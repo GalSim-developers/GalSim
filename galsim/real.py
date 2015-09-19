@@ -831,10 +831,6 @@ class ChromaticRealGalaxy(ChromaticSum):
     --------------
     TODO
 
-    @param x_interpolant    Either an Interpolant instance or a string indicating which real-space
-                            interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
-                            'cubic', 'quintic', or 'lanczosN' where N should be the integer order
-                            to use. [default: galsim.Quintic()]
     @param k_interpolant    Either an Interpolant instance or a string indicating which k-space
                             interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
                             'cubic', 'quintic', or 'lanczosN' where N should be the integer order
@@ -886,7 +882,7 @@ class ChromaticRealGalaxy(ChromaticSum):
 
         # Select maxk by requiring modes to be resolved both by the marginal PSFs (i.e., the
         # achromatic PSFs obtained by evaluating the chromatic PSF at the blue and red edges of
-        # each of the filters provided, and also by the input images' pixel scales.
+        # each of the filters provided) and also by the input images' pixel scales.
 
         img_maxk = np.min([np.pi/img.scale for img in imgs])
         marginal_PSFs = [PSF.evaluateAtWavelength(tp.blue_limit) for tp in tputs]
@@ -894,39 +890,63 @@ class ChromaticRealGalaxy(ChromaticSum):
         psf_maxk = np.min([p.maxK() for p in marginal_PSFs])
 
         # In practice, the output PSF will almost always cut off at smaller maxK than obtained
-        # above.  In this case, the user can set maxK keyword argument for improved efficiency.
+        # above.  In this case, the user can set the maxK keyword argument for improved efficiency.
         if maxk is None:
             self.maxk = np.min([img_maxk, psf_maxk])
         else:
             self.maxk = np.min([img_maxk, psf_maxk, maxk])
 
         # Setting stepk is trickier.  We'll assume that the postage stamp inputs are already at the
-        # critical size to avoid significant aliasing and use the implied stepK.
-        self.stepk = np.min([2*np.pi/(img.scale*max(img.array.shape)) for img in imgs])
+        # critical size to avoid significant aliasing and use the implied stepK.  Note that since
+        # we will be storing the Fourier transforms of the input images as `InterpolatedKImage`s,
+        # which require stepk_x = stepk_y, the input images must be square.
+        self.stepk = np.min([2*np.pi/(img.scale*img.array.shape[0]) for img in imgs])
 
-        nk = int(np.ceil(2*self.maxk/self.stepk))
+        nk = 2*int(np.ceil(self.maxk/self.stepk))
 
         # Create Fourier-space kimages of effective PSFs
         eff_PSF_kimgs = np.empty((len(imgs), len(SEDs), nk, nk), dtype=complex)
         for i, (img, tput) in enumerate(zip(imgs, tputs)):
             for j, sed in enumerate(SEDs):
-                star = galsim.Gaussian(fwhm=1e-8) * sed
-                # assume that PSF does not yet include pixel contribution
+                star = galsim.Gaussian(fwhm=1e-8) * sed  # Could use a delta-fn here...
+                # assume that PSF does not include pixel contribution, so add it in.
                 conv = galsim.Convolve(PSF, star, galsim.Pixel(img.scale))
                 re, im = conv.drawKImage(tput, nx=nk, ny=nk, scale=self.stepk)
                 eff_PSF_kimgs[i, j, :, :] = re.array + 1j * im.array
 
-        # Get Fourier-space representations of input imgs.
+        # Get Fourier-space representations of input imgs.  It's tempting to just create
+        # `InterpolatedImage` objects and use drawKImage here, but I've found that this
+        # leads to diluted Fourier-mode amplitudes at high k (see left hand panel of
+        # Bernstein&Gruen14 figure 1).  Instead, we'll Fourier transform using np.fft, create an
+        # `InterpolatedKImage` object, and regrid to our desired stepk and maxk.
         kimgs = np.empty((len(imgs), nk, nk), dtype=complex)
+        # for i, img in enumerate(imgs):
+        #     re, im = galsim.InterpolatedImage(img).drawKImage(nx=nk, ny=nk, scale=self.stepk)
+        #     kimgs[i, :, :] = re.array + 1j * im.array
         for i, img in enumerate(imgs):
-            re, im = galsim.InterpolatedImage(img).drawKImage(nx=nk, ny=nk, scale=self.stepk)
+            tmp = np.fft.fftshift(np.fft.fft2(img.array))
+            nx = img.array.shape[0]
+            scale = 2*np.pi/(nx*img.scale)
+            re = galsim.Image(tmp.real.copy(), scale=scale)
+            im = galsim.Image(tmp.imag.copy(), scale=scale)
+            tmp = galsim.InterpolatedKImage(re, im)
+            re, im = tmp.drawKImage(nx=nk, ny=nk, scale=self.stepk)
             kimgs[i, :, :] = re.array + 1j * im.array
 
         # Setup input noise power spectra
+        # Similar to above, it's better to draw in real space, fft, then interpolate as opposed to
+        # interpolating directly.
         pk = np.empty((len(imgs), nk, nk), dtype=float)
-        for i, xi in enumerate(xis):
-            # transform of real even function should be real, so ignore imag part of result.
-            re, _ = xi.drawKImage(nx=nk, ny=nk, scale=self.stepk)
+        for i, (img, xi) in enumerate(zip(imgs, xis)):
+            nx = img.array.shape[0]
+            xi_img = galsim.Image(nx, nx, scale=img.scale, dtype=np.float64)
+            xi.drawImage(xi_img)
+            tmp = np.abs(np.fft.fftshift(np.fft.fft2(xi_img.array)).real) * nx**2
+            scale = 2*np.pi/(nx*img.scale)
+            re = galsim.Image(tmp, scale=scale)
+            im = galsim.Image(tmp*0, scale=scale)
+            tmp = galsim.InterpolatedKImage(re, im)
+            re, _ = tmp.drawKImage(nx=nk, ny=nk, scale=self.stepk)
             pk[i, :, :] = re.array
 
         # Allocate output coeffs and covariances.
@@ -935,7 +955,7 @@ class ChromaticRealGalaxy(ChromaticSum):
         # Solve the weighted linear least squares problem for each Fourier mode.  This is
         # effectively a constrained chromatic deconvolution.
         for iy in xrange(nk):
-            for ix in xrange(iy, nk): # Hermitian, so only need to do half of Fourier-modes
+            for ix in xrange(iy, nk):  # Hermitian, so only need to do half of Fourier-modes
                 w = _complex_to_real(np.diag(1.0 / pk[:, iy, ix]))
                 root_w = np.sqrt(w)
                 A = np.dot(root_w, _complex_to_real(eff_PSF_kimgs[:, :, iy, ix]))

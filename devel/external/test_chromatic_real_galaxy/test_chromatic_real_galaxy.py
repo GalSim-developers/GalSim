@@ -34,21 +34,21 @@ def test_CRG_noise(plot=False):
                   galsim.Image(192, 192, scale=0.03, dtype=np.float64)]
     # Use COSMOS correlated noise
     rng = galsim.BaseDeviate(1)
-    cn1 = galsim.getCOSMOSNoise(rng=rng)
-    cn2 = cn1.dilate(1.5)
+    xi1 = galsim.getCOSMOSNoise(rng=rng)
+    xi2 = xi1.dilate(0.8)
 
-    HST_images[0].addNoise(cn1)
-    HST_images[1].addNoise(cn2)
+    HST_images[0].addNoise(xi1)
+    HST_images[1].addNoise(xi2)
 
     print "Constructing ChromaticRealGalaxy"
     crg = galsim.ChromaticRealGalaxy((HST_images,
                                       [rband, iband],
                                       [const_SED, linear_SED],
-                                      [cn1, cn2],
+                                      [xi1, xi2],
                                       HST_PSF),
-                                      maxk=maxk)
+                                     maxk=maxk)
 
-    crg2 = crg.shear(g1=0.3, g2=0.3)
+    crg2 = crg.shear(g1=0.3)
 
     print "Convolving by Euclid PSF"
     Euclid_obj = galsim.Convolve(crg, Euclid_PSF)
@@ -59,8 +59,12 @@ def test_CRG_noise(plot=False):
     Euclid_im2 = Euclid_obj2.drawImage(visband, nx=64, ny=64, scale=0.03, iimult=2)
 
     print "Get CorrelatedNoise from image"
-    cn_image = galsim.CorrelatedNoise(Euclid_im)
-    cn_image2 = galsim.CorrelatedNoise(Euclid_im2)
+    xi_obs = galsim.CorrelatedNoise(Euclid_im, correct_periodicity=False)
+    xi_obs2 = galsim.CorrelatedNoise(Euclid_im2, correct_periodicity=False)
+
+    for im in HST_images+[Euclid_im, Euclid_im2]:
+        im.setCenter(0, 0)
+    bd = galsim.BoundsI(-20, 20, -20, 20)
 
     if plot:
         import matplotlib.pyplot as plt
@@ -68,37 +72,37 @@ def test_CRG_noise(plot=False):
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.set_title("r-band image")
-        im = ax.imshow(HST_images[0].array[0:64, 0:64])
+        im = ax.imshow(HST_images[0][bd].array)
         plt.colorbar(im)
 
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.set_title("i-band image")
-        im = ax.imshow(HST_images[1].array[0:64, 0:64])
+        im = ax.imshow(HST_images[1][bd].array)
         plt.colorbar(im)
 
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.set_title("Euclid image")
-        im = ax.imshow(Euclid_im.array[0:64, 0:64])
+        im = ax.imshow(Euclid_im[bd].array)
         plt.colorbar(im)
 
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.set_title("Observed noise correlation function")
-        im = ax.imshow(cn_image.drawImage().array)
+        im = ax.imshow(xi_obs.drawImage().array)
         plt.colorbar(im)
 
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.set_title("sheared Euclid image")
-        im = ax.imshow(Euclid_im2.array[0:64, 0:64])
+        im = ax.imshow(Euclid_im2[bd].array)
         plt.colorbar(im)
 
         fig = plt.figure()
         ax = fig.add_subplot(111)
         ax.set_title("Observed sheared noise correlation function")
-        im = ax.imshow(cn_image2.drawImage().array)
+        im = ax.imshow(xi_obs2.drawImage().array)
         plt.colorbar(im)
 
         plt.show()
@@ -144,7 +148,7 @@ def test_CRG(plot=False):
     cn1 = galsim.getCOSMOSNoise()
     cn2 = cn1.rotate(45*galsim.degrees)
     # wcs = galsim.PixelScale(0.03)
-    wcs = None
+    # wcs = None
     # corrfunc1 = galsim.Gaussian(sigma=0.06).shear(g1=0.3, g2=0.3)
     # corrfunc2 = galsim.Gaussian(sigma=0.1).shear(g1=-0.2, g2=-0.2)
     # cn1 = galsim.correlatednoise._BaseCorrelatedNoise(rng=None, gsobject=corrfunc1, wcs=wcs)
