@@ -941,12 +941,12 @@ class ChromaticRealGalaxy(ChromaticSum):
             nx = img.array.shape[0]
             xi_img = galsim.Image(nx, nx, scale=img.scale, dtype=np.float64)
             xi.drawImage(xi_img)
-            tmp = np.abs(np.fft.fftshift(np.fft.fft2(xi_img.array)).real) * nx**2
+            ps = np.abs(np.fft.fftshift(np.fft.fft2(xi_img.array)).real) * nx**2
             scale = 2*np.pi/(nx*img.scale)
-            re = galsim.Image(tmp, scale=scale)
-            im = galsim.Image(tmp*0, scale=scale)
-            tmp = galsim.InterpolatedKImage(re, im)
-            re, _ = tmp.drawKImage(nx=self.nk, ny=self.nk, scale=self.stepk)
+            re = galsim.Image(ps, scale=scale)
+            im = galsim.Image(ps*0, scale=scale)
+            psobj = galsim.InterpolatedKImage(re, im)
+            re, _ = psobj.drawKImage(nx=self.nk, ny=self.nk, scale=self.stepk)
             pk[i] = re.array
 
         # Allocate output coeffs and covariances.
@@ -974,7 +974,7 @@ class ChromaticRealGalaxy(ChromaticSum):
             im = galsim.ImageD(coef[i].imag.copy(), scale=self.stepk)
             objlist.append(sed * galsim.InterpolatedKImage(re, im))
 
-        self.covspec = galsim.CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs)
+        self.covspec = galsim.CovarianceSpectrum(Sigma / nx**2, self.stepk, self.nk, self.SEDs)
         super(ChromaticRealGalaxy, self).__init__(objlist)
 
 
