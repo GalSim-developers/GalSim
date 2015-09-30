@@ -924,7 +924,7 @@ class ChromaticRealGalaxy(ChromaticSum):
         #     re, im = galsim.InterpolatedImage(img).drawKImage(nx=self.nk, ny=self.nk, scale=self.stepk)
         #     kimgs[i] = re.array + 1j * im.array
         for i, img in enumerate(imgs):
-            tmp = np.fft.fftshift(np.fft.fft2(img.array))
+            tmp = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(img.array)))
             nx = img.array.shape[0]
             scale = 2*np.pi/(nx*img.scale)
             re = galsim.Image(tmp.real.copy(), scale=scale)
@@ -941,7 +941,7 @@ class ChromaticRealGalaxy(ChromaticSum):
             nx = img.array.shape[0]
             xi_img = galsim.Image(nx, nx, scale=img.scale, dtype=np.float64)
             xi.drawImage(xi_img)
-            ps = np.abs(np.fft.fftshift(np.fft.fft2(xi_img.array)).real) * nx**2
+            ps = np.abs(np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(xi_img.array))).real) * nx**2
             scale = 2*np.pi/(nx*img.scale)
             re = galsim.Image(ps, scale=scale)
             im = galsim.Image(ps*0, scale=scale)
@@ -991,7 +991,7 @@ def _noiseWithPSF(self, bandpass, PSF, rng=None, wcs=None):
     for i, sed in enumerate(SEDs):
         star = galsim.Gaussian(fwhm=1e-8) * sed  # Could use a delta-fn here...
         # assume that PSF does not include pixel contribution, so add it in.
-        conv = galsim.Convolve(PSF, star)
+        conv = galsim.Convolve(PSF, star, galsim.Pixel(wcs.scale))
         re, im = conv.drawKImage(bandpass, nx=nk, ny=nk, scale=stepk)
         eff_PSF_kimgs[i] = re.array + 1j * im.array
     pkout = np.zeros((nk, nk), )

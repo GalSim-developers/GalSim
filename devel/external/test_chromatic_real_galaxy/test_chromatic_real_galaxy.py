@@ -49,8 +49,8 @@ def test_CRG_noise(plot=False):
                                      maxk=maxk)
 
     crg2 = crg.shear(g1=0.2)
-    noise = crg.noiseWithPSF(visband, Euclid_PSF)
-    noise2 = crg2.noiseWithPSF(visband, Euclid_PSF)
+    noise = crg.noiseWithPSF(visband, Euclid_PSF, wcs=galsim.Pixel(0.03))
+    noise2 = crg2.noiseWithPSF(visband, Euclid_PSF, wcs=galsim.Pixel(0.03))
 
     print "Convolving by Euclid PSF"
     Euclid_obj = galsim.Convolve(crg, Euclid_PSF)
@@ -67,6 +67,13 @@ def test_CRG_noise(plot=False):
     for im in HST_images+[Euclid_im, Euclid_im2]:
         im.setCenter(0, 0)
     bd = galsim.BoundsI(-20, 20, -20, 20)
+
+    print "predicted noise: ", noise.getVariance()
+    print "observed noise: ", xi_obs.getVariance()
+    print "ratio: ", noise.getVariance()/xi_obs.getVariance()
+    print "observed noise: ", xi_obs2.getVariance()
+    print "predicted noise: ", noise2.getVariance()
+    print "ratio: ", noise2.getVariance()/xi_obs2.getVariance()
 
     if plot:
         import matplotlib.pyplot as plt
@@ -108,7 +115,6 @@ def test_CRG_noise(plot=False):
         plt.colorbar(im)
 
         plt.show()
-
 
 def test_CRG(plot=False):
     """Use some simplified simulated HST-like observations around r and i band to predict
