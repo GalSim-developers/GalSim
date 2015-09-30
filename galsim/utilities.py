@@ -525,8 +525,9 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     y_size, x_size = im_list[0].array.shape
     wcs = im_list[0].wcs
 
-    if wcs.isPixelScale():
-        scale = wcs.scale
+    if wcs is not None:
+        if wcs.isPixelScale():
+            scale = wcs.scale
     else:
         scale = None
 
