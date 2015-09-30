@@ -959,11 +959,19 @@ class ChromaticRealGalaxy(ChromaticSum):
                 w = _complex_to_real(np.diag(1.0 / pk[:, iy, ix]))
                 root_w = np.sqrt(w)
                 A = np.dot(root_w, _complex_to_real(eff_PSF_kimgs[:, :, iy, ix]))
-                b = np.dot(root_w, _complex_to_real(kimgs[:, iy, ix]))
-                x = _real_to_complex(np.linalg.lstsq(A, b)[0])
+                # Punt if condition number is greater than 1e12.  This probably means that
+                # one of the effective PSFs is 0.0 at this point in k-space.  This will presumably
+                # get eventually get nulled out when convolving the CRG with a fatter PSF than
+                # used for the input images.
+                if np.linalg.cond(np.dot(A.T, A)) > 1e12:
+                    x = 0.0
+                    dx = np.zeros((2, 2), dtype=complex)
+                else:
+                    b = np.dot(root_w, _complex_to_real(kimgs[:, iy, ix]))
+                    x = _real_to_complex(np.linalg.lstsq(A, b)[0])
+                    dx = _real_to_complex(np.linalg.inv(np.dot(A.T, A)))
                 coef[:, iy, ix] = x
                 coef[:, -iy, -ix] = np.conjugate(x)
-                dx = _real_to_complex(np.linalg.inv(np.dot(A.T, A)))
                 Sigma[:, :, iy, ix] = dx
                 Sigma[:, :, -iy, -ix] = np.conjugate(dx)
 

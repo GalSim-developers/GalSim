@@ -226,4 +226,5 @@ if __name__ == '__main__':
     parser.add_argument('--plot', action='store_true')
     args = parser.parse_args()
 
-    test_CRG_noise(plot=args.plot)
+    # test_CRG_noise(plot=args.plot)
+    test_CRG(plot=args.plot)
