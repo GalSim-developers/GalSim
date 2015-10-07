@@ -894,6 +894,7 @@ class ChromaticRealGalaxy(ChromaticSum):
 
         # Get Fourier-space representations of input imgs.
         kimgs = np.empty((len(imgs), self.nk, self.nk), dtype=complex)
+
         # Option 1): Use GalSim to Fourier transform
         for i, img in enumerate(imgs):
             ii = galsim.InterpolatedImage(img)
@@ -914,6 +915,7 @@ class ChromaticRealGalaxy(ChromaticSum):
         # Setup input noise power spectra
         pk = np.empty((len(imgs), self.nk, self.nk), dtype=float)
         for i, (img, xi) in enumerate(zip(imgs, xis)):
+
             # Option 1) Using GalSim to Fourier transform
             # re, im = xi.drawKImage(nx=self.nk, ny=self.nk, scale=self.stepk)
             # pk[i] = re.array / xi.wcs.pixelArea()
@@ -938,7 +940,6 @@ class ChromaticRealGalaxy(ChromaticSum):
         # effectively a constrained chromatic deconvolution.
         for iy in xrange(self.nk):
             for ix in xrange(iy, self.nk):  # Hermitian, so only need to do half of Fourier-modes
-
                 w = np.diag(1.0/pk[:, iy, ix])
                 root_w = np.sqrt(w)
                 A = np.dot(root_w, PSF_eff_kimgs[:, :, iy, ix])
