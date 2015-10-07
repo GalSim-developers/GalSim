@@ -899,7 +899,18 @@ class ChromaticRealGalaxy(ChromaticSum):
 
         # TODO: code to query not-yet-existing catalog for imgs, tputs, SEDs, cfuncs, cPSF
 
-        # Need to sample both the effective PSFs and the imgs on the same Fourier grid.
+        # Need to sample three different types of objects on the same Fourier grid: the input
+        # effective PSFs, the input images, and the input correlation-functions/power-spectra.
+        # There are quite a few potential options for implementing this Fourier sampling.  Some
+        # examples include:
+        #   1) draw object in real space, interpolate onto the real-space grid conjugate to the
+        #      desired Fourier-space grid and then DFT with numpy.fft methods.
+        #   2) Use numpy.fft methods on pre-sampled real-space input (like the input images), then
+        #      use an InterpolatedKImage object to regrid onto desired Fourier grid.
+        #   3) Create an InterpolatedImage and use drawKImage to directly sample on desired Fourier
+        #      grid.
+        # I'm sure there are other options too.  The options chosen below were chosen empirically
+        # based on tests of propagating both (chromatic) galaxy images and images of pure noise.
 
         # Select maxk by requiring modes to be resolved both by the marginal PSFs (i.e., the
         # achromatic PSFs obtained by evaluating the chromatic PSF at the blue and red edges of
@@ -910,7 +921,7 @@ class ChromaticRealGalaxy(ChromaticSum):
         marginal_PSFs += [PSF.evaluateAtWavelength(tp.red_limit) for tp in tputs]
         psf_maxk = np.min([p.maxK() for p in marginal_PSFs])
 
-        # In practice, the output PSF will almost always cut off at smaller maxK than obtained
+        # In practice, the output PSF should almost always cut off at smaller maxk than obtained
         # above.  In this case, the user can set the maxK keyword argument for improved efficiency.
         if maxk is None:
             self.maxk = np.min([img_maxk, psf_maxk])
@@ -918,59 +929,65 @@ class ChromaticRealGalaxy(ChromaticSum):
             self.maxk = np.min([img_maxk, psf_maxk, maxk])
 
         # Setting stepk is trickier.  We'll assume that the postage stamp inputs are already at the
-        # critical size to avoid significant aliasing and use the implied stepK.  Note that since
+        # critical size to avoid significant aliasing and use the implied stepk.  Note that since
         # we will be storing the Fourier transforms of the input images as `InterpolatedKImage`s,
         # which require stepk_x = stepk_y, the input images must be square.
+        if any(img.array.shape[0] != img.array.shape[1] for img in imgs):
+            raise ValueError("Cannot process non-square images.")
         self.stepk = np.min([2*np.pi/(img.scale*img.array.shape[0]) for img in imgs])
 
         self.nk = 2*int(np.ceil(self.maxk/self.stepk))
 
         # Create Fourier-space kimages of effective PSFs
-        eff_PSF_kimgs = np.empty((len(imgs), len(self.SEDs), self.nk, self.nk), dtype=complex)
+        PSF_eff_kimgs = np.empty((len(imgs), len(self.SEDs), self.nk, self.nk), dtype=complex)
         for i, (img, tput) in enumerate(zip(imgs, tputs)):
             for j, sed in enumerate(self.SEDs):
                 star = galsim.Gaussian(fwhm=1e-8) * sed  # Could use a delta-fn here...
                 # assume that PSF does not include pixel contribution, so add it in.
                 conv = galsim.Convolve(PSF, star, galsim.Pixel(img.scale))
                 re, im = conv.drawKImage(tput, nx=self.nk, ny=self.nk, scale=self.stepk)
-                eff_PSF_kimgs[i, j] = re.array + 1j * im.array
+                PSF_eff_kimgs[i, j] = re.array + 1j * im.array
 
-        # Get Fourier-space representations of input imgs.  It's tempting to just create
-        # `InterpolatedImage` objects and use drawKImage here, but I've found that this
-        # leads to diluted Fourier-mode amplitudes at high k (see left hand panel of
-        # Bernstein&Gruen14 figure 1).  Instead, we'll Fourier transform using np.fft, create an
-        # `InterpolatedKImage` object, and regrid to our desired stepk and maxk.
+        # Get Fourier-space representations of input imgs.
         kimgs = np.empty((len(imgs), self.nk, self.nk), dtype=complex)
-        # for i, img in enumerate(imgs):
-        #     re, im = galsim.InterpolatedImage(img).drawKImage(nx=self.nk, ny=self.nk, scale=self.stepk)
-        #     kimgs[i] = re.array + 1j * im.array
+        # Option 1): Use GalSim to Fourier transform
         for i, img in enumerate(imgs):
-            tmp = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(img.array)))
-            nx = img.array.shape[0]
-            scale = 2*np.pi/(nx*img.scale)
-            re = galsim.Image(tmp.real.copy(), scale=scale)
-            im = galsim.Image(tmp.imag.copy(), scale=scale)
-            tmp = galsim.InterpolatedKImage(re, im)
-            re, im = tmp.drawKImage(nx=self.nk, ny=self.nk, scale=self.stepk)
+            ii = galsim.InterpolatedImage(img)
+            re, im = ii.drawKImage(nx=self.nk, ny=self.nk, scale=self.stepk)
             kimgs[i] = re.array + 1j * im.array
 
+        # Option 2) Using numpy to Fourier transform
+        # for i, img in enumerate(imgs):
+        #     tmp = np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(img.array)))
+        #     nx = img.array.shape[0]
+        #     scale = 2*np.pi/(nx*img.scale)
+        #     re = galsim.Image(tmp.real.copy(), scale=scale)
+        #     im = galsim.Image(tmp.imag.copy(), scale=scale)
+        #     tmp = galsim.InterpolatedKImage(re, im)
+        #     re, im = tmp.drawKImage(nx=self.nk, ny=self.nk, scale=self.stepk)
+        #     kimgs[i] = re.array + 1j * im.array
+
         # Setup input noise power spectra
-        # Similar to above, it's better to draw in real space, fft, then interpolate as opposed to
-        # interpolating directly.
         pk = np.empty((len(imgs), self.nk, self.nk), dtype=float)
         for i, (img, xi) in enumerate(zip(imgs, xis)):
+            # Option 1) Using GalSim to Fourier transform
+            # re, im = xi.drawKImage(nx=self.nk, ny=self.nk, scale=self.stepk)
+            # pk[i] = re.array / xi.wcs.pixelArea()
+
+            # Option 2) Using numpy to Fourier transform
             nx = img.array.shape[0]
             xi_img = galsim.Image(nx, nx, scale=img.scale, dtype=np.float64)
             xi.drawImage(xi_img)
-            ps = np.abs(np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(xi_img.array))).real) * nx**2
+            ps = np.ascontiguousarray(
+                np.fft.fftshift(np.fft.fft2(np.fft.ifftshift(xi_img.array))).real)
             scale = 2*np.pi/(nx*img.scale)
             re = galsim.Image(ps, scale=scale)
             im = galsim.Image(ps*0, scale=scale)
-            psobj = galsim.InterpolatedKImage(re, im)
-            re, _ = psobj.drawKImage(nx=self.nk, ny=self.nk, scale=self.stepk)
+            iki = galsim.InterpolatedKImage(re, im)
+            re, _ = iki.drawKImage(nx=self.nk, ny=self.nk, scale=self.stepk)
             pk[i] = re.array
 
-        # Allocate output coeffs and covariances.
+        # Allocate and fill output coefficients and covariances.
         Sigma = np.empty((len(self.SEDs), len(self.SEDs), self.nk, self.nk), dtype=complex)
         coef = np.empty((len(self.SEDs), self.nk, self.nk), dtype=complex)
         # Solve the weighted linear least squares problem for each Fourier mode.  This is
@@ -979,11 +996,11 @@ class ChromaticRealGalaxy(ChromaticSum):
             for ix in xrange(iy, self.nk):  # Hermitian, so only need to do half of Fourier-modes
                 w = _complex_to_real(np.diag(1.0 / pk[:, iy, ix]))
                 root_w = np.sqrt(w)
-                A = np.dot(root_w, _complex_to_real(eff_PSF_kimgs[:, :, iy, ix]))
+                A = np.dot(root_w, _complex_to_real(PSF_eff_kimgs[:, :, iy, ix]))
                 # Punt if condition number is greater than 1e12.  This probably means that
-                # one of the effective PSFs is 0.0 at this point in k-space.  This will presumably
-                # get eventually get nulled out when convolving the CRG with a fatter PSF than
-                # used for the input images.
+                # one of the effective PSFs is 0.0 at this point in k-space, and will presumably
+                # eventually get nulled out when convolving the CRG with a wider PSF than used for
+                # the input images.
                 if np.linalg.cond(np.dot(A.T, A)) > 1e12:
                     x = 0.0
                     dx = np.zeros((2, 2), dtype=complex)
@@ -992,9 +1009,9 @@ class ChromaticRealGalaxy(ChromaticSum):
                     x = _real_to_complex(np.linalg.lstsq(A, b)[0])
                     dx = _real_to_complex(np.linalg.inv(np.dot(A.T, A)))
                 coef[:, iy, ix] = x
-                coef[:, -iy, -ix] = np.conjugate(x)
+                coef[:, -iy, -ix] = np.conj(x)
                 Sigma[:, :, iy, ix] = dx
-                Sigma[:, :, -iy, -ix] = np.conjugate(dx)
+                Sigma[:, :, -iy, -ix] = np.conj(dx)
 
         # Set up objlist as required since this is a subclass of ChromaticSum.
         objlist = []
@@ -1003,7 +1020,7 @@ class ChromaticRealGalaxy(ChromaticSum):
             im = galsim.ImageD(coef[i].imag.copy(), scale=self.stepk)
             objlist.append(sed * galsim.InterpolatedKImage(re, im))
 
-        self.covspec = galsim.CovarianceSpectrum(Sigma / nx**2, self.stepk, self.nk, self.SEDs)
+        self.covspec = galsim.CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs)
         super(ChromaticRealGalaxy, self).__init__(objlist)
 
 
@@ -1016,22 +1033,22 @@ def _noiseWithPSF(self, bandpass, PSF, rng=None, wcs=None):
     nk = self.covspec.nk
     stepk = self.covspec.stepk
     SEDs = self.covspec.SEDs
-    eff_PSF_kimgs = np.empty((len(SEDs), nk, nk), dtype=complex)
+    PSF_eff_kimgs = np.empty((len(SEDs), nk, nk), dtype=complex)
     for i, sed in enumerate(SEDs):
         star = galsim.Gaussian(fwhm=1e-8) * sed  # Could use a delta-fn here...
         # assume that PSF does not include pixel contribution, so add it in.
         conv = galsim.Convolve(PSF, star, galsim.Pixel(wcs.scale))
         re, im = conv.drawKImage(bandpass, nx=nk, ny=nk, scale=stepk)
-        eff_PSF_kimgs[i] = re.array + 1j * im.array
+        PSF_eff_kimgs[i] = re.array + 1j * im.array
     pkout = np.zeros((nk, nk), )
     for i in xrange(len(SEDs)):
         for j in xrange(i, len(SEDs)):
             re, im = Sigma[(i, j)].drawKImage(nx=nk, ny=nk, scale=stepk)
             s = re.array + 1j * im.array
-            pkout += (eff_PSF_kimgs[i].conj() * s * eff_PSF_kimgs[j] *
+            pkout += (np.conj(PSF_eff_kimgs[i]) * s * PSF_eff_kimgs[j] *
                       (2 if i != j else 1)).real
     re = galsim.Image(pkout.copy().real, scale=stepk)
-    pkobj = galsim.InterpolatedKImage(re, re*0)  # imag part should be zero.
-    return galsim.correlatednoise._BaseCorrelatedNoise(rng, pkobj, wcs)
+    iki = galsim.InterpolatedKImage(re, re*0)  # imag part should be zero.
+    return galsim.correlatednoise._BaseCorrelatedNoise(rng, iki, wcs)
 
 ChromaticSum.noiseWithPSF = _noiseWithPSF
