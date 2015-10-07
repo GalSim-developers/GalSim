@@ -8,10 +8,10 @@ def test_CRG(args):
     Euclid-ish visual band observations."""
     t0 = time.time()
     print "Constructing simplified HST PSF"
-    HST_PSF = galsim.ChromaticAiry(lam=700, diam=2.4)
+    HST_PSF = galsim.ChromaticAiry(lam=700, diam=2.4).shear(g1=0.01, g2=0.01)
 
     print "Constructing simplified Euclid PSF"
-    Euclid_PSF = galsim.ChromaticAiry(lam=700, diam=1.2)
+    Euclid_PSF = galsim.ChromaticAiry(lam=700, diam=1.2).shear(g1=-0.01, g2=-0.01)
 
     print "Constructing simple filters and SEDs"
     waves = np.arange(550.0, 830.1, 10.0)
@@ -40,7 +40,8 @@ def test_CRG(args):
     # Draw HST images
     HST_images = [HST_prof.drawImage(rband, nx=128, ny=128, scale=0.03),
                   HST_prof.drawImage(iband, nx=128, ny=128, scale=0.03)]
-    cn1 = galsim.getCOSMOSNoise()
+    rng = galsim.BaseDeviate(seed=args.seed)
+    cn1 = galsim.getCOSMOSNoise(rng=rng)
     cn2 = cn1.rotate(45*galsim.degrees)
     # wcs = galsim.PixelScale(0.03)
     # wcs = None
@@ -110,5 +111,6 @@ if __name__ == '__main__':
     parser.add_argument('--plot', action='store_true')
     parser.add_argument('--SNR', type=float, default=100.0,
                         help="Input signal-to-noise ratio")
+    parser.add_argument('--seed', type=int, default=0)
     args = parser.parse_args()
     test_CRG(args)

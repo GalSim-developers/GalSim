@@ -787,62 +787,6 @@ def _parse_files_dirs(file_name, image_dir, dir, noise_dir):
     return full_file_name, full_image_dir, full_noise_dir
 
 
-def _complex_to_real(a):
-    """ Utility to transform complex vector or matrix into equivalent real vector or matrix.
-    For a vector, an example is :
-                         [a]
-    [ a + i*b ]    ->    [b]
-    [ c + i*d ]          [c]
-                         [d]
-
-    For a matrix, an example is:
-                              [a  -b  0   0]
-    [a + i*b   0      ]  ->   [b   a  0   0]
-    [0         c + i*d]       [0   0  c  -d]
-                              [0   0  d   c]
-
-    Linear algebra performed with the real vectors/matrices is then equivalent to linear algebra
-    performed on the complex vectors/matrices.
-    """
-    import numpy as np
-    if a.ndim == 1:
-        out = np.empty((2*a.shape[0],), dtype=float)
-        for i in range(a.shape[0]):
-            out[2*i] = a[i].real
-            out[2*i+1] = a[i].imag
-        return out
-    elif a.ndim == 2:
-        out = np.empty((2*a.shape[0], 2*a.shape[1]), dtype=float)
-        for i in range(a.shape[0]):
-            for j in range(a.shape[1]):
-                out[2*i, 2*j] = a[i, j].real
-                out[2*i, 2*j+1] = -a[i, j].imag
-                out[2*i+1, 2*j] = a[i, j].imag
-                out[2*i+1, 2*j+1] = a[i, j].real
-        return out
-    else:
-        raise ValueError("Unsupported dimension.")
-
-
-def _real_to_complex(a):
-    """ Undoes _complex_to_real.  See that docstring.
-    """
-    import numpy as np
-    if a.ndim == 1:
-        out = np.empty((a.shape[0]/2,), dtype=complex)
-        for i in range(a.shape[0]/2):
-            out[i] = a[2*i] + 1j * a[2*i+1]
-        return out
-    elif a.ndim == 2:
-        out = np.empty((a.shape[0]/2, a.shape[1]/2), dtype=complex)
-        for i in range(a.shape[0]/2):
-            for j in range(a.shape[1]/2):
-                out[i, j] = a[2*i, 2*j] - 1j * a[2*i, 2*j+1]
-        return out
-    else:
-        raise ValueError("Unsupported dimension.")
-
-
 class ChromaticRealGalaxy(ChromaticSum):
     """A class describing real galaxies, including chromatic gradients, from some training dataset.
     Its underlying implementation solves for a sum of chromatic profiles which are separable into
@@ -994,20 +938,23 @@ class ChromaticRealGalaxy(ChromaticSum):
         # effectively a constrained chromatic deconvolution.
         for iy in xrange(self.nk):
             for ix in xrange(iy, self.nk):  # Hermitian, so only need to do half of Fourier-modes
-                w = _complex_to_real(np.diag(1.0 / pk[:, iy, ix]))
+
+                w = np.diag(1.0/pk[:, iy, ix])
                 root_w = np.sqrt(w)
-                A = np.dot(root_w, _complex_to_real(PSF_eff_kimgs[:, :, iy, ix]))
-                # Punt if condition number is greater than 1e12.  This probably means that
-                # one of the effective PSFs is 0.0 at this point in k-space, and will presumably
-                # eventually get nulled out when convolving the CRG with a wider PSF than used for
-                # the input images.
-                if np.linalg.cond(np.dot(A.T, A)) > 1e12:
+                A = np.dot(root_w, PSF_eff_kimgs[:, :, iy, ix])
+                b = np.dot(root_w, kimgs[:, iy, ix])
+                try:
+                    r = np.linalg.lstsq(A, b)
+                    x = r[0]
+                    # only attempt to invert if condition number is reasonable
+                    dx = np.zeros((len(self.SEDs), len(self.SEDs)), dtype=complex)
+                    if np.min(np.abs(r[3])) > 0:
+                        if np.max(r[3])/np.min(r[3]) < 1.e12:
+                            dx = np.linalg.inv(np.dot(np.conj(A.T), A))
+                except:
                     x = 0.0
-                    dx = np.zeros((2, 2), dtype=complex)
-                else:
-                    b = np.dot(root_w, _complex_to_real(kimgs[:, iy, ix]))
-                    x = _real_to_complex(np.linalg.lstsq(A, b)[0])
-                    dx = _real_to_complex(np.linalg.inv(np.dot(A.T, A)))
+                    dx = np.zeros((len(self.SEDs), len(self.SEDs)), dtype=complex)
+
                 coef[:, iy, ix] = x
                 coef[:, -iy, -ix] = np.conj(x)
                 Sigma[:, :, iy, ix] = dx
