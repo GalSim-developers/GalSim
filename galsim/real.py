@@ -841,18 +841,18 @@ class ChromaticRealGalaxy(ChromaticSum):
         else:
             raise ValueError("Chromatic Real Galaxy Catalog not implemented yet!")
 
-        # TODO: code to query not-yet-existing catalog for imgs, tputs, SEDs, cfuncs, cPSF
+        # TODO: code to query not-yet-existing catalog for imgs, tputs, SEDs, xis, PSF
 
         # Need to sample three different types of objects on the same Fourier grid: the input
         # effective PSFs, the input images, and the input correlation-functions/power-spectra.
         # There are quite a few potential options for implementing this Fourier sampling.  Some
         # examples include:
-        #   1) draw object in real space, interpolate onto the real-space grid conjugate to the
-        #      desired Fourier-space grid and then DFT with numpy.fft methods.
-        #   2) Use numpy.fft methods on pre-sampled real-space input (like the input images), then
-        #      use an InterpolatedKImage object to regrid onto desired Fourier grid.
-        #   3) Create an InterpolatedImage and use drawKImage to directly sample on desired Fourier
-        #      grid.
+        #   * draw object in real space, interpolate onto the real-space grid conjugate to the
+        #     desired Fourier-space grid and then DFT with numpy.fft methods.
+        #   * Use numpy.fft methods on pre-sampled real-space input (like the input images), then
+        #     use an InterpolatedKImage object to regrid onto desired Fourier grid.
+        #   * Create an InterpolatedImage from pre-sampled input then use drawKImage to directly
+        #     sample on desired Fourier grid.
         # I'm sure there are other options too.  The options chosen below were chosen empirically
         # based on tests of propagating both (chromatic) galaxy images and images of pure noise.
 
@@ -935,11 +935,21 @@ class ChromaticRealGalaxy(ChromaticSum):
 
         # Allocate and fill output coefficients and covariances.
         Sigma = np.empty((len(self.SEDs), len(self.SEDs), self.nk, self.nk), dtype=complex)
-        coef = np.empty((len(self.SEDs), self.nk, self.nk), dtype=complex)
+        coef = np.zeros((len(self.SEDs), self.nk, self.nk), dtype=complex)
         # Solve the weighted linear least squares problem for each Fourier mode.  This is
         # effectively a constrained chromatic deconvolution.
         for iy in xrange(self.nk):
-            for ix in xrange(iy, self.nk):  # Hermitian, so only need to do half of Fourier-modes
+            for ix in xrange(self.nk):
+                # Hermitian, so don't need to compute every entry (some are just conjugates)
+                # However, since the origin is at (Nk/2, Nk/2) instead of (0,0), the rules are
+                # somewhat complicated:
+                # 1) Always compute first row and first column, no conjugate to fill in this case
+                # 2) Always compute if ix < iy, fill in conjugate at (-ix, -iy)
+                # 3) Do ix == iy if ix <= Nk/2, fill in conjugate at (-ix, -ix)
+                if ix != 0 and iy != 0 and ix > iy:
+                    break
+                if ix == iy and ix > self.nk/2:
+                    break
                 w = np.diag(1.0/pk[:, iy, ix])
                 root_w = np.sqrt(w)
                 A = np.dot(root_w, PSF_eff_kimgs[:, :, iy, ix])
@@ -957,9 +967,10 @@ class ChromaticRealGalaxy(ChromaticSum):
                     dx = np.zeros((len(self.SEDs), len(self.SEDs)), dtype=complex)
 
                 coef[:, iy, ix] = x
-                coef[:, -iy, -ix] = np.conj(x)
                 Sigma[:, :, iy, ix] = dx
-                Sigma[:, :, -iy, -ix] = np.conj(dx)
+                if ix != 0 and iy != 0:
+                    coef[:, -iy, -ix] = np.conj(x)
+                    Sigma[:, :, -iy, -ix] = np.conj(dx)
 
         # Set up objlist as required since this is a subclass of ChromaticSum.
         objlist = []
