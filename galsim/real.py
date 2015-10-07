@@ -788,6 +788,22 @@ def _parse_files_dirs(file_name, image_dir, dir, noise_dir):
 
 
 def _complex_to_real(a):
+    """ Utility to transform complex vector or matrix into equivalent real vector or matrix.
+    For a vector, an example is :
+                         [a]
+    [ a + i*b ]    ->    [b]
+    [ c + i*d ]          [c]
+                         [d]
+
+    For a matrix, an example is:
+                              [a  -b  0   0]
+    [a + i*b   0      ]  ->   [b   a  0   0]
+    [0         c + i*d]       [0   0  c  -d]
+                              [0   0  d   c]
+
+    Linear algebra performed with the real vectors/matrices is then equivalent to linear algebra
+    performed on the complex vectors/matrices.
+    """
     import numpy as np
     if a.ndim == 1:
         out = np.empty((2*a.shape[0],), dtype=float)
@@ -805,21 +821,26 @@ def _complex_to_real(a):
                 out[2*i+1, 2*j+1] = a[i, j].real
         return out
     else:
-        raise ValueError("Unsupport dimension.")
+        raise ValueError("Unsupported dimension.")
+
 
 def _real_to_complex(a):
+    """ Undoes _complex_to_real.  See that docstring.
+    """
     import numpy as np
     if a.ndim == 1:
         out = np.empty((a.shape[0]/2,), dtype=complex)
         for i in range(a.shape[0]/2):
             out[i] = a[2*i] + 1j * a[2*i+1]
         return out
-    else:
+    elif a.ndim == 2:
         out = np.empty((a.shape[0]/2, a.shape[1]/2), dtype=complex)
         for i in range(a.shape[0]/2):
             for j in range(a.shape[1]/2):
                 out[i, j] = a[2*i, 2*j] - 1j * a[2*i, 2*j+1]
         return out
+    else:
+        raise ValueError("Unsupported dimension.")
 
 
 class ChromaticRealGalaxy(ChromaticSum):
