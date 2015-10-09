@@ -7,3 +7,6 @@ test*out
 *.out
 *.toc
 *.sh
+*.fdb_latexmk
+*.fls
+*.synctex.gz
