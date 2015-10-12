@@ -1,7 +1,7 @@
 # This script is featured on pyast issue page:
 # https://github.com/timj/starlink-pyast/issues/8
 # It also constructs the file tanflip.fits, which we use in the test suite.
-# PyAst natively flipps the order of RA and Dec when writing this file as a TAN WCS.
+# PyAst natively flips the order of RA and Dec when writing this file as a TAN WCS.
 # This was a kind of input that wasn't otherwise featured in our test suite, but is
 # apparently allowed by the fits standard.  So I added it.
 
