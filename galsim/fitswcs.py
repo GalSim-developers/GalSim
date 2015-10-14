@@ -557,6 +557,8 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
             # The easiest way I found to check for them is that the string TPN is in the string 
             # version of wcsinfo.  So check for that and set success = False in that case.
             if 'TPN' in str(self._wcsinfo): success = False
+            # Likewise for SIP.  MPF seems to be an appropriate string to look for.
+            if 'MPF' in str(self._wcsinfo): success = False
             if not success:
                 # This should always work, since it uses starlinks own proprietary encoding, but 
                 # it won't necessarily be readable by ds9.

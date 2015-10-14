@@ -77,7 +77,7 @@ class RealGalaxy(GSObject):
     comments.
 
     If you don't set a flux, the flux of the returned object will be the flux of the original
-    COSMOS data, scaled to correspond to a 1 second HST exposure.  If you want a flux approproriate
+    COSMOS data, scaled to correspond to a 1 second HST exposure.  If you want a flux appropriate
     for a longer exposure, you can set flux_rescale = the exposure time.  You can also account
     for exposures taken with a different telescope diameter than the HST 2.4 meter diameter
     this way.
@@ -327,7 +327,7 @@ class RealGalaxyCatalog(object):
     1. A small example catalog is distributed with the GalSim distribution.  This catalog only
        has 100 galaxies, so it is not terribly useful as a representative galaxy population.
        But for simplistic use cases, it might be sufficient.  We use it for our unit tests and
-       in dome of the demo scripts (demo6, demo10, and demo11).  To use this catalog, you would
+       in some of the demo scripts (demo6, demo10, and demo11).  To use this catalog, you would
        initialize with
 
            >>> rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog_example.fits',
