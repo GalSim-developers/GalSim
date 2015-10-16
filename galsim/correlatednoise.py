@@ -1526,10 +1526,11 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
 
 
 class CovarianceSpectrum(object):
-    def __init__(self, Sigma, stepk, nk, SEDs):
+    def __init__(self, Sigma, stepk, nk, SEDs, in_area):
         self.stepk = stepk
         self.nk = nk
         self.SEDs = SEDs
+        self.in_area = in_area
         if isinstance(Sigma, dict):
             self.Sigma = Sigma
         else:
@@ -1559,46 +1560,46 @@ class CovarianceSpectrum(object):
         Sigma = {}
         for k, v in self.Sigma.iteritems():
             Sigma[k] = v.expand(scale)
-        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs)
+        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs, self.in_area)
 
     def dilate(self, scale):
         Sigma = {}
         for k, v in self.Sigma.iteritems():
             Sigma[k] = v.dilate(scale) / scale**4
-        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs)
+        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs, self.in_area)
 
     def magnify(self, scale):
         Sigma = {}
         for k, v in self.Sigma.iteritems():
             Sigma[k] = v.magnify(scale)
-        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs)
+        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs, self.in_area)
 
     def lens(self, g1, g2, mu):
         Sigma = {}
         for k, v in self.Sigma.iteritems():
             Sigma[k] = v.lens(g1, g2, mu)
-        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs)
+        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs, self.in_area)
 
     def rotate(self, theta):
         Sigma = {}
         for k, v in self.Sigma.iteritems():
             Sigma[k] = v.rotate(theta)
-        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs)
+        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs, self.in_area)
 
     def shear(self, *args, **kwargs):
         Sigma = {}
         for k, v in self.Sigma.iteritems():
             Sigma[k] = v.shear(*args, **kwargs)
-        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs)
+        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs, self.in_area)
 
     def transform(self, dudx, dudy, dvdx, dvdy):
         Sigma = {}
         for k, v in self.Sigma.iteritems():
             Sigma[k] = v.transform(dudx, dudy, dvdx, dvdy)
-        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs)
+        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs, self.in_area)
 
     def withScaledVariance(self, variance_ratio):
         Sigma = {}
         for k, v in self.Sigma.iteritems():
             Sigma[k] = v * variance_ratio
-        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs)
+        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs, self.in_area)
