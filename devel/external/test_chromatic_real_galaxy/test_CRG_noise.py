@@ -8,16 +8,6 @@ def test_CRG_noise(args):
     """Test noise propagation in ChromaticRealGalaxy
     """
     t0 = time.time()
-    in_array = (np.arange(args.in_Nx) - args.in_Nx/2) * args.in_scale
-    in_extent = [-args.in_Nx*args.in_scale/2,
-                 args.in_Nx*args.in_scale/2,
-                 -args.in_Nx*args.in_scale/2,
-                 args.in_Nx*args.in_scale/2]
-    out_array = (np.arange(args.out_Nx) - args.out_Nx/2) * args.out_scale
-    out_extent = [-args.out_Nx*args.out_scale/2,
-                  args.out_Nx*args.out_scale/2,
-                  -args.out_Nx*args.out_scale/2,
-                  args.out_Nx*args.out_scale/2]
 
     print "Constructing chromatic PSFs"
     in_PSF = galsim.ChromaticAiry(lam=700., diam=2.4)
@@ -39,9 +29,9 @@ def test_CRG_noise(args):
 
     print "Construction input noise correlation functions"
     rng = galsim.BaseDeviate(args.seed)
-    in_xis = [galsim.getCOSMOSNoise(
-                  cosmos_scale=args.in_scale,
-                  rng=rng).dilate(1 + i * 0.05).rotate(5 * i * galsim.degrees)
+    in_xis = [galsim.getCOSMOSNoise(cosmos_scale=args.in_scale, rng=rng)
+              .dilate(1 + i * 0.05)
+              .rotate(5 * i * galsim.degrees)
               for i in xrange(args.Nim)]
 
     print "Creating noise images"
@@ -53,7 +43,6 @@ def test_CRG_noise(args):
             img.addNoise(xi)
             imgs.append(img)
         img_sets.append(imgs)
-    del imgs
 
     print "Constructing `ChromaticRealGalaxy`s"
     crgs = []
@@ -89,21 +78,16 @@ def test_CRG_noise(args):
 
     if args.plot:
         import matplotlib.pyplot as plt
+        out_array = (np.arange(args.out_Nx) - args.out_Nx/2) * args.out_scale
+        out_extent = [-args.out_Nx*args.out_scale/2,
+                      args.out_Nx*args.out_scale/2,
+                      -args.out_Nx*args.out_scale/2,
+                      args.out_Nx*args.out_scale/2]
 
         # Sample image
         fig = plt.figure(figsize=(5, 5))
         ax = fig.add_subplot(111)
         ax.imshow(out_imgs[0].array, extent=out_extent)
-        ax.set_title("sample output image")
-        ax.set_xlabel("x")
-        ax.set_ylabel("y")
-        # ax.colorbar()
-        fig.show()
-
-        # Sample image
-        fig = plt.figure(figsize=(5, 5))
-        ax = fig.add_subplot(111)
-        ax.imshow(out_imgs[1].array, extent=out_extent)
         ax.set_title("sample output image")
         ax.set_xlabel("x")
         ax.set_ylabel("y")
