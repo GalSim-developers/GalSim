@@ -84,8 +84,9 @@ def test_CRG_noise(args):
                       -args.out_Nx*args.out_scale/2,
                       args.out_Nx*args.out_scale/2]
 
-        # Sample image
         fig = plt.figure(figsize=(5, 5))
+
+        # Sample image
         ax = fig.add_subplot(111)
         ax.imshow(out_imgs[0].array, extent=out_extent)
         ax.set_title("sample output image")
