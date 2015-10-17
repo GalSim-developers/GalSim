@@ -20,8 +20,7 @@ import os
 import sys
 
 from galsim_test_helpers import *
-path, filename = os.path.split(__file__)
-datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
+
 try:
     import galsim
 except ImportError:
@@ -202,8 +201,6 @@ def test_real_galaxy_saved():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-
 
 if __name__ == "__main__":
     test_real_galaxy_ideal()
