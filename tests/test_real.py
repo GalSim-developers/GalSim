@@ -128,7 +128,7 @@ def test_real_galaxy_ideal():
                     targ_PSF = galsim.Gaussian(fwhm = tpf).shear(g1=tps1, g2=tps2)
                     # simulate image
                     sim_image = galsim.simReal(
-                            rg, targ_PSF, tps, 
+                            rg, targ_PSF, tps,
                             g1 = targ_applied_shear1, g2 = targ_applied_shear2,
                             rand_rotate = False, target_flux = fake_gal_flux)
                     # galaxy sigma, in units of pixels on the final image
