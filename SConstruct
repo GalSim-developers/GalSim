@@ -937,7 +937,7 @@ def TryScript(config,text,executable):
 
     # Run the given executable with the source file we just built
     output = config.sconf.confdir.File(f + '.out')
-    node = config.env.Command(output, source, executable + " < $SOURCE >& $TARGET")
+    node = config.env.Command(output, source, executable + " < $SOURCE > $TARGET 2>&1")
     ok = config.sconf.BuildNodes(node)
 
     config.sconf.env['SPAWN'] = save_spawn
