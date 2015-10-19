@@ -1728,8 +1728,9 @@ def test_chromatic_image_setup():
 
     # Just going to try drawing a few different combinations of profiles to make sure that
     # the automatic image construction logic doesn't crash.  Most possibilities effectively get
-    # tested in other scripts above anyway, so just focus on possibilities near known previous
-    # failures here.
+    # tested in other scripts above anyway, so just focus on possibilities related to known previous
+    # failures here; specifically, drawing a convolution of two inseparable profiles while
+    # specifying `nx`, `ny`, and `scale` as keywords.
     img = galsim.Convolve(gal1+gal2, psf).drawImage(bandpass)
     img2 = galsim.Convolve(gal1+gal2, psf).drawImage(bandpass, nx=32, ny=32, scale=0.2)
     bds = galsim.BoundsI(1, 32, 1, 32)
