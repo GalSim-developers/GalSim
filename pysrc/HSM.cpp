@@ -112,7 +112,7 @@ struct PyHSMParams {
             "                   correction.\n"
             "ksb_sig_weight     The width of the weight function for the KSB method.  Normally,\n"
             "                   this is computed from the measured moments of the galaxy image.\n"
-            "                   This keyword overrides this calculation."
+            "                   This keyword overrides this calculation.\n"
             "ksb_sig_factor     Factor by which to multiply the weight function width for the KSB\n"
             "                   method.  Default is 1.0.\n"
             "failed_moments     Value to report for ellipticities and resolution factor if shape\n"
