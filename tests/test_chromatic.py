@@ -1738,9 +1738,9 @@ def test_chromatic_image_setup():
                                   "Got wrong size output image using nx=, ny= keywords.")
     np.testing.assert_array_equal(img3.array.shape, (32, 32),
                                   "Got wrong size output image using bounds= keyword.")
-    np.testing.assert_almost_equal(img2.scale, 0.2,
+    np.testing.assert_almost_equal(img2.scale, 0.2, 9,
                                    "Got wrong output image scale using nx=, ny= keywords.")
-    np.testing.assert_almost_equal(img3.scale, 0.2,
+    np.testing.assert_almost_equal(img3.scale, 0.2, 9,
                                    "Got wrong output image scale using bounds= keyword.")
 
     t2 = time.time()
