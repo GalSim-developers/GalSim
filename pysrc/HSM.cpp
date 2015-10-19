@@ -38,7 +38,7 @@ struct PyHSMParams {
 
     static void wrap() {
 
-        static const char* doc = 
+        static const char* doc =
             "HSMParams stores a set of numbers that determine how the moments/shape estimation\n"
             "routines make speed/accuracy tradeoff decisions and/or store their results.\n"
             "\n"
@@ -110,13 +110,19 @@ struct PyHSMParams {
             "                   exception.\n"
             "ksb_moments_max    Use moments up to ksb_moments_max order for KSB method of PSF\n"
             "                   correction.\n"
+            "ksb_sig_weight     The width of the weight function for the KSB method.  Normally,\n"
+            "                   this is computed from the measured moments of the galaxy image.\n"
+            "                   This keyword overrides this calculation."
+            "ksb_sig_factor     Factor by which to multiply the weight function width for the KSB\n"
+            "                   method.  Default is 1.0.\n"
             "failed_moments     Value to report for ellipticities and resolution factor if shape\n"
             "                   measurement fails.\n";
 
         bp::class_<HSMParams> pyHSMParams("HSMParams", doc, bp::no_init);
         pyHSMParams
             .def(bp::init<
-                 double, double, double, int, int, long, long, double, double, double, int, double>(
+                 double, double, double, int, int, long, long, double, double, double, int, double,
+                 double, double>(
                      (bp::arg("nsig_rg")=3.0,
                       bp::arg("nsig_rg2")=3.6,
                       bp::arg("max_moment_nsig2")=25.0,
@@ -128,6 +134,8 @@ struct PyHSMParams {
                       bp::arg("max_amoment")=8000.,
                       bp::arg("max_ashift")=15.,
                       bp::arg("ksb_moments_max")=4,
+                      bp::arg("ksb_sig_weight")=0.0,
+                      bp::arg("ksb_sig_factor")=1.0,
                       bp::arg("failed_moments")=-1000.))
             )
             .def(bp::init<const HSMParams&>())
@@ -142,6 +150,8 @@ struct PyHSMParams {
             .def_readonly("max_amoment",&HSMParams::max_amoment)
             .def_readonly("max_ashift",&HSMParams::max_ashift)
             .def_readonly("ksb_moments_max",&HSMParams::ksb_moments_max)
+            .def_readonly("ksb_sig_weight",&HSMParams::ksb_sig_weight)
+            .def_readonly("ksb_sig_factor",&HSMParams::ksb_sig_factor)
             .def_readonly("failed_moments",&HSMParams::failed_moments)
             .enable_pickling()
             ;
@@ -160,7 +170,7 @@ struct PyShapeData {
         float corrected_g1, float corrected_g2, std::string meas_type,
         float corrected_shape_err, std::string correction_method,
         float resolution_factor, float psf_sigma,
-        float psf_e1, float psf_e2, std::string error_message) 
+        float psf_e1, float psf_e2, std::string error_message)
     {
         CppShapeData* data = new CppShapeData();
         data->image_bounds = image_bounds;
@@ -190,17 +200,17 @@ struct PyShapeData {
 
     template <typename U, typename V>
     static void wrapTemplates() {
-        typedef CppShapeData (*FAM_func)(const BaseImage<U>&, const BaseImage<int>&, 
+        typedef CppShapeData (*FAM_func)(const BaseImage<U>&, const BaseImage<int>&,
                                          double, double, Position<double>,
                                          boost::shared_ptr<HSMParams>);
         bp::def("_FindAdaptiveMomView",
                 FAM_func(&FindAdaptiveMomView),
-                (bp::arg("object_image"), bp::arg("object_mask_image"), bp::arg("guess_sig")=5.0, 
-                 bp::arg("precision")=1.0e-6, bp::arg("guess_centroid")=Position<double>(0.,0.), 
+                (bp::arg("object_image"), bp::arg("object_mask_image"), bp::arg("guess_sig")=5.0,
+                 bp::arg("precision")=1.0e-6, bp::arg("guess_centroid")=Position<double>(0.,0.),
                  bp::arg("hsmparams")=bp::object()),
                 "Find adaptive moments of an image (with some optional args).");
 
-        typedef CppShapeData (*ESH_func)(const BaseImage<U>&, const BaseImage<V>&, 
+        typedef CppShapeData (*ESH_func)(const BaseImage<U>&, const BaseImage<V>&,
                                          const BaseImage<int>&, float, const char *,
                                          const std::string&, double, double, double, Position<double>,
                                          boost::shared_ptr<HSMParams>);
@@ -278,4 +288,3 @@ void pyExportHSM() {
 
 } // namespace hsm
 } // namespace galsim
-
