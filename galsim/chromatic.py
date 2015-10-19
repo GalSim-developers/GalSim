@@ -75,8 +75,6 @@ class ChromaticObject(object):
     The drawImage() method draws the object as observed through a particular bandpass, so the
     function parameters are somewhat different.  See the docstring for ChromaticObject.drawImage()
     for more details.
-
-    The drawKImage() method is not yet implemented.
     """
 
     # In general, `ChromaticObject` and subclasses should provide the following interface:
@@ -343,6 +341,33 @@ class ChromaticObject(object):
         return image
 
     def drawKImage(self, bandpass, re=None, im=None, integrator='trapezoidal', **kwargs):
+        """Base implementation for drawing the Fourier transform of a ChromaticObject.
+
+        The task of drawKImage() in a chromatic context is exactly analogous to the task of
+        drawImage() in a chromatic context: to integrate the `SED` * `bandpass` weighted Fourier
+        profiles over wavelength.
+
+        See drawImage() for details on integration options.
+
+        @param bandpass         A Bandpass object representing the filter against which to
+                                integrate.
+        @param re               Optionally, the `Image`s to draw the real part result onto.
+                                (See GSObject.drawKImage() for details.)  If `re` is None, then `im`
+                                must also be None.  [default: None]
+        @param im               Optionally, the `Image`s to draw the imaginary part result onto.
+                                (See GSObject.drawKImage() for details.)  If `im` is None, then `re`
+                                must also be None. [default: None]
+        @param integrator       When doing the exact evaluation of the profile, this argument should
+                                be one of the image integrators from galsim.integ, or a string
+                                'trapezoidal' or 'midpoint', in which case the routine will use a
+                                SampleIntegrator or ContinuousIntegrator depending on whether or not
+                                the object has a `wave_list`.  [default: 'trapezoidal',
+                                which will try to select an appropriate integrator using the
+                                trapezoidal integration rule automatically.]
+        @param **kwargs         For all other kwarg options, see GSObject.drawKImage()
+
+        @returns the drawn Image.
+        """
         # To help developers debug extensions to ChromaticObject, check that ChromaticObject has
         # the expected attributes
         if self.separable: assert hasattr(self, 'SED')
