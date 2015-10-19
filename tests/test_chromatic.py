@@ -1717,7 +1717,7 @@ def test_ChromaticAiry():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def chromatic_image_setup():
+def test_chromatic_image_setup():
     """Test ability for chromatic drawImage to setup output image."""
     import time
     t1 = time.time()
@@ -1730,14 +1730,18 @@ def chromatic_image_setup():
     # the automatic image construction logic doesn't crash.  Most possibilities effectively get
     # tested in other scripts above anyway, so just focus on possibilities near known previous
     # failures here.
-    img = galsim.Convolve(g1+g2, psf).drawImage(bandpass)
-    img2 = galsim.Convolve(g1+g2, psf).drawImage(bandpass, nx=32, ny=32, scale=0.2)
+    img = galsim.Convolve(gal1+gal2, psf).drawImage(bandpass)
+    img2 = galsim.Convolve(gal1+gal2, psf).drawImage(bandpass, nx=32, ny=32, scale=0.2)
     bds = galsim.BoundsI(1, 32, 1, 32)
-    img3 = galsim.Convolve(g1+g2, psf).drawImage(bandpass, bounds=bds, scale=0.2)
-    np.testing.assert_array_equal(img2.array.shape, (32, 32))
-    np.testing.assert_array_equal(img3.array.shape, (32, 32))
-    np.testing.assert_almost_equal(img2.scale, 0.2)
-    np.testing.assert_almost_equal(img3.scale, 0.2)
+    img3 = galsim.Convolve(gal1+gal2, psf).drawImage(bandpass, bounds=bds, scale=0.2)
+    np.testing.assert_array_equal(img2.array.shape, (32, 32),
+                                  "Got wrong size output image using nx=, ny= keywords.")
+    np.testing.assert_array_equal(img3.array.shape, (32, 32),
+                                  "Got wrong size output image using bounds= keyword.")
+    np.testing.assert_almost_equal(img2.scale, 0.2,
+                                   "Got wrong output image scale using nx=, ny= keywords.")
+    np.testing.assert_almost_equal(img3.scale, 0.2,
+                                   "Got wrong output image scale using bounds= keyword.")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
