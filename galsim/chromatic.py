@@ -290,6 +290,7 @@ class ChromaticObject(object):
         kwargs.pop('wcs', None)
         kwargs.pop('nx', None)
         kwargs.pop('ny', None)
+        kwargs.pop('bounds', None)
 
         # determine combined self.wave_list and bandpass.wave_list
         wave_list = self._getCombinedWaveList(bandpass)
@@ -893,6 +894,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         kwargs.pop('wcs', None)
         kwargs.pop('nx', None)
         kwargs.pop('ny', None)
+        kwargs.pop('bounds', None)
 
         # determine combination of self.wave_list and bandpass.wave_list
         wave_list = self._getCombinedWaveList(bandpass)
@@ -1573,6 +1575,14 @@ class ChromaticSum(ChromaticObject):
         # Use given add_to_image for the first one, then add_to_image=False for the rest.
         image = self.objlist[0].drawImage(
                 bandpass, image=image, add_to_image=add_to_image, **kwargs)
+        # at this point, image exists, so remove kwargs related to setting up the image
+        # remove kwargs that would interfere with image
+        kwargs.pop('dtype', None)
+        kwargs.pop('scale', None)
+        kwargs.pop('wcs', None)
+        kwargs.pop('nx', None)
+        kwargs.pop('ny', None)
+        kwargs.pop('bounds', None)
         for obj in self.objlist[1:]:
             image = obj.drawImage(
                     bandpass, image=image, add_to_image=True, **kwargs)
@@ -1849,6 +1859,13 @@ class ChromaticConvolution(ChromaticObject):
                     tmplist.append(summand)
                     tmpobj = ChromaticConvolution(tmplist)
                     # add to previously started image
+                    # remove kwargs that would interfere with image
+                    kwargs.pop('dtype', None)
+                    kwargs.pop('scale', None)
+                    kwargs.pop('wcs', None)
+                    kwargs.pop('nx', None)
+                    kwargs.pop('ny', None)
+                    kwargs.pop('bounds', None)
                     image = tmpobj.drawImage(bandpass, image=image, integrator=integrator,
                                              iimult=iimult, add_to_image=True, **kwargs)
                 # Return the image here, breaking the loop early.  If there are two ChromaticSum
@@ -1868,6 +1885,7 @@ class ChromaticConvolution(ChromaticObject):
         kwargs.pop('wcs', None)
         kwargs.pop('nx', None)
         kwargs.pop('ny', None)
+        kwargs.pop('bounds', None)
 
         # Sort these atomic objects into separable and inseparable lists, and collect
         # the spectral parts of the separable profiles.
@@ -2159,8 +2177,8 @@ class ChromaticAiry(ChromaticObject):
         if diam is not None:
             self.lam_over_diam = (1.e-9*lam/diam)*galsim.radians/scale_unit
         else:
-            self.lam_over_diam = lam_over_diam
-        self.lam = lam
+            self.lam_over_diam = float(lam_over_diam)
+        self.lam = float(lam)
 
         self.kwargs = kwargs
         self.scale_unit = scale_unit
