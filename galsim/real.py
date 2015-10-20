@@ -980,8 +980,8 @@ class ChromaticRealGalaxy(ChromaticSum):
             objlist.append(sed * galsim.InterpolatedKImage(re, im))
 
         Sigma_dict = {}
-        for i in range(len(self.SEDs)):
-            for j in range(i, len(self.SEDs)):
+        for i in xrange(len(self.SEDs)):
+            for j in xrange(i, len(self.SEDs)):
                 rearray = Sigma[i, j].real
                 imarray = Sigma[i, j].imag
                 re = galsim.ImageD(np.ascontiguousarray(rearray), scale=self.stepk)
