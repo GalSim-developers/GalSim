@@ -147,10 +147,12 @@ class ChromaticObject(object):
         Return a monochromatic profile of a separable chromatic object that can be scaled to give
         the monochromatic profile at any wavelength.
         """
-        candidate_waves = [bandpass.effective_wavelength,
-                           0.5 * (bandpass.blue_limit + bandpass.red_limit),
-                           bandpass.blue_limit,
-                           bandpass.red_limit]
+        bpwave = bandpass.effective_wavelength
+        candidate_waves = [bpwave, 0.5 * (bandpass.blue_limit + bandpass.red_limit)]
+        candidate_waves = np.union1d(candidate_waves, bandpass.wave_list)
+        candidate_waves = np.union1d(candidate_waves, self.wave_list)
+        candidate_waves = candidate_waves[np.argsort(np.abs(candidate_waves - bpwave))]
+
         for w in candidate_waves:
             prof0 = self.evaluateAtWavelength(w)
             if prof0.flux != 0:
