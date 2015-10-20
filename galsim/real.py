@@ -980,38 +980,17 @@ class ChromaticRealGalaxy(ChromaticSum):
             im = galsim.Image(np.ascontiguousarray(coef[i].imag), scale=self.stepk)
             objlist.append(sed * galsim.InterpolatedKImage(re, im))
 
-        self.covspec = galsim.CovarianceSpectrum(
-            Sigma, self.stepk, self.nk, self.SEDs,
-            imgs[0].array.shape[0]*imgs[0].array.shape[1] * imgs[0].scale**2)
+        Sigma_dict = {}
+        for i in range(len(self.SEDs)):
+            for j in range(i, len(self.SEDs)):
+                rearray = Sigma[i, j].real
+                imarray = Sigma[i, j].imag
+                re = galsim.ImageD(np.ascontiguousarray(rearray), scale=self.stepk)
+                im = galsim.ImageD(np.ascontiguousarray(imarray), scale=self.stepk)
+                obj = galsim.InterpolatedKImage(re, im) / (
+                       imgs[0].array.shape[0] * imgs[0].array.shape[1] * imgs[0].scale**2)
+                Sigma_dict[(i, j)] = obj
+
+        self.covspec = galsim.CovarianceSpectrum(Sigma_dict, self.stepk, self.nk, self.SEDs)
+
         super(ChromaticRealGalaxy, self).__init__(objlist)
-
-
-# Attach noise generation method to ChromaticSum instead of RealChromaticGalaxy, since this is what
-# transformed `RealChromaticGalaxy`s turn into.  We're placing this method here though since its
-# only current possible use is for RealChromaticGalaxy and not generic ChromaticSum's.
-def _noiseWithPSF(self, bandpass, PSF, wcs, rng=None):
-    import numpy as np
-    Sigma = self.covspec.Sigma
-    nk = self.covspec.nk
-    stepk = self.covspec.stepk
-    SEDs = self.covspec.SEDs
-    PSF_eff_kimgs = np.empty((len(SEDs), nk, nk), dtype=complex)
-    for i, sed in enumerate(SEDs):
-        star = galsim.Gaussian(fwhm=1e-12) * sed  # Could use a delta-fn here...
-        # assume that PSF does not include pixel contribution, so add it in.
-        conv = galsim.Convolve(PSF, star, galsim.Pixel(wcs.scale))
-        re, im = conv.drawKImage(bandpass, nx=nk, ny=nk, scale=stepk)
-        PSF_eff_kimgs[i] = re.array + 1j * im.array
-    pkout = np.zeros((nk, nk), dtype=float)
-    for i in xrange(len(SEDs)):
-        for j in xrange(i, len(SEDs)):
-            re, im = Sigma[(i, j)].drawKImage(nx=nk, ny=nk, scale=stepk)
-            s = re.array + 1j * im.array
-            pkout += (np.conj(PSF_eff_kimgs[i]) * s * PSF_eff_kimgs[j] *
-                      (2 if i != j else 1)).real
-    re = galsim.Image(pkout, scale=stepk)
-    iki = galsim.InterpolatedKImage(re, re*0)  # imag part should be zero.
-    iki *= wcs.pixelArea()**2 / self.covspec.in_area  # determined these empirically
-    return galsim.correlatednoise._BaseCorrelatedNoise(rng, iki, wcs)
-
-ChromaticSum.noiseWithPSF = _noiseWithPSF

@@ -1526,26 +1526,28 @@ class UncorrelatedNoise(_BaseCorrelatedNoise):
 
 
 class CovarianceSpectrum(object):
-    def __init__(self, Sigma, stepk, nk, SEDs, in_area):
+    """Class to hold a `ChromaticSum` noise covariance spectrum (which is a generalization of a
+    power spectrum or equivalently a correlation function).
+
+    Analogous to how a galsim.CorrelatedNoise object stores the variance and covariance of a
+    galsim.Image object, a galsim.CovarianceSpectrum stores the variance and covariance of the
+    Fourier mode amplitudes in different components of a `ChromaticSum`.  Note that the covariance
+    in question exists between different SED-components of the `ChromaticSum`, and not between
+    different Fourier modes, which are assumed to be uncorrelated.  This structure arises naturally
+    for `RealChromaticGalaxy`s (see devel/modules/CGNotes.pdf for more details).
+
+    @param Sigma   A dictionary whose keys are tuples numerically indicating a pair of ChromaticSum
+                   components whose Fourier mode amplitude covariances are described by the
+                   corresponding GSObject values.
+    @param stepk   Fourier grid spacing to use when drawing covariance objects.
+    @param nk      Number of grid points to use when drawing covariance objects.
+    @param SEDs    SEDs of associated ChromaticSum components.
+    """
+    def __init__(self, Sigma, stepk, nk, SEDs):
+        self.Sigma = Sigma
         self.stepk = stepk
         self.nk = nk
         self.SEDs = SEDs
-        self.in_area = in_area
-        if isinstance(Sigma, dict):
-            self.Sigma = Sigma
-        else:
-            shape = Sigma.shape
-            if len(shape) != 4 or shape[0] != shape[1] or shape[2] != shape[3]:
-                raise ValueError("Sigma must have shape [NSED, NSED, Nk, Nk]")
-            self.Sigma = {}
-            for i in range(len(self.SEDs)):
-                for j in range(i, len(self.SEDs)):
-                    rearray = Sigma[i, j].real
-                    imarray = Sigma[i, j].imag
-                    re = galsim.ImageD(rearray.copy(), scale=self.stepk)
-                    im = galsim.ImageD(imarray.copy(), scale=self.stepk)
-                    obj = galsim.InterpolatedKImage(re, im)
-                    self.Sigma[(i, j)] = obj
 
     def __mul__(self, variance_ratio):
         return self.withScaledVariance(variance_ratio)
@@ -1560,46 +1562,75 @@ class CovarianceSpectrum(object):
         Sigma = {}
         for k, v in self.Sigma.iteritems():
             Sigma[k] = v.expand(scale)
-        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs, self.in_area)
+        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs)
 
     def dilate(self, scale):
         Sigma = {}
         for k, v in self.Sigma.iteritems():
             Sigma[k] = v.dilate(scale) / scale**4
-        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs, self.in_area)
+        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs)
 
     def magnify(self, scale):
         Sigma = {}
         for k, v in self.Sigma.iteritems():
             Sigma[k] = v.magnify(scale)
-        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs, self.in_area)
+        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs)
 
     def lens(self, g1, g2, mu):
         Sigma = {}
         for k, v in self.Sigma.iteritems():
             Sigma[k] = v.lens(g1, g2, mu)
-        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs, self.in_area)
+        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs)
 
     def rotate(self, theta):
         Sigma = {}
         for k, v in self.Sigma.iteritems():
             Sigma[k] = v.rotate(theta)
-        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs, self.in_area)
+        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs)
 
     def shear(self, *args, **kwargs):
         Sigma = {}
         for k, v in self.Sigma.iteritems():
             Sigma[k] = v.shear(*args, **kwargs)
-        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs, self.in_area)
+        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs)
 
     def transform(self, dudx, dudy, dvdx, dvdy):
         Sigma = {}
         for k, v in self.Sigma.iteritems():
             Sigma[k] = v.transform(dudx, dudy, dvdx, dvdy)
-        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs, self.in_area)
+        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs)
 
     def withScaledVariance(self, variance_ratio):
         Sigma = {}
         for k, v in self.Sigma.iteritems():
             Sigma[k] = v * variance_ratio
-        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs, self.in_area)
+        return CovarianceSpectrum(Sigma, self.stepk, self.nk, self.SEDs)
+
+    def toNoise(self, bandpass, PSF, wcs, rng=None):
+        """ Derive the galsim.CorrelatedNoise object for the associated ChromaticSum when convolved
+        with `PSF` and drawn through `bandpass` onto pixels with specified `wcs`.
+
+        @param bandpass   galsim.Bandpass object representing filter image is drawn through.
+        @param PSF        output chromatic PSF to convolve by.
+        @param wcs        WCS of output pixel scale.
+        @param rng        Random number generator to forward to resulting CorrelatedNoise object.
+        @returns  CorrelatedNoise object.
+        """
+        import numpy as np
+        PSF_eff_kimgs = np.empty((len(self.SEDs), self.nk, self.nk), dtype=complex)
+        for i, sed in enumerate(self.SEDs):
+            # Assume that PSF does not yet include pixel contribution, so add it in.
+            conv = galsim.Convolve(PSF, galsim.Pixel(wcs.scale)) * sed
+            re, im = conv.drawKImage(bandpass, nx=self.nk, ny=self.nk, scale=self.stepk)
+            PSF_eff_kimgs[i] = re.array + 1j * im.array
+        pkout = np.zeros((self.nk, self.nk), dtype=float)
+        for i in xrange(len(self.SEDs)):
+            for j in xrange(i, len(self.SEDs)):
+                re, im = self.Sigma[(i, j)].drawKImage(nx=self.nk, ny=self.nk, scale=self.stepk)
+                s = re.array + 1j * im.array
+                pkout += (np.conj(PSF_eff_kimgs[i]) * s * PSF_eff_kimgs[j] *
+                          (2 if i != j else 1)).real
+        re = galsim.Image(pkout, scale=self.stepk)
+        iki = galsim.InterpolatedKImage(re, re*0)  # image part should be zero
+        iki *= wcs.pixelArea()**2  # determined this empirically
+        return galsim.correlatednoise._BaseCorrelatedNoise(rng, iki, wcs)

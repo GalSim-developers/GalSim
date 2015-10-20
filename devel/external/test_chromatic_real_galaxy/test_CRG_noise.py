@@ -52,7 +52,7 @@ def test_CRG_noise(args):
                 galsim.ChromaticRealGalaxy((imgs, bands, SEDs, in_xis, in_PSF), maxk=maxk))
             bar.update()
 
-    noise = crgs[0].noiseWithPSF(visband, out_PSF, galsim.wcs.PixelScale(args.out_scale))
+    noise = crgs[0].covspec.toNoise(visband, out_PSF, galsim.wcs.PixelScale(args.out_scale))
 
     print "Convolving by output PSF"
     objs = [galsim.Convolve(crg, out_PSF) for crg in crgs]
