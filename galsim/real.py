@@ -830,9 +830,9 @@ class ChromaticRealGalaxy(ChromaticSum):
         if isinstance(chromatic_real_galaxy_catalog, tuple):
             # Special (undocumented) way to build a ChromaticRealGalaxy without needing the rgc
             # directly by providing the things we need from it.
-            imgs, tputs, SEDs, xis, PSF = chromatic_real_galaxy_catalog
+            imgs, bands, SEDs, xis, PSF = chromatic_real_galaxy_catalog
 
-            self.SEDs = [sed.withFlux(1.0, tputs[0]) for sed in SEDs]
+            self.SEDs = [sed.withFlux(1.0, bands[0]) for sed in SEDs]
 
             use_index = 0  # For the logger statements below.
             if logger:
@@ -841,7 +841,7 @@ class ChromaticRealGalaxy(ChromaticSum):
         else:
             raise ValueError("Chromatic Real Galaxy Catalog not implemented yet!")
 
-        # TODO: code to query not-yet-existing catalog for imgs, tputs, SEDs, xis, PSF
+        # TODO: code to query not-yet-existing catalog for imgs, bands, SEDs, xis, PSF
 
         # Need to sample three different types of objects on the same Fourier grid: the input
         # effective PSFs, the input images, and the input correlation-functions/power-spectra.
@@ -861,8 +861,8 @@ class ChromaticRealGalaxy(ChromaticSum):
         # each of the filters provided) and also by the input images' pixel scales.
 
         img_maxk = np.min([np.pi/img.scale for img in imgs])
-        marginal_PSFs = [PSF.evaluateAtWavelength(tp.blue_limit) for tp in tputs]
-        marginal_PSFs += [PSF.evaluateAtWavelength(tp.red_limit) for tp in tputs]
+        marginal_PSFs = [PSF.evaluateAtWavelength(band.blue_limit) for band in bands]
+        marginal_PSFs += [PSF.evaluateAtWavelength(band.red_limit) for band in bands]
         psf_maxk = np.min([p.maxK() for p in marginal_PSFs])
 
         # In practice, the output PSF should almost always cut off at smaller maxk than obtained
@@ -884,12 +884,11 @@ class ChromaticRealGalaxy(ChromaticSum):
 
         # Create Fourier-space kimages of effective PSFs
         PSF_eff_kimgs = np.empty((len(imgs), len(self.SEDs), self.nk, self.nk), dtype=complex)
-        for i, (img, tput) in enumerate(zip(imgs, tputs)):
+        for i, (img, band) in enumerate(zip(imgs, bands)):
             for j, sed in enumerate(self.SEDs):
-                star = galsim.Gaussian(fwhm=1e-12) * sed  # If only there were a delta fn...
                 # assume that PSF does not already include pixel, so convolve it in.
-                conv = galsim.Convolve(star, PSF, galsim.Pixel(img.scale))
-                re, im = conv.drawKImage(tput, nx=self.nk, ny=self.nk, scale=self.stepk)
+                conv = galsim.Convolve(PSF, galsim.Pixel(img.scale)) * sed
+                re, im = conv.drawKImage(band, nx=self.nk, ny=self.nk, scale=self.stepk)
                 PSF_eff_kimgs[i, j] = re.array + 1j * im.array
 
         # Get Fourier-space representations of input imgs.
