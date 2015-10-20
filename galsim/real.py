@@ -990,6 +990,6 @@ class ChromaticRealGalaxy(ChromaticSum):
                        imgs[0].array.shape[0] * imgs[0].array.shape[1] * imgs[0].scale**2)
                 Sigma_dict[(i, j)] = obj
 
-        self.covspec = galsim.CovarianceSpectrum(Sigma_dict, self.stepk, self.nk, self.SEDs)
+        self.covspec = galsim.CovarianceSpectrum(Sigma_dict, self.SEDs)
 
         super(ChromaticRealGalaxy, self).__init__(objlist)
