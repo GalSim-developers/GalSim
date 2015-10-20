@@ -21,10 +21,10 @@
 #define GalSim_PsfCorr_H
 
 /**
- * @file PSFCorr.h 
+ * @file PSFCorr.h
  *
  * @brief Contains functions for the hsm shape measurement code, which has functions to carry out
- *        PSF correction and measurement of adaptive moments. 
+ *        PSF correction and measurement of adaptive moments.
  *
  * All functions are in the hsm namespace.
  */
@@ -231,12 +231,12 @@ namespace hsm {
      * aligned with the pixel grid and the 2nd aligned at 45 degrees with respect to it.  There are
      * two choices for measurement type: 'e' = Bernstein & Jarvis (2002) ellipticity (or
      * distortion), 'g' = shear estimator = shear*responsivity.  The sigma is defined based on the
-     * observed moments M_xx, M_xy, and M_yy as sigma = (Mxx Myy - M_xy^2)^(1/4) = 
+     * observed moments M_xx, M_xy, and M_yy as sigma = (Mxx Myy - M_xy^2)^(1/4) =
      * [ det(M) ]^(1/4). */
-    struct ObjectData 
+    struct ObjectData
     {
         // Make sure everything starts with 0's.
-        ObjectData() : 
+        ObjectData() :
             x0(0.), y0(0.), sigma(0.), flux(0.), e1(0.), e2(0.), responsivity(0.),
             meas_type('\0'), resolution(0.) {}
 
@@ -246,11 +246,11 @@ namespace hsm {
         double flux; ///< total flux
         double e1; ///< first ellipticity component
         double e2; ///< second ellipticity component
-        double responsivity; ///< responsivity of ellipticity estimator 
-        char meas_type; ///< type of measurement (see function description) 
-        double resolution; ///< resolution factor (0=unresolved, 1=resolved) 
+        double responsivity; ///< responsivity of ellipticity estimator
+        char meas_type; ///< type of measurement (see function description)
+        double resolution; ///< resolution factor (0=unresolved, 1=resolved)
     };
-  
+
     /**
      * @brief Struct containing information about the shape of an object.
      *
@@ -348,7 +348,7 @@ namespace hsm {
         CppShapeData() : image_bounds(galsim::Bounds<int>()), moments_status(-1),
             observed_e1(0.), observed_e2(0.), moments_sigma(-1.), moments_amp(-1.),
             moments_centroid(galsim::Position<double>(0.,0.)), moments_rho4(-1.), moments_n_iter(0),
-            correction_status(-1), corrected_e1(-10.), corrected_e2(-10.), corrected_g1(-10.), 
+            correction_status(-1), corrected_e1(-10.), corrected_e2(-10.), corrected_g1(-10.),
             corrected_g2(-10.), meas_type("None"), corrected_shape_err(-1.),
             correction_method("None"), resolution_factor(-1.),
             psf_sigma(-1.0), psf_e1(0.), psf_e2(0.), error_message("None")
@@ -440,7 +440,7 @@ namespace hsm {
      * flags parameter is only used for the REGAUSS shape measurement method, and is defined as
      * follows: 0x1=recompute galaxy flux by summing unmasked pixels, 0x2=recompute galaxy flux from
      * Gaussian-quartic fit, 0x4=cut off Gaussian approximator at NSIG_RG sigma to save time,
-     * 0x8=cut off PSF residual at NSIG_RG2 to save time.    
+     * 0x8=cut off PSF residual at NSIG_RG2 to save time.
      * @param[in] gal_image    The galaxy Image.
      * @param[in] PSF_image    The PSF Image.
      * @param[in] gal_data     The ObjectData object for the galaxy
@@ -453,8 +453,8 @@ namespace hsm {
      * @return A status flag that should be zero if the measurement was successful.
      */
     unsigned int general_shear_estimator(
-        ConstImageView<double> gal_image, ConstImageView<double> PSF_image, 
-        ObjectData& gal_data, ObjectData& PSF_data, 
+        ConstImageView<double> gal_image, ConstImageView<double> PSF_image,
+        ObjectData& gal_data, ObjectData& PSF_data,
         const std::string& shear_est, unsigned long flags,
         boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
 
@@ -485,7 +485,7 @@ namespace hsm {
         ConstImageView<double> data, double& A, double& x0, double& y0,
         double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter,
         boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
-  
+
 }
 }
 #endif
