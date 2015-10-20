@@ -1341,7 +1341,8 @@ namespace hsm {
             if (hsmparams->ksb_sig_weight > 0.0) {
                 sig_gal = hsmparams->ksb_sig_weight;
                 find_mom_1(gal_image, moments, hsmparams->ksb_moments_max, x0_gal, y0_gal, sig_gal);
-            } else if (hsmparams->ksb_sig_factor != 1.0) {
+            }
+            if (hsmparams->ksb_sig_factor != 1.0) {
                 sig_gal *= hsmparams->ksb_sig_factor;
                 find_mom_1(gal_image, moments, hsmparams->ksb_moments_max, x0_gal, y0_gal, sig_gal);
             }

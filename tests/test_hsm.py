@@ -44,7 +44,7 @@ pixel_scale = 0.2
 decimal = 2 # decimal place at which to require equality in sizes
 decimal_shape = 3 # decimal place at which to require equality in shapes
 
-# The timing tests can be unreliable in environments with other processes running at the 
+# The timing tests can be unreliable in environments with other processes running at the
 # same time.  So we disable them by default.  However, on a clean system, they should all pass.
 test_timing = False
 
@@ -564,7 +564,7 @@ def test_hsmparams():
     do_pickle(res)
     do_pickle(res2)
     do_pickle(galsim._galsim.CppShapeData())
- 
+
     try:
         # Then check failure modes: force it to fail by changing HSMParams.
         new_params_niter = galsim.hsm.HSMParams(max_mom2_iter = res.moments_n_iter-1)
@@ -781,6 +781,30 @@ def test_bounds_centroid():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_ksb_sig():
+    """Check that modification of KSB weight function width is consistent."""
+    import time
+    t1 = time.time()
+
+    gal = galsim.Gaussian(fwhm=1.0).shear(e1=0.2, e2=0.1)
+    psf = galsim.Gaussian(fwhm=0.7)
+    gal_img = galsim.Convolve(gal, psf).drawImage(nx=32, ny=32, scale=0.2)
+    psf_img = psf.drawImage(nx=16, ny=16, scale=0.2)
+
+    hsmparams1 = galsim.hsm.HSMParams(ksb_sig_weight=2.0)
+    result1 = galsim.hsm.EstimateShear(gal_img, psf_img, shear_est='KSB', hsmparams=hsmparams1)
+
+    hsmparams2 = galsim.hsm.HSMParams(ksb_sig_weight=1.0, ksb_sig_factor=2.0)
+    result2 = galsim.hsm.EstimateShear(gal_img, psf_img, shear_est='KSB', hsmparams=hsmparams2)
+
+    np.testing.assert_almost_equal(result1.corrected_g1, result2.corrected_g1, 9,
+                                   "KSB weight fn width inconsistently manipulated")
+    np.testing.assert_almost_equal(result1.corrected_g2, result2.corrected_g2, 9,
+                                   "KSB weight fn width inconsistently manipulated")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_moments_basic()
     test_shearest_basic()
@@ -792,3 +816,4 @@ if __name__ == "__main__":
     test_shapedata()
     test_strict()
     test_bounds_centroid()
+    test_ksb_sig()
