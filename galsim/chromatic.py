@@ -142,6 +142,21 @@ class ChromaticObject(object):
         """
         ChromaticObject._multiplier_cache.resize(maxsize)
 
+    def _fiducial_profile(self, bandpass):
+        """
+        Return a monochromatic profile of a separable chromatic object that can be scaled to give
+        the monochromatic profile at any wavelength.
+        """
+        candidate_waves = [bandpass.effective_wavelength,
+                           0.5 * (bandpass.blue_limit + bandpass.red_limit),
+                           bandpass.blue_limit,
+                           bandpass.red_limit]
+        for w in candidate_waves:
+            prof0 = self.evaluateAtWavelength(w)
+            if prof0.flux != 0:
+                return w, self.evaluateAtWavelength(w)
+        raise ValueError("Could not fiducial wavelength where SED * Bandpass is nonzero.")
+
     def __repr__(self):
         return 'galsim.ChromaticObject(%r)'%self.obj
 
@@ -281,8 +296,8 @@ class ChromaticObject(object):
         if self.separable: assert hasattr(self, 'SED')
         assert hasattr(self, 'wave_list')
 
-        # setup output image (semi-arbitrarily using the bandpass effective wavelength)
-        prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
+        # setup output image using fiducial profile
+        wave0, prof0 = self._fiducial_profile(bandpass)
         image = prof0.drawImage(image=image, setup_only=True, **kwargs)
         # Remove from kwargs anything that is only used for setting up image:
         kwargs.pop('dtype', None)
@@ -296,7 +311,7 @@ class ChromaticObject(object):
 
         if self.separable:
             multiplier = ChromaticObject._multiplier_cache(self.SED, bandpass, tuple(wave_list))
-            prof0 *= multiplier/self.SED(bandpass.effective_wavelength)
+            prof0 *= multiplier/self.SED(wave0)
             image = prof0.drawImage(image=image, **kwargs)
             return image
 
@@ -885,7 +900,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         # with whatever pixel scale was required to sample all the images properly.  We want to set
         # up an output image that has the requested pixel scale, which might change the image size
         # and so on.
-        prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
+        _, prof0 = self._fiducial_profile(bandpass)
         image = prof0.drawImage(image=image, setup_only=True, **kwargs)
         # Remove from kwargs anything that is only used for setting up image:
         kwargs.pop('dtype', None)
@@ -1685,7 +1700,8 @@ class ChromaticConvolution(ChromaticObject):
             SED = lambda w: reduce(lambda x,y:x*y, [s(w) for s in sep_SED], 1)
             insep_obj = galsim.Convolve(insep_profs, gsparams=gsparams)
             # Find scale at which to draw effective profile
-            iiscale = insep_obj.evaluateAtWavelength(bandpass.effective_wavelength).nyquistScale()
+            _, prof0 = insep_obj._fiducial_profile(bandpass)
+            iiscale = prof0.nyquistScale()
             if iimult is not None:
                 iiscale /= iimult
             # Create the effective bandpass.
@@ -1860,7 +1876,7 @@ class ChromaticConvolution(ChromaticObject):
         # and non-ChromaticConvolution).  (The latter case was dealt with in the constructor.)
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
-        prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
+        wave0, prof0 = self._fiducial_profile(bandpass)
         image = prof0.drawImage(image=image, setup_only=True, **kwargs)
         # Remove from kwargs anything that is only used for setting up image:
         kwargs.pop('dtype', None)
@@ -1880,8 +1896,8 @@ class ChromaticConvolution(ChromaticObject):
                 if isinstance(obj, galsim.GSObject):
                     sep_profs.append(obj) # The g(x,y)'s (see above)
                 else:
-                    sep_profs.append(obj.evaluateAtWavelength(bandpass.effective_wavelength)
-                                     /obj.SED(bandpass.effective_wavelength)) # more g(x,y)'s
+                    wave0, prof0 = obj._fiducial_profile(bandpass)
+                    sep_profs.append(prof0 / obj.SED(wave0)) # more g(x,y)'s
                     sep_SED.append(obj.SED) # The h(lambda)'s (see above)
                     wave_list = np.union1d(wave_list, obj.wave_list)
             else:
