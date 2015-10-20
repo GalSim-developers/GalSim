@@ -144,20 +144,22 @@ class ChromaticObject(object):
 
     def _fiducial_profile(self, bandpass):
         """
-        Return a monochromatic profile of a separable chromatic object that can be scaled to give
-        the monochromatic profile at any wavelength.
+        Return a fiducial achromatic profile of a chromatic object that can be used to estimate
+        default output image characteristics, or in the case of separable profiles, can be scaled to
+        give the monochromatic profile at any wavelength or the wavelength-integrated profile.
         """
         bpwave = bandpass.effective_wavelength
         candidate_waves = [bpwave, 0.5 * (bandpass.blue_limit + bandpass.red_limit)]
         candidate_waves = np.union1d(candidate_waves, bandpass.wave_list)
         candidate_waves = np.union1d(candidate_waves, self.wave_list)
+        # Prioritize wavelengths near the bandpass effective wavelength.
         candidate_waves = candidate_waves[np.argsort(np.abs(candidate_waves - bpwave))]
 
         for w in candidate_waves:
             prof0 = self.evaluateAtWavelength(w)
             if prof0.flux != 0:
                 return w, self.evaluateAtWavelength(w)
-        raise ValueError("Could not fiducial wavelength where SED * Bandpass is nonzero.")
+        raise ValueError("Could not locate fiducial wavelength where SED * Bandpass is nonzero.")
 
     def __repr__(self):
         return 'galsim.ChromaticObject(%r)'%self.obj
