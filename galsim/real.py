@@ -830,7 +830,7 @@ class ChromaticRealGalaxy(ChromaticSum):
         if isinstance(chromatic_real_galaxy_catalog, tuple):
             # Special (undocumented) way to build a ChromaticRealGalaxy without needing the crg
             # catalog directly by providing the things we need from it.
-            imgs, bands, SEDs, xis, PSF = chromatic_real_galaxy_catalog
+            imgs, bands, SEDs, xis, PSFs = chromatic_real_galaxy_catalog
 
             use_index = 0  # For the logger statements below.
             if logger:
@@ -845,6 +845,7 @@ class ChromaticRealGalaxy(ChromaticSum):
         Nim = len(imgs)
         assert Nim == len(bands)
         assert Nim == len(xis)
+        assert Nim == len(PSFs)
         assert Nim >= NSED
 
         # Need to sample three different types of objects on the same Fourier grid: the input
@@ -865,8 +866,10 @@ class ChromaticRealGalaxy(ChromaticSum):
         # each of the filters provided) and also by the input images' pixel scales.
 
         img_maxk = np.min([np.pi/img.scale for img in imgs])
-        marginal_PSFs = [PSF.evaluateAtWavelength(band.blue_limit) for band in bands]
-        marginal_PSFs += [PSF.evaluateAtWavelength(band.red_limit) for band in bands]
+        marginal_PSFs = [PSF.evaluateAtWavelength(band.blue_limit)
+                         for PSF in PSFs for band in bands]
+        marginal_PSFs += [PSF.evaluateAtWavelength(band.red_limit)
+                          for PSF in PSFs for band in bands]
         psf_maxk = np.min([p.maxK() for p in marginal_PSFs])
 
         # In practice, the output PSF should almost always cut off at smaller maxk than obtained
@@ -888,7 +891,7 @@ class ChromaticRealGalaxy(ChromaticSum):
 
         # Create Fourier-space kimages of effective PSFs
         PSF_eff_kimgs = np.empty((Nim, NSED, nk, nk), dtype=np.complex128)
-        for i, (img, band) in enumerate(zip(imgs, bands)):
+        for i, (img, band, PSF) in enumerate(zip(imgs, bands, PSFs)):
             for j, sed in enumerate(SEDs):
                 # assume that PSF does not already include pixel, so convolve it in.
                 conv = galsim.Convolve(PSF, galsim.Pixel(img.scale)) * sed
