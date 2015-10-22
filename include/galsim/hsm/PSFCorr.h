@@ -137,11 +137,12 @@ namespace hsm {
      *                           exception.
      * @param ksb_moments_max    Use moments up to ksb_moments_max order for KSB method of PSF
      *                           correction.
-     * @param ksb_sig_weight     The width of the weight function for the KSB method.  Normally,
-     *                           this is computed from the measured moments of the galaxy image.
-     *                           This keyword overrides this calculation.
+     * @param ksb_sig_weight     The width of the weight function (in pixels) to use for the KSB
+     *                           method.  Normally, this is derived from the measured moments of the
+     *                           galaxy image; this keyword overrides this calculation.  Can be
+     *                           combined with ksb_sig_factor.
      * @param ksb_sig_factor     Factor by which to multiply the weight function width for the KSB
-     *                           method.  Default is 1.0.
+     *                           method (default: 1.0).  Can be combined with ksb_sig_weight.
      * @param failed_moments     Value to report for ellipticities and resolution factor if shape
      *                           measurement fails.
      */
