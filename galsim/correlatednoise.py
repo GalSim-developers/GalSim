@@ -1613,21 +1613,22 @@ class CovarianceSpectrum(object):
         @returns  CorrelatedNoise object.
         """
         import numpy as np
+        NSED = len(SEDs)
         maxk = np.min([PSF.evaluateAtWavelength(bandpass.blue_limit).maxK(),
                        PSF.evaluateAtWavelength(bandpass.red_limit).maxK()])
         stepk = np.max([PSF.evaluateAtWavelength(bandpass.blue_limit).stepK(),
                         PSF.evaluateAtWavelength(bandpass.red_limit).stepK()])
         nk = 2*int(np.ceil(maxk/stepk))
 
-        PSF_eff_kimgs = np.empty((len(self.SEDs), nk, nk), dtype=complex)
+        PSF_eff_kimgs = np.empty((NSED, nk, nk), dtype=np.complex128)
         for i, sed in enumerate(self.SEDs):
             # Assume that PSF does not yet include pixel contribution, so add it in.
             conv = galsim.Convolve(PSF, galsim.Pixel(wcs.scale)) * sed
             re, im = conv.drawKImage(bandpass, nx=nk, ny=nk, scale=stepk)
             PSF_eff_kimgs[i] = re.array + 1j * im.array
-        pkout = np.zeros((nk, nk), dtype=float)
-        for i in xrange(len(self.SEDs)):
-            for j in xrange(i, len(self.SEDs)):
+        pkout = np.zeros((nk, nk), dtype=np.float64)
+        for i in xrange(NSED):
+            for j in xrange(i, NSED):
                 re, im = self.Sigma[(i, j)].drawKImage(nx=nk, ny=nk, scale=stepk)
                 s = re.array + 1j * im.array
                 pkout += (np.conj(PSF_eff_kimgs[i]) * s * PSF_eff_kimgs[j] *
