@@ -110,11 +110,12 @@ struct PyHSMParams {
             "                   exception.\n"
             "ksb_moments_max    Use moments up to ksb_moments_max order for KSB method of PSF\n"
             "                   correction.\n"
-            "ksb_sig_weight     The width of the weight function for the KSB method.  Normally,\n"
-            "                   this is computed from the measured moments of the galaxy image.\n"
-            "                   This keyword overrides this calculation.\n"
+            "ksb_sig_weight     The width of the weight function (in pixels) to use for the KSB\n"
+            "                   method.  Normally, this is derived from the measured moments of the\n"
+            "                   galaxy image; this keyword overrides this calculation.  Can be\n"
+            "                   combined with ksb_sig_factor.\n"
             "ksb_sig_factor     Factor by which to multiply the weight function width for the KSB\n"
-            "                   method.  Default is 1.0.\n"
+            "                   method (default: 1.0).  Can be combined with ksb_sig_weight.\n"
             "failed_moments     Value to report for ellipticities and resolution factor if shape\n"
             "                   measurement fails.\n";
 
