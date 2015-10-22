@@ -38,7 +38,7 @@ def test_CRG(args):
         components.append(
             galsim.Gaussian(half_light_radius=0.3+0.1*np.cos(i))
             .shear(e=0.4+np.cos(i)*0.4, beta=i*galsim.radians)
-            .shift(0.3*i, -0.3*i)
+            .shift(0.4*i, -0.4*i)
         )
     gal = galsim.Add([c*s for c, s in zip(components, SEDs)])
     gal = gal.shift(-gal.centroid(visband))
