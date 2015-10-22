@@ -1613,7 +1613,7 @@ class CovarianceSpectrum(object):
         @returns  CorrelatedNoise object.
         """
         import numpy as np
-        NSED = len(SEDs)
+        NSED = len(self.SEDs)
         maxk = np.min([PSF.evaluateAtWavelength(bandpass.blue_limit).maxK(),
                        PSF.evaluateAtWavelength(bandpass.red_limit).maxK()])
         stepk = np.max([PSF.evaluateAtWavelength(bandpass.blue_limit).stepK(),
