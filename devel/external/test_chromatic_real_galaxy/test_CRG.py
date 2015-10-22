@@ -56,7 +56,7 @@ def test_CRG(args):
 
     # Now "deconvolve" the chromatic HST PSF while asserting the correct SEDs.
     print "Constructing ChromaticRealGalaxy"
-    crg = galsim.ChromaticRealGalaxy((in_imgs, bands, SEDs, in_xis, [in_PSF]*args.Nim), maxk=maxk)
+    crg = galsim.ChromaticRealGalaxy((in_imgs, bands, SEDs, in_xis, in_PSF), maxk=maxk)
     # crg should be effectively the same thing as gal now.  Let's test.
 
     crg_prof = galsim.Convolve(crg, out_PSF)

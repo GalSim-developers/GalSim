@@ -48,9 +48,7 @@ def test_CRG_noise(args):
     crgs = []
     with ProgressBar(len(img_sets)) as bar:
         for imgs in img_sets:
-            crgs.append(
-                galsim.ChromaticRealGalaxy(
-                    (imgs, bands, SEDs, in_xis, [in_PSF]*args.Nim), maxk=maxk))
+            crgs.append(galsim.ChromaticRealGalaxy((imgs, bands, SEDs, in_xis, in_PSF), maxk=maxk))
             bar.update()
 
     noise = crgs[0].covspec.toNoise(visband, out_PSF, galsim.wcs.PixelScale(args.out_scale))

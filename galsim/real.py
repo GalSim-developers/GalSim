@@ -831,6 +831,8 @@ class ChromaticRealGalaxy(ChromaticSum):
             # Special (undocumented) way to build a ChromaticRealGalaxy without needing the crg
             # catalog directly by providing the things we need from it.
             imgs, bands, SEDs, xis, PSFs = chromatic_real_galaxy_catalog
+            if not hasattr(PSFs, '__iter__'):
+                PSFs = [PSFs]*len(imgs)
 
             use_index = 0  # For the logger statements below.
             if logger:
