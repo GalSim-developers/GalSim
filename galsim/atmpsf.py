@@ -231,7 +231,9 @@ class AtmosphericPSF(GSObject):
                 velocity=velocity, direction=direction)
             ### Generate the phase screens for every time step
             phase_cube.run()
+        self.phase_cube = phase_cube
 
+        scale = 2*np.pi/5.0 * lam * galsim.radians / scale_unit
         ### Generate PSFs for each time step
         im_grid = np.zeros_like(np.array(phase_cube.screens[0]), dtype=np.float64)
         for i, screen in enumerate(phase_cube.screens):
@@ -242,10 +244,10 @@ class AtmosphericPSF(GSObject):
             ftwf = np.fft.fft2(wf)
             im = np.abs(ftwf)**2
             im = utilities.roll2d(im, (im.shape[0] / 2, im.shape[1] / 2))
-            im *= (flux / (im.sum() * phase_cube.screen_scale**2))
+            im *= (flux / (im.sum() * scale**2))
             ### Add this PSF instance to stack to get the finite-exposure PSF
             im_grid += im
 
         out_im = galsim.InterpolatedImage(
-            galsim.Image(im.astype(np.float64), scale=phase_cube.screen_scale))
+            galsim.Image(im.astype(np.float64), scale=scale))
         GSObject.__init__(self, out_im)
