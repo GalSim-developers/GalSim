@@ -208,10 +208,11 @@ class AtmosphericPSF(GSObject):
             phase_cube = AtmosphericPhaseCube(exptime=exptime, time_step=time_step,
                 screen_size=10., screen_scale=0.1, r0=r0, alpha=alpha,
                 velocity=velocity, direction=direction)
-        ### Generate the phase screens for every time step
-        phase_cube.run()
+            ### Generate the phase screens for every time step
+            phase_cube.run()
 
         ### Generate PSFs for each time step
+        im_grid = np.zeros_like(np.array(phase_cube.screens[0]), dtype=np.float64)
         for i, screen in enumerate(phase_cube.screens):
             ### The wavefront to use is exp(2 pi i screen)
             wf = np.exp(2j * np.pi * np.array(screen))
@@ -221,3 +222,8 @@ class AtmosphericPSF(GSObject):
             im = np.abs(ftwf)**2
             im = utilities.roll2d(im, (im.shape[0] / 2, im.shape[1] / 2))
             im *= (flux / (im.sum() * phase_cube.screen_scale**2))
+            ### Add this PSF instance to stack to get the finite-exposure PSF
+            im_grid += im
+
+        out_im = galsim.Image(im.astype(np.float64), scale=phase_cube.screen_scale)
+        return out_im
