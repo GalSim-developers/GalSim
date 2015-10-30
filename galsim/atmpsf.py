@@ -31,6 +31,7 @@ September 2014
 
 import numpy as np
 import galsim
+import utilities
 from galsim import GSObject
 
 class AtmosphericPhaseCube(object):
@@ -96,6 +97,20 @@ class AtmosphericPSF(GSObject):
                  stop_time=None, interpolant=galsim.Quintic(), oversampling=1.5,
                  flux=1., scale_unit=galsim.arcsec, gsparams=None):
         if phase_cube is None:
+            ### Setup a new phase screen generator
             phase_cube = AtmosphericPhaseCube(exptime=exptime, time_step=time_step,
                 screen_size=10., screen_scale=0.1, r0=r0, alpha=alpha,
                 velocity=velocity, direction=direction)
+        ### Generate the phase screens for every time step
+        phase_cube.run()
+
+        ### Generate PSFs for each time step
+        for i, screen in enumerate(phase_cube.screens):
+            ### The wavefront to use is exp(2 pi i screen)
+            wf = np.exp(2j * np.pi * np.array(screen))
+            ### Calculate the image array via FFT.
+            ### Copied from galsim.optics.psf method (hacky)
+            ftwf = np.fft.fft2(wf)
+            im = np.abs(ftwf)**2
+            im = utilities.roll2d(im, (im.shape[0] / 2, im.shape[1] / 2))
+            im *= (flux / (im.sum() * phase_cube.screen_scale**2))
