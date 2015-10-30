@@ -233,10 +233,13 @@ class AtmosphericPSF(GSObject):
             phase_cube.run()
 
         ### Generate PSFs for each time step
-        im_grid = np.zeros_like(np.array(phase_cube.screens[0]), dtype=np.float64)
+        pad = 2
+        nx, ny = phase_cube.screens[0].shape
+        im_grid = np.zeros((nx*pad, ny*pad), dtype=np.float64)
         for i, screen in enumerate(phase_cube.screens):
+            wf = np.zeros((nx*pad, ny*pad), dtype=np.float64)
             ### The wavefront to use is exp(2 pi i screen)
-            wf = np.exp(2j * np.pi * np.array(screen))
+            wf[(nx/2):(3*nx/2), (ny/2):(3*ny/2)] = np.exp(2j * np.pi * np.array(screen))
             ### Calculate the image array via FFT.
             ### Copied from galsim.optics.psf method (hacky)
             ftwf = np.fft.fft2(wf)
