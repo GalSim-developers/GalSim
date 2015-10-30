@@ -10,14 +10,14 @@ class ArScreens(object):
     @param pscale     Pixel scale
     @param rate       A0 system rate (Hz)
     @param paramcube  Parameter array describing each layer of the atmosphere
-                      to be modeled.  Each row contains a tuple of 
+                      to be modeled.  Each row contains a tuple of
                       (r0 (m), velocity (m/s), direction (deg), altitude (m))
                       describing the corresponding layer.
     @param alpha_mag  magnitude of autoregressive parameter.  (1-alpha_mag)
                       is the fraction of the phase from the prior time step
                       that is "forgotten" and replaced by Gaussian noise.
     """
-    def __init__(self, n, m, pscale, rate, paramcube, alpha_mag, 
+    def __init__(self, n, m, pscale, rate, paramcube, alpha_mag,
                  ranseed=None):
         self.pl, self.alpha = create_multilayer_arbase(n, m, pscale, rate,
                                                        paramcube, alpha_mag)
@@ -44,7 +44,7 @@ class ArScreens(object):
                 print "time step", j
             self._phaseFT, screens = self.get_ar_atmos()
             for i, item in enumerate(screens):
-                self.screens[i].append(item)
+                self.screens[i].append(item[1])
     def write(self, outfile, clobber=True):
         from galsim._pyfits import pyfits
         output = pyfits.HDUList()
@@ -67,4 +67,3 @@ if __name__ == '__main__':
     my_screens = ArScreens(n, m, pscale, rate, paramcube, alpha_mag)
     my_screens.run(100, verbose=True)
     my_screens.write('my_screens_0.999.fits')
-    
