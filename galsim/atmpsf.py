@@ -44,6 +44,27 @@ class AtmosphericPhaseCube(object):
     @param alpha [Default: 0.999]
     @param velocity in meters/second [Default: 0]
     @param direction CCW relative to +x as galsim.Angle [Default: 0*galsim.degrees]
+
+    The implicit atmoshpere model here is that turbulence is confined to a set
+    of 2D phase screens at different altitudes. The number of atmosphere layers
+    is determined from the length of the `r0`, `velocity`, or `direction`
+    arguments, if they are lists. If these arguments have different lengths
+    then we ...FIXME...?
+
+    Some suggestions for choices of wind velocities come from data hosted by
+    NOAA. The Global Data Assimilation System (GDAS), run by the NOAA National
+    Center for Environmental Prediction (NCEP), puts out various datasets. GDAS
+    produces analyses every six hours, giving a large number of parameters
+    tabulated at 24 altitudes in the atmosphere covering the entire Earth. The
+    following is an example of wind velocities extracted from a file for 2014,
+    Feb 13, 6h UT at the longitude and latitude of CTIO.
+    (Wind velocities are m/s). Altitudes are approximate.
+        Altitude (km)    velocity (m/s)    direction (deg.)
+            1               0.98                -66
+            10              0.67                116
+            30              18.0                 27
+    Data is found here: ftp://arlftp.arlhq.noaa.gov/pub/archives/gdas1/
+    Datat documentation: http://ready.arl.noaa.gov/gdas1.php
     """
     def __init__(self, exptime, time_step=0.03, screen_size=10.0, screen_scale=0.1,
                  r0=0.2, alpha_mag=0.999, velocity=0.0, direction=0*galsim.degrees):
