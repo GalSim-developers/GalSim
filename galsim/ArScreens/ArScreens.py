@@ -1,7 +1,4 @@
 import numpy as np
-import numpy.random as ra
-import scipy.fftpack as sf
-import pyfits
 from create_multilayer_arbase import create_multilayer_arbase
 
 class ArScreens(object):
@@ -26,20 +23,20 @@ class ArScreens(object):
                                                        paramcube, alpha_mag)
         self._phaseFT = None
         self.screens = [[] for x in paramcube]
-        ra.seed(ranseed)
+        np.random.seed(ranseed)
     def get_ar_atmos(self):
         shape = self.alpha.shape
         newphFT = []
         newphase = []
         for i, powerlaw, alpha in zip(range(shape[0]), self.pl, self.alpha):
-            noise = ra.normal(size=shape[1:3])
+            noise = np.random.normal(size=shape[1:3])
             noisescalefac = np.sqrt(1. - np.abs(alpha**2))
-            noiseFT = sf.fft2(noise)*powerlaw
+            noiseFT = np.fft.fft2(noise)*powerlaw
             if self._phaseFT is None:
                 newphFT.append(noiseFT)
             else:
                 newphFT.append(alpha*self._phaseFT[i] + noiseFT*noisescalefac)
-            newphase.append(sf.ifft2(newphFT[i]).real)
+            newphase.append(np.fft.ifft2(newphFT[i]).real)
         return np.array(newphFT), np.array(newphase)
     def run(self, nframes, verbose=False):
         for j in range(nframes):
@@ -49,6 +46,7 @@ class ArScreens(object):
             for i, item in enumerate(screens):
                 self.screens[i].append(item)
     def write(self, outfile, clobber=True):
+        from galsim._pyfits import pyfits
         output = pyfits.HDUList()
         output.append(pyfits.PrimaryHDU())
         for i, screen in enumerate(self.screens):

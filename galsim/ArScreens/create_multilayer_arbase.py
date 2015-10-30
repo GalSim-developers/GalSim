@@ -77,8 +77,7 @@ def create_multilayer_arbase(n, m, pscale, rate, paramcube, alpha_mag,
     return powerlaw, alpha
 
 if __name__ == '__main__':
-#    np.seterr(all='raise')
-    import pyfits
+    from galsim._pyfits import pyfits
     n = 10
     m = 100
     pscale = 1
