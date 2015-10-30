@@ -164,7 +164,7 @@ class AtmosphericPSF(GSObject):
     @param lam_over_r0      Lambda / Fried parameter
     @param fwhm             Full width at half max (FWHM) of the PSF in the infinite
                             exposure limit in arcseconds. [Default: 0.8]
-    @param alpha            Magnitude of autoregressive parameter.  (1-alpha)
+    @param alpha_mag        Magnitude of autoregressive parameter.  (1-alpha)
                             is the fraction of the phase from the prior time step
                             that is "forgotten" and replaced by Gaussian noise.
                             [Default: 0.999]
@@ -199,14 +199,14 @@ class AtmosphericPSF(GSObject):
                             details. [default: None]
     """
     def __init__(self, lam=None, r0=0.2, lam_over_r0=None, fwhm=0.8,
-                 alpha=0.999, exptime=None, time_step=0.03, velocity=0,
+                 alpha_mag=0.999, exptime=None, time_step=0.03, velocity=0,
                  direction=0*galsim.degrees, phase_cube=None, start_time=0.,
-                 stop_time=None, interpolant=galsim.Quintic(), oversampling=1.5,
+                 stop_time=None, interpolant=None, oversampling=1.5,
                  flux=1., scale_unit=galsim.arcsec, gsparams=None):
         if phase_cube is None:
             ### Setup a new phase screen generator
             phase_cube = AtmosphericPhaseCube(exptime=exptime, time_step=time_step,
-                screen_size=10., screen_scale=0.1, r0=r0, alpha=alpha,
+                screen_size=10., screen_scale=0.1, r0=r0, alpha_mag=alpha_mag,
                 velocity=velocity, direction=direction)
             ### Generate the phase screens for every time step
             phase_cube.run()
