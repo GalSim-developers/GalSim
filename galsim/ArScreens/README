@@ -1,0 +1,5 @@
+The code in this directory comes from Jim Chiang's reimplementation of code by Srikar Srinath.
+The original code was taken from https://github.com/shrieks/AR-atmospheres-py.
+(At the time we copied it over, this was a private repo.  If that is still the case, the link
+will return 404.)
+
