@@ -77,7 +77,7 @@ class AtmosphericPhaseCube(object):
         self.pl, self.alpha = create_multilayer_arbase(self.n, screen_scale, 1./time_step,
                                                        self.paramcube, alpha_mag)
         self._phaseFT = None
-        self.screens = [[] for x in self.paramcube]
+        self.screens = []
 
     def get_ar_atmos(self):
         shape = self.alpha.shape
@@ -98,7 +98,7 @@ class AtmosphericPhaseCube(object):
         for j in range(self.n):
             self._phaseFT, screens = self.get_ar_atmos()
             for i, item in enumerate(screens):
-                self.screens[i].append(item)
+                self.screens.append(item)
 
 
 def create_multilayer_arbase(n, pscale, rate, paramcube, alpha_mag,
@@ -246,5 +246,6 @@ class AtmosphericPSF(GSObject):
             ### Add this PSF instance to stack to get the finite-exposure PSF
             im_grid += im
 
-        out_im = galsim.Image(im.astype(np.float64), scale=phase_cube.screen_scale)
-        return out_im
+        out_im = galsim.InterpolatedImage(
+            galsim.Image(im.astype(np.float64), scale=phase_cube.screen_scale))
+        GSObject.__init__(self, out_im)

@@ -44,7 +44,7 @@ class ArScreens(object):
                 print "time step", j
             self._phaseFT, screens = self.get_ar_atmos()
             for i, item in enumerate(screens):
-                self.screens[i].append(item[1])
+                self.screens[i].append(item)
     def write(self, outfile, clobber=True):
         from galsim._pyfits import pyfits
         output = pyfits.HDUList()
