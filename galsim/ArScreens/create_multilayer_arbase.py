@@ -1,5 +1,4 @@
 import numpy as np
-import generate_grids as gg
 
 def create_multilayer_arbase(n, m, pscale, rate, paramcube, alpha_mag,
                              boiling_only=False):
@@ -40,7 +39,15 @@ def create_multilayer_arbase(n, m, pscale, rate, paramcube, alpha_mag,
     
     screensize_meters = bign*pscale # extent is given by aperture size and sampling
     deltaf = 1./screensize_meters   # spatial frequency delta
-    fx, fy = gg.generate_grids(bign, scalefac=deltaf, freqshift=True)
+
+    # This is very similar to numpy.fftfreq, so we can probably use that, but for now
+    # just copy over the original code from Srikar:
+    #fx, fy = gg.generate_grids(bign, scalefac=deltaf, freqshift=True)
+    fx = np.zeros((bign,bign))
+    for j in np.arange(bign):
+        fx[:,j] = j - (j > bign/2)*bign
+    fx = fx * deltaf
+    fy = fx.transpose()
   
     powerlaw = []
     alpha = []
