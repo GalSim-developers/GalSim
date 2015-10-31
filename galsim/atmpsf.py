@@ -38,7 +38,6 @@ from galsim import GSObject
 class AtmosphericPhaseGenerator(object):
     """ Create a an autoregressive atmospheric turbulence phase generator.
 
-    @param exptime in seconds
     @param time_step in seconds [Default: 0.03]
     @param screen_size in meters [Default: 10]
     @param screen_scale in meters [Default: 0.1]
@@ -68,7 +67,7 @@ class AtmosphericPhaseGenerator(object):
     Data is found here: ftp://arlftp.arlhq.noaa.gov/pub/archives/gdas1/
     Datat documentation: http://ready.arl.noaa.gov/gdas1.php
     """
-    def __init__(self, exptime, time_step=0.03, screen_size=10.0, screen_scale=0.1,
+    def __init__(self, time_step=0.03, screen_size=10.0, screen_scale=0.1,
                  r0=0.2, alpha_mag=0.999, velocity=0.0, direction=0*galsim.degrees,
                  rng=None):
         if rng is None:
@@ -225,7 +224,7 @@ class AtmosphericPSF(GSObject):
         if phase_generator is None:
             # Setup a new phase screen generator
             phase_generator = AtmosphericPhaseGenerator(
-                exptime=exptime, time_step=time_step,
+                time_step=time_step,
                 screen_size=10., screen_scale=0.1, r0=r0, alpha_mag=alpha_mag,
                 velocity=velocity, direction=direction)
         self.phase_generator = phase_generator
