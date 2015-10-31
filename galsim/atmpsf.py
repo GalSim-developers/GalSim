@@ -73,7 +73,7 @@ class AtmosphericPhaseGenerator(object):
                  rng=None):
         if rng is None:
             rng = galsim.BaseDeviate()
-        self.gauss = galsim.GaussianDeviate(rng)
+        self.rng = rng
         self.size = int(np.ceil(screen_size/screen_scale))
 
         self.screen_scale = screen_scale
@@ -83,8 +83,9 @@ class AtmosphericPhaseGenerator(object):
 
     def next(self):
         shape = self.alpha.shape
-        for i, powerlaw, alpha in zip(range(shape[0]), self.pl, self.alpha):
-            noise = np.random.normal(size=shape[1:3])
+        for powerlaw, alpha in zip(self.pl, self.alpha):
+            gd = galsim.GaussianDeviate(self.rng)
+            noise = utilities.rand_arr((shape[1:3]), gd)
             noisescalefac = np.sqrt(1. - np.abs(alpha**2))
             noiseFT = np.fft.fft2(noise)*powerlaw
             if self._phaseFT is None:
@@ -128,7 +129,7 @@ def create_multilayer_arbase(size, scale, rate, r0, velocity, direction, alpha_m
     n_layers = max(map(len, [r0, velocity, direction, alpha_mag]))
     if n_layers > 1:
         r0, velocity, direction, alpha_mag = map(
-            lambda i: [i]*n_layers if len(i) == 1 else i,
+            lambda i: [i[0]]*n_layers if len(i) == 1 else i,
             (r0, velocity, direction, alpha_mag)
         )
 
@@ -151,8 +152,8 @@ def create_multilayer_arbase(size, scale, rate, r0, velocity, direction, alpha_m
     fy = fx.transpose()
 
     powerlaw = np.empty((n_layers, size, size), dtype=np.float64)
-    alpha = np.empty((n_layers, size, size), dtype=np.float64)
-    for i, (r00, vx0, vy0) in enumerate(zip(r0, vx, vy)):
+    alpha = np.empty((n_layers, size, size), dtype=np.complex128)
+    for i, (r00, vx0, vy0, amag) in enumerate(zip(r0, vx, vy, alpha_mag)):
         pl = (2*np.pi/screensize_meters*np.sqrt(0.00058)*(r00**(-5.0/6.0)) *
               (fx*fx + fy*fy)**(-11.0/12.0) *
               size * np.sqrt(np.sqrt(2.0)))
@@ -164,7 +165,7 @@ def create_multilayer_arbase(size, scale, rate, r0, velocity, direction, alpha_m
         # N is WFS grid, d is subap size in meters = scale*m, k = 2pi*fx
         # fx, fy are k/Nd and l/Nd respectively
         alpha_phase = -(fx*vx0 + fy*vy0)/rate
-        alpha[i] = alpha_mag * np.exp(2j*np.pi*alpha_phase)
+        alpha[i] = amag * np.exp(2j*np.pi*alpha_phase)
 
     return powerlaw, alpha
 
