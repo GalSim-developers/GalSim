@@ -35,8 +35,9 @@ import utilities
 from galsim import GSObject
 
 
-class AtmosphericPhaseCube(object):
-    """ Create a phase cube using an autoregressive model.
+class AtmosphericPhaseGenerator(object):
+    """ Create a an autoregressive atmsperic turbulence phase generator.
+
     @param exptime in seconds
     @param time_step in seconds [Default: 0.03]
     @param screen_size in meters [Default: 10]
@@ -46,7 +47,7 @@ class AtmosphericPhaseCube(object):
     @param velocity in meters/second [Default: 0]
     @param direction CCW relative to +x as galsim.Angle [Default: 0*galsim.degrees]
 
-    The implicit atmoshpere model here is that turbulence is confined to a set
+    The implicit atmosphere model here is that turbulence is confined to a set
     of 2D phase screens at different altitudes. The number of atmosphere layers
     is determined from the length of the `r0`, `velocity`, or `direction`
     arguments, if they are lists. If these arguments have different lengths
@@ -78,28 +79,28 @@ class AtmosphericPhaseCube(object):
         self.pl, self.alpha = create_multilayer_arbase(self.n, screen_scale, 1./time_step,
                                                        self.paramcube, alpha_mag)
         self._phaseFT = None
-        self.screens = []
 
     def get_ar_atmos(self):
         shape = self.alpha.shape
-        newphFT = []
-        newphase = []
         for i, powerlaw, alpha in zip(range(shape[0]), self.pl, self.alpha):
             noise = np.random.normal(size=shape[1:3])
             noisescalefac = np.sqrt(1. - np.abs(alpha**2))
             noiseFT = np.fft.fft2(noise)*powerlaw
             if self._phaseFT is None:
-                newphFT.append(noiseFT)
+                self._phaseFT = noiseFT
             else:
-                newphFT.append(alpha*self._phaseFT[i] + noiseFT*noisescalefac)
-            newphase.append(np.fft.ifft2(newphFT[i]).real)
-        return np.array(newphFT), np.array(newphase)
+                self._phaseFT = alpha*self._phaseFT + noiseFT*noisescalefac
+            newphase = np.fft.ifft2(self._phaseFT).real
+        return newphase
 
-    def run(self):
-        for j in range(self.n):
-            self._phaseFT, screens = self.get_ar_atmos()
-            for i, item in enumerate(screens):
-                self.screens.append(item)
+    def __iter__(self):
+        return self
+
+    def next(self):
+        return self.get_ar_atmos()
+
+    def __next__(self):
+        return self.next()
 
 
 def create_multilayer_arbase(n, pscale, rate, paramcube, alpha_mag,
@@ -222,28 +223,29 @@ class AtmosphericPSF(GSObject):
     """
     def __init__(self, lam=None, r0=0.2, lam_over_r0=None, fwhm=0.8,
                  alpha_mag=0.999, exptime=None, time_step=0.03, velocity=0,
-                 direction=0*galsim.degrees, phase_cube=None, start_time=0.,
+                 direction=0*galsim.degrees, phase_generator=None, start_time=0.,
                  stop_time=None, interpolant=None, oversampling=1.5,
                  flux=1., scale_unit=galsim.arcsec, gsparams=None):
-        if phase_cube is None:
+        import itertools
+        nstep = int(np.ceil(exptime/time_step))
+        if phase_generator is None:
             # Setup a new phase screen generator
-            phase_cube = AtmosphericPhaseCube(
+            phase_generator = AtmosphericPhaseGenerator(
                 exptime=exptime, time_step=time_step,
                 screen_size=10., screen_scale=0.1, r0=r0, alpha_mag=alpha_mag,
                 velocity=velocity, direction=direction)
-            # Generate the phase screens for every time step
-            phase_cube.run()
-        self.phase_cube = phase_cube
+        self.phase_generator = phase_generator
 
         pad = 2
         scale = pad / 10.0 * lam * galsim.radians / scale_unit
         # Generate PSFs for each time step
-        nx, ny = phase_cube.screens[0].shape
+        screen = phase_generator.next()
+        nx, ny = screen.shape
         im_grid = np.zeros((nx*pad, ny*pad), dtype=np.float64)
-        for i, screen in enumerate(phase_cube.screens):
+        for i, screen in itertools.izip(xrange(nstep), phase_generator):
             wf = np.zeros((nx*pad, ny*pad), dtype=np.float64)
             # The wavefront to use is exp(2 pi i screen)
-            wf[(nx/2):(3*nx/2), (ny/2):(3*ny/2)] = np.exp(1j * np.array(screen))
+            wf[(nx/2):(3*nx/2), (ny/2):(3*ny/2)] = np.exp(1j * screen)
             # Calculate the image array via FFT.
             # Copied from galsim.optics.psf method (hacky)
             ftwf = np.fft.ifft2(np.fft.ifftshift(wf))
