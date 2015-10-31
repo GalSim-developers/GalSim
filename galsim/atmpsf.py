@@ -81,18 +81,19 @@ class AtmosphericPhaseGenerator(object):
         self._phaseFT = None
 
     def next(self):
-        shape = self.alpha.shape
+        shape = self.alpha[0].shape
+        self.phase = np.zeros(shape)
         for powerlaw, alpha in zip(self.pl, self.alpha):
             gd = galsim.GaussianDeviate(self.rng)
-            noise = utilities.rand_arr((shape[1:3]), gd)
+            noise = utilities.rand_arr(shape, gd)
             noisescalefac = np.sqrt(1. - np.abs(alpha**2))
             noiseFT = np.fft.fft2(noise)*powerlaw
             if self._phaseFT is None:
                 self._phaseFT = noiseFT
             else:
                 self._phaseFT = alpha*self._phaseFT + noiseFT*noisescalefac
-            newphase = np.fft.ifft2(self._phaseFT).real
-        return newphase
+            self.phase += np.fft.ifft2(self._phaseFT).real
+        return self.phase
 
     def __iter__(self):
         return self
