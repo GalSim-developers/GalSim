@@ -34,6 +34,7 @@ import galsim
 import utilities
 from galsim import GSObject
 
+
 class AtmosphericPhaseCube(object):
     """ Create a phase cube using an autoregressive model.
     @param exptime in seconds
@@ -72,7 +73,7 @@ class AtmosphericPhaseCube(object):
         self.n = int(np.ceil(screen_size/screen_scale))
         self.nsteps = int(np.ceil(exptime/time_step))
         self.paramcube = np.array([r0, velocity, direction.rad()])
-        self.paramcube.shape=(1, 3) #HACK
+        self.paramcube.shape = (1, 3)  # HACK
         self.screen_scale = screen_scale
         self.pl, self.alpha = create_multilayer_arbase(self.n, screen_scale, 1./time_step,
                                                        self.paramcube, alpha_mag)
@@ -134,15 +135,15 @@ def create_multilayer_arbase(n, pscale, rate, paramcube, alpha_mag,
     cp_vels_x = cp_vels*np.cos(cp_dirs)
     cp_vels_y = cp_vels*np.sin(cp_dirs)
 
-    screensize_meters = n*pscale # extent is given by aperture size and sampling
+    screensize_meters = n*pscale  # extent is given by aperture size and sampling
     deltaf = 1./screensize_meters   # spatial frequency delta
 
     # This is very similar to numpy.fftfreq, so we can probably use that, but for now
     # just copy over the original code from Srikar:
-    #fx, fy = gg.generate_grids(n, scalefac=deltaf, freqshift=True)
-    fx = np.zeros((n,n))
+    # fx, fy = gg.generate_grids(n, scalefac=deltaf, freqshift=True)
+    fx = np.zeros((n, n))
     for j in np.arange(n):
-        fx[:,j] = j - (j > n/2)*n
+        fx[:, j] = j - (j > n/2)*n
     fx = fx * deltaf
     fy = fx.transpose()
 
@@ -225,32 +226,33 @@ class AtmosphericPSF(GSObject):
                  stop_time=None, interpolant=None, oversampling=1.5,
                  flux=1., scale_unit=galsim.arcsec, gsparams=None):
         if phase_cube is None:
-            ### Setup a new phase screen generator
-            phase_cube = AtmosphericPhaseCube(exptime=exptime, time_step=time_step,
+            # Setup a new phase screen generator
+            phase_cube = AtmosphericPhaseCube(
+                exptime=exptime, time_step=time_step,
                 screen_size=10., screen_scale=0.1, r0=r0, alpha_mag=alpha_mag,
                 velocity=velocity, direction=direction)
-            ### Generate the phase screens for every time step
+            # Generate the phase screens for every time step
             phase_cube.run()
         self.phase_cube = phase_cube
 
-        scale = 2*np.pi/5.0 * lam * galsim.radians / scale_unit
-        ### Generate PSFs for each time step
         pad = 2
+        scale = pad / 10.0 * lam * galsim.radians / scale_unit
+        # Generate PSFs for each time step
         nx, ny = phase_cube.screens[0].shape
         im_grid = np.zeros((nx*pad, ny*pad), dtype=np.float64)
         for i, screen in enumerate(phase_cube.screens):
             wf = np.zeros((nx*pad, ny*pad), dtype=np.float64)
-            ### The wavefront to use is exp(2 pi i screen)
-            wf[(nx/2):(3*nx/2), (ny/2):(3*ny/2)] = np.exp(2j * np.pi * np.array(screen))
-            ### Calculate the image array via FFT.
-            ### Copied from galsim.optics.psf method (hacky)
-            ftwf = np.fft.fft2(wf)
+            # The wavefront to use is exp(2 pi i screen)
+            wf[(nx/2):(3*nx/2), (ny/2):(3*ny/2)] = np.exp(1j * np.array(screen))
+            # Calculate the image array via FFT.
+            # Copied from galsim.optics.psf method (hacky)
+            ftwf = np.fft.ifft2(np.fft.ifftshift(wf))
             im = np.abs(ftwf)**2
             im = utilities.roll2d(im, (im.shape[0] / 2, im.shape[1] / 2))
             im *= (flux / (im.sum() * scale**2))
-            ### Add this PSF instance to stack to get the finite-exposure PSF
+            # Add this PSF instance to stack to get the finite-exposure PSF
             im_grid += im
 
         out_im = galsim.InterpolatedImage(
-            galsim.Image(im.astype(np.float64), scale=scale))
+            galsim.Image(im_grid.astype(np.float64), scale=scale))
         GSObject.__init__(self, out_im)
