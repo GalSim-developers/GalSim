@@ -36,7 +36,7 @@ from galsim import GSObject
 
 
 class AtmosphericPhaseGenerator(object):
-    """ Create a an autoregressive atmsperic turbulence phase generator.
+    """ Create a an autoregressive atmospheric turbulence phase generator.
 
     @param exptime in seconds
     @param time_step in seconds [Default: 0.03]
@@ -80,7 +80,7 @@ class AtmosphericPhaseGenerator(object):
                                                        self.paramcube, alpha_mag)
         self._phaseFT = None
 
-    def get_ar_atmos(self):
+    def next(self):
         shape = self.alpha.shape
         for i, powerlaw, alpha in zip(range(shape[0]), self.pl, self.alpha):
             noise = np.random.normal(size=shape[1:3])
@@ -95,9 +95,6 @@ class AtmosphericPhaseGenerator(object):
 
     def __iter__(self):
         return self
-
-    def next(self):
-        return self.get_ar_atmos()
 
     def __next__(self):
         return self.next()
