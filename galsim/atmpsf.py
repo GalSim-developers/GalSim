@@ -69,15 +69,16 @@ class AtmosphericPhaseGenerator(object):
     Datat documentation: http://ready.arl.noaa.gov/gdas1.php
     """
     def __init__(self, exptime, time_step=0.03, screen_size=10.0, screen_scale=0.1,
-                 r0=0.2, alpha_mag=0.999, velocity=0.0, direction=0*galsim.degrees):
+                 r0=0.2, alpha_mag=0.999, velocity=0.0, direction=0*galsim.degrees,
+                 rng=None):
+        if rng is None:
+            rng = galsim.BaseDeviate()
+        self.gauss = galsim.GaussianDeviate(rng)
+        self.size = int(np.ceil(screen_size/screen_scale))
 
-        self.n = int(np.ceil(screen_size/screen_scale))
-        self.nsteps = int(np.ceil(exptime/time_step))
-        self.paramcube = np.array([r0, velocity, direction.rad()])
-        self.paramcube.shape = (1, 3)  # HACK
         self.screen_scale = screen_scale
-        self.pl, self.alpha = create_multilayer_arbase(self.n, screen_scale, 1./time_step,
-                                                       self.paramcube, alpha_mag)
+        self.pl, self.alpha = create_multilayer_arbase(self.size, screen_scale, 1./time_step,
+                                                       r0, velocity, direction, alpha_mag)
         self._phaseFT = None
 
     def next(self):
@@ -100,75 +101,70 @@ class AtmosphericPhaseGenerator(object):
         return self.next()
 
 
-def create_multilayer_arbase(n, pscale, rate, paramcube, alpha_mag,
-                             boiling_only=False):
+def create_multilayer_arbase(size, scale, rate, r0, velocity, direction, alpha_mag):
     """
     Function to create the starting phase screen to be used for an
     autoregressive atmosphere model. A powerlaw scales random noise
     generated to make it look like Kolmogorov turbulence.  alpha is
     the autoregressive parameter to scale the current phase.
 
-    @param n          Number of pixels across the screen
-    @param pscale     Pixel scale
+    @param size       Number of pixels across the screen
+    @param scale      Pixel scale
     @param rate       A0 system rate (Hz)
-    @param paramcube  Parameter array describing each layer of the atmosphere
-                      to be modeled.  Each row contains a tuple of
-                      (r0 (m), velocity (m/s), direction (deg))
-                      describing the corresponding layer.
-    @param alpha      magnitude of autoregressive parameter.  (1-alpha)
+    @param r0         Fried parameter (meters)
+    @param velocity   Wind velocity (m/s)
+    @param direction  Wind direction (galsim.Angle)
+    @param alpha_mag  Magnitude of autoregressive parameter.  (1-alpha)
                       is the fraction of the phase from the prior time step
                       that is "forgotten" and replaced by Gaussian noise.
-    @param boiling_only Flag to set all screen velocities to zero.
     """
-    n_layers = len(paramcube)
+    # Listify
+    r0, velocity, direction, alpha_mag = map(
+        lambda i: [i] if not hasattr(i, '__iter__') else i,
+        (r0, velocity, direction, alpha_mag)
+    )
 
-    cp_r0s = paramcube[:, 0]      # r0 in meters
-    cp_vels = paramcube[:, 1]     # m/s,  change to [0,0,0] to get pure boiling
+    # Broadcast
+    n_layers = max(map(len, [r0, velocity, direction, alpha_mag]))
+    if n_layers > 1:
+        r0, velocity, direction, alpha_mag = map(
+            lambda i: [i]*n_layers if len(i) == 1 else i,
+            (r0, velocity, direction, alpha_mag)
+        )
 
-    if boiling_only:
-        cp_vels *= 0
-    cp_dirs = paramcube[:, 2]*np.pi/180.   # in radians
+    if any(len(i) != n_layers for i in (r0, velocity, direction, alpha_mag)):
+        raise ValueError("r0, velocity, direction, alpha_mag not broadcastable")
 
     # decompose velocities
-    cp_vels_x = cp_vels*np.cos(cp_dirs)
-    cp_vels_y = cp_vels*np.sin(cp_dirs)
+    vx, vy = zip(*[v*d.sincos() for v, d in zip(velocity, direction)])
 
-    screensize_meters = n*pscale  # extent is given by aperture size and sampling
+    screensize_meters = size*scale  # extent is given by aperture size and sampling
     deltaf = 1./screensize_meters   # spatial frequency delta
 
     # This is very similar to numpy.fftfreq, so we can probably use that, but for now
     # just copy over the original code from Srikar:
     # fx, fy = gg.generate_grids(n, scalefac=deltaf, freqshift=True)
-    fx = np.zeros((n, n))
-    for j in np.arange(n):
-        fx[:, j] = j - (j > n/2)*n
+    fx = np.zeros((size, size))
+    for j in np.arange(size):
+        fx[:, j] = j - (j > size/2)*size
     fx = fx * deltaf
     fy = fx.transpose()
 
-    powerlaw = []
-    alpha = []
-    for i in range(n_layers):
-        factor1 = 2*np.pi/screensize_meters*np.sqrt(0.00058)*(cp_r0s[i]**(-5.0/6.0))
-        factor2 = (fx*fx + fy*fy)**(-11.0/12.0)
-        factor3 = n*np.sqrt(np.sqrt(2.))
-        powerlaw.append(factor1*factor2*factor3)
-        powerlaw[-1][0][0] = 0.0
+    powerlaw = np.empty((n_layers, size, size), dtype=np.float64)
+    alpha = np.empty((n_layers, size, size), dtype=np.float64)
+    for i, (r00, vx0, vy0) in enumerate(zip(r0, vx, vy)):
+        pl = (2*np.pi/screensize_meters*np.sqrt(0.00058)*(r00**(-5.0/6.0)) *
+              (fx*fx + fy*fy)**(-11.0/12.0) *
+              size * np.sqrt(np.sqrt(2.0)))
+        pl[0, 0] = 0.0
+        powerlaw[i] = pl
 
         # make array for the alpha parameter and populate it
         # phase of alpha = -2pi(k*vx + l*vy)*T/Nd where T is sampling interval
-        # N is WFS grid, d is subap size in meters = pscale*m, k = 2pi*fx
+        # N is WFS grid, d is subap size in meters = scale*m, k = 2pi*fx
         # fx, fy are k/Nd and l/Nd respectively
-        alpha_phase = -2*np.pi*(fx*cp_vels_x[i] + fy*cp_vels_y[i])/rate
-        try:
-            alpha.append(alpha_mag[i]*(np.cos(alpha_phase) +
-                                       1j*np.sin(alpha_phase)))
-        except TypeError:
-            # Just have a scalar for alpha_mag
-            alpha.append(alpha_mag*(np.cos(alpha_phase) +
-                                    1j*np.sin(alpha_phase)))
-
-    powerlaw = np.array(powerlaw)
-    alpha = np.array(alpha)
+        alpha_phase = -(fx*vx0 + fy*vy0)/rate
+        alpha[i] = alpha_mag * np.exp(2j*np.pi*alpha_phase)
 
     return powerlaw, alpha
 
