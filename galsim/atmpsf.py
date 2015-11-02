@@ -98,16 +98,11 @@ class AtmosphericPhaseGenerator(object):
         # decompose velocities
         vx, vy = zip(*[v*d.sincos() for v, d in zip(velocity, direction)])
 
-        deltaf = 1./screen_size   # spatial frequency delta
-        # This is very similar to numpy.fftfreq, so we can probably use that, but for now
-        # just copy over the original code from Srikar:
-        # fx, fy = gg.generate_grids(n, scalefac=deltaf, freqshift=True)
-        fx = np.zeros((npix, npix))
-        for j in np.arange(npix):
-            fx[:, j] = j - (j > npix/2)*npix
-        fx = fx * deltaf
-        fy = fx.transpose()
+        # setup frequency grid
+        fx = np.fft.fftfreq(npix, screen_scale)
+        fx, fy = np.meshgrid(fx, fx)
 
+        # compute Kolmogorov power-law and auto-regressive memory parameter alpha
         self.powerlaw = np.empty((n_layers, npix, npix), dtype=np.float64)
         self.alpha = np.empty((n_layers, npix, npix), dtype=np.complex128)
         for i, (r00, vx0, vy0, amag0) in enumerate(zip(r0, vx, vy, alpha_mag)):
@@ -215,7 +210,7 @@ class AtmosphericPSF(GSObject):
         nx, ny = screen.shape
         im_grid = np.zeros((nx*pad, ny*pad), dtype=np.float64)
         for i, screen in itertools.izip(xrange(nstep), phase_generator):
-            wf = np.zeros((nx*pad, ny*pad), dtype=np.float64)
+            wf = np.zeros((nx*pad, ny*pad), dtype=np.complex128)
             # The wavefront to use is exp(2 pi i screen)
             wf[(nx/2):(3*nx/2), (ny/2):(3*ny/2)] = np.exp(1j * screen)
             # Calculate the image array via FFT.
