@@ -102,10 +102,12 @@ class AtmosphericPhaseGenerator(object):
         fx = np.fft.fftfreq(npix, screen_scale)
         fx, fy = np.meshgrid(fx, fx)
 
-        # compute Kolmogorov power-law and auto-regressive memory parameter alpha
+        # setup phase screens states
         self.powerlaw = np.empty((n_layers, npix, npix), dtype=np.float64)
         self.alpha = np.empty((n_layers, npix, npix), dtype=np.complex128)
         self._phaseFT = np.empty((n_layers, npix, npix), dtype=np.complex128)
+        self.screens = np.zeros_like(self.powerlaw)
+
         for i, (r00, vx0, vy0, amag0) in enumerate(zip(r0, vx, vy, alpha_mag)):
             pl = (2*np.pi/screen_size*np.sqrt(0.00058)*(r00**(-5.0/6.0)) *
                   (fx*fx + fy*fy)**(-11.0/12.0) *
@@ -113,6 +115,7 @@ class AtmosphericPhaseGenerator(object):
             pl[0, 0] = 0.0
             self.powerlaw[i] = pl
             self._phaseFT[i] = self._noiseFT(pl)
+            self.screens[i] = np.fft.ifft2(self._phaseFT[i]).real
 
             # make array for the alpha parameter and populate it
             # phase of alpha = -2pi(k*vx + l*vy)*T/Nd where T is sampling interval
@@ -127,13 +130,11 @@ class AtmosphericPhaseGenerator(object):
         return np.fft.fft2(noise)*powerlaw
 
     def next(self):
-        shape = self.alpha[0].shape
-        self.phase = np.zeros(shape)
         for i, (pl, phFT, alpha) in enumerate(zip(self.powerlaw, self._phaseFT, self.alpha)):
             noisescalefac = np.sqrt(1. - np.abs(alpha**2))
             self._phaseFT[i] = alpha*phFT + self._noiseFT(pl)*noisescalefac
-            self.phase += np.fft.ifft2(self._phaseFT[i]).real
-        return self.phase
+            self.screens[i] = np.fft.ifft2(self._phaseFT[i]).real
+        return self.screens
 
     def __iter__(self):
         return self
@@ -205,13 +206,12 @@ class AtmosphericPSF(GSObject):
         pad = 2
         scale = pad / 10.0 * lam * galsim.radians / scale_unit
         # Generate PSFs for each time step
-        screen = phase_generator.next()
-        nx, ny = screen.shape
+        nx, ny = phase_generator.screens[0].shape
         im_grid = np.zeros((nx*pad, ny*pad), dtype=np.float64)
-        for i, screen in itertools.izip(xrange(nstep), phase_generator):
+        for i, screens in itertools.izip(xrange(nstep), phase_generator):
             wf = np.zeros((nx*pad, ny*pad), dtype=np.complex128)
             # The wavefront to use is exp(2 pi i screen)
-            wf[(nx/2):(3*nx/2), (ny/2):(3*ny/2)] = np.exp(1j * screen)
+            wf[(nx/2):(3*nx/2), (ny/2):(3*ny/2)] = np.exp(1j * np.sum(screens, axis=0))
             # Calculate the image array via FFT.
             # Copied from galsim.optics.psf method (hacky)
             ftwf = np.fft.ifft2(np.fft.ifftshift(wf))
