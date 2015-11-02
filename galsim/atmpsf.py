@@ -42,9 +42,10 @@ class AtmosphericPhaseGenerator(object):
     @param screen_size in meters [Default: 10]
     @param screen_scale in meters [Default: 0.1]
     @param r0 in meters [Default: 0.2]
-    @param alpha [Default: 0.999]
     @param velocity in meters/second [Default: 0]
     @param direction CCW relative to +x as galsim.Angle [Default: 0*galsim.degrees]
+    @param alpha_mag [Default: 0.999]
+    @param rng BaseDeviate instance to provide random number generation
 
     The implicit atmosphere model here is that turbulence is confined to a set
     of 2D phase screens at different altitudes. The number of atmosphere layers
@@ -68,22 +69,67 @@ class AtmosphericPhaseGenerator(object):
     Datat documentation: http://ready.arl.noaa.gov/gdas1.php
     """
     def __init__(self, time_step=0.03, screen_size=10.0, screen_scale=0.1,
-                 r0=0.2, alpha_mag=0.999, velocity=0.0, direction=0*galsim.degrees,
+                 r0=0.2, velocity=0.0, direction=0*galsim.degrees, alpha_mag=0.999,
                  rng=None):
         if rng is None:
             rng = galsim.BaseDeviate()
         self.rng = rng
-        self.size = int(np.ceil(screen_size/screen_scale))
 
-        self.screen_scale = screen_scale
-        self.pl, self.alpha = create_multilayer_arbase(self.size, screen_scale, 1./time_step,
-                                                       r0, velocity, direction, alpha_mag)
+        npix = int(np.ceil(screen_size/screen_scale))
+        screen_size = screen_scale * npix  # in case screen_scale doesn't divide screen_size
+
+        # Listify
+        r0, velocity, direction, alpha_mag = map(
+            lambda i: [i] if not hasattr(i, '__iter__') else i,
+            (r0, velocity, direction, alpha_mag)
+        )
+
+        # Broadcast
+        n_layers = max(map(len, [r0, velocity, direction, alpha_mag]))
+        if n_layers > 1:
+            r0, velocity, direction, alpha_mag = map(
+                lambda i: [i[0]]*n_layers if len(i) == 1 else i,
+                (r0, velocity, direction, alpha_mag)
+            )
+
+        if any(len(i) != n_layers for i in (r0, velocity, direction, alpha_mag)):
+            raise ValueError("r0, velocity, direction, alpha_mag not broadcastable")
+
+        # decompose velocities
+        vx, vy = zip(*[v*d.sincos() for v, d in zip(velocity, direction)])
+
+        deltaf = 1./screen_size   # spatial frequency delta
+        # This is very similar to numpy.fftfreq, so we can probably use that, but for now
+        # just copy over the original code from Srikar:
+        # fx, fy = gg.generate_grids(n, scalefac=deltaf, freqshift=True)
+        fx = np.zeros((npix, npix))
+        for j in np.arange(npix):
+            fx[:, j] = j - (j > npix/2)*npix
+        fx = fx * deltaf
+        fy = fx.transpose()
+
+        self.powerlaw = np.empty((n_layers, npix, npix), dtype=np.float64)
+        self.alpha = np.empty((n_layers, npix, npix), dtype=np.complex128)
+        for i, (r00, vx0, vy0, amag0) in enumerate(zip(r0, vx, vy, alpha_mag)):
+            pl = (2*np.pi/screen_size*np.sqrt(0.00058)*(r00**(-5.0/6.0)) *
+                  (fx*fx + fy*fy)**(-11.0/12.0) *
+                  npix * np.sqrt(np.sqrt(2.0)))
+            pl[0, 0] = 0.0
+            self.powerlaw[i] = pl
+
+            # make array for the alpha parameter and populate it
+            # phase of alpha = -2pi(k*vx + l*vy)*T/Nd where T is sampling interval
+            # N is WFS grid, d is subap size in meters = scale*m, k = 2pi*fx
+            # fx, fy are k/Nd and l/Nd respectively
+            alpha_phase = -(fx*vx0 + fy*vy0) * time_step
+            self.alpha[i] = amag0 * np.exp(2j*np.pi*alpha_phase)
+
         self._phaseFT = None
 
     def next(self):
         shape = self.alpha[0].shape
         self.phase = np.zeros(shape)
-        for powerlaw, alpha in zip(self.pl, self.alpha):
+        for powerlaw, alpha in zip(self.powerlaw, self.alpha):
             gd = galsim.GaussianDeviate(self.rng)
             noise = utilities.rand_arr(shape, gd)
             noisescalefac = np.sqrt(1. - np.abs(alpha**2))
@@ -100,74 +146,6 @@ class AtmosphericPhaseGenerator(object):
 
     def __next__(self):
         return self.next()
-
-
-def create_multilayer_arbase(size, scale, rate, r0, velocity, direction, alpha_mag):
-    """
-    Function to create the starting phase screen to be used for an
-    autoregressive atmosphere model. A powerlaw scales random noise
-    generated to make it look like Kolmogorov turbulence.  alpha is
-    the autoregressive parameter to scale the current phase.
-
-    @param size       Number of pixels across the screen
-    @param scale      Pixel scale
-    @param rate       A0 system rate (Hz)
-    @param r0         Fried parameter (meters)
-    @param velocity   Wind velocity (m/s)
-    @param direction  Wind direction (galsim.Angle)
-    @param alpha_mag  Magnitude of autoregressive parameter.  (1-alpha)
-                      is the fraction of the phase from the prior time step
-                      that is "forgotten" and replaced by Gaussian noise.
-    """
-    # Listify
-    r0, velocity, direction, alpha_mag = map(
-        lambda i: [i] if not hasattr(i, '__iter__') else i,
-        (r0, velocity, direction, alpha_mag)
-    )
-
-    # Broadcast
-    n_layers = max(map(len, [r0, velocity, direction, alpha_mag]))
-    if n_layers > 1:
-        r0, velocity, direction, alpha_mag = map(
-            lambda i: [i[0]]*n_layers if len(i) == 1 else i,
-            (r0, velocity, direction, alpha_mag)
-        )
-
-    if any(len(i) != n_layers for i in (r0, velocity, direction, alpha_mag)):
-        raise ValueError("r0, velocity, direction, alpha_mag not broadcastable")
-
-    # decompose velocities
-    vx, vy = zip(*[v*d.sincos() for v, d in zip(velocity, direction)])
-
-    screensize_meters = size*scale  # extent is given by aperture size and sampling
-    deltaf = 1./screensize_meters   # spatial frequency delta
-
-    # This is very similar to numpy.fftfreq, so we can probably use that, but for now
-    # just copy over the original code from Srikar:
-    # fx, fy = gg.generate_grids(n, scalefac=deltaf, freqshift=True)
-    fx = np.zeros((size, size))
-    for j in np.arange(size):
-        fx[:, j] = j - (j > size/2)*size
-    fx = fx * deltaf
-    fy = fx.transpose()
-
-    powerlaw = np.empty((n_layers, size, size), dtype=np.float64)
-    alpha = np.empty((n_layers, size, size), dtype=np.complex128)
-    for i, (r00, vx0, vy0, amag) in enumerate(zip(r0, vx, vy, alpha_mag)):
-        pl = (2*np.pi/screensize_meters*np.sqrt(0.00058)*(r00**(-5.0/6.0)) *
-              (fx*fx + fy*fy)**(-11.0/12.0) *
-              size * np.sqrt(np.sqrt(2.0)))
-        pl[0, 0] = 0.0
-        powerlaw[i] = pl
-
-        # make array for the alpha parameter and populate it
-        # phase of alpha = -2pi(k*vx + l*vy)*T/Nd where T is sampling interval
-        # N is WFS grid, d is subap size in meters = scale*m, k = 2pi*fx
-        # fx, fy are k/Nd and l/Nd respectively
-        alpha_phase = -(fx*vx0 + fy*vy0)/rate
-        alpha[i] = amag * np.exp(2j*np.pi*alpha_phase)
-
-    return powerlaw, alpha
 
 
 class AtmosphericPSF(GSObject):
