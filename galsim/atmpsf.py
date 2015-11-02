@@ -50,7 +50,7 @@ class AtmosphericPhaseGenerator(object):
     of 2D phase screens at different altitudes. The number of atmosphere layers
     is determined from the length of the `r0`, `velocity`, or `direction`
     arguments, if they are lists. If these arguments have different lengths
-    then we ...FIXME...?
+    then select the length of the longest input to define the number of layers.
 
     Some suggestions for choices of wind velocities come from data hosted by
     NOAA. The Global Data Assimilation System (GDAS), run by the NOAA National
