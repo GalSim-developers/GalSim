@@ -131,8 +131,7 @@ class AtmosphericPhaseGenerator(object):
         self.phase = np.zeros(shape)
         for i, (pl, phFT, alpha) in enumerate(zip(self.powerlaw, self._phaseFT, self.alpha)):
             noisescalefac = np.sqrt(1. - np.abs(alpha**2))
-            noiseFT = self._noiseFT(pl)
-            self._phaseFT[i] = alpha*phFT + noiseFT*noisescalefac
+            self._phaseFT[i] = alpha*phFT + self._noiseFT(pl)*noisescalefac
             self.phase += np.fft.ifft2(self._phaseFT[i]).real
         return self.phase
 
