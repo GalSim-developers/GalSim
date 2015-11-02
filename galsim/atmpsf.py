@@ -105,12 +105,14 @@ class AtmosphericPhaseGenerator(object):
         # compute Kolmogorov power-law and auto-regressive memory parameter alpha
         self.powerlaw = np.empty((n_layers, npix, npix), dtype=np.float64)
         self.alpha = np.empty((n_layers, npix, npix), dtype=np.complex128)
+        self._phaseFT = np.empty((n_layers, npix, npix), dtype=np.complex128)
         for i, (r00, vx0, vy0, amag0) in enumerate(zip(r0, vx, vy, alpha_mag)):
             pl = (2*np.pi/screen_size*np.sqrt(0.00058)*(r00**(-5.0/6.0)) *
                   (fx*fx + fy*fy)**(-11.0/12.0) *
                   npix * np.sqrt(np.sqrt(2.0)))
             pl[0, 0] = 0.0
             self.powerlaw[i] = pl
+            self._phaseFT[i] = self._noiseFT(pl)
 
             # make array for the alpha parameter and populate it
             # phase of alpha = -2pi(k*vx + l*vy)*T/Nd where T is sampling interval
@@ -119,21 +121,19 @@ class AtmosphericPhaseGenerator(object):
             alpha_phase = -(fx*vx0 + fy*vy0) * time_step
             self.alpha[i] = amag0 * np.exp(2j*np.pi*alpha_phase)
 
-        self._phaseFT = None
+    def _noiseFT(self, powerlaw):
+        gd = galsim.GaussianDeviate(self.rng)
+        noise = utilities.rand_arr(powerlaw.shape, gd)
+        return np.fft.fft2(noise)*powerlaw
 
     def next(self):
         shape = self.alpha[0].shape
         self.phase = np.zeros(shape)
-        for powerlaw, alpha in zip(self.powerlaw, self.alpha):
-            gd = galsim.GaussianDeviate(self.rng)
-            noise = utilities.rand_arr(shape, gd)
+        for i, (pl, phFT, alpha) in enumerate(zip(self.powerlaw, self._phaseFT, self.alpha)):
             noisescalefac = np.sqrt(1. - np.abs(alpha**2))
-            noiseFT = np.fft.fft2(noise)*powerlaw
-            if self._phaseFT is None:
-                self._phaseFT = noiseFT
-            else:
-                self._phaseFT = alpha*self._phaseFT + noiseFT*noisescalefac
-            self.phase += np.fft.ifft2(self._phaseFT).real
+            noiseFT = self._noiseFT(pl)
+            self._phaseFT[i] = alpha*phFT + noiseFT*noisescalefac
+            self.phase += np.fft.ifft2(self._phaseFT[i]).real
         return self.phase
 
     def __iter__(self):
