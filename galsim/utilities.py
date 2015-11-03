@@ -418,7 +418,7 @@ _gammafn._a = ( 1.00000000000000000000, 0.57721566490153286061, -0.6558780715202
                0.00000000000000000141, -0.00000000000000000023, 0.00000000000000000002
              )
 
-def deInterleaveImage(image, N, conserve_flux=True,suppress_warnings=False):
+def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
     """
     The routine to do the opposite of what 'interleaveImages' routine does. It generates a
     (uniform) dither sequence of low resolution images from a high resolution image.
@@ -460,7 +460,7 @@ def deInterleaveImage(image, N, conserve_flux=True,suppress_warnings=False):
     @param conserve_flux     Should the routine output images that have, on average, same total
                              pixel values as the input image (True) or should the pixel values
                              summed over all the images equal the sum of pixel values of the input
-                             image (False)? [default:True]
+                             image (False)? [default:False]
     @param suppress_warnings Suppresses the warnings about the pixel scale of the output, if True.
                              [default:False]
 
@@ -487,8 +487,9 @@ def deInterleaveImage(image, N, conserve_flux=True,suppress_warnings=False):
         raise ValueError("Dimensions mismatch")
 
     wcs = image.wcs
-    if wcs.isPixelScale():
-        scale = wcs.scale
+    if wcs is not None:
+        if wcs.isPixelScale():
+            scale = wcs.scale
     else:
         scale = None
 
@@ -501,9 +502,9 @@ def deInterleaveImage(image, N, conserve_flux=True,suppress_warnings=False):
         dx,dy = -(i+0.5)/n1+0.5,-(j+0.5)/n2+0.5
         offset = galsim.PositionD(dx,dy)
         img_arr = image.array[j::n2,i::n1].copy()
-        if conserve_flux is True:
-            img_arr *= n1*n2
         img = galsim.Image(img_arr)
+        if conserve_flux is True:
+            img *= n1*n2
         im_list.append(img)
         offsets.append(offset)
 
