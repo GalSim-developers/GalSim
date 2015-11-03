@@ -216,11 +216,11 @@ class AtmosphericPSF(GSObject):
             # Copied from galsim.optics.psf method (hacky)
             ftwf = np.fft.ifft2(np.fft.ifftshift(wf))
             im = np.abs(ftwf)**2
-            im = utilities.roll2d(im, (im.shape[0] / 2, im.shape[1] / 2))
-            im *= (flux / (im.sum() * scale**2))
             # Add this PSF instance to stack to get the finite-exposure PSF
             im_grid += im
 
+        im_grid = utilities.roll2d(im_grid, (im_grid.shape[0] / 2, im_grid.shape[1] / 2))
+        im_grid *= (flux / (im_grid.sum() * scale**2))
         out_im = galsim.InterpolatedImage(
             galsim.Image(im_grid.astype(np.float64), scale=scale))
         GSObject.__init__(self, out_im)
