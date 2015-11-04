@@ -1379,7 +1379,7 @@ except:
     config.Result(result)
 
     if not result:
-         print """
+        print """
 WARNING: There seems to be a mismatch between this C++ compiler and the one
          that was used to build either python or boost.python (or both).
          This might be ok, but if you get a linking error in the subsequent 
