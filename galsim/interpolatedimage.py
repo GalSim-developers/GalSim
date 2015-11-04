@@ -132,6 +132,7 @@ class InterpolatedImage(GSObject):
                                   to be equal to the total flux.
                               "surface brightness" or "sb" means that the pixels sample
                                   the surface brightness distribution at each location.
+                            This is overridden if you specify an explicit flux value.
                             [default: "flux"]
     @param scale            If provided, use this as the pixel scale for the Image; this will
                             override the pixel scale stored by the provided Image, in any.
@@ -445,7 +446,7 @@ class InterpolatedImage(GSObject):
 
         # If the user specified a surface brightness normalization for the input Image, then
         # need to rescale flux by the pixel area to get proper normalization.
-        if normalization.lower() in ['surface brightness','sb']:
+        if flux is None and normalization.lower() in ['surface brightness','sb']:
             flux = sbii.getFlux() * local_wcs.pixelArea()
 
         # Save this intermediate profile
