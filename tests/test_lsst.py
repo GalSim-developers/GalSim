@@ -78,7 +78,7 @@ class WcsTestClass(unittest.TestCase):
             star_list = np.array([CelestialCoord((ra+dra)*galsim.radians, (dec+ddec)*galsim.radians)
                                  for dra, ddec in zip(dra_list, ddec_list)])
 
-            xTest, yTest = wcs._get_pupil_coordinates(star_list)
+            xTest, yTest = wcs.pupilCoordsFromPoint(star_list)
             xControl = []
             yControl = []
             for star in star_list:
@@ -114,7 +114,7 @@ class WcsTestClass(unittest.TestCase):
             zip(self.camera_data['ra'], self.camera_data['dec'], self.camera_data['chipName']):
 
             point = CelestialCoord(rr*galsim.degrees, dd*galsim.degrees)
-            test_name = wcs._get_chip_name(point)
+            test_name = wcs.chipNameFromPoint(point)
 
             try:
                 if control_name != 'None':
@@ -134,7 +134,7 @@ class WcsTestClass(unittest.TestCase):
         for rr, dd in zip(self.camera_data['ra'], self.camera_data['dec']):
             point_list.append(CelestialCoord(rr*galsim.degrees, dd*galsim.degrees))
 
-        test_name_list = wcs._get_chip_name(point_list)
+        test_name_list = wcs.chipNameFromPoint(point_list)
         for test_name, control_name in zip(test_name_list, self.camera_data['chipName']):
             try:
                 if control_name != 'None':

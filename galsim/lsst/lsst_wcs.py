@@ -63,7 +63,7 @@ class LSSTWCS(galsim.wcs.CelestialWCS):
         self._sin_rot = np.sin(self._rotation_angle/galsim.radians)
 
 
-    def _get_pupil_coordinates(self, point):
+    def pupilCoordsFromPoint(self, point):
         """
         Convert from RA, Dec into coordinates on the pupil
 
@@ -139,7 +139,7 @@ class LSSTWCS(galsim.wcs.CelestialWCS):
         of point
         """
 
-        x_pupil, y_pupil = self._get_pupil_coordinates(point)
+        x_pupil, y_pupil = self.pupilCoordsFromPoint(point)
 
         if hasattr(x_pupil, '__len__'):
             camera_point_list = [afwGeom.Point2D(x/galsim.radians, y/galsim.radians) for x,y in zip(x_pupil, y_pupil)]
@@ -149,7 +149,7 @@ class LSSTWCS(galsim.wcs.CelestialWCS):
         return camera_point_list
 
 
-    def _get_chip_name(self, point):
+    def chipNameFromPoint(self, point):
         """
         Take a point on the sky and find the chip which sees it
 
