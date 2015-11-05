@@ -1,6 +1,25 @@
 import numpy as np
 import galsim
 
+try:
+    import lsst.afw.cameraGeom as cameraGeom
+    from lsst.obs.lsstSim import LsstSimMapper
+except ImportError:
+    raise ImportError("You cannot use the LSST module.\n"
+                      "You either do not have the LSST stack installed,\n"
+                      "or you have it installed, but have not set it up.\n"
+                      "------------\n"
+                      "To install the LSST stack, follow the instructions at:\n\n"
+                      "https://confluence.lsstcorp.org/display/SIM/Catalogs+and+MAF\n\n"
+                      "NOTE: you must build the stack with the python you are using to\n"
+                      "run GalSim.  This means that when the stack asks you if you want\n"
+                      "it to install Anaconda for you , you MUST SAY NO.\n\n"
+                      "------------\n"
+                      "If you have installed the stack, run\n\n"
+                      "source $LSST_HOME/loadLSST.bash\n"
+                      "setup obs_lsstSim -t sims\n")
+
+
 __all__ = ["LSSTWCS"]
 
 class LSSTWCS(galsim.wcs.CelestialWCS):
