@@ -24,6 +24,9 @@ class WcsTestClass(unittest.TestCase):
                              + "\nYou can also try re-creating the test validation data\n" \
                              + "using the script GalSim/devel/external/generate_galsim_lsst_camera_validation.py"
 
+        pointing = CelestialCoord(cls.raPointing*galsim.degrees, cls.decPointing*galsim.degrees)
+        cls.wcs = LSSTWCS(pointing, cls.rotation*galsim.degrees)
+
         path, filename = os.path.split(__file__)
         file_name = os.path.join(path, 'random_data', 'galsim_afwCameraGeom_data.txt')
         dtype = np.dtype([('ra', np.float), ('dec', np.float), ('chipName', str, 100),
@@ -145,15 +148,12 @@ class WcsTestClass(unittest.TestCase):
         Test the method which associates positions on the sky with names of chips
         """
 
-        pointing = CelestialCoord(self.raPointing*galsim.degrees, self.decPointing*galsim.degrees)
-        wcs = LSSTWCS(pointing, self.rotation*galsim.degrees)
-
         # test case of a mapping a single location
         for rr, dd, control_name in \
             zip(self.camera_data['ra'], self.camera_data['dec'], self.camera_data['chipName']):
 
             point = CelestialCoord(rr*galsim.degrees, dd*galsim.degrees)
-            test_name = wcs.chipNameFromPoint(point)
+            test_name = self.wcs.chipNameFromPoint(point)
 
             try:
                 if control_name != 'None':
@@ -169,7 +169,7 @@ class WcsTestClass(unittest.TestCase):
         for rr, dd in zip(self.camera_data['ra'], self.camera_data['dec']):
             point_list.append(CelestialCoord(rr*galsim.degrees, dd*galsim.degrees))
 
-        test_name_list = wcs.chipNameFromPoint(point_list)
+        test_name_list = self.wcs.chipNameFromPoint(point_list)
         for test_name, control_name in zip(test_name_list, self.camera_data['chipName']):
             try:
                 if control_name != 'None':
@@ -186,14 +186,11 @@ class WcsTestClass(unittest.TestCase):
         Test the method which associates positions on the sky (in terms of floats) with names of chips
         """
 
-        pointing = CelestialCoord(self.raPointing*galsim.degrees, self.decPointing*galsim.degrees)
-        wcs = LSSTWCS(pointing, self.rotation*galsim.degrees)
-
         # test case of a mapping a single location
         for rr, dd, control_name in \
             zip(self.camera_data['ra'], self.camera_data['dec'], self.camera_data['chipName']):
 
-            test_name = wcs.chipNameFromFloat(np.radians(rr), np.radians(dd))
+            test_name = self.wcs.chipNameFromFloat(np.radians(rr), np.radians(dd))
 
             try:
                 if control_name != 'None':
@@ -205,7 +202,7 @@ class WcsTestClass(unittest.TestCase):
                 raise AssertionError(self.validation_msg)
 
         # test case of mapping a list of celestial coords
-        test_name_list = wcs.chipNameFromFloat(np.radians(self.camera_data['ra']), np.radians(self.camera_data['dec']))
+        test_name_list = self.wcs.chipNameFromFloat(np.radians(self.camera_data['ra']), np.radians(self.camera_data['dec']))
         for test_name, control_name in zip(test_name_list, self.camera_data['chipName']):
             try:
                 if control_name != 'None':
