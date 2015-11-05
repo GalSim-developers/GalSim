@@ -36,7 +36,7 @@ from galsim import GSObject
 
 
 class AtmosphericPhaseGenerator(object):
-    """ Create a an autoregressive atmospheric turbulence phase generator.
+    """ Create an autoregressive atmospheric turbulence phase generator.
 
     @param time_step in seconds [Default: 0.03]
     @param screen_size in meters [Default: 10]
@@ -47,26 +47,23 @@ class AtmosphericPhaseGenerator(object):
     @param alpha_mag [Default: 0.999]
     @param rng BaseDeviate instance to provide random number generation
 
-    The implicit atmosphere model here is that turbulence is confined to a set
-    of 2D phase screens at different altitudes. The number of atmosphere layers
-    is determined from the length of the `r0`, `velocity`, or `direction`
-    arguments, if they are lists. If these arguments have different lengths
-    then select the length of the longest input to define the number of layers.
+    The implicit atmosphere model here is that turbulence is confined to a set of 2D phase screens
+    at different altitudes. The number of atmosphere layers is determined from the length of the
+    `r0`, `velocity`, or `direction` arguments, if they are lists. If these arguments have different
+    lengths then select the length of the longest input to define the number of layers.
 
-    Some suggestions for choices of wind velocities come from data hosted by
-    NOAA. The Global Data Assimilation System (GDAS), run by the NOAA National
-    Center for Environmental Prediction (NCEP), puts out various datasets. GDAS
-    produces analyses every six hours, giving a large number of parameters
-    tabulated at 24 altitudes in the atmosphere covering the entire Earth. The
-    following is an example of wind velocities extracted from a file for 2014,
-    Feb 13, 6h UT at the longitude and latitude of CTIO.
-    (Wind velocities are m/s). Altitudes are approximate.
+    Some suggestions for choices of wind velocities come from data hosted by NOAA. The Global Data
+    Assimilation System (GDAS), run by the NOAA National Center for Environmental Prediction (NCEP),
+    puts out various datasets. GDAS produces analyses every six hours, giving a large number of
+    parameters tabulated at 24 altitudes in the atmosphere covering the entire Earth. The following
+    is an example of wind velocities extracted from a file for 2014, Feb 13, 6h UT at the longitude
+    and latitude of CTIO. (Wind velocities are m/s). Altitudes are approximate.
         Altitude (km)    velocity (m/s)    direction (deg.)
             1               0.98                -66
             10              0.67                116
             30              18.0                 27
     Data is found here: ftp://arlftp.arlhq.noaa.gov/pub/archives/gdas1/
-    Datat documentation: http://ready.arl.noaa.gov/gdas1.php
+    Data documentation: http://ready.arl.noaa.gov/gdas1.php
     """
     def __init__(self, time_step=0.03, screen_size=10.0, screen_scale=0.1,
                  r0=0.2, velocity=0.0, direction=0*galsim.degrees, alpha_mag=0.999,
@@ -118,9 +115,6 @@ class AtmosphericPhaseGenerator(object):
             self.screens[i] = np.fft.ifft2(self._phaseFT[i]).real
 
             # make array for the alpha parameter and populate it
-            # phase of alpha = -2pi(k*vx + l*vy)*T/Nd where T is sampling interval
-            # N is WFS grid, d is subap size in meters = scale*m, k = 2pi*fx
-            # fx, fy are k/Nd and l/Nd respectively
             alpha_phase = -(fx*vx0 + fy*vy0) * time_step
             self.alpha[i] = amag0 * np.exp(2j*np.pi*alpha_phase)
 
@@ -145,32 +139,23 @@ class AtmosphericPhaseGenerator(object):
 
 class AtmosphericPSF(GSObject):
     """ Create an atmosphere PSF by summing over a phase cube in time steps.
-    @param lam              Lambda (wavelength) in units of nanometers.  Must be supplied with
-                            `diam`, and in this case, image scales (`scale`) should be specified in
-                            units of `scale_unit`.
-    @param r0               Fried parameter for each layer of turbulence in meters.
-                            This parameter sets the amplitude of turbulence for each
-                            layer. [Default: 0.2]
+    @param lam              Lambda (wavelength) in units of nanometers.  Must be supplied with `r0`,
+                            and in this case, image scales (`scale`) should be specified in units of
+                            `scale_unit`.
+    @param r0               Fried parameter for each layer of turbulence in meters.  This parameter
+                            sets the amplitude of turbulence for each layer. [Default: 0.2]
     @param lam_over_r0      Lambda / Fried parameter
-    @param fwhm             Full width at half max (FWHM) of the PSF in the infinite
-                            exposure limit in arcseconds. [Default: 0.8]
-    @param alpha_mag        Magnitude of autoregressive parameter.  (1-alpha)
-                            is the fraction of the phase from the prior time step
-                            that is "forgotten" and replaced by Gaussian noise.
-                            [Default: 0.999]
+    @param fwhm             Full width at half max (FWHM) of the PSF in the infinite exposure limit
+                            in arcseconds. [Default: 0.8]
+    @param alpha_mag        Magnitude of autoregressive parameter.  (1-alpha) is the fraction of the
+                            phase from the prior time step that is "forgotten" and replaced by
+                            Gaussian noise.  [Default: 0.999]
     @param exptime          Exposure time in seconds.
     @param time_step        Interval between PSF images in seconds. [Default: 0.03]
-    @param velocity         Velocity magnitude of each phase screen layer in
-                            meters / second. [Default: 0]
-    @param direction        CCW relative to +x as galsim.Angle
-                            [Default: 0*galsim.degrees]
-    @param phase_cube       [Default: None]
-    @param start_time       Start time in seconds for the simulation relative to the
-                            beginning of the phase cube, if `phase_cube` is provided.
+    @param velocity         Velocity magnitude of each phase screen layer in meters / second.
                             [Default: 0]
-    @param stop_time        Stop time in seconds for the simulation relative to the
-                            beginning of the phase cube, if `phase_cube` is provided.
-                            [Default: None]
+    @param direction        CCW relative to +x as galsim.Angle.  [Default: 0*galsim.degrees]
+    @param phase_generator  AtmosphericPhaseGenerator object.  [Default: None]
     @param interpolant      Either an Interpolant instance or a string indicating which interpolant
                             should be used.  Options are 'nearest', 'sinc', 'linear', 'cubic',
                             'quintic', or 'lanczosN' where N should be the integer order to use.
@@ -181,7 +166,7 @@ class AtmosphericPSF(GSObject):
                             usually a safe choice.  [default: 1.5]
     @param flux             Total flux of the profile. [default: 1.]
     @param scale_unit       Units used to define the diffraction limit and draw images, if the user
-                            has supplied a separate value for `lam` and `diam`.  Should be either a
+                            has supplied a separate value for `lam` and `r0`.  Should be either a
                             galsim.AngleUnit, or a string that can be used to construct one (e.g.,
                             'arcsec', 'radians', etc.).
                             [default: galsim.arcsec]
@@ -203,7 +188,7 @@ class AtmosphericPSF(GSObject):
                 velocity=velocity, direction=direction)
         self.phase_generator = phase_generator
 
-        scale =1. / 10.0 * 1.e-9*lam * galsim.radians / scale_unit
+        scale = 1. / 10.0 * 1.e-9*lam * galsim.radians / scale_unit
         # Generate PSFs for each time step
         nx, ny = phase_generator.screens[0].shape
         im_grid = np.zeros((nx, ny), dtype=np.float64)
@@ -217,7 +202,7 @@ class AtmosphericPSF(GSObject):
             # Add this PSF instance to stack to get the finite-exposure PSF
             im_grid += im
 
-        im_grid = utilities.roll2d(im_grid, (im_grid.shape[0] / 2, im_grid.shape[1] / 2))
+        im_grid = np.fft.fftshift(im_grid)
         im_grid *= (flux / (im_grid.sum() * scale**2))
         out_im = galsim.InterpolatedImage(
             galsim.Image(im_grid.astype(np.float64), scale=scale))
