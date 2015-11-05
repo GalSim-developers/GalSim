@@ -61,6 +61,8 @@ class LSSTWCS(galsim.wcs.CelestialWCS):
         self._rotation_angle = rotation_angle
         self._cos_rot = np.cos(self._rotation_angle/galsim.radians)
         self._sin_rot = np.sin(self._rotation_angle/galsim.radians)
+        self._cos_dec = np.cos(self._pointing.dec/galsim.radians)
+        self._sin_dec = np.sin(self._pointing.dec/galsim.radians)
 
 
     def pupilCoordsFromPoint(self, point):
@@ -93,6 +95,36 @@ class LSSTWCS(galsim.wcs.CelestialWCS):
 
         return (x*self._cos_rot - y*self._sin_rot)*galsim.arcsec, \
                (x*self._sin_rot + y*self._cos_rot)*galsim.arcsec
+
+
+    def pupilCoordsFromFloat(self, ra, dec):
+        """
+        Convert from RA, Dec into coordinates on the pupil
+
+        Note: this method just reimplements the PALPY method Ds2tp
+        with some minor adjustments for sign conventions.
+
+        inputs
+        ------------
+        ra is in radians.  Can be a list.
+
+        dec is in radians.  Can be a list.
+
+        outputs
+        ------------
+        The x and y coordinates on the pupil in radians
+        """
+
+        dra = ra - self._pointing.ra/galsim.radians
+        cradif = np.cos(dra)
+        sradif = np.sin(dra)
+        sdec = np.sin(dec)
+        cdec = np.cos(dec)
+        denom = sdec * self._sin_dec + cdec * self._cos_dec * cradif
+        xx = cdec * sradif/denom
+        yy = (sdec * self._cos_dec - cdec * self._sin_dec * cradif)/denom
+        xx *= -1.0
+        return xx*self._cos_rot - yy*self._sin_rot, xx*self._sin_rot + yy*self._cos_rot
 
 
     def _get_chip_name_from_afw_point_list(self, point_list):

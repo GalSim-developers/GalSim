@@ -94,6 +94,38 @@ class WcsTestClass(unittest.TestCase):
             np.testing.assert_array_almost_equal((yTest/galsim.arcsec) - (yControl/galsim.arcsec), np.zeros(len(yControl)), 7)
 
 
+    def test_pupil_coordinates_from_floats(self):
+        """
+        Test that the method which converts floats into pupil coordinates agrees with the method
+        that converts CelestialCoords into pupil coordinates
+        """
+
+        raPointing = 113.0
+        decPointing = -25.6
+        rot = 82.1
+        pointing = CelestialCoord(raPointing*galsim.degrees, decPointing*galsim.degrees)
+        wcs = LSSTWCS(pointing, rot*galsim.degrees)
+
+        arcsec_per_radian = 180.0*3600.0/np.pi
+        np.random.seed(33)
+        raList = (np.random.random_sample(100)-0.5)*20.0+raPointing
+        decList = (np.random.random_sample(100)-0.5)*20.0+decPointing
+        pointingList = []
+        for rr, dd in zip(raList, decList):
+            pointingList.append(CelestialCoord(rr*galsim.degrees, dd*galsim.degrees))
+
+        control_x, control_y = wcs.pupilCoordsFromPoint(pointingList)
+        test_x, test_y = wcs.pupilCoordsFromFloat(np.radians(raList), np.radians(decList))
+
+        np.testing.assert_array_almost_equal((test_x - control_x/galsim.radians)*arcsec_per_radian,
+                                             np.zeros(len(test_x)), 10)
+
+
+        np.testing.assert_array_almost_equal((test_y - control_y/galsim.radians)*arcsec_per_radian,
+                                             np.zeros(len(test_y)), 10)
+
+
+
     def test_get_chip_name(self):
         """
         Test the method which associates positions on the sky with names of chips
