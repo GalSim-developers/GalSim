@@ -181,6 +181,30 @@ class LSSTWCS(galsim.wcs.CelestialWCS):
         return camera_point_list
 
 
+    def _get_afw_pupil_coord_list_from_float(self, ra, dec):
+        """
+        inputs
+        -------------
+        ra is in radians (can be a list)
+
+        dec is in radians (can be a list)
+
+        outputs
+        -------------
+        a list of afwGeom.Point2D objects correspdonding to pupil coordinates in radians
+        of point
+        """
+
+        x_pupil, y_pupil = self.pupilCoordsFromFloat(ra, dec)
+
+        if hasattr(x_pupil, '__len__'):
+            camera_point_list = [afwGeom.Point2D(x, y) for x,y in zip(x_pupil, y_pupil)]
+        else:
+            camera_point_list = [afwGeom.Point2D(x_pupil, y_pupil)]
+
+        return camera_point_list
+
+
     def chipNameFromPoint(self, point):
         """
         Take a point on the sky and find the chip which sees it
@@ -197,6 +221,33 @@ class LSSTWCS(galsim.wcs.CelestialWCS):
         """
 
         camera_point_list = self._get_afw_pupil_coord_list_from_point(point)
+
+        chip_name_list = self._get_chip_name_from_afw_point_list(camera_point_list)
+
+
+        if len(camera_point_list)==1:
+            return chip_name_list[0]
+        else:
+            return chip_name_list
+
+
+    def chipNameFromFloat(self, ra, dec):
+        """
+        Take a point on the sky and find the chip which sees it
+
+        inputs
+        ------------
+        ra is in radians (can be a list)
+
+        dec is in radians (can be a list)
+
+        outputs
+        ------------
+        the name of the chip (or a list of the names of the chips) on which
+        those points fall
+        """
+
+        camera_point_list = self._get_afw_pupil_coord_list_from_float(ra, dec)
 
         chip_name_list = self._get_chip_name_from_afw_point_list(camera_point_list)
 

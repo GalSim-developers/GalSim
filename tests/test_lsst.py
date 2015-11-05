@@ -180,3 +180,38 @@ class WcsTestClass(unittest.TestCase):
                 print 'triggering error: ',aa.args[0]
                 raise AssertionError(self.validation_msg)
 
+
+    def test_get_chip_name_from_float(self):
+        """
+        Test the method which associates positions on the sky (in terms of floats) with names of chips
+        """
+
+        pointing = CelestialCoord(self.raPointing*galsim.degrees, self.decPointing*galsim.degrees)
+        wcs = LSSTWCS(pointing, self.rotation*galsim.degrees)
+
+        # test case of a mapping a single location
+        for rr, dd, control_name in \
+            zip(self.camera_data['ra'], self.camera_data['dec'], self.camera_data['chipName']):
+
+            test_name = wcs.chipNameFromFloat(np.radians(rr), np.radians(dd))
+
+            try:
+                if control_name != 'None':
+                    self.assertEqual(test_name, control_name)
+                else:
+                    self.assertEqual(test_name, None)
+            except AssertionError as aa:
+                print 'triggering error: ',aa.args[0]
+                raise AssertionError(self.validation_msg)
+
+        # test case of mapping a list of celestial coords
+        test_name_list = wcs.chipNameFromFloat(np.radians(self.camera_data['ra']), np.radians(self.camera_data['dec']))
+        for test_name, control_name in zip(test_name_list, self.camera_data['chipName']):
+            try:
+                if control_name != 'None':
+                    self.assertEqual(test_name, control_name)
+                else:
+                    self.assertEqual(test_name, None)
+            except AssertionError as aa:
+                print 'triggering error: ',aa.args[0]
+                raise AssertionError(self.validation_msg)
