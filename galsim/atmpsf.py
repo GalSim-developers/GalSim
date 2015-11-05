@@ -203,15 +203,13 @@ class AtmosphericPSF(GSObject):
                 velocity=velocity, direction=direction)
         self.phase_generator = phase_generator
 
-        pad = 2
-        scale = pad / 10.0 * lam * galsim.radians / scale_unit
+        scale =1. / 10.0 * 1.e-9*lam * galsim.radians / scale_unit
         # Generate PSFs for each time step
         nx, ny = phase_generator.screens[0].shape
-        im_grid = np.zeros((nx*pad, ny*pad), dtype=np.float64)
+        im_grid = np.zeros((nx, ny), dtype=np.float64)
         for i, screens in itertools.izip(xrange(nstep), phase_generator):
-            wf = np.zeros((nx*pad, ny*pad), dtype=np.complex128)
             # The wavefront to use is exp(2 pi i screen)
-            wf[(nx/2):(3*nx/2), (ny/2):(3*ny/2)] = np.exp(1j * np.sum(screens, axis=0))
+            wf = np.exp(1j * np.sum(screens, axis=0))
             # Calculate the image array via FFT.
             # Copied from galsim.optics.psf method (hacky)
             ftwf = np.fft.ifft2(np.fft.ifftshift(wf))
