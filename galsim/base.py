@@ -276,7 +276,7 @@ class GSObject(object):
 
         NB. This is a shallow copy, which is normally fine.  However, if the object has a noise
         attribute, then the copy will use the same rng, so calls to things like noise.whitenImage
-        from the two copies would produce different realizations of the noise.  If you want 
+        from the two copies would produce different realizations of the noise.  If you want
         these to be precisely identical, then copy.deepcopy will make an exact duplicate, which
         will have identical noise realizations for that kind of application.
         """
@@ -1269,8 +1269,8 @@ class GSObject(object):
 # Pickling an SBProfile is a bit tricky, since it's a base class for lots of other classes.
 # Normally, we'll know what the derived class is, so we can just use the pickle stuff that is
 # appropriate for that.  But if we get a SBProfile back from say the getObj() method of
-# SBTransform, then we won't know what class it should be.  So, in this case, we use the 
-# repr to do the pickling.  This isn't usually a great idea in general, but it provides a 
+# SBTransform, then we won't know what class it should be.  So, in this case, we use the
+# repr to do the pickling.  This isn't usually a great idea in general, but it provides a
 # convenient way to get the SBProfile to be the correct type in this case.
 # So, getstate just returns the repr string.  And setstate builds the right kind of object
 # by essentially doing `self = eval(repr)`.
@@ -1410,12 +1410,12 @@ class Gaussian(GSObject):
 _galsim.SBGaussian.__getinitargs__ = lambda self: (
         self.getSigma(), self.getFlux(), self.getGSParams())
 # SBProfile defines __getstate__ and __setstate__.  We don't actually want to use those here.
-# Just the __getinitargs__ is sufficient.  But we define these two to override the base class 
+# Just the __getinitargs__ is sufficient.  But we define these two to override the base class
 # definitions.
 # Note: __setstate__ just returns 1, which means it is a no op.  I would use pass to make that
 # clear, but pass doesn't work for a lambda expression since it needs to return something.
 _galsim.SBGaussian.__getstate__ = lambda self: None
-_galsim.SBGaussian.__setstate__ = lambda self, state: 1 
+_galsim.SBGaussian.__setstate__ = lambda self, state: 1
 _galsim.SBGaussian.__repr__ = lambda self: \
         'galsim._galsim.SBGaussian(%r, %r, %r)'%self.__getinitargs__()
 
@@ -1526,7 +1526,7 @@ class Moffat(GSObject):
         return s
 
 _galsim.SBMoffat.__getinitargs__ = lambda self: (
-        self.getBeta(), self.getScaleRadius(), None, None, self.getTrunc(), 
+        self.getBeta(), self.getScaleRadius(), None, None, self.getTrunc(),
         self.getFlux(), self.getGSParams())
 _galsim.SBMoffat.__getstate__ = lambda self: None
 _galsim.SBMoffat.__setstate__ = lambda self, state: 1
@@ -1723,20 +1723,42 @@ class Kolmogorov(GSObject):
         >>> r0 = 0.15 * (lam/500)**1.2  # meters
         >>> lam_over_r0 = (lam * 1.e-9) / r0  # radians
         >>> lam_over_r0 *= 206265  # Convert to arcsec
+        >>> psf = galsim.Kolmogorov(lam_over_r0)
+
+    Or, use separate keywords for r0 and wavelength in meters and nanometers, respectively:
+
+        >>> psf = galsim.Kolmogorov(lam=lam, r0=r0)
+
+    in which case the user can also choose what units to use for internal descriptions of the light
+    profile using the `scale_unit` keyword (default: galsim.arcsec).  When drawing images, users
+    should then use units of `scale_unit` to specify the pixel scale.
 
     The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
 
-    A Kolmogorov can be initialized using one (and only one) of three possible size parameters:
-    `lam_over_r0`, `fwhm`, or `half_light_radius`.  Exactly one of these three is required.
+    A Kolmogorov can be initialized using one (and only one) of four possible size parameter
+    combinations: `lam` and `r0`, `lam_over_r0`, `fwhm`, or `half_light_radius`. Exactly one of
+    these three is required.
 
     @param lam_over_r0      The parameter that governs the scale size of the profile.
                             See above for details about calculating it.  [One of `lam_over_r0`,
                             `fwhm`, or `half_light_radius` is required.]
+    @param lam              Lambda (wavelength) in units of nanometers.  Must be supplied with
+                            `diam`, and in this case, image scales (`scale`) should be specified in
+                            units of `scale_unit`.
+    @param diam             Telescope diameter in units of meters.  Must be supplied with
+                            `lam`, and in this case, image scales (`scale`) should be specified in
+                            units of `scale_unit`.
     @param fwhm             The full-width-half-max of the profile.  Typically given in arcsec.
                             [One of `lam_over_r0`, `fwhm`, or `half_light_radius` is required.]
     @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
                             [One of `lam_over_r0`, `fwhm`, or `half_light_radius` is required.]
     @param flux             The flux (in photons) of the profile. [default: 1]
+    @param scale_unit       Units used to define the seeing and draw images, if the user has
+                            supplied a separate value for `lam` and `r0`.  Note that the results of
+                            calling methods like getFWHM() will be returned in units of
+                            `scale_unit`, as well.  Should be either a galsim.AngleUnit, or a string
+                            that can be used to construct one (e.g., 'arcsec', 'radians', etc.).
+                            [default: galsim.arcsec]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
@@ -1751,7 +1773,8 @@ class Kolmogorov(GSObject):
     """
     _req_params = {}
     _opt_params = { "flux" : float }
-    _single_params = [ { "lam_over_r0" : float, "fwhm" : float, "half_light_radius" : float } ]
+    _single_params = [ { "lam_over_r0" : float, "lam": float,
+                         "fwhm" : float, "half_light_radius" : float } ]
     _takes_rng = False
     _takes_logger = False
 
@@ -1761,27 +1784,35 @@ class Kolmogorov(GSObject):
     # Similarly, SBKolmogorov calculates the relation between lambda/r0 and half-light radius
     _hlr_factor = 0.554811
 
-    def __init__(self, lam_over_r0=None, fwhm=None, half_light_radius=None, flux=1.,
-                 gsparams=None):
+    def __init__(self, lam_over_r0=None, lam=None, r0=None, fwhm=None, half_light_radius=None,
+                 flux=1., scale_unit=galsim.arcsec, gsparams=None):
 
-        if fwhm is not None :
-            if lam_over_r0 is not None or half_light_radius is not None:
+        if fwhm is not None:
+            if any(item is not None for item in (lam_over_r0, lam, r0, half_light_radius)):
                 raise TypeError(
-                        "Only one of lam_over_r0, fwhm, and half_light_radius may be " +
-                        "specified for Kolmogorov")
+                    "Only one of (lam, r0), lam_over_r0, fwhm, and half_light_radius may be " +
+                    "specified for Kolmogorov")
             else:
                 lam_over_r0 = fwhm / Kolmogorov._fwhm_factor
         elif half_light_radius is not None:
-            if lam_over_r0 is not None:
+            if any(item is not None for item in (lam_over_r0, lam, r0, fwhm)):
                 raise TypeError(
-                        "Only one of lam_over_r0, fwhm, and half_light_radius may be " +
-                        "specified for Kolmogorov")
+                    "Only one of (lam, r0), lam_over_r0, fwhm, and half_light_radius may be " +
+                    "specified for Kolmogorov")
             else:
                 lam_over_r0 = half_light_radius / Kolmogorov._hlr_factor
-        elif lam_over_r0 is None:
+        elif lam is not None:
+            if r0 is None:
+                raise TypeError("Must specify r0 if specifying lam in Kolmogorov")
+            if any(item is not None for item in (lam_over_r0, fwhm, half_light_radius)):
                 raise TypeError(
-                        "One of lam_over_r0, fwhm, or half_light_radius must be " +
-                        "specified for Kolmogorov")
+                    "Only one of (lam, r0), lam_over_r0, fwhm, and half_light_radius may be " +
+                    "specified for Kolmogorov")
+            lam_over_r0 = (1.e-9*lam / r0) * (galsim.radians / scale_unit)
+        elif lam_over_r0 is None:
+            raise TypeError(
+                "One of (lam, r0), lam_over_r0, fwhm, or half_light_radius must be " +
+                "specified for Kolmogorov")
 
         GSObject.__init__(self, _galsim.SBKolmogorov(lam_over_r0, flux, gsparams))
         self._gsparams = gsparams
@@ -1807,7 +1838,7 @@ class Kolmogorov(GSObject):
     def half_light_radius(self): return self.getHalfLightRadius()
     @property
     def fwhm(self): return self.getFWHM()
- 
+
     def __repr__(self):
         return 'galsim.Kolmogorov(lam_over_r0=%r, flux=%r, gsparams=%r)'%(
             self.lam_over_r0, self.flux, self._gsparams)
@@ -1987,7 +2018,7 @@ class TopHat(GSObject):
 
     @property
     def radius(self): return self.getRadius()
- 
+
     def __repr__(self):
         return 'galsim.TopHat(radius=%r, flux=%r, gsparams=%r)'%(
             self.radius, self.flux, self._gsparams)
@@ -2494,7 +2525,7 @@ class Spergel(GSObject):
 
     def __init__(self, nu, half_light_radius=None, scale_radius=None,
                  flux=1., gsparams=None):
-        GSObject.__init__(self, _galsim.SBSpergel(nu, scale_radius, half_light_radius, flux, 
+        GSObject.__init__(self, _galsim.SBSpergel(nu, scale_radius, half_light_radius, flux,
                                                   gsparams))
         self._gsparams = gsparams
 
@@ -2639,10 +2670,10 @@ small_fraction_of_flux      When photon shooting, intervals with less than this 
 """
 
 _galsim.GSParams.__getinitargs__ = lambda self: (
-        self.minimum_fft_size, self.maximum_fft_size, 
+        self.minimum_fft_size, self.maximum_fft_size,
         self.folding_threshold, self.stepk_minimum_hlr, self.maxk_threshold,
         self.kvalue_accuracy, self.xvalue_accuracy, self.table_spacing,
-        self.realspace_relerr, self.realspace_abserr, 
+        self.realspace_relerr, self.realspace_abserr,
         self.integration_relerr, self.integration_abserr,
         self.shoot_accuracy, self.allowed_flux_variation,
         self.range_division_for_extrema, self.small_fraction_of_flux)
