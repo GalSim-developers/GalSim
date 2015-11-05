@@ -95,6 +95,60 @@ class LSSTWCS(galsim.wcs.CelestialWCS):
                (x*self._sin_rot + y*self._cos_rot)*galsim.arcsec
 
 
+    def _get_chip_name_from_afw_point_list(self, point_list):
+        """
+        inputs
+        ------------
+        point_list is a list of afwGeom.Point2D objects corresponding to pupil coordinates (in radians)
+
+        outputs
+        ------------
+        a list of chip names where those points fall
+        """
+        det_list = self._camera.findDetectorsList(point_list, PUPIL)
+
+        chip_name_list = []
+
+        for pt, det in zip(point_list, det_list):
+            if len(det)==0 or np.isnan(pt.getX()) or np.isnan(pt.getY()):
+                chip_name_list.append(None)
+            else:
+                names = [dd.getName() for dd in det]
+                if len(names)>1:
+                    raise RuntimeError("This method does not know how to deal with cameras " +
+                                       "where points can be on multiple detectors.  " +
+                                       "Override LSSTWCS._get_chip_name to add this.")
+                elif len(names)==0:
+                    chip_name_list.append(None)
+                else:
+                    chip_name_list.append(names[0])
+
+        return chip_name_list
+
+
+    def _get_afw_pupil_coord_list(self, point):
+        """
+        inputs
+        -------------
+        point is a CelestialCoord (or a list of CelestialCoords) corresponding to RA, Dec
+        on the sky
+
+        outputs
+        -------------
+        a list of afwGeom.Point2D objects correspdonding to pupil coordinates in radians
+        of point
+        """
+
+        x_pupil, y_pupil = self._get_pupil_coordinates(point)
+
+        if hasattr(x_pupil, '__len__'):
+            camera_point_list = [afwGeom.Point2D(x/galsim.radians, y/galsim.radians) for x,y in zip(x_pupil, y_pupil)]
+        else:
+            camera_point_list = [afwGeom.Point2D(x_pupil/galsim.radians, y_pupil/galsim.radians)]
+
+        return camera_point_list
+
+
     def _get_chip_name(self, point):
         """
         Take a point on the sky and find the chip which sees it
@@ -110,30 +164,10 @@ class LSSTWCS(galsim.wcs.CelestialWCS):
         those points fall
         """
 
-        x_pupil, y_pupil = self._get_pupil_coordinates(point)
+        camera_point_list = self._get_afw_pupil_coord_list(point)
 
-        if hasattr(x_pupil, '__len__'):
-            camera_point_list = [afwGeom.Point2D(x/galsim.radians, y/galsim.radians) for x,y in zip(x_pupil, y_pupil)]
-        else:
-            camera_point_list = [afwGeom.Point2D(x_pupil/galsim.radians, y_pupil/galsim.radians)]
+        chip_name_list = self._get_chip_name_from_afw_point_list(camera_point_list)
 
-        det_list = self._camera.findDetectorsList(camera_point_list, PUPIL)
-
-        chip_name_list = []
-
-        for pt, det in zip(camera_point_list, det_list):
-            if len(det)==0 or np.isnan(pt.getX()) or np.isnan(pt.getY()):
-                chip_name_list.append(None)
-            else:
-                names = [dd.getName() for dd in det]
-                if len(names)>1:
-                    raise RuntimeError("This method does not know how to deal with cameras " +
-                                       "where points can be on multiple detectors.  " +
-                                       "Override LSSTWCS._get_chip_name to add this.")
-                elif len(names)==0:
-                    chip_name_list.append(None)
-                else:
-                    chip_name_list.append(names[0])
 
         if len(camera_point_list)==1:
             return chip_name_list[0]
