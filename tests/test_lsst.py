@@ -122,7 +122,9 @@ class WcsTestClass(unittest.TestCase):
                 print 'triggering error: ',aa.args[0]
                 raise AssertionError("The LSST WCS chipName outputs are no longer consistent\n"
                                      "with the LSST Stack.  Contact Scott Daniel at scottvalscott@gmail.com\n"
-                                     "to make sure you have the correct version\n")
+                                     "to make sure you have the correct version\n"
+                                     "\nYou can also try re-creating the test validation data\n"
+                                     "using the script GalSim/devel/external/generate_galsim_lsst_camera_validation.py")
 
         # test case of mapping a list of celestial coords
         point_list = []
@@ -140,5 +142,7 @@ class WcsTestClass(unittest.TestCase):
                 print 'triggering error: ',aa.args[0]
                 raise AssertionError("The LSST WCS chipName outputs are no longer consistent\n"
                                      "with the LSST Stack.  Contact Scott Daniel at scottvalscott@gmail.com\n"
-                                     "to make sure you have the correct version\n")
+                                     "to make sure you have the correct version\n"
+                                     "\nYou can also try re-creating the test validation data\n"
+                                     "using the script GalSim/devel/external/generate_galsim_lsst_camera_validation.py")
 
