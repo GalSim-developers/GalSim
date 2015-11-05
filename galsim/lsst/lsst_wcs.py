@@ -256,3 +256,64 @@ class LSSTWCS(galsim.wcs.CelestialWCS):
             return chip_name_list[0]
         else:
             return chip_name_list
+
+
+    def _pixel_coord_from_point_list(self, point_list):
+        """
+        inputs
+        ------------
+        point_list is a list of afwGeom.Point2D objects corresponding to pupil coordinates (in radians)
+
+        outputs
+        ------------
+        a list of x pixel coordinates
+
+        a list of y pixel coordinates
+        """
+
+        chip_name_list = self._get_chip_name_from_afw_point_list(point_list)
+
+        transform_dict = {}
+        for name in chip_name_list:
+            if name not in transform_dict and name is not None:
+                transform_dict[name] = self._camera[name].makeCameraSys(PIXELS)
+
+        x_pix = []
+        y_pix = []
+        for name, pt in zip(chip_name_list, point_list):
+            if name is None:
+                x_pix.append(np.nan)
+                y_pix.append(np.nan)
+                continue
+            cp = self._camera.makeCameraPoint(pt, PUPIL)
+            cs = transform_dict[name]
+            detPoint = self._camera.transform(cp, cs)
+            x_pix.append(detPoint.getPoint().getX())
+            y_pix.append(detPoint.getPoint().getY())
+
+        return x_pix, y_pix
+
+
+    def pixelCoordsFromPoint(self, point):
+        """
+        Take a point on the sky and transform it into pixel coordinates
+
+        inputs
+        ------------
+        point is a CelestialCoord (or a list of CelestialCoords) to be
+        transformed
+
+        outputs
+        ------------
+        a list of x pixel coordinates
+
+        a list of y pixel coordinates
+        """
+
+        camera_point_list = self._get_afw_pupil_coord_list_from_point(point)
+        xx, yy = self._pixel_coord_from_point_list(camera_point_list)
+
+        if len(xx)==1:
+            return xx[0], yy[0]
+        else:
+            return xx, yy
