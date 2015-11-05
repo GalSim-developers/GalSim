@@ -2,7 +2,10 @@ import numpy as np
 import galsim
 
 try:
+    import lsst.pex.logging as pexLog
+    import lsst.afw.geom as afwGeom
     import lsst.afw.cameraGeom as cameraGeom
+    from lsst.afw.cameraGeom import PUPIL, PIXELS
     from lsst.obs.lsstSim import LsstSimMapper
 except ImportError:
     raise ImportError("You cannot use the LSST module.\n"
@@ -47,6 +50,13 @@ class LSSTWCS(galsim.wcs.CelestialWCS):
         coordinates must be oriented along the direction of serial readout.
         """
 
+        # this line prevents the camera mapper from printing harmless warnings to
+        # stdout (which, as of 5 November 2015, happens every time you instantiate
+        # the camera below)
+        pexLog.Log.getDefaultLog().setThresholdFor("CameraMapper", pexLog.Log.FATAL)
+
+        self._camera = LsstSimMapper().camera
+
         self._pointing = origin
         self._rotation_angle = rotation_angle
         self._cos_rot = np.cos(self._rotation_angle/galsim.radians)
@@ -81,6 +91,51 @@ class LSSTWCS(galsim.wcs.CelestialWCS):
             x = np.array(x)
             y = np.array(y)
 
-        x *= -1.0
         return (x*self._cos_rot - y*self._sin_rot)*galsim.arcsec, \
                (x*self._sin_rot + y*self._cos_rot)*galsim.arcsec
+
+
+    def _get_chip_name(self, point):
+        """
+        Take a point on the sky and find the chip which sees it
+
+        inputs
+        ------------
+        point is a CelestialCoord (or a list of CelestialCoords) indicating
+        the positions to be transformed
+
+        outputs
+        ------------
+        the name of the chip (or a list of the names of the chips) on which
+        those points fall
+        """
+
+        x_pupil, y_pupil = self._get_pupil_coordinates(point)
+
+        if hasattr(x_pupil, '__len__'):
+            camera_point_list = [afwGeom.Point2D(x/galsim.radians, y/galsim.radians) for x,y in zip(x_pupil, y_pupil)]
+        else:
+            camera_point_list = [afwGeom.Point2D(x_pupil/galsim.radians, y_pupil/galsim.radians)]
+
+        det_list = self._camera.findDetectorsList(camera_point_list, PUPIL)
+
+        chip_name_list = []
+
+        for pt, det in zip(camera_point_list, det_list):
+            if len(det)==0 or np.isnan(pt.getX()) or np.isnan(pt.getY()):
+                chip_name_list.append(None)
+            else:
+                names = [dd.getName() for dd in det]
+                if len(names)>1:
+                    raise RuntimeError("This method does not know how to deal with cameras " +
+                                       "where points can be on multiple detectors.  " +
+                                       "Override LSSTWCS._get_chip_name to add this.")
+                elif len(names)==0:
+                    chip_name_list.append(None)
+                else:
+                    chip_name_list.append(names[0])
+
+        if len(camera_point_list)==1:
+            return chip_name_list[0]
+        else:
+            return chip_name_list
