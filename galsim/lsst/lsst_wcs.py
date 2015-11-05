@@ -49,8 +49,8 @@ class LSSTWCS(galsim.wcs.CelestialWCS):
 
         self._pointing = origin
         self._rotation_angle = rotation_angle
-        self.cos_rot = np.cos(self._rotation_angle/galsim.radians)
-        self.sin_rot = np.sin(self._rotation_angle/galsim.radians)
+        self._cos_rot = np.cos(self._rotation_angle/galsim.radians)
+        self._sin_rot = np.sin(self._rotation_angle/galsim.radians)
 
 
     def _get_pupil_coordinates(self, point):
@@ -82,4 +82,5 @@ class LSSTWCS(galsim.wcs.CelestialWCS):
             y = np.array(y)
 
         x *= -1.0
-        return (x*self.cos_rot - y*self.sin_rot)*galsim.arcsec, (x*self.sin_rot + y*self.cos_rot)*galsim.arcsec
+        return (x*self._cos_rot - y*self._sin_rot)*galsim.arcsec, \
+               (x*self._sin_rot + y*self._cos_rot)*galsim.arcsec
