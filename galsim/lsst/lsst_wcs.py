@@ -126,7 +126,7 @@ class LSSTWCS(galsim.wcs.CelestialWCS):
         return chip_name_list
 
 
-    def _get_afw_pupil_coord_list(self, point):
+    def _get_afw_pupil_coord_list_from_point(self, point):
         """
         inputs
         -------------
@@ -164,7 +164,7 @@ class LSSTWCS(galsim.wcs.CelestialWCS):
         those points fall
         """
 
-        camera_point_list = self._get_afw_pupil_coord_list(point)
+        camera_point_list = self._get_afw_pupil_coord_list_from_point(point)
 
         chip_name_list = self._get_chip_name_from_afw_point_list(camera_point_list)
 
