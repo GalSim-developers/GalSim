@@ -321,6 +321,44 @@ class LsstCameraTestClass(unittest.TestCase):
             raise AssertionError(self.validation_msg)
 
 
+    def test_pupil_coords_from_pixel_coords(self):
+        """
+        Test the conversion from pixel coordinates back into pupil coordinates
+        """
+
+        np.random.seed(88)
+        n_samples = 100
+        raList = (np.random.random_sample(n_samples)-0.5)*np.radians(1.5) + np.radians(self.raPointing)
+        decList = (np.random.random_sample(n_samples)-0.5)*np.radians(1.5) + np.radians(self.decPointing)
+
+        x_pup_control, y_pup_control = self.camera.pupilCoordsFromFloat(raList, decList)
+
+        camera_point_list = self.camera._get_afw_pupil_coord_list_from_float(raList, decList)
+
+        chip_name_possibilities = ('R:0,1 S:1,1', 'R:0,3 S:0,2', 'R:4,2 S:2,2', 'R:3,4 S:0,2')
+
+        chip_name_list = [chip_name_possibilities[ii] for ii in np.random.random_integers(0,3,n_samples)]
+        x_pix_list, y_pix_list = self.camera._pixel_coord_from_point_and_name(camera_point_list, chip_name_list)
+
+        x_pup_test, y_pup_test = self.camera.pupilCoordsFromPixelCoords(x_pix_list, y_pix_list, chip_name_list)
+
+        np.testing.assert_array_almost_equal(x_pup_test, x_pup_control, 10)
+        np.testing.assert_array_almost_equal(y_pup_test, y_pup_control, 10)
+
+        # test that NaNs are returned if chip_name is None or 'None'
+        chip_name_list = ['None'] * len(x_pix_list)
+        x_pup_test, y_pup_test = self.camera.pupilCoordsFromPixelCoords(x_pix_list, y_pix_list, chip_name_list)
+        for xp, yp in zip(x_pup_test, y_pup_test):
+            self.assertTrue(np.isnan(xp))
+            self.assertTrue(np.isnan(yp))
+
+        chip_name_list = [None] * len(x_pix_list)
+        x_pup_test, y_pup_test = self.camera.pupilCoordsFromPixelCoords(x_pix_list, y_pix_list, chip_name_list)
+        for xp, yp in zip(x_pup_test, y_pup_test):
+            self.assertTrue(np.isnan(xp))
+            self.assertTrue(np.isnan(yp))
+
+
 class LsstWcsTestCase(unittest.TestCase):
 
     @classmethod

@@ -61,6 +61,10 @@ class LsstCamera(object):
         # keyed to chip names
         self._pixel_system_dict = {}
 
+        # _pupil_system_dict will be a dictionary of chip pupil coordinate systems
+        # keyed to chip names
+        self._pupil_system_dict = {}
+
         self._pointing = origin
         self._rotation_angle = rotation_angle
         self._cos_rot = np.cos(self._rotation_angle/galsim.radians)
@@ -384,6 +388,62 @@ class LsstCamera(object):
             return xx[0], yy[0], chip_name_list[0]
         else:
             return xx, yy, chip_name_list
+
+
+    def pupilCoordsFromPixelCoords(self, x, y, chip_name):
+        """
+        Convert pixel coordinates on a specific chip into pupil coordinates (in radians)
+
+        inputs
+        ------------
+        x is the x pixel coordinate (it can be a list)
+
+        y is the y pixel coordinate (it can be a list)
+
+        chip_name is the name of the chip on which x and y were
+        measured (it can be a list)
+
+        outputs
+        ------------
+        a list of x pupil coordinates in radians
+
+        a list of y pupil coordinates in radians
+        """
+
+        if not hasattr(x, '__len__'):
+            x_list = [x]
+            y_list = [y]
+            chip_name_list = [chip_name]
+        else:
+            x_list = x
+            y_list = y
+            chip_name_list = chip_name
+
+        x_pupil = []
+        y_pupil = []
+        for xx, yy, name in zip(x_list, y_list, chip_name_list):
+            if name is None or name=='None':
+                x_pupil.append(np.NaN)
+                y_pupil.append(np.NaN)
+                continue
+
+            if name not in self._pixel_system_dict:
+                self._pixel_system_dict[name] = self._camera[name].makeCameraSys(PIXEL)
+
+            if name not in self._pupil_system_dict:
+                self._pupil_system_dict[name] = self._camera[name].makeCameraSys(PUPIL)
+
+            pt = self._camera.transform(self._camera.makeCameraPoint(afwGeom.Point2D(xx, yy), self._pixel_system_dict[name]),
+                                        self._pupil_system_dict[name]).getPoint()
+
+            x_pupil.append(pt.getX())
+            y_pupil.append(pt.getY())
+
+
+        if len(x_pupil)==1:
+            return x_pupil[0], y_pupil[0]
+        else:
+            return x_pupil, y_pupil
 
 
 class LsstWCS(galsim.wcs.CelestialWCS):
