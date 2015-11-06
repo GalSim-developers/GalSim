@@ -155,7 +155,7 @@ class LsstCamera(object):
         """
 
         x_g = x*self._cos_rot + y*self._sin_rot
-        y_g = -x*self._sin_rot + y*self._cos_rot
+        y_g = -1.0*x*self._sin_rot + y*self._cos_rot
 
         x_g *= -1.0
 
@@ -330,7 +330,7 @@ class LsstCamera(object):
             x_pix.append(detPoint.getPoint().getX())
             y_pix.append(detPoint.getPoint().getY())
 
-        return x_pix, y_pix
+        return np.array(x_pix), np.array(y_pix)
 
 
     def pixelCoordsFromPoint(self, point):
@@ -358,7 +358,7 @@ class LsstCamera(object):
         if len(xx)==1:
             return xx[0], yy[0], chip_name_list[0]
         else:
-            return xx, yy, chip_name_list
+            return np.array(xx), np.array(yy), chip_name_list
 
 
     def pixelCoordsFromFloat(self, ra, dec):
@@ -387,7 +387,7 @@ class LsstCamera(object):
         if len(xx)==1:
             return xx[0], yy[0], chip_name_list[0]
         else:
-            return xx, yy, chip_name_list
+            return np.array(xx), np.array(yy), chip_name_list
 
 
     def pupilCoordsFromPixelCoords(self, x, y, chip_name):
