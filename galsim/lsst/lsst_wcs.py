@@ -289,8 +289,7 @@ class LsstCamera(galsim.wcs.CelestialWCS):
                 y_pix.append(np.nan)
                 continue
             cp = self._camera.makeCameraPoint(pt, PUPIL)
-            cs = self._transform_dict[name]
-            detPoint = self._camera.transform(cp, cs)
+            detPoint = self._camera.transform(cp, self._transform_dict[name])
             x_pix.append(detPoint.getPoint().getX())
             y_pix.append(detPoint.getPoint().getY())
 
