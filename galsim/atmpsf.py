@@ -106,7 +106,7 @@ class AtmosphericPhaseGenerator(object):
         self.screens = np.zeros_like(self.powerlaw)
 
         for i, (r00, vx0, vy0, amag0) in enumerate(zip(r0, vx, vy, alpha_mag)):
-            pl = (2*np.pi/screen_size*np.sqrt(0.00058)*(r00**(-5.0/6.0)) *
+            pl = (1./screen_size*np.sqrt(0.00058)*(r00**(-5.0/6.0)) *
                   (fx*fx + fy*fy)**(-11.0/12.0) *
                   npix * np.sqrt(np.sqrt(2.0)))
             pl[0, 0] = 0.0
@@ -194,7 +194,7 @@ class AtmosphericPSF(GSObject):
         im_grid = np.zeros((nx, ny), dtype=np.float64)
         for i, screens in itertools.izip(xrange(nstep), phase_generator):
             # The wavefront to use is exp(2 pi i screen)
-            wf = np.exp(1j * np.sum(screens, axis=0))
+            wf = np.exp(2j * np.pi * np.sum(screens, axis=0))
             # Calculate the image array via FFT.
             # Copied from galsim.optics.psf method (hacky)
             ftwf = np.fft.ifft2(np.fft.ifftshift(wf))
