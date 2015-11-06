@@ -23,7 +23,7 @@ except ImportError:
                       "setup obs_lsstSim -t sims\n")
 
 
-__all__ = ["LsstCamera"]
+__all__ = ["LsstCamera", "LsstWCS"]
 
 class LsstCamera(object):
 
@@ -36,13 +36,13 @@ class LsstCamera(object):
         rotation_angle is an angle indicating the orientation of the camera with
         respect to the sky.  The convention for rotation_angle is:
 
-        rotSkyPos = 0 degrees means north is in the +y direction on the camera and east is -x
+        rotation_angle = 0 degrees means north is in the +y direction on the camera and east is -x
 
-        rotSkyPos = 90 degrees means north is -x and east is -y
+        rotation_angle = 90 degrees means north is -x and east is -y
 
-        rotSkyPos = -90 degrees means north is +x and east is +y
+        rotation_angle = -90 degrees means north is +x and east is +y
 
-        rotSkyPos = 180 degrees means north is -y and east is +x
+        rotation_angle = 180 degrees means north is -y and east is +x
 
         Note that in the above, x and y return to coordinates on the pupil.  These are
         rotated 90 degrees with respect to coordinates on the camera (pixel coordinates)
@@ -352,3 +352,51 @@ class LsstCamera(object):
             return xx[0], yy[0], chip_name_list[0]
         else:
             return xx, yy, chip_name_list
+
+
+class LsstWCS(galsim.wcs.CelestialWCS):
+
+    def __init__(self, origin, rotation_angle, chip_name):
+        """
+        inputs
+        ------------
+        origin is a CelestialCoord indicating the point at which the telescope
+        is pointing
+
+        rotation_angle is an angle indicating the orientation of the camera with
+        respect to the sky.  The convention for rotation_angle is:
+
+            rotation_angle = 0 degrees means north is in the +y direction on the camera and east is -x
+
+            rotation_angle = 90 degrees means north is -x and east is -y
+
+            rotation_angle = -90 degrees means north is +x and east is +y
+
+            rotation_angle = 180 degrees means north is -y and east is +x
+
+            Note that in the above, x and y return to coordinates on the pupil.  These are
+            rotated 90 degrees with respect to coordinates on the camera (pixel coordinates)
+            because of the LSST Data Management convention that the x-direction in pixel
+            coordinates must be oriented along the direction of serial readout.
+
+        chip_name is a string indicating the name of the chip to which this WCS corresponds
+
+            valid formats for chip_name are
+
+            R:i,j S:m,n
+
+            where i,j,m,n are integers.  R denotes the raft (a 3x3 block of chips).
+            S denotes the chip within the raft.
+
+            chip_names can be found using the chipNameFromFloat and chipNameFromPoint
+            methods of the class LsstCamera
+
+            Note: origin denotes the point on the sky at which the center of the entire
+            LSST field of view is pointing.  It does not (and often won't) have to fall
+            on the chip specified by chip_name
+        """
+
+        self._camera = LsstCamera(origin, rotation_angle)
+        self._chip_name = chip_name
+        if self._chip_name not in self._camera._camera:
+            raise RuntimeError("%s is not a valid chip_name for an LsstWCS" % chip_name)

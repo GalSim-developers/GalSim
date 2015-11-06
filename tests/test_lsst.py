@@ -1,8 +1,9 @@
+from __future__ import with_statement
 import unittest
 import numpy as np
 import os
 import galsim
-from galsim.lsst import LsstCamera
+from galsim.lsst import LsstCamera, LsstWCS
 from galsim.celestial import CelestialCoord
 
 
@@ -299,3 +300,22 @@ class LsstCameraTestClass(unittest.TestCase):
         except AssertionError as aa:
             print 'triggering error: ',aa.args[0]
             raise AssertionError(self.validation_msg)
+
+
+class LsstWcsTestCase(unittest.TestCase):
+
+    def test_constructor(self):
+        """
+        Just make sure that the constructor for LsstWCS runs, and that it throws an error when you specify
+        a nonsense chip.
+        """
+
+        pointing = CelestialCoord(112.0*galsim.degrees, -39.0*galsim.degrees)
+        rotation = 23.1*galsim.degrees
+
+        wcs1 = LsstWCS(pointing, rotation, 'R:1,1 S:2,2')
+
+        with self.assertRaises(RuntimeError) as context:
+            wcs2 = LsstWCS(pointing, rotation, 'R:1,1 S:3,3')
+        self.assertEqual(context.exception.args[0],
+                         "R:1,1 S:3,3 is not a valid chip_name for an LsstWCS")
