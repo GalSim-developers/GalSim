@@ -277,10 +277,6 @@ class LsstCamera(galsim.wcs.CelestialWCS):
         a list of y pixel coordinates
         """
 
-        for name in name_list:
-            if name not in self._transform_dict and name is not None:
-                self._transform_dict[name] = self._camera[name].makeCameraSys(PIXELS)
-
         x_pix = []
         y_pix = []
         for name, pt in zip(name_list, point_list):
@@ -288,6 +284,10 @@ class LsstCamera(galsim.wcs.CelestialWCS):
                 x_pix.append(np.nan)
                 y_pix.append(np.nan)
                 continue
+
+            if name not in self._transform_dict:
+                self._transform_dict[name] = self._camera[name].makeCameraSys(PIXELS)
+
             cp = self._camera.makeCameraPoint(pt, PUPIL)
             detPoint = self._camera.transform(cp, self._transform_dict[name])
             x_pix.append(detPoint.getPoint().getX())
