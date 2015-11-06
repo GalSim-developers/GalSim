@@ -23,7 +23,105 @@ except ImportError:
                       "setup obs_lsstSim -t sims\n")
 
 
-__all__ = ["LsstCamera", "LsstWCS"]
+__all__ = ["LsstCamera", "LsstWCS", "_nativeLonLatFromRaDec"]
+
+
+def _nativeLonLatFromRaDec(ra, dec, raPointing, decPointing):
+    """
+    Convert the RA and Dec of a star into `native' longitude and latitude.
+
+    Native longitude and latitude are defined as what RA and Dec would be
+    if the celestial pole were at the location where the telescope is pointing.
+    The transformation is achieved by rotating the vector pointing to the RA
+    and Dec being transformed once about the x axis and once about the z axis.
+    These are the Euler rotations referred to in Section 2.3 of
+
+    Calabretta and Greisen (2002), A&A 395, p. 1077
+
+    inputs
+    ------------
+    ra is the RA of the star being transformed in radians
+
+    dec is the Dec of the star being transformed in radians
+
+    raPointing is the RA at which the telescope is pointing
+    in radians
+
+    decPointing is the Dec at which the telescope is pointing
+    in radians
+
+    outputs
+    ------------
+    lonOut is the native longitude in radians
+
+    latOut is the native latitude in radians
+
+    Note: while ra and dec can be numpy.arrays, raPointing and decPointing
+    must be floats (you cannot transform for more than one pointing at once)
+    """
+
+    x = -1.0*np.cos(dec)*np.sin(ra)
+    y = np.cos(dec)*np.cos(ra)
+    z = np.sin(dec)
+
+    alpha = decPointing - 0.5*np.pi
+    beta = raPointing
+
+    ca=np.cos(alpha)
+    sa=np.sin(alpha)
+    cb=np.cos(beta)
+    sb=np.sin(beta)
+
+    v2 = np.dot(np.array([
+                          [1.0, 0.0, 0.0],
+                          [0.0, ca, sa],
+                          [0.0, -1.0*sa, ca]
+                          ]),
+                   np.dot(np.array([[cb, sb, 0.0],
+                                    [-sb, cb, 0.0],
+                                    [0.0, 0.0, 1.0]
+                                    ]), np.array([x,y,z])))
+
+    cc = np.sqrt(v2[0]*v2[0]+v2[1]*v2[1])
+    latOut = np.arctan2(v2[2], cc)
+
+    _y = v2[1]/np.cos(latOut)
+    _ra_raw = np.arccos(_y)
+
+    # control for _y=1.0, -1.0 but actually being stored as just outside
+    # the bounds of -1.0<=_y<=1.0 because of floating point error
+    if hasattr(_ra_raw, '__len__'):
+        _ra = np.array([rr if not np.isnan(rr) \
+                           else 0.5*np.pi*(1.0-np.sign(yy)) \
+                           for rr, yy in zip(_ra_raw, _y)])
+    else:
+        if np.isnan(_ra_raw):
+            if np.sign(_y)<0.0:
+                _ra = np.pi
+            else:
+                _ra = 0.0
+        else:
+            _ra = _ra_raw
+
+    _x = -np.sin(_ra)
+
+    if type(_ra) is np.float64:
+        if np.isnan(_ra):
+            lonOut = 0.0
+        elif (np.abs(_x)>1.0e-9 and np.sign(_x)!=np.sign(v2[0])) \
+             or (np.abs(_y)>1.0e-9 and np.sign(_y)!=np.sign(v2[1])):
+            lonOut = 2.0*np.pi-_ra
+        else:
+            lonOut = _ra
+    else:
+        _lonOut = [2.0*np.pi-rr if (np.abs(xx)>1.0e-9 and np.sign(xx)!=np.sign(v2_0)) \
+                                   or (np.abs(yy)>1.0e-9 and np.sign(yy)!=np.sign(v2_1)) \
+                                   else rr \
+                                   for rr, xx, yy, v2_0, v2_1 in zip(_ra, _x, _y, v2[0], v2[1])]
+
+        lonOut = np.array([0.0 if np.isnan(ll) else ll for ll in _lonOut])
+
+    return lonOut, latOut
 
 
 class LsstCamera(object):

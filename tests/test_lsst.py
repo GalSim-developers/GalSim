@@ -3,8 +3,125 @@ import unittest
 import numpy as np
 import os
 import galsim
-from galsim.lsst import LsstCamera, LsstWCS
+from galsim.lsst import LsstCamera, LsstWCS, _nativeLonLatFromRaDec
 from galsim.celestial import CelestialCoord
+
+
+class NativeLonLatTest(unittest.TestCase):
+
+    def testNativeLonLat(self):
+        """
+        Test that nativeLonLatFromRaDec works by considering stars and pointings
+        at intuitive locations
+        """
+
+        raList = [0.0, 0.0, 0.0, 1.5*np.pi]
+        decList = [0.5*np.pi, 0.5*np.pi, 0.0, 0.0]
+
+        raPointList = [0.0, 1.5*np.pi, 1.5*np.pi, 0.0]
+        decPointList = [0.0, 0.0,0.0, 0.0]
+
+        lonControlList = [np.pi, np.pi, 0.5*np.pi, 1.5*np.pi]
+        latControlList = [0.0, 0.0, 0.0, 0.0]
+
+        for rr, dd, rp, dp, lonc, latc in \
+        zip(raList, decList, raPointList, decPointList, lonControlList, latControlList):
+            lon, lat = _nativeLonLatFromRaDec(rr, dd, rp, dp)
+            self.assertAlmostEqual(lon, lonc, 10)
+            self.assertAlmostEqual(lat, latc, 10)
+
+
+    def testNativeLongLatComplicated(self):
+        """
+        Test that nativeLongLatFromRaDec works by considering stars and pointings
+        at non-intuitive locations.
+        """
+
+        np.random.seed(42)
+        nPointings = 10
+        raPointingList = np.random.random_sample(nPointings)*2.0*np.pi
+        decPointingList = np.random.random_sample(nPointings)*np.pi - 0.5*np.pi
+
+        nStars = 10
+        for raPointing, decPointing in zip(raPointingList, decPointingList):
+            raList = np.random.random_sample(nStars)*2.0*np.pi
+            decList = np.random.random_sample(nStars)*np.pi - 0.5*np.pi
+            for raRad, decRad in zip(raList, decList):
+
+                sinRa = np.sin(raRad)
+                cosRa = np.cos(raRad)
+                sinDec = np.sin(decRad)
+                cosDec = np.cos(decRad)
+
+                # the three dimensional position of the star
+                controlPosition = np.array([-cosDec*sinRa, cosDec*cosRa, sinDec])
+
+                # calculate the rotation matrices needed to transform the
+                # x, y, and z axes into the local x, y, and z axes
+                # (i.e. the axes with z lined up with raPointing, decPointing)
+                alpha = 0.5*np.pi - decPointing
+                ca = np.cos(alpha)
+                sa = np.sin(alpha)
+                rotX = np.array([[1.0, 0.0, 0.0],
+                                    [0.0, ca, sa],
+                                    [0.0, -sa, ca]])
+
+                cb = np.cos(raPointing)
+                sb = np.sin(raPointing)
+                rotZ = np.array([[cb, -sb, 0.0],
+                                    [sb, cb, 0.0],
+                                    [0.0, 0.0, 1.0]])
+
+                # rotate the coordinate axes into the local basis
+                xAxis = np.dot(rotZ, np.dot(rotX, np.array([1.0, 0.0, 0.0])))
+                yAxis = np.dot(rotZ, np.dot(rotX, np.array([0.0, 1.0, 0.0])))
+                zAxis = np.dot(rotZ, np.dot(rotX, np.array([0.0, 0.0, 1.0])))
+
+                # calculate the local longitude and latitude of the star
+                lon, lat = _nativeLonLatFromRaDec(raRad, decRad, raPointing, decPointing)
+                cosLon = np.cos(lon)
+                sinLon = np.sin(lon)
+                cosLat = np.cos(lat)
+                sinLat = np.sin(lat)
+
+                # the x, y, z position of the star in the local coordinate basis
+                transformedPosition = np.array([-cosLat*sinLon,
+                                                   cosLat*cosLon,
+                                                   sinLat])
+
+                # convert that position back into the un-rotated bases
+                testPosition = transformedPosition[0]*xAxis + \
+                               transformedPosition[1]*yAxis + \
+                               transformedPosition[2]*zAxis
+
+                # assert that testPosition and controlPosition should be equal
+                np.testing.assert_array_almost_equal(controlPosition, testPosition, decimal=10)
+
+
+
+    def testNativeLonLatVector(self):
+        """
+        Test that _nativeLonLatFromRaDec works by considering stars and pointings
+        at intuitive locations (make sure it works in a vectorized way; we do this
+        by performing a bunch of tansformations passing in ra and dec as numpy arrays
+        and then comparing them to results computed in an element-wise way)
+        """
+
+        raPoint = np.radians(145.0)
+        decPoint = np.radians(-35.0)
+
+        nSamples = 100
+        np.random.seed(42)
+        raList = np.random.random_sample(nSamples)*2.0*np.pi
+        decList = np.random.random_sample(nSamples)*np.pi - 0.5*np.pi
+
+        lonList, latList = _nativeLonLatFromRaDec(raList, decList, raPoint, decPoint)
+
+        for rr, dd, lon, lat in zip(raList, decList, lonList, latList):
+            lonControl, latControl = _nativeLonLatFromRaDec(rr, dd, raPoint, decPoint)
+            self.assertAlmostEqual(lat, latControl, 10)
+            if np.abs(np.abs(lat) - 0.5*np.pi)>1.0e-9:
+                self.assertAlmostEqual(lon, lonControl, 10)
 
 
 class LsstCameraTestClass(unittest.TestCase):
