@@ -709,3 +709,59 @@ class LsstWcsTestCase(unittest.TestCase):
 
         msg = 'maxError in tanWcs was %e ' % maxDistance
         self.assertLess(maxDistance, 0.001, msg=msg)
+
+
+    def test_tan_sip_wcs(self):
+        """
+        Test that getTanSipWcs works by fitting a TAN WCS and a TAN-SIP WCS to
+        the a detector with distortions and verifying that the TAN-SIP WCS better approximates
+        the truth.
+        """
+
+        arcsec_per_radian = 180.0*3600.0/np.pi
+
+        tanWcs = self.wcs.getTanWcs()
+        tanSipWcs = self.wcs.getTanSipWcs()
+
+        tanWcsRa = []
+        tanWcsDec = []
+        tanSipWcsRa = []
+        tanSipWcsDec = []
+
+        xPixList = []
+        yPixList = []
+        for xx in np.arange(0.0, 4001.0, 1000.0):
+            for yy in np.arange(0.0, 4001.0, 1000.0):
+                xPixList.append(xx)
+                yPixList.append(yy)
+
+                pt = afwGeom.Point2D(xx ,yy)
+                skyPt = tanWcs.pixelToSky(pt).getPosition()
+                tanWcsRa.append(skyPt.getX())
+                tanWcsDec.append(skyPt.getY())
+
+                skyPt = tanSipWcs.pixelToSky(pt).getPosition()
+                tanSipWcsRa.append(skyPt.getX())
+                tanSipWcsDec.append(skyPt.getY())
+
+        tanWcsRa = np.radians(np.array(tanWcsRa))
+        tanWcsDec = np.radians(np.array(tanWcsDec))
+
+        tanSipWcsRa = np.radians(np.array(tanSipWcsRa))
+        tanSipWcsDec = np.radians(np.array(tanSipWcsDec))
+
+        xPixList = np.array(xPixList)
+        yPixList = np.array(yPixList)
+
+        raTest, decTest = self.wcs._camera.raDecFromPixelCoords(xPixList, yPixList,
+                                                                [self.wcs._chip_name]*len(xPixList))
+
+        tanDistanceList = arcsec_per_radian*haversine(raTest, decTest, tanWcsRa, tanWcsDec)
+        tanSipDistanceList = arcsec_per_radian*haversine(raTest, decTest, tanSipWcsRa, tanSipWcsDec)
+
+        maxDistanceTan = tanDistanceList.max()
+        maxDistanceTanSip = tanSipDistanceList.max()
+
+        msg = 'max error in TAN WCS %e; in TAN-SIP %e' % (maxDistanceTan, maxDistanceTanSip)
+        self.assertLess(maxDistanceTanSip, 0.001, msg=msg)
+        self.assertGreater(maxDistanceTan-maxDistanceTanSip, 1.0e-10, msg=msg)

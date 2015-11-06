@@ -7,6 +7,8 @@ try:
     import lsst.afw.geom as afwGeom
     import lsst.afw.cameraGeom as cameraGeom
     import lsst.afw.image as afwImage
+    import lsst.afw.image.utils as afwImageUtils
+    import lsst.meas.astrom as measAstrom
     from lsst.afw.cameraGeom import PUPIL, PIXELS, TAN_PIXELS, FOCAL_PLANE
     from lsst.obs.lsstSim import LsstSimMapper
 except ImportError:
@@ -943,3 +945,49 @@ class LsstWCS(galsim.wcs.CelestialWCS):
         tanWcs = afwImage.cast_TanWcs(afwImage.makeWcs(fitsHeader))
 
         return tanWcs
+
+
+    def getTanSipWcs(self,
+                     order=3,
+                     skyToleranceArcSec=0.001,
+                     pixelTolerance=0.01):
+        """
+        Take an afw Detector and approximate its pixel-to-(Ra,Dec) transformation
+        with a TAN-SIP WCs.
+
+        Definition of the TAN-SIP WCS can be found in Shupe and Hook (2008)
+        http://fits.gsfc.nasa.gov/registry/sip/SIP_distortion_v1_0.pdf
+
+        inputs
+        ------------
+        order is the order of the SIP polynomials to be fit to the
+        optical distortions (default 3)
+
+        skyToleranceArcSec is the maximum allowed error in the fitted
+        world coordinates (in arcseconds).  Default 0.001
+
+        pixelTolerance is the maximum allowed error in the fitted
+        pixel coordinates.  Default 0.02
+
+        outputs
+        ------------
+        tanSipWcs is an instantiation of afw.image's TanWcs class
+        representing the WCS of the detector with optical distortions parametrized
+        by the SIP polynomials.
+        """
+
+        bbox = self._detector.getBBox()
+
+        tanWcs = self.getTanWcs()
+
+        mockExposure = afwImage.ExposureF(bbox.getMaxX(), bbox.getMaxY())
+        mockExposure.setWcs(tanWcs)
+        mockExposure.setDetector(self._detector)
+
+        distortedWcs = afwImageUtils.getDistortedWcs(mockExposure.getInfo())
+        tanSipWcs = measAstrom.approximateWcs(distortedWcs, bbox,
+                                              order=order,
+                                              skyTolerance=skyToleranceArcSec*afwGeom.arcseconds,
+                                              pixelTolerance=pixelTolerance)
+
+        return tanSipWcs
