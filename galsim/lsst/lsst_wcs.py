@@ -23,9 +23,9 @@ except ImportError:
                       "setup obs_lsstSim -t sims\n")
 
 
-__all__ = ["LSSTWCS"]
+__all__ = ["LsstCamera"]
 
-class LSSTWCS(galsim.wcs.CelestialWCS):
+class LsstCamera(galsim.wcs.CelestialWCS):
 
     def __init__(self, origin, rotation_angle):
         """

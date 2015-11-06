@@ -2,11 +2,11 @@ import unittest
 import numpy as np
 import os
 import galsim
-from galsim.lsst import LSSTWCS
+from galsim.lsst import LsstCamera
 from galsim.celestial import CelestialCoord
 
 
-class WcsTestClass(unittest.TestCase):
+class LsstCameraTestClass(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -18,14 +18,14 @@ class WcsTestClass(unittest.TestCase):
         cls.decPointing = -33.015167519966
         cls.rotation = 27.0
 
-        cls.validation_msg = "The LSST WCS chipName outputs are no longer consistent\n" \
+        cls.validation_msg = "The LSST Camera chipName outputs are no longer consistent\n" \
                              + "with the LSST Stack.  Contact Scott Daniel at scottvalscott@gmail.com\n" \
                              + "to make sure you have the correct version\n" \
                              + "\nYou can also try re-creating the test validation data\n" \
                              + "using the script GalSim/devel/external/generate_galsim_lsst_camera_validation.py"
 
         pointing = CelestialCoord(cls.raPointing*galsim.degrees, cls.decPointing*galsim.degrees)
-        cls.wcs = LSSTWCS(pointing, cls.rotation*galsim.degrees)
+        cls.camera = LsstCamera(pointing, cls.rotation*galsim.degrees)
 
         path, filename = os.path.split(__file__)
         file_name = os.path.join(path, 'random_data', 'galsim_afwCameraGeom_data.txt')
@@ -87,7 +87,7 @@ class WcsTestClass(unittest.TestCase):
         for ra, dec, rotation in zip(ra_pointing_list, dec_pointing_list, rotation_angle_list):
 
             pointing = CelestialCoord(ra*galsim.radians, dec*galsim.radians)
-            wcs = LSSTWCS(pointing, rotation*galsim.radians)
+            camera = LsstCamera(pointing, rotation*galsim.radians)
 
             dra_list = (np.random.random_sample(100)-0.5)*0.5
             ddec_list = (np.random.random_sample(100)-0.5)*0.5
@@ -95,7 +95,7 @@ class WcsTestClass(unittest.TestCase):
             star_list = np.array([CelestialCoord((ra+dra)*galsim.radians, (dec+ddec)*galsim.radians)
                                  for dra, ddec in zip(dra_list, ddec_list)])
 
-            xTest, yTest = wcs.pupilCoordsFromPoint(star_list)
+            xTest, yTest = camera.pupilCoordsFromPoint(star_list)
             xControl = []
             yControl = []
             for star in star_list:
@@ -121,7 +121,7 @@ class WcsTestClass(unittest.TestCase):
         decPointing = -25.6
         rot = 82.1
         pointing = CelestialCoord(raPointing*galsim.degrees, decPointing*galsim.degrees)
-        wcs = LSSTWCS(pointing, rot*galsim.degrees)
+        camera = LsstCamera(pointing, rot*galsim.degrees)
 
         arcsec_per_radian = 180.0*3600.0/np.pi
         np.random.seed(33)
@@ -131,8 +131,8 @@ class WcsTestClass(unittest.TestCase):
         for rr, dd in zip(raList, decList):
             pointingList.append(CelestialCoord(rr*galsim.degrees, dd*galsim.degrees))
 
-        control_x, control_y = wcs.pupilCoordsFromPoint(pointingList)
-        test_x, test_y = wcs.pupilCoordsFromFloat(np.radians(raList), np.radians(decList))
+        control_x, control_y = camera.pupilCoordsFromPoint(pointingList)
+        test_x, test_y = camera.pupilCoordsFromFloat(np.radians(raList), np.radians(decList))
 
         np.testing.assert_array_almost_equal((test_x - control_x/galsim.radians)*arcsec_per_radian,
                                              np.zeros(len(test_x)), 10)
@@ -153,7 +153,7 @@ class WcsTestClass(unittest.TestCase):
             zip(self.camera_data['ra'], self.camera_data['dec'], self.camera_data['chipName']):
 
             point = CelestialCoord(rr*galsim.degrees, dd*galsim.degrees)
-            test_name = self.wcs.chipNameFromPoint(point)
+            test_name = self.camera.chipNameFromPoint(point)
 
             try:
                 if control_name != 'None':
@@ -169,7 +169,7 @@ class WcsTestClass(unittest.TestCase):
         for rr, dd in zip(self.camera_data['ra'], self.camera_data['dec']):
             point_list.append(CelestialCoord(rr*galsim.degrees, dd*galsim.degrees))
 
-        test_name_list = self.wcs.chipNameFromPoint(point_list)
+        test_name_list = self.camera.chipNameFromPoint(point_list)
         for test_name, control_name in zip(test_name_list, self.camera_data['chipName']):
             try:
                 if control_name != 'None':
@@ -190,7 +190,7 @@ class WcsTestClass(unittest.TestCase):
         for rr, dd, control_name in \
             zip(self.camera_data['ra'], self.camera_data['dec'], self.camera_data['chipName']):
 
-            test_name = self.wcs.chipNameFromFloat(np.radians(rr), np.radians(dd))
+            test_name = self.camera.chipNameFromFloat(np.radians(rr), np.radians(dd))
 
             try:
                 if control_name != 'None':
@@ -202,7 +202,7 @@ class WcsTestClass(unittest.TestCase):
                 raise AssertionError(self.validation_msg)
 
         # test case of mapping a list of celestial coords
-        test_name_list = self.wcs.chipNameFromFloat(np.radians(self.camera_data['ra']), np.radians(self.camera_data['dec']))
+        test_name_list = self.camera.chipNameFromFloat(np.radians(self.camera_data['ra']), np.radians(self.camera_data['dec']))
         for test_name, control_name in zip(test_name_list, self.camera_data['chipName']):
             try:
                 if control_name != 'None':
@@ -224,7 +224,7 @@ class WcsTestClass(unittest.TestCase):
             zip(self.camera_data['ra'], self.camera_data['dec'], self.camera_data['xpix'], self.camera_data['ypix']):
 
             point = CelestialCoord(rr*galsim.degrees, dd*galsim.degrees)
-            x_test, y_test = self.wcs.pixelCoordsFromPoint(point)
+            x_test, y_test = self.camera.pixelCoordsFromPoint(point)
             try:
                 if not np.isnan(x_test):
                     self.assertAlmostEqual(x_test, x_control, 6)
@@ -242,7 +242,7 @@ class WcsTestClass(unittest.TestCase):
         for rr, dd in zip(self.camera_data['ra'], self.camera_data['dec']):
             pointing_list.append(CelestialCoord(rr*galsim.degrees, dd*galsim.degrees))
 
-        x_test, y_test = self.wcs.pixelCoordsFromPoint(pointing_list)
+        x_test, y_test = self.camera.pixelCoordsFromPoint(pointing_list)
 
         try:
             np.testing.assert_array_almost_equal(x_test, self.camera_data['xpix'], 6)
@@ -261,7 +261,7 @@ class WcsTestClass(unittest.TestCase):
         for rr, dd, x_control, y_control in \
             zip(self.camera_data['ra'], self.camera_data['dec'], self.camera_data['xpix'], self.camera_data['ypix']):
 
-            x_test, y_test = self.wcs.pixelCoordsFromFloat(np.radians(rr), np.radians(dd))
+            x_test, y_test = self.camera.pixelCoordsFromFloat(np.radians(rr), np.radians(dd))
             try:
                 if not np.isnan(x_test):
                     self.assertAlmostEqual(x_test, x_control, 6)
@@ -279,7 +279,7 @@ class WcsTestClass(unittest.TestCase):
         for rr, dd in zip(self.camera_data['ra'], self.camera_data['dec']):
             pointing_list.append(CelestialCoord(rr*galsim.degrees, dd*galsim.degrees))
 
-        x_test, y_test = self.wcs.pixelCoordsFromFloat(np.radians(self.camera_data['ra']), np.radians(self.camera_data['dec']))
+        x_test, y_test = self.camera.pixelCoordsFromFloat(np.radians(self.camera_data['ra']), np.radians(self.camera_data['dec']))
 
         try:
             np.testing.assert_array_almost_equal(x_test, self.camera_data['xpix'], 6)
