@@ -143,6 +143,25 @@ class LsstCameraTestClass(unittest.TestCase):
                                              np.zeros(len(test_y)), 10)
 
 
+    def test_ra_dec_from_pupil_coords(self):
+        """
+        Test that the method which converts from pupil coordinates back to RA, Dec works
+        """
+
+        np.random.seed(55)
+        n_samples = 100
+        raList = (np.random.random_sample(n_samples)-0.5)*1.0 + np.radians(self.raPointing)
+        decList = (np.random.random_sample(n_samples)-0.5)*1.0 + np.radians(self.decPointing)
+
+        x_pupil, y_pupil = self.camera.pupilCoordsFromFloat(raList, decList)
+
+        ra_test, dec_test = self.camera.raDecFromPupilCoords(x_pupil, y_pupil)
+
+        np.testing.assert_array_almost_equal(np.cos(raList), np.cos(ra_test), 10)
+        np.testing.assert_array_almost_equal(np.sin(raList), np.sin(ra_test), 10)
+        np.testing.assert_array_almost_equal(np.cos(decList), np.cos(dec_test), 10)
+        np.testing.assert_array_almost_equal(np.sin(decList), np.sin(dec_test), 10)
+
 
     def test_get_chip_name(self):
         """

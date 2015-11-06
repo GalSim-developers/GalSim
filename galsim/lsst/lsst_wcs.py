@@ -131,6 +131,38 @@ class LsstCamera(object):
         return xx*self._cos_rot - yy*self._sin_rot, xx*self._sin_rot + yy*self._cos_rot
 
 
+    def raDecFromPupilCoords(self, x, y):
+        """
+        Convert pupil coordinates in radians to RA, Dec in radians
+
+        Note: this method just reimplements the PALPY method Dtp2s
+        with some minor adjustments for sign conventsion
+
+        inputs
+        ------------
+        x is the x pupil coordinate in radians
+
+        y is the y pupil coordinate in radians
+
+        ouputs
+        ------------
+        RA and Dec in radians as lists of floats (or individual floats if only one
+        set of x, y was passed in)
+        """
+
+        x_g = x*self._cos_rot + y*self._sin_rot
+        y_g = -x*self._sin_rot + y*self._cos_rot
+
+        x_g *= -1.0
+
+        denom = self._cos_dec - y_g * self._sin_dec
+        d = np.arctan2(x_g, denom) + self._pointing.ra/galsim.radians
+        ra = d%(2.0*np.pi)
+        dec = np.arctan2(self._sin_dec + y_g * self._cos_dec, np.sqrt(x_g*x_g + denom*denom))
+
+        return ra, dec
+
+
     def _get_chip_name_from_afw_point_list(self, point_list):
         """
         inputs
