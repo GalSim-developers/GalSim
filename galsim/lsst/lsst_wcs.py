@@ -539,3 +539,26 @@ class LsstWCS(galsim.wcs.CelestialWCS):
             return xx[0], yy[0]
         else:
             return xx, yy
+
+
+    def _radec(self, x, y):
+        """
+        inputs
+        ------------
+        x is the x pixel coordinate on this chip (can be a list)
+
+        y is the y pixel coordinate on this chip (can be a list)
+
+        outputs
+        ------------
+        ra is in radians
+
+        dec is in radians
+        """
+
+        if hasattr(x, '__len__'):
+            chip_name = [self._chip_name]*len(x)
+        else:
+            chip_name = self._chip_name
+
+        return self._camera.raDecFromPixelCoords(x, y, chip_name)

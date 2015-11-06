@@ -490,3 +490,35 @@ class LsstWcsTestCase(unittest.TestCase):
         except AssertionError as aa:
             print 'triggering error: ',aa.args[0]
             raise AssertionError(self.validation_msg)
+
+
+    def test_radec(self):
+        """
+        Test that the conversion from pixel coordinates to RA, Dec orks
+        """
+
+        # test one-at-a-time use case
+        for ra_control, dec_control, xx, yy in \
+            zip(np.radians(self.wcs_data['ra']), np.radians(self.wcs_data['dec']), self.wcs_data['xpix'], self.wcs_data['ypix']):
+
+            ra_test, dec_test = self.wcs._radec(xx, yy)
+            try:
+                self.assertAlmostEqual(np.cos(ra_test), np.cos(ra_control), 10)
+                self.assertAlmostEqual(np.sin(ra_test), np.sin(ra_control), 10)
+                self.assertAlmostEqual(np.cos(dec_test), np.cos(dec_control), 10)
+                self.assertAlmostEqual(np.sin(dec_test), np.sin(dec_control), 10)
+            except AssertionError as aa:
+                print 'triggering error: ',aa.args[0]
+                raise AssertionError(self.validation_msg)
+
+
+        # test list inputs
+        ra_test, dec_test = self.wcs._radec(self.wcs_data['xpix'], self.wcs_data['ypix'])
+        try:
+            np.testing.assert_array_almost_equal(np.cos(ra_test), np.cos(np.radians(self.wcs_data['ra'])))
+            np.testing.assert_array_almost_equal(np.sin(ra_test), np.sin(np.radians(self.wcs_data['ra'])))
+            np.testing.assert_array_almost_equal(np.cos(dec_test), np.cos(np.radians(self.wcs_data['dec'])))
+            np.testing.assert_array_almost_equal(np.sin(dec_test), np.sin(np.radians(self.wcs_data['dec'])))
+        except AssertionError as aa:
+            print 'triggering error: ',aa.args[0]
+            raise AssertionError(self.validation_msg)
