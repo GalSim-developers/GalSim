@@ -400,3 +400,27 @@ class LsstWCS(galsim.wcs.CelestialWCS):
         self._chip_name = chip_name
         if self._chip_name not in self._camera._camera:
             raise RuntimeError("%s is not a valid chip_name for an LsstWCS" % chip_name)
+
+
+    def _xy(self, ra, dec):
+        """
+        inputs
+        ------------
+        ra is in radians (can be a list)
+
+        dec is in radians (can be a list)
+
+        outputs
+        ------------
+        a list of x pixel coordinates on the chip specified for this WCS
+
+        a list of y pixel coordinates on the chip specified for this WCS
+        """
+        camera_point_list = self._camera._get_afw_pupil_coord_list_from_float(ra, dec)
+        xx, yy = self._camera._pixel_coord_from_point_and_name(camera_point_list,
+                                                               [self._chip_name]*len(camera_point_list))
+
+        if len(xx)==1:
+            return xx[0], yy[0]
+        else:
+            return xx, yy

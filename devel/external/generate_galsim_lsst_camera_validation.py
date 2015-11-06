@@ -52,3 +52,15 @@ if __name__ == "__main__":
         zip(raList, decList, chipNameList, pixelCoordsList.transpose(), pupilCoordsList.transpose()):
             output.write('%.12f; %.12f; %s; %.12f; %.12f; %.12f; %.12f\n'
             % (rr, dd, name, pixpt[0], pixpt[1], puppt[0], puppt[1]))
+
+    # now generate pixel coordinates which are forced to be reckoned on a specific chip
+    chip_name = 'R:0,1 S:1,2'
+    forcedPixelCoordsList = pixelCoordsFromRaDec(raList, decList, obs_metadata=obs, epoch=epoch,
+                                                 camera=camera, chipNames=[chip_name]*len(raList))
+
+    with open('galsim_afwCameraGeom_forced_data.txt', 'w') as output:
+        output.write('# pointing: ra %.12f degrees dec %.12f degrees rot %e degrees\n' % (ra_p[0], dec_p[0], rot))
+        output.write('# chip %s\n' % chip_name)
+        output.write('# columns: ra; dec; x_pixel; y_pixel;\n')
+        for rr, dd, pixpt in zip(raList, decList, forcedPixelCoordsList.transpose()):
+            output.write('%.12f; %.12f; %.12f; %.12f\n' % (rr, dd, pixpt[0], pixpt[1]))
