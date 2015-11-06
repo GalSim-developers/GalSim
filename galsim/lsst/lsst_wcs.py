@@ -25,7 +25,7 @@ except ImportError:
 
 __all__ = ["LsstCamera"]
 
-class LsstCamera(galsim.wcs.CelestialWCS):
+class LsstCamera(object):
 
     def __init__(self, origin, rotation_angle):
         """
