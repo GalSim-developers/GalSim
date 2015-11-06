@@ -317,3 +317,29 @@ class LSSTWCS(galsim.wcs.CelestialWCS):
             return xx[0], yy[0]
         else:
             return xx, yy
+
+
+    def pixelCoordsFromFloat(self, ra, dec):
+        """
+        Take a point on the sky and transform it into pixel coordinates
+
+        inputs
+        ------------
+        ra is in radians (can be a list)
+
+        dec is in radians (can be a list)
+
+        outputs
+        ------------
+        a list of x pixel coordinates
+
+        a list of y pixel coordinates
+        """
+
+        camera_point_list = self._get_afw_pupil_coord_list_from_float(ra, dec)
+        xx, yy = self._pixel_coord_from_point_list(camera_point_list)
+
+        if len(xx)==1:
+            return xx[0], yy[0]
+        else:
+            return xx, yy

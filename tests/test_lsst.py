@@ -250,3 +250,40 @@ class WcsTestClass(unittest.TestCase):
         except AssertionError as aa:
             print 'triggering error: ',aa.args[0]
             raise AssertionError(self.validation_msg)
+
+
+    def test_pixel_coords_from_float(self):
+        """
+        Test method that goes from floats of RA, Dec to pixel coordinates
+        """
+
+        # test one at a time
+        for rr, dd, x_control, y_control in \
+            zip(self.camera_data['ra'], self.camera_data['dec'], self.camera_data['xpix'], self.camera_data['ypix']):
+
+            x_test, y_test = self.wcs.pixelCoordsFromFloat(np.radians(rr), np.radians(dd))
+            try:
+                if not np.isnan(x_test):
+                    self.assertAlmostEqual(x_test, x_control, 6)
+                    self.assertAlmostEqual(y_test, y_control, 6)
+                else:
+                    self.assertTrue(np.isnan(x_control))
+                    self.assertTrue(np.isnan(y_control))
+                    self.assertTrue(np.isnan(y_test))
+            except AssertionError as aa:
+                print 'triggering error: ',aa.args[0]
+                raise AssertionError(self.validation_msg)
+
+        # test lists
+        pointing_list = []
+        for rr, dd in zip(self.camera_data['ra'], self.camera_data['dec']):
+            pointing_list.append(CelestialCoord(rr*galsim.degrees, dd*galsim.degrees))
+
+        x_test, y_test = self.wcs.pixelCoordsFromFloat(np.radians(self.camera_data['ra']), np.radians(self.camera_data['dec']))
+
+        try:
+            np.testing.assert_array_almost_equal(x_test, self.camera_data['xpix'], 6)
+            np.testing.assert_array_almost_equal(y_test, self.camera_data['ypix'], 6)
+        except AssertionError as aa:
+            print 'triggering error: ',aa.args[0]
+            raise AssertionError(self.validation_msg)
