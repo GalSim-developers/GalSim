@@ -359,6 +359,47 @@ class LsstCameraTestClass(unittest.TestCase):
             self.assertTrue(np.isnan(yp))
 
 
+    def test_ra_dec_from_pixel_coordinates(self):
+        """
+        Test the method that converts from pixel coordinates back to RA, Dec
+        """
+
+        ra_test, dec_test = self.camera.raDecFromPixelCoords(self.camera_data['xpix'], self.camera_data['ypix'], self.camera_data['chipName'])
+
+        for rt, dt, rc, dc, name in \
+            zip(ra_test, dec_test, np.radians(self.camera_data['ra']), np.radians(self.camera_data['dec']), self.camera_data['chipName']):
+
+            if name != 'None':
+                self.assertAlmostEqual(np.cos(rt), np.cos(rc))
+                self.assertAlmostEqual(np.sin(rt), np.sin(rc))
+                self.assertAlmostEqual(np.cos(dt), np.cos(dc))
+                self.assertAlmostEqual(np.sin(dt), np.sin(dc))
+            else:
+                self.assertTrue(np.isnan(rt))
+                self.assertTrue(np.isnan(dt))
+
+
+        np.random.seed(99)
+        n_samples = 100
+        raList = (np.random.random_sample(n_samples)-0.5)*np.radians(1.5) + np.radians(self.raPointing)
+        decList = (np.random.random_sample(n_samples)-0.5)*np.radians(1.5) + np.radians(self.decPointing)
+
+        x_pup_control, y_pup_control = self.camera.pupilCoordsFromFloat(raList, decList)
+
+        camera_point_list = self.camera._get_afw_pupil_coord_list_from_float(raList, decList)
+
+        chip_name_possibilities = ('R:0,1 S:1,1', 'R:0,3 S:0,2', 'R:4,2 S:2,2', 'R:3,4 S:0,2')
+
+        chip_name_list = [chip_name_possibilities[ii] for ii in np.random.random_integers(0,3,n_samples)]
+        x_pix_list, y_pix_list = self.camera._pixel_coord_from_point_and_name(camera_point_list, chip_name_list)
+
+        ra_test, dec_test = self.camera.raDecFromPixelCoords(x_pix_list, y_pix_list, chip_name_list)
+        np.testing.assert_array_almost_equal(np.cos(ra_test), np.cos(raList))
+        np.testing.assert_array_almost_equal(np.sin(ra_test), np.sin(raList))
+        np.testing.assert_array_almost_equal(np.cos(dec_test), np.cos(decList))
+        np.testing.assert_array_almost_equal(np.sin(dec_test), np.sin(decList))
+
+
 class LsstWcsTestCase(unittest.TestCase):
 
     @classmethod

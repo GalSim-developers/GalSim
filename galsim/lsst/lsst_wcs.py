@@ -443,7 +443,30 @@ class LsstCamera(object):
         if len(x_pupil)==1:
             return x_pupil[0], y_pupil[0]
         else:
-            return x_pupil, y_pupil
+            return np.array(x_pupil), np.array(y_pupil)
+
+
+    def raDecFromPixelCoords(self, x, y, chip_name):
+        """
+        Convert pixel coordinates into RA, Dec
+
+        inputs
+        ------------
+        x is the x pixel coordinate (can be a list)
+
+        y is the y pixel coordinate (can be a list)
+
+        chip_name is the name of the chip on which x and y are measured (can be a list)
+
+        outputs
+        ------------
+        ra is in radians
+
+        dec is in radians
+        """
+
+        x_pupil, y_pupil = self.pupilCoordsFromPixelCoords(x, y, chip_name)
+        return self.raDecFromPupilCoords(x_pupil, y_pupil)
 
 
 class LsstWCS(galsim.wcs.CelestialWCS):
