@@ -73,7 +73,7 @@ class AtmosphericPhaseGenerator(object):
         self.rng = rng
 
         npix = int(np.ceil(screen_size/screen_scale))
-        screen_size = screen_scale * npix  # in case screen_scale doesn't divide screen_size
+        self.screen_size = screen_scale * npix  # in case screen_scale doesn't divide screen_size
 
         # Listify
         r0, velocity, direction, alpha_mag = map(
@@ -106,7 +106,7 @@ class AtmosphericPhaseGenerator(object):
         self.screens = np.zeros_like(self.powerlaw)
 
         for i, (r00, vx0, vy0, amag0) in enumerate(zip(r0, vx, vy, alpha_mag)):
-            pl = (1./screen_size*np.sqrt(0.00058)*(r00**(-5.0/6.0)) *
+            pl = (1./self.screen_size*np.sqrt(0.00058)*(r00**(-5.0/6.0)) *
                   (fx*fx + fy*fy)**(-11.0/12.0) *
                   npix * np.sqrt(np.sqrt(2.0)))
             pl[0, 0] = 0.0
@@ -173,7 +173,7 @@ class AtmosphericPSF(GSObject):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
     """
-    def __init__(self, lam=None, r0=0.2, lam_over_r0=None, fwhm=0.8,
+    def __init__(self, lam=None, r0=0.2, lam_over_r0=None, fwhm=None,
                  alpha_mag=0.999, exptime=None, time_step=0.03, velocity=0,
                  direction=0*galsim.degrees, phase_generator=None, start_time=0.,
                  stop_time=None, interpolant=None, oversampling=1.5,
@@ -181,14 +181,23 @@ class AtmosphericPSF(GSObject):
         import itertools
         nstep = int(np.ceil(exptime/time_step))
         if phase_generator is None:
-            # Setup a new phase screen generator
+            # Sampling the phase screen is roughly analogous to sampling the PSF in Fourier space.
+            # We can use a Kolmogorov profile to get a rough estimate of what stepK is needed to
+            # avoid aliasing.
+            kolm = galsim.Kolmogorov(lam=lam, r0=r0, lam_over_r0=lam_over_r0, fwhm=fwhm)
+            screen_scale = kolm.stepK()/(2*np.pi)  # 2pi b/c np and GalSim FFT conventions differ.
+            # an arbitrary additional factor of 4 to account for the fact that a stochastic
+            # atmospheric PSF can have significant fluctuations at relatively large radii.
+            screen_scale /= 4
+            # We'll hard code screen_size = 10 meters since that covers all planned ground-based
+            # weak lensing experiments.
+            screen_size = 10.
             phase_generator = AtmosphericPhaseGenerator(
-                time_step=time_step,
-                screen_size=10., screen_scale=0.1, r0=r0, alpha_mag=alpha_mag,
-                velocity=velocity, direction=direction)
+                time_step=time_step, screen_size=screen_size, screen_scale=screen_scale, r0=r0,
+                alpha_mag=alpha_mag, velocity=velocity, direction=direction)
         self.phase_generator = phase_generator
 
-        scale = 1. / 10.0 * 1.e-9*lam * galsim.radians / scale_unit
+        scale = 1. / self.phase_generator.screen_size * 1.e-9*lam * galsim.radians / scale_unit
         # Generate PSFs for each time step
         nx, ny = phase_generator.screens[0].shape
         im_grid = np.zeros((nx, ny), dtype=np.float64)
