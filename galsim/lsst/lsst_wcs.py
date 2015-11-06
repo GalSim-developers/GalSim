@@ -428,7 +428,7 @@ class LsstCamera(object):
                 continue
 
             if name not in self._pixel_system_dict:
-                self._pixel_system_dict[name] = self._camera[name].makeCameraSys(PIXEL)
+                self._pixel_system_dict[name] = self._camera[name].makeCameraSys(PIXELS)
 
             if name not in self._pupil_system_dict:
                 self._pupil_system_dict[name] = self._camera[name].makeCameraSys(PUPIL)
