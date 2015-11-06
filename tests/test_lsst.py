@@ -220,19 +220,22 @@ class LsstCameraTestClass(unittest.TestCase):
         """
 
         # test one at a time
-        for rr, dd, x_control, y_control in \
-            zip(self.camera_data['ra'], self.camera_data['dec'], self.camera_data['xpix'], self.camera_data['ypix']):
+        for rr, dd, x_control, y_control, name_control in \
+            zip(self.camera_data['ra'], self.camera_data['dec'],
+                self.camera_data['xpix'], self.camera_data['ypix'], self.camera_data['chipName']):
 
             point = CelestialCoord(rr*galsim.degrees, dd*galsim.degrees)
-            x_test, y_test = self.camera.pixelCoordsFromPoint(point)
+            x_test, y_test, name_test = self.camera.pixelCoordsFromPoint(point)
             try:
                 if not np.isnan(x_test):
                     self.assertAlmostEqual(x_test, x_control, 6)
                     self.assertAlmostEqual(y_test, y_control, 6)
+                    self.assertEqual(name_test, name_control)
                 else:
                     self.assertTrue(np.isnan(x_control))
                     self.assertTrue(np.isnan(y_control))
                     self.assertTrue(np.isnan(y_test))
+                    self.assertIsNone(name_test)
             except AssertionError as aa:
                 print 'triggering error: ',aa.args[0]
                 raise AssertionError(self.validation_msg)
@@ -242,11 +245,14 @@ class LsstCameraTestClass(unittest.TestCase):
         for rr, dd in zip(self.camera_data['ra'], self.camera_data['dec']):
             pointing_list.append(CelestialCoord(rr*galsim.degrees, dd*galsim.degrees))
 
-        x_test, y_test = self.camera.pixelCoordsFromPoint(pointing_list)
+        x_test, y_test, name_test_0 = self.camera.pixelCoordsFromPoint(pointing_list)
+
+        name_test = np.array([nn if nn is not None else 'None' for nn in name_test_0])
 
         try:
             np.testing.assert_array_almost_equal(x_test, self.camera_data['xpix'], 6)
             np.testing.assert_array_almost_equal(y_test, self.camera_data['ypix'], 6)
+            np.testing.assert_array_equal(name_test, self.camera_data['chipName'])
         except AssertionError as aa:
             print 'triggering error: ',aa.args[0]
             raise AssertionError(self.validation_msg)
@@ -258,18 +264,21 @@ class LsstCameraTestClass(unittest.TestCase):
         """
 
         # test one at a time
-        for rr, dd, x_control, y_control in \
-            zip(self.camera_data['ra'], self.camera_data['dec'], self.camera_data['xpix'], self.camera_data['ypix']):
+        for rr, dd, x_control, y_control, name_control in \
+            zip(self.camera_data['ra'], self.camera_data['dec'],
+                self.camera_data['xpix'], self.camera_data['ypix'], self.camera_data['chipName']):
 
-            x_test, y_test = self.camera.pixelCoordsFromFloat(np.radians(rr), np.radians(dd))
+            x_test, y_test, name_test = self.camera.pixelCoordsFromFloat(np.radians(rr), np.radians(dd))
             try:
                 if not np.isnan(x_test):
                     self.assertAlmostEqual(x_test, x_control, 6)
                     self.assertAlmostEqual(y_test, y_control, 6)
+                    self.assertEqual(name_test, name_control)
                 else:
                     self.assertTrue(np.isnan(x_control))
                     self.assertTrue(np.isnan(y_control))
                     self.assertTrue(np.isnan(y_test))
+                    self.assertIsNone(name_test)
             except AssertionError as aa:
                 print 'triggering error: ',aa.args[0]
                 raise AssertionError(self.validation_msg)
@@ -279,11 +288,14 @@ class LsstCameraTestClass(unittest.TestCase):
         for rr, dd in zip(self.camera_data['ra'], self.camera_data['dec']):
             pointing_list.append(CelestialCoord(rr*galsim.degrees, dd*galsim.degrees))
 
-        x_test, y_test = self.camera.pixelCoordsFromFloat(np.radians(self.camera_data['ra']), np.radians(self.camera_data['dec']))
+        x_test, y_test, name_test_0 = self.camera.pixelCoordsFromFloat(np.radians(self.camera_data['ra']), np.radians(self.camera_data['dec']))
+
+        name_test = np.array([nn if nn is not None else 'None' for nn in name_test_0])
 
         try:
             np.testing.assert_array_almost_equal(x_test, self.camera_data['xpix'], 6)
             np.testing.assert_array_almost_equal(y_test, self.camera_data['ypix'], 6)
+            np.testing.assert_array_equal(name_test, self.camera_data['chipName'])
         except AssertionError as aa:
             print 'triggering error: ',aa.args[0]
             raise AssertionError(self.validation_msg)

@@ -275,6 +275,8 @@ class LsstCamera(galsim.wcs.CelestialWCS):
         a list of x pixel coordinates
 
         a list of y pixel coordinates
+
+        Note: these coordinates are only valid on the chips named in name_list
         """
 
         x_pix = []
@@ -296,24 +298,6 @@ class LsstCamera(galsim.wcs.CelestialWCS):
         return x_pix, y_pix
 
 
-    def _pixel_coord_from_point_list(self, point_list):
-        """
-        inputs
-        ------------
-        point_list is a list of afwGeom.Point2D objects corresponding to pupil coordinates (in radians)
-
-        outputs
-        ------------
-        a list of x pixel coordinates
-
-        a list of y pixel coordinates
-        """
-
-        chip_name_list = self._get_chip_name_from_afw_point_list(point_list)
-
-        return self._pixel_coord_from_point_and_name(point_list, chip_name_list)
-
-
     def pixelCoordsFromPoint(self, point):
         """
         Take a point on the sky and transform it into pixel coordinates
@@ -328,15 +312,18 @@ class LsstCamera(galsim.wcs.CelestialWCS):
         a list of x pixel coordinates
 
         a list of y pixel coordinates
+
+        a list of the names of the chips on which x and y are reckoned
         """
 
         camera_point_list = self._get_afw_pupil_coord_list_from_point(point)
-        xx, yy = self._pixel_coord_from_point_list(camera_point_list)
+        chip_name_list = self._get_chip_name_from_afw_point_list(camera_point_list)
+        xx, yy = self._pixel_coord_from_point_and_name(camera_point_list, chip_name_list)
 
         if len(xx)==1:
-            return xx[0], yy[0]
+            return xx[0], yy[0], chip_name_list[0]
         else:
-            return xx, yy
+            return xx, yy, chip_name_list
 
 
     def pixelCoordsFromFloat(self, ra, dec):
@@ -354,12 +341,15 @@ class LsstCamera(galsim.wcs.CelestialWCS):
         a list of x pixel coordinates
 
         a list of y pixel coordinates
+
+        a list of the names of the chips on which x and y are reckoned
         """
 
         camera_point_list = self._get_afw_pupil_coord_list_from_float(ra, dec)
-        xx, yy = self._pixel_coord_from_point_list(camera_point_list)
+        chip_name_list = self._get_chip_name_from_afw_point_list(camera_point_list)
+        xx, yy = self._pixel_coord_from_point_and_name(camera_point_list, chip_name_list)
 
         if len(xx)==1:
-            return xx[0], yy[0]
+            return xx[0], yy[0], chip_name_list[0]
         else:
-            return xx, yy
+            return xx, yy, chip_name_list
