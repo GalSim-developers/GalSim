@@ -905,22 +905,22 @@ class LsstWCS(galsim.wcs.CelestialWCS):
         delta_yList = yPixList - crPix2[0]
 
         bVector = np.array([
-                              (delta_xList*uList).sum(),
-                              (delta_yList*uList).sum(),
-                              (delta_xList*vList).sum(),
-                              (delta_yList*vList).sum()
-                              ])
+                           (delta_xList*uList).sum(),
+                           (delta_yList*uList).sum(),
+                           (delta_xList*vList).sum(),
+                           (delta_yList*vList).sum()
+                           ])
 
         offDiag = (delta_yList*delta_xList).sum()
         xsq = np.power(delta_xList,2).sum()
         ysq = np.power(delta_yList,2).sum()
 
         aMatrix = np.array([
-                              [xsq, offDiag, 0.0, 0.0],
-                              [offDiag, ysq, 0.0, 0.0],
-                              [0.0, 0.0, xsq, offDiag],
-                              [0.0, 0.0, offDiag, ysq]
-                              ])
+                           [xsq, offDiag, 0.0, 0.0],
+                           [offDiag, ysq, 0.0, 0.0],
+                           [0.0, 0.0, xsq, offDiag],
+                           [0.0, 0.0, offDiag, ysq]
+                           ])
 
         coeffs = np.linalg.solve(aMatrix, bVector)
 
