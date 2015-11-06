@@ -214,5 +214,7 @@ class AtmosphericPSF(GSObject):
         im_grid = np.fft.fftshift(im_grid)
         im_grid *= (flux / (im_grid.sum() * scale**2))
         out_im = galsim.InterpolatedImage(
-            galsim.Image(im_grid.astype(np.float64), scale=scale))
+            galsim.Image(im_grid.astype(np.float64), scale=scale),
+            x_interpolant=interpolant, calculate_stepk=True, calculate_maxk=True,
+            use_true_center=False, normalization='sb')
         GSObject.__init__(self, out_im)
