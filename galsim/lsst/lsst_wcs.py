@@ -57,9 +57,9 @@ class LsstCamera(object):
 
         self._camera = LsstSimMapper().camera
 
-        # _transform_dict will be a dictionary of chip coordinate systems
+        # _pixel_system_dict will be a dictionary of chip pixel coordinate systems
         # keyed to chip names
-        self._transform_dict = {}
+        self._pixel_system_dict = {}
 
         self._pointing = origin
         self._rotation_angle = rotation_angle
@@ -318,11 +318,11 @@ class LsstCamera(object):
                 y_pix.append(np.nan)
                 continue
 
-            if name not in self._transform_dict:
-                self._transform_dict[name] = self._camera[name].makeCameraSys(PIXELS)
+            if name not in self._pixel_system_dict:
+                self._pixel_system_dict[name] = self._camera[name].makeCameraSys(PIXELS)
 
             cp = self._camera.makeCameraPoint(pt, PUPIL)
-            detPoint = self._camera.transform(cp, self._transform_dict[name])
+            detPoint = self._camera.transform(cp, self._pixel_system_dict[name])
             x_pix.append(detPoint.getPoint().getX())
             y_pix.append(detPoint.getPoint().getY())
 
