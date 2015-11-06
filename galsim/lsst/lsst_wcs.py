@@ -533,35 +533,6 @@ class LsstCamera(object):
             return np.array(xx), np.array(yy), chip_name_list
 
 
-    def tanPixelCoordsFromFloat(self, ra, dec):
-        """
-        Take a point on the sky and transform it into tan_pixel coordinates
-
-        inputs
-        ------------
-        ra is in radians (can be a list)
-
-        dec is in radians (can be a list)
-
-        outputs
-        ------------
-        a list of x tan_pixel coordinates
-
-        a list of y tan_pixel coordinates
-
-        a list of the names of the chips on which x and y are reckoned
-        """
-
-        camera_point_list = self._get_afw_pupil_coord_list_from_float(ra, dec)
-        chip_name_list = self._get_chip_name_from_afw_point_list(camera_point_list)
-        xx, yy = self._tan_pixel_coord_from_point_and_name(camera_point_list, chip_name_list)
-
-        if len(xx)==1:
-            return xx[0], yy[0], chip_name_list[0]
-        else:
-            return np.array(xx), np.array(yy), chip_name_list
-
-
     def pupilCoordsFromPixelCoords(self, x, y, chip_name):
         """
         Convert pixel coordinates on a specific chip into pupil coordinates (in radians)
