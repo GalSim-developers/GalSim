@@ -57,6 +57,10 @@ class LSSTWCS(galsim.wcs.CelestialWCS):
 
         self._camera = LsstSimMapper().camera
 
+        # _transform_dict will be a dictionary of chip coordinate systems
+        # keyed to chip names
+        self._transform_dict = {}
+
         self._pointing = origin
         self._rotation_angle = rotation_angle
         self._cos_rot = np.cos(self._rotation_angle/galsim.radians)
@@ -273,10 +277,9 @@ class LSSTWCS(galsim.wcs.CelestialWCS):
 
         chip_name_list = self._get_chip_name_from_afw_point_list(point_list)
 
-        transform_dict = {}
         for name in chip_name_list:
-            if name not in transform_dict and name is not None:
-                transform_dict[name] = self._camera[name].makeCameraSys(PIXELS)
+            if name not in self._transform_dict and name is not None:
+                self._transform_dict[name] = self._camera[name].makeCameraSys(PIXELS)
 
         x_pix = []
         y_pix = []
@@ -286,7 +289,7 @@ class LSSTWCS(galsim.wcs.CelestialWCS):
                 y_pix.append(np.nan)
                 continue
             cp = self._camera.makeCameraPoint(pt, PUPIL)
-            cs = transform_dict[name]
+            cs = self._transform_dict[name]
             detPoint = self._camera.transform(cp, cs)
             x_pix.append(detPoint.getPoint().getX())
             y_pix.append(detPoint.getPoint().getY())
