@@ -255,7 +255,6 @@ class LsstCamera(galsim.wcs.CelestialWCS):
 
         chip_name_list = self._get_chip_name_from_afw_point_list(camera_point_list)
 
-
         if len(camera_point_list)==1:
             return chip_name_list[0]
         else:
