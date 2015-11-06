@@ -345,6 +345,15 @@ class LsstCameraTestClass(unittest.TestCase):
         np.testing.assert_array_almost_equal(x_pup_test, x_pup_control, 10)
         np.testing.assert_array_almost_equal(y_pup_test, y_pup_control, 10)
 
+        # test one at a time
+        for xx, yy, name, x_control, y_control in \
+            zip(x_pix_list, y_pix_list, chip_name_list, x_pup_control, y_pup_control):
+
+            x_test, y_test = self.camera.pupilCoordsFromPixelCoords(xx, yy, name)
+            self.assertAlmostEqual(x_test, x_control, 10)
+            self.assertAlmostEqual(y_test, y_control, 10)
+
+
         # test that NaNs are returned if chip_name is None or 'None'
         chip_name_list = ['None'] * len(x_pix_list)
         x_pup_test, y_pup_test = self.camera.pupilCoordsFromPixelCoords(x_pix_list, y_pix_list, chip_name_list)
@@ -394,10 +403,21 @@ class LsstCameraTestClass(unittest.TestCase):
         x_pix_list, y_pix_list = self.camera._pixel_coord_from_point_and_name(camera_point_list, chip_name_list)
 
         ra_test, dec_test = self.camera.raDecFromPixelCoords(x_pix_list, y_pix_list, chip_name_list)
-        np.testing.assert_array_almost_equal(np.cos(ra_test), np.cos(raList))
-        np.testing.assert_array_almost_equal(np.sin(ra_test), np.sin(raList))
-        np.testing.assert_array_almost_equal(np.cos(dec_test), np.cos(decList))
-        np.testing.assert_array_almost_equal(np.sin(dec_test), np.sin(decList))
+        np.testing.assert_array_almost_equal(np.cos(ra_test), np.cos(raList), 10)
+        np.testing.assert_array_almost_equal(np.sin(ra_test), np.sin(raList), 10)
+        np.testing.assert_array_almost_equal(np.cos(dec_test), np.cos(decList), 10)
+        np.testing.assert_array_almost_equal(np.sin(dec_test), np.sin(decList), 10)
+
+
+        # test one at a time
+        for xx, yy, name, ra_control, dec_control in \
+            zip(x_pix_list, y_pix_list, chip_name_list, raList, decList):
+
+            ra_test, dec_test = self.camera.raDecFromPixelCoords(xx, yy, name)
+            self.assertAlmostEqual(np.cos(ra_test), np.cos(ra_control), 10)
+            self.assertAlmostEqual(np.sin(ra_test), np.sin(ra_control), 10)
+            self.assertAlmostEqual(np.cos(dec_test), np.cos(dec_control), 10)
+            self.assertAlmostEqual(np.sin(dec_test), np.sin(dec_control), 10)
 
 
 class LsstWcsTestCase(unittest.TestCase):
