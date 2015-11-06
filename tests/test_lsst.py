@@ -19,7 +19,7 @@ class LsstCameraTestClass(unittest.TestCase):
         cls.decPointing = -33.015167519966
         cls.rotation = 27.0
 
-        cls.validation_msg = "The LSST Camera chipName outputs are no longer consistent\n" \
+        cls.validation_msg = "The LSST Camera outputs are no longer consistent\n" \
                              + "with the LSST Stack.  Contact Scott Daniel at scottvalscott@gmail.com\n" \
                              + "to make sure you have the correct version\n" \
                              + "\nYou can also try re-creating the test validation data\n" \
