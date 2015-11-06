@@ -5,6 +5,31 @@ import os
 import galsim
 from galsim.lsst import LsstCamera, LsstWCS, _nativeLonLatFromRaDec
 from galsim.celestial import CelestialCoord
+import lsst.afw.geom as afwGeom
+
+def haversine(long1, lat1, long2, lat2):
+    """
+    Return the angular distance between two points in radians
+
+    inputs
+    ------------
+    long1 is the longitude of point 1 in radians
+
+    lat1 is the latitude of point 1 in radians
+
+    long2 is the longitude of point 2 in radians
+
+    lat2 is the latitude of point 2 in radians
+
+    outputs
+    ------------
+    the angular separation between points 1 and 2 in radians
+
+    From http://en.wikipedia.org/wiki/Haversine_formula
+    """
+    t1 = np.sin(lat2/2.-lat1/2.)**2
+    t2 = np.cos(lat1)*np.cos(lat2)*np.sin(long2/2. - long1/2.)**2
+    return 2*np.arcsin(np.sqrt(t1 + t2))
 
 
 class NativeLonLatTest(unittest.TestCase):
@@ -639,3 +664,48 @@ class LsstWcsTestCase(unittest.TestCase):
         except AssertionError as aa:
             print 'triggering error: ',aa.args[0]
             raise AssertionError(self.validation_msg)
+
+
+    def test_tan_wcs(self):
+        """
+        Test method to return a Tan WCS by generating a bunch of pixel coordinates
+        in the undistorted TAN-PIXELS coordinate system.  Then, use sims_coordUtils
+        to convert those pixel coordinates into RA and Dec.  Compare these to the
+        RA and Dec returned by the WCS.  Demand agreement to witin 0.001 arcseconds.
+
+        Note: if you use a bigger camera, it is possible to have disagreements of
+        order a few milliarcseconds.
+        """
+
+        arcsec_per_radian = 180.0*3600.0/np.pi
+
+        xPixList = []
+        yPixList = []
+
+        tanWcs = self.wcs.getTanWcs()
+        wcsRa = []
+        wcsDec = []
+        for xx in np.arange(0.0, 4001.0, 1000.0):
+            for yy in np.arange(0.0, 4001.0, 1000.0):
+                xPixList.append(xx)
+                yPixList.append(yy)
+
+                pt = afwGeom.Point2D(xx ,yy)
+                skyPt = tanWcs.pixelToSky(pt).getPosition()
+                wcsRa.append(skyPt.getX())
+                wcsDec.append(skyPt.getY())
+
+        wcsRa = np.radians(np.array(wcsRa))
+        wcsDec = np.radians(np.array(wcsDec))
+
+        xPixList = np.array(xPixList)
+        yPixList = np.array(yPixList)
+
+        raTest, decTest = self.wcs._camera.raDecFromTanPixelCoords(xPixList, yPixList,
+                                                                   [self.wcs._chip_name]*len(xPixList))
+
+        distanceList = arcsec_per_radian*haversine(raTest, decTest, wcsRa, wcsDec)
+        maxDistance = distanceList.max()
+
+        msg = 'maxError in tanWcs was %e ' % maxDistance
+        self.assertLess(maxDistance, 0.001, msg=msg)

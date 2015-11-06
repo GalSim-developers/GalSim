@@ -3,9 +3,11 @@ import galsim
 
 try:
     import lsst.pex.logging as pexLog
+    import lsst.daf.base as dafBase
     import lsst.afw.geom as afwGeom
     import lsst.afw.cameraGeom as cameraGeom
-    from lsst.afw.cameraGeom import PUPIL, PIXELS
+    import lsst.afw.image as afwImage
+    from lsst.afw.cameraGeom import PUPIL, PIXELS, TAN_PIXELS, FOCAL_PLANE
     from lsst.obs.lsstSim import LsstSimMapper
 except ImportError:
     raise ImportError("You cannot use the LSST module.\n"
@@ -159,6 +161,10 @@ class LsstCamera(object):
         # _pixel_system_dict will be a dictionary of chip pixel coordinate systems
         # keyed to chip names
         self._pixel_system_dict = {}
+
+        # _tan_pixel_system_dict will be a dictionary of chip tan pixel coordinate
+        # systems
+        self._tan_pixel_system_dict = {}
 
         # _pupil_system_dict will be a dictionary of chip pupil coordinate systems
         # keyed to chip names
@@ -432,6 +438,42 @@ class LsstCamera(object):
         return np.array(x_pix), np.array(y_pix)
 
 
+    def _tan_pixel_coord_from_point_and_name(self, point_list, name_list):
+        """
+        inputs
+        ------------
+        point_list is a list of afwGeom.Point2D objects corresponding to pupil coordinates (in radians)
+
+        name_list is a list of chip names
+
+        outputs
+        ------------
+        a list of x tan_pixel coordinates
+
+        a list of y tan_pixel coordinates
+
+        Note: these coordinates are only valid on the chips named in name_list
+        """
+
+        x_pix = []
+        y_pix = []
+        for name, pt in zip(name_list, point_list):
+            if name is None:
+                x_pix.append(np.nan)
+                y_pix.append(np.nan)
+                continue
+
+            if name not in self._pixel_system_dict:
+                self._tan_pixel_system_dict[name] = self._camera[name].makeCameraSys(TAN_PIXELS)
+
+            cp = self._camera.makeCameraPoint(pt, PUPIL)
+            detPoint = self._camera.transform(cp, self._tan_pixel_system_dict[name])
+            x_pix.append(detPoint.getPoint().getX())
+            y_pix.append(detPoint.getPoint().getY())
+
+        return np.array(x_pix), np.array(y_pix)
+
+
     def pixelCoordsFromPoint(self, point):
         """
         Take a point on the sky and transform it into pixel coordinates
@@ -482,6 +524,35 @@ class LsstCamera(object):
         camera_point_list = self._get_afw_pupil_coord_list_from_float(ra, dec)
         chip_name_list = self._get_chip_name_from_afw_point_list(camera_point_list)
         xx, yy = self._pixel_coord_from_point_and_name(camera_point_list, chip_name_list)
+
+        if len(xx)==1:
+            return xx[0], yy[0], chip_name_list[0]
+        else:
+            return np.array(xx), np.array(yy), chip_name_list
+
+
+    def tanPixelCoordsFromFloat(self, ra, dec):
+        """
+        Take a point on the sky and transform it into tan_pixel coordinates
+
+        inputs
+        ------------
+        ra is in radians (can be a list)
+
+        dec is in radians (can be a list)
+
+        outputs
+        ------------
+        a list of x tan_pixel coordinates
+
+        a list of y tan_pixel coordinates
+
+        a list of the names of the chips on which x and y are reckoned
+        """
+
+        camera_point_list = self._get_afw_pupil_coord_list_from_float(ra, dec)
+        chip_name_list = self._get_chip_name_from_afw_point_list(camera_point_list)
+        xx, yy = self._tan_pixel_coord_from_point_and_name(camera_point_list, chip_name_list)
 
         if len(xx)==1:
             return xx[0], yy[0], chip_name_list[0]
@@ -545,6 +616,63 @@ class LsstCamera(object):
             return np.array(x_pupil), np.array(y_pupil)
 
 
+    def pupilCoordsFromTanPixelCoords(self, x, y, chip_name):
+        """
+        Convert tan_pixel coordinates on a specific chip into pupil coordinates (in radians)
+
+        inputs
+        ------------
+        x is the x tan_pixel coordinate (it can be a list)
+
+        y is the y tan_pixel coordinate (it can be a list)
+
+        chip_name is the name of the chip on which x and y were
+        measured (it can be a list)
+
+        outputs
+        ------------
+        a list of x pupil coordinates in radians
+
+        a list of y pupil coordinates in radians
+        """
+
+        if not hasattr(x, '__len__'):
+            x_list = [x]
+            y_list = [y]
+            chip_name_list = [chip_name]
+        else:
+            x_list = x
+            y_list = y
+            chip_name_list = chip_name
+
+        x_pupil = []
+        y_pupil = []
+        for xx, yy, name in zip(x_list, y_list, chip_name_list):
+            if name is None or name=='None':
+                x_pupil.append(np.NaN)
+                y_pupil.append(np.NaN)
+                continue
+
+            if name not in self._tan_pixel_system_dict:
+                self._tan_pixel_system_dict[name] = self._camera[name].makeCameraSys(TAN_PIXELS)
+
+            if name not in self._pupil_system_dict:
+                self._pupil_system_dict[name] = self._camera[name].makeCameraSys(PUPIL)
+
+            pt = self._camera.transform(self._camera.makeCameraPoint(afwGeom.Point2D(xx, yy), self._tan_pixel_system_dict[name]),
+                                        self._pupil_system_dict[name]).getPoint()
+
+            x_pupil.append(pt.getX())
+            y_pupil.append(pt.getY())
+
+
+        if len(x_pupil)==1:
+            return x_pupil[0], y_pupil[0]
+        else:
+            return np.array(x_pupil), np.array(y_pupil)
+
+
+
     def raDecFromPixelCoords(self, x, y, chip_name):
         """
         Convert pixel coordinates into RA, Dec
@@ -565,6 +693,29 @@ class LsstCamera(object):
         """
 
         x_pupil, y_pupil = self.pupilCoordsFromPixelCoords(x, y, chip_name)
+        return self.raDecFromPupilCoords(x_pupil, y_pupil)
+
+
+    def raDecFromTanPixelCoords(self, x, y, chip_name):
+        """
+        Convert tan_pixel coordinates into RA, Dec
+
+        inputs
+        ------------
+        x is the x tan_pixel coordinate (can be a list)
+
+        y is the y tan_pixel coordinate (can be a list)
+
+        chip_name is the name of the chip on which x and y are measured (can be a list)
+
+        outputs
+        ------------
+        ra is in radians
+
+        dec is in radians
+        """
+
+        x_pupil, y_pupil = self.pupilCoordsFromTanPixelCoords(x, y, chip_name)
         return self.raDecFromPupilCoords(x_pupil, y_pupil)
 
 
@@ -615,6 +766,8 @@ class LsstWCS(galsim.wcs.CelestialWCS):
         if self._chip_name not in self._camera._camera:
             raise RuntimeError("%s is not a valid chip_name for an LsstWCS" % chip_name)
 
+        self._detector = self._camera._camera[self._chip_name]
+
 
     def _xy(self, ra, dec):
         """
@@ -661,3 +814,132 @@ class LsstWCS(galsim.wcs.CelestialWCS):
             chip_name = self._chip_name
 
         return self._camera.raDecFromPixelCoords(x, y, chip_name)
+
+
+    def _getTanPixelBounds(self):
+        """
+        Return the minimum and maximum values of x and y in TAN_PIXELS
+        coordinates (pixel coordinates without any distoration due to
+        optics applied).
+
+        output order is: xmin, xmax, ymin, ymax
+        """
+
+        tanPixelSystem = self._detector.makeCameraSys(TAN_PIXELS)
+        xPixMin = None
+        xPixMax = None
+        yPixMin = None
+        yPixMax = None
+        cornerPointList = self._detector.getCorners(FOCAL_PLANE)
+        for cornerPoint in cornerPointList:
+            cameraPoint = self._camera._camera.transform(
+                               self._detector.makeCameraPoint(cornerPoint, FOCAL_PLANE),
+                               tanPixelSystem).getPoint()
+
+            xx = cameraPoint.getX()
+            yy = cameraPoint.getY()
+            if xPixMin is None or xx<xPixMin:
+                xPixMin = xx
+            if xPixMax is None or xx>xPixMax:
+                xPixMax = xx
+            if yPixMin is None or yy<yPixMin:
+                yPixMin = yy
+            if yPixMax is None or yy>yPixMax:
+                yPixMax = yy
+
+        return xPixMin, xPixMax, yPixMin, yPixMax
+
+
+    def getTanWcs(self):
+        """
+        Return a WCS which approximates the focal plane as perfectly flat
+        (i.e. it ignores optical distortions that the telescope may impose on the image)
+
+        The output is an instantiation of afw.image's TanWcs class
+        representing the WCS of the detector as if there were no optical
+        distortions imposed by the telescope.
+        """
+
+        xTanPixMin, xTanPixMax, \
+        yTanPixMin, yTanPixMax = self._getTanPixelBounds()
+
+
+        xPixList = []
+        yPixList = []
+        nameList = []
+
+        #dx and dy are set somewhat heuristically
+        #setting them eqal to 0.1(max-min) lead to errors
+        #on the order of 0.7 arcsec in the WCS
+
+        dx = 0.5*(xTanPixMax-xTanPixMin)
+        dy = 0.5*(yTanPixMax-yTanPixMin)
+        for xx in np.arange(xTanPixMin, xTanPixMax+0.5*dx, dx):
+            for yy in np.arange(yTanPixMin, yTanPixMax+0.5*dx, dx):
+                xPixList.append(xx)
+                yPixList.append(yy)
+                nameList.append(self._chip_name)
+
+        raList, decList = self._camera.raDecFromTanPixelCoords(np.array(xPixList),
+                                                               np.array(yPixList),
+                                                               nameList)
+
+        raPointing = self._camera._pointing.ra/galsim.radians
+        decPointing = self._camera._pointing.dec/galsim.radians
+
+        camera_point_list = self._camera._get_afw_pupil_coord_list_from_float(raPointing, decPointing)
+        crPix1, crPix2 = self._camera._tan_pixel_coord_from_point_and_name(camera_point_list, [self._chip_name])
+
+        lonList, latList = _nativeLonLatFromRaDec(raList, decList, raPointing, decPointing)
+
+        #convert from native longitude and latitude to intermediate world coordinates
+        #according to equations (12), (13), (54) and (55) of
+        #
+        #Calabretta and Greisen (2002), A&A 395, p. 1077
+        #
+        radiusList = 180.0/(np.tan(latList)*np.pi)
+        uList = radiusList*np.sin(lonList)
+        vList = -radiusList*np.cos(lonList)
+
+        delta_xList = xPixList - crPix1[0]
+        delta_yList = yPixList - crPix2[0]
+
+        bVector = np.array([
+                              (delta_xList*uList).sum(),
+                              (delta_yList*uList).sum(),
+                              (delta_xList*vList).sum(),
+                              (delta_yList*vList).sum()
+                              ])
+
+        offDiag = (delta_yList*delta_xList).sum()
+        xsq = np.power(delta_xList,2).sum()
+        ysq = np.power(delta_yList,2).sum()
+
+        aMatrix = np.array([
+                              [xsq, offDiag, 0.0, 0.0],
+                              [offDiag, ysq, 0.0, 0.0],
+                              [0.0, 0.0, xsq, offDiag],
+                              [0.0, 0.0, offDiag, ysq]
+                              ])
+
+        coeffs = np.linalg.solve(aMatrix, bVector)
+
+        crValPoint = afwGeom.Point2D(np.degrees(raPointing), np.degrees(decPointing))
+        crPixPoint = afwGeom.Point2D(crPix1[0], crPix2[0])
+
+        fitsHeader = dafBase.PropertyList()
+        fitsHeader.set("RADESYS", "ICRS")
+        fitsHeader.set("EQUINOX", 2000.0)
+        fitsHeader.set("CRVAL1", np.degrees(raPointing))
+        fitsHeader.set("CRVAL2", np.degrees(decPointing))
+        fitsHeader.set("CRPIX1", crPix1[0]+1) # the +1 is because LSST uses 0-indexed images
+        fitsHeader.set("CRPIX2", crPix2[0]+1) # FITS files use 1-indexed images
+        fitsHeader.set("CTYPE1", "RA---TAN")
+        fitsHeader.set("CTYPE2", "DEC--TAN")
+        fitsHeader.setDouble("CD1_1", coeffs[0])
+        fitsHeader.setDouble("CD1_2", coeffs[1])
+        fitsHeader.setDouble("CD2_1", coeffs[2])
+        fitsHeader.setDouble("CD2_2", coeffs[3])
+        tanWcs = afwImage.cast_TanWcs(afwImage.makeWcs(fitsHeader))
+
+        return tanWcs
