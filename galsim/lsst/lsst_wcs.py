@@ -262,6 +262,41 @@ class LSSTWCS(galsim.wcs.CelestialWCS):
             return chip_name_list
 
 
+    def _pixel_coord_from_point_and_name(self, point_list, name_list):
+        """
+        inputs
+        ------------
+        point_list is a list of afwGeom.Point2D objects corresponding to pupil coordinates (in radians)
+
+        name_list is a list of chip names
+
+        outputs
+        ------------
+        a list of x pixel coordinates
+
+        a list of y pixel coordinates
+        """
+
+        for name in name_list:
+            if name not in self._transform_dict and name is not None:
+                self._transform_dict[name] = self._camera[name].makeCameraSys(PIXELS)
+
+        x_pix = []
+        y_pix = []
+        for name, pt in zip(name_list, point_list):
+            if name is None:
+                x_pix.append(np.nan)
+                y_pix.append(np.nan)
+                continue
+            cp = self._camera.makeCameraPoint(pt, PUPIL)
+            cs = self._transform_dict[name]
+            detPoint = self._camera.transform(cp, cs)
+            x_pix.append(detPoint.getPoint().getX())
+            y_pix.append(detPoint.getPoint().getY())
+
+        return x_pix, y_pix
+
+
     def _pixel_coord_from_point_list(self, point_list):
         """
         inputs
@@ -277,24 +312,7 @@ class LSSTWCS(galsim.wcs.CelestialWCS):
 
         chip_name_list = self._get_chip_name_from_afw_point_list(point_list)
 
-        for name in chip_name_list:
-            if name not in self._transform_dict and name is not None:
-                self._transform_dict[name] = self._camera[name].makeCameraSys(PIXELS)
-
-        x_pix = []
-        y_pix = []
-        for name, pt in zip(chip_name_list, point_list):
-            if name is None:
-                x_pix.append(np.nan)
-                y_pix.append(np.nan)
-                continue
-            cp = self._camera.makeCameraPoint(pt, PUPIL)
-            cs = self._transform_dict[name]
-            detPoint = self._camera.transform(cp, cs)
-            x_pix.append(detPoint.getPoint().getX())
-            y_pix.append(detPoint.getPoint().getY())
-
-        return x_pix, y_pix
+        return self._pixel_coord_from_point_and_name(point_list, chip_name_list)
 
 
     def pixelCoordsFromPoint(self, point):
