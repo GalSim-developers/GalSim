@@ -741,6 +741,12 @@ class LsstWCS(galsim.wcs.CelestialWCS):
 
         self._detector = self._camera._camera[self._chip_name]
 
+        self.origin = galsim.PositionD(0,0)
+
+
+    def _newOrigin(self, origin):
+        self.origin = origin
+
 
     def _xy(self, ra, dec):
         """
@@ -962,3 +968,28 @@ class LsstWCS(galsim.wcs.CelestialWCS):
                                               pixelTolerance=pixelTolerance)
 
         return tanSipWcs
+
+
+    def _writeHeader(self, header, bounds):
+
+        tanSipWcs = self.getTanSipWcs()
+        tanSipHeader = tanSipWcs.getFitsMetadata()
+        header["GS_WCS"] = ("lsst.LsstWCS", "GalSim WCS name")
+        for name in tanSipHeader.getOrderedNames():
+            header[name] = tanSipHeader.get(name)
+
+        header["RApoint"] = self._camera._pointing.ra/galsim.radians
+        header["DECpoint"] = self._camera._pointing.dec/galsim.radians
+        header["ROT"] = self._camera._rotation_angle/galsim.radians
+        header["CNAME"] = self._chip_name
+
+        return header
+
+
+    @staticmethod
+    def _readHeader(header):
+        pointing = galsim.CelestialCoord(header.get("RApoint")*galsim.radians,
+                                         header.get("DECpoint")*galsim.radians)
+
+        rot = header.get("ROT")*galsim.radians
+        return LsstWCS(pointing, rot, header.get("CNAME"))

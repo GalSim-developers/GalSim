@@ -765,3 +765,44 @@ class LsstWcsTestCase(unittest.TestCase):
         msg = 'max error in TAN WCS %e; in TAN-SIP %e' % (maxDistanceTan, maxDistanceTanSip)
         self.assertLess(maxDistanceTanSip, 0.001, msg=msg)
         self.assertGreater(maxDistanceTan-maxDistanceTanSip, 1.0e-10, msg=msg)
+
+
+    def test_round_trip(self):
+        """
+        Test writing out an image with an LsstWCS, reading it back in, and comparing
+        the resulting pixel -> ra, dec mappings
+        """
+
+        path, filename = os.path.split(__file__)
+
+        pointing = CelestialCoord(64.82*galsim.degrees, -16.73*galsim.degrees)
+        rotation = 116.8*galsim.degrees
+        chip_name = 'R:1,2 S:2,2'
+        wcs0 = LsstWCS(pointing, rotation, chip_name)
+        im0 = galsim.Image(int(4000), int(4000), wcs=wcs0)
+
+        outputFile = os.path.join(path,'scratch_space','lsst_junk_img.fits')
+        im0.write(outputFile)
+
+        im1 = galsim.fits.read(outputFile)
+
+        xPix = []
+        yPix = []
+        pixPts = []
+        for xx in range(0, 4000, 100):
+            for yy in range(0, 4000, 100):
+                xPix.append(xx)
+                yPix.append(yy)
+                pixPts.append(galsim.PositionI(xx, yy))
+
+        xPix = np.array(xPix)
+        yPix = np.array(yPix)
+
+        ra_control, dec_control = wcs0._radec(xPix, yPix)
+        for rr, dd, pp in zip(ra_control, dec_control, pixPts):
+            ra_dec_test = im1.wcs.toWorld(pp)
+            self.assertAlmostEqual(rr, ra_dec_test.ra/galsim.radians, 12)
+            self.assertAlmostEqual(dd, ra_dec_test.dec/galsim.radians, 12)
+
+        if os.path.exists(outputFile):
+            os.unlink(outputFile)
