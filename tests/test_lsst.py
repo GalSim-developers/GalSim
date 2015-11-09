@@ -607,6 +607,21 @@ class LsstWcsTestCase(unittest.TestCase):
                          "R:1,1 S:3,3 is not a valid chip_name for an LsstWCS")
 
 
+    def test_attribute_exceptions(self):
+        """
+        Test that exceptions are raised when you try to re-assign LsstWCS attributes
+        """
+
+        with self.assertRaises(AttributeError) as context:
+            self.wcs.pointing = CelestialCoord(22.0*galsim.degrees, -17.0*galsim.degrees)
+
+        with self.assertRaises(AttributeError) as context:
+            self.wcs.rotation_angle = 23.0*galsim.degrees
+
+        with self.assertRaises(AttributeError) as context:
+            self.wcs.chip_name = 'R:4,4 S:1,1'
+
+
     def test_xy(self):
         """
         Test that the conversion from RA, Dec to pixel coordinates works

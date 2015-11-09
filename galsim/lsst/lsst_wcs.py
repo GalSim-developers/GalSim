@@ -739,6 +739,30 @@ class LsstWCS(galsim.wcs.CelestialWCS):
         self._chip_name = chip_name
         self._initialize()
 
+    @property
+    def pointing(self):
+        """
+        A galsim.CelestialCoord representing the point at which the center of the camera
+        pointed.
+        """
+        return self._pointing
+
+
+    @property
+    def rotation_angle(self):
+        """
+        A galsim.Angle object representing the rotation of the camera with respect to the sky
+        """
+        return self._rotation_angle
+
+
+    @property
+    def chip_name(self):
+        """
+        A string indicating the name of the chip for which this WCS is valid
+        """
+        return self._chip_name
+
 
     def _initialize(self):
         """
