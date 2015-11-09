@@ -44,7 +44,7 @@ pixel_scale = 0.2
 decimal = 2 # decimal place at which to require equality in sizes
 decimal_shape = 3 # decimal place at which to require equality in shapes
 
-# The timing tests can be unreliable in environments with other processes running at the 
+# The timing tests can be unreliable in environments with other processes running at the
 # same time.  So we disable them by default.  However, on a clean system, they should all pass.
 test_timing = False
 
@@ -564,7 +564,7 @@ def test_hsmparams():
     do_pickle(res)
     do_pickle(res2)
     do_pickle(galsim._galsim.CppShapeData())
- 
+
     try:
         # Then check failure modes: force it to fail by changing HSMParams.
         new_params_niter = galsim.hsm.HSMParams(max_mom2_iter = res.moments_n_iter-1)

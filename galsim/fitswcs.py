@@ -183,8 +183,23 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
         # We allow for the option to fix up the header information when a modification can
         # make it readable by astropy.wcs.
 
-        # So far, we don't have any, but something could be added in the future.
-        pass
+        # Older versions of astropy had trouble with files where the axes were swapped.
+        # So fix them if necessary.  I know >= 1.0.1 works.  0.2.4 and 0.3.1 both fail.
+        import astropy
+        if astropy.__version__ < '1.0.1':
+            ctype1 = header.get('CTYPE1', 'RA---')
+            ctype2 = header.get('CTYPE2', 'DEC--')
+            if ctype1.startswith('DEC--') and ctype2.startswith('RA---'):
+                for key1, key2 in [ ('CTYPE1', 'CTYPE2'),
+                                    ('CRVAL1', 'CRVAL2'),
+                                    ('CDELT1', 'CDELT2'),
+                                    ('CD1_1', 'CD2_1'),
+                                    ('CD1_2', 'CD2_2'),
+                                    ('PC1_1', 'PC2_1'),
+                                    ('PC1_2', 'PC2_2'),
+                                    ('CUNIT1', 'CUNIT2') ]:
+                    if key1 in header and key2 in header:
+                        header[key1], header[key2] = header[key2], header[key1]
 
     def _radec(self, x, y):
         import numpy
@@ -192,15 +207,13 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
         y1 = numpy.atleast_1d(y)
 
         try:
-            # Apparently, the returned values aren't _necessarily_ (ra, dec).  They could be
-            # (dec, ra) instead!  But if you add ra_dec_order=True, then it will be (ra, dec).
-            # I can't imagine why that isn't the default, but there you go.
-            # This currently fails with an AttributeError about astropy.wcs.Wcsprm.lattype
+            # Old versions fail with an AttributeError about astropy.wcs.Wcsprm.lattype
             # cf. https://github.com/astropy/astropy/pull/1463
-            # Once they fix it, this is what we want.
+            # This has been fixed for a while now, but leave in this workaround for old versions.
             ra, dec = self._wcs.all_pix2world(x1, y1, 1, ra_dec_order=True)
         except AttributeError:
-            # Until then, just assume that the returned values really are ra, dec.
+            # If that failed, then we should be on version < 1.0.1, and the header should have
+            # been fixed above by _fix_header.  So this should work correctly.
             ra, dec = self._wcs.all_pix2world(x1, y1, 1)
 
         # astropy outputs ra, dec in degrees.  Need to convert to radians.
@@ -221,25 +234,20 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
 
     def _xy(self, ra, dec):
         import numpy
+        import astropy
         factor = galsim.radians / galsim.degrees
         rd = numpy.atleast_2d([ra, dec]) * factor
         # Here we have to work around another astropy.wcs bug.  The way they use scipy's
         # Broyden's method doesn't work.  So I implement a fix here.
-        if False:
-            # This is what I would like to have done, but it doesn't work.  I've reported
-            # the issue at:
-            # https://github.com/astropy/astropy/issues/1977
+        if astropy.__version__ >= '1.0.1':
+            # This works now on recent vesions of astropy.  At least >= 1.0.1, but possibly 
+            # 1.0 also included the fix.
+            # cf. https://github.com/astropy/astropy/issues/1977
 
-            # Try their version first (with and without ra_dec_order) in case they fix this.
             import warnings
-            try:
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                    xy = self._wcs.all_world2pix(rd, 1, ra_dec_order=True)[0]
-            except AttributeError:
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore")
-                    xy = self._wcs.all_world2pix(rd, 1)[0]
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                xy = self._wcs.all_world2pix(rd, 1, ra_dec_order=True)[0]
         else:
             # This section is basically a copy of astropy.wcs's _all_world2pix function, but
             # simplified a bit to remove some features we don't need, and with corrections
@@ -293,8 +301,10 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             x, y = numpy.array(xy).transpose()
         except:
             # Otherwise, return scalars
-            assert len(xy) == 1
-            x, y = xy[0]
+            if len(xy) == 1:
+                x, y = xy[0]
+            else:
+                x, y = xy
         return x, y
 
     def _newOrigin(self, origin):
@@ -474,9 +484,20 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
             # this next line can emit deprecation warnings.
             # We can safely ignore them (for now...)
             fc = starlink.Ast.FitsChan(starlink.Atl.PyFITSAdapter(hdu))
+            #  Read a FrameSet from the FITS header.
             wcsinfo = fc.read()
+
         if wcsinfo is None:
             raise RuntimeError("Failed to read WCS information from fits file")
+
+        # The PyAst WCS might not have (RA,Dec) axes, which we want.  It might for instance have
+        # (Dec, RA) instead.  If it's possible to convert to an (RA,Dec) system, this next line
+        # will do so.  And if not, the result will be None.
+        # cf. https://github.com/timj/starlink-pyast/issues/8
+        wcsinfo = wcsinfo.findframe(starlink.Ast.SkyFrame())
+        if wcsinfo is None:
+            raise RuntimeError("The WCS read in does not define a pair of celestial axes" )
+
         return wcsinfo
 
     @property
@@ -551,12 +572,20 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
             # Again, we can get deprecation warnings here.  Safe to ignore.
             warnings.simplefilter("ignore")
             fc = starlink.Ast.FitsChan(None, starlink.Atl.PyFITSAdapter(hdu) , "Encoding=FITS-WCS")
+            # Let Ast know how big the image is that we'll be writing.
+            for key in ['NAXIS', 'NAXIS1', 'NAXIS2']:
+                if key in header:
+                    fc[key] = header[key]
             success = fc.write(self._wcsinfo)
             # PyAst doesn't write out TPV or ZPX correctly.  It writes them as TAN and ZPN 
-            # respectively.  However, it claims success nonetheless, so we need to countermand that.
+            # respectively.  However, if the maximum error is less than 0.1 pixel, it claims
+            # success nonetheless.  This doesn't seem accurate enough for many purposes,
+            # so we need to countermand that.
             # The easiest way I found to check for them is that the string TPN is in the string 
             # version of wcsinfo.  So check for that and set success = False in that case.
             if 'TPN' in str(self._wcsinfo): success = False
+            # Likewise for SIP.  MPF seems to be an appropriate string to look for.
+            if 'MPF' in str(self._wcsinfo): success = False
             if not success:
                 # This should always work, since it uses starlinks own proprietary encoding, but 
                 # it won't necessarily be readable by ds9.
@@ -962,9 +991,14 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         # Start by reading the basic WCS stuff that most types have.
         ctype1 = header['CTYPE1']
         ctype2 = header['CTYPE2']
-        if not (ctype1.startswith('RA---') and ctype2.startswith('DEC--')):
-            raise NotImplementedError("GSFitsWCS can only handle cases where CTYPE1 is RA " +
-                                      "and CTYPE2 is DEC")
+        if ctype1.startswith('DEC--') and ctype2.startswith('RA---'):
+            flip = True
+        elif ctype1.startswith('RA---') and ctype2.startswith('DEC--'):
+            flip = False
+        else:
+            raise RuntimeError("The WCS read in does not define a pair of celestial axes. "
+                               "Expecting CTYPE1,2 to start with RA--- and DEC--.  Got %s, %s"%(
+                               ctype1, ctype2))
         if ctype1[5:] != ctype2[5:]:
             raise RuntimeError("ctype1, ctype2 do not seem to agree on the WCS type")
         self.wcs_type = ctype1[5:]
@@ -988,20 +1022,21 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             cd21 = float(header['CD2_1'])
             cd22 = float(header['CD2_2'])
         elif 'CDELT1' in header:
-            cd11 = float(header['CDELT1'])
-            cd12 = 0.
-            cd21 = 0.
-            cd22 = float(header['CDELT2'])
+            if 'PC1_1' in header:
+                cd11 = float(header['PC1_1']) * float(header['CDELT1'])
+                cd12 = float(header['PC1_2']) * float(header['CDELT1'])
+                cd21 = float(header['PC2_1']) * float(header['CDELT2'])
+                cd22 = float(header['PC2_2']) * float(header['CDELT2'])
+            else:
+                cd11 = float(header['CDELT1'])
+                cd12 = 0.
+                cd21 = 0.
+                cd22 = float(header['CDELT2'])
         else:
             cd11 = 1.
             cd12 = 0.
             cd21 = 0.
             cd22 = 1.
-
-        import numpy
-        self.crpix = numpy.array( [ crpix1, crpix2 ] )
-        self.cd = numpy.array( [ [ cd11, cd12 ], 
-                                 [ cd21, cd22 ] ] )
 
         # Usually the units are degrees, but make sure
         if 'CUNIT1' in header:
@@ -1012,6 +1047,17 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         else:
             ra_units = galsim.degrees
             dec_units = galsim.degrees
+
+        if flip:
+            crval1, crval2 = crval2, crval1
+            ra_units, dec_units = dec_units, ra_units
+            cd11, cd21 = cd21, cd11
+            cd12, cd22 = cd22, cd12
+
+        import numpy
+        self.crpix = numpy.array( [ crpix1, crpix2 ] )
+        self.cd = numpy.array( [ [ cd11, cd12 ], 
+                                 [ cd21, cd22 ] ] )
 
         self.center = galsim.CelestialCoord(crval1 * ra_units, crval2 * dec_units)
 

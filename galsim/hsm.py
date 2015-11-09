@@ -15,7 +15,7 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file hsm.py 
+"""@file hsm.py
 Routines for adaptive moment estimation and PSF correction.
 
 This file contains the python interface to C++ routines for estimation of second moments of images,
@@ -46,7 +46,7 @@ originated by others and one that was originated by Hirata & Seljak:
 
 These methods return shear (or shape) estimators, which may not in fact satisfy conditions like
 |e|<=1, and so they are represented simply as e1/e2 or g1/g2 (depending on the method) rather than
-using a Shear object, which IS required to satisfy |e|<=1. 
+using a Shear object, which IS required to satisfy |e|<=1.
 
 These methods are all based on correction of moments, but with different sets of assumptions.  For
 more detailed discussion on all of these algorithms, see the relevant papers above.
@@ -162,7 +162,7 @@ class ShapeData(object):
             self.correction_method = data.correction_method
             self.resolution_factor = data.resolution_factor
             self.psf_sigma = data.psf_sigma
-            # We use "None" in CppShapeData to indicate no error messages to avoid problems on 
+            # We use "None" in CppShapeData to indicate no error messages to avoid problems on
             # (some) Macs using zero-length strings.  Here, we revert that back to "".
             if data.error_message == "None":
                 self.error_message = ""
@@ -254,7 +254,7 @@ _galsim.CppShapeData.__getinitargs__ = lambda self: (
         self.corrected_g1, self.corrected_g2, self.meas_type, self.corrected_shape_err,
         self.correction_method, self.resolution_factor, self.psf_sigma,
         self.psf_e1, self.psf_e2, self.error_message)
-    
+
 _galsim.CppShapeData.__repr__ = lambda self: \
         ('galsim._galsim.CppShapeData(' + 21*'%r,' + '%r)')%self.__getinitargs__()
 
@@ -357,14 +357,14 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
     Typical application to a single object:
 
         >>> galaxy = galsim.Gaussian(flux=1.0, sigma=1.0)
-        >>> galaxy = galaxy.shear(g1=0.05, g2=0.0)  # shears the Gaussian by (0.05, 0) using the 
+        >>> galaxy = galaxy.shear(g1=0.05, g2=0.0)  # shears the Gaussian by (0.05, 0) using the
         >>>                                         # |g| = (a-b)/(a+b) definition
         >>> psf = galsim.Kolmogorov(flux=1.0, fwhm=0.7)
         >>> final = galsim.Convolve(galaxy, psf)
         >>> final_image = final.drawImage(scale=0.2)
         >>> final_epsf_image = psf.drawImage(scale=0.2)
         >>> result = galsim.hsm.EstimateShear(final_image, final_epsf_image)
-    
+
     After running the above code, `result.observed_shape` is a galsim.Shear object with a value of
     `(0.0438925349133, -2.85747392701e-18)` and `result.corrected_e1`, `result_corrected_e2` are
     `(0.09934103488922119, -3.746108423463568e-10)`, compared with the expected `(0.09975, 0)` for a perfect
@@ -413,9 +413,9 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
                             not set).  The convention for centroids is such that the center of
                             the lower-left pixel is (image.xmin, image.ymin).
                             [default: gal_image.trueCenter()]
-    @param strict           Whether to require success. If `strict=True`, then there will be a 
+    @param strict           Whether to require success. If `strict=True`, then there will be a
                             `RuntimeError` exception if shear estimation fails.  If set to `False`,
-                            then information about failures will be silently stored in the output 
+                            then information about failures will be silently stored in the output
                             ShapeData object. [default: True]
     @param hsmparams        The hsmparams keyword can be used to change the settings used by
                             EstimateShear() when estimating shears; see HSMParams documentation
@@ -473,7 +473,7 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
         >>> my_moments = galsim.hsm.FindAdaptiveMom(my_gaussian_image)
 
     OR
-    
+
         >>> my_moments = my_gaussian_image.FindAdaptiveMom()
 
     Assuming a successful measurement, the most relevant pieces of information are
@@ -523,9 +523,9 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
                             convention for centroids is such that the center of the lower-left pixel
                             is (image.xmin, image.ymin).
                             [default: object_image.trueCenter()]
-    @param strict           Whether to require success. If `strict=True`, then there will be a 
+    @param strict           Whether to require success. If `strict=True`, then there will be a
                             `RuntimeError` exception if shear estimation fails.  If set to `False`,
-                            then information about failures will be silently stored in the output 
+                            then information about failures will be silently stored in the output
                             ShapeData object. [default: True]
     @param hsmparams        The hsmparams keyword can be used to change the settings used by
                             FindAdaptiveMom when estimating moments; see HSMParams documentation

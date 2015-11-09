@@ -4,6 +4,101 @@ not listed here for brevity.  See the CHANGLELOG.md files associated with each
 version for a more complete list.  Issue numbers related to each change are 
 given in parentheses.
 
+v1.3
+====
+
+Installation Changes
+--------------------
+
+- Require functionality in TMV 0.72. (#616)
+
+
+API Changes
+-----------
+
+- Changed the name of the `bounds.addBorder()` method to `withBorder`. (#218)
+- Removed (from the python layer) Interpolant2d and InterpolantXY. (#218)
+- Removed the MultipleImage way of constructing an SBInterpolatedImage. (#218, #642)
+- Made the default tolerance for all Interpolants equal to 1.e-4.. (#218)
+- Deprecated the __rdiv__ operator from Bandpass and SED. (#218)
+- Made all returned matrices consistently use numpy.array, rather than
+  numpy.matrix. (#218)
+- Made the classes PositionI, PositionD, GSParams, and HSMParams immutable.
+  (#218, #643)
+- Deprecated CorrelatedNoise.calculateCovarianceMatrix. (#630)
+- Officially deprecated the methods and functions that had been described as
+  having been removed or changed to a different name. (#643)
+- Added function to interleave a set of dithered images into a single
+  higher-resolution image. (#666)
+
+
+New Features
+------------
+
+- Made all GalSim objects picklable unless they use fundamentally unpicklable
+  things such as lambda expressions, improved str and repr representations,
+  made __eq__, __ne__, and __hash__ work better. (#218)
+- Added ability to set the zeropoint of a bandpass to a numeric value on
+  construction. (#218)
+- Added ability to set the redshift of an SED on construction. (#218)
+- Updated CorrelatedNoise to work with images that have a non-trivial WCS.
+  (#501)
+- Added new methods of the image class to simulate detector effects (#555, #558).
+- Enabled constructing a FitsHeader object from a dict, and allow
+  FitsHeader to be default constructed with no keys. (#590)
+- Added a module, galsim.wfirst, that includes information about the planned
+  WFIRST mission, along with helper routines for constructing appropriate PSFs,
+  bandpasses, WCS, etc.  (#590)
+- Added native support for the TAN-SIP WCS type using GSFitsWCS. (#590)
+- Added a helper program, galsim_download_cosmos, that downloads the COSMOS
+  RealGalaxy catalog. (#590)
+- Added new class with methods for making realistic galaxy samples using COSMOS:
+  the COSMOSCatalog class and its method makeObj(). (#590 / #635).
+- Added information about PSF to the data returned by EstimateShear(). (#612)
+- Added Spergel(2010) profile GSObject (#616).
+- Added an option to the ChromaticObject class that allows for faster image
+  rendering via interpolation between stored images.  (#618)
+- Added new `ChromaticAiry` and `ChromaticOpticalPSF` classes for representing
+  chromatic optical PSFs. (#618)
+- Enable initializing a DES_PSFEx object using a pyfits HDU directly instead
+  of a filename. (#626)
+- Added TopHat class implementing a circular tophat profile. (#639)
+- Added ability of Noise objects to take a new random number generator (a
+  BaseDeviate instance) when being copied. (#643)
+- Added InterpolatedKImage GSObject for constructing a surface brightness
+  profile out of samples of its Fourier transform. (#642)
+- Enabled constructing a FitsHeader object from a list of (key, value) pairs,
+  which preserves the order of the items in the header. (#672)
+
+Bug Fixes and Improvements
+--------------------------
+
+- Fixed a bug in the normalization of SEDs that use `wave_type='A'`. (#218)
+- Switched the sign of the angle returned by `CelestialCoord.angleBetween`.
+  (#590)
+- Fixed a bug in UncorrelatedNoise where the variance was set incorrectly.
+  (#630)
+- Changed the implementation of drawing Box and Pixel profiles in real space
+  (i.e. without being convolved by anything) to actually draw the surface
+  brightness at the center of each pixel. (#639)
+- Fixed a bug where InterpolatedImage and Box profiles were not correctly
+  rendered when transformed by something that includes a flip. (#645)
+- Fixed a bug in rendering profiles that involve two separate shifts. (#645)
+- Fixed a bug if drawImage was given odd nx, ny parameters, the drawn profile
+  was not correctly centered in the image. (#645)
+- Added intermediate results cache to `ChromaticObject.drawImage` and
+  `ChromaticConvolution.drawImage` to speed up the rendering of groups
+  of similar (same SED, same Bandpass, same PSF) chromatic profiles. (#670)
+
+Updates to config options
+-------------------------
+
+- Added COSMOSGalaxy type, with corresponding cosmos_catalog input type. (#590)
+- Added Spergel type. (#616)
+- Added lam, diam, scale_units options to Airy and OpticalPSF types. (#618)
+- Added TopHat type. (#639)
+
+
 v1.2
 ====
 
