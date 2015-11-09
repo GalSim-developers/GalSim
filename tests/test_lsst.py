@@ -781,7 +781,9 @@ class LsstWcsTestCase(unittest.TestCase):
         wcs0 = LsstWCS(pointing, rotation, chip_name)
         im0 = galsim.Image(int(4000), int(4000), wcs=wcs0)
 
-        outputFile = os.path.join(path,'scratch_space','lsst_junk_img.fits')
+        outputFile = os.path.join(path,'scratch_space','lsst_roundtrip_img.fits')
+        if os.path.exists(outputFile):
+            os.unlink(outputFile)
         im0.write(outputFile)
 
         im1 = galsim.fits.read(outputFile)
