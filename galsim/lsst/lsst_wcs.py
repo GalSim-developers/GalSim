@@ -1053,12 +1053,12 @@ class LsstWCS(galsim.wcs.CelestialWCS):
 
 
     def __getstate__(self):
-            output_dict = {}
-            output_dict['pointing'] = self._pointing
-            output_dict['rotation_angle'] = self._rotation_angle
-            output_dict['chip_name'] = self._chip_name
-            output_dict['origin'] = self.origin
-            return output_dict
+        output_dict = {}
+        output_dict['pointing'] = self._pointing
+        output_dict['rotation_angle'] = self._rotation_angle
+        output_dict['chip_name'] = self._chip_name
+        output_dict['origin'] = self.origin
+        return output_dict
 
 
     def __setstate__(self, input_dict):
