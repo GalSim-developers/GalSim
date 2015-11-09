@@ -129,6 +129,15 @@ def _nativeLonLatFromRaDec(ra, dec, raPointing, decPointing):
 
 
 class LsstCamera(object):
+    """
+    This class characterizes the entire LSST Camera.  It uses a pointing and a rotation
+    angle to construct transformations between RA, Dec and pixel positions on each of the
+    chips in the camera.
+
+    Note: Each chip on the camera has its own origin in pixel coordinates.  When you ask this
+    class to transform RA, Dec into pixel coordinates, it will return you coordinate values as
+    well as the name of the chip on which those coordinate values are valid.
+    """
 
     def __init__(self, origin, rotation_angle):
         """
@@ -476,6 +485,10 @@ class LsstCamera(object):
         """
         Take a point on the sky and transform it into pixel coordinates
 
+        Note: if the point specified does not fall on a chip, the
+        returned coordinates will be numpy.NaN and the returned
+        chip name will be None (not the string 'None'; an actual None).
+
         inputs
         ------------
         point is a CelestialCoord (or a list of CelestialCoords) to be
@@ -503,6 +516,10 @@ class LsstCamera(object):
     def pixelCoordsFromFloat(self, ra, dec):
         """
         Take a point on the sky and transform it into pixel coordinates
+
+        Note: if the point specified does not fall on a chip, the
+        returned coordinates will be numpy.NaN and the returned
+        chip name will be None (not the string 'None'; an actual None).
 
         inputs
         ------------
@@ -689,6 +706,18 @@ class LsstCamera(object):
 
 
 class LsstWCS(galsim.wcs.CelestialWCS):
+    """
+    This class characterizes the WCS for a single chip on the LSST Camera.
+    It uses an instantiation of the class LsstCamera to handle the transformations
+    between RA, Dec and pixel coordinates.
+
+    Note: the pixel coordinates calculated by this class are relative to the origin
+    of the chip specified by self.chip_name.  You can get valid pixel coordinates for
+    an RA, Dec pair that does not actually fall on the chip.  The returned coordinates
+    will just exceed the chip bounds in that case (most chips have 4000 pixels in both
+    the x and y directions; it is possible to get pixel coordinates like (5000, 6000), etc.).
+    To find which chip an RA, Dec point lies on, use the methods in the LsstCamera class.
+    """
 
     def __init__(self, pointing, rotation_angle, chip_name):
         """
@@ -863,7 +892,7 @@ class LsstWCS(galsim.wcs.CelestialWCS):
         Return a WCS which approximates the focal plane as perfectly flat
         (i.e. it ignores optical distortions that the telescope may impose on the image)
 
-        The output is an instantiation of afw.image's TanWcs class
+        The output is an instantiation of lsst.afw.image's TanWcs class
         representing the WCS of the detector as if there were no optical
         distortions imposed by the telescope.
         """
@@ -977,7 +1006,7 @@ class LsstWCS(galsim.wcs.CelestialWCS):
 
         outputs
         ------------
-        tanSipWcs is an instantiation of afw.image's TanWcs class
+        tanSipWcs is an instantiation of lsst.afw.image's TanWcs class
         representing the WCS of the detector with optical distortions parametrized
         by the SIP polynomials.
         """
