@@ -694,11 +694,11 @@ class LsstCamera(object):
 
 class LsstWCS(galsim.wcs.CelestialWCS):
 
-    def __init__(self, origin, rotation_angle, chip_name):
+    def __init__(self, pointing, rotation_angle, chip_name):
         """
         inputs
         ------------
-        origin is a CelestialCoord indicating the point at which the telescope
+        pointing is a CelestialCoord indicating the point at which the telescope
         is pointing
 
         rotation_angle is an angle indicating the orientation of the camera with
@@ -734,10 +734,23 @@ class LsstWCS(galsim.wcs.CelestialWCS):
             on the chip specified by chip_name
         """
 
-        self._camera = LsstCamera(origin, rotation_angle)
+        self._pointing = pointing
+        self._rotation_angle = rotation_angle
         self._chip_name = chip_name
+        self._initialize()
+
+
+    def _initialize(self):
+        """
+        Setup the LsstCamera that does all of the calculations for this
+        WCS
+
+        (This is separate from __init__() so that it can be used in pickling)
+        """
+
+        self._camera = LsstCamera(self._pointing, self._rotation_angle)
         if self._chip_name not in self._camera._camera:
-            raise RuntimeError("%s is not a valid chip_name for an LsstWCS" % chip_name)
+            raise RuntimeError("%s is not a valid chip_name for an LsstWCS" % self._chip_name)
 
         self._detector = self._camera._camera[self._chip_name]
 
@@ -1021,3 +1034,19 @@ class LsstWCS(galsim.wcs.CelestialWCS):
 
     def __hash__(self):
         return hash(self.__repr__())
+
+
+    def __getstate__(self):
+            output_dict = {}
+            output_dict['pointing'] = self._pointing
+            output_dict['rotation_angle'] = self._rotation_angle
+            output_dict['chip_name'] = self._chip_name
+            output_dict['origin'] = self.origin
+            return output_dict
+
+    def __setstate__(self, input_dict):
+        self._pointing = input_dict['pointing']
+        self._rotation_angle = input_dict['rotation_angle']
+        self._chip_name = input_dict['chip_name']
+        self._initialize()
+        self._newOrigin(input_dict['origin'])

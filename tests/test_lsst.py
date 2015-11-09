@@ -851,3 +851,24 @@ class LsstWcsTestCase(unittest.TestCase):
 
         wcs0._newOrigin(galsim.PositionI(66, 77))
         self.assertNotEqual(wcs0, wcs1)
+
+
+    def test_pickling(self):
+        """
+        Test that LsstWCS can be pickled and un-pickled
+        """
+        path, filename = os.path.split(__file__)
+        file_name = os.path.join(path,'scratch_space','pickle_LsstWCS.txt')
+
+        import pickle
+
+        with open(file_name, 'w') as output_file:
+             pickle.dump(self.wcs, output_file)
+
+        with open(file_name, 'r') as input_file:
+            wcs1 = pickle.load(input_file)
+
+        self.assertEqual(self.wcs, wcs1)
+
+        if os.path.exists(file_name):
+            os.unlink(file_name)
