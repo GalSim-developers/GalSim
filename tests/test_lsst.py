@@ -904,6 +904,8 @@ class LsstWcsTestCase(unittest.TestCase):
         self.assertEqual(len(ww), 0)
 
 
+        # verify that, if the camera does not have the pointing or rotation angle you want,
+        # a new camera will be instantiated
         with warnings.catch_warnings(record=True) as ww:
             wcs1 = LsstWCS(galsim.CelestialCoord(0.0*galsim.degrees, 0.0*galsim.degrees), self.rotation,
                            chip_name='R:0,1 S:1,1', camera=self.wcs.camera)
