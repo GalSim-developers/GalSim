@@ -993,3 +993,31 @@ class LsstWCS(galsim.wcs.CelestialWCS):
 
         rot = header.get("ROT")*galsim.radians
         return LsstWCS(pointing, rot, header.get("CNAME"))
+
+
+    def copy(self):
+        other = LsstWCS(self._camera._pointing, self._camera._rotation_angle, self._chip_name)
+        other._newOrigin(self.origin)
+        return other
+
+
+    def __eq__(self, other):
+        return (isinstance(other, LsstWCS) and
+                other.origin == self.origin and
+                other._camera._pointing == self._camera._pointing and
+                other._camera._rotation_angle == self._camera._rotation_angle and
+                other._chip_name == self._chip_name)
+
+
+    def __repr__(self):
+        return "galsim.lsst.LsstWCS(galsim.CelestialCoord(%e*galsim.radians, %e*galsim.radians), %e*galsim.radians, '%s')" \
+        % (self._camera._pointing.ra/galsim.radians, self._camera._poiting.dec/galsim.radians,
+           self._camera._rotation_angle/galsim.radians, self._chip_name)
+
+
+    def __str__(self):
+        return self.__repr__()
+
+
+    def __hash__(self):
+        return hash(self.__repr__())

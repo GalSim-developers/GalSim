@@ -808,3 +808,43 @@ class LsstWcsTestCase(unittest.TestCase):
 
         if os.path.exists(outputFile):
             os.unlink(outputFile)
+
+
+    def test_eq(self):
+        """
+        Test that __eq__ works for LsstWCS
+        """
+
+        pointing = CelestialCoord(64.82*galsim.degrees, -16.73*galsim.degrees)
+        rotation = 116.8*galsim.degrees
+        chip_name = 'R:1,2 S:2,2'
+        wcs0 = LsstWCS(pointing, rotation, chip_name)
+        wcs1 = LsstWCS(pointing, rotation, chip_name)
+        self.assertEqual(wcs0, wcs1)
+
+        new_origin = galsim.PositionI(9, 9)
+        wcs1._newOrigin(new_origin)
+        self.assertNotEqual(wcs0, wcs1)
+
+        other_pointing = CelestialCoord(1.9*galsim.degrees, -34.0*galsim.degrees)
+        wcs2 = LsstWCS(other_pointing, rotation, chip_name)
+        self.assertNotEqual(wcs0, wcs2)
+
+        wcs3 = LsstWCS(pointing, 112.0*galsim.degrees, chip_name)
+        self.assertNotEqual(wcs0, wcs3)
+
+        wcs4 = LsstWCS(pointing, rotation, 'R:2,2 S:2,2')
+        self.assertNotEqual(wcs0, wcs4)
+
+
+    def test_copy(self):
+        """
+        Test that copy() works
+        """
+        pointing = CelestialCoord(64.82*galsim.degrees, -16.73*galsim.degrees)
+        rotation = 116.8*galsim.degrees
+        chip_name = 'R:1,2 S:2,2'
+        wcs0 = LsstWCS(pointing, rotation, chip_name)
+        wcs0._newOrigin(galsim.PositionI(112, 4))
+        wcs1 = wcs0.copy()
+        self.assertEqual(wcs0, wcs1)
