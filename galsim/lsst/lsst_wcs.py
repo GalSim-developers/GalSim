@@ -185,6 +185,32 @@ class LsstCamera(object):
         self._sin_dec = np.sin(self._pointing.dec/galsim.radians)
 
 
+    @property
+    def pointing(self):
+        """
+        A galsim.CelestialCoord characterizing the direction the camera is pointing
+        """
+        return self._pointing
+
+
+    @property
+    def rotation_angle(self):
+        """
+        A galsim.Angle object characterizing the rotation of the camera with respect
+        to the sky.
+
+        rotation_angle = 0 degrees means north is in the +x direction (in pixel coordinates)
+                         and east is in the +y direction
+
+        rotation_angle = 90 degrees means north is +y and east is -x
+
+        rotation_angle = -90 degrees means north is -y and east is +x
+
+        rotation_angle = 180 degrees means north is -x and east is -y
+        """
+        return self._roationa_angle
+
+
     def pupilCoordsFromPoint(self, point):
         """
         Convert from RA, Dec into coordinates on the pupil

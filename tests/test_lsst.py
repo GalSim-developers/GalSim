@@ -179,6 +179,17 @@ class LsstCameraTestClass(unittest.TestCase):
         cls.camera_data = np.genfromtxt(file_name, dtype=dtype, delimiter='; ')
 
 
+    def test_attribute_exceptions(self):
+        """
+        Test that exceptions are raised when you try to set attributes
+        """
+        with self.assertRaises(AttributeError) as context:
+            self.camera.pointing = galsim.CelestialCoord(34.0*galsim.degrees, 18.0*galsim.degrees)
+
+        with self.assertRaises(AttributeError) as context:
+            self.camera.rotation_angle = 56.0*galsim.degrees
+
+
     def test_pupil_coordinates(self):
         """
         Test the conversion between (RA, Dec) and pupil coordinates.
