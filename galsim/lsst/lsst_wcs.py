@@ -208,7 +208,7 @@ class LsstCamera(object):
 
         rotation_angle = 180 degrees means north is -x and east is -y
         """
-        return self._roationa_angle
+        return self._rotation_angle
 
 
     def pupilCoordsFromPoint(self, point):
