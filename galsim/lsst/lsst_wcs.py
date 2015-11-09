@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 import galsim
 
 try:
@@ -745,7 +746,7 @@ class LsstWCS(galsim.wcs.CelestialWCS):
     To find which chip an RA, Dec point lies on, use the methods in the LsstCamera class.
     """
 
-    def __init__(self, pointing, rotation_angle, chip_name):
+    def __init__(self, pointing, rotation_angle, chip_name, camera=None):
         """
         inputs
         ------------
@@ -779,11 +780,20 @@ class LsstWCS(galsim.wcs.CelestialWCS):
             Note: origin denotes the point on the sky at which the center of the entire
             LSST field of view is pointing.  It does not (and often won't) have to fall
             on the chip specified by chip_name
+
+        camera (optional) is an instantiation of LsstCamera that you want to use for this
+        WCS.  Before actually assigning camera to this WCS, LsstWCS will verify that camera
+        was created with the pointing and rotation_angle that you say you want for this WCS.
+        If that is not true, LsstWCS will go ahead and create a new LsstCamera instantiation
+        for this WCS.  This option exists in case you want to create multiple LsstWCSs using
+        the same camera but do not want to incur the overhead of instantiating a camera for
+        each WCS.
         """
 
         self._pointing = pointing
         self._rotation_angle = rotation_angle
         self._chip_name = chip_name
+        self._camera = camera
         self._initialize()
 
     @property
@@ -810,6 +820,13 @@ class LsstWCS(galsim.wcs.CelestialWCS):
         """
         return self._chip_name
 
+    @property
+    def camera(self):
+        """
+        An instantiation of LsstCamera characterizing the camera used for this WCS
+        """
+        return self._camera
+
 
     def _initialize(self):
         """
@@ -819,7 +836,18 @@ class LsstWCS(galsim.wcs.CelestialWCS):
         (This is separate from __init__() so that it can be used in pickling)
         """
 
-        self._camera = LsstCamera(self._pointing, self._rotation_angle)
+        if self._camera is None or \
+          self._camera.pointing!=self._pointing or \
+          self._camera.rotation_angle!=self._rotation_angle:
+
+            if self._camera is not None:
+               warnings.warn("The camera you passed to LsstWCS does not have the same\n"
+                             "pointing and rotation angle as you asked for for this WCS.\n"
+                             "LsstWCS is creating a new camera with the pointing and\n"
+                             "rotation angle you specified in the constructor for LsstWCS.")
+
+            self._camera = LsstCamera(self._pointing, self._rotation_angle)
+
         if self._chip_name not in self._camera._camera:
             raise RuntimeError("%s is not a valid chip_name for an LsstWCS" % self._chip_name)
 
@@ -1117,6 +1145,7 @@ class LsstWCS(galsim.wcs.CelestialWCS):
 
 
     def __setstate__(self, input_dict):
+        self._camera = None
         self._pointing = input_dict['pointing']
         self._rotation_angle = input_dict['rotation_angle']
         self._chip_name = input_dict['chip_name']

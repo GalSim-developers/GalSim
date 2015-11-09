@@ -1,6 +1,7 @@
 from __future__ import with_statement
 import unittest
 import numpy as np
+import warnings
 import os
 import galsim
 from galsim.lsst import LsstCamera, LsstWCS, _nativeLonLatFromRaDec
@@ -890,3 +891,36 @@ class LsstWcsTestCase(unittest.TestCase):
 
         if os.path.exists(file_name):
             os.unlink(file_name)
+
+
+    def test_passing_camera_by_hand(self):
+        """
+        Test that you can pass a camera from one WCS to another
+        """
+
+        with warnings.catch_warnings(record=True) as ww:
+            wcs1 = LsstWCS(self.pointing, self.rotation, chip_name='R:0,1 S:1,1', camera=self.wcs.camera)
+
+        self.assertEqual(len(ww), 0)
+
+
+        with warnings.catch_warnings(record=True) as ww:
+            wcs1 = LsstWCS(galsim.CelestialCoord(0.0*galsim.degrees, 0.0*galsim.degrees), self.rotation,
+                           chip_name='R:0,1 S:1,1', camera=self.wcs.camera)
+
+        self.assertEqual(str(ww[0].message),
+                         "The camera you passed to LsstWCS does not have the same\n"
+                         "pointing and rotation angle as you asked for for this WCS.\n"
+                         "LsstWCS is creating a new camera with the pointing and\n"
+                         "rotation angle you specified in the constructor for LsstWCS.")
+
+
+        with warnings.catch_warnings(record=True) as ww:
+            wcs1 = LsstWCS(self.pointing, 49.0*galsim.degrees,
+                           chip_name='R:0,1 S:1,1', camera=self.wcs.camera)
+
+        self.assertEqual(str(ww[0].message),
+                         "The camera you passed to LsstWCS does not have the same\n"
+                         "pointing and rotation angle as you asked for for this WCS.\n"
+                         "LsstWCS is creating a new camera with the pointing and\n"
+                         "rotation angle you specified in the constructor for LsstWCS.")
