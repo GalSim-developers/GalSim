@@ -848,3 +848,6 @@ class LsstWcsTestCase(unittest.TestCase):
         wcs0._newOrigin(galsim.PositionI(112, 4))
         wcs1 = wcs0.copy()
         self.assertEqual(wcs0, wcs1)
+
+        wcs0._newOrigin(galsim.PositionI(66, 77))
+        self.assertNotEqual(wcs0, wcs1)
