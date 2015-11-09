@@ -139,18 +139,14 @@ class LsstCamera(object):
         rotation_angle is an angle indicating the orientation of the camera with
         respect to the sky.  The convention for rotation_angle is:
 
-        rotation_angle = 0 degrees means north is in the +y direction on the camera and east is -x
+        rotation_angle = 0 degrees means north is in the +x direction (in pixel coordinates)
+                         and east is in the +y direction
 
-        rotation_angle = 90 degrees means north is -x and east is -y
+        rotation_angle = 90 degrees means north is +y and east is -x
 
-        rotation_angle = -90 degrees means north is +x and east is +y
+        rotation_angle = -90 degrees means north is -y and east is +x
 
-        rotation_angle = 180 degrees means north is -y and east is +x
-
-        Note that in the above, x and y return to coordinates on the pupil.  These are
-        rotated 90 degrees with respect to coordinates on the camera (pixel coordinates)
-        because of the LSST Data Management convention that the x-direction in pixel
-        coordinates must be oriented along the direction of serial readout.
+        rotation_angle = 180 degrees means north is -x and east is -y
         """
 
         # this line prevents the camera mapper from printing harmless warnings to
@@ -704,18 +700,14 @@ class LsstWCS(galsim.wcs.CelestialWCS):
         rotation_angle is an angle indicating the orientation of the camera with
         respect to the sky.  The convention for rotation_angle is:
 
-            rotation_angle = 0 degrees means north is in the +y direction on the camera and east is -x
+            rotation_angle = 0 degrees means north is in the +x direction
+            (in pixel coordinates) and east is in the +y direction
 
-            rotation_angle = 90 degrees means north is -x and east is -y
+            rotation_angle = 90 degrees means north is +y and east is -x
 
-            rotation_angle = -90 degrees means north is +x and east is +y
+            rotation_angle = -90 degrees means north is -y and east is +x
 
-            rotation_angle = 180 degrees means north is -y and east is +x
-
-            Note that in the above, x and y return to coordinates on the pupil.  These are
-            rotated 90 degrees with respect to coordinates on the camera (pixel coordinates)
-            because of the LSST Data Management convention that the x-direction in pixel
-            coordinates must be oriented along the direction of serial readout.
+            rotation_angle = 180 degrees means north is -x and east is -y
 
         chip_name is a string indicating the name of the chip to which this WCS corresponds
 
