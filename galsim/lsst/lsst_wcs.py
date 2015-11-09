@@ -1060,6 +1060,7 @@ class LsstWCS(galsim.wcs.CelestialWCS):
             output_dict['origin'] = self.origin
             return output_dict
 
+
     def __setstate__(self, input_dict):
         self._pointing = input_dict['pointing']
         self._rotation_angle = input_dict['rotation_angle']
