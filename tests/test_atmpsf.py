@@ -17,12 +17,16 @@
 #
 import numpy as np
 
+
 try:
     import galsim
 except ImportError:
+    import os
+    import sys
     path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
+
 
 def test_atmpsf_kwargs():
     """ Test that different ways of initializing AtmsphericPSF don't crash.
@@ -30,13 +34,13 @@ def test_atmpsf_kwargs():
 
     # First the simple cases, where the size is set via a scalar
 
-    lam = 500. # nm
-    r0 = 0.2 # m
+    lam = 500.0  # nm
+    r0 = 0.2  # m
     psf0 = galsim.AtmosphericPSF(lam=lam, r0=r0)
     psf0.drawImage()
 
     lam_over_r0 = lam*1e-9/r0 * galsim.radians/galsim.arcsec
-    psf1 = galsim.AtmosphericPSF(lam_over_r0 = lam_over_r0)
+    psf1 = galsim.AtmosphericPSF(lam_over_r0=lam_over_r0)
     psf1.drawImage()
 
     fwhm = galsim.Kolmogorov(lam_over_r0).getFWHM()
@@ -44,12 +48,12 @@ def test_atmpsf_kwargs():
     psf2.drawImage()
 
     # Now try multiple phase screens
-    weights=[0.1, 0.2, 0.3, 0.4]
+    weights = [0.1, 0.2, 0.3, 0.4]
     psf3 = galsim.AtmosphericPSF(lam=lam, r0=r0, weights=weights)
     psf3.drawImage()
 
-    velocity=[1, 2, 3, 4]
-    psf4 = galsim.AtmosphericPSF(lam=lam, r0=r0, velocity=velocity)
+    velocities = [1.0, 2.0, 3.0, 4.0]
+    psf4 = galsim.AtmosphericPSF(lam=lam, r0=r0, velocity=velocities)
     psf4.drawImage()
 
     psf5 = galsim.AtmosphericPSF(lam_over_r0=lam_over_r0, weights=weights)
@@ -64,15 +68,22 @@ def test_atmpsf_kwargs():
     psf7.drawImage()
 
     # Try multiple broadcasts
-    direction = [d*galsim.degrees for d in (0, 10, 20, 30)]
-    psf8 = galsim.AtmosphericPSF(lam=lam, r0=r0, direction=direction, velocity=velocity,
+    directions = [d*galsim.degrees for d in (0, 10, 20, 30)]
+    psf8 = galsim.AtmosphericPSF(lam=lam, r0=r0, direction=directions, velocity=velocities,
                                  weights=weights)
     psf8.drawImage()
 
+    alpha_mags = [0.999, 0.998, 0.997, 0.996]
+    psf9 = galsim.AtmosphericPSF(lam=lam, r0=r0s, direction=directions, velocity=velocities,
+                                 alpha_mag=alpha_mags)
+    psf9.drawImage()
+
     # Now try some things that *should* fail.
     try:
+        # Can't specify both r0 and weights as lists.
         np.testing.assert_raises(ValueError, galsim.AtmosphericPSF,
                                  lam=lam, r0=r0s, weights=weights)
+        # Can't specify both lam_over_r0 and weights as lists.
         np.testing.assert_raises(ValueError, galsim.AtmosphericPSF,
                                  lam_over_r0=[lam/r for r in r0s], weights=weights)
 

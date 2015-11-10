@@ -142,14 +142,21 @@ class AtmosphericPSF(GSObject):
     @param lam              Lambda (wavelength) in units of nanometers.  Must be supplied with `r0`,
                             and in this case, image scales (`scale`) should be specified in units of
                             `scale_unit`.
-    @param r0               Fried parameter (in meters) setting the amplitude of turbulence due to
-                            all layers.  [Default: 0.2]
-    @param lam_over_r0      Lambda / Fried parameter
+    @param r0               Fried parameter (in meters) setting the amplitude of turbulence.  If a
+                            scalar, then this is the effective Fried parameter for combination of
+                            all layers.  If a list, then each element specifies the Fried parameter
+                            for a particular layer.  Note that the Fried parameter adds over layers
+                            like r0_effective^(-5/3) = sum r0_i^(-5/3).
+    @param lam_over_r0      Ratio of wavelength to Fried parameter.  Can be a scalar, which
+                            then specifies the net turbulence across all layers, or a list which
+                            then indicates the turbulence for each individual layer.
     @param fwhm             Full width at half max (FWHM) of the PSF in the infinite exposure limit
-                            in arcseconds. [Default: 0.8]
+                            in arcseconds.
+    @param half_light_radius  The half-light-radius of the PSF in the infinite exposure limit.
+                            Typically given in arcsec.
     @param weights          Relative weights for each turbulent layer in terms of the layers'
                             refractive index fluctuations C_n^2.  The Fried parameter for each layer
-                            is then set via r0_i = r_0 * weight_i^(-3/5).
+                            is then set via r0_i = r0_effective * weight_i^(-3/5).
     @param alpha_mag        Magnitude of autoregressive parameter.  (1-alpha) is the fraction of the
                             phase from the prior time step that is "forgotten" and replaced by
                             Gaussian noise.  [Default: 0.999]
@@ -163,10 +170,6 @@ class AtmosphericPSF(GSObject):
                             should be used.  Options are 'nearest', 'sinc', 'linear', 'cubic',
                             'quintic', or 'lanczosN' where N should be the integer order to use.
                             [Default: galsim.Quintic()]
-    @param oversampling     Optional oversampling factor for the InterpolatedImage. Setting
-                            `oversampling < 1` will produce aliasing in the PSF (not good).
-                            Usually `oversampling` should be somewhat larger than 1.  1.5 is
-                            usually a safe choice.  [Default: 1.5]
     @param flux             Total flux of the profile. [Default: 1.]
     @param scale_unit       Units used to define the diffraction limit and draw images, if the user
                             has supplied a separate value for `lam` and `r0`.  Should be either a
@@ -176,27 +179,31 @@ class AtmosphericPSF(GSObject):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [Default: None]
     """
-    def __init__(self, lam=None, r0=None, lam_over_r0=None, fwhm=None, weights=None,
-                 alpha_mag=None, exptime=0.0, time_step=0.03, velocity=0.0,
-                 direction=0*galsim.degrees, phase_generator=None, interpolant=None,
-                 oversampling=1.5, flux=1.0, scale_unit=galsim.arcsec, gsparams=None):
+    def __init__(self, lam=None, r0=None, lam_over_r0=None, fwhm=None, half_light_radius=None,
+                 weights=None, alpha_mag=None, exptime=0.0, time_step=0.03, velocity=None,
+                 direction=None, phase_generator=None, interpolant=None, oversampling=1.5, flux=1.0,
+                 scale_unit=galsim.arcsec, gsparams=None):
         import itertools
 
         nstep = int(np.ceil(exptime/time_step))
         if nstep == 0:
             nstep = 1
 
-        if alpha_mag is None:
-            alpha_mag = 0.999
-
         if phase_generator is not None:
-            if any(item is not None for item in (lam, r0, lam_over_r0, fwhm, weights, alpha_mag)):
-                raise ValueError("Cannot specify lam, r0, lam_over_r0, fwhm, weights, or alpha_mag"
+            if any(item is not None for item in (r0, lam_over_r0, fwhm, weights, alpha_mag)):
+                raise ValueError("Cannot specify r0, lam_over_r0, fwhm, weights, or alpha_mag"
                                  " when specifying phase_generator")
         else:
-            # First determine the size (effective r0) of the requested PSF.
             if fwhm is not None:
                 lam_over_r0 = fwhm / 0.975865
+            if half_light_radius is not None:
+                lam_over_r0 = half_light_radius / 0.554811
+            if alpha_mag is None:
+                alpha_mag = 0.999
+            if direction is None:
+                direction = 0.0 * galsim.degrees
+            if velocity is None:
+                velocity = 0.0
             if weights is not None:
                 if r0 is not None:
                     if hasattr(r0, '__len__'):
@@ -218,14 +225,6 @@ class AtmosphericPSF(GSObject):
             # Should have lam, {r0} at this point.
             r0_effective = (sum(r**(-5./3) for r in r0)**(-3./5))
 
-            print "r0_effective: ", r0_effective
-            print "lam_over_r0:", lam_over_r0
-            print "r0: ", r0
-            print "lam: ", lam
-            print "alpha_mag: ", alpha_mag
-            print "velocity: ", velocity
-            print "direction: ", direction
-
             # Sampling the phase screen is roughly analogous to sampling the PSF in Fourier space.
             # We can use a Kolmogorov profile to get a rough estimate of what stepK is needed to
             # avoid aliasing.
@@ -233,16 +232,16 @@ class AtmosphericPSF(GSObject):
             screen_scale = kolm.stepK()/(2*np.pi)  # 2pi b/c np and GalSim FFT conventions differ.
             # an arbitrary additional factor of 4 to account for the fact that a stochastic
             # atmospheric PSF can have significant fluctuations at relatively large radii.
-            screen_scale /= 4
+            screen_scale /= 4.0
             # We'll hard code screen_size = 10 meters since that covers all planned ground-based
             # weak lensing experiments.
-            screen_size = 10.
+            screen_size = 10.0
             phase_generator = AtmosphericPhaseGenerator(
                 time_step=time_step, screen_size=screen_size, screen_scale=screen_scale, r0=r0,
                 alpha_mag=alpha_mag, velocity=velocity, direction=direction)
         self.phase_generator = phase_generator
 
-        scale = 1.e-9*lam/self.phase_generator.screen_size * galsim.radians / scale_unit
+        scale = 1e-9*lam/self.phase_generator.screen_size * galsim.radians / scale_unit
         # Generate PSFs for each time step
         nx, ny = phase_generator.screens[0].shape
         im_grid = np.zeros((nx, ny), dtype=np.float64)
