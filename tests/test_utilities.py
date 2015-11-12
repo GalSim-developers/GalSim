@@ -156,6 +156,22 @@ def test_check_all_contiguous():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_deInterleaveImage():
+    import time
+    t1 = time.time()
+
+    np.random.seed(84) # for generating the same random instances
+
+    # Check compatability with interleaveImages
+    img = galsim.Image(np.random.randn(64,64),scale=0.25)
+    im_list, offsets = galsim.utilities.deInterleaveImage(img,8)
+    img1 = galsim.utilities.interleaveImages(im_list,8,offsets)
+    np.testing.assert_array_equal(img1.array,img.array,\
+       err_msg = "interleaveImages cannot reproduce the input to deInterleaveImage")
+
+    assert img.wcs == img1.wcs
+    
+    
 def test_interleaveImages():
     import time
     t1 = time.time()
@@ -300,6 +316,57 @@ def test_interleaveImages():
 
     np.testing.assert_array_equal(im.array,img.array,err_msg="Sheared gaussian not interleaved correctly")
     assert img.wcs == galsim.JacobianWCS(1.*scale/n**2,0.0,0.0,scale)
+
+    # 3) Check compatability with deInterleaveImage
+    n = 3
+    g = galsim.Gaussian(sigma=3.7,flux=100.)#.shear(g1=0.2,g2=0.1)
+    img = galsim.Image(16*n,16*n)
+    g.drawImage(image=img,scale=2.0,method='no_pixel')
+
+    im_list_1, offset_list_1 = galsim.utilities.deInterleaveImage(img,n)
+    img1 = galsim.utilities.interleaveImages(im_list_1,N=n,offsets=offset_list_1)
+
+    np.testing.assert_array_equal(img1.array,img.array)
+    assert img1.wcs == img.wcs
+
+    im_list_2, offset_list_2 = galsim.utilities.deInterleaveImage(img,n,conserve_flux=True)
+    img2 = galsim.utilities.interleaveImages(im_list_2,N=n,offsets=offset_list_2,add_flux=False)
+
+    np.testing.assert_array_almost_equal(img2.array,img.array,7)
+    assert img2.wcs == img.wcs
+    
+    # 3) Check compatability with deInterleaveImage
+    n = 3
+    g = galsim.Gaussian(sigma=3.7,flux=100.)
+    gal = g.shear(g=0.2,beta=0.*galsim.degrees) # break symmetry to detect possible bugs in deInterleaveImages
+    im_list = []
+    offset_list = []
+
+    # Generating offsets in the order they would be returned by deInterleaveImage, for convenience
+    for i in xrange(n):
+        for j in xrange(n):
+            im = galsim.Image(16*n,16*n)
+            offset = galsim.PositionD(-(i+0.5)/n+0.5,-(j+0.5)/n+0.5)
+            offset_list.append(offset)
+            gal.drawImage(image=im,method='no_pixel',offset=offset,scale=0.5)
+            im_list.append(im)
+
+    img = galsim.utilities.interleaveImages(im_list,N=n,offsets=offset_list)
+    im_list_1, offset_list_1 = galsim.utilities.deInterleaveImage(img, N=n)
+
+    for k in xrange(n**2):
+        assert offset_list_1[k] == offset_list[k]
+        np.testing.assert_array_equal(im_list_1[k].array, im_list[k].array)
+        assert im_list_1[k].wcs == im_list[k].wcs 
+
+    # Checking for non-default flux option
+    img = galsim.utilities.interleaveImages(im_list,N=n,offsets=offset_list,add_flux=False)
+    im_list_2, offset_list_2 = galsim.utilities.deInterleaveImage(img,N=n,conserve_flux=True)
+
+    for k in xrange(n**2):
+        assert offset_list_2[k] == offset_list[k]
+        np.testing.assert_array_equal(im_list_2[k].array, im_list[k].array)
+        assert im_list_2[k].wcs == im_list[k].wcs
     
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -352,5 +419,6 @@ if __name__ == "__main__":
     test_kxky()
     test_kxky_plusone()
     test_check_all_contiguous()
+    #test_deInterleaveImage()
     test_interleaveImages()
     test_python_LRU_Cache()
