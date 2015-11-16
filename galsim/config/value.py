@@ -1162,7 +1162,7 @@ def _GenerateFromEval(param, param_name, base, value_type):
     if 'stamp_ysize' in base:
         stamp_ysize = base['stamp_ysize']
     if 'pixel_scale' in base:
-        pixel_sclae = base['pixel_scale']
+        pixel_scale = base['pixel_scale']
     if 'rng' in base:
         rng = base['rng']
     if 'file_num' in base:
@@ -1201,7 +1201,7 @@ def _GenerateFromCurrent(param, param_name, base, value_type):
     # the key is probably wrong relative to the current config dict.  We make each input
     # item a list, so the user can have more than one input dict for example.  But if 
     # they aren't using that, we don't want them to have to know about it if they try to 
-    # take soemthing from there for a Current item.  
+    # take something from there for a Current item.
     # So we change, e.g., 
     #     input.fits_header.file_name 
     # --> input.fits_header.0.file_name
