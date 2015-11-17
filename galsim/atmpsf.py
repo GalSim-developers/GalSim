@@ -93,7 +93,7 @@ class AtmosphericPhaseGenerator(object):
         if any(len(i) != n_layers for i in (r0, L0, velocity, direction, alpha_mag)):
             raise ValueError("r0, L0, velocity, direction, alpha_mag not broadcastable")
 
-        # Invert L0, with L0 is None interpretted as L0 = infinity => L0_inv = 0.0
+        # Invert L0, with `L0 is None` interpretted as L0 = infinity => L0_inv = 0.0
         L0_inv = [1./L00 if L00 is not None else 0.0 for L00 in L0]
 
         # decompose velocities
@@ -110,7 +110,7 @@ class AtmosphericPhaseGenerator(object):
         self.screens = np.zeros_like(self.powerlaw)
 
         for i, (r00, L00_inv, vx0, vy0, amag0) in enumerate(zip(r0, L0_inv, vx, vy, alpha_mag)):
-            # Jee+Tyson2011 have (screen_size * L00_inv))**2 below instead of L00_inv**2.  I *think*
+            # Jee+Tyson2011 have (screen_size * L00_inv))**2 instead of L00_inv**2.  I *think*
             # this is because their k & l are indices and not spatial frequencies.
             pl = (1./self.screen_size*np.sqrt(0.00058)*(r00**(-5.0/6.0)) *
                   (fx*fx + fy*fy + L00_inv**2)**(-11.0/12.0) *
