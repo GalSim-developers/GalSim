@@ -1,0 +1,215 @@
+# The Great3 control-ground-constant branch configuration file
+
+psf:
+    type: Convolve
+
+    # TODO the 'repeat' option is not supported yet
+    # This will keep the same PSF object for 10000 objects before making a new one.
+    # 10000 = 100 x 100 is the number of objects in each file.
+    repeat: 10000
+
+    items:
+    # The atmospheric component
+    -   type: Kolmogorov
+        # To avoid PSFs that were "too round", the ellipticity was drawn from a uniform
+        # distribution from sqrt(1.e-4) to sqrt(9.e-4), based on an estimate of the 
+        # typical variance of e in ground-based imaging.
+        ellip:
+            type: EBeta
+            e: 
+                type: Random
+                min: 0.01
+                max: 0.03
+            beta: 
+                type: Random 
+
+        # The seeing is taken from a plausible distribution of seeing values
+        # ranging from 0.45 to 0.95.
+        fwhm: 
+            type: RandomDistribution
+            # TODO: This inline lookup table from x,f lists is not supported yet.
+            x: [ 0.45, 0.55, 0.65, 0.75, 0.85, 0.95 ]
+            f: [ 0.,   20.,  17.,  13.,  9.,   0.   ]
+
+    # The optical component 
+    -   type: OpticalPSF
+        lam_over_diam: { type: Random, min: 0.013, max: 0.083 }
+        obscuration: { type: Random, min: 0.1, max: 0.5 }
+        # Despite sort of modeling off of DECam (with 4 struts), they didn't use 
+        # any struts for the ground psfs.
+        nstruts: 0
+
+        # The aberrations are taken to have an rms of 0.41 waves
+        # Great3 put a lot more weight into the defocus than the others.
+        # Unfortunately, this makes a couple PSFs into donuts, which was a problem.
+        # According to Aaron Roodma, for DES the appropriate rms values are closer to
+        # [ 0.13, 0.13, 0.14, 0.06, 0.06, 0.05, 0.06, 0.03 ]
+        # which has an rms of 0.26 waves, much less than 0.41, so probably that was too
+        # large a target.
+        defocus: { type: RandomGaussian, sigma: 0.36 }
+        astig1: { type: RandomGaussian, sigma: 0.07 }
+        astig2: { type: RandomGaussian, sigma: 0.07 }
+        coma1: { type: RandomGaussian, sigma: 0.07 }
+        coma2: { type: RandomGaussian, sigma: 0.07 }
+        trefoil1: { type: RandomGaussian, sigma: 0.07 }
+        trefoil2: { type: RandomGaussian, sigma: 0.07 }
+        spher: { type: RandomGaussian, sigma: 0.07 }
+
+        # Sometimes the OpticalPSF wants to make a very large image of the PSF.  But if the
+        # PSF image is larger than the postage stamp onto which we will draw the object,
+        # the larger area is mostly wasted.  Setting max_size 
+        # 
+        # This is in arcsec, so stamp_size * pixel_scale
+        max_size: { type: Eval, str: '48 * 0.2' }
+        suppress_warning: true
+
+gal:
+    type: Ring
+    num: 2
+    first:
+        # Galaxies were based on parametric fits to COSMOS galaxies.
+        type: COSMOSGalaxy
+        gal_type: parametric
+        index: { type: Random }
+
+        # Randomly spin the original profile
+        rotate: { type: Random }
+
+    # AFAICT, this was never changed from the default mu=1.
+    magnification: 1
+
+    # The shear was chosen randomly within an annulus with 0.01 < |g| < 0.05.
+    shear:
+        type: GBeta
+        # TODO: Using repeat here is also not implemented yet.
+        repeat: 10000
+        g: 
+            type: RandomDistribution
+            function: x
+            x_min: 0.01
+            x_max: 0.05
+        beta: { type: Random }
+
+eval_variables:
+    # I don't understand this bit at all.  
+    # Here is the line in the original great3 scripts:
+    # https://github.com/barnabytprowe/great3-public/blob/master/great3sims/noise.py#L97
+    # They did this as a LookupTable, but the formula below is pretty close.
+    # I have no idea what the physical plausibility of this relation is.  I don't even 
+    # understand why they chose to vary the noise level in concert with the seeing.
+    fmax_var: 
+        type: Eval
+        str: '0.004 * math.exp(2.9 * (x-1.1) * (x-0.95))'
+        fx: { type: Current, key: psf.items.0.fwhm }
+
+image:
+    type: Tiled
+    nx_tiles: 100
+    ny_tiles: 100
+    stamp_size: 48
+    pixel_scale: 0.2
+    random_seed: 31415
+    order: random # Scramble the order of the ring pairs, so they aren't next to each other
+
+    # Simple Gaussian noise.  Although there is a weird thing they did to have the noise
+    # variance be larger for smaller seeing fwhm.
+    noise:
+        type: Gaussian
+        variance: 
+            type: Random
+            # Vary 5% around some nominal variance level. (See fmax_var in eval_variables above.)
+            min: { type: Eval, str: '0.95 * max_var' }
+            max: { type: Eval, str: '1.05 * max_var' }
+
+    # Offset
+    offset:
+        type: XY
+        x: { type: Random, min: -1.0, max: 1.0 }
+        y: { type: Random, min: -1.0, max: 1.0 }
+
+    # This means the code will parallelize the creation of a single output file,
+    # splitting up the postage stamps among the available cores.
+    nproc: -1
+
+    # Sometimes the ffts need to be a bit bigger than is allowed by default...
+    gsparams: {maximum_fft_size: 10240}
+
+output:
+    type: Fits
+    dir: control/ground/constant
+    file_name:
+        type: FormattedStr
+        # The numbers in the file_name are subfield and epoch number.  
+        # This branch only has one epoch, so epoch is always 0 here.
+        format: image-%03d-%1d.fits
+        items:
+        - { type: Sequence, nitems: 200 }
+        - 0
+    nfiles: 200
+
+    # This lets you rerun the code if there were I/O issues and it will just write the
+    # missing files.  (Potentially ones that have been deleted because they were corrupted.)
+    noclobber: true
+
+    # Output truth catalogs with some of the generated values
+    # TODO: Not implemented yet.
+    truth:
+        dir: control/ground/constant
+        file_name :
+            type: FormattedStr
+            format: epoch_catalog-%03d-%1d.fits
+            items:
+            - { type: Sequence, nitems: 200 }
+            - 0
+        items:
+            num: obj_num
+            x: image.offset.x
+            y: image.offset.y
+            atmos_psf_e1:
+                type: Eval
+                str: 's.e1'
+                ss: { type: Current, key: psf.items.0.ellip }
+            atmos_psf_e2:
+                type: Eval
+                str: 's.e2'
+                ss: { type: Current, key: psf.items.0.ellip }
+            atmos_psf_fwhm: psf.items.0.fwhm
+            opt_lam_over_diam: psf.items.1.lam_over_diam
+            opt_obscuration: psf.items.1.obscuration
+            opt_n_struts: psf.items.1.nstruts
+            opt_strut_angle: 0
+            opt_psf_defocus: psf.items.1.defocus
+            opt_psf_astig1: psf.items.1.astig1
+            opt_psf_astig2: psf.items.1.astig2
+            opt_psf_coma1: psf.items.1.coma1
+            opt_psf_coma2: psf.items.1.coma2
+            opt_psf_trefoil1: psf.items.1.trefoil1
+            opt_psf_trefoil2: psf.items.1.trefoil2
+            opt_psf_spher: psf.items.1.spher
+            cosmos_index: gal.first.index
+            theta: 
+                type: Eval
+                str: 't.rad()'
+                at: { type: Current, key: gal.first.rotate }
+            mu: gal.magnification
+            g1: 
+                type: Eval
+                str: 's.g1'
+                ss: { type: Current, key: gal.shear }
+            g2: 
+                type: Eval
+                str: 's.g2'
+                ss: { type: Current, key: gal.shear }
+            # The parameteric components aren't really available here
+            # So we don't have:
+            #   bulge_beta_radians
+            #   bulge_q
+            #   bulge_flux
+            #   bulge_hlr
+            #   bulge_n
+            #   dist_beta_radians
+            #   disk_q
+            #   disk_flux
+            #   disk_hlr
+            # Instead, we only have cosmos_index and theta, which covers the same
+            # information, but in a less specific way.
