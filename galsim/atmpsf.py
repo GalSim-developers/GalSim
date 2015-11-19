@@ -73,8 +73,10 @@ class AtmosphericPhaseGenerator(object):
             rng = galsim.BaseDeviate()
         self.rng = rng
 
-        npix = int(np.ceil(screen_size/screen_scale))
-        self.screen_size = screen_scale * npix  # in case screen_scale doesn't divide screen_size
+        self.npix = int(np.ceil(screen_size/screen_scale))
+        self.screen_scale = screen_scale
+        # in case screen_scale doesn't divide screen_size
+        self.screen_size = self.screen_scale * self.npix
 
         # Listify
         r0, L0, velocity, direction, alpha_mag = map(
@@ -100,21 +102,26 @@ class AtmosphericPhaseGenerator(object):
         vx, vy = zip(*[v*d.sincos() for v, d in zip(velocity, direction)])
 
         # setup frequency grid
-        fx = np.fft.fftfreq(npix, screen_scale)
+        # probe frequencies between -1/(2 * screen_scale) to 1/(2 * screen_scale),
+        # in steps of 1/screen_size.
+        fx = np.fft.fftfreq(self.npix, self.screen_scale)
         fx, fy = np.meshgrid(fx, fx)
 
         # setup phase screens states
-        self.powerlaw = np.empty((n_layers, npix, npix), dtype=np.float64)
-        self.alpha = np.empty((n_layers, npix, npix), dtype=np.complex128)
-        self._phaseFT = np.empty((n_layers, npix, npix), dtype=np.complex128)
+        self.powerlaw = np.empty((n_layers, self.npix, self.npix), dtype=np.float64)
+        self.alpha = np.empty((n_layers, self.npix, self.npix), dtype=np.complex128)
+        self._phaseFT = np.empty((n_layers, self.npix, self.npix), dtype=np.complex128)
         self.screens = np.zeros_like(self.powerlaw)
 
         for i, (r00, L00_inv, vx0, vy0, amag0) in enumerate(zip(r0, L0_inv, vx, vy, alpha_mag)):
-            # Jee+Tyson2011 have (screen_size * L00_inv))**2 instead of L00_inv**2.  I *think*
-            # this is because their k & l are indices and not spatial frequencies.
+            # I believe the magic number below is 0.00058 ~= 0.023 / (2*pi)**2, where
+            # 0.023 ~= (5 * (24/5 * gamma(6/5))**(5/6) * gamma(11/6) /
+            #          (6 * pi**8/3 * gamma(1/6))
+            # I used a combination of Roddier (1981), Noll (1976), and Sasiela (1994) to figure
+            # this out.
             pl = (1./self.screen_size*np.sqrt(0.00058)*(r00**(-5.0/6.0)) *
-                  (fx*fx + fy*fy + L00_inv**2)**(-11.0/12.0) *
-                  npix * np.sqrt(np.sqrt(2.0)))
+                  (fx*fx + fy*fy + L00_inv*L00_inv)**(-11.0/12.0) *
+                  self.npix * np.sqrt(np.sqrt(2.0)))
             pl[0, 0] = 0.0
             self.powerlaw[i] = pl
             self._phaseFT[i] = self._noiseFT(pl)
@@ -193,7 +200,8 @@ class AtmosphericPSF(GSObject):
     def __init__(self, lam=None, r0=None, L0=None, lam_over_r0=None, fwhm=None,
                  half_light_radius=None, weights=None, alpha_mag=None, exptime=0.0, time_step=0.03,
                  velocity=None, direction=None, phase_generator=None, interpolant=None,
-                 oversampling=1.5, flux=1.0, scale_unit=galsim.arcsec, gsparams=None):
+                 oversampling=1.5, flux=1.0, scale_unit=galsim.arcsec, gsparams=None,
+                 diam=None):
         import itertools
 
         nstep = int(np.ceil(exptime/time_step))
@@ -256,9 +264,15 @@ class AtmosphericPSF(GSObject):
         # Generate PSFs for each time step
         nx, ny = phase_generator.screens[0].shape
         im_grid = np.zeros((nx, ny), dtype=np.float64)
+        aper = np.ones_like(im_grid)
+        if diam is not None:
+            x = np.fft.fftfreq(nx, 1./phase_generator.screen_size)
+            x, y = np.meshgrid(x, x)
+            r = np.hypot(x, y)
+            aper = r < 0.5*diam
         for i, screens in itertools.izip(xrange(nstep), phase_generator):
             # The wavefront to use is exp(2 pi i screen)
-            wf = np.exp(2j * np.pi * np.sum(screens, axis=0))
+            wf = np.exp(2j * np.pi * np.sum(screens, axis=0)) * aper
             # Calculate the image array via FFT.
             # Copied from galsim.optics.psf method (hacky)
             ftwf = np.fft.ifft2(np.fft.ifftshift(wf))
