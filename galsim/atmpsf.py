@@ -201,7 +201,7 @@ class AtmosphericPSF(GSObject):
                  half_light_radius=None, weights=None, alpha_mag=None, exptime=0.0, time_step=0.03,
                  velocity=None, direction=None, phase_generator=None, interpolant=None,
                  oversampling=1.5, flux=1.0, scale_unit=galsim.arcsec, gsparams=None,
-                 diam=None):
+                 diam=None, obscuration=None, screen_size=None):
         import itertools
 
         nstep = int(np.ceil(exptime/time_step))
@@ -254,7 +254,10 @@ class AtmosphericPSF(GSObject):
             screen_scale /= 4.0
             # We'll hard code screen_size = 10 meters since that aperturn covers all planned
             # ground-based optical weak lensing experiments.
-            screen_size = 10.0
+            if screen_size is None:
+                screen_size = 10.0
+            print "screen_scale: {}".format(screen_scale)
+            print "screen_size: {}".format(screen_size)
             phase_generator = AtmosphericPhaseGenerator(
                 time_step=time_step, screen_size=screen_size, screen_scale=screen_scale, r0=r0,
                 L0=L0, alpha_mag=alpha_mag, velocity=velocity, direction=direction)
@@ -269,7 +272,11 @@ class AtmosphericPSF(GSObject):
             x = np.fft.fftfreq(nx, 1./phase_generator.screen_size)
             x, y = np.meshgrid(x, x)
             r = np.hypot(x, y)
-            aper = r < 0.5*diam
+            if obscuration is not None:
+                aper = (r <= 0.5*diam) & (r >= 0.5*diam*obscuration)
+            else:
+                aper = r < 0.5*diam
+
         for i, screens in itertools.izip(xrange(nstep), phase_generator):
             # The wavefront to use is exp(2 pi i screen)
             wf = np.exp(2j * np.pi * np.sum(screens, axis=0)) * aper
