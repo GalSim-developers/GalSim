@@ -35,9 +35,7 @@ namespace galsim {
 
         ~SBTransformImpl() {}
 
-        double xValue(const Position<double>& p) const 
-        { return _adaptee.xValue(inv(p-_cen)) * _fluxScaling; }
-
+        double xValue(const Position<double>& p) const;
         std::complex<double> kValue(const Position<double>& k) const;
 
         bool isAxisymmetric() const { return _stillIsAxisymmetric; }
