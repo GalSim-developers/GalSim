@@ -282,13 +282,7 @@ class ChromaticObject(object):
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
         prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
         image = prof0.drawImage(image=image, setup_only=True, **kwargs)
-        # Remove from kwargs anything that is only used for setting up image:
-        kwargs.pop('dtype', None)
-        kwargs.pop('scale', None)
-        kwargs.pop('wcs', None)
-        kwargs.pop('nx', None)
-        kwargs.pop('ny', None)
-        kwargs.pop('bounds', None)
+        _remove_setup_kwargs(kwargs)
 
         # determine combined self.wave_list and bandpass.wave_list
         wave_list = self._getCombinedWaveList(bandpass)
@@ -986,13 +980,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         # and so on.
         prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
         image = prof0.drawImage(image=image, setup_only=True, **kwargs)
-        # Remove from kwargs anything that is only used for setting up image:
-        kwargs.pop('dtype', None)
-        kwargs.pop('scale', None)
-        kwargs.pop('wcs', None)
-        kwargs.pop('nx', None)
-        kwargs.pop('ny', None)
-        kwargs.pop('bounds', None)
+        _remove_setup_kwargs(kwargs)
 
         # determine combination of self.wave_list and bandpass.wave_list
         wave_list = self._getCombinedWaveList(bandpass)
@@ -1673,14 +1661,7 @@ class ChromaticSum(ChromaticObject):
         # Use given add_to_image for the first one, then add_to_image=False for the rest.
         image = self.objlist[0].drawImage(
                 bandpass, image=image, add_to_image=add_to_image, **kwargs)
-        # at this point, image exists, so remove kwargs related to setting up the image
-        # remove kwargs that would interfere with image
-        kwargs.pop('dtype', None)
-        kwargs.pop('scale', None)
-        kwargs.pop('wcs', None)
-        kwargs.pop('nx', None)
-        kwargs.pop('ny', None)
-        kwargs.pop('bounds', None)
+        _remove_setup_kwargs(kwargs)
         for obj in self.objlist[1:]:
             image = obj.drawImage(
                     bandpass, image=image, add_to_image=True, **kwargs)
@@ -1957,13 +1938,7 @@ class ChromaticConvolution(ChromaticObject):
                     tmplist.append(summand)
                     tmpobj = ChromaticConvolution(tmplist)
                     # add to previously started image
-                    # remove kwargs that would interfere with image
-                    kwargs.pop('dtype', None)
-                    kwargs.pop('scale', None)
-                    kwargs.pop('wcs', None)
-                    kwargs.pop('nx', None)
-                    kwargs.pop('ny', None)
-                    kwargs.pop('bounds', None)
+                    _remove_setup_kwargs(kwargs)
                     image = tmpobj.drawImage(bandpass, image=image, integrator=integrator,
                                              iimult=iimult, add_to_image=True, **kwargs)
                 # Return the image here, breaking the loop early.  If there are two ChromaticSum
@@ -1977,13 +1952,7 @@ class ChromaticConvolution(ChromaticObject):
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
         prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
         image = prof0.drawImage(image=image, setup_only=True, **kwargs)
-        # Remove from kwargs anything that is only used for setting up image:
-        kwargs.pop('dtype', None)
-        kwargs.pop('scale', None)
-        kwargs.pop('wcs', None)
-        kwargs.pop('nx', None)
-        kwargs.pop('ny', None)
-        kwargs.pop('bounds', None)
+        _remove_setup_kwargs(kwargs)
 
         # Sort these atomic objects into separable and inseparable lists, and collect
         # the spectral parts of the separable profiles.
@@ -2332,3 +2301,15 @@ def _linearInterp(list, frac, lower_idx):
     interpolation later on if we want to enable something other than linear interpolation.
     """
     return frac*list[lower_idx+1] + (1.-frac)*list[lower_idx]
+
+def _remove_setup_kwargs(kwargs):
+    """
+    Helper function to remove from kwargs anything that is only used for setting up image and that
+    might otherwise interfere with drawImage.
+    """
+    kwargs.pop('dtype', None)
+    kwargs.pop('scale', None)
+    kwargs.pop('wcs', None)
+    kwargs.pop('nx', None)
+    kwargs.pop('ny', None)
+    kwargs.pop('bounds', None)
