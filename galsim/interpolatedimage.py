@@ -132,6 +132,7 @@ class InterpolatedImage(GSObject):
                                   to be equal to the total flux.
                               "surface brightness" or "sb" means that the pixels sample
                                   the surface brightness distribution at each location.
+                            This is overridden if you specify an explicit flux value.
                             [default: "flux"]
     @param scale            If provided, use this as the pixel scale for the Image; this will
                             override the pixel scale stored by the provided Image, in any.
@@ -443,6 +444,11 @@ class InterpolatedImage(GSObject):
                 # If not a bool, then value is max_maxk
                 sbii.calculateMaxK(max_maxk=calculate_maxk)
 
+        # If the user specified a surface brightness normalization for the input Image, then
+        # need to rescale flux by the pixel area to get proper normalization.
+        if flux is None and normalization.lower() in ['surface brightness','sb']:
+            flux = sbii.getFlux() * local_wcs.pixelArea()
+
         # Save this intermediate profile
         self._sbii = sbii
         self._stepk = sbii.stepK() / self.min_scale
@@ -471,11 +477,6 @@ class InterpolatedImage(GSObject):
         # If the user specified a flux, then set to that flux value.
         if flux is not None:
             prof = prof.withFlux(float(flux))
-        # If the user specified a surface brightness normalization for the input Image, then
-        # need to rescale flux by the pixel area to get proper normalization.
-        elif normalization.lower() in ['surface brightness','sb']:
-            prof *= local_wcs.pixelArea()
-            self._flux = prof.flux
 
         # Now, in order for these to pickle correctly if they are the "original" object in a
         # Transform object, we need to hide the current transformation.  An easy way to do that
