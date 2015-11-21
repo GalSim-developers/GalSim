@@ -1324,7 +1324,7 @@ namespace hsm {
         tmv::Matrix<double> moments(hsmparams->ksb_moments_max+1,hsmparams->ksb_moments_max+1);
         tmv::Matrix<double> psfmoms(hsmparams->ksb_moments_max+1,hsmparams->ksb_moments_max+1);
 
-        /* Determine the adaptive variance of the measured galaxy */
+        /* Determine the adaptive centroid and variance of the measured galaxy */
         x0 = x0_gal;
         y0 = y0_gal;
         sigma0 = sig_gal;
@@ -1336,6 +1336,16 @@ namespace hsm {
             y0_gal = y0;
             sig_gal = sigma0;
             find_mom_1(gal_image, moments, hsmparams->ksb_moments_max, x0, y0, sigma0);
+        } else {
+            /* If requested, recompute with asserted weight fn sigma */
+            if (hsmparams->ksb_sig_weight > 0.0) {
+                sig_gal = hsmparams->ksb_sig_weight;
+                find_mom_1(gal_image, moments, hsmparams->ksb_moments_max, x0_gal, y0_gal, sig_gal);
+            }
+            if (hsmparams->ksb_sig_factor != 1.0) {
+                sig_gal *= hsmparams->ksb_sig_factor;
+                find_mom_1(gal_image, moments, hsmparams->ksb_moments_max, x0_gal, y0_gal, sig_gal);
+            }
         }
         flux_gal = 3.544907701811 * sig_gal * moments(0,0);
 
