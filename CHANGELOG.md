@@ -8,3 +8,5 @@ Bug Fixes
   are reversed (which is allowed by the FITS standard). (#681)
 - Improved ability of ChromaticObjects to find fiducial achromatic profiles
   and wavelengths with non-zero flux. (#680)
+- Fixed a bug in the way Images are instantiated for certain combinations of
+  ChromaticObjects and image-setup keyword arguments (#683)

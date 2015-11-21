@@ -1738,6 +1738,33 @@ def test_chromatic_fiducial_wavelength():
     assert np.isfinite(img1.array.sum()), "drawImage failed to identify fiducial wavelength"
     assert np.isfinite(img2.array.sum()), "drawImage failed to identify fiducial wavelength"
 
+def test_chromatic_image_setup():
+    """Test ability for chromatic drawImage to setup output image."""
+    import time
+    t1 = time.time()
+
+    psf = galsim.ChromaticAiry(lam=550, diam=0.1)
+    gal1 = galsim.Sersic(n=1, half_light_radius=1.0) * bulge_SED
+    gal2 = galsim.Sersic(n=2, half_light_radius=0.5) * disk_SED
+
+    # Just going to try drawing a few different combinations of profiles to make sure that
+    # the automatic image construction logic doesn't crash.  Most possibilities effectively get
+    # tested in other scripts above anyway, so just focus on possibilities related to known previous
+    # failures here; specifically, drawing a convolution of two inseparable profiles while
+    # specifying `nx`, `ny`, and `scale` as keywords.
+    img = galsim.Convolve(gal1+gal2, psf).drawImage(bandpass)
+    img2 = galsim.Convolve(gal1+gal2, psf).drawImage(bandpass, nx=32, ny=32, scale=0.2)
+    bds = galsim.BoundsI(1, 32, 1, 32)
+    img3 = galsim.Convolve(gal1+gal2, psf).drawImage(bandpass, bounds=bds, scale=0.2)
+    np.testing.assert_array_equal(img2.array.shape, (32, 32),
+                                  "Got wrong size output image using nx=, ny= keywords.")
+    np.testing.assert_array_equal(img3.array.shape, (32, 32),
+                                  "Got wrong size output image using bounds= keyword.")
+    np.testing.assert_almost_equal(img2.scale, 0.2, 9,
+                                   "Got wrong output image scale using nx=, ny= keywords.")
+    np.testing.assert_almost_equal(img3.scale, 0.2, 9,
+                                   "Got wrong output image scale using bounds= keyword.")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1767,3 +1794,4 @@ if __name__ == "__main__":
     test_ChromaticOpticalPSF()
     test_ChromaticAiry()
     test_chromatic_fiducial_wavelength()
+    test_chromatic_image_setup()
