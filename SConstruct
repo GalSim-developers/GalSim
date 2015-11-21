@@ -1379,9 +1379,16 @@ except:
     config.Result(result)
 
     if not result:
+         print """
+WARNING: There seems to be a mismatch between this C++ compiler and the one
+         that was used to build either python or boost.python (or both).
+         This might be ok, but if you get a linking error in the subsequent 
+         build, it is possible  that you will need to rebuild boost with the
+         same compiler (and sometimes version) that you are using here.
+"""
         config.env['final_messages'].append("""
 WARNING: There seems to be a mismatch between this C++ compiler and the one
-         that was used to build python.
+         that was used to build either python or boost.python (or both).
          This should not affect normal usage of GalSim.  However, exceptions
          thrown in the C++ layer are not being correctly propagated to the
          python layer, so the error text for C++ run-time errors  will not
