@@ -149,16 +149,21 @@ class ChromaticObject(object):
         give the monochromatic profile at any wavelength or the wavelength-integrated profile.
         """
         bpwave = bandpass.effective_wavelength
-        candidate_waves = [bpwave, 0.5 * (bandpass.blue_limit + bandpass.red_limit)]
-        candidate_waves = np.union1d(candidate_waves, bandpass.wave_list)
-        candidate_waves = np.union1d(candidate_waves, self.wave_list)
+        prof0 = self.evaluateAtWavelength(bpwave)
+        if prof0.flux != 0:
+            return bpwave, prof0
+
+        candidate_waves = np.concatenate(
+            [np.array([0.5 * (bandpass.blue_limit + bandpass.red_limit)]),
+             bandpass.wave_list,
+             self.wave_list])
         # Prioritize wavelengths near the bandpass effective wavelength.
         candidate_waves = candidate_waves[np.argsort(np.abs(candidate_waves - bpwave))]
-
         for w in candidate_waves:
             prof0 = self.evaluateAtWavelength(w)
             if prof0.flux != 0:
-                return w, self.evaluateAtWavelength(w)
+                return w, prof0
+
         raise ValueError("Could not locate fiducial wavelength where SED * Bandpass is nonzero.")
 
     def __repr__(self):
