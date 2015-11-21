@@ -360,7 +360,7 @@ class ChromaticObject(object):
                                 trapezoidal integration rule automatically.]
         @param **kwargs         For all other kwarg options, see GSObject.drawKImage()
 
-        @returns the drawn Image.
+        @returns the tuple of Image instances, `(re, im)` (created if necessary).
         """
         # To help developers debug extensions to ChromaticObject, check that ChromaticObject has
         # the expected attributes
@@ -370,13 +370,7 @@ class ChromaticObject(object):
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
         prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
         re, im = prof0.drawKImage(re=re, im=im, **kwargs)
-        # Remove from kwargs anything that is only used for setting up image:
-        kwargs.pop('dtype', None)
-        kwargs.pop('scale', None)
-        kwargs.pop('wcs', None)
-        kwargs.pop('nx', None)
-        kwargs.pop('ny', None)
-        kwargs.pop('bounds', None)
+        _remove_setup_kwargs(kwargs)
 
         # determine combined self.wave_list and bandpass.wave_list
         wave_list = self._getCombinedWaveList(bandpass)
