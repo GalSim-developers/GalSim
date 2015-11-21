@@ -668,7 +668,7 @@ class _BaseCorrelatedNoise(object):
             add_to_image=add_to_image, use_true_center=False)
 
     def drawKImage(self, re=None, im=None, nx=None, ny=None, scale=None, dtype=None, wmult=1.,
-                   add_to_image=False, dk=None):
+                   add_to_image=False):
         """A method for drawing profiles storing correlation functions (i.e., power spectra) in
         Fourier space.
 
@@ -706,12 +706,6 @@ class _BaseCorrelatedNoise(object):
 
         @returns the tuple of Image instances, `(re, im)` (created if necessary)
         """
-        # Check for obsolete dk parameter
-        if dk is not None and scale is None:
-            from galsim.deprecated import depr
-            depr('dk', 1.1, 'scale')
-            scale = dk
-
         return self._profile.drawKImage(
             re=re, im=im, nx=nx, ny=ny, dtype=dtype, scale=scale, gain=1., wmult=wmult,
             add_to_image=add_to_image)
