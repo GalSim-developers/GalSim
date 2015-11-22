@@ -136,6 +136,13 @@ image:
     # Sometimes the ffts need to be a bit bigger than is allowed by default...
     gsparams: {maximum_fft_size: 10240}
 
+input:
+    # This requires that the command galsim_download_cosmos has been run, which downloads
+    # the catalog from the GalSim web site and saves it into a directory that GalSim knows
+    # about.  So there are no parameters to set here, but given the way the YAML structure
+    # works, we have to give it an empty dict.
+    cosmos_catalog : {}
+
 output:
     type: Fits
     dir: control/ground/constant
