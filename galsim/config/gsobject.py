@@ -72,9 +72,10 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     # allow that.  So None is the default, and if it's None, we set it to config.
     if not base:
         base = config
-    if logger:
-        logger.debug('obj %d: Start BuildGSObject',base['obj_num'])
  
+    if logger:
+        logger.debug('obj %d: Start BuildGSObject %s',base['obj_num'],key)
+
     if isinstance(config,dict):
         if not key in config:
             raise AttributeError("key %s not found in config"%key)
@@ -86,6 +87,9 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
 
     # Alias for convenience
     ck = config[key]
+
+    # Check what index key we want to use for this object.
+    index, index_key = galsim.config.value._get_index(ck, key, base)
     if False:
         logger.debug('obj %d: ck = %s',base['obj_num'],str(ck))
 
@@ -95,10 +99,14 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     type = ck['type']
 
     # If we have previously saved an object and marked it as safe, then use it.
-    if 'current_val' in ck and ck['current_safe']:
+    if 'current_val' in ck and (ck['current_safe'] or ck['current_index'] == index):
         if logger:
-            logger.debug('obj %d: current is safe: %s',base['obj_num'],str(ck['current_val']))
-        return ck['current_val'], True
+            if ck['current_safe']:
+                logger.debug('obj %d: current is safe: %s',base['obj_num'],str(ck['current_val']))
+            else:
+                logger.debug('obj %d: We already built this object: %s',
+                             base['obj_num'],str(ck['current_val']))
+        return ck['current_val'], ck['current_safe']
 
     # Ring is only allowed for top level gal (since it requires special handling in 
     # multiprocessing, and that's the only place we look for it currently).
@@ -117,7 +125,8 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     ignore = [ 
         'dilate', 'dilation', 'ellip', 'rotate', 'rotation', 'scale_flux',
         'magnify', 'magnification', 'shear', 'shift', 
-        'gsparams', 'skip', 'current_val', 'current_safe' 
+        'gsparams', 'skip', 'current_val', 'current_safe', 'current_index',
+        'index_key', 'repeat'
     ]
     # There are a few more that are specific to which key we have.
     if key == 'gal':
@@ -191,10 +200,10 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     # Apply any dilation, ellip, shear, etc. modifications.
     gsobject, safe1 = _TransformObject(gsobject, ck, base, logger)
     safe = safe and safe1
-
-    if 'no_save' not in base:
-        ck['current_val'] = gsobject
-        ck['current_safe'] = safe
+ 
+    ck['current_val'] = gsobject
+    ck['current_safe'] = safe
+    ck['current_index'] = index
 
     return gsobject, safe
 

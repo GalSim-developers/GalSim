@@ -66,8 +66,8 @@ valid_value_types = {
 # Standard keys to ignore while parsing values:
 standard_ignore = [ 
     'type',
-    'current_val', 'current_safe', 'current_value_type',
-    'current_obj_num', 'current_image_num', 'current_file_num',
+    'current_val', 'current_safe', 'current_value_type', 'current_index',
+    'index_key', 'repeat',
     '#' # When we read in json files, there represent comments
 ]
 
@@ -80,6 +80,14 @@ def ParseValue(config, param_name, base, value_type):
     #print 'ParseValue for param_name = ',param_name,', value_type = ',str(value_type)
     #print 'param = ',param
     #print 'nums = ',base.get('file_num',0), base.get('image_num',0), base.get('obj_num',0)
+
+    # Check what index key we want to use for this value.
+    if isinstance(param, dict):
+        index, index_key = _get_index(param, param_name, base)
+        if index is None:
+            # This is probably something artificial where we aren't keeping track of indices.
+            # In this case, always make a new value.
+            index = config.get('current_index',0) + 1
 
     # First see if we can assign by param by a direct constant value
     if isinstance(param, value_type):
@@ -109,14 +117,11 @@ def ParseValue(config, param_name, base, value_type):
         raise AttributeError(
             "%s.type attribute required in config for non-constant parameter %s."%(
                 param_name,param_name))
-    elif ( 'current_val' in param 
-           and param['current_obj_num'] == base.get('obj_num',0)
-           and param['current_image_num'] == base.get('image_num',0)
-           and param['current_file_num'] == base.get('file_num',0) ):
+    elif ( 'current_val' in param and param['current_index'] == index):
         if param['current_value_type'] != value_type:
             raise ValueError(
                 "Attempt to parse %s multiple times with different value types"%param_name)
-        #print base['obj_num'],'Using current value of ',param_name,' = ',param['current_val']
+        #print index,'Using current value of ',param_name,' = ',param['current_val']
         return param['current_val'], param['current_safe']
     else:
         # Otherwise, we need to generate the value according to its type
@@ -149,9 +154,7 @@ def ParseValue(config, param_name, base, value_type):
         param['current_val'] = val
         param['current_safe'] = safe
         param['current_value_type'] = value_type
-        param['current_obj_num'] = base.get('obj_num',0)
-        param['current_image_num'] = base.get('image_num',0)
-        param['current_file_num'] = base.get('file_num',0)
+        param['current_index'] = index
         #print param_name,' = ',val
         return val, safe
 
@@ -748,6 +751,34 @@ def _GenerateFromRandomCircle(param, param_name, base, value_type):
     #print base['obj_num'],'RandomCircle: ',pos
     return pos, False
 
+def _get_index(param, param_name, base, is_sequence=False):
+    """Return the index to use for the current object or parameter
+
+    First check for an explicit index_key param values given by the user.
+    Then if base[index_key] is other than obj_num, use that.
+    Finally, if this is a sequance, default to 'obj_num_in_file', otherwise 'obj_num'.
+
+    @returns index, index_key
+    """
+    if 'index_key' in param:
+        index_key = param['index_key']
+        if index_key not in [ 'obj_num_in_file', 'obj_num', 'image_num', 'file_num' ]:
+            raise AttributeError("Invalid index_key=%s for %s."%(index_key,param_name))
+    else:
+        index_key = base.get('index_key','obj_num')
+        if index_key == 'obj_num' and is_sequence:
+            index_key = 'obj_num_in_file'
+
+    if index_key == 'obj_num_in_file':
+        if 'obj_num' in base:
+            index = base['obj_num'] - base.get('start_obj_num',0)
+        else:
+            index = None
+    else:
+        index = base.get(index_key,None)
+
+    return index, index_key
+
 
 def _GenerateFromSequence(param, param_name, base, value_type):
     """@brief Return next in a sequence of integers
@@ -762,7 +793,7 @@ def _GenerateFromSequence(param, param_name, base, value_type):
     repeat = kwargs.get('repeat',1)
     last = kwargs.get('last',None)
     nitems = kwargs.get('nitems',None)
-    index_key = kwargs.get('index_key',base.get('index_key','obj_num'))
+
     if repeat <= 0:
         raise ValueError(
             "Invalid repeat=%d (must be > 0) for %s.type = Sequence"%(repeat,param_name))
@@ -770,9 +801,12 @@ def _GenerateFromSequence(param, param_name, base, value_type):
         raise AttributeError(
             "At most one of the attributes last and nitems is allowed for %s.type = Sequence"%(
                 param_name))
-    if index_key not in [ 'obj_num_in_file', 'obj_num', 'image_num', 'file_num' ]:
-        raise AttributeError(
-            "Invalid index=%s for %s.type = Sequence."%(index_key,param_name))
+
+    index, index_key = _get_index(kwargs, param_name, base, is_sequence=True)
+    if index_key is None:
+        raise ValueError("No valid index_key found for %s"%param_name)
+    if index is None:
+        raise ValueError("The base config dict does not have %s set correctly."%index_key)
 
     if value_type is bool:
         # Then there are only really two valid sequences: Either 010101... or 101010...
@@ -793,18 +827,14 @@ def _GenerateFromSequence(param, param_name, base, value_type):
         if last is not None:
             nitems = (last - first)/step + 1
 
-    if index_key == 'obj_num_in_file':
-        k = base['obj_num'] - base.get('start_obj_num',0)
-    else:
-        k = base[index_key]
-    k = k / repeat
+    index = index / repeat
 
     if nitems is not None and nitems > 0:
-        k = k % nitems
+        index = index % nitems
 
-    index = first + k*step
-    #print base[index_key],'Sequence index = %s + %d*%s = %s'%(first,k,step,index)
-    return index, False
+    value = first + index*step
+    #print base[index_key],'Sequence index = %s + %d*%s = %s'%(first,index,step,value)
+    return value, False
 
 
 def _GenerateFromNumberedFile(param, param_name, base, value_type):

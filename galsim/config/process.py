@@ -537,6 +537,7 @@ def Process(config, logger=None):
         if 'first_seed' in config:
             config['image']['random_seed'] = {
                 'type' : 'Sequence' ,
+                'index_key' : 'obj_num',
                 'first' : config['first_seed']
             }
 
@@ -806,7 +807,11 @@ def BuildFits(file_name, config, logger=None,
          and 'random_seed' in config['image'] 
          and not isinstance(config['image']['random_seed'],dict) ):
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
+        config['image']['random_seed'] = { 
+                'type' : 'Sequence',
+                'index_key' : 'obj_num',
+                'first' : first 
+        }
 
     # hdus is a dict with hdus[i] = the item in all_images to put in the i-th hdu.
     hdus = {}
@@ -933,7 +938,11 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
          and 'random_seed' in config['image'] 
          and not isinstance(config['image']['random_seed'],dict) ):
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
+        config['image']['random_seed'] = { 
+                'type' : 'Sequence',
+                'index_key' : 'obj_num',
+                'first' : first 
+        }
 
     if psf_file_name:
         make_psf_image = True
@@ -1049,7 +1058,11 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
          and 'random_seed' in config['image'] 
          and not isinstance(config['image']['random_seed'],dict) ):
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
+        config['image']['random_seed'] = { 
+                'type' : 'Sequence',
+                'index_key' : 'obj_num',
+                'first' : first 
+        }
 
     if psf_file_name:
         make_psf_image = True

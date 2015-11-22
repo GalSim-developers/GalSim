@@ -6,7 +6,8 @@ psf:
     # TODO the 'repeat' option is not supported yet
     # This will keep the same PSF object for 10000 objects before making a new one.
     # 10000 = 100 x 100 is the number of objects in each file.
-    repeat: 10000
+    #repeat: 10000
+    index_key : image_num
 
     items:
     # The atmospheric component
@@ -82,7 +83,8 @@ gal:
     shear:
         type: GBeta
         # TODO: Using repeat here is also not implemented yet.
-        repeat: 10000
+        #repeat: 10000
+        index_key : file_num
         g: 
             type: RandomDistribution
             function: x

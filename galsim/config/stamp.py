@@ -275,15 +275,12 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
     import time
     t1 = time.time()
 
-    # For everything except random_seed, the default key is obj_num_in_file
-    config['index_key'] = 'obj_num_in_file'
+    config['index_key'] = 'obj_num'
     config['obj_num'] = obj_num
 
     # Initialize the random number generator we will be using.
     if 'random_seed' in config['image']:
-        config['index_key'] = 'obj_num'
         seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
-        config['index_key'] = 'obj_num_in_file'
         if logger:
             logger.debug('obj %d: seed = %d',obj_num,seed)
         rng = galsim.BaseDeviate(seed)
