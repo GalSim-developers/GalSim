@@ -1162,10 +1162,12 @@ def _GenerateFromEval(param, param_name, base, value_type):
         #print key[1:],'=',eval(key[1:])
 
     # Also bring in any top level eval_variables
-    if 'eval_variables' in base:
+    if 'eval_variables' in base and not 'parsing_eval_variables' in base:
         #print 'found eval_variables = ',base['eval_variables']
         if not isinstance(base['eval_variables'],dict):
             raise AttributeError("eval_variables must be a dict")
+        # Make sure we don't recurse this process if any eval_variables are also Eval type.
+        base['parsing_eval_variables'] = True
         opt = {}
         for key in base['eval_variables'].keys():
             if key not in ignore:
@@ -1178,6 +1180,7 @@ def _GenerateFromEval(param, param_name, base, value_type):
         for key in opt.keys():
             exec(key[1:] + ' = params[key]')
             #print key[1:],'=',eval(key[1:])
+        del base['parsing_eval_variables']
 
     # Also, we allow the use of math functions
     import math
