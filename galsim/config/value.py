@@ -690,10 +690,28 @@ def _GenerateFromRandomDistribution(param, param_name, base, value_type):
         raise ValueError("No rng available for %s.type = RandomDistribution"%param_name)
     rng = base['rng']
 
+    ignore = [ 'x', 'f', 'x_log', 'f_log' ]
     opt = {'function' : str, 'interpolant' : str, 'npoints' : int, 
            'x_min' : float, 'x_max' : float }
-    kwargs, safe = GetAllParams(param, param_name, base, opt=opt)
-    
+    kwargs, safe = GetAllParams(param, param_name, base, opt=opt, ignore=ignore)
+
+    # Allow the user to give x,f instead of function to define a LookupTable.
+    if 'x' in param or 'f' in param:
+        if 'x' not in param or 'f' not in param:
+            raise AttributeError("Both x and f must be provided for %s"%param_name)
+        if 'function' in kwargs:
+            raise AttributeError("Cannot provide function with x,f for %s"%param_name)
+        x = param['x']
+        f = param['f']
+        x_log = param.get('x_log', False)
+        f_log = param.get('f_log', False)
+        kwargs['function'] = galsim.LookupTable(x=x, f=f, x_log=x_log, f_log=f_log)
+    else:
+        if 'function' not in kwargs:
+            raise AttributeError("Either x,f or function must be provided for %s"%param_name)
+        if 'x_log' in param or 'f_log' in param:
+            raise AttributeError("x_log, f_log are invalid with function for %s"%param_name)
+
     if '_distdev' in param:
         # The overhead for making a DistDeviate is large enough that we'd rather not do it every 
         # time, so first check if we've already made one:
