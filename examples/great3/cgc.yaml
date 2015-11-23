@@ -152,6 +152,16 @@ input:
         # For now, just a maximum hlr to exclude huge objects, although cf. issue #693.
         max_hlr : 2.5  # arcsec
 
+        # This still leaves in a lot of bright objects that visibly overflow the edge of the 
+        # postage stamps.  Great3 imposed a maximum S/N of 100 and a minimum of 17.
+        # Using the noise over 50 pixels as a *rough!* estimate of the total noise
+        # (50 ~= pi r^2 where r = 4 pixels is close to the typical FWHM.), I find that the 
+        # corresponding flux range is around 8 to 50 ADU.
+        # Again, hopefully, this can be improved as part of issue #693 and we can
+        # just give max_snr, min_snr, given a noise level.
+        min_flux : 8
+        max_flux : 50
+
 output:
     type: Fits
     dir: control/ground/constant

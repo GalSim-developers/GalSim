@@ -118,8 +118,14 @@ class COSMOSCatalog(object):
     @param exclude_fail Exclude galaxies that have failures in the parametric fits? [default: True]
     @param exclude_bad  Exclude those that have evidence of probably being a bad fit?  e.g. n > 5
                         and hlr > 1 arcsec, probably indicates poor sky subtraction. [default: True]
+    @param min_hlr      Exclude galaxies whose fitted half-light-radius is smaller than this value
+                        (in arcsec).  [default: 0, meaning no limit]
     @param max_hlr      Exclude galaxies whose fitted half-light-radius is larger than this value
                         (in arcsec).  [default: 0, meaning no limit]
+    @param min_flux     Exclude galaxies whose fitted flux is smaller than this value.  
+                        [default: 0, meaning no limit]
+    @param max_flux     Exclude galaxies whose fitted flux is larger than this value.  
+                        [default: 0, meaning no limit]
 
     Attributes
     ----------
@@ -131,13 +137,16 @@ class COSMOSCatalog(object):
     _req_params = {}
     _opt_params = { 'file_name' : str, 'image_dir' : str , 'dir' : str, 'preload' : bool,
                     'noise_dir' : str, 'use_real' : bool,
-                    'exclude_fail' : bool, 'exclude_bad' : bool, 'max_hlr' : float  }
+                    'exclude_fail' : bool, 'exclude_bad' : bool, 
+                    'min_hlr' : float, 'max_hlr' : float, 'min_flux' : float, 'max_flux' : float
+                  }
     _single_params = []
     _takes_rng = False
     _takes_logger = False
 
     def __init__(self, file_name=None, image_dir=None, dir=None, preload=False, noise_dir=None,
-                 use_real=True, exclude_fail=True, exclude_bad=True, max_hlr=0.,
+                 use_real=True, exclude_fail=True, exclude_bad=True, 
+                 min_hlr=0, max_hlr=0., min_flux=0., max_flux=0.,
                  _nobjects_only=False):
         from galsim._pyfits import pyfits
         self.use_real = use_real
@@ -183,29 +192,52 @@ class COSMOSCatalog(object):
         # (This also makes it run much faster, as an extra bonus!)
         self.param_cat = np.array(self.param_cat, copy=True)
 
-        # If requested, select galaxies based on existence of a usable fit.
         self.orig_index = np.arange(len(self.param_cat))
-        if exclude_fail or exclude_bad or max_hlr > 0.:
-            mask = True
-            if exclude_fail:
-                sersicfit_status = self.param_cat['fit_status'][:,4]
-                bulgefit_status = self.param_cat['fit_status'][:,0]
-                mask &= ( (sersicfit_status > 0) &
-                          (sersicfit_status < 5) &
-                          (bulgefit_status > 0) &
-                          (bulgefit_status < 5) )
+        mask = np.ones(len(self.orig_index), dtype=bool)
 
-            if exclude_bad:
-                hlr = self.param_cat['sersicfit'][:,1]
-                n = self.param_cat['sersicfit'][:,2]
-                mask &= ( (n < 5) | (hlr < 1./cosmos_pix_scale) ) 
-                # May add more cuts here if we discover other kinds of problematic objects.
+        # If requested, select galaxies based on existence of a usable fit.
+        if exclude_fail:
+            sersicfit_status = self.param_cat['fit_status'][:,4]
+            bulgefit_status = self.param_cat['fit_status'][:,0]
+            mask &= ( (sersicfit_status > 0) &
+                      (sersicfit_status < 5) &
+                      (bulgefit_status > 0) &
+                      (bulgefit_status < 5) )
 
+        if exclude_bad:
+            hlr = self.param_cat['sersicfit'][:,1]
+            n = self.param_cat['sersicfit'][:,2]
+            mask &= ( (n < 5) | (hlr < 1./cosmos_pix_scale) ) 
+            # May add more cuts here if we discover other kinds of problematic objects.
+
+        if min_hlr > 0. or max_hlr > 0. or min_flux > 0. or max_flux > 0.:
+            sparams = self.param_cat['sersicfit']
+            hlr_pix = sparams[:,1]
+            n = sparams[:,2]
+            q = sparams[:,3]
+            hlr = cosmos_pix_scale*hlr_pix*np.sqrt(q)
+            if min_hlr > 0.:
+                mask &= (hlr > min_hlr)
             if max_hlr > 0.:
-                hlr = self.param_cat['sersicfit'][:,1]
-                mask &= (hlr < max_hlr / cosmos_pix_scale)
+                mask &= (hlr < max_hlr)
 
-            self.orig_index = self.orig_index[mask]
+            if min_flux > 0. or max_flux > 0.:
+                flux_hlr = sparams[:,0]
+                # The prefactor for n=4 is 3.607.  For n=1, it is 1.901.
+                # It's not linear in these values, but for the sake of efficiency and the 
+                # ability to work on the whole array at once, just linearly interpolate.
+                # Hopefully, this can be improved as part of issue #693.  Maybe by storing the
+                # calculated directly flux in the catalog, rather than just the amplitude of the
+                # surface brightness profile at the half-light-radius?
+                #prefactor = ( (n-1.)*3.607 + (4.-n)*1.901 ) / (4.-1.)
+                prefactor = ((3.607-1.901)/3.) * n + (4.*1.901 - 1.*3.607)/3.
+                flux = 2.0*np.pi*prefactor*(hlr**2)*flux_hlr/cosmos_pix_scale**2
+                if min_flux > 0.:
+                    mask &= (flux > min_flux)
+                if max_flux > 0.:
+                    mask &= (flux < max_flux)
+
+        self.orig_index = self.orig_index[mask]
         self.nobjects = len(self.orig_index)
 
     # We need this method because the config apparatus will use this via a Proxy, and they cannot
