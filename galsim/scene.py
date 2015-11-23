@@ -163,6 +163,7 @@ class COSMOSCatalog(object):
             try:
                 # Read in data.
                 self.param_cat = pyfits.getdata(param_file_name)
+                # Check if this was the right file.  It should have a 'fit_status' column.
                 self.param_cat['fit_status']
             except KeyError:
                 # But if that doesn't work, then the name might be the name of the real catalog,
@@ -170,6 +171,17 @@ class COSMOSCatalog(object):
                 k = param_file_name.find('.fits')
                 param_file_name = param_file_name[:k] + '_fits' + param_file_name[k:]
                 self.param_cat = pyfits.getdata(param_file_name)
+
+        # NB. The pyfits FITS_Rec class has a bug where it makes a copy of the full
+        # record array in each record (e.g. in getParametricRecord) and then doesn't 
+        # garbage collect it until the top-level FITS_Record goes out of scope.  
+        # This leads to a memory leak of order 10MB or so each time we make a parametric
+        # galaxy.  
+        # cf. https://mail.scipy.org/pipermail/astropy/2014-June/003218.html
+        # also https://github.com/astropy/astropy/pull/520
+        # The simplest workaround seems to be to convert it to a regular numpy recarray.
+        # (This also makes it run much faster, as an extra bonus!)
+        self.param_cat = np.array(self.param_cat, copy=True)
 
         # If requested, select galaxies based on existence of a usable fit.
         self.orig_index = np.arange(len(self.param_cat))
