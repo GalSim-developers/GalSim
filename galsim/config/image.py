@@ -639,6 +639,9 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
             draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
 
             if max_current_var > 0:
+                if logger:
+                    logger.debug('image %d: maximum noise varance in any stamp is %f',
+                                 config['image_num'], max_current_var)
                 import numpy
                 # Then there was whitening applied in the individual stamps.
                 # But there could be a different variance in each postage stamp, so the first
@@ -875,6 +878,9 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
             # Update this, since overlapping postage stamps may have led to a larger 
             # value in some pixels.
             max_current_var = numpy.max(noise_image.array)
+            if logger:
+                logger.debug('image %d: maximum noise varance in any pixel is %f',
+                             config['image_num'], max_current_var)
             # Figure out how much noise we need to add to each pixel.
             noise_image = max_current_var - noise_image
             # Add it.

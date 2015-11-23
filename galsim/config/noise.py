@@ -137,6 +137,9 @@ def AddNoiseGaussian(noise, config, draw_method, rng, im, weight_im, current_var
     # If we already have some variance in the image (from whitening), then we subtract this much
     # from sigma**2.
     if current_var: 
+        if logger:
+            logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
+                         config['image_num'],config['obj_num'],var,current_var)
         if var < current_var:
             raise RuntimeError(
                 "Whitening already added more noise than requested Gaussian noise.")
@@ -222,6 +225,9 @@ def AddNoisePoisson(noise, config, draw_method, rng, im, weight_im, current_var,
     # off of the sky level.  It's not precisely accurate, since the existing variance is Gaussian,
     # rather than Poisson, but it's the best we can do.
     if current_var:
+        if logger:
+            logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
+                         config['image_num'],config['obj_num'],extra_sky, current_var)
         if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
             test = ((sky+extra_sky).image.array < current_var).any()
         else:
@@ -366,6 +372,10 @@ def AddNoiseCCD(noise, config, draw_method, rng, im, weight_im, current_var, sky
     # not precisely accurate, since the existing variance is Gaussian, rather than Poisson, but 
     # it's the best we can do.
     if current_var:
+        if logger:
+            logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
+                         config['image_num'],config['obj_num'],
+                         read_noise_var+extra_sky, current_var)
         if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
             test = ((sky+extra_sky).image.array/gain + read_noise_var < current_var).any()
         else:
@@ -474,6 +484,9 @@ def AddNoiseCOSMOS(noise, config, draw_method, rng, im, weight_im, current_var, 
 
     # Subtract off the current variance if any
     if current_var:
+        if logger:
+            logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
+                         config['image_num'],config['obj_num'], var, current_var)
         if var < current_var:
             raise RuntimeError(
                 "Whitening already added more noise than requested COSMOS noise.")

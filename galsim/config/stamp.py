@@ -465,7 +465,10 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 else:
                     weight_im = None
                 if do_noise:
+                    # The default indexing for the noise is image_num, not obj_num
+                    config['index_key'] = 'image_num'
                     galsim.config.AddNoise(config,method,im,weight_im,current_var,logger)
+                    config['index_key'] = 'obj_num'
 
             if make_badpix_image:
                 badpix_im = galsim.ImageS(im.bounds, wcs=im.wcs)
@@ -480,7 +483,9 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 if ('output' in config and 'psf' in config['output'] and 
                         'signal_to_noise' in config['output']['psf'] and
                         'noise' in config['image']):
+                    config['index_key'] = 'image_num'
                     galsim.config.AddNoise(config,'fft',psf_im,None,0,logger,add_sky=False)
+                    config['index_key'] = 'obj_num'
             else:
                 psf_im = None
 
@@ -621,10 +626,16 @@ def DrawStamp(psf, gal, config, xsize, ysize, offset, method):
                     raise AttributeError('Only one of whiten or symmetrize is allowed')
                 whiten, safe = galsim.config.ParseValue(noise, 'whiten', config, bool)
                 current_var = final.noise.whitenImage(im)
+                if logger:
+                    logger.debug('obj %d: whitening noise brought current var to %f',
+                                 config['obj_num'],current_var)
 
             elif 'symmetrize' in noise:
                 symmetrize, safe = galsim.config.ParseValue(noise, 'symmetrize', config, int)
                 current_var = final.noise.symmetrizeImage(im, symmetrize)
+                if logger:
+                    logger.debug('obj %d: symmetrizing noise brought current var to %f',
+                                 config['obj_num'],current_var)
 
     if (('gal' in config and 'signal_to_noise' in config['gal']) or
         ('gal' not in config and 'psf' in config and 'signal_to_noise' in config['psf'])):
