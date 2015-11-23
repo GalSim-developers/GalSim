@@ -76,6 +76,12 @@ gal:
         # Randomly spin the original profile
         rotate: { type: Random }
 
+        # Make the galaxies a bit smaller and fainter to simulate a fainter sample
+        # ??? Apparently only the size is rescaled.  In the Great3 scripts, it seems that
+        # flux_rescale is just set to 1/nepochs.  So just 1.0 for single epoch branches.
+        dilate: 0.6
+        scale_flux: 1.0
+
     # AFAICT, this was never changed from the default mu=1.
     magnification: 1
 
@@ -122,6 +128,7 @@ image:
             # Vary 5% around some nominal variance level. (See fmax_var in eval_variables above.)
             min: { type: Eval, str: '0.95 * max_var' }
             max: { type: Eval, str: '1.05 * max_var' }
+        whiten: True
 
     # Offset
     offset:
@@ -131,17 +138,19 @@ image:
 
     # This means the code will parallelize the creation of a single output file,
     # splitting up the postage stamps among the available cores.
-    nproc: -1
+    nproc: 1
 
     # Sometimes the ffts need to be a bit bigger than is allowed by default...
     gsparams: {maximum_fft_size: 10240}
 
 input:
-    # This requires that the command galsim_download_cosmos has been run, which downloads
-    # the catalog from the GalSim web site and saves it into a directory that GalSim knows
-    # about.  So there are no parameters to set here, but given the way the YAML structure
-    # works, we have to give it an empty dict.
-    cosmos_catalog : {}
+    cosmos_catalog : 
+        # If the command galsim_download_cosmos has been run, the catalog will have been downloaed
+        # from the GalSim web site and saved in a directory that GalSim knows about. 
+        # So file_name and dir are not necessary. 
+        # We just need some parameters to tell it which galaxies to include in the selection.
+        # For now, just a maximum hlr to exclude huge objects, although cf. issue #693.
+        max_hlr : 2.5  # arcsec
 
 output:
     type: Fits
