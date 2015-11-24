@@ -636,7 +636,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     if not do_noise:
         if 'noise' in config['image']:
             # If we didn't apply noise in each stamp, then we need to apply it now.
-            draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
+            draw_method = galsim.config.GetCurrentValue('image.draw_method','Tiled',config,str)
 
             if max_current_var > 0:
                 if logger:
@@ -865,7 +865,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     if 'noise' in config['image']:
         # Apply the noise to the full image
-        draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
+        draw_method = galsim.config.GetCurrentValue('image.draw_method','Scattered',config,str)
         if max_current_var > 0:
             import numpy
             # Then there was whitening applied in the individual stamps.

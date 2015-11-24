@@ -61,7 +61,7 @@ psf:
         # the larger area is mostly wasted.  Setting max_size 
         # 
         # This is in arcsec, so stamp_size * pixel_scale
-        max_size: { type: Eval, str: '48 * 0.2' }
+        max_size: "$48 * 0.2"
         suppress_warning: true
 
 gal:
@@ -105,10 +105,7 @@ eval_variables:
     # They did this as a LookupTable, but the formula below is pretty close.
     # I have no idea what the physical plausibility of this relation is.  I don't even 
     # understand why they chose to vary the noise level in concert with the seeing.
-    fmax_var: 
-        type: Eval
-        str: '0.004 * math.exp(2.9 * (x-1.1) * (x-0.95))'
-        fx: { type: Current, key: psf.items.0.fwhm }
+    fmax_var: '$0.004 * math.exp(2.9 * (@psf.items.0.fwhm-1.1) * (@psf.items.0.fwhm-0.95))'
 
 image:
     type: Tiled
@@ -126,8 +123,8 @@ image:
         variance: 
             type: Random
             # Vary 5% around some nominal variance level. (See fmax_var in eval_variables above.)
-            min: { type: Eval, str: '0.95 * max_var' }
-            max: { type: Eval, str: '1.05 * max_var' }
+            min: '$0.95 * max_var'
+            max: '$1.05 * max_var'
         whiten: True
 
     # Offset
@@ -193,14 +190,8 @@ output:
             num: obj_num
             x: image.offset.x
             y: image.offset.y
-            atmos_psf_e1:
-                type: Eval
-                str: 's.e1'
-                ss: { type: Current, key: psf.items.0.ellip }
-            atmos_psf_e2:
-                type: Eval
-                str: 's.e2'
-                ss: { type: Current, key: psf.items.0.ellip }
+            atmos_psf_e1: "$(@psf.items.0.ellip).e1"
+            atmos_psf_e2: "$(@psf.items.0.ellip).e2"
             atmos_psf_fwhm: psf.items.0.fwhm
             opt_lam_over_diam: psf.items.1.lam_over_diam
             opt_obscuration: psf.items.1.obscuration
@@ -215,19 +206,10 @@ output:
             opt_psf_trefoil2: psf.items.1.trefoil2
             opt_psf_spher: psf.items.1.spher
             cosmos_index: gal.first.index
-            theta: 
-                type: Eval
-                str: 't.rad()'
-                at: { type: Current, key: gal.first.rotate }
+            theta: "$(@gal.first.rotate + @gal.index * math.pi/@gal.num * galsim.radians).rad()"
             mu: gal.magnification
-            g1: 
-                type: Eval
-                str: 's.g1'
-                ss: { type: Current, key: gal.shear }
-            g2: 
-                type: Eval
-                str: 's.g2'
-                ss: { type: Current, key: gal.shear }
+            g1: "$(gal.shear).g1"
+            g2: "$(gal.shear).g2"
             # The parameteric components aren't really available here
             # So we don't have:
             #   bulge_beta_radians

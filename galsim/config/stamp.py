@@ -456,7 +456,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 current_var = 0
 
             else:
-                im, current_var = DrawStamp(psf,gal,config,xsize,ysize,offset,method)
+                im, current_var = DrawStamp(psf,gal,config,xsize,ysize,offset,method,logger)
                 if icenter:
                     im.setCenter(icenter.x, icenter.y)
                 if make_weight_image:
@@ -479,7 +479,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             t5 = time.time()
 
             if make_psf_image:
-                psf_im = DrawPSFStamp(psf,config,im.bounds,offset,method)
+                psf_im = DrawPSFStamp(psf,config,im.bounds,offset,method,logger)
                 if ('output' in config and 'psf' in config['output'] and 
                         'signal_to_noise' in config['output']['psf'] and
                         'noise' in config['image']):
@@ -546,7 +546,7 @@ def BuildGal(config, logger=None, gsparams={}):
 
 
 
-def DrawStamp(psf, gal, config, xsize, ysize, offset, method):
+def DrawStamp(psf, gal, config, xsize, ysize, offset, method, logger=None):
     """
     Draw an image using the given psf and gal profiles (which may be None)
     using the FFT method for doing the convolution.
@@ -679,7 +679,7 @@ def DrawStamp(psf, gal, config, xsize, ysize, offset, method):
     return im, current_var
 
 
-def DrawPSFStamp(psf, config, bounds, offset, method):
+def DrawPSFStamp(psf, config, bounds, offset, method, logger=None):
     """
     Draw an image using the given psf profile.
 
@@ -699,8 +699,8 @@ def DrawPSFStamp(psf, config, bounds, offset, method):
 
     # Special: if the galaxy was shifted, then also shift the psf 
     if 'shift' in config['gal']:
-        gal_shift = galsim.config.GetCurrentValue(config['gal'],'shift')
-        if False:
+        gal_shift = galsim.config.GetCurrentValue('gal.shift','psf',config)
+        if logger:
             logger.debug('obj %d: psf shift (1): %s',config['obj_num'],str(gal_shift))
         psf = psf.shift(gal_shift)
 

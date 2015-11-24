@@ -81,6 +81,12 @@ def ParseValue(config, param_name, base, value_type):
     #print 'param = ',param
     #print 'nums = ',base.get('file_num',0), base.get('image_num',0), base.get('obj_num',0)
 
+    # Check for some special markup:
+    if isinstance(param, basestring) and param[0] == '$':
+        param = { 'type' : 'Eval', 'str' : param[1:] }
+    if isinstance(param, basestring) and param[0] == '@':
+        param = { 'type' : 'Current', 'key' : param[1:] }
+
     # Check what index key we want to use for this value.
     if isinstance(param, dict):
         index, index_key = _get_index(param, param_name, base)
@@ -275,16 +281,6 @@ def GetAllParams(param, param_name, base, req={}, opt={}, single=[], ignore=[]):
     # Just in case there are unicode strings.   python 2.6 doesn't like them in kwargs.
     kwargs = dict([(k.encode('utf-8'), v) for k,v in kwargs.iteritems()])
     return kwargs, safe
-
-
-def GetCurrentValue(config, param_name):
-    """@brief Return the current value of a parameter (either stored or a simple value)
-    """
-    param = config[param_name]
-    if isinstance(param, dict):
-        return param['current_val']
-    else: 
-        return param
 
 
 #
@@ -940,7 +936,7 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
 
     if 'gal' not in base or 'redshift' not in base['gal']:
         raise ValueError("NFWHaloShear requested, but no gal.redshift defined.")
-    redshift = GetCurrentValue(base['gal'],'redshift')
+    redshift = GetCurrentValue('gal.redshift', param_name, base, float)
 
     if 'nfw_halo' not in base:
         raise ValueError("NFWHaloShear requested, but no input.nfw_halo defined.")
@@ -976,7 +972,7 @@ def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
 
     if 'gal' not in base or 'redshift' not in base['gal']:
         raise ValueError("NFWHaloMagnification requested, but no gal.redshift defined.")
-    redshift = GetCurrentValue(base['gal'],'redshift')
+    redshift = GetCurrentValue('gal.redshift', param_name, base, float)
 
     if 'nfw_halo' not in base:
         raise ValueError("NFWHaloMagnification requested, but no input.nfw_halo defined.")
@@ -1156,6 +1152,24 @@ def _GenerateFromEval(param, param_name, base, value_type):
     string = params['str']
     #print 'string = ',string
 
+    # We allow the following modules to be used in the eval string:
+    import math
+    import numpy
+    import os
+
+    # Parse any "Current" items indicated with an @ sign.
+    if '@' in string:
+        import re
+        # Find @items using regex.  They can include alphanumeric chars plus '.'.
+        keys = re.findall(r'@[\w\.]*', string)
+        # Remove duplicates
+        keys = numpy.unique(keys).tolist()
+        for key0 in keys:
+            key = key0[1:] # Remove the @ sign.
+            value = GetCurrentValue(key, param_name, base)
+            # Replaces all occurrences of key0 with the value.
+            string = string.replace(key0,repr(value)) 
+
     # Bring the user-defined variables into scope.
     for key in opt.keys():
         exec(key[1:] + ' = params[key]')
@@ -1181,11 +1195,6 @@ def _GenerateFromEval(param, param_name, base, value_type):
             exec(key[1:] + ' = params[key]')
             #print key[1:],'=',eval(key[1:])
         del base['parsing_eval_variables']
-
-    # Also, we allow the use of math functions
-    import math
-    import numpy
-    import os
 
     # Try evaluating the string as is.
     try:
@@ -1240,13 +1249,19 @@ def _GenerateFromCurrent(param, param_name, base, value_type):
     """
     req = { 'key' : str }
     params, safe = GetAllParams(param, param_name, base, req=req)
-
     key = params['key']
+    return GetCurrentValue(key, param_name, base, value_type), False
 
+def GetCurrentValue(key, param_name, base, value_type=None):
+    """@brief Get the current value of another config item given the key name.
+    """
     # This next bit is basically identical to the code for Dict.get(key) in catalog.py.
     # Make a list of keys
     chain = key.split('.')
     d = base
+
+    #print 'GetCurrent %s for param %s.  value_type = %s'%(key,param_name,value_type)
+    #print 'd = ',d
 
     # We may need to make one adjustment.  If the first item in the key is 'input', then
     # the key is probably wrong relative to the current config dict.  We make each input
@@ -1261,9 +1276,11 @@ def _GenerateFromCurrent(param, param_name, base, value_type):
             k = int(chain[2])
         except:
             chain.insert(2,0)
+    #print 'chain = ',chain
 
     while len(chain):
         k = chain.pop(0)
+        #print 'k = ',k
 
         # Try to convert to an integer:
         try: k = int(k)
@@ -1272,13 +1289,35 @@ def _GenerateFromCurrent(param, param_name, base, value_type):
         if chain: 
             # If there are more keys, just set d to the next in the chanin.
             d = d[k]
-        else: 
-            # Otherwise, parse the value for this key
-            val,safe = ParseValue(d, k, base, value_type)
+        else:
+            if type(d[k]) is not dict:
+                if value_type is not None:
+                    # This will work fine to evaluate the current value, but will also
+                    # compute it if necessary
+                    #print 'Not dict. Parse value normally'
+                    val = ParseValue(d, k, base, value_type)[0]
+                else:
+                    # If we are not given the value_type, and it's not a dict, then the
+                    # item is probably just some value already.
+                    #print 'Not dict, no value_type.  Assume %s is ok.'%d[k]
+                    val = d[k]
+            else:
+                if 'current_val' in d[k]:
+                    # If there is already a current_val, use it.
+                    #print 'Dict with current_val.  Use it: ',d[k]['current_val']
+                    val = d[k]['current_val']
+                elif value_type is None:
+                    # We don't know how to parse it if there isn't a current_val yet.
+                    #print 'Dict with no current_val and unknown value_type'
+                    raise ValueError("No current value of %s yet for %s"%key,param_name)
+                else:
+                    # Otherwise, parse the value for this key
+                    #print 'Dict without current_val. Parse this value normally'
+                    val = ParseValue(d, k, base, value_type)[0]
             #print base['obj_num'],'Current key = %s, value = %s'%(key,val)
-            return val,safe
+            return val
 
-    raise ValueError("Invalid key = %s given for %s.type = Current"%(key,param_name))
+    raise ValueError("Invalid key = %s given for %s"%(key,param_name))
 
 
 def SetDefaultIndex(config, num):
