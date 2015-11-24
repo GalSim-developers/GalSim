@@ -135,7 +135,7 @@ image:
 
     # This means the code will parallelize the creation of a single output file,
     # splitting up the postage stamps among the available cores.
-    nproc: 1
+    nproc: -1
 
     # Sometimes the ffts need to be a bit bigger than is allowed by default...
     gsparams: {maximum_fft_size: 10240}
