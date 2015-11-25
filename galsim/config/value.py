@@ -89,11 +89,18 @@ def ParseValue(config, param_name, base, value_type):
 
     # Check what index key we want to use for this value.
     if isinstance(param, dict):
-        index, index_key = _get_index(param, param_name, base)
+        is_seq = param['type'] == 'Sequence'
+        index, index_key = _get_index(param, param_name, base, is_seq)
         if index is None:
             # This is probably something artificial where we aren't keeping track of indices.
             # In this case, always make a new value.
             index = config.get('current_index',0) + 1
+
+        # If we are repeating, then only make this when index % repeat == 0
+        if 'repeat' in param:
+            repeat = galsim.config.ParseValue(param, 'repeat', base, int)[0]
+            if 'current_val' in param and (index//repeat == param['current_index']//repeat):
+                return param['current_val'], param['current_safe']
 
     # First see if we can assign by param by a direct constant value
     if isinstance(param, value_type):
@@ -839,9 +846,9 @@ def _GenerateFromSequence(param, param_name, base, value_type):
             nitems = int( (last-first)/step + 0.5 ) + 1
     else:
         if last is not None:
-            nitems = (last - first)/step + 1
+            nitems = (last - first)//step + 1
 
-    index = index / repeat
+    index = index // repeat
 
     if nitems is not None and nitems > 0:
         index = index % nitems

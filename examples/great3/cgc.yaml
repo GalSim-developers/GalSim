@@ -1,13 +1,15 @@
 # The Great3 control-ground-constant branch configuration file
+# Note: This configuration will not produce images _identical_ to the ones used for Great3, 
+# since the order of random number generation is different.  However, it is intended to
+# produce an _equivalent_ simulation as the one produced for Great3.
 
 psf:
     type: Convolve
 
-    # TODO the 'repeat' option is not supported yet
     # This will keep the same PSF object for 10000 objects before making a new one.
     # 10000 = 100 x 100 is the number of objects in each file.
-    #repeat: 10000
-    index_key : image_num
+    #index_key : image_num
+    repeat : 10000
 
     items:
     # The atmospheric component
@@ -28,7 +30,6 @@ psf:
         # ranging from 0.45 to 0.95.
         fwhm: 
             type: RandomDistribution
-            # TODO: This inline lookup table from x,f lists is not supported yet.
             x: [ 0.45, 0.55, 0.65, 0.75, 0.85, 0.95 ]
             f: [ 0.,   20.,  17.,  13.,  9.,   0.   ]
 
@@ -88,9 +89,8 @@ gal:
     # The shear was chosen randomly within an annulus with 0.01 < |g| < 0.05.
     shear:
         type: GBeta
-        # TODO: Using repeat here is also not implemented yet.
-        #repeat: 10000
-        index_key : file_num
+        repeat: 10000
+        #index_key : image_num
         g: 
             type: RandomDistribution
             function: x

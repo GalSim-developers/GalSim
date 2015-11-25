@@ -91,7 +91,24 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     # Check what index key we want to use for this object.
     index, index_key = galsim.config.value._get_index(ck, key, base)
     if False:
-        logger.debug('obj %d: ck = %s',base['obj_num'],str(ck))
+        logger.debug('obj %d: ck = %s',base['obj_num'],ck)
+
+    # If we are repeating, then only make this when index % repeat == 0
+    if 'repeat' in ck:
+        repeat = galsim.config.ParseValue(ck, 'repeat', base, int)[0]
+        if 'current_val' in ck and (index//repeat == ck['current_index']//repeat):
+            if logger:
+                logger.debug('obj %d: repeat = %d, index = %d, use current object: %s',
+                             base['obj_num'],repeat,index,ck['current_val'])
+            return ck['current_val'], ck['current_safe']
+        else:
+            if logger:
+                if 'current_val' not in ck:
+                    logger.debug('obj %d: repeat = %d, index = %d, no current object yet',
+                                 base['obj_num'],repeat,index)
+                else:
+                    logger.debug('obj %d: repeat = %d, index = %d, current_index = %d not ok',
+                                 base['obj_num'],repeat,index,ck['current_index'])
 
     # Check that the input config has a type to even begin with!
     if not 'type' in ck:
@@ -102,11 +119,18 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     if 'current_val' in ck and (ck['current_safe'] or ck['current_index'] == index):
         if logger:
             if ck['current_safe']:
-                logger.debug('obj %d: current is safe: %s',base['obj_num'],str(ck['current_val']))
+                logger.debug('obj %d: current is safe: %s',base['obj_num'],ck['current_val'])
             else:
-                logger.debug('obj %d: We already built this object: %s',
-                             base['obj_num'],str(ck['current_val']))
+                logger.debug('obj %d: This object is already current: %s',
+                             base['obj_num'],ck['current_val'])
         return ck['current_val'], ck['current_safe']
+    else:
+        if logger:
+            if 'current_val' not in ck:
+                logger.debug('obj %d: no current object yet',base['obj_num'])
+            else:
+                logger.debug('obj %d: index = %d, current_index = %d not ok and not safe',
+                             base['obj_num'],index,ck['current_index'])
 
     # Ring is only allowed for top level gal (since it requires special handling in 
     # multiprocessing, and that's the only place we look for it currently).
@@ -178,7 +202,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     if type in valid_gsobject_types:
         build_func = eval(valid_gsobject_types[type])
         if logger:
-            logger.debug('obj %d: build_func = %s',base['obj_num'],str(build_func))
+            logger.debug('obj %d: build_func = %s',base['obj_num'],build_func)
         gsobject, safe = build_func(ck, key, base, ignore, gsparams, logger)
     # Next, we check if this name is in the galsim dictionary.
     elif type in galsim.__dict__:
@@ -432,7 +456,7 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
 
     kwargs['real_galaxy_catalog'] = real_cat
     if logger:
-        logger.debug('obj %d: RealGalaxy kwargs = %s',base['obj_num'],str(kwargs))
+        logger.debug('obj %d: RealGalaxy kwargs = %s',base['obj_num'],kwargs)
 
     gal = galsim.RealGalaxy(**kwargs)
 
@@ -513,7 +537,7 @@ def _BuildCOSMOSGalaxy(config, key, base, ignore, gsparams, logger):
                 "%s index has gone past the number of entries in the catalog"%index)
 
     if logger:
-        logger.debug('obj %d: COSMOSGalaxy kwargs = %s',base['obj_num'],str(kwargs))
+        logger.debug('obj %d: COSMOSGalaxy kwargs = %s',base['obj_num'],kwargs)
 
     kwargs['cosmos_catalog'] = cosmos_cat
 
@@ -537,7 +561,7 @@ def _BuildSimple(config, key, base, ignore, gsparams, logger):
         init_func = eval(type)
     if logger:
         logger.debug('obj %d: BuildSimple for type = %s',base['obj_num'],type)
-        logger.debug('obj %d: init_func = %s',base['obj_num'],str(init_func))
+        logger.debug('obj %d: init_func = %s',base['obj_num'],init_func)
 
     kwargs, safe = galsim.config.GetAllParams(config, key, base, 
                                               req = init_func._req_params,
@@ -554,7 +578,7 @@ def _BuildSimple(config, key, base, ignore, gsparams, logger):
         safe = False
 
     if logger:
-        logger.debug('obj %d: kwargs = %s',base['obj_num'],str(kwargs))
+        logger.debug('obj %d: kwargs = %s',base['obj_num'],kwargs)
 
     # Finally, after pulling together all the params, try making the GSObject.
     return init_func(**kwargs), safe
