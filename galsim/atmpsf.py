@@ -142,8 +142,13 @@ class AtmosphericPhaseGenerator(object):
         """ Propagate phase screens with wind, update boiling, and return new screens.
         """
         for i, (pl, phFT, alpha) in enumerate(zip(self.powerlaw, self._phaseFT, self.alpha)):
-            noisescalefac = np.sqrt(1. - np.abs(alpha**2))
-            self._phaseFT[i] = alpha*phFT + self._noiseFT(pl)*noisescalefac
+            noise_frac_sq = 1.0 - np.abs(alpha**2)[0, 0]
+            if noise_frac_sq < 1.e-5:
+                # Frozen flow
+                self._phaseFT[i] = alpha/abs(alpha)*phFT
+            else:
+                # Boiling
+                self._phaseFT[i] = alpha*phFT + self._noiseFT(pl)*np.sqrt(noise_frac_sq)
             self.screens[i] = np.fft.ifft2(self._phaseFT[i]).real
         return self.screens
 
@@ -256,8 +261,6 @@ class AtmosphericPSF(GSObject):
             # ground-based optical weak lensing experiments.
             if screen_size is None:
                 screen_size = 10.0
-            print "screen_scale: {}".format(screen_scale)
-            print "screen_size: {}".format(screen_size)
             phase_generator = AtmosphericPhaseGenerator(
                 time_step=time_step, screen_size=screen_size, screen_scale=screen_scale, r0=r0,
                 L0=L0, alpha_mag=alpha_mag, velocity=velocity, direction=direction)
