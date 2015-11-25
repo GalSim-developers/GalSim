@@ -92,6 +92,9 @@ def parse_args():
             '-m', '--module', type=str, action='append', default=None, 
             help='python module to import before parsing config file')
         parser.add_argument(
+            '-p', '--profile', action='store_const', default=False, const=True,
+            help='output profiling information at the end of the run')
+        parser.add_argument(
             '--version', action='store_const', default=False, const=True,
             help='show the version of GalSim')
         args = parser.parse_args()
@@ -130,6 +133,9 @@ def parse_args():
             '-m', '--module', type=str, action='append', default=None, 
             help='python module to import before parsing config file')
         parser.add_option(
+            '-p', '--profile', action='store_const', default=False, const=True,
+            help='output profiling information at the end of the run')
+        parser.add_option(
             '--version', action='store_const', default=False, const=True,
             help='show the version of GalSim')
         (args, posargs) = parser.parse_args()
@@ -165,13 +171,19 @@ def main():
                        3: logging.DEBUG }
     logging_level = logging_levels[args.verbosity]
 
+    # If requested, load the profiler
+    if args.profile:
+        import cProfile, pstats, StringIO
+        pr = cProfile.Profile()
+        pr.enable()
+
     # Setup logging to go to sys.stdout or (if requested) to an output file
     if args.log_file is None:
         logging.basicConfig(format="%(message)s", level=logging_level, stream=sys.stdout)
     else:
         logging.basicConfig(format="%(message)s", level=logging_level, filename=args.log_file)
     logger = logging.getLogger('galsim')
-    
+
     # Determine the file type from the extension if necessary:
     if args.file_type is None:
         import os
@@ -281,6 +293,14 @@ def main():
         # Process the configuration
         galsim.config.Process(config, logger)
 
+    if args.profile:
+        # cf. example code here: https://docs.python.org/2/library/profile.html
+        pr.disable()
+        #sortby = 'cumulative'
+        sortby = 'tottime'
+        ps = pstats.Stats(pr).sort_stats(sortby).reverse_order()
+        ps.print_stats()
+ 
 
 if __name__ == "__main__":
     main()
