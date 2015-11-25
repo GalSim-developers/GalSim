@@ -6,10 +6,8 @@
 psf:
     type: Convolve
 
-    # This will keep the same PSF object for 10000 objects before making a new one.
-    # 10000 = 100 x 100 is the number of objects in each file.
-    #index_key : image_num
-    repeat : 10000
+    # This means the psf should change per image, not per object as would be the default.
+    index_key : image_num
 
     items:
     # The atmospheric component
@@ -89,8 +87,7 @@ gal:
     # The shear was chosen randomly within an annulus with 0.01 < |g| < 0.05.
     shear:
         type: GBeta
-        repeat: 10000
-        #index_key : image_num
+        index_key : image_num
         g: 
             type: RandomDistribution
             function: x
