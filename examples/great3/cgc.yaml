@@ -132,7 +132,7 @@ image:
 
     # This means the code will parallelize the creation of a single output file,
     # splitting up the postage stamps among the available cores.
-    nproc: -1
+    #nproc: -1
 
     # Sometimes the ffts need to be a bit bigger than is allowed by default...
     gsparams: {maximum_fft_size: 10240}
@@ -168,6 +168,12 @@ output:
         - { type: Sequence, nitems: 200 }
         - 0
     nfiles: 200
+
+    # This means the code will parallelize across the different files, doing a full
+    # output file in each core at a time.
+    # This is gernerally the better choice, since it doesn't require as much interprocess
+    # communication, which can be rather slow.
+    nproc: -1
 
     # This lets you rerun the code if there were I/O issues and it will just write the
     # missing files.  (Potentially ones that have been deleted because they were corrupted.)
