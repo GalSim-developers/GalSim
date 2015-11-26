@@ -87,6 +87,8 @@ def test_CRG(args):
             ax = plt.Subplot(fig, inner_grid[i])
             im = ax.imshow(img.array, extent=in_extent)
             ax.set_title("band[{}] input".format(i))
+            ax.set_xticks([])
+            ax.set_yticks([])
             fig.add_subplot(ax)
             plt.colorbar(im)
 
@@ -95,17 +97,23 @@ def test_CRG(args):
         ax = plt.Subplot(fig, inner_grid[0])
         ax.set_title("True output")
         im = ax.imshow(out_img.array, extent=out_extent)
+        ax.set_xticks([])
+        ax.set_yticks([])
         fig.add_subplot(ax)
         plt.colorbar(im)
 
         ax = plt.Subplot(fig, inner_grid[1])
         ax.set_title("Reconstructed output")
+        ax.set_xticks([])
+        ax.set_yticks([])
         im = ax.imshow(crg_img.array, extent=out_extent)
         fig.add_subplot(ax)
         plt.colorbar(im)
 
         ax = plt.Subplot(fig, inner_grid[2])
         ax.set_title("Residual")
+        ax.set_xticks([])
+        ax.set_yticks([])
         resid = crg_img.array - out_img.array
         vmin, vmax = np.percentile(resid, [5.0, 95.0])
         v = np.max([np.abs(vmin), np.abs(vmax)])
