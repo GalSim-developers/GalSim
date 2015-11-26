@@ -18,6 +18,7 @@
 
 import os
 import galsim
+import logging
 
 valid_input_types = { 
     # The values are tuples with:
@@ -161,7 +162,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
     """
     config['index_key'] = 'file_num'
     config['file_num'] = file_num
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: Start ProcessInput',file_num)
     # Process the input field (read any necessary input files)
     if 'input' in config:
@@ -222,12 +223,12 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
             # Skip this key if not relevant for file_scope_only run.
             if file_scope_only and not valid_input_types[key][3]: continue
 
-            if logger:
+            if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('file %d: Process input key %s',file_num,key)
             fields = input[key]
 
             if key not in config:
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('file %d: %s not currently in config',file_num,key)
                 config[key] = [ None for i in range(len(fields)) ]
                 config[key+'_safe'] = [ None for i in range(len(fields)) ]
@@ -235,16 +236,16 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                 field = fields[i]
                 ck = config[key]
                 ck_safe = config[key+'_safe']
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('file %d: Current values for %s are %s, safe = %s',
                                  file_num, key, str(ck[i]), ck_safe[i])
                 type, ignore = valid_input_types[key][0:2]
                 field['type'] = type
                 if ck[i] is not None and ck_safe[i]:
-                    if logger:
+                    if logger and logger.isEnabledFor(logging.DEBUG):
                         logger.debug('file %d: Using %s already read in',file_num,key)
                 else:
-                    if logger:
+                    if logger and logger.isEnabledFor(logging.DEBUG):
                         logger.debug('file %d: Build input type %s',file_num,type)
                     # This is almost identical to the operation of BuildSimple.  However,
                     # rather than call the regular function here, we have input_manager do so.
@@ -266,7 +267,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                         safe = False
 
                     if safe_only and not safe:
-                        if logger:
+                        if logger and logger.isEnabledFor(logging.DEBUG):
                             logger.debug('file %d: Skip %s %d, since not safe',file_num,key,i)
                         ck[i] = None
                         ck_safe[i] = None
@@ -274,10 +275,11 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
 
                     tag = key + str(i)
                     input_obj = getattr(config['input_manager'],tag)(**kwargs)
-                    if logger:
+                    if logger and logger.isEnabledFor(logging.DEBUG):
                         logger.debug('file %d: Built input object %s %d',file_num,key,i)
                         if 'file_name' in kwargs:
                             logger.debug('file %d: file_name = %s',file_num,kwargs['file_name'])
+                    if logger and logger.isEnabledFor(logging.INFO):
                         if valid_input_types[key][2]:
                             logger.info('Read %d objects from %s',input_obj.getNObjects(),key)
                     # Store input_obj in the config for use by BuildGSObject function.
@@ -288,7 +290,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                     #       item.  e.g. you might want to invalidate dict0, but not dict1.
                     for value_type in valid_input_types[key][5]:
                         RemoveCurrent(config, type=value_type)
-                        if logger:
+                        if logger and logger.isEnabledFor(logging.DEBUG):
                             logger.debug('file %d: Cleared current_vals for items with type %s',
                                          file_num,value_type)
 
@@ -329,7 +331,7 @@ def ProcessInputNObjects(config, logger=None):
                                                         ignore = ignore)[0]
                     kwargs['_nobjects_only'] = True
                     input_obj = init_func(**kwargs)
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('file %d: Found nobjects = %d for %s',
                                  config['file_num'],input_obj.getNOjects(),key)
                 return input_obj.getNObjects()
@@ -386,7 +388,7 @@ def Process(config, logger=None):
 
     # extra_hdu says whether the function takes psf_hdu, etc.
     extra_hdu = valid_output_types[type][4]
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('type = %s',type)
         logger.debug('extra_file_name = %s',extra_file_name)
         logger.debug('extra_hdu = %d',extra_hdu)
@@ -400,7 +402,7 @@ def Process(config, logger=None):
         nfiles = galsim.config.ParseValue(output, 'nfiles', config, int)[0]
     else:
         nfiles = 1 
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('nfiles = %d',nfiles)
 
     # Figure out how many processes we will use for building the files.
@@ -417,7 +419,7 @@ def Process(config, logger=None):
             nproc2 = nproc 
             nproc = 1
         else:
-            if logger:
+            if logger and logger.isEnabledFor(logging.WARN):
                 logger.warn(
                     "Trying to use more processes than files: output.nproc=%d, "%nproc +
                     "output.nfiles=%d.  Reducing nproc to %d."%(nfiles,nfiles))
@@ -431,17 +433,17 @@ def Process(config, logger=None):
             if nfiles == 1 and can_do_multiple:
                 nproc2 = ncpu # Use this value in BuildImages rather than here.
                 nproc = 1
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug("ncpu = %d.",ncpu)
             else:
                 if ncpu > nfiles:
                     nproc = nfiles
                 else:
                     nproc = ncpu
-                if logger:
-                    logger.info("ncpu = %d.  Using %d processes",ncpu,nproc)
+                if logger and logger.isEnabledFor(logging.WARN):
+                    logger.warn("ncpu = %d.  Using %d processes",ncpu,nproc)
         except:
-            if logger:
+            if logger and logger.isEnabledFor(logging.WARN):
                 logger.warn("config.output.nproc <= 0, but unable to determine number of cpus.")
             nproc = 1
 
@@ -450,24 +452,24 @@ def Process(config, logger=None):
         for job in iter(input.get, 'STOP'):
             try:
                 (kwargs, file_num, file_name) = job
-                if logger:
-                    logger.debug('%s: Received job to do file %d, %s',proc,file_num,file_name)
+                if logger and logger.isEnabledFor(logging.WARN):
+                    logger.warn('%s: Start file %d, %s',proc,file_num,file_name)
                 ProcessInput(config, file_num=file_num, logger=logger)
                 kwargs['config'] = config
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('%s: After ProcessInput for file %d',proc,file_num)
                 kwargs['logger'] = logger
                 t = build_func(**kwargs)
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('%s: After %s for file %d',proc,build_func,file_num)
                 output.put( (t, file_num, file_name, proc) )
             except Exception as e:
                 import traceback
                 tr = traceback.format_exc()
-                if logger:
-                    logger.debug('%s: Caught exception %s\n%s',proc,str(e),tr)
+                if logger and logger.isEnabledFor(logging.WARN):
+                    logger.warn('%s: Caught exception %s\n%s',proc,str(e),tr)
                 output.put( (e, file_num, file_name, tr) )
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('%s: Received STOP',proc)
 
     # Set up the multi-process task_queue if we're going to need it.
@@ -528,7 +530,7 @@ def Process(config, logger=None):
     # We'll want a pristine version later to give to the workers.
     orig_config = CopyConfig(config)
     for file_num in range(nfiles):
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file_num, image_num, obj_num = %d,%d,%d',file_num,image_num,obj_num)
         # Set the index for any sequences in the input or output parameters.
         # These sequences are indexed by the file_num.
@@ -549,7 +551,7 @@ def Process(config, logger=None):
             config['index_key'] = 'obj_num'
             seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
             config['index_key'] = 'file_num'
-            if logger:
+            if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('file %d: seed = %d',file_num,seed)
             rng = galsim.BaseDeviate(seed)
         else:
@@ -589,7 +591,7 @@ def Process(config, logger=None):
         # This also updates nimages or nobjects as needed if they are being automatically
         # set from an input catalog.
         nobj = nobj_func(config,file_num,image_num)
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: nobj = %s',file_num,str(nobj))
 
         # nobj is a list of nobj for each image in that file.
@@ -601,14 +603,14 @@ def Process(config, logger=None):
         # Check if we ought to skip this file
         if ('skip' in output 
                 and galsim.config.ParseValue(output, 'skip', config, bool)[0]):
-            if logger:
+            if logger and logger.isEnabledFor(logging.WARN):
                 logger.warn('Skipping file %d = %s because output.skip = True',file_num,file_name)
             nfiles_use -= 1
             continue
         if ('noclobber' in output 
                 and galsim.config.ParseValue(output, 'noclobber', config, bool)[0]
                 and os.path.isfile(file_name)):
-            if logger:
+            if logger and logger.isEnabledFor(logging.WARN):
                 logger.warn('Skipping file %d = %s because output.noclobber = True' +
                             ' and file exists',file_num,file_name)
             nfiles_use -= 1
@@ -616,7 +618,7 @@ def Process(config, logger=None):
 
         # Check if we need to build extra images to write out as well
         for extra_key in [ key for key in extra_keys if key in output ]:
-            if logger:
+            if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('extra_key = %s',extra_key)
             output_extra = output[extra_key]
 
@@ -655,8 +657,8 @@ def Process(config, logger=None):
                 # If we already wrote this file, skip it this time around.
                 # (Typically this is applicable for psf, where we may only want 1 psf file.)
                 if last_file_name[key] == f:
-                    if logger:
-                        logger.debug('skipping %s, since already written',f)
+                    if logger and logger.isEnabledFor(logging.WARN):
+                        logger.warn('skipping %s, since already written',f)
                     continue
                 kwargs[ extra_key+'_file_name' ] = f
                 last_file_name[key] = f
@@ -674,14 +676,16 @@ def Process(config, logger=None):
             task_queue.put( (kwargs1, file_num, file_name) )
         else:
             try:
+                if logger and logger.isEnabledFor(logging.WARN):
+                    logger.warn('Start file %d = %s', file_num, file_name)
                 ProcessInput(config, file_num=file_num, logger=logger_proxy)
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('file %d: After ProcessInput',file_num)
                 kwargs['config'] = config
                 kwargs['logger'] = logger 
                 t = build_func(**kwargs)
-                if logger:
-                    logger.warn('File %d = %s: time = %f sec', file_num, file_name, t)
+                if logger and logger.isEnabledFor(logging.WARN):
+                    logger.warn('File %d = %s, time = %f sec', file_num, file_name, t)
             except Exception as e:
                 import traceback
                 tr = traceback.format_exc()
@@ -694,7 +698,7 @@ def Process(config, logger=None):
     # If we're doing multiprocessing, here is the machinery to run through the task_queue
     # and process the results.
     if nproc > 1:
-        if logger:
+        if logger and logger.isEnabledFor(logging.WARN):
             logger.warn("Using %d processes",nproc)
         import time
         t1 = time.time()
@@ -708,7 +712,7 @@ def Process(config, logger=None):
             p_list.append(p)
 
         # Log the results.
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('nfiles_use = %d',nfiles_use)
         for k in range(nfiles_use):
             t, file_num, file_name, proc = done_queue.get()
@@ -721,7 +725,7 @@ def Process(config, logger=None):
                     logger.error('%s',t)
                     logger.error('File %s not written! Continuing on...',file_name)
             else:
-                if logger:
+                if logger and logger.isEnabledFor(logging.WARN):
                     logger.warn('%s: File %d = %s: time = %f sec', proc, file_num, file_name, t)
 
         # Stop the processes
@@ -731,12 +735,12 @@ def Process(config, logger=None):
             p_list[j].join()
         task_queue.close()
         t2 = time.time()
-        if logger:
+        if logger and logger.isEnabledFor(logging.WARN):
             logger.warn('Total time for %d files with %d processes = %f sec', 
                         nfiles_use,nproc,t2-t1)
 
-    if logger:
-        logger.debug('Done building files')
+    if logger and logger.isEnabledFor(logging.WARN):
+        logger.warn('Done building files')
 
 
 # A helper function to retry io commands
@@ -749,7 +753,7 @@ def _retry_io(func, args, ntries, file_name, logger):
                 # Then this was the last try.  Just re-raise the exception.
                 raise
             else:
-                if logger:
+                if logger and logger.isEnabledFor(logging.WARN):
                     logger.warn('File %s: Caught IOError: %s',file_name,str(e))
                     logger.warn('This is try %d/%d, so sleep for %d sec and try again.',
                                 itry+1,ntries,itry+1)
@@ -793,7 +797,7 @@ def BuildFits(file_name, config, logger=None,
     config['image_num'] = image_num
     config['start_obj_num'] = obj_num
     config['obj_num'] = obj_num
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: BuildFits for %s: file, image, obj = %d,%d,%d',
                       config['file_num'],file_name,file_num,image_num,obj_num)
 
@@ -811,7 +815,7 @@ def BuildFits(file_name, config, logger=None,
         config['index_key'] = 'obj_num'
         seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
         config['index_key'] = 'file_num'
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: seed = %d',file_num,seed)
         rng = galsim.BaseDeviate(seed)
     else:
@@ -875,7 +879,7 @@ def BuildFits(file_name, config, logger=None,
         ntries = 1
 
     _retry_io(galsim.fits.writeMulti, (hdulist, file_name), ntries, file_name, logger)
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         if len(hdus.keys()) == 1:
             logger.debug('file %d: Wrote image to fits file %r',
                          config['file_num'],file_name)
@@ -886,21 +890,21 @@ def BuildFits(file_name, config, logger=None,
     if psf_file_name:
         _retry_io(galsim.fits.write, (all_images[1], psf_file_name),
                   ntries, psf_file_name, logger)
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote psf image to fits file %r',
                          config['file_num'],psf_file_name)
 
     if weight_file_name:
         _retry_io(galsim.fits.write, (all_images[2], weight_file_name),
                   ntries, weight_file_name, logger)
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote weight image to fits file %r',
                          config['file_num'],weight_file_name)
 
     if badpix_file_name:
         _retry_io(galsim.fits.write, (all_images[3], badpix_file_name),
                   ntries, badpix_file_name, logger)
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote badpix image to fits file %r',
                          config['file_num'],badpix_file_name)
 
@@ -935,7 +939,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
     config['image_num'] = image_num
     config['start_obj_num'] = obj_num
     config['obj_num'] = obj_num
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: BuildMultiFits for %s: file, image, obj = %d,%d,%d',
                       config['file_num'],file_name,file_num,image_num,obj_num)
 
@@ -953,7 +957,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
         config['index_key'] = 'obj_num'
         seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
         config['index_key'] = 'file_num'
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: seed = %d',file_num,seed)
         rng = galsim.BaseDeviate(seed)
     else:
@@ -981,12 +985,12 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
 
     if nproc > nimages:
         # Only warn if nproc was specifically set, not if it is -1.
-        if (logger and
-            not ('nproc' in config['output'] and 
-                 galsim.config.ParseValue(config['output'],'nproc',config,int)[0] == -1)):
-            logger.warn(
-                "Trying to use more processes than images: output.nproc=%d, "%nproc +
-                "nimages=%d.  Reducing nproc to %d."%(nimages,nimages))
+        if logger and logger.isEnabledFor(logging.WARN):
+            if not ('nproc' in config['output'] and 
+                 galsim.config.ParseValue(config['output'],'nproc',config,int)[0] == -1):
+                logger.warn(
+                    "Trying to use more processes than images: output.nproc=%d, "%nproc +
+                    "nimages=%d.  Reducing nproc to %d."%(nimages,nimages))
         nproc = nimages
 
     all_images = galsim.config.BuildImages(
@@ -1009,28 +1013,28 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
         ntries = 1
 
     _retry_io(galsim.fits.writeMulti, (main_images, file_name), ntries, file_name, logger)
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: Wrote images to multi-extension fits file %r',
                      config['file_num'],file_name)
 
     if psf_file_name:
         _retry_io(galsim.fits.writeMulti, (psf_images, psf_file_name),
                   ntries, psf_file_name, logger)
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote psf images to multi-extension fits file %r',
                          config['file_num'],psf_file_name)
 
     if weight_file_name:
         _retry_io(galsim.fits.writeMulti, (weight_images, weight_file_name),
                   ntries, weight_file_name, logger)
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote weight images to multi-extension fits file %r',
                          config['file_num'],weight_file_name)
 
     if badpix_file_name:
         _retry_io(galsim.fits.writeMulti, (all_images, badpix_file_name),
                   ntries, badpix_file_name, logger)
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote badpix images to multi-extension fits file %r',
                          config['file_num'],badpix_file_name)
 
@@ -1066,7 +1070,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     config['image_num'] = image_num
     config['start_obj_num'] = obj_num
     config['obj_num'] = obj_num
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: BuildDataCube for %s: file, image, obj = %d,%d,%d',
                       config['file_num'],file_name,file_num,image_num,obj_num)
 
@@ -1084,7 +1088,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
         config['index_key'] = 'obj_num'
         seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
         config['index_key'] = 'file_num'
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: seed = %d',file_num,seed)
         rng = galsim.BaseDeviate(seed)
     else:
@@ -1123,7 +1127,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
             make_badpix_image=make_badpix_image)
     obj_num += galsim.config.GetNObjForImage(config, image_num)
     t3 = time.time()
-    if logger:
+    if logger and logger.isEnabledFor(logging.INFO):
         # Note: numpy shape is y,x
         ys, xs = all_images[0].array.shape
         logger.info('Image %d: size = %d x %d, time = %f sec', image_num, xs, ys, t3-t2)
@@ -1141,12 +1145,12 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     if nimages > 1:
         if nproc > nimages-1:
             # Only warn if nproc was specifically set, not if it is -1.
-            if (logger and
-                not ('nproc' in config['output'] and
-                     galsim.config.ParseValue(config['output'],'nproc',config,int)[0] == -1)):
-                logger.warn(
-                    "Trying to use more processes than (nimages-1): output.nproc=%d, "%nproc +
-                    "nimages=%d.  Reducing nproc to %d."%(nimages,nimages-1))
+            if logger and logger.isEnabledFor(logging.WARN):
+                if not ('nproc' in config['output'] and
+                     galsim.config.ParseValue(config['output'],'nproc',config,int)[0] == -1):
+                    logger.warn(
+                        "Trying to use more processes than (nimages-1): output.nproc=%d, "%nproc +
+                        "nimages=%d.  Reducing nproc to %d."%(nimages,nimages-1))
             nproc = nimages-1
 
         all_images = galsim.config.BuildImages(
@@ -1169,28 +1173,28 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
         ntries = 1
 
     _retry_io(galsim.fits.writeCube, (main_images, file_name), ntries, file_name, logger)
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: Wrote image to fits data cube %r',
                      config['file_num'],file_name)
 
     if psf_file_name:
         _retry_io(galsim.fits.writeCube, (psf_images, psf_file_name),
                   ntries, psf_file_name, logger)
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote psf images to fits data cube %r',
                          config['file_num'],psf_file_name)
 
     if weight_file_name:
         _retry_io(galsim.fits.writeCube, (weight_images, weight_file_name),
                   ntries, weight_file_name, logger)
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote weight images to fits data cube %r',
                          config['file_num'],weight_file_name)
 
     if badpix_file_name:
         _retry_io(galsim.fits.writeCube, (badpix_images, badpix_file_name),
                   ntries, badpix_file_name, logger)
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote badpix images to fits data cube %r',
                          config['file_num'],badpix_file_name)
 

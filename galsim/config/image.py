@@ -17,6 +17,7 @@
 #
 
 import galsim
+import logging
 
 # The items in each tuple are:
 #   - The function to call to build the image
@@ -51,7 +52,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
     config['image_num'] = image_num
     config['obj_num'] = obj_num
 
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: BuildImages nimages = %d: image, obj = %d,%d',
                      config.get('file_num',0),nimages,image_num,obj_num)
 
@@ -67,7 +68,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
         for job in iter(input.get, 'STOP'):
             try :
                 (image_num, obj_num, nim, info) = job
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('%s: Received job to do %d images, starting with %d',
                                  proc,nim,image_num)
                 results = []
@@ -81,16 +82,16 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
                     t2 = time.time()
                     results.append( [im[0], im[1], im[2], im[3], t2-t1 ] )
                     ys, xs = im[0].array.shape
-                    if logger:
+                    if logger and logger.isEnabledFor(logging.INFO):
                         logger.info('%s: Image %d: size = %d x %d, time = %f sec', 
                                     proc, image_num+k, xs, ys, t2-t1)
                 output.put( (results, info, proc) )
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('%s: Finished job %d -- %d',proc,image_num,image_num+nim-1)
             except Exception as e:
                 import traceback
                 tr = traceback.format_exc()
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('%s: Caught exception %s\n%s',proc,str(e),tr)
                 output.put( (e, info, tr) )
     
@@ -102,7 +103,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
     }
 
     if nproc > nimages:
-        if logger:
+        if logger and logger.isEnabledFor(logging.INFO):
             logger.warn(
                 "Trying to use more processes than images: output.nproc=%d, "%nproc +
                 "nimages=%d.  Reducing nproc to %d."%(nimages,nimages))
@@ -117,13 +118,13 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
                 nproc = nimages
             else:
                 nproc = ncpu
-            if logger:
-                logger.info("ncpu = %d.  Using %d processes",ncpu,nproc)
+            if logger and logger.isEnabledFor(logging.WARN):
+                logger.warn("ncpu = %d.  Using %d processes",ncpu,nproc)
         except:
-            if logger:
+            if logger and logger.isEnabledFor(logging.WARN):
                 logger.warn("config.output.nproc <= 0, but unable to determine number of cpus.")
             nproc = 1
-            if logger:
+            if logger and logger.isEnabledFor(logging.INFO):
                 logger.info("Unable to determine ncpu.  Using %d processes",nproc)
  
     if nproc > 1:
@@ -150,7 +151,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
              'gal' in config and isinstance(config['gal'],dict) and 'type' in config['gal'] and
              config['gal']['type'] == 'Ring' and 'num' in config['gal'] ):
             min_nim = galsim.config.ParseValue(config['gal'], 'num', config, int)[0]
-            if logger:
+            if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('file %d: Found ring: num = %d',config.get('file_num',0),min_nim)
         if max_nim < min_nim: 
             nim_per_task = min_nim
@@ -158,7 +159,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
             import math
             # This formula keeps nim a multiple of min_nim, so Rings are intact.
             nim_per_task = min_nim * int(math.sqrt(float(max_nim) / float(min_nim)))
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: nim_per_task = %d',config.get('file_num',0),nim_per_task)
 
         # The logger is not picklable, se we set up a proxy object.  See comments in process.py
@@ -221,7 +222,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
                 weight_images[k] = result[2]
                 badpix_images[k] = result[3]
                 k += 1
-            if logger:
+            if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('%s: Successfully returned results for images %d--%d', proc, k0, k-1)
 
         # Stop the processes
@@ -257,13 +258,13 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
             weight_images += [ result[2] ]
             badpix_images += [ result[3] ]
             t2 = time.time()
-            if logger:
+            if logger and logger.isEnabledFor(logging.INFO):
                 # Note: numpy shape is y,x
                 ys, xs = result[0].array.shape
                 logger.info('Image %d: size = %d x %d, time = %f sec', image_num+k, xs, ys, t2-t1)
             obj_num += galsim.config.GetNObjForImage(config, image_num+k)
 
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: Done making images %d--%d',config.get('file_num',0),
                      image_num,image_num+nimages-1)
 
@@ -292,7 +293,7 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
     config['image_num'] = image_num
     config['obj_num'] = obj_num
 
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: BuildImage: image, obj = %d,%d',image_num,image_num,obj_num)
 
     # Make config['image'] exist if it doesn't yet.
@@ -367,7 +368,7 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     config['image_num'] = image_num
     config['obj_num'] = obj_num
 
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: BuildSingleImage: image, obj = %d,%d',image_num,image_num,obj_num)
 
     if 'random_seed' in config['image'] and not isinstance(config['image']['random_seed'],dict):
@@ -398,7 +399,7 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     config['image_ysize'] = ysize
     convention = params.get('index_convention','1')
     _set_image_origin(config,convention)
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: image_origin = %s',image_num,str(config['image_origin']))
         logger.debug('image %d: image_center = %s',image_num,str(config['image_center']))
 
@@ -441,7 +442,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     config['image_num'] = image_num
     config['obj_num'] = obj_num
 
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: BuildTiledImage: image, obj = %d,%d',image_num,image_num,obj_num)
 
     if 'random_seed' in config['image'] and not isinstance(config['image']['random_seed'],dict):
@@ -463,7 +464,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     nobjects = nx_tiles * ny_tiles
     config['nx_tiles'] = nx_tiles
     config['ny_tiles'] = ny_tiles
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: n_tiles = %d, %d',image_num,nx_tiles,ny_tiles)
 
     stamp_size = params.get('stamp_size',0)
@@ -500,12 +501,12 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
             "!= required (%d,%d)."%(config['image_force_xsize'],config['image_force_ysize']))
     config['image_xsize'] = full_xsize
     config['image_ysize'] = full_ysize
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: image_size = %d, %d',image_num,full_xsize,full_ysize)
 
     convention = params.get('index_convention','1')
     _set_image_origin(config,convention)
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: image_origin = %s',image_num,str(config['image_origin']))
         logger.debug('image %d: image_center = %s',image_num,str(config['image_center']))
 
@@ -520,7 +521,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         config['index_key'] = 'obj_num'
         seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
         config['index_key'] = 'image_num'
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('image %d: seed = %d',image_num,seed)
         rng = galsim.BaseDeviate(seed)
     else:
@@ -640,7 +641,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
             draw_method = galsim.config.GetCurrentValue('image.draw_method','Tiled',config,str)
 
             if max_current_var > 0:
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('image %d: maximum noise varance in any stamp is %f',
                                  config['image_num'], max_current_var)
                 import numpy
@@ -693,7 +694,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     config['image_num'] = image_num
     config['obj_num'] = obj_num
 
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: BuildScatteredImage: image, obj = %d,%d',
                      image_num,image_num,obj_num)
 
@@ -702,7 +703,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     nobjects = GetNObjForScatteredImage(config,image_num)
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: nobj = %d',image_num,nobjects)
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs', 'nproc',
@@ -743,7 +744,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     convention = params.get('index_convention','1')
     _set_image_origin(config,convention)
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: image_origin = %s',image_num,str(config['image_origin']))
         logger.debug('image %d: image_center = %s',image_num,str(config['image_center']))
 
@@ -758,7 +759,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         config['index_key'] = 'obj_num'
         seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
         config['index_key'] = 'image_num'
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('image %d: seed = %d',image_num,seed)
         rng = galsim.BaseDeviate(seed)
     else:
@@ -851,7 +852,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
             if make_badpix_image:
                 full_badpix_image[bounds] |= badpix_images[k][bounds]
         else:
-            if logger:
+            if logger and logger.isEnabledFor(logging.INFO):
                 logger.warn(
                     "Object centered at (%d,%d) is entirely off the main image,\n"%(
                         images[k].bounds.center().x, images[k].bounds.center().y) +
@@ -879,7 +880,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
             # Update this, since overlapping postage stamps may have led to a larger 
             # value in some pixels.
             max_current_var = numpy.max(noise_image.array)
-            if logger:
+            if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('image %d: maximum noise varance in any pixel is %f',
                              config['image_num'], max_current_var)
             # Figure out how much noise we need to add to each pixel.

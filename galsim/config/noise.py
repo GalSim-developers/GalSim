@@ -17,6 +17,7 @@
 #
 
 import galsim
+import logging
 
 valid_noise_types = { 
     # The values in the tuple are:
@@ -137,7 +138,7 @@ def AddNoiseGaussian(noise, config, draw_method, rng, im, weight_im, current_var
     # If we already have some variance in the image (from whitening), then we subtract this much
     # from sigma**2.
     if current_var: 
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
                          config['image_num'],config['obj_num'],var,current_var)
         if var < current_var:
@@ -150,7 +151,7 @@ def AddNoiseGaussian(noise, config, draw_method, rng, im, weight_im, current_var
     sigma = math.sqrt(var)
     im.addNoise(galsim.GaussianNoise(rng,sigma=sigma))
 
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d, obj %d: Added Gaussian noise with sigma = %f',
                      config['image_num'],config['obj_num'],sigma)
 
@@ -225,7 +226,7 @@ def AddNoisePoisson(noise, config, draw_method, rng, im, weight_im, current_var,
     # off of the sky level.  It's not precisely accurate, since the existing variance is Gaussian,
     # rather than Poisson, but it's the best we can do.
     if current_var:
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
                          config['image_num'],config['obj_num'],extra_sky, current_var)
         if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
@@ -263,7 +264,7 @@ def AddNoisePoisson(noise, config, draw_method, rng, im, weight_im, current_var,
         im.addNoise(galsim.PoissonNoise(rng))
         im -= extra_sky
 
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d, obj %d: Added Poisson noise with sky = %f',
                      config['image_num'],config['obj_num'],sky)
 
@@ -372,7 +373,7 @@ def AddNoiseCCD(noise, config, draw_method, rng, im, weight_im, current_var, sky
     # not precisely accurate, since the existing variance is Gaussian, rather than Poisson, but 
     # it's the best we can do.
     if current_var:
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
                          config['image_num'],config['obj_num'],
                          read_noise_var+extra_sky, current_var)
@@ -427,7 +428,7 @@ def AddNoiseCCD(noise, config, draw_method, rng, im, weight_im, current_var, sky
         im.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
         im -= extra_sky
 
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d, obj %d: Added CCD noise with sky = %f, ' +
                      'gain = %f, read_noise = %f',
                      config['image_num'],config['obj_num'],sky,gain,read_noise)
@@ -484,7 +485,7 @@ def AddNoiseCOSMOS(noise, config, draw_method, rng, im, weight_im, current_var, 
 
     # Subtract off the current variance if any
     if current_var:
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
                          config['image_num'],config['obj_num'], var, current_var)
         if var < current_var:
@@ -495,7 +496,7 @@ def AddNoiseCOSMOS(noise, config, draw_method, rng, im, weight_im, current_var, 
     # Add the noise to the image
     im.addNoise(cn)
 
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d, obj %d: Added COSMOS correlated noise with variance = %f',
                      config['image_num'],config['obj_num'],var)
 

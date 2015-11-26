@@ -17,6 +17,7 @@
 #
 
 import galsim
+import logging
 
 def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
                 xsize=0, ysize=0, do_noise=True,
@@ -51,7 +52,7 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
         for job in iter(input.get, 'STOP'):
             try :
                 (obj_num, nobj, info) = job
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('%s: Received job to do %d stamps, starting with %d',
                                  proc,nobj,obj_num)
                 results = []
@@ -62,11 +63,11 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
                     # Note: numpy shape is y,x
                     ys, xs = result[0].array.shape
                     t = result[5]
-                    if logger:
+                    if logger and logger.isEnabledFor(logging.INFO):
                         logger.info('%s: Stamp %d: size = %d x %d, time = %f sec', 
                                     proc, obj_num+k, xs, ys, t)
                 output.put( (results, info, proc) )
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('%s: Finished job %d -- %d',proc,obj_num,obj_num+nobj-1)
             except Exception as e:
                 import traceback
@@ -74,7 +75,7 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
                 if logger:
                     logger.error('%s: Caught exception %s\n%s',proc,str(e),tr)
                 output.put( (e, info, tr) )
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('%s: Received STOP',proc)
     
     # The kwargs to pass to build_func.
@@ -88,7 +89,7 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
     }
 
     if nproc > nobjects:
-        if logger:
+        if logger and logger.isEnabledFor(logging.WARN):
             logger.warn(
                 "Trying to use more processes than objects: image.nproc=%d, "%nproc +
                 "nobjects=%d.  Reducing nproc to %d."%(nobjects,nobjects))
@@ -103,13 +104,13 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
                 nproc = nobjects
             else:
                 nproc = ncpu
-            if logger:
-                logger.info("ncpu = %d.  Using %d processes",ncpu,nproc)
+            if logger and logger.isEnabledFor(logging.WARN):
+                logger.warn("ncpu = %d.  Using %d processes",ncpu,nproc)
         except:
-            if logger:
+            if logger and logger.isEnabledFor(logging.WARN):
                 logger.warn("config.image.nproc <= 0, but unable to determine number of cpus.")
             nproc = 1
-            if logger:
+            if logger and logger.isEnabledFor(logging.INFO):
                 logger.info("Unable to determine ncpu.  Using %d processes",nproc)
     
     if nproc > 1:
@@ -204,7 +205,7 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
                 badpix_images[k] = result[3]
                 current_vars[k] = result[4]
                 k += 1
-            if logger:
+            if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('%s: Successfully returned results for stamps %d--%d', proc, k0, k-1)
 
         # Stop the processes
@@ -239,14 +240,14 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
             weight_images += [ result[2] ]
             badpix_images += [ result[3] ]
             current_vars += [ result[4] ]
-            if logger:
+            if logger and logger.isEnabledFor(logging.INFO):
                 # Note: numpy shape is y,x
                 ys, xs = result[0].array.shape
                 t = result[5]
                 logger.info('Stamp %d: size = %d x %d, time = %f sec', obj_num+k, xs, ys, t)
 
 
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: Done making stamps',config.get('image_num',0))
 
     return images, psf_images, weight_images, badpix_images, current_vars
@@ -280,7 +281,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
     # Initialize the random number generator we will be using.
     if 'random_seed' in config['image']:
         seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('obj %d: seed = %d',obj_num,seed)
         rng = galsim.BaseDeviate(seed)
     else:
@@ -355,11 +356,11 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             # Save these values for possible use in Evals or other modules
             if image_pos is not None:
                 config['image_pos'] = image_pos
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('obj %d: image_pos = %s',obj_num,str(config['image_pos']))
             if world_pos is not None:
                 config['world_pos'] = world_pos
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('obj %d: world_pos = %s',obj_num,str(config['world_pos']))
 
             if image_pos is not None:
@@ -416,8 +417,9 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                     raise AttributeError("At least one of gal or psf must be specified in config.")
 
             except galsim.config.gsobject.SkipThisObject, e:
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('obj %d: Caught SkipThisObject: e = %s',obj_num,e.msg)
+                if logger and logger.isEnabledFor(logging.INFO):
                     if e.msg:
                         # If there is a message, upgrade to info level
                         logger.info('Skipping object %d: %s',obj_num,e.msg)
@@ -490,7 +492,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
 
             t6 = time.time()
 
-            if logger:
+            if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('obj %d: Times: %f, %f, %f, %f, %f',
                              obj_num, t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
 
@@ -500,7 +502,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 # Then this was the last try.  Just re-raise the exception.
                 raise
             else:
-                if logger:
+                if logger and logger.isEnabledFor(logging.INFO):
                     logger.info('Object %d: Caught exception %s',obj_num,str(e))
                     logger.info('This is try %d/%d, so trying again.',itry+1,ntries)
                 # Need to remove the "current_val"s from the config dict.  Otherwise,
@@ -579,10 +581,10 @@ def DrawStamp(psf, gal, config, xsize, ysize, offset, method, logger=None):
         if method != 'phot':
             raise AttributeError('n_photons is invalid with method != phot')
         if 'max_extra_noise' in config['image']:
-            import warnings
-            warnings.warn(
-                "Both 'max_extra_noise' and 'n_photons' are set in config['image'], "+
-                "ignoring 'max_extra_noise'.")
+            if logger and logger.isEnabledFor(logging.WARN):
+                logger.warn(
+                    "Both 'max_extra_noise' and 'n_photons' are set in config['image'], "+
+                    "ignoring 'max_extra_noise'.")
         kwargs['n_photons'] = galsim.config.ParseValue(config['image'], 'n_photons', config, int)[0]
     elif 'image' in config and 'max_extra_noise' in config['image']:
         if method != 'phot':
@@ -625,14 +627,14 @@ def DrawStamp(psf, gal, config, xsize, ysize, offset, method, logger=None):
                     raise AttributeError('Only one of whiten or symmetrize is allowed')
                 whiten, safe = galsim.config.ParseValue(noise, 'whiten', config, bool)
                 current_var = final.noise.whitenImage(im)
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('obj %d: whitening noise brought current var to %f',
                                  config['obj_num'],current_var)
 
             elif 'symmetrize' in noise:
                 symmetrize, safe = galsim.config.ParseValue(noise, 'symmetrize', config, int)
                 current_var = final.noise.symmetrizeImage(im, symmetrize)
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('obj %d: symmetrizing noise brought current var to %f',
                                  config['obj_num'],current_var)
 
@@ -699,7 +701,7 @@ def DrawPSFStamp(psf, config, bounds, offset, method, logger=None):
     # Special: if the galaxy was shifted, then also shift the psf 
     if 'shift' in config['gal']:
         gal_shift = galsim.config.GetCurrentValue('gal.shift','psf',config)
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('obj %d: psf shift (1): %s',config['obj_num'],str(gal_shift))
         psf = psf.shift(gal_shift)
 
