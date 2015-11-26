@@ -245,7 +245,7 @@ class COSMOSCatalog(object):
     def getNObjects(self) : return self.nobjects
 
     def makeGalaxy(self, index=None, gal_type=None, chromatic=False, noise_pad_size=5,
-                   deep=False, rng=None, gsparams=None):
+                   deep=False, sersic_prec=0.05, rng=None, gsparams=None):
         """
         Routine to construct GSObjects corresponding to the catalog entry with a particular index 
         or indices.
@@ -293,6 +293,13 @@ class COSMOSCatalog(object):
                                 ridiculous choice.]
         @param deep             Modify fluxes and sizes of galaxies in order to roughly simulate
                                 an F814W<25 sample? [default: False]
+        @param sersic_prec      The desired precision on the Sersic index n in parametric galaxies.
+                                GalSim is significantly faster if it gets a smallish number of
+                                Sersic values, so it can cache some of the calculations and use
+                                them again the next time it gets a galaxy with the same index.
+                                If `sersic_prec` is 0.0, then use the exact value of index n from
+                                the catalog.  But if it is >0, then round the index to that
+                                precision.  [default: 0.05]
         @param rng              A random number generator to use for selecting a random galaxy
                                 (may be any kind of BaseDeviate or None) and to use in generating
                                 any noise field when padding.  [default: None]
@@ -338,7 +345,7 @@ class COSMOSCatalog(object):
                 raise RuntimeError("Cannot yet make real chromatic galaxies!")
             gal_list = self._makeReal(indices, noise_pad_size, rng, gsparams)
         else:
-            gal_list = self._makeParametric(indices, chromatic, gsparams)
+            gal_list = self._makeParametric(indices, chromatic, sersic_prec, gsparams)
 
         # If deep, rescale the size and flux
         if deep:
@@ -359,7 +366,7 @@ class COSMOSCatalog(object):
                                    noise_pad_size=noise_pad_size, rng=rng, gsparams=gsparams)
                  for i in indices ]
 
-    def _makeParametric(self, indices, chromatic, gsparams):
+    def _makeParametric(self, indices, chromatic, sersic_prec, gsparams):
         if chromatic:
             # Defer making the Bandpass and reading in SEDs until we actually are going to use them.
             # It's not a huge calculation, but the thin() call especially isn't trivial.
@@ -390,13 +397,18 @@ class COSMOSCatalog(object):
         gal_list = []
         for index in indices:
             record = self.param_cat[self.orig_index[index]]
-            gal = self._buildParametric(record, gsparams, chromatic, self._bandpass, self._sed)
+            gal = self._buildParametric(record, sersic_prec, gsparams,
+                                        chromatic, self._bandpass, self._sed)
             gal_list.append(gal)
 
         return gal_list
 
     @staticmethod
-    def _buildParametric(record, gsparams=None, chromatic=False, bandpass=None, sed=None):
+    def _round_sersic(n, sersic_prec):
+        return float(int(n/sersic_prec + 0.5)) * sersic_prec
+
+    @staticmethod
+    def _buildParametric(record, sersic_prec, gsparams, chromatic, bandpass=None, sed=None):
         # Get fit parameters.  For 'sersicfit', the result is an array of 8 numbers for each
         # galaxy:
         #     SERSICFIT[0]: intensity of light profile at the half-light radius.
@@ -511,6 +523,10 @@ class COSMOSCatalog(object):
             # in case other samples are swapped in that go to higher value of sersic n.
             if gal_n < 0.3: gal_n = 0.3
             if gal_n > 6.0: gal_n = 6.0
+            # GalSim is much more efficient if only a finite number of Sersic n values are used.
+            # This (optionally given constructor args) rounds n to the nearest 0.01.
+            if sersic_prec > 0.:
+                gal_n = COSMOSCatalog._round_sersic(gal_n, sersic_prec)
             gal_q = sparams[3]
             gal_beta = sparams[7]*galsim.radians
             gal_hlr = cosmos_pix_scale*np.sqrt(gal_q)*sparams[1]
@@ -564,7 +580,7 @@ class COSMOSCatalog(object):
 
     @staticmethod
     def _makeSingleGalaxy(cosmos_catalog, index, gal_type, noise_pad_size=5, deep=False,
-                          rng=None, gsparams=None):
+                          rng=None, sersic_prec=0.05, gsparams=None):
         # A static function that mimics the functionality of COSMOSCatalog.makeGalaxy()
         # for single index and chromatic=False.
         # The only point of this class is to circumvent some pickling issues when using
@@ -590,7 +606,7 @@ class COSMOSCatalog(object):
                                     gsparams=gsparams)
         else:
             record = cosmos_catalog.getParametricRecord(index)
-            gal = COSMOSCatalog._buildParametric(record, gsparams=gsparams)
+            gal = COSMOSCatalog._buildParametric(record, sersic_prec, gsparams, chromatic=False)
 
         # If deep, rescale the size and flux
         if deep:
@@ -611,7 +627,8 @@ class COSMOSCatalog(object):
     makeGalaxy._opt_params = { "index" : int,
                                "gal_type" : str,
                                "noise_pad_size" : float,
-                               "deep" : bool
+                               "deep" : bool,
+                               "sersic_prec": float,
                              }
     makeGalaxy._single_params = []
     makeGalaxy._takes_rng = True
