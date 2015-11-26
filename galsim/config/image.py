@@ -62,11 +62,11 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
         config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     import time
-    def worker(input, output):
+    def worker(input, output, kwargs, logger):
         proc = current_process().name
         for job in iter(input.get, 'STOP'):
             try :
-                (kwargs, image_num, obj_num, nim, info, logger) = job
+                (image_num, obj_num, nim, info) = job
                 if logger:
                     logger.debug('%s: Received job to do %d images, starting with %d',
                                  proc,nim,image_num)
@@ -173,15 +173,8 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
         # Set up the task list
         task_queue = Queue()
         for k in range(0,nimages,nim_per_task):
-            import copy
-            kwargs1 = copy.copy(kwargs)
-            kwargs1['config'] = galsim.config.CopyConfig(config)
-            if logger:
-                logger_proxy = logger_manager.logger()
-            else:
-                logger_proxy = None
             nim1 = min(nim_per_task, nimages-k)
-            task_queue.put( ( kwargs1, image_num+k, obj_num, nim1, k, logger_proxy ) )
+            task_queue.put( ( image_num+k, obj_num, nim1, k ) )
             for i in range(nim1):
                 obj_num += galsim.config.GetNObjForImage(config, image_num+k+i)
 
@@ -191,8 +184,16 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
         # until there is one to grab. When it finds a 'STOP', it shuts down. 
         done_queue = Queue()
         p_list = []
+        import copy
+        kwargs1 = copy.copy(kwargs)
+        kwargs1['config'] = galsim.config.CopyConfig(config)
+        if logger:
+            logger_proxy = logger_manager.logger()
+        else:
+            logger_proxy = None
         for j in range(nproc):
-            p = Process(target=worker, args=(task_queue, done_queue), name='Process-%d'%(j+1))
+            p = Process(target=worker, args=(task_queue, done_queue, kwargs1, logger_proxy),
+                        name='Process-%d'%(j+1))
             p.start()
             p_list.append(p)
 

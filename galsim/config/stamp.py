@@ -46,19 +46,18 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
     """
     config['obj_num'] = obj_num
 
-    def worker(input, output):
+    def worker(input, output, kwargs, config, logger):
         proc = current_process().name
         for job in iter(input.get, 'STOP'):
             try :
-                (kwargs, obj_num, nobj, info, logger) = job
+                (obj_num, nobj, info) = job
                 if logger:
                     logger.debug('%s: Received job to do %d stamps, starting with %d',
                                  proc,nobj,obj_num)
                 results = []
                 for k in range(nobj):
-                    kwargs['obj_num'] = obj_num + k
-                    kwargs['logger'] = logger
-                    result = BuildSingleStamp(**kwargs)
+                    result = BuildSingleStamp(config=config, logger=logger, obj_num=obj_num+k,
+                                              **kwargs)
                     results.append(result)
                     # Note: numpy shape is y,x
                     ys, xs = result[0].array.shape
@@ -154,16 +153,10 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
 
         # Set up the task list
         task_queue = Queue()
+        import copy
         for k in range(0,nobjects,nobj_per_task):
-            import copy
-            kwargs1 = copy.copy(kwargs)
-            kwargs1['config'] = galsim.config.CopyConfig(config)
-            if logger:
-                logger_proxy = logger_manager.logger()
-            else:
-                logger_proxy = None
             nobj1 = min(nobj_per_task, nobjects-k)
-            task_queue.put( ( kwargs1, obj_num+k, nobj1, k, logger_proxy ) )
+            task_queue.put( ( obj_num+k, nobj1, k ) )
 
         # Run the tasks
         # Each Process command starts up a parallel process that will keep checking the queue 
@@ -171,13 +164,19 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
         # until there is one to grab. When it finds a 'STOP', it shuts down. 
         done_queue = Queue()
         p_list = []
+        config1 = galsim.config.CopyConfig(config)
+        if logger:
+            logger_proxy = logger_manager.logger()
+        else:
+            logger_proxy = None
         for j in range(nproc):
             # The name is actually the default name for the first time we do this,
             # but after that it just keeps incrementing the numbers, rather than starting
             # over at Process-1.  As far as I can tell, it's not actually spawning more 
             # processes, so for the sake of the info output, we name the processes 
             # explicitly.
-            p = Process(target=worker, args=(task_queue, done_queue), name='Process-%d'%(j+1))
+            p = Process(target=worker, args=(task_queue, done_queue, kwargs, config1, logger_proxy),
+                        name='Process-%d'%(j+1))
             p.start()
             p_list.append(p)
 

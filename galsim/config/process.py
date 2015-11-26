@@ -116,7 +116,7 @@ class InputGetter:
 def CopyConfig(config):
     """
     If you want to use a config dict for multiprocessing, you need to deep copy
-    the gal, psf, and pix fields, since they get cache values that are not picklable.
+    the gal, psf, and pix fields, since they cache values that are not picklable.
     If you don't do the deep copy, then python balks when trying to send the updated
     config dict back to the root process.  We do this a few different times, so encapsulate
     the copy semantics once here.
@@ -445,14 +445,15 @@ def Process(config, logger=None):
                 logger.warn("config.output.nproc <= 0, but unable to determine number of cpus.")
             nproc = 1
 
-    def worker(input, output):
+    def worker(input, output, config, logger):
         proc = current_process().name
         for job in iter(input.get, 'STOP'):
             try:
-                (kwargs, file_num, file_name, logger) = job
+                (kwargs, file_num, file_name) = job
                 if logger:
                     logger.debug('%s: Received job to do file %d, %s',proc,file_num,file_name)
-                ProcessInput(kwargs['config'], file_num=file_num, logger=logger)
+                ProcessInput(config, file_num=file_num, logger=logger)
+                kwargs['config'] = config
                 if logger:
                     logger.debug('%s: After ProcessInput for file %d',proc,file_num)
                 kwargs['logger'] = logger
@@ -466,6 +467,8 @@ def Process(config, logger=None):
                 if logger:
                     logger.debug('%s: Caught exception %s\n%s',proc,str(e),tr)
                 output.put( (e, file_num, file_name, tr) )
+        if logger:
+            logger.debug('%s: Received STOP',proc)
 
     # Set up the multi-process task_queue if we're going to need it.
     if nproc > 1:
@@ -514,10 +517,16 @@ def Process(config, logger=None):
     if ( 'image' in config 
          and 'random_seed' in config['image'] 
          and not isinstance(config['image']['random_seed'],dict) ):
-        config['first_seed'] = galsim.config.ParseValue(
-                config['image'], 'random_seed', config, int)[0]
+        first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        config['image']['random_seed'] = {
+            'type' : 'Sequence' ,
+            'index_key' : 'obj_num',
+            'first' : first
+        }
 
     nfiles_use = nfiles
+    # We'll want a pristine version later to give to the workers.
+    orig_config = CopyConfig(config)
     for file_num in range(nfiles):
         if logger:
             logger.debug('file_num, image_num, obj_num = %d,%d,%d',file_num,image_num,obj_num)
@@ -532,14 +541,6 @@ def Process(config, logger=None):
 
         # Process the input fields that might be relevant at file scope:
         ProcessInput(config, file_num=file_num, logger=logger_proxy, file_scope_only=True)
-
-        # Set up random_seed appropriately if necessary.
-        if 'first_seed' in config:
-            config['image']['random_seed'] = {
-                'type' : 'Sequence' ,
-                'index_key' : 'obj_num',
-                'first' : config['first_seed']
-            }
 
         # It is possible that some items at image scope could need a random number generator.
         # For example, in demo9, we have a random number of objects per image.
@@ -613,7 +614,7 @@ def Process(config, logger=None):
             nfiles_use -= 1
             continue
 
-        # Check if we need to build extra images for write out as well
+        # Check if we need to build extra images to write out as well
         for extra_key in [ key for key in extra_keys if key in output ]:
             if logger:
                 logger.debug('extra_key = %s',extra_key)
@@ -667,18 +668,10 @@ def Process(config, logger=None):
         # Otherwise, we just call build_func.
         if nproc > 1:
             import copy
-            # Make new copies of config and kwargs so we can update them without
+            # Make new copies of kwargs so we can update them without
             # clobbering the versions for other tasks on the queue.
             kwargs1 = copy.copy(kwargs)
-            # Clear out unsafe proxy objects, since there seems to be a bug in the manager
-            # package where this can cause strange KeyError exceptions in the incref function.
-            # It seems to be related to having multiple identical proxy objects that then
-            # get deleted.  e.g. if the first N files use one dict, then the next N use another,
-            # and so forth.  I don't really get it, but clearing them out here seems to 
-            # fix the problem.
-            ProcessInput(config, file_num=file_num, logger=logger_proxy, safe_only=True)
-            kwargs1['config'] = CopyConfig(config)
-            task_queue.put( (kwargs1, file_num, file_name, logger_proxy) )
+            task_queue.put( (kwargs1, file_num, file_name) )
         else:
             try:
                 ProcessInput(config, file_num=file_num, logger=logger_proxy)
@@ -709,7 +702,8 @@ def Process(config, logger=None):
         done_queue = Queue()
         p_list = []
         for j in range(nproc):
-            p = Process(target=worker, args=(task_queue, done_queue), name='Process-%d'%(j+1))
+            p = Process(target=worker, args=(task_queue, done_queue, orig_config, logger_proxy),
+                        name='Process-%d'%(j+1))
             p.start()
             p_list.append(p)
 
@@ -812,6 +806,17 @@ def BuildFits(file_name, config, logger=None,
                 'index_key' : 'obj_num',
                 'first' : first 
         }
+
+    if 'random_seed' in config['image']:
+        config['index_key'] = 'obj_num'
+        seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        config['index_key'] = 'file_num'
+        if logger:
+            logger.debug('file %d: seed = %d',file_num,seed)
+        rng = galsim.BaseDeviate(seed)
+    else:
+        rng = galsim.BaseDeviate()
+    config['rng'] = rng
 
     # hdus is a dict with hdus[i] = the item in all_images to put in the i-th hdu.
     hdus = {}
@@ -944,6 +949,17 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
                 'first' : first 
         }
 
+    if 'random_seed' in config['image']:
+        config['index_key'] = 'obj_num'
+        seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        config['index_key'] = 'file_num'
+        if logger:
+            logger.debug('file %d: seed = %d',file_num,seed)
+        rng = galsim.BaseDeviate(seed)
+    else:
+        rng = galsim.BaseDeviate()
+    config['rng'] = rng
+
     if psf_file_name:
         make_psf_image = True
     else:
@@ -1063,6 +1079,17 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
                 'index_key' : 'obj_num',
                 'first' : first 
         }
+
+    if 'random_seed' in config['image']:
+        config['index_key'] = 'obj_num'
+        seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        config['index_key'] = 'file_num'
+        if logger:
+            logger.debug('file %d: seed = %d',file_num,seed)
+        rng = galsim.BaseDeviate(seed)
+    else:
+        rng = galsim.BaseDeviate()
+    config['rng'] = rng
 
     if psf_file_name:
         make_psf_image = True
