@@ -33,8 +33,14 @@ psf:
 
     # The optical component 
     -   type: OpticalPSF
+        # The Optical component for ground is based sort of on the Blanco 4m telescope at
+        # Cerro Tololo.  However, we allow a fairly wide range of lambda/D values that cover
+        # a plausible range of visible wavelengths and large ground-based telescopes.
         lam_over_diam: { type: Random, min: 0.013, max: 0.083 }
+
+        # Also a range of obscuration fractions.
         obscuration: { type: Random, min: 0.1, max: 0.5 }
+
         # Despite sort of modeling off of DECam (with 4 struts), they didn't use 
         # any struts for the ground psfs.
         nstruts: 0
@@ -44,8 +50,7 @@ psf:
         # Unfortunately, this makes a couple PSFs into donuts, which was a problem.
         # According to Aaron Roodma, for DES the appropriate rms values are closer to
         # [ 0.13, 0.13, 0.14, 0.06, 0.06, 0.05, 0.06, 0.03 ]
-        # which has an rms of 0.26 waves, much less than 0.41, so probably that was too
-        # large a target.
+        # which has an rms of 0.26 waves, so probably 0.41 was too large a target.
         defocus: { type: RandomGaussian, sigma: 0.36 }
         astig1: { type: RandomGaussian, sigma: 0.07 }
         astig2: { type: RandomGaussian, sigma: 0.07 }
@@ -57,9 +62,9 @@ psf:
 
         # Sometimes the OpticalPSF wants to make a very large image of the PSF.  But if the
         # PSF image is larger than the postage stamp onto which we will draw the object,
-        # the larger area is mostly wasted.  Setting max_size 
-        # 
-        # This is in arcsec, so stamp_size * pixel_scale
+        # the larger area is mostly wasted.  Setting max_size to the size of the postage stamp
+        # we will eventually draw onto helps avoid wasted calculations.
+        # This is in arcsec, so max_size = stamp_size * pixel_scale
         max_size: "$48 * 0.2"
         suppress_warning: true
 
@@ -75,20 +80,25 @@ gal:
         # Randomly spin the original profile
         rotate: { type: Random }
 
-        # Make the galaxies a bit smaller and fainter to simulate a fainter sample
-        # ??? Apparently only the size is rescaled.  In the Great3 scripts, it seems that
-        # flux_rescale is just set to 1/nepochs.  So just 1.0 for single epoch branches.
+        # The COSMOS galaxies are a bit brighter than was wanted for Great3, so make them
+        # a bit smaller to simulate a fainter sample.
+        # However, in the great3 scripts, it seems that only the size is rescaled, not the flux.
+        # They just set flux_rescale to 1/nepochs.  So just 1.0 for single epoch branches.
         dilate: 0.6
         scale_flux: 1.0
 
-    # AFAICT, this was never changed from the default mu=1.
+    # This was just 1 for constant shear branches.
     magnification: 1
 
     # The shear was chosen randomly within an annulus with 0.01 < |g| < 0.05.
     shear:
         type: GBeta
+        # Change the shear every image, not every object.
         index_key : image_num
         g: 
+            # The probability distribution is linear in |g|: P(g) ~ g. So equal probability per
+            # area within the annulus.  (RandomDistribution automatically renormalizes to have
+            # the total integrated probability equal to 1.0.)
             type: RandomDistribution
             function: x
             x_min: 0.01
@@ -110,16 +120,21 @@ image:
     ny_tiles: 100
     stamp_size: 48
     pixel_scale: 0.2
+
     random_seed: 31415
-    order: random # Scramble the order of the ring pairs, so they aren't next to each other
+
+    # Scramble the order of the ring pairs, so they aren't next to each other
+    order: random 
 
     # Simple Gaussian noise.  Although there is a weird thing they did to have the noise
-    # variance be larger for smaller seeing fwhm.
+    # variance be larger for smaller seeing fwhm.  cf. fmax_var in eval_variables above.
     noise:
         type: Gaussian
         variance: 
+            # Vary 5% around the nominal variance level.
+            # The implicit index_key here is image_num, so this will be the same for all
+            # postage stamps on an image, but then change for the next image.
             type: Random
-            # Vary 5% around some nominal variance level. (See fmax_var in eval_variables above.)
             min: '$0.95 * max_var'
             max: '$1.05 * max_var'
         whiten: True
@@ -132,7 +147,10 @@ image:
 
     # This means the code will parallelize the creation of a single output file,
     # splitting up the postage stamps among the available cores.
-    #nproc: -1
+    # This is normally overridden by the output.nproc item below, so the parellelization
+    # will be done over files instead.  But if you modify this to only do one file or
+    # set output.nproc=1, then this stamp-based parallelization will turn on.
+    nproc: -1
 
     # Sometimes the ffts need to be a bit bigger than is allowed by default...
     gsparams: {maximum_fft_size: 10240}
@@ -142,13 +160,14 @@ input:
         # If the command galsim_download_cosmos has been run, the catalog will have been downloaed
         # from the GalSim web site and saved in a directory that GalSim knows about. 
         # So file_name and dir are not necessary. 
+
         # We just need some parameters to tell it which galaxies to include in the selection.
         # For now, just a maximum hlr to exclude huge objects, although cf. issue #693.
         max_hlr : 2.5  # arcsec
 
         # This still leaves in a lot of bright objects that visibly overflow the edge of the 
         # postage stamps.  Great3 imposed a maximum S/N of 100 and a minimum of 17.
-        # Using the noise over 50 pixels as a *rough!* estimate of the total noise
+        # Using the noise over 50 pixels as a *very rough!* estimate of the total noise
         # (50 ~= pi r^2 where r = 4 pixels is close to the typical FWHM.), I find that the 
         # corresponding flux range is around 8 to 50 ADU.
         # Again, hopefully, this can be improved as part of issue #693 and we can
@@ -167,11 +186,16 @@ output:
         items:
         - { type: Sequence, nitems: 200 }
         - 0
+
+    # The full Great3 had 200 files.  Note that to run fewer files than this, you can change this
+    # from the command line as `galsim cgc.yaml output.nfiles=10` say.  Likewise for any other
+    # parameters in the configuration.  This is often more convenient than changing the original
+    # YAML configuration file.
     nfiles: 200
 
     # This means the code will parallelize across the different files, doing a full
     # output file in each core at a time.
-    # This is gernerally the better choice, since it doesn't require as much interprocess
+    # This is generally better than image.nproc, since it doesn't require as much interprocess
     # communication, which can be rather slow.
     nproc: -1
 
