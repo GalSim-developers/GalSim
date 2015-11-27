@@ -274,7 +274,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
         seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('obj %d: seed = %d',obj_num,seed)
-        rng = galsim.BaseDeviate(seed)
+        rng = galsim.BaseDeviate(seed+1)
     else:
         rng = galsim.BaseDeviate()
 

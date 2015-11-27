@@ -509,7 +509,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         # Technically obj_num+nobjects will be the index of the random seed used for the next 
         # image's first object (if there is a next image).  But I don't think that will have 
         # any adverse effects.
-        config['obj_num'] = obj_num + nobjects
+        config['obj_num'] = obj_num
         config['index_key'] = 'obj_num'
         seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
         config['index_key'] = 'image_num'
@@ -747,7 +747,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         # Technically obj_num+nobjects will be the index of the random seed used for the next 
         # image's first object (if there is a next image).  But I don't think that will have 
         # any adverse effects.
-        config['obj_num'] = obj_num + nobjects
+        config['obj_num'] = obj_num
         config['index_key'] = 'obj_num'
         seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
         config['index_key'] = 'image_num'

@@ -137,10 +137,10 @@ def main(argv):
     # explicitly and then construct anything else you need from that.
     # Note: A BaseDeviate cannot be used to generate any values.  It can
     # only be used in the constructor for other kinds of deviates.
-    # The seeds for the objects are random_seed..random_seed+nobj-1 (which comes later), 
-    # so use the next one.
+    # The seeds for the objects are random_seed+1..random_seed+nobj.
+    # The seeds for things at the image or file level use random_seed itself.
     nobj = n_tiles * n_tiles
-    rng = galsim.BaseDeviate(random_seed+nobj)
+    rng = galsim.BaseDeviate(random_seed)
 
     # Setup the images:
     gal_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles)
@@ -173,7 +173,7 @@ def main(argv):
     # Build each postage stamp:
     for k in range(nobj):
         # The usual random number generator using a different seed for each galaxy.
-        rng = galsim.BaseDeviate(random_seed+k)
+        rng = galsim.BaseDeviate(random_seed+k+1)
 
         # Determine the bounds for this stamp and its center position.
         ix = ix_list[k]

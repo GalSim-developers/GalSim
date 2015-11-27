@@ -253,7 +253,7 @@ def main(argv):
         for k in range(nobj):
 
             # Initialize the random number generator we will be using for this object:
-            ud = galsim.UniformDeviate(seed+k)
+            ud = galsim.UniformDeviate(seed+k+1)
 
             # Determine where this object is going to go.
             # We choose points randomly within a donut centered at the center of the main image
@@ -389,11 +389,12 @@ def main(argv):
         full_image += weight_image
 
         # Add Poisson noise, given the current full_image.
-        # Going to the next seed isn't really required, but it matches the behavior of the 
-        # config parser, so doing this will result in identical output files.
-        # If you didn't care about that, you could instead construct this as a continuation
-        # of the last RNG from the above loop
-        rng = galsim.BaseDeviate(seed+nobj)
+        # The config parser uses a different random number generator for file-level and 
+        # image-level values than for the individual objects.  This makes it easier to 
+        # parallelize the calculation if desired.  In fact, this is why we've been adding 1
+        # to each seed value all along.  The seeds for the objects take the values
+        # random_seed+1 .. random_seed+nobj.  The seed for the image is just random_seed.
+        rng = galsim.BaseDeviate(seed)
         full_image.addNoise(galsim.PoissonNoise(rng))
 
         # Subtract the sky back off.

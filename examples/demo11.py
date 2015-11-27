@@ -183,10 +183,10 @@ def main(argv):
     # switch to 0-based indexing, so the lower-left pixel will be called (0,0).
     full_image.setOrigin(0,0)
 
-    # As for demo10, we use random_seed+nobj for the random numbers required for the 
+    # As for demo10, we use random_seed for the random numbers required for the 
     # whole image.  In this case, both the power spectrum realization and the noise on the 
     # full image we apply later.
-    rng = galsim.BaseDeviate(random_seed+nobj)
+    rng = galsim.BaseDeviate(random_seed)
 
     # We want to make random positions within our image.  However, currently for shears from a power
     # spectrum we first have to get shears on a grid of positions, and then we can choose random
@@ -238,7 +238,7 @@ def main(argv):
     for k in range(nobj):
         time1 = time.time()
         # The usual random number generator using a different seed for each galaxy.
-        ud = galsim.UniformDeviate(random_seed+k)
+        ud = galsim.UniformDeviate(random_seed+k+1)
 
         # Choose a random position in the image
         x = ud()*(image_size-1)
