@@ -92,7 +92,6 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
                     "compression" : str }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, file_name=None, dir=None, hdu=None, header=None, compression='auto',
                  wcs=None, origin=None):
@@ -412,7 +411,6 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
                     "compression" : str }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, file_name=None, dir=None, hdu=None, header=None, compression='auto',
                  wcsinfo=None, origin=None):
@@ -665,7 +663,6 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
     _opt_params = { "dir" : str, "origin" : galsim.PositionD }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, file_name, dir=None, origin=None):
         import os
@@ -923,7 +920,6 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
                     "compression" : str }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, file_name=None, dir=None, hdu=None, header=None, compression='auto',
                  origin=None, _data=None):
@@ -1863,6 +1859,5 @@ FitsWCS._req_params = { "file_name" : str }
 FitsWCS._opt_params = { "dir" : str, "hdu" : int, "compression" : str, 'text_file' : bool }
 FitsWCS._single_params = []
 FitsWCS._takes_rng = False
-FitsWCS._takes_logger = False
 
 

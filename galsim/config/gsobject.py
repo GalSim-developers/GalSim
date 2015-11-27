@@ -442,8 +442,6 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
         ignore = ignore)
     safe = safe and safe1
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
-    if logger and logger.isEnabledFor(logging.DEBUG) and galsim.RealGalaxy._takes_logger:
-        kwargs['logger'] = logger
 
     if 'rng' not in base:
         raise ValueError("No base['rng'] available for %s.type = RealGalaxy"%(key))
@@ -524,8 +522,6 @@ def _BuildCOSMOSGalaxy(config, key, base, ignore, gsparams, logger):
         ignore = ignore)
     safe = safe and safe1
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
-    if logger and logger.isEnabledFor(logging.DEBUG) and galsim.RealGalaxy._takes_logger:
-        kwargs['logger'] = logger
 
     if 'gal_type' in kwargs and kwargs['gal_type'] == 'real':
         if 'rng' not in base:
@@ -571,8 +567,6 @@ def _BuildSimple(config, key, base, ignore, gsparams, logger):
                                               single = init_func._single_params,
                                               ignore = ignore)
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
-    if logger and logger.isEnabledFor(logging.DEBUG) and galsim.RealGalaxy._takes_logger:
-        kwargs['logger'] = logger
 
     if init_func._takes_rng:
         if 'rng' not in base:

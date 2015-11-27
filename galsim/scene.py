@@ -142,7 +142,6 @@ class COSMOSCatalog(object):
                   }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, file_name=None, image_dir=None, dir=None, preload=False, noise_dir=None,
                  use_real=True, exclude_fail=True, exclude_bad=True, 
@@ -632,6 +631,5 @@ class COSMOSCatalog(object):
                              }
     makeGalaxy._single_params = []
     makeGalaxy._takes_rng = True
-    makeGalaxy._takes_logger = False
 
 

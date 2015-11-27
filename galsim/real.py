@@ -138,7 +138,6 @@ class RealGalaxy(GSObject):
                   }
     _single_params = [ { "index" : int , "id" : str } ]
     _takes_rng = True
-    _takes_logger = True
 
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, flux_rescale=None,
@@ -384,7 +383,6 @@ class RealGalaxyCatalog(object):
                     'preload' : bool, 'noise_dir' : str }
     _single_params = []
     _takes_rng = False
-    _takes_logger = True
 
     # _nobject_only is an intentionally undocumented kwarg that should be used only by
     # the config structure.  It indicates that all we care about is the nobjects parameter.

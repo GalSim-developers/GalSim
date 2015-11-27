@@ -79,9 +79,6 @@ def BuildWCS(config, logger=None):
 
         kwargs, safe = galsim.config.GetAllParams(image_wcs, type, config, req, opt, single)
 
-        if logger and build_func._takes_logger: 
-            kwargs['logger'] = logger
-
         # This would be weird, but might as well check...
         if build_func._takes_rng:
             if 'rng' not in config:
@@ -127,5 +124,4 @@ TanWCSBuilder._req_params = { "dudx" : float, "dudy" : float, "dvdx" : float, "d
 TanWCSBuilder._opt_params = { "units" : str, "origin" : galsim.PositionD }
 TanWCSBuilder._single_params = []
 TanWCSBuilder._takes_rng = False
-TanWCSBuilder._takes_logger = False
 
