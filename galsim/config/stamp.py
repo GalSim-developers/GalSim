@@ -88,32 +88,22 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
         'make_badpix_image' : make_badpix_image
     }
 
-    if nproc > nobjects:
-        if logger and logger.isEnabledFor(logging.WARN):
-            logger.warn(
-                "Trying to use more processes than objects: image.nproc=%d, "%nproc +
-                "nobjects=%d.  Reducing nproc to %d."%(nobjects,nobjects))
-        nproc = nobjects
+    nproc = galsim.config.UpdateNProc(nproc,logger)
 
-    if nproc <= 0:
-        # Try to figure out a good number of processes to use
-        try:
-            from multiprocessing import cpu_count
-            ncpu = cpu_count()
-            if ncpu > nobjects:
-                nproc = nobjects
-            else:
-                nproc = ncpu
-            if logger and logger.isEnabledFor(logging.WARN):
-                logger.warn("ncpu = %d.  Using %d processes",ncpu,nproc)
-        except:
-            if logger and logger.isEnabledFor(logging.WARN):
-                logger.warn("config.image.nproc <= 0, but unable to determine number of cpus.")
-            nproc = 1
-            if logger and logger.isEnabledFor(logging.INFO):
-                logger.info("Unable to determine ncpu.  Using %d processes",nproc)
-    
+    if nproc > 1 and 'current_nproc' in config:
+        if logger and logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Already multiprocessing.  Ignoring image.nproc")
+        nproc = 1
+ 
+    if nproc > nobjects:
+        if logger and logger.isEnabledFor(logging.DEBUG):
+            logger.debug(
+                "There are only %d objects.  Reducing nproc to %d."%(nobjects,nobjects))
+        nproc = nobjects
+   
     if nproc > 1:
+        if logger and logger.isEnabledFor(logging.WARN):
+            logger.warn("Using %d processes for stamp processing",nproc)
         from multiprocessing import Process, Queue, current_process
         from multiprocessing.managers import BaseManager
 
@@ -166,6 +156,7 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
         done_queue = Queue()
         p_list = []
         config1 = galsim.config.CopyConfig(config)
+        config1['current_nproc'] = nproc
         if logger:
             logger_proxy = logger_manager.logger()
         else:

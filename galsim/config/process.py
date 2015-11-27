@@ -338,6 +338,23 @@ def ProcessInputNObjects(config, logger=None):
     # If didn't find anything, return None.
     return None
 
+def UpdateNProc(nproc, logger=None):
+    """Update nproc to ncpu if nproc <= 0
+    """
+    if nproc <= 0:
+        # Try to figure out a good number of processes to use
+        try:
+            from multiprocessing import cpu_count
+            nproc = cpu_count()
+            if logger and logger.isEnabledFor(logging.DEBUG):
+                logger.debug("ncpu = %d.",nproc)
+        except:
+            if logger and logger.isEnabledFor(logging.WARN):
+                logger.warn("nproc <= 0, but unable to determine number of cpus.")
+                logger.warn("Using single process")
+            nproc = 1
+    return nproc
+ 
 
 def Process(config, logger=None):
     """
@@ -380,7 +397,7 @@ def Process(config, logger=None):
     # nobj_func is the function that builds the nobj_per_file list
     nobj_func = eval(valid_output_types[type][1])
 
-    # can_do_multiple says whether the function can in principal do multiple files
+    # can_do_multiple says whether the function can in principal do multiple images.
     can_do_multiple = valid_output_types[type][2]
 
     # extra_file_name says whether the function takes psf_file_name, etc.
@@ -409,43 +426,20 @@ def Process(config, logger=None):
     # (If nfiles = 1, but nimages > 1, we'll do the multi-processing at the image stage.)
     if 'nproc' in output:
         nproc = galsim.config.ParseValue(output, 'nproc', config, int)[0]
+        nproc = UpdateNProc(nproc,logger)
     else:
         nproc = 1 
 
-    # If set, nproc2 will be passed to the build function to be acted on at that level.
-    nproc2 = None
+    # If set, nproc_image will be passed to the build function to be acted on at that level.
+    nproc_image = None
     if nproc > nfiles:
         if nfiles == 1 and can_do_multiple:
-            nproc2 = nproc 
+            nproc_image = nproc 
             nproc = 1
         else:
-            if logger and logger.isEnabledFor(logging.WARN):
-                logger.warn(
-                    "Trying to use more processes than files: output.nproc=%d, "%nproc +
-                    "output.nfiles=%d.  Reducing nproc to %d."%(nfiles,nfiles))
+            if logger and logger.isEnabledFor(logging.DEBUG):
+                logger.debug("There are only %d files.  Reducing nproc to %d."%(nfiles,nfiles))
             nproc = nfiles
-
-    if nproc <= 0:
-        # Try to figure out a good number of processes to use
-        try:
-            from multiprocessing import cpu_count
-            ncpu = cpu_count()
-            if nfiles == 1 and can_do_multiple:
-                nproc2 = ncpu # Use this value in BuildImages rather than here.
-                nproc = 1
-                if logger and logger.isEnabledFor(logging.DEBUG):
-                    logger.debug("ncpu = %d.",ncpu)
-            else:
-                if ncpu > nfiles:
-                    nproc = nfiles
-                else:
-                    nproc = ncpu
-                if logger and logger.isEnabledFor(logging.WARN):
-                    logger.warn("ncpu = %d.  Using %d processes",ncpu,nproc)
-        except:
-            if logger and logger.isEnabledFor(logging.WARN):
-                logger.warn("config.output.nproc <= 0, but unable to determine number of cpus.")
-            nproc = 1
 
     def worker(input, output, config, logger):
         proc = current_process().name
@@ -584,8 +578,8 @@ def Process(config, logger=None):
             'image_num' : image_num,
             'obj_num' : obj_num
         }
-        if nproc2:
-            kwargs['nproc'] = nproc2
+        if nproc_image:
+            kwargs['nproc'] = nproc_image
 
         output = config['output']
         # This also updates nimages or nobjects as needed if they are being automatically
@@ -699,14 +693,16 @@ def Process(config, logger=None):
     # and process the results.
     if nproc > 1:
         if logger and logger.isEnabledFor(logging.WARN):
-            logger.warn("Using %d processes",nproc)
+            logger.warn("Using %d processes for file processing",nproc)
         import time
         t1 = time.time()
         # Run the tasks
         done_queue = Queue()
         p_list = []
+        config1 = galsim.config.CopyConfig(orig_config)
+        config1['current_nproc'] = nproc
         for j in range(nproc):
-            p = Process(target=worker, args=(task_queue, done_queue, orig_config, logger_proxy),
+            p = Process(target=worker, args=(task_queue, done_queue, config1, logger_proxy),
                         name='Process-%d'%(j+1))
             p.start()
             p_list.append(p)

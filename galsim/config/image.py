@@ -102,32 +102,22 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
         'make_badpix_image' : make_badpix_image
     }
 
+    nproc = galsim.config.UpdateNProc(nproc,logger)
+ 
+    if nproc > 1 and 'current_nproc' in config:
+        if logger and logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Already multiprocessing.  Ignoring nproc for image processing")
+        nproc = 1
+ 
     if nproc > nimages:
-        if logger and logger.isEnabledFor(logging.INFO):
-            logger.warn(
-                "Trying to use more processes than images: output.nproc=%d, "%nproc +
-                "nimages=%d.  Reducing nproc to %d."%(nimages,nimages))
+        if logger and logger.isEnabledFor(logging.DEBUG):
+            logger.debug("There are only %d images.  Reducing nproc to %d."%(nimages,nimages))
         nproc = nimages
 
-    if nproc <= 0:
-        # Try to figure out a good number of processes to use
-        try:
-            from multiprocessing import cpu_count
-            ncpu = cpu_count()
-            if ncpu > nimages:
-                nproc = nimages
-            else:
-                nproc = ncpu
-            if logger and logger.isEnabledFor(logging.WARN):
-                logger.warn("ncpu = %d.  Using %d processes",ncpu,nproc)
-        except:
-            if logger and logger.isEnabledFor(logging.WARN):
-                logger.warn("config.output.nproc <= 0, but unable to determine number of cpus.")
-            nproc = 1
-            if logger and logger.isEnabledFor(logging.INFO):
-                logger.info("Unable to determine ncpu.  Using %d processes",nproc)
- 
     if nproc > 1:
+        if logger and logger.isEnabledFor(logging.WARN):
+            logger.warn("Using %d processes for image processing",nproc)
+
         from multiprocessing import Process, Queue, current_process
         from multiprocessing.managers import BaseManager
 
@@ -187,7 +177,9 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
         p_list = []
         import copy
         kwargs1 = copy.copy(kwargs)
-        kwargs1['config'] = galsim.config.CopyConfig(config)
+        config1 = galsim.config.CopyConfig(config)
+        config1['current_nproc'] = nproc
+        kwargs1['config'] = config1
         if logger:
             logger_proxy = logger_manager.logger()
         else:
@@ -449,7 +441,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
         config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs', 'nproc',
+    ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs', 
                'sky_level', 'sky_level_pixel',
                'retry_failures', 'image_pos', 'n_photons', 'wmult', 'offset', 'gsparams' ]
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
@@ -706,7 +698,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: nobj = %d',image_num,nobjects)
 
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs', 'nproc',
+    ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs',
                'sky_level', 'sky_level_pixel',
                'retry_failures', 'image_pos', 'world_pos', 'n_photons', 'wmult', 'offset', 
                'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams', 'nobjects' ]
