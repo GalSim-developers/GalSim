@@ -25,37 +25,37 @@ bin=../bin  # For galsim executable
 /bin/rm -rf output_yaml
 
 time $python demo1.py || exit
-time $bin/galsim demo1.yaml || exit
+time $bin/galsim -v2 demo1.yaml || exit
 
 time $python demo2.py || exit
-time $bin/galsim demo2.yaml || exit
+time $bin/galsim -v2 demo2.yaml || exit
 
 time $python demo3.py || exit
-time $bin/galsim demo3.yaml || exit
+time $bin/galsim -v2 demo3.yaml || exit
 
 time $python demo4.py || exit
-time $bin/galsim demo4.yaml || exit
+time $bin/galsim -v2 demo4.yaml || exit
 
 time $python demo5.py || exit
-time $bin/galsim demo5.yaml || exit
+time $bin/galsim -v2 demo5.yaml || exit
 
 time $python demo6.py || exit
-time $bin/galsim demo6.yaml || exit
+time $bin/galsim -v2 demo6.yaml || exit
 
 time $python demo7.py || exit
-time $bin/galsim demo7.yaml || exit
+time $bin/galsim -v2 demo7.yaml || exit
 
 time $python demo8.py || exit
-time $bin/galsim demo8.yaml || exit
+time $bin/galsim -v2 demo8.yaml || exit
 
 time $python demo9.py || exit
 time $bin/galsim -v1 demo9.yaml || exit
 
 time $python demo10.py || exit
-time $bin/galsim demo10.yaml || exit
+time $bin/galsim -v2 demo10.yaml || exit
 
 time $python demo11.py || exit
-time $bin/galsim demo11.yaml || exit
+time $bin/galsim -v2 demo11.yaml || exit
 
 echo 'Checking diffs: (No output means success)'
 

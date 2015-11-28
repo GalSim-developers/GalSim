@@ -78,8 +78,8 @@ def parse_args():
             help='additional variables or modifications to variables in the config file. ' +
             'e.g. galsim foo.yaml output.nproc=-1 gal.rotate="{type : Random}"')
         parser.add_argument(
-            '-v', '--verbosity', type=int, action='store', default=2, choices=(0, 1, 2, 3),
-            help='integer verbosity level: min=0, max=3 [default=2]')
+            '-v', '--verbosity', type=int, action='store', default=1, choices=(0, 1, 2, 3),
+            help='integer verbosity level: min=0, max=3 [default=1]')
         parser.add_argument(
             '-l', '--log_file', type=str, action='store', default=None,
             help='filename for storing logging output [default is to stream to stdout]')
@@ -120,7 +120,7 @@ def parse_args():
         # optparse only allows string choices, so take verbosity as a string and make it int later
         parser.add_option(
             '-v', '--verbosity', type="choice", action='store', choices=('0', '1', '2', '3'),
-            default='2', help='integer verbosity level: min=0, max=3 [default=2]')
+            default='1', help='integer verbosity level: min=0, max=3 [default=1]')
         parser.add_option(
             '-l', '--log_file', type=str, action='store', default=None,
             help='filename for storing logging output [default is to stream to stdout]')
