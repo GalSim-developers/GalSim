@@ -127,19 +127,25 @@ def test_output_catalog():
     t1 = time.time()
 
     names = [ 'float1', 'float2', 'int1', 'int2', 'bool1', 'bool2',
-              'str1', 'str2', 'str3', 'str4', 'angle1', 'angle2' ]
-    types = [ float, float, int, int, bool, bool, str, str, str, str, float, float ]
+              'str1', 'str2', 'str3', 'str4', 'angle', 'posi', 'posd', 'shear' ]
+    types = [ float, float, int, int, bool, bool, str, str, str, str, 
+              galsim.Angle, galsim.PositionI, galsim.PositionD, galsim.Shear ]
     out_cat = galsim.OutputCatalog(names, types)
-    out_cat.add_row( [1.234, 4.131, 9, -3, 1, True, "He's", '"ceased', 'to', 'be"', 1.2, 23.0] )
+
+    out_cat.add_row( [1.234, 4.131, 9, -3, 1, True, "He's", '"ceased', 'to', 'be"',
+                      1.2 * galsim.degrees, galsim.PositionI(5,6),
+                      galsim.PositionD(0.3,-0.4), galsim.Shear(g1=0.2, g2=0.1) ])
     out_cat.add_row( (2.345, -900, 0.0, 8, False, 0, "bleedin'", '"bereft', 'of', 'life"',
-                      0.1, 15.0) )
+                      11 * galsim.arcsec, galsim.PositionI(-35,106),
+                      galsim.PositionD(23.5,55.1), galsim.Shear(e1=-0.1, e2=0.15) ))
     out_cat.add_row( [3.4560001, 8.e3, -4, 17.0, 1, 0, 'demised!', '"kicked', 'the', 'bucket"', 
-                      -0.9, 82.0] )
+                      0.4 * galsim.radians, galsim.PositionI(88,99),
+                      galsim.PositionD(-0.99,-0.88), galsim.Shear() ])
 
     # First the ASCII version
     out_cat.write(dir='output', file_name='catalog.dat')
     cat = galsim.Catalog(dir='output', file_name='catalog.dat')
-    np.testing.assert_equal(cat.ncols, 12)
+    np.testing.assert_equal(cat.ncols, 17)
     np.testing.assert_equal(cat.nobjects, 3)
     np.testing.assert_equal(cat.isFits(), False)
     np.testing.assert_almost_equal(cat.getFloat(1,0), 2.345)
@@ -152,13 +158,18 @@ def test_output_catalog():
     np.testing.assert_equal(cat.get(1,7), '"bereft')
     np.testing.assert_equal(cat.get(0,8), 'to')
     np.testing.assert_equal(cat.get(2,9), 'bucket"')
-    np.testing.assert_almost_equal(cat.getFloat(1,10), 0.1)
-    np.testing.assert_almost_equal(cat.getFloat(0,11), 23)
+    np.testing.assert_almost_equal(cat.getFloat(0,10), 1.2 * galsim.degrees / galsim.radians)
+    np.testing.assert_almost_equal(cat.getInt(1,11), -35)
+    np.testing.assert_almost_equal(cat.getInt(1,12), 106)
+    np.testing.assert_almost_equal(cat.getFloat(2,13), -0.99)
+    np.testing.assert_almost_equal(cat.getFloat(2,14), -0.88)
+    np.testing.assert_almost_equal(cat.getFloat(0,15), 0.2)
+    np.testing.assert_almost_equal(cat.getFloat(0,16), 0.1)
 
     # Next the FITS version
     out_cat.write(dir='output', file_name='catalog.fits')
     cat = galsim.Catalog(dir='output', file_name='catalog.fits')
-    np.testing.assert_equal(cat.ncols, 12)
+    np.testing.assert_equal(cat.ncols, 17)
     np.testing.assert_equal(cat.nobjects, 3)
     np.testing.assert_equal(cat.isFits(), True)
     np.testing.assert_almost_equal(cat.getFloat(1,'float1'), 2.345)
@@ -171,8 +182,14 @@ def test_output_catalog():
     np.testing.assert_equal(cat.get(1,'str2'), '"bereft')
     np.testing.assert_equal(cat.get(0,'str3'), 'to')
     np.testing.assert_equal(cat.get(2,'str4'), 'bucket"')
-    np.testing.assert_almost_equal(cat.getFloat(1,'angle1'), 0.1)
-    np.testing.assert_almost_equal(cat.getFloat(0,'angle2'), 23)
+    np.testing.assert_almost_equal(cat.getFloat(0,'angle.rad'),
+                                   1.2 * galsim.degrees / galsim.radians)
+    np.testing.assert_equal(cat.getInt(1,'posi.x'), -35)
+    np.testing.assert_equal(cat.getInt(1,'posi.y'), 106)
+    np.testing.assert_almost_equal(cat.getFloat(2,'posd.x'), -0.99)
+    np.testing.assert_almost_equal(cat.getFloat(2,'posd.y'), -0.88)
+    np.testing.assert_almost_equal(cat.getFloat(0,'shear.g1'), 0.2)
+    np.testing.assert_almost_equal(cat.getFloat(0,'shear.g2'), 0.1)
 
 
     # Check pickling

@@ -437,17 +437,44 @@ class OutputCatalog(object):
 
     def _make_data(self):
         import numpy
+
+        cols = zip(*self.rows)
+
         dtypes = []
-        for i, name, t in zip(range(self.ncols), self.names, self.types):
+        new_cols = []
+        for col, name, t in zip(cols, self.names, self.types):
             dt = numpy.dtype(t) # just used to catagorize the type into int, float, str
             if dt.kind in numpy.typecodes['AllInteger']:
                 dtypes.append( (name, int) )
+                new_cols.append(col)
             elif dt.kind in numpy.typecodes['AllFloat']:
                 dtypes.append( (name, float) )
+                new_cols.append(col)
+            elif t == galsim.Angle:
+                dtypes.append( (name + ".rad", float) )
+                new_cols.append( [ val.rad() for val in col ] )
+            elif t == galsim.PositionI:
+                dtypes.append( (name + ".x", int) )
+                dtypes.append( (name + ".y", int) )
+                new_cols.append( [ val.x for val in col ] )
+                new_cols.append( [ val.y for val in col ] )
+            elif t == galsim.PositionD:
+                dtypes.append( (name + ".x", float) )
+                dtypes.append( (name + ".y", float) )
+                new_cols.append( [ val.x for val in col ] )
+                new_cols.append( [ val.y for val in col ] )
+            elif t == galsim.Shear:
+                dtypes.append( (name + ".g1", float) )
+                dtypes.append( (name + ".g2", float) )
+                new_cols.append( [ val.g1 for val in col ] )
+                new_cols.append( [ val.g2 for val in col ] )
             else:
-                maxlen = numpy.max([ len(self.rows[k][i]) for k in range(self.nobjects) ])
+                col = [ str(s) for s in col ]
+                maxlen = numpy.max([ len(s) for s in col ])
                 dtypes.append( (name, str, maxlen) )
-        data = numpy.array(self.rows, dtype=dtypes)
+                new_cols.append(col)
+
+        data = numpy.array(zip(*new_cols), dtype=dtypes)
         return data
 
     def write_ascii(self, file_name, prec=8):
@@ -522,7 +549,12 @@ class OutputCatalog(object):
         return tbhdu
 
     def __repr__(self):
-        type_str = "( " + ", ".join([ repr(t)[7:-2] for t in self.types ]) + " )"
+        def make_type_str(t):
+            s = repr(t)
+            if s[1:5] == 'type': return s[7:-2]
+            elif s[1:6] == 'class': return s[8:-2]
+            else: return s
+        type_str = "( " + ", ".join([ make_type_str(t) for t in self.types ]) + " )"
         return "galsim.OutputCatalog(names=%r, types=%s, _rows=%r)"%(
                 self.names, type_str, self.rows)
 
