@@ -120,7 +120,7 @@ def main(argv):
 
     logger.info('Starting demo script 9')
 
-    def build_file(seed, file_name, mass, nobj):
+    def build_file(seed, file_name, mass, nobj, rng):
         """A function that does all the work to build a single file.
            Returns the total time taken.
         """
@@ -393,8 +393,9 @@ def main(argv):
         # image-level values than for the individual objects.  This makes it easier to 
         # parallelize the calculation if desired.  In fact, this is why we've been adding 1
         # to each seed value all along.  The seeds for the objects take the values
-        # random_seed+1 .. random_seed+nobj.  The seed for the image is just random_seed.
-        rng = galsim.BaseDeviate(seed)
+        # random_seed+1 .. random_seed+nobj.  The seed for the image is just random_seed,
+        # which we built already (below) when we calculated how many objects need to
+        # be in each file.  Use the same rng again here, since this is also at image scope.
         full_image.addNoise(galsim.PoissonNoise(rng))
 
         # Subtract the sky back off.
@@ -416,7 +417,7 @@ def main(argv):
 
     def worker(input, output):
         """input is a queue with (args, info) tuples:
-               args are the arguements to pass to build_file
+               args are the arguments to pass to build_file
                info is passed along to the output queue.
            output is a queue storing (result, info, proc) tuples:
                result is the return value of from build_file
@@ -470,7 +471,7 @@ def main(argv):
             # We put on the task queue the args to the buld_file function and
             # some extra info to pass through to the output queue.
             # Our extra info is just the file name that we use to write out which file finished.
-            task_queue.put( ( (seed, full_name, mass, nobj), full_name ) )
+            task_queue.put( ( (seed, full_name, mass, nobj, ud), full_name ) )
             # Need to step by the number of galaxies in each file.
             seed += nobj
 

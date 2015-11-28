@@ -28,8 +28,6 @@ valid_image_types = {
     'Scattered' : ( 'BuildScatteredImage', 'GetNObjForScatteredImage' ),
 }
 
-
-
 def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
                 make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
@@ -48,19 +46,9 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
     @returns the tuple `(images, psf_images, weight_images, badpix_images)`.
              All in tuple are lists.
     """
-    config['index_key'] = 'image_num'
-    config['image_num'] = image_num
-    config['obj_num'] = obj_num
-
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: BuildImages nimages = %d: image, obj = %d,%d',
                      config.get('file_num',0),nimages,image_num,obj_num)
-
-    if ( 'image' in config 
-         and 'random_seed' in config['image'] 
-         and not isinstance(config['image']['random_seed'],dict) ):
-        first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     import time
     def worker(input, output, kwargs, logger):
@@ -262,6 +250,71 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
 
     return images, psf_images, weight_images, badpix_images
  
+def SetupConfigImageNum(config, image_num, obj_num):
+    """Do the basic setup of the config dict at the image processing level.
+
+    Includes:
+    - Set config['image_num'] = image_num
+    - Set config['obj_num'] = obj_num
+    - Set config['index_key'] = 'image_num'
+    - Make sure config['image'] exists
+    - Set config['image']['draw_method'] to 'auto' if not given.
+
+    @param config           A configuration dict.
+    @param image_num        The current image_num.
+    @param obj_num          The current obj_num.
+    """
+    config['image_num'] = image_num
+    config['obj_num'] = obj_num
+    config['index_key'] = 'image_num'
+ 
+    # Make config['image'] exist if it doesn't yet.
+    if 'image' not in config:
+        config['image'] = {}
+    image = config['image']
+    if not isinstance(image, dict):
+        raise AttributeError("config.image is not a dict.")
+
+    if 'draw_method' not in image:
+        image['draw_method'] = 'auto'
+    if 'type' not in image:
+        image['type'] = 'Single'
+
+
+def SetupConfigImageSize(config, xsize, ysize, wcs):
+    """Do some further setup of the config dict at the image processing level based on
+    the provided image size and wcs.
+
+    - Set config['image_xsize'], config['image_ysize'] to the size of the image
+    - Set config['image_origin'] to the origin of the image
+    - Set config['image_center'] to the center of the image
+    - If wcs is None, build the wcs using galsim.config.
+    - Set config['wcs'] to the wcs
+
+    @param config           A configuration dict.
+    @param xsize            The size of the image in the x-dimension.
+    @param ysize            The size of the image in the y-dimension.
+    @param wcs              The wcs for the image. [default: None, which means build it from
+                            either config['image']['pixel_scale'] or config['image']['wcs'].]
+    """
+    config['image_xsize'] = xsize
+    config['image_ysize'] = ysize
+
+    origin = 1 # default
+    if 'index_convention' in config['image']:
+        convention = galsim.config.ParseValue(config['image'],'index_convention',config,str)[0]
+        if convention.lower() in [ '0', 'c', 'python' ]:
+            origin = 0
+        elif convention.lower() in [ '1', 'fortran', 'fits' ]:
+            origin = 1
+        else:
+            raise AttributeError("Unknown index_convention: %s"%convention)
+
+    config['image_origin'] = galsim.PositionI(origin,origin)
+    config['image_center'] = galsim.PositionD( origin + (xsize-1.)/2., origin + (ysize-1.)/2. )
+
+    config['wcs'] = galsim.config.BuildWCS(config)
+
 
 def BuildImage(config, logger=None, image_num=0, obj_num=0,
                make_psf_image=False, make_weight_image=False, make_badpix_image=False):
@@ -281,31 +334,18 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
     Note: All 4 images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.
     """
-    config['index_key'] = 'image_num'
-    config['image_num'] = image_num
-    config['obj_num'] = obj_num
-
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: BuildImage: image, obj = %d,%d',image_num,image_num,obj_num)
 
-    # Make config['image'] exist if it doesn't yet.
-    if 'image' not in config:
-        config['image'] = {}
-    image = config['image']
-    if not isinstance(image, dict):
-        raise AttributeError("config.image is not a dict.")
+    if 'image' in config and 'type' in config['image']:   
+        image_type = config['image']['type']
+    else:
+        image_type = 'Single'
 
-    if 'draw_method' not in image:
-        image['draw_method'] = 'auto'
+    if image_type not in valid_image_types:
+        raise AttributeError("Invalid image.type=%s."%image_type)
 
-    if 'type' not in image:
-        image['type'] = 'Single'  # Default is Single
-    type = image['type']
-
-    if type not in valid_image_types:
-        raise AttributeError("Invalid image.type=%s."%type)
-
-    build_func = eval(valid_image_types[type][0])
+    build_func = eval(valid_image_types[image_type][0])
     all_images = build_func(
             config=config, logger=logger,
             image_num=image_num, obj_num=obj_num,
@@ -321,22 +361,10 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
 
     return all_images
 
-
-def _set_image_origin(config, convention):
-    """Set `config['image_origin']` appropriately based on the provided `convention`.
-    """
-    if convention.lower() in [ '0', 'c', 'python' ]:
-        origin = 0
-    elif convention.lower() in [ '1', 'fortran', 'fits' ]:
-        origin = 1
-    else:
-        raise AttributeError("Unknown index_convention: %s"%convention)
-    config['image_origin'] = galsim.PositionI(origin,origin)
-    # Also define the overall image center while we're at it.
-    xsize = config['image_xsize']
-    ysize = config['image_ysize']
-    config['image_center'] = galsim.PositionD( origin + (xsize-1.)/2., origin + (ysize-1.)/2. )
-
+# Ignore these when parsing the parameters for specific Image types:
+image_ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs', 
+                 'sky_level', 'sky_level_pixel', 'index_convention',
+                 'retry_failures', 'n_photons', 'wmult', 'offset', 'gsparams' ]
 
 def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
                      make_psf_image=False, make_weight_image=False, make_badpix_image=False):
@@ -355,24 +383,21 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
 
     Note: All 4 Images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.    
+    Also: It is easier to accumulate the inverse weight map, which is just the noise variance
+          in each pixel.  BuildImage will invert this to the more normal weight map, but here
+          it is actually a variance map.
     """
-    config['index_key'] = 'image_num'
-    config['image_num'] = image_num
-    config['obj_num'] = obj_num
-
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: BuildSingleImage: image, obj = %d,%d',image_num,image_num,obj_num)
+    SetupConfigImageNum(config,image_num,obj_num)
+    seed = galsim.config.SetupConfigRNG(config)
+    if logger and logger.isEnabledFor(logging.DEBUG):
+        logger.debug('image %d: seed = %d',image_num,seed)
 
-    if 'random_seed' in config['image'] and not isinstance(config['image']['random_seed'],dict):
-        first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
-
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs', 'nproc', 
-               'sky_level', 'sky_level_pixel',
-               'retry_failures', 'n_photons', 'wmult', 'offset', 'gsparams' ]
-    opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 'index_convention' : str }
+    extra_ignore = [ 'image_pos', 'world_pos' ]
+    opt = { 'size' : int , 'xsize' : int , 'ysize' : int }
     params = galsim.config.GetAllParams(
-        config['image'], 'image', config, opt=opt, ignore=ignore)[0]
+        config['image'], 'image', config, opt=opt, ignore=image_ignore+extra_ignore)[0]
 
     # If image_force_xsize and image_force_ysize were set in config, this overrides the 
     # read-in params.
@@ -387,20 +412,15 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
         raise AttributeError(
             "Both (or neither) of image.xsize and image.ysize need to be defined  and != 0.")
 
-    config['image_xsize'] = xsize
-    config['image_ysize'] = ysize
-    convention = params.get('index_convention','1')
-    _set_image_origin(config,convention)
+    SetupConfigImageSize(config,xsize,ysize,wcs=None)
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: image_origin = %s',image_num,str(config['image_origin']))
         logger.debug('image %d: image_center = %s',image_num,str(config['image_center']))
 
-    wcs = galsim.config.BuildWCS(config, logger)
-
+    # We allow world_pos to be in config[image], but we don't want it to lead to a final_shift
+    # in BuildSingleStamp.  The easiest way to do this is to set image_pos to (0,0).
     if 'world_pos' in config['image']:
         config['image']['image_pos'] = (0,0)
-        # We allow world_pos to be in config[image], but we don't want it to lead to a final_shift
-        # in BuildSingleStamp.  The easiest way to do this is to set image_pos to (0,0).
 
     return galsim.config.BuildSingleStamp(
             config=config, xsize=xsize, ysize=ysize, obj_num=obj_num,
@@ -429,27 +449,25 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     Note: All 4 Images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.    
+    Also: It is easier to accumulate the inverse weight map, which is just the noise variance
+          in each pixel.  BuildImage will invert this to the more normal weight map, but here
+          it is actually a variance map.
     """
-    config['index_key'] = 'image_num'
-    config['image_num'] = image_num
-    config['obj_num'] = obj_num
-
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: BuildTiledImage: image, obj = %d,%d',image_num,image_num,obj_num)
+    SetupConfigImageNum(config,image_num,obj_num)
+    seed = galsim.config.SetupConfigRNG(config)
+    if logger and logger.isEnabledFor(logging.DEBUG):
+        logger.debug('image %d: seed = %d',image_num,seed)
+    rng = config['rng'] # Grab this for use later
 
-    if 'random_seed' in config['image'] and not isinstance(config['image']['random_seed'],dict):
-        first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
-
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs', 
-               'sky_level', 'sky_level_pixel',
-               'retry_failures', 'image_pos', 'n_photons', 'wmult', 'offset', 'gsparams' ]
+    extra_ignore = [ 'image_pos' ] # We create this below, so on subequent passes, we ignore it.
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'border' : int , 'xborder' : int , 'yborder' : int ,
-            'nproc' : int , 'index_convention' : str, 'order' : str }
+            'nproc' : int , 'order' : str }
     params = galsim.config.GetAllParams(
-        config['image'], 'image', config, req=req, opt=opt, ignore=ignore)[0]
+        config['image'], 'image', config, req=req, opt=opt, ignore=image_ignore+extra_ignore)[0]
 
     nx_tiles = params['nx_tiles']
     ny_tiles = params['ny_tiles']
@@ -491,34 +509,12 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
             "xborder=%d, yborder=%d\n"%(xborder,yborder) +
             "Calculated full_size = (%d,%d) "%(full_xsize,full_ysize)+
             "!= required (%d,%d)."%(config['image_force_xsize'],config['image_force_ysize']))
-    config['image_xsize'] = full_xsize
-    config['image_ysize'] = full_ysize
+
+    SetupConfigImageSize(config,full_xsize,full_ysize,wcs=None)
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: image_size = %d, %d',image_num,full_xsize,full_ysize)
-
-    convention = params.get('index_convention','1')
-    _set_image_origin(config,convention)
-    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: image_origin = %s',image_num,str(config['image_origin']))
         logger.debug('image %d: image_center = %s',image_num,str(config['image_center']))
-
-    wcs = galsim.config.BuildWCS(config, logger)
-
-    # Set the rng to use for image stuff.
-    if 'random_seed' in config['image']:
-        # Technically obj_num+nobjects will be the index of the random seed used for the next 
-        # image's first object (if there is a next image).  But I don't think that will have 
-        # any adverse effects.
-        config['obj_num'] = obj_num
-        config['index_key'] = 'obj_num'
-        seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['index_key'] = 'image_num'
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('image %d: seed = %d',image_num,seed)
-        rng = galsim.BaseDeviate(seed)
-    else:
-        rng = galsim.BaseDeviate()
-    config['rng'] = rng
 
     # Make a list of ix,iy values according to the specified order:
     order = params.get('order','row').lower()
@@ -551,6 +547,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     nproc = params.get('nproc',1)
 
+    wcs = config['wcs']
     full_image = galsim.ImageF(full_xsize, full_ysize)
     full_image.setOrigin(config['image_origin'])
     full_image.wcs = wcs
@@ -626,6 +623,9 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     # level, so it cannot be used for things like wcs.pixelArea(image_pos).  
     if 'image_pos' in config: del config['image_pos']
 
+    # Put the rng back into config['rng'] for use by the AddNoise function.
+    config['rng'] = rng
+
     # If didn't do noise above in the stamps, then need to do it here.
     if not do_noise:
         if 'noise' in config['image']:
@@ -651,7 +651,6 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
                 full_image.addNoise(galsim.VariableGaussianNoise(rng,noise_image))
             # Now max_current_var is how much noise is in each pixel.
 
-            config['rng'] = rng
             galsim.config.AddNoise(
                 config,draw_method,full_image,full_weight_image,max_current_var,logger)
 
@@ -681,31 +680,34 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     Note: All 4 Images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.    
+    Also: It is easier to accumulate the inverse weight map, which is just the noise variance
+          in each pixel.  BuildImage will invert this to the more normal weight map, but here
+          it is actually a variance map.
     """
-    config['index_key'] = 'image_num'
-    config['image_num'] = image_num
-    config['obj_num'] = obj_num
-
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: BuildScatteredImage: image, obj = %d,%d',
                      image_num,image_num,obj_num)
+    SetupConfigImageNum(config,image_num,obj_num)
+    seed = galsim.config.SetupConfigRNG(config)
+    if logger and logger.isEnabledFor(logging.DEBUG):
+        logger.debug('image %d: seed = %d',image_num,seed)
+    rng = config['rng'] # Grab this for use later
 
-    if 'random_seed' in config['image'] and not isinstance(config['image']['random_seed'],dict):
-        first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
-
-    nobjects = GetNObjForScatteredImage(config,image_num)
+    if 'nobjects' not in config['image']:
+        nobjects = galsim.config.ProcessInputNObjects(config)
+        if nobjects is None:
+            raise AttributeError("Attribute nobjects is required for image.type = Scattered")
+    else:
+        nobjects = galsim.config.ParseValue(config['image'],'nobjects',config,int)[0]
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: nobj = %d',image_num,nobjects)
 
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs',
-               'sky_level', 'sky_level_pixel',
-               'retry_failures', 'image_pos', 'world_pos', 'n_photons', 'wmult', 'offset', 
-               'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams', 'nobjects' ]
-    opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
-            'nproc' : int , 'index_convention' : str }
+    # These are allowed for Scattered, but we don't use them here.
+    extra_ignore = [ 'image_pos', 'world_pos', 'stamp_size', 'stamp_xsize', 'stamp_ysize',
+                     'nobjects' ]
+    opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 'nproc' : int }
     params = galsim.config.GetAllParams(
-        config['image'], 'image', config, opt=opt, ignore=ignore)[0]
+        config['image'], 'image', config, opt=opt, ignore=image_ignore+extra_ignore)[0]
 
     # Special check for the size.  Either size or both xsize and ysize is required.
     if 'size' not in params:
@@ -731,32 +733,12 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         raise ValueError(
             "Unable to reconcile required image xsize and ysize with provided "+
             "xsize=%d, ysize=%d, "%(full_xsize,full_ysize))
-    config['image_xsize'] = full_xsize
-    config['image_ysize'] = full_ysize
 
-    convention = params.get('index_convention','1')
-    _set_image_origin(config,convention)
+    SetupConfigImageSize(config,full_xsize,full_ysize,wcs=None)
     if logger and logger.isEnabledFor(logging.DEBUG):
+        logger.debug('image %d: image_size = %d, %d',image_num,full_xsize,full_ysize)
         logger.debug('image %d: image_origin = %s',image_num,str(config['image_origin']))
         logger.debug('image %d: image_center = %s',image_num,str(config['image_center']))
-
-    wcs = galsim.config.BuildWCS(config, logger)
-
-    # Set the rng to use for image stuff.
-    if 'random_seed' in config['image']:
-        # Technically obj_num+nobjects will be the index of the random seed used for the next 
-        # image's first object (if there is a next image).  But I don't think that will have 
-        # any adverse effects.
-        config['obj_num'] = obj_num
-        config['index_key'] = 'obj_num'
-        seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['index_key'] = 'image_num'
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('image %d: seed = %d',image_num,seed)
-        rng = galsim.BaseDeviate(seed)
-    else:
-        rng = galsim.BaseDeviate()
-    config['rng'] = rng
 
     if 'image_pos' in config['image'] and 'world_pos' in config['image']:
         raise AttributeError("Both image_pos and world_pos specified for Scattered image.")
@@ -774,6 +756,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     nproc = params.get('nproc',1)
 
+    wcs = config['wcs']
     full_image = galsim.ImageF(full_xsize, full_ysize)
     full_image.setOrigin(config['image_origin'])
     full_image.wcs = wcs
@@ -857,6 +840,9 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     # level, so it cannot be used for things like wcs.pixelArea(image_pos).  
     if 'image_pos' in config: del config['image_pos']
 
+    # Put the rng back into config['rng'] for use by the AddNoise function.
+    config['rng'] = rng
+
     if 'noise' in config['image']:
         # Apply the noise to the full image
         draw_method = galsim.config.GetCurrentValue('image.draw_method','Scattered',config,str)
@@ -881,7 +867,6 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
             full_image.addNoise(galsim.VariableGaussianNoise(rng,noise_image))
         # Now max_current_var is how much noise is in each pixel.
 
-        config['rng'] = rng
         galsim.config.AddNoise(
             config,draw_method,full_image,full_weight_image,max_current_var,logger)
 

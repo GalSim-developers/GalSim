@@ -505,51 +505,19 @@ def Process(config, logger=None):
     # in the config for all file_nums.  This is more important if nproc != 1.
     ProcessInput(config, file_num=0, logger=logger_proxy, safe_only=True)
 
-    # Normally, random_seed is just a number, which really means to use that number
-    # for the first item and go up sequentially from there for each object.
-    # However, we allow for random_seed to be a gettable parameter, so for the 
-    # normal case, we just convert it into a Sequence.
-    if ( 'image' in config 
-         and 'random_seed' in config['image'] 
-         and not isinstance(config['image']['random_seed'],dict) ):
-        first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = {
-            'type' : 'Sequence' ,
-            'index_key' : 'obj_num',
-            'first' : first
-        }
-
     nfiles_use = nfiles
     # We'll want a pristine version later to give to the workers.
     orig_config = CopyConfig(config)
     for file_num in range(nfiles):
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file_num, image_num, obj_num = %d,%d,%d',file_num,image_num,obj_num)
-        # Set the index for any sequences in the input or output parameters.
-        # These sequences are indexed by the file_num.
-        # (In image, they are indexed by image_num, and after that by obj_num.)
-        config['index_key'] = 'file_num'
-        config['file_num'] = file_num
-        config['image_num'] = image_num
-        config['start_obj_num'] = obj_num
-        config['obj_num'] = obj_num
+        SetupConfigFileNum(config,file_num,image_num,obj_num)
+        seed = SetupConfigRNG(config)
+        if logger and logger.isEnabledFor(logging.DEBUG):
+            logger.debug('file %d: seed = %d',file_num,seed)
 
         # Process the input fields that might be relevant at file scope:
         ProcessInput(config, file_num=file_num, logger=logger_proxy, file_scope_only=True)
-
-        # It is possible that some items at image scope could need a random number generator.
-        # For example, in demo9, we have a random number of objects per image.
-        # So we need to build an rng here.
-        if 'random_seed' in config['image']:
-            config['index_key'] = 'obj_num'
-            seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-            config['index_key'] = 'file_num'
-            if logger and logger.isEnabledFor(logging.DEBUG):
-                logger.debug('file %d: seed = %d',file_num,seed)
-            rng = galsim.BaseDeviate(seed)
-        else:
-            rng = galsim.BaseDeviate()
-        config['rng'] = rng
 
         # Get the file_name
         if 'file_name' in output:
@@ -669,12 +637,13 @@ def Process(config, logger=None):
             task_queue.put( (kwargs1, file_num, file_name) )
         else:
             try:
+                config1 = galsim.config.CopyConfig(orig_config)
                 if logger and logger.isEnabledFor(logging.WARN):
                     logger.warn('Start file %d = %s', file_num, file_name)
-                ProcessInput(config, file_num=file_num, logger=logger_proxy)
+                ProcessInput(config1, file_num=file_num, logger=logger)
                 if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('file %d: After ProcessInput',file_num)
-                kwargs['config'] = config
+                kwargs['config'] = config1
                 kwargs['logger'] = logger 
                 t = build_func(**kwargs)
                 if logger and logger.isEnabledFor(logging.WARN):
@@ -759,6 +728,82 @@ def _retry_io(func, args, ntries, file_name, logger):
             break
     return ret
 
+def SetupConfigRNG(config, seed_offset=0):
+    """Set up the RNG in the config dict.
+
+    - Setup config['image']['random_seed'] if necessary
+    - Set config['rng'] based on appropriate random_seed 
+
+    @param config           A configuration dict.
+    @param seed_offset      An offset to use relative to what config['image']['random_seed'] gives.
+
+    @returns the seed used to initialize the RNG.
+    """
+    # Normally, random_seed is just a number, which really means to use that number
+    # for the first item and go up sequentially from there for each object.
+    # However, we allow for random_seed to be a gettable parameter, so for the 
+    # normal case, we just convert it into a Sequence.
+    if ( 'image' in config 
+         and 'random_seed' in config['image'] 
+         and not isinstance(config['image']['random_seed'],dict) ):
+         # The "first" is actually the seed value to use for anything at file or image scope
+         # using the obj_num of the first object in the file or image.  Seeds for objects
+         # will start at 1 more than this.
+         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+         config['image']['random_seed'] = { 
+                 'type' : 'Sequence',
+                 'index_key' : 'obj_num',
+                 'first' : first
+         }
+
+    if 'random_seed' in config['image']:
+        orig_key = config['index_key']
+        config['index_key'] = 'obj_num'
+        seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        config['index_key'] = orig_key
+        seed += seed_offset
+    else:
+        seed = 0
+
+    config['seed'] = seed
+    config['rng'] = galsim.BaseDeviate(seed)
+
+    # This can be present for efficiency, since GaussianDeviates produce two values at a time, 
+    # so it is more efficient to not create a new GaussianDeviate object each time.
+    # But if so, we need to remove it now.
+    if 'gd' in config:
+        del config['gd']
+
+    return seed
+ 
+
+def SetupConfigFileNum(config, file_num, image_num, obj_num):
+    """Do the basic setup of the config dict at the file processing level.
+
+    Includes:
+    - Set config['file_num'] = file_num
+    - Set config['image_num'] = image_num
+    - Set config['obj_num'] = obj_num
+    - Set config['index_key'] = 'file_num'
+    - Set config['start_obj_num'] = obj_num
+
+    @param config           A configuration dict.
+    @param file_num         The current file_num. (If file_num=None, then don't set file_num or
+                            start_obj_num items in the config dict.)
+    @param image_num        The current image_num.
+    @param obj_num          The current obj_num.
+    """
+    if file_num is None:
+        if 'file_num' not in config: config['file_num'] = 0
+        if 'start_obj_num' not in config: config['start_obj_num'] = obj_num
+    else:
+        config['file_num'] = file_num
+        config['start_obj_num'] = obj_num
+    config['image_num'] = image_num
+    config['obj_num'] = obj_num
+    config['index_key'] = 'file_num'
+
+
 def BuildFits(file_name, config, logger=None, 
               file_num=0, image_num=0, obj_num=0,
               psf_file_name=None, psf_hdu=None,
@@ -787,35 +832,15 @@ def BuildFits(file_name, config, logger=None,
     import time
     t1 = time.time()
 
-    config['index_key'] = 'file_num'
-    config['file_num'] = file_num
-    config['image_num'] = image_num
-    config['start_obj_num'] = obj_num
-    config['obj_num'] = obj_num
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: BuildFits for %s: file, image, obj = %d,%d,%d',
-                      config['file_num'],file_name,file_num,image_num,obj_num)
+                      file_num,file_name,file_num,image_num,obj_num)
 
-    if ( 'image' in config 
-         and 'random_seed' in config['image'] 
-         and not isinstance(config['image']['random_seed'],dict) ):
-        first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 
-                'type' : 'Sequence',
-                'index_key' : 'obj_num',
-                'first' : first 
-        }
-
-    if 'random_seed' in config['image']:
-        config['index_key'] = 'obj_num'
-        seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['index_key'] = 'file_num'
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: seed = %d',file_num,seed)
-        rng = galsim.BaseDeviate(seed)
-    else:
-        rng = galsim.BaseDeviate()
-    config['rng'] = rng
+    SetupConfigFileNum(config,file_num,image_num,obj_num)
+    seed = SetupConfigRNG(config)
+    RemoveCurrent(config, keep_safe=True)
+    if logger and logger.isEnabledFor(logging.DEBUG):
+        logger.debug('file %d: seed = %d',file_num,seed)
 
     # hdus is a dict with hdus[i] = the item in all_images to put in the i-th hdu.
     hdus = {}
@@ -876,32 +901,28 @@ def BuildFits(file_name, config, logger=None,
     _retry_io(galsim.fits.writeMulti, (hdulist, file_name), ntries, file_name, logger)
     if logger and logger.isEnabledFor(logging.DEBUG):
         if len(hdus.keys()) == 1:
-            logger.debug('file %d: Wrote image to fits file %r',
-                         config['file_num'],file_name)
+            logger.debug('file %d: Wrote image to fits file %r',file_num,file_name)
         else:
             logger.debug('file %d: Wrote image (with extra hdus) to multi-extension fits file %r',
-                         config['file_num'],file_name)
+                         file_num,file_name)
 
     if psf_file_name:
         _retry_io(galsim.fits.write, (all_images[1], psf_file_name),
                   ntries, psf_file_name, logger)
         if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: Wrote psf image to fits file %r',
-                         config['file_num'],psf_file_name)
+            logger.debug('file %d: Wrote psf image to fits file %r',file_num,psf_file_name)
 
     if weight_file_name:
         _retry_io(galsim.fits.write, (all_images[2], weight_file_name),
                   ntries, weight_file_name, logger)
         if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: Wrote weight image to fits file %r',
-                         config['file_num'],weight_file_name)
+            logger.debug('file %d: Wrote weight image to fits file %r',file_num,weight_file_name)
 
     if badpix_file_name:
         _retry_io(galsim.fits.write, (all_images[3], badpix_file_name),
                   ntries, badpix_file_name, logger)
         if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: Wrote badpix image to fits file %r',
-                         config['file_num'],badpix_file_name)
+            logger.debug('file %d: Wrote badpix image to fits file %r',file_num,badpix_file_name)
 
     t2 = time.time()
     return t2-t1
@@ -929,35 +950,14 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
     import time
     t1 = time.time()
 
-    config['index_key'] = 'file_num'
-    config['file_num'] = file_num
-    config['image_num'] = image_num
-    config['start_obj_num'] = obj_num
-    config['obj_num'] = obj_num
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: BuildMultiFits for %s: file, image, obj = %d,%d,%d',
                       config['file_num'],file_name,file_num,image_num,obj_num)
-
-    if ( 'image' in config 
-         and 'random_seed' in config['image'] 
-         and not isinstance(config['image']['random_seed'],dict) ):
-        first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 
-                'type' : 'Sequence',
-                'index_key' : 'obj_num',
-                'first' : first 
-        }
-
-    if 'random_seed' in config['image']:
-        config['index_key'] = 'obj_num'
-        seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['index_key'] = 'file_num'
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: seed = %d',file_num,seed)
-        rng = galsim.BaseDeviate(seed)
-    else:
-        rng = galsim.BaseDeviate()
-    config['rng'] = rng
+    SetupConfigFileNum(config,file_num,image_num,obj_num)
+    seed = SetupConfigRNG(config)
+    RemoveCurrent(config, keep_safe=True)
+    if logger and logger.isEnabledFor(logging.DEBUG):
+        logger.debug('file %d: seed = %d',file_num,seed)
 
     if psf_file_name:
         make_psf_image = True
@@ -974,19 +974,16 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
     else:
         make_badpix_image = False
 
+    # Allow nimages to be automatic based on input catalog if image type is Single
+    if ( 'nimages' not in config['output'] and 
+         ( 'image' not in config or 'type' not in config['image'] or 
+           config['image']['type'] == 'Single' ) ):
+        nobjects = ProcessInputNObjects(config)
+        if nobjects:
+            config['output']['nimages'] = nobjects
     if 'output' not in config or 'nimages' not in config['output']:
         raise AttributeError("Attribute output.nimages is required for output.type = MultiFits")
     nimages = galsim.config.ParseValue(config['output'],'nimages',config,int)[0]
-
-    if nproc > nimages:
-        # Only warn if nproc was specifically set, not if it is -1.
-        if logger and logger.isEnabledFor(logging.WARN):
-            if not ('nproc' in config['output'] and 
-                 galsim.config.ParseValue(config['output'],'nproc',config,int)[0] == -1):
-                logger.warn(
-                    "Trying to use more processes than images: output.nproc=%d, "%nproc +
-                    "nimages=%d.  Reducing nproc to %d."%(nimages,nimages))
-        nproc = nimages
 
     all_images = galsim.config.BuildImages(
         nimages, config=config, nproc=nproc, logger=logger,
@@ -1033,7 +1030,6 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
             logger.debug('file %d: Wrote badpix images to multi-extension fits file %r',
                          config['file_num'],badpix_file_name)
 
-
     t2 = time.time()
     return t2-t1
 
@@ -1060,35 +1056,14 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     import time
     t1 = time.time()
 
-    config['index_key'] = 'file_num'
-    config['file_num'] = file_num
-    config['image_num'] = image_num
-    config['start_obj_num'] = obj_num
-    config['obj_num'] = obj_num
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: BuildDataCube for %s: file, image, obj = %d,%d,%d',
-                      config['file_num'],file_name,file_num,image_num,obj_num)
-
-    if ( 'image' in config 
-         and 'random_seed' in config['image'] 
-         and not isinstance(config['image']['random_seed'],dict) ):
-        first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 
-                'type' : 'Sequence',
-                'index_key' : 'obj_num',
-                'first' : first 
-        }
-
-    if 'random_seed' in config['image']:
-        config['index_key'] = 'obj_num'
-        seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['index_key'] = 'file_num'
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: seed = %d',file_num,seed)
-        rng = galsim.BaseDeviate(seed)
-    else:
-        rng = galsim.BaseDeviate()
-    config['rng'] = rng
+                      file_num,file_name,file_num,image_num,obj_num)
+    SetupConfigFileNum(config,file_num,image_num,obj_num)
+    seed = SetupConfigRNG(config)
+    RemoveCurrent(config, keep_safe=True)
+    if logger and logger.isEnabledFor(logging.DEBUG):
+        logger.debug('file %d: seed = %d',file_num,seed)
 
     if psf_file_name:
         make_psf_image = True
@@ -1105,6 +1080,13 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     else:
         make_badpix_image = False
 
+    # Allow nimages to be automatic based on input catalog if image type is Single
+    if ( 'nimages' not in config['output'] and 
+         ( 'image' not in config or 'type' not in config['image'] or 
+           config['image']['type'] == 'Single' ) ):
+        nobjects = ProcessInputNObjects(config)
+        if nobjects:
+            config['output']['nimages'] = nobjects
     if 'output' not in config or 'nimages' not in config['output']:
         raise AttributeError("Attribute output.nimages is required for output.type = DataCube")
     nimages = galsim.config.ParseValue(config['output'],'nimages',config,int)[0]
@@ -1138,16 +1120,6 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     badpix_images = [ all_images[3] ]
 
     if nimages > 1:
-        if nproc > nimages-1:
-            # Only warn if nproc was specifically set, not if it is -1.
-            if logger and logger.isEnabledFor(logging.WARN):
-                if not ('nproc' in config['output'] and
-                     galsim.config.ParseValue(config['output'],'nproc',config,int)[0] == -1):
-                    logger.warn(
-                        "Trying to use more processes than (nimages-1): output.nproc=%d, "%nproc +
-                        "nimages=%d.  Reducing nproc to %d."%(nimages,nimages-1))
-            nproc = nimages-1
-
         all_images = galsim.config.BuildImages(
             nimages-1, config=config, nproc=nproc, logger=logger,
             image_num=image_num+1, obj_num=obj_num,

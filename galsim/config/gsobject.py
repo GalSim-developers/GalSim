@@ -454,7 +454,7 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
                 "%s index has gone past the number of entries in the catalog"%index)
 
     kwargs['real_galaxy_catalog'] = real_cat
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if False:
         logger.debug('obj %d: RealGalaxy kwargs = %s',base['obj_num'],kwargs)
 
     gal = galsim.RealGalaxy(**kwargs)
@@ -534,7 +534,7 @@ def _BuildCOSMOSGalaxy(config, key, base, ignore, gsparams, logger):
             raise IndexError(
                 "%s index has gone past the number of entries in the catalog"%index)
 
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if False:
         logger.debug('obj %d: COSMOSGalaxy kwargs = %s',base['obj_num'],kwargs)
 
     kwargs['cosmos_catalog'] = cosmos_cat
@@ -574,7 +574,7 @@ def _BuildSimple(config, key, base, ignore, gsparams, logger):
         kwargs['rng'] = base['rng']
         safe = False
 
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if False:
         logger.debug('obj %d: kwargs = %s',base['obj_num'],kwargs)
 
     # Finally, after pulling together all the params, try making the GSObject.

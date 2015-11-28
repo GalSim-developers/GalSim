@@ -34,7 +34,7 @@ valid_wcs_types = {
     'Tan' : ( 'TanWCSBuilder', 'TanWCSBuilder' ),
 }
 
-def BuildWCS(config, logger=None):
+def BuildWCS(config):
     """Read the wcs from the config dict, writing both it and, if it is well-defined, the 
     pixel_scale to the config.  If the wcs does not have a well-defined pixel_scale, it will 
     be stored as None.
@@ -52,8 +52,6 @@ def BuildWCS(config, logger=None):
         # Special case: origin == center means to use image_center for the wcs origin
         if 'origin' in image_wcs and image_wcs['origin'] == 'center':
             origin = config['image_center']
-            if logger and logger.isEnabledFor(logging.DEBUG):
-                logger.debug('image %d: Using origin = %s',config['image_num'],str(origin))
             image_wcs['origin'] = origin
 
         if type not in valid_wcs_types:
@@ -63,10 +61,6 @@ def BuildWCS(config, logger=None):
             build_func = eval(valid_wcs_types[type][1])
         else:
             build_func = eval(valid_wcs_types[type][0])
-
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('image %d: Build WCS for type = %s using %s',
-                         config['image_num'],type,str(build_func))
 
         req = build_func._req_params
         opt = build_func._opt_params
@@ -85,8 +79,6 @@ def BuildWCS(config, logger=None):
                 raise ValueError("No config['rng'] available for %s.type = %s"%(key,type))
             kwargs['rng'] = config['rng']
 
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('image %d: kwargs = %s',config['image_num'],str(kwargs))
         wcs = build_func(**kwargs) 
 
     else:
