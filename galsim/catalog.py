@@ -31,14 +31,14 @@ class Catalog(object):
     Initialization
     --------------
 
-    @param file_name     Filename of the input catalog. (Required)
-    @param dir           Optionally a directory name can be provided if `file_name` does not 
-                         already include it.
-    @param file_type     Either 'ASCII' or 'FITS'.  If None, infer from `file_name` ending.
-                         [default: None]
-    @param comments      The character used to indicate the start of a comment in an
-                         ASCII catalog.  [default: '#']
-    @param hdu           Which hdu to use for FITS files.  [default: 1]
+    @param file_name    Filename of the input catalog. (Required)
+    @param dir          Optionally a directory name can be provided if `file_name` does not 
+                        already include it.
+    @param file_type    Either 'ASCII' or 'FITS'.  If None, infer from `file_name` ending.
+                        [default: None]
+    @param comments     The character used to indicate the start of a comment in an
+                        ASCII catalog.  [default: '#']
+    @param hdu          Which hdu to use for FITS files.  [default: 1]
 
     Attributes
     ----------
@@ -64,12 +64,14 @@ class Catalog(object):
 
         # First build full file_name
         self.file_name = file_name.strip()
-        if dir:
+        if dir is not None:
             import os
             self.file_name = os.path.join(dir,self.file_name)
     
-        if not file_type:
-            if self.file_name.lower().endswith('.fits'):
+        if file_type is None:
+            import os
+            name, ext = os.path.splitext(file_name)
+            if ext.lower().startswith('.fit'):
                 file_type = 'FITS'
             else:
                 file_type = 'ASCII'
@@ -82,8 +84,10 @@ class Catalog(object):
 
         if file_type == 'FITS':
             self.read_fits(hdu, _nobjects_only)
-        else:
+        elif file_type == 'ASCII':
             self.read_ascii(comments, _nobjects_only)
+        else:
+            raise ValueError("Invalid file_type %s"%file_type)
             
     # When we make a proxy of this class (cf. galsim/config/stamp.py), the attributes
     # don't get proxied.  Only callable methods are.  So make method versions of these.
@@ -222,14 +226,14 @@ class Dict(object):
     to set `key_split` to a different character or string and use that to chain the keys.
 
 
-    @param file_name     Filename storing the dict.
-    @param dir           Optionally a directory name can be provided if `file_name` does not 
-                         already include it. [default: None]
-    @param file_type     Options are 'Pickle', 'YAML', or 'JSON' or None.  If None, infer from 
-                         `file_name` extension ('.p*', '.y*', '.j*' respectively).
-                         [default: None]
-    @param key_split     The character (or string) to use to split chained keys.  (cf. the 
-                         description of this feature above.)  [default: '.']
+    @param file_name    Filename storing the dict.
+    @param dir          Optionally a directory name can be provided if `file_name` does not 
+                        already include it. [default: None]
+    @param file_type    Options are 'Pickle', 'YAML', or 'JSON' or None.  If None, infer from 
+                        `file_name` extension ('.p*', '.y*', '.j*' respectively).
+                        [default: None]
+    @param key_split    The character (or string) to use to split chained keys.  (cf. the 
+                        description of this feature above.)  [default: '.']
     """
     _req_params = { 'file_name' : str }
     _opt_params = { 'dir' : str , 'file_type' : str, 'key_split' : str }
@@ -240,11 +244,11 @@ class Dict(object):
 
         # First build full file_name
         self.file_name = file_name.strip()
-        if dir:
+        if dir is not None:
             import os
             self.file_name = os.path.join(dir,self.file_name)
     
-        if not file_type:
+        if file_type is None:
             import os
             name, ext = os.path.splitext(self.file_name)
             if ext.lower().startswith('.p'):
@@ -255,6 +259,7 @@ class Dict(object):
                 file_type = 'JSON'
             else:
                 raise ValueError('Unable to determine file_type from file_name ending')
+
         file_type = file_type.upper()
         if file_type not in ['PICKLE','YAML','JSON']:
             raise ValueError("file_type must be one of Pickle, YAML, or JSON if specified.")
@@ -270,10 +275,11 @@ class Dict(object):
             elif file_type == 'YAML':
                 import yaml
                 self.dict = yaml.load(f)
-            else:
+            elif file_type == 'JSON':
                 import json
                 self.dict = json.load(f)
-
+            else:
+                raise ValueError("Invalid file_type %s"%file_type)
 
     def get(self, key, default=None):
         # Make a list of keys according to our key_split parameter
@@ -336,6 +342,192 @@ class Dict(object):
         return s
 
     def __str__(self): return "galsim.Dict(file_name=%r)"%self.file_name
+
+    def __eq__(self, other): return repr(self) == repr(other)
+    def __ne__(self, other): return not self.__eq__(other)
+    def __hash__(self): return hash(repr(self))
+
+
+
+class OutputCatalog(object):
+    """A class for building up a catalog for output, typically storing truth information
+    about a simulation.
+
+    Each row corresponds to a different object, and each column stores some item of
+    information about that object (e.g. flux or half_light_radius).
+
+    Initialization
+    --------------
+
+    @param names    A list of names for the output columns.
+    @param types    A list of types for the output columns. [default: None, which assumes all
+                    columns are float]
+
+    Attributes
+    ----------
+
+    After construction, the following attributes are available:
+
+        nobjects    The number of objects so far in the catalog.
+        ncols       The number of columns in the catalog.
+        names       The names of the columns.
+        types       The types of the columns.
+        cols        The columns of data that have been accumulated so far.
+
+    """
+    def __init__(self, names, types=None, _rows=[]):
+        self.names = names
+        if types is None:
+            self.types = [ float for i in names ]
+        else:
+            self.types = types
+        self.rows = _rows
+
+    @property
+    def nobjects(self): return len(self.rows)
+    @property
+    def ncols(self): return len(self.names)
+
+    def add_row(self, row):
+        """Add a row of data to the catalog.
+
+        Warning: no type checking is done at this point.  If the values in the row do not
+        match the column types, you may get an error when writing, or you may lose precision,
+        depending on the nature of the mismatch.
+
+        @param row      A list with one item per column in the same order as the names list.
+        """
+        if len(row) != self.ncols:
+            raise ValueError("Length of row does not match the number of columns")
+        self.rows.append(tuple(row))
+
+    def write(self, file_name, dir=None, file_type=None, prec=8):
+        """Write the catalog to a file.
+
+        @param file_name    The name of the file to write to.
+        @param dir          Optionally a directory name can be provided if `file_name` does not 
+                            already include it. [default: None]
+        @param file_type    Which kind of file to write to. [default: determine from the file_name
+                            extension]
+        @param prec         Output precision for ASCII. [default: 8]
+        """
+        if dir is not None:
+            import os
+            file_name = os.path.join(dir,file_name)
+
+        # Figure out which file type the catalog is
+        if file_type is None:
+            import os
+            name, ext = os.path.splitext(file_name)
+            if ext.lower().startswith('.fit'):
+                file_type = 'FITS'
+            else:
+                file_type = 'ASCII'
+        file_type = file_type.upper()
+        if file_type not in ['FITS', 'ASCII']:
+            raise ValueError("file_type must be either FITS or ASCII if specified.")
+        self.file_type = file_type
+
+        if file_type == 'FITS':
+            self.write_fits(file_name)
+        elif file_type == 'ASCII':
+            self.write_ascii(file_name, prec)
+        else:
+            raise ValueError("Invalid file_type %s"%file_type)
+
+    def _make_data(self):
+        import numpy
+        dtypes = []
+        for i, name, t in zip(range(self.ncols), self.names, self.types):
+            dt = numpy.dtype(t) # just used to catagorize the type into int, float, str
+            if dt.kind in numpy.typecodes['AllInteger']:
+                dtypes.append( (name, int) )
+            elif dt.kind in numpy.typecodes['AllFloat']:
+                dtypes.append( (name, float) )
+            else:
+                maxlen = numpy.max([ len(self.rows[k][i]) for k in range(self.nobjects) ])
+                dtypes.append( (name, str, maxlen) )
+        data = numpy.array(self.rows, dtype=dtypes)
+        return data
+
+    def write_ascii(self, file_name, prec=8):
+        """Write catalog to an ASCII file.
+
+        @param file_name    The name of the file to write to.
+        @param prec         Output precision for floats. [default: 8]
+        """
+        import numpy
+
+        data = self._make_data()
+
+        width = prec+8
+        header_form = ""
+        for i in range(self.ncols):
+            header_form += "{%d:^%d} "%(i,width)
+        header = header_form.format(*self.names)
+
+        fmt = []
+        for name in data.dtype.names:
+            dt = data.dtype[name]
+            if dt.kind in numpy.typecodes['AllInteger']:
+                fmt.append('%%%dd'%(width))
+            elif dt.kind in numpy.typecodes['AllFloat']:
+                fmt.append('%%%d.%de'%(width,prec))
+            else:
+                fmt.append('%%%ds'%(width))
+
+        try:
+            numpy.savetxt(file_name, data, fmt=fmt, header=header)
+        except (AttributeError, TypeError):
+            # header was added with version 1.7, so do it by hand if not available.
+            with open(file_name, 'w') as fid:
+                fid.write('#' + header + '\n')
+                numpy.savetxt(fid, data, fmt=fmt)
+
+    def write_fits(self, file_name):
+        """Write catalog to a FITS file.
+
+        @param file_name    The name of the file to write to.
+        """
+        tbhdu = self.write_fits_hdu()
+        tbhdu.writeto(file_name, clobber=True)
+
+    def write_fits_hdu(self):
+        """Write catalog to a FITS hdu.
+
+        @returns an HDU with the FITS binary table of the catalog.
+        """
+        import numpy
+        from galsim._pyfits import pyfits
+
+        data = self._make_data()
+
+        cols = []
+        for name in data.dtype.names:
+            dt = data.dtype[name]
+            if dt.kind in numpy.typecodes['AllInteger']:
+                cols.append(pyfits.Column(name=name, format='J', array=data[name]))
+            elif dt.kind in numpy.typecodes['AllFloat']:
+                cols.append(pyfits.Column(name=name, format='D', array=data[name]))
+            else:
+                cols.append(pyfits.Column(name=name, format='%dA'%dt.itemsize, array=data[name]))
+
+        cols = pyfits.ColDefs(cols)
+
+        # Depending on the version of pyfits, one of these should work:
+        try:
+            tbhdu = pyfits.BinTableHDU.from_columns(cols)
+        except:
+            tbhdu = pyfits.new_table(cols)
+        return tbhdu
+
+    def __repr__(self):
+        type_str = "( " + ", ".join([ repr(t)[7:-2] for t in self.types ]) + " )"
+        return "galsim.OutputCatalog(names=%r, types=%s, _rows=%r)"%(
+                self.names, type_str, self.rows)
+
+    def __str__(self):
+        return "galsim.OutputCatalog(name=%r)"%self.names
 
     def __eq__(self, other): return repr(self) == repr(other)
     def __ne__(self, other): return not self.__eq__(other)
