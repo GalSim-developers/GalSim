@@ -204,7 +204,6 @@ output:
     noclobber: true
 
     # Output truth catalogs with some of the generated values
-    # TODO: Not implemented yet.
     truth:
         dir: control/ground/constant
         file_name :
@@ -213,7 +212,7 @@ output:
             items:
             - { type: Sequence, nitems: 200 }
             - 0
-        items:
+        columns:
             num: obj_num
             x: image.offset.x
             y: image.offset.y
@@ -235,8 +234,8 @@ output:
             cosmos_index: gal.first.index
             theta: "$(@gal.first.rotate + @gal.index * math.pi/@gal.num * galsim.radians).rad()"
             mu: gal.magnification
-            g1: "$(gal.shear).g1"
-            g2: "$(gal.shear).g2"
+            g1: "$(@gal.shear).g1"
+            g2: "$(@gal.shear).g2"
             # The parameteric components aren't really available here
             # So we don't have:
             #   bulge_beta_radians

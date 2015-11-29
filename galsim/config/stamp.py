@@ -360,7 +360,9 @@ def ProcessTruth(config, logger=None):
             value = galsim.config.ParseValue(cols,name,config,None)[0]
             t = type(value)
         elif not isinstance(key,basestring):
-            raise ValueError("truth column item %s is not a string or a dict."%name)
+            # The item can just be a constant value.
+            value = key
+            t = type(value)
         elif key[0] == '$':
             # This can also be handled by ParseValue
             value = galsim.config.ParseValue(cols,name,config,None)[0]
