@@ -101,7 +101,9 @@ do
     for file_num in {0..4}
     do
         file_name=nfw$dir_num/cluster000$file_num.fits
+        truth_name=nfw$dir_num/truth000$file_num.dat
         ./check_diff output/$file_name output_yaml/$file_name
+        ./check_diff output/$truth_name output_yaml/$truth_name
     done
 done
 
