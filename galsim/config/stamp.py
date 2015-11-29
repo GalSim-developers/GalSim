@@ -351,7 +351,21 @@ def ProcessTruth(config, logger=None):
     types = []
     for name in cat.names:
         key = cols[name]
-        value, t = galsim.config.GetCurrentValue(key, name, config)
+        if isinstance(key, dict):
+            # Then the "key" is actually something to be parsed in the normal way.
+            # Caveat: We don't know the value_type here, so we give None.  This allows
+            # only a limited subset of the parsing.  Usually enough for truth items, but
+            # not fully featured.
+            value = galsim.config.ParseValue(cols,name,config,None)[0]
+            t = type(value)
+        elif not isinstance(key,basestring):
+            raise ValueError("truth column item %s is not a string or a dict."%name)
+        elif key[0] == '$':
+            # This can also be handled by ParseValue
+            value = galsim.config.ParseValue(cols,name,config,None)[0]
+            t = type(value)
+        else:
+            value, t = galsim.config.GetCurrentValue(key, name, config)
         row.append(value)
         types.append(t)
     if cat.nobjects == 0:

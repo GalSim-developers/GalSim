@@ -24,9 +24,9 @@ valid_value_types = {
     'List' : ('_GenerateFromList', 
               [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ]),
     'Eval' : ('_GenerateFromEval', 
-              [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ]),
+              [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD, None ]),
     'Current' : ('_GenerateFromCurrent', 
-                 [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ]),
+                 [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD, None ]),
     'Sum' : ('_GenerateFromSum', 
              [ float, int, galsim.Angle, galsim.Shear, galsim.PositionD ]),
     'Catalog' : ('_GenerateFromCatalog', [ float, int, bool, str ]),
@@ -103,7 +103,7 @@ def ParseValue(config, param_name, base, value_type):
                 return param['current_val'], param['current_safe']
 
     # First see if we can assign by param by a direct constant value
-    if isinstance(param, value_type):
+    if value_type is not None and isinstance(param, value_type):
         #print param_name,' = ',param
         return param, True
     elif not isinstance(param, dict):
@@ -117,6 +117,10 @@ def ParseValue(config, param_name, base, value_type):
         elif value_type is galsim.PositionD:
             # For PositionD, we allow a string of x,y
             val = _GetPositionValue(param, param_name)
+        elif value_type is None:
+            # If no value_type is given, just return whatever we have in the dict and hope
+            # for the best.
+            val = param
         else:
             # Make sure strings are converted to float (or other type) if necessary.
             # In particular things like 1.e6 aren't converted to float automatically
@@ -131,7 +135,7 @@ def ParseValue(config, param_name, base, value_type):
             "%s.type attribute required in config for non-constant parameter %s."%(
                 param_name,param_name))
     elif ( 'current_val' in param and param['current_index'] == index):
-        if param['current_value_type'] != value_type:
+        if value_type is not None and param['current_value_type'] != value_type:
             raise ValueError(
                 "Attempt to parse %s multiple times with different value types"%param_name)
         #print index,'Using current value of ',param_name,' = ',param['current_val']
@@ -160,7 +164,7 @@ def ParseValue(config, param_name, base, value_type):
         #print 'returned val, safe = ',val,safe
 
         # Make sure we really got the right type back.  (Just in case...)
-        if not isinstance(val,value_type):
+        if value_type is not None and not isinstance(val,value_type):
             val = value_type(val)
 
         # Save the current value for possible use by the Current type
@@ -1244,8 +1248,10 @@ def _GenerateFromEval(param, param_name, base, value_type):
         if key in base:
             exec(key + ' = base[key]')
     try:
-        val = value_type(eval(string))
+        val = eval(string)
         #print base['obj_num'],'Eval(%s) needed extra variables: val = %s'%(string,val)
+        if value_type is not None:
+            val = value_type(val)
         return val, False
     except:
         raise ValueError("Unable to evaluate string %r as a %s for %s"%(
@@ -1265,13 +1271,12 @@ def GetCurrentValue(key, param_name, base, value_type=None):
     If value_type is None, return the current value, type
     If value_type is given, just return value
     """
+    #print 'GetCurrent %s for param %s.  value_type = %s'%(key,param_name,value_type)
+
     # This next bit is basically identical to the code for Dict.get(key) in catalog.py.
     # Make a list of keys
     chain = key.split('.')
     d = base
-
-    #print 'GetCurrent %s for param %s.  value_type = %s'%(key,param_name,value_type)
-    #print 'd = ',d
 
     # We may need to make one adjustment.  If the first item in the key is 'input', then
     # the key is probably wrong relative to the current config dict.  We make each input
@@ -1318,11 +1323,6 @@ def GetCurrentValue(key, param_name, base, value_type=None):
                     #print 'Dict with current_val.  Use it: ',d[k]['current_val']
                     val = d[k]['current_val']
                     t = d[k]['current_value_type']
-                elif value_type is None:
-                    # We don't know how to parse it if there isn't a current_val yet.
-                    #print 'Dict with no current_val and unknown value_type'
-                    #print 'd[k] = ',d[k]
-                    raise ValueError("No current value of %s yet for %s"%(key,param_name))
                 else:
                     # Otherwise, parse the value for this key
                     #print 'Parse value normally'

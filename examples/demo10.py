@@ -167,8 +167,18 @@ def main(argv):
     galsim.random.permute(rng, ix_list, iy_list)
 
     # Now have the PowerSpectrum object build a grid of shear values for us to use.
-    grid_g1, grid_g2 = ps.buildGrid(grid_spacing=stamp_size*pixel_scale, ngrid=n_tiles,
-                                    rng=rng)
+    grid_g1, grid_g2 = ps.buildGrid(grid_spacing=stamp_size*pixel_scale, ngrid=n_tiles, rng=rng)
+
+    # Initialize the OutputCatalog for the truth values
+    names = [ 'gal_num', 'x_image', 'y_image', 
+              'psf_e1', 'psf_e2', 'psf_fwhm',
+              'cosmos_id', 'theta',
+              'g1', 'g2', 'shift_x', 'shift_y' ]
+    types = [ int, float, float,
+              float, float, float,
+              str, float, 
+              float, float, float, float ]
+    truth_catalog = galsim.OutputCatalog(names, types)
 
     # Build each postage stamp:
     for k in range(nobj):
@@ -186,14 +196,17 @@ def main(argv):
         pos = wcs.toWorld(b.trueCenter())
         # The image comes out as about 211 arcsec across, so we define our variable
         # parameters in terms of (r/100 arcsec), so roughly the scale size of the image.
-        r = math.sqrt(pos.x**2 + pos.y**2) / 100
-        psf_fwhm = 0.9 + 0.5 * r**2   # arcsec
-        psf_e = 0.4 * r**1.5
+        rsq = (pos.x**2 + pos.y**2)
+        r = math.sqrt(rsq)
+
+        psf_fwhm = 0.9 + 0.5 * rsq / 100**2   # arcsec
+        psf_e = 0.4 * (r/100.)**1.5
         psf_beta = (math.atan2(pos.y,pos.x) + math.pi/2) * galsim.radians
 
         # Define the PSF profile
         psf = galsim.Gaussian(fwhm=psf_fwhm)
-        psf = psf.shear(e=psf_e, beta=psf_beta)
+        psf_shape = galsim.Shear(e=psf_e, beta=psf_beta)
+        psf = psf.shear(psf_shape)
 
         # Define the galaxy profile:
 
@@ -201,10 +214,11 @@ def main(argv):
         # orientations stepped uniformly in angle, making a ring in e1-e2 space.
         # We're drawing each profile at 20 different orientations and then skipping to the
         # next galaxy in the list.  So theta steps by 1/20 * 360 degrees:
-        theta = k/20. * 360. * galsim.degrees
+        theta_deg = (k%20) / 20. * 360.
+        theta = theta_deg * galsim.degrees
 
         # The index needs to increment every 20 objects so we use k/20 using integer math.
-        index = k / 20
+        index = k // 20
         gal = gal_list[index]
 
         # This makes a new copy so we're not changing the object in the gal_list.
@@ -222,9 +236,9 @@ def main(argv):
         # Apply half-pixel shift in a random direction.
         shift_r = pixel_scale * 0.5
         ud = galsim.UniformDeviate(rng)
-        theta = ud() * 2. * math.pi
-        dx = shift_r * math.cos(theta)
-        dy = shift_r * math.sin(theta)
+        t = ud() * 2. * math.pi
+        dx = shift_r * math.cos(t)
+        dy = shift_r * math.sin(t)
         gal = gal.shift(dx,dy)
 
         # Make the final image, convolving with the psf
@@ -252,12 +266,25 @@ def main(argv):
         # Again, add noise, but at higher S/N this time.
         sub_psf_image.addNoiseSNR(noise, psf_signal_to_noise)
 
+        # Add the truth values to the truth catalog
+        row = [ k, b.trueCenter().x, b.trueCenter().y,
+                psf_shape.e1, psf_shape.e2, psf_fwhm,
+                id_list[index], (theta_deg % 360.),
+                alt_g1, alt_g2, dx, dy ]
+        truth_catalog.add_row(row)
+
         logger.info('Galaxy (%d,%d): position relative to center = %s', ix,iy,str(pos))
 
     logger.info('Done making images of postage stamps')
 
+    # In this case, we'll attach the truth catalog as an aditional HDU in the same file as
+    # the image data.
+    truth_hdu = truth_catalog.write_fits_hdu()
+
     # Now write the images to disk.
-    images = [ gal_image , psf_image ]
+    images = [ gal_image , psf_image, truth_hdu ]
+    # Any items in the "images" list that is already an hdu is just used directly.
+    # The actual images are converted to FITS hdus that contain the image data.
     galsim.fits.writeMulti(images, file_name)
     logger.info('Wrote image to %r',file_name) 
 

@@ -35,13 +35,15 @@
 # - obj type : Ring (..., full_rotation)
 # - obj type : RealGalaxy (..., id)
 # - type : Eval using world_pos variable, user-defined variables and math functions
-# - top level field eval_variables
+# - type : Current
 # - shear_value : PowerSpectrumShear 
 # - pos_value : RTheta (r, theta)
 # - image type : Tiled (..., order)
 # - input : power_spectrum (e_power_function, b_power_function)
 # - output.psf : hdu, signal_to_noise, draw_method
+# - output.truth : hdu
 #
+# - Evaluated values in output.truth.columns
 
 # Define the PSF profile
 psf : 
@@ -73,7 +75,7 @@ psf :
             #     g = Shear
             # Thus, fr here is a float variable named r.
             fr : { type : Eval , str : '(world_pos.x**2 + world_pos.y**2)**0.5' } 
-            # Now we can use this variable (without the first letter) in our string:
+            # Now we can use this variable (as r, not fr) in our string:
             str : '0.4 * (r/100)**1.5'   # large value at the edge, so visible by eye.
         beta:
             type : Eval
@@ -89,7 +91,7 @@ gal :
     # Last time we used Ring (demo5), we had num=2 to make pairs of 90 degree rotated
     # galaxies.  This example is more like a typical ring test where the same galaxy profile
     # is drawn at many orientations stepped uniformly in angle, making a ring in e1-e2 space.
-    num : &num_in_ring 20
+    num : 20
 
     first :
         type : RealGalaxy
@@ -100,8 +102,14 @@ gal :
             # However, sequences are indexed by the overall object number, so in order to
             # step through the items in this list once for each time it gets to the "first"
             # item, we need to set the index to repeat 20 times before incrementing.
-            # We again use the convenient YAML variable name notation to do so.
-            index : { type : Sequence , repeat : *num_in_ring }
+            index :
+                type : Sequence
+                # You can access the current value of any other item in the config dict using
+                # type = Current.  The syntax for the key is to treat the config levels as
+                # attributes.  So the number of galaxies in the ring defined above is gal.num.
+                # You can use any value this way.  If it hasn't actually been evaluated yet,
+                # it will evaluate it as needed for the current object.
+                repeat : { type : Current, key : gal.num }
 
         # Make the galaxies a factor of 3 larger (in linear size, not area) than their
         # original observed size.
@@ -120,21 +128,15 @@ gal :
 
     shift : 
         type : RTheta
-        # Half a pixel in a random direction
-        # This time, we use the pixel_scale variable defined in eval_variables (below), 
-        # so we don't need to define it here.
-        r : { type : Eval , str : 'pixel_scale * 0.5' }
+        # Half a pixel in a random direction.
+        r :
+            type : Eval
+            str : 'pixel_scale * 0.5'
+            # We again use the Current type, this time to access image.pixel_scale defined below.
+            fpixel_scale : { type : Current, key : image.pixel_scale }
         theta : { type : Random }
 
     signal_to_noise : 100
-
-
-# Anything defined in eval_variables will be available for all Eval commands, so you don't 
-# have to repeat them for each one.  This is most useful when the same variable is used 
-# in multiple places.  In this case, we use the pixel_scale for the shift above, and also
-# as a trivial evaluation for the image pixel_scale below.
-eval_variables :
-    fpixel_scale : 0.44  # arcsec / pixel
 
 
 # Define some other information about the images 
@@ -159,7 +161,7 @@ image :
     # We use 'random' here so the ring test galaxies don't appear in order along the rows.
     order : 'random'
 
-    pixel_scale : { type : Eval , str : 'pixel_scale' }
+    pixel_scale : 0.44  # arcsec / pixel
 
     wcs :
         # This time, we only want to set the world coordinates to be (0,0) at the center
@@ -215,4 +217,68 @@ output :
         # If there is a signal_to_noise value, then it uses the same kind of noise as in the 
         # main image.
         signal_to_noise : 1000
+
+    # Make a truth catalog as a binary table in hdu 2
+    truth :
+        hdu : 2
+
+        columns :
+            gal_num : obj_num
+
+            # We saw in demo9 that position values in the output catalog get converted into two
+            # float values, and the column names get '.x' and '.y' appended to the given name.
+            # If you want, you can instead specify the x and y column names directly, but you
+            # need to do a little calculation to get the values, since these aren't natively
+            # stored anywhere.  To enable this, truth columns can be calculated quantities,
+            # just like any other field in the configuration.  However, only Eval and Current
+            # types are allowed.
+            x_image : { type : Eval, str : 'image_pos.x' }
+            y_image : { type : Eval, str : 'image_pos.y' }
+
+            # Similarly, shear values append '.g1' and '.g2' to the name and output a column
+            # for each of the two components.  However, this isn't necessarily what you want.
+            # E.g. you might want to catalog the e1,e2 definitions of the shape rather than g1,g2.
+            psf_e1 :
+                type : Eval
+                str : 'ellip.e1'
+                # Reminder g is the Eval code for Shear types. (s = str was already taken)
+                gellip : { type : Current, key : 'psf.ellip' }
+            psf_e2 :
+                type : Eval
+                str : 'ellip.e2'
+                gellip : { type : Current, key : 'psf.ellip' }
+
+            psf_fwhm : psf.fwhm
+
+            cosmos_id : gal.first.id
+
+            # Fields that are automatically generated are also available.
+            # List, Ring, and Catalog all have an index parameter, but it is often omitted
+            # from the configuration file because the ordering is obvious, so the default is
+            # what you want.  However, we can still use the Ring index here to compute the
+            # rotation angle that was applied.
+            theta :
+                type : Eval
+                str : "index / num * 360."
+                iindex : { type : Current, key : 'gal.index' }
+                fnum : { type : Current, key : 'gal.num' }
+
+            g1 :
+                type : Eval
+                str : 'shear.g1'
+                gshear : { type : Current, key : 'gal.shear' }
+            g2 :
+                type : Eval
+                str : 'shear.g2'
+                gshear : { type : Current, key : 'gal.shear' }
+
+            shift_x :
+                type : Eval
+                str : 'shift.x'
+                pshift : { type : Current, key : 'gal.shift' }
+            shift_y :
+                type : Eval
+                str : 'shift.y'
+                pshift : { type : Current, key : 'gal.shift' }
+
 
