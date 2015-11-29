@@ -71,7 +71,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     """
     # I'd like to be able to have base=config be the default value, but python doesn't
     # allow that.  So None is the default, and if it's None, we set it to config.
-    if not base:
+    if base is None:
         base = config
  
     if logger and logger.isEnabledFor(logging.DEBUG):

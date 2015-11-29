@@ -1300,7 +1300,7 @@ def GetCurrentValue(key, param_name, base, value_type=None):
             # If there are more keys, just set d to the next in the chanin.
             d = d[k]
         else:
-            if type(d[k]) is not dict:
+            if not isinstance(d[k], dict):
                 if value_type is None:
                     # If we are not given the value_type, and it's not a dict, then the
                     # item is probably just some value already.

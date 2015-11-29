@@ -433,7 +433,7 @@ output :
             # still be placed in the truth catalog.  These columns will have all identical
             # values within each catalog, but different across catalogs.
             halo_mass : input.nfw_halo.mass
-            halo_conv : input.nfw_halo.conc
+            halo_conc : input.nfw_halo.conc
             halo_redshift : input.nfw_halo.redshift
  
 ---

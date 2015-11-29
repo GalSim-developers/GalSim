@@ -116,7 +116,6 @@ output :
 # The second version of this uses 4 processes
 
 image :
-    # If nproc <= 0, then this means to use nproc = ncpu.
     nproc : 4
 
 output :

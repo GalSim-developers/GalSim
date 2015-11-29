@@ -160,6 +160,63 @@ def parse_args():
     return args
 
 
+def read_yaml(config_file):
+
+    import yaml
+    from collections import OrderedDict
+
+    # We read in the YAML config file into an OrderedDict.  The main advantage of this
+    # is for the truth catalog.  This lets the columns be in the same order as the
+    # entries in the yaml file.  With a normal dict, they get scrambled.
+
+    # cf. coldfix's answer here:
+    # http://stackoverflow.com/questions/5121931/in-python-how-can-you-load-yaml-mappings-as-ordereddicts
+    class OrderedLoader(yaml.SafeLoader):
+        pass
+    def construct_mapping(loader, node):
+        loader.flatten_mapping(node)
+        return OrderedDict(loader.construct_pairs(node))
+    OrderedLoader.add_constructor(
+        yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+        construct_mapping)
+
+    with open(config_file) as f:
+        all_config = [ c for c in yaml.load_all(f.read(), OrderedLoader) ]
+
+    # If there is only 1 yaml document, then it is of course used for the configuration.
+    # If there are multiple yaml documents, then the first one defines a common starting
+    # point for the later documents.
+    # So the configurations are taken to be:
+    #   all_config[0] + all_config[1]
+    #   all_config[0] + all_config[2]
+    #   all_config[0] + all_config[3]
+    #   ...
+    # See demo6.yaml and demo8.yaml in the examples directory for examples of this feature.
+
+    if len(all_config) > 1:
+        # Break off the first one if more than one:
+        base_config = all_config[0]
+        all_config = all_config[1:]
+    else:
+        # Else just use an empty base_config dict.
+        base_config = {}
+
+    return base_config, all_config
+
+
+def read_json(config_file):
+    import json
+
+    with open(config_file) as f:
+        config = json.load(f)
+
+    # JSON files are just processed as is.  This is equivalent to having an empty 
+    # base_config, so we just do that and use the same structure.
+    base_config = {}
+    all_config = [ config ]
+
+    return base_config, all_config
+ 
 def main():
     args = parse_args()
 
@@ -200,40 +257,10 @@ def main():
     logger.warn('Using config file %s', args.config_file)
     
     if args.file_type == 'yaml':
-        import yaml
-
-        with open(args.config_file) as f:
-            all_config = [ c for c in yaml.load_all(f.read()) ]
-
-        # If there is only 1 yaml document, then it is of course used for the configuration.
-        # If there are multiple yaml documents, then the first one defines a common starting
-        # point for the later documents.
-        # So the configurations are taken to be:
-        #   all_config[0] + all_config[1]
-        #   all_config[0] + all_config[2]
-        #   all_config[0] + all_config[3]
-        #   ...
-        # See demo6.yaml and demo8.yaml in the examples directory for examples of this feature.
-
-        if len(all_config) > 1:
-            # Break off the first one if more than one:
-            base_config = all_config[0]
-            all_config = all_config[1:]
-        else:
-            # Else just use an empty base_config dict.
-            base_config = {}
-
+        base_config, all_config = read_yaml(args.config_file)
     else:
-        import json
+        base_config, all_config = read_json(args.config_file)
 
-        with open(args.config_file) as f:
-            config = json.load(f)
-
-        # JSON files are just processed as is.  This is equivalent to having an empty 
-        # base_config, so we just do that and use the same structure.
-        base_config = {}
-        all_config = [ config ]
-            
     logger.debug('Successfully read in config file.')
 
     # Add the additional variables to the config file
