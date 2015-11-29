@@ -557,7 +557,8 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True
 
     The details of how the images are written to file depends on the arguments.
 
-    @param image_list   A Python list of Images.
+    @param image_list   A Python list of Images.  (For convenience, some items in this list
+                        may be HDUs already.  Any Images will be converted into pyfits HDUs.)
     @param file_name    The name of the file to write to.  [Either `file_name` or `hdu_list` is 
                         required.]
     @param dir          Optionally a directory name can be provided if `file_name` does not 
@@ -583,13 +584,17 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True
         hdu_list = pyfits.HDUList()
 
     for image in image_list:
-        hdu = _add_hdu(hdu_list, image.array, pyfits_compress)
-        if image.wcs:
-            image.wcs.writeToFitsHeader(hdu.header, image.bounds)
+        if isinstance(image, pyfits.hdu.base.ExtensionHDU):
+            hdu_list.append(image)
+        elif not isinstance(image, galsim.Image):
+            raise ValueError("All items in image_list must be either a galsim.Image or an HDU")
+        else:
+            hdu = _add_hdu(hdu_list, image.array, pyfits_compress)
+            if image.wcs:
+                image.wcs.writeToFitsHeader(hdu.header, image.bounds)
 
     if file_name:
         _write_file(file_name, dir, hdu_list, clobber, file_compress, pyfits_compress)
-
 
 
 def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,

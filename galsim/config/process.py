@@ -95,10 +95,8 @@ def RemoveCurrent(config, keep_safe=False, type=None):
           and (type == None or ('type' in config and config['type'] == type)) ):
         del config['current_val']
         del config['current_safe']
-        if 'current_obj_num' in config:
-            del config['current_obj_num']
-            del config['current_image_num']
-            del config['current_file_num']
+        del config['current_index']
+        if 'current_value_type' in config:
             del config['current_value_type']
         return True
     else:
@@ -445,6 +443,7 @@ def Process(config, logger=None):
         for job in iter(input.get, 'STOP'):
             try:
                 (kwargs, file_num, file_name) = job
+                RemoveCurrent(config, keep_safe=True)
                 if logger and logger.isEnabledFor(logging.WARN):
                     logger.warn('%s: Start file %d, %s',proc,file_num,file_name)
                 ProcessInput(config, file_num=file_num, logger=logger)
@@ -495,7 +494,7 @@ def Process(config, logger=None):
     config['image_num'] = 0
     config['obj_num'] = 0
 
-    extra_keys = [ 'psf', 'weight', 'badpix' ]
+    extra_keys = [ 'psf', 'weight', 'badpix', 'truth' ]
     last_file_name = {}
     for key in extra_keys:
         last_file_name[key] = None
@@ -578,6 +577,7 @@ def Process(config, logger=None):
             continue
 
         # Check if we need to build extra images to write out as well
+        main_dir = dir
         for extra_key in [ key for key in extra_keys if key in output ]:
             if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('extra_key = %s',extra_key)
@@ -601,6 +601,8 @@ def Process(config, logger=None):
                 ignore += ['draw_method', 'signal_to_noise']
             if extra_key == 'weight': 
                 ignore += ['include_obj_var']
+            if extra_key == 'truth': 
+                ignore += ['columns']
             if 'file_name' in output_extra:
                 SetDefaultExt(output_extra['file_name'],'.fits')
             params, safe = galsim.config.GetAllParams(output_extra,extra_key,config,
@@ -613,6 +615,8 @@ def Process(config, logger=None):
                     dir = params['dir']
                     if dir and not os.path.isdir(dir): os.makedirs(dir)
                 # else keep dir from above.
+                else:
+                    dir = main_dir
                 if dir:
                     f = os.path.join(dir,f)
                 # If we already wrote this file, skip it this time around.
@@ -638,6 +642,7 @@ def Process(config, logger=None):
         else:
             try:
                 config1 = galsim.config.CopyConfig(orig_config)
+                RemoveCurrent(config1, keep_safe=True)
                 if logger and logger.isEnabledFor(logging.WARN):
                     logger.warn('Start file %d = %s', file_num, file_name)
                 ProcessInput(config1, file_num=file_num, logger=logger)
@@ -802,13 +807,15 @@ def SetupConfigFileNum(config, file_num, image_num, obj_num):
     config['image_num'] = image_num
     config['obj_num'] = obj_num
     config['index_key'] = 'file_num'
+    if 'output' not in config: config['output'] = {}
 
 
 def BuildFits(file_name, config, logger=None, 
               file_num=0, image_num=0, obj_num=0,
               psf_file_name=None, psf_hdu=None,
               weight_file_name=None, weight_hdu=None,
-              badpix_file_name=None, badpix_hdu=None):
+              badpix_file_name=None, badpix_hdu=None,
+              truth_file_name=None, truth_hdu=None):
     """
     Build a regular fits file as specified in config.
     
@@ -821,10 +828,13 @@ def BuildFits(file_name, config, logger=None,
     @param psf_file_name    If given, write a psf image to this file. [default: None]
     @param psf_hdu          If given, write a psf image to this hdu in file_name. [default: None]
     @param weight_file_name If given, write a weight image to this file. [default: None]
-    @param weight_hdu       If given, write a weight image to this hdu in file_name.  [default: 
+    @param weight_hdu       If given, write a weight image to this hdu in file_name. [default: 
                             None]
     @param badpix_file_name If given, write a badpix image to this file. [default: None]
     @param badpix_hdu       If given, write a badpix image to this hdu in file_name. [default:
+                            None]
+    @param truth_file_name  If given, write a truth catalog to this file. [default: None]
+    @param truth_hdu        If given, write a truth catalog to this hdu in file_name. [default:
                             None]
 
     @returns the time taken to build file.
@@ -838,7 +848,6 @@ def BuildFits(file_name, config, logger=None,
 
     SetupConfigFileNum(config,file_num,image_num,obj_num)
     seed = SetupConfigRNG(config)
-    RemoveCurrent(config, keep_safe=True)
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: seed = %d',file_num,seed)
 
@@ -874,6 +883,22 @@ def BuildFits(file_name, config, logger=None,
     else:
         make_badpix_image = False
 
+    if truth_file_name or truth_hdu:
+        if 'truth' not in config['output']:
+            raise AttributeError("No 'truth' field found in config.output")
+        if 'columns' not in config['output']['truth']:
+            raise AttributeError("No 'columns' listed for config.output.truth")
+        columns = config['output']['truth']['columns']
+        truth_names = columns.keys()
+        config['truth_catalog'] = galsim.OutputCatalog(truth_names)
+        if logger and logger.isEnabledFor(logging.DEBUG):
+            logger.debug('file %d: Made initial truth catalog',file_num)
+
+        if truth_hdu:
+            if truth_hdu <= 0 or truth_hdu in hdus.keys():
+                raise ValueError("truth_hdu = %d is invalid or a duplicate."%truth_hdu)
+            hdus[truth_hdu] = 0 # This value isn't actually used.
+
     for h in range(len(hdus.keys())):
         if h not in hdus.keys():
             raise ValueError("Image for hdu %d not found.  Cannot skip hdus."%h)
@@ -888,7 +913,10 @@ def BuildFits(file_name, config, logger=None,
     hdulist = []
     for h in range(len(hdus.keys())):
         assert h in hdus.keys()  # Checked for this above.
-        hdulist.append(all_images[hdus[h]])
+        if h == truth_hdu:
+            hdulist.append(config['truth_catalog'].write_fits_hdu())
+        else:
+            hdulist.append(all_images[hdus[h]])
     # We can use hdulist in writeMulti even if the main image is the only one in the list.
 
     if 'output' in config and 'retry_io' in config['output']:
@@ -924,13 +952,20 @@ def BuildFits(file_name, config, logger=None,
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote badpix image to fits file %r',file_num,badpix_file_name)
 
+    if truth_file_name:
+        _retry_io(galsim.OutputCatalog.write, (config['truth_catalog'], truth_file_name),
+                  ntries, truth_file_name, logger)
+        if logger and logger.isEnabledFor(logging.DEBUG):
+            logger.debug('file %d: Wrote truth catalog to %r',file_num,truth_file_name)
+
     t2 = time.time()
     return t2-t1
 
 
 def BuildMultiFits(file_name, config, nproc=1, logger=None,
                    file_num=0, image_num=0, obj_num=0,
-                   psf_file_name=None, weight_file_name=None, badpix_file_name=None):
+                   psf_file_name=None, weight_file_name=None,
+                   badpix_file_name=None, truth_file_name=None):
     """
     Build a multi-extension fits file as specified in config.
     
@@ -944,6 +979,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
     @param psf_file_name    If given, write a psf image to this file. [default: None]
     @param weight_file_name If given, write a weight image to this file. [default: None]
     @param badpix_file_name If given, write a badpix image to this file. [default: None]
+    @param truth_file_name  If given, write a truth catalog to this file. [default: None]
 
     @returns the time taken to build file.
     """
@@ -955,7 +991,6 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
                       config['file_num'],file_name,file_num,image_num,obj_num)
     SetupConfigFileNum(config,file_num,image_num,obj_num)
     seed = SetupConfigRNG(config)
-    RemoveCurrent(config, keep_safe=True)
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: seed = %d',file_num,seed)
 
@@ -974,6 +1009,15 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
     else:
         make_badpix_image = False
 
+    if truth_file_name:
+        if 'truth' not in config['output']:
+            raise AttributeError("No 'truth' field found in config.output")
+        if 'columns' not in config['output']['truth']:
+            raise AttributeError("No 'columns' listed for config.output.truth")
+        columns = config['output']['truth']['columns']
+        truth_names = columns.keys()
+        config['truth_catalog'] = galsim.OutputCatalog(names=truth_names)
+
     # Allow nimages to be automatic based on input catalog if image type is Single
     if ( 'nimages' not in config['output'] and 
          ( 'image' not in config or 'type' not in config['image'] or 
@@ -981,7 +1025,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
         nobjects = ProcessInputNObjects(config)
         if nobjects:
             config['output']['nimages'] = nobjects
-    if 'output' not in config or 'nimages' not in config['output']:
+    if 'nimages' not in config['output']:
         raise AttributeError("Attribute output.nimages is required for output.type = MultiFits")
     nimages = galsim.config.ParseValue(config['output'],'nimages',config,int)[0]
 
@@ -997,7 +1041,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
     weight_images = all_images[2]
     badpix_images = all_images[3]
 
-    if 'output' in config and 'retry_io' in config['output']:
+    if 'retry_io' in config['output']:
         ntries = galsim.config.ParseValue(config['output'],'retry_io',config,int)[0]
         # This is how many _re_-tries.  Do at least 1, so ntries is 1 more than this.
         ntries = ntries + 1
@@ -1030,13 +1074,21 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
             logger.debug('file %d: Wrote badpix images to multi-extension fits file %r',
                          config['file_num'],badpix_file_name)
 
+    if truth_file_name:
+        _retry_io(galsim.OutputCatalog.write, (config['truth_catalog'], truth_file_name),
+                  ntries, truth_file_name, logger)
+        if logger and logger.isEnabledFor(logging.DEBUG):
+            logger.debug('file %d: Wrote truth catalog to %r',
+                         config['file_num'],truth_file_name)
+
     t2 = time.time()
     return t2-t1
 
 
 def BuildDataCube(file_name, config, nproc=1, logger=None, 
                   file_num=0, image_num=0, obj_num=0,
-                  psf_file_name=None, weight_file_name=None, badpix_file_name=None):
+                  psf_file_name=None, weight_file_name=None, 
+                  badpix_file_name=None, truth_file_name=None):
     """
     Build a multi-image fits data cube as specified in config.
     
@@ -1050,6 +1102,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     @param psf_file_name    If given, write a psf image to this file. [default: None]
     @param weight_file_name If given, write a weight image to this file. [default: None]
     @param badpix_file_name If given, write a badpix image to this file. [default: None]
+    @param truth_file_name  If given, write a truth catalog to this file. [default: None]
 
     @returns the time taken to build file.
     """
@@ -1061,7 +1114,6 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
                       file_num,file_name,file_num,image_num,obj_num)
     SetupConfigFileNum(config,file_num,image_num,obj_num)
     seed = SetupConfigRNG(config)
-    RemoveCurrent(config, keep_safe=True)
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: seed = %d',file_num,seed)
 
@@ -1080,6 +1132,15 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     else:
         make_badpix_image = False
 
+    if truth_file_name:
+        if 'truth' not in config['output']:
+            raise AttributeError("No 'truth' field found in config.output")
+        if 'columns' not in config['output']['truth']:
+            raise AttributeError("No 'columns' listed for config.output.truth")
+        columns = config['output']['truth']['columns']
+        truth_names = columns.keys()
+        config['truth_catalog'] = galsim.OutputCatalog(names=truth_names)
+
     # Allow nimages to be automatic based on input catalog if image type is Single
     if ( 'nimages' not in config['output'] and 
          ( 'image' not in config or 'type' not in config['image'] or 
@@ -1087,7 +1148,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
         nobjects = ProcessInputNObjects(config)
         if nobjects:
             config['output']['nimages'] = nobjects
-    if 'output' not in config or 'nimages' not in config['output']:
+    if 'nimages' not in config['output']:
         raise AttributeError("Attribute output.nimages is required for output.type = DataCube")
     nimages = galsim.config.ParseValue(config['output'],'nimages',config,int)[0]
 
@@ -1132,7 +1193,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
         weight_images += all_images[2]
         badpix_images += all_images[3]
 
-    if 'output' in config and 'retry_io' in config['output']:
+    if 'retry_io' in config['output']:
         ntries = galsim.config.ParseValue(config['output'],'retry_io',config,int)[0]
         # This is how many _re_-tries.  Do at least 1, so ntries is 1 more than this.
         ntries = ntries + 1
@@ -1165,11 +1226,18 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
             logger.debug('file %d: Wrote badpix images to fits data cube %r',
                          config['file_num'],badpix_file_name)
 
+    if truth_file_name:
+        _retry_io(galsim.OutputCatalog.write, (config['truth_catalog'], truth_file_name),
+                  ntries, truth_file_name, logger)
+        if logger and logger.isEnabledFor(logging.DEBUG):
+            logger.debug('file %d: Wrote truth catalog to %r',
+                         config['file_num'],truth_file_name)
+
     t4 = time.time()
     return t4-t1
 
 def GetNObjForFits(config, file_num, image_num):
-    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc',
+    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'truth', 'nproc',
                'skip', 'noclobber', 'retry_io' ]
     galsim.config.CheckAllParams(config['output'], 'output', ignore=ignore)
     try : 
@@ -1180,7 +1248,7 @@ def GetNObjForFits(config, file_num, image_num):
     return nobj
     
 def GetNObjForMultiFits(config, file_num, image_num):
-    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc', 
+    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'truth', 'nproc', 
                'skip', 'noclobber', 'retry_io' ]
     req = { 'nimages' : int }
     # Allow nimages to be automatic based on input catalog if image type is Single
@@ -1203,7 +1271,7 @@ def GetNObjForMultiFits(config, file_num, image_num):
     return nobj
 
 def GetNObjForDataCube(config, file_num, image_num):
-    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc',
+    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'truth', 'nproc',
                'skip', 'noclobber', 'retry_io' ]
     req = { 'nimages' : int }
     # Allow nimages to be automatic based on input catalog if image type is Single

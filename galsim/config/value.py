@@ -1173,7 +1173,7 @@ def _GenerateFromEval(param, param_name, base, value_type):
         keys = numpy.unique(keys).tolist()
         for key0 in keys:
             key = key0[1:] # Remove the @ sign.
-            value = GetCurrentValue(key, param_name, base)
+            value, t = GetCurrentValue(key, param_name, base)
             # Replaces all occurrences of key0 with the value.
             string = string.replace(key0,repr(value)) 
 
@@ -1261,6 +1261,9 @@ def _GenerateFromCurrent(param, param_name, base, value_type):
 
 def GetCurrentValue(key, param_name, base, value_type=None):
     """@brief Get the current value of another config item given the key name.
+
+    If value_type is None, return the current value, type
+    If value_type is given, just return value
     """
     # This next bit is basically identical to the code for Dict.get(key) in catalog.py.
     # Make a list of keys
@@ -1298,31 +1301,37 @@ def GetCurrentValue(key, param_name, base, value_type=None):
             d = d[k]
         else:
             if type(d[k]) is not dict:
-                if value_type is not None:
-                    # This will work fine to evaluate the current value, but will also
-                    # compute it if necessary
-                    #print 'Not dict. Parse value normally'
-                    val = ParseValue(d, k, base, value_type)[0]
-                else:
+                if value_type is None:
                     # If we are not given the value_type, and it's not a dict, then the
                     # item is probably just some value already.
                     #print 'Not dict, no value_type.  Assume %s is ok.'%d[k]
                     val = d[k]
+                    t = type(val)
+                else:
+                    # This will work fine to evaluate the current value, but will also
+                    # compute it if necessary
+                    #print 'Not dict. Parse value normally'
+                    val = ParseValue(d, k, base, value_type)[0]
             else:
                 if 'current_val' in d[k]:
                     # If there is already a current_val, use it.
                     #print 'Dict with current_val.  Use it: ',d[k]['current_val']
                     val = d[k]['current_val']
+                    t = d[k]['current_value_type']
                 elif value_type is None:
                     # We don't know how to parse it if there isn't a current_val yet.
                     #print 'Dict with no current_val and unknown value_type'
-                    raise ValueError("No current value of %s yet for %s"%key,param_name)
+                    #print 'd[k] = ',d[k]
+                    raise ValueError("No current value of %s yet for %s"%(key,param_name))
                 else:
                     # Otherwise, parse the value for this key
-                    #print 'Dict without current_val. Parse this value normally'
+                    #print 'Parse value normally'
                     val = ParseValue(d, k, base, value_type)[0]
             #print base['obj_num'],'Current key = %s, value = %s'%(key,val)
-            return val
+            if value_type is None:
+                return val, t
+            else:
+                return val
 
     raise ValueError("Invalid key = %s given for %s"%(key,param_name))
 

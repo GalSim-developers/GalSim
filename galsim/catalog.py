@@ -375,13 +375,18 @@ class OutputCatalog(object):
         cols        The columns of data that have been accumulated so far.
 
     """
-    def __init__(self, names, types=None, _rows=[]):
+    # Watch out for this "Gotcha".  Using _rows=[] as the default argument doesn't work!
+    # https://pythonconquerstheuniverse.wordpress.com/2012/02/15/mutable-default-arguments/
+    def __init__(self, names, types=None, _rows=None):
         self.names = names
         if types is None:
             self.types = [ float for i in names ]
         else:
             self.types = types
-        self.rows = _rows
+        if _rows is None:
+            self.rows = []
+        else:
+            self.rows = _rows
 
     @property
     def nobjects(self): return len(self.rows)
@@ -489,9 +494,9 @@ class OutputCatalog(object):
 
         width = prec+8
         header_form = ""
-        for i in range(self.ncols):
+        for i in range(len(data.dtype.names)):
             header_form += "{%d:^%d} "%(i,width)
-        header = header_form.format(*self.names)
+        header = header_form.format(*data.dtype.names)
 
         fmt = []
         for name in data.dtype.names:

@@ -333,6 +333,38 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
 
     return stamp_center, offset
 
+def ProcessTruth(config, logger=None):
+    """
+    Put the appropriate current_val's into the truth catalog.
+
+    @param config           A configuration dict.
+    @param logger           If given, a logger object to log progress. [default: None]
+    """
+    if ('output' not in config or 'truth' not in config['output'] or 
+        'columns' not in config['output']['truth']):
+        raise RuntimeError("config has no output.truth.columns field")
+    if 'truth_catalog' not in config:
+        raise RuntimeError("config has no truth_catalog")
+    cat = config['truth_catalog']
+    cols = config['output']['truth']['columns']
+    row = []
+    types = []
+    for name in cat.names:
+        key = cols[name]
+        value, t = galsim.config.GetCurrentValue(key, name, config)
+        row.append(value)
+        types.append(t)
+    if cat.nobjects == 0:
+        cat.types = types
+    elif cat.types != types:
+        if logger:
+            logger.error("Type mismatch found when building truth catalog at object %d",
+                config['obj_num'])
+            logger.error("Types for current object = %s",repr(types))
+            logger.error("Expecting types = %s",repr(cat.types))
+        raise RuntimeError("Type mismatch found when building truth catalog.")
+    cat.add_row(row)
+
 
 def BuildSingleStamp(config, xsize=0, ysize=0,
                      obj_num=0, do_noise=True, logger=None,
@@ -527,6 +559,9 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 galsim.config.process.RemoveCurrent(config, keep_safe=True)
                 continue
 
+    if 'truth_catalog' in config:
+        ProcessTruth(config, logger)
+
     return im, psf_im, weight_im, badpix_im, current_var, t6-t1
 
 
@@ -717,7 +752,7 @@ def DrawPSFStamp(psf, config, bounds, offset, method, logger=None):
 
     # Special: if the galaxy was shifted, then also shift the psf 
     if 'shift' in config['gal']:
-        gal_shift = galsim.config.GetCurrentValue('gal.shift','psf',config)
+        gal_shift = galsim.config.GetCurrentValue('gal.shift','psf',config, galsim.PositionD)
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('obj %d: psf shift (1): %s',config['obj_num'],str(gal_shift))
         psf = psf.shift(gal_shift)
