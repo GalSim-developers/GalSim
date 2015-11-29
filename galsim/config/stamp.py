@@ -343,13 +343,14 @@ def ProcessTruth(config, logger=None):
     if ('output' not in config or 'truth' not in config['output'] or 
         'columns' not in config['output']['truth']):
         raise RuntimeError("config has no output.truth.columns field")
-    if 'truth_catalog' not in config:
-        raise RuntimeError("config has no truth_catalog")
-    cat = config['truth_catalog']
+    if 'truth' not in config:
+        raise RuntimeError("config has no truth catalog")
+    cat = config['truth']
+    cat.lock_acquire()
     cols = config['output']['truth']['columns']
     row = []
     types = []
-    for name in cat.names:
+    for name in cat.getNames():
         key = cols[name]
         if isinstance(key, dict):
             # Then the "key" is actually something to be parsed in the normal way.
@@ -368,16 +369,17 @@ def ProcessTruth(config, logger=None):
             value, t = galsim.config.GetCurrentValue(key, name, config)
         row.append(value)
         types.append(t)
-    if cat.nobjects == 0:
-        cat.types = types
-    elif cat.types != types:
+    if cat.getNObjects() == 0:
+        cat.setTypes(types)
+    elif cat.getTypes() != types:
         if logger:
             logger.error("Type mismatch found when building truth catalog at object %d",
                 config['obj_num'])
             logger.error("Types for current object = %s",repr(types))
-            logger.error("Expecting types = %s",repr(cat.types))
+            logger.error("Expecting types = %s",repr(cat.getTypes()))
         raise RuntimeError("Type mismatch found when building truth catalog.")
-    cat.add_row(row)
+    cat.add_row(row, config['obj_num'])
+    cat.lock_release()
 
 
 def BuildSingleStamp(config, xsize=0, ysize=0,
@@ -573,7 +575,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 galsim.config.process.RemoveCurrent(config, keep_safe=True)
                 continue
 
-    if 'truth_catalog' in config:
+    if 'truth' in config:
         ProcessTruth(config, logger)
 
     return im, psf_im, weight_im, badpix_im, current_var, t6-t1

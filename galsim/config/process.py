@@ -62,6 +62,20 @@ valid_output_types = {
     'DataCube' : ('BuildDataCube', 'GetNObjForDataCube', True, True, False),
 }
 
+valid_extra_output_items = { 
+    # The values are tuples with:
+    # - the class name to build, if any.
+    # - a list of keys to ignore on the initial creation.
+    # - a function to get the initialization kwargs if building something.
+    # - a function to call at the start of each file
+    # - a function to call at the end of each stamp processing (or None)
+    # - a function to call at the end of each file
+    'psf' : (None, ['draw_method', 'signal_to_noise'], None, None, None),
+    'weight' : (None, ['weight'], None, None, None),
+    'badpix' : (None, [], None, None, None),
+    'truth' : ('galsim.OutputCatalog', ['columns'], 'galsim.config.GetTruthKwargs',
+               'galsim.config.ProcessTruth', 'galsim.config.WriteTruth'),
+}
 
 def RemoveCurrent(config, keep_safe=False, type=None):
     """
@@ -295,6 +309,60 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
         valid_keys = valid_input_types.keys()
         galsim.config.CheckAllParams(input, 'input', ignore=valid_keys)
 
+    # Also process items in the output field that need to be set up and managed
+    if 'output' in config and not file_scope_only and not safe_only:
+        output = config['output']
+        if not isinstance(output, dict):
+            raise AttributeError("config.output is not a dict.")
+
+        # We'll iterate through this list of keys a few times
+        all_keys = [ k for k in valid_extra_output_items.keys()
+                     if (k in output and valid_extra_output_items[k][0] is not None) ]
+ 
+        if 'output_manager' not in config:
+            from multiprocessing.managers import BaseManager
+            class OutputManager(BaseManager): pass
+ 
+            # Register each input field with the OutputManager class
+            for key in all_keys:
+                fields = output[key]
+                # Register this object with the manager
+                type = valid_extra_output_items[key][0]
+                if type in galsim.__dict__:
+                    init_func = eval("galsim."+type)
+                else:
+                    init_func = eval(type)
+                OutputManager.register(key, init_func)
+            # Start up the output_manager
+            config['output_manager'] = OutputManager()
+            config['output_manager'].start()
+
+        for key in all_keys:
+            if logger and logger.isEnabledFor(logging.DEBUG):
+                logger.debug('file %d: Setup output item %s',file_num,key)
+            kwargs_func = valid_extra_output_items[key][2]
+            if kwargs_func is None:
+                type = valid_extra_output_items[key][0]
+                if type in galsim.__dict__:
+                    init_func = eval("galsim."+type)
+                else:
+                    init_func = eval(type)
+                ignore = valid_extra_output_items[key][1]
+                ignore += ['file_name', 'hdu', 'file_type', 'dir']
+                kwargs = galsim.config.GetAllParams(field, key, config,
+                                                    req = init_func._req_params,
+                                                    opt = init_func._opt_params,
+                                                    single = init_func._single_params,
+                                                    ignore = ignore)[0]
+            else:
+                kwargs_func = eval(kwargs_func)
+                kwargs = kwargs_func(config, logger)
+ 
+            output_obj = getattr(config['output_manager'],key)(**kwargs)
+            if logger and logger.isEnabledFor(logging.DEBUG):
+                logger.debug('file %d: Setup output %s object',file_num,key)
+            config[key] = output_obj
+
 
 def ProcessInputNObjects(config, logger=None):
     """Process the input field, just enough to determine the number of objects.
@@ -494,7 +562,7 @@ def Process(config, logger=None):
     config['image_num'] = 0
     config['obj_num'] = 0
 
-    extra_keys = [ 'psf', 'weight', 'badpix', 'truth' ]
+    extra_keys = valid_extra_output_items.keys()
     last_file_name = {}
     for key in extra_keys:
         last_file_name[key] = None
@@ -597,12 +665,8 @@ def Process(config, logger=None):
             elif extra_hdu:
                 req['hdu'] = int
 
-            if extra_key == 'psf': 
-                ignore += ['draw_method', 'signal_to_noise']
-            if extra_key == 'weight': 
-                ignore += ['include_obj_var']
-            if extra_key == 'truth': 
-                ignore += ['columns']
+            ignore += valid_extra_output_items[extra_key][1]
+
             if 'file_name' in output_extra:
                 SetDefaultExt(output_extra['file_name'],'.fits')
             params, safe = galsim.config.GetAllParams(output_extra,extra_key,config,
@@ -810,6 +874,25 @@ def SetupConfigFileNum(config, file_num, image_num, obj_num):
     if 'output' not in config: config['output'] = {}
 
 
+def GetTruthKwargs(config, logger):
+    if 'truth' not in config['output']:
+        raise AttributeError("No 'truth' field found in config.output")
+    if 'columns' not in config['output']['truth']:
+        raise AttributeError("No 'columns' listed for config.output.truth")
+    columns = config['output']['truth']['columns']
+    truth_names = columns.keys()
+    return { 'names' : truth_names }
+ 
+
+def WriteTruth(config, file_name):
+    """Write the truth catalog to a file
+    """
+    config['truth'].write(file_name)
+
+
+ 
+output_ignore = [ 'file_name', 'dir', 'nfiles', 'nproc', 'skip', 'noclobber', 'retry_io' ]
+
 def BuildFits(file_name, config, logger=None, 
               file_num=0, image_num=0, obj_num=0,
               psf_file_name=None, psf_hdu=None,
@@ -884,16 +967,6 @@ def BuildFits(file_name, config, logger=None,
         make_badpix_image = False
 
     if truth_file_name or truth_hdu:
-        if 'truth' not in config['output']:
-            raise AttributeError("No 'truth' field found in config.output")
-        if 'columns' not in config['output']['truth']:
-            raise AttributeError("No 'columns' listed for config.output.truth")
-        columns = config['output']['truth']['columns']
-        truth_names = columns.keys()
-        config['truth_catalog'] = galsim.OutputCatalog(truth_names)
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: Made initial truth catalog',file_num)
-
         if truth_hdu:
             if truth_hdu <= 0 or truth_hdu in hdus.keys():
                 raise ValueError("truth_hdu = %d is invalid or a duplicate."%truth_hdu)
@@ -914,7 +987,7 @@ def BuildFits(file_name, config, logger=None,
     for h in range(len(hdus.keys())):
         assert h in hdus.keys()  # Checked for this above.
         if h == truth_hdu:
-            hdulist.append(config['truth_catalog'].write_fits_hdu())
+            hdulist.append(config['truth'].write_fits_hdu())
         else:
             hdulist.append(all_images[hdus[h]])
     # We can use hdulist in writeMulti even if the main image is the only one in the list.
@@ -953,7 +1026,7 @@ def BuildFits(file_name, config, logger=None,
             logger.debug('file %d: Wrote badpix image to fits file %r',file_num,badpix_file_name)
 
     if truth_file_name:
-        _retry_io(galsim.OutputCatalog.write, (config['truth_catalog'], truth_file_name),
+        _retry_io(WriteTruth, (config, truth_file_name),
                   ntries, truth_file_name, logger)
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote truth catalog to %r',file_num,truth_file_name)
@@ -1008,15 +1081,6 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
         make_badpix_image = True
     else:
         make_badpix_image = False
-
-    if truth_file_name:
-        if 'truth' not in config['output']:
-            raise AttributeError("No 'truth' field found in config.output")
-        if 'columns' not in config['output']['truth']:
-            raise AttributeError("No 'columns' listed for config.output.truth")
-        columns = config['output']['truth']['columns']
-        truth_names = columns.keys()
-        config['truth_catalog'] = galsim.OutputCatalog(names=truth_names)
 
     # Allow nimages to be automatic based on input catalog if image type is Single
     if ( 'nimages' not in config['output'] and 
@@ -1075,7 +1139,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
                          config['file_num'],badpix_file_name)
 
     if truth_file_name:
-        _retry_io(galsim.OutputCatalog.write, (config['truth_catalog'], truth_file_name),
+        _retry_io(WriteTruth, (config, truth_file_name),
                   ntries, truth_file_name, logger)
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote truth catalog to %r',
@@ -1131,15 +1195,6 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
         make_badpix_image = True
     else:
         make_badpix_image = False
-
-    if truth_file_name:
-        if 'truth' not in config['output']:
-            raise AttributeError("No 'truth' field found in config.output")
-        if 'columns' not in config['output']['truth']:
-            raise AttributeError("No 'columns' listed for config.output.truth")
-        columns = config['output']['truth']['columns']
-        truth_names = columns.keys()
-        config['truth_catalog'] = galsim.OutputCatalog(names=truth_names)
 
     # Allow nimages to be automatic based on input catalog if image type is Single
     if ( 'nimages' not in config['output'] and 
@@ -1227,7 +1282,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
                          config['file_num'],badpix_file_name)
 
     if truth_file_name:
-        _retry_io(galsim.OutputCatalog.write, (config['truth_catalog'], truth_file_name),
+        _retry_io(WriteTruth, (config, truth_file_name),
                   ntries, truth_file_name, logger)
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote truth catalog to %r',
@@ -1237,8 +1292,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     return t4-t1
 
 def GetNObjForFits(config, file_num, image_num):
-    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'truth', 'nproc',
-               'skip', 'noclobber', 'retry_io' ]
+    ignore = output_ignore + valid_extra_output_items.keys()
     galsim.config.CheckAllParams(config['output'], 'output', ignore=ignore)
     try : 
         nobj = [ galsim.config.GetNObjForImage(config, image_num) ]
@@ -1248,8 +1302,6 @@ def GetNObjForFits(config, file_num, image_num):
     return nobj
     
 def GetNObjForMultiFits(config, file_num, image_num):
-    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'truth', 'nproc', 
-               'skip', 'noclobber', 'retry_io' ]
     req = { 'nimages' : int }
     # Allow nimages to be automatic based on input catalog if image type is Single
     if ( 'nimages' not in config['output'] and 
@@ -1258,7 +1310,8 @@ def GetNObjForMultiFits(config, file_num, image_num):
         nobjects = ProcessInputNObjects(config)
         if nobjects:
             config['output']['nimages'] = nobjects
-    params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
+    ignore = output_ignore + valid_extra_output_items.keys()
+    params = galsim.config.GetAllParams(config['output'],'output',config, ignore=ignore,req=req)[0]
     config['index_key'] = 'file_num'
     config['file_num'] = file_num
     config['image_num'] = image_num
@@ -1271,8 +1324,6 @@ def GetNObjForMultiFits(config, file_num, image_num):
     return nobj
 
 def GetNObjForDataCube(config, file_num, image_num):
-    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'truth', 'nproc',
-               'skip', 'noclobber', 'retry_io' ]
     req = { 'nimages' : int }
     # Allow nimages to be automatic based on input catalog if image type is Single
     if ( 'nimages' not in config['output'] and 
@@ -1281,7 +1332,8 @@ def GetNObjForDataCube(config, file_num, image_num):
         nobjects = ProcessInputNObjects(config)
         if nobjects:
             config['output']['nimages'] = nobjects
-    params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
+    ignore = output_ignore + valid_extra_output_items.keys()
+    params = galsim.config.GetAllParams(config['output'],'output',config, ignore=ignore,req=req)[0]
     config['index_key'] = 'file_num'
     config['file_num'] = file_num
     config['image_num'] = image_num

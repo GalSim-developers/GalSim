@@ -377,7 +377,8 @@ class OutputCatalog(object):
     """
     # Watch out for this "Gotcha".  Using _rows=[] as the default argument doesn't work!
     # https://pythonconquerstheuniverse.wordpress.com/2012/02/15/mutable-default-arguments/
-    def __init__(self, names, types=None, _rows=None):
+    def __init__(self, names, types=None, _rows=None, _sort_keys=None):
+        from multiprocessing import Lock
         self.names = names
         if types is None:
             self.types = [ float for i in names ]
@@ -387,24 +388,45 @@ class OutputCatalog(object):
             self.rows = []
         else:
             self.rows = _rows
+        if _sort_keys is None:
+            self.sort_keys = []
+        else:
+            self.sort_keys = _sort_keys
+        self.lock = Lock()
 
     @property
     def nobjects(self): return len(self.rows)
     @property
     def ncols(self): return len(self.names)
 
-    def add_row(self, row):
+    # Again, when we use this through a proxy, we need getters for the attributes.
+    def getNames(self): return self.names
+    def getTypes(self): return self.types
+    def setTypes(self, types): self.types = types
+    def getNObjects(self): return self.nobjects
+    def getNCols(self): return self.ncols
+
+    def lock_acquire(self): self.lock.acquire()
+    def lock_release(self): self.lock.release()
+
+    def add_row(self, row, sort_key=None):
         """Add a row of data to the catalog.
 
         Warning: no type checking is done at this point.  If the values in the row do not
         match the column types, you may get an error when writing, or you may lose precision,
         depending on the nature of the mismatch.
 
-        @param row      A list with one item per column in the same order as the names list.
+        @param row          A list with one item per column in the same order as the names list.
+        @param sort_key     If the rows may be added out of order, you can provide a sort_key,
+                            which will be used at the end to re-sort the rows.
         """
         if len(row) != self.ncols:
             raise ValueError("Length of row does not match the number of columns")
         self.rows.append(tuple(row))
+        if sort_key is None:
+            self.sort_keys.append(self.nobjects)
+        else:
+            self.sort_keys.append(sort_key)
 
     def write(self, file_name, dir=None, file_type=None, prec=8):
         """Write the catalog to a file.
@@ -480,6 +502,10 @@ class OutputCatalog(object):
                 new_cols.append(col)
 
         data = numpy.array(zip(*new_cols), dtype=dtypes)
+
+        sort_index = numpy.argsort(self.sort_keys)
+        data = data[sort_index]
+
         return data
 
     def write_ascii(self, file_name, prec=8):
