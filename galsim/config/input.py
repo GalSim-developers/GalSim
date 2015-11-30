@@ -22,12 +22,12 @@ import logging
 
 valid_input_types = { 
     # The values are tuples with:
-    # - the class name to build.
-    # - a list of keys to ignore on the initial creation (e.g. PowerSpectrum has values that are 
+    # - The class name to build.
+    # - A list of keys to ignore on the initial creation (e.g. PowerSpectrum has values that are 
     #   used later in PowerSpectrumInit).
-    # - whether the class has a getNObjects method, in which case it also must have a constructor
+    # - Whether the class has a getNObjects method, in which case it also must have a constructor
     #   kwarg _nobjects_only to efficiently do only enough to calculate nobjects.
-    # - whether the class might be relevant at the file- or image-scope level, rather than just
+    # - Whether the class might be relevant at the file- or image-scope level, rather than just
     #   at the object level.  Notably, this is true for dict.
     # - A function to call at the start of each image (or None)
     # - A list of types that should have their "current" values invalidated when the input
@@ -35,7 +35,10 @@ valid_input_types = {
     # See the des module for examples of how to extend this from a module.
     'catalog' : ('galsim.Catalog', [], True, False, None, ['Catalog']), 
     'dict' : ('galsim.Dict', [], False, True, None, ['Dict']), 
-    'real_catalog' : ('galsim.RealGalaxyCatalog', [], True, False, None, 
+    'real_catalog' : ('galsim.RealGalaxyCatalog', [], 
+                      False, # Actually it does have getNObjects, but that's probably not
+                             # the right number of objects to use for a single file or image.
+                      False, None, 
                       ['RealGalaxy', 'RealGalaxyOriginal']),
     'cosmos_catalog' : ('galsim.COSMOSCatalog', [], True, False, None, ['COSMOSGalaxy']),
     'nfw_halo' : ('galsim.NFWHalo', [], False, False, None,
@@ -54,11 +57,23 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
     Process the input field, reading in any specified input files or setting up
     any objects that need to be initialized.
 
-    Each item in the above valid_input_types will be built and available at the top level
-    of config.  e.g.;
-        config['catalog'] = the catalog specified by config.input.catalog, if provided.
-        config['real_catalog'] = the catalog specified by config.input.real_catalog, if provided.
-        etc.
+    Each item in galsim.config.valid_input_types will be built and available at the top level
+    of config in config['input_objs'].  Since there is allowed to be more than one of each type
+    of input object (e.g. multilpe catalogs or multiple dicts), these are actually lists.
+    If there is only one e.g. catalog entry in config['input'], then this list will have one
+    element.
+
+    e.g. config['input_objs']['catalog'][0] holds the first catalog item defined in
+    config['input']['catalog'] (if any).
+
+    @param config           The configuutation dict to process
+    @param file_num         The file number being worked on currently [default: 0]
+    @param logger           If given, a logger object to log progress. [default: None]
+    @param file_scope_only  If True, only process the input items that are marked as being
+                            possibly relevant for file- and image-level items. [default: False]
+    @param safe_only        If True, only process the input items whose construction parameters
+                            are not going to change every file, so it can be made once and
+                            used by multiple processes if appropriate. [default: False]
     """
     config['index_key'] = 'file_num'
     config['file_num'] = file_num
@@ -66,17 +81,14 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
         logger.debug('file %d: Start ProcessInput',file_num)
     # Process the input field (read any necessary input files)
     if 'input' in config:
-        input = config['input']
-        if not isinstance(input, dict):
-            raise AttributeError("config.input is not a dict.")
-
         # We'll iterate through this list of keys a few times
-        all_keys = [ k for k in valid_input_types.keys() if k in input ]
+        all_keys = [ k for k in valid_input_types.keys() if k in config['input'] ]
 
         # First, make sure all the input fields are lists.  If not, then we make them a 
         # list with one element.
         for key in all_keys:
-            if not isinstance(input[key], list): input[key] = [ input[key] ]
+            if not isinstance(config['input'][key], list):
+                config['input'][key] = [ config['input'][key] ]
  
         # The input items can be rather large.  Especially RealGalaxyCatalog.  So it is
         # unwieldy to copy them in the config file for each process.  Instead we use proxy
@@ -99,7 +111,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
  
             # Register each input field with the InputManager class
             for key in all_keys:
-                fields = input[key]
+                fields = config['input'][key]
 
                 # Register this object with the manager
                 for i in range(len(fields)):
@@ -107,15 +119,22 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                     tag = key + str(i)
                     # This next bit mimics the operation of BuildSimple, except that we don't
                     # actually build the object here.  Just register the class name.
-                    type = valid_input_types[key][0]
-                    if type in galsim.__dict__:
-                        init_func = eval("galsim."+type)
+                    input_type = valid_input_types[key][0]
+                    if input_type in galsim.__dict__:
+                        init_func = eval("galsim."+input_type)
                     else:
-                        init_func = eval(type)
+                        init_func = eval(input_type)
                     InputManager.register(tag, init_func)
             # Start up the input_manager
             config['input_manager'] = InputManager()
             config['input_manager'].start()
+
+        if 'input_objs' not in config:
+            config['input_objs'] = {}
+            for key in all_keys:
+                fields = config['input'][key]
+                config['input_objs'][key] = [ None for i in range(len(fields)) ]
+                config['input_objs'][key+'_safe'] = [ None for i in range(len(fields)) ]
 
         # Read all input fields provided and create the corresponding object
         # with the parameters given in the config file.
@@ -125,34 +144,29 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
 
             if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('file %d: Process input key %s',file_num,key)
-            fields = input[key]
+            fields = config['input'][key]
 
-            if key not in config:
-                if logger and logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('file %d: %s not currently in config',file_num,key)
-                config[key] = [ None for i in range(len(fields)) ]
-                config[key+'_safe'] = [ None for i in range(len(fields)) ]
             for i in range(len(fields)):
                 field = fields[i]
-                ck = config[key]
-                ck_safe = config[key+'_safe']
+                input_objs = config['input_objs'][key]
+                input_objs_safe = config['input_objs'][key+'_safe']
                 if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('file %d: Current values for %s are %s, safe = %s',
-                                 file_num, key, str(ck[i]), ck_safe[i])
-                type, ignore = valid_input_types[key][0:2]
-                field['type'] = type
-                if ck[i] is not None and ck_safe[i]:
+                                 file_num, key, str(input_objs[i]), input_objs_safe[i])
+                input_type, ignore = valid_input_types[key][0:2]
+                field['type'] = input_type
+                if input_objs[i] is not None and input_objs_safe[i]:
                     if logger and logger.isEnabledFor(logging.DEBUG):
                         logger.debug('file %d: Using %s already read in',file_num,key)
                 else:
                     if logger and logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('file %d: Build input type %s',file_num,type)
+                        logger.debug('file %d: Build input type %s',file_num,input_type)
                     # This is almost identical to the operation of BuildSimple.  However,
                     # rather than call the regular function here, we have input_manager do so.
-                    if type in galsim.__dict__:
-                        init_func = eval("galsim."+type)
+                    if input_type in galsim.__dict__:
+                        init_func = eval("galsim."+input_type)
                     else:
-                        init_func = eval(type)
+                        init_func = eval(input_type)
                     kwargs, safe = galsim.config.GetAllParams(field, key, config,
                                                               req = init_func._req_params,
                                                               opt = init_func._opt_params,
@@ -161,15 +175,15 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                     if init_func._takes_rng:
                         if 'rng' not in config:
                             raise ValueError("No config['rng'] available for %s.type = %s"%(
-                                             key,type))
+                                             key,input_type))
                         kwargs['rng'] = config['rng']
                         safe = False
 
                     if safe_only and not safe:
                         if logger and logger.isEnabledFor(logging.DEBUG):
                             logger.debug('file %d: Skip %s %d, since not safe',file_num,key,i)
-                        ck[i] = None
-                        ck_safe[i] = None
+                        input_objs[i] = None
+                        input_objs_safe[i] = None
                         continue
 
                     tag = key + str(i)
@@ -182,8 +196,8 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                         if valid_input_types[key][2]:
                             logger.info('Read %d objects from %s',input_obj.getNObjects(),key)
                     # Store input_obj in the config for use by BuildGSObject function.
-                    ck[i] = input_obj
-                    ck_safe[i] = safe
+                    input_objs[i] = input_obj
+                    input_objs_safe[i] = safe
                     # Invalidate any currently cached values that use this kind of input object:
                     # TODO: This isn't quite correct if there are multiple versions of this input
                     #       item.  e.g. you might want to invalidate dict0, but not dict1.
@@ -195,33 +209,47 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
 
         # Check that there are no other attributes specified.
         valid_keys = valid_input_types.keys()
-        galsim.config.CheckAllParams(input, 'input', ignore=valid_keys)
+        galsim.config.CheckAllParams(config['input'], 'input', ignore=valid_keys)
 
 def ProcessInputNObjects(config, logger=None):
     """Process the input field, just enough to determine the number of objects.
-    """
-    if 'input' in config:
-        config['index_key'] = 'file_num'
-        input = config['input']
-        if not isinstance(input, dict):
-            raise AttributeError("config.input is not a dict.")
 
+    Some input items are relevant for determining the number of objects in a file or image.
+    This means we need to have them processed before splitting up jobs over multiple processes
+    (since the seed increments based on the number of objects).  So this function builds
+    the input items that have a getNObjects() method using the _nobject_only construction
+    argument and returns the number of objects.
+
+    Caveat: This function tries each input type in galsim.config.valid_input_types in
+            order and returns the nobjects for the first one that works.  If multiple input
+            items have nobjects and they are inconsistent, this function may return a
+            number of objects that isn't what you wanted.  In this case, you should explicitly
+            set nobjects or nimages in the configuratin dict, rather than relying on this
+            galsim.config "magic".
+
+    @param config       The configuutation dict to process
+    @param logger       If given, a logger object to log progress. [default: None]
+
+    @returns the number of objects to use.
+    """
+    config['index_key'] = 'file_num'
+    if 'input' in config:
         for key in valid_input_types:
             has_nobjects = valid_input_types[key][2]
-            if key in input and has_nobjects:
-                field = input[key]
+            if key in config['input'] and has_nobjects:
+                field = config['input'][key]
 
-                if key in config and config[key+'_safe'][0]:
-                    input_obj = config[key][0]
+                if key in config['input_objs'] and config['input_objs'][key+'_safe'][0]:
+                    input_obj = config['input_objs'][key][0]
                 else:
                     # If it's a list, just use the first one.
                     if isinstance(field, list): field = field[0]
 
-                    type, ignore = valid_input_types[key][0:2]
-                    if type in galsim.__dict__:
-                        init_func = eval("galsim."+type)
+                    input_type, ignore = valid_input_types[key][0:2]
+                    if input_type in galsim.__dict__:
+                        init_func = eval("galsim."+input_type)
                     else:
-                        init_func = eval(type)
+                        init_func = eval(input_type)
                     kwargs = galsim.config.GetAllParams(field, key, config,
                                                         req = init_func._req_params,
                                                         opt = init_func._opt_params,
@@ -235,4 +263,74 @@ def ProcessInputNObjects(config, logger=None):
                 return input_obj.getNObjects()
     # If didn't find anything, return None.
     return None
+
+
+def SetupInputsForImage(config, logger):
+    """Do any necessary setup of the input items at the start of an image.
+
+    @param config       The configuutation dict to process
+    @param logger       If given, a logger object to log progress. [default: None]
+    """
+    if 'input' in config:
+        for key in valid_input_types.keys():
+            image_func = valid_input_types[key][4]
+            if key in config['input'] and image_func is not None:
+                fields = config['input'][key]
+                if not isinstance(fields, list):
+                    fields = [ fields ]
+                input_objs = config['input_objs'][key]
+
+                for i in range(len(fields)):
+                    field = fields[i]
+                    input_obj = input_objs[i]
+                    func = eval(image_func)
+                    func(input_obj, field, config, logger)
+
+
+def PowerSpectrumInit(ps, config, base, logger=None):
+    """Initialize the PowerSpectrum input object's gridded values based on the 
+    size of the image and the grid spacing.
+
+    @param ps           The PowerSpectrum object to use
+    @param config       The configuration dict for 'power_spectrum'
+    @param base         The base configuration dict.
+    @param logger       If given, a logger object to log progress.  [default: None]
+    """
+    if 'grid_spacing' in config:
+        grid_spacing = galsim.config.ParseValue(config, 'grid_spacing', base, float)[0]
+    elif 'tile_xsize' in base:
+        # Then we have a tiled image.  Can use the tile spacing as the grid spacing.
+        stamp_size = min(base['tile_xsize'], base['tile_ysize'])
+        # Note: we use the (max) pixel scale at the image center.  This isn't 
+        # necessarily optimal, but it seems like the best choice.
+        scale = base['wcs'].maxLinearScale(base['image_center'])
+        grid_spacing = stamp_size * scale
+    else:
+        raise AttributeError("power_spectrum.grid_spacing required for non-tiled images")
+
+    if 'tile_xsize' in base and base['tile_xsize'] == base['tile_ysize']:
+        # PowerSpectrum can only do a square FFT, so make it the larger of the two n's.
+        ngrid = max(base['nx_tiles'], base['ny_tiles'])
+        # Normally that's good, but if tiles aren't square, need to drop through to the
+        # second option.
+    else:
+        import math
+        image_size = max(base['image_xsize'], base['image_ysize'])
+        scale = base['wcs'].maxLinearScale(base['image_center'])
+        ngrid = int(math.ceil(image_size * scale / grid_spacing))
+
+    if 'interpolant' in config:
+        interpolant = galsim.config.ParseValue(config, 'interpolant', base, str)[0]
+    else:
+        interpolant = None
+
+    # We don't care about the output here.  This just builds the grid, which we'll
+    # access for each object using its position.
+    if base['wcs'].isCelestial():
+        world_center = galsim.PositionD(0,0)
+    else:
+        world_center = base['wcs'].toWorld(base['image_center'])
+    ps.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid, center=world_center,
+                 rng=base['rng'], interpolant=interpolant)
+
 

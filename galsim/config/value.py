@@ -392,7 +392,7 @@ def _GenerateFromDeg(param, param_name, base, value_type):
 def _GenerateFromCatalog(param, param_name, base, value_type):
     """@brief Return a value read from an input catalog
     """
-    if 'catalog' not in base:
+    if 'catalog' not in base['input_objs']:
         raise ValueError("No input catalog available for %s.type = Catalog"%param_name)
 
     if 'num' in param:
@@ -402,10 +402,10 @@ def _GenerateFromCatalog(param, param_name, base, value_type):
 
     if num < 0:
         raise ValueError("Invalid num < 0 supplied for Catalog: num = %d"%num)
-    if num >= len(base['catalog']):
+    if num >= len(base['input_objs']['catalog']):
         raise ValueError("Invalid num supplied for Catalog (too large): num = %d"%num)
 
-    input_cat = base['catalog'][num]
+    input_cat = base['input_objs']['catalog'][num]
 
     # Setup the indexing sequence if it hasn't been specified.
     # The normal thing with a Catalog is to just use each object in order,
@@ -437,7 +437,7 @@ def _GenerateFromCatalog(param, param_name, base, value_type):
 def _GenerateFromDict(param, param_name, base, value_type):
     """@brief Return a value read from an input dict.
     """
-    if 'dict' not in base:
+    if 'dict' not in base['input_objs']:
         raise ValueError("No input dict available for %s.type = Dict"%param_name)
 
     req = { 'key' : str }
@@ -448,9 +448,9 @@ def _GenerateFromDict(param, param_name, base, value_type):
     num = kwargs.get('num',0)
     if num < 0:
         raise ValueError("Invalid num < 0 supplied for Dict: num = %d"%num)
-    if num >= len(base['dict']):
+    if num >= len(base['input_objs']['dict']):
         raise ValueError("Invalid num supplied for Dict (too large): num = %d"%num)
-    d = base['dict'][num]
+    d = base['input_objs']['dict'][num]
 
     val = d.get(key)
     #print base['file_num'],'Dict: key = %s, val = %s'%(key,val)
@@ -461,7 +461,7 @@ def _GenerateFromDict(param, param_name, base, value_type):
 def _GenerateFromFitsHeader(param, param_name, base, value_type):
     """@brief Return a value read from a FITS header
     """
-    if 'fits_header' not in base:
+    if 'fits_header' not in base['input_objs']:
         raise ValueError("No fits header available for %s.type = FitsHeader"%param_name)
 
     req = { 'key' : str }
@@ -472,9 +472,9 @@ def _GenerateFromFitsHeader(param, param_name, base, value_type):
     num = kwargs.get('num',0)
     if num < 0:
         raise ValueError("Invalid num < 0 supplied for FitsHeader: num = %d"%num)
-    if num >= len(base['fits_header']):
+    if num >= len(base['input_objs']['fits_header']):
         raise ValueError("Invalid num supplied for FitsHeader (too large): num = %d"%num)
-    header = base['fits_header'][num]
+    header = base['input_objs']['fits_header'][num]
 
     if key not in header.keys():
         raise ValueError("key %s not found in the FITS header in %s"%(key,kwargs['file_name']))
@@ -949,7 +949,7 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
         raise ValueError("NFWHaloShear requested, but no gal.redshift defined.")
     redshift = GetCurrentValue('gal.redshift', param_name, base, float)
 
-    if 'nfw_halo' not in base:
+    if 'nfw_halo' not in base['input_objs']:
         raise ValueError("NFWHaloShear requested, but no input.nfw_halo defined.")
 
     opt = { 'num' : int }
@@ -958,9 +958,9 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
     num = kwargs.get('num',0)
     if num < 0:
         raise ValueError("Invalid num < 0 supplied for NFWHalowShear: num = %d"%num)
-    if num >= len(base['nfw_halo']):
+    if num >= len(base['input_objs']['nfw_halo']):
         raise ValueError("Invalid num supplied for NFWHaloShear (too large): num = %d"%num)
-    nfw_halo = base['nfw_halo'][num]
+    nfw_halo = base['input_objs']['nfw_halo'][num]
 
     try:
         g1,g2 = nfw_halo.getShear(pos,redshift)
@@ -985,7 +985,7 @@ def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
         raise ValueError("NFWHaloMagnification requested, but no gal.redshift defined.")
     redshift = GetCurrentValue('gal.redshift', param_name, base, float)
 
-    if 'nfw_halo' not in base:
+    if 'nfw_halo' not in base['input_objs']:
         raise ValueError("NFWHaloMagnification requested, but no input.nfw_halo defined.")
  
     opt = { 'max_mu' : float, 'num' : int }
@@ -994,9 +994,9 @@ def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
     num = kwargs.get('num',0)
     if num < 0:
         raise ValueError("Invalid num < 0 supplied for NFWHaloMagnification: num = %d"%num)
-    if num >= len(base['nfw_halo']):
+    if num >= len(base['input_objs']['nfw_halo']):
         raise ValueError("Invalid num supplied for NFWHaloMagnification (too large): num = %d"%num)
-    nfw_halo = base['nfw_halo'][num]
+    nfw_halo = base['input_objs']['nfw_halo'][num]
 
     mu = nfw_halo.getMagnification(pos,redshift)
 
@@ -1022,7 +1022,7 @@ def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
         raise ValueError("PowerSpectrumShear requested, but no position defined.")
     pos = base['world_pos']
 
-    if 'power_spectrum' not in base:
+    if 'power_spectrum' not in base['input_objs']:
         raise ValueError("PowerSpectrumShear requested, but no input.power_spectrum defined.")
     
     opt = { 'num' : int }
@@ -1031,9 +1031,9 @@ def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
     num = kwargs.get('num',0)
     if num < 0:
         raise ValueError("Invalid num < 0 supplied for PowerSpectrumShear: num = %d"%num)
-    if num >= len(base['power_spectrum']):
+    if num >= len(base['input_objs']['power_spectrum']):
         raise ValueError("Invalid num supplied for PowerSpectrumShear (too large): num = %d"%num)
-    power_spectrum = base['power_spectrum'][num]
+    power_spectrum = base['input_objs']['power_spectrum'][num]
 
     try:
         g1,g2 = power_spectrum.getShear(pos)
@@ -1053,7 +1053,7 @@ def _GenerateFromPowerSpectrumMagnification(param, param_name, base, value_type)
         raise ValueError("PowerSpectrumMagnification requested, but no position defined.")
     pos = base['world_pos']
 
-    if 'power_spectrum' not in base:
+    if 'power_spectrum' not in base['input_objs']:
         raise ValueError("PowerSpectrumMagnification requested, but no input.power_spectrum "
                          "defined.")
 
@@ -1063,10 +1063,10 @@ def _GenerateFromPowerSpectrumMagnification(param, param_name, base, value_type)
     num = kwargs.get('num',0)
     if num < 0:
         raise ValueError("Invalid num < 0 supplied for PowerSpectrumMagnification: num = %d"%num)
-    if num >= len(base['power_spectrum']):
+    if num >= len(base['input_objs']['power_spectrum']):
         raise ValueError(
             "Invalid num supplied for PowerSpectrumMagnification (too large): num = %d"%num)
-    power_spectrum = base['power_spectrum'][num]
+    power_spectrum = base['input_objs']['power_spectrum'][num]
 
     mu = power_spectrum.getMagnification(pos)
 
@@ -1246,7 +1246,7 @@ def _GenerateFromEval(param, param_name, base, value_type):
         start_obj_num = base.get('start_obj_num',0)
     for key in galsim.config.valid_input_types.keys():
         if key in base:
-            exec(key + ' = base[key]')
+            exec(key + " = base['input_objs'][key]")
     try:
         val = eval(string)
         #print base['obj_num'],'Eval(%s) needed extra variables: val = %s'%(string,val)

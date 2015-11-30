@@ -414,7 +414,7 @@ def _BuildRing(config, key, base, ignore, gsparams, logger):
 def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
     """@brief Build a RealGalaxy from the real_catalog input item.
     """
-    if 'real_catalog' not in base:
+    if 'real_catalog' not in base['input_objs']:
         raise ValueError("No real galaxy catalog available for building type = RealGalaxy")
 
     if 'num' in config:
@@ -425,10 +425,10 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
 
     if num < 0:
         raise ValueError("Invalid num < 0 supplied for RealGalaxy: num = %d"%num)
-    if num >= len(base['real_catalog']):
+    if num >= len(base['input_objs']['real_catalog']):
         raise ValueError("Invalid num supplied for RealGalaxy (too large): num = %d"%num)
 
-    real_cat = base['real_catalog'][num]
+    real_cat = base['input_objs']['real_catalog'][num]
 
     # Special: if index is Sequence or Random, and max isn't set, set it to nobjects-1.
     # But not if they specify 'id' which overrides that.
@@ -496,7 +496,7 @@ def _BuildOpticalPSF(config, key, base, ignore, gsparams, logger):
 def _BuildCOSMOSGalaxy(config, key, base, ignore, gsparams, logger):
     """@brief Build a COSMOS galaxy using the cosmos_catalog input item.
     """
-    if 'cosmos_catalog' not in base:
+    if 'cosmos_catalog' not in base['input_objs']:
         raise ValueError("No COSMOS galaxy catalog available for building type = COSMOSGalaxy")
 
     if 'num' in config:
@@ -507,10 +507,10 @@ def _BuildCOSMOSGalaxy(config, key, base, ignore, gsparams, logger):
 
     if num < 0:
         raise ValueError("Invalid num < 0 supplied for COSMOSGalaxy: num = %d"%num)
-    if num >= len(base['cosmos_catalog']):
+    if num >= len(base['input_objs']['cosmos_catalog']):
         raise ValueError("Invalid num supplied for COSMOSGalaxy (too large): num = %d"%num)
 
-    cosmos_cat = base['cosmos_catalog'][num]
+    cosmos_cat = base['input_objs']['cosmos_catalog'][num]
 
     # Special: if index is Sequence or Random, and max isn't set, set it to nobjects-1.
     galsim.config.SetDefaultIndex(config, cosmos_cat.getNObjects())

@@ -572,20 +572,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         full_badpix_image = None
 
     # Sometimes an input field needs to do something special at the start of an image.
-    if 'input' in config:
-        for key in [ k for k in galsim.config.valid_input_types.keys() if k in config['input'] ]:
-            if galsim.config.valid_input_types[key][4]:
-                assert key in config
-                fields = config['input'][key]
-                if not isinstance(fields, list):
-                    fields = [ fields ]
-                input_objs = config[key]
-
-                for i in range(len(fields)):
-                    field = fields[i]
-                    input_obj = input_objs[i]
-                    func = eval(galsim.config.valid_input_types[key][4])
-                    func(input_obj, field, config)
+    galsim.config.SetupInputsForImage(config,logger)
 
     stamp_images = galsim.config.BuildStamps(
             nobjects=nobjects, config=config,
@@ -781,20 +768,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         full_badpix_image = None
 
     # Sometimes an input field needs to do something special at the start of an image.
-    if 'input' in config:
-        for key in [ k for k in galsim.config.valid_input_types.keys() if k in config['input'] ]:
-            if galsim.config.valid_input_types[key][4]:
-                assert key in config
-                fields = config['input'][key]
-                if not isinstance(fields, list):
-                    fields = [ fields ]
-                input_objs = config[key]
-
-                for i in range(len(fields)):
-                    field = fields[i]
-                    input_obj = input_objs[i]
-                    func = eval(galsim.config.valid_input_types[key][4])
-                    func(input_obj, field, config)
+    galsim.config.SetupInputsForImage(config,logger)
 
     stamp_images = galsim.config.BuildStamps(
             nobjects=nobjects, config=config,
@@ -922,43 +896,4 @@ def GetNObjForTiledImage(config, image_num):
     nx = galsim.config.ParseValue(config['image'],'nx_tiles',config,int)[0]
     ny = galsim.config.ParseValue(config['image'],'ny_tiles',config,int)[0]
     return nx*ny
-
-def PowerSpectrumInit(ps, config, base):
-    if 'grid_spacing' in config:
-        grid_spacing = galsim.config.ParseValue(config, 'grid_spacing', base, float)[0]
-    elif 'tile_xsize' in base:
-        # Then we have a tiled image.  Can use the tile spacing as the grid spacing.
-        stamp_size = min(base['tile_xsize'], base['tile_ysize'])
-        # Note: we use the (max) pixel scale at the image center.  This isn't 
-        # necessarily optimal, but it seems like the best choice.
-        scale = base['wcs'].maxLinearScale(base['image_center'])
-        grid_spacing = stamp_size * scale
-    else:
-        raise AttributeError("power_spectrum.grid_spacing required for non-tiled images")
-
-    if 'tile_xsize' in base and base['tile_xsize'] == base['tile_ysize']:
-        # PowerSpectrum can only do a square FFT, so make it the larger of the two n's.
-        ngrid = max(base['nx_tiles'], base['ny_tiles'])
-        # Normally that's good, but if tiles aren't square, need to drop through to the
-        # second option.
-    else:
-        import math
-        image_size = max(base['image_xsize'], base['image_ysize'])
-        scale = base['wcs'].maxLinearScale(base['image_center'])
-        ngrid = int(math.ceil(image_size * scale / grid_spacing))
-
-    if 'interpolant' in config:
-        interpolant = galsim.config.ParseValue(config, 'interpolant', base, str)[0]
-    else:
-        interpolant = None
-
-    # We don't care about the output here.  This just builds the grid, which we'll
-    # access for each object using its position.
-    if base['wcs'].isCelestial():
-        world_center = galsim.PositionD(0,0)
-    else:
-        world_center = base['wcs'].toWorld(base['image_center'])
-    ps.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid, center=world_center,
-                 rng=base['rng'], interpolant=interpolant)
-
 
