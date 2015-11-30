@@ -27,13 +27,13 @@ valid_extra_outputs = {
     # - a function to get the initialization kwargs if building something.
     # - a function to call at the start of each file
     # - a function to call at the end of each stamp processing
-    # - a function to call at the end of each file
+    # - a function to call to write the output file
     'psf' : (None, ['draw_method', 'signal_to_noise'], None, None, None, None),
     'weight' : (None, ['weight'], None, None, None, None),
     'badpix' : (None, [], None, None, None, None),
     'truth' : ('galsim.OutputCatalog', ['columns'],
                'galsim.config.GetTruthKwargs', None,
-               'galsim.config.ProcessTruth', 'galsim.config.WriteTruth'),
+               'galsim.config.ProcessTruth', 'galsim.OutputCatalog.write'),
 }
 
 def SetupExtraOutput(config, file_num=0, logger=None):
@@ -125,6 +125,85 @@ def ProcessExtraOutputsForStamp(config, logger=None):
                 func(extra_obj, field, config, logger)
 
 
+def WriteExtraOutputs(config, logger=None):
+    """Write the extra output objects to files.
+
+    This gets run at the end of the functions for building the regular output files.
+
+    @param config       The configuration dict.
+    @param logger       If given, a logger object to log progress. [default: None]
+    """
+    from galsim.config.output import _retry_io
+    config['index_key'] = 'file_num'
+    if 'output' in config:
+        output = config['output']
+        if 'retry_io' in output:
+            ntries = galsim.config.ParseValue(config['output'],'retry_io',config,int)[0]
+            # This is how many retries.  Do at least 1, so ntries is 1 more than this.
+            ntries = ntries + 1
+        else:
+            ntries = 1
+
+        if 'dir' in output:
+            default_dir = galsim.config.ParseValue(output,'dir',config,str)[0]
+        else:
+            default_dir = None
+
+        if 'noclobber' in output:
+            noclobber = galsim.config.ParseValue(output,'noclobber',config,bool)[0]
+        else:
+            noclobber = False
+
+        if 'extra_objs_last_file' not in config:
+            config['extra_objs_last_file'] = {}
+
+        for key in [ k for k in valid_extra_outputs.keys() if k in output ]:
+            write_func = valid_extra_outputs[key][5]
+            if write_func is None: continue
+
+            field = output[key]
+            if 'file_name' in field:
+                galsim.config.SetDefaultExt(field, '.fits')
+                file_name = galsim.config.ParseValue(field,'file_name',config,str)[0]
+            if 'dir' in field:
+                dir = galsim.config.ParseValue(field,'file_name',config,str)[0]
+            else:
+                dir = default_dir
+
+            if dir is not None:
+                file_name = os.path.join(dir,file_name)
+
+            if noclobber and os.path.isfile(file_name):
+                if logger and logger.isEnabledFor(logging.WARN):
+                    logger.warn('Not writing %s file %d = %s because output.noclobber = True' +
+                                ' and file exists',key,output['file_num'],file_name)
+                continue
+
+            if config['extra_objs_last_file'].get(key, None) == file_name:
+                # If we already wrote this file, skip it this time around.
+                # (Typically this is applicable for psf, where we may only want 1 psf file.)
+                if logger and logger.isEnabledFor(logging.INFO):
+                    logger.info('Not writing %s file %d = %s because already written',
+                                key,output['file_num'],file_name)
+                continue
+
+            if write_func is not None:
+                extra_obj = config['extra_objs'][key]
+                extra_type = valid_extra_outputs[key][0]
+                if write_func.startswith(extra_type):
+                    # Methods can't be called with proxy objects as the self parameter,
+                    # so we need to actually call the method on the proxy instead.
+                    method = write_func[len(extra_type)+1:]
+                    func = eval('extra_obj.' + method)
+                    _retry_io(func, (file_name,), ntries, file_name, logger)
+                else:
+                    func = eval(stamp_func)
+                    _retry_io(func, (extra_obj, file_name), ntries, file_name, logger)
+                config['extra_objs_last_file'][key] = file_name
+                if logger and logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('file %d: Wrote %s to %r',file_num,key,file_name)
+
+
 def GetTruthKwargs(config, base, logger=None):
     """Get the kwargs needed to build the truth OutputCatalog.
 
@@ -138,18 +217,6 @@ def GetTruthKwargs(config, base, logger=None):
     truth_names = columns.keys()
     return { 'names' : truth_names }
  
-
-def WriteTruth(truth_cat, file_name, config, base, logger=None):
-    """Write the truth catalog to a file.
-
-    @param truth_cat    The OutputCatalog to write.
-    @param file_name    The file name to write to.
-    @param config       The configuration dict for 'truth'.
-    @param base         The base configuration dict.
-    @param logger       If given, a logger object to log progress. [default: None]
-    """
-    truth_cat.write(file_name)
-
 
 def ProcessTruth(truth_cat, config, base, logger=None):
     """

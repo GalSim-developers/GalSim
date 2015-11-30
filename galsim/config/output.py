@@ -215,11 +215,7 @@ def BuildFits(file_name, config, logger=None,
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote badpix image to fits file %r',file_num,badpix_file_name)
 
-    if truth_file_name:
-        _retry_io(galsim.config.WriteTruth, (config['extra_objs']['truth'], truth_file_name, config['output']['truth'], config, logger),
-                  ntries, truth_file_name, logger)
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: Wrote truth catalog to %r',file_num,truth_file_name)
+    galsim.config.WriteExtraOutputs(config,logger)
 
     t2 = time.time()
     return t2-t1
@@ -328,12 +324,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
             logger.debug('file %d: Wrote badpix images to multi-extension fits file %r',
                          config['file_num'],badpix_file_name)
 
-    if truth_file_name:
-        _retry_io(galsim.config.WriteTruth, (config['extra_objs']['truth'], truth_file_name, config['output']['truth'], config, logger),
-                  ntries, truth_file_name, logger)
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: Wrote truth catalog to %r',
-                         config['file_num'],truth_file_name)
+    galsim.config.WriteExtraOutputs(config,logger)
 
     t2 = time.time()
     return t2-t1
@@ -471,12 +462,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
             logger.debug('file %d: Wrote badpix images to fits data cube %r',
                          config['file_num'],badpix_file_name)
 
-    if truth_file_name:
-        _retry_io(galsim.config.WriteTruth, (config['extra_objs']['truth'], truth_file_name, config['output']['truth'], config, logger),
-                  ntries, truth_file_name, logger)
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: Wrote truth catalog to %r',
-                         config['file_num'],truth_file_name)
+    galsim.config.WriteExtraOutputs(config,logger)
 
     t4 = time.time()
     return t4-t1
