@@ -124,47 +124,20 @@ def BuildFits(file_name, config, logger=None,
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: seed = %d',file_num,seed)
 
-    # hdus is a dict with hdus[i] = the item in all_images to put in the i-th hdu.
-    hdus = {}
-    # The primary hdu is always the main image.
-    hdus[0] = 0
-
     if psf_file_name or psf_hdu:
         make_psf_image = True
-        if psf_hdu: 
-            if psf_hdu <= 0 or psf_hdu in hdus.keys():
-                raise ValueError("psf_hdu = %d is invalid or a duplicate."%pdf_hdu)
-            hdus[psf_hdu] = 1
     else:
         make_psf_image = False
 
     if weight_file_name or weight_hdu:
         make_weight_image = True
-        if weight_hdu: 
-            if weight_hdu <= 0 or weight_hdu in hdus.keys():
-                raise ValueError("weight_hdu = %d is invalid or a duplicate."&weight_hdu)
-            hdus[weight_hdu] = 2
     else:
         make_weight_image = False
 
     if badpix_file_name or badpix_hdu:
         make_badpix_image = True
-        if badpix_hdu: 
-            if badpix_hdu <= 0 or badpix_hdu in hdus.keys():
-                raise ValueError("badpix_hdu = %d is invalid or a duplicate."&badpix_hdu)
-            hdus[badpix_hdu] = 3
     else:
         make_badpix_image = False
-
-    if truth_file_name or truth_hdu:
-        if truth_hdu:
-            if truth_hdu <= 0 or truth_hdu in hdus.keys():
-                raise ValueError("truth_hdu = %d is invalid or a duplicate."%truth_hdu)
-            hdus[truth_hdu] = 0 # This value isn't actually used.
-
-    for h in range(len(hdus.keys())):
-        if h not in hdus.keys():
-            raise ValueError("Image for hdu %d not found.  Cannot skip hdus."%h)
 
     all_images = galsim.config.BuildImage(
             config=config, logger=logger, image_num=image_num, obj_num=obj_num,
@@ -173,14 +146,12 @@ def BuildFits(file_name, config, logger=None,
             make_badpix_image=make_badpix_image)
     # returns a tuple ( main_image, psf_image, weight_image, badpix_image )
 
-    hdulist = []
-    for h in range(len(hdus.keys())):
-        assert h in hdus.keys()  # Checked for this above.
-        if h == truth_hdu:
-            hdulist.append(config['extra_objs']['truth'].write_fits_hdu())
-        else:
-            hdulist.append(all_images[hdus[h]])
-    # We can use hdulist in writeMulti even if the main image is the only one in the list.
+    if make_psf_image:
+        config['extra_objs']['psf'] = all_images[1]
+    if make_weight_image:
+        config['extra_objs']['weight'] = all_images[2]
+
+    hdulist = [ all_images[0] ] + galsim.config.BuildExtraOutputHDUs(config,logger)
 
     if 'output' in config and 'retry_io' in config['output']:
         ntries = galsim.config.ParseValue(config['output'],'retry_io',config,int)[0]
@@ -191,7 +162,7 @@ def BuildFits(file_name, config, logger=None,
 
     _retry_io(galsim.fits.writeMulti, (hdulist, file_name), ntries, file_name, logger)
     if logger and logger.isEnabledFor(logging.DEBUG):
-        if len(hdus.keys()) == 1:
+        if len(hdulist) == 1:
             logger.debug('file %d: Wrote image to fits file %r',file_num,file_name)
         else:
             logger.debug('file %d: Wrote image (with extra hdus) to multi-extension fits file %r',
@@ -208,12 +179,6 @@ def BuildFits(file_name, config, logger=None,
                   ntries, weight_file_name, logger)
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote weight image to fits file %r',file_num,weight_file_name)
-
-    if badpix_file_name:
-        _retry_io(galsim.fits.write, (all_images[3], badpix_file_name),
-                  ntries, badpix_file_name, logger)
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: Wrote badpix image to fits file %r',file_num,badpix_file_name)
 
     galsim.config.WriteExtraOutputs(config,logger)
 
@@ -316,13 +281,6 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote weight images to multi-extension fits file %r',
                          config['file_num'],weight_file_name)
-
-    if badpix_file_name:
-        _retry_io(galsim.fits.writeMulti, (all_images, badpix_file_name),
-                  ntries, badpix_file_name, logger)
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: Wrote badpix images to multi-extension fits file %r',
-                         config['file_num'],badpix_file_name)
 
     galsim.config.WriteExtraOutputs(config,logger)
 
@@ -454,13 +412,6 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote weight images to fits data cube %r',
                          config['file_num'],weight_file_name)
-
-    if badpix_file_name:
-        _retry_io(galsim.fits.writeCube, (badpix_images, badpix_file_name),
-                  ntries, badpix_file_name, logger)
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: Wrote badpix images to fits data cube %r',
-                         config['file_num'],badpix_file_name)
 
     galsim.config.WriteExtraOutputs(config,logger)
 

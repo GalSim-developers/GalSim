@@ -487,11 +487,11 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                     galsim.config.AddNoise(config,method,im,weight_im,current_var,logger)
                     config['index_key'] = 'obj_num'
 
-            if make_badpix_image:
-                badpix_im = galsim.ImageS(im.bounds, wcs=im.wcs)
-                badpix_im.setZero()
-            else:
-                badpix_im = None
+            # Extra outputs might want to use these:
+            config['stamp_bounds'] = im.bounds
+            config['stamp_wcs'] = im.wcs
+
+            badpix_im = None
 
             t5 = time.time()
 
@@ -505,6 +505,8 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                     config['index_key'] = 'obj_num'
             else:
                 psf_im = None
+
+            galsim.config.ProcessExtraOutputsForStamp(config, logger)
 
             t6 = time.time()
 
@@ -525,8 +527,6 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 # the value generators will do a quick return with the cached value.
                 galsim.config.process.RemoveCurrent(config, keep_safe=True)
                 continue
-
-    galsim.config.ProcessExtraOutputsForStamp(config, logger)
 
     return im, psf_im, weight_im, badpix_im, current_var, t6-t1
 

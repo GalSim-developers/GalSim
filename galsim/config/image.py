@@ -422,7 +422,9 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     if 'world_pos' in config['image']:
         config['image']['image_pos'] = (0,0)
 
-    return galsim.config.BuildSingleStamp(
+    galsim.config.SetupExtraOutputsForImage(config,1,logger)
+
+    all_images = galsim.config.BuildSingleStamp(
             config=config, xsize=xsize, ysize=ysize, obj_num=obj_num,
             do_noise=True, logger=logger,
             make_psf_image=make_psf_image, 
@@ -430,6 +432,10 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
             make_badpix_image=make_badpix_image)[:4] # Required due to `current_var, time` being
                                                      # last two elements of the BuildSingleStamp
                                                      # return tuple
+
+    galsim.config.ProcessExtraOutputsForImage(config,logger)
+
+    return all_images
 
 
 def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
@@ -553,6 +559,8 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     full_image.wcs = wcs
     full_image.setZero()
 
+    config['image_bounds'] = full_image.bounds
+
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_image.bounds, wcs=wcs)
         full_psf_image.setZero()
@@ -565,14 +573,11 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     else:
         full_weight_image = None
 
-    if make_badpix_image:
-        full_badpix_image = galsim.ImageS(full_image.bounds, wcs=wcs)
-        full_badpix_image.setZero()
-    else:
-        full_badpix_image = None
+    full_badpix_image = None
 
     # Sometimes an input field needs to do something special at the start of an image.
     galsim.config.SetupInputsForImage(config,logger)
+    galsim.config.SetupExtraOutputsForImage(config,nobjects,logger)
 
     stamp_images = galsim.config.BuildStamps(
             nobjects=nobjects, config=config,
@@ -602,8 +607,6 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
             full_psf_image[b] += psf_images[k]
         if make_weight_image:
             full_weight_image[b] += weight_images[k]
-        if make_badpix_image:
-            full_badpix_image[b] |= badpix_images[k]
         if current_vars[k] > max_current_var: max_current_var = current_vars[k]
 
     # Mark that we are no longer doing a single galaxy by deleting image_pos from config top 
@@ -612,6 +615,8 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     # Put the rng back into config['rng'] for use by the AddNoise function.
     config['rng'] = rng
+
+    galsim.config.ProcessExtraOutputsForImage(config,logger)
 
     # If didn't do noise above in the stamps, then need to do it here.
     if not do_noise:
@@ -749,6 +754,8 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     full_image.wcs = wcs
     full_image.setZero()
 
+    config['image_bounds'] = full_image.bounds
+
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_image.bounds, wcs=wcs)
         full_psf_image.setZero()
@@ -761,14 +768,11 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     else:
         full_weight_image = None
 
-    if make_badpix_image:
-        full_badpix_image = galsim.ImageS(full_image.bounds, wcs=wcs)
-        full_badpix_image.setZero()
-    else:
-        full_badpix_image = None
+    full_badpix_image = None
 
     # Sometimes an input field needs to do something special at the start of an image.
     galsim.config.SetupInputsForImage(config,logger)
+    galsim.config.SetupExtraOutputsForImage(config,nobjects,logger)
 
     stamp_images = galsim.config.BuildStamps(
             nobjects=nobjects, config=config,
@@ -798,8 +802,6 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
                 full_psf_image[bounds] += psf_images[k][bounds]
             if make_weight_image:
                 full_weight_image[bounds] += weight_images[k][bounds]
-            if make_badpix_image:
-                full_badpix_image[bounds] |= badpix_images[k][bounds]
         else:
             if logger and logger.isEnabledFor(logging.INFO):
                 logger.warn(
@@ -816,6 +818,8 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     # Put the rng back into config['rng'] for use by the AddNoise function.
     config['rng'] = rng
+
+    galsim.config.ProcessExtraOutputsForImage(config,logger)
 
     if 'noise' in config['image']:
         # Apply the noise to the full image
