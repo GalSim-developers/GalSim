@@ -333,57 +333,6 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
 
     return stamp_center, offset
 
-def ProcessTruth(config, logger=None):
-    """
-    Put the appropriate current_val's into the truth catalog.
-
-    @param config           A configuration dict.
-    @param logger           If given, a logger object to log progress. [default: None]
-    """
-    if ('output' not in config or 'truth' not in config['output'] or 
-        'columns' not in config['output']['truth']):
-        raise RuntimeError("config has no output.truth.columns field")
-    if 'truth' not in config:
-        raise RuntimeError("config has no truth catalog")
-    cat = config['truth']
-    cat.lock_acquire()
-    cols = config['output']['truth']['columns']
-    row = []
-    types = []
-    for name in cat.getNames():
-        key = cols[name]
-        if isinstance(key, dict):
-            # Then the "key" is actually something to be parsed in the normal way.
-            # Caveat: We don't know the value_type here, so we give None.  This allows
-            # only a limited subset of the parsing.  Usually enough for truth items, but
-            # not fully featured.
-            value = galsim.config.ParseValue(cols,name,config,None)[0]
-            t = type(value)
-        elif not isinstance(key,basestring):
-            # The item can just be a constant value.
-            value = key
-            t = type(value)
-        elif key[0] == '$':
-            # This can also be handled by ParseValue
-            value = galsim.config.ParseValue(cols,name,config,None)[0]
-            t = type(value)
-        else:
-            value, t = galsim.config.GetCurrentValue(key, name, config)
-        row.append(value)
-        types.append(t)
-    if cat.getNObjects() == 0:
-        cat.setTypes(types)
-    elif cat.getTypes() != types:
-        if logger:
-            logger.error("Type mismatch found when building truth catalog at object %d",
-                config['obj_num'])
-            logger.error("Types for current object = %s",repr(types))
-            logger.error("Expecting types = %s",repr(cat.getTypes()))
-        raise RuntimeError("Type mismatch found when building truth catalog.")
-    cat.add_row(row, config['obj_num'])
-    cat.lock_release()
-
-
 def BuildSingleStamp(config, xsize=0, ysize=0,
                      obj_num=0, do_noise=True, logger=None,
                      make_psf_image=False, make_weight_image=False, make_badpix_image=False):
@@ -578,7 +527,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 continue
 
     if 'truth' in config:
-        ProcessTruth(config, logger)
+        galsim.config.ProcessTruth(config, logger)
 
     return im, psf_im, weight_im, badpix_im, current_var, t6-t1
 

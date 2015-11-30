@@ -16,6 +16,9 @@
 #    and/or other materials provided with the distribution.
 #
 from process import *
+from input import *
+from output import *
+from extra_output import *
 from image import *
 from stamp import *
 from noise import *
