@@ -177,7 +177,7 @@ def BuildFits(file_name, config, logger=None,
     for h in range(len(hdus.keys())):
         assert h in hdus.keys()  # Checked for this above.
         if h == truth_hdu:
-            hdulist.append(config['truth'].write_fits_hdu())
+            hdulist.append(config['extra_objs']['truth'].write_fits_hdu())
         else:
             hdulist.append(all_images[hdus[h]])
     # We can use hdulist in writeMulti even if the main image is the only one in the list.
@@ -216,7 +216,7 @@ def BuildFits(file_name, config, logger=None,
             logger.debug('file %d: Wrote badpix image to fits file %r',file_num,badpix_file_name)
 
     if truth_file_name:
-        _retry_io(galsim.config.WriteTruth, (config, truth_file_name),
+        _retry_io(galsim.config.WriteTruth, (config['extra_objs']['truth'], truth_file_name, config['output']['truth'], config, logger),
                   ntries, truth_file_name, logger)
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote truth catalog to %r',file_num,truth_file_name)
@@ -329,7 +329,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
                          config['file_num'],badpix_file_name)
 
     if truth_file_name:
-        _retry_io(galsim.config.WriteTruth, (config, truth_file_name),
+        _retry_io(galsim.config.WriteTruth, (config['extra_objs']['truth'], truth_file_name, config['output']['truth'], config, logger),
                   ntries, truth_file_name, logger)
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote truth catalog to %r',
@@ -472,7 +472,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
                          config['file_num'],badpix_file_name)
 
     if truth_file_name:
-        _retry_io(galsim.config.WriteTruth, (config, truth_file_name),
+        _retry_io(galsim.config.WriteTruth, (config['extra_objs']['truth'], truth_file_name, config['output']['truth'], config, logger),
                   ntries, truth_file_name, logger)
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote truth catalog to %r',
@@ -482,7 +482,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     return t4-t1
 
 def GetNObjForFits(config, file_num, image_num):
-    ignore = output_ignore + galsim.config.valid_extra_output_items.keys()
+    ignore = output_ignore + galsim.config.valid_extra_outputs.keys()
     galsim.config.CheckAllParams(config['output'], 'output', ignore=ignore)
     try : 
         nobj = [ galsim.config.GetNObjForImage(config, image_num) ]
@@ -500,7 +500,7 @@ def GetNObjForMultiFits(config, file_num, image_num):
         nobjects = galsim.config.ProcessInputNObjects(config)
         if nobjects:
             config['output']['nimages'] = nobjects
-    ignore = output_ignore + galsim.config.valid_extra_output_items.keys()
+    ignore = output_ignore + galsim.config.valid_extra_outputs.keys()
     params = galsim.config.GetAllParams(config['output'],'output',config, ignore=ignore,req=req)[0]
     config['index_key'] = 'file_num'
     config['file_num'] = file_num
@@ -522,7 +522,7 @@ def GetNObjForDataCube(config, file_num, image_num):
         nobjects = galsim.config.ProcessInputNObjects(config)
         if nobjects:
             config['output']['nimages'] = nobjects
-    ignore = output_ignore + galsim.config.valid_extra_output_items.keys()
+    ignore = output_ignore + galsim.config.valid_extra_outputs.keys()
     params = galsim.config.GetAllParams(config['output'],'output',config, ignore=ignore,req=req)[0]
     config['index_key'] = 'file_num'
     config['file_num'] = file_num

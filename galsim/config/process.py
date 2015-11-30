@@ -312,7 +312,7 @@ def Process(config, logger=None):
     config['image_num'] = 0
     config['obj_num'] = 0
 
-    extra_keys = galsim.config.valid_extra_output_items.keys()
+    extra_keys = galsim.config.valid_extra_outputs.keys()
     last_file_name = {}
     for key in extra_keys:
         last_file_name[key] = None
@@ -416,7 +416,7 @@ def Process(config, logger=None):
             elif extra_hdu:
                 req['hdu'] = int
 
-            ignore += galsim.config.valid_extra_output_items[extra_key][1]
+            ignore += galsim.config.valid_extra_outputs[extra_key][1]
 
             if 'file_name' in output_extra:
                 SetDefaultExt(output_extra['file_name'],'.fits')
