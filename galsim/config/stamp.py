@@ -515,6 +515,8 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 logger.debug('obj %d: Times: %f, %f, %f, %f, %f',
                              obj_num, t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
 
+            return im, psf_im, weight_im, badpix_im, current_var, t6-t1
+
         except Exception as e:
 
             if itry == ntries-1:
@@ -528,8 +530,6 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 # the value generators will do a quick return with the cached value.
                 galsim.config.process.RemoveCurrent(config, keep_safe=True)
                 continue
-
-    return im, psf_im, weight_im, badpix_im, current_var, t6-t1
 
 
 def BuildPSF(config, logger=None, gsparams={}):
