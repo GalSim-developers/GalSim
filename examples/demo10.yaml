@@ -259,9 +259,9 @@ output :
             # rotation angle that was applied.
             theta :
                 type : Eval
-                str : "index / num * 360."
+                str : "index * 360. / num"
                 iindex : { type : Current, key : 'gal.index' }
-                fnum : { type : Current, key : 'gal.num' }
+                inum : { type : Current, key : 'gal.num' }
 
             g1 :
                 type : Eval

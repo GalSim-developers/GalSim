@@ -415,8 +415,8 @@ output :
             object_id : obj_num
             halo_id : file_num
 
-            # Mostly, you will typically access calculated values by their location in the config
-            # dict.  e.g. gal.flux accesses the calculated value of the galaxy flux.
+            # Most items will typically be given by their location in the config dict.
+            # e.g. gal.flux accesses the calculated value of the galaxy flux.
             flux : gal.flux
             size : gal.half_light_radius
             eta1 : gal.ellip.eta1
@@ -424,8 +424,9 @@ output :
             mu : gal.magnification
             redshift : gal.redshift
 
-            # For positions and shears, the output column will hold a two-element array
-            # either (x,y) or (g1,g2)
+            # For positions and shears, the data will be split into two columns, and the given
+            # column name will have ('.g1', '.g2) or ('.x', '.y') appended to what is listed here.
+            # i.e. There will be output columns named 'shear.g1', 'shear.g2', 'pos.x', 'pos.y'.
             shear : gal.shear
             pos : image.world_pos
 
