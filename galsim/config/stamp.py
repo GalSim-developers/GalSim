@@ -268,18 +268,17 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
     - Set config['index_pos'] = image_pos
     - Set config['world_pos'] = world_pos
     - Calculate the appropriate value of the center of the stamp, to be used with the
-      command: stamp_image.setCenter(stamp_center)
+      command: stamp_image.setCenter(stamp_center).  Save this as config['stamp_center']
     - Calculate the appropriate offset for the position of the object from the center of 
       the stamp due to just the fractional part of the image position, not including
       any config['image']['offset'] item that may be present in the config dict.
+      Save this as config['stamp_offset']
 
     @param config           A configuration dict.
     @param xsize            The size of the stamp in the x-dimension. [may be None]
     @param ysize            The size of the stamp in the y-dimension. [may be None]
     @param image_pos        The posotion of the stamp in image coordinates. [may be None]
     @param world_pos        The posotion of the stamp in world coordinates. [may be None]
-
-    @returns stamp_center, offset
     """
  
     if xsize: config['stamp_xsize'] = xsize
@@ -315,23 +314,22 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
         if xsize % 2 == 0: nominal_x += 0.5
         if ysize % 2 == 0: nominal_y += 0.5
 
-        stamp_center = galsim.PositionI(
-            int(math.floor(nominal_x+0.5)),
-            int(math.floor(nominal_y+0.5)) )
-        offset = galsim.PositionD(nominal_x-stamp_center.x , nominal_y-stamp_center.y)
+        stamp_center = galsim.PositionI(int(math.floor(nominal_x+0.5)),
+                                        int(math.floor(nominal_y+0.5)))
+        config['stamp_center'] = stamp_center
+        config['stamp_offset'] = galsim.PositionD(nominal_x-stamp_center.x,
+                                                  nominal_y-stamp_center.y)
         config['image_pos'] = image_pos
         config['world_pos'] = world_pos
 
     else:
-        stamp_center = None
-        offset = galsim.PositionD(0.,0.)
+        config['stamp_center'] = None
+        config['stamp_offset'] = galsim.PositionD(0.,0.)
         # Set the image_pos to (0,0) in case the wcs needs it.  Probably, if 
         # there is no image_pos or world_pos defined, then it is unlikely a
         # non-trivial wcs will have been set.  So anything would actually be fine.
         config['image_pos'] = galsim.PositionD(0.,0.)
         config['world_pos'] = world_pos
-
-    return stamp_center, offset
 
 def BuildSingleStamp(config, xsize=0, ysize=0,
                      obj_num=0, do_noise=True, logger=None,
@@ -406,7 +404,8 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 world_pos = None
 
             # Save these values for possible use in Evals or other modules
-            stamp_center, offset = SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos)
+            SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos)
+            stamp_center = config['stamp_center']
             if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('obj %d: stamp_center = %s',obj_num,stamp_center)
 
@@ -445,10 +444,10 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             if method not in ['auto', 'fft', 'phot', 'real_space', 'no_pixel', 'sb']:
                 raise AttributeError("Invalid draw_method: %s"%method)
 
-            if not skip and 'offset' in config['image']:
-                offset1 = galsim.config.ParseValue(config['image'], 'offset', config,
+            offset = config['stamp_offset']
+            if 'offset' in config['image']:
+                offset += galsim.config.ParseValue(config['image'], 'offset', config,
                                                    galsim.PositionD)[0]
-                offset += offset1
 
             if skip: 
                 if xsize and ysize:
@@ -478,17 +477,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             # This is also information that the weight image calculation needs
             config['do_noise_in_stamps'] = do_noise
 
-            if make_psf_image:
-                psf_im = DrawPSFStamp(psf,config,im.bounds,offset,method,logger)
-                if ('output' in config and 'psf' in config['output'] and 
-                        'signal_to_noise' in config['output']['psf'] and
-                        'noise' in config['image']):
-                    config['index_key'] = 'image_num'
-                    galsim.config.AddNoise(config,psf_im,0,logger)
-                    config['index_key'] = 'obj_num'
-            else:
-                psf_im = None
-
+            psf_im = None
             badpix_im = None
             weight_im = None
 

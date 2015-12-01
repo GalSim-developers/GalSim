@@ -288,6 +288,7 @@ def SetupConfigImageSize(config, xsize, ysize, wcs):
     - Set config['image_xsize'], config['image_ysize'] to the size of the image
     - Set config['image_origin'] to the origin of the image
     - Set config['image_center'] to the center of the image
+    - Set config['image_bounds'] to the bounds of the image
     - If wcs is None, build the wcs using galsim.config.
     - Set config['wcs'] to the wcs
 
@@ -312,6 +313,7 @@ def SetupConfigImageSize(config, xsize, ysize, wcs):
 
     config['image_origin'] = galsim.PositionI(origin,origin)
     config['image_center'] = galsim.PositionD( origin + (xsize-1.)/2., origin + (ysize-1.)/2. )
+    config['image_bounds'] = galsim.BoundsI(origin, origin+xsize-1, origin, origin+ysize-1)
 
     config['wcs'] = galsim.config.BuildWCS(config)
 
@@ -556,12 +558,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     # Store the current image in the base-level config for reference
     config['current_image'] = full_image
 
-    if make_psf_image:
-        full_psf_image = galsim.ImageF(full_image.bounds, wcs=wcs)
-        full_psf_image.setZero()
-    else:
-        full_psf_image = None
-
+    full_psf_image = None
     full_weight_image = None
     full_badpix_image = None
 
@@ -593,8 +590,6 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         assert full_image.bounds.includes(images[k].bounds)
         b = images[k].bounds
         full_image[b] += images[k]
-        if make_psf_image:
-            full_psf_image[b] += psf_images[k]
         if current_vars[k] > max_current_var: max_current_var = current_vars[k]
 
     # Mark that we are no longer doing a single galaxy by deleting image_pos from config top 
@@ -739,12 +734,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     # Store the current image in the base-level config for reference
     config['current_image'] = full_image
 
-    if make_psf_image:
-        full_psf_image = galsim.ImageF(full_image.bounds, wcs=wcs)
-        full_psf_image.setZero()
-    else:
-        full_psf_image = None
-
+    full_psf_image = None
     full_weight_image = None
     full_badpix_image = None
 
@@ -776,8 +766,6 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
             logger.debug('image %d: Overlap = %s',image_num,str(bounds))
         if bounds.isDefined():
             full_image[bounds] += images[k][bounds]
-            if make_psf_image:
-                full_psf_image[bounds] += psf_images[k][bounds]
         else:
             if logger and logger.isEnabledFor(logging.INFO):
                 logger.warn(

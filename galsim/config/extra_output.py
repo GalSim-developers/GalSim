@@ -29,7 +29,9 @@ valid_extra_outputs = {
     # - a function to call at the end of building each image
     # - a function to call to write the output file
     # - a function to call to build either a FITS HDU or an Image to put in an HDU
-    'psf' : ('galsim.ImageF', None, None, None, None, None, 'galsim.ImageF.view',
+    'psf' : ('galsim.ImageF', None,
+             'SetupExtraPSF', 'ProcessExtraPSFStamp', 'ProcessExtraPSFImage', 
+             'galsim.ImageF.write', 'galsim.ImageF.view',
              ['draw_method', 'signal_to_noise']),
     'weight' : ('galsim.ImageF', None,
                 'SetupWeight', 'ProcessWeightStamp', 'ProcessWeightImage', 
@@ -307,11 +309,45 @@ def BuildExtraOutputHDUs(config, logger=None):
 
 
 #
+# The functions for psf
+#
+
+def SetupExtraPSF(image, scratch, config, base, nobjects, logger=None):
+    image.resize(base['image_bounds'], wcs=base['wcs'])
+    image.setZero()
+    scratch.clear()
+
+def ProcessExtraPSFStamp(image, scratch, config, base, obj_num, logger=None):
+    # If this doesn't exist, an appropriate exception will be raised.
+    psf = base['psf']['current_val']
+    draw_method = galsim.config.GetCurrentValue('image.draw_method',base,str)
+    bounds = base['current_stamp'].bounds
+    offset = base['stamp_offset']
+    if 'offset' in base['image']:
+        offset += galsim.config.ParseValue(base['image'], 'offset', base, galsim.PositionD)[0]
+    psf_im = galsim.config.DrawPSFStamp(psf,base,bounds,offset,draw_method,logger)
+    if 'signal_to_noise' in config:
+        base['index_key'] = 'image_num'
+        galsim.config.AddNoise(base,psf_im,0,logger)
+        base['index_key'] = 'obj_num'
+    scratch[obj_num] = psf_im
+
+def ProcessExtraPSFImage(image, scratch, config, base, logger=None):
+    for stamp in scratch.values():
+        b = stamp.bounds & image.getBounds()
+        if b.isDefined():
+            # This next line is equivalent to:
+            #    image[b] += stamp[b]
+            # except that this doesn't work through the proxy.  We can only call methods
+            # that don't start with _.  Hence using the more verbose form here.
+            image.setSubImage(b, image.subImage(b) + stamp[b])
+
+#
 # The functions for weight
 #
 
 def SetupWeight(image, scratch, config, base, nobjects, logger=None):
-    image.resize(base['current_image'].bounds, wcs=base['wcs'])
+    image.resize(base['image_bounds'], wcs=base['wcs'])
     image.setZero()
     scratch.clear()
 
@@ -362,7 +398,7 @@ def ProcessWeightImage(image, scratch, config, base, logger=None):
 #
 
 def SetupBadPix(image, scratch, config, base, nobjects, logger=None):
-    image.resize(base['current_image'].bounds, wcs=base['wcs'])
+    image.resize(base['image_bounds'], wcs=base['wcs'])
     image.setZero()
     scratch.clear()
 
