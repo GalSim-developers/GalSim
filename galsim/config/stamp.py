@@ -457,7 +457,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                     im.setOrigin(config['image_origin'])
                     im.setZero()
                     if do_noise:
-                        galsim.config.AddNoise(config,'skip',im,weight_im,current_var,logger)
+                        galsim.config.AddSky(config,im)
                 else:
                     # Otherwise, we don't set the bounds, so it will be noticed as invalid upstream.
                     im = galsim.ImageF()
@@ -484,7 +484,8 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 if do_noise:
                     # The default indexing for the noise is image_num, not obj_num
                     config['index_key'] = 'image_num'
-                    galsim.config.AddNoise(config,method,im,weight_im,current_var,logger)
+                    galsim.config.AddSky(config,im)
+                    galsim.config.AddNoise(config,im,weight_im,current_var,logger)
                     config['index_key'] = 'obj_num'
 
             # Extra outputs might want to use these:
@@ -501,7 +502,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                         'signal_to_noise' in config['output']['psf'] and
                         'noise' in config['image']):
                     config['index_key'] = 'image_num'
-                    galsim.config.AddNoise(config,'fft',psf_im,None,0,logger,add_sky=False)
+                    galsim.config.AddNoise(config,psf_im,None,0,logger)
                     config['index_key'] = 'obj_num'
             else:
                 psf_im = None
@@ -718,7 +719,7 @@ def DrawPSFStamp(psf, config, bounds, offset, method, logger=None):
 
     # Special: if the galaxy was shifted, then also shift the psf 
     if 'shift' in config['gal']:
-        gal_shift = galsim.config.GetCurrentValue('gal.shift','psf',config, galsim.PositionD)
+        gal_shift = galsim.config.GetCurrentValue('gal.shift',config, galsim.PositionD)
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('obj %d: psf shift (1): %s',config['obj_num'],str(gal_shift))
         psf = psf.shift(gal_shift)

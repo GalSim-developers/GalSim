@@ -947,7 +947,7 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
 
     if 'gal' not in base or 'redshift' not in base['gal']:
         raise ValueError("NFWHaloShear requested, but no gal.redshift defined.")
-    redshift = GetCurrentValue('gal.redshift', param_name, base, float)
+    redshift = GetCurrentValue('gal.redshift', base, float)
 
     if 'nfw_halo' not in base['input_objs']:
         raise ValueError("NFWHaloShear requested, but no input.nfw_halo defined.")
@@ -983,7 +983,7 @@ def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
 
     if 'gal' not in base or 'redshift' not in base['gal']:
         raise ValueError("NFWHaloMagnification requested, but no gal.redshift defined.")
-    redshift = GetCurrentValue('gal.redshift', param_name, base, float)
+    redshift = GetCurrentValue('gal.redshift', base, float)
 
     if 'nfw_halo' not in base['input_objs']:
         raise ValueError("NFWHaloMagnification requested, but no input.nfw_halo defined.")
@@ -1177,7 +1177,7 @@ def _GenerateFromEval(param, param_name, base, value_type):
         keys = numpy.unique(keys).tolist()
         for key0 in keys:
             key = key0[1:] # Remove the @ sign.
-            value, t = GetCurrentValue(key, param_name, base)
+            value, t = GetCurrentValue(key, base)
             # Replaces all occurrences of key0 with the value.
             string = string.replace(key0,repr(value)) 
 
@@ -1263,15 +1263,19 @@ def _GenerateFromCurrent(param, param_name, base, value_type):
     req = { 'key' : str }
     params, safe = GetAllParams(param, param_name, base, req=req)
     key = params['key']
-    return GetCurrentValue(key, param_name, base, value_type), False
+    try:
+        return GetCurrentValue(key, base, value_type), False
+    except ValueError:
+        # Give more informative error here with param_name
+        raise ValueError("Invalid key = %s given for %s"%(key,param_name))
 
-def GetCurrentValue(key, param_name, base, value_type=None):
+def GetCurrentValue(key, base, value_type=None):
     """@brief Get the current value of another config item given the key name.
 
     If value_type is None, return the current value, type
     If value_type is given, just return value
     """
-    #print 'GetCurrent %s for param %s.  value_type = %s'%(key,param_name,value_type)
+    #print 'GetCurrent %s.  value_type = %s'%(key,value_type)
 
     # This next bit is basically identical to the code for Dict.get(key) in catalog.py.
     # Make a list of keys
@@ -1333,7 +1337,7 @@ def GetCurrentValue(key, param_name, base, value_type=None):
             else:
                 return val
 
-    raise ValueError("Invalid key = %s given for %s"%(key,param_name))
+    raise ValueError("Invalid key = %s"%key)
 
 
 def SetDefaultIndex(config, num):

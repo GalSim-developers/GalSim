@@ -405,7 +405,7 @@ def ProcessTruth(truth_cat, scratch, config, base, obj_num, logger=None):
             value = galsim.config.ParseValue(cols,name,base,None)[0]
             t = type(value)
         else:
-            value, t = galsim.config.GetCurrentValue(key, name, base)
+            value, t = galsim.config.GetCurrentValue(key, base)
         row.append(value)
         types.append(t)
     if truth_cat.getNObjects() == 0:

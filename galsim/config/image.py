@@ -432,7 +432,7 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
             make_badpix_image=make_badpix_image)[:4] # Required due to `current_var, time` being
                                                      # last two elements of the BuildSingleStamp
                                                      # return tuple
-
+    
     galsim.config.ProcessExtraOutputsForImage(config,logger)
 
     return all_images
@@ -616,13 +616,18 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     # Put the rng back into config['rng'] for use by the AddNoise function.
     config['rng'] = rng
 
+    # Store the current image in the base-level config for reference
+    config['current_image'] = full_image
+
+    galsim.config.AddSky(config,full_image)
+
     galsim.config.ProcessExtraOutputsForImage(config,logger)
 
     # If didn't do noise above in the stamps, then need to do it here.
     if not do_noise:
         if 'noise' in config['image']:
             # If we didn't apply noise in each stamp, then we need to apply it now.
-            draw_method = galsim.config.GetCurrentValue('image.draw_method','Tiled',config,str)
+            draw_method = galsim.config.GetCurrentValue('image.draw_method',config,str)
 
             if max_current_var > 0:
                 if logger and logger.isEnabledFor(logging.DEBUG):
@@ -644,13 +649,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
             # Now max_current_var is how much noise is in each pixel.
 
             galsim.config.AddNoise(
-                config,draw_method,full_image,full_weight_image,max_current_var,logger)
-
-        else:
-            # If we aren't doing noise, we still may need to add a non-zero sky_level.
-            # The same noise function does this with the 'skip' draw method.
-            galsim.config.AddNoise(
-                config,'skip',full_image,full_weight_image,max_current_var,logger)
+                config,full_image,full_weight_image,max_current_var,logger)
 
     return full_image, full_psf_image, full_weight_image, full_badpix_image
 
@@ -819,11 +818,16 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     # Put the rng back into config['rng'] for use by the AddNoise function.
     config['rng'] = rng
 
+    # Store the current image in the base-level config for reference
+    config['current_image'] = full_image
+
+    galsim.config.AddSky(config,full_image)
+
     galsim.config.ProcessExtraOutputsForImage(config,logger)
 
     if 'noise' in config['image']:
         # Apply the noise to the full image
-        draw_method = galsim.config.GetCurrentValue('image.draw_method','Scattered',config,str)
+        draw_method = galsim.config.GetCurrentValue('image.draw_method',config,str)
         if max_current_var > 0:
             import numpy
             # Then there was whitening applied in the individual stamps.
@@ -846,13 +850,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         # Now max_current_var is how much noise is in each pixel.
 
         galsim.config.AddNoise(
-            config,draw_method,full_image,full_weight_image,max_current_var,logger)
-
-    else:
-        # If we aren't doing noise, we still may need to add a non-zero sky_level.
-        # The same noise function does this with the 'skip' draw method.
-        galsim.config.AddNoise(
-            config,'skip',full_image,full_weight_image,max_current_var,logger)
+            config,full_image,full_weight_image,max_current_var,logger)
 
     return full_image, full_psf_image, full_weight_image, full_badpix_image
 
