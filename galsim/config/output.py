@@ -148,8 +148,6 @@ def BuildFits(file_name, config, logger=None,
 
     if make_psf_image:
         config['extra_objs']['psf'] = all_images[1]
-    if make_weight_image:
-        config['extra_objs']['weight'] = all_images[2]
 
     hdulist = [ all_images[0] ] + galsim.config.BuildExtraOutputHDUs(config,logger)
 
@@ -173,12 +171,6 @@ def BuildFits(file_name, config, logger=None,
                   ntries, psf_file_name, logger)
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote psf image to fits file %r',file_num,psf_file_name)
-
-    if weight_file_name:
-        _retry_io(galsim.fits.write, (all_images[2], weight_file_name),
-                  ntries, weight_file_name, logger)
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: Wrote weight image to fits file %r',file_num,weight_file_name)
 
     galsim.config.WriteExtraOutputs(config,logger)
 
@@ -274,13 +266,6 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote psf images to multi-extension fits file %r',
                          config['file_num'],psf_file_name)
-
-    if weight_file_name:
-        _retry_io(galsim.fits.writeMulti, (weight_images, weight_file_name),
-                  ntries, weight_file_name, logger)
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: Wrote weight images to multi-extension fits file %r',
-                         config['file_num'],weight_file_name)
 
     galsim.config.WriteExtraOutputs(config,logger)
 
@@ -405,13 +390,6 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote psf images to fits data cube %r',
                          config['file_num'],psf_file_name)
-
-    if weight_file_name:
-        _retry_io(galsim.fits.writeCube, (weight_images, weight_file_name),
-                  ntries, weight_file_name, logger)
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: Wrote weight images to fits data cube %r',
-                         config['file_num'],weight_file_name)
 
     galsim.config.WriteExtraOutputs(config,logger)
 

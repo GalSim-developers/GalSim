@@ -470,29 +470,13 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 im, current_var = DrawStamp(psf,gal,config,xsize,ysize,offset,method,logger)
                 if stamp_center:
                     im.setCenter(stamp_center)
-                if do_noise:
-                    config['index_key'] = 'image_num'
-                    galsim.config.AddSky(config,im)
-                    config['index_key'] = 'obj_num'
 
             t5 = time.time()
 
-            # Extra outputs might want to use these:
-            config['stamp_bounds'] = im.bounds
-            config['stamp_wcs'] = im.wcs
-
-            if make_weight_image:
-                weight_im = galsim.ImageF(im.bounds, wcs=im.wcs)
-                weight_im.setZero()
-                if do_noise and not skip:
-                    if 'include_obj_var' in config['output']['weight']:
-                        include_obj_var = galsim.config.ParseValue(
-                                config['output']['weight'], 'include_obj_var', config, bool)[0]
-                    else:
-                        include_obj_var = False
-                    galsim.config.AddNoiseVariance(config,weight_im,include_obj_var,logger)
-            else:
-                weight_im = None
+            # Store the current stamp in the base-level config for reference
+            config['current_stamp'] = im
+            # This is also information that the weight image calculation needs
+            config['do_noise_in_stamps'] = do_noise
 
             if make_psf_image:
                 psf_im = DrawPSFStamp(psf,config,im.bounds,offset,method,logger)
@@ -506,6 +490,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 psf_im = None
 
             badpix_im = None
+            weight_im = None
 
             galsim.config.ProcessExtraOutputsForStamp(config, logger)
 
@@ -514,6 +499,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             if do_noise and not skip:
                 # The default indexing for the noise is image_num, not obj_num
                 config['index_key'] = 'image_num'
+                galsim.config.AddSky(config,im)
                 galsim.config.AddNoise(config,im,current_var,logger)
                 config['index_key'] = 'obj_num'
 

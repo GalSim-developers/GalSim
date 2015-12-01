@@ -274,8 +274,8 @@ def NoiseVarPoisson(config, base):
 
 def AddNoiseVariancePoisson(config, base, im, include_obj_var, logger):
     if include_obj_var:
-        # The current image at this point should be the noise-free image, which is the
-        # object variance in each pixel.
+        # The current image at this point should be the noise-free, sky-free image,
+        # which is the object variance in each pixel.
         im += base['current_image']
 
         # Note: For the phot case, we don't actually have an exact value for the variance in each 
@@ -397,8 +397,8 @@ def NoiseVarCCD(config, base):
 def AddNoiseVarianceCCD(config, base, im, include_obj_var, logger):
     gain, read_noise, read_noise_var = _GetCCDNoiseParams(config, base)
     if include_obj_var:
-        # The current image at this point should be the noise-free image, which is the
-        # object variance in each pixel.
+        # The current image at this point should be the noise-free, sky-free image,
+        # which is the object variance in each pixel.
         im += base['current_image']
 
         # Account for the gain and read noise

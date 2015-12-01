@@ -31,7 +31,9 @@ valid_extra_outputs = {
     # - a function to call to build either a FITS HDU or an Image to put in an HDU
     'psf' : ('galsim.ImageF', None, None, None, None, None, 'galsim.ImageF.view',
              ['draw_method', 'signal_to_noise']),
-    'weight' : ('galsim.ImageF', None, None, None, None, None, 'galsim.ImageF.view',
+    'weight' : ('galsim.ImageF', None,
+                'SetupWeight', 'ProcessWeightStamp', 'ProcessWeightImage', 
+                'galsim.ImageF.write', 'galsim.ImageF.view',
                 ['weight']),
     'badpix' : ('galsim.ImageS', None,
                 'SetupBadPix', 'ProcessBadPixStamp', 'ProcessBadPixImage', 
@@ -135,7 +137,10 @@ def SetupExtraOutputsForImage(config, nobjects, logger=None):
 
 def ProcessExtraOutputsForStamp(config, logger=None):
     """Run the appropriate processing code for any extra output items that need to do something
-    at the end of building each object
+    at the end of building each object.
+
+    This gets called after all the object flux is added to the stamp, but before the sky level
+    and noise are added.
 
     @param config       The configuration dict.
     @param logger       If given, a logger object to log progress. [default: None]
@@ -302,56 +307,90 @@ def BuildExtraOutputHDUs(config, logger=None):
 
 
 #
+# The functions for weight
+#
+
+def SetupWeight(image, scratch, config, base, nobjects, logger=None):
+    image.resize(base['current_image'].bounds, wcs=base['wcs'])
+    image.setZero()
+    scratch.clear()
+
+def ProcessWeightStamp(image, scratch, config, base, obj_num, logger=None):
+    if base['do_noise_in_stamps']:
+        weight_im = galsim.ImageF(base['current_stamp'].bounds, wcs=base['wcs'], init_value=0)
+        if 'include_obj_var' in base['output']['weight']:
+            include_obj_var = galsim.config.ParseValue(
+                    base['output']['weight'], 'include_obj_var', config, bool)[0]
+        else:
+            include_obj_var = False
+        galsim.config.AddNoiseVariance(base,weight_im,include_obj_var,logger)
+        scratch[obj_num] = weight_im
+
+def ProcessWeightImage(image, scratch, config, base, logger=None):
+    if len(scratch) > 0.:
+        # If we have been accumulating the variance on the stamps, build the total from them.
+        for stamp in scratch.values():
+            b = stamp.bounds & image.getBounds()
+            if b.isDefined():
+                # This next line is equivalent to:
+                #    image[b] += stamp[b]
+                # except that this doesn't work through the proxy.  We can only call methods
+                # that don't start with _.  Hence using the more verbose form here.
+                image.setSubImage(b, image.subImage(b) + stamp[b])
+    else:
+        # Otherwise, build the variance map now.
+        if 'include_obj_var' in base['output']['weight']:
+            include_obj_var = galsim.config.ParseValue(
+                    base['output']['weight'], 'include_obj_var', config, bool)[0]
+        else:
+            include_obj_var = False
+        if isinstance(image, galsim.Image):
+            galsim.config.AddNoiseVariance(base,image,include_obj_var,logger)
+        else:
+            # If we are using a Proxy for the image, the code in AddNoiseVar won't work properly.
+            # The easiest workaround is to build a new image here and copy it over.
+            im2 = galsim.ImageF(image.getBounds(), wcs=base['wcs'], init_value=0)
+            galsim.config.AddNoiseVariance(base,im2,include_obj_var,logger)
+            image.copyFrom(im2)
+ 
+    # Now invert the variance image to get weight map.
+    image.invertSelf()
+
+
+#
 # The functions for badpix
 #
 
 def SetupBadPix(image, scratch, config, base, nobjects, logger=None):
-    """
-    Put the appropriate current_val's into the truth catalog.
-
-    @param image        The final badpix image (ignored here)
-    @param scratch      The badpix scratch space.
-    @param config       The configuration dict for 'truth'
-    @param base         The base configuration dict.
-    @param nobjects     The number of stamps to be built for this file.
-    @param logger       If given, a logger object to log progress. [default: None]
-    """
-    image.resize(base['image_bounds'], wcs=base['wcs'])
+    image.resize(base['current_image'].bounds, wcs=base['wcs'])
     image.setZero()
     scratch.clear()
 
 def ProcessBadPixStamp(image, scratch, config, base, obj_num, logger=None):
-    """
-    Put the appropriate current_val's into the truth catalog.
-
-    @param image        The final badpix image (ignored here)
-    @param scratch      The badpix scratch space.
-    @param config       The configuration dict for 'truth'
-    @param base         The base configuration dict.
-    @param obj_num      The object number in the file.
-    @param logger       If given, a logger object to log progress. [default: None]
-    """
-    badpix_im = galsim.ImageS(base['stamp_bounds'], wcs=base['stamp_wcs'], init_value=0)
-    scratch[obj_num] = badpix_im
+    # Note: This is just a placeholder for now.  Once we implement defects, saturation, etc.,
+    # these features should be marked in the badpix mask.  For now though, all pixels = 0.
+    if base['do_noise_in_stamps']:
+        badpix_im = galsim.ImageF(base['current_stamp'].bounds, wcs=base['wcs'], init_value=0)
+        scratch[obj_num] = badpix_im
 
 def ProcessBadPixImage(image, scratch, config, base, logger=None):
-    """
-    Put the appropriate current_val's into the truth catalog.
-
-    @param image        The final badpix image
-    @param scratch      The badpix scratch space.
-    @param config       The configuration dict for 'truth'
-    @param base         The base configuration dict.
-    @param logger       If given, a logger object to log progress. [default: None]
-    """
-    for stamp in scratch.values():
-        b = stamp.bounds & image.getBounds()
-        if b.isDefined():
-            # This next line is equivalent to:
-            #    image[b] |= stamp[b]
-            # except that this doesn't work through the proxy.  We can only call methods
-            # that don't start with _.  Hence using the more verbose form here.
-            image.setSubImage(b, image.subImage(b) | stamp[b])
+    if len(scratch) > 0.:
+        # If we have been accumulating the variance on the stamps, build the total from them.
+        for stamp in scratch.values():
+            b = stamp.bounds & image.getBounds()
+            if b.isDefined():
+                # This next line is equivalent to:
+                #    image[b] |= stamp[b]
+                # except that this doesn't work through the proxy.  We can only call methods
+                # that don't start with _.  Hence using the more verbose form here.
+                image.setSubImage(b, image.subImage(b) | stamp[b])
+    else:
+        # Otherwise, build the bad pixel mask here.
+        # Again, nothing here yet.
+        pass
+ 
+    # Now invert the variance image to get weight map.
+    image.invertSelf()
 
  
 #
@@ -359,30 +398,12 @@ def ProcessBadPixImage(image, scratch, config, base, logger=None):
 #
 
 def GetTruthKwargs(config, base, logger=None):
-    """Get the kwargs needed to build the truth OutputCatalog.
-
-    @param config       The configuration dict for 'truth'.
-    @param base         The base configuration dict.
-    @param logger       If given, a logger object to log progress. [default: None]
-
-    @returns the kwargs to use for building the OutputCatalog.
-    """
     columns = config['columns']
     truth_names = columns.keys()
     return { 'names' : truth_names }
  
 
 def ProcessTruth(truth_cat, scratch, config, base, obj_num, logger=None):
-    """
-    Put the appropriate current_val's into the truth catalog.
-
-    @param truth_cat    The OutputCatalog in which to put the truth information.
-    @param scratch      The truth scratch space.
-    @param config       The configuration dict for 'truth'
-    @param base         The base configuration dict.
-    @param obj_num      The object number in the file.
-    @param logger       If given, a logger object to log progress. [default: None]
-    """
     truth_cat.lock_acquire()
     cols = config['columns']
     row = []

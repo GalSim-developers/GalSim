@@ -353,12 +353,6 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)
 
-    # The later image building functions build up the weight image as the total variance 
-    # in each pixel.  We need to invert this to produce the inverse variance map.
-    # Doing it here means it only needs to be done in this one place.
-    if all_images[2]:
-        all_images[2].invertSelf()
-
     return all_images
 
 # Ignore these when parsing the parameters for specific Image types:
@@ -559,7 +553,8 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     full_image.wcs = wcs
     full_image.setZero()
 
-    config['image_bounds'] = full_image.bounds
+    # Store the current image in the base-level config for reference
+    config['current_image'] = full_image
 
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_image.bounds, wcs=wcs)
@@ -567,12 +562,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     else:
         full_psf_image = None
 
-    if make_weight_image:
-        full_weight_image = galsim.ImageF(full_image.bounds, wcs=wcs)
-        full_weight_image.setZero()
-    else:
-        full_weight_image = None
-
+    full_weight_image = None
     full_badpix_image = None
 
     # Sometimes an input field needs to do something special at the start of an image.
@@ -605,8 +595,6 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         full_image[b] += images[k]
         if make_psf_image:
             full_psf_image[b] += psf_images[k]
-        if make_weight_image:
-            full_weight_image[b] += weight_images[k]
         if current_vars[k] > max_current_var: max_current_var = current_vars[k]
 
     # Mark that we are no longer doing a single galaxy by deleting image_pos from config top 
@@ -616,23 +604,13 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     # Put the rng back into config['rng'] for use by the AddNoise function.
     config['rng'] = rng
 
-    # Store the current image in the base-level config for reference
-    config['current_image'] = full_image
-
-    galsim.config.AddSky(config,full_image)
-
-    if make_weight_image and not do_noise:
-        if 'include_obj_var' in config['output']['weight']:
-            include_obj_var = galsim.config.ParseValue(
-                    config['output']['weight'], 'include_obj_var', config, bool)[0]
-        else:
-            include_obj_var = False
-        galsim.config.AddNoiseVariance(config,full_weight_image,include_obj_var,logger)
-
     galsim.config.ProcessExtraOutputsForImage(config,logger)
 
     # If didn't do noise above in the stamps, then need to do it here.
     if not do_noise:
+
+        galsim.config.AddSky(config,full_image)
+
         if 'noise' in config['image']:
             # If we didn't apply noise in each stamp, then we need to apply it now.
             if max_current_var > 0:
@@ -758,7 +736,8 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     full_image.wcs = wcs
     full_image.setZero()
 
-    config['image_bounds'] = full_image.bounds
+    # Store the current image in the base-level config for reference
+    config['current_image'] = full_image
 
     if make_psf_image:
         full_psf_image = galsim.ImageF(full_image.bounds, wcs=wcs)
@@ -766,12 +745,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     else:
         full_psf_image = None
 
-    if make_weight_image:
-        full_weight_image = galsim.ImageF(full_image.bounds, wcs=wcs)
-        full_weight_image.setZero()
-    else:
-        full_weight_image = None
-
+    full_weight_image = None
     full_badpix_image = None
 
     # Sometimes an input field needs to do something special at the start of an image.
@@ -804,8 +778,6 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
             full_image[bounds] += images[k][bounds]
             if make_psf_image:
                 full_psf_image[bounds] += psf_images[k][bounds]
-            if make_weight_image:
-                full_weight_image[bounds] += weight_images[k][bounds]
         else:
             if logger and logger.isEnabledFor(logging.INFO):
                 logger.warn(
@@ -826,17 +798,9 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     # Store the current image in the base-level config for reference
     config['current_image'] = full_image
 
-    galsim.config.AddSky(config,full_image)
-
-    if make_weight_image:
-        if 'include_obj_var' in config['output']['weight']:
-            include_obj_var = galsim.config.ParseValue(
-                    config['output']['weight'], 'include_obj_var', config, bool)[0]
-        else:
-            include_obj_var = False
-        galsim.config.AddNoiseVariance(config,full_weight_image,include_obj_var,logger)
-
     galsim.config.ProcessExtraOutputsForImage(config,logger)
+
+    galsim.config.AddSky(config,full_image)
 
     if 'noise' in config['image']:
         # Apply the noise to the full image
