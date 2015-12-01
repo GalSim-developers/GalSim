@@ -484,6 +484,13 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             if make_weight_image:
                 weight_im = galsim.ImageF(im.bounds, wcs=im.wcs)
                 weight_im.setZero()
+                if do_noise and not skip:
+                    if 'include_obj_var' in config['output']['weight']:
+                        include_obj_var = galsim.config.ParseValue(
+                                config['output']['weight'], 'include_obj_var', config, bool)[0]
+                    else:
+                        include_obj_var = False
+                    galsim.config.AddNoiseVariance(config,weight_im,include_obj_var,logger)
             else:
                 weight_im = None
 
@@ -493,7 +500,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                         'signal_to_noise' in config['output']['psf'] and
                         'noise' in config['image']):
                     config['index_key'] = 'image_num'
-                    galsim.config.AddNoise(config,psf_im,None,0,logger)
+                    galsim.config.AddNoise(config,psf_im,0,logger)
                     config['index_key'] = 'obj_num'
             else:
                 psf_im = None
@@ -507,7 +514,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             if do_noise and not skip:
                 # The default indexing for the noise is image_num, not obj_num
                 config['index_key'] = 'image_num'
-                galsim.config.AddNoise(config,im,weight_im,current_var,logger)
+                galsim.config.AddNoise(config,im,current_var,logger)
                 config['index_key'] = 'obj_num'
 
             t7 = time.time()

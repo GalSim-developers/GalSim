@@ -621,14 +621,20 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     galsim.config.AddSky(config,full_image)
 
+    if make_weight_image and not do_noise:
+        if 'include_obj_var' in config['output']['weight']:
+            include_obj_var = galsim.config.ParseValue(
+                    config['output']['weight'], 'include_obj_var', config, bool)[0]
+        else:
+            include_obj_var = False
+        galsim.config.AddNoiseVariance(config,full_weight_image,include_obj_var,logger)
+
     galsim.config.ProcessExtraOutputsForImage(config,logger)
 
     # If didn't do noise above in the stamps, then need to do it here.
     if not do_noise:
         if 'noise' in config['image']:
             # If we didn't apply noise in each stamp, then we need to apply it now.
-            draw_method = galsim.config.GetCurrentValue('image.draw_method',config,str)
-
             if max_current_var > 0:
                 if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('image %d: maximum noise varance in any stamp is %f',
@@ -648,8 +654,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
                 full_image.addNoise(galsim.VariableGaussianNoise(rng,noise_image))
             # Now max_current_var is how much noise is in each pixel.
 
-            galsim.config.AddNoise(
-                config,full_image,full_weight_image,max_current_var,logger)
+            galsim.config.AddNoise(config,full_image,max_current_var,logger)
 
     return full_image, full_psf_image, full_weight_image, full_badpix_image
 
@@ -823,11 +828,18 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     galsim.config.AddSky(config,full_image)
 
+    if make_weight_image:
+        if 'include_obj_var' in config['output']['weight']:
+            include_obj_var = galsim.config.ParseValue(
+                    config['output']['weight'], 'include_obj_var', config, bool)[0]
+        else:
+            include_obj_var = False
+        galsim.config.AddNoiseVariance(config,full_weight_image,include_obj_var,logger)
+
     galsim.config.ProcessExtraOutputsForImage(config,logger)
 
     if 'noise' in config['image']:
         # Apply the noise to the full image
-        draw_method = galsim.config.GetCurrentValue('image.draw_method',config,str)
         if max_current_var > 0:
             import numpy
             # Then there was whitening applied in the individual stamps.
@@ -849,8 +861,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
             full_image.addNoise(galsim.VariableGaussianNoise(rng,noise_image))
         # Now max_current_var is how much noise is in each pixel.
 
-        galsim.config.AddNoise(
-            config,full_image,full_weight_image,max_current_var,logger)
+        galsim.config.AddNoise(config,full_image,max_current_var,logger)
 
     return full_image, full_psf_image, full_weight_image, full_badpix_image
 

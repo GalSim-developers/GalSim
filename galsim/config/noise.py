@@ -23,10 +23,10 @@ valid_noise_types = {
     # The values in the tuple are:
     # - A function to add noise after drawing
     # - A function that returns the variance of the noise
-    'Gaussian' : ('AddNoiseGaussian', 'NoiseVarGaussian'),
-    'Poisson' : ('AddNoisePoisson', 'NoiseVarPoisson'),
-    'CCD' : ('AddNoiseCCD', 'NoiseVarCCD'),
-    'COSMOS' : ('AddNoiseCOSMOS', 'NoiseVarCOSMOS'),
+    'Gaussian' : ('AddNoiseGaussian', 'NoiseVarGaussian', 'AddNoiseVarianceGaussian'),
+    'Poisson' : ('AddNoisePoisson', 'NoiseVarPoisson', 'AddNoiseVariancePoisson'),
+    'CCD' : ('AddNoiseCCD', 'NoiseVarCCD', 'AddNoiseVarianceCCD'),
+    'COSMOS' : ('AddNoiseCOSMOS', 'NoiseVarCOSMOS', 'AddNoiseVarianceCOSMOS'),
 }
 
 # items that are parsed separately from the normal noise function
@@ -80,18 +80,20 @@ def AddSky(config, im):
         im += sky
 
 
-def AddNoise(config, im, weight_im, current_var, logger):
+def AddNoise(config, im, current_var=0., logger=None):
     """
-    Add noise to an image according to the noise specifications in the noise dict
-    appropriate for an image that has been drawn using the specified method.
+    Add noise to an image according to the noise specifications in the noise dict.
+
+    @param config           The configuration dict
+    @param im               The image onto which to add the noise
+    @param current_var      The current noise variance present in the image already [default: 0]
+    @param logger           If given, a logger object to log progress. [default: None]
     """
     if 'noise' in config['image']:
         noise = config['image']['noise']
     else:
         # No noise.
         return
-
-    rng = config['rng']
 
     if 'type' in noise:
         type = noise['type']
@@ -100,13 +102,16 @@ def AddNoise(config, im, weight_im, current_var, logger):
     if type not in valid_noise_types:
         raise AttributeError("Invalid type %s for noise",type)
 
-    noise_func = eval(valid_noise_types[type][0])
-    noise_func(noise, config, rng, im, weight_im, current_var, logger)
-
+    func = eval(valid_noise_types[type][0])
+    func(noise, config, im, current_var, logger)
 
 def CalculateNoiseVar(config):
     """
     Calculate the noise variance from the noise specified in the noise dict.
+
+    @param config           The configuration dict
+
+    @returns the noise variance
     """
     noise = config['image']['noise']
     if not isinstance(noise, dict):
@@ -119,30 +124,45 @@ def CalculateNoiseVar(config):
     if type not in valid_noise_types:
         raise AttributeError("Invalid type %s for noise",type)
 
-    noisevar_func = eval(valid_noise_types[type][1])
-    return noisevar_func(noise, config)
+    func = eval(valid_noise_types[type][1])
+    return func(noise, config)
+
+def AddNoiseVariance(config, im, include_obj_var=False, logger=None):
+    """
+    Add the noise variance to an image according to the noise specifications in the noise dict.
+    Typically, this is used for buliding a weight map, which is typically the inverse variance.
+
+    @param config           The configuration dict
+    @param im               The image onto which to add the variance values
+    @param include_obj_var  Whether to add the variance from the object photons for noise
+                            models that have a component based on the number of photons.
+                            [default: False]
+    @param logger           If given, a logger object to log progress. [default: None]
+    """
+    if 'noise' in config['image']:
+        noise = config['image']['noise']
+    else:
+        # No noise.
+        return
+
+    if 'type' in noise:
+        type = noise['type']
+    else:
+        type = 'Poisson'  # Default is Poisson
+    if type not in valid_noise_types:
+        raise AttributeError("Invalid type %s for noise",type)
+
+    func = eval(valid_noise_types[type][2])
+    func(noise, config, im, include_obj_var, logger)
+
 
 #
 # Gaussian
 #
 
-def AddNoiseGaussian(config, base, rng, im, weight_im, current_var, logger):
-    # NB: Identical for fft and phot
+def AddNoiseGaussian(config, base, im, current_var, logger):
 
-    # The noise level can be specified either as a sigma or a variance.  Here we just calculate
-    # the value of the variance from either one.
-    single = [ { 'sigma' : float , 'variance' : float } ]
-    params = galsim.config.GetAllParams(config, 'noise', base, single=single,
-                                        ignore=noise_ignore)[0]
-    if 'sigma' in params:
-        sigma = params['sigma']
-        var = sigma**2
-    else:
-        var = params['variance']
-
-    # If we are saving the noise level in a weight image, do that now.
-    if weight_im:
-        weight_im += var
+    var = NoiseVarGaussian(config, base)
 
     # If we already have some variance in the image (from whitening), then we subtract this much
     # from sigma**2.
@@ -158,6 +178,7 @@ def AddNoiseGaussian(config, base, rng, im, weight_im, current_var, logger):
     # Now apply the noise.
     import math
     sigma = math.sqrt(var)
+    rng = base['rng']
     im.addNoise(galsim.GaussianNoise(rng,sigma=sigma))
 
     if logger and logger.isEnabledFor(logging.DEBUG):
@@ -166,7 +187,8 @@ def AddNoiseGaussian(config, base, rng, im, weight_im, current_var, logger):
 
 def NoiseVarGaussian(config, base):
 
-    # The noise variance is just sigma^2 or variance
+    # The noise level can be specified either as a sigma or a variance.  Here we just calculate
+    # the value of the variance from either one.
     single = [ { 'sigma' : float , 'variance' : float } ]
     params = galsim.config.GetAllParams(config, 'noise', base, single=single,
                                         ignore=noise_ignore)[0]
@@ -176,12 +198,15 @@ def NoiseVarGaussian(config, base):
     else:
         return params['variance']
 
+def AddNoiseVarianceGaussian(config, base, im, include_obj_var, logger):
+    im += NoiseVarGaussian(config, base)
+
 
 #
 # Poisson
 #
 
-def AddNoisePoisson(config, base, rng, im, weight_im, current_var, logger):
+def AddNoisePoisson(config, base, im, current_var, logger):
 
     # Get how much extra sky to assume from the image.noise attribute.
     sky = GetSky(base['image'], base)
@@ -189,28 +214,6 @@ def AddNoisePoisson(config, base, rng, im, weight_im, current_var, logger):
     if not sky and not extra_sky:
         raise AttributeError(
             "Must provide either sky_level or sky_level_pixel for noise.type = Poisson")
-
-    # If we are saving the noise level in a weight image, do that now.
-    if weight_im:
-        # Check if a weight image should include the object variance.
-        # Note: For the phot case, we don't actually have an exact value for the variance in each 
-        # pixel, but the drawn image before adding the Poisson noise is our best guess for the 
-        # variance from the object's flux, so if we want the object variance included, this is 
-        # still the best we can do.
-        include_obj_var = False
-        if ('output' in base and 'weight' in base['output'] and 
-            'include_obj_var' in base['output']['weight']):
-            include_obj_var = galsim.config.ParseValue(
-                base['output']['weight'], 'include_obj_var', base, bool)[0]
-        if include_obj_var:
-            # The image right now has the object variance in each pixel.  So before going on with 
-            # the noise, copy these over to the weight image.  (We invert this later...)
-            weight_im.copyFrom(im)
-        else:
-            # Otherwise, just add in the current sky noise:
-            if sky: weight_im += sky
-        # And add in the extra sky noise:
-        if extra_sky: weight_im += extra_sky
 
     # If we already have some variance in the image (from whitening), then we subtract this much
     # off of the sky level.  It's not precisely accurate, since the existing variance is Gaussian,
@@ -231,6 +234,7 @@ def AddNoisePoisson(config, base, rng, im, weight_im, current_var, logger):
     # At this point, there is a slight difference between fft and phot. For photon shooting, the 
     # galaxy already has Poisson noise, so we want to make sure not to add that again!
     draw_method = galsim.config.GetCurrentValue('image.draw_method',base,str)
+    rng = base['rng']
     if draw_method == 'phot':
         # Only add in the noise from the sky.
         if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
@@ -268,25 +272,26 @@ def NoiseVarPoisson(config, base):
     return sky
 
 
+def AddNoiseVariancePoisson(config, base, im, include_obj_var, logger):
+    if include_obj_var:
+        # The current image at this point should be the noise-free image, which is the
+        # object variance in each pixel.
+        im += base['current_image']
+
+        # Note: For the phot case, we don't actually have an exact value for the variance in each 
+        # pixel, but the drawn image before adding the Poisson noise is our best guess for the 
+        # variance from the object's flux, so if we want the object variance included, this is 
+        # still the best we can do.
+
+    # Add the total sky level
+    im += NoiseVarPoisson(config, base)
+
+
 #
 # CCD
 #
 
-def AddNoiseCCD(config, base, rng, im, weight_im, current_var, logger):
-
-    # This process goes a lot like the Poisson routine.  There are just two differences.
-    # First, the Poisson noise is in electrons, not ADU, and now we allow for a gain = e-/ADU,
-    # so we need to account for that properly.  Second, we also allow for an additional Gaussian
-    # read noise.
-
-    # Get how much extra sky to assume from the image.noise attribute.
-    sky = GetSky(base['image'], base)
-    extra_sky = GetSky(config, base)
-    if not sky and not extra_sky:
-        raise AttributeError(
-            "Must provide either sky_level or sky_level_pixel for noise.type = Poisson")
-
-    # Read the other parameters
+def _GetCCDNoiseParams(config, base):
     opt = { 'gain' : float , 'read_noise' : float }
     ignore = ['sky_level', 'sky_level_pixel']
     params = galsim.config.GetAllParams(config, 'noise', base, opt=opt,
@@ -295,37 +300,22 @@ def AddNoiseCCD(config, base, rng, im, weight_im, current_var, logger):
     read_noise = params.get('read_noise',0.0)
     read_noise_var = read_noise**2
 
+    return gain, read_noise, read_noise_var
 
-    # If we are saving the noise level in a weight image, do that now.
-    if weight_im:
-        # Check if a weight image should include the object variance.
-        # Note: For the phot case, we don't actually have an exact value for the variance in each 
-        # pixel, but the drawn image before adding the Poisson noise is our best guess for the 
-        # variance from the object's flux, so if we want the object variance included, this is 
-        # still the best we can do.
-        include_obj_var = False
-        if ('output' in base and 'weight' in base['output'] and 
-            'include_obj_var' in base['output']['weight']):
-            include_obj_var = galsim.config.ParseValue(
-                base['output']['weight'], 'include_obj_var', base, bool)[0]
-        if include_obj_var:
-            # The image right now has the object variance in each pixel.  So before going on with 
-            # the noise, copy these over to the weight image.  (We invert this later...)
-            weight_im.copyFrom(im)
+def AddNoiseCCD(config, base, im, current_var, logger):
 
-            # Account for the gain and read noise
-            if gain != 1.0:
-                import math
-                weight_im /= math.sqrt(gain)
-            if read_noise != 0.0:
-                weight_im += read_noise_var
-        else:
-            # Otherwise, just add in the current sky noise:
-            if sky or read_noise != 0.0:
-                weight_im += sky / gain + read_noise_var
+    # This process goes a lot like the Poisson routine.  There are just two differences.
+    # First, the Poisson noise is in electrons, not ADU, and now we allow for a gain = e-/ADU,
+    # so we need to account for that properly.  Second, we also allow for an additional Gaussian
+    # read noise.
+    gain, read_noise, read_noise_var = _GetCCDNoiseParams(config, base)
 
-        # And add in the extra sky noise:
-        if extra_sky: weight_im += extra_sky
+    # Get how much extra sky to assume from the image.noise attribute.
+    sky = GetSky(base['image'], base)
+    extra_sky = GetSky(config, base)
+    if not sky and not extra_sky:
+        raise AttributeError(
+            "Must provide either sky_level or sky_level_pixel for noise.type = Poisson")
 
     # If we already have some variance in the image (from whitening), then we try to subtract it 
     # from the read noise if possible.  If now, we subtract the rest off of the sky level.  It's 
@@ -359,6 +349,7 @@ def AddNoiseCCD(config, base, rng, im, weight_im, current_var, logger):
     # At this point, there is a slight difference between fft and phot. For photon shooting, the 
     # galaxy already has Poisson noise, so we want to make sure not to add that again!
     draw_method = galsim.config.GetCurrentValue('image.draw_method',base,str)
+    rng = base['rng']
     if draw_method == 'phot':
         # Add in the noise from the sky.
         if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
@@ -394,36 +385,63 @@ def AddNoiseCCD(config, base, rng, im, weight_im, current_var, logger):
 
 def NoiseVarCCD(config, base):
     # The noise variance is sky / gain + read_noise^2
+    gain, read_noise, read_noise_var = _GetCCDNoiseParams(config, base)
 
     # Start with the background sky level for the image
     sky = GetSky(base['image'], base)
     sky += GetSky(config, base)
 
     # Account for the gain and read_noise
-    gain = params.get('gain',1.0)
-    read_noise = params.get('read_noise',0.0)
-    return sky / gain + read_noise * read_noise
+    return sky / gain + read_noise_var
+
+def AddNoiseVarianceCCD(config, base, im, include_obj_var, logger):
+    gain, read_noise, read_noise_var = _GetCCDNoiseParams(config, base)
+    if include_obj_var:
+        # The current image at this point should be the noise-free image, which is the
+        # object variance in each pixel.
+        im += base['current_image']
+
+        # Account for the gain and read noise
+        if gain != 1.0:
+            import math
+            im /= math.sqrt(gain)
+        if read_noise_var != 0.0:
+            im += read_noise_var
+
+    # Otherwise, just add in the current sky noise and read noise:
+    sky = GetSky(base['image'], base)
+    sky += GetSky(config, base)
+
+    if sky or read_noise_var != 0.0:
+        im += sky / gain + read_noise_var
+
 
 #
 # COSMOS
 #
 
-def AddNoiseCOSMOS(config, base, rng, im, weight_im, current_var, logger):
-    # NB: Identical for fft and phot
-
-    req = { 'file_name' : str }
-    opt = { 'cosmos_scale' : float, 'variance' : float }
+def _GetCOSMOSNoise(config, base):
+    # Save the constructed CorrelatedNoise object, since we might need it again.
+    tag = (base['file_num'], base['image_num'])
+    if config.get('current_cn_tag',None) == tag:
+        return config['current_cn']
+    else:
+        req = { 'file_name' : str }
+        opt = { 'cosmos_scale' : float, 'variance' : float }
         
-    kwargs = galsim.config.GetAllParams(config, 'noise', base, req=req, opt=opt,
-                                        ignore=noise_ignore)[0]
+        kwargs = galsim.config.GetAllParams(config, 'noise', base, req=req, opt=opt,
+                                            ignore=noise_ignore)[0]
+        rng = base['rng']
+        cn = galsim.correlatednoise.getCOSMOSNoise(rng, **kwargs)
+        config['current_cn'] = cn
+        config['current_cn_tag'] = tag
+        return cn
+
+def AddNoiseCOSMOS(config, base, im, current_var, logger):
 
     # Build the correlated noise 
-    cn = galsim.correlatednoise.getCOSMOSNoise(rng, **kwargs)
+    cn = _GetCOSMOSNoise(config,base)
     var = cn.getVariance()
-
-    # If we are saving the noise level in a weight image, do that now.
-    if weight_im: 
-        weight_im += var
 
     # Subtract off the current variance if any
     if current_var:
@@ -443,20 +461,8 @@ def AddNoiseCOSMOS(config, base, rng, im, weight_im, current_var, logger):
                      base['image_num'],base['obj_num'],var)
 
 def NoiseVarCOSMOS(config, base):
-    # The variance is given by the getVariance function.
-
-    req = { 'file_name' : str }
-    opt = { 'cosmos_scale' : float, 'variance' : float }
-    kwargs = galsim.config.GetAllParams(config, 'noise', base, req=req, opt=opt,
-                                        ignore=noise_ignore)[0]
-
-    # Build and add the correlated noise (lets the cn internals handle dealing with the options
-    # for default variance: quick and ensures we don't needlessly duplicate code) 
-    # Note: the rng being passed here is arbitrary, since we don't need it to calculate the
-    # variance.  Building a BaseDeviate with a particular seed is the fastest option.
-    cn = galsim.correlatednoise.getCOSMOSNoise(galsim.BaseDeviate(123), **kwargs)
-
-    # zero distance correlation function value returned as variance
+    cn = _GetCOSMOSNoise(config,base)
     return cn.getVariance()
 
-
+def AddNoiseVarianceCOSMOS(config, base, im, include_obj_var, logger):
+    im += NoiseVarCOSMOS(config, base)
