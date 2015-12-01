@@ -457,44 +457,35 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                     im.setOrigin(config['image_origin'])
                     im.setZero()
                     if do_noise:
+                        config['index_key'] = 'image_num'
                         galsim.config.AddSky(config,im)
+                        config['index_key'] = 'obj_num'
                 else:
                     # Otherwise, we don't set the bounds, so it will be noticed as invalid upstream.
                     im = galsim.ImageF()
-
-                if make_weight_image:
-                    weight_im = galsim.ImageF(im.bounds, wcs=im.wcs)
-                    weight_im.setZero()
-                else:
-                    weight_im = None
                 current_var = 0
-
             else:
                 if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('obj %d: offset = %s',obj_num,offset)
-
                 im, current_var = DrawStamp(psf,gal,config,xsize,ysize,offset,method,logger)
                 if stamp_center:
                     im.setCenter(stamp_center)
-                if make_weight_image:
-                    weight_im = galsim.ImageF(im.bounds, wcs=im.wcs)
-                    weight_im.setZero()
-                else:
-                    weight_im = None
                 if do_noise:
-                    # The default indexing for the noise is image_num, not obj_num
                     config['index_key'] = 'image_num'
                     galsim.config.AddSky(config,im)
-                    galsim.config.AddNoise(config,im,weight_im,current_var,logger)
                     config['index_key'] = 'obj_num'
+
+            t5 = time.time()
 
             # Extra outputs might want to use these:
             config['stamp_bounds'] = im.bounds
             config['stamp_wcs'] = im.wcs
 
-            badpix_im = None
-
-            t5 = time.time()
+            if make_weight_image:
+                weight_im = galsim.ImageF(im.bounds, wcs=im.wcs)
+                weight_im.setZero()
+            else:
+                weight_im = None
 
             if make_psf_image:
                 psf_im = DrawPSFStamp(psf,config,im.bounds,offset,method,logger)
@@ -507,15 +498,25 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             else:
                 psf_im = None
 
+            badpix_im = None
+
             galsim.config.ProcessExtraOutputsForStamp(config, logger)
 
             t6 = time.time()
 
-            if logger and logger.isEnabledFor(logging.DEBUG):
-                logger.debug('obj %d: Times: %f, %f, %f, %f, %f',
-                             obj_num, t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
+            if do_noise and not skip:
+                # The default indexing for the noise is image_num, not obj_num
+                config['index_key'] = 'image_num'
+                galsim.config.AddNoise(config,im,weight_im,current_var,logger)
+                config['index_key'] = 'obj_num'
 
-            return im, psf_im, weight_im, badpix_im, current_var, t6-t1
+            t7 = time.time()
+
+            if logger and logger.isEnabledFor(logging.DEBUG):
+                logger.debug('obj %d: Times: %f, %f, %f, %f, %f, %f',
+                             obj_num, t2-t1, t3-t2, t4-t3, t5-t4, t6-t5, t7-t6)
+
+            return im, psf_im, weight_im, badpix_im, current_var, t7-t1
 
         except Exception as e:
 

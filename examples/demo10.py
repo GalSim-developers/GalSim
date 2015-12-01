@@ -247,12 +247,6 @@ def main(argv):
         # Draw the image
         final.drawImage(sub_gal_image)
 
-        # Now add noise to get our desired S/N
-        # See demo5.py for more info about how this works.
-        sky_level_pixel = sky_level * pixel_scale**2
-        noise = galsim.PoissonNoise(rng, sky_level=sky_level_pixel)
-        sub_gal_image.addNoiseSNR(noise, gal_signal_to_noise)
-
         # For the PSF image, we also shift the PSF by the same amount.
         psf = psf.shift(dx,dy)
 
@@ -263,8 +257,17 @@ def main(argv):
         # so little noise, they are apparent with ds9's zscale viewing.
         psf.drawImage(sub_psf_image, method='real_space')
 
-        # Again, add noise, but at higher S/N this time.
+        # Build the noise model: Poisson noise with a given sky level.
+        sky_level_pixel = sky_level * pixel_scale**2
+        noise = galsim.PoissonNoise(rng, sky_level=sky_level_pixel)
+
+        # Add noise to the PSF image, using the normal noise model, but scaling the
+        # PSF flux high enough to reach the desired signal-to-noise.
+        # See demo5.py for more info about how this works.
         sub_psf_image.addNoiseSNR(noise, psf_signal_to_noise)
+
+        # And also to the galaxy image using its signal-to-noise..
+        sub_gal_image.addNoiseSNR(noise, gal_signal_to_noise)
 
         # Add the truth values to the truth catalog
         row = [ k, b.trueCenter().x, b.trueCenter().y,
