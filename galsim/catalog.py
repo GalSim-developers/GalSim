@@ -457,7 +457,9 @@ class OutputCatalog(object):
         else:
             raise ValueError("Invalid file_type %s"%file_type)
 
-    def _make_data(self):
+    def make_data(self):
+        """Returns a numpy array of the data as it should be written to an output file.
+        """
         import numpy
 
         cols = zip(*self.rows)
@@ -511,7 +513,7 @@ class OutputCatalog(object):
         """
         import numpy
 
-        data = self._make_data()
+        data = self.make_data()
 
         width = prec+8
         header_form = ""
@@ -553,7 +555,7 @@ class OutputCatalog(object):
         import numpy
         from galsim._pyfits import pyfits
 
-        data = self._make_data()
+        data = self.make_data()
 
         cols = []
         for name in data.dtype.names:

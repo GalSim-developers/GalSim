@@ -19,8 +19,10 @@
 import os
 import galsim
 import logging
+import inspect
 
-valid_extra_outputs = { 
+# This is blank here.  It will be filled in by extra_*.py.
+valid_extra_outputs = {
     # The values are tuples with:
     # - the class name to build, if any.
     # - a function to get the initialization kwargs if building something.
@@ -29,22 +31,6 @@ valid_extra_outputs = {
     # - a function to call at the end of building each image
     # - a function to call to write the output file
     # - a function to call to build either a FITS HDU or an Image to put in an HDU
-    'psf' : ('galsim.ImageF', None,
-             'SetupExtraPSF', 'ProcessExtraPSFStamp', 'ProcessExtraPSFImage', 
-             'galsim.ImageF.write', 'galsim.ImageF.view',
-             ['draw_method', 'signal_to_noise']),
-    'weight' : ('galsim.ImageF', None,
-                'SetupWeight', 'ProcessWeightStamp', 'ProcessWeightImage', 
-                'galsim.ImageF.write', 'galsim.ImageF.view',
-                ['weight']),
-    'badpix' : ('galsim.ImageS', None,
-                'SetupBadPix', 'ProcessBadPixStamp', 'ProcessBadPixImage', 
-                'galsim.ImageS.write', 'galsim.ImageS.view',
-                []),
-    'truth' : ('galsim.OutputCatalog', 'GetTruthKwargs',
-                None, 'ProcessTruthStamp', 'ProcessTruthImage',
-               'galsim.OutputCatalog.write', 'galsim.OutputCatalog.write_fits_hdu',
-               ['columns']),
 }
 
 def SetupExtraOutput(config, file_num=0, logger=None):
@@ -90,11 +76,7 @@ def SetupExtraOutput(config, file_num=0, logger=None):
             for key in all_keys:
                 fields = output[key]
                 # Register this object with the manager
-                extra_type = valid_extra_outputs[key][0]
-                if extra_type in galsim.__dict__:
-                    init_func = eval("galsim."+extra_type)
-                else:
-                    init_func = eval(extra_type)
+                init_func = valid_extra_outputs[key][0]
                 OutputManager.register(key, init_func)
             # Also register dict to use for scratch space
             OutputManager.register('dict', dict, DictProxy)
@@ -113,7 +95,6 @@ def SetupExtraOutput(config, file_num=0, logger=None):
             field = config['output'][key]
             kwargs_func = valid_extra_outputs[key][1]
             if kwargs_func is not None:
-                kwargs_func = eval(kwargs_func)
                 kwargs = kwargs_func(field, config, logger)
             else:
                 # use default constructor
@@ -123,11 +104,7 @@ def SetupExtraOutput(config, file_num=0, logger=None):
                 output_obj = getattr(config['output_manager'],key)(**kwargs)
                 scratch = config['output_manager'].dict()
             else: 
-                extra_type = valid_extra_outputs[key][0]
-                if extra_type in galsim.__dict__:
-                    init_func = eval("galsim."+extra_type)
-                else:
-                    init_func = eval(extra_type)
+                init_func = valid_extra_outputs[key][0]
                 output_obj = init_func(**kwargs)
                 scratch = dict()
             if logger and logger.isEnabledFor(logging.DEBUG):
@@ -150,9 +127,8 @@ def SetupExtraOutputsForImage(config, logger=None):
             setup_func = valid_extra_outputs[key][2]
             if setup_func is not None:
                 extra_obj = config['extra_objs'][key]
-                func = eval(setup_func)
                 field = config['output'][key]
-                func(extra_obj, extra_scratch, field, config, logger)
+                setup_func(extra_obj, extra_scratch, field, config, logger)
 
 
 def ProcessExtraOutputsForStamp(config, logger=None):
@@ -172,9 +148,8 @@ def ProcessExtraOutputsForStamp(config, logger=None):
             if stamp_func is not None:
                 extra_obj = config['extra_objs'][key]
                 extra_scratch = config['extra_scratch'][key]
-                func = eval(stamp_func)
                 field = config['output'][key]
-                func(extra_obj, extra_scratch, field, config, obj_num, logger)
+                stamp_func(extra_obj, extra_scratch, field, config, obj_num, logger)
 
 
 def ProcessExtraOutputsForImage(config, logger=None):
@@ -190,9 +165,8 @@ def ProcessExtraOutputsForImage(config, logger=None):
             if image_func is not None:
                 extra_obj = config['extra_objs'][key]
                 extra_scratch = config['extra_scratch'][key]
-                func = eval(image_func)
                 field = config['output'][key]
-                func(extra_obj, extra_scratch, field, config, logger)
+                image_func(extra_obj, extra_scratch, field, config, logger)
 
 
 def WriteExtraOutputs(config, logger=None):
@@ -261,16 +235,15 @@ def WriteExtraOutputs(config, logger=None):
                 continue
 
             extra_obj = config['extra_objs'][key]
-            extra_type = valid_extra_outputs[key][0]
-            if write_func.startswith(extra_type):
-                # Methods can't be called with proxy objects as the self parameter,
-                # so we need to actually call the method on the proxy instead.
-                method = write_func[len(extra_type)+1:]
-                func = eval('extra_obj.' + method)
-                _retry_io(func, (file_name,), ntries, file_name, logger)
+
+            # If we have a method, we need to attach it to the extra_obj, since it might
+            # be a proxy, in which case the method call won't work.
+            if inspect.ismethod(write_func):
+                write_func = eval('extra_obj.' + write_func.__name__)
+                args = (file_name,)
             else:
-                func = eval(write_func)
-                _retry_io(func, (extra_obj, file_name), ntries, file_name, logger)
+                args = (extra_obj, file_name)
+            _retry_io(write_func, args, ntries, file_name, logger)
             config['extra_objs_last_file'][key] = file_name
             if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('file %d: Wrote %s to %r',config['file_num'],key,file_name)
@@ -306,15 +279,14 @@ def BuildExtraOutputHDUs(config, logger=None):
 
             extra_obj = config['extra_objs'][key]
             extra_type = valid_extra_outputs[key][0]
-            if hdu_func.startswith(extra_type):
-                # Methods can't be called with proxy objects as the self parameter,
-                # so we need to actually call the method on the proxy instead.
-                method = hdu_func[len(extra_type)+1:]
-                func = eval('extra_obj.' + method)
-                hdus[hdu] = func()
+
+            # If we have a method, we need to attach it to the extra_obj, since it might
+            # be a proxy, in which case the method call won't work.
+            if inspect.ismethod(hdu_func):
+                hdu_func = eval('extra_obj.' + hdu_func.__name__)
+                hdus[hdu] = hdu_func()
             else:
-                func = eval(hdu_func)
-                hdus[hdu] = func(extra_obj)
+                hdus[hdu] = hdu_func(extra_obj)
 
         for h in range(1,len(hdus)+1):
             if h not in hdus.keys():
@@ -324,176 +296,4 @@ def BuildExtraOutputHDUs(config, logger=None):
         return hdulist
     else:
         return []
-
-
-#
-# The functions for psf
-#
-
-def SetupExtraPSF(image, scratch, config, base, logger=None):
-    image.resize(base['image_bounds'], wcs=base['wcs'])
-    image.setZero()
-    scratch.clear()
-
-def ProcessExtraPSFStamp(image, scratch, config, base, obj_num, logger=None):
-    # If this doesn't exist, an appropriate exception will be raised.
-    psf = base['psf']['current_val']
-    draw_method = galsim.config.GetCurrentValue('image.draw_method',base,str)
-    bounds = base['current_stamp'].bounds
-    offset = base['stamp_offset']
-    if 'offset' in base['image']:
-        offset += galsim.config.ParseValue(base['image'], 'offset', base, galsim.PositionD)[0]
-    psf_im = galsim.config.DrawPSFStamp(psf,base,bounds,offset,draw_method,logger)
-    if 'signal_to_noise' in config:
-        base['index_key'] = 'image_num'
-        galsim.config.AddNoise(base,psf_im,0,logger)
-        base['index_key'] = 'obj_num'
-    scratch[obj_num] = psf_im
-
-def ProcessExtraPSFImage(image, scratch, config, base, logger=None):
-    for stamp in scratch.values():
-        b = stamp.bounds & image.getBounds()
-        if b.isDefined():
-            # This next line is equivalent to:
-            #    image[b] += stamp[b]
-            # except that this doesn't work through the proxy.  We can only call methods
-            # that don't start with _.  Hence using the more verbose form here.
-            image.setSubImage(b, image.subImage(b) + stamp[b])
-
-#
-# The functions for weight
-#
-
-def SetupWeight(image, scratch, config, base, logger=None):
-    image.resize(base['image_bounds'], wcs=base['wcs'])
-    image.setZero()
-    scratch.clear()
-
-def ProcessWeightStamp(image, scratch, config, base, obj_num, logger=None):
-    if base['do_noise_in_stamps']:
-        weight_im = galsim.ImageF(base['current_stamp'].bounds, wcs=base['wcs'], init_value=0)
-        if 'include_obj_var' in base['output']['weight']:
-            include_obj_var = galsim.config.ParseValue(
-                    base['output']['weight'], 'include_obj_var', config, bool)[0]
-        else:
-            include_obj_var = False
-        galsim.config.AddNoiseVariance(base,weight_im,include_obj_var,logger)
-        scratch[obj_num] = weight_im
-
-def ProcessWeightImage(image, scratch, config, base, logger=None):
-    if len(scratch) > 0.:
-        # If we have been accumulating the variance on the stamps, build the total from them.
-        for stamp in scratch.values():
-            b = stamp.bounds & image.getBounds()
-            if b.isDefined():
-                # This next line is equivalent to:
-                #    image[b] += stamp[b]
-                # except that this doesn't work through the proxy.  We can only call methods
-                # that don't start with _.  Hence using the more verbose form here.
-                image.setSubImage(b, image.subImage(b) + stamp[b])
-    else:
-        # Otherwise, build the variance map now.
-        if 'include_obj_var' in base['output']['weight']:
-            include_obj_var = galsim.config.ParseValue(
-                    base['output']['weight'], 'include_obj_var', config, bool)[0]
-        else:
-            include_obj_var = False
-        if isinstance(image, galsim.Image):
-            galsim.config.AddNoiseVariance(base,image,include_obj_var,logger)
-        else:
-            # If we are using a Proxy for the image, the code in AddNoiseVar won't work properly.
-            # The easiest workaround is to build a new image here and copy it over.
-            im2 = galsim.ImageF(image.getBounds(), wcs=base['wcs'], init_value=0)
-            galsim.config.AddNoiseVariance(base,im2,include_obj_var,logger)
-            image.copyFrom(im2)
- 
-    # Now invert the variance image to get weight map.
-    image.invertSelf()
-
-
-#
-# The functions for badpix
-#
-
-def SetupBadPix(image, scratch, config, base, logger=None):
-    image.resize(base['image_bounds'], wcs=base['wcs'])
-    image.setZero()
-    scratch.clear()
-
-def ProcessBadPixStamp(image, scratch, config, base, obj_num, logger=None):
-    # Note: This is just a placeholder for now.  Once we implement defects, saturation, etc.,
-    # these features should be marked in the badpix mask.  For now though, all pixels = 0.
-    if base['do_noise_in_stamps']:
-        badpix_im = galsim.ImageF(base['current_stamp'].bounds, wcs=base['wcs'], init_value=0)
-        scratch[obj_num] = badpix_im
-
-def ProcessBadPixImage(image, scratch, config, base, logger=None):
-    if len(scratch) > 0.:
-        # If we have been accumulating the variance on the stamps, build the total from them.
-        for stamp in scratch.values():
-            b = stamp.bounds & image.getBounds()
-            if b.isDefined():
-                # This next line is equivalent to:
-                #    image[b] |= stamp[b]
-                # except that this doesn't work through the proxy.  We can only call methods
-                # that don't start with _.  Hence using the more verbose form here.
-                image.setSubImage(b, image.subImage(b) | stamp[b])
-    else:
-        # Otherwise, build the bad pixel mask here.
-        # Again, nothing here yet.
-        pass
- 
-    # Now invert the variance image to get weight map.
-    image.invertSelf()
-
- 
-#
-# The functions for truth
-#
-
-def GetTruthKwargs(config, base, logger=None):
-    columns = config['columns']
-    truth_names = columns.keys()
-    return { 'names' : truth_names }
-
-def ProcessTruthStamp(truth_cat, scratch, config, base, obj_num, logger=None):
-    cols = config['columns']
-    row = []
-    types = []
-    for name in truth_cat.getNames():
-        key = cols[name]
-        if isinstance(key, dict):
-            # Then the "key" is actually something to be parsed in the normal way.
-            # Caveat: We don't know the value_type here, so we give None.  This allows
-            # only a limited subset of the parsing.  Usually enough for truth items, but
-            # not fully featured.
-            value = galsim.config.ParseValue(cols,name,base,None)[0]
-            t = type(value)
-        elif not isinstance(key,basestring):
-            # The item can just be a constant value.
-            value = key
-            t = type(value)
-        elif key[0] == '$':
-            # This can also be handled by ParseValue
-            value = galsim.config.ParseValue(cols,name,base,None)[0]
-            t = type(value)
-        else:
-            value, t = galsim.config.GetCurrentValue(key, base)
-        row.append(value)
-        types.append(t)
-    if truth_cat.getNObjects() == 0:
-        truth_cat.setTypes(types)
-    elif truth_cat.getTypes() != types:
-        if logger:
-            logger.error("Type mismatch found when building truth catalog at object %d",
-                base['obj_num'])
-            logger.error("Types for current object = %s",repr(types))
-            logger.error("Expecting types = %s",repr(truth_cat.getTypes()))
-        raise RuntimeError("Type mismatch found when building truth catalog.")
-    scratch[obj_num] = row
-
-def ProcessTruthImage(truth_cat, scratch, config, base, logger=None):
-    # Add all the rows in order to the OutputCatalog
-    for row in scratch.values():
-        truth_cat.add_row(row)
 

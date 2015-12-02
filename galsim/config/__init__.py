@@ -15,13 +15,23 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+
+# These have the basic config functionality that gets imported into galsim.config scope
 from process import *
 from input import *
 from output import *
-from extra_output import *
+from extra import *
 from image import *
 from stamp import *
 from noise import *
 from wcs import *
 from gsobject import *
 from value import *
+
+# These implement specific types and features that get registered into the main config
+# apparatus.  The functions themselves are not available at galsim.config scope.
+import extra_psf
+import extra_weight
+import extra_badpix
+import extra_truth
