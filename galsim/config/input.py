@@ -20,10 +20,10 @@ import os
 import galsim
 import logging
 
-valid_input_types = { 
+valid_input_types = {
     # The values are tuples with:
     # - The class name to build.
-    # - A list of keys to ignore on the initial creation (e.g. PowerSpectrum has values that are 
+    # - A list of keys to ignore on the initial creation (e.g. PowerSpectrum has values that are
     #   used later in PowerSpectrumInit).
     # - Whether the class has a getNObjects method, in which case it also must have a constructor
     #   kwarg _nobjects_only to efficiently do only enough to calculate nobjects.
@@ -33,23 +33,23 @@ valid_input_types = {
     # - A list of types that should have their "current" values invalidated when the input
     #   object changes.
     # See the des module for examples of how to extend this from a module.
-    'catalog' : ('galsim.Catalog', [], True, False, None, ['Catalog']), 
-    'dict' : ('galsim.Dict', [], False, True, None, ['Dict']), 
-    'real_catalog' : ('galsim.RealGalaxyCatalog', [], 
+    'catalog' : ('galsim.Catalog', [], True, False, None, ['Catalog']),
+    'dict' : ('galsim.Dict', [], False, True, None, ['Dict']),
+    'real_catalog' : ('galsim.RealGalaxyCatalog', [],
                       False, # Actually it does have getNObjects, but that's probably not
                              # the right number of objects to use for a single file or image.
-                      False, None, 
+                      False, None,
                       ['RealGalaxy', 'RealGalaxyOriginal']),
     'cosmos_catalog' : ('galsim.COSMOSCatalog', [], True, False, None, ['COSMOSGalaxy']),
     'nfw_halo' : ('galsim.NFWHalo', [], False, False, None,
                   ['NFWHaloShear','NFWHaloMagnification']),
     'power_spectrum' : ('galsim.PowerSpectrum',
                         # power_spectrum uses these extra parameters in PowerSpectrumInit
-                        ['grid_spacing', 'interpolant'], 
+                        ['grid_spacing', 'interpolant'],
                         False, False,
                         'galsim.config.PowerSpectrumInit',
                         ['PowerSpectrumShear','PowerSpectrumMagnification']),
-    'fits_header' : ('galsim.FitsHeader', [], False, True, None, ['FitsHeader']), 
+    'fits_header' : ('galsim.FitsHeader', [], False, True, None, ['FitsHeader']),
 }
 
 def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_only=False):
@@ -84,12 +84,12 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
         # We'll iterate through this list of keys a few times
         all_keys = [ k for k in valid_input_types.keys() if k in config['input'] ]
 
-        # First, make sure all the input fields are lists.  If not, then we make them a 
+        # First, make sure all the input fields are lists.  If not, then we make them a
         # list with one element.
         for key in all_keys:
             if not isinstance(config['input'][key], list):
                 config['input'][key] = [ config['input'][key] ]
- 
+
         # The input items can be rather large.  Especially RealGalaxyCatalog.  So it is
         # unwieldy to copy them in the config file for each process.  Instead we use proxy
         # objects which are implemented using multiprocessing.BaseManager.  See
@@ -101,9 +101,9 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
         # The input manager itself should not be copied, so the function CopyConfig makes
         # sure to only keep that in the original config dict, not the one that gets passed
         # to other processed.
-        # The proxy objects are  able to call public functions in the real object via 
-        # multiprocessing communication channels.  (A Pipe, I believe.)  The BaseManager 
-        # base class handles all the details.  We just need to register each class we need 
+        # The proxy objects are  able to call public functions in the real object via
+        # multiprocessing communication channels.  (A Pipe, I believe.)  The BaseManager
+        # base class handles all the details.  We just need to register each class we need
         # with a name (called tag below) and then construct it by calling that tag function.
 
         # We don't need the manager stuff if we (a) are already in a multiprocessing Process, or
@@ -116,11 +116,11 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                    galsim.config.ParseValue(config['image'], 'nproc', config, int)[0] != 1) or
                   ('output' in config and 'nproc' in config['output'] and
                    galsim.config.ParseValue(config['output'], 'nproc', config, int)[0] != 1) ) )
- 
+
         if use_manager and 'input_manager' not in config:
             from multiprocessing.managers import BaseManager
             class InputManager(BaseManager): pass
- 
+
             # Register each input field with the InputManager class
             for key in all_keys:
                 fields = config['input'][key]
@@ -308,7 +308,7 @@ def SetupInputsForImage(config, logger):
 
 
 def PowerSpectrumInit(ps, config, base, logger=None):
-    """Initialize the PowerSpectrum input object's gridded values based on the 
+    """Initialize the PowerSpectrum input object's gridded values based on the
     size of the image and the grid spacing.
 
     @param ps           The PowerSpectrum object to use
@@ -321,7 +321,7 @@ def PowerSpectrumInit(ps, config, base, logger=None):
     elif 'tile_xsize' in base:
         # Then we have a tiled image.  Can use the tile spacing as the grid spacing.
         stamp_size = min(base['tile_xsize'], base['tile_ysize'])
-        # Note: we use the (max) pixel scale at the image center.  This isn't 
+        # Note: we use the (max) pixel scale at the image center.  This isn't
         # necessarily optimal, but it seems like the best choice.
         scale = base['wcs'].maxLinearScale(base['image_center'])
         grid_spacing = stamp_size * scale
@@ -353,4 +353,10 @@ def PowerSpectrumInit(ps, config, base, logger=None):
     ps.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid, center=world_center,
                  rng=base['rng'], interpolant=interpolant)
 
+    # Make sure this process gives consistent results regardless of the number of processes
+    # being used.
+    if not isinstance(ps, galsim.PowerSpectrum):
+        # Then ps is really a proxy, which means the rng was pickled, so we need to
+        # discard the same number of random calls from the one in the config dict.
+        base['rng'].discard(ps.nRandCallsForBuildGrid())
 
