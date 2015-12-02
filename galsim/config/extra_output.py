@@ -136,11 +136,10 @@ def SetupExtraOutput(config, file_num=0, logger=None):
             config['extra_scratch'][key] = scratch
 
 
-def SetupExtraOutputsForImage(config, nobjects, logger=None):
+def SetupExtraOutputsForImage(config, logger=None):
     """Perform any necessary setup for the extra output items at the start of a new image.
 
     @param config       The configuration dict.
-    @param nobjects     The number of objects that will be built for this image.
     @param logger       If given, a logger object to log progress. [default: None]
     """
     if 'output' in config:
@@ -153,7 +152,7 @@ def SetupExtraOutputsForImage(config, nobjects, logger=None):
                 extra_obj = config['extra_objs'][key]
                 func = eval(setup_func)
                 field = config['output'][key]
-                func(extra_obj, extra_scratch, field, config, nobjects, logger)
+                func(extra_obj, extra_scratch, field, config, logger)
 
 
 def ProcessExtraOutputsForStamp(config, logger=None):
@@ -331,7 +330,7 @@ def BuildExtraOutputHDUs(config, logger=None):
 # The functions for psf
 #
 
-def SetupExtraPSF(image, scratch, config, base, nobjects, logger=None):
+def SetupExtraPSF(image, scratch, config, base, logger=None):
     image.resize(base['image_bounds'], wcs=base['wcs'])
     image.setZero()
     scratch.clear()
@@ -365,7 +364,7 @@ def ProcessExtraPSFImage(image, scratch, config, base, logger=None):
 # The functions for weight
 #
 
-def SetupWeight(image, scratch, config, base, nobjects, logger=None):
+def SetupWeight(image, scratch, config, base, logger=None):
     image.resize(base['image_bounds'], wcs=base['wcs'])
     image.setZero()
     scratch.clear()
@@ -416,7 +415,7 @@ def ProcessWeightImage(image, scratch, config, base, logger=None):
 # The functions for badpix
 #
 
-def SetupBadPix(image, scratch, config, base, nobjects, logger=None):
+def SetupBadPix(image, scratch, config, base, logger=None):
     image.resize(base['image_bounds'], wcs=base['wcs'])
     image.setZero()
     scratch.clear()

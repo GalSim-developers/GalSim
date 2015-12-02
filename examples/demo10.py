@@ -142,6 +142,9 @@ def main(argv):
     nobj = n_tiles * n_tiles
     rng = galsim.BaseDeviate(random_seed)
 
+    # Have the PowerSpectrum object build a grid of shear values for us to use.
+    grid_g1, grid_g2 = ps.buildGrid(grid_spacing=stamp_size*pixel_scale, ngrid=n_tiles, rng=rng)
+
     # Setup the images:
     gal_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles)
     psf_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles)
@@ -165,9 +168,6 @@ def main(argv):
     # randomly permute any number of lists.  All lists will have the same random permutation
     # applied.
     galsim.random.permute(rng, ix_list, iy_list)
-
-    # Now have the PowerSpectrum object build a grid of shear values for us to use.
-    grid_g1, grid_g2 = ps.buildGrid(grid_spacing=stamp_size*pixel_scale, ngrid=n_tiles, rng=rng)
 
     # Initialize the OutputCatalog for the truth values
     names = [ 'gal_num', 'x_image', 'y_image', 

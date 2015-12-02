@@ -89,18 +89,7 @@ def BuildWCS(config):
             scale = 1.0
         wcs = galsim.PixelScale(scale)
 
-    # Write it to the config dict and also return it.
-    config['wcs'] = wcs
-
-    # If the WCS is a PixelScale or OffsetWCS, then store the pixel_scale in base.  The 
-    # config apparatus does not use it -- we always use the wcs -- but we keep it in case
-    # the user wants to use it for an Eval item.  It's one of the variables they are allowed
-    # to assume will be present for them.
-    if wcs.isPixelScale():
-        config['pixel_scale'] = wcs.scale
-
     return wcs
-
 
 def TanWCSBuilder(dudx, dudy, dvdx, dvdy, ra, dec, units='arcsec', origin=galsim.PositionD(0,0)):
     # The TanWCS uses a custom builder because the normal function takes an AffineTransform, which
