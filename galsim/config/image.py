@@ -28,8 +28,7 @@ valid_image_types = {
     'Scattered' : ( 'BuildScatteredImage', 'GetNObjForScatteredImage' ),
 }
 
-def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
-                make_psf_image=False, make_weight_image=False, make_badpix_image=False):
+def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0):
     """
     Build a number of postage stamp images as specified by the config dict.
 
@@ -39,19 +38,15 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
     @param logger              If given, a logger object to log progress. [default: None]
     @param image_num           If given, the current `image_num` [default: 0]
     @param obj_num             If given, the current `obj_num` [default: 0]
-    @param make_psf_image      Whether to make `psf_image`. [default: False]
-    @param make_weight_image   Whether to make `weight_image`. [default: False]
-    @param make_badpix_image   Whether to make `badpix_image`. [default: False]
 
-    @returns the tuple `(images, psf_images, weight_images, badpix_images)`.
-             All in tuple are lists.
+    @returns a list of images
     """
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: BuildImages nimages = %d: image, obj = %d,%d',
                      config.get('file_num',0),nimages,image_num,obj_num)
 
     import time
-    def worker(input, output, kwargs, logger):
+    def worker(input, output, config, logger):
         proc = current_process().name
         for job in iter(input.get, 'STOP'):
             try :
@@ -62,33 +57,24 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
                 results = []
                 for k in range(nim):
                     t1 = time.time()
-                    kwargs['image_num'] = image_num + k
-                    kwargs['obj_num'] = obj_num
-                    kwargs['logger'] = logger
-                    im = BuildImage(**kwargs)
-                    obj_num += galsim.config.GetNObjForImage(kwargs['config'], image_num+k)
+                    im = BuildImage(config, image_num=image_num, obj_num=obj_num, logger=logger)
+                    obj_num += galsim.config.GetNObjForImage(config, image_num)
+                    image_num += 1
                     t2 = time.time()
-                    results.append( [im[0], im[1], im[2], im[3], t2-t1 ] )
+                    results.append( (im, t2-t1) )
                     ys, xs = im[0].array.shape
                     if logger and logger.isEnabledFor(logging.INFO):
                         logger.info('%s: Image %d: size = %d x %d, time = %f sec', 
-                                    proc, image_num+k, xs, ys, t2-t1)
+                                    proc, image_num, xs, ys, t2-t1)
                 output.put( (results, info, proc) )
                 if logger and logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('%s: Finished job %d -- %d',proc,image_num,image_num+nim-1)
+                    logger.debug('%s: Finished job %d -- %d',proc,image_num-nim,image_num-1)
             except Exception as e:
                 import traceback
                 tr = traceback.format_exc()
                 if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('%s: Caught exception %s\n%s',proc,str(e),tr)
                 output.put( (e, info, tr) )
-    
-    # The kwargs to pass to BuildImage
-    kwargs = {
-        'make_psf_image' : make_psf_image,
-        'make_weight_image' : make_weight_image,
-        'make_badpix_image' : make_badpix_image
-    }
 
     nproc = galsim.config.UpdateNProc(nproc,logger)
  
@@ -114,9 +100,6 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
         # and we need them to go in the right places (in order to have deterministic
         # output files).  So we initialize the list to be the right size.
         images = [ None for i in range(nimages) ]
-        psf_images = [ None for i in range(nimages) ]
-        weight_images = [ None for i in range(nimages) ]
-        badpix_images = [ None for i in range(nimages) ]
 
         # Number of images to do in each task:
         # At most nimages / nproc.
@@ -164,16 +147,14 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
         done_queue = Queue()
         p_list = []
         import copy
-        kwargs1 = copy.copy(kwargs)
         config1 = galsim.config.CopyConfig(config)
         config1['current_nproc'] = nproc
-        kwargs1['config'] = config1
         if logger:
             logger_proxy = logger_manager.logger()
         else:
             logger_proxy = None
         for j in range(nproc):
-            p = Process(target=worker, args=(task_queue, done_queue, kwargs1, logger_proxy),
+            p = Process(target=worker, args=(task_queue, done_queue, config1, logger_proxy),
                         name='Process-%d'%(j+1))
             p.start()
             p_list.append(p)
@@ -198,9 +179,6 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
             k = k0
             for result in results:
                 images[k] = result[0]
-                psf_images[k] = result[1]
-                weight_images[k] = result[2]
-                badpix_images[k] = result[3]
                 k += 1
             if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('%s: Successfully returned results for images %d--%d', proc, k0, k-1)
@@ -222,33 +200,24 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
     else : # nproc == 1
 
         images = []
-        psf_images = []
-        weight_images = []
-        badpix_images = []
 
         for k in range(nimages):
             t1 = time.time()
-            kwargs['config'] = config
-            kwargs['image_num'] = image_num+k
-            kwargs['obj_num'] = obj_num
-            kwargs['logger'] = logger
-            result = BuildImage(**kwargs)
-            images += [ result[0] ]
-            psf_images += [ result[1] ]
-            weight_images += [ result[2] ]
-            badpix_images += [ result[3] ]
+            image = BuildImage(config, image_num=image_num, obj_num=obj_num, logger=logger)
+            images += [ image ]
             t2 = time.time()
             if logger and logger.isEnabledFor(logging.INFO):
                 # Note: numpy shape is y,x
-                ys, xs = result[0].array.shape
-                logger.info('Image %d: size = %d x %d, time = %f sec', image_num+k, xs, ys, t2-t1)
-            obj_num += galsim.config.GetNObjForImage(config, image_num+k)
+                ys, xs = image.array.shape
+                logger.info('Image %d: size = %d x %d, time = %f sec', image_num, xs, ys, t2-t1)
+            obj_num += galsim.config.GetNObjForImage(config, image_num)
+            image_num += 1
 
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: Done making images %d--%d',config.get('file_num',0),
                      image_num,image_num+nimages-1)
 
-    return images, psf_images, weight_images, badpix_images
+    return images
  
 def SetupConfigImageNum(config, image_num, obj_num):
     """Do the basic setup of the config dict at the image processing level.
@@ -318,8 +287,7 @@ def SetupConfigImageSize(config, xsize, ysize, wcs):
     config['wcs'] = galsim.config.BuildWCS(config)
 
 
-def BuildImage(config, logger=None, image_num=0, obj_num=0,
-               make_psf_image=False, make_weight_image=False, make_badpix_image=False):
+def BuildImage(config, logger=None, image_num=0, obj_num=0):
     """
     Build an Image according to the information in config.
 
@@ -327,14 +295,8 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
     @param logger              If given, a logger object to log progress. [default: None]
     @param image_num           If given, the current `image_num` [default: 0]
     @param obj_num             If given, the current `obj_num` [default: 0]
-    @param make_psf_image      Whether to make `psf_image`. [default: False]
-    @param make_weight_image   Whether to make `weight_image`. [default: False]
-    @param make_badpix_image   Whether to make `badpix_image`. [default: False]
 
-    @returns the tuple `(image, psf_image, weight_image, badpix_image)`.
-
-    Note: All 4 images are always returned in the return tuple,
-          but the latter 3 might be None depending on the parameters make_*_image.
+    @returns the final image
     """
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: BuildImage: image, obj = %d,%d',image_num,image_num,obj_num)
@@ -348,22 +310,14 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
         raise AttributeError("Invalid image.type=%s."%image_type)
 
     build_func = eval(valid_image_types[image_type][0])
-    all_images = build_func(
-            config=config, logger=logger,
-            image_num=image_num, obj_num=obj_num,
-            make_psf_image=make_psf_image, 
-            make_weight_image=make_weight_image,
-            make_badpix_image=make_badpix_image)
-
-    return all_images
+    return build_func(config=config, logger=logger, image_num=image_num, obj_num=obj_num)
 
 # Ignore these when parsing the parameters for specific Image types:
 image_ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs', 
                  'sky_level', 'sky_level_pixel', 'index_convention',
                  'retry_failures', 'n_photons', 'wmult', 'offset', 'gsparams' ]
 
-def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
-                     make_psf_image=False, make_weight_image=False, make_badpix_image=False):
+def BuildSingleImage(config, logger=None, image_num=0, obj_num=0):
     """
     Build an Image consisting of a single stamp.
 
@@ -371,17 +325,8 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     @param logger              If given, a logger object to log progress. [default: None]
     @param image_num           If given, the current `image_num` [default: 0]
     @param obj_num             If given, the current `obj_num` [default: 0]
-    @param make_psf_image      Whether to make `psf_image`. [default: False]
-    @param make_weight_image   Whether to make `weight_image`. [default: False]
-    @param make_badpix_image   Whether to make `badpix_image`. [default: False]
 
-    @returns the tuple `(image, psf_image, weight_image, badpix_image)`.
-
-    Note: All 4 Images are always returned in the return tuple,
-          but the latter 3 might be None depending on the parameters make_*_image.    
-    Also: It is easier to accumulate the inverse weight map, which is just the noise variance
-          in each pixel.  BuildImage will invert this to the more normal weight map, but here
-          it is actually a variance map.
+    @returns the final image
     """
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: BuildSingleImage: image, obj = %d,%d',image_num,image_num,obj_num)
@@ -420,22 +365,16 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
 
     galsim.config.SetupExtraOutputsForImage(config,1,logger)
 
-    all_images = galsim.config.BuildSingleStamp(
-            config=config, xsize=xsize, ysize=ysize, obj_num=obj_num,
-            do_noise=True, logger=logger,
-            make_psf_image=make_psf_image, 
-            make_weight_image=make_weight_image,
-            make_badpix_image=make_badpix_image)[:4] # Required due to `current_var, time` being
-                                                     # last two elements of the BuildSingleStamp
-                                                     # return tuple
+    image, current_var = galsim.config.BuildSingleStamp(
+            config, xsize=xsize, ysize=ysize, obj_num=obj_num,
+            do_noise=True, logger=logger)
     
     galsim.config.ProcessExtraOutputsForImage(config,logger)
 
-    return all_images
+    return image
 
 
-def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
-                    make_psf_image=False, make_weight_image=False, make_badpix_image=False):
+def BuildTiledImage(config, logger=None, image_num=0, obj_num=0):
     """
     Build an Image consisting of a tiled array of postage stamps.
 
@@ -443,17 +382,8 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     @param logger              If given, a logger object to log progress. [default: None]
     @param image_num           If given, the current `image_num`. [default: 0]
     @param obj_num             If given, the current `obj_num`. [default: 0]
-    @param make_psf_image      Whether to make `psf_image`. [default: False]
-    @param make_weight_image   Whether to make `weight_image`. [default: False]
-    @param make_badpix_image   Whether to make `badpix_image`. [default: False]
 
-    @returns the tuple `(image, psf_image, weight_image, badpix_image)`.
-
-    Note: All 4 Images are always returned in the return tuple,
-          but the latter 3 might be None depending on the parameters make_*_image.    
-    Also: It is easier to accumulate the inverse weight map, which is just the noise variance
-          in each pixel.  BuildImage will invert this to the more normal weight map, but here
-          it is actually a variance map.
+    @returns the final image
     """
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: BuildTiledImage: image, obj = %d,%d',image_num,image_num,obj_num)
@@ -558,27 +488,13 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     # Store the current image in the base-level config for reference
     config['current_image'] = full_image
 
-    full_psf_image = None
-    full_weight_image = None
-    full_badpix_image = None
-
     # Sometimes an input field needs to do something special at the start of an image.
     galsim.config.SetupInputsForImage(config,logger)
     galsim.config.SetupExtraOutputsForImage(config,nobjects,logger)
 
-    stamp_images = galsim.config.BuildStamps(
-            nobjects=nobjects, config=config,
-            nproc=nproc, logger=logger, obj_num=obj_num,
-            xsize=stamp_xsize, ysize=stamp_ysize, do_noise=do_noise,
-            make_psf_image=make_psf_image,
-            make_weight_image=make_weight_image,
-            make_badpix_image=make_badpix_image)
-
-    images = stamp_images[0]
-    psf_images = stamp_images[1]
-    weight_images = stamp_images[2]
-    badpix_images = stamp_images[3]
-    current_vars = stamp_images[4]
+    images, current_vars = galsim.config.BuildStamps(
+            nobjects, config, nproc=nproc, logger=logger, obj_num=obj_num,
+            xsize=stamp_xsize, ysize=stamp_ysize, do_noise=do_noise)
 
     max_current_var = 0
     for k in range(nobjects):
@@ -629,11 +545,10 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
             galsim.config.AddNoise(config,full_image,max_current_var,logger)
 
-    return full_image, full_psf_image, full_weight_image, full_badpix_image
+    return full_image
 
 
-def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
-                        make_psf_image=False, make_weight_image=False, make_badpix_image=False):
+def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0):
     """
     Build an Image containing multiple objects placed at arbitrary locations.
 
@@ -641,17 +556,8 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     @param logger              If given, a logger object to log progress. [default None]
     @param image_num           If given, the current `image_num` [default: 0]
     @param obj_num             If given, the current `obj_num` [default: 0]
-    @param make_psf_image      Whether to make `psf_image`. [default: False]
-    @param make_weight_image   Whether to make `weight_image`. [default: False]
-    @param make_badpix_image   Whether to make `badpix_image`. [default: False]
 
-    @returns the tuple `(image, psf_image, weight_image, badpix_image)`.
-
-    Note: All 4 Images are always returned in the return tuple,
-          but the latter 3 might be None depending on the parameters make_*_image.    
-    Also: It is easier to accumulate the inverse weight map, which is just the noise variance
-          in each pixel.  BuildImage will invert this to the more normal weight map, but here
-          it is actually a variance map.
+    @returns the final image
     """
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: BuildScatteredImage: image, obj = %d,%d',
@@ -734,26 +640,12 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     # Store the current image in the base-level config for reference
     config['current_image'] = full_image
 
-    full_psf_image = None
-    full_weight_image = None
-    full_badpix_image = None
-
     # Sometimes an input field needs to do something special at the start of an image.
     galsim.config.SetupInputsForImage(config,logger)
     galsim.config.SetupExtraOutputsForImage(config,nobjects,logger)
 
-    stamp_images = galsim.config.BuildStamps(
-            nobjects=nobjects, config=config,
-            nproc=nproc, logger=logger,obj_num=obj_num, do_noise=False,
-            make_psf_image=make_psf_image,
-            make_weight_image=make_weight_image,
-            make_badpix_image=make_badpix_image)
-
-    images = stamp_images[0]
-    psf_images = stamp_images[1]
-    weight_images = stamp_images[2]
-    badpix_images = stamp_images[3]
-    current_vars = stamp_images[4]
+    images, current_vars = galsim.config.BuildStamps(
+            nobjects, config, nproc=nproc, logger=logger,obj_num=obj_num, do_noise=False)
 
     max_current_var = 0.
     for k in range(nobjects):
@@ -815,7 +707,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
         galsim.config.AddNoise(config,full_image,max_current_var,logger)
 
-    return full_image, full_psf_image, full_weight_image, full_badpix_image
+    return full_image
 
 
 def GetNObjForImage(config, image_num):

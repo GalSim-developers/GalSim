@@ -25,12 +25,10 @@ valid_output_types = {
     # - the build function to call
     # - a function that merely counts the number of objects that will be built by the function
     # - whether the Builder takes nproc.
-    # - whether the Builder takes psf_file_name, weight_file_name, and badpix_file_name.
-    # - whether the Builder takes psf_hdu, weight_hdu, and badpix_hdu.
     # See the des module for examples of how to extend this from a module.
-    'Fits' : ('galsim.config.BuildFits', 'galsim.config.GetNObjForFits', False, True, True),
-    'MultiFits' : ('galsim.config.BuildMultiFits', 'galsim.config.GetNObjForMultiFits', True, True, False),
-    'DataCube' : ('galsim.config.BuildDataCube', 'galsim.config.GetNObjForDataCube', True, True, False),
+    'Fits' : ('galsim.config.BuildFits', 'galsim.config.GetNObjForFits', False),
+    'MultiFits' : ('galsim.config.BuildMultiFits', 'galsim.config.GetNObjForMultiFits', True),
+    'DataCube' : ('galsim.config.BuildDataCube', 'galsim.config.GetNObjForDataCube', True),
 }
 
 # A helper function to retry io commands
@@ -84,11 +82,7 @@ def SetupConfigFileNum(config, file_num, image_num, obj_num):
 output_ignore = [ 'file_name', 'dir', 'nfiles', 'nproc', 'skip', 'noclobber', 'retry_io' ]
 
 def BuildFits(file_name, config, logger=None, 
-              file_num=0, image_num=0, obj_num=0,
-              psf_file_name=None, psf_hdu=None,
-              weight_file_name=None, weight_hdu=None,
-              badpix_file_name=None, badpix_hdu=None,
-              truth_file_name=None, truth_hdu=None):
+              file_num=0, image_num=0, obj_num=0):
     """
     Build a regular fits file as specified in config.
     
@@ -98,17 +92,6 @@ def BuildFits(file_name, config, logger=None,
     @param file_num         If given, the current file_num. [default: 0]
     @param image_num        If given, the current image_num. [default: 0]
     @param obj_num          If given, the current obj_num. [default: 0]
-    @param psf_file_name    If given, write a psf image to this file. [default: None]
-    @param psf_hdu          If given, write a psf image to this hdu in file_name. [default: None]
-    @param weight_file_name If given, write a weight image to this file. [default: None]
-    @param weight_hdu       If given, write a weight image to this hdu in file_name. [default: 
-                            None]
-    @param badpix_file_name If given, write a badpix image to this file. [default: None]
-    @param badpix_hdu       If given, write a badpix image to this hdu in file_name. [default:
-                            None]
-    @param truth_file_name  If given, write a truth catalog to this file. [default: None]
-    @param truth_hdu        If given, write a truth catalog to this hdu in file_name. [default:
-                            None]
 
     @returns the time taken to build file.
     """
@@ -124,29 +107,9 @@ def BuildFits(file_name, config, logger=None,
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: seed = %d',file_num,seed)
 
-    if psf_file_name or psf_hdu:
-        make_psf_image = True
-    else:
-        make_psf_image = False
+    image = galsim.config.BuildImage(config, logger=logger, image_num=image_num, obj_num=obj_num)
 
-    if weight_file_name or weight_hdu:
-        make_weight_image = True
-    else:
-        make_weight_image = False
-
-    if badpix_file_name or badpix_hdu:
-        make_badpix_image = True
-    else:
-        make_badpix_image = False
-
-    all_images = galsim.config.BuildImage(
-            config=config, logger=logger, image_num=image_num, obj_num=obj_num,
-            make_psf_image=make_psf_image,
-            make_weight_image=make_weight_image,
-            make_badpix_image=make_badpix_image)
-    # returns a tuple ( main_image, psf_image, weight_image, badpix_image )
-
-    hdulist = [ all_images[0] ] + galsim.config.BuildExtraOutputHDUs(config,logger)
+    hdulist = [ image ] + galsim.config.BuildExtraOutputHDUs(config,logger)
 
     if 'output' in config and 'retry_io' in config['output']:
         ntries = galsim.config.ParseValue(config['output'],'retry_io',config,int)[0]
@@ -170,9 +133,7 @@ def BuildFits(file_name, config, logger=None,
 
 
 def BuildMultiFits(file_name, config, nproc=1, logger=None,
-                   file_num=0, image_num=0, obj_num=0,
-                   psf_file_name=None, weight_file_name=None,
-                   badpix_file_name=None, truth_file_name=None):
+                   file_num=0, image_num=0, obj_num=0):
     """
     Build a multi-extension fits file as specified in config.
     
@@ -183,10 +144,6 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
     @param file_num         If given, the current file_num. [default: 0]
     @param image_num        If given, the current image_num. [default: 0]
     @param obj_num          If given, the current obj_num. [default: 0]
-    @param psf_file_name    If given, write a psf image to this file. [default: None]
-    @param weight_file_name If given, write a weight image to this file. [default: None]
-    @param badpix_file_name If given, write a badpix image to this file. [default: None]
-    @param truth_file_name  If given, write a truth catalog to this file. [default: None]
 
     @returns the time taken to build file.
     """
@@ -201,21 +158,6 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: seed = %d',file_num,seed)
 
-    if psf_file_name:
-        make_psf_image = True
-    else:
-        make_psf_image = False
-
-    if weight_file_name:
-        make_weight_image = True
-    else:
-        make_weight_image = False
-
-    if badpix_file_name:
-        make_badpix_image = True
-    else:
-        make_badpix_image = False
-
     # Allow nimages to be automatic based on input catalog if image type is Single
     if ( 'nimages' not in config['output'] and 
          ( 'image' not in config or 'type' not in config['image'] or 
@@ -227,17 +169,8 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
         raise AttributeError("Attribute output.nimages is required for output.type = MultiFits")
     nimages = galsim.config.ParseValue(config['output'],'nimages',config,int)[0]
 
-    all_images = galsim.config.BuildImages(
-        nimages, config=config, nproc=nproc, logger=logger,
-        image_num=image_num, obj_num=obj_num,
-        make_psf_image=make_psf_image, 
-        make_weight_image=make_weight_image,
-        make_badpix_image=make_badpix_image)
-
-    main_images = all_images[0]
-    psf_images = all_images[1]
-    weight_images = all_images[2]
-    badpix_images = all_images[3]
+    images = galsim.config.BuildImages(nimages, config, nproc=nproc, logger=logger,
+                                       image_num=image_num, obj_num=obj_num)
 
     if 'retry_io' in config['output']:
         ntries = galsim.config.ParseValue(config['output'],'retry_io',config,int)[0]
@@ -246,7 +179,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
     else:
         ntries = 1
 
-    _retry_io(galsim.fits.writeMulti, (main_images, file_name), ntries, file_name, logger)
+    _retry_io(galsim.fits.writeMulti, (images, file_name), ntries, file_name, logger)
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: Wrote images to multi-extension fits file %r',
                      config['file_num'],file_name)
@@ -258,9 +191,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
 
 
 def BuildDataCube(file_name, config, nproc=1, logger=None, 
-                  file_num=0, image_num=0, obj_num=0,
-                  psf_file_name=None, weight_file_name=None, 
-                  badpix_file_name=None, truth_file_name=None):
+                  file_num=0, image_num=0, obj_num=0):
     """
     Build a multi-image fits data cube as specified in config.
     
@@ -271,10 +202,6 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     @param file_num         If given, the current file_num. [default: 0]
     @param image_num        If given, the current image_num. [default: 0]
     @param obj_num          If given, the current obj_num. [default: 0]
-    @param psf_file_name    If given, write a psf image to this file. [default: None]
-    @param weight_file_name If given, write a weight image to this file. [default: None]
-    @param badpix_file_name If given, write a badpix image to this file. [default: None]
-    @param truth_file_name  If given, write a truth catalog to this file. [default: None]
 
     @returns the time taken to build file.
     """
@@ -288,21 +215,6 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     seed = galsim.config.SetupConfigRNG(config)
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: seed = %d',file_num,seed)
-
-    if psf_file_name:
-        make_psf_image = True
-    else:
-        make_psf_image = False
-
-    if weight_file_name:
-        make_weight_image = True
-    else:
-        make_weight_image = False
-
-    if badpix_file_name:
-        make_badpix_image = True
-    else:
-        make_badpix_image = False
 
     # Allow nimages to be automatic based on input catalog if image type is Single
     if ( 'nimages' not in config['output'] and 
@@ -321,40 +233,24 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     # image.
     t2 = time.time()
     config1 = galsim.config.CopyConfig(config)
-    all_images = galsim.config.BuildImage(
-            config=config1, logger=logger, image_num=image_num, obj_num=obj_num,
-            make_psf_image=make_psf_image, 
-            make_weight_image=make_weight_image,
-            make_badpix_image=make_badpix_image)
-    obj_num += galsim.config.GetNObjForImage(config, image_num)
+    image0 = galsim.config.BuildImage(config1, logger=logger, image_num=image_num, obj_num=obj_num)
     t3 = time.time()
     if logger and logger.isEnabledFor(logging.INFO):
         # Note: numpy shape is y,x
-        ys, xs = all_images[0].array.shape
+        ys, xs = image0.array.shape
         logger.info('Image %d: size = %d x %d, time = %f sec', image_num, xs, ys, t3-t2)
 
     # Note: numpy shape is y,x
-    image_ysize, image_xsize = all_images[0].array.shape
+    image_ysize, image_xsize = image0.array.shape
     config['image_force_xsize'] = image_xsize
     config['image_force_ysize'] = image_ysize
 
-    main_images = [ all_images[0] ]
-    psf_images = [ all_images[1] ]
-    weight_images = [ all_images[2] ]
-    badpix_images = [ all_images[3] ]
+    images = [ image0 ]
 
     if nimages > 1:
-        all_images = galsim.config.BuildImages(
-            nimages-1, config=config, nproc=nproc, logger=logger,
-            image_num=image_num+1, obj_num=obj_num,
-            make_psf_image=make_psf_image,
-            make_weight_image=make_weight_image,
-            make_badpix_image=make_badpix_image)
-
-        main_images += all_images[0]
-        psf_images += all_images[1]
-        weight_images += all_images[2]
-        badpix_images += all_images[3]
+        obj_num += galsim.config.GetNObjForImage(config, image_num)
+        images += galsim.config.BuildImages(nimages-1, config, nproc=nproc, logger=logger,
+                                            image_num=image_num+1, obj_num=obj_num)
 
     if 'retry_io' in config['output']:
         ntries = galsim.config.ParseValue(config['output'],'retry_io',config,int)[0]
@@ -363,7 +259,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     else:
         ntries = 1
 
-    _retry_io(galsim.fits.writeCube, (main_images, file_name), ntries, file_name, logger)
+    _retry_io(galsim.fits.writeCube, (images, file_name), ntries, file_name, logger)
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: Wrote image to fits data cube %r',
                      config['file_num'],file_name)

@@ -214,16 +214,6 @@ def Process(config, logger=None):
     # can_do_multiple says whether the function can in principal do multiple images.
     can_do_multiple = galsim.config.valid_output_types[type][2]
 
-    # extra_file_name says whether the function takes psf_file_name, etc.
-    extra_file_name = galsim.config.valid_output_types[type][3]
-
-    # extra_hdu says whether the function takes psf_hdu, etc.
-    extra_hdu = galsim.config.valid_output_types[type][4]
-    if logger and logger.isEnabledFor(logging.DEBUG):
-        logger.debug('type = %s',type)
-        logger.debug('extra_file_name = %s',extra_file_name)
-        logger.debug('extra_hdu = %d',extra_hdu)
-
     # We need to know how many objects we'll need for each file (and each image within each file)
     # to get the indexing correct for any sequence items.  (e.g. random_seed)
     # If we use multiple processors and let the regular sequencing happen, 
@@ -312,11 +302,6 @@ def Process(config, logger=None):
     config['image_num'] = 0
     config['obj_num'] = 0
 
-    extra_keys = galsim.config.valid_extra_outputs.keys()
-    last_file_name = {}
-    for key in extra_keys:
-        last_file_name[key] = None
-
     # Process the input field for the first file.  Often there are "safe" input items
     # that won't need to be reprocessed each time.  So do them here once and keep them
     # in the config for all file_nums.  This is more important if nproc != 1.
@@ -394,56 +379,6 @@ def Process(config, logger=None):
                             ' and file exists',file_num,file_name)
             nfiles_use -= 1
             continue
-
-        # Check if we need to build extra images to write out as well
-        main_dir = dir
-        for extra_key in [ key for key in extra_keys if key in output ]:
-            if logger and logger.isEnabledFor(logging.DEBUG):
-                logger.debug('extra_key = %s',extra_key)
-            output_extra = output[extra_key]
-
-            output_extra['type'] = 'default'
-            req = {}
-            single = []
-            opt = {}
-            ignore = []
-            if extra_file_name and extra_hdu:
-                single += [ { 'file_name' : str, 'hdu' : int } ]
-                opt['dir'] = str
-            elif extra_file_name:
-                req['file_name'] = str
-                opt['dir'] = str
-            elif extra_hdu:
-                req['hdu'] = int
-
-            ignore += galsim.config.valid_extra_outputs[extra_key][-1]
-
-            if 'file_name' in output_extra:
-                SetDefaultExt(output_extra['file_name'],'.fits')
-            params, safe = galsim.config.GetAllParams(output_extra,extra_key,config,
-                                                      req=req, opt=opt, single=single,
-                                                      ignore=ignore)
-
-            if 'file_name' in params:
-                f = params['file_name']
-                if 'dir' in params:
-                    dir = params['dir']
-                    if dir and not os.path.isdir(dir): os.makedirs(dir)
-                # else keep dir from above.
-                else:
-                    dir = main_dir
-                if dir:
-                    f = os.path.join(dir,f)
-                # If we already wrote this file, skip it this time around.
-                # (Typically this is applicable for psf, where we may only want 1 psf file.)
-                if last_file_name[key] == f:
-                    if logger and logger.isEnabledFor(logging.WARN):
-                        logger.warn('skipping %s, since already written',f)
-                    continue
-                kwargs[ extra_key+'_file_name' ] = f
-                last_file_name[key] = f
-            elif 'hdu' in params:
-                kwargs[ extra_key+'_hdu' ] = params['hdu']
 
         # This is where we actually build the file.
         # If we're doing multiprocessing, we send this information off to the task_queue.

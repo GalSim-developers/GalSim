@@ -159,14 +159,6 @@ def main(argv):
     #
     #     galsim.config.BuildImage(config)
     #
-    # This returns a tuple of potentially 4 images:
-    #
-    #     (image, psf_image, weight_image, badpix_image)
-    #
-    # The default is for the latter 3 to all be None, but you can have the function build those
-    # images as well by setting the optional kwargs: make_psf_image=True, make_weight_image=True,
-    # and make_badpix_image=True, respectively.
-    #
     # All of the above functions also have an optional kwarg, logger, which can take a 
     # logger object to output diagnostic information if desired.  We'll use that option here
     # to output the progress of the build as we go.  Our logger is set with level=logging.INFO
@@ -177,13 +169,7 @@ def main(argv):
     t1 = time.time()
 
     # Build the image
-    # Since BuildImage returns a tuple of 4 images (see above) even though the latter
-    # three are all returned as None, we still need to deal with the return values.
-    # You could take [0] of the return value to just take the first image.  
-    # You could also assign them all to an appropriate name and then not use them.
-    # Another cute way to do it is to use an underscore for names of returned values
-    # that you are planning to ignore:
-    image, _, _, _ = galsim.config.BuildImage(config, logger=logger)
+    image = galsim.config.BuildImage(config, logger=logger)
     
     # At this point you could do something interesting with the image in memory.
     # After all, that was kind of the point of using BuildImage rather than the other higher

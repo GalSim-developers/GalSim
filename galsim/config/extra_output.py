@@ -231,7 +231,7 @@ def WriteExtraOutputs(config, logger=None):
             if noclobber and os.path.isfile(file_name):
                 if logger and logger.isEnabledFor(logging.WARN):
                     logger.warn('Not writing %s file %d = %s because output.noclobber = True' +
-                                ' and file exists',key,output['file_num'],file_name)
+                                ' and file exists',key,config['file_num'],file_name)
                 continue
 
             if config['extra_objs_last_file'].get(key, None) == file_name:
@@ -239,7 +239,7 @@ def WriteExtraOutputs(config, logger=None):
                 # (Typically this is applicable for psf, where we may only want 1 psf file.)
                 if logger and logger.isEnabledFor(logging.INFO):
                     logger.info('Not writing %s file %d = %s because already written',
-                                key,output['file_num'],file_name)
+                                key,config['file_num'],file_name)
                 continue
 
             extra_obj = config['extra_objs'][key]
@@ -255,7 +255,7 @@ def WriteExtraOutputs(config, logger=None):
                 _retry_io(func, (extra_obj, file_name), ntries, file_name, logger)
             config['extra_objs_last_file'][key] = file_name
             if logger and logger.isEnabledFor(logging.DEBUG):
-                logger.debug('file %d: Wrote %s to %r',file_num,key,file_name)
+                logger.debug('file %d: Wrote %s to %r',config['file_num'],key,file_name)
 
 
 def BuildExtraOutputHDUs(config, logger=None):

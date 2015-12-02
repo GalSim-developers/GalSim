@@ -20,8 +20,7 @@ import galsim
 import logging
 
 def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
-                xsize=0, ysize=0, do_noise=True,
-                make_psf_image=False, make_weight_image=False, make_badpix_image=False):
+                xsize=0, ysize=0, do_noise=True):
     """
     Build a number of postage stamp images as specified by the config dict.
 
@@ -38,15 +37,12 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
                             not there, use automatic sizing.]
     @param do_noise         Whether to add noise to the image (according to config['noise']).
                             [default: True]
-    @param make_psf_image   Whether to make psf_image. [default: False]
-    @param make_weight_image  Whether to make weight_image. [default: False]
-    @param make_badpix_image  Whether to make badpix_image. [default: False]
 
-    @returns the tuple (images, psf_images, weight_images, badpix_images, current_vars).
-             All in tuple are lists.
+    @returns the tuple (images, current_vars).  Both are lists.
     """
     config['obj_num'] = obj_num
 
+    import time
     def worker(input, output, kwargs, config, logger):
         proc = current_process().name
         for job in iter(input.get, 'STOP'):
@@ -57,18 +53,19 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
                                  proc,nobj,obj_num)
                 results = []
                 for k in range(nobj):
-                    result = BuildSingleStamp(config=config, logger=logger, obj_num=obj_num+k,
-                                              **kwargs)
-                    results.append(result)
+                    t1 = time.time()
+                    im, var = BuildSingleStamp(config, logger=logger, obj_num=obj_num, **kwargs)
+                    obj_num += 1
+                    t2 = time.time()
+                    results.append( (im, var, (t2-t1)) )
                     # Note: numpy shape is y,x
-                    ys, xs = result[0].array.shape
-                    t = result[5]
+                    ys, xs = im.array.shape
                     if logger and logger.isEnabledFor(logging.INFO):
                         logger.info('%s: Stamp %d: size = %d x %d, time = %f sec', 
-                                    proc, obj_num+k, xs, ys, t)
+                                    proc, obj_num, xs, ys, t2-t1)
                 output.put( (results, info, proc) )
                 if logger and logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('%s: Finished job %d -- %d',proc,obj_num,obj_num+nobj-1)
+                    logger.debug('%s: Finished job %d -- %d',proc,obj_num-nobj,obj_num-1)
             except Exception as e:
                 import traceback
                 tr = traceback.format_exc()
@@ -83,9 +80,6 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
     kwargs = {
         'xsize' : xsize, 'ysize' : ysize, 
         'do_noise' : do_noise,
-        'make_psf_image' : make_psf_image,
-        'make_weight_image' : make_weight_image,
-        'make_badpix_image' : make_badpix_image
     }
 
     nproc = galsim.config.UpdateNProc(nproc,logger)
@@ -112,9 +106,6 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
         # and we need them to go in the right places (in order to have deterministic
         # output files).  So we initialize the list to be the right size.
         images = [ None for i in range(nobjects) ]
-        psf_images = [ None for i in range(nobjects) ]
-        weight_images = [ None for i in range(nobjects) ]
-        badpix_images = [ None for i in range(nobjects) ]
         current_vars = [ None for i in range(nobjects) ]
 
         # Number of objects to do in each task:
@@ -191,10 +182,7 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
             k = k0
             for result in results:
                 images[k] = result[0]
-                psf_images[k] = result[1]
-                weight_images[k] = result[2]
-                badpix_images[k] = result[3]
-                current_vars[k] = result[4]
+                current_vars[k] = result[1]
                 k += 1
             if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('%s: Successfully returned results for stamps %d--%d', proc, k0, k-1)
@@ -216,32 +204,24 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
     else : # nproc == 1
 
         images = []
-        psf_images = []
-        weight_images = []
-        badpix_images = []
         current_vars = []
 
         for k in range(nobjects):
-            kwargs['config'] = config
-            kwargs['obj_num'] = obj_num+k
-            kwargs['logger'] = logger
-            result = BuildSingleStamp(**kwargs)
-            images += [ result[0] ]
-            psf_images += [ result[1] ]
-            weight_images += [ result[2] ]
-            badpix_images += [ result[3] ]
-            current_vars += [ result[4] ]
+            t1 = time.time()
+            image, current_var = BuildSingleStamp(config, obj_num=obj_num, logger=logger, **kwargs)
+            images += [ image ]
+            current_vars += [ current_var ]
+            obj_num += 1
+            t2 = time.time()
             if logger and logger.isEnabledFor(logging.INFO):
                 # Note: numpy shape is y,x
-                ys, xs = result[0].array.shape
-                t = result[5]
-                logger.info('Stamp %d: size = %d x %d, time = %f sec', obj_num+k, xs, ys, t)
-
+                ys, xs = image.array.shape
+                logger.info('Stamp %d: size = %d x %d, time = %f sec', obj_num, xs, ys, t2-t1)
 
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: Done making stamps',config.get('image_num',0))
 
-    return images, psf_images, weight_images, badpix_images, current_vars
+    return images, current_vars
  
 
 def SetupConfigObjNum(config, obj_num):
@@ -331,9 +311,7 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
         config['image_pos'] = galsim.PositionD(0.,0.)
         config['world_pos'] = world_pos
 
-def BuildSingleStamp(config, xsize=0, ysize=0,
-                     obj_num=0, do_noise=True, logger=None,
-                     make_psf_image=False, make_weight_image=False, make_badpix_image=False):
+def BuildSingleStamp(config, xsize=0, ysize=0, obj_num=0, do_noise=True, logger=None):
     """
     Build a single image using the given config file
 
@@ -344,11 +322,8 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
     @param do_noise         Whether to add noise to the image (according to config['noise']).
                             [default: True]
     @param logger           If given, a logger object to log progress. [default: None]
-    @param make_psf_image   Whether to make psf_image. [default: False]
-    @param make_weight_image  Whether to make weight_image. [default: False]
-    @param make_badpix_image  Whether to make badpix_image. [default: False]
 
-    @returns the tuple (image, psf_image, weight_image, badpix_image, current_var, time)
+    @returns the tuple (image, current_var)
     """
     import time
     t1 = time.time()
@@ -477,10 +452,6 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             # This is also information that the weight image calculation needs
             config['do_noise_in_stamps'] = do_noise
 
-            psf_im = None
-            badpix_im = None
-            weight_im = None
-
             galsim.config.ProcessExtraOutputsForStamp(config, logger)
 
             t6 = time.time()
@@ -498,7 +469,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 logger.debug('obj %d: Times: %f, %f, %f, %f, %f, %f',
                              obj_num, t2-t1, t3-t2, t4-t3, t5-t4, t6-t5, t7-t6)
 
-            return im, psf_im, weight_im, badpix_im, current_var, t7-t1
+            return im, current_var
 
         except Exception as e:
 
