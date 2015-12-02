@@ -1717,6 +1717,27 @@ def test_ChromaticAiry():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_chromatic_fiducial_wavelength():
+    """ Check that chromatic code can handle profiles with flux(effective_wavelength) = 0.
+    """
+    import time
+    t1 = time.time()
+
+    waves = np.arange(500., 600.1, 10.)
+    blue_flux = waves < 550.0
+    red_flux = waves > 550.0
+    bp = galsim.Bandpass(galsim.LookupTable(waves, waves**0, interpolant='linear'))
+    blue_sed = galsim.SED(galsim.LookupTable(waves, blue_flux, interpolant='linear'))
+    red_sed = galsim.SED(galsim.LookupTable(waves, red_flux, interpolant='linear'))
+
+    gal1 = galsim.Gaussian(fwhm=1) * blue_sed
+    gal2 = galsim.Gaussian(fwhm=1) * red_sed
+    img1 = gal1.drawImage(bp)
+    img2 = gal2.drawImage(bp)
+    # Didn't see an obvious np.testing method for checking finiteness, so just use assert.
+    assert np.isfinite(img1.array.sum()), "drawImage failed to identify fiducial wavelength"
+    assert np.isfinite(img2.array.sum()), "drawImage failed to identify fiducial wavelength"
+
 def test_chromatic_image_setup():
     """Test ability for chromatic drawImage to setup output image."""
     import time
@@ -1772,4 +1793,5 @@ if __name__ == "__main__":
     test_interpolated_ChromaticObject()
     test_ChromaticOpticalPSF()
     test_ChromaticAiry()
+    test_chromatic_fiducial_wavelength()
     test_chromatic_image_setup()
