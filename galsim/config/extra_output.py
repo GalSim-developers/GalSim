@@ -42,7 +42,7 @@ valid_extra_outputs = {
                 'galsim.ImageS.write', 'galsim.ImageS.view',
                 []),
     'truth' : ('galsim.OutputCatalog', 'GetTruthKwargs',
-                None, 'ProcessTruth', None,
+                None, 'ProcessTruthStamp', 'ProcessTruthImage',
                'galsim.OutputCatalog.write', 'galsim.OutputCatalog.write_fits_hdu',
                ['columns']),
 }
@@ -128,10 +128,12 @@ def SetupExtraOutputsForImage(config, nobjects, logger=None):
     """
     if 'output' in config:
         for key in [ k for k in valid_extra_outputs.keys() if k in config['output'] ]:
+            # Always clear out anything in the scratch space
+            extra_scratch = config['extra_scratch'][key]
+            extra_scratch.clear()
             setup_func = valid_extra_outputs[key][2]
             if setup_func is not None:
                 extra_obj = config['extra_objs'][key]
-                extra_scratch = config['extra_scratch'][key]
                 func = eval(setup_func)
                 field = config['output'][key]
                 func(extra_obj, extra_scratch, field, config, nobjects, logger)
@@ -437,10 +439,8 @@ def GetTruthKwargs(config, base, logger=None):
     columns = config['columns']
     truth_names = columns.keys()
     return { 'names' : truth_names }
- 
 
-def ProcessTruth(truth_cat, scratch, config, base, obj_num, logger=None):
-    truth_cat.lock_acquire()
+def ProcessTruthStamp(truth_cat, scratch, config, base, obj_num, logger=None):
     cols = config['columns']
     row = []
     types = []
@@ -474,7 +474,10 @@ def ProcessTruth(truth_cat, scratch, config, base, obj_num, logger=None):
             logger.error("Types for current object = %s",repr(types))
             logger.error("Expecting types = %s",repr(truth_cat.getTypes()))
         raise RuntimeError("Type mismatch found when building truth catalog.")
-    truth_cat.add_row(row, obj_num)
-    truth_cat.lock_release()
+    scratch[obj_num] = row
 
+def ProcessTruthImage(truth_cat, scratch, config, base, logger=None):
+    # Add all the rows in order to the OutputCatalog
+    for row in scratch.values():
+        truth_cat.add_row(row)
 

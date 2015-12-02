@@ -378,7 +378,6 @@ class OutputCatalog(object):
     # Watch out for this "Gotcha".  Using _rows=[] as the default argument doesn't work!
     # https://pythonconquerstheuniverse.wordpress.com/2012/02/15/mutable-default-arguments/
     def __init__(self, names, types=None, _rows=None, _sort_keys=None):
-        from multiprocessing import Lock
         self.names = names
         if types is None:
             self.types = [ float for i in names ]
@@ -392,7 +391,6 @@ class OutputCatalog(object):
             self.sort_keys = []
         else:
             self.sort_keys = _sort_keys
-        self._lock = Lock()
 
     @property
     def nobjects(self): return len(self.rows)
@@ -405,9 +403,6 @@ class OutputCatalog(object):
     def setTypes(self, types): self.types = types
     def getNObjects(self): return self.nobjects
     def getNCols(self): return self.ncols
-
-    def lock_acquire(self): self._lock.acquire()
-    def lock_release(self): self._lock.release()
 
     def add_row(self, row, sort_key=None):
         """Add a row of data to the catalog.
@@ -595,16 +590,4 @@ class OutputCatalog(object):
     def __eq__(self, other): return repr(self) == repr(other)
     def __ne__(self, other): return not self.__eq__(other)
     def __hash__(self): return hash(repr(self))
-
-    def __getstate__(self):
-        # The lock isn't picklable.  So remove it and make a new one on the other side.
-        d = self.__dict__.copy()
-        del d['_lock']
-        return d
-
-    def __setstate__(self, d):
-        from multiprocessing import Lock
-        self.__dict__ = d
-        self._lock = Lock()
-
 
