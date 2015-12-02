@@ -95,6 +95,23 @@ def CopyConfig(config):
 
     return config1
 
+def GetLoggerProxy(logger):
+    """Make a proxy for the given logger that can be passed into multiprocessing Processes
+    and used safely.
+    """
+    from multiprocessing.managers import BaseManager
+    if logger:
+        class LoggerManager(BaseManager): pass
+        logger_generator = galsim.utilities.SimpleGenerator(logger)
+        LoggerManager.register('logger', callable = logger_generator)
+        logger_manager = LoggerManager()
+        logger_manager.start()
+        logger_proxy = logger_manager.logger()
+    else:
+        logger_proxy = None
+    return logger_proxy
+
+
 def UpdateNProc(nproc, logger=None):
     """Update nproc to ncpu if nproc <= 0
     """
@@ -279,22 +296,6 @@ def Process(config, logger=None):
         from multiprocessing import Process, Queue, current_process
         task_queue = Queue()
 
-    # The logger is not picklable, so we use the same trick for it as we used for the 
-    # input fields in CopyConfig to allow the worker processes to log their progress.
-    # The real logger stays in this process, and the workers all get a proxy logger which 
-    # they can use normally.  We use galsim.utilities.SimpleGenerator as the callable that
-    # just returns the existing logger object.
-    from multiprocessing.managers import BaseManager
-    class LoggerManager(BaseManager): pass
-    if logger:
-        logger_generator = galsim.utilities.SimpleGenerator(logger)
-        LoggerManager.register('logger', callable = logger_generator)
-        logger_manager = LoggerManager()
-        logger_manager.start()
-        logger_proxy = logger_manager.logger()
-    else:
-        logger_proxy = None
-
     # Now start working on the files.
     image_num = 0
     obj_num = 0
@@ -305,7 +306,7 @@ def Process(config, logger=None):
     # Process the input field for the first file.  Often there are "safe" input items
     # that won't need to be reprocessed each time.  So do them here once and keep them
     # in the config for all file_nums.  This is more important if nproc != 1.
-    galsim.config.ProcessInput(config, file_num=0, logger=logger_proxy, safe_only=True)
+    galsim.config.ProcessInput(config, file_num=0, logger=logger, safe_only=True)
 
     nfiles_use = nfiles
     # We'll want a pristine version later to give to the workers.
@@ -319,8 +320,7 @@ def Process(config, logger=None):
             logger.debug('file %d: seed = %d',file_num,seed)
 
         # Process the input fields that might be relevant at file scope:
-        galsim.config.ProcessInput(config, file_num=file_num, logger=logger_proxy,
-                                   file_scope_only=True)
+        galsim.config.ProcessInput(config, file_num=file_num, logger=logger, file_scope_only=True)
 
         # Get the file_name
         if 'file_name' in output:
@@ -425,6 +425,7 @@ def Process(config, logger=None):
         p_list = []
         config1 = galsim.config.CopyConfig(orig_config)
         config1['current_nproc'] = nproc
+        logger_proxy = GetLoggerProxy(logger)
         for j in range(nproc):
             p = Process(target=worker, args=(task_queue, done_queue, config1, logger_proxy),
                         name='Process-%d'%(j+1))

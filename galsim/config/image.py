@@ -123,15 +123,6 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0):
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: nim_per_task = %d',config.get('file_num',0),nim_per_task)
 
-        # The logger is not picklable, se we set up a proxy object.  See comments in process.py
-        # for more details about how this works.
-        class LoggerManager(BaseManager): pass
-        if logger:
-            logger_generator = galsim.utilities.SimpleGenerator(logger)
-            LoggerManager.register('logger', callable = logger_generator)
-            logger_manager = LoggerManager()
-            logger_manager.start()
-
         # Set up the task list
         task_queue = Queue()
         for k in range(0,nimages,nim_per_task):
@@ -149,10 +140,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0):
         import copy
         config1 = galsim.config.CopyConfig(config)
         config1['current_nproc'] = nproc
-        if logger:
-            logger_proxy = logger_manager.logger()
-        else:
-            logger_proxy = None
+        logger_proxy = galsim.config.GetLoggerProxy(logger)
         for j in range(nproc):
             p = Process(target=worker, args=(task_queue, done_queue, config1, logger_proxy),
                         name='Process-%d'%(j+1))
