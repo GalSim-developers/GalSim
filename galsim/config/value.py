@@ -712,26 +712,23 @@ def _GenerateFromRandomDistribution(param, param_name, base, value_type):
         f = param['f']
         x_log = param.get('x_log', False)
         f_log = param.get('f_log', False)
-        kwargs['function'] = galsim.LookupTable(x=x, f=f, x_log=x_log, f_log=f_log)
+        interpolant = kwargs.pop('interpolant', 'spline')
+        kwargs['function'] = galsim.LookupTable(x=x, f=f, x_log=x_log, f_log=f_log,
+                                                interpolant=interpolant)
     else:
         if 'function' not in kwargs:
             raise AttributeError("Either x,f or function must be provided for %s"%param_name)
         if 'x_log' in param or 'f_log' in param:
             raise AttributeError("x_log, f_log are invalid with function for %s"%param_name)
 
-    if '_distdev' in param:
+    if '_distdev' not in param or param['_distdev_kwargs'] != kwargs:
         # The overhead for making a DistDeviate is large enough that we'd rather not do it every 
         # time, so first check if we've already made one:
-        distdev = param['_distdev']
-        if param['_distdev_kwargs'] != kwargs:
-            distdev=galsim.DistDeviate(rng,**kwargs)
-            param['_distdev'] = distdev
-            param['_distdev_kwargs'] = kwargs
-    else:
-        # Otherwise, just go ahead and make a new one.
         distdev=galsim.DistDeviate(rng,**kwargs)
         param['_distdev'] = distdev
         param['_distdev_kwargs'] = kwargs
+    else:
+        distdev = param['_distdev']
 
     # Typically, the rng will change between successive calls to this, so reset the 
     # seed.  (The other internal calculations don't need to be redone unless the rest of the
