@@ -105,7 +105,19 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
         # multiprocessing communication channels.  (A Pipe, I believe.)  The BaseManager 
         # base class handles all the details.  We just need to register each class we need 
         # with a name (called tag below) and then construct it by calling that tag function.
-        if 'input_manager' not in config:
+
+        # We don't need the manager stuff if we (a) are already in a multiprocessing Process, or
+        # (b) we are only loading for file scope, or (c) both config.image.nproc and
+        # config.output.nproc == 1.
+        use_manager = (
+                'current_nproc' not in config and
+                not file_scope_only and
+                ( ('image' in config and 'nproc' in config['image'] and
+                   galsim.config.ParseValue(config['image'], 'nproc', config, int)[0] != 1) or
+                  ('output' in config and 'nproc' in config['output'] and
+                   galsim.config.ParseValue(config['output'], 'nproc', config, int)[0] != 1) ) )
+ 
+        if use_manager and 'input_manager' not in config:
             from multiprocessing.managers import BaseManager
             class InputManager(BaseManager): pass
  
@@ -186,8 +198,16 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                         input_objs_safe[i] = None
                         continue
 
-                    tag = key + str(i)
-                    input_obj = getattr(config['input_manager'],tag)(**kwargs)
+                    if use_manager:
+                        tag = key + str(i)
+                        input_obj = getattr(config['input_manager'],tag)(**kwargs)
+                    else:
+                        input_type = valid_input_types[key][0]
+                        if input_type in galsim.__dict__:
+                            init_func = eval("galsim."+input_type)
+                        else:
+                            init_func = eval(input_type)
+                        input_obj = init_func(**kwargs)
                     if logger and logger.isEnabledFor(logging.DEBUG):
                         logger.debug('file %d: Built input object %s %d',file_num,key,i)
                         if 'file_name' in kwargs:

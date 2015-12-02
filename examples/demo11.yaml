@@ -257,6 +257,8 @@ image :
 
     random_seed : 24783923
 
+    nproc : -1
+
 # Define the input files
 input :
     # The COSMOS catalog uses the same input file as we have been using for the real galaxy

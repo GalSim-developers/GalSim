@@ -74,8 +74,15 @@ def SetupExtraOutput(config, file_num=0, logger=None):
         # We'll iterate through this list of keys a few times
         all_keys = [ k for k in valid_extra_outputs.keys()
                      if (k in output and valid_extra_outputs[k][0] is not None) ]
+
+        # We don't need the manager stuff if we (a) are already in a multiprocessing Process, or
+        # (b) config.image.nproc == 1.
+        use_manager = (
+                'current_nproc' not in config and
+                'image' in config and 'nproc' in config['image'] and
+                galsim.config.ParseValue(config['image'], 'nproc', config, int)[0] != 1 )
  
-        if 'output_manager' not in config:
+        if use_manager and 'output_manager' not in config:
             from multiprocessing.managers import BaseManager, DictProxy
             class OutputManager(BaseManager): pass
  
@@ -112,11 +119,21 @@ def SetupExtraOutput(config, file_num=0, logger=None):
                 # use default constructor
                 kwargs = {}
  
-            output_obj = getattr(config['output_manager'],key)(**kwargs)
+            if use_manager:
+                output_obj = getattr(config['output_manager'],key)(**kwargs)
+                scratch = config['output_manager'].dict()
+            else: 
+                extra_type = valid_extra_outputs[key][0]
+                if extra_type in galsim.__dict__:
+                    init_func = eval("galsim."+extra_type)
+                else:
+                    init_func = eval(extra_type)
+                output_obj = init_func(**kwargs)
+                scratch = dict()
             if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('file %d: Setup output %s object',file_num,key)
             config['extra_objs'][key] = output_obj
-            config['extra_scratch'][key] = config['output_manager'].dict()
+            config['extra_scratch'][key] = scratch
 
 
 def SetupExtraOutputsForImage(config, nobjects, logger=None):
