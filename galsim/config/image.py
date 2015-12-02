@@ -480,21 +480,19 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0):
     galsim.config.SetupInputsForImage(config,logger)
     galsim.config.SetupExtraOutputsForImage(config,nobjects,logger)
 
-    images, current_vars = galsim.config.BuildStamps(
+    stamps, current_vars = galsim.config.BuildStamps(
             nobjects, config, nproc=nproc, logger=logger, obj_num=obj_num,
             xsize=stamp_xsize, ysize=stamp_ysize, do_noise=do_noise)
 
-    max_current_var = 0
     for k in range(nobjects):
         # This is our signal that the object was skipped.
-        if not images[k].bounds.isDefined(): continue
+        if not stamps[k].bounds.isDefined(): continue
         if False:
             logger.debug('image %d: full bounds = %s',image_num,str(full_image.bounds))
-            logger.debug('image %d: stamp %d bounds = %s',image_num,k,str(images[k].bounds))
-        assert full_image.bounds.includes(images[k].bounds)
-        b = images[k].bounds
-        full_image[b] += images[k]
-        if current_vars[k] > max_current_var: max_current_var = current_vars[k]
+            logger.debug('image %d: stamp %d bounds = %s',image_num,k,str(stamps[k].bounds))
+        assert full_image.bounds.includes(stamps[k].bounds)
+        b = stamps[k].bounds
+        full_image[b] += stamps[k]
 
     # Mark that we are no longer doing a single galaxy by deleting image_pos from config top 
     # level, so it cannot be used for things like wcs.pixelArea(image_pos).  
@@ -507,31 +505,12 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0):
 
     # If didn't do noise above in the stamps, then need to do it here.
     if not do_noise:
-
         galsim.config.AddSky(config,full_image)
-
         if 'noise' in config['image']:
-            # If we didn't apply noise in each stamp, then we need to apply it now.
-            if max_current_var > 0:
-                if logger and logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('image %d: maximum noise varance in any stamp is %f',
-                                 config['image_num'], max_current_var)
-                import numpy
-                # Then there was whitening applied in the individual stamps.
-                # But there could be a different variance in each postage stamp, so the first
-                # thing we need to do is bring everything up to a common level.
-                noise_image = galsim.ImageF(full_image.bounds)
-                for k in range(nobjects): noise_image[images[k].bounds] += current_vars[k]
-                # Update this, since overlapping postage stamps may have led to a larger 
-                # value in some pixels.
-                max_current_var = numpy.max(noise_image.array)
-                # Figure out how much noise we need to add to each pixel.
-                noise_image = max_current_var - noise_image
-                # Add it.
-                full_image.addNoise(galsim.VariableGaussianNoise(rng,noise_image))
-            # Now max_current_var is how much noise is in each pixel.
-
-            galsim.config.AddNoise(config,full_image,max_current_var,logger)
+            # First bring the image so far up to a flat noise variance
+            current_var = FlattenNoiseVariance(config, full_image, stamps, current_vars, logger)
+            # Apply the noise to the full image
+            galsim.config.AddNoise(config,full_image,current_var,logger)
 
     return full_image
 
@@ -632,29 +611,27 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0):
     galsim.config.SetupInputsForImage(config,logger)
     galsim.config.SetupExtraOutputsForImage(config,nobjects,logger)
 
-    images, current_vars = galsim.config.BuildStamps(
+    stamps, current_vars = galsim.config.BuildStamps(
             nobjects, config, nproc=nproc, logger=logger,obj_num=obj_num, do_noise=False)
 
-    max_current_var = 0.
     for k in range(nobjects):
         # This is our signal that the object was skipped.
-        if not images[k].bounds.isDefined(): continue
-        bounds = images[k].bounds & full_image.bounds
+        if not stamps[k].bounds.isDefined(): continue
+        bounds = stamps[k].bounds & full_image.bounds
         if False:
             logger.debug('image %d: full bounds = %s',image_num,str(full_image.bounds))
-            logger.debug('image %d: stamp %d bounds = %s',image_num,k,str(images[k].bounds))
+            logger.debug('image %d: stamp %d bounds = %s',image_num,k,str(stamps[k].bounds))
             logger.debug('image %d: Overlap = %s',image_num,str(bounds))
         if bounds.isDefined():
-            full_image[bounds] += images[k][bounds]
+            full_image[bounds] += stamps[k][bounds]
         else:
             if logger and logger.isEnabledFor(logging.INFO):
                 logger.warn(
                     "Object centered at (%d,%d) is entirely off the main image,\n"%(
-                        images[k].bounds.center().x, images[k].bounds.center().y) +
+                        stamps[k].bounds.center().x, stamps[k].bounds.center().y) +
                     "whose bounds are (%d,%d,%d,%d)."%(
                         full_image.bounds.xmin, full_image.bounds.xmax,
                         full_image.bounds.ymin, full_image.bounds.ymax))
-        if current_vars[k] > max_current_var: max_current_var = current_vars[k]
 
     # Mark that we are no longer doing a single galaxy by deleting image_pos from config top 
     # level, so it cannot be used for things like wcs.pixelArea(image_pos).  
@@ -671,32 +648,42 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0):
     galsim.config.AddSky(config,full_image)
 
     if 'noise' in config['image']:
+        # First bring the image so far up to a flat noise variance
+        current_var = FlattenNoiseVariance(config, full_image, stamps, current_vars, logger)
         # Apply the noise to the full image
-        if max_current_var > 0:
-            import numpy
-            # Then there was whitening applied in the individual stamps.
-            # But there could be a different variance in each postage stamp, so the first
-            # thing we need to do is bring everything up to a common level.
-            noise_image = galsim.ImageF(full_image.bounds)
-            for k in range(nobjects): 
-                b = images[k].bounds & full_image.bounds
-                if b.isDefined(): noise_image[b] += current_vars[k]
-            # Update this, since overlapping postage stamps may have led to a larger 
-            # value in some pixels.
-            max_current_var = numpy.max(noise_image.array)
-            if logger and logger.isEnabledFor(logging.DEBUG):
-                logger.debug('image %d: maximum noise varance in any pixel is %f',
-                             config['image_num'], max_current_var)
-            # Figure out how much noise we need to add to each pixel.
-            noise_image = max_current_var - noise_image
-            # Add it.
-            full_image.addNoise(galsim.VariableGaussianNoise(rng,noise_image))
-        # Now max_current_var is how much noise is in each pixel.
-
-        galsim.config.AddNoise(config,full_image,max_current_var,logger)
+        galsim.config.AddNoise(config,full_image,current_var,logger)
 
     return full_image
 
+
+def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
+    rng = config['rng']
+    nobjects = len(stamps)
+    max_current_var = max(current_vars)
+    if max_current_var > 0:
+        if logger and logger.isEnabledFor(logging.DEBUG):
+            logger.debug('image %d: maximum noise varance in any stamp is %f',
+                         config['image_num'], max_current_var)
+        import numpy
+        # Then there was whitening applied in the individual stamps.
+        # But there could be a different variance in each postage stamp, so the first
+        # thing we need to do is bring everything up to a common level.
+        noise_image = galsim.ImageF(full_image.bounds)
+        for k in range(nobjects): 
+            b = stamps[k].bounds & full_image.bounds
+            if b.isDefined(): noise_image[b] += current_vars[k]
+        # Update this, since overlapping postage stamps may have led to a larger 
+        # value in some pixels.
+        max_current_var = numpy.max(noise_image.array)
+        if logger and logger.isEnabledFor(logging.DEBUG):
+            logger.debug('image %d: maximum noise varance in any pixel is %f',
+                         config['image_num'], max_current_var)
+        # Figure out how much noise we need to add to each pixel.
+        noise_image = max_current_var - noise_image
+        # Add it.
+        full_image.addNoise(galsim.VariableGaussianNoise(rng,noise_image))
+    # Now max_current_var is how much noise is in each pixel.
+    return max_current_var
 
 def GetNObjForImage(config, image_num):
     if 'image' in config and 'type' in config['image']:
