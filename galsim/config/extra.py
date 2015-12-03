@@ -272,7 +272,6 @@ def BuildExtraOutputHDUs(config, logger=None, first=1):
                 raise ValueError("%s hdu = %d is invalid or a duplicate."%hdu)
 
             extra_obj = config['extra_objs'][key]
-            extra_type = valid_extra_outputs[key][0]
 
             # If we have a method, we need to attach it to the extra_obj, since it might
             # be a proxy, in which case the method call won't work.
@@ -296,19 +295,19 @@ def BuildExtraOutputHDUs(config, logger=None, first=1):
 # The dict is empty here.  The appropriate items are added to the dict in extra_*.py, and
 # this provides the hook for other modules to add additional output items.
 # The keys here are the names of the output items, and the values are tuples with:
-# - the class name of the object to build to be output.
-# - a function to get the initialization kwargs if building something.
-#   The call signature is GetKwargs(config, base, logger)
-# - a function to call at the start of each image
-#   The call signature is Setup(output_obj, scratch, config, base, logger)
-# - a function to call at the end of building each stamp
-#   The call signature is ProcessStamp(output_obj, scratch, config, base, obj_num, logger)
-# - a function to call at the end of building each image
-#   The call signature is ProcessImage(output_obj, scratch, config, base, logger)
-# - a function to call to write the output file
-#   The call signature is WriteFile(output_obj, file_name)
-# - a function to call to build either a FITS HDU or an Image to put in an HDU
-#   The call signature is hdu = WriteToHDU(output_obj)
+#   - The class name of the object to build to be output.
+#   - A function to get the initialization kwargs if building something.
+#     The call signature is kwargs = GetKwargs(config, base, logger)
+#   - A function to call at the start of each image
+#     The call signature is Setup(output_obj, scratch, config, base, logger)
+#   - A function to call at the end of building each stamp
+#     The call signature is ProcessStamp(output_obj, scratch, config, base, obj_num, logger)
+#   - A function to call at the end of building each image
+#     The call signature is ProcessImage(output_obj, scratch, config, base, logger)
+#   - A function to call to write the output file
+#     The call signature is WriteFile(output_obj, file_name)
+#   - A function to call to build either a FITS HDU or an Image to put in an HDU
+#     The call signature is hdu = WriteToHDU(output_obj)
 
 valid_extra_outputs = {}
 

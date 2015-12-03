@@ -100,21 +100,9 @@ def ProcessExtraPSFImage(image, scratch, config, base, logger=None):
             # that don't start with _.  Hence using the more verbose form here.
             image.setSubImage(b, image.subImage(b) + stamp[b])
 
-# Normally import galsim would give us access to galsim.config.valid_extra_outputs.
-# However, since galsim.config imports this file, it doesn't exist yet, so we need to
-# get it directly from the extra module.
+# Register this as a valid extra output
 from .extra import valid_extra_outputs
-
-# Register psf as an extra output type in config
 valid_extra_outputs['psf'] = (
-    # The values are tuples with:
-    # - the class name to build, if any.
-    # - a function to get the initialization kwargs if building something.
-    # - a function to call at the start of each image
-    # - a function to call at the end of building each stamp
-    # - a function to call at the end of building each image
-    # - a function to call to write the output file
-    # - a function to call to build either a FITS HDU or an Image to put in an HDU
     galsim.Image, None,
     SetupExtraPSF, ProcessExtraPSFStamp, ProcessExtraPSFImage, 
     galsim.Image.write, galsim.Image.view 

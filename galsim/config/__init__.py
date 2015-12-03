@@ -34,6 +34,12 @@ from .value import *
 from . import output_multifits
 from . import output_datacube
 
+from . import input_fitsheader
+from . import input_real
+from . import input_cosmos
+from . import input_nfw
+from . import input_powerspectrum
+
 from . import extra_psf
 from . import extra_weight
 from . import extra_badpix
@@ -43,5 +49,6 @@ from . import image_scattered
 from . import image_tiled
 
 from . import gsobject_ring
-from . import gsobject_realgalaxy
-from . import gsobject_cosmosgalaxy
+
+from . import value_random
+from . import value_eval

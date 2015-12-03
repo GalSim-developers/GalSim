@@ -21,9 +21,9 @@ import galsim
 import logging
 
 # This file handles building the output files according to the specifications in config['output'].
-# This file includes the basic functionality, but it calls out to helper functions for 
-# the different types of output files.  It includes the implementation of the default output
-# type, 'Fits'.  See output_multifits.py for 'MultiFits' and output_datacube.py for 'DataCube'.
+# This file includes the basic functionality, but it calls out to helper functions for the
+# different types of output files.  It includes the implementation of the default output type,
+# 'Fits'.  See output_multifits.py for 'MultiFits' and output_datacube.py for 'DataCube'.
 
 
 def BuildFiles(nfiles, config, file_num=0, image_num=0, obj_num=0, nproc=1, logger=None):

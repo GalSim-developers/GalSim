@@ -20,7 +20,7 @@ import logging
 
 # This file handles the building of GSObjects in the config['psf'] and config['gal'] fields.
 # This file includes many of the simple object types.  Additional types are defined in
-# gsobject_*.py.
+# gsobject_ring.py, input_real.py, and input_cosmos.py.
 
 
 class SkipThisObject(Exception):

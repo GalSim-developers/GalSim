@@ -20,37 +20,9 @@ import os
 import galsim
 import logging
 
-valid_input_types = {
-    # The values are tuples with:
-    # - The class name to build.
-    # - A list of keys to ignore on the initial creation (e.g. PowerSpectrum has values that are
-    #   used later in PowerSpectrumInit).
-    # - Whether the class has a getNObjects method, in which case it also must have a constructor
-    #   kwarg _nobjects_only to efficiently do only enough to calculate nobjects.
-    # - Whether the class might be relevant at the file- or image-scope level, rather than just
-    #   at the object level.  Notably, this is true for dict.
-    # - A function to call at the start of each image (or None)
-    # - A list of types that should have their "current" values invalidated when the input
-    #   object changes.
-    # See the des module for examples of how to extend this from a module.
-    'catalog' : ('galsim.Catalog', [], True, False, None, ['Catalog']),
-    'dict' : ('galsim.Dict', [], False, True, None, ['Dict']),
-    'real_catalog' : ('galsim.RealGalaxyCatalog', [],
-                      False, # Actually it does have getNObjects, but that's probably not
-                             # the right number of objects to use for a single file or image.
-                      False, None,
-                      ['RealGalaxy', 'RealGalaxyOriginal']),
-    'cosmos_catalog' : ('galsim.COSMOSCatalog', [], True, False, None, ['COSMOSGalaxy']),
-    'nfw_halo' : ('galsim.NFWHalo', [], False, False, None,
-                  ['NFWHaloShear','NFWHaloMagnification']),
-    'power_spectrum' : ('galsim.PowerSpectrum',
-                        # power_spectrum uses these extra parameters in PowerSpectrumInit
-                        ['grid_spacing', 'interpolant'],
-                        False, False,
-                        'galsim.config.PowerSpectrumInit',
-                        ['PowerSpectrumShear','PowerSpectrumMagnification']),
-    'fits_header' : ('galsim.FitsHeader', [], False, True, None, ['FitsHeader']),
-}
+# This file handles processing the input items according to the specifications in config['input'].
+# This file includes the basic functionality, which is often sufficient for simple input types,
+# but it has hooks to allow more customized behavior where necessary. See input_*.py for examples.
 
 def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_only=False):
     """
@@ -131,11 +103,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                     tag = key + str(i)
                     # This next bit mimics the operation of BuildSimple, except that we don't
                     # actually build the object here.  Just register the class name.
-                    input_type = valid_input_types[key][0]
-                    if input_type in galsim.__dict__:
-                        init_func = eval("galsim."+input_type)
-                    else:
-                        init_func = eval(input_type)
+                    init_func = valid_input_types[key][0]
                     InputManager.register(tag, init_func)
             # Start up the input_manager
             config['input_manager'] = InputManager()
@@ -165,31 +133,15 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                 if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('file %d: Current values for %s are %s, safe = %s',
                                  file_num, key, str(input_objs[i]), input_objs_safe[i])
-                input_type, ignore = valid_input_types[key][0:2]
-                field['type'] = input_type
+                init_func = valid_input_types[key][0]
+                ignore = valid_input_types[key][1]
                 if input_objs[i] is not None and input_objs_safe[i]:
                     if logger and logger.isEnabledFor(logging.DEBUG):
                         logger.debug('file %d: Using %s already read in',file_num,key)
                 else:
                     if logger and logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('file %d: Build input type %s',file_num,input_type)
-                    # This is almost identical to the operation of BuildSimple.  However,
-                    # rather than call the regular function here, we have input_manager do so.
-                    if input_type in galsim.__dict__:
-                        init_func = eval("galsim."+input_type)
-                    else:
-                        init_func = eval(input_type)
-                    kwargs, safe = galsim.config.GetAllParams(field, config,
-                                                              req = init_func._req_params,
-                                                              opt = init_func._opt_params,
-                                                              single = init_func._single_params,
-                                                              ignore = ignore)
-                    if init_func._takes_rng:
-                        if 'rng' not in config:
-                            raise ValueError("No config['rng'] available for %s.type = %s"%(
-                                             key,input_type))
-                        kwargs['rng'] = config['rng']
-                        safe = False
+                        logger.debug('file %d: Build input type %s',file_num,key)
+                    kwargs, safe = GetInputKwargs(key, field, config)
 
                     if safe_only and not safe:
                         if logger and logger.isEnabledFor(logging.DEBUG):
@@ -202,12 +154,9 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                         tag = key + str(i)
                         input_obj = getattr(config['input_manager'],tag)(**kwargs)
                     else:
-                        input_type = valid_input_types[key][0]
-                        if input_type in galsim.__dict__:
-                            init_func = eval("galsim."+input_type)
-                        else:
-                            init_func = eval(input_type)
+                        init_func = valid_input_types[key][0]
                         input_obj = init_func(**kwargs)
+
                     if logger and logger.isEnabledFor(logging.DEBUG):
                         logger.debug('file %d: Built input object %s %d',file_num,key,i)
                         if 'file_name' in kwargs:
@@ -215,6 +164,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                     if logger and logger.isEnabledFor(logging.INFO):
                         if valid_input_types[key][2]:
                             logger.info('Read %d objects from %s',input_obj.getNObjects(),key)
+
                     # Store input_obj in the config for use by BuildGSObject function.
                     input_objs[i] = input_obj
                     input_objs_safe[i] = safe
@@ -231,6 +181,30 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
         valid_keys = valid_input_types.keys()
         galsim.config.CheckAllParams(config['input'], ignore=valid_keys)
 
+def GetInputKwargs(key, config, base):
+    """Get the kwargs to use for initializing the input object
+
+    @param key      The name of the input type
+    @param config   The config dict for this input item, typically base['input'][key]
+    @param base     The base config dict
+    """
+    kwargs_func = valid_input_types[key][1]
+    if kwargs_func is None:
+        init_func = valid_input_types[key][0]
+        req = init_func._req_params
+        opt = init_func._opt_params
+        single = init_func._single_params
+        kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt, single=single)
+        if init_func._takes_rng:
+            if 'rng' not in config:
+                raise ValueError("No config['rng'] available for %s.type"%key)
+            kwargs['rng'] = config['rng']
+            safe = False
+        return kwargs, safe
+    else:
+        return kwargs_func(config, base)
+
+ 
 def ProcessInputNObjects(config, logger=None):
     """Process the input field, just enough to determine the number of objects.
 
@@ -265,16 +239,8 @@ def ProcessInputNObjects(config, logger=None):
                     # If it's a list, just use the first one.
                     if isinstance(field, list): field = field[0]
 
-                    input_type, ignore = valid_input_types[key][0:2]
-                    if input_type in galsim.__dict__:
-                        init_func = eval("galsim."+input_type)
-                    else:
-                        init_func = eval(input_type)
-                    kwargs = galsim.config.GetAllParams(field, config,
-                                                        req = init_func._req_params,
-                                                        opt = init_func._opt_params,
-                                                        single = init_func._single_params,
-                                                        ignore = ignore)[0]
+                    init_func = valid_input_types[key][0]
+                    kwargs, safe = GetInputKwargs(key, field, config)
                     kwargs['_nobjects_only'] = True
                     input_obj = init_func(**kwargs)
                 if logger and logger.isEnabledFor(logging.DEBUG):
@@ -303,60 +269,109 @@ def SetupInputsForImage(config, logger):
                 for i in range(len(fields)):
                     field = fields[i]
                     input_obj = input_objs[i]
-                    func = eval(image_func)
-                    func(input_obj, field, config, logger)
+                    image_func(input_obj, field, config, logger)
 
 
-def PowerSpectrumInit(ps, config, base, logger=None):
-    """Initialize the PowerSpectrum input object's gridded values based on the
-    size of the image and the grid spacing.
+# We define in this file two simple input types: catalog and dict, which read in a Catalog
+# or Dict from a file and then can use that to generate values.
 
-    @param ps           The PowerSpectrum object to use
-    @param config       The configuration dict for 'power_spectrum'
-    @param base         The base configuration dict.
-    @param logger       If given, a logger object to log progress.  [default: None]
+valid_input_types = {
+    # The values are tuples with:
+    # - The class name to build or the function to call to build the input object.
+    # - A function to get the initialization kwargs or None if the regular _req, _opt, etc.
+    #   kind of initialization will work.
+    #   The call signature is kwargs, safe = GetKwargs(config, base)
+    # - Whether the object can be used to automatically determine the number of objects to
+    #   build for a given file or image.  If true, it must have a getNObjects() method
+    #   and also a construction kwargs _nobjects_only to efficiently do only enough to 
+    #   calculate nobjects.
+    # - Whether the class might be relevant at the file- or image-scope level, rather than just
+    #   at the object level.  Notably, this is true for dict.
+    # - A function to call at the start of each image (or None)
+    #   The call signature is Setup(input_obj, config, base, logger)
+    # - A list of value or object types that use this input type.  These items will have their
+    #   "current" values invalidated when the input object changes.
+    'catalog' : (galsim.Catalog, None, True, False, None, ['Catalog']),
+    'dict' : (galsim.Dict, None, False, True, None, ['Dict']),
+}
+
+# Now define the value generators connected to the catalog and dict input types.
+
+
+# A helper function for getting the input object needed for generating a value:
+def GetInputObj(input_type, config, base, param_name):
+    """Get the input object needed for generating a particular value
+
+    @param input_type   The type of input object to get
+    @param config       The config dict for this value item
+    @param base         The base config dict
+    @param param_name   The type of value that we are trying to construct (only used for
+                        error messages).
     """
-    if 'grid_spacing' in config:
-        grid_spacing = galsim.config.ParseValue(config, 'grid_spacing', base, float)[0]
-    elif 'tile_xsize' in base:
-        # Then we have a tiled image.  Can use the tile spacing as the grid spacing.
-        stamp_size = min(base['tile_xsize'], base['tile_ysize'])
-        # Note: we use the (max) pixel scale at the image center.  This isn't
-        # necessarily optimal, but it seems like the best choice.
-        scale = base['wcs'].maxLinearScale(base['image_center'])
-        grid_spacing = stamp_size * scale
+    if input_type not in base['input_objs']:
+        raise ValueError("No input %s available for type = %s"%(input_type,param_name))
+
+    if 'num' in config:
+        num = galsim.config.ParseValue(config, 'num', base, int)[0]
     else:
-        raise AttributeError("power_spectrum.grid_spacing required for non-tiled images")
+        num = 0
 
-    if 'tile_xsize' in base and base['tile_xsize'] == base['tile_ysize']:
-        # PowerSpectrum can only do a square FFT, so make it the larger of the two n's.
-        ngrid = max(base['nx_tiles'], base['ny_tiles'])
-        # Normally that's good, but if tiles aren't square, need to drop through to the
-        # second option.
-    else:
-        import math
-        image_size = max(base['image_xsize'], base['image_ysize'])
-        scale = base['wcs'].maxLinearScale(base['image_center'])
-        ngrid = int(math.ceil(image_size * scale / grid_spacing))
+    if num < 0:
+        raise ValueError("Invalid num < 0 supplied for %s: num = %d"%(param_name,num))
+    if num >= len(base['input_objs'][input_type]):
+        raise ValueError("Invalid num supplied for %s (too large): num = %d"%(param_name,num))
 
-    if 'interpolant' in config:
-        interpolant = galsim.config.ParseValue(config, 'interpolant', base, str)[0]
-    else:
-        interpolant = None
+    return base['input_objs'][input_type][num]
 
-    # We don't care about the output here.  This just builds the grid, which we'll
-    # access for each object using its position.
-    if base['wcs'].isCelestial():
-        world_center = galsim.PositionD(0,0)
-    else:
-        world_center = base['wcs'].toWorld(base['image_center'])
-    ps.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid, center=world_center,
-                 rng=base['rng'], interpolant=interpolant)
+def _GenerateFromCatalog(config, base, value_type):
+    """@brief Return a value read from an input catalog
+    """
+    input_cat = GetInputObj('catalog', config, base, 'Catalog')
 
-    # Make sure this process gives consistent results regardless of the number of processes
-    # being used.
-    if not isinstance(ps, galsim.PowerSpectrum):
-        # Then ps is really a proxy, which means the rng was pickled, so we need to
-        # discard the same number of random calls from the one in the config dict.
-        base['rng'].discard(ps.nRandCallsForBuildGrid())
+    # Setup the indexing sequence if it hasn't been specified.
+    # The normal thing with a Catalog is to just use each object in order,
+    # so we don't require the user to specify that by hand.  We can do it for them.
+    galsim.config.SetDefaultIndex(config, input_cat.getNObjects())
 
+    # Coding note: the and/or bit is equivalent to a C ternary operator:
+    #     input_cat.isFits() ? str : int
+    # which of course doesn't exist in python.  This does the same thing (so long as the 
+    # middle item evaluates to true).
+    req = { 'col' : input_cat.isFits() and str or int , 'index' : int }
+    opt = { 'num' : int }
+    kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
+    col = kwargs['col']
+    index = kwargs['index']
+
+    if value_type is str:
+        val = input_cat.get(index, col)
+    elif value_type is float:
+        val = input_cat.getFloat(index, col)
+    elif value_type is int:
+        val = input_cat.getInt(index, col)
+    elif value_type is bool:
+        val = galsim.config.value._GetBoolValue(input_cat.get(index, col))
+
+    #print base['file_num'],'Catalog: col = %s, index = %s, val = %s'%(col, index, val)
+    return val, safe
+
+
+def _GenerateFromDict(config, base, value_type):
+    """@brief Return a value read from an input dict.
+    """
+    input_dict = GetInputObj('dict', config, base, 'Dict')
+
+    req = { 'key' : str }
+    opt = { 'num' : int }
+    kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
+    key = kwargs['key']
+
+    val = input_dict.get(key)
+
+    #print base['file_num'],'Dict: key = %s, val = %s'%(key,val)
+    return val, safe
+
+# Register these as valid value types
+from .value import valid_value_types
+valid_value_types['Catalog'] = (_GenerateFromCatalog, [ float, int, bool, str ])
+valid_value_types['Dict'] = (_GenerateFromDict, [ float, int, bool, str ])

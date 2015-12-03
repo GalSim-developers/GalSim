@@ -17,42 +17,40 @@
 #
 import galsim
 
-# This file adds gsobject types RealGalaxy and RealGalaxyOriginal.
+# This file adds input type real_catalog and gsobject types RealGalaxy and RealGalaxyOriginal.
 
-def _BuildRealGalaxy(config, base, ignore, gsparams, logger):
+# The RealGalaxyCatalog doesn't need anything special other than registration as a valid
+# input type.
+from .input import valid_input_types
+valid_input_types['real_catalog'] = (
+    galsim.RealGalaxyCatalog, None,
+    False, # Actually it does have getNObjects, but that's probably not
+           # the right number of objects to use for a single file or image.
+    False, None,
+    ['RealGalaxy', 'RealGalaxyOriginal']
+)
+
+# There are two gsobject types that are coupled to this: RealGalaxy and RealGalaxyOriginal.
+
+def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGalaxy'):
     """@brief Build a RealGalaxy from the real_catalog input item.
     """
-    if 'real_catalog' not in base['input_objs']:
-        raise ValueError("No real galaxy catalog available for building type = RealGalaxy")
-
-    if 'num' in config:
-        num, safe = ParseValue(config, 'num', base, int)
-    else:
-        num, safe = (0, True)
-    ignore.append('num')
-
-    if num < 0:
-        raise ValueError("Invalid num < 0 supplied for RealGalaxy: num = %d"%num)
-    if num >= len(base['input_objs']['real_catalog']):
-        raise ValueError("Invalid num supplied for RealGalaxy (too large): num = %d"%num)
-
-    real_cat = base['input_objs']['real_catalog'][num]
+    real_cat = galsim.config.GetInputObj('real_catalog', config, base, param_name)
 
     # Special: if index is Sequence or Random, and max isn't set, set it to nobjects-1.
     # But not if they specify 'id' which overrides that.
     if 'id' not in config:
         galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
 
-    kwargs, safe1 = galsim.config.GetAllParams(config, base,
+    kwargs, safe = galsim.config.GetAllParams(config, base,
         req = galsim.__dict__['RealGalaxy']._req_params,
         opt = galsim.__dict__['RealGalaxy']._opt_params,
         single = galsim.__dict__['RealGalaxy']._single_params,
-        ignore = ignore)
-    safe = safe and safe1
+        ignore = ignore + ['num'])
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
     if 'rng' not in base:
-        raise ValueError("No base['rng'] available for type = RealGalaxy")
+        raise ValueError("No base['rng'] available for type = %s"%param_name)
     kwargs['rng'] = base['rng']
 
     if 'index' in kwargs:
@@ -63,7 +61,7 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger):
 
     kwargs['real_galaxy_catalog'] = real_cat
     if False:
-        logger.debug('obj %d: RealGalaxy kwargs = %s',base['obj_num'],kwargs)
+        logger.debug('obj %d: %s kwargs = %s',base['obj_num'],param_name,kwargs)
 
     gal = galsim.RealGalaxy(**kwargs)
 
@@ -73,7 +71,8 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger):
 def _BuildRealGalaxyOriginal(config, base, ignore, gsparams, logger):
     """@brief Return the original image from a RealGalaxy using the real_catalog input item.
     """
-    image, safe = _BuildRealGalaxy(config, base, ignore, gsparams, logger)
+    image, safe = _BuildRealGalaxy(config, base, ignore, gsparams, logger, 
+                                   param_name='RealGalaxyOriginal')
     return image.original_image, safe    
 
 
