@@ -25,25 +25,6 @@ import inspect
 # in config['output']. The ones that are defined natively in GalSim are psf, weight, badpix,
 # and truth.  See extra_*.py for the specific functions for each of these.
 
-# valid_extra_outputs is a dict that defines how to process each of the extra output items.
-# The dict is empty here.  The appropriate items are added to the dict in extra_*.py, and
-# this provides the hook for other modules to add additional output items.
-# The keys here are the names of the output items, and the values are tuples with:
-# - the class name of the object to build to be output.
-# - a function to get the initialization kwargs if building something.
-#   The call signature is GetKwargs(config, base, logger)
-# - a function to call at the start of each image
-#   The call signature is Setup(output_obj, scratch, config, base, logger)
-# - a function to call at the end of building each stamp
-#   The call signature is ProcessStamp(output_obj, scratch, config, base, obj_num, logger)
-# - a function to call at the end of building each image
-#   The call signature is ProcessImage(output_obj, scratch, config, base, logger)
-# - a function to call to write the output file
-#   The call signature is WriteFile(output_obj, file_name)
-# - a function to call to build either a FITS HDU or an Image to put in an HDU
-#   The call signature is hdu = WriteToHDU(output_obj)
-valid_extra_outputs = {}
-
 def SetupExtraOutput(config, file_num=0, logger=None):
     """
     Set up the extra output items as necessary, including building Managers for them
@@ -307,4 +288,26 @@ def BuildExtraOutputHDUs(config, logger=None):
         return hdulist
     else:
         return []
+
+
+# valid_extra_outputs is a dict that defines how to process each of the extra output items.
+# The dict is empty here.  The appropriate items are added to the dict in extra_*.py, and
+# this provides the hook for other modules to add additional output items.
+# The keys here are the names of the output items, and the values are tuples with:
+# - the class name of the object to build to be output.
+# - a function to get the initialization kwargs if building something.
+#   The call signature is GetKwargs(config, base, logger)
+# - a function to call at the start of each image
+#   The call signature is Setup(output_obj, scratch, config, base, logger)
+# - a function to call at the end of building each stamp
+#   The call signature is ProcessStamp(output_obj, scratch, config, base, obj_num, logger)
+# - a function to call at the end of building each image
+#   The call signature is ProcessImage(output_obj, scratch, config, base, logger)
+# - a function to call to write the output file
+#   The call signature is WriteFile(output_obj, file_name)
+# - a function to call to build either a FITS HDU or an Image to put in an HDU
+#   The call signature is hdu = WriteToHDU(output_obj)
+
+valid_extra_outputs = {}
+
 

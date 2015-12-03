@@ -19,18 +19,97 @@
 import galsim
 import logging
 
-valid_noise_types = { 
-    # The values in the tuple are:
-    # - A function to add noise after drawing
-    # - A function that returns the variance of the noise
-    'Gaussian' : ('AddNoiseGaussian', 'NoiseVarGaussian', 'AddNoiseVarianceGaussian'),
-    'Poisson' : ('AddNoisePoisson', 'NoiseVarPoisson', 'AddNoiseVariancePoisson'),
-    'CCD' : ('AddNoiseCCD', 'NoiseVarCCD', 'AddNoiseVarianceCCD'),
-    'COSMOS' : ('AddNoiseCOSMOS', 'NoiseVarCOSMOS', 'AddNoiseVarianceCOSMOS'),
-}
+# This file handles the functionality for adding noise and the sky to an image after
+# drawing the objects.
 
-# items that are parsed separately from the normal noise function
-noise_ignore = [ 'whiten', 'symmetrize' ]
+
+#
+# First the driver functions:
+#
+
+def AddSky(config, im):
+    """Add the sky level to the image
+    """
+    sky = GetSky(config['image'], config)
+    if sky:
+        im += sky
+
+
+def AddNoise(config, im, current_var=0., logger=None):
+    """
+    Add noise to an image according to the noise specifications in the noise dict.
+
+    @param config           The configuration dict
+    @param im               The image onto which to add the noise
+    @param current_var      The current noise variance present in the image already [default: 0]
+    @param logger           If given, a logger object to log progress. [default: None]
+    """
+    if 'noise' in config['image']:
+        noise = config['image']['noise']
+    else:
+        # No noise.
+        return
+
+    if 'type' in noise:
+        type = noise['type']
+    else:
+        type = 'Poisson'  # Default is Poisson
+    if type not in valid_noise_types:
+        raise AttributeError("Invalid type %s for noise",type)
+
+    func = valid_noise_types[type][0]
+    func(noise, config, im, current_var, logger)
+
+def CalculateNoiseVar(config):
+    """
+    Calculate the noise variance from the noise specified in the noise dict.
+
+    @param config           The configuration dict
+
+    @returns the noise variance
+    """
+    noise = config['image']['noise']
+    if not isinstance(noise, dict):
+        raise AttributeError("image.noise is not a dict.")
+
+    if 'type' in noise:
+        type = noise['type']
+    else:
+        type = 'Poisson'  # Default is Poisson
+    if type not in valid_noise_types:
+        raise AttributeError("Invalid type %s for noise",type)
+
+    func = valid_noise_types[type][1]
+    return func(noise, config)
+
+def AddNoiseVariance(config, im, include_obj_var=False, logger=None):
+    """
+    Add the noise variance to an image according to the noise specifications in the noise dict.
+    Typically, this is used for buliding a weight map, which is typically the inverse variance.
+
+    @param config           The configuration dict
+    @param im               The image onto which to add the variance values
+    @param include_obj_var  Whether to add the variance from the object photons for noise
+                            models that have a component based on the number of photons.
+                            [default: False]
+    @param logger           If given, a logger object to log progress. [default: None]
+    """
+    if 'noise' in config['image']:
+        noise = config['image']['noise']
+    else:
+        # No noise.
+        return
+
+    if 'type' in noise:
+        type = noise['type']
+    else:
+        type = 'Poisson'  # Default is Poisson
+    if type not in valid_noise_types:
+        raise AttributeError("Invalid type %s for noise",type)
+
+    func = valid_noise_types[type][2]
+    func(noise, config, im, include_obj_var, logger)
+
 
 def GetSky(config, base):
     """Parse the sky information and return either a float value for the sky level per pixel
@@ -68,93 +147,8 @@ def GetSky(config, base):
         return 0.
 
 
-#
-# First the driver functions:
-#
-
-def AddSky(config, im):
-    """Add the sky level to the image
-    """
-    sky = GetSky(config['image'], config)
-    if sky:
-        im += sky
-
-
-def AddNoise(config, im, current_var=0., logger=None):
-    """
-    Add noise to an image according to the noise specifications in the noise dict.
-
-    @param config           The configuration dict
-    @param im               The image onto which to add the noise
-    @param current_var      The current noise variance present in the image already [default: 0]
-    @param logger           If given, a logger object to log progress. [default: None]
-    """
-    if 'noise' in config['image']:
-        noise = config['image']['noise']
-    else:
-        # No noise.
-        return
-
-    if 'type' in noise:
-        type = noise['type']
-    else:
-        type = 'Poisson'  # Default is Poisson
-    if type not in valid_noise_types:
-        raise AttributeError("Invalid type %s for noise",type)
-
-    func = eval(valid_noise_types[type][0])
-    func(noise, config, im, current_var, logger)
-
-def CalculateNoiseVar(config):
-    """
-    Calculate the noise variance from the noise specified in the noise dict.
-
-    @param config           The configuration dict
-
-    @returns the noise variance
-    """
-    noise = config['image']['noise']
-    if not isinstance(noise, dict):
-        raise AttributeError("image.noise is not a dict.")
-
-    if 'type' in noise:
-        type = noise['type']
-    else:
-        type = 'Poisson'  # Default is Poisson
-    if type not in valid_noise_types:
-        raise AttributeError("Invalid type %s for noise",type)
-
-    func = eval(valid_noise_types[type][1])
-    return func(noise, config)
-
-def AddNoiseVariance(config, im, include_obj_var=False, logger=None):
-    """
-    Add the noise variance to an image according to the noise specifications in the noise dict.
-    Typically, this is used for buliding a weight map, which is typically the inverse variance.
-
-    @param config           The configuration dict
-    @param im               The image onto which to add the variance values
-    @param include_obj_var  Whether to add the variance from the object photons for noise
-                            models that have a component based on the number of photons.
-                            [default: False]
-    @param logger           If given, a logger object to log progress. [default: None]
-    """
-    if 'noise' in config['image']:
-        noise = config['image']['noise']
-    else:
-        # No noise.
-        return
-
-    if 'type' in noise:
-        type = noise['type']
-    else:
-        type = 'Poisson'  # Default is Poisson
-    if type not in valid_noise_types:
-        raise AttributeError("Invalid type %s for noise",type)
-
-    func = eval(valid_noise_types[type][2])
-    func(noise, config, im, include_obj_var, logger)
-
+# items that are parsed separately from the normal noise function
+noise_ignore = [ 'whiten', 'symmetrize' ]
 
 #
 # Gaussian
@@ -463,3 +457,22 @@ def NoiseVarCOSMOS(config, base):
 
 def AddNoiseVarianceCOSMOS(config, base, im, include_obj_var, logger):
     im += NoiseVarCOSMOS(config, base)
+
+
+
+# valid_noise_type is a dict that defines how to process each noise type.
+# The values in the tuple are:
+# - A function to add noise to an image
+#   The call signature is AddNoise(config, base, im, current_var, logger)
+# - A function that returns the variance of the noise
+#   The call signature is NoiseVar(config, base)
+# - A function to add the noise variance to an image
+#   The call signature is AddNoiseVariance(config, base, im, include_obj_var, logger)
+
+valid_noise_types = { 
+    'Gaussian' : (AddNoiseGaussian, NoiseVarGaussian, AddNoiseVarianceGaussian),
+    'Poisson' : (AddNoisePoisson, NoiseVarPoisson, AddNoiseVariancePoisson),
+    'CCD' : (AddNoiseCCD, NoiseVarCCD, AddNoiseVarianceCCD),
+    'COSMOS' : (AddNoiseCOSMOS, NoiseVarCOSMOS, AddNoiseVarianceCOSMOS),
+}
+

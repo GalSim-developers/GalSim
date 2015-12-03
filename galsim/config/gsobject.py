@@ -502,6 +502,7 @@ def _Shift(gsobject, config, key, base, logger):
 # e.g. if a PSF has all constant values, then it can be used for all the galaxies in a simulation
 # which lets it keep any FFTs that it has performed internally.  OpticalPSF is a good example
 # of where this can have a significant speed up.
+
 valid_gsobject_types = {
     'None' : _BuildNone,
     'Add' : _BuildAdd,

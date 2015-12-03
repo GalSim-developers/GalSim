@@ -17,51 +17,7 @@
 #
 import galsim
 
-valid_value_types = {
-    # The values are tuples with:
-    # - the build function to call
-    # - a list of types for which the type is valid
-    'List' : ('_GenerateFromList', 
-              [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ]),
-    'Eval' : ('_GenerateFromEval', 
-              [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD, None ]),
-    'Current' : ('_GenerateFromCurrent', 
-                 [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD, None ]),
-    'Sum' : ('_GenerateFromSum', 
-             [ float, int, galsim.Angle, galsim.Shear, galsim.PositionD ]),
-    'Catalog' : ('_GenerateFromCatalog', [ float, int, bool, str ]),
-    'Dict' : ('_GenerateFromDict', [ float, int, bool, str ]),
-    'FitsHeader' : ('_GenerateFromFitsHeader', [ float, int, bool, str ]),
-    'Sequence' : ('_GenerateFromSequence', [ float, int, bool ]),
-    'Random' : ('_GenerateFromRandom', [ float, int, bool, galsim.Angle ]),
-    'RandomGaussian' : ('_GenerateFromRandomGaussian', [ float ]),
-    'RandomPoisson' : ('_GenerateFromRandomPoisson', [ float, int ]),
-    'RandomBinomial' : ('_GenerateFromRandomBinomial', [ float, int, bool ]),
-    'RandomWeibull' : ('_GenerateFromRandomWeibull', [ float ]),
-    'RandomGamma' : ('_GenerateFromRandomGamma', [ float ]),
-    'RandomChi2' : ('_GenerateFromRandomChi2', [ float ]),
-    'RandomDistribution' : ('_GenerateFromRandomDistribution', [ float ]),
-    'RandomCircle' : ('_GenerateFromRandomCircle', [ galsim.PositionD ]),
-    'NumberedFile' : ('_GenerateFromNumberedFile', [ str ]),
-    'FormattedStr' : ('_GenerateFromFormattedStr', [ str ]),
-    'Rad' : ('_GenerateFromRad', [ galsim.Angle ]),
-    'Radians' : ('_GenerateFromRad', [ galsim.Angle ]),
-    'Deg' : ('_GenerateFromDeg', [ galsim.Angle ]),
-    'Degrees' : ('_GenerateFromDeg', [ galsim.Angle ]),
-    'E1E2' : ('_GenerateFromE1E2', [ galsim.Shear ]),
-    'EBeta' : ('_GenerateFromEBeta', [ galsim.Shear ]),
-    'G1G2' : ('_GenerateFromG1G2', [ galsim.Shear ]),
-    'GBeta' : ('_GenerateFromGBeta', [ galsim.Shear ]),
-    'Eta1Eta2' : ('_GenerateFromEta1Eta2', [ galsim.Shear ]),
-    'EtaBeta' : ('_GenerateFromEtaBeta', [ galsim.Shear ]),
-    'QBeta' : ('_GenerateFromQBeta', [ galsim.Shear ]),
-    'XY' : ('_GenerateFromXY', [ galsim.PositionD ]),
-    'RTheta' : ('_GenerateFromRTheta', [ galsim.PositionD ]),
-    'NFWHaloShear' : ('_GenerateFromNFWHaloShear', [ galsim.Shear ]),
-    'NFWHaloMagnification' : ('_GenerateFromNFWHaloMagnification', [ float ]),
-    'PowerSpectrumShear' : ('_GenerateFromPowerSpectrumShear', [ galsim.Shear ]),
-    'PowerSpectrumMagnification' : ('_GenerateFromPowerSpectrumMagnification', [ float ]),
-}
+
  
 # Standard keys to ignore while parsing values:
 standard_ignore = [ 
@@ -157,7 +113,7 @@ def ParseValue(config, key, base, value_type):
                 "Invalid value_type = %s specified for parameter %s with type = %s."%(
                     value_type, key, type))
 
-        generate_func = eval(valid_value_types[type][0])
+        generate_func = valid_value_types[type][0]
         #print 'generate_func = ',generate_func
         val, safe = generate_func(param, base, value_type)
         #print 'returned val, safe = ',val,safe
@@ -174,55 +130,137 @@ def ParseValue(config, key, base, value_type):
         #print key,' = ',val
         return val, safe
 
+def GetCurrentValue(key, base, value_type=None):
+    """@brief Get the current value of another config item given the key name.
 
-def _GetAngleValue(param):
-    """ @brief Convert a string consisting of a value and an angle unit into an Angle.
+    If value_type is None, return the current value, type
+    If value_type is given, just return value
     """
-    try :
-        value, unit = param.rsplit(None,1)
-        value = float(value)
-        unit = galsim.angle.get_angle_unit(unit)
-        return galsim.Angle(value, unit)
-    except Exception as e:
-        raise AttributeError("Unable to parse %s as an Angle."%param)
+    #print 'GetCurrent %s.  value_type = %s'%(key,value_type)
 
+    # This next bit is basically identical to the code for Dict.get(key) in catalog.py.
+    # Make a list of keys
+    chain = key.split('.')
+    d = base
 
-def _GetPositionValue(param):
-    """ @brief Convert a tuple or a string that looks like "a,b" into a galsim.PositionD.
-    """
-    try:
-        x = float(param[0])
-        y = float(param[1])
-    except:
+    # We may need to make one adjustment.  If the first item in the key is 'input', then
+    # the key is probably wrong relative to the current config dict.  We make each input
+    # item a list, so the user can have more than one input dict for example.  But if 
+    # they aren't using that, we don't want them to have to know about it if they try to 
+    # take something from there for a Current item.
+    # So we change, e.g., 
+    #     input.fits_header.file_name 
+    # --> input.fits_header.0.file_name
+    if chain[0] == 'input' and len(chain) > 2:
         try:
-            x, y = param.split(',')
-            x = float(x.strip())
-            y = float(y.strip())
+            k = int(chain[2])
         except:
-            raise AttributeError("Unable to parse %s as a PositionD."%param)
-    return galsim.PositionD(x,y)
+            chain.insert(2,0)
+    #print 'chain = ',chain
 
+    while len(chain):
+        k = chain.pop(0)
+        #print 'k = ',k
 
-def _GetBoolValue(param):
-    """ @brief Convert a string to a bool
-    """
-    if isinstance(param,str):
-        if param.strip().upper() in [ 'TRUE', 'YES' ]:
-            return True
-        elif param.strip().upper() in [ 'FALSE', 'NO' ]:
-            return False
+        # Try to convert to an integer:
+        try: k = int(k)
+        except ValueError: pass
+
+        if chain: 
+            # If there are more keys, just set d to the next in the chanin.
+            d = d[k]
         else:
-            try:
-                val = bool(int(param))
+            if not isinstance(d[k], dict):
+                if value_type is None:
+                    # If we are not given the value_type, and it's not a dict, then the
+                    # item is probably just some value already.
+                    #print 'Not dict, no value_type.  Assume %s is ok.'%d[k]
+                    val = d[k]
+                    t = type(val)
+                else:
+                    # This will work fine to evaluate the current value, but will also
+                    # compute it if necessary
+                    #print 'Not dict. Parse value normally'
+                    val = ParseValue(d, k, base, value_type)[0]
+            else:
+                if 'current_val' in d[k]:
+                    # If there is already a current_val, use it.
+                    #print 'Dict with current_val.  Use it: ',d[k]['current_val']
+                    val = d[k]['current_val']
+                    t = d[k]['current_value_type']
+                else:
+                    # Otherwise, parse the value for this key
+                    #print 'Parse value normally'
+                    val = ParseValue(d, k, base, value_type)[0]
+            #print base['obj_num'],'Current key = %s, value = %s'%(key,val)
+            if value_type is None:
+                return val, t
+            else:
                 return val
-            except:
-                raise AttributeError("Unable to parse %s as a bool."%param)
-    else:
-        try:
-            val = bool(param)
-            return val
-        except:
-            raise AttributeError("Unable to parse %s as a bool."%param)
+
+    raise ValueError("Invalid key = %s"%key)
+
+
+def SetDefaultIndex(config, num):
+    """
+    When the number of items in a list is known, we allow the user to omit some of 
+    the parameters of a Sequence or Random and set them automatically based on the 
+    size of the list, catalog, etc.
+    """
+    # We use a default item (set to True) to indicate that the value of nitems, last, or max
+    # has been set here, rather than by the user.  This way if the number of items in the 
+    # catalog changes from one file to the next, it will be update correctly to the new
+    # number of catalog entries.
+
+    if 'index' not in config:
+        config['index'] = {
+            'type' : 'Sequence',
+            'nitems' : num,
+            'default' : True,
+        }
+    elif ( isinstance(config['index'],dict) 
+           and 'type' in config['index'] ):
+        index = config['index']
+        type = index['type']
+        if ( type == 'Sequence' 
+             and 'nitems' in index 
+             and 'default' in index ):
+            index['nitems'] = num
+            index['default'] = True
+        elif ( type == 'Sequence' 
+               and 'nitems' not in index
+               and ('step' not in index or (isinstance(index['step'],int) and index['step'] > 0) )
+               and ('last' not in index or 'default' in index) ):
+            index['last'] = num-1
+            index['default'] = True
+        elif ( type == 'Sequence'
+               and 'nitems' not in index
+               and ('step' in index and (isinstance(index['step'],int) and index['step'] < 0) ) ):
+            # Normally, the value of default doesn't matter.  Its presence is sufficient
+            # to indicate True.  However, here we have three options.  
+            # 1) first and last are both set by default
+            # 2) first (only) is set by default
+            # 3) last (only) is set by default
+            # So set default to the option we are using, so we update with the correct method.
+            if ( ('first' not in index and 'last' not in index)
+                 or ('default' in index and index['default'] == 1) ):
+                index['first'] = num-1
+                index['last'] = 0
+                index['default'] = 1
+            elif ( 'first' not in index 
+                   or ('default' in index and index['default'] == 2) ):
+                index['first'] = num-1
+                index['default'] = 2
+            elif ( 'last' not in index 
+                   or ('default' in index and index['default'] == 3) ):
+                index['last'] = 0
+                index['default'] = 3
+        elif ( type == 'Random'
+               and ('min' not in index or 'default' in index)
+               and ('max' not in index or 'default' in index) ):
+            index['min'] = 0
+            index['max'] = num-1
+            index['default'] = True
 
 
 def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
@@ -288,6 +326,93 @@ def GetAllParams(config, base, req={}, opt={}, single=[], ignore=[]):
     # Just in case there are unicode strings.   python 2.6 doesn't like them in kwargs.
     kwargs = dict([(k.encode('utf-8'), v) for k,v in kwargs.iteritems()])
     return kwargs, safe
+
+
+def _get_index(config, base, is_sequence=False):
+    """Return the index to use for the current object or parameter
+
+    First check for an explicit index_key value given by the user.
+    Then if base[index_key] is other than obj_num, use that.
+    Finally, if this is a sequance, default to 'obj_num_in_file', otherwise 'obj_num'.
+
+    @returns index, index_key
+    """
+    if 'index_key' in config:
+        index_key = config['index_key']
+        if index_key not in [ 'obj_num_in_file', 'obj_num', 'image_num', 'file_num' ]:
+            raise AttributeError("Invalid index_key=%s."%index_key)
+    else:
+        index_key = base.get('index_key','obj_num')
+        if index_key == 'obj_num' and is_sequence:
+            index_key = 'obj_num_in_file'
+
+    if index_key == 'obj_num_in_file':
+        if 'obj_num' in base:
+            index = base['obj_num'] - base.get('start_obj_num',0)
+        else:
+            index = None
+    else:
+        index = base.get(index_key,None)
+
+    return index, index_key
+
+
+
+
+#
+# Now the functions for directly converting an item in the config dict into a value.
+# The ones that need a special function are: Angle, PositionD, and bool.
+#
+
+def _GetAngleValue(param):
+    """ @brief Convert a string consisting of a value and an angle unit into an Angle.
+    """
+    try :
+        value, unit = param.rsplit(None,1)
+        value = float(value)
+        unit = galsim.angle.get_angle_unit(unit)
+        return galsim.Angle(value, unit)
+    except Exception as e:
+        raise AttributeError("Unable to parse %s as an Angle."%param)
+
+
+def _GetPositionValue(param):
+    """ @brief Convert a tuple or a string that looks like "a,b" into a galsim.PositionD.
+    """
+    try:
+        x = float(param[0])
+        y = float(param[1])
+    except:
+        try:
+            x, y = param.split(',')
+            x = float(x.strip())
+            y = float(y.strip())
+        except:
+            raise AttributeError("Unable to parse %s as a PositionD."%param)
+    return galsim.PositionD(x,y)
+
+
+def _GetBoolValue(param):
+    """ @brief Convert a string to a bool
+    """
+    if isinstance(param,str):
+        if param.strip().upper() in [ 'TRUE', 'YES' ]:
+            return True
+        elif param.strip().upper() in [ 'FALSE', 'NO' ]:
+            return False
+        else:
+            try:
+                val = bool(int(param))
+                return val
+            except:
+                raise AttributeError("Unable to parse %s as a bool."%param)
+    else:
+        try:
+            val = bool(param)
+            return val
+        except:
+            raise AttributeError("Unable to parse %s as a bool."%param)
+
 
 
 #
@@ -769,35 +894,6 @@ def _GenerateFromRandomCircle(config, base, value_type):
     #print base['obj_num'],'RandomCircle: ',pos
     return pos, False
 
-def _get_index(config, base, is_sequence=False):
-    """Return the index to use for the current object or parameter
-
-    First check for an explicit index_key value given by the user.
-    Then if base[index_key] is other than obj_num, use that.
-    Finally, if this is a sequance, default to 'obj_num_in_file', otherwise 'obj_num'.
-
-    @returns index, index_key
-    """
-    if 'index_key' in config:
-        index_key = config['index_key']
-        if index_key not in [ 'obj_num_in_file', 'obj_num', 'image_num', 'file_num' ]:
-            raise AttributeError("Invalid index_key=%s."%index_key)
-    else:
-        index_key = base.get('index_key','obj_num')
-        if index_key == 'obj_num' and is_sequence:
-            index_key = 'obj_num_in_file'
-
-    if index_key == 'obj_num_in_file':
-        if 'obj_num' in base:
-            index = base['obj_num'] - base.get('start_obj_num',0)
-        else:
-            index = None
-    else:
-        index = base.get(index_key,None)
-
-    return index, index_key
-
-
 def _GenerateFromSequence(config, base, value_type):
     """@brief Return next in a sequence of integers
     """
@@ -1114,7 +1210,23 @@ def _GenerateFromSum(config, base, value_type):
         safe = safe and safe1
         
     return sum, safe
- 
+
+
+def _GenerateFromCurrent(config, base, value_type):
+    """@brief Get the current value of another config item.
+    """
+    req = { 'key' : str }
+    params, safe = GetAllParams(config, base, req=req)
+    key = params['key']
+    try:
+        return GetCurrentValue(key, base, value_type), False
+    except ValueError:
+        raise ValueError("Invalid key = %s given for type=Current")
+
+
+# N.B. I would normally put this helper inside of _GenerateFromEval, since it's really an
+# implementation detail but it's not allowed because that function uses exec() and you can't
+# do that in functions that have nested functions.
 def _type_by_letter(key):
     if len(key) < 2:
         raise AttributeError("Invalid user-defined variable %r"%key)
@@ -1198,7 +1310,9 @@ def _GenerateFromEval(config, base, value_type):
 
     # Try evaluating the string as is.
     try:
-        val = value_type(eval(string))
+        val = eval(string)
+        if value_type is not None:
+            val = value_type(val)
         #print base['obj_num'],'Simple Eval(%s) = %s'%(string,val)
         return val, safe
     except:
@@ -1245,146 +1359,51 @@ def _GenerateFromEval(config, base, value_type):
     except:
         raise ValueError("Unable to evaluate string %r as a %s"%(string,value_type))
 
-def _GenerateFromCurrent(config, base, value_type):
-    """@brief Get the current value of another config item.
-    """
-    req = { 'key' : str }
-    params, safe = GetAllParams(config, base, req=req)
-    key = params['key']
-    try:
-        return GetCurrentValue(key, base, value_type), False
-    except ValueError:
-        raise ValueError("Invalid key = %s given for type=Current")
+# valid_value_types is a dict that defines how to compute each value type.
+# The values are tuples with:
+# - A function to generate a value from the config information.
+#   The call signature is value, safe = Generate(
+# - A list of types for which the type is valid
 
-def GetCurrentValue(key, base, value_type=None):
-    """@brief Get the current value of another config item given the key name.
-
-    If value_type is None, return the current value, type
-    If value_type is given, just return value
-    """
-    #print 'GetCurrent %s.  value_type = %s'%(key,value_type)
-
-    # This next bit is basically identical to the code for Dict.get(key) in catalog.py.
-    # Make a list of keys
-    chain = key.split('.')
-    d = base
-
-    # We may need to make one adjustment.  If the first item in the key is 'input', then
-    # the key is probably wrong relative to the current config dict.  We make each input
-    # item a list, so the user can have more than one input dict for example.  But if 
-    # they aren't using that, we don't want them to have to know about it if they try to 
-    # take something from there for a Current item.
-    # So we change, e.g., 
-    #     input.fits_header.file_name 
-    # --> input.fits_header.0.file_name
-    if chain[0] == 'input' and len(chain) > 2:
-        try:
-            k = int(chain[2])
-        except:
-            chain.insert(2,0)
-    #print 'chain = ',chain
-
-    while len(chain):
-        k = chain.pop(0)
-        #print 'k = ',k
-
-        # Try to convert to an integer:
-        try: k = int(k)
-        except ValueError: pass
-
-        if chain: 
-            # If there are more keys, just set d to the next in the chanin.
-            d = d[k]
-        else:
-            if not isinstance(d[k], dict):
-                if value_type is None:
-                    # If we are not given the value_type, and it's not a dict, then the
-                    # item is probably just some value already.
-                    #print 'Not dict, no value_type.  Assume %s is ok.'%d[k]
-                    val = d[k]
-                    t = type(val)
-                else:
-                    # This will work fine to evaluate the current value, but will also
-                    # compute it if necessary
-                    #print 'Not dict. Parse value normally'
-                    val = ParseValue(d, k, base, value_type)[0]
-            else:
-                if 'current_val' in d[k]:
-                    # If there is already a current_val, use it.
-                    #print 'Dict with current_val.  Use it: ',d[k]['current_val']
-                    val = d[k]['current_val']
-                    t = d[k]['current_value_type']
-                else:
-                    # Otherwise, parse the value for this key
-                    #print 'Parse value normally'
-                    val = ParseValue(d, k, base, value_type)[0]
-            #print base['obj_num'],'Current key = %s, value = %s'%(key,val)
-            if value_type is None:
-                return val, t
-            else:
-                return val
-
-    raise ValueError("Invalid key = %s"%key)
-
-
-def SetDefaultIndex(config, num):
-    """
-    When the number of items in a list is known, we allow the user to omit some of 
-    the parameters of a Sequence or Random and set them automatically based on the 
-    size of the list, catalog, etc.
-    """
-    # We use a default item (set to True) to indicate that the value of nitems, last, or max
-    # has been set here, rather than by the user.  This way if the number of items in the 
-    # catalog changes from one file to the next, it will be update correctly to the new
-    # number of catalog entries.
-
-    if 'index' not in config:
-        config['index'] = {
-            'type' : 'Sequence',
-            'nitems' : num,
-            'default' : True,
-        }
-    elif ( isinstance(config['index'],dict) 
-           and 'type' in config['index'] ):
-        index = config['index']
-        type = index['type']
-        if ( type == 'Sequence' 
-             and 'nitems' in index 
-             and 'default' in index ):
-            index['nitems'] = num
-            index['default'] = True
-        elif ( type == 'Sequence' 
-               and 'nitems' not in index
-               and ('step' not in index or (isinstance(index['step'],int) and index['step'] > 0) )
-               and ('last' not in index or 'default' in index) ):
-            index['last'] = num-1
-            index['default'] = True
-        elif ( type == 'Sequence'
-               and 'nitems' not in index
-               and ('step' in index and (isinstance(index['step'],int) and index['step'] < 0) ) ):
-            # Normally, the value of default doesn't matter.  Its presence is sufficient
-            # to indicate True.  However, here we have three options.  
-            # 1) first and last are both set by default
-            # 2) first (only) is set by default
-            # 3) last (only) is set by default
-            # So set default to the option we are using, so we update with the correct method.
-            if ( ('first' not in index and 'last' not in index)
-                 or ('default' in index and index['default'] == 1) ):
-                index['first'] = num-1
-                index['last'] = 0
-                index['default'] = 1
-            elif ( 'first' not in index 
-                   or ('default' in index and index['default'] == 2) ):
-                index['first'] = num-1
-                index['default'] = 2
-            elif ( 'last' not in index 
-                   or ('default' in index and index['default'] == 3) ):
-                index['last'] = 0
-                index['default'] = 3
-        elif ( type == 'Random'
-               and ('min' not in index or 'default' in index)
-               and ('max' not in index or 'default' in index) ):
-            index['min'] = 0
-            index['max'] = num-1
-            index['default'] = True
-
+valid_value_types = {
+    'List' : (_GenerateFromList, 
+              [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ]),
+    'Eval' : (_GenerateFromEval, 
+              [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD, None ]),
+    'Current' : (_GenerateFromCurrent, 
+                 [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD, None ]),
+    'Sum' : (_GenerateFromSum, 
+             [ float, int, galsim.Angle, galsim.Shear, galsim.PositionD ]),
+    'Catalog' : (_GenerateFromCatalog, [ float, int, bool, str ]),
+    'Dict' : (_GenerateFromDict, [ float, int, bool, str ]),
+    'FitsHeader' : (_GenerateFromFitsHeader, [ float, int, bool, str ]),
+    'Sequence' : (_GenerateFromSequence, [ float, int, bool ]),
+    'Random' : (_GenerateFromRandom, [ float, int, bool, galsim.Angle ]),
+    'RandomGaussian' : (_GenerateFromRandomGaussian, [ float ]),
+    'RandomPoisson' : (_GenerateFromRandomPoisson, [ float, int ]),
+    'RandomBinomial' : (_GenerateFromRandomBinomial, [ float, int, bool ]),
+    'RandomWeibull' : (_GenerateFromRandomWeibull, [ float ]),
+    'RandomGamma' : (_GenerateFromRandomGamma, [ float ]),
+    'RandomChi2' : (_GenerateFromRandomChi2, [ float ]),
+    'RandomDistribution' : (_GenerateFromRandomDistribution, [ float ]),
+    'RandomCircle' : (_GenerateFromRandomCircle, [ galsim.PositionD ]),
+    'NumberedFile' : (_GenerateFromNumberedFile, [ str ]),
+    'FormattedStr' : (_GenerateFromFormattedStr, [ str ]),
+    'Rad' : (_GenerateFromRad, [ galsim.Angle ]),
+    'Radians' : (_GenerateFromRad, [ galsim.Angle ]),
+    'Deg' : (_GenerateFromDeg, [ galsim.Angle ]),
+    'Degrees' : (_GenerateFromDeg, [ galsim.Angle ]),
+    'E1E2' : (_GenerateFromE1E2, [ galsim.Shear ]),
+    'EBeta' : (_GenerateFromEBeta, [ galsim.Shear ]),
+    'G1G2' : (_GenerateFromG1G2, [ galsim.Shear ]),
+    'GBeta' : (_GenerateFromGBeta, [ galsim.Shear ]),
+    'Eta1Eta2' : (_GenerateFromEta1Eta2, [ galsim.Shear ]),
+    'EtaBeta' : (_GenerateFromEtaBeta, [ galsim.Shear ]),
+    'QBeta' : (_GenerateFromQBeta, [ galsim.Shear ]),
+    'XY' : (_GenerateFromXY, [ galsim.PositionD ]),
+    'RTheta' : (_GenerateFromRTheta, [ galsim.PositionD ]),
+    'NFWHaloShear' : (_GenerateFromNFWHaloShear, [ galsim.Shear ]),
+    'NFWHaloMagnification' : (_GenerateFromNFWHaloMagnification, [ float ]),
+    'PowerSpectrumShear' : (_GenerateFromPowerSpectrumShear, [ galsim.Shear ]),
+    'PowerSpectrumMagnification' : (_GenerateFromPowerSpectrumMagnification, [ float ]),
+}
