@@ -26,14 +26,14 @@ import logging
 # i.e. it won't be an error if these parameters are present.
 from .image import image_ignore
 
-def SetupTiledImage(config, logger, image_num, obj_num):
+def SetupTiledImage(config, image_num, obj_num, logger):
     """
     Build an Image consisting of a tiled array of postage stamps.
 
     @param config           The configuration dict.
-    @param logger           If given, a logger object to log progress.
     @param image_num        The current image number.
     @param obj_num          The first object number in the image.
+    @param logger           If given, a logger object to log progress.
 
     @returns the final image
     """
@@ -94,14 +94,14 @@ def SetupTiledImage(config, logger, image_num, obj_num):
     return full_xsize, full_ysize
 
 
-def BuildTiledImage(config, logger, image_num, obj_num):
+def BuildTiledImage(config, image_num, obj_num, logger):
     """
     Build an Image consisting of a tiled array of postage stamps.
 
     @param config           The configuration dict.
-    @param logger           If given, a logger object to log progress.
     @param image_num        The current image number.
     @param obj_num          The first object number in the image.
+    @param logger           If given, a logger object to log progress.
 
     @returns the final image
     """
@@ -188,15 +188,15 @@ def BuildTiledImage(config, logger, image_num, obj_num):
     return full_image
 
 
-def AddNoiseTiledImage(image, config, logger, image_num, obj_num):
+def AddNoiseTiledImage(image, config, image_num, obj_num, logger):
     """
     Add the final noise to a Tiled image
 
     @param image            The image onto which to add the noise.
     @param config           The configuration dict.
-    @param logger           If given, a logger object to log progress.
     @param image_num        The current image number.
     @param obj_num          The first object number in the image.
+    @param logger           If given, a logger object to log progress.
     """
     # If didn't do noise above in the stamps, then need to do it here.
     do_noise = config['do_noise_in_stamps']

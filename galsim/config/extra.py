@@ -169,7 +169,6 @@ def WriteExtraOutputs(config, logger=None):
     @param config       The configuration dict.
     @param logger       If given, a logger object to log progress. [default: None]
     """
-    from galsim.config.output import _retry_io
     config['index_key'] = 'file_num'
     if 'output' in config:
         output = config['output']
@@ -235,23 +234,26 @@ def WriteExtraOutputs(config, logger=None):
                 args = (file_name,)
             else:
                 args = (extra_obj, file_name)
-            _retry_io(write_func, args, ntries, file_name, logger)
+            galsim.config.RetryIO(write_func, args, ntries, file_name, logger)
             config['extra_objs_last_file'][key] = file_name
             if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('file %d: Wrote %s to %r',config['file_num'],key,file_name)
 
 
-def BuildExtraOutputHDUs(config, logger=None):
+def BuildExtraOutputHDUs(config, logger=None, first=1):
     """Write the extra output objects to either HDUS or images as appropriate.
 
     This gets run at the end of the functions for building the regular output files.
 
+    Note: the extra items must have hdu numbers ranging continuously (in any order) starting
+    at first.  Typically first = 1, since the main image is the primary HDU, numbered 0.
+
     @param config       The configuration dict.
     @param logger       If given, a logger object to log progress. [default: None]
+    @param first        The first number allowed for the extra hdus. [default: 1]
 
     @returns a list of HDUs and/or Images to put in the output FITS file.
     """
-    from galsim.config.output import _retry_io
     config['index_key'] = 'file_num'
     if 'output' in config:
         output = config['output']
@@ -280,11 +282,11 @@ def BuildExtraOutputHDUs(config, logger=None):
             else:
                 hdus[hdu] = hdu_func(extra_obj)
 
-        for h in range(1,len(hdus)+1):
+        for h in range(first,len(hdus)+first):
             if h not in hdus.keys():
                 raise ValueError("Cannot skip hdus.  Not output found for hdu %d"%h)
         # Turn hdus into a list (in order)
-        hdulist = [ hdus[k] for k in range(1,len(hdus)+1) ]
+        hdulist = [ hdus[k] for k in range(first,len(hdus)+first) ]
         return hdulist
     else:
         return []

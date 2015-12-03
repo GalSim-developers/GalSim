@@ -26,16 +26,16 @@ import logging
 # image_scattered.py for the implementation of the Tiled and Scattered image types.
 
 
-def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0):
+def BuildImages(nimages, config, image_num=0, obj_num=0, nproc=1, logger=None):
     """
     Build a number of postage stamp images as specified by the config dict.
 
     @param nimages          How many images to build.
     @param config           The configuration dict.
-    @param nproc            How many processes to use. [default: 1]
-    @param logger           If given, a logger object to log progress. [default: None]
     @param image_num        If given, the current image number. [default: 0]
     @param obj_num          If given, the first object number in the image. [default: 0]
+    @param nproc            How many processes to use. [default: 1]
+    @param logger           If given, a logger object to log progress. [default: None]
 
     @returns a list of images
     """
@@ -282,30 +282,26 @@ def SetupConfigImageSize(config, xsize, ysize):
         config['pixel_scale'] = wcs.scale
 
 
-def BuildImage(config, logger=None, image_num=0, obj_num=0):
+def BuildImage(config, image_num=0, obj_num=0, logger=None):
     """
     Build an Image according to the information in config.
 
     @param config           The configuration dict.
-    @param logger           If given, a logger object to log progress. [default: None]
     @param image_num        If given, the current image number. [default: 0]
     @param obj_num          If given, the first object number in the image. [default: 0]
+    @param logger           If given, a logger object to log progress. [default: None]
 
     @returns the final image
     """
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: BuildImage: image, obj = %d,%d',image_num,image_num,obj_num)
 
-    if 'image' in config and 'type' in config['image']:
-        image_type = config['image']['type']
-    else:
-        image_type = 'Single'
-
-    if image_type not in valid_image_types:
-        raise AttributeError("Invalid image.type=%s."%image_type)
-
     # Setup basic things in the top-level config dict that we will need.
     SetupConfigImageNum(config,image_num,obj_num)
+
+    image_type = config['image']['type']
+    if image_type not in valid_image_types:
+        raise AttributeError("Invalid image.type=%s."%image_type)
 
     # Build the rng to use at the image level.
     seed = galsim.config.SetupConfigRNG(config)
@@ -315,7 +311,7 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0):
 
     # Do the necessary initial setup for this image type.
     setup_func = valid_image_types[image_type][0]
-    xsize, ysize = setup_func(config, logger, image_num, obj_num)
+    xsize, ysize = setup_func(config, image_num, obj_num, logger)
 
     # Given this image size (which may be 0,0, in which case it will be set automatically later),
     # do some basic calculations
@@ -334,7 +330,7 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0):
     # Actually build the image now.  This is the main working part of this function.
     # It calls out to the appropriate build function for this image type.
     build_func = valid_image_types[image_type][1]
-    image = build_func(config, logger, image_num, obj_num)
+    image = build_func(config, image_num, obj_num, logger)
 
     # Store the current image in the base-level config for reference
     config['current_image'] = image
@@ -351,7 +347,7 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0):
 
     noise_func = valid_image_types[image_type][2]
     if noise_func:
-        noise_func(image, config, logger, image_num, obj_num)
+        noise_func(image, config, image_num, obj_num, logger)
 
     return image
 
@@ -431,14 +427,14 @@ image_ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs',
                  'retry_failures', 'n_photons', 'wmult', 'offset', 'gsparams' ]
 
 
-def SetupSingleImage(config, logger, image_num, obj_num):
+def SetupSingleImage(config, image_num, obj_num, logger):
     """
     Do the initialization and setup for building a Single image.
 
     @param config           The configuration dict.
-    @param logger           If given, a logger object to log progress.
     @param image_num        The current image number.
     @param obj_num          The first object number in the image.
+    @param logger           If given, a logger object to log progress.
 
     @returns xsize, ysize for the image (not built yet)
     """
@@ -471,14 +467,14 @@ def SetupSingleImage(config, logger, image_num, obj_num):
     return xsize, ysize
 
 
-def BuildSingleImage(config, logger, image_num, obj_num):
+def BuildSingleImage(config, image_num, obj_num, logger):
     """
     Build an Image consisting of a single stamp.
 
     @param config           The configuration dict.
-    @param logger           If given, a logger object to log progress.
     @param image_num        The current image number.
     @param obj_num          The first object number in the image.
+    @param logger           If given, a logger object to log progress.
 
     @returns the final image
     """
@@ -486,7 +482,7 @@ def BuildSingleImage(config, logger, image_num, obj_num):
     ysize = config['image_ysize']
 
     image, current_var = galsim.config.BuildSingleStamp(
-            config, xsize=xsize, ysize=ysize, obj_num=obj_num,
+            config, obj_num=obj_num, xsize=xsize, ysize=ysize,
             do_noise=True, logger=logger)
 
     return image
@@ -507,11 +503,11 @@ def GetNObjForSingleImage(config, image_num):
 # valid_image_types is a dict that defines how to build each image type.
 # The items in each tuple are:
 #   - The function to call to determine the size of the image and do any other initial setup.
-#     The call signature is xsize, ysize = Setup(config, logger, image_num, obj_num)
+#     The call signature is xsize, ysize = Setup(config, image_num, obj_num, logger)
 #   - The function to call to build the image.
-#     The call signature is image = Build(config, logger, image_num, obj_num)
+#     The call signature is image = Build(config, image_num, obj_num, logger)
 #   - The function to call to add noise and sky level to the image.
-#     The call signature is AddNoise(image, config, logger, image_num, obj_num)
+#     The call signature is AddNoise(image, config, image_num, obj_num, logger)
 #   - The function to call to get the number of objects that will be built
 #     The call signature is nobj = GetNobj(config, image_num)
 

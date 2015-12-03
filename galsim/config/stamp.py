@@ -19,15 +19,13 @@
 import galsim
 import logging
 
-def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
-                xsize=0, ysize=0, do_noise=True):
+def BuildStamps(nobjects, config, obj_num=0,
+                xsize=0, ysize=0, do_noise=True, nproc=1, logger=None):
     """
     Build a number of postage stamp images as specified by the config dict.
 
     @param nobjects         How many postage stamps to build.
     @param config           A configuration dict.
-    @param nproc            How many processes to use. [default: 1]
-    @param logger           If given, a logger object to log progress. [default: None]
     @param obj_num          If given, the current obj_num. [default: 0]
     @param xsize            The size of a single stamp in the x direction. [default: 0,
                             which means to look for config.image.stamp_xsize, and if that's
@@ -37,6 +35,8 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
                             not there, use automatic sizing.]
     @param do_noise         Whether to add noise to the image (according to config['noise']).
                             [default: True]
+    @param nproc            How many processes to use. [default: 1]
+    @param logger           If given, a logger object to log progress. [default: None]
 
     @returns the tuple (images, current_vars).  Both are lists.
     """
@@ -54,7 +54,7 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
                 results = []
                 for k in range(nobj):
                     t1 = time.time()
-                    im, var = BuildSingleStamp(config, logger=logger, obj_num=obj_num, **kwargs)
+                    im, var = BuildSingleStamp(config, obj_num=obj_num, logger=logger, **kwargs)
                     obj_num += 1
                     t2 = time.time()
                     results.append( (im, var, (t2-t1)) )
@@ -299,14 +299,14 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
         config['image_pos'] = galsim.PositionD(0.,0.)
         config['world_pos'] = world_pos
 
-def BuildSingleStamp(config, xsize=0, ysize=0, obj_num=0, do_noise=True, logger=None):
+def BuildSingleStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
     """
     Build a single image using the given config file
 
     @param config           A configuration dict.
+    @param obj_num          If given, the current obj_num [default: 0]
     @param xsize            The xsize of the image to build (if known). [default: 0]
     @param ysize            The ysize of the image to build (if known). [default: 0]
-    @param obj_num          If given, the current obj_num [default: 0]
     @param do_noise         Whether to add noise to the image (according to config['noise']).
                             [default: True]
     @param logger           If given, a logger object to log progress. [default: None]

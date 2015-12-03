@@ -31,16 +31,17 @@ from .value import *
 
 # These implement specific types and features that get registered into the main config
 # apparatus.  The functions themselves are not available at galsim.config scope.
+from . import output_multifits
+from . import output_datacube
 
+from . import extra_psf
+from . import extra_weight
+from . import extra_badpix
+from . import extra_truth
 
-import extra_psf
-import extra_weight
-import extra_badpix
-import extra_truth
+from . import image_scattered
+from . import image_tiled
 
-import image_scattered
-import image_tiled
-
-import gsobject_ring
-import gsobject_realgalaxy
-import gsobject_cosmosgalaxy
+from . import gsobject_ring
+from . import gsobject_realgalaxy
+from . import gsobject_cosmosgalaxy
