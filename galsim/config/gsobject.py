@@ -18,23 +18,10 @@
 import galsim
 import logging
 
-valid_gsobject_types = {
-    # Note: these are just the types that need a special builder.  Most GSObject sub-classes
-    # in base.py (and some elsewhere) can use the default builder, called _BuildSimple, which
-    # just uses the req, opt, and single class variables.
-    # See the des module for examples of how to extend this from a module.
-    'None' : '_BuildNone',
-    'Add' : '_BuildAdd',
-    'Sum' : '_BuildAdd',
-    'Convolve' : '_BuildConvolve',
-    'Convolution' : '_BuildConvolve',
-    'List' : '_BuildList',
-    'Ring' : '_BuildRing',
-    'RealGalaxy' : '_BuildRealGalaxy',
-    'RealGalaxyOriginal' : '_BuildRealGalaxyOriginal',
-    'OpticalPSF' : '_BuildOpticalPSF',
-    'COSMOSGalaxy' : '_BuildCOSMOSGalaxy',
-}
+# This file handles the building of GSObjects in the config['psf'] and config['gal'] fields.
+# This file includes many of the simple object types.  Additional types are defined in
+# gsobject_*.py.
+
 
 class SkipThisObject(Exception):
     """
@@ -49,16 +36,11 @@ class SkipThisObject(Exception):
 
 
 def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
-    """Build a GSObject using config dict for `key=key`.
+    """Build a GSObject from the parameters in config[key].
 
     @param config       A dict with the configuration information.
     @param key          The key name in config indicating which object to build.
-    @param base         A dict which stores potentially useful things like
-                        base['rng'] = random number generator
-                        base['catalog'] = input catalog for InputCat items
-                        base['real_catalog'] = real galaxy catalog for RealGalaxy objects
-                        Typically on the initial call to BuildGSObject(), this will be 
-                        the same as config, hence the name base. [default: None]
+    @param base         The base dict of the configuration. [default: config]
     @param gsparams     Optionally, provide non-default GSParams items.  Any `gsparams` specified
                         at this level will be added to the list.  This should be a dict with
                         whatever kwargs should be used in constructing the GSParams object.
@@ -69,11 +51,9 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     @returns the tuple `(gsobject, safe)`, where `gsobject` is the built object, and `safe` is
              a bool that says whether it is safe to use this object again next time.
     """
-    # I'd like to be able to have base=config be the default value, but python doesn't
-    # allow that.  So None is the default, and if it's None, we set it to config.
     if base is None:
         base = config
- 
+
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('obj %d: Start BuildGSObject %s',base['obj_num'],key)
 
@@ -87,59 +67,54 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         raise AttributeError("BuildGSObject not given a valid dictionary")
 
     # Alias for convenience
-    ck = config[key]
+    param = config[key]
 
     # Check what index key we want to use for this object.
-    index, index_key = galsim.config.value._get_index(ck, base)
+    index, index_key = galsim.config.value._get_index(param, base)
     if False:
-        logger.debug('obj %d: ck = %s',base['obj_num'],ck)
+        logger.debug('obj %d: param = %s',base['obj_num'],param)
 
     # If we are repeating, then only make this when index % repeat == 0
-    if 'repeat' in ck:
-        repeat = galsim.config.ParseValue(ck, 'repeat', base, int)[0]
-        if 'current_val' in ck and (index//repeat == ck['current_index']//repeat):
+    if 'repeat' in param:
+        repeat = galsim.config.ParseValue(param, 'repeat', base, int)[0]
+        if 'current_val' in param and (index//repeat == param['current_index']//repeat):
             if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('obj %d: repeat = %d, index = %d, use current object',
                              base['obj_num'],repeat,index)
-            return ck['current_val'], ck['current_safe']
+            return param['current_val'], param['current_safe']
         else:
             if logger and logger.isEnabledFor(logging.DEBUG):
-                if 'current_val' not in ck:
+                if 'current_val' not in param:
                     logger.debug('obj %d: repeat = %d, index = %d, no current object yet',
                                  base['obj_num'],repeat,index)
                 else:
                     logger.debug('obj %d: repeat = %d, index = %d, current_index = %d not ok',
-                                 base['obj_num'],repeat,index,ck['current_index'])
+                                 base['obj_num'],repeat,index,param['current_index'])
 
     # Check that the input config has a type to even begin with!
-    if not 'type' in ck:
+    if not 'type' in param:
         raise AttributeError("type attribute required in config.%s"%key)
-    type = ck['type']
+    type = param['type']
 
     # If we have previously saved an object and marked it as safe, then use it.
-    if 'current_val' in ck and (ck['current_safe'] or ck['current_index'] == index):
+    if 'current_val' in param and (param['current_safe'] or param['current_index'] == index):
         if logger and logger.isEnabledFor(logging.DEBUG):
-            if ck['current_safe']:
+            if param['current_safe']:
                 logger.debug('obj %d: current is safe',base['obj_num'])
             else:
                 logger.debug('obj %d: This object is already current', base['obj_num'])
-        return ck['current_val'], ck['current_safe']
+        return param['current_val'], param['current_safe']
     else:
         if logger and logger.isEnabledFor(logging.DEBUG):
-            if 'current_val' not in ck:
+            if 'current_val' not in param:
                 logger.debug('obj %d: no current object yet',base['obj_num'])
             else:
                 logger.debug('obj %d: index = %d, current_index = %d not ok and not safe',
-                             base['obj_num'],index,ck['current_index'])
-
-    # Ring is only allowed for top level gal (since it requires special handling in 
-    # multiprocessing, and that's the only place we look for it currently).
-    if type == 'Ring' and key != 'gal':
-        raise AttributeError("Ring type only allowed for top level gal")
+                             base['obj_num'],index,param['current_index'])
 
     # Check if we need to skip this object
-    if 'skip' in ck:
-        skip = galsim.config.ParseValue(ck, 'skip', base, bool)[0]
+    if 'skip' in param:
+        skip = galsim.config.ParseValue(param, 'skip', base, bool)[0]
         if skip: 
             if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('obj %d: Skipping because field skip=True',base['obj_num'])
@@ -157,8 +132,8 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         ignore += [ 'resolution', 'signal_to_noise', 'redshift', 're_from_res' ]
         # If redshift is present, parse it here, since it might be needed by the Build functions.
         # All we actually care about is setting the current_val, so don't assign to anything.
-        if 'redshift' in ck:
-            galsim.config.ParseValue(ck, 'redshift', base, float)
+        if 'redshift' in param:
+            galsim.config.ParseValue(param, 'redshift', base, float)
     elif key == 'psf':
         ignore += [ 'saved_re' ]
     elif key != 'pix':
@@ -173,7 +148,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
 
     # If we are specifying the size according to a resolution, then we 
     # need to get the PSF's half_light_radius.
-    if 'resolution' in ck:
+    if 'resolution' in param:
         if 'psf' not in base:
             raise AttributeError(
                 "Cannot use gal.resolution if no psf is set.")
@@ -181,33 +156,33 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
             raise AttributeError(
                 'Cannot use gal.resolution with psf.type = %s'%base['psf']['type'])
         psf_re = base['psf']['saved_re']
-        resolution = galsim.config.ParseValue(ck, 'resolution', base, float)[0]
+        resolution = galsim.config.ParseValue(param, 'resolution', base, float)[0]
         gal_re = resolution * psf_re
-        if 're_from_res' not in ck:
+        if 're_from_res' not in param:
             # The first time, check that half_light_radius isn't also specified.
-            if 'half_light_radius' in ck:
+            if 'half_light_radius' in param:
                 raise AttributeError(
                     'Cannot specify both gal.resolution and gal.half_light_radius')
-            ck['re_from_res'] = True
-        ck['half_light_radius'] = gal_re
+            param['re_from_res'] = True
+        param['half_light_radius'] = gal_re
 
     # Make sure the PSF gets flux=1 unless explicitly overridden by the user.
-    if key == 'psf' and 'flux' not in ck and 'signal_to_noise' not in ck:
-        ck['flux'] = 1
+    if key == 'psf' and 'flux' not in param and 'signal_to_noise' not in param:
+        param['flux'] = 1
 
-    if 'gsparams' in ck:
-        gsparams = UpdateGSParams(gsparams, ck['gsparams'], 'gsparams', config)
+    if 'gsparams' in param:
+        gsparams = UpdateGSParams(gsparams, param['gsparams'], config)
 
     # See if this type has a specialized build function:
     if type in valid_gsobject_types:
-        build_func = eval(valid_gsobject_types[type])
+        build_func = valid_gsobject_types[type]
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('obj %d: build_func = %s',base['obj_num'],build_func)
-        gsobject, safe = build_func(ck, key, base, ignore, gsparams, logger)
+        gsobject, safe = build_func(param, base, ignore, gsparams, logger)
     # Next, we check if this name is in the galsim dictionary.
     elif type in galsim.__dict__:
         if issubclass(galsim.__dict__[type], galsim.GSObject):
-            gsobject, safe = _BuildSimple(ck, key, base, ignore, gsparams, logger)
+            gsobject, safe = _BuildSimple(param, base, ignore, gsparams, logger)
         else:
             TypeError("Input config type = %s is not a GSObject."%type)
     # Otherwise, it's not a valid type.
@@ -217,22 +192,22 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     # If this is a psf, try to save the half_light_radius in case gal uses resolution.
     if key == 'psf':
         try : 
-            ck['saved_re'] = gsobject.getHalfLightRadius()
+            param['saved_re'] = gsobject.getHalfLightRadius()
         except :
             pass
     
     # Apply any dilation, ellip, shear, etc. modifications.
-    gsobject, safe1 = _TransformObject(gsobject, ck, base, logger)
+    gsobject, safe1 = _TransformObject(gsobject, param, base, logger)
     safe = safe and safe1
  
-    ck['current_val'] = gsobject
-    ck['current_safe'] = safe
-    ck['current_index'] = index
+    param['current_val'] = gsobject
+    param['current_safe'] = safe
+    param['current_index'] = index
 
     return gsobject, safe
 
 
-def UpdateGSParams(gsparams, config, key, base):
+def UpdateGSParams(gsparams, config, base):
     """@brief Add additional items to the `gsparams` dict based on config['gsparams'].
     """
     opt = galsim.GSObject._gsparams
@@ -245,13 +220,52 @@ def UpdateGSParams(gsparams, config, key, base):
     return ret
 
 
-def _BuildNone(config, key, base, ignore, gsparams, logger):
+# 
+# The following are private functions to implement the simpler GSObject types.
+# These are not imported into galsim.config namespace.
+#
+
+def _BuildSimple(config, base, ignore, gsparams, logger):
+    """@brief Build a simple GSObject (i.e. one without a specialized _Build function) or
+    any other GalSim object that defines _req_params, _opt_params and _single_params.
+    """
+    # Build the kwargs according to the various params objects in the class definition.
+    type = config['type']
+    if type in galsim.__dict__:
+        init_func = eval("galsim."+type)
+    else:
+        init_func = eval(type)
+    if logger and logger.isEnabledFor(logging.DEBUG):
+        logger.debug('obj %d: BuildSimple for type = %s',base['obj_num'],type)
+        logger.debug('obj %d: init_func = %s',base['obj_num'],init_func)
+
+    kwargs, safe = galsim.config.GetAllParams(config, base,
+                                              req = init_func._req_params,
+                                              opt = init_func._opt_params,
+                                              single = init_func._single_params,
+                                              ignore = ignore)
+    if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
+
+    if init_func._takes_rng:
+        if 'rng' not in base:
+            raise ValueError("No base['rng'] available for type = %s"%type)
+        kwargs['rng'] = base['rng']
+        safe = False
+
+    if False:
+        logger.debug('obj %d: kwargs = %s',base['obj_num'],kwargs)
+
+    # Finally, after pulling together all the params, try making the GSObject.
+    return init_func(**kwargs), safe
+
+
+def _BuildNone(config, base, ignore, gsparams, logger):
     """@brief Special type=None returns None.
     """
     return None, True
 
 
-def _BuildAdd(config, key, base, ignore, gsparams, logger):
+def _BuildAdd(config, base, ignore, gsparams, logger):
     """@brief  Build a Sum object.
     """
     req = { 'items' : list }
@@ -276,7 +290,7 @@ def _BuildAdd(config, key, base, ignore, gsparams, logger):
         gsobjects.append(gsobject)
 
     if len(gsobjects) == 0:
-        raise ValueError("No valid items for %s"%key)
+        raise ValueError("No valid items for type=Add")
     elif len(gsobjects) == 1:
         gsobject = gsobjects[0]
     else:
@@ -306,7 +320,7 @@ def _BuildAdd(config, key, base, ignore, gsparams, logger):
 
     return gsobject, safe
 
-def _BuildConvolve(config, key, base, ignore, gsparams, logger):
+def _BuildConvolve(config, base, ignore, gsparams, logger):
     """@brief  Build a Convolution object.
     """
     req = { 'items' : list }
@@ -325,7 +339,7 @@ def _BuildConvolve(config, key, base, ignore, gsparams, logger):
         gsobjects.append(gsobject)
 
     if len(gsobjects) == 0:
-        raise ValueError("No valid items for %s"%key)
+        raise ValueError("No valid items for type=Convolve")
     elif len(gsobjects) == 1:
         gsobject = gsobjects[0]
     else:
@@ -342,7 +356,7 @@ def _BuildConvolve(config, key, base, ignore, gsparams, logger):
 
     return gsobject, safe
 
-def _BuildList(config, key, base, ignore, gsparams, logger):
+def _BuildList(config, base, ignore, gsparams, logger):
     """@brief  Build a GSObject selected from a List.
     """
     req = { 'items' : list }
@@ -372,104 +386,7 @@ def _BuildList(config, key, base, ignore, gsparams, logger):
 
     return gsobject, safe
 
-def _BuildRing(config, key, base, ignore, gsparams, logger):
-    """@brief  Build a GSObject in a Ring.
-    """
-    req = { 'num' : int, 'first' : dict }
-    opt = { 'full_rotation' : galsim.Angle , 'index' : int }
-    # Only Check, not Get.  We need to handle first a bit differently, since it's a gsobject.
-    galsim.config.CheckAllParams(config, req=req, opt=opt, ignore=ignore)
-
-    num = galsim.config.ParseValue(config, 'num', base, int)[0]
-    if num <= 0:
-        raise ValueError("Attribute num for gal.type == Ring must be > 0")
-
-    # Setup the indexing sequence if it hasn't been specified using the number of items.
-    galsim.config.SetDefaultIndex(config, num)
-    index, safe = galsim.config.ParseValue(config, 'index', base, int)
-    if index < 0 or index >= num:
-        raise AttributeError("index %d out of bounds for config.%s"%(index,type))
-
-    if 'full_rotation' in config:
-        full_rotation = galsim.config.ParseValue(config, 'full_rotation', base, galsim.Angle)[0]
-    else:
-        import math
-        full_rotation = math.pi * galsim.radians
-
-    dtheta = full_rotation / num
-    if logger and logger.isEnabledFor(logging.DEBUG):
-        logger.debug('obj %d: Ring dtheta = %f',base['obj_num'],dtheta.rad())
-
-    if index % num == 0:
-        # Then this is the first in the Ring.  
-        gsobject = BuildGSObject(config, 'first', base, gsparams, logger)[0]
-    else:
-        if not isinstance(config['first'],dict) or 'current_val' not in config['first']:
-            raise RuntimeError("Building Ring after the first item, but no current_val stored.")
-        gsobject = config['first']['current_val'].rotate(index*dtheta)
-
-    return gsobject, False
-
-
-def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
-    """@brief Build a RealGalaxy from the real_catalog input item.
-    """
-    if 'real_catalog' not in base['input_objs']:
-        raise ValueError("No real galaxy catalog available for building type = RealGalaxy")
-
-    if 'num' in config:
-        num, safe = ParseValue(config, 'num', base, int)
-    else:
-        num, safe = (0, True)
-    ignore.append('num')
-
-    if num < 0:
-        raise ValueError("Invalid num < 0 supplied for RealGalaxy: num = %d"%num)
-    if num >= len(base['input_objs']['real_catalog']):
-        raise ValueError("Invalid num supplied for RealGalaxy (too large): num = %d"%num)
-
-    real_cat = base['input_objs']['real_catalog'][num]
-
-    # Special: if index is Sequence or Random, and max isn't set, set it to nobjects-1.
-    # But not if they specify 'id' which overrides that.
-    if 'id' not in config:
-        galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
-
-    kwargs, safe1 = galsim.config.GetAllParams(config, base,
-        req = galsim.__dict__['RealGalaxy']._req_params,
-        opt = galsim.__dict__['RealGalaxy']._opt_params,
-        single = galsim.__dict__['RealGalaxy']._single_params,
-        ignore = ignore)
-    safe = safe and safe1
-    if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
-
-    if 'rng' not in base:
-        raise ValueError("No base['rng'] available for %s.type = RealGalaxy"%(key))
-    kwargs['rng'] = base['rng']
-
-    if 'index' in kwargs:
-        index = kwargs['index']
-        if index >= real_cat.getNObjects():
-            raise IndexError(
-                "%s index has gone past the number of entries in the catalog"%index)
-
-    kwargs['real_galaxy_catalog'] = real_cat
-    if False:
-        logger.debug('obj %d: RealGalaxy kwargs = %s',base['obj_num'],kwargs)
-
-    gal = galsim.RealGalaxy(**kwargs)
-
-    return gal, safe
-
-
-def _BuildRealGalaxyOriginal(config, key, base, ignore, gsparams, logger):
-    """@brief Return the original image from a RealGalaxy using the real_catalog input item.
-    """
-    image, safe = _BuildRealGalaxy(config, key, base, ignore, gsparams, logger)
-    return image.original_image, safe    
-
-
-def _BuildOpticalPSF(config, key, base, ignore, gsparams, logger):
+def _BuildOpticalPSF(config, base, ignore, gsparams, logger):
     """@brief Build an OpticalPSF.
     """
     kwargs, safe = galsim.config.GetAllParams(config, base,
@@ -493,93 +410,9 @@ def _BuildOpticalPSF(config, key, base, ignore, gsparams, logger):
     return galsim.OpticalPSF(**kwargs), safe
 
 
-def _BuildCOSMOSGalaxy(config, key, base, ignore, gsparams, logger):
-    """@brief Build a COSMOS galaxy using the cosmos_catalog input item.
-    """
-    if 'cosmos_catalog' not in base['input_objs']:
-        raise ValueError("No COSMOS galaxy catalog available for building type = COSMOSGalaxy")
-
-    if 'num' in config:
-        num, safe = ParseValue(config, 'num', base, int)
-    else:
-        num, safe = (0, True)
-    ignore.append('num')
-
-    if num < 0:
-        raise ValueError("Invalid num < 0 supplied for COSMOSGalaxy: num = %d"%num)
-    if num >= len(base['input_objs']['cosmos_catalog']):
-        raise ValueError("Invalid num supplied for COSMOSGalaxy (too large): num = %d"%num)
-
-    cosmos_cat = base['input_objs']['cosmos_catalog'][num]
-
-    # Special: if index is Sequence or Random, and max isn't set, set it to nobjects-1.
-    galsim.config.SetDefaultIndex(config, cosmos_cat.getNObjects())
-
-    kwargs, safe1 = galsim.config.GetAllParams(config, base,
-        req = galsim.COSMOSCatalog.makeGalaxy._req_params,
-        opt = galsim.COSMOSCatalog.makeGalaxy._opt_params,
-        single = galsim.COSMOSCatalog.makeGalaxy._single_params,
-        ignore = ignore)
-    safe = safe and safe1
-    if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
-
-    if 'gal_type' in kwargs and kwargs['gal_type'] == 'real':
-        if 'rng' not in base:
-            raise ValueError("No base['rng'] available for %s.type = COSMOSGalaxy"%(key))
-        kwargs['rng'] = base['rng']
-
-    if 'index' in kwargs:
-        index = kwargs['index']
-        if index >= cosmos_cat.getNObjects():
-            raise IndexError(
-                "%s index has gone past the number of entries in the catalog"%index)
-
-    if False:
-        logger.debug('obj %d: COSMOSGalaxy kwargs = %s',base['obj_num'],kwargs)
-
-    kwargs['cosmos_catalog'] = cosmos_cat
-
-    # Use a staticmethod of COSMOSCatalog to avoid pickling the result of makeGalaxy()
-    # The RealGalaxy in particular has a large serialization, so it is more efficient to
-    # make it in this process, which is what happens here.
-    gal = galsim.COSMOSCatalog._makeSingleGalaxy(**kwargs)
-
-    return gal, safe
-
-
-def _BuildSimple(config, key, base, ignore, gsparams, logger):
-    """@brief Build a simple GSObject (i.e. one without a specialized _Build function) or
-    any other GalSim object that defines _req_params, _opt_params and _single_params.
-    """
-    # Build the kwargs according to the various params objects in the class definition.
-    type = config['type']
-    if type in galsim.__dict__:
-        init_func = eval("galsim."+type)
-    else:
-        init_func = eval(type)
-    if logger and logger.isEnabledFor(logging.DEBUG):
-        logger.debug('obj %d: BuildSimple for type = %s',base['obj_num'],type)
-        logger.debug('obj %d: init_func = %s',base['obj_num'],init_func)
-
-    kwargs, safe = galsim.config.GetAllParams(config, base,
-                                              req = init_func._req_params,
-                                              opt = init_func._opt_params,
-                                              single = init_func._single_params,
-                                              ignore = ignore)
-    if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
-
-    if init_func._takes_rng:
-        if 'rng' not in base:
-            raise ValueError("No base['rng'] available for %s.type = %s"%(key,type))
-        kwargs['rng'] = base['rng']
-        safe = False
-
-    if False:
-        logger.debug('obj %d: kwargs = %s',base['obj_num'],kwargs)
-
-    # Finally, after pulling together all the params, try making the GSObject.
-    return init_func(**kwargs), safe
-
+#
+# Now the functions for performing transformations
+#
 
 def _TransformObject(gsobject, config, base, logger):
     """@brief Applies ellipticity, rotation, gravitational shearing and centroid shifting to a
@@ -587,102 +420,95 @@ def _TransformObject(gsobject, config, base, logger):
 
     @returns transformed GSObject.
     """
+    # The transformations are applied in the following order:
+    _transformation_list = [
+        ('dilate', _Dilate),
+        ('dilation', _Dilate),
+        ('ellip', _Shear),
+        ('rotate', _Rotate),
+        ('rotation', _Rotate),
+        ('scale_flux', _ScaleFlux),
+        ('shear', _Shear),
+        ('magnify', _Magnify),
+        ('magnification', _Magnify),
+        ('shift', _Shift),
+    ]
+
     safe = True
-    if 'dilate' in config:
-        gsobject, safe1 = _DilateObject(gsobject, config, 'dilate', base, logger)
-        safe = safe and safe1
-    if 'dilation' in config:
-        gsobject, safe1 = _DilateObject(gsobject, config, 'dilation', base, logger)
-        safe = safe and safe1
-    if 'ellip' in config:
-        gsobject, safe1 = _EllipObject(gsobject, config, 'ellip', base, logger)
-        safe = safe and safe1
-    if 'rotate' in config:
-        gsobject, safe1 = _RotateObject(gsobject, config, 'rotate', base, logger)
-        safe = safe and safe1
-    if 'rotation' in config:
-        gsobject, safe1 = _RotateObject(gsobject, config, 'rotation', base, logger)
-        safe = safe and safe1
-    if 'scale_flux' in config:
-        gsobject, safe1 = _ScaleFluxObject(gsobject, config, 'scale_flux', base, logger)
-        safe = safe and safe1
-    if 'shear' in config:
-        gsobject, safe1 = _EllipObject(gsobject, config, 'shear', base, logger)
-        safe = safe and safe1
-    if 'magnify' in config:
-        gsobject, safe1 = _MagnifyObject(gsobject, config, 'magnify', base, logger)
-        safe = safe and safe1
-    if 'magnification' in config:
-        gsobject, safe1 = _MagnifyObject(gsobject, config, 'magnification', base, logger)
-        safe = safe and safe1
-    if 'shift' in config:
-        gsobject, safe1 = _ShiftObject(gsobject, config, 'shift', base, logger)
-        safe = safe and safe1
+    for key, func in _transformation_list:
+        if key in config:
+            gsobject, safe1 = func(gsobject, config, key, base, logger)
+            safe = safe and safe1
     return gsobject, safe
 
-def _EllipObject(gsobject, config, key, base, logger):
-    """@brief Applies ellipticity to a supplied GSObject, also used for gravitational shearing.
-
-    @returns transformed GSObject.
-    """
+def _Shear(gsobject, config, key, base, logger):
     shear, safe = galsim.config.ParseValue(config, key, base, galsim.Shear)
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('obj %d: shear = %f,%f',base['obj_num'],shear.g1,shear.g2)
     gsobject = gsobject.shear(shear)
     return gsobject, safe
 
-def _RotateObject(gsobject, config, key, base, logger):
-    """@brief Applies rotation to a supplied GSObject.
-
-    @returns transformed GSObject.
-    """
+def _Rotate(gsobject, config, key, base, logger):
     theta, safe = galsim.config.ParseValue(config, key, base, galsim.Angle)
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('obj %d: theta = %f rad',base['obj_num'],theta.rad())
     gsobject = gsobject.rotate(theta)
     return gsobject, safe
 
-def _ScaleFluxObject(gsobject, config, key, base, logger):
-    """@brief Scales the flux of a supplied GSObject.
-
-    @returns transformed GSObject.
-    """
+def _ScaleFlux(gsobject, config, key, base, logger):
     flux_ratio, safe = galsim.config.ParseValue(config, key, base, float)
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('obj %d: flux_ratio  = %f',base['obj_num'],flux_ratio)
     gsobject = gsobject * flux_ratio
     return gsobject, safe
 
-def _DilateObject(gsobject, config, key, base, logger):
-    """@brief Applies dilation to a supplied GSObject.
-
-    @returns transformed GSObject.
-    """
+def _Dilate(gsobject, config, key, base, logger):
     scale, safe = galsim.config.ParseValue(config, key, base, float)
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('obj %d: scale  = %f',base['obj_num'],scale)
     gsobject = gsobject.dilate(scale)
     return gsobject, safe
 
-def _MagnifyObject(gsobject, config, key, base, logger):
-    """@brief Applies magnification to a supplied GSObject.
-
-    @returns transformed GSObject.
-    """
+def _Magnify(gsobject, config, key, base, logger):
     mu, safe = galsim.config.ParseValue(config, key, base, float)
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('obj %d: mu  = %f',base['obj_num'],mu)
     gsobject = gsobject.magnify(mu)
     return gsobject, safe
 
-def _ShiftObject(gsobject, config, key, base, logger):
-    """@brief Applies centroid shift to a supplied GSObject.
-
-    @returns transformed GSObject.
-    """
+def _Shift(gsobject, config, key, base, logger):
     shift, safe = galsim.config.ParseValue(config, key, base, galsim.PositionD)
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('obj %d: shift  = %f,%f',base['obj_num'],shift.x,shift.y)
     gsobject = gsobject.shift(shift.x,shift.y)
     return gsobject, safe
+
+# valid_gsobject_types is a dict that defines how to build each object type.
+# Note: these are just the types that need a special builder.  Most GSObject sub-classes
+# in base.py (and some elsewhere) can use the default builder, called _BuildSimple, which
+# just uses the req, opt, and single class variables.  The keys are the type names 
+# (the type : name in the config dict) and the value are functions used to build the object.
+# The call signature of the function is
+#    obj, safe = Build(config, base, ignore, gsparams, logger)
+# where
+#    - config is the dict with the parameters for the object
+#    - base is the full config dict being processed
+#    - ignore is a list of items that should be ignored in the config dict if they are present
+#      and not valid for the object being built
+#    - gsparams is a dict of kwargs that should be used for a GSParams item
+#    - logger is a logging.Logger object to use for logging progress if desired.
+# The return value is a tuple of the object and a boolean, safe, which indicates whether
+# the object is safe to keep around and use again next time rather than rebuilding a new object.
+# e.g. if a PSF has all constant values, then it can be used for all the galaxies in a simulation
+# which lets it keep any FFTs that it has performed internally.  OpticalPSF is a good example
+# of where this can have a significant speed up.
+valid_gsobject_types = {
+    'None' : _BuildNone,
+    'Add' : _BuildAdd,
+    'Sum' : _BuildAdd,
+    'Convolve' : _BuildConvolve,
+    'Convolution' : _BuildConvolve,
+    'List' : _BuildList,
+    'OpticalPSF' : _BuildOpticalPSF,
+}
 

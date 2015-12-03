@@ -375,7 +375,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0, obj_num=0, do_noise=True, logger=
             gsparams = {}
             if 'gsparams' in config['image']:
                 gsparams = galsim.config.UpdateGSParams(
-                    gsparams, config['image']['gsparams'], 'gsparams', config)
+                    gsparams, config['image']['gsparams'], config)
 
             skip = False
             try :
