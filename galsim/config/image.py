@@ -282,6 +282,12 @@ def SetupConfigImageSize(config, xsize, ysize):
         config['pixel_scale'] = wcs.scale
 
 
+# Ignore these when parsing the parameters for specific Image types:
+image_ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs',
+                 'sky_level', 'sky_level_pixel', 'index_convention', 'nproc',
+                 'retry_failures', 'n_photons', 'wmult', 'offset', 'gsparams' ]
+
+
 def BuildImage(config, image_num=0, obj_num=0, logger=None):
     """
     Build an Image according to the information in config.
@@ -311,7 +317,7 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
 
     # Do the necessary initial setup for this image type.
     setup_func = valid_image_types[image_type][0]
-    xsize, ysize = setup_func(config, image_num, obj_num, logger)
+    xsize, ysize = setup_func(config, image_num, obj_num, image_ignore, logger)
 
     # Given this image size (which may be 0,0, in which case it will be set automatically later),
     # do some basic calculations
@@ -421,19 +427,16 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
     return max_current_var
 
 
-# Ignore these when parsing the parameters for specific Image types:
-image_ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs',
-                 'sky_level', 'sky_level_pixel', 'index_convention', 'nproc',
-                 'retry_failures', 'n_photons', 'wmult', 'offset', 'gsparams' ]
-
-
-def SetupSingleImage(config, image_num, obj_num, logger):
+def SetupSingleImage(config, image_num, obj_num, ignore, logger):
     """
     Do the initialization and setup for building a Single image.
 
     @param config           The configuration dict.
     @param image_num        The current image number.
     @param obj_num          The first object number in the image.
+    @param ignore           A list of parameters that are allowed to be in config['image']
+                            that we can ignore here.  i.e. it won't be an error if these
+                            parameters are present.
     @param logger           If given, a logger object to log progress.
 
     @returns xsize, ysize for the image (not built yet)
@@ -444,7 +447,7 @@ def SetupSingleImage(config, image_num, obj_num, logger):
     extra_ignore = [ 'image_pos', 'world_pos' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int }
     params = galsim.config.GetAllParams(config['image'], config, opt=opt,
-                                        ignore=image_ignore+extra_ignore)[0]
+                                        ignore=ignore+extra_ignore)[0]
 
     # If image_force_xsize and image_force_ysize were set in config, this overrides the
     # read-in params.
@@ -503,7 +506,7 @@ def GetNObjForSingleImage(config, image_num):
 # valid_image_types is a dict that defines how to build each image type.
 # The items in each tuple are:
 #   - The function to call to determine the size of the image and do any other initial setup.
-#     The call signature is xsize, ysize = Setup(config, image_num, obj_num, logger)
+#     The call signature is xsize, ysize = Setup(config, image_num, obj_num, ignore, logger)
 #   - The function to call to build the image.
 #     The call signature is image = Build(config, image_num, obj_num, logger)
 #   - The function to call to add noise and sky level to the image.

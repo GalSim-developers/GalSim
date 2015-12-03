@@ -22,17 +22,16 @@ import logging
 # This file adds image type Tiled, which builds a larger image by tiling nx x ny individual
 # postage stamps.
 
-# A list of parameters that are allowed to be in config['image'] that we can ignore here.
-# i.e. it won't be an error if these parameters are present.
-from .image import image_ignore
-
-def SetupTiledImage(config, image_num, obj_num, logger):
+def SetupTiledImage(config, image_num, obj_num, ignore, logger):
     """
     Build an Image consisting of a tiled array of postage stamps.
 
     @param config           The configuration dict.
     @param image_num        The current image number.
     @param obj_num          The first object number in the image.
+    @param ignore           A list of parameters that are allowed to be in config['image']
+                            that we can ignore here.  i.e. it won't be an error if these
+                            parameters are present.
     @param logger           If given, a logger object to log progress.
 
     @returns the final image
@@ -45,7 +44,7 @@ def SetupTiledImage(config, image_num, obj_num, logger):
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'border' : int , 'xborder' : int , 'yborder' : int , 'order' : str }
     params = galsim.config.GetAllParams(config['image'], config, req=req, opt=opt,
-                                        ignore=image_ignore+extra_ignore)[0]
+                                        ignore=ignore+extra_ignore)[0]
 
     nx_tiles = params['nx_tiles']
     ny_tiles = params['ny_tiles']

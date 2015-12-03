@@ -20,7 +20,7 @@ import os
 import galsim
 import logging
 
-def BuildMultiFits(config, file_num, image_num, obj_num, nproc, logger):
+def BuildMultiFits(config, file_num, image_num, obj_num, nproc, ignore, logger):
     """
     Build a multi-extension fits file as specified in config.
     
@@ -29,50 +29,47 @@ def BuildMultiFits(config, file_num, image_num, obj_num, nproc, logger):
     @param image_num        The current image_num.
     @param obj_num          The current obj_num.
     @param nproc            How many processes to use.
+    @param ignore           A list of parameters that are allowed to be in config['output']
+                            that we can ignore here.  i.e. it won't be an error if these
+                            parameters are present.
     @param logger           If given, a logger object to log progress.
 
     @returns a list of images
     """
-    # Allow nimages to be automatic based on input catalog if image type is Single
-    if ( 'nimages' not in config['output'] and 
-         ( 'image' not in config or 'type' not in config['image'] or 
-           config['image']['type'] == 'Single' ) ):
-        nobjects = galsim.config.ProcessInputNObjects(config)
-        if nobjects:
-            config['output']['nimages'] = nobjects
-    if 'nimages' not in config['output']:
-        raise AttributeError("Attribute output.nimages is required for output.type = MultiFits")
-    nimages = galsim.config.ParseValue(config['output'],'nimages',config,int)[0]
+    nimages = GetNImagesMultiFits(config, file_num)
+
+    # The above call sets up a default nimages if appropriate.  Now, check that there are no
+    # invalid parameters in the config dict.
+    req = { 'nimages' : int }
+    galsim.config.CheckAllParams(config['output'], ignore=ignore, req=req)
 
     return galsim.config.BuildImages(nimages, config, nproc=nproc, logger=logger,
                                      image_num=image_num, obj_num=obj_num)
 
 
-def GetNObjMultiFits(config, file_num, image_num):
-    req = { 'nimages' : int }
+def GetNImagesMultiFits(config, file_num):
+    """
+    Get the number of images for a MultiFits file type.
+
+    @param config           The configuration dict.
+    @param file_num         The current file number.
+
+    @returns the number of images
+    """
     # Allow nimages to be automatic based on input catalog if image type is Single
     if ( 'nimages' not in config['output'] and 
          ( 'image' not in config or 'type' not in config['image'] or 
            config['image']['type'] == 'Single' ) ):
-        nobjects = galsim.config.ProcessInputNObjects(config)
-        if nobjects:
-            config['output']['nimages'] = nobjects
-    ignore = galsim.config.output_ignore + galsim.config.valid_extra_outputs.keys()
-    params = galsim.config.GetAllParams(config['output'], config, ignore=ignore, req=req)[0]
-    config['index_key'] = 'file_num'
-    config['file_num'] = file_num
-    config['image_num'] = image_num
-    nimages = params['nimages']
-    try :
-        nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
-    except ValueError : # (This may be raised if something needs the input stuff)
-        galsim.config.ProcessInput(config, file_num=file_num)
-        nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
-    return nobj
+        nimages = galsim.config.ProcessInputNObjects(config)
+        if nimages:
+            config['output']['nimages'] = nimages
+    if 'nimages' not in config['output']:
+        raise AttributeError("Attribute output.nimages is required for output.type = MultiFits")
+    return galsim.config.ParseValue(config['output'],'nimages',config,int)[0]
 
 # Register this as a valid output type
 from .output import valid_output_types
 valid_output_types['MultiFits'] = (
-    BuildMultiFits, galsim.fits.writeMulti, False, '.fits', GetNObjMultiFits
+    BuildMultiFits, galsim.fits.writeMulti, False, '.fits', GetNImagesMultiFits
 )
 

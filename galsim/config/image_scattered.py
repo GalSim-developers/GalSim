@@ -22,17 +22,16 @@ import logging
 # This file adds image type Scattered, which places individual stamps at arbitrary
 # locations on a larger image.
 
-# A list of parameters that are allowed to be in config['image'] that we can ignore here.
-# i.e. it won't be an error if these parameters are present.
-from .image import image_ignore
-
-def SetupScatteredImage(config, image_num, obj_num, logger):
+def SetupScatteredImage(config, image_num, obj_num, ignore, logger):
     """
     Build an Image containing multiple objects placed at arbitrary locations.
 
     @param config           The configuration dict.
     @param image_num        The current image number.
     @param obj_num          The first object number in the image.
+    @param ignore           A list of parameters that are allowed to be in config['image']
+                            that we can ignore here.  i.e. it won't be an error if these
+                            parameters are present.
     @param logger           If given, a logger object to log progress.
 
     @returns the final image
@@ -56,7 +55,7 @@ def SetupScatteredImage(config, image_num, obj_num, logger):
                      'nobjects' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int }
     params = galsim.config.GetAllParams(config['image'], config, opt=opt,
-                                        ignore=image_ignore+extra_ignore)[0]
+                                        ignore=ignore+extra_ignore)[0]
 
     # Special check for the size.  Either size or both xsize and ysize is required.
     if 'size' not in params:
