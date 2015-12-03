@@ -271,7 +271,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
 
 def GetNObjForFits(config, file_num, image_num):
     ignore = output_ignore + galsim.config.valid_extra_outputs.keys()
-    galsim.config.CheckAllParams(config['output'], 'output', ignore=ignore)
+    galsim.config.CheckAllParams(config['output'], ignore=ignore)
     try : 
         nobj = [ galsim.config.GetNObjForImage(config, image_num) ]
     except ValueError : # (This may be raised if something needs the input stuff)
@@ -289,7 +289,7 @@ def GetNObjForMultiFits(config, file_num, image_num):
         if nobjects:
             config['output']['nimages'] = nobjects
     ignore = output_ignore + galsim.config.valid_extra_outputs.keys()
-    params = galsim.config.GetAllParams(config['output'],'output',config, ignore=ignore,req=req)[0]
+    params = galsim.config.GetAllParams(config['output'], config, ignore=ignore, req=req)[0]
     config['index_key'] = 'file_num'
     config['file_num'] = file_num
     config['image_num'] = image_num
@@ -311,7 +311,7 @@ def GetNObjForDataCube(config, file_num, image_num):
         if nobjects:
             config['output']['nimages'] = nobjects
     ignore = output_ignore + galsim.config.valid_extra_outputs.keys()
-    params = galsim.config.GetAllParams(config['output'],'output',config, ignore=ignore,req=req)[0]
+    params = galsim.config.GetAllParams(config['output'], config, ignore=ignore, req=req)[0]
     config['index_key'] = 'file_num'
     config['file_num'] = file_num
     config['image_num'] = image_num

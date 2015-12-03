@@ -179,7 +179,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                         init_func = eval("galsim."+input_type)
                     else:
                         init_func = eval(input_type)
-                    kwargs, safe = galsim.config.GetAllParams(field, key, config,
+                    kwargs, safe = galsim.config.GetAllParams(field, config,
                                                               req = init_func._req_params,
                                                               opt = init_func._opt_params,
                                                               single = init_func._single_params,
@@ -229,7 +229,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
 
         # Check that there are no other attributes specified.
         valid_keys = valid_input_types.keys()
-        galsim.config.CheckAllParams(config['input'], 'input', ignore=valid_keys)
+        galsim.config.CheckAllParams(config['input'], ignore=valid_keys)
 
 def ProcessInputNObjects(config, logger=None):
     """Process the input field, just enough to determine the number of objects.
@@ -270,7 +270,7 @@ def ProcessInputNObjects(config, logger=None):
                         init_func = eval("galsim."+input_type)
                     else:
                         init_func = eval(input_type)
-                    kwargs = galsim.config.GetAllParams(field, key, config,
+                    kwargs = galsim.config.GetAllParams(field, config,
                                                         req = init_func._req_params,
                                                         opt = init_func._opt_params,
                                                         single = init_func._single_params,

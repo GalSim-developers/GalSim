@@ -190,8 +190,7 @@ def NoiseVarGaussian(config, base):
     # The noise level can be specified either as a sigma or a variance.  Here we just calculate
     # the value of the variance from either one.
     single = [ { 'sigma' : float , 'variance' : float } ]
-    params = galsim.config.GetAllParams(config, 'noise', base, single=single,
-                                        ignore=noise_ignore)[0]
+    params = galsim.config.GetAllParams(config, base, single=single, ignore=noise_ignore)[0]
     if 'sigma' in params:
         sigma = params['sigma']
         return sigma * sigma
@@ -294,8 +293,7 @@ def AddNoiseVariancePoisson(config, base, im, include_obj_var, logger):
 def _GetCCDNoiseParams(config, base):
     opt = { 'gain' : float , 'read_noise' : float }
     ignore = ['sky_level', 'sky_level_pixel']
-    params = galsim.config.GetAllParams(config, 'noise', base, opt=opt,
-                                        ignore=noise_ignore + ignore)[0]
+    params = galsim.config.GetAllParams(config, base, opt=opt, ignore=noise_ignore + ignore)[0]
     gain = params.get('gain',1.0)
     read_noise = params.get('read_noise',0.0)
     read_noise_var = read_noise**2
@@ -429,8 +427,7 @@ def _GetCOSMOSNoise(config, base):
         req = { 'file_name' : str }
         opt = { 'cosmos_scale' : float, 'variance' : float }
         
-        kwargs = galsim.config.GetAllParams(config, 'noise', base, req=req, opt=opt,
-                                            ignore=noise_ignore)[0]
+        kwargs = galsim.config.GetAllParams(config, base, req=req, opt=opt, ignore=noise_ignore)[0]
         rng = base['rng']
         cn = galsim.correlatednoise.getCOSMOSNoise(rng, **kwargs)
         config['current_cn'] = cn

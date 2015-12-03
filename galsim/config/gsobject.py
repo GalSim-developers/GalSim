@@ -90,7 +90,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     ck = config[key]
 
     # Check what index key we want to use for this object.
-    index, index_key = galsim.config.value._get_index(ck, key, base)
+    index, index_key = galsim.config.value._get_index(ck, base)
     if False:
         logger.debug('obj %d: ck = %s',base['obj_num'],ck)
 
@@ -236,7 +236,7 @@ def UpdateGSParams(gsparams, config, key, base):
     """@brief Add additional items to the `gsparams` dict based on config['gsparams'].
     """
     opt = galsim.GSObject._gsparams
-    kwargs, safe = galsim.config.GetAllParams(config, key, base, opt=opt)
+    kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt)
     # When we update gsparams, we don't want to corrupt the original, so we need to
     # make a copy first, then update with kwargs.
     ret = {}
@@ -257,7 +257,7 @@ def _BuildAdd(config, key, base, ignore, gsparams, logger):
     req = { 'items' : list }
     opt = { 'flux' : float }
     # Only Check, not Get.  We need to handle items a bit differently, since it's a list.
-    galsim.config.CheckAllParams(config, key, req=req, opt=opt, ignore=ignore)
+    galsim.config.CheckAllParams(config, req=req, opt=opt, ignore=ignore)
 
     gsobjects = []
     items = config['items']
@@ -312,7 +312,7 @@ def _BuildConvolve(config, key, base, ignore, gsparams, logger):
     req = { 'items' : list }
     opt = { 'flux' : float }
     # Only Check, not Get.  We need to handle items a bit differently, since it's a list.
-    galsim.config.CheckAllParams(config, key, req=req, opt=opt, ignore=ignore)
+    galsim.config.CheckAllParams(config, req=req, opt=opt, ignore=ignore)
 
     gsobjects = []
     items = config['items']
@@ -348,7 +348,7 @@ def _BuildList(config, key, base, ignore, gsparams, logger):
     req = { 'items' : list }
     opt = { 'index' : float , 'flux' : float }
     # Only Check, not Get.  We need to handle items a bit differently, since it's a list.
-    galsim.config.CheckAllParams(config, key, req=req, opt=opt, ignore=ignore)
+    galsim.config.CheckAllParams(config, req=req, opt=opt, ignore=ignore)
 
     items = config['items']
     if not isinstance(items,list):
@@ -378,7 +378,7 @@ def _BuildRing(config, key, base, ignore, gsparams, logger):
     req = { 'num' : int, 'first' : dict }
     opt = { 'full_rotation' : galsim.Angle , 'index' : int }
     # Only Check, not Get.  We need to handle first a bit differently, since it's a gsobject.
-    galsim.config.CheckAllParams(config, key, req=req, opt=opt, ignore=ignore)
+    galsim.config.CheckAllParams(config, req=req, opt=opt, ignore=ignore)
 
     num = galsim.config.ParseValue(config, 'num', base, int)[0]
     if num <= 0:
@@ -435,7 +435,7 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
     if 'id' not in config:
         galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
 
-    kwargs, safe1 = galsim.config.GetAllParams(config, key, base, 
+    kwargs, safe1 = galsim.config.GetAllParams(config, base,
         req = galsim.__dict__['RealGalaxy']._req_params,
         opt = galsim.__dict__['RealGalaxy']._opt_params,
         single = galsim.__dict__['RealGalaxy']._single_params,
@@ -472,7 +472,7 @@ def _BuildRealGalaxyOriginal(config, key, base, ignore, gsparams, logger):
 def _BuildOpticalPSF(config, key, base, ignore, gsparams, logger):
     """@brief Build an OpticalPSF.
     """
-    kwargs, safe = galsim.config.GetAllParams(config, key, base, 
+    kwargs, safe = galsim.config.GetAllParams(config, base,
         req = galsim.OpticalPSF._req_params,
         opt = galsim.OpticalPSF._opt_params,
         single = galsim.OpticalPSF._single_params,
@@ -515,7 +515,7 @@ def _BuildCOSMOSGalaxy(config, key, base, ignore, gsparams, logger):
     # Special: if index is Sequence or Random, and max isn't set, set it to nobjects-1.
     galsim.config.SetDefaultIndex(config, cosmos_cat.getNObjects())
 
-    kwargs, safe1 = galsim.config.GetAllParams(config, key, base,
+    kwargs, safe1 = galsim.config.GetAllParams(config, base,
         req = galsim.COSMOSCatalog.makeGalaxy._req_params,
         opt = galsim.COSMOSCatalog.makeGalaxy._opt_params,
         single = galsim.COSMOSCatalog.makeGalaxy._single_params,
@@ -561,7 +561,7 @@ def _BuildSimple(config, key, base, ignore, gsparams, logger):
         logger.debug('obj %d: BuildSimple for type = %s',base['obj_num'],type)
         logger.debug('obj %d: init_func = %s',base['obj_num'],init_func)
 
-    kwargs, safe = galsim.config.GetAllParams(config, key, base, 
+    kwargs, safe = galsim.config.GetAllParams(config, base,
                                               req = init_func._req_params,
                                               opt = init_func._opt_params,
                                               single = init_func._single_params,

@@ -384,8 +384,8 @@ def SetupSingleImage(config, logger, image_num, obj_num):
 
     extra_ignore = [ 'image_pos', 'world_pos' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int }
-    params = galsim.config.GetAllParams(
-        config['image'], 'image', config, opt=opt, ignore=image_ignore+extra_ignore)[0]
+    params = galsim.config.GetAllParams(config['image'], config, opt=opt,
+                                        ignore=image_ignore+extra_ignore)[0]
 
     # If image_force_xsize and image_force_ysize were set in config, this overrides the
     # read-in params.
@@ -447,8 +447,8 @@ def SetupTiledImage(config, logger, image_num, obj_num):
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'border' : int , 'xborder' : int , 'yborder' : int , 'order' : str }
-    params = galsim.config.GetAllParams(
-        config['image'], 'image', config, req=req, opt=opt, ignore=image_ignore+extra_ignore)[0]
+    params = galsim.config.GetAllParams(config['image'], config, req=req, opt=opt,
+                                        ignore=image_ignore+extra_ignore)[0]
 
     nx_tiles = params['nx_tiles']
     ny_tiles = params['ny_tiles']
@@ -639,8 +639,8 @@ def SetupScatteredImage(config, logger, image_num, obj_num):
     extra_ignore = [ 'image_pos', 'world_pos', 'stamp_size', 'stamp_xsize', 'stamp_ysize',
                      'nobjects' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int }
-    params = galsim.config.GetAllParams(
-        config['image'], 'image', config, opt=opt, ignore=image_ignore+extra_ignore)[0]
+    params = galsim.config.GetAllParams(config['image'], config, opt=opt,
+                                        ignore=image_ignore+extra_ignore)[0]
 
     # Special check for the size.  Either size or both xsize and ysize is required.
     if 'size' not in params:
