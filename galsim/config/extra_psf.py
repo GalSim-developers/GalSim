@@ -17,6 +17,9 @@
 #
 
 import galsim
+import math
+import numpy
+import logging
 
 # The psf extra output type builds an Image of the PSF at the same locations as the galaxies.
 
@@ -25,6 +28,50 @@ def SetupExtraPSF(image, scratch, config, base, logger=None):
     image.resize(base['image_bounds'], wcs=base['wcs'])
     image.setZero()
     scratch.clear()
+
+# The code the actually draws the PSF on a postage stamp.
+def DrawPSFStamp(psf, config, base, bounds, offset, method, logger=None):
+    """
+    Draw an image using the given psf profile.
+
+    @returns the resulting image.
+    """
+    if 'draw_method' in config:
+        method = galsim.config.ParseValue(config,'draw_method',base,str)[0]
+        if method not in ['auto', 'fft', 'phot', 'real_space', 'no_pixel', 'sb']:
+            raise AttributeError("Invalid draw_method: %s"%method)
+    else:
+        method = 'auto'
+
+    # Special: if the galaxy was shifted, then also shift the psf
+    if 'shift' in base['gal']:
+        gal_shift = galsim.config.GetCurrentValue('gal.shift',base, galsim.PositionD)
+        if logger and logger.isEnabledFor(logging.DEBUG):
+            logger.debug('obj %d: psf shift (1): %s',base['obj_num'],str(gal_shift))
+        psf = psf.shift(gal_shift)
+
+    wcs = base['wcs'].local(base['image_pos'])
+    im = galsim.ImageF(bounds, wcs=wcs)
+    im = psf.drawImage(image=im, offset=offset, method=method)
+
+    if 'signal_to_noise' in config:
+        if method == 'phot':
+            raise NotImplementedError(
+                "signal_to_noise option not implemented for draw_method = phot")
+
+        if 'image' in base and 'noise' in base['image']:
+            noise_var = galsim.config.CalculateNoiseVar(base)
+        else:
+            raise AttributeError("Need to specify noise level when using psf.signal_to_noise")
+
+        sn_target = galsim.config.ParseValue(config, 'signal_to_noise', base, float)[0]
+
+        sn_meas = math.sqrt( numpy.sum(im.array**2) / noise_var )
+        flux = sn_target / sn_meas
+        im *= flux
+
+    return im
+
 
 # The function to call at the end of building each stamp
 def ProcessExtraPSFStamp(image, scratch, config, base, obj_num, logger=None):
@@ -35,7 +82,7 @@ def ProcessExtraPSFStamp(image, scratch, config, base, obj_num, logger=None):
     offset = base['stamp_offset']
     if 'offset' in base['image']:
         offset += galsim.config.ParseValue(base['image'], 'offset', base, galsim.PositionD)[0]
-    psf_im = galsim.config.DrawPSFStamp(psf,base,bounds,offset,draw_method,logger)
+    psf_im = DrawPSFStamp(psf,config,base,bounds,offset,draw_method,logger)
     if 'signal_to_noise' in config:
         base['index_key'] = 'image_num'
         galsim.config.AddNoise(base,psf_im,0,logger)
