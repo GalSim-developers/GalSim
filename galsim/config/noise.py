@@ -30,9 +30,10 @@ import logging
 def AddSky(config, im):
     """Add the sky level to the image
     """
-    sky = GetSky(config['image'], config)
-    if sky:
-        im += sky
+    if im:
+        sky = GetSky(config['image'], config)
+        if sky:
+            im += sky
 
 
 def AddNoise(config, im, current_var=0., logger=None):

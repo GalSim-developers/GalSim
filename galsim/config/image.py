@@ -463,7 +463,7 @@ def SetupSingle(config, image_num, obj_num, ignore, logger):
             "Both (or neither) of image.xsize and image.ysize need to be defined  and != 0.")
 
     # We allow world_pos to be in config[image], but we don't want it to lead to a final_shift
-    # in BuildSingleStamp.  The easiest way to do this is to set image_pos to (0,0).
+    # in BuildStamp.  The easiest way to do this is to set image_pos to (0,0).
     if 'world_pos' in config['image']:
         config['image']['image_pos'] = (0,0)
 
@@ -484,7 +484,7 @@ def BuildSingle(config, image_num, obj_num, logger):
     xsize = config['image_xsize']
     ysize = config['image_ysize']
 
-    image, current_var = galsim.config.BuildSingleStamp(
+    image, current_var = galsim.config.BuildStamp(
             config, obj_num=obj_num, xsize=xsize, ysize=ysize,
             do_noise=True, logger=logger)
 

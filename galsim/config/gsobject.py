@@ -57,14 +57,10 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('obj %d: Start BuildGSObject %s',base['obj_num'],key)
 
-    if isinstance(config,dict):
-        if not key in config:
-            raise AttributeError("key %s not found in config"%key)
-    elif isinstance(config,list):
-        if not key < len(config):
-            raise AttributeError("Trying to build past the end of a list in config")
-    else:
-        raise AttributeError("BuildGSObject not given a valid dictionary")
+    try:
+        param = config[key]
+    except KeyError:
+        return None, True
 
     # Alias for convenience
     param = config[key]
