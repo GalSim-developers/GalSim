@@ -74,7 +74,7 @@ def _GenerateFromEval(config, base, value_type):
         keys = numpy.unique(keys).tolist()
         for key0 in keys:
             key = key0[1:] # Remove the @ sign.
-            value, t = GetCurrentValue(key, base)
+            value, t = galsim.config.GetCurrentValue(key, base)
             # Replaces all occurrences of key0 with the value.
             string = string.replace(key0,repr(value)) 
 
