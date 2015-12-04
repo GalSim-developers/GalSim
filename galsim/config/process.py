@@ -186,6 +186,20 @@ def SetupConfigRNG(config, seed_offset=0):
 
     return seed
  
+def ImportModules(config):
+    """Import any modules listed in config['modules'].
+
+    These won't be brought into the running scope of the config processing, but any side
+    effects of the import statements will persist.  In particular, these are allowed to 
+    register additional custom types that can then be used in the current config dict.
+    """
+    if 'modules' in config:
+        for module in config['modules']:
+            try:
+                exec('import '+module)
+            except ImportError:
+                exec('import galsim.'+module)
+
 # This is the main script to process everything in the configuration dict.
 def Process(config, logger=None):
     """
@@ -197,6 +211,9 @@ def Process(config, logger=None):
     # First thing to do is deep copy the input config to make sure we don't modify the original.
     import copy
     config = copy.deepcopy(config)
+
+    # Import any modules if requested
+    ImportModules(config)
 
     # If we don't have a root specified yet, we generate it from the current script.
     if 'root' not in config:

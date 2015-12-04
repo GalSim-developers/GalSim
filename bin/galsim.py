@@ -216,7 +216,45 @@ def read_json(config_file):
     all_config = [ config ]
 
     return base_config, all_config
- 
+
+def UpdateConfig(config, variables, file_type, logger):
+    # Add the additional variables to the config file
+    for v in variables:
+        logger.debug('Parsing additional variable: %s',v)
+        if '=' not in v:
+            raise ValueError('Improper variable specification.  Use field.item=value.')
+        key, value = v.split('=',1)
+        # This next bit is basically identical to the code for Dict.get(key) in catalog.py.
+        chain = key.split('.')
+        d = config
+        while chain:
+            k = chain.pop(0)
+            try: k = int(k)
+            except ValueError: pass
+            if chain: d = d[k]
+            else: 
+                # Try to evaluate the value string to allow people to input things like
+                # gal.rotate='{type : Rotate}'
+                # But if it fails (particularly with json), just assign the value as a string.
+                try:
+                    if file_type == 'yaml':
+                        import yaml
+                        d[k] = yaml.load(value)
+                    else:
+                        import json
+                        d[k] = json.loads(value)
+                except:
+                    logger.debug('Unable to parse %s.  Treating it as a string.'%value)
+                    d[k] = value
+
+
+def AddModules(config, modules):
+    if modules:
+        if 'modules' not in config:
+            config['modules'] = modules
+        else:
+            config['modules'].extend(modules)
+
 def main():
     args = parse_args()
 
@@ -263,56 +301,22 @@ def main():
 
     logger.debug('Successfully read in config file.')
 
-    # Add the additional variables to the config file
-    for v in args.variables:
-        logger.debug('Parsing additional variable: %s',v)
-        if '=' not in v:
-            raise ValueError('Improper variable specification.  Use field.item=value.')
-        key, value = v.split('=',1)
-        # This next bit is basically identical to the code for Dict.get(key) in catalog.py.
-        chain = key.split('.')
-        if base_config:
-            d = base_config
-        else:
-            d = all_config[0]
-        while chain:
-            k = chain.pop(0)
-            try: k = int(k)
-            except ValueError: pass
-            if chain: d = d[k]
-            else: 
-                # Try to evaluate the value string to allow people to input things like
-                # gal.rotate='{type : Rotate}'
-                # But if it fails (particularly with json), just assign the value as a string.
-                try:
-                    if args.file_type == 'yaml':
-                        import yaml
-                        d[k] = yaml.load(value)
-                    else:
-                        import json
-                        d[k] = json.loads(value)
-                except:
-                    logger.debug('Unable to parse %s.  Treating it as a string.'%value)
-                    d[k] = value
-
     # Set the root value in base_config
     if 'root' not in base_config:
         import os
         base_config['root'] = os.path.splitext(args.config_file)[0]
-
-    # Import any modules if requested
-    if args.module:
-        for module in args.module:
-            try:
-                exec('import galsim.'+module)
-            except:
-                exec('import '+module)
 
     # Process each config document
     for config in all_config:
 
         # Merge the base_config information into this config file.
         MergeConfig(config,base_config)
+
+        # Update with the command-line variables:
+        UpdateConfig(config, args.variables, args.file_type, logger)
+
+        # Add modules to the config['modules'] list
+        AddModules(config, args.module)
 
         import pprint
         logger.debug("Process config dict: \n%s", pprint.pformat(config))
