@@ -94,7 +94,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     # Check that the input config has a type to even begin with!
     if not 'type' in param:
         raise AttributeError("type attribute required in config.%s"%key)
-    type = param['type']
+    type_name = param['type']
 
     # If we have previously saved an object and marked it as safe, then use it.
     if 'current_val' in param and (param['current_safe'] or param['current_index'] == index):
@@ -174,20 +174,20 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         gsparams = UpdateGSParams(gsparams, param['gsparams'], config)
 
     # See if this type has a specialized build function:
-    if type in valid_gsobject_types:
-        build_func = valid_gsobject_types[type]
+    if type_name in valid_gsobject_types:
+        build_func = valid_gsobject_types[type_name]
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('obj %d: build_func = %s',base['obj_num'],build_func)
         gsobject, safe = build_func(param, base, ignore, gsparams, logger)
     # Next, we check if this name is in the galsim dictionary.
-    elif type in galsim.__dict__:
-        if issubclass(galsim.__dict__[type], galsim.GSObject):
+    elif type_name in galsim.__dict__:
+        if issubclass(galsim.__dict__[type_name], galsim.GSObject):
             gsobject, safe = _BuildSimple(param, base, ignore, gsparams, logger)
         else:
-            TypeError("Input config type = %s is not a GSObject."%type)
+            TypeError("Input config type = %s is not a GSObject."%type_name)
     # Otherwise, it's not a valid type.
     else:
-        raise NotImplementedError("Unrecognised config type = %s"%type)
+        raise NotImplementedError("Unrecognised config type = %s"%type_name)
 
     # If this is a psf, try to save the half_light_radius in case gal uses resolution.
     if key == 'psf':
@@ -230,13 +230,13 @@ def _BuildSimple(config, base, ignore, gsparams, logger):
     any other GalSim object that defines _req_params, _opt_params and _single_params.
     """
     # Build the kwargs according to the various params objects in the class definition.
-    type = config['type']
-    if type in galsim.__dict__:
-        init_func = eval("galsim."+type)
+    type_name = config['type']
+    if type_name in galsim.__dict__:
+        init_func = eval("galsim."+type_name)
     else:
-        init_func = eval(type)
+        init_func = eval(type_name)
     if logger and logger.isEnabledFor(logging.DEBUG):
-        logger.debug('obj %d: BuildSimple for type = %s',base['obj_num'],type)
+        logger.debug('obj %d: BuildSimple for type = %s',base['obj_num'],type_name)
         logger.debug('obj %d: init_func = %s',base['obj_num'],init_func)
 
     kwargs, safe = galsim.config.GetAllParams(config, base,
@@ -248,7 +248,7 @@ def _BuildSimple(config, base, ignore, gsparams, logger):
 
     if init_func._takes_rng:
         if 'rng' not in base:
-            raise ValueError("No base['rng'] available for type = %s"%type)
+            raise ValueError("No base['rng'] available for type = %s"%type_name)
         kwargs['rng'] = base['rng']
         safe = False
 
@@ -276,7 +276,7 @@ def _BuildAdd(config, base, ignore, gsparams, logger):
     gsobjects = []
     items = config['items']
     if not isinstance(items,list):
-        raise AttributeError("items entry for config.%s entry is not a list."%type)
+        raise AttributeError("items entry for type=Add is not a list.")
     safe = True
 
     for i in range(len(items)):
@@ -331,7 +331,7 @@ def _BuildConvolve(config, base, ignore, gsparams, logger):
     gsobjects = []
     items = config['items']
     if not isinstance(items,list):
-        raise AttributeError("items entry for config.%s entry is not a list."%type)
+        raise AttributeError("items entry for type=Convolve is not a list.")
     safe = True
     for i in range(len(items)):
         gsobject, safe1 = BuildGSObject(items, i, base, gsparams, logger)
@@ -366,13 +366,13 @@ def _BuildList(config, base, ignore, gsparams, logger):
 
     items = config['items']
     if not isinstance(items,list):
-        raise AttributeError("items entry for config.%s entry is not a list."%type)
+        raise AttributeError("items entry for type=List is not a list.")
 
     # Setup the indexing sequence if it hasn't been specified using the length of items.
     galsim.config.SetDefaultIndex(config, len(items))
     index, safe = galsim.config.ParseValue(config, 'index', base, int)
     if index < 0 or index >= len(items):
-        raise AttributeError("index %d out of bounds for config.%s"%(index,type))
+        raise AttributeError("index %d out of bounds for List"%index)
 
     gsobject, safe1 = BuildGSObject(items, index, base, gsparams, logger)
     safe = safe and safe1
@@ -483,33 +483,41 @@ def _Shift(gsobject, config, key, base, logger):
     gsobject = gsobject.shift(shift.x,shift.y)
     return gsobject, safe
 
-# valid_gsobject_types is a dict that defines how to build each object type.
-# Note: these are just the types that need a special builder.  Most GSObject sub-classes
-# in base.py (and some elsewhere) can use the default builder, called _BuildSimple, which
-# just uses the req, opt, and single class variables.  The keys are the type names 
-# (the type : name in the config dict) and the value are functions used to build the object.
-# The call signature of the function is
-#    obj, safe = Build(config, base, ignore, gsparams, logger)
-# where
-#    - config is the dict with the parameters for the object
-#    - base is the full config dict being processed
-#    - ignore is a list of items that should be ignored in the config dict if they are present
-#      and not valid for the object being built
-#    - gsparams is a dict of kwargs that should be used for a GSParams item
-#    - logger is a logging.Logger object to use for logging progress if desired.
-# The return value is a tuple of the object and a boolean, safe, which indicates whether
-# the object is safe to keep around and use again next time rather than rebuilding a new object.
-# e.g. if a PSF has all constant values, then it can be used for all the galaxies in a simulation
-# which lets it keep any FFTs that it has performed internally.  OpticalPSF is a good example
-# of where this can have a significant speed up.
 
-valid_gsobject_types = {
-    'None' : _BuildNone,
-    'Add' : _BuildAdd,
-    'Sum' : _BuildAdd,
-    'Convolve' : _BuildConvolve,
-    'Convolution' : _BuildConvolve,
-    'List' : _BuildList,
-    'OpticalPSF' : _BuildOpticalPSF,
-}
+valid_gsobject_types = {}
+
+def RegisterObjectType(type_name, build_func):
+    """Register an object type for use by the config apparatus.
+
+    A few notes about the signature of the build functions:
+
+    1. The config parameter is the dict for the current object to be generated.  So it should
+       be the case that config['type'] == type_name.
+    2. The base parameter is the original config dict being processed.
+    3. The ignore parameter  is a list of items that should be ignored in the config dict if they 
+       are present and not valid for the object being built.
+    4. The gsparams parameter is a dict of kwargs that should be used to build a GSParams object
+       to use when building this object.
+    5. The logger parameter is a logging.Logger object to use for logging progress if desired.
+    6. The return value of build_func should be a tuple consisting of the object and a boolean,
+       safe, which indicates whether the generated object is safe to use again rather than
+       regenerate for subsequent postage stamps. e.g. if a PSF has all constant values, then it
+       can be used for all the galaxies in a simulation, which lets it keep any FFTs that it has
+       performed internally.  OpticalPSF is a good example of where this can have a significant
+       speed up.
+
+    @param type_name        The name of the 'type' specification in the config dict.
+    @param build_func       A function to build a GSObject from the config information.
+                            The call signature is
+                                obj, safe = Build(config, base, ignore, gsparams, logger)
+    """
+    valid_gsobject_types[type_name] = build_func
+
+RegisterObjectType('None', _BuildNone)
+RegisterObjectType('Add', _BuildAdd)
+RegisterObjectType('Sum', _BuildAdd)
+RegisterObjectType('Convolve', _BuildConvolve)
+RegisterObjectType('Convolution', _BuildConvolve)
+RegisterObjectType('List', _BuildList)
+RegisterObjectType('OpticalPSF', _BuildOpticalPSF)
 

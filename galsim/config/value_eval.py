@@ -143,9 +143,6 @@ def _GenerateFromEval(config, base, value_type):
         obj_num = base['obj_num']
     if 'start_obj_num' in base:
         start_obj_num = base.get('start_obj_num',0)
-    for key in galsim.config.valid_input_types.keys():
-        if key in base:
-            exec(key + " = base['input_objs'][key]")
     try:
         val = eval(string)
         #print base['obj_num'],'Eval(%s) needed extra variables: val = %s'%(string,val)
@@ -157,8 +154,6 @@ def _GenerateFromEval(config, base, value_type):
 
 
 # Register this as a valid value type
-from .value import valid_value_types
-valid_value_types['Eval'] = (
-    _GenerateFromEval, 
-    [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD, None ]
-)
+from .value import RegisterValueType
+RegisterValueType('Eval', _GenerateFromEval, 
+                  [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD, None ])

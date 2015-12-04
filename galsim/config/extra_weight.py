@@ -76,10 +76,8 @@ def ProcessWeightImage(image, scratch, config, base, logger=None):
     image.invertSelf()
 
 # Register this as a valid extra output
-from .extra import valid_extra_outputs
-valid_extra_outputs['weight'] = (
-    galsim.Image, None,
-    SetupWeight, ProcessWeightStamp, ProcessWeightImage, 
-    galsim.Image.write, galsim.Image.view 
-)
+from .extra import RegisterExtraOutput
+RegisterExtraOutput('weight', galsim.Image, None,
+                    SetupWeight, ProcessWeightStamp, ProcessWeightImage, 
+                    galsim.Image.write, galsim.Image.view)
 

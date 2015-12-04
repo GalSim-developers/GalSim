@@ -67,7 +67,7 @@ def BuildFiles(nfiles, config, file_num=0, image_num=0, obj_num=0, nproc=1, logg
                 tr = traceback.format_exc()
                 if logger and logger.isEnabledFor(logging.WARN):
                     logger.warn('%s: Caught exception %s\n%s',proc,str(e),tr)
-                output.put( (e, file_num, tr) )
+                output.put( (e, file_num, file_name, tr) )
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('%s: Received STOP',proc)
 
@@ -128,7 +128,7 @@ def BuildFiles(nfiles, config, file_num=0, image_num=0, obj_num=0, nproc=1, logg
         # safe to do with multiple processes. (At least not without extra code in the 
         # GetFilename function...)
         output_type = output.get('type', 'Fits')
-        default_ext = valid_output_types[output_type][3]
+        default_ext = valid_output_types[output_type]['ext']
         file_name = GetFilename(output, config, default_ext)
 
         # This is where we actually build the file.
@@ -191,12 +191,10 @@ def BuildFiles(nfiles, config, file_num=0, image_num=0, obj_num=0, nproc=1, logg
                 # proc is really the traceback
                 if logger:
                     logger.error('Exception caught for file %d = %s', file_num, file_name)
+                    # And proc is really the traceback.
                     logger.error('%s',proc)
                     logger.error('%s',result)
-                    try:
-                        logger.error('File %s not written! Continuing on...',file_name)
-                    except:
-                        pass
+                    logger.error('File %s not written! Continuing on...',file_name)
             else:
                 file_name, t = result
                 if t != 0 and logger and logger.isEnabledFor(logging.WARN):
@@ -253,7 +251,7 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, nproc=1, logger=None):
         logger.debug('file %d: seed = %d',file_num,seed)
 
     # Get the file name
-    default_ext = valid_output_types[output_type][3]
+    default_ext = valid_output_types[output_type]['ext']
     file_name = GetFilename(output, config, default_ext)
 
     # Check if we ought to skip this file
@@ -277,11 +275,11 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, nproc=1, logger=None):
         elif logger.isEnabledFor(logging.WARN):
             logger.warn('Start file %d = %s', file_num, file_name)
 
-    build_func = valid_output_types[output_type][0]
+    build_func = valid_output_types[output_type]['build']
     ignore = output_ignore + galsim.config.valid_extra_outputs.keys()
     data = build_func(config, file_num, image_num, obj_num, nproc, ignore, logger)
 
-    can_add_hdus = valid_output_types[output_type][2]
+    can_add_hdus = valid_output_types[output_type]['hdus']
     if can_add_hdus:
         data = data + galsim.config.BuildExtraOutputHDUs(config,logger,len(data))
 
@@ -292,7 +290,7 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, nproc=1, logger=None):
     else:
         ntries = 1
 
-    write_func = valid_output_types[output_type][1]
+    write_func = valid_output_types[output_type]['write']
     args = (data, file_name)
     RetryIO(write_func, args, ntries, file_name, logger)
     if logger and logger.isEnabledFor(logging.DEBUG):
@@ -322,7 +320,7 @@ def GetNImagesForFile(config, file_num):
     if output_type not in valid_output_types:
         raise AttributeError("Invalid output.type=%s."%output_type)
 
-    nim_func = valid_output_types[output_type][4]
+    nim_func = valid_output_types[output_type]['nim']
     return nim_func(config, file_num)
  
 
@@ -429,7 +427,6 @@ def RetryIO(func, args, ntries, file_name, logger):
     return ret
 
 
-
 def BuildFits(config, file_num, image_num, obj_num, nproc, ignore, logger):
     """
     Build a regular fits file as specified in config.
@@ -464,20 +461,34 @@ def GetNImagesFits(config, file_num):
     """
     return 1
 
+valid_output_types = {}
 
-# valid_output_types is a dict that defines how to build each output type.
-# The items in each tuple are:
-#   - the build function to call
-#     The call signature is data = Build(config, file_num, image_num, obj_num,
-#                                        nproc, ignore, logger)
-#   - the function to use for writing the data
-#     The call signature is Write(data, file_name)
-#   - whether extra hdus can be added to the end of the data for the extra output items
-#   - the default file extension
-#   - a function that returns the number of images that will be built by the function
-#     The call signature is nimages = GetNImages(config, file_num)
+def RegisterOutputType(output_type, build_func, write_func, nimages_func,
+                       extra_hdus=False, default_ext='.fits'):
+    """Register an output type for use by the config apparatus.
 
-valid_output_types = {
-    'Fits' : (BuildFits, galsim.fits.writeMulti, True, '.fits', GetNImagesFits),
-}
+    @param output_type      The name of the type in config['output']
+    @param build_func       The function to call for building the necessary data.
+                            The call signature is:
+                                data = Build(config, file_num, image_num, obj_num, nproc,
+                                             ignore, logger)
+    @param write_func       The function to use for writing the data to a file.
+                            The call signature is:
+                                Write(data, file_name)
+    @param nimages_func     A function that returns the number of images that will be built.
+                            The call signature is 
+                                nimages = GetNImages(config, file_num)
+    @param extra_hdus       Whether extra hdus can be added to the end of the data for the extra
+                            output items. [default: False]
+    @param default_ext      The default file extension if none is given. [default: '.fits']
+    """
+    valid_output_types[output_type] = {
+        'build' : build_func,
+        'write' : write_func,
+        'nim' : nimages_func,
+        'hdus' : extra_hdus,
+        'ext' : default_ext
+    }
+
+RegisterOutputType('Fits', BuildFits, galsim.fits.writeMulti, GetNImagesFits, extra_hdus=True)
 

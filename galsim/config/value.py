@@ -102,21 +102,21 @@ def ParseValue(config, key, base, value_type):
         # Otherwise, we need to generate the value according to its type
         # (See valid_value_types defined at the top of the file.)
 
-        type = param['type']
-        #print 'type = ',type
+        type_name = param['type']
+        #print 'type = ',type_name
         #print param['type'], value_type
 
         # First check if the value_type is valid.
-        if type not in valid_value_types:
+        if type_name not in valid_value_types:
             raise AttributeError(
-                "Unrecognized type = %s specified for parameter %s"%(type,key))
+                "Unrecognized type = %s specified for parameter %s"%(type_name,key))
             
-        if value_type not in valid_value_types[type][1]:
+        if value_type not in valid_value_types[type_name]['types']:
             raise AttributeError(
                 "Invalid value_type = %s specified for parameter %s with type = %s."%(
-                    value_type, key, type))
+                    value_type, key, type_name))
 
-        generate_func = valid_value_types[type][0]
+        generate_func = valid_value_types[type_name]['gen']
         #print 'generate_func = ',generate_func
         val, safe = generate_func(param, base, value_type)
         #print 'returned val, safe = ',val,safe
@@ -224,19 +224,19 @@ def SetDefaultIndex(config, num):
     elif ( isinstance(config['index'],dict) 
            and 'type' in config['index'] ):
         index = config['index']
-        type = index['type']
-        if ( type == 'Sequence' 
+        type_name = index['type']
+        if ( type_name == 'Sequence' 
              and 'nitems' in index 
              and 'default' in index ):
             index['nitems'] = num
             index['default'] = True
-        elif ( type == 'Sequence' 
+        elif ( type_name == 'Sequence' 
                and 'nitems' not in index
                and ('step' not in index or (isinstance(index['step'],int) and index['step'] > 0) )
                and ('last' not in index or 'default' in index) ):
             index['last'] = num-1
             index['default'] = True
-        elif ( type == 'Sequence'
+        elif ( type_name == 'Sequence'
                and 'nitems' not in index
                and ('step' in index and (isinstance(index['step'],int) and index['step'] < 0) ) ):
             # Normally, the value of default doesn't matter.  Its presence is sufficient
@@ -258,7 +258,7 @@ def SetDefaultIndex(config, num):
                    or ('default' in index and index['default'] == 3) ):
                 index['last'] = 0
                 index['default'] = 3
-        elif ( type == 'Random'
+        elif ( type_name == 'Random'
                and ('min' not in index or 'default' in index)
                and ('max' not in index or 'default' in index) ):
             index['min'] = 0
@@ -698,34 +698,60 @@ def _GenerateFromCurrent(config, base, value_type):
         raise ValueError("Invalid key = %s given for type=Current")
 
 
-# valid_value_types is a dict that defines how to generate each value type.
-# The keys in the dict are the 'type' specifications for each in the config dict.
-# The values are tuples with:
-#   - A function to generate a value from the config information.
-#     The call signature is value, safe = Generate(
-#   - A list of types for which the type is valid
+valid_value_types = {}
 
-valid_value_types = {
-    'List' : (_GenerateFromList, 
-              [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ]),
-    'Current' : (_GenerateFromCurrent, 
-                 [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD, None ]),
-    'Sum' : (_GenerateFromSum, 
-             [ float, int, galsim.Angle, galsim.Shear, galsim.PositionD ]),
-    'Sequence' : (_GenerateFromSequence, [ float, int, bool ]),
-    'NumberedFile' : (_GenerateFromNumberedFile, [ str ]),
-    'FormattedStr' : (_GenerateFromFormattedStr, [ str ]),
-    'Rad' : (_GenerateFromRad, [ galsim.Angle ]),
-    'Radians' : (_GenerateFromRad, [ galsim.Angle ]),
-    'Deg' : (_GenerateFromDeg, [ galsim.Angle ]),
-    'Degrees' : (_GenerateFromDeg, [ galsim.Angle ]),
-    'E1E2' : (_GenerateFromE1E2, [ galsim.Shear ]),
-    'EBeta' : (_GenerateFromEBeta, [ galsim.Shear ]),
-    'G1G2' : (_GenerateFromG1G2, [ galsim.Shear ]),
-    'GBeta' : (_GenerateFromGBeta, [ galsim.Shear ]),
-    'Eta1Eta2' : (_GenerateFromEta1Eta2, [ galsim.Shear ]),
-    'EtaBeta' : (_GenerateFromEtaBeta, [ galsim.Shear ]),
-    'QBeta' : (_GenerateFromQBeta, [ galsim.Shear ]),
-    'XY' : (_GenerateFromXY, [ galsim.PositionD ]),
-    'RTheta' : (_GenerateFromRTheta, [ galsim.PositionD ]),
-}
+def RegisterValueType(type_name, gen_func, valid_types):
+    """Register a value type for use by the config apparatus.
+
+    A few notes about the signature of the generating function:
+
+    1. The config parameter is the dict for the current value to be generated.  So it should
+       be the case that config['type'] == type_name.
+    2. The base parameter is the original config dict being processed.
+    3. The value_type parameter is the intended type of the generated value.  It should
+       be one of the values that you specify as valid in valid_types.
+    4. The return value of gen_func should be a tuple consisting of the value and a boolean,
+       safe, which indicates whether the generated value is safe to use again rather than
+       regenerate for subsequent objects.  This will be used upstream to determine if 
+       objects constructed using this value are safe to keep or if they have to be rebuilt.
+
+    The allowed types to include in valid_types are: float, int, bool, str, galsim.Angle,
+    galsim.Shear, galsim.PositionD.  In addition, including None in this list means that
+    it is valid to use this type if you don't necessarily know what type you are expecting.
+    This happens when building a truth catalog where each item should already be generated
+    and the current value and type stored, so currently the only two types that allow
+    None as a valid type are Current and Eval.
+
+    @param type_name        The name of the 'type' specification in the config dict.
+    @param gen_func         A function to generate a value from the config information.
+                            The call signature is
+                                value, safe = Generate(config, base, value_type)
+    @param valid_types      A list of types for which this type name is valid.
+    """
+    valid_value_types[type_name] = {
+        'gen' : gen_func,
+        'types' : tuple(valid_types)
+    }
+
+RegisterValueType('List', _GenerateFromList, 
+              [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ])
+RegisterValueType('Current', _GenerateFromCurrent, 
+                 [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD, None ])
+RegisterValueType('Sum', _GenerateFromSum, 
+             [ float, int, galsim.Angle, galsim.Shear, galsim.PositionD ])
+RegisterValueType('Sequence', _GenerateFromSequence, [ float, int, bool ])
+RegisterValueType('NumberedFile', _GenerateFromNumberedFile, [ str ])
+RegisterValueType('FormattedStr', _GenerateFromFormattedStr, [ str ])
+RegisterValueType('Rad', _GenerateFromRad, [ galsim.Angle ])
+RegisterValueType('Radians', _GenerateFromRad, [ galsim.Angle ])
+RegisterValueType('Deg', _GenerateFromDeg, [ galsim.Angle ])
+RegisterValueType('Degrees', _GenerateFromDeg, [ galsim.Angle ])
+RegisterValueType('E1E2', _GenerateFromE1E2, [ galsim.Shear ])
+RegisterValueType('EBeta', _GenerateFromEBeta, [ galsim.Shear ])
+RegisterValueType('G1G2', _GenerateFromG1G2, [ galsim.Shear ])
+RegisterValueType('GBeta', _GenerateFromGBeta, [ galsim.Shear ])
+RegisterValueType('Eta1Eta2', _GenerateFromEta1Eta2, [ galsim.Shear ])
+RegisterValueType('EtaBeta', _GenerateFromEtaBeta, [ galsim.Shear ])
+RegisterValueType('QBeta', _GenerateFromQBeta, [ galsim.Shear ])
+RegisterValueType('XY', _GenerateFromXY, [ galsim.PositionD ])
+RegisterValueType('RTheta', _GenerateFromRTheta, [ galsim.PositionD ])

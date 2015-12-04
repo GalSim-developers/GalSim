@@ -20,10 +20,8 @@ import galsim
 # This file adds input type cosmos_catalog and gsobject typs COSMOSGalaxy.
 
 # The COSMOSCatalog doesn't need anything special other than registration as a valid input type.
-from .input import valid_input_types
-valid_input_types['cosmos_catalog'] = (
-    galsim.COSMOSCatalog, None, True, False, None, ['COSMOSGalaxy']
-)
+from .input import RegisterInputType
+RegisterInputType('cosmos_catalog', galsim.COSMOSCatalog, ['COSMOSGalaxy'])
 
 # The gsobject type coupled to this is COSMOSGalaxy.
 
@@ -68,5 +66,5 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
     return gal, safe
 
 # Register this as a valid gsobject type
-from .gsobject import valid_gsobject_types
-valid_gsobject_types['COSMOSGalaxy'] = _BuildCOSMOSGalaxy
+from .gsobject import RegisterObjectType
+RegisterObjectType('COSMOSGalaxy', _BuildCOSMOSGalaxy)

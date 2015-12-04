@@ -311,15 +311,13 @@ def _GenerateFromRandomCircle(config, base, value_type):
     return pos, False
 
 # Register these as valid value types
-from .value import valid_value_types
-valid_value_types.update({
-    'Random' : (_GenerateFromRandom, [ float, int, bool, galsim.Angle ]),
-    'RandomGaussian' : (_GenerateFromRandomGaussian, [ float ]),
-    'RandomPoisson' : (_GenerateFromRandomPoisson, [ float, int ]),
-    'RandomBinomial' : (_GenerateFromRandomBinomial, [ float, int, bool ]),
-    'RandomWeibull' : (_GenerateFromRandomWeibull, [ float ]),
-    'RandomGamma' : (_GenerateFromRandomGamma, [ float ]),
-    'RandomChi2' : (_GenerateFromRandomChi2, [ float ]),
-    'RandomDistribution' : (_GenerateFromRandomDistribution, [ float ]),
-    'RandomCircle' : (_GenerateFromRandomCircle, [ galsim.PositionD ]),
-})
+from .value import RegisterValueType
+RegisterValueType('Random', _GenerateFromRandom, [ float, int, bool, galsim.Angle ])
+RegisterValueType('RandomGaussian', _GenerateFromRandomGaussian, [ float ])
+RegisterValueType('RandomPoisson', _GenerateFromRandomPoisson, [ float, int ])
+RegisterValueType('RandomBinomial', _GenerateFromRandomBinomial, [ float, int, bool ])
+RegisterValueType('RandomWeibull', _GenerateFromRandomWeibull, [ float ])
+RegisterValueType('RandomGamma', _GenerateFromRandomGamma, [ float ])
+RegisterValueType('RandomChi2', _GenerateFromRandomChi2, [ float ])
+RegisterValueType('RandomDistribution', _GenerateFromRandomDistribution, [ float ])
+RegisterValueType('RandomCircle', _GenerateFromRandomCircle, [ galsim.PositionD ])

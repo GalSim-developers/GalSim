@@ -32,30 +32,28 @@ def BuildWCS(config):
     if 'wcs' in image:
         image_wcs = image['wcs']
         if 'type' in image_wcs:
-            type = image_wcs['type']
+            wcs_type = image_wcs['type']
         else:
-            type = 'PixelScale'
+            wcs_type = 'PixelScale'
 
         # Special case: origin == center means to use image_center for the wcs origin
         if 'origin' in image_wcs and image_wcs['origin'] == 'center':
             origin = config['image_center']
             image_wcs['origin'] = origin
 
-        if type not in valid_wcs_types:
-            raise AttributeError("Invalid image.wcs.type=%s."%type)
+        if wcs_type not in valid_wcs_types:
+            raise AttributeError("Invalid image.wcs.type=%s."%wcs_type)
 
-        # First choice is item 2 in the tuple, which is the custom builder.
-        build_func = valid_wcs_types[type][2]
-        if build_func is not None:
-            wcs = build_func(image_wcs, config)
+        if ( valid_wcs_types[wcs_type]['local'] is not None and
+             ('origin' in image_wcs or 'world_origin' in image_wcs) ):
+            build_func = valid_wcs_types[wcs_type]['local']
         else:
-            # If that is None (the usual case), then use the _req_params, etc. in a
-            # similar manner as what _BuildSimple does in gsobject.py.
-            if 'origin' in image_wcs or 'world_origin' in image_wcs:
-                build_func = valid_wcs_types[type][1]
-            else:
-                build_func = valid_wcs_types[type][0]
+            build_func = valid_wcs_types[wcs_type]['init']
 
+        kwargs_func = valid_wcs_types[wcs_type]['kwargs']
+        if kwargs_func is not None:
+            kwargs = kwargs_func(image_wcs, config)
+        else:
             req = build_func._req_params
             opt = build_func._opt_params
             single = build_func._single_params
@@ -70,10 +68,10 @@ def BuildWCS(config):
             # This would be weird, but might as well check...
             if build_func._takes_rng:
                 if 'rng' not in config:
-                    raise ValueError("No config['rng'] available for %s.type = %s"%(key,type))
+                    raise ValueError("No config['rng'] available for %s.type = %s"%(key,wcs_type))
                 kwargs['rng'] = config['rng']
 
-            wcs = build_func(**kwargs) 
+        wcs = build_func(**kwargs) 
 
     else:
         # Default if no wcs is to use PixelScale
@@ -85,11 +83,12 @@ def BuildWCS(config):
 
     return wcs
 
-def TanWCSBuilder(config, base):
-    # The TanWCS uses a custom builder because the normal function takes an AffineTransform, which
-    # we need to construct.  It also takes a CelestialCoord for its world_origin parameter, so we
-    # make that out of ra and dec parameters.
-
+def GetTanWCSKwargs(config, base):
+    """The TanWCS type needs special handling to get the kwargs, since the TanWCS function
+    takes an AffineTransform as one of the arguments, so we need to build that from 
+    dudx, dudy, etc.  We also need to construct a CelestialCoord object for the world_origin,
+    which we make from ra, dec paramters.
+    """
     req = { "dudx" : float, "dudy" : float, "dvdx" : float, "dvdy" : float,
             "ra" : galsim.Angle, "dec" : galsim.Angle }
     opt = { "units" : str, "origin" : galsim.PositionD }
@@ -108,25 +107,38 @@ def TanWCSBuilder(config, base):
     world_origin = galsim.CelestialCoord(ra, dec)
     units = galsim.angle.get_angle_unit(units)
 
-    return galsim.TanWCS(affine, world_origin, units)
+    return { 'affine' : affine,
+             'world_origin' : world_origin,
+             'units' : units }
 
 
+valid_wcs_types = {}
 
+def RegisterWCSType(wcs_type, init_func, local_func=None, kwargs_func=None):
+    """Register a wcs type for use by the config apparatus.
 
-# We distinguish some classes according to whether they have an origin parameter.
-# The first item in the tuple is the builder class or function that does not take an 
-# offset parameter.  The second item is the version that does.
-# Most WCS types can use the normal _req_params, etc.  Currently, only Tan has a custom builder.
-# But if a custom builder is required, it is the third item in the tuple.
+    @param wcs_type         The name of the type in config['image']['wcs']
+    @param init_func        A function or class name to use to build the wcs.
+    @param local_func       If given, use a different class when origin is not given as
+                            one of the parameters.
+    @param kwargs_func      A function to get the initialization kwargs if the regular
+                            _req, _opt, etc. kind of initialization will not work. The call
+                            signature is:
+                                kwargs, safe = GetKwargs(config, base)
+                            [default: None, which means use the regular initialization]
+    """
+    valid_wcs_types[wcs_type] = {
+        'init' : init_func,
+        'local' : local_func,
+        'kwargs' : kwargs_func
+    }
 
-valid_wcs_types = { 
-    'PixelScale' : ( galsim.PixelScale, galsim.OffsetWCS, None ),
-    'Shear' : ( galsim.ShearWCS, galsim.OffsetShearWCS, None ),
-    'Jacobian' : ( galsim.JacobianWCS, galsim.AffineTransform, None ),
-    'Affine' : ( galsim.JacobianWCS, galsim.AffineTransform, None ),
-    'UVFunction' : ( galsim.UVFunction, galsim.UVFunction, None ),
-    'RaDecFunction' : ( galsim.RaDecFunction, galsim.RaDecFunction, None ),
-    'Fits' : ( galsim.FitsWCS, galsim.FitsWCS, None ),
-    'Tan' : ( galsim.TanWCS, galsim.TanWCS, TanWCSBuilder ),
-}
+RegisterWCSType('PixelScale', galsim.PixelScale, local_func=galsim.OffsetWCS)
+RegisterWCSType('Shear', galsim.ShearWCS, local_func=galsim.OffsetShearWCS)
+RegisterWCSType('Jacobian', galsim.JacobianWCS, local_func=galsim.AffineTransform)
+RegisterWCSType('Affine', galsim.JacobianWCS, local_func=galsim.AffineTransform)
+RegisterWCSType('UVFunction', galsim.UVFunction)
+RegisterWCSType('RaDecFunction', galsim.RaDecFunction)
+RegisterWCSType('Fits', galsim.FitsWCS)
+RegisterWCSType('Tan', galsim.TanWCS, kwargs_func=GetTanWCSKwargs )
 

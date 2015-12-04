@@ -22,7 +22,7 @@ import logging
 # This file adds image type Tiled, which builds a larger image by tiling nx x ny individual
 # postage stamps.
 
-def SetupTiledImage(config, image_num, obj_num, ignore, logger):
+def SetupTiled(config, image_num, obj_num, ignore, logger):
     """
     Build an Image consisting of a tiled array of postage stamps.
 
@@ -37,7 +37,7 @@ def SetupTiledImage(config, image_num, obj_num, ignore, logger):
     @returns the final image
     """
     if logger and logger.isEnabledFor(logging.DEBUG):
-        logger.debug('image %d: BuildTiledImage: image, obj = %d,%d',image_num,image_num,obj_num)
+        logger.debug('image %d: Building Tiled: image, obj = %d,%d',image_num,image_num,obj_num)
 
     extra_ignore = [ 'image_pos' ] # We create this below, so on subequent passes, we ignore it.
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
@@ -93,7 +93,7 @@ def SetupTiledImage(config, image_num, obj_num, ignore, logger):
     return full_xsize, full_ysize
 
 
-def BuildTiledImage(config, image_num, obj_num, logger):
+def BuildTiled(config, image_num, obj_num, logger):
     """
     Build an Image consisting of a tiled array of postage stamps.
 
@@ -187,7 +187,7 @@ def BuildTiledImage(config, image_num, obj_num, logger):
     return full_image
 
 
-def AddNoiseTiledImage(image, config, image_num, obj_num, logger):
+def AddNoiseTiled(image, config, image_num, obj_num, logger):
     """
     Add the final noise to a Tiled image
 
@@ -206,7 +206,7 @@ def AddNoiseTiledImage(image, config, image_num, obj_num, logger):
             current_var = config['current_var']
             galsim.config.AddNoise(config,image,current_var,logger)
 
-def GetNObjForTiledImage(config, image_num):
+def GetNObjTiled(config, image_num):
 
     config['index_key'] = 'image_num'
     config['image_num'] = image_num
@@ -219,10 +219,5 @@ def GetNObjForTiledImage(config, image_num):
     return nx*ny
 
 # Register this as a valid image type
-from .image import valid_image_types
-valid_image_types['Tiled'] = (
-    SetupTiledImage, BuildTiledImage, AddNoiseTiledImage,
-    GetNObjForTiledImage 
-)
-
-
+from .image import RegisterImageType
+RegisterImageType('Tiled', SetupTiled, BuildTiled, AddNoiseTiled, GetNObjTiled)

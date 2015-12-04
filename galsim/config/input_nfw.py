@@ -23,10 +23,8 @@ import logging
 # This file adds input type nfw_halo and value types NFWHaloShear and NFWHaloMagnification.
 
 # The NFWHalo doesn't need anything special other than registration as a valid input type.
-from .input import valid_input_types
-valid_input_types['nfw_halo'] = (
-    galsim.NFWHalo, None, False, False, None, ['NFWHaloShear', 'NFWHaloMagnification']
-)
+from .input import RegisterInputType
+RegisterInputType('nfw_halo', galsim.NFWHalo, ['NFWHaloShear', 'NFWHaloMagnification'])
 
 # There are two value types associated with this: NFWHaloShear and NFWHaloMagnification.
 
@@ -92,8 +90,6 @@ def _GenerateFromNFWHaloMagnification(config, base, value_type):
 
 
 # Register these as valid value types
-from .value import valid_value_types
-valid_value_types.update({
-    'NFWHaloShear' : (_GenerateFromNFWHaloShear, [ galsim.Shear ]),
-    'NFWHaloMagnification' : (_GenerateFromNFWHaloMagnification, [ float ]),
-})
+from .value import RegisterValueType
+RegisterValueType('NFWHaloShear', _GenerateFromNFWHaloShear, [ galsim.Shear ])
+RegisterValueType('NFWHaloMagnification', _GenerateFromNFWHaloMagnification, [ float ])

@@ -92,12 +92,11 @@ def SetupPowerSpectrum(ps, config, base, logger=None):
         base['rng'].discard(ps.nRandCallsForBuildGrid())
 
 # Register this as a valid input type
-from .input import valid_input_types
-valid_input_types['power_spectrum'] = (
-    galsim.PowerSpectrum,
-    GetPowerSpectrumKwargs, False, False, SetupPowerSpectrum,
-    ['PowerSpectrumShear','PowerSpectrumMagnification']
-)
+from .input import RegisterInputType
+RegisterInputType('power_spectrum', galsim.PowerSpectrum,
+                  types=['PowerSpectrumShear','PowerSpectrumMagnification'],
+                  kwargs_func=GetPowerSpectrumKwargs,
+                  setup_func=SetupPowerSpectrum)
 
 
 # There are two value types associated with this: PowerSpectrumShear and 
@@ -157,8 +156,6 @@ def _GenerateFromPowerSpectrumMagnification(config, base, value_type):
     return mu, False
 
 # Register these as valid value types
-from .value import valid_value_types
-valid_value_types.update({
-    'PowerSpectrumShear' : (_GenerateFromPowerSpectrumShear, [ galsim.Shear ]),
-    'PowerSpectrumMagnification' : (_GenerateFromPowerSpectrumMagnification, [ float ]),
-})
+from .value import RegisterValueType
+RegisterValueType('PowerSpectrumShear', _GenerateFromPowerSpectrumShear, [ galsim.Shear ])
+RegisterValueType('PowerSpectrumMagnification', _GenerateFromPowerSpectrumMagnification, [ float ])

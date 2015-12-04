@@ -68,8 +68,5 @@ def GetNImagesMultiFits(config, file_num):
     return galsim.config.ParseValue(config['output'],'nimages',config,int)[0]
 
 # Register this as a valid output type
-from .output import valid_output_types
-valid_output_types['MultiFits'] = (
-    BuildMultiFits, galsim.fits.writeMulti, False, '.fits', GetNImagesMultiFits
-)
-
+from .output import RegisterOutputType
+RegisterOutputType('MultiFits', BuildMultiFits, galsim.fits.writeMulti, GetNImagesMultiFits)

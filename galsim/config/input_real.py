@@ -21,14 +21,8 @@ import galsim
 
 # The RealGalaxyCatalog doesn't need anything special other than registration as a valid
 # input type.
-from .input import valid_input_types
-valid_input_types['real_catalog'] = (
-    galsim.RealGalaxyCatalog, None,
-    False, # Actually it does have getNObjects, but that's probably not
-           # the right number of objects to use for a single file or image.
-    False, None,
-    ['RealGalaxy', 'RealGalaxyOriginal']
-)
+from .input import RegisterInputType
+RegisterInputType('real_catalog', galsim.RealGalaxyCatalog, ['RealGalaxy', 'RealGalaxyOriginal'])
 
 # There are two gsobject types that are coupled to this: RealGalaxy and RealGalaxyOriginal.
 
@@ -77,7 +71,7 @@ def _BuildRealGalaxyOriginal(config, base, ignore, gsparams, logger):
 
 
 # Register these as valid gsobject types
-from .gsobject import valid_gsobject_types
-valid_gsobject_types['RealGalaxy'] = _BuildRealGalaxy
-valid_gsobject_types['RealGalaxyOriginal'] = _BuildRealGalaxyOriginal
+from .gsobject import RegisterObjectType
+RegisterObjectType('RealGalaxy', _BuildRealGalaxy)
+RegisterObjectType('RealGalaxyOriginal', _BuildRealGalaxyOriginal)
 

@@ -51,7 +51,7 @@ def SetupExtraOutput(config, file_num=0, logger=None):
 
         # We'll iterate through this list of keys a few times
         all_keys = [ k for k in valid_extra_outputs.keys()
-                     if (k in output and valid_extra_outputs[k][0] is not None) ]
+                     if (k in output and valid_extra_outputs[k]['init'] is not None) ]
 
         # We don't need the manager stuff if we (a) are already in a multiprocessing Process, or
         # (b) config.image.nproc == 1.
@@ -68,7 +68,7 @@ def SetupExtraOutput(config, file_num=0, logger=None):
             for key in all_keys:
                 fields = output[key]
                 # Register this object with the manager
-                init_func = valid_extra_outputs[key][0]
+                init_func = valid_extra_outputs[key]['init']
                 OutputManager.register(key, init_func)
             # Also register dict to use for scratch space
             OutputManager.register('dict', dict, DictProxy)
@@ -85,7 +85,7 @@ def SetupExtraOutput(config, file_num=0, logger=None):
             if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('file %d: Setup output item %s',file_num,key)
             field = config['output'][key]
-            kwargs_func = valid_extra_outputs[key][1]
+            kwargs_func = valid_extra_outputs[key]['kwargs']
             if kwargs_func is not None:
                 kwargs = kwargs_func(field, config, logger)
             else:
@@ -96,7 +96,7 @@ def SetupExtraOutput(config, file_num=0, logger=None):
                 output_obj = getattr(config['output_manager'],key)(**kwargs)
                 scratch = config['output_manager'].dict()
             else: 
-                init_func = valid_extra_outputs[key][0]
+                init_func = valid_extra_outputs[key]['init']
                 output_obj = init_func(**kwargs)
                 scratch = dict()
             if logger and logger.isEnabledFor(logging.DEBUG):
@@ -116,7 +116,7 @@ def SetupExtraOutputsForImage(config, logger=None):
             # Always clear out anything in the scratch space
             extra_scratch = config['extra_scratch'][key]
             extra_scratch.clear()
-            setup_func = valid_extra_outputs[key][2]
+            setup_func = valid_extra_outputs[key]['setup']
             if setup_func is not None:
                 extra_obj = config['extra_objs'][key]
                 field = config['output'][key]
@@ -136,7 +136,7 @@ def ProcessExtraOutputsForStamp(config, logger=None):
     if 'output' in config:
         obj_num = config['obj_num'] - config['start_obj_num']
         for key in [ k for k in valid_extra_outputs.keys() if k in config['output'] ]:
-            stamp_func = valid_extra_outputs[key][3]
+            stamp_func = valid_extra_outputs[key]['stamp']
             if stamp_func is not None:
                 extra_obj = config['extra_objs'][key]
                 extra_scratch = config['extra_scratch'][key]
@@ -153,7 +153,7 @@ def ProcessExtraOutputsForImage(config, logger=None):
     """
     if 'output' in config:
         for key in [ k for k in valid_extra_outputs.keys() if k in config['output'] ]:
-            image_func = valid_extra_outputs[key][4]
+            image_func = valid_extra_outputs[key]['image']
             if image_func is not None:
                 extra_obj = config['extra_objs'][key]
                 extra_scratch = config['extra_scratch'][key]
@@ -193,7 +193,7 @@ def WriteExtraOutputs(config, logger=None):
             config['extra_objs_last_file'] = {}
 
         for key in [ k for k in valid_extra_outputs.keys() if k in output ]:
-            write_func = valid_extra_outputs[key][5]
+            write_func = valid_extra_outputs[key]['write']
             if write_func is None: continue
 
             field = output[key]
@@ -259,7 +259,7 @@ def BuildExtraOutputHDUs(config, logger=None, first=1):
         output = config['output']
         hdus = {}
         for key in [ k for k in valid_extra_outputs.keys() if k in output ]:
-            hdu_func = valid_extra_outputs[key][6]
+            hdu_func = valid_extra_outputs[key]['hdu']
             if hdu_func is None: continue
 
             field = output[key]
@@ -290,25 +290,41 @@ def BuildExtraOutputHDUs(config, logger=None, first=1):
     else:
         return []
 
-
-# valid_extra_outputs is a dict that defines how to process each of the extra output items.
-# The dict is empty here.  The appropriate items are added to the dict in extra_*.py, and
-# this provides the hook for other modules to add additional output items.
-# The keys here are the names of the output items, and the values are tuples with:
-#   - The class name of the object to build to be output.
-#   - A function to get the initialization kwargs if building something.
-#     The call signature is kwargs = GetKwargs(config, base, logger)
-#   - A function to call at the start of each image
-#     The call signature is Setup(output_obj, scratch, config, base, logger)
-#   - A function to call at the end of building each stamp
-#     The call signature is ProcessStamp(output_obj, scratch, config, base, obj_num, logger)
-#   - A function to call at the end of building each image
-#     The call signature is ProcessImage(output_obj, scratch, config, base, logger)
-#   - A function to call to write the output file
-#     The call signature is WriteFile(output_obj, file_name)
-#   - A function to call to build either a FITS HDU or an Image to put in an HDU
-#     The call signature is hdu = WriteToHDU(output_obj)
-
 valid_extra_outputs = {}
 
+def RegisterExtraOutput(key, init_func, kwargs_func=None, setup_func=None, stamp_func=None,
+                        image_func=None, write_func=None, hdu_func=None):
+    """Register an extra output field for use by the config apparatus.
+
+    @param key              The name of the output field in config['output']
+    @param init_func        A function or class name to use to build the output object.
+    @param kwargs_func      A function to get the initialization kwargs. [default: None, which
+                            means initialize with no arguments.]
+    @param setup_func       A function to call at the start of each image. 
+                            The call signature is
+                                Setup(output_obj, scratch, config, base, logger)
+    @param stamp_func       A function to call at the end of building each stamp.
+                            The call signature is 
+                                ProcessStamp(output_obj, scratch, config, base, obj_num, logger)
+    @param image_func       A function to call at the end of building each image
+                            The call signature is 
+                                ProcessImage(output_obj, scratch, config, base, logger)
+    @param write_func       A function to call to write the output file
+                            The call signature is 
+                                WriteFile(output_obj, file_name)
+    @param hdu_func         A function to call to build a FITS HDU or an Image to put in an HDU.
+                            The call signature is   
+                                hdu = WriteToHDU(output_obj)
+    """
+    valid_extra_outputs[key] = {
+        'init' : init_func,
+        'kwargs' : kwargs_func,
+        'setup' : setup_func,
+        'stamp' : stamp_func,
+        'image' : image_func,
+        'write' : write_func,
+        'hdu' : hdu_func
+    }
+
+# Nothing is registered here.  The appropriate items are registered in extra_*.py.
 

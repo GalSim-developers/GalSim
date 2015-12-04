@@ -59,6 +59,5 @@ def _BuildRing(config, base, ignore, gsparams, logger):
     return gsobject, False
 
 # Register this as a valid gsobject type
-from .gsobject import valid_gsobject_types
-valid_gsobject_types['Ring'] = _BuildRing
-
+from .gsobject import RegisterObjectType
+RegisterObjectType('Ring', _BuildRing)

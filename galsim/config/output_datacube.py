@@ -94,8 +94,5 @@ def GetNImagesDataCube(config, file_num):
 
 
 # Register this as a valid output type
-from .output import valid_output_types
-valid_output_types['DataCube'] = (
-    BuildDataCube, galsim.fits.writeCube, False, '.fits', GetNImagesDataCube
-)
-
+from .output import RegisterOutputType
+RegisterOutputType('DataCube', BuildDataCube, galsim.fits.writeCube, GetNImagesDataCube)

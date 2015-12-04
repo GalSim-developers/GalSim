@@ -51,13 +51,13 @@ def AddNoise(config, im, current_var=0., logger=None):
         return
 
     if 'type' in noise:
-        type = noise['type']
+        noise_type = noise['type']
     else:
-        type = 'Poisson'  # Default is Poisson
-    if type not in valid_noise_types:
-        raise AttributeError("Invalid type %s for noise",type)
+        noise_type = 'Poisson'  # Default is Poisson
+    if noise_type not in valid_noise_types:
+        raise AttributeError("Invalid type %s for noise",noise_type)
 
-    func = valid_noise_types[type][0]
+    func = valid_noise_types[noise_type]['noise']
     func(noise, config, im, current_var, logger)
 
 def CalculateNoiseVar(config):
@@ -73,13 +73,13 @@ def CalculateNoiseVar(config):
         raise AttributeError("image.noise is not a dict.")
 
     if 'type' in noise:
-        type = noise['type']
+        noise_type = noise['type']
     else:
-        type = 'Poisson'  # Default is Poisson
-    if type not in valid_noise_types:
-        raise AttributeError("Invalid type %s for noise",type)
+        noise_type = 'Poisson'  # Default is Poisson
+    if noise_type not in valid_noise_types:
+        raise AttributeError("Invalid type %s for noise",noise_type)
 
-    func = valid_noise_types[type][1]
+    func = valid_noise_types[noise_type]['var']
     return func(noise, config)
 
 def AddNoiseVariance(config, im, include_obj_var=False, logger=None):
@@ -101,13 +101,13 @@ def AddNoiseVariance(config, im, include_obj_var=False, logger=None):
         return
 
     if 'type' in noise:
-        type = noise['type']
+        noise_type = noise['type']
     else:
-        type = 'Poisson'  # Default is Poisson
-    if type not in valid_noise_types:
-        raise AttributeError("Invalid type %s for noise",type)
+        noise_type = 'Poisson'  # Default is Poisson
+    if noise_type not in valid_noise_types:
+        raise AttributeError("Invalid type %s for noise",noise_type)
 
-    func = valid_noise_types[type][2]
+    func = valid_noise_types[noise_type]['addvar']
     func(noise, config, im, include_obj_var, logger)
 
 
@@ -459,20 +459,30 @@ def AddNoiseVarianceCOSMOS(config, base, im, include_obj_var, logger):
     im += NoiseVarCOSMOS(config, base)
 
 
+valid_noise_types = {}
 
-# valid_noise_type is a dict that defines how to process each noise type.
-# The values in the tuple are:
-# - A function to add noise to an image
-#   The call signature is AddNoise(config, base, im, current_var, logger)
-# - A function that returns the variance of the noise
-#   The call signature is NoiseVar(config, base)
-# - A function to add the noise variance to an image
-#   The call signature is AddNoiseVariance(config, base, im, include_obj_var, logger)
+def RegisterNoiseType(noise_type, addnoise_func, getvar_func, addvar_func):
+    """Register a noise type for use by the config apparatus.
 
-valid_noise_types = { 
-    'Gaussian' : (AddNoiseGaussian, NoiseVarGaussian, AddNoiseVarianceGaussian),
-    'Poisson' : (AddNoisePoisson, NoiseVarPoisson, AddNoiseVariancePoisson),
-    'CCD' : (AddNoiseCCD, NoiseVarCCD, AddNoiseVarianceCCD),
-    'COSMOS' : (AddNoiseCOSMOS, NoiseVarCOSMOS, AddNoiseVarianceCOSMOS),
-}
+    @param noise_type       The name of the type in config['image']['noise']
+    @param addnoise_func    The function to add noise to an image
+                            The call signature is:
+                                AddNoise(config, base, image, current_var, logger)
+    @param getvar_func      A function that returns the variance of the noise
+                            The call signature is 
+                                var = GetVar(config, base)
+    @param addvar_func      The function to add the variance of the noise to an image.
+                            The call signature is 
+                                AddVar(image, config, image, include_obj_var, logger)
+    """
+    valid_noise_types[noise_type] = {
+        'noise' : addnoise_func,
+        'var' : getvar_func,
+        'addvar' : addvar_func,
+    }
+
+RegisterNoiseType('Gaussian', AddNoiseGaussian, NoiseVarGaussian, AddNoiseVarianceGaussian)
+RegisterNoiseType('Poisson', AddNoisePoisson, NoiseVarPoisson, AddNoiseVariancePoisson)
+RegisterNoiseType('CCD', AddNoiseCCD, NoiseVarCCD, AddNoiseVarianceCCD)
+RegisterNoiseType('COSMOS', AddNoiseCOSMOS, NoiseVarCOSMOS, AddNoiseVarianceCOSMOS)
 

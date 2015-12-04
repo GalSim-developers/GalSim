@@ -316,7 +316,7 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
     rng = config['rng'] # Grab this for use later
 
     # Do the necessary initial setup for this image type.
-    setup_func = valid_image_types[image_type][0]
+    setup_func = valid_image_types[image_type]['setup']
     xsize, ysize = setup_func(config, image_num, obj_num, image_ignore, logger)
 
     # Given this image size (which may be 0,0, in which case it will be set automatically later),
@@ -335,7 +335,7 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
 
     # Actually build the image now.  This is the main working part of this function.
     # It calls out to the appropriate build function for this image type.
-    build_func = valid_image_types[image_type][1]
+    build_func = valid_image_types[image_type]['build']
     image = build_func(config, image_num, obj_num, logger)
 
     # Store the current image in the base-level config for reference
@@ -351,7 +351,7 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
     # Do whatever processing is required for the extra output items.
     galsim.config.ProcessExtraOutputsForImage(config,logger)
 
-    noise_func = valid_image_types[image_type][2]
+    noise_func = valid_image_types[image_type]['noise']
     if noise_func:
         noise_func(image, config, image_num, obj_num, logger)
 
@@ -377,7 +377,7 @@ def GetNObjForImage(config, image_num):
     if image_type not in valid_image_types:
         raise AttributeError("Invalid image.type=%s."%type)
 
-    nobj_func = valid_image_types[image_type][3]
+    nobj_func = valid_image_types[image_type]['nobj']
 
     return nobj_func(config,image_num)
 
@@ -427,7 +427,7 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
     return max_current_var
 
 
-def SetupSingleImage(config, image_num, obj_num, ignore, logger):
+def SetupSingle(config, image_num, obj_num, ignore, logger):
     """
     Do the initialization and setup for building a Single image.
 
@@ -470,7 +470,7 @@ def SetupSingleImage(config, image_num, obj_num, ignore, logger):
     return xsize, ysize
 
 
-def BuildSingleImage(config, image_num, obj_num, logger):
+def BuildSingle(config, image_num, obj_num, logger):
     """
     Build an Image consisting of a single stamp.
 
@@ -490,7 +490,7 @@ def BuildSingleImage(config, image_num, obj_num, logger):
 
     return image
 
-def GetNObjForSingleImage(config, image_num):
+def GetNObjSingle(config, image_num):
     """
     Get the number of objects for an Image consisting of a single stamp.
 
@@ -503,18 +503,32 @@ def GetNObjForSingleImage(config, image_num):
     return 1
 
 
-# valid_image_types is a dict that defines how to build each image type.
-# The items in each tuple are:
-#   - The function to call to determine the size of the image and do any other initial setup.
-#     The call signature is xsize, ysize = Setup(config, image_num, obj_num, ignore, logger)
-#   - The function to call to build the image.
-#     The call signature is image = Build(config, image_num, obj_num, logger)
-#   - The function to call to add noise and sky level to the image.
-#     The call signature is AddNoise(image, config, image_num, obj_num, logger)
-#   - The function to call to get the number of objects that will be built
-#     The call signature is nobj = GetNobj(config, image_num)
+valid_image_types = {}
 
-valid_image_types = {
-    'Single' : ( SetupSingleImage, BuildSingleImage, None, GetNObjForSingleImage ),
-}
+def RegisterImageType(image_type, setup_func, build_func, noise_func, nobj_func):
+    """Register an image type for use by the config apparatus.
+
+    @param image_type       The name of the type in config['image']
+    @param setup_func       The function to call to determine the size of the image and do any
+                            other initial setup.
+                            The call signature is 
+                                xsize, ysize = Setup(config, image_num, obj_num, ignore, logger)
+    @param build_func       The function to call for building the image
+                            The call signature is:
+                                image = Build(config, image_num, obj_num, logger)
+    @param noise_func       The function to call to add noise and sky level to the image.
+                            The call signature is 
+                                AddNoise(image, config, image_num, obj_num, logger)
+    @param nobj_func        A function that returns the number of objects that will be built.
+                            The call signature is 
+                                nobj = GetNObj(config, image_num)
+    """
+    valid_image_types[image_type] = {
+        'setup' : setup_func,
+        'build' : build_func,
+        'noise' : noise_func,
+        'nobj' : nobj_func,
+    }
+
+RegisterImageType('Single', SetupSingle, BuildSingle, None, GetNObjSingle)
 

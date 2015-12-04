@@ -58,10 +58,8 @@ def ProcessBadPixImage(image, scratch, config, base, logger=None):
         pass
 
 # Register this as a valid extra output
-from .extra import valid_extra_outputs
-valid_extra_outputs['badpix'] = (
-    galsim.Image, GetBadPixKwargs,
-    SetupBadPix, ProcessBadPixStamp, ProcessBadPixImage, 
-    galsim.Image.write, galsim.Image.view 
-)
+from .extra import RegisterExtraOutput
+RegisterExtraOutput('badpix', galsim.Image, GetBadPixKwargs,
+                    SetupBadPix, ProcessBadPixStamp, ProcessBadPixImage, 
+                    galsim.Image.write, galsim.Image.view)
 

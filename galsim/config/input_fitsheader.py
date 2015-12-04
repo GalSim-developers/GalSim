@@ -23,8 +23,8 @@ import logging
 # This file adds input type fits_header and value types NFWHaloShear and NFWHaloMagnification.
 
 # The NFWHalo doesn't need anything special other than registration as a valid input type.
-from .input import valid_input_types
-valid_input_types['fits_header'] = (galsim.FitsHeader, None, False, True, None, ['FitsHeader'])
+from .input import RegisterInputType
+RegisterInputType('fits_header', galsim.FitsHeader,['FitsHeader'], file_scope=True)
 
 def _GenerateFromFitsHeader(config, base, value_type):
     """@brief Return a value read from a FITS header
@@ -42,5 +42,5 @@ def _GenerateFromFitsHeader(config, base, value_type):
     return val, safe
 
 # Register this as a valid value type
-from .value import valid_value_types
-valid_value_types['FitsHeader'] = (_GenerateFromFitsHeader, [ float, int, bool, str ])
+from .value import RegisterValueType
+RegisterValueType('FitsHeader', _GenerateFromFitsHeader, [ float, int, bool, str ])

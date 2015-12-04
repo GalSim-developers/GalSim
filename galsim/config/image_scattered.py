@@ -22,7 +22,7 @@ import logging
 # This file adds image type Scattered, which places individual stamps at arbitrary
 # locations on a larger image.
 
-def SetupScatteredImage(config, image_num, obj_num, ignore, logger):
+def SetupScattered(config, image_num, obj_num, ignore, logger):
     """
     Build an Image containing multiple objects placed at arbitrary locations.
 
@@ -37,7 +37,7 @@ def SetupScatteredImage(config, image_num, obj_num, ignore, logger):
     @returns the final image
     """
     if logger and logger.isEnabledFor(logging.DEBUG):
-        logger.debug('image %d: BuildScatteredImage: image, obj = %d,%d',
+        logger.debug('image %d: Building Scattered: image, obj = %d,%d',
                      image_num,image_num,obj_num)
 
     if 'nobjects' not in config['image']:
@@ -84,7 +84,7 @@ def SetupScatteredImage(config, image_num, obj_num, ignore, logger):
     return full_xsize, full_ysize
 
 
-def BuildScatteredImage(config, image_num, obj_num, logger):
+def BuildScattered(config, image_num, obj_num, logger):
     """
     Build an Image containing multiple objects placed at arbitrary locations.
 
@@ -158,7 +158,7 @@ def BuildScatteredImage(config, image_num, obj_num, logger):
     return full_image
 
 
-def AddNoiseScatteredImage(image, config, image_num, obj_num, logger):
+def AddNoiseScattered(image, config, image_num, obj_num, logger):
     """
     Add the final noise to a Scattered image
 
@@ -174,7 +174,7 @@ def AddNoiseScatteredImage(image, config, image_num, obj_num, logger):
         galsim.config.AddNoise(config,image,current_var,logger)
 
 
-def GetNObjForScatteredImage(config, image_num):
+def GetNObjScattered(config, image_num):
 
     config['index_key'] = 'image_num'
     config['image_num'] = image_num
@@ -190,10 +190,7 @@ def GetNObjForScatteredImage(config, image_num):
         return nobj
 
 # Register this as a valid image type
-from .image import valid_image_types
-valid_image_types['Scattered'] = (
-    SetupScatteredImage, BuildScatteredImage, AddNoiseScatteredImage,
-    GetNObjForScatteredImage 
-)
+from .image import RegisterImageType
+RegisterImageType('Scattered', SetupScattered, BuildScattered, AddNoiseScattered, GetNObjScattered)
 
 
