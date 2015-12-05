@@ -374,7 +374,7 @@ def AddNoiseCCD(config, base, im, current_var, logger):
 
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d, obj %d: Added CCD noise with gain = %f, read_noise = %f',
-                     base['image_num'],base['obj_num'],sky,gain,read_noise)
+                     base['image_num'],base['obj_num'],gain,read_noise)
 
 def NoiseVarCCD(config, base):
     # The noise variance is sky / gain + read_noise^2

@@ -252,3 +252,175 @@ def Process(config, logger=None):
 
     galsim.config.BuildFiles(nfiles, config, nproc=nproc, logger=logger)
 
+
+def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
+                 njobs_per_task=1, done_func=None, except_func=None, except_abort=True):
+    """A helper function for performing a task using multiprocessing.
+
+    @param nproc            How many processes to use.
+    @param config           The configuration dict.
+    @param job_func         The function to run for each job.
+    @param jobs             A list of jobs to run.  Each item is a tuple (kwargs, info).
+    @param item             A string indicating what is being worked on.
+    @param logger           If given, a logger object to log progress. [default: None]
+    @param njobs_per_task   The number of jobs to send to the worker at a time. [default: 1]
+    @param done_func        A function to run upon completion of each job. [default: None]
+    @param except_func      A function to run if an exception is encountered. [default: None]
+    @param except_abort     Whether an exception should abort the rest of the processing.
+                            [default: True]
+
+    @returns nproc, results
+             - nproc is the number of processes actually used
+             - results is a list of the outputs from job_func for each job
+    """
+    import time
+
+    # The worker function will be run once in each process.
+    # It pulls tasks off the task_queue, runs them, and puts the results onto the results_queue
+    # to send them back to the main process.
+    # The *tasks* can be made up of more than one *job*.  Each job involves calling job_func
+    # with the kwargs from the list of jobs.
+    # Each job also carries with it some kind of information, like the file_num, file_name, etc.
+    # to help identify what the job is about.  This is mostly useful for the done_func and
+    # except_func to write something appropriate in the logger.
+    def worker(task_queue, results_queue, config, logger):
+        proc = current_process().name
+        for task in iter(task_queue.get, 'STOP'):
+            try :
+                if logger and logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('%s: Received job to do %d %ss, starting with %s',
+                                 proc,len(task),item,task[0][1])
+                for kwargs, k in task:
+                    t1 = time.time()
+                    kwargs['config'] = config
+                    kwargs['logger'] = logger
+                    result = job_func(**kwargs)
+                    t2 = time.time()
+                    results_queue.put( (result, k, t2-t1, proc) )
+            except Exception as e:
+                import traceback
+                tr = traceback.format_exc()
+                if logger and logger.isEnabledFor(logging.WARN):
+                    logger.warn('%s: Caught exception: %s\n%s',proc,str(e),tr)
+                results_queue.put( (e, k, tr, proc) )
+        if logger and logger.isEnabledFor(logging.DEBUG):
+            logger.debug('%s: Received STOP', proc)
+
+    # Possibly update the number of processes. 
+    # First if nproc < 0, update based on ncpu
+    nproc = UpdateNProc(nproc, logger)
+
+    # Second, make sure we aren't already in a multiprocessing mode
+    if nproc > 1 and 'current_nproc' in config:
+        if logger and logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Already multiprocessing.  Ignoring image.nproc")
+        nproc = 1
+
+    # Finally, don't try to use more processes than jobs.  It wouldn't fail or anything.
+    # It just looks bad to have 3 images processed with 8 processes or something like that.
+    njobs = len(jobs)
+    if nproc > njobs:
+        if logger and logger.isEnabledFor(logging.DEBUG):
+            logger.debug("There are only %d jobs.  Reducing nproc to %d."%(njobs,njobs))
+        nproc = njobs
+
+    if nproc > 1:
+        if logger and logger.isEnabledFor(logging.WARN):
+            logger.warn("Using %d processes for %s processing",nproc,item)
+
+        from multiprocessing import Process, Queue, current_process
+        from multiprocessing.managers import BaseManager
+
+        # Set up the task list.  Each task is defined as a list of jobs and the index k of the
+        # first job to be done.  The index k is mostly important for putting the results in
+        # the right order, since they will be done out of order.
+        task_queue = Queue()
+        for k in range(0, len(jobs), njobs_per_task):
+            k2 = k + njobs_per_task
+            if k2 > njobs: k2 = njobs
+            task = [ (jobs[k][0], k) for k in range(k,k2) ]
+            task_queue.put(task)
+
+        # Temporarily mark that we are multiprocessing, so we know not to start another
+        # round of multiprocessing later.
+        config['current_nproc'] = nproc
+
+        # The logger is not picklable, so we need to make a proxy for it so all the 
+        # processes can emit logging information safely.
+        logger_proxy = GetLoggerProxy(logger)
+
+        # Run the tasks.
+        # Each Process command starts up a parallel process that will keep checking the queue
+        # for a new task. If there is one there, it grabs it and does it. If not, it waits
+        # until there is one to grab. When it finds a 'STOP', it shuts down.
+        results_queue = Queue()
+        p_list = []
+        for j in range(nproc):
+            # The process name is actually the default name that Process would generate on its
+            # own for the first time we do this. But after that, if we start another round of
+            # multiprocessing, then it just keeps incrementing the numbers, rather than starting
+            # over at Process-1.  As far as I can tell, it's not actually spawning more
+            # processes, so for the sake of the logging output, we name the processes explicitly.
+            p = Process(target=worker, args=(task_queue, results_queue, config, logger_proxy),
+                        name='Process-%d'%(j+1))
+            p.start()
+            p_list.append(p)
+
+        # In the meanwhile, the main process keeps going.  We pull each set of images off of the
+        # results_queue and put them in the appropriate place in the lists.
+        # This loop is happening while the other processes are still working on their tasks.
+        results = [ None for k in range(len(jobs)) ]
+        for kk in range(njobs):
+            res, k, t, proc = results_queue.get()
+            if isinstance(res,Exception):
+                # res is really the exception, e
+                # t is really the traceback
+                # k is the job number that failed, so jobs[k][1] is the info for that job.
+                except_func(logger, proc, res, t, jobs[k][1])
+                if except_abort:
+                    for j in range(nproc):
+                        p_list[j].terminate()
+                    raise res
+            else:
+                # The normal case
+                done_func(logger, proc, jobs[k][1], res, t)
+                results[k] = res
+ 
+        # Stop the processes
+        # The 'STOP's could have been put on the task list before starting the processes, or you
+        # can wait.  In some cases it can be useful to clear out the results_queue (as we just did)
+        # and then add on some more tasks.  We don't need that here, but it's perfectly fine to do.
+        # Once you are done with the processes, putting nproc 'STOP's will stop them all.
+        # This is important, because the program will keep running as long as there are running
+        # processes, even if the main process gets to the end.  So you do want to make sure to
+        # add those 'STOP's at some point!
+        for j in range(nproc):
+            task_queue.put('STOP')
+        for j in range(nproc):
+            p_list[j].join()
+        task_queue.close()
+
+        # And clear this out, so we know that we're not multiprocessing anymore.
+        config['current_nproc'] = nproc
+
+    else : # nproc == 1
+        results = []
+        for kwargs, info in jobs:
+            try:
+                t1 = time.time()
+                kwargs['config'] = config
+                kwargs['logger'] = logger
+                result = job_func(**kwargs)
+                t2 = time.time()
+                done_func(logger, None, info, result, t2-t1)
+                results.append(result)
+            except Exception as e:
+                import traceback
+                tr = traceback.format_exc()
+                if logger and logger.isEnabledFor(logging.WARN):
+                    logger.warn('Caught exception %s\n%s',str(e),tr)
+                except_func(logger, None, e, tr, info)
+                if except_abort: raise
+ 
+    return nproc, results
+ 

@@ -48,77 +48,15 @@ def BuildStamps(nobjects, config, obj_num=0,
 
     @returns the tuple (images, current_vars).  Both are lists.
     """
-    config['obj_num'] = obj_num
-
-    import time
-    def worker(input, output, kwargs, config, logger):
-        proc = current_process().name
-        for job in iter(input.get, 'STOP'):
-            try :
-                (obj_num, nobj, info) = job
-                if logger and logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('%s: Received job to do %d stamps, starting with %d',
-                                 proc,nobj,obj_num)
-                results = []
-                for k in range(nobj):
-                    t1 = time.time()
-                    im, var = BuildStamp(config, obj_num=obj_num, logger=logger, **kwargs)
-                    obj_num += 1
-                    t2 = time.time()
-                    results.append( (im, var, (t2-t1)) )
-                    # Note: numpy shape is y,x
-                    ys, xs = im.array.shape
-                    if logger and logger.isEnabledFor(logging.INFO):
-                        logger.info('%s: Stamp %d: size = %d x %d, time = %f sec',
-                                    proc, obj_num, xs, ys, t2-t1)
-                output.put( (results, info, proc) )
-                if logger and logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('%s: Finished job %d -- %d',proc,obj_num-nobj,obj_num-1)
-            except Exception as e:
-                import traceback
-                tr = traceback.format_exc()
-                if logger:
-                    logger.error('%s: Caught exception %s\n%s',proc,str(e),tr)
-                output.put( (e, info, tr) )
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('%s: Received STOP',proc)
-
-    # The kwargs to pass to build_func.
-    # We'll be adding to this below...
-    kwargs = {
-        'xsize' : xsize, 'ysize' : ysize,
-        'do_noise' : do_noise,
-    }
-
-    nproc = galsim.config.UpdateNProc(nproc,logger)
-
-    if nproc > 1 and 'current_nproc' in config:
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug("Already multiprocessing.  Ignoring image.nproc")
-        nproc = 1
-
-    if nproc > nobjects:
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug(
-                "There are only %d objects.  Reducing nproc to %d."%(nobjects,nobjects))
-        nproc = nobjects
+    if logger and logger.isEnabledFor(logging.DEBUG):
+        logger.debug('file %d: BuildStamp nobjects = %d: obj = %d',
+                     config.get('image_num',0),nobjects,obj_num)
 
     if nproc > 1:
-        if logger and logger.isEnabledFor(logging.WARN):
-            logger.warn("Using %d processes for stamp processing",nproc)
-        from multiprocessing import Process, Queue, current_process
-        from multiprocessing.managers import BaseManager
-
-        # Initialize the images list to have the correct size.
-        # This is important here, since we'll be getting back images in a random order,
-        # and we need them to go in the right places (in order to have deterministic
-        # output files).  So we initialize the list to be the right size.
-        images = [ None for i in range(nobjects) ]
-        current_vars = [ None for i in range(nobjects) ]
-
+        # Figure out how many jobs to do per task.
         # Number of objects to do in each task:
-        # At most nobjects / nproc.
-        # At least 1 normally, but number in Ring if doing a Ring test
+        #  - At most nobjects / nproc.
+        #  - At least 1 normally, but number in Ring if doing a Ring test
         # Shoot for geometric mean of these two.
         max_nobj = nobjects / nproc
         min_nobj = 1
@@ -131,88 +69,44 @@ def BuildStamps(nobjects, config, obj_num=0,
             import math
             # This formula keeps nobj a multiple of min_nobj, so Rings are intact.
             nobj_per_task = min_nobj * int(math.sqrt(float(max_nobj) / float(min_nobj)))
+        if logger and logger.isEnabledFor(logging.DEBUG):
+            logger.debug('image %d: nobj_per_task = %d',config.get('image_num',0), nobj_per_task)
+    else:
+        nobj_per_task = 1
 
-        # Set up the task list
-        task_queue = Queue()
-        import copy
-        for k in range(0,nobjects,nobj_per_task):
-            nobj1 = min(nobj_per_task, nobjects-k)
-            task_queue.put( ( obj_num+k, nobj1, k ) )
+    jobs = []
+    for k in range(nobjects):
+        kwargs = {
+            'obj_num' : obj_num + k,
+            'xsize' : xsize,
+            'ysize' : ysize,
+            'do_noise' : do_noise,
+        }
+        jobs.append( (kwargs, obj_num+k) )
 
-        # Run the tasks
-        # Each Process command starts up a parallel process that will keep checking the queue
-        # for a new task. If there is one there, it grabs it and does it. If not, it waits
-        # until there is one to grab. When it finds a 'STOP', it shuts down.
-        done_queue = Queue()
-        p_list = []
-        config1 = galsim.config.CopyConfig(config)
-        config1['current_nproc'] = nproc
-        logger_proxy = galsim.config.GetLoggerProxy(logger)
-        for j in range(nproc):
-            # The name is actually the default name for the first time we do this,
-            # but after that it just keeps incrementing the numbers, rather than starting
-            # over at Process-1.  As far as I can tell, it's not actually spawning more
-            # processes, so for the sake of the info output, we name the processes
-            # explicitly.
-            p = Process(target=worker, args=(task_queue, done_queue, kwargs, config1, logger_proxy),
-                        name='Process-%d'%(j+1))
-            p.start()
-            p_list.append(p)
+    def done_func(logger, proc, obj_num, result, t):
+        if logger and logger.isEnabledFor(logging.INFO):
+            # Note: numpy shape is y,x
+            image = result[0]
+            ys, xs = image.array.shape
+            if proc is None: s0 = ''
+            else: s0 = '%s: '%proc
+            logger.info(s0 + 'Stamp %d: size = %d x %d, time = %f sec', obj_num, xs, ys, t)
 
-        # In the meanwhile, the main process keeps going.  We pull each set of images off of the
-        # done_queue and put them in the appropriate place in the lists.
-        # This loop is happening while the other processes are still working on their tasks.
-        # You'll see that these logging statements get print out as the stamp images are still
-        # being drawn.
-        for i in range(0,nobjects,nobj_per_task):
-            results, k0, proc = done_queue.get()
-            if isinstance(results,Exception):
-                # results is really the exception, e
-                # proc is really the traceback
-                if logger:
-                    logger.error('Exception caught during job starting with stamp %d', k0)
-                    logger.error('Aborting the rest of this image')
-                for j in range(nproc):
-                    p_list[j].terminate()
-                raise results
-            k = k0
-            for result in results:
-                images[k] = result[0]
-                current_vars[k] = result[1]
-                k += 1
-            if logger and logger.isEnabledFor(logging.DEBUG):
-                logger.debug('%s: Successfully returned results for stamps %d--%d', proc, k0, k-1)
+    def except_func(logger, proc, e, tr, obj_num):
+        if logger:
+            if proc is None: s0 = ''
+            else: s0 = '%s: '%proc
+            logger.error(s0 + 'Exception caught when building stamp %d', obj_num)
+            logger.error('%s',tr)
+            logger.error('Aborting the rest of this image')
 
-        # Stop the processes
-        # The 'STOP's could have been put on the task list before starting the processes, or you
-        # can wait.  In some cases it can be useful to clear out the done_queue (as we just did)
-        # and then add on some more tasks.  We don't need that here, but it's perfectly fine to do.
-        # Once you are done with the processes, putting nproc 'STOP's will stop them all.
-        # This is important, because the program will keep running as long as there are running
-        # processes, even if the main process gets to the end.  So you do want to make sure to
-        # add those 'STOP's at some point!
-        for j in range(nproc):
-            task_queue.put('STOP')
-        for j in range(nproc):
-            p_list[j].join()
-        task_queue.close()
+    nproc, results = galsim.config.MultiProcess(nproc, config, BuildStamp, jobs, 'stamp', logger,
+                                                njobs_per_task = nobj_per_task,
+                                                done_func = done_func,
+                                                except_func = except_func)
 
-    else : # nproc == 1
-
-        images = []
-        current_vars = []
-
-        for k in range(nobjects):
-            t1 = time.time()
-            image, current_var = BuildStamp(config, obj_num=obj_num, logger=logger, **kwargs)
-            images += [ image ]
-            current_vars += [ current_var ]
-            obj_num += 1
-            t2 = time.time()
-            if logger and logger.isEnabledFor(logging.INFO):
-                # Note: numpy shape is y,x
-                ys, xs = image.array.shape
-                logger.info('Stamp %d: size = %d x %d, time = %f sec', obj_num, xs, ys, t2-t1)
+    images, current_vars = zip(*results)
 
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: Done making stamps',config.get('image_num',0))
@@ -372,7 +266,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             stamp_center = config['stamp_center']
             if logger and logger.isEnabledFor(logging.DEBUG):
                 if xsize:
-                    logger.debug('obj %d: xsize,ysize = %s',obj_num,xsize,ysize)
+                    logger.debug('obj %d: xsize,ysize = %s,%s',obj_num,xsize,ysize)
                 if image_pos:
                     logger.debug('obj %d: image_pos = %s',obj_num,image_pos)
                 if world_pos:

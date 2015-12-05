@@ -38,52 +38,15 @@ def BuildFiles(nfiles, config, file_num=0, image_num=0, obj_num=0, nproc=1, logg
     @param nproc            How many processes to use for building the images. [default: 1]
     @param logger           If given, a logger object to log progress. [default: None]
     """
- 
-    # nproc_image will be passed to the build function to be acted on at that level.
-    nproc_image = 1
-    if nproc > nfiles:
-        if nfiles == 1:
-            nproc_image = nproc 
-            nproc = 1
-        else:
-            if logger and logger.isEnabledFor(logging.DEBUG):
-                logger.debug("There are only %d files.  Reducing nproc to %d."%(nfiles,nfiles))
-            nproc = nfiles
+    import time
+    t1 = time.time()
 
-    def worker(input, output, config, logger):
-        proc = current_process().name
-        for job in iter(input.get, 'STOP'):
-            try:
-                (kwargs, file_num, file_name) = job
-                galsim.config.RemoveCurrent(config, keep_safe=True)
-                galsim.config.ProcessInput(config, file_num=file_num, logger=logger)
-                galsim.config.SetupExtraOutput(config, file_num=file_num, logger=logger)
-                kwargs['config'] = config
-                kwargs['logger'] = logger
-                result = BuildFile(**kwargs)
-                output.put( (result, file_num, file_name, proc) )
-            except Exception as e:
-                import traceback
-                tr = traceback.format_exc()
-                if logger and logger.isEnabledFor(logging.WARN):
-                    logger.warn('%s: Caught exception %s\n%s',proc,str(e),tr)
-                output.put( (e, file_num, file_name, tr) )
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('%s: Received STOP',proc)
-
-    # Set up the multi-process task_queue if we're going to need it.
-    if nproc > 1:
-        # NB: See the function BuildStamps for more verbose comments about how
-        # the multiprocessing stuff works.
-        from multiprocessing import Process, Queue, current_process
-        task_queue = Queue()
-
-    # Now start working on the files.
-    image_num = 0
-    obj_num = 0
-    config['file_num'] = 0
-    config['image_num'] = 0
-    config['obj_num'] = 0
+    # If only 1 file, then pass the nproc option on to the BuildImages function.
+    if nfiles == 1:
+        nproc_image = nproc
+        nproc = 1
+    else:
+        nproc_image = 1
 
     # Process the input field for the first file.  Often there are "safe" input items
     # that won't need to be reprocessed each time.  So do them here once and keep them
@@ -92,18 +55,18 @@ def BuildFiles(nfiles, config, file_num=0, image_num=0, obj_num=0, nproc=1, logg
 
     # We'll want a pristine version later to give to the workers.
     orig_config = galsim.config.CopyConfig(config)
-    for file_num in range(nfiles):
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file_num, image_num, obj_num = %d,%d,%d',file_num,image_num,obj_num)
-        SetupConfigFileNum(config,file_num,image_num,obj_num)
-        seed = galsim.config.SetupConfigRNG(config)
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: seed = %d',file_num,seed)
+
+    jobs = []
+    for k in range(nfiles):
+        config['index_key'] = 'file_num'
+        config['file_num'] = file_num
+        config['image_num'] = image_num
+        config['obj_num'] = obj_num
 
         # Process the input fields that might be relevant at file scope:
         galsim.config.ProcessInput(config, file_num=file_num, logger=logger, file_scope_only=True)
 
-        # Assign some of the kwargs we know now:
+        # The kwargs to pass to BuildFile
         kwargs = {
             'nproc' : nproc_image,
             'file_num' : file_num,
@@ -111,108 +74,55 @@ def BuildFiles(nfiles, config, file_num=0, image_num=0, obj_num=0, nproc=1, logg
             'obj_num' : obj_num
         }
 
-        output = config['output']
-        # This also updates nimages or nobjects as needed if they are being automatically
-        # set from an input catalog.
         nobj = GetNObjForFile(config,file_num,image_num)
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: nobj = %s',file_num,str(nobj))
-
         # nobj is a list of nobj for each image in that file.
         # So len(nobj) = nimages and sum(nobj) is the total number of objects
         # This gets the values of image_num and obj_num ready for the next loop.
+        file_num += 1
         image_num += len(nobj)
         obj_num += sum(nobj)
 
         # Get the file_name here, in case it needs to create directories, which is not 
         # safe to do with multiple processes. (At least not without extra code in the 
         # GetFilename function...)
-        output_type = output.get('type', 'Fits')
+        output = config['output']
+        output_type = output['type']
         default_ext = valid_output_types[output_type]['ext']
         file_name = GetFilename(output, config, default_ext)
+        jobs.append( (kwargs, (file_num, file_name)) )
 
-        # This is where we actually build the file.
-        # If we're doing multiprocessing, we send this information off to the task_queue.
-        # Otherwise, we just call BuildFile
-        if nproc > 1:
-            import copy
-            # Make new copies of kwargs so we can update them without
-            # clobbering the versions for other tasks on the queue.
-            kwargs1 = copy.copy(kwargs)
-            task_queue.put( (kwargs1, file_num, file_name) )
-        else:
-            try:
-                config1 = galsim.config.CopyConfig(orig_config)
-                galsim.config.RemoveCurrent(config1, keep_safe=True)
-                galsim.config.ProcessInput(config1, file_num=file_num, logger=logger)
-                galsim.config.SetupExtraOutput(config1, file_num=file_num, logger=logger)
-                kwargs['config'] = config1
-                kwargs['logger'] = logger 
-                file_name, t = BuildFile(**kwargs)
-                if logger and logger.isEnabledFor(logging.WARN):
-                    logger.warn('File %d = %s: time = %f sec', file_num, file_name, t)
-            except Exception as e:
-                import traceback
-                tr = traceback.format_exc()
-                if logger:
-                    logger.error('Exception caught for file %d = %s', file_num, file_name)
-                    logger.error('%s',tr)
-                    logger.error('%s',e)
-                    try:
-                        logger.error('File %s not written! Continuing on...',file_name)
-                    except:
-                        pass
+    def done_func(logger, proc, info, result, t2):
+        file_num, file_name = info
+        file_name2, t = result  # This is the t for which 0 means the file was skipped.
+        if file_name2 != file_name:
+            raise RuntimeError("Files seem to be out of sync. %s != %s",file_name, file_name2)
+        if t != 0 and logger and logger.isEnabledFor(logging.WARN):
+            if proc is None: s0 = ''
+            else: s0 = '%s: '%proc
+            logger.warn(s0 + 'File %d = %s: time = %f sec', file_num, file_name, t)
 
-    # If we're doing multiprocessing, here is the machinery to run through the task_queue
-    # and process the results.
-    if nproc > 1:
-        if logger and logger.isEnabledFor(logging.WARN):
-            logger.warn("Using %d processes for file processing",nproc)
-        import time
-        t1 = time.time()
-        # Run the tasks
-        done_queue = Queue()
-        p_list = []
-        config1 = galsim.config.CopyConfig(orig_config)
-        config1['current_nproc'] = nproc
-        logger_proxy = galsim.config.GetLoggerProxy(logger)
-        for j in range(nproc):
-            p = Process(target=worker, args=(task_queue, done_queue, config1, logger_proxy),
-                        name='Process-%d'%(j+1))
-            p.start()
-            p_list.append(p)
+    def except_func(logger, proc, e, tr, info):
+        if logger:
+            file_num, file_name = info
+            if proc is None: s0 = ''
+            else: s0 = '%s: '%proc
+            logger.error(s0 + 'Exception caught for file %d = %s', file_num, file_name)
+            logger.error('%s',tr)
+            logger.error('File %s not written! Continuing on...',file_name)
 
-        # Log the results.
-        nfiles_written = 0  # Don't count skipped files.
-        for k in range(nfiles):
-            result, file_num, file_name, proc = done_queue.get()
-            if isinstance(result,Exception):
-                # result is really the exception, e
-                # proc is really the traceback
-                if logger:
-                    logger.error('Exception caught for file %d = %s', file_num, file_name)
-                    # And proc is really the traceback.
-                    logger.error('%s',proc)
-                    logger.error('%s',result)
-                    logger.error('File %s not written! Continuing on...',file_name)
-            else:
-                file_name, t = result
-                if t != 0 and logger and logger.isEnabledFor(logging.WARN):
-                    logger.warn('%s: File %d = %s: time = %f sec', proc, file_num, file_name, t)
-                    nfiles_written += 1
+    nproc, results = galsim.config.MultiProcess(nproc, orig_config, BuildFile, jobs, 'file',
+                                                logger, done_func = done_func,
+                                                except_func = except_func,
+                                                except_abort = False)
 
-        # Stop the processes
-        for j in range(nproc):
-            task_queue.put('STOP')
-        for j in range(nproc):
-            p_list[j].join()
-        task_queue.close()
-        t2 = time.time()
-        if logger and logger.isEnabledFor(logging.WARN):
+    fnames, times = zip(*results)
+    nfiles_written = sum([ t!=0 for t in times])
+
+    t2 = time.time()
+    if logger and logger.isEnabledFor(logging.WARN):
+        if nfiles_written > 1 and nproc != 1:
             logger.warn('Total time for %d files with %d processes = %f sec', 
                         nfiles_written,nproc,t2-t1)
-
-    if logger and logger.isEnabledFor(logging.WARN):
         logger.warn('Done building files')
 
 output_ignore = [ 'file_name', 'dir', 'nfiles', 'nproc', 'skip', 'noclobber', 'retry_io' ]
@@ -234,21 +144,26 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, nproc=1, logger=None):
     import time
     t1 = time.time()
 
-    if 'output' not in config:
-        config['output'] = {}
-    output = config['output']
-    output_type = output.get('type','Fits')
-
-    if output_type not in valid_output_types:
-        raise AttributeError("Invalid output.type=%s."%output_type)
-    if logger and logger.isEnabledFor(logging.DEBUG):
-        logger.debug('file %d: Build File with type=%s for file, image, obj = %d,%d,%d',
-                      file_num,output_type,file_num,image_num,obj_num)
-
     SetupConfigFileNum(config,file_num,image_num,obj_num)
     seed = galsim.config.SetupConfigRNG(config)
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: seed = %d',file_num,seed)
+
+    # The GetNImagesForFile function performs some basic setup, so in the interest of avoiding
+    # code duplication, call it here, even though we don't really need the output.  (Although,
+    # we do got ahead and use it in the debug logging, since we have it.)
+    nimages = GetNImagesForFile(config, file_num)
+
+    output = config['output']
+    output_type = output['type']
+
+    if logger and logger.isEnabledFor(logging.DEBUG):
+        logger.debug('file %d: Build File with type=%s to build %d images, starting with %d',
+                      file_num,output_type,nimages,image_num)
+
+    # Make sure the inputs and extra outputs are set up properly.
+    galsim.config.ProcessInput(config, file_num=file_num, logger=logger)
+    galsim.config.SetupExtraOutput(config, file_num=file_num, logger=logger)
 
     # Get the file name
     default_ext = valid_output_types[output_type]['ext']
@@ -311,16 +226,23 @@ def GetNImagesForFile(config, file_num):
 
     @returns the number of images
     """
-    if 'output' in config and 'type' in config['output']:
-        output_type = config['output']['type']
-    else:
-        output_type = 'Fits'
+    if 'output' not in config:
+        config['output'] = {}
+    if 'type' not in config['output']:
+        config['output']['type'] = 'Fits'
+    output_type = config['output']['type']
 
     # Check that the type is valid
     if output_type not in valid_output_types:
         raise AttributeError("Invalid output.type=%s."%output_type)
 
+    # These might be required for nimages
+    config['index_key'] = 'file_num'
+    config['file_num'] = file_num
+    seed = galsim.config.SetupConfigRNG(config)
+
     nim_func = valid_output_types[output_type]['nim']
+ 
     return nim_func(config, file_num)
  
 
@@ -373,7 +295,6 @@ def SetupConfigFileNum(config, file_num, image_num, obj_num):
     config['image_num'] = image_num
     config['obj_num'] = obj_num
     config['index_key'] = 'file_num'
-    if 'output' not in config: config['output'] = {}
 
 
 def SetDefaultExt(config, ext):
@@ -390,9 +311,9 @@ def GetFilename(config, base, default_ext=None):
     if 'file_name' in config:
         SetDefaultExt(config['file_name'],default_ext)
         file_name = galsim.config.ParseValue(config, 'file_name', base, str)[0]
-    elif 'root' in config and default_ext is not None:
+    elif 'root' in base and default_ext is not None:
         # If a file_name isn't specified, we use the name of the config file + '.fits'
-        file_name = config['root'] + default_ext
+        file_name = base['root'] + default_ext
     else:
         raise AttributeError("No file_name specified and unable to generate it automatically.")
 

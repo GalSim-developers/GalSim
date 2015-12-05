@@ -226,7 +226,7 @@ def WriteExtraOutputs(config, logger=None):
                 # If no file_name, then probably writing to hdu
                 continue
             if 'dir' in field:
-                dir = galsim.config.ParseValue(field,'file_name',config,str)[0]
+                dir = galsim.config.ParseValue(field,'dir',config,str)[0]
             else:
                 dir = default_dir
 
