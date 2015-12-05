@@ -114,16 +114,24 @@ def BuildFiles(nfiles, config, file_num=0, image_num=0, obj_num=0, nproc=1, logg
                                                 logger, done_func = done_func,
                                                 except_func = except_func,
                                                 except_abort = False)
-
-    fnames, times = zip(*results)
-    nfiles_written = sum([ t!=0 for t in times])
-
     t2 = time.time()
-    if logger and logger.isEnabledFor(logging.WARN):
-        if nfiles_written > 1 and nproc != 1:
-            logger.warn('Total time for %d files with %d processes = %f sec', 
-                        nfiles_written,nproc,t2-t1)
-        logger.warn('Done building files')
+
+    if not results:
+        nfiles_written = 0
+    else:
+        fnames, times = zip(*results)
+        nfiles_written = sum([ t!=0 for t in times])
+
+    if nfiles_written == 0:
+        if logger:
+            logger.error('No files were written.  All were either skipped or had errors.')
+    else:
+        if logger and logger.isEnabledFor(logging.WARN):
+            if nfiles_written > 1 and nproc != 1:
+                logger.warn('Total time for %d files with %d processes = %f sec', 
+                            nfiles_written,nproc,t2-t1)
+            logger.warn('Done building files')
+
 
 output_ignore = [ 'file_name', 'dir', 'nfiles', 'nproc', 'skip', 'noclobber', 'retry_io' ]
 

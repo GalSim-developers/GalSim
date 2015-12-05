@@ -98,7 +98,7 @@ def BuildStamps(nobjects, config, obj_num=0,
             if proc is None: s0 = ''
             else: s0 = '%s: '%proc
             logger.error(s0 + 'Exception caught when building stamp %d', obj_num)
-            logger.error('%s',tr)
+            #logger.error('%s',tr)
             logger.error('Aborting the rest of this image')
 
     nproc, results = galsim.config.MultiProcess(nproc, config, BuildStamp, jobs, 'stamp', logger,

@@ -300,8 +300,8 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
             except Exception as e:
                 import traceback
                 tr = traceback.format_exc()
-                if logger and logger.isEnabledFor(logging.WARN):
-                    logger.warn('%s: Caught exception: %s\n%s',proc,str(e),tr)
+                if logger and logger.isEnabledFor(logging.DEBUG):
+                    logger.debug('%s: Caught exception: %s\n%s',proc,str(e),tr)
                 results_queue.put( (e, k, tr, proc) )
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('%s: Received STOP', proc)
@@ -417,8 +417,6 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
             except Exception as e:
                 import traceback
                 tr = traceback.format_exc()
-                if logger and logger.isEnabledFor(logging.WARN):
-                    logger.warn('Caught exception %s\n%s',str(e),tr)
                 except_func(logger, None, e, tr, info)
                 if except_abort: raise
  

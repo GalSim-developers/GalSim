@@ -89,7 +89,7 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, nproc=1, logger=None):
             if proc is None: s0 = ''
             else: s0 = '%s: '%proc
             logger.error(s0 + 'Exception caught when building image %d', image_num)
-            logger.error('%s',tr)
+            #logger.error('%s',tr)
             logger.error('Aborting the rest of this file')
 
     nproc, images = galsim.config.MultiProcess(nproc, config, BuildImage, jobs, 'stamp', logger,
