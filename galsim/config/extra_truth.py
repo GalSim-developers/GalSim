@@ -81,7 +81,10 @@ def ProcessTruthImage(truth_cat, scratch, config, base, logger=None):
 
 # Register this as a valid extra output
 from .extra import RegisterExtraOutput
-RegisterExtraOutput('truth', galsim.OutputCatalog, GetTruthKwargs,
-                    None, ProcessTruthStamp, ProcessTruthImage,
-                    galsim.OutputCatalog.write, galsim.OutputCatalog.write_fits_hdu)
-
+RegisterExtraOutput('truth',
+                    init_func = galsim.OutputCatalog,
+                    kwargs_func = GetTruthKwargs,
+                    stamp_func = ProcessTruthStamp, 
+                    image_func = ProcessTruthImage,
+                    write_func = galsim.OutputCatalog.write,
+                    hdu_func = galsim.OutputCatalog.write_fits_hdu)

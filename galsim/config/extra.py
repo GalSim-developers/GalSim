@@ -50,8 +50,7 @@ def SetupExtraOutput(config, file_num=0, logger=None):
         output = config['output']
 
         # We'll iterate through this list of keys a few times
-        all_keys = [ k for k in valid_extra_outputs.keys()
-                     if (k in output and valid_extra_outputs[k]['init'] is not None) ]
+        all_keys = [ k for k in valid_extra_outputs.keys() if k in output ]
 
         # We don't need the manager stuff if we (a) are already in a multiprocessing Process, or
         # (b) config.image.nproc == 1.
@@ -61,7 +60,7 @@ def SetupExtraOutput(config, file_num=0, logger=None):
                 galsim.config.ParseValue(config['image'], 'nproc', config, int)[0] != 1 )
  
         if use_manager and 'output_manager' not in config:
-            from multiprocessing.managers import BaseManager, DictProxy
+            from multiprocessing.managers import BaseManager, ListProxy, DictProxy
             class OutputManager(BaseManager): pass
  
             # Register each input field with the OutputManager class
@@ -69,7 +68,10 @@ def SetupExtraOutput(config, file_num=0, logger=None):
                 fields = output[key]
                 # Register this object with the manager
                 init_func = valid_extra_outputs[key]['init']
-                OutputManager.register(key, init_func)
+                if init_func is None:
+                    OutputManager.register(key, list, ListProxy)
+                else:
+                    OutputManager.register(key, init_func)
             # Also register dict to use for scratch space
             OutputManager.register('dict', dict, DictProxy)
             # Start up the output_manager
@@ -97,7 +99,10 @@ def SetupExtraOutput(config, file_num=0, logger=None):
                 scratch = config['output_manager'].dict()
             else: 
                 init_func = valid_extra_outputs[key]['init']
-                output_obj = init_func(**kwargs)
+                if init_func is None:
+                    output_obj = list()
+                else:
+                    output_obj = init_func(**kwargs)
                 scratch = dict()
             if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('file %d: Setup output %s object',file_num,key)
@@ -114,13 +119,12 @@ def SetupExtraOutputsForImage(config, logger=None):
     if 'output' in config:
         for key in [ k for k in valid_extra_outputs.keys() if k in config['output'] ]:
             # Always clear out anything in the scratch space
-            extra_scratch = config['extra_scratch'][key]
-            extra_scratch.clear()
+            scratch = config['extra_scratch'][key]
             setup_func = valid_extra_outputs[key]['setup']
             if setup_func is not None:
                 extra_obj = config['extra_objs'][key]
                 field = config['output'][key]
-                setup_func(extra_obj, extra_scratch, field, config, logger)
+                setup_func(extra_obj, scratch, field, config, logger)
 
 
 def ProcessExtraOutputsForStamp(config, logger=None):
@@ -139,9 +143,9 @@ def ProcessExtraOutputsForStamp(config, logger=None):
             stamp_func = valid_extra_outputs[key]['stamp']
             if stamp_func is not None:
                 extra_obj = config['extra_objs'][key]
-                extra_scratch = config['extra_scratch'][key]
+                scratch = config['extra_scratch'][key]
                 field = config['output'][key]
-                stamp_func(extra_obj, extra_scratch, field, config, obj_num, logger)
+                stamp_func(extra_obj, scratch, field, config, obj_num, logger)
 
 
 def ProcessExtraOutputsForImage(config, logger=None):
@@ -156,9 +160,27 @@ def ProcessExtraOutputsForImage(config, logger=None):
             image_func = valid_extra_outputs[key]['image']
             if image_func is not None:
                 extra_obj = config['extra_objs'][key]
-                extra_scratch = config['extra_scratch'][key]
+                scratch = config['extra_scratch'][key]
                 field = config['output'][key]
-                image_func(extra_obj, extra_scratch, field, config, logger)
+                image_func(extra_obj, scratch, field, config, logger)
+
+
+def GetFinalExtraOutput(key, config, logger=None):
+    """Get the finalized output object for the given extra output key
+
+    @param key          The name of the output field in config['output']
+    @param config       The configuration dict.
+    @param logger       If given, a logger object to log progress. [default: None]
+
+    @returns the final data to be output.
+    """
+    extra_obj = config['extra_objs'][key]
+    final_func = valid_extra_outputs[key]['final']
+    if final_func is not None:
+        scratch = config['extra_scratch'][key]
+        field = config['output'][key]
+        extra_obj = final_func(extra_obj, scratch, field, config, logger)
+    return extra_obj
 
 
 def WriteExtraOutputs(config, logger=None):
@@ -225,7 +247,7 @@ def WriteExtraOutputs(config, logger=None):
                                 key,config['file_num'],file_name)
                 continue
 
-            extra_obj = config['extra_objs'][key]
+            extra_obj = GetFinalExtraOutput(key, config, logger)
 
             # If we have a method, we need to attach it to the extra_obj, since it might
             # be a proxy, in which case the method call won't work.
@@ -271,7 +293,7 @@ def BuildExtraOutputHDUs(config, logger=None, first=1):
             if hdu <= 0 or hdu in hdus.keys():
                 raise ValueError("%s hdu = %d is invalid or a duplicate."%hdu)
 
-            extra_obj = config['extra_objs'][key]
+            extra_obj = GetFinalExtraOutput(key, config, logger)
 
             # If we have a method, we need to attach it to the extra_obj, since it might
             # be a proxy, in which case the method call won't work.
@@ -292,12 +314,14 @@ def BuildExtraOutputHDUs(config, logger=None, first=1):
 
 valid_extra_outputs = {}
 
-def RegisterExtraOutput(key, init_func, kwargs_func=None, setup_func=None, stamp_func=None,
-                        image_func=None, write_func=None, hdu_func=None):
+def RegisterExtraOutput(key, init_func=None, kwargs_func=None, setup_func=None, stamp_func=None,
+                        image_func=None, final_func=None, write_func=None, hdu_func=None):
     """Register an extra output field for use by the config apparatus.
 
     @param key              The name of the output field in config['output']
-    @param init_func        A function or class name to use to build the output object.
+    @param init_func        A function or class name to use to build the output object. 
+                            [default: None, in which case the output "object" will be a list
+                            that final_func can use to construct what you need.]
     @param kwargs_func      A function to get the initialization kwargs. [default: None, which
                             means initialize with no arguments.]
     @param setup_func       A function to call at the start of each image. 
@@ -309,6 +333,11 @@ def RegisterExtraOutput(key, init_func, kwargs_func=None, setup_func=None, stamp
     @param image_func       A function to call at the end of building each image
                             The call signature is 
                                 ProcessImage(output_obj, scratch, config, base, logger)
+    @param final_func       A function to call at the end of the file processing to construct
+                            the final object to be written. [default: None, which means the
+                            init_func already created the correct object, so just use that.]
+                            The call signature is 
+                                output_obj = Finalize(output_obj, scratch, config, base, logger)
     @param write_func       A function to call to write the output file
                             The call signature is 
                                 WriteFile(output_obj, file_name)
@@ -322,6 +351,7 @@ def RegisterExtraOutput(key, init_func, kwargs_func=None, setup_func=None, stamp
         'setup' : setup_func,
         'stamp' : stamp_func,
         'image' : image_func,
+        'final' : final_func,
         'write' : write_func,
         'hdu' : hdu_func
     }

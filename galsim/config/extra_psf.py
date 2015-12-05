@@ -23,12 +23,6 @@ import logging
 
 # The psf extra output type builds an Image of the PSF at the same locations as the galaxies.
 
-# The function called at the start of each image.
-def SetupExtraPSF(image, scratch, config, base, logger=None):
-    image.resize(base['image_bounds'], wcs=base['wcs'])
-    image.setZero()
-    scratch.clear()
-
 # The code the actually draws the PSF on a postage stamp.
 def DrawPSFStamp(psf, config, base, bounds, offset, method, logger=None):
     """
@@ -74,7 +68,7 @@ def DrawPSFStamp(psf, config, base, bounds, offset, method, logger=None):
 
 
 # The function to call at the end of building each stamp
-def ProcessExtraPSFStamp(image, scratch, config, base, obj_num, logger=None):
+def ProcessExtraPSFStamp(images, scratch, config, base, obj_num, logger=None):
     # If this doesn't exist, an appropriate exception will be raised.
     psf = base['psf']['current_val']
     draw_method = galsim.config.GetCurrentValue('image.draw_method',base,str)
@@ -90,7 +84,8 @@ def ProcessExtraPSFStamp(image, scratch, config, base, obj_num, logger=None):
     scratch[obj_num] = psf_im
 
 # The function to call at the end of building each image
-def ProcessExtraPSFImage(image, scratch, config, base, logger=None):
+def ProcessExtraPSFImage(images, scratch, config, base, logger=None):
+    image = galsim.ImageF(base['image_bounds'], wcs=base['wcs'], init_value=0.)
     for stamp in scratch.values():
         b = stamp.bounds & image.getBounds()
         if b.isDefined():
@@ -99,10 +94,22 @@ def ProcessExtraPSFImage(image, scratch, config, base, logger=None):
             # except that this doesn't work through the proxy.  We can only call methods
             # that don't start with _.  Hence using the more verbose form here.
             image.setSubImage(b, image.subImage(b) + stamp[b])
+    images.append(image)
+
+# For the hdu, just return the first element
+def HDUExtraPSF(images):
+    n = len(images)
+    if n == 0:
+        raise RuntimeError("No psf images were created.")
+    elif n > 1:
+        raise RuntimeError("%d psf images were created, but expecting only 1."%n)
+    return images[0]
+
 
 # Register this as a valid extra output
 from .extra import RegisterExtraOutput
-RegisterExtraOutput('psf', galsim.Image, None,
-                    SetupExtraPSF, ProcessExtraPSFStamp, ProcessExtraPSFImage, 
-                    galsim.Image.write, galsim.Image.view)
-
+RegisterExtraOutput('psf',
+                    stamp_func = ProcessExtraPSFStamp,
+                    image_func = ProcessExtraPSFImage,
+                    write_func = galsim.fits.writeMulti,
+                    hdu_func = HDUExtraPSF)

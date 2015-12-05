@@ -23,16 +23,10 @@ import galsim
 # or at the end from the full image if that is when noise is added.  Then at the end of 
 # the image processing, it inverts the image to get the appropriate weight map.
 
-# The function called at the start of each image.
-def SetupWeight(image, scratch, config, base, logger=None):
-    image.resize(base['image_bounds'], wcs=base['wcs'])
-    image.setZero()
-    scratch.clear()
-
 # The function to call at the end of building each stamp
-def ProcessWeightStamp(image, scratch, config, base, obj_num, logger=None):
+def ProcessWeightStamp(images, scratch, config, base, obj_num, logger=None):
     if base['do_noise_in_stamps']:
-        weight_im = galsim.ImageF(base['current_stamp'].bounds, wcs=base['wcs'], init_value=0)
+        weight_im = galsim.ImageF(base['current_stamp'].bounds, wcs=base['wcs'], init_value=0.)
         if 'include_obj_var' in base['output']['weight']:
             include_obj_var = galsim.config.ParseValue(
                     base['output']['weight'], 'include_obj_var', config, bool)[0]
@@ -42,7 +36,8 @@ def ProcessWeightStamp(image, scratch, config, base, obj_num, logger=None):
         scratch[obj_num] = weight_im
 
 # The function to call at the end of building each image
-def ProcessWeightImage(image, scratch, config, base, logger=None):
+def ProcessWeightImage(images, scratch, config, base, logger=None):
+    image = galsim.ImageF(base['image_bounds'], wcs=base['wcs'], init_value=0.)
     if len(scratch) > 0.:
         # If we have been accumulating the variance on the stamps, build the total from them.
         for stamp in scratch.values():
@@ -65,7 +60,7 @@ def ProcessWeightImage(image, scratch, config, base, logger=None):
         else:
             # If we are using a Proxy for the image, the code in AddNoiseVar won't work properly.
             # The easiest workaround is to build a new image here and copy it over.
-            im2 = galsim.ImageF(image.getBounds(), wcs=base['wcs'], init_value=0)
+            im2 = galsim.ImageF(image.getBounds(), wcs=base['wcs'], init_value=0.)
             galsim.config.AddNoiseVariance(base,im2,include_obj_var,logger)
             image.copyFrom(im2)
  
@@ -74,10 +69,24 @@ def ProcessWeightImage(image, scratch, config, base, logger=None):
     # So it is ok to set bad pixels to have zero variance above, and they will invert to have
     # zero weight.
     image.invertSelf()
+    images.append(image)
+
+# For the hdu, just return the first element
+def HDUWeight(images):
+    n = len(images)
+    if n == 0:
+        raise RuntimeError("No weight images were created.")
+    elif n > 1:
+        raise RuntimeError("%d weight images were created, but expecting only 1."%n)
+    return images[0]
+
+
 
 # Register this as a valid extra output
 from .extra import RegisterExtraOutput
-RegisterExtraOutput('weight', galsim.Image, None,
-                    SetupWeight, ProcessWeightStamp, ProcessWeightImage, 
-                    galsim.Image.write, galsim.Image.view)
-
+RegisterExtraOutput('weight',
+                    stamp_func = ProcessWeightStamp,
+                    image_func = ProcessWeightImage,
+                    write_func = galsim.fits.writeMulti,
+                    hdu_func = HDUWeight)
+ 

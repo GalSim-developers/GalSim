@@ -22,18 +22,8 @@ import galsim
 # The badpix extra output type is currently just a placeholder for when we eventually add 
 # defects, saturation, etc.  Now it always just builds an Image with all 0's.
 
-# The function that returns the kwargs for constructing the Image
-def GetBadPixKwargs(config, base, logger=None):
-    return {'dtype' : numpy.int16 }
-
-# The function called at the start of each image.
-def SetupBadPix(image, scratch, config, base, logger=None):
-    image.resize(base['image_bounds'], wcs=base['wcs'])
-    image.setZero()
-    scratch.clear()
-
 # The function to call at the end of building each stamp
-def ProcessBadPixStamp(image, scratch, config, base, obj_num, logger=None):
+def ProcessBadPixStamp(images, scratch, config, base, obj_num, logger=None):
     # Note: This is just a placeholder for now.  Once we implement defects, saturation, etc.,
     # these features should be marked in the badpix mask.  For now though, all pixels = 0.
     if base['do_noise_in_stamps']:
@@ -41,7 +31,8 @@ def ProcessBadPixStamp(image, scratch, config, base, obj_num, logger=None):
         scratch[obj_num] = badpix_im
 
 # The function to call at the end of building each image
-def ProcessBadPixImage(image, scratch, config, base, logger=None):
+def ProcessBadPixImage(images, scratch, config, base, logger=None):
+    image = galsim.ImageS(base['image_bounds'], wcs=base['wcs'], init_value=0)
     if len(scratch) > 0.:
         # If we have been accumulating the variance on the stamps, build the total from them.
         for stamp in scratch.values():
@@ -56,10 +47,22 @@ def ProcessBadPixImage(image, scratch, config, base, logger=None):
         # Otherwise, build the bad pixel mask here.
         # Again, nothing here yet.
         pass
+    images.append(image)
+
+# For the hdu, just return the first element
+def HDUBadPix(images):
+    n = len(images)
+    if n == 0:
+        raise RuntimeError("No badpix images were created.")
+    elif n > 1:
+        raise RuntimeError("%d badpix images were created, but expecting only 1."%n)
+    return images[0]
+
 
 # Register this as a valid extra output
 from .extra import RegisterExtraOutput
-RegisterExtraOutput('badpix', galsim.Image, GetBadPixKwargs,
-                    SetupBadPix, ProcessBadPixStamp, ProcessBadPixImage, 
-                    galsim.Image.write, galsim.Image.view)
-
+RegisterExtraOutput('badpix',
+                    stamp_func = ProcessBadPixStamp,
+                    image_func = ProcessBadPixImage,
+                    write_func = galsim.fits.writeMulti,
+                    hdu_func = HDUBadPix)
