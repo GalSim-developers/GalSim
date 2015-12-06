@@ -14,23 +14,18 @@
 "#" : "ellipticity occasionally come out larger than 1, so we redo these objects.",
 "#" : "And we build the same image using a single process and again using 4 processes.",
 
-"#" : "New features introduced in this demo:",
-
-"#" : "- image : retry_failures",
-"#" : "- image : nproc",
-
 "#" : "There are two .json files to do this.  The first one (demo8a.json) does the ",
 "#" : "run with just 1 process.  The second one (demo8b.json) is identical except for ",
 "#" : "setting nproc = 4 and outputting to a different file.",
 
-"#" : "Define the PSF profile",
+"#" : "See deom8.yaml for more extensive commentary about the features here.",
+
 "psf" : {
     "type" : "Moffat",
     "beta" : 2.4,
     "fwhm" : 0.65
 },
 
-"#" : "Define the galaxy profile",
 "gal" : {
     "type" : "Sum",
     "items" : [
@@ -49,19 +44,10 @@
             "type" : "Sersic",
             "n" : 1.5,
             "half_light_radius" : { "type" : "Random" , "min" : 0.5 , "max" : 1.5 },
-            "#" : "Special: if the last item in a Sum doesn't have a flux specified,",
-            "#" : "then it is given whatever is needed to bring the total to 1.",
-            "#" : "This is especially useful when other components have a random value.",
             "ellip" : {
                 "type" : "E1E2",
                 "e1" : { "type" : "RandomGaussian" , "sigma" : 0.4 },
-                "e2" : { "type" : "RandomGaussian" , "sigma" : 0.4 },
-                "#" : "These will sometimes have |e| > 1.",
-                "#" : "In the past, we've dealt with this by truncating the distribution with",
-                "#" : "min/max.  This time, we let the values generated exceed 1, which internally",
-                "#" : "will fail the stamp generation process.  We set retry_failures = 2 below to",
-                "#" : "indicate that the object generation stage should just try again (up to 2",
-                "#" : "times) whenever a failure is encountered."
+                "e2" : { "type" : "RandomGaussian" , "sigma" : 0.4 }
             }
         }
     ],
@@ -69,28 +55,21 @@
     "flux" : { "type" : "Random" , "min" : 1.0e4 , "max" : 1.0e5 }
 },
 
-"#" : "Define some other information about the images ",
 "image" : {
     "type" : "Tiled",
     "nx_tiles" : 10,
     "ny_tiles" : 10,
-
     "stamp_size" : 64,
-
     "pixel_scale" : 0.28,
 
     "draw_method" : "phot",
 
-    "noise" : {
-        "sky_level" : 1.0e4
-    },
-
+    "noise" : { "sky_level" : 1.0e4 },
     "random_seed" : 22345921,
 
     "retry_failures" : 2
 },
 
-"#" : "Define the name and format of the output file",
 "output" : {
     "dir" : "output_json",
     "file_name" : "bpd_single.fits"

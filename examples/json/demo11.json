@@ -14,294 +14,79 @@
 "#" : "from the same catalog of 100 objects that demo6 used.  We also use the whitening option to",
 "#" : "remove the correlations in the noise originally present in the HST images.",
 
-"#" : "New features introduced in this demo:",
+"#" : "See deom11.yaml for more extensive commentary about the features here.",
 
-"#" : " - obj type : InterpolatedImage(image, scale) ",
-"#" : " - obj type : COSMOSGalaxy",
-"#" : " - obj : scale_flus",
-"#" : " - image : draw_method (no_pixel) ",
-"#" : " - input : power_spectrum (e_power_file, delta2, units)",
-"#" : " - input : cosmos_catalog (file_name, dir, use_real)",
-"#" : " - image : index_convention",
-"#" : " - image.noise : whiten",
-"#" : " - image.noise : symmetrize",
-"#" : " - wcs type : Tan(dudx, dudy, dvdx, dvdy, units, origin, ra, dec)",
-
-"#" : " - Power spectrum shears and magnifications for non-gridded positions.",
-"#" : " - Reading a compressed FITS image (using BZip2 compression).",
-"#" : " - Writing a compressed FITS image (using Rice compression).",
-
-"#" : "Some variable we use in the Evals below.",
 "eval_variables" : {
-
-    "#" : "pixel_scale = the pixel scale in arcsec.  Used in setting up the WCS.",
-    "#" : "The units for this doesn't have to be arcsec.  It is set by the wcs.units parameter.",
-    "#" : "Remember the first letter indicates what type each variable is.  Here f = float.",
     "fpixel_scale" : 0.2,
-
-    "#" : "theta = the angle we rotate the pixel coordinates with respect to RA/Dec coordinates.",
-    "#" : "An unusual prefix: a = Angle.",
     "atheta" : "0.17 degrees",
-
-    "#" : "tel_diam = the telescope diameter in meters.",
     "ftel_diam" : 4,
-
-    "#" : "exp_time = the exposure time in seconds.",
     "fexp_time" : 300
 },
 
-"#" : "Define the PSF profile",
 "psf" : {
-    "#" : "We introduce here a new way to describe a profile.  We can use an image from a fits",
-    "#" : "file and interpolate between the pixels with type = InterpolatedImage.",
     "type" : "InterpolatedImage",
-    
-    "#" : "The only required parameter is the name of the file with the image.  Note: the file is ",
-    "#" : "bzipped, to demonstrate the new capability of reading in a file that has been ",
-    "#" : "compressed in various ways (which GalSim can infer from the filename).",
     "image" : "data/example_sdss_psf_sky0.fits.bz2",
-
-    "#" : "If the fits file has a scale given in the header information, we can use that for ",
-    "#" : "the pixel scale.  If it is not given it will assume 1. ",
-    "#" : "Or we can also override that by providing an explicit pixel scale here.",
-    "#" : "This file is a real SDSS PSF, which means pixel scale of 0.396 arcsec.  However, the ",
-    "#" : "typical seeing is 1.2 arcsec and we want to simulate better seeing, so we will just ",
-    "#" : "tell GalSim that the pixel scale is 0.2 arcsec to match the pixel scale we use below.",
     "scale" : 0.2
 },
 
-"#" : "Define the galaxy profile",
 "gal" : {
-   
-    "#" : "COSMOS galaxies are generated from a cosmos_catalog (see below).",
-    "#" : "They are based on the COSMOS field observed with HST.  The size and flux distribution",
-    "#" : "are appropriate for an I < 23.5 magnitude limited survey.",
     "type" : "COSMOSGalaxy",
-
-    "#" : "The COSMOS galaxies can be either 'real', meaning they are based on the real COSMOS",
-    "#" : "image, including features like spiral arms, star-bursting regions, etc, or 'parametric'",
-    "#" : "which means either a Sersic fit or a bulge plus disk fit (according to which one gave",
-    "#" : "the better chisq).  Here we use real 30% of the time, and parametric 70%.",
     "gal_type" : {
         "type" : "List",
         "items" : [ "parametric", "real" ],
-        "index" : {
-            "#" : "The RandomBinomial type returns an integer according to a binomial distribution",
-            "#" : "with (N,p).  (The number of heads you get from N tosses with each toss having a",
-            "#" : "probability p of getting heads.)  Here we have p = 0.3, so we get 'real' (index=0)",
-            "#" : "30% of the time and 'parametric' (index=1) 70% of the time.",
-            "type" : "RandomBinomial",
-            "N" : 1,
-            "p" : 0.3
-        }
+        "index" : { "type" : "RandomBinomial", "N" : 1, "p" : 0.3 }
     },
-
-    "#" : "For real galaxies, we will want to whiten the noise in the image (below).",
-    "#" : "When whitening the image, we need to make sure the original correlated noise is",
-    "#" : "present throughout the whole image, otherwise the whitening will do the wrong thing",
-    "#" : "to the parts of the image that don't include the original image.  The RealGalaxy",
-    "#" : "stores the correct noise profile to use as the gal.noise attribute.  This noise",
-    "#" : "profile is automatically updated as we shear, dilate, convolve, etc.  But we need to",
-    "#" : "tell it how large to pad with this noise by hand.  This is a bit complicated for the",
-    "#" : "code to figure out on its own, so we have to supply the size for noise padding",
-    "#" : "with the noise_pad_size parameter.",
-
-    "#" : "The large galaxies will render fine without any noise padding, but the postage stamp",
-    "#" : "for the smaller galaxies will be sized appropriately for the PSF, which may make the",
-    "#" : "stamp larger than the original galaxy image.  The psf image is 40 x 40, although",
-    "#" : "the bright part is much more concentrated than that.  If we pad out the galaxy image",
-    "#" : "to at least 40 x sqrt(2), we should be safe even if the galaxy image is rotated",
-    "#" : "with respect to the psf image.",
-    "#" : "    noise_pad_size = 40 * sqrt(2) * 0.2 arcsec/pixel = 11.3 arcsec",
     "noise_pad_size" : 11.3,
-
     "index" : { "type" : "Random" },
-
-    "shear" : {
-        "#" : "We again use PowerSpectrumShear, which is set up below using input:power_spectrum.",
-        "type" : "PowerSpectrumShear"
-    },
-
-    "magnification" : {
-        "#" : "We use PowerSpectrumMagnification for this, which is set up below using input :",
-        "#" : "power_spectrum.",
-        "type" : "PowerSpectrumMagnification"
-    },
-
+    "shear" : { "type" : "PowerSpectrumShear" },
+    "magnification" : { "type" : "PowerSpectrumMagnification" },
     "rotation" : { "type" : "Random" },
-
-    "scale_flux" : {
-        "#" : "Rescale the flux to be appropriate for a 4 meter class telescope using 300 second",
-        "#" : "exposures.  The COSMOS galaxies have their flux set to be appropriate for HST",
-        "#" : "(a 2.4 m telescope with a linear obscuration factor of 0.33) with 1 second",
-        "#" : "exposures. So the flux should be scaled by (4**2/(2.4*(1-0.33**2))) * 300",
-        "type" : "Eval",
-        "str" : "(tel_diam**2 / (2.4**2*(1.-0.33**2))) * exp_time"
-    }
-
+    "scale_flux" : { "type" : "Eval", "str" : "(tel_diam**2 / (2.4**2*(1.-0.33**2))) * exp_time" }
 },
 
-
-"#" : "Define some other information about the images ",
 "image" : {
     "type" : "Scattered",
-
-    "size" : 1800 ,
-
+    "size" : 1800,
     "nobjects" : 288,
-
-    "#" : "The default convention on positions is to follow the FITS standard where the lower left",
-    "#" : "pixel is called (1,1).  However, this can be counter-intuitive to people more used",
-    "#" : "to C or python indexing, where indices start at 0.  So we offer the option of switching",
-    "#" : "the indexing convention.  This is probably only useful if you are going to do something",
-    "#" : "non-trivial with the image_pos values.",
-
-    "#" : "If index_convention is 0 or 'C' or 'python', then the lower-left pixel is (0,0).",
-    "#" : "If index_convention is 1 or 'Fortran' or 'FITS', then the lower-left pixel is (1,1).",
-    "#" : "The default is 1.",
     "index_convention" : 0,
 
-    "#" : "In demo9, we said that you can specify either image_pos or world_pos to place",
-    "#" : "each postage stamp on the full image.  If you don't specify either one, then the",
-    "#" : "default is random x and y within the full image.",
+    "noise" : { "type" : "Gaussian", "variance" : 50000.0, "symmetrize" : 8 },
+    "random_seed" : 24783923,
 
-    "#" : "stamp_image_pos : ",
-    "#" : "    type : XY ",
-    "#" : "    x : { type : Random , min : 0 , max : xsize-1 }",
-    "#" : "    y : { type : Random , min : 0 , max : ysize-1 }",
-    "#" : "Note: if the image_convention were 1 as is the default, then these would instead be ",
-    "#" : "    min : 1 , max : {x,y}size",
-
-
-    "#" : "Add Gaussian noise.  When using the whitening feature, the whitening process will end",
-    "#" : "up with white Gaussian noise.  So adding more Gaussian noise can be done coherently.",
-    "#" : "Adding any other kind of noise (Poisson for instance) will actually result in some ",
-    "#" : "Gaussian noise as well, with the total variance preserved.",
-    "noise" : {
-        "type" : "Gaussian",
-        "variance" : 50000.0,
-
-        "#" : "RealGalaxy objects have some noise already included in the original HST images.",
-        "#" : "This noise is stored with each object, and the propagated through all changes",
-        "#" : "(transformations, convolutions, etc.), which will correlate the noise.",
-
-        "#" : "Once the process gets to the point of adding additional noise to the image, you",
-        "#" : "have a few options for what to do with this propagated noise.  The first option",
-        "#" : "is to do nothing, in which case GalSim will just ignore it and add the full ",
-        "#" : "amount specified above as additional noise.  This is equivalent to treating the",
-        "#" : "noise that was in the original image as part of the true surface brightness",
-        "#" : "profile of the galaxy.",
-
-        "#" : "Another option is to whiten the noise to get rid of the correlations.  This is",
-        "#" : "specified as whiten : True.  GalSim will add enough correlated noise to make the",
-        "#" : "resulting noise be white, then add more white noise to make the total variance ",
-        "#" : "equal to the above specified value.",
-
-        "#" : "However, this is often overkill for many applications.  If it is acceptable to ",
-        "#" : "merely end up with noise with some degree of symmetry (say 4-fold or 8-fold",
-        "#" : "symmetry), then you can instead have GalSim just add enough noise to make the",
-        "#" : "resulting noise have this kind of symmetry.  Usually this requires adding ",
-        "#" : "significantly less additional noise, which means you can have the resulting ",
-        "#" : "total variance be somewhat smaller.  The above specified variance will then ",
-        "#" : "correspond to the zero-lag value, since the noise will still have some ",
-        "#" : "covariances.  This option is specified using symmetrize : N, where N is the",
-        "#" : "order of the symmetry that is desired.  We use 8-fold symmetry here.",
-        
-        "#" : "whiten : True",
-        "symmetrize" : 8
- 
-    },
-
-    "#" : "For the WCS, we use one that has the world coordinates on the celestial sphere, using",
-    "#" : "a TAN projection.  This WCS uses an affine transform first to get to a (u,v) coordinate",
-    "#" : "system.  Then this plane is projected onto the sky using a given point as the tangent",
-    "#" : "point.  For the affine transform, we just use a slight rotation and center it at the",
-    "#" : "center of the image.",
     "wcs" : {
         "type" : "Tan",
-        "#" : "theta and pixel_scale are defined in eval_variables, so we can use them here.",
         "dudx" : { "type" : "Eval", "str" : "math.cos(theta.rad()) * pixel_scale" },
         "dudy" : { "type" : "Eval", "str" : "-math.sin(theta.rad()) * pixel_scale" },
         "dvdx" : { "type" : "Eval", "str" : "math.sin(theta.rad()) * pixel_scale" },
         "dvdy" : { "type" : "Eval", "str" : "math.cos(theta.rad()) * pixel_scale" },
-
-        "#" : "This is the default, but we put it in anyway to make it explicit.",
-        "#" : "It sets the angular units of the (u,v) intermediate coordinate system.",
         "units" : "arcsec",
-
-        "#" : "Set (u,v) = (0,0) to be the center of the image.",
         "origin" : "center",
-
-        "#" : "These are the celestial coordinates of (u,v) = (0,0).",
         "ra" : "19.3 hours",
         "dec" : "-33.1 degrees"
     },
 
-    "#" : "Normally, the draw routine accounts for a convolution by the pixel.  In this case we ",
-    "#" : "we don't want it to do that, since the psf here is what is sometimes called an ",
-    "#" : "'effective PSF'.  It is already the convolution of the real PSF with a square pixel.",
-    "#" : "We can indicate that we don't want the draw routine to convolve by a pixel by using ",
     "draw_method" : "no_pixel",
 
-    "random_seed" : 24783923
+    "nproc" : -1
 },
 
-"#" : "Define the input files",
 "input" : {
-    "#" : "The COSMOS catalog uses the same input file as we have been using for the real galaxy",
-    "#" : "catalogs plus another file called real_galaxy_catalog_example_fits.fits, which stores",
-    "#" : "the information about the parametric fits.  There is no need to specify the second file",
-    "#" : "name, since the name is derivable from the name of the main catalog.",
     "cosmos_catalog" : {
-        "#" : "The catalog we distribute with the GalSim code only has 100 galaxies.",
-        "#" : "The galaxies will typically be reused several times here.",
-        "#" : "However, if you've run galsim_download_cosmos, then you can leave these two items",
-        "#" : "out and it will automatically use the full COSMOS catalog with 56,000 galaxies in it.",
         "dir" : "data",
         "file_name" : "real_galaxy_catalog_example.fits",
-
-        "#" : "If you only want to use the parametric fits, and not the real galaxy profiles,",
-        "#" : "then you may set use_real to False.  In this case the 'real' parameter for the COSMOS",
-        "#" : "type above would default to False and in fact it would be an error to set it to True.",
-        "#" : "use_real = True is the default, but we specify it here so we could mention it.",
         "use_real" : "True"
     },
 
-    "#" : "We also initialize the power spectrum here.",
     "power_spectrum" : {
-        "#" : "In this case, we read the e_power_function from a file.  This is done simply by ",
-        "#" : "providing the file name for the e_power_function parameter.  The input file is",
-        "#" : "expected to have two columns of numbers:  k and P(k).  GalSim is not capable of ",
-        "#" : "computing shear power spectra as a function of cosmology and redshift; users are ",
-        "#" : "expected to provide their own, or use the examples already in the repository.",
         "e_power_function" : "data/cosmo-fid.zmed1.00.out",
-
-        "#" : "The default units of k are arcsec^-1 to match all the other units.  But again,",
-        "#" : "sometimes it is more convenient to define them in different units.  You may",
-        "#" : "specify units = arcsec, arcmin, degrees, or radians.  The units must be ",
-        "#" : "consistent for the input k and P(k), i.e., if k is in inverse radians then P must",
-        "#" : " be in radians^2.",
         "units" : "radians",
-
-        "#" : "Since we are not providing galaxy positions on a grid (e.g. in demo10, where we",
-        "#" : "used a TiledImage), we need to define what grid spacing we want to use for",
-        "#" : "the power spectrum realization.  GalSim will then interpolate between these ",
-        "#" : "locations to the actual position of each galaxy.",
         "grid_spacing" : 90
-
     }
 },
 
-"#" : "Define the names and format of the output files",
 "output" : {
-
     "dir" : "output_json",
-
-    "#" : "Note that the filename ends in .fz.  This is the standard ending for a Rice-compressed",
-    "#" : "fits file.  When GalSim sees that, it automatically applies Rice compression to the",
-    "#" : "output image.",
     "file_name" : "tabulated_power_spectrum.fits.fz"
 }
 
 }
-
