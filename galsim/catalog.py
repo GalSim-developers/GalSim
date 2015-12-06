@@ -467,6 +467,7 @@ class OutputCatalog(object):
         dtypes = []
         new_cols = []
         for col, name, t in zip(cols, self.names, self.types):
+            name = str(name)  # numpy will barf if the name is a unicode string
             dt = numpy.dtype(t) # just used to catagorize the type into int, float, str
             if dt.kind in numpy.typecodes['AllInteger']:
                 dtypes.append( (name, int) )
