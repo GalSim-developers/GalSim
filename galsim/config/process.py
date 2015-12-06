@@ -285,6 +285,14 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
     # except_func to write something appropriate in the logger.
     def worker(task_queue, results_queue, config, logger):
         proc = current_process().name
+
+        if 'profile' in config and config['profile']:
+            import cProfile, pstats, StringIO
+            pr = cProfile.Profile()
+            pr.enable()
+        else:
+            pr = None
+
         for task in iter(task_queue.get, 'STOP'):
             try :
                 if logger and logger.isEnabledFor(logging.DEBUG):
@@ -305,6 +313,15 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
                 results_queue.put( (e, k, tr, proc) )
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('%s: Received STOP', proc)
+
+        if pr:
+            pr.disable()
+            s = StringIO.StringIO()
+            sortby = 'tottime'
+            ps = pstats.Stats(pr,stream=s).sort_stats(sortby).reverse_order()
+            ps.print_stats()
+            logger.error("*** Start profile for %s ***\n%s\n*** End profile for %s ***",
+                         proc,s.getvalue(),proc)
 
     # Possibly update the number of processes. 
     # First if nproc < 0, update based on ncpu

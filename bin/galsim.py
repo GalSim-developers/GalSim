@@ -318,6 +318,12 @@ def main():
         # Add modules to the config['modules'] list
         AddModules(config, args.module)
 
+        # Profiling doesn't work well with multiple processes.  We'll need to separately
+        # enable profiling withing the workers and output when the process ends.  Set
+        # config['profile'] = True to enable this.
+        if args.profile:
+            config['profile'] = True
+
         import pprint
         logger.debug("Process config dict: \n%s", pprint.pformat(config))
 
@@ -327,10 +333,11 @@ def main():
     if args.profile:
         # cf. example code here: https://docs.python.org/2/library/profile.html
         pr.disable()
-        #sortby = 'cumulative'
+        s = StringIO.StringIO()
         sortby = 'tottime'
-        ps = pstats.Stats(pr).sort_stats(sortby).reverse_order()
+        ps = pstats.Stats(pr, stream=s).sort_stats(sortby).reverse_order()
         ps.print_stats()
+        logger.error(s.getvalue)
  
 
 if __name__ == "__main__":
