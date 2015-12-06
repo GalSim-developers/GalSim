@@ -47,6 +47,7 @@ def BuildFiles(nfiles, config, file_num=0, image_num=0, obj_num=0, nproc=1, logg
         nproc = 1
     else:
         nproc_image = 1
+        nproc = galsim.config.UpdateNProc(nproc, nfiles, config, logger)
 
     # Process the input field for the first file.  Often there are "safe" input items
     # that won't need to be reprocessed each time.  So do them here once and keep them
@@ -110,10 +111,10 @@ def BuildFiles(nfiles, config, file_num=0, image_num=0, obj_num=0, nproc=1, logg
             logger.error('%s',tr)
             logger.error('File %s not written! Continuing on...',file_name)
 
-    nproc, results = galsim.config.MultiProcess(nproc, orig_config, BuildFile, jobs, 'file',
-                                                logger, done_func = done_func,
-                                                except_func = except_func,
-                                                except_abort = False)
+    results = galsim.config.MultiProcess(nproc, orig_config, BuildFile, jobs, 'file',
+                                         logger, done_func = done_func,
+                                         except_func = except_func,
+                                         except_abort = False)
     t2 = time.time()
 
     if not results:

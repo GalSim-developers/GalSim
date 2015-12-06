@@ -43,31 +43,15 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, nproc=1, logger=None):
         logger.debug('file %d: BuildImages nimages = %d: image, obj = %d,%d',
                      config.get('file_num',0),nimages,image_num,obj_num)
 
-    if nproc != 1:
-        # Figure out how many jobs to do per task.
-        # Number of images to do in each task should be:
-        #  - At most nimages / nproc.
-        #  - At least 1 normally, but number in Ring if doing a Ring test
-        # Shoot for gemoetric mean of these two values.
-        max_nim = nimages / nproc
-        min_nim = 1
-        if ( ('image' not in config or 'type' not in config['image'] or
-                    config['image']['type'] == 'Single') and
-                'gal' in config and isinstance(config['gal'],dict) and 'type' in config['gal'] and
-                config['gal']['type'] == 'Ring' and 'num' in config['gal'] ):
-            min_nim = galsim.config.ParseValue(config['gal'], 'num', config, int)[0]
-            if logger and logger.isEnabledFor(logging.DEBUG):
-                logger.debug('file %d: Found ring: num = %d',config.get('file_num',0),min_nim)
-        if max_nim < min_nim:
-            nim_per_task = min_nim
-        else:
-            import math
-            # This formula keeps nim a multiple of min_nim, so Rings are intact.
-            nim_per_task = min_nim * int(math.sqrt(float(max_nim) / float(min_nim)))
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: nim_per_task = %d',config.get('file_num',0), nim_per_task)
+    # Update this if necessary
+    nproc = galsim.config.UpdateNProc(nproc, nimages, config, logger)
+
+    # If the images are Single (one stamp per image), then we need to check for Rings and the like.
+    if ('image' not in config or 'type' not in config['image'] or 
+            config['image']['type'] == 'Single'):
+        nim_per_task = galsim.config.CalculateNObjPerTask(nproc, nimages, config)
     else:
-        nim_per_task = 1  # ignored if MultiProcess gets nproc=1
+        nim_per_task = 1
 
     jobs = []
     for k in range(nimages):
@@ -92,10 +76,10 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, nproc=1, logger=None):
             #logger.error('%s',tr)
             logger.error('Aborting the rest of this file')
 
-    nproc, images = galsim.config.MultiProcess(nproc, config, BuildImage, jobs, 'stamp', logger,
-                                               njobs_per_task = nim_per_task,
-                                               done_func = done_func,
-                                               except_func = except_func)
+    images = galsim.config.MultiProcess(nproc, config, BuildImage, jobs, 'stamp', logger,
+                                        njobs_per_task = nim_per_task,
+                                        done_func = done_func,
+                                        except_func = except_func)
 
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: Done making images',config.get('file_num',0))

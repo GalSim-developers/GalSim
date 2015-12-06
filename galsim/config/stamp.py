@@ -49,30 +49,14 @@ def BuildStamps(nobjects, config, obj_num=0,
     @returns the tuple (images, current_vars).  Both are lists.
     """
     if logger and logger.isEnabledFor(logging.DEBUG):
-        logger.debug('file %d: BuildStamp nobjects = %d: obj = %d',
+        logger.debug('image %d: BuildStamp nobjects = %d: obj = %d',
                      config.get('image_num',0),nobjects,obj_num)
 
-    if nproc > 1:
-        # Figure out how many jobs to do per task.
-        # Number of objects to do in each task:
-        #  - At most nobjects / nproc.
-        #  - At least 1 normally, but number in Ring if doing a Ring test
-        # Shoot for geometric mean of these two.
-        max_nobj = nobjects / nproc
-        min_nobj = 1
-        if ( 'gal' in config and isinstance(config['gal'],dict) and 'type' in config['gal'] and
-             config['gal']['type'] == 'Ring' and 'num' in config['gal'] ):
-            min_nobj = galsim.config.ParseValue(config['gal'], 'num', config, int)[0]
-        if max_nobj < min_nobj:
-            nobj_per_task = min_nobj
-        else:
-            import math
-            # This formula keeps nobj a multiple of min_nobj, so Rings are intact.
-            nobj_per_task = min_nobj * int(math.sqrt(float(max_nobj) / float(min_nobj)))
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('image %d: nobj_per_task = %d',config.get('image_num',0), nobj_per_task)
-    else:
-        nobj_per_task = 1
+    nproc = galsim.config.UpdateNProc(nproc, nobjects, config, logger)
+
+    nobj_per_task = galsim.config.CalculateNObjPerTask(nproc, nobjects, config)
+    if logger and logger.isEnabledFor(logging.DEBUG):
+        logger.debug('image %d: nobj_per_task = %d',config.get('image_num',0), nobj_per_task)
 
     jobs = []
     for k in range(nobjects):
@@ -101,10 +85,10 @@ def BuildStamps(nobjects, config, obj_num=0,
             #logger.error('%s',tr)
             logger.error('Aborting the rest of this image')
 
-    nproc, results = galsim.config.MultiProcess(nproc, config, BuildStamp, jobs, 'stamp', logger,
-                                                njobs_per_task = nobj_per_task,
-                                                done_func = done_func,
-                                                except_func = except_func)
+    results = galsim.config.MultiProcess(nproc, config, BuildStamp, jobs, 'stamp', logger,
+                                         njobs_per_task = nobj_per_task,
+                                         done_func = done_func,
+                                         except_func = except_func)
 
     images, current_vars = zip(*results)
 

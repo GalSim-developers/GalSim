@@ -26,7 +26,7 @@ def RemoveCurrent(config, keep_safe=False, type=None):
     """
     Remove any "current values" stored in the config dict at any level.
 
-    @param config       The config dict to process.
+    @param config       The configuration dict.
     @param keep_safe    Should current values that are marked as safe be preserved? 
                         [default: False]
     @param type         If provided, only clear the current value of objects that use this 
@@ -68,6 +68,10 @@ def CopyConfig(config):
     If you don't do the deep copy, then python balks when trying to send the updated
     config dict back to the root process.  We do this a few different times, so encapsulate
     the copy semantics once here.
+
+    @param config           The configuration dict to copy. 
+
+    @returns a deep copy of the config dict.
     """
     import copy
     config1 = copy.copy(config)
@@ -98,6 +102,10 @@ def CopyConfig(config):
 def GetLoggerProxy(logger):
     """Make a proxy for the given logger that can be passed into multiprocessing Processes
     and used safely.
+
+    @param logger           The logger to make a copy of
+
+    @returns a proxy for the given logger
     """
     from multiprocessing.managers import BaseManager
     if logger:
@@ -112,9 +120,21 @@ def GetLoggerProxy(logger):
     return logger_proxy
 
 
-def UpdateNProc(nproc, logger=None):
-    """Update nproc to ncpu if nproc <= 0
+def UpdateNProc(nproc, ntot, config, logger=None):
+    """Update nproc
+
+    - If nproc < 0, set nproc to ncpu
+    - Make sure nproc <= ntot
+
+    @param nproc        The nominal number of processes from the config dict
+    @param ntot         The total number of files/images/stamps to do, so the maximum number of
+                        processes that would make sense.
+    @param config       The configuration dict to copy.
+    @param logger       If given, a logger object to log progress. [default: None]
+
+    @returns the number of processes to use.
     """
+    # First if nproc < 0, update based on ncpu
     if nproc <= 0:
         # Try to figure out a good number of processes to use
         try:
@@ -127,12 +147,29 @@ def UpdateNProc(nproc, logger=None):
                 logger.warn("nproc <= 0, but unable to determine number of cpus.")
                 logger.warn("Using single process")
             nproc = 1
-    return nproc
  
+    # Second, make sure we aren't already in a multiprocessing mode
+    if nproc > 1 and 'current_nproc' in config:
+        if logger and logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Already multiprocessing.  Ignoring image.nproc")
+        nproc = 1
+
+    # Finally, don't try to use more processes than jobs.  It wouldn't fail or anything.
+    # It just looks bad to have 3 images processed with 8 processes or something like that.
+    if nproc > ntot:
+        if logger and logger.isEnabledFor(logging.DEBUG):
+            logger.debug("There are only %d jobs to do.  Reducing nproc to %d."%(ntot,ntot))
+        nproc = ntot
+    return nproc
+
 
 def SetDefaultExt(config, ext):
     """
-    Some items have a default extension for a NumberedFile type.
+    Some items have a default extension for a NumberedFile type.  This sets the extension 
+    in the dict to this default if appropriate.
+
+    @param config       The configuration field for something that might be a NumberdFile type.
+    @param ext          The default extension to apply.
     """
     if ( isinstance(config,dict) and 'type' in config and 
          config['type'] == 'NumberedFile' and 'ext' not in config ):
@@ -144,7 +181,7 @@ def SetupConfigRNG(config, seed_offset=0):
     - Setup config['image']['random_seed'] if necessary
     - Set config['rng'] based on appropriate random_seed 
 
-    @param config           A configuration dict.
+    @param config           The configuration dict.
     @param seed_offset      An offset to use relative to what config['image']['random_seed'] gives.
 
     @returns the seed used to initialize the RNG.
@@ -192,6 +229,8 @@ def ImportModules(config):
     These won't be brought into the running scope of the config processing, but any side
     effects of the import statements will persist.  In particular, these are allowed to 
     register additional custom types that can then be used in the current config dict.
+
+    @param config           The configuration dict.
     """
     if 'modules' in config:
         for module in config['modules']:
@@ -207,6 +246,9 @@ def Process(config, logger=None):
     function handles processing the output field, calling other functions to
     build and write the specified files.  The input field is processed before
     building each file.
+
+    @param config           The configuration dict.
+    @param logger           If given, a logger object to log progress. [default: None]
     """
     # First thing to do is deep copy the input config to make sure we don't modify the original.
     import copy
@@ -243,14 +285,45 @@ def Process(config, logger=None):
         logger.debug('nfiles = %d',nfiles)
 
     # Figure out how many processes we will use for building the files.
-    # (If nfiles = 1, but nimages > 1, we'll do the multi-processing at the image stage.)
     if 'nproc' in output:
         nproc = galsim.config.ParseValue(output, 'nproc', config, int)[0]
-        nproc = UpdateNProc(nproc,logger)
     else:
         nproc = 1 
 
     galsim.config.BuildFiles(nfiles, config, nproc=nproc, logger=logger)
+
+def CalculateNObjPerTask(nproc, ntot, config):
+    """A helper function for calculating an appropriate number of objects to do per task.
+    In particular, it accounts for object types that require some number of objects to be done
+    together (e.g. Ring).  Aside from that detail, it shoots for something close to sqrt(ntot).
+
+    @param nproc        The number of processes
+    @param ntot         The total number of objects
+    @param config       The configuration dict.
+
+    @returns nobj_per_task
+    """
+    if nproc != 1:
+        # Figure out how many jobs to do per task.
+        # Number of objects to do in each task:
+        #  - At most nobjects / nproc.
+        #  - At least 1 normally, but number in Ring if doing a Ring test (or other block type)
+        # Shoot for geometric mean of these two.
+        max_nobj = ntot // nproc
+        min_nobj = 1
+        if 'gal' in config:
+            min_nobj = galsim.config.GetMinimumBlock(config['gal'], config)
+        if max_nobj < min_nobj:
+            nobj_per_task = min_nobj
+        else:
+            import math
+            # This formula keeps nobj a multiple of min_nobj, so Rings are intact.
+            nobj_per_task = int(math.sqrt(float(max_nobj)) / min_nobj) * min_nobj
+            if nobj_per_task == 0:
+                nobj_per_task = min_nobj
+    else:
+        nobj_per_task = 1
+    return nobj_per_task
 
 
 def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
@@ -269,9 +342,7 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
     @param except_abort     Whether an exception should abort the rest of the processing.
                             [default: True]
 
-    @returns nproc, results
-             - nproc is the number of processes actually used
-             - results is a list of the outputs from job_func for each job
+    @returns results = a list of the outputs from job_func for each job
     """
     import time
 
@@ -313,7 +384,6 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
                 results_queue.put( (e, k, tr, proc) )
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('%s: Received STOP', proc)
-
         if pr:
             pr.disable()
             s = StringIO.StringIO()
@@ -322,24 +392,6 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
             ps.print_stats()
             logger.error("*** Start profile for %s ***\n%s\n*** End profile for %s ***",
                          proc,s.getvalue(),proc)
-
-    # Possibly update the number of processes. 
-    # First if nproc < 0, update based on ncpu
-    nproc = UpdateNProc(nproc, logger)
-
-    # Second, make sure we aren't already in a multiprocessing mode
-    if nproc > 1 and 'current_nproc' in config:
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug("Already multiprocessing.  Ignoring image.nproc")
-        nproc = 1
-
-    # Finally, don't try to use more processes than jobs.  It wouldn't fail or anything.
-    # It just looks bad to have 3 images processed with 8 processes or something like that.
-    njobs = len(jobs)
-    if nproc > njobs:
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug("There are only %d jobs.  Reducing nproc to %d."%(njobs,njobs))
-        nproc = njobs
 
     if nproc > 1:
         if logger and logger.isEnabledFor(logging.WARN):
@@ -352,7 +404,8 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
         # first job to be done.  The index k is mostly important for putting the results in
         # the right order, since they will be done out of order.
         task_queue = Queue()
-        for k in range(0, len(jobs), njobs_per_task):
+        njobs = len(jobs)
+        for k in range(0, njobs, njobs_per_task):
             k2 = k + njobs_per_task
             if k2 > njobs: k2 = njobs
             task = [ (jobs[k][0], k) for k in range(k,k2) ]
@@ -437,5 +490,5 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
                 except_func(logger, None, e, tr, info)
                 if except_abort: raise
  
-    return nproc, results
+    return results
  

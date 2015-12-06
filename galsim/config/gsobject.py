@@ -171,7 +171,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
 
     # See if this type has a specialized build function:
     if type_name in valid_gsobject_types:
-        build_func = valid_gsobject_types[type_name]
+        build_func = valid_gsobject_types[type_name]['func']
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('obj %d: build_func = %s',base['obj_num'],build_func)
         gsobject, safe = build_func(param, base, ignore, gsparams, logger)
@@ -479,10 +479,27 @@ def _Shift(gsobject, config, key, base, logger):
     gsobject = gsobject.shift(shift.x,shift.y)
     return gsobject, safe
 
+def GetMinimumBlock(config, base):
+    """Get the minimum number of objects that should be done on the same process for a 
+    particular object configuration.
+
+    @param config       A dict with the configuration information.
+    @param base         The base dict of the configuration. [default: config]
+    """
+    if isinstance(config, dict) and 'type' in config:
+        type_name = config['type']
+        if valid_gsobject_types[type_name]['block']:
+            num = galsim.config.ParseValue(config, 'num', base, int)[0]
+            return num
+        else:
+            return 1
+    else:
+        return 1
+
 
 valid_gsobject_types = {}
 
-def RegisterObjectType(type_name, build_func):
+def RegisterObjectType(type_name, build_func, is_block=False):
     """Register an object type for use by the config apparatus.
 
     A few notes about the signature of the build functions:
@@ -506,8 +523,15 @@ def RegisterObjectType(type_name, build_func):
     @param build_func       A function to build a GSObject from the config information.
                             The call signature is
                                 obj, safe = Build(config, base, ignore, gsparams, logger)
+    @param is_block         Does the type define a block of galaxies that are inter-related in
+                            some way where they need to be done by the same process.  If True,
+                            then this type should include a 'num' parameter that gives the
+                            number of objects in the block. [default: False]
     """
-    valid_gsobject_types[type_name] = build_func
+    valid_gsobject_types[type_name] = {
+        'func' : build_func, 
+        'block' : is_block
+    }
 
 RegisterObjectType('None', _BuildNone)
 RegisterObjectType('Add', _BuildAdd)
