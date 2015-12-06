@@ -298,32 +298,21 @@ class DES_PSFEx(object):
 import galsim.config
 
 # First we need to add the class itself as a valid input_type.
-galsim.config.process.valid_input_types['des_psfex'] = ('galsim.des.DES_PSFEx',
-                                                        [], False, False, None, ['DES_PSFEx'])
+galsim.config.RegisterInputType('des_psfex', DES_PSFEx, ['DES_PSFEx'])
 
 # Also make a builder to create the PSF object for a given position.
 # The builders require 4 args.
 # config is a dictionary that includes 'type' plus other items you might want to allow or require.
-# key is the key name one level up in the config structure.  Probably 'psf' in this case.
 # base is the top level config dictionary where some global variables are stored.
 # ignore is a list of key words that might be in the config dictionary that you should ignore.
-def BuildDES_PSFEx(config, key, base, ignore, gsparams, logger):
+def BuildDES_PSFEx(config, base, ignore, gsparams, logger):
     """@brief Build a RealGalaxy type GSObject from user input.
     """
+    des_psfex = galsim.config.GetInputObj('des_psfex', config, base, 'DES_PSFEx')
+
     opt = { 'flux' : float , 'num' : int }
-    kwargs, safe = galsim.config.GetAllParams(config, key, base, opt=opt, ignore=ignore)
+    kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
 
-    if 'des_psfex' not in base:
-        raise ValueError("No DES_PSFEx instance available for building type = DES_PSFEx")
-
-    num = kwargs.get('num', 0)
-    if num < 0:
-        raise ValueError("Invalid num < 0 supplied for DES_PSFEx: num = %d"%num)
-    if num >= len(base['des_psfex']):
-        raise ValueError("Invalid num supplied for DES_PSFEx (too large): num = %d"%num)
-
-    des_psfex = base['des_psfex'][num]
- 
     if 'image_pos' not in base:
         raise ValueError("DES_PSFEx requested, but no image_pos defined in base.")
     image_pos = base['image_pos']
@@ -351,7 +340,6 @@ def BuildDES_PSFEx(config, key, base, ignore, gsparams, logger):
     # that, since they will be at different positions, so the interpolated PSF will be different.
     return psf, False
 
-
 # Register this builder with the config framework:
-galsim.config.gsobject.valid_gsobject_types['DES_PSFEx'] = 'galsim.des.BuildDES_PSFEx'
+galsim.config.RegisterObjectType('DES_PSFEx', BuildDES_PSFEx)
 

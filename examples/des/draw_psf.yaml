@@ -58,7 +58,11 @@ eval_variables :
     ilast_chip : &last_chip 62
     #ifirst_chip : &first_chip 12
     #ilast_chip : &last_chip 12
-    
+
+# This uses the galsim.des module, which is not loaded by default, so we need to tell it
+# to import that module to get the des-specific types.
+modules :
+    - galsim.des
 
 # Define the PSF profile.  For now, just the items common to both shapelet and PSFEx PSFs.
 psf : 
