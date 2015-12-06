@@ -21,6 +21,10 @@ in a configuration file.
 """
 
 import sys
+import json
+import yaml
+import logging
+import copy
 
 # The only wrinkle about letting this executable be called galsim is that we want to
 # make sure that `import galsim` doesn't import itself.  We want it to import the real
@@ -32,6 +36,20 @@ import galsim
 # Now put it back in case anyone else relies on this feature.
 sys.path = [temp] + sys.path
 
+# Python 2.6 doesn't include OrderdDict natively.  There is a package ordereddict that you
+# can pip install.  But if the user hasn't done that, we'll just read into a regular dict.
+# The only feature that requires the OrderedDict is the truth catalog output.  With a regular
+# dict the columns will appear in arbitrary order.
+use_ordereddict = True
+try:
+    from collections import OrderedDict
+except ImportError:
+    try:
+        from ordereddict import OrderedDict
+    except ImportError:
+        OrderedDict = dict
+
+
 def MergeConfig(config1, config2, logger=None):
     """
     Merge config2 into config1 such that it has all the information from either config1 or 
@@ -42,7 +60,6 @@ def MergeConfig(config1, config2, logger=None):
     """
     for (key, value) in config2.items():
         if not key in config1:
-            import copy
             # If this key isn't in config1 yet, just add it
             config1[key] = copy.deepcopy(value)
         elif isinstance(value,dict) and isinstance(config1[key],dict):
@@ -162,9 +179,6 @@ def parse_args():
 
 def read_yaml(config_file):
 
-    import yaml
-    from collections import OrderedDict
-
     # We read in the YAML config file into an OrderedDict.  The main advantage of this
     # is for the truth catalog.  This lets the columns be in the same order as the
     # entries in the yaml file.  With a normal dict, they get scrambled.
@@ -205,10 +219,19 @@ def read_yaml(config_file):
 
 
 def read_json(config_file):
-    import json
 
     with open(config_file) as f:
-        config = json.load(f)
+        try:
+            # cf. http://stackoverflow.com/questions/6921699/can-i-get-json-to-load-into-an-ordereddict-in-python
+            config = json.load(f, object_pairs_hook=OrderedDict)
+        except TypeError:
+            # for python2.6, json doesn't come with the object_pairs_hook, so 
+            # try using simplejson, and if that doesn't work, just use a regular dict.
+            try:
+                import simplejson
+                config = simplejson.load(f, object_pairs_hook=OrderedDict)
+            except ImportError:
+                config = json.load(f)
 
     # JSON files are just processed as is.  This is equivalent to having an empty 
     # base_config, so we just do that and use the same structure.
@@ -238,10 +261,8 @@ def UpdateConfig(config, variables, file_type, logger):
                 # But if it fails (particularly with json), just assign the value as a string.
                 try:
                     if file_type == 'yaml':
-                        import yaml
                         d[k] = yaml.load(value)
                     else:
-                        import json
                         d[k] = json.loads(value)
                 except:
                     logger.debug('Unable to parse %s.  Treating it as a string.'%value)
@@ -259,7 +280,6 @@ def main():
     args = parse_args()
 
     # Parse the integer verbosity level from the command line args into a logging_level string
-    import logging
     logging_levels = { 0: logging.CRITICAL, 
                        1: logging.WARNING,
                        2: logging.INFO,
