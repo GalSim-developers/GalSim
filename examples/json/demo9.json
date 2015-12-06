@@ -128,7 +128,40 @@
     "badpix" : { "hdu" : 1 },
     "psf" : { "hdu" : 3 },
 
-    "nproc" : -1
+    "nproc" : -1,
+
+    "truth" : {
+        "file_name" : {
+            "type" : "NumberedFile",
+            "root" : "truth",
+            "num" : {
+                "type" : "Sequence",
+                "first" : 0,
+                "nitems" : 5
+            },
+            "digits" : 4,
+            "ext" : ".dat"
+        },
+
+        "columns" : {
+            "object_id" : "obj_num",
+            "halo_id" : "file_num",
+
+            "flux" : "gal.flux",
+            "size" : "gal.half_light_radius",
+            "eta1" : "gal.ellip.eta1",
+            "eta2" : "gal.ellip.eta2",
+            "mu" : "gal.magnification",
+            "redshift" : "gal.redshift",
+
+            "shear" : "gal.shear",
+            "pos" : "image.world_pos",
+
+            "halo_mass" : "input.nfw_halo.mass",
+            "halo_conc" : "input.nfw_halo.conc",
+            "halo_redshift" : "input.nfw_halo.redshift"
+        }
+    }
 }
 
 }

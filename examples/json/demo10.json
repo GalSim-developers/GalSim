@@ -46,7 +46,10 @@
         "id" : {
             "type" : "List",
             "items" : [ 106416, 106731, 108402, 116045, 116448 ],
-            "index" : { "type" : "Sequence" , "repeat" : 20 }
+            "index" : {
+                "type" : "Sequence",
+                "repeat" : { "type" : "Current", "key" : "gal.num" }
+            }
         },
         "dilation" : 3
     },
@@ -56,15 +59,15 @@
 
     "shift" : {
         "type" : "RTheta",
-        "r" : { "type" : "Eval" , "str" : "pixel_scale * 0.5" },
+        "r" : {
+            "type" : "Eval",
+            "str" : "pixel_scale * 0.5",
+            "fpixel_scale" : { "type" : "Current", "key" : "image.pixel_scale" }
+        },
         "theta" : { "type" : "Random" }
     },
 
     "signal_to_noise" : 100
-},
-
-"eval_variables" : {
-    "fpixel_scale" : 0.44
 },
 
 "image" : {
@@ -98,6 +101,57 @@
         "hdu" : 1,
         "draw_method" : "real_space",
         "signal_to_noise" : 1000
+    },
+
+    "truth" : {
+        "hdu" : 2,
+        "columns" : {
+            "gal_num" : "obj_num",
+            "x_image" : { "type" : "Eval", "str" : "image_pos.x" },
+            "y_image" : { "type" : "Eval", "str" : "image_pos.y" },
+
+            "psf_e1" : {
+                "type" : "Eval",
+                "str" : "ellip.e1",
+                "gellip" : { "type" : "Current", "key" : "psf.ellip" }
+            },
+            "psf_e2" : {
+                "type" : "Eval",
+                "str" : "ellip.e2",
+                "gellip" : { "type" : "Current", "key" : "psf.ellip" }
+            },
+
+            "psf_fwhm" : "psf.fwhm",
+            "cosmos_id" : "gal.first.id",
+            "theta" : {
+                "type" : "Eval",
+                "str" : "index * 360. / num",
+                "iindex" : { "type" : "Current", "key" : "gal.index" },
+                "inum" : { "type" : "Current", "key" : "gal.num" }
+            },
+
+            "g1" : {
+                "type" : "Eval",
+                "str" : "shear.g1",
+                "gshear" : { "type" : "Current", "key" : "gal.shear" }
+            },
+            "g2" : {
+                "type" : "Eval",
+                "str" : "shear.g2",
+                "gshear" : { "type" : "Current", "key" : "gal.shear" }
+            },
+
+            "shift_x" : {
+                "type" : "Eval",
+                "str" : "shift.x",
+                "pshift" : { "type" : "Current", "key" : "gal.shift" }
+            },
+            "shift_y" : {
+                "type" : "Eval",
+                "str" : "shift.y",
+                "pshift" : { "type" : "Current", "key" : "gal.shift" }
+            }
+        }
     }
 }
 
