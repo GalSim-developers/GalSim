@@ -169,7 +169,7 @@ def BuildTiled(config, image_num, obj_num, logger):
 
     for k in range(nobjects):
         # This is our signal that the object was skipped.
-        if not stamps[k].bounds.isDefined(): continue
+        if stamps[k] is None: continue
         if False:
             logger.debug('image %d: full bounds = %s',image_num,str(full_image.bounds))
             logger.debug('image %d: stamp %d bounds = %s',image_num,k,str(stamps[k].bounds))

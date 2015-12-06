@@ -296,6 +296,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                         # If there is a message, upgrade to info level
                         logger.info('Skipping object %d: %s',obj_num,e.msg)
                 skip = True
+                current_var = 0.
 
             stamp_func = valid_stamp_types[stamp_type]['stamp']
             im = stamp_func(config, xsize, ysize)
@@ -336,6 +337,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
 
             # Set the origin appropriately
             if im is None:
+                # Note: im might be None here if the stamp size isn't given and skip==True.
                 pass
             elif stamp_center:
                 im.setCenter(stamp_center)

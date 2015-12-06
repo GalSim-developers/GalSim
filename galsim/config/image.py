@@ -308,6 +308,7 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
         # thing we need to do is bring everything up to a common level.
         noise_image = galsim.ImageF(full_image.bounds)
         for k in range(nobjects):
+            if stamps[k] is None: continue
             b = stamps[k].bounds & full_image.bounds
             if b.isDefined(): noise_image[b] += current_vars[k]
         # Update this, since overlapping postage stamps may have led to a larger
