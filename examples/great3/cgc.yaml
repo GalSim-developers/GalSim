@@ -109,10 +109,12 @@ eval_variables:
     # I don't understand this bit at all.  
     # Here is the line in the original great3 scripts:
     # https://github.com/barnabytprowe/great3-public/blob/master/great3sims/noise.py#L97
+    # The point was to have a consistent lower limit on the S/N level of the galaxies for
+    # different seeing sizes.  When the seeing is larger, a given flux galaxy will have 
+    # lower S/N.  To compensate, they added less noise in those cases.  However, the
+    # exact formula they used is still a bit of a mystery to me.
     # They did this as a LookupTable, but the formula below is pretty close.
-    # I have no idea what the physical plausibility of this relation is.  I don't even 
-    # understand why they chose to vary the noise level in concert with the seeing.
-    fmax_var: '$0.004 * math.exp(2.9 * (@psf.items.0.fwhm-1.1) * (@psf.items.0.fwhm-0.95))'
+    fmax_var: '$0.004 * math.exp(2.9 * (1.1-@psf.items.0.fwhm) * (0.95-@psf.items.0.fwhm))'
 
 image:
     type: Tiled
@@ -127,7 +129,7 @@ image:
     order: random 
 
     # Simple Gaussian noise.  Although there is a weird thing they did to have the noise
-    # variance be larger for smaller seeing fwhm.  cf. fmax_var in eval_variables above.
+    # variance be larger for smaller PSF fwhm.  cf. fmax_var in eval_variables above.
     noise:
         type: Gaussian
         variance: 
