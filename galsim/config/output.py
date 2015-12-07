@@ -26,15 +26,13 @@ import logging
 # 'Fits'.  See output_multifits.py for 'MultiFits' and output_datacube.py for 'DataCube'.
 
 
-def BuildFiles(nfiles, config, file_num=0, image_num=0, obj_num=0, nproc=1, logger=None):
+def BuildFiles(nfiles, config, file_num=0, nproc=1, logger=None):
     """
     Build a number of output files as specified in config.
     
     @param nfiles           The number of files to build.
     @param config           A configuration dict.
     @param file_num         If given, the first file_num. [default: 0]
-    @param image_num        If given, the first image_num. [default: 0]
-    @param obj_num          If given, the first obj_num. [default: 0]
     @param nproc            How many processes to use for building the images. [default: 1]
     @param logger           If given, a logger object to log progress. [default: None]
     """
@@ -58,7 +56,15 @@ def BuildFiles(nfiles, config, file_num=0, image_num=0, obj_num=0, nproc=1, logg
     orig_config = galsim.config.CopyConfig(config)
 
     jobs = []
-    for k in range(nfiles):
+
+    # Count from 0 to make sure image_num, etc. get counted right.  We'll start actually
+    # building the files at first_file_num.
+    first_file_num = file_num
+    file_num = 0
+    image_num = 0
+    obj_num = 0
+
+    for k in range(nfiles + first_file_num):
         config['index_key'] = 'file_num'
         config['file_num'] = file_num
         config['image_num'] = image_num
@@ -75,22 +81,25 @@ def BuildFiles(nfiles, config, file_num=0, image_num=0, obj_num=0, nproc=1, logg
             'obj_num' : obj_num
         }
 
+        # This performs a bit of setup, so do this before GetFilename.
         nobj = GetNObjForFile(config,file_num,image_num)
+
+        if file_num >= first_file_num:
+            # Get the file_name here, in case it needs to create directories, which is not
+            # safe to do with multiple processes. (At least not without extra code in the
+            # GetFilename function...)
+            output = config['output']
+            output_type = output['type']
+            default_ext = valid_output_types[output_type]['ext']
+            file_name = GetFilename(output, config, default_ext)
+            jobs.append( (kwargs, (file_num, file_name)) )
+
         # nobj is a list of nobj for each image in that file.
         # So len(nobj) = nimages and sum(nobj) is the total number of objects
         # This gets the values of image_num and obj_num ready for the next loop.
         file_num += 1
         image_num += len(nobj)
         obj_num += sum(nobj)
-
-        # Get the file_name here, in case it needs to create directories, which is not 
-        # safe to do with multiple processes. (At least not without extra code in the 
-        # GetFilename function...)
-        output = config['output']
-        output_type = output['type']
-        default_ext = valid_output_types[output_type]['ext']
-        file_name = GetFilename(output, config, default_ext)
-        jobs.append( (kwargs, (file_num, file_name)) )
 
     def done_func(logger, proc, info, result, t2):
         file_num, file_name = info

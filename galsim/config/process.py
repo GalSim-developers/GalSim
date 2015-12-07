@@ -240,16 +240,31 @@ def ImportModules(config):
                 exec('import galsim.'+module)
 
 # This is the main script to process everything in the configuration dict.
-def Process(config, logger=None):
+def Process(config, logger=None, njobs=1, job=1):
     """
     Do all processing of the provided configuration dict.  In particular, this
     function handles processing the output field, calling other functions to
     build and write the specified files.  The input field is processed before
     building each file.
 
+    Sometimes, it can be helpful to split up a processing jobs over multiple machines
+    (i.e. not just multiple processes, which can be handled natively with the output.nproc
+    or image.nproc options).  In this case, you can ask the Process command to split up
+    the total amount of work into njobs and only do one of those jobs here.  To do this,
+    set njobs to be the number of jobs total and job to be which job should be done here.
+
     @param config           The configuration dict.
     @param logger           If given, a logger object to log progress. [default: None]
+    @param njobs            The total number of jobs to split the work into. [default: 1]
+    @param job              Which job should be worked on here (1..njobs). [default: 1]
     """
+    if njobs < 1:
+        raise ValueError("Invalid number of jobs %d"%njobs)
+    if job < 1:
+        raise ValueError("Invalid job number %d.  Must be >= 1."%job)
+    if job > njobs:
+        raise ValueError("Invalid job number %d.  Must be <= njobs (%d)"%(job,njobs))
+
     # First thing to do is deep copy the input config to make sure we don't modify the original.
     import copy
     config = copy.deepcopy(config)
@@ -290,7 +305,18 @@ def Process(config, logger=None):
     else:
         nproc = 1 
 
-    galsim.config.BuildFiles(nfiles, config, nproc=nproc, logger=logger)
+    if njobs > 1:
+        # Start each job at file_num = nfiles * job / njobs
+        start = nfiles * (job-1) // njobs
+        end = nfiles * job // njobs
+        logger.warn('Splitting work into %d jobs.  Doing job %d',njobs,job)
+        logger.warn('Building %d out of %d total files: file_num = %d .. %d',
+                    end-start,nfiles,start,end-1)
+        nfiles = end-start
+    else:
+        start = 0
+
+    galsim.config.BuildFiles(nfiles, config, file_num=start, nproc=nproc, logger=logger)
 
 def CalculateNObjPerTask(nproc, ntot, config):
     """A helper function for calculating an appropriate number of objects to do per task.

@@ -112,6 +112,14 @@ def parse_args():
             '-p', '--profile', action='store_const', default=False, const=True,
             help='output profiling information at the end of the run')
         parser.add_argument(
+            '-n', '--njobs', type=int, action='store', default=1, 
+            help='set the total number of jobs that this run is a part of. ' + 
+            'Used in conjunction with -j (--job)')
+        parser.add_argument(
+            '-j', '--job', type=int, action='store', default=1,
+            help='set the job number for this particular run. Must be in (1 .. njobs). ' +
+            'Used in conjunction with -n (--njobs)')
+        parser.add_argument(
             '--version', action='store_const', default=False, const=True,
             help='show the version of GalSim')
         args = parser.parse_args()
@@ -149,6 +157,14 @@ def parse_args():
         parser.add_option(
             '-m', '--module', type=str, action='append', default=None, 
             help='python module to import before parsing config file')
+        parser.add_option(
+            '-n', '--njobs', type=int, action='store', default=1, 
+            help='set the total number of jobs that this run is a part of. ' + 
+            'Used in conjunction with -j (--job)')
+        parser.add_option(
+            '-j', '--job', type=int, action='store', default=1,
+            help='set the job number for this particular run. Must be in (1 .. njobs). ' +
+            'Used in conjunction with -n (--njobs)')
         parser.add_option(
             '-p', '--profile', action='store_const', default=False, const=True,
             help='output profiling information at the end of the run')
@@ -279,6 +295,13 @@ def AddModules(config, modules):
 def main():
     args = parse_args()
 
+    if args.njobs < 1:
+        raise ValueError("Invalid number of jobs %d"%args.njobs)
+    if args.job < 1:
+        raise ValueError("Invalid job number %d.  Must be >= 1"%args.job)
+    if args.job > args.njobs:
+        raise ValueError("Invalid job number %d.  Must be <= njobs (%d)"%(args.job,args.njobs))
+
     # Parse the integer verbosity level from the command line args into a logging_level string
     logging_levels = { 0: logging.CRITICAL, 
                        1: logging.WARNING,
@@ -348,7 +371,7 @@ def main():
         logger.debug("Process config dict: \n%s", pprint.pformat(config))
 
         # Process the configuration
-        galsim.config.Process(config, logger)
+        galsim.config.Process(config, logger, njobs=args.njobs, job=args.job)
 
     if args.profile:
         # cf. example code here: https://docs.python.org/2/library/profile.html
