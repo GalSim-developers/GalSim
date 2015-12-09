@@ -44,15 +44,18 @@ class AtmosphericPhaseGenerator(object):
     lists must all either be equal the number of layers or equal to 1.  In the latter case, the
     length-1 list is broadcast to length-N.
 
-    @param time_step in seconds [Default: 0.03]
-    @param screen_size in meters [Default: 10]
-    @param screen_scale in meters [Default: 0.1]
-    @param r0 in meters [Default: 0.2]
-    @param L0 in meters [Default: 25.0]
-    @param velocity in meters/second [Default: 0]
-    @param direction CCW relative to +x as galsim.Angle [Default: 0*galsim.degrees]
-    @param alpha_mag [Default: 0.999]
-    @param rng BaseDeviate instance to provide random number generation
+    @param    time_step     in seconds [Default: 0.03]
+    @param    screen_size   in meters [Default: 10]
+    @param    screen_scale  in meters [Default: 0.1]
+    @param    r0_500        Fried parameter at wavelength 500 nm in meters [Default: 0.2]
+    @param    L0            in meters [Default: 25.0]
+    @param    velocity      in meters/second [Default: 0]
+    @param    direction     CCW relative to +x as galsim.Angle [Default: 0*galsim.degrees]
+    @param    alpha_mag     [Default: 0.999]
+    @param    rng           BaseDeviate instance to provide random number generation
+    @returns  phase         screen in nm
+
+    PSF is then |FT(exp(2 pi i * phase / lambda))|^2
 
     Some suggestions for choices of wind velocities come from data hosted by NOAA. The Global Data
     Assimilation System (GDAS), run by the NOAA National Center for Environmental Prediction (NCEP),
@@ -67,8 +70,8 @@ class AtmosphericPhaseGenerator(object):
     Data is found here: ftp://arlftp.arlhq.noaa.gov/pub/archives/gdas1/
     Data documentation: http://ready.arl.noaa.gov/gdas1.php
     """
-    def __init__(self, time_step=0.03, screen_size=10.0, screen_scale=0.1, r0=0.2, L0=25.0,
-                 velocity=0.0, direction=0*galsim.degrees, alpha_mag=0.999, rng=None):
+    def __init__(self, time_step=0.03, screen_size=10.0, screen_scale=0.1, r0_500=0.2, L0=25.0,
+                 velocity=0.0, direction=0*galsim.degrees, alpha_mag=0.999, lam=500.0, rng=None):
         if rng is None:
             rng = galsim.BaseDeviate()
         self.rng = rng
@@ -79,21 +82,21 @@ class AtmosphericPhaseGenerator(object):
         self.screen_size = self.screen_scale * self.npix
 
         # Listify
-        r0, L0, velocity, direction, alpha_mag = map(
+        r0_500, L0, velocity, direction, alpha_mag = map(
             lambda i: [i] if not hasattr(i, '__iter__') else i,
-            (r0, L0, velocity, direction, alpha_mag)
+            (r0_500, L0, velocity, direction, alpha_mag)
         )
 
         # Broadcast
-        n_layers = max(map(len, [r0, L0, velocity, direction, alpha_mag]))
+        n_layers = max(map(len, [r0_500, L0, velocity, direction, alpha_mag]))
         if n_layers > 1:
-            r0, L0, velocity, direction, alpha_mag = map(
+            r0_500, L0, velocity, direction, alpha_mag = map(
                 lambda i: [i[0]]*n_layers if len(i) == 1 else i,
-                (r0, L0, velocity, direction, alpha_mag)
+                (r0_500, L0, velocity, direction, alpha_mag)
             )
 
-        if any(len(i) != n_layers for i in (r0, L0, velocity, direction, alpha_mag)):
-            raise ValueError("r0, L0, velocity, direction, alpha_mag not broadcastable")
+        if any(len(i) != n_layers for i in (r0_500, L0, velocity, direction, alpha_mag)):
+            raise ValueError("r0_500, L0, velocity, direction, alpha_mag not broadcastable")
 
         # Invert L0, with `L0 is None` interpretted as L0 = infinity => L0_inv = 0.0
         L0_inv = [1./L00 if L00 is not None else 0.0 for L00 in L0]
@@ -113,15 +116,16 @@ class AtmosphericPhaseGenerator(object):
         self._phaseFT = np.empty((n_layers, self.npix, self.npix), dtype=np.complex128)
         self.screens = np.zeros_like(self.powerlaw)
 
-        for i, (r00, L00_inv, vx0, vy0, amag0) in enumerate(zip(r0, L0_inv, vx, vy, alpha_mag)):
+        for i, (r00, L00_inv, vx0, vy0, amag0) in enumerate(zip(r0_500, L0_inv, vx, vy, alpha_mag)):
             # I believe the magic number below is 0.00058 ~= 0.023 / (2*pi)**2, where
-            # 0.023 ~= (5 * (24/5 * gamma(6/5))**(5/6) * gamma(11/6) /
+            # 0.023 ~= (5 * (24/5 * gamma(6/5))**(5/6) * gamma(11/6)) /
             #          (6 * pi**8/3 * gamma(1/6))
             # I used a combination of Roddier (1981), Noll (1976), and Sasiela (1994) to figure
             # this out.
             pl = (1./self.screen_size*np.sqrt(0.00058)*(r00**(-5.0/6.0)) *
                   (fx*fx + fy*fy + L00_inv*L00_inv)**(-11.0/12.0) *
                   self.npix * np.sqrt(np.sqrt(2.0)))
+            pl *= 500.0  # since r0 is specified at 500 nm
             pl[0, 0] = 0.0
             self.powerlaw[i] = pl
             self._phaseFT[i] = self._noiseFT(pl)
@@ -164,19 +168,8 @@ class AtmosphericPSF(GSObject):
     @param lam              Lambda (wavelength) in units of nanometers.  Must be supplied with `r0`,
                             and in this case, image scales (`scale`) should be specified in units of
                             `scale_unit`.
-    @param r0               Fried parameter (in meters) setting the amplitude of turbulence.  If a
-                            scalar, then this is the effective Fried parameter for combination of
-                            all layers.  If a list, then each element specifies the Fried parameter
-                            for a particular layer.  Note that the Fried parameter adds over layers
-                            like r0_effective^(-5/3) = sum r0_i^(-5/3).
+    @param r0_500           Like r0, but specified for lambda=500nm instead of at provided lambda.
     @param L0               Outer scale in meters of von Karman spectrum.  [Default: None (= inf)]
-    @param lam_over_r0      Ratio of wavelength to Fried parameter.  Can be a scalar, which
-                            then specifies the net turbulence across all layers, or a list which
-                            then indicates the turbulence for each individual layer.
-    @param fwhm             Full width at half max (FWHM) of the PSF in the infinite exposure limit
-                            in arcseconds.
-    @param half_light_radius  The half-light-radius of the PSF in the infinite exposure limit.
-                            Typically given in arcsec.
     @param weights          Relative weights for each turbulent layer in terms of the layers'
                             refractive index fluctuations C_n^2.  The Fried parameter for each layer
                             is then set via r0_i = r0_effective * weight_i^(-3/5).
@@ -202,11 +195,11 @@ class AtmosphericPSF(GSObject):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [Default: None]
     """
-    def __init__(self, lam=None, r0=None, L0=None, lam_over_r0=None, fwhm=None,
-                 half_light_radius=None, weights=None, alpha_mag=None, exptime=0.0, time_step=0.03,
-                 velocity=None, direction=None, phase_generator=None, interpolant=None,
-                 oversampling=1.5, flux=1.0, scale_unit=galsim.arcsec, gsparams=None,
-                 diam=None, obscuration=None, screen_size=None):
+    def __init__(self, lam=None, r0_500=None, L0=None, weights=None, alpha_mag=None, exptime=0.0,
+                 time_step=0.03, velocity=None, direction=None, phase_generator=None,
+                 interpolant=None, oversampling=1.5, flux=1.0, scale_unit=galsim.arcsec,
+                 gsparams=None, diam=None, obscuration=None, screen_size=None, rng=None,
+                 _bar=None):
         import itertools
 
         nstep = int(np.ceil(exptime/time_step))
@@ -214,14 +207,10 @@ class AtmosphericPSF(GSObject):
             nstep = 1
 
         if phase_generator is not None:
-            if any(item is not None for item in (r0, L0, lam_over_r0, fwhm, weights, alpha_mag)):
-                raise ValueError("Cannot specify r0, L0, lam_over_r0, fwhm, weights, or alpha_mag"
+            if any(item is not None for item in (r0_500, L0, weights, alpha_mag)):
+                raise ValueError("Cannot specify r0_500, L0, weights, or alpha_mag"
                                  " when specifying phase_generator")
         else:
-            if fwhm is not None:
-                lam_over_r0 = fwhm / 0.975865
-            if half_light_radius is not None:
-                lam_over_r0 = half_light_radius / 0.554811
             if alpha_mag is None:
                 alpha_mag = 0.999
             if direction is None:
@@ -229,41 +218,36 @@ class AtmosphericPSF(GSObject):
             if velocity is None:
                 velocity = 0.0
             if weights is not None:
-                if r0 is not None:
-                    if hasattr(r0, '__len__'):
-                        raise ValueError("Cannot specify both weights and list of r0s.")
-                    r0 = [r0 * w**(-3./5) for w in weights]
-                elif lam_over_r0 is not None:
-                    if hasattr(lam_over_r0, '__len__'):
-                        raise ValueError("Cannot specify both weights and list of lam_over_r0s.")
-                    lam_over_r0 = [lam_over_r0 * w**(3./5) for w in weights]
+                if hasattr(r0_500, '__iter__'):
+                    raise ValueError("Cannot specify both weights and list of r0_500s.")
+                r0_500 = [r0_500 * w**(-3./5) for w in weights]
+
             # Listify
-            r0, velocity, direction, alpha_mag, lam_over_r0 = map(
+            r0_500, velocity, direction, alpha_mag = map(
                 lambda i: [i] if not hasattr(i, '__iter__') else i,
-                (r0, velocity, direction, alpha_mag, lam_over_r0)
+                (r0_500, velocity, direction, alpha_mag)
             )
 
             if lam is None:
-                lam = 800.  # arbitrarily set wavelength = 800nm
-                r0 = [lam*1.e-9 / lor0 * galsim.radians / scale_unit for lor0 in lam_over_r0]
-            # Should have lam as a scalar, and r0 as a list at this point.
-            r0_effective = (sum(r**(-5./3) for r in r0)**(-3./5))
+                lam = 500.0  # arbitrarily set wavelength = 500nm
+            r0_500_effective = (sum(r**(-5./3) for r in r0_500)**(-3./5))
 
             # Sampling the phase screen is roughly analogous to sampling the PSF in Fourier space.
             # We can use a Kolmogorov profile to get a rough estimate of what stepK is needed to
             # avoid aliasing.
-            kolm = galsim.Kolmogorov(lam=lam, r0=r0_effective)
+            kolm = galsim.Kolmogorov(lam=lam, r0=r0_500_effective*(lam/500.0)**(6./5))
             screen_scale = kolm.stepK()/(2*np.pi)  # 2pi b/c np and GalSim FFT conventions differ.
             # an arbitrary additional factor of 4 to account for the fact that a stochastic
             # atmospheric PSF can have significant fluctuations at relatively large radii.
             screen_scale /= 4.0
-            # We'll hard code screen_size = 10 meters since that aperturn covers all planned
+            # We'll hard code screen_size = 10 meters since that aperture covers all planned
             # ground-based optical weak lensing experiments.
             if screen_size is None:
                 screen_size = 10.0
             phase_generator = AtmosphericPhaseGenerator(
-                time_step=time_step, screen_size=screen_size, screen_scale=screen_scale, r0=r0,
-                L0=L0, alpha_mag=alpha_mag, velocity=velocity, direction=direction)
+                time_step=time_step, screen_size=screen_size, screen_scale=screen_scale,
+                r0_500=r0_500, L0=L0, alpha_mag=alpha_mag, velocity=velocity, direction=direction,
+                rng=rng)
         self.phase_generator = phase_generator
 
         scale = 1e-9*lam/self.phase_generator.screen_size * galsim.radians / scale_unit
@@ -278,11 +262,13 @@ class AtmosphericPSF(GSObject):
             if obscuration is not None:
                 aper = (r <= 0.5*diam) & (r >= 0.5*diam*obscuration)
             else:
-                aper = r < 0.5*diam
+                aper = r <= 0.5*diam
 
         for i, screens in itertools.izip(xrange(nstep), phase_generator):
+            if _bar is not None:  # Hidden ProgressBar option
+                _bar.update()
             # The wavefront to use is exp(2 pi i screen)
-            wf = np.exp(2j * np.pi * np.sum(screens, axis=0)) * aper
+            wf = np.exp(2j * np.pi * np.sum(screens, axis=0) / lam) * aper
             # Calculate the image array via FFT.
             # Copied from galsim.optics.psf method (hacky)
             ftwf = np.fft.ifft2(np.fft.ifftshift(wf))
