@@ -65,7 +65,7 @@ psf:
         # the larger area is mostly wasted.  Setting max_size to the size of the postage stamp
         # we will eventually draw onto helps avoid wasted calculations.
         # This is in arcsec, so max_size = stamp_size * pixel_scale
-        max_size: "$48 * 0.2"
+        max_size: "$@image.stamp_size * @image.pixel_scale"
         suppress_warning: true
 
 gal:
@@ -207,7 +207,6 @@ output:
 
     # Output truth catalogs with some of the generated values
     truth:
-        dir: control/ground/constant
         file_name :
             type: FormattedStr
             format: epoch_catalog-%03d-%1d.fits
