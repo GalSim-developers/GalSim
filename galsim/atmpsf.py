@@ -104,7 +104,7 @@ class Atmosphere(object):
 
 class PhaseScreen(object):
     def __init__(self, time_step=0.03, screen_size=10.0, screen_scale=0.1, altitude=0.0,
-                 r0_500=0.2, L0_inv=1./25.0, vx=0, vy=0, rng=None, **kwargs):
+                 r0_500=0.2, L0_inv=1./25.0, vx=0.0, vy=0.0, rng=None, **kwargs):
         if rng is None:
             rng = galsim.BaseDeviate()
         self.rng = rng
@@ -149,9 +149,9 @@ class FrozenPhaseScreen(PhaseScreen):
     def advance(self):
         self.ii = self.ii.shift(self.vx*self.time_step, self.vy*self.time_step)
 
-    def path_difference(self, nx, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
+    def path_difference(self, nx, scale, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
         ii_t = self.ii.shift(self.altitude*theta_x.tan(), self.altitude*theta_y.tan())
-        return ii_t.drawImage(nx=nx, ny=nx, scale=self.screen_scale, method='sb').array
+        return ii_t.drawImage(nx=nx, ny=nx, scale=scale, method='sb').array
 
 
 class ARPhaseScreen(PhaseScreen):
@@ -181,23 +181,23 @@ class ARPhaseScreen(PhaseScreen):
             self._phaseFT = self.alpha*self._phaseFT + self._noiseFT()*self.noise_frac
         self.screen = np.fft.ifft2(self._phaseFT).real
 
-    def path_difference(self, nx, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
+    def path_difference(self, nx, scale, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
         img = galsim.Image(np.ascontiguousarray(self.screen), scale=self.screen_scale)
         ii = galsim.InterpolatedImage(img, calculate_stepk=False, calculate_maxk=False,
                                       normalization='sb')
         ii = ii.shift(self.altitude * theta_x.tan(), self.altitude * theta_y.tan())
-        return ii.drawImage(nx=nx, ny=nx, scale=self.screen_scale, method='sb').array
+        return ii.drawImage(nx=nx, ny=nx, scale=scale, method='sb').array
 
 
 class AtmosphericPSF(GSObject):
     def __init__(self, atmosphere, lam=500.0, exptime=15.0, flux=1.0,
                  theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees,
                  scale_unit=galsim.arcsec, interpolant=None,
-                 diam=10.0, obscuration=None, pad_factor=4.0,
+                 diam=10.0, obscuration=None, pad_factor=1.0, fft_scale=0.05,
                  _bar=None):
 
-        nx = int(np.ceil(diam/atmosphere.screen_scale) * pad_factor)
-        size = nx * atmosphere.screen_scale
+        nx = int(np.ceil(diam/fft_scale) * pad_factor)
+        size = nx * fft_scale
         self.scale = 1e-9*lam/size * galsim.radians / scale_unit
         img = np.zeros((nx, nx), dtype=np.float64)
 
@@ -215,7 +215,7 @@ class AtmosphericPSF(GSObject):
             nstep = 1
 
         for i in xrange(nstep):
-            path_difference = atmosphere.path_difference(nx, theta_x, theta_y)
+            path_difference = atmosphere.path_difference(nx, fft_scale, theta_x, theta_y)
             wf = aper * np.exp(2j * np.pi * path_difference / lam)
             ftwf = np.fft.ifft2(np.fft.ifftshift(wf))
             img += np.abs(ftwf)**2
