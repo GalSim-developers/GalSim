@@ -57,12 +57,17 @@ class Atmosphere(object):
         # Broadcast
         self.n_layers = len(self.altitude) if hasattr(self.altitude, '__iter__') else 1
         if self.n_layers > 1:
-            r0_500, L0, velocity, direction, alpha_mag = map(
+            L0, velocity, direction, alpha_mag = map(
                 lambda i: [i[0]]*self.n_layers if len(i) == 1 else i,
-                (r0_500, L0, velocity, direction, alpha_mag)
+                (L0, velocity, direction, alpha_mag)
             )
+        # Broadcast r0_500 separately, since combination of indiv layers' r0s is more complex:
+        if len(r0_500) == 1:
+            r0_500 = [self.n_layers**(3./5) * r0_500[0]] * self.n_layers
         if any(len(i) != self.n_layers for i in (r0_500, L0, velocity, direction, alpha_mag)):
             raise ValueError("r0_500, L0, velocity, direction, alpha_mag not broadcastable")
+
+        self.r0_500_effective = (np.sum(r**(-5./3) for r in r0_500))**(-3./5)
         self.r0_500 = r0_500
 
         # Invert L0, with `L0 is None` interpretted as L0 = infinity => L0_inv = 0.0
@@ -193,17 +198,30 @@ class AtmosphericPSF(GSObject):
     def __init__(self, atmosphere, lam=500.0, exptime=15.0, flux=1.0,
                  theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees,
                  scale_unit=galsim.arcsec, interpolant=None,
-                 diam=10.0, obscuration=None, pad_factor=1.0, fft_scale=0.05,
-                 _bar=None):
+                 diam=10.0, obscuration=None,
+                 pad_factor=1.0, pupil_size=None,
+                 oversample_factor=1.0, pupil_scale=None,
+                 _bar=None, verbose=False):
 
-        nx = int(np.ceil(diam/fft_scale) * pad_factor)
-        size = nx * fft_scale
-        self.scale = 1e-9*lam/size * galsim.radians / scale_unit
-        img = np.zeros((nx, nx), dtype=np.float64)
+        if pupil_scale is None:
+            obj = galsim.Kolmogorov(lam=lam, r0=atmosphere.r0_500_effective*(lam/500.)**(6./5))
+            pupil_scale = obj.stepK() * lam*1e-9 * galsim.radians / scale_unit / oversample_factor
+        if pupil_size is None:
+            pupil_size = diam * pad_factor
+
+        n_u = int(np.ceil(pupil_size/pupil_scale))
+        pupil_size = n_u * pupil_scale
+        self.scale = 1e-9*lam/pupil_size * galsim.radians / scale_unit
+        img = np.zeros((n_u, n_u), dtype=np.float64)
+
+        if verbose:
+            print "pupil_size: ", pupil_size
+            print "pupil_scale: ", pupil_scale
+            print "n_u: ", n_u
 
         aper = np.ones_like(img)
         if diam is not None:
-            u = np.fft.fftshift(np.fft.fftfreq(nx, 1./size))
+            u = np.fft.fftshift(np.fft.fftfreq(n_u, 1./pupil_size))
             u, v = np.meshgrid(u, u)
             r = np.hypot(u, v)
             aper = r <= 0.5*diam
@@ -215,7 +233,7 @@ class AtmosphericPSF(GSObject):
             nstep = 1
 
         for i in xrange(nstep):
-            path_difference = atmosphere.path_difference(nx, fft_scale, theta_x, theta_y)
+            path_difference = atmosphere.path_difference(n_u, pupil_scale, theta_x, theta_y)
             wf = aper * np.exp(2j * np.pi * path_difference / lam)
             ftwf = np.fft.ifft2(np.fft.ifftshift(wf))
             img += np.abs(ftwf)**2
