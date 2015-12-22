@@ -49,19 +49,16 @@ def ProcessTruthStamp(truth_cat, scratch, config, base, obj_num, logger=None):
             # only a limited subset of the parsing.  Usually enough for truth items, but
             # not fully featured.
             value = galsim.config.ParseValue(cols,name,base,None)[0]
-            t = type(value)
         elif not isinstance(key,basestring):
             # The item can just be a constant value.
             value = key
-            t = type(value)
         elif key[0] == '$':
             # This can also be handled by ParseValue
             value = galsim.config.ParseValue(cols,name,base,None)[0]
-            t = type(value)
         else:
-            value, t = galsim.config.GetCurrentValue(key, base)
+            value = galsim.config.GetCurrentValue(key, base)
         row.append(value)
-        types.append(t)
+        types.append(type(value))
     if truth_cat.getNObjects() == 0:
         truth_cat.setTypes(types)
     elif truth_cat.getTypes() != types:

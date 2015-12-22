@@ -84,7 +84,7 @@ def _GenerateFromEval(config, base, value_type):
         #print 'unique @keys = ',keys
         for key0 in keys:
             key = key0[1:] # Remove the @ sign.
-            value, t = galsim.config.GetCurrentValue(key, base)
+            value = galsim.config.GetCurrentValue(key, base)
             # Replaces all occurrences of key0 with the value.
             string = string.replace(key0,repr(value)) 
             #print '%s = %s'%(key, string)

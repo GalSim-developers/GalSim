@@ -136,8 +136,7 @@ def ParseValue(config, key, base, value_type):
 def GetCurrentValue(key, base, value_type=None):
     """@brief Get the current value of another config item given the key name.
 
-    If value_type is None, return the current value, type
-    If value_type is given, just return value
+    @returns the current value
     """
     #print 'GetCurrent %s.  value_type = %s'%(key,value_type)
 
@@ -179,7 +178,6 @@ def GetCurrentValue(key, base, value_type=None):
                     # item is probably just some value already.
                     #print 'Not dict, no value_type.  Assume %s is ok.'%d[k]
                     val = d[k]
-                    t = type(val)
                 else:
                     # This will work fine to evaluate the current value, but will also
                     # compute it if necessary
@@ -190,16 +188,12 @@ def GetCurrentValue(key, base, value_type=None):
                     # If there is already a current_val, use it.
                     #print 'Dict with current_val.  Use it: ',d[k]['current_val']
                     val = d[k]['current_val']
-                    t = d[k]['current_value_type']
                 else:
                     # Otherwise, parse the value for this key
                     #print 'Parse value normally'
                     val = ParseValue(d, k, base, value_type)[0]
             #print base['obj_num'],'Current key = %s, value = %s'%(key,val)
-            if value_type is None:
-                return val, t
-            else:
-                return val
+            return val
 
     raise ValueError("Invalid key = %s"%key)
 
