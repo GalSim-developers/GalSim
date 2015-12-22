@@ -39,6 +39,8 @@ def _type_by_letter(key):
         return galsim.PositionD
     elif key[0] == 'g':
         return galsim.Shear
+    elif key[0] == 'x':
+        return None
     else:
         raise AttributeError("Invalid Eval variable: %s (starts with an invalid letter)"%key)
 

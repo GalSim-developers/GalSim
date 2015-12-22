@@ -115,6 +115,8 @@ def main(argv):
     # This means the Fourier transforms of the real galaxy images don't need to be recalculated 
     # each time, so it's a bit more efficient.
     gal_list = [ galsim.RealGalaxy(real_galaxy_catalog, id=id) for id in id_list ]
+    # Grab the index numbers before we transform them and lose the index attribute.
+    cosmos_index = [ gal.index for gal in gal_list ]
 
     # Make the galaxies a bit larger than their original observed size.
     gal_list = [ gal.dilate(gal_dilation) for gal in gal_list ]
@@ -172,11 +174,11 @@ def main(argv):
     # Initialize the OutputCatalog for the truth values
     names = [ 'gal_num', 'x_image', 'y_image', 
               'psf_e1', 'psf_e2', 'psf_fwhm',
-              'cosmos_id', 'theta',
+              'cosmos_id', 'cosmos_index', 'theta',
               'g1', 'g2', 'shift_x', 'shift_y' ]
     types = [ int, float, float,
               float, float, float,
-              str, float, 
+              str, int, float, 
               float, float, float, float ]
     truth_catalog = galsim.OutputCatalog(names, types)
 
@@ -272,7 +274,7 @@ def main(argv):
         # Add the truth values to the truth catalog
         row = [ k, b.trueCenter().x, b.trueCenter().y,
                 psf_shape.e1, psf_shape.e2, psf_fwhm,
-                id_list[index], (theta_deg % 360.),
+                id_list[index], cosmos_index[index], (theta_deg % 360.),
                 alt_g1, alt_g2, dx, dy ]
         truth_catalog.add_row(row)
 

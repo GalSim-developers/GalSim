@@ -111,9 +111,9 @@ gal :
                 # it will evaluate it as needed for the current object.
                 repeat : { type : Current, key : gal.num }
 
-        # Make the galaxies a factor of 3 larger (in linear size, not area) than their
-        # original observed size.
-        dilation : 3
+    # Make the galaxies a factor of 3 larger (in linear size, not area) than their
+    # original observed size.
+    dilation : 3
 
     # If your underlying galaxy (defined in first) has rotational symmetry (e.g. a sheared 
     # exponential profile), then you would typically want the full rotation spanned by the 
@@ -251,6 +251,16 @@ output :
             psf_fwhm : psf.fwhm
 
             cosmos_id : gal.first.id
+
+            # Even though we accessed the catalog by id, we can still get the index number
+            # in the catalog via the gal.index attribute.
+            cosmos_index :
+                type : Eval
+                str : 'gal.index'
+                # There is a special Eval code we haven't mentioned yet.  If you name precede
+                # a variable name with x, then that means it's an object, rather than a value.
+                # So in this case, get the index from the attribute of the object, gal.first.
+                xgal : { type : Current, key : 'gal.first' }
 
             # Fields that are automatically generated are also available.
             # List, Ring, and Catalog all have an index parameter, but it is often omitted
