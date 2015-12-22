@@ -257,7 +257,7 @@ def _GenerateFromCatalog(param, param_name, base, value_type):
         raise ValueError("No input catalog available for %s.type = Catalog"%param_name)
 
     if 'num' in param:
-        num, safe = ParseValue(param, 'num', base, int)
+        num, safe = galsim.config.ParseValue(param, 'num', base, int)
     else:
         num, safe = (0, True)
 
@@ -288,7 +288,7 @@ def _GenerateFromCatalog(param, param_name, base, value_type):
     elif value_type is int:
         val = input_cat.getInt(**kwargs)
     elif value_type is bool:
-        val = _GetBoolValue(input_cat.get(**kwargs),param_name)
+        val = galsim.config.value._GetBoolValue(input_cat.get(**kwargs),param_name)
 
     #print base['file_num'],
     #print 'Catalog: col = %s, index = %s, val = %s'%(kwargs['col'],kwargs['index'],val)
