@@ -36,20 +36,6 @@ import galsim
 # Now put it back in case anyone else relies on this feature.
 sys.path = [temp] + sys.path
 
-# Python 2.6 doesn't include OrderdDict natively.  There is a package ordereddict that you
-# can pip install.  But if the user hasn't done that, we'll just read into a regular dict.
-# The only feature that requires the OrderedDict is the truth catalog output.  With a regular
-# dict the columns will appear in arbitrary order.
-use_ordereddict = True
-try:
-    from collections import OrderedDict
-except ImportError:
-    try:
-        from ordereddict import OrderedDict
-    except ImportError:
-        OrderedDict = dict
-
-
 def MergeConfig(config1, config2, logger=None):
     """
     Merge config2 into config1 such that it has all the information from either config1 or 
@@ -192,97 +178,29 @@ def parse_args():
     # Return the args
     return args
 
-
-def read_yaml(config_file):
-
-    # We read in the YAML config file into an OrderedDict.  The main advantage of this
-    # is for the truth catalog.  This lets the columns be in the same order as the
-    # entries in the yaml file.  With a normal dict, they get scrambled.
-
-    # cf. coldfix's answer here:
-    # http://stackoverflow.com/questions/5121931/in-python-how-can-you-load-yaml-mappings-as-ordereddicts
-    class OrderedLoader(yaml.SafeLoader):
-        pass
-    def construct_mapping(loader, node):
-        loader.flatten_mapping(node)
-        return OrderedDict(loader.construct_pairs(node))
-    OrderedLoader.add_constructor(
-        yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
-        construct_mapping)
-
-    with open(config_file) as f:
-        all_config = [ c for c in yaml.load_all(f.read(), OrderedLoader) ]
-
-    # If there is only 1 yaml document, then it is of course used for the configuration.
-    # If there are multiple yaml documents, then the first one defines a common starting
-    # point for the later documents.
-    # So the configurations are taken to be:
-    #   all_config[0] + all_config[1]
-    #   all_config[0] + all_config[2]
-    #   all_config[0] + all_config[3]
-    #   ...
-    # See demo6.yaml and demo8.yaml in the examples directory for examples of this feature.
-
-    if len(all_config) > 1:
-        # Break off the first one if more than one:
-        base_config = all_config[0]
-        all_config = all_config[1:]
-    else:
-        # Else just use an empty base_config dict.
-        base_config = {}
-
-    return base_config, all_config
-
-
-def read_json(config_file):
-
-    with open(config_file) as f:
-        try:
-            # cf. http://stackoverflow.com/questions/6921699/can-i-get-json-to-load-into-an-ordereddict-in-python
-            config = json.load(f, object_pairs_hook=OrderedDict)
-        except TypeError:
-            # for python2.6, json doesn't come with the object_pairs_hook, so 
-            # try using simplejson, and if that doesn't work, just use a regular dict.
-            try:
-                import simplejson
-                config = simplejson.load(f, object_pairs_hook=OrderedDict)
-            except ImportError:
-                config = json.load(f)
-
-    # JSON files are just processed as is.  This is equivalent to having an empty 
-    # base_config, so we just do that and use the same structure.
-    base_config = {}
-    all_config = [ config ]
-
-    return base_config, all_config
-
-def UpdateConfig(config, variables, file_type, logger):
-    # Add the additional variables to the config file
+def ParseVariables(variables, logger):
+    new_params = {}
     for v in variables:
         logger.debug('Parsing additional variable: %s',v)
         if '=' not in v:
             raise ValueError('Improper variable specification.  Use field.item=value.')
         key, value = v.split('=',1)
-        # This next bit is basically identical to the code for Dict.get(key) in catalog.py.
-        chain = key.split('.')
-        d = config
-        while chain:
-            k = chain.pop(0)
-            try: k = int(k)
-            except ValueError: pass
-            if chain: d = d[k]
-            else: 
-                # Try to evaluate the value string to allow people to input things like
-                # gal.rotate='{type : Rotate}'
-                # But if it fails (particularly with json), just assign the value as a string.
-                try:
-                    if file_type == 'yaml':
-                        d[k] = yaml.load(value)
-                    else:
-                        d[k] = json.loads(value)
-                except:
-                    logger.debug('Unable to parse %s.  Treating it as a string.'%value)
-                    d[k] = value
+        # Try to evaluate the value string to allow people to input things like
+        # gal.rotate='{type : Rotate}'
+        # But if it fails (particularly with json), just assign the value as a string.
+        try:
+            try:
+                import yaml
+                value = yaml.load(value)
+            except ImportError:
+                # Don't require yaml.  json usually works for these.
+                import json
+                value = json.loads(value)
+        except:
+            logger.debug('Unable to parse %s.  Treating it as a string.'%value)
+        new_params[key] = value
+
+    return new_params
 
 
 def AddModules(config, modules):
@@ -322,26 +240,8 @@ def main():
         logging.basicConfig(format="%(message)s", level=logging_level, filename=args.log_file)
     logger = logging.getLogger('galsim')
 
-    # Determine the file type from the extension if necessary:
-    if args.file_type is None:
-        import os
-        name, ext = os.path.splitext(args.config_file)
-        if ext.lower().startswith('.j'):
-            args.file_type = 'json'
-        else:
-            # Let YAML be the default if the extension is not .y* or .j*.
-            args.file_type = 'yaml'
-        logger.debug('File type determined to be %s', args.file_type)
-    else:
-        logger.debug('File type specified to be %s', args.file_type)
-
     logger.warn('Using config file %s', args.config_file)
-    
-    if args.file_type == 'yaml':
-        base_config, all_config = read_yaml(args.config_file)
-    else:
-        base_config, all_config = read_json(args.config_file)
-
+    base_config, all_config = galsim.config.ReadConfig(args.config_file, args.file_type, logger)
     logger.debug('Successfully read in config file.')
 
     # Set the root value in base_config
@@ -356,7 +256,7 @@ def main():
         MergeConfig(config,base_config)
 
         # Update with the command-line variables:
-        UpdateConfig(config, args.variables, args.file_type, logger)
+        new_params = ParseVariables(args.variables, logger)
 
         # Add modules to the config['modules'] list
         AddModules(config, args.module)
@@ -371,7 +271,7 @@ def main():
         logger.debug("Process config dict: \n%s", pprint.pformat(config))
 
         # Process the configuration
-        galsim.config.Process(config, logger, njobs=args.njobs, job=args.job)
+        galsim.config.Process(config, logger, njobs=args.njobs, job=args.job, new_params=new_params)
 
     if args.profile:
         # cf. example code here: https://docs.python.org/2/library/profile.html
