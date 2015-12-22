@@ -603,6 +603,8 @@ class COSMOSCatalog(object):
             real_params = cosmos_catalog.getRealParams(index)
             gal = galsim.RealGalaxy(real_params, noise_pad_size=noise_pad_size, rng=rng,
                                     gsparams=gsparams)
+            # Store the orig_index as gal.index, since the above just sets it as 0.
+            gal.index = self.orig_index[index]
         else:
             record = cosmos_catalog.getParametricRecord(index)
             gal = COSMOSCatalog._buildParametric(record, sersic_prec, gsparams, chromatic=False)
