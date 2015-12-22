@@ -243,6 +243,8 @@ class COSMOSCatalog(object):
     # access attributes directly -- just call methods.  So this is how we get nobjects there.
     def getNObjects(self) : return self.nobjects
 
+    def getOrigIndex(self, index): return self.orig_index[index]
+
     def makeGalaxy(self, index=None, gal_type=None, chromatic=False, noise_pad_size=5,
                    deep=False, sersic_prec=0.05, rng=None, gsparams=None):
         """
@@ -604,7 +606,7 @@ class COSMOSCatalog(object):
             gal = galsim.RealGalaxy(real_params, noise_pad_size=noise_pad_size, rng=rng,
                                     gsparams=gsparams)
             # Store the orig_index as gal.index, since the above just sets it as 0.
-            gal.index = self.orig_index[index]
+            gal.index = cosmos_catalog.getOrigIndex(index)
         else:
             record = cosmos_catalog.getParametricRecord(index)
             gal = COSMOSCatalog._buildParametric(record, sersic_prec, gsparams, chromatic=False)
