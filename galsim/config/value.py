@@ -17,6 +17,13 @@
 #
 import galsim
 
+from .value_eval import _GenerateFromEval
+from .value_random import _GenerateFromRandom, _GenerateFromRandomGaussian, _GenerateFromRandomPoisson, _GenerateFromRandomBinomial, _GenerateFromRandomWeibull, _GenerateFromRandomGamma, _GenerateFromRandomChi2, _GenerateFromRandomDistribution, _GenerateFromRandomCircle
+from .input import _GenerateFromCatalog, _GenerateFromDict
+from .input_fitsheader import _GenerateFromFitsHeader
+from .input_powerspectrum import _GenerateFromPowerSpectrumShear, _GenerateFromPowerSpectrumMagnification
+from .input_nfw import _GenerateFromNFWHaloShear, _GenerateFromNFWHaloMagnification
+
 valid_value_types = {
     # The values are tuples with:
     # - the build function to call
@@ -156,54 +163,75 @@ def ParseValue(config, param_name, base, value_type):
         return val, safe
 
 
-def _GetAngleValue(param, param_name):
-    """ @brief Convert a string consisting of a value and an angle unit into an Angle.
+def GetCurrentValue(config, param_name):
+    """@brief Return the current value of a parameter (either stored or a simple value)
     """
-    try :
-        value, unit = param.rsplit(None,1)
-        value = float(value)
-        unit = galsim.angle.get_angle_unit(unit)
-        return galsim.Angle(value, unit)
-    except Exception as e:
-        raise AttributeError("Unable to parse %s param = %s as an Angle."%(param_name,param))
+    param = config[param_name]
+    if isinstance(param, dict):
+        return param['current_val']
+    else: 
+        return param
 
-
-def _GetPositionValue(param, param_name):
-    """ @brief Convert a tuple or a string that looks like "a,b" into a galsim.PositionD.
+def SetDefaultIndex(config, num):
     """
-    try:
-        x = float(param[0])
-        y = float(param[1])
-    except:
-        try:
-            x, y = param.split(',')
-            x = float(x.strip())
-            y = float(y.strip())
-        except:
-            raise AttributeError("Unable to parse %s param = %s as a PositionD."%(param_name,param))
-    return galsim.PositionD(x,y)
-
-
-def _GetBoolValue(param, param_name):
-    """ @brief Convert a string to a bool
+    When the number of items in a list is known, we allow the user to omit some of 
+    the parameters of a Sequence or Random and set them automatically based on the 
+    size of the list, catalog, etc.
     """
-    if isinstance(param,str):
-        if param.strip().upper() in [ 'TRUE', 'YES' ]:
-            return True
-        elif param.strip().upper() in [ 'FALSE', 'NO' ]:
-            return False
-        else:
-            try:
-                val = bool(int(param))
-                return val
-            except:
-                raise AttributeError("Unable to parse %s param = %s as a bool."%(param_name,param))
-    else:
-        try:
-            val = bool(param)
-            return val
-        except:
-            raise AttributeError("Unable to parse %s param = %s as a bool."%(param_name,param))
+    # We use a default item (set to True) to indicate that the value of nitems, last, or max
+    # has been set here, rather than by the user.  This way if the number of items in the 
+    # catalog changes from one file to the next, it will be update correctly to the new
+    # number of catalog entries.
+
+    if 'index' not in config:
+        config['index'] = {
+            'type' : 'Sequence',
+            'nitems' : num,
+            'default' : True,
+        }
+    elif ( isinstance(config['index'],dict) 
+           and 'type' in config['index'] ):
+        index = config['index']
+        type = index['type']
+        if ( type == 'Sequence' 
+             and 'nitems' in index 
+             and 'default' in index ):
+            index['nitems'] = num
+            index['default'] = True
+        elif ( type == 'Sequence' 
+               and 'nitems' not in index
+               and ('step' not in index or (isinstance(index['step'],int) and index['step'] > 0) )
+               and ('last' not in index or 'default' in index) ):
+            index['last'] = num-1
+            index['default'] = True
+        elif ( type == 'Sequence'
+               and 'nitems' not in index
+               and ('step' in index and (isinstance(index['step'],int) and index['step'] < 0) ) ):
+            # Normally, the value of default doesn't matter.  Its presence is sufficient
+            # to indicate True.  However, here we have three options.  
+            # 1) first and last are both set by default
+            # 2) first (only) is set by default
+            # 3) last (only) is set by default
+            # So set default to the option we are using, so we update with the correct method.
+            if ( ('first' not in index and 'last' not in index)
+                 or ('default' in index and index['default'] == 1) ):
+                index['first'] = num-1
+                index['last'] = 0
+                index['default'] = 1
+            elif ( 'first' not in index 
+                   or ('default' in index and index['default'] == 2) ):
+                index['first'] = num-1
+                index['default'] = 2
+            elif ( 'last' not in index 
+                   or ('default' in index and index['default'] == 3) ):
+                index['last'] = 0
+                index['default'] = 3
+        elif ( type == 'Random'
+               and ('min' not in index or 'default' in index)
+               and ('max' not in index or 'default' in index) ):
+            index['min'] = 0
+            index['max'] = num-1
+            index['default'] = True
 
 
 def CheckAllParams(param, param_name, req={}, opt={}, single=[], ignore=[]):
@@ -274,14 +302,56 @@ def GetAllParams(param, param_name, base, req={}, opt={}, single=[], ignore=[]):
     return kwargs, safe
 
 
-def GetCurrentValue(config, param_name):
-    """@brief Return the current value of a parameter (either stored or a simple value)
+
+def _GetAngleValue(param, param_name):
+    """ @brief Convert a string consisting of a value and an angle unit into an Angle.
     """
-    param = config[param_name]
-    if isinstance(param, dict):
-        return param['current_val']
-    else: 
-        return param
+    try :
+        value, unit = param.rsplit(None,1)
+        value = float(value)
+        unit = galsim.angle.get_angle_unit(unit)
+        return galsim.Angle(value, unit)
+    except Exception as e:
+        raise AttributeError("Unable to parse %s param = %s as an Angle."%(param_name,param))
+
+
+def _GetPositionValue(param, param_name):
+    """ @brief Convert a tuple or a string that looks like "a,b" into a galsim.PositionD.
+    """
+    try:
+        x = float(param[0])
+        y = float(param[1])
+    except:
+        try:
+            x, y = param.split(',')
+            x = float(x.strip())
+            y = float(y.strip())
+        except:
+            raise AttributeError("Unable to parse %s param = %s as a PositionD."%(param_name,param))
+    return galsim.PositionD(x,y)
+
+
+def _GetBoolValue(param, param_name):
+    """ @brief Convert a string to a bool
+    """
+    if isinstance(param,str):
+        if param.strip().upper() in [ 'TRUE', 'YES' ]:
+            return True
+        elif param.strip().upper() in [ 'FALSE', 'NO' ]:
+            return False
+        else:
+            try:
+                val = bool(int(param))
+                return val
+            except:
+                raise AttributeError("Unable to parse %s param = %s as a bool."%(param_name,param))
+    else:
+        try:
+            val = bool(param)
+            return val
+        except:
+            raise AttributeError("Unable to parse %s param = %s as a bool."%(param_name,param))
+
 
 
 #
@@ -378,376 +448,6 @@ def _GenerateFromDeg(param, param_name, base, value_type):
     kwargs, safe = GetAllParams(param, param_name, base, req=req)
     #print base['obj_num'],'Generate from Deg: kwargs = ',kwargs
     return kwargs['theta'] * galsim.degrees, safe
-
-def _GenerateFromCatalog(param, param_name, base, value_type):
-    """@brief Return a value read from an input catalog
-    """
-    if 'catalog' not in base:
-        raise ValueError("No input catalog available for %s.type = Catalog"%param_name)
-
-    if 'num' in param:
-        num, safe = ParseValue(param, 'num', base, int)
-    else:
-        num, safe = (0, True)
-
-    if num < 0:
-        raise ValueError("Invalid num < 0 supplied for Catalog: num = %d"%num)
-    if num >= len(base['catalog']):
-        raise ValueError("Invalid num supplied for Catalog (too large): num = %d"%num)
-
-    input_cat = base['catalog'][num]
-
-    # Setup the indexing sequence if it hasn't been specified.
-    # The normal thing with a Catalog is to just use each object in order,
-    # so we don't require the user to specify that by hand.  We can do it for them.
-    SetDefaultIndex(param, input_cat.getNObjects())
-
-    # Coding note: the and/or bit is equivalent to a C ternary operator:
-    #     input_cat.isFits() ? str : int
-    # which of course doesn't exist in python.  This does the same thing (so long as the 
-    # middle item evaluates to true).
-    req = { 'col' : input_cat.isFits() and str or int , 'index' : int }
-    kwargs, safe1 = GetAllParams(param, param_name, base, req=req, ignore=['num'])
-    safe = safe and safe1
-
-    if value_type is str:
-        val = input_cat.get(**kwargs)
-    elif value_type is float:
-        val = input_cat.getFloat(**kwargs)
-    elif value_type is int:
-        val = input_cat.getInt(**kwargs)
-    elif value_type is bool:
-        val = _GetBoolValue(input_cat.get(**kwargs),param_name)
-
-    #print base['file_num'],
-    #print 'Catalog: col = %s, index = %s, val = %s'%(kwargs['col'],kwargs['index'],val)
-    return val, safe
-
-
-def _GenerateFromDict(param, param_name, base, value_type):
-    """@brief Return a value read from an input dict.
-    """
-    if 'dict' not in base:
-        raise ValueError("No input dict available for %s.type = Dict"%param_name)
-
-    req = { 'key' : str }
-    opt = { 'num' : int }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
-    key = kwargs['key']
-
-    num = kwargs.get('num',0)
-    if num < 0:
-        raise ValueError("Invalid num < 0 supplied for Dict: num = %d"%num)
-    if num >= len(base['dict']):
-        raise ValueError("Invalid num supplied for Dict (too large): num = %d"%num)
-    d = base['dict'][num]
-
-    val = d.get(key)
-    #print base['file_num'],'Dict: key = %s, val = %s'%(key,val)
-    return val, safe
-
-
-
-def _GenerateFromFitsHeader(param, param_name, base, value_type):
-    """@brief Return a value read from a FITS header
-    """
-    if 'fits_header' not in base:
-        raise ValueError("No fits header available for %s.type = FitsHeader"%param_name)
-
-    req = { 'key' : str }
-    opt = { 'num' : int }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
-    key = kwargs['key']
-
-    num = kwargs.get('num',0)
-    if num < 0:
-        raise ValueError("Invalid num < 0 supplied for FitsHeader: num = %d"%num)
-    if num >= len(base['fits_header']):
-        raise ValueError("Invalid num supplied for FitsHeader (too large): num = %d"%num)
-    header = base['fits_header'][num]
-
-    if key not in header.keys():
-        raise ValueError("key %s not found in the FITS header in %s"%(key,kwargs['file_name']))
-
-    val = header.get(key)
-    #print base['file_num'],'Header: key = %s, val = %s'%(key,val)
-    return val, safe
-
-
-def _GenerateFromRandom(param, param_name, base, value_type):
-    """@brief Return a random value drawn from a uniform distribution
-    """
-    if 'rng' not in base:
-        raise ValueError("No base['rng'] available for %s.type = Random"%param_name)
-    rng = base['rng']
-    ud = galsim.UniformDeviate(rng)
-
-    # Each value_type works a bit differently:
-    if value_type is galsim.Angle:
-        import math
-        CheckAllParams(param, param_name)
-        val = ud() * 2 * math.pi * galsim.radians
-        #print base['obj_num'],'Random angle = ',val
-        return val, False
-    elif value_type is bool:
-        CheckAllParams(param, param_name)
-        val = ud() < 0.5
-        #print base['obj_num'],'Random bool = ',val
-        return val, False
-    else:
-        ignore = [ 'default' ]
-        req = { 'min' : value_type , 'max' : value_type }
-        kwargs, safe = GetAllParams(param, param_name, base, req=req, ignore=ignore)
-
-        min = kwargs['min']
-        max = kwargs['max']
-
-        if value_type is int:
-            import math
-            val = int(math.floor(ud() * (max-min+1))) + min
-            # In case ud() == 1
-            if val > max: val = max
-        else:
-            val = ud() * (max-min) + min
-
-        #print base['obj_num'],'Random = ',val
-        return val, False
-
-
-def _GenerateFromRandomGaussian(param, param_name, base, value_type):
-    """@brief Return a random value drawn from a Gaussian distribution
-    """
-    if 'rng' not in base:
-        raise ValueError("No base['rng'] available for %s.type = RandomGaussian"%param_name)
-    rng = base['rng']
-
-    req = { 'sigma' : float }
-    opt = { 'mean' : float, 'min' : float, 'max' : float }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
-
-    sigma = kwargs['sigma']
-
-    if 'gd' in base and base['current_gdsigma'] == sigma:
-        # Minor subtlety here.  GaussianDeviate requires two random numbers to 
-        # generate a single Gaussian deviate.  But then it gets a second 
-        # deviate for free.  So it's more efficient to store gd than to make
-        # a new one each time.  So check if we did that.
-        gd = base['gd']
-    else:
-        # Otherwise, just go ahead and make a new one.
-        gd = galsim.GaussianDeviate(rng,sigma=sigma)
-        base['gd'] = gd
-        base['current_gdsigma'] = sigma
-
-    if 'min' in kwargs or 'max' in kwargs:
-        # Clip at min/max.
-        # However, special cases if min == mean or max == mean
-        #  -- can use fabs to double the chances of falling in the range.
-        mean = kwargs.get('mean',0.)
-        min = kwargs.get('min',-float('inf'))
-        max = kwargs.get('max',float('inf'))
-
-        do_abs = False
-        do_neg = False
-        if min == mean:
-            do_abs = True
-            max -= mean
-            min = -max
-        elif max == mean:
-            do_abs = True
-            do_neg = True
-            min -= mean
-            max = -min
-        else:
-            min -= mean
-            max -= mean
-    
-        # Emulate a do-while loop
-        import math
-        while True:
-            val = gd()
-            if do_abs: val = math.fabs(val)
-            if val >= min and val <= max: break
-        if do_neg: val = -val
-        val += mean
-    else:
-        val = gd()
-        if 'mean' in kwargs: val += kwargs['mean']
-
-    #print base['obj_num'],'RandomGaussian: ',val
-    return val, False
-
-def _GenerateFromRandomPoisson(param, param_name, base, value_type):
-    """@brief Return a random value drawn from a Poisson distribution
-    """
-    if 'rng' not in base:
-        raise ValueError("No base['rng'] available for %s.type = RandomPoisson"%param_name)
-    rng = base['rng']
-
-    req = { 'mean' : float }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req)
-
-    mean = kwargs['mean']
-
-    dev = galsim.PoissonDeviate(rng,mean=mean)
-    val = dev()
-
-    #print base['obj_num'],'RandomPoisson: ',val
-    return val, False
-
-def _GenerateFromRandomBinomial(param, param_name, base, value_type):
-    """@brief Return a random value drawn from a Binomial distribution
-    """
-    if 'rng' not in base:
-        raise ValueError("No base['rng'] available for %s.type = RandomBinomial"%param_name)
-    rng = base['rng']
-
-    req = {}
-    opt = { 'p' : float }
-
-    # Let N be optional for bool, since N=1 is the only value that makes sense.
-    if value_type is bool:
-        opt['N'] = int
-    else:
-        req['N'] = int
-    kwargs, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
-
-    N = kwargs.get('N',1)
-    p = kwargs.get('p',0.5)
-    if value_type is bool and N != 1:
-        raise ValueError("N must = 1 for %s.type = RandomBinomial used in bool context"%param_name)
-
-    dev = galsim.BinomialDeviate(rng,N=N,p=p)
-    val = dev()
-
-    #print base['obj_num'],'RandomBinomial: ',val
-    return val, False
-
-
-def _GenerateFromRandomWeibull(param, param_name, base, value_type):
-    """@brief Return a random value drawn from a Weibull distribution
-    """
-    if 'rng' not in base:
-        raise ValueError("No base['rng'] available for %s.type = RandomWeibull"%param_name)
-    rng = base['rng']
-
-    req = { 'a' : float, 'b' : float }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req)
-
-    a = kwargs['a']
-    b = kwargs['b']
-    dev = galsim.WeibullDeviate(rng,a=a,b=b)
-    val = dev()
-
-    #print base['obj_num'],'RandomWeibull: ',val
-    return val, False
-
-
-def _GenerateFromRandomGamma(param, param_name, base, value_type):
-    """@brief Return a random value drawn from a Gamma distribution
-    """
-    if 'rng' not in base:
-        raise ValueError("No base['rng'] available for %s.type = RandomGamma"%param_name)
-    rng = base['rng']
-
-    req = { 'k' : float, 'theta' : float }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req)
-
-    k = kwargs['k']
-    theta = kwargs['theta']
-    dev = galsim.GammaDeviate(rng,k=k,theta=theta)
-    val = dev()
-
-    #print base['obj_num'],'RandomGamma: ',val
-    return val, False
-
-
-def _GenerateFromRandomChi2(param, param_name, base, value_type):
-    """@brief Return a random value drawn from a Chi^2 distribution
-    """
-    if 'rng' not in base:
-        raise ValueError("No base['rng'] available for %s.type = RandomChi2"%param_name)
-    rng = base['rng']
-
-    req = { 'n' : float }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req)
-
-    n = kwargs['n']
-
-    dev = galsim.Chi2Deviate(rng,n=n)
-    val = dev()
-
-    #print base['obj_num'],'RandomChi2: ',val
-    return val, False
-
-def _GenerateFromRandomDistribution(param, param_name, base, value_type):
-    """@brief Return a random value drawn from a user-defined probability distribution
-    """
-    if 'rng' not in base:
-        raise ValueError("No rng available for %s.type = RandomDistribution"%param_name)
-    rng = base['rng']
-
-    opt = {'function' : str, 'interpolant' : str, 'npoints' : int, 
-           'x_min' : float, 'x_max' : float }
-    kwargs, safe = GetAllParams(param, param_name, base, opt=opt)
-    
-    if '_distdev' in param:
-        # The overhead for making a DistDeviate is large enough that we'd rather not do it every 
-        # time, so first check if we've already made one:
-        distdev = param['_distdev']
-        if param['_distdev_kwargs'] != kwargs:
-            distdev=galsim.DistDeviate(rng,**kwargs)
-            param['_distdev'] = distdev
-            param['_distdev_kwargs'] = kwargs
-    else:
-        # Otherwise, just go ahead and make a new one.
-        distdev=galsim.DistDeviate(rng,**kwargs)
-        param['_distdev'] = distdev
-        param['_distdev_kwargs'] = kwargs
-
-    # Typically, the rng will change between successive calls to this, so reset the 
-    # seed.  (The other internal calculations don't need to be redone unless the rest of the
-    # kwargs have been changed.)
-    distdev.reset(rng)
-
-    val = distdev()
-    #print base['obj_num'],'distdev = ',val
-    return val, False
-
-
-def _GenerateFromRandomCircle(param, param_name, base, value_type):
-    """@brief Return a PositionD drawn from a circular top hat distribution.
-    """
-    if 'rng' not in base:
-        raise ValueError("No base['rng'] available for %s.type = RandomCircle"%param_name)
-    rng = base['rng']
-
-    req = { 'radius' : float }
-    opt = { 'inner_radius' : float, 'center' : galsim.PositionD }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
-    radius = kwargs['radius']
-
-    ud = galsim.UniformDeviate(rng)
-    max_rsq = radius**2
-    if 'inner_radius' in kwargs:
-        inner_radius = kwargs['inner_radius']
-        min_rsq = inner_radius**2
-    else:
-        min_rsq = 0.
-    # Emulate a do-while loop
-    while True:
-        x = (2*ud()-1) * radius
-        y = (2*ud()-1) * radius
-        rsq = x**2 + y**2
-        if rsq >= min_rsq and rsq <= max_rsq: break
-
-    pos = galsim.PositionD(x,y)
-    if 'center' in kwargs:
-        pos += kwargs['center']
-
-    #print base['obj_num'],'RandomCircle: ',pos
-    return pos, False
-
 
 def _GenerateFromSequence(param, param_name, base, value_type):
     """@brief Return next in a sequence of integers
@@ -883,152 +583,6 @@ def _GenerateFromFormattedStr(param, param_name, base, value_type):
     return final_str, safe
 
 
-def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
-    """@brief Return a shear calculated from an NFWHalo object.
-    """
-    if 'world_pos' not in base:
-        raise ValueError("NFWHaloShear requested, but no position defined.")
-    pos = base['world_pos']
-
-    if 'gal' not in base or 'redshift' not in base['gal']:
-        raise ValueError("NFWHaloShear requested, but no gal.redshift defined.")
-    redshift = GetCurrentValue(base['gal'],'redshift')
-
-    if 'nfw_halo' not in base:
-        raise ValueError("NFWHaloShear requested, but no input.nfw_halo defined.")
-
-    opt = { 'num' : int }
-    kwargs = GetAllParams(param, param_name, base, opt=opt)[0]
-
-    num = kwargs.get('num',0)
-    if num < 0:
-        raise ValueError("Invalid num < 0 supplied for NFWHalowShear: num = %d"%num)
-    if num >= len(base['nfw_halo']):
-        raise ValueError("Invalid num supplied for NFWHaloShear (too large): num = %d"%num)
-    nfw_halo = base['nfw_halo'][num]
-
-    try:
-        g1,g2 = nfw_halo.getShear(pos,redshift)
-        shear = galsim.Shear(g1=g1,g2=g2)
-    except Exception as e:
-        import warnings
-        warnings.warn("Warning: NFWHalo shear is invalid -- probably strong lensing!  " +
-                      "Using shear = 0.")
-        shear = galsim.Shear(g1=0,g2=0)
-    #print base['obj_num'],'NFW shear = ',shear
-    return shear, False
-
-
-def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
-    """@brief Return a magnification calculated from an NFWHalo object.
-    """
-    if 'world_pos' not in base:
-        raise ValueError("NFWHaloMagnification requested, but no position defined.")
-    pos = base['world_pos']
-
-    if 'gal' not in base or 'redshift' not in base['gal']:
-        raise ValueError("NFWHaloMagnification requested, but no gal.redshift defined.")
-    redshift = GetCurrentValue(base['gal'],'redshift')
-
-    if 'nfw_halo' not in base:
-        raise ValueError("NFWHaloMagnification requested, but no input.nfw_halo defined.")
- 
-    opt = { 'max_mu' : float, 'num' : int }
-    kwargs = GetAllParams(param, param_name, base, opt=opt)[0]
-
-    num = kwargs.get('num',0)
-    if num < 0:
-        raise ValueError("Invalid num < 0 supplied for NFWHaloMagnification: num = %d"%num)
-    if num >= len(base['nfw_halo']):
-        raise ValueError("Invalid num supplied for NFWHaloMagnification (too large): num = %d"%num)
-    nfw_halo = base['nfw_halo'][num]
-
-    mu = nfw_halo.getMagnification(pos,redshift)
-
-    max_mu = kwargs.get('max_mu', 25.)
-    if not max_mu > 0.: 
-        raise ValueError(
-            "Invalid max_mu=%f (must be > 0) for %s.type = NFWHaloMagnification"%(
-                max_mu,param_name))
-
-    if mu < 0 or mu > max_mu:
-        import warnings
-        warnings.warn("Warning: NFWHalo mu = %f means strong lensing!  Using mu=%f"%(mu,max_mu))
-        mu = max_mu
-
-    #print base['obj_num'],'NFW mu = ',mu
-    return mu, False
-
-
-def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
-    """@brief Return a shear calculated from a PowerSpectrum object.
-    """
-    if 'world_pos' not in base:
-        raise ValueError("PowerSpectrumShear requested, but no position defined.")
-    pos = base['world_pos']
-
-    if 'power_spectrum' not in base:
-        raise ValueError("PowerSpectrumShear requested, but no input.power_spectrum defined.")
-    
-    opt = { 'num' : int }
-    kwargs = GetAllParams(param, param_name, base, opt=opt)[0]
-
-    num = kwargs.get('num',0)
-    if num < 0:
-        raise ValueError("Invalid num < 0 supplied for PowerSpectrumShear: num = %d"%num)
-    if num >= len(base['power_spectrum']):
-        raise ValueError("Invalid num supplied for PowerSpectrumShear (too large): num = %d"%num)
-    power_spectrum = base['power_spectrum'][num]
-
-    try:
-        g1,g2 = power_spectrum.getShear(pos)
-        shear = galsim.Shear(g1=g1,g2=g2)
-    except Exception as e:
-        import warnings
-        warnings.warn("Warning: PowerSpectrum shear is invalid -- probably strong lensing!  " +
-                      "Using shear = 0.")
-        shear = galsim.Shear(g1=0,g2=0)
-    #print base['obj_num'],'PS shear = ',shear
-    return shear, False
-
-def _GenerateFromPowerSpectrumMagnification(param, param_name, base, value_type):
-    """@brief Return a magnification calculated from a PowerSpectrum object.
-    """
-    if 'world_pos' not in base:
-        raise ValueError("PowerSpectrumMagnification requested, but no position defined.")
-    pos = base['world_pos']
-
-    if 'power_spectrum' not in base:
-        raise ValueError("PowerSpectrumMagnification requested, but no input.power_spectrum "
-                         "defined.")
-
-    opt = { 'max_mu' : float, 'num' : int }
-    kwargs = GetAllParams(param, param_name, base, opt=opt)[0]
-
-    num = kwargs.get('num',0)
-    if num < 0:
-        raise ValueError("Invalid num < 0 supplied for PowerSpectrumMagnification: num = %d"%num)
-    if num >= len(base['power_spectrum']):
-        raise ValueError(
-            "Invalid num supplied for PowerSpectrumMagnification (too large): num = %d"%num)
-    power_spectrum = base['power_spectrum'][num]
-
-    mu = power_spectrum.getMagnification(pos)
-
-    max_mu = kwargs.get('max_mu', 25.)
-    if not max_mu > 0.: 
-        raise ValueError(
-            "Invalid max_mu=%f (must be > 0) for %s.type = PowerSpectrumMagnification"%(
-                max_mu,param_name))
-
-    if mu < 0 or mu > max_mu:
-        import warnings
-        warnings.warn("Warning: PowerSpectrum mu = %f means strong lensing!  Using mu=%f"%(
-            mu,max_mu))
-        mu = max_mu
-    #print base['obj_num'],'PS mu = ',mu
-    return mu, False
-
 def _GenerateFromList(param, param_name, base, value_type):
     """@brief Return next item from a provided list
     """
@@ -1070,119 +624,6 @@ def _GenerateFromSum(param, param_name, base, value_type):
         
     return sum, safe
  
-def _type_by_letter(key):
-    if len(key) < 2:
-        raise AttributeError("Invalid user-defined variable %r"%key)
-    if key[0] == 'f':
-        return float
-    elif key[0] == 'i':
-        return int
-    elif key[0] == 'b':
-        return bool
-    elif key[0] == 's':
-        return str
-    elif key[0] == 'a':
-        return galsim.Angle
-    elif key[0] == 'p':
-        return galsim.PositionD
-    elif key[0] == 'g':
-        return galsim.Shear
-    else:
-        raise AttributeError("Invalid Eval variable: %s (starts with an invalid letter)"%key)
-
-def _GenerateFromEval(param, param_name, base, value_type):
-    """@brief Evaluate a string as the provided type
-    """
-    #print 'Start Eval for ',param_name
-    req = { 'str' : str }
-    opt = {}
-    ignore = standard_ignore
-    for key in param.keys():
-        if key not in (ignore + req.keys()):
-            opt[key] = _type_by_letter(key)
-    #print 'opt = ',opt
-    #print 'base has ',base.keys()
-            
-    params, safe = GetAllParams(param, param_name, base, req=req, opt=opt, ignore=ignore)
-    #print 'params = ',params
-    string = params['str']
-    #print 'string = ',string
-
-    # Bring the user-defined variables into scope.
-    for key in opt.keys():
-        exec(key[1:] + ' = params[key]')
-        #print key[1:],'=',eval(key[1:])
-
-    # Also bring in any top level eval_variables
-    if 'eval_variables' in base:
-        #print 'found eval_variables = ',base['eval_variables']
-        if not isinstance(base['eval_variables'],dict):
-            raise AttributeError("eval_variables must be a dict")
-        opt = {}
-        for key in base['eval_variables'].keys():
-            if key not in ignore:
-                opt[key] = _type_by_letter(key)
-        #print 'opt = ',opt
-        params, safe1 = GetAllParams(base['eval_variables'], 'eval_variables', base, opt=opt,
-                                     ignore=ignore)
-        #print 'params = ',params
-        safe = safe and safe1
-        for key in opt.keys():
-            exec(key[1:] + ' = params[key]')
-            #print key[1:],'=',eval(key[1:])
-
-    # Also, we allow the use of math functions
-    import math
-    import numpy
-    import os
-
-    # Try evaluating the string as is.
-    try:
-        val = value_type(eval(string))
-        #print base['obj_num'],'Simple Eval(%s) = %s'%(string,val)
-        return val, safe
-    except:
-        pass
-
-    # Then try bringing in the allowed variables to see if that works:
-    if 'image_pos' in base:
-        image_pos = base['image_pos']
-    if 'world_pos' in base:
-        world_pos = base['world_pos']
-    if 'image_center' in base:
-        image_center = base['image_center']
-    if 'image_origin' in base:
-        image_origin = base['image_origin']
-    if 'image_xsize' in base:
-        image_xsize = base['image_xsize']
-    if 'image_ysize' in base:
-        image_ysize = base['image_ysize']
-    if 'stamp_xsize' in base:
-        stamp_xsize = base['stamp_xsize']
-    if 'stamp_ysize' in base:
-        stamp_ysize = base['stamp_ysize']
-    if 'pixel_scale' in base:
-        pixel_sclae = base['pixel_scale']
-    if 'rng' in base:
-        rng = base['rng']
-    if 'file_num' in base:
-        file_num = base.get('file_num',0)
-    if 'image_num' in base:
-        image_num = base.get('image_num',0)
-    if 'obj_num' in base:
-        obj_num = base['obj_num']
-    if 'start_obj_num' in base:
-        start_obj_num = base.get('start_obj_num',0)
-    for key in galsim.config.valid_input_types.keys():
-        if key in base:
-            exec(key + ' = base[key]')
-    try:
-        val = value_type(eval(string))
-        #print base['obj_num'],'Eval(%s) needed extra variables: val = %s'%(string,val)
-        return val, False
-    except:
-        raise ValueError("Unable to evaluate string %r as a %s for %s"%(
-                string,value_type,param_name))
 
 def _GenerateFromCurrent(param, param_name, base, value_type):
     """@brief Get the current value of another config item.
@@ -1229,65 +670,4 @@ def _GenerateFromCurrent(param, param_name, base, value_type):
 
     raise ValueError("Invalid key = %s given for %s.type = Current"%(key,param_name))
 
-
-def SetDefaultIndex(config, num):
-    """
-    When the number of items in a list is known, we allow the user to omit some of 
-    the parameters of a Sequence or Random and set them automatically based on the 
-    size of the list, catalog, etc.
-    """
-    # We use a default item (set to True) to indicate that the value of nitems, last, or max
-    # has been set here, rather than by the user.  This way if the number of items in the 
-    # catalog changes from one file to the next, it will be update correctly to the new
-    # number of catalog entries.
-
-    if 'index' not in config:
-        config['index'] = {
-            'type' : 'Sequence',
-            'nitems' : num,
-            'default' : True,
-        }
-    elif ( isinstance(config['index'],dict) 
-           and 'type' in config['index'] ):
-        index = config['index']
-        type = index['type']
-        if ( type == 'Sequence' 
-             and 'nitems' in index 
-             and 'default' in index ):
-            index['nitems'] = num
-            index['default'] = True
-        elif ( type == 'Sequence' 
-               and 'nitems' not in index
-               and ('step' not in index or (isinstance(index['step'],int) and index['step'] > 0) )
-               and ('last' not in index or 'default' in index) ):
-            index['last'] = num-1
-            index['default'] = True
-        elif ( type == 'Sequence'
-               and 'nitems' not in index
-               and ('step' in index and (isinstance(index['step'],int) and index['step'] < 0) ) ):
-            # Normally, the value of default doesn't matter.  Its presence is sufficient
-            # to indicate True.  However, here we have three options.  
-            # 1) first and last are both set by default
-            # 2) first (only) is set by default
-            # 3) last (only) is set by default
-            # So set default to the option we are using, so we update with the correct method.
-            if ( ('first' not in index and 'last' not in index)
-                 or ('default' in index and index['default'] == 1) ):
-                index['first'] = num-1
-                index['last'] = 0
-                index['default'] = 1
-            elif ( 'first' not in index 
-                   or ('default' in index and index['default'] == 2) ):
-                index['first'] = num-1
-                index['default'] = 2
-            elif ( 'last' not in index 
-                   or ('default' in index and index['default'] == 3) ):
-                index['last'] = 0
-                index['default'] = 3
-        elif ( type == 'Random'
-               and ('min' not in index or 'default' in index)
-               and ('max' not in index or 'default' in index) ):
-            index['min'] = 0
-            index['max'] = num-1
-            index['default'] = True
 

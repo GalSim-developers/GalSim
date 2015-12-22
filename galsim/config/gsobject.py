@@ -17,6 +17,10 @@
 #
 import galsim
 
+from .gsobject_ring import _BuildRing
+from .input_cosmos import _BuildCOSMOSGalaxy
+from .input_real import _BuildRealGalaxy, _BuildRealGalaxyOriginal
+
 valid_gsobject_types = {
     # Note: these are just the types that need a special builder.  Most GSObject sub-classes
     # in base.py (and some elsewhere) can use the default builder, called _BuildSimple, which
@@ -212,6 +216,41 @@ def UpdateGSParams(gsparams, config, key, base):
     return ret
 
 
+def _BuildSimple(config, key, base, ignore, gsparams, logger):
+    """@brief Build a simple GSObject (i.e. one without a specialized _Build function) or
+    any other GalSim object that defines _req_params, _opt_params and _single_params.
+    """
+    # Build the kwargs according to the various params objects in the class definition.
+    type = config['type']
+    if type in galsim.__dict__:
+        init_func = eval("galsim."+type)
+    else:
+        init_func = eval(type)
+    if logger:
+        logger.debug('obj %d: BuildSimple for type = %s',base['obj_num'],type)
+        logger.debug('obj %d: init_func = %s',base['obj_num'],str(init_func))
+
+    kwargs, safe = galsim.config.GetAllParams(config, key, base, 
+                                              req = init_func._req_params,
+                                              opt = init_func._opt_params,
+                                              single = init_func._single_params,
+                                              ignore = ignore)
+    if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
+    if logger and init_func._takes_logger: kwargs['logger'] = logger
+
+    if init_func._takes_rng:
+        if 'rng' not in base:
+            raise ValueError("No base['rng'] available for %s.type = %s"%(key,type))
+        kwargs['rng'] = base['rng']
+        safe = False
+
+    if logger:
+        logger.debug('obj %d: kwargs = %s',base['obj_num'],str(kwargs))
+
+    # Finally, after pulling together all the params, try making the GSObject.
+    return init_func(**kwargs), safe
+
+
 def _BuildNone(config, key, base, ignore, gsparams, logger):
     """@brief Special type=None returns None.
     """
@@ -339,103 +378,6 @@ def _BuildList(config, key, base, ignore, gsparams, logger):
 
     return gsobject, safe
 
-def _BuildRing(config, key, base, ignore, gsparams, logger):
-    """@brief  Build a GSObject in a Ring.
-    """
-    req = { 'num' : int, 'first' : dict }
-    opt = { 'full_rotation' : galsim.Angle , 'index' : int }
-    # Only Check, not Get.  We need to handle first a bit differently, since it's a gsobject.
-    galsim.config.CheckAllParams(config, key, req=req, opt=opt, ignore=ignore)
-
-    num = galsim.config.ParseValue(config, 'num', base, int)[0]
-    if num <= 0:
-        raise ValueError("Attribute num for gal.type == Ring must be > 0")
-
-    # Setup the indexing sequence if it hasn't been specified using the number of items.
-    galsim.config.SetDefaultIndex(config, num)
-    index, safe = galsim.config.ParseValue(config, 'index', base, int)
-    if index < 0 or index >= num:
-        raise AttributeError("index %d out of bounds for config.%s"%(index,type))
-
-    if 'full_rotation' in config:
-        full_rotation = galsim.config.ParseValue(config, 'full_rotation', base, galsim.Angle)[0]
-    else:
-        import math
-        full_rotation = math.pi * galsim.radians
-
-    dtheta = full_rotation / num
-    if logger:
-        logger.debug('obj %d: Ring dtheta = %f',base['obj_num'],dtheta.rad())
-
-    if index % num == 0:
-        # Then this is the first in the Ring.  
-        gsobject = BuildGSObject(config, 'first', base, gsparams, logger)[0]
-    else:
-        if not isinstance(config['first'],dict) or 'current_val' not in config['first']:
-            raise RuntimeError("Building Ring after the first item, but no current_val stored.")
-        gsobject = config['first']['current_val'].rotate(index*dtheta)
-
-    return gsobject, False
-
-
-def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
-    """@brief Build a RealGalaxy from the real_catalog input item.
-    """
-    if 'real_catalog' not in base:
-        raise ValueError("No real galaxy catalog available for building type = RealGalaxy")
-
-    if 'num' in config:
-        num, safe = ParseValue(config, 'num', base, int)
-    else:
-        num, safe = (0, True)
-    ignore.append('num')
-
-    if num < 0:
-        raise ValueError("Invalid num < 0 supplied for RealGalaxy: num = %d"%num)
-    if num >= len(base['real_catalog']):
-        raise ValueError("Invalid num supplied for RealGalaxy (too large): num = %d"%num)
-
-    real_cat = base['real_catalog'][num]
-
-    # Special: if index is Sequence or Random, and max isn't set, set it to nobjects-1.
-    # But not if they specify 'id' which overrides that.
-    if 'id' not in config:
-        galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
-
-    kwargs, safe1 = galsim.config.GetAllParams(config, key, base, 
-        req = galsim.__dict__['RealGalaxy']._req_params,
-        opt = galsim.__dict__['RealGalaxy']._opt_params,
-        single = galsim.__dict__['RealGalaxy']._single_params,
-        ignore = ignore)
-    safe = safe and safe1
-    if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
-    if logger and galsim.RealGalaxy._takes_logger: kwargs['logger'] = logger
-
-    if 'rng' not in base:
-        raise ValueError("No base['rng'] available for %s.type = RealGalaxy"%(key))
-    kwargs['rng'] = base['rng']
-
-    if 'index' in kwargs:
-        index = kwargs['index']
-        if index >= real_cat.getNObjects():
-            raise IndexError(
-                "%s index has gone past the number of entries in the catalog"%index)
-
-    kwargs['real_galaxy_catalog'] = real_cat
-    if logger:
-        logger.debug('obj %d: RealGalaxy kwargs = %s',base['obj_num'],str(kwargs))
-
-    gal = galsim.RealGalaxy(**kwargs)
-
-    return gal, safe
-
-
-def _BuildRealGalaxyOriginal(config, key, base, ignore, gsparams, logger):
-    """@brief Return the original image from a RealGalaxy using the real_catalog input item.
-    """
-    image, safe = _BuildRealGalaxy(config, key, base, ignore, gsparams, logger)
-    return image.original_image, safe    
-
 
 def _BuildOpticalPSF(config, key, base, ignore, gsparams, logger):
     """@brief Build an OpticalPSF.
@@ -460,95 +402,6 @@ def _BuildOpticalPSF(config, key, base, ignore, gsparams, logger):
             
     return galsim.OpticalPSF(**kwargs), safe
 
-
-def _BuildCOSMOSGalaxy(config, key, base, ignore, gsparams, logger):
-    """@brief Build a COSMOS galaxy using the cosmos_catalog input item.
-    """
-    if 'cosmos_catalog' not in base:
-        raise ValueError("No COSMOS galaxy catalog available for building type = COSMOSGalaxy")
-
-    if 'num' in config:
-        num, safe = ParseValue(config, 'num', base, int)
-    else:
-        num, safe = (0, True)
-    ignore.append('num')
-
-    if num < 0:
-        raise ValueError("Invalid num < 0 supplied for COSMOSGalaxy: num = %d"%num)
-    if num >= len(base['cosmos_catalog']):
-        raise ValueError("Invalid num supplied for COSMOSGalaxy (too large): num = %d"%num)
-
-    cosmos_cat = base['cosmos_catalog'][num]
-
-    # Special: if index is Sequence or Random, and max isn't set, set it to nobjects-1.
-    galsim.config.SetDefaultIndex(config, cosmos_cat.getNObjects())
-
-    kwargs, safe1 = galsim.config.GetAllParams(config, key, base,
-        req = galsim.COSMOSCatalog.makeGalaxy._req_params,
-        opt = galsim.COSMOSCatalog.makeGalaxy._opt_params,
-        single = galsim.COSMOSCatalog.makeGalaxy._single_params,
-        ignore = ignore)
-    safe = safe and safe1
-    if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
-    if logger and galsim.COSMOSCatalog.makeGalaxy._takes_logger: kwargs['logger'] = logger
-
-    if 'gal_type' in kwargs and kwargs['gal_type'] == 'real':
-        if 'rng' not in base:
-            raise ValueError("No base['rng'] available for %s.type = COSMOSGalaxy"%(key))
-        kwargs['rng'] = base['rng']
-
-    if 'index' in kwargs:
-        index = kwargs['index']
-        if index >= cosmos_cat.getNObjects():
-            raise IndexError(
-                "%s index has gone past the number of entries in the catalog"%index)
-
-    if logger:
-        logger.debug('obj %d: COSMOSGalaxy kwargs = %s',base['obj_num'],str(kwargs))
-
-    kwargs['cosmos_catalog'] = cosmos_cat
-
-    # Use a staticmethod of COSMOSCatalog to avoid pickling the result of makeGalaxy()
-    # The RealGalaxy in particular has a large serialization, so it is more efficient to
-    # make it in this process, which is what happens here.
-    gal = galsim.COSMOSCatalog._makeSingleGalaxy(**kwargs)
-
-    return gal, safe
-
-
-def _BuildSimple(config, key, base, ignore, gsparams, logger):
-    """@brief Build a simple GSObject (i.e. one without a specialized _Build function) or
-    any other GalSim object that defines _req_params, _opt_params and _single_params.
-    """
-    # Build the kwargs according to the various params objects in the class definition.
-    type = config['type']
-    if type in galsim.__dict__:
-        init_func = eval("galsim."+type)
-    else:
-        init_func = eval(type)
-    if logger:
-        logger.debug('obj %d: BuildSimple for type = %s',base['obj_num'],type)
-        logger.debug('obj %d: init_func = %s',base['obj_num'],str(init_func))
-
-    kwargs, safe = galsim.config.GetAllParams(config, key, base, 
-                                              req = init_func._req_params,
-                                              opt = init_func._opt_params,
-                                              single = init_func._single_params,
-                                              ignore = ignore)
-    if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
-    if logger and init_func._takes_logger: kwargs['logger'] = logger
-
-    if init_func._takes_rng:
-        if 'rng' not in base:
-            raise ValueError("No base['rng'] available for %s.type = %s"%(key,type))
-        kwargs['rng'] = base['rng']
-        safe = False
-
-    if logger:
-        logger.debug('obj %d: kwargs = %s',base['obj_num'],str(kwargs))
-
-    # Finally, after pulling together all the params, try making the GSObject.
-    return init_func(**kwargs), safe
 
 
 def _TransformObject(gsobject, config, base, logger):
