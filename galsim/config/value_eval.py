@@ -54,10 +54,18 @@ def _GenerateFromEval(config, base, value_type):
             opt[key] = _type_by_letter(key)
     #print 'opt = ',opt
     #print 'base has ',base.keys()
-            
-    params, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt, ignore=ignore)
-    #print 'params = ',params
-    string = params['str']
+    #print 'config = ',config
+
+    if isinstance(config['str'], basestring):
+        # The ParseValue function can get confused if the first character is an @, but the 
+        # whole string isn't a Current item.  e.g. @image.pixel_scale * @image.stamp_size.
+        # So if config['str'] is a string, just get it.  Otherwise, try parsing the dict.
+        string = config['str']
+        params, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore+['str'])
+    else:
+        params, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt, ignore=ignore)
+        #print 'params = ',params
+        string = params['str']
     #print 'string = ',string
 
     # We allow the following modules to be used in the eval string:
@@ -70,13 +78,16 @@ def _GenerateFromEval(config, base, value_type):
         import re
         # Find @items using regex.  They can include alphanumeric chars plus '.'.
         keys = re.findall(r'@[\w\.]*', string)
+        #print '@keys = ',keys
         # Remove duplicates
         keys = numpy.unique(keys).tolist()
+        #print 'unique @keys = ',keys
         for key0 in keys:
             key = key0[1:] # Remove the @ sign.
             value, t = galsim.config.GetCurrentValue(key, base)
             # Replaces all occurrences of key0 with the value.
             string = string.replace(key0,repr(value)) 
+            #print '%s = %s'%(key, string)
 
     # Bring the user-defined variables into scope.
     for key in opt.keys():
