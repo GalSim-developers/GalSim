@@ -31,14 +31,14 @@ class Catalog(object):
     Initialization
     --------------
 
-    @param file_name     Filename of the input catalog. (Required)
-    @param dir           Optionally a directory name can be provided if `file_name` does not 
-                         already include it.
-    @param file_type     Either 'ASCII' or 'FITS'.  If None, infer from `file_name` ending.
-                         [default: None]
-    @param comments      The character used to indicate the start of a comment in an
-                         ASCII catalog.  [default: '#']
-    @param hdu           Which hdu to use for FITS files.  [default: 1]
+    @param file_name    Filename of the input catalog. (Required)
+    @param dir          Optionally a directory name can be provided if `file_name` does not 
+                        already include it.
+    @param file_type    Either 'ASCII' or 'FITS'.  If None, infer from `file_name` ending.
+                        [default: None]
+    @param comments     The character used to indicate the start of a comment in an
+                        ASCII catalog.  [default: '#']
+    @param hdu          Which hdu to use for FITS files.  [default: 1]
 
     Attributes
     ----------
@@ -223,14 +223,14 @@ class Dict(object):
     to set `key_split` to a different character or string and use that to chain the keys.
 
 
-    @param file_name     Filename storing the dict.
-    @param dir           Optionally a directory name can be provided if `file_name` does not 
-                         already include it. [default: None]
-    @param file_type     Options are 'Pickle', 'YAML', or 'JSON' or None.  If None, infer from 
-                         `file_name` extension ('.p*', '.y*', '.j*' respectively).
-                         [default: None]
-    @param key_split     The character (or string) to use to split chained keys.  (cf. the 
-                         description of this feature above.)  [default: '.']
+    @param file_name    Filename storing the dict.
+    @param dir          Optionally a directory name can be provided if `file_name` does not 
+                        already include it. [default: None]
+    @param file_type    Options are 'Pickle', 'YAML', or 'JSON' or None.  If None, infer from 
+                        `file_name` extension ('.p*', '.y*', '.j*' respectively).
+                        [default: None]
+    @param key_split    The character (or string) to use to split chained keys.  (cf. the 
+                        description of this feature above.)  [default: '.']
     """
     _req_params = { 'file_name' : str }
     _opt_params = { 'dir' : str , 'file_type' : str, 'key_split' : str }
