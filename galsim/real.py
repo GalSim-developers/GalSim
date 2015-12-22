@@ -408,8 +408,10 @@ class RealGalaxyCatalog(object):
         self.psf_file_name = self.cat.field('PSF_filename') # file containing the PSF image
 
         # Add the directories:
-        self.gal_file_name = [ os.path.join(self.image_dir,f) for f in self.gal_file_name ]
-        self.psf_file_name = [ os.path.join(self.image_dir,f) for f in self.psf_file_name ]
+        # Note the strip call.  Sometimes the filenames have an extra space at the end. 
+        # This gets rid of that space.
+        self.gal_file_name = [ os.path.join(self.image_dir,f.strip()) for f in self.gal_file_name ]
+        self.psf_file_name = [ os.path.join(self.image_dir,f.strip()) for f in self.psf_file_name ]
 
         # We don't require the noise_filename column.  If it is not present, we will use
         # Uncorrelated noise based on the variance column.
