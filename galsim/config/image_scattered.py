@@ -175,7 +175,6 @@ def AddNoiseScattered(image, config, image_num, obj_num, logger):
 
 
 def GetNObjScattered(config, image_num):
-
     config['index_key'] = 'image_num'
     config['image_num'] = image_num
 

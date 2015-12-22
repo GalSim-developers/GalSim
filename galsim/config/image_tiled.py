@@ -207,7 +207,6 @@ def AddNoiseTiled(image, config, image_num, obj_num, logger):
             galsim.config.AddNoise(config,image,current_var,logger)
 
 def GetNObjTiled(config, image_num):
-
     config['index_key'] = 'image_num'
     config['image_num'] = image_num
 

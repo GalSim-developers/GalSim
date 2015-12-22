@@ -74,4 +74,3 @@ def _BuildRealGalaxyOriginal(config, base, ignore, gsparams, logger):
 from .gsobject import RegisterObjectType
 RegisterObjectType('RealGalaxy', _BuildRealGalaxy)
 RegisterObjectType('RealGalaxyOriginal', _BuildRealGalaxyOriginal)
-

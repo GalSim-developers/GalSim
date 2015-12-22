@@ -22,7 +22,6 @@ import logging
 # This file includes many of the simple object types.  Additional types are defined in
 # gsobject_ring.py, input_real.py, and input_cosmos.py.
 
-
 class SkipThisObject(Exception):
     """
     A class that a builder can throw to indicate that nothing went wrong, but for some

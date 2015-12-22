@@ -356,7 +356,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                     logger.info('This is try %d/%d, so trying again.',itry+1,ntries)
                 # Need to remove the "current_val"s from the config dict.  Otherwise,
                 # the value generators will do a quick return with the cached value.
-                galsim.config.process.RemoveCurrent(config, keep_safe=True)
+                galsim.config.RemoveCurrent(config, keep_safe=True)
                 continue
 
 
