@@ -139,7 +139,6 @@ image:
             type: Random
             min: '$0.95 * max_var'
             max: '$1.05 * max_var'
-        whiten: True
 
     # Offset
     offset:

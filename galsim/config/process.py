@@ -460,6 +460,49 @@ def UpdateConfig(config, new_params):
         SetInConfig(config, key, value)
 
 
+def ProcessTemplate(config, logger=None):
+    """If the config dict has a 'template' item, read in the appropriate file and 
+    make any requested updates.
+
+    @param config           The configuration dict.
+    @param logger           If given, a logger object to log progress. [default: None]
+    """
+    if 'template' in config:
+        template_string = config.pop('template')
+        if logger:
+            logger.debug("Processing template specified as %s",template_string)
+        if ':' in template_string:
+            config_file, field = template_string.split(':')
+        else:
+            config_file = template_string
+            field = None
+        base, all_config = ReadConfig(config_file, logger=logger)
+        if base != {} or len(all_config) != 1:
+            raise RuntimeError("Template config file %s is not allowed to have multiple documents.",
+                               config_file)
+        # Copy over the template config into this one.
+        new_params = config.copy()  # N.B. Already popped config['template'].
+        config.clear()
+        if field is None:
+            config.update(all_config[0])
+        else:
+            config.update(GetFromConfig(all_config[0],field))
+
+        # Update the config with the requested changes
+        UpdateConfig(config, new_params)
+
+
+def ProcessAllTemplates(config, logger=None):
+    """Check through the full config dict and process any fields that have a 'template' item.
+
+    @param config           The configuration dict.
+    @param logger           If given, a logger object to log progress. [default: None]
+    """
+    ProcessTemplate(config, logger)
+    for (key, field) in config.items():
+        if isinstance(field, dict):
+            ProcessAllTemplates(field, logger)
+
 # This is the main script to process everything in the configuration dict.
 def Process(config, logger=None, njobs=1, job=1, new_params=None):
     """
@@ -494,6 +537,9 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None):
 
     # Import any modules if requested
     ImportModules(config)
+
+    # Process any template specifications in the dict.
+    ProcessAllTemplates(config, logger)
 
     # Update using any new_params that are given:
     if new_params is not None:
