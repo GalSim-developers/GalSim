@@ -584,14 +584,16 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True
         hdu_list = pyfits.HDUList()
 
     for image in image_list:
-        if isinstance(image, pyfits.hdu.base.ExtensionHDU):
-            hdu_list.append(image)
-        elif not isinstance(image, galsim.Image):
-            raise ValueError("All items in image_list must be either a galsim.Image or an HDU")
-        else:
+        if isinstance(image, galsim.Image):
             hdu = _add_hdu(hdu_list, image.array, pyfits_compress)
             if image.wcs:
                 image.wcs.writeToFitsHeader(hdu.header, image.bounds)
+        else:
+            # Assume that image is really an HDU.  If not, this should give a reasonable error
+            # message.  (The base type of HDUs vary among versions of pyfits, so it's hard to
+            # check explicitly with an isinstance call.  For newer pyfits versions, it is
+            # pyfits.hdu.base.ExtensionHDU, but not in older versions.)
+            hdu_list.append(image)
 
     if file_name:
         _write_file(file_name, dir, hdu_list, clobber, file_compress, pyfits_compress)
