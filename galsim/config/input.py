@@ -169,7 +169,6 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                                                               opt = init_func._opt_params,
                                                               single = init_func._single_params,
                                                               ignore = ignore)
-                    if logger and init_func._takes_logger: kwargs['logger'] = logger
                     if init_func._takes_rng:
                         if 'rng' not in config:
                             raise ValueError("No config['rng'] available for %s.type = %s"%(

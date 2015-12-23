@@ -55,7 +55,6 @@ class Catalog(object):
     _opt_params = { 'dir' : str , 'file_type' : str , 'comments' : str , 'hdu' : int }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     # _nobjects_only is an intentionally undocumented kwarg that should be used only by
     # the config structure.  It indicates that all we care about is the nobjects parameter.
@@ -236,7 +235,6 @@ class Dict(object):
     _opt_params = { 'dir' : str , 'file_type' : str, 'key_split' : str }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, file_name, dir=None, file_type=None, key_split='.'):
 

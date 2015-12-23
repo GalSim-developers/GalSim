@@ -70,7 +70,6 @@ class DES_Shapelet(object):
     _opt_params = { 'dir' : str, 'file_type' : str }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, file_name, dir=None, file_type=None):
         if dir:

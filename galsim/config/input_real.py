@@ -49,7 +49,6 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
         ignore = ignore)
     safe = safe and safe1
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
-    if logger and galsim.RealGalaxy._takes_logger: kwargs['logger'] = logger
 
     if 'rng' not in base:
         raise ValueError("No base['rng'] available for %s.type = RealGalaxy"%(key))

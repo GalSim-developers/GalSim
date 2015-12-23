@@ -236,7 +236,6 @@ def _BuildSimple(config, key, base, ignore, gsparams, logger):
                                               single = init_func._single_params,
                                               ignore = ignore)
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
-    if logger and init_func._takes_logger: kwargs['logger'] = logger
 
     if init_func._takes_rng:
         if 'rng' not in base:

@@ -98,7 +98,6 @@ class DES_PSFEx(object):
     _opt_params = { 'dir' : str }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, file_name, image_file_name=None, wcs=None, dir=None):
 

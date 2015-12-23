@@ -47,7 +47,6 @@ def _BuildCOSMOSGalaxy(config, key, base, ignore, gsparams, logger):
         ignore = ignore)
     safe = safe and safe1
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
-    if logger and galsim.COSMOSCatalog.makeGalaxy._takes_logger: kwargs['logger'] = logger
 
     if 'gal_type' in kwargs and kwargs['gal_type'] == 'real':
         if 'rng' not in base:
