@@ -21,6 +21,10 @@ in a configuration file.
 """
 
 import sys
+import os
+import logging
+import copy
+import pprint
 
 # The only wrinkle about letting this executable be called galsim is that we want to
 # make sure that `import galsim` doesn't import itself.  We want it to import the real
@@ -42,7 +46,6 @@ def MergeConfig(config1, config2, logger=None):
     """
     for (key, value) in config2.items():
         if not key in config1:
-            import copy
             # If this key isn't in config1 yet, just add it
             config1[key] = copy.deepcopy(value)
         elif isinstance(value,dict) and isinstance(config1[key],dict):
@@ -182,7 +185,6 @@ def main():
     args = parse_args()
 
     # Parse the integer verbosity level from the command line args into a logging_level string
-    import logging
     logging_levels = { 0: logging.CRITICAL, 
                        1: logging.WARNING,
                        2: logging.INFO,
@@ -202,7 +204,6 @@ def main():
 
     # Set the root value in base_config
     if 'root' not in base_config:
-        import os
         base_config['root'] = os.path.splitext(args.config_file)[0]
 
     # Import any modules if requested
@@ -222,7 +223,6 @@ def main():
         # Parse the command-line variables:
         new_params = ParseVariables(args.variables, logger)
 
-        import pprint
         logger.debug("Process config dict: \n%s", pprint.pformat(config))
 
         # Process the configuration
