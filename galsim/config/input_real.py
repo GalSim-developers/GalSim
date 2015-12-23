@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 import galsim
+import logging
 
 
 def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
@@ -61,7 +62,7 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
                 "%s index has gone past the number of entries in the catalog"%index)
 
     kwargs['real_galaxy_catalog'] = real_cat
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('obj %d: RealGalaxy kwargs = %s',base['obj_num'],str(kwargs))
 
     gal = galsim.RealGalaxy(**kwargs)

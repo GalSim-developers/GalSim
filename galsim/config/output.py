@@ -18,6 +18,7 @@
 
 import os
 import galsim
+import logging
 
 valid_output_types = { 
     # The values are tuples with:
@@ -43,7 +44,7 @@ def _retry_io(func, args, ntries, file_name, logger):
                 # Then this was the last try.  Just re-raise the exception.
                 raise
             else:
-                if logger:
+                if logger and logger.isEnabledFor(logging.WARN):
                     logger.warn('File %s: Caught IOError: %s',file_name,str(e))
                     logger.warn('This is try %d/%d, so sleep for %d sec and try again.',
                                 itry+1,ntries,itry+1)
@@ -87,7 +88,7 @@ def BuildFits(file_name, config, logger=None,
     config['image_num'] = image_num
     config['start_obj_num'] = obj_num
     config['obj_num'] = obj_num
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: BuildFits for %s: file, image, obj = %d,%d,%d',
                       config['file_num'],file_name,file_num,image_num,obj_num)
 
@@ -154,7 +155,7 @@ def BuildFits(file_name, config, logger=None,
         ntries = 1
 
     _retry_io(galsim.fits.writeMulti, (hdulist, file_name), ntries, file_name, logger)
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         if len(hdus.keys()) == 1:
             logger.debug('file %d: Wrote image to fits file %r',
                          config['file_num'],file_name)
@@ -165,21 +166,21 @@ def BuildFits(file_name, config, logger=None,
     if psf_file_name:
         _retry_io(galsim.fits.write, (all_images[1], psf_file_name),
                   ntries, psf_file_name, logger)
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote psf image to fits file %r',
                          config['file_num'],psf_file_name)
 
     if weight_file_name:
         _retry_io(galsim.fits.write, (all_images[2], weight_file_name),
                   ntries, weight_file_name, logger)
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote weight image to fits file %r',
                          config['file_num'],weight_file_name)
 
     if badpix_file_name:
         _retry_io(galsim.fits.write, (all_images[3], badpix_file_name),
                   ntries, badpix_file_name, logger)
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote badpix image to fits file %r',
                          config['file_num'],badpix_file_name)
 

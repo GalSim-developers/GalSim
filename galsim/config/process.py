@@ -18,6 +18,7 @@
 
 import os
 import galsim
+import logging
 
 from .input import *
 from .output import *
@@ -125,18 +126,18 @@ def ReadConfig(config_file, file_type=None, logger=None):
         else:
             # Let YAML be the default if the extension is not .y* or .j*.
             file_type = 'yaml'
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('File type determined to be %s', file_type)
     else:
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('File type specified to be %s', file_type)
 
     if file_type == 'yaml':
-        if logger:
+        if logger and logger.isEnabledFor(logging.INFO):
             logger.info('Reading YAML config file %s', config_file)
         return galsim.config.ReadYaml(config_file)
     else:
-        if logger:
+        if logger and logger.isEnabledFor(logging.INFO):
             logger.info('Reading JSON config file %s', config_file)
         return galsim.config.ReadJson(config_file)
 
@@ -331,7 +332,7 @@ def Process(config, logger=None, new_params=None):
         # Strip off a final suffix if present.
         config['root'] = os.path.splitext(script_name)[0]
 
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         import pprint
         logger.debug("Final config dict to be processed: \n%s", pprint.pformat(config))
 
@@ -365,7 +366,7 @@ def Process(config, logger=None, new_params=None):
 
     # extra_hdu says whether the function takes psf_hdu, etc.
     extra_hdu = valid_output_types[type][4]
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('type = %s',type)
         logger.debug('extra_file_name = %s',extra_file_name)
         logger.debug('extra_hdu = %d',extra_hdu)
@@ -379,7 +380,7 @@ def Process(config, logger=None, new_params=None):
         nfiles = galsim.config.ParseValue(output, 'nfiles', config, int)[0]
     else:
         nfiles = 1 
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('nfiles = %d',nfiles)
 
     # Figure out how many processes we will use for building the files.
@@ -396,7 +397,7 @@ def Process(config, logger=None, new_params=None):
             nproc2 = nproc 
             nproc = 1
         else:
-            if logger:
+            if logger and logger.isEnabledFor(logging.WARN):
                 logger.warn(
                     "Trying to use more processes than files: output.nproc=%d, "%nproc +
                     "output.nfiles=%d.  Reducing nproc to %d."%(nfiles,nfiles))
@@ -410,17 +411,17 @@ def Process(config, logger=None, new_params=None):
             if nfiles == 1 and can_do_multiple:
                 nproc2 = ncpu # Use this value in BuildImages rather than here.
                 nproc = 1
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug("ncpu = %d.",ncpu)
             else:
                 if ncpu > nfiles:
                     nproc = nfiles
                 else:
                     nproc = ncpu
-                if logger:
-                    logger.info("ncpu = %d.  Using %d processes",ncpu,nproc)
+                if logger and logger.isEnabledFor(logging.WARN):
+                    logger.warn("ncpu = %d.  Using %d processes",ncpu,nproc)
         except:
-            if logger:
+            if logger and logger.isEnabledFor(logging.WARN):
                 logger.warn("config.output.nproc <= 0, but unable to determine number of cpus.")
             nproc = 1
 
@@ -429,22 +430,24 @@ def Process(config, logger=None, new_params=None):
         for job in iter(input.get, 'STOP'):
             try:
                 (kwargs, file_num, file_name, logger) = job
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('%s: Received job to do file %d, %s',proc,file_num,file_name)
                 ProcessInput(kwargs['config'], file_num=file_num, logger=logger)
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('%s: After ProcessInput for file %d',proc,file_num)
                 kwargs['logger'] = logger
                 t = build_func(**kwargs)
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('%s: After %s for file %d',proc,build_func,file_num)
                 output.put( (t, file_num, file_name, proc) )
             except Exception as e:
                 import traceback
                 tr = traceback.format_exc()
-                if logger:
-                    logger.debug('%s: Caught exception %s\n%s',proc,str(e),tr)
+                if logger and logger.isEnabledFor(logging.WARN):
+                    logger.warn('%s: Caught exception %s\n%s',proc,str(e),tr)
                 output.put( (e, file_num, file_name, tr) )
+        if logger and logger.isEnabledFor(logging.DEBUG):
+            logger.debug('%s: Received STOP',proc)
 
     # Set up the multi-process task_queue if we're going to need it.
     if nproc > 1:
@@ -485,7 +488,7 @@ def Process(config, logger=None, new_params=None):
 
     nfiles_use = nfiles
     for file_num in range(nfiles):
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file_num, image_num, obj_num = %d,%d,%d',file_num,image_num,obj_num)
         # Set the index for any sequences in the input or output parameters.
         # These sequences are indexed by the file_num.
@@ -513,7 +516,7 @@ def Process(config, logger=None, new_params=None):
             config['index_key'] = 'obj_num'
             seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
             config['index_key'] = 'file_num'
-            if logger:
+            if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('file %d: seed = %d',file_num,seed)
             rng = galsim.BaseDeviate(seed)
         else:
@@ -553,7 +556,7 @@ def Process(config, logger=None, new_params=None):
         # This also updates nimages or nobjects as needed if they are being automatically
         # set from an input catalog.
         nobj = nobj_func(config,file_num,image_num)
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: nobj = %s',file_num,str(nobj))
 
         # nobj is a list of nobj for each image in that file.
@@ -565,14 +568,14 @@ def Process(config, logger=None, new_params=None):
         # Check if we ought to skip this file
         if ('skip' in output 
                 and galsim.config.ParseValue(output, 'skip', config, bool)[0]):
-            if logger:
+            if logger and logger.isEnabledFor(logging.WARN):
                 logger.warn('Skipping file %d = %s because output.skip = True',file_num,file_name)
             nfiles_use -= 1
             continue
         if ('noclobber' in output 
                 and galsim.config.ParseValue(output, 'noclobber', config, bool)[0]
                 and os.path.isfile(file_name)):
-            if logger:
+            if logger and logger.isEnabledFor(logging.WARN):
                 logger.warn('Skipping file %d = %s because output.noclobber = True' +
                             ' and file exists',file_num,file_name)
             nfiles_use -= 1
@@ -580,7 +583,7 @@ def Process(config, logger=None, new_params=None):
 
         # Check if we need to build extra images for write out as well
         for extra_key in [ key for key in extra_keys if key in output ]:
-            if logger:
+            if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('extra_key = %s',extra_key)
             output_extra = output[extra_key]
 
@@ -619,8 +622,8 @@ def Process(config, logger=None, new_params=None):
                 # If we already wrote this file, skip it this time around.
                 # (Typically this is applicable for psf, where we may only want 1 psf file.)
                 if last_file_name[key] == f:
-                    if logger:
-                        logger.debug('skipping %s, since already written',f)
+                    if logger and logger.isEnabledFor(logging.WARN):
+                        logger.warn('skipping %s, since already written',f)
                     continue
                 kwargs[ extra_key+'_file_name' ] = f
                 last_file_name[key] = f
@@ -646,14 +649,16 @@ def Process(config, logger=None, new_params=None):
             task_queue.put( (kwargs1, file_num, file_name, logger_proxy) )
         else:
             try:
+                if logger and logger.isEnabledFor(logging.WARN):
+                    logger.warn('Start file %d = %s', file_num, file_name)
                 ProcessInput(config, file_num=file_num, logger=logger_proxy)
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('file %d: After ProcessInput',file_num)
                 kwargs['config'] = config
                 kwargs['logger'] = logger 
                 t = build_func(**kwargs)
-                if logger:
-                    logger.warn('File %d = %s: time = %f sec', file_num, file_name, t)
+                if logger and logger.isEnabledFor(logging.WARN):
+                    logger.warn('File %d = %s, time = %f sec', file_num, file_name, t)
             except Exception as e:
                 import traceback
                 tr = traceback.format_exc()
@@ -666,7 +671,7 @@ def Process(config, logger=None, new_params=None):
     # If we're doing multiprocessing, here is the machinery to run through the task_queue
     # and process the results.
     if nproc > 1:
-        if logger:
+        if logger and logger.isEnabledFor(logging.WARN):
             logger.warn("Using %d processes",nproc)
         import time
         t1 = time.time()
@@ -679,7 +684,7 @@ def Process(config, logger=None, new_params=None):
             p_list.append(p)
 
         # Log the results.
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('nfiles_use = %d',nfiles_use)
         for k in range(nfiles_use):
             t, file_num, file_name, proc = done_queue.get()
@@ -692,7 +697,7 @@ def Process(config, logger=None, new_params=None):
                     logger.error('%s',t)
                     logger.error('File %s not written! Continuing on...',file_name)
             else:
-                if logger:
+                if logger and logger.isEnabledFor(logging.WARN):
                     logger.warn('%s: File %d = %s: time = %f sec', proc, file_num, file_name, t)
 
         # Stop the processes
@@ -702,10 +707,10 @@ def Process(config, logger=None, new_params=None):
             p_list[j].join()
         task_queue.close()
         t2 = time.time()
-        if logger:
+        if logger and logger.isEnabledFor(logging.WARN):
             logger.warn('Total time for %d files with %d processes = %f sec', 
                         nfiles_use,nproc,t2-t1)
 
-    if logger:
-        logger.debug('Done building files')
+    if logger and logger.isEnabledFor(logging.WARN):
+        logger.warn('Done building files')
 

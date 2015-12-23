@@ -18,7 +18,7 @@
 
 import os
 import galsim
-
+import logging
 
 
 def BuildMultiFits(file_name, config, nproc=1, logger=None,
@@ -48,7 +48,7 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
     config['image_num'] = image_num
     config['start_obj_num'] = obj_num
     config['obj_num'] = obj_num
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: BuildMultiFits for %s: file, image, obj = %d,%d,%d',
                       config['file_num'],file_name,file_num,image_num,obj_num)
 
@@ -107,28 +107,28 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
         ntries = 1
 
     galsim.config.output._retry_io(galsim.fits.writeMulti, (main_images, file_name), ntries, file_name, logger)
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: Wrote images to multi-extension fits file %r',
                      config['file_num'],file_name)
 
     if psf_file_name:
         galsim.config.output._retry_io(galsim.fits.writeMulti, (psf_images, psf_file_name),
                   ntries, psf_file_name, logger)
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote psf images to multi-extension fits file %r',
                          config['file_num'],psf_file_name)
 
     if weight_file_name:
         galsim.config.output._retry_io(galsim.fits.writeMulti, (weight_images, weight_file_name),
                   ntries, weight_file_name, logger)
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote weight images to multi-extension fits file %r',
                          config['file_num'],weight_file_name)
 
     if badpix_file_name:
         galsim.config.output._retry_io(galsim.fits.writeMulti, (all_images, badpix_file_name),
                   ntries, badpix_file_name, logger)
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote badpix images to multi-extension fits file %r',
                          config['file_num'],badpix_file_name)
 

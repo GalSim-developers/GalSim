@@ -17,6 +17,7 @@
 #
 
 import galsim
+import logging
 
 
 def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
@@ -41,7 +42,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     config['image_num'] = image_num
     config['obj_num'] = obj_num
 
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: BuildTiledImage: image, obj = %d,%d',image_num,image_num,obj_num)
 
     if 'random_seed' in config['image'] and not isinstance(config['image']['random_seed'],dict):
@@ -63,7 +64,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     nobjects = nx_tiles * ny_tiles
     config['nx_tiles'] = nx_tiles
     config['ny_tiles'] = ny_tiles
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: n_tiles = %d, %d',image_num,nx_tiles,ny_tiles)
 
     stamp_size = params.get('stamp_size',0)
@@ -100,12 +101,12 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
             "!= required (%d,%d)."%(config['image_force_xsize'],config['image_force_ysize']))
     config['image_xsize'] = full_xsize
     config['image_ysize'] = full_ysize
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: image_size = %d, %d',image_num,full_xsize,full_ysize)
 
     convention = params.get('index_convention','1')
     galsim.config.image._set_image_origin(config,convention)
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: image_origin = %s',image_num,str(config['image_origin']))
         logger.debug('image %d: image_center = %s',image_num,str(config['image_center']))
 
@@ -120,7 +121,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         config['index_key'] = 'obj_num'
         seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
         config['index_key'] = 'image_num'
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('image %d: seed = %d',image_num,seed)
         rng = galsim.BaseDeviate(seed)
     else:

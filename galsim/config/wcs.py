@@ -17,7 +17,7 @@
 #
 
 import galsim
-
+import logging
 
 # We distinguish some classes according to whether they have an origin parameter.
 # The first item in the tuple is the builder class or function that does not take an 
@@ -52,7 +52,7 @@ def BuildWCS(config, logger=None):
         # Special case: origin == center means to use image_center for the wcs origin
         if 'origin' in image_wcs and image_wcs['origin'] == 'center':
             origin = config['image_center']
-            if logger:
+            if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('image %d: Using origin = %s',config['image_num'],str(origin))
             image_wcs['origin'] = origin
 
@@ -64,7 +64,7 @@ def BuildWCS(config, logger=None):
         else:
             build_func = eval(valid_wcs_types[type][0])
 
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('image %d: Build WCS for type = %s using %s',
                          config['image_num'],type,str(build_func))
 
@@ -85,7 +85,7 @@ def BuildWCS(config, logger=None):
                 raise ValueError("No config['rng'] available for %s.type = %s"%(key,type))
             kwargs['rng'] = config['rng']
 
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('image %d: kwargs = %s',config['image_num'],str(kwargs))
         wcs = build_func(**kwargs) 
 

@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 import galsim
+import logging
 
 
 def _BuildCOSMOSGalaxy(config, key, base, ignore, gsparams, logger):
@@ -59,7 +60,7 @@ def _BuildCOSMOSGalaxy(config, key, base, ignore, gsparams, logger):
             raise IndexError(
                 "%s index has gone past the number of entries in the catalog"%index)
 
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('obj %d: COSMOSGalaxy kwargs = %s',base['obj_num'],str(kwargs))
 
     kwargs['cosmos_catalog'] = cosmos_cat

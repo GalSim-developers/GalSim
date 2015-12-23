@@ -17,6 +17,7 @@
 #
 
 import galsim
+import logging
 
 from .image_scattered import *
 from .image_tiled import *
@@ -54,7 +55,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
     config['image_num'] = image_num
     config['obj_num'] = obj_num
 
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: BuildImages nimages = %d: image, obj = %d,%d',
                      config.get('file_num',0),nimages,image_num,obj_num)
 
@@ -70,7 +71,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
         for job in iter(input.get, 'STOP'):
             try :
                 (kwargs, image_num, obj_num, nim, info, logger) = job
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('%s: Received job to do %d images, starting with %d',
                                  proc,nim,image_num)
                 results = []
@@ -84,16 +85,16 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
                     t2 = time.time()
                     results.append( [im[0], im[1], im[2], im[3], t2-t1 ] )
                     ys, xs = im[0].array.shape
-                    if logger:
+                    if logger and logger.isEnabledFor(logging.INFO):
                         logger.info('%s: Image %d: size = %d x %d, time = %f sec', 
                                     proc, image_num+k, xs, ys, t2-t1)
                 output.put( (results, info, proc) )
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('%s: Finished job %d -- %d',proc,image_num,image_num+nim-1)
             except Exception as e:
                 import traceback
                 tr = traceback.format_exc()
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('%s: Caught exception %s\n%s',proc,str(e),tr)
                 output.put( (e, info, tr) )
     
@@ -105,7 +106,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
     }
 
     if nproc > nimages:
-        if logger:
+        if logger and logger.isEnabledFor(logging.WARN):
             logger.warn(
                 "Trying to use more processes than images: output.nproc=%d, "%nproc +
                 "nimages=%d.  Reducing nproc to %d."%(nimages,nimages))
@@ -120,13 +121,13 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
                 nproc = nimages
             else:
                 nproc = ncpu
-            if logger:
-                logger.info("ncpu = %d.  Using %d processes",ncpu,nproc)
+            if logger and logger.isEnabledFor(logging.WARN):
+                logger.warn("ncpu = %d.  Using %d processes",ncpu,nproc)
         except:
-            if logger:
+            if logger and logger.isEnabledFor(logging.WARN):
                 logger.warn("config.output.nproc <= 0, but unable to determine number of cpus.")
             nproc = 1
-            if logger:
+            if logger and logger.isEnabledFor(logging.INFO):
                 logger.info("Unable to determine ncpu.  Using %d processes",nproc)
  
     if nproc > 1:
@@ -153,7 +154,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
              'gal' in config and isinstance(config['gal'],dict) and 'type' in config['gal'] and
              config['gal']['type'] == 'Ring' and 'num' in config['gal'] ):
             min_nim = galsim.config.ParseValue(config['gal'], 'num', config, int)[0]
-            if logger:
+            if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('file %d: Found ring: num = %d',config.get('file_num',0),min_nim)
         if max_nim < min_nim: 
             nim_per_task = min_nim
@@ -161,7 +162,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
             import math
             # This formula keeps nim a multiple of min_nim, so Rings are intact.
             nim_per_task = min_nim * int(math.sqrt(float(max_nim) / float(min_nim)))
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: nim_per_task = %d',config.get('file_num',0),nim_per_task)
 
 
@@ -213,7 +214,7 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
                 weight_images[k] = result[2]
                 badpix_images[k] = result[3]
                 k += 1
-            if logger:
+            if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('%s: Successfully returned results for images %d--%d', proc, k0, k-1)
 
         # Stop the processes
@@ -249,13 +250,13 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
             weight_images += [ result[2] ]
             badpix_images += [ result[3] ]
             t2 = time.time()
-            if logger:
+            if logger and logger.isEnabledFor(logging.INFO):
                 # Note: numpy shape is y,x
                 ys, xs = result[0].array.shape
                 logger.info('Image %d: size = %d x %d, time = %f sec', image_num+k, xs, ys, t2-t1)
             obj_num += galsim.config.GetNObjForImage(config, image_num+k)
 
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: Done making images %d--%d',config.get('file_num',0),
                      image_num,image_num+nimages-1)
 
@@ -284,7 +285,7 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
     config['image_num'] = image_num
     config['obj_num'] = obj_num
 
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: BuildImage: image, obj = %d,%d',image_num,image_num,obj_num)
 
     # Make config['image'] exist if it doesn't yet.
@@ -341,7 +342,7 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
     nobjects = len(stamps)
     max_current_var = max(current_vars)
     if max_current_var > 0:
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('image %d: maximum noise varance in any stamp is %f',
                          config['image_num'], max_current_var)
         import numpy
@@ -355,7 +356,7 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
         # Update this, since overlapping postage stamps may have led to a larger 
         # value in some pixels.
         max_current_var = numpy.max(noise_image.array)
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('image %d: maximum noise varance in any pixel is %f',
                          config['image_num'], max_current_var)
         # Figure out how much noise we need to add to each pixel.
@@ -404,7 +405,7 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     config['image_num'] = image_num
     config['obj_num'] = obj_num
 
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: BuildSingleImage: image, obj = %d,%d',image_num,image_num,obj_num)
 
     if 'random_seed' in config['image'] and not isinstance(config['image']['random_seed'],dict):
@@ -435,7 +436,7 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     config['image_ysize'] = ysize
     convention = params.get('index_convention','1')
     _set_image_origin(config,convention)
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: image_origin = %s',image_num,str(config['image_origin']))
         logger.debug('image %d: image_center = %s',image_num,str(config['image_center']))
 

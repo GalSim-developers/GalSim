@@ -18,6 +18,7 @@
 
 import os
 import galsim
+import logging
 
 
 def BuildDataCube(file_name, config, nproc=1, logger=None, 
@@ -47,7 +48,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     config['image_num'] = image_num
     config['start_obj_num'] = obj_num
     config['obj_num'] = obj_num
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: BuildDataCube for %s: file, image, obj = %d,%d,%d',
                       config['file_num'],file_name,file_num,image_num,obj_num)
 
@@ -89,7 +90,7 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
             make_badpix_image=make_badpix_image)
     obj_num += galsim.config.GetNObjForImage(config, image_num)
     t3 = time.time()
-    if logger:
+    if logger and logger.isEnabledFor(logging.INFO):
         # Note: numpy shape is y,x
         ys, xs = all_images[0].array.shape
         logger.info('Image %d: size = %d x %d, time = %f sec', image_num, xs, ys, t3-t2)
@@ -135,28 +136,28 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
         ntries = 1
 
     galsim.config.output._retry_io(galsim.fits.writeCube, (main_images, file_name), ntries, file_name, logger)
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: Wrote image to fits data cube %r',
                      config['file_num'],file_name)
 
     if psf_file_name:
         galsim.config.output._retry_io(galsim.fits.writeCube, (psf_images, psf_file_name),
                   ntries, psf_file_name, logger)
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote psf images to fits data cube %r',
                          config['file_num'],psf_file_name)
 
     if weight_file_name:
         galsim.config.output._retry_io(galsim.fits.writeCube, (weight_images, weight_file_name),
                   ntries, weight_file_name, logger)
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote weight images to fits data cube %r',
                          config['file_num'],weight_file_name)
 
     if badpix_file_name:
         galsim.config.output._retry_io(galsim.fits.writeCube, (badpix_images, badpix_file_name),
                   ntries, badpix_file_name, logger)
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote badpix images to fits data cube %r',
                          config['file_num'],badpix_file_name)
 

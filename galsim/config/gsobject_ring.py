@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 import galsim
+import logging
 
 
 def _BuildRing(config, key, base, ignore, gsparams, logger):
@@ -43,7 +44,7 @@ def _BuildRing(config, key, base, ignore, gsparams, logger):
         full_rotation = math.pi * galsim.radians
 
     dtheta = full_rotation / num
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('obj %d: Ring dtheta = %f',base['obj_num'],dtheta.rad())
 
     if index % num == 0:

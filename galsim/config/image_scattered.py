@@ -17,6 +17,7 @@
 #
 
 import galsim
+import logging
 
 def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
                         make_psf_image=False, make_weight_image=False, make_badpix_image=False):
@@ -40,7 +41,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     config['image_num'] = image_num
     config['obj_num'] = obj_num
 
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: BuildScatteredImage: image, obj = %d,%d',
                      image_num,image_num,obj_num)
 
@@ -49,7 +50,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
 
     nobjects = GetNObjForScatteredImage(config,image_num)
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: nobj = %d',image_num,nobjects)
 
     ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs', 'nproc',
@@ -90,7 +91,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
 
     convention = params.get('index_convention','1')
     galsim.config.image._set_image_origin(config,convention)
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: image_origin = %s',image_num,str(config['image_origin']))
         logger.debug('image %d: image_center = %s',image_num,str(config['image_center']))
 
@@ -105,7 +106,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         config['index_key'] = 'obj_num'
         seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
         config['index_key'] = 'image_num'
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('image %d: seed = %d',image_num,seed)
         rng = galsim.BaseDeviate(seed)
     else:
@@ -184,7 +185,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
             if make_badpix_image:
                 full_badpix_image[bounds] |= badpix_images[k][bounds]
         else:
-            if logger:
+            if logger and logger.isEnabledFor(logging.WARN):
                 logger.warn(
                     "Object centered at (%d,%d) is entirely off the main image,\n"%(
                         images[k].bounds.center().x, images[k].bounds.center().y) +

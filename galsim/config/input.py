@@ -18,6 +18,7 @@
 
 import os
 import galsim
+import logging
 
 from .input_powerspectrum import PowerSpectrumInit
 
@@ -74,7 +75,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
     """
     config['index_key'] = 'file_num'
     config['file_num'] = file_num
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: Start ProcessInput',file_num)
     # Process the input field (read any necessary input files)
     if 'input' in config:
@@ -139,7 +140,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
             # Skip this key if not relevant for file_scope_only run.
             if file_scope_only and not valid_input_types[key][3]: continue
 
-            if logger:
+            if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('file %d: Process input key %s',file_num,key)
             fields = config['input'][key]
 
@@ -147,16 +148,16 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                 field = fields[i]
                 input_objs = config['input_objs'][key]
                 input_objs_safe = config['input_objs'][key+'_safe']
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('file %d: Current values for %s are %s, safe = %s',
                                  file_num, key, str(input_objs[i]), input_objs_safe[i])
                 input_type, ignore = valid_input_types[key][0:2]
                 field['type'] = input_type
                 if input_objs[i] is not None and input_objs_safe[i]:
-                    if logger:
+                    if logger and logger.isEnabledFor(logging.DEBUG):
                         logger.debug('file %d: Using %s already read in',file_num,key)
                 else:
-                    if logger:
+                    if logger and logger.isEnabledFor(logging.DEBUG):
                         logger.debug('file %d: Build input type %s',file_num,input_type)
                     # This is almost identical to the operation of BuildSimple.  However,
                     # rather than call the regular function here, we have input_manager do so.
@@ -177,7 +178,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                         safe = False
 
                     if safe_only and not safe:
-                        if logger:
+                        if logger and logger.isEnabledFor(logging.DEBUG):
                             logger.debug('file %d: Skip %s %d, since not safe',file_num,key,i)
                         input_objs[i] = None
                         input_objs_safe[i] = None
@@ -185,10 +186,11 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
 
                     tag = key + str(i)
                     input_obj = getattr(config['input_manager'],tag)(**kwargs)
-                    if logger:
+                    if logger and logger.isEnabledFor(logging.DEBUG):
                         logger.debug('file %d: Built input object %s %d',file_num,key,i)
                         if 'file_name' in kwargs:
                             logger.debug('file %d: file_name = %s',file_num,kwargs['file_name'])
+                    if logger and logger.isEnabledFor(logging.INFO):
                         if valid_input_types[key][2]:
                             logger.info('Read %d objects from %s',input_obj.getNObjects(),key)
                     # Store input_obj in the config for use by BuildGSObject function.
@@ -199,7 +201,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                     #       item.  e.g. you might want to invalidate dict0, but not dict1.
                     for value_type in valid_input_types[key][5]:
                         galsim.config.RemoveCurrent(config, type=value_type)
-                        if logger:
+                        if logger and logger.isEnabledFor(logging.DEBUG):
                             logger.debug('file %d: Cleared current_vals for items with type %s',
                                          file_num,value_type)
 
@@ -236,7 +238,7 @@ def ProcessInputNObjects(config, logger=None):
                                                         ignore = ignore)[0]
                     kwargs['_nobjects_only'] = True
                     input_obj = init_func(**kwargs)
-                if logger:
+                if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('file %d: Found nobjects = %d for %s',
                                  config['file_num'],input_obj.getNOjects(),key)
                 return input_obj.getNObjects()
