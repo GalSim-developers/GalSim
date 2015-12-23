@@ -22,9 +22,6 @@ import logging
 
 from .input import *
 from .output import *
-from .output_datacube import *
-from .output_multifits import *
-
 
 def ReadYaml(config_file):
     """Read in a YAML configuration file and return the corresponding dicts.
@@ -234,13 +231,44 @@ def GetLoggerProxy(logger):
     return logger_proxy
 
 
-def SetDefaultExt(config, ext):
+def UpdateNProc(nproc, ntot, config, logger=None):
+    """Update nproc
+    - If nproc < 0, set nproc to ncpu
+    - Make sure nproc <= ntot
+    @param nproc        The nominal number of processes from the config dict
+    @param ntot         The total number of files/images/stamps to do, so the maximum number of
+                        processes that would make sense.
+    @param config       The configuration dict to copy.
+    @param logger       If given, a logger object to log progress. [default: None]
+    @returns the number of processes to use.
     """
-    Some items have a default extension for a NumberedFile type.
-    """
-    if ( isinstance(config,dict) and 'type' in config and 
-         config['type'] == 'NumberedFile' and 'ext' not in config ):
-        config['ext'] = ext
+    # First if nproc < 0, update based on ncpu
+    if nproc <= 0:
+        # Try to figure out a good number of processes to use
+        try:
+            from multiprocessing import cpu_count
+            nproc = cpu_count()
+            if logger and logger.isEnabledFor(logging.DEBUG):
+                logger.debug("ncpu = %d.",nproc)
+        except:
+            if logger and logger.isEnabledFor(logging.WARN):
+                logger.warn("nproc <= 0, but unable to determine number of cpus.")
+                logger.warn("Using single process")
+            nproc = 1
+ 
+    # Second, make sure we aren't already in a multiprocessing mode
+    if nproc > 1 and 'current_nproc' in config:
+        if logger and logger.isEnabledFor(logging.DEBUG):
+            logger.debug("Already multiprocessing.  Ignoring image.nproc")
+        nproc = 1
+
+    # Finally, don't try to use more processes than jobs.  It wouldn't fail or anything.
+    # It just looks bad to have 3 images processed with 8 processes or something like that.
+    if nproc > ntot:
+        if logger and logger.isEnabledFor(logging.DEBUG):
+            logger.debug("There are only %d jobs to do.  Reducing nproc to %d."%(ntot,ntot))
+        nproc = ntot
+    return nproc
 
 
 def SetupConfigRNG(config, seed_offset=0):
@@ -389,34 +417,6 @@ def Process(config, logger=None, new_params=None):
     if not isinstance(output, dict):
         raise AttributeError("config.output is not a dict.")
 
-    # Get the output type.  Default = Fits
-    if 'type' not in output:
-        output['type'] = 'Fits' 
-    type = output['type']
-
-    # Check that the type is valid
-    if type not in valid_output_types:
-        raise AttributeError("Invalid output.type=%s."%type)
-
-    # build_func is the function we'll call to build each file.
-    build_func = eval(valid_output_types[type][0])
-
-    # nobj_func is the function that builds the nobj_per_file list
-    nobj_func = eval(valid_output_types[type][1])
-
-    # can_do_multiple says whether the function can in principal do multiple files
-    can_do_multiple = valid_output_types[type][2]
-
-    # extra_file_name says whether the function takes psf_file_name, etc.
-    extra_file_name = valid_output_types[type][3]
-
-    # extra_hdu says whether the function takes psf_hdu, etc.
-    extra_hdu = valid_output_types[type][4]
-    if logger and logger.isEnabledFor(logging.DEBUG):
-        logger.debug('type = %s',type)
-        logger.debug('extra_file_name = %s',extra_file_name)
-        logger.debug('extra_hdu = %d',extra_hdu)
-
     # We need to know how many objects we'll need for each file (and each image within each file)
     # to get the indexing correct for any sequence items.  (e.g. random_seed)
     # If we use multiple processors and let the regular sequencing happen, 
@@ -436,325 +436,5 @@ def Process(config, logger=None, new_params=None):
     else:
         nproc = 1 
 
-    # If set, nproc2 will be passed to the build function to be acted on at that level.
-    nproc2 = None
-    if nproc > nfiles:
-        if nfiles == 1 and can_do_multiple:
-            nproc2 = nproc 
-            nproc = 1
-        else:
-            if logger and logger.isEnabledFor(logging.WARN):
-                logger.warn(
-                    "Trying to use more processes than files: output.nproc=%d, "%nproc +
-                    "output.nfiles=%d.  Reducing nproc to %d."%(nfiles,nfiles))
-            nproc = nfiles
-
-    if nproc <= 0:
-        # Try to figure out a good number of processes to use
-        try:
-            from multiprocessing import cpu_count
-            ncpu = cpu_count()
-            if nfiles == 1 and can_do_multiple:
-                nproc2 = ncpu # Use this value in BuildImages rather than here.
-                nproc = 1
-                if logger and logger.isEnabledFor(logging.DEBUG):
-                    logger.debug("ncpu = %d.",ncpu)
-            else:
-                if ncpu > nfiles:
-                    nproc = nfiles
-                else:
-                    nproc = ncpu
-                if logger and logger.isEnabledFor(logging.WARN):
-                    logger.warn("ncpu = %d.  Using %d processes",ncpu,nproc)
-        except:
-            if logger and logger.isEnabledFor(logging.WARN):
-                logger.warn("config.output.nproc <= 0, but unable to determine number of cpus.")
-            nproc = 1
-
-    def worker(input, output):
-        proc = current_process().name
-        for job in iter(input.get, 'STOP'):
-            try:
-                (kwargs, file_num, file_name, logger) = job
-                if logger and logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('%s: Received job to do file %d, %s',proc,file_num,file_name)
-                ProcessInput(kwargs['config'], file_num=file_num, logger=logger)
-                if logger and logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('%s: After ProcessInput for file %d',proc,file_num)
-                kwargs['logger'] = logger
-                t = build_func(**kwargs)
-                if logger and logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('%s: After %s for file %d',proc,build_func,file_num)
-                output.put( (t, file_num, file_name, proc) )
-            except Exception as e:
-                import traceback
-                tr = traceback.format_exc()
-                if logger and logger.isEnabledFor(logging.WARN):
-                    logger.warn('%s: Caught exception %s\n%s',proc,str(e),tr)
-                output.put( (e, file_num, file_name, tr) )
-
-    # Set up the multi-process task_queue if we're going to need it.
-    if nproc > 1:
-        # NB: See the function BuildStamps for more verbose comments about how
-        # the multiprocessing stuff works.
-        from multiprocessing import Process, Queue, current_process
-        task_queue = Queue()
-
-    # Get a proxy of the logger to send to the task_queue.
-    logger_proxy = GetLoggerProxy(logger)
-
-    # Now start working on the files.
-    image_num = 0
-    obj_num = 0
-    config['file_num'] = 0
-    config['image_num'] = 0
-    config['obj_num'] = 0
-
-    extra_keys = [ 'psf', 'weight', 'badpix' ]
-    last_file_name = {}
-    for key in extra_keys:
-        last_file_name[key] = None
-
-    # Process the input field for the first file.  Often there are "safe" input items
-    # that won't need to be reprocessed each time.  So do them here once and keep them
-    # in the config for all file_nums.  This is more important if nproc != 1.
-    ProcessInput(config, file_num=0, logger=logger_proxy, safe_only=True)
-
-    # Normally, random_seed is just a number, which really means to use that number
-    # for the first item and go up sequentially from there for each object.
-    # However, we allow for random_seed to be a gettable parameter, so for the 
-    # normal case, we just convert it into a Sequence.
-    if ( 'image' in config 
-         and 'random_seed' in config['image'] 
-         and not isinstance(config['image']['random_seed'],dict) ):
-        config['first_seed'] = galsim.config.ParseValue(
-                config['image'], 'random_seed', config, int)[0]
-
-    nfiles_use = nfiles
-    for file_num in range(nfiles):
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file_num, image_num, obj_num = %d,%d,%d',file_num,image_num,obj_num)
-        # Set the index for any sequences in the input or output parameters.
-        # These sequences are indexed by the file_num.
-        # (In image, they are indexed by image_num, and after that by obj_num.)
-        config['index_key'] = 'file_num'
-        config['file_num'] = file_num
-        config['image_num'] = image_num
-        config['start_obj_num'] = obj_num
-        config['obj_num'] = obj_num
-
-        # Process the input fields that might be relevant at file scope:
-        ProcessInput(config, file_num=file_num, logger=logger_proxy, file_scope_only=True)
-
-        # Set up random_seed appropriately if necessary.
-        if 'first_seed' in config:
-            config['image']['random_seed'] = {
-                'type' : 'Sequence' ,
-                'first' : config['first_seed']
-            }
-
-        # It is possible that some items at image scope could need a random number generator.
-        # For example, in demo9, we have a random number of objects per image.
-        # So we need to build an rng here.
-        if 'random_seed' in config['image']:
-            config['index_key'] = 'obj_num'
-            seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-            config['index_key'] = 'file_num'
-            if logger and logger.isEnabledFor(logging.DEBUG):
-                logger.debug('file %d: seed = %d',file_num,seed)
-            rng = galsim.BaseDeviate(seed)
-        else:
-            rng = galsim.BaseDeviate()
-        config['rng'] = rng
-
-        # Get the file_name
-        if 'file_name' in output:
-            SetDefaultExt(output['file_name'],'.fits')
-            file_name = galsim.config.ParseValue(output, 'file_name', config, str)[0]
-        elif 'root' in config:
-            # If a file_name isn't specified, we use the name of the config file + '.fits'
-            file_name = config['root'] + '.fits'
-        else:
-            raise AttributeError(
-                "No output.file_name specified and unable to generate it automatically.")
-        
-        # Prepend a dir to the beginning of the filename if requested.
-        if 'dir' in output:
-            dir = galsim.config.ParseValue(output, 'dir', config, str)[0]
-            if dir and not os.path.isdir(dir): os.makedirs(dir)
-            file_name = os.path.join(dir,file_name)
-        else:
-            dir = None
-
-        # Assign some of the kwargs we know now:
-        kwargs = {
-            'file_name' : file_name,
-            'file_num' : file_num,
-            'image_num' : image_num,
-            'obj_num' : obj_num
-        }
-        if nproc2:
-            kwargs['nproc'] = nproc2
-
-        output = config['output']
-        # This also updates nimages or nobjects as needed if they are being automatically
-        # set from an input catalog.
-        nobj = nobj_func(config,file_num,image_num)
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: nobj = %s',file_num,str(nobj))
-
-        # nobj is a list of nobj for each image in that file.
-        # So len(nobj) = nimages and sum(nobj) is the total number of objects
-        # This gets the values of image_num and obj_num ready for the next loop.
-        image_num += len(nobj)
-        obj_num += sum(nobj)
-
-        # Check if we ought to skip this file
-        if ('skip' in output 
-                and galsim.config.ParseValue(output, 'skip', config, bool)[0]):
-            if logger and logger.isEnabledFor(logging.WARN):
-                logger.warn('Skipping file %d = %s because output.skip = True',file_num,file_name)
-            nfiles_use -= 1
-            continue
-        if ('noclobber' in output 
-                and galsim.config.ParseValue(output, 'noclobber', config, bool)[0]
-                and os.path.isfile(file_name)):
-            if logger and logger.isEnabledFor(logging.WARN):
-                logger.warn('Skipping file %d = %s because output.noclobber = True' +
-                            ' and file exists',file_num,file_name)
-            nfiles_use -= 1
-            continue
-
-        # Check if we need to build extra images for write out as well
-        for extra_key in [ key for key in extra_keys if key in output ]:
-            if logger and logger.isEnabledFor(logging.DEBUG):
-                logger.debug('extra_key = %s',extra_key)
-            output_extra = output[extra_key]
-
-            output_extra['type'] = 'default'
-            req = {}
-            single = []
-            opt = {}
-            ignore = []
-            if extra_file_name and extra_hdu:
-                single += [ { 'file_name' : str, 'hdu' : int } ]
-                opt['dir'] = str
-            elif extra_file_name:
-                req['file_name'] = str
-                opt['dir'] = str
-            elif extra_hdu:
-                req['hdu'] = int
-
-            if extra_key == 'psf': 
-                ignore += ['draw_method', 'signal_to_noise']
-            if extra_key == 'weight': 
-                ignore += ['include_obj_var']
-            if 'file_name' in output_extra:
-                SetDefaultExt(output_extra['file_name'],'.fits')
-            params, safe = galsim.config.GetAllParams(output_extra,config,
-                                                      req=req, opt=opt, single=single,
-                                                      ignore=ignore)
-
-            if 'file_name' in params:
-                f = params['file_name']
-                if 'dir' in params:
-                    dir = params['dir']
-                    if dir and not os.path.isdir(dir): os.makedirs(dir)
-                # else keep dir from above.
-                if dir:
-                    f = os.path.join(dir,f)
-                # If we already wrote this file, skip it this time around.
-                # (Typically this is applicable for psf, where we may only want 1 psf file.)
-                if last_file_name[key] == f:
-                    if logger and logger.isEnabledFor(logging.WARN):
-                        logger.warn('skipping %s, since already written',f)
-                    continue
-                kwargs[ extra_key+'_file_name' ] = f
-                last_file_name[key] = f
-            elif 'hdu' in params:
-                kwargs[ extra_key+'_hdu' ] = params['hdu']
-
-        # This is where we actually build the file.
-        # If we're doing multiprocessing, we send this information off to the task_queue.
-        # Otherwise, we just call build_func.
-        if nproc > 1:
-            import copy
-            # Make new copies of config and kwargs so we can update them without
-            # clobbering the versions for other tasks on the queue.
-            kwargs1 = copy.copy(kwargs)
-            # Clear out unsafe proxy objects, since there seems to be a bug in the manager
-            # package where this can cause strange KeyError exceptions in the incref function.
-            # It seems to be related to having multiple identical proxy objects that then
-            # get deleted.  e.g. if the first N files use one dict, then the next N use another,
-            # and so forth.  I don't really get it, but clearing them out here seems to 
-            # fix the problem.
-            ProcessInput(config, file_num=file_num, logger=logger_proxy, safe_only=True)
-            kwargs1['config'] = CopyConfig(config)
-            task_queue.put( (kwargs1, file_num, file_name, logger_proxy) )
-        else:
-            try:
-                if logger and logger.isEnabledFor(logging.WARN):
-                    logger.warn('Start file %d = %s', file_num, file_name)
-                ProcessInput(config, file_num=file_num, logger=logger_proxy)
-                if logger and logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('file %d: After ProcessInput',file_num)
-                kwargs['config'] = config
-                kwargs['logger'] = logger 
-                t = build_func(**kwargs)
-                if logger and logger.isEnabledFor(logging.WARN):
-                    logger.warn('File %d = %s, time = %f sec', file_num, file_name, t)
-            except Exception as e:
-                import traceback
-                tr = traceback.format_exc()
-                if logger:
-                    logger.error('Exception caught for file %d = %s', file_num, file_name)
-                    logger.error('%s',tr)
-                    logger.error('%s',e)
-                    logger.error('File %s not written! Continuing on...',file_name)
-
-    # If we're doing multiprocessing, here is the machinery to run through the task_queue
-    # and process the results.
-    if nproc > 1:
-        if logger and logger.isEnabledFor(logging.WARN):
-            logger.warn("Using %d processes",nproc)
-        import time
-        t1 = time.time()
-        # Run the tasks
-        done_queue = Queue()
-        p_list = []
-        for j in range(nproc):
-            p = Process(target=worker, args=(task_queue, done_queue), name='Process-%d'%(j+1))
-            p.start()
-            p_list.append(p)
-
-        # Log the results.
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('nfiles_use = %d',nfiles_use)
-        for k in range(nfiles_use):
-            t, file_num, file_name, proc = done_queue.get()
-            if isinstance(t,Exception):
-                # t is really the exception, e
-                # proc is really the traceback
-                if logger:
-                    logger.error('Exception caught for file %d = %s', file_num, file_name)
-                    logger.error('%s',proc)
-                    logger.error('%s',t)
-                    logger.error('File %s not written! Continuing on...',file_name)
-            else:
-                if logger and logger.isEnabledFor(logging.WARN):
-                    logger.warn('%s: File %d = %s: time = %f sec', proc, file_num, file_name, t)
-
-        # Stop the processes
-        for j in range(nproc):
-            task_queue.put('STOP')
-        for j in range(nproc):
-            p_list[j].join()
-        task_queue.close()
-        t2 = time.time()
-        if logger and logger.isEnabledFor(logging.WARN):
-            logger.warn('Total time for %d files with %d processes = %f sec', 
-                        nfiles_use,nproc,t2-t1)
-
-    if logger and logger.isEnabledFor(logging.WARN):
-        logger.warn('Done building files')
+    galsim.config.BuildFiles(nfiles, config, nproc=nproc, logger=logger)
 

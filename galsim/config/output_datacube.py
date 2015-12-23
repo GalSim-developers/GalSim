@@ -43,20 +43,12 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     import time
     t1 = time.time()
 
-    config['index_key'] = 'file_num'
-    config['file_num'] = file_num
-    config['image_num'] = image_num
-    config['start_obj_num'] = obj_num
-    config['obj_num'] = obj_num
+    galsim.config.SetupConfigFileNum(config,file_num,image_num,obj_num)
+    seed = galsim.config.SetupConfigRNG(config)
     if logger and logger.isEnabledFor(logging.DEBUG):
-        logger.debug('file %d: BuildDataCube for %s: file, image, obj = %d,%d,%d',
-                      config['file_num'],file_name,file_num,image_num,obj_num)
+        logger.debug('file %d: seed = %d',file_num,seed)
 
-    if ( 'image' in config 
-         and 'random_seed' in config['image'] 
-         and not isinstance(config['image']['random_seed'],dict) ):
-        first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
+    nimages = galsim.config.GetNImagesForFile(config, file_num)
 
     if psf_file_name:
         make_psf_image = True
@@ -72,10 +64,6 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
         make_badpix_image = True
     else:
         make_badpix_image = False
-
-    if 'output' not in config or 'nimages' not in config['output']:
-        raise AttributeError("Attribute output.nimages is required for output.type = DataCube")
-    nimages = galsim.config.ParseValue(config['output'],'nimages',config,int)[0]
 
     # All images need to be the same size for a data cube.
     # Enforce this by buliding the first image outside the below loop and setting
@@ -135,27 +123,27 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     else:
         ntries = 1
 
-    galsim.config.output._retry_io(galsim.fits.writeCube, (main_images, file_name), ntries, file_name, logger)
+    galsim.config.output.RetryIO(galsim.fits.writeCube, (main_images, file_name), ntries, file_name, logger)
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: Wrote image to fits data cube %r',
                      config['file_num'],file_name)
 
     if psf_file_name:
-        galsim.config.output._retry_io(galsim.fits.writeCube, (psf_images, psf_file_name),
+        galsim.config.output.RetryIO(galsim.fits.writeCube, (psf_images, psf_file_name),
                   ntries, psf_file_name, logger)
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote psf images to fits data cube %r',
                          config['file_num'],psf_file_name)
 
     if weight_file_name:
-        galsim.config.output._retry_io(galsim.fits.writeCube, (weight_images, weight_file_name),
+        galsim.config.output.RetryIO(galsim.fits.writeCube, (weight_images, weight_file_name),
                   ntries, weight_file_name, logger)
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote weight images to fits data cube %r',
                          config['file_num'],weight_file_name)
 
     if badpix_file_name:
-        galsim.config.output._retry_io(galsim.fits.writeCube, (badpix_images, badpix_file_name),
+        galsim.config.output.RetryIO(galsim.fits.writeCube, (badpix_images, badpix_file_name),
                   ntries, badpix_file_name, logger)
         if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: Wrote badpix images to fits data cube %r',
@@ -164,26 +152,15 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     t4 = time.time()
     return t4-t1
 
-def GetNObjForDataCube(config, file_num, image_num):
-    ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc',
-               'skip', 'noclobber', 'retry_io' ]
-    req = { 'nimages' : int }
+def GetNImagesDataCube(config, file_num):
     # Allow nimages to be automatic based on input catalog if image type is Single
     if ( 'nimages' not in config['output'] and 
          ( 'image' not in config or 'type' not in config['image'] or 
            config['image']['type'] == 'Single' ) ):
-        nobjects = galsim.config.ProcessInputNObjects(config)
-        if nobjects:
-            config['output']['nimages'] = nobjects
-    params = galsim.config.GetAllParams(config['output'],config,ignore=ignore,req=req)[0]
-    config['index_key'] = 'file_num'
-    config['file_num'] = file_num
-    config['image_num'] = image_num
-    nimages = params['nimages']
-    try :
-        nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
-    except ValueError : # (This may be raised if something needs the input stuff)
-        galsim.config.ProcessInput(config, file_num=file_num)
-        nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
-    return nobj
+        nimages = galsim.config.ProcessInputNObjects(config)
+        if nimages:
+            config['output']['nimages'] = nimages
+    if 'nimages' not in config['output']:
+        raise AttributeError("Attribute output.nimages is required for output.type = MultiFits")
+    return galsim.config.ParseValue(config['output'],'nimages',config,int)[0]
 
