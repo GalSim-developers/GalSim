@@ -37,29 +37,26 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     Note: All 4 Images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.    
     """
-    config['index_key'] = 'image_num'
-    config['image_num'] = image_num
-    config['obj_num'] = obj_num
-
     if logger and logger.isEnabledFor(logging.DEBUG):
-        logger.debug('image %d: BuildScatteredImage: image, obj = %d,%d',
+        logger.debug('image %d: Building Scattered: image, obj = %d,%d',
                      image_num,image_num,obj_num)
 
-    if 'random_seed' in config['image'] and not isinstance(config['image']['random_seed'],dict):
-        first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
-
-    nobjects = GetNObjForScatteredImage(config,image_num)
+    if 'nobjects' not in config['image']:
+        nobjects = galsim.config.ProcessInputNObjects(config)
+        if nobjects is None:
+            raise AttributeError("Attribute nobjects is required for image.type = Scattered")
+    else:
+        nobjects = galsim.config.ParseValue(config['image'],'nobjects',config,int)[0]
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: nobj = %d',image_num,nobjects)
+    config['nobjects'] = nobjects
 
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs', 'nproc',
-               'sky_level', 'sky_level_pixel',
-               'retry_failures', 'image_pos', 'world_pos', 'n_photons', 'wmult', 'offset', 
-               'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams', 'nobjects' ]
-    opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
-            'nproc' : int , 'index_convention' : str }
-    params = galsim.config.GetAllParams(config['image'], config, opt=opt, ignore=ignore)[0]
+    # These are allowed for Scattered, but we don't use them here.
+    extra_ignore = [ 'image_pos', 'world_pos', 'stamp_size', 'stamp_xsize', 'stamp_ysize',
+                     'nobjects' ]
+    opt = { 'size' : int , 'xsize' : int , 'ysize' : int }
+    params = galsim.config.GetAllParams(config['image'], config, opt=opt,
+                                        ignore=galsim.config.image_ignore+extra_ignore)[0]
 
     # Special check for the size.  Either size or both xsize and ysize is required.
     if 'size' not in params:
@@ -78,39 +75,23 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         full_xsize = params['size']
         full_ysize = params['size']
 
-
     # If image_force_xsize and image_force_ysize were set in config, make sure it matches.
     if ( ('image_force_xsize' in config and full_xsize != config['image_force_xsize']) or
          ('image_force_ysize' in config and full_ysize != config['image_force_ysize']) ):
         raise ValueError(
             "Unable to reconcile required image xsize and ysize with provided "+
             "xsize=%d, ysize=%d, "%(full_xsize,full_ysize))
-    config['image_xsize'] = full_xsize
-    config['image_ysize'] = full_ysize
 
-    convention = params.get('index_convention','1')
-    galsim.config.image._set_image_origin(config,convention)
+    galsim.config.SetupConfigImageSize(config, full_xsize, full_ysize)
+    wcs = config['wcs']
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: image_origin = %s',image_num,str(config['image_origin']))
         logger.debug('image %d: image_center = %s',image_num,str(config['image_center']))
 
-    wcs = galsim.config.BuildWCS(config, logger)
-
-    # Set the rng to use for image stuff.
-    if 'random_seed' in config['image']:
-        # Technically obj_num+nobjects will be the index of the random seed used for the next 
-        # image's first object (if there is a next image).  But I don't think that will have 
-        # any adverse effects.
-        config['obj_num'] = obj_num + nobjects
-        config['index_key'] = 'obj_num'
-        seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['index_key'] = 'image_num'
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('image %d: seed = %d',image_num,seed)
-        rng = galsim.BaseDeviate(seed)
-    else:
-        rng = galsim.BaseDeviate()
-    config['rng'] = rng
+    seed = galsim.config.SetupConfigRNG(config, nobjects)
+    if logger and logger.isEnabledFor(logging.DEBUG):
+        logger.debug('image %d: seed = %d',image_num,seed)
+    rng = config['rng']
 
     if 'image_pos' in config['image'] and 'world_pos' in config['image']:
         raise AttributeError("Both image_pos and world_pos specified for Scattered image.")
@@ -208,7 +189,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     return full_image, full_psf_image, full_weight_image, full_badpix_image
 
 
-def GetNObjForScatteredImage(config, image_num):
+def GetNObjScattered(config, image_num):
 
     config['index_key'] = 'image_num'
     config['image_num'] = image_num

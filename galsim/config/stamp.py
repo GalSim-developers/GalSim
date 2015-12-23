@@ -61,7 +61,7 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
                 for k in range(nobj):
                     kwargs['obj_num'] = obj_num + k
                     kwargs['logger'] = logger
-                    result = BuildSingleStamp(**kwargs)
+                    result = BuildStamp(**kwargs)
                     results.append(result)
                     # Note: numpy shape is y,x
                     ys, xs = result[0].array.shape
@@ -226,7 +226,7 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
             kwargs['config'] = config
             kwargs['obj_num'] = obj_num+k
             kwargs['logger'] = logger
-            result = BuildSingleStamp(**kwargs)
+            result = BuildStamp(**kwargs)
             images += [ result[0] ]
             psf_images += [ result[1] ]
             weight_images += [ result[2] ]
@@ -243,13 +243,100 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
         logger.debug('image %d: Done making stamps',config.get('image_num',0))
 
     return images, psf_images, weight_images, badpix_images, current_vars
- 
 
-def BuildSingleStamp(config, xsize=0, ysize=0,
-                     obj_num=0, do_noise=True, logger=None,
-                     make_psf_image=False, make_weight_image=False, make_badpix_image=False):
+
+def SetupConfigObjNum(config, obj_num):
+    """Do the basic setup of the config dict at the stamp (or object) processing level.
+    Includes:
+    - Set config['obj_num'] = obj_num
+    - Set config['index_key'] = 'obj_num'
+
+    @param config           A configuration dict.
+    @param obj_num          The current obj_num.
     """
-    Build a single image using the given config file
+    config['obj_num'] = obj_num
+    config['index_key'] = 'obj_num'
+
+
+def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
+    """Do further setup of the config dict at the stamp (or object) processing level reflecting
+    the stamp size and position in either image or world coordinates.
+    Includes:
+    - If given, set config['stamp_xsize'] = xsize
+    - If given, set config['stamp_ysize'] = ysize
+    - If only image_pos or world_pos is given, compute the other from config['wcs']
+    - Set config['index_pos'] = image_pos
+    - Set config['world_pos'] = world_pos
+    - Calculate the appropriate value of the center of the stamp, to be used with the
+      command: stamp_image.setCenter(stamp_center).  Save this as config['stamp_center']
+    - Calculate the appropriate offset for the position of the object from the center of
+      the stamp due to just the fractional part of the image position, not including
+      any config['image']['offset'] item that may be present in the config dict.
+      Save this as config['stamp_offset']
+
+    @param config           A configuration dict.
+    @param xsize            The size of the stamp in the x-dimension. [may be None]
+    @param ysize            The size of the stamp in the y-dimension. [may be None]
+    @param image_pos        The posotion of the stamp in image coordinates. [may be None]
+    @param world_pos        The posotion of the stamp in world coordinates. [may be None]
+    """
+
+    if xsize: config['stamp_xsize'] = xsize
+    if ysize: config['stamp_ysize'] = ysize
+    if image_pos is not None and world_pos is None:
+        # Calculate and save the position relative to the image center
+        world_pos = config['wcs'].toWorld(image_pos)
+
+        # Wherever we use the world position, we expect a Euclidean position, not a
+        # CelestialCoord.  So if it is the latter, project it onto a tangent plane at the
+        # image center.
+        if isinstance(world_pos, galsim.CelestialCoord):
+            # Then project this position relative to the image center.
+            world_center = config['wcs'].toWorld(config['image_center'])
+            world_pos = world_center.project(world_pos, projection='gnomonic')
+
+    elif world_pos is not None and image_pos is None:
+        world_pos = galsim.config.ParseValue(
+            config['image'], 'world_pos', config, galsim.PositionD)[0]
+        # Calculate and save the position relative to the image center
+        image_pos = config['wcs'].toImage(world_pos)
+
+    if image_pos is not None:
+        import math
+        # The image_pos refers to the location of the true center of the image, which is
+        # not necessarily the nominal center we need for adding to the final image.  In
+        # particular, even-sized images have their nominal center offset by 1/2 pixel up
+        # and to the right.
+        # N.B. This works even if xsize,ysize == 0, since the auto-sizing always produces
+        # even sized images.
+        nominal_x = image_pos.x        # Make sure we don't change image_pos, which is
+        nominal_y = image_pos.y        # stored in config['image_pos'].
+        if xsize % 2 == 0: nominal_x += 0.5
+        if ysize % 2 == 0: nominal_y += 0.5
+
+        stamp_center = galsim.PositionI(int(math.floor(nominal_x+0.5)),
+                                        int(math.floor(nominal_y+0.5)))
+        config['stamp_center'] = stamp_center
+        config['stamp_offset'] = galsim.PositionD(nominal_x-stamp_center.x,
+                                                  nominal_y-stamp_center.y)
+        config['image_pos'] = image_pos
+        config['world_pos'] = world_pos
+
+    else:
+        config['stamp_center'] = None
+        config['stamp_offset'] = galsim.PositionD(0.,0.)
+        # Set the image_pos to (0,0) in case the wcs needs it.  Probably, if
+        # there is no image_pos or world_pos defined, then it is unlikely a
+        # non-trivial wcs will have been set.  So anything would actually be fine.
+        config['image_pos'] = galsim.PositionD(0.,0.)
+        config['world_pos'] = world_pos
+
+
+def BuildStamp(config, xsize=0, ysize=0,
+               obj_num=0, do_noise=True, logger=None,
+               make_psf_image=False, make_weight_image=False, make_badpix_image=False):
+    """
+    Build a single stamp image using the given config file
 
     @param config           A configuration dict.
     @param xsize            The xsize of the image to build (if known). [default: 0]
@@ -267,25 +354,11 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
     import time
     t1 = time.time()
 
-    # For everything except random_seed, the default key is obj_num_in_file
-    config['index_key'] = 'obj_num_in_file'
-    config['obj_num'] = obj_num
+    SetupConfigObjNum(config, obj_num)
 
-    # Initialize the random number generator we will be using.
-    if 'random_seed' in config['image']:
-        config['index_key'] = 'obj_num'
-        seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
-        config['index_key'] = 'obj_num_in_file'
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('obj %d: seed = %d',obj_num,seed)
-        rng = galsim.BaseDeviate(seed)
-    else:
-        rng = galsim.BaseDeviate()
-
-    # Store the rng in the config for use by BuildGSObject function.
-    config['rng'] = rng
-    if 'gd' in config:
-        del config['gd']  # In case it was set.
+    seed = galsim.config.SetupConfigRNG(config)
+    if logger and logger.isEnabledFor(logging.DEBUG):
+        logger.debug('obj %d: seed = %d',obj_num,seed)
 
     if 'image' in config and 'retry_failures' in config['image']:
         ntries = galsim.config.ParseValue(config['image'],'retry_failures',config,int)[0]
@@ -312,85 +385,31 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                     ysize = galsim.config.ParseValue(config['image'],'stamp_ysize',config,int)[0]
                 elif 'stamp_size' in config['image']:
                     ysize = galsim.config.ParseValue(config['image'],'stamp_size',config,int)[0]
-            if False:
-                logger.debug('obj %d: xsize,ysize = %d,%d',obj_num,xsize,ysize)
-            if xsize: config['stamp_xsize'] = xsize
-            if ysize: config['stamp_ysize'] = ysize
 
             # Determine where this object is going to go:
-            if 'image_pos' in config['image'] and 'world_pos' in config['image']:
+            if 'image_pos' in config['image']:
                 image_pos = galsim.config.ParseValue(
                     config['image'], 'image_pos', config, galsim.PositionD)[0]
-                world_pos = galsim.config.ParseValue(
-                    config['image'], 'world_pos', config, galsim.PositionD)[0]
-
-            elif 'image_pos' in config['image']:
-                image_pos = galsim.config.ParseValue(
-                    config['image'], 'image_pos', config, galsim.PositionD)[0]
-                # Calculate and save the position relative to the image center
-                world_pos = config['wcs'].toWorld(image_pos)
-
-                # Wherever we use the world position, we expect a Euclidean position, not a 
-                # CelestialCoord.  So if it is the latter, project it onto a tangent plane at the 
-                # image center.
-                if isinstance(world_pos, galsim.CelestialCoord):
-                    # Then project this position relative to the image center.
-                    world_center = config['wcs'].toWorld(config['image_center'])
-                    world_pos = world_center.project(world_pos, projection='gnomonic')
-
-            elif 'world_pos' in config['image']:
-                world_pos = galsim.config.ParseValue(
-                    config['image'], 'world_pos', config, galsim.PositionD)[0]
-                # Calculate and save the position relative to the image center
-                image_pos = config['wcs'].toImage(world_pos)
-
             else:
                 image_pos = None
+            if 'world_pos' in config['image']:
+                world_pos = galsim.config.ParseValue(
+                    config['image'], 'world_pos', config, galsim.PositionD)[0]
+            else:
                 world_pos = None
 
             # Save these values for possible use in Evals or other modules
-            if image_pos is not None:
-                config['image_pos'] = image_pos
-                if logger and logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('obj %d: image_pos = %s',obj_num,str(config['image_pos']))
-            if world_pos is not None:
-                config['world_pos'] = world_pos
-                if logger and logger.isEnabledFor(logging.DEBUG):
-                    logger.debug('obj %d: world_pos = %s',obj_num,str(config['world_pos']))
-
-            if image_pos is not None:
-                import math
-                # The image_pos refers to the location of the true center of the image, which is 
-                # not necessarily the nominal center we need for adding to the final image.  In 
-                # particular, even-sized images have their nominal center offset by 1/2 pixel up 
-                # and to the right.
-                # N.B. This works even if xsize,ysize == 0, since the auto-sizing always produces
-                # even sized images.
-                nominal_x = image_pos.x        # Make sure we don't change image_pos, which is
-                nominal_y = image_pos.y        # stored in config['image_pos'].
-                if xsize % 2 == 0: nominal_x += 0.5
-                if ysize % 2 == 0: nominal_y += 0.5
-                if False:
-                    logger.debug('obj %d: nominal pos = %f,%f',obj_num,nominal_x,nominal_y)
-
-                icenter = galsim.PositionI(
-                    int(math.floor(nominal_x+0.5)),
-                    int(math.floor(nominal_y+0.5)) )
-                if False:
-                    logger.debug('obj %d: nominal icenter = %s',obj_num,str(icenter))
-                offset = galsim.PositionD(nominal_x-icenter.x , nominal_y-icenter.y)
-                if False:
-                    logger.debug('obj %d: offset = %s',obj_num,str(offset))
-
-            else:
-                icenter = None
-                offset = galsim.PositionD(0.,0.)
-                # Set the image_pos to (0,0) in case the wcs needs it.  Probably, if 
-                # there is no image_pos or world_pos defined, then it is unlikely a
-                # non-trivial wcs will have been set.  So anything would actually be fine.
-                config['image_pos'] = galsim.PositionD(0.,0.)
-                if False:
-                    logger.debug('obj %d: no offset',obj_num)
+            SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos)
+            stamp_center = config['stamp_center']
+            if logger and logger.isEnabledFor(logging.DEBUG):
+                if xsize:
+                    logger.debug('obj %d: xsize,ysize = %s,%s',obj_num,xsize,ysize)
+                if image_pos:
+                    logger.debug('obj %d: image_pos = %s',obj_num,image_pos)
+                if world_pos:
+                    logger.debug('obj %d: world_pos = %s',obj_num,world_pos)
+                if stamp_center:
+                    logger.debug('obj %d: stamp_center = %s',obj_num,stamp_center)
 
             gsparams = {}
             if 'gsparams' in config['image']:
@@ -401,10 +420,10 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
             try :
                 t4=t3=t2=t1  # in case we throw.
         
-                psf = BuildPSF(config,logger,gsparams)
+                psf = galsim.config.BuildGSObject(config, 'psf', config, gsparams, logger)[0]
                 t2 = time.time()
 
-                gal = BuildGal(config,logger,gsparams)
+                gal = galsim.config.BuildGSObject(config, 'gal', config, gsparams, logger)[0]
                 t4 = time.time()
 
                 # Check that we have at least gal or psf.
@@ -420,6 +439,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                         logger.info('Skipping object %d: %s',obj_num,e.msg)
                 skip = True
 
+            offset = config['stamp_offset']
             if not skip and 'offset' in config['image']:
                 offset1 = galsim.config.ParseValue(config['image'], 'offset', config,
                                                    galsim.PositionD)[0]
@@ -453,8 +473,13 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
 
             else:
                 im, current_var = DrawStamp(psf,gal,config,xsize,ysize,offset,method,logger)
-                if icenter:
-                    im.setCenter(icenter.x, icenter.y)
+
+                # Set the origin appropriately
+                if stamp_center:
+                    im.setCenter(stamp_center)
+                else:
+                    im.setOrigin(config['image_origin'])
+
                 if make_weight_image:
                     weight_im = galsim.ImageF(im.bounds, wcs=im.wcs)
                     weight_im.setZero()
@@ -507,40 +532,6 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 continue
 
     return im, psf_im, weight_im, badpix_im, current_var, t6-t1
-
-
-def BuildPSF(config, logger=None, gsparams={}):
-    """
-    Parse the field config['psf'] returning the built psf object.
-    """
- 
-    if 'psf' in config:
-        if not isinstance(config['psf'], dict):
-            raise AttributeError("config.psf is not a dict.")
-        if False:
-            logger.debug('obj %d: Start BuildPSF with %s',config['obj_num'],str(config['psf']))
-        psf = galsim.config.BuildGSObject(config, 'psf', config, gsparams, logger)[0]
-    else:
-        psf = None
-
-    return psf
-
-
-def BuildGal(config, logger=None, gsparams={}):
-    """
-    Parse the field config['gal'] returning the built gal object.
-    """
- 
-    if 'gal' in config:
-        if not isinstance(config['gal'], dict):
-            raise AttributeError("config.gal is not a dict.")
-        if False:
-            logger.debug('obj %d: Start BuildGal with %s',config['obj_num'],str(config['gal']))
-        gal = galsim.config.BuildGSObject(config, 'gal', config, gsparams, logger)[0]
-    else:
-        gal = None
-    return gal
-
 
 
 def DrawStamp(psf, gal, config, xsize, ysize, offset, method, logger):

@@ -38,25 +38,16 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     Note: All 4 Images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.    
     """
-    config['index_key'] = 'image_num'
-    config['image_num'] = image_num
-    config['obj_num'] = obj_num
-
     if logger and logger.isEnabledFor(logging.DEBUG):
-        logger.debug('image %d: BuildTiledImage: image, obj = %d,%d',image_num,image_num,obj_num)
+        logger.debug('image %d: Building Tiled: image, obj = %d,%d',image_num,image_num,obj_num)
 
-    if 'random_seed' in config['image'] and not isinstance(config['image']['random_seed'],dict):
-        first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
-
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs', 'nproc',
-               'sky_level', 'sky_level_pixel',
-               'retry_failures', 'image_pos', 'n_photons', 'wmult', 'offset', 'gsparams' ]
+    extra_ignore = [ 'image_pos' ] # We create this below, so on subequent passes, we ignore it.
     req = { 'nx_tiles' : int , 'ny_tiles' : int }
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
-            'border' : int , 'xborder' : int , 'yborder' : int ,
-            'nproc' : int , 'index_convention' : str, 'order' : str }
-    params = galsim.config.GetAllParams(config['image'], config, req=req, opt=opt, ignore=ignore)[0]
+            'border' : int , 'xborder' : int , 'yborder' : int , 'order' : str,
+            'nproc' : int }
+    params = galsim.config.GetAllParams(config['image'], config, req=req, opt=opt, 
+                                        ignore=galsim.config.image_ignore+extra_ignore)[0]
 
     nx_tiles = params['nx_tiles']
     ny_tiles = params['ny_tiles']
@@ -98,34 +89,17 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
             "xborder=%d, yborder=%d\n"%(xborder,yborder) +
             "Calculated full_size = (%d,%d) "%(full_xsize,full_ysize)+
             "!= required (%d,%d)."%(config['image_force_xsize'],config['image_force_ysize']))
-    config['image_xsize'] = full_xsize
-    config['image_ysize'] = full_ysize
-    if logger and logger.isEnabledFor(logging.DEBUG):
-        logger.debug('image %d: image_size = %d, %d',image_num,full_xsize,full_ysize)
 
-    convention = params.get('index_convention','1')
-    galsim.config.image._set_image_origin(config,convention)
+    galsim.config.SetupConfigImageSize(config, full_xsize, full_ysize)
+    wcs = config['wcs']
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: image_origin = %s',image_num,str(config['image_origin']))
         logger.debug('image %d: image_center = %s',image_num,str(config['image_center']))
 
-    wcs = galsim.config.BuildWCS(config, logger)
-
-    # Set the rng to use for image stuff.
-    if 'random_seed' in config['image']:
-        # Technically obj_num+nobjects will be the index of the random seed used for the next 
-        # image's first object (if there is a next image).  But I don't think that will have 
-        # any adverse effects.
-        config['obj_num'] = obj_num + nobjects
-        config['index_key'] = 'obj_num'
-        seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['index_key'] = 'image_num'
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('image %d: seed = %d',image_num,seed)
-        rng = galsim.BaseDeviate(seed)
-    else:
-        rng = galsim.BaseDeviate()
-    config['rng'] = rng
+    seed = galsim.config.SetupConfigRNG(config, nobjects)
+    if logger and logger.isEnabledFor(logging.DEBUG):
+        logger.debug('image %d: seed = %d',image_num,seed)
+    rng = config['rng']
 
     # Make a list of ix,iy values according to the specified order:
     order = params.get('order','row').lower()
@@ -140,7 +114,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         iy_list = [ iy for ix in range(nx_tiles) for iy in range(ny_tiles) ]
         galsim.random.permute(rng, ix_list, iy_list)
         
-    # Define a 'image_pos' field so the stamps can set their position appropriately in case
+    # Define an 'image_pos' field so the stamps can set their position appropriately in case
     # we need it for PowerSpectum or NFWHalo.
     x0 = (stamp_xsize-1)/2. + config['image_origin'].x
     y0 = (stamp_ysize-1)/2. + config['image_origin'].y
@@ -233,7 +207,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     return full_image, full_psf_image, full_weight_image, full_badpix_image
 
 
-def GetNObjForTiledImage(config, image_num):
+def GetNObjTiled(config, image_num):
     
     config['index_key'] = 'image_num'
     config['image_num'] = image_num

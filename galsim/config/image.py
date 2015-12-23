@@ -26,11 +26,10 @@ from .image_tiled import *
 #   - The function to call to build the image
 #   - The function to call to get the number of objects that will be built
 valid_image_types = { 
-    'Single' : ( 'BuildSingleImage', 'GetNObjForSingleImage' ),
-    'Tiled' : ( 'BuildTiledImage', 'GetNObjForTiledImage' ),
-    'Scattered' : ( 'BuildScatteredImage', 'GetNObjForScatteredImage' ),
+    'Single' : ( 'BuildSingleImage', 'GetNObjSingle' ),
+    'Tiled' : ( 'BuildTiledImage', 'GetNObjTiled' ),
+    'Scattered' : ( 'BuildScatteredImage', 'GetNObjScattered' ),
 }
-
 
 
 def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
@@ -263,6 +262,83 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
     return images, psf_images, weight_images, badpix_images
  
 
+def SetupConfigImageNum(config, image_num, obj_num):
+    """Do the basic setup of the config dict at the image processing level.
+    Includes:
+    - Set config['image_num'] = image_num
+    - Set config['obj_num'] = obj_num
+    - Set config['index_key'] = 'image_num'
+    - Make sure config['image'] exists
+    - Set config['image']['draw_method'] to 'auto' if not given.
+    @param config           The configuration dict.
+    @param image_num        The current image number.
+    @param obj_num          The first object number in the image.
+    """
+    config['image_num'] = image_num
+    config['obj_num'] = obj_num
+    config['index_key'] = 'image_num'
+
+    # Make config['image'] exist if it doesn't yet.
+    if 'image' not in config:
+        config['image'] = {}
+    image = config['image']
+    if not isinstance(image, dict):
+        raise AttributeError("config.image is not a dict.")
+
+    if 'draw_method' not in image:
+        image['draw_method'] = 'auto'
+    if 'type' not in image:
+        image['type'] = 'Single'
+
+
+def SetupConfigImageSize(config, xsize, ysize):
+    """Do some further setup of the config dict at the image processing level based on
+    the provided image size.
+    - Set config['image_xsize'], config['image_ysize'] to the size of the image
+    - Set config['image_origin'] to the origin of the image
+    - Set config['image_center'] to the center of the image
+    - Set config['image_bounds'] to the bounds of the image
+    - Build the WCS based on either config['image']['wcs'] or config['image']['pixel_scale']
+    - Set config['wcs'] to be the built wcs
+    - If wcs.isPixelScale(), also set config['pixel_scale'] for convenience.
+    @param config       The configuration dict.
+    @param xsize        The size of the image in the x-dimension.
+    @param ysize        The size of the image in the y-dimension.
+    """
+    config['image_xsize'] = xsize
+    config['image_ysize'] = ysize
+
+    origin = 1 # default
+    if 'index_convention' in config['image']:
+        convention = galsim.config.ParseValue(config['image'],'index_convention',config,str)[0]
+        if convention.lower() in [ '0', 'c', 'python' ]:
+            origin = 0
+        elif convention.lower() in [ '1', 'fortran', 'fits' ]:
+            origin = 1
+        else:
+            raise AttributeError("Unknown index_convention: %s"%convention)
+
+    config['image_origin'] = galsim.PositionI(origin,origin)
+    config['image_center'] = galsim.PositionD( origin + (xsize-1.)/2., origin + (ysize-1.)/2. )
+    config['image_bounds'] = galsim.BoundsI(origin, origin+xsize-1, origin, origin+ysize-1)
+
+    # Build the wcs
+    wcs = galsim.config.BuildWCS(config)
+    config['wcs'] = wcs
+
+    # If the WCS is a PixelScale or OffsetWCS, then store the pixel_scale in base.  The
+    # config apparatus does not use it -- we always use the wcs -- but we keep it in case
+    # the user wants to use it for an Eval item.  It's one of the variables they are allowed
+    # to assume will be present for them.
+    if wcs.isPixelScale():
+        config['pixel_scale'] = wcs.scale
+
+
+image_ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs',
+                 'sky_level', 'sky_level_pixel', 'index_convention', 'nproc',
+                 'retry_failures', 'n_photons', 'wmult', 'offset', 'gsparams' ]
+
+
 def BuildImage(config, logger=None, image_num=0, obj_num=0,
                make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
@@ -281,31 +357,17 @@ def BuildImage(config, logger=None, image_num=0, obj_num=0,
     Note: All 4 images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.
     """
-    config['index_key'] = 'image_num'
-    config['image_num'] = image_num
-    config['obj_num'] = obj_num
-
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: BuildImage: image, obj = %d,%d',image_num,image_num,obj_num)
 
-    # Make config['image'] exist if it doesn't yet.
-    if 'image' not in config:
-        config['image'] = {}
-    image = config['image']
-    if not isinstance(image, dict):
-        raise AttributeError("config.image is not a dict.")
+    # Setup basic things in the top-level config dict that we will need.
+    SetupConfigImageNum(config,image_num,obj_num)
 
-    if 'draw_method' not in image:
-        image['draw_method'] = 'auto'
+    image_type = config['image']['type']
+    if image_type not in valid_image_types:
+        raise AttributeError("Invalid image.type=%s."%image_type)
 
-    if 'type' not in image:
-        image['type'] = 'Single'  # Default is Single
-    type = image['type']
-
-    if type not in valid_image_types:
-        raise AttributeError("Invalid image.type=%s."%type)
-
-    build_func = eval(valid_image_types[type][0])
+    build_func = eval(valid_image_types[image_type][0])
     all_images = build_func(
             config=config, logger=logger,
             image_num=image_num, obj_num=obj_num,
@@ -367,22 +429,6 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
     return max_current_var
 
 
-def _set_image_origin(config, convention):
-    """Set `config['image_origin']` appropriately based on the provided `convention`.
-    """
-    if convention.lower() in [ '0', 'c', 'python' ]:
-        origin = 0
-    elif convention.lower() in [ '1', 'fortran', 'fits' ]:
-        origin = 1
-    else:
-        raise AttributeError("Unknown index_convention: %s"%convention)
-    config['image_origin'] = galsim.PositionI(origin,origin)
-    # Also define the overall image center while we're at it.
-    xsize = config['image_xsize']
-    ysize = config['image_ysize']
-    config['image_center'] = galsim.PositionD( origin + (xsize-1.)/2., origin + (ysize-1.)/2. )
-
-
 def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
                      make_psf_image=False, make_weight_image=False, make_badpix_image=False):
     """
@@ -401,22 +447,10 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
     Note: All 4 Images are always returned in the return tuple,
           but the latter 3 might be None depending on the parameters make_*_image.    
     """
-    config['index_key'] = 'image_num'
-    config['image_num'] = image_num
-    config['obj_num'] = obj_num
-
-    if logger and logger.isEnabledFor(logging.DEBUG):
-        logger.debug('image %d: BuildSingleImage: image, obj = %d,%d',image_num,image_num,obj_num)
-
-    if 'random_seed' in config['image'] and not isinstance(config['image']['random_seed'],dict):
-        first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['image']['random_seed'] = { 'type' : 'Sequence', 'first' : first }
-
-    ignore = [ 'random_seed', 'draw_method', 'noise', 'pixel_scale', 'wcs', 'nproc', 
-               'sky_level', 'sky_level_pixel',
-               'retry_failures', 'n_photons', 'wmult', 'offset', 'gsparams' ]
-    opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 'index_convention' : str }
-    params = galsim.config.GetAllParams(config['image'], config, opt=opt, ignore=ignore)[0]
+    extra_ignore = [ 'image_pos', 'world_pos' ]
+    opt = { 'size' : int , 'xsize' : int , 'ysize' : int }
+    params = galsim.config.GetAllParams(config['image'], config, opt=opt, 
+                                        ignore=image_ignore+extra_ignore)[0]
 
     # If image_force_xsize and image_force_ysize were set in config, this overrides the 
     # read-in params.
@@ -431,31 +465,26 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
         raise AttributeError(
             "Both (or neither) of image.xsize and image.ysize need to be defined  and != 0.")
 
-    config['image_xsize'] = xsize
-    config['image_ysize'] = ysize
-    convention = params.get('index_convention','1')
-    _set_image_origin(config,convention)
+    SetupConfigImageSize(config, xsize, ysize)
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: image_origin = %s',image_num,str(config['image_origin']))
         logger.debug('image %d: image_center = %s',image_num,str(config['image_center']))
 
-    wcs = galsim.config.BuildWCS(config, logger)
-
     if 'world_pos' in config['image']:
         config['image']['image_pos'] = (0,0)
         # We allow world_pos to be in config[image], but we don't want it to lead to a final_shift
-        # in BuildSingleStamp.  The easiest way to do this is to set image_pos to (0,0).
+        # in BuildStamp.  The easiest way to do this is to set image_pos to (0,0).
 
-    return galsim.config.BuildSingleStamp(
+    return galsim.config.BuildStamp(
             config=config, xsize=xsize, ysize=ysize, obj_num=obj_num,
             do_noise=True, logger=logger,
             make_psf_image=make_psf_image, 
             make_weight_image=make_weight_image,
             make_badpix_image=make_badpix_image)[:4] # Required due to `current_var, time` being
-                                                     # last two elements of the BuildSingleStamp
+                                                     # last two elements of the BuildStamp
                                                      # return tuple
 
-def GetNObjForSingleImage(config, image_num):
+def GetNObjSingle(config, image_num):
     return 1
 
 

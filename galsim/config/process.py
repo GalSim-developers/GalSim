@@ -243,6 +243,52 @@ def SetDefaultExt(config, ext):
         config['ext'] = ext
 
 
+def SetupConfigRNG(config, seed_offset=0):
+    """Set up the RNG in the config dict.
+    - Setup config['image']['random_seed'] if necessary
+    - Set config['rng'] based on appropriate random_seed 
+    @param config           The configuration dict.
+    @param seed_offset      An offset to use relative to what config['image']['random_seed'] gives.
+    @returns the seed used to initialize the RNG.
+    """
+    # Normally, random_seed is just a number, which really means to use that number
+    # for the first item and go up sequentially from there for each object.
+    # However, we allow for random_seed to be a gettable parameter, so for the 
+    # normal case, we just convert it into a Sequence.
+    if ( 'image' in config 
+         and 'random_seed' in config['image'] 
+         and not isinstance(config['image']['random_seed'],dict) ):
+         # The "first" is actually the seed value to use for anything at file or image scope
+         # using the obj_num of the first object in the file or image.  Seeds for objects
+         # will start at 1 more than this.
+         first = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+         config['image']['random_seed'] = { 
+                 'type' : 'Sequence',
+                 'index_key' : 'obj_num',
+                 'first' : first
+         }
+
+    if 'random_seed' in config['image']:
+        orig_key = config['index_key']
+        config['index_key'] = 'obj_num'
+        seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        config['index_key'] = orig_key
+        seed += seed_offset
+    else:
+        seed = 0
+
+    config['seed'] = seed
+    config['rng'] = galsim.BaseDeviate(seed)
+
+    # This can be present for efficiency, since GaussianDeviates produce two values at a time, 
+    # so it is more efficient to not create a new GaussianDeviate object each time.
+    # But if so, we need to remove it now.
+    if 'gd' in config:
+        del config['gd']
+
+    return seed
+
+
 def ParseExtendedKey(config, key):
     """Traverse all but the last item in an extended key and return the resulting config, key.
 
