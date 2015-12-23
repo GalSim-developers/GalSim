@@ -336,6 +336,36 @@ def GetNObjForImage(config, image_num):
     return nobj_func(config,image_num)
 
 
+def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
+    rng = config['rng']
+    nobjects = len(stamps)
+    max_current_var = max(current_vars)
+    if max_current_var > 0:
+        if logger:
+            logger.debug('image %d: maximum noise varance in any stamp is %f',
+                         config['image_num'], max_current_var)
+        import numpy
+        # Then there was whitening applied in the individual stamps.
+        # But there could be a different variance in each postage stamp, so the first
+        # thing we need to do is bring everything up to a common level.
+        noise_image = galsim.ImageF(full_image.bounds)
+        for k in range(nobjects): 
+            b = stamps[k].bounds & full_image.bounds
+            if b.isDefined(): noise_image[b] += current_vars[k]
+        # Update this, since overlapping postage stamps may have led to a larger 
+        # value in some pixels.
+        max_current_var = numpy.max(noise_image.array)
+        if logger:
+            logger.debug('image %d: maximum noise varance in any pixel is %f',
+                         config['image_num'], max_current_var)
+        # Figure out how much noise we need to add to each pixel.
+        noise_image = max_current_var - noise_image
+        # Add it.
+        full_image.addNoise(galsim.VariableGaussianNoise(rng,noise_image))
+    # Now max_current_var is how much noise is in each pixel.
+    return max_current_var
+
+
 def _set_image_origin(config, convention):
     """Set `config['image_origin']` appropriately based on the provided `convention`.
     """

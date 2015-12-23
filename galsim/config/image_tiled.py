@@ -198,7 +198,6 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     badpix_images = stamp_images[3]
     current_vars = stamp_images[4]
 
-    max_current_var = 0
     for k in range(nobjects):
         # This is our signal that the object was skipped.
         if not images[k].bounds.isDefined(): continue
@@ -214,7 +213,6 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
             full_weight_image[b] += weight_images[k]
         if make_badpix_image:
             full_badpix_image[b] |= badpix_images[k]
-        if current_vars[k] > max_current_var: max_current_var = current_vars[k]
 
     # Mark that we are no longer doing a single galaxy by deleting image_pos from config top 
     # level, so it cannot be used for things like wcs.pixelArea(image_pos).  
@@ -225,27 +223,12 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
         galsim.config.AddSky(config, full_iamge)
         if 'noise' in config['image']:
             # If we didn't apply noise in each stamp, then we need to apply it now.
-            draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
-
-            if max_current_var > 0:
-                import numpy
-                # Then there was whitening applied in the individual stamps.
-                # But there could be a different variance in each postage stamp, so the first
-                # thing we need to do is bring everything up to a common level.
-                noise_image = galsim.ImageF(full_image.bounds)
-                for k in range(nobjects): noise_image[images[k].bounds] += current_vars[k]
-                # Update this, since overlapping postage stamps may have led to a larger 
-                # value in some pixels.
-                max_current_var = numpy.max(noise_image.array)
-                # Figure out how much noise we need to add to each pixel.
-                noise_image = max_current_var - noise_image
-                # Add it.
-                full_image.addNoise(galsim.VariableGaussianNoise(rng,noise_image))
-            # Now max_current_var is how much noise is in each pixel.
-
             config['rng'] = rng
-            galsim.config.AddNoise(
-                config,full_image,full_weight_image,max_current_var,logger)
+            # First, bring noise up to a a constant level if necessary.
+            current_var = galsim.config.FlattenNoiseVariance(
+                    config, full_image, images, current_vars, logger)
+            # Apply the noise to the full image
+            galsim.config.AddNoise(config,full_image,full_weight_image,current_var,logger)
 
     return full_image, full_psf_image, full_weight_image, full_badpix_image
 
