@@ -86,7 +86,6 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, nproc=1, logger=None):
 
     return images
 
-
 def SetupConfigImageNum(config, image_num, obj_num):
     """Do the basic setup of the config dict at the image processing level.
 
