@@ -588,8 +588,8 @@ def _GenerateFromFormattedStr(config, base, value_type):
     req = { 'format' : str }
     # Ignore items for now, we'll deal with it differently.
     ignore = [ 'items' ]
-    configs, safe = GetAllParams(config, base, req=req, ignore=ignore)
-    format = configs['format']
+    params, safe = GetAllParams(config, base, req=req, ignore=ignore)
+    format = params['format']
 
     # Check that items is present and is a list.
     if 'items' not in config:
