@@ -152,20 +152,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         full_badpix_image = None
 
     # Sometimes an input field needs to do something special at the start of an image.
-    if 'input' in config:
-        for key in [ k for k in galsim.config.valid_input_types.keys() if k in config['input'] ]:
-            if galsim.config.valid_input_types[key][4]:
-                assert key in config
-                fields = config['input'][key]
-                if not isinstance(fields, list):
-                    fields = [ fields ]
-                input_objs = config[key]
-
-                for i in range(len(fields)):
-                    field = fields[i]
-                    input_obj = input_objs[i]
-                    func = eval(galsim.config.valid_input_types[key][4])
-                    func(input_obj, field, config)
+    galsim.config.SetupInputsForImage(config, logger)
 
     stamp_images = galsim.config.BuildStamps(
             nobjects=nobjects, config=config,

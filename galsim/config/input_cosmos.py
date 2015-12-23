@@ -21,7 +21,7 @@ import galsim
 def _BuildCOSMOSGalaxy(config, key, base, ignore, gsparams, logger):
     """@brief Build a COSMOS galaxy using the cosmos_catalog input item.
     """
-    if 'cosmos_catalog' not in base:
+    if 'cosmos_catalog' not in base['input_objs']:
         raise ValueError("No COSMOS galaxy catalog available for building type = COSMOSGalaxy")
 
     if 'num' in config:
@@ -32,10 +32,10 @@ def _BuildCOSMOSGalaxy(config, key, base, ignore, gsparams, logger):
 
     if num < 0:
         raise ValueError("Invalid num < 0 supplied for COSMOSGalaxy: num = %d"%num)
-    if num >= len(base['cosmos_catalog']):
+    if num >= len(base['input_objs']['cosmos_catalog']):
         raise ValueError("Invalid num supplied for COSMOSGalaxy (too large): num = %d"%num)
 
-    cosmos_cat = base['cosmos_catalog'][num]
+    cosmos_cat = base['input_objs']['cosmos_catalog'][num]
 
     # Special: if index is Sequence or Random, and max isn't set, set it to nobjects-1.
     galsim.config.SetDefaultIndex(config, cosmos_cat.getNObjects())

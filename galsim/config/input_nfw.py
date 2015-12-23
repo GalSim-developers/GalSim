@@ -28,7 +28,7 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
         raise ValueError("NFWHaloShear requested, but no gal.redshift defined.")
     redshift = galsim.config.GetCurrentValue(base['gal'],'redshift')
 
-    if 'nfw_halo' not in base:
+    if 'nfw_halo' not in base['input_objs']:
         raise ValueError("NFWHaloShear requested, but no input.nfw_halo defined.")
 
     opt = { 'num' : int }
@@ -37,9 +37,9 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
     num = kwargs.get('num',0)
     if num < 0:
         raise ValueError("Invalid num < 0 supplied for NFWHalowShear: num = %d"%num)
-    if num >= len(base['nfw_halo']):
+    if num >= len(base['input_objs']['nfw_halo']):
         raise ValueError("Invalid num supplied for NFWHaloShear (too large): num = %d"%num)
-    nfw_halo = base['nfw_halo'][num]
+    nfw_halo = base['input_objs']['nfw_halo'][num]
 
     try:
         g1,g2 = nfw_halo.getShear(pos,redshift)
@@ -64,7 +64,7 @@ def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
         raise ValueError("NFWHaloMagnification requested, but no gal.redshift defined.")
     redshift = galsim.config.GetCurrentValue(base['gal'],'redshift')
 
-    if 'nfw_halo' not in base:
+    if 'nfw_halo' not in base['input_objs']:
         raise ValueError("NFWHaloMagnification requested, but no input.nfw_halo defined.")
  
     opt = { 'max_mu' : float, 'num' : int }
@@ -73,9 +73,9 @@ def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
     num = kwargs.get('num',0)
     if num < 0:
         raise ValueError("Invalid num < 0 supplied for NFWHaloMagnification: num = %d"%num)
-    if num >= len(base['nfw_halo']):
+    if num >= len(base['input_objs']['nfw_halo']):
         raise ValueError("Invalid num supplied for NFWHaloMagnification (too large): num = %d"%num)
-    nfw_halo = base['nfw_halo'][num]
+    nfw_halo = base['input_objs']['nfw_halo'][num]
 
     mu = nfw_halo.getMagnification(pos,redshift)
 

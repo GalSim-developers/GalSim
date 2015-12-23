@@ -63,7 +63,7 @@ def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
         raise ValueError("PowerSpectrumShear requested, but no position defined.")
     pos = base['world_pos']
 
-    if 'power_spectrum' not in base:
+    if 'power_spectrum' not in base['input_objs']:
         raise ValueError("PowerSpectrumShear requested, but no input.power_spectrum defined.")
     
     opt = { 'num' : int }
@@ -72,9 +72,9 @@ def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
     num = kwargs.get('num',0)
     if num < 0:
         raise ValueError("Invalid num < 0 supplied for PowerSpectrumShear: num = %d"%num)
-    if num >= len(base['power_spectrum']):
+    if num >= len(base['input_objs']['power_spectrum']):
         raise ValueError("Invalid num supplied for PowerSpectrumShear (too large): num = %d"%num)
-    power_spectrum = base['power_spectrum'][num]
+    power_spectrum = base['input_objs']['power_spectrum'][num]
 
     try:
         g1,g2 = power_spectrum.getShear(pos)
@@ -94,7 +94,7 @@ def _GenerateFromPowerSpectrumMagnification(param, param_name, base, value_type)
         raise ValueError("PowerSpectrumMagnification requested, but no position defined.")
     pos = base['world_pos']
 
-    if 'power_spectrum' not in base:
+    if 'power_spectrum' not in base['input_objs']:
         raise ValueError("PowerSpectrumMagnification requested, but no input.power_spectrum "
                          "defined.")
 
@@ -104,10 +104,10 @@ def _GenerateFromPowerSpectrumMagnification(param, param_name, base, value_type)
     num = kwargs.get('num',0)
     if num < 0:
         raise ValueError("Invalid num < 0 supplied for PowerSpectrumMagnification: num = %d"%num)
-    if num >= len(base['power_spectrum']):
+    if num >= len(base['input_objs']['power_spectrum']):
         raise ValueError(
             "Invalid num supplied for PowerSpectrumMagnification (too large): num = %d"%num)
-    power_spectrum = base['power_spectrum'][num]
+    power_spectrum = base['input_objs']['power_spectrum'][num]
 
     mu = power_spectrum.getMagnification(pos)
 
