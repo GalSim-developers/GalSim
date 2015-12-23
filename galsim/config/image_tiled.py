@@ -56,8 +56,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
     opt = { 'stamp_size' : int , 'stamp_xsize' : int , 'stamp_ysize' : int ,
             'border' : int , 'xborder' : int , 'yborder' : int ,
             'nproc' : int , 'index_convention' : str, 'order' : str }
-    params = galsim.config.GetAllParams(
-        config['image'], 'image', config, req=req, opt=opt, ignore=ignore)[0]
+    params = galsim.config.GetAllParams(config['image'], config, req=req, opt=opt, ignore=ignore)[0]
 
     nx_tiles = params['nx_tiles']
     ny_tiles = params['ny_tiles']

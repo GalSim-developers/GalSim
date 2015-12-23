@@ -19,13 +19,13 @@ import galsim
 import logging
 
 
-def _BuildRing(config, key, base, ignore, gsparams, logger):
+def _BuildRing(config, base, ignore, gsparams, logger):
     """@brief  Build a GSObject in a Ring.
     """
     req = { 'num' : int, 'first' : dict }
     opt = { 'full_rotation' : galsim.Angle , 'index' : int }
     # Only Check, not Get.  We need to handle first a bit differently, since it's a gsobject.
-    galsim.config.CheckAllParams(config, key, req=req, opt=opt, ignore=ignore)
+    galsim.config.CheckAllParams(config, req=req, opt=opt, ignore=ignore)
 
     num = galsim.config.ParseValue(config, 'num', base, int)[0]
     if num <= 0:
@@ -56,5 +56,4 @@ def _BuildRing(config, key, base, ignore, gsparams, logger):
         gsobject = config['first']['current_val'].rotate(index*dtheta)
 
     return gsobject, False
-
 

@@ -59,8 +59,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
                'stamp_size', 'stamp_xsize', 'stamp_ysize', 'gsparams', 'nobjects' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 
             'nproc' : int , 'index_convention' : str }
-    params = galsim.config.GetAllParams(
-        config['image'], 'image', config, opt=opt, ignore=ignore)[0]
+    params = galsim.config.GetAllParams(config['image'], config, opt=opt, ignore=ignore)[0]
 
     # Special check for the size.  Either size or both xsize and ysize is required.
     if 'size' not in params:

@@ -416,8 +416,7 @@ def BuildSingleImage(config, logger=None, image_num=0, obj_num=0,
                'sky_level', 'sky_level_pixel',
                'retry_failures', 'n_photons', 'wmult', 'offset', 'gsparams' ]
     opt = { 'size' : int , 'xsize' : int , 'ysize' : int , 'index_convention' : str }
-    params = galsim.config.GetAllParams(
-        config['image'], 'image', config, opt=opt, ignore=ignore)[0]
+    params = galsim.config.GetAllParams(config['image'], config, opt=opt, ignore=ignore)[0]
 
     # If image_force_xsize and image_force_ysize were set in config, this overrides the 
     # read-in params.

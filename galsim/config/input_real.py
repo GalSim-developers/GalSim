@@ -19,7 +19,7 @@ import galsim
 import logging
 
 
-def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
+def _BuildRealGalaxy(config, base, ignore, gsparams, logger):
     """@brief Build a RealGalaxy from the real_catalog input item.
     """
     if 'real_catalog' not in base['input_objs']:
@@ -43,7 +43,7 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
     if 'id' not in config:
         galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
 
-    kwargs, safe1 = galsim.config.GetAllParams(config, key, base, 
+    kwargs, safe1 = galsim.config.GetAllParams(config, base, 
         req = galsim.__dict__['RealGalaxy']._req_params,
         opt = galsim.__dict__['RealGalaxy']._opt_params,
         single = galsim.__dict__['RealGalaxy']._single_params,
@@ -52,7 +52,7 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
     if 'rng' not in base:
-        raise ValueError("No base['rng'] available for %s.type = RealGalaxy"%(key))
+        raise ValueError("No base['rng'] available for RealGalaxy")
     kwargs['rng'] = base['rng']
 
     if 'index' in kwargs:
@@ -70,10 +70,10 @@ def _BuildRealGalaxy(config, key, base, ignore, gsparams, logger):
     return gal, safe
 
 
-def _BuildRealGalaxyOriginal(config, key, base, ignore, gsparams, logger):
+def _BuildRealGalaxyOriginal(config, base, ignore, gsparams, logger):
     """@brief Return the original image from a RealGalaxy using the real_catalog input item.
     """
-    image, safe = _BuildRealGalaxy(config, key, base, ignore, gsparams, logger)
+    image, safe = _BuildRealGalaxy(config, base, ignore, gsparams, logger)
     return image.original_image, safe    
 
 

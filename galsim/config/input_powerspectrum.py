@@ -56,7 +56,7 @@ def PowerSpectrumInit(ps, config, base):
                  rng=base['rng'], interpolant=interpolant)
 
 
-def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
+def _GenerateFromPowerSpectrumShear(config, base, value_type):
     """@brief Return a shear calculated from a PowerSpectrum object.
     """
     if 'world_pos' not in base:
@@ -67,7 +67,7 @@ def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
         raise ValueError("PowerSpectrumShear requested, but no input.power_spectrum defined.")
     
     opt = { 'num' : int }
-    kwargs = galsim.config.GetAllParams(param, param_name, base, opt=opt)[0]
+    kwargs = galsim.config.GetAllParams(config, base, opt=opt)[0]
 
     num = kwargs.get('num',0)
     if num < 0:
@@ -87,7 +87,7 @@ def _GenerateFromPowerSpectrumShear(param, param_name, base, value_type):
     #print base['obj_num'],'PS shear = ',shear
     return shear, False
 
-def _GenerateFromPowerSpectrumMagnification(param, param_name, base, value_type):
+def _GenerateFromPowerSpectrumMagnification(config, base, value_type):
     """@brief Return a magnification calculated from a PowerSpectrum object.
     """
     if 'world_pos' not in base:
@@ -99,7 +99,7 @@ def _GenerateFromPowerSpectrumMagnification(param, param_name, base, value_type)
                          "defined.")
 
     opt = { 'max_mu' : float, 'num' : int }
-    kwargs = galsim.config.GetAllParams(param, param_name, base, opt=opt)[0]
+    kwargs = galsim.config.GetAllParams(config, base, opt=opt)[0]
 
     num = kwargs.get('num',0)
     if num < 0:
@@ -113,9 +113,7 @@ def _GenerateFromPowerSpectrumMagnification(param, param_name, base, value_type)
 
     max_mu = kwargs.get('max_mu', 25.)
     if not max_mu > 0.: 
-        raise ValueError(
-            "Invalid max_mu=%f (must be > 0) for %s.type = PowerSpectrumMagnification"%(
-                max_mu,param_name))
+        raise ValueError("Invalid max_mu=%f (must be > 0) for PowerSpectrumMagnification"%max_mu)
 
     if mu < 0 or mu > max_mu:
         import warnings

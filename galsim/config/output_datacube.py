@@ -175,7 +175,7 @@ def GetNObjForDataCube(config, file_num, image_num):
         nobjects = galsim.config.ProcessInputNObjects(config)
         if nobjects:
             config['output']['nimages'] = nobjects
-    params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
+    params = galsim.config.GetAllParams(config['output'],config,ignore=ignore,req=req)[0]
     config['index_key'] = 'file_num'
     config['file_num'] = file_num
     config['image_num'] = image_num

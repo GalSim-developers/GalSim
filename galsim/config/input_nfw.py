@@ -17,7 +17,7 @@
 #
 import galsim
 
-def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
+def _GenerateFromNFWHaloShear(config, base, value_type):
     """@brief Return a shear calculated from an NFWHalo object.
     """
     if 'world_pos' not in base:
@@ -32,7 +32,7 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
         raise ValueError("NFWHaloShear requested, but no input.nfw_halo defined.")
 
     opt = { 'num' : int }
-    kwargs = galsim.config.GetAllParams(param, param_name, base, opt=opt)[0]
+    kwargs = galsim.config.GetAllParams(config, base, opt=opt)[0]
 
     num = kwargs.get('num',0)
     if num < 0:
@@ -53,7 +53,7 @@ def _GenerateFromNFWHaloShear(param, param_name, base, value_type):
     return shear, False
 
 
-def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
+def _GenerateFromNFWHaloMagnification(config, base, value_type):
     """@brief Return a magnification calculated from an NFWHalo object.
     """
     if 'world_pos' not in base:
@@ -68,7 +68,7 @@ def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
         raise ValueError("NFWHaloMagnification requested, but no input.nfw_halo defined.")
  
     opt = { 'max_mu' : float, 'num' : int }
-    kwargs = galsim.config.GetAllParams(param, param_name, base, opt=opt)[0]
+    kwargs = galsim.config.GetAllParams(config, base, opt=opt)[0]
 
     num = kwargs.get('num',0)
     if num < 0:
@@ -81,9 +81,7 @@ def _GenerateFromNFWHaloMagnification(param, param_name, base, value_type):
 
     max_mu = kwargs.get('max_mu', 25.)
     if not max_mu > 0.: 
-        raise ValueError(
-            "Invalid max_mu=%f (must be > 0) for %s.type = NFWHaloMagnification"%(
-                max_mu,param_name))
+        raise ValueError("Invalid max_mu=%f (must be > 0) for NFWHaloMagnification"%max_mu)
 
     if mu < 0 or mu > max_mu:
         import warnings

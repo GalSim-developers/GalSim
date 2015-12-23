@@ -165,7 +165,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                         init_func = eval("galsim."+input_type)
                     else:
                         init_func = eval(input_type)
-                    kwargs, safe = galsim.config.GetAllParams(field, key, config,
+                    kwargs, safe = galsim.config.GetAllParams(field, config,
                                                               req = init_func._req_params,
                                                               opt = init_func._opt_params,
                                                               single = init_func._single_params,
@@ -207,7 +207,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
 
         # Check that there are no other attributes specified.
         valid_keys = valid_input_types.keys()
-        galsim.config.CheckAllParams(config['input'], 'input', ignore=valid_keys)
+        galsim.config.CheckAllParams(config['input'], ignore=valid_keys)
 
 
 def ProcessInputNObjects(config, logger=None):
@@ -231,7 +231,7 @@ def ProcessInputNObjects(config, logger=None):
                         init_func = eval("galsim."+input_type)
                     else:
                         init_func = eval(input_type)
-                    kwargs = galsim.config.GetAllParams(field, key, config,
+                    kwargs = galsim.config.GetAllParams(field, config,
                                                         req = init_func._req_params,
                                                         opt = init_func._opt_params,
                                                         single = init_func._single_params,
@@ -268,14 +268,14 @@ def SetupInputsForImage(config, logger):
                     func(input_obj, field, config)
 
 
-def _GenerateFromCatalog(param, param_name, base, value_type):
+def _GenerateFromCatalog(config, base, value_type):
     """@brief Return a value read from an input catalog
     """
     if 'catalog' not in base['input_objs']:
-        raise ValueError("No input catalog available for %s.type = Catalog"%param_name)
+        raise ValueError("No input catalog available for Catalog")
 
-    if 'num' in param:
-        num, safe = galsim.config.ParseValue(param, 'num', base, int)
+    if 'num' in config:
+        num, safe = galsim.config.ParseValue(config, 'num', base, int)
     else:
         num, safe = (0, True)
 
@@ -289,14 +289,14 @@ def _GenerateFromCatalog(param, param_name, base, value_type):
     # Setup the indexing sequence if it hasn't been specified.
     # The normal thing with a Catalog is to just use each object in order,
     # so we don't require the user to specify that by hand.  We can do it for them.
-    galsim.config.SetDefaultIndex(param, input_cat.getNObjects())
+    galsim.config.SetDefaultIndex(config, input_cat.getNObjects())
 
     # Coding note: the and/or bit is equivalent to a C ternary operator:
     #     input_cat.isFits() ? str : int
     # which of course doesn't exist in python.  This does the same thing (so long as the 
     # middle item evaluates to true).
     req = { 'col' : input_cat.isFits() and str or int , 'index' : int }
-    kwargs, safe1 = galsim.config.GetAllParams(param, param_name, base, req=req, ignore=['num'])
+    kwargs, safe1 = galsim.config.GetAllParams(config, base, req=req, ignore=['num'])
     safe = safe and safe1
 
     if value_type is str:
@@ -306,22 +306,22 @@ def _GenerateFromCatalog(param, param_name, base, value_type):
     elif value_type is int:
         val = input_cat.getInt(**kwargs)
     elif value_type is bool:
-        val = galsim.config.value._GetBoolValue(input_cat.get(**kwargs),param_name)
+        val = galsim.config.value._GetBoolValue(input_cat.get(**kwargs))
 
     #print base['file_num'],
     #print 'Catalog: col = %s, index = %s, val = %s'%(kwargs['col'],kwargs['index'],val)
     return val, safe
 
 
-def _GenerateFromDict(param, param_name, base, value_type):
+def _GenerateFromDict(config, base, value_type):
     """@brief Return a value read from an input dict.
     """
     if 'dict' not in base['input_objs']:
-        raise ValueError("No input dict available for %s.type = Dict"%param_name)
+        raise ValueError("No input dict available for Dict")
 
     req = { 'key' : str }
     opt = { 'num' : int }
-    kwargs, safe = galsim.config.GetAllParams(param, param_name, base, req=req, opt=opt)
+    kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
     key = kwargs['key']
 
     num = kwargs.get('num',0)

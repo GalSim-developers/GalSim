@@ -37,20 +37,19 @@ def _type_by_letter(key):
     else:
         raise AttributeError("Invalid Eval variable: %s (starts with an invalid letter)"%key)
 
-def _GenerateFromEval(param, param_name, base, value_type):
+def _GenerateFromEval(config, base, value_type):
     """@brief Evaluate a string as the provided type
     """
-    #print 'Start Eval for ',param_name
     req = { 'str' : str }
     opt = {}
     ignore = galsim.config.value.standard_ignore
-    for key in param.keys():
+    for key in config.keys():
         if key not in (ignore + req.keys()):
             opt[key] = _type_by_letter(key)
     #print 'opt = ',opt
     #print 'base has ',base.keys()
             
-    params, safe = galsim.config.GetAllParams(param, param_name, base, req=req, opt=opt, ignore=ignore)
+    params, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt, ignore=ignore)
     #print 'params = ',params
     string = params['str']
     #print 'string = ',string
@@ -70,7 +69,7 @@ def _GenerateFromEval(param, param_name, base, value_type):
             if key not in ignore:
                 opt[key] = _type_by_letter(key)
         #print 'opt = ',opt
-        params, safe1 = galsim.config.GetAllParams(base['eval_variables'], 'eval_variables', base, opt=opt,
+        params, safe1 = galsim.config.GetAllParams(base['eval_variables'], base, opt=opt,
                                      ignore=ignore)
         #print 'params = ',params
         safe = safe and safe1
@@ -128,6 +127,5 @@ def _GenerateFromEval(param, param_name, base, value_type):
         #print base['obj_num'],'Eval(%s) needed extra variables: val = %s'%(string,val)
         return val, False
     except:
-        raise ValueError("Unable to evaluate string %r as a %s for %s"%(
-                string,value_type,param_name))
+        raise ValueError("Unable to evaluate string %r as a %s"%(string,value_type))
 

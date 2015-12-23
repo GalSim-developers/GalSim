@@ -19,7 +19,7 @@ import galsim
 import logging
 
 
-def _BuildCOSMOSGalaxy(config, key, base, ignore, gsparams, logger):
+def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
     """@brief Build a COSMOS galaxy using the cosmos_catalog input item.
     """
     if 'cosmos_catalog' not in base['input_objs']:
@@ -41,7 +41,7 @@ def _BuildCOSMOSGalaxy(config, key, base, ignore, gsparams, logger):
     # Special: if index is Sequence or Random, and max isn't set, set it to nobjects-1.
     galsim.config.SetDefaultIndex(config, cosmos_cat.getNObjects())
 
-    kwargs, safe1 = galsim.config.GetAllParams(config, key, base,
+    kwargs, safe1 = galsim.config.GetAllParams(config, base,
         req = galsim.COSMOSCatalog.makeGalaxy._req_params,
         opt = galsim.COSMOSCatalog.makeGalaxy._opt_params,
         single = galsim.COSMOSCatalog.makeGalaxy._single_params,
@@ -51,7 +51,7 @@ def _BuildCOSMOSGalaxy(config, key, base, ignore, gsparams, logger):
 
     if 'gal_type' in kwargs and kwargs['gal_type'] == 'real':
         if 'rng' not in base:
-            raise ValueError("No base['rng'] available for %s.type = COSMOSGalaxy"%(key))
+            raise ValueError("No base['rng'] available for COSMOSGalaxy")
         kwargs['rng'] = base['rng']
 
     if 'index' in kwargs:

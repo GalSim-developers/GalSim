@@ -607,7 +607,7 @@ def Process(config, logger=None, new_params=None):
                 ignore += ['include_obj_var']
             if 'file_name' in output_extra:
                 SetDefaultExt(output_extra['file_name'],'.fits')
-            params, safe = galsim.config.GetAllParams(output_extra,extra_key,config,
+            params, safe = galsim.config.GetAllParams(output_extra,config,
                                                       req=req, opt=opt, single=single,
                                                       ignore=ignore)
 

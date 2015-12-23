@@ -191,7 +191,7 @@ def BuildFits(file_name, config, logger=None,
 def GetNObjForFits(config, file_num, image_num):
     ignore = [ 'file_name', 'dir', 'nfiles', 'psf', 'weight', 'badpix', 'nproc',
                'skip', 'noclobber', 'retry_io' ]
-    galsim.config.CheckAllParams(config['output'], 'output', ignore=ignore)
+    galsim.config.CheckAllParams(config['output'], ignore=ignore)
     try : 
         nobj = [ galsim.config.GetNObjForImage(config, image_num) ]
     except ValueError : # (This may be raised if something needs the input stuff)

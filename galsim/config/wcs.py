@@ -77,7 +77,7 @@ def BuildWCS(config, logger=None):
              'pixel_scale' in image ):
             image_wcs['scale'] = image['pixel_scale']
 
-        kwargs, safe = galsim.config.GetAllParams(image_wcs, type, config, req, opt, single)
+        kwargs, safe = galsim.config.GetAllParams(image_wcs, config, req, opt, single)
 
         # This would be weird, but might as well check...
         if build_func._takes_rng:

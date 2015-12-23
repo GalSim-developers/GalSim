@@ -96,13 +96,13 @@ def ParseValue(config, param_name, base, value_type):
         if value_type is galsim.Angle:
             # Angle is a special case.  Angles are specified with a final string to 
             # declare what unit to use.
-            val = _GetAngleValue(param, param_name)
+            val = _GetAngleValue(param)
         elif value_type is bool:
             # For bool, we allow a few special string conversions
-            val = _GetBoolValue(param, param_name)
+            val = _GetBoolValue(param)
         elif value_type is galsim.PositionD:
             # For PositionD, we allow a string of x,y
-            val = _GetPositionValue(param, param_name)
+            val = _GetPositionValue(param)
         else:
             # Make sure strings are converted to float (or other type) if necessary.
             # In particular things like 1.e6 aren't converted to float automatically
@@ -145,7 +145,7 @@ def ParseValue(config, param_name, base, value_type):
 
         generate_func = eval(valid_value_types[type][0])
         #print 'generate_func = ',generate_func
-        val, safe = generate_func(param, param_name, base, value_type)
+        val, safe = generate_func(param, base, value_type)
         #print 'returned val, safe = ',val,safe
 
         # Make sure we really got the right type back.  (Just in case...)
@@ -234,7 +234,7 @@ def SetDefaultIndex(config, num):
             index['default'] = True
 
 
-def CheckAllParams(param, param_name, req={}, opt={}, single=[], ignore=[]):
+def CheckAllParams(param, req={}, opt={}, single=[], ignore=[]):
     """@brief Check that the parameters for a particular item are all valid
     
     @returns a dict, get, with get[key] = value_type for all keys to get.
@@ -247,7 +247,7 @@ def CheckAllParams(param, param_name, req={}, opt={}, single=[], ignore=[]):
             get[key] = value_type
         else:
             raise AttributeError(
-                "Attribute %s is required for %s.type = %s"%(key,param_name,param['type']))
+                "Attribute %s is required for %s"%(key,param['type']))
 
     # Check optional items:
     for (key, value_type) in opt.items():
@@ -265,13 +265,11 @@ def CheckAllParams(param, param_name, req={}, opt={}, single=[], ignore=[]):
                 count += 1
                 if count > 1:
                     raise AttributeError(
-                        "Only one of the attributes %s is allowed for %s.type = %s"%(
-                            s.keys(),param_name,param['type']))
+                        "Only one of the attributes %s is allowed for %s"%(s.keys(),param['type']))
                 get[key] = value_type
         if count == 0:
             raise AttributeError(
-                "One of the attributes %s is required for %s.type = %s"%(
-                    s.keys(),param_name,param['type']))
+                "One of the attributes %s is required for %s"%(s.keys(),param['type']))
 
     # Check that there aren't any extra keys in param aside from a few we expect:
     valid_keys += ignore
@@ -279,18 +277,17 @@ def CheckAllParams(param, param_name, req={}, opt={}, single=[], ignore=[]):
     for key in param.keys():
         # Generators are allowed to use item names that start with _, which we ignore here.
         if key not in valid_keys and not key.startswith('_'):
-            raise AttributeError(
-                "Unexpected attribute %s found for parameter %s"%(key,param_name))
+            raise AttributeError("Unexpected attribute %s found"%key)
 
     return get
 
 
-def GetAllParams(param, param_name, base, req={}, opt={}, single=[], ignore=[]):
+def GetAllParams(param, base, req={}, opt={}, single=[], ignore=[]):
     """@brief Check and get all the parameters for a particular item
 
     @returns the tuple (kwargs, safe).
     """
-    get = CheckAllParams(param,param_name,req,opt,single,ignore)
+    get = CheckAllParams(param,req,opt,single,ignore)
     kwargs = {}
     safe = True
     for (key, value_type) in sorted(get.items()):
@@ -303,7 +300,7 @@ def GetAllParams(param, param_name, base, req={}, opt={}, single=[], ignore=[]):
 
 
 
-def _GetAngleValue(param, param_name):
+def _GetAngleValue(param):
     """ @brief Convert a string consisting of a value and an angle unit into an Angle.
     """
     try :
@@ -312,10 +309,10 @@ def _GetAngleValue(param, param_name):
         unit = galsim.angle.get_angle_unit(unit)
         return galsim.Angle(value, unit)
     except Exception as e:
-        raise AttributeError("Unable to parse %s param = %s as an Angle."%(param_name,param))
+        raise AttributeError("Unable to parse %s as an Angle."%param)
 
 
-def _GetPositionValue(param, param_name):
+def _GetPositionValue(param):
     """ @brief Convert a tuple or a string that looks like "a,b" into a galsim.PositionD.
     """
     try:
@@ -327,11 +324,11 @@ def _GetPositionValue(param, param_name):
             x = float(x.strip())
             y = float(y.strip())
         except:
-            raise AttributeError("Unable to parse %s param = %s as a PositionD."%(param_name,param))
+            raise AttributeError("Unable to parse %s as a PositionD."%param)
     return galsim.PositionD(x,y)
 
 
-def _GetBoolValue(param, param_name):
+def _GetBoolValue(param):
     """ @brief Convert a string to a bool
     """
     if isinstance(param,str):
@@ -344,13 +341,13 @@ def _GetBoolValue(param, param_name):
                 val = bool(int(param))
                 return val
             except:
-                raise AttributeError("Unable to parse %s param = %s as a bool."%(param_name,param))
+                raise AttributeError("Unable to parse %s as a bool."%param)
     else:
         try:
             val = bool(param)
             return val
         except:
-            raise AttributeError("Unable to parse %s param = %s as a bool."%(param_name,param))
+            raise AttributeError("Unable to parse %s as a bool."%param)
 
 
 
@@ -358,104 +355,104 @@ def _GetBoolValue(param, param_name):
 # Now all the GenerateFrom functions:
 #
 
-def _GenerateFromG1G2(param, param_name, base, value_type):
+def _GenerateFromG1G2(config, base, value_type):
     """@brief Return a Shear constructed from given (g1, g2)
     """
     req = { 'g1' : float, 'g2' : float }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    kwargs, safe = GetAllParams(config, base, req=req)
     #print base['obj_num'],'Generate from G1G2: kwargs = ',kwargs
     return galsim.Shear(**kwargs), safe
 
-def _GenerateFromE1E2(param, param_name, base, value_type):
+def _GenerateFromE1E2(config, base, value_type):
     """@brief Return a Shear constructed from given (e1, e2)
     """
     req = { 'e1' : float, 'e2' : float }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    kwargs, safe = GetAllParams(config, base, req=req)
     #print base['obj_num'],'Generate from E1E2: kwargs = ',kwargs
     return galsim.Shear(**kwargs), safe
 
-def _GenerateFromEta1Eta2(param, param_name, base, value_type):
+def _GenerateFromEta1Eta2(config, base, value_type):
     """@brief Return a Shear constructed from given (eta1, eta2)
     """
     req = { 'eta1' : float, 'eta2' : float }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    kwargs, safe = GetAllParams(config, base, req=req)
     #print base['obj_num'],'Generate from Eta1Eta2: kwargs = ',kwargs
     return galsim.Shear(**kwargs), safe
 
-def _GenerateFromGBeta(param, param_name, base, value_type):
+def _GenerateFromGBeta(config, base, value_type):
     """@brief Return a Shear constructed from given (g, beta)
     """
     req = { 'g' : float, 'beta' : galsim.Angle }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    kwargs, safe = GetAllParams(config, base, req=req)
     #print base['obj_num'],'Generate from GBeta: kwargs = ',kwargs
     return galsim.Shear(**kwargs), safe
 
-def _GenerateFromEBeta(param, param_name, base, value_type):
+def _GenerateFromEBeta(config, base, value_type):
     """@brief Return a Shear constructed from given (e, beta)
     """
     req = { 'e' : float, 'beta' : galsim.Angle }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    kwargs, safe = GetAllParams(config, base, req=req)
     #print base['obj_num'],'Generate from EBeta: kwargs = ',kwargs
     return galsim.Shear(**kwargs), safe
 
-def _GenerateFromEtaBeta(param, param_name, base, value_type):
+def _GenerateFromEtaBeta(config, base, value_type):
     """@brief Return a Shear constructed from given (eta, beta)
     """
     req = { 'eta' : float, 'beta' : galsim.Angle }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    kwargs, safe = GetAllParams(config, base, req=req)
     #print base['obj_num'],'Generate from EtaBeta: kwargs = ',kwargs
     return galsim.Shear(**kwargs), safe
 
-def _GenerateFromQBeta(param, param_name, base, value_type):
+def _GenerateFromQBeta(config, base, value_type):
     """@brief Return a Shear constructed from given (q, beta)
     """
     req = { 'q' : float, 'beta' : galsim.Angle }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    kwargs, safe = GetAllParams(config, base, req=req)
     #print base['obj_num'],'Generate from QBeta: kwargs = ',kwargs
     return galsim.Shear(**kwargs), safe
 
-def _GenerateFromXY(param, param_name, base, value_type):
+def _GenerateFromXY(config, base, value_type):
     """@brief Return a PositionD constructed from given (x,y)
     """
     req = { 'x' : float, 'y' : float }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    kwargs, safe = GetAllParams(config, base, req=req)
     #print base['obj_num'],'Generate from XY: kwargs = ',kwargs
     return galsim.PositionD(**kwargs), safe
 
-def _GenerateFromRTheta(param, param_name, base, value_type):
+def _GenerateFromRTheta(config, base, value_type):
     """@brief Return a PositionD constructed from given (r,theta)
     """
     req = { 'r' : float, 'theta' : galsim.Angle }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    kwargs, safe = GetAllParams(config, base, req=req)
     r = kwargs['r']
     theta = kwargs['theta']
     import math
     #print base['obj_num'],'Generate from RTheta: kwargs = ',kwargs
     return galsim.PositionD(r*math.cos(theta.rad()), r*math.sin(theta.rad())), safe
 
-def _GenerateFromRad(param, param_name, base, value_type):
+def _GenerateFromRad(config, base, value_type):
     """@brief Return an Angle constructed from given theta in radians
     """
     req = { 'theta' : float }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    kwargs, safe = GetAllParams(config, base, req=req)
     #print base['obj_num'],'Generate from Rad: kwargs = ',kwargs
     return kwargs['theta'] * galsim.radians, safe
 
-def _GenerateFromDeg(param, param_name, base, value_type):
+def _GenerateFromDeg(config, base, value_type):
     """@brief Return an Angle constructed from given theta in degrees
     """
     req = { 'theta' : float }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req)
+    kwargs, safe = GetAllParams(config, base, req=req)
     #print base['obj_num'],'Generate from Deg: kwargs = ',kwargs
     return kwargs['theta'] * galsim.degrees, safe
 
-def _GenerateFromSequence(param, param_name, base, value_type):
+def _GenerateFromSequence(config, base, value_type):
     """@brief Return next in a sequence of integers
     """
     ignore = [ 'default' ]
     opt = { 'first' : value_type, 'last' : value_type, 'step' : value_type,
             'repeat' : int, 'nitems' : int, 'index_key' : str }
-    kwargs, safe = GetAllParams(param, param_name, base, opt=opt, ignore=ignore)
+    kwargs, safe = GetAllParams(config, base, opt=opt, ignore=ignore)
 
     step = kwargs.get('step',1)
     first = kwargs.get('first',0)
@@ -465,14 +462,13 @@ def _GenerateFromSequence(param, param_name, base, value_type):
     index_key = kwargs.get('index_key',base.get('index_key','obj_num'))
     if repeat <= 0:
         raise ValueError(
-            "Invalid repeat=%d (must be > 0) for %s.type = Sequence"%(repeat,param_name))
+            "Invalid repeat=%d (must be > 0) for Sequence"%repeat)
     if last is not None and nitems is not None:
         raise AttributeError(
-            "At most one of the attributes last and nitems is allowed for %s.type = Sequence"%(
-                param_name))
+            "At most one of the attributes last and nitems is allowed for Sequence")
     if index_key not in [ 'obj_num_in_file', 'obj_num', 'image_num', 'file_num' ]:
         raise AttributeError(
-            "Invalid index=%s for %s.type = Sequence."%(index_key,param_name))
+            "Invalid index=%s for Sequence."%index_key)
 
     if value_type is bool:
         # Then there are only really two valid sequences: Either 010101... or 101010...
@@ -507,14 +503,14 @@ def _GenerateFromSequence(param, param_name, base, value_type):
     return index, False
 
 
-def _GenerateFromNumberedFile(param, param_name, base, value_type):
+def _GenerateFromNumberedFile(config, base, value_type):
     """@brief Return a file_name using a root, a number, and an extension
     """
-    if 'num' not in param:
-        param['num'] = { 'type' : 'Sequence' }
+    if 'num' not in config:
+        config['num'] = { 'type' : 'Sequence' }
     req = { 'root' : str , 'num' : int }
     opt = { 'ext' : str , 'digits' : int }
-    kwargs, safe = GetAllParams(param, param_name, base, req=req, opt=opt)
+    kwargs, safe = GetAllParams(config, base, req=req, opt=opt)
 
     template = kwargs['root']
     if 'digits' in kwargs:
@@ -527,21 +523,21 @@ def _GenerateFromNumberedFile(param, param_name, base, value_type):
     #print base['obj_num'],'NumberedFile = ',s
     return s, safe
 
-def _GenerateFromFormattedStr(param, param_name, base, value_type):
+def _GenerateFromFormattedStr(config, base, value_type):
     """@brief Create a string from a format string
     """
     req = { 'format' : str }
     # Ignore items for now, we'll deal with it differently.
     ignore = [ 'items' ]
-    params, safe = GetAllParams(param, param_name, base, req=req, ignore=ignore)
+    params, safe = GetAllParams(config, base, req=req, ignore=ignore)
     format = params['format']
 
     # Check that items is present and is a list.
-    if 'items' not in param:
-        raise AttributeError("Attribute items is required for %s.type = FormattedStr"%param_name)
-    items = param['items']
+    if 'items' not in config:
+        raise AttributeError("Attribute items is required for type = FormattedStr")
+    items = config['items']
     if not isinstance(items,list):
-        raise AttributeError("items entry for parameter %s is not a list."%param_name)
+        raise AttributeError("items entry is not a list.")
 
     # Figure out what types we are expecting for the list elements:
     tokens = format.split('%')
@@ -583,37 +579,37 @@ def _GenerateFromFormattedStr(param, param_name, base, value_type):
     return final_str, safe
 
 
-def _GenerateFromList(param, param_name, base, value_type):
+def _GenerateFromList(config, base, value_type):
     """@brief Return next item from a provided list
     """
     req = { 'items' : list }
     opt = { 'index' : int }
     # Only Check, not Get.  We need to handle items a bit differently, since it's a list.
-    CheckAllParams(param, param_name, req=req, opt=opt)
-    items = param['items']
+    CheckAllParams(config, req=req, opt=opt)
+    items = config['items']
     if not isinstance(items,list):
-        raise AttributeError("items entry for parameter %s is not a list."%param_name)
+        raise AttributeError("items entry is not a list.")
 
     # Setup the indexing sequence if it hasn't been specified using the length of items.
-    SetDefaultIndex(param, len(items))
-    index, safe = ParseValue(param, 'index', base, int)
+    SetDefaultIndex(config, len(items))
+    index, safe = ParseValue(config, 'index', base, int)
 
     if index < 0 or index >= len(items):
-        raise AttributeError("index %d out of bounds for parameter %s"%(index,param_name))
+        raise AttributeError("index %d out of bound"%index)
     val, safe1 = ParseValue(items, index, base, value_type)
     safe = safe and safe1
     #print base['obj_num'],'List index = %d, val = %s'%(index,val)
     return val, safe
  
-def _GenerateFromSum(param, param_name, base, value_type):
+def _GenerateFromSum(config, base, value_type):
     """@brief Return next item from a provided list
     """
     req = { 'items' : list }
     # Only Check, not Get.  We need to handle items a bit differently, since it's a list.
-    CheckAllParams(param, param_name, req=req)
-    items = param['items']
+    CheckAllParams(config, req=req)
+    items = config['items']
     if not isinstance(items,list):
-        raise AttributeError("items entry for parameter %s is not a list."%param_name)
+        raise AttributeError("items entry is not a list.")
 
     sum, safe = ParseValue(items, 0, base, value_type)
 
@@ -625,11 +621,11 @@ def _GenerateFromSum(param, param_name, base, value_type):
     return sum, safe
  
 
-def _GenerateFromCurrent(param, param_name, base, value_type):
+def _GenerateFromCurrent(config, base, value_type):
     """@brief Get the current value of another config item.
     """
     req = { 'key' : str }
-    params, safe = GetAllParams(param, param_name, base, req=req)
+    params, safe = GetAllParams(config, base, req=req)
 
     key = params['key']
 
@@ -668,6 +664,6 @@ def _GenerateFromCurrent(param, param_name, base, value_type):
             #print base['obj_num'],'Current key = %s, value = %s'%(key,val)
             return val,safe
 
-    raise ValueError("Invalid key = %s given for %s.type = Current"%(key,param_name))
+    raise ValueError("Invalid key = %s given for Current"%key)
 
 
