@@ -78,19 +78,19 @@ standard_ignore = [
     '#' # When we read in json files, there represent comments
 ]
 
-def ParseValue(config, param_name, base, value_type):
+def ParseValue(config, key, base, value_type):
     """@brief Read or generate a parameter value from config.
 
     @returns the tuple (value, safe).
     """
-    param = config[param_name]
-    #print 'ParseValue for param_name = ',param_name,', value_type = ',str(value_type)
+    param = config[key]
+    #print 'ParseValue for param_name = ',key,', value_type = ',str(value_type)
     #print 'param = ',param
     #print 'nums = ',base.get('file_num',0), base.get('image_num',0), base.get('obj_num',0)
 
     # First see if we can assign by param by a direct constant value
     if isinstance(param, value_type):
-        #print param_name,' = ',param
+        #print key,' = ',param
         return param, True
     elif not isinstance(param, dict):
         if value_type is galsim.Angle:
@@ -109,41 +109,40 @@ def ParseValue(config, param_name, base, value_type):
             # by the yaml reader. (Although I think this is a bug.)
             val = value_type(param)
         # Save the converted type for next time.
-        config[param_name] = val
-        #print param_name,' = ',val
+        config[key] = val
+        #print key,' = ',val
         return val, True
     elif 'type' not in param:
         raise AttributeError(
-            "%s.type attribute required in config for non-constant parameter %s."%(
-                param_name,param_name))
+            "%s.type attribute required in config for non-constant parameter %s."%(key,key))
     elif ( 'current_val' in param 
            and param['current_obj_num'] == base.get('obj_num',0)
            and param['current_image_num'] == base.get('image_num',0)
            and param['current_file_num'] == base.get('file_num',0) ):
         if param['current_value_type'] != value_type:
             raise ValueError(
-                "Attempt to parse %s multiple times with different value types"%param_name)
-        #print base['obj_num'],'Using current value of ',param_name,' = ',param['current_val']
+                "Attempt to parse %s multiple times with different value types"%key)
+        #print base['obj_num'],'Using current value of ',key,' = ',param['current_val']
         return param['current_val'], param['current_safe']
     else:
         # Otherwise, we need to generate the value according to its type
         # (See valid_value_types defined at the top of the file.)
 
-        type = param['type']
-        #print 'type = ',type
+        type_name = param['type']
+        #print 'type = ',type_name
         #print param['type'], value_type
 
         # First check if the value_type is valid.
-        if type not in valid_value_types:
+        if type_name not in valid_value_types:
             raise AttributeError(
-                "Unrecognized type = %s specified for parameter %s"%(type,param_name))
+                "Unrecognized type = %s specified for parameter %s"%(type_name,key))
             
-        if value_type not in valid_value_types[type][1]:
+        if value_type not in valid_value_types[type_name][1]:
             raise AttributeError(
                 "Invalid value_type = %s specified for parameter %s with type = %s."%(
-                    value_type, param_name, type))
+                    value_type, key, type_name))
 
-        generate_func = eval(valid_value_types[type][0])
+        generate_func = eval(valid_value_types[type_name][0])
         #print 'generate_func = ',generate_func
         val, safe = generate_func(param, base, value_type)
         #print 'returned val, safe = ',val,safe
@@ -159,14 +158,14 @@ def ParseValue(config, param_name, base, value_type):
         param['current_obj_num'] = base.get('obj_num',0)
         param['current_image_num'] = base.get('image_num',0)
         param['current_file_num'] = base.get('file_num',0)
-        #print param_name,' = ',val
+        #print key,' = ',val
         return val, safe
 
 
-def GetCurrentValue(config, param_name):
+def GetCurrentValue(config, key):
     """@brief Return the current value of a parameter (either stored or a simple value)
     """
-    param = config[param_name]
+    param = config[key]
     if isinstance(param, dict):
         return param['current_val']
     else: 
@@ -192,19 +191,19 @@ def SetDefaultIndex(config, num):
     elif ( isinstance(config['index'],dict) 
            and 'type' in config['index'] ):
         index = config['index']
-        type = index['type']
-        if ( type == 'Sequence' 
+        type_name = index['type']
+        if ( type_name == 'Sequence' 
              and 'nitems' in index 
              and 'default' in index ):
             index['nitems'] = num
             index['default'] = True
-        elif ( type == 'Sequence' 
+        elif ( type_name == 'Sequence' 
                and 'nitems' not in index
                and ('step' not in index or (isinstance(index['step'],int) and index['step'] > 0) )
                and ('last' not in index or 'default' in index) ):
             index['last'] = num-1
             index['default'] = True
-        elif ( type == 'Sequence'
+        elif ( type_name == 'Sequence'
                and 'nitems' not in index
                and ('step' in index and (isinstance(index['step'],int) and index['step'] < 0) ) ):
             # Normally, the value of default doesn't matter.  Its presence is sufficient
@@ -226,7 +225,7 @@ def SetDefaultIndex(config, num):
                    or ('default' in index and index['default'] == 3) ):
                 index['last'] = 0
                 index['default'] = 3
-        elif ( type == 'Random'
+        elif ( type_name == 'Random'
                and ('min' not in index or 'default' in index)
                and ('max' not in index or 'default' in index) ):
             index['min'] = 0
@@ -234,7 +233,7 @@ def SetDefaultIndex(config, num):
             index['default'] = True
 
 
-def CheckAllParams(param, req={}, opt={}, single=[], ignore=[]):
+def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
     """@brief Check that the parameters for a particular item are all valid
     
     @returns a dict, get, with get[key] = value_type for all keys to get.
@@ -243,15 +242,15 @@ def CheckAllParams(param, req={}, opt={}, single=[], ignore=[]):
     valid_keys = req.keys() + opt.keys()
     # Check required items:
     for (key, value_type) in req.items():
-        if key in param:
+        if key in config:
             get[key] = value_type
         else:
             raise AttributeError(
-                "Attribute %s is required for %s"%(key,param['type']))
+                "Attribute %s is required for %s"%(key,config['type']))
 
     # Check optional items:
     for (key, value_type) in opt.items():
-        if key in param:
+        if key in config:
             get[key] = value_type
 
     # Check items for which exacly 1 should be defined:
@@ -261,20 +260,20 @@ def CheckAllParams(param, req={}, opt={}, single=[], ignore=[]):
         valid_keys += s.keys()
         count = 0
         for (key, value_type) in s.items():
-            if key in param:
+            if key in config:
                 count += 1
                 if count > 1:
                     raise AttributeError(
-                        "Only one of the attributes %s is allowed for %s"%(s.keys(),param['type']))
+                        "Only one of the attributes %s is allowed for %s"%(s.keys(),config['type']))
                 get[key] = value_type
         if count == 0:
             raise AttributeError(
-                "One of the attributes %s is required for %s"%(s.keys(),param['type']))
+                "One of the attributes %s is required for %s"%(s.keys(),config['type']))
 
     # Check that there aren't any extra keys in param aside from a few we expect:
     valid_keys += ignore
     valid_keys += standard_ignore
-    for key in param.keys():
+    for key in config.keys():
         # Generators are allowed to use item names that start with _, which we ignore here.
         if key not in valid_keys and not key.startswith('_'):
             raise AttributeError("Unexpected attribute %s found"%key)
@@ -282,16 +281,16 @@ def CheckAllParams(param, req={}, opt={}, single=[], ignore=[]):
     return get
 
 
-def GetAllParams(param, base, req={}, opt={}, single=[], ignore=[]):
+def GetAllParams(config, base, req={}, opt={}, single=[], ignore=[]):
     """@brief Check and get all the parameters for a particular item
 
     @returns the tuple (kwargs, safe).
     """
-    get = CheckAllParams(param,req,opt,single,ignore)
+    get = CheckAllParams(config,req,opt,single,ignore)
     kwargs = {}
     safe = True
     for (key, value_type) in sorted(get.items()):
-        val, safe1 = ParseValue(param, key, base, value_type)
+        val, safe1 = ParseValue(config, key, base, value_type)
         safe = safe and safe1
         kwargs[key] = val
     # Just in case there are unicode strings.   python 2.6 doesn't like them in kwargs.
@@ -490,17 +489,17 @@ def _GenerateFromSequence(config, base, value_type):
             nitems = (last - first)/step + 1
 
     if index_key == 'obj_num_in_file':
-        k = base['obj_num'] - base.get('start_obj_num',0)
+        index = base['obj_num'] - base.get('start_obj_num',0)
     else:
-        k = base[index_key]
-    k = k / repeat
+        index = base[index_key]
+    index = index / repeat
 
     if nitems is not None and nitems > 0:
-        k = k % nitems
+        index = index % nitems
 
-    index = first + k*step
-    #print base[index_key],'Sequence index = %s + %d*%s = %s'%(first,k,step,index)
-    return index, False
+    value = first + index*step
+    #print base[index_key],'Sequence index = %s + %d*%s = %s'%(first,index,step,value)
+    return value, False
 
 
 def _GenerateFromNumberedFile(config, base, value_type):
