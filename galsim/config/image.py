@@ -164,14 +164,8 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
         if logger:
             logger.debug('file %d: nim_per_task = %d',config.get('file_num',0),nim_per_task)
 
-        # The logger is not picklable, se we set up a proxy object.  See comments in process.py
-        # for more details about how this works.
-        class LoggerManager(BaseManager): pass
-        if logger:
-            logger_generator = galsim.utilities.SimpleGenerator(logger)
-            LoggerManager.register('logger', callable = logger_generator)
-            logger_manager = LoggerManager()
-            logger_manager.start()
+
+        logger_proxy = galsim.config.GetLoggerProxy(logger)
 
         # Set up the task list
         task_queue = Queue()
@@ -179,10 +173,6 @@ def BuildImages(nimages, config, nproc=1, logger=None, image_num=0, obj_num=0,
             import copy
             kwargs1 = copy.copy(kwargs)
             kwargs1['config'] = galsim.config.CopyConfig(config)
-            if logger:
-                logger_proxy = logger_manager.logger()
-            else:
-                logger_proxy = None
             nim1 = min(nim_per_task, nimages-k)
             task_queue.put( ( kwargs1, image_num+k, obj_num, nim1, k, logger_proxy ) )
             for i in range(nim1):

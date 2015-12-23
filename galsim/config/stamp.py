@@ -143,14 +143,7 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
             # This formula keeps nobj a multiple of min_nobj, so Rings are intact.
             nobj_per_task = min_nobj * int(math.sqrt(float(max_nobj) / float(min_nobj)))
         
-        # The logger is not picklable, se we set up a proxy object.  See comments in process.py
-        # for more details about how this works.
-        class LoggerManager(BaseManager): pass
-        if logger:
-            logger_generator = galsim.utilities.SimpleGenerator(logger)
-            LoggerManager.register('logger', callable = logger_generator)
-            logger_manager = LoggerManager()
-            logger_manager.start()
+        logger_proxy = galsim.config.GetLoggerProxy(logger)
 
         # Set up the task list
         task_queue = Queue()
@@ -158,10 +151,6 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
             import copy
             kwargs1 = copy.copy(kwargs)
             kwargs1['config'] = galsim.config.CopyConfig(config)
-            if logger:
-                logger_proxy = logger_manager.logger()
-            else:
-                logger_proxy = None
             nobj1 = min(nobj_per_task, nobjects-k)
             task_queue.put( ( kwargs1, obj_num+k, nobj1, k, logger_proxy ) )
 

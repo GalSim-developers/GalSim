@@ -216,6 +216,22 @@ def CopyConfig(config):
 
     return config1
 
+def GetLoggerProxy(logger):
+    """Make a proxy for the given logger that can be passed into multiprocessing Processes
+    and used safely.
+    """
+    from multiprocessing.managers import BaseManager
+    if logger:
+        class LoggerManager(BaseManager): pass
+        logger_generator = galsim.utilities.SimpleGenerator(logger)
+        LoggerManager.register('logger', callable = logger_generator)
+        logger_manager = LoggerManager()
+        logger_manager.start()
+        logger_proxy = logger_manager.logger()
+    else:
+        logger_proxy = None
+    return logger_proxy
+
 
 def SetDefaultExt(config, ext):
     """
@@ -437,21 +453,8 @@ def Process(config, logger=None, new_params=None):
         from multiprocessing import Process, Queue, current_process
         task_queue = Queue()
 
-    # The logger is not picklable, so we use the same trick for it as we used for the 
-    # input fields in CopyConfig to allow the worker processes to log their progress.
-    # The real logger stays in this process, and the workers all get a proxy logger which 
-    # they can use normally.  We use galsim.utilities.SimpleGenerator as the callable that
-    # just returns the existing logger object.
-    from multiprocessing.managers import BaseManager
-    class LoggerManager(BaseManager): pass
-    if logger:
-        logger_generator = galsim.utilities.SimpleGenerator(logger)
-        LoggerManager.register('logger', callable = logger_generator)
-        logger_manager = LoggerManager()
-        logger_manager.start()
-        logger_proxy = logger_manager.logger()
-    else:
-        logger_proxy = None
+    # Get a proxy of the logger to send to the task_queue.
+    logger_proxy = GetLoggerProxy(logger)
 
     # Now start working on the files.
     image_num = 0
