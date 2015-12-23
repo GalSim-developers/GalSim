@@ -24,6 +24,122 @@ from .output import *
 from .output_datacube import *
 from .output_multifits import *
 
+
+def ReadYaml(config_file):
+    """Read in a YAML configuration file and return the corresponding dicts.
+
+    A YAML file is allowed to define several dicts using multiple documents. The GalSim parser
+    treats this as a set of multiple jobs to be done.  The first document is taken to be a "base"
+    dict that has common definitions for all the jobs.  Then each subsequent document has the
+    (usually small) modifications to the base dict for each job.  See demo6.yaml, demo8.yaml and
+    demo9.yaml in the GalSim/examples directory for example usage.
+
+    On output, base_config is the dict for the first document if there are multiple documents.
+    Then all_config is a list of all the other documents that should be joined with base_dict
+    for each job to be processed.  If there is only one document defined, base_dict will be
+    empty, and all_config will be a list of one dict, which is the one to use.
+
+    @param config_file      The name of the configuration file to read.
+
+    @returns (base_config, all_config)
+    """
+    import yaml
+
+    with open(config_file) as f:
+        all_config = [ c for c in yaml.load_all(f.read()) ]
+
+    # If there is only 1 yaml document, then it is of course used for the configuration.
+    # If there are multiple yaml documents, then the first one defines a common starting
+    # point for the later documents.
+    # So the configurations are taken to be:
+    #   all_config[0] + all_config[1]
+    #   all_config[0] + all_config[2]
+    #   all_config[0] + all_config[3]
+    #   ...
+    # See demo6.yaml and demo8.yaml in the examples directory for examples of this feature.
+
+    if len(all_config) > 1:
+        # Break off the first one if more than one:
+        base_config = all_config[0]
+        all_config = all_config[1:]
+    else:
+        # Else just use an empty base_config dict.
+        base_config = {}
+
+    return base_config, all_config
+
+
+def ReadJson(config_file):
+    """Read in a JSON configuration file and return the corresponding dicts.
+
+    A JSON file only defines a single dict.  However to be parallel to the functionality of
+    ReadYaml, the output is base_config, all_config, where base_config is an empty dict,
+    and all_config is a list with a single item, which is the dict defined by the JSON file.
+
+    @param config_file      The name of the configuration file to read.
+
+    @returns (base_config, all_config)
+    """
+    import json
+
+    with open(config_file) as f:
+        config = json.load(f)
+
+    # JSON files are just processed as is.  This is equivalent to having an empty 
+    # base_config, so we just do that and use the same structure.
+    base_config = {}
+    all_config = [ config ]
+
+    return base_config, all_config
+
+def ReadConfig(config_file, file_type=None, logger=None):
+    """Read in a configuration file and return the corresponding dicts.
+
+    A YAML file is allowed to define several dicts using multiple documents. The GalSim parser
+    treats this as a set of multiple jobs to be done.  The first document is taken to be a "base"
+    dict that has common definitions for all the jobs.  Then each subsequent document has the
+    (usually small) modifications to the base dict for each job.  See demo6.yaml, demo8.yaml and
+    demo9.yaml in the GalSim/examples directory for example usage.
+
+    On output, base_config is the dict for the first document if there are multiple documents.
+    Then all_config is a list of all the other documents that should be joined with base_dict
+    for each job to be processed.  If there is only one document defined, base_dict will be
+    empty, and all_config will be a list of one dict, which is the one to use.
+
+    A JSON file does not have this feature, but to be consistent, we always return the tuple
+    (base_config, all_config).
+
+    @param config_file      The name of the configuration file to read.
+    @param file_type        If given, the type of file to read.  [default: None, which mean
+                            infer the file type from the extension.]
+    @param logger           If given, a logger object to log progress. [default: None]
+
+    @returns (base_config, all_config)
+    """
+    # Determine the file type from the extension if necessary:
+    if file_type is None:
+        import os
+        name, ext = os.path.splitext(config_file)
+        if ext.lower().startswith('.j'):
+            file_type = 'json'
+        else:
+            # Let YAML be the default if the extension is not .y* or .j*.
+            file_type = 'yaml'
+        if logger:
+            logger.debug('File type determined to be %s', file_type)
+    else:
+        if logger:
+            logger.debug('File type specified to be %s', file_type)
+
+    if file_type == 'yaml':
+        if logger:
+            logger.info('Reading YAML config file %s', config_file)
+        return galsim.config.ReadYaml(config_file)
+    else:
+        if logger:
+            logger.info('Reading JSON config file %s', config_file)
+        return galsim.config.ReadJson(config_file)
+
 def RemoveCurrent(config, keep_safe=False, type=None):
     """
     Remove any "current values" stored in the config dict at any level.
@@ -110,7 +226,73 @@ def SetDefaultExt(config, ext):
         config['ext'] = ext
 
 
-def Process(config, logger=None):
+def ParseExtendedKey(config, key):
+    """Traverse all but the last item in an extended key and return the resulting config, key.
+
+    If key is an extended key like gal.items.0.ellip.e, then this will return the tuple.
+    (config['gal']['items'][0]['ellip'], 'e').
+
+    If key is a regular string, then is just returns the original (config, key).
+
+    @param config       The configuration dict.
+    @param key          The possibly extended key.
+
+    @returns the equivalent (config, key) where key is now a regular non-extended key.
+    """
+    # This is basically identical to the code for Dict.get(key) in catalog.py.
+    chain = key.split('.')
+    d = config
+    while len(chain) > 1:
+        k = chain.pop(0)
+        try: k = int(k)
+        except ValueError: pass
+        d = d[k]
+    return d, chain[0]
+
+def GetFromConfig(config, key):
+    """Get the value for the (possibly extended) key from a config dict.
+
+    If key is a simple string, then this is equivalent to config[key].
+    However, key is allowed to be a chain of keys such as 'gal.items.0.ellip.e', in which
+    case this function will return config['gal']['items'][0]['ellip']['e'].
+
+    @param config       The configuration dict.
+    @param key          The possibly extended key.
+
+    @returns the value of that key from the config.
+    """
+    config, key = ParseExtendedKey(config, key)
+    return config[key]
+
+def SetInConfig(config, key, value):
+    """Set the value of a (possibly extended) key in a config dict.
+
+    If key is a simple string, then this is equivalent to config[key] = value.
+    However, key is allowed to be a chain of keys such as 'gal.items.0.ellip.e', in which
+    case this function will set config['gal']['items'][0]['ellip']['e'] = value.
+
+    @param config       The configuration dict.
+    @param key          The possibly extended key.
+
+    @returns the value of that key from the config.
+    """
+    config, key = ParseExtendedKey(config, key)
+    config[key] = value
+
+
+def UpdateConfig(config, new_params):
+    """Update the given config dict with additional parameters/values.
+
+    @param config           The configuration dict to update.
+    @param new_params       A dict of parameters to update.  The keys of this dict may be
+                            chained field names, such as gal.first.dilate, which will be
+                            parsed to update config['gal']['first']['dilate'].
+    """
+    for key, value in new_params.items():
+        SetInConfig(config, key, value)
+
+
+def Process(config, logger=None, new_params=None):
     """
     Do all processing of the provided configuration dict.  In particular, this
     function handles processing the output field, calling other functions to
@@ -121,6 +303,10 @@ def Process(config, logger=None):
     import copy
     config = copy.deepcopy(config)
 
+    # Update using any new_params that are given:
+    if new_params is not None:
+        UpdateConfig(config, new_params)
+
     # If we don't have a root specified yet, we generate it from the current script.
     if 'root' not in config:
         import inspect
@@ -128,6 +314,10 @@ def Process(config, logger=None):
             inspect.getfile(inspect.currentframe())) # script filename (usually with path)
         # Strip off a final suffix if present.
         config['root'] = os.path.splitext(script_name)[0]
+
+    if logger:
+        import pprint
+        logger.debug("Final config dict to be processed: \n%s", pprint.pformat(config))
 
     # Make config['output'] exist if it doesn't yet.
     if 'output' not in config:
