@@ -56,18 +56,16 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('obj %d: Start BuildGSObject %s',base['obj_num'],key)
 
+    # If key isn't in config, then just return None.
     try:
         param = config[key]
     except KeyError:
         return None, True
-
-    # Alias for convenience
-    param = config[key]
+    if False:
+        logger.debug('obj %d: param = %s',base['obj_num'],param)
 
     # Check what index key we want to use for this object.
     index, index_key = galsim.config.value._get_index(param, base)
-    if False:
-        logger.debug('obj %d: param = %s',base['obj_num'],param)
 
     # If we are repeating, then only make this when index % repeat == 0
     if 'repeat' in param:
