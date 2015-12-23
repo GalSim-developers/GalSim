@@ -50,9 +50,9 @@
                 "type" : "Sequence",
                 "repeat" : { "type" : "Current", "key" : "gal.num" }
             }
-        },
-        "dilation" : 3
+        }
     },
+    "dilation" : 3,
     "full_rotation" : "360 deg",
 
     "shear" : { "type" : "PowerSpectrumShear" },
@@ -123,6 +123,12 @@
 
             "psf_fwhm" : "psf.fwhm",
             "cosmos_id" : "gal.first.id",
+            "cosmos_index" : {
+                "type" : "Eval",
+                "str" : "gal.index",
+                "xgal" : { "type" : "Current", "key" : "gal.first" }
+            },
+
             "theta" : {
                 "type" : "Eval",
                 "str" : "index * 360. / num",
