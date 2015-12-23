@@ -446,8 +446,6 @@ def Process(config, logger=None, new_params=None):
                 if logger and logger.isEnabledFor(logging.WARN):
                     logger.warn('%s: Caught exception %s\n%s',proc,str(e),tr)
                 output.put( (e, file_num, file_name, tr) )
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('%s: Received STOP',proc)
 
     # Set up the multi-process task_queue if we're going to need it.
     if nproc > 1:

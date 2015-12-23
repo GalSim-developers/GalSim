@@ -20,25 +20,15 @@ import galsim
 def _GenerateFromFitsHeader(param, param_name, base, value_type):
     """@brief Return a value read from a FITS header
     """
-    if 'fits_header' not in base['input_objs']:
-        raise ValueError("No fits header available for %s.type = FitsHeader"%param_name)
+    header = galsim.config.GetInputObj('fits_header', config, base, 'FitsHeader')
 
     req = { 'key' : str }
     opt = { 'num' : int }
     kwargs, safe = galsim.config.GetAllParams(param, param_name, base, req=req, opt=opt)
     key = kwargs['key']
 
-    num = kwargs.get('num',0)
-    if num < 0:
-        raise ValueError("Invalid num < 0 supplied for FitsHeader: num = %d"%num)
-    if num >= len(base['input_objs']['fits_header']):
-        raise ValueError("Invalid num supplied for FitsHeader (too large): num = %d"%num)
-    header = base['input_objs']['fits_header'][num]
-
-    if key not in header.keys():
-        raise ValueError("key %s not found in the FITS header in %s"%(key,kwargs['file_name']))
-
     val = header.get(key)
+
     #print base['file_num'],'Header: key = %s, val = %s'%(key,val)
     return val, safe
 

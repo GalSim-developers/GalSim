@@ -268,23 +268,36 @@ def SetupInputsForImage(config, logger):
                     func(input_obj, field, config)
 
 
+# A helper function for getting the input object needed for generating a value or building
+# a gsobject.
+def GetInputObj(input_type, config, base, param_name):
+    """Get the input object needed for generating a particular value
+    @param input_type   The type of input object to get
+    @param config       The config dict for this value item
+    @param base         The base config dict
+    @param param_name   The type of value that we are trying to construct (only used for
+                        error messages).
+    """
+    if input_type not in base['input_objs']:
+        raise ValueError("No input %s available for type = %s"%(input_type,param_name))
+
+    if 'num' in config:
+        num = galsim.config.ParseValue(config, 'num', base, int)[0]
+    else:
+        num = 0
+
+    if num < 0:
+        raise ValueError("Invalid num < 0 supplied for %s: num = %d"%(param_name,num))
+    if num >= len(base['input_objs'][input_type]):
+        raise ValueError("Invalid num supplied for %s (too large): num = %d"%(param_name,num))
+
+    return base['input_objs'][input_type][num]
+
+
 def _GenerateFromCatalog(config, base, value_type):
     """@brief Return a value read from an input catalog
     """
-    if 'catalog' not in base['input_objs']:
-        raise ValueError("No input catalog available for Catalog")
-
-    if 'num' in config:
-        num, safe = galsim.config.ParseValue(config, 'num', base, int)
-    else:
-        num, safe = (0, True)
-
-    if num < 0:
-        raise ValueError("Invalid num < 0 supplied for Catalog: num = %d"%num)
-    if num >= len(base['input_objs']['catalog']):
-        raise ValueError("Invalid num supplied for Catalog (too large): num = %d"%num)
-
-    input_cat = base['input_objs']['catalog'][num]
+    input_cat = GetInputObj('catalog', config, base, 'Catalog')
 
     # Setup the indexing sequence if it hasn't been specified.
     # The normal thing with a Catalog is to just use each object in order,
@@ -296,8 +309,7 @@ def _GenerateFromCatalog(config, base, value_type):
     # which of course doesn't exist in python.  This does the same thing (so long as the 
     # middle item evaluates to true).
     req = { 'col' : input_cat.isFits() and str or int , 'index' : int }
-    kwargs, safe1 = galsim.config.GetAllParams(config, base, req=req, ignore=['num'])
-    safe = safe and safe1
+    kwargs, safe = galsim.config.GetAllParams(config, base, req=req, ignore=['num'])
 
     if value_type is str:
         val = input_cat.get(**kwargs)
@@ -316,22 +328,14 @@ def _GenerateFromCatalog(config, base, value_type):
 def _GenerateFromDict(config, base, value_type):
     """@brief Return a value read from an input dict.
     """
-    if 'dict' not in base['input_objs']:
-        raise ValueError("No input dict available for Dict")
+    input_dict = GetInputObj('dict', config, base, 'Dict')
 
     req = { 'key' : str }
     opt = { 'num' : int }
     kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
     key = kwargs['key']
 
-    num = kwargs.get('num',0)
-    if num < 0:
-        raise ValueError("Invalid num < 0 supplied for Dict: num = %d"%num)
-    if num >= len(base['input_objs']['dict']):
-        raise ValueError("Invalid num supplied for Dict (too large): num = %d"%num)
-    d = base['input_objs']['dict'][num]
-
-    val = d.get(key)
+    val = input_dict.get(key)
     #print base['file_num'],'Dict: key = %s, val = %s'%(key,val)
     return val, safe
 

@@ -16,43 +16,29 @@
 #    and/or other materials provided with the distribution.
 #
 import galsim
-import logging
 
 
-def _BuildRealGalaxy(config, base, ignore, gsparams, logger):
+def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGalaxy'):
     """@brief Build a RealGalaxy from the real_catalog input item.
     """
-    if 'real_catalog' not in base['input_objs']:
-        raise ValueError("No real galaxy catalog available for building type = RealGalaxy")
+    real_cat = galsim.config.GetInputObj('real_catalog', config, base, param_name)
 
-    if 'num' in config:
-        num, safe = ParseValue(config, 'num', base, int)
-    else:
-        num, safe = (0, True)
     ignore.append('num')
-
-    if num < 0:
-        raise ValueError("Invalid num < 0 supplied for RealGalaxy: num = %d"%num)
-    if num >= len(base['input_objs']['real_catalog']):
-        raise ValueError("Invalid num supplied for RealGalaxy (too large): num = %d"%num)
-
-    real_cat = base['input_objs']['real_catalog'][num]
 
     # Special: if index is Sequence or Random, and max isn't set, set it to nobjects-1.
     # But not if they specify 'id' which overrides that.
     if 'id' not in config:
         galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
 
-    kwargs, safe1 = galsim.config.GetAllParams(config, base, 
+    kwargs, safe = galsim.config.GetAllParams(config, base, 
         req = galsim.__dict__['RealGalaxy']._req_params,
         opt = galsim.__dict__['RealGalaxy']._opt_params,
         single = galsim.__dict__['RealGalaxy']._single_params,
         ignore = ignore)
-    safe = safe and safe1
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
     if 'rng' not in base:
-        raise ValueError("No base['rng'] available for RealGalaxy")
+        raise ValueError("No base['rng'] available for type = %s"%param_name)
     kwargs['rng'] = base['rng']
 
     if 'index' in kwargs:
@@ -62,8 +48,8 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger):
                 "%s index has gone past the number of entries in the catalog"%index)
 
     kwargs['real_galaxy_catalog'] = real_cat
-    if logger and logger.isEnabledFor(logging.DEBUG):
-        logger.debug('obj %d: RealGalaxy kwargs = %s',base['obj_num'],str(kwargs))
+    if False:
+        logger.debug('obj %d: %s kwargs = %s',base['obj_num'],param_name,str(kwargs))
 
     gal = galsim.RealGalaxy(**kwargs)
 
@@ -73,7 +59,8 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger):
 def _BuildRealGalaxyOriginal(config, base, ignore, gsparams, logger):
     """@brief Return the original image from a RealGalaxy using the real_catalog input item.
     """
-    image, safe = _BuildRealGalaxy(config, base, ignore, gsparams, logger)
-    return image.original_image, safe    
+    image, safe = _BuildRealGalaxy(config, base, ignore, gsparams, logger,
+                                   param_name='RealGalaxyOriginal')
+    return image.original_image, safe
 
 
