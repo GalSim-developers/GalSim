@@ -198,6 +198,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
     # level, so it cannot be used for things like wcs.pixelArea(image_pos).  
     if 'image_pos' in config: del config['image_pos']
 
+    galsim.config.AddSky(config, full_image)
     if 'noise' in config['image']:
         # Apply the noise to the full image
         draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
@@ -220,14 +221,7 @@ def BuildScatteredImage(config, logger=None, image_num=0, obj_num=0,
         # Now max_current_var is how much noise is in each pixel.
 
         config['rng'] = rng
-        galsim.config.AddNoise(
-            config,draw_method,full_image,full_weight_image,max_current_var,logger)
-
-    else:
-        # If we aren't doing noise, we still may need to add a non-zero sky_level.
-        # The same noise function does this with the 'skip' draw method.
-        galsim.config.AddNoise(
-            config,'skip',full_image,full_weight_image,max_current_var,logger)
+        galsim.config.AddNoise(config,full_image,full_weight_image,max_current_var,logger)
 
     return full_image, full_psf_image, full_weight_image, full_badpix_image
 

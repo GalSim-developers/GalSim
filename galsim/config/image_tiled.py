@@ -222,6 +222,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
     # If didn't do noise above in the stamps, then need to do it here.
     if not do_noise:
+        galsim.config.AddSky(config, full_iamge)
         if 'noise' in config['image']:
             # If we didn't apply noise in each stamp, then we need to apply it now.
             draw_method = galsim.config.GetCurrentValue(config['image'],'draw_method')
@@ -244,13 +245,7 @@ def BuildTiledImage(config, logger=None, image_num=0, obj_num=0,
 
             config['rng'] = rng
             galsim.config.AddNoise(
-                config,draw_method,full_image,full_weight_image,max_current_var,logger)
-
-        else:
-            # If we aren't doing noise, we still may need to add a non-zero sky_level.
-            # The same noise function does this with the 'skip' draw method.
-            galsim.config.AddNoise(
-                config,'skip',full_image,full_weight_image,max_current_var,logger)
+                config,full_image,full_weight_image,max_current_var,logger)
 
     return full_image, full_psf_image, full_weight_image, full_badpix_image
 

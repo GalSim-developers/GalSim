@@ -446,7 +446,7 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                     im.setOrigin(config['image_origin'])
                     im.setZero()
                     if do_noise:
-                        galsim.config.AddNoise(config,'skip',im,weight_im,current_var,logger)
+                        galsim.config.AddSky(config,im)
                 else:
                     # Otherwise, we don't set the bounds, so it will be noticed as invalid upstream.
                     im = galsim.ImageF()
@@ -468,7 +468,11 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 else:
                     weight_im = None
                 if do_noise:
-                    galsim.config.AddNoise(config,method,im,weight_im,current_var,logger)
+                    # The default indexing for the noise is image_num, not obj_num
+                    config['index_key'] = 'image_num'
+                    galsim.config.AddSky(config,im)
+                    galsim.config.AddNoise(config,im,weight_im,current_var,logger)
+                    config['index_key'] = 'obj_num'
 
             if make_badpix_image:
                 badpix_im = galsim.ImageS(im.bounds, wcs=im.wcs)
@@ -483,7 +487,9 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                 if ('output' in config and 'psf' in config['output'] and 
                         'signal_to_noise' in config['output']['psf'] and
                         'noise' in config['image']):
-                    galsim.config.AddNoise(config,'fft',psf_im,None,0,logger,add_sky=False)
+                    config['index_key'] = 'image_num'
+                    galsim.config.AddNoise(config,psf_im,None,0,logger)
+                    config['index_key'] = 'obj_num'
             else:
                 psf_im = None
 
