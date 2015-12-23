@@ -525,7 +525,7 @@ class COSMOSCatalog(object):
             if gal_n < 0.3: gal_n = 0.3
             if gal_n > 6.0: gal_n = 6.0
             # GalSim is much more efficient if only a finite number of Sersic n values are used.
-            # This (optionally given constructor args) rounds n to the nearest 0.01.
+            # This (optionally given constructor args) rounds n to the nearest 0.05.
             if sersic_prec > 0.:
                 gal_n = COSMOSCatalog._round_sersic(gal_n, sersic_prec)
             gal_q = sparams[3]
