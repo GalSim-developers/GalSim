@@ -553,6 +553,9 @@ class OutputCatalog(object):
 
         @returns an HDU with the FITS binary table of the catalog.
         """
+        # Note to developers: Because of problems with pickling in older pyfits versions, this
+        # code is duplicated in galsim/config/extra_truth.py, BuildTruthHDU.  If you change
+        # this function, you should update BuildTruthHDU as well.
         import numpy
         from galsim._pyfits import pyfits
 

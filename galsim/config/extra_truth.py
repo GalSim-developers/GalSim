@@ -76,6 +76,28 @@ def ProcessTruthImage(truth_cat, scratch, config, base, logger=None):
     for row in scratch.values():
         truth_cat.add_row(row)
 
+# Older versions of pyfits can't pickle HDUs, so this is a reimplementation of the
+# OutputCatalog.write_fits_hdu function that can be run through a proxy OutputCatalog.
+def BuildTruthHDU(truth_cat):
+    import numpy
+    from galsim._pyfits import pyfits
+    data = truth_cat.make_data()
+    cols = []
+    for name in data.dtype.names:
+        dt = data.dtype[name]
+        if dt.kind in numpy.typecodes['AllInteger']:
+            cols.append(pyfits.Column(name=name, format='J', array=data[name]))
+        elif dt.kind in numpy.typecodes['AllFloat']:
+            cols.append(pyfits.Column(name=name, format='D', array=data[name]))
+        else:
+            cols.append(pyfits.Column(name=name, format='%dA'%dt.itemsize, array=data[name]))
+    cols = pyfits.ColDefs(cols)
+    try:
+        tbhdu = pyfits.BinTableHDU.from_columns(cols)
+    except:
+        tbhdu = pyfits.new_table(cols)
+    return tbhdu
+
 # Register this as a valid extra output
 from .extra import RegisterExtraOutput
 RegisterExtraOutput('truth',
@@ -84,4 +106,4 @@ RegisterExtraOutput('truth',
                     stamp_func = ProcessTruthStamp, 
                     image_func = ProcessTruthImage,
                     write_func = galsim.OutputCatalog.write,
-                    hdu_func = galsim.OutputCatalog.write_fits_hdu)
+                    hdu_func = BuildTruthHDU)
