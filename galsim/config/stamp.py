@@ -18,6 +18,8 @@
 
 import galsim
 
+from .extra_psf import DrawPSFStamp
+
 def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
                 xsize=0, ysize=0, do_noise=True,
                 make_psf_image=False, make_weight_image=False, make_badpix_image=False):
@@ -664,63 +666,4 @@ def DrawStamp(psf, gal, config, xsize, ysize, offset, method):
             current_var *= flux**2
 
     return im, current_var
-
-
-def DrawPSFStamp(psf, config, bounds, offset, method):
-    """
-    Draw an image using the given psf profile.
-
-    @returns the resulting image.
-    """
-
-    if not psf:
-        raise AttributeError("DrawPSFStamp requires psf to be provided.")
-
-    if ('output' in config and 'psf' in config['output'] and 
-        'draw_method' in config['output']['psf'] ):
-        method = galsim.config.ParseValue(config['output']['psf'],'draw_method',config,str)[0]
-        if method not in ['auto', 'fft', 'phot', 'real_space', 'no_pixel', 'sb']:
-            raise AttributeError("Invalid draw_method: %s"%method)
-    else:
-        method = 'auto'
-
-    # Special: if the galaxy was shifted, then also shift the psf 
-    if 'shift' in config['gal']:
-        gal_shift = galsim.config.GetCurrentValue(config['gal'],'shift')
-        if False:
-            logger.debug('obj %d: psf shift (1): %s',config['obj_num'],str(gal_shift))
-        psf = psf.shift(gal_shift)
-
-    wcs = config['wcs'].local(config['image_pos'])
-    im = galsim.ImageF(bounds, wcs=wcs)
-    im = psf.drawImage(image=im, offset=offset, method=method)
-
-    if (('output' in config and 'psf' in config['output'] 
-            and 'signal_to_noise' in config['output']['psf']) or
-        ('gal' not in config and 'psf' in config and 'signal_to_noise' in config['psf'])):
-        if method == 'phot':
-            raise NotImplementedError(
-                "signal_to_noise option not implemented for draw_method = phot")
-        import math
-        import numpy
-
-        if 'image' in config and 'noise' in config['image']:
-            noise_var = galsim.config.CalculateNoiseVar(config)
-        else:
-            raise AttributeError(
-                "Need to specify noise level when using psf.signal_to_noise")
-
-        if ('output' in config and 'psf' in config['output'] 
-                and 'signal_to_noise' in config['output']['psf']):
-            cf = config['output']['psf']
-        else:
-            cf = config['psf']
-        sn_target = galsim.config.ParseValue(cf, 'signal_to_noise', config, float)[0]
-            
-        sn_meas = math.sqrt( numpy.sum(im.array**2) / noise_var )
-        flux = sn_target / sn_meas
-        im *= flux
-
-    return im
-           
 
