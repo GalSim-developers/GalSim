@@ -573,7 +573,11 @@ class COSMOSCatalog(object):
     def getParametricRecord(self, index):
         """Get the parametric record for a given index"""
         # Used by _makeSingleGalaxy to circumvent pickling the result.
-        return self.param_cat[self.orig_index[index]]
+        record = self.param_cat[self.orig_index[index]]
+        # Convert to a dict, since on some systems, the numpy record doesn't seem to 
+        # pickle correctly.
+        record_dict = { k:record[k] for k in record.dtype.names }
+        return record_dict
 
     def canMakeReal(self):
         """Is it permissible to call makeGalaxy with gal_type='real'?"""
