@@ -105,12 +105,12 @@ RegisterInputType('power_spectrum', galsim.PowerSpectrum,
 def _GenerateFromPowerSpectrumShear(config, base, value_type):
     """@brief Return a shear calculated from a PowerSpectrum object.
     """
+    power_spectrum = galsim.config.GetInputObj('power_spectrum', config, base, 'PowerSpectrumShear')
+
     if 'world_pos' not in base:
         raise ValueError("PowerSpectrumShear requested, but no position defined.")
     pos = base['world_pos']
 
-    power_spectrum = galsim.config.GetInputObj('power_spectrum', config, base, 'PowerSpectrumShear')
-    
     # There aren't any parameters for this, so just make sure num is the only (optional)
     # one present.
     galsim.config.CheckAllParams(config, opt={ 'num' : int })
@@ -123,19 +123,20 @@ def _GenerateFromPowerSpectrumShear(config, base, value_type):
         warnings.warn("Warning: PowerSpectrum shear is invalid -- probably strong lensing!  " +
                       "Using shear = 0.")
         shear = galsim.Shear(g1=0,g2=0)
+
     #print base['obj_num'],'PS shear = ',shear
     return shear, False
 
 def _GenerateFromPowerSpectrumMagnification(config, base, value_type):
     """@brief Return a magnification calculated from a PowerSpectrum object.
     """
+    power_spectrum = galsim.config.GetInputObj('power_spectrum', config, base,
+                                               'PowerSpectrumMagnification')
+
     if 'world_pos' not in base:
         raise ValueError("PowerSpectrumMagnification requested, but no position defined.")
     pos = base['world_pos']
 
-    power_spectrum = galsim.config.GetInputObj('power_spectrum', config, base, 
-                                               'PowerSpectrumMagnification')
-    
     opt = { 'max_mu' : float, 'num' : int }
     kwargs = galsim.config.GetAllParams(config, base, opt=opt)[0]
 

@@ -67,6 +67,7 @@ def GetNImagesMultiFits(config, file_num):
         raise AttributeError("Attribute output.nimages is required for output.type = MultiFits")
     return galsim.config.ParseValue(config['output'],'nimages',config,int)[0]
 
+
 # Register this as a valid output type
 from .output import RegisterOutputType
 RegisterOutputType('MultiFits', BuildMultiFits, galsim.fits.writeMulti, GetNImagesMultiFits)

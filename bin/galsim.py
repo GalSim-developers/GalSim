@@ -21,10 +21,10 @@ in a configuration file.
 """
 
 import sys
-import json
-import yaml
+import os
 import logging
 import copy
+import pprint
 
 # The only wrinkle about letting this executable be called galsim is that we want to
 # make sure that `import galsim` doesn't import itself.  We want it to import the real
@@ -246,7 +246,6 @@ def main():
 
     # Set the root value in base_config
     if 'root' not in base_config:
-        import os
         base_config['root'] = os.path.splitext(args.config_file)[0]
 
     # Process each config document
@@ -267,7 +266,6 @@ def main():
         if args.profile:
             config['profile'] = True
 
-        import pprint
         logger.debug("Process config dict: \n%s", pprint.pformat(config))
 
         # Process the configuration

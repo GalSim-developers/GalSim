@@ -355,7 +355,6 @@ def _get_index(config, base, is_sequence=False):
 
 
 
-
 #
 # Now the functions for directly converting an item in the config dict into a value.
 # The ones that need a special function are: Angle, PositionD, and bool.
@@ -637,6 +636,7 @@ def _GenerateFromFormattedStr(config, base, value_type):
     final_str = format%tuple(vals)
     #print base['obj_num'],'FormattedStr = ',final_str
     return final_str, safe
+
 
 def _GenerateFromList(config, base, value_type):
     """@brief Return next item from a provided list

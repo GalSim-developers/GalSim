@@ -160,18 +160,18 @@ def ReadConfig(config_file, file_type=None, logger=None):
         else:
             # Let YAML be the default if the extension is not .y* or .j*.
             file_type = 'yaml'
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('File type determined to be %s', file_type)
     else:
-        if logger:
+        if logger and logger.isEnabledFor(logging.DEBUG):
             logger.debug('File type specified to be %s', file_type)
 
     if file_type == 'yaml':
-        if logger:
+        if logger and logger.isEnabledFor(logging.INFO):
             logger.info('Reading YAML config file %s', config_file)
         return galsim.config.ReadYaml(config_file)
     else:
-        if logger:
+        if logger and logger.isEnabledFor(logging.INFO):
             logger.info('Reading JSON config file %s', config_file)
         return galsim.config.ReadJson(config_file)
 
@@ -316,18 +316,6 @@ def UpdateNProc(nproc, ntot, config, logger=None):
         nproc = ntot
     return nproc
 
-
-def SetDefaultExt(config, ext):
-    """
-    Some items have a default extension for a NumberedFile type.  This sets the extension 
-    in the dict to this default if appropriate.
-
-    @param config       The configuration field for something that might be a NumberdFile type.
-    @param ext          The default extension to apply.
-    """
-    if ( isinstance(config,dict) and 'type' in config and 
-         config['type'] == 'NumberedFile' and 'ext' not in config ):
-        config['ext'] = ext
 
 def SetupConfigRNG(config, seed_offset=0):
     """Set up the RNG in the config dict.
@@ -553,7 +541,7 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None):
         # Strip off a final suffix if present.
         config['root'] = os.path.splitext(script_name)[0]
 
-    if logger:
+    if logger and logger.isEnabledFor(logging.DEBUG):
         import pprint
         logger.debug("Final config dict to be processed: \n%s", pprint.pformat(config))
 

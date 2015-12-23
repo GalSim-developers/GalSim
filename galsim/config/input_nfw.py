@@ -31,6 +31,8 @@ RegisterInputType('nfw_halo', galsim.NFWHalo, ['NFWHaloShear', 'NFWHaloMagnifica
 def _GenerateFromNFWHaloShear(config, base, value_type):
     """@brief Return a shear calculated from an NFWHalo object.
     """
+    nfw_halo = galsim.config.GetInputObj('nfw_halo', config, base, 'NFWHaloShear')
+
     if 'world_pos' not in base:
         raise ValueError("NFWHaloShear requested, but no position defined.")
     pos = base['world_pos']
@@ -38,8 +40,6 @@ def _GenerateFromNFWHaloShear(config, base, value_type):
     if 'gal' not in base or 'redshift' not in base['gal']:
         raise ValueError("NFWHaloShear requested, but no gal.redshift defined.")
     redshift = galsim.config.GetCurrentValue('gal.redshift', base, float)
-
-    nfw_halo = galsim.config.GetInputObj('nfw_halo', config, base, 'NFWHaloShear')
 
     # There aren't any parameters for this, so just make sure num is the only (optional)
     # one present.
@@ -53,6 +53,7 @@ def _GenerateFromNFWHaloShear(config, base, value_type):
         warnings.warn("Warning: NFWHalo shear is invalid -- probably strong lensing!  " +
                       "Using shear = 0.")
         shear = galsim.Shear(g1=0,g2=0)
+
     #print base['obj_num'],'NFW shear = ',shear
     return shear, False
 
@@ -60,6 +61,8 @@ def _GenerateFromNFWHaloShear(config, base, value_type):
 def _GenerateFromNFWHaloMagnification(config, base, value_type):
     """@brief Return a magnification calculated from an NFWHalo object.
     """
+    nfw_halo = galsim.config.GetInputObj('nfw_halo', config, base, 'NFWHaloMagnification')
+
     if 'world_pos' not in base:
         raise ValueError("NFWHaloMagnification requested, but no position defined.")
     pos = base['world_pos']
@@ -68,8 +71,6 @@ def _GenerateFromNFWHaloMagnification(config, base, value_type):
         raise ValueError("NFWHaloMagnification requested, but no gal.redshift defined.")
     redshift = galsim.config.GetCurrentValue('gal.redshift', base, float)
 
-    nfw_halo = galsim.config.GetInputObj('nfw_halo', config, base, 'NFWHaloMagnification')
- 
     opt = { 'max_mu' : float, 'num' : int }
     kwargs = galsim.config.GetAllParams(config, base, opt=opt)[0]
 

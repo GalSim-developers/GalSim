@@ -202,7 +202,7 @@ stamp_ignore = []
 
 def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
     """
-    Build a single image using the given config file
+    Build a single stamp image using the given config file
 
     @param config           A configuration dict.
     @param obj_num          If given, the current obj_num [default: 0]
