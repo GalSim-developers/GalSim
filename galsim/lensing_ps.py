@@ -607,7 +607,7 @@ class PowerSpectrum(object):
             ntot += temp
         if self.b_power_function is not None:
             ntot += temp
-        return ntot
+        return int(ntot)
 
     def subsampleGrid(self, subsample_fac, get_convergence=False):
         """Routine to use a regular subset of the grid points without a completely new call to
