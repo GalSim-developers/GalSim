@@ -24,7 +24,8 @@ New Features
 - Added optional `wcs` argument to `Image.resize()`. (#691)
 - Added `BaseDeviate.discard(n)` and `BaseDeviate.raw()`. (#691)
 - Added `sersic_prec` option to COSMOSCatalog.makeGalaxy(). (#691)
-
+- Made it possible to initialize an InterpolatedImage from a user-specified 
+  HDU in a FITS file with multiple extensions. (#660)
 
 Updates to galsim executable
 ----------------------------
