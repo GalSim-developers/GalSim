@@ -254,7 +254,7 @@ def main():
         # Merge the base_config information into this config file.
         MergeConfig(config,base_config)
 
-        # Update with the command-line variables:
+        # Parse the command-line variables:
         new_params = ParseVariables(args.variables, logger)
 
         # Add modules to the config['modules'] list
