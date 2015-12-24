@@ -12,3 +12,44 @@ Bug Fixes
   ChromaticObjects and image-setup keyword arguments (#683)
 - Added ability to manipulate the width of the moment-measuring weight function
   for the KSB shear estimation method of the galsim.hsm package. (#686)
+- Fixed bug the (undocumented) function COSMOSCatalog._makeSingleGalaxy,
+  where the resulting object did not set the index attribute properly. (#694)
+
+
+New Features
+------------
+- Added OutputCatalog class (#301, #691)
+- Changed `galsim.fits.writeMulti` to allow any of the "image"s to be
+  already-built hdus, which are included as is.. (#691)
+- Added optional `wcs` argument to `Image.resize()`. (#691)
+- Added `BaseDeviate.discard(n)` and `BaseDeviate.raw()`. (#691)
+- Added `sersic_prec` option to COSMOSCatalog.makeGalaxy(). (#691)
+
+
+Updates to galsim executable
+----------------------------
+
+- Dropped default verbosity from 2 to 1, since for real simulations, 2 is
+  usually too much output. (#691)
+- Added ability to easily split the total work into several jobs with
+  galsim -n njobs -j jobnum. (#691)
+- Added galsim -p to perform profiling on the run. (#691)
+
+
+New config features
+-------------------
+
+- Added ability to write truth catalogs using output.truth field. (#301, #691)
+- Improved the extensibility of the config parsing.  It is now easier to write
+  custom image types, object types, value types, etc. and register them with
+  the config parser.  The code with the new type definitions should be given
+  as a module for the code to import using the new 'modules' top-level
+  config field. (#691)
+- Added the 'template' option to read another config file and use either the 
+  whole file as a template or just a given field from the file. (#691)
+- Made '$' and '@' shorthand for 'Eval' and 'Current' types respectively in
+  string values.  e.g. '$(@image.pixel_scale) * 2' would be parsed to mean
+  2 times the current value of image.pixel_scale.  (#691)
+- Allowed gsobjects to be referenced from Current types. (#691)
+- Added x,f specification for a RandomDistribution. (#691)
+
