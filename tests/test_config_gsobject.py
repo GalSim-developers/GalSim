@@ -698,6 +698,8 @@ def test_interpolated_image():
 
     imgdir = 'SBProfile_comparison_images'
     file_name = os.path.join(imgdir,'gauss_smallshear.fits')
+    imgdir2 = 'fits_files'
+    file_name2 = os.path.join(imgdir2,'interpim_hdu_test.fits')
     config = {
         'gal1' : { 'type' : 'InterpolatedImage', 'image' : file_name },
         'gal2' : { 'type' : 'InterpolatedImage', 'image' : file_name,
@@ -716,7 +718,9 @@ def test_interpolated_image():
                  },
         'gal7' : { 'type' : 'InterpolatedImage', 'image' : file_name,
                    'pad_image' : 'fits_files/blankimg.fits' 
-                 }
+                 },
+        'galmulti' : { 'type' : 'InterpolatedImage', 'image' : file_name2,
+                       'hdu' : 2 }
     }
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
@@ -751,6 +755,14 @@ def test_interpolated_image():
     gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
     gal7b = galsim.InterpolatedImage(im, pad_image = 'fits_files/blankimg.fits')
     gsobject_compare(gal7a, gal7b)
+
+    # Now test the reading from some particular HDU
+    galmulti = galsim.config.BuildGSObject(config, 'galmulti')[0]
+    im = galmulti.drawImage(scale=0.2, method='no_pixel')
+    test_g2 = im.FindAdaptiveMom().observed_shape.g2
+    np.testing.assert_almost_equal(
+        test_g2, 0.7, decimal=3,
+        err_msg='Did not get right shape image after reading InterpolatedImage from HDU')
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
