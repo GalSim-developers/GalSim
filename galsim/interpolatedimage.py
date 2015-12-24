@@ -95,7 +95,7 @@ class InterpolatedImage(GSObject):
                 image, x_interpolant=None, k_interpolant=None, normalization='flux', scale=None,
                 wcs=None, flux=None, pad_factor=4., noise_pad_size=0, noise_pad=0., use_cache=True,
                 pad_image=None, rng=None, calculate_stepk=True, calculate_maxk=True,
-                use_true_center=True, offset=None)
+                use_true_center=True, offset=None, hdu=None)
 
     Initializes `interpolated_image` as an InterpolatedImage instance.
 
@@ -117,7 +117,8 @@ class InterpolatedImage(GSObject):
 
     @param image            The Image from which to construct the object.
                             This may be either an Image instance or a string indicating a fits
-                            file from which to read the image.
+                            file from which to read the image.  In the latter case, the `hdu`
+                            kwarg can be used to specify a particular HDU in that file.
     @param x_interpolant    Either an Interpolant instance or a string indicating which real-space
                             interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
                             'cubic', 'quintic', or 'lanczosN' where N should be the integer order
@@ -161,7 +162,8 @@ class InterpolatedImage(GSObject):
                                (c) as an Image of a noise field, which is used to calculate
                                    the desired noise power spectrum; or
                                (d) as a string which is interpreted as a filename containing an
-                                   example noise field with the proper noise power spectrum.
+                                   example noise field with the proper noise power spectrum (as an
+                                   Image in the first HDU).
                             It is important to keep in mind that the calculation of the correlation
                             function that is internally stored within a CorrelatedNoise object is a
                             non-negligible amount of overhead, so the recommended means of
@@ -184,7 +186,7 @@ class InterpolatedImage(GSObject):
                             can be specified in two ways:
                                (a) as an Image; or
                                (b) as a string which is interpreted as a filename containing an
-                                   image to use.
+                                   image to use (in the first HDU).
                             The `pad_image` scale or wcs is ignored.  It uses the same scale or
                             wcs for both the `image` and the `pad_image`.
                             The user should be careful to ensure that the image used for padding
@@ -222,6 +224,8 @@ class InterpolatedImage(GSObject):
                             center if `use_true_center=False`).  [default: None]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
+    @param hdu              When reading in an Image from a file, this parameter can be used to
+                            select a particular HDU in the file. [default: None]
 
     Methods
     -------
@@ -241,7 +245,8 @@ class InterpolatedImage(GSObject):
         'pad_image' : str ,
         'calculate_stepk' : bool ,
         'calculate_maxk' : bool ,
-        'use_true_center' : bool
+        'use_true_center' : bool ,
+        'hdu' : int
     }
     _single_params = []
     _takes_rng = True
@@ -251,7 +256,7 @@ class InterpolatedImage(GSObject):
                  scale=None, wcs=None, flux=None, pad_factor=4., noise_pad_size=0, noise_pad=0.,
                  rng=None, pad_image=None, calculate_stepk=True, calculate_maxk=True,
                  use_cache=True, use_true_center=True, offset=None, gsparams=None, dx=None,
-                 _force_stepk=0., _force_maxk=0.):
+                 _force_stepk=0., _force_maxk=0., hdu=None):
 
         # Check for obsolete dx parameter
         if dx is not None and scale is None:
@@ -262,7 +267,7 @@ class InterpolatedImage(GSObject):
         # first try to read the image as a file.  If it's not either a string or a valid
         # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
         try:
-            image = galsim.fits.read(image)
+            image = galsim.fits.read(image, hdu=hdu)
         except:
             pass
 
