@@ -196,10 +196,10 @@ def test_meds_config():
 
     # Some parameters:
     if __name__ == '__main__':
-        nobj = 5
+        nobj = 15
         n_per_obj = 8
     else:
-        nobj = 1
+        nobj = 5
         n_per_obj = 3
     file_name = 'test_meds.fits'
     stamp_size = 32
@@ -211,7 +211,7 @@ def test_meds_config():
     # The config dict to write some images to a MEDS file
     config = {
         'gal' : { 'type' : 'Sersic',
-                  'n' : 3,
+                  'n' : 1.3,
                   'half_light_radius' : { 'type' : 'Sequence', 'first' : 1.7, 'step' : 0.2,
                                           'repeat' : n_per_obj },
                   'shear' : { 'type' : 'G1G2', 'g1' : g1, 'g2' : g2 },
@@ -238,6 +238,9 @@ def test_meds_config():
                                            'index_key' : 'file_num' }
     config['output'] = { 'type' : 'Fits',
                          'nfiles' : nobj,
+                         'weight' : { 'hdu' : 1 },
+                         'badpix' : { 'hdu' : 2 },
+                         'psf' : { 'hdu' : 3 },
                          'file_name' : { 'type' : 'NumberedFile', 'root' : 'test_meds' }
                        }
     config['image'] = { 'type' : 'Tiled',
@@ -279,7 +282,12 @@ def test_meds_config():
         numpy.testing.assert_array_equal(ref_im.array, meds_im_array)
 
         meds_wt_array = m.get_mosaic(iobj, type='weight')
+        ref_wt_im = galsim.fits.read(ref_file, hdu=1)
+        numpy.testing.assert_array_equal(ref_wt_im.array, meds_wt_array)
         meds_seg_array = m.get_mosaic(iobj, type='seg')
+        ref_seg_im = galsim.fits.read(ref_file, hdu=2)
+        ref_seg_im = 1 - ref_seg_im  # The seg mag is 1 where badpix == 0
+        numpy.testing.assert_array_equal(ref_seg_im.array, meds_seg_array)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

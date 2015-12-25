@@ -112,7 +112,7 @@ class MultiExposureObject(object):
             # where the segmentation info and bad pixel info are separately coded.
             # However, for now, we just set to 0 any bad pixels.
             # (Not that GalSim has any mechanism yet for generating bad pixels, so this is
-            # usually a null op, but it's in place for when there is something to do.)
+            # usually a no op, but it's in place for when there is something to do.)
             if badpix != None:
                 if len(self.segs) != len(badpix):
                     raise ValueError("segs and badpix are different lengths")
