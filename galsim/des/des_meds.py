@@ -223,6 +223,7 @@ def write_meds(obj_list, file_name, clobber=True):
 
     # loop over objects
     for obj in obj_list:
+        print 'obj = ',obj
 
         # initialise the start indices for each image
         start_rows = numpy.ones(MAX_NCUTOUTS)*EMPTY_START_INDEX
@@ -319,7 +320,11 @@ def write_meds(obj_list, file_name, clobber=True):
                                array=numpy.array(cat['col0'])     ) )
 
 
-    object_data = pyfits.new_table(pyfits.ColDefs(cols))
+    # Depending on the version of pyfits, one of these should work:
+    try:
+        object_data = pyfits.BinTableHDU.from_columns(cols)
+    except:
+        object_data = pyfits.new_table(pyfits.ColDefs(cols))
     object_data.update_ext_name('object_data')
 
     # third hdu is image_info
@@ -332,7 +337,10 @@ def write_meds(obj_list, file_name, clobber=True):
     cols.append( pyfits.Column(name='seg_path',    format='A256',   array=['generated_by_galsim'] ))
     cols.append( pyfits.Column(name='magzp',       format='E',      array=[-1.]                   ))
     cols.append( pyfits.Column(name='scale',       format='E',      array=[-1.]                   ))
-    image_info = pyfits.new_table(pyfits.ColDefs(cols))
+    try:
+        image_info = pyfits.BinTableHDU.from_columns(cols)
+    except:
+        image_info = pyfits.new_table(pyfits.ColDefs(cols))
     image_info.update_ext_name('image_info')
 
     # fourth hdu is metadata
@@ -359,7 +367,10 @@ def write_meds(obj_list, file_name, clobber=True):
     cols.append( pyfits.Column(name='seg_hdu',       format='K',    array=[9999]                  ))
     cols.append( pyfits.Column(name='sky_hdu',       format='K',    array=[9999]                  ))
     cols.append( pyfits.Column(name='fake_coadd_seg',format='K',    array=[9999]                  ))
-    metadata = pyfits.new_table(pyfits.ColDefs(cols))
+    try:
+        metadata = pyfits.BinTableHDU.from_columns(cols)
+    except:
+        metadata = pyfits.new_table(pyfits.ColDefs(cols))
     metadata.update_ext_name('metadata')
 
     # rest of HDUs are image vectors
@@ -404,7 +415,7 @@ def build_meds(config, file_num, image_num, obj_num, nproc, ignore, logger):
             raise AttibuteError("MEDS files are not compatible with image type %s."%image_type)
 
     req = { 'nobjects' : int , 'nstamps_per_object' : int }
-    params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
+    params = galsim.config.GetAllParams(config['output'],config,ignore=ignore,req=req)[0]
 
     nobjects = params['nobjects']
     nstamps_per_object = params['nstamps_per_object']

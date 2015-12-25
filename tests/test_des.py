@@ -16,24 +16,19 @@
 #    and/or other materials provided with the distribution.
 #
 
-
-
-# This test script requires that you have installed Erin's meds module and his fitsio module.
-# You can get these from:
-#
-# meds  - https://github.com/esheldon/meds
-# fitsio - https://github.com/esheldon/fitsio
-#
-# In both cases, the installation is simply
-#
-# python setup.py install [ --prefix PREFIX ]
-
-
 import numpy
 import os
 import sys
 import galsim
 import galsim.des
+
+from galsim_test_helpers import *
+
+try:
+    import galsim
+except ImportError:
+    sys.path.append(os.path.abspath(os.path.join(path, "..")))
+    import galsim
 
 
 def test_meds():
@@ -41,6 +36,8 @@ def test_meds():
     Create two objects, each with two exposures. Save them to a MEDS file.
     Load the MEDS file. Compare the created objects with the one read by MEDS.
     """
+    import time
+    t1 = time.time()
 
     # initialise empty MultiExposureObject list
     objlist = []
@@ -73,6 +70,7 @@ def test_meds():
 
     # create object
     obj1 = galsim.des.MultiExposureObject(images=images, weights=weights, segs=segs, wcs=wcs, id=1)
+    print 'obj1 = ',obj1
 
     # second obj
     img21 = galsim.Image(box_size, box_size, init_value=211)
@@ -95,18 +93,27 @@ def test_meds():
 
     # create object
     obj2 = galsim.des.MultiExposureObject(images=images, weights=weights, segs=segs, wcs=wcs, id=2)
+    print 'obj2 = ',obj2
 
     # create an object list
     objlist = [obj1, obj2]
 
     # save objects to MEDS file
     filename_meds = 'test_meds.fits'
-    galsim.des.write_meds(filename_meds, objlist, clobber=True)
+    print 'file_name = ',filename_meds
+    print 'objlist = ',objlist
+    galsim.des.write_meds(objlist, filename_meds, clobber=True)
     print 'wrote MEDS file %s ' % filename_meds
 
     # test functions in des_meds.py
     print 'reading %s' % filename_meds
-    import meds
+    try:
+        import meds
+    except ImportError:
+        print 'Failed to import meds.  Unable to do tests of meds file.'
+        # Note that while there are no tests prior to this, the above still checks for 
+        # syntax errors in the meds creation software, so it's still worth running as part
+        # of the normal unit test runs.
     m = meds.MEDS(filename_meds)
 
     # get the catalog
@@ -176,16 +183,24 @@ def test_meds():
 
         print 'test passed get_mosaic for obj=%d' % (iobj)
 
-    print 'all asserts succeeded'
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 def test_meds_config():
     """
     Create a meds file from a config and compare with a manual creation.
     """
+    import time
+    t1 = time.time()
 
     # Some parameters:
-    nobj = 5
-    n_per_obj = 8
+    if __name__ == '__main__':
+        nobj = 5
+        n_per_obj = 8
+    else:
+        nobj = 1
+        n_per_obj = 3
     file_name = 'test_meds.fits'
     stamp_size = 32
     pixel_scale = 0.26
@@ -200,7 +215,7 @@ def test_meds_config():
                   'half_light_radius' : { 'type' : 'Sequence', 'first' : 1.7, 'step' : 0.2,
                                           'repeat' : n_per_obj },
                   'shear' : { 'type' : 'G1G2', 'g1' : g1, 'g2' : g2 },
-                  'shift' : { 'type' : 'XY' , 'x' : 1, 'y' : 2}
+                  'shift' : { 'type' : 'XY' , 'x' : 0.02, 'y' : 0.03}
                 },
         'psf' : { 'type' : 'Moffat', 'beta' : 2.9, 'fwhm' : 0.7 },
         'image' : { 'pixel_scale' : pixel_scale,
@@ -220,7 +235,7 @@ def test_meds_config():
 
     # Now repeat, making a separate file for each
     config['gal']['half_light_radius'] = { 'type' : 'Sequence', 'first' : 1.7, 'step' : 0.2,
-                                           'index' : 'file_num' }
+                                           'index_key' : 'file_num' }
     config['output'] = { 'type' : 'Fits',
                          'nfiles' : nobj,
                          'file_name' : { 'type' : 'NumberedFile', 'root' : 'test_meds' }
@@ -236,7 +251,13 @@ def test_meds_config():
 
     # test functions in des_meds.py
     print 'reading %s' % file_name
-    import meds
+    try:
+        import meds
+    except ImportError:
+        print 'Failed to import meds.  Unable to do tests of meds file.'
+        # Note that while there are no tests prior to this, the above still checks for 
+        # syntax errors in the meds creation software, so it's still worth running as part
+        # of the normal unit test runs.
     m = meds.MEDS(file_name)
     print 'number of objects is %d' % m.size
     assert m.size == nobj
@@ -260,10 +281,10 @@ def test_meds_config():
         meds_wt_array = m.get_mosaic(iobj, type='weight')
         meds_seg_array = m.get_mosaic(iobj, type='seg')
 
-    print 'all asserts succeeded'
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
-
     test_meds()
     test_meds_config()
 
