@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -48,12 +48,12 @@ def test_shapelet_gaussian():
     im2 = galsim.ImageF(64,64, scale=scale)
     for sigma in [1., 0.6, 2.4]:
         gauss = galsim.Gaussian(flux=test_flux, sigma=sigma)
-        gauss.draw(im1)
+        gauss.drawImage(im1, method='no_pixel')
         for order in [0, 2, 8]:
-            bvec = np.zeros(galsim.LVectorSize(order))
+            bvec = np.zeros(galsim.ShapeletSize(order))
             bvec[0] = test_flux
             shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
-            shapelet.draw(im2)
+            shapelet.drawImage(im2, method='no_pixel')
             printval(im2,im1)
             np.testing.assert_array_almost_equal(
                     im1.array, im2.array, 5,
@@ -64,7 +64,7 @@ def test_shapelet_gaussian():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
-def test_shapelet_draw():
+def test_shapelet_drawImage():
     """Test some measured properties of a drawn shapelet against the supposed true values
     """
     import time
@@ -74,38 +74,34 @@ def test_shapelet_draw():
     scale = 0.2
     test_flux = 23.
 
-    pix = galsim.Pixel(scale)
     im = galsim.ImageF(129,129, scale=scale)
     for sigma in [1., 0.3, 2.4]:
         for order in [0, 2, 8]:
-            shapelet = galsim.Shapelet(sigma=sigma, order=order)
-            shapelet.setNM(0,0,1.)
+            bvec = np.zeros(galsim.ShapeletSize(order))
+            bvec[0] = 1.  # N,m = 0,0
+            k = 0
             for n in range(1,order+1):
+                k += n+1
                 if n%2 == 0:  # even n
-                    #shapelet.setNM(n,0,0.23/(n*n))
-                    shapelet.setPQ(n/2,n/2,0.23/(n*n))  # same thing.  Just test setPQ syntax.
+                    bvec[k] = 0.23/(n*n)        # N,m = n,0  or p,q = n/2,n/2
                     if n >= 2:
-                        shapelet.setNM(n,2,0.14/n,-0.08/n)
+                        bvec[k-2] = 0.14/n      # N,m = n,2  real part
+                        bvec[k-1] = -0.08/n     # N,m = n,2  imag part
                 else:  # odd n
                     if n >= 1:
-                        shapelet.setNM(n,1,-0.08/n**3.2,0.05/n**2.1)
+                        bvec[k-1] = -0.08/n**3.2    # N,m = n,1  real part
+                        bvec[k] = 0.05/n**2.1       # N,m = n,1  imag part
                     if n >= 3:
-                        shapelet.setNM(n,3,0.31/n**4.2,-0.18/n**3.9)
-            #print 'shapelet vector = ',shapelet.getBVec()
+                        bvec[k-3] = 0.31/n**4.2    # N,m = n,3  real part
+                        bvec[k-2] = -0.18/n**3.9       # N,m = n,3  imag part
+            print 'shapelet vector = ',bvec
+            shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
 
             # Test normalization  (This is normally part of do_shoot.  When we eventually 
             # implement photon shooting, we should go back to the normal do_shoot call, 
             # and remove this section.)
-            shapelet.setFlux(test_flux)
-            # Need to convolve with a pixel if we want the flux to come out right.
-            conv = galsim.Convolve([pix,shapelet])
-            conv.draw(im, normalization="surface brightness")
-            flux = im.array.sum()
-            print 'img.sum = ',flux,'  cf. ',test_flux/(scale*scale)
-            np.testing.assert_almost_equal(flux * scale*scale / test_flux, 1., 4,
-                    err_msg="Surface brightness normalization for Shapelet "
-                    "disagrees with expected result")
-            conv.draw(im, normalization="flux")
+            shapelet = shapelet.withFlux(test_flux)
+            shapelet.drawImage(im)
             flux = im.array.sum()
             print 'im.sum = ',flux,'  cf. ',test_flux
             np.testing.assert_almost_equal(flux / test_flux, 1., 4,
@@ -123,6 +119,7 @@ def test_shapelet_draw():
             flux = im.array.sum()
             mx = (x*im.array).sum() / flux
             my = (y*im.array).sum() / flux
+            conv = galsim.Convolve([shapelet, galsim.Pixel(scale)])
             print 'centroid = ',mx,my,' cf. ',conv.centroid()
             np.testing.assert_almost_equal(mx, shapelet.centroid().x, 3,
                     err_msg="Measured centroid (x) for Shapelet disagrees with expected result")
@@ -166,6 +163,9 @@ def test_shapelet_properties():
     np.testing.assert_almost_equal(shapelet.kValue(zero), flux+0j, 10)
     np.testing.assert_almost_equal(shapelet.xValue(zero), 0.0653321217013, 10)
 
+    # Check picklability
+    do_pickle(shapelet)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -175,21 +175,19 @@ def test_shapelet_fit():
     import time
     t1 = time.time()
 
-    for norm in ['f', 'sb']:
+    for method, norm in [('no_pixel','f'), ('sb','sb')]:
         # We fit a shapelet approximation of a distorted Moffat profile:
         flux = 20
         psf = galsim.Moffat(beta=3.4, half_light_radius=1.2, flux=flux)
-        psf.applyShear(g1=0.11,g2=0.07)
-        psf.applyShift(0.03,0.04)
+        psf = psf.shear(g1=0.11,g2=0.07).shift(0.03,0.04)
         scale = 0.2
         pixel = galsim.Pixel(scale)
         conv = galsim.Convolve([psf,pixel])
-        im1 = conv.draw(scale=scale, normalization=norm)
+        im1 = conv.drawImage(scale=scale, method=method)
 
         sigma = 1.2  # Match half-light-radius as a decent first approximation.
-        shapelet = galsim.Shapelet(sigma=sigma, order=10)
-        shapelet.fitImage(im1, normalization=norm)
-        #print 'fitted shapelet coefficients = ',shapelet.getBVec()
+        shapelet = galsim.FitShapelet(sigma, 10, im1, normalization=norm)
+        print 'fitted shapelet coefficients = ',shapelet.bvec
 
         # Check flux
         print 'flux = ',shapelet.getFlux(),'  cf. ',flux
@@ -205,20 +203,19 @@ def test_shapelet_fit():
 
         # Test drawing image from shapelet
         im2 = im1.copy()
-        shapelet.draw(im2, normalization=norm)
+        shapelet.drawImage(im2, method=method)
         # Check that images are close to the same:
         print 'norm(diff) = ',np.sum((im1.array-im2.array)**2)
         print 'norm(im) = ',np.sum(im1.array**2)
         assert np.sum((im1.array-im2.array)**2) < 1.e-3 * np.sum(im1.array**2)
 
         # Remeasure -- should now be very close to the same.
-        shapelet2 = shapelet.copy()
-        shapelet2.fitImage(im2, normalization=norm)
-        np.testing.assert_equal(shapelet.getSigma(), shapelet2.getSigma(),
+        shapelet2 = galsim.FitShapelet(sigma, 10, im2, normalization=norm)
+        np.testing.assert_equal(shapelet.sigma, shapelet2.sigma,
                 err_msg="Second fitted shapelet has the wrong sigma")
-        np.testing.assert_equal(shapelet.getOrder(), shapelet2.getOrder(),
+        np.testing.assert_equal(shapelet.order, shapelet2.order,
                 err_msg="Second fitted shapelet has the wrong order")
-        np.testing.assert_almost_equal(shapelet.getBVec(), shapelet2.getBVec(), 6,
+        np.testing.assert_almost_equal(shapelet.bvec, shapelet2.bvec, 6,
                 err_msg="Second fitted shapelet coefficients do not match original")
 
     t2 = time.time()
@@ -249,149 +246,53 @@ def test_shapelet_adjustments():
 
     ref_shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
     ref_im = galsim.ImageF(nx,ny)
-    ref_shapelet.draw(ref_im, scale=scale)
+    ref_shapelet.drawImage(ref_im, scale=scale)
 
-    # Test setSigma
-    shapelet = galsim.Shapelet(sigma=1., order=order, bvec=bvec)
-    shapelet.setSigma(sigma)
-    shapelet.draw(im)
-    np.testing.assert_array_almost_equal(
-        im.array, ref_im.array, 6,
-        err_msg="Shapelet set with setSigma disagrees with reference Shapelet")
-
-    # Test setBVec
-    shapelet = galsim.Shapelet(sigma=sigma, order=order)
-    shapelet.setBVec(bvec)
-    shapelet.draw(im)
-    np.testing.assert_array_almost_equal(
-        im.array, ref_im.array, 6,
-        err_msg="Shapelet set with setBVec disagrees with reference Shapelet")
-
-    # Test setOrder
-    shapelet = galsim.Shapelet(sigma=sigma, order=2)
-    shapelet.setOrder(order)
-    shapelet.setBVec(bvec)
-    shapelet.draw(im)
-    np.testing.assert_array_almost_equal(
-        im.array, ref_im.array, 6,
-        err_msg="Shapelet set with setOrder disagrees with reference Shapelet")
-
-    # Test that changing the order preserves the values to the extent possible.
-    shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
-    shapelet.setOrder(10)
-    np.testing.assert_array_equal(
-        shapelet.getBVec()[0:28], bvec, 
-        err_msg="Shapelet setOrder to larger doesn't preserve existing values.")
-    np.testing.assert_array_equal(
-        shapelet.getBVec()[28:66], np.zeros(66-28),
-        err_msg="Shapelet setOrder to larger doesn't fill with zeros.")
-    shapelet.setOrder(6)
-    np.testing.assert_array_equal(
-        shapelet.getBVec(), bvec, 
-        err_msg="Shapelet setOrder back to original from larger doesn't preserve existing values.")
-    shapelet.setOrder(3)
-    np.testing.assert_array_equal(
-        shapelet.getBVec()[0:10], bvec[0:10], 
-        err_msg="Shapelet setOrder to smaller doesn't preserve existing values.")
-    shapelet.setOrder(6)
-    np.testing.assert_array_equal(
-        shapelet.getBVec()[0:10], bvec[0:10], 
-        err_msg="Shapelet setOrder back to original from smaller doesn't preserve existing values.")
-    shapelet.setOrder(6)
-    np.testing.assert_array_equal(
-        shapelet.getBVec()[10:28], np.zeros(28-10),
-        err_msg="Shapelet setOrder back to original from smaller doesn't fill with zeros.")
-
-    # Test that setting a Shapelet with setNM gives the right profile
-    shapelet = galsim.Shapelet(sigma=sigma, order=order)
-    i = 0
-    for n in range(order+1):
-        for m in range(n,-1,-2):
-            if m == 0:
-                shapelet.setNM(n,m,bvec[i])
-                i = i+1
-            else:
-                shapelet.setNM(n,m,bvec[i],bvec[i+1])
-                i = i+2
-    shapelet.draw(im)
-    np.testing.assert_array_almost_equal(
-        im.array, ref_im.array, 6,
-        err_msg="Shapelet set with setNM disagrees with reference Shapelet")
-
-    # Test that setting a Shapelet with setPQ gives the right profile
-    shapelet = galsim.Shapelet(sigma=sigma, order=order)
-    i = 0
-    for n in range(order+1):
-        for m in range(n,-1,-2):
-            p = (n+m)/2
-            q = (n-m)/2
-            if m == 0:
-                shapelet.setPQ(p,q,bvec[i])
-                i = i+1
-            else:
-                shapelet.setPQ(p,q,bvec[i],bvec[i+1])
-                i = i+2
-    shapelet.draw(im)
-    np.testing.assert_array_almost_equal(
-        im.array, ref_im.array, 6,
-        err_msg="Shapelet set with setPQ disagrees with reference Shapelet")
-
-    # Test that the Shapelet setFlux does the same thing as the GSObject setFlux
+    # Test that the Shapelet withFlux does the same thing as the GSObject withFlux
     gsref_shapelet = galsim.GSObject(ref_shapelet)  # Make it opaque to the Shapelet versions
-    gsref_shapelet.setFlux(23.)
-    gsref_shapelet.draw(ref_im)
+    gsref_shapelet.withFlux(23.).drawImage(ref_im, method='no_pixel')
     shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
-    shapelet.setFlux(23.)
-    shapelet.draw(im)
+    shapelet.withFlux(23.).drawImage(im, method='no_pixel')
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
-        err_msg="Shapelet setFlux disagrees with GSObject setFlux")
+        err_msg="Shapelet withFlux disagrees with GSObject withFlux")
 
-    # Test that the Shapelet scaleFlux does the same thing as the GSObject scaleFlux
-    gsref_shapelet.scaleFlux(0.23)
-    gsref_shapelet.draw(ref_im)
-    shapelet.scaleFlux(0.23)
-    shapelet.draw(im)
+    # Test that scaling the Shapelet flux does the same thing as the GSObject scaling
+    gsref_shapelet *= 0.23
+    gsref_shapelet.drawImage(ref_im, method='no_pixel')
+    shapelet *= 0.23
+    shapelet.drawImage(im, method='no_pixel')
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
-        err_msg="Shapelet setFlux disagrees with SObject scaleFlux")
+        err_msg="Shapelet *= 0.23 disagrees with GSObject *= 0.23")
 
-    # Test that the Shapelet applyRotation does the same thing as the GSObject applyRotation
-    gsref_shapelet.applyRotation(23. * galsim.degrees)
-    gsref_shapelet.draw(ref_im)
-    shapelet.applyRotation(23. * galsim.degrees)
-    shapelet.draw(im)
+    # Test that the Shapelet rotate does the same thing as the GSObject rotate
+    gsref_shapelet.rotate(23. * galsim.degrees).drawImage(ref_im, method='no_pixel')
+    shapelet.rotate(23. * galsim.degrees).drawImage(im, method='no_pixel')
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
-        err_msg="Shapelet applyRotation disagrees with GSObject applyRotation")
+        err_msg="Shapelet rotate disagrees with GSObject rotate")
 
-    # Test that the Shapelet applyDilation does the same thing as the GSObject applyDilation
-    gsref_shapelet.applyDilation(1.3)
-    gsref_shapelet.draw(ref_im)
-    shapelet.applyDilation(1.3)
-    shapelet.draw(im)
+    # Test that the Shapelet dilate does the same thing as the GSObject dilate
+    gsref_shapelet.dilate(1.3).drawImage(ref_im, method='no_pixel')
+    shapelet.dilate(1.3).drawImage(im, method='no_pixel')
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
-        err_msg="Shapelet applyDilation disagrees with GSObject applyDilation")
+        err_msg="Shapelet dilate disagrees with GSObject dilate")
 
-    # Test that the Shapelet applyMagnification does the same thing as the GSObject 
-    # applyMagnification
-    gsref_shapelet.applyMagnification(0.8)
-    gsref_shapelet.draw(ref_im)
-    shapelet.applyMagnification(0.8)
-    shapelet.draw(im)
+    # Test that the Shapelet magnify does the same thing as the GSObject magnify
+    gsref_shapelet.magnify(0.8).drawImage(ref_im, method='no_pixel')
+    shapelet.magnify(0.8).drawImage(im, method='no_pixel')
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
-        err_msg="Shapelet applyMagnification disagrees with GSObject applyMagnification")
+        err_msg="Shapelet magnify disagrees with GSObject magnify")
 
-    # Test that applyLensing works on Shapelet
-    gsref_shapelet.applyLensing(-0.05, 0.15, 1.1)
-    gsref_shapelet.draw(ref_im)
-    shapelet.applyLensing(-0.05, 0.15, 1.1)
-    shapelet.draw(im)
+    # Test that lens works on Shapelet
+    gsref_shapelet.lens(-0.05, 0.15, 1.1).drawImage(ref_im, method='no_pixel')
+    shapelet.lens(-0.05, 0.15, 1.1).drawImage(im, method='no_pixel')
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
-        err_msg="Shapelet applyLensing disagrees with GSObject applyLensing")
+        err_msg="Shapelet lens disagrees with GSObject lens")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -400,7 +301,7 @@ def test_shapelet_adjustments():
 
 if __name__ == "__main__":
     test_shapelet_gaussian()
-    test_shapelet_draw()
+    test_shapelet_drawImage()
     test_shapelet_properties()
     test_shapelet_fit()
     test_shapelet_adjustments()

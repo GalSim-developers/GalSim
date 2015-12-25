@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -55,7 +55,7 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-from galsim import pyfits
+from galsim._pyfits import pyfits
 
 # Setup info for tests, not likely to change
 ntypes = 4  # Note: Most tests below only run through the first 4 types.
@@ -205,112 +205,20 @@ def test_Image_basic():
                 assert im2(x,y) == 10*x+y
                 assert im2_view(x+dx,y+dy) == 10*x+y
                 assert im3_view(x+dx,y+dy) == 10*x+y
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_Image_obsolete():
-    """Test that the old obsolete syntax still works (for now)
-    """
-    # This is the old version of the test_Image_basic function from version 1.0
-    import time
-    t1 = time.time()
-    for i in xrange(ntypes):
+        # Check picklability
+        do_pickle(im1)
+        do_pickle(im1_view)
+        do_pickle(im2)
+        do_pickle(im2_view)
+        do_pickle(im3_view)
 
-        # Check basic constructor from ncol, nrow
-        array_type = types[i]
-        im1 = galsim.Image[array_type](ncol,nrow)
-        bounds = galsim.BoundsI(1,ncol,1,nrow)
+    # Also check picklability of Bounds, Position here.
+    do_pickle(galsim.PositionI(2,3))
+    do_pickle(galsim.PositionD(2.2,3.3))
+    do_pickle(galsim.BoundsI(2,3,7,8))
+    do_pickle(galsim.BoundsD(2.1, 4.3, 6.5, 9.1))
 
-        assert im1.getXMin() == 1
-        assert im1.getXMax() == ncol
-        assert im1.getYMin() == 1
-        assert im1.getYMax() == nrow
-        assert im1.getBounds() == bounds
-        assert im1.bounds == bounds
-
-        # Check basic constructor from ncol, nrow
-        # Also test alternate name of image type: ImageD, ImageF, etc.
-        image_type = eval("galsim.Image"+tchar[i]) # Use handy eval() mimics use of ImageSIFD
-        im2 = image_type(bounds)
-        im2_view = im2.view()
-
-        assert im2_view.getXMin() == 1
-        assert im2_view.getXMax() == ncol
-        assert im2_view.getYMin() == 1
-        assert im2_view.getYMax() == nrow
-        assert im2_view.bounds == bounds
-
-        # Check various ways to set and get values
-        for y in range(1,nrow):
-            for x in range(1,ncol):
-                im1.setValue(x,y, 100 + 10*x + y)
-                im2_view.setValue(x,y, 100 + 10*x + y)
-
-        for y in range(1,nrow):
-            for x in range(1,ncol):
-                assert im1.at(x,y) == 100+10*x+y
-                assert im1.view().at(x,y) == 100+10*x+y
-                assert im2.at(x,y) == 100+10*x+y
-                assert im2_view.at(x,y) == 100+10*x+y
-                im1.setValue(x,y, 10*x + y)
-                im2_view.setValue(x,y, 10*x + y)
-                assert im1(x,y) == 10*x+y
-                assert im1.view()(x,y) == 10*x+y
-                assert im2(x,y) == 10*x+y
-                assert im2_view(x,y) == 10*x+y
-
-        # Setting or getting the value outside the bounds should throw an exception.
-        try:
-            np.testing.assert_raises(RuntimeError,im1.setValue,0,0,1)
-            np.testing.assert_raises(RuntimeError,im1.at,0,0)
-            np.testing.assert_raises(RuntimeError,im1.view().setValue,0,0,1)
-            np.testing.assert_raises(RuntimeError,im1.view().at,0,0)
-
-            np.testing.assert_raises(RuntimeError,im1.setValue,ncol+1,0,1)
-            np.testing.assert_raises(RuntimeError,im1.at,ncol+1,0)
-            np.testing.assert_raises(RuntimeError,im1.view().setValue,ncol+1,0,1)
-            np.testing.assert_raises(RuntimeError,im1.view().at,ncol+1,0)
-
-            np.testing.assert_raises(RuntimeError,im1.setValue,0,nrow+1,1)
-            np.testing.assert_raises(RuntimeError,im1.at,0,nrow+1)
-            np.testing.assert_raises(RuntimeError,im1.view().setValue,0,nrow+1,1)
-            np.testing.assert_raises(RuntimeError,im1.view().at,0,nrow+1)
-
-            np.testing.assert_raises(RuntimeError,im1.setValue,ncol+1,nrow+1,1)
-            np.testing.assert_raises(RuntimeError,im1.at,ncol+1,nrow+1)
-            np.testing.assert_raises(RuntimeError,im1.view().setValue,ncol+1,nrow+1,1)
-            np.testing.assert_raises(RuntimeError,im1.view().at,ncol+1,nrow+1)
-        except ImportError:
-            print 'The assert_raises tests require nose'
-
-        # Check view of given data
-        im3_view = galsim.ImageView[array_type](ref_array.astype(array_type))
-        for y in range(1,nrow):
-            for x in range(1,ncol):
-                assert im3_view(x,y) == 10*x+y
-
-        # Check shift ops
-        im1_view = im1.view() # View with old bounds
-        dx = 31
-        dy = 16
-        im1.shift(dx,dy)
-        im2_view.setOrigin( 1+dx , 1+dy )
-        im3_view.setCenter( (ncol+1)/2+dx , (nrow+1)/2+dy )
-        shifted_bounds = galsim.BoundsI(1+dx, ncol+dx, 1+dy, nrow+dy)
-
-        assert im1.bounds == shifted_bounds
-        assert im2_view.bounds == shifted_bounds
-        assert im3_view.bounds == shifted_bounds
-        # Others shouldn't have changed
-        assert im1_view.bounds == bounds
-        assert im2.bounds == bounds
-        for y in range(1,nrow):
-            for x in range(1,ncol):
-                assert im1(x+dx,y+dy) == 10*x+y
-                assert im1_view(x,y) == 10*x+y
-                assert im2(x,y) == 10*x+y
-                assert im2_view(x+dx,y+dy) == 10*x+y
-                assert im3_view(x+dx,y+dy) == 10*x+y
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1551,6 +1459,9 @@ def test_Image_subImage():
         image[bounds] = galsim.Image((2*sub_array**2).astype(types[i]))
         np.testing.assert_array_equal(image.array, (2*ref_array**2),
             err_msg="image[bounds] /= im2 set wrong locations for dtype = "+str(types[i]))
+
+        do_pickle(image)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1631,6 +1542,9 @@ def test_Image_resize():
             np.testing.assert_array_equal(
                 im3_full.array, 23, err_msg="im3_full changed")
 
+            do_pickle(im1)
+            do_pickle(im2)
+            do_pickle(im3)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1642,6 +1556,7 @@ def test_ConstImage_array_constness():
     """
     import time
     t1 = time.time()
+
     for i in xrange(ntypes):
         # First try using the dictionary-type Image init
         image = galsim.Image(ref_array.astype(types[i]), make_const=True)
@@ -1658,6 +1573,7 @@ def test_ConstImage_array_constness():
             pass
         except:
             assert False, "Unexpected error: "+str(sys.exc_info()[0])
+
         # Then try using the eval command to mimic use via ImageD, etc.
         image_init_func = eval("galsim.Image"+tchar[i])
         image = image_init_func(ref_array.astype(types[i]), make_const=True)
@@ -1667,6 +1583,9 @@ def test_ConstImage_array_constness():
             pass
         except:
             assert False, "Unexpected error: "+str(sys.exc_info()[0])
+
+        do_pickle(image)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
             
@@ -1747,6 +1666,8 @@ def test_Image_constructor():
             test_arr, test_im.array,
             err_msg="Image constructor mangled input NumPy array (endian issues).")
 
+        do_pickle(test_im)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -1757,11 +1678,13 @@ def test_Image_view():
     import time
     t1 = time.time()
 
-    im = galsim.ImageI(25,25, wcs=galsim.AffineTransform(0.23,0.01,-0.02,0.22, galsim.PositionI(13,13)))
+    im = galsim.ImageI(25,25, wcs=galsim.AffineTransform(0.23,0.01,-0.02,0.22,
+                       galsim.PositionI(13,13)))
     im.fill(17)
     assert im.wcs == galsim.AffineTransform(0.23,0.01,-0.02,0.22, galsim.PositionI(13,13))
     assert im.bounds == galsim.BoundsI(1,25,1,25)
     assert im(11,19) == 17  # I'll keep editing this pixel to new values.
+    do_pickle(im)
 
     # Test view with no arguments
     imv = im.view()
@@ -1770,6 +1693,8 @@ def test_Image_view():
     imv.setValue(11,19, 20)
     assert imv(11,19) == 20
     assert im(11,19) == 20
+    do_pickle(im)
+    do_pickle(imv)
 
     # Test view with new origin
     imv = im.view(origin=(0,0))
@@ -1784,6 +1709,8 @@ def test_Image_view():
     imv2.setOrigin(0,0)
     assert imv.bounds == imv2.bounds
     assert imv.wcs == imv2.wcs
+    do_pickle(imv)
+    do_pickle(imv2)
 
     # Test view with new center
     imv = im.view(center=(0,0))
@@ -1798,6 +1725,8 @@ def test_Image_view():
     imv2.setCenter(0,0)
     assert imv.bounds == imv2.bounds
     assert imv.wcs == imv2.wcs
+    do_pickle(imv)
+    do_pickle(imv2)
 
     # Test view with new scale
     imv = im.view(scale=0.17)
@@ -1812,6 +1741,8 @@ def test_Image_view():
     imv2.scale = 0.17
     assert imv.bounds == imv2.bounds
     assert imv.wcs == imv2.wcs
+    do_pickle(imv)
+    do_pickle(imv2)
 
     # Test view with new wcs
     imv = im.view(wcs=galsim.JacobianWCS(0., 0.23, -0.23, 0.))
@@ -1825,6 +1756,8 @@ def test_Image_view():
     imv2.wcs = galsim.JacobianWCS(0.,0.23,-0.23,0.)
     assert imv.bounds == imv2.bounds
     assert imv.wcs == imv2.wcs
+    do_pickle(imv)
+    do_pickle(imv2)
 
     # Go back to original value for that pixel and make sure all are still equal to 17
     im.setValue(11,19, 17)
@@ -1834,9 +1767,35 @@ def test_Image_view():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_Image_writeheader():
+    """Test the functionality of image.write(...) for images that have header attributes
+    """
+    import time
+    t1 = time.time()
+
+    # First check: if we have an image.header attribute, it gets written to file.
+    im_test = galsim.Image(10, 10)
+    key_name = 'test_key'
+    im_test.header = galsim.FitsHeader(header={key_name : 'test_val'})
+    test_file = os.path.join(datadir, "test_header.fits")
+    im_test.write(test_file)
+    new_header = galsim.FitsHeader(test_file)
+    assert key_name.upper() in new_header.keys()
+
+    # Second check: if we have an image.header attribute that modifies some keywords used by the
+    # WCS, then make sure it doesn't overwrite the WCS.
+    im_test.wcs = galsim.JacobianWCS(0., 0.23, -0.23, 0.)
+    im_test.header = galsim.FitsHeader(header={'CD1_1' : 10., key_name : 'test_val'})
+    im_test.write(test_file)
+    new_header = galsim.FitsHeader(test_file)
+    assert key_name.upper() in new_header.keys()
+    assert new_header['CD1_1'] == 0.0
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_Image_basic()
-    test_Image_obsolete()
     test_Image_FITS_IO()
     test_Image_MultiFITS_IO()
     test_Image_CubeFITS_IO()
@@ -1865,3 +1824,4 @@ if __name__ == "__main__":
     test_BoundsI_init_with_non_pure_ints()
     test_Image_constructor()
     test_Image_view()
+    test_Image_writeheader()

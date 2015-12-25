@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -29,6 +29,91 @@ except ImportError:
 
 path, filename = os.path.split(__file__)
 datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
+
+def test_SED_basic():
+    """Basic tests of SED functionality
+    """
+    import time
+    t1 = time.time()
+
+    c = 2.99792458e17  # speed of light in nm/s
+    h = 6.62606957e-27 # Planck's constant in erg seconds
+    nm_w = np.arange(10,1002,10)
+    A_w = np.arange(100,10002,100)
+
+    # All of these should be equivalent.  Flat spectrum with F_lambda = 200 erg/nm
+    s_list = [
+        galsim.SED(spec=lambda x: 200.),
+        galsim.SED(spec='200', flux_type='flambda', wave_type='nanometers'),
+        galsim.SED('200'),
+        galsim.SED('200', 'nm', 'flambda'),
+        # 200 erg/nm / 10 A/nm = 20 erg/A
+        galsim.SED(spec='20', wave_type='Angstroms'),
+        # 200 erg/nm / (hc/w erg/photon) = 200 w/hc photons/nm
+        galsim.SED(spec='200 * wave / %r'%(h*c), flux_type='fphotons'),
+        # 200 erg/nm / (hc/w erg/photon) / 10 A/nm = 20 (w in A)/hc photons/A
+        galsim.SED(spec='20 * (wave/10) / %r'%(h*c), flux_type='fphotons', wave_type='Ang'),
+        # 200 erg/nm / (c/w^2 Hz/nm) = 200 w^2/c erg/Hz
+        galsim.SED(spec='200 * wave**2 / %r'%c, flux_type='fnu'),
+        galsim.SED(spec='200 * (wave/10)**2 / %r'%c, flux_type='fnu', wave_type='A'),
+        galsim.SED(galsim.LookupTable([1,1e3],[200,200], interpolant='linear')),
+        galsim.SED(galsim.LookupTable([1,1e4],[20,20], interpolant='linear'),
+                   wave_type='ang'),
+        galsim.SED(galsim.LookupTable([1,1e3],[200/(h*c),2e5/(h*c)], interpolant='linear'),
+                   flux_type='fphotons'),
+        galsim.SED(galsim.LookupTable([1,1e4],[2/(h*c),2e4/(h*c)], interpolant='linear'),
+                   flux_type='fphotons', wave_type='A'),
+        galsim.SED(galsim.LookupTable([1,1e3],[200/c,2e8/c], interpolant='linear', 
+                                      x_log=True, f_log=True),
+                   flux_type='fnu'),
+        galsim.SED(galsim.LookupTable([1,1e4],[2/c,2e8/c], interpolant='linear', 
+                                      x_log=True, f_log=True),
+                   flux_type='fnu', wave_type='A'),
+        galsim.SED(galsim.LookupTable(nm_w, 200.*np.ones(100)), flux_type='flambda'),
+        galsim.SED(galsim.LookupTable(A_w, 20.*np.ones(100)), flux_type='flambda', wave_type='A'),
+        galsim.SED(galsim.LookupTable(nm_w, 200.*nm_w/(h*c)), flux_type='fphotons'),
+        galsim.SED(galsim.LookupTable(A_w, 2.*A_w/(h*c)), flux_type='fphotons', wave_type='A'),
+        galsim.SED(galsim.LookupTable(nm_w, 200.*nm_w**2/c), flux_type='fnu'),
+        galsim.SED(galsim.LookupTable(A_w, 2.*A_w**2/c), flux_type='fnu', wave_type='A'),
+        galsim.SED(galsim.LookupTable([1, 100-1.e-10, 100, 1000, 1000+1.e-10, 2000],
+                                      [0., 0., 200., 200., 0., 0.], interpolant='linear'))
+    ]
+    s_list += [
+        s_list[9].thin(),
+        s_list[10].thin(),
+        s_list[11].thin(),
+        s_list[12].thin(),
+        s_list[13].thin(),
+        s_list[14].thin(),
+        s_list[15].thin(),
+        s_list[15].thin(preserve_range=True),
+        s_list[18].thin(),
+        s_list[18].thin(preserve_range=True),
+        s_list[21].thin(),
+        s_list[21].thin(preserve_range=True),
+        galsim.SED('1000', redshift=4),
+        galsim.SED('1000').atRedshift(4.0),
+    ]
+ 
+    for k,s in enumerate(s_list):
+        print k,' s = ',s
+        np.testing.assert_almost_equal(s(400)*h*c/400, 200, decimal=10)
+        np.testing.assert_almost_equal(s(900)*h*c/900, 200, decimal=10)
+        waves = np.arange(700,800,10)
+        np.testing.assert_array_almost_equal(s(waves) * h*c/waves, 200, decimal=10)
+
+        if k < len(s_list)-2:
+            np.testing.assert_equal(s.redshift, 0.)
+        else:
+            np.testing.assert_almost_equal(s.redshift, 4.)
+
+        # Only the first one is not picklable
+        if k > 0:
+            do_pickle(s, lambda x: (x(470), x(490), x(910)) )
+            do_pickle(s)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_SED_add():
     """Check that SEDs add like I think they should...
@@ -118,24 +203,30 @@ def test_SED_mul():
                        flux_type='fphotons')
         if z != 0:
             a = a.atRedshift(z)
-        b = lambda w: w**2
+
         # SED multiplied by function
+        b = lambda w: w**2
         c = a*b
         x = 3.0
         np.testing.assert_almost_equal(c(x), a(x) * b(x), 10,
                                        err_msg="Found wrong value in SED.__mul__")
+
         # function multiplied by SED
         c = b*a
         np.testing.assert_almost_equal(c(x), a(x) * b(x), 10,
                                        err_msg="Found wrong value in SED.__rmul__")
+
         # SED multiplied by scalar
-        d = c*4.2
-        np.testing.assert_almost_equal(d(x), c(x) * 4.2, 10,
+        d = a*4.2
+        np.testing.assert_almost_equal(d(x), a(x) * 4.2, 10,
                                        err_msg="Found wrong value in SED.__mul__")
+        do_pickle(d)
+
         # assignment multiplication
         d *= 2
-        np.testing.assert_almost_equal(d(x), c(x) * 4.2 * 2, 10,
+        np.testing.assert_almost_equal(d(x), a(x) * 4.2 * 2, 10,
                                        err_msg="Found wrong value in SED.__mul__")
+        do_pickle(d)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -151,24 +242,25 @@ def test_SED_div():
                        flux_type='fphotons')
         if z != 0:
             a = a.atRedshift(z)
-        b = lambda w: w**2
+
         # SED divided by function
+        b = lambda w: w**2
         c = a/b
         x = 3.0
         np.testing.assert_almost_equal(c(x), a(x)/b(x), 10,
                                        err_msg="Found wrong value in SED.__div__")
-        # function divided by SED
-        c = b/a
-        np.testing.assert_almost_equal(c(x), b(x)/a(x), 10,
-                                       err_msg="Found wrong value in SED.__rdiv__")
+
         # SED divided by scalar
-        d = c/4.2
-        np.testing.assert_almost_equal(d(x), c(x)/4.2, 10,
+        d = a/4.2
+        np.testing.assert_almost_equal(d(x), a(x)/4.2, 10,
                                        err_msg="Found wrong value in SED.__div__")
+        do_pickle(d)
+
         # assignment division
         d /= 2
-        np.testing.assert_almost_equal(d(x), c(x)/4.2/2, 10,
+        np.testing.assert_almost_equal(d(x), a(x)/4.2/2, 10,
                                        err_msg="Found wrong value in SED.__div__")
+        do_pickle(d)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -366,8 +458,21 @@ def test_SED_calculateDCRMomentShifts():
                                              parallactic_angle=90*galsim.degrees)
     np.testing.assert_almost_equal(Rbar[0], Rbar3[1], 15)
     np.testing.assert_almost_equal(V[1,1], V3[0,0], 25)
-    # and now test against an external known result.
-    np.testing.assert_almost_equal(V[1,1] * (180.0/np.pi * 3600)**2, 0.0065, 4)
+    # and now do the integral right here to compare.
+    # \bar{R} = \frac{\int{sed(\lambda) * bandpass(\lambda) * R(\lambda) d\lambda}}
+    #                {\int{sed(\lambda) * bandpass(\lambda) d\lambda}}
+    # where sed is in units of photons/nm (which is the default)
+    waves = np.union1d(sed.wave_list, bandpass.wave_list)
+    R = galsim.dcr.get_refraction(waves, 45.*galsim.degrees)
+    Rnum = np.trapz(sed(waves) * bandpass(waves) * R, waves)
+    den = np.trapz(sed(waves) * bandpass(waves), waves)
+    rad2arcsec = galsim.radians / galsim.arcsec
+
+    np.testing.assert_almost_equal(Rnum/den*rad2arcsec, Rbar[1]*rad2arcsec, 4)
+    # and for the second moment, V, the numerator is:
+    # \int{sed(\lambda) * bandpass(\lambda) * (R(\lambda) - Rbar)^2 d\lambda}
+    Vnum = np.trapz(sed(waves) * bandpass(waves) * (R - Rnum/den)**2, waves)
+    np.testing.assert_almost_equal(Vnum/den, V[1,1], 5)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -380,7 +485,15 @@ def test_SED_calculateSeeingMomentRatio():
     sed = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'))
     bandpass = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
     relative_size = sed.calculateSeeingMomentRatio(bandpass)
-    np.testing.assert_almost_equal(relative_size, 0.919577157172, 4)
+
+    # and now do the integral right here to compare.
+    # \Delta r^2/r^2 = \frac{\int{sed(\lambda) * bandpass(\lambda) * (\lambda/500)^-0.4 d\lambda}}
+    #                       {\int{sed(\lambda) * bandpass(\lambda) d\lambda}}
+    waves = np.union1d(sed.wave_list, bandpass.wave_list)
+    num = np.trapz(sed(waves) * bandpass(waves) * (waves/500.0)**(-0.4), waves)
+    den = np.trapz(sed(waves) * bandpass(waves), waves)
+
+    np.testing.assert_almost_equal(relative_size, num/den, 5)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -416,21 +529,21 @@ def test_fnu_vs_flambda():
         # Now also check that wavelengths in Angstroms work.
         waves_ang = waves * 10
         sed3 = galsim.SED(galsim.LookupTable(waves_ang, fnu), flux_type='fnu', wave_type='Ang')
-        sed4 = galsim.SED(galsim.LookupTable(waves_ang, flambda),
-                          flux_type='flambda',
-                          wave_type='Ang')
+        sed4 = galsim.SED(galsim.LookupTable(waves_ang, flambda/10.),
+                          flux_type='flambda', wave_type='Ang')
         if z != 0:
             sed3 = sed3.atRedshift(z)
             sed4 = sed4.atRedshift(z)
-        np.testing.assert_array_almost_equal(sed1(zwaves)/sed3(zwaves), np.ones(len(zwaves)), 10,
+        np.testing.assert_array_almost_equal(sed1(zwaves)/sed3(zwaves), 1., 10,
                                              err_msg="Check nm and Ang SED wavelengths consistency.")
-        np.testing.assert_array_almost_equal(sed2(zwaves)/sed4(zwaves), np.ones(len(zwaves)), 10,
+        np.testing.assert_array_almost_equal(sed2(zwaves)/sed4(zwaves), 1., 10,
                                              err_msg="Check nm and Ang SED wavelengths consistency.")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
+    test_SED_basic()
     test_SED_add()
     test_SED_sub()
     test_SED_mul()

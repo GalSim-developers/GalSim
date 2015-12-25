@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,7 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 """@file getSEDs.py
-Grab example SEDs from the web, clip them at 12000 Angstroms, and then thin with rel_err = 1.e-5.
+Grab example SEDs from the web, clip them at 22050 Angstroms, and then thin with rel_err = 1.e-5.
 Note that the outputs of this script, which are the files GALSIM_DIR/examples/data/CWW_*.sed, are
 already included in the repository.  This script just lets users know where these files came from
 and how they were altered.
@@ -43,9 +43,9 @@ for sedname in sednames:
     file_ = t.extractfile(sedname)
     base = os.path.basename(sedname)
     x,f = np.loadtxt(file_, unpack=True)
-    w = x<12000 # Angstroms
-    x=x[w]
-    f=f[w]
+    w = x<=22050 # Angstroms
+    x = x[w]
+    f = f[w]
     x1,f1 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-5)
     x2,f2 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-4)
     x3,f3 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-3)

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -17,24 +17,11 @@
 #
 
 import galsim
+import logging
 
+# This file handles the construction of wcs types in config['image']['wcs'].
 
-# We distinguish some classes according to whether they have an origin parameter.
-# The first item in the tuple is the builder class or function that does not take an 
-# offset parameter.  The second item is the version that does.
-# Most WCS types can use the normal _req_params, etc.  Currently, only Tan has a custom builder.
-valid_wcs_types = { 
-    'PixelScale' : ( 'galsim.PixelScale', 'galsim.OffsetWCS' ),
-    'Shear' : ( 'galsim.ShearWCS', 'galsim.OffsetShearWCS' ),
-    'Jacobian' : ( 'galsim.JacobianWCS', 'galsim.AffineTransform' ),
-    'Affine' : ( 'galsim.JacobianWCS', 'galsim.AffineTransform', ),
-    'UVFunction' : ( 'galsim.UVFunction', 'galsim.UVFunction' ),
-    'RaDecFunction' : ( 'galsim.RaDecFunction', 'galsim.RaDecFunction' ),
-    'Fits' : ( 'galsim.FitsWCS', 'galsim.FitsWCS' ),
-    'Tan' : ( 'TanWCSBuilder', 'TanWCSBuilder' ),
-}
-
-def BuildWCS(config, logger=None):
+def BuildWCS(config):
     """Read the wcs from the config dict, writing both it and, if it is well-defined, the 
     pixel_scale to the config.  If the wcs does not have a well-defined pixel_scale, it will 
     be stored as None.
@@ -45,51 +32,45 @@ def BuildWCS(config, logger=None):
     if 'wcs' in image:
         image_wcs = image['wcs']
         if 'type' in image_wcs:
-            type = image_wcs['type']
+            wcs_type = image_wcs['type']
         else:
-            type = 'PixelScale'
+            wcs_type = 'PixelScale'
 
         # Special case: origin == center means to use image_center for the wcs origin
         if 'origin' in image_wcs and image_wcs['origin'] == 'center':
             origin = config['image_center']
-            if logger:
-                logger.debug('image %d: Using origin = %s',config['image_num'],str(origin))
             image_wcs['origin'] = origin
 
-        if type not in valid_wcs_types:
-            raise AttributeError("Invalid image.wcs.type=%s."%type)
+        if wcs_type not in valid_wcs_types:
+            raise AttributeError("Invalid image.wcs.type=%s."%wcs_type)
 
-        if 'origin' in image_wcs or 'world_origin' in image_wcs:
-            build_func = eval(valid_wcs_types[type][1])
+        if ( valid_wcs_types[wcs_type]['local'] is not None and
+             ('origin' in image_wcs or 'world_origin' in image_wcs) ):
+            build_func = valid_wcs_types[wcs_type]['local']
         else:
-            build_func = eval(valid_wcs_types[type][0])
+            build_func = valid_wcs_types[wcs_type]['init']
 
-        if logger:
-            logger.debug('image %d: Build WCS for type = %s using %s',
-                         config['image_num'],type,str(build_func))
+        kwargs_func = valid_wcs_types[wcs_type]['kwargs']
+        if kwargs_func is not None:
+            kwargs = kwargs_func(image_wcs, config)
+        else:
+            req = build_func._req_params
+            opt = build_func._opt_params
+            single = build_func._single_params
 
-        req = build_func._req_params
-        opt = build_func._opt_params
-        single = build_func._single_params
+            # Pull in the image layer pixel_scale as a scale item if necessary.
+            if ( ('scale' in req or 'scale' in opt) and 'scale' not in image_wcs and 
+                'pixel_scale' in image ):
+                image_wcs['scale'] = image['pixel_scale']
 
-        # Pull in the image layer pixel_scale as a scale item if necessary.
-        if ( ('scale' in req or 'scale' in opt) and 'scale' not in image_wcs and 
-             'pixel_scale' in image ):
-            image_wcs['scale'] = image['pixel_scale']
+            kwargs, safe = galsim.config.GetAllParams(image_wcs, config, req, opt, single)
 
-        kwargs, safe = galsim.config.GetAllParams(image_wcs, type, config, req, opt, single)
+            # This would be weird, but might as well check...
+            if build_func._takes_rng:
+                if 'rng' not in config:
+                    raise ValueError("No config['rng'] available for %s.type = %s"%(key,wcs_type))
+                kwargs['rng'] = config['rng']
 
-        if logger and build_func._takes_logger: 
-            kwargs['logger'] = logger
-
-        # This would be weird, but might as well check...
-        if build_func._takes_rng:
-            if 'rng' not in config:
-                raise ValueError("No config['rng'] available for %s.type = %s"%(key,type))
-            kwargs['rng'] = config['rng']
-
-        if logger:
-            logger.debug('image %d: kwargs = %s',config['image_num'],str(kwargs))
         wcs = build_func(**kwargs) 
 
     else:
@@ -100,32 +81,64 @@ def BuildWCS(config, logger=None):
             scale = 1.0
         wcs = galsim.PixelScale(scale)
 
-    # Write it to the config dict and also return it.
-    config['wcs'] = wcs
-
-    # If the WCS is a PixelScale or OffsetWCS, then store the pixel_scale in base.  The 
-    # config apparatus does not use it -- we always use the wcs -- but we keep it in case
-    # the user wants to use it for an Eval item.  It's one of the variables they are allowed
-    # to assume will be present for them.
-    if wcs.isPixelScale():
-        config['pixel_scale'] = wcs.scale
-
     return wcs
 
+def GetTanWCSKwargs(config, base):
+    """The TanWCS type needs special handling to get the kwargs, since the TanWCS function
+    takes an AffineTransform as one of the arguments, so we need to build that from 
+    dudx, dudy, etc.  We also need to construct a CelestialCoord object for the world_origin,
+    which we make from ra, dec paramters.
+    """
+    req = { "dudx" : float, "dudy" : float, "dvdx" : float, "dvdy" : float,
+            "ra" : galsim.Angle, "dec" : galsim.Angle }
+    opt = { "units" : str, "origin" : galsim.PositionD }
+    params, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
 
-def TanWCSBuilder(dudx, dudy, dvdx, dvdy, ra, dec, units='arcsec', origin=galsim.PositionD(0,0)):
-    # The TanWCS uses a custom builder because the normal function takes an AffineTransform, which
-    # we need to construct.  It also takes a CelestialCoord for its world_origin parameter, so we
-    # make that out of ra and dec parameters.
+    dudx = params['dudx']
+    dudy = params['dudy']
+    dvdx = params['dvdx']
+    dvdy = params['dvdy']
+    ra = params['ra']
+    dec = params['dec']
+    units = params.get('units', 'arcsec')
+    origin = params.get('origin', None)
+
     affine = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, origin)
     world_origin = galsim.CelestialCoord(ra, dec)
     units = galsim.angle.get_angle_unit(units)
-    return galsim.TanWCS(affine, world_origin, units)
 
-TanWCSBuilder._req_params = { "dudx" : float, "dudy" : float, "dvdx" : float, "dvdy" : float,
-                              "ra" : galsim.Angle, "dec" : galsim.Angle }
-TanWCSBuilder._opt_params = { "units" : str, "origin" : galsim.PositionD }
-TanWCSBuilder._single_params = []
-TanWCSBuilder._takes_rng = False
-TanWCSBuilder._takes_logger = False
+    return { 'affine' : affine,
+             'world_origin' : world_origin,
+             'units' : units }
+
+
+valid_wcs_types = {}
+
+def RegisterWCSType(wcs_type, init_func, local_func=None, kwargs_func=None):
+    """Register a wcs type for use by the config apparatus.
+
+    @param wcs_type         The name of the type in config['image']['wcs']
+    @param init_func        A function or class name to use to build the wcs.
+    @param local_func       If given, use a different class when origin is not given as
+                            one of the parameters.
+    @param kwargs_func      A function to get the initialization kwargs if the regular
+                            _req, _opt, etc. kind of initialization will not work. The call
+                            signature is:
+                                kwargs, safe = GetKwargs(config, base)
+                            [default: None, which means use the regular initialization]
+    """
+    valid_wcs_types[wcs_type] = {
+        'init' : init_func,
+        'local' : local_func,
+        'kwargs' : kwargs_func
+    }
+
+RegisterWCSType('PixelScale', galsim.PixelScale, local_func=galsim.OffsetWCS)
+RegisterWCSType('Shear', galsim.ShearWCS, local_func=galsim.OffsetShearWCS)
+RegisterWCSType('Jacobian', galsim.JacobianWCS, local_func=galsim.AffineTransform)
+RegisterWCSType('Affine', galsim.JacobianWCS, local_func=galsim.AffineTransform)
+RegisterWCSType('UVFunction', galsim.UVFunction)
+RegisterWCSType('RaDecFunction', galsim.RaDecFunction)
+RegisterWCSType('Fits', galsim.FitsWCS)
+RegisterWCSType('Tan', galsim.TanWCS, kwargs_func=GetTanWCSKwargs )
 

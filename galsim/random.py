@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -133,6 +133,10 @@ GaussianDeviate, since it generates two values at a time, saving the second one 
 next output value.
 """
 
+# Quick and dirty.  Just check reprs are equal.
+_galsim.BaseDeviate.__eq__ = lambda self, other: repr(self) == repr(other)
+_galsim.BaseDeviate.__ne__ = lambda self, other: not self.__eq__(other)
+_galsim.BaseDeviate.__hash__ = lambda self: hash(repr(self))
 
 def permute(rng, *args):
     """Randomly permute one or more lists.
@@ -208,7 +212,7 @@ class DistDeviate(_galsim.BaseDeviate):
                         BaseDeviate.  Using 0 means to generate a seed from the system. [default: 0]
     @param function     A callable function giving a probability distribution or the name of a 
                         file containing a probability distribution as a 2-column ASCII table.
-                        [default: None]
+                        [required]
     @param x_min        The minimum desired return value (required for non-LookupTable
                         callable functions; will raise an error if not passed in that case, or if
                         passed in any other case) [default: None]
@@ -237,7 +241,10 @@ class DistDeviate(_galsim.BaseDeviate):
         # lseed is an obsolete synonym for seed
         # I think this was the only place that the name lseed was actually used in the docs.
         # so we keep it for now for backwards compatibility.
-        if lseed is not None: seed = lseed
+        if lseed is not None:
+            from galsim.deprecated import depr
+            depr('lseed', 1.1, 'seed')
+            seed = lseed
 
         import numpy
         import galsim
@@ -252,6 +259,13 @@ class DistDeviate(_galsim.BaseDeviate):
         # Basic input checking and setups
         if not function:
             raise TypeError('You must pass a function to DistDeviate!')
+
+        self._function = function # Save the inputs to be used in repr
+        self._interpolant = interpolant
+        self._npoints = npoints
+        self._xmin = x_min
+        self._xmax = x_max
+
         # Figure out if a string is a filename or something we should be using in an eval call
         if isinstance(function, str):
             input_function = function
@@ -339,7 +353,6 @@ class DistDeviate(_galsim.BaseDeviate):
         self._inverseprobabilitytable = galsim.LookupTable(cdf, xarray, interpolant='linear')
         self.x_min = x_min
         self.x_max = x_max
-
         
     def val(self,p):
         """
@@ -374,6 +387,23 @@ class DistDeviate(_galsim.BaseDeviate):
         dup.__dict__.update(self.__dict__)
         dup._ud = self._ud.duplicate()
         return dup
+
+    def __copy__(self):
+        return self.duplicate()
+
+    def __repr__(self):
+        return ('galsim.DistDeviate(seed=%r, function=%r, x_min=%r, x_max=%r, interpolant=%r, '+
+                'npoints=%r)')%(self._ud.serialize(), self._function, self._xmin, self._xmax, 
+                                self._interpolant, self._npoints)
+    def __str__(self):
+        return 'galsim.DistDeviate(function="%s", x_min=%s, x_max=%s, interpolant=%s, npoints=%s)'%(
+                self._function, self._xmin, self._xmax, self._interpolant, self._npoints)
+
+    # Functions aren't picklable, so for pickling, we reinitialize the DistDeviate using the
+    # original function parameter, which may be a string or a file name.
+    def __getinitargs__(self):
+        return (self._ud.serialize(), self._function, self._xmin, self._xmax, 
+                self._interpolant, self._npoints)
 
 
 
@@ -436,9 +466,7 @@ Draw a new random number from the distribution.
 Returns a Gaussian deviate with current `mean` and `sigma`.
 """
 _galsim.GaussianDeviate.getMean.__func__.__doc__ = "Get current distribution `mean`."
-_galsim.GaussianDeviate.setMean.__func__.__doc__ = "Set current distribution `mean`. Discouraged."
 _galsim.GaussianDeviate.getSigma.__func__.__doc__ = "Get current distribution `sigma`."
-_galsim.GaussianDeviate.setSigma.__func__.__doc__ = "Set current distribution `sigma`. Discouraged."
 
 
 # BinomialDeviate docstrings
@@ -476,9 +504,7 @@ Draw a new random number from the distribution.
 Returns a Binomial deviate with current `N` and `p`.
 """
 _galsim.BinomialDeviate.getN.__func__.__doc__ = "Get current distribution `N`."
-_galsim.BinomialDeviate.setN.__func__.__doc__ = "Set current distribution `N`. Discouraged."
 _galsim.BinomialDeviate.getP.__func__.__doc__ = "Get current distribution `p`."
-_galsim.BinomialDeviate.setP.__func__.__doc__ = "Set current distribution `p`. Discouraged."
 
 
 # PoissonDeviate docstrings
@@ -515,8 +541,6 @@ Draw a new random number from the distribution.
 Returns a Poisson deviate with current `mean`.
 """
 _galsim.PoissonDeviate.getMean.__func__.__doc__ = "Get current distribution `mean`."
-_galsim.PoissonDeviate.setMean.__func__.__doc__ = "Set current distribution `mean`. Discouraged."
-
 
 
 # WeibullDeviate docstrings
@@ -556,9 +580,7 @@ Draw a new random number from the distribution.
 Returns a Weibull-distributed deviate with current `a` and `b`.
 """
 _galsim.WeibullDeviate.getA.__func__.__doc__ = "Get current distribution shape parameter `a`."
-_galsim.WeibullDeviate.setA.__func__.__doc__ = "Set current distribution shape parameter `a`. Discouraged."
 _galsim.WeibullDeviate.getB.__func__.__doc__ = "Get current distribution shape parameter `b`."
-_galsim.WeibullDeviate.setB.__func__.__doc__ = "Set current distribution shape parameter `b`. Discouraged."
 
 
 # GammaDeviate docstrings
@@ -595,9 +617,7 @@ Draw a new random number from the distribution.
 Returns a Gamma-distributed deviate with current k and theta.
 """
 _galsim.GammaDeviate.getK.__func__.__doc__ = "Get current distribution shape parameter `k`."
-_galsim.GammaDeviate.setK.__func__.__doc__ = "Set current distribution shape parameter `k`. Discouraged."
 _galsim.GammaDeviate.getTheta.__func__.__doc__ = "Get current distribution shape parameter `theta`."
-_galsim.GammaDeviate.setTheta.__func__.__doc__ = "Set current distribution shape parameter `theta`. Discouraged."
 
 
 # Chi2Deviate docstrings
@@ -635,39 +655,15 @@ Draw a new random number from the distribution.
 Returns a Chi2-distributed deviate with current `n` degrees of freedom.
 """
 _galsim.Chi2Deviate.getN.__func__.__doc__ = "Get current distribution `n` degrees of freedom."
-_galsim.Chi2Deviate.setN.__func__.__doc__ = "Set current distribution `n` degrees of freedom. Discouraged."
 
 
 # Some functions to enable pickling of deviates
-def BaseDeviate_getinitargs(self):
-    return self.serialize(), 
-_galsim.BaseDeviate.__getinitargs__ = BaseDeviate_getinitargs
-
-def UniformDeviate_getinitargs(self):
-    return self.serialize(),
-_galsim.UniformDeviate.__getinitargs__ = UniformDeviate_getinitargs
-
-def GaussianDeviate_getinitargs(self):
-    return self.serialize(), self.getMean(), self.getSigma()
-_galsim.GaussianDeviate.__getinitargs__ = GaussianDeviate_getinitargs
-
-def BinomialDeviate_getinitargs(self):
-    return self.serialize(), self.getN(), self.getP()
-_galsim.BinomialDeviate.__getinitargs__ = BinomialDeviate_getinitargs
-
-def PoissonDeviate_getinitargs(self):
-    return self.serialize(), self.getMean()
-_galsim.PoissonDeviate.__getinitargs__ = PoissonDeviate_getinitargs
-
-def WeibullDeviate_getinitargs(self):
-    return self.serialize(), self.getA(), self.getB()
-_galsim.WeibullDeviate.__getinitargs__ = WeibullDeviate_getinitargs
-
-def GammaDeviate_getinitargs(self):
-    return self.serialize(), self.getK(), self.getTheta()
-_galsim.GammaDeviate.__getinitargs__ = GammaDeviate_getinitargs
-
-def Chi2Deviate_getinitargs(self):
-    return self.serialize(), self.getN()
-_galsim.Chi2Deviate.__getinitargs__ = Chi2Deviate_getinitargs
-
+_galsim.BaseDeviate.__getinitargs__ = lambda self: (self.serialize(),)
+_galsim.UniformDeviate.__getinitargs__ = lambda self: (self.serialize(),)
+_galsim.GaussianDeviate.__getinitargs__ = lambda self: \
+        (self.serialize(), self.getMean(), self.getSigma())
+_galsim.BinomialDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getN(), self.getP())
+_galsim.PoissonDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getMean())
+_galsim.WeibullDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getA(), self.getB())
+_galsim.GammaDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getK(), self.getTheta())
+_galsim.Chi2Deviate.__getinitargs__ = lambda self: (self.serialize(), self.getN())

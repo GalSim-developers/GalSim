@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -39,8 +39,7 @@ test_flux = 1.8
 default_params = galsim.GSParams(
         minimum_fft_size = 128,
         maximum_fft_size = 4096,
-        #folding_threshold = 5.e-3,
-        alias_threshold = 5.e-3,
+        folding_threshold = 5.e-3,
         maxk_threshold = 1.e-3,
         kvalue_accuracy = 1.e-5,
         xvalue_accuracy = 1.e-5,
@@ -69,44 +68,43 @@ def test_smallshear():
     e1 = 0.02
     e2 = 0.02
     myShear = galsim.Shear(e1=e1, e2=e2)
-    # test the SBProfile version using applyShear
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_smallshear.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
 
     gauss = galsim.Gaussian(flux=1, sigma=1)
-    gauss.applyShear(myShear)
-    gauss.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    gauss2 = gauss.shear(myShear)
+    gauss2.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyShear disagrees with expected result")
-    gauss = galsim.Gaussian(flux=1, sigma=1)
-    gauss2 = gauss.createSheared(myShear)
-    gauss2.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject createSheared disagrees with expected result")
+            err_msg="Using GSObject shear disagrees with expected result")
  
     # Check with default_params
     gauss = galsim.Gaussian(flux=1, sigma=1, gsparams=default_params)
-    gauss.applyShear(myShear)
-    gauss.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    gauss = gauss.shear(myShear)
+    gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyShear with default_params disagrees with expected result")
+            err_msg="Using GSObject shear with default_params disagrees with expected result")
     gauss = galsim.Gaussian(flux=1, sigma=1, gsparams=galsim.GSParams())
-    gauss.applyShear(myShear)
-    gauss.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    gauss = gauss.shear(myShear)
+    gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyShear with GSParams() disagrees with expected result")
+            err_msg="Using GSObject shear with GSParams() disagrees with expected result")
  
     # Test photon shooting.
     do_shoot(gauss,myImg,"sheared Gaussian")
 
     # Test kvalues
     do_kvalue(gauss,myImg,"sheared Gaussian")
+
+    # Check picklability
+    do_pickle(gauss.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
+    do_pickle(gauss, lambda x: x.drawImage())
+    do_pickle(gauss)
+    do_pickle(gauss.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -121,38 +119,32 @@ def test_largeshear():
     e2 = 0.5
 
     myShear = galsim.Shear(e1=e1, e2=e2)
-    # test the SBProfile version using applyShear
+    # test the SBProfile version using shear
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_largeshear.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
 
     devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1)
-    devauc.applyShear(myShear)
-    devauc.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    devauc2 = devauc.shear(myShear)
+    devauc2.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyShear disagrees with expected result")
-    devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1)
-    devauc2 = devauc.createSheared(myShear)
-    devauc2.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject createSheared disagrees with expected result")
+            err_msg="Using GSObject shear disagrees with expected result")
 
     # Check with default_params
     devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1, gsparams=default_params)
-    devauc.applyShear(myShear)
-    devauc.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    devauc = devauc.shear(myShear)
+    devauc.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyShear with default_params disagrees with expected result")
+            err_msg="Using GSObject shear with default_params disagrees with expected result")
     devauc = galsim.DeVaucouleurs(flux=1, half_light_radius=1, gsparams=galsim.GSParams())
-    devauc.applyShear(myShear)
-    devauc.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    devauc = devauc.shear(myShear)
+    devauc.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyShear with GSParams() disagrees with expected result")
+            err_msg="Using GSObject shear with GSParams() disagrees with expected result")
  
     # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
@@ -161,10 +153,16 @@ def test_largeshear():
 
     # Test kvalues.
     # Testing a sheared devauc requires a rather large fft.  What we really care about 
-    # testing though is the accuracy of the applyShear function.  So just shear a Gaussian here.
+    # testing though is the accuracy of the shear function.  So just shear a Gaussian here.
     gauss = galsim.Gaussian(sigma=2.3)
-    gauss.applyShear(myShear)
+    gauss = gauss.shear(myShear)
     do_kvalue(gauss,myImg, "sheared Gaussian")
+
+    # Check picklability
+    do_pickle(gauss.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
+    do_pickle(gauss, lambda x: x.drawImage())
+    do_pickle(gauss)
+    do_pickle(gauss.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -183,29 +181,26 @@ def test_rotate():
     myImg.setCenter(0,0)
 
     gal = galsim.Sersic(n=2.5, flux=1, half_light_radius=1)
-    gal.applyShear(myShear)
-    gal.applyRotation(45.0 * galsim.degrees)
-    gal.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    gal = gal.shear(myShear).rotate(45.0 * galsim.degrees)
+    gal.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyRotation disagrees with expected result")
+            err_msg="Using GSObject rotate disagrees with expected result")
 
     # Check with default_params
     gal = galsim.Sersic(n=2.5, flux=1, half_light_radius=1, gsparams=default_params)
-    gal.applyShear(myShear)
-    gal.applyRotation(45.0 * galsim.degrees)
-    gal.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    gal = gal.shear(myShear).rotate(45.0 * galsim.degrees)
+    gal.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyRotation with default_params disagrees with expected "
+            err_msg="Using GSObject rotate with default_params disagrees with expected "
             "result")
     gal = galsim.Sersic(n=2.5, flux=1, half_light_radius=1, gsparams=galsim.GSParams())
-    gal.applyShear(myShear)
-    gal.applyRotation(45.0 * galsim.degrees)
-    gal.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    gal = gal.shear(myShear).rotate(45.0 * galsim.degrees)
+    gal.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyRotation with GSParams() disagrees with expected result")
+            err_msg="Using GSObject rotate with GSParams() disagrees with expected result")
  
     # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
@@ -214,6 +209,12 @@ def test_rotate():
 
     # Test kvalues
     do_kvalue(gal,myImg,"rotated sheared Sersic")
+
+    # Check picklability
+    do_pickle(gal.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
+    do_pickle(gal, lambda x: x.drawImage())
+    do_pickle(gal)
+    do_pickle(gal.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -232,87 +233,63 @@ def test_mag():
     myImg.setCenter(0,0)
 
     gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal.applyDilation(1.5)
-    gal.scaleFlux(1.5**2) # Apply the flux magnification.
-    gal.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    gal = gal.dilate(1.5)
+    gal *= 1.5**2 # Apply the flux magnification.
+    gal.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyDilation disagrees with expected result")
+            err_msg="Using GSObject dilate disagrees with expected result")
  
     # Check with default_params
     gal = galsim.Exponential(flux=1, scale_radius=r0, gsparams=default_params)
-    gal.applyDilation(1.5)
-    gal.scaleFlux(1.5**2)
-    gal.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    gal = gal.dilate(1.5)
+    gal *= 1.5**2
+    gal.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyTransformation with default_params disagrees with "
-            "expected result")
+            err_msg="Using GSObject dilate with default_params disagrees with expected result")
     gal = galsim.Exponential(flux=1, scale_radius=r0, gsparams=galsim.GSParams())
-    gal.applyDilation(1.5)
-    gal.scaleFlux(1.5**2)
-    gal.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    gal = gal.dilate(1.5)
+    gal *= 1.5**2
+    gal.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyTransformation with GSParams() disagrees with "
-            "expected result")
+            err_msg="Using GSObject dilate with GSParams() disagrees with expected result")
 
-    # Use applyMagnification
+    # Use magnify
     gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal.applyMagnification(1.5**2) # area rescaling factor
-    gal.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    gal = gal.magnify(1.5**2) # area rescaling factor
+    gal.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyMagnification disagrees with expected result")
+            err_msg="Using GSObject magnify disagrees with expected result")
 
-    # Use applyLensing
+    # Use lens
     gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal.applyLensing(0., 0., 1.5**2) # area rescaling factor
-    gal.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    gal = gal.lens(0., 0., 1.5**2) # area rescaling factor
+    gal.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyLensing disagrees with expected result")
+            err_msg="Using GSObject lens disagrees with expected result")
 
-    # Use createDilated
-    gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal2 = gal.createDilated(1.5)
-    gal2.scaleFlux(1.5**2) # Apply the flux magnification.
-    gal2.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject createDilated disagrees with expected result")
- 
-    # Use createMagnified
-    gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal2 = gal.createMagnified(1.5**2) # area rescaling factor
-    gal2.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject createMagnified disagrees with expected result")
- 
-    # Use createLensed
-    gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal2 = gal.createLensed(0., 0., 1.5**2) # area rescaling factor
-    gal2.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
-    printval(myImg, savedImg)
-    np.testing.assert_array_almost_equal(
-            myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject createLensed disagrees with expected result")
- 
     # Test photon shooting.
     gal = galsim.Exponential(flux=1, scale_radius=r0)
-    gal.applyMagnification(1.5**2) # area rescaling factor
+    gal = gal.magnify(1.5**2) # area rescaling factor
     do_shoot(gal,myImg,"dilated Exponential")
 
     # Test kvalues
     do_kvalue(gal,myImg,"dilated Exponential")
+
+    # Check picklability
+    do_pickle(gal.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
+    do_pickle(gal, lambda x: x.drawImage())
+    do_pickle(gal)
+    do_pickle(gal.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -330,13 +307,12 @@ def test_lens():
     pix_scale = 0.1
     imsize = 100
     ser = galsim.Sersic(n, half_light_radius = re)
-    ser2 = ser.createLensed(g1, g2, mu)
-    ser.applyShear(g1=g1, g2=g2)
-    ser.applyMagnification(mu)
+    ser2 = ser.lens(g1, g2, mu)
+    ser = ser.shear(g1=g1, g2=g2).magnify(mu)
     im = galsim.ImageF(imsize, imsize, scale=pix_scale)
-    im = ser.draw(im)
+    im = ser.drawImage(im, method='no_pixel')
     im2 = galsim.ImageF(imsize, imsize, scale=pix_scale)
-    im2 = ser2.draw(im2)
+    im2 = ser2.drawImage(im2, method='no_pixel')
     np.testing.assert_array_almost_equal(im.array, im2.array, 5,
         err_msg="Lensing of Sersic profile done in two different ways gives different answer")
 
@@ -355,35 +331,41 @@ def test_shift():
     myImg.setCenter(0,0)
 
     pixel = galsim.Pixel(scale=dx)
-    pixel.applyShift(dx, -dx)
-    pixel.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    pixel = pixel.shift(dx, -dx)
+    pixel.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyShift disagrees with expected result")
+            err_msg="Using GSObject shift disagrees with expected result")
  
     # Check with default_params
     pixel = galsim.Pixel(scale=dx, gsparams=default_params)
-    pixel.applyShift(dx, -dx)
-    pixel.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    pixel = pixel.shift(dx, -dx)
+    pixel.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyShift with default_params disagrees with expected result")
+            err_msg="Using GSObject shift with default_params disagrees with expected result")
     pixel = galsim.Pixel(scale=dx, gsparams=galsim.GSParams())
-    pixel.applyShift(dx, -dx)
-    pixel.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    pixel = pixel.shift(dx, -dx)
+    pixel.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject applyShift with GSParams() disagrees with expected result")
+            err_msg="Using GSObject shift with GSParams() disagrees with expected result")
  
     # Test photon shooting.
     do_shoot(pixel,myImg,"shifted Box")
 
     # Test kvalues.
     # Testing a shifted box requires a ridiculously large fft.  What we really care about 
-    # testing though is the accuracy of the applyShift function.  So just shift a Gaussian here.
+    # testing though is the accuracy of the shift function.  So just shift a Gaussian here.
     gauss = galsim.Gaussian(sigma=2.3)
-    gauss.applyShift(dx,-dx)
+    gauss = gauss.shift(dx,-dx)
     do_kvalue(gauss,myImg, "shifted Gaussian")
+
+    # Check picklability
+    do_pickle(gauss.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
+    do_pickle(gauss, lambda x: x.drawImage())
+    do_pickle(gauss)
+    do_pickle(gauss.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -400,25 +382,24 @@ def test_rescale():
     myImg.setCenter(0,0)
 
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
-    sersic.setFlux(2)
-    sersic.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    sersic.withFlux(2).drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
-            err_msg="Using GSObject setFlux disagrees with expected result")
+            err_msg="Using GSObject withFlux disagrees with expected result")
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
     sersic *= 2
-    sersic.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    sersic.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject *= 2 disagrees with expected result")
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
     sersic2 = sersic * 2
-    sersic2.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    sersic2.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject obj * 2 disagrees with expected result")
     sersic2 = 2 * sersic
-    sersic2.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    sersic2.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject 2 * obj disagrees with expected result")
@@ -426,21 +407,21 @@ def test_rescale():
     # Check with default_params
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1, gsparams=default_params)
     sersic *= 2
-    sersic.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    sersic.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject *= 2 with default_params disagrees with expected result")
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1, gsparams=galsim.GSParams())
     sersic *= 2
-    sersic.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    sersic.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject *= 2 with GSParams() disagrees with expected result")
  
     # Can also get a flux of 2 by drawing flux=1 twice with add_to_image=True
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
-    sersic.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
-    sersic.draw(myImg,scale=dx, normalization="surface brightness",add_to_image=True,
+    sersic.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
+    sersic.drawImage(myImg,scale=dx, method="sb",add_to_image=True,
                 use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
@@ -448,19 +429,15 @@ def test_rescale():
 
     # With lower folding_threshold and maxk_threshold, the calculated flux should come out right 
     # so long as we also convolve by a pixel:
-    #gsp1 = galsim.GSParams(folding_threshold=1.e-3, maxk_threshold=5.e-4)
-    gsp1 = galsim.GSParams(alias_threshold=1.e-3, maxk_threshold=5.e-4)
-    sersic_acc = galsim.Convolve([
-            galsim.Sersic(n=3, flux=1, half_light_radius=1, gsparams=gsp1),
-            galsim.Pixel(scale=dx, gsparams=gsp1)  
-            ])
-    myImg2 = sersic_acc.draw(scale=dx, use_true_center=False)
+    gsp1 = galsim.GSParams(folding_threshold=1.e-3, maxk_threshold=5.e-4)
+    sersic_acc = galsim.Sersic(n=3, flux=1, half_light_radius=1, gsparams=gsp1)
+    myImg2 = sersic_acc.drawImage(scale=dx, use_true_center=False)
     print myImg2.array.sum(), myImg2.added_flux
     np.testing.assert_almost_equal(myImg2.array.sum(), 1., 3,
             err_msg="Drawing with gsp1 results in wrong flux")
     np.testing.assert_almost_equal(myImg2.added_flux, 1., 3,
             err_msg="Drawing with gsp1 returned wrong added_flux")
-    myImg2 = sersic_acc.draw(myImg2, add_to_image=True, use_true_center=False)
+    myImg2 = sersic_acc.drawImage(myImg2, add_to_image=True, use_true_center=False)
     print myImg2.array.sum(), myImg2.added_flux
     np.testing.assert_almost_equal(myImg2.array.sum(), 2., 3,
             err_msg="Drawing with add_to_image=True results in wrong flux")
@@ -469,57 +446,55 @@ def test_rescale():
 
     # Check that the flux works out when adding multiple times.
     # With a Gaussian, we can take the thresholds even lower and get another digit of accuracy.
-    #gsp2 = galsim.GSParams(folding_threshold=1.e-5, maxk_threshold=1.e-5)
-    gsp2 = galsim.GSParams(alias_threshold=1.e-5, maxk_threshold=1.e-5)
+    gsp2 = galsim.GSParams(folding_threshold=1.e-5, maxk_threshold=1.e-5)
     gauss = galsim.Gaussian(flux=1.e5, sigma=2., gsparams=gsp2)
-    gauss2 = galsim.Convolve([gauss, galsim.Pixel(scale=dx, gsparams=gsp2)])
-    myImg2 = gauss2.draw(scale=dx, use_true_center=False)
+    myImg2 = gauss.drawImage(scale=dx, use_true_center=False)
     print 'image size = ',myImg2.array.shape
     print myImg2.array.sum(), myImg2.added_flux
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 1., 4,
             err_msg="Drawing Gaussian results in wrong flux")
     np.testing.assert_almost_equal(myImg2.added_flux/1.e5, 1., 4,
             err_msg="Drawing Gaussian returns wrong added_flux")
-    myImg2 = gauss2.draw(myImg2, add_to_image=True, use_true_center=False)
+    myImg2 = gauss.drawImage(myImg2, add_to_image=True, use_true_center=False)
     print myImg2.array.sum(), myImg2.added_flux
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 2., 4,
             err_msg="Drawing Gaussian with add_to_image=True results in wrong flux")
     np.testing.assert_almost_equal(myImg2.added_flux/1.e5, 1., 4,
             err_msg="Drawing Gaussian with add_to_image=True returns wrong added_flux")
     rng = galsim.BaseDeviate(12345)
-    myImg2 = gauss.drawShoot(myImg2, add_to_image=True, poisson_flux=False, rng=rng)
+    myImg2 = gauss.drawImage(myImg2, add_to_image=True, poisson_flux=False, rng=rng, method='phot')
     print myImg2.array.sum(), myImg2.added_flux
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 3., 4,
-            err_msg="Drawing Gaussian with drawShoot, add_to_image=True, poisson_flux=False "+
+            err_msg="Drawing Gaussian with method=phot, add_to_image=True, poisson_flux=False "+
                     "results in wrong flux")
     np.testing.assert_almost_equal(myImg2.added_flux/1.e5, 1., 4,
-            err_msg="Drawing Gaussian with drawShoot, add_to_image=True, poisson_flux=False "+
+            err_msg="Drawing Gaussian with method=phot, add_to_image=True, poisson_flux=False "+
                     "returned wrong added_flux")
-    myImg2 = gauss.drawShoot(myImg2, add_to_image=True, rng=rng)
+    myImg2 = gauss.drawImage(myImg2, add_to_image=True, rng=rng, method='phot')
     print myImg2.array.sum(), myImg2.added_flux
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 4., 1,
-            err_msg="Drawing Gaussian with drawShoot, add_to_image=True, poisson_flux=True "+
+            err_msg="Drawing Gaussian with method=phot, add_to_image=True, poisson_flux=True "+
                     "results in wrong flux")
     np.testing.assert_almost_equal(myImg2.added_flux/1.e5, 1., 1,
-            err_msg="Drawing Gaussian with drawShoot, add_to_image=True, poisson_flux=True "+
+            err_msg="Drawing Gaussian with method=phot, add_to_image=True, poisson_flux=True "+
                     "returned wrong added_flux")
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 3.+myImg2.added_flux/1.e5, 4,
-            err_msg="Drawing Gaussian with drawShoot, add_to_image=True results in wrong flux "+
+            err_msg="Drawing Gaussian with method=phot, add_to_image=True results in wrong flux "+
                     "according to the returned added_flux")
 
     # Can also get a flux of 2 using gain = 0.5
-    sersic.draw(myImg, scale=dx, gain=0.5, normalization="surface brightness", use_true_center=False)
+    sersic.drawImage(myImg, scale=dx, gain=0.5, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Drawing with gain=0.5 disagrees with expected result")
-    myImg2 = sersic_acc.draw(scale=dx, gain=0.5, use_true_center=False)
+    myImg2 = sersic_acc.drawImage(scale=dx, gain=0.5, use_true_center=False)
     np.testing.assert_almost_equal(myImg2.array.sum(), 2., 3,
             err_msg="Drawing with gain=0.5 results in wrong flux")
-    myImg2 = sersic_acc.draw(scale=dx, gain=4., use_true_center=False)
+    myImg2 = sersic_acc.drawImage(scale=dx, gain=4., use_true_center=False)
     np.testing.assert_almost_equal(myImg2.array.sum(), 0.25, 3,
             err_msg="Drawing with gain=4. results in wrong flux")
     # Check add_to_image in conjunction with gain
-    sersic_acc.draw(myImg2, gain=4., add_to_image=True, use_true_center=False)
+    sersic_acc.drawImage(myImg2, gain=4., add_to_image=True, use_true_center=False)
     np.testing.assert_almost_equal(myImg2.array.sum(), 0.5, 3,
             err_msg="Drawing with gain=4. results in wrong flux")
  
@@ -531,29 +506,34 @@ def test_rescale():
     # Test kvalues
     do_kvalue(sersic2,myImg, "scaled Sersic")
 
+    # Check picklability
+    do_pickle(sersic2.SBProfile, lambda x: (x.getJac().tolist(), x.getOffset(), x.getFluxScaling()))
+    do_pickle(sersic2, lambda x: x.drawImage())
+    do_pickle(sersic2)
+    do_pickle(sersic2.SBProfile)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_integer_shift_fft():
-    """Test if applyShift works correctly for integer shifts using draw method.
+    """Test if shift works correctly for integer shifts using drawImage method.
     """
     import time
     t1 = time.time()
 
     gal = galsim.Gaussian(sigma=test_sigma)
-    pix = galsim.Pixel(1.)
     psf = galsim.Airy(lam_over_diam=test_hlr)
 
     # shift galaxy only
  
-    final=galsim.Convolve([gal, psf, pix])
+    final=galsim.Convolve([gal, psf])
     img_center = galsim.ImageD(n_pix_x,n_pix_y)
-    final.draw(img_center,scale=1)
+    final.drawImage(img_center,scale=1)
 
-    gal.applyShift(dx=int_shift_x,dy=int_shift_y)
-    final=galsim.Convolve([gal, psf, pix])
+    gal = gal.shift(dx=int_shift_x,dy=int_shift_y)
+    final=galsim.Convolve([gal, psf])
     img_shift = galsim.ImageD(n_pix_x,n_pix_y)
-    final.draw(img_shift,scale=1)
+    final.drawImage(img_shift,scale=1)
 
     sub_center = img_center.array[
         (n_pix_y - delta_sub) / 2 : (n_pix_y + delta_sub) / 2,
@@ -569,10 +549,10 @@ def test_integer_shift_fft():
     # shift PSF only
 
     gal = galsim.Gaussian(sigma=test_sigma)
-    psf.applyShift(dx=int_shift_x,dy=int_shift_y)
-    final=galsim.Convolve([gal, psf, pix])
+    psf = psf.shift(dx=int_shift_x,dy=int_shift_y)
+    final=galsim.Convolve([gal, psf])
     img_shift = galsim.ImageD(n_pix_x,n_pix_y)
-    final.draw(img_shift,scale=1)
+    final.drawImage(img_shift,scale=1)
 
     sub_center = img_center.array[
         (n_pix_y - delta_sub) / 2 : (n_pix_y + delta_sub) / 2,
@@ -588,7 +568,7 @@ def test_integer_shift_fft():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_integer_shift_photon():
-    """Test if applyShift works correctly for integer shifts using drawShoot method.
+    """Test if shift works correctly for integer shifts using method=phot.
     """
     import time
     t1 = time.time()
@@ -597,21 +577,20 @@ def test_integer_shift_photon():
     seed = 10
 
     gal = galsim.Gaussian(sigma=test_sigma)
-    pix = galsim.Pixel(1.)
     psf = galsim.Airy(lam_over_diam=test_hlr)
 
     # shift galaxy only
  
-    final=galsim.Convolve([gal, psf, pix])
+    final=galsim.Convolve([gal, psf])
     img_center = galsim.ImageD(n_pix_x,n_pix_y)
     test_deviate = galsim.BaseDeviate(seed)
-    final.drawShoot(img_center,scale=1,rng=test_deviate,n_photons=n_photons_low)
+    final.drawImage(img_center,scale=1,rng=test_deviate,n_photons=n_photons_low, method='phot')
 
-    gal.applyShift(dx=int_shift_x,dy=int_shift_y)
-    final=galsim.Convolve([gal, psf, pix])
+    gal = gal.shift(dx=int_shift_x,dy=int_shift_y)
+    final=galsim.Convolve([gal, psf])
     img_shift = galsim.ImageD(n_pix_x,n_pix_y)
     test_deviate = galsim.BaseDeviate(seed)
-    final.drawShoot(img_shift,scale=1,rng=test_deviate,n_photons=n_photons_low)
+    final.drawImage(img_shift,scale=1,rng=test_deviate,n_photons=n_photons_low, method='phot')
     
     sub_center = img_center.array[
         (n_pix_y - delta_sub) / 2 : (n_pix_y + delta_sub) / 2,
@@ -628,11 +607,11 @@ def test_integer_shift_photon():
     # shift PSF only
 
     gal = galsim.Gaussian(sigma=test_sigma)
-    psf.applyShift(dx=int_shift_x,dy=int_shift_y)
-    final=galsim.Convolve([gal, psf, pix])
+    psf = psf.shift(dx=int_shift_x,dy=int_shift_y)
+    final=galsim.Convolve([gal, psf])
     img_shift = galsim.ImageD(n_pix_x,n_pix_y)
     test_deviate = galsim.BaseDeviate(seed)
-    final.drawShoot(img_shift,scale=1,rng=test_deviate,n_photons=n_photons_low)
+    final.drawImage(img_shift,scale=1,rng=test_deviate,n_photons=n_photons_low, method='phot')
 
     sub_center = img_center.array[
         (n_pix_y - delta_sub) / 2 : (n_pix_y + delta_sub) / 2,
@@ -757,85 +736,94 @@ def test_flip():
         image_k2 = prof.shear(s).drawImage(image=im.copy())
 
         # Flip around y axis (i.e. x -> -x)
-        flip = prof.transform(-1, 0, 0, 1)
-        image2_x = flip.drawImage(image=im.copy(), method='no_pixel')
+        flip1 = prof.transform(-1, 0, 0, 1)
+        image2_x = flip1.drawImage(image=im.copy(), method='no_pixel')
         np.testing.assert_array_almost_equal(
             image_x.array, image2_x.array[:,::-1], decimal=decimal,
             err_msg="Flipping image around y-axis failed x test")
-        image2_x1 = flip.shear(q1).drawImage(image=im.copy(), method='no_pixel')
+        image2_x1 = flip1.shear(q1).drawImage(image=im.copy(), method='no_pixel')
         np.testing.assert_array_almost_equal(
             image_x1.array, image2_x1.array[:,::-1], decimal=decimal,
             err_msg="Flipping image around y-axis failed x1 test")
-        image2_x2 = flip.shear(s1).drawImage(image=im.copy(), method='no_pixel')
+        image2_x2 = flip1.shear(s1).drawImage(image=im.copy(), method='no_pixel')
         np.testing.assert_array_almost_equal(
             image_x2.array, image2_x2.array[:,::-1], decimal=decimal,
             err_msg="Flipping image around y-axis failed x2 test")
-        image2_k = flip.drawImage(image=im.copy())
+        image2_k = flip1.drawImage(image=im.copy())
         np.testing.assert_array_almost_equal(
             image_k.array, image2_k.array[:,::-1], decimal=decimal,
             err_msg="Flipping image around y-axis failed k test")
-        image2_k1 = flip.shear(q1).drawImage(image=im.copy())
+        image2_k1 = flip1.shear(q1).drawImage(image=im.copy())
         np.testing.assert_array_almost_equal(
             image_k1.array, image2_k1.array[:,::-1], decimal=decimal,
             err_msg="Flipping image around y-axis failed k1 test")
-        image2_k2 = flip.shear(s1).drawImage(image=im.copy())
+        image2_k2 = flip1.shear(s1).drawImage(image=im.copy())
         np.testing.assert_array_almost_equal(
             image_k2.array, image2_k2.array[:,::-1], decimal=decimal,
             err_msg="Flipping image around y-axis failed k2 test")
 
         # Flip around x axis (i.e. y -> -y)
-        flip = prof.transform(1, 0, 0, -1)
-        image2_x = flip.drawImage(image=im.copy(), method='no_pixel')
+        flip2 = prof.transform(1, 0, 0, -1)
+        image2_x = flip2.drawImage(image=im.copy(), method='no_pixel')
         np.testing.assert_array_almost_equal(
             image_x.array, image2_x.array[::-1,:], decimal=decimal,
             err_msg="Flipping image around x-axis failed x test")
-        image2_x1 = flip.shear(q1).drawImage(image=im.copy(), method='no_pixel')
+        image2_x1 = flip2.shear(q1).drawImage(image=im.copy(), method='no_pixel')
         np.testing.assert_array_almost_equal(
             image_x1.array, image2_x1.array[::-1,:], decimal=decimal,
             err_msg="Flipping image around x-axis failed x1 test")
-        image2_x2 = flip.shear(s1).drawImage(image=im.copy(), method='no_pixel')
+        image2_x2 = flip2.shear(s1).drawImage(image=im.copy(), method='no_pixel')
         np.testing.assert_array_almost_equal(
             image_x2.array, image2_x2.array[::-1,:], decimal=decimal,
             err_msg="Flipping image around x-axis failed x2 test")
-        image2_k = flip.drawImage(image=im.copy())
+        image2_k = flip2.drawImage(image=im.copy())
         np.testing.assert_array_almost_equal(
             image_k.array, image2_k.array[::-1,:], decimal=decimal,
             err_msg="Flipping image around x-axis failed k test")
-        image2_k1 = flip.shear(q1).drawImage(image=im.copy())
+        image2_k1 = flip2.shear(q1).drawImage(image=im.copy())
         np.testing.assert_array_almost_equal(
             image_k1.array, image2_k1.array[::-1,:], decimal=decimal,
             err_msg="Flipping image around x-axis failed k1 test")
-        image2_k2 = flip.shear(s1).drawImage(image=im.copy())
+        image2_k2 = flip2.shear(s1).drawImage(image=im.copy())
         np.testing.assert_array_almost_equal(
             image_k2.array, image2_k2.array[::-1,:], decimal=decimal,
             err_msg="Flipping image around x-axis failed k2 test")
 
         # Flip around x=y (i.e. y -> x, x -> y)
-        flip = prof.transform(0, 1, 1, 0)
-        image2_x = flip.drawImage(image=im.copy(), method='no_pixel')
+        flip3 = prof.transform(0, 1, 1, 0)
+        image2_x = flip3.drawImage(image=im.copy(), method='no_pixel')
         np.testing.assert_array_almost_equal(
             image_x.array, np.transpose(image2_x.array), decimal=decimal,
             err_msg="Flipping image around x=y failed x test")
-        image2_x1 = flip.shear(q2).drawImage(image=im.copy(), method='no_pixel')
+        image2_x1 = flip3.shear(q2).drawImage(image=im.copy(), method='no_pixel')
         np.testing.assert_array_almost_equal(
             image_x1.array, np.transpose(image2_x1.array), decimal=decimal,
             err_msg="Flipping image around x=y failed x1 test")
-        image2_x2 = flip.shear(s2).drawImage(image=im.copy(), method='no_pixel')
+        image2_x2 = flip3.shear(s2).drawImage(image=im.copy(), method='no_pixel')
         np.testing.assert_array_almost_equal(
             image_x2.array, np.transpose(image2_x2.array), decimal=decimal,
             err_msg="Flipping image around x=y failed x2 test")
-        image2_k = flip.drawImage(image=im.copy())
+        image2_k = flip3.drawImage(image=im.copy())
         np.testing.assert_array_almost_equal(
             image_k.array, np.transpose(image2_k.array), decimal=decimal,
             err_msg="Flipping image around x=y failed k test")
-        image2_k1 = flip.shear(q2).drawImage(image=im.copy())
+        image2_k1 = flip3.shear(q2).drawImage(image=im.copy())
         np.testing.assert_array_almost_equal(
             image_k1.array, np.transpose(image2_k1.array), decimal=decimal,
             err_msg="Flipping image around x=y failed k1 test")
-        image2_k2 = flip.shear(s2).drawImage(image=im.copy())
+        image2_k2 = flip3.shear(s2).drawImage(image=im.copy())
         np.testing.assert_array_almost_equal(
             image_k2.array, np.transpose(image2_k2.array), decimal=decimal,
             err_msg="Flipping image around x=y failed k2 test")
+
+        do_pickle(prof, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
+        do_pickle(flip1, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
+        do_pickle(flip2, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
+        do_pickle(flip3, lambda x: x.drawImage(image=im.copy(), method='no_pixel'))
+        do_pickle(prof)
+        do_pickle(flip1)
+        do_pickle(flip2)
+        do_pickle(flip3)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

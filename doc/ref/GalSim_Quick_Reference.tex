@@ -1,4 +1,4 @@
-% Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+% Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 % https://github.com/GalSim-developers
 %
 % This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -127,7 +127,7 @@ be something like the following:
 
 There are many examples of this workflow in the directory {\tt
  examples/}, showing most of the GalSim library in action, in
-the scripts named \texttt{demo1.py} -- \texttt{demo12.py}.  This
+the scripts named \texttt{demo1.py} -- \texttt{demo13.py}.  This
 document provides a brief, reference description of the GalSim classes
 and methods which can be used in these workflows.
 
@@ -155,7 +155,7 @@ methods and attributes of the GalSim classes.
 GalSim has many classes that represent various types of surface brightness profiles.
 These are all subclasses of the \GSObject\ base class, which encapsulates
 much of the functionality that is common to all such profiles in GalSim.
-The first 12 classes listed below are
+All but the last two classes listed below are
 `simple' \texttt{GSObject}s that can be initialized by providing
 values for their required and optional parameters.  The last two are
 `compound' classes used to represent combinations of
@@ -227,6 +227,10 @@ parameters available for use (e.g.\ total \texttt{flux}) along with default valu
     \newline 
     An arbitrary rectangular box profile.
 \item[$\circ$]
+  \texttt{galsim.}\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1base_1_1_top_hat.html}{\texttt{TopHat}}\texttt{(radius, flux=1.)}
+    \newline
+    A circular tophat profile.
+\item[$\circ$]
   \texttt{galsim.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_sersic.html}{\texttt{Sersic}}\texttt{(n, half\_light\_radius, flux=1.)}
     \newline
     A profile form the S\'{e}rsic family of galaxy light
@@ -242,6 +246,11 @@ parameters available for use (e.g.\ total \texttt{flux}) along with default valu
     \newline 
     A De Vaucouleurs galaxy bulge profile, a S\'{e}rsic
     with index \texttt{n=4} and input \texttt{half\_light\_radius}.
+\item[$\circ$]
+  \texttt{galsim.}\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1base_1_1_spergel.html}{\texttt{Spergel}}\texttt{(nu, \emph{size}, flux=1.)}
+    \newline
+    A class describing a Spergel (2010) profile.   Requires one of the
+    following \texttt{\emph{size}} parameters: \texttt{half\_light\_radius} or \texttt{scale\_radius}.
 \item[$\circ$]
   \texttt{galsim.}\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1real_1_1_real_galaxy.html}{\texttt{RealGalaxy}}\texttt{(real\_galaxy\_catalog, \dots)}
     \newline 
@@ -274,7 +283,7 @@ any of their arguments are \texttt{ChromaticObject}s instead of
 \texttt{GSObects} (see Section~\ref{sect:chromaticity}).
 
 Also note that all of the \texttt{GSObject}s except for \texttt{RealGalaxy}, \texttt{Sum}, and
-\texttt{Convolution} {\em require} the specification of one radius size
+\texttt{Convolution} {\em require} the specification of one size
 parameter.
 
 \subsection{Units}
@@ -298,7 +307,10 @@ it often used for image pixel scales.  If wishing to use arcsec, which
 is more common in both cases, the user should multiply the result in
 radians by the conversion factor
 $648000 / \pi$.  In principle, however, any consistent
-system of units could be used.
+system of units could be used.  Users wishing to separately specify the values of $\lambda$ and $D$
+with their natural units of nanometers and meters may do so using \texttt{lam} and \texttt{diam}; in
+that case, the keyword \texttt{scale\_unit} can be used to define the system of units used for the
+scales in images.
 
 
 \subsection{Important GSObject methods}\label{sect:gsobjectmethods}
@@ -622,17 +634,35 @@ argument.
 \texttt{>>> gband = galsim.Bandpass(lambda w:1.0, blue\_limit=410, red\_limit=550)} \newline
 \texttt{>>> image = chromatic\_obj.drawImage(gband)}
 
-GalSim also comes with built-in support for ground-based PSFs affected by differential chromatic
+GalSim comes with built-in support for ground-based PSFs affected by differential chromatic
 refraction and Kolmogorov chromatic seeing ($\mathrm{FWHM} \propto \lambda^{-0.2}$) through the
-following function:
+following class:
 \begin{itemize}
   \item[$\circ$] 
-  \texttt{\href{http://galsim-developers.github.io/GalSim/namespacegalsim_1_1chromatic.html\#a90f867f2cde815b9048117e9e426e968}{ChromaticAtmosphere}(base\_obj, base\_wavelength, \dots)}
+  \texttt{\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1chromatic_1_1_chromatic_atmosphere.html}{ChromaticAtmosphere}\texttt{(base\_obj, base\_wavelength, \dots)}}
     \newline
     where \texttt{base\_obj} is the fiducial PSF at wavelength \texttt{base\_wavelength}.
     There are a number of options for specifying details like the position of the object with
     respect to zenith and the physical properties of the atmosphere.
 \end{itemize}
+
+There are also classes for representing chromatic optical PSFs:
+\begin{itemize}
+   \item[$\circ$]
+   \texttt{\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1chromatic_1_1_chromatic_airy.html}{ChromaticAiry}\texttt{(\dots)}}
+    \newline
+   for representing a chromatic Airy profile, where the user must specify either \texttt{lam} (the
+   telescope diameter in meters) or \texttt{lam\_over\_diam} (the ratio of some fiducial wavelength
+   to the diameter).
+   \item[$\circ$]
+   \texttt{\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1chromatic_1_1_chromatic_optical_p_s_f.html}{ChromaticOpticalPSF}\texttt{(\dots)}}
+    \newline
+   for representing a fully chromatic optical PSF, including chromatic aberrations.
+\end{itemize}
+
+For sufficiently complex chromatic objects, an optional optimization can be invoked to speed up the
+image rendering process; for more information, view the docstring for the
+\texttt{setupInterpolation} method associated with \texttt{ChromaticObject}s.
 
 \section{Random deviates}\label{sect:random}
 \subsection{Random deviate classes and when to use them}

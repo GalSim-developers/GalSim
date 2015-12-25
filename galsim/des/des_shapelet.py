@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -70,7 +70,6 @@ class DES_Shapelet(object):
     _opt_params = { 'dir' : str, 'file_type' : str }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, file_name, dir=None, file_type=None):
         if dir:
@@ -135,7 +134,7 @@ class DES_Shapelet(object):
     def read_fits(self):
         """Read in a DES_Shapelet stored using the the FITS-file version.
         """
-        from galsim import pyfits
+        from galsim._pyfits import pyfits
         cat = pyfits.getdata(self.file_name,1)
         # These fields each only contain one element, hence the [0]'s.
         self.psf_order = cat.field('psf_order')[0]
@@ -222,32 +221,20 @@ class DES_Shapelet(object):
 import galsim.config
 
 # First we need to add the class itself as a valid input_type.
-galsim.config.process.valid_input_types['des_shapelet'] = ('galsim.des.DES_Shapelet',
-                                                           [], False, False, None, ['DES_Shapelet'])
+galsim.config.RegisterInputType('des_shapelet', DES_Shapelet, ['DES_Shapelet'])
 
 # Also make a builder to create the PSF object for a given position.
 # The builders require 4 args.
 # config is a dictionary that includes 'type' plus other items you might want to allow or require.
-# key is the key name one level up in the config structure.  Probably 'psf' in this case.
 # base is the top level config dictionary where some global variables are stored.
 # ignore is a list of key words that might be in the config dictionary that you should ignore.
-def BuildDES_Shapelet(config, key, base, ignore, gsparams, logger):
+def BuildDES_Shapelet(config, base, ignore, gsparams, logger):
     """@brief Build a RealGalaxy type GSObject from user input.
     """
-    opt = { 'flux' : float ,
-            'num' : int }
-    kwargs, safe = galsim.config.GetAllParams(config, key, base, opt=opt, ignore=ignore)
+    des_shapelet = galsim.config.GetInputObj('des_shapelet', config, base, 'DES_Shapelet')
 
-    if 'des_shapelet' not in base:
-        raise ValueError("No DES_Shapelet instance available for building type = DES_Shapelet")
-
-    num = kwargs.get('num', 0)
-    if num < 0:
-        raise ValueError("Invalid num < 0 supplied for DES_Shapelet: num = %d"%num)
-    if num >= len(base['des_shapelet']):
-        raise ValueError("Invalid num supplied for DES_Shapelet (too large): num = %d"%num)
-
-    des_shapelet = base['des_shapelet'][num]
+    opt = { 'flux' : float , 'num' : int }
+    kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
 
     if 'image_pos' not in base:
         raise ValueError("DES_Shapelet requested, but no image_pos defined in base.")
@@ -279,5 +266,5 @@ def BuildDES_Shapelet(config, key, base, ignore, gsparams, logger):
     return psf, False
 
 # Register this builder with the config framework:
-galsim.config.gsobject.valid_gsobject_types['DES_Shapelet'] = 'galsim.des.BuildDES_Shapelet'
+galsim.config.RegisterObjectType('DES_Shapelet', BuildDES_Shapelet)
 

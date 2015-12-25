@@ -19,3 +19,6 @@ http://fits.gsfc.nasa.gov/fits_registry.html
 The file tanpv.fits is just a copy of tpv.fits with the CTYPE tags
 changed from TPV to TAN.
 
+The file tanflip.fits is made by the script test_pyast_tpv.py.  It has
+the RA, Dec axes flipped relative to the normal ordering, which is apparently
+an allowed thing in the FITS standard.

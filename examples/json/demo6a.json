@@ -17,26 +17,12 @@
 "#" : "The output for this script is to a FITS data cube.  With DS9, this can be viewed with a",
 "#" : "slider to quickly move through the different images.",
        
-"#" : "New features introduced in this demo:",
-
-"#" : "- input : real_catalog (file_name, dir, image_dir)",
-"#" : "- obj type : RealGalaxy (index)",
-"#" : "- obj : rotate ",
-"#" : "- obj : magnify",
-"#" : "- image : sky_level",
-"#" : "- image : offset",
-"#" : "- value type : Sequence (first, last, step)",
-"#" : "- output type : DataCube (file_name, dir, nimages)",
-
-"#" : "- Using JSON's multiple document feature to do more than one thing",
-
 "#" : "For this example, we actually have two config files, since we have two different kinds",
 "#" : "of output files to make.  The first, demo6a.json is for the PSF output,",
 "#" : "and the second, demo6b.json is for the convolved galaxy images.",
-"#" : "Out JSON parser can take multiple input files on the command line, and will run all",
-"#" : "of them.",
 
-"#" : "Define the PSF profile",
+"#" : "See deom6.yaml for more extensive commentary about the features here.",
+
 "psf" : {
     "type" : "Sum",
     "items" : [
@@ -45,17 +31,10 @@
     ]
 },
 
-"#" : "Define some other information about the images ",
 "image" : {
     "pixel_scale" : 0.16,
 
-    "#" : "Define the initial random number seed",
-    "random_seed" : 1512413,
-
-    "#" : "Note: since the output includes a data_cube output, which requires all the",
-    "#" : "images to be the same size, GalSim will choose the size of the first image",
-    "#" : "automatically from the profile (since we aren't setting any image : size here),",
-    "#" : "but then subsequent images will be forced to be the same size as the first one."
+    "random_seed" : 1512413
 },
 
 "output" : {

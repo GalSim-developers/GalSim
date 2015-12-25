@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -116,7 +116,6 @@ output :
 # The second version of this uses 4 processes
 
 image :
-    # If nproc <= 0, then this means to use nproc = ncpu.
     nproc : 4
 
 output :

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -25,7 +25,6 @@ routines for handling multiple Images.
 
 import os
 import galsim
-from galsim import pyfits, pyfits_version
 
 
 ##############################################################################################
@@ -36,6 +35,7 @@ from galsim import pyfits, pyfits_version
 ##############################################################################################
  
 def _parse_compression(compression, file_name):
+    from galsim._pyfits import pyfits, pyfits_version
     file_compress = None
     pyfits_compress = None
     if compression == 'rice' or compression == 'RICE_1': pyfits_compress = 'RICE_1'
@@ -71,6 +71,7 @@ class _ReadFile:
         # cf. http://bugs.python.org/issue7471
         import subprocess
         from cStringIO import StringIO
+        from galsim._pyfits import pyfits
         # We use gunzip -c rather than zcat, since the latter is sometimes called gzcat
         # (with zcat being a symlink to uncompress instead).
         p = subprocess.Popen(["gunzip", "-c", file], stdout=subprocess.PIPE, close_fds=True)
@@ -81,6 +82,7 @@ class _ReadFile:
 
     def gzip_in_mem(self, file):
         import gzip
+        from galsim._pyfits import pyfits
         fin = gzip.open(file, 'rb')
         hdu_list = pyfits.open(fin, 'readonly')
         # Sometimes this doesn't work.  The symptoms may be that this raises an
@@ -93,6 +95,7 @@ class _ReadFile:
         return hdu_list, fin
 
     def pyfits_open(self, file):
+        from galsim._pyfits import pyfits
         # This usually works, although pyfits internally may (depending on the version)
         # use a temporary file, which is why we prefer the above in-memory code if it works.
         # For some versions of pyfits, this is actually the same as the in_mem version.
@@ -101,6 +104,7 @@ class _ReadFile:
 
     def gzip_tmp(self, file):
         import gzip
+        from galsim._pyfits import pyfits
         # Finally, just in case, if everything else failed, here is an implementation that 
         # should always work.
         fin = gzip.open(file, 'rb')
@@ -117,6 +121,7 @@ class _ReadFile:
     def bunzip2_call(self, file):
         import subprocess
         from cStringIO import StringIO
+        from galsim._pyfits import pyfits
         p = subprocess.Popen(["bunzip2", "-c", file], stdout=subprocess.PIPE, close_fds=True)
         fin = StringIO(p.communicate()[0])
         assert p.returncode == 0 
@@ -125,6 +130,7 @@ class _ReadFile:
 
     def bz2_in_mem(self, file):
         import bz2
+        from galsim._pyfits import pyfits
         # This normally works.  But it might not on old versions of pyfits.
         fin = bz2.BZ2File(file, 'rb')
         hdu_list = pyfits.open(fin, 'readonly')
@@ -136,6 +142,7 @@ class _ReadFile:
 
     def bz2_tmp(self, file):
         import bz2
+        from galsim._pyfits import pyfits
         fin = bz2.BZ2File(file, 'rb')
         data = fin.read()
         tmp = file + '.tmp'
@@ -165,6 +172,7 @@ class _ReadFile:
         self.bz2 = self.bz2_methods[0]
 
     def __call__(self, file, dir, file_compress):
+        from galsim._pyfits import pyfits, pyfits_version
         if dir:
             import os
             file = os.path.join(dir,file)
@@ -337,6 +345,7 @@ class _WriteFile:
 
     def __call__(self, file, dir, hdu_list, clobber, file_compress, pyfits_compress):
         import os
+        from galsim._pyfits import pyfits, pyfits_version
         if dir:
             file = os.path.join(dir,file)
 
@@ -395,10 +404,14 @@ class _WriteFile:
 _write_file = _WriteFile()
 
 def _add_hdu(hdu_list, data, pyfits_compress):
+    from galsim._pyfits import pyfits, pyfits_version
     if pyfits_compress:
         if len(hdu_list) == 0:
             hdu_list.append(pyfits.PrimaryHDU())  # Need a blank PrimaryHDU
-        hdu = pyfits.CompImageHDU(data, compressionType=pyfits_compress)
+        if pyfits_version < '4.3':
+            hdu = pyfits.CompImageHDU(data, compressionType=pyfits_compress)
+        else:
+            hdu = pyfits.CompImageHDU(data, compression_type=pyfits_compress)
     else:
         if len(hdu_list) == 0:
             hdu = pyfits.PrimaryHDU(data)
@@ -411,10 +424,9 @@ def _add_hdu(hdu_list, data, pyfits_compress):
 def _check_hdu(hdu, pyfits_compress):
     """Check that an input `hdu` is valid
     """
+    from galsim._pyfits import pyfits
     if pyfits_compress:
         if not isinstance(hdu, pyfits.CompImageHDU):
-            #print 'pyfits_compress = ',pyfits_compress
-            #print 'hdu = ',hdu
             if isinstance(hdu, pyfits.BinTableHDU):
                 raise IOError('Expecting a CompImageHDU, but got a BinTableHDU\n' +
                     'Probably your pyfits installation does not have the pyfitsComp module '+
@@ -426,12 +438,11 @@ def _check_hdu(hdu, pyfits_compress):
                 raise IOError('Found invalid HDU reading FITS file (expected an ImageHDU)')
     else:
         if not isinstance(hdu, pyfits.ImageHDU) and not isinstance(hdu, pyfits.PrimaryHDU):
-            #print 'pyfits_compress = ',pyfits_compress
-            #print 'hdu = ',hdu
             raise IOError('Found invalid HDU reading FITS file (expected an ImageHDU)')
 
 
 def _get_hdu(hdu_list, hdu, pyfits_compress):
+    from galsim._pyfits import pyfits
     if isinstance(hdu_list, pyfits.HDUList):
         # Note: Nothing special needs to be done when reading a compressed hdu.
         # However, such compressed hdu's may not be the PrimaryHDU, so if we think we are
@@ -485,7 +496,9 @@ def write(image, file_name=None, dir=None, hdu_list=None, clobber=True, compress
 
     @param image        The image to write to file.  Per the description of this method, it may be
                         given explicitly via `galsim.fits.write(image, ...)` or the method may be 
-                        called directly as an image method, `image.write(...)`.
+                        called directly as an image method, `image.write(...)`.  Note that if the
+                        image has a 'header' attribute containing a FitsHeader, then the FitsHeader
+                        is written to the header in the PrimaryHDU, followed by the WCS as usual.
     @param file_name    The name of the file to write to.  [Either `file_name` or `hdu_list` is 
                         required.]
     @param dir          Optionally a directory name can be provided if `file_name` does not 
@@ -513,7 +526,8 @@ def write(image, file_name=None, dir=None, hdu_list=None, clobber=True, compress
                                    otherwise None
                         [default: 'auto']
     """
-  
+    from galsim._pyfits import pyfits
+
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
     if file_name and hdu_list is not None:
@@ -525,6 +539,11 @@ def write(image, file_name=None, dir=None, hdu_list=None, clobber=True, compress
         hdu_list = pyfits.HDUList()
 
     hdu = _add_hdu(hdu_list, image.array, pyfits_compress)
+    if hasattr(image, 'header'):
+        # Automatically handle old pyfits versions correctly...
+        hdu_header = galsim.FitsHeader(hdu.header)
+        for key in image.header.keys():
+            hdu_header[key] = image.header[key]
     if image.wcs:
         image.wcs.writeToFitsHeader(hdu.header, image.bounds)
 
@@ -538,7 +557,8 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True
 
     The details of how the images are written to file depends on the arguments.
 
-    @param image_list   A Python list of Images.
+    @param image_list   A Python list of Images.  (For convenience, some items in this list
+                        may be HDUs already.  Any Images will be converted into pyfits HDUs.)
     @param file_name    The name of the file to write to.  [Either `file_name` or `hdu_list` is 
                         required.]
     @param dir          Optionally a directory name can be provided if `file_name` does not 
@@ -551,6 +571,7 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True
     @param clobber      See documentation for this parameter on the galsim.fits.write() method.
     @param compression  See documentation for this parameter on the galsim.fits.write() method.
     """
+    from galsim._pyfits import pyfits
 
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
@@ -563,13 +584,19 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True
         hdu_list = pyfits.HDUList()
 
     for image in image_list:
-        hdu = _add_hdu(hdu_list, image.array, pyfits_compress)
-        if image.wcs:
-            image.wcs.writeToFitsHeader(hdu.header, image.bounds)
+        if isinstance(image, galsim.Image):
+            hdu = _add_hdu(hdu_list, image.array, pyfits_compress)
+            if image.wcs:
+                image.wcs.writeToFitsHeader(hdu.header, image.bounds)
+        else:
+            # Assume that image is really an HDU.  If not, this should give a reasonable error
+            # message.  (The base type of HDUs vary among versions of pyfits, so it's hard to
+            # check explicitly with an isinstance call.  For newer pyfits versions, it is
+            # pyfits.hdu.base.ExtensionHDU, but not in older versions.)
+            hdu_list.append(image)
 
     if file_name:
         _write_file(file_name, dir, hdu_list, clobber, file_compress, pyfits_compress)
-
 
 
 def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
@@ -605,6 +632,7 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
     @param compression  See documentation for this parameter on the galsim.fits.write() method.
     """
     import numpy
+    from galsim._pyfits import pyfits
 
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
@@ -823,6 +851,7 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
 
     @returns a Python list of Images
     """
+    from galsim._pyfits import pyfits
 
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
@@ -1017,21 +1046,35 @@ class FitsHeader(object):
     to write to a fits header, so this class will work regardless of which version of pyfits
     (or astropy.io.fits) is installed.
 
+    The underlying pyfits.Header object is available as a `.header` attribute:
+
+        >>> pyf_header = fits_header.header
+
+    A FitsHeader may be constructed from a file name, an open PyFits (or astropy.io.fits) HDUList
+    object, or a PyFits (or astropy.io.fits) Header object.  It can also be constructed with
+    no parameters, in which case a blank Header will be constructed with no keywords yet if 
+    you want to add the keywords you want by hand.
+
+        >>> h1 = galsim.FitsHeader(file_name = file_name)
+        >>> h2 = galsim.FitsHeader(header = header)
+        >>> h3 = galsim.FitsHeader(hdu_list = hdu_list)
+        >>> h4 = galsim.FitsHeader()
+
+    For convenience, the first parameter may be unnamed as either a header or a file_name:
+
+        >>> h1 = galsim.FitsHeader(file_name)
+        >>> h2 = galsim.FitsHeader(header)
+
     Constructor parameters:
 
-    @param header       A pyfits Header object.  [One of `file_name`, `hdu_list` or `header`
-                        is required.  The `header` parameter may be given without the keyword
-                        name.  Also, if `header` is a string, it is interpreted as a file name,
-                        so a file name may be passed as an arg like most other galsim.fits 
-                        read functions.]
-    @param file_name    The name of the file to read in.  [One of `file_name`, `hdu_list` or 
-                        `header` is required.]
+    @param header       A pyfits Header object or in fact any dict-like object or list of 
+                        (key,value) pairs.  [default: None]
+    @param file_name    The name of the file to read in.  [default: None]
     @param dir          Optionally a directory name can be provided if `file_name` does not 
                         already include it. [default: None]
     @param hdu_list     Either a `pyfits.HDUList`, a `pyfits.PrimaryHDU`, or `pyfits.ImageHDU`.
                         In the former case, the `hdu` in the list will be selected.  In the latter
-                        two cases, the `hdu` parameter is ignored.  [One of `file_name`, `hdu_list`
-                        or `header is required.]
+                        two cases, the `hdu` parameter is ignored.  [default: None]
     @param hdu          The number of the HDU to return.  [default: None, which means to return
                         either the primary or first extension as appropriate for the given
                         compression.  (e.g. for rice, the first extension is the one you normally
@@ -1060,10 +1103,10 @@ class FitsHeader(object):
     _opt_params = { 'dir' : str , 'hdu' : int , 'compression' : str , 'text_file' : bool }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, header=None, file_name=None, dir=None, hdu_list=None, hdu=None,
                  compression='auto', text_file=False):
+        from galsim._pyfits import pyfits
 
         if header and file_name:
             raise TypeError("Cannot provide both file_name and header to FitsHeader")
@@ -1071,8 +1114,6 @@ class FitsHeader(object):
             raise TypeError("Cannot provide both hdu_list and header to FitsHeader")
         if file_name and hdu_list:
             raise TypeError("Cannot provide both file_name and hdu_list to FitsHeader")
-        if not (header or file_name or hdu_list):
-            raise TypeError("Must provide one of header, file_name or hdu_list to FitsHeader")
 
         # Interpret a string header as though it were passed as file_name.
         if isinstance(header, basestring):
@@ -1080,16 +1121,32 @@ class FitsHeader(object):
             header = None
     
         file_compress, pyfits_compress = _parse_compression(compression,file_name)
+        self._tag = None # Used for the repr
 
-        if file_name:
-            if text_file:
+        if file_name is not None:
+            if dir is not None:
                 import os
-                if dir: file_name = os.path.join(dir,file_name)
+                self._tag = 'file_name='+repr(os.path.join(dir,file_name))
+            else:
+                self._tag = 'file_name='+repr(file_name)
+            if hdu is not None:
+                self._tag += ', hdu=%r'%hdu
+            if compression is not 'auto':
+                self._tag += ', compression=%r'%compression
+
+            if text_file:
+                self._tag += ', text_file=True'
+                if dir is not None:
+                    import os
+                    file_name = os.path.join(dir,file_name)
                 with open(file_name,"r") as fin:
-                    # Later pyfits versions changed this to a class method, so you can write
-                    # pyfits.Card.fromstring(text).  But in older pyfits versions, it was
-                    # a regular method.  This syntax should work in both cases.
-                    cards = [ pyfits.Card().fromstring(text) for text in fin ]
+                    lines = [ line.strip() for line in fin ]
+                if 'END' in lines:  # Don't include END (or later lines)
+                    lines = lines[:lines.index('END')]
+                # Later pyfits versions changed this to a class method, so you can write
+                # pyfits.Card.fromstring(text).  But in older pyfits versions, it was
+                # a regular method.  This syntax should work in both cases.
+                cards = [ pyfits.Card().fromstring(line) for line in lines ]
                 header = pyfits.Header(cards)
             else:
                 hdu_list, fin = _read_file(file_name, dir, file_compress)
@@ -1106,8 +1163,20 @@ class FitsHeader(object):
             import copy
             self.header = copy.copy(header)
             closeHDUList(hdu_list, fin)
-        else:
+        elif isinstance(header, pyfits.Header):
+            # If header is a pyfits.Header, then we just use it.
             self.header = header
+        else:
+            # Otherwise, header may be any kind of dict-like object or list of (key,value) pairs.
+            self.header = pyfits.Header()
+            if header is not None:
+                if hasattr(header, 'items'):
+                    # update() should handle anything that acts like a dict.
+                    self.update(header)
+                else:
+                    # for a list, just add each item one at a time.
+                    for k,v in header:
+                        self.append(k,v,useblanks=False)
 
     # The rest of the functions are typical non-mutating functions for a dict, for which we just
     # pass the request along to self.header.
@@ -1118,6 +1187,7 @@ class FitsHeader(object):
         return key in self.header
 
     def __delitem__(self, key):
+        self._tag = None
         # This is equivalent to the newer pyfits implementation, but older versions silently
         # did nothing if the key was not in the header.
         if key in self.header:
@@ -1132,12 +1202,15 @@ class FitsHeader(object):
         return self.header.__iter__
 
     def __len__(self):
+        from galsim._pyfits import pyfits_version
         if pyfits_version < '3.1':
             return len(self.header.ascard)
         else:
             return len(self.header)
 
     def __setitem__(self, key, value):
+        from galsim._pyfits import pyfits_version
+        self._tag = None
         if pyfits_version < '3.1':
             if isinstance(value, tuple):
                 # header[key] = (value, comment) syntax
@@ -1158,7 +1231,13 @@ class FitsHeader(object):
             self.header[key] = value
 
     def clear(self):
-        self.header.clear()
+        from galsim._pyfits import pyfits_version
+        self._tag = None
+        if pyfits_version < '3.1':
+            # Not sure when clear() was added, but not present in 2.4, and present in 3.1.
+            del self.header.ascardlist()[:]
+        else:
+            self.header.clear()
 
     def get(self, key, default=None):
         return self.header.get(key, default)
@@ -1167,28 +1246,109 @@ class FitsHeader(object):
         return self.header.items()
 
     def iteritems(self):
-        return self.header.iteritems()
+        from galsim._pyfits import pyfits_version
+        if pyfits_version < '3.1':
+            return self.header.items()
+        else:
+            return self.header.iteritems()
 
     def iterkeys(self):
-        return self.header.iterkeys()
+        from galsim._pyfits import pyfits_version
+        if pyfits_version < '3.1':
+            return self.header.keys()
+        else:
+            return self.header.iterkeys()
 
     def itervalues(self):
-        return self.header.itervalues()
+        from galsim._pyfits import pyfits_version
+        if pyfits_version < '3.1':
+            return self.header.ascard.values()
+        else:
+            return self.header.itervalues()
 
     def keys(self):
         return self.header.keys()
 
     def update(self, dict2):
+        from galsim._pyfits import pyfits_version
+        self._tag = None
         # dict2 may be a dict or another FitsHeader (or anything that acts like a dict).
         if pyfits_version < '3.1':
-            for k, v in dict2.iteritems:
+            for k, v in dict2.iteritems():
                 self[k] = v
         else:
             self.header.update(dict2)
 
     def values(self):
-        return self.header.values()
+        from galsim._pyfits import pyfits_version
+        if pyfits_version < '3.1':
+            return self.header.ascard.values()
+        else:
+            return self.header.values()
 
+    def append(self, key, value='', useblanks=True):
+        """Append an item to the end of the header.
+
+        This breaks convention a bit by treating the header more like a list than a dict,
+        but sometimes that is necessary to get the header structured the way you want it.
+
+        @param key          The key of the entry to append
+        @param value        The value of the entry to append
+        @param useblanks    If there are blank entries currently at the end, should they be
+                            overwritten with the new entry? [default: True]
+        """
+        from galsim._pyfits import pyfits, pyfits_version
+        self._tag = None
+        if pyfits_version < '3.1':
+            # NB. append doesn't quite do what it claims when useblanks=False.
+            # If there are blanks, it doesn't put the new item after the blanks.
+            # Inserting before the end does do what we want.
+            self.header.ascardlist().insert(len(self), pyfits.Card(key, value),
+                                            useblanks=useblanks)
+        else:
+            self.header.insert(len(self), (key, value), useblanks=useblanks)
+
+    def __repr__(self):
+        from galsim._pyfits import pyfits_str
+        if self._tag is None:
+            return "galsim.FitsHeader(header=%r)"%self.items()
+        else:
+            return "galsim.FitsHeader(%s)"%self._tag
+
+    def __str__(self):
+        if self._tag is None:
+            return "galsim.FitsHeader(header=<Header object at %s>)"%id(self.header)
+        else:
+            return "galsim.FitsHeader(%s)"%self._tag
+
+    def __eq__(self, other):
+        return isinstance(other,FitsHeader) and self.header.items() == other.header.items()
+
+    def __ne__(self, other): return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash(tuple(sorted(self.items())))
+
+    def __deepcopy__(self, memo):
+        # Need this because pyfits.Header deepcopy was broken before 3.0.6.
+        # cf. https://aeon.stsci.edu/ssb/trac/pyfits/ticket/115
+        from galsim._pyfits import pyfits, pyfits_version
+        import copy
+        # Boilerplate deepcopy implementation.
+        # cf. http://stackoverflow.com/questions/1500718/what-is-the-right-way-to-override-the-copy-deepcopy-operations-on-an-object-in-p
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        d1 = self.__dict__
+        # This is the special bit for this case.
+        if pyfits_version < '3.0.6':
+            # Not technically a deepcopy apparently, but good enough in most cases.
+            result.header = self.header.copy()
+            d1 = d1.copy()
+            del d1['header']
+        for k, v in d1.items():
+            setattr(result, k, copy.deepcopy(v, memo))
+        return result
 
 # inject write as method of Image class
 galsim.Image.write = write

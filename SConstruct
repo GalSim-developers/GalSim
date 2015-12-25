@@ -1,6 +1,6 @@
 # vim: set filetype=python et ts=4 sw=4:
 
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -937,7 +937,7 @@ def TryScript(config,text,executable):
 
     # Run the given executable with the source file we just built
     output = config.sconf.confdir.File(f + '.out')
-    node = config.env.Command(output, source, executable + " < $SOURCE >& $TARGET")
+    node = config.env.Command(output, source, executable + " < $SOURCE > $TARGET 2>&1")
     ok = config.sconf.BuildNodes(node)
 
     config.sconf.env['SPAWN'] = save_spawn
@@ -1061,7 +1061,7 @@ PyMODINIT_FUNC initcheck_python(void)
         ErrorExit('Unable to compile a file with #include "Python.h" using the include path:',
                   '%s'%py_inc)
 
-    # Now see if we can build it as a LoadableModule and run in from python.
+    # Now see if we can build it as a LoadableModule and run it from python.
     # Sometimes (e.g. most linux systems), we don't need the python library to do this.
     # So the first attempt below with [''] for the libs will work.
     if CheckModuleLibs(config,[''],python_source_file,'check_python'):
@@ -1379,9 +1379,16 @@ except:
     config.Result(result)
 
     if not result:
+        print """
+WARNING: There seems to be a mismatch between this C++ compiler and the one
+         that was used to build either python or boost.python (or both).
+         This might be ok, but if you get a linking error in the subsequent 
+         build, it is possible  that you will need to rebuild boost with the
+         same compiler (and sometimes version) that you are using here.
+"""
         config.env['final_messages'].append("""
 WARNING: There seems to be a mismatch between this C++ compiler and the one
-         that was used to build python.
+         that was used to build either python or boost.python (or both).
          This should not affect normal usage of GalSim.  However, exceptions
          thrown in the C++ layer are not being correctly propagated to the
          python layer, so the error text for C++ run-time errors  will not

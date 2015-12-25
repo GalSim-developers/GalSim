@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -44,7 +44,7 @@ pixel_scale = 0.2
 decimal = 2 # decimal place at which to require equality in sizes
 decimal_shape = 3 # decimal place at which to require equality in shapes
 
-# The timing tests can be unreliable in environments with other processes running at the 
+# The timing tests can be unreliable in environments with other processes running at the
 # same time.  So we disable them by default.  However, on a clean system, they should all pass.
 test_timing = False
 
@@ -548,6 +548,23 @@ def test_hsmparams():
     res2_def = galsim.hsm.EstimateShear(tot_gal_image, tot_psf_image, hsmparams = default_hsmparams)
     assert(equal_hsmshapedata(res, res_def)), 'Shear outputs differ when using default HSMParams'
 
+    do_pickle(default_hsmparams)
+    do_pickle(galsim.hsm.HSMParams(nsig_rg=1.0,
+                                   nsig_rg2=1.6,
+                                   max_moment_nsig2=2.0,
+                                   regauss_too_small=0,
+                                   adapt_order=0,
+                                   max_mom2_iter=100,
+                                   num_iter_default=4,
+                                   bound_correct_wt=0.05,
+                                   max_amoment=80.,
+                                   max_ashift=5.,
+                                   ksb_moments_max=2,
+                                   failed_moments=99.))
+    do_pickle(res)
+    do_pickle(res2)
+    do_pickle(galsim._galsim.CppShapeData())
+
     try:
         # Then check failure modes: force it to fail by changing HSMParams.
         new_params_niter = galsim.hsm.HSMParams(max_mom2_iter = res.moments_n_iter-1)
@@ -764,6 +781,47 @@ def test_bounds_centroid():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_ksb_sig():
+    """Check that modification of KSB weight function width works."""
+    import time
+    t1 = time.time()
+
+    gal = galsim.Gaussian(fwhm=1.0).shear(e1=0.2, e2=0.1)
+    psf = galsim.Gaussian(fwhm=0.7)
+    gal_img = galsim.Convolve(gal, psf).drawImage(nx=32, ny=32, scale=0.2)
+    psf_img = psf.drawImage(nx=16, ny=16, scale=0.2)
+
+    # First just check that combination of ksb_sig_weight and ksb_sig_factor is consistent.
+    hsmparams1 = galsim.hsm.HSMParams(ksb_sig_weight=2.0)
+    result1 = galsim.hsm.EstimateShear(gal_img, psf_img, shear_est='KSB', hsmparams=hsmparams1)
+
+    hsmparams2 = galsim.hsm.HSMParams(ksb_sig_weight=1.0, ksb_sig_factor=2.0)
+    result2 = galsim.hsm.EstimateShear(gal_img, psf_img, shear_est='KSB', hsmparams=hsmparams2)
+
+    np.testing.assert_almost_equal(result1.corrected_g1, result2.corrected_g1, 9,
+                                   "KSB weight fn width inconsistently manipulated")
+    np.testing.assert_almost_equal(result1.corrected_g2, result2.corrected_g2, 9,
+                                   "KSB weight fn width inconsistently manipulated")
+
+    # Now check that if we construct a galaxy with an ellipticity gradient, we see the appropriate
+    # sign of the response when we change the width of the weight function.
+    narrow = galsim.Gaussian(fwhm=1.0).shear(e1=0.2)
+    wide = galsim.Gaussian(fwhm=2.0).shear(e1=-0.2)
+    gal = narrow + wide
+    gal_img = galsim.Convolve(gal, psf).drawImage(nx=32, ny=32, scale=0.2)
+    hsmparams_narrow = galsim.hsm.HSMParams()  # Default sig_factor=1.0
+    result_narrow = galsim.hsm.EstimateShear(gal_img, psf_img, shear_est='KSB',
+                                             hsmparams=hsmparams_narrow)
+    hsmparams_wide = galsim.hsm.HSMParams(ksb_sig_factor=2.0)
+    result_wide = galsim.hsm.EstimateShear(gal_img, psf_img, shear_est='KSB',
+                                           hsmparams=hsmparams_wide)
+
+    np.testing.assert_array_less(result_wide.corrected_g1, result_narrow.corrected_g1,
+                                 "Galaxy ellipticity gradient not captured by ksb_sig_factor.")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_moments_basic()
     test_shearest_basic()
@@ -775,3 +833,4 @@ if __name__ == "__main__":
     test_shapedata()
     test_strict()
     test_bounds_centroid()
+    test_ksb_sig()

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -56,7 +56,9 @@ _galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
 # cf. http://stackoverflow.com/questions/6187932/how-to-write-a-static-python-getitem-method
 class MetaImage(type):
     def __getitem__(cls,t):
-        """An obsolete syntax that treats Image as a dict indexed by type"""
+        """A deprecated syntax that treats Image as a dict indexed by type"""
+        from galsim.deprecated import depr
+        depr('Image[type]', 1.1, 'Image(..., dtype=type)')
         Image_dict = {
             numpy.int16 : ImageS,
             numpy.int32 : ImageI,
@@ -185,6 +187,7 @@ class Image(object):
 
     """
     __metaclass__ = MetaImage
+
     cpp_valid_dtypes = _galsim.ImageView.keys()
     alias_dtypes = {
         int : numpy.int32,          # So that user gets what they would expect
@@ -227,6 +230,14 @@ class Image(object):
                 xmin = kwargs.pop('xmin',1)
                 ymin = kwargs.pop('ymin',1)
                 make_const = kwargs.pop('make_const',False)
+                if 'bounds' in kwargs:
+                    b = kwargs.pop('bounds')
+                    if b.xmax-b.xmin+1 != array.shape[1]:
+                        raise ValueError("Shape of array is inconsistent with provided bounds")
+                    if b.ymax-b.ymin+1 != array.shape[0]:
+                        raise ValueError("Shape of array is inconsistent with provided bounds")
+                    xmin = b.xmin
+                    ymin = b.ymin
             elif 'bounds' in kwargs:
                 bounds = kwargs.pop('bounds')
             elif 'image' in kwargs:
@@ -346,6 +357,18 @@ class Image(object):
                 raise TypeError("wcs parameters must be a galsim.BaseWCS instance")
             self.wcs = wcs
 
+    def __repr__(self):
+        return 'galsim.Image(bounds=%r, array=array(%r, dtype=%s), wcs=%r)'%(
+                self.bounds, self.array.tolist(), self.array.dtype, self.wcs)
+
+    def __str__(self):
+        if self.wcs is not None and self.wcs.isPixelScale():
+            return 'galsim.Image(bounds=%s, scale=%s)'%(self.bounds, self.scale)
+        else:
+            return 'galsim.Image(bounds=%s, wcs=%s)'%(self.bounds, self.wcs)
+
+    def __hash__(self): return hash(repr(self))
+
     # bounds and array are really properties which pass the request to the image
     @property
     def bounds(self): return self.image.bounds
@@ -388,13 +411,17 @@ class Image(object):
     def copy(self):
         return Image(image=self.image.copy(), wcs=self.wcs)
 
-    def resize(self, bounds):
+    def resize(self, bounds, wcs=None):
         """Resize the image to have a new bounds (must be a BoundsI instance)
 
         Note that the resized image will have uninitialized data.  If you want to preserve
         the existing data values, you should either use `subImage` (if you want a smaller
         portion of the current Image) or make a new Image and copy over the current values
         into a portion of the new image (if you are resizing to a larger Image).
+
+        @param bounds   The new bounds to resize to.
+        @param wcs      If provided, also update the wcs to the given value. [default: None,
+                        which means keep the existing wcs]
         """
         if not isinstance(bounds, galsim.BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
@@ -403,9 +430,13 @@ class Image(object):
         except:
             # if the image wasn't an ImageAlloc, then above won't work.  So just make it one.
             self.image = _galsim.ImageAlloc[self.dtype](bounds)
+        if wcs is not None:
+            self.wcs = wcs
 
     def subImage(self, bounds):
         """Return a view of a portion of the full image
+
+        This is equivalent to self[bounds]
         """
         if not isinstance(bounds, galsim.BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
@@ -415,6 +446,13 @@ class Image(object):
         # reorigin that you need to update the wcs.  So that's taken care of in im.shift.
         return Image(image=subimage, wcs=self.wcs)
 
+    def setSubImage(self, bounds, rhs):
+        """Set a portion of the full image to the values in another image
+
+        This is equivalent to self[bounds] = rhs
+        """
+        self.subImage(bounds).image.copyFrom(rhs.image)
+
     def __getitem__(self, bounds):
         """Return a view of a portion of the full image
         """
@@ -423,7 +461,7 @@ class Image(object):
     def __setitem__(self, bounds, rhs):
         """Set a portion of the full image to the values in another image
         """
-        self.subImage(bounds).image.copyFrom(rhs.image)
+        self.setSubImage(bounds,rhs)
 
     def copyFrom(self, rhs):
         """Copy the contents of another image
@@ -570,6 +608,13 @@ class Image(object):
         """
         self.image.invertSelf()
 
+    def __eq__(self, other):
+        return ( isinstance(other, Image) and
+                 self.bounds == other.bounds and
+                 self.wcs == other.wcs and
+                 numpy.array_equal(self.array,other.array) )
+    def __ne__(self, other): return not self.__eq__(other)
+
 
 # These are essentially aliases for the regular Image with the correct dtype
 def ImageS(*args, **kwargs):
@@ -595,74 +640,6 @@ def ImageD(*args, **kwargs):
     """
     kwargs['dtype'] = numpy.float64
     return Image(*args, **kwargs)
-
-def ImageViewS(*args, **kwargs):
-    """Alias for galsim.Image(..., dtype=numpy.int16)
-    """
-    kwargs['dtype'] = numpy.int16
-    return Image(*args, **kwargs)
-
-def ImageViewI(*args, **kwargs):
-    """Alias for galsim.Image(..., dtype=numpy.int32)
-    """
-    kwargs['dtype'] = numpy.int32
-    return Image(*args, **kwargs)
-
-def ImageViewF(*args, **kwargs):
-    """Alias for galsim.Image(..., dtype=numpy.float32)
-    """
-    kwargs['dtype'] = numpy.float32
-    return Image(*args, **kwargs)
-
-def ImageViewD(*args, **kwargs):
-    """Alias for galsim.Image(..., dtype=numpy.float64)
-    """
-    kwargs['dtype'] = numpy.float64
-    return Image(*args, **kwargs)
-
-def ConstImageViewS(*args, **kwargs):
-    """An obsolete alias for galsim.Image(..., dtype=numpy.int16, make_const=True)
-    """
-    kwargs['dtype'] = numpy.int16
-    kwargs['make_const'] = True
-    return Image(*args, **kwargs)
-
-def ConstImageViewI(*args, **kwargs):
-    """An obsolete alias for galsim.Image(..., dtype=numpy.int32, make_const=True)
-    """
-    kwargs['dtype'] = numpy.int32
-    kwargs['make_const'] = True
-    return Image(*args, **kwargs)
-
-def ConstImageViewF(*args, **kwargs):
-    """An obsolete alias for galsim.Image(..., dtype=numpy.float32, make_const=True)
-    """
-    kwargs['dtype'] = numpy.float32
-    kwargs['make_const'] = True
-    return Image(*args, **kwargs)
-
-def ConstImageViewD(*args, **kwargs):
-    """An obsolete alias for galsim.Image(..., dtype=numpy.float64, make_const=True)
-    """
-    kwargs['dtype'] = numpy.float64
-    kwargs['make_const'] = True
-    return Image(*args, **kwargs)
-
-ImageView = {
-    numpy.int16 : ImageViewS,
-    numpy.int32 : ImageViewI,
-    numpy.float32 : ImageViewF,
-    numpy.float64 : ImageViewD
-}
-
-ConstImageView = {
-    numpy.int16 : ConstImageViewS,
-    numpy.int32 : ConstImageViewI,
-    numpy.float32 : ConstImageViewF,
-    numpy.float64 : ConstImageViewD
-}
-
-
 
 
 ################################################################################################
@@ -694,9 +671,15 @@ def Image_add(self, other):
 def Image_iadd(self, other):
     check_image_consistency(self, other)
     try:
-        self.array[:,:] += other.array
+        a = other.array
+        dt = a.dtype
     except AttributeError:
-        self.array[:,:] += other
+        a = other
+        dt = type(a)
+    if dt == self.array.dtype:
+        self.array[:,:] += a
+    else:
+        self.array[:,:] = (self.array + a).astype(self.array.dtype)
     return self
 
 def Image_sub(self, other):
@@ -713,9 +696,15 @@ def Image_rsub(self, other):
 def Image_isub(self, other):
     check_image_consistency(self, other)
     try:
-        self.array[:,:] -= other.array
+        a = other.array
+        dt = a.dtype
     except AttributeError:
-        self.array[:,:] -= other
+        a = other
+        dt = type(a)
+    if dt == self.array.dtype:
+        self.array[:,:] -= a
+    else:
+        self.array[:,:] = (self.array - a).astype(self.array.dtype)
     return self
 
 def Image_mul(self, other):
@@ -726,9 +715,15 @@ def Image_mul(self, other):
 def Image_imul(self, other):
     check_image_consistency(self, other)
     try:
-        self.array[:,:] *= other.array
+        a = other.array
+        dt = a.dtype
     except AttributeError:
-        self.array[:,:] *= other
+        a = other
+        dt = type(a)
+    if dt == self.array.dtype:
+        self.array[:,:] *= a
+    else:
+        self.array[:,:] = (self.array * a).astype(self.array.dtype)
     return self
 
 def Image_div(self, other):
@@ -745,9 +740,15 @@ def Image_rdiv(self, other):
 def Image_idiv(self, other):
     check_image_consistency(self, other)
     try:
-        self.array[:,:] /= other.array
+        a = other.array
+        dt = a.dtype
     except AttributeError:
-        self.array[:,:] /= other
+        a = other
+        dt = type(a)
+    if dt == self.array.dtype:
+        self.array[:,:] /= a
+    else:
+        self.array[:,:] = (self.array / a).astype(self.array.dtype)
     return self
 
 def Image_pow(self, other):
@@ -825,6 +826,9 @@ def ImageAlloc_setstate(self, args):
     self.__class__ = _galsim.ImageView[self_type]
     self.__init__(*args)
 
+def ImageHash(self):
+    return hash(repr(self))
+
 # inject the arithmetic operators as methods of the Image class:
 Image.__add__ = Image_add
 Image.__radd__ = Image_add
@@ -877,6 +881,7 @@ for Class in _galsim.ImageAlloc.itervalues():
     Class.__getstate_manages_dict__ = 1
     Class.__getstate__ = ImageAlloc_getstate
     Class.__setstate__ = ImageAlloc_setstate
+    Class.__hash__ = ImageHash
 
 for Class in _galsim.ImageView.itervalues():
     Class.__setitem__ = Image_setitem
@@ -901,6 +906,7 @@ for Class in _galsim.ImageView.itervalues():
     Class.__neg__ = Image_neg
     Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs
+    Class.__hash__ = ImageHash
 
 for Class in _galsim.ConstImageView.itervalues():
     Class.__getitem__ = Image_getitem
@@ -918,6 +924,7 @@ for Class in _galsim.ConstImageView.itervalues():
     Class.__neg__ = Image_neg
     Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs
+    Class.__hash__ = ImageHash
 
 for int_type in [ numpy.int16, numpy.int32 ]:
     for Class in [ _galsim.ImageAlloc[int_type], _galsim.ImageView[int_type],
@@ -931,3 +938,37 @@ for int_type in [ numpy.int16, numpy.int32 ]:
         Class.__ior__ = Image_ior
 
 del Class    # cleanup public namespace
+
+galsim._galsim.ImageAllocS.__repr__ = lambda self: 'galsim._galsim.ImageAllocS(%r,%r)'%(
+        self.bounds, self.array)
+galsim._galsim.ImageAllocI.__repr__ = lambda self: 'galsim._galsim.ImageAllocI(%r,%r)'%(
+        self.bounds, self.array)
+galsim._galsim.ImageAllocF.__repr__ = \
+        lambda self: 'galsim._galsim.ImageAllocF(%r,array(%r, dtype=%s))'%(
+            self.bounds, self.array.tolist(), self.array.dtype)
+galsim._galsim.ImageAllocD.__repr__ = \
+        lambda self: 'galsim._galsim.ImageAllocD(%r,array(%r, dtype=%s))'%(
+            self.bounds, self.array.tolist(), self.array.dtype)
+
+galsim._galsim.ImageViewS.__repr__ = lambda self: 'galsim._galsim.ImageViewS(%r,%r,%r)'%(
+        self.array, self.xmin, self.xmax)
+galsim._galsim.ImageViewI.__repr__ = lambda self: 'galsim._galsim.ImageViewI(%r,%r,%r)'%(
+        self.array, self.xmin, self.xmax)
+galsim._galsim.ImageViewF.__repr__ = \
+        lambda self: 'galsim._galsim.ImageViewF(array(%r, dtype=%s),%r,%r)'%(
+            self.array.tolist(), self.array.dtype, self.xmin, self.xmax)
+galsim._galsim.ImageViewD.__repr__ = \
+        lambda self: 'galsim._galsim.ImageViewD(array(%r, dtype=%s),%r,%r)'%(
+            self.array.tolist(), self.array.dtype, self.xmin, self.xmax)
+
+galsim._galsim.ConstImageViewS.__repr__ = lambda self: 'galsim._galsim.ConstImageViewS(%r,%r,%r)'%(
+        self.array, self.xmin, self.xmax)
+galsim._galsim.ConstImageViewI.__repr__ = lambda self: 'galsim._galsim.ConstImageViewI(%r,%r,%r)'%(
+        self.array, self.xmin, self.xmax)
+galsim._galsim.ConstImageViewF.__repr__ = \
+        lambda self: 'galsim._galsim.ConstImageViewF(array(%r, dtype=%s),%r,%r)'%(
+            self.array.tolist(), self.array.dtype, self.xmin, self.xmax)
+galsim._galsim.ConstImageViewD.__repr__ = \
+        lambda self: 'galsim._galsim.ConstImageViewD(array(%r, dtype=%s),%r,%r)'%(
+            self.array.tolist(), self.array.dtype, self.xmin, self.xmax)
+

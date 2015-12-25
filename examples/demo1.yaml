@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -63,6 +63,7 @@
 # - top level fields gal, psf, image, output
 # - obj type : Gaussian (flux, sigma)
 # - image : pixel_scale
+# - image : noise
 # - noise type : Gaussian (sigma)
 # - output : dir, file_name
 

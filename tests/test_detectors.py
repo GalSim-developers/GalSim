@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,6 +19,7 @@
 """
 
 import numpy as np
+import warnings
 from galsim_test_helpers import *
 
 try:
@@ -134,7 +135,9 @@ def test_nonlinearity_basic():
     # GalSim doesn't have SciPy dependence and this is NOT the preferred way to construct smooth
     # functions from tables but our routine can handle it anyway.
     try:
-        from scipy import interpolate
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore",category=RuntimeWarning)
+            from scipy import interpolate
         max_val = np.max(im.array)
         x_vals = np.linspace(0.0,max_val,num=500)
         y_vals = x_vals + 0.1*(x_vals**2)
@@ -421,11 +424,12 @@ def test_IPC_basic():
         err_msg="Output of applyIPC does not match the output from Convolve")
 
     try:
-        from scipy import signal
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore",category=RuntimeWarning)
+            from scipy import signal
         print "SciPy found installed. Checking IPC kernel convolution against SciPy's `convolve2d`"
         # SciPy is going to emit a warning that we don't want to worry about, so let's deliberately
         # ignore it by going into a `catch_warnings` context.
-        import warnings
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
 

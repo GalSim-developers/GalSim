@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -136,7 +136,7 @@ namespace galsim {
          *
          * @param[in] lseed A long-integer seed for the RNG.
          */
-        BaseDeviate(long lseed) : _rng(new rng_type()) { seed(lseed); }
+        explicit BaseDeviate(long lseed) : _rng(new rng_type()) { seed(lseed); }
 
         /**
          * @brief Construct a new BaseDeviate, sharing the random number generator with rhs.
@@ -162,6 +162,9 @@ namespace galsim {
         /// @brief return a serialization string for this BaseDeviate
         std::string serialize()
         { 
+            // When serializing, we need to make sure there is no cache being stored
+            // by the derived class.
+            clearCache();
             std::ostringstream oss;
             oss << *_rng; 
             return oss.str();
@@ -174,6 +177,18 @@ namespace galsim {
          */
         BaseDeviate duplicate()
         { return BaseDeviate(serialize()); }
+
+        /**
+         * @brief Return a string that can act as the repr in python
+         */
+        std::string repr() { return make_repr(true); }
+
+        /**
+         * @brief Return a string that can act as the str in python
+         *
+         * For this we use the same thing as the repr, but omit the (verbose!) seed parameter.
+         */
+        std::string str() { return make_repr(false); }
 
         /**
          * @brief Re-seed the PRNG using specified seed
@@ -219,6 +234,16 @@ namespace galsim {
         virtual void clearCache() {}
 
         /**
+         * @brief Discard some number of values from the random number generator.
+         */
+        void discard(int n) { _rng->discard(n); }
+
+        /**
+         * @brief Get a random value in its raw form as a long integer.
+         */
+        long raw() { return (*_rng)(); }
+
+        /**
          * @brief Draw a new random number from the distribution
          *
          * This is invalid for a BaseDeviate object that is not a derived class.
@@ -236,6 +261,9 @@ namespace galsim {
         // So this provides the interface that returns a double.
         virtual double _val() 
         { throw std::runtime_error("Cannot draw random values from a pure BaseDeviate object."); }
+
+        /// Helper to make the repr with or without the (lengthy!) seed item.
+        virtual std::string make_repr(bool incl_seed);
 
         /**
          * @brief Private routine to seed with microsecond counter from time-of-day structure.
@@ -297,6 +325,7 @@ namespace galsim {
 
     protected:
         double _val() { return operator()(); }
+        std::string make_repr(bool incl_seed);
 
     private:
         boost::random::uniform_real_distribution<> _urd;
@@ -402,6 +431,7 @@ namespace galsim {
 
     protected:
         double _val() { return operator()(); }
+        std::string make_repr(bool incl_seed);
 
     private:
         boost::random::normal_distribution<> _normal;
@@ -503,6 +533,7 @@ namespace galsim {
 
     protected:
         double _val() { return double(operator()()); }
+        std::string make_repr(bool incl_seed);
 
     private:
         boost::random::binomial_distribution<> _bd;
@@ -585,6 +616,7 @@ namespace galsim {
 
     protected:
         double _val() { return double(operator()()); }
+        std::string make_repr(bool incl_seed);
 
     private:
         boost::random::poisson_distribution<> _pd;
@@ -696,6 +728,7 @@ namespace galsim {
 
     protected:
         double _val() { return operator()(); }
+        std::string make_repr(bool incl_seed);
 
     private:
         boost::random::weibull_distribution<> _weibull;
@@ -805,6 +838,7 @@ namespace galsim {
 
     protected:
         double _val() { return operator()(); }
+        std::string make_repr(bool incl_seed);
 
     private:
         // Note: confusingly, boost calls the internal values alpha and beta, even though they
@@ -894,6 +928,7 @@ namespace galsim {
 
     protected:
         double _val() { return operator()(); }
+        std::string make_repr(bool incl_seed);
 
     private:
         boost::random::chi_squared_distribution<> _chi_squared;

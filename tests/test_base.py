@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -55,8 +55,7 @@ if __name__ == "__main__":
 default_params = galsim.GSParams(
         minimum_fft_size = 128,
         maximum_fft_size = 4096,
-        #folding_threshold = 5.e-3,
-        alias_threshold = 5.e-3,
+        folding_threshold = 5.e-3,
         maxk_threshold = 1.e-3,
         kvalue_accuracy = 1.e-5,
         xvalue_accuracy = 1.e-5,
@@ -68,7 +67,7 @@ default_params = galsim.GSParams(
 
 
 def test_gaussian():
-    """Test the generation of a specific Gaussian profile using SBProfile against a known result.
+    """Test the generation of a specific Gaussian profile against a known result.
     """
     import time
     t1 = time.time()
@@ -80,7 +79,7 @@ def test_gaussian():
 
     gauss = galsim.Gaussian(flux=1, sigma=1)
     # Reference images were made with old centering, which is equivalent to use_true_center=False.
-    myImg = gauss.draw(myImg, scale=dx, normalization="surface brightness", use_true_center=False)
+    myImg = gauss.drawImage(myImg, scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Gaussian disagrees with expected result")
@@ -92,7 +91,7 @@ def test_gaussian():
     print myImg.bounds
     recImg = galsim.ImageF(45,66)
     recImg.setCenter(0,0)
-    recImg = gauss.draw(recImg, scale=dx, normalization="surface brightness", use_true_center=False)
+    recImg = gauss.drawImage(recImg, scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             recImg[savedImg.bounds].array, savedImg.array, 5,
             err_msg="Drawing Gaussian on non-square image disagrees with expected result")
@@ -102,15 +101,18 @@ def test_gaussian():
 
     # Check with default_params
     gauss = galsim.Gaussian(flux=1, sigma=1, gsparams=default_params)
-    gauss.draw(myImg,scale=0.2, normalization="surface brightness", use_true_center=False)
+    gauss.drawImage(myImg,scale=0.2, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Gaussian with default_params disagrees with expected result")
     gauss = galsim.Gaussian(flux=1, sigma=1, gsparams=galsim.GSParams())
-    gauss.draw(myImg,scale=0.2, normalization="surface brightness", use_true_center=False)
+    gauss.drawImage(myImg,scale=0.2, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Gaussian with GSParams() disagrees with expected result")
+
+    # Use non-unity values.
+    gauss = galsim.Gaussian(flux=1.7, sigma=2.3)
 
     # Test photon shooting.
     do_shoot(gauss,myImg,"Gaussian")
@@ -118,12 +120,31 @@ def test_gaussian():
     # Test kvalues
     do_kvalue(gauss,myImg,"Gaussian")
 
+    # Check picklability
+    do_pickle(galsim.GSParams())  # Check GSParams explicitly here too.
+    do_pickle(galsim.GSParams(
+        minimum_fft_size = 12,
+        maximum_fft_size = 40,
+        folding_threshold = 1.e-1,
+        maxk_threshold = 2.e-1,
+        kvalue_accuracy = 3.e-1,
+        xvalue_accuracy = 4.e-1,
+        shoot_accuracy = 5.e-1,
+        realspace_relerr = 6.e-1,
+        realspace_abserr = 7.e-1,
+        integration_relerr = 8.e-1,
+        integration_abserr = 9.e-1))
+    do_pickle(gauss.SBProfile, lambda x: (x.getSigma(), x.getFlux(), x.getGSParams()))
+    do_pickle(gauss, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(gauss)
+    do_pickle(gauss.SBProfile)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_gaussian_properties():
-    """Test some basic properties of the SBGaussian profile.
+    """Test some basic properties of the Gaussian profile.
     """
     import time
     t1 = time.time()
@@ -232,13 +253,15 @@ def test_gaussian_radii():
 
     # Check that the getters don't work after modifying the original.
     # Note: I test all the modifiers here.  For the rest of the profile types, I'll
-    # just confirm that it is true of applyShear.  I don't think that has any chance
+    # just confirm that it is true of shear.  I don't think that has any chance
     # of missing anything.
-    test_gal_flux1 = test_gal.copy()
-    print 'fwhm = ',test_gal_flux1.getFWHM()
-    print 'hlr = ',test_gal_flux1.getHalfLightRadius()
-    print 'sigma = ',test_gal_flux1.getSigma()
-    test_gal_flux1.setFlux(3.)
+    test_gal_copy = test_gal.copy()
+    print 'fwhm = ',test_gal_copy.getFWHM()
+    print 'hlr = ',test_gal_copy.getHalfLightRadius()
+    print 'sigma = ',test_gal_copy.getSigma()
+    # They still work after copy
+    test_gal_flux1 = test_gal_copy * 3.
+    # But not after rescaling the flux.
     try:
         np.testing.assert_raises(AttributeError, getattr, test_gal_flux1, "getFWHM")
         np.testing.assert_raises(AttributeError, getattr, test_gal_flux1, "getHalfLightRadius")
@@ -248,11 +271,7 @@ def test_gaussian_radii():
         # So if they are running this without nose, we just skip these tests.
         pass
 
-    test_gal_flux2 = test_gal.copy()
-    print 'fwhm = ',test_gal_flux2.getFWHM()
-    print 'hlr = ',test_gal_flux2.getHalfLightRadius()
-    print 'sigma = ',test_gal_flux2.getSigma()
-    test_gal_flux2.setFlux(3.)
+    test_gal_flux2 = test_gal.withFlux(3.)
     try:
         np.testing.assert_raises(AttributeError, getattr, test_gal_flux2, "getFWHM")
         np.testing.assert_raises(AttributeError, getattr, test_gal_flux2, "getHalfLightRadius")
@@ -260,11 +279,7 @@ def test_gaussian_radii():
     except ImportError:
         pass
 
-    test_gal_shear = test_gal.copy()
-    print 'fwhm = ',test_gal_shear.getFWHM()
-    print 'hlr = ',test_gal_shear.getHalfLightRadius()
-    print 'sigma = ',test_gal_shear.getSigma()
-    test_gal_shear.applyShear(g1=0.3, g2=0.1)
+    test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
     try:
         np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM")
         np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
@@ -272,11 +287,7 @@ def test_gaussian_radii():
     except ImportError:
         pass
 
-    test_gal_rot = test_gal.copy()
-    print 'fwhm = ',test_gal_rot.getFWHM()
-    print 'hlr = ',test_gal_rot.getHalfLightRadius()
-    print 'sigma = ',test_gal_rot.getSigma()
-    test_gal_rot.applyRotation(theta = 0.5 * galsim.radians)
+    test_gal_rot = test_gal.rotate(theta = 0.5 * galsim.radians)
     try:
         np.testing.assert_raises(AttributeError, getattr, test_gal_rot, "getFWHM")
         np.testing.assert_raises(AttributeError, getattr, test_gal_rot, "getHalfLightRadius")
@@ -284,11 +295,7 @@ def test_gaussian_radii():
     except ImportError:
         pass
 
-    test_gal_shift = test_gal.copy()
-    print 'fwhm = ',test_gal_shift.getFWHM()
-    print 'hlr = ',test_gal_shift.getHalfLightRadius()
-    print 'sigma = ',test_gal_shift.getSigma()
-    test_gal_shift.applyShift(dx=0.11, dy=0.04)
+    test_gal_shift = test_gal.shift(dx=0.11, dy=0.04)
     try:
         np.testing.assert_raises(AttributeError, getattr, test_gal_shift, "getFWHM")
         np.testing.assert_raises(AttributeError, getattr, test_gal_shift, "getHalfLightRadius")
@@ -355,7 +362,7 @@ def test_gaussian_flux_scaling():
 
 
 def test_exponential():
-    """Test the generation of a specific exp profile using SBProfile against a known result.
+    """Test the generation of a specific exp profile against a known result.
     """
     import time
     t1 = time.time()
@@ -372,22 +379,25 @@ def test_exponential():
     myImg.setCenter(0,0)
 
     expon = galsim.Exponential(flux=1., scale_radius=r0)
-    expon.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    expon.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Exponential disagrees with expected result")
 
     # Check with default_params
     expon = galsim.Exponential(flux=1., scale_radius=r0, gsparams=default_params)
-    expon.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    expon.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Exponential with default_params disagrees with expected result")
     expon = galsim.Exponential(flux=1., scale_radius=r0, gsparams=galsim.GSParams())
-    expon.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    expon.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Exponential with GSParams() disagrees with expected result")
+
+    # Use non-unity values.
+    expon = galsim.Exponential(flux=1.7, scale_radius=0.91)
 
     # Test photon shooting.
     do_shoot(expon,myImg,"Exponential")
@@ -395,12 +405,18 @@ def test_exponential():
     # Test kvalues
     do_kvalue(expon,myImg,"Exponential")
 
+    # Check picklability
+    do_pickle(expon.SBProfile, lambda x: (x.getScaleRadius(), x.getFlux(), x.getGSParams()))
+    do_pickle(expon, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(expon)
+    do_pickle(expon.SBProfile)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_exponential_properties():
-    """Test some basic properties of the SBExponential profile.
+    """Test some basic properties of the Exponential profile.
     """
     import time
     t1 = time.time()
@@ -463,10 +479,10 @@ def test_exponential_radii():
             err_msg="Error in half light radius for Exponential initialized with scale_radius.")
 
     # Check that the getters don't work after modifying the original.
-    test_gal_shear = test_gal.copy()
-    print 'hlr = ',test_gal_shear.getHalfLightRadius()
-    print 'scale = ',test_gal_shear.getScaleRadius()
-    test_gal_shear.applyShear(g1=0.3, g2=0.1)
+    test_gal_copy = test_gal.copy()
+    print 'hlr = ',test_gal_copy.getHalfLightRadius()
+    print 'scale = ',test_gal_copy.getScaleRadius()
+    test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
     try:
         np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
         np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getScaleRadius")
@@ -532,7 +548,7 @@ def test_exponential_flux_scaling():
 
 
 def test_sersic():
-    """Test the generation of a specific Sersic profile using SBProfile against a known result.
+    """Test the generation of a specific Sersic profile against a known result.
     """
     import time
     t1 = time.time()
@@ -544,22 +560,25 @@ def test_sersic():
     myImg.setCenter(0,0)
 
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
-    sersic.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    sersic.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Sersic disagrees with expected result")
 
     # Check with default_params
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1, gsparams=default_params)
-    sersic.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    sersic.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Sersic with default_params disagrees with expected result")
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1, gsparams=galsim.GSParams())
-    sersic.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    sersic.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Sersic with GSParams() disagrees with expected result")
+
+    # Use non-unity values.
+    sersic = galsim.Sersic(n=3, flux=1.7, half_light_radius=2.3)
 
     # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
@@ -568,6 +587,13 @@ def test_sersic():
 
     # Test kvalues
     do_kvalue(sersic,myImg,"Sersic")
+
+    # Check picklability
+    do_pickle(sersic.SBProfile,
+              lambda x: (x.getScaleRadius(), x.getTrunc(), x.getFlux(), x.getGSParams()))
+    do_pickle(sersic, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(sersic)
+    do_pickle(sersic.SBProfile)
 
 
     # Now repeat everything using a truncation.  (Above had no truncation.)
@@ -578,10 +604,13 @@ def test_sersic():
     myImg.setCenter(0,0)
 
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1, trunc=10)
-    sersic.draw(myImg,scale=dx, normalization="surface brightness", use_true_center=False)
+    sersic.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using truncated GSObject Sersic disagrees with expected result")
+
+    # Use non-unity values.
+    sersic = galsim.Sersic(n=3, flux=1.7, half_light_radius=2.3, trunc=5.9)
 
     # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
@@ -590,6 +619,13 @@ def test_sersic():
 
     # Test kvalues
     do_kvalue(sersic,myImg, "Truncated Sersic")
+
+    # Check picklability
+    do_pickle(sersic.SBProfile,
+              lambda x: (x.getScaleRadius(), x.getTrunc(), x.getFlux(), x.getGSParams()))
+    do_pickle(sersic, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(sersic)
+    do_pickle(sersic.SBProfile)
 
     # Check for normalization consistencies with kValue checks. xValues tested in test_sersic_radii.
 
@@ -770,14 +806,14 @@ def test_sersic_radii():
                     err_msg="Error in HLR for scale_radius constructed %s"%label)
 
         # Check that the getters don't work after modifying the original.
-        test_gal_shear = test_gal1.copy()
+        test_gal_copy = test_gal1.copy()
         # They still work after copy()
         if n != -4:
-            print 'n = ',test_gal_shear.getN()
-        print 'hlr = ',test_gal_shear.getHalfLightRadius()
-        print 'sr = ',test_gal_shear.getScaleRadius()
-        test_gal_shear.applyShear(g1=0.3, g2=0.1)
-        # But not after applyShear() (or others, but this is a sufficient test here)
+            print 'n = ',test_gal_copy.getN()
+        print 'hlr = ',test_gal_copy.getHalfLightRadius()
+        print 'sr = ',test_gal_copy.getScaleRadius()
+        test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
+        # But not after shear() (or others, but this is a sufficient test here)
         try:
             if n != -4:
                 np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getN")
@@ -868,7 +904,7 @@ def test_sersic_05():
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     sersic = galsim.Sersic(n=0.5, flux=1, half_light_radius=1 * hlr_sigma)
-    myImg = sersic.draw(myImg, normalization="surface brightness", use_true_center=False)
+    myImg = sersic.drawImage(myImg, method="sb", use_true_center=False)
     print 'saved image center = ',savedImg(0,0)
     print 'image center = ',myImg(0,0)
     np.testing.assert_array_almost_equal(
@@ -906,7 +942,7 @@ def test_sersic_1():
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     sersic = galsim.Sersic(n=1, flux=1., half_light_radius=r0 * hlr_r0)
-    sersic.draw(myImg, normalization="surface brightness", use_true_center=False)
+    sersic.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using Sersic n=1 disagrees with expected result for Exponential")
@@ -931,7 +967,7 @@ def test_sersic_1():
 
 
 def test_airy():
-    """Test the generation of a specific Airy profile using SBProfile against a known result.
+    """Test the generation of a specific Airy profile against a known result.
     """
     import time
     t1 = time.time()
@@ -941,19 +977,19 @@ def test_airy():
     myImg.setCenter(0,0)
 
     airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=1)
-    airy.draw(myImg, normalization="surface brightness", use_true_center=False)
+    airy.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Airy disagrees with expected result")
 
     # Check with default_params
     airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=1, gsparams=default_params)
-    airy.draw(myImg, normalization="surface brightness", use_true_center=False)
+    airy.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Airy with default_params disagrees with expected result")
     airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=1, gsparams=galsim.GSParams())
-    airy.draw(myImg, normalization="surface brightness", use_true_center=False)
+    airy.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Airy with GSParams() disagrees with expected result")
@@ -968,6 +1004,12 @@ def test_airy():
     do_kvalue(airy,myImg, "Airy obscuration=0.0")
     do_kvalue(airy2,myImg, "Airy obscuration=0.1")
 
+    # Check picklability
+    do_pickle(airy.SBProfile, lambda x: (x.getLamOverD(), x.getFlux(), x.getGSParams()))
+    do_pickle(airy, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(airy)
+    do_pickle(airy.SBProfile)
+
     # Test initialization separately with lam and diam, in various units.  Since the above profiles
     # have lam/diam = 1./0.8 in arbitrary units, we will tell it that lam=1.e9 nm and diam=0.8 m,
     # and use `scale_unit` of galsim.radians.  This is rather silly, but it should work.
@@ -979,7 +1021,6 @@ def test_airy():
     np.testing.assert_array_almost_equal(
             test_im1.array, test_im2.array, 8,
             err_msg="Using GSObject Airy with different kwargs disagrees with expected result")
-
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1010,11 +1051,11 @@ def test_airy_radii():
             err_msg="Error in getFWHM() for Airy.")
 
     # Check that the getters don't work after modifying the original.
-    test_gal_shear = test_gal.copy()
-    print 'fwhm = ',test_gal_shear.getFWHM()
-    print 'hlr = ',test_gal_shear.getHalfLightRadius()
-    print 'lod = ',test_gal_shear.getLamOverD()
-    test_gal_shear.applyShear(g1=0.3, g2=0.1)
+    test_gal_copy = test_gal.copy()
+    print 'fwhm = ',test_gal_copy.getFWHM()
+    print 'hlr = ',test_gal_copy.getHalfLightRadius()
+    print 'lod = ',test_gal_copy.getLamOverD()
+    test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
     try:
         np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM");
         np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
@@ -1083,7 +1124,7 @@ def test_airy_flux_scaling():
 
 
 def test_box():
-    """Test the generation of a specific box profile using SBProfile against a known result.
+    """Test the generation of a specific box profile against a known result.
     """
     import time
     t1 = time.time()
@@ -1092,25 +1133,35 @@ def test_box():
     myImg.setCenter(0,0)
 
     pixel = galsim.Pixel(scale=1, flux=1)
-    pixel.draw(myImg, normalization="surface brightness", use_true_center=False)
+    pixel.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Pixel disagrees with expected result")
 
     # Check with default_params
     pixel = galsim.Pixel(scale=1, flux=1, gsparams=default_params)
-    pixel.draw(myImg, normalization="surface brightness", use_true_center=False)
+    pixel.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Pixel with default_params disagrees with expected result")
     pixel = galsim.Pixel(scale=1, flux=1, gsparams=galsim.GSParams())
-    pixel.draw(myImg, normalization="surface brightness", use_true_center=False)
+    pixel.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Pixel with GSParams() disagrees with expected result")
 
+    # Use non-unity values.
+    pixel = galsim.Pixel(flux=1.7, scale=2.3)
+
     # Test photon shooting.
     do_shoot(pixel,myImg,"Pixel")
+
+    # Check picklability
+    do_pickle(pixel.SBProfile,
+              lambda x: (x.getWidth(), x.getHeight(), x.getFlux(), x.getGSParams()))
+    do_pickle(pixel, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(pixel)
+    do_pickle(pixel.SBProfile)
 
     # Check that non-square Box profiles work correctly
     scale = 0.2939  # Use a strange scale here to make sure that the centers of the pixels
@@ -1129,24 +1180,34 @@ def test_box():
             # So only do them if running as main.
             do_kvalue(box,im,"Box with width,height = %f,%f"%(width,height))
 
+    # Check picklability
+    do_pickle(box.SBProfile, lambda x: (x.getWidth(), x.getHeight(), x.getFlux(), x.getGSParams()))
+    do_pickle(box, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(box)
+    do_pickle(box.SBProfile)
+
     # Check sheared boxes the same way
     box = galsim.Box(width=3, height=2, flux=test_flux, gsparams=gsp)
     box = box.shear(galsim.Shear(g1=0.2, g2=-0.3))
     do_shoot(box,im, "Sheared Box")
     if __name__ == '__main__':
         do_kvalue(box,im, "Sheared Box")
+        do_pickle(box, lambda x: x.drawImage(method='no_pixel'))
+        do_pickle(box)
 
     # This is also a profile that may be convolved using real space convolution, so test that.
     if __name__ == '__main__':
         conv = galsim.Convolve(box, galsim.Pixel(scale=scale), real_space=True)
         do_kvalue(conv,im, "Sheared Box convolved with pixel in real space")
+        do_pickle(conv, lambda x: x.xValue(0.123,-0.456))
+        do_pickle(conv)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 def test_tophat():
-    """Test the generation of a specific tophat profile using SBProfile against a known result.
+    """Test the generation of a specific tophat profile against a known result.
     """
     import time
     t1 = time.time()
@@ -1160,22 +1221,25 @@ def test_tophat():
     # test since it wouldn't be any less correct for a different subset of these points to be
     # drawn. Using r = 1.01 solves this problem and makes the result symmetric.
     tophat = galsim.TopHat(radius=1.01, flux=1)
-    tophat.draw(myImg, normalization="surface brightness", use_true_center=False)
+    tophat.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject TopHat disagrees with expected result")
 
     # Check with default_params
     tophat = galsim.TopHat(radius=1.01, flux=1, gsparams=default_params)
-    tophat.draw(myImg, normalization="surface brightness", use_true_center=False)
+    tophat.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject TopHat with default_params disagrees with expected result")
     tophat = galsim.TopHat(radius=1.01, flux=1, gsparams=galsim.GSParams())
-    tophat.draw(myImg, normalization="surface brightness", use_true_center=False)
+    tophat.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject TopHat with GSParams() disagrees with expected result")
+
+    # Use non-unity values.
+    tophat = galsim.TopHat(flux=1.7, radius=2.3)
 
     # Test photon shooting.
     do_shoot(tophat,myImg,"TopHat")
@@ -1194,6 +1258,16 @@ def test_tophat():
         do_shoot(tophat,im,"TopHat with radius = %f"%radius)
         do_kvalue(tophat,im,"TopHat with radius = %f"%radius)
 
+        # This is also a profile that may be convolved using real space convolution, so test that.
+        conv = galsim.Convolve(tophat, galsim.Pixel(scale=scale), real_space=True)
+        do_kvalue(conv,im, "Sheared TopHat convolved with pixel in real space")
+
+    # Check picklability
+    do_pickle(tophat.SBProfile, lambda x: (x.getRadius(), x.getFlux(), x.getGSParams()))
+    do_pickle(tophat, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(tophat)
+    do_pickle(tophat.SBProfile)
+
     # Check sheared tophat the same way
     tophat = galsim.TopHat(radius=1.2, flux=test_flux)
     # Again, the test is very sensitive to the choice of shear here.  Most values fail because 
@@ -1203,7 +1277,11 @@ def test_tophat():
     do_shoot(tophat,im, "Sheared TopHat")
     do_kvalue(tophat,im, "Sheared TopHat")
 
-    # This is also a profile that may be convolved using real space convolution, so test that.
+    # Check picklability
+    do_pickle(tophat, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(tophat)
+
+    # Check real-space convolution of the sheared tophat.
     conv = galsim.Convolve(tophat, galsim.Pixel(scale=scale), real_space=True)
     do_kvalue(conv,im, "Sheared TopHat convolved with pixel in real space")
 
@@ -1212,7 +1290,7 @@ def test_tophat():
 
 
 def test_moffat():
-    """Test the generation of a specific Moffat profile using SBProfile against a known result.
+    """Test the generation of a specific Moffat profile against a known result.
     """
     import time
     t1 = time.time()
@@ -1230,7 +1308,7 @@ def test_moffat():
     # as calculated by interval bisection in devutils/external/calculate_moffat_radii.py
     fwhm_backwards_compatible = 1.3178976627539716
     moffat = galsim.Moffat(beta=2, half_light_radius=1, trunc=5*fwhm_backwards_compatible, flux=1)
-    moffat.draw(myImg, normalization="surface brightness", use_true_center=False)
+    moffat.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Moffat disagrees with expected result")
@@ -1238,22 +1316,33 @@ def test_moffat():
     # Check with default_params
     moffat = galsim.Moffat(beta=2, half_light_radius=1, trunc=5*fwhm_backwards_compatible, flux=1,
                            gsparams=default_params)
-    moffat.draw(myImg, normalization="surface brightness", use_true_center=False)
+    moffat.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Moffat with default_params disagrees with expected result")
     moffat = galsim.Moffat(beta=2, half_light_radius=1, trunc=5*fwhm_backwards_compatible, flux=1,
                            gsparams=galsim.GSParams())
-    moffat.draw(myImg, normalization="surface brightness", use_true_center=False)
+    moffat.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Moffat with GSParams() disagrees with expected result")
+
+    # Use non-unity values.
+    moffat = galsim.Moffat(beta=3.7, flux=1.7, half_light_radius=2.3, trunc=8.2)
 
     # Test photon shooting.
     do_shoot(moffat,myImg,"Moffat")
 
     # Test kvalues
     do_kvalue(moffat,myImg, "Moffat")
+
+    # Check picklability
+    do_pickle(moffat.SBProfile,
+              lambda x: (x.getBeta(), x.getScaleRadius(), x.getTrunc(), x.getFlux(),\
+                         x.getGSParams()))
+    do_pickle(moffat, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(moffat)
+    do_pickle(moffat.SBProfile)
 
     # The code for untruncated Moffat profiles is specialized for particular beta values, so
     # test each of these:
@@ -1268,7 +1357,7 @@ def test_moffat():
 
 
 def test_moffat_properties():
-    """Test some basic properties of the SBMoffat profile.
+    """Test some basic properties of the Moffat profile.
     """
     import time
     t1 = time.time()
@@ -1486,12 +1575,12 @@ def test_moffat_radii():
             err_msg="Error in scale radius for truncated Moffat initialized with scale radius")
 
     # Check that the getters don't work after modifying the original.
-    test_gal_shear = test_gal.copy()
-    print 'beta = ',test_gal_shear.getBeta()
-    print 'fwhm = ',test_gal_shear.getFWHM()
-    print 'hlr = ',test_gal_shear.getHalfLightRadius()
-    print 'scale = ',test_gal_shear.getScaleRadius()
-    test_gal_shear.applyShear(g1=0.3, g2=0.1)
+    test_gal_copy = test_gal.copy()
+    print 'beta = ',test_gal_copy.getBeta()
+    print 'fwhm = ',test_gal_copy.getFWHM()
+    print 'hlr = ',test_gal_copy.getHalfLightRadius()
+    print 'scale = ',test_gal_copy.getScaleRadius()
+    test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
     try:
         np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getBeta");
         np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM");
@@ -1568,7 +1657,7 @@ def test_moffat_flux_scaling():
 
 
 def test_kolmogorov():
-    """Test the generation of a specific Kolmogorov profile using SBProfile against a known result.
+    """Test the generation of a specific Kolmogorov profile against a known result.
     """
     import time
     t1 = time.time()
@@ -1578,26 +1667,26 @@ def test_kolmogorov():
     # It would be nice to get an independent calculation here...
     #mySBP = galsim.SBKolmogorov(lam_over_r0=1.5, flux=test_flux)
     #savedImg = galsim.ImageF(128,128)
-    #mySBP.draw(image=savedImg, dx=dx)
+    #mySBP.drawImage(image=savedImg, dx=dx, method="sb")
     #savedImg.write(os.path.join(imgdir, "kolmogorov.fits"))
     savedImg = galsim.fits.read(os.path.join(imgdir, "kolmogorov.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
 
     kolm = galsim.Kolmogorov(lam_over_r0=1.5, flux=test_flux)
-    kolm.draw(myImg, normalization="surface brightness", use_true_center=False)
+    kolm.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Kolmogorov disagrees with expected result")
 
     # Check with default_params
     kolm = galsim.Kolmogorov(lam_over_r0=1.5, flux=test_flux, gsparams=default_params)
-    kolm.draw(myImg, normalization="surface brightness", use_true_center=False)
+    kolm.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Kolmogorov with default_params disagrees with expected result")
     kolm = galsim.Kolmogorov(lam_over_r0=1.5, flux=test_flux, gsparams=galsim.GSParams())
-    kolm.draw(myImg, normalization="surface brightness", use_true_center=False)
+    kolm.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Kolmogorov with GSParams() disagrees with expected result")
@@ -1607,6 +1696,12 @@ def test_kolmogorov():
 
     # Test kvalues
     do_kvalue(kolm,myImg, "Kolmogorov")
+
+    # Check picklability
+    do_pickle(kolm.SBProfile, lambda x: (x.getLamOverR0(), x.getFlux(), x.getGSParams()))
+    do_pickle(kolm, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(kolm)
+    do_pickle(kolm.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1643,9 +1738,7 @@ def test_kolmogorov_properties():
         # Also check the realized flux in a drawn image
         dx = lor / 10.
         img = galsim.ImageF(256,256, scale=dx)
-        pix = galsim.Pixel(dx)
-        conv = galsim.Convolve([psf,pix])
-        conv.draw(image=img)
+        psf.drawImage(image=img)
         out_flux = img.array.sum()
         np.testing.assert_almost_equal(out_flux, test_flux, 3,
                                        err_msg="Flux of Kolmogorov (image array) is incorrect.")
@@ -1726,11 +1819,11 @@ def test_kolmogorov_radii():
             err_msg="Error in half light radius for Gaussian initialized with FWHM.")
 
     # Check that the getters don't work after modifying the original.
-    test_gal_shear = test_gal.copy()
-    print 'fwhm = ',test_gal_shear.getFWHM()
-    print 'hlr = ',test_gal_shear.getHalfLightRadius()
-    print 'lor = ',test_gal_shear.getLamOverR0()
-    test_gal_shear.applyShear(g1=0.3, g2=0.1)
+    test_gal_copy = test_gal.copy()
+    print 'fwhm = ',test_gal_copy.getFWHM()
+    print 'hlr = ',test_gal_copy.getHalfLightRadius()
+    print 'lor = ',test_gal_copy.getLamOverR0()
+    test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
     try:
         np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM");
         np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius");
@@ -1798,7 +1891,7 @@ def test_kolmogorov_flux_scaling():
 
 
 def test_spergel():
-    """Test the generation of a specific Spergel profile using SBProfile against a known result.
+    """Test the generation of a specific Spergel profile against a known result.
     """
     import time
     t1 = time.time()
@@ -1819,7 +1912,7 @@ def test_spergel():
         spergel = galsim.Spergel(nu=nu, half_light_radius=1.0)
         # Reference images were made with old centering,
         # which is equivalent to use_true_center=False.
-        myImg = spergel.draw(myImg, scale=dx, normalization="surface brightness",
+        myImg = spergel.drawImage(myImg, scale=dx, method="sb",
                              use_true_center=False)
 
         np.testing.assert_array_almost_equal(
@@ -1831,7 +1924,7 @@ def test_spergel():
             err_msg="Spergel profile GSObject::draw returned wrong added_flux")
 
         # Only nu >= -0.3 give reasonably sized FFTs,
-        # and small nu drawShoot is super slow.
+        # and small nu method='phot' is super slow.
         if nu >= -0.3:
             test_im = galsim.Image(16,16,scale=dx)
             do_kvalue(spergel,test_im, "Spergel(nu={0:1}) ".format(nu))
@@ -1845,18 +1938,27 @@ def test_spergel():
         spergel = galsim.Spergel(nu=nu, scale_radius=1.0)
         np.testing.assert_almost_equal(
             spergel.SBProfile.calculateFluxRadius(1.e-5)/enclosing_radius, 1.0, 4,
-            err_msg="Calculated incorrect Spergel(nu={}) flux-enclosing-radius.".format(nu))
+            err_msg="Calculated incorrect Spergel(nu={0}) flux-enclosing-radius.".format(nu))
         np.testing.assert_almost_equal(
             spergel.SBProfile.calculateIntegratedFlux(1.e-5)/enclosed_flux, 1.0, 4,
-            err_msg="Calculated incorrect Spergel(nu={}) enclosed flux.".format(nu))
+            err_msg="Calculated incorrect Spergel(nu={0}) enclosed flux.".format(nu))
 
+        # Use non-unity values.
+        spergel = galsim.Spergel(nu=0.37, flux=1.7, half_light_radius=2.3)
+
+        # Check picklability
+        do_pickle(spergel.SBProfile,
+                  lambda x: (x.getNu(), x.getScaleRadius(), x.getFlux(), x.getGSParams()))
+        do_pickle(spergel, lambda x: x.drawImage(method='no_pixel'))
+        do_pickle(spergel)
+        do_pickle(spergel.SBProfile)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
         
 def test_spergel_properties():
-    """Test some basic properties of the SBSpergel profile.
+    """Test some basic properties of the Spergel profile.
     """
     import time
     t1 = time.time()
@@ -1940,13 +2042,13 @@ def test_spergel_radii():
                     err_msg="Error in HLR for scale_radius constructed Spergel")
 
         # Check that the getters don't work after modifying the original.
-        test_gal_shear = test_gal.copy()
+        test_gal_copy = test_gal.copy()
         # They still work after copy()
-        print 'nu = ',test_gal_shear.getNu()
-        print 'hlr = ',test_gal_shear.getHalfLightRadius()
-        print 'sr = ',test_gal_shear.getScaleRadius()
-        test_gal_shear.applyShear(g1=0.3, g2=0.1)
-        # But not after applyShear() (or others, but this is a sufficient test here)
+        print 'nu = ',test_gal_copy.getNu()
+        print 'hlr = ',test_gal_copy.getHalfLightRadius()
+        print 'sr = ',test_gal_copy.getScaleRadius()
+        test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
+        # But not after shear() (or others, but this is a sufficient test here)
         try:
             np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getNu")
             np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
@@ -2030,7 +2132,7 @@ def test_spergel_05():
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     spergel = galsim.Spergel(nu=0.5, flux=1., half_light_radius=r0 * hlr_r0)
-    spergel.draw(myImg, normalization="surface brightness", use_true_center=False)
+    spergel.drawImage(myImg, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using Spergel nu=0.5 disagrees with expected result for Exponential")

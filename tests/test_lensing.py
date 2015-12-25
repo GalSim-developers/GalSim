@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -110,6 +110,8 @@ def test_nfwhalo():
     np.testing.assert_array_equal(g2, np.zeros_like(g2),
                                   err_msg="Computation of reduced shear g2 incorrect.")
 
+    do_pickle(halo)
+
     # comparison to reference:
     # tangential shear in x-direction is purely negative in g1
     try:
@@ -133,6 +135,50 @@ def test_nfwhalo():
         np.testing.assert_array_almost_equal(
             ref[:,4], kappa, decimal=4,
             err_msg="Computation of convergence deviates from reference.")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_cosmology():
+    """Test the NFWHalo class in conjunction with non-default cosmologies"""
+    import time
+    t1 = time.time()
+
+    # MJ: I don't really have a good way to test that the NFWHalo class is accurate with respect
+    # to the cosmology.  If someone with a more theoretical bent is interested in writing some
+    # unit tests here, that would be fabulous!
+    # All I'm doing here is testing that pickling, repr, etc. work correctly.
+    # And the internal consistency checks from above.
+
+    pos_x = np.arange(1,600)
+    pos_y = np.zeros_like(pos_x)
+    z_s = 2
+
+    for wm, wl in [ (0.4,0.0), (0.3,0.7), (0.25, 0.8) ]:
+        cosmo = galsim.Cosmology(omega_m=wm, omega_lam=wl)
+
+        np.testing.assert_equal(cosmo.omega_m, wm)
+        np.testing.assert_equal(cosmo.omega_lam, wl)
+        np.testing.assert_equal(cosmo.omega_c, 1.-wm-wl)
+
+        halo = galsim.NFWHalo(mass=1e15, conc=4, redshift=1, cosmo=cosmo)
+        halo2 = galsim.NFWHalo(mass=1e15, conc=4, redshift=1, omega_m=wm, omega_lam=wl)
+
+        kappa = halo.getConvergence((pos_x, pos_y), z_s)
+        gamma1, gamma2 = halo.getShear((pos_x, pos_y), z_s, reduced=False)
+        g1, g2 = halo.getShear((pos_x, pos_y), z_s, reduced=True)
+
+        # check internal correctness:
+        # g1 = gamma1/(1-kappa), and g2 = 0
+        np.testing.assert_array_equal(g1, gamma1/(1-np.array(kappa)),
+                                      err_msg="Computation of reduced shear g incorrect.")
+        np.testing.assert_array_equal(g2, np.zeros_like(g2),
+                                      err_msg="Computation of reduced shear g2 incorrect.")
+
+        do_pickle(cosmo)
+        do_pickle(halo)
+        do_pickle(halo2)
+        assert halo == halo2
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -162,10 +208,16 @@ def test_shear_variance():
     # pk_flat_lim returns 1.
     test_ps = galsim.PowerSpectrum(e_power_function=pk_flat_lim, b_power_function=pk_flat_lim)
     # get shears on 500x500 grid with spacing 0.1 degree
+    rng2 = rng.duplicate()
     g1, g2 = test_ps.buildGrid(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
                                units=galsim.degrees)
     assert g1.shape == (ngrid, ngrid)
     assert g2.shape == (ngrid, ngrid)
+
+    # Test nRandCallsForBuildGrid:
+    rng2.discard(test_ps.nRandCallsForBuildGrid())
+    assert rng == rng2
+
     # Now we should compare the variance with the predictions.  We use
     # ../devel/modules/lensing_engine.pdf section 5.3 to get
     # Var(g1) + Var(g2) = (1/pi^2) [(pi klim^2 / 4) - kmin^2]
@@ -349,6 +401,7 @@ def test_shear_variance():
     erfmin = 0.007978712629263206
     s = 2.5/kmax
     test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
+    rng2 = rng.duplicate()
     g1, g2 = test_ps.buildGrid(grid_spacing = grid_size/ngrid, ngrid=ngrid,
                                rng=rng, units=galsim.degrees, kmax_factor=kmax_factor)
     assert g1.shape == (ngrid, ngrid)
@@ -361,6 +414,8 @@ def test_shear_variance():
     print 'fractional diff = ',((var1+var2)/predicted_variance-1)
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum with kmax_factor=2"
+    rng2.discard(test_ps.nRandCallsForBuildGrid())
+    assert rng == rng2
 
     # change ngrid implicitly with kmin_factor
     grid_size = 50. # degrees
@@ -384,6 +439,8 @@ def test_shear_variance():
     print 'fractional diff = ',((var1+var2)/predicted_variance-1)
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum with kmin_factor=2"
+    rng2.discard(test_ps.nRandCallsForBuildGrid())
+    assert rng == rng2
 
     # Now check the variances post-interpolation to random (off-grid) points.  Ideally, our default
     # interpolant should not alter the power spectrum very much from kmin to kmax, so the shear
@@ -589,6 +646,7 @@ def test_tabulated():
     # make a LookupTable to initialize another PowerSpectrum
     tab = galsim.LookupTable(k_arr, p_arr)
     ps_tab = galsim.PowerSpectrum(tab)
+    do_pickle(ps_tab)  # This is the first one that doesn't use a function, so it is picklable.
 
     # draw shears on a grid from both PowerSpectrum objects, with same random seed
     seed = 12345
@@ -610,6 +668,7 @@ def test_tabulated():
     np.savetxt(filename, data)
     tab2 = galsim.LookupTable(file = filename)
     ps_tab2 = galsim.PowerSpectrum(tab2)
+    do_pickle(ps_tab2)
     g1_tab2, g2_tab2 = ps_tab2.buildGrid(grid_spacing = 1.7, ngrid = 10,
                                          rng = galsim.BaseDeviate(seed))
     np.testing.assert_almost_equal(g1_analytic, g1_tab2, 6,
@@ -619,6 +678,7 @@ def test_tabulated():
     # check that we get the same answer whether we use interpolation in log for k, P, or both
     tab = galsim.LookupTable(k_arr, p_arr, x_log = True)
     ps_tab = galsim.PowerSpectrum(tab)
+    do_pickle(ps_tab2)
     g1_tab, g2_tab = ps_tab.buildGrid(grid_spacing = 1.7, ngrid = 10,
                                       rng = galsim.BaseDeviate(seed))
     np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
@@ -627,6 +687,7 @@ def test_tabulated():
         err_msg = "g2 of shear field from tabulated P(k) with x_log differs from expectation!")
     tab = galsim.LookupTable(k_arr, p_arr, f_log = True)
     ps_tab = galsim.PowerSpectrum(tab)
+    do_pickle(ps_tab)
     g1_tab, g2_tab = ps_tab.buildGrid(grid_spacing = 1.7, ngrid = 10,
                                       rng = galsim.BaseDeviate(seed))
     np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
@@ -635,6 +696,7 @@ def test_tabulated():
         err_msg = "g2 of shear field from tabulated P(k) with f_log differs from expectation!")
     tab = galsim.LookupTable(k_arr, p_arr, x_log = True, f_log = True)
     ps_tab = galsim.PowerSpectrum(tab)
+    do_pickle(ps_tab)
     g1_tab, g2_tab = ps_tab.buildGrid(grid_spacing = 1.7, ngrid = 10,
                                       rng = galsim.BaseDeviate(seed))
     np.testing.assert_almost_equal(g1_analytic, g1_tab, 6,
@@ -658,6 +720,7 @@ def test_tabulated():
         ## exception should be raised)
         t = galsim.LookupTable((0.99,1.,1.01),(0.99,1.,1.01))
         ps = galsim.PowerSpectrum(t)
+        do_pickle(ps)
         np.testing.assert_raises(RuntimeError, ps.buildGrid, grid_spacing=1.7, ngrid=100)
         ## try to interpolate in log, but with zero values included
         np.testing.assert_raises(ValueError, galsim.LookupTable, (0.,1.,2.), (0.,1.,2.),
@@ -783,6 +846,7 @@ def test_power_spectrum_with_kappa():
 
     # Begin with E-mode input power
     psE = galsim.PowerSpectrum(tab_ps, None, units=galsim.radians)
+    do_pickle(psE)
     g1E, g2E, k_test = psE.buildGrid(
         grid_spacing=dx_grid_arcmin, ngrid=ngrid, units=galsim.arcmin,
         rng=galsim.BaseDeviate(rseed), get_convergence=True)
@@ -799,6 +863,7 @@ def test_power_spectrum_with_kappa():
 
     # Then do B-mode only input power
     psB = galsim.PowerSpectrum(None, tab_ps, units=galsim.radians)
+    do_pickle(psB)
     g1B, g2B, k_test = psB.buildGrid(
         grid_spacing=dx_grid_arcmin, ngrid=ngrid, units=galsim.arcmin,
         rng=galsim.BaseDeviate(rseed), get_convergence=True)
@@ -824,6 +889,7 @@ def test_power_spectrum_with_kappa():
 
     # Finally, do E- and B-mode power
     psB = galsim.PowerSpectrum(tab_ps, tab_ps, units=galsim.radians)
+    do_pickle(psB)
     g1EB, g2EB, k_test = psB.buildGrid(
         grid_spacing=dx_grid_arcmin, ngrid=ngrid, units=galsim.arcmin,
         rng=galsim.BaseDeviate(rseed), get_convergence=True)
@@ -974,6 +1040,7 @@ def test_periodic():
     tab_ps = galsim.LookupTable(
         file='../examples/data/cosmo-fid.zmed1.00_smoothed.out', interpolant='linear')
     ps = galsim.PowerSpectrum(tab_ps, units=galsim.radians)
+    do_pickle(ps)
 
     # Set up a grid.  Make it GREAT10/GREAT3-like.
     ngrid = 100
@@ -1001,6 +1068,7 @@ def test_periodic():
     # Compute shear power spectra for the original grid and the new grid.  We can use all the
     # default settings for the power spectrum estimator.
     pse = galsim.pse.PowerSpectrumEstimator()
+    do_pickle(pse)
     k, pe, pb, peb = pse.estimate(g1, g2)
     _, pe_r, pb_r, peb_r = pse.estimate(g1_r, g2_r)
     _, pe_shift, pb_shift, peb_shift = pse.estimate(g1_shift, g2_shift)
@@ -1099,6 +1167,7 @@ def test_bandlimit():
     # Start with a cosmological power spectrum that is not band-limited.
     ps_tab = galsim.LookupTable(file='../examples/data/cosmo-fid.zmed1.00.out')
     ps = galsim.PowerSpectrum(ps_tab, units=galsim.radians)
+    do_pickle(ps)
 
     # Generate shears without and with band-limiting
     g1, g2 = ps.buildGrid(ngrid=100, grid_spacing=0.1, units=galsim.degrees,
@@ -1114,8 +1183,26 @@ def test_bandlimit():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_psr():
+    """Test PowerSpectrumRealizer"""
+    import time
+    t1 = time.time()
+
+    # Most of the tests of this class are implicit in its use by PowerSpectrum.
+    # But since it is technically documented, we should make sure things like the repr and ==
+    # work correctly.
+
+    pe = galsim.LookupTable(file='../examples/data/cosmo-fid.zmed1.00.out')
+    pb = galsim.LookupTable(file='../examples/data/cosmo-fid.zmed1.00_smoothed.out')
+    psr = galsim.lensing_ps.PowerSpectrumRealizer(100, 0.005, pe, pb)
+    do_pickle(psr)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_nfwhalo()
+    test_cosmology()
     test_shear_variance()
     test_shear_seeds()
     test_shear_reference()
@@ -1127,3 +1214,4 @@ if __name__ == "__main__":
     test_corr_func()
     test_periodic()
     test_bandlimit()
+    test_psr()

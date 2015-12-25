@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -36,6 +36,7 @@
 # - obj type : Moffat (..., trunc)
 # - obj type : DeVaucouleurs (flux, half_light_radius)
 # - value type : Catalog (col)
+# - obj : shift
 # - shift type : XY (x, y)
 # - shear type : E1E2 (e1, e2)
 # - image : xsize, ysize

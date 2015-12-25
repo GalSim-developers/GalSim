@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -104,7 +104,7 @@ def main(argv):
     gain = 1.7             # photons / ADU
     read_noise = 0.3       # ADU / pixel
 
-    random_seed = 1314662  
+    random_seed = 1314662
 
     logger.info('Starting demo script 3 using:')
     logger.info('    - Galaxy is bulge plus disk, flux = %.1e',gal_flux)
@@ -126,7 +126,7 @@ def main(argv):
     logger.info('    - Gaussian read noise (sigma = %.2f).',read_noise)
 
     # Initialize the (pseudo-)random number generator that we will be using below.
-    rng = galsim.BaseDeviate(random_seed)
+    rng = galsim.BaseDeviate(random_seed+1)
  
     # Define the galaxy profile.
     # Normally Sersic profiles are specified by half-light radius, the radius that 

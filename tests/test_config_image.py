@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -78,7 +78,7 @@ def test_scattered():
             config['image']['stamp_size'] = test_stamp_size
             config['image']['index_convention'] = convention
     
-            image, _, _, _  = galsim.config.BuildImage(config)
+            image = galsim.config.BuildImage(config)
             np.testing.assert_equal(image.getXMin(), convention)
             np.testing.assert_equal(image.getYMin(), convention)
 
@@ -115,13 +115,11 @@ def test_scattered():
         'nobjects' : 3 
     }
 
-    image, _, _, _  = galsim.config.BuildImage(config)
+    image = galsim.config.BuildImage(config)
 
     image2 = galsim.ImageF(size,size, scale=scale)
     image2.setZero()
     gal = galsim.Gaussian(sigma=sigma, flux=flux)
-    pix = galsim.Pixel(scale)
-    conv = galsim.Convolve([pix,gal])
 
     for (i,x,y) in [ (0,x1,y1), (1,x2,y2), (2,x3,y3) ]:
         stamp = galsim.ImageF(stamp_size+i,stamp_size+i, scale=scale)
@@ -133,8 +131,7 @@ def test_scattered():
         stamp.setCenter(ix,iy)
         dx = x-ix
         dy = y-iy
-        conv2 = conv.createShifted(dx*scale,dy*scale)
-        conv2.draw(stamp)
+        gal.drawImage(stamp, offset=(dx, dy))
         b = image2.bounds & stamp.bounds
         image2[b] += stamp[b]
 

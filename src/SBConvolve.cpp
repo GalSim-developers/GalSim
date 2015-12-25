@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -38,6 +38,30 @@ namespace galsim {
     SBConvolve::SBConvolve(const SBConvolve& rhs) : SBProfile(rhs) {}
 
     SBConvolve::~SBConvolve() {}
+
+    std::list<SBProfile> SBConvolve::getObjs() const
+    {
+        assert(dynamic_cast<const SBConvolveImpl*>(_pimpl.get()));
+        return static_cast<const SBConvolveImpl&>(*_pimpl).getObjs();
+    }
+
+    bool SBConvolve::isRealSpace() const
+    {
+        assert(dynamic_cast<const SBConvolveImpl*>(_pimpl.get()));
+        return static_cast<const SBConvolveImpl&>(*_pimpl).isRealSpace();
+    }
+
+    std::string SBConvolve::SBConvolveImpl::repr() const 
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SBConvolve([";
+        ConstIter sptr = _plist.begin(); 
+        oss << sptr->repr();
+        for (++sptr; sptr!=_plist.end(); ++sptr) oss << ", " << sptr->repr();
+        oss << "], galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
 
     SBConvolve::SBConvolveImpl::SBConvolveImpl(const std::list<SBProfile>& slist, bool real_space,
                                                const GSParamsPtr& gsparams) :
@@ -256,6 +280,29 @@ namespace galsim {
     SBAutoConvolve::SBAutoConvolve(const SBAutoConvolve& rhs) : SBProfile(rhs) {}
     SBAutoConvolve::~SBAutoConvolve() {}
 
+    SBProfile SBAutoConvolve::getObj() const
+    {
+        assert(dynamic_cast<const SBAutoConvolveImpl*>(_pimpl.get()));
+        return static_cast<const SBAutoConvolveImpl&>(*_pimpl).getObj();
+    }
+
+    bool SBAutoConvolve::isRealSpace() const
+    {
+        assert(dynamic_cast<const SBAutoConvolveImpl*>(_pimpl.get()));
+        return static_cast<const SBAutoConvolveImpl&>(*_pimpl).isRealSpace();
+    }
+
+    std::string SBAutoConvolve::SBAutoConvolveImpl::repr() const 
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SBAutoConvolve(" << _adaptee.repr() << ", ";
+        if (_real_space) oss << "True";
+        else oss << "False";
+        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
+
     SBAutoConvolve::SBAutoConvolveImpl::SBAutoConvolveImpl(const SBProfile& s, bool real_space,
                                                            const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams ? gsparams : GetImpl(s)->gsparams),
@@ -321,6 +368,29 @@ namespace galsim {
         SBProfile(new SBAutoCorrelateImpl(s, real_space, gsparams)) {}
     SBAutoCorrelate::SBAutoCorrelate(const SBAutoCorrelate& rhs) : SBProfile(rhs) {}
     SBAutoCorrelate::~SBAutoCorrelate() {}
+
+    SBProfile SBAutoCorrelate::getObj() const
+    {
+        assert(dynamic_cast<const SBAutoCorrelateImpl*>(_pimpl.get()));
+        return static_cast<const SBAutoCorrelateImpl&>(*_pimpl).getObj();
+    }
+
+    bool SBAutoCorrelate::isRealSpace() const
+    {
+        assert(dynamic_cast<const SBAutoCorrelateImpl*>(_pimpl.get()));
+        return static_cast<const SBAutoCorrelateImpl&>(*_pimpl).isRealSpace();
+    }
+
+    std::string SBAutoCorrelate::SBAutoCorrelateImpl::repr() const 
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SBAutoCorrelate(" << _adaptee.repr() << ", ";
+        if (_real_space) oss << "True";
+        else oss << "False";
+        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
 
     SBAutoCorrelate::SBAutoCorrelateImpl::SBAutoCorrelateImpl(
         const SBProfile& s, bool real_space,

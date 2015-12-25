@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -22,20 +22,17 @@ A few adjustments to the Bounds class at the Python layer.
 from . import _galsim
 from ._galsim import BoundsI, BoundsD
 
-def Bounds_repr(self):
-    return (self.__class__.__name__+"(xmin="+str(self.xmin)+", xmax="+str(self.xmax)+
-            ", ymin="+str(self.ymin)+", ymax="+str(self.ymax)+")")
-
-def Bounds_str(self):
-    return "("+str(self.xmin)+", "+str(self.xmax)+", "+str(self.ymin)+", "+str(self.ymax)+")"
-
-def Bounds_getinitargs(self):
-    return self.xmin, self.xmax, self.ymin, self.ymax
-
 for Class in (_galsim.BoundsD, _galsim.BoundsI):
-    Class.__repr__ = Bounds_repr
-    Class.__str__ = Bounds_str
-    Class.__getinitargs__ = Bounds_getinitargs
+    Class.__repr__ = lambda self: "galsim.%s(xmin=%r, xmax=%r, ymin=%r, ymax=%r)"%(
+            self.__class__.__name__, self.xmin, self.xmax, self.ymin, self.ymax)
+    Class.__str__ = lambda self: "galsim.%s(%s,%s,%s,%s)"%(
+            self.__class__.__name__, self.xmin, self.xmax, self.ymin, self.ymax)
+    Class.__getinitargs__ = lambda self: (self.xmin, self.xmax, self.ymin, self.ymax)
+    # Quick and dirty.  Just check reprs are equal.
+    Class.__eq__ = lambda self, other: repr(self) == repr(other)
+    Class.__ne__ = lambda self, other: not self.__eq__(other)
+    Class.__hash__ = lambda self: hash(repr(self))
+
     Class.__doc__ = """A class for representing image bounds as 2D rectangles.
 
     BoundsD describes bounds with floating point values in `x` and `y`.
@@ -111,9 +108,8 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     box.
     """
 
-    Class.addBorder.__func__.__doc__ = """Add a border of the specified width to the Bounds.
-
-    The bounds rectangle must be defined, i.e. `xmax > xmin`, `ymax > ymin`.
+    Class.withBorder.__func__.__doc__ = """Return a new Bounds object that expands the current
+    bounds by the specified width.
     """
 
     Class.center.__func__.__doc__ = "Return the central point of the Bounds as a Position."
@@ -142,10 +138,6 @@ for Class in (_galsim.BoundsD, _galsim.BoundsI):
     Class.getXMax.__func__.__doc__ = "Get the value of xmax."
     Class.getYMin.__func__.__doc__ = "Get the value of ymin."
     Class.getYMax.__func__.__doc__ = "Get the value of ymax."
-    Class.setXMin.__func__.__doc__ = "Set the value of xmin. (discouraged, will be deprecated)"
-    Class.setXMax.__func__.__doc__ = "Set the value of xmax. (discouraged, will be deprecated)"
-    Class.setYMin.__func__.__doc__ = "Set the value of ymin. (discouraged, will be deprecated)"
-    Class.setYMax.__func__.__doc__ = "Set the value of ymax. (discouraged, will be deprecated)"
     Class.shift.__func__.__doc__ = """Shift the Bounds instance by a supplied position
 
     Calling Examples

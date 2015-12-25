@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,6 +16,8 @@
  *    this list of conditions, and the disclaimer given in the documentation
  *    and/or other materials provided with the distribution.
  */
+#define BOOST_PYTHON_MAX_ARITY 22  // We have a function with 21 params here...
+                                   // c.f. www.boost.org/libs/python/doc/v2/configuration.html
 #ifndef __INTEL_COMPILER
 #if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
 #pragma GCC diagnostic ignored "-Wunused-local-typedefs"
@@ -36,7 +38,7 @@ struct PyHSMParams {
 
     static void wrap() {
 
-        static const char* doc = 
+        static const char* doc =
             "HSMParams stores a set of numbers that determine how the moments/shape estimation\n"
             "routines make speed/accuracy tradeoff decisions and/or store their results.\n"
             "\n"
@@ -108,13 +110,20 @@ struct PyHSMParams {
             "                   exception.\n"
             "ksb_moments_max    Use moments up to ksb_moments_max order for KSB method of PSF\n"
             "                   correction.\n"
+            "ksb_sig_weight     The width of the weight function (in pixels) to use for the KSB\n"
+            "                   method.  Normally, this is derived from the measured moments of the\n"
+            "                   galaxy image; this keyword overrides this calculation.  Can be\n"
+            "                   combined with ksb_sig_factor.\n"
+            "ksb_sig_factor     Factor by which to multiply the weight function width for the KSB\n"
+            "                   method (default: 1.0).  Can be combined with ksb_sig_weight.\n"
             "failed_moments     Value to report for ellipticities and resolution factor if shape\n"
             "                   measurement fails.\n";
 
-        bp::class_<HSMParams> pyHSMParams("_HSMParams", doc, bp::no_init);
+        bp::class_<HSMParams> pyHSMParams("HSMParams", doc, bp::no_init);
         pyHSMParams
             .def(bp::init<
-                 double, double, double, int, int, long, long, double, double, double, int, double>(
+                 double, double, double, int, int, long, long, double, double, double, int, double,
+                 double, double>(
                      (bp::arg("nsig_rg")=3.0,
                       bp::arg("nsig_rg2")=3.6,
                       bp::arg("max_moment_nsig2")=25.0,
@@ -126,39 +135,83 @@ struct PyHSMParams {
                       bp::arg("max_amoment")=8000.,
                       bp::arg("max_ashift")=15.,
                       bp::arg("ksb_moments_max")=4,
+                      bp::arg("ksb_sig_weight")=0.0,
+                      bp::arg("ksb_sig_factor")=1.0,
                       bp::arg("failed_moments")=-1000.))
             )
-            .def_readwrite("nsig_rg",&HSMParams::nsig_rg)
-            .def_readwrite("nsig_rg2",&HSMParams::nsig_rg2)
-            .def_readwrite("max_moment_nsig2",&HSMParams::max_moment_nsig2)
-            .def_readwrite("regauss_too_small",&HSMParams::regauss_too_small)
-            .def_readwrite("adapt_order",&HSMParams::adapt_order)
-            .def_readwrite("max_mom2_iter",&HSMParams::max_mom2_iter)
-            .def_readwrite("num_iter_default",&HSMParams::num_iter_default)
-            .def_readwrite("bound_correct_wt",&HSMParams::bound_correct_wt)
-            .def_readwrite("max_amoment",&HSMParams::max_amoment)
-            .def_readwrite("max_ashift",&HSMParams::max_ashift)
-            .def_readwrite("ksb_moments_max",&HSMParams::ksb_moments_max)
-            .def_readwrite("failed_moments",&HSMParams::failed_moments)
+            .def(bp::init<const HSMParams&>())
+            .def_readonly("nsig_rg",&HSMParams::nsig_rg)
+            .def_readonly("nsig_rg2",&HSMParams::nsig_rg2)
+            .def_readonly("max_moment_nsig2",&HSMParams::max_moment_nsig2)
+            .def_readonly("regauss_too_small",&HSMParams::regauss_too_small)
+            .def_readonly("adapt_order",&HSMParams::adapt_order)
+            .def_readonly("max_mom2_iter",&HSMParams::max_mom2_iter)
+            .def_readonly("num_iter_default",&HSMParams::num_iter_default)
+            .def_readonly("bound_correct_wt",&HSMParams::bound_correct_wt)
+            .def_readonly("max_amoment",&HSMParams::max_amoment)
+            .def_readonly("max_ashift",&HSMParams::max_ashift)
+            .def_readonly("ksb_moments_max",&HSMParams::ksb_moments_max)
+            .def_readonly("ksb_sig_weight",&HSMParams::ksb_sig_weight)
+            .def_readonly("ksb_sig_factor",&HSMParams::ksb_sig_factor)
+            .def_readonly("failed_moments",&HSMParams::failed_moments)
+            .enable_pickling()
             ;
     }
 };
 
-struct PyCppShapeData {
+struct PyShapeData {
+
+    static CppShapeData* ShapeData_init(
+        const galsim::Bounds<int>& image_bounds, int moments_status,
+        float observed_e1, float observed_e2,
+        float moments_sigma, float moments_amp,
+        const galsim::Position<double>& moments_centroid,
+        double moments_rho4, int moments_n_iter,
+        int correction_status, float corrected_e1, float corrected_e2,
+        float corrected_g1, float corrected_g2, std::string meas_type,
+        float corrected_shape_err, std::string correction_method,
+        float resolution_factor, float psf_sigma,
+        float psf_e1, float psf_e2, std::string error_message)
+    {
+        CppShapeData* data = new CppShapeData();
+        data->image_bounds = image_bounds;
+        data->moments_status = moments_status;
+        data->observed_e1 = observed_e1;
+        data->observed_e2 = observed_e2;
+        data->moments_sigma = moments_sigma;
+        data->moments_amp = moments_amp;
+        data->moments_centroid = moments_centroid;
+        data->moments_rho4 = moments_rho4;
+        data->moments_n_iter = moments_n_iter;
+        data->correction_status = correction_status;
+        data->corrected_e1 = corrected_e1;
+        data->corrected_e2 = corrected_e2;
+        data->corrected_g1 = corrected_g1;
+        data->corrected_g2 = corrected_g2;
+        data->meas_type = meas_type;
+        data->corrected_shape_err = corrected_shape_err;
+        data->correction_method = correction_method;
+        data->resolution_factor = resolution_factor;
+        data->psf_sigma = psf_sigma;
+        data->psf_e1 = psf_e1;
+        data->psf_e2 = psf_e2;
+        data->error_message = error_message;
+        return data;
+    }
 
     template <typename U, typename V>
     static void wrapTemplates() {
-        typedef CppShapeData (*FAM_func)(const BaseImage<U>&, const BaseImage<int>&, 
+        typedef CppShapeData (*FAM_func)(const BaseImage<U>&, const BaseImage<int>&,
                                          double, double, Position<double>,
                                          boost::shared_ptr<HSMParams>);
         bp::def("_FindAdaptiveMomView",
                 FAM_func(&FindAdaptiveMomView),
-                (bp::arg("object_image"), bp::arg("object_mask_image"), bp::arg("guess_sig")=5.0, 
-                 bp::arg("precision")=1.0e-6, bp::arg("guess_centroid")=Position<double>(0.,0.), 
+                (bp::arg("object_image"), bp::arg("object_mask_image"), bp::arg("guess_sig")=5.0,
+                 bp::arg("precision")=1.0e-6, bp::arg("guess_centroid")=Position<double>(0.,0.),
                  bp::arg("hsmparams")=bp::object()),
                 "Find adaptive moments of an image (with some optional args).");
 
-        typedef CppShapeData (*ESH_func)(const BaseImage<U>&, const BaseImage<V>&, 
+        typedef CppShapeData (*ESH_func)(const BaseImage<U>&, const BaseImage<V>&,
                                          const BaseImage<int>&, float, const char *,
                                          const std::string&, double, double, double, Position<double>,
                                          boost::shared_ptr<HSMParams>);
@@ -174,32 +227,49 @@ struct PyCppShapeData {
     };
 
     static void wrap() {
-        static char const * doc = 
-            "CppShapeData object represents information from the HSM moments and PSF-correction\n"
-            "functions.  See C++ docs for more detail.\n"
-            ;
-
-        bp::class_<CppShapeData>("_CppShapeData", doc, bp::init<>())
-            .def_readwrite("image_bounds", &CppShapeData::image_bounds)
-            .def_readwrite("moments_status", &CppShapeData::moments_status)
-            .def_readwrite("observed_shape", &CppShapeData::observed_shape)
-            .def_readwrite("moments_sigma", &CppShapeData::moments_sigma)
-            .def_readwrite("moments_amp", &CppShapeData::moments_amp)
-            .def_readwrite("moments_rho4", &CppShapeData::moments_rho4)
-            .def_readwrite("moments_centroid", &CppShapeData::moments_centroid)
-            .def_readwrite("moments_n_iter", &CppShapeData::moments_n_iter)
-            .def_readwrite("correction_status", &CppShapeData::correction_status)
-            .def_readwrite("corrected_e1", &CppShapeData::corrected_e1)
-            .def_readwrite("corrected_e2", &CppShapeData::corrected_e2)
-            .def_readwrite("corrected_g1", &CppShapeData::corrected_g1)
-            .def_readwrite("corrected_g2", &CppShapeData::corrected_g2)
-            .def_readwrite("meas_type", &CppShapeData::meas_type)
-            .def_readwrite("corrected_shape_err", &CppShapeData::corrected_shape_err)
-            .def_readwrite("correction_method", &CppShapeData::correction_method)
-            .def_readwrite("resolution_factor", &CppShapeData::resolution_factor)
-            .def_readwrite("psf_sigma", &CppShapeData::psf_sigma)
-            .def_readwrite("psf_shape", &CppShapeData::psf_shape)
-            .def_readwrite("error_message", &CppShapeData::error_message)
+        bp::class_<CppShapeData>("CppShapeData", "", bp::no_init)
+            .def(bp::init<>())
+            .def(bp::init<const CppShapeData&>())
+            .def("__init__",
+                 bp::make_constructor(
+                     &ShapeData_init, bp::default_call_policies(), (
+                         bp::arg("image_bounds"), bp::arg("moments_status"),
+                         bp::arg("observed_e1"), bp::arg("observed_e2"),
+                         bp::arg("moments_sigma"), bp::arg("moments_amp"),
+                         bp::arg("moments_centroid"),
+                         bp::arg("moments_rho4"), bp::arg("moments_n_iter"),
+                         bp::arg("correction_status"),
+                         bp::arg("corrected_e1"), bp::arg("corrected_e2"),
+                         bp::arg("corrected_g1"), bp::arg("corrected_g2"), bp::arg("meas_type"),
+                         bp::arg("corrected_shape_err"), bp::arg("correction_method"),
+                         bp::arg("resolution_factor"), bp::arg("psf_sigma"),
+                         bp::arg("psf_e1"), bp::arg("psf_e2"), bp::arg("error_message")
+                     )
+                 )
+            )
+            .def_readonly("image_bounds", &CppShapeData::image_bounds)
+            .def_readonly("moments_status", &CppShapeData::moments_status)
+            .def_readonly("observed_e1", &CppShapeData::observed_e1)
+            .def_readonly("observed_e2", &CppShapeData::observed_e2)
+            .def_readonly("moments_sigma", &CppShapeData::moments_sigma)
+            .def_readonly("moments_amp", &CppShapeData::moments_amp)
+            .def_readonly("moments_centroid", &CppShapeData::moments_centroid)
+            .def_readonly("moments_rho4", &CppShapeData::moments_rho4)
+            .def_readonly("moments_n_iter", &CppShapeData::moments_n_iter)
+            .def_readonly("correction_status", &CppShapeData::correction_status)
+            .def_readonly("corrected_e1", &CppShapeData::corrected_e1)
+            .def_readonly("corrected_e2", &CppShapeData::corrected_e2)
+            .def_readonly("corrected_g1", &CppShapeData::corrected_g1)
+            .def_readonly("corrected_g2", &CppShapeData::corrected_g2)
+            .def_readonly("meas_type", &CppShapeData::meas_type)
+            .def_readonly("corrected_shape_err", &CppShapeData::corrected_shape_err)
+            .def_readonly("correction_method", &CppShapeData::correction_method)
+            .def_readonly("resolution_factor", &CppShapeData::resolution_factor)
+            .def_readonly("psf_sigma", &CppShapeData::psf_sigma)
+            .def_readonly("psf_e1", &CppShapeData::psf_e1)
+            .def_readonly("psf_e2", &CppShapeData::psf_e2)
+            .def_readonly("error_message", &CppShapeData::error_message)
+            .enable_pickling()
             ;
 
         wrapTemplates<float, float>();
@@ -213,10 +283,9 @@ struct PyCppShapeData {
 } // anonymous
 
 void pyExportHSM() {
-    PyCppShapeData::wrap();
+    PyShapeData::wrap();
     PyHSMParams::wrap();
 }
 
 } // namespace hsm
 } // namespace galsim
-

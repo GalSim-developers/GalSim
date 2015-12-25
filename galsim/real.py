@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -20,16 +20,15 @@ Functions for dealing with RealGalaxy objects and the catalogs that store their 
 
 The RealGalaxy uses images of galaxies from real astrophysical data (e.g. the Hubble Space
 Telescope), along with a PSF model of the optical properties of the telescope that took these
-images, to simulate new galaxy images with a different (must be larger) telescope PSF.  A 
-description of the simulation method can be found in Section 5 of Mandelbaum et al. (2012; MNRAS, 
-540, 1518), although note that the details of the implementation in Section 7 of that work are not 
+images, to simulate new galaxy images with a different (must be larger) telescope PSF.  A
+description of the simulation method can be found in Section 5 of Mandelbaum et al. (2012; MNRAS,
+540, 1518), although note that the details of the implementation in Section 7 of that work are not
 relevant to the more recent software used here.
 
 This module defines the RealGalaxyCatalog class, used to store all required information about a
-real galaxy simulation training sample and accompanying PSF model.  For information about 
+real galaxy simulation training sample and accompanying PSF model.  For information about
 downloading GalSim-readable RealGalaxyCatalog data in FITS format, see the RealGalaxy Data Download
-page on the GalSim Wiki: 
-https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data%20Download%20Page
+page on the GalSim Wiki: https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data
 
 The function simReal() takes this information and uses it to simulate a (no-noise-added) image from
 some lower-resolution telescope.
@@ -39,7 +38,7 @@ some lower-resolution telescope.
 import galsim
 import utilities
 from galsim import GSObject
-from galsim import pyfits
+import os
 
 class RealGalaxy(GSObject):
     """A class describing real galaxies from some training dataset.  Its underlying implementation
@@ -50,15 +49,16 @@ class RealGalaxy(GSObject):
     RealGalaxyCatalog documentation) to read in data about realistic galaxies that can be used for
     simulations based on those galaxies.  Also included in the class is additional information that
     might be needed to make or interpret the simulations, e.g., the noise properties of the training
-    data.
+    data.  Users who wish to draw RealGalaxies that have well-defined flux scalings in various
+    passbands, and/or parametric representations, should use the COSMOSGalaxy class.
 
-    Because RealGalaxy involved a Deconvolution, `method = 'phot'` is unavailable for the
+    Because RealGalaxy involves a Deconvolution, `method = 'phot'` is unavailable for the
     drawImage() function.
 
     Initialization
     --------------
-    
-        >>> real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index=None, id=None, random=False, 
+
+        >>> real_galaxy = galsim.RealGalaxy(real_galaxy_catalog, index=None, id=None, random=False,
         ...                                 rng=None, x_interpolant=None, k_interpolant=None,
         ...                                 flux=None, pad_factor=4, noise_pad_size=0,
         ...                                 gsparams=None)
@@ -67,7 +67,7 @@ class RealGalaxy(GSObject):
     galaxy, and saved versions of the original HST image and PSF). Note that there are multiple
     keywords for choosing a galaxy; exactly one must be set.  In future we may add more such
     options, e.g., to choose at random but accounting for the non-constant weight factors
-    (probabilities for objects to make it into the training sample).  
+    (probabilities for objects to make it into the training sample).
 
     Note that tests suggest that for optimal balance between accuracy and speed, `k_interpolant` and
     `pad_factor` should be kept at their default values.  The user should be aware that significant
@@ -75,6 +75,12 @@ class RealGalaxy(GSObject):
     found in http://arxiv.org/abs/1401.2636, especially table 1, and in comment
     https://github.com/GalSim-developers/GalSim/issues/389#issuecomment-26166621 and the following
     comments.
+
+    If you don't set a flux, the flux of the returned object will be the flux of the original
+    COSMOS data, scaled to correspond to a 1 second HST exposure.  If you want a flux appropriate
+    for a longer exposure, you can set flux_rescale = the exposure time.  You can also account
+    for exposures taken with a different telescope diameter than the HST 2.4 meter diameter
+    this way.
 
     @param real_galaxy_catalog  A RealGalaxyCatalog object with basic information about where to
                             find the data, etc.
@@ -90,18 +96,19 @@ class RealGalaxy(GSObject):
                             generator takes precedence over any stored within a user-input
                             CorrelatedNoise instance (see `noise_pad` parameter below).
                             [default: None]
-    @param x_interpolant    Either an Interpolant2d (or Interpolant) instance or a string
-                            indicating which real-space interpolant should be used.  Options
-                            are 'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN'
-                            where N should be the integer order to use. [default: Quintic]
-    @param k_interpolant    Either an Interpolant2d (or Interpolant) instance or a string
-                            indicating which k-space interpolant should be used.  Options are
-                            'nearest', 'sinc', 'linear', 'cubic', 'quintic', or 'lanczosN'
-                            where N should be the integer order to use.  We strongly recommend
-                            leaving this parameter at its default value; see text above for
-                            details.  [default: Quintic]
+    @param x_interpolant    Either an Interpolant instance or a string indicating which real-space
+                            interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
+                            'cubic', 'quintic', or 'lanczosN' where N should be the integer order
+                            to use. [default: galsim.Quintic()]
+    @param k_interpolant    Either an Interpolant instance or a string indicating which k-space
+                            interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
+                            'cubic', 'quintic', or 'lanczosN' where N should be the integer order
+                            to use.  We strongly recommend leaving this parameter at its default
+                            value; see text above for details.  [default: galsim.Quintic()]
     @param flux             Total flux, if None then original flux in galaxy is adopted without
                             change. [default: None]
+    @param flux_rescale     Flux rescaling factor; if None, then no rescaling is done.  Either
+                            `flux` or `flux_rescale` may be set, but not both. [default: None]
     @param pad_factor       Factor by which to pad the Image when creating the
                             InterpolatedImage.  We strongly recommend leaving this parameter
                             at its default value; see text above for details.  [default: 4]
@@ -113,90 +120,109 @@ class RealGalaxy(GSObject):
                             [default: None]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
+    @param logger           A logger object for output of progress statements if the user wants
+                            them.  [default: None]
 
     Methods
     -------
 
     There are no additional methods for RealGalaxy beyond the usual GSObject methods.
     """
-
-    # Initialization parameters of the object, with type information
     _req_params = {}
     _opt_params = { "x_interpolant" : str ,
                     "k_interpolant" : str ,
                     "flux" : float ,
+                    "flux_rescale" : float ,
                     "pad_factor" : float,
                     "noise_pad_size" : float,
                   }
     _single_params = [ { "index" : int , "id" : str } ]
     _takes_rng = True
-    _takes_logger = True
 
-    # --- Public Class methods ---
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
-                 rng=None, x_interpolant=None, k_interpolant=None, flux=None, pad_factor=4,
-                 noise_pad_size=0, gsparams=None, logger=None):
+                 rng=None, x_interpolant=None, k_interpolant=None, flux=None, flux_rescale=None,
+                 pad_factor=4, noise_pad_size=0, gsparams=None, logger=None):
 
         import numpy as np
 
         if rng is None:
-            rng = galsim.BaseDeviate()
+            self.rng = galsim.BaseDeviate()
         elif not isinstance(rng, galsim.BaseDeviate):
             raise TypeError("The rng provided to RealGalaxy constructor is not a BaseDeviate")
- 
-        # Code block below will be for galaxy selection; not all are currently implemented.  Each
-        # option must return an index within the real_galaxy_catalog.        
-        if index is not None:
-            if id is not None or random is True:
-                raise AttributeError('Too many methods for selecting a galaxy!')
-            use_index = index
-        elif id is not None:
-            if random is True:
-                raise AttributeError('Too many methods for selecting a galaxy!')
-            use_index = real_galaxy_catalog.getIndexForID(id)
-        elif random is True:
-            uniform_deviate = galsim.UniformDeviate(rng)
-            use_index = int(real_galaxy_catalog.nobjects * uniform_deviate()) 
         else:
-            raise AttributeError('No method specified for selecting a galaxy!')
+            self.rng = rng
+        self._rng = self.rng.duplicate()  # This is only needed if we want to make sure eval(repr)
+                                          # results in the same object.
 
-        if logger:
-            logger.debug('RealGalaxy %d: Start RealGalaxy constructor.',use_index)
+        if flux is not None and flux_rescale is not None:
+            raise TypeError("Cannot supply a flux and a flux rescaling factor!")
 
+        if isinstance(real_galaxy_catalog, tuple):
+            # Special (undocumented) way to build a RealGalaxy without needing the rgc directly
+            # by providing the things we need from it.  Used by COSMOSGalaxy.
+            self.gal_image, self.psf_image, noise_image, pixel_scale, var = real_galaxy_catalog
+            use_index = 0  # For the logger statements below.
+            if logger:
+                logger.debug('RealGalaxy %d: Start RealGalaxy constructor.',use_index)
+            self.catalog_file = None
+        else:
+            # Get the index to use in the catalog
+            if index is not None:
+                if id is not None or random is True:
+                    raise AttributeError('Too many methods for selecting a galaxy!')
+                use_index = index
+            elif id is not None:
+                if random is True:
+                    raise AttributeError('Too many methods for selecting a galaxy!')
+                use_index = real_galaxy_catalog.getIndexForID(id)
+            elif random is True:
+                uniform_deviate = galsim.UniformDeviate(self.rng)
+                use_index = int(real_galaxy_catalog.nobjects * uniform_deviate())
+            else:
+                raise AttributeError('No method specified for selecting a galaxy!')
+            if logger:
+                logger.debug('RealGalaxy %d: Start RealGalaxy constructor.',use_index)
 
-        # read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors.
-        self.gal_image = real_galaxy_catalog.getGal(use_index)
-        if logger:
-            logger.debug('RealGalaxy %d: Got gal_image',use_index)
+            # Read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors.
+            self.gal_image = real_galaxy_catalog.getGal(use_index)
+            if logger:
+                logger.debug('RealGalaxy %d: Got gal_image',use_index)
 
-        self.psf_image = real_galaxy_catalog.getPSF(use_index)
-        if logger:
-            logger.debug('RealGalaxy %d: Got psf_image',use_index)
+            self.psf_image = real_galaxy_catalog.getPSF(use_index)
+            if logger:
+                logger.debug('RealGalaxy %d: Got psf_image',use_index)
 
-        #self.noise = real_galaxy_catalog.getNoise(use_index, rng, gsparams)
-        # This is a duplication of the RealGalaxyCatalog.getNoise() function, since we
-        # want it to be possible to have the RealGalaxyCatalog in another process, and the
-        # BaseCorrelatedNoise object is not picklable.  So we just build it here instead.
-        noise_image, pixel_scale, var = real_galaxy_catalog.getNoiseProperties(use_index)
-        if logger:
-            logger.debug('RealGalaxy %d: Got noise_image',use_index)
+            #self.noise = real_galaxy_catalog.getNoise(use_index, self.rng, gsparams)
+            # We need to duplication some of the RealGalaxyCatalog.getNoise() function, since we
+            # want it to be possible to have the RealGalaxyCatalog in another process, and the
+            # BaseCorrelatedNoise object is not picklable.  So we just build it here instead.
+            noise_image, pixel_scale, var = real_galaxy_catalog.getNoiseProperties(use_index)
+            if logger:
+                logger.debug('RealGalaxy %d: Got noise_image',use_index)
+            self.catalog_file = real_galaxy_catalog.getFileName()
 
         if noise_image is None:
-            self.noise = galsim.UncorrelatedNoise(var, rng=rng, scale=pixel_scale,
+            self.noise = galsim.UncorrelatedNoise(var, rng=self.rng, scale=pixel_scale,
                                                   gsparams=gsparams)
         else:
             ii = galsim.InterpolatedImage(noise_image, normalization="sb",
                                           calculate_stepk=False, calculate_maxk=False,
                                           x_interpolant='linear', gsparams=gsparams)
-            self.noise = galsim.correlatednoise._BaseCorrelatedNoise(rng, ii, noise_image.wcs)
+            self.noise = galsim.correlatednoise._BaseCorrelatedNoise(self.rng, ii, noise_image.wcs)
             self.noise = self.noise.withVariance(var)
         if logger:
             logger.debug('RealGalaxy %d: Finished building noise',use_index)
 
         # Save any other relevant information as instance attributes
-        self.catalog_file = real_galaxy_catalog.getFileName()
+        self.catalog = real_galaxy_catalog
         self.index = use_index
         self.pixel_scale = float(pixel_scale)
+        self._x_interpolant = x_interpolant
+        self._k_interpolant = k_interpolant
+        self._pad_factor = pad_factor
+        self._noise_pad_size = noise_pad_size
+        self._flux = flux
+        self._gsparams = gsparams
 
         # Convert noise_pad to the right noise to pass to InterpolatedImage
         if noise_pad_size:
@@ -206,7 +232,7 @@ class RealGalaxy(GSObject):
 
         # Build the InterpolatedImage of the PSF.
         self.original_psf = galsim.InterpolatedImage(
-            self.psf_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant, 
+            self.psf_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
             flux=1.0, gsparams=gsparams)
         if logger:
             logger.debug('RealGalaxy %d: Made original_psf',use_index)
@@ -215,24 +241,28 @@ class RealGalaxy(GSObject):
         # Use the stepK() value of the PSF as a maximum value for stepK of the galaxy.
         # (Otherwise, low surface brightness galaxies can get a spuriously high stepk, which
         # leads to problems.)
-        self.original_image = galsim.InterpolatedImage(
+        self.original_gal = galsim.InterpolatedImage(
                 self.gal_image, x_interpolant=x_interpolant, k_interpolant=k_interpolant,
                 pad_factor=pad_factor, noise_pad_size=noise_pad_size,
                 calculate_stepk=self.original_psf.stepK(),
                 calculate_maxk=self.original_psf.maxK(),
-                noise_pad=noise_pad, rng=rng, gsparams=gsparams)
+                noise_pad=noise_pad, rng=self.rng, gsparams=gsparams)
         if logger:
-            logger.debug('RealGalaxy %d: Made original_image',use_index)
+            logger.debug('RealGalaxy %d: Made original_gal',use_index)
 
         # If flux is None, leave flux as given by original image
         if flux is not None:
-            self.original_image = self.original_image.withFlux(flux)
+            flux_rescale = flux / self.original_gal.getFlux()
+        if flux_rescale is not None:
+            self.original_gal *= flux_rescale
+            self.noise *= flux_rescale**2
 
         # Calculate the PSF "deconvolution" kernel
         psf_inv = galsim.Deconvolve(self.original_psf, gsparams=gsparams)
+
         # Initialize the SBProfile attribute
         GSObject.__init__(
-            self, galsim.Convolve([self.original_image, psf_inv], gsparams=gsparams))
+            self, galsim.Convolve([self.original_gal, psf_inv], gsparams=gsparams))
         if logger:
             logger.debug('RealGalaxy %d: Made gsobject',use_index)
 
@@ -245,6 +275,40 @@ class RealGalaxy(GSObject):
         raise NotImplementedError("Half light radius calculation not implemented for RealGalaxy "
                                    +"objects.")
 
+    def __repr__(self):
+        s = 'galsim.RealGalaxy(%r, %r, '%(self.catalog, self.index)
+        if self._x_interpolant is not None:
+            s += 'x_interpolant=%r, '%self._x_interpolant
+        if self._k_interpolant is not None:
+            s += 'k_interpolant=%r, '%self._k_interpolant
+        if self._pad_factor != 4:
+            s += 'pad_factor=%r, '%self._pad_factor
+        if self._noise_pad_size != 0:
+            s += 'noise_pad_size=%r, '%self._noise_pad_size
+        if self._flux is not None:
+            s += 'flux=%r, '%self._flux
+        s += 'rng=%r, '%self._rng
+        s += 'gsparams=%r)'%self._gsparams
+        return s
+
+    def __str__(self):
+        # I think this is more intuitive without the RealGalaxyCatalog parameter listed.
+        return 'galsim.RealGalaxy(index=%s, flux=%s)'%(self.index, self.flux)
+
+    def __getstate__(self):
+        # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
+        # written as a string.  Better to pickle the image and remake the InterpolatedImage.
+        d = self.__dict__.copy()
+        del d['SBProfile']
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        psf_inv = galsim.Deconvolve(self.original_psf, gsparams=self._gsparams)
+        GSObject.__init__(
+            self, galsim.Convolve([self.original_gal, psf_inv], gsparams=self._gsparams))
+
+
 
 class RealGalaxyCatalog(object):
     """Class containing a catalog with information about real galaxy training data.
@@ -253,147 +317,120 @@ class RealGalaxyCatalog(object):
     realistic galaxies. We assume that all files containing the images (galaxies and PSFs) live in
     one directory; they could be individual files, or multiple HDUs of the same file.  Currently
     there is no functionality that lets this be a FITS data cube, because we assume that the object
-    postage stamps will in general need to be different sizes depending on the galaxy size.  
+    postage stamps will in general need to be different sizes depending on the galaxy size.
 
-    If only the catalog name (`'real_galaxy_catalog.fits'`) is specified, then the set of galaxy/PSF
-    image files (e.g., `'real_galaxy_images_1.fits'`, `'real_galaxy_PSF_images_1.fits'`, etc.) are
-    assumed to be in the directory as the catalog file (in the following example, in the current 
-    working directory `./`):
+    While you could create your own catalog to use with this class, the typical use cases would
+    be to use one of the catalogs that we have created and distributed.  There are three such
+    catalogs currently, which can be use with one of the following initializations:
 
-        >>> my_rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog.fits')
+    1. A small example catalog is distributed with the GalSim distribution.  This catalog only
+       has 100 galaxies, so it is not terribly useful as a representative galaxy population.
+       But for simplistic use cases, it might be sufficient.  We use it for our unit tests and
+       in some of the demo scripts (demo6, demo10, and demo11).  To use this catalog, you would
+       initialize with
 
-    If `image_dir` is specified, the set of galaxy/PSF image files is assumed to be in that
-    subdirectory of where the catalog is (in the following example, `./images`):
+           >>> rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog_example.fits',
+                                              dir='path/to/GalSim/examples/data')
 
-        >>> my_rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog.fits', image_dir='images')
+    2. There are two larger catalogs based on HST observations of the COSMOS field with around
+       26,000 and 56,000 galaxies each.  (The former is a subset of the latter.) For information
+       about how to download these catalogs, see the RealGalaxy Data Download Page on the GalSim
+       Wiki:
 
-    If the real galaxy catalog is in some far-flung directory, and the galaxy/PSF image files are in 
-    its subdirectory, one only needs to specify the long directory name once:
+           https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data
 
-        >>> file_name = '/data3/scratch/user_name/galsim/real_galaxy_data/real_galaxy_catalog.fits'
-        >>> image_dir = 'images'
-        >>> my_rgc = galsim.RealGalaxyCatalog(file_name, image_dir=image_dir)
+       Be warned that the catalogs are quite large.  The larger one is around 11 GB after unpacking
+       the tarball.  To use one of these catalogs, you would initialize with
 
-    In the above case, the galaxy/PSF image files are in the directory 
-    `/data3/scratch/user_name/galsim/real_galaxy_data/images/`.
+           >>> rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog_23.5.fits',
+                                              dir='path/to/download/directory')
 
-    The above behavior is changed if the `image_dir` specifies a directory.  In this case, 
-    `image_dir` is interpreted as the full path:
+       There is also an optional `image_dir` parameter that lets you have the image files in
+       a different location than the catalog.
 
-        >>> file_name = '/data3/scratch/user_name/galsim/real_galaxy_data/real_galaxy_catalog.fits'
-        >>> image_dir = '/data3/scratch/user_name/galsim/real_galaxy_data/images'
-        >>> my_rgc = galsim.RealGalaxyCatalog(file_name, image_dir=image_dir)
+    3. Finally, we provide a program that will download the large COSMOS sample for you and
+       put it in the $PREFIX/share/galsim directory of your installation path.  The program is
 
-    When `dir` is specified without `image_dir` being specified, both the catalog and
-    the set of galaxy/PSF images will be searched for under the directory `dir`:
+           galsim_download_cosmos
 
-        >>> catalog_dir = '/data3/scratch/user_name/galsim/real_galaxy_data'
-        >>> file_name = 'real_galaxy_catalog.fits'
-        >>> my_rgc = galsim.RealGalaxyCatalog(file_name, dir=catalog_dir)
+       which gets installed in the $PREFIX/bin directory when you install GalSim.  If you use
+       this program to download the COSMOS catalog, then you can use it with
 
-    If the `image_dir` is specified in addition to `dir`, the catalog name is specified as 
-    `dir/file_name`, while the galaxy/PSF image files will be searched for under `dir/image_dir`:
+           >>> rgc = galsim.RealGalaxyCatalog()
 
-        >>> catalog_dir = '/data3/scratch/user_name/galsim/real_galaxy_data'
-        >>> file_name = 'real_galaxy_catalog.fits'
-        >>> image_dir = 'images'
-        >>> my_rgc = galsim.RealGalaxyCatalog(file_name, image_dir=image_dir, dir=catalog_dir)
+       GalSim knows the location of the installation share directory, so it will automatically
+       look for it there.
 
-    To explore for the future: scaling with number of galaxies, adding more information as needed,
-    and other i/o related issues.
-
-    The GalSim repository currently contains an example catalog, in
-    `GalSim/examples/data/real_galaxy_catalog_example.fits` (100 galaxies), along with the
-    corresponding image data in other files (`real_galaxy_images.fits` and
-    `real_galaxy_PSF_images.fits`) in that directory.  For information on how to download a larger
-    sample of 26k training galaxies, see the RealGalaxy Data Download Page on the GalSim Wiki:
-    https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data%20Download%20Page
-
-    @param file_name  The file containing the catalog.
-    @param image_dir  If a string containing no `/`, it is the relative path from the location of
-                      the catalog file to the directory containing the galaxy/PDF images.
-                      If a path (a string containing `/`), it is the full path to the directory
-                      containing the galaxy/PDF images. [default: None]
+    @param file_name  The file containing the catalog. [default: None, which will look for the
+                      COSMOS catalog in $PREFIX/share/galsim.  It will raise an exception if the
+                      catalog is not there telling you to run galsim_download_cosmos.]
+    @param image_dir  The directory of the image files.  If the string contains '/', then it is an
+                      absolute path, else it is taken to be a relative path from the location of
+                      the catalog file.  [default: None, which means to use the same directory
+                      as the catalog file.]
     @param dir        The directory of catalog file. [default: None]
-    @param preload    Whether to preload the header information.  If `preload=True`, the bulk of 
+    @param preload    Whether to preload the header information.  If `preload=True`, the bulk of
                       the I/O time is in the constructor.  If `preload=False`, there is
                       approximately the same total I/O time (assuming you eventually use most of
                       the image files referenced in the catalog), but it is spread over the
                       various calls to getGal() and getPSF().  [default: False]
-    @param noise_dir  The directory of the noise files if different from the directory of the 
+    @param noise_dir  The directory of the noise files if different from the directory of the
                       image files.  [default: image_dir]
+    @param logger     An optional logger object to log progress. [default: None]
     """
-    _req_params = { 'file_name' : str }
-    _opt_params = { 'image_dir' : str , 'dir' : str, 'preload' : bool, 'noise_dir' : str }
+    _req_params = {}
+    _opt_params = { 'file_name' : str, 'image_dir' : str , 'dir' : str,
+                    'preload' : bool, 'noise_dir' : str }
     _single_params = []
     _takes_rng = False
-    _takes_logger = True
 
-    # nobject_only is an intentionally undocumented kwarg that should be used only by
+    # _nobject_only is an intentionally undocumented kwarg that should be used only by
     # the config structure.  It indicates that all we care about is the nobjects parameter.
     # So skip any other calculations that might normally be necessary on construction.
-    def __init__(self, file_name, image_dir=None, dir=None, preload=False, nobjects_only=False,
-                 noise_dir=None, logger=None):
-        import os
-        # First build full file_name
-        if dir is None:
-            self.file_name = file_name
-            if image_dir is None:
-                self.image_dir = os.path.dirname(file_name)
-            elif os.path.dirname(image_dir) == '':
-                self.image_dir = os.path.join(os.path.dirname(self.file_name),image_dir)
-            else:
-                self.image_dir = image_dir
-        else:
-            self.file_name = os.path.join(dir,file_name)
-            if image_dir is None:
-                self.image_dir = dir
-            else:
-                self.image_dir = os.path.join(dir,image_dir)
-        if not os.path.isdir(self.image_dir):
-            raise RuntimeError(self.image_dir+' directory does not exist!')
-        if noise_dir is None:
-            self.noise_dir = self.image_dir
-        else:
-            if not os.path.isdir(noise_dir):
-                raise RuntimeError(noise_dir+' directory does not exist!')
-            self.noise_dir = noise_dir
+    def __init__(self, file_name=None, image_dir=None, dir=None, preload=False,
+                 noise_dir=None, logger=None, _nobjects_only=False):
 
-        cat = pyfits.getdata(self.file_name)
-        self.nobjects = len(cat) # number of objects in the catalog
-        if nobjects_only: return  # Exit early if that's all we needed.
-        ident = cat.field('ident') # ID for object in the training sample
+        from galsim._pyfits import pyfits
+        self.file_name, self.image_dir, self.noise_dir = \
+            _parse_files_dirs(file_name, image_dir, dir, noise_dir)
+
+        self.cat = pyfits.getdata(self.file_name)
+        self.nobjects = len(self.cat) # number of objects in the catalog
+        if _nobjects_only: return  # Exit early if that's all we needed.
+        ident = self.cat.field('ident') # ID for object in the training sample
 
         # We want to make sure that the ident array contains all strings.
         # Strangely, ident.astype(str) produces a string with each element == '1'.
         # Hence this way of doing the conversion:
         self.ident = [ "%s"%val for val in ident ]
 
-        self.gal_file_name = cat.field('gal_filename') # file containing the galaxy image
-        self.psf_file_name = cat.field('PSF_filename') # file containing the PSF image
+        self.gal_file_name = self.cat.field('gal_filename') # file containing the galaxy image
+        self.psf_file_name = self.cat.field('PSF_filename') # file containing the PSF image
 
         # Add the directories:
-        self.gal_file_name = [ os.path.join(self.image_dir,f) for f in self.gal_file_name ]
-        self.psf_file_name = [ os.path.join(self.image_dir,f) for f in self.psf_file_name ]
+        # Note the strip call.  Sometimes the filenames have an extra space at the end. 
+        # This gets rid of that space.
+        self.gal_file_name = [ os.path.join(self.image_dir,f.strip()) for f in self.gal_file_name ]
+        self.psf_file_name = [ os.path.join(self.image_dir,f.strip()) for f in self.psf_file_name ]
 
         # We don't require the noise_filename column.  If it is not present, we will use
         # Uncorrelated noise based on the variance column.
         try:
-            self.noise_file_name = cat.field('noise_filename') # file containing the noise cf
+            self.noise_file_name = self.cat.field('noise_filename') # file containing the noise cf
             self.noise_file_name = [ os.path.join(self.noise_dir,f) for f in self.noise_file_name ]
         except:
             self.noise_file_name = None
 
-        self.gal_hdu = cat.field('gal_hdu') # HDU containing the galaxy image
-        self.psf_hdu = cat.field('PSF_hdu') # HDU containing the PSF image
-        self.pixel_scale = cat.field('pixel_scale') # pixel scale for image (could be different
-        # if we have training data from other datasets... let's be general here and make it a 
+        self.gal_hdu = self.cat.field('gal_hdu') # HDU containing the galaxy image
+        self.psf_hdu = self.cat.field('PSF_hdu') # HDU containing the PSF image
+        self.pixel_scale = self.cat.field('pixel_scale') # pixel scale for image (could be different
+        # if we have training data from other datasets... let's be general here and make it a
         # vector in case of mixed training set)
-        self.variance = cat.field('noise_variance') # noise variance for image
-        self.mag = cat.field('mag')   # apparent magnitude
-        self.band = cat.field('band') # bandpass in which apparent mag is measured, e.g., F814W
-        self.weight = cat.field('weight') # weight factor to account for size-dependent
-                                          # probability
+        self.variance = self.cat.field('noise_variance') # noise variance for image
+        self.mag = self.cat.field('mag')   # apparent magnitude
+        self.band = self.cat.field('band') # bandpass in which apparent mag is measured, e.g., F814W
+        self.weight = self.cat.field('weight') # weight factor to account for size-dependent
+                                               # probability
 
         self.saved_noise_im = {}
         self.loaded_files = {}
@@ -409,8 +446,9 @@ class RealGalaxyCatalog(object):
 
         # Preload all files if desired
         if preload: self.preload()
+        self._preload = preload
 
-        # eventually I think we'll want information about the training dataset, 
+        # eventually I think we'll want information about the training dataset,
         # i.e. (dataset, ID within dataset)
         # also note: will be adding bits of information, like noise properties and galaxy fit params
 
@@ -431,7 +469,7 @@ class RealGalaxyCatalog(object):
     def getFileName(self) : return self.file_name
 
     def getIndexForID(self, id):
-        """Internal function to find which index number corresponds to the value ID in the ident 
+        """Internal function to find which index number corresponds to the value ID in the ident
         field.
         """
         # Just to be completely consistent, convert id to a string in the same way we
@@ -444,23 +482,24 @@ class RealGalaxyCatalog(object):
 
     def preload(self):
         """Preload the files into memory.
-        
-        There are memory implications to this, so we don't do this by default.  However, it can be 
-        a big speedup if memory isn't an issue.  Especially if many (or all) of the images are 
+
+        There are memory implications to this, so we don't do this by default.  However, it can be
+        a big speedup if memory isn't an issue.  Especially if many (or all) of the images are
         stored in the same file as different HDUs.
         """
         import numpy
         from multiprocessing import Lock
+        from galsim._pyfits import pyfits
         if self.logger:
             self.logger.debug('RealGalaxyCatalog: start preload')
         for file_name in numpy.concatenate((self.gal_file_name , self.psf_file_name)):
-            # numpy sometimes add a space at the end of the string that is not present in 
+            # numpy sometimes add a space at the end of the string that is not present in
             # the original file.  Stupid.  But this next line removes it.
             file_name = file_name.strip()
             if file_name not in self.loaded_files:
                 if self.logger:
                     self.logger.debug('RealGalaxyCatalog: preloading %s',file_name)
-                # I use memmap=False, because I was getting problems with running out of 
+                # I use memmap=False, because I was getting problems with running out of
                 # file handles in the great3 real_gal run, which uses a lot of rgc files.
                 # I think there must be a bug in pyfits that leaves file handles open somewhere
                 # when memmap = True.  Anyway, I don't know what the performance implications
@@ -470,6 +509,7 @@ class RealGalaxyCatalog(object):
 
     def _getFile(self, file_name):
         from multiprocessing import Lock
+        from galsim._pyfits import pyfits
         if file_name in self.loaded_files:
             if self.logger:
                 self.logger.debug('RealGalaxyCatalog: File %s is already open',file_name)
@@ -553,6 +593,7 @@ class RealGalaxyCatalog(object):
                         self.logger.debug('RealGalaxyCatalog %d: Got saved noise im',i)
                 else:
                     import numpy
+                    from galsim._pyfits import pyfits
                     array = pyfits.getdata(self.noise_file_name[i])
                     im = galsim.Image(numpy.ascontiguousarray(array.astype(numpy.float64)),
                                       scale=self.pixel_scale[i])
@@ -570,7 +611,7 @@ class RealGalaxyCatalog(object):
         """
         im, scale, var = self.getNoiseProperties(i)
         if im is None:
-            cf = galsim.UncorrelatedNoise(var, rng=rng, scale=pixel_scale, gsparams=gsparams)
+            cf = galsim.UncorrelatedNoise(var, rng=rng, scale=scale, gsparams=gsparams)
         else:
             ii = galsim.InterpolatedImage(im, normalization="sb",
                                           calculate_stepk=False, calculate_maxk=False,
@@ -579,22 +620,60 @@ class RealGalaxyCatalog(object):
             cf = cf.withVariance(var)
         return cf
 
+    def __repr__(self):
+        s = 'galsim.RealGalaxyCatalog(%r,%r'%(self.file_name,self.image_dir)
+        if self.noise_dir != self.image_dir: s += ',noise_dir=%r'%self.noise_dir
+        s += ')'
+        return s
 
-def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotation_angle=None, 
+    def __str__(self):
+        return 'galsim.RealGalaxyCatalog(%r)'%(self.file_name)
+
+    def __eq__(self, other):
+        return (isinstance(other, RealGalaxyCatalog) and
+                self.file_name == other.file_name and
+                self.image_dir == other.image_dir and
+                self.noise_dir == other.noise_dir)
+    def __ne__(self, other): return not self.__eq__(other)
+
+    def __hash__(self): return hash(repr(self))
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        d['loaded_files'] = {}
+        d['saved_noise_im'] = {}
+        del d['gal_lock']
+        del d['psf_lock']
+        del d['loaded_lock']
+        del d['noise_lock']
+        return d
+
+    def __setstate__(self, d):
+        from multiprocessing import Lock
+        self.__dict__ = d
+        self.gal_lock = Lock()
+        self.psf_lock = Lock()
+        self.loaded_lock = Lock()
+        self.noise_lock = Lock()
+        pass
+
+
+
+def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotation_angle=None,
             rand_rotate=True, rng=None, target_flux=1000.0, image=None):
     """Function to simulate images (no added noise) from real galaxy training data.
 
-    This function takes a RealGalaxy from some training set, and manipulates it as needed to 
+    This function takes a RealGalaxy from some training set, and manipulates it as needed to
     simulate a (no-noise-added) image from some lower-resolution telescope.  It thus requires a
-    target PSF (which could be an image, or one of our base classes) that represents all PSF 
-    components including the pixel response, and a target pixel scale.  
+    target PSF (which could be an image, or one of our base classes) that represents all PSF
+    components including the pixel response, and a target pixel scale.
 
-    The default rotation option is to impose a random rotation to make irrelevant any real shears 
-    in the galaxy training data (optionally, the RNG can be supplied).  This default can be turned 
+    The default rotation option is to impose a random rotation to make irrelevant any real shears
+    in the galaxy training data (optionally, the RNG can be supplied).  This default can be turned
     off by setting `rand_rotate = False` or by requesting a specific rotation angle using the
     `rotation_angle` keyword, in which case `rand_rotate` is ignored.
 
-    Optionally, the user can specify a shear (default 0).  Finally, they can specify a flux 
+    Optionally, the user can specify a shear (default 0).  Finally, they can specify a flux
     normalization for the final image, default 1000.
 
     @param real_galaxy      The RealGalaxy object to use, not modified in generating the
@@ -664,3 +743,44 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
 
     # return simulated image
     return image
+
+def _parse_files_dirs(file_name, image_dir, dir, noise_dir):
+    if file_name is None:
+        if image_dir is not None:
+            raise ValueError('Cannot specify image_dir when using default file_name.')
+        file_name = 'real_galaxy_catalog_23.5.fits'
+        if dir is None:
+            dir = os.path.join(galsim.meta_data.share_dir, 'COSMOS_23.5_training_sample')
+        full_file_name = os.path.join(dir,file_name)
+        full_image_dir = dir
+        if not os.path.isfile(full_file_name):
+            raise RuntimeError('No RealGalaxy catalog found in %s.  '%dir +
+                               'Run the program galsim_download_cosmos to download catalog '+
+                               'and accompanying image files.')
+    elif dir is None:
+        full_file_name = file_name
+        if image_dir is None:
+            full_image_dir = os.path.dirname(file_name)
+        elif os.path.dirname(image_dir) == '':
+            full_image_dir = os.path.join(os.path.dirname(full_file_name),image_dir)
+        else:
+            full_image_dir = image_dir
+    else:
+        full_file_name = os.path.join(dir,file_name)
+        if image_dir is None:
+            full_image_dir = dir
+        else:
+            full_image_dir = os.path.join(dir,image_dir)
+    if not os.path.isfile(full_file_name):
+        raise RuntimeError(full_file_name+' not found.')
+    if not os.path.isdir(full_image_dir):
+        raise RuntimeError(full_image_dir+' directory does not exist!')
+
+    if noise_dir is None:
+        full_noise_dir = full_image_dir
+    else:
+        if not os.path.isdir(noise_dir):
+            raise RuntimeError(noise_dir+' directory does not exist!')
+        full_noise_dir = noise_dir
+
+    return full_file_name, full_image_dir, full_noise_dir

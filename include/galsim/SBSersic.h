@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -122,6 +122,9 @@ namespace galsim {
 
         /// @brief Returns the half light radius of the Sersic profile.
         double getHalfLightRadius() const;
+
+        /// @brief Returns the truncation radius
+        double getTrunc() const;
 
     protected:
 

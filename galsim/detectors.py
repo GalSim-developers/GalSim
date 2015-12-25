@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -9,11 +9,11 @@
 # conditions are met:
 #
 # 1. Redistributions of source code must retain the above copyright notice, this
-# list of conditions, and the disclaimer given in the accompanying LICENSE file.
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
 # 2. Redistributions in binary form must reproduce the above copyright notice,
-# this list of conditions, and the disclaimer given in the documentation
-# and/or other materials provided with the distribution.
-#
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 """@file detectors.py
 
 Module with routines to simulate CCD and NIR detector effects like nonlinearity, reciprocity
@@ -80,7 +80,7 @@ def applyNonlinearity(self, NLfunc, *args):
 
 def addReciprocityFailure(self, exp_time, alpha, base_flux):
     """
-    Accounts for the reciprocity failure and corrects the original Image for it directly.
+    Accounts for the reciprocity failure and includes it in the original Image directly.
 
     Reciprocity, in the context of photography, is the inverse relationship between the incident
     flux (I) of a source object and the exposure time (t) required to produce a given response (p)

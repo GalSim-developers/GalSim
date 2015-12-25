@@ -18,16 +18,16 @@ simulate high-fidelity galaxy images with accurate sizes and shears.  At the
 end of this file, there is a list of the code capabilities and plans for future
 development.  For details of algorithms and code validation, please see
 
-    http://arxiv.org/abs/1407.7676
+    http://adsabs.harvard.edu/abs/2015A%26C....10..121R
 
 
 Distribution
 ------------
 
-The current released version of GalSim is version 1.2.  To get the code, you
+The current released version of GalSim is version 1.3.  To get the code, you
 can grab the tarball (or zip file) from
 
-    https://github.com/GalSim-developers/GalSim/releases/tag/v1.2.0
+    https://github.com/GalSim-developers/GalSim/releases/tag/v1.3.0
 
 Also, feel free to fork the repository:
 
@@ -41,7 +41,7 @@ Or clone the repository with either of the following:
 although after doing so, if you are not a developer, you should probably
 checkout the latest release tag, rather than use the master branch:
 
-    git checkout v1.2.0
+    git checkout v1.3.0
 
 The code is also distributed via Fink, Macports, and Homebrew for Mac users.
 See INSTALL.md for more information.
@@ -161,15 +161,17 @@ Demonstration scripts
 ---------------------
 
 There are a number of scripts in `examples/` that demonstrate how the code can
-be used.  These are called `demo1.py`...`demo12.py`.  You can run them by
+be used.  These are called `demo1.py`...`demo13.py`.  You can run them by
 typing (e.g.) `python demo1.py` while sitting in `examples/`, All demo scripts
 are designed to be run in the `examples/` directory.  Some of them access
 files in subdirectories of the `examples/` directory, so they would not work
 correctly from other locations.
 
 A completely parallel sequence of configuration files, called `demo1.yaml`...
-`demo12.yaml`, demonstrates how to make the same set of simulations using
-config files that are parsed by the executable `bin/galsim`.
+`demo11.yaml`, demonstrates how to make the same set of simulations using
+config files that are parsed by the executable `bin/galsim`.  (There are no
+corresponding .yaml files for demo12 and demo13 yet, because some of the
+functionality cannot yet be carried out using config files.)
 
 As the project develops through further versions, and adds further
 capabilities to the software, more demo scripts may be added to `examples/`
@@ -191,7 +193,7 @@ at one time or another.
 The version of the code at any given snapshot can be downloaded from our
 GitHub webpage, or checked out from the repository using the tag name, e.g.:
 
-    git checkout v1.2.0
+    git checkout v1.3.0
 
 This will then update your directory tree to the snapshot of the code at the
 milestone requested.  (You will also get a message about being in a "detached"
@@ -235,7 +237,8 @@ Currently, GalSim has the following capabilities:
 
 * Can add noise using a variety of noise models, including correlated noise.
 
-* Can whiten existing correlated noise that is already in an image.
+* Can whiten or apply N-fold symmetry to existing correlated noise that is 
+  already in an image.
 
 * Can read in input values from a catalog, a dictionary file (such as a JSON
   or YAML file), or a fits header.
@@ -254,7 +257,10 @@ Currently, GalSim has the following capabilities:
   including a variety of common FITS WCS specifications.
 
 * Can include a range of simple detector effects such as nonlinearity,
-  brighter-fatter, etc.
+  brighter-fatter effect, etc.
+
+* Has a module that is particularly meant to simulate images for the WFIRST
+  survey.
 
 
 Summary of planned future development

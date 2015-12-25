@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -141,18 +141,20 @@ class OpticalPSF(GSObject):
                             individual aberration.  Currently GalSim supports aberrations from
                             defocus through third-order spherical (`spher`), which are aberrations
                             4-11 in the Noll convention, and hence `aberrations` should be an
-                            object of length 12, with the first four numbers being ignored, the 5th
-                            (index 4) being defocus, and so on through index 11 corresponding to
-                            `spher`. [default: None]
+                            object of length 12, with the 5th number (index 4) being the defocus,
+                            and so on through index 11 corresponding to `spher`.  Orders 1-3
+                            (piston, tip, and tilt), while not true optical aberrations, are
+                            permitted to be non-zero and will be treated appropriately, while the
+                            first number will be ignored. [default: None]
     @param circular_pupil   Adopt a circular pupil?  [default: True]
     @param obscuration      Linear dimension of central obscuration as fraction of pupil linear
                             dimension, [0., 1.). This should be specified even if you are providing
                             a `pupil_plane_im`, since we need an initial value of obscuration to use
                             to figure out the necessary image sampling. [default: 0]
-    @param interpolant      Either an Interpolant2d (or Interpolant) instance or a string indicating
-                            which interpolant should be used.  Options are 'nearest', 'sinc', 
-                            'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the 
-                            integer order to use. [default: galsim.Quintic()]
+    @param interpolant      Either an Interpolant instance or a string indicating which interpolant
+                            should be used.  Options are 'nearest', 'sinc', 'linear', 'cubic',
+                            'quintic', or 'lanczosN' where N should be the integer order to use.
+                            [default: galsim.Quintic()]
     @param oversampling     Optional oversampling factor for the InterpolatedImage. Setting 
                             `oversampling < 1` will produce aliasing in the PSF (not good).
                             Usually `oversampling` should be somewhat larger than 1.  1.5 is 
@@ -200,8 +202,6 @@ class OpticalPSF(GSObject):
 
     There are no additional methods for OpticalPSF beyond the usual GSObject methods.
     """
-
-    # Initialization parameters of the object, with type information
     _req_params = { }
     _opt_params = {
         "diam" : float ,
@@ -229,13 +229,11 @@ class OpticalPSF(GSObject):
         "scale_unit" : str }
     _single_params = [ { "lam_over_diam" : float , "lam" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
-    # --- Public Class methods ---
     def __init__(self, lam_over_diam=None, lam=None, diam=None, defocus=0., astig1=0., astig2=0.,
                  coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., aberrations=None,
                  circular_pupil=True, obscuration=0., interpolant=None, oversampling=1.5,
-                 pad_factor=1.5, suppress_warning=False, _warning=False, max_size=None, flux=1.,
+                 pad_factor=1.5, suppress_warning=False, max_size=None, flux=1.,
                  nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees, pupil_plane_im=None,
                  pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None):
 
@@ -304,11 +302,27 @@ class OpticalPSF(GSObject):
             if len(aberrations) < 12:
                 aberrations = np.append(aberrations, [0] * (12-len(aberrations)))
 
-            # Check for non-zero elements in first 4 values.  Probably a mistake.
-            if np.any(aberrations[0:4] != 0.0):
+            # Check for non-zero elements in first value.  Probably a mistake.
+            if aberrations[0] != 0.0:
                 import warnings
                 warnings.warn(
-                    "Detected non-zero value in aberrations[0:4] -- these values are ignored!")
+                    "Detected non-zero value in aberrations[0] -- this value is ignored!")
+
+        self._lam_over_diam = lam_over_diam
+        self._aberrations = aberrations.tolist()
+        self._oversampling = oversampling
+        self._pad_factor = pad_factor
+        self._max_size = max_size
+        self._circular_pupil = circular_pupil
+        self._flux = flux
+        self._obscuration = obscuration
+        self._nstruts = nstruts
+        self._strut_thick = strut_thick
+        self._strut_angle = strut_angle
+        self._pupil_plane_im = pupil_plane_im
+        self._pupil_angle = pupil_angle
+        self._interpolant = interpolant
+        self._gsparams = gsparams
 
         # Make the psf image using this scale and array shape
         optimage = galsim.optics.psf_image(
@@ -316,16 +330,21 @@ class OpticalPSF(GSObject):
             aberrations=aberrations, circular_pupil=circular_pupil, obscuration=obscuration,
             flux=flux, nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle,
             pupil_plane_im=pupil_plane_im, pupil_angle=pupil_angle, oversampling=oversampling)
-        
+
         # Initialize the GSObject (InterpolatedImage)
-        GSObject.__init__(
-            self, galsim.InterpolatedImage(optimage, x_interpolant=interpolant,
-                                           calculate_stepk=True, calculate_maxk=True,
-                                           use_true_center=False, normalization='sb',
-                                           gsparams=gsparams))
+        ii =  galsim.InterpolatedImage(optimage, x_interpolant=interpolant,
+                                       calculate_stepk=True, calculate_maxk=True,
+                                       use_true_center=False, normalization='sb',
+                                       gsparams=gsparams)
         # The above procedure ends up with a larger image than we really need, which
         # means that the default stepK value will be smaller than we need.  
         # Hence calculate_stepk=True and calculate_maxk=True above.
+
+        self._optimage = optimage
+        self._stepk = ii._stepk
+        self._maxk = ii._maxk
+
+        GSObject.__init__(self, ii)
 
         if not suppress_warning:
             # Check the calculated stepk value.  If it is smaller than stepk, then there might
@@ -338,6 +357,62 @@ class OpticalPSF(GSObject):
                     "than what was used to build the wavefront (%g). "%stepk +
                     "This could lead to aliasing problems. " +
                     "Using pad_factor >= %f is recommended."%(pad_factor * stepk / final_stepk))
+
+    def __repr__(self):
+        s = 'galsim.OpticalPSF(lam_over_diam=%r, aberrations=%r, oversampling=%r, pad_factor=%r'%(
+                self._lam_over_diam, self._aberrations, self._oversampling, self._pad_factor)
+        if self._obscuration != 0.:
+            s += ', obscuration=%r'%self._obscuration
+        if self._nstruts != 0:
+            s += ', nstruts=%r, strut_thick=%r, strut_angle=%r'%(
+                    self._nstruts, self._strut_thick, self._strut_angle)
+        if self._pupil_plane_im != None:
+            s += ', pupil_plane_im=%r, pupil_angle=%r'%(
+                    self._pupil_plane_im, self._pupil_angle)
+        if self._circular_pupil == False:
+            s += ', circular_pupil=False'
+        if self._max_size is not None:
+            s += ', max_size=%r'%self._max_size
+        if self._interpolant is not None:
+            s += ', interpolant=%r'%self._interpolant
+        s += ', flux=%r, gsparams=%r)'%(self._flux, self._gsparams)
+        return s
+
+    def __str__(self):
+        s = 'galsim.OpticalPSF(lam_over_diam=%s'%self._lam_over_diam
+        # The aberrations look a bit nicer without the spaces, since it tightens up that
+        # parameter, which makes it easier to distinguish from the others.
+        ab_str = [ str(ab) for ab in self._aberrations ]
+        s += ', aberrations=[' + ','.join(ab_str) + ']'
+        if self._obscuration != 0.:
+            s += ', obscuration=%s'%self._obscuration
+        if self._nstruts != 0:
+            s += ', nstruts=%s, strut_thick=%s, strut_angle=%s'%(
+                    self._nstruts, self._strut_thick, self._strut_angle)
+        if self._pupil_plane_im != None:
+            s += ', pupil_plane_im=%s, pupil_angle=%s'%(
+                    self._pupil_plane_im, self._pupil_angle)
+        if self._circular_pupil == False:
+            s += ', circular_pupil=False'
+        if self._flux != 1.0:
+            s += ', flux=%s'%self._flux
+        s += ')'
+        return s
+ 
+    def __getstate__(self):
+        # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
+        # written as a string.  Better to pickle the image and remake the InterpolatedImage.
+        d = self.__dict__.copy()
+        del d['SBProfile']
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        ii =  galsim.InterpolatedImage(self._optimage, x_interpolant=self._interpolant,
+                                       _force_stepk=self._stepk, _force_maxk=self._maxk,
+                                       use_true_center=False, normalization='sb',
+                                       gsparams=self._gsparams)
+        GSObject.__init__(self, ii)
 
 
 def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=None,
@@ -395,7 +470,7 @@ def load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape=
         # input image.
         if array_shape[0] > pupil_plane_im.array.shape[0]:
             border_size = int(0.5*(array_shape[0] - pupil_plane_im.array.shape[0]))
-            new_im = galsim.Image(pupil_plane_im.bounds.addBorder(border_size))
+            new_im = galsim.Image(pupil_plane_im.bounds.withBorder(border_size))
             new_im[pupil_plane_im.bounds] = pupil_plane_im
             pupil_plane_im = new_im.copy()
         # If the requested shape is smaller than the input one, we do nothing at this stage.  All
@@ -643,18 +718,19 @@ def wavefront(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
 
     # Faster to use Horner's method in rho:
     temp = (
-            # Constant terms: includes defocus (4)
-            -np.sqrt(3.) * aberrations[4]
+            # Constant terms: includes defocus (4) and piston (1)
+            -np.sqrt(3.) * aberrations[4] + aberrations[1]
 
             # Terms with rhosq, but no rho, rho**2, etc.: includes defocus (4) and spher (11)
             + rhosq * ( 2. * np.sqrt(3.) * aberrations[4]
                         - 6. * np.sqrt(5.) * aberrations[11]
                         + rhosq * (6. * np.sqrt(5.) * aberrations[11]) )
 
-            # Now the powers of rho: includes coma2 (8), coma1 (7), astig2 (6), astig1 (5), trefoil2
-            # (10), trefoil1 (9).
-            # We eventually take the real part
-            + ( rho * ( (rhosq-2./3.) * (3. * np.sqrt(8.) * (aberrations[8] - 1j * aberrations[7]))
+            # Now the powers of rho: includes tip (2), tilt (3), coma2 (8), coma1 (7), astig2 (6),
+            # astig1 (5), trefoil2 (10), trefoil1 (9).
+            # We eventually take the real part.
+            + ( rho * ( 2. * (aberrations[2] - 1j * aberrations[3])
+                + (rhosq-2./3.) * (3. * np.sqrt(8.) * (aberrations[8] - 1j * aberrations[7]))
                         + rho * ( (np.sqrt(6.) * (aberrations[6] - 1j * aberrations[5]))
                                    + rho * (np.sqrt(8.) * (aberrations[10] - 1j * aberrations[9])) 
                                 )

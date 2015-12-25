@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -32,20 +32,22 @@
 # New features introduced in this demo:
 #
 # - obj type : OpticalPSF (lam, diam, ..., trefoil1, trefoil2, nstruts, strut_thick, strut_angle)
-# - shear_value : NFWHaloShear (redshift)
-# - float_value : NFWHaloMagnification (redshift)
+# - shear type : NFWHaloShear (redshift)
+# - float type : NFWHaloMagnification (redshift)
+# - float type : RandomDistribution(function, x_min, x_max)
 # - input : nfw_halo (mass, conc, redshift)
-# - shear_value : Eta1Eta2 (eta1, eta2)
-# - shear_value : Sum (items)
+# - shear type : Eta1Eta2 (eta1, eta2)
+# - shear type : Sum (items)
 # - image type : Scattered (size, nobjects)
 # - wcs type : UVFunction (ufunc, vfunc, xfunc, yfunc, origin)
-# - str_value type : NumberedFile (root, num, ext, digits)
-# - str_value type : FormattedStr (format, items)
-# - pos_value type : RandomCircle (..., inner_radius)
+# - str type : NumberedFile (root, num, ext, digits)
+# - str type : FormattedStr (format, items)
+# - pos type : RandomCircle (..., inner_radius)
 # - value type : Sequence (..., nitems)
 # - output : nproc
 # - output : weight
 # - output : badpix
+# - output : truth
 # - output : skip
 # - output : noclobber
 
@@ -87,7 +89,17 @@ gal :
     
     type : Exponential
     half_light_radius : { type : Random , min : 0.1 , max : 0.3 }
-    flux : { type : Random , min : 1.0e4 , max : 1.0e6 }
+    flux :
+        # We draw the flux from a power law distribution with values from 1.e4 to 1.e6.
+        # You can use any arbitrary function here, along with a min and max value,
+        # and values will be drawn within this probability distribution.
+        # The function should be given in terms of the variable x, since internally
+        # it is parsed with eval('lambda x : ' + function).
+        type : RandomDistribution
+        function : x**-1.5
+        x_min : 1.0e4
+        x_max : 1.0e6
+
     ellip :
         # The eta definition of shear is |eta| = ln(a/b) where a and b are (as usual)
         # the semi-major and semi-minor axes.  This definition has the advantage that 
@@ -367,6 +379,64 @@ output :
     # determine the number of CPUs you have and use that many processes.
     nproc : -1
 
+    # A truth catalog records a number of calculated values for each object made by the script.
+    # We make a truth catalog file for each output file. 
+    truth :
+        file_name :
+            type : NumberedFile
+            root : 'truth'
+            num : 
+                type : Sequence
+                first : 0
+                nitems : *n_clusters_per_mass
+            digits : 4
+
+            # Again, the default extension is '.fits', in which case it will build a fits 
+            # binary table.  However, if you use ext : '.dat' (or anything that doesn't 
+            # start with '.fit'), it will make an ASCII file instead.
+            ext : '.dat'
+
+        # You can also specify dir, as the output directory, but the default is to use
+        # the same directory as the main output files, so we'll just do that.
+
+        columns :
+            # The columns are specified as a dict giving the name of the output column
+            # and which calculated value to use for the data.
+
+            # There are some special values that can be used that the config apparatus
+            # calculates automatically.  Some useful ones are:
+            #
+            # - obj_num is the running object number, starting at 0
+            # - image_num is the running image number, starting at 0
+            # - file_num is the running file number, starting at 0
+            #
+            # See the documentation of the Eval type for the complete list:
+            # https://github.com/GalSim-developers/GalSim/wiki/Config-Documentation-v1.3#eval-type
+            object_id : obj_num
+            halo_id : file_num
+
+            # Most items will typically be given by their location in the config dict.
+            # e.g. gal.flux accesses the calculated value of the galaxy flux.
+            flux : gal.flux
+            size : gal.half_light_radius
+            eta1 : gal.ellip.eta1
+            eta2 : gal.ellip.eta2
+            mu : gal.magnification
+            redshift : gal.redshift
+
+            # For positions and shears, the data will be split into two columns, and the given
+            # column name will have ('.g1', '.g2) or ('.x', '.y') appended to what is listed here.
+            # i.e. There will be output columns named 'shear.g1', 'shear.g2', 'pos.x', 'pos.y'.
+            shear : gal.shear
+            pos : image.world_pos
+
+            # Things in the input field don't change for each object, but they can 
+            # still be placed in the truth catalog.  These columns will have all identical
+            # values within each catalog, but different across catalogs.
+            halo_mass : input.nfw_halo.mass
+            halo_conc : input.nfw_halo.conc
+            halo_redshift : input.nfw_halo.redshift
+ 
 ---
 
 output :

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -37,6 +37,14 @@ namespace galsim {
     SBDeconvolve::SBDeconvolve(const SBDeconvolve& rhs) : SBProfile(rhs) {}
 
     SBDeconvolve::~SBDeconvolve() {}
+
+    std::string SBDeconvolve::SBDeconvolveImpl::repr() const 
+    {
+        std::ostringstream oss(" ");
+        oss << "galsim._galsim.SBDeconvolve(" << _adaptee.repr();
+        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
 
     SBDeconvolve::SBDeconvolveImpl::SBDeconvolveImpl(const SBProfile& adaptee,
                                                      const GSParamsPtr& gsparams) :

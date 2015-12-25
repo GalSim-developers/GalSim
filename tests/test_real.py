@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -95,6 +95,17 @@ def test_real_galaxy_ideal():
     except ImportError:
         print 'The assert_raises tests require nose'
 
+    do_pickle(rgc, lambda x: [ x.getGal(ind_fake), x.getPSF(ind_fake),
+                               x.getNoiseProperties(ind_fake) ])
+    do_pickle(rgc, lambda x: drawNoise(x.getNoise(ind_fake,rng=galsim.BaseDeviate(123))))
+    do_pickle(rgc)
+    do_pickle(rg, lambda x: [ x.gal_image, x.psf_image, repr(x.noise),
+                              x.original_psf.flux, x.original_gal.flux, x.flux ])
+    do_pickle(rg, lambda x: x.drawImage(nx=20, ny=20, scale=0.7))
+    do_pickle(rg_1, lambda x: x.drawImage(nx=20, ny=20, scale=0.7))
+    do_pickle(rg)
+    do_pickle(rg_1)
+
     ## for the generation of the ideal right answer, we need to add the intrinsic shape of the
     ## galaxy and the lensing shear using the rule for addition of distortions which is ugly, but oh
     ## well:
@@ -114,11 +125,10 @@ def test_real_galaxy_ideal():
                 for tps2 in targ_PSF_shear2:
                     print 'tps,tpf,tps1,tps2 = ',tps,tpf,tps1,tps2
                     # make target PSF
-                    targ_PSF = galsim.Gaussian(fwhm = tpf)
-                    targ_PSF.applyShear(g1=tps1, g2=tps2)
+                    targ_PSF = galsim.Gaussian(fwhm = tpf).shear(g1=tps1, g2=tps2)
                     # simulate image
                     sim_image = galsim.simReal(
-                            rg, targ_PSF, tps, 
+                            rg, targ_PSF, tps,
                             g1 = targ_applied_shear1, g2 = targ_applied_shear2,
                             rand_rotate = False, target_flux = fake_gal_flux)
                     # galaxy sigma, in units of pixels on the final image
@@ -137,14 +147,15 @@ def test_real_galaxy_ideal():
                     # compare with images that are expected
                     expected_gaussian = galsim.Gaussian(
                             flux = fake_gal_flux, sigma = tps*tot_sigma)
-                    expected_gaussian.applyShear(e1 = tot_e1, e2 = tot_e2)
+                    expected_gaussian = expected_gaussian.shear(e1 = tot_e1, e2 = tot_e2)
                     expected_image = galsim.ImageD(
                             sim_image.array.shape[0], sim_image.array.shape[1])
-                    expected_gaussian.draw(expected_image, scale = tps)
+                    expected_gaussian.drawImage(expected_image, scale=tps, method='no_pixel')
                     printval(expected_image,sim_image)
                     np.testing.assert_array_almost_equal(
                         sim_image.array, expected_image.array, decimal = 3,
                         err_msg = "Error in comparison of ideal Gaussian RealGalaxy calculations")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -178,6 +189,16 @@ def test_real_galaxy_saved():
                                    err_msg = "Error in comparison with SHERA result: e2")
     np.testing.assert_almost_equal(sbp_res.moments_sigma, shera_res.moments_sigma, 2,
                                    err_msg = "Error in comparison with SHERA result: sigma")
+
+    # Check picklability
+    do_pickle(rgc, lambda x: [ x.getGal(ind_real), x.getPSF(ind_real),
+                               x.getNoiseProperties(ind_real) ])
+    do_pickle(rgc, lambda x: drawNoise(x.getNoise(ind_real,rng=galsim.BaseDeviate(123))))
+    do_pickle(rg, lambda x: galsim.Convolve([x,galsim.Gaussian(sigma=1.7)]).drawImage(
+                                nx=20, ny=20, scale=0.7))
+    do_pickle(rgc)
+    do_pickle(rg)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 

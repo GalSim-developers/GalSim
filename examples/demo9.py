@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -37,12 +37,14 @@ New features introduced in this demo:
 - nfw = galsim.NFWHalo(mass, conc, z, omega_m, omega_lam)
 - g1,g2 = nfw.getShear(pos, z)
 - mag = nfw.getMagnification(pos, z)
+- distdev = galsim.DistDeviate(rng, function, x_min, x_max)
 - pos = bounds.trueCenter()
 - wcs = galsim.UVFunction(ufunc, vfunc, xfunc, yfunc, origin)
 - wcs.toWorld(profile, image_pos)
 - wcs.makeSkyImage(image, sky_level)
 - image_pos = wcs.toImage(pos)
 - image.invertSelf()
+- truth_cat = galsim.OutputCatalog(names)
 
 - Make multiple output files.
 - Place galaxies at random positions on a larger image.
@@ -119,7 +121,7 @@ def main(argv):
 
     logger.info('Starting demo script 9')
 
-    def build_file(seed, file_name, mass, nobj):
+    def build_file(seed, file_name, mass, nobj, rng, truth_file_name, halo_id, first_obj_id):
         """A function that does all the work to build a single file.
            Returns the total time taken.
         """
@@ -230,6 +232,22 @@ def main(argv):
         # struts can look when there is no atmospheric component to blur it out.
         psf_image = galsim.ImageF(image_size, image_size, wcs=wcs)
 
+        # We will also write some truth information to an output catalog.
+        # In real simulations, it is often useful to have a catalog of the truth values
+        # to compare to measurements either directly or as cuts on the galaxy sample to 
+        # find where systematic errors are largest.
+        # For now, we just make an empty OutputCatalog object with the names and types of the
+        # columns.
+        names = [ 'object_id', 'halo_id',
+                  'flux', 'size', 'eta1', 'eta2', 'mu', 'redshift', 
+                  'shear.g1', 'shear.g2', 'pos.x', 'pos.y', 
+                  'halo_mass', 'halo_conc', 'halo_redshift' ]
+        types = [ int, int,
+                  float, float, float, float, float, float,
+                  float, float, float, float,
+                  float, float, float ]
+        truth_cat = galsim.OutputCatalog(names, types)
+
         # Setup the NFWHalo stuff:
         nfw = galsim.NFWHalo(mass=mass, conc=nfw_conc, redshift=nfw_z_halo,
                              omega_m=omega_m, omega_lam=omega_lam)
@@ -252,7 +270,7 @@ def main(argv):
         for k in range(nobj):
 
             # Initialize the random number generator we will be using for this object:
-            rng = galsim.UniformDeviate(seed+k)
+            ud = galsim.UniformDeviate(seed+k+1)
 
             # Determine where this object is going to go.
             # We choose points randomly within a donut centered at the center of the main image
@@ -264,8 +282,8 @@ def main(argv):
             max_rsq = radius**2
             min_rsq = inner_radius**2
             while True:  # (This is essentially a do..while loop.)
-                x = (2.*rng()-1) * radius
-                y = (2.*rng()-1) * radius
+                x = (2.*ud()-1) * radius
+                y = (2.*ud()-1) * radius
                 rsq = x**2 + y**2
                 if rsq >= min_rsq and rsq <= max_rsq: break
             pos = galsim.PositionD(x,y)
@@ -292,10 +310,20 @@ def main(argv):
             dy = y_nominal - iy_nominal
             offset = galsim.PositionD(dx,dy)
 
+            # Draw the flux from a power law distribution: N(f) ~ f^-1.5
+            # For this, we use the class DistDeviate which can draw deviates from an arbitrary
+            # probability distribution.  This distribution can be defined either as a functional
+            # form as we do here, or as tabulated lists of x and p values, from which the 
+            # function is interpolated.
+            distdev = galsim.DistDeviate(ud,
+                                         function = lambda x:x**-1.5,
+                                         x_min = gal_flux_min,
+                                         x_max = gal_flux_max)
+            flux = distdev()
+
             # Determine the random values for the galaxy:
-            flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
-            hlr = rng() * (gal_hlr_max-gal_hlr_min) + gal_hlr_min
-            gd = galsim.GaussianDeviate(rng, sigma = gal_eta_rms)
+            hlr = ud() * (gal_hlr_max-gal_hlr_min) + gal_hlr_min
+            gd = galsim.GaussianDeviate(ud, sigma = gal_eta_rms)
             eta1 = gd()  # Unlike g or e, large values of eta are valid, so no need to cutoff.
             eta2 = gd()
 
@@ -365,6 +393,12 @@ def main(argv):
             psf.drawImage(psf_stamp, wcs=local_wcs, offset=offset)
             psf_image[bounds] += psf_stamp[bounds]
 
+            # Add the truth information for this object to the truth catalog
+            row = ( (first_obj_id + k), halo_id, 
+                    flux, hlr, eta1, eta2, nfw_mu, nfw_z_source,
+                    total_shear.g1, total_shear.g2, pos.x, pos.y,
+                    mass, nfw_conc, nfw_z_halo )
+            truth_cat.add_row(row)
 
         # Add Poisson noise to the full image
         # Note: The normal calculation of Poission noise isn't quite correct right now.
@@ -378,11 +412,13 @@ def main(argv):
         full_image += weight_image
 
         # Add Poisson noise, given the current full_image.
-        # Going to the next seed isn't really required, but it matches the behavior of the 
-        # config parser, so doing this will result in identical output files.
-        # If you didn't care about that, you could instead construct this as a continuation
-        # of the last RNG from the above loop
-        rng = galsim.BaseDeviate(seed+nobj)
+        # The config parser uses a different random number generator for file-level and 
+        # image-level values than for the individual objects.  This makes it easier to 
+        # parallelize the calculation if desired.  In fact, this is why we've been adding 1
+        # to each seed value all along.  The seeds for the objects take the values
+        # random_seed+1 .. random_seed+nobj.  The seed for the image is just random_seed,
+        # which we built already (below) when we calculated how many objects need to
+        # be in each file.  Use the same rng again here, since this is also at image scope.
         full_image.addNoise(galsim.PoissonNoise(rng))
 
         # Subtract the sky back off.
@@ -399,12 +435,15 @@ def main(argv):
         # Write the file to disk:
         galsim.fits.writeMulti([full_image, badpix_image, weight_image, psf_image], file_name)
 
+        # And the truth catalog
+        truth_cat.write(truth_file_name)
+
         t2 = time.time()
         return t2-t1
 
     def worker(input, output):
         """input is a queue with (args, info) tuples:
-               args are the arguements to pass to build_file
+               args are the arguments to pass to build_file
                info is passed along to the output queue.
            output is a queue storing (result, info, proc) tuples:
                result is the return value of from build_file
@@ -438,6 +477,8 @@ def main(argv):
     # Set up the task list
     task_queue = Queue()
     seed = random_seed
+    halo_id = 0
+    first_obj_id = 0
     for i in range(len(mass_list)):
         mass = mass_list[i]
         dir_name = "nfw%d"%(i+1)
@@ -445,7 +486,9 @@ def main(argv):
         if not os.path.isdir(dir): os.mkdir(dir)
         for j in range(nfiles):
             file_name = "cluster%04d.fits"%j
-            full_name = os.path.join(dir,file_name)
+            file_name = os.path.join(dir,file_name)
+            truth_file_name = "truth%04d.dat"%j
+            truth_file_name = os.path.join(dir,truth_file_name)
 
             # Each image has a different number of objects.
             # We use a random number from 15 to 30.
@@ -453,14 +496,17 @@ def main(argv):
             min = 15
             max = 30
             nobj = int(math.floor(ud() * (max-min+1))) + min
-            logger.info('Number of objects for %s = %d',full_name,nobj)
+            logger.info('Number of objects for %s = %d',file_name,nobj)
 
             # We put on the task queue the args to the buld_file function and
             # some extra info to pass through to the output queue.
             # Our extra info is just the file name that we use to write out which file finished.
-            task_queue.put( ( (seed, full_name, mass, nobj), full_name ) )
+            args = (seed, file_name, mass, nobj, ud, truth_file_name, halo_id, first_obj_id)
+            task_queue.put( (args, file_name) )
             # Need to step by the number of galaxies in each file.
             seed += nobj
+            halo_id += 1
+            first_obj_id += nobj
 
     # Run the tasks
     # Each Process command starts up a parallel process that will keep checking the queue 
