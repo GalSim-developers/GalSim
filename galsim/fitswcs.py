@@ -966,7 +966,6 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
 
         if header is None:
             raise TypeError("Must provide either file_name or header")
-        if self._tag is None: self._tag = 'header=%r'%galsim.FitsHeader(header)
 
         # Read the wcs information from the header.
         self._read_header(header)

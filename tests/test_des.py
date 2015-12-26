@@ -301,9 +301,66 @@ def test_nan_fits():
 
     This test is specifically in response to issue #602.
     """
-    file_name = "fits_files/DECam_00158414_01.fits.fz"
-    im = galsim.fits.read(file_name)
+    import warnings
+    from galsim._pyfits import pyfits
+    import time
+    t1 = time.time()
 
+    # The problematic file:
+    file_name = "fits_files/DECam_00158414_01.fits.fz"
+
+    # These are the values we should be reading in:
+    ref_bounds = galsim.BoundsI(xmin=1, xmax=2048, ymin=1, ymax=4096)
+    ref_wcs = galsim.GSFitsWCS(_data = [
+            'TPV',
+            numpy.array([13423.2, 6307.333]),
+            numpy.array([[-4.410051713005e-09, 7.286844513153e-05],
+                   [-7.285161461796e-05, 3.936353853081e-09]]),
+            galsim.CelestialCoord(1.1502513773465992 * galsim.radians,
+                                  -0.9862866578241959 * galsim.radians),
+            numpy.array(
+                    [[[0.004336243600183, -0.01133740904139, 0.01202041999278, -0.004357212119479],
+                      [1.013741474567, -0.01657049389296, 0.005805882078771, 0.0],
+                      [0.008865811106037, -0.007472254968395, 0.0, 0.0],
+                      [0.0008534196190617, 0.0, 0.0, 0.0]],
+                     [[0.002619866608142, 0.9931356822158, 0.008771460618847, -0.003739430249945],
+                      [-0.009422336649176, 0.01826140592329, -0.009387805146152, 0.0],
+                      [-0.01066967054507, 0.007202907073747, 0.0, 0.0],
+                      [-0.003683686751425, 0.0, 0.0, 0.0]]
+                    ]),
+            None, None])
+
+    # First just read the file directly, not using galsim.fits.read
+    fp = pyfits.open(file_name)
+    try:
+        data = fp[1].data
+        print 'Able to read FITS file with NAN.0 without any problem.'
+    except:
+        print 'Running verify to fix the problematic FITS header.'
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore",category=pyfits.verify.VerifyWarning)
+            fp[1].verify('fix')
+        # This should work now.
+        data = fp[1].data
+    assert data.shape == ref_bounds.numpyShape()
+
+    # Check a direct read of the header with GSFitsWCS
+    header = fp[1].header
+    wcs = galsim.GSFitsWCS(header=header)
+    assert wcs == ref_wcs
+
+    # Now read it with GalSim's fits.read function.
+    # Reading this file will emit verification warnings, so we'll ignore those here for the 
+    # test.  But the result should be a valid image.
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore",category=pyfits.verify.VerifyWarning)
+        im = galsim.fits.read(file_name)
+
+    assert im.bounds == ref_bounds
+    assert im.wcs == ref_wcs
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 if __name__ == "__main__":

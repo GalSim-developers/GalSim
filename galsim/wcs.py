@@ -1816,7 +1816,7 @@ class AffineTransform(UniformWCS):
                                self.origin, self.world_origin)
 
     def __repr__(self):
-        return ("galsim.AffineTransform(%r, %r, %r, %r, %r, %r)")%(
+        return ("galsim.AffineTransform(%r, %r, %r, %r, origin=%r, world_origin=%r)")%(
                 self.dudx, self.dudy, self.dvdx, self.dvdy, self.origin, self.world_origin)
     def __hash__(self): return hash(repr(self))
 
