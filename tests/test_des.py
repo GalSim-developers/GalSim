@@ -296,7 +296,18 @@ def test_meds_config():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_nan_fits():
+    """Test reading in a FITS file that has NAN.0 entries in the header.
+
+    This test is specifically in response to issue #602.
+    """
+    file_name = "fits_files/DECam_00158414_01.fits.fz"
+    im = galsim.fits.read(file_name)
+
+
+
 if __name__ == "__main__":
     test_meds()
     test_meds_config()
+    test_nan_fits()
 
