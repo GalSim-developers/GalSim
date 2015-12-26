@@ -89,10 +89,13 @@ def test_meds():
     images =   [img21, img22]
     weights =  [wth21, wth22]
     segs =     [seg21, seg22]
-    wcs =      [wcs22, wcs22]
+    wcs =      [wcs21, wcs22]
 
     # create object
-    obj2 = galsim.des.MultiExposureObject(images=images, weights=weights, segs=segs, wcs=wcs, id=2)
+    # This time put the wcs in the image and get it there.
+    img21.wcs = wcs21
+    img22.wcs = wcs22
+    obj2 = galsim.des.MultiExposureObject(images=images, weights=weights, segs=segs, id=2)
     print 'obj2 = ',obj2
 
     # create an object list

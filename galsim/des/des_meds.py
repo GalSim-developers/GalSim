@@ -58,7 +58,6 @@ class MultiExposureObject(object):
 
     Attributes
     ----------
-
     self.images         List of images of the object (GalSim Images).
     self.weights        List of weight maps (GalSim Images).
     self.segs           List of segmentation masks (GalSim Images).
@@ -134,10 +133,9 @@ class MultiExposureObject(object):
             self.wcs = wcs
         else:
             # Get the wcs from the images.  Probably just the pixel scale.
-            #use withOrigin instead of setOrigin
             self.wcs = [ im.wcs.jacobian().withOrigin(im.trueCenter()) for im in self.images ]
 
-         # check if weights,segs,jacks are lists
+        # check if weights,segs,jacks are lists
         if not isinstance(self.weights,list):
             raise TypeError('weights should be a list')
         if not isinstance(self.segs,list):
