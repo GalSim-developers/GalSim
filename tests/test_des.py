@@ -99,7 +99,7 @@ def test_meds():
     objlist = [obj1, obj2]
 
     # save objects to MEDS file
-    filename_meds = 'test_meds.fits'
+    filename_meds = 'output/test_meds.fits'
     print 'file_name = ',filename_meds
     print 'objlist = ',objlist
     galsim.des.write_meds(objlist, filename_meds, clobber=True)
@@ -196,12 +196,12 @@ def test_meds_config():
 
     # Some parameters:
     if __name__ == '__main__':
-        nobj = 15
+        nobj = 5
         n_per_obj = 8
     else:
         nobj = 5
         n_per_obj = 3
-    file_name = 'test_meds.fits'
+    file_name = 'output/test_meds.fits'
     stamp_size = 32
     pixel_scale = 0.26
     seed = 5757231
@@ -241,6 +241,7 @@ def test_meds_config():
                          'weight' : { 'hdu' : 1 },
                          'badpix' : { 'hdu' : 2 },
                          'psf' : { 'hdu' : 3 },
+                         'dir' : 'output',
                          'file_name' : { 'type' : 'NumberedFile', 'root' : 'test_meds' }
                        }
     config['image'] = { 'type' : 'Tiled',
@@ -270,12 +271,12 @@ def test_meds_config():
 
     # loop over objects and exposures - test get_cutout
     for iobj in range(nobj):
-        ref_file = 'test_meds%d.fits' % iobj
+        ref_file = os.path.join('output','test_meds%d.fits' % iobj)
         ref_im = galsim.fits.read(ref_file)
 
         meds_im_array = m.get_mosaic(iobj)
 
-        alt_meds_file = 'test_alt_meds%d.fits' % iobj
+        alt_meds_file = os.path.join('output','test_alt_meds%d.fits' % iobj)
         alt_meds_im = galsim.Image(meds_im_array)
         alt_meds_im.write(alt_meds_file)
 
