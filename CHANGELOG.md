@@ -6,6 +6,8 @@ Bug Fixes
 
 - Improved ability of galsim.fits.read to handle invalid but fixable FITS
   headers. (#602)
+- Fixed bug in des module related to building meds file with wcs taken from
+  the input images. (#654)
 - Improved ability of ChromaticObjects to find fiducial achromatic profiles
   and wavelengths with non-zero flux. (#680)
 - Fixed a bug in some of the WCS classes if the RA/Dec axes in the FITS header
