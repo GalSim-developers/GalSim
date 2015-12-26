@@ -307,7 +307,7 @@ def test_nan_fits():
     t1 = time.time()
 
     # The problematic file:
-    file_name = "fits_files/DECam_00158414_01.fits.fz"
+    file_name = "des_data/DECam_00158414_01.fits.fz"
 
     # These are the values we should be reading in:
     ref_bounds = galsim.BoundsI(xmin=1, xmax=2048, ymin=1, ymax=4096)
