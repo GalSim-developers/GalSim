@@ -19,6 +19,8 @@ Bug Fixes
 New Features
 ------------
 - Added OutputCatalog class (#301, #691)
+- Added BoundsI.numpyShape() to easily get the numpy shape that corresponds
+  to a given bounds instance. (#654)
 - Changed `galsim.fits.writeMulti` to allow any of the "image"s to be
   already-built hdus, which are included as is.. (#691)
 - Added optional `wcs` argument to `Image.resize()`. (#691)

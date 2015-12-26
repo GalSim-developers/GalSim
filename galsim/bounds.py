@@ -172,3 +172,9 @@ def _new_BoundsI_init(self, *args, **kwargs):
         _orig_BoundsI_init(self, *args, **kwargs)
 BoundsI.__init__ = _new_BoundsI_init
 
+def BoundsI_numpyShape(self):
+    """A simple utility function to get the numpy shape that corresponds to this Bounds object.
+    """
+    return self.ymax-self.ymin+1, self.xmax-self.xmin+1
+
+BoundsI.numpyShape = BoundsI_numpyShape
