@@ -792,12 +792,12 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
     hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
 
     wcs, origin = galsim.wcs.readFromFitsHeader(hdu.header)
-    pixel = hdu.data.dtype.type
-    if pixel in galsim.Image.valid_dtypes:
+    dt = hdu.data.dtype.type
+    if dt in galsim.Image.valid_array_dtypes:
         data = hdu.data
     else:
         import warnings
-        warnings.warn("No C++ Image template instantiation for pixel type %s" % pixel)
+        warnings.warn("No C++ Image template instantiation for data type %s" % dt)
         warnings.warn("   Using numpy.float64 instead.")
         import numpy
         data = hdu.data.astype(numpy.float64)
@@ -937,12 +937,12 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
     hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
 
     wcs, origin = galsim.wcs.readFromFitsHeader(hdu.header)
-    pixel = hdu.data.dtype.type
-    if pixel in galsim.Image.valid_dtypes:
+    dt = hdu.data.dtype.type
+    if dt in galsim.Image.valid_array_dtypes:
         data = hdu.data
     else:
         import warnings
-        warnings.warn("No C++ Image template instantiation for pixel type %s" % pixel)
+        warnings.warn("No C++ Image template instantiation for data type %s" % dt)
         warnings.warn("   Using numpy.float64 instead.")
         import numpy
         data = hdu.data.astype(numpy.float64)
