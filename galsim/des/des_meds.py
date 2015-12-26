@@ -321,9 +321,10 @@ def write_meds(obj_list, file_name, clobber=True):
     # Depending on the version of pyfits, one of these should work:
     try:
         object_data = pyfits.BinTableHDU.from_columns(cols)
+        object_data.name = 'object_data'
     except:
         object_data = pyfits.new_table(pyfits.ColDefs(cols))
-    object_data.update_ext_name('object_data')
+        object_data.update_ext_name('object_data')
 
     # third hdu is image_info
     cols = []
@@ -337,9 +338,10 @@ def write_meds(obj_list, file_name, clobber=True):
     cols.append( pyfits.Column(name='scale',       format='E',      array=[-1.]                   ))
     try:
         image_info = pyfits.BinTableHDU.from_columns(cols)
+        image_info.name = 'image_info'
     except:
         image_info = pyfits.new_table(pyfits.ColDefs(cols))
-    image_info.update_ext_name('image_info')
+        image_info.update_ext_name('image_info')
 
     # fourth hdu is metadata
     # default values?
@@ -367,9 +369,10 @@ def write_meds(obj_list, file_name, clobber=True):
     cols.append( pyfits.Column(name='fake_coadd_seg',format='K',    array=[9999]                  ))
     try:
         metadata = pyfits.BinTableHDU.from_columns(cols)
+        metadata.name = 'metadata'
     except:
         metadata = pyfits.new_table(pyfits.ColDefs(cols))
-    metadata.update_ext_name('metadata')
+        metadata.update_ext_name('metadata')
 
     # rest of HDUs are image vectors
     image_cutouts   = pyfits.ImageHDU( vec['image'] , name='image_cutouts'  )
