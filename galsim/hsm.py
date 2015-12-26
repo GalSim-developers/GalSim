@@ -326,6 +326,22 @@ def _convertMask(image, weight=None, badpix=None):
     # finally, return the Image for the weight map
     return mask.image.view()
 
+
+# A simpler helper function to make sure the images are not ImageS.  Convert to ImageI if they are.
+def _convertImage(image):
+    """Convert the given image to the correct format needed to pass to the C++ layer.
+
+    This is used by EstimateShear() and FindAdaptiveMom().
+    """
+    # if weight is an ImageS, then convert to ImageI.
+    import numpy
+    if image.dtype == numpy.int16:
+        image = galsim.ImageI(image)
+
+    # Return this as an ImageView
+    return image.image.view()
+
+
 def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
                   shear_est="REGAUSS", recompute_flux="FIT", guess_sig_gal=5.0,
                   guess_sig_PSF=3.0, precision=1.0e-6, guess_centroid=None,
@@ -425,8 +441,8 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
     @returns a ShapeData object containing the results of shape measurement.
     """
     # prepare inputs to C++ routines: ImageView for galaxy, PSF, and weight map
-    gal_image_view = gal_image.image.view()
-    PSF_image_view = PSF_image.image.view()
+    gal_image_view = _convertImage(gal_image)
+    PSF_image_view = _convertImage(PSF_image)
     weight_view = _convertMask(gal_image, weight=weight, badpix=badpix)
 
     if guess_centroid is None:
@@ -535,7 +551,7 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
     @returns a ShapeData object containing the results of moment measurement.
     """
     # prepare inputs to C++ routines: ImageView for the object being measured and the weight map.
-    object_image_view = object_image.image.view()
+    object_image_view = _convertImage(object_image)
     weight_view = _convertMask(object_image, weight=weight, badpix=badpix)
 
     if guess_centroid is None:
