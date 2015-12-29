@@ -176,7 +176,14 @@ class DES_Shapelet(object):
 
         @returns the PSF as a galsim.Shapelet instance
         """
-        return galsim.Shapelet(self.sigma, self.psf_order, self.getB(image_pos), gsparams=gsparams)
+        psf = galsim.Shapelet(self.sigma, self.psf_order, self.getB(image_pos), gsparams=gsparams)
+
+        # The fitpsf files were built with respect to (u,v) = (ra,dec).  The GalSim convention is
+        # to use sky coordinates with u = -ra.  So we need to flip the profile across the v axis
+        # to take u -> -u.
+        psf = psf.transform(-1,0,0,1)
+
+        return psf
 
     def getB(self, pos):
         """Get the B vector as a numpy array at position pos
