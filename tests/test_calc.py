@@ -101,5 +101,64 @@ def test_hlr():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+def test_sigma():
+    """Test the calculateSigma method.
+    """
+    import time
+    t1 = time.time()
+
+    # Compare the calculation for a simple Gaussian.
+    g1 = galsim.Gaussian(sigma=5, flux=1.7)
+
+    print 'g1 native sigma = ',g1.sigma
+    print 'g1.calculateSigma = ',g1.calculateSigma()
+    # These should be exactly equal.
+    np.testing.assert_equal(g1.sigma, g1.calculateSigma(),
+                            err_msg="Gaussian.calculateSigma() returned wrong value.")
+
+    # Check for a convolution of two Gaussians.  Should be equivalent, but now will need to 
+    # do the calculation.
+    g2 = galsim.Convolve(galsim.Gaussian(sigma=3, flux=1.3), galsim.Gaussian(sigma=4, flux=23))
+    test_sigma = g2.calculateSigma()
+    print 'g2.calculateSigma = ',test_sigma
+    print 'ratio - 1 = ',test_sigma/g1.sigma-1
+    np.testing.assert_almost_equal(test_sigma/g1.sigma, 1.0, decimal=1,
+                                   err_msg="Gaussian.calculateSigma() is not accurate.")
+
+    # The default scale and size is only accurate to around 1 dp.# Using scale = 0.1 is accurate
+    # to 3 dp.
+    test_sigma = g2.calculateSigma(scale=0.1)
+    print 'g2.calculateSigma(scale=0.1) = ',test_sigma
+    print 'ratio - 1 = ',test_sigma/g1.sigma-1
+    np.testing.assert_almost_equal(test_sigma/g1.sigma, 1.0, decimal=3,
+                                   err_msg="Gaussian.calculateSigma(scale=0.1) is not accurate.")
+    
+    # Next, use an Exponential profile
+    e1 = galsim.Exponential(scale_radius=5, flux=1.7)
+
+    # The true "sigma" for this is analytic, but not an attribute.
+    e1_sigma = np.sqrt(3.0) * e1.scale_radius
+    print 'true e1 sigma = sqrt(3) * e1.scale_radius = ',e1_sigma
+
+    # Test with the default scale and size.
+    test_sigma = e1.calculateSigma()
+    print 'e1.calculateSigma = ',test_sigma
+    print 'ratio - 1 = ',test_sigma/e1_sigma-1
+    np.testing.assert_almost_equal(test_sigma/e1_sigma, 1.0, decimal=1,
+                                   err_msg="Exponential.calculateSigma() is not accurate.")
+
+    # The default scale and size is only accurate to around 1 dp.  This time we have to both
+    # decrease the scale and also increase the size to get 3 dp of precision.
+    test_sigma = e1.calculateSigma(scale=0.1, size=2000)
+    print 'e1.calculateSigma(scale=0.1) = ',test_sigma
+    print 'ratio - 1 = ',test_sigma/e1_sigma-1
+    np.testing.assert_almost_equal(test_sigma/e1_sigma, 1.0, decimal=3,
+                                   err_msg="Exponential.calculateSigma(scale=0.1) is not accurate.")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 if __name__ == "__main__":
     test_hlr()
+    test_sigma()

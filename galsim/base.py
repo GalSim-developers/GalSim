@@ -403,6 +403,56 @@ class GSObject(object):
         return hlr
 
 
+    def calculateSigma(self, size=None, scale=None):
+        """Returns the sqrt of the radial second moment of the object, sigma = sqrt(T/2), where
+        T = Irr = Ixx+Iyy.
+
+        If the profile has a sigma attribute (only true for a Gaussian), it will just return that,
+        but in the general case, we draw the profile and estimate T directly.
+
+        The function optionally takes size and scale values to use for the image drawing.
+        The default scale is the nyquist scale, which generally produces results accurate
+        to about 1 decimal place.  Using a smaller scale will be more accurate at the expense
+        of speed.  The default size is None, which means drawImage will choose a size designed
+        to contain around 99.5% of the flux.  Using a larger size will again be more accurate
+        at the expense of speed.
+
+        Note: The results from this calculation should be taken as approximate at best.
+              They should usually be acceptable for things like testing that a galaxy has a
+              reasonable resolution, but they should not be trusted for very fine grain
+              discriminations.  For a more accurate estimate, see galsim.hlm.FindAdaptiveMom.
+
+        @param size         If given, the stamp size to use for the drawn image. [default: None,
+                            which will let drawImage choose the size automatically]
+        @param scale        If given, the pixel scale to use for the drawn image. [default:
+                            self.nyquistScale()]
+
+        @returns an estimate of sigma = sqrt(T/2)
+        """
+        if hasattr(self, 'sigma'): 
+            return self.sigma
+
+        if scale is None:
+            scale = self.nyquistScale()
+
+        # Draw the image.  Note: need a method that integrates over pixels to get flux right.
+        im = self.drawImage(nx=size, ny=size, scale=scale)
+
+        # Use radii at centers of pixels as approximation to the radial integral
+        x,y = np.meshgrid(range(im.array.shape[0]), range(im.array.shape[1]))
+        x = x - (im.trueCenter().x - im.bounds.xmin)
+        y = y - (im.trueCenter().y - im.bounds.ymin)
+        rsq = x*x + y*y
+
+        # Accumulate Irr
+        Irr = np.sum(rsq * im.array) / self.flux
+
+        # This has all been done in pixels.  So normalize according to the pixel scale.
+        sigma = np.sqrt(Irr/2.) * im.scale
+
+        return sigma
+
+
     @property
     def flux(self): return self.getFlux()
     @property
