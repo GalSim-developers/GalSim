@@ -13,21 +13,8 @@
 "#" : "The 100 total profiles are written to a FITS data cube, which makes it easy to scroll",
 "#" : "through the images comparing the two drawing methods.",
 
-"#" : "New features introduced in this demo:",
+"#" : "See deom7.yaml for more extensive commentary about the features here.",
 
-"#" : "- obj type : List (items)",
-"#" : "- obj type : Airy (lam_over_diam)",
-"#" : "- obj type : Sersic (..., trunc)",
-"#" : "- obj : dilate",
-"#" : "- value type : Sequence (..., repeat, index_key)",
-"#" : "- value type : Random (min, max)",
-"#" : "- image type : Tiled (..., stamp_size, xborder, yborder)",
-"#" : "- image : draw_method (fft or phot)",
-"#" : "- output : file_name with .gz, .bz2 or .fz extension automatically uses compression.",
-"#" : "- image : gsparams",
-
-
-"#" : "Define the PSF profiles",
 "psf" : {
     "type" : "List",
     "items" : [
@@ -51,34 +38,11 @@
             "type" : "Convolution",
             "items" : [
                 { "type" : "Gaussian" , "fwhm" : 0.65 },
-                { "#" : "The OpticalPSF and set of Zernike values chosen below correspond to a",
-                  "#" : "reasonably well aligned, smallish ~0.3m / 12 inch diameter telescope with",
-                  "#" : "a central obscuration of ~0.12m or 5 inches diameter, being used in",
-                  "#" : "optical wavebands.",
-                  "#" : "In the Noll convention, the value of the Zernike coefficient also gives",
-                  "#" : "the RMS optical path difference across a circular pupil.  An RMS",
-                  "#" : "difference of ~0.5 or larger indicates that parts of the wavefront are in",
-                  "#" : "fully destructive interference, and so we might expect aberrations to",
-                  "#" : "become strong when Zernike aberrations summed in quadrature approach 0.5",
-                  "#" : "wave.",
-                  "#" : "The aberrations chosen in this case correspond to operating close to a",
-                  "#" : "0.25 wave RMS optical path difference:",
+                {
                   "type" : "OpticalPSF" , 
-                  "lam_over_diam" : 0.39 ,
-                  "obscuration" : 0.4 ,
-                  "#" : "aberrations should be a list of coefficients in the Noll index convention",
-                  "#" : "starting with index 4 (defocus).  Here we go up to index 11 (spherical).",
-                  "#" : "c.f. http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials",
-                  "aberrations" : [
-                        0.06,
-                        0.12,
-                        -0.08,
-                        0.07,
-                        0.04,
-                        0.0,
-                        0.0,
-                        -0.13
-                  ]
+                  "lam_over_diam" : 0.39,
+                  "obscuration" : 0.4,
+                  "aberrations" : [ 0.06, 0.12, -0.08, 0.07, 0.04, 0.0, 0.0, -0.13 ]
                 }
             ]
         },
@@ -95,17 +59,12 @@
         "type" : "Sequence",
         "first" : 0,
         "last" : 4,
-
-        "#" : "How many times to repeat the same value before moving on:",
         "repeat" : 40 
     }
 },
 
-"#" : "Define the galaxy profiles",
 "gal" : {
     "type" : "List",
-
-    "#" : "The sizes here start as 1, but we dilate the profile below:",
     "items" : [
         { "type" : "Gaussian" , "half_light_radius" : 1 },
         { "type" : "Exponential" , "half_light_radius" : 1 },
@@ -114,11 +73,7 @@
         {
             "type" : "Sum",
             "items" : [
-                { "#" : "Sersics can be truncated if desired.",
-                  "#" : "The units for this are expected to be arcsec (or specifically -- whatever",
-                  "#" : "units you are using for all the size values as defined by the",
-                  "#" : "pixel_scale).",
-                  "type" : "Sersic" , "n" : 3.2 , "half_light_radius" : 0.7 , "flux" : 0.4 ,
+                { "type" : "Sersic" , "n" : 3.2 , "half_light_radius" : 0.7 , "flux" : 0.4 ,
                   "trunc" : 8.5 },
                 { "type" : "Sersic" , "n" : 1.5 , "half_light_radius" : 1.2 , "flux" : 0.6 }
             ]
@@ -127,9 +82,6 @@
 
     "index" : {
         "type" : "Sequence",
-        "#" : "The index item for a List automatically has first and last set appropriately",
-        "#" : "(0 and 4 in this case).  So we can omit them, and just specify repeat.",
-        "#" : "This will repeat each 8 times, but also go through the full list 5 times:",
         "repeat" : 8
     },
 
@@ -142,84 +94,37 @@
     }
 },
 
-"#" : "Define some other information about the images ",
 "image" : {
-    "#" : "Each image in the data cube has two tiles.",
     "type" : "Tiled",
     "nx_tiles" : 2,
     "ny_tiles" : 1,
-
-    "#" : "Use a 2 pixel border between fft and phot images",
-    "#" : "Rather than specify a single border for both directions, you can also specify",
-    "#" : "xborder and/or yborder separately.  Here we use xborder.",
     "xborder" : 2,
-
-    "#" : "Rather than specify stamp_xsize and stamp_ysize separately, you can also just ",
-    "#" : "specify a single stamp_size.",
     "stamp_size" : 64,
 
     "pixel_scale" : 0.28,
 
-    "#" : "Define what kind of noise to use",
-    "noise" : {
-        "sky_level" : 1e4
-    },
-    
-    "#" : "This is a pretty contrived item.  Normally, you would just choose either",
-    "#" : "fft or phot.  But here we alternate between the two of them to make ",
-    "#" : "images that compare the same object drawn both ways.",
     "draw_method" : {
         "type" : "List",
-        "items" : [ "fft" , "phot" ],
-        "#" : "The following sequence for index is automatically generated:",
-        "#" : "index : { type : Sequence , firat : 0 , last : 1 }"
+        "items" : [ "fft" , "phot" ]
     },
 
-    "#" : "This is also pretty contrived. It is really only relevant for this particular example.",
-    "#" : "The usual case is to just set a single number, which really means that each object",
-    "#" : "gets a sequential value starting with this number.  In this case we want to use the",
-    "#" : "same value for both the fft and phot images to get the same values for the random",
-    "#" : "parameters. To implement this, we tell it to use the image_num for the sequencing key",
-    "#" : "rather than the usual obj_num.",
+    "noise" : { "sky_level" : 1e4 },
     "random_seed" : { "type" : "Sequence" , "first" : 553728 , "index_key" : "image_num" },
 
-    "#" : "This script is set up as a comparison between using FFTs for doing the convolutions and",
-    "#" : "shooting photons.  The two methods have trade-offs in speed and accuracy which vary",
-    "#" : "with the kind of profile being drawn and the S/N of the object, among other factors.",
-    "#" : "In addition, for each method, there are a number of parameters GalSim uses that control",
-    "#" : "aspects of the calculation that further affect the speed and accuracy.",
-    
-    "#" : "These parametsrs can be adjusted from the defaults with a gsparams item, either in",
-    "#" : "image (in which case the values apply to all objects) or in the gal or psf layer",
-    "#" : "in which case the values apply to just that object.  For this script, we just apply a",
-    "#" : "global change to some of the values, just to demonstrate how it works.",
-
-    "#" : "See the config documentation for the complete list of parameters and more detailed",
-    "#" : "documentation, including the default values for each parameter.",
     "gsparams" : {
-        "#" : "maximum fractional flux that may be folded around edge of FFT",
         "folding_threshold" : 1.0e-2,
-        "#" : "k-values less than this may be excluded off edge of FFT",
         "maxk_threshold" : 2.0e-3,
-        "#" : "approximations in real space aim to be this accurate",
         "xvalue_accuracy" : 1.0e-4,
-        "#" : "approximations in fourier space aim to be this accurate",
         "kvalue_accuracy" : 1.0e-4,
-        "#" : "approximations in photon shooting aim to be this accurate",
         "shoot_accuracy" : 1.0e-4,
-        "#" : "minimum size of ffts",
         "minimum_fft_size" : 64
     }
-
 },
 
-"#" : "Define the name and format of the output file",
 "output" : {
     "type" : "DataCube",
-
     "dir" : "output_json",
     "file_name" : "cube_phot.fits.gz",
-    
     "nimages" : 100
 }
 

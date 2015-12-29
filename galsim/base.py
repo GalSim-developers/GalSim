@@ -338,6 +338,194 @@ class GSObject(object):
         """
         return self.SBProfile.getGSParams()
 
+    def calculateHLR(self, size=None, scale=None):
+        """Returns the half-light radius of the object.
+
+        If the profile has a half_light_radius attribute, it will just return that, but in the
+        general case, we draw the profile and estimate the half-light radius directly.
+
+        The function optionally takes size and scale values to use for the image drawing.
+        The default scale is half the nyquist scale, which generally produces results accurate
+        to about 1 decimal place.  Using a smaller scale will be more accurate at the expense
+        of speed.  The default size is None, which means drawImage will choose a size designed
+        to contain around 99.5% of the flux.  This is overkill for this calculation, so 
+        choosing a smaller size than this may speed up this calculation somewhat.
+
+        Note: The results from this calculation should be taken as approximate at best.
+              They should usually be acceptable for things like testing that a galaxy has a
+              reasonable resolution, but they should not be trusted for very fine grain
+              discriminations.
+
+        @param size         If given, the stamp size to use for the drawn image. [default: None,
+                            which will let drawImage choose the size automatically]
+        @param scale        If given, the pixel scale to use for the drawn image. [default:
+                            0.5 * self.nyquistScale()]
+
+        @returns an estimate of the half-light radius
+        """
+        if hasattr(self, 'half_light_radius'): 
+            return self.half_light_radius
+
+        if scale is None:
+            scale = self.nyquistScale() * 0.5
+
+        # Draw the image.  Note: need a method that integrates over pixels to get flux right.
+        # The offset is to make all the rsq values different to help the precision a bit.
+        offset = galsim.PositionD(0.2, 0.33)
+        im = self.drawImage(nx=size, ny=size, scale=scale, offset=offset)
+
+        # Use radii at centers of pixels as approximation to the radial integral
+        x,y = np.meshgrid(range(im.array.shape[0]), range(im.array.shape[1]))
+        x = x - (im.trueCenter().x - im.bounds.xmin + offset.x)
+        y = y - (im.trueCenter().y - im.bounds.ymin + offset.y)
+        rsq = x*x + y*y
+
+        # Sort by radius
+        indx = np.argsort(rsq.flatten())
+        rsqf = rsq.flatten()[indx]
+        data = im.array.flatten()[indx]
+        cumflux = np.cumsum(data)
+
+        # Find the first value with cumflux > 0.5 * flux
+        k = np.argmax(cumflux > 0.5 * self.flux)
+        flux_k = cumflux[k] / self.flux  # normalize to unit total flux
+
+        # Interpolate (linearly) between this and the previous value.
+        if k == 0:
+            hlrsq = rsqf[0] * (0.5 / flux_k)
+        else:
+            flux_km1 = cumflux[k-1] / self.flux
+            hlrsq = (rsqf[k-1] * (flux_k-0.5) + rsqf[k] * (0.5-flux_km1)) / (flux_k-flux_km1)
+
+        # This has all been done in pixels.  So normalize according to the pixel scale.
+        hlr = np.sqrt(hlrsq) * im.scale
+
+        return hlr
+
+
+    def calculateSigma(self, size=None, scale=None):
+        """Returns the sqrt of the radial second moment of the object, sigma = sqrt(T/2), where
+        T = Irr = Ixx+Iyy.
+
+        If the profile has a sigma attribute (only true for a Gaussian), it will just return that,
+        but in the general case, we draw the profile and estimate T directly.
+
+        The function optionally takes size and scale values to use for the image drawing.
+        The default scale is the nyquist scale, which generally produces results accurate
+        to about 1 decimal place.  Using a smaller scale will be more accurate at the expense
+        of speed.  The default size is None, which means drawImage will choose a size designed
+        to contain around 99.5% of the flux.  Using a larger size will again be more accurate
+        at the expense of speed.
+
+        Note: The results from this calculation should be taken as approximate at best.
+              They should usually be acceptable for things like testing that a galaxy has a
+              reasonable resolution, but they should not be trusted for very fine grain
+              discriminations.  For a more accurate estimate, see galsim.hlm.FindAdaptiveMom.
+
+        @param size         If given, the stamp size to use for the drawn image. [default: None,
+                            which will let drawImage choose the size automatically]
+        @param scale        If given, the pixel scale to use for the drawn image. [default:
+                            self.nyquistScale()]
+
+        @returns an estimate of sigma = sqrt(T/2)
+        """
+        if hasattr(self, 'sigma'): 
+            return self.sigma
+
+        if scale is None:
+            scale = self.nyquistScale()
+
+        # Draw the image.  Note: need a method that integrates over pixels to get flux right.
+        im = self.drawImage(nx=size, ny=size, scale=scale)
+
+        # Use radii at centers of pixels as approximation to the radial integral
+        x,y = np.meshgrid(range(im.array.shape[0]), range(im.array.shape[1]))
+        x = x - (im.trueCenter().x - im.bounds.xmin)
+        y = y - (im.trueCenter().y - im.bounds.ymin)
+        rsq = x*x + y*y
+
+        # Accumulate Irr
+        Irr = np.sum(rsq * im.array) / self.flux
+
+        # This has all been done in pixels.  So normalize according to the pixel scale.
+        sigma = np.sqrt(Irr/2.) * im.scale
+
+        return sigma
+
+
+    def calculateFWHM(self, size=None, scale=None):
+        """Returns the full-width half-maximum (FWHM) of the object.
+
+        If the profile has a fwhm attribute, it will just return that, but in the general case,
+        we draw the profile and estimate the FWHM directly.
+
+        The function optionally takes size and scale values to use for the image drawing.
+        The default scale is half the nyquist scale, which generally produces results accurate
+        to about 1 decimal place.  Using a smaller scale will be more accurate at the expense
+        of speed.  The default size is None, which means drawImage will choose a size designed
+        to contain around 99.5% of the flux.  This is overkill for this calculation, so 
+        choosing a smaller size than this may speed up this calculation somewhat.
+
+        Note: The results from this calculation should be taken as approximate at best.
+              They should usually be acceptable for things like testing that a galaxy has a
+              reasonable resolution, but they should not be trusted for very fine grain
+              discriminations.
+
+        @param size         If given, the stamp size to use for the drawn image. [default: None,
+                            which will let drawImage choose the size automatically]
+        @param scale        If given, the pixel scale to use for the drawn image. [default:
+                            self.nyquistScale()]
+
+        @returns an estimate of the full-width half-maximum
+        """
+        if hasattr(self, 'fwhm'): 
+            return self.fwhm
+
+        if scale is None:
+            scale = self.nyquistScale()
+
+        # Draw the image.  Note: draw with method='sb' here, since the fwhm is a property of the 
+        # raw surface brightness profile, not integrated over pixels.
+        # The offset is to make all the rsq values different to help the precision a bit.
+        offset = galsim.PositionD(0.2, 0.3)
+        im = self.drawImage(nx=size, ny=size, scale=scale, offset=offset, method='sb')
+
+        # Get the maximum value, assuming it is at the center.
+        im1 = self.drawImage(nx=1, ny=1, scale=scale, method='sb')
+        Imax = im1(1,1)
+
+        # If the full image has a larger maximum, use that.
+        Imax2 = np.max(im.array)
+        if Imax2 > Imax: Imax = Imax2
+
+        # Use radii at centers of pixels.
+        x,y = np.meshgrid(range(im.array.shape[0]), range(im.array.shape[1]))
+        x = x - (im.trueCenter().x - im.bounds.xmin + offset.x)
+        y = y - (im.trueCenter().y - im.bounds.ymin + offset.y)
+        rsq = x*x + y*y
+
+        # Sort by radius
+        indx = np.argsort(rsq.flatten())
+        rsqf = rsq.flatten()[indx]
+        data = im.array.flatten()[indx]
+
+        # Find the first value with I < 0.5 * Imax
+        k = np.argmax(data < 0.5 * Imax)
+        Ik = data[k] / Imax
+
+        # Interpolate (linearly) between this and the previous value.
+        if k == 0:
+            rsqhm = rsqf[0] * (0.5 / Ik)
+        else:
+            Ikm1 = data[k-1] / Imax
+            rsqhm = (rsqf[k-1] * (Ik-0.5) + rsqf[k] * (0.5-Ikm1)) / (Ik-Ikm1)
+
+        # This has all been done in pixels.  So normalize according to the pixel scale.
+        fwhm = 2. * np.sqrt(rsqhm) * im.scale
+
+        return fwhm
+
+
     @property
     def flux(self): return self.getFlux()
     @property
@@ -1339,12 +1527,10 @@ class Gaussian(GSObject):
     # _opt_params are optional
     # _single_params are a list of sets for which exactly one in the list is required.
     # _takes_rng indicates whether the constructor should be given the current rng.
-    # _takes_logger indicates whether the constructor takes a logger object for debug logging.
     _req_params = {}
     _opt_params = { "flux" : float }
     _single_params = [ { "sigma" : float, "half_light_radius" : float, "fwhm" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     # The FWHM of a Gaussian is 2 sqrt(2 ln2) sigma
     _fwhm_factor = 2.3548200450309493
@@ -1465,7 +1651,6 @@ class Moffat(GSObject):
     _opt_params = { "trunc" : float , "flux" : float }
     _single_params = [ { "scale_radius" : float, "half_light_radius" : float, "fwhm" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     # The conversion from hlr or fwhm to scale radius is complicated for Moffat, especially
     # since we allow it to be truncated, which matters for hlr.  So we do these calculations
@@ -1607,7 +1792,6 @@ class Airy(GSObject):
     # error.
     _single_params = [{ "lam_over_diam" : float , "lam" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     # For an unobscured Airy, we have the following factor which can be derived using the
     # integral result given in the Wikipedia page (http://en.wikipedia.org/wiki/Airy_disk),
@@ -1753,7 +1937,6 @@ class Kolmogorov(GSObject):
     _opt_params = { "flux" : float }
     _single_params = [ { "lam_over_r0" : float, "fwhm" : float, "half_light_radius" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
     # In SBKolmogorov.cpp we refine this factor to 0.975865
@@ -1855,7 +2038,6 @@ class Pixel(GSObject):
     _opt_params = { "flux" : float }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, scale, flux=1., gsparams=None):
         GSObject.__init__(self, _galsim.SBBox(scale, scale, flux, gsparams))
@@ -1907,7 +2089,6 @@ class Box(GSObject):
     _opt_params = { "flux" : float }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, width, height, flux=1., gsparams=None):
         width = float(width)
@@ -1973,7 +2154,6 @@ class TopHat(GSObject):
     _opt_params = { "flux" : float }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, radius, flux=1., gsparams=None):
         radius = float(radius)
@@ -2173,7 +2353,6 @@ class Sersic(GSObject):
     _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     # The conversion from hlr to scale radius is complicated for Sersic, especially since we
     # allow it to be truncated.  So we do these calculations in the C++-layer constructor.
@@ -2270,7 +2449,6 @@ class Exponential(GSObject):
     _opt_params = { "flux" : float }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     # The half-light-radius is not analytic, but can be calculated numerically.
     _hlr_factor = 1.6783469900166605
@@ -2369,7 +2547,6 @@ class DeVaucouleurs(GSObject):
     _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, half_light_radius=None, scale_radius=None, flux=1., trunc=0.,
                  flux_untruncated=False, gsparams=None):
@@ -2490,7 +2667,6 @@ class Spergel(GSObject):
     _opt_params = { "flux" : float}
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, nu, half_light_radius=None, scale_radius=None,
                  flux=1., gsparams=None):

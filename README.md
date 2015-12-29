@@ -18,7 +18,7 @@ simulate high-fidelity galaxy images with accurate sizes and shears.  At the
 end of this file, there is a list of the code capabilities and plans for future
 development.  For details of algorithms and code validation, please see
 
-    http://arxiv.org/abs/1407.7676
+    http://adsabs.harvard.edu/abs/2015A%26C....10..121R
 
 
 Distribution

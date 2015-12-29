@@ -15,10 +15,10 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-from process import *
-from image import *
-from stamp import *
-from noise import *
-from wcs import *
-from gsobject import *
-from value import *
+from .process import *
+from .image import *
+from .stamp import *
+from .noise import *
+from .wcs import *
+from .gsobject import *
+from .value import *

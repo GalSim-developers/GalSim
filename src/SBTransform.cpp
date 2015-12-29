@@ -189,8 +189,6 @@ namespace galsim {
         xdbg<<"maxK() = "<<_maxk<<std::endl;
         xdbg<<"stepK() = "<<_stepk<<std::endl;
 
-
-
         // Calculate the values for getXRange and getYRange:
         if (_adaptee.isAxisymmetric()) {
             // The original is a circle, so first get its radius.
@@ -492,6 +490,9 @@ namespace galsim {
             xxdbg<<"ymin .. ymax = "<<ymin<<" ... "<<ymax<<std::endl;
         }
     }
+
+    double SBTransform::SBTransformImpl::xValue(const Position<double>& p) const
+    { return _adaptee.xValue(inv(p-_cen)) * _fluxScaling; }
 
     std::complex<double> SBTransform::SBTransformImpl::kValue(const Position<double>& k) const
     { return _kValue(_adaptee,fwdT(k),_absdet,k,_cen); }

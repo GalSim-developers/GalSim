@@ -111,7 +111,6 @@ class Shapelet(GSObject):
     _opt_params = {}
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, sigma, order, bvec=None, gsparams=None):
         # Make sure order and sigma are the right type:

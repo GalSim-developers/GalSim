@@ -177,7 +177,6 @@ class PowerSpectrum(object):
                     'delta2' : bool, 'units' : str }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, e_power_function=None, b_power_function=None, delta2=False,
                  units=galsim.arcsec):
