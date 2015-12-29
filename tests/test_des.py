@@ -375,9 +375,135 @@ def test_nan_fits():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_psf():
+    """Test the two kinds of PSF files we have in DES.
+    """
+    import time
+    t1 = time.time()
+
+    # The shapelet file to use for the tests
+    data_dir = 'des_data'
+    psfex_file = "DECam_00154912_12_psfcat.psf"
+    fitpsf_file = "DECam_00154912_12_fitpsf.fits"
+    wcs_file = "DECam_00154912_12_header.fits"
+
+    wcs = galsim.FitsWCS(wcs_file, dir=data_dir)
+
+    # We don't require that the files in example_data_dir have been downloaded.  If they 
+    # haven't, then we just directly set the comparison values that we want here.
+    example_data_dir = '../examples/des/des_data'
+    cat_file = "DECam_00154912_12_cat.fits"
+    image_file = "DECam_00154912_12.fits.fz"
+
+    try:
+        cat = galsim.Catalog(cat_file, hdu=2, dir=example_data_dir)
+        size = numpy.array([ cat.getFloat(i,'FLUX_RADIUS') for i in range(cat.nobjects) ])
+        mag = numpy.array([ cat.getFloat(i,'MAG_AUTO') for i in range(cat.nobjects) ])
+        flags = numpy.array([ cat.getInt(i,'FLAGS') for i in range(cat.nobjects) ])
+        index = numpy.array(range(cat.nobjects))
+        xvals = numpy.array([ cat.getFloat(i,'X_IMAGE') for i in range(cat.nobjects) ])
+        yvals = numpy.array([ cat.getFloat(i,'Y_IMAGE') for i in range(cat.nobjects) ])
+
+        # Pick bright small objects as probable stars
+        mask = (flags == 0) & (mag < 14) & (mag > 13) & (size > 2) & (size < 2.5)
+        idx = numpy.argsort(size[mask])
+        print 'sizes = ',size[mask][idx].tolist()
+        print 'index = ',index[mask][idx].tolist()
+        print 'mag = ',mag[mask][idx].tolist()
+        print 'x = ',xvals[mask][idx].tolist()
+        print 'y = ',yvals[mask][idx].tolist()
+
+        # This choice of a star is fairly isolated from neighbors, isn't too near an edge or a tape
+        # bump, and doesn't have any noticeable image artifacts in its vicinity.
+        x = xvals[mask][idx][27]
+        y = yvals[mask][idx][27]
+        print 'Using x,y = ',x,y
+        image_pos = galsim.PositionD(x,y)
+        print 'size, mag = ',size[mask][idx][27], mag[mask][idx][27]
+
+        data = galsim.fits.read(image_file, dir=example_data_dir)
+        b = galsim.BoundsI(int(x)-15, int(x)+16, int(y)-15, int(y)+16)
+        data_stamp = data[b]
+
+        header = galsim.fits.FitsHeader(image_file, dir=example_data_dir)
+        sky_level = header['SKYBRITE']
+        print 'sky_level = ',sky_level
+        data_stamp -= sky_level
+
+        raw_meas = data_stamp.FindAdaptiveMom()
+        print 'raw_meas = ',raw_meas
+        print 'pixel scale = ',data_stamp.wcs.minLinearScale(image_pos=image_pos)
+        ref_size = raw_meas.moments_sigma
+        ref_shape = raw_meas.observed_shape
+        print 'ref size: ',ref_size
+        print 'ref shape: ',ref_shape
+
+    except OSError:
+        x,y = 1195.64074707, 1276.63427734
+        image_pos = galsim.PositionD(x,y)
+        b = galsim.BoundsI(int(x)-15, int(x)+16, int(y)-15, int(y)+16)
+        ref_size = 1.80668628216
+        ref_shape = galsim.Shear(g1=0.022104322221,g2=-0.130925191715)
+
+    # First the PSFEx model using the wcs_file to get the model is sky coordinates.
+    psfex = galsim.des.DES_PSFEx(psfex_file, wcs_file, dir=data_dir)
+    psf = psfex.getPSF(image_pos)
+    #print 'psfex psf = ',psf
+
+    # Draw the postage stamp image
+    # Note: the PSF already includes the pixel response, so draw with method 'no_pixel'.
+    stamp = psf.drawImage(wcs=wcs.local(image_pos), bounds=b, method='no_pixel')
+    print 'wcs = ',wcs.local(image_pos)
+    meas = stamp.FindAdaptiveMom()
+    print 'meas = ',meas
+    print 'pixel scale = ',stamp.wcs.minLinearScale(image_pos=image_pos)
+    print 'cf sizes: ',ref_size, meas.moments_sigma
+    print 'cf shapes: ',ref_shape, meas.observed_shape
+    # The agreement for a single star is not great of course, not even 2 decimals.
+    # Divide by 2 to get agreement at 2 dp.
+    numpy.testing.assert_almost_equal(meas.moments_sigma/2, ref_size/2, decimal=2,
+                                      err_msg="PSFEx size doesn't match")
+    numpy.testing.assert_almost_equal(meas.observed_shape.g1/2, ref_shape.g1/2, decimal=2,
+                                      err_msg="PSFEx shape.g1 doesn't match")
+    numpy.testing.assert_almost_equal(meas.observed_shape.g2/2, ref_shape.g2/2, decimal=2,
+                                      err_msg="PSFEx shape.g2 doesn't match")
+
+    # Repeat without the wcs_file argument, so the model is in chip coordinates.
+    psfex = galsim.des.DES_PSFEx(psfex_file, dir=data_dir)
+    psf = psfex.getPSF(image_pos)
+    #print 'psfex psf = ',psf
+
+    # Draw the postage stamp image.  This time in image coords, so pixel_scale = 1.0.
+    stamp = psf.drawImage(bounds=b, scale=1.0, method='no_pixel')
+    meas = stamp.FindAdaptiveMom()
+    numpy.testing.assert_almost_equal(meas.moments_sigma/2, ref_size/2, decimal=2,
+                                      err_msg="no-wcs PSFEx size doesn't match")
+    numpy.testing.assert_almost_equal(meas.observed_shape.g1/2, ref_shape.g1/2, decimal=2,
+                                      err_msg="no-wcs PSFEx shape.g1 doesn't match")
+    numpy.testing.assert_almost_equal(meas.observed_shape.g2/2, ref_shape.g2/2, decimal=2,
+                                      err_msg="no-wcs PSFEx shape.g2 doesn't match")
+
+    # Now the shapelet PSF model.  This model is already in sky coordinates, so no wcs_file needed.
+    fitpsf = galsim.des.DES_Shapelet(fitpsf_file, dir=data_dir)
+    psf = fitpsf.getPSF(image_pos)
+
+    # Draw the postage stamp image
+    # Again, the PSF already includes the pixel response.
+    stamp = psf.drawImage(wcs=wcs.local(image_pos), bounds=b, method='no_pixel')
+    meas = stamp.FindAdaptiveMom()
+    numpy.testing.assert_almost_equal(meas.moments_sigma/2, ref_size/2, decimal=2,
+                                      err_msg="Shapelet PSF size doesn't match")
+    numpy.testing.assert_almost_equal(meas.observed_shape.g1/2, ref_shape.g1/2, decimal=2,
+                                      err_msg="Shapelet PSF shape.g1 doesn't match")
+    numpy.testing.assert_almost_equal(meas.observed_shape.g2/2, ref_shape.g2/2, decimal=2,
+                                      err_msg="Shapelet PSF shape.g2 doesn't match")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_meds()
     test_meds_config()
     test_nan_fits()
+    test_psf()
 
