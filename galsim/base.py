@@ -338,7 +338,7 @@ class GSObject(object):
         """
         return self.SBProfile.getGSParams()
 
-    def calculateHLR(self, size=None, scale=None, flux_frac=0.5):
+    def calculateHLR(self, size=None, scale=None, centroid=None, flux_frac=0.5):
         """Returns the half-light radius of the object.
 
         If the profile has a half_light_radius attribute, it will just return that, but in the
@@ -364,6 +364,7 @@ class GSObject(object):
                             which will let drawImage choose the size automatically]
         @param scale        If given, the pixel scale to use for the drawn image. [default:
                             0.5 * self.nyquistScale()]
+        @param centroid     The position to use for the centroid. [default: self.centroid()]
         @param flux_frac    The fraction of light to be enclosed by the returned radius.
                             [default: 0.5]
 
@@ -375,6 +376,9 @@ class GSObject(object):
         if scale is None:
             scale = self.nyquistScale() * 0.5
 
+        if centroid is None:
+            centroid = self.centroid()
+
         # Draw the image.  Note: need a method that integrates over pixels to get flux right.
         # The offset is to make all the rsq values different to help the precision a bit.
         offset = galsim.PositionD(0.2, 0.33)
@@ -382,8 +386,8 @@ class GSObject(object):
 
         # Use radii at centers of pixels as approximation to the radial integral
         x,y = np.meshgrid(range(im.array.shape[0]), range(im.array.shape[1]))
-        x = x - (im.trueCenter().x - im.bounds.xmin + offset.x)
-        y = y - (im.trueCenter().y - im.bounds.ymin + offset.y)
+        x = x - (im.trueCenter().x - im.bounds.xmin + offset.x + centroid.x/scale)
+        y = y - (im.trueCenter().y - im.bounds.ymin + offset.y + centroid.y/scale)
         rsq = x*x + y*y
 
         # Sort by radius
@@ -412,7 +416,7 @@ class GSObject(object):
         return hlr
 
 
-    def calculateMomentRadius(self, size=None, scale=None, rtype='det'):
+    def calculateMomentRadius(self, size=None, scale=None, centroid=None, rtype='det'):
         """Returns an estimate of the radius based on second moments.
 
         The second moments are defines as:
@@ -448,6 +452,7 @@ class GSObject(object):
                             which will let drawImage choose the size automatically]
         @param scale        If given, the pixel scale to use for the drawn image. [default:
                             self.nyquistScale()]
+        @param centroid     The position to use for the centroid. [default: self.centroid()]
         @param rtype        There are three options for this parameter:
                             - 'trace' means return sqrt(T/2)
                             - 'det' means return det(Q)^1/4
@@ -468,13 +473,16 @@ class GSObject(object):
         if scale is None:
             scale = self.nyquistScale()
 
+        if centroid is None:
+            centroid = self.centroid()
+
         # Draw the image.  Note: need a method that integrates over pixels to get flux right.
         im = self.drawImage(nx=size, ny=size, scale=scale)
 
         # Use radii at centers of pixels as approximation to the radial integral
         x,y = np.meshgrid(range(im.array.shape[0]), range(im.array.shape[1]))
-        x = x - (im.trueCenter().x - im.bounds.xmin)
-        y = y - (im.trueCenter().y - im.bounds.ymin)
+        x = x - (im.trueCenter().x - im.bounds.xmin + centroid.x/scale)
+        y = y - (im.trueCenter().y - im.bounds.ymin + centroid.y/scale)
 
         if rtype in ['trace', 'both']:
             # Calculate trace measure:
@@ -501,7 +509,7 @@ class GSObject(object):
             return sigma_trace, sigma_det
 
 
-    def calculateFWHM(self, size=None, scale=None):
+    def calculateFWHM(self, size=None, scale=None, centroid=None):
         """Returns the full-width half-maximum (FWHM) of the object.
 
         If the profile has a fwhm attribute, it will just return that, but in the general case,
@@ -523,6 +531,7 @@ class GSObject(object):
                             which will let drawImage choose the size automatically]
         @param scale        If given, the pixel scale to use for the drawn image. [default:
                             self.nyquistScale()]
+        @param centroid     The position to use for the centroid. [default: self.centroid()]
 
         @returns an estimate of the full-width half-maximum
         """
@@ -532,15 +541,22 @@ class GSObject(object):
         if scale is None:
             scale = self.nyquistScale()
 
+        if centroid is None:
+            centroid = self.centroid()
+
         # Draw the image.  Note: draw with method='sb' here, since the fwhm is a property of the 
         # raw surface brightness profile, not integrated over pixels.
         # The offset is to make all the rsq values different to help the precision a bit.
-        offset = galsim.PositionD(0.2, 0.3)
+        offset = galsim.PositionD(0.2, 0.33)
+
         im = self.drawImage(nx=size, ny=size, scale=scale, offset=offset, method='sb')
 
-        # Get the maximum value, assuming it is at the center.
-        im1 = self.drawImage(nx=1, ny=1, scale=scale, method='sb')
-        Imax = im1(1,1)
+        # Get the maximum value, assuming the maximum is at the centroid.
+        if self.isAnalyticX():
+            Imax = self.xValue(centroid)
+        else:
+            im1 = self.drawImage(nx=1, ny=1, scale=scale, method='sb', offset=-centroid/scale)
+            Imax = im1(1,1)
 
         # If the full image has a larger maximum, use that.
         Imax2 = np.max(im.array)
@@ -548,8 +564,8 @@ class GSObject(object):
 
         # Use radii at centers of pixels.
         x,y = np.meshgrid(range(im.array.shape[0]), range(im.array.shape[1]))
-        x = x - (im.trueCenter().x - im.bounds.xmin + offset.x)
-        y = y - (im.trueCenter().y - im.bounds.ymin + offset.y)
+        x = x - (im.trueCenter().x - im.bounds.xmin + offset.x + centroid.x/scale)
+        y = y - (im.trueCenter().y - im.bounds.ymin + offset.y + centroid.y/scale)
         rsq = x*x + y*y
 
         # Sort by radius

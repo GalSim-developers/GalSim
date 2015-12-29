@@ -97,6 +97,20 @@ def test_hlr():
     np.testing.assert_almost_equal(test_hlr/e1.half_light_radius, 1.0, decimal=3,
                                    err_msg="Exponential.calculateHLR(scale=0.1) is not accurate.")
 
+    # Check that it works if the centroid is not at the origin
+    e3 = e2.shift(2,3)
+    test_hlr = e3.calculateHLR(scale=0.1)
+    print 'e3.calculateHLR(scale=0.1) = ',test_hlr
+    print 'ratio - 1 = ',test_hlr/e1.half_light_radius-1
+    np.testing.assert_almost_equal(test_hlr/e1.half_light_radius, 1.0, decimal=3,
+                                   err_msg="shifted Exponential HLR is not accurate.")
+
+    # Can set a centroid manually.  This should be equivalent to the default.
+    print 'e3.centroid = ',e3.centroid()
+    test_hlr = e3.calculateHLR(scale=0.1, centroid=e3.centroid())
+    np.testing.assert_almost_equal(test_hlr/e1.half_light_radius, 1.0, decimal=3,
+                                   err_msg="shifted HLR with explicit centroid is not accurate.")
+
     # The calculateHLR method can also return other radii like r90, rather than r50 using the
     # parameter flux_fraction.  This is also analytic for Exponential
     r90 = 3.889720170 * e1.scale_radius
@@ -106,7 +120,6 @@ def test_hlr():
     print 'ratio - 1 = ',test_r90/r90-1
     np.testing.assert_almost_equal(test_r90/r90, 1.0, decimal=3,
                                    err_msg="Exponential r90 calculation is not accurate.")
-
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -211,6 +224,23 @@ def test_sigma():
             test_sigma/e1_sigma, 1.0, decimal=4,
             err_msg="Exponential.calculateMomentRadius(scale=0.1) is not accurate.")
 
+    # Check that it works if the centroid is not at the origin
+    e3 = e1.shift(2,3)
+    test_sigma = e3.calculateMomentRadius(scale=0.1, size=2000)
+    print 'e1.calculateMomentRadius(scale=0.1) = ',test_sigma
+    print 'ratio - 1 = ',test_sigma/e1_sigma-1
+    np.testing.assert_almost_equal(
+            test_sigma/e1_sigma, 1.0, decimal=4,
+            err_msg="shifted Exponential MomentRadius is not accurate.")
+
+    # Can set a centroid manually.  This should be equivalent to the default.
+    print 'e3.centroid = ',e3.centroid()
+    test_sigma = e3.calculateMomentRadius(scale=0.1, size=2000, centroid=e3.centroid())
+    np.testing.assert_almost_equal(
+            test_sigma/e1_sigma, 1.0, decimal=4,
+            err_msg="shifted MomentRadius with explicit centroid is not accurate.")
+
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
@@ -277,6 +307,21 @@ def test_fwhm():
     print 'ratio - 1 = ',test_fwhm/e1_fwhm-1
     np.testing.assert_almost_equal(test_fwhm/e1_fwhm, 1.0, decimal=7,
                                    err_msg="Exponential.calculateFWHM(scale=0.1) is not accurate.")
+
+    # Check that it works if the centroid is not at the origin
+    e3 = e1.shift(2,3)
+    test_fwhm = e3.calculateFWHM(scale=0.1)
+    print 'e3.calculateFWHM(scale=0.1) = ',test_fwhm
+    print 'ratio - 1 = ',test_fwhm/e1_fwhm-1
+    np.testing.assert_almost_equal(test_fwhm/e1_fwhm, 1.0, decimal=6,
+                                   err_msg="shifted Exponential FWHM is not accurate.")
+
+    # Can set a centroid manually.  This should be equivalent to the default.
+    print 'e3.centroid = ',e3.centroid()
+    test_fwhm = e3.calculateFWHM(scale=0.1)
+    np.testing.assert_almost_equal(test_fwhm/e1_fwhm, 1.0, decimal=6,
+                                   err_msg="shifted FWHM with explicit centroid is not accurate.")
+
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
