@@ -338,7 +338,7 @@ class GSObject(object):
         """
         return self.SBProfile.getGSParams()
 
-    def calculateHLR(self, size=None, scale=None):
+    def calculateHLR(self, size=None, scale=None, flux_frac=0.5):
         """Returns the half-light radius of the object.
 
         If the profile has a half_light_radius attribute, it will just return that, but in the
@@ -351,6 +351,10 @@ class GSObject(object):
         to contain around 99.5% of the flux.  This is overkill for this calculation, so 
         choosing a smaller size than this may speed up this calculation somewhat.
 
+        Also, while the name of this function refers to the half-light radius, in fact it can also
+        calculate radii that enclose other fractions of the light, according to the parameter
+        `flux_frac`.  E.g. for r90, you would set flux_frac=0.90.
+
         Note: The results from this calculation should be taken as approximate at best.
               They should usually be acceptable for things like testing that a galaxy has a
               reasonable resolution, but they should not be trusted for very fine grain
@@ -360,6 +364,8 @@ class GSObject(object):
                             which will let drawImage choose the size automatically]
         @param scale        If given, the pixel scale to use for the drawn image. [default:
                             0.5 * self.nyquistScale()]
+        @param flux_frac    The fraction of light to be enclosed by the returned radius.
+                            [default: 0.5]
 
         @returns an estimate of the half-light radius
         """
@@ -387,15 +393,18 @@ class GSObject(object):
         cumflux = np.cumsum(data)
 
         # Find the first value with cumflux > 0.5 * flux
-        k = np.argmax(cumflux > 0.5 * self.flux)
+        k = np.argmax(cumflux > flux_frac * self.flux)
         flux_k = cumflux[k] / self.flux  # normalize to unit total flux
 
         # Interpolate (linearly) between this and the previous value.
         if k == 0:
-            hlrsq = rsqf[0] * (0.5 / flux_k)
+            hlrsq = rsqf[0] * (flux_frac / flux_k)
         else:
-            flux_km1 = cumflux[k-1] / self.flux
-            hlrsq = (rsqf[k-1] * (flux_k-0.5) + rsqf[k] * (0.5-flux_km1)) / (flux_k-flux_km1)
+            fkm1 = cumflux[k-1] / self.flux
+            # For brevity in the next formula:
+            fk = flux_k
+            f = flux_frac
+            hlrsq = (rsqf[k-1] * (fk-f) + rsqf[k] * (f-fkm1)) / (fk-fkm1)
 
         # This has all been done in pixels.  So normalize according to the pixel scale.
         hlr = np.sqrt(hlrsq) * im.scale

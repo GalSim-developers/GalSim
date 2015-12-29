@@ -97,6 +97,17 @@ def test_hlr():
     np.testing.assert_almost_equal(test_hlr/e1.half_light_radius, 1.0, decimal=3,
                                    err_msg="Exponential.calculateHLR(scale=0.1) is not accurate.")
 
+    # The calculateHLR method can also return other radii like r90, rather than r50 using the
+    # parameter flux_fraction.  This is also analytic for Exponential
+    r90 = 3.889720170 * e1.scale_radius
+    test_r90 = e2.calculateHLR(scale=0.1, flux_frac=0.9)
+    print 'r90 = ',r90
+    print 'e2.calculateHLR(scale=0.1, flux_frac=0.9) = ',test_r90
+    print 'ratio - 1 = ',test_r90/r90-1
+    np.testing.assert_almost_equal(test_r90/r90, 1.0, decimal=3,
+                                   err_msg="Exponential r90 calculation is not accurate.")
+
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
