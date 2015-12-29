@@ -106,7 +106,8 @@ class DES_PSFEx(object):
                 raise ValueError("Cannot provide dir and an HDU instance")
             import os
             file_name = os.path.join(dir,file_name)
-            image_file_name = os.path.join(dir,image_file_name)
+            if image_file_name is not None:
+                image_file_name = os.path.join(dir,image_file_name)
         self.file_name = file_name
         if image_file_name:
             if wcs is not None:
