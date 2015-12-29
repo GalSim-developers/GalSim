@@ -126,7 +126,8 @@ def test_meds():
     n_obj = len(cat)
 
     # check if the number of objects is correct
-    numpy.testing.assert_equal(n_obj,n_obj_test)
+    numpy.testing.assert_equal(n_obj,n_obj_test,
+                               err_msg="MEDS file has wrong number of objects")
 
     print 'number of objects is %d' % n_obj
     print 'testing if loaded images are the same as original images'
@@ -135,11 +136,13 @@ def test_meds():
     for iobj in range(n_obj):
 
         # check ID is correct
-        numpy.testing.assert_equal(cat['id'][iobj], iobj+1)
+        numpy.testing.assert_equal(cat['id'][iobj], iobj+1,
+                                   err_msg="MEDS file has wrong id for object %d"%iobj)
 
         # get number of cutouts and check if it's right
         n_cut = cat['ncutout'][iobj]
-        numpy.testing.assert_equal(n_cut,n_cut_test)
+        numpy.testing.assert_equal(n_cut,n_cut_test,
+                                   err_msg="MEDS file has wrong ncutout for object %d"%iobj)
 
         # loop over cutouts
         for icut in range(n_cut):
@@ -155,14 +158,18 @@ def test_meds():
 
 
             # compare
-            numpy.testing.assert_array_equal(img, objlist[iobj].images[icut].array)
-            numpy.testing.assert_array_equal(wth, objlist[iobj].weights[icut].array)
-            numpy.testing.assert_array_equal(seg, objlist[iobj].segs[icut].array)
+            numpy.testing.assert_array_equal(img, objlist[iobj].images[icut].array,
+                                             err_msg="MEDS cutout has wrong img for object %d"%iobj)
+            numpy.testing.assert_array_equal(wth, objlist[iobj].weights[icut].array,
+                                             err_msg="MEDS cutout has wrong wth for object %d"%iobj)
+            numpy.testing.assert_array_equal(seg, objlist[iobj].segs[icut].array,
+                                             err_msg="MEDS cutout has wrong seg for object %d"%iobj)
             wcs_orig = objlist[iobj].wcs[icut]
             wcs_array_orig = numpy.array(
                     [ wcs_orig.dudx, wcs_orig.dudy, wcs_orig.dvdx, wcs_orig.dvdy,
                       wcs_orig.origin.x, wcs_orig.origin.y ])
-            numpy.testing.assert_array_equal(wcs_array_meds, wcs_array_orig)
+            numpy.testing.assert_array_equal(wcs_array_meds, wcs_array_orig,
+                                             err_msg="MEDS cutout has wrong wcs for object %d"%iobj)
 
             print 'test passed get_cutout obj=%d icut=%d' % (iobj, icut)
 
@@ -180,9 +187,12 @@ def test_meds():
         true_mosaic_seg = numpy.concatenate([x.array for x in objlist[iobj].segs],    axis=0)
 
         # compare
-        numpy.testing.assert_array_equal(true_mosaic_img, img)
-        numpy.testing.assert_array_equal(true_mosaic_wth, wth)
-        numpy.testing.assert_array_equal(true_mosaic_seg, seg)
+        numpy.testing.assert_array_equal(true_mosaic_img, img,
+                                         err_msg="MEDS mosaic has wrong img for object %d"%iobj)
+        numpy.testing.assert_array_equal(true_mosaic_wth, wth,
+                                         err_msg="MEDS mosaic has wrong wth for object %d"%iobj)
+        numpy.testing.assert_array_equal(true_mosaic_seg, seg,
+                                         err_msg="MEDS mosaic has wrong seg for object %d"%iobj)
 
         print 'test passed get_mosaic for obj=%d' % (iobj)
 
@@ -283,15 +293,18 @@ def test_meds_config():
         alt_meds_im = galsim.Image(meds_im_array)
         alt_meds_im.write(alt_meds_file)
 
-        numpy.testing.assert_array_equal(ref_im.array, meds_im_array)
+        numpy.testing.assert_array_equal(ref_im.array, meds_im_array,
+                                         err_msg="config MEDS has wrong im for object %d"%iobj)
 
         meds_wt_array = m.get_mosaic(iobj, type='weight')
         ref_wt_im = galsim.fits.read(ref_file, hdu=1)
-        numpy.testing.assert_array_equal(ref_wt_im.array, meds_wt_array)
+        numpy.testing.assert_array_equal(ref_wt_im.array, meds_wt_array,
+                                         err_msg="config MEDS has wrong wt for object %d"%iobj)
         meds_seg_array = m.get_mosaic(iobj, type='seg')
         ref_seg_im = galsim.fits.read(ref_file, hdu=2)
         ref_seg_im = 1 - ref_seg_im  # The seg mag is 1 where badpix == 0
-        numpy.testing.assert_array_equal(ref_seg_im.array, meds_seg_array)
+        numpy.testing.assert_array_equal(ref_seg_im.array, meds_seg_array,
+                                         err_msg="config MEDS has wrong seg for object %d"%iobj)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
