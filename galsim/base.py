@@ -338,6 +338,71 @@ class GSObject(object):
         """
         return self.SBProfile.getGSParams()
 
+    def calculateHLR(self, size=None, scale=None):
+        """Returns the half-light radius of the object.
+
+        If the profile has a half_light_radius attribute, it will just return that, but in the
+        general case, we draw the profile and estimate the half-light radius directly.
+
+        The function optionally takes size and scale values to use for the image drawing.
+        The default scale is half the nyquist scale, which generally produces results accurate
+        to about 1 decimal place.  Using a smaller scale will be more accurate at the expense
+        of speed.  The default size is None, which means drawImage will choose a size designed
+        to contain around 99.5% of the flux.  This is overkill for this calculation, so 
+        choosing a smaller size than this may speed up this calculation somewhat.
+
+        Note: The results from this calculation should be taken as approximate at best.
+              They should usually be acceptable for things like testing that a galaxy has a
+              reasonable resolution, but they should not be trusted for very fine grain
+              discriminations.
+
+        @param size         If given, the stamp size to use for the drawn image. [default: None,
+                            which will let drawImage choose the size automatically]
+        @param scale        If given, the pixel scale to use for the drawn image. [default:
+                            0.5 * self.nyquistScale()]
+
+        @returns an estimate of the half-light radius
+        """
+        if hasattr(self, 'half_light_radius'): 
+            return self.half_light_radius
+
+        if scale is None:
+            scale = self.nyquistScale() * 0.5
+
+        # Draw the image.  Note: need a method that integrates over pixels to get flux right.
+        # The offset is to make all the rsq values different to help the precision a bit.
+        offset = galsim.PositionD(0.2, 0.33)
+        im = self.drawImage(nx=size, ny=size, scale=scale, offset=offset)
+
+        # Use radii at centers of pixels as approximation to the radial integral
+        x,y = np.meshgrid(range(im.array.shape[0]), range(im.array.shape[1]))
+        x = x - (im.trueCenter().x - im.bounds.xmin + offset.x)
+        y = y - (im.trueCenter().y - im.bounds.ymin + offset.y)
+        rsq = x*x + y*y
+
+        # Sort by radius
+        indx = np.argsort(rsq.flatten())
+        rsqf = rsq.flatten()[indx]
+        data = im.array.flatten()[indx]
+        cumflux = np.cumsum(data)
+
+        # Find the first value with cumflux > 0.5 * flux
+        k = np.argmax(cumflux > 0.5 * self.flux)
+        flux_k = cumflux[k] / self.flux  # normalize to unit total flux
+
+        # Interpolate (linearly) between this and the previous value.
+        if k == 0:
+            hlrsq = rsqf[0] * (0.5 / flux_k)
+        else:
+            flux_km1 = cumflux[k-1] / self.flux
+            hlrsq = (rsqf[k-1] * (flux_k-0.5) + rsqf[k] * (0.5-flux_km1)) / (flux_k-flux_km1)
+
+        # This has all been done in pixels.  So normalize according to the pixel scale.
+        hlr = np.sqrt(hlrsq) * im.scale
+
+        return hlr
+
+
     @property
     def flux(self): return self.getFlux()
     @property
