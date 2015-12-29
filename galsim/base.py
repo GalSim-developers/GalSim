@@ -453,6 +453,79 @@ class GSObject(object):
         return sigma
 
 
+    def calculateFWHM(self, size=None, scale=None):
+        """Returns the full-width half-maximum (FWHM) of the object.
+
+        If the profile has a fwhm attribute, it will just return that, but in the general case,
+        we draw the profile and estimate the FWHM directly.
+
+        The function optionally takes size and scale values to use for the image drawing.
+        The default scale is half the nyquist scale, which generally produces results accurate
+        to about 1 decimal place.  Using a smaller scale will be more accurate at the expense
+        of speed.  The default size is None, which means drawImage will choose a size designed
+        to contain around 99.5% of the flux.  This is overkill for this calculation, so 
+        choosing a smaller size than this may speed up this calculation somewhat.
+
+        Note: The results from this calculation should be taken as approximate at best.
+              They should usually be acceptable for things like testing that a galaxy has a
+              reasonable resolution, but they should not be trusted for very fine grain
+              discriminations.
+
+        @param size         If given, the stamp size to use for the drawn image. [default: None,
+                            which will let drawImage choose the size automatically]
+        @param scale        If given, the pixel scale to use for the drawn image. [default:
+                            self.nyquistScale()]
+
+        @returns an estimate of the full-width half-maximum
+        """
+        if hasattr(self, 'fwhm'): 
+            return self.fwhm
+
+        if scale is None:
+            scale = self.nyquistScale()
+
+        # Draw the image.  Note: draw with method='sb' here, since the fwhm is a property of the 
+        # raw surface brightness profile, not integrated over pixels.
+        # The offset is to make all the rsq values different to help the precision a bit.
+        offset = galsim.PositionD(0.2, 0.3)
+        im = self.drawImage(nx=size, ny=size, scale=scale, offset=offset, method='sb')
+
+        # Get the maximum value, assuming it is at the center.
+        im1 = self.drawImage(nx=1, ny=1, scale=scale, method='sb')
+        Imax = im1(1,1)
+
+        # If the full image has a larger maximum, use that.
+        Imax2 = np.max(im.array)
+        if Imax2 > Imax: Imax = Imax2
+
+        # Use radii at centers of pixels.
+        x,y = np.meshgrid(range(im.array.shape[0]), range(im.array.shape[1]))
+        x = x - (im.trueCenter().x - im.bounds.xmin + offset.x)
+        y = y - (im.trueCenter().y - im.bounds.ymin + offset.y)
+        rsq = x*x + y*y
+
+        # Sort by radius
+        indx = np.argsort(rsq.flatten())
+        rsqf = rsq.flatten()[indx]
+        data = im.array.flatten()[indx]
+
+        # Find the first value with I < 0.5 * Imax
+        k = np.argmax(data < 0.5 * Imax)
+        Ik = data[k] / Imax
+
+        # Interpolate (linearly) between this and the previous value.
+        if k == 0:
+            rsqhm = rsqf[0] * (0.5 / Ik)
+        else:
+            Ikm1 = data[k-1] / Imax
+            rsqhm = (rsqf[k-1] * (Ik-0.5) + rsqf[k] * (0.5-Ikm1)) / (Ik-Ikm1)
+
+        # This has all been done in pixels.  So normalize according to the pixel scale.
+        fwhm = 2. * np.sqrt(rsqhm) * im.scale
+
+        return fwhm
+
+
     @property
     def flux(self): return self.getFlux()
     @property

@@ -159,6 +159,74 @@ def test_sigma():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+def test_fwhm():
+    """Test the calculateFWHM method.
+    """
+    import time
+    t1 = time.time()
+
+    # Compare the calculation for a simple Gaussian.
+    g1 = galsim.Gaussian(sigma=5, flux=1.7)
+
+    print 'g1 native fwhm = ',g1.fwhm
+    print 'g1.calculateFWHM = ',g1.calculateFWHM()
+    # These should be exactly equal.
+    np.testing.assert_equal(g1.fwhm, g1.calculateFWHM(),
+                            err_msg="Gaussian.calculateFWHM() returned wrong value.")
+
+    # Check for a convolution of two Gaussians.  Should be equivalent, but now will need to 
+    # do the calculation.
+    g2 = galsim.Convolve(galsim.Gaussian(sigma=3, flux=1.3), galsim.Gaussian(sigma=4, flux=23))
+    test_fwhm = g2.calculateFWHM()
+    print 'g2.calculateFWHM = ',test_fwhm
+    print 'ratio - 1 = ',test_fwhm/g1.fwhm-1
+    np.testing.assert_almost_equal(test_fwhm/g1.fwhm, 1.0, decimal=3,
+                                   err_msg="Gaussian.calculateFWHM() is not accurate.")
+
+    # The default scale already accurate to around 3 dp.  Using scale = 0.1 is accurate to 8 dp.
+    test_fwhm = g2.calculateFWHM(scale=0.1)
+    print 'g2.calculateFWHM(scale=0.1) = ',test_fwhm
+    print 'ratio - 1 = ',test_fwhm/g1.fwhm-1
+    np.testing.assert_almost_equal(test_fwhm/g1.fwhm, 1.0, decimal=8,
+                                   err_msg="Gaussian.calculateFWHM(scale=0.1) is not accurate.")
+
+    # Finally, we don't expect this to be accurate, but make sure the code can handle having
+    # only the central pixel higher than half-maximum.
+    test_fwhm = g2.calculateFWHM(scale=20)
+    print 'g2.calculateFWHM(scale=20) = ',test_fwhm
+    print 'ratio - 1 = ',test_fwhm/g1.fwhm-1
+    np.testing.assert_almost_equal(test_fwhm/g1.fwhm/10, 0.1, decimal=1,
+                                   err_msg="Gaussian.calculateFWHM(scale=20) is not accurate.")
+
+    # Next, use an Exponential profile
+    e1 = galsim.Exponential(scale_radius=5, flux=1.7)
+
+    # The true fwhm for this is analytic, but not an attribute.
+    e1_fwhm = 2. * np.log(2.0) * e1.scale_radius
+    print 'true e1 fwhm = ',e1_fwhm
+
+    # Test with the default scale and size.
+    test_fwhm = e1.calculateFWHM()
+    print 'e1.calculateFWHM = ',test_fwhm
+    print 'ratio - 1 = ',test_fwhm/e1_fwhm-1
+    np.testing.assert_almost_equal(test_fwhm/e1_fwhm, 1.0, decimal=3,
+                                   err_msg="Exponential.calculateFWHM() is not accurate.")
+
+    # The default scale already accurate to around 3 dp.  Using scale = 0.1 is accurate to 7 dp.
+    # We can also decrease the size, which should still be accurate, but maybe a little faster.
+    # Go a bit more that fwhm in units of the pixels.
+    size = 1.2 * e1_fwhm / 0.1
+    test_fwhm = e1.calculateFWHM(scale=0.1, size=size)
+    print 'e1.calculateFWHM(scale=0.1) = ',test_fwhm
+    print 'ratio - 1 = ',test_fwhm/e1_fwhm-1
+    np.testing.assert_almost_equal(test_fwhm/e1_fwhm, 1.0, decimal=7,
+                                   err_msg="Exponential.calculateFWHM(scale=0.1) is not accurate.")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 if __name__ == "__main__":
     test_hlr()
     test_sigma()
+    test_fwhm()
