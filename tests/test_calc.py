@@ -102,7 +102,7 @@ def test_hlr():
 
 
 def test_sigma():
-    """Test the calculateSigma method.
+    """Test the calculateMomentRadius method.
     """
     import time
     t1 = time.time()
@@ -111,28 +111,71 @@ def test_sigma():
     g1 = galsim.Gaussian(sigma=5, flux=1.7)
 
     print 'g1 native sigma = ',g1.sigma
-    print 'g1.calculateSigma = ',g1.calculateSigma()
+    print 'g1.calculateMomentRadius = ',g1.calculateMomentRadius()
     # These should be exactly equal.
-    np.testing.assert_equal(g1.sigma, g1.calculateSigma(),
-                            err_msg="Gaussian.calculateSigma() returned wrong value.")
+    np.testing.assert_equal(
+            g1.sigma, g1.calculateMomentRadius(),
+            err_msg="Gaussian.calculateMomentRadius() returned wrong value.")
+    np.testing.assert_equal(
+            g1.sigma, g1.calculateMomentRadius(rtype='trace'),
+            err_msg="Gaussian.calculateMomentRadius(trace) returned wrong value.")
+    np.testing.assert_equal(
+            g1.sigma, g1.calculateMomentRadius(rtype='det'),
+            err_msg="Gaussian.calculateMomentRadius(det) returned wrong value.")
+    np.testing.assert_equal(
+            (g1.sigma, g1.sigma), g1.calculateMomentRadius(rtype='both'),
+            err_msg="Gaussian.calculateMomentRadius(both) returned wrong value.")
 
     # Check for a convolution of two Gaussians.  Should be equivalent, but now will need to 
     # do the calculation.
     g2 = galsim.Convolve(galsim.Gaussian(sigma=3, flux=1.3), galsim.Gaussian(sigma=4, flux=23))
-    test_sigma = g2.calculateSigma()
-    print 'g2.calculateSigma = ',test_sigma
+    test_sigma = g2.calculateMomentRadius()
+    print 'g2.calculateMomentRadius = ',test_sigma
     print 'ratio - 1 = ',test_sigma/g1.sigma-1
-    np.testing.assert_almost_equal(test_sigma/g1.sigma, 1.0, decimal=1,
-                                   err_msg="Gaussian.calculateSigma() is not accurate.")
+    np.testing.assert_almost_equal(
+            test_sigma/g1.sigma, 1.0, decimal=1,
+            err_msg="Gaussian.calculateMomentRadius() is not accurate.")
 
-    # The default scale and size is only accurate to around 1 dp.# Using scale = 0.1 is accurate
-    # to 3 dp.
-    test_sigma = g2.calculateSigma(scale=0.1)
-    print 'g2.calculateSigma(scale=0.1) = ',test_sigma
+    # The default scale and size is only accurate to around 1 dp.  Using scale = 0.1 is accurate
+    # to 4 dp.
+    test_sigma = g2.calculateMomentRadius(scale=0.1)
+    print 'g2.calculateMomentRadius(scale=0.1) = ',test_sigma
     print 'ratio - 1 = ',test_sigma/g1.sigma-1
-    np.testing.assert_almost_equal(test_sigma/g1.sigma, 1.0, decimal=3,
-                                   err_msg="Gaussian.calculateSigma(scale=0.1) is not accurate.")
-    
+    np.testing.assert_almost_equal(
+            test_sigma/g1.sigma, 1.0, decimal=4,
+            err_msg="Gaussian.calculateMomentRadius(scale=0.1) is not accurate.")
+ 
+    # In this case, the different calculations are eqivalent:
+    np.testing.assert_almost_equal(
+            test_sigma, g2.calculateMomentRadius(scale=0.1, rtype='trace'),
+            err_msg="Gaussian.calculateMomentRadius(trace) is not accurate.")
+    np.testing.assert_almost_equal(
+            test_sigma, g2.calculateMomentRadius(scale=0.1, rtype='det'),
+            err_msg="Gaussian.calculateMomentRadius(trace) is not accurate.")
+    np.testing.assert_almost_equal(
+            (test_sigma, test_sigma), g2.calculateMomentRadius(scale=0.1, rtype='both'),
+            err_msg="Gaussian.calculateMomentRadius(trace) is not accurate.")
+
+    # However, when we shear it, the default (det) measure stays equal to the original sigma, but
+    # the trace measure increases by a factor of (1-e^2)^0.25
+    g3 = g2.shear(e1=0.4, e2=0.3)
+    esq = 0.4**2 + 0.3**2
+    sheared_sigma = g3.calculateMomentRadius(scale=0.1)
+    print 'g3.calculateMomentRadius(scale=0.1) = ',sheared_sigma
+    print 'ratio - 1 = ',sheared_sigma/g1.sigma-1
+    sheared_sigma2 = g3.calculateMomentRadius(scale=0.1, rtype='trace')
+    print 'g3.calculateMomentRadius(scale=0.1,trace) = ',sheared_sigma2
+    print 'ratio = ',sheared_sigma2 / g1.sigma
+    print '(1-e^2)^-0.25 = ',(1-esq)**-0.25
+    print 'ratio - 1 = ',sheared_sigma2/(g1.sigma*(1.-esq)**-0.25)-1
+    np.testing.assert_almost_equal(
+            sheared_sigma/g1.sigma, 1.0, decimal=4,
+            err_msg="sheared Gaussian.calculateMomentRadius(scale=0.1) is not accurate.")
+    np.testing.assert_almost_equal(
+            sheared_sigma2/(g1.sigma*(1.-esq)**-0.25), 1.0, decimal=4,
+            err_msg="sheared Gaussian.calculateMomentRadius(scale=0.1,trace) is not accurate.")
+
+   
     # Next, use an Exponential profile
     e1 = galsim.Exponential(scale_radius=5, flux=1.7)
 
@@ -141,19 +184,21 @@ def test_sigma():
     print 'true e1 sigma = sqrt(3) * e1.scale_radius = ',e1_sigma
 
     # Test with the default scale and size.
-    test_sigma = e1.calculateSigma()
-    print 'e1.calculateSigma = ',test_sigma
+    test_sigma = e1.calculateMomentRadius()
+    print 'e1.calculateMomentRadius = ',test_sigma
     print 'ratio - 1 = ',test_sigma/e1_sigma-1
-    np.testing.assert_almost_equal(test_sigma/e1_sigma, 1.0, decimal=1,
-                                   err_msg="Exponential.calculateSigma() is not accurate.")
+    np.testing.assert_almost_equal(
+            test_sigma/e1_sigma, 1.0, decimal=1,
+            err_msg="Exponential.calculateMomentRadius() is not accurate.")
 
     # The default scale and size is only accurate to around 1 dp.  This time we have to both
-    # decrease the scale and also increase the size to get 3 dp of precision.
-    test_sigma = e1.calculateSigma(scale=0.1, size=2000)
-    print 'e1.calculateSigma(scale=0.1) = ',test_sigma
+    # decrease the scale and also increase the size to get 4 dp of precision.
+    test_sigma = e1.calculateMomentRadius(scale=0.1, size=2000)
+    print 'e1.calculateMomentRadius(scale=0.1) = ',test_sigma
     print 'ratio - 1 = ',test_sigma/e1_sigma-1
-    np.testing.assert_almost_equal(test_sigma/e1_sigma, 1.0, decimal=3,
-                                   err_msg="Exponential.calculateSigma(scale=0.1) is not accurate.")
+    np.testing.assert_almost_equal(
+            test_sigma/e1_sigma, 1.0, decimal=4,
+            err_msg="Exponential.calculateMomentRadius(scale=0.1) is not accurate.")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

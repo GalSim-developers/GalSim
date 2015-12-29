@@ -403,12 +403,25 @@ class GSObject(object):
         return hlr
 
 
-    def calculateSigma(self, size=None, scale=None):
-        """Returns the sqrt of the radial second moment of the object, sigma = sqrt(T/2), where
-        T = Irr = Ixx+Iyy.
+    def calculateMomentRadius(self, size=None, scale=None, rtype='det'):
+        """Returns an estimate of the radius based on second moments.
 
-        If the profile has a sigma attribute (only true for a Gaussian), it will just return that,
-        but in the general case, we draw the profile and estimate T directly.
+        The second moments are defines as:
+
+        Q_ij = int( I(x,y) i j dx dy ) / int( I(x,y) dx dy )
+        where i,j may be either x or y.
+
+        If I(x,y) is a Gaussian, then T = Tr(Q) = Qxx + Qyy = 2 sigma^2.  Thus, one reasonable
+        choice for a "radius" for an arbitrary profile is sqrt(T/2).  
+
+        In addition, det(Q) = sigma^4.  So another choice for an arbitrary profile is det(Q)^1/4.
+
+        This routine can return either of these measures according to the value of the `rtype`
+        parameter.  `rtype='trace'` will cause it to return sqrt(T/2).  `rtype='det'` will cause
+        it to return det(Q)^1/4.  And `rtype='both'` will return a tuple with both values.
+
+        Note that for the special case of a Gaussian profile, no calculation is necessary, and
+        the `sigma` attribute will be used in both cases.
 
         The function optionally takes size and scale values to use for the image drawing.
         The default scale is the nyquist scale, which generally produces results accurate
@@ -426,11 +439,22 @@ class GSObject(object):
                             which will let drawImage choose the size automatically]
         @param scale        If given, the pixel scale to use for the drawn image. [default:
                             self.nyquistScale()]
+        @param rtype        There are three options for this parameter:
+                            - 'trace' means return sqrt(T/2)
+                            - 'det' means return det(Q)^1/4
+                            - 'both' means return both: (sqrt(T/2), det(Q)^1/4)
+                            [default: 'det']
 
-        @returns an estimate of sigma = sqrt(T/2)
+        @returns an estimate of the radius (or both estimates if rtype == 'both')
         """
+        if rtype not in ['trace', 'det', 'both']:
+            raise ValueError("rtype must be one of 'trace', 'det', or 'both'")
+
         if hasattr(self, 'sigma'): 
-            return self.sigma
+            if rtype == 'both':
+                return self.sigma, self.sigma
+            else:
+                return self.sigma
 
         if scale is None:
             scale = self.nyquistScale()
@@ -442,15 +466,30 @@ class GSObject(object):
         x,y = np.meshgrid(range(im.array.shape[0]), range(im.array.shape[1]))
         x = x - (im.trueCenter().x - im.bounds.xmin)
         y = y - (im.trueCenter().y - im.bounds.ymin)
-        rsq = x*x + y*y
 
-        # Accumulate Irr
-        Irr = np.sum(rsq * im.array) / self.flux
+        if rtype in ['trace', 'both']:
+            # Calculate trace measure:
+            rsq = x*x + y*y
+            Irr = np.sum(rsq * im.array) / self.flux
 
-        # This has all been done in pixels.  So normalize according to the pixel scale.
-        sigma = np.sqrt(Irr/2.) * im.scale
+            # This has all been done in pixels.  So normalize according to the pixel scale.
+            sigma_trace = (Irr/2.)**0.5 * im.scale
 
-        return sigma
+        if rtype in ['det', 'both']:
+            # Calculate det measure:
+            Ixx = np.sum(x*x * im.array) / self.flux
+            Iyy = np.sum(y*y * im.array) / self.flux
+            Ixy = np.sum(x*y * im.array) / self.flux
+
+            # This has all been done in pixels.  So normalize according to the pixel scale.
+            sigma_det = (Ixx*Iyy-Ixy**2)**0.25 * im.scale
+
+        if rtype == 'trace':
+            return sigma_trace
+        elif rtype == 'det':
+            return sigma_det
+        else:
+            return sigma_trace, sigma_det
 
 
     def calculateFWHM(self, size=None, scale=None):
