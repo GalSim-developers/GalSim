@@ -118,8 +118,10 @@ def SetupExtraOutputsForImage(config, logger=None):
     """
     if 'output' in config:
         for key in [ k for k in valid_extra_outputs.keys() if k in config['output'] ]:
-            # Always clear out anything in the scratch space
+            # Always clear out anything in the scratch space.
             scratch = config['extra_scratch'][key]
+            scratch.clear()
+            # Now do anything else needed for this extra output.
             setup_func = valid_extra_outputs[key]['setup']
             if setup_func is not None:
                 extra_obj = config['extra_objs'][key]
