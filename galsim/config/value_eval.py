@@ -167,8 +167,8 @@ def _GenerateFromEval(config, base, value_type):
         if value_type is not None:
             val = value_type(val)
         return val, False
-    except:
-        raise ValueError("Unable to evaluate string %r as a %s"%(string,value_type))
+    except Exception as e:
+        raise ValueError("Unable to evaluate string %r as a %s\n"%(string,value_type) + str(e))
 
 
 # Register this as a valid value type
