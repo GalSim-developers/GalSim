@@ -76,7 +76,7 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, nproc=1, logger=None):
             #logger.error('%s',tr)
             logger.error('Aborting the rest of this file')
 
-    images = galsim.config.MultiProcess(nproc, config, BuildImage, jobs, 'stamp', logger,
+    images = galsim.config.MultiProcess(nproc, config, BuildImage, jobs, 'image', logger,
                                         njobs_per_task = nim_per_task,
                                         done_func = done_func,
                                         except_func = except_func)
