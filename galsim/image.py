@@ -618,8 +618,8 @@ class Image(object):
 
         # Use radii at centers of pixels as approximation to the radial integral
         x,y = numpy.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
-        x = x - (center.x - self.bounds.xmin)
-        y = y - (center.y - self.bounds.ymin)
+        x = x - center.x + self.bounds.xmin
+        y = y - center.y + self.bounds.ymin
         rsq = x*x + y*y
 
         # Sort by radius
@@ -680,8 +680,8 @@ class Image(object):
 
         # Use radii at centers of pixels as approximation to the radial integral
         x,y = numpy.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
-        x = x - (center.x - self.bounds.xmin)
-        y = y - (center.y - self.bounds.ymin)
+        x = x - center.x + self.bounds.xmin
+        y = y - center.y + self.bounds.ymin
 
         if rtype in ['trace', 'both']:
             # Calculate trace measure:
@@ -736,8 +736,8 @@ class Image(object):
 
         # Use radii at centers of pixels.
         x,y = numpy.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
-        x = x - (center.x - self.bounds.xmin)
-        y = y - (center.y - self.bounds.ymin)
+        x = x - center.x + self.bounds.xmin
+        y = y - center.y + self.bounds.ymin
         rsq = x*x + y*y
 
         # Sort by radius
