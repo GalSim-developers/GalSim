@@ -278,7 +278,7 @@ def main():
         sortby = 'tottime'
         ps = pstats.Stats(pr, stream=s).sort_stats(sortby).reverse_order()
         ps.print_stats()
-        logger.error(s.getvalue)
+        logger.error(s.getvalue())
  
 
 if __name__ == "__main__":
