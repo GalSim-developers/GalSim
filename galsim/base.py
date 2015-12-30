@@ -344,21 +344,27 @@ class GSObject(object):
         If the profile has a half_light_radius attribute, it will just return that, but in the
         general case, we draw the profile and estimate the half-light radius directly.
 
-        The function optionally takes size and scale values to use for the image drawing.
-        The default scale is half the nyquist scale, which generally produces results accurate
-        to about 1 decimal place.  Using a smaller scale will be more accurate at the expense
-        of speed.  The default size is None, which means drawImage will choose a size designed
-        to contain around 99.5% of the flux.  This is overkill for this calculation, so 
-        choosing a smaller size than this may speed up this calculation somewhat.
+        This function (by default at least) is only accurate to a few percent, typically.
+        Possibly worse depending on the profile being measured.  If you care about a high 
+        precision estimate of the half-light radius, the accuracy can be improved using the
+        optional parameter scale to change the pixel scale used to draw the profile.
+
+        The default scale is half the Nyquist scale, which were found to produce results accurate
+        to a few percent on our internal tests.  Using a smaller scale will be more accurate at
+        the expense of speed.
+
+        In addition, you can optionally specify the size of the image to draw. The default size is
+        None, which means drawImage will choose a size designed to contain around 99.5% of the
+        flux.  This is overkill for this calculation, so choosing a smaller size than this may
+        speed up this calculation somewhat.
 
         Also, while the name of this function refers to the half-light radius, in fact it can also
         calculate radii that enclose other fractions of the light, according to the parameter
         `flux_frac`.  E.g. for r90, you would set flux_frac=0.90.
 
-        Note: The results from this calculation should be taken as approximate at best.
-              They should usually be acceptable for things like testing that a galaxy has a
-              reasonable resolution, but they should not be trusted for very fine grain
-              discriminations.
+        The default scale should usually be acceptable for things like testing that a galaxy
+        has a reasonable resolution, but they should not be trusted for very fine grain
+        discriminations.
 
         @param size         If given, the stamp size to use for the drawn image. [default: None,
                             which will let drawImage choose the size automatically]
@@ -412,17 +418,19 @@ class GSObject(object):
         the integral of I(x,y) i j dx dy over each pixel can be approximated as
         int(I(x,y) dx dy) * i_center * j_center.
 
-        The function optionally takes size and scale values to use for the image drawing.
-        The default scale is the nyquist scale, which generally produces results accurate
-        to about 1 decimal place.  Using a smaller scale will be more accurate at the expense
-        of speed.  The default size is None, which means drawImage will choose a size designed
-        to contain around 99.5% of the flux.  Using a larger size will again be more accurate
-        at the expense of speed.
+        This function (by default at least) is only accurate to a few percent, typically.
+        Possibly worse depending on the profile being measured.  If you care about a high 
+        precision estimate of the radius, the accuracy can be improved using the optional
+        parameters size and scale to change the size and pixel scale used to draw the profile.
 
-        Note: The results from this calculation should be taken as approximate at best.
-              They should usually be acceptable for things like testing that a galaxy has a
-              reasonable resolution, but they should not be trusted for very fine grain
-              discriminations.  For a more accurate estimate, see galsim.hsm.FindAdaptiveMom.
+        The default is to use the the Nyquist scale for the pixel scale and let drawImage 
+        choose a size for the stamp that will enclose at least 99.5% of the flux.  These
+        were found to produce results accurate to a few percent on our internal tests.
+        Using a smaller scale and larger size will be more accurate at the expense of speed.
+
+        The default parameters should usually be acceptable for things like testing that a galaxy
+        has a reasonable resolution, but they should not be trusted for very fine grain
+        discriminations.  For a more accurate estimate, see galsim.hsm.FindAdaptiveMom.
 
         @param size         If given, the stamp size to use for the drawn image. [default: None,
                             which will let drawImage choose the size automatically]
@@ -465,17 +473,13 @@ class GSObject(object):
         If the profile has a fwhm attribute, it will just return that, but in the general case,
         we draw the profile and estimate the FWHM directly.
 
-        The function optionally takes size and scale values to use for the image drawing.
-        The default scale is half the nyquist scale, which generally produces results accurate
-        to about 1 decimal place.  Using a smaller scale will be more accurate at the expense
-        of speed.  The default size is None, which means drawImage will choose a size designed
-        to contain around 99.5% of the flux.  This is overkill for this calculation, so 
-        choosing a smaller size than this may speed up this calculation somewhat.
-
-        Note: The results from this calculation should be taken as approximate at best.
-              They should usually be acceptable for things like testing that a galaxy has a
-              reasonable resolution, but they should not be trusted for very fine grain
-              discriminations.
+        As with calculateHLR and calculateMomentRadius, this function optionally takes size and
+        scale values to use for the image drawing.  The default is to use the the Nyquist scale
+        for the pixel scale and let drawImage choose a size for the stamp that will enclose at
+        least 99.5% of the flux.  These were found to produce results accurate to well below
+        one percent on our internal tests, so it is unlikely that you will want to adjust
+        them for accuracy.  However, using a smaller size than default could help speed up
+        the calculation, since the default is usually much larger than is needed.
 
         @param size         If given, the stamp size to use for the drawn image. [default: None,
                             which will let drawImage choose the size automatically]
