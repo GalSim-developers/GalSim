@@ -406,7 +406,11 @@ class GSObject(object):
         it to return det(Q)^1/4.  And `rtype='both'` will return a tuple with both values.
 
         Note that for the special case of a Gaussian profile, no calculation is necessary, and
-        the `sigma` attribute will be used in both cases.
+        the `sigma` attribute will be used in both cases.  In the limit as scale->0, this 
+        function will return the same value, but because finite pixels are drawn, the results
+        will not be precisely equal for real use cases.  The approximation being made is that
+        the integral of I(x,y) i j dx dy over each pixel can be approximated as
+        int(I(x,y) dx dy) * i_center * j_center.
 
         The function optionally takes size and scale values to use for the image drawing.
         The default scale is the nyquist scale, which generally produces results accurate

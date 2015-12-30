@@ -600,6 +600,8 @@ class Image(object):
         been drawn onto an image.  Note that the profile should be drawn using a method that
         integrates over pixels and does not add noise. (The default method='auto' is acceptable.)
 
+        If the image has a wcs other than a PixelScale, an AttributeError will be raised.
+
         @param center       The position in pixels to use for the center, r=0. 
                             [default: self.trueCenter()]
         @param flux         The total flux.  [default: sum(self.array)]
@@ -652,6 +654,8 @@ class Image(object):
         This method is equivalent to GSObject.calculateMomentRadius when the object has already
         been drawn onto an image.  Note that the profile should be drawn using a method that
         integrates over pixels and does not add noise. (The default method='auto' is acceptable.)
+
+        If the image has a wcs other than a PixelScale, an AttributeError will be raised.
 
         @param center       The position in pixels to use for the center, r=0. 
                             [default: self.trueCenter()]
@@ -711,6 +715,8 @@ class Image(object):
         been drawn onto an image.  Note that the profile should be drawn using a method that
         does not integrate over pixels, so either 'sb' or 'no_pixel'.  Also, if there is a
         significant amount of noise in the image, this method may not work well.
+
+        If the image has a wcs other than a PixelScale, an AttributeError will be raised.
 
         @param center       The position in pixels to use for the center, r=0. 
                             [default: self.trueCenter()]
