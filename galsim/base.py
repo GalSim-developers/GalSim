@@ -368,7 +368,7 @@ class GSObject(object):
         @param flux_frac    The fraction of light to be enclosed by the returned radius.
                             [default: 0.5]
 
-        @returns an estimate of the half-light radius
+        @returns an estimate of the half-light radius in physical units
         """
         if hasattr(self, 'half_light_radius'): 
             return self.half_light_radius
@@ -417,9 +417,9 @@ class GSObject(object):
 
 
     def calculateMomentRadius(self, size=None, scale=None, centroid=None, rtype='det'):
-        """Returns an estimate of the radius based on second moments.
+        """Returns an estimate of the radius based on unweighted second moments.
 
-        The second moments are defines as:
+        The second moments are defined as:
 
         Q_ij = int( I(x,y) i j dx dy ) / int( I(x,y) dx dy )
         where i,j may be either x or y.
@@ -446,7 +446,7 @@ class GSObject(object):
         Note: The results from this calculation should be taken as approximate at best.
               They should usually be acceptable for things like testing that a galaxy has a
               reasonable resolution, but they should not be trusted for very fine grain
-              discriminations.  For a more accurate estimate, see galsim.hlm.FindAdaptiveMom.
+              discriminations.  For a more accurate estimate, see galsim.hsm.FindAdaptiveMom.
 
         @param size         If given, the stamp size to use for the drawn image. [default: None,
                             which will let drawImage choose the size automatically]
@@ -459,7 +459,7 @@ class GSObject(object):
                             - 'both' means return both: (sqrt(T/2), det(Q)^1/4)
                             [default: 'det']
 
-        @returns an estimate of the radius (or both estimates if rtype == 'both')
+        @returns an estimate of the radius in physical units (or both estimates if rtype == 'both')
         """
         if rtype not in ['trace', 'det', 'both']:
             raise ValueError("rtype must be one of 'trace', 'det', or 'both'")
@@ -533,7 +533,7 @@ class GSObject(object):
                             self.nyquistScale()]
         @param centroid     The position to use for the centroid. [default: self.centroid()]
 
-        @returns an estimate of the full-width half-maximum
+        @returns an estimate of the full-width half-maximum in physical units
         """
         if hasattr(self, 'fwhm'): 
             return self.fwhm
