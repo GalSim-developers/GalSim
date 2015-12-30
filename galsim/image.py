@@ -615,7 +615,7 @@ class Image(object):
             flux = numpy.sum(self.array)
 
         # Use radii at centers of pixels as approximation to the radial integral
-        x,y = numpy.meshgrid(range(self.array.shape[0]), range(self.array.shape[1]))
+        x,y = numpy.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
         x = x - (center.x - self.bounds.xmin)
         y = y - (center.y - self.bounds.ymin)
         rsq = x*x + y*y
@@ -675,7 +675,7 @@ class Image(object):
             flux = numpy.sum(self.array)
 
         # Use radii at centers of pixels as approximation to the radial integral
-        x,y = numpy.meshgrid(range(self.array.shape[0]), range(self.array.shape[1]))
+        x,y = numpy.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
         x = x - (center.x - self.bounds.xmin)
         y = y - (center.y - self.bounds.ymin)
 
@@ -729,7 +729,7 @@ class Image(object):
         if Imax2 > Imax: Imax = Imax2
 
         # Use radii at centers of pixels.
-        x,y = numpy.meshgrid(range(self.array.shape[0]), range(self.array.shape[1]))
+        x,y = numpy.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
         x = x - (center.x - self.bounds.xmin)
         y = y - (center.y - self.bounds.ymin)
         rsq = x*x + y*y

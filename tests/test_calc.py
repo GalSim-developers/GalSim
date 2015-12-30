@@ -90,7 +90,7 @@ def test_hlr():
     # Note: Nyquist scale is about 1.57 for this profile.
     # We can also decrease the size, which should still be accurate, but maybe a little faster.
     # Go a bit more that 2*hlr in units of the pixels.
-    size = 2.1 * e1.half_light_radius / 0.1
+    size = int(2.2 * e1.half_light_radius / 0.1)
     test_hlr = e2.calculateHLR(scale=0.1, size=size)
     print 'e2.calculateHLR(scale=0.1) = ',test_hlr
     print 'ratio - 1 = ',test_hlr/e1.half_light_radius-1
@@ -120,6 +120,26 @@ def test_hlr():
     print 'ratio - 1 = ',test_r90/r90-1
     np.testing.assert_almost_equal(test_r90/r90, 1.0, decimal=3,
                                    err_msg="Exponential r90 calculation is not accurate.")
+
+    # Check the image version.
+    im = e1.drawImage(scale=0.1)
+    test_hlr = im.calculateHLR(flux=e1.flux)
+    print 'im.calculateHLR() = ',test_hlr
+    print 'ratio - 1 = ',test_hlr/e1.half_light_radius-1
+    np.testing.assert_almost_equal(test_hlr/e1.half_light_radius, 1.0, decimal=3,
+                                   err_msg="image.calculateHLR is not accurate.")
+
+    # Check that a non-square image works correctly.  Also, not centered anywhere in particular.
+    #bounds = galsim.BoundsI(-1234, -1234+size*2, 8234, 8234+size)
+    bounds = galsim.BoundsI(1, 1+size*2, 1, 1+size)
+    #offset = galsim.PositionD(29,1)
+    offset = galsim.PositionD(0,0)
+    im = e1.drawImage(scale=0.1, bounds=bounds, offset=offset)
+    test_hlr = im.calculateHLR(flux=e1.flux, center=im.trueCenter()+offset)
+    print 'im.calculateHLR() = ',test_hlr
+    print 'ratio - 1 = ',test_hlr/e1.half_light_radius-1
+    np.testing.assert_almost_equal(test_hlr/e1.half_light_radius, 1.0, decimal=3,
+                                   err_msg="non-square image.calculateHLR is not accurate.")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -240,6 +260,26 @@ def test_sigma():
             test_sigma/e1_sigma, 1.0, decimal=4,
             err_msg="shifted MomentRadius with explicit centroid is not accurate.")
 
+    # Check the image version.
+    size = 2000
+    im = e1.drawImage(scale=0.1, nx=size, ny=size)
+    test_sigma = im.calculateMomentRadius(flux=e1.flux)
+    print 'im.calculateMomentRadius() = ',test_sigma
+    print 'ratio - 1 = ',test_sigma/e1_sigma-1
+    np.testing.assert_almost_equal(
+            test_sigma/e1_sigma, 1.0, decimal=4,
+            err_msg="image.calculateMomentRadius is not accurate.")
+
+    # Check that a non-square image works correctly.  Also, not centered anywhere in particular.
+    bounds = galsim.BoundsI(-1234, -1234+size*2, 8234, 8234+size)
+    offset = galsim.PositionD(29,1)
+    im = e1.drawImage(scale=0.1, bounds=bounds, offset=offset)
+    test_hlr = im.calculateMomentRadius(flux=e1.flux, center=im.trueCenter()+offset)
+    print 'im.calculateMomentRadius() = ',test_sigma
+    print 'ratio - 1 = ',test_sigma/e1_sigma-1
+    np.testing.assert_almost_equal(
+            test_sigma/e1_sigma, 1.0, decimal=4,
+            err_msg="non-square image.calculateMomentRadius is not accurate.")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -301,7 +341,7 @@ def test_fwhm():
     # The default scale already accurate to around 3 dp.  Using scale = 0.1 is accurate to 7 dp.
     # We can also decrease the size, which should still be accurate, but maybe a little faster.
     # Go a bit more that fwhm in units of the pixels.
-    size = 1.2 * e1_fwhm / 0.1
+    size = int(1.2 * e1_fwhm / 0.1)
     test_fwhm = e1.calculateFWHM(scale=0.1, size=size)
     print 'e1.calculateFWHM(scale=0.1) = ',test_fwhm
     print 'ratio - 1 = ',test_fwhm/e1_fwhm-1
@@ -322,6 +362,23 @@ def test_fwhm():
     np.testing.assert_almost_equal(test_fwhm/e1_fwhm, 1.0, decimal=6,
                                    err_msg="shifted FWHM with explicit centroid is not accurate.")
 
+    # Check the image version.
+    im = e1.drawImage(scale=0.1, method='sb')
+    test_fwhm = im.calculateFWHM(Imax=e1.xValue(0,0))
+    print 'im.calculateFWHM() = ',test_fwhm
+    print 'ratio - 1 = ',test_fwhm/e1_fwhm-1
+    np.testing.assert_almost_equal(test_fwhm/e1_fwhm, 1.0, decimal=6,
+                                   err_msg="image.calculateFWHM is not accurate.")
+
+    # Check that a non-square image works correctly.  Also, not centered anywhere in particular.
+    bounds = galsim.BoundsI(-1234, -1234+size*2, 8234, 8234+size)
+    offset = galsim.PositionD(29,1)
+    im = e1.drawImage(scale=0.1, bounds=bounds, offset=offset, method='sb')
+    test_fwhm = im.calculateFWHM(Imax=e1.xValue(0,0), center=im.trueCenter()+offset)
+    print 'im.calculateFWHM() = ',test_fwhm
+    print 'ratio - 1 = ',test_fwhm/e1_fwhm-1
+    np.testing.assert_almost_equal(test_fwhm/e1_fwhm, 1.0, decimal=6,
+                                   err_msg="non-square image.calculateFWHM is not accurate.")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
