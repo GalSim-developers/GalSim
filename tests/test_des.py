@@ -70,7 +70,7 @@ def test_meds():
 
     # create object
     obj1 = galsim.des.MultiExposureObject(images=images, weights=weights, segs=segs, wcs=wcs, id=1)
-    print 'obj1 = ',obj1
+    #print 'obj1 = ',obj1
 
     # second obj
     img21 = galsim.Image(box_size, box_size, init_value=211)
@@ -96,20 +96,19 @@ def test_meds():
     img21.wcs = wcs21
     img22.wcs = wcs22
     obj2 = galsim.des.MultiExposureObject(images=images, weights=weights, segs=segs, id=2)
-    print 'obj2 = ',obj2
+    #print 'obj2 = ',obj2
 
     # create an object list
     objlist = [obj1, obj2]
 
     # save objects to MEDS file
     filename_meds = 'output/test_meds.fits'
-    print 'file_name = ',filename_meds
-    print 'objlist = ',objlist
+    #print 'file_name = ',filename_meds
+    #print 'objlist = ',objlist
     galsim.des.write_meds(objlist, filename_meds, clobber=True)
     print 'wrote MEDS file %s ' % filename_meds
 
     # test functions in des_meds.py
-    print 'reading %s' % filename_meds
     try:
         import meds
     except ImportError:
@@ -117,6 +116,8 @@ def test_meds():
         # Note that while there are no tests prior to this, the above still checks for 
         # syntax errors in the meds creation software, so it's still worth running as part
         # of the normal unit test runs.
+
+    print 'reading %s' % filename_meds
     m = meds.MEDS(filename_meds)
 
     # get the catalog
@@ -242,7 +243,7 @@ def test_meds_config():
     }
 
     import logging
-    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
+    logging.basicConfig(format="%(message)s", level=logging.WARN, stream=sys.stdout)
     logger = logging.getLogger('test_meds_config')
     galsim.config.Process(config, logger=logger)
 
@@ -267,7 +268,6 @@ def test_meds_config():
     galsim.config.Process(config, logger=logger)
 
     # test functions in des_meds.py
-    print 'reading %s' % file_name
     try:
         import meds
     except ImportError:
@@ -275,6 +275,8 @@ def test_meds_config():
         # Note that while there are no tests prior to this, the above still checks for 
         # syntax errors in the meds creation software, so it's still worth running as part
         # of the normal unit test runs.
+
+    print 'reading %s' % file_name
     m = meds.MEDS(file_name)
     print 'number of objects is %d' % m.size
     assert m.size == nobj
@@ -407,11 +409,11 @@ def test_psf():
         # Pick bright small objects as probable stars
         mask = (flags == 0) & (mag < 14) & (mag > 13) & (size > 2) & (size < 2.5)
         idx = numpy.argsort(size[mask])
-        print 'sizes = ',size[mask][idx].tolist()
-        print 'index = ',index[mask][idx].tolist()
-        print 'mag = ',mag[mask][idx].tolist()
-        print 'x = ',xvals[mask][idx].tolist()
-        print 'y = ',yvals[mask][idx].tolist()
+        #print 'sizes = ',size[mask][idx].tolist()
+        #print 'index = ',index[mask][idx].tolist()
+        #print 'mag = ',mag[mask][idx].tolist()
+        #print 'x = ',xvals[mask][idx].tolist()
+        #print 'y = ',yvals[mask][idx].tolist()
 
         # This choice of a star is fairly isolated from neighbors, isn't too near an edge or a tape
         # bump, and doesn't have any noticeable image artifacts in its vicinity.
@@ -427,12 +429,12 @@ def test_psf():
 
         header = galsim.fits.FitsHeader(image_file, dir=example_data_dir)
         sky_level = header['SKYBRITE']
-        print 'sky_level = ',sky_level
+        #print 'sky_level = ',sky_level
         data_stamp -= sky_level
 
         raw_meas = data_stamp.FindAdaptiveMom()
         print 'raw_meas = ',raw_meas
-        print 'pixel scale = ',data_stamp.wcs.minLinearScale(image_pos=image_pos)
+        #print 'pixel scale = ',data_stamp.wcs.minLinearScale(image_pos=image_pos)
         ref_size = raw_meas.moments_sigma
         ref_shape = raw_meas.observed_shape
         print 'ref size: ',ref_size
