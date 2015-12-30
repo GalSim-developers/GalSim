@@ -422,7 +422,8 @@ def build_meds(config, file_num, image_num, obj_num, nproc, ignore, logger):
     nstamps_per_object = params['nstamps_per_object']
     ntot = nobjects * nstamps_per_object
 
-    main_images = galsim.config.BuildImages(ntot, config, image_num, obj_num, logger=logger)
+    main_images = galsim.config.BuildImages(ntot, config, image_num=image_num,  obj_num=obj_num,
+                                            nproc=nproc, logger=logger)
 
     weight_images = galsim.config.GetFinalExtraOutput('weight', config, logger)
     badpix_images = galsim.config.GetFinalExtraOutput('badpix', config, logger)

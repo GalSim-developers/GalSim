@@ -52,6 +52,8 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, nproc=1, logger=None):
         nim_per_task = galsim.config.CalculateNObjPerTask(nproc, nimages, config)
     else:
         nim_per_task = 1
+    if logger and logger.isEnabledFor(logging.DEBUG):
+        logger.debug('file %d: BuildImages nproc = %d, nim_per_task = %d',nproc,nim_per_task)
 
     jobs = []
     for k in range(nimages):
