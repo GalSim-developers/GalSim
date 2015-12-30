@@ -133,10 +133,16 @@ def ParseValue(config, key, base, value_type):
         #print key,' = ',val
         return val, safe
 
-def GetCurrentValue(key, base, value_type=None):
+def GetCurrentValue(key, base, value_type=None, return_safe=False):
     """@brief Get the current value of another config item given the key name.
 
-    @returns the current value
+    @param key          The key value in the dict to get the current value of.
+    @param base         The base config dict.
+    @param value_type   The value_type expected.  [default: None, which means it won't check
+                        that the value is the right type.]
+    @param return_safe  If True, also return the current_safe value: (value, safe).
+
+    @returns the current value (or value, safe if return_safe = True)
     """
     #print 'GetCurrent %s.  value_type = %s'%(key,value_type)
 
@@ -178,22 +184,27 @@ def GetCurrentValue(key, base, value_type=None):
                     # item is probably just some value already.
                     #print 'Not dict, no value_type.  Assume %s is ok.'%d[k]
                     val = d[k]
+                    safe = True
                 else:
                     # This will work fine to evaluate the current value, but will also
                     # compute it if necessary
                     #print 'Not dict. Parse value normally'
-                    val = ParseValue(d, k, base, value_type)[0]
+                    val, safe = ParseValue(d, k, base, value_type)
             else:
                 if 'current_val' in d[k]:
                     # If there is already a current_val, use it.
                     #print 'Dict with current_val.  Use it: ',d[k]['current_val']
                     val = d[k]['current_val']
+                    safe = d[k]['current_safe']
                 else:
                     # Otherwise, parse the value for this key
                     #print 'Parse value normally'
-                    val = ParseValue(d, k, base, value_type)[0]
+                    val, safe = ParseValue(d, k, base, value_type)
             #print base['obj_num'],'Current key = %s, value = %s'%(key,val)
-            return val
+            if return_safe:
+                return val, safe
+            else:
+                return val
 
     raise ValueError("Invalid key = %s"%key)
 
@@ -687,7 +698,7 @@ def _GenerateFromCurrent(config, base, value_type):
     params, safe = GetAllParams(config, base, req=req)
     key = params['key']
     try:
-        return GetCurrentValue(key, base, value_type), False
+        return GetCurrentValue(key, base, value_type, return_safe=True)
     except ValueError:
         raise ValueError("Invalid key = %s given for type=Current")
 
