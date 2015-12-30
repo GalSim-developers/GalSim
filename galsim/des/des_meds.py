@@ -221,7 +221,6 @@ def write_meds(obj_list, file_name, clobber=True):
 
     # loop over objects
     for obj in obj_list:
-        print 'obj = ',obj
 
         # initialise the start indices for each image
         start_rows = numpy.ones(MAX_NCUTOUTS)*EMPTY_START_INDEX
