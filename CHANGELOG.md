@@ -17,4 +17,5 @@ Bug Fixes
 New Features
 ------------
 
-- Added methods calculateHLR, calculateMomentRadius, and calculateFWHM. (#308)
+- Added methods calculateHLR, calculateMomentRadius, and calculateFWHM to both
+  GSObject and Image. (#308)

@@ -384,36 +384,8 @@ class GSObject(object):
         offset = galsim.PositionD(0.2, 0.33)
         im = self.drawImage(nx=size, ny=size, scale=scale, offset=offset)
 
-        # Use radii at centers of pixels as approximation to the radial integral
-        x,y = np.meshgrid(range(im.array.shape[0]), range(im.array.shape[1]))
-        x = x - (im.trueCenter().x - im.bounds.xmin + offset.x + centroid.x/scale)
-        y = y - (im.trueCenter().y - im.bounds.ymin + offset.y + centroid.y/scale)
-        rsq = x*x + y*y
-
-        # Sort by radius
-        indx = np.argsort(rsq.flatten())
-        rsqf = rsq.flatten()[indx]
-        data = im.array.flatten()[indx]
-        cumflux = np.cumsum(data)
-
-        # Find the first value with cumflux > 0.5 * flux
-        k = np.argmax(cumflux > flux_frac * self.flux)
-        flux_k = cumflux[k] / self.flux  # normalize to unit total flux
-
-        # Interpolate (linearly) between this and the previous value.
-        if k == 0:
-            hlrsq = rsqf[0] * (flux_frac / flux_k)
-        else:
-            fkm1 = cumflux[k-1] / self.flux
-            # For brevity in the next formula:
-            fk = flux_k
-            f = flux_frac
-            hlrsq = (rsqf[k-1] * (fk-f) + rsqf[k] * (f-fkm1)) / (fk-fkm1)
-
-        # This has all been done in pixels.  So normalize according to the pixel scale.
-        hlr = np.sqrt(hlrsq) * im.scale
-
-        return hlr
+        center = im.trueCenter() + offset + centroid/scale
+        return im.calculateHLR(center=center, flux=self.flux, flux_frac=flux_frac)
 
 
     def calculateMomentRadius(self, size=None, scale=None, centroid=None, rtype='det'):
@@ -479,34 +451,8 @@ class GSObject(object):
         # Draw the image.  Note: need a method that integrates over pixels to get flux right.
         im = self.drawImage(nx=size, ny=size, scale=scale)
 
-        # Use radii at centers of pixels as approximation to the radial integral
-        x,y = np.meshgrid(range(im.array.shape[0]), range(im.array.shape[1]))
-        x = x - (im.trueCenter().x - im.bounds.xmin + centroid.x/scale)
-        y = y - (im.trueCenter().y - im.bounds.ymin + centroid.y/scale)
-
-        if rtype in ['trace', 'both']:
-            # Calculate trace measure:
-            rsq = x*x + y*y
-            Irr = np.sum(rsq * im.array) / self.flux
-
-            # This has all been done in pixels.  So normalize according to the pixel scale.
-            sigma_trace = (Irr/2.)**0.5 * im.scale
-
-        if rtype in ['det', 'both']:
-            # Calculate det measure:
-            Ixx = np.sum(x*x * im.array) / self.flux
-            Iyy = np.sum(y*y * im.array) / self.flux
-            Ixy = np.sum(x*y * im.array) / self.flux
-
-            # This has all been done in pixels.  So normalize according to the pixel scale.
-            sigma_det = (Ixx*Iyy-Ixy**2)**0.25 * im.scale
-
-        if rtype == 'trace':
-            return sigma_trace
-        elif rtype == 'det':
-            return sigma_det
-        else:
-            return sigma_trace, sigma_det
+        center = im.trueCenter() + centroid/scale
+        return im.calculateMomentRadius(center=center, flux=self.flux, rtype=rtype)
 
 
     def calculateFWHM(self, size=None, scale=None, centroid=None):
@@ -558,36 +504,8 @@ class GSObject(object):
             im1 = self.drawImage(nx=1, ny=1, scale=scale, method='sb', offset=-centroid/scale)
             Imax = im1(1,1)
 
-        # If the full image has a larger maximum, use that.
-        Imax2 = np.max(im.array)
-        if Imax2 > Imax: Imax = Imax2
-
-        # Use radii at centers of pixels.
-        x,y = np.meshgrid(range(im.array.shape[0]), range(im.array.shape[1]))
-        x = x - (im.trueCenter().x - im.bounds.xmin + offset.x + centroid.x/scale)
-        y = y - (im.trueCenter().y - im.bounds.ymin + offset.y + centroid.y/scale)
-        rsq = x*x + y*y
-
-        # Sort by radius
-        indx = np.argsort(rsq.flatten())
-        rsqf = rsq.flatten()[indx]
-        data = im.array.flatten()[indx]
-
-        # Find the first value with I < 0.5 * Imax
-        k = np.argmax(data < 0.5 * Imax)
-        Ik = data[k] / Imax
-
-        # Interpolate (linearly) between this and the previous value.
-        if k == 0:
-            rsqhm = rsqf[0] * (0.5 / Ik)
-        else:
-            Ikm1 = data[k-1] / Imax
-            rsqhm = (rsqf[k-1] * (Ik-0.5) + rsqf[k] * (0.5-Ikm1)) / (Ik-Ikm1)
-
-        # This has all been done in pixels.  So normalize according to the pixel scale.
-        fwhm = 2. * np.sqrt(rsqhm) * im.scale
-
-        return fwhm
+        center = im.trueCenter() + offset + centroid/scale
+        return im.calculateFWHM(center=center, Imax=Imax)
 
 
     @property
