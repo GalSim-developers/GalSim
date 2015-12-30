@@ -87,9 +87,14 @@ def _GenerateFromEval(config, base, value_type):
         for key0 in keys:
             key = key0[1:] # Remove the @ sign.
             value = galsim.config.GetCurrentValue(key, base)
-            # Replaces all occurrences of key0 with the value.
-            string = string.replace(key0,repr(value)) 
-            #print '%s = %s'%(key, string)
+            # Give a probably unique name to this value
+            key_name = "temp_variable_" + key.replace('.','_')
+            #print 'key_name = ',key_name
+            #print 'value = ',value
+            # Replaces all occurrences of key0 with the key_name.
+            string = string.replace(key0,key_name)
+            # Finally, bring the key's variable name into scope.
+            exec(key_name + ' = value')
 
     # Bring the user-defined variables into scope.
     for key in opt.keys():
