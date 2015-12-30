@@ -121,14 +121,15 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
 
         # Load the wcs from the header.
         if header is not None:
-            if self._tag is None: self._tag = 'header=%r'%galsim.FitsHeader(header)
+            if self._tag is None: 
+                self.header = header
             if wcs is not None:
                 raise TypeError("Cannot provide both pyfits header and wcs")
             wcs = self._load_from_header(header, hdu)
 
         if wcs is None:
             raise TypeError("Must provide one of file_name, header, or wcs")
-        if self._tag is None: self._tag = 'wcs=%r'%wcs
+
         if file_name is not None:
             galsim.fits.closeHDUList(hdu_list, fin)
 
@@ -341,6 +342,11 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
                  self.origin == other.origin )
 
     def __repr__(self):
+        if self._tag is None:
+            if hasattr(self,'header'):
+                self._tag = 'header=%r'%galsim.FitsHeader(self.header)
+            else:
+                self._tag = 'wcs=%r'%self.wcs
         return "galsim.AstropyWCS(%s, origin=%r)"%(self._tag, self.origin)
 
     def __hash__(self): return hash(repr(self))
@@ -349,7 +355,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
         d = self.__dict__.copy()
         # If header or wcs is in the tag, then it might still be picklable, so let pickle
         # try and raise the normal exception if it can't.
-        if 'wcs' not in self._tag and 'header' not in self._tag:
+        if self._tag is not None and 'wcs' not in self._tag and 'header' not in self._tag:
             del d['_wcs']
         return d
 
@@ -436,15 +442,14 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
 
         # Load the wcs from the header.
         if header is not None:
-            if self._tag is None: self._tag = 'header=%r'%galsim.FitsHeader(header)
+            if self._tag is None: 
+                self.header = header
             if wcsinfo is not None:
                 raise TypeError("Cannot provide both pyfits header and wcsinfo")
             wcsinfo = self._load_from_header(header, hdu)
 
         if wcsinfo is None:
             raise TypeError("Must provide one of file_name, header, or wcsinfo")
-        # Ast doesn't have a good repr for a FrameSet, so do it ourselves.
-        if self._tag is None: self._tag = 'wcsinfo=<starlink.Ast.FrameSet at %s>'%id(wcsinfo)
 
         #  We can only handle WCS with 2 pixel axes (given by Nin) and 2 WCS axes
         # (given by Nout).
@@ -616,6 +621,12 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
                  self.origin == other.origin)
 
     def __repr__(self):
+        if self._tag is None:
+            if hasattr(self, 'header'):
+                self._tag = 'header=%r'%galsim.FitsHeader(self.header)
+            else:
+                # Ast doesn't have a good repr for a FrameSet, so do it ourselves.
+                self._tag = 'wcsinfo=<starlink.Ast.FrameSet at %s>'%id(self.wcsinfo)
         return "galsim.PyAstWCS(%s, origin=%r)"%(self._tag, self.origin)
 
     def __hash__(self): return hash(repr(self))
@@ -624,7 +635,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
         d = self.__dict__.copy()
         # If header or wcsinfo is in the tag, then we can't pickle.  Just leave it alone
         # and let pickle raise the normal exception.
-        if 'wcsinfo' not in self._tag and 'header' not in self._tag:
+        if self._tag is not None and 'wcsinfo' not in self._tag and 'header' not in self._tag:
             del d['_wcsinfo']
         return d
 
