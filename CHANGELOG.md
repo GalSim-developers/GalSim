@@ -22,6 +22,8 @@ Bug Fixes
 
 New Features
 ------------
+- Added methods calculateHLR, calculateMomentRadius, and calculateFWHM to both
+  GSObject and Image. (#308)
 - Added OutputCatalog class (#301, #691)
 - Added BoundsI.numpyShape() to easily get the numpy shape that corresponds
   to a given bounds instance. (#654)

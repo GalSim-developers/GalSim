@@ -338,6 +338,180 @@ class GSObject(object):
         """
         return self.SBProfile.getGSParams()
 
+    def calculateHLR(self, size=None, scale=None, centroid=None, flux_frac=0.5):
+        """Returns the half-light radius of the object.
+
+        If the profile has a half_light_radius attribute, it will just return that, but in the
+        general case, we draw the profile and estimate the half-light radius directly.
+
+        The function optionally takes size and scale values to use for the image drawing.
+        The default scale is half the nyquist scale, which generally produces results accurate
+        to about 1 decimal place.  Using a smaller scale will be more accurate at the expense
+        of speed.  The default size is None, which means drawImage will choose a size designed
+        to contain around 99.5% of the flux.  This is overkill for this calculation, so 
+        choosing a smaller size than this may speed up this calculation somewhat.
+
+        Also, while the name of this function refers to the half-light radius, in fact it can also
+        calculate radii that enclose other fractions of the light, according to the parameter
+        `flux_frac`.  E.g. for r90, you would set flux_frac=0.90.
+
+        Note: The results from this calculation should be taken as approximate at best.
+              They should usually be acceptable for things like testing that a galaxy has a
+              reasonable resolution, but they should not be trusted for very fine grain
+              discriminations.
+
+        @param size         If given, the stamp size to use for the drawn image. [default: None,
+                            which will let drawImage choose the size automatically]
+        @param scale        If given, the pixel scale to use for the drawn image. [default:
+                            0.5 * self.nyquistScale()]
+        @param centroid     The position to use for the centroid. [default: self.centroid()]
+        @param flux_frac    The fraction of light to be enclosed by the returned radius.
+                            [default: 0.5]
+
+        @returns an estimate of the half-light radius in physical units
+        """
+        if hasattr(self, 'half_light_radius'): 
+            return self.half_light_radius
+
+        if scale is None:
+            scale = self.nyquistScale() * 0.5
+
+        if centroid is None:
+            centroid = self.centroid()
+
+        # Draw the image.  Note: need a method that integrates over pixels to get flux right.
+        # The offset is to make all the rsq values different to help the precision a bit.
+        offset = galsim.PositionD(0.2, 0.33)
+        im = self.drawImage(nx=size, ny=size, scale=scale, offset=offset)
+
+        center = im.trueCenter() + offset + centroid/scale
+        return im.calculateHLR(center=center, flux=self.flux, flux_frac=flux_frac)
+
+
+    def calculateMomentRadius(self, size=None, scale=None, centroid=None, rtype='det'):
+        """Returns an estimate of the radius based on unweighted second moments.
+
+        The second moments are defined as:
+
+        Q_ij = int( I(x,y) i j dx dy ) / int( I(x,y) dx dy )
+        where i,j may be either x or y.
+
+        If I(x,y) is a Gaussian, then T = Tr(Q) = Qxx + Qyy = 2 sigma^2.  Thus, one reasonable
+        choice for a "radius" for an arbitrary profile is sqrt(T/2).  
+
+        In addition, det(Q) = sigma^4.  So another choice for an arbitrary profile is det(Q)^1/4.
+
+        This routine can return either of these measures according to the value of the `rtype`
+        parameter.  `rtype='trace'` will cause it to return sqrt(T/2).  `rtype='det'` will cause
+        it to return det(Q)^1/4.  And `rtype='both'` will return a tuple with both values.
+
+        Note that for the special case of a Gaussian profile, no calculation is necessary, and
+        the `sigma` attribute will be used in both cases.  In the limit as scale->0, this 
+        function will return the same value, but because finite pixels are drawn, the results
+        will not be precisely equal for real use cases.  The approximation being made is that
+        the integral of I(x,y) i j dx dy over each pixel can be approximated as
+        int(I(x,y) dx dy) * i_center * j_center.
+
+        The function optionally takes size and scale values to use for the image drawing.
+        The default scale is the nyquist scale, which generally produces results accurate
+        to about 1 decimal place.  Using a smaller scale will be more accurate at the expense
+        of speed.  The default size is None, which means drawImage will choose a size designed
+        to contain around 99.5% of the flux.  Using a larger size will again be more accurate
+        at the expense of speed.
+
+        Note: The results from this calculation should be taken as approximate at best.
+              They should usually be acceptable for things like testing that a galaxy has a
+              reasonable resolution, but they should not be trusted for very fine grain
+              discriminations.  For a more accurate estimate, see galsim.hsm.FindAdaptiveMom.
+
+        @param size         If given, the stamp size to use for the drawn image. [default: None,
+                            which will let drawImage choose the size automatically]
+        @param scale        If given, the pixel scale to use for the drawn image. [default:
+                            self.nyquistScale()]
+        @param centroid     The position to use for the centroid. [default: self.centroid()]
+        @param rtype        There are three options for this parameter:
+                            - 'trace' means return sqrt(T/2)
+                            - 'det' means return det(Q)^1/4
+                            - 'both' means return both: (sqrt(T/2), det(Q)^1/4)
+                            [default: 'det']
+
+        @returns an estimate of the radius in physical units (or both estimates if rtype == 'both')
+        """
+        if rtype not in ['trace', 'det', 'both']:
+            raise ValueError("rtype must be one of 'trace', 'det', or 'both'")
+
+        if hasattr(self, 'sigma'): 
+            if rtype == 'both':
+                return self.sigma, self.sigma
+            else:
+                return self.sigma
+
+        if scale is None:
+            scale = self.nyquistScale()
+
+        if centroid is None:
+            centroid = self.centroid()
+
+        # Draw the image.  Note: need a method that integrates over pixels to get flux right.
+        im = self.drawImage(nx=size, ny=size, scale=scale)
+
+        center = im.trueCenter() + centroid/scale
+        return im.calculateMomentRadius(center=center, flux=self.flux, rtype=rtype)
+
+
+    def calculateFWHM(self, size=None, scale=None, centroid=None):
+        """Returns the full-width half-maximum (FWHM) of the object.
+
+        If the profile has a fwhm attribute, it will just return that, but in the general case,
+        we draw the profile and estimate the FWHM directly.
+
+        The function optionally takes size and scale values to use for the image drawing.
+        The default scale is half the nyquist scale, which generally produces results accurate
+        to about 1 decimal place.  Using a smaller scale will be more accurate at the expense
+        of speed.  The default size is None, which means drawImage will choose a size designed
+        to contain around 99.5% of the flux.  This is overkill for this calculation, so 
+        choosing a smaller size than this may speed up this calculation somewhat.
+
+        Note: The results from this calculation should be taken as approximate at best.
+              They should usually be acceptable for things like testing that a galaxy has a
+              reasonable resolution, but they should not be trusted for very fine grain
+              discriminations.
+
+        @param size         If given, the stamp size to use for the drawn image. [default: None,
+                            which will let drawImage choose the size automatically]
+        @param scale        If given, the pixel scale to use for the drawn image. [default:
+                            self.nyquistScale()]
+        @param centroid     The position to use for the centroid. [default: self.centroid()]
+
+        @returns an estimate of the full-width half-maximum in physical units
+        """
+        if hasattr(self, 'fwhm'): 
+            return self.fwhm
+
+        if scale is None:
+            scale = self.nyquistScale()
+
+        if centroid is None:
+            centroid = self.centroid()
+
+        # Draw the image.  Note: draw with method='sb' here, since the fwhm is a property of the 
+        # raw surface brightness profile, not integrated over pixels.
+        # The offset is to make all the rsq values different to help the precision a bit.
+        offset = galsim.PositionD(0.2, 0.33)
+
+        im = self.drawImage(nx=size, ny=size, scale=scale, offset=offset, method='sb')
+
+        # Get the maximum value, assuming the maximum is at the centroid.
+        if self.isAnalyticX():
+            Imax = self.xValue(centroid)
+        else:
+            im1 = self.drawImage(nx=1, ny=1, scale=scale, method='sb', offset=-centroid/scale)
+            Imax = im1(1,1)
+
+        center = im.trueCenter() + offset + centroid/scale
+        return im.calculateFWHM(center=center, Imax=Imax)
+
+
     @property
     def flux(self): return self.getFlux()
     @property
