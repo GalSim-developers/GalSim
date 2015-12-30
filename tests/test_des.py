@@ -234,7 +234,7 @@ def test_meds_config():
         'image' : { 'pixel_scale' : pixel_scale,
                     'random_seed' : seed,
                     'size' : stamp_size },
-        'output' : { 'type' : 'des_meds',
+        'output' : { 'type' : 'MEDS',
                      'nobjects' : nobj,
                      'nstamps_per_object' : n_per_obj,
                      'file_name' : file_name

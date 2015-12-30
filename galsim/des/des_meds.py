@@ -460,7 +460,7 @@ def nobj_meds(config, file_num):
 import galsim.config
 
 # Make this a valid output type:
-galsim.config.RegisterOutputType('des_meds',
+galsim.config.RegisterOutputType('MEDS',
     build_func = build_meds,
     write_func = write_meds,
     nimages_func = nobj_meds)
