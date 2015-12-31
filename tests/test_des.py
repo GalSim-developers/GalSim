@@ -33,7 +33,7 @@ except ImportError:
 
 def test_meds():
     """
-    Create two objects, each with two exposures. Save them to a MEDS file.
+    Create two objects, each with three exposures. Save them to a MEDS file.
     Load the MEDS file. Compare the created objects with the one read by MEDS.
     """
     import time
@@ -42,9 +42,9 @@ def test_meds():
     # initialise empty MultiExposureObject list
     objlist = []
 
-    # we will be using 2 objects for testing, each with 2 cutouts
+    # we will be using 2 objects for testing, each with 3 cutouts
     n_obj_test = 2 
-    n_cut_test = 2
+    n_cut_test = 3
 
     # set the image size
     box_size = 32
@@ -52,51 +52,69 @@ def test_meds():
     # first obj
     img11 = galsim.Image(box_size, box_size, init_value=111)
     img12 = galsim.Image(box_size, box_size, init_value=112)
+    img13 = galsim.Image(box_size, box_size, init_value=113)
     seg11 = galsim.Image(box_size, box_size, init_value=121)
     seg12 = galsim.Image(box_size, box_size, init_value=122)
+    seg13 = galsim.Image(box_size, box_size, init_value=123)
     wth11 = galsim.Image(box_size, box_size, init_value=131)
     wth12 = galsim.Image(box_size, box_size, init_value=132)
+    wth13 = galsim.Image(box_size, box_size, init_value=133)
+    psf11 = galsim.Image(box_size, box_size, init_value=141)
+    psf12 = galsim.Image(box_size, box_size, init_value=142)
+    psf13 = galsim.Image(box_size, box_size, init_value=143)
     dudx = 11.1; dudy = 11.2; dvdx = 11.3; dvdy = 11.4; x0 = 11.5; y0 = 11.6;
     wcs11  = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, galsim.PositionD(x0, y0))
     dudx = 12.1; dudy = 12.2; dvdx = 12.3; dvdy = 12.4; x0 = 12.5; y0 = 12.6;
     wcs12  = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, galsim.PositionD(x0, y0))
+    dudx = 13.1; dudy = 13.2; dvdx = 13.3; dvdy = 13.4; x0 = 13.5; y0 = 13.6;
+    wcs13  = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, galsim.PositionD(x0, y0))
 
 
     # create lists
-    images =   [img11, img12]
-    weights =  [wth11, wth12]
-    segs =     [seg11, seg12]
-    wcs =      [wcs11, wcs12]
+    images = [img11, img12, img13]
+    weight = [wth11, wth12, wth13]
+    seg =    [seg11, seg12, seg13]
+    psf =    [psf11, psf12, psf13]
+    wcs =    [wcs11, wcs12, wcs13]
 
     # create object
-    obj1 = galsim.des.MultiExposureObject(images=images, weights=weights, segs=segs, wcs=wcs, id=1)
-    #print 'obj1 = ',obj1
+    obj1 = galsim.des.MultiExposureObject(images=images, weight=weight, seg=seg, psf=psf,
+                                          wcs=wcs, id=1)
 
     # second obj
     img21 = galsim.Image(box_size, box_size, init_value=211)
     img22 = galsim.Image(box_size, box_size, init_value=212)
+    img23 = galsim.Image(box_size, box_size, init_value=213)
     seg21 = galsim.Image(box_size, box_size, init_value=221)
     seg22 = galsim.Image(box_size, box_size, init_value=222)
+    seg23 = galsim.Image(box_size, box_size, init_value=223)
     wth21 = galsim.Image(box_size, box_size, init_value=231)
     wth22 = galsim.Image(box_size, box_size, init_value=332)
+    wth23 = galsim.Image(box_size, box_size, init_value=333)
+    psf21 = galsim.Image(box_size, box_size, init_value=241)
+    psf22 = galsim.Image(box_size, box_size, init_value=342)
+    psf23 = galsim.Image(box_size, box_size, init_value=343)
 
     dudx = 21.1; dudy = 21.2; dvdx = 21.3; dvdy = 21.4; x0 = 21.5; y0 = 21.6;
     wcs21  = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, galsim.PositionD(x0, y0))
     dudx = 22.1; dudy = 22.2; dvdx = 22.3; dvdy = 22.4; x0 = 22.5; y0 = 22.6;
     wcs22  = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, galsim.PositionD(x0, y0))
+    dudx = 23.1; dudy = 23.2; dvdx = 23.3; dvdy = 23.4; x0 = 23.5; y0 = 23.6;
+    wcs23  = galsim.AffineTransform(dudx, dudy, dvdx, dvdy, galsim.PositionD(x0, y0))
 
     # create lists
-    images =   [img21, img22]
-    weights =  [wth21, wth22]
-    segs =     [seg21, seg22]
-    wcs =      [wcs21, wcs22]
+    images = [img21, img22, img23]
+    weight = [wth21, wth22, wth23]
+    seg =    [seg21, seg22, seg23]
+    psf =    [psf21, psf22, psf23]
+    wcs =    [wcs21, wcs22, wcs23]
 
     # create object
     # This time put the wcs in the image and get it there.
     img21.wcs = wcs21
     img22.wcs = wcs22
-    obj2 = galsim.des.MultiExposureObject(images=images, weights=weights, segs=segs, id=2)
-    #print 'obj2 = ',obj2
+    img23.wcs = wcs23
+    obj2 = galsim.des.MultiExposureObject(images=images, weight=weight, seg=seg, psf=psf, id=2)
 
     # create an object list
     objlist = [obj1, obj2]
@@ -105,7 +123,7 @@ def test_meds():
     filename_meds = 'output/test_meds.fits'
     #print 'file_name = ',filename_meds
     #print 'objlist = ',objlist
-    galsim.des.write_meds(objlist, filename_meds, clobber=True)
+    galsim.des.WriteMEDS(objlist, filename_meds, clobber=True)
     print 'wrote MEDS file %s ' % filename_meds
 
     # test functions in des_meds.py
@@ -113,9 +131,10 @@ def test_meds():
         import meds
     except ImportError:
         print 'Failed to import meds.  Unable to do tests of meds file.'
+        return
         # Note that while there are no tests prior to this, the above still checks for 
         # syntax errors in the meds creation software, so it's still worth running as part
-        # of the normal unit test runs.
+        # of the normal unit tests.
 
     print 'reading %s' % filename_meds
     m = meds.MEDS(filename_meds)
@@ -149,22 +168,25 @@ def test_meds():
         for icut in range(n_cut):
 
             # get the images etc to compare with originals
-            img = m.get_cutout( iobj, icut, type='image')
-            wth = m.get_cutout( iobj, icut, type='weight')
-            seg = m.get_cutout( iobj, icut, type='seg')
+            img = m.get_cutout(iobj, icut, type='image')
+            wth = m.get_cutout(iobj, icut, type='weight')
+            seg = m.get_cutout(iobj, icut, type='seg')
+            psf = m.get_psf(iobj, icut)
             wcs_meds = m.get_jacobian(iobj, icut)
-            wcs_array_meds= numpy.array( [ wcs_meds['dudrow'], wcs_meds['dudcol'],
-                wcs_meds['dvdrow'], wcs_meds['dvdcol'], wcs_meds['row0'],
-                wcs_meds['col0'] ] )
-
+            wcs_array_meds= numpy.array(
+                [ wcs_meds['dudrow'], wcs_meds['dudcol'],
+                  wcs_meds['dvdrow'], wcs_meds['dvdcol'], wcs_meds['row0'],
+                  wcs_meds['col0'] ] )
 
             # compare
             numpy.testing.assert_array_equal(img, objlist[iobj].images[icut].array,
                                              err_msg="MEDS cutout has wrong img for object %d"%iobj)
-            numpy.testing.assert_array_equal(wth, objlist[iobj].weights[icut].array,
+            numpy.testing.assert_array_equal(wth, objlist[iobj].weight[icut].array,
                                              err_msg="MEDS cutout has wrong wth for object %d"%iobj)
-            numpy.testing.assert_array_equal(seg, objlist[iobj].segs[icut].array,
+            numpy.testing.assert_array_equal(seg, objlist[iobj].seg[icut].array,
                                              err_msg="MEDS cutout has wrong seg for object %d"%iobj)
+            numpy.testing.assert_array_equal(psf, objlist[iobj].psf[icut].array,
+                                             err_msg="MEDS cutout has wrong psf for object %d"%iobj)
             wcs_orig = objlist[iobj].wcs[icut]
             wcs_array_orig = numpy.array(
                     [ wcs_orig.dudx, wcs_orig.dudy, wcs_orig.dvdx, wcs_orig.dvdy,
@@ -181,11 +203,15 @@ def test_meds():
         img = m.get_mosaic( iobj, type='image')
         wth = m.get_mosaic( iobj, type='weight')
         seg = m.get_mosaic( iobj, type='seg')
+        # There is currently no get_mosaic option for the psfs.
+        #psf = m.get_mosaic( iobj, type='psf')
+        psf = numpy.concatenate([m.get_psf(iobj,icut) for icut in range(n_cut)], axis=0)
 
         # get the concatenated images - create the true mosaic
-        true_mosaic_img = numpy.concatenate([x.array for x in objlist[iobj].images],  axis=0)
-        true_mosaic_wth = numpy.concatenate([x.array for x in objlist[iobj].weights], axis=0)
-        true_mosaic_seg = numpy.concatenate([x.array for x in objlist[iobj].segs],    axis=0)
+        true_mosaic_img = numpy.concatenate([x.array for x in objlist[iobj].images], axis=0)
+        true_mosaic_wth = numpy.concatenate([x.array for x in objlist[iobj].weight], axis=0)
+        true_mosaic_seg = numpy.concatenate([x.array for x in objlist[iobj].seg],    axis=0)
+        true_mosaic_psf = numpy.concatenate([x.array for x in objlist[iobj].psf],    axis=0)
 
         # compare
         numpy.testing.assert_array_equal(true_mosaic_img, img,
@@ -194,6 +220,8 @@ def test_meds():
                                          err_msg="MEDS mosaic has wrong wth for object %d"%iobj)
         numpy.testing.assert_array_equal(true_mosaic_seg, seg,
                                          err_msg="MEDS mosaic has wrong seg for object %d"%iobj)
+        numpy.testing.assert_array_equal(true_mosaic_psf, psf,
+                                         err_msg="MEDS mosaic has wrong psf for object %d"%iobj)
 
         print 'test passed get_mosaic for obj=%d' % (iobj)
 
@@ -272,9 +300,10 @@ def test_meds_config():
         import meds
     except ImportError:
         print 'Failed to import meds.  Unable to do tests of meds file.'
+        return
         # Note that while there are no tests prior to this, the above still checks for 
         # syntax errors in the meds creation software, so it's still worth running as part
-        # of the normal unit test runs.
+        # of the normal unit tests.
 
     print 'reading %s' % file_name
     m = meds.MEDS(file_name)
@@ -302,11 +331,18 @@ def test_meds_config():
         ref_wt_im = galsim.fits.read(ref_file, hdu=1)
         numpy.testing.assert_array_equal(ref_wt_im.array, meds_wt_array,
                                          err_msg="config MEDS has wrong wt for object %d"%iobj)
+
         meds_seg_array = m.get_mosaic(iobj, type='seg')
         ref_seg_im = galsim.fits.read(ref_file, hdu=2)
         ref_seg_im = 1 - ref_seg_im  # The seg mag is 1 where badpix == 0
         numpy.testing.assert_array_equal(ref_seg_im.array, meds_seg_array,
                                          err_msg="config MEDS has wrong seg for object %d"%iobj)
+
+        meds_psf_array = numpy.concatenate([m.get_psf(iobj,icut) for icut in range(n_per_obj)],
+                                           axis=0)
+        ref_psf_im = galsim.fits.read(ref_file, hdu=3)
+        numpy.testing.assert_array_equal(ref_psf_im.array, meds_psf_array,
+                                         err_msg="config MEDS has wrong psf for object %d"%iobj)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
