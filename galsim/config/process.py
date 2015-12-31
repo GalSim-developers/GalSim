@@ -345,17 +345,23 @@ def SetupConfigRNG(config, seed_offset=0):
                  'first' : first
          }
 
+    index_key = config['index_key']
+
     if 'random_seed' in config['image']:
-        orig_key = config['index_key']
         config['index_key'] = 'obj_num'
         seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['index_key'] = orig_key
+        config['index_key'] = index_key
         seed += seed_offset
     else:
         seed = 0
 
     config['seed'] = seed
-    config['rng'] = galsim.BaseDeviate(seed)
+    rng = galsim.BaseDeviate(seed)
+    config['rng'] = rng
+
+    # Also save this rng as 'file_num_rng' or 'image_num_rng' or 'obj_num_rng' according
+    # to whatever the index_key is.
+    config[index_key + '_rng'] = rng
 
     # This can be present for efficiency, since GaussianDeviates produce two values at a time, 
     # so it is more efficient to not create a new GaussianDeviate object each time.

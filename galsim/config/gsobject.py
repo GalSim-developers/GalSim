@@ -64,8 +64,14 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     if False:
         logger.debug('obj %d: param = %s',base['obj_num'],param)
 
+    # Save these, so we can edit them based on parameters at this level in the tree to take 
+    # effect an all lower branches, and then we can reset it back to this at the end.
+    orig_index_key = base.get('index_key',None)
+    orig_rng = base.get('rng',None)
+
     # Check what index key we want to use for this object.
-    index, index_key = galsim.config.value._get_index(param, base)
+    # Note: this call will also set base['index_key'] and base['rng'] to the right values
+    index = galsim.config.value._get_index(param, base)
 
     # If we are repeating, then only make this when index % repeat == 0
     if 'repeat' in param:
@@ -196,6 +202,12 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     param['current_val'] = gsobject
     param['current_safe'] = safe
     param['current_index'] = index
+
+    # Reset these values in case they were changed.
+    if orig_index_key is not None:
+        base['index_key'] = orig_index_key
+    if orig_rng is not None:
+        base['rng'] = orig_rng
 
     return gsobject, safe
 

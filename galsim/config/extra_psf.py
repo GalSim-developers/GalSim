@@ -78,9 +78,7 @@ def ProcessExtraPSFStamp(images, scratch, config, base, obj_num, logger=None):
         offset += galsim.config.ParseValue(base['image'], 'offset', base, galsim.PositionD)[0]
     psf_im = DrawPSFStamp(psf,config,base,bounds,offset,draw_method,logger)
     if 'signal_to_noise' in config:
-        base['index_key'] = 'image_num'
         galsim.config.AddNoise(base,psf_im,0,logger)
-        base['index_key'] = 'obj_num'
     scratch[obj_num] = psf_im
 
 # The function to call at the end of building each image

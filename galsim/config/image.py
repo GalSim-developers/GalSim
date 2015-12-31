@@ -196,7 +196,6 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
     seed = galsim.config.SetupConfigRNG(config)
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: seed = %d',image_num,seed)
-    rng = config['rng'] # Grab this for use later
 
     # Do the necessary initial setup for this image type.
     setup_func = valid_image_types[image_type]['setup']
@@ -228,8 +227,10 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
     # level, so it cannot be used for things like wcs.pixelArea(image_pos).
     if 'image_pos' in config: del config['image_pos']
 
-    # Put the rng back into config['rng'] for use by the AddNoise function.
-    config['rng'] = rng
+    # Got back to using image_num for any indexing.
+    config['index_key'] = 'image_num'
+    # And put the right rng into config['rng'] for use by the AddNoise function.
+    config['rng'] = config['image_num_rng']
 
     # Do whatever processing is required for the extra output items.
     galsim.config.ProcessExtraOutputsForImage(config,logger)

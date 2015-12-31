@@ -65,10 +65,7 @@ def BuildFiles(nfiles, config, file_num=0, nproc=1, logger=None):
     obj_num = 0
 
     for k in range(nfiles + first_file_num):
-        config['index_key'] = 'file_num'
-        config['file_num'] = file_num
-        config['image_num'] = image_num
-        config['obj_num'] = obj_num
+        SetupConfigFileNum(config, file_num, image_num, obj_num)
 
         # Process the input fields that might be relevant at file scope:
         galsim.config.ProcessInput(config, file_num=file_num, logger=logger, file_scope_only=True)
