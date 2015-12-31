@@ -253,52 +253,233 @@ _galsim._LookupTable.__hash__ = lambda self: hash(repr(self))
 class LookupTable2D(object):
     """
     LookupTable2D represents a 2-dimensional lookup table to store function values that may be slow
-    to calculate, for which interpolating from a lookup table is sufficiently accurate.
+    to calculate, for which interpolating from a lookup table is sufficiently accurate.  A
+    LookupTable2D is also useful for evaluating periodic 2-d functions given samples from a single
+    period.
 
     A LookupTable2D representing the function f(x, y) may be constructed from initial offsets in
     both dimensions `x0` and `y0`, step sizes in both dimensions `dx` and `dy`, and an array of
-    function values `f`.
+    function values `f` (the max values of `x` and `y` are determined automatically from the shape
+    of the array `f`).
+
+    The default interpolation method is a cubic spline.  Other choices for the interpolant are the
+    same as for `InterpolatedImage`:
+      - 'nearest'
+      - 'linear'
+      - 'quintic'
+      - 'sinc', this one may not work well with edge wrapping since it has a large kernel footprint.
+      - 'lanczosN', where N is the order of the Lanczos interpolant
+
+    The `edge_mode` keyword describes how to handle extrapolation beyond the initial input range.
+    Possibilities include:
+      - 'none': do nothing, silently allow extrapolation, which will return all zeros at positions
+                beyond the combined extent of the initial range and interpolant kernel footprint.
+      - 'warn': allow extrapolation, but issue a warning whenever a value beyond the initial range
+                is requested.
+      - 'wrap': infinitely wrap the initial range in both directions.
+
+    Three methods are available to evaluate new function values with the lookup table:
+
+      - the () operator, i.e.:
+
+        > tab2d = LookupTable2D(...)
+        > val = tab2d(x, y)
+
+        The () operator has flexible input; the following are equivalent to the above:
+
+        > val = tab2d(galsim.PositionD(x, y))
+        > val = tab2d(y=y, x=x)
+
+      - the at() method, which is similar to the () operator, but slightly faster since the input
+        argument types do not need to be dynamically inferred:
+
+        > val = tab2d.at(x, y)
+
+      - the eval_grid() method, which is optimized for evaluating the lookup table on a grid.
+
+        > vals = tab2d.eval_grid(xmin, xmax, nx, ymin, ymax, ny)
+
+    @param x0             The minimum `x` position of the table inputs
+    @param y0             The minimum `y` position of the table inputs
+    @param dx             The `x` spacing of initial table inputs
+    @param dy             The `y` spacing of initial table inputs
+    @param f              The input array of function values
+    @param interpolant    Interpolant to use.  [Default: 'cubic']
+    @param edge_mode      Keyword controlling how extrapolation beyond the input range is handled.
+                          See above for details.  [Default: 'warn']
     """
-    def __init__(self, x0=0, y0=0, dx=1, dy=1, f=None, interpolant=None):
+    def __init__(self, x0=0.0, y0=0.0, dx=1.0, dy=1.0, f=None, interpolant=None,
+                 edge_mode=None):
         import numpy as np
         if interpolant is None:
             interpolant = 'cubic'
         self.interpolant = interpolant
+        if edge_mode is None:
+            edge_mode = 'warn'
+        if edge_mode not in {'warn', 'wrap', 'none'}:
+            raise ValueError("Unknown edge_mode")
+        self.edge_mode = edge_mode
 
         self.f = np.array(f)
         ny, nx = self.f.shape
+        self.xmin = x0
+        self.xmax = x0 + (nx-1)*dx
+        self.ymin = y0
+        self.ymax = y0 + (ny-1)*dy
 
-        self.x0 = x0
-        self.y0 = y0
-        self.dx = dx
-        self.dy = dy
+        xorigin = x0
+        yorigin = y0
+
+        if self.edge_mode == 'wrap':
+            # Need to extend the input grid by a few columns/rows here to make the interpolation
+            # work near the edges.  We wrap 3 rows/columns since the quintic interpolant footprint
+            # is 5x5.  Handle extrapolations outside of the initial input footprint using modular
+            # arithmetic inside the __call__(), at(), and eval_grid() methods.
+
+            # wrap 3 rows on top/bottom edges
+            self.f = np.vstack([self.f[-3:, :], self.f, self.f[:3, :]])
+            # wrap 3 columns (including new rows) on left/right edges
+            self.f = np.hstack([self.f[:, -3:], self.f, self.f[:, :3]])
+            # Grid repeats over pre-extended array size.
+            # Note that xrepeat != (xmax - xmin)  !!!  They're different by amount dx.
+            self.xrepeat = nx * dx
+            self.yrepeat = ny * dy
+            # adjust origin for new array size and range
+            xorigin -= 3*dx
+            yorigin -= 3*dy
+            nx += 6
+            ny += 6
+
         # JM - In principle, we can integrate the offset into the wcs too with an
         # AffineTransform object.  I haven't figured out how to actually take advantage of that
         # when using drawImage, though, so for now I'm handling the origin offset manually, and the
-        # "local" wcs (the shape part) through the wcs framework.
+        # "local" wcs (the pixel shape part) through the wcs framework.
         wcs = galsim.wcs.JacobianWCS(dx, 0.0, 0.0, dy)
 
-        img = galsim.ImageD(f, wcs=wcs)
-        self.ii = galsim.InterpolatedImage(
+        img = galsim.ImageD(self.f, wcs=wcs)
+        self._ii = galsim.InterpolatedImage(
             img, x_interpolant=self.interpolant, normalization='sb', calculate_stepk=False,
             calculate_maxk=False, pad_factor=1,
-        ).shift(self.x0+0.5*(nx-1)*self.dx, self.y0+0.5*(ny-1)*self.dy)
+        ).shift(xorigin+0.5*(nx-1)*dx, yorigin+0.5*(ny-1)*dy)
+
+    def _wrap_pos(self, pos):
+        x = (pos.x-self.xmin) % self.xrepeat + self.xmin
+        y = (pos.y-self.ymin) % self.yrepeat + self.ymin
+        return galsim.PositionD(x, y)
 
     def __call__(self, *args, **kwargs):
-        ny, nx = self.f.shape
+        """Interpolate/extrapolate the LookupTable2D to get `f(x, y)` at some `(x, y)` position.
+
+        Multiple options are supported for the input position.  For example:
+
+        > tab2d = LookupTable2D(...)
+        > val = tab2d(x, y)
+        > val = tab2d(galsim.PositionD(x, y))
+        > val = tab2d(y=y, x=x)
+
+        @returns the interpolated `f(x, y)` value.
+        """
         pos = galsim.utilities.parse_pos_args(args, kwargs, 'x', 'y')
-        return self.ii.xValue(pos)
+        if self.edge_mode == 'warn':
+            import warnings
+            if pos.x < self.xmin or pos.x > self.xmax or pos.y < self.ymin or pos.y > self.ymax:
+                warnings.warn("Extrapolating beyond input range.")
+        elif self.edge_mode == 'wrap':
+            pos = self._wrap_pos(pos)
+        return self._ii.xValue(pos)
 
     def at(self, x, y):
-        ny, nx = self.f.shape
+        """Interpolate/extrapolate the LookupTable2D to get `f(x, y)` at some `(x, y)` position.
+
+        This method is slightly faster than the () operator since the input is more constrained.
+
+        @param x   The `x` value for which `f(x, y)` should be evaluated
+        @param y   The `y` value for which `f(x, y)` should be evaluated
+
+        @returns   the interpolated `f(x, y)` value.
+        """
         pos = galsim.PositionD(x, y)
-        return self.ii.xValue(pos)
+        if self.edge_mode == 'warn':
+            import warnings
+            if pos.x < self.xmin or pos.x > self.xmax or pos.y < self.ymin or pos.y > self.ymax:
+                warnings.warn("Extrapolating beyond input range.")
+        elif self.edge_mode == 'wrap':
+            pos = self._wrap_pos(pos)
+        return self._ii.xValue(pos)
 
     def eval_grid(self, xmin, xmax, nx, ymin, ymax, ny):
-        dx = (xmax-xmin)/(nx-1.0)
-        dy = (ymax-ymin)/(ny-1.0)
+        """Evaluate the LookupTable2D on a regularly spaced grid.  This method is significantly
+        faster for grid evaluations than repeated calling the .at() method or the () operator.
+
+        @param xmin  Minimum value of `x` for which to obtain `f(x, y)`
+        @param xmax  Maximum value of `x` for which to obtain `f(x, y)`
+        @param nx    Number of grid points in the `x` direction for which to obtain `f(x, y)`
+        @param ymin  Minimum value of `y` for which to obtain `f(x, y)`
+        @param ymax  Maximum value of `y` for which to obtain `f(x, y)`
+        @param ny    Number of grid points in the `y` direction for which to obtain `f(x, y)`
+        @returns     Array of `f(x, y)` values.
+        """
+        if self.edge_mode == 'wrap':
+            return self._eval_grid_wrap(xmin, xmax, nx, ymin, ymax, ny)
+        elif self.edge_mode == 'warn':
+            import warnings
+            if xmin < self.xmin or xmax > self.xmax or ymin < self.ymin or ymax > self.ymax:
+                warnings.warn("Extrapolating beyond input range.")
+        return self._eval_grid(xmin, xmax, nx, ymin, ymax, ny)
+
+    def _eval_grid(self, xmin, xmax, nx, ymin, ymax, ny):
+        # Assumes no extrapolation.  I.e., that xmin > self.xmin, xmax < self.xmax, etc.
+        dx = (xmax-xmin)/(nx-1.0) if nx != 1 else 1e-12
+        dy = (ymax-ymin)/(ny-1.0) if ny != 1 else 1e-12
         xmean = 0.5*(xmin+xmax)
         ymean = 0.5*(ymin+ymax)
         wcs = galsim.wcs.JacobianWCS(dx, 0.0, 0.0, dy)
         offset = (-xmean, -ymean)
-        return self.ii.shift(offset).drawImage(nx=nx, ny=ny, method='sb', wcs=wcs).array
+        return self._ii.shift(offset).drawImage(nx=nx, ny=ny, method='sb', wcs=wcs).array
+
+    def _eval_grid_wrap(self, xmin, xmax, nx, ymin, ymax, ny):
+        # implement edge wrapping by repeatedly identifying grid cells that map back onto
+        # the "unwrapped" input coordinates.
+        import numpy as np
+        out = np.empty((ny, nx), dtype=float)
+        # Output grid spacing
+        dx = (xmax-xmin)/(nx-1.0)
+        dy = (ymax-ymin)/(ny-1.0)
+
+        # find wrap # that extends just below xmin
+        i = (xmin - self.xmin) // self.xrepeat
+        xlo, xhi = _lohi(i, self.xmin, self.xrepeat)  # current cell range
+        ix = 0  # lower index for current cell in output array
+        while xlo < xmax:
+            # find output x range within current wrap #
+            xmaxtmp = min([((xhi - xmin) // dx) * dx + xmin, xmax])
+            xmintmp = max([((xlo - xmin) // dx + 1) * dx + xmin, xmin])
+            nxtmp = int(round((xmaxtmp - xmintmp) / dx)) + 1
+
+            # find wrap # that extends just below ymin
+            j = (ymin - self.ymin) // self.yrepeat
+            ylo, yhi = _lohi(j, self.ymin, self.yrepeat)
+            iy = 0
+            while ylo < ymax:
+                # find output y range within current wrap #
+                ymaxtmp = min([((yhi - ymin) // dy) * dy + ymin, ymax])
+                ymintmp = max([((ylo - ymin) // dy + 1) * dy + ymin, ymin])
+                nytmp = int(round((ymaxtmp - ymintmp) / dy)) + 1
+
+                # _eval_grid with appropriately unwrapped coordinates
+                out[iy:iy+nytmp, ix:ix+nxtmp] = self._eval_grid(
+                    xmintmp - i * self.xrepeat, xmaxtmp - i * self.xrepeat, nxtmp,
+                    ymintmp - j * self.yrepeat, ymaxtmp - j * self.yrepeat, nytmp)
+
+                # prepare for next wrap #
+                j += 1
+                ylo, yhi = _lohi(j, self.ymin, self.yrepeat)
+                iy += nytmp
+            i += 1
+            xlo, xhi = _lohi(i, self.xmin, self.xrepeat)
+            ix += nxtmp
+        return out
+
+
+def _lohi(i, x0, dx):
+    return x0 + i * dx, x0 + (i+1) * dx
