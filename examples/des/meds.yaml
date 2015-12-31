@@ -1,0 +1,220 @@
+# A simulation based on the Great3 rgc branch, but tailored to DES specifics including
+# outputing to MEDS files.
+
+modules:
+    # Use the extra features from the galsim.des module
+    - galsim.des
+
+    # A custom package in this directory for measuring shapes with HSM
+    - hsm_shape
+
+    # GalSim doesn't have a log-normal distribution natively, so we make our own.
+    - log_normal
+
+psf:
+    type: Convolve
+
+    # This means the psf should change per output file, not per object as would be the default.
+    index_key : file_num
+
+    items:
+    # The atmospheric component
+    -   type: Kolmogorov
+        # To avoid PSFs that were "too round", the ellipticity was drawn from a uniform
+        # distribution from sqrt(1.e-4) to sqrt(9.e-4), based on an estimate of the 
+        # typical variance of e in ground-based imaging.
+        ellip:
+            type: EBeta
+            e: 
+                type: Random
+                min: 0.01
+                max: 0.03
+            beta: 
+                type: Random 
+
+        # The seeing is taken from a plausible distribution of seeing values
+        # ranging from 0.6 to 1.1.
+        fwhm: 
+            type: RandomDistribution
+            x: [ 0.6, 0.7, 0.8, 0.9, 1.0, 1.1 ]
+            f: [  0., 10., 20., 40., 30.,  0. ]
+
+    # The optical component 
+    -   type: OpticalPSF
+        # Take lambda = 800 nm.  D = 4 m.  lam/D = 0.04 arcsec
+        lam_over_diam: "$800 * 1.e-9 / 4 * 206265"
+
+        # I don't know what the right value of this is.  This is a guess.
+        obscuration: 0.3
+
+        # Despite sort of modeling off of DECam (with 4 struts), they didn't use 
+        # any struts for the ground psfs.
+        nstruts: 0
+
+        # According to Aaron Roodma, for DES the appropriate rms values are
+        # [ 0.13, 0.13, 0.14, 0.06, 0.06, 0.05, 0.06, 0.03 ]
+        defocus: { type: RandomGaussian, sigma: 0.13 }
+        astig1: { type: RandomGaussian, sigma: 0.13 }
+        astig2: { type: RandomGaussian, sigma: 0.14 }
+        coma1: { type: RandomGaussian, sigma: 0.06 }
+        coma2: { type: RandomGaussian, sigma: 0.06 }
+        trefoil1: { type: RandomGaussian, sigma: 0.05 }
+        trefoil2: { type: RandomGaussian, sigma: 0.06 }
+        spher: { type: RandomGaussian, sigma: 0.03 }
+
+        # Sometimes the OpticalPSF wants to make a very large image of the PSF.  But if the
+        # PSF image is larger than the postage stamp onto which we will draw the object,
+        # the larger area is mostly wasted.  Setting max_size to the size of the postage stamp
+        # we will eventually draw onto helps avoid wasted calculations.
+        # This is in arcsec, so max_size = stamp_size * pixel_scale
+        max_size: "$@image.size * @image.pixel_scale"
+        suppress_warning: true
+
+gal:
+    # Choose random real galaxies from the COSMOS catalog.
+    type: COSMOSGalaxy
+    gal_type: real
+    index: { type: Random }
+
+    # Randomly spin the original profile
+    rotate: { type: Random }
+
+    # The COSMOS galaxy sample is shallower than we want, so make them a bit smaller to simulate
+    # a fainter sample.  Don't worry about the flux, since we'll just adjust the noise to 
+    # an appropriate level.
+    dilate: 0.6
+
+    # The shear is chosen randomly within an annulus with 0.01 < |g| < 0.05.
+    shear:
+        type: EtaBeta
+        # Change the shear every file, not every object.
+        index_key : file_num
+        eta: 
+            # I'm not sure how appropriate a log normal distribution is here, but Erin was 
+            # asking about it, so I figured I'd put in an example of how you can roll your
+            # own distribution.
+            # Since this can have arbitrarily large values, use Eta-, rather than G-type shears.
+            type: LogNormal
+            mean: 0.05
+            sigma: 0.05
+        beta: { type: Random }
+
+image:
+    # Eventually, it would be nice to have variable stamp sizes based on the galaxy size, but 
+    # don't bother with that for now.
+    size: 48
+
+    # Also, just square pixels for now.
+    pixel_scale: 0.265
+
+    random_seed: 31415
+
+    # Simple Gaussian noise.  The range here is much larger than the range used for Great3 to
+    # simulate the wide range in sky levels we get in real data.
+    # This might need some work to tune to a reasonable average S/N level.
+    noise:
+        type: Gaussian
+        variance: 
+            type: Random
+            min: 0.002
+            max: 0.006
+
+    # Offset is just random within central pixel.
+    offset:
+        type: XY
+        x: { type: Random, min: -0.5, max: 0.5 }
+        y: { type: Random, min: -0.5, max: 0.5 }
+
+    # This means the code will parallelize the creation of a single output file,
+    # splitting up the postage stamps among the available cores.
+    # This is normally overridden by the output.nproc item below, so the parellelization
+    # will be done over files instead.  But if you modify this to only do one file or
+    # set output.nproc=1, then this stamp-based parallelization will turn on.
+    nproc: -1
+
+    # Sometimes the ffts need to be a bit bigger than is allowed by default...
+    #gsparams: {maximum_fft_size: 10240}
+
+input:
+    cosmos_catalog : 
+        # If the command galsim_download_cosmos has been run, the catalog will have been downloaed
+        # from the GalSim web site and saved in a directory that GalSim knows about. 
+        # So file_name and dir are not necessary. 
+
+        # We just need some parameters to tell it which galaxies to include in the selection.
+        # For now, just a maximum hlr to exclude huge objects, although cf. issue #693.
+        # We'll probably eventually want to allow larger galaxies and let them automatically
+        # use a larger stamp size.  
+        max_hlr : 2.5  # arcsec
+
+        # This still leaves in a lot of bright objects that visibly overflow the edge of the 
+        # postage stamps.  Great3 imposed a maximum S/N of 100 and a minimum of 17.
+        # Using the noise over 50 pixels as a *very rough!* estimate of the total noise
+        # (50 ~= pi r^2 where r = 4 pixels is close to the typical FWHM.), I find that the 
+        # corresponding flux range is around 8 to 50 ADU.
+        # Again, hopefully, this can be improved as part of issue #693 and we can
+        # just give max_snr, min_snr, given a noise level.
+        min_flux : 8
+        max_flux : 50
+
+        # Opening the files with the RealGalaxy images strangely takes a huge amount of time.
+        # This parameter determines whether this overhead is done at the beginning to load
+        # all the files at the start or if the overhead happens for each file the first time it
+        # is needed.  It used to be much faster to preload, but I think a number of changes to
+        # the code (that happened a while ago -- see issue #474) made it so not preloading is 
+        # actually better now.
+        #preload: True
+
+output:
+    type: MEDS
+    #nobjects: 10000  # nobj per file
+    nobjects: 10  # nobj per file
+    nstamps_per_object: 1  # For now, single epoch sim.
+
+    dir: output_yaml
+    file_name:
+        type: FormattedStr
+        format: "sim-v001-%03d.fits"
+        items:
+        - { type: Sequence, nitems: '@output.nfiles' }
+
+    # Note: This can be changed from the command line as `galsim meds.yaml output.nfiles=10` say.
+    # Likewise for any other parameters in the configuration.  This is often more convenient than
+    # changing the original YAML configuration file.  Especially for temporary modifications.
+    nfiles: 1
+
+    # This means the code will parallelize across the different files, doing a full
+    # output file in each core at a time.
+    # This is generally better than image.nproc, since it doesn't require as much interprocess
+    # communication, which can be rather slow.
+    nproc: -1
+
+    # Output truth catalogs with some of the generated values
+    truth:
+        file_name :
+            type: FormattedStr
+            format: truth_catalog-%03d-%1d.fits
+            items:
+            - { type: Sequence, nitems: '@output.nfiles' }
+            - 0
+        columns:
+            num: obj_num
+            x: image.offset.x
+            y: image.offset.y
+
+            psf_hlr: "$(@psf).calculateHLR()"
+            # Use hsm to get PSF shape estimates
+            psf_e1:
+                type: Eval
+                str: "psfe.e1"
+                gpsfe :
+                    index_key: file_num  # Only remeasure for each new file num.
+                    type: HSM_Shape_Measure  # In the module hsm_shape
+                    obj: 'psf'
+            psf_e2: "$(@output.truth.columns.psf_e1.gpsfe).e2"
+
+            cosmos_index: gal.index
+            theta: "$(@gal.rotate).rad()"
+
+            g1: "$(@gal.shear).g1"
+            g2: "$(@gal.shear).g2"
