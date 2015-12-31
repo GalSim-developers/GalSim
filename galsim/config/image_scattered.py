@@ -129,6 +129,8 @@ def BuildScattered(config, image_num, obj_num, logger):
             nobjects, config, nproc=nproc, logger=logger, obj_num=obj_num,
             do_noise=False)
 
+    config['index_key'] = 'image_num'
+
     for k in range(nobjects):
         # This is our signal that the object was skipped.
         if stamps[k] is None: continue

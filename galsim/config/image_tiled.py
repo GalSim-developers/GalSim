@@ -167,6 +167,8 @@ def BuildTiled(config, image_num, obj_num, logger):
             nobjects, config, nproc=nproc, logger=logger, obj_num=obj_num,
             xsize=xsize, ysize=ysize, do_noise=do_noise)
 
+    config['index_key'] = 'image_num'
+
     for k in range(nobjects):
         # This is our signal that the object was skipped.
         if stamps[k] is None: continue

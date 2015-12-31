@@ -336,12 +336,9 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             galsim.config.ProcessExtraOutputsForStamp(config, logger)
 
             if do_noise:
-                # The default indexing for the noise is image_num, not obj_num
-                config['index_key'] = 'image_num'
                 galsim.config.AddSky(config,im)
                 if not skip:
                     galsim.config.AddNoise(config,im,current_var,logger)
-                config['index_key'] = 'obj_num'
 
             return im, current_var
 
