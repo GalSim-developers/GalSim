@@ -97,7 +97,7 @@ from shear import Shear
 from angle import Angle, AngleUnit, radians, hours, degrees, arcmin, arcsec, HMS_Angle, DMS_Angle
 from catalog import Catalog, Dict
 from scene import COSMOSCatalog
-from table import LookupTable
+from table import LookupTable, LookupTable2D
 
 # Image
 from image import Image, ImageS, ImageI, ImageF, ImageD

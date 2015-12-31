@@ -16,17 +16,21 @@
 #    and/or other materials provided with the distribution.
 #
 """"@file table.py
-A few adjustments to galsim.LookupTable at the Python layer, including the 
+A few adjustments to galsim.LookupTable at the Python layer, including the
 addition of the docstring and few extra features.
+
+Also, a simple 2D table for uniformly gridded input data: LookupTable2D.
 """
 from . import _galsim
+import galsim
+
 
 class LookupTable(object):
     """
     LookupTable represents a lookup table to store function values that may be slow to calculate,
     for which interpolating from a lookup table is sufficiently accurate.
 
-    A LookupTable may be constructed from two arrays (lists, tuples, or NumPy arrays of 
+    A LookupTable may be constructed from two arrays (lists, tuples, or NumPy arrays of
     floats/doubles).
 
         >>> args = [...]
@@ -44,22 +48,22 @@ class LookupTable(object):
         ...     [... use val ...]
 
 
-    The default interpolation method is cubic spline interpolation.  This is usually the 
+    The default interpolation method is cubic spline interpolation.  This is usually the
     best choice, but we also provide three other options, which can be specified by
     the `interpolant` kwarg.  The choices are 'floor', 'ceil', 'linear' and 'spline':
 
     - 'floor' takes the value from the previous argument in the table.
     - 'ceil' takes the value from the next argument in the table.
     - 'linear' does linear interpolation between these two values.
-    - 'spline' uses a cubic spline interpolation, so the interpolated values are smooth at 
+    - 'spline' uses a cubic spline interpolation, so the interpolated values are smooth at
       each argument in the table.
 
-    Another option is to read in the values from an ascii file.  The file should have two 
+    Another option is to read in the values from an ascii file.  The file should have two
     columns of numbers, which are taken to be the `x` and `f` values.
 
     The user can also opt to interpolate in log(x) and/or log(f), though this is not the default.
     It may be a wise choice depending on the particular function, e.g., for a nearly power-law
-    f(x) (or at least one that is locally power-law-ish for much of the x range) then it might 
+    f(x) (or at least one that is locally power-law-ish for much of the x range) then it might
     be a good idea to interpolate in log(x) and log(f) rather than x and f.
 
     @param x             The list, tuple, or NumPy array of `x` values (floats, doubles, or ints,
@@ -70,7 +74,7 @@ class LookupTable(object):
                          [Either `x` and `f` or `file` is required.]
     @param file          A file from which to read the `(x,f)` pairs. [Either `x` and `f`, or `file`
                          is required]
-    @param interpolant   The interpolant to use, with the options being 'floor', 'ceil', 
+    @param interpolant   The interpolant to use, with the options being 'floor', 'ceil',
                          'linear' and 'spline'. [default: 'spline']
     @param x_log         Set to True if you wish to interpolate using log(x) rather than x.  Note
                          that all inputs / outputs will still be x, it's just a question of how the
@@ -243,4 +247,58 @@ _galsim._LookupTable.__repr__ = lambda self: \
             self.getArgs(), self.getVals(), self.getInterp())
 _galsim._LookupTable.__eq__ = lambda self, other: repr(self) == repr(other)
 _galsim._LookupTable.__ne__ = lambda self, other: not self.__eq__(other)
-_galsim._LookupTable.__hash__ = lambda self: hash(repr(other))
+_galsim._LookupTable.__hash__ = lambda self: hash(repr(self))
+
+
+class LookupTable2D(object):
+    """
+    LookupTable2D represents a 2-dimensional lookup table to store function values that may be slow
+    to calculate, for which interpolating from a lookup table is sufficiently accurate.
+
+    A LookupTable2D representing the function f(x, y) may be constructed from initial offsets in
+    both dimensions `x0` and `y0`, step sizes in both dimensions `dx` and `dy`, and an array of
+    function values `f`.
+    """
+    def __init__(self, x0=0, y0=0, dx=1, dy=1, f=None, interpolant=None):
+        import numpy as np
+        if interpolant is None:
+            interpolant = 'cubic'
+        self.interpolant = interpolant
+
+        self.f = np.array(f)
+        ny, nx = self.f.shape
+
+        self.x0 = x0
+        self.y0 = y0
+        self.dx = dx
+        self.dy = dy
+        # JM - In principle, we can integrate the offset into the wcs too with an
+        # AffineTransform object.  I haven't figured out how to actually take advantage of that
+        # when using drawImage, though, so for now I'm handling the origin offset manually, and the
+        # "local" wcs (the shape part) through the wcs framework.
+        wcs = galsim.wcs.JacobianWCS(dx, 0.0, 0.0, dy)
+
+        img = galsim.ImageD(f, wcs=wcs)
+        self.ii = galsim.InterpolatedImage(
+            img, x_interpolant=self.interpolant, normalization='sb', calculate_stepk=False,
+            calculate_maxk=False, pad_factor=1,
+        ).shift(self.x0+0.5*(nx-1)*self.dx, self.y0+0.5*(ny-1)*self.dy)
+
+    def __call__(self, *args, **kwargs):
+        ny, nx = self.f.shape
+        pos = galsim.utilities.parse_pos_args(args, kwargs, 'x', 'y')
+        return self.ii.xValue(pos)
+
+    def at(self, x, y):
+        ny, nx = self.f.shape
+        pos = galsim.PositionD(x, y)
+        return self.ii.xValue(pos)
+
+    def eval_grid(self, xmin, xmax, nx, ymin, ymax, ny):
+        dx = (xmax-xmin)/(nx-1.0)
+        dy = (ymax-ymin)/(ny-1.0)
+        xmean = 0.5*(xmin+xmax)
+        ymean = 0.5*(ymin+ymax)
+        wcs = galsim.wcs.JacobianWCS(dx, 0.0, 0.0, dy)
+        offset = (-xmean, -ymean)
+        return self.ii.shift(offset).drawImage(nx=nx, ny=ny, method='sb', wcs=wcs).array
