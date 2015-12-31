@@ -22,6 +22,7 @@ trying to read.
 """
 
 import galsim
+import warnings
 
 #########################################################################################
 #
@@ -95,9 +96,11 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
 
     def __init__(self, file_name=None, dir=None, hdu=None, header=None, compression='auto',
                  wcs=None, origin=None):
-        import astropy.wcs
-        import scipy # We don't need this yet, but we want it to fail now if it's not available.
-        import scipy.optimize # Check this too, since it's actually what we need from scipy.
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore",category=RuntimeWarning)
+            import astropy.wcs
+            import scipy  # AstropyWCS constructor will do this, so check now.
+            import scipy.optimize # Check this too, since it's actually what we need from scipy.
 
         self._tag = None # Write something useful here (see below). This is just used for the repr.
 
@@ -138,7 +141,6 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
         # later when if will fail (with `RuntimeError: NULL error object in wcslib`).
         # We'd rather get that to happen now rather than later.
         try:
-            import warnings
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 ra, dec = wcs.all_pix2world( [ [0, 0] ], 1)[0]
@@ -158,7 +160,6 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
     def _load_from_header(self, header, hdu):
         import astropy.wcs
         self._fix_header(header)
-        import warnings
         with warnings.catch_warnings():
             # The constructor might emit warnings if it wants to fix the header
             # information (e.g. RADECSYS -> RADESYSa).  We'd rather ignore these
@@ -244,7 +245,6 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             # 1.0 also included the fix.
             # cf. https://github.com/astropy/astropy/issues/1977
 
-            import warnings
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 xy = self._wcs.all_world2pix(rd, 1, ra_dec_order=True)[0]
@@ -255,7 +255,6 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             import astropy.wcs
             import scipy.optimize
             import numpy
-            import warnings
 
             origin = 1
             tolerance = 1.e-6
@@ -480,7 +479,6 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
             from galsim._pyfits import pyfits
             hdu = pyfits.PrimaryHDU()
             galsim.fits.FitsHeader(hdu_list=hdu).update(header)
-        import warnings
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             # They aren't so good at keeping up with the latest pyfits and numpy syntax, so
@@ -570,7 +568,6 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
         import starlink.Atl
 
         hdu = pyfits.PrimaryHDU()
-        import warnings
         with warnings.catch_warnings():
             # Again, we can get deprecation warnings here.  Safe to ignore.
             warnings.simplefilter("ignore")
@@ -817,7 +814,6 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
             if len(vals) < 6:
                 raise RuntimeError('wcstools sky2xy returned invalid result for %f,%f'%(ra,dec))
             if len(vals) > 6:
-                import warnings
                 warnings.warn('wcstools sky2xy indicates that %f,%f is off the image\n'%(ra,dec) +
                               'output is %r'%results)
             x.append(float(vals[4]))
@@ -1858,7 +1854,6 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
     # Finally, this one is really the last resort, since it only reads in the linear part of the 
     # WCS.  It defaults to the equivalent of a pixel scale of 1.0 if even these are not present.
     if not suppress_warning:
-        import warnings
         warnings.warn("All the fits WCS types failed to read "+file_name+".  " +
                       "Using AffineTransform instead, which will not really be correct.")
     wcs = galsim.wcs.AffineTransform._readHeader(header)
