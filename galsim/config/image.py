@@ -97,6 +97,8 @@ def SetupConfigImageNum(config, image_num, obj_num):
     - Set config['obj_num'] = obj_num
     - Set config['index_key'] = 'image_num'
     - Make sure config['image'] exists
+    - Set default config['image']['type'] to 'Single' if not specified
+    - Check that the specified image type is valid.
     - Set config['image']['draw_method'] to 'auto' if not given.
 
     @param config           The configuration dict.
@@ -114,10 +116,15 @@ def SetupConfigImageNum(config, image_num, obj_num):
     if not isinstance(image, dict):
         raise AttributeError("config.image is not a dict.")
 
-    if 'draw_method' not in image:
-        image['draw_method'] = 'auto'
     if 'type' not in image:
         image['type'] = 'Single'
+    image_type = image['type']
+    if image_type not in valid_image_types:
+        raise AttributeError("Invalid image.type=%s."%image_type)
+
+    if 'draw_method' not in image:
+        image['draw_method'] = 'auto'
+
 
 
 def SetupConfigImageSize(config, xsize, ysize):
@@ -189,8 +196,6 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
     SetupConfigImageNum(config,image_num,obj_num)
 
     image_type = config['image']['type']
-    if image_type not in valid_image_types:
-        raise AttributeError("Invalid image.type=%s."%image_type)
 
     # Build the rng to use at the image level.
     seed = galsim.config.SetupConfigRNG(config)
@@ -227,7 +232,7 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
     # level, so it cannot be used for things like wcs.pixelArea(image_pos).
     if 'image_pos' in config: del config['image_pos']
 
-    # Got back to using image_num for any indexing.
+    # Go back to using image_num for any indexing.
     config['index_key'] = 'image_num'
     # And put the right rng into config['rng'] for use by the AddNoise function.
     config['rng'] = config['image_num_rng']

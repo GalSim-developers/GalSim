@@ -31,11 +31,13 @@ def ProcessBadPixStamp(images, scratch, config, base, obj_num, logger=None):
         scratch[obj_num] = badpix_im
 
 # The function to call at the end of building each image
-def ProcessBadPixImage(images, scratch, config, base, logger=None):
+def ProcessBadPixImage(images, scratch, config, base, obj_nums, logger=None):
     image = galsim.ImageS(base['image_bounds'], wcs=base['wcs'], init_value=0)
     if len(scratch) > 0.:
         # If we have been accumulating the variance on the stamps, build the total from them.
-        for stamp in scratch.values():
+        # Make sure to only use the stamps for objects in this image.
+        for obj_num in obj_nums:
+            stamp = scratch[obj_num]
             b = stamp.bounds & image.getBounds()
             if b.isDefined():
                 # This next line is equivalent to:
@@ -47,7 +49,8 @@ def ProcessBadPixImage(images, scratch, config, base, logger=None):
         # Otherwise, build the bad pixel mask here.
         # Again, nothing here yet.
         pass
-    images.append(image)
+    k = base['image_num'] - base['start_image_num']
+    images[k] = image
 
 # For the hdu, just return the first element
 def HDUBadPix(images):

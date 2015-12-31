@@ -36,11 +36,12 @@ def ProcessWeightStamp(images, scratch, config, base, obj_num, logger=None):
         scratch[obj_num] = weight_im
 
 # The function to call at the end of building each image
-def ProcessWeightImage(images, scratch, config, base, logger=None):
+def ProcessWeightImage(images, scratch, config, base, obj_nums, logger=None):
     image = galsim.ImageF(base['image_bounds'], wcs=base['wcs'], init_value=0.)
     if len(scratch) > 0.:
         # If we have been accumulating the variance on the stamps, build the total from them.
-        for stamp in scratch.values():
+        for obj_num in obj_nums:
+            stamp = scratch[obj_num]
             b = stamp.bounds & image.getBounds()
             if b.isDefined():
                 # This next line is equivalent to:
@@ -69,7 +70,8 @@ def ProcessWeightImage(images, scratch, config, base, logger=None):
     # So it is ok to set bad pixels to have zero variance above, and they will invert to have
     # zero weight.
     image.invertSelf()
-    images.append(image)
+    k = base['image_num'] - base['start_image_num']
+    images[k] = image
 
 # For the hdu, just return the first element
 def HDUWeight(images):

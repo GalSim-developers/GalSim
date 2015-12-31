@@ -82,9 +82,11 @@ def ProcessExtraPSFStamp(images, scratch, config, base, obj_num, logger=None):
     scratch[obj_num] = psf_im
 
 # The function to call at the end of building each image
-def ProcessExtraPSFImage(images, scratch, config, base, logger=None):
+def ProcessExtraPSFImage(images, scratch, config, base, obj_nums, logger=None):
     image = galsim.ImageF(base['image_bounds'], wcs=base['wcs'], init_value=0.)
-    for stamp in scratch.values():
+    # Make sure to only use the stamps for objects in this image.
+    for obj_num in obj_nums:
+        stamp = scratch[obj_num]
         b = stamp.bounds & image.getBounds()
         if b.isDefined():
             # This next line is equivalent to:
@@ -92,7 +94,8 @@ def ProcessExtraPSFImage(images, scratch, config, base, logger=None):
             # except that this doesn't work through the proxy.  We can only call methods
             # that don't start with _.  Hence using the more verbose form here.
             image.setSubImage(b, image.subImage(b) + stamp[b])
-    images.append(image)
+    k = base['image_num'] - base['start_image_num']
+    images[k] = image
 
 # For the hdu, just return the first element
 def HDUExtraPSF(images):

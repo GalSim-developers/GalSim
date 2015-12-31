@@ -90,10 +90,14 @@ def BuildStamps(nobjects, config, obj_num=0,
                                          done_func = done_func,
                                          except_func = except_func)
 
-    images, current_vars = zip(*results)
-
-    if logger and logger.isEnabledFor(logging.DEBUG):
-        logger.debug('image %d: Done making stamps',config.get('image_num',0))
+    if not results:
+        images, current_vars = [], []
+        if logger:
+            logger.error('No images were built.  All were either skipped or had errors.')
+    else:
+        images, current_vars = zip(*results)
+        if logger and logger.isEnabledFor(logging.DEBUG):
+            logger.debug('image %d: Done making stamps',config.get('image_num',0))
 
     return images, current_vars
 
