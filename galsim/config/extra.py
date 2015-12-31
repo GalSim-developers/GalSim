@@ -94,16 +94,21 @@ def SetupExtraOutput(config, file_num=0, logger=None):
                 # use default constructor
                 kwargs = {}
  
+            init_func = valid_extra_outputs[key]['init']
             if use_manager:
                 output_obj = getattr(config['output_manager'],key)(**kwargs)
                 scratch = config['output_manager'].dict()
             else: 
-                init_func = valid_extra_outputs[key]['init']
                 if init_func is None:
                     output_obj = list()
                 else:
                     output_obj = init_func(**kwargs)
                 scratch = dict()
+            if init_func is None:
+                # Make the output_obj list the right length now to avoid issues with multiple
+                # processes trying to append at the same time.
+                nimages = galsim.config.GetNImagesForFile(config, file_num)
+                for i in range(nimages): output_obj.append(None)
             if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('file %d: Setup output %s object',file_num,key)
             config['extra_objs'][key] = output_obj
@@ -323,7 +328,7 @@ def RegisterExtraOutput(key, init_func=None, kwargs_func=None, setup_func=None, 
     @param key              The name of the output field in config['output']
     @param init_func        A function or class name to use to build the output object. 
                             [default: None, in which case the output "object" will be a list
-                            that final_func can use to construct what you need.]
+                            of length nimages that can be used to construct what is needed.]
     @param kwargs_func      A function to get the initialization kwargs. [default: None, which
                             means initialize with no arguments.]
     @param setup_func       A function to call at the start of each image. 

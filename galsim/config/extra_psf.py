@@ -92,7 +92,8 @@ def ProcessExtraPSFImage(images, scratch, config, base, logger=None):
             # except that this doesn't work through the proxy.  We can only call methods
             # that don't start with _.  Hence using the more verbose form here.
             image.setSubImage(b, image.subImage(b) + stamp[b])
-    images.append(image)
+    k = base['image_num'] - base['start_image_num']
+    images[k] = image
 
 # For the hdu, just return the first element
 def HDUExtraPSF(images):

@@ -47,7 +47,8 @@ def ProcessBadPixImage(images, scratch, config, base, logger=None):
         # Otherwise, build the bad pixel mask here.
         # Again, nothing here yet.
         pass
-    images.append(image)
+    k = base['image_num'] - base['start_image_num']
+    images[k] = image
 
 # For the hdu, just return the first element
 def HDUBadPix(images):

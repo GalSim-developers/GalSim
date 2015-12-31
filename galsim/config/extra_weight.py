@@ -69,7 +69,8 @@ def ProcessWeightImage(images, scratch, config, base, logger=None):
     # So it is ok to set bad pixels to have zero variance above, and they will invert to have
     # zero weight.
     image.invertSelf()
-    images.append(image)
+    k = base['image_num'] - base['start_image_num']
+    images[k] = image
 
 # For the hdu, just return the first element
 def HDUWeight(images):

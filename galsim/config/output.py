@@ -276,7 +276,6 @@ def GetNObjForFile(config, file_num, image_num):
 
     config['index_key'] = 'file_num'
     config['file_num'] = file_num
-    config['image_num'] = image_num
     try :
         nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
     except ValueError : # (This may be raised if something needs the input stuff)
@@ -293,6 +292,7 @@ def SetupConfigFileNum(config, file_num, image_num, obj_num):
     - Set config['image_num'] = image_num
     - Set config['obj_num'] = obj_num
     - Set config['index_key'] = 'file_num'
+    - Set config['start_image_num'] = image_num
     - Set config['start_obj_num'] = obj_num
 
     @param config           A configuration dict.
@@ -304,9 +304,11 @@ def SetupConfigFileNum(config, file_num, image_num, obj_num):
     if file_num is None:
         if 'file_num' not in config: config['file_num'] = 0
         if 'start_obj_num' not in config: config['start_obj_num'] = obj_num
+        if 'start_image_num' not in config: config['start_image_num'] = image_num
     else:
         config['file_num'] = file_num
         config['start_obj_num'] = obj_num
+        config['start_image_num'] = image_num
     config['image_num'] = image_num
     config['obj_num'] = obj_num
     config['index_key'] = 'file_num'
