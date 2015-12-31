@@ -66,6 +66,7 @@ def BuildFiles(nfiles, config, file_num=0, nproc=1, logger=None):
 
     for k in range(nfiles + first_file_num):
         SetupConfigFileNum(config, file_num, image_num, obj_num)
+        seed = galsim.config.SetupConfigRNG(config)
 
         # Process the input fields that might be relevant at file scope:
         galsim.config.ProcessInput(config, file_num=file_num, logger=logger, file_scope_only=True)
@@ -78,9 +79,6 @@ def BuildFiles(nfiles, config, file_num=0, nproc=1, logger=None):
             'obj_num' : obj_num
         }
 
-        # This performs a bit of setup, so do this before GetFilename.
-        nobj = GetNObjForFile(config,file_num,image_num)
-
         if file_num >= first_file_num:
             # Get the file_name here, in case it needs to create directories, which is not
             # safe to do with multiple processes. (At least not without extra code in the
@@ -91,6 +89,8 @@ def BuildFiles(nfiles, config, file_num=0, nproc=1, logger=None):
             file_name = GetFilename(output, config, default_ext)
             jobs.append( (kwargs, (file_num, file_name)) )
 
+        # Get the number of objects in each image for this file.
+        nobj = GetNObjForFile(config,file_num,image_num)
         # nobj is a list of nobj for each image in that file.
         # So len(nobj) = nimages and sum(nobj) is the total number of objects
         # This gets the values of image_num and obj_num ready for the next loop.
@@ -241,21 +241,10 @@ def GetNImagesForFile(config, file_num):
 
     @returns the number of images
     """
-    if 'output' not in config:
-        config['output'] = {}
-    if 'type' not in config['output']:
-        config['output']['type'] = 'Fits'
-    output_type = config['output']['type']
-
-    # Check that the type is valid
-    if output_type not in valid_output_types:
-        raise AttributeError("Invalid output.type=%s."%output_type)
-
-    # These might be required for nimages
-    config['index_key'] = 'file_num'
-    config['file_num'] = file_num
-    seed = galsim.config.SetupConfigRNG(config)
-
+    if 'output' in config and 'type' in config['output']:
+        output_type = config['output']['type']
+    else:
+        output_type = 'Fits'
     nim_func = valid_output_types[output_type]['nim']
  
     return nim_func(config, file_num)
@@ -274,8 +263,6 @@ def GetNObjForFile(config, file_num, image_num):
     """
     nimages = GetNImagesForFile(config, file_num)
 
-    config['index_key'] = 'file_num'
-    config['file_num'] = file_num
     try :
         nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
     except ValueError : # (This may be raised if something needs the input stuff)
@@ -294,6 +281,9 @@ def SetupConfigFileNum(config, file_num, image_num, obj_num):
     - Set config['index_key'] = 'file_num'
     - Set config['start_image_num'] = image_num
     - Set config['start_obj_num'] = obj_num
+    - Make sure config['output'] exists
+    - Set default config['output']['type'] to 'Fits' if not specified
+    - Check that the specified output type is valid.
 
     @param config           A configuration dict.
     @param file_num         The current file_num. (If file_num=None, then don't set file_num or
@@ -312,6 +302,16 @@ def SetupConfigFileNum(config, file_num, image_num, obj_num):
     config['image_num'] = image_num
     config['obj_num'] = obj_num
     config['index_key'] = 'file_num'
+
+    if 'output' not in config:
+        config['output'] = {}
+    if 'type' not in config['output']:
+        config['output']['type'] = 'Fits'
+
+    # Check that the type is valid
+    output_type = config['output']['type']
+    if output_type not in valid_output_types:
+        raise AttributeError("Invalid output.type=%s."%output_type)
 
 
 def SetDefaultExt(config, ext):
