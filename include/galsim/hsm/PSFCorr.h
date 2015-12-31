@@ -137,6 +137,12 @@ namespace hsm {
      *                           exception.
      * @param ksb_moments_max    Use moments up to ksb_moments_max order for KSB method of PSF
      *                           correction.
+     * @param ksb_sig_weight     The width of the weight function (in pixels) to use for the KSB
+     *                           method.  Normally, this is derived from the measured moments of the
+     *                           galaxy image; this keyword overrides this calculation.  Can be
+     *                           combined with ksb_sig_factor.
+     * @param ksb_sig_factor     Factor by which to multiply the weight function width for the KSB
+     *                           method (default: 1.0).  Can be combined with ksb_sig_weight.
      * @param failed_moments     Value to report for ellipticities and resolution factor if shape
      *                           measurement fails.
      */
@@ -151,6 +157,8 @@ namespace hsm {
                   double _max_amoment,
                   double _max_ashift,
                   int _ksb_moments_max,
+                  double _ksb_sig_weight,
+                  double _ksb_sig_factor,
                   double _failed_moments) :
             nsig_rg(_nsig_rg),
             nsig_rg2(_nsig_rg2),
@@ -163,6 +171,8 @@ namespace hsm {
             max_amoment(_max_amoment),
             max_ashift(_max_ashift),
             ksb_moments_max(_ksb_moments_max),
+            ksb_sig_weight(_ksb_sig_weight),
+            ksb_sig_factor(_ksb_sig_factor),
             failed_moments(_failed_moments)
         {}
 
@@ -181,6 +191,8 @@ namespace hsm {
             max_amoment(8000.),
             max_ashift(15.),
             ksb_moments_max(4),
+            ksb_sig_weight(0.0),
+            ksb_sig_factor(1.0),
             failed_moments(-1000.)
             {}
 
@@ -196,6 +208,8 @@ namespace hsm {
         double max_amoment;
         double max_ashift;
         int ksb_moments_max;
+        double ksb_sig_weight;
+        double ksb_sig_factor;
         double failed_moments;
     };
 
