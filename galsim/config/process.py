@@ -752,6 +752,10 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
                 # The normal case
                 done_func(logger, proc, jobs[k][1], res, t)
                 results[k] = res
+
+        # If there are any failures, then there will still be some Nones in the results list.
+        # Remove them.
+        results = [ r for r in results if r is not None ]
  
         # Stop the processes
         # The 'STOP's could have been put on the task list before starting the processes, or you
