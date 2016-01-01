@@ -139,6 +139,12 @@ class PhaseScreen(object):
         noise = utilities.rand_arr(self.psi.shape, gd)
         return np.fft.fft2(noise)*self.psi
 
+    def advance(self):
+        raise NotImplementedError
+
+    def path_difference(self, nx, scale, theta_x=None, theta_y=None):
+        raise NotImplementedError
+
 
 class FrozenPhaseScreen(PhaseScreen):
     def __init__(self, time_step=0.03, screen_size=10.0, screen_scale=0.1, altitude=0.0,
