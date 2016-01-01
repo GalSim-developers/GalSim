@@ -320,7 +320,7 @@ class LookupTable2D(object):
             raise ValueError("Unknown edge_mode")
         self.edge_mode = edge_mode
 
-        self.f = np.array(f)
+        self.f = np.ascontiguousarray(f)
         ny, nx = self.f.shape
         self.xmin = x0
         self.xmax = x0 + (nx-1)*dx

@@ -146,17 +146,24 @@ class FrozenPhaseScreen(PhaseScreen):
 
         super(FrozenPhaseScreen, self).__init__(time_step, screen_size, screen_scale, altitude,
                                                 r0_500, L0_inv, vx, vy, rng)
-
-        self.img = galsim.Image(np.ascontiguousarray(self.screen), scale=self.screen_scale)
-        self.ii = galsim.InterpolatedImage(self.img, calculate_stepk=False, calculate_maxk=False,
-                                           normalization='sb', x_interpolant='Linear')
+        x0 = y0 = -self.screen_size/2.0
+        dx = dy = self.screen_scale
+        self.tab2d = galsim.LookupTable2D(x0, y0, dx, dy, self.screen, edge_mode='wrap')
+        self.origin = np.r_[0.0, 0.0]
 
     def advance(self):
-        self.ii = self.ii.shift(self.vx*self.time_step, self.vy*self.time_step)
+        """ For frozen screen, easier to adjust telescope bore-sight location rather than actually
+        move the screen (c.f. ARPhaseScreen).
+        """
+        self.origin += (self.vx*self.time_step, self.vy*self.time_step)
 
     def path_difference(self, nx, scale, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
-        ii_t = self.ii.shift(self.altitude*theta_x.tan(), self.altitude*theta_y.tan())
-        return ii_t.drawImage(nx=nx, ny=nx, scale=scale, method='sb').array
+        xmin = self.origin[0] + self.altitude*theta_x.tan() - 0.5*scale*(nx-1)
+        xmax = xmin + scale*(nx-1)
+        ymin = self.origin[1] + self.altitude*theta_y.tan() - 0.5*scale*(nx-1)
+        ymax = ymin + scale*(nx-1)
+
+        return self.tab2d.eval_grid(xmin, xmax, nx, ymin, ymax, nx)
 
 
 class ARPhaseScreen(PhaseScreen):
@@ -178,6 +185,8 @@ class ARPhaseScreen(PhaseScreen):
             self.alpha /= np.abs(self.alpha)
 
     def advance(self):
+        """ For AR screen, easy to actually move the screen, rather than the telescope bore-sight.
+        """
         if self.noise_frac < 1.e-10:
             # Frozen flow
             self._phaseFT = self.alpha*self._phaseFT
