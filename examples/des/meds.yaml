@@ -1,5 +1,30 @@
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+
 # A simulation based on the Great3 rgc branch, but tailored to DES specifics including
 # outputing to MEDS files.
+#
+#
+# For the wcs, we use a random location within a full DES focal plane, which we take from 62
+# images files from SV data.  We don't include these files in the repo, since they total about
+# 700 MB.  You can download a tarball with the files used by this script at
+#
+#    http://www.sas.upenn.edu/~mjarvis/des_data.html
+#
 
 modules:
     # Use the extra features from the galsim.des module
@@ -11,6 +36,9 @@ modules:
     # GalSim doesn't have a log-normal distribution natively, so we make our own.
     - log_normal
 
+    # Read the WCS from a (in this case random) location within a real DES focal place observation.
+    - des_wcs
+
 psf:
     type: Convolve
 
@@ -21,25 +49,25 @@ psf:
     # The atmospheric component
     -   type: Kolmogorov
         # To avoid PSFs that were "too round", the ellipticity was drawn from a uniform
-        # distribution from sqrt(1.e-4) to sqrt(9.e-4), based on an estimate of the 
+        # distribution from sqrt(1.e-4) to sqrt(9.e-4), based on an estimate of the
         # typical variance of e in ground-based imaging.
         ellip:
             type: EBeta
-            e: 
+            e:
                 type: Random
                 min: 0.01
                 max: 0.03
-            beta: 
-                type: Random 
+            beta:
+                type: Random
 
         # The seeing is taken from a plausible distribution of seeing values
         # ranging from 0.6 to 1.1.
-        fwhm: 
+        fwhm:
             type: RandomDistribution
             x: [ 0.6, 0.7, 0.8, 0.9, 1.0, 1.1 ]
             f: [  0., 10., 20., 40., 30.,  0. ]
 
-    # The optical component 
+    # The optical component
     -   type: OpticalPSF
         # Take lambda = 800 nm.  D = 4 m.  lam/D = 0.04 arcsec
         lam_over_diam: "$800 * 1.e-9 / 4 * 206265"
@@ -47,7 +75,7 @@ psf:
         # I don't know what the right value of this is.  This is a guess.
         obscuration: 0.3
 
-        # Despite sort of modeling off of DECam (with 4 struts), they didn't use 
+        # Despite sort of modeling off of DECam (with 4 struts), they didn't use
         # any struts for the ground psfs.
         nstruts: 0
 
@@ -67,7 +95,9 @@ psf:
         # the larger area is mostly wasted.  Setting max_size to the size of the postage stamp
         # we will eventually draw onto helps avoid wasted calculations.
         # This is in arcsec, so max_size = stamp_size * pixel_scale
-        max_size: "$@image.size * @image.pixel_scale"
+        # We're using a non-square wcs, so there isn't a well-defined pixel scale.  Use
+        # the maxLinearScale to get the maximum "pixel scale" for the parallelogram.
+        max_size: "$@image.size * wcs.maxLinearScale()"
         suppress_warning: true
 
 gal:
@@ -80,41 +110,46 @@ gal:
     rotate: { type: Random }
 
     # The COSMOS galaxy sample is shallower than we want, so make them a bit smaller to simulate
-    # a fainter sample.  Don't worry about the flux, since we'll just adjust the noise to 
+    # a fainter sample.  Don't worry about the flux, since we'll just adjust the noise to
     # an appropriate level.
     dilate: 0.6
 
-    # The shear is chosen randomly within an annulus with 0.01 < |g| < 0.05.
+    # The shear is chosen randomly with a log-normal distribution in eta.
     shear:
         type: EtaBeta
         # Change the shear every file, not every object.
         index_key : file_num
-        eta: 
-            # I'm not sure how appropriate a log normal distribution is here, but Erin was 
+        eta:
+            # I'm not sure how appropriate a log normal distribution is here, but Erin was
             # asking about it, so I figured I'd put in an example of how you can roll your
             # own distribution.
             # Since this can have arbitrarily large values, use Eta-, rather than G-type shears.
-            type: LogNormal
+            type: LogNormal  # Defined in log_normal.py in this directory.
             mean: 0.05
             sigma: 0.05
         beta: { type: Random }
 
 image:
-    # Eventually, it would be nice to have variable stamp sizes based on the galaxy size, but 
+    # Eventually, it would be nice to have variable stamp sizes based on the galaxy size, but
     # don't bother with that for now.
     size: 48
 
-    # Also, just square pixels for now.
-    pixel_scale: 0.265
+    # Use a real wcs from some random location within a DES focal plane.
+    wcs :
+        type : DES_Local  # Defined in des_wcs.py in this directory.
+        #chipnum : 11   # We could specify a chipnum here if we wanted.  The default is to pick
+                        # a random chipnum from 1-62
+        # This optionally takes image_pos as well, but we'll use the default here, which is to
+        # pick a random location on the chip.
 
-    random_seed: 31415
+    random_seed: 8675309   # Jenny
 
     # Simple Gaussian noise.  The range here is much larger than the range used for Great3 to
     # simulate the wide range in sky levels we get in real data.
     # This might need some work to tune to a reasonable average S/N level.
     noise:
         type: Gaussian
-        variance: 
+        variance:
             type: Random
             min: 0.002
             max: 0.006
@@ -136,21 +171,21 @@ image:
     #gsparams: {maximum_fft_size: 10240}
 
 input:
-    cosmos_catalog : 
+    cosmos_catalog :
         # If the command galsim_download_cosmos has been run, the catalog will have been downloaed
-        # from the GalSim web site and saved in a directory that GalSim knows about. 
-        # So file_name and dir are not necessary. 
+        # from the GalSim web site and saved in a directory that GalSim knows about.
+        # So file_name and dir are not necessary.
 
         # We just need some parameters to tell it which galaxies to include in the selection.
         # For now, just a maximum hlr to exclude huge objects, although cf. issue #693.
         # We'll probably eventually want to allow larger galaxies and let them automatically
-        # use a larger stamp size.  
+        # use a larger stamp size.
         max_hlr : 2.5  # arcsec
 
-        # This still leaves in a lot of bright objects that visibly overflow the edge of the 
+        # This still leaves in a lot of bright objects that visibly overflow the edge of the
         # postage stamps.  Great3 imposed a maximum S/N of 100 and a minimum of 17.
         # Using the noise over 50 pixels as a *very rough!* estimate of the total noise
-        # (50 ~= pi r^2 where r = 4 pixels is close to the typical FWHM.), I find that the 
+        # (50 ~= pi r^2 where r = 4 pixels is close to the typical FWHM.), I find that the
         # corresponding flux range is around 8 to 50 ADU.
         # Again, hopefully, this can be improved as part of issue #693 and we can
         # just give max_snr, min_snr, given a noise level.
@@ -161,14 +196,21 @@ input:
         # This parameter determines whether this overhead is done at the beginning to load
         # all the files at the start or if the overhead happens for each file the first time it
         # is needed.  It used to be much faster to preload, but I think a number of changes to
-        # the code (that happened a while ago -- see issue #474) made it so not preloading is 
-        # actually better now.
+        # the code (that happened a while ago -- see issue #474) made it so not preloading is
+        # actually better now.  Worth checking at least, since it may be system-specific.
         #preload: True
+
+    des_wcs:
+        # This is used by the DES_Local wcs type.
+        # It reads in a full field worth of WCS objects, which DES_Local will select from
+        # and get a local WCS at some (in this case random) image position.
+        dir : des_data
+        root : "DECam_00154912"
+        ext : ".fits.fz"  # This is the default, but might as well be explicit here.
 
 output:
     type: MEDS
-    #nobjects: 10000  # nobj per file
-    nobjects: 10  # nobj per file
+    nobjects: 10000  # nobj per file
     nstamps_per_object: 1  # For now, single epoch sim.
 
     dir: output_yaml
@@ -209,7 +251,7 @@ output:
                 str: "psfe.e1"
                 gpsfe :
                     index_key: file_num  # Only remeasure for each new file num.
-                    type: HSM_Shape_Measure  # In the module hsm_shape
+                    type: HSM_Shape_Measure  # Defined in hsm_shape.py in this directory.
                     obj: 'psf'
             psf_e2: "$(@output.truth.columns.psf_e1.gpsfe).e2"
 

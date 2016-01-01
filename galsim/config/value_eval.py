@@ -151,6 +151,8 @@ def _GenerateFromEval(config, base, value_type):
         stamp_ysize = base['stamp_ysize']
     if 'pixel_scale' in base:
         pixel_scale = base['pixel_scale']
+    if 'wcs' in base:
+        wcs = base['wcs']
     if 'rng' in base:
         rng = base['rng']
     if 'file_num' in base:
