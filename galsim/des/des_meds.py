@@ -390,7 +390,7 @@ def WriteMEDS(obj_list, file_name, clobber=True):
     hdu_list.writeto(file_name,clobber=clobber)
 
 
-def BuildMEDS(config, file_num, image_num, obj_num, nproc, ignore, logger):
+def BuildMEDS(config, file_num, image_num, obj_num, ignore, logger):
     """
     Build a meds file as specified in config.
 
@@ -398,7 +398,6 @@ def BuildMEDS(config, file_num, image_num, obj_num, nproc, ignore, logger):
     @param file_num         The current file_num.
     @param image_num        The current image_num.
     @param obj_num          The current obj_num.
-    @param nproc            How many processes to use.
     @param ignore           A list of parameters that are allowed to be in config['output']
                             that we can ignore here.
     @param logger           If given, a logger object to log progress.
@@ -421,7 +420,7 @@ def BuildMEDS(config, file_num, image_num, obj_num, nproc, ignore, logger):
     ntot = nobjects * nstamps_per_object
 
     main_images = galsim.config.BuildImages(ntot, config, image_num=image_num,  obj_num=obj_num,
-                                            nproc=nproc, logger=logger)
+                                            logger=logger)
 
     weight_images = galsim.config.GetFinalExtraOutput('weight', config, logger)
     if 'badpix' in config['output']:
