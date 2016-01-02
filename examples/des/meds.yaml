@@ -91,9 +91,11 @@ psf:
         # I don't know what the right value of this is.  This is a guess.
         obscuration: 0.3
 
-        # Despite sort of modeling off of DECam (with 4 struts), they didn't use
-        # any struts for the ground psfs.
-        nstruts: 0
+        # DECam has 4 struts.  Not sure what strut_thick or strut_angle is appropriate here.
+        # So these are just guesses.
+        nstruts: 4
+        strut_thick: 0.05  # In units of pupil diameter.
+        strut_angle: 10 degrees
 
         # According to Aaron Roodma, for DES the appropriate rms values are
         # [ 0.13, 0.13, 0.14, 0.06, 0.06, 0.05, 0.06, 0.03 ]
