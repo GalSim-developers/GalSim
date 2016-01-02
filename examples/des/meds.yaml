@@ -15,9 +15,15 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 
+
 # A simulation based on the Great3 rgc branch, but tailored to DES specifics including
 # outputing to MEDS files.
 #
+# For the psf, we use a combination of Kolmogorov for the atmospheric component, and an
+# OpticalPSF for the optics, using parameters appropriate for DECam and the Blanco telescope.
+#
+# The galaxies are real galaxies from COSMOS, modified to be slightly smaller to simulate a
+# slightly fainter sample than the 23.5 limiting magnitude in the COSMOS catalog.
 #
 # For the wcs, we use a random location within a full DES focal plane, which we take from 62
 # images files from SV data.  We don't include these files in the repo, since they total about
@@ -25,6 +31,16 @@
 #
 #    http://www.sas.upenn.edu/~mjarvis/des_data.html
 #
+# The applied shear is random in each output file, using a log-normal distribution in eta.
+# This is completely arbitrary, just to give a non-trivial range of applied shears.
+#
+# The output files are MEDS files using the new psf extension to store images of the 
+# PSF, so no interpolation is necessary.  In this sim, the PSF is actually a constant, but
+# when we start making the PSF variable, this will be useful.
+#
+# Notably, this config file uses a number of custom types, the code for which is also in this
+# directory in the files hsm_shape.py, log_normal.py, and des_wcs.py.  So this serves as an
+# example for how to write custom extensions to the GalSim config apparatus.
 
 modules:
     # Use the extra features from the galsim.des module
@@ -137,10 +153,12 @@ image:
     # Use a real wcs from some random location within a DES focal plane.
     wcs :
         type : DES_Local  # Defined in des_wcs.py in this directory.
-        #chipnum : 11   # We could specify a chipnum here if we wanted.  The default is to pick
-                        # a random chipnum from 1-62
-        # This optionally takes image_pos as well, but we'll use the default here, which is to
-        # pick a random location on the chip.
+
+        # We could specify a chipnum here if we wanted.  The default is to pick a random chipnum
+        # from 1-62
+
+        # This also optionally takes image_pos, but we'll use the default here, which is to pick
+        # a random location on the chip.
 
     random_seed: 8675309   # Jenny
 
@@ -167,8 +185,9 @@ image:
     # set output.nproc=1, then this stamp-based parallelization will turn on.
     nproc: -1
 
-    # Sometimes the ffts need to be a bit bigger than is allowed by default...
-    #gsparams: {maximum_fft_size: 10240}
+    # Great3 found that some stamps needed a larger fft size than default.  I don't think it's
+    # necessary here, but it doesn't hurt to put this in.
+    gsparams: {maximum_fft_size: 10240}
 
 input:
     cosmos_catalog :
@@ -197,7 +216,7 @@ input:
         # all the files at the start or if the overhead happens for each file the first time it
         # is needed.  It used to be much faster to preload, but I think a number of changes to
         # the code (that happened a while ago -- see issue #474) made it so not preloading is
-        # actually better now.  Worth checking at least, since it may be system-specific.
+        # actually better now.  Possibly worth checking though, since it may be system-specific.
         #preload: True
 
     des_wcs:
