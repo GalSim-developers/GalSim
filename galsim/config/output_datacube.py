@@ -20,7 +20,7 @@ import os
 import galsim
 import logging
 
-def BuildDataCube(config, file_num, image_num, obj_num, nproc, ignore, logger):
+def BuildDataCube(config, file_num, image_num, obj_num, ignore, logger):
     """
     Build a multi-image fits data cube as specified in config.
     
@@ -28,7 +28,6 @@ def BuildDataCube(config, file_num, image_num, obj_num, nproc, ignore, logger):
     @param file_num         The current file_num.
     @param image_num        The current image_num.
     @param obj_num          The current obj_num.
-    @param nproc            How many processes to use.
     @param ignore           A list of parameters that are allowed to be in config['output']
                             that we can ignore here.  i.e. it won't be an error if these
                             parameters are present.
@@ -67,7 +66,7 @@ def BuildDataCube(config, file_num, image_num, obj_num, nproc, ignore, logger):
 
     if nimages > 1:
         obj_num += galsim.config.GetNObjForImage(config, image_num)
-        images += galsim.config.BuildImages(nimages-1, config, nproc=nproc, logger=logger,
+        images += galsim.config.BuildImages(nimages-1, config, logger=logger,
                                             image_num=image_num+1, obj_num=obj_num)
 
     return images

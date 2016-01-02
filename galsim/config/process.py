@@ -570,12 +570,6 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None):
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('nfiles = %d',nfiles)
 
-    # Figure out how many processes we will use for building the files.
-    if 'nproc' in output:
-        nproc = galsim.config.ParseValue(output, 'nproc', config, int)[0]
-    else:
-        nproc = 1 
-
     if njobs > 1:
         # Start each job at file_num = nfiles * job / njobs
         start = nfiles * (job-1) // njobs
@@ -587,7 +581,7 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None):
     else:
         start = 0
 
-    galsim.config.BuildFiles(nfiles, config, file_num=start, nproc=nproc, logger=logger)
+    galsim.config.BuildFiles(nfiles, config, file_num=start, logger=logger)
 
 def CalculateNObjPerTask(nproc, ntot, config):
     """A helper function for calculating an appropriate number of objects to do per task.
