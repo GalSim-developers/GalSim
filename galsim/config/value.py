@@ -297,7 +297,10 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
         if key in config:
             get[key] = value_type
         else:
-            raise AttributeError("Attribute %s is required for type = %s"%(key,config['type']))
+            if 'type' in config:
+                raise AttributeError("Attribute %s is required for type = %s"%(key,config['type']))
+            else:
+                raise AttributeError("Attribute %s is required"%key)
 
     # Check optional items:
     for (key, value_type) in opt.items():
@@ -314,13 +317,19 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
             if key in config:
                 count += 1
                 if count > 1:
-                    raise AttributeError(
-                        "Only one of the attributes %s is allowed for type = %s"%(
-                            s.keys(),config['type']))
+                    if 'type' in config:
+                        raise AttributeError(
+                            "Only one of the attributes %s is allowed for type = %s"%(
+                                s.keys(),config['type']))
+                    else:
+                        raise AttributeError("Only one of the attributes %s is allowed"%s.keys())
                 get[key] = value_type
         if count == 0:
-            raise AttributeError(
-                "One of the attributes %s is required for type = %s"%(s.keys(),config['type']))
+            if 'type' in config:
+                raise AttributeError(
+                    "One of the attributes %s is required for type = %s"%(s.keys(),config['type']))
+            else:
+                raise AttributeError("One of the attributes %s is required"%s.keys())
 
     # Check that there aren't any extra keys in config aside from a few we expect:
     valid_keys += ignore

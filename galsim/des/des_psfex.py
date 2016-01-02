@@ -46,7 +46,7 @@ class DES_PSFEx(object):
     object profiles in world coordinates.  However, PSFEx does not consider the WCS of the 
     image when building its bases.  The bases are built in image coordinates.  So there are 
     two options to get GalSim to handle this difference.
-    
+
     1. Ignore the WCS of the original image.  In this case, the *.psf files have all the
        information you need:
 
@@ -297,8 +297,35 @@ class DES_PSFEx(object):
 # Now add this class to the config framework.
 import galsim.config
 
+# Allow the user to not provide the image file.  In this case, we'll grab the wcs from the
+# config dict.
+def DES_PSFExKwargs(config, base):
+    req = { 'file_name' : str }
+    opt = { 'dir' : str, 'image_file_name' : str }
+    kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
+
+    if 'image_file_name' not in kwargs:
+        if 'wcs' in base:
+            wcs = base['wcs']
+            if wcs.isLocal():
+                # Then the wcs is already fine.
+                pass
+            elif 'image_pos' in base:
+                image_pos = base['image_pos']
+                wcs = wcs.local(image_pos)
+                safe = False
+            else:
+                raise RuntimeError("No image_pos found in config, but wcs is not local.")
+            kwargs['wcs'] = wcs
+        else:
+            # Then we aren't doing normal config processing, so just use pixel scale = 1.
+            kwargs['wcs'] = galsim.PixelScale(1.)
+
+    return kwargs, safe
+
 # First we need to add the class itself as a valid input_type.
-galsim.config.RegisterInputType('des_psfex', DES_PSFEx, ['DES_PSFEx'])
+galsim.config.RegisterInputType('des_psfex', DES_PSFEx, ['DES_PSFEx'],
+                                kwargs_func=DES_PSFExKwargs)
 
 # Also make a builder to create the PSF object for a given position.
 # The builders require 4 args.

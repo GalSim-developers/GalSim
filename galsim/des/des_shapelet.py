@@ -258,7 +258,7 @@ def BuildDES_Shapelet(config, base, ignore, gsparams, logger):
         b = des_shapelet.getB(image_pos)
         sigma = des_shapelet.getSigma()
         order = des_shapelet.getOrder()
-        psf = galsim.Shapelet(sigma, order, b, gsparams=gsparams)
+        psf = galsim.Shapelet(sigma, order, b, gsparams=gsparams).transform(-1,0,0,1)
     else:
         message = 'Position '+str(image_pos)+' not in interpolation bounds: '
         message += str(des_shapelet.getBounds())

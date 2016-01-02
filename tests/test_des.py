@@ -419,7 +419,6 @@ def test_psf():
     import time
     t1 = time.time()
 
-    # The shapelet file to use for the tests
     data_dir = 'des_data'
     psfex_file = "DECam_00154912_12_psfcat.psf"
     fitpsf_file = "DECam_00154912_12_fitpsf.fits"
@@ -539,9 +538,61 @@ def test_psf():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+def test_psf_config():
+    """Test building the two PSF types using the config layer.
+    """
+    import time
+    t1 = time.time()
+
+    data_dir = 'des_data'
+    psfex_file = "DECam_00154912_12_psfcat.psf"
+    fitpsf_file = "DECam_00154912_12_fitpsf.fits"
+    wcs_file = "DECam_00154912_12_header.fits"
+
+    image_pos = galsim.PositionD(123.45, 543.21)
+
+    config = {
+        'input' : {
+            'des_shapelet' : { 'dir' : data_dir, 'file_name' : fitpsf_file },
+            'des_psfex' : [
+                { 'dir' : data_dir, 'file_name' : psfex_file },
+                { 'dir' : data_dir, 'file_name' : psfex_file, 'image_file_name' : wcs_file },
+            ]
+        },
+
+        'psf1' : { 'type' : 'DES_Shapelet' },
+        'psf2' : { 'type' : 'DES_PSFEx', 'num' : 0 },
+        'psf3' : { 'type' : 'DES_PSFEx', 'num' : 1 },
+
+        # This would normally be set by the config processing.  Set it manually here.
+        'image_pos' : image_pos,
+    }
+
+    galsim.config.ProcessInput(config)
+
+    psf1a = galsim.config.BuildGSObject(config, 'psf1')[0]
+    fitpsf = galsim.des.DES_Shapelet(fitpsf_file, dir=data_dir)
+    psf1b = fitpsf.getPSF(image_pos)
+    gsobject_compare(psf1a, psf1b)
+
+    psf2a = galsim.config.BuildGSObject(config, 'psf2')[0]
+    psfex = galsim.des.DES_PSFEx(psfex_file, dir=data_dir)
+    psf2b = psfex.getPSF(image_pos)
+    gsobject_compare(psf2a, psf2b)
+
+    psf3a = galsim.config.BuildGSObject(config, 'psf3')[0]
+    psfex = galsim.des.DES_PSFEx(psfex_file, wcs_file, dir=data_dir)
+    psf3b = psfex.getPSF(image_pos)
+    gsobject_compare(psf3a, psf3b)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_meds()
     test_meds_config()
     test_nan_fits()
     test_psf()
+    test_psf_config()
 
