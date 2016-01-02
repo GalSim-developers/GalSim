@@ -134,7 +134,7 @@ def BuildFiles(nfiles, config, file_num=0, logger=None):
     else:
         if logger and logger.isEnabledFor(logging.WARN):
             if nfiles_written > 1 and nproc != 1:
-                logger.warn('Total time for %d files with %d processes = %f sec', 
+                logger.warn('Total time for %d files with %d processes = %f sec',
                             nfiles_written,nproc,t2-t1)
             logger.warn('Done building files')
 
@@ -144,7 +144,7 @@ output_ignore = [ 'file_name', 'dir', 'nfiles', 'nproc', 'skip', 'noclobber', 'r
 def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     """
     Build an output file as specified in config.
-    
+
     @param config           A configuration dict.
     @param file_num         If given, the current file_num. [default: 0]
     @param image_num        If given, the current image_num. [default: 0]
@@ -162,10 +162,12 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: seed = %d',file_num,seed)
 
-    # The GetNImagesForFile function performs some basic setup, so in the interest of avoiding
-    # code duplication, call it here, even though we don't really need the output.  (Although,
-    # we do got ahead and use it in the debug logging, since we have it.)
+    # Put these values in the config dict so we won't have to run them again later if
+    # we need them.  e.g. ExtraOuput processing uses these.
     nimages = GetNImagesForFile(config, file_num)
+    nobj = GetNObjForFile(config,file_num,image_num)
+    config['nimages'] = nimages
+    config['nobj'] = nobj
 
     output = config['output']
     output_type = output['type']
@@ -244,9 +246,9 @@ def GetNImagesForFile(config, file_num):
     else:
         output_type = 'Fits'
     nim_func = valid_output_types[output_type]['nim']
- 
+
     return nim_func(config, file_num)
- 
+
 
 def GetNObjForFile(config, file_num, image_num):
     """
@@ -267,7 +269,7 @@ def GetNObjForFile(config, file_num, image_num):
         galsim.config.ProcessInput(config, file_num=file_num)
         nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
     return nobj
- 
+
 
 def SetupConfigFileNum(config, file_num, image_num, obj_num):
     """Do the basic setup of the config dict at the file processing level.
@@ -366,7 +368,7 @@ def RetryIO(func, args, ntries, file_name, logger):
 def BuildFits(config, file_num, image_num, obj_num, ignore, logger):
     """
     Build a regular fits file as specified in config.
-    
+
     @param config           A configuration dict.
     @param file_num         The current file_num.
     @param image_num        The current image_num.
