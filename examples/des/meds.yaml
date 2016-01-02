@@ -43,6 +43,12 @@
 # example for how to write custom extensions to the GalSim config apparatus.
 
 modules:
+    # The GalSim config processor will import each of these at the start of processing this
+    # file, so it provides a way to have custom types for anything (values, objects, inputs,
+    # output files, etc.).  In this case, three of these are in the current directory, so if
+    # you run `galsim meds.yaml` in this directory, it will find them.  But they can be anywhere
+    # in your PYTHONPATH.
+
     # Use the extra features from the galsim.des module
     - galsim.des
 
