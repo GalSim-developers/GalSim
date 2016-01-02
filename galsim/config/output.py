@@ -26,26 +26,17 @@ import logging
 # 'Fits'.  See output_multifits.py for 'MultiFits' and output_datacube.py for 'DataCube'.
 
 
-def BuildFiles(nfiles, config, file_num=0, nproc=1, logger=None):
+def BuildFiles(nfiles, config, file_num=0, logger=None):
     """
     Build a number of output files as specified in config.
-    
+
     @param nfiles           The number of files to build.
     @param config           A configuration dict.
     @param file_num         If given, the first file_num. [default: 0]
-    @param nproc            How many processes to use for building the images. [default: 1]
     @param logger           If given, a logger object to log progress. [default: None]
     """
     import time
     t1 = time.time()
-
-    # If only 1 file, then pass the nproc option on to the BuildImages function.
-    if nfiles == 1:
-        nproc_image = nproc
-        nproc = 1
-    else:
-        nproc_image = 1
-        nproc = galsim.config.UpdateNProc(nproc, nfiles, config, logger)
 
     # Process the input field for the first file.  Often there are "safe" input items
     # that won't need to be reprocessed each time.  So do them here once and keep them
@@ -64,6 +55,16 @@ def BuildFiles(nfiles, config, file_num=0, nproc=1, logger=None):
     image_num = 0
     obj_num = 0
 
+    # Figure out how many processes we will use for building the files.
+    if 'output' not in config: config['output'] = {}
+    output = config['output']
+    if nfiles > 1 and 'nproc' in output:
+        nproc = galsim.config.ParseValue(output, 'nproc', config, int)[0]
+        # Update this in case the config value is -1
+        nproc = galsim.config.UpdateNProc(nproc, nfiles, config, logger)
+    else:
+        nproc = 1
+
     for k in range(nfiles + first_file_num):
         SetupConfigFileNum(config, file_num, image_num, obj_num)
         seed = galsim.config.SetupConfigRNG(config)
@@ -73,7 +74,6 @@ def BuildFiles(nfiles, config, file_num=0, nproc=1, logger=None):
 
         # The kwargs to pass to BuildFile
         kwargs = {
-            'nproc' : nproc_image,
             'file_num' : file_num,
             'image_num' : image_num,
             'obj_num' : obj_num
@@ -83,7 +83,6 @@ def BuildFiles(nfiles, config, file_num=0, nproc=1, logger=None):
             # Get the file_name here, in case it needs to create directories, which is not
             # safe to do with multiple processes. (At least not without extra code in the
             # GetFilename function...)
-            output = config['output']
             output_type = output['type']
             default_ext = valid_output_types[output_type]['ext']
             file_name = GetFilename(output, config, default_ext)
@@ -142,7 +141,7 @@ def BuildFiles(nfiles, config, file_num=0, nproc=1, logger=None):
 
 output_ignore = [ 'file_name', 'dir', 'nfiles', 'nproc', 'skip', 'noclobber', 'retry_io' ]
 
-def BuildFile(config, file_num=0, image_num=0, obj_num=0, nproc=1, logger=None):
+def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     """
     Build an output file as specified in config.
     
@@ -150,7 +149,6 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, nproc=1, logger=None):
     @param file_num         If given, the current file_num. [default: 0]
     @param image_num        If given, the current image_num. [default: 0]
     @param obj_num          If given, the current obj_num. [default: 0]
-    @param nproc            How many processes to use for building the images. [default: 1]
     @param logger           If given, a logger object to log progress. [default: None]
 
     @returns a tuple of the file name and the time taken to build file: (file_name, t)
@@ -207,7 +205,7 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, nproc=1, logger=None):
 
     build_func = valid_output_types[output_type]['build']
     ignore = output_ignore + galsim.config.valid_extra_outputs.keys()
-    data = build_func(config, file_num, image_num, obj_num, nproc, ignore, logger)
+    data = build_func(config, file_num, image_num, obj_num, ignore, logger)
 
     can_add_hdus = valid_output_types[output_type]['hdus']
     if can_add_hdus:
@@ -365,7 +363,7 @@ def RetryIO(func, args, ntries, file_name, logger):
     return ret
 
 
-def BuildFits(config, file_num, image_num, obj_num, nproc, ignore, logger):
+def BuildFits(config, file_num, image_num, obj_num, ignore, logger):
     """
     Build a regular fits file as specified in config.
     
@@ -373,7 +371,6 @@ def BuildFits(config, file_num, image_num, obj_num, nproc, ignore, logger):
     @param file_num         The current file_num.
     @param image_num        The current image_num.
     @param obj_num          The current obj_num.
-    @param nproc            How many processes to use. (ignored in this case)
     @param ignore           A list of parameters that are allowed to be in config['output']
                             that we can ignore here.  i.e. it won't be an error if these
                             parameters are present.
@@ -408,8 +405,7 @@ def RegisterOutputType(output_type, build_func, write_func, nimages_func,
     @param output_type      The name of the type in config['output']
     @param build_func       The function to call for building the necessary data.
                             The call signature is:
-                                data = Build(config, file_num, image_num, obj_num, nproc,
-                                             ignore, logger)
+                                data = Build(config, file_num, image_num, obj_num, ignore, logger)
     @param write_func       The function to use for writing the data to a file.
                             The call signature is:
                                 Write(data, file_name)

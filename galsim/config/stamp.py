@@ -28,7 +28,7 @@ import logging
 
 
 def BuildStamps(nobjects, config, obj_num=0,
-                xsize=0, ysize=0, do_noise=True, nproc=1, logger=None):
+                xsize=0, ysize=0, do_noise=True, logger=None):
     """
     Build a number of postage stamp images as specified by the config dict.
 
@@ -43,7 +43,6 @@ def BuildStamps(nobjects, config, obj_num=0,
                             not there, use automatic sizing.]
     @param do_noise         Whether to add noise to the image (according to config['noise']).
                             [default: True]
-    @param nproc            How many processes to use. [default: 1]
     @param logger           If given, a logger object to log progress. [default: None]
 
     @returns the tuple (images, current_vars).  Both are lists.
@@ -52,7 +51,15 @@ def BuildStamps(nobjects, config, obj_num=0,
         logger.debug('image %d: BuildStamp nobjects = %d: obj = %d',
                      config.get('image_num',0),nobjects,obj_num)
 
-    nproc = galsim.config.UpdateNProc(nproc, nobjects, config, logger)
+    # Figure out how many processes we will use for building the stamps:
+    if 'image' not in config: config['image'] = {}
+    image = config['image']
+    if nobjects > 1 and 'nproc' in image:
+        nproc = galsim.config.ParseValue(image, 'nproc', config, int)[0]
+        # Update this in case the config value is -1
+        nproc = galsim.config.UpdateNProc(nproc, nobjects, config, logger)
+    else:
+        nproc = 1
 
     nobj_per_task = galsim.config.CalculateNObjPerTask(nproc, nobjects, config)
     if logger and logger.isEnabledFor(logging.DEBUG):

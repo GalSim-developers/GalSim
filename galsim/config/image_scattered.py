@@ -118,16 +118,10 @@ def BuildScattered(config, image_num, obj_num, logger):
             'y' : { 'type' : 'Random' , 'min' : ymin , 'max' : ymax }
         }
 
-    if 'nproc' in config['image']:
-        nproc = galsim.config.ParseValue(config['image'],'nproc',config,int)[0]
-    else:
-        nproc = 1
-
     nobjects = config['nobjects']
 
     stamps, current_vars = galsim.config.BuildStamps(
-            nobjects, config, nproc=nproc, logger=logger, obj_num=obj_num,
-            do_noise=False)
+            nobjects, config, logger=logger, obj_num=obj_num, do_noise=False)
 
     config['index_key'] = 'image_num'
 

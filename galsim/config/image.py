@@ -26,7 +26,7 @@ import logging
 # image_scattered.py for the implementation of the Tiled and Scattered image types.
 
 
-def BuildImages(nimages, config, image_num=0, obj_num=0, nproc=1, logger=None):
+def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
     """
     Build a number of postage stamp images as specified by the config dict.
 
@@ -34,7 +34,6 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, nproc=1, logger=None):
     @param config           The configuration dict.
     @param image_num        If given, the current image number. [default: 0]
     @param obj_num          If given, the first object number in the image. [default: 0]
-    @param nproc            How many processes to use. [default: 1]
     @param logger           If given, a logger object to log progress. [default: None]
 
     @returns a list of images
@@ -43,12 +42,18 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, nproc=1, logger=None):
         logger.debug('file %d: BuildImages nimages = %d: image, obj = %d,%d',
                      config.get('file_num',0),nimages,image_num,obj_num)
 
-    # Update this if necessary
-    nproc = galsim.config.UpdateNProc(nproc, nimages, config, logger)
+    # Figure out how many processes we will use for building the images.
+    if 'image' not in config: config['image'] = {}
+    image = config['image']
+    if nimages > 1 and 'nproc' in image:
+        nproc = galsim.config.ParseValue(image, 'nproc', config, int)[0]
+        # Update this in case the config value is -1
+        nproc = galsim.config.UpdateNProc(nproc, nimages, config, logger)
+    else:
+        nproc = 1
 
     # If the images are Single (one stamp per image), then we need to check for Rings and the like.
-    if ('image' not in config or 'type' not in config['image'] or 
-            config['image']['type'] == 'Single'):
+    if ('image' not in config or 'type' not in image or image['type'] == 'Single'):
         nim_per_task = galsim.config.CalculateNObjPerTask(nproc, nimages, config)
     else:
         nim_per_task = 1
