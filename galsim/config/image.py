@@ -104,7 +104,6 @@ def SetupConfigImageNum(config, image_num, obj_num):
     - Make sure config['image'] exists
     - Set default config['image']['type'] to 'Single' if not specified
     - Check that the specified image type is valid.
-    - Set config['image']['draw_method'] to 'auto' if not given.
 
     @param config           The configuration dict.
     @param image_num        The current image number.
@@ -126,9 +125,6 @@ def SetupConfigImageNum(config, image_num, obj_num):
     image_type = image['type']
     if image_type not in valid_image_types:
         raise AttributeError("Invalid image.type=%s."%image_type)
-
-    if 'draw_method' not in image:
-        image['draw_method'] = 'auto'
 
 
 

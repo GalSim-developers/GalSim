@@ -71,11 +71,11 @@ def DrawPSFStamp(psf, config, base, bounds, offset, method, logger=None):
 def ProcessExtraPSFStamp(images, scratch, config, base, obj_num, logger=None):
     # If this doesn't exist, an appropriate exception will be raised.
     psf = base['psf']['current_val']
-    draw_method = galsim.config.GetCurrentValue('image.draw_method',base,str)
+    draw_method = galsim.config.GetCurrentValue('stamp.draw_method',base,str)
     bounds = base['current_stamp'].bounds
     offset = base['stamp_offset']
-    if 'offset' in base['image']:
-        offset += galsim.config.ParseValue(base['image'], 'offset', base, galsim.PositionD)[0]
+    if 'offset' in base['stamp']:
+        offset += galsim.config.ParseValue(base['stamp'], 'offset', base, galsim.PositionD)[0]
     psf_im = DrawPSFStamp(psf,config,base,bounds,offset,draw_method,logger)
     if 'signal_to_noise' in config:
         galsim.config.AddNoise(base,psf_im,0,logger)

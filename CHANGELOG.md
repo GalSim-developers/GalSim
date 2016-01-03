@@ -60,4 +60,8 @@ New config features
   2 times the current value of image.pixel_scale.  (#691)
 - Allowed gsobjects to be referenced from Current types. (#691)
 - Added x,f specification for a RandomDistribution. (#691)
-
+- Added a new 'stamp' top level field and moved some of the items that had
+  belonged in 'image' over to 'stamp'.  Notably, 'draw_method', 'offset', and
+  'gsparams', among other less commonly used parameters.  However, for
+  backwards compatibility, they are all still allowed in the image field
+  as well. (#691)
