@@ -564,6 +564,8 @@ def test_psf_config():
         'psf1' : { 'type' : 'DES_Shapelet' },
         'psf2' : { 'type' : 'DES_PSFEx', 'num' : 0 },
         'psf3' : { 'type' : 'DES_PSFEx', 'num' : 1 },
+        'psf4' : { 'type' : 'DES_Shapelet', 'image_pos' : galsim.PositionD(567,789), 'flux' : 179 },
+        'psf5' : { 'type' : 'DES_PSFEx', 'image_pos' : galsim.PositionD(789,567), 'flux' : 388 },
 
         # This would normally be set by the config processing.  Set it manually here.
         'image_pos' : image_pos,
@@ -577,14 +579,23 @@ def test_psf_config():
     gsobject_compare(psf1a, psf1b)
 
     psf2a = galsim.config.BuildGSObject(config, 'psf2')[0]
-    psfex = galsim.des.DES_PSFEx(psfex_file, dir=data_dir)
-    psf2b = psfex.getPSF(image_pos)
+    psfex0 = galsim.des.DES_PSFEx(psfex_file, dir=data_dir)
+    psf2b = psfex0.getPSF(image_pos)
     gsobject_compare(psf2a, psf2b)
 
     psf3a = galsim.config.BuildGSObject(config, 'psf3')[0]
-    psfex = galsim.des.DES_PSFEx(psfex_file, wcs_file, dir=data_dir)
-    psf3b = psfex.getPSF(image_pos)
+    psfex1 = galsim.des.DES_PSFEx(psfex_file, wcs_file, dir=data_dir)
+    psf3b = psfex1.getPSF(image_pos)
     gsobject_compare(psf3a, psf3b)
+
+    psf4a = galsim.config.BuildGSObject(config, 'psf4')[0]
+    psf4b = fitpsf.getPSF(galsim.PositionD(567,789)).withFlux(179)
+    gsobject_compare(psf4a, psf4b)
+
+    psf5a = galsim.config.BuildGSObject(config, 'psf5')[0]
+    psf5b = psfex0.getPSF(galsim.PositionD(789,567)).withFlux(388)
+    gsobject_compare(psf5a, psf5b)
+
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

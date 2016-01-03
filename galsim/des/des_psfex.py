@@ -337,12 +337,15 @@ def BuildDES_PSFEx(config, base, ignore, gsparams, logger):
     """
     des_psfex = galsim.config.GetInputObj('des_psfex', config, base, 'DES_PSFEx')
 
-    opt = { 'flux' : float , 'num' : int }
-    kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
+    opt = { 'flux' : float , 'num' : int, 'image_pos' : galsim.PositionD }
+    params, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
 
-    if 'image_pos' not in base:
+    if 'image_pos' in params:
+        image_pos = params['image_pos']
+    elif 'image_pos' in base:
+        image_pos = base['image_pos']
+    else:
         raise ValueError("DES_PSFEx requested, but no image_pos defined in base.")
-    image_pos = base['image_pos']
 
     # Convert gsparams from a dict to an actual GSParams object
     if gsparams: gsparams = galsim.GSParams(**gsparams)
@@ -359,8 +362,8 @@ def BuildDES_PSFEx(config, base, ignore, gsparams, logger):
                                    x_interpolant=galsim.Lanczos(3), gsparams=gsparams)
     psf = des_psfex.getLocalWCS(image_pos).toWorld(psf)
 
-    if 'flux' in kwargs:
-        psf = psf.withFlux(kwargs['flux'])
+    if 'flux' in params:
+        psf = psf.withFlux(params['flux'])
 
     # The second item here is "safe", a boolean that declares whether the returned value is 
     # safe to save and use again for later objects.  In this case, we wouldn't want to do 
