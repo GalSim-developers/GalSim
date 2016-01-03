@@ -31,7 +31,7 @@ import ngmix
 # seed numpy.random.  This should produce deterministic results.
 
 def GenLogNormal(config, base, value_type):
-    """Generate a random number form a log-normal distribution.
+    """Generate a random number from a log-normal distribution.
     """
     if 'rng' not in base:
         raise ValueError("No base['rng'] available for type = LogNormal")
