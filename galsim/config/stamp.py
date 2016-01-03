@@ -635,9 +635,12 @@ def SNRBasic(image, config):
 
 valid_stamp_types = {}
 
-def RegisterStampType(stamp_type, setup_func, prof_func, stamp_func, draw_func,
-                      whiten_func, snr_func):
+def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=None,
+                      draw_func=None, whiten_func=None, snr_func=None):
     """Register an image type for use by the config apparatus.
+
+    You only need to specify the functions that you want to change from the Basic stamp
+    functionality.
 
     @param stamp_type       The name of the type in config['stamp']
     @param setup_func       The function to call to determine the size of the stamp and do any
@@ -662,6 +665,13 @@ def RegisterStampType(stamp_type, setup_func, prof_func, stamp_func, draw_func,
                             The call signature is
                                 scale_factor = SNR(image, config)
     """
+    if setup_func is None: setup_func = SetupBasic
+    if prof_func is None: prof_func = ProfileBasic
+    if stamp_func is None: stamp_func = StampBasic
+    if draw_func is None: draw_func = DrawBasic
+    if whiten_func is None: whiten_func = WhitenBasic
+    if snr_func is None: snr_func = SNRBasic
+
     valid_stamp_types[stamp_type] = {
         'setup' : setup_func,
         'prof' : prof_func,
