@@ -263,7 +263,7 @@ def AddNoisePoisson(config, base, im, current_var, logger):
 
     # At this point, there is a slight difference between fft and phot. For photon shooting, the 
     # galaxy already has Poisson noise, so we want to make sure not to add that again!
-    draw_method = galsim.config.GetCurrentValue('image.draw_method',base,str)
+    draw_method = galsim.config.GetCurrentValue('stamp.draw_method',base,str)
     rng = base['noise_rng']
     if draw_method == 'phot':
         # Only add in the noise from the sky.
@@ -377,7 +377,7 @@ def AddNoiseCCD(config, base, im, current_var, logger):
 
     # At this point, there is a slight difference between fft and phot. For photon shooting, the 
     # galaxy already has Poisson noise, so we want to make sure not to add that again!
-    draw_method = galsim.config.GetCurrentValue('image.draw_method',base,str)
+    draw_method = galsim.config.GetCurrentValue('stamp.draw_method',base,str)
     rng = base['noise_rng']
     if draw_method == 'phot':
         # Add in the noise from the sky.

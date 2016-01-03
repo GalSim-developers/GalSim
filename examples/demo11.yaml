@@ -248,6 +248,14 @@ image :
         ra : 19.3 hours
         dec : -33.1 degrees
 
+    random_seed : 24783923
+
+    nproc : -1
+
+
+# Define some image properties that are specific to the stamp generation phase.
+stamp :
+
     # Normally, the draw routine accounts for a convolution by the pixel.  In this case we 
     # we don't want it to do that, since the psf here is what is sometimes called an 
     # "effective PSF".  It is already the convolution of the real PSF with a square pixel.
@@ -255,9 +263,6 @@ image :
     # draw_method = no_pixel.
     draw_method : no_pixel
 
-    random_seed : 24783923
-
-    nproc : -1
 
 # Define the input files
 input :
