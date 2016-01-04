@@ -475,7 +475,7 @@ def test_psf():
         print 'ref size: ',ref_size
         print 'ref shape: ',ref_shape
 
-    except OSError:
+    except IOError:
         x,y = 1195.64074707, 1276.63427734
         image_pos = galsim.PositionD(x,y)
         b = galsim.BoundsI(int(x)-15, int(x)+16, int(y)-15, int(y)+16)
