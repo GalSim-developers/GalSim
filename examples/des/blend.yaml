@@ -1,0 +1,168 @@
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# https://github.com/GalSim-developers
+#
+# This file is part of GalSim: The modular galaxy image simulation toolkit.
+# https://github.com/GalSim-developers/GalSim
+#
+# GalSim is free software: redistribution and use in source and binary forms,
+# with or without modification, are permitted provided that the following
+# conditions are met:
+#
+# 1. Redistributions of source code must retain the above copyright notice, this
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
+
+
+# A simulation of blended pairs of galaxies at various separations and flux ratios.
+# There are two parallel runs, one normal and the other where the neighbor only contributes
+# to the noise, not the flux.  So this simulates a perfect deblender that removes the flux
+# correctly, but there is still the extra noise from the neighbor.
+#
+
+modules:
+    # Use the extra features from the galsim.des module
+    - galsim.des
+
+    # A module in this directory that defines some custom types we want to use here.
+    - blend
+
+psf:
+    type: DES_PSFEx
+
+    # This means the psf should change per output file, not per object as would be the default.
+    index_key : file_num
+
+    image_pos : 
+        type : XY
+        x : { type : Random, min: 1, max: 2048 }
+        y : { type : Random, min: 1, max: 4096 }
+
+gal:
+    # Choose random real galaxies from the COSMOS catalog.
+    type: COSMOSGalaxy
+    gal_type: real
+    index: { type: Random }
+
+    # Randomly spin the original profile
+    rotate: { type: Random }
+
+    # The COSMOS galaxy sample is shallower than we want, so make them a bit smaller to simulate
+    # a fainter sample.  Don't worry about the flux, since we'll just adjust the noise to
+    # an appropriate level.
+    dilate: 0.6
+
+    # This works out about right for the sky level we chose below.  The galaxies mostly seem 
+    # to have pretty decent S/N based on visual inspection of image.
+    scale_flux: 1000
+
+    # Just a constant shear for now.
+    shear:
+        type: G1G2
+        g1: 0.23
+        g2: -0.17
+
+stamp:
+    # In blend.py (loaded by the modules field above), we define a custom stamp type
+    # called Blend.
+    # It has one galaxy centered (more or less -- cf image.offset) on the stamp, and then
+    # some number of neighbors also appearing on the stamp placed randomly within some range
+    # of allowed separations.
+    type: Blend
+
+    # Up to 5 neighbors.  Each neighbor has a prob of p=0.3 of being included.
+    n_neighbors: 
+        type: RandomBinomial
+        N: 5
+        p: 0.2
+
+    # The neighbors cannot be too close (assume they are rejected as unusable) or too far
+    # (not really a blend).
+    min_sep: 2   # arcsec -- clearly overlapping
+    max_sep: 10  # arcsec -- this would be off the edge of the stamp
+
+    # Offset is just random within central pixel.
+    offset:
+        type: XY
+        x: { type: Random, min: -0.5, max: 0.5 }
+        y: { type: Random, min: -0.5, max: 0.5 }
+
+
+image:
+    type: Tiled
+    stamp_size : 64
+    nx_tiles : 10
+    ny_tiles : 10
+
+    pixel_scale : 0.26
+
+    random_seed: 8675309   # Jenny
+
+    # Poisson noise with whitening.
+    noise:
+        type: Poisson
+        sky_level: 800
+        whiten: True
+
+    # This means the code will parallelize the creation of a single output file,
+    # splitting up the postage stamps among the available cores.
+    # This is normally overridden by the output.nproc item below, so the parellelization
+    # will be done over files instead.  But if you modify this to only do one file or
+    # set output.nproc=1, then this stamp-based parallelization will turn on.
+    nproc: -1
+
+input:
+    cosmos_catalog :
+        # Use the same COSMOS catalog choices we made in meds.yaml
+        template : "meds.yaml:input.cosmos_catalog"
+
+        # Also impose a minimum size, which we didn't there, to avoid very small galaxies.
+        min_hlr : 1.0  # arcsec
+
+    des_psfex :
+        dir : 'des_data'
+        file_name :
+            type : NumberedFile
+            root : 'DECam_00154912_'
+            digits : 2
+            ext : '_psfcat.psf'
+            num :
+                # Pick a random chip, but not either of our bad chips.
+                type : ExcludedRandom  # This is a custom type defined in blend.py
+                min: 1
+                max : 62
+                exclude: [ 61, 31 ]
+ 
+output:
+    type: Fits
+
+    dir: output_yaml
+    file_name:
+        type: FormattedStr
+        format: "blend-v001-%03d.fits"
+        items:
+        - { type: Sequence, nitems: '@output.nfiles' }
+
+    # Note: This can be changed from the command line as `galsim blend.yaml output.nfiles=10` say.
+    nfiles: 1
+
+    # This means the code will parallelize across the different files, doing a full
+    # output file in each core at a time.
+    # This is generally better than image.nproc, since it doesn't require as much interprocess
+    # communication, which can be rather slow.
+    nproc: -1
+
+    blend_noiseonly:
+        # This is a custom extra output field to write a second file that is identical
+        # except for not including the flux of the neigbors.  We do this by grabbing the
+        # pre-noise postage stamp of the neighbor and then subtracting this off from the
+        # final postage stamp that includes all the noise.
+        file_name:
+            type: FormattedStr
+            format: "blend-noiseonly-v001-%03d.fits"
+            items:
+            - { type: Sequence, nitems: '@output.nfiles' }
+
+       
