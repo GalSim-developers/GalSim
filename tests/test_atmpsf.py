@@ -28,68 +28,24 @@ except ImportError:
     import galsim
 
 
-def test_atmpsf_kwargs():
-    """ Test that different ways of initializing AtmsphericPSF don't crash.
-    """
+def test_multi_atmpsf_reset():
+    rng = galsim.BaseDeviate(1234)
+    atm = galsim.Atmosphere(altitude=10.0, frozen=False, rng=rng)
+    theta_x = [0.0 * galsim.arcmin, 0.1 * galsim.arcmin]
+    theta_y = [0.0 * galsim.arcmin, 0.1 * galsim.arcmin]
+    psfs = atm.getPSFs(theta_x=theta_x, theta_y=theta_y, exptime=0.06, diam=4.0)
 
-    # First the simple cases, where the size is set via a scalar
+    atm.reset()
+    psf0 = atm.getPSF(theta_x=theta_x[0], theta_y=theta_y[0], exptime=0.06, diam=4.0)
+    atm.reset()
+    psf1 = atm.getPSF(theta_x=theta_x[1], theta_y=theta_y[1], exptime=0.06, diam=4.0)
 
-    lam = 500.0  # nm
-    r0 = 0.2  # m
-    psf0 = galsim.AtmosphericPSF(lam=lam, r0=r0)
-    psf0.drawImage()
-
-    lam_over_r0 = lam*1e-9/r0 * galsim.radians/galsim.arcsec
-    psf1 = galsim.AtmosphericPSF(lam_over_r0=lam_over_r0)
-    psf1.drawImage()
-
-    fwhm = galsim.Kolmogorov(lam_over_r0).getFWHM()
-    psf2 = galsim.AtmosphericPSF(fwhm=fwhm)
-    psf2.drawImage()
-
-    # Now try multiple phase screens
-    weights = [0.1, 0.2, 0.3, 0.4]
-    psf3 = galsim.AtmosphericPSF(lam=lam, r0=r0, weights=weights)
-    psf3.drawImage()
-
-    velocities = [1.0, 2.0, 3.0, 4.0]
-    psf4 = galsim.AtmosphericPSF(lam=lam, r0=r0, velocity=velocities)
-    psf4.drawImage()
-
-    psf5 = galsim.AtmosphericPSF(lam_over_r0=lam_over_r0, weights=weights)
-    psf5.drawImage()
-
-    psf6 = galsim.AtmosphericPSF(fwhm=fwhm, weights=weights)
-    psf6.drawImage()
-
-    # Try specifying r0s directly
-    r0s = [0.6, 0.6, 0.6, 0.6]
-    psf7 = galsim.AtmosphericPSF(lam=lam, r0=r0s)
-    psf7.drawImage()
-
-    # Try multiple broadcasts
-    directions = [d*galsim.degrees for d in (0, 10, 20, 30)]
-    psf8 = galsim.AtmosphericPSF(lam=lam, r0=r0, direction=directions, velocity=velocities,
-                                 weights=weights)
-    psf8.drawImage()
-
-    alpha_mags = [0.999, 0.998, 0.997, 0.996]
-    psf9 = galsim.AtmosphericPSF(lam=lam, r0=r0s, direction=directions, velocity=velocities,
-                                 alpha_mag=alpha_mags)
-    psf9.drawImage()
-
-    # Now try some things that *should* fail.
-    try:
-        # Can't specify both r0 and weights as lists.
-        np.testing.assert_raises(ValueError, galsim.AtmosphericPSF,
-                                 lam=lam, r0=r0s, weights=weights)
-        # Can't specify both lam_over_r0 and weights as lists.
-        np.testing.assert_raises(ValueError, galsim.AtmosphericPSF,
-                                 lam_over_r0=[lam/r for r in r0s], weights=weights)
-
-    except ImportError:
-        print 'The assert_raises tests require nose'
-
+    np.testing.assert_array_equal(
+        psfs[0].img, psf0.img,
+        "AtmosphericPSF generated singly differs from AtmosphericPSF generated multiply")
+    np.testing.assert_array_equal(
+        psfs[1].img, psf1.img,
+        "AtmosphericPSF generated singly differs from AtmosphericPSF generated multiply")
 
 if __name__ == "__main__":
-    test_atmpsf_kwargs()
+    test_multi_atmpsf_reset()

@@ -29,6 +29,7 @@ September 2014
 
 """
 
+import copy
 import numpy as np
 import galsim
 import utilities
@@ -47,6 +48,7 @@ class Atmosphere(object):
         if rng is None:
             rng = galsim.BaseDeviate()
         self.rng = rng
+        self.orig_rng = copy.deepcopy(rng)
 
         # Listify
         altitude, r0_500, L0, velocity, direction, alpha_mag = map(
@@ -76,7 +78,12 @@ class Atmosphere(object):
         # decompose velocities
         self.vx, self.vy = zip(*[v*d.sincos() for v, d in zip(velocity, direction)])
 
-        if frozen:
+        self.alpha_mag = alpha_mag
+        self.frozen = frozen
+        self._initialize_screens()
+
+    def _initialize_screens(self):
+        if self.frozen:
             self.layers = [
                 FrozenPhaseScreen(
                     self.time_step, self.screen_size, self.screen_scale, alt,
@@ -86,7 +93,6 @@ class Atmosphere(object):
                 in zip(self.r0_500, self.L0_inv, self.vx, self.vy, self.altitude)
             ]
         else:
-            self.alpha_mag = alpha_mag
             self.layers = [
                 ARPhaseScreen(
                     self.time_step, self.screen_size, self.screen_scale, alt,
@@ -103,8 +109,30 @@ class Atmosphere(object):
     def getPSF(self, **kwargs):
         return AtmosphericPSF(self, **kwargs)
 
+    def getPSFs(self, **kwargs):
+        kwargs['_eval_now'] = False
+        PSFs = []
+        for theta_x, theta_y in zip(kwargs.pop('theta_x'), kwargs.pop('theta_y')):
+            PSFs.append(AtmosphericPSF(self, theta_x=theta_x, theta_y=theta_y, **kwargs))
+
+        nstep = PSFs[0]._nstep
+        atm = PSFs[0].atmosphere
+        flux = kwargs.pop('flux', 1.0)
+        gsparams = kwargs.pop('gsparams', None)
+        for i in xrange(nstep):
+            for PSF in PSFs:
+                PSF._step()
+            atm.advance()
+        for PSF in PSFs:
+            PSF._finalize(flux, gsparams)
+        return PSFs
+
     def path_difference(self, *args, **kwargs):
         return np.sum(layer.path_difference(*args, **kwargs) for layer in self.layers)
+
+    def reset(self):
+        self.rng = copy.deepcopy(self.orig_rng)
+        self._initialize_screens()
 
 
 class PhaseScreen(object):
@@ -214,54 +242,84 @@ class AtmosphericPSF(GSObject):
                  theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees,
                  scale_unit=galsim.arcsec, interpolant=None,
                  diam=10.0, obscuration=None,
-                 pad_factor=1.0, pupil_size=None,
-                 oversample_factor=1.0, pupil_scale=None,
-                 _bar=None, verbose=False):
+                 pad_factor=1.0, oversampling=1.5,
+                 _pupil_size=None, _pupil_scale=None,
+                 _bar=None, gsparams=None, _eval_now=True):
 
-        if pupil_scale is None:
-            obj = galsim.Kolmogorov(lam=lam, r0=atmosphere.r0_500_effective*(lam/500.)**(6./5))
-            pupil_scale = obj.stepK() * lam*1e-9 * galsim.radians / scale_unit / oversample_factor
-        if pupil_size is None:
-            pupil_size = diam * pad_factor
+        # Store initialization variables
+        self.atmosphere = atmosphere
+        self.lam = lam
+        self.exptime = exptime
+        self.theta_x = theta_x
+        self.theta_y = theta_y
+        self.scale_unit = scale_unit
+        self.interpolant = interpolant
+        self.diam = diam
+        self.obscuration = obscuration
+        self.pad_factor = pad_factor
+        self.oversampling = oversampling
 
-        n_u = int(np.ceil(pupil_size/pupil_scale))
-        pupil_size = n_u * pupil_scale
-        self.scale = 1e-9*lam/pupil_size * galsim.radians / scale_unit
-        img = np.zeros((n_u, n_u), dtype=np.float64)
+        if _pupil_scale is None:
+            obj = galsim.Kolmogorov(lam=self.lam,
+                                    r0=self.atmosphere.r0_500_effective*(self.lam/500.)**(6./5))
+            _pupil_scale = (obj.stepK() * self.lam*1e-9 *
+                            galsim.radians / self.scale_unit / self.oversampling)
+        self._pupil_scale = _pupil_scale
 
-        if verbose:
-            print "pupil_size: ", pupil_size
-            print "pupil_scale: ", pupil_scale
-            print "n_u: ", n_u
+        if _pupil_size is None:
+            _pupil_size = self.diam * self.pad_factor
+        self._nu = int(np.ceil(_pupil_size/self._pupil_scale))
+        self._pupil_size = self._nu * self._pupil_scale
 
-        aper = np.ones_like(img)
-        if diam is not None:
-            u = np.fft.fftshift(np.fft.fftfreq(n_u, 1./pupil_size))
+        self.scale = 1e-9*self.lam/self._pupil_size * galsim.radians / self.scale_unit
+        self.img = np.zeros((self._nu, self._nu), dtype=np.float64)
+
+        self.aper = self._generate_pupil()
+
+        self._nstep = int(np.ceil(self.exptime/self.atmosphere.time_step))
+        # Generate at least one time sample
+        if self._nstep == 0:
+            self._nstep = 1
+
+        # When generating many PSFs from the same atmosphere, it's more efficient to loop over
+        # the PSFs and then increment the atmosphere than to fully compute single PSFs one at a
+        # time.  The _eval_now flag enables (in a hidden way) the above computation strategy.
+        if _eval_now:
+            for i in xrange(self._nstep):
+                self._step()
+                self.atmosphere.advance()
+                if _bar is not None:
+                    _bar.update()
+
+            self._finalize(flux, gsparams)
+
+    def _generate_pupil(self):
+        aper = np.ones((self._nu, self._nu), dtype=np.float64)
+        if self.diam is not None:
+            radius = 0.5*self.diam
+            u = np.fft.fftshift(np.fft.fftfreq(self._nu, 1./self._pupil_size))
             u, v = np.meshgrid(u, u)
-            r = np.hypot(u, v)
-            aper = r <= 0.5*diam
-            if obscuration is not None:
-                aper[r <= 0.5*diam*obscuration] = 0.0
+            rsqr = u**2 + v**2
+            aper = rsqr <= radius**2
+            if self.obscuration is not None:
+                aper[rsqr <= (radius*self.obscuration)**2] = 0.0
+        return aper
 
-        nstep = int(np.ceil(exptime/atmosphere.time_step))
-        if nstep == 0:
-            nstep = 1
+    def _step(self):
+        path_difference = self.atmosphere.path_difference(self._nu, self._pupil_scale,
+                                                          self.theta_x, self.theta_y)
+        wf = self.aper * np.exp(2j * np.pi * path_difference / self.lam)
+        ftwf = np.fft.ifft2(np.fft.ifftshift(wf))
+        self.img += np.abs(ftwf)**2
 
-        for i in xrange(nstep):
-            path_difference = atmosphere.path_difference(n_u, pupil_scale, theta_x, theta_y)
-            wf = aper * np.exp(2j * np.pi * path_difference / lam)
-            ftwf = np.fft.ifft2(np.fft.ifftshift(wf))
-            img += np.abs(ftwf)**2
-            atmosphere.advance()
-            if _bar is not None:
-                _bar.update()
-
-        img = np.fft.fftshift(img)
-        img *= (flux / (img.sum() * self.scale**2))
-        img = galsim.ImageD(img.astype(np.float64), scale=self.scale)
+    def _finalize(self, flux, gsparams):
+        del self.aper  # save some RAM
+        self.img = np.fft.fftshift(self.img)
+        self.img *= (flux / (self.img.sum() * self.scale**2))
+        self.img = galsim.ImageD(self.img.astype(np.float64), scale=self.scale)
 
         ii = galsim.InterpolatedImage(
-            img, x_interpolant=interpolant, calculate_stepk=True, calculate_maxk=True,
-            use_true_center=False, normalization='sb'
+            self.img, x_interpolant=self.interpolant, calculate_stepk=True, calculate_maxk=True,
+            use_true_center=False, normalization='sb', gsparams=gsparams
         )
         GSObject.__init__(self, ii)
