@@ -394,12 +394,21 @@ def ImportModules(config):
 
     @param config           The configuration dict.
     """
+    import sys
     if 'modules' in config:
         for module in config['modules']:
             try:
+                # Do this first to let user modules take precedence
                 exec('import '+module)
             except ImportError:
-                exec('import galsim.'+module)
+                try:
+                    exec('import galsim.'+module)
+                except ImportError:
+                    # But do it again if everything fails to give a better error message.
+                    # Also make sure '.' in the path to load local modules.
+                    if '.' not in sys.path:
+                        sys.path.append('.')
+                    exec('import '+module)
 
 
 def ParseExtendedKey(config, key):
