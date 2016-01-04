@@ -500,15 +500,16 @@ def StampBasic(config, xsize, ysize):
     else:
         return None
 
-def DrawBasic(prof, image, method, offset, config):
+def DrawBasic(prof, image, method, offset, config, add_to_image=False):
     """
     Draw the profile on the image.
 
-    @param prof         The profile to draw.
-    @param image        The image onto which to draw the profile.
-    @param method       The method to use in drawImage.
-    @param offset       The offset to apply when drawing.
-    @param config       The configuration dict.
+    @param prof             The profile to draw.
+    @param image            The image onto which to draw the profile.
+    @param method           The method to use in drawImage.
+    @param offset           The offset to apply when drawing.
+    @param config           The configuration dict.
+    @param add_to_image     Add to the given image? [default: False]
 
     @returns the resulting image
     """
@@ -522,6 +523,9 @@ def DrawBasic(prof, image, method, offset, config):
     kwargs['wcs'] = config['wcs'].local(image_pos = config['image_pos'])
     if method == 'phot':
         kwargs['rng'] = config['rng']
+    if add_to_image and image is None:
+        raise RuntimeError("Cannot add to image if no image size is specified.")
+    kwargs['add_to_image'] = add_to_image
 
     # Check validity of extra phot options:
     max_extra_noise = None
