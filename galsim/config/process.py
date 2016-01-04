@@ -355,11 +355,18 @@ def SetupConfigRNG(config, seed_offset=0):
                 del config[key]
 
     if 'random_seed' in config['image']:
-        config['index_key'] = 'obj_num'
-        if index_key != 'obj_num' and 'start_obj_num' in config:
-            config['obj_num'] = config['start_obj_num']
-        seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['index_key'] = index_key
+        if index_key == 'obj_num':
+            # The normal case
+            seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        else:
+            # If we are setting either the file_num or image_num rng, we need to be careful.
+            config['index_key'] = 'obj_num'
+            obj_num = config['obj_num']
+            if 'start_obj_num' in config:
+                config['obj_num'] = config['start_obj_num']
+            seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+            config['index_key'] = index_key
+            config['obj_num'] = obj_num
         seed += seed_offset
     else:
         seed = 0
