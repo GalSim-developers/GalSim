@@ -69,6 +69,9 @@ def BuildFiles(nfiles, config, file_num=0, logger=None):
         SetupConfigFileNum(config, file_num, image_num, obj_num)
         seed = galsim.config.SetupConfigRNG(config)
 
+        # Get the number of objects in each image for this file.
+        nobj = GetNObjForFile(config,file_num,image_num)
+
         # Process the input fields that might be relevant at file scope:
         galsim.config.ProcessInput(config, file_num=file_num, logger=logger, file_scope_only=True)
 
@@ -88,8 +91,6 @@ def BuildFiles(nfiles, config, file_num=0, logger=None):
             file_name = GetFilename(output, config, default_ext)
             jobs.append( (kwargs, (file_num, file_name)) )
 
-        # Get the number of objects in each image for this file.
-        nobj = GetNObjForFile(config,file_num,image_num)
         # nobj is a list of nobj for each image in that file.
         # So len(nobj) = nimages and sum(nobj) is the total number of objects
         # This gets the values of image_num and obj_num ready for the next loop.
@@ -134,7 +135,7 @@ def BuildFiles(nfiles, config, file_num=0, logger=None):
     else:
         if logger and logger.isEnabledFor(logging.WARN):
             if nfiles_written > 1 and nproc != 1:
-                logger.warn('Total time for %d files with %d processes = %f sec', 
+                logger.warn('Total time for %d files with %d processes = %f sec',
                             nfiles_written,nproc,t2-t1)
             logger.warn('Done building files')
 
@@ -144,7 +145,7 @@ output_ignore = [ 'file_name', 'dir', 'nfiles', 'nproc', 'skip', 'noclobber', 'r
 def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     """
     Build an output file as specified in config.
-    
+
     @param config           A configuration dict.
     @param file_num         If given, the current file_num. [default: 0]
     @param image_num        If given, the current image_num. [default: 0]
@@ -162,10 +163,12 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: seed = %d',file_num,seed)
 
-    # The GetNImagesForFile function performs some basic setup, so in the interest of avoiding
-    # code duplication, call it here, even though we don't really need the output.  (Although,
-    # we do got ahead and use it in the debug logging, since we have it.)
-    nimages = GetNImagesForFile(config, file_num)
+    # Put these values in the config dict so we won't have to run them again later if
+    # we need them.  e.g. ExtraOuput processing uses these.
+    nobj = GetNObjForFile(config,file_num,image_num)
+    nimages = len(nobj)
+    config['nimages'] = nimages
+    config['nobj'] = nobj
 
     output = config['output']
     output_type = output['type']
@@ -244,9 +247,9 @@ def GetNImagesForFile(config, file_num):
     else:
         output_type = 'Fits'
     nim_func = valid_output_types[output_type]['nim']
- 
+
     return nim_func(config, file_num)
- 
+
 
 def GetNObjForFile(config, file_num, image_num):
     """
@@ -267,7 +270,7 @@ def GetNObjForFile(config, file_num, image_num):
         galsim.config.ProcessInput(config, file_num=file_num)
         nobj = [ galsim.config.GetNObjForImage(config, image_num+j) for j in range(nimages) ]
     return nobj
- 
+
 
 def SetupConfigFileNum(config, file_num, image_num, obj_num):
     """Do the basic setup of the config dict at the file processing level.
@@ -366,7 +369,7 @@ def RetryIO(func, args, ntries, file_name, logger):
 def BuildFits(config, file_num, image_num, obj_num, ignore, logger):
     """
     Build a regular fits file as specified in config.
-    
+
     @param config           A configuration dict.
     @param file_num         The current file_num.
     @param image_num        The current image_num.

@@ -107,7 +107,7 @@ def SetupExtraOutput(config, file_num=0, logger=None):
             if init_func is None:
                 # Make the output_obj list the right length now to avoid issues with multiple
                 # processes trying to append at the same time.
-                nimages = galsim.config.GetNImagesForFile(config, file_num)
+                nimages = config['nimages']
                 for i in range(nimages): output_obj.append(None)
             if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('file %d: Setup output %s object',file_num,key)
@@ -170,9 +170,7 @@ def ProcessExtraOutputsForImage(config, logger=None):
                     image_num = config['image_num']
                     start_image_num = config['start_image_num']
                     start_obj_num = config['start_obj_num']
-                    nobj = galsim.config.GetNObjForFile(config,file_num,start_image_num)
-                    # GetNObjForFile changed index_key, so make sure to set it back.
-                    config['index_key'] = 'image_num'
+                    nobj = config['nobj']
                     k = image_num - start_image_num
                     for i in range(k):
                         start_obj_num += nobj[i]
