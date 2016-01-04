@@ -140,7 +140,18 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                 else:
                     if logger and logger.isEnabledFor(logging.DEBUG):
                         logger.debug('file %d: Build input type %s',file_num,key)
-                    kwargs, safe = GetInputKwargs(key, field, config)
+                    try:
+                        kwargs, safe = GetInputKwargs(key, field, config)
+                    except Exception as e:
+                        if safe_only:
+                            if logger and logger.isEnabledFor(logging.DEBUG):
+                                logger.debug('file %d: Skip %s %d, since caugt exception: %s',
+                                             file_num,key,i,e)
+                            input_objs[i] = None
+                            input_objs_safe[i] = None
+                            continue
+                        else:
+                            raise
 
                     if safe_only and not safe:
                         if logger and logger.isEnabledFor(logging.DEBUG):
