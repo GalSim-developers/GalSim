@@ -307,7 +307,6 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                         # If there is a message, upgrade to info level
                         logger.info('Skipping object %d: %s',obj_num,e.msg)
                 skip = True
-                current_var = 0.
 
             stamp_func = valid_stamp_types[stamp_type]['stamp']
             im = stamp_func(config, xsize, ysize)
@@ -330,13 +329,6 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 draw_func = valid_stamp_types[stamp_type]['draw']
                 im = draw_func(prof, im, method, offset, config)
 
-                whiten_func = valid_stamp_types[stamp_type]['whiten']
-                current_var = whiten_func(prof, im, config)
-                if current_var != 0.:
-                    if logger and logger.isEnabledFor(logging.DEBUG):
-                        logger.debug('obj %d: whitening noise brought current var to %f',
-                                     config['obj_num'],current_var)
-
                 snr_func = valid_stamp_types[stamp_type]['snr']
                 scale_factor = snr_func(im, config)
                 if scale_factor != 1.0:
@@ -344,7 +336,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                         logger.error(
                             "signal_to_noise caluclation is not accurate for draw_method = phot")
                     im *= scale_factor
-                    current_var *= scale_factor**2
+                    prof *= scale_factor
 
             # Set the origin appropriately
             if im is None:
@@ -362,6 +354,18 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
 
             galsim.config.ProcessExtraOutputsForStamp(config, logger)
 
+            # We always need to do the whiten step here in the stamp processing
+            if not skip:
+                whiten_func = valid_stamp_types[stamp_type]['whiten']
+                current_var = whiten_func(prof, im, config)
+                if current_var != 0.:
+                    if logger and logger.isEnabledFor(logging.DEBUG):
+                        logger.debug('obj %d: whitening noise brought current var to %f',
+                                     config['obj_num'],current_var)
+            else:
+                current_var = 0.
+
+            # Sometimes, depending on the image type, we go on to do the rest of the noise as well.
             if do_noise:
                 galsim.config.AddSky(config,im)
                 if not skip:
