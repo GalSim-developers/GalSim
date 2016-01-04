@@ -69,6 +69,9 @@ def BuildFiles(nfiles, config, file_num=0, logger=None):
         SetupConfigFileNum(config, file_num, image_num, obj_num)
         seed = galsim.config.SetupConfigRNG(config)
 
+        # Get the number of objects in each image for this file.
+        nobj = GetNObjForFile(config,file_num,image_num)
+
         # Process the input fields that might be relevant at file scope:
         galsim.config.ProcessInput(config, file_num=file_num, logger=logger, file_scope_only=True)
 
@@ -88,8 +91,6 @@ def BuildFiles(nfiles, config, file_num=0, logger=None):
             file_name = GetFilename(output, config, default_ext)
             jobs.append( (kwargs, (file_num, file_name)) )
 
-        # Get the number of objects in each image for this file.
-        nobj = GetNObjForFile(config,file_num,image_num)
         # nobj is a list of nobj for each image in that file.
         # So len(nobj) = nimages and sum(nobj) is the total number of objects
         # This gets the values of image_num and obj_num ready for the next loop.
@@ -164,8 +165,8 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
 
     # Put these values in the config dict so we won't have to run them again later if
     # we need them.  e.g. ExtraOuput processing uses these.
-    nimages = GetNImagesForFile(config, file_num)
     nobj = GetNObjForFile(config,file_num,image_num)
+    nimages = len(nobj)
     config['nimages'] = nimages
     config['nobj'] = nobj
 
