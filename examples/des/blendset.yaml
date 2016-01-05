@@ -69,7 +69,7 @@ stamp:
     type: BlendSet
 
     # Up to 5 neighbors.  Each neighbor has a prob of p=0.3 of being included.
-    n_neighbors: 
+    n_neighbors:
         type: RandomBinomial
         N: 5
         p: 0.3
@@ -87,10 +87,7 @@ stamp:
 
 
 image:
-    type: Tiled
-    stamp_size : 64
-    nx_tiles : 10
-    ny_tiles : 10
+    size: 64
 
     pixel_scale : 0.26
 
@@ -101,9 +98,11 @@ image:
         type: Poisson
         sky_level: 100
 
- 
+
 output:
-    type: Fits
+    type: MEDS
+    nobjects: 100
+    nstamps_per_object: 1
 
     dir: output_yaml
     file_name:
@@ -114,11 +113,7 @@ output:
 
     nfiles: 1
 
-    deblend:
-        # This is a custom extra output field to write a second file that is identical
-        # except for not including the flux of the neigbors.  We do this by grabbing the
-        # pre-noise postage stamp of the neighbor and then subtracting this off from the
-        # final postage stamp that includes all the noise.
+    deblend_meds:
         file_name:
             type: FormattedStr
             format: "blendset-deblend-v001-%03d.fits"

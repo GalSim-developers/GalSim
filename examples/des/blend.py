@@ -194,6 +194,7 @@ def DrawBlendSet(profiles, image, method, offset, config):
 
     # Add up the cutouts from the profile images
     image.setZero()
+    image.wcs = wcs
     for full_im in full_images:
         assert full_im.bounds.includes(bounds)
         image += full_im[bounds]
@@ -268,7 +269,7 @@ galsim.config.RegisterStampType('BlendSet',
 # neighbor flux.  The represents the result of a perfect deblender.
 #
 
-def BlendNoiseOnlyStamp(images, scratch, config, base, obj_num, logger=None):
+def DeblendStamp(images, scratch, config, base, obj_num, logger=None):
     """Save the stamps of just the neighbor fluxes.  We'll subtract them from the full image
     at the end.
     """
@@ -280,11 +281,11 @@ def BlendNoiseOnlyStamp(images, scratch, config, base, obj_num, logger=None):
     elif base['stamp_center'] is not None:
         im.setCenter(base['stamp_center'])
     else:
-        im.setOrigin(config['image_origin'])
+        im.setOrigin(base['image_origin'])
     # Save it in the scratch dict using this obj_num as the key.
     scratch[obj_num] = im
 
-def BlendNoiseOnlyImage(images, scratch, config, base, obj_nums, logger=None):
+def DeblendImage(images, scratch, config, base, obj_nums, logger=None):
     """Copy the full final image over and then subtract off the neighbor-only fluxes.
     """
     # Start with a copy of the regular final image.
@@ -301,8 +302,38 @@ def BlendNoiseOnlyImage(images, scratch, config, base, obj_nums, logger=None):
 
 
 galsim.config.RegisterExtraOutput('deblend',
-                                  stamp_func = BlendNoiseOnlyStamp,
-                                  image_func = BlendNoiseOnlyImage,
+                                  stamp_func = DeblendStamp,
+                                  image_func = DeblendImage,
                                   write_func = galsim.fits.writeMulti)
+
+#
+# When used with MEDS files, we modify it slightly so that it can write out as a meds file,
+# rather than a simple Fits file.
+#
+
+def DeblendMedsFinalize(images, scratch, data, config, base, logger):
+    """Convert from the list of images we've been making into a list of MultiExposureObjects
+    we can use to write the MEDS file.
+    """
+    # cf. code to make obj_list in BuildMEDS function in galsim/des/des_meds.py
+    obj_list = []
+    k1 = 0
+    # Copy over everything but the images. Replace the data images with the deblend images.
+    for obj in data:
+        k2 = k1 + obj.n_cutouts
+        new_images = images[k1:k2]
+        weight = obj.weight
+        psf = obj.psf
+        new_obj = galsim.des.MultiExposureObject(images=new_images, weight=weight, psf=psf)
+        obj_list.append(new_obj)
+        k1 = k2
+    return obj_list
+
+
+galsim.config.RegisterExtraOutput('deblend_meds',
+                                  stamp_func = DeblendStamp,
+                                  image_func = DeblendImage,
+                                  final_func = DeblendMedsFinalize,
+                                  write_func = galsim.des.WriteMEDS)
 
 
