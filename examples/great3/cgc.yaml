@@ -120,6 +120,14 @@ eval_variables:
     # They did this as a LookupTable, but the formula below is pretty close.
     fmax_var: '$0.004 * math.exp(2.9 * (1.1-@psf.items.0.fwhm) * (0.95-@psf.items.0.fwhm))'
 
+stamp:
+    # Use new top-level "stamp" field to specify a minimum flux fraction in each postage stamp.  The
+    # idea is that if the galaxy is drawn into the postage stamp of size stamp_size (see "image"
+    # field) then the galaxy gets chucked out and a new one is selected.  This will depend not only
+    # on the galaxy parameters but the PSF as well, since the cut is imposed on the PSF-convolved
+    # object.
+    min_flux_frac = 0.99
+
 image:
     type: Tiled
     nx_tiles: 100
