@@ -29,43 +29,36 @@ modules:
     # A module in this directory that defines some custom types related to blending
     - blend
 
-    # Another module in this directory that defines the ExcludedRandom type
-    - excluded_random
+    # A module that defines the LogNormal distribution.
+    - log_normal
 
 psf:
-    type: DES_PSFEx
+    # Simple Moffat PSF
+    type: Moffat
+    fwhm: 0.9
+    beta: 3.0   # Typical beta values are between 2.5 and 4 according to this paper:
+                # http://adsabs.harvard.edu/abs/1993MNRAS.264..961S
 
     # This means the psf should change per output file, not per object as would be the default.
     index_key : file_num
 
-    image_pos : 
-        type : XY
-        x : { type : Random, min: 1, max: 2048 }
-        y : { type : Random, min: 1, max: 4096 }
-
 gal:
-    # Choose random real galaxies from the COSMOS catalog.
-    type: COSMOSGalaxy
-    gal_type: real
-    index: { type: Random }
+    # Simple Exponential galaxies this time.
+    type: Exponential
+    half_light_radius:
+        type: LogNormal
+        mean: 1.2
+        sigma: 0.4
 
-    # Randomly spin the original profile
-    rotate: { type: Random }
+    ellip:
+        type: Eta1Eta2
+        eta1: { type: RandomGaussian, sigma: 0.2 }
+        eta2: { type: RandomGaussian, sigma: 0.2 }
 
-    # The COSMOS galaxy sample is shallower than we want, so make them a bit smaller to simulate
-    # a fainter sample.  Don't worry about the flux, since we'll just adjust the noise to
-    # an appropriate level.
-    dilate: 0.6
-
-    # This works out about right for the sky level we chose below.  The galaxies mostly seem 
-    # to have pretty decent S/N based on visual inspection of image.
-    scale_flux: 1000
-
-    # Just a constant shear for now.
-    shear:
-        type: G1G2
-        g1: 0.23
-        g2: -0.17
+    flux:
+        type: LogNormal
+        mean: 1000.
+        sigma: 500.
 
 stamp:
     # In blend.py (loaded by the modules field above), we define a custom stamp type
@@ -73,7 +66,7 @@ stamp:
     # It has one galaxy centered (more or less -- cf image.offset) on the stamp, and then
     # some number of neighbors also appearing on the stamp placed randomly within some range
     # of allowed separations.
-    type: Blend
+    type: BlendSet
 
     # Up to 5 neighbors.  Each neighbor has a prob of p=0.3 of being included.
     n_neighbors: 
@@ -103,40 +96,11 @@ image:
 
     random_seed: 8675309   # Jenny
 
-    # Poisson noise with whitening.
+    # Poisson noise
     noise:
         type: Poisson
-        sky_level: 800
-        whiten: True
+        sky_level: 100
 
-    # This means the code will parallelize the creation of a single output file,
-    # splitting up the postage stamps among the available cores.
-    # This is normally overridden by the output.nproc item below, so the parellelization
-    # will be done over files instead.  But if you modify this to only do one file or
-    # set output.nproc=1, then this stamp-based parallelization will turn on.
-    nproc: -1
-
-input:
-    cosmos_catalog :
-        # Use the same COSMOS catalog choices we made in meds.yaml
-        template : "meds.yaml:input.cosmos_catalog"
-
-        # Also impose a minimum size, which we didn't there, to avoid very small galaxies.
-        min_hlr : 1.0  # arcsec
-
-    des_psfex :
-        dir : 'des_data'
-        file_name :
-            type : NumberedFile
-            root : 'DECam_00154912_'
-            digits : 2
-            ext : '_psfcat.psf'
-            num :
-                # Pick a random chip, but not either of our bad chips.
-                type : ExcludedRandom  # This is a custom type defined in blend.py
-                min: 1
-                max : 62
-                exclude: [ 61, 31 ]
  
 output:
     type: Fits
@@ -144,7 +108,7 @@ output:
     dir: output_yaml
     file_name:
         type: FormattedStr
-        format: "blend-v001-%03d.fits"
+        format: "blendset-v001-%03d.fits"
         items:
         - { type: Sequence, nitems: '@output.nfiles' }
 
@@ -154,13 +118,10 @@ output:
         # This is a custom extra output field to write a second file that is identical
         # except for not including the flux of the neigbors.  We do this by grabbing the
         # pre-noise postage stamp of the neighbor and then subtracting this off from the
-        # final postage stamp that includes all the noise.  So the Poisson noise of the
-        # neighbors is still there as is the noise from whitening.  Just not the actual
-        # neighbor flux.  The represents the result of a perfect deblender.
+        # final postage stamp that includes all the noise.
         file_name:
             type: FormattedStr
-            format: "blend-deblend-v001-%03d.fits"
+            format: "blendset-deblend-v001-%03d.fits"
             items:
             - { type: Sequence, nitems: '@output.nfiles' }
 
-       
