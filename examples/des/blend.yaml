@@ -29,6 +29,9 @@ modules:
     # A module in this directory that defines some custom types we want to use here.
     - blend
 
+    # Another module in this directory that defines the ExcludedRandom type
+    - excluded_random
+
 psf:
     type: DES_PSFEx
 
