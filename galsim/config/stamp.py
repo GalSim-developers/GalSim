@@ -367,9 +367,8 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
 
             # Sometimes, depending on the image type, we go on to do the rest of the noise as well.
             if do_noise:
-                galsim.config.AddSky(config,im)
-                if not skip:
-                    galsim.config.AddNoise(config,im,current_var,logger)
+                noise_func = valid_stamp_types[stamp_type]['noise']
+                im = noise_func(config,im,skip,current_var,logger)
 
             return im, current_var
 
@@ -641,10 +640,31 @@ def SNRBasic(image, config):
     else:
         return 1.
 
+def NoiseBasic(config, image, skip, current_var, logger):
+    """
+    Add the sky level and the noise to the stamp.
+
+    Note: This only gets called if the image type requests that the noise be added to each
+          stamp individually, rather than to the full image and the end.
+
+    @param config           The configuration dict
+    @param image            The current image.
+    @param skip             Are we skipping this image? (Usually means to add sky, but not noise.)
+    @param current_var      The current noise variance present in the image already.
+    @param logger           If given, a logger object to log progress. [default: None]
+
+    @returns the image with noise
+    """
+    galsim.config.AddSky(config,image)
+    if not skip:
+        galsim.config.AddNoise(config,image,current_var,logger)
+    return image
+
+
 valid_stamp_types = {}
 
 def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=None,
-                      draw_func=None, whiten_func=None, snr_func=None):
+                      draw_func=None, snr_func=None, whiten_func=None, noise_func=None):
     """Register an image type for use by the config apparatus.
 
     You only need to specify the functions that you want to change from the Basic stamp
@@ -665,29 +685,37 @@ def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=No
     @param draw_func        The function to call to draw the image.
                             The call signature is
                                 image = Draw(prof, image, method, offset, config)
-    @param whiten_func      The function to call to whiten the image.
-                            The call signature is
-                                current_var = Whiten(prof, image, config)
     @param snr_func         The function to call to rescale the image according to the desired
                             signal-to-noise.
                             The call signature is
                                 scale_factor = SNR(image, config)
+    @param whiten_func      The function to call to whiten the image.
+                            The call signature is
+                                current_var = Whiten(prof, image, config)
+    @param noise_func       The function to call to add the sky and noise if appropriate.
+                            (Depending on the image type, this may not be called, since the noise
+                            may be added to the full image, rather than to each stamp.)
+                            The call signature is
+                                image = Noise(config, image, skip, current_var, logger)
     """
     if setup_func is None: setup_func = SetupBasic
     if prof_func is None: prof_func = ProfileBasic
     if stamp_func is None: stamp_func = StampBasic
     if draw_func is None: draw_func = DrawBasic
-    if whiten_func is None: whiten_func = WhitenBasic
     if snr_func is None: snr_func = SNRBasic
+    if whiten_func is None: whiten_func = WhitenBasic
+    if noise_func is None: noise_func = NoiseBasic
 
     valid_stamp_types[stamp_type] = {
         'setup' : setup_func,
         'prof' : prof_func,
         'stamp' : stamp_func,
         'draw' : draw_func,
-        'whiten' : whiten_func,
         'snr' : snr_func,
+        'whiten' : whiten_func,
+        'noise' : noise_func,
     }
 
-RegisterStampType('Basic', SetupBasic, ProfileBasic, StampBasic, DrawBasic, WhitenBasic, SNRBasic)
+RegisterStampType('Basic', SetupBasic, ProfileBasic, StampBasic, DrawBasic,
+                  SNRBasic, WhitenBasic, NoiseBasic)
 
