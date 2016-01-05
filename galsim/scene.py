@@ -43,8 +43,9 @@ class COSMOSCatalog(object):
 
     option (1) for more information.  Note that if you want to make real galaxies you need to
     download and store the full tarball with all galaxy images, whereas if you want to make
-    parametric galaxies you only need the catalog real_galaxy_catalog_23.5_fits.fits and can delete
-    the other files.
+    parametric galaxies you only need the catalog real_galaxy_catalog_23.5_fits.fits (and the
+    selection file real_galaxy_galsim_selection.fits.gz if you want to place cuts on the postage
+    stamp quality) and can delete the galaxy and PSF image files.
 
     Finally, we provide a program that will download the large COSMOS sample for you and
     put it in the $PREFIX/share/galsim directory of your installation path.  The program is
@@ -73,7 +74,7 @@ class COSMOSCatalog(object):
         >>> indices = np.arange(10)
         >>> real_gal_list = cosmos_cat.makeGalaxy(indices, gal_type='real',
         ...                                       noise_pad_size=im_size*pix_scale)
-        >>> param_gal_list = cosmosm_cat.makeGalaxy(indices, gal_type='parametric', chromatic=True)
+        >>> param_gal_list = cosmos_cat.makeGalaxy(indices, gal_type='parametric', chromatic=True)
         >>> for ind in indices:
         >>>     real_gal = galsim.Convolve(real_gal_list[ind], psf)
         >>>     param_gal = galsim.Convolve(param_gal_list[ind], psf)
@@ -86,46 +87,53 @@ class COSMOSCatalog(object):
 
     This code snippet will draw images of the first 10 entries in the COSMOS catalog, at slightly
     lower resolution than in COSMOS, with a real image and its parametric representation for each of
-    those objects.  Note that we are automatically excluding galaxies that do not have parametric
-    representations.  These are rare and do not occur in the first ten entries in the catalog, which
-    is why we can assume that the real and parametric objects will be comparable.
+    those objects.
 
     Initialization
     --------------
 
-    @param file_name    The file containing the catalog. [default: None, which will look for the
-                        COSMOS catalog in $PREFIX/share/galsim.  It will raise an exception if the
-                        catalog is not there telling you to run galsim_download_cosmos.]
-    @param image_dir    Keyword that is only used for real galaxies, not parametric ones, to specify
-                        the directory of the image files.
-                        If a string containing no `/`, it is the relative path from the location of
-                        the catalog file to the directory containing the galaxy/PDF images.
-                        If a path (a string containing `/`), it is the full path to the directory
-                        containing the galaxy/PDF images. [default: None]
-    @param dir          The directory of catalog file. [default: None]
-    @param preload      Keyword that is only used for real galaxies, not parametric ones, to choose
-                        whether to preload the header information.  If `preload=True`, the bulk of  
-                        the I/O time is in the constructor.  If `preload=False`, there is
-                        approximately the same total I/O time (assuming you eventually use most of
-                        the image files referenced in the catalog), but it is spread over the
-                        various calls to getGal() and getPSF().  [default: False]
-    @param noise_dir    Keyword that is only used for real galaxies, not parametric ones.
-                        The directory of the noise files if different from the directory of the 
-                        image files.  [default: image_dir]
-    @param use_real     Enable the use of realistic galaxies?  [default: True]
-                        If this parameter is False, then `makeGalaxy(gal_type='real')` will
-                        not be allowed.
-    @param exclude_fail Exclude galaxies that have failures in the parametric fits? [default: True]
-    @param exclude_bad  Exclude those that have evidence of probably being a bad fit?  e.g. n > 5
-                        and hlr > 1 arcsec, probably indicates poor sky subtraction. [default: True]
-    @param min_hlr      Exclude galaxies whose fitted half-light-radius is smaller than this value
-                        (in arcsec).  [default: 0, meaning no limit]
-    @param max_hlr      Exclude galaxies whose fitted half-light-radius is larger than this value
-                        (in arcsec).  [default: 0, meaning no limit]
-    @param min_flux     Exclude galaxies whose fitted flux is smaller than this value.  
-                        [default: 0, meaning no limit]
-    @param max_flux     Exclude galaxies whose fitted flux is larger than this value.  
-                        [default: 0, meaning no limit]
+    @param file_name        The file containing the catalog. [default: None, which will look for the
+                            COSMOS catalog in $PREFIX/share/galsim.  It will raise an exception if
+                            the catalog is not there telling you to run galsim_download_cosmos.]
+    @param image_dir        Keyword that is only used for real galaxies, not parametric ones, to
+                            specify the directory of the image files.
+                            If a string containing no `/`, it is the relative path from the location
+                            of the catalog file to the directory containing the galaxy/PDF images.
+                            If a path (a string containing `/`), it is the full path to the
+                            directory containing the galaxy/PDF images. [default: None]
+    @param dir              The directory of catalog file. [default: None]
+    @param preload          Keyword that is only used for real galaxies, not parametric ones, to
+                            choose whether to preload the header information.  If `preload=True`,
+                            the bulk of the I/O time is in the constructor.  If `preload=False`,
+                            there is approximately the same total I/O time (assuming you eventually
+                            use most of the image files referenced in the catalog), but it is spread
+                            over the various calls to getGal() and getPSF().  [default: False]
+    @param noise_dir        Keyword that is only used for real galaxies, not parametric ones.
+                            The directory of the noise files if different from the directory of the 
+                            image files.  [default: image_dir]
+    @param use_real         Enable the use of realistic galaxies?  [default: True]
+                            If this parameter is False, then `makeGalaxy(gal_type='real')` will
+                            not be allowed.
+    @param exclusion_level  Level of cuts to make on the galaxies based on the quality of postage
+                            stamp definition and/or parametric fit quality.  Options:
+                            "none": No cuts.
+                            "bad_ps": Apply cuts to eliminate galaxies that have failures in postage
+                                      stamp definition.  These cuts may also eliminate a small
+                                      subset of the good postage stamps as well.
+                            "bad_fits": Apply cuts to eliminate galaxies that have failures in the
+                                        parametric fits.  These cuts may also eliminate a small
+                                        subset of the good parametric fits as well.
+                            "marginal": Apply the above cuts, plus ones that eliminate some more
+                                        marginal cases.
+                            [default: "marginal"]
+    @param min_hlr          Exclude galaxies whose fitted half-light-radius is smaller than this
+                            value (in arcsec).  [default: 0, meaning no limit]
+    @param max_hlr          Exclude galaxies whose fitted half-light-radius is larger than this
+                            value (in arcsec).  [default: 0, meaning no limit]
+    @param min_flux         Exclude galaxies whose fitted flux is smaller than this value.
+                            [default: 0, meaning no limit]
+    @param max_flux         Exclude galaxies whose fitted flux is larger than this value.  
+                            [default: 0, meaning no limit]
 
     Attributes
     ----------
@@ -136,19 +144,20 @@ class COSMOSCatalog(object):
     """
     _req_params = {}
     _opt_params = { 'file_name' : str, 'image_dir' : str , 'dir' : str, 'preload' : bool,
-                    'noise_dir' : str, 'use_real' : bool,
-                    'exclude_fail' : bool, 'exclude_bad' : bool, 
+                    'noise_dir' : str, 'use_real' : bool, 'exclusion_level' : str, 
                     'min_hlr' : float, 'max_hlr' : float, 'min_flux' : float, 'max_flux' : float
                   }
     _single_params = []
     _takes_rng = False
 
     def __init__(self, file_name=None, image_dir=None, dir=None, preload=False, noise_dir=None,
-                 use_real=True, exclude_fail=True, exclude_bad=True, 
-                 min_hlr=0, max_hlr=0., min_flux=0., max_flux=0.,
-                 _nobjects_only=False):
+                 use_real=True, exclusion_level='marginal', min_hlr=0, max_hlr=0., min_flux=0.,
+                 max_flux=0., _nobjects_only=False):
         from galsim._pyfits import pyfits
         self.use_real = use_real
+
+        if exclusion_level not in ['none', 'bad_ps', 'bad_fits', 'marginal']:
+            raise ValueError("Invalid value of exclusion_level: %s"%exclusion_level)
 
         if self.use_real:
             if not _nobjects_only:
@@ -180,6 +189,27 @@ class COSMOSCatalog(object):
                 param_file_name = param_file_name[:k] + '_fits' + param_file_name[k:]
                 self.param_cat = pyfits.getdata(param_file_name)
 
+        # Do the reading of what we need to impose selection criteria, if the appropriate
+        # exclusion_level was chosen.
+        if exclusion_level in ['marginal', 'bad_ps']:
+            try:
+                selection_file_name, _, _ = galsim.real._parse_files_dirs(
+                    'real_galaxy_galsim_selection.fits.gz', image_dir, dir, noise_dir)
+                self.selection_cat = pyfits.getdata(selection_file_name)
+            except IOError:
+                try:
+                    selection_file_name, _, _ = galsim.real._parse_files_dirs(
+                        'real_galaxy_galsim_selection.fits', image_dir, dir, noise_dir)
+                    self.selection_cat = pyfits.getdata(selection_file_name)
+                except:
+                    raise RuntimeError(
+                        'File with GalSim selection criteria not found!'+
+                        'Run the program galsim_download_cosmos to download catalog '+
+                        'and accompanying image and selection files.'+
+                        'Or directly download the selection file from '+
+                        '  http://great3.jb.man.ac.uk/leaderboard/data/public/real_galaxy_galsim_selection.fits.gz'+
+                        'and put it with the catalog and image files.')
+
         # NB. The pyfits FITS_Rec class has a bug where it makes a copy of the full
         # record array in each record (e.g. in getParametricRecord) and then doesn't 
         # garbage collect it until the top-level FITS_Record goes out of scope.  
@@ -194,8 +224,27 @@ class COSMOSCatalog(object):
         self.orig_index = np.arange(len(self.param_cat))
         mask = np.ones(len(self.orig_index), dtype=bool)
 
-        # If requested, select galaxies based on existence of a usable fit.
-        if exclude_fail:
+        # If requested, select galaxies in a way that excludes suspect postage stamps (e.g., with
+        # deblending issues), suspect parametric model fits, or both of the above plus marginal
+        # ones.
+        if exclusion_level == 'bad_ps' or exclusion_level == 'marginal':
+            # This 'exclusion_level' involves placing cuts on the S/N of the object detection in the
+            # original postage stamp, and on issues with masking that can indicate deblending or
+            # detection failures.  These cuts were used in GREAT3.
+            # In the case of the masking cut, in some cases there are messed up ones that have a 0
+            # for self.selection_cat['peak_image_pixel_count'].  To make sure we don't divide by
+            # zero (generating a RuntimeWarning), and still eliminate those, we will first set that
+            # column to 1.e-5.
+            div_val = self.selection_cat['peak_image_pixel_count']
+            div_val[div_val == 0.] = 1.e-5
+            mask &= ( (self.selection_cat['sn_ellip_gauss'] >= 20.0) &
+                      ((self.selection_cat['min_mask_dist_pixels'] > 11.0) |
+                      (self.selection_cat['average_mask_adjacent_pixel_count'] / \
+                           div_val < 0.2)) )
+
+        if exclusion_level == 'bad_fits' or exclusion_level == 'marginal':
+            # This 'exclusion_level' involves eliminating failed parametric fits (bad fit status
+            # flags).
             sersicfit_status = self.param_cat['fit_status'][:,4]
             bulgefit_status = self.param_cat['fit_status'][:,0]
             mask &= ( (sersicfit_status > 0) &
@@ -203,11 +252,17 @@ class COSMOSCatalog(object):
                       (bulgefit_status > 0) &
                       (bulgefit_status < 5) )
 
-        if exclude_bad:
+        if exclusion_level == 'marginal':
+            # We have already placed some cuts (above) in this case, but we'll do some more.
+        
+            # Some fit parameters can indicate a likely sky subtraction error
             hlr = self.param_cat['sersicfit'][:,1]
             n = self.param_cat['sersicfit'][:,2]
-            mask &= ( (n < 5) | (hlr < 1./cosmos_pix_scale) ) 
-            # May add more cuts here if we discover other kinds of problematic objects.
+            mask &= ( (n < 5) | (hlr < 1./cosmos_pix_scale) )
+
+            # Major flux differences in the parametric model vs. the COSMOS catalog can indicate fit
+            # issues, deblending problems, etc.
+            mask &= ( np.abs(self.selection_cat['dmag']) < 0.8)
 
         if min_hlr > 0. or max_hlr > 0. or min_flux > 0. or max_flux > 0.:
             sparams = self.param_cat['sersicfit']
@@ -458,7 +513,7 @@ class COSMOSCatalog(object):
             use_bulgefit = False
         # Then check if sersicfit is viable; if not, this galaxy is a total failure.
         # Note that we can avoid including these in the catalog in the first place by using
-        # `exclude_fail=True` when making the catalog.
+        # `exclusion_level=bad_fits` or `exclusion_level=marginal` when making the catalog.
         if sstat < 1 or sstat > 4 or sparams[1] <= 0 or sparams[0] <= 0:
             raise RuntimeError("Cannot make parametric model for this galaxy!")
 

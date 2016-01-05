@@ -20,12 +20,14 @@ New Features
 ------------
 - Added OutputCatalog class (#301, #691)
 - Changed `galsim.fits.writeMulti` to allow any of the "image"s to be
-  already-built hdus, which are included as is.. (#691)
+  already-built hdus, which are included as is. (#691)
 - Added optional `wcs` argument to `Image.resize()`. (#691)
 - Added `BaseDeviate.discard(n)` and `BaseDeviate.raw()`. (#691)
 - Added `sersic_prec` option to COSMOSCatalog.makeGalaxy(). (#691)
 - Made it possible to initialize an InterpolatedImage from a user-specified 
   HDU in a FITS file with multiple extensions. (#660)
+- Made it possible to impose some cuts on galaxy image quality in the
+  COSMOSCatalog class. (#693)
 
 Updates to galsim executable
 ----------------------------
