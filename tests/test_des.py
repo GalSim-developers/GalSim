@@ -124,7 +124,7 @@ def test_meds():
     #print 'file_name = ',filename_meds
     #print 'objlist = ',objlist
     galsim.des.WriteMEDS(objlist, filename_meds, clobber=True)
-    print 'wrote MEDS file %s ' % filename_meds
+    #print 'wrote MEDS file %s ' % filename_meds
 
     # Note that while there are no tests prior to this, the above still checks for
     # syntax errors in the meds creation software, so it's still worth running as part
@@ -146,7 +146,7 @@ def test_meds():
     # Run meds module's validate function
     meds.util.validate_meds(filename_meds)
 
-    print 'reading %s' % filename_meds
+    #print 'reading %s' % filename_meds
     m = meds.MEDS(filename_meds)
 
     # Check the image_info extension:
@@ -180,7 +180,7 @@ def test_meds():
                                err_msg="MEDS file has wrong number of objects")
 
     # loop over objects and exposures - test get_cutout
-    print 'testing if loaded images are the same as original images'
+    #print 'testing if loaded images are the same as original images'
     for iobj in range(n_obj):
 
         # check ID is correct
@@ -222,10 +222,7 @@ def test_meds():
             numpy.testing.assert_array_equal(wcs_array_meds, wcs_array_orig,
                                              err_msg="MEDS cutout has wrong wcs for object %d"%iobj)
 
-            print 'test passed get_cutout obj=%d icut=%d' % (iobj, icut)
-
-    # loop over objects - test get_mosaic
-    for iobj in range(n_obj):
+            #print 'test passed get_cutout obj=%d icut=%d' % (iobj, icut)
 
         # get the mosaic to compare with originals
         img = m.get_mosaic( iobj, type='image')
@@ -251,7 +248,7 @@ def test_meds():
         numpy.testing.assert_array_equal(true_mosaic_psf, psf,
                                          err_msg="MEDS mosaic has wrong psf for object %d"%iobj)
 
-        print 'test passed get_mosaic for obj=%d' % (iobj)
+        #print 'test passed get_mosaic for obj=%d' % (iobj)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -272,7 +269,7 @@ def test_meds_config():
         nobj = 5
         n_per_obj = 3
     file_name = 'output/test_meds.fits'
-    stamp_size = 32
+    stamp_size = 64
     pixel_scale = 0.26
     seed = 5757231
     g1 = -0.17
@@ -282,14 +279,13 @@ def test_meds_config():
     config = {
         'gal' : { 'type' : 'Sersic',
                   'n' : 1.3,
-                  'half_light_radius' : { 'type' : 'Sequence', 'first' : 1.7, 'step' : 0.2,
+                  'half_light_radius' : { 'type' : 'Sequence', 'first' : 0.7, 'step' : 0.1,
                                           'repeat' : n_per_obj },
                   'shear' : { 'type' : 'G1G2', 'g1' : g1, 'g2' : g2 },
-                  'shift' : { 'type' : 'XY' , 'x' : 0.02, 'y' : 0.03}
                 },
         'psf' : { 'type' : 'Moffat', 'beta' : 2.9, 'fwhm' : 0.7 },
         'image' : { 'pixel_scale' : pixel_scale,
-                    'random_seed' : seed,
+                    'offset' : { 'type' : 'XY' , 'x' : -0.17, 'y' : 0.23 },
                     'size' : stamp_size },
         'output' : { 'type' : 'MEDS',
                      'nobjects' : nobj,
@@ -304,7 +300,7 @@ def test_meds_config():
     galsim.config.Process(config, logger=logger)
 
     # Now repeat, making a separate file for each
-    config['gal']['half_light_radius'] = { 'type' : 'Sequence', 'first' : 1.7, 'step' : 0.2,
+    config['gal']['half_light_radius'] = { 'type' : 'Sequence', 'first' : 0.7, 'step' : 0.1,
                                            'index_key' : 'file_num' }
     config['output'] = { 'type' : 'Fits',
                          'nfiles' : nobj,
@@ -318,12 +314,11 @@ def test_meds_config():
                         'nx_tiles' : 1,
                         'ny_tiles' : n_per_obj,
                         'pixel_scale' : pixel_scale,
-                        'random_seed' : seed,
+                        'offset' : config['image']['offset'],
                         'stamp_size' : stamp_size
                       }
     galsim.config.Process(config, logger=logger)
 
-    # test functions in des_meds.py
     try:
         import meds
         import fitsio
@@ -331,21 +326,20 @@ def test_meds_config():
         print 'Failed to import either meds or fitsio.  Unable to do tests of meds file.'
         return
 
-    print 'reading %s' % file_name
+    #print 'reading %s' % file_name
     m = meds.MEDS(file_name)
-    print 'number of objects is %d' % m.size
+    #print 'number of objects is %d' % m.size
     assert m.size == nobj
 
-    # get the catalog
+    # Test that the images made as meds mosaics match the ones written to the separate fits files.
     cat = m.get_cat()
-
-    # loop over objects and exposures - test get_cutout
     for iobj in range(nobj):
         ref_file = os.path.join('output','test_meds%d.fits' % iobj)
         ref_im = galsim.fits.read(ref_file)
 
         meds_im_array = m.get_mosaic(iobj)
 
+        # Just for reference.  If you get an error, you can open this file with ds9.
         alt_meds_file = os.path.join('output','test_alt_meds%d.fits' % iobj)
         alt_meds_im = galsim.Image(meds_im_array)
         alt_meds_im.write(alt_meds_file)
@@ -369,6 +363,57 @@ def test_meds_config():
         ref_psf_im = galsim.fits.read(ref_file, hdu=3)
         numpy.testing.assert_array_equal(ref_psf_im.array, meds_psf_array,
                                          err_msg="config MEDS has wrong psf for object %d"%iobj)
+
+    # Check that the various positions and sizes are set correctly.
+    info = m.get_image_info()
+    for iobj in range(nobj):
+        n_cut = cat['ncutout'][iobj]
+        for icut in range(n_cut):
+
+            # This should be stamp_size
+            box_size = cat['box_size'][iobj]
+            numpy.testing.assert_almost_equal(box_size, stamp_size)
+
+            # These should be (box_size-1)/2
+            center = galsim.PositionD( (box_size-1.)/2., (box_size-1.)/2. )
+            cutout_row = cat['cutout_row'][iobj][icut]
+            cutout_col = cat['cutout_col'][iobj][icut]
+            print 'nominal position = ',cutout_col, cutout_row
+            numpy.testing.assert_almost_equal(cutout_col, center.x)
+            numpy.testing.assert_almost_equal(cutout_row, center.y)
+
+            # The col0 and row0 here should be the same.
+            wcs_meds = m.get_jacobian(iobj, icut)
+            numpy.testing.assert_almost_equal(wcs_meds['col0'], (box_size-1)/2.)
+            numpy.testing.assert_almost_equal(wcs_meds['row0'], (box_size-1)/2.)
+
+            # The centroid should be (roughly) at the nominal center + offset
+            img = m.get_cutout(iobj, icut, type='image')
+            x,y = numpy.meshgrid( range(img.shape[1]), range(img.shape[0]) )
+            itot = numpy.sum(img)
+            ix = numpy.sum(x*img)
+            iy = numpy.sum(y*img)
+            #print 'I, Ix, Iy = ',itot,ix,iy
+            print 'centroid = ',ix/itot, iy/itot
+
+            offset = galsim.PositionD(-0.17, 0.23)
+            #print 'offset = ',offset
+            print 'center + offset = ',center + offset
+            numpy.testing.assert_almost_equal(ix/itot, (center+offset).x, decimal=2)
+            numpy.testing.assert_almost_equal(iy/itot, (center+offset).y, decimal=2)
+
+            # The orig positions are irrelevant and should be 0.
+            orig_row = cat['orig_row'][iobj][icut]
+            orig_col = cat['orig_col'][iobj][icut]
+            orig_start_row = cat['orig_start_row'][iobj][icut]
+            orig_start_col = cat['orig_start_col'][iobj][icut]
+            numpy.testing.assert_almost_equal(orig_col, 0.)
+            numpy.testing.assert_almost_equal(orig_row, 0.)
+            numpy.testing.assert_almost_equal(orig_start_col, 0.)
+            numpy.testing.assert_almost_equal(orig_start_row, 0.)
+
+            # This should be also be 0.
+            numpy.testing.assert_almost_equal(info['position_offset'], 0.)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

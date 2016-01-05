@@ -123,7 +123,11 @@ class MultiExposureObject(object):
                     wcs[i] = wcs[i].affine()
 
         self.id = id
-        self.images = images
+        self.images = [ im.view() for im in images ]
+        # Convert to 0-based images as preferred by meds.
+        for im in self.images:
+            # Note: making the list of views above means this won't change the originals.
+            im.setOrigin(0,0)
         self.box_size = self.images[0].array.shape[0]
         self.n_cutouts = len(self.images)
         if psf is not None:
@@ -297,13 +301,13 @@ def WriteMEDS(obj_list, file_name, clobber=True):
     cols.append( pyfits.Column(name='start_row',      format='%dK' % MAX_NCUTOUTS,
                                array=numpy.array(cat['start_row'])) )
     cols.append( pyfits.Column(name='orig_row',       format='%dD' % MAX_NCUTOUTS,
-                               array=[[1]*MAX_NCUTOUTS]*n_obj     ) )
+                               array=[[0]*MAX_NCUTOUTS]*n_obj     ) )
     cols.append( pyfits.Column(name='orig_col',       format='%dD' % MAX_NCUTOUTS,
-                               array=[[1]*MAX_NCUTOUTS]*n_obj     ) )
+                               array=[[0]*MAX_NCUTOUTS]*n_obj     ) )
     cols.append( pyfits.Column(name='orig_start_row', format='%dK' % MAX_NCUTOUTS,
-                               array=[[1]*MAX_NCUTOUTS]*n_obj     ) )
+                               array=[[0]*MAX_NCUTOUTS]*n_obj     ) )
     cols.append( pyfits.Column(name='orig_start_col', format='%dK' % MAX_NCUTOUTS,
-                               array=[[1]*MAX_NCUTOUTS]*n_obj     ) )
+                               array=[[0]*MAX_NCUTOUTS]*n_obj     ) )
     cols.append( pyfits.Column(name='cutout_row',     format='%dD' % MAX_NCUTOUTS,
                                array=numpy.array(cat['row0'])     ) )
     cols.append( pyfits.Column(name='cutout_col',     format='%dD' % MAX_NCUTOUTS,
