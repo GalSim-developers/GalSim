@@ -177,10 +177,12 @@ def WriteMEDS(obj_list, file_name, clobber=True):
 
     # initialise the catalog
     cat = {}
-    cat['ncutout'] = []
-    cat['box_size'] = []
-    cat['start_row'] = []
     cat['id'] = []
+    cat['box_size'] = []
+    cat['ra'] = []
+    cat['dec'] = []
+    cat['ncutout'] = []
+    cat['start_row'] = []
     cat['dudrow'] = []
     cat['dudcol'] = []
     cat['dvdrow'] = []
@@ -221,9 +223,12 @@ def WriteMEDS(obj_list, file_name, clobber=True):
         n_cutout = obj.n_cutouts
 
         # append the catalog for this object
-        cat['ncutout'].append(n_cutout)
-        cat['box_size'].append(obj.box_size)
         cat['id'].append(obj.id)
+        cat['box_size'].append(obj.box_size)
+        # TODO: If the config defines a world position, get the right ra, dec here.
+        cat['ra'].append(0.)
+        cat['dec'].append(0.)
+        cat['ncutout'].append(n_cutout)
         cat['psf_box_size'].append(obj.psf_box_size)
 
         # loop over cutouts
@@ -279,10 +284,14 @@ def WriteMEDS(obj_list, file_name, clobber=True):
     primary = pyfits.PrimaryHDU()
 
     # second hdu is the object_data
+    # cf. https://github.com/esheldon/meds/wiki/MEDS-Format
     cols = []
-    cols.append( pyfits.Column(name='ncutout',        format='K', array=cat['ncutout']  ) )
     cols.append( pyfits.Column(name='id',             format='K', array=cat['id']       ) )
+    cols.append( pyfits.Column(name='number',         format='K', array=cat['id']       ) )
+    cols.append( pyfits.Column(name='ra',             format='D', array=cat['ra']       ) )
+    cols.append( pyfits.Column(name='dec',            format='D', array=cat['dec']      ) )
     cols.append( pyfits.Column(name='box_size',       format='K', array=cat['box_size'] ) )
+    cols.append( pyfits.Column(name='ncutout',        format='K', array=cat['ncutout']  ) )
     cols.append( pyfits.Column(name='file_id',        format='%dK' % MAX_NCUTOUTS,
                                array=[1]*n_obj) )
     cols.append( pyfits.Column(name='start_row',      format='%dK' % MAX_NCUTOUTS,
@@ -295,6 +304,10 @@ def WriteMEDS(obj_list, file_name, clobber=True):
                                array=[[1]*MAX_NCUTOUTS]*n_obj     ) )
     cols.append( pyfits.Column(name='orig_start_col', format='%dK' % MAX_NCUTOUTS,
                                array=[[1]*MAX_NCUTOUTS]*n_obj     ) )
+    cols.append( pyfits.Column(name='cutout_row',     format='%dD' % MAX_NCUTOUTS,
+                               array=numpy.array(cat['row0'])     ) )
+    cols.append( pyfits.Column(name='cutout_col',     format='%dD' % MAX_NCUTOUTS,
+                               array=numpy.array(cat['col0'])     ) )
     cols.append( pyfits.Column(name='dudrow',         format='%dD' % MAX_NCUTOUTS,
                                array=numpy.array(cat['dudrow'])   ) )
     cols.append( pyfits.Column(name='dudcol',         format='%dD' % MAX_NCUTOUTS,
@@ -303,10 +316,6 @@ def WriteMEDS(obj_list, file_name, clobber=True):
                                array=numpy.array(cat['dvdrow'])   ) )
     cols.append( pyfits.Column(name='dvdcol',         format='%dD' % MAX_NCUTOUTS,
                                array=numpy.array(cat['dvdcol'])   ) )
-    cols.append( pyfits.Column(name='cutout_row',     format='%dD' % MAX_NCUTOUTS,
-                               array=numpy.array(cat['row0'])     ) )
-    cols.append( pyfits.Column(name='cutout_col',     format='%dD' % MAX_NCUTOUTS,
-                               array=numpy.array(cat['col0'])     ) )
     cols.append( pyfits.Column(name='psf_box_size',   format='K', array=cat['psf_box_size'] ) )
     cols.append( pyfits.Column(name='psf_start_row',  format='%dK' % MAX_NCUTOUTS,
                                array=numpy.array(cat['psf_start_row'])) )
@@ -322,15 +331,22 @@ def WriteMEDS(obj_list, file_name, clobber=True):
 
     # third hdu is image_info
     cols = []
+    cols.append( pyfits.Column(name='image_path',  format='A256',   array=['generated_by_galsim'] ))
+    cols.append( pyfits.Column(name='image_ext',   format='I',      array=[0]                     ))
+    cols.append( pyfits.Column(name='weight_path', format='A256',   array=['generated_by_galsim'] ))
+    cols.append( pyfits.Column(name='weight_ext',  format='I',      array=[0]                     ))
+    cols.append( pyfits.Column(name='seg_path',    format='A256',   array=['generated_by_galsim'] ))
+    cols.append( pyfits.Column(name='seg_ext',     format='I',      array=[0]                     ))
+    cols.append( pyfits.Column(name='bmask_path',  format='A256',   array=['generated_by_galsim'] ))
+    cols.append( pyfits.Column(name='bmask_ext',   format='I',      array=[0]                     ))
+    cols.append( pyfits.Column(name='bkg_path',    format='A256',   array=['generated_by_galsim'] ))
+    cols.append( pyfits.Column(name='bkg_ext',     format='I',      array=[0]                     ))
     cols.append( pyfits.Column(name='image_id',    format='K',      array=[-1]                    ))
     cols.append( pyfits.Column(name='image_flags', format='K',      array=[-1]                    ))
-    cols.append( pyfits.Column(name='image_path',  format='A256',   array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='wcs_path',    format='A256',   array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='sky_path',    format='A256',   array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='seg_path',    format='A256',   array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='psf_path',    format='A256',   array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='magzp',       format='E',      array=[-1.]                   ))
-    cols.append( pyfits.Column(name='scale',       format='E',      array=[-1.]                   ))
+    cols.append( pyfits.Column(name='magzp',       format='E',      array=[30.]                   ))
+    cols.append( pyfits.Column(name='scale',       format='E',      array=[1.]                    ))
+    # TODO: Not sure if this is right!
+    cols.append( pyfits.Column(name='position_offset', format='D',  array=[0.]                    ))
     try:
         image_info = pyfits.BinTableHDU.from_columns(cols)
         image_info.name = 'image_info'

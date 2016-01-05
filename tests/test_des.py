@@ -43,7 +43,7 @@ def test_meds():
     objlist = []
 
     # we will be using 2 objects for testing, each with 3 cutouts
-    n_obj_test = 2 
+    n_obj_test = 2
     n_cut_test = 3
 
     # set the image size
@@ -126,33 +126,61 @@ def test_meds():
     galsim.des.WriteMEDS(objlist, filename_meds, clobber=True)
     print 'wrote MEDS file %s ' % filename_meds
 
-    # test functions in des_meds.py
+    # Note that while there are no tests prior to this, the above still checks for
+    # syntax errors in the meds creation software, so it's still worth running as part
+    # of the normal unit tests.
+    # But for the rest of the tests, we'll use the meds module to make sure our code
+    # stays in sync with any changes there.
     try:
         import meds
     except ImportError:
         print 'Failed to import meds.  Unable to do tests of meds file.'
         return
-        # Note that while there are no tests prior to this, the above still checks for 
-        # syntax errors in the meds creation software, so it's still worth running as part
-        # of the normal unit tests.
+    try:
+        # Meds will import this, so check for this too.
+        import fitsio
+    except ImportError:
+        print 'Failed to import fitsio.  Unable to do tests of meds file.'
+        return
+
+    # Run meds module's validate function
+    meds.util.validate_meds(filename_meds)
 
     print 'reading %s' % filename_meds
     m = meds.MEDS(filename_meds)
 
-    # get the catalog
+    # Check the image_info extension:
+    ref_info = meds.util.get_image_info_dtype(1)
+    info = m.get_image_info()
+    for name, dt in ref_info:
+        dt = numpy.dtype(dt)
+        print name, dt, info.dtype[name], dt.char, info.dtype[name].char
+        assert name in info.dtype.names, "column %s not present in image_info extension"%name
+        assert dt.char == info.dtype[name].char, "column %s is the wrong type"%name
+
+    # Check the basic structure of the object_data extension
     cat = m.get_cat()
+    ref_data = meds.util.get_meds_output_dtype(1)
+    for tup in ref_data:
+        # Some of these tuples have 3 items, not 2.  The last two are the full dtype tuple.
+        name = tup[0]
+        if len(tup) == 2:
+            dt = tup[1]
+        else:
+            dt = tup[1:]
+        dt = numpy.dtype(dt)
+        print name, dt, cat.dtype[name], dt.char, cat.dtype[name].char
+        assert name in cat.dtype.names, "column %s not present in object_data extension"%name
+        assert dt.char == cat.dtype[name].char, "column %s is the wrong type"%name
 
-    # get number of objects
+    # Check that we have the right number of objects.
     n_obj = len(cat)
-
-    # check if the number of objects is correct
+    print 'number of objects is %d' % n_obj
     numpy.testing.assert_equal(n_obj,n_obj_test,
                                err_msg="MEDS file has wrong number of objects")
 
-    print 'number of objects is %d' % n_obj
-    print 'testing if loaded images are the same as original images'
-    
     # loop over objects and exposures - test get_cutout
+    print 'testing if loaded images are the same as original images'
     for iobj in range(n_obj):
 
         # check ID is correct
@@ -291,19 +319,17 @@ def test_meds_config():
                         'ny_tiles' : n_per_obj,
                         'pixel_scale' : pixel_scale,
                         'random_seed' : seed,
-                        'stamp_size' : stamp_size 
+                        'stamp_size' : stamp_size
                       }
     galsim.config.Process(config, logger=logger)
 
     # test functions in des_meds.py
     try:
         import meds
+        import fitsio
     except ImportError:
-        print 'Failed to import meds.  Unable to do tests of meds file.'
+        print 'Failed to import either meds or fitsio.  Unable to do tests of meds file.'
         return
-        # Note that while there are no tests prior to this, the above still checks for 
-        # syntax errors in the meds creation software, so it's still worth running as part
-        # of the normal unit tests.
 
     print 'reading %s' % file_name
     m = meds.MEDS(file_name)
@@ -401,7 +427,7 @@ def test_nan_fits():
     assert wcs == ref_wcs
 
     # Now read it with GalSim's fits.read function.
-    # Reading this file will emit verification warnings, so we'll ignore those here for the 
+    # Reading this file will emit verification warnings, so we'll ignore those here for the
     # test.  But the result should be a valid image.
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore",category=pyfits.verify.VerifyWarning)
@@ -426,7 +452,7 @@ def test_psf():
 
     wcs = galsim.FitsWCS(wcs_file, dir=data_dir)
 
-    # We don't require that the files in example_data_dir have been downloaded.  If they 
+    # We don't require that the files in example_data_dir have been downloaded.  If they
     # haven't, then we just directly set the comparison values that we want here.
     example_data_dir = '../examples/des/des_data'
     cat_file = "DECam_00154912_12_cat.fits"
