@@ -42,7 +42,9 @@ psf:
         obscuration: { type: Random, min: 0.1, max: 0.5 }
 
         # Despite sort of modeling off of DECam (with 4 struts), they didn't use 
-        # any struts for the ground psfs.
+        # any struts for the ground psfs.  This choice was made because the inclusion of struts
+        # required stricter numerical accuracy settings (=more expensive calculations) to avoid
+        # numerical artifacts, without making a very noticable difference in the final overall PSF.
         nstruts: 0
 
         # The aberrations are taken to have an rms of 0.41 waves
@@ -86,8 +88,10 @@ gal:
 
         # The COSMOS galaxies are a bit brighter than was wanted for Great3, so make them
         # a bit smaller to simulate a fainter sample.
-        # However, in the great3 scripts, it seems that only the size is rescaled, not the flux.
-        # They just set flux_rescale to 1/nepochs.  So just 1.0 for single epoch branches.
+        # However, in the great3 scripts, only the size is rescaled, not the flux.
+        # The reason for this choice was that the flux level in the Great3 simulations was
+        # essentially arbitrary. Instead, the noise level was tuned to achieve the expected S/N for
+        # reasonably deep images with galaxies going down to I<25.
         dilate: 0.6
         scale_flux: 1.0
 
@@ -110,14 +114,14 @@ gal:
         beta: { type: Random }
 
 eval_variables:
-    # I don't understand this bit at all.  
     # Here is the line in the original great3 scripts:
     # https://github.com/barnabytprowe/great3-public/blob/master/great3sims/noise.py#L97
     # The point was to have a consistent lower limit on the S/N level of the galaxies for
     # different seeing sizes.  When the seeing is larger, a given flux galaxy will have 
-    # lower S/N.  To compensate, they added less noise in those cases.  However, the
-    # exact formula they used is still a bit of a mystery to me.
-    # They did this as a LookupTable, but the formula below is pretty close.
+    # lower S/N.  To compensate, they added less noise in those cases.  The formula that was used
+    # was based on running experiments with different seeing values, and checking how the S/N varied
+    # at fixed noise variance.  The results of those experiments were used to create a LookupTable
+    # in the GREAT3 scripts, but the formula below is pretty close.
     fmax_var: '$0.004 * math.exp(2.9 * (1.1-@psf.items.0.fwhm) * (0.95-@psf.items.0.fwhm))'
 
 stamp:
