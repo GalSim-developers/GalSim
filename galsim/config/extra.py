@@ -94,16 +94,21 @@ def SetupExtraOutput(config, file_num=0, logger=None):
                 # use default constructor
                 kwargs = {}
  
+            init_func = valid_extra_outputs[key]['init']
             if use_manager:
                 output_obj = getattr(config['output_manager'],key)(**kwargs)
                 scratch = config['output_manager'].dict()
             else: 
-                init_func = valid_extra_outputs[key]['init']
                 if init_func is None:
                     output_obj = list()
                 else:
                     output_obj = init_func(**kwargs)
                 scratch = dict()
+            if init_func is None:
+                # Make the output_obj list the right length now to avoid issues with multiple
+                # processes trying to append at the same time.
+                nimages = config['nimages']
+                for i in range(nimages): output_obj.append(None)
             if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('file %d: Setup output %s object',file_num,key)
             config['extra_objs'][key] = output_obj
@@ -118,7 +123,6 @@ def SetupExtraOutputsForImage(config, logger=None):
     """
     if 'output' in config:
         for key in [ k for k in valid_extra_outputs.keys() if k in config['output'] ]:
-            # Always clear out anything in the scratch space
             scratch = config['extra_scratch'][key]
             setup_func = valid_extra_outputs[key]['setup']
             if setup_func is not None:
@@ -138,7 +142,7 @@ def ProcessExtraOutputsForStamp(config, logger=None):
     @param logger       If given, a logger object to log progress. [default: None]
     """
     if 'output' in config:
-        obj_num = config['obj_num'] - config['start_obj_num']
+        obj_num = config['obj_num']
         for key in [ k for k in valid_extra_outputs.keys() if k in config['output'] ]:
             stamp_func = valid_extra_outputs[key]['stamp']
             if stamp_func is not None:
@@ -156,13 +160,25 @@ def ProcessExtraOutputsForImage(config, logger=None):
     @param logger       If given, a logger object to log progress. [default: None]
     """
     if 'output' in config:
+        obj_nums = None
         for key in [ k for k in valid_extra_outputs.keys() if k in config['output'] ]:
             image_func = valid_extra_outputs[key]['image']
             if image_func is not None:
+                if obj_nums is None:
+                    # Figure out which obj_nums were used for this image.
+                    file_num = config['file_num']
+                    image_num = config['image_num']
+                    start_image_num = config['start_image_num']
+                    start_obj_num = config['start_obj_num']
+                    nobj = config['nobj']
+                    k = image_num - start_image_num
+                    for i in range(k):
+                        start_obj_num += nobj[i]
+                    obj_nums = range(start_obj_num, start_obj_num+nobj[k])
                 extra_obj = config['extra_objs'][key]
                 scratch = config['extra_scratch'][key]
                 field = config['output'][key]
-                image_func(extra_obj, scratch, field, config, logger)
+                image_func(extra_obj, scratch, field, config, obj_nums, logger)
 
 
 def GetFinalExtraOutput(key, config, logger=None):
@@ -321,7 +337,7 @@ def RegisterExtraOutput(key, init_func=None, kwargs_func=None, setup_func=None, 
     @param key              The name of the output field in config['output']
     @param init_func        A function or class name to use to build the output object. 
                             [default: None, in which case the output "object" will be a list
-                            that final_func can use to construct what you need.]
+                            of length nimages that can be used to construct what is needed.]
     @param kwargs_func      A function to get the initialization kwargs. [default: None, which
                             means initialize with no arguments.]
     @param setup_func       A function to call at the start of each image. 
@@ -332,7 +348,8 @@ def RegisterExtraOutput(key, init_func=None, kwargs_func=None, setup_func=None, 
                                 ProcessStamp(output_obj, scratch, config, base, obj_num, logger)
     @param image_func       A function to call at the end of building each image
                             The call signature is 
-                                ProcessImage(output_obj, scratch, config, base, logger)
+                                ProcessImage(output_obj, scratch, config, base, obj_nums, logger)
+                            where obj_nums is a list of the object numbers used for this image.
     @param final_func       A function to call at the end of the file processing to construct
                             the final object to be written. [default: None, which means the
                             init_func already created the correct object, so just use that.]

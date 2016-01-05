@@ -40,12 +40,7 @@ def SetupScattered(config, image_num, obj_num, ignore, logger):
         logger.debug('image %d: Building Scattered: image, obj = %d,%d',
                      image_num,image_num,obj_num)
 
-    if 'nobjects' not in config['image']:
-        nobjects = galsim.config.ProcessInputNObjects(config)
-        if nobjects is None:
-            raise AttributeError("Attribute nobjects is required for image.type = Scattered")
-    else:
-        nobjects = galsim.config.ParseValue(config['image'],'nobjects',config,int)[0]
+    nobjects = GetNObjScattered(config, image_num)
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: nobj = %d',image_num,nobjects)
     config['nobjects'] = nobjects
@@ -118,16 +113,12 @@ def BuildScattered(config, image_num, obj_num, logger):
             'y' : { 'type' : 'Random' , 'min' : ymin , 'max' : ymax }
         }
 
-    if 'nproc' in config['image']:
-        nproc = galsim.config.ParseValue(config['image'],'nproc',config,int)[0]
-    else:
-        nproc = 1
-
     nobjects = config['nobjects']
 
     stamps, current_vars = galsim.config.BuildStamps(
-            nobjects, config, nproc=nproc, logger=logger, obj_num=obj_num,
-            do_noise=False)
+            nobjects, config, logger=logger, obj_num=obj_num, do_noise=False)
+
+    config['index_key'] = 'image_num'
 
     for k in range(nobjects):
         # This is our signal that the object was skipped.

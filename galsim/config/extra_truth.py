@@ -70,11 +70,14 @@ def ProcessTruthStamp(truth_cat, scratch, config, base, obj_num, logger=None):
         raise RuntimeError("Type mismatch found when building truth catalog.")
     scratch[obj_num] = row
 
-# The function to call at the end of building each image
-def ProcessTruthImage(truth_cat, scratch, config, base, logger=None):
+# The function to call at the end of building each file to finalize the truth catalog
+def FinalizeTruth(truth_cat, scratch, config, base, logger=None):
     # Add all the rows in order to the OutputCatalog
-    for row in scratch.values():
+    obj_nums = sorted(scratch.keys())
+    for obj_num in obj_nums:
+        row = scratch[obj_num]
         truth_cat.add_row(row)
+    return truth_cat
 
 # Older versions of pyfits can't pickle HDUs, so this is a reimplementation of the
 # OutputCatalog.write_fits_hdu function that can be run through a proxy OutputCatalog.
@@ -104,6 +107,6 @@ RegisterExtraOutput('truth',
                     init_func = galsim.OutputCatalog,
                     kwargs_func = GetTruthKwargs,
                     stamp_func = ProcessTruthStamp, 
-                    image_func = ProcessTruthImage,
+                    final_func = FinalizeTruth,
                     write_func = galsim.OutputCatalog.write,
                     hdu_func = BuildTruthHDU)

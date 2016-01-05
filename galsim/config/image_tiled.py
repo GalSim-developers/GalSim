@@ -113,11 +113,6 @@ def BuildTiled(config, image_num, obj_num, logger):
     full_image.wcs = wcs
     full_image.setZero()
 
-    if 'nproc' in config['image']:
-        nproc = galsim.config.ParseValue(config['image'],'nproc',config,int)[0]
-    else:
-        nproc = 1
-
     do_noise = config['do_noise_in_stamps']
     xsize = config['tile_xsize']
     ysize = config['tile_ysize']
@@ -164,8 +159,10 @@ def BuildTiled(config, image_num, obj_num, logger):
     }
 
     stamps, current_vars = galsim.config.BuildStamps(
-            nobjects, config, nproc=nproc, logger=logger, obj_num=obj_num,
+            nobjects, config, logger=logger, obj_num=obj_num,
             xsize=xsize, ysize=ysize, do_noise=do_noise)
+
+    config['index_key'] = 'image_num'
 
     for k in range(nobjects):
         # This is our signal that the object was skipped.

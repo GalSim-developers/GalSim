@@ -20,7 +20,7 @@ import os
 import galsim
 import logging
 
-def BuildMultiFits(config, file_num, image_num, obj_num, nproc, ignore, logger):
+def BuildMultiFits(config, file_num, image_num, obj_num, ignore, logger):
     """
     Build a multi-extension fits file as specified in config.
     
@@ -28,7 +28,6 @@ def BuildMultiFits(config, file_num, image_num, obj_num, nproc, ignore, logger):
     @param file_num         The current file_num.
     @param image_num        The current image_num.
     @param obj_num          The current obj_num.
-    @param nproc            How many processes to use.
     @param ignore           A list of parameters that are allowed to be in config['output']
                             that we can ignore here.  i.e. it won't be an error if these
                             parameters are present.
@@ -43,7 +42,7 @@ def BuildMultiFits(config, file_num, image_num, obj_num, nproc, ignore, logger):
     req = { 'nimages' : int }
     galsim.config.CheckAllParams(config['output'], ignore=ignore, req=req)
 
-    return galsim.config.BuildImages(nimages, config, nproc=nproc, logger=logger,
+    return galsim.config.BuildImages(nimages, config, logger=logger,
                                      image_num=image_num, obj_num=obj_num)
 
 

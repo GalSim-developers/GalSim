@@ -26,7 +26,7 @@ import logging
 # image_scattered.py for the implementation of the Tiled and Scattered image types.
 
 
-def BuildImages(nimages, config, image_num=0, obj_num=0, nproc=1, logger=None):
+def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
     """
     Build a number of postage stamp images as specified by the config dict.
 
@@ -34,7 +34,6 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, nproc=1, logger=None):
     @param config           The configuration dict.
     @param image_num        If given, the current image number. [default: 0]
     @param obj_num          If given, the first object number in the image. [default: 0]
-    @param nproc            How many processes to use. [default: 1]
     @param logger           If given, a logger object to log progress. [default: None]
 
     @returns a list of images
@@ -43,12 +42,18 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, nproc=1, logger=None):
         logger.debug('file %d: BuildImages nimages = %d: image, obj = %d,%d',
                      config.get('file_num',0),nimages,image_num,obj_num)
 
-    # Update this if necessary
-    nproc = galsim.config.UpdateNProc(nproc, nimages, config, logger)
+    # Figure out how many processes we will use for building the images.
+    if 'image' not in config: config['image'] = {}
+    image = config['image']
+    if nimages > 1 and 'nproc' in image:
+        nproc = galsim.config.ParseValue(image, 'nproc', config, int)[0]
+        # Update this in case the config value is -1
+        nproc = galsim.config.UpdateNProc(nproc, nimages, config, logger)
+    else:
+        nproc = 1
 
     # If the images are Single (one stamp per image), then we need to check for Rings and the like.
-    if ('image' not in config or 'type' not in config['image'] or 
-            config['image']['type'] == 'Single'):
+    if ('image' not in config or 'type' not in image or image['type'] == 'Single'):
         nim_per_task = galsim.config.CalculateNObjPerTask(nproc, nimages, config)
     else:
         nim_per_task = 1
@@ -76,7 +81,7 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, nproc=1, logger=None):
             #logger.error('%s',tr)
             logger.error('Aborting the rest of this file')
 
-    images = galsim.config.MultiProcess(nproc, config, BuildImage, jobs, 'stamp', logger,
+    images = galsim.config.MultiProcess(nproc, config, BuildImage, jobs, 'image', logger,
                                         njobs_per_task = nim_per_task,
                                         done_func = done_func,
                                         except_func = except_func)
@@ -94,7 +99,8 @@ def SetupConfigImageNum(config, image_num, obj_num):
     - Set config['obj_num'] = obj_num
     - Set config['index_key'] = 'image_num'
     - Make sure config['image'] exists
-    - Set config['image']['draw_method'] to 'auto' if not given.
+    - Set default config['image']['type'] to 'Single' if not specified
+    - Check that the specified image type is valid.
 
     @param config           The configuration dict.
     @param image_num        The current image number.
@@ -111,10 +117,12 @@ def SetupConfigImageNum(config, image_num, obj_num):
     if not isinstance(image, dict):
         raise AttributeError("config.image is not a dict.")
 
-    if 'draw_method' not in image:
-        image['draw_method'] = 'auto'
     if 'type' not in image:
         image['type'] = 'Single'
+    image_type = image['type']
+    if image_type not in valid_image_types:
+        raise AttributeError("Invalid image.type=%s."%image_type)
+
 
 
 def SetupConfigImageSize(config, xsize, ysize):
@@ -186,14 +194,11 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
     SetupConfigImageNum(config,image_num,obj_num)
 
     image_type = config['image']['type']
-    if image_type not in valid_image_types:
-        raise AttributeError("Invalid image.type=%s."%image_type)
 
     # Build the rng to use at the image level.
     seed = galsim.config.SetupConfigRNG(config)
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d: seed = %d',image_num,seed)
-    rng = config['rng'] # Grab this for use later
 
     # Do the necessary initial setup for this image type.
     setup_func = valid_image_types[image_type]['setup']
@@ -225,8 +230,10 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
     # level, so it cannot be used for things like wcs.pixelArea(image_pos).
     if 'image_pos' in config: del config['image_pos']
 
-    # Put the rng back into config['rng'] for use by the AddNoise function.
-    config['rng'] = rng
+    # Go back to using image_num for any indexing.
+    config['index_key'] = 'image_num'
+    # And put the right rng into config['rng'] for use by the AddNoise function.
+    config['rng'] = config['image_num_rng']
 
     # Do whatever processing is required for the extra output items.
     galsim.config.ProcessExtraOutputsForImage(config,logger)

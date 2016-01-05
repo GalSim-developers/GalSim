@@ -30,10 +30,17 @@ import logging
 def AddSky(config, im):
     """Add the sky level to the image
     """
+    orig_index = config.get('index_key','image_num')
+    if orig_index == 'obj_num':
+        config['index_key'] = 'image_num'
+
     if im:
         sky = GetSky(config['image'], config)
         if sky:
             im += sky
+
+    if orig_index == 'obj_num':
+        config['index_key'] = 'obj_num'
 
 
 def AddNoise(config, im, current_var=0., logger=None):
@@ -58,8 +65,22 @@ def AddNoise(config, im, current_var=0., logger=None):
     if noise_type not in valid_noise_types:
         raise AttributeError("Invalid type %s for noise",noise_type)
 
+    # We need to use image_num for the index_key, but if we are in the stamp processing
+    # make sure to reset it back when we are done.  Also, we want to use obj_num_rng in this
+    # case for the noise.  The easiest way to make sure this doesn't get messed up by any
+    # value parsing is to copy it over to a new item in the dict.
+    orig_index = config.get('index_key','image_num')
+    if orig_index == 'obj_num':
+        config['index_key'] = 'image_num'
+        config['noise_rng'] = config.get('obj_num_rng', config['rng'])
+    else:
+        config['noise_rng'] = config['rng']
+
     func = valid_noise_types[noise_type]['noise']
     func(noise, config, im, current_var, logger)
+
+    if orig_index == 'obj_num':
+        config['index_key'] = 'obj_num'
 
 def CalculateNoiseVar(config):
     """
@@ -80,8 +101,17 @@ def CalculateNoiseVar(config):
     if noise_type not in valid_noise_types:
         raise AttributeError("Invalid type %s for noise",noise_type)
 
+    orig_index = config.get('index_key','image_num')
+    if orig_index == 'obj_num':
+        config['index_key'] = 'image_num'
+
     func = valid_noise_types[noise_type]['var']
-    return func(noise, config)
+    var = func(noise, config)
+
+    if orig_index == 'obj_num':
+        config['index_key'] = 'obj_num'
+
+    return var
 
 def AddNoiseVariance(config, im, include_obj_var=False, logger=None):
     """
@@ -108,9 +138,15 @@ def AddNoiseVariance(config, im, include_obj_var=False, logger=None):
     if noise_type not in valid_noise_types:
         raise AttributeError("Invalid type %s for noise",noise_type)
 
+    orig_index = config.get('index_key','image_num')
+    if orig_index == 'obj_num':
+        config['index_key'] = 'image_num'
+
     func = valid_noise_types[noise_type]['addvar']
     func(noise, config, im, include_obj_var, logger)
 
+    if orig_index == 'obj_num':
+        config['index_key'] = orig_index
 
 def GetSky(config, base):
     """Parse the sky information and return either a float value for the sky level per pixel
@@ -173,7 +209,7 @@ def AddNoiseGaussian(config, base, im, current_var, logger):
     # Now apply the noise.
     import math
     sigma = math.sqrt(var)
-    rng = base['rng']
+    rng = base['noise_rng']
     im.addNoise(galsim.GaussianNoise(rng,sigma=sigma))
 
     if logger and logger.isEnabledFor(logging.DEBUG):
@@ -227,8 +263,8 @@ def AddNoisePoisson(config, base, im, current_var, logger):
 
     # At this point, there is a slight difference between fft and phot. For photon shooting, the 
     # galaxy already has Poisson noise, so we want to make sure not to add that again!
-    draw_method = galsim.config.GetCurrentValue('image.draw_method',base,str)
-    rng = base['rng']
+    draw_method = galsim.config.GetCurrentValue('stamp.draw_method',base,str)
+    rng = base['noise_rng']
     if draw_method == 'phot':
         # Only add in the noise from the sky.
         if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
@@ -341,8 +377,8 @@ def AddNoiseCCD(config, base, im, current_var, logger):
 
     # At this point, there is a slight difference between fft and phot. For photon shooting, the 
     # galaxy already has Poisson noise, so we want to make sure not to add that again!
-    draw_method = galsim.config.GetCurrentValue('image.draw_method',base,str)
-    rng = base['rng']
+    draw_method = galsim.config.GetCurrentValue('stamp.draw_method',base,str)
+    rng = base['noise_rng']
     if draw_method == 'phot':
         # Add in the noise from the sky.
         if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
@@ -423,7 +459,7 @@ def _GetCOSMOSNoise(config, base):
         opt = { 'cosmos_scale' : float, 'variance' : float }
         
         kwargs = galsim.config.GetAllParams(config, base, req=req, opt=opt, ignore=noise_ignore)[0]
-        rng = base['rng']
+        rng = base['noise_rng']
         cn = galsim.correlatednoise.getCOSMOSNoise(rng, **kwargs)
         config['current_cn'] = cn
         config['current_cn_tag'] = tag

@@ -46,25 +46,32 @@ def ParseValue(config, key, base, value_type):
     if isinstance(param, basestring) and param[0] == '@':
         param = { 'type' : 'Current', 'key' : param[1:] }
 
+    # Save these, so we can edit them based on parameters at this level in the tree to take 
+    # effect an all lower branches, and then we can reset it back to this at the end.
+    orig_index_key = base.get('index_key',None)
+    orig_rng = base.get('rng',None)
+
     # Check what index key we want to use for this value.
     if isinstance(param, dict):
         is_seq = param['type'] == 'Sequence'
-        index, index_key = _get_index(param, base, is_seq)
+        # Note: this call will also set base['index_key'] and base['rng'] to the right values
+        index = _get_index(param, base, is_seq)
+
         if index is None:
             # This is probably something artificial where we aren't keeping track of indices.
             # In this case, always make a new value.
             index = config.get('current_index',0) + 1
 
-        # If we are repeating, then only make this when index % repeat == 0
+        # Get this for use below.  Not repeating is equivalent to repeat = 1
         if 'repeat' in param:
             repeat = galsim.config.ParseValue(param, 'repeat', base, int)[0]
-            if 'current_val' in param and (index//repeat == param['current_index']//repeat):
-                return param['current_val'], param['current_safe']
+        else:
+            repeat = 1
 
     # First see if we can assign by param by a direct constant value
     if value_type is not None and isinstance(param, value_type):
         #print key,' = ',param
-        return param, True
+        val,safe = param, True
     elif not isinstance(param, dict):
         if value_type is galsim.Angle:
             # Angle is a special case.  Angles are specified with a final string to 
@@ -88,16 +95,16 @@ def ParseValue(config, key, base, value_type):
         # Save the converted type for next time.
         config[key] = val
         #print key,' = ',val
-        return val, True
+        safe = True
     elif 'type' not in param:
         raise AttributeError(
             "%s.type attribute required in config for non-constant parameter %s."%(key,key))
-    elif ( 'current_val' in param and param['current_index'] == index):
+    elif 'current_val' in param and param['current_index']//repeat == index//repeat:
         if value_type is not None and param['current_value_type'] != value_type:
             raise ValueError(
                 "Attempt to parse %s multiple times with different value types"%key)
         #print index,'Using current value of ',key,' = ',param['current_val']
-        return param['current_val'], param['current_safe']
+        val,safe = param['current_val'], param['current_safe']
     else:
         # Otherwise, we need to generate the value according to its type
         # (See valid_value_types defined at the top of the file.)
@@ -131,12 +138,25 @@ def ParseValue(config, key, base, value_type):
         param['current_value_type'] = value_type
         param['current_index'] = index
         #print key,' = ',val
-        return val, safe
 
-def GetCurrentValue(key, base, value_type=None):
+    # Reset these values in case they were changed.
+    if orig_index_key is not None:
+        base['index_key'] = orig_index_key
+    if orig_rng is not None:
+        base['rng'] = orig_rng
+
+    return val, safe
+
+def GetCurrentValue(key, base, value_type=None, return_safe=False):
     """@brief Get the current value of another config item given the key name.
 
-    @returns the current value
+    @param key          The key value in the dict to get the current value of.
+    @param base         The base config dict.
+    @param value_type   The value_type expected.  [default: None, which means it won't check
+                        that the value is the right type.]
+    @param return_safe  If True, also return the current_safe value: (value, safe).
+
+    @returns the current value (or value, safe if return_safe = True)
     """
     #print 'GetCurrent %s.  value_type = %s'%(key,value_type)
 
@@ -178,22 +198,27 @@ def GetCurrentValue(key, base, value_type=None):
                     # item is probably just some value already.
                     #print 'Not dict, no value_type.  Assume %s is ok.'%d[k]
                     val = d[k]
+                    safe = True
                 else:
                     # This will work fine to evaluate the current value, but will also
                     # compute it if necessary
                     #print 'Not dict. Parse value normally'
-                    val = ParseValue(d, k, base, value_type)[0]
+                    val, safe = ParseValue(d, k, base, value_type)
             else:
                 if 'current_val' in d[k]:
                     # If there is already a current_val, use it.
                     #print 'Dict with current_val.  Use it: ',d[k]['current_val']
                     val = d[k]['current_val']
+                    safe = d[k]['current_safe']
                 else:
                     # Otherwise, parse the value for this key
                     #print 'Parse value normally'
-                    val = ParseValue(d, k, base, value_type)[0]
+                    val, safe = ParseValue(d, k, base, value_type)
             #print base['obj_num'],'Current key = %s, value = %s'%(key,val)
-            return val
+            if return_safe:
+                return val, safe
+            else:
+                return val
 
     raise ValueError("Invalid key = %s"%key)
 
@@ -330,9 +355,9 @@ def _get_index(config, base, is_sequence=False):
 
     First check for an explicit index_key value given by the user.
     Then if base[index_key] is other than obj_num, use that.
-    Finally, if this is a sequance, default to 'obj_num_in_file', otherwise 'obj_num'.
+    Finally, if this is a sequence, default to 'obj_num_in_file', otherwise 'obj_num'.
 
-    @returns index, index_key
+    @returns index
     """
     if 'index_key' in config:
         index_key = config['index_key']
@@ -348,10 +373,17 @@ def _get_index(config, base, is_sequence=False):
             index = base['obj_num'] - base.get('start_obj_num',0)
         else:
             index = None
+        rng = base.get('obj_num_rng', None)
     else:
         index = base.get(index_key,None)
+        rng = base.get(index_key + '_rng', None)
 
-    return index, index_key
+    if not is_sequence:
+        base['index_key'] = index_key
+        if rng is not None:
+            base['rng'] = rng
+
+    return index
 
 
 
@@ -527,11 +559,9 @@ def _GenerateFromSequence(config, base, value_type):
         raise AttributeError(
             "At most one of the attributes last and nitems is allowed for type = Sequence")
 
-    index, index_key = _get_index(kwargs, base, is_sequence=True)
-    if index_key is None:
-        raise ValueError("No valid index_key found for type=Sequence")
+    index = _get_index(kwargs, base, is_sequence=True)
     if index is None:
-        raise ValueError("The base config dict does not have %s set correctly."%index_key)
+        raise ValueError("The base config dict does not have index_key set correctly.")
 
     if value_type is bool:
         # Then there are only really two valid sequences: Either 010101... or 101010...
@@ -687,7 +717,7 @@ def _GenerateFromCurrent(config, base, value_type):
     params, safe = GetAllParams(config, base, req=req)
     key = params['key']
     try:
-        return GetCurrentValue(key, base, value_type), False
+        return GetCurrentValue(key, base, value_type, return_safe=True)
     except ValueError:
         raise ValueError("Invalid key = %s given for type=Current")
 

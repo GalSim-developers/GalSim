@@ -778,7 +778,7 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
 
     @returns the image as an Image instance.
     """
-    
+
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
     if file_name and hdu_list is not None:

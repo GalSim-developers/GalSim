@@ -64,46 +64,46 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     if False:
         logger.debug('obj %d: param = %s',base['obj_num'],param)
 
+    # Save these, so we can edit them based on parameters at this level in the tree to take 
+    # effect an all lower branches, and then we can reset it back to this at the end.
+    orig_index_key = base.get('index_key',None)
+    orig_rng = base.get('rng',None)
+
     # Check what index key we want to use for this object.
-    index, index_key = galsim.config.value._get_index(param, base)
+    # Note: this call will also set base['index_key'] and base['rng'] to the right values
+    index = galsim.config.value._get_index(param, base)
 
-    # If we are repeating, then only make this when index % repeat == 0
-    if 'repeat' in param:
-        repeat = galsim.config.ParseValue(param, 'repeat', base, int)[0]
-        if 'current_val' in param and (index//repeat == param['current_index']//repeat):
-            if logger and logger.isEnabledFor(logging.DEBUG):
-                logger.debug('obj %d: repeat = %d, index = %d, use current object',
-                             base['obj_num'],repeat,index)
-            return param['current_val'], param['current_safe']
-        else:
-            if logger and logger.isEnabledFor(logging.DEBUG):
-                if 'current_val' not in param:
-                    logger.debug('obj %d: repeat = %d, index = %d, no current object yet',
-                                 base['obj_num'],repeat,index)
-                else:
-                    logger.debug('obj %d: repeat = %d, index = %d, current_index = %d not ok',
-                                 base['obj_num'],repeat,index,param['current_index'])
-
-    # Check that the input config has a type to even begin with!
+    # Get the type to be parsed.
     if not 'type' in param:
         raise AttributeError("type attribute required in config.%s"%key)
     type_name = param['type']
 
-    # If we have previously saved an object and marked it as safe, then use it.
-    if 'current_val' in param and (param['current_safe'] or param['current_index'] == index):
+    # If we are repeating, then we get to use the current object for repeat times.
+    if 'repeat' in param:
+        repeat = galsim.config.ParseValue(param, 'repeat', base, int)[0]
+    else:
+        repeat = 1
+
+    # Check if we can use the current cached object
+    if ('current_val' in param and 
+            (param['current_safe'] or param['current_index']//repeat == index//repeat)):
+        # If logging, explain why we are using the current object.
         if logger and logger.isEnabledFor(logging.DEBUG):
             if param['current_safe']:
                 logger.debug('obj %d: current is safe',base['obj_num'])
+            elif repeat > 1:
+                logger.debug('obj %d: repeat = %d, index = %d, use current object',
+                             base['obj_num'],repeat,index)
             else:
                 logger.debug('obj %d: This object is already current', base['obj_num'])
+
+        # Make sure to reset these values in case they were changed.
+        if orig_index_key is not None:
+            base['index_key'] = orig_index_key
+        if orig_rng is not None:
+            base['rng'] = orig_rng
+
         return param['current_val'], param['current_safe']
-    else:
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            if 'current_val' not in param:
-                logger.debug('obj %d: no current object yet',base['obj_num'])
-            else:
-                logger.debug('obj %d: index = %d, current_index = %d not ok and not safe',
-                             base['obj_num'],index,param['current_index'])
 
     # Check if we need to skip this object
     if 'skip' in param:
@@ -196,6 +196,12 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     param['current_val'] = gsobject
     param['current_safe'] = safe
     param['current_index'] = index
+
+    # Reset these values in case they were changed.
+    if orig_index_key is not None:
+        base['index_key'] = orig_index_key
+    if orig_rng is not None:
+        base['rng'] = orig_rng
 
     return gsobject, safe
 

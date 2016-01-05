@@ -71,22 +71,22 @@ def DrawPSFStamp(psf, config, base, bounds, offset, method, logger=None):
 def ProcessExtraPSFStamp(images, scratch, config, base, obj_num, logger=None):
     # If this doesn't exist, an appropriate exception will be raised.
     psf = base['psf']['current_val']
-    draw_method = galsim.config.GetCurrentValue('image.draw_method',base,str)
+    draw_method = galsim.config.GetCurrentValue('stamp.draw_method',base,str)
     bounds = base['current_stamp'].bounds
     offset = base['stamp_offset']
-    if 'offset' in base['image']:
-        offset += galsim.config.ParseValue(base['image'], 'offset', base, galsim.PositionD)[0]
+    if 'offset' in base['stamp']:
+        offset += galsim.config.ParseValue(base['stamp'], 'offset', base, galsim.PositionD)[0]
     psf_im = DrawPSFStamp(psf,config,base,bounds,offset,draw_method,logger)
     if 'signal_to_noise' in config:
-        base['index_key'] = 'image_num'
         galsim.config.AddNoise(base,psf_im,0,logger)
-        base['index_key'] = 'obj_num'
     scratch[obj_num] = psf_im
 
 # The function to call at the end of building each image
-def ProcessExtraPSFImage(images, scratch, config, base, logger=None):
+def ProcessExtraPSFImage(images, scratch, config, base, obj_nums, logger=None):
     image = galsim.ImageF(base['image_bounds'], wcs=base['wcs'], init_value=0.)
-    for stamp in scratch.values():
+    # Make sure to only use the stamps for objects in this image.
+    for obj_num in obj_nums:
+        stamp = scratch[obj_num]
         b = stamp.bounds & image.getBounds()
         if b.isDefined():
             # This next line is equivalent to:
@@ -94,7 +94,8 @@ def ProcessExtraPSFImage(images, scratch, config, base, logger=None):
             # except that this doesn't work through the proxy.  We can only call methods
             # that don't start with _.  Hence using the more verbose form here.
             image.setSubImage(b, image.subImage(b) + stamp[b])
-    images.append(image)
+    k = base['image_num'] - base['start_image_num']
+    images[k] = image
 
 # For the hdu, just return the first element
 def HDUExtraPSF(images):

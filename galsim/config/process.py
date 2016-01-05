@@ -325,6 +325,7 @@ def SetupConfigRNG(config, seed_offset=0):
 
     @param config           The configuration dict.
     @param seed_offset      An offset to use relative to what config['image']['random_seed'] gives.
+                            [default: 0]
 
     @returns the seed used to initialize the RNG.
     """
@@ -345,17 +346,36 @@ def SetupConfigRNG(config, seed_offset=0):
                  'first' : first
          }
 
+    index_key = config['index_key']
+
+    # If we are starting a new file, clear out the existing rngs.
+    if index_key == 'file_num':
+        for key in ['seed', 'rng', 'obj_num_rng', 'image_num_rng', 'file_num_rng']:
+            if key in config:
+                del config[key]
+
     if 'random_seed' in config['image']:
-        orig_key = config['index_key']
         config['index_key'] = 'obj_num'
+        if index_key != 'obj_num' and 'start_obj_num' in config:
+            config['obj_num'] = config['start_obj_num']
         seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['index_key'] = orig_key
+        config['index_key'] = index_key
         seed += seed_offset
     else:
         seed = 0
 
-    config['seed'] = seed
-    config['rng'] = galsim.BaseDeviate(seed)
+    # Normally, the file_num rng and the image_num rng can be the same.  So if seed
+    # comes out the same as what we already built, then just use the existing file_num_rng.
+    if index_key == 'image_num' and 'file_num_rng' in config and seed == config.get('seed',None):
+        rng = config['file_num_rng']
+    else:
+        config['seed'] = seed
+        rng = galsim.BaseDeviate(seed)
+        config['rng'] = rng
+
+    # Also save this rng as 'file_num_rng' or 'image_num_rng' or 'obj_num_rng' according
+    # to whatever the index_key is.
+    config[index_key + '_rng'] = rng
 
     # This can be present for efficiency, since GaussianDeviates produce two values at a time, 
     # so it is more efficient to not create a new GaussianDeviate object each time.
@@ -564,12 +584,6 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None):
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('nfiles = %d',nfiles)
 
-    # Figure out how many processes we will use for building the files.
-    if 'nproc' in output:
-        nproc = galsim.config.ParseValue(output, 'nproc', config, int)[0]
-    else:
-        nproc = 1 
-
     if njobs > 1:
         # Start each job at file_num = nfiles * job / njobs
         start = nfiles * (job-1) // njobs
@@ -581,7 +595,7 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None):
     else:
         start = 0
 
-    galsim.config.BuildFiles(nfiles, config, file_num=start, nproc=nproc, logger=logger)
+    galsim.config.BuildFiles(nfiles, config, file_num=start, logger=logger)
 
 def CalculateNObjPerTask(nproc, ntot, config):
     """A helper function for calculating an appropriate number of objects to do per task.
@@ -746,6 +760,10 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
                 # The normal case
                 done_func(logger, proc, jobs[k][1], res, t)
                 results[k] = res
+
+        # If there are any failures, then there will still be some Nones in the results list.
+        # Remove them.
+        results = [ r for r in results if r is not None ]
  
         # Stop the processes
         # The 'STOP's could have been put on the task list before starting the processes, or you
