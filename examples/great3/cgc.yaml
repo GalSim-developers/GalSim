@@ -73,8 +73,12 @@ gal:
     num: 2
     first:
         # Galaxies were based on parametric fits to COSMOS galaxies.
+        # Make sure we use some cuts on postage stamp and fit quality as in GREAT3, specified using
+        # the exclusion_level keyword.  Currently the selected value "marginal" is in fact the
+        # default, but specify it in case that changes in future.
         type: COSMOSGalaxy
         gal_type: parametric
+        exclusion_level: marginal
         index: { type: Random }
 
         # Randomly spin the original profile
