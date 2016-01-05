@@ -16,17 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 """@file atmpsf.py
-Module for generating atmospheric PSFs using an autoregressive phase screen generator.
-
-Relevant SPIE paper:
-"Remembrance of phases past: An autoregressive method for generating realistic atmospheres in
-simulations"
-Srikar Srinath, Univ. of California, Santa Cruz;
-Lisa A. Poyneer, Lawrence Livermore National Lab.;
-Alexander R. Rudy, UCSC; S. Mark Ammons, LLNL
-Published in Proceedings Volume 9148: Adaptive Optics Systems IV
-September 2014
-
 """
 
 import copy
@@ -129,7 +118,7 @@ class AtmosphericScreen(PhaseScreen):
         _nstep = int(np.ceil(dt/self.time_step))
         for i in xrange(_nstep):
             self.advance()
-        return _nstep*self.time_step  # return the time *actually advanced
+        return _nstep*self.time_step  # return the time *actually* advanced
 
     # Collect a few methods common to both FrozenAtmosphericScreen and ARAtmosphericScreen
     def _freq(self):
@@ -203,9 +192,22 @@ class FrozenAtmosphericScreen(AtmosphericScreen):
         # To handle wind, we will interpolate the LookupTable2D with an offset origin.
         self.origin = np.r_[0.0, 0.0]
 
+    def __str__(self):
+        return "galsim.FrozenAtmosphericScreen(altitude=%s)" % self.altitude
+
+    def __repr__(self):
+        return ("galsim.FrozenAtmosphericScreen(%r, %r, altitude=%r, time_step=%r, " +
+                "r0_500=%r, L0_inv=%r, vx=%r, vy=%r)" % (
+                    self.screen_size, self.screen_scale, self.altitude, self.time_step,
+                    self.r0_500, self.L0_inv, self.vx, self.vy))
+
     def advance(self):
         # If wind blows right, then origin moves left, so use minus sign.
         self.origin -= (self.vx*self.time_step, self.vy*self.time_step)
+
+    def advance_by(self, dt):
+        self.origin -= (self.vx*dt, self.vy*dt)
+        return dt
 
     def path_difference(self, nx, scale, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
         xmin = self.origin[0] + 1000*self.altitude*theta_x.tan() - 0.5*scale*(nx-1)
@@ -221,7 +223,17 @@ class FrozenAtmosphericScreen(AtmosphericScreen):
 
 
 class ARAtmosphericScreen(AtmosphericScreen):
-    """Auto-regressive atmospheric screen"""
+    """Auto-regressive atmospheric screen.
+
+    Relevant SPIE paper:
+    "Remembrance of phases past: An autoregressive method for generating realistic atmospheres in
+    simulations"
+    Srikar Srinath, Univ. of California, Santa Cruz;
+    Lisa A. Poyneer, Lawrence Livermore National Lab.;
+    Alexander R. Rudy, UCSC; S. Mark Ammons, LLNL
+    Published in Proceedings Volume 9148: Adaptive Optics Systems IV
+    September 2014
+    """
     def __init__(self, screen_size, screen_scale, altitude=0.0, time_step=0.03,
                  r0_500=0.2, L0_inv=1./25.0, vx=0.0, vy=0.0, alpha_mag=0.999, rng=None):
 
@@ -242,6 +254,15 @@ class ARAtmosphericScreen(AtmosphericScreen):
         # Ignore boiling for *really* large alpha, but don't let amplitudes decay
         if self.noise_frac < 1.e-12:
             self.alpha /= np.abs(self.alpha)
+
+    def __str__(self):
+        return "galsim.ARAtmosphericScreen(altitude=%s)" % self.altitude
+
+    def __repr__(self):
+        return ("galsim.ARAtmosphericScreen(%r, %r, altitude=%r, time_step=%r, " +
+                "r0_500=%r, L0_inv=%r, vx=%r, vy=%r, alpha_mag=%r, rng=%r)" % (
+                    self.screen_size, self.screen_scale, self.altitude, self.time_step,
+                    self.r0_500, self.L0_inv, self.vx, self.vy, self.alpha_mag, self.rng))
 
     def advance(self):
         # For ARAtmosphericScreen, since we use Fourier methods to update the screen each step
@@ -274,8 +295,45 @@ class PhaseScreenList(object):
     the function `Atmosphere` or `OpticalPSF`.
     """
     def __init__(self, layers):
-        self.layers = layers
-        time_step = {l.time_step for l in self.layers if l.time_step is not None}
+        self._layers = layers
+        self._update_attrs()  # for now, just updating self.time_step
+
+    def __len__(self):
+        return len(self._layers)
+
+    def __getitem__(self, position):
+        return self._layers[position]
+
+    def __setitem__(self, position, layer):
+        self._layers[position] = layer
+        self._update_attrs()
+
+    def __delitem__(self, position):
+        del self._layers[position]
+        self._update_attrs()
+
+    def append(self, layer):
+        self._layers.append(layer)
+        self._update_attrs()
+
+    def extend(self, layers):
+        self._layers.extend(layers)
+        self._update_attrs()
+
+    def __str__(self):
+        return "galsim.PhaseScreenList(%s)" % self._layers
+
+    def __repr__(self):
+        return "galsim.PhaseScreenList(%r)" % self._layers
+
+    def _update_attrs(self):
+        # Update object attributes for current set of layers.  Currently the only attribute is
+        # self.time_step.
+        # Could have made self.time_step a @property instead of defining _update_attrs(), but then
+        # failures would occur late rather than early, which makes debugging more difficult.
+
+        # Must have unique time_step or time_step is None (for time-indep screen)
+        time_step = {l.time_step for l in self if l.time_step is not None}
         if len(time_step) == 0:
             self.time_step = None
         elif len(time_step) == 1:
@@ -283,17 +341,8 @@ class PhaseScreenList(object):
         else:
             raise ValueError("Layer time steps must all be identical or None")
 
-    def __len__(self):
-        return len(self.layers)
-
-    def __getitem__(self, position):
-        return self.layers[position]
-
-    def __setitem__(self, position, layer):
-        self.layers[position] = layer
-
     def advance(self):
-        for layer in self.layers:
+        for layer in self:
             layer.advance()
 
     def getPSF(self, *args, **kwargs):
@@ -318,10 +367,10 @@ class PhaseScreenList(object):
         return PSFs
 
     def path_difference(self, *args, **kwargs):
-        return sum(layer.path_difference(*args, **kwargs) for layer in self.layers)
+        return sum(layer.path_difference(*args, **kwargs) for layer in self)
 
     def reset(self):
-        for layer in self.layers:
+        for layer in self:
             layer.reset()
 
 
@@ -379,6 +428,18 @@ class PhaseScreenPSF(GSObject):
                     _bar.update()
             self._finalize(flux, gsparams)
 
+    def __str__(self):
+        return ("galsim.PhaseScreenPSF(%s, lam=%s, exptime=%s)" %
+                (self.screen_set, self.lam, self.exptime))
+
+    def __repr__(self):
+        return ("galsim.PhaseScreenPSF(%r, lam=%r, exptime=%r, flux=%r, theta_x=%r, " +
+                "theta_y=%r, scale_unit=%r, interpolant=%r, diam=%r, obscuration=%r, " +
+                "pad_factor=%r, oversampling=%r, gsparam=%r)" % (
+                    self.screen_set, self.lam, self.exptime, self.flux, self.theta_x, self.theta_y,
+                    self.scale_unit, self.interpolant, self.diam, self.obscuration, self.pad_factor,
+                    self.oversampling, self.gsparams))
+
     def _step(self):
         path_difference = self.screen_set.path_difference(self._nu, self._pupil_scale,
                                                           self.theta_x, self.theta_y)
@@ -414,15 +475,14 @@ def Atmosphere(time_step=0.03, screen_size=10.0, screen_scale=0.1, altitude=0.0,
     # Broadcast
     n_layers = max(len(i) for i in (altitudes, r0_500s, L0s, velocities, directions, alpha_mags))
     if n_layers > 1:
-        L0s, velocities, directions, alpha_mags = (
-            broadcast(i, n_layers) for i in (L0s, velocities, directions, alpha_mags)
+        altitudes, L0s, velocities, directions, alpha_mags = (
+            broadcast(i, n_layers) for i in (altitudes, L0s, velocities, directions, alpha_mags)
         )
     # Broadcast r0_500 separately, since combination of indiv layers' r0s is more complex:
     if len(r0_500s) == 1:
         r0_500s = [n_layers**(3./5) * r0_500s[0]] * n_layers
     if any(len(i) != n_layers for i in (r0_500s, L0s, velocities, directions, alpha_mags)):
         raise ValueError("r0_500, L0, velocity, direction, alpha_mag not broadcastable")
-
     # r0_500_effective = (sum(r**(-5./3) for r in r0_500s))**(-3./5)
 
     # Invert L0, with `L0 is None` interpretted as L0 = infinity => L0_inv = 0.0
@@ -435,14 +495,14 @@ def Atmosphere(time_step=0.03, screen_size=10.0, screen_scale=0.1, altitude=0.0,
         layers = [
             FrozenAtmosphericScreen(
                 screen_size, screen_scale, alt, time_step=time_step,
-                r0_500=r0_500, L0_inv=L0_inv, vx=vx, vy=vy, rng=rng)
-            for alt, r0_500, L0_inv, vx, vy in zip(altitudes, r0_500s, L0_invs, vxs, vys)]
+                r0_500=r0, L0_inv=L0_inv, vx=vx, vy=vy, rng=rng)
+            for alt, r0, L0_inv, vx, vy in zip(altitudes, r0_500s, L0_invs, vxs, vys)]
     else:
         layers = [
             ARAtmosphericScreen(
                 screen_size, screen_scale, alt, time_step=time_step,
-                r0_500=r0_500, L0_inv=L0_inv, vx=vx, vy=vy, rng=rng)
-            for alt, r0_500, L0_inv, vx, vy, amg
+                r0_500=r0, L0_inv=L0_inv, vx=vx, vy=vy, alpha_mag=amag, rng=rng)
+            for alt, r0, L0_inv, vx, vy, amag
             in zip(altitudes, r0_500s, L0_invs, vxs, vys, alpha_mags)]
 
     return PhaseScreenList(layers)

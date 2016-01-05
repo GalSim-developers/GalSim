@@ -17,6 +17,7 @@
 #
 import numpy as np
 from galsim_test_helpers import funcname
+import copy
 
 try:
     import galsim
@@ -27,6 +28,62 @@ except ImportError:
     path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
+
+
+def test_phase_screen_list():
+    # Check list-like behaviors of PhaseScreenList
+
+    import time
+    t1 = time.time()
+    rng = galsim.BaseDeviate(1234)
+
+    atm = galsim.Atmosphere(altitude=[0.0, 1.0],
+                            velocity=[1.0, 2.0],
+                            direction=[0.0*galsim.degrees, 120*galsim.degrees],
+                            r0_500=0.15,
+                            rng=rng)
+
+    # test append, extend, __getitem__, __setitem__, __delitem__
+    atm2 = galsim.PhaseScreenList([atm[0]])
+    atm2.append(atm[1])
+
+    atm3 = galsim.PhaseScreenList([])
+    atm3.extend(atm2)
+    atm3[1] = atm2[1]
+
+    atm4 = galsim.PhaseScreenList(atm3)
+    del atm4[1]
+    atm4.append(atm[1])
+
+    pd = atm.path_difference(20, 0.01)
+    pd2 = atm2.path_difference(20, 0.01)
+    pd3 = atm3.path_difference(20, 0.01)
+    pd4 = atm4.path_difference(20, 0.01)
+
+    np.testing.assert_array_equal(pd, pd2, "PhaseScreenLists are inconsistent")
+    np.testing.assert_array_equal(pd, pd3, "PhaseScreenLists are inconsistent")
+    np.testing.assert_array_equal(pd, pd4, "PhaseScreenLists are inconsistent")
+
+    # Check some actual derived PSFs too, not just phase screens.
+    psf = atm.getPSF(exptime=0.06, diam=4.0)
+
+    # Need to reset atm2 since both atm and atm2 reference the same layer objects (not copies).
+    # Not sure if this is a feature or a bug, but it's also how regular python lists work.
+    atm2.reset()
+    psf2 = atm2.getPSF(exptime=0.06, diam=4.0)
+
+    atm3.reset()
+    psf3 = atm3.getPSF(exptime=0.06, diam=4.0)
+
+    atm4.reset()
+    psf4 = atm4.getPSF(exptime=0.06, diam=4.0)
+
+    np.testing.assert_array_equal(psf.img, psf2.img, "PhaseScreenPSFs are inconsistent")
+    np.testing.assert_array_equal(psf.img, psf3.img, "PhaseScreenPSFs are inconsistent")
+    np.testing.assert_array_equal(psf.img, psf4.img, "PhaseScreenPSFs are inconsistent")
+
+    t2 = time.time()
+    print 'time for %s = %.2f' % (funcname(), t2-t1)
 
 
 def test_atmpsf_wind_and_field_angle():
@@ -123,3 +180,4 @@ if __name__ == "__main__":
     test_atmpsf_batch()
     test_atmpsf_reset()
     test_atmpsf_wind_and_field_angle()
+    test_phase_screen_list()
