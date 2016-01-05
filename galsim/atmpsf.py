@@ -36,125 +36,107 @@ import utilities
 from galsim import GSObject
 
 
-class Atmosphere(object):
-    def __init__(self, time_step=0.03, screen_size=10.0, screen_scale=0.1, altitude=0.0,
-                 r0_500=0.2, L0=25.0, velocity=0.0, direction=0.0*galsim.degrees, alpha_mag=0.997,
-                 rng=None, frozen=True):
-        self.time_step = time_step
+def listify(arg):
+    """Turns argument into a list if not already iterable."""
+    return [arg] if not hasattr(arg, '__iter__') else arg
+
+
+def broadcast(arg, n):
+    """Turn length-1 iterable into length-n list."""
+    return [arg[0]]*n if len(arg) == 1 else arg
+
+
+def generate_pupil(nu, pupil_size, diam=None, obscuration=None):
+    """ Generate a pupil transmission array (0's and 1's) for a circular aperture and potentially a
+    central circular obscuration.
+
+    @param nu          Number of pixels in square output array.
+    @param pupil_size  Physical size of pupil array in meters.
+    @param diam        Diameter of aperture in meters.
+    @param obscuration Fractional linear obscuration.
+    @returns array of 0's and 1's indicating pupil transmission function.
+    """
+    aper = np.ones((nu, nu), dtype=np.float64)
+    if diam is not None:
+        radius = 0.5*diam
+        u = np.fft.fftshift(np.fft.fftfreq(nu, 1./pupil_size))
+        u, v = np.meshgrid(u, u)
+        rsqr = u**2 + v**2
+        aper = rsqr <= radius**2
+        if obscuration is not None:
+            aper *= rsqr >= (radius*obscuration)**2
+    return aper
+
+
+class PhaseScreen(object):
+    """ Abstract base class for a phase screen to use in generating a PSF using Fourier optics.
+    PhaseScreen subclasses need to implement the methods below.
+    """
+    def __init__(self, screen_size, screen_scale, altitude):
         self.npix = int(np.ceil(screen_size/screen_scale))
         self.screen_scale = screen_scale
-        # redefine screen_size to make sure it's consistent with npix and screen_scale
         self.screen_size = self.screen_scale * self.npix
+        self.altitude = altitude
+
+    def advance(self):
+        # Default is a no-op, which would be appropriate for an optics phase screen, for example.
+        # For an atmsopheric phase screen, this should update the atmospheric layer to account for
+        # wind, boiling, etc.
+        pass
+
+    def advance_by(self, dt):
+        return dt
+
+    def reset(self):
+        # For time-dependent screens, should reset state to t=0.
+        # For time-independent screens, this is a no-op.
+        pass
+
+    def path_difference(self, nx, scale, theta_x=None, theta_y=None):
+        # This should return an nx-by-nx pixel array with scale `scale` (in meters) representing the
+        # effective difference in path length (nanometers) for rays originating from different
+        # points in the pupil plane.  The `theta_x` and `theta_y` params indicate the position on
+        # the focal plane, or equivalently the position on the sky from which the rays originate.
+        raise NotImplementedError
+
+    def pupil_scale(self, lam, scale_unit=galsim.arcsec):
+        raise NotImplementedError
+
+
+class AtmosphericScreen(PhaseScreen):
+    """ A phase screen representing an atmospheric layer.
+    """
+    def __init__(self, screen_size, screen_scale=None, altitude=0.0, time_step=0.03,
+                 r0_500=0.2, L0_inv=1./25.0, vx=0.0, vy=0.0, rng=None):
+
+        if screen_scale is None:
+            screen_scale = 0.5 * r0_500
+        super(AtmosphericScreen, self).__init__(screen_size, screen_scale, altitude)
+
         if rng is None:
             rng = galsim.BaseDeviate()
         self.rng = rng
         self.orig_rng = copy.deepcopy(rng)
 
-        # Listify
-        altitude, r0_500, L0, velocity, direction, alpha_mag = map(
-            lambda i: [i] if not hasattr(i, '__iter__') else i,
-            (altitude, r0_500, L0, velocity, direction, alpha_mag)
-        )
-        self.altitude = altitude
-        # Broadcast
-        self.n_layers = len(self.altitude) if hasattr(self.altitude, '__iter__') else 1
-        if self.n_layers > 1:
-            L0, velocity, direction, alpha_mag = map(
-                lambda i: [i[0]]*self.n_layers if len(i) == 1 else i,
-                (L0, velocity, direction, alpha_mag)
-            )
-        # Broadcast r0_500 separately, since combination of indiv layers' r0s is more complex:
-        if len(r0_500) == 1:
-            r0_500 = [self.n_layers**(3./5) * r0_500[0]] * self.n_layers
-        if any(len(i) != self.n_layers for i in (r0_500, L0, velocity, direction, alpha_mag)):
-            raise ValueError("r0_500, L0, velocity, direction, alpha_mag not broadcastable")
-
-        self.r0_500_effective = (np.sum(r**(-5./3) for r in r0_500))**(-3./5)
-        self.r0_500 = r0_500
-
-        # Invert L0, with `L0 is None` interpretted as L0 = infinity => L0_inv = 0.0
-        self.L0_inv = [1./L00 if L00 is not None else 0.0 for L00 in L0]
-
-        # decompose velocities
-        self.vx, self.vy = zip(*[v*d.sincos() for v, d in zip(velocity, direction)])
-
-        self.alpha_mag = alpha_mag
-        self.frozen = frozen
-        self._initialize_screens()
-
-    def _initialize_screens(self):
-        if self.frozen:
-            self.layers = [
-                FrozenPhaseScreen(
-                    self.time_step, self.screen_size, self.screen_scale, alt,
-                    r, L, vx0, vy0, self.rng
-                )
-                for r, L, vx0, vy0, alt
-                in zip(self.r0_500, self.L0_inv, self.vx, self.vy, self.altitude)
-            ]
-        else:
-            self.layers = [
-                ARPhaseScreen(
-                    self.time_step, self.screen_size, self.screen_scale, alt,
-                    r, L, vx0, vy0, amag, self.rng
-                )
-                for r, L, vx0, vy0, amag, alt
-                in zip(self.r0_500, self.L0_inv, self.vx, self.vy, self.alpha_mag, self.altitude)
-            ]
-
-    def advance(self):
-        for layer in self.layers:
-            layer.advance()
-
-    def getPSF(self, **kwargs):
-        return AtmosphericPSF(self, **kwargs)
-
-    def getPSFs(self, **kwargs):
-        kwargs['_eval_now'] = False
-        PSFs = []
-        for theta_x, theta_y in zip(kwargs.pop('theta_x'), kwargs.pop('theta_y')):
-            PSFs.append(AtmosphericPSF(self, theta_x=theta_x, theta_y=theta_y, **kwargs))
-
-        nstep = PSFs[0]._nstep
-        atm = PSFs[0].atmosphere
-        flux = kwargs.pop('flux', 1.0)
-        gsparams = kwargs.pop('gsparams', None)
-        for i in xrange(nstep):
-            for PSF in PSFs:
-                PSF._step()
-            atm.advance()
-        for PSF in PSFs:
-            PSF._finalize(flux, gsparams)
-        return PSFs
-
-    def path_difference(self, *args, **kwargs):
-        return np.sum(layer.path_difference(*args, **kwargs) for layer in self.layers)
-
-    def reset(self):
-        self.rng = copy.deepcopy(self.orig_rng)
-        self._initialize_screens()
-
-
-class PhaseScreen(object):
-    def __init__(self, time_step=0.03, screen_size=10.0, screen_scale=0.1, altitude=0.0,
-                 r0_500=0.2, L0_inv=1./25.0, vx=0.0, vy=0.0, rng=None, **kwargs):
-        if rng is None:
-            rng = galsim.BaseDeviate()
-        self.rng = rng
-
-        self.npix = int(np.ceil(screen_size/screen_scale))
-        self.screen_scale = screen_scale
-        self.screen_size = self.screen_scale * self.npix
-        self.altitude = altitude
         self.time_step = time_step
+        self.altitude = altitude
         self.r0_500 = r0_500
         self.L0_inv = L0_inv
         self.vx = vx
         self.vy = vy
 
-        fx = np.fft.fftfreq(self.npix, self.screen_scale)
-        fx, fy = np.meshgrid(fx, fx)
+    def advance_by(self, dt):
+        _nstep = int(np.ceil(dt/self.time_step))
+        for i in xrange(_nstep):
+            self.advance()
+        return _nstep*self.time_step  # return the time *actually advanced
 
+    # Collect a few methods common to both FrozenAtmosphericScreen and ARAtmosphericScreen
+    def _freq(self):
+        fx = np.fft.fftfreq(self.npix, self.screen_scale)
+        return np.meshgrid(fx, fx)
+
+    def _init_screen(self, fx, fy):
         self.psi = (1./self.screen_size*np.sqrt(0.00058)*(self.r0_500**(-5.0/6.0)) *
                     (fx*fx + fy*fy + self.L0_inv*self.L0_inv)**(-11.0/12.0) *
                     self.npix * np.sqrt(np.sqrt(2.0))) * 500.0
@@ -167,65 +149,109 @@ class PhaseScreen(object):
         noise = utilities.rand_arr(self.psi.shape, gd)
         return np.fft.fft2(noise)*self.psi
 
-    def advance(self):
-        raise NotImplementedError
+    # Both types of atmospheric screens determine their pupil scales (essentially stepK()) from the
+    # Kolmogorov profile with the same Fried parameter r0.
+    def pupil_scale(self, lam, scale_unit=galsim.arcsec):
+        obj = galsim.Kolmogorov(lam=lam, r0=self.r0_500 * (lam/500.0)**(6./5))
+        return obj.stepK() * lam*1.e-9 * galsim.radians / scale_unit
 
-    def path_difference(self, nx, scale, theta_x=None, theta_y=None):
-        raise NotImplementedError
 
+class FrozenAtmosphericScreen(AtmosphericScreen):
+    """ An atmospheric phase screen that can drift in the wind, but otherwise does not evolve with
+    time.  The phases are drawn from a von Karman power spectrum, which is defined by a Fried
+    parameter that effectively sets the amplitude of the turbulence, and an outer scale that sets
+    scale beyond which the turbulence power goes (smoothly) to zero.
 
-class FrozenPhaseScreen(PhaseScreen):
-    def __init__(self, time_step=0.03, screen_size=10.0, screen_scale=0.1, altitude=0.0,
+    @param screen_size    How large in meters should the screen be?  This should be large enough to
+                          accommodate the desired field-of-view of the telescope as well as the
+                          meta-pupil defined by the wind velocity and exposure time.  Note that the
+                          screen will have periodic boundary conditions, so it's technically
+                          possible to use a smaller sized screen than technically necessary, though
+                          this may introduce artifacts into PSFs or PSF correlations functions.
+    @param screen_scale   How finely should the phase screen be sampled in meters?  A fraction of
+                          the Fried parameter is usually sufficiently small, but users should test
+                          the effects of this parameter to ensure robust results.
+                          [Default: 0.5*r0_500]
+    @param altitude       The altitude of the screen with respect to the telescope in km.
+                          [Default: 0.0]
+    @param time_step      Time interval in seconds over which atmosphere is propagated before the
+                          PSF image is incrementally integrated.  [Default: 0.03]
+    @param r0_500         The Fried parameter in meters *at wavelength 500 nm*.  [Default: 0.2]
+    @param L0_inv         Inverse outer scale in 1/meters.  [Default: 1./25].
+    @param vx             Wind velocity in x-direction in meters/second. [Default: 0]
+    @param vy             Wind velocity in y-direction in meters/second. [Default: 0]
+    @param rng            Random number generator (galsim.BaseDeviate or subclass) used to
+                          initialize phase screen.  Default of None will create a BaseDeviate with
+                          random seed from the system entropy or clock time.
+    """
+    def __init__(self, screen_size, screen_scale, altitude=0.0, time_step=0.03,
                  r0_500=0.2, L0_inv=1./25.0, vx=0.0, vy=0.0, rng=None):
+        super(FrozenAtmosphericScreen, self).__init__(screen_size, screen_scale, altitude,
+                                                      time_step, r0_500, L0_inv,
+                                                      vx, vy, rng)
 
-        super(FrozenPhaseScreen, self).__init__(time_step, screen_size, screen_scale, altitude,
-                                                r0_500, L0_inv, vx, vy, rng)
+        # Note that _init_screen is here instead of in superclass since ARAtmosphericScreen reuses
+        # fx, fy, but we don't want to store these in the class or recompute them.  So instead, we
+        # just provide the `_freq` method in the superclass that each AtmosphericScreen subclass can
+        # use.
+        fx, fy = self._freq()
+        self._init_screen(fx, fy)
+        # Use a LookupTable2D to interpolate/extrapolate with periodic boundary conditions.
         x0 = y0 = -self.screen_size/2.0
         dx = dy = self.screen_scale
         self.tab2d = galsim.LookupTable2D(x0, y0, dx, dy, self.screen, edge_mode='wrap')
+        # To handle wind, we will interpolate the LookupTable2D with an offset origin.
         self.origin = np.r_[0.0, 0.0]
 
     def advance(self):
-        """ For frozen screen, easier to adjust telescope bore-sight location rather than actually
-        move the screen (c.f. ARPhaseScreen).
-        """
-        self.origin += (self.vx*self.time_step, self.vy*self.time_step)
+        # If wind blows right, then origin moves left, so use minus sign.
+        self.origin -= (self.vx*self.time_step, self.vy*self.time_step)
 
     def path_difference(self, nx, scale, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
-        xmin = self.origin[0] + self.altitude*theta_x.tan() - 0.5*scale*(nx-1)
+        xmin = self.origin[0] + 1000*self.altitude*theta_x.tan() - 0.5*scale*(nx-1)
         xmax = xmin + scale*(nx-1)
-        ymin = self.origin[1] + self.altitude*theta_y.tan() - 0.5*scale*(nx-1)
+        ymin = self.origin[1] + 1000*self.altitude*theta_y.tan() - 0.5*scale*(nx-1)
         ymax = ymin + scale*(nx-1)
 
         return self.tab2d.eval_grid(xmin, xmax, nx, ymin, ymax, nx)
 
+    def reset(self):
+        self.rng = copy.deepcopy(self.orig_rng)
+        self.origin = np.r_[0.0, 0.0]
 
-class ARPhaseScreen(PhaseScreen):
-    def __init__(self, time_step=0.03, screen_size=10.0, screen_scale=0.1, altitude=0.0,
+
+class ARAtmosphericScreen(AtmosphericScreen):
+    """Auto-regressive atmospheric screen"""
+    def __init__(self, screen_size, screen_scale, altitude=0.0, time_step=0.03,
                  r0_500=0.2, L0_inv=1./25.0, vx=0.0, vy=0.0, alpha_mag=0.999, rng=None):
 
-        super(ARPhaseScreen, self).__init__(time_step, screen_size, screen_scale, altitude,
-                                            r0_500, L0_inv, vx, vy, rng)
+        super(ARAtmosphericScreen, self).__init__(screen_size, screen_scale, altitude,
+                                                  time_step, r0_500, L0_inv,
+                                                  vx, vy, rng)
+
         self.alpha_mag = alpha_mag
-        fx = np.fft.fftfreq(self.npix, self.screen_scale)
-        fx, fy = np.meshgrid(fx, fx)
+        fx, fy = self._freq()
+        self._init_screen(fx, fy)
+
+        # Work wind directly into "boiling" phase updating.
         alpha_phase = -(fx*vx + fy*vy) * time_step
         self.alpha = alpha_mag * np.exp(2j*np.pi*alpha_phase)
 
         self.noise_frac = np.sqrt(1.0 - np.abs(self.alpha**2)[0, 0])
 
         # Ignore boiling for *really* large alpha, but don't let amplitudes decay
-        if self.noise_frac < 1.e-10:
+        if self.noise_frac < 1.e-12:
             self.alpha /= np.abs(self.alpha)
 
     def advance(self):
-        """ For AR screen, easy to actually move the screen, rather than the telescope bore-sight.
-        """
-        if self.noise_frac < 1.e-10:
-            # Frozen flow
+        # For ARAtmosphericScreen, since we use Fourier methods to update the screen each step
+        # anyway, it's easy to simultaneously move the screen with the wind.
+        if self.noise_frac < 1.e-12:
+            # Frozen flow (but slower than FrozenAtmosphericScreen, since using Fourier methods to
+            # move the screen in the wind).
             self._phaseFT = self.alpha*self._phaseFT
         else:
-            # Boiling
+            # Boiling, do a fractional random phase update.
             self._phaseFT = self.alpha*self._phaseFT + self._noiseFT()*self.noise_frac
         self.screen = np.fft.ifft2(self._phaseFT).real
 
@@ -233,21 +259,82 @@ class ARPhaseScreen(PhaseScreen):
         img = galsim.Image(np.ascontiguousarray(self.screen), scale=self.screen_scale)
         ii = galsim.InterpolatedImage(img, calculate_stepk=False, calculate_maxk=False,
                                       normalization='sb')
-        ii = ii.shift(self.altitude * theta_x.tan(), self.altitude * theta_y.tan())
+        ii = ii.shift(1000*self.altitude * theta_x.tan(), 1000*self.altitude * theta_y.tan())
         return ii.drawImage(nx=nx, ny=nx, scale=scale, method='sb').array
 
+    def reset(self):
+        self.rng = copy.deepcopy(self.orig_rng)
+        fx, fy = self._freq()
+        self._init_screen(fx, fy)
 
-class AtmosphericPSF(GSObject):
-    def __init__(self, atmosphere, lam=500.0, exptime=15.0, flux=1.0,
-                 theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees,
+
+class PhaseScreenList(object):
+    """ List of phase screens that can be turned into a PSF.  Screens can be either atmospheric
+    layers or optical phase screens.  Generally, one would assemble a PhaseScreenList object using
+    the function `Atmosphere` or `OpticalPSF`.
+    """
+    def __init__(self, layers):
+        self.layers = layers
+        time_step = {l.time_step for l in self.layers if l.time_step is not None}
+        if len(time_step) == 0:
+            self.time_step = None
+        elif len(time_step) == 1:
+            self.time_step = time_step.pop()
+        else:
+            raise ValueError("Layer time steps must all be identical or None")
+
+    def __len__(self):
+        return len(self.layers)
+
+    def __getitem__(self, position):
+        return self.layers[position]
+
+    def __setitem__(self, position, layer):
+        self.layers[position] = layer
+
+    def advance(self):
+        for layer in self.layers:
+            layer.advance()
+
+    def getPSF(self, *args, **kwargs):
+        return PhaseScreenPSF(self, *args, **kwargs)
+
+    def getPSFs(self, **kwargs):
+        kwargs['_eval_now'] = False
+        PSFs = []
+        for theta_x, theta_y in zip(kwargs.pop('theta_x'), kwargs.pop('theta_y')):
+            PSFs.append(PhaseScreenPSF(self, theta_x=theta_x, theta_y=theta_y, **kwargs))
+
+        flux = kwargs.pop('flux', 1.0)
+        gsparams = kwargs.pop('gsparams', None)
+        _nstep = PSFs[0]._nstep
+        for i in xrange(_nstep):
+            for PSF in PSFs:
+                PSF._step()
+            self.advance()
+
+        for PSF in PSFs:
+            PSF._finalize(flux, gsparams)
+        return PSFs
+
+    def path_difference(self, *args, **kwargs):
+        return sum(layer.path_difference(*args, **kwargs) for layer in self.layers)
+
+    def reset(self):
+        for layer in self.layers:
+            layer.reset()
+
+
+class PhaseScreenPSF(GSObject):
+    def __init__(self, screen_set, lam=500., exptime=0.0, flux=1.0,
+                 theta_x=0.0*galsim.arcmin, theta_y=0.0*galsim.arcmin,
                  scale_unit=galsim.arcsec, interpolant=None,
-                 diam=10.0, obscuration=None,
+                 diam=8.4, obscuration=0.6,
                  pad_factor=1.0, oversampling=1.5,
                  _pupil_size=None, _pupil_scale=None,
-                 _bar=None, gsparams=None, _eval_now=True):
+                 gsparams=None, _eval_now=True, _bar=None):
 
-        # Store initialization variables
-        self.atmosphere = atmosphere
+        self.screen_set = screen_set
         self.lam = lam
         self.exptime = exptime
         self.theta_x = theta_x
@@ -260,53 +347,40 @@ class AtmosphericPSF(GSObject):
         self.oversampling = oversampling
 
         if _pupil_scale is None:
-            obj = galsim.Kolmogorov(lam=self.lam,
-                                    r0=self.atmosphere.r0_500_effective*(self.lam/500.)**(6./5))
-            _pupil_scale = (obj.stepK() * self.lam*1e-9 *
-                            galsim.radians / self.scale_unit / self.oversampling)
+            # Generically, Galsim propagates stepK() for convolutions using
+            #   scale = sum(s**-2 for s in scales)**(-0.5)
+            # We're not actually doing convolution here, and, in fact, the right relation for
+            # Kolmogorov screens uses exponents -5./3 and -3./5, which is just slightly different.
+            # Since most of the layers in a PhaseScreenList are will likely be Kolmogorov screens,
+            # we'll use that relation.
+            _pupil_scale = (sum(layer.pupil_scale(lam)**(-5./3) for layer in screen_set))**(-3./5)
+            _pupil_scale /= oversampling
         self._pupil_scale = _pupil_scale
-
         if _pupil_size is None:
             _pupil_size = self.diam * self.pad_factor
         self._nu = int(np.ceil(_pupil_size/self._pupil_scale))
         self._pupil_size = self._nu * self._pupil_scale
 
         self.scale = 1e-9*self.lam/self._pupil_size * galsim.radians / self.scale_unit
-        self.img = np.zeros((self._nu, self._nu), dtype=np.float64)
 
-        self.aper = self._generate_pupil()
+        self.aper = generate_pupil(self._nu, self._pupil_size, self.diam, self.obscuration)
+        self.img = np.zeros_like(self.aper, dtype=np.float64)
 
-        self._nstep = int(np.ceil(self.exptime/self.atmosphere.time_step))
+        self._nstep = int(np.ceil(self.exptime/self.screen_set.time_step))
         # Generate at least one time sample
         if self._nstep == 0:
             self._nstep = 1
 
-        # When generating many PSFs from the same atmosphere, it's more efficient to loop over
-        # the PSFs and then increment the atmosphere than to fully compute single PSFs one at a
-        # time.  The _eval_now flag enables (in a hidden way) the above computation strategy.
         if _eval_now:
             for i in xrange(self._nstep):
                 self._step()
-                self.atmosphere.advance()
+                self.screen_set.advance()
                 if _bar is not None:
                     _bar.update()
-
             self._finalize(flux, gsparams)
 
-    def _generate_pupil(self):
-        aper = np.ones((self._nu, self._nu), dtype=np.float64)
-        if self.diam is not None:
-            radius = 0.5*self.diam
-            u = np.fft.fftshift(np.fft.fftfreq(self._nu, 1./self._pupil_size))
-            u, v = np.meshgrid(u, u)
-            rsqr = u**2 + v**2
-            aper = rsqr <= radius**2
-            if self.obscuration is not None:
-                aper[rsqr <= (radius*self.obscuration)**2] = 0.0
-        return aper
-
     def _step(self):
-        path_difference = self.atmosphere.path_difference(self._nu, self._pupil_scale,
+        path_difference = self.screen_set.path_difference(self._nu, self._pupil_scale,
                                                           self.theta_x, self.theta_y)
         wf = self.aper * np.exp(2j * np.pi * path_difference / self.lam)
         ftwf = np.fft.ifft2(np.fft.ifftshift(wf))
@@ -323,3 +397,52 @@ class AtmosphericPSF(GSObject):
             use_true_center=False, normalization='sb', gsparams=gsparams
         )
         GSObject.__init__(self, ii)
+
+
+def Atmosphere(time_step=0.03, screen_size=10.0, screen_scale=0.1, altitude=0.0,
+               r0_500=0.2, L0=25.0, velocity=0.0, direction=0.0*galsim.degrees, alpha_mag=0.997,
+               rng=None, frozen=True):
+
+    if rng is None:
+        rng = galsim.BaseDeviate()
+
+    # Listify
+    altitudes, r0_500s, L0s, velocities, directions, alpha_mags = (
+        listify(i) for i in (altitude, r0_500, L0, velocity, direction, alpha_mag)
+    )
+
+    # Broadcast
+    n_layers = max(len(i) for i in (altitudes, r0_500s, L0s, velocities, directions, alpha_mags))
+    if n_layers > 1:
+        L0s, velocities, directions, alpha_mags = (
+            broadcast(i, n_layers) for i in (L0s, velocities, directions, alpha_mags)
+        )
+    # Broadcast r0_500 separately, since combination of indiv layers' r0s is more complex:
+    if len(r0_500s) == 1:
+        r0_500s = [n_layers**(3./5) * r0_500s[0]] * n_layers
+    if any(len(i) != n_layers for i in (r0_500s, L0s, velocities, directions, alpha_mags)):
+        raise ValueError("r0_500, L0, velocity, direction, alpha_mag not broadcastable")
+
+    # r0_500_effective = (sum(r**(-5./3) for r in r0_500s))**(-3./5)
+
+    # Invert L0, with `L0 is None` interpretted as L0 = infinity => L0_inv = 0.0
+    L0_invs = [1./L if L is not None else 0.0 for L in L0s]
+
+    # decompose velocities
+    vxs, vys = zip(*[v*d.sincos() for v, d in zip(velocities, directions)])
+
+    if frozen:
+        layers = [
+            FrozenAtmosphericScreen(
+                screen_size, screen_scale, alt, time_step=time_step,
+                r0_500=r0_500, L0_inv=L0_inv, vx=vx, vy=vy, rng=rng)
+            for alt, r0_500, L0_inv, vx, vy in zip(altitudes, r0_500s, L0_invs, vxs, vys)]
+    else:
+        layers = [
+            ARAtmosphericScreen(
+                screen_size, screen_scale, alt, time_step=time_step,
+                r0_500=r0_500, L0_inv=L0_inv, vx=vx, vy=vy, rng=rng)
+            for alt, r0_500, L0_inv, vx, vy, amg
+            in zip(altitudes, r0_500s, L0_invs, vxs, vys, alpha_mags)]
+
+    return PhaseScreenList(layers)
