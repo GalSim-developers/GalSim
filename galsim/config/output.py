@@ -212,7 +212,7 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
 
     can_add_hdus = valid_output_types[output_type]['hdus']
     if can_add_hdus:
-        data = data + galsim.config.BuildExtraOutputHDUs(config,logger,len(data))
+        data = galsim.config.AddExtraOutputHDUs(data,config,logger)
 
     if 'retry_io' in output:
         ntries = galsim.config.ParseValue(output,'retry_io',config,int)[0]
@@ -227,7 +227,7 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('file %d: Wrote %s to file %r',file_num,output_type,file_name)
 
-    galsim.config.WriteExtraOutputs(config,logger)
+    galsim.config.WriteExtraOutputs(config,data,logger)
     t2 = time.time()
 
     return file_name, t2-t1

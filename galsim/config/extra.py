@@ -181,11 +181,12 @@ def ProcessExtraOutputsForImage(config, logger=None):
                 image_func(extra_obj, scratch, field, config, obj_nums, logger)
 
 
-def GetFinalExtraOutput(key, config, logger=None):
+def GetFinalExtraOutput(key, config, data, logger=None):
     """Get the finalized output object for the given extra output key
 
     @param key          The name of the output field in config['output']
     @param config       The configuration dict.
+    @param data         The main file data in case it is needed.
     @param logger       If given, a logger object to log progress. [default: None]
 
     @returns the final data to be output.
@@ -195,16 +196,17 @@ def GetFinalExtraOutput(key, config, logger=None):
     if final_func is not None:
         scratch = config['extra_scratch'][key]
         field = config['output'][key]
-        extra_obj = final_func(extra_obj, scratch, field, config, logger)
+        extra_obj = final_func(extra_obj, scratch, data, field, config, logger)
     return extra_obj
 
 
-def WriteExtraOutputs(config, logger=None):
+def WriteExtraOutputs(config, data, logger=None):
     """Write the extra output objects to files.
 
     This gets run at the end of the functions for building the regular output files.
 
     @param config       The configuration dict.
+    @param data         The main file data in case it is needed.
     @param logger       If given, a logger object to log progress. [default: None]
     """
     config['index_key'] = 'file_num'
@@ -263,7 +265,7 @@ def WriteExtraOutputs(config, logger=None):
                                 key,config['file_num'],file_name)
                 continue
 
-            extra_obj = GetFinalExtraOutput(key, config, logger)
+            extra_obj = GetFinalExtraOutput(key, config, data, logger)
 
             # If we have a method, we need to attach it to the extra_obj, since it might
             # be a proxy, in which case the method call won't work.
@@ -278,19 +280,21 @@ def WriteExtraOutputs(config, logger=None):
                 logger.debug('file %d: Wrote %s to %r',config['file_num'],key,file_name)
 
 
-def BuildExtraOutputHDUs(config, logger=None, first=1):
-    """Write the extra output objects to either HDUS or images as appropriate.
+def AddExtraOutputHDUs(data, config, logger=None):
+    """Write the extra output objects to either HDUS or images as appropriate and add them
+    to the existing data.
 
     This gets run at the end of the functions for building the regular output files.
 
     Note: the extra items must have hdu numbers ranging continuously (in any order) starting
-    at first.  Typically first = 1, since the main image is the primary HDU, numbered 0.
+    at len(data).  Typically first = 1, since the main image is the primary HDU, numbered 0.
 
     @param config       The configuration dict.
+    @param data         The main file data as a list of images.  Usually just [image] where
+                        image is the primary image to be written to the output file.
     @param logger       If given, a logger object to log progress. [default: None]
-    @param first        The first number allowed for the extra hdus. [default: 1]
 
-    @returns a list of HDUs and/or Images to put in the output FITS file.
+    @returns data with additional hdus added
     """
     config['index_key'] = 'file_num'
     if 'output' in config:
@@ -309,7 +313,7 @@ def BuildExtraOutputHDUs(config, logger=None, first=1):
             if hdu <= 0 or hdu in hdus.keys():
                 raise ValueError("%s hdu = %d is invalid or a duplicate."%hdu)
 
-            extra_obj = GetFinalExtraOutput(key, config, logger)
+            extra_obj = GetFinalExtraOutput(key, config, data, logger)
 
             # If we have a method, we need to attach it to the extra_obj, since it might
             # be a proxy, in which case the method call won't work.
@@ -319,14 +323,15 @@ def BuildExtraOutputHDUs(config, logger=None, first=1):
             else:
                 hdus[hdu] = hdu_func(extra_obj)
 
+        first = len(data)
         for h in range(first,len(hdus)+first):
             if h not in hdus.keys():
                 raise ValueError("Cannot skip hdus.  Not output found for hdu %d"%h)
         # Turn hdus into a list (in order)
         hdulist = [ hdus[k] for k in range(first,len(hdus)+first) ]
-        return hdulist
+        return data + hdulist
     else:
-        return []
+        return data
 
 valid_extra_outputs = {}
 
@@ -354,7 +359,8 @@ def RegisterExtraOutput(key, init_func=None, kwargs_func=None, setup_func=None, 
                             the final object to be written. [default: None, which means the
                             init_func already created the correct object, so just use that.]
                             The call signature is 
-                                output_obj = Finalize(output_obj, scratch, config, base, logger)
+                                output_obj = Finalize(output_obj, scratch, data, config, base,
+                                                      logger)
     @param write_func       A function to call to write the output file
                             The call signature is 
                                 WriteFile(output_obj, file_name)

@@ -71,7 +71,7 @@ def ProcessTruthStamp(truth_cat, scratch, config, base, obj_num, logger=None):
     scratch[obj_num] = row
 
 # The function to call at the end of building each file to finalize the truth catalog
-def FinalizeTruth(truth_cat, scratch, config, base, logger=None):
+def FinalizeTruth(truth_cat, scratch, data, config, base, logger=None):
     # Add all the rows in order to the OutputCatalog
     obj_nums = sorted(scratch.keys())
     for obj_num in obj_nums:
