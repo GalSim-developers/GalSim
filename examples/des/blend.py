@@ -19,6 +19,7 @@
 # This file defines a few custom types related to making stamps of blended galaxies.
 
 import galsim
+import galsim.des
 import os
 import math
 import numpy
