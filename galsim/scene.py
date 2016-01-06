@@ -244,16 +244,24 @@ class COSMOSCatalog(object):
 
         if exclusion_level == 'bad_fits' or exclusion_level == 'marginal':
             # This 'exclusion_level' involves eliminating failed parametric fits (bad fit status
-            # flags).
+            # flags).  In this case we only get rid of those with failed bulge+disk AND failed
+            # Sersic fits, so there is no viable parametric model for the galaxy.
             sersicfit_status = self.param_cat['fit_status'][:,4]
             bulgefit_status = self.param_cat['fit_status'][:,0]
-            mask &= ( (sersicfit_status > 0) &
-                      (sersicfit_status < 5) &
-                      (bulgefit_status > 0) &
-                      (bulgefit_status < 5) )
+            mask &= ( ((sersicfit_status > 0) &
+                      (sersicfit_status < 5)) |
+                      ((bulgefit_status > 0) &
+                      (bulgefit_status < 5)) )
 
         if exclusion_level == 'marginal':
-            # We have already placed some cuts (above) in this case, but we'll do some more.
+            # We have already placed some cuts (above) in this case, but we'll do some more.  For
+            # example, a failed bulge+disk fit often indicates difficulty in fit convergence due to
+            # noisy surface brightness profiles, so we might want to toss out those that have a
+            # failure in EITHER fit.
+            mask &= ( ((sersicfit_status > 0) &
+                      (sersicfit_status < 5)) &
+                      ((bulgefit_status > 0) &
+                      (bulgefit_status < 5)) )
         
             # Some fit parameters can indicate a likely sky subtraction error
             hlr = self.param_cat['sersicfit'][:,1]
