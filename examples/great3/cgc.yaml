@@ -2,6 +2,8 @@
 # Note: This configuration will not produce images _identical_ to the ones used for Great3, 
 # since the order of random number generation is different.  However, it is intended to
 # produce an _equivalent_ simulation as the one produced for Great3.
+modules:
+    - great3_reject
 
 psf:
     type: Convolve
@@ -131,6 +133,10 @@ stamp:
     # on the galaxy parameters but the PSF as well, since the cut is imposed on the PSF-convolved
     # object.
     min_flux_frac = 0.99
+
+    # Also use a custom module to apply other GREAT3 cuts: SNR and resolution.
+    reject:
+        type: Great3Reject
 
 image:
     type: Tiled
