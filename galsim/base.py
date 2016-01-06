@@ -2333,7 +2333,7 @@ class DeVaucouleurs(GSObject):
     A DeVaucouleurs can be initialized using one (and only one) of two possible size parameters:
     `scale_radius` or `half_light_radius`.  Exactly one of these two is required.
 
-    @param scale_radius     The value of sigma of the profile.  Typically given in arcsec.
+    @param scale_radius     The value of scale radius of the profile.  Typically given in arcsec.
                             [One of `scale_radius` or `half_light_radius` is required.]
     @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
                             [One of `scale_radius` or `half_light_radius` is required.]

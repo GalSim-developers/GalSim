@@ -647,7 +647,7 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
     @param except_abort     Whether an exception should abort the rest of the processing.
                             [default: True]
 
-    @returns results = a list of the outputs from job_func for each job
+    @returns a list of the outputs from job_func for each job
     """
     import time
 
