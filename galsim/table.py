@@ -480,6 +480,20 @@ class LookupTable2D(object):
             ix += nxtmp
         return out
 
+    def __eq__(self, other):
+        import numpy as np
+        return (isinstance(other, LookupTable2D) and
+                self.xmin == other.xmin and
+                self.xmax == other.xmax and
+                self.ymin == other.ymin and
+                self.ymax == other.ymax and
+                self.edge_mode == other.edge_mode and
+                np.array_equal(self.f, other.f) and
+                self.interpolant == other.interpolant)
+
+    def __ne__(self, other):
+        return not self == other
+
 
 def _lohi(i, x0, dx):
     return x0 + i * dx, x0 + (i+1) * dx

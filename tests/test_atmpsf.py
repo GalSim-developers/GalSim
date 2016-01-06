@@ -17,7 +17,6 @@
 #
 import numpy as np
 from galsim_test_helpers import funcname
-import copy
 
 try:
     import galsim
@@ -36,24 +35,39 @@ def test_phase_screen_list():
     import time
     t1 = time.time()
     rng = galsim.BaseDeviate(1234)
+    rng2 = galsim.BaseDeviate(123)
+
+    ar1 = galsim.ARAtmosphericScreen(10, 1, rng=rng)
+    ar2 = galsim.ARAtmosphericScreen(10, 1, rng=rng)
+    assert ar1 == ar2
+    ar2 = galsim.ARAtmosphericScreen(10, 1, rng=rng2)
+    assert ar1 != ar2
 
     atm = galsim.Atmosphere(altitude=[0.0, 1.0],
                             velocity=[1.0, 2.0],
                             direction=[0.0*galsim.degrees, 120*galsim.degrees],
                             r0_500=0.15,
                             rng=rng)
+    atm.append(ar1)  # Mix of ARAtmosphericScreen and FrozenAtmosphericScreen this way
 
-    # test append, extend, __getitem__, __setitem__, __delitem__
-    atm2 = galsim.PhaseScreenList([atm[0]])
-    atm2.append(atm[1])
+    # testing append, extend, __getitem__, __setitem__, __delitem__, __eq__, __ne__
+    atm2 = galsim.PhaseScreenList(atm[:-1])
+    assert atm != atm2
+    atm2.append(ar2)
+    assert atm != atm2
+    del atm2[-1]
+    atm2.append(atm[-1])
+    assert atm == atm2
 
     atm3 = galsim.PhaseScreenList([])
     atm3.extend(atm2)
     atm3[1] = atm2[1]
+    assert atm == atm2
 
     atm4 = galsim.PhaseScreenList(atm3)
-    del atm4[1]
-    atm4.append(atm[1])
+    del atm4[-1]
+    atm4.append(atm[-1])
+    assert atm == atm4
 
     pd = atm.path_difference(20, 0.01)
     pd2 = atm2.path_difference(20, 0.01)
@@ -65,6 +79,7 @@ def test_phase_screen_list():
     np.testing.assert_array_equal(pd, pd4, "PhaseScreenLists are inconsistent")
 
     # Check some actual derived PSFs too, not just phase screens.
+    atm.reset()
     psf = atm.getPSF(exptime=0.06, diam=4.0)
 
     # Need to reset atm2 since both atm and atm2 reference the same layer objects (not copies).

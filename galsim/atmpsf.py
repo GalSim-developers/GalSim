@@ -196,10 +196,24 @@ class FrozenAtmosphericScreen(AtmosphericScreen):
         return "galsim.FrozenAtmosphericScreen(altitude=%s)" % self.altitude
 
     def __repr__(self):
-        return ("galsim.FrozenAtmosphericScreen(%r, %r, altitude=%r, time_step=%r, " +
-                "r0_500=%r, L0_inv=%r, vx=%r, vy=%r)" % (
-                    self.screen_size, self.screen_scale, self.altitude, self.time_step,
-                    self.r0_500, self.L0_inv, self.vx, self.vy))
+        outstr = ("galsim.FrozenAtmosphericScreen(%r, %r, altitude=%r, time_step=%r, " +
+                  "r0_500=%r, L0_inv=%r, vx=%r, vy=%r, rng=%r)")
+        return outstr % (self.screen_size, self.screen_scale, self.altitude, self.time_step,
+                         self.r0_500, self.L0_inv, self.vx, self.vy, self.rng)
+
+    def __eq__(self, other):
+        return (self.screen_size == other.screen_size and
+                self.screen_scale == other.screen_scale and
+                self.altitude == other.altitude and
+                self.r0_500 == other.r0_500 and
+                self.L0_inv == other.L0_inv and
+                self.vx == other.vx and
+                self.vy == other.vy and
+                self.tab2d == other.tab2d and
+                np.array_equal(self.origin, other.origin))
+
+    def __ne__(self, other):
+        return not self == other
 
     def advance(self):
         # If wind blows right, then origin moves left, so use minus sign.
@@ -259,10 +273,24 @@ class ARAtmosphericScreen(AtmosphericScreen):
         return "galsim.ARAtmosphericScreen(altitude=%s)" % self.altitude
 
     def __repr__(self):
-        return ("galsim.ARAtmosphericScreen(%r, %r, altitude=%r, time_step=%r, " +
-                "r0_500=%r, L0_inv=%r, vx=%r, vy=%r, alpha_mag=%r, rng=%r)" % (
-                    self.screen_size, self.screen_scale, self.altitude, self.time_step,
-                    self.r0_500, self.L0_inv, self.vx, self.vy, self.alpha_mag, self.rng))
+        outstr = ("galsim.ARAtmosphericScreen(%r, %r, altitude=%r, time_step=%r, " +
+                  "r0_500=%r, L0_inv=%r, vx=%r, vy=%r, alpha_mag=%r, rng=%r)")
+        return outstr % (self.screen_size, self.screen_scale, self.altitude, self.time_step,
+                         self.r0_500, self.L0_inv, self.vx, self.vy, self.alpha_mag, self.rng)
+
+    def __eq__(self, other):
+        return (self.screen_size == other.screen_size and
+                self.screen_scale == other.screen_scale and
+                self.altitude == other.altitude and
+                self.r0_500 == other.r0_500 and
+                self.L0_inv == other.L0_inv and
+                self.vx == other.vx and
+                self.vy == other.vy and
+                self.alpha_mag == other.alpha_mag and
+                self.rng == other.rng)
+
+    def __ne__(self, other):
+        return not self == other
 
     def advance(self):
         # For ARAtmosphericScreen, since we use Fourier methods to update the screen each step
@@ -326,6 +354,13 @@ class PhaseScreenList(object):
     def __repr__(self):
         return "galsim.PhaseScreenList(%r)" % self._layers
 
+    def __eq__(self, other):
+        return (len(self) == len(other) and
+                all(sl == ol for sl, ol in zip(self._layers, other._layers)))
+
+    def __ne__(self, other):
+        return not self == other
+
     def _update_attrs(self):
         # Update object attributes for current set of layers.  Currently the only attribute is
         # self.time_step.
@@ -375,7 +410,7 @@ class PhaseScreenList(object):
 
 
 class PhaseScreenPSF(GSObject):
-    def __init__(self, screen_set, lam=500., exptime=0.0, flux=1.0,
+    def __init__(self, screen_list, lam=500., exptime=0.0, flux=1.0,
                  theta_x=0.0*galsim.arcmin, theta_y=0.0*galsim.arcmin,
                  scale_unit=galsim.arcsec, interpolant=None,
                  diam=8.4, obscuration=0.6,
@@ -383,7 +418,7 @@ class PhaseScreenPSF(GSObject):
                  _pupil_size=None, _pupil_scale=None,
                  gsparams=None, _eval_now=True, _bar=None):
 
-        self.screen_set = screen_set
+        self.screen_list = screen_list
         self.lam = lam
         self.exptime = exptime
         self.theta_x = theta_x
@@ -402,7 +437,7 @@ class PhaseScreenPSF(GSObject):
             # Kolmogorov screens uses exponents -5./3 and -3./5, which is just slightly different.
             # Since most of the layers in a PhaseScreenList are will likely be Kolmogorov screens,
             # we'll use that relation.
-            _pupil_scale = (sum(layer.pupil_scale(lam)**(-5./3) for layer in screen_set))**(-3./5)
+            _pupil_scale = (sum(layer.pupil_scale(lam)**(-5./3) for layer in screen_list))**(-3./5)
             _pupil_scale /= oversampling
         self._pupil_scale = _pupil_scale
         if _pupil_size is None:
@@ -415,7 +450,7 @@ class PhaseScreenPSF(GSObject):
         self.aper = generate_pupil(self._nu, self._pupil_size, self.diam, self.obscuration)
         self.img = np.zeros_like(self.aper, dtype=np.float64)
 
-        self._nstep = int(np.ceil(self.exptime/self.screen_set.time_step))
+        self._nstep = int(np.ceil(self.exptime/self.screen_list.time_step))
         # Generate at least one time sample
         if self._nstep == 0:
             self._nstep = 1
@@ -423,26 +458,42 @@ class PhaseScreenPSF(GSObject):
         if _eval_now:
             for i in xrange(self._nstep):
                 self._step()
-                self.screen_set.advance()
+                self.screen_list.advance()
                 if _bar is not None:
                     _bar.update()
             self._finalize(flux, gsparams)
 
     def __str__(self):
         return ("galsim.PhaseScreenPSF(%s, lam=%s, exptime=%s)" %
-                (self.screen_set, self.lam, self.exptime))
+                (self.screen_list, self.lam, self.exptime))
 
     def __repr__(self):
-        return ("galsim.PhaseScreenPSF(%r, lam=%r, exptime=%r, flux=%r, theta_x=%r, " +
-                "theta_y=%r, scale_unit=%r, interpolant=%r, diam=%r, obscuration=%r, " +
-                "pad_factor=%r, oversampling=%r, gsparam=%r)" % (
-                    self.screen_set, self.lam, self.exptime, self.flux, self.theta_x, self.theta_y,
-                    self.scale_unit, self.interpolant, self.diam, self.obscuration, self.pad_factor,
-                    self.oversampling, self.gsparams))
+        outstr = ("galsim.PhaseScreenPSF(%r, lam=%r, exptime=%r, flux=%r, theta_x=%r, " +
+                  "theta_y=%r, scale_unit=%r, interpolant=%r, diam=%r, obscuration=%r, " +
+                  "pad_factor=%r, oversampling=%r, gsparam=%r)")
+        return outstr % (self.screen_list, self.lam, self.exptime, self.flux, self.theta_x,
+                         self.theta_y, self.scale_unit, self.interpolant, self.diam,
+                         self.obscuration, self.pad_factor, self.oversampling, self.gsparams)
+
+    def __eq__(self, other):
+        return (self.screen_list == other.screen_list and
+                self.lam == other.lam and
+                self.exptime == other.exptime and
+                self.theta_x == other.theta_x and
+                self.theta_y == other.theta_y and
+                self.scale_unit == other.scale_unit and
+                self.interpolant == other.interpolant and
+                self.diam == other.diam and
+                self.obscuration == other.obscuration and
+                self._pupil_scale == other._pupil_scale and
+                self._pupil_size == other.pupil_size)
+
+    def __ne__(self, other):
+        return not self == other
 
     def _step(self):
-        path_difference = self.screen_set.path_difference(self._nu, self._pupil_scale,
-                                                          self.theta_x, self.theta_y)
+        path_difference = self.screen_list.path_difference(self._nu, self._pupil_scale,
+                                                           self.theta_x, self.theta_y)
         wf = self.aper * np.exp(2j * np.pi * path_difference / self.lam)
         ftwf = np.fft.ifft2(np.fft.ifftshift(wf))
         self.img += np.abs(ftwf)**2
