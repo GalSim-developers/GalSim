@@ -38,6 +38,14 @@ psf:
     # Use a PSFEx PSF as measured from DES SV data.
     type: DES_PSFEx
 
+    # The image_pos doesn't matter much for the MEDS output, but it is used to get the
+    # right PSF from the PSFEx file.
+    image_pos :
+        type : XY
+        x : { type : Random, min: 1, max: 2048 }
+        y : { type : Random, min: 1, max: 4096 }
+
+
 gal:
     # Choose random real galaxies from the COSMOS catalog.
     type: COSMOSGalaxy
@@ -89,8 +97,6 @@ stamp:
 
 
 image:
-    size: 64
-
     pixel_scale : 0.26
 
     random_seed: 8675309
@@ -101,12 +107,6 @@ image:
         sky_level: 800
         whiten: True
 
-    # The image_pos doesn't matter much for the MEDS output, but it is used to get the
-    # right PSF from the PSFEx file.
-    image_pos :
-        type : XY
-        x : { type : Random, min: 1, max: 2048 }
-        y : { type : Random, min: 1, max: 4096 }
 
 input:
     cosmos_catalog :
@@ -131,25 +131,68 @@ input:
                 max : 62
                 exclude: [ 61, 31 ]
 
+
+# We have two separate runs, one writing to a MEDS file and the other writing a Tiled image.
+# These have different output fields, defined in the two sections below.  We also put the
+# parts of the iamge field that differ there as well.
+
+---
+
+# The first output file is a MEDS file, as would be made from DES data.
+
+image:
+    size: 64
+
+
 output:
     type: MEDS
     nobjects: 100
     nstamps_per_object: 1
 
-    dir: output_yaml
+    nfiles: 1
+
+    dir: output
     file_name:
         type: FormattedStr
         format: "blendset-v001-%03d.fits"
         items:
         - { type: Sequence, nitems: '@output.nfiles' }
 
-    nfiles: 1
-
     # Need a different specification of the deblend output to get it to write a MEDS file.
     deblend_meds:
         file_name:
             type: FormattedStr
             format: "blendset-deblend-v001-%03d.fits"
+            items:
+            - { type: Sequence, nitems: '@output.nfiles' }
+
+---
+
+# The second output file is a tiled image, just to make it easier to view the stamps in ds9.
+
+image:
+    type: Tiled
+    stamp_size : 64
+    nx_tiles : 10
+    ny_tiles : 10
+
+output:
+    type: Fits
+
+    nfiles: 1
+
+    dir: output
+    file_name:
+        type: FormattedStr
+        format: "blendset-tiled-v001-%03d.fits"
+        items:
+        - { type: Sequence, nitems: '@output.nfiles' }
+
+    # This is the same output specification we used in blend.yaml.
+    deblend:
+        file_name:
+            type: FormattedStr
+            format: "blendset-tiled-deblend-v001-%03d.fits"
             items:
             - { type: Sequence, nitems: '@output.nfiles' }
 

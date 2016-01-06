@@ -238,7 +238,7 @@ output:
     nobjects: 10000  # nobj per file
     nstamps_per_object: 1  # For now, single epoch sim.
 
-    dir: output_yaml
+    dir: output
     file_name:
         type: FormattedStr
         format: "sim-v001-%03d.fits"

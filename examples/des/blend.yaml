@@ -104,7 +104,7 @@ image:
 output:
     type: Fits
 
-    dir: output_yaml
+    dir: output
     file_name: "blend.fits"
 
     deblend:
