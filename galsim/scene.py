@@ -357,6 +357,13 @@ class COSMOSCatalog(object):
             size_factor = 0.6
             gal_list = [ gal.dilate(size_factor) * flux_factor for gal in gal_list ]
 
+        # Store the orig_index as gal.index regardless of whether we have a RealGalaxy or not.
+        # It gets set by _makeReal, but not by _makeParametric.
+        # And if we are doing the deep scaling, then it gets messed up by that.
+        # So just put it in here at the end to be sure.
+        for gal, index in zip(gal_list, indices):
+            gal.index = self.orig_index[index]
+
         if hasattr(index, '__iter__'):
             return gal_list
         else:
@@ -610,8 +617,6 @@ class COSMOSCatalog(object):
             real_params = cosmos_catalog.getRealParams(index)
             gal = galsim.RealGalaxy(real_params, noise_pad_size=noise_pad_size, rng=rng,
                                     gsparams=gsparams)
-            # Store the orig_index as gal.index, since the above just sets it as 0.
-            gal.index = cosmos_catalog.getOrigIndex(index)
         else:
             record = cosmos_catalog.getParametricRecord(index)
             gal = COSMOSCatalog._buildParametric(record, sersic_prec, gsparams, chromatic=False)
@@ -624,6 +629,11 @@ class COSMOSCatalog(object):
             flux_factor = 10.**(-0.4*1.5)
             size_factor = 0.6
             gal = gal.dilate(size_factor) * flux_factor
+
+        # Store the orig_index as gal.index, since the above RealGalaxy initialization
+        # just sets it as 0.  Plus, it isn't set at all if we make a parametric galaxy.
+        # And if we are doing the deep scaling, then it gets messed up by that
+        gal.index = cosmos_catalog.getOrigIndex(index)
 
         return gal
 
