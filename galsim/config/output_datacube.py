@@ -21,7 +21,7 @@ import galsim
 import logging
 
 
-def BuildDataCube(file_name, config, nproc=1, logger=None, 
+def BuildDataCube(file_name, config, logger=None, 
                   file_num=0, image_num=0, obj_num=0,
                   psf_file_name=None, weight_file_name=None, badpix_file_name=None):
     """
@@ -29,7 +29,6 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     
     @param file_name        The name of the output file.
     @param config           A configuration dict.
-    @param nproc            How many processes to use. [default: 1]
     @param logger           If given, a logger object to log progress. [default: None]
     @param file_num         If given, the current file_num. [default: 0]
     @param image_num        If given, the current image_num. [default: 0]
@@ -94,18 +93,8 @@ def BuildDataCube(file_name, config, nproc=1, logger=None,
     badpix_images = [ all_images[3] ]
 
     if nimages > 1:
-        if nproc > nimages-1:
-            # Only warn if nproc was specifically set, not if it is -1.
-            if (logger and
-                not ('nproc' in config['output'] and
-                     galsim.config.ParseValue(config['output'],'nproc',config,int)[0] == -1)):
-                logger.warn(
-                    "Trying to use more processes than (nimages-1): output.nproc=%d, "%nproc +
-                    "nimages=%d.  Reducing nproc to %d."%(nimages,nimages-1))
-            nproc = nimages-1
-
         all_images = galsim.config.BuildImages(
-            nimages-1, config=config, nproc=nproc, logger=logger,
+            nimages-1, config=config, logger=logger,
             image_num=image_num+1, obj_num=obj_num,
             make_psf_image=make_psf_image,
             make_weight_image=make_weight_image,

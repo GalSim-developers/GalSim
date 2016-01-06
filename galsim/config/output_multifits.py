@@ -21,7 +21,7 @@ import galsim
 import logging
 
 
-def BuildMultiFits(file_name, config, nproc=1, logger=None,
+def BuildMultiFits(file_name, config, logger=None,
                    file_num=0, image_num=0, obj_num=0,
                    psf_file_name=None, weight_file_name=None, badpix_file_name=None):
     """
@@ -29,7 +29,6 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
     
     @param file_name        The name of the output file.
     @param config           A configuration dict.
-    @param nproc            How many processes to use. [default: 1]
     @param logger           If given, a logger object to log progress. [default: None]
     @param file_num         If given, the current file_num. [default: 0]
     @param image_num        If given, the current image_num. [default: 0]
@@ -65,18 +64,8 @@ def BuildMultiFits(file_name, config, nproc=1, logger=None,
     else:
         make_badpix_image = False
 
-    if nproc > nimages:
-        # Only warn if nproc was specifically set, not if it is -1.
-        if (logger and
-            not ('nproc' in config['output'] and 
-                 galsim.config.ParseValue(config['output'],'nproc',config,int)[0] == -1)):
-            logger.warn(
-                "Trying to use more processes than images: output.nproc=%d, "%nproc +
-                "nimages=%d.  Reducing nproc to %d."%(nimages,nimages))
-        nproc = nimages
-
     all_images = galsim.config.BuildImages(
-        nimages, config=config, nproc=nproc, logger=logger,
+        nimages, config=config, logger=logger,
         image_num=image_num, obj_num=obj_num,
         make_psf_image=make_psf_image, 
         make_weight_image=make_weight_image,
