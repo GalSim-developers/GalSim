@@ -215,8 +215,8 @@ def test_frozen_AR_screen():
 
 
 if __name__ == "__main__":
-    # test_phase_screen_list()
-    # test_frozen_flow()
-    # test_phase_psf_reset()
-    # test_phase_psf_batch()
+    test_phase_screen_list()
+    test_frozen_flow()
+    test_phase_psf_reset()
+    test_phase_psf_batch()
     test_frozen_AR_screen()

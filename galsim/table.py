@@ -448,7 +448,7 @@ class LookupTable2D(object):
 
     def _eval_grid_wrap(self, xmin, xmax, nx, ymin, ymax, ny, dtype=None):
         # implement edge wrapping by repeatedly identifying grid cells that map back onto
-        # the "unwrapped" input coordinates.
+        # the "fundamental" input cell coordinates.
         import numpy as np
         out = np.empty((ny, nx), dtype=np.float64)
         # Output grid spacing
@@ -462,7 +462,7 @@ class LookupTable2D(object):
         while xlo < xmax:
             # find output x range within current wrap #
             xmaxtmp = min([((xhi - xmin) // dx) * dx + xmin, xmax])
-            xmintmp = max([((xlo - xmin) // dx + 1) * dx + xmin, xmin])
+            xmintmp = max([_ceildiv(xlo - xmin, dx) * dx + xmin, xmin])
             nxtmp = int(round((xmaxtmp - xmintmp) / dx)) + 1
 
             # find wrap # that extends just below ymin
@@ -472,13 +472,14 @@ class LookupTable2D(object):
             while ylo < ymax:
                 # find output y range within current wrap #
                 ymaxtmp = min([((yhi - ymin) // dy) * dy + ymin, ymax])
-                ymintmp = max([((ylo - ymin) // dy + 1) * dy + ymin, ymin])
+                ymintmp = max([_ceildiv(ylo - ymin, dy) * dy + ymin, ymin])
                 nytmp = int(round((ymaxtmp - ymintmp) / dy)) + 1
 
                 # _eval_grid with appropriately unwrapped coordinates
                 out[iy:iy+nytmp, ix:ix+nxtmp] = self._eval_grid(
                     xmintmp - i * self.xrepeat, xmaxtmp - i * self.xrepeat, nxtmp,
-                    ymintmp - j * self.yrepeat, ymaxtmp - j * self.yrepeat, nytmp, dtype=dtype)
+                    ymintmp - j * self.yrepeat, ymaxtmp - j * self.yrepeat, nytmp,
+                    dtype=dtype)
 
                 # prepare for next wrap #
                 j += 1
@@ -506,3 +507,7 @@ class LookupTable2D(object):
 
 def _lohi(i, x0, dx):
     return x0 + i * dx, x0 + (i+1) * dx
+
+
+def _ceildiv(a, b):
+    return -(-a // b)

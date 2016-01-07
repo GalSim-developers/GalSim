@@ -346,7 +346,6 @@ class FrozenAtmosphericScreen(AtmosphericScreen):
         ymin = self.origin[1] + 1000*self.altitude*theta_y.tan() - 0.5*scale*(nx-1)
         # ymin = self.origin[1] + 1000*self.altitude*theta_y.tan() - 0.5*scale*nx
         ymax = ymin + scale*(nx-1)
-        import ipdb; ipdb.set_trace()
         return self.tab2d.eval_grid(xmin, xmax, nx, ymin, ymax, nx)
 
     def reset(self):
