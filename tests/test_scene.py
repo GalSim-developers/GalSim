@@ -48,7 +48,7 @@ def test_cosmos_basic():
     # Check for reasonable exceptions when initializing.
     try:
         # Can't find data (wrong directory).
-        np.testing.assert_raises(RuntimeError, galsim.COSMOSCatalog,
+        np.testing.assert_raises(IOError, galsim.COSMOSCatalog,
                                  file_name='real_galaxy_catalog_example.fits')
     except ImportError:
         print 'The assert_raises tests require nose'

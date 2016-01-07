@@ -772,15 +772,15 @@ def _parse_files_dirs(file_name, image_dir, dir, noise_dir):
         else:
             full_image_dir = os.path.join(dir,image_dir)
     if not os.path.isfile(full_file_name):
-        raise RuntimeError(full_file_name+' not found.')
+        raise IOError(full_file_name+' not found.')
     if not os.path.isdir(full_image_dir):
-        raise RuntimeError(full_image_dir+' directory does not exist!')
+        raise IOError(full_image_dir+' directory does not exist!')
 
     if noise_dir is None:
         full_noise_dir = full_image_dir
     else:
         if not os.path.isdir(noise_dir):
-            raise RuntimeError(noise_dir+' directory does not exist!')
+            raise IOError(noise_dir+' directory does not exist!')
         full_noise_dir = noise_dir
 
     return full_file_name, full_image_dir, full_noise_dir
