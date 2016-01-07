@@ -219,12 +219,16 @@ class COSMOSCatalog(object):
                         'real_galaxy_galsim_selection.fits', image_dir, dir, noise_dir)
                     self.selection_cat = pyfits.getdata(selection_file_name)
                 except:
-                    raise RuntimeError(
-                        'File with GalSim selection criteria not found!'+
-                        'Run the program galsim_download_cosmos to download catalog '+
-                        'and accompanying image and selection files.'+
-                        'Or directly download the selection file from '+
-                        '  http://great3.jb.man.ac.uk/leaderboard/data/public/real_galaxy_galsim_selection.fits.gz'+
+                    self.selection_cat = None
+                    import warnings
+                    warnings.warn(
+                    #raise RuntimeError(
+                        'File with GalSim selection criteria not found!\n'+
+                        'Not all of the requested exclusions will be performed.\n'+
+                        'Run the program galsim_download_cosmos to download catalog\n '+
+                        'and accompanying image and selection files.\n'+
+                        'Or directly download the selection file from\n '+
+                        '  http://great3.jb.man.ac.uk/leaderboard/data/public/real_galaxy_galsim_selection.fits.gz\n'+
                         'and put it with the catalog and image files.')
 
         # NB. The pyfits FITS_Rec class has a bug where it makes a copy of the full
@@ -252,12 +256,13 @@ class COSMOSCatalog(object):
             # for self.selection_cat['peak_image_pixel_count'].  To make sure we don't divide by
             # zero (generating a RuntimeWarning), and still eliminate those, we will first set that
             # column to 1.e-5.
-            div_val = self.selection_cat['peak_image_pixel_count']
-            div_val[div_val == 0.] = 1.e-5
-            mask &= ( (self.selection_cat['sn_ellip_gauss'] >= 20.0) &
-                      ((self.selection_cat['min_mask_dist_pixels'] > 11.0) |
-                      (self.selection_cat['average_mask_adjacent_pixel_count'] / \
-                           div_val < 0.2)) )
+            if self.selection_cat is not None:
+                div_val = self.selection_cat['peak_image_pixel_count']
+                div_val[div_val == 0.] = 1.e-5
+                mask &= ( (self.selection_cat['sn_ellip_gauss'] >= 20.0) &
+                          ((self.selection_cat['min_mask_dist_pixels'] > 11.0) |
+                           (self.selection_cat['average_mask_adjacent_pixel_count'] / \
+                               div_val < 0.2)) )
 
         if exclusion_level == 'bad_fits' or exclusion_level == 'marginal':
             # This 'exclusion_level' involves eliminating failed parametric fits (bad fit status
@@ -287,7 +292,8 @@ class COSMOSCatalog(object):
 
             # Major flux differences in the parametric model vs. the COSMOS catalog can indicate fit
             # issues, deblending problems, etc.
-            mask &= ( np.abs(self.selection_cat['dmag']) < 0.8)
+            if self.selection_cat is not None:
+                mask &= ( np.abs(self.selection_cat['dmag']) < 0.8)
 
         if min_hlr > 0. or max_hlr > 0. or min_flux > 0. or max_flux > 0.:
             sparams = self.param_cat['sersicfit']
