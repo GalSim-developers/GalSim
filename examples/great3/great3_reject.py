@@ -26,10 +26,9 @@ import numpy as np
 def Great3Reject(config, base, value_type):
     """See if a drawn postage stamp should be rejected based on Great3 cuts.
     """
-    stamp = base['current_stamp']
-    im = config['current_image']
-    gal = base['gal']['current_val']
-    psf = base['psf']['current_val']
+    # Note: this is the pre-noise rendering of the object
+    im = base['current_stamp']
+    psf = galsim.config.GetCurrentValue('psf',base)
 
     reject = False
 
@@ -45,7 +44,7 @@ def Great3Reject(config, base, value_type):
     # We will define resolution using the resolution factor from re-Gaussianization, which uses a
     # trace-based size estimate of the post-seeing object.  For simplicity, we run
     # re-Gaussianization directly.
-    res = galsim.hsm.EstimateShearHSM(im, psf_image, strict='False')
+    res = galsim.hsm.EstimateShear(im, psf_image, strict='False')
     # Cut based on the resolution failure, or if the measurement simply failed.
     if res.error_message != "" or res.resolution_factor < 1./3:
         reject = True
@@ -62,14 +61,16 @@ def Great3Reject(config, base, value_type):
     # First get the sum of pixel values squared:
     sumsq = np.sum(im.array**2)
     # Get the noise variance for this stamp:
-    var = galsim.config.noise.NoiseVarGaussian(config, base)
+    var = galsim.config.CalculateNoiseVar(base)
     snr = np.sqrt(sumsq / var)
     # We nominally used a cut at SNR=17 (in an attempt to compensate for the SNR estimator being
     # overly optimistic) and also eliminated SNR>100.
     if snr < 17. or snr > 100.:
         reject = True
 
-    return reject
+    # False here is a "safe" parameter, which tells GalSim not to cache this result to use again
+    # for the next object.
+    return reject, False
 
 
 galsim.config.RegisterValueType('Great3Reject', Great3Reject, [ bool ])

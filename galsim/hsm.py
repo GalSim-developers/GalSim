@@ -110,7 +110,7 @@ class ShapeData(object):
 
     - corrected_shape_err: shape measurement uncertainty sigma_gamma per component.  The estimate of
       the uncertainty will only be non-zero if an estimate of the sky variance was passed to
-      EstimateShearHSM().
+      EstimateShear().
 
     - correction_method: a string indicating the method of PSF correction (will be "None" if
       PSF-correction was not carried out).
