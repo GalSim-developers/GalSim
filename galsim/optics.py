@@ -229,7 +229,6 @@ class OpticalPSF(GSObject):
         "scale_unit" : str }
     _single_params = [ { "lam_over_diam" : float , "lam" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, lam_over_diam=None, lam=None, diam=None, defocus=0., astig1=0., astig2=0.,
                  coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0., aberrations=None,

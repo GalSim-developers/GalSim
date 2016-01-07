@@ -15,10 +15,21 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-from .process import *
-from .image import *
-from .stamp import *
-from .noise import *
-from .wcs import *
-from .gsobject import *
-from .value import *
+import galsim
+
+def _GenerateFromFitsHeader(config, base, value_type):
+    """@brief Return a value read from a FITS header
+    """
+    header = galsim.config.GetInputObj('fits_header', config, base, 'FitsHeader')
+
+    req = { 'key' : str }
+    opt = { 'num' : int }
+    kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
+    key = kwargs['key']
+
+    val = header.get(key)
+
+    #print base['file_num'],'Header: key = %s, val = %s'%(key,val)
+    return val, safe
+
+

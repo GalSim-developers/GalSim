@@ -33,6 +33,13 @@
 #include <cassert>
 #include <stdexcept>
 
+#ifdef _WIN32
+#include <Windows.h>
+#else
+#include <sys/time.h>
+#endif
+
+
 // A nice memory checker if you need to track down some memory problem.
 #ifdef MEM_TEST
 #include "mmgr.h"
@@ -100,6 +107,85 @@ public:
     ~FormatAndThrow() { throw E(oss.str()); }
 private:
     std::ostringstream oss;
+};
+
+/*
+ *  A simple timer class to see how long a piece of code takes. 
+ *  Usage:
+ *
+ *  {
+ *      static Timer timer("name");
+ *
+ *      ...
+ *
+ *      timer.start()
+ *      [ The code you want timed ]
+ *      timer.stop()
+ *
+ *      ...
+ *  }
+ *
+ *  At the end of execution, you will get output:
+ *
+ *  Time for name: xxx seconds
+ */
+class Timer
+{
+public:
+    Timer(std::string name, bool start_running=false) : _name(name), _accum(0), _running(false) 
+    {
+        if (start_running) start();
+    }
+    ~Timer() { stop(); report(); }
+
+    void start() {
+        if (!_running) {
+            _start_time = GetTimeMicroseconds();
+            _running = true;
+        }
+    }
+    void stop() {
+        if (_running) {
+            unsigned long long stop_time = GetTimeMicroseconds();
+            _accum += stop_time - _start_time;
+            _running = false;
+        }
+    }
+    void report() { std::cout<<"Time for "<<_name<<": " << _accum / 1.e6 << " seconds\n"; }
+private:
+    // cf. http://stackoverflow.com/questions/1861294/how-to-calculate-execution-time-of-a-code-snippet-in-c
+    unsigned long long GetTimeMicroseconds()
+    {
+#ifdef _WIN32
+        /* Windows */
+        FILETIME ft;
+        LARGE_INTEGER li;
+
+        /* Get the amount of 100 nano seconds intervals elapsed since January 1, 1601 (UTC) and copy it
+         *   * to a LARGE_INTEGER structure. */
+        GetSystemTimeAsFileTime(&ft);
+        li.LowPart = ft.dwLowDateTime;
+        li.HighPart = ft.dwHighDateTime;
+
+        unsigned long long ret = li.QuadPart;
+        ret -= 116444736000000000LL; /* Convert from file time to UNIX epoch time. */
+        ret /= 10; /* From 100 nano seconds (10^-7) to 1 microsecond (10^-6) intervals */
+#else
+        /* Linux */
+        struct timeval tv;
+
+        gettimeofday(&tv, NULL);
+
+        unsigned long long ret = tv.tv_usec;
+        /* Adds the seconds (10^0) after converting them to microseconds (10^-6) */
+        ret += (tv.tv_sec * 1000000);
+#endif
+        return ret;
+    }
+    std::string _name;
+    long long _accum;
+    unsigned long long _start_time;
+    bool _running;
 };
 
 

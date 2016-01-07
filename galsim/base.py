@@ -1339,12 +1339,10 @@ class Gaussian(GSObject):
     # _opt_params are optional
     # _single_params are a list of sets for which exactly one in the list is required.
     # _takes_rng indicates whether the constructor should be given the current rng.
-    # _takes_logger indicates whether the constructor takes a logger object for debug logging.
     _req_params = {}
     _opt_params = { "flux" : float }
     _single_params = [ { "sigma" : float, "half_light_radius" : float, "fwhm" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     # The FWHM of a Gaussian is 2 sqrt(2 ln2) sigma
     _fwhm_factor = 2.3548200450309493
@@ -1465,7 +1463,6 @@ class Moffat(GSObject):
     _opt_params = { "trunc" : float , "flux" : float }
     _single_params = [ { "scale_radius" : float, "half_light_radius" : float, "fwhm" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     # The conversion from hlr or fwhm to scale radius is complicated for Moffat, especially
     # since we allow it to be truncated, which matters for hlr.  So we do these calculations
@@ -1607,7 +1604,6 @@ class Airy(GSObject):
     # error.
     _single_params = [{ "lam_over_diam" : float , "lam" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     # For an unobscured Airy, we have the following factor which can be derived using the
     # integral result given in the Wikipedia page (http://en.wikipedia.org/wiki/Airy_disk),
@@ -1776,7 +1772,6 @@ class Kolmogorov(GSObject):
     _single_params = [ { "lam_over_r0" : float, "lam": float,
                          "fwhm" : float, "half_light_radius" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
     # In SBKolmogorov.cpp we refine this factor to 0.975865
@@ -1886,7 +1881,6 @@ class Pixel(GSObject):
     _opt_params = { "flux" : float }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, scale, flux=1., gsparams=None):
         GSObject.__init__(self, _galsim.SBBox(scale, scale, flux, gsparams))
@@ -1938,7 +1932,6 @@ class Box(GSObject):
     _opt_params = { "flux" : float }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, width, height, flux=1., gsparams=None):
         width = float(width)
@@ -2004,7 +1997,6 @@ class TopHat(GSObject):
     _opt_params = { "flux" : float }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, radius, flux=1., gsparams=None):
         radius = float(radius)
@@ -2204,7 +2196,6 @@ class Sersic(GSObject):
     _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     # The conversion from hlr to scale radius is complicated for Sersic, especially since we
     # allow it to be truncated.  So we do these calculations in the C++-layer constructor.
@@ -2301,7 +2292,6 @@ class Exponential(GSObject):
     _opt_params = { "flux" : float }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     # The half-light-radius is not analytic, but can be calculated numerically.
     _hlr_factor = 1.6783469900166605
@@ -2374,7 +2364,7 @@ class DeVaucouleurs(GSObject):
     A DeVaucouleurs can be initialized using one (and only one) of two possible size parameters:
     `scale_radius` or `half_light_radius`.  Exactly one of these two is required.
 
-    @param scale_radius     The value of sigma of the profile.  Typically given in arcsec.
+    @param scale_radius     The value of scale radius of the profile.  Typically given in arcsec.
                             [One of `scale_radius` or `half_light_radius` is required.]
     @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
                             [One of `scale_radius` or `half_light_radius` is required.]
@@ -2400,7 +2390,6 @@ class DeVaucouleurs(GSObject):
     _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, half_light_radius=None, scale_radius=None, flux=1., trunc=0.,
                  flux_untruncated=False, gsparams=None):
@@ -2521,7 +2510,6 @@ class Spergel(GSObject):
     _opt_params = { "flux" : float}
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, nu, half_light_radius=None, scale_radius=None,
                  flux=1., gsparams=None):

@@ -21,6 +21,10 @@ in a configuration file.
 """
 
 import sys
+import os
+import logging
+import copy
+import pprint
 
 # The only wrinkle about letting this executable be called galsim is that we want to
 # make sure that `import galsim` doesn't import itself.  We want it to import the real
@@ -42,7 +46,6 @@ def MergeConfig(config1, config2, logger=None):
     """
     for (key, value) in config2.items():
         if not key in config1:
-            import copy
             # If this key isn't in config1 yet, just add it
             config1[key] = copy.deepcopy(value)
         elif isinstance(value,dict) and isinstance(config1[key],dict):
@@ -153,12 +156,35 @@ def parse_args():
     # Return the args
     return args
 
+def ParseVariables(variables, logger):
+    new_params = {}
+    for v in variables:
+        logger.debug('Parsing additional variable: %s',v)
+        if '=' not in v:
+            raise ValueError('Improper variable specification.  Use field.item=value.')
+        key, value = v.split('=',1)
+        # Try to evaluate the value string to allow people to input things like
+        # gal.rotate='{type : Rotate}'
+        # But if it fails (particularly with json), just assign the value as a string.
+        try:
+            try:
+                import yaml
+                value = yaml.load(value)
+            except ImportError:
+                # Don't require yaml.  json usually works for these.
+                import json
+                value = json.loads(value)
+        except:
+            logger.debug('Unable to parse %s.  Treating it as a string.'%value)
+        new_params[key] = value
+
+    return new_params
+
 
 def main():
     args = parse_args()
 
     # Parse the integer verbosity level from the command line args into a logging_level string
-    import logging
     logging_levels = { 0: logging.CRITICAL, 
                        1: logging.WARNING,
                        2: logging.INFO,
@@ -172,93 +198,12 @@ def main():
         logging.basicConfig(format="%(message)s", level=logging_level, filename=args.log_file)
     logger = logging.getLogger('galsim')
     
-    # Determine the file type from the extension if necessary:
-    if args.file_type is None:
-        import os
-        name, ext = os.path.splitext(args.config_file)
-        if ext.lower().startswith('.j'):
-            args.file_type = 'json'
-        else:
-            # Let YAML be the default if the extension is not .y* or .j*.
-            args.file_type = 'yaml'
-        logger.debug('File type determined to be %s', args.file_type)
-    else:
-        logger.debug('File type specified to be %s', args.file_type)
-
     logger.warn('Using config file %s', args.config_file)
-    
-    if args.file_type == 'yaml':
-        import yaml
-
-        with open(args.config_file) as f:
-            all_config = [ c for c in yaml.load_all(f.read()) ]
-
-        # If there is only 1 yaml document, then it is of course used for the configuration.
-        # If there are multiple yaml documents, then the first one defines a common starting
-        # point for the later documents.
-        # So the configurations are taken to be:
-        #   all_config[0] + all_config[1]
-        #   all_config[0] + all_config[2]
-        #   all_config[0] + all_config[3]
-        #   ...
-        # See demo6.yaml and demo8.yaml in the examples directory for examples of this feature.
-
-        if len(all_config) > 1:
-            # Break off the first one if more than one:
-            base_config = all_config[0]
-            all_config = all_config[1:]
-        else:
-            # Else just use an empty base_config dict.
-            base_config = {}
-
-    else:
-        import json
-
-        with open(args.config_file) as f:
-            config = json.load(f)
-
-        # JSON files are just processed as is.  This is equivalent to having an empty 
-        # base_config, so we just do that and use the same structure.
-        base_config = {}
-        all_config = [ config ]
-            
+    base_config, all_config = galsim.config.ReadConfig(args.config_file, args.file_type, logger)
     logger.debug('Successfully read in config file.')
-
-    # Add the additional variables to the config file
-    for v in args.variables:
-        logger.debug('Parsing additional variable: %s',v)
-        if '=' not in v:
-            raise ValueError('Improper variable specification.  Use field.item=value.')
-        key, value = v.split('=',1)
-        # This next bit is basically identical to the code for Dict.get(key) in catalog.py.
-        chain = key.split('.')
-        if base_config:
-            d = base_config
-        else:
-            d = all_config[0]
-        while chain:
-            k = chain.pop(0)
-            try: k = int(k)
-            except ValueError: pass
-            if chain: d = d[k]
-            else: 
-                # Try to evaluate the value string to allow people to input things like
-                # gal.rotate='{type : Rotate}'
-                # But if it fails (particularly with json), just assign the value as a string.
-                try:
-                    if args.file_type == 'yaml':
-                        import yaml
-                        d[k] = yaml.load(value)
-                    else:
-                        import json
-                        d[k] = json.loads(value)
-                except:
-                    logger.debug('Unable to parse %s.  Treating it as a string.'%value)
-                    d[k] = value
 
     # Set the root value in base_config
     if 'root' not in base_config:
-        import os
         base_config['root'] = os.path.splitext(args.config_file)[0]
 
     # Import any modules if requested
@@ -275,11 +220,13 @@ def main():
         # Merge the base_config information into this config file.
         MergeConfig(config,base_config)
 
-        import pprint
+        # Parse the command-line variables:
+        new_params = ParseVariables(args.variables, logger)
+
         logger.debug("Process config dict: \n%s", pprint.pformat(config))
 
         # Process the configuration
-        galsim.config.Process(config, logger)
+        galsim.config.Process(config, logger, new_params=new_params)
 
 
 if __name__ == "__main__":
