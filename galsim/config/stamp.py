@@ -604,6 +604,15 @@ def RejectBasic(config, prof, psf, image, logger):
 
     @returns the variance of the resulting whitened (or symmetrized) image.
     """
+    # Check that we aren't on a second or later item in a Ring.
+    # This will make more sense when Ring is a stamp type rather than an object type,
+    # so it will just specialize this function.  cf. Issue #698.
+    if 'gal' in config:
+        block_size = galsim.config.GetMinimumBlock(config['gal'], config)
+        if config['obj_num'] % block_size != 0:
+            # Don't reject, since the first item passed.  If we reject now, it will mess things up.
+            return False
+
     stamp = config['stamp']
     reject = False
     if 'reject' in stamp:

@@ -491,7 +491,7 @@ def GetMinimumBlock(config, base):
     """
     if isinstance(config, dict) and 'type' in config:
         type_name = config['type']
-        if valid_gsobject_types[type_name]['block']:
+        if type_name in valid_gsobject_types and valid_gsobject_types[type_name]['block']:
             num = galsim.config.ParseValue(config, 'num', base, int)[0]
             return num
         else:
