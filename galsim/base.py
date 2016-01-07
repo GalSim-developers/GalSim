@@ -276,7 +276,7 @@ class GSObject(object):
 
         NB. This is a shallow copy, which is normally fine.  However, if the object has a noise
         attribute, then the copy will use the same rng, so calls to things like noise.whitenImage
-        from the two copies would produce different realizations of the noise.  If you want 
+        from the two copies would produce different realizations of the noise.  If you want
         these to be precisely identical, then copy.deepcopy will make an exact duplicate, which
         will have identical noise realizations for that kind of application.
         """
@@ -1269,8 +1269,8 @@ class GSObject(object):
 # Pickling an SBProfile is a bit tricky, since it's a base class for lots of other classes.
 # Normally, we'll know what the derived class is, so we can just use the pickle stuff that is
 # appropriate for that.  But if we get a SBProfile back from say the getObj() method of
-# SBTransform, then we won't know what class it should be.  So, in this case, we use the 
-# repr to do the pickling.  This isn't usually a great idea in general, but it provides a 
+# SBTransform, then we won't know what class it should be.  So, in this case, we use the
+# repr to do the pickling.  This isn't usually a great idea in general, but it provides a
 # convenient way to get the SBProfile to be the correct type in this case.
 # So, getstate just returns the repr string.  And setstate builds the right kind of object
 # by essentially doing `self = eval(repr)`.
@@ -1408,12 +1408,12 @@ class Gaussian(GSObject):
 _galsim.SBGaussian.__getinitargs__ = lambda self: (
         self.getSigma(), self.getFlux(), self.getGSParams())
 # SBProfile defines __getstate__ and __setstate__.  We don't actually want to use those here.
-# Just the __getinitargs__ is sufficient.  But we define these two to override the base class 
+# Just the __getinitargs__ is sufficient.  But we define these two to override the base class
 # definitions.
 # Note: __setstate__ just returns 1, which means it is a no op.  I would use pass to make that
 # clear, but pass doesn't work for a lambda expression since it needs to return something.
 _galsim.SBGaussian.__getstate__ = lambda self: None
-_galsim.SBGaussian.__setstate__ = lambda self, state: 1 
+_galsim.SBGaussian.__setstate__ = lambda self, state: 1
 _galsim.SBGaussian.__repr__ = lambda self: \
         'galsim._galsim.SBGaussian(%r, %r, %r)'%self.__getinitargs__()
 
@@ -1523,7 +1523,7 @@ class Moffat(GSObject):
         return s
 
 _galsim.SBMoffat.__getinitargs__ = lambda self: (
-        self.getBeta(), self.getScaleRadius(), None, None, self.getTrunc(), 
+        self.getBeta(), self.getScaleRadius(), None, None, self.getTrunc(),
         self.getFlux(), self.getGSParams())
 _galsim.SBMoffat.__getstate__ = lambda self: None
 _galsim.SBMoffat.__setstate__ = lambda self, state: 1
@@ -1802,7 +1802,7 @@ class Kolmogorov(GSObject):
     def half_light_radius(self): return self.getHalfLightRadius()
     @property
     def fwhm(self): return self.getFWHM()
- 
+
     def __repr__(self):
         return 'galsim.Kolmogorov(lam_over_r0=%r, flux=%r, gsparams=%r)'%(
             self.lam_over_r0, self.flux, self._gsparams)
@@ -1979,7 +1979,7 @@ class TopHat(GSObject):
 
     @property
     def radius(self): return self.getRadius()
- 
+
     def __repr__(self):
         return 'galsim.TopHat(radius=%r, flux=%r, gsparams=%r)'%(
             self.radius, self.flux, self._gsparams)
@@ -2482,7 +2482,7 @@ class Spergel(GSObject):
 
     def __init__(self, nu, half_light_radius=None, scale_radius=None,
                  flux=1., gsparams=None):
-        GSObject.__init__(self, _galsim.SBSpergel(nu, scale_radius, half_light_radius, flux, 
+        GSObject.__init__(self, _galsim.SBSpergel(nu, scale_radius, half_light_radius, flux,
                                                   gsparams))
         self._gsparams = gsparams
 
@@ -2627,10 +2627,10 @@ small_fraction_of_flux      When photon shooting, intervals with less than this 
 """
 
 _galsim.GSParams.__getinitargs__ = lambda self: (
-        self.minimum_fft_size, self.maximum_fft_size, 
+        self.minimum_fft_size, self.maximum_fft_size,
         self.folding_threshold, self.stepk_minimum_hlr, self.maxk_threshold,
         self.kvalue_accuracy, self.xvalue_accuracy, self.table_spacing,
-        self.realspace_relerr, self.realspace_abserr, 
+        self.realspace_relerr, self.realspace_abserr,
         self.integration_relerr, self.integration_abserr,
         self.shoot_accuracy, self.allowed_flux_variation,
         self.range_division_for_extrema, self.small_fraction_of_flux)
