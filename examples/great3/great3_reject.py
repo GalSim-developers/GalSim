@@ -47,6 +47,7 @@ def Great3Reject(config, base, value_type):
     res = galsim.hsm.EstimateShear(im, psf_image, strict='False')
     # Cut based on the resolution failure, or if the measurement simply failed.
     if res.error_message != "" or res.resolution_factor < 1./3:
+        print 'Resolution rejection: ',res.error_message, 'resolution =',res.resolution_factor
         reject = True
 
     # Next we check the SNR using the idealized SNR estimator used for GREAT3.  For a derivation of
@@ -66,6 +67,7 @@ def Great3Reject(config, base, value_type):
     # We nominally used a cut at SNR=17 (in an attempt to compensate for the SNR estimator being
     # overly optimistic) and also eliminated SNR>100.
     if snr < 17. or snr > 100.:
+        print 'SNR rejection: ',snr
         reject = True
 
     # False here is a "safe" parameter, which tells GalSim not to cache this result to use again
