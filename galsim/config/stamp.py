@@ -18,6 +18,7 @@
 
 import galsim
 import logging
+import numpy
 
 # This file handles the building of postage stamps to place onto a larger image.
 # There is only one type of stamp currently, called Basic, which builds a galaxy from
@@ -225,7 +226,8 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
 
 # Ignore these when parsing the parameters for specific stamp types:
 stamp_ignore = ['offset', 'retry_failures', 'gsparams', 'draw_method',
-                'wmult', 'nphotons', 'max_extra_noise', 'poisson_flux']
+                'wmult', 'nphotons', 'max_extra_noise', 'poisson_flux',
+                'reject', 'min_flux_frac']
 
 def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
     """
@@ -243,7 +245,8 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
     """
     SetupConfigObjNum(config,obj_num)
 
-    stamp_type = config['stamp']['type']
+    stamp = config['stamp']
+    stamp_type = stamp['type']
     if stamp_type not in valid_stamp_types:
         raise AttributeErro("Invalid stamp.type=%s."%stamp_type)
 
@@ -252,10 +255,13 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('obj %d: seed = %d',obj_num,seed)
 
-    if 'retry_failures' in config['stamp']:
-        ntries = galsim.config.ParseValue(config['stamp'],'retry_failures',config,int)[0]
+    if 'retry_failures' in stamp:
+        ntries = galsim.config.ParseValue(stamp,'retry_failures',config,int)[0]
         # This is how many _re_-tries.  Do at least 1, so ntries is 1 more than this.
         ntries = ntries + 1
+    elif 'reject' in stamp or 'min_flux_frac' in stamp:
+        # Still impose a maximum number of tries to prevent infinite loops.
+        ntries = 20
     else:
         ntries = 1
 
@@ -287,9 +293,9 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
 
             # Get the global gsparams kwargs.  Individual objects can add to this.
             gsparams = {}
-            if 'gsparams' in config['stamp']:
+            if 'gsparams' in stamp:
                 gsparams = galsim.config.UpdateGSParams(
-                    gsparams, config['stamp']['gsparams'], config)
+                    gsparams, stamp['gsparams'], config)
 
             skip = False
             try :
@@ -312,16 +318,16 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             im = stamp_func(config, xsize, ysize)
 
             if not skip:
-                if 'draw_method' in config['stamp']:
-                    method = galsim.config.ParseValue(config['stamp'],'draw_method',config,str)[0]
+                if 'draw_method' in stamp:
+                    method = galsim.config.ParseValue(stamp,'draw_method',config,str)[0]
                 else:
                     method = 'auto'
                 if method not in ['auto', 'fft', 'phot', 'real_space', 'no_pixel', 'sb']:
                     raise AttributeError("Invalid draw_method: %s"%method)
 
                 offset = config['stamp_offset']
-                if 'offset' in config['stamp']:
-                    offset += galsim.config.ParseValue(config['stamp'], 'offset', config,
+                if 'offset' in stamp:
+                    offset += galsim.config.ParseValue(stamp, 'offset', config,
                                                        galsim.PositionD)[0]
                 if logger and logger.isEnabledFor(logging.DEBUG):
                     logger.debug('obj %d: offset = %s',obj_num,offset)
@@ -351,6 +357,36 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             config['current_stamp'] = im
             # This is also information that the weight image calculation needs
             config['do_noise_in_stamps'] = do_noise
+
+            # Check for reasons to reject this stamp.
+            reject = False
+            if 'reject' in stamp:
+                reject = galsim.config.ParseValue(stamp, 'reject', config, bool)[0]
+                if logger and logger.isEnabledFor(logging.INFO):
+                    logger.info('Object %d: Reject = True', obj_num)
+            if 'min_flux_frac' in stamp:
+                min_flux_frac = galsim.config.ParseValue(stamp, 'min_flux_frac', config, float)[0]
+                if not isinstance(prof, galsim.GSObject):
+                    raise ValueError("Cannot apply min_flux_frac for stamp types that do not use "+
+                                     "a single GSObject profile.")
+                expected_flux = prof.flux
+                measured_flux = numpy.sum(im.array)
+                if measured_flux < min_flux_frac * expected_flux:
+                    if logger and logger.isEnabledFor(logging.WARN):
+                        logger.warn('Object %d: Measured flux = %f < %f * %f.',
+                                    obj_num, measured_flux, min_flux_frac, expected_flux)
+                    reject = True
+            if reject:
+                if itry+1 < ntries:
+                    if logger and logger.isEnabledFor(logging.WARN):
+                        logger.warn('Object %d: Rejecting this object and rebuilding',obj_num)
+                    galsim.config.RemoveCurrent(config, keep_safe=True)
+                    continue
+                else:
+                    if logger:
+                        logger.error('Object %d: Too many rejections for this object. Aborting.')
+                    raise RuntimeError("Rejected an object %d times. If this is expected, "%ntries+
+                                       "you should specify a larger retry_failures.")
 
             galsim.config.ProcessExtraOutputsForStamp(config, logger)
 
@@ -604,7 +640,6 @@ def SNRBasic(image, config):
     if (('gal' in config and 'signal_to_noise' in config['gal']) or
         ('gal' not in config and 'psf' in config and 'signal_to_noise' in config['psf'])):
         import math
-        import numpy
         if 'gal' in config: root_key = 'gal'
         else: root_key = 'psf'
 

@@ -128,7 +128,7 @@ stamp:
     # field) then the galaxy gets chucked out and a new one is selected.  This will depend not only
     # on the galaxy parameters but the PSF as well, since the cut is imposed on the PSF-convolved
     # object.
-    min_flux_frac = 0.99
+    min_flux_frac: 0.99
 
     # Also use a custom module to apply other GREAT3 cuts: SNR and resolution.
     reject:
