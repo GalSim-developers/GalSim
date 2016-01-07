@@ -282,11 +282,14 @@ class FrozenAtmosphericScreen(AtmosphericScreen):
         fx, fy = self._freq()
         self._init_screen(fx, fy)
         # Use a LookupTable2D to interpolate/extrapolate with periodic boundary conditions.
-        x0 = y0 = -self.screen_size/2.0
+        nx = self.screen_size/self.screen_scale
+        # x0 = y0 = -self.screen_size/2.0
+        x0 = y0 = -0.5*(nx-1)*self.screen_scale
         dx = dy = self.screen_scale
+
         self.tab2d = galsim.LookupTable2D(x0, y0, dx, dy, self.screen, edge_mode='wrap')
         # Don't need these anymore, so free memory
-        del self._phaseFT, self.psi, self.screen
+        # del self._phaseFT, self.psi, self.screen
 
         # To handle wind, we will interpolate the LookupTable2D with an offset origin.
         self.origin = np.r_[0.0, 0.0]
@@ -338,10 +341,12 @@ class FrozenAtmosphericScreen(AtmosphericScreen):
                    array of phase differences.
         """
         xmin = self.origin[0] + 1000*self.altitude*theta_x.tan() - 0.5*scale*(nx-1)
+        # xmin = self.origin[0] + 1000*self.altitude*theta_x.tan() - 0.5*scale*nx
         xmax = xmin + scale*(nx-1)
         ymin = self.origin[1] + 1000*self.altitude*theta_y.tan() - 0.5*scale*(nx-1)
+        # ymin = self.origin[1] + 1000*self.altitude*theta_y.tan() - 0.5*scale*nx
         ymax = ymin + scale*(nx-1)
-
+        import ipdb; ipdb.set_trace()
         return self.tab2d.eval_grid(xmin, xmax, nx, ymin, ymax, nx)
 
     def reset(self):
@@ -463,7 +468,7 @@ class ARAtmosphericScreen(AtmosphericScreen):
         ii = galsim.InterpolatedImage(img, calculate_stepk=False, calculate_maxk=False,
                                       normalization='sb')
         ii = ii.shift(1000*self.altitude * theta_x.tan(), 1000*self.altitude * theta_y.tan())
-        return ii.drawImage(nx=nx, ny=nx, scale=scale, method='sb').array
+        return ii.drawImage(nx=nx, ny=nx, scale=scale, method='sb', dtype=np.float64).array
 
     def reset(self):
         """Reset phase screen back to time=0."""

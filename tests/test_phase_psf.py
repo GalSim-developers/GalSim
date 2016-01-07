@@ -119,7 +119,7 @@ def test_frozen_flow():
     screen.advance_by(t)
     pd1 = screen.path_difference(20, dx, theta_x=45*galsim.degrees)
 
-    np.testing.assert_array_equal(pd0, pd1, "Flow is not frozen")
+    np.testing.assert_array_almost_equal(pd0, pd1, 5, "Flow is not frozen")
 
     t2 = time.time()
     print 'time for %s = %.2f' % (funcname(), t2-t1)
@@ -191,8 +191,32 @@ def test_phase_psf_batch():
     print 'time for %s = %.2f' % (funcname(), t2-t1)
 
 
+def test_frozen_AR_screen():
+    # Check that ARAtmosphericScreen with alpha=1.0 matches FrozenAtmosphericScreen.
+    import time
+    t1 = time.time()
+
+    rng1 = galsim.BaseDeviate(1234)
+    rng2 = galsim.BaseDeviate(1234)
+
+    frozen_screen = galsim.FrozenAtmosphericScreen(screen_size=10.0, screen_scale=0.1, altitude=0.0,
+                                                   vx=1.0, vy=2.0, rng=rng1)
+    ar_screen = galsim.ARAtmosphericScreen(screen_size=10.0, screen_scale=0.1, altitude=0.0,
+                                           vx=1.0, vy=2.0, rng=rng2, alpha_mag=1.0)
+
+    ar_pd = ar_screen.path_difference(100, 0.1)
+    frozen_pd = frozen_screen.path_difference(100, 0.1)
+
+    np.testing.assert_array_almost_equal(frozen_pd, ar_pd, 3,
+                                         "Frozen screen and AR screen with alpha=1 do not agree.")
+
+    t2 = time.time()
+    print 'time for %s = %.2f' % (funcname(), t2-t1)
+
+
 if __name__ == "__main__":
-    test_phase_psf_batch()
-    test_phase_psf_reset()
-    test_frozen_flow()
-    test_phase_screen_list()
+    # test_phase_screen_list()
+    # test_frozen_flow()
+    # test_phase_psf_reset()
+    # test_phase_psf_batch()
+    test_frozen_AR_screen()

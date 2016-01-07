@@ -326,6 +326,7 @@ class LookupTable2D(object):
         self.xmax = x0 + (nx-1)*dx
         self.ymin = y0
         self.ymax = y0 + (ny-1)*dy
+        self.slop = min((self.xmax-self.xmin, self.ymax-self.ymin))*1e-6
 
         xorigin = x0
         yorigin = y0
@@ -367,6 +368,12 @@ class LookupTable2D(object):
         y = (pos.y-self.ymin) % self.yrepeat + self.ymin
         return galsim.PositionD(x, y)
 
+    def _inbounds(self, pos):
+        return (pos.x > self.xmin - self.slop and
+                pos.x < self.xmax + self.slop and
+                pos.y > self.ymin - self.slop and
+                pos.y < self.ymax + self.slop)
+
     def __call__(self, *args, **kwargs):
         """Interpolate/extrapolate the LookupTable2D to get `f(x, y)` at some `(x, y)` position.
 
@@ -382,7 +389,7 @@ class LookupTable2D(object):
         pos = galsim.utilities.parse_pos_args(args, kwargs, 'x', 'y')
         if self.edge_mode == 'warn':
             import warnings
-            if pos.x < self.xmin or pos.x > self.xmax or pos.y < self.ymin or pos.y > self.ymax:
+            if not self._inbounds(pos):
                 warnings.warn("Extrapolating beyond input range.")
         elif self.edge_mode == 'wrap':
             pos = self._wrap_pos(pos)
@@ -401,13 +408,13 @@ class LookupTable2D(object):
         pos = galsim.PositionD(x, y)
         if self.edge_mode == 'warn':
             import warnings
-            if pos.x < self.xmin or pos.x > self.xmax or pos.y < self.ymin or pos.y > self.ymax:
+            if not self._inbounds(pos):
                 warnings.warn("Extrapolating beyond input range.")
         elif self.edge_mode == 'wrap':
             pos = self._wrap_pos(pos)
         return self._ii.xValue(pos)
 
-    def eval_grid(self, xmin, xmax, nx, ymin, ymax, ny):
+    def eval_grid(self, xmin, xmax, nx, ymin, ymax, ny, dtype=None):
         """Evaluate the LookupTable2D on a regularly spaced grid.  This method is significantly
         faster for grid evaluations than repeated calling the .at() method or the () operator.
 
@@ -420,14 +427,15 @@ class LookupTable2D(object):
         @returns     Array of `f(x, y)` values.
         """
         if self.edge_mode == 'wrap':
-            return self._eval_grid_wrap(xmin, xmax, nx, ymin, ymax, ny)
+            return self._eval_grid_wrap(xmin, xmax, nx, ymin, ymax, ny, dtype=dtype)
         elif self.edge_mode == 'warn':
             import warnings
-            if xmin < self.xmin or xmax > self.xmax or ymin < self.ymin or ymax > self.ymax:
+            if (not self._inbounds(galsim.PositionD(xmin, ymin)) or
+                not self._inbounds(galsim.PositionD(xmax, ymax))):
                 warnings.warn("Extrapolating beyond input range.")
-        return self._eval_grid(xmin, xmax, nx, ymin, ymax, ny)
+        return self._eval_grid(xmin, xmax, nx, ymin, ymax, ny, dtype=dtype)
 
-    def _eval_grid(self, xmin, xmax, nx, ymin, ymax, ny):
+    def _eval_grid(self, xmin, xmax, nx, ymin, ymax, ny, dtype=None):
         # Assumes no extrapolation.  I.e., that xmin > self.xmin, xmax < self.xmax, etc.
         dx = (xmax-xmin)/(nx-1.0) if nx != 1 else 1e-12
         dy = (ymax-ymin)/(ny-1.0) if ny != 1 else 1e-12
@@ -435,13 +443,14 @@ class LookupTable2D(object):
         ymean = 0.5*(ymin+ymax)
         wcs = galsim.wcs.JacobianWCS(dx, 0.0, 0.0, dy)
         offset = (-xmean, -ymean)
-        return self._ii.shift(offset).drawImage(nx=nx, ny=ny, method='sb', wcs=wcs).array
+        return (self._ii.shift(offset)
+                .drawImage(nx=nx, ny=ny, method='sb', wcs=wcs, dtype=dtype).array)
 
-    def _eval_grid_wrap(self, xmin, xmax, nx, ymin, ymax, ny):
+    def _eval_grid_wrap(self, xmin, xmax, nx, ymin, ymax, ny, dtype=None):
         # implement edge wrapping by repeatedly identifying grid cells that map back onto
         # the "unwrapped" input coordinates.
         import numpy as np
-        out = np.empty((ny, nx), dtype=float)
+        out = np.empty((ny, nx), dtype=np.float64)
         # Output grid spacing
         dx = (xmax-xmin)/(nx-1.0)
         dy = (ymax-ymin)/(ny-1.0)
@@ -469,7 +478,7 @@ class LookupTable2D(object):
                 # _eval_grid with appropriately unwrapped coordinates
                 out[iy:iy+nytmp, ix:ix+nxtmp] = self._eval_grid(
                     xmintmp - i * self.xrepeat, xmaxtmp - i * self.xrepeat, nxtmp,
-                    ymintmp - j * self.yrepeat, ymaxtmp - j * self.yrepeat, nytmp)
+                    ymintmp - j * self.yrepeat, ymaxtmp - j * self.yrepeat, nytmp, dtype=dtype)
 
                 # prepare for next wrap #
                 j += 1
