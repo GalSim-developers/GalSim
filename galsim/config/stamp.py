@@ -313,9 +313,14 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                         # If there is a message, upgrade to info level
                         logger.info('Skipping object %d: %s',obj_num,e.msg)
                 skip = True
+                # Note: Skip is different from Reject.
+                #       Skip means we return None for this stamp image and continue on.
+                #       Reject means we retry this object using the same obj_num.
+                #       This has implications for the total number of objects as well as
+                #       things like ring tests that rely on objects being made in pairs.
 
             stamp_func = valid_stamp_types[stamp_type]['stamp']
-            im = stamp_func(config, xsize, ysize)
+            im = stamp_func(config, xsize, ysize, logger)
 
             if not skip:
                 if 'draw_method' in stamp:
@@ -333,10 +338,10 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                     logger.debug('obj %d: offset = %s',obj_num,offset)
 
                 draw_func = valid_stamp_types[stamp_type]['draw']
-                im = draw_func(prof, im, method, offset, config)
+                im = draw_func(config, prof, im, method, offset, logger)
 
                 snr_func = valid_stamp_types[stamp_type]['snr']
-                scale_factor = snr_func(im, config)
+                scale_factor = snr_func(config, im, logger)
                 if scale_factor != 1.0:
                     if method == 'phot':
                         logger.error(
@@ -358,24 +363,9 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             # This is also information that the weight image calculation needs
             config['do_noise_in_stamps'] = do_noise
 
-            # Check for reasons to reject this stamp.
-            reject = False
-            if 'reject' in stamp:
-                reject = galsim.config.ParseValue(stamp, 'reject', config, bool)[0]
-                if logger and logger.isEnabledFor(logging.INFO):
-                    logger.info('Object %d: Reject = True', obj_num)
-            if 'min_flux_frac' in stamp:
-                min_flux_frac = galsim.config.ParseValue(stamp, 'min_flux_frac', config, float)[0]
-                if not isinstance(prof, galsim.GSObject):
-                    raise ValueError("Cannot apply min_flux_frac for stamp types that do not use "+
-                                     "a single GSObject profile.")
-                expected_flux = prof.flux
-                measured_flux = numpy.sum(im.array)
-                if measured_flux < min_flux_frac * expected_flux:
-                    if logger and logger.isEnabledFor(logging.WARN):
-                        logger.warn('Object %d: Measured flux = %f < %f * %f.',
-                                    obj_num, measured_flux, min_flux_frac, expected_flux)
-                    reject = True
+            # Check if this object should be rejected.
+            reject_func = valid_stamp_types[stamp_type]['reject']
+            reject = reject_func(config, prof, psf, im, logger)
             if reject:
                 if itry+1 < ntries:
                     if logger and logger.isEnabledFor(logging.WARN):
@@ -393,7 +383,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             # We always need to do the whiten step here in the stamp processing
             if not skip:
                 whiten_func = valid_stamp_types[stamp_type]['whiten']
-                current_var = whiten_func(prof, im, config)
+                current_var = whiten_func(config, prof, im, logger)
                 if current_var != 0.:
                     if logger and logger.isEnabledFor(logging.DEBUG):
                         logger.debug('obj %d: whitening noise brought current var to %f',
@@ -517,7 +507,7 @@ def ProfileBasic(config, psf, gsparams, logger):
         else:
             raise AttributeError("At least one of gal or psf must be specified in config.")
 
-def StampBasic(config, xsize, ysize):
+def StampBasic(config, xsize, ysize, logger):
     """
     Returns the postage stamp image onto which we will draw the profile if we can before the
     drawImage command.  If we don't know xsize, ysize, return None.
@@ -525,6 +515,7 @@ def StampBasic(config, xsize, ysize):
     @param config           The configuration dict.
     @param xsize            The xsize of the image to build (if known).
     @param ysize            The ysize of the image to build (if known).
+    @param logger           If given, a logger object to log progress.
 
     @returns the image
     """
@@ -536,15 +527,16 @@ def StampBasic(config, xsize, ysize):
     else:
         return None
 
-def DrawBasic(prof, image, method, offset, config):
+def DrawBasic(config, prof, image, method, offset, logger):
     """
     Draw the profile on the image.
 
+    @param config       The configuration dict.
     @param prof         The profile to draw.
     @param image        The image onto which to draw the profile.
     @param method       The method to use in drawImage.
     @param offset       The offset to apply when drawing.
-    @param config       The configuration dict.
+    @param logger       If given, a logger object to log progress.
 
     @returns the resulting image
     """
@@ -601,14 +593,44 @@ def DrawBasic(prof, image, method, offset, config):
     image = prof.drawImage(**kwargs)
     return image
 
-def WhitenBasic(prof, image, config):
+def RejectBasic(config, prof, psf, image, logger):
+    """Check to see if this object should be rejected.
+
+    @param config       The configuration dict.
+    @param prof         The profile that was drawn.
+    @param psf          The psf that was used to build the profile.
+    @param image        The postage stamp image.  No noise is on it yet at this point.
+    @param logger       If given, a logger object to log progress.
+
+    @returns the variance of the resulting whitened (or symmetrized) image.
+    """
+    stamp = config['stamp']
+    reject = False
+    if 'reject' in stamp:
+        reject = galsim.config.ParseValue(stamp, 'reject', config, bool)[0]
+    if 'min_flux_frac' in stamp:
+        min_flux_frac = galsim.config.ParseValue(stamp, 'min_flux_frac', config, float)[0]
+        if not isinstance(prof, galsim.GSObject):
+            raise ValueError("Cannot apply min_flux_frac for stamp types that do not use "+
+                                "a single GSObject profile.")
+        expected_flux = prof.flux
+        measured_flux = numpy.sum(image.array)
+        if measured_flux < min_flux_frac * expected_flux:
+            if logger and logger.isEnabledFor(logging.WARN):
+                logger.warn('Object %d: Measured flux = %f < %f * %f.',
+                            config['obj_num'], measured_flux, min_flux_frac, expected_flux)
+            reject = True
+    return reject
+
+def WhitenBasic(config, prof, image, logger):
     """
     If appropriate, whiten the resulting image according to the requested noise profile
     and the amount of noise originally present in the profile.
 
-    @param prof         The profile to draw.
-    @param image        The image onto which to draw the profile.
     @param config       The configuration dict.
+    @param prof         The profile that was drawn.
+    @param image        The postage stamp image to be whitened.
+    @param logger       If given, a logger object to log progress.
 
     @returns the variance of the resulting whitened (or symmetrized) image.
     """
@@ -628,12 +650,13 @@ def WhitenBasic(prof, image, config):
     return current_var
 
 
-def SNRBasic(image, config):
+def SNRBasic(config, image, logger):
     """
     Calculate the factor by which to rescale the image based on a desired S/N level.
 
-    @param image            The current image.
     @param config           The configuration dict.
+    @param image            The current image.
+    @param logger           If given, a logger object to log progress.
 
     @returns scale_factor
     """
@@ -675,7 +698,7 @@ def SNRBasic(image, config):
 valid_stamp_types = {}
 
 def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=None,
-                      draw_func=None, whiten_func=None, snr_func=None):
+                      draw_func=None, reject_func=None, whiten_func=None, snr_func=None):
     """Register an image type for use by the config apparatus.
 
     You only need to specify the functions that you want to change from the Basic stamp
@@ -692,22 +715,26 @@ def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=No
                                 prof = Profile(config, psf, gsparams, logger)
     @param stamp_func       The function to call to build the postage stamp image
                             The call signature is:
-                                image = Stamp(config, xsize, ysize)
+                                image = Stamp(config, xsize, ysize, logger)
     @param draw_func        The function to call to draw the image.
                             The call signature is
-                                image = Draw(prof, image, method, offset, config)
+                                image = Draw(config, prof, image, method, offset, logger)
+    @param reject_func      The function to call to determine if this stamp should be rejected.
+                            The call signature is
+                                reject = Reject(config, prof, psf, image, logger)
     @param whiten_func      The function to call to whiten the image.
                             The call signature is
-                                current_var = Whiten(prof, image, config)
+                                current_var = Whiten(config, prof, image, logger)
     @param snr_func         The function to call to rescale the image according to the desired
                             signal-to-noise.
                             The call signature is
-                                scale_factor = SNR(image, config)
+                                scale_factor = SNR(config, image, logger)
     """
     if setup_func is None: setup_func = SetupBasic
     if prof_func is None: prof_func = ProfileBasic
     if stamp_func is None: stamp_func = StampBasic
     if draw_func is None: draw_func = DrawBasic
+    if reject_func is None: reject_func = RejectBasic
     if whiten_func is None: whiten_func = WhitenBasic
     if snr_func is None: snr_func = SNRBasic
 
@@ -716,9 +743,11 @@ def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=No
         'prof' : prof_func,
         'stamp' : stamp_func,
         'draw' : draw_func,
+        'reject' : reject_func,
         'whiten' : whiten_func,
         'snr' : snr_func,
     }
 
-RegisterStampType('Basic', SetupBasic, ProfileBasic, StampBasic, DrawBasic, WhitenBasic, SNRBasic)
+RegisterStampType('Basic', SetupBasic, ProfileBasic, StampBasic, DrawBasic, RejectBasic,
+                  WhitenBasic, SNRBasic)
 
