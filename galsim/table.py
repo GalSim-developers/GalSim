@@ -458,20 +458,34 @@ class LookupTable2D(object):
         # find wrap # that extends just below xmin
         i = (xmin - self.xmin) // self.xrepeat
         xlo, xhi = _lohi(i, self.xmin, self.xrepeat)  # current cell range
+        if xhi == xmin:  # exclude upper limit, which will then get computed in next cell.
+            i += 1
+            xlo, xhi = _lohi(i, self.xmin, self.xrepeat)
         ix = 0  # lower index for current cell in output array
         while xlo < xmax:
             # find output x range within current wrap #
             xmaxtmp = min([((xhi - xmin) // dx) * dx + xmin, xmax])
+            # avoid computing at xhi for this wrap, it will get done next wrap, and we don't want
+            # to do it twice.
+            if xmaxtmp == xhi:
+                xmaxtmp -= dx
             xmintmp = max([_ceildiv(xlo - xmin, dx) * dx + xmin, xmin])
             nxtmp = int(round((xmaxtmp - xmintmp) / dx)) + 1
 
             # find wrap # that extends just below ymin
             j = (ymin - self.ymin) // self.yrepeat
             ylo, yhi = _lohi(j, self.ymin, self.yrepeat)
+            if yhi == ymin:
+                j += 1
+                ylo, yhi = _lohi(j, self.ymin, self.yrepeat)
             iy = 0
             while ylo < ymax:
                 # find output y range within current wrap #
                 ymaxtmp = min([((yhi - ymin) // dy) * dy + ymin, ymax])
+                # avoid computing at yhi for this wrap, it will get done next wrap, and we don't
+                # want to do it twice.
+                if ymaxtmp == yhi:
+                    ymaxtmp -= dy
                 ymintmp = max([_ceildiv(ylo - ymin, dy) * dy + ymin, ymin])
                 nytmp = int(round((ymaxtmp - ymintmp) / dy)) + 1
 

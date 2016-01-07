@@ -207,8 +207,20 @@ def test_frozen_AR_screen():
     ar_pd = ar_screen.path_difference(100, 0.1)
     frozen_pd = frozen_screen.path_difference(100, 0.1)
 
-    np.testing.assert_array_almost_equal(frozen_pd, ar_pd, 3,
+    # I feel like these should agree better, but this is probably fine in practice
+    # (picometer agreement in path differences)
+    np.testing.assert_array_almost_equal(frozen_pd, ar_pd, 4,
                                          "Frozen screen and AR screen with alpha=1 do not agree.")
+
+    for t in [0.3, 3.0, 5.1]:
+        # Let the wind blow and check again.
+        frozen_screen.advance_by(t)
+        ar_screen.advance_by(t)
+        ar_pd2 = ar_screen.path_difference(100, 0.1)
+        frozen_pd2 = frozen_screen.path_difference(100, 0.1)
+        assert np.any(ar_pd != ar_pd2)  # make sure we actually updated
+        np.testing.assert_array_almost_equal(
+            frozen_pd2, ar_pd2, 4, "Frozen screen and AR screen with alpha=1 do not agree.")
 
     t2 = time.time()
     print 'time for %s = %.2f' % (funcname(), t2-t1)
