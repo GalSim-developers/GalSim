@@ -152,7 +152,24 @@ class COSMOSCatalog(object):
 
     def __init__(self, file_name=None, image_dir=None, dir=None, preload=False, noise_dir=None,
                  use_real=True, exclusion_level='marginal', min_hlr=0, max_hlr=0., min_flux=0.,
-                 max_flux=0., _nobjects_only=False):
+                 max_flux=0., _nobjects_only=False, exclude_bad=None, exclude_fail=None):
+        # Check for deprecated exclude_bad or exclude_fail args.
+        if exclude_bad is not None or exclude_fail is not None:
+            from .deprecated import depr
+            if exclude_bad is not None:
+                depr('exclude_bad', 1.4, 'exclusion_level')
+            if exclude_fail is not None:
+                depr('exclude_fail', 1.4, 'exclusion_level')
+
+            # These aren't equivalent, but probably what the user would want to choose.
+            if exclude_bad is False and exclude_fail is False:
+                exclusion_level = 'none'
+            elif exclude_fail is False:  # implying exclude_bad=True is intended
+                exclusion_level = 'bad_ps'
+            elif exclude_bad is False:   # implying exclude_fail=True is intended
+                exclusion_level = 'bad_fits'
+            # else leave exclusion_level as 'marginal'
+
         from galsim._pyfits import pyfits
         self.use_real = use_real
 

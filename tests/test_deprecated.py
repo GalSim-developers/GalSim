@@ -41,8 +41,8 @@ def check_dep(f, *args, **kwargs):
     with warnings.catch_warnings(galsim.GalSimDeprecationWarning) as w:
         res = f(*args, **kwargs)
     #print 'w = ',w
-    assert len(w) == 1, "Calling %s did not raise a warning"%str(f)
-    print str(w[0].message)
+    assert len(w) >= 1, "Calling %s did not raise a warning"%str(f)
+    print [ str(wk.message) for wk in w ]
     return res
 
 
@@ -597,6 +597,62 @@ def test_dep_random():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+def test_dep_scene():
+    """Test the deprecated exclude_bad and exclude_fail args to COSMOSCatalog
+    """
+    import time
+    t1 = time.time()
+
+    path, filename = os.path.split(__file__)
+    datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
+
+    # Initialize one that doesn't exclude failures.  It should be >= the previous one in length.
+    cat2 = check_dep(galsim.COSMOSCatalog,
+                     file_name='real_galaxy_catalog_example.fits',
+                     dir=datapath, exclude_fail=False, exclude_bad=False)
+    # Initialize a COSMOSCatalog with all defaults.
+    cat = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+                               dir=datapath)
+    assert cat2.nobjects>=cat.nobjects
+    # Equivalent to current exclusion_level='none'
+    cat3 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+                                dir=datapath, exclusion_level='none')
+    assert cat2.nobjects==cat3.nobjects
+
+    # Just exclude_bad=True
+    cat2 = check_dep(galsim.COSMOSCatalog,
+                     file_name='real_galaxy_catalog_example.fits',
+                     dir=datapath, exclude_fail=False)  # i.e. leave exclude_bad=True
+    assert cat2.nobjects>=cat.nobjects
+    # Equivalent to current exclusion_level='bad_ps'
+    cat3 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+                                dir=datapath, exclusion_level='bad_ps')
+    assert cat2.nobjects==cat3.nobjects
+
+    # Just exclude_fail=True
+    cat2 = check_dep(galsim.COSMOSCatalog,
+                     file_name='real_galaxy_catalog_example.fits',
+                     dir=datapath, exclude_bad=False)  # i.e. leave exclude_fail=True
+    assert cat2.nobjects>=cat.nobjects
+    # Equivalent to current exclusion_level='bad_fits'
+    cat3 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+                                dir=datapath, exclusion_level='bad_fits')
+    assert cat2.nobjects==cat3.nobjects
+
+    # Both=True
+    cat2 = check_dep(galsim.COSMOSCatalog,
+                     file_name='real_galaxy_catalog_example.fits',
+                     dir=datapath, exclude_fail=True, exclude_bad=True)
+    assert cat2.nobjects>=cat.nobjects
+    # Equivalent to current exclusion_level='marginal'
+    cat3 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+                                dir=datapath, exclusion_level='marginal')
+    assert cat2.nobjects==cat3.nobjects
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 def test_dep_sed():
     """Test the deprecated methods in galsim/deprecated/sed.py.
     """
@@ -794,6 +850,7 @@ if __name__ == "__main__":
     test_dep_image()
     test_dep_noise()
     test_dep_random()
+    test_dep_scene()
     test_dep_sed()
     test_dep_shapelet()
     test_dep_shear()

@@ -42,7 +42,7 @@ def test_cosmos_basic():
                                dir=datapath)
     # Initialize one that doesn't exclude failures.  It should be >= the previous one in length.
     cat2 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
-                               dir=datapath, exclude_fail=False, exclude_bad=False)
+                               dir=datapath, exclusion_level='none')
     assert cat2.nobjects>=cat.nobjects
 
     # Check for reasonable exceptions when initializing.
@@ -66,7 +66,7 @@ def test_cosmos_fluxnorm():
     test_ind = 54
     rand_seed = 12345
     cat = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
-                               dir=datapath, exclude_fail=False, exclude_bad=False)
+                               dir=datapath, exclusion_level='none')
     rgc = galsim.RealGalaxyCatalog(file_name='real_galaxy_catalog_example.fits',
                                    dir=datapath)
     final_psf = galsim.Airy(diam=1.2, lam=800.) # PSF twice as big as HST in F814W.
