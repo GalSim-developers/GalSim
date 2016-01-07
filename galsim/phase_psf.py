@@ -289,7 +289,7 @@ class FrozenAtmosphericScreen(AtmosphericScreen):
 
         self.tab2d = galsim.LookupTable2D(x0, y0, dx, dy, self.screen, edge_mode='wrap')
         # Don't need these anymore, so free memory
-        # del self._phaseFT, self.psi, self.screen
+        del self._phaseFT, self.psi, self.screen
 
         # To handle wind, we will interpolate the LookupTable2D with an offset origin.
         self.origin = np.r_[0.0, 0.0]
@@ -879,11 +879,11 @@ def Atmosphere(r0_500=0.2, screen_size=30.0, time_step=0.03, altitude=0.0, L0=25
     is typically in the 10s of meters and does not vary with wavelength.
 
     To create multiple layers, simply specify keyword arguments as length-N lists instead of scalars
-    (works for all arguments except time_step and rng).  If, for any of these keyword arguments, you
-    want to use the same value for each layer, then you can just specify the argument as a scalar
-    and the function will automatically broadcast it into a list with length equal to the longest
-    found keyword argument list.  Note that it is an error to specify two keywords with lists of
-    different lengths (unless the of one of them is length is 1).
+    (works for all arguments except `time_step` and `rng`).  If, for any of these keyword arguments,
+    you want to use the same value for each layer, then you can just specify the argument as a
+    scalar and the function will automatically broadcast it into a list with length equal to the
+    longest found keyword argument list.  Note that it is an error to specify two keywords with
+    lists of different lengths (unless the of one of them is length is 1).
 
     The one exception to the above is the keyword `r0_500`.  The effective Fried parameter for a set
     of atmospheric layers is r0_500_effective = (sum(r**(-5./3) for r in r0_500s))**(-3./5).
@@ -891,8 +891,9 @@ def Atmosphere(r0_500=0.2, screen_size=30.0, time_step=0.03, altitude=0.0, L0=25
     effective Fried parameter for the whole set of layers equal to the input argument.
 
     As an example, the following code approximately creates the atmosphere used by Jee+Tyson(2011)
-    for their study of atmospheric PSFs for LSST.  Note this code takes about ~3 minutes to run on a
-    fast laptop, and will consume about (8192 ** 2 pixels) * (8 bytes) * (6 screens) ~ 3 GB of RAM.
+    for their study of atmospheric PSFs for LSST.  Note this code takes about ~3-4 minutes to run on
+    a fast laptop, and will consume about (8192 ** 2 pixels) * (8 bytes) * (6 screens) ~ 3 GB of
+    RAM in its final state, and more at intermediate states.
 
     > altitude = [0, 2.58, 5.16, 7.73, 12.89, 15.46]
     > r0_500_effective = 0.16
@@ -906,8 +907,8 @@ def Atmosphere(r0_500=0.2, screen_size=30.0, time_step=0.03, altitude=0.0, L0=25
                               altitude=altitude, L0=25.0, velocity=velocity, direction=direction,
                               screen_scale=screen_scale)
 
-    Once the atmosphere is constructed, 15-sec exposure PSFs (with an 8.4 meter aperture) take about
-    90 sec to generate on a fast laptop.
+    Once the atmosphere is constructed, a 15-sec exposure PSF (using an 8.4 meter aperture and
+    default settings) takes about 150 sec to generate on a fast laptop.
 
     > psf = atm.getPSF(exptime=15.0, diam=8.4, obscuration=0.6)
 
@@ -948,24 +949,26 @@ def Atmosphere(r0_500=0.2, screen_size=30.0, time_step=0.03, altitude=0.0, L0=25
                          clock time or system entropy to seed a new generator.  [Default: None]
     """
     # Listify
-    r0_500s, sizes, altitudes, L0s, velocities, directions, alpha_mags, scales = (
+    r0_500s, sizes, altitudes, L0s, velocities, directions, alpha_mags, frozens, scales = (
         listify(i) for i in (
-            r0_500, screen_size, altitude, L0, velocity, direction, alpha_mag, screen_scale))
+            r0_500, screen_size, altitude, L0, velocity, direction, alpha_mag, frozen,
+            screen_scale))
 
     # Broadcast
     n_layers = max(len(i) for i in (
-        r0_500s, sizes, altitudes, L0s, velocities, directions, alpha_mags, scales))
+        r0_500s, sizes, altitudes, L0s, velocities, directions, alpha_mags, frozens, scales))
     if n_layers > 1:
-        sizes, altitudes, L0s, velocities, directions, alpha_mags, scales = (
+        sizes, altitudes, L0s, velocities, directions, alpha_mags, frozens, scales = (
             broadcast(i, n_layers) for i in (
-                sizes, altitudes, L0s, velocities, directions, alpha_mags, scales))
+                sizes, altitudes, L0s, velocities, directions, alpha_mags, frozens, scales))
     # Broadcast r0_500 separately, since combination of indiv layers' r0s is more complex:
     if len(r0_500s) == 1:
         r0_500s = [n_layers**(3./5) * r0_500s[0]] * n_layers
 
     if any(len(i) != n_layers for i in (r0_500s, sizes, L0s, velocities, directions, alpha_mags,
-                                        scales)):
-        raise ValueError("r0_500, L0, velocity, direction, alpha_mag not broadcastable")
+                                        frozens, scales)):
+        raise ValueError("r0_500, screen_size, L0, velocity, direction, alpha_mag, frozen, " +
+                         "screen_scale not broadcastable")
 
     # Invert L0, with `L0 is None` interpretted as L0 = infinity => L0_inv = 0.0
     L0_invs = [1./L if L is not None else 0.0 for L in L0s]
@@ -973,19 +976,16 @@ def Atmosphere(r0_500=0.2, screen_size=30.0, time_step=0.03, altitude=0.0, L0=25
     # decompose velocities
     vxs, vys = zip(*[v*d.sincos() for v, d in zip(velocities, directions)])
 
-    if frozen:
-        layers = [
-            FrozenAtmosphericScreen(
-                size, scale, alt, time_step=time_step,
-                r0_500=r0, L0_inv=L0_inv, vx=vx, vy=vy, rng=rng)
-            for r0, size, alt, L0_inv, vx, vy, scale in zip(
-                r0_500s, sizes, altitudes, L0_invs, vxs, vys, scales)]
-    else:
-        layers = [
-            ARAtmosphericScreen(
-                size, screen_scale, alt, time_step=time_step,
-                r0_500=r0, L0_inv=L0_inv, vx=vx, vy=vy, alpha_mag=amag, rng=rng)
-            for r0, size, alt, L0_inv, vx, vy, amag, scale in zip(
-                r0_500s, sizes, altitudes, L0_invs, vxs, vys, alpha_mags, scales)]
-
+    layers = []
+    for r0, size, alt, L0_inv, vx, vy, amag, froze, scale in zip(r0_500s, sizes, altitudes, L0_invs,
+                                                                 vxs, vys, alpha_mags, frozens,
+                                                                 scales):
+        if froze:
+            layers.append(FrozenAtmosphericScreen(
+                size, scale, alt, time_step=time_step, r0_500=r0, L0_inv=L0_inv, vx=vx, vy=vy,
+                rng=rng))
+        else:
+            layers.append(ARAtmosphericScreen(
+                size, scale, alt, time_step=time_step, r0_500=r0, L0_inv=L0_inv, vx=vx, vy=vy,
+                alpha_mag=amag, rng=rng))
     return PhaseScreenList(layers)
