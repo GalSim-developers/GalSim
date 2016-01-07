@@ -101,7 +101,7 @@ def test_phase_screen_list():
     print 'time for %s = %.2f' % (funcname(), t2-t1)
 
 
-def test_atmpsf_wind_and_field_angle():
+def test_frozen_flow():
     # Check frozen flow: phase(x=0, t=0) == phase(x=v*t, t=t)
 
     import time
@@ -125,7 +125,7 @@ def test_atmpsf_wind_and_field_angle():
     print 'time for %s = %.2f' % (funcname(), t2-t1)
 
 
-def test_atmpsf_reset():
+def test_phase_psf_reset():
     import time
     t1 = time.time()
 
@@ -160,7 +160,7 @@ def test_atmpsf_reset():
     print 'time for %s = %.2f' % (funcname(), t2-t1)
 
 
-def test_atmpsf_batch():
+def test_phase_psf_batch():
     # Check that PSFs generated serially match those generated in batch.
     import time
     t1 = time.time()
@@ -192,7 +192,7 @@ def test_atmpsf_batch():
 
 
 if __name__ == "__main__":
-    test_atmpsf_batch()
-    test_atmpsf_reset()
-    test_atmpsf_wind_and_field_angle()
+    test_phase_psf_batch()
+    test_phase_psf_reset()
+    test_frozen_flow()
     test_phase_screen_list()

@@ -15,7 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file atmpsf.py
+"""@file phase_psf.py
+Utilities for creating PSFs from phase screens; Fourier optics stuff.
 """
 
 import copy
