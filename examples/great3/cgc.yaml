@@ -77,12 +77,8 @@ gal:
     num: 2
     first:
         # Galaxies were based on parametric fits to COSMOS galaxies.
-        # Make sure we use some cuts on postage stamp and fit quality as in GREAT3, specified using
-        # the exclusion_level keyword.  Currently the selected value "marginal" is in fact the
-        # default, but specify it in case that changes in future.
         type: COSMOSGalaxy
         gal_type: parametric
-        exclusion_level: marginal
         index: { type: Random }
 
         # Randomly spin the original profile
@@ -183,6 +179,11 @@ input:
         # If the command galsim_download_cosmos has been run, the catalog will have been downloaed
         # from the GalSim web site and saved in a directory that GalSim knows about. 
         # So file_name and dir are not necessary. 
+
+        # Make sure we use some cuts on postage stamp and fit quality as in GREAT3, specified using
+        # the exclusion_level keyword.  Currently the selected value "marginal" is in fact the
+        # default, but specify it in case that changes in future.
+        exclusion_level: marginal
 
         # We just need some parameters to tell it which galaxies to include in the selection.
         # For now, just a maximum hlr to exclude huge objects, although cf. issue #693.
