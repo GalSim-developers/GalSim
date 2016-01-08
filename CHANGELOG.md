@@ -12,13 +12,15 @@ Bug Fixes
   ChromaticObjects and image-setup keyword arguments (#683)
 - Added ability to manipulate the width of the moment-measuring weight function
   for the KSB shear estimation method of the galsim.hsm package. (#686)
-- Fixed bug the (undocumented) function COSMOSCatalog._makeSingleGalaxy,
+- Fixed bug in the (undocumented) function COSMOSCatalog._makeSingleGalaxy,
   where the resulting object did not set the index attribute properly. (#694)
 
 
 New Features
 ------------
 - Added OutputCatalog class (#301, #691)
+- Added methods calculateHLR, calculateMomentRadius, and calculateFWHM to both
+  GSObject and Image. (#308)
 - Changed `galsim.fits.writeMulti` to allow any of the "image"s to be
   already-built hdus, which are included as is. (#691)
 - Added optional `wcs` argument to `Image.resize()`. (#691)
@@ -28,6 +30,7 @@ New Features
   HDU in a FITS file with multiple extensions. (#660)
 - Made it possible to impose some cuts on galaxy image quality in the
   COSMOSCatalog class. (#693)
+
 
 Updates to galsim executable
 ----------------------------
