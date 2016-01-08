@@ -207,6 +207,18 @@ class COSMOSCatalog(object):
                 param_file_name = full_file_name[:k] + '_fits' + param_file_name[k:]
                 self.param_cat = pyfits.getdata(param_file_name)
 
+        # Check for the old-style parameter catalog
+        if 'fit_dvc_btt' not in self.param_cat.dtype.names:
+            # This will fail if they try to make a parametric galaxy.
+            # Don't raise an exception here, since they might not care about that.
+            # But give them some guidance about the error they will get if they
+            # do try to make a parametric galaxy.
+            import warnings
+            warnings.warn(
+                'You seem to have an old version of the COSMOS parameter file.\n'+
+                'Please run `galsim_download_cosmos -f` to force a re-download\n' +
+                'of the COSMOS catalog.')
+
         # Do the reading of what we need to impose selection criteria, if the appropriate
         # exclusion_level was chosen.
         if exclusion_level in ['marginal', 'bad_ps']:
@@ -218,7 +230,6 @@ class COSMOSCatalog(object):
                 self.selection_cat = None
                 import warnings
                 warnings.warn(
-                #raise RuntimeError(
                     'File with GalSim selection criteria not found!\n'+
                     'Not all of the requested exclusions will be performed.\n'+
                     'Run the program galsim_download_cosmos to download catalog\n '+
