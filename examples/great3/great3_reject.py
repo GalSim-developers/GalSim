@@ -41,6 +41,7 @@ def Great3Reject(config, base, value_type):
         psf_image = psf.drawImage(scale=im.scale)
         base['cached_psf_image'] = psf_image
         base['cached_psf'] = psf
+        print 'psf fwhm = ',psf_image.calculateFWHM()
     # We will define resolution using the resolution factor from re-Gaussianization, which uses a
     # trace-based size estimate of the post-seeing object.  For simplicity, we run
     # re-Gaussianization directly.

@@ -134,6 +134,9 @@ stamp:
     reject:
         type: Great3Reject
 
+    # For now.  Hopefully can remove this.
+    retry_failures: 500
+
 image:
     type: Tiled
     nx_tiles: 100
