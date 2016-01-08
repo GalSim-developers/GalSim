@@ -44,7 +44,7 @@ class COSMOSCatalog(object):
     option (1) for more information.  Note that if you want to make real galaxies you need to
     download and store the full tarball with all galaxy images, whereas if you want to make
     parametric galaxies you only need the catalog real_galaxy_catalog_23.5_fits.fits (and the
-    selection file real_galaxy_galsim_selection.fits.gz if you want to place cuts on the postage
+    selection file real_galaxy_galsim_selection.fits if you want to place cuts on the postage
     stamp quality) and can delete the galaxy and PSF image files.
 
     Finally, we provide a program that will download the large COSMOS sample for you and
@@ -176,6 +176,10 @@ class COSMOSCatalog(object):
         if exclusion_level not in ['none', 'bad_ps', 'bad_fits', 'marginal']:
             raise ValueError("Invalid value of exclusion_level: %s"%exclusion_level)
 
+        # Start by parsing the file names, since we'll need the image_dir below.
+        full_file_name, full_image_dir, _ = galsim.real._parse_files_dirs(
+                file_name, image_dir, dir, noise_dir)
+
         if self.use_real:
             if not _nobjects_only:
                 # First, do the easy thing: real galaxies.  We make the galsim.RealGalaxyCatalog()
@@ -191,19 +195,16 @@ class COSMOSCatalog(object):
             self.param_cat = pyfits.getdata(param_file_name)
 
         else:
-            # Start by doing the same file_name parsing as we did for the real galaxy
-            param_file_name, _, _ = galsim.real._parse_files_dirs(
-                    file_name, image_dir, dir, noise_dir)
             try:
                 # Read in data.
-                self.param_cat = pyfits.getdata(param_file_name)
+                self.param_cat = pyfits.getdata(full_file_name)
                 # Check if this was the right file.  It should have a 'fit_status' column.
                 self.param_cat['fit_status']
             except KeyError:
                 # But if that doesn't work, then the name might be the name of the real catalog,
                 # so try adding _fits to it as above.
-                k = param_file_name.find('.fits')
-                param_file_name = param_file_name[:k] + '_fits' + param_file_name[k:]
+                k = full_file_name.find('.fits')
+                param_file_name = full_file_name[:k] + '_fits' + param_file_name[k:]
                 self.param_cat = pyfits.getdata(param_file_name)
 
         # Do the reading of what we need to impose selection criteria, if the appropriate
@@ -211,26 +212,22 @@ class COSMOSCatalog(object):
         if exclusion_level in ['marginal', 'bad_ps']:
             try:
                 selection_file_name, _, _ = galsim.real._parse_files_dirs(
-                    'real_galaxy_galsim_selection.fits.gz', image_dir, dir, noise_dir)
+                    'real_galaxy_galsim_selection.fits', image_dir, full_image_dir, noise_dir)
                 self.selection_cat = pyfits.getdata(selection_file_name)
             except IOError:
-                try:
-                    selection_file_name, _, _ = galsim.real._parse_files_dirs(
-                        'real_galaxy_galsim_selection.fits', image_dir, dir, noise_dir)
-                    self.selection_cat = pyfits.getdata(selection_file_name)
-                except:
-                    self.selection_cat = None
-                    import warnings
-                    warnings.warn(
-                    #raise RuntimeError(
-                        'File with GalSim selection criteria not found!\n'+
-                        'Not all of the requested exclusions will be performed.\n'+
-                        'Run the program galsim_download_cosmos to download catalog\n '+
-                        'and accompanying image and selection files.\n'+
-                        'Or directly download the selection file from\n '+
-                        '  http://great3.jb.man.ac.uk/leaderboard/data/public/real_galaxy_galsim_selection.fits.gz\n'+
-                        'and put it with the catalog and image files.')
+                self.selection_cat = None
+                import warnings
+                warnings.warn(
+                #raise RuntimeError(
+                    'File with GalSim selection criteria not found!\n'+
+                    'Not all of the requested exclusions will be performed.\n'+
+                    'Run the program galsim_download_cosmos to download catalog\n '+
+                    'and accompanying image and selection files.\n'+
+                    'Or directly download the selection file from\n '+
+                    '  http://great3.jb.man.ac.uk/leaderboard/data/public/real_galaxy_galsim_selection.fits.gz\n'+
+                    'and put it with the catalog and image files.')
 
+        self.selection_cat = None
         # NB. The pyfits FITS_Rec class has a bug where it makes a copy of the full
         # record array in each record (e.g. in getParametricRecord) and then doesn't 
         # garbage collect it until the top-level FITS_Record goes out of scope.  
