@@ -19,7 +19,7 @@
 A program to download the COSMOS RealGalaxy catalog for use with GalSim.
 """
 
-import os, sys, urllib2, tarfile
+import os, sys, urllib2, tarfile, subprocess
 
 # Since this will be installed in the same directory as our galsim executable,
 # we need to do the same trick about changing the path so it imports the real
@@ -44,10 +44,10 @@ def parse_args():
     description += "See https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data\n"
     description += "for more details about the files being downloaded."
     epilog = "Note: The unpacked files total almost 6 GB in size!\n"
-    
+
     try:
         import argparse
-        
+
         # Build the parser and add arguments
         parser = argparse.ArgumentParser(description=description, epilog=epilog, add_help=True)
         parser.add_argument(
@@ -93,7 +93,7 @@ def parse_args():
             help="save the tarball after unpacking.")
 
         # Remembering to convert to an integer type
-        args.verbosity = int(args.verbosity) 
+        args.verbosity = int(args.verbosity)
 
     if args.verbosity == 0:
         args.quiet = True
@@ -104,7 +104,7 @@ def parse_args():
 # Based on recipe 577058: http://code.activestate.com/recipes/577058/
 def query_yes_no(question, default="yes"):
     """Ask a yes/no question via raw_input() and return their answer.
-    
+
     "question" is a string that is presented to the user.
     "default" is the presumed answer if the user just hits <Enter>.
         It must be "yes" (the default), "no" or None (meaning
@@ -134,28 +134,7 @@ def query_yes_no(question, default="yes"):
             sys.stdout.write("Please respond with 'yes' or 'no' "\
                              "(or 'y' or 'n').\n")
 
-
-def main():
-    args = parse_args()
-
-    # Parse the integer verbosity level from the command line args into a logging_level string
-    import logging
-    logging_levels = { 0: logging.CRITICAL, 
-                       1: logging.WARNING,
-                       2: logging.INFO,
-                       3: logging.DEBUG }
-    logging_level = logging_levels[args.verbosity]
-
-    # Setup logging to go to sys.stdout or (if requested) to an output file
-    logging.basicConfig(format="%(message)s", level=logging_level, stream=sys.stdout)
-    logger = logging.getLogger('galsim')
-    
-    url = "http://great3.jb.man.ac.uk/leaderboard/data/public/COSMOS_23.5_training_sample.tar.gz"
-    file_name = os.path.basename(url)
-    share_dir = galsim.meta_data.share_dir
-    target = os.path.join(share_dir, file_name)
-
-    unpack_dir = target[:-len('.tar.gz')]
+def download(url, target, unpack_dir, args, logger):
 
     logger.info('Downloading from url:\n  %s',url)
     logger.info('Target location is:\n  %s',target)
@@ -165,6 +144,7 @@ def main():
     meta = u.info()
     logger.debug("\nMeta information about url:\n%s",str(meta))
     file_size = int(meta.getheaders("Content-Length")[0]) / 1024**2
+    file_name = os.path.basename(url)
     logger.info("\nSize of %s: %d MBytes" , file_name, file_size)
 
     # Check if the file already exists and if it is the right size
@@ -194,7 +174,7 @@ def main():
                 yn = query_yes_no(q, default='yes')
                 if yn == 'no':
                     do_download = False
-    elif os.path.isdir(unpack_dir):
+    elif unpack_dir is not None and os.path.isdir(unpack_dir):
         logger.info("")
         if args.force:
             logger.info("Target file has already been downloaded and unpacked.  "+
@@ -211,7 +191,7 @@ def main():
                 if yn == 'no':
                     do_download = False
                     args.save = True
- 
+
     # The next bit is based on one of the answers here: (by PabloG)
     # http://stackoverflow.com/questions/22676/how-do-i-download-a-file-over-http-using-python
     # The progress bar feature in that answer is important here, since this will take a while,
@@ -239,7 +219,10 @@ def main():
                     sys.stdout.flush()
         logger.info("Download complete.")
 
-    if do_download or args.unpack:
+    return do_download, target
+
+def unpack(new_download, target, share_dir, args, logger):
+    if new_download or args.unpack:
         logger.info("Unpacking the tarball...")
         with tarfile.open(target) as tar:
             if args.verbosity >= 3:
@@ -252,6 +235,50 @@ def main():
     if not args.save:
         logger.info("Removing the tarball to save space")
         os.remove(target)
+
+def unzip(target, args, logger):
+    logger.info("Unzipping file")
+    subprocess.call(["gunzip", target])
+    logger.info("Done")
+
+
+def main():
+    args = parse_args()
+
+    # Parse the integer verbosity level from the command line args into a logging_level string
+    import logging
+    logging_levels = { 0: logging.CRITICAL,
+                       1: logging.WARNING,
+                       2: logging.INFO,
+                       3: logging.DEBUG }
+    logging_level = logging_levels[args.verbosity]
+
+    # Setup logging to go to sys.stdout or (if requested) to an output file
+    logging.basicConfig(format="%(message)s", level=logging_level, stream=sys.stdout)
+    logger = logging.getLogger('galsim')
+
+    url = "http://great3.jb.man.ac.uk/leaderboard/data/public/COSMOS_23.5_training_sample.tar.gz"
+    share_dir = galsim.meta_data.share_dir
+
+    file_name = os.path.basename(url)
+    target = os.path.join(share_dir, file_name)
+    unpack_dir = target[:-len('.tar.gz')]
+
+    url2 = "http://great3.jb.man.ac.uk/leaderboard/data/public/real_galaxy_galsim_selection.fits.gz"
+    file_name2 = os.path.basename(url2)
+    target2 = os.path.join(unpack_dir, file_name2)
+    target2_nogz = target2[:-len('.gz')]
+
+    if os.path.exists(unpack_dir) and not os.path.exists(target2_nogz):
+        logger.info("Detected old version without %s",file_name2)
+        logger.info("Only downloading %s",file_name2)
+
+        download(url2, target2, None, args, logger)
+        unzip(target2, args, logger)
+
+    else:
+        new_download, target = download(url, target, unpack_dir, args, logger)
+        unpack(new_download, target, share_dir, args, logger)
 
 if __name__ == "__main__":
     main()
