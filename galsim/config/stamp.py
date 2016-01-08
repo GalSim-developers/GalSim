@@ -227,7 +227,7 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
 # Ignore these when parsing the parameters for specific stamp types:
 stamp_ignore = ['offset', 'retry_failures', 'gsparams', 'draw_method',
                 'wmult', 'nphotons', 'max_extra_noise', 'poisson_flux',
-                'reject', 'min_flux_frac']
+                'reject', 'min_flux_frac', 'min_snr', 'max_snr']
 
 def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
     """
@@ -619,17 +619,38 @@ def RejectBasic(config, prof, psf, image, logger):
     if 'reject' in stamp:
         reject = galsim.config.ParseValue(stamp, 'reject', config, bool)[0]
     if 'min_flux_frac' in stamp:
-        min_flux_frac = galsim.config.ParseValue(stamp, 'min_flux_frac', config, float)[0]
         if not isinstance(prof, galsim.GSObject):
             raise ValueError("Cannot apply min_flux_frac for stamp types that do not use "+
-                                "a single GSObject profile.")
+                             "a single GSObject profile.")
         expected_flux = prof.flux
         measured_flux = numpy.sum(image.array)
+        min_flux_frac = galsim.config.ParseValue(stamp, 'min_flux_frac', config, float)[0]
         if measured_flux < min_flux_frac * expected_flux:
             if logger and logger.isEnabledFor(logging.WARN):
-                logger.warn('Object %d: Measured flux = %f < %f * %f.',
+                logger.warn('Object %d: Measured flux = %f < %s * %f.',
                             config['obj_num'], measured_flux, min_flux_frac, expected_flux)
             reject = True
+    if 'min_snr' in stamp or 'max_snr' in stamp:
+        if not isinstance(prof, galsim.GSObject):
+            raise ValueError("Cannot apply min_snr for stamp types that do not use "+
+                             "a single GSObject profile.")
+        var = galsim.config.CalculateNoiseVar(config)
+        sumsq = numpy.sum(image.array**2)
+        snr = numpy.sqrt(sumsq / var)
+        if 'min_snr' in stamp:
+            min_snr = galsim.config.ParseValue(stamp, 'min_snr', config, float)[0]
+            if snr < min_snr:
+                if logger and logger.isEnabledFor(logging.WARN):
+                    logger.warn('Object %d: Measured snr = %f < %s.',
+                                config['obj_num'], snr, min_snr)
+                reject = True
+        if 'max_snr' in stamp:
+            max_snr = galsim.config.ParseValue(stamp, 'max_snr', config, float)[0]
+            if snr > max_snr:
+                if logger and logger.isEnabledFor(logging.WARN):
+                    logger.warn('Object %d: Measured snr = %f > %s.',
+                                config['obj_num'], snr, max_snr)
+                reject = True
     return reject
 
 

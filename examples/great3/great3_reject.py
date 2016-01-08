@@ -60,15 +60,25 @@ def Great3Reject(config, base, value_type):
     # to use some kind of Gaussian-weighted SNR estimator for the realistic galaxy branches.  Or,
     # subtract off the expected contribution given the value of 'current_var' in the postage stamp?
     #
+    # Note: aside from the bit about the noise for real-galaxy branches, this calculation
+    # could be replaced by setting
+    #     min_snr: 17
+    #     max_snr: 100
+    # in the stamp field of the config file.
+
     # First get the sum of pixel values squared:
     sumsq = np.sum(im.array**2)
     # Get the noise variance for this stamp:
     var = galsim.config.CalculateNoiseVar(base)
     snr = np.sqrt(sumsq / var)
+
     # We nominally used a cut at SNR=17 (in an attempt to compensate for the SNR estimator being
     # overly optimistic) and also eliminated SNR>100.
-    if snr < 17. or snr > 100.:
-        print 'SNR rejection: ',snr
+    if snr < 17.:
+        print 'Low SNR rejection: ',snr
+        reject = True
+    if snr > 100.:
+        print 'High SNR rejection: ',snr
         reject = True
 
     # False here is a "safe" parameter, which tells GalSim not to cache this result to use again
