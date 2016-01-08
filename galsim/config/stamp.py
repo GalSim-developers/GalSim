@@ -370,7 +370,8 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 if itry+1 < ntries:
                     if logger and logger.isEnabledFor(logging.WARN):
                         logger.warn('Object %d: Rejecting this object and rebuilding',obj_num)
-                    galsim.config.RemoveCurrent(config, keep_safe=True)
+                    reset_func = valid_stamp_types[stamp_type]['reset']
+                    reset = reset_func(config, logger)
                     continue
                 else:
                     if logger:
@@ -400,7 +401,6 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             return im, current_var
 
         except Exception as e:
-
             if itry == ntries-1:
                 # Then this was the last try.  Just re-raise the exception.
                 raise
@@ -410,7 +410,8 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                     logger.info('This is try %d/%d, so trying again.',itry+1,ntries)
                 # Need to remove the "current_val"s from the config dict.  Otherwise,
                 # the value generators will do a quick return with the cached value.
-                galsim.config.RemoveCurrent(config, keep_safe=True)
+                reset_func = valid_stamp_types[stamp_type]['reset']
+                reset = reset_func(config, logger)
                 continue
 
 
@@ -631,6 +632,25 @@ def RejectBasic(config, prof, psf, image, logger):
             reject = True
     return reject
 
+
+def ResetBasic(config, logger):
+    """Reset some aspects of the config dict so the object can be rebuilt after rejecting the
+    current object.
+
+    @param config       The configuration dict.
+    @param logger       If given, a logger object to log progress.
+    """
+    # Only clear things out if they are indexed by obj_num
+    for field in ['psf', 'gal']:
+        if 'index_key' in config[field]:
+            if config[field]['index_key'] not in ['obj_num', 'obj_num_in_file']:
+                continue
+        galsim.config.RemoveCurrent(config[field], keep_safe=True)
+    # Also make sure to clear any explicit reject calculations
+    if 'reject' in config['stamp']:
+        galsim.config.RemoveCurrent(config['stamp']['reject'], keep_safe=True)
+
+
 def WhitenBasic(config, prof, image, logger):
     """
     If appropriate, whiten the resulting image according to the requested noise profile
@@ -707,7 +727,8 @@ def SNRBasic(config, image, logger):
 valid_stamp_types = {}
 
 def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=None,
-                      draw_func=None, reject_func=None, whiten_func=None, snr_func=None):
+                      draw_func=None, reject_func=None, reset_func=None,
+                      whiten_func=None, snr_func=None):
     """Register an image type for use by the config apparatus.
 
     You only need to specify the functions that you want to change from the Basic stamp
@@ -731,6 +752,9 @@ def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=No
     @param reject_func      The function to call to determine if this stamp should be rejected.
                             The call signature is
                                 reject = Reject(config, prof, psf, image, logger)
+    @param reset_func       The function to call to reset the config dict after a rejection.
+                            The call signature is
+                                Reset(config, logger)
     @param whiten_func      The function to call to whiten the image.
                             The call signature is
                                 current_var = Whiten(config, prof, image, logger)
@@ -744,6 +768,7 @@ def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=No
     if stamp_func is None: stamp_func = StampBasic
     if draw_func is None: draw_func = DrawBasic
     if reject_func is None: reject_func = RejectBasic
+    if reset_func is None: reset_func = ResetBasic
     if whiten_func is None: whiten_func = WhitenBasic
     if snr_func is None: snr_func = SNRBasic
 
@@ -753,10 +778,11 @@ def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=No
         'stamp' : stamp_func,
         'draw' : draw_func,
         'reject' : reject_func,
+        'reset' : reset_func,
         'whiten' : whiten_func,
         'snr' : snr_func,
     }
 
 RegisterStampType('Basic', SetupBasic, ProfileBasic, StampBasic, DrawBasic, RejectBasic,
-                  WhitenBasic, SNRBasic)
+                  ResetBasic, WhitenBasic, SNRBasic)
 
