@@ -56,10 +56,11 @@ def Great3Reject(config, base, value_type):
     # compared to one that might be used in reality.  Also, for realistic galaxies, it will be
     # confused by the noise in the image.  In GREAT3, we dealt with this by precomputing SNR values
     # using parametric galaxies models and using them even when calculating SNR for realistic
-    # galaxies.  It is hard to imagine how to implement this here, but it would at least be better
-    # to use some kind of Gaussian-weighted SNR estimator for the realistic galaxy branches.  Or,
-    # subtract off the expected contribution given the value of 'current_var' in the postage stamp?
-    #
+    # galaxies.  It is hard to imagine how to implement this here.
+    # We could switch to using some kind of Gaussian-weighted SNR estimator for the realistic
+    # galaxy branches perhaps.  But for now we just do the same calculation, but subtract off
+    # the contribution of the original image noise from the calculation of sum(I(x,y)^2).
+
     # Note: aside from the bit about the noise for real-galaxy branches, this calculation
     # could be replaced by setting
     #     min_snr: 17
@@ -70,6 +71,16 @@ def Great3Reject(config, base, value_type):
     sumsq = np.sum(im.array**2)
     # Get the noise variance for this stamp:
     var = galsim.config.CalculateNoiseVar(base)
+
+    # If the galaxy has a noise attribute, then we are in a real-galaxy branch, so we need to
+    # subtract off the contribution of the image noise to sumsq.
+    gal = galsim.config.GetCurrentValue('gal',base)
+    if hasattr(gal, 'noise'):
+        final = galsim.Convolve(gal,psf)
+        current_noise_var = final.noise.getVariance()
+        npix = numpy.prod(im.array.shape)
+        sumsq -= current_noise_var * npix
+
     snr = np.sqrt(sumsq / var)
 
     # We nominally used a cut at SNR=17 (in an attempt to compensate for the SNR estimator being
