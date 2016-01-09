@@ -77,10 +77,12 @@ def AddNoise(config, im, current_var=0., logger=None):
         config['noise_rng'] = config['rng']
 
     func = valid_noise_types[noise_type]['noise']
-    func(noise, config, im, current_var, logger)
+    var = func(noise, config, im, current_var, logger)
 
     if orig_index == 'obj_num':
         config['index_key'] = 'obj_num'
+
+    return var
 
 def CalculateNoiseVar(config):
     """
@@ -122,8 +124,11 @@ def AddNoiseVariance(config, im, include_obj_var=False, logger=None):
     @param im               The image onto which to add the variance values
     @param include_obj_var  Whether to add the variance from the object photons for noise
                             models that have a component based on the number of photons.
-                            [default: False]
+                            Note: if this is True, the returned variance will not include this
+                            contribution to the noise variance.  [default: False]
     @param logger           If given, a logger object to log progress. [default: None]
+
+    @returns the variance in the image
     """
     if 'noise' in config['image']:
         noise = config['image']['noise']
@@ -216,6 +221,8 @@ def AddNoiseGaussian(config, base, im, current_var, logger):
         logger.debug('image %d, obj %d: Added Gaussian noise with var = %f',
                      base['image_num'],base['obj_num'],var)
 
+    return var
+
 def NoiseVarGaussian(config, base):
 
     # The noise level can be specified either as a sigma or a variance.  Here we just calculate
@@ -244,6 +251,7 @@ def AddNoisePoisson(config, base, im, current_var, logger):
     if not sky and not extra_sky:
         raise AttributeError(
             "Must provide either sky_level or sky_level_pixel for noise.type = Poisson")
+    var = sky + extra_sky # for the return value
 
     # If we already have some variance in the image (from whitening), then we subtract this much
     # off of the sky level.  It's not precisely accurate, since the existing variance is Gaussian,
@@ -291,6 +299,8 @@ def AddNoisePoisson(config, base, im, current_var, logger):
 
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d, obj %d: Added Poisson noise', base['image_num'],base['obj_num'])
+
+    return var
 
 
 def NoiseVarPoisson(config, base):
@@ -345,6 +355,7 @@ def AddNoiseCCD(config, base, im, current_var, logger):
     if not sky and not extra_sky:
         raise AttributeError(
             "Must provide either sky_level or sky_level_pixel for noise.type = Poisson")
+    var = sky + extra_sky + read_noise_var  # for the return value
 
     # If we already have some variance in the image (from whitening), then we try to subtract it 
     # from the read noise if possible.  If now, we subtract the rest off of the sky level.  It's 
@@ -411,6 +422,8 @@ def AddNoiseCCD(config, base, im, current_var, logger):
     if logger and logger.isEnabledFor(logging.DEBUG):
         logger.debug('image %d, obj %d: Added CCD noise with gain = %f, read_noise = %f',
                      base['image_num'],base['obj_num'],gain,read_noise)
+
+    return var
 
 def NoiseVarCCD(config, base):
     # The noise variance is sky / gain + read_noise^2
@@ -488,6 +501,8 @@ def AddNoiseCOSMOS(config, base, im, current_var, logger):
         logger.debug('image %d, obj %d: Added COSMOS correlated noise with variance = %f',
                      base['image_num'],base['obj_num'],var)
 
+    return var
+
 def NoiseVarCOSMOS(config, base):
     cn = _GetCOSMOSNoise(config,base)
     return cn.getVariance()
@@ -504,7 +519,7 @@ def RegisterNoiseType(noise_type, addnoise_func, getvar_func, addvar_func):
     @param noise_type       The name of the type in config['image']['noise']
     @param addnoise_func    The function to add noise to an image
                             The call signature is:
-                                AddNoise(config, base, image, current_var, logger)
+                                var = AddNoise(config, base, image, current_var, logger)
     @param getvar_func      A function that returns the variance of the noise
                             The call signature is 
                                 var = GetVar(config, base)

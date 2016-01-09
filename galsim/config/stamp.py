@@ -395,7 +395,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             # Sometimes, depending on the image type, we go on to do the rest of the noise as well.
             if do_noise:
                 noise_func = valid_stamp_types[stamp_type]['noise']
-                im = noise_func(config,im,skip,current_var,logger)
+                im, current_var = noise_func(config,skip,im,current_var,logger)
 
             return im, current_var
 
@@ -746,7 +746,7 @@ def WhitenBasic(config, prof, image, logger):
     return current_var
 
 
-def NoiseBasic(config, image, skip, current_var, logger):
+def NoiseBasic(config, skip, image, current_var, logger):
     """
     Add the sky level and the noise to the stamp.
 
@@ -754,17 +754,17 @@ def NoiseBasic(config, image, skip, current_var, logger):
           stamp individually, rather than to the full image and the end.
 
     @param config           The configuration dict
-    @param image            The current image.
     @param skip             Are we skipping this image? (Usually means to add sky, but not noise.)
+    @param image            The current image.
     @param current_var      The current noise variance present in the image already.
     @param logger           If given, a logger object to log progress. [default: None]
 
-    @returns the image with noise
+    @returns the new values of image, current_var
     """
     galsim.config.AddSky(config,image)
     if not skip:
-        galsim.config.AddNoise(config,image,current_var,logger)
-    return image
+        current_var = galsim.config.AddNoise(config,image,current_var,logger)
+    return image, current_var
 
 
 valid_stamp_types = {}
@@ -807,7 +807,7 @@ def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=No
                                 current_var = Whiten(config, prof, image, logger)
     @param noise_func       The function to call to add noise to the image.
                             The call signature is
-                                image = Noise(config, image, skip, current_var, logger)
+                                image, current_var = Noise(config, skip, image, current_var, logger)
     """
     if setup_func is None: setup_func = SetupBasic
     if prof_func is None: prof_func = ProfileBasic
