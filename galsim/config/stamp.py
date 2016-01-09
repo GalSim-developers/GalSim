@@ -593,6 +593,53 @@ def DrawBasic(config, prof, image, method, offset, logger):
     image = prof.drawImage(**kwargs)
     return image
 
+
+def SNRBasic(config, image, logger):
+    """
+    Calculate the factor by which to rescale the image based on a desired S/N level.
+
+    @param config           The configuration dict.
+    @param image            The current image.
+    @param logger           If given, a logger object to log progress.
+
+    @returns scale_factor
+    """
+    if (('gal' in config and 'signal_to_noise' in config['gal']) or
+        ('gal' not in config and 'psf' in config and 'signal_to_noise' in config['psf'])):
+        import math
+        if 'gal' in config: root_key = 'gal'
+        else: root_key = 'psf'
+
+        if 'flux' in config[root_key]:
+            raise AttributeError(
+                'Only one of signal_to_noise or flux may be specified for %s'%root_key)
+
+        if 'image' in config and 'noise' in config['image']:
+            noise_var = galsim.config.CalculateNoiseVar(config)
+        else:
+            raise AttributeError(
+                "Need to specify noise level when using %s.signal_to_noise"%root_key)
+        sn_target = galsim.config.ParseValue(config[root_key], 'signal_to_noise', config, float)[0]
+
+        # Now determine what flux we need to get our desired S/N
+        # There are lots of definitions of S/N, but here is the one used by Great08
+        # We use a weighted integral of the flux:
+        # S = sum W(x,y) I(x,y) / sum W(x,y)
+        # N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
+        # Now we assume that Var(I(x,y)) is dominated by the sky noise, so
+        # Var(I(x,y)) = var
+        # We also assume that we are using a matched filter for W, so W(x,y) = I(x,y).
+        # Then a few things cancel and we find that
+        # S/N = sqrt( sum I(x,y)^2 / var )
+
+        sn_meas = math.sqrt( numpy.sum(image.array**2) / noise_var )
+        # Now we rescale the flux to get our desired S/N
+        scale_factor = sn_target / sn_meas
+        return scale_factor
+    else:
+        return 1.
+
+
 def RejectBasic(config, prof, psf, image, logger):
     """Check to see if this object should be rejected.
 
@@ -720,56 +767,11 @@ def NoiseBasic(config, image, skip, current_var, logger):
     return image
 
 
-def SNRBasic(config, image, logger):
-    """
-    Calculate the factor by which to rescale the image based on a desired S/N level.
-
-    @param config           The configuration dict.
-    @param image            The current image.
-    @param logger           If given, a logger object to log progress.
-
-    @returns scale_factor
-    """
-    if (('gal' in config and 'signal_to_noise' in config['gal']) or
-        ('gal' not in config and 'psf' in config and 'signal_to_noise' in config['psf'])):
-        import math
-        if 'gal' in config: root_key = 'gal'
-        else: root_key = 'psf'
-
-        if 'flux' in config[root_key]:
-            raise AttributeError(
-                'Only one of signal_to_noise or flux may be specified for %s'%root_key)
-
-        if 'image' in config and 'noise' in config['image']:
-            noise_var = galsim.config.CalculateNoiseVar(config)
-        else:
-            raise AttributeError(
-                "Need to specify noise level when using %s.signal_to_noise"%root_key)
-        sn_target = galsim.config.ParseValue(config[root_key], 'signal_to_noise', config, float)[0]
-
-        # Now determine what flux we need to get our desired S/N
-        # There are lots of definitions of S/N, but here is the one used by Great08
-        # We use a weighted integral of the flux:
-        # S = sum W(x,y) I(x,y) / sum W(x,y)
-        # N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
-        # Now we assume that Var(I(x,y)) is dominated by the sky noise, so
-        # Var(I(x,y)) = var
-        # We also assume that we are using a matched filter for W, so W(x,y) = I(x,y).
-        # Then a few things cancel and we find that
-        # S/N = sqrt( sum I(x,y)^2 / var )
-
-        sn_meas = math.sqrt( numpy.sum(image.array**2) / noise_var )
-        # Now we rescale the flux to get our desired S/N
-        scale_factor = sn_target / sn_meas
-        return scale_factor
-    else:
-        return 1.
-
 valid_stamp_types = {}
 
 def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=None,
-                      draw_func=None, reject_func=None, reset_func=None,
-                      whiten_func=None, noise_func=None, snr_func=None):
+                      draw_func=None, snr_func=None, reject_func=None, reset_func=None,
+                      whiten_func=None, noise_func=None):
     """Register an image type for use by the config apparatus.
 
     You only need to specify the functions that you want to change from the Basic stamp
@@ -790,6 +792,10 @@ def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=No
     @param draw_func        The function to call to draw the image.
                             The call signature is
                                 image = Draw(config, prof, image, method, offset, logger)
+    @param snr_func         The function to call to rescale the image according to the desired
+                            signal-to-noise.
+                            The call signature is
+                                scale_factor = SNR(config, image, logger)
     @param reject_func      The function to call to determine if this stamp should be rejected.
                             The call signature is
                                 reject = Reject(config, prof, psf, image, logger)
@@ -802,33 +808,29 @@ def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=No
     @param noise_func       The function to call to add noise to the image.
                             The call signature is
                                 image = Noise(config, image, skip, current_var, logger)
-    @param snr_func         The function to call to rescale the image according to the desired
-                            signal-to-noise.
-                            The call signature is
-                                scale_factor = SNR(config, image, logger)
     """
     if setup_func is None: setup_func = SetupBasic
     if prof_func is None: prof_func = ProfileBasic
     if stamp_func is None: stamp_func = StampBasic
     if draw_func is None: draw_func = DrawBasic
+    if snr_func is None: snr_func = SNRBasic
     if reject_func is None: reject_func = RejectBasic
     if reset_func is None: reset_func = ResetBasic
     if whiten_func is None: whiten_func = WhitenBasic
     if noise_func is None: noise_func = NoiseBasic
-    if snr_func is None: snr_func = SNRBasic
 
     valid_stamp_types[stamp_type] = {
         'setup' : setup_func,
         'prof' : prof_func,
         'stamp' : stamp_func,
         'draw' : draw_func,
+        'snr' : snr_func,
         'reject' : reject_func,
         'reset' : reset_func,
         'whiten' : whiten_func,
         'noise' : noise_func,
-        'snr' : snr_func,
     }
 
-RegisterStampType('Basic', SetupBasic, ProfileBasic, StampBasic, DrawBasic, RejectBasic,
-                  ResetBasic, WhitenBasic, NoiseBasic, SNRBasic)
+RegisterStampType('Basic', SetupBasic, ProfileBasic, StampBasic, DrawBasic, SNRBasic,
+                  RejectBasic, ResetBasic, WhitenBasic, NoiseBasic)
 
