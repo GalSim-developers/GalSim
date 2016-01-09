@@ -394,9 +394,8 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
 
             # Sometimes, depending on the image type, we go on to do the rest of the noise as well.
             if do_noise:
-                galsim.config.AddSky(config,im)
-                if not skip:
-                    galsim.config.AddNoise(config,im,current_var,logger)
+                noise_func = valid_stamp_types[stamp_type]['noise']
+                im = noise_func(config,im,skip,current_var,logger)
 
             return im, current_var
 
@@ -700,6 +699,27 @@ def WhitenBasic(config, prof, image, logger):
     return current_var
 
 
+def NoiseBasic(config, image, skip, current_var, logger):
+    """
+    Add the sky level and the noise to the stamp.
+
+    Note: This only gets called if the image type requests that the noise be added to each
+          stamp individually, rather than to the full image and the end.
+
+    @param config           The configuration dict
+    @param image            The current image.
+    @param skip             Are we skipping this image? (Usually means to add sky, but not noise.)
+    @param current_var      The current noise variance present in the image already.
+    @param logger           If given, a logger object to log progress. [default: None]
+
+    @returns the image with noise
+    """
+    galsim.config.AddSky(config,image)
+    if not skip:
+        galsim.config.AddNoise(config,image,current_var,logger)
+    return image
+
+
 def SNRBasic(config, image, logger):
     """
     Calculate the factor by which to rescale the image based on a desired S/N level.
@@ -749,7 +769,7 @@ valid_stamp_types = {}
 
 def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=None,
                       draw_func=None, reject_func=None, reset_func=None,
-                      whiten_func=None, snr_func=None):
+                      whiten_func=None, noise_func=None, snr_func=None):
     """Register an image type for use by the config apparatus.
 
     You only need to specify the functions that you want to change from the Basic stamp
@@ -779,6 +799,9 @@ def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=No
     @param whiten_func      The function to call to whiten the image.
                             The call signature is
                                 current_var = Whiten(config, prof, image, logger)
+    @param noise_func       The function to call to add noise to the image.
+                            The call signature is
+                                image = Noise(config, image, skip, current_var, logger)
     @param snr_func         The function to call to rescale the image according to the desired
                             signal-to-noise.
                             The call signature is
@@ -791,6 +814,7 @@ def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=No
     if reject_func is None: reject_func = RejectBasic
     if reset_func is None: reset_func = ResetBasic
     if whiten_func is None: whiten_func = WhitenBasic
+    if noise_func is None: noise_func = NoiseBasic
     if snr_func is None: snr_func = SNRBasic
 
     valid_stamp_types[stamp_type] = {
@@ -801,9 +825,10 @@ def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=No
         'reject' : reject_func,
         'reset' : reset_func,
         'whiten' : whiten_func,
+        'noise' : noise_func,
         'snr' : snr_func,
     }
 
 RegisterStampType('Basic', SetupBasic, ProfileBasic, StampBasic, DrawBasic, RejectBasic,
-                  ResetBasic, WhitenBasic, SNRBasic)
+                  ResetBasic, WhitenBasic, NoiseBasic, SNRBasic)
 
