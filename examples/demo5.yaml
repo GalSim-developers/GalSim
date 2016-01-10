@@ -61,11 +61,16 @@ psf :
 
 # For this demo, we have pairs of galaxies that are 90 degree rotations of each other
 # to eliminate the effect of shape noise.  (To first order at least.)
-# In GalSim, we declare this as a "Ring" stamp type.  The ring can have any number of
-# values set around a ring in e1-e2 space.  For 90 degree rotated pairs, this
-# corresponds to only 2 values on the "ring".  It is up to the user to make sure the
-# total number of objects in an image is a multiple of num, otherwise the last "ring"
-# won't get completed.  In this case 100 is divisible by 2, so it's fine.
+# In GalSim, we declare this as a "Ring" stamp type.  We haven't specified the stamp field
+# in previous demos.  When it is not given, it defaults to the "Basic" stamp type, which
+# simply builds the galaxy and the psf objects as given and convolves them together.
+# The ring type does the same thing on the first galaxy, but then for some number of subsequent
+# stamps, uses a rotated version of the same galaxy.  After completing the ring, using num
+# stamps in total, then a new galaxy is built.
+# The ring can have any number of values set around a ring in e1-e2 space.  For 90 degree rotated
+# pairs, this corresponds to only 2 values on the "ring" so num = 2 here.
+# It is up to the user to make sure the total number of objects in an image is a multiple of num,
+# otherwise the last "ring" won't get completed.  In this case 100 is divisible by 2, so it's fine.
 stamp :
     type : Ring
     num : 2

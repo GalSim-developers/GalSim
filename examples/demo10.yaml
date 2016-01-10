@@ -84,49 +84,34 @@ psf :
             str : '(math.atan2(world_pos.y,world_pos.x) + math.pi/2.) * galsim.radians' 
 
 
-# Define the galaxy profile
-gal :
-    type : Ring
+# Make the galaxies in a Ring test.
+stamp :
 
     # Last time we used Ring (demo5), we had num=2 to make pairs of 90 degree rotated
     # galaxies.  This example is more like a typical ring test where the same galaxy profile
     # is drawn at many orientations stepped uniformly in angle, making a ring in e1-e2 space.
+    type : Ring
+
     num : 20
 
-    first :
-        type : RealGalaxy
-        id : 
-            type : List
-            items : [ 106416, 106731, 108402, 116045, 116448 ]
-            # Because this is in a Ring, the "first" item only gets accessed every 20 objects.
-            # However, sequences are indexed by the overall object number, so in order to
-            # step through the items in this list once for each time it gets to the "first"
-            # item, we need to set the index to repeat 20 times before incrementing.
-            index :
-                type : Sequence
-                # You can access the current value of any other item in the config dict using
-                # type = Current.  The syntax for the key is to treat the config levels as
-                # attributes.  So the number of galaxies in the ring defined above is gal.num.
-                # You can use any value this way.  If it hasn't actually been evaluated yet,
-                # it will evaluate it as needed for the current object.
-                repeat : { type : Current, key : gal.num }
+    # If your underlying galaxy (defined in gal) has rotational symmetry (e.g. a sheared
+    # exponential profile), then you would typically want the full rotation spanned by the
+    # ring test to be 180 degrees.  However, in this case, the underlying real galaxies
+    # do not have this symmetry.  So we want the ring to span a full rotation of 360 degrees.
+    full_rotation : 360 deg
+
+    # Again, these transformations happen after the Ring rotation.
 
     # Make the galaxies a factor of 3 larger (in linear size, not area) than their
     # original observed size.
     dilation : 3
 
-    # If your underlying galaxy (defined in first) has rotational symmetry (e.g. a sheared 
-    # exponential profile), then you would typically want the full rotation spanned by the 
-    # ring test to be 180 degrees.  However, in this case, the underlying real galaxies
-    # do not have this symmetry.  So we want the ring to span a full rotation of 360 degrees.
-    full_rotation : 360 deg
-
-    shear : 
-        # For this demo, we use shears drawn from a power spectrum P(k) = k^1.8.
-        # The power spectrum is set up below using input : power_spectrum.  See below.
+    # For this demo, we use shears drawn from a power spectrum P(k) = k^1.8.
+    # The power spectrum is set up below using input : power_spectrum.  See below.
+    shear :
         type : PowerSpectrumShear
 
-    shift : 
+    shift :
         type : RTheta
         # Half a pixel in a random direction.
         r :
@@ -135,6 +120,26 @@ gal :
             # We again use the Current type, this time to access image.pixel_scale defined below.
             fpixel_scale : { type : Current, key : image.pixel_scale }
         theta : { type : Random }
+
+
+# Define the galaxy profile
+gal :
+    type : RealGalaxy
+    id :
+        type : List
+        items : [ 106416, 106731, 108402, 116045, 116448 ]
+        # Because this is in a Ring, the gal field only gets processed every 20 objects.
+        # However, sequences are indexed by the overall object number, so in order to
+        # step through the items in this list once for each time it gets to the gal processing,
+        # we need to set the index to repeat 20 times before incrementing.
+        index :
+            type : Sequence
+            # You can access the current value of any other item in the config dict using
+            # type = Current.  The syntax for the key is to treat the config levels as
+            # attributes.  So the number of galaxies in the ring defined above is gal.num.
+            # You can use any value this way.  If it hasn't actually been evaluated yet,
+            # it will evaluate it as needed for the current object.
+            repeat : { type : Current, key : stamp.num }
 
     signal_to_noise : 100
 
@@ -250,7 +255,7 @@ output :
 
             psf_fwhm : psf.fwhm
 
-            cosmos_id : gal.first.id
+            cosmos_id : gal.id
 
             # Even though we accessed the catalog by id, we can still get the index number
             # in the catalog via the gal.index attribute.
@@ -259,8 +264,8 @@ output :
                 str : 'gal.index'
                 # There is a special Eval code we haven't mentioned yet.  If you name precede
                 # a variable name with x, then that means it's an object, rather than a value.
-                # So in this case, get the index from the attribute of the object, gal.first.
-                xgal : { type : Current, key : 'gal.first' }
+                # So in this case, get the index from the attribute of the object, gal.
+                xgal : { type : Current, key : 'gal' }
 
             # Fields that are automatically generated are also available.
             # List, Ring, and Catalog all have an index parameter, but it is often omitted
@@ -270,25 +275,25 @@ output :
             theta :
                 type : Eval
                 str : "index * 360. / num"
-                iindex : { type : Current, key : 'gal.index' }
-                inum : { type : Current, key : 'gal.num' }
+                iindex : { type : Current, key : 'stamp.index' }
+                inum : { type : Current, key : 'stamp.num' }
 
             g1 :
                 type : Eval
                 str : 'shear.g1'
-                gshear : { type : Current, key : 'gal.shear' }
+                gshear : { type : Current, key : 'stamp.shear' }
             g2 :
                 type : Eval
                 str : 'shear.g2'
-                gshear : { type : Current, key : 'gal.shear' }
+                gshear : { type : Current, key : 'stamp.shear' }
 
             shift_x :
                 type : Eval
                 str : 'shift.x'
-                pshift : { type : Current, key : 'gal.shift' }
+                pshift : { type : Current, key : 'stamp.shift' }
             shift_y :
                 type : Eval
                 str : 'shift.y'
-                pshift : { type : Current, key : 'gal.shift' }
+                pshift : { type : Current, key : 'stamp.shift' }
 
 
