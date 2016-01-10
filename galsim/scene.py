@@ -232,8 +232,7 @@ class COSMOSCatalog(object):
                 warnings.warn(
                     'File with GalSim selection criteria not found!\n'+
                     'Not all of the requested exclusions will be performed.\n'+
-                    'Run the program galsim_download_cosmos to download catalog\n '+
-                    'and accompanying image and selection files.\n'+
+                    'Run the program galsim_download_cosmos to get the necessay selection file.\n'+
                     'Or directly download the selection file from\n '+
                     '  http://great3.jb.man.ac.uk/leaderboard/data/public/real_galaxy_galsim_selection.fits.gz\n'+
                     'and put it with the catalog and image files.')
