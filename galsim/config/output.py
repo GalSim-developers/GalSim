@@ -46,7 +46,8 @@ def BuildFiles(nfiles, config, file_num=0, logger=None):
     # We'll want a pristine version later to give to the workers.
     orig_config = galsim.config.CopyConfig(config)
 
-    jobs = []
+    jobs = []  # Will be a list of the kwargs to use for each job
+    info = []  # Will be a list of (file_num, file_name) correspongind to each jobs.
 
     # Count from 0 to make sure image_num, etc. get counted right.  We'll start actually
     # building the files at first_file_num.
@@ -89,7 +90,8 @@ def BuildFiles(nfiles, config, file_num=0, logger=None):
             output_type = output['type']
             default_ext = valid_output_types[output_type]['ext']
             file_name = GetFilename(output, config, default_ext)
-            jobs.append( (kwargs, (file_num, file_name)) )
+            jobs.append(kwargs)
+            info.append( (file_num, file_name) )
 
         # nobj is a list of nobj for each image in that file.
         # So len(nobj) = nimages and sum(nobj) is the total number of objects
@@ -98,8 +100,8 @@ def BuildFiles(nfiles, config, file_num=0, logger=None):
         image_num += len(nobj)
         obj_num += sum(nobj)
 
-    def done_func(logger, proc, info, result, t2):
-        file_num, file_name = info
+    def done_func(logger, proc, k, result, t2):
+        file_num, file_name = info[k]
         file_name2, t = result  # This is the t for which 0 means the file was skipped.
         if file_name2 != file_name:
             raise RuntimeError("Files seem to be out of sync. %s != %s",file_name, file_name2)
@@ -108,9 +110,9 @@ def BuildFiles(nfiles, config, file_num=0, logger=None):
             else: s0 = '%s: '%proc
             logger.warn(s0 + 'File %d = %s: time = %f sec', file_num, file_name, t)
 
-    def except_func(logger, proc, e, tr, info):
+    def except_func(logger, proc, k, e, tr):
         if logger:
-            file_num, file_name = info
+            file_num, file_name = info[k]
             if proc is None: s0 = ''
             else: s0 = '%s: '%proc
             logger.error(s0 + 'Exception caught for file %d = %s', file_num, file_name)

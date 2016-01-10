@@ -61,22 +61,24 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
     jobs = []
     for k in range(nimages):
         kwargs = { 'image_num' : image_num, 'obj_num' : obj_num }
-        jobs.append( (kwargs, image_num) )
+        jobs.append(kwargs)
         obj_num += galsim.config.GetNObjForImage(config, image_num)
         image_num += 1
 
-    def done_func(logger, proc, image_num, image, t):
+    def done_func(logger, proc, k, image, t):
         if logger and logger.isEnabledFor(logging.INFO):
             # Note: numpy shape is y,x
             ys, xs = image.array.shape
             if proc is None: s0 = ''
             else: s0 = '%s: '%proc
+            image_num = jobs[k]['image_num']
             logger.info(s0 + 'Image %d: size = %d x %d, time = %f sec', image_num, xs, ys, t)
 
-    def except_func(logger, proc, e, tr, image_num):
+    def except_func(logger, proc, k, e, tr):
         if logger:
             if proc is None: s0 = ''
             else: s0 = '%s: '%proc
+            image_num = jobs[k]['image_num']
             logger.error(s0 + 'Exception caught when building image %d', image_num)
             #logger.error('%s',tr)
             logger.error('Aborting the rest of this file')

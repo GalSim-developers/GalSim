@@ -72,21 +72,23 @@ def BuildStamps(nobjects, config, obj_num=0,
             'ysize' : ysize,
             'do_noise' : do_noise,
         }
-        jobs.append( (kwargs, obj_num+k) )
+        jobs.append(kwargs)
 
-    def done_func(logger, proc, obj_num, result, t):
+    def done_func(logger, proc, k, result, t):
         if logger and logger.isEnabledFor(logging.INFO):
             # Note: numpy shape is y,x
             image = result[0]
             ys, xs = image.array.shape
             if proc is None: s0 = ''
             else: s0 = '%s: '%proc
+            obj_num = jobs[k]['obj_num']
             logger.info(s0 + 'Stamp %d: size = %d x %d, time = %f sec', obj_num, xs, ys, t)
 
-    def except_func(logger, proc, e, tr, obj_num):
+    def except_func(logger, proc, k, e, tr):
         if logger:
             if proc is None: s0 = ''
             else: s0 = '%s: '%proc
+            obj_num = jobs[k]['obj_num']
             logger.error(s0 + 'Exception caught when building stamp %d', obj_num)
             #logger.error('%s',tr)
             logger.error('Aborting the rest of this image')

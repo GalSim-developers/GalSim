@@ -635,17 +635,37 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
                  njobs_per_task=1, done_func=None, except_func=None, except_abort=True):
     """A helper function for performing a task using multiprocessing.
 
+    A note about the nomenclature here.  We use the term "job" to mean the job of building a single
+    file or image or stamp.  The output of each job is gathered into the list of results that
+    is returned.  A task is a collection of one or more jobs that are all done by the same
+    processor.  For simple cases, each task is just a single job, but for things like a Ring
+    test, the task needs to have the jobs for a full ring.
+
+    The tasks argument is a list of tasks.
+    Each task in that list is a list of jobs.
+    Each job is a tuple consisting of (kwargs, k), where kwargs is the dict of kwargs to pass to
+    the job_func and k is the index of this job in the full list of jobs.
+
     @param nproc            How many processes to use.
     @param config           The configuration dict.
-    @param job_func         The function to run for each job.
+    @param job_func         The function to run for each job.  It will be called as
+                                result = job_func(**kwargs)
+                            where kwargs is from one of the jobs in the task list.
     @param jobs             A list of jobs to run.  Each item is a tuple (kwargs, info).
     @param item             A string indicating what is being worked on.
     @param logger           If given, a logger object to log progress. [default: None]
     @param njobs_per_task   The number of jobs to send to the worker at a time. [default: 1]
-    @param done_func        A function to run upon completion of each job. [default: None]
-    @param except_func      A function to run if an exception is encountered. [default: None]
+    @param done_func        A function to run upon completion of each job.  It will be called as
+                                done_func(logger, proc, k, result, t)
+                            where proc is the process name, k is the index of the job, result is
+                            the return value of that job, and t is the time taken. [default: None]
+    @param except_func      A function to run if an exception is encountered.  It will be called as
+                                except_func(logger, proc, k, ex, tr)
+                            where proc is the process name, k is the index of the job that failed,
+                            ex is the exception caught, and tr is the traceback. [default: None]
     @param except_abort     Whether an exception should abort the rest of the processing.
-                            [default: True]
+                            If False, then the returned results list will not include anything
+                            for the jobs that failed.  [default: True]
 
     @returns results = a list of the outputs from job_func for each job
     """
@@ -656,9 +676,7 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
     # to send them back to the main process.
     # The *tasks* can be made up of more than one *job*.  Each job involves calling job_func
     # with the kwargs from the list of jobs.
-    # Each job also carries with it some kind of information, like the file_num, file_name, etc.
-    # to help identify what the job is about.  This is mostly useful for the done_func and
-    # except_func to write something appropriate in the logger.
+    # Each job also carries with it its index in the original list of all jobs.
     def worker(task_queue, results_queue, config, logger):
         proc = current_process().name
 
@@ -698,6 +716,13 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
             logger.error("*** Start profile for %s ***\n%s\n*** End profile for %s ***",
                          proc,s.getvalue(),proc)
 
+    # Convert to the tasks structure we need for MultiProcess
+    # Each task is a list of (job, k) tuples.  In this case, we have njobs_per_task jobs per task.
+    tasks = [ [ (jobs[j], j) for j in range(k,k+njobs_per_task) ]
+                for k in range(0, len(jobs), njobs_per_task) ]
+    njobs = sum([len(task) for task in tasks])
+    assert njobs == len(jobs)
+
     if nproc > 1:
         if logger and logger.isEnabledFor(logging.WARN):
             logger.warn("Using %d processes for %s processing",nproc,item)
@@ -705,22 +730,16 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
         from multiprocessing import Process, Queue, current_process
         from multiprocessing.managers import BaseManager
 
-        # Set up the task list.  Each task is defined as a list of jobs and the index k of the
-        # first job to be done.  The index k is mostly important for putting the results in
-        # the right order, since they will be done out of order.
+        # Send the tasks to the task_queue.
         task_queue = Queue()
-        njobs = len(jobs)
-        for k in range(0, njobs, njobs_per_task):
-            k2 = k + njobs_per_task
-            if k2 > njobs: k2 = njobs
-            task = [ (jobs[k][0], k) for k in range(k,k2) ]
+        for task in tasks:
             task_queue.put(task)
 
         # Temporarily mark that we are multiprocessing, so we know not to start another
         # round of multiprocessing later.
         config['current_nproc'] = nproc
 
-        # The logger is not picklable, so we need to make a proxy for it so all the 
+        # The logger is not picklable, so we need to make a proxy for it so all the
         # processes can emit logging information safely.
         logger_proxy = GetLoggerProxy(logger)
 
@@ -744,27 +763,25 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
         # In the meanwhile, the main process keeps going.  We pull each set of images off of the
         # results_queue and put them in the appropriate place in the lists.
         # This loop is happening while the other processes are still working on their tasks.
-        results = [ None for k in range(len(jobs)) ]
+        results = [ None for k in range(njobs) ]
         for kk in range(njobs):
             res, k, t, proc = results_queue.get()
             if isinstance(res,Exception):
                 # res is really the exception, e
                 # t is really the traceback
-                # k is the job number that failed, so jobs[k][1] is the info for that job.
-                except_func(logger, proc, res, t, jobs[k][1])
+                # k is the index for the job that failed
+                if except_func is not None:
+                    except_func(logger, proc, k, res, t)
                 if except_abort:
                     for j in range(nproc):
                         p_list[j].terminate()
                     raise res
             else:
                 # The normal case
-                done_func(logger, proc, jobs[k][1], res, t)
+                if done_func is not None:
+                    done_func(logger, proc, k, res, t)
                 results[k] = res
 
-        # If there are any failures, then there will still be some Nones in the results list.
-        # Remove them.
-        results = [ r for r in results if r is not None ]
- 
         # Stop the processes
         # The 'STOP's could have been put on the task list before starting the processes, or you
         # can wait.  In some cases it can be useful to clear out the results_queue (as we just did)
@@ -783,21 +800,28 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
         config['current_nproc'] = nproc
 
     else : # nproc == 1
-        results = []
-        for kwargs, info in jobs:
-            try:
-                t1 = time.time()
-                kwargs['config'] = config
-                kwargs['logger'] = logger
-                result = job_func(**kwargs)
-                t2 = time.time()
-                done_func(logger, None, info, result, t2-t1)
-                results.append(result)
-            except Exception as e:
-                import traceback
-                tr = traceback.format_exc()
-                except_func(logger, None, e, tr, info)
-                if except_abort: raise
- 
+        results = [ None ] * njobs
+        for task in tasks:
+            for kwargs, k in task:
+                try:
+                    t1 = time.time()
+                    kwargs['config'] = config
+                    kwargs['logger'] = logger
+                    result = job_func(**kwargs)
+                    t2 = time.time()
+                    if done_func is not None:
+                        done_func(logger, None, k, result, t2-t1)
+                    results[k] = result
+                except Exception as e:
+                    import traceback
+                    tr = traceback.format_exc()
+                    if except_func is not None:
+                        except_func(logger, None, k, e, tr)
+                    if except_abort: raise
+
+    # If there are any failures, then there will still be some Nones in the results list.
+    # Remove them.
+    results = [ r for r in results if r is not None ]
+
     return results
- 
+
