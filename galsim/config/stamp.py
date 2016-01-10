@@ -482,9 +482,11 @@ def SetupBasic(config, xsize, ysize, ignore, logger):
 
 def ProfileBasic(config, psf, gsparams, logger):
     """
-    Build the object to be drawn.  For the Basic stamp type, this builds a galaxy from
-    the config['gal'] dict and convolves it with the psf (if given).  If either the psf or
-    the galaxy is None, then the other one is returned as is.
+    Build the object to be drawn.
+
+    For the Basic stamp type, this builds a galaxy from the config['gal'] dict and convolves it
+    with the psf (if given).  If either the psf or the galaxy is None, then the other one is
+    returned as is.
 
     @param config           The configuration dict.
     @param psf              The PSF, if any.  This may be None, in which case, no PSF is convolved.
@@ -649,7 +651,7 @@ def RejectBasic(config, prof, psf, image, logger):
     @param image        The postage stamp image.  No noise is on it yet at this point.
     @param logger       If given, a logger object to log progress.
 
-    @returns the variance of the resulting whitened (or symmetrized) image.
+    @returns whether the galaxy was rejected.
     """
     # Check that we aren't on a second or later item in a Ring.
     # This will make more sense when Ring is a stamp type rather than an object type,
