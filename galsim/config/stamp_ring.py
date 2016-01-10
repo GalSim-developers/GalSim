@@ -38,7 +38,10 @@ def SetupRing(config, xsize, ysize, ignore, logger):
     """
     req = { 'num' : int }
     opt = { 'full_rotation' : galsim.Angle , 'index' : int }
-    ignore = ignore + []
+    # Ignore the transformation specifications that are allowed in stamp for Ring types.
+    ignore = ignore + [
+        'dilate', 'dilation', 'ellip', 'rotate', 'rotation', 'scale_flux',
+        'magnify', 'magnification', 'shear', 'shift' ]
 
     stamp = config['stamp']
     params = galsim.config.GetAllParams(stamp, config, req=req, opt=opt, ignore=ignore)[0]
@@ -98,6 +101,9 @@ def ProfileRing(config, psf, gsparams, logger):
         dtheta = full_rotation / num
         gal = gal.rotate(index*dtheta)
 
+    # Apply any transformations that are given in the stamp field.
+    gal = galsim.config.TransformObject(gal, config['stamp'], config, logger)[0]
+
     if psf is not None:
         return galsim.Convolve(gal,psf)
     else:
@@ -117,9 +123,9 @@ def RejectRing(config, prof, psf, image, logger):
 
     @returns whether the galaxy was rejected.
     """
-    index = galsim.config.ParseValue(stamp, 'index', config, int)[0]
+    index = galsim.config.ParseValue(config['stamp'], 'index', config, int)[0]
     if index == 0:
-        return RejectBasic(config, prof, psf, image, logger)
+        return galsim.config.RejectBasic(config, prof, psf, image, logger)
     else:
         return False
 

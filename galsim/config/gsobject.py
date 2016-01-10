@@ -190,7 +190,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
             pass
     
     # Apply any dilation, ellip, shear, etc. modifications.
-    gsobject, safe1 = _TransformObject(gsobject, param, base, logger)
+    gsobject, safe1 = TransformObject(gsobject, param, base, logger)
     safe = safe and safe1
  
     param['current_val'] = gsobject
@@ -413,7 +413,7 @@ def _BuildOpticalPSF(config, base, ignore, gsparams, logger):
 # Now the functions for performing transformations
 #
 
-def _TransformObject(gsobject, config, base, logger):
+def TransformObject(gsobject, config, base, logger):
     """@brief Applies ellipticity, rotation, gravitational shearing and centroid shifting to a
     supplied GSObject, in that order.
 

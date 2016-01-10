@@ -37,12 +37,18 @@ def DrawPSFStamp(psf, config, base, bounds, offset, method, logger=None):
     else:
         method = 'auto'
 
-    # Special: if the galaxy was shifted, then also shift the psf
-    if 'shift' in base['gal']:
-        gal_shift = galsim.config.GetCurrentValue('gal.shift',base, galsim.PositionD)
+    # Check for a shift specification in (1) output.psf, (2) stamp, and (3) gal
+    shift = None
+    if 'shift' in config:
+        shift = galsim.config.ParseValue(config,'shift',base,galsim.PositionD)[0]
+    elif 'shift' in base['stamp']:
+        shift = galsim.config.GetCurrentValue('stamp.shift',base, galsim.PositionD)
+    elif 'shift' in base['gal']:
+        shift = galsim.config.GetCurrentValue('gal.shift',base, galsim.PositionD)
+    if shift is not None:
         if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('obj %d: psf shift (1): %s',base['obj_num'],str(gal_shift))
-        psf = psf.shift(gal_shift)
+            logger.debug('obj %d: psf shift: %s',base['obj_num'],str(shift))
+        psf = psf.shift(shift)
 
     wcs = base['wcs'].local(base['image_pos'])
     im = galsim.ImageF(bounds, wcs=wcs)
