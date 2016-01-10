@@ -65,4 +65,4 @@ def _BuildRing(config, base, ignore, gsparams, logger):
     return gsobject, False
 
 # Register this as a valid gsobject type
-galsim.config.RegisterObjectType('Ring', _BuildRing, is_block=True)
+galsim.config.RegisterObjectType('Ring', _BuildRing, _is_block=True)

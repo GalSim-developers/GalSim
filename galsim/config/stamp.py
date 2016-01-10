@@ -60,10 +60,6 @@ def BuildStamps(nobjects, config, obj_num=0,
     else:
         nproc = 1
 
-    nobj_per_task = galsim.config.CalculateNObjPerTask(nproc, nobjects, config)
-    if logger and logger.isEnabledFor(logging.DEBUG):
-        logger.debug('image %d: nobj_per_task = %d',config.get('image_num',0), nobj_per_task)
-
     jobs = []
     for k in range(nobjects):
         kwargs = {
@@ -93,8 +89,11 @@ def BuildStamps(nobjects, config, obj_num=0,
             #logger.error('%s',tr)
             logger.error('Aborting the rest of this image')
 
-    results = galsim.config.MultiProcess(nproc, config, BuildStamp, jobs, 'stamp', logger,
-                                         njobs_per_task = nobj_per_task,
+    # Convert to the tasks structure we need for MultiProcess
+    # Each task is a list of (job, k) tuples.  In this case, we have nobj_per_task jobs per task.
+    tasks = MakeStampTasks(config, jobs, logger)
+
+    results = galsim.config.MultiProcess(nproc, config, BuildStamp, tasks, 'stamp', logger,
                                          done_func = done_func,
                                          except_func = except_func)
 
@@ -656,10 +655,9 @@ def RejectBasic(config, prof, psf, image, logger):
     @returns whether the galaxy was rejected.
     """
     # Check that we aren't on a second or later item in a Ring.
-    # This will make more sense when Ring is a stamp type rather than an object type,
-    # so it will just specialize this function.  cf. Issue #698.
+    # This check can be removed once we do not need to support the deprecated  gsobject type=Ring.
     if 'gal' in config:
-        block_size = galsim.config.GetMinimumBlock(config['gal'], config)
+        block_size = galsim.config.gsobject._GetMinimumBlock(config['gal'], config)
         if config['obj_num'] % block_size != 0:
             # Don't reject, since the first item passed.  If we reject now, it will mess things up.
             return False
@@ -761,7 +759,7 @@ def NoiseBasic(config, skip, image, current_var, logger):
     @param skip             Are we skipping this image? (Usually means to add sky, but not noise.)
     @param image            The current image.
     @param current_var      The current noise variance present in the image already.
-    @param logger           If given, a logger object to log progress. [default: None]
+    @param logger           If given, a logger object to log progress.
 
     @returns the new values of image, current_var
     """
@@ -771,11 +769,63 @@ def NoiseBasic(config, skip, image, current_var, logger):
     return image, current_var
 
 
+def MakeStampTasks(config, jobs, logger):
+    """Turn a list of jobs into a list of tasks.
+
+    See the doc string for galsim.config.MultiProcess for the meaning of this distinction.
+
+    For the Basic stamp type, there is just one job per task, so the tasks list is just:
+
+        tasks = [ [ (job, k) ] for k, job in enumerate(jobs) ]
+
+    But other stamp types may need groups of jobs to be done sequentially by the same process.
+    cf. stamp type=Ring.
+
+    @param config           The configuration dict
+    @param jobs             A list of jobs to split up into tasks.  Each job in the list is a
+                            dict of parameters that includes 'obj_num'.
+    @param logger           If given, a logger object to log progress.
+
+    @returns a list of tasks
+    """
+    if 'stamp' in config and 'type' in config['stamp']:
+        stamp_type = config['stamp']['type']
+    else:
+        stamp_type = 'Basic'
+    tasks_func = valid_stamp_types[stamp_type]['tasks']
+    return tasks_func(config, jobs, logger)
+
+
+def TasksBasic(config, jobs, logger):
+    """Turn a list of jobs into a list of tasks.
+
+    For the Basic stamp type, there is just one job per task, so the tasks list is just:
+
+        tasks = [ [ (job, k) ] for k, job in enumerate(jobs) ]
+
+    @param config           The configuration dict
+    @param jobs             A list of jobs to split up into tasks.  Each job in the list is a
+                            dict of parameters that includes 'obj_num'.
+    @param logger           If given, a logger object to log progress.
+
+    @returns a list of tasks
+    """
+    # For backwards compatibility with the old Ring gsobject type, we actually check for that
+    # here and make a list of tasks that work for that.  This is undocumented though, since the
+    # gsobject type=Ring is now deprecated.
+    block_size = 1
+    if 'gal' in config:
+        block_size = galsim.config.gsobject._GetMinimumBlock(config['gal'], config)
+    tasks = [ [ (jobs[j], j) for j in range(k,min(k+block_size,len(jobs))) ]
+                for k in range(0, len(jobs), block_size) ]
+    return tasks
+
+
 valid_stamp_types = {}
 
 def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=None,
                       draw_func=None, snr_func=None, reject_func=None, reset_func=None,
-                      whiten_func=None, noise_func=None):
+                      whiten_func=None, noise_func=None, tasks_func=None):
     """Register an image type for use by the config apparatus.
 
     You only need to specify the functions that you want to change from the Basic stamp
@@ -812,6 +862,9 @@ def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=No
     @param noise_func       The function to call to add noise to the image.
                             The call signature is
                                 image, current_var = Noise(config, skip, image, current_var, logger)
+    @param tasks_func       The function to call to convert a list of jobs to a list of tasks.
+                            The call signature is
+                                tasks = Tasks(config, jobs, logger)
     """
     if setup_func is None: setup_func = SetupBasic
     if prof_func is None: prof_func = ProfileBasic
@@ -822,6 +875,7 @@ def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=No
     if reset_func is None: reset_func = ResetBasic
     if whiten_func is None: whiten_func = WhitenBasic
     if noise_func is None: noise_func = NoiseBasic
+    if tasks_func is None: tasks_func = TasksBasic
 
     valid_stamp_types[stamp_type] = {
         'setup' : setup_func,
@@ -833,8 +887,9 @@ def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=No
         'reset' : reset_func,
         'whiten' : whiten_func,
         'noise' : noise_func,
+        'tasks' : tasks_func,
     }
 
 RegisterStampType('Basic', SetupBasic, ProfileBasic, StampBasic, DrawBasic, SNRBasic,
-                  RejectBasic, ResetBasic, WhitenBasic, NoiseBasic)
+                  RejectBasic, ResetBasic, WhitenBasic, NoiseBasic, TasksBasic)
 

@@ -130,6 +130,29 @@ def RejectRing(config, prof, psf, image, logger):
         return False
 
 
+def TasksRing(config, jobs, logger):
+    """Turn a list of jobs into a list of tasks.
+
+    For the Ring stamp type, we group jobs into sets of num.  If there are extra jobs that
+    don't fit into a full ring, the last task will be a partial ring.
+
+    @param config           The configuration dict
+    @param jobs             A list of jobs to split up into tasks.  Each job in the list is a
+                            dict of parameters that includes 'obj_num'.
+    @param logger           If given, a logger object to log progress.
+
+    @returns a list of tasks
+    """
+    stamp = config['stamp']
+    if 'num' not in stamp:
+        raise AttributeError("Attribute num is required for type = Ring")
+    num = galsim.config.ParseValue(stamp, 'num', config, int)[0]
+    ntot = len(jobs)
+    tasks = [ [ (jobs[j], j) for j in range(k,min(k+num,ntot)) ] for k in range(0, ntot, num) ]
+    return tasks
+
+
+
 # Register this as a valid stamp type
 # Use the regular Basic functions for most things.  Just specialize the setup, profile, and reject
 # functions.
@@ -137,5 +160,6 @@ from .stamp import RegisterStampType
 RegisterStampType('Ring',
                   setup_func = SetupRing,
                   prof_func = ProfileRing,
-                  reject_func = RejectRing)
+                  reject_func = RejectRing,
+                  tasks_func = TasksRing)
 

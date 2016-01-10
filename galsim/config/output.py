@@ -119,7 +119,11 @@ def BuildFiles(nfiles, config, file_num=0, logger=None):
             logger.error('%s',tr)
             logger.error('File %s not written! Continuing on...',file_name)
 
-    results = galsim.config.MultiProcess(nproc, orig_config, BuildFile, jobs, 'file',
+    # Convert to the tasks structure we need for MultiProcess
+    # Each task is a list of (job, k) tuples.  In this case, we only have one job per task.
+    tasks = [ [ (job, k) ] for (k, job) in enumerate(jobs) ]
+
+    results = galsim.config.MultiProcess(nproc, orig_config, BuildFile, tasks, 'file',
                                          logger, done_func = done_func,
                                          except_func = except_func,
                                          except_abort = False)

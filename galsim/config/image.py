@@ -52,12 +52,6 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
     else:
         nproc = 1
 
-    # If the images are Single (one stamp per image), then we need to check for Rings and the like.
-    if ('image' not in config or 'type' not in image or image['type'] == 'Single'):
-        nim_per_task = galsim.config.CalculateNObjPerTask(nproc, nimages, config)
-    else:
-        nim_per_task = 1
-
     jobs = []
     for k in range(nimages):
         kwargs = { 'image_num' : image_num, 'obj_num' : obj_num }
@@ -83,8 +77,10 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
             #logger.error('%s',tr)
             logger.error('Aborting the rest of this file')
 
-    images = galsim.config.MultiProcess(nproc, config, BuildImage, jobs, 'image', logger,
-                                        njobs_per_task = nim_per_task,
+    # Convert to the tasks structure we need for MultiProcess
+    tasks = MakeImageTasks(config, jobs, logger)
+
+    images = galsim.config.MultiProcess(nproc, config, BuildImage, tasks, 'image', logger,
                                         done_func = done_func,
                                         except_func = except_func)
 
@@ -317,6 +313,38 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
     return max_current_var
 
 
+def MakeImageTasks(config, jobs, logger):
+    """Turn a list of jobs into a list of tasks.
+
+    See the doc string for galsim.config.MultiProcess for the meaning of this distinction.
+
+    For most image types, there is just one job per task, so the tasks list is just:
+
+        tasks = [ [ (job, k) ] for k, job in enumerate(jobs) ]
+
+    But some image types may need groups of jobs to be done sequentially by the same process.
+    The image type=Single for instance uses whatever grouping is needed for the stamp type.
+
+    @param config           The configuration dict
+    @param jobs             A list of jobs to split up into tasks.  Each job in the list is a
+                            dict of parameters that includes 'image_num' and 'obj_num'.
+    @param logger           If given, a logger object to log progress.
+
+    @returns a list of tasks
+    """
+    if 'image' in config and 'type' in config['image']:
+        image_type = config['image']['type']
+    else:
+        image_type = 'Single'
+
+    tasks_func = valid_image_types[image_type]['tasks']
+    if tasks_func is None:
+        tasks = [ [ (job, k) ] for k, job in enumerate(jobs) ]
+    else:
+        tasks = tasks_func(config, jobs, logger)
+    return tasks
+
+
 def SetupSingle(config, image_num, obj_num, ignore, logger):
     """
     Do the initialization and setup for building a Single image.
@@ -392,33 +420,52 @@ def GetNObjSingle(config, image_num):
     """
     return 1
 
+def TasksSingle(config, jobs, logger):
+    """Turn a list of jobs into a list of tasks.
+
+    This passes the job onto the MakeStampTasks function.
+
+    @param config           The configuration dict
+    @param jobs             A list of jobs to split up into tasks.  Each job in the list is a
+                            dict of parameters that includes 'image_num' and 'obj_num'.
+    @param logger           If given, a logger object to log progress.
+
+    @returns a list of tasks
+    """
+    return galsim.config.MakeStampTasks(config, jobs, logger)
+
 
 valid_image_types = {}
 
-def RegisterImageType(image_type, setup_func, build_func, noise_func, nobj_func):
+def RegisterImageType(image_type, setup_func, build_func, noise_func, nobj_func, tasks_func=None):
     """Register an image type for use by the config apparatus.
 
     @param image_type       The name of the type in config['image']
     @param setup_func       The function to call to determine the size of the image and do any
                             other initial setup.
-                            The call signature is 
+                            The call signature is
                                 xsize, ysize = Setup(config, image_num, obj_num, ignore, logger)
     @param build_func       The function to call for building the image
                             The call signature is:
                                 image = Build(config, image_num, obj_num, logger)
     @param noise_func       The function to call to add noise and sky level to the image.
-                            The call signature is 
+                            The call signature is
                                 AddNoise(image, config, image_num, obj_num, logger)
     @param nobj_func        A function that returns the number of objects that will be built.
-                            The call signature is 
+                            The call signature is
                                 nobj = GetNObj(config, image_num)
+    @param tasks_func       The function to call to convert a list of jobs to a list of tasks.
+                            The call signature is
+                                tasks = Tasks(config, jobs, logger)
+                            [default: None, which means use 1 job per task]
     """
     valid_image_types[image_type] = {
         'setup' : setup_func,
         'build' : build_func,
         'noise' : noise_func,
         'nobj' : nobj_func,
+        'tasks' : tasks_func,
     }
 
-RegisterImageType('Single', SetupSingle, BuildSingle, None, GetNObjSingle)
+RegisterImageType('Single', SetupSingle, BuildSingle, None, GetNObjSingle, TasksSingle)
 

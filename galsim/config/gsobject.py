@@ -482,9 +482,11 @@ def _Shift(gsobject, config, key, base, logger):
     gsobject = gsobject.shift(shift.x,shift.y)
     return gsobject, safe
 
-def GetMinimumBlock(config, base):
+def _GetMinimumBlock(config, base):
     """Get the minimum number of objects that should be done on the same process for a 
     particular object configuration.
+
+    This function is only needed for backwards-compatibility support of gsobject type=Ring.
 
     @param config       A dict with the configuration information.
     @param base         The base dict of the configuration. [default: config]
@@ -502,7 +504,7 @@ def GetMinimumBlock(config, base):
 
 valid_gsobject_types = {}
 
-def RegisterObjectType(type_name, build_func, is_block=False):
+def RegisterObjectType(type_name, build_func, _is_block=False):
     """Register an object type for use by the config apparatus.
 
     A few notes about the signature of the build functions:
@@ -526,14 +528,13 @@ def RegisterObjectType(type_name, build_func, is_block=False):
     @param build_func       A function to build a GSObject from the config information.
                             The call signature is
                                 obj, safe = Build(config, base, ignore, gsparams, logger)
-    @param is_block         Does the type define a block of galaxies that are inter-related in
-                            some way where they need to be done by the same process.  If True,
-                            then this type should include a 'num' parameter that gives the
-                            number of objects in the block. [default: False]
     """
+    # Note: the is_block parameter is an undocumented feature only needed to support the
+    # now-deprecated type=Ring.  Once that feature is fully removed, we can remove the _is_block
+    # parameter here.
     valid_gsobject_types[type_name] = {
-        'func' : build_func, 
-        'block' : is_block
+        'func' : build_func,
+        'block' : _is_block
     }
 
 RegisterObjectType('None', _BuildNone)

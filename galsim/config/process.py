@@ -597,42 +597,9 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None):
 
     galsim.config.BuildFiles(nfiles, config, file_num=start, logger=logger)
 
-def CalculateNObjPerTask(nproc, ntot, config):
-    """A helper function for calculating an appropriate number of objects to do per task.
-    In particular, it accounts for object types that require some number of objects to be done
-    together (e.g. Ring).  Aside from that detail, it shoots for something close to sqrt(ntot).
 
-    @param nproc        The number of processes
-    @param ntot         The total number of objects
-    @param config       The configuration dict.
-
-    @returns nobj_per_task
-    """
-    if nproc != 1:
-        # Figure out how many jobs to do per task.
-        # Number of objects to do in each task:
-        #  - At most nobjects / nproc.
-        #  - At least 1 normally, but number in Ring if doing a Ring test (or other block type)
-        # Shoot for geometric mean of these two.
-        max_nobj = ntot // nproc
-        min_nobj = 1
-        if 'gal' in config:
-            min_nobj = galsim.config.GetMinimumBlock(config['gal'], config)
-        if max_nobj < min_nobj:
-            nobj_per_task = min_nobj
-        else:
-            import math
-            # This formula keeps nobj a multiple of min_nobj, so Rings are intact.
-            nobj_per_task = int(math.sqrt(float(max_nobj)) / min_nobj) * min_nobj
-            if nobj_per_task == 0:
-                nobj_per_task = min_nobj
-    else:
-        nobj_per_task = 1
-    return nobj_per_task
-
-
-def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
-                 njobs_per_task=1, done_func=None, except_func=None, except_abort=True):
+def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
+                 done_func=None, except_func=None, except_abort=True):
     """A helper function for performing a task using multiprocessing.
 
     A note about the nomenclature here.  We use the term "job" to mean the job of building a single
@@ -651,10 +618,10 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
     @param job_func         The function to run for each job.  It will be called as
                                 result = job_func(**kwargs)
                             where kwargs is from one of the jobs in the task list.
-    @param jobs             A list of jobs to run.  Each item is a tuple (kwargs, info).
+    @param tasks            A list of tasks to run.  Each task is a list of jobs, each of which is
+                            a tuple (kwargs, k).
     @param item             A string indicating what is being worked on.
     @param logger           If given, a logger object to log progress. [default: None]
-    @param njobs_per_task   The number of jobs to send to the worker at a time. [default: 1]
     @param done_func        A function to run upon completion of each job.  It will be called as
                                 done_func(logger, proc, k, result, t)
                             where proc is the process name, k is the index of the job, result is
@@ -716,12 +683,7 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
             logger.error("*** Start profile for %s ***\n%s\n*** End profile for %s ***",
                          proc,s.getvalue(),proc)
 
-    # Convert to the tasks structure we need for MultiProcess
-    # Each task is a list of (job, k) tuples.  In this case, we have njobs_per_task jobs per task.
-    tasks = [ [ (jobs[j], j) for j in range(k,k+njobs_per_task) ]
-                for k in range(0, len(jobs), njobs_per_task) ]
     njobs = sum([len(task) for task in tasks])
-    assert njobs == len(jobs)
 
     if nproc > 1:
         if logger and logger.isEnabledFor(logging.WARN):
