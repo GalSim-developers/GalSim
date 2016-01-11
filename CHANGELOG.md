@@ -16,6 +16,13 @@ Bug Fixes
   where the resulting object did not set the index attribute properly. (#694)
 
 
+Deprecated Features
+-------------------
+- Deprecated the gal.type=Ring option in the config files.  The preferred way
+  to get a ring test is now with the new stamp.type=Ring.  See demo5 and demo10
+  for examples of the new syntax. (#698)
+
+
 New Features
 ------------
 - Added OutputCatalog class (#301, #691)
@@ -63,3 +70,6 @@ New config features
   'gsparams', among other less commonly used parameters.  However, for
   backwards compatibility, they are all still allowed in the image field
   as well. (#691)
+- Added new stamp type=Ring to effect ring tests.  This replaces the old 
+  gsobject type=Ring, which is now deprecated.  See demo5 and demo10 for 
+  examples of the new preferred syntax. (#698)
