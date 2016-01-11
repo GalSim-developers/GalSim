@@ -25,7 +25,7 @@ import galsim
 # Standard keys to ignore while parsing values:
 standard_ignore = [ 
     'type',
-    'current_val', 'current_safe', 'current_value_type', 'current_index',
+    'current_val', 'current_safe', 'current_value_type', 'current_index', 'current_index_key',
     'index_key', 'repeat',
     '#' # When we read in json files, there represent comments
 ]
@@ -55,7 +55,7 @@ def ParseValue(config, key, base, value_type):
     if isinstance(param, dict):
         is_seq = param['type'] == 'Sequence'
         # Note: this call will also set base['index_key'] and base['rng'] to the right values
-        index = _get_index(param, base, is_seq)
+        index, index_key = _get_index(param, base, is_seq)
 
         if index is None:
             # This is probably something artificial where we aren't keeping track of indices.
@@ -145,6 +145,7 @@ def ParseValue(config, key, base, value_type):
         param['current_safe'] = safe
         param['current_value_type'] = value_type
         param['current_index'] = index
+        param['current_index_key'] = index_key
         #print key,' = ',val
 
     # Reset these values in case they were changed.
@@ -365,7 +366,7 @@ def _get_index(config, base, is_sequence=False):
     Then if base[index_key] is other than obj_num, use that.
     Finally, if this is a sequence, default to 'obj_num_in_file', otherwise 'obj_num'.
 
-    @returns index
+    @returns index, index_key
     """
     if 'index_key' in config:
         index_key = config['index_key']
@@ -391,7 +392,7 @@ def _get_index(config, base, is_sequence=False):
         if rng is not None:
             base['rng'] = rng
 
-    return index
+    return index, index_key
 
 
 
@@ -567,7 +568,7 @@ def _GenerateFromSequence(config, base, value_type):
         raise AttributeError(
             "At most one of the attributes last and nitems is allowed for type = Sequence")
 
-    index = _get_index(kwargs, base, is_sequence=True)
+    index, index_key = _get_index(kwargs, base, is_sequence=True)
     if index is None:
         raise ValueError("The base config dict does not have index_key set correctly.")
 

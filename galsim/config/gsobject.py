@@ -64,14 +64,14 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     if False:
         logger.debug('obj %d: param = %s',base['obj_num'],param)
 
-    # Save these, so we can edit them based on parameters at this level in the tree to take 
+    # Save these, so we can edit them based on parameters at this level in the tree to take
     # effect an all lower branches, and then we can reset it back to this at the end.
     orig_index_key = base.get('index_key',None)
     orig_rng = base.get('rng',None)
 
     # Check what index key we want to use for this object.
     # Note: this call will also set base['index_key'] and base['rng'] to the right values
-    index = galsim.config.value._get_index(param, base)
+    index, index_key = galsim.config.value._get_index(param, base)
 
     # Get the type to be parsed.
     if not 'type' in param:
@@ -85,7 +85,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         repeat = 1
 
     # Check if we can use the current cached object
-    if ('current_val' in param and 
+    if ('current_val' in param and
             (param['current_safe'] or param['current_index']//repeat == index//repeat)):
         # If logging, explain why we are using the current object.
         if logger and logger.isEnabledFor(logging.DEBUG):
@@ -108,16 +108,17 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     # Check if we need to skip this object
     if 'skip' in param:
         skip = galsim.config.ParseValue(param, 'skip', base, bool)[0]
-        if skip: 
+        if skip:
             if logger and logger.isEnabledFor(logging.DEBUG):
                 logger.debug('obj %d: Skipping because field skip=True',base['obj_num'])
             raise SkipThisObject()
 
     # Set up the initial default list of attributes to ignore while building the object:
-    ignore = [ 
+    ignore = [
         'dilate', 'dilation', 'ellip', 'rotate', 'rotation', 'scale_flux',
-        'magnify', 'magnification', 'shear', 'shift', 
-        'gsparams', 'skip', 'current_val', 'current_safe', 'current_index',
+        'magnify', 'magnification', 'shear', 'shift',
+        'gsparams', 'skip',
+        'current_val', 'current_safe', 'current_value_type', 'current_index', 'current_index_key',
         'index_key', 'repeat'
     ]
     # There are a few more that are specific to which key we have.
@@ -195,7 +196,9 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
  
     param['current_val'] = gsobject
     param['current_safe'] = safe
+    param['current_value_type'] = None
     param['current_index'] = index
+    param['current_index_key'] = index_key
 
     # Reset these values in case they were changed.
     if orig_index_key is not None:

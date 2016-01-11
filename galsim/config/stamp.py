@@ -713,15 +713,10 @@ def ResetBasic(config, logger):
     @param config       The configuration dict.
     @param logger       If given, a logger object to log progress.
     """
-    # Only clear things out if they are indexed by obj_num
-    for field in ['psf', 'gal']:
-        if 'index_key' in config[field]:
-            if config[field]['index_key'] not in ['obj_num', 'obj_num_in_file']:
-                continue
-        galsim.config.RemoveCurrent(config[field], keep_safe=True)
-    # Also make sure to clear any explicit reject calculations
-    if 'reject' in config['stamp']:
-        galsim.config.RemoveCurrent(config['stamp']['reject'], keep_safe=True)
+    # Clear current values out of psf, gal, and stamp if they are not safe to reuse.
+    # This means they are either marked as safe or indexed by something other than obj_num.
+    for field in ['psf', 'gal', 'stamp']:
+        galsim.config.RemoveCurrent(config[field], keep_safe=True, index_key='obj_num')
 
 
 def WhitenBasic(config, prof, image, logger):

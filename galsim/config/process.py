@@ -176,16 +176,19 @@ def ReadConfig(config_file, file_type=None, logger=None):
         return galsim.config.ReadJson(config_file)
 
 
-def RemoveCurrent(config, keep_safe=False, type=None):
+def RemoveCurrent(config, keep_safe=False, type=None, index_key=None):
     """
     Remove any "current values" stored in the config dict at any level.
 
     @param config       The configuration dict.
-    @param keep_safe    Should current values that are marked as safe be preserved? 
+    @param keep_safe    Should current values that are marked as safe be preserved?
                         [default: False]
-    @param type         If provided, only clear the current value of objects that use this 
+    @param type         If provided, only clear the current value of objects that use this
                         particular type.  [default: None, which means to remove current values
                         of all types.]
+    @param index_key    If provided, only clear the current value of objects that use this
+                        index_key (or start with this index_key, so obj_num also does
+                        obj_num_in_file).  [default: None]
     """
     # End recursion if this is not a dict.
     if not isinstance(config,dict): return
@@ -195,22 +198,24 @@ def RemoveCurrent(config, keep_safe=False, type=None):
     for key in config:
         if isinstance(config[key],list):
             for item in config[key]:
-                force = RemoveCurrent(item, keep_safe, type) or force
+                force = RemoveCurrent(item, keep_safe, type, index_key) or force
         else:
-            force = RemoveCurrent(config[key], keep_safe, type) or force
-    if force: 
+            force = RemoveCurrent(config[key], keep_safe, type, index_key) or force
+    if force:
         keep_safe = False
         type = None
+        index_key = None
 
     # Delete the current_val at this level, if any
-    if ( 'current_val' in config 
+    if ( 'current_val' in config
           and not (keep_safe and config['current_safe'])
-          and (type == None or ('type' in config and config['type'] == type)) ):
+          and (type is None or ('type' in config and config['type'] == type))
+          and (index_key is None or config['current_index_key'].startswith(index_key)) ):
         del config['current_val']
         del config['current_safe']
         del config['current_index']
-        if 'current_value_type' in config:
-            del config['current_value_type']
+        del config['current_index_key']
+        del config['current_value_type']
         return True
     else:
         return force
