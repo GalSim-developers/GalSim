@@ -408,6 +408,10 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 if logger and logger.isEnabledFor(logging.INFO):
                     logger.info('Object %d: Caught exception %s',obj_num,str(e))
                     logger.info('This is try %d/%d, so trying again.',itry+1,ntries)
+                if logger and logger.isEnabledFor(logging.DEBUG):
+                    import traceback
+                    tr = traceback.format_exc()
+                    logger.debug('obj %d: Traceback = %s',obj_num,tr)
                 # Need to remove the "current_val"s from the config dict.  Otherwise,
                 # the value generators will do a quick return with the cached value.
                 reset_func = valid_stamp_types[stamp_type]['reset']
