@@ -1,5 +1,5 @@
 # The Great3 control-ground-constant branch configuration file
-# Note: This configuration will not produce images _identical_ to the ones used for Great3, 
+# Note: This configuration will not produce images _identical_ to the ones used for Great3,
 # since the order of random number generation is different.  However, it is intended to
 # produce an _equivalent_ simulation as the one produced for Great3.
 modules:
@@ -15,25 +15,25 @@ psf:
     # The atmospheric component
     -   type: Kolmogorov
         # To avoid PSFs that were "too round", the ellipticity was drawn from a uniform
-        # distribution from sqrt(1.e-4) to sqrt(9.e-4), based on an estimate of the 
+        # distribution from sqrt(1.e-4) to sqrt(9.e-4), based on an estimate of the
         # typical variance of e in ground-based imaging.
         ellip:
             type: EBeta
-            e: 
+            e:
                 type: Random
                 min: 0.01
                 max: 0.03
-            beta: 
-                type: Random 
+            beta:
+                type: Random
 
         # The seeing is taken from a plausible distribution of seeing values
         # ranging from 0.45 to 0.95.
-        fwhm: 
+        fwhm:
             type: RandomDistribution
             x: [ 0.45, 0.55, 0.65, 0.75, 0.85, 0.95 ]
             f: [ 0.,   20.,  17.,  13.,  9.,   0.   ]
 
-    # The optical component 
+    # The optical component
     -   type: OpticalPSF
         # The Optical component for ground is based sort of on the Blanco 4m telescope at
         # Cerro Tololo.  However, we allow a fairly wide range of lambda/D values that cover
@@ -43,7 +43,7 @@ psf:
         # Also a range of obscuration fractions.
         obscuration: { type: Random, min: 0.1, max: 0.5 }
 
-        # Despite sort of modeling off of DECam (with 4 struts), they didn't use 
+        # Despite sort of modeling off of DECam (with 4 struts), they didn't use
         # any struts for the ground psfs.  This choice was made because the inclusion of struts
         # required stricter numerical accuracy settings (=more expensive calculations) to avoid
         # numerical artifacts, without making a very noticable difference in the final overall PSF.
@@ -73,25 +73,27 @@ psf:
         suppress_warning: true
 
 gal:
+    # Galaxies were based on parametric fits to COSMOS galaxies.
+    type: COSMOSGalaxy
+    gal_type: parametric
+    index: { type: Random }
+
+    # Randomly spin the original profile
+    rotate: { type: Random }
+
+    # The COSMOS galaxies are a bit brighter than was wanted for Great3, so make them
+    # a bit smaller to simulate a fainter sample.
+    # However, in the great3 scripts, only the size is rescaled, not the flux.
+    # The reason for this choice was that the flux level in the Great3 simulations was
+    # essentially arbitrary. Instead, the noise level was tuned to achieve the expected S/N for
+    # reasonably deep images with galaxies going down to I<25.
+    dilate: 0.6
+    scale_flux: 1.0
+
+stamp:
+    # Use a Ring type with num=2 to do pairs of 90 degree rotated galaxies.
     type: Ring
     num: 2
-    first:
-        # Galaxies were based on parametric fits to COSMOS galaxies.
-        type: COSMOSGalaxy
-        gal_type: parametric
-        index: { type: Random }
-
-        # Randomly spin the original profile
-        rotate: { type: Random }
-
-        # The COSMOS galaxies are a bit brighter than was wanted for Great3, so make them
-        # a bit smaller to simulate a fainter sample.
-        # However, in the great3 scripts, only the size is rescaled, not the flux.
-        # The reason for this choice was that the flux level in the Great3 simulations was
-        # essentially arbitrary. Instead, the noise level was tuned to achieve the expected S/N for
-        # reasonably deep images with galaxies going down to I<25.
-        dilate: 0.6
-        scale_flux: 1.0
 
     # This was just 1 for constant shear branches.
     magnification: 1
@@ -101,7 +103,7 @@ gal:
         type: GBeta
         # Change the shear every image, not every object.
         index_key : image_num
-        g: 
+        g:
             # The probability distribution is linear in |g|: P(g) ~ g. So equal probability per
             # area within the annulus.  (RandomDistribution automatically renormalizes to have
             # the total integrated probability equal to 1.0.)
@@ -111,20 +113,8 @@ gal:
             x_max: 0.05
         beta: { type: Random }
 
-eval_variables:
-    # Here is the line in the original great3 scripts:
-    # https://github.com/barnabytprowe/great3-public/blob/master/great3sims/noise.py#L97
-    # The point was to have a consistent lower limit on the S/N level of the galaxies for
-    # different seeing sizes.  When the seeing is larger, a given flux galaxy will have 
-    # lower S/N.  To compensate, they added less noise in those cases.  The formula that was used
-    # was based on running experiments with different seeing values, and checking how the S/N varied
-    # at fixed noise variance.  The results of those experiments were used to create a LookupTable
-    # in the GREAT3 scripts, but the formula below is pretty close.
-    fmax_var: '$0.004 * math.exp(2.9 * (1.1-@psf.items.0.fwhm) * (0.95-@psf.items.0.fwhm))'
-
-stamp:
-    # Use new top-level "stamp" field to specify a minimum flux fraction in each postage stamp.  The
-    # idea is that if the galaxy is drawn into the postage stamp of size stamp_size (see "image"
+    # Specify a minimum flux fraction in each postage stamp.
+    # The idea is that if the galaxy is drawn into the postage stamp of size stamp_size (see image
     # field) then the galaxy gets chucked out and a new one is selected.  This will depend not only
     # on the galaxy parameters but the PSF as well, since the cut is imposed on the PSF-convolved
     # object.
@@ -137,6 +127,18 @@ stamp:
     # For now.  Hopefully can remove this.
     retry_failures: 500
 
+eval_variables:
+    # Here is the line in the original great3 scripts:
+    # https://github.com/barnabytprowe/great3-public/blob/master/great3sims/noise.py#L97
+    # The point was to have a consistent lower limit on the S/N level of the galaxies for
+    # different seeing sizes.  When the seeing is larger, a given flux galaxy will have
+    # lower S/N.  To compensate, they added less noise in those cases.  The formula that was used
+    # was based on running experiments with different seeing values, and checking how the S/N varied
+    # at fixed noise variance.  The results of those experiments were used to create a LookupTable
+    # in the GREAT3 scripts, but the formula below is pretty close.
+    fmax_var: '$0.004 * math.exp(2.9 * (1.1-@psf.items.0.fwhm) * (0.95-@psf.items.0.fwhm))'
+
+
 image:
     type: Tiled
     nx_tiles: 100
@@ -147,13 +149,13 @@ image:
     random_seed: 31415
 
     # Scramble the order of the ring pairs, so they aren't next to each other
-    order: random 
+    order: random
 
     # Simple Gaussian noise.  Although there is a weird thing they did to have the noise
     # variance be larger for smaller PSF fwhm.  cf. fmax_var in eval_variables above.
     noise:
         type: Gaussian
-        variance: 
+        variance:
             # Vary 5% around the nominal variance level.
             # The implicit index_key here is image_num, so this will be the same for all
             # postage stamps on an image, but then change for the next image.
@@ -178,10 +180,10 @@ image:
     gsparams: {maximum_fft_size: 10240}
 
 input:
-    cosmos_catalog : 
+    cosmos_catalog :
         # If the command galsim_download_cosmos has been run, the catalog will have been downloaed
-        # from the GalSim web site and saved in a directory that GalSim knows about. 
-        # So file_name and dir are not necessary. 
+        # from the GalSim web site and saved in a directory that GalSim knows about.
+        # So file_name and dir are not necessary.
 
         # Make sure we use some cuts on postage stamp and fit quality as in GREAT3, specified using
         # the exclusion_level keyword.  Currently the selected value "marginal" is in fact the
@@ -192,10 +194,10 @@ input:
         # For now, just a maximum hlr to exclude huge objects, although cf. issue #693.
         #max_hlr : 2.5  # arcsec
 
-        # This still leaves in a lot of bright objects that visibly overflow the edge of the 
+        # This still leaves in a lot of bright objects that visibly overflow the edge of the
         # postage stamps.  Great3 imposed a maximum S/N of 100 and a minimum of 17.
         # Using the noise over 50 pixels as a *very rough!* estimate of the total noise
-        # (50 ~= pi r^2 where r = 4 pixels is close to the typical FWHM.), I find that the 
+        # (50 ~= pi r^2 where r = 4 pixels is close to the typical FWHM.), I find that the
         # corresponding flux range is around 8 to 50 ADU.
         # Again, hopefully, this can be improved as part of issue #693 and we can
         # just give max_snr, min_snr, given a noise level.
@@ -207,7 +209,7 @@ output:
     dir: control/ground/constant
     file_name:
         type: FormattedStr
-        # The numbers in the file_name are subfield and epoch number.  
+        # The numbers in the file_name are subfield and epoch number.
         # This branch only has one epoch, so epoch is always 0 here.
         format: image-%03d-%1d.fits
         items:
@@ -257,11 +259,11 @@ output:
             opt_psf_trefoil1: psf.items.1.trefoil1
             opt_psf_trefoil2: psf.items.1.trefoil2
             opt_psf_spher: psf.items.1.spher
-            cosmos_index: gal.first.index
-            theta: "$(@gal.first.rotate + @gal.index * math.pi/@gal.num * galsim.radians).rad()"
-            mu: gal.magnification
-            g1: "$(@gal.shear).g1"
-            g2: "$(@gal.shear).g2"
+            cosmos_index: gal.index
+            theta: "$(@gal.rotate + @stamp.index * math.pi/@stamp.num * galsim.radians).rad()"
+            mu: stamp.magnification
+            g1: "$(@stamp.shear).g1"
+            g2: "$(@stamp.shear).g2"
             # The parameteric components aren't really available here
             # So we don't have:
             #   bulge_beta_radians
