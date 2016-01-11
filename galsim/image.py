@@ -608,6 +608,175 @@ class Image(object):
         """
         self.image.invertSelf()
 
+    def calculateHLR(self, center=None, flux=None, flux_frac=0.5):
+        """Returns the half-light radius of a drawn object.
+
+        This method is equivalent to GSObject.calculateHLR when the object has already been
+        been drawn onto an image.  Note that the profile should be drawn using a method that
+        integrates over pixels and does not add noise. (The default method='auto' is acceptable.)
+
+        If the image has a wcs other than a PixelScale, an AttributeError will be raised.
+
+        @param center       The position in pixels to use for the center, r=0. 
+                            [default: self.trueCenter()]
+        @param flux         The total flux.  [default: sum(self.array)]
+        @param flux_frac    The fraction of light to be enclosed by the returned radius.
+                            [default: 0.5]
+
+        @returns an estimate of the half-light radius in physical units defined by the pixel scale.
+        """
+        if center is None:
+            center = self.trueCenter()
+
+        if flux is None:
+            flux = numpy.sum(self.array)
+
+        # Use radii at centers of pixels as approximation to the radial integral
+        x,y = numpy.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
+        x = x - center.x + self.bounds.xmin
+        y = y - center.y + self.bounds.ymin
+        rsq = x*x + y*y
+
+        # Sort by radius
+        indx = numpy.argsort(rsq.flatten())
+        rsqf = rsq.flatten()[indx]
+        data = self.array.flatten()[indx]
+        cumflux = numpy.cumsum(data)
+
+        # Find the first value with cumflux > 0.5 * flux
+        k = numpy.argmax(cumflux > flux_frac * flux)
+        flux_k = cumflux[k] / flux  # normalize to unit total flux
+
+        # Interpolate (linearly) between this and the previous value.
+        if k == 0:
+            hlrsq = rsqf[0] * (flux_frac / flux_k)
+        else:
+            fkm1 = cumflux[k-1] / flux
+            # For brevity in the next formula:
+            fk = flux_k
+            f = flux_frac
+            hlrsq = (rsqf[k-1] * (fk-f) + rsqf[k] * (f-fkm1)) / (fk-fkm1)
+
+        # This has all been done in pixels.  So normalize according to the pixel scale.
+        hlr = numpy.sqrt(hlrsq) * self.scale
+
+        return hlr
+
+
+    def calculateMomentRadius(self, center=None, flux=None, rtype='det'):
+        """Returns an estimate of the radius based on unweighted second moments of a drawn object.
+
+        This method is equivalent to GSObject.calculateMomentRadius when the object has already
+        been drawn onto an image.  Note that the profile should be drawn using a method that
+        integrates over pixels and does not add noise. (The default method='auto' is acceptable.)
+
+        If the image has a wcs other than a PixelScale, an AttributeError will be raised.
+
+        @param center       The position in pixels to use for the center, r=0. 
+                            [default: self.trueCenter()]
+        @param flux         The total flux.  [default: sum(self.array)]
+        @param rtype        There are three options for this parameter:
+                            - 'trace' means return sqrt(T/2)
+                            - 'det' means return det(Q)^1/4
+                            - 'both' means return both: (sqrt(T/2), det(Q)^1/4)
+                            [default: 'det']
+
+        @returns an estimate of the radius in physical units defined by the pixel scale 
+                 (or both estimates if rtype == 'both').
+        """
+        if rtype not in ['trace', 'det', 'both']:
+            raise ValueError("rtype must be one of 'trace', 'det', or 'both'")
+
+        if center is None:
+            center = self.trueCenter()
+
+        if flux is None:
+            flux = numpy.sum(self.array)
+
+        # Use radii at centers of pixels as approximation to the radial integral
+        x,y = numpy.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
+        x = x - center.x + self.bounds.xmin
+        y = y - center.y + self.bounds.ymin
+
+        if rtype in ['trace', 'both']:
+            # Calculate trace measure:
+            rsq = x*x + y*y
+            Irr = numpy.sum(rsq * self.array) / flux
+
+            # This has all been done in pixels.  So normalize according to the pixel scale.
+            sigma_trace = (Irr/2.)**0.5 * self.scale
+
+        if rtype in ['det', 'both']:
+            # Calculate det measure:
+            Ixx = numpy.sum(x*x * self.array) / flux
+            Iyy = numpy.sum(y*y * self.array) / flux
+            Ixy = numpy.sum(x*y * self.array) / flux
+
+            # This has all been done in pixels.  So normalize according to the pixel scale.
+            sigma_det = (Ixx*Iyy-Ixy**2)**0.25 * self.scale
+
+        if rtype == 'trace':
+            return sigma_trace
+        elif rtype == 'det':
+            return sigma_det
+        else:
+            return sigma_trace, sigma_det
+
+
+    def calculateFWHM(self, center=None, Imax=0.):
+        """Returns the full-width half-maximum (FWHM) of a drawn object.
+
+        This method is equivalent to GSObject.calculateMomentRadius when the object has already
+        been drawn onto an image.  Note that the profile should be drawn using a method that
+        does not integrate over pixels, so either 'sb' or 'no_pixel'.  Also, if there is a
+        significant amount of noise in the image, this method may not work well.
+
+        If the image has a wcs other than a PixelScale, an AttributeError will be raised.
+
+        @param center       The position in pixels to use for the center, r=0. 
+                            [default: self.trueCenter()]
+        @param Imax         The maximum surface brightness.  [default: max(self.array)]
+                            Note: If Imax is provided, and the maximum pixel value is larger than
+                            this value, Imax will be updated to use the larger value.
+
+        @returns an estimate of the full-width half-maximum in physical units defined by the
+                 pixel scale.
+        """
+        if center is None:
+            center = self.trueCenter()
+
+        # If the full image has a larger maximum, use that.
+        Imax2 = numpy.max(self.array)
+        if Imax2 > Imax: Imax = Imax2
+
+        # Use radii at centers of pixels.
+        x,y = numpy.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
+        x = x - center.x + self.bounds.xmin
+        y = y - center.y + self.bounds.ymin
+        rsq = x*x + y*y
+
+        # Sort by radius
+        indx = numpy.argsort(rsq.flatten())
+        rsqf = rsq.flatten()[indx]
+        data = self.array.flatten()[indx]
+
+        # Find the first value with I < 0.5 * Imax
+        k = numpy.argmax(data < 0.5 * Imax)
+        Ik = data[k] / Imax
+
+        # Interpolate (linearly) between this and the previous value.
+        if k == 0:
+            rsqhm = rsqf[0] * (0.5 / Ik)
+        else:
+            Ikm1 = data[k-1] / Imax
+            rsqhm = (rsqf[k-1] * (Ik-0.5) + rsqf[k] * (0.5-Ikm1)) / (Ik-Ikm1)
+
+        # This has all been done in pixels.  So normalize according to the pixel scale.
+        fwhm = 2. * numpy.sqrt(rsqhm) * self.scale
+
+        return fwhm
+
+
     def __eq__(self, other):
         return ( isinstance(other, Image) and
                  self.bounds == other.bounds and

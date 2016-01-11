@@ -16,7 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 """"@file table.py
-A few adjustments to galsim.LookupTable at the Python layer, including the 
+A few adjustments to galsim.LookupTable at the Python layer, including the
 addition of the docstring and few extra features.
 """
 from . import _galsim
@@ -26,7 +26,7 @@ class LookupTable(object):
     LookupTable represents a lookup table to store function values that may be slow to calculate,
     for which interpolating from a lookup table is sufficiently accurate.
 
-    A LookupTable may be constructed from two arrays (lists, tuples, or NumPy arrays of 
+    A LookupTable may be constructed from two arrays (lists, tuples, or NumPy arrays of
     floats/doubles).
 
         >>> args = [...]
@@ -44,22 +44,22 @@ class LookupTable(object):
         ...     [... use val ...]
 
 
-    The default interpolation method is cubic spline interpolation.  This is usually the 
+    The default interpolation method is cubic spline interpolation.  This is usually the
     best choice, but we also provide three other options, which can be specified by
     the `interpolant` kwarg.  The choices are 'floor', 'ceil', 'linear' and 'spline':
 
     - 'floor' takes the value from the previous argument in the table.
     - 'ceil' takes the value from the next argument in the table.
     - 'linear' does linear interpolation between these two values.
-    - 'spline' uses a cubic spline interpolation, so the interpolated values are smooth at 
+    - 'spline' uses a cubic spline interpolation, so the interpolated values are smooth at
       each argument in the table.
 
-    Another option is to read in the values from an ascii file.  The file should have two 
+    Another option is to read in the values from an ascii file.  The file should have two
     columns of numbers, which are taken to be the `x` and `f` values.
 
     The user can also opt to interpolate in log(x) and/or log(f), though this is not the default.
     It may be a wise choice depending on the particular function, e.g., for a nearly power-law
-    f(x) (or at least one that is locally power-law-ish for much of the x range) then it might 
+    f(x) (or at least one that is locally power-law-ish for much of the x range) then it might
     be a good idea to interpolate in log(x) and log(f) rather than x and f.
 
     @param x             The list, tuple, or NumPy array of `x` values (floats, doubles, or ints,
@@ -70,7 +70,7 @@ class LookupTable(object):
                          [Either `x` and `f` or `file` is required.]
     @param file          A file from which to read the `(x,f)` pairs. [Either `x` and `f`, or `file`
                          is required]
-    @param interpolant   The interpolant to use, with the options being 'floor', 'ceil', 
+    @param interpolant   The interpolant to use, with the options being 'floor', 'ceil',
                          'linear' and 'spline'. [default: 'spline']
     @param x_log         Set to True if you wish to interpolate using log(x) rather than x.  Note
                          that all inputs / outputs will still be x, it's just a question of how the
