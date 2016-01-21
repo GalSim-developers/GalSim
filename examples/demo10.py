@@ -268,7 +268,7 @@ def main(argv):
         # See demo5.py for more info about how this works.
         sub_psf_image.addNoiseSNR(noise, psf_signal_to_noise)
 
-        # And also to the galaxy image using its signal-to-noise..
+        # And also to the galaxy image using its signal-to-noise.
         sub_gal_image.addNoiseSNR(noise, gal_signal_to_noise)
 
         # Add the truth values to the truth catalog
