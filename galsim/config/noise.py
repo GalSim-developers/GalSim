@@ -116,7 +116,7 @@ def CalculateNoiseVar(config):
 def AddNoiseVariance(config, im, include_obj_var=False, logger=None):
     """
     Add the noise variance to an image according to the noise specifications in the noise dict.
-    Typically, this is used for buliding a weight map, which is typically the inverse variance.
+    Typically, this is used for building a weight map, which is typically the inverse variance.
 
     @param config           The configuration dict
     @param im               The image onto which to add the variance values

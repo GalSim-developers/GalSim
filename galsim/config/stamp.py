@@ -334,7 +334,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 if scale_factor != 1.0:
                     if method == 'phot':
                         logger.error(
-                            "signal_to_noise caluclation is not accurate for draw_method = phot")
+                            "signal_to_noise calculation is not accurate for draw_method = phot")
                     im *= scale_factor
                     prof *= scale_factor
 

@@ -45,7 +45,7 @@ def BuildDataCube(config, file_num, image_num, obj_num, ignore, logger):
     galsim.config.CheckAllParams(config['output'], ignore=ignore, req=req)
 
     # All images need to be the same size for a data cube.
-    # Enforce this by buliding the first image outside the below loop and setting
+    # Enforce this by building the first image outside the below loop and setting
     # config['image_force_xsize'] and config['image_force_ysize'] to be the size of the first 
     # image.
     t1 = time.time()

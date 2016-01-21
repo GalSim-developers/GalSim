@@ -47,7 +47,7 @@ def ParseValue(config, key, base, value_type):
         param = { 'type' : 'Current', 'key' : param[1:] }
 
     # Save these, so we can edit them based on parameters at this level in the tree to take 
-    # effect an all lower branches, and then we can reset it back to this at the end.
+    # effect on all lower branches, and then we can reset it back to this at the end.
     orig_index_key = base.get('index_key',None)
     orig_rng = base.get('rng',None)
 

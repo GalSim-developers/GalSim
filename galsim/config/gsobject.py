@@ -65,7 +65,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         logger.debug('obj %d: param = %s',base['obj_num'],param)
 
     # Save these, so we can edit them based on parameters at this level in the tree to take 
-    # effect an all lower branches, and then we can reset it back to this at the end.
+    # effect on all lower branches, and then we can reset it back to this at the end.
     orig_index_key = base.get('index_key',None)
     orig_rng = base.get('rng',None)
 

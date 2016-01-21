@@ -21,7 +21,7 @@ import galsim
 import logging
 
 
-# Python 2.6 doesn't include OrderdDict natively.  There is a package ordereddict that you
+# Python 2.6 doesn't include OrderedDict natively.  There is a package ordereddict that you
 # can pip install.  But if the user hasn't done that, we'll just read into a regular dict.
 # The only feature that requires the OrderedDict is the truth catalog output.  With a regular
 # dict the columns will appear in arbitrary order.
