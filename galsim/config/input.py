@@ -38,7 +38,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
     e.g. config['input_objs']['catalog'][0] holds the first catalog item defined in
     config['input']['catalog'] (if any).
 
-    @param config           The configuutation dict to process
+    @param config           The configuration dict to process
     @param file_num         The file number being worked on currently [default: 0]
     @param logger           If given, a logger object to log progress. [default: None]
     @param file_scope_only  If True, only process the input items that are marked as being
@@ -217,10 +217,10 @@ def ProcessInputNObjects(config, logger=None):
             order and returns the nobjects for the first one that works.  If multiple input
             items have nobjects and they are inconsistent, this function may return a
             number of objects that isn't what you wanted.  In this case, you should explicitly
-            set nobjects or nimages in the configuratin dict, rather than relying on this
+            set nobjects or nimages in the configuration dict, rather than relying on this
             galsim.config "magic".
 
-    @param config       The configuutation dict to process
+    @param config       The configuration dict to process
     @param logger       If given, a logger object to log progress. [default: None]
 
     @returns the number of objects to use.
@@ -253,7 +253,7 @@ def ProcessInputNObjects(config, logger=None):
 def SetupInputsForImage(config, logger):
     """Do any necessary setup of the input items at the start of an image.
 
-    @param config       The configuutation dict to process
+    @param config       The configuration dict to process
     @param logger       If given, a logger object to log progress. [default: None]
     """
     if 'input' in config:
