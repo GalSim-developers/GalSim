@@ -22,7 +22,7 @@ New Features
 - Added methods calculateHLR, calculateMomentRadius, and calculateFWHM to both
   GSObject and Image. (#308)
 - Changed `galsim.fits.writeMulti` to allow any of the "image"s to be
-  already-built hdus, which are included as is.. (#691)
+  already-built hdus, which are included as is. (#691)
 - Added optional `wcs` argument to `Image.resize()`. (#691)
 - Added `BaseDeviate.discard(n)` and `BaseDeviate.raw()`. (#691)
 - Added `sersic_prec` option to COSMOSCatalog.makeGalaxy(). (#691)
