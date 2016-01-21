@@ -282,7 +282,7 @@ def main(argv):
 
     logger.info('Done making images of postage stamps')
 
-    # In this case, we'll attach the truth catalog as an aditional HDU in the same file as
+    # In this case, we'll attach the truth catalog as an additional HDU in the same file as
     # the image data.
     truth_hdu = truth_catalog.write_fits_hdu()
 
