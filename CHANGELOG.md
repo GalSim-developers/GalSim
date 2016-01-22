@@ -12,6 +12,13 @@ Bug Fixes
   ChromaticObjects and image-setup keyword arguments (#683)
 - Added ability to manipulate the width of the moment-measuring weight function
   for the KSB shear estimation method of the galsim.hsm package. (#686)
+
+
+New Features
+------------
+
+- Added methods calculateHLR, calculateMomentRadius, and calculateFWHM to both
+  GSObject and Image. (#308)
 - Added LookupTable2D to facility quick interpolation of two-dimensional
   tabular data. (#465)
 - Added PhaseScreen, PhaseScreenList, and PhaseScreenPSF objects to use Fourier

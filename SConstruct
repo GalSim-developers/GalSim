@@ -107,8 +107,8 @@ opts.Add(BoolVariable('WITH_PROF',
             'Use the compiler flag -pg to include profiling info for gprof', False))
 opts.Add(BoolVariable('MEM_TEST','Test for memory leaks', False))
 opts.Add(BoolVariable('TMV_DEBUG','Turn on extra debugging statements within TMV library',False))
-# None of the code uses openmp yet.  Probably make this default True if we start using it.
-opts.Add(BoolVariable('WITH_OPENMP','Look for openmp and use if found.', False))
+# None of the code uses openmp yet.  Re-enable this if we start using it.
+#opts.Add(BoolVariable('WITH_OPENMP','Look for openmp and use if found.', False))
 opts.Add(BoolVariable('USE_UNKNOWN_VARS',
             'Allow other parameters besides the ones listed here.',False))
 
@@ -327,6 +327,8 @@ def BasicCCFlags(env):
             env.AppendUnique(LINKFLAGS=flag)
 
 
+# Note: I'm leaving this function here, in case we ever want to use OpenMP, but we
+# don't currently use any OpenMP features, so this function never gets called.
 def AddOpenMPFlag(env):
     """
     Make sure you do this after you have determined the version of
@@ -1633,7 +1635,8 @@ def DoConfig(env):
     BasicCCFlags(env)
 
     # Some extra flags depending on the options:
-    if env['WITH_OPENMP']:
+    #if env['WITH_OPENMP']:
+    if False:  # We don't use OpenMP anywhere, so don't bother with this.
         print 'Using OpenMP'
         AddOpenMPFlag(env)
     if not env['DEBUG']:
