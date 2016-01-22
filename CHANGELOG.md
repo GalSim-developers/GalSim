@@ -17,8 +17,10 @@ Bug Fixes
 
 
 New Features
-<<<<<<< HEAD
-- Added OutputCatalog class (#301, #691)
+------------
+
+- Added OutputCatalog class, which can be used to keep track of and then output
+  truth information.  cf. demos 9 and 10. (#301, #691)
 - Added methods calculateHLR, calculateMomentRadius, and calculateFWHM to both
   GSObject and Image. (#308)
 - Changed `galsim.fits.writeMulti` to allow any of the "image"s to be
