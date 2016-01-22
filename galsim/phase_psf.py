@@ -920,11 +920,11 @@ def Atmosphere(r0_500=0.2, screen_size=30.0, time_step=0.03, altitude=0.0, L0=25
     a fast laptop, and will consume about (8192 ** 2 pixels) * (8 bytes) * (6 screens) ~ 3 GB of
     RAM in its final state, and more at intermediate states.
 
-    > altitude = [0, 2.58, 5.16, 7.73, 12.89, 15.46]
-    > r0_500_effective = 0.16
+    > altitude = [0, 2.58, 5.16, 7.73, 12.89, 15.46]  # km
+    > r0_500_effective = 0.16  # m
     > weights = [0.652, 0.172, 0.055, 0.025, 0.074, 0.022]
     > r0_500 = [r0_500_effective * w**(-3./5) for w in weights]
-    > velocity = np.random.uniform(0, 20, size=6)
+    > velocity = np.random.uniform(0, 20, size=6)  # m/s
     > direction = [np.random.uniform(0, 360)*galsim.degrees for i in xrange(6)]
     > npix = 8192
     > screen_scale = 0.5 * r0_500_effective
@@ -932,8 +932,9 @@ def Atmosphere(r0_500=0.2, screen_size=30.0, time_step=0.03, altitude=0.0, L0=25
                               altitude=altitude, L0=25.0, velocity=velocity, direction=direction,
                               screen_scale=screen_scale)
 
-    Once the atmosphere is constructed, a 15-sec exposure PSF (using an 8.4 meter aperture and
-    default settings) takes about 150 sec to generate on a fast laptop.
+    Once the atmosphere is constructed (takes a few minutes on a fast laptop), a 15-sec exposure PSF
+    (using an 8.4 meter aperture and default settings) takes about 150 sec to generate on a fast
+    laptop.
 
     > psf = atm.getPSF(exptime=15.0, diam=8.4, obscuration=0.6)
 
