@@ -27,7 +27,8 @@ of galaxies around 20 different clusters -- 5 each of 4 different masses.  Each 
 has its own file, organized into 4 directories (one for each mass).  For each cluster, we
 draw 20 lensed galaxies at random positions of the image.  The PSF is appropriate for a
 space-like simulation.  (Some of the numbers used are the values for HST.)  And we apply
-a cubic telescope distortion for the WCS.
+a cubic telescope distortion for the WCS.  Finally, we also output a truth catalog for each
+output image that could be used for testing the accuracy of shape or flux measurements.
 
 New features introduced in this demo:
 
@@ -44,7 +45,7 @@ New features introduced in this demo:
 - wcs.makeSkyImage(image, sky_level)
 - image_pos = wcs.toImage(pos)
 - image.invertSelf()
-- truth_cat = galsim.OutputCatalog(names)
+- truth_cat = galsim.OutputCatalog(names, types)
 
 - Make multiple output files.
 - Place galaxies at random positions on a larger image.
@@ -435,7 +436,7 @@ def main(argv):
         # Write the file to disk:
         galsim.fits.writeMulti([full_image, badpix_image, weight_image, psf_image], file_name)
 
-        # And the truth catalog
+        # And write the truth catalog file
         truth_cat.write(truth_file_name)
 
         t2 = time.time()
