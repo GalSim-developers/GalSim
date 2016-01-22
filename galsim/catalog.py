@@ -356,6 +356,10 @@ class OutputCatalog(object):
     Each row corresponds to a different object, and each column stores some item of
     information about that object (e.g. flux or half_light_radius).
 
+    Note: no type checking is done when the data are added in add_row().  It is up to 
+    the user to make sure that the values added for each row are compatible with the
+    types given here in the `types` parameter.
+
     Initialization
     --------------
 
