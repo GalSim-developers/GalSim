@@ -16,9 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
-import os
 import galsim
-import logging
 
 # This file adds input type nfw_halo and value types NFWHaloShear and NFWHaloMagnification.
 

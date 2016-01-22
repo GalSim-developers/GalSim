@@ -258,8 +258,8 @@ output :
             cosmos_index :
                 type : Eval
                 str : 'gal.index'
-                # There is a special Eval code we haven't mentioned yet.  If you name precede
-                # a variable name with x, then that means it's an object, rather than a value.
+                # There is a special Eval code we haven't mentioned yet.  If you precede a
+                # variable name with x, then that means it's an object, rather than a value.
                 # So in this case, get the index from the attribute of the object, gal.first.
                 xgal : { type : Current, key : 'gal.first' }
 

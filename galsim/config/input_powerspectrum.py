@@ -16,11 +16,11 @@
 #    and/or other materials provided with the distribution.
 #
 
-import os
 import galsim
-import logging
 
-# This file adds input type nfw_halo and value types NFWHaloShear and NFWHaloMagnification.
+# This file adds input type nfw_halo and value types PowerSpectrumShear and
+# PowerSpectrumMagnification.
+
 # A PowerSpectrum input type requires a special initialization at the start of each image
 # to build the shear grid.  This is done in SetupPowerSpecrum.  There are also a couple of
 # parameters that are specific to that step, which we want to ignore when getting the 

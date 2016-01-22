@@ -16,13 +16,11 @@
 #    and/or other materials provided with the distribution.
 #
 
-import os
 import galsim
-import logging
 
-# This file adds input type fits_header and value types NFWHaloShear and NFWHaloMagnification.
+# This file adds input type fits_header and value type FitsHeader.
 
-# The NFWHalo doesn't need anything special other than registration as a valid input type.
+# The FitsHeader doesn't need anything special other than registration as a valid input type.
 from .input import RegisterInputType
 RegisterInputType('fits_header', galsim.FitsHeader,['FitsHeader'], file_scope=True)
 
