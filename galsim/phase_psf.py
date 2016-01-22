@@ -16,7 +16,32 @@
 #    and/or other materials provided with the distribution.
 #
 """@file phase_psf.py
-Utilities for creating PSFs from phase screens; Fourier optics stuff.
+Utilities for creating PSFs from phase screens.  Essentially evaluates the Fourier optics
+diffraction equation:
+
+PSF(x, y) = int( |FT(aperture(u, v) * exp(i * phase(u, v, x, y, t)))|^2, dt)
+
+where x, y are focal plane coordinates and u, v are pupil plane coordinates
+
+The main classes of note are:
+
+FrozenAtmosphericScreen
+  Class implementing phase(u, v, x, y, t) for frozen flow von Karman type turbulence
+
+ARAtmosphericScreen
+  Class implementing phase(u, v, x, y, t) for "boiling" von Karman type turbulence
+
+PhaseScreenList
+  Python sequence type to hold multiple phase screens, for instance to simulate turbulence at
+  different altitudes.  A key method is getPSF(), which will take the list of phase screens,
+  add them together linearly (Fraunhofer approximation), and evaluate the above diffraction
+  equation to yield a PhaseScreenPSF object.
+
+PhaseScreenPSF
+  A GSObject holding the evaluated PSF.
+
+Atmosphere
+  Convenience function to quickly assemble multiple AtmosphericScreens into a PhaseScreenList.
 """
 
 import copy
