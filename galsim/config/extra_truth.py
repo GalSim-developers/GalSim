@@ -32,6 +32,14 @@ import galsim
 
 # The function that returns the kwargs for constructing the OutputCatalog
 def GetTruthKwargs(config, base, logger=None):
+    if logger and not hasattr(config, '__reversed__'):
+        # If config doesn't have a __reversed__ attribute, then it's not an OrderedDict.
+        # Probably it's just a regular dict.  So warn the user that the columns are in 
+        # arbitrary order.
+        # (This was the simplest difference I could find between dict and OrderedDict that
+        #  seemed relevant.)
+        logger.warn('The config dict is not an OrderedDict.  The columns in the output truth '+
+                    'catalog will be in arbitrary order.')
     columns = config['columns']
     truth_names = columns.keys()
     return { 'names' : truth_names }

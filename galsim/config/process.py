@@ -25,7 +25,6 @@ import logging
 # can pip install.  But if the user hasn't done that, we'll just read into a regular dict.
 # The only feature that requires the OrderedDict is the truth catalog output.  With a regular
 # dict the columns will appear in arbitrary order.
-use_ordereddict = True
 try:
     from collections import OrderedDict
 except ImportError:
