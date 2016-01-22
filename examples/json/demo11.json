@@ -14,7 +14,7 @@
 "#" : "from the same catalog of 100 objects that demo6 used.  We also use the whitening option to",
 "#" : "remove the correlations in the noise originally present in the HST images.",
 
-"#" : "See deom11.yaml for more extensive commentary about the features here.",
+"#" : "See demo11.yaml for more extensive commentary about the features here.",
 
 "eval_variables" : {
     "fpixel_scale" : 0.2,

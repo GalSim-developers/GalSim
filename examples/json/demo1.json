@@ -33,7 +33,7 @@
 "#" : "between the .py and .json files, since the two methods implement things different ways.",
 "#" : "(demo*.py are python scripts, while demo*.json are configuration files.)",
 
-"#" : "See deom1.yaml for more extensive commentary about the features here.",
+"#" : "See demo1.yaml for more extensive commentary about the features here.",
 
 "gal" : {
     "type" : "Gaussian",

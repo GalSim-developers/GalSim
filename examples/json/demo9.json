@@ -13,7 +13,7 @@
 "#" : "a cubic telescope distortion for the WCS.  Finally, we also output a truth catalog for each",
 "#" : "output image that could be used for testing the accuracy of shape or flux measurements.",
 
-"#" : "See deom9.yaml for more extensive commentary about the features here.",
+"#" : "See demo9.yaml for more extensive commentary about the features here.",
 
 "psf" : {
     "type" : "OpticalPSF",

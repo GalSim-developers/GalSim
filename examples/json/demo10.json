@@ -14,7 +14,7 @@
 "#" : "test (Nakajima & Bernstein 2007) of 20 each.  And we again output a truth catalog with the",
 "#" : "correct applied shear for each object (among other information).",
 
-"#" : "See deom10.yaml for more extensive commentary about the features here.",
+"#" : "See demo10.yaml for more extensive commentary about the features here.",
 
 
 "psf" : {
