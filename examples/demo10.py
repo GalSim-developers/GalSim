@@ -250,15 +250,22 @@ def main(argv):
         # Draw the image
         final.drawImage(sub_gal_image)
 
-        # For the PSF image, we also shift the PSF by the same amount.
-        psf = psf.shift(dx,dy)
+        # For the PSF image, we don't match the galaxy shift.  Rather, we use the offset
+        # parameter to drawImage to apply a random offset of up to 0.5 pixels in each direction.
+        # Note the difference in units between shift and offset.  The shift is applied to the
+        # surface brightness profile, so it is in sky coordinates (as all dimension are for
+        # GSObjects), which are arcsec here.  The offset though is applied to the image itself,
+        # so it is in pixels.  Hence, we don't multiply by pixel_scale.
+        psf_dx = ud() - 0.5
+        psf_dy = ud() - 0.5
+        psf_offset = galsim.PositionD(psf_dx, psf_dy)
 
         # Draw the PSF image:
         # We use real space integration over the pixels to avoid some of the 
         # artifacts that can show up with Fourier convolution.
         # The level of the artifacts is quite low, but when drawing with
         # so little noise, they are apparent with ds9's zscale viewing.
-        psf.drawImage(sub_psf_image, method='real_space')
+        psf.drawImage(sub_psf_image, method='real_space', offset=psf_offset)
 
         # Build the noise model: Poisson noise with a given sky level.
         sky_level_pixel = sky_level * pixel_scale**2

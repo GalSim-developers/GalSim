@@ -1,6 +1,17 @@
 Changes from v1.3 to v1.4
 =========================
 
+API Changes
+-----------
+
+- Changed the default shift and/or offset for the output.psf field in a config
+  file to not do any shift or offset.  It had been the default to match what
+  was applied to the galaxy (cf. demo5).  However, we thought that was probably
+  not the most intuitive default.  Now, matching the galaxy is still possible,
+  but requires explicit specification of output.psf.shift = "galaxy" or
+  output.psf.offset = "galaxy". (#691)
+
+
 Bug Fixes
 ---------
 

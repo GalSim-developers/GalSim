@@ -71,7 +71,8 @@
     "file_name" : "g08_gal.fits",
     
     "psf" : {
-        "file_name" : "g08_psf.fits"
+        "file_name" : "g08_psf.fits",
+        "shift" : "galaxy"
     }
 }
 

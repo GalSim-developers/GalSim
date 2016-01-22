@@ -37,13 +37,6 @@ def DrawPSFStamp(psf, config, base, bounds, offset, method, logger=None):
     else:
         method = 'auto'
 
-    # Special: if the galaxy was shifted, then also shift the psf
-    if 'shift' in base['gal']:
-        gal_shift = galsim.config.GetCurrentValue('gal.shift',base, galsim.PositionD)
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('obj %d: psf shift (1): %s',base['obj_num'],str(gal_shift))
-        psf = psf.shift(gal_shift)
-
     wcs = base['wcs'].local(base['image_pos'])
     im = galsim.ImageF(bounds, wcs=wcs)
     im = psf.drawImage(image=im, offset=offset, method=method)
@@ -73,9 +66,29 @@ def ProcessExtraPSFStamp(images, scratch, config, base, obj_num, logger=None):
     psf = base['psf']['current_val']
     draw_method = galsim.config.GetCurrentValue('stamp.draw_method',base,str)
     bounds = base['current_stamp'].bounds
+
+    # Check if we should shift the psf:
+    if 'shift' in config:
+        # Special: output.psf.shift = 'galaxy' means use the galaxy shift.
+        if config['shift'] == 'galaxy':
+            shift = galsim.config.GetCurrentValue('gal.shift',base, galsim.PositionD)
+        else:
+            shift = galsim.config.ParseValue(config, 'shift', base, galsim.PositionD)[0]
+        if logger and logger.isEnabledFor(logging.DEBUG):
+            logger.debug('obj %d: psf shift: %s',base['obj_num'],str(shift))
+        psf = psf.shift(shift)
+
+    # Start with the offset required just due to the stamp size/shape.
     offset = base['stamp_offset']
-    if 'offset' in base['stamp']:
-        offset += galsim.config.ParseValue(base['stamp'], 'offset', base, galsim.PositionD)[0]
+    # Check if we should apply any additional offset:
+    if 'offset' in config:
+        # Special: output.psf.offset = 'galaxy' means use the same offset as in the galaxy image,
+        #          which note is actually in config.stamp, not config.gal.
+        if config['offset'] == 'galaxy':
+            offset += galsim.config.GetCurrentValue('stamp.offset',base, galsim.PositionD)
+        else:
+            offset += galsim.config.ParseValue(config, 'offset', base, galsim.PositionD)[0]
+
     psf_im = DrawPSFStamp(psf,config,base,bounds,offset,draw_method,logger)
     if 'signal_to_noise' in config:
         galsim.config.AddNoise(base,psf_im,0,logger)

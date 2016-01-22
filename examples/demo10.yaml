@@ -41,7 +41,7 @@
 # - pos_value : RTheta (r, theta)
 # - image type : Tiled (..., order)
 # - input : power_spectrum (e_power_function, b_power_function)
-# - output.psf : hdu, signal_to_noise, draw_method
+# - output.psf : hdu, signal_to_noise, draw_method, offset
 # - output.truth : hdu
 #
 # - Evaluated values in output.truth.columns
@@ -218,6 +218,18 @@ output :
         # If there is a signal_to_noise value, then it uses the same kind of noise as in the 
         # main image.
         signal_to_noise : 1000
+
+        # Offset the PSF images randomly within the central pixel to better sample the
+        # sub-pixel surface brightness profile.  Note: as with the output.psf.shift parameter
+        # (cf. demo5.yaml), the output field may also take the value 'galaxy', which would mean
+        # to apply the same offset as was applied to the galaxy.  In this case, there is no
+        # such offset, so it wouldn't apply here, but it's an option if you want to match the
+        # offsets of the PSF and galaxy.
+        offset:
+            type : XY
+            x : { type: Random, min: -0.5, max: 0.5 }
+            y : { type: Random, min: -0.5, max: 0.5 }
+
 
     # Make a truth catalog as a binary table in hdu 2
     truth :

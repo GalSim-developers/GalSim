@@ -101,7 +101,12 @@
     "psf" :  {
         "hdu" : 1,
         "draw_method" : "real_space",
-        "signal_to_noise" : 1000
+        "signal_to_noise" : 1000,
+        "offset" : {
+            "type" : "XY",
+            "x" : { "type": "Random", "min": -0.5, "max": 0.5 },
+            "y" : { "type": "Random", "min": -0.5, "max": 0.5 }
+        }
     },
 
     "truth" : {
