@@ -24,10 +24,13 @@ import logging
 
 # This module-level dict will store all the registered gsobject types.
 # See the RegisterObjectType function at the end of this file.
-# The keys will be the (string) names of the object types, and the values will be dicts that keep
-# track of the build function and other information about the type.
+# The keys will be the (string) names of the object types, and the values are the function
+# to call to build an object of that type.
 valid_gsobject_types = {}
 
+# A list of gsobject types that define a block of inter-related stamps.  This will go away
+# once the Ring type is turned into a stamp type rather than an object type.  Issue #698
+block_gsobject_types = []
 
 class SkipThisObject(Exception):
     """
@@ -175,7 +178,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
 
     # See if this type has a specialized build function:
     if type_name in valid_gsobject_types:
-        build_func = valid_gsobject_types[type_name]['func']
+        build_func = valid_gsobject_types[type_name]
         if logger:
             logger.debug('obj %d: build_func = %s',base['obj_num'],build_func)
         gsobject, safe = build_func(param, base, ignore, gsparams, logger)
@@ -498,7 +501,7 @@ def GetMinimumBlock(config, base):
     """
     if isinstance(config, dict) and 'type' in config:
         type_name = config['type']
-        if type_name in valid_gsobject_types and valid_gsobject_types[type_name]['block']:
+        if type_name in block_gsobject_types:
             num = galsim.config.ParseValue(config, 'num', base, int)[0]
             return num
         else:
@@ -536,10 +539,9 @@ def RegisterObjectType(type_name, build_func, is_block=False):
                             then this type should include a 'num' parameter that gives the
                             number of objects in the block. [default: False]
     """
-    valid_gsobject_types[type_name] = {
-        'func' : build_func, 
-        'block' : is_block
-    }
+    valid_gsobject_types[type_name] = build_func
+    if is_block:
+        block_gsobject_types.append(type_name)
 
 RegisterObjectType('None', _BuildNone)
 RegisterObjectType('Add', _BuildAdd)

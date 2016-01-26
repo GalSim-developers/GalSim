@@ -24,8 +24,8 @@ import galsim
 
 # This module-level dict will store all the registered value types.
 # See the RegisterValueType function at the end of this file.
-# The keys are the (string) names of the value types, and the values will be dicts that keep track
-# of the function to call to generate the value and a list of the types (float, int, str, etc.)
+# The keys are the (string) names of the value types, and the values are a tuple of the
+# function to call to generate the value and a list of the types (float, int, str, etc.)
 # that the value type is able to generate.
 valid_value_types = {}
 
@@ -125,13 +125,15 @@ def ParseValue(config, key, base, value_type):
         if type_name not in valid_value_types:
             raise AttributeError(
                 "Unrecognized type = %s specified for parameter %s"%(type_name,key))
-            
-        if value_type not in valid_value_types[type_name]['types']:
+
+        # Get the generating function and the list of valid types for it.
+        generate_func, valid_types = valid_value_types[type_name]
+
+        if value_type not in valid_types:
             raise AttributeError(
                 "Invalid value_type = %s specified for parameter %s with type = %s."%(
                     value_type, key, type_name))
 
-        generate_func = valid_value_types[type_name]['gen']
         #print 'generate_func = ',generate_func
         val, safe = generate_func(param, base, value_type)
         #print 'returned val, safe = ',val,safe
@@ -758,10 +760,8 @@ def RegisterValueType(type_name, gen_func, valid_types):
                                 value, safe = Generate(config, base, value_type)
     @param valid_types      A list of types for which this type name is valid.
     """
-    valid_value_types[type_name] = {
-        'gen' : gen_func,
-        'types' : tuple(valid_types)
-    }
+    valid_value_types[type_name] = (gen_func, tuple(valid_types))
+
 
 RegisterValueType('List', _GenerateFromList, 
               [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ])
