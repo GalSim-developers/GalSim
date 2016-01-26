@@ -27,8 +27,8 @@ import inspect
 
 # This module-level dict will store all the registered "extra" output types.
 # See the RegisterExtraOutput function at the end of this file.
-# The keys will be the (string) names of the extra output types, and the values will be dicts that
-# keep track of the different functions to be called at different stages of processing.
+# The keys will be the (string) names of the extra output types, and the values will be 
+# builder classes that will perform the different processing functions.
 valid_extra_outputs = {}
 
 
