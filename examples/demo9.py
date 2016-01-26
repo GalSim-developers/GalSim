@@ -399,7 +399,7 @@ def main(argv):
                     flux, hlr, eta1, eta2, nfw_mu, nfw_z_source,
                     total_shear.g1, total_shear.g2, pos.x, pos.y,
                     mass, nfw_conc, nfw_z_halo )
-            truth_cat.add_row(row)
+            truth_cat.addRow(row)
 
         # Add Poisson noise to the full image
         # Note: The normal calculation of Poission noise isn't quite correct right now.

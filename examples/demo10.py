@@ -284,7 +284,7 @@ def main(argv):
                 psf_shape.e1, psf_shape.e2, psf_fwhm,
                 id_list[index], cosmos_index[index], (theta_deg % 360.),
                 alt_g1, alt_g2, dx, dy ]
-        truth_catalog.add_row(row)
+        truth_catalog.addRow(row)
 
         logger.info('Galaxy (%d,%d): position relative to center = %s', ix,iy,str(pos))
 
@@ -292,7 +292,7 @@ def main(argv):
 
     # In this case, we'll attach the truth catalog as an additional HDU in the same file as
     # the image data.
-    truth_hdu = truth_catalog.write_fits_hdu()
+    truth_hdu = truth_catalog.writeFitsHdu()
 
     # Now write the images to disk.
     images = [ gal_image , psf_image, truth_hdu ]

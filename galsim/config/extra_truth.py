@@ -84,15 +84,15 @@ def FinalizeTruth(truth_cat, scratch, config, base, logger=None):
     obj_nums = sorted(scratch.keys())
     for obj_num in obj_nums:
         row = scratch[obj_num]
-        truth_cat.add_row(row)
+        truth_cat.addRow(row)
     return truth_cat
 
 # Older versions of pyfits can't pickle HDUs, so this is a reimplementation of the
-# OutputCatalog.write_fits_hdu function that can be run through a proxy OutputCatalog.
+# OutputCatalog.writeFitsHdu function that can be run through a proxy OutputCatalog.
 def BuildTruthHDU(truth_cat):
     import numpy
     from galsim._pyfits import pyfits
-    data = truth_cat.make_data()
+    data = truth_cat.makeData()
     cols = []
     for name in data.dtype.names:
         dt = data.dtype[name]
