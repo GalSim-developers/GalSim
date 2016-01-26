@@ -72,7 +72,7 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
         image_num += 1
 
     def done_func(logger, proc, image_num, image, t):
-        if logger:
+        if logger and image is not None:
             # Note: numpy shape is y,x
             ys, xs = image.array.shape
             if proc is None: s0 = ''

@@ -80,7 +80,7 @@ def BuildStamps(nobjects, config, obj_num=0,
         jobs.append( (kwargs, obj_num+k) )
 
     def done_func(logger, proc, obj_num, result, t):
-        if logger:
+        if logger and result[0] is not None:
             # Note: numpy shape is y,x
             image = result[0]
             ys, xs = image.array.shape
