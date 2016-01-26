@@ -26,6 +26,12 @@ import logging
 # and is typically not specified explicitly.  But there are hooks in place to allow for other
 # options, either in future versions of GalSim or through user modules.
 
+# This module-level dict will store all the registered stamp types.
+# See the RegisterStampType function at the end of this file.
+# The keys are the (string) names of the stamp types, and the values will be dicts that keep track
+# of the functions to call at different stages of building the stamps.
+valid_stamp_types = {}
+
 
 def BuildStamps(nobjects, config, obj_num=0,
                 xsize=0, ysize=0, do_noise=True, logger=None):
@@ -636,8 +642,6 @@ def SNRBasic(image, config):
         return scale_factor
     else:
         return 1.
-
-valid_stamp_types = {}
 
 def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=None,
                       draw_func=None, whiten_func=None, snr_func=None):

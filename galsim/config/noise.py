@@ -22,6 +22,12 @@ import logging
 # This file handles the functionality for adding noise and the sky to an image after
 # drawing the objects.
 
+# This module-level dict will store all the registered noise types.
+# See the RegisterNoiseType function at the end of this file.
+# The keys are the (string) names of the noise types, and the values will be dicts that keep track
+# of the functions to call to do the different things we need related to the noise.
+valid_noise_types = {}
+
 
 #
 # First the driver functions:
@@ -495,8 +501,6 @@ def NoiseVarCOSMOS(config, base):
 def AddNoiseVarianceCOSMOS(config, base, im, include_obj_var, logger):
     im += NoiseVarCOSMOS(config, base)
 
-
-valid_noise_types = {}
 
 def RegisterNoiseType(noise_type, addnoise_func, getvar_func, addvar_func):
     """Register a noise type for use by the config apparatus.

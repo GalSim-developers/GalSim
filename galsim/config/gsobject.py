@@ -22,6 +22,13 @@ import logging
 # This file includes many of the simple object types.  Additional types are defined in
 # gsobject_ring.py, input_real.py, and input_cosmos.py.
 
+# This module-level dict will store all the registered gsobject types.
+# See the RegisterObjectType function at the end of this file.
+# The keys will be the (string) names of the object types, and the values will be dicts that keep
+# track of the build function and other information about the type.
+valid_gsobject_types = {}
+
+
 class SkipThisObject(Exception):
     """
     A class that a builder can throw to indicate that nothing went wrong, but for some
@@ -499,8 +506,6 @@ def GetMinimumBlock(config, base):
     else:
         return 1
 
-
-valid_gsobject_types = {}
 
 def RegisterObjectType(type_name, build_func, is_block=False):
     """Register an object type for use by the config apparatus.

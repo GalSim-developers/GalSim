@@ -25,6 +25,13 @@ import logging
 # different types of output files.  It includes the implementation of the default output type,
 # 'Fits'.  See output_multifits.py for 'MultiFits' and output_datacube.py for 'DataCube'.
 
+# This module-level dict will store all the registered output types.
+# See the RegisterOutputType function at the end of this file.
+# The keys are the (string) names of the output types, and the values will be dicts that keep track
+# of the functions to call at different stages of processing to construct and write the output
+# file(s).
+valid_output_types = {}
+
 
 def BuildFiles(nfiles, config, file_num=0, logger=None):
     """
@@ -398,8 +405,6 @@ def GetNImagesFits(config, file_num):
     @returns 1
     """
     return 1
-
-valid_output_types = {}
 
 def RegisterOutputType(output_type, build_func, write_func, nimages_func,
                        extra_hdus=False, default_ext='.fits'):

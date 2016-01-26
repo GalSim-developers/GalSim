@@ -25,6 +25,12 @@ import logging
 # those helper functions for the simplest image type, Single.  See image_tiled.py and
 # image_scattered.py for the implementation of the Tiled and Scattered image types.
 
+# This module-level dict will store all the registered image types.
+# See the RegisterImageType function at the end of this file.
+# The keys are the (string) names of the image types, and the values will be dicts that keep track
+# of the various functions to call at different stages of processing.
+valid_image_types = {}
+
 
 def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
     """
@@ -390,8 +396,6 @@ def GetNObjSingle(config, image_num):
     """
     return 1
 
-
-valid_image_types = {}
 
 def RegisterImageType(image_type, setup_func, build_func, noise_func, nobj_func):
     """Register an image type for use by the config apparatus.

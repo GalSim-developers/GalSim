@@ -24,6 +24,14 @@ import logging
 # This file includes the basic functionality, which is often sufficient for simple input types,
 # but it has hooks to allow more customized behavior where necessary. See input_*.py for examples.
 
+# This module-level dict will store all the registered input types.
+# See the RegisterInputType function near the end of this file.
+# The keys are the (string) names of the image types, and the values will be dicts that keep track
+# of the function to call to load the input object as well as some other extra information we need
+# to know to process the input type correctly.
+valid_input_types = {}
+
+
 def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_only=False):
     """
     Process the input field, reading in any specified input files or setting up
@@ -297,8 +305,6 @@ def GetInputObj(input_type, config, base, param_name):
 
     return base['input_objs'][input_type][num]
 
-
-valid_input_types = {}
 
 def RegisterInputType(input_type, init_func, types, kwargs_func=None, has_nobj=False, 
                       file_scope=False, setup_func=None):

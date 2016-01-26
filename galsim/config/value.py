@@ -22,6 +22,14 @@ import galsim
 # Additional value types are defined in value_random.py, value_eval.py, input.py, 
 # input_powerspectrum.py, input_nfw.py, and input_fitsheader.
 
+# This module-level dict will store all the registered value types.
+# See the RegisterValueType function at the end of this file.
+# The keys are the (string) names of the value types, and the values will be dicts that keep track
+# of the function to call to generate the value and a list of the types (float, int, str, etc.)
+# that the value type is able to generate.
+valid_value_types = {}
+
+
 # Standard keys to ignore while parsing values:
 standard_ignore = [ 
     'type',
@@ -721,8 +729,6 @@ def _GenerateFromCurrent(config, base, value_type):
     except ValueError:
         raise ValueError("Invalid key = %s given for type=Current")
 
-
-valid_value_types = {}
 
 def RegisterValueType(type_name, gen_func, valid_types):
     """Register a value type for use by the config apparatus.

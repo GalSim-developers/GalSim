@@ -25,6 +25,13 @@ import inspect
 # in config['output']. The ones that are defined natively in GalSim are psf, weight, badpix,
 # and truth.  See extra_*.py for the specific functions for each of these.
 
+# This module-level dict will store all the registered "extra" output types.
+# See the RegisterExtraOutput function at the end of this file.
+# The keys will be the (string) names of the extra output types, and the values will be dicts that
+# keep track of the different functions to be called at different stages of processing.
+valid_extra_outputs = {}
+
+
 def SetupExtraOutput(config, file_num=0, logger=None):
     """
     Set up the extra output items as necessary, including building Managers for them
@@ -327,8 +334,6 @@ def BuildExtraOutputHDUs(config, logger=None, first=1):
         return hdulist
     else:
         return []
-
-valid_extra_outputs = {}
 
 def RegisterExtraOutput(key, init_func=None, kwargs_func=None, setup_func=None, stamp_func=None,
                         image_func=None, final_func=None, write_func=None, hdu_func=None):

@@ -21,6 +21,13 @@ import logging
 
 # This file handles the construction of wcs types in config['image']['wcs'].
 
+# This module-level dict will store all the registered wcs types.
+# See the RegisterWCSType function at the end of this file.
+# The keys are the (string) names of the wcs types, and the values will be dicts that keep track
+# of the functions to call related to different aspects of the WCS processing.
+valid_wcs_types = {}
+
+
 def BuildWCS(config):
     """Read the wcs from the config dict, writing both it and, if it is well-defined, the
     pixel_scale to the config.  If the wcs does not have a well-defined pixel_scale, it will
@@ -109,8 +116,6 @@ def BuildTanWCS(config, base):
 
     return galsim.TanWCS(affine=affine, world_origin=world_origin, units=units)
 
-
-valid_wcs_types = {}
 
 def RegisterWCSType(wcs_type, init_func, origin_func=None, kwargs_func=None):
     """Register a wcs type for use by the config apparatus.
