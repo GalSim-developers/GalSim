@@ -376,7 +376,7 @@ class OutputCatalog(object):
         ncols       The number of columns in the catalog.
         names       The names of the columns.
         types       The types of the columns.
-        cols        The columns of data that have been accumulated so far.
+        rows        The rows of data that have been accumulated so far.
 
     """
     # Watch out for this "Gotcha".  Using _rows=[] as the default argument doesn't work!
