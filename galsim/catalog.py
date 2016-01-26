@@ -381,20 +381,14 @@ class OutputCatalog(object):
     """
     # Watch out for this "Gotcha".  Using _rows=[] as the default argument doesn't work!
     # https://pythonconquerstheuniverse.wordpress.com/2012/02/15/mutable-default-arguments/
-    def __init__(self, names, types=None, _rows=None, _sort_keys=None):
+    def __init__(self, names, types=None, _rows=(), _sort_keys=()):
         self.names = names
         if types is None:
             self.types = [ float for i in names ]
         else:
             self.types = types
-        if _rows is None:
-            self.rows = []
-        else:
-            self.rows = _rows
-        if _sort_keys is None:
-            self.sort_keys = []
-        else:
-            self.sort_keys = _sort_keys
+        self.rows = list(_rows)
+        self.sort_keys = list(_sort_keys)
 
     @property
     def nobjects(self): return len(self.rows)
