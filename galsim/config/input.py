@@ -312,6 +312,12 @@ def RegisterInputType(input_type, init_func, types, kwargs_func=None, has_nobj=F
 
     @param input_type       The name of the type in config['input']
     @param init_func        A function or class name to use to build the input object.
+                            The call signature is:
+                                input_obj = Init(**kwargs)
+                            If kwargs_func is given, use that to get the kwargs.  Else use class
+                            attributes _req_params, _opt_params, and _single_params.  See classes
+                            in galsim/base.py (e.g. Gaussian) for examples of this "regular"
+                            initialization specification.
     @param types            A list of value or object types that use this input type.
                             These items will have their "current" values invalidated when the
                             input object changes.

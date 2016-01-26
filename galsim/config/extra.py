@@ -345,6 +345,8 @@ def RegisterExtraOutput(key, init_func=None, kwargs_func=None, setup_func=None, 
                             of length nimages that can be used to construct what is needed.]
     @param kwargs_func      A function to get the initialization kwargs. [default: None, which
                             means initialize with no arguments.]
+                            The call signature is
+                                kwargs = Kwargs(config, base, logger)
     @param setup_func       A function to call at the start of each image. 
                             The call signature is
                                 Setup(output_obj, scratch, config, base, logger)
