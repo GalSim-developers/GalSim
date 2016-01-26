@@ -141,14 +141,14 @@ def main(argv):
     # save the catalog (or whatever) in the config dict in the way that further processing
     # functions expect.  However, we don't have any input field, so we don't need it here.
     #
-    # To build the files, the Process function then calls the following to build each file:
+    # The Process function then calls the following function to build each file:
     #
     #     galsim.config.BuildFile(config, file_num)
     #
     # Again, we'll forego that option here, so we can see how to use the config machinery
     # to produce images that we can use from within python.
     #
-    # This functions then call the following function to process the image field and actually
+    # This function then calls the following function to process the image field and actually
     # build each image:
     #
     #     image = galsim.config.BuildImage(config, image_num)
