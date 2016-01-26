@@ -72,9 +72,11 @@ psf :
             #     b = bool
             #     s = string
             #     a = Angle
-            #     p = Position
+            #     p = PositionD
             #     g = Shear
+            #     x = GSObject
             # Thus, fr here is a float variable named r.
+            # (Examples of i, p, g, and x codes can be seen below in the output.truth field.)
             fr : { type : Eval , str : '(world_pos.x**2 + world_pos.y**2)**0.5' } 
             # Now we can use this variable (as r, not fr) in our string:
             str : '0.4 * (r/100)**1.5'   # large value at the edge, so visible by eye.
@@ -266,14 +268,17 @@ output :
             cosmos_id : gal.first.id
 
             # Even though we accessed the catalog by id, we can still get the index number
-            # in the catalog via the gal.index attribute.
+            # in the catalog via the RealGalaxy index attribute.
             cosmos_index :
                 type : Eval
-                str : 'gal.index'
-                # There is a special Eval code we haven't mentioned yet.  If you precede a
-                # variable name with x, then that means it's an object, rather than a value.
-                # So in this case, get the index from the attribute of the object, gal.first.
-                xgal : { type : Current, key : 'gal.first' }
+                str : 'orig_gal.index'
+                # The orig_gal variable uses the x code, which is a little different from the
+                # other codes we've seen.  It refers to a GSObject, which needs to already be
+                # built by some other part of the code; the only type that works for these then
+                # is Current.  Here we take the current value stored in gal.first, which is the
+                # RealGalaxy object that was built in that field before the transformations
+                # were applied in the main gal field.
+                xorig_gal : { type : Current, key : 'gal.first' }
 
             # Fields that are automatically generated are also available.
             # List, Ring, and Catalog all have an index parameter, but it is often omitted

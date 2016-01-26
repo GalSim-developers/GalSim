@@ -131,8 +131,8 @@
             "cosmos_id" : "gal.first.id",
             "cosmos_index" : {
                 "type" : "Eval",
-                "str" : "gal.index",
-                "xgal" : { "type" : "Current", "key" : "gal.first" }
+                "str" : "orig_gal.index",
+                "xorig_gal" : { "type" : "Current", "key" : "gal.first" }
             },
 
             "theta" : {
