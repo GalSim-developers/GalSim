@@ -446,7 +446,6 @@ class OutputCatalog(object):
         file_type = file_type.upper()
         if file_type not in ['FITS', 'ASCII']:
             raise ValueError("file_type must be either FITS or ASCII if specified.")
-        self.file_type = file_type
 
         if file_type == 'FITS':
             self.writeFits(file_name)
