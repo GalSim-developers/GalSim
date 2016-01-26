@@ -21,8 +21,8 @@ import galsim
 # This file adds input type nfw_halo and value types NFWHaloShear and NFWHaloMagnification.
 
 # The NFWHalo doesn't need anything special other than registration as a valid input type.
-from .input import RegisterInputType
-RegisterInputType('nfw_halo', galsim.NFWHalo, ['NFWHaloShear', 'NFWHaloMagnification'])
+from .input import RegisterInputType, InputLoader
+RegisterInputType('nfw_halo', InputLoader(galsim.NFWHalo, ['NFWHaloShear', 'NFWHaloMagnification']))
 
 # There are two value types associated with this: NFWHaloShear and NFWHaloMagnification.
 
@@ -75,7 +75,7 @@ def _GenerateFromNFWHaloMagnification(config, base, value_type):
     mu = nfw_halo.getMagnification(pos,redshift)
 
     max_mu = kwargs.get('max_mu', 25.)
-    if not max_mu > 0.: 
+    if not max_mu > 0.:
         raise ValueError(
             "Invalid max_mu=%f (must be > 0) for type = NFWHaloMagnification"%max_mu)
 

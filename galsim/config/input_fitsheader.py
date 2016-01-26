@@ -21,8 +21,8 @@ import galsim
 # This file adds input type fits_header and value type FitsHeader.
 
 # The FitsHeader doesn't need anything special other than registration as a valid input type.
-from .input import RegisterInputType
-RegisterInputType('fits_header', galsim.FitsHeader,['FitsHeader'], file_scope=True)
+from .input import RegisterInputType, InputLoader
+RegisterInputType('fits_header', InputLoader(galsim.FitsHeader,['FitsHeader'], file_scope=True))
 
 def _GenerateFromFitsHeader(config, base, value_type):
     """@brief Return a value read from a FITS header
