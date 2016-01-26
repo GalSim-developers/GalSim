@@ -45,7 +45,7 @@ def _BuildRing(config, base, ignore, gsparams, logger):
         full_rotation = math.pi * galsim.radians
 
     dtheta = full_rotation / num
-    if False:
+    if logger:
         logger.debug('obj %d: Ring dtheta = %f',base['obj_num'],dtheta.rad())
 
     if index % num == 0:

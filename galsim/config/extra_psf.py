@@ -74,7 +74,7 @@ def ProcessExtraPSFStamp(images, scratch, config, base, obj_num, logger=None):
             shift = galsim.config.GetCurrentValue('gal.shift',base, galsim.PositionD)
         else:
             shift = galsim.config.ParseValue(config, 'shift', base, galsim.PositionD)[0]
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             logger.debug('obj %d: psf shift: %s',base['obj_num'],str(shift))
         psf = psf.shift(shift)
 

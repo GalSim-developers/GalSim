@@ -36,12 +36,12 @@ def SetupScattered(config, image_num, obj_num, ignore, logger):
 
     @returns the final image
     """
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('image %d: Building Scattered: image, obj = %d,%d',
                      image_num,image_num,obj_num)
 
     nobjects = GetNObjScattered(config, image_num)
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('image %d: nobj = %d',image_num,nobjects)
     config['nobjects'] = nobjects
 
@@ -124,14 +124,14 @@ def BuildScattered(config, image_num, obj_num, logger):
         # This is our signal that the object was skipped.
         if stamps[k] is None: continue
         bounds = stamps[k].bounds & full_image.bounds
-        if False:
+        if logger:
             logger.debug('image %d: full bounds = %s',image_num,str(full_image.bounds))
             logger.debug('image %d: stamp %d bounds = %s',image_num,k,str(stamps[k].bounds))
             logger.debug('image %d: Overlap = %s',image_num,str(bounds))
         if bounds.isDefined():
             full_image[bounds] += stamps[k][bounds]
         else:
-            if logger and logger.isEnabledFor(logging.INFO):
+            if logger:
                 logger.warn(
                     "Object centered at (%d,%d) is entirely off the main image,\n"%(
                         stamps[k].bounds.center().x, stamps[k].bounds.center().y) +

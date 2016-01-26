@@ -38,7 +38,7 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
 
     @returns a list of images
     """
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('file %d: BuildImages nimages = %d: image, obj = %d,%d',
                      config.get('file_num',0),nimages,image_num,obj_num)
 
@@ -66,7 +66,7 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
         image_num += 1
 
     def done_func(logger, proc, image_num, image, t):
-        if logger and logger.isEnabledFor(logging.INFO):
+        if logger:
             # Note: numpy shape is y,x
             ys, xs = image.array.shape
             if proc is None: s0 = ''
@@ -86,7 +86,7 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
                                         done_func = done_func,
                                         except_func = except_func)
 
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('file %d: Done making images',config.get('file_num',0))
 
     return images
@@ -187,7 +187,7 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
 
     @returns the final image
     """
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('image %d: BuildImage: image, obj = %d,%d',image_num,image_num,obj_num)
 
     # Setup basic things in the top-level config dict that we will need.
@@ -197,7 +197,7 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
 
     # Build the rng to use at the image level.
     seed = galsim.config.SetupConfigRNG(config)
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('image %d: seed = %d',image_num,seed)
 
     # Do the necessary initial setup for this image type.
@@ -207,7 +207,7 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
     # Given this image size (which may be 0,0, in which case it will be set automatically later),
     # do some basic calculations
     SetupConfigImageSize(config,xsize,ysize)
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('image %d: image_size = %d, %d',image_num,xsize,ysize)
         logger.debug('image %d: image_origin = %s',image_num,config['image_origin'])
         logger.debug('image %d: image_center = %s',image_num,config['image_center'])
@@ -289,7 +289,7 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
     nobjects = len(stamps)
     max_current_var = max(current_vars)
     if max_current_var > 0:
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             logger.debug('image %d: maximum noise varance in any stamp is %f',
                          config['image_num'], max_current_var)
         import numpy
@@ -304,7 +304,7 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
         # Update this, since overlapping postage stamps may have led to a larger
         # value in some pixels.
         max_current_var = numpy.max(noise_image.array)
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             logger.debug('image %d: maximum noise varance in any pixel is %f',
                          config['image_num'], max_current_var)
         # Figure out how much noise we need to add to each pixel.
@@ -329,7 +329,7 @@ def SetupSingle(config, image_num, obj_num, ignore, logger):
 
     @returns xsize, ysize for the image (not built yet)
     """
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('image %d: BuildSingleImage: image, obj = %d,%d',image_num,image_num,obj_num)
 
     extra_ignore = [ 'image_pos', 'world_pos' ]

@@ -159,18 +159,18 @@ def ReadConfig(config_file, file_type=None, logger=None):
         else:
             # Let YAML be the default if the extension is not .y* or .j*.
             file_type = 'yaml'
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             logger.debug('File type determined to be %s', file_type)
     else:
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             logger.debug('File type specified to be %s', file_type)
 
     if file_type == 'yaml':
-        if logger and logger.isEnabledFor(logging.INFO):
+        if logger:
             logger.info('Reading YAML config file %s', config_file)
         return galsim.config.ReadYaml(config_file)
     else:
-        if logger and logger.isEnabledFor(logging.INFO):
+        if logger:
             logger.info('Reading JSON config file %s', config_file)
         return galsim.config.ReadJson(config_file)
 
@@ -256,7 +256,7 @@ def GetLoggerProxy(logger):
     """Make a proxy for the given logger that can be passed into multiprocessing Processes
     and used safely.
 
-    @param logger           The logger to make a copy of
+    @param logger       The logger to make a copy of
 
     @returns a proxy for the given logger
     """
@@ -271,6 +271,40 @@ def GetLoggerProxy(logger):
     else:
         logger_proxy = None
     return logger_proxy
+
+class LoggerWrapper(object):
+    """A wrap around a Logger object that checks whether a debug or info or warn call will
+    actually produce any output before calling the functions.
+
+    This seems like a gratuitous wrapper, and it is if the object being wrapped is a real
+    Logger object.  However, we use it to wrap proxy objects (returned from GetLoggerProxy)
+    that would otherwise send the arguments of logger.debug(...) calls through a multiprocessing
+    pipe before (typically) being ignored.  Here, we check whether the call will actually
+    produce any output before calling the functions.
+
+    @param logger       The logger object to wrap.
+    """
+    def __init__(self, logger):
+        self.logger = logger
+
+    def debug(self, *args, **kwargs):
+        if self.logger and self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug(*args, **kwargs)
+
+    def info(self, *args, **kwargs):
+        if self.logger and self.logger.isEnabledFor(logging.INFO):
+            self.logger.info(*args, **kwargs)
+
+    def warn(self, *args, **kwargs):
+        if self.logger and self.logger.isEnabledFor(logging.WARN):
+            self.logger.warn(*args, **kwargs)
+
+    def error(self, *args, **kwargs):
+        if self.logger and self.logger.isEnabledFor(logging.ERROR):
+            self.logger.error(*args, **kwargs)
+
+    def isEnabledFor(self, *args, **kwargs):
+        return self.logger.isEnabledFor(*args,**kwargs)
 
 
 def UpdateNProc(nproc, ntot, config, logger=None):
@@ -293,24 +327,24 @@ def UpdateNProc(nproc, ntot, config, logger=None):
         try:
             from multiprocessing import cpu_count
             nproc = cpu_count()
-            if logger and logger.isEnabledFor(logging.DEBUG):
+            if logger:
                 logger.debug("ncpu = %d.",nproc)
         except:
-            if logger and logger.isEnabledFor(logging.WARN):
+            if logger:
                 logger.warn("nproc <= 0, but unable to determine number of cpus.")
                 logger.warn("Using single process")
             nproc = 1
  
     # Second, make sure we aren't already in a multiprocessing mode
     if nproc > 1 and 'current_nproc' in config:
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             logger.debug("Already multiprocessing.  Ignoring image.nproc")
         nproc = 1
 
     # Finally, don't try to use more processes than jobs.  It wouldn't fail or anything.
     # It just looks bad to have 3 images processed with 8 processes or something like that.
     if nproc > ntot:
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             logger.debug("There are only %d jobs to do.  Reducing nproc to %d."%(ntot,ntot))
         nproc = ntot
     return nproc
@@ -560,7 +594,7 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None):
         # Strip off a final suffix if present.
         config['root'] = os.path.splitext(script_name)[0]
 
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         import pprint
         logger.debug("Final config dict to be processed: \n%s", pprint.pformat(config))
 
@@ -580,7 +614,7 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None):
         nfiles = galsim.config.ParseValue(output, 'nfiles', config, int)[0]
     else:
         nfiles = 1 
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('nfiles = %d',nfiles)
 
     if njobs > 1:
@@ -661,6 +695,15 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
     def worker(task_queue, results_queue, config, logger):
         proc = current_process().name
 
+        # The logger object passed in here is a proxy object.  This means that all the arguments
+        # to any logging commands are passed through the pipe to the real Logger object on the
+        # other end of the pipe.  This tends to produce a lot of unnecessary communication, since
+        # most of those commands don't actually produce any output (e.g. logger.debug(..) commands
+        # when the logging level is not DEBUG).  So it is helpful to wrap this object in a
+        # LoggerWrapper that checks whether it is worth sending the arguments back to the original
+        # Logger before calling the functions.
+        logger = LoggerWrapper(logger)
+
         if 'profile' in config and config['profile']:
             import cProfile, pstats, StringIO
             pr = cProfile.Profile()
@@ -670,7 +713,7 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
 
         for task in iter(task_queue.get, 'STOP'):
             try :
-                if logger and logger.isEnabledFor(logging.DEBUG):
+                if logger:
                     logger.debug('%s: Received job to do %d %ss, starting with %s',
                                  proc,len(task),item,task[0][1])
                 for kwargs, k in task:
@@ -683,10 +726,10 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
             except Exception as e:
                 import traceback
                 tr = traceback.format_exc()
-                if logger and logger.isEnabledFor(logging.DEBUG):
+                if logger:
                     logger.debug('%s: Caught exception: %s\n%s',proc,str(e),tr)
                 results_queue.put( (e, k, tr, proc) )
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             logger.debug('%s: Received STOP', proc)
         if pr:
             pr.disable()
@@ -698,7 +741,7 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
                          proc,s.getvalue(),proc)
 
     if nproc > 1:
-        if logger and logger.isEnabledFor(logging.WARN):
+        if logger:
             logger.warn("Using %d processes for %s processing",nproc,item)
 
         from multiprocessing import Process, Queue, current_process

@@ -52,7 +52,7 @@ def BuildDataCube(config, file_num, image_num, obj_num, ignore, logger):
     config1 = galsim.config.CopyConfig(config)
     image0 = galsim.config.BuildImage(config1, logger=logger, image_num=image_num, obj_num=obj_num)
     t2 = time.time()
-    if logger and logger.isEnabledFor(logging.INFO):
+    if logger:
         # Note: numpy shape is y,x
         ys, xs = image0.array.shape
         logger.info('Image %d: size = %d x %d, time = %f sec', image_num, xs, ys, t2-t1)

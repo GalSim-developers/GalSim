@@ -84,7 +84,7 @@ def SetupExtraOutput(config, file_num=0, logger=None):
             config['extra_scratch'] = {}
 
         for key in all_keys:
-            if logger and logger.isEnabledFor(logging.DEBUG):
+            if logger:
                 logger.debug('file %d: Setup output item %s',file_num,key)
             field = config['output'][key]
             kwargs_func = valid_extra_outputs[key]['kwargs']
@@ -109,7 +109,7 @@ def SetupExtraOutput(config, file_num=0, logger=None):
                 # processes trying to append at the same time.
                 nimages = config['nimages']
                 for i in range(nimages): output_obj.append(None)
-            if logger and logger.isEnabledFor(logging.DEBUG):
+            if logger:
                 logger.debug('file %d: Setup output %s object',file_num,key)
             config['extra_objs'][key] = output_obj
             config['extra_scratch'][key] = scratch
@@ -250,7 +250,7 @@ def WriteExtraOutputs(config, logger=None):
                 file_name = os.path.join(dir,file_name)
 
             if noclobber and os.path.isfile(file_name):
-                if logger and logger.isEnabledFor(logging.WARN):
+                if logger:
                     logger.warn('Not writing %s file %d = %s because output.noclobber = True' +
                                 ' and file exists',key,config['file_num'],file_name)
                 continue
@@ -258,7 +258,7 @@ def WriteExtraOutputs(config, logger=None):
             if config['extra_objs_last_file'].get(key, None) == file_name:
                 # If we already wrote this file, skip it this time around.
                 # (Typically this is applicable for psf, where we may only want 1 psf file.)
-                if logger and logger.isEnabledFor(logging.INFO):
+                if logger:
                     logger.info('Not writing %s file %d = %s because already written',
                                 key,config['file_num'],file_name)
                 continue
@@ -274,7 +274,7 @@ def WriteExtraOutputs(config, logger=None):
                 args = (extra_obj, file_name)
             galsim.config.RetryIO(write_func, args, ntries, file_name, logger)
             config['extra_objs_last_file'][key] = file_name
-            if logger and logger.isEnabledFor(logging.DEBUG):
+            if logger:
                 logger.debug('file %d: Wrote %s to %r',config['file_num'],key,file_name)
 
 

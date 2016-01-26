@@ -47,7 +47,7 @@ def BuildStamps(nobjects, config, obj_num=0,
 
     @returns the tuple (images, current_vars).  Both are lists.
     """
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('image %d: BuildStamp nobjects = %d: obj = %d',
                      config.get('image_num',0),nobjects,obj_num)
 
@@ -60,7 +60,7 @@ def BuildStamps(nobjects, config, obj_num=0,
         nproc = 1
 
     nobj_per_task = galsim.config.CalculateNObjPerTask(nproc, nobjects, config)
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('image %d: nobj_per_task = %d',config.get('image_num',0), nobj_per_task)
 
     jobs = []
@@ -74,7 +74,7 @@ def BuildStamps(nobjects, config, obj_num=0,
         jobs.append( (kwargs, obj_num+k) )
 
     def done_func(logger, proc, obj_num, result, t):
-        if logger and logger.isEnabledFor(logging.INFO):
+        if logger:
             # Note: numpy shape is y,x
             image = result[0]
             ys, xs = image.array.shape
@@ -101,7 +101,7 @@ def BuildStamps(nobjects, config, obj_num=0,
             logger.error('No images were built.  All were either skipped or had errors.')
     else:
         images, current_vars = zip(*results)
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             logger.debug('image %d: Done making stamps',config.get('image_num',0))
 
     return images, current_vars
@@ -249,7 +249,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
 
     # Add 1 to the seed here so the first object has a different rng than the file or image.
     seed = galsim.config.SetupConfigRNG(config, seed_offset=1)
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('obj %d: seed = %d',obj_num,seed)
 
     if 'retry_failures' in config['stamp']:
@@ -275,7 +275,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             # Save these values for possible use in Evals or other modules
             SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos)
             stamp_center = config['stamp_center']
-            if logger and logger.isEnabledFor(logging.DEBUG):
+            if logger:
                 if xsize:
                     logger.debug('obj %d: xsize,ysize = %s,%s',obj_num,xsize,ysize)
                 if image_pos:
@@ -300,9 +300,9 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 prof = profile_func(config, psf, gsparams, logger)
 
             except galsim.config.gsobject.SkipThisObject, e:
-                if logger and logger.isEnabledFor(logging.DEBUG):
+                if logger:
                     logger.debug('obj %d: Caught SkipThisObject: e = %s',obj_num,e.msg)
-                if logger and logger.isEnabledFor(logging.INFO):
+                if logger:
                     if e.msg:
                         # If there is a message, upgrade to info level
                         logger.info('Skipping object %d: %s',obj_num,e.msg)
@@ -323,7 +323,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 if 'offset' in config['stamp']:
                     offset += galsim.config.ParseValue(config['stamp'], 'offset', config,
                                                        galsim.PositionD)[0]
-                if logger and logger.isEnabledFor(logging.DEBUG):
+                if logger:
                     logger.debug('obj %d: offset = %s',obj_num,offset)
 
                 draw_func = valid_stamp_types[stamp_type]['draw']
@@ -359,7 +359,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 whiten_func = valid_stamp_types[stamp_type]['whiten']
                 current_var = whiten_func(prof, im, config)
                 if current_var != 0.:
-                    if logger and logger.isEnabledFor(logging.DEBUG):
+                    if logger:
                         logger.debug('obj %d: whitening noise brought current var to %f',
                                      config['obj_num'],current_var)
             else:
@@ -379,7 +379,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 # Then this was the last try.  Just re-raise the exception.
                 raise
             else:
-                if logger and logger.isEnabledFor(logging.INFO):
+                if logger:
                     logger.info('Object %d: Caught exception %s',obj_num,str(e))
                     logger.info('This is try %d/%d, so trying again.',itry+1,ntries)
                 # Need to remove the "current_val"s from the config dict.  Otherwise,
@@ -529,7 +529,7 @@ def DrawBasic(prof, image, method, offset, config):
         if method != 'phot':
             raise AttributeError('n_photons is invalid with method != phot')
         if 'max_extra_noise' in config['stamp']:
-            if logger and logger.isEnabledFor(logging.WARN):
+            if logger:
                 logger.warn(
                     "Both 'max_extra_noise' and 'n_photons' are set in config dict, "+
                     "ignoring 'max_extra_noise'.")

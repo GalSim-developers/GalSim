@@ -36,7 +36,7 @@ def SetupTiled(config, image_num, obj_num, ignore, logger):
 
     @returns the final image
     """
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('image %d: Building Tiled: image, obj = %d,%d',image_num,image_num,obj_num)
 
     extra_ignore = [ 'image_pos' ] # We create this below, so on subequent passes, we ignore it.
@@ -50,7 +50,7 @@ def SetupTiled(config, image_num, obj_num, ignore, logger):
     ny_tiles = params['ny_tiles']
     config['nx_tiles'] = nx_tiles
     config['ny_tiles'] = ny_tiles
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('image %d: n_tiles = %d, %d',image_num,nx_tiles,ny_tiles)
 
     stamp_size = params.get('stamp_size',0)
@@ -167,7 +167,7 @@ def BuildTiled(config, image_num, obj_num, logger):
     for k in range(nobjects):
         # This is our signal that the object was skipped.
         if stamps[k] is None: continue
-        if False:
+        if logger:
             logger.debug('image %d: full bounds = %s',image_num,str(full_image.bounds))
             logger.debug('image %d: stamp %d bounds = %s',image_num,k,str(stamps[k].bounds))
         assert full_image.bounds.includes(stamps[k].bounds)

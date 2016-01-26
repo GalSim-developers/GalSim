@@ -103,7 +103,7 @@ def BuildFiles(nfiles, config, file_num=0, logger=None):
         file_name2, t = result  # This is the t for which 0 means the file was skipped.
         if file_name2 != file_name:
             raise RuntimeError("Files seem to be out of sync. %s != %s",file_name, file_name2)
-        if t != 0 and logger and logger.isEnabledFor(logging.WARN):
+        if t != 0 and logger:
             if proc is None: s0 = ''
             else: s0 = '%s: '%proc
             logger.warn(s0 + 'File %d = %s: time = %f sec', file_num, file_name, t)
@@ -133,7 +133,7 @@ def BuildFiles(nfiles, config, file_num=0, logger=None):
         if logger:
             logger.error('No files were written.  All were either skipped or had errors.')
     else:
-        if logger and logger.isEnabledFor(logging.WARN):
+        if logger:
             if nfiles_written > 1 and nproc != 1:
                 logger.warn('Total time for %d files with %d processes = %f sec',
                             nfiles_written,nproc,t2-t1)
@@ -160,7 +160,7 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
 
     SetupConfigFileNum(config,file_num,image_num,obj_num)
     seed = galsim.config.SetupConfigRNG(config)
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('file %d: seed = %d',file_num,seed)
 
     # Put these values in the config dict so we won't have to run them again later if
@@ -173,7 +173,7 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     output = config['output']
     output_type = output['type']
 
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('file %d: Build File with type=%s to build %d images, starting with %d',
                       file_num,output_type,nimages,image_num)
 
@@ -187,14 +187,14 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
 
     # Check if we ought to skip this file
     if 'skip' in output and galsim.config.ParseValue(output, 'skip', config, bool)[0]:
-        if logger and logger.isEnabledFor(logging.WARN):
+        if logger:
             logger.warn('Skipping file %d = %s because output.skip = True',file_num,file_name)
         t2 = time.time()
         return file_name, 0
     if ('noclobber' in output
         and galsim.config.ParseValue(output, 'noclobber', config, bool)[0]
         and os.path.isfile(file_name)):
-        if logger and logger.isEnabledFor(logging.WARN):
+        if logger:
             logger.warn('Skipping file %d = %s because output.noclobber = True' +
                         ' and file exists',file_num,file_name)
         t2 = time.time()
@@ -203,7 +203,7 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     if logger: 
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: file_name = %s',file_num,file_name)
-        elif logger.isEnabledFor(logging.WARN):
+        else:
             logger.warn('Start file %d = %s', file_num, file_name)
 
     build_func = valid_output_types[output_type]['build']
@@ -224,7 +224,7 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     write_func = valid_output_types[output_type]['write']
     args = (data, file_name)
     RetryIO(write_func, args, ntries, file_name, logger)
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('file %d: Wrote %s to file %r',file_num,output_type,file_name)
 
     galsim.config.WriteExtraOutputs(config,logger)
@@ -354,7 +354,7 @@ def RetryIO(func, args, ntries, file_name, logger):
                 # Then this was the last try.  Just re-raise the exception.
                 raise
             else:
-                if logger and logger.isEnabledFor(logging.WARN):
+                if logger:
                     logger.warn('File %s: Caught IOError: %s',file_name,str(e))
                     logger.warn('This is try %d/%d, so sleep for %d sec and try again.',
                                 itry+1,ntries,itry+1)
