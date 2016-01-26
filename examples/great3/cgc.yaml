@@ -65,7 +65,7 @@ psf:
         # The aberrations are taken to have an rms of 0.41 waves
         # Great3 put a lot more weight into the defocus than the others.
         # Unfortunately, this makes a couple PSFs into donuts, which was a problem.
-        # According to Aaron Roodma, for DES the appropriate rms values are closer to
+        # According to Aaron Roodman, for DES the appropriate rms values are closer to
         # [ 0.13, 0.13, 0.14, 0.06, 0.06, 0.05, 0.06, 0.03 ]
         # which has an rms of 0.26 waves, so probably 0.41 was too large a target.
         defocus: { type: RandomGaussian, sigma: 0.36 }
