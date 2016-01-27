@@ -118,4 +118,4 @@ class DataCubeBuilder(OutputBuilder):
 
 # Register this as a valid output type
 from .output import RegisterOutputType
-RegisterOutputType('DataCube', DataCubeBuilder)
+RegisterOutputType('DataCube', DataCubeBuilder())

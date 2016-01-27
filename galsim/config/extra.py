@@ -27,7 +27,7 @@ import inspect
 
 # This module-level dict will store all the registered "extra" output types.
 # See the RegisterExtraOutput function at the end of this file.
-# The keys will be the (string) names of the extra output types, and the values will be 
+# The keys will be the (string) names of the extra output types, and the values will be
 # builder classes that will perform the different processing functions.
 valid_extra_outputs = {}
 
@@ -89,8 +89,9 @@ def SetupExtraOutput(config, file_num=0, logger=None):
 
             # Create the builder, giving it the data and scratch objects as work space.
             field = config['output'][key]
-            builder = valid_extra_outputs[key](data, scratch, field, config, logger)
-            # And store it in the config dict.
+            builder = valid_extra_outputs[key]
+            builder.initialize(data, scratch, field, config, logger)
+            # And store it in the config dict
             config['extra_builder'][key] = builder
 
             if logger:
@@ -280,11 +281,11 @@ class ExtraOutputBuilder(object):
     The base class doesn't do anything, but it defines the function signatures that a derived
     class can override to perform specific processing at any of several steps in the processing.
 
-    The initializer is given a list and and dict to use as work space. The typical work flow is
-    to save something in scratch[obj_num] for each object built, and then process them all at the
-    end of each image into data[k].  Then finalize may do something additional at the end of the
-    processing to prepare the data to be written.
-    
+    The builder gets initialized with a list and and dict to use as work space.
+    The typical work flow is to save something in scratch[obj_num] for each object built, and then
+    process them all at the end of each image into data[k].  Then finalize may do something
+    additional at the end of the processing to prepare the data to be written.
+
     It's worth remembering that the objects could potentially be processed in a random order if
     multiprocessing is being used.  The above work flow will thus work regardless of the order
     that the stamps and/or images are processed.
@@ -295,16 +296,15 @@ class ExtraOutputBuilder(object):
     any information you want to persist into the scratch or data objects, which are set up
     to handle the multiprocessing communication properly.
     """
-    def __init__(self, data, scratch, config, base, logger):
-        """Initialize the output object.
+    def initialize(self, data, scratch, config, base, logger):
+        """Do any initial setup for this builder at the start of a new output file.
 
-        The default constructor constructs a list of length nimages of Nones.
-        These can be filled in with some kind of data for each image by processImage.
+        The base class implementation saves two work space items into self.data and self.scratch
+        that can be used to safely communicate across multiple processes.
 
         @param data         An empty list of length nimages to use as work space.
         @param scratch      An empty dict that can be used as work space.
-        @param config       The configuration field for this output object.  e.g. for the extra
-                            output field, weight, this would be base['output']['weight'].
+        @param config       The configuration field for this output object.
         @param base         The base configuration dict.
         @param logger       If given, a logger object to log progress. [default: None]
         """
@@ -361,7 +361,6 @@ class ExtraOutputBuilder(object):
         """
         pass
 
-
     def finalize(self, config, base, logger):
         """Perform any final processing at the end of all the image processing.
 
@@ -373,7 +372,6 @@ class ExtraOutputBuilder(object):
         """
         pass
 
-
     def writeFile(self, file_name, config, base, logger):
         """Write this output object to a file.
 
@@ -383,7 +381,6 @@ class ExtraOutputBuilder(object):
         @param logger       If given, a logger object to log progress. [default: None]
         """
         pass
-
 
     def writeHdu(self, config, base, logger):
         """Write the data to a FITS HDU with the data for this output object.
@@ -406,7 +403,8 @@ def RegisterExtraOutput(key, builder):
     in the processing, you can leave the base class function, which doesn't do anything.
 
     @param key              The name of the output field in config['output']
-    @param builder          A class to use for building the extra output object.
+    @param builder          A builder object to use for building the extra output object.
+                            It should be an instance of a subclass of ExtraOutputBuilder.
     """
     valid_extra_outputs[key] = builder
 

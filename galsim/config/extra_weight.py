@@ -98,4 +98,4 @@ class WeightBuilder(ExtraOutputBuilder):
 
 # Register this as a valid extra output
 from .extra import RegisterExtraOutput
-RegisterExtraOutput('weight', WeightBuilder)
+RegisterExtraOutput('weight', WeightBuilder())

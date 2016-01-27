@@ -456,12 +456,12 @@ def RegisterOutputType(output_type, builder):
     """Register an output type for use by the config apparatus.
 
     @param output_type      The name of the type in config['output']
-    @param builder          A class to use for building this output type.  It should be a
-                            subclass of OutputBuilder.
+    @param builder          A builder object to use for building and writing the output file.
+                            It should be an instance of OutputBuilder or a subclass thereof.
     """
     # Make a concrete instance of the builder.
-    valid_output_types[output_type] = builder()
+    valid_output_types[output_type] = builder
 
 # The base class is also the builder for type = Fits.
-RegisterOutputType('Fits', OutputBuilder)
+RegisterOutputType('Fits', OutputBuilder())
 

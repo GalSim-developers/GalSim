@@ -72,4 +72,4 @@ class MultiFitsBuilder(OutputBuilder):
 
 # Register this as a valid output type
 from .output import RegisterOutputType
-RegisterOutputType('MultiFits', MultiFitsBuilder)
+RegisterOutputType('MultiFits', MultiFitsBuilder())

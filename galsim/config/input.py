@@ -371,7 +371,8 @@ def RegisterInputType(input_type, loader):
     """Register an input type for use by the config apparatus.
 
     @param input_type       The name of the type in config['input']
-    @param loader           An object of type InputLoader (or a derived class)
+    @param loader           A loader object to use for loading in the input object.
+                            It should be an instance of InputLoader or a subclass thereof.
     """
     valid_input_types[input_type] = loader
 

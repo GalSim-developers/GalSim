@@ -35,9 +35,9 @@ class TruthBuilder(ExtraOutputBuilder):
     """Build an output truth catalog with user-defined columns, typically taken from
     current values of various quantities for each constructed object.
     """
-    def __init__(self, data, scratch, config, base, logger):
-        # Call the base class init first.
-        super(self.__class__,self).__init__(data,scratch,config,base,logger)
+    def initialize(self, data, scratch, config, base, logger):
+        # Call the base class initialize first.
+        super(self.__class__,self).initialize(data,scratch,config,base,logger)
 
         # Warn if the config dict isn't an OrderedDict.
         if logger and not hasattr(config, '__reversed__'):
@@ -107,4 +107,4 @@ class TruthBuilder(ExtraOutputBuilder):
 
 # Register this as a valid extra output
 from .extra import RegisterExtraOutput
-RegisterExtraOutput('truth', TruthBuilder)
+RegisterExtraOutput('truth', TruthBuilder())

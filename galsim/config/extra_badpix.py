@@ -76,4 +76,4 @@ class BadPixBuilder(ExtraOutputBuilder):
 
 # Register this as a valid extra output
 from .extra import RegisterExtraOutput
-RegisterExtraOutput('badpix', BadPixBuilder)
+RegisterExtraOutput('badpix', BadPixBuilder())

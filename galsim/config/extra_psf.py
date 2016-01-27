@@ -133,4 +133,4 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
 
 # Register this as a valid extra output
 from .extra import RegisterExtraOutput
-RegisterExtraOutput('psf', ExtraPSFBuilder)
+RegisterExtraOutput('psf', ExtraPSFBuilder())
