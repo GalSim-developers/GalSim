@@ -83,9 +83,9 @@ class Catalog(object):
         self.hdu = hdu
 
         if file_type == 'FITS':
-            self.read_fits(hdu, _nobjects_only)
+            self.readFits(hdu, _nobjects_only)
         elif file_type == 'ASCII':
-            self.read_ascii(comments, _nobjects_only)
+            self.readAscii(comments, _nobjects_only)
         else:
             raise ValueError("Invalid file_type %s"%file_type)
             
@@ -94,7 +94,7 @@ class Catalog(object):
     def getNObjects(self) : return self.nobjects
     def isFits(self) : return self.isfits
 
-    def read_ascii(self, comments, _nobjects_only=False):
+    def readAscii(self, comments, _nobjects_only=False):
         """Read in an input catalog from an ASCII file.
         """
         # If all we care about is nobjects, this is quicker:
@@ -126,7 +126,7 @@ class Catalog(object):
         self.ncols = self.data.shape[1]
         self.isfits = False
 
-    def read_fits(self, hdu, _nobjects_only=False):
+    def readFits(self, hdu, _nobjects_only=False):
         """Read in an input catalog from a FITS file.
         """
         from galsim._pyfits import pyfits, pyfits_version
@@ -356,6 +356,10 @@ class OutputCatalog(object):
     Each row corresponds to a different object, and each column stores some item of
     information about that object (e.g. flux or half_light_radius).
 
+    Note: no type checking is done when the data are added in addRow().  It is up to
+    the user to make sure that the values added for each row are compatible with the
+    types given here in the `types` parameter.
+
     Initialization
     --------------
 
@@ -372,25 +376,19 @@ class OutputCatalog(object):
         ncols       The number of columns in the catalog.
         names       The names of the columns.
         types       The types of the columns.
-        cols        The columns of data that have been accumulated so far.
+        rows        The rows of data that have been accumulated so far.
 
     """
     # Watch out for this "Gotcha".  Using _rows=[] as the default argument doesn't work!
     # https://pythonconquerstheuniverse.wordpress.com/2012/02/15/mutable-default-arguments/
-    def __init__(self, names, types=None, _rows=None, _sort_keys=None):
+    def __init__(self, names, types=None, _rows=(), _sort_keys=()):
         self.names = names
         if types is None:
             self.types = [ float for i in names ]
         else:
             self.types = types
-        if _rows is None:
-            self.rows = []
-        else:
-            self.rows = _rows
-        if _sort_keys is None:
-            self.sort_keys = []
-        else:
-            self.sort_keys = _sort_keys
+        self.rows = list(_rows)
+        self.sort_keys = list(_sort_keys)
 
     @property
     def nobjects(self): return len(self.rows)
@@ -404,7 +402,7 @@ class OutputCatalog(object):
     def getNObjects(self): return self.nobjects
     def getNCols(self): return self.ncols
 
-    def add_row(self, row, sort_key=None):
+    def addRow(self, row, sort_key=None):
         """Add a row of data to the catalog.
 
         Warning: no type checking is done at this point.  If the values in the row do not
@@ -448,16 +446,15 @@ class OutputCatalog(object):
         file_type = file_type.upper()
         if file_type not in ['FITS', 'ASCII']:
             raise ValueError("file_type must be either FITS or ASCII if specified.")
-        self.file_type = file_type
 
         if file_type == 'FITS':
-            self.write_fits(file_name)
+            self.writeFits(file_name)
         elif file_type == 'ASCII':
-            self.write_ascii(file_name, prec)
+            self.writeAscii(file_name, prec)
         else:
             raise ValueError("Invalid file_type %s"%file_type)
 
-    def make_data(self):
+    def makeData(self):
         """Returns a numpy array of the data as it should be written to an output file.
         """
         import numpy
@@ -468,7 +465,7 @@ class OutputCatalog(object):
         new_cols = []
         for col, name, t in zip(cols, self.names, self.types):
             name = str(name)  # numpy will barf if the name is a unicode string
-            dt = numpy.dtype(t) # just used to catagorize the type into int, float, str
+            dt = numpy.dtype(t) # just used to categorize the type into int, float, str
             if dt.kind in numpy.typecodes['AllInteger']:
                 dtypes.append( (name, int) )
                 new_cols.append(col)
@@ -506,7 +503,7 @@ class OutputCatalog(object):
 
         return data
 
-    def write_ascii(self, file_name, prec=8):
+    def writeAscii(self, file_name, prec=8):
         """Write catalog to an ASCII file.
 
         @param file_name    The name of the file to write to.
@@ -514,7 +511,7 @@ class OutputCatalog(object):
         """
         import numpy
 
-        data = self.make_data()
+        data = self.makeData()
 
         width = prec+8
         header_form = ""
@@ -540,15 +537,15 @@ class OutputCatalog(object):
                 fid.write('#' + header + '\n')
                 numpy.savetxt(fid, data, fmt=fmt)
 
-    def write_fits(self, file_name):
+    def writeFits(self, file_name):
         """Write catalog to a FITS file.
 
         @param file_name    The name of the file to write to.
         """
-        tbhdu = self.write_fits_hdu()
+        tbhdu = self.writeFitsHdu()
         tbhdu.writeto(file_name, clobber=True)
 
-    def write_fits_hdu(self):
+    def writeFitsHdu(self):
         """Write catalog to a FITS hdu.
 
         @returns an HDU with the FITS binary table of the catalog.
@@ -559,7 +556,7 @@ class OutputCatalog(object):
         import numpy
         from galsim._pyfits import pyfits
 
-        data = self.make_data()
+        data = self.makeData()
 
         cols = []
         for name in data.dtype.names:

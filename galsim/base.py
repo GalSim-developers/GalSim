@@ -276,7 +276,7 @@ class GSObject(object):
 
         NB. This is a shallow copy, which is normally fine.  However, if the object has a noise
         attribute, then the copy will use the same rng, so calls to things like noise.whitenImage
-        from the two copies would produce different realizations of the noise.  If you want 
+        from the two copies would produce different realizations of the noise.  If you want
         these to be precisely identical, then copy.deepcopy will make an exact duplicate, which
         will have identical noise realizations for that kind of application.
         """
@@ -344,21 +344,27 @@ class GSObject(object):
         If the profile has a half_light_radius attribute, it will just return that, but in the
         general case, we draw the profile and estimate the half-light radius directly.
 
-        The function optionally takes size and scale values to use for the image drawing.
-        The default scale is half the nyquist scale, which generally produces results accurate
-        to about 1 decimal place.  Using a smaller scale will be more accurate at the expense
-        of speed.  The default size is None, which means drawImage will choose a size designed
-        to contain around 99.5% of the flux.  This is overkill for this calculation, so 
-        choosing a smaller size than this may speed up this calculation somewhat.
+        This function (by default at least) is only accurate to a few percent, typically.
+        Possibly worse depending on the profile being measured.  If you care about a high 
+        precision estimate of the half-light radius, the accuracy can be improved using the
+        optional parameter scale to change the pixel scale used to draw the profile.
+
+        The default scale is half the Nyquist scale, which were found to produce results accurate
+        to a few percent on our internal tests.  Using a smaller scale will be more accurate at
+        the expense of speed.
+
+        In addition, you can optionally specify the size of the image to draw. The default size is
+        None, which means drawImage will choose a size designed to contain around 99.5% of the
+        flux.  This is overkill for this calculation, so choosing a smaller size than this may
+        speed up this calculation somewhat.
 
         Also, while the name of this function refers to the half-light radius, in fact it can also
         calculate radii that enclose other fractions of the light, according to the parameter
         `flux_frac`.  E.g. for r90, you would set flux_frac=0.90.
 
-        Note: The results from this calculation should be taken as approximate at best.
-              They should usually be acceptable for things like testing that a galaxy has a
-              reasonable resolution, but they should not be trusted for very fine grain
-              discriminations.
+        The default scale should usually be acceptable for things like testing that a galaxy
+        has a reasonable resolution, but they should not be trusted for very fine grain
+        discriminations.
 
         @param size         If given, the stamp size to use for the drawn image. [default: None,
                             which will let drawImage choose the size automatically]
@@ -412,17 +418,19 @@ class GSObject(object):
         the integral of I(x,y) i j dx dy over each pixel can be approximated as
         int(I(x,y) dx dy) * i_center * j_center.
 
-        The function optionally takes size and scale values to use for the image drawing.
-        The default scale is the nyquist scale, which generally produces results accurate
-        to about 1 decimal place.  Using a smaller scale will be more accurate at the expense
-        of speed.  The default size is None, which means drawImage will choose a size designed
-        to contain around 99.5% of the flux.  Using a larger size will again be more accurate
-        at the expense of speed.
+        This function (by default at least) is only accurate to a few percent, typically.
+        Possibly worse depending on the profile being measured.  If you care about a high 
+        precision estimate of the radius, the accuracy can be improved using the optional
+        parameters size and scale to change the size and pixel scale used to draw the profile.
 
-        Note: The results from this calculation should be taken as approximate at best.
-              They should usually be acceptable for things like testing that a galaxy has a
-              reasonable resolution, but they should not be trusted for very fine grain
-              discriminations.  For a more accurate estimate, see galsim.hsm.FindAdaptiveMom.
+        The default is to use the the Nyquist scale for the pixel scale and let drawImage 
+        choose a size for the stamp that will enclose at least 99.5% of the flux.  These
+        were found to produce results accurate to a few percent on our internal tests.
+        Using a smaller scale and larger size will be more accurate at the expense of speed.
+
+        The default parameters should usually be acceptable for things like testing that a galaxy
+        has a reasonable resolution, but they should not be trusted for very fine grain
+        discriminations.  For a more accurate estimate, see galsim.hsm.FindAdaptiveMom.
 
         @param size         If given, the stamp size to use for the drawn image. [default: None,
                             which will let drawImage choose the size automatically]
@@ -465,17 +473,13 @@ class GSObject(object):
         If the profile has a fwhm attribute, it will just return that, but in the general case,
         we draw the profile and estimate the FWHM directly.
 
-        The function optionally takes size and scale values to use for the image drawing.
-        The default scale is half the nyquist scale, which generally produces results accurate
-        to about 1 decimal place.  Using a smaller scale will be more accurate at the expense
-        of speed.  The default size is None, which means drawImage will choose a size designed
-        to contain around 99.5% of the flux.  This is overkill for this calculation, so 
-        choosing a smaller size than this may speed up this calculation somewhat.
-
-        Note: The results from this calculation should be taken as approximate at best.
-              They should usually be acceptable for things like testing that a galaxy has a
-              reasonable resolution, but they should not be trusted for very fine grain
-              discriminations.
+        As with calculateHLR and calculateMomentRadius, this function optionally takes size and
+        scale values to use for the image drawing.  The default is to use the the Nyquist scale
+        for the pixel scale and let drawImage choose a size for the stamp that will enclose at
+        least 99.5% of the flux.  These were found to produce results accurate to well below
+        one percent on our internal tests, so it is unlikely that you will want to adjust
+        them for accuracy.  However, using a smaller size than default could help speed up
+        the calculation, since the default is usually much larger than is needed.
 
         @param size         If given, the stamp size to use for the drawn image. [default: None,
                             which will let drawImage choose the size automatically]
@@ -1443,8 +1447,8 @@ class GSObject(object):
 # Pickling an SBProfile is a bit tricky, since it's a base class for lots of other classes.
 # Normally, we'll know what the derived class is, so we can just use the pickle stuff that is
 # appropriate for that.  But if we get a SBProfile back from say the getObj() method of
-# SBTransform, then we won't know what class it should be.  So, in this case, we use the 
-# repr to do the pickling.  This isn't usually a great idea in general, but it provides a 
+# SBTransform, then we won't know what class it should be.  So, in this case, we use the
+# repr to do the pickling.  This isn't usually a great idea in general, but it provides a
 # convenient way to get the SBProfile to be the correct type in this case.
 # So, getstate just returns the repr string.  And setstate builds the right kind of object
 # by essentially doing `self = eval(repr)`.
@@ -1582,12 +1586,12 @@ class Gaussian(GSObject):
 _galsim.SBGaussian.__getinitargs__ = lambda self: (
         self.getSigma(), self.getFlux(), self.getGSParams())
 # SBProfile defines __getstate__ and __setstate__.  We don't actually want to use those here.
-# Just the __getinitargs__ is sufficient.  But we define these two to override the base class 
+# Just the __getinitargs__ is sufficient.  But we define these two to override the base class
 # definitions.
 # Note: __setstate__ just returns 1, which means it is a no op.  I would use pass to make that
 # clear, but pass doesn't work for a lambda expression since it needs to return something.
 _galsim.SBGaussian.__getstate__ = lambda self: None
-_galsim.SBGaussian.__setstate__ = lambda self, state: 1 
+_galsim.SBGaussian.__setstate__ = lambda self, state: 1
 _galsim.SBGaussian.__repr__ = lambda self: \
         'galsim._galsim.SBGaussian(%r, %r, %r)'%self.__getinitargs__()
 
@@ -1697,7 +1701,7 @@ class Moffat(GSObject):
         return s
 
 _galsim.SBMoffat.__getinitargs__ = lambda self: (
-        self.getBeta(), self.getScaleRadius(), None, None, self.getTrunc(), 
+        self.getBeta(), self.getScaleRadius(), None, None, self.getTrunc(),
         self.getFlux(), self.getGSParams())
 _galsim.SBMoffat.__getstate__ = lambda self: None
 _galsim.SBMoffat.__setstate__ = lambda self, state: 1
@@ -1976,7 +1980,7 @@ class Kolmogorov(GSObject):
     def half_light_radius(self): return self.getHalfLightRadius()
     @property
     def fwhm(self): return self.getFWHM()
- 
+
     def __repr__(self):
         return 'galsim.Kolmogorov(lam_over_r0=%r, flux=%r, gsparams=%r)'%(
             self.lam_over_r0, self.flux, self._gsparams)
@@ -2153,7 +2157,7 @@ class TopHat(GSObject):
 
     @property
     def radius(self): return self.getRadius()
- 
+
     def __repr__(self):
         return 'galsim.TopHat(radius=%r, flux=%r, gsparams=%r)'%(
             self.radius, self.flux, self._gsparams)
@@ -2656,7 +2660,7 @@ class Spergel(GSObject):
 
     def __init__(self, nu, half_light_radius=None, scale_radius=None,
                  flux=1., gsparams=None):
-        GSObject.__init__(self, _galsim.SBSpergel(nu, scale_radius, half_light_radius, flux, 
+        GSObject.__init__(self, _galsim.SBSpergel(nu, scale_radius, half_light_radius, flux,
                                                   gsparams))
         self._gsparams = gsparams
 
@@ -2801,10 +2805,10 @@ small_fraction_of_flux      When photon shooting, intervals with less than this 
 """
 
 _galsim.GSParams.__getinitargs__ = lambda self: (
-        self.minimum_fft_size, self.maximum_fft_size, 
+        self.minimum_fft_size, self.maximum_fft_size,
         self.folding_threshold, self.stepk_minimum_hlr, self.maxk_threshold,
         self.kvalue_accuracy, self.xvalue_accuracy, self.table_spacing,
-        self.realspace_relerr, self.realspace_abserr, 
+        self.realspace_relerr, self.realspace_abserr,
         self.integration_relerr, self.integration_abserr,
         self.shoot_accuracy, self.allowed_flux_variation,
         self.range_division_for_extrema, self.small_fraction_of_flux)

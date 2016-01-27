@@ -28,7 +28,8 @@ is 48 x 48 pixels.  Instead of putting the PSF images on a separate image, we pa
 as the second HDU in the file.  For the galaxies, we use a random selection from 5 specific
 RealGalaxy objects, selected to be 5 particularly irregular ones. (These are taken from 
 the same catalog of 100 objects that demo6 used.)  The galaxies are oriented in a ring 
-test (Nakajima & Bernstein 2007) of 20 each.
+test (Nakajima & Bernstein 2007) of 20 each.  And we again output a truth catalog with the
+correct applied shear for each object (among other information).
 
 New features introduced in this demo:
 
@@ -249,15 +250,22 @@ def main(argv):
         # Draw the image
         final.drawImage(sub_gal_image)
 
-        # For the PSF image, we also shift the PSF by the same amount.
-        psf = psf.shift(dx,dy)
+        # For the PSF image, we don't match the galaxy shift.  Rather, we use the offset
+        # parameter to drawImage to apply a random offset of up to 0.5 pixels in each direction.
+        # Note the difference in units between shift and offset.  The shift is applied to the
+        # surface brightness profile, so it is in sky coordinates (as all dimension are for
+        # GSObjects), which are arcsec here.  The offset though is applied to the image itself,
+        # so it is in pixels.  Hence, we don't multiply by pixel_scale.
+        psf_dx = ud() - 0.5
+        psf_dy = ud() - 0.5
+        psf_offset = galsim.PositionD(psf_dx, psf_dy)
 
         # Draw the PSF image:
         # We use real space integration over the pixels to avoid some of the 
         # artifacts that can show up with Fourier convolution.
         # The level of the artifacts is quite low, but when drawing with
         # so little noise, they are apparent with ds9's zscale viewing.
-        psf.drawImage(sub_psf_image, method='real_space')
+        psf.drawImage(sub_psf_image, method='real_space', offset=psf_offset)
 
         # Build the noise model: Poisson noise with a given sky level.
         sky_level_pixel = sky_level * pixel_scale**2
@@ -268,7 +276,7 @@ def main(argv):
         # See demo5.py for more info about how this works.
         sub_psf_image.addNoiseSNR(noise, psf_signal_to_noise)
 
-        # And also to the galaxy image using its signal-to-noise..
+        # And also to the galaxy image using its signal-to-noise.
         sub_gal_image.addNoiseSNR(noise, gal_signal_to_noise)
 
         # Add the truth values to the truth catalog
@@ -276,15 +284,15 @@ def main(argv):
                 psf_shape.e1, psf_shape.e2, psf_fwhm,
                 id_list[index], cosmos_index[index], (theta_deg % 360.),
                 alt_g1, alt_g2, dx, dy ]
-        truth_catalog.add_row(row)
+        truth_catalog.addRow(row)
 
         logger.info('Galaxy (%d,%d): position relative to center = %s', ix,iy,str(pos))
 
     logger.info('Done making images of postage stamps')
 
-    # In this case, we'll attach the truth catalog as an aditional HDU in the same file as
+    # In this case, we'll attach the truth catalog as an additional HDU in the same file as
     # the image data.
-    truth_hdu = truth_catalog.write_fits_hdu()
+    truth_hdu = truth_catalog.writeFitsHdu()
 
     # Now write the images to disk.
     images = [ gal_image , psf_image, truth_hdu ]

@@ -73,7 +73,7 @@ class COSMOSCatalog(object):
         >>> indices = np.arange(10)
         >>> real_gal_list = cosmos_cat.makeGalaxy(indices, gal_type='real',
         ...                                       noise_pad_size=im_size*pix_scale)
-        >>> param_gal_list = cosmosm_cat.makeGalaxy(indices, gal_type='parametric', chromatic=True)
+        >>> param_gal_list = cosmos_cat.makeGalaxy(indices, gal_type='parametric', chromatic=True)
         >>> for ind in indices:
         >>>     real_gal = galsim.Convolve(real_gal_list[ind], psf)
         >>>     param_gal = galsim.Convolve(param_gal_list[ind], psf)

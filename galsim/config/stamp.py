@@ -26,6 +26,12 @@ import logging
 # and is typically not specified explicitly.  But there are hooks in place to allow for other
 # options, either in future versions of GalSim or through user modules.
 
+# This module-level dict will store all the registered stamp types.
+# See the RegisterStampType function at the end of this file.
+# The keys are the (string) names of the output types, and the values will be builder objects
+# that will perform the different stages of processing to build each stamp image.
+valid_stamp_types = {}
+
 
 def BuildStamps(nobjects, config, obj_num=0,
                 xsize=0, ysize=0, do_noise=True, logger=None):
@@ -47,7 +53,7 @@ def BuildStamps(nobjects, config, obj_num=0,
 
     @returns the tuple (images, current_vars).  Both are lists.
     """
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('image %d: BuildStamp nobjects = %d: obj = %d',
                      config.get('image_num',0),nobjects,obj_num)
 
@@ -60,7 +66,7 @@ def BuildStamps(nobjects, config, obj_num=0,
         nproc = 1
 
     nobj_per_task = galsim.config.CalculateNObjPerTask(nproc, nobjects, config)
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('image %d: nobj_per_task = %d',config.get('image_num',0), nobj_per_task)
 
     jobs = []
@@ -74,7 +80,7 @@ def BuildStamps(nobjects, config, obj_num=0,
         jobs.append( (kwargs, obj_num+k) )
 
     def done_func(logger, proc, obj_num, result, t):
-        if logger and logger.isEnabledFor(logging.INFO):
+        if logger and result[0] is not None:
             # Note: numpy shape is y,x
             image = result[0]
             ys, xs = image.array.shape
@@ -101,7 +107,7 @@ def BuildStamps(nobjects, config, obj_num=0,
             logger.error('No images were built.  All were either skipped or had errors.')
     else:
         images, current_vars = zip(*results)
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             logger.debug('image %d: Done making stamps',config.get('image_num',0))
 
     return images, current_vars
@@ -243,17 +249,19 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
     """
     SetupConfigObjNum(config,obj_num)
 
-    stamp_type = config['stamp']['type']
+    stamp = config['stamp']
+    stamp_type = stamp['type']
     if stamp_type not in valid_stamp_types:
         raise AttributeErro("Invalid stamp.type=%s."%stamp_type)
+    builder = valid_stamp_types[stamp_type]
 
     # Add 1 to the seed here so the first object has a different rng than the file or image.
     seed = galsim.config.SetupConfigRNG(config, seed_offset=1)
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('obj %d: seed = %d',obj_num,seed)
 
-    if 'retry_failures' in config['stamp']:
-        ntries = galsim.config.ParseValue(config['stamp'],'retry_failures',config,int)[0]
+    if 'retry_failures' in stamp:
+        ntries = galsim.config.ParseValue(stamp,'retry_failures',config,int)[0]
         # This is how many _re_-tries.  Do at least 1, so ntries is 1 more than this.
         ntries = ntries + 1
     else:
@@ -268,14 +276,13 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
         try:
 
             # Do the necessary initial setup for this stamp type.
-            setup_func = valid_stamp_types[stamp_type]['setup']
-            xsize, ysize, image_pos, world_pos = setup_func(
-                    config, xsize, ysize, stamp_ignore, logger)
+            xsize, ysize, image_pos, world_pos = builder.setup(
+                    stamp, config, xsize, ysize, stamp_ignore, logger)
 
             # Save these values for possible use in Evals or other modules
             SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos)
             stamp_center = config['stamp_center']
-            if logger and logger.isEnabledFor(logging.DEBUG):
+            if logger:
                 if xsize:
                     logger.debug('obj %d: xsize,ysize = %s,%s',obj_num,xsize,ysize)
                 if image_pos:
@@ -287,54 +294,49 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
 
             # Get the global gsparams kwargs.  Individual objects can add to this.
             gsparams = {}
-            if 'gsparams' in config['stamp']:
+            if 'gsparams' in stamp:
                 gsparams = galsim.config.UpdateGSParams(
-                    gsparams, config['stamp']['gsparams'], config)
+                    gsparams, stamp['gsparams'], config)
 
             skip = False
             try :
                 psf = galsim.config.BuildGSObject(config, 'psf', gsparams=gsparams,
                                                   logger=logger)[0]
 
-                profile_func = valid_stamp_types[stamp_type]['prof']
-                prof = profile_func(config, psf, gsparams, logger)
+                prof = builder.buildProfile(stamp, config, psf, gsparams, logger)
 
             except galsim.config.gsobject.SkipThisObject, e:
-                if logger and logger.isEnabledFor(logging.DEBUG):
+                if logger:
                     logger.debug('obj %d: Caught SkipThisObject: e = %s',obj_num,e.msg)
-                if logger and logger.isEnabledFor(logging.INFO):
+                if logger:
                     if e.msg:
                         # If there is a message, upgrade to info level
                         logger.info('Skipping object %d: %s',obj_num,e.msg)
                 skip = True
 
-            stamp_func = valid_stamp_types[stamp_type]['stamp']
-            im = stamp_func(config, xsize, ysize)
+            im = builder.makeStamp(stamp, config, xsize, ysize)
 
             if not skip:
-                if 'draw_method' in config['stamp']:
-                    method = galsim.config.ParseValue(config['stamp'],'draw_method',config,str)[0]
+                if 'draw_method' in stamp:
+                    method = galsim.config.ParseValue(stamp,'draw_method',config,str)[0]
                 else:
                     method = 'auto'
                 if method not in ['auto', 'fft', 'phot', 'real_space', 'no_pixel', 'sb']:
                     raise AttributeError("Invalid draw_method: %s"%method)
 
                 offset = config['stamp_offset']
-                if 'offset' in config['stamp']:
-                    offset += galsim.config.ParseValue(config['stamp'], 'offset', config,
-                                                       galsim.PositionD)[0]
-                if logger and logger.isEnabledFor(logging.DEBUG):
+                if 'offset' in stamp:
+                    offset += galsim.config.ParseValue(stamp, 'offset', config, galsim.PositionD)[0]
+                if logger:
                     logger.debug('obj %d: offset = %s',obj_num,offset)
 
-                draw_func = valid_stamp_types[stamp_type]['draw']
-                im = draw_func(prof, im, method, offset, config)
+                im = builder.draw(prof, im, method, offset, stamp, config)
 
-                snr_func = valid_stamp_types[stamp_type]['snr']
-                scale_factor = snr_func(im, config)
+                scale_factor = builder.getSNRScale(im, stamp, config)
                 if scale_factor != 1.0:
                     if method == 'phot':
                         logger.error(
-                            "signal_to_noise caluclation is not accurate for draw_method = phot")
+                            "signal_to_noise calculation is not accurate for draw_method = phot")
                     im *= scale_factor
                     prof *= scale_factor
 
@@ -356,10 +358,9 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
 
             # We always need to do the whiten step here in the stamp processing
             if not skip:
-                whiten_func = valid_stamp_types[stamp_type]['whiten']
-                current_var = whiten_func(prof, im, config)
+                current_var = builder.whiten(prof, im, stamp, config)
                 if current_var != 0.:
-                    if logger and logger.isEnabledFor(logging.DEBUG):
+                    if logger:
                         logger.debug('obj %d: whitening noise brought current var to %f',
                                      config['obj_num'],current_var)
             else:
@@ -367,8 +368,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
 
             # Sometimes, depending on the image type, we go on to do the rest of the noise as well.
             if do_noise:
-                noise_func = valid_stamp_types[stamp_type]['noise']
-                im = noise_func(config,im,skip,current_var,logger)
+                im = builder.addNoise(config,im,skip,current_var,logger)
 
             return im, current_var
 
@@ -378,7 +378,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 # Then this was the last try.  Just re-raise the exception.
                 raise
             else:
-                if logger and logger.isEnabledFor(logging.INFO):
+                if logger:
                     logger.info('Object %d: Caught exception %s',obj_num,str(e))
                     logger.info('This is try %d/%d, so trying again.',itry+1,ntries)
                 # Need to remove the "current_val"s from the config dict.  Otherwise,
@@ -387,335 +387,291 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 continue
 
 
-def SetupBasic(config, xsize, ysize, ignore, logger):
+class StampBuilder(object):
+    """A base class for building stamp images of individual objects.
+
+    The base class defines the call signatures of the methods that any derived class should follow.
+    It also includes the implementation of the default stamp type: Basic.
     """
-    Do the initialization and setup for building a Basic postage stamp.  In this case
-    we check for and parse the appropriate size and position values in config['stamp']
-    or config['image'].
 
-    Values given in config['stamp'] take precedence if these are given in both places (which would
-    be confusing, so probably shouldn't do that, but there might be a use case where it would make
-    sense).
+    def setup(self, config, base, xsize, ysize, ignore, logger):
+        """
+        Do the initialization and setup for building a postage stamp.
 
-    @param config           The configuration dict.
-    @param xsize            The xsize of the image to build (if known).
-    @param ysize            The ysize of the image to build (if known).
-    @param ignore           A list of parameters that are allowed to be in config['stamp']
-                            that we can ignore here.  i.e. it won't be an error if these
-                            parameters are present.
-    @param logger           If given, a logger object to log progress.
+        In the base class, we check for and parse the appropriate size and position values in
+        config (aka base['stamp'] or base['image'].
 
-    @returns xsize, ysize, image_pos, world_pos
-    """
-    # Check for spurious parameters
-    galsim.config.CheckAllParams(config['stamp'], ignore=ignore)
+        Values given in base['stamp'] take precedence if these are given in both places (which
+        would be confusing, so probably shouldn't do that, but there might be a use case where it
+        would make sense).
 
-    # Update the size if necessary
-    if not xsize:
-        if 'xsize' in config['stamp']:
-            xsize = galsim.config.ParseValue(config['stamp'],'xsize',config,int)[0]
-        elif 'size' in config['stamp']:
-            xsize = galsim.config.ParseValue(config['stamp'],'size',config,int)[0]
-        elif 'stamp_xsize' in config['image']:
-            xsize = galsim.config.ParseValue(config['image'],'stamp_xsize',config,int)[0]
-        elif 'stamp_size' in config['image']:
-            xsize = galsim.config.ParseValue(config['image'],'stamp_size',config,int)[0]
+        @param config       The configuration dict for the stamp field.
+        @param base         The base configuration dict.
+        @param xsize        The xsize of the image to build (if known).
+        @param ysize        The ysize of the image to build (if known).
+        @param ignore       A list of parameters that are allowed to be in config that we can
+                            ignore here. i.e. it won't be an error if these parameters are present.
+        @param logger       If given, a logger object to log progress.
 
-    if not ysize:
-        if 'ysize' in config['stamp']:
-            ysize = galsim.config.ParseValue(config['stamp'],'ysize',config,int)[0]
-        elif 'size' in config['stamp']:
-            ysize = galsim.config.ParseValue(config['stamp'],'size',config,int)[0]
-        elif 'stamp_ysize' in config['image']:
-            ysize = galsim.config.ParseValue(config['image'],'stamp_ysize',config,int)[0]
-        elif 'stamp_size' in config['image']:
-            ysize = galsim.config.ParseValue(config['image'],'stamp_size',config,int)[0]
+        @returns xsize, ysize, image_pos, world_pos
+        """
+        # Check for spurious parameters
+        galsim.config.CheckAllParams(config, ignore=ignore)
 
-    # Determine where this object is going to go:
-    if 'image_pos' in config['stamp']:
-        image_pos = galsim.config.ParseValue(
-            config['stamp'], 'image_pos', config, galsim.PositionD)[0]
-    elif 'image_pos' in config['image']:
-        image_pos = galsim.config.ParseValue(
-            config['image'], 'image_pos', config, galsim.PositionD)[0]
-    else:
-        image_pos = None
+        # Update the size if necessary
+        image = base['image']
+        if not xsize:
+            if 'xsize' in config:
+                xsize = galsim.config.ParseValue(config,'xsize',base,int)[0]
+            elif 'size' in config:
+                xsize = galsim.config.ParseValue(config,'size',base,int)[0]
+            elif 'stamp_xsize' in image:
+                xsize = galsim.config.ParseValue(image,'stamp_xsize',base,int)[0]
+            elif 'stamp_size' in image:
+                xsize = galsim.config.ParseValue(image,'stamp_size',base,int)[0]
 
-    if 'world_pos' in config['stamp']:
-        world_pos = galsim.config.ParseValue(
-            config['stamp'], 'world_pos', config, galsim.PositionD)[0]
-    elif 'world_pos' in config['image']:
-        world_pos = galsim.config.ParseValue(
-            config['image'], 'world_pos', config, galsim.PositionD)[0]
-    else:
-        world_pos = None
+        if not ysize:
+            if 'ysize' in config:
+                ysize = galsim.config.ParseValue(config,'ysize',base,int)[0]
+            elif 'size' in config:
+                ysize = galsim.config.ParseValue(config,'size',base,int)[0]
+            elif 'stamp_ysize' in image:
+                ysize = galsim.config.ParseValue(image,'stamp_ysize',base,int)[0]
+            elif 'stamp_size' in image:
+                ysize = galsim.config.ParseValue(image,'stamp_size',base,int)[0]
 
-    return xsize, ysize, image_pos, world_pos
+        # Determine where this object is going to go:
+        if 'image_pos' in config:
+            image_pos = galsim.config.ParseValue(config, 'image_pos', base, galsim.PositionD)[0]
+        elif 'image_pos' in image:
+            image_pos = galsim.config.ParseValue(image, 'image_pos', base, galsim.PositionD)[0]
+        else:
+            image_pos = None
+
+        if 'world_pos' in config:
+            world_pos = galsim.config.ParseValue(config, 'world_pos', base, galsim.PositionD)[0]
+        elif 'world_pos' in image:
+            world_pos = galsim.config.ParseValue(image, 'world_pos', base, galsim.PositionD)[0]
+        else:
+            world_pos = None
+
+        return xsize, ysize, image_pos, world_pos
 
 
-def ProfileBasic(config, psf, gsparams, logger):
-    """
-    Build the object to be drawn.  For the Basic stamp type, this builds a galaxy from
-    the config['gal'] dict and convolves it with the psf (if given).  If either the psf or
-    the galaxy is None, then the other one is returned as is.
+    def buildProfile(self, config, base, psf, gsparams, logger):
+        """Build the surface brightness profile (a GSObject) to be drawn.
+ 
+        For the Basic stamp type, this builds a galaxy from the base['gal'] dict and convolves
+        it with the psf (if given).  If either the psf or the galaxy is None, then the other one
+        is returned as is.
 
-    @param config           The configuration dict.
-    @param psf              The PSF, if any.  This may be None, in which case, no PSF is convolved.
-    @param gsparams         A dict of kwargs to use for a GSParams.  More may be added to this
+        @param config       The configuration dict for the stamp field.
+        @param base         The base configuration dict.
+        @param psf          The PSF, if any.  This may be None, in which case, no PSF is convolved.
+        @param gsparams     A dict of kwargs to use for a GSParams.  More may be added to this
                             list by the galaxy object.
-    @param logger           If given, a logger object to log progress.
+        @param logger       If given, a logger object to log progress.
 
-    @returns the final profile
-    """
-    gal = galsim.config.BuildGSObject(config, 'gal', gsparams=gsparams, logger=logger)[0]
+        @returns the final profile
+        """
+        gal = galsim.config.BuildGSObject(base, 'gal', gsparams=gsparams, logger=logger)[0]
 
-    if psf:
-        if gal:
-            return galsim.Convolve(gal,psf)
+        if psf:
+            if gal:
+                return galsim.Convolve(gal,psf)
+            else:
+                return psf
         else:
-            return psf
-    else:
-        if gal:
-            return gal
+            if gal:
+                return gal
+            else:
+                raise AttributeError("At least one of gal or psf must be specified in config.")
+
+    def makeStamp(self, config, base, xsize, ysize):
+        """Make the initial empty postage stamp image, if possible.
+
+        If we don't know xsize, ysize, return None, in which case the stamp will be created
+        automatically by the drawImage command based on the natural size of the profile.
+
+        @param config       The configuration dict for the stamp field.
+        @param base         The base configuration dict.
+        @param xsize        The xsize of the image to build (if known).
+        @param ysize        The ysize of the image to build (if known).
+
+        @returns the image
+        """
+        if xsize and ysize:
+            # If the size is set, we need to do something reasonable to return this size.
+            im = galsim.ImageF(xsize, ysize)
+            im.setZero()
+            return im
         else:
-            raise AttributeError("At least one of gal or psf must be specified in config.")
+            return None
 
-def StampBasic(config, xsize, ysize):
-    """
-    Returns the postage stamp image onto which we will draw the profile if we can before the
-    drawImage command.  If we don't know xsize, ysize, return None.
+    def draw(self, prof, image, method, offset, config, base):
+        """Draw the profile on the postage stamp image.
 
-    @param config           The configuration dict.
-    @param xsize            The xsize of the image to build (if known).
-    @param ysize            The ysize of the image to build (if known).
+        @param prof         The profile to draw.
+        @param image        The image onto which to draw the profile (which may be None).
+        @param method       The method to use in drawImage.
+        @param offset       The offset to apply when drawing.
+        @param config       The configuration dict for the stamp field.
+        @param base         The base configuration dict.
 
-    @returns the image
-    """
-    if xsize and ysize:
-        # If the size is set, we need to do something reasonable to return this size.
-        im = galsim.ImageF(xsize, ysize)
-        im.setZero()
-        return im
-    else:
-        return None
+        @returns the resulting image
+        """
+        # Setup the kwargs to pass to drawImage
+        kwargs = {}
+        kwargs['image'] = image
+        kwargs['offset'] = offset
+        kwargs['method'] = method
+        if 'wmult' in config:
+            kwargs['wmult'] = galsim.config.ParseValue(config, 'wmult', base, float)[0]
+        kwargs['wcs'] = base['wcs'].local(image_pos = base['image_pos'])
+        if method == 'phot':
+            kwargs['rng'] = base['rng']
 
-def DrawBasic(prof, image, method, offset, config, add_to_image=False):
-    """
-    Draw the profile on the image.
+        # Check validity of extra phot options:
+        max_extra_noise = None
+        if 'n_photons' in config:
+            if method != 'phot':
+                raise AttributeError('n_photons is invalid with method != phot')
+            if 'max_extra_noise' in config:
+                if logger:
+                    logger.warn(
+                        "Both 'max_extra_noise' and 'n_photons' are set in config dict, "+
+                        "ignoring 'max_extra_noise'.")
+            kwargs['n_photons'] = galsim.config.ParseValue(config, 'n_photons', base, int)[0]
+        elif 'max_extra_noise' in config:
+            if method != 'phot':
+                raise AttributeError('max_extra_noise is invalid with method != phot')
+            max_extra_noise = galsim.config.ParseValue(config, 'max_extra_noise', base, float)[0]
+        elif method == 'phot':
+            max_extra_noise = 0.01
 
-    @param prof             The profile to draw.
-    @param image            The image onto which to draw the profile.
-    @param method           The method to use in drawImage.
-    @param offset           The offset to apply when drawing.
-    @param config           The configuration dict.
-    @param add_to_image     Add to the given image? [default: False]
+        if 'poisson_flux' in config:
+            if method != 'phot':
+                raise AttributeError('poisson_flux is invalid with method != phot')
+            kwargs['poisson_flux'] = galsim.config.ParseValue(config, 'poisson_flux', base, bool)[0]
 
-    @returns the resulting image
-    """
-    # Setup the kwargs to pass to drawImage
-    kwargs = {}
-    kwargs['image'] = image
-    kwargs['offset'] = offset
-    kwargs['method'] = method
-    if 'wmult' in config['stamp']:
-        kwargs['wmult'] = galsim.config.ParseValue(config['stamp'], 'wmult', config, float)[0]
-    kwargs['wcs'] = config['wcs'].local(image_pos = config['image_pos'])
-    if method == 'phot':
-        kwargs['rng'] = config['rng']
-    if add_to_image and image is None:
-        raise RuntimeError("Cannot add to image if no image size is specified.")
-    kwargs['add_to_image'] = add_to_image
+        if max_extra_noise is not None:
+            if max_extra_noise < 0.:
+                raise ValueError("image.max_extra_noise cannot be negative")
+            if max_extra_noise > 0.:
+                if 'image' in base and 'noise' in base['image']:
+                    noise_var = galsim.config.CalculateNoiseVar(base)
+                else:
+                    raise AttributeError("Need to specify noise level when using max_extra_noise")
+                if noise_var < 0.:
+                    raise ValueError("noise_var calculated to be < 0.")
+                max_extra_noise *= noise_var
+                kwargs['max_extra_noise'] = max_extra_noise
 
-    # Check validity of extra phot options:
-    max_extra_noise = None
-    if 'n_photons' in config['stamp']:
-        if method != 'phot':
-            raise AttributeError('n_photons is invalid with method != phot')
-        if 'max_extra_noise' in config['stamp']:
-            if logger and logger.isEnabledFor(logging.WARN):
-                logger.warn(
-                    "Both 'max_extra_noise' and 'n_photons' are set in config dict, "+
-                    "ignoring 'max_extra_noise'.")
-        kwargs['n_photons'] = galsim.config.ParseValue(config['stamp'], 'n_photons', config, int)[0]
-    elif 'max_extra_noise' in config['stamp']:
-        if method != 'phot':
-            raise AttributeError('max_extra_noise is invalid with method != phot')
-        max_extra_noise = galsim.config.ParseValue(
-            config['stamp'], 'max_extra_noise', config, float)[0]
-    elif method == 'phot':
-        max_extra_noise = 0.01
+        image = prof.drawImage(**kwargs)
+        return image
 
-    if 'poisson_flux' in config['stamp']:
-        if method != 'phot':
-            raise AttributeError('poisson_flux is invalid with method != phot')
-        kwargs['poisson_flux'] = galsim.config.ParseValue(
-                config['stamp'], 'poisson_flux', config, bool)[0]
+    def whiten(self, prof, image, config, base):
+        """If appropriate, whiten the resulting image according to the requested noise profile
+        and the amount of noise originally present in the profile.
 
-    if max_extra_noise is not None:
-        if max_extra_noise < 0.:
-            raise ValueError("image.max_extra_noise cannot be negative")
-        if max_extra_noise > 0.:
-            if 'image' in config and 'noise' in config['image']:
-                noise_var = galsim.config.CalculateNoiseVar(config)
+        @param prof         The profile to draw.
+        @param image        The image onto which to draw the profile.
+        @param config       The configuration dict for the stamp field.
+        @param base         The base configuration dict.
+
+        @returns the variance of the resulting whitened (or symmetrized) image.
+        """
+        # If the object has a noise attribute, then check if we need to do anything with it.
+        current_var = 0.  # Default if not overwritten
+        if hasattr(prof,'noise'):
+            if 'image' in base and 'noise' in base['image']:
+                noise = base['image']['noise']
+                if 'whiten' in noise:
+                    if 'symmetrize' in noise:
+                        raise AttributeError('Only one of whiten or symmetrize is allowed')
+                    whiten, safe = galsim.config.ParseValue(noise, 'whiten', base, bool)
+                    current_var = prof.noise.whitenImage(image)
+                elif 'symmetrize' in noise:
+                    symmetrize, safe = galsim.config.ParseValue(noise, 'symmetrize', base, int)
+                    current_var = prof.noise.symmetrizeImage(image, symmetrize)
+        return current_var
+
+
+    def getSNRScale(self, image, config, base):
+        """Calculate the factor by which to rescale the image based on a desired S/N level.
+
+        @param image        The current image.
+        @param config       The configuration dict for the stamp field.
+        @param base         The base configuration dict.
+
+        @returns scale_factor
+        """
+        if (('gal' in base and 'signal_to_noise' in base['gal']) or
+            ('gal' not in base and 'psf' in base and 'signal_to_noise' in base['psf'])):
+            import math
+            import numpy
+            if 'gal' in base: root_key = 'gal'
+            else: root_key = 'psf'
+
+            if 'flux' in base[root_key]:
+                raise AttributeError(
+                    'Only one of signal_to_noise or flux may be specified for %s'%root_key)
+
+            if 'image' in base and 'noise' in base['image']:
+                noise_var = galsim.config.CalculateNoiseVar(base)
             else:
                 raise AttributeError(
-                    "Need to specify noise level when using draw_method = phot")
-            if noise_var < 0.:
-                raise ValueError("noise_var calculated to be < 0.")
-            max_extra_noise *= noise_var
-            kwargs['max_extra_noise'] = max_extra_noise
+                    "Need to specify noise level when using %s.signal_to_noise"%root_key)
+            sn_target = galsim.config.ParseValue(base[root_key], 'signal_to_noise', base, float)[0]
 
-    image = prof.drawImage(**kwargs)
-    return image
+            # Now determine what flux we need to get our desired S/N
+            # There are lots of definitions of S/N, but here is the one used by Great08
+            # We use a weighted integral of the flux:
+            # S = sum W(x,y) I(x,y) / sum W(x,y)
+            # N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
+            # Now we assume that Var(I(x,y)) is dominated by the sky noise, so
+            # Var(I(x,y)) = var
+            # We also assume that we are using a matched filter for W, so W(x,y) = I(x,y).
+            # Then a few things cancel and we find that
+            # S/N = sqrt( sum I(x,y)^2 / var )
 
-def WhitenBasic(prof, image, config):
-    """
-    If appropriate, whiten the resulting image according to the requested noise profile
-    and the amount of noise originally present in the profile.
-
-    @param prof         The profile to draw.
-    @param image        The image onto which to draw the profile.
-    @param config       The configuration dict.
-
-    @returns the variance of the resulting whitened (or symmetrized) image.
-    """
-    # If the object has a noise attribute, then check if we need to do anything with it.
-    current_var = 0.  # Default if not overwritten
-    if hasattr(prof,'noise'):
-        if 'image' in config and 'noise' in config['image']:
-            noise = config['image']['noise']
-            if 'whiten' in noise:
-                if 'symmetrize' in noise:
-                    raise AttributeError('Only one of whiten or symmetrize is allowed')
-                whiten, safe = galsim.config.ParseValue(noise, 'whiten', config, bool)
-                current_var = prof.noise.whitenImage(image)
-            elif 'symmetrize' in noise:
-                symmetrize, safe = galsim.config.ParseValue(noise, 'symmetrize', config, int)
-                current_var = prof.noise.symmetrizeImage(image, symmetrize)
-    return current_var
-
-
-def SNRBasic(image, config):
-    """
-    Calculate the factor by which to rescale the image based on a desired S/N level.
-
-    @param image            The current image.
-    @param config           The configuration dict.
-
-    @returns scale_factor
-    """
-    if (('gal' in config and 'signal_to_noise' in config['gal']) or
-        ('gal' not in config and 'psf' in config and 'signal_to_noise' in config['psf'])):
-        import math
-        import numpy
-        if 'gal' in config: root_key = 'gal'
-        else: root_key = 'psf'
-
-        if 'flux' in config[root_key]:
-            raise AttributeError(
-                'Only one of signal_to_noise or flux may be specified for %s'%root_key)
-
-        if 'image' in config and 'noise' in config['image']:
-            noise_var = galsim.config.CalculateNoiseVar(config)
+            sn_meas = math.sqrt( numpy.sum(image.array**2) / noise_var )
+            # Now we rescale the flux to get our desired S/N
+            scale_factor = sn_target / sn_meas
+            return scale_factor
         else:
-            raise AttributeError(
-                "Need to specify noise level when using %s.signal_to_noise"%root_key)
-        sn_target = galsim.config.ParseValue(config[root_key], 'signal_to_noise', config, float)[0]
+            return 1.
 
-        # Now determine what flux we need to get our desired S/N
-        # There are lots of definitions of S/N, but here is the one used by Great08
-        # We use a weighted integral of the flux:
-        # S = sum W(x,y) I(x,y) / sum W(x,y)
-        # N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
-        # Now we assume that Var(I(x,y)) is dominated by the sky noise, so
-        # Var(I(x,y)) = var
-        # We also assume that we are using a matched filter for W, so W(x,y) = I(x,y).
-        # Then a few things cancel and we find that
-        # S/N = sqrt( sum I(x,y)^2 / var )
+    def addNoise(config, base, image, skip, current_var, logger):
+        """Add the sky level and the noise to the stamp.
 
-        sn_meas = math.sqrt( numpy.sum(image.array**2) / noise_var )
-        # Now we rescale the flux to get our desired S/N
-        scale_factor = sn_target / sn_meas
-        return scale_factor
-    else:
-        return 1.
-
-def NoiseBasic(config, image, skip, current_var, logger):
-    """
-    Add the sky level and the noise to the stamp.
-
-    Note: This only gets called if the image type requests that the noise be added to each
-          stamp individually, rather than to the full image and the end.
-
-    @param config           The configuration dict
-    @param image            The current image.
-    @param skip             Are we skipping this image? (Usually means to add sky, but not noise.)
-    @param current_var      The current noise variance present in the image already.
-    @param logger           If given, a logger object to log progress. [default: None]
-
-    @returns the image with noise
-    """
-    galsim.config.AddSky(config,image)
-    if not skip:
-        galsim.config.AddNoise(config,image,current_var,logger)
-    return image
+        Note: This only gets called if the image type requests that the noise be added to each
+              stamp individually, rather than to the full image and the end.
+ 
+        @param config           The configuration dict for the stamp field.
+        @param base             The base configuration dict.
+        @param image            The current image.
+        @param skip             Are we skipping this image? (Usually means to add sky, but not
+                                any noise.)
+        @param current_var      The current noise variance present in the image already.
+        @param logger           If given, a logger object to log progress. [default: None]
+ 
+        @returns the image with noise
+        """
+        galsim.config.AddSky(base,image)
+        if not skip:
+            galsim.config.AddNoise(base,image,current_var,logger)
+        return image
 
 
-valid_stamp_types = {}
-
-def RegisterStampType(stamp_type, setup_func=None, prof_func=None, stamp_func=None,
-                      draw_func=None, snr_func=None, whiten_func=None, noise_func=None):
+def RegisterStampType(stamp_type, builder):
     """Register an image type for use by the config apparatus.
 
-    You only need to specify the functions that you want to change from the Basic stamp
-    functionality.
-
     @param stamp_type       The name of the type in config['stamp']
-    @param setup_func       The function to call to determine the size of the stamp and do any
-                            other initial setup.
-                            The call signature is
-                                xsize, ysize, image_pos, world_pos = \
-                                    Setup(config, xsize, ysize, ignore, logger)
-    @param prof_func        The function to call to build the profile
-                            The call signature is
-                                prof = Profile(config, psf, gsparams, logger)
-    @param stamp_func       The function to call to build the postage stamp image
-                            The call signature is:
-                                image = Stamp(config, xsize, ysize)
-    @param draw_func        The function to call to draw the image.
-                            The call signature is
-                                image = Draw(prof, image, method, offset, config)
-    @param snr_func         The function to call to rescale the image according to the desired
-                            signal-to-noise.
-                            The call signature is
-                                scale_factor = SNR(image, config)
-    @param whiten_func      The function to call to whiten the image.
-                            The call signature is
-                                current_var = Whiten(prof, image, config)
-    @param noise_func       The function to call to add the sky and noise if appropriate.
-                            (Depending on the image type, this may not be called, since the noise
-                            may be added to the full image, rather than to each stamp.)
-                            The call signature is
-                                image = Noise(config, image, skip, current_var, logger)
+    @param builder          A builder object to use for building the stamp images.  It should be
+                            an instance of StampBuilder or a subclass thereof.
     """
-    if setup_func is None: setup_func = SetupBasic
-    if prof_func is None: prof_func = ProfileBasic
-    if stamp_func is None: stamp_func = StampBasic
-    if draw_func is None: draw_func = DrawBasic
-    if snr_func is None: snr_func = SNRBasic
-    if whiten_func is None: whiten_func = WhitenBasic
-    if noise_func is None: noise_func = NoiseBasic
+    valid_stamp_types[stamp_type] = builder
 
-    valid_stamp_types[stamp_type] = {
-        'setup' : setup_func,
-        'prof' : prof_func,
-        'stamp' : stamp_func,
-        'draw' : draw_func,
-        'snr' : snr_func,
-        'whiten' : whiten_func,
-        'noise' : noise_func,
-    }
-
-RegisterStampType('Basic', SetupBasic, ProfileBasic, StampBasic, DrawBasic,
-                  SNRBasic, WhitenBasic, NoiseBasic)
+RegisterStampType('Basic', StampBuilder())
 

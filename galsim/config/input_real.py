@@ -21,8 +21,9 @@ import galsim
 
 # The RealGalaxyCatalog doesn't need anything special other than registration as a valid
 # input type.
-from .input import RegisterInputType
-RegisterInputType('real_catalog', galsim.RealGalaxyCatalog, ['RealGalaxy', 'RealGalaxyOriginal'])
+from .input import RegisterInputType, InputLoader
+RegisterInputType('real_catalog',
+                  InputLoader(galsim.RealGalaxyCatalog, ['RealGalaxy', 'RealGalaxyOriginal']))
 
 # There are two gsobject types that are coupled to this: RealGalaxy and RealGalaxyOriginal.
 
@@ -54,7 +55,7 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGal
                 "%s index has gone past the number of entries in the catalog"%index)
 
     kwargs['real_galaxy_catalog'] = real_cat
-    if False:
+    if logger:
         logger.debug('obj %d: %s kwargs = %s',base['obj_num'],param_name,kwargs)
 
     gal = galsim.RealGalaxy(**kwargs)
@@ -65,9 +66,9 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGal
 def _BuildRealGalaxyOriginal(config, base, ignore, gsparams, logger):
     """@brief Return the original image from a RealGalaxy using the real_catalog input item.
     """
-    image, safe = _BuildRealGalaxy(config, base, ignore, gsparams, logger, 
+    image, safe = _BuildRealGalaxy(config, base, ignore, gsparams, logger,
                                    param_name='RealGalaxyOriginal')
-    return image.original_image, safe    
+    return image.original_image, safe
 
 
 # Register these as valid gsobject types

@@ -24,6 +24,16 @@ import logging
 # This file includes the basic functionality, which is often sufficient for simple input types,
 # but it has hooks to allow more customized behavior where necessary. See input_*.py for examples.
 
+# This module-level dict will store all the registered input types.
+# See the RegisterInputType function near the end of this file.
+# The keys will be the (string) names of the extra output types, and the values will be
+# builder classes that will perform the different processing functions.
+# The keys will be the (string) names of the image types, and the values will be loaders
+# that load the input object's class as well some other information we need to know to how to
+# process the input object correctly.
+valid_input_types = {}
+
+
 def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_only=False):
     """
     Process the input field, reading in any specified input files or setting up
@@ -38,7 +48,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
     e.g. config['input_objs']['catalog'][0] holds the first catalog item defined in
     config['input']['catalog'] (if any).
 
-    @param config           The configuutation dict to process
+    @param config           The configuration dict to process
     @param file_num         The file number being worked on currently [default: 0]
     @param logger           If given, a logger object to log progress. [default: None]
     @param file_scope_only  If True, only process the input items that are marked as being
@@ -49,7 +59,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
     """
     config['index_key'] = 'file_num'
     config['file_num'] = file_num
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('file %d: Start ProcessInput',file_num)
     # Process the input field (read any necessary input files)
     if 'input' in config:
@@ -101,10 +111,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                 for i in range(len(fields)):
                     field = fields[i]
                     tag = key + str(i)
-                    # This next bit mimics the operation of BuildSimple, except that we don't
-                    # actually build the object here.  Just register the class name.
-                    init_func = valid_input_types[key]['init']
-                    InputManager.register(tag, init_func)
+                    InputManager.register(tag, valid_input_types[key].init_func)
             # Start up the input_manager
             config['input_manager'] = InputManager()
             config['input_manager'].start()
@@ -119,10 +126,12 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
         # Read all input fields provided and create the corresponding object
         # with the parameters given in the config file.
         for key in all_keys:
-            # Skip this key if not relevant for file_scope_only run.
-            if file_scope_only and not valid_input_types[key]['file']: continue
+            loader = valid_input_types[key]
 
-            if logger and logger.isEnabledFor(logging.DEBUG):
+            # Skip this key if not relevant for file_scope_only run.
+            if file_scope_only and not loader.file_scope: continue
+
+            if logger:
                 logger.debug('file %d: Process input key %s',file_num,key)
             fields = config['input'][key]
 
@@ -130,18 +139,17 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                 field = fields[i]
                 input_objs = config['input_objs'][key]
                 input_objs_safe = config['input_objs'][key+'_safe']
-                if logger and logger.isEnabledFor(logging.DEBUG):
+                if logger:
                     logger.debug('file %d: Current values for %s are %s, safe = %s',
                                  file_num, key, str(input_objs[i]), input_objs_safe[i])
-                init_func = valid_input_types[key]['init']
                 if input_objs[i] is not None and input_objs_safe[i]:
-                    if logger and logger.isEnabledFor(logging.DEBUG):
+                    if logger:
                         logger.debug('file %d: Using %s already read in',file_num,key)
                 else:
-                    if logger and logger.isEnabledFor(logging.DEBUG):
+                    if logger:
                         logger.debug('file %d: Build input type %s',file_num,key)
                     try:
-                        kwargs, safe = GetInputKwargs(key, field, config)
+                        kwargs, safe = loader.getKwargs(field, config, logger)
                     except Exception as e:
                         if safe_only:
                             if logger and logger.isEnabledFor(logging.DEBUG):
@@ -154,7 +162,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                             raise
 
                     if safe_only and not safe:
-                        if logger and logger.isEnabledFor(logging.DEBUG):
+                        if logger:
                             logger.debug('file %d: Skip %s %d, since not safe',file_num,key,i)
                         input_objs[i] = None
                         input_objs_safe[i] = None
@@ -164,15 +172,14 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                         tag = key + str(i)
                         input_obj = getattr(config['input_manager'],tag)(**kwargs)
                     else:
-                        init_func = valid_input_types[key]['init']
-                        input_obj = init_func(**kwargs)
+                        input_obj = loader.init_func(**kwargs)
 
-                    if logger and logger.isEnabledFor(logging.DEBUG):
+                    if logger:
                         logger.debug('file %d: Built input object %s %d',file_num,key,i)
                         if 'file_name' in kwargs:
                             logger.debug('file %d: file_name = %s',file_num,kwargs['file_name'])
-                    if logger and logger.isEnabledFor(logging.INFO):
-                        if valid_input_types[key]['nobj']:
+                    if logger:
+                        if loader.has_nobj:
                             logger.info('Read %d objects from %s',input_obj.getNObjects(),key)
 
                     # Store input_obj in the config for use by BuildGSObject function.
@@ -181,9 +188,9 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                     # Invalidate any currently cached values that use this kind of input object:
                     # TODO: This isn't quite correct if there are multiple versions of this input
                     #       item.  e.g. you might want to invalidate dict0, but not dict1.
-                    for value_type in valid_input_types[key]['types']:
+                    for value_type in loader.types:
                         galsim.config.RemoveCurrent(config, type=value_type)
-                        if logger and logger.isEnabledFor(logging.DEBUG):
+                        if logger:
                             logger.debug('file %d: Cleared current_vals for items with type %s',
                                          file_num,value_type)
 
@@ -191,30 +198,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
         valid_keys = valid_input_types.keys()
         galsim.config.CheckAllParams(config['input'], ignore=valid_keys)
 
-def GetInputKwargs(key, config, base):
-    """Get the kwargs to use for initializing the input object
 
-    @param key      The name of the input type
-    @param config   The config dict for this input item, typically base['input'][key]
-    @param base     The base config dict
-    """
-    kwargs_func = valid_input_types[key]['kwargs']
-    if kwargs_func is None:
-        init_func = valid_input_types[key]['init']
-        req = init_func._req_params
-        opt = init_func._opt_params
-        single = init_func._single_params
-        kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt, single=single)
-        if init_func._takes_rng:
-            if 'rng' not in config:
-                raise ValueError("No config['rng'] available for %s.type"%key)
-            kwargs['rng'] = config['rng']
-            safe = False
-        return kwargs, safe
-    else:
-        return kwargs_func(config, base)
-
- 
 def ProcessInputNObjects(config, logger=None):
     """Process the input field, just enough to determine the number of objects.
 
@@ -228,10 +212,10 @@ def ProcessInputNObjects(config, logger=None):
             order and returns the nobjects for the first one that works.  If multiple input
             items have nobjects and they are inconsistent, this function may return a
             number of objects that isn't what you wanted.  In this case, you should explicitly
-            set nobjects or nimages in the configuratin dict, rather than relying on this
+            set nobjects or nimages in the configuration dict, rather than relying on this
             galsim.config "magic".
 
-    @param config       The configuutation dict to process
+    @param config       The configuration dict to process
     @param logger       If given, a logger object to log progress. [default: None]
 
     @returns the number of objects to use.
@@ -239,8 +223,8 @@ def ProcessInputNObjects(config, logger=None):
     config['index_key'] = 'file_num'
     if 'input' in config:
         for key in valid_input_types:
-            has_nobjects = valid_input_types[key]['nobj']
-            if key in config['input'] and has_nobjects:
+            loader = valid_input_types[key]
+            if key in config['input'] and loader.has_nobj:
                 field = config['input'][key]
 
                 if key in config['input_objs'] and config['input_objs'][key+'_safe'][0]:
@@ -249,11 +233,10 @@ def ProcessInputNObjects(config, logger=None):
                     # If it's a list, just use the first one.
                     if isinstance(field, list): field = field[0]
 
-                    init_func = valid_input_types[key]['init']
-                    kwargs, safe = GetInputKwargs(key, field, config)
+                    kwargs, safe = loader.getKwargs(field, config, logger)
                     kwargs['_nobjects_only'] = True
-                    input_obj = init_func(**kwargs)
-                if logger and logger.isEnabledFor(logging.DEBUG):
+                    input_obj = loader.init_func(**kwargs)
+                if logger:
                     logger.debug('file %d: Found nobjects = %d for %s',
                                  config['file_num'],input_obj.getNOjects(),key)
                 return input_obj.getNObjects()
@@ -264,13 +247,13 @@ def ProcessInputNObjects(config, logger=None):
 def SetupInputsForImage(config, logger):
     """Do any necessary setup of the input items at the start of an image.
 
-    @param config       The configuutation dict to process
+    @param config       The configuration dict to process
     @param logger       If given, a logger object to log progress. [default: None]
     """
     if 'input' in config:
         for key in valid_input_types.keys():
-            setup_func = valid_input_types[key]['setup']
-            if key in config['input'] and setup_func is not None:
+            loader = valid_input_types[key]
+            if key in config['input']:
                 fields = config['input'][key]
                 if not isinstance(fields, list):
                     fields = [ fields ]
@@ -279,7 +262,7 @@ def SetupInputsForImage(config, logger):
                 for i in range(len(fields)):
                     field = fields[i]
                     input_obj = input_objs[i]
-                    setup_func(input_obj, field, config, logger)
+                    loader.setupImage(input_obj, field, config, logger)
 
 
 # A helper function for getting the input object needed for generating a value or building
@@ -288,7 +271,7 @@ def GetInputObj(input_type, config, base, param_name):
     """Get the input object needed for generating a particular value
 
     @param input_type   The type of input object to get
-    @param config       The config dict for this value item
+    @param config       The config dict for this input item
     @param base         The base config dict
     @param param_name   The type of value that we are trying to construct (only used for
                         error messages).
@@ -309,46 +292,105 @@ def GetInputObj(input_type, config, base, param_name):
     return base['input_objs'][input_type][num]
 
 
-valid_input_types = {}
+class InputLoader(object):
+    """Define how to load a particular input type.
 
-def RegisterInputType(input_type, init_func, types, kwargs_func=None, has_nobj=False, 
-                      file_scope=False, setup_func=None):
+    The base class is often sufficient for simple types, but you may derive from it and
+    override some of the functions to deal with special handling requirements.
+
+    The loader object defines a few attributes that will be used by the processing framework,
+    so any derived class should make sure to define them as well.
+
+        init_func   The class or function that will be used to build the input object.
+
+        types       A list of value or object types that use this input type.  These items will
+                    have their "current" values invalidated when the input object changes.
+
+        has_nobj    Whether the object can be used to automatically determine the number of
+                    objects to build for a given file or image.  For example, a galsim.Catalog has
+                    a specific number of rows in it.  In many cases, you will just want to run
+                    through the whole catalog for each output file.  So the number of objects to
+                    build will just be the number of objects in the input catalog. [default: False]
+
+                    If this is True, the constructed input object must have a `getNObjects()`
+                    method.  It must also take a construction kwarg, `_nobjects_only` that tells
+                    it to only do enough initialization to efficiently determine nobjects.
+
+        file_scope  Whether the input object might be relevant at file scope when the file and
+                    image is initially being set up. [default: False]
+
+                    If this is False, then the input object won't be loaded until after the
+                    initial file setup.  For example, you might store the file names you want
+                    to use for the output files in a YAML file, which you plan to read in as a
+                    dict input object. Thus, dict is our canonical example of an input type for
+                    which this parameter should be True.
+    """
+    def __init__(self, init_func, types, has_nobj=False, file_scope=False):
+        self.init_func = init_func
+        self.types = types
+        self.has_nobj = has_nobj
+        self.file_scope = file_scope
+
+    def getKwargs(self, config, base, logger):
+        """Parse the config dict and return the kwargs needed to build the input object.
+
+        The default implementation looks for special class attributes called:
+
+            _req_params     A dict of required parameters and their types.
+            _opt_params     A dict of optional parameters and their types.
+            _single_params  A list of dicts of parameters such that one and only one of
+                            parameter in each dict is required.
+            _takes_rng      A bool value saying whether an rng object is required.
+
+        See galsim.Catalog for an example of a class that sets these attributes.
+
+        In addition to the kwargs, we also return a bool value, safe, that indicates whether
+        the constructed object will be safe to keep around for multiple files (True) of if
+        it will need to be rebuilt for each output file (False).
+
+        @param config       The config dict for this input item
+        @param base         The base config dict
+        @param logger       If given, a logger object to log progress. [default: None]
+
+        @returns kwargs, safe
+        """
+        req = self.init_func._req_params
+        opt = self.init_func._opt_params
+        single = self.init_func._single_params
+        kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt, single=single)
+        if self.init_func._takes_rng:
+            if 'rng' not in config:
+                raise ValueError("No config['rng'] available for %s.type"%key)
+            kwargs['rng'] = config['rng']
+            safe = False
+        return kwargs, safe
+
+    def setupImage(self, input_obj, config, base, logger):
+        """Do any necessary setup at the start of each image.
+
+        In the base class, this function does not do anything.  But see PowerSpectrumLoader
+        for an example that does require some setup at the start of each image.
+
+        @param input_obj    The input object to use
+        @param config       The configuration dict for the input type
+        @param base         The base configuration dict.
+        @param logger       If given, a logger object to log progress.  [default: None]
+        """
+        pass
+
+def RegisterInputType(input_type, loader):
     """Register an input type for use by the config apparatus.
 
     @param input_type       The name of the type in config['input']
-    @param init_func        A function or class name to use to build the input object.
-    @param types            A list of value or object types that use this input type.
-                            These items will have their "current" values invalidated when the
-                            input object changes.
-    @param kwargs_func      A function to get the initialization kwargs if the regular
-                            _req, _opt, etc. kind of initialization will not work. The call
-                            signature is:
-                                kwargs, safe = GetKwargs(config, base)
-                            [default: None, which means use the regular initialization]
-    @param has_nobj         Whether the object can be used to automatically determine the number
-                            of objects to build for a given file or image.  If True, it must have
-                            a getNObjects() method and also a construction kwargs _nobjects_only
-                            to efficiently do only enough to calculate nobjects. [default: False]
-    @param file_scope       Whether the class might be relevant at the file- or image-scope level,
-                            rather than just at the object level.  Notably, this is true for dict.
-                            [default: False]
-    @param setup_func       A function to call at the start of each image. The call signature is
-                                Setup(input_obj, config, base, logger)
-                            [default: None]
+    @param loader           A loader object to use for loading in the input object.
+                            It should be an instance of InputLoader or a subclass thereof.
     """
-    valid_input_types[input_type] = {
-        'init' : init_func,
-        'types' : types,
-        'kwargs' : kwargs_func,
-        'nobj' : has_nobj,
-        'file' : file_scope,
-        'setup' : setup_func
-    }
+    valid_input_types[input_type] = loader
 
 # We define in this file two simple input types: catalog and dict, which read in a Catalog
 # or Dict from a file and then can use that to generate values.
-RegisterInputType('catalog', galsim.Catalog, ['Catalog'], has_nobj=True)
-RegisterInputType('dict', galsim.Dict, ['Dict'], file_scope=True)
+RegisterInputType('catalog', InputLoader(galsim.Catalog, ['Catalog'], has_nobj=True))
+RegisterInputType('dict', InputLoader(galsim.Dict, ['Dict'], file_scope=True))
 
 
 
@@ -365,7 +407,7 @@ def _GenerateFromCatalog(config, base, value_type):
 
     # Coding note: the and/or bit is equivalent to a C ternary operator:
     #     input_cat.isFits() ? str : int
-    # which of course doesn't exist in python.  This does the same thing (so long as the 
+    # which of course doesn't exist in python.  This does the same thing (so long as the
     # middle item evaluates to true).
     req = { 'col' : input_cat.isFits() and str or int , 'index' : int }
     opt = { 'num' : int }

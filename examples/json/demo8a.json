@@ -18,7 +18,7 @@
 "#" : "run with just 1 process.  The second one (demo8b.json) is identical except for ",
 "#" : "setting nproc = 4 and outputting to a different file.",
 
-"#" : "See deom8.yaml for more extensive commentary about the features here.",
+"#" : "See demo8.yaml for more extensive commentary about the features here.",
 
 "psf" : {
     "type" : "Moffat",

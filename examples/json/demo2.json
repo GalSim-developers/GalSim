@@ -9,7 +9,7 @@
 "#" : "The PSF is a circular Moffat profile.  And the noise is Poisson using the flux from both",
 "#" : "the object and a background sky level to determine the variance in each pixel.",
 
-"#" : "See deom2.yaml for more extensive commentary about the features here.",
+"#" : "See demo2.yaml for more extensive commentary about the features here.",
 
 "gal" : {
     "type" : "Exponential",

@@ -14,7 +14,7 @@
 "#" : "The galaxies are oriented randomly, but in 90 degree-rotated pairs to cancel the effect of",
 "#" : "shape noise.  The applied shear is the same for each galaxy.",
 
-"#" : "See deom5.yaml for more extensive commentary about the features here.",
+"#" : "See demo5.yaml for more extensive commentary about the features here.",
     
 "psf" : {
     "type" : "Moffat",
@@ -71,7 +71,8 @@
     "file_name" : "g08_gal.fits",
     
     "psf" : {
-        "file_name" : "g08_psf.fits"
+        "file_name" : "g08_psf.fits",
+        "shift" : "galaxy"
     }
 }
 

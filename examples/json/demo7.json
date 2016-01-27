@@ -13,7 +13,7 @@
 "#" : "The 100 total profiles are written to a FITS data cube, which makes it easy to scroll",
 "#" : "through the images comparing the two drawing methods.",
 
-"#" : "See deom7.yaml for more extensive commentary about the features here.",
+"#" : "See demo7.yaml for more extensive commentary about the features here.",
 
 "psf" : {
     "type" : "List",

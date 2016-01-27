@@ -21,11 +21,10 @@ import galsim
 import logging
 
 
-# Python 2.6 doesn't include OrderdDict natively.  There is a package ordereddict that you
+# Python 2.6 doesn't include OrderedDict natively.  There is a package ordereddict that you
 # can pip install.  But if the user hasn't done that, we'll just read into a regular dict.
 # The only feature that requires the OrderedDict is the truth catalog output.  With a regular
 # dict the columns will appear in arbitrary order.
-use_ordereddict = True
 try:
     from collections import OrderedDict
 except ImportError:
@@ -160,18 +159,18 @@ def ReadConfig(config_file, file_type=None, logger=None):
         else:
             # Let YAML be the default if the extension is not .y* or .j*.
             file_type = 'yaml'
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             logger.debug('File type determined to be %s', file_type)
     else:
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             logger.debug('File type specified to be %s', file_type)
 
     if file_type == 'yaml':
-        if logger and logger.isEnabledFor(logging.INFO):
+        if logger:
             logger.info('Reading YAML config file %s', config_file)
         return galsim.config.ReadYaml(config_file)
     else:
-        if logger and logger.isEnabledFor(logging.INFO):
+        if logger:
             logger.info('Reading JSON config file %s', config_file)
         return galsim.config.ReadJson(config_file)
 
@@ -206,11 +205,10 @@ def RemoveCurrent(config, keep_safe=False, type=None):
     if ( 'current_val' in config 
           and not (keep_safe and config['current_safe'])
           and (type == None or ('type' in config and config['type'] == type)) ):
-        del config['current_val']
-        del config['current_safe']
-        del config['current_index']
-        if 'current_value_type' in config:
-            del config['current_value_type']
+        config.pop('current_val')
+        config.pop('current_safe')
+        config.pop('current_index')
+        config.pop('current_value_type',None)  # This one might not be there.
         return True
     else:
         return force
@@ -231,8 +229,7 @@ def CopyConfig(config):
     config1 = copy.copy(config)
   
     # Make sure the input_manager isn't in the copy
-    if 'input_manager' in config1:
-        del config1['input_manager']
+    config1.pop('input_manager',None)
 
     # Now deepcopy all the regular config fields to make sure things like current_val don't
     # get clobbered by two processes writing to the same dict.
@@ -257,7 +254,7 @@ def GetLoggerProxy(logger):
     """Make a proxy for the given logger that can be passed into multiprocessing Processes
     and used safely.
 
-    @param logger           The logger to make a copy of
+    @param logger       The logger to make a copy of
 
     @returns a proxy for the given logger
     """
@@ -272,6 +269,40 @@ def GetLoggerProxy(logger):
     else:
         logger_proxy = None
     return logger_proxy
+
+class LoggerWrapper(object):
+    """A wrap around a Logger object that checks whether a debug or info or warn call will
+    actually produce any output before calling the functions.
+
+    This seems like a gratuitous wrapper, and it is if the object being wrapped is a real
+    Logger object.  However, we use it to wrap proxy objects (returned from GetLoggerProxy)
+    that would otherwise send the arguments of logger.debug(...) calls through a multiprocessing
+    pipe before (typically) being ignored.  Here, we check whether the call will actually
+    produce any output before calling the functions.
+
+    @param logger       The logger object to wrap.
+    """
+    def __init__(self, logger):
+        self.logger = logger
+
+    def debug(self, *args, **kwargs):
+        if self.logger and self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug(*args, **kwargs)
+
+    def info(self, *args, **kwargs):
+        if self.logger and self.logger.isEnabledFor(logging.INFO):
+            self.logger.info(*args, **kwargs)
+
+    def warn(self, *args, **kwargs):
+        if self.logger and self.logger.isEnabledFor(logging.WARN):
+            self.logger.warn(*args, **kwargs)
+
+    def error(self, *args, **kwargs):
+        if self.logger and self.logger.isEnabledFor(logging.ERROR):
+            self.logger.error(*args, **kwargs)
+
+    def isEnabledFor(self, *args, **kwargs):
+        return self.logger.isEnabledFor(*args,**kwargs)
 
 
 def UpdateNProc(nproc, ntot, config, logger=None):
@@ -294,24 +325,24 @@ def UpdateNProc(nproc, ntot, config, logger=None):
         try:
             from multiprocessing import cpu_count
             nproc = cpu_count()
-            if logger and logger.isEnabledFor(logging.DEBUG):
+            if logger:
                 logger.debug("ncpu = %d.",nproc)
         except:
-            if logger and logger.isEnabledFor(logging.WARN):
+            if logger:
                 logger.warn("nproc <= 0, but unable to determine number of cpus.")
                 logger.warn("Using single process")
             nproc = 1
  
     # Second, make sure we aren't already in a multiprocessing mode
     if nproc > 1 and 'current_nproc' in config:
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             logger.debug("Already multiprocessing.  Ignoring image.nproc")
         nproc = 1
 
     # Finally, don't try to use more processes than jobs.  It wouldn't fail or anything.
     # It just looks bad to have 3 images processed with 8 processes or something like that.
     if nproc > ntot:
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             logger.debug("There are only %d jobs to do.  Reducing nproc to %d."%(ntot,ntot))
         nproc = ntot
     return nproc
@@ -351,8 +382,7 @@ def SetupConfigRNG(config, seed_offset=0):
     # If we are starting a new file, clear out the existing rngs.
     if index_key == 'file_num':
         for key in ['seed', 'rng', 'obj_num_rng', 'image_num_rng', 'file_num_rng']:
-            if key in config:
-                del config[key]
+            config.pop(key, None)
 
     if 'random_seed' in config['image']:
         if index_key == 'obj_num':
@@ -387,8 +417,7 @@ def SetupConfigRNG(config, seed_offset=0):
     # This can be present for efficiency, since GaussianDeviates produce two values at a time, 
     # so it is more efficient to not create a new GaussianDeviate object each time.
     # But if so, we need to remove it now.
-    if 'gd' in config:
-        del config['gd']
+    config.pop('gd',None)
 
     return seed
  
@@ -577,7 +606,7 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None):
         # Strip off a final suffix if present.
         config['root'] = os.path.splitext(script_name)[0]
 
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         import pprint
         logger.debug("Final config dict to be processed: \n%s", pprint.pformat(config))
 
@@ -597,7 +626,7 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None):
         nfiles = galsim.config.ParseValue(output, 'nfiles', config, int)[0]
     else:
         nfiles = 1 
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('nfiles = %d',nfiles)
 
     if njobs > 1:
@@ -663,7 +692,7 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
     @param except_abort     Whether an exception should abort the rest of the processing.
                             [default: True]
 
-    @returns results = a list of the outputs from job_func for each job
+    @returns a list of the outputs from job_func for each job
     """
     import time
 
@@ -678,6 +707,15 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
     def worker(task_queue, results_queue, config, logger):
         proc = current_process().name
 
+        # The logger object passed in here is a proxy object.  This means that all the arguments
+        # to any logging commands are passed through the pipe to the real Logger object on the
+        # other end of the pipe.  This tends to produce a lot of unnecessary communication, since
+        # most of those commands don't actually produce any output (e.g. logger.debug(..) commands
+        # when the logging level is not DEBUG).  So it is helpful to wrap this object in a
+        # LoggerWrapper that checks whether it is worth sending the arguments back to the original
+        # Logger before calling the functions.
+        logger = LoggerWrapper(logger)
+
         if 'profile' in config and config['profile']:
             import cProfile, pstats, StringIO
             pr = cProfile.Profile()
@@ -687,7 +725,7 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
 
         for task in iter(task_queue.get, 'STOP'):
             try :
-                if logger and logger.isEnabledFor(logging.DEBUG):
+                if logger:
                     logger.debug('%s: Received job to do %d %ss, starting with %s',
                                  proc,len(task),item,task[0][1])
                 for kwargs, k in task:
@@ -700,10 +738,10 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
             except Exception as e:
                 import traceback
                 tr = traceback.format_exc()
-                if logger and logger.isEnabledFor(logging.DEBUG):
+                if logger:
                     logger.debug('%s: Caught exception: %s\n%s',proc,str(e),tr)
                 results_queue.put( (e, k, tr, proc) )
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             logger.debug('%s: Received STOP', proc)
         if pr:
             pr.disable()
@@ -715,7 +753,7 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
                          proc,s.getvalue(),proc)
 
     if nproc > 1:
-        if logger and logger.isEnabledFor(logging.WARN):
+        if logger:
             logger.warn("Using %d processes for %s processing",nproc,item)
 
         from multiprocessing import Process, Queue, current_process

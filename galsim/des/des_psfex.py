@@ -324,8 +324,8 @@ def DES_PSFExKwargs(config, base):
     return kwargs, safe
 
 # First we need to add the class itself as a valid input_type.
-galsim.config.RegisterInputType('des_psfex', DES_PSFEx, ['DES_PSFEx'],
-                                kwargs_func=DES_PSFExKwargs)
+galsim.config.RegisterInputType('des_psfex',
+                                galsim.config.InputLoader(DES_PSFEx, ['DES_PSFEx']))
 
 # Also make a builder to create the PSF object for a given position.
 # The builders require 4 args.

@@ -27,7 +27,8 @@
 # has its own file, organized into 4 directories (one for each mass).  For each cluster, we
 # draw 20 lensed galaxies at random positions on the image.  The PSF is appropriate for a 
 # space-like simulation.  (Some of the numbers used are the values for HST.)  And we apply
-# a cubic telescope distortion for the WCS.
+# a cubic telescope distortion for the WCS.  Finally, we also output a truth catalog for each
+# +output image that could be used for testing the accuracy of shape or flux measurements.
 #
 # New features introduced in this demo:
 #
