@@ -24,8 +24,8 @@ import logging
 
 # This module-level dict will store all the registered noise types.
 # See the RegisterNoiseType function at the end of this file.
-# The keys are the (string) names of the noise types, and the values will be dicts that keep track
-# of the functions to call to do the different things we need related to the noise.
+# The keys are the (string) names of the noise types, and the values will be builder objects
+# that will perform the different functions related to adding noise to images.
 valid_noise_types = {}
 
 

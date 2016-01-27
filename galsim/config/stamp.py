@@ -28,8 +28,8 @@ import logging
 
 # This module-level dict will store all the registered stamp types.
 # See the RegisterStampType function at the end of this file.
-# The keys are the (string) names of the stamp types, and the values will be dicts that keep track
-# of the functions to call at different stages of building the stamps.
+# The keys are the (string) names of the output types, and the values will be builder objects
+# that will perform the different stages of processing to build each stamp image.
 valid_stamp_types = {}
 
 
@@ -411,9 +411,8 @@ class StampBuilder(object):
         @param base         The base configuration dict.
         @param xsize        The xsize of the image to build (if known).
         @param ysize        The ysize of the image to build (if known).
-        @param ignore       A list of parameters that are allowed to be in config['stamp']
-                            that we can ignore here.  i.e. it won't be an error if these
-                            parameters are present.
+        @param ignore       A list of parameters that are allowed to be in config that we can
+                            ignore here. i.e. it won't be an error if these parameters are present.
         @param logger       If given, a logger object to log progress.
 
         @returns xsize, ysize, image_pos, world_pos

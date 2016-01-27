@@ -28,7 +28,7 @@ import logging
 # This module-level dict will store all the registered output types.
 # See the RegisterOutputType function at the end of this file.
 # The keys are the (string) names of the output types, and the values will be builder objects
-# will perform the different stages of processing to construct and write the output file(s).
+# that will perform the different stages of processing to construct and write the output file(s).
 valid_output_types = {}
 
 
