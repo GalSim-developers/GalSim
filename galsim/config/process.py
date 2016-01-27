@@ -205,11 +205,10 @@ def RemoveCurrent(config, keep_safe=False, type=None):
     if ( 'current_val' in config 
           and not (keep_safe and config['current_safe'])
           and (type == None or ('type' in config and config['type'] == type)) ):
-        del config['current_val']
-        del config['current_safe']
-        del config['current_index']
-        if 'current_value_type' in config:
-            del config['current_value_type']
+        config.pop('current_val')
+        config.pop('current_safe')
+        config.pop('current_index')
+        config.pop('current_value_type',None)  # This one might not be there.
         return True
     else:
         return force
@@ -230,8 +229,7 @@ def CopyConfig(config):
     config1 = copy.copy(config)
   
     # Make sure the input_manager isn't in the copy
-    if 'input_manager' in config1:
-        del config1['input_manager']
+    config1.pop('input_manager',None)
 
     # Now deepcopy all the regular config fields to make sure things like current_val don't
     # get clobbered by two processes writing to the same dict.
@@ -384,8 +382,7 @@ def SetupConfigRNG(config, seed_offset=0):
     # If we are starting a new file, clear out the existing rngs.
     if index_key == 'file_num':
         for key in ['seed', 'rng', 'obj_num_rng', 'image_num_rng', 'file_num_rng']:
-            if key in config:
-                del config[key]
+            config.pop(key, None)
 
     if 'random_seed' in config['image']:
         config['index_key'] = 'obj_num'
@@ -413,8 +410,7 @@ def SetupConfigRNG(config, seed_offset=0):
     # This can be present for efficiency, since GaussianDeviates produce two values at a time, 
     # so it is more efficient to not create a new GaussianDeviate object each time.
     # But if so, we need to remove it now.
-    if 'gd' in config:
-        del config['gd']
+    config.pop('gd',None)
 
     return seed
  

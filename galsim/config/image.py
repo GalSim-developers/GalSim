@@ -235,7 +235,7 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
 
     # Mark that we are no longer doing a single galaxy by deleting image_pos from config top
     # level, so it cannot be used for things like wcs.pixelArea(image_pos).
-    if 'image_pos' in config: del config['image_pos']
+    config.pop('image_pos', None)
 
     # Go back to using image_num for any indexing.
     config['index_key'] = 'image_num'
