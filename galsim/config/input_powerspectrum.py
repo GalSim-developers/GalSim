@@ -17,6 +17,7 @@
 #
 
 import galsim
+import math
 
 # This file adds input type nfw_halo and value types PowerSpectrumShear and
 # PowerSpectrumMagnification.
@@ -58,23 +59,25 @@ class PowerSpectrumLoader(InputLoader):
         """
         if 'grid_spacing' in config:
             grid_spacing = galsim.config.ParseValue(config, 'grid_spacing', base, float)[0]
-        elif 'tile_xsize' in base:
+        elif 'grid_xsize' in base and 'grid_ysize' in base:
             # Then we have a tiled image.  Can use the tile spacing as the grid spacing.
-            stamp_size = min(base['tile_xsize'], base['tile_ysize'])
+            grid_size = min(base['grid_xsize'], base['grid_ysize'])
+            # This size is in pixels, so we need to convert to arcsec using the pixel scale.
             # Note: we use the (max) pixel scale at the image center.  This isn't
-            # necessarily optimal, but it seems like the best choice.
+            # necessarily optimal, but it seems like the best choice for a non-trivial WCS.
             scale = base['wcs'].maxLinearScale(base['image_center'])
-            grid_spacing = stamp_size * scale
+            grid_spacing = grid_size * scale
         else:
             raise AttributeError("power_spectrum.grid_spacing required for non-tiled images")
 
-        if 'tile_xsize' in base and base['tile_xsize'] == base['tile_ysize']:
+        if 'grid_xsize' in base and base['grid_xsize'] == base['grid_ysize']:
             # PowerSpectrum can only do a square FFT, so make it the larger of the two n's.
-            ngrid = max(base['nx_tiles'], base['ny_tiles'])
+            nx_grid = int(math.ceil(base['image_xsize']/base['grid_xsize']))
+            ny_grid = int(math.ceil(base['image_ysize']/base['grid_ysize']))
+            ngrid = max(nx_grid, ny_grid)
             # Normally that's good, but if tiles aren't square, need to drop through to the
             # second option.
         else:
-            import math
             image_size = max(base['image_xsize'], base['image_ysize'])
             scale = base['wcs'].maxLinearScale(base['image_center'])
             ngrid = int(math.ceil(image_size * scale / grid_spacing))

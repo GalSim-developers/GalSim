@@ -50,47 +50,44 @@ class TiledImageBuilder(ImageBuilder):
         params = galsim.config.GetAllParams(config, base, req=req, opt=opt,
                                             ignore=ignore+extra_ignore)[0]
 
-        nx_tiles = params['nx_tiles']
-        ny_tiles = params['ny_tiles']
-        base['nx_tiles'] = nx_tiles
-        base['ny_tiles'] = ny_tiles
+        self.nx_tiles = params['nx_tiles']  # We'll need this again later, so save them in self.
+        self.ny_tiles = params['ny_tiles']
         if logger:
-            logger.debug('image %d: n_tiles = %d, %d',image_num,nx_tiles,ny_tiles)
+            logger.debug('image %d: n_tiles = %d, %d',image_num,self.nx_tiles,self.ny_tiles)
 
         stamp_size = params.get('stamp_size',0)
-        stamp_xsize = params.get('stamp_xsize',stamp_size)
-        stamp_ysize = params.get('stamp_ysize',stamp_size)
-        base['tile_xsize'] = stamp_xsize
-        base['tile_ysize'] = stamp_ysize
+        self.stamp_xsize = params.get('stamp_xsize',stamp_size)
+        self.stamp_ysize = params.get('stamp_ysize',stamp_size)
 
-        if (stamp_xsize == 0) or (stamp_ysize == 0):
+        if (self.stamp_xsize == 0) or (self.stamp_ysize == 0):
             raise AttributeError(
                 "Both image.stamp_xsize and image.stamp_ysize need to be defined and != 0.")
 
         border = params.get("border",0)
-        xborder = params.get("xborder",border)
-        yborder = params.get("yborder",border)
+        self.xborder = params.get("xborder",border)
+        self.yborder = params.get("yborder",border)
 
-        do_noise = xborder >= 0 and yborder >= 0
+        # Store the net grid spacing in the config dict as grid_xsize, grid_ysize for things like
+        # PowerSpectrum that might want to know the grid spacing.
+        base['grid_xsize'] = self.stamp_xsize + self.xborder
+        base['grid_ysize'] = self.stamp_ysize + self.yborder
+
+        self.do_noise_in_stamps = self.xborder >= 0 and self.yborder >= 0
         # TODO: Note: if one of these is < 0 and the other is > 0, then
         #       this will add noise to the border region.  Not exactly the
         #       design, but I didn't bother to do the bookkeeping right to
         #       make the borders pure 0 in that case.
-        base['do_noise_in_stamps'] = do_noise
 
-        full_xsize = (stamp_xsize + xborder) * nx_tiles - xborder
-        full_ysize = (stamp_ysize + yborder) * ny_tiles - yborder
-
-        base['tile_xborder'] = xborder
-        base['tile_yborder'] = yborder
+        full_xsize = (self.stamp_xsize + self.xborder) * self.nx_tiles - self.xborder
+        full_ysize = (self.stamp_ysize + self.yborder) * self.ny_tiles - self.yborder
 
         # If image_force_xsize and image_force_ysize were set in config, make sure it matches.
         if ( ('image_force_xsize' in base and full_xsize != base['image_force_xsize']) or
              ('image_force_ysize' in base and full_ysize != base['image_force_ysize']) ):
             raise ValueError(
                 "Unable to reconcile required image xsize and ysize with provided "+
-                "nx_tiles=%d, ny_tiles=%d, "%(nx_tiles,ny_tiles) +
-                "xborder=%d, yborder=%d\n"%(xborder,yborder) +
+                "nx_tiles=%d, ny_tiles=%d, "%(self.nx_tiles,self.ny_tiles) +
+                "xborder=%d, yborder=%d\n"%(self.xborder,self.yborder) +
                 "Calculated full_size = (%d,%d) "%(full_xsize,full_ysize)+
                 "!= required (%d,%d)."%(base['image_force_xsize'],base['image_force_ysize']))
 
@@ -118,15 +115,7 @@ class TiledImageBuilder(ImageBuilder):
         full_image.wcs = wcs
         full_image.setZero()
 
-        do_noise = base['do_noise_in_stamps']
-        xsize = base['tile_xsize']
-        ysize = base['tile_ysize']
-        xborder = base['tile_xborder']
-        yborder = base['tile_yborder']
-
-        nx_tiles = base['nx_tiles']
-        ny_tiles = base['ny_tiles']
-        nobjects = nx_tiles * ny_tiles
+        nobjects = self.nx_tiles * self.ny_tiles
 
         # Make a list of ix,iy values according to the specified order:
         if 'order' in config:
@@ -134,14 +123,14 @@ class TiledImageBuilder(ImageBuilder):
         else:
             order = 'row'
         if order.startswith('row'):
-            ix_list = [ ix for iy in range(ny_tiles) for ix in range(nx_tiles) ]
-            iy_list = [ iy for iy in range(ny_tiles) for ix in range(nx_tiles) ]
+            ix_list = [ ix for iy in range(self.ny_tiles) for ix in range(self.nx_tiles) ]
+            iy_list = [ iy for iy in range(self.ny_tiles) for ix in range(self.nx_tiles) ]
         elif order.startswith('col'):
-            ix_list = [ ix for ix in range(nx_tiles) for iy in range(ny_tiles) ]
-            iy_list = [ iy for ix in range(nx_tiles) for iy in range(ny_tiles) ]
+            ix_list = [ ix for ix in range(self.nx_tiles) for iy in range(self.ny_tiles) ]
+            iy_list = [ iy for ix in range(self.nx_tiles) for iy in range(self.ny_tiles) ]
         elif order.startswith('rand'):
-            ix_list = [ ix for ix in range(nx_tiles) for iy in range(ny_tiles) ]
-            iy_list = [ iy for ix in range(nx_tiles) for iy in range(ny_tiles) ]
+            ix_list = [ ix for ix in range(self.nx_tiles) for iy in range(self.ny_tiles) ]
+            iy_list = [ iy for ix in range(self.nx_tiles) for iy in range(self.ny_tiles) ]
             rng = base['rng']
             galsim.random.permute(rng, ix_list, iy_list)
         else:
@@ -149,10 +138,10 @@ class TiledImageBuilder(ImageBuilder):
 
         # Define a 'image_pos' field so the stamps can set their position appropriately in case
         # we need it for PowerSpectum or NFWHalo.
-        x0 = (xsize-1)/2. + base['image_origin'].x
-        y0 = (ysize-1)/2. + base['image_origin'].y
-        dx = xsize + xborder
-        dy = ysize + yborder
+        x0 = (self.stamp_xsize-1)/2. + base['image_origin'].x
+        y0 = (self.stamp_ysize-1)/2. + base['image_origin'].y
+        dx = self.stamp_xsize + self.xborder
+        dy = self.stamp_ysize + self.yborder
         config['image_pos'] = {
             'type' : 'XY' ,
             'x' : { 'type' : 'List',
@@ -165,7 +154,7 @@ class TiledImageBuilder(ImageBuilder):
 
         stamps, current_vars = galsim.config.BuildStamps(
                 nobjects, base, logger=logger, obj_num=obj_num,
-                xsize=xsize, ysize=ysize, do_noise=do_noise)
+                xsize=self.stamp_xsize, ysize=self.stamp_ysize, do_noise=self.do_noise_in_stamps)
 
         base['index_key'] = 'image_num'
 
@@ -179,13 +168,13 @@ class TiledImageBuilder(ImageBuilder):
             b = stamps[k].bounds
             full_image[b] += stamps[k]
 
-        current_var = 0
-        if not do_noise:
+        # Bring the noise in the image so far up to a flat noise variance
+        # Save the resulting noise variance as self.current_var.
+        self.current_var = 0
+        if not self.do_noise_in_stamps:
             if 'noise' in config:
-                # First bring the image so far up to a flat noise variance
-                current_var = galsim.config.FlattenNoiseVariance(
+                self.current_var = galsim.config.FlattenNoiseVariance(
                         base, full_image, stamps, current_vars, logger)
-        base['current_var'] = current_var
         return full_image
 
 
@@ -200,13 +189,11 @@ class TiledImageBuilder(ImageBuilder):
         @param logger       If given, a logger object to log progress.
         """
         # If didn't do noise above in the stamps, then need to do it here.
-        do_noise = base['do_noise_in_stamps']
-        if not do_noise:
+        if not self.do_noise_in_stamps:
             # Apply the sky and noise to the full image
             galsim.config.AddSky(config,image)
             if 'noise' in config:
-                current_var = base['current_var']
-                galsim.config.AddNoise(base,image,current_var,logger)
+                galsim.config.AddNoise(base,image,self.current_var,logger)
 
     def getNObj(self, config, base, image_num):
         """Get the number of objects that will be built for this image.

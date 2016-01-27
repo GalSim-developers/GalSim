@@ -44,10 +44,9 @@ class ScatteredImageBuilder(ImageBuilder):
             logger.debug('image %d: Building Scattered: image, obj = %d,%d',
                          image_num,image_num,obj_num)
 
-        nobjects = self.getNObj(config, base, image_num)
+        self.nobjects = self.getNObj(config, base, image_num)
         if logger:
-            logger.debug('image %d: nobj = %d',image_num,nobjects)
-        base['nobjects'] = nobjects
+            logger.debug('image %d: nobj = %d',image_num,self.nobjects)
 
         # These are allowed for Scattered, but we don't use them here.
         extra_ignore = [ 'image_pos', 'world_pos', 'stamp_size', 'stamp_xsize', 'stamp_ysize',
@@ -116,14 +115,12 @@ class ScatteredImageBuilder(ImageBuilder):
                 'y' : { 'type' : 'Random' , 'min' : ymin , 'max' : ymax }
             }
 
-        nobjects = base['nobjects']
-
         stamps, current_vars = galsim.config.BuildStamps(
-                nobjects, base, logger=logger, obj_num=obj_num, do_noise=False)
+                self.nobjects, base, logger=logger, obj_num=obj_num, do_noise=False)
 
         base['index_key'] = 'image_num'
 
-        for k in range(nobjects):
+        for k in range(self.nobjects):
             # This is our signal that the object was skipped.
             if stamps[k] is None: continue
             bounds = stamps[k].bounds & full_image.bounds
@@ -147,7 +144,7 @@ class ScatteredImageBuilder(ImageBuilder):
             # Bring the image so far up to a flat noise variance
             current_var = galsim.config.FlattenNoiseVariance(
                     base, full_image, stamps, current_vars, logger)
-        base['current_var'] = current_var
+        self.current_var = current_var  # We'll need this later in the addNoise step.
 
         return full_image
 
@@ -164,8 +161,7 @@ class ScatteredImageBuilder(ImageBuilder):
         """
         galsim.config.AddSky(base,image)
         if 'noise' in config:
-            current_var = base['current_var']
-            galsim.config.AddNoise(base,image,current_var,logger)
+            galsim.config.AddNoise(base,image,self.current_var,logger)
 
 
     def getNObj(self, config, base, image_num):

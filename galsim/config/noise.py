@@ -507,11 +507,15 @@ class CCDNoiseBuilder(NoiseBuilder):
 
 class COSMOSNoiseBuilder(NoiseBuilder):
 
+    def __init__(self):
+        self.current_cn_tag = None
+        self.current_cn = None
+
     def getCOSMOSNoise(self, config, base, rng=None):
         # Save the constructed CorrelatedNoise object, since we might need it again.
         tag = (base['file_num'], base['image_num'])
-        if config.get('current_cn_tag',None) == tag:
-            return config['current_cn']
+        if self.current_cn_tag == tag:
+            return self.current_cn
         else:
             req = { 'file_name' : str }
             opt = { 'cosmos_scale' : float, 'variance' : float }
@@ -521,8 +525,8 @@ class COSMOSNoiseBuilder(NoiseBuilder):
             if rng is None:
                 rng = base['rng']
             cn = galsim.correlatednoise.getCOSMOSNoise(rng, **kwargs)
-            config['current_cn'] = cn
-            config['current_cn_tag'] = tag
+            self.current_cn = cn
+            self.current_cn_tag = tag
             return cn
 
     def addNoise(self, config, base, im, rng, current_var, logger):
