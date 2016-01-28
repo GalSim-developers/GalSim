@@ -103,7 +103,7 @@ def parse_args():
             'Used in conjunction with -j (--job)')
         parser.add_argument(
             '-j', '--job', type=int, action='store', default=1,
-            help='set the job number for this particular run. Must be in (1 .. njobs). ' +
+            help='set the job number for this particular run. Must be in [1,njobs]. ' +
             'Used in conjunction with -n (--njobs)')
         parser.add_argument(
             '--version', action='store_const', default=False, const=True,
@@ -149,7 +149,7 @@ def parse_args():
             'Used in conjunction with -j (--job)')
         parser.add_option(
             '-j', '--job', type=int, action='store', default=1,
-            help='set the job number for this particular run. Must be in (1 .. njobs). ' +
+            help='set the job number for this particular run. Must be in [1,njobs]. ' +
             'Used in conjunction with -n (--njobs)')
         parser.add_option(
             '-p', '--profile', action='store_const', default=False, const=True,

@@ -1,6 +1,17 @@
 Changes from v1.3 to v1.4
 =========================
 
+API Changes
+-----------
+
+- Changed the default shift and/or offset for the output.psf field in a config
+  file to not do any shift or offset.  It had been the default to match what
+  was applied to the galaxy (cf. demo5).  However, we thought that was probably
+  not the most intuitive default.  Now, matching the galaxy is still possible,
+  but requires explicit specification of output.psf.shift = "galaxy" or
+  output.psf.offset = "galaxy". (#691)
+
+
 Bug Fixes
 ---------
 
@@ -14,6 +25,7 @@ Bug Fixes
   for the KSB shear estimation method of the galsim.hsm package. (#686)
 - Fixed bug in the (undocumented) function COSMOSCatalog._makeSingleGalaxy,
   where the resulting object did not set the index attribute properly. (#694)
+<<<<<<< HEAD
 
 
 Deprecated Features
@@ -21,11 +33,19 @@ Deprecated Features
 - Deprecated the gal.type=Ring option in the config files.  The preferred way
   to get a ring test is now with the new stamp.type=Ring.  See demo5 and demo10
   for examples of the new syntax. (#698)
+=======
+>>>>>>> #691
 
 
 New Features
 ------------
+<<<<<<< HEAD
 - Added OutputCatalog class (#301, #691)
+=======
+
+- Added OutputCatalog class, which can be used to keep track of and then output
+  truth information.  cf. demos 9 and 10. (#301, #691)
+>>>>>>> #691
 - Added methods calculateHLR, calculateMomentRadius, and calculateFWHM to both
   GSObject and Image. (#308)
 - Changed `galsim.fits.writeMulti` to allow any of the "image"s to be
@@ -70,6 +90,10 @@ New config features
   'gsparams', among other less commonly used parameters.  However, for
   backwards compatibility, they are all still allowed in the image field
   as well. (#691)
+<<<<<<< HEAD
 - Added new stamp type=Ring to effect ring tests.  This replaces the old 
   gsobject type=Ring, which is now deprecated.  See demo5 and demo10 for 
   examples of the new preferred syntax. (#698)
+=======
+
+>>>>>>> #691

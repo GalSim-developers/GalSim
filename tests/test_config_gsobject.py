@@ -1098,10 +1098,11 @@ def test_ring():
 
     galsim.config.SetupConfigImageNum(config, 0, 0)
     ignore = galsim.config.stamp_ignore
+    ring_builder = galsim.config.stamp_ring.RingBuilder()
     for k in range(6):
         galsim.config.SetupConfigObjNum(config, k)
-        galsim.config.stamp_ring.SetupRing(config, None, None, ignore, None)
-        gal1a = galsim.config.stamp_ring.ProfileRing(config, None, {}, None)
+        ring_builder.setup(config['stamp'], config, None, None, ignore, None)
+        gal1a = ring_builder.buildProfile(config['stamp'], config, None, {}, None)
         gal1b = gauss.shear(e1=e1_list[k], e2=e2_list[k])
         print 'gal1a = ',gal1a
         print 'gal1b = ',gal1b
@@ -1123,8 +1124,8 @@ def test_ring():
     galsim.config.SetupConfigImageNum(config, 0, 0)
     for k in range(25):
         galsim.config.SetupConfigObjNum(config, k)
-        galsim.config.stamp_ring.SetupRing(config, None, None, ignore, None)
-        gal2a = galsim.config.stamp_ring.ProfileRing(config, None, {}, None)
+        ring_builder.setup(config['stamp'], config, None, None, ignore, None)
+        gal2a = ring_builder.buildProfile(config['stamp'], config, None, {}, None)
         gal2b = disk.rotate(theta = k * 18 * galsim.degrees)
         gsobject_compare(gal2a, gal2b)
 
@@ -1156,8 +1157,8 @@ def test_ring():
     for k in range(25):
         galsim.config.SetupConfigObjNum(config, k)
         index = k // 4  # make sure we use integer division
-        galsim.config.stamp_ring.SetupRing(config, None, None, ignore, None)
-        gal3a = galsim.config.stamp_ring.ProfileRing(config, None, {}, None)
+        ring_builder.setup(config['stamp'], config, None, None, ignore, None)
+        gal3a = ring_builder.buildProfile(config['stamp'], config, None, {}, None)
         gal3b = sum.rotate(theta = index * 72 * galsim.degrees)
         gsobject_compare(gal3a, gal3b)
 
@@ -1186,8 +1187,9 @@ def test_ring():
 
     galsim.config.SetupConfigImageNum(config, 0, 0)
     galsim.config.SetupConfigObjNum(config, 0)
-    galsim.config.stamp_ring.SetupRing(config, None, None, ignore, None)
-    gal4a = galsim.config.stamp_ring.ProfileRing(config, None, config['stamp']['gsparams'], None)
+    ring_builder.setup(config['stamp'], config, None, None, ignore, None)
+    gal4a = ring_builder.buildProfile(config['stamp'], config, None, config['stamp']['gsparams'],
+                                      None)
     gsparams = galsim.GSParams(maxk_threshold=1.e-2, folding_threshold=1.e-2, stepk_minimum_hlr=3)
     disk = galsim.Exponential(half_light_radius=2, gsparams=gsparams).shear(e2=0.3)
     bulge = galsim.Sersic(n=3,half_light_radius=1.3, gsparams=gsparams).shear(e1=0.12,e2=-0.08)

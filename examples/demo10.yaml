@@ -28,7 +28,8 @@
 # as the second HDU in the file.  For the galaxies, we use a random selection from 5 specific
 # RealGalaxy objects, selected to be 5 particularly irregular ones.  (These are taken from 
 # the same catalog of 100 objects that demo6 used.)  The galaxies are oriented in a ring 
-# test (Nakajima & Bernstein 2007) of 20 each.
+# test (Nakajima & Bernstein 2007) of 20 each.  And we again output a truth catalog with the
+# correct applied shear for each object (among other information).
 #
 # New features introduced in this demo:
 #
@@ -40,7 +41,7 @@
 # - pos_value : RTheta (r, theta)
 # - image type : Tiled (..., order)
 # - input : power_spectrum (e_power_function, b_power_function)
-# - output.psf : hdu, signal_to_noise, draw_method
+# - output.psf : hdu, signal_to_noise, draw_method, offset
 # - output.truth : hdu
 #
 # - Evaluated values in output.truth.columns
@@ -71,9 +72,11 @@ psf :
             #     b = bool
             #     s = string
             #     a = Angle
-            #     p = Position
+            #     p = PositionD
             #     g = Shear
+            #     x = GSObject
             # Thus, fr here is a float variable named r.
+            # (Examples of i, p, g, and x codes can be seen below in the output.truth field.)
             fr : { type : Eval , str : '(world_pos.x**2 + world_pos.y**2)**0.5' } 
             # Now we can use this variable (as r, not fr) in our string:
             str : '0.4 * (r/100)**1.5'   # large value at the edge, so visible by eye.
@@ -223,6 +226,18 @@ output :
         # main image.
         signal_to_noise : 1000
 
+        # Offset the PSF images randomly within the central pixel to better sample the
+        # sub-pixel surface brightness profile.  Note: as with the output.psf.shift parameter
+        # (cf. demo5.yaml), the output field may also take the value 'galaxy', which would mean
+        # to apply the same offset as was applied to the galaxy.  In this case, there is no
+        # such offset, so it wouldn't apply here, but it's an option if you want to match the
+        # offsets of the PSF and galaxy.
+        offset:
+            type : XY
+            x : { type: Random, min: -0.5, max: 0.5 }
+            y : { type: Random, min: -0.5, max: 0.5 }
+
+
     # Make a truth catalog as a binary table in hdu 2
     truth :
         hdu : 2
@@ -258,14 +273,18 @@ output :
             cosmos_id : gal.id
 
             # Even though we accessed the catalog by id, we can still get the index number
-            # in the catalog via the gal.index attribute.
+            # in the catalog via the RealGalaxy index attribute.
             cosmos_index :
                 type : Eval
-                str : 'gal.index'
-                # There is a special Eval code we haven't mentioned yet.  If you name precede
-                # a variable name with x, then that means it's an object, rather than a value.
-                # So in this case, get the index from the attribute of the object, gal.
-                xgal : { type : Current, key : 'gal' }
+                str : 'orig_gal.index'
+                # The orig_gal variable uses the x code, which is a little different from the
+                # other codes we've seen.  It refers to a GSObject, which needs to already be
+                # built by some other part of the code; the only type that works for these then
+                # is Current.  Here we take the current value stored in the gal field, which is
+                # the RealGalaxy object that was built for the first item in the Ring pattern.
+                # It doesn't have any transformations applied to it, so it still has the index
+                # attribute.
+                xorig_gal : { type : Current, key : 'gal' }
 
             # Fields that are automatically generated are also available.
             # List, Ring, and Catalog all have an index parameter, but it is often omitted

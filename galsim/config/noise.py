@@ -22,6 +22,12 @@ import logging
 # This file handles the functionality for adding noise and the sky to an image after
 # drawing the objects.
 
+# This module-level dict will store all the registered noise types.
+# See the RegisterNoiseType function at the end of this file.
+# The keys are the (string) names of the noise types, and the values will be builder objects
+# that will perform the different functions related to adding noise to images.
+valid_noise_types = {}
+
 
 #
 # First the driver functions:
@@ -72,12 +78,12 @@ def AddNoise(config, im, current_var=0., logger=None):
     orig_index = config.get('index_key','image_num')
     if orig_index == 'obj_num':
         config['index_key'] = 'image_num'
-        config['noise_rng'] = config.get('obj_num_rng', config['rng'])
+        rng = config.get('obj_num_rng', config['rng'])
     else:
-        config['noise_rng'] = config['rng']
+        rng = config['rng']
 
-    func = valid_noise_types[noise_type]['noise']
-    var = func(noise, config, im, current_var, logger)
+    builder = valid_noise_types[noise_type]
+    var = builder.addNoise(noise, config, im, rng, current_var, logger)
 
     if orig_index == 'obj_num':
         config['index_key'] = 'obj_num'
@@ -107,8 +113,8 @@ def CalculateNoiseVar(config):
     if orig_index == 'obj_num':
         config['index_key'] = 'image_num'
 
-    func = valid_noise_types[noise_type]['var']
-    var = func(noise, config)
+    builder = valid_noise_types[noise_type]
+    var = builder.getNoiseVariance(noise, config)
 
     if orig_index == 'obj_num':
         config['index_key'] = 'obj_num'
@@ -118,7 +124,7 @@ def CalculateNoiseVar(config):
 def AddNoiseVariance(config, im, include_obj_var=False, logger=None):
     """
     Add the noise variance to an image according to the noise specifications in the noise dict.
-    Typically, this is used for buliding a weight map, which is typically the inverse variance.
+    Typically, this is used for building a weight map, which is typically the inverse variance.
 
     @param config           The configuration dict
     @param im               The image onto which to add the variance values
@@ -147,8 +153,8 @@ def AddNoiseVariance(config, im, include_obj_var=False, logger=None):
     if orig_index == 'obj_num':
         config['index_key'] = 'image_num'
 
-    func = valid_noise_types[noise_type]['addvar']
-    func(noise, config, im, include_obj_var, logger)
+    builder = valid_noise_types[noise_type]
+    builder.addNoiseVariance(noise, config, im, include_obj_var, logger)
 
     if orig_index == 'obj_num':
         config['index_key'] = orig_index
@@ -156,7 +162,7 @@ def AddNoiseVariance(config, im, include_obj_var=False, logger=None):
 def GetSky(config, base):
     """Parse the sky information and return either a float value for the sky level per pixel
     or an image, as needed.
-    
+
     If an image is required (because wcs is not uniform) then it will use the presence of
     base['image_pos'] to determine what size image to return (stamp or full).  If there is
     a current image_pos, then we are doing a stamp.  Otherwise a full image.
@@ -192,349 +198,389 @@ def GetSky(config, base):
 # items that are parsed separately from the normal noise function
 noise_ignore = [ 'whiten', 'symmetrize' ]
 
+class NoiseBuilder(object):
+    """A base class for building noise objects and applying the noise to images.
+
+    The base class doesn't do anything, but it defines the call signatures of the methods
+    that derived classes should use for the different specific noise types.
+    """
+    def addNoise(self, config, base, im, rng, current_var, logger):
+        """Read the noise parameters from the config dict and add the appropriate noise to the
+        given image.
+
+        @param config           The configuration dict for the noise field.
+        @param base             The base configuration dict.
+        @param im               The image onto which to add the noise
+        @param rng              The random number generator to use for adding the noise.
+        @param current_var      The current noise variance present in the image already [default: 0]
+        @param logger           If given, a logger object to log progress.
+        """
+        raise NotImplemented("The %s class has not overridden addNoise"%self.__class__)
+
+    def getNoiseVariance(self, config, base):
+        """Read the noise parameters from the config dict and return the variance.
+
+        @param config           The configuration dict for the noise field.
+        @param base             The base configuration dict.
+
+        @returns the variance of the noise model
+        """
+        raise NotImplemented("The %s class has not overridden addNoise"%self.__class__)
+
+    def addNoiseVariance(self, config, base, im, include_obj_var, logger):
+        """Read the noise parameters from the config dict and add the appropriate noise variance
+        to the given image.
+
+        This is used for constructing the weight map iamge.  It doesn't add a random value to
+        each pixel.  Rather, it adds the variance of the noise that was used in the main image to
+        each pixel in this image.
+
+        This method has a default implemenation that is appropriate for noise models that have
+        a constant noise variance.  It just gets the variance from getNoiseVariance and adds
+        that constant value to every pixel.
+
+        @param config           The configuration dict for the noise field.
+        @param base             The base configuration dict.
+        @param im               The image onto which to add the noise variance
+        @param include_obj_var  Whether the noise variance values should the photon noise from
+                                object flux in addition to the sky flux.  Only relevant for
+                                noise models that are based on the image flux values such as
+                                Poisson and CCDNoise.
+        @param logger           If given, a logger object to log progress.
+        """
+        im += self.getNoiseVariance(config, base)
+
 #
 # Gaussian
 #
 
-def AddNoiseGaussian(config, base, im, current_var, logger):
+class GaussianNoiseBuilder(NoiseBuilder):
 
-    var = NoiseVarGaussian(config, base)
+    def addNoise(self, config, base, im, rng, current_var, logger):
 
-    # If we already have some variance in the image (from whitening), then we subtract this much
-    # from sigma**2.
-    if current_var: 
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
-                         base['image_num'],base['obj_num'],var,current_var)
-        if var < current_var:
-            raise RuntimeError(
-                "Whitening already added more noise than the requested Gaussian noise.")
-        var -= current_var
+        # Read the noise variance
+        var = self.getNoiseVariance(config, base)
 
-    # Now apply the noise.
-    import math
-    sigma = math.sqrt(var)
-    rng = base['noise_rng']
-    im.addNoise(galsim.GaussianNoise(rng,sigma=sigma))
+        # If we already have some variance in the image (from whitening), then we subtract this much
+        # from sigma**2.
+        if current_var:
+            if logger:
+                logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
+                            base['image_num'],base['obj_num'],var,current_var)
+            if var < current_var:
+                raise RuntimeError(
+                    "Whitening already added more noise than the requested Gaussian noise.")
+            var -= current_var
 
-    if logger and logger.isEnabledFor(logging.DEBUG):
-        logger.debug('image %d, obj %d: Added Gaussian noise with var = %f',
-                     base['image_num'],base['obj_num'],var)
+        # Now apply the noise.
+        import math
+        sigma = math.sqrt(var)
+        im.addNoise(galsim.GaussianNoise(rng,sigma=sigma))
 
-    return var
+        if logger:
+            logger.debug('image %d, obj %d: Added Gaussian noise with var = %f',
+                        base['image_num'],base['obj_num'],var)
 
-def NoiseVarGaussian(config, base):
+        return var
 
-    # The noise level can be specified either as a sigma or a variance.  Here we just calculate
-    # the value of the variance from either one.
-    single = [ { 'sigma' : float , 'variance' : float } ]
-    params = galsim.config.GetAllParams(config, base, single=single, ignore=noise_ignore)[0]
-    if 'sigma' in params:
-        sigma = params['sigma']
-        return sigma * sigma
-    else:
-        return params['variance']
+    def getNoiseVariance(self, config, base):
 
-def AddNoiseVarianceGaussian(config, base, im, include_obj_var, logger):
-    im += NoiseVarGaussian(config, base)
+        # The noise level can be specified either as a sigma or a variance.  Here we just calculate
+        # the value of the variance from either one.
+        single = [ { 'sigma' : float , 'variance' : float } ]
+        params = galsim.config.GetAllParams(config, base, single=single, ignore=noise_ignore)[0]
+        if 'sigma' in params:
+            sigma = params['sigma']
+            return sigma * sigma
+        else:
+            return params['variance']
 
 
 #
 # Poisson
 #
 
-def AddNoisePoisson(config, base, im, current_var, logger):
+class PoissonNoiseBuilder(NoiseBuilder):
 
-    # Get how much extra sky to assume from the image.noise attribute.
-    sky = GetSky(base['image'], base)
-    extra_sky = GetSky(config, base)
-    if not sky and not extra_sky:
-        raise AttributeError(
-            "Must provide either sky_level or sky_level_pixel for noise.type = Poisson")
-    var = sky + extra_sky # for the return value
+    def addNoise(self, config, base, im, rng, current_var, logger):
 
-    # If we already have some variance in the image (from whitening), then we subtract this much
-    # off of the sky level.  It's not precisely accurate, since the existing variance is Gaussian,
-    # rather than Poisson, but it's the best we can do.
-    if current_var:
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
-                         base['image_num'],base['obj_num'],extra_sky, current_var)
-        if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
-            test = ((sky+extra_sky).image.array < current_var).any()
+        # Get how much extra sky to assume from the image.noise attribute.
+        sky = GetSky(base['image'], base)
+        extra_sky = GetSky(config, base)
+        if not sky and not extra_sky:
+            raise AttributeError(
+                "Must provide either sky_level or sky_level_pixel for noise.type = Poisson")
+        var = sky + extra_sky # for the return value
+
+        # If we already have some variance in the image (from whitening), then we subtract this
+        # much off of the sky level.  It's not precisely accurate, since the existing variance is
+        # Gaussian, rather than Poisson, but it's the best we can do.
+        if current_var:
+            if logger:
+                logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
+                            base['image_num'],base['obj_num'],extra_sky, current_var)
+            if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
+                test = ((sky+extra_sky).image.array < current_var).any()
+            else:
+                test = (sky+extra_sky < current_var)
+            if test:
+                raise RuntimeError(
+                    "Whitening already added more noise than the requested Poisson noise.")
+            extra_sky -= current_var
+
+        # At this point, there is a slight difference between fft and phot. For photon shooting,
+        # the galaxy already has Poisson noise, so we want to make sure not to add that again!
+        draw_method = galsim.config.GetCurrentValue('stamp.draw_method',base,str)
+        if draw_method == 'phot':
+            # Only add in the noise from the sky.
+            if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
+                noise_im = sky + extra_sky
+                noise_im.addNoise(galsim.PoissonNoise(rng))
+                if sky:
+                    noise_im -= sky
+                if extra_sky:
+                    noise_im -= extra_sky
+                # noise_im should now have zero mean, but with the noise of the total sky level.
+                im += noise_im
+            else:
+                total_sky = sky + extra_sky
+                if total_sky > 0.:
+                    im.addNoise(galsim.DeviateNoise(galsim.PoissonDeviate(rng, mean=total_sky)))
+                    # This deviate adds a noisy version of the sky, so need to subtract the mean
+                    # back off.
+                    im -= total_sky
         else:
-            test = (sky+extra_sky < current_var)
-        if test:
-            raise RuntimeError(
-                "Whitening already added more noise than the requested Poisson noise.")
-        extra_sky -= current_var
+            im += extra_sky
+            # Do the normal PoissonNoise calculation.
+            im.addNoise(galsim.PoissonNoise(rng))
+            im -= extra_sky
 
-    # At this point, there is a slight difference between fft and phot. For photon shooting, the 
-    # galaxy already has Poisson noise, so we want to make sure not to add that again!
-    draw_method = galsim.config.GetCurrentValue('stamp.draw_method',base,str)
-    rng = base['noise_rng']
-    if draw_method == 'phot':
-        # Only add in the noise from the sky.
-        if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
-            noise_im = sky + extra_sky
-            noise_im.addNoise(galsim.PoissonNoise(rng))
-            if sky:
-                noise_im -= sky
-            if extra_sky:
-                noise_im -= extra_sky
-            # noise_im should now have zero mean, but with the noise of the total sky level.
-            im += noise_im
-        else:
-            total_sky = sky + extra_sky
-            if total_sky > 0.:
-                im.addNoise(galsim.DeviateNoise(galsim.PoissonDeviate(rng, mean=total_sky)))
-                # This deviate adds a noisy version of the sky, so need to subtract the mean back 
-                # off.
-                im -= total_sky
-    else:
-        im += extra_sky
-        # Do the normal PoissonNoise calculation.
-        im.addNoise(galsim.PoissonNoise(rng))
-        im -= extra_sky
+        if logger:
+            logger.debug('image %d, obj %d: Added Poisson noise', base['image_num'],base['obj_num'])
+        return var
 
-    if logger and logger.isEnabledFor(logging.DEBUG):
-        logger.debug('image %d, obj %d: Added Poisson noise', base['image_num'],base['obj_num'])
+    def getNoiseVariance(self, config, base):
+        # The noise variance is the net sky level per pixel
+        sky = GetSky(base['image'], base)
+        sky += GetSky(config, base)
+        return sky
 
-    return var
+    def addNoiseVariance(self, config, base, im, include_obj_var, logger):
+        if include_obj_var:
+            # The current image at this point should be the noise-free, sky-free image,
+            # which is the object variance in each pixel.
+            im += base['current_image']
 
+            # Note: For the phot case, we don't actually have an exact value for the variance in
+            # each pixel, but the drawn image before adding the Poisson noise is our best guess for
+            # the variance from the object's flux, so if we want the object variance included, this
+            # is still the best we can do.
 
-def NoiseVarPoisson(config, base):
-    # The noise variance is the net sky level per pixel
-
-    # Start with the background sky level for the image
-    sky = GetSky(base['image'], base)
-    sky += GetSky(config, base)
-    return sky
-
-
-def AddNoiseVariancePoisson(config, base, im, include_obj_var, logger):
-    if include_obj_var:
-        # The current image at this point should be the noise-free, sky-free image,
-        # which is the object variance in each pixel.
-        im += base['current_image']
-
-        # Note: For the phot case, we don't actually have an exact value for the variance in each 
-        # pixel, but the drawn image before adding the Poisson noise is our best guess for the 
-        # variance from the object's flux, so if we want the object variance included, this is 
-        # still the best we can do.
-
-    # Add the total sky level
-    im += NoiseVarPoisson(config, base)
+        # Add the total sky level
+        im += self.getNoiseVariance(config, base)
 
 
 #
 # CCD
 #
 
-def _GetCCDNoiseParams(config, base):
-    opt = { 'gain' : float , 'read_noise' : float }
-    ignore = ['sky_level', 'sky_level_pixel']
-    params = galsim.config.GetAllParams(config, base, opt=opt, ignore=noise_ignore + ignore)[0]
-    gain = params.get('gain',1.0)
-    read_noise = params.get('read_noise',0.0)
-    read_noise_var = read_noise**2
+class CCDNoiseBuilder(NoiseBuilder):
 
-    return gain, read_noise, read_noise_var
+    def getCCDNoiseParams(self, config, base):
+        opt = { 'gain' : float , 'read_noise' : float }
+        ignore = ['sky_level', 'sky_level_pixel']
+        params = galsim.config.GetAllParams(config, base, opt=opt, ignore=noise_ignore + ignore)[0]
+        gain = params.get('gain',1.0)
+        read_noise = params.get('read_noise',0.0)
+        read_noise_var = read_noise**2
 
-def AddNoiseCCD(config, base, im, current_var, logger):
+        return gain, read_noise, read_noise_var
 
-    # This process goes a lot like the Poisson routine.  There are just two differences.
-    # First, the Poisson noise is in electrons, not ADU, and now we allow for a gain = e-/ADU,
-    # so we need to account for that properly.  Second, we also allow for an additional Gaussian
-    # read noise.
-    gain, read_noise, read_noise_var = _GetCCDNoiseParams(config, base)
+    def addNoise(self, config, base, im, rng, current_var, logger):
 
-    # Get how much extra sky to assume from the image.noise attribute.
-    sky = GetSky(base['image'], base)
-    extra_sky = GetSky(config, base)
-    if not sky and not extra_sky:
-        raise AttributeError(
-            "Must provide either sky_level or sky_level_pixel for noise.type = Poisson")
-    var = sky + extra_sky + read_noise_var  # for the return value
+        # This process goes a lot like the Poisson routine.  There are just two differences.
+        # First, the Poisson noise is in electrons, not ADU, and now we allow for a gain = e-/ADU,
+        # so we need to account for that properly.  Second, we also allow for an additional Gaussian
+        # read noise.
+        gain, read_noise, read_noise_var = self.getCCDNoiseParams(config, base)
 
-    # If we already have some variance in the image (from whitening), then we try to subtract it 
-    # from the read noise if possible.  If now, we subtract the rest off of the sky level.  It's 
-    # not precisely accurate, since the existing variance is Gaussian, rather than Poisson, but 
-    # it's the best we can do.
-    if current_var:
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
-                         base['image_num'],base['obj_num'],
-                         read_noise_var+extra_sky, current_var)
-        if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
-            test = ((sky+extra_sky).image.array/gain + read_noise_var < current_var).any()
+        # Get how much extra sky to assume from the image.noise attribute.
+        sky = GetSky(base['image'], base)
+        extra_sky = GetSky(config, base)
+        if not sky and not extra_sky:
+            raise AttributeError(
+                "Must provide either sky_level or sky_level_pixel for noise.type = Poisson")
+        var = sky + extra_sky + read_noise_var  # for the return value
+
+        # If we already have some variance in the image (from whitening), then we try to subtract
+        # t from the read noise if possible.  If now, we subtract the rest off of the sky level.
+        # It's not precisely accurate, since the existing variance is Gaussian, rather than
+        # Poisson, but it's the best we can do.
+        if current_var:
+            if logger:
+                logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
+                            base['image_num'],base['obj_num'],
+                            read_noise_var+extra_sky, current_var)
+            if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
+                test = ((sky+extra_sky).image.array/gain + read_noise_var < current_var).any()
+            else:
+                test = (sky+extra_sky) / gain + read_noise_var < current_var
+            if test:
+                raise RuntimeError(
+                    "Whitening already added more noise than the requested CCD noise.")
+            if read_noise_var >= current_var:
+                # First try to take away from the read_noise, since this one is actually Gaussian.
+                import math
+                read_noise_var -= current_var
+                read_noise = math.sqrt(read_noise_var)
+            else:
+                # Take read_noise down to zero, since already have at least that much already.
+                current_var -= read_noise_var
+                read_noise = 0
+                read_noise_var = 0
+                # Take the rest away from the sky level
+                extra_sky -= current_var * gain
+
+        # At this point, there is a slight difference between fft and phot. For photon shooting,
+        # the galaxy already has Poisson noise, so we want to make sure not to add that again!
+        draw_method = galsim.config.GetCurrentValue('stamp.draw_method',base,str)
+        if draw_method == 'phot':
+            # Add in the noise from the sky.
+            if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
+                noise_im = sky + extra_sky
+                if gain != 1.0: noise_im *= gain
+                noise_im.addNoise(galsim.PoissonNoise(rng))
+                if gain != 1.0: noise_im /= gain
+                if sky:
+                    noise_im -= sky
+                if extra_sky:
+                    noise_im -= extra_sky
+                # noise_im should now have zero mean, but with the noise of the total sky level.
+                im += noise_im
+            else:
+                total_sky = sky + extra_sky
+                if total_sky > 0.:
+                    if gain != 1.0: im *= gain
+                    pd = galsim.PoissonDeviate(rng, mean=total_sky*gain)
+                    im.addNoise(galsim.DeviateNoise(pd))
+                    if gain != 1.0: im /= gain
+                    im -= total_sky
+            # And add the read noise
+            if read_noise != 0.:
+                im.addNoise(galsim.GaussianNoise(rng, sigma=read_noise))
         else:
-            test = (sky+extra_sky) / gain + read_noise_var < current_var
-        if test:
-            raise RuntimeError(
-                "Whitening already added more noise than the requested CCD noise.")
-        if read_noise_var >= current_var:
-            # First try to take away from the read_noise, since this one is actually Gaussian.
-            import math
-            read_noise_var -= current_var
-            read_noise = math.sqrt(read_noise_var)
-        else:
-            # Take read_noise down to zero, since already have at least that much already.
-            current_var -= read_noise_var
-            read_noise = 0
-            read_noise_var = 0
-            # Take the rest away from the sky level
-            extra_sky -= current_var * gain
+            # Do the normal CCDNoise calculation.
+            im += extra_sky
+            im.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
+            im -= extra_sky
 
-    # At this point, there is a slight difference between fft and phot. For photon shooting, the 
-    # galaxy already has Poisson noise, so we want to make sure not to add that again!
-    draw_method = galsim.config.GetCurrentValue('stamp.draw_method',base,str)
-    rng = base['noise_rng']
-    if draw_method == 'phot':
-        # Add in the noise from the sky.
-        if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
-            noise_im = sky + extra_sky
-            if gain != 1.0: noise_im *= gain
-            noise_im.addNoise(galsim.PoissonNoise(rng))
-            if gain != 1.0: noise_im /= gain
-            if sky:
-                noise_im -= sky
-            if extra_sky:
-                noise_im -= extra_sky
-            # noise_im should now have zero mean, but with the noise of the total sky level.
-            im += noise_im
-        else:
-            total_sky = sky + extra_sky
-            if total_sky > 0.:
-                if gain != 1.0: im *= gain
-                im.addNoise(galsim.DeviateNoise(galsim.PoissonDeviate(rng, mean=total_sky*gain)))
-                if gain != 1.0: im /= gain
-                im -= total_sky
-        # And add the read noise
-        if read_noise != 0.:
-            im.addNoise(galsim.GaussianNoise(rng, sigma=read_noise))
-    else:
-        # Do the normal CCDNoise calculation.
-        im += extra_sky
-        im.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
-        im -= extra_sky
+        if logger:
+            logger.debug('image %d, obj %d: Added CCD noise with gain = %f, read_noise = %f',
+                        base['image_num'],base['obj_num'],gain,read_noise)
 
-    if logger and logger.isEnabledFor(logging.DEBUG):
-        logger.debug('image %d, obj %d: Added CCD noise with gain = %f, read_noise = %f',
-                     base['image_num'],base['obj_num'],gain,read_noise)
+        return var
 
-    return var
+    def getNoiseVariance(self, config, base):
+        # The noise variance is sky / gain + read_noise^2
+        gain, read_noise, read_noise_var = self.getCCDNoiseParams(config, base)
 
-def NoiseVarCCD(config, base):
-    # The noise variance is sky / gain + read_noise^2
-    gain, read_noise, read_noise_var = _GetCCDNoiseParams(config, base)
+        # Start with the background sky level for the image
+        sky = GetSky(base['image'], base)
+        sky += GetSky(config, base)
 
-    # Start with the background sky level for the image
-    sky = GetSky(base['image'], base)
-    sky += GetSky(config, base)
+        # Account for the gain and read_noise
+        return sky / gain + read_noise_var
 
-    # Account for the gain and read_noise
-    return sky / gain + read_noise_var
+    def addNoiseVariance(self, config, base, im, include_obj_var, logger):
+        gain, read_noise, read_noise_var = self.getCCDNoiseParams(config, base)
+        if include_obj_var:
+            # The current image at this point should be the noise-free, sky-free image,
+            # which is the object variance in each pixel.
+            im += base['current_image']
 
-def AddNoiseVarianceCCD(config, base, im, include_obj_var, logger):
-    gain, read_noise, read_noise_var = _GetCCDNoiseParams(config, base)
-    if include_obj_var:
-        # The current image at this point should be the noise-free, sky-free image,
-        # which is the object variance in each pixel.
-        im += base['current_image']
+            # Account for the gain and read noise
+            if gain != 1.0:
+                import math
+                im /= math.sqrt(gain)
+            if read_noise_var != 0.0:
+                im += read_noise_var
 
-        # Account for the gain and read noise
-        if gain != 1.0:
-            import math
-            im /= math.sqrt(gain)
-        if read_noise_var != 0.0:
-            im += read_noise_var
+        # Otherwise, just add in the current sky noise and read noise:
+        sky = GetSky(base['image'], base)
+        sky += GetSky(config, base)
 
-    # Otherwise, just add in the current sky noise and read noise:
-    sky = GetSky(base['image'], base)
-    sky += GetSky(config, base)
-
-    if sky or read_noise_var != 0.0:
-        im += sky / gain + read_noise_var
+        if sky or read_noise_var != 0.0:
+            im += sky / gain + read_noise_var
 
 
 #
 # COSMOS
 #
 
-def _GetCOSMOSNoise(config, base):
-    # Save the constructed CorrelatedNoise object, since we might need it again.
-    tag = (base['file_num'], base['image_num'])
-    if config.get('current_cn_tag',None) == tag:
-        return config['current_cn']
-    else:
-        req = { 'file_name' : str }
-        opt = { 'cosmos_scale' : float, 'variance' : float }
-        
-        kwargs = galsim.config.GetAllParams(config, base, req=req, opt=opt, ignore=noise_ignore)[0]
-        rng = base['noise_rng']
-        cn = galsim.correlatednoise.getCOSMOSNoise(rng, **kwargs)
-        config['current_cn'] = cn
-        config['current_cn_tag'] = tag
-        return cn
+class COSMOSNoiseBuilder(NoiseBuilder):
 
-def AddNoiseCOSMOS(config, base, im, current_var, logger):
+    def __init__(self):
+        self.current_cn_tag = None
+        self.current_cn = None
 
-    # Build the correlated noise 
-    cn = _GetCOSMOSNoise(config,base)
-    var = cn.getVariance()
+    def getCOSMOSNoise(self, config, base, rng=None):
+        # Save the constructed CorrelatedNoise object, since we might need it again.
+        tag = (base['file_num'], base['image_num'])
+        if self.current_cn_tag == tag:
+            return self.current_cn
+        else:
+            req = { 'file_name' : str }
+            opt = { 'cosmos_scale' : float, 'variance' : float }
 
-    # Subtract off the current variance if any
-    if current_var:
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
-                         base['image_num'],base['obj_num'], var, current_var)
-        if var < current_var:
-            raise RuntimeError(
-                "Whitening already added more noise than the requested COSMOS noise.")
-        cn -= galsim.UncorrelatedNoise(rng, im.wcs, current_var)
+            kwargs = galsim.config.GetAllParams(config, base, req=req, opt=opt,
+                                                ignore=noise_ignore)[0]
+            if rng is None:
+                rng = base['rng']
+            cn = galsim.correlatednoise.getCOSMOSNoise(rng, **kwargs)
+            self.current_cn = cn
+            self.current_cn_tag = tag
+            return cn
 
-    # Add the noise to the image
-    im.addNoise(cn)
+    def addNoise(self, config, base, im, rng, current_var, logger):
 
-    if logger and logger.isEnabledFor(logging.DEBUG):
-        logger.debug('image %d, obj %d: Added COSMOS correlated noise with variance = %f',
-                     base['image_num'],base['obj_num'],var)
+        # Build the correlated noise
+        cn = self.getCOSMOSNoise(config,base,rng)
+        var = cn.getVariance()
 
-    return var
+        # Subtract off the current variance if any
+        if current_var:
+            if logger:
+                logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
+                            base['image_num'],base['obj_num'], var, current_var)
+            if var < current_var:
+                raise RuntimeError(
+                    "Whitening already added more noise than the requested COSMOS noise.")
+            cn -= galsim.UncorrelatedNoise(rng, im.wcs, current_var)
 
-def NoiseVarCOSMOS(config, base):
-    cn = _GetCOSMOSNoise(config,base)
-    return cn.getVariance()
+        # Add the noise to the image
+        im.addNoise(cn)
 
-def AddNoiseVarianceCOSMOS(config, base, im, include_obj_var, logger):
-    im += NoiseVarCOSMOS(config, base)
+        if logger:
+            logger.debug('image %d, obj %d: Added COSMOS correlated noise with variance = %f',
+                        base['image_num'],base['obj_num'],var)
+        return var
+
+    def getNoiseVariance(self, config, base):
+        cn = self.getCOSMOSNoise(config,base)
+        return cn.getVariance()
 
 
-valid_noise_types = {}
-
-def RegisterNoiseType(noise_type, addnoise_func, getvar_func, addvar_func):
+def RegisterNoiseType(noise_type, builder):
     """Register a noise type for use by the config apparatus.
 
     @param noise_type       The name of the type in config['image']['noise']
-    @param addnoise_func    The function to add noise to an image
-                            The call signature is:
-                                var = AddNoise(config, base, image, current_var, logger)
-    @param getvar_func      A function that returns the variance of the noise
-                            The call signature is 
-                                var = GetVar(config, base)
-    @param addvar_func      The function to add the variance of the noise to an image.
-                            The call signature is 
-                                AddVar(image, config, image, include_obj_var, logger)
+    @param builder          A builder object to use for building the noise.  It should be an
+                            instance of a subclass of NoiseBuilder.
     """
-    valid_noise_types[noise_type] = {
-        'noise' : addnoise_func,
-        'var' : getvar_func,
-        'addvar' : addvar_func,
-    }
+    valid_noise_types[noise_type] = builder
 
-RegisterNoiseType('Gaussian', AddNoiseGaussian, NoiseVarGaussian, AddNoiseVarianceGaussian)
-RegisterNoiseType('Poisson', AddNoisePoisson, NoiseVarPoisson, AddNoiseVariancePoisson)
-RegisterNoiseType('CCD', AddNoiseCCD, NoiseVarCCD, AddNoiseVarianceCCD)
-RegisterNoiseType('COSMOS', AddNoiseCOSMOS, NoiseVarCOSMOS, AddNoiseVarianceCOSMOS)
+RegisterNoiseType('Gaussian', GaussianNoiseBuilder())
+RegisterNoiseType('Poisson', PoissonNoiseBuilder())
+RegisterNoiseType('CCD', CCDNoiseBuilder())
+RegisterNoiseType('COSMOS', COSMOSNoiseBuilder())
 

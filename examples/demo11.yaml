@@ -42,7 +42,7 @@
 # We've also seen (in demo4.yaml) that YAML lets you tag values with an & in one place and
 # use them later with *.  It can be convenient to combine this notation with eval_variables
 # to let you define all the useful variables near the top of the config file and use them
-# either in Eval strings or as YAML tags.  Here, the only one use use both ways is pixel_scale,
+# either in Eval strings or as YAML tags.  Here, the only one we use both ways is pixel_scale,
 # but we show it for all of them to give you the idea.
 eval_variables :
 

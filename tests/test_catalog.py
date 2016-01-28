@@ -132,13 +132,13 @@ def test_output_catalog():
               galsim.Angle, galsim.PositionI, galsim.PositionD, galsim.Shear ]
     out_cat = galsim.OutputCatalog(names, types)
 
-    out_cat.add_row( [1.234, 4.131, 9, -3, 1, True, "He's", '"ceased', 'to', 'be"',
+    out_cat.addRow( [1.234, 4.131, 9, -3, 1, True, "He's", '"ceased', 'to', 'be"',
                       1.2 * galsim.degrees, galsim.PositionI(5,6),
                       galsim.PositionD(0.3,-0.4), galsim.Shear(g1=0.2, g2=0.1) ])
-    out_cat.add_row( (2.345, -900, 0.0, 8, False, 0, "bleedin'", '"bereft', 'of', 'life"',
+    out_cat.addRow( (2.345, -900, 0.0, 8, False, 0, "bleedin'", '"bereft', 'of', 'life"',
                       11 * galsim.arcsec, galsim.PositionI(-35,106),
                       galsim.PositionD(23.5,55.1), galsim.Shear(e1=-0.1, e2=0.15) ))
-    out_cat.add_row( [3.4560001, 8.e3, -4, 17.0, 1, 0, 'demised!', '"kicked', 'the', 'bucket"', 
+    out_cat.addRow( [3.4560001, 8.e3, -4, 17.0, 1, 0, 'demised!', '"kicked', 'the', 'bucket"',
                       0.4 * galsim.radians, galsim.PositionI(88,99),
                       galsim.PositionD(-0.99,-0.88), galsim.Shear() ])
 

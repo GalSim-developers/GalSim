@@ -25,22 +25,18 @@ import inspect
 # in config['output']. The ones that are defined natively in GalSim are psf, weight, badpix,
 # and truth.  See extra_*.py for the specific functions for each of these.
 
+# This module-level dict will store all the registered "extra" output types.
+# See the RegisterExtraOutput function at the end of this file.
+# The keys will be the (string) names of the extra output types, and the values will be
+# builder classes that will perform the different processing functions.
+valid_extra_outputs = {}
+
+
 def SetupExtraOutput(config, file_num=0, logger=None):
     """
-    Set up the extra output items as necessary, including building Managers for them
-    so their objects can be updated safely in multi-processing mode.
-
-    For example, the truth item needs to have the OutputCatalog set up and managed
-    so each process can add rows to it without getting race conditions or clobbering
-    each others' rows.
-
-    Each item that gets built will be placed in config['extra_objs'][key] where key is
-    the key in galsim.config.valid_extra_outputs.  The objects will actually be proxy objects
-    using a multiprocessing.Manager so that multiple processes can all communicate with it
-    correctly.  The objects here are what will eventually be written out. 
-
-    This also sets up a scratch dict that is similarly safe to use from multiple processes
-    called config['extra_scratch'][key].
+    Set up the extra output items as necessary, including building Managers for the work
+    space so they can work safely in multi-processing mode.  Each builder will be placed in
+    config['extra_builder'][key] where key is the key in galsim.config.valid_extra_outputs.
 
     @param config       The configuration dict.
     @param file_num     The file number being worked on currently. [default: 0]
@@ -58,61 +54,48 @@ def SetupExtraOutput(config, file_num=0, logger=None):
                 'current_nproc' not in config and
                 'image' in config and 'nproc' in config['image'] and
                 galsim.config.ParseValue(config['image'], 'nproc', config, int)[0] != 1 )
- 
+
         if use_manager and 'output_manager' not in config:
             from multiprocessing.managers import BaseManager, ListProxy, DictProxy
             class OutputManager(BaseManager): pass
- 
-            # Register each input field with the OutputManager class
-            for key in all_keys:
-                fields = output[key]
-                # Register this object with the manager
-                init_func = valid_extra_outputs[key]['init']
-                if init_func is None:
-                    OutputManager.register(key, list, ListProxy)
-                else:
-                    OutputManager.register(key, init_func)
-            # Also register dict to use for scratch space
+
+            # We'll use a list and a dict as work space to do the extra output processing.
             OutputManager.register('dict', dict, DictProxy)
+            OutputManager.register('list', list, ListProxy)
             # Start up the output_manager
             config['output_manager'] = OutputManager()
             config['output_manager'].start()
 
-        if 'extra_objs' not in config:
-            config['extra_objs'] = {}
-        if 'extra_scratch' not in config:
-            config['extra_scratch'] = {}
+        if 'extra_builder' not in config:
+            config['extra_builder'] = {}
 
         for key in all_keys:
-            if logger and logger.isEnabledFor(logging.DEBUG):
+            if logger:
                 logger.debug('file %d: Setup output item %s',file_num,key)
-            field = config['output'][key]
-            kwargs_func = valid_extra_outputs[key]['kwargs']
-            if kwargs_func is not None:
-                kwargs = kwargs_func(field, config, logger)
-            else:
-                # use default constructor
-                kwargs = {}
- 
-            init_func = valid_extra_outputs[key]['init']
+
+            # Make the work space structures
             if use_manager:
-                output_obj = getattr(config['output_manager'],key)(**kwargs)
+                data = config['output_manager'].list()
                 scratch = config['output_manager'].dict()
-            else: 
-                if init_func is None:
-                    output_obj = list()
-                else:
-                    output_obj = init_func(**kwargs)
+            else:
+                data = list()
                 scratch = dict()
-            if init_func is None:
-                # Make the output_obj list the right length now to avoid issues with multiple
-                # processes trying to append at the same time.
-                nimages = config['nimages']
-                for i in range(nimages): output_obj.append(None)
-            if logger and logger.isEnabledFor(logging.DEBUG):
+
+            # Make the data list the right length now to avoid issues with multiple
+            # processes trying to append at the same time.
+            nimages = config['nimages']
+            for k in range(nimages):
+                data.append(None)
+
+            # Create the builder, giving it the data and scratch objects as work space.
+            field = config['output'][key]
+            builder = valid_extra_outputs[key]
+            builder.initialize(data, scratch, field, config, logger)
+            # And store it in the config dict
+            config['extra_builder'][key] = builder
+
+            if logger:
                 logger.debug('file %d: Setup output %s object',file_num,key)
-            config['extra_objs'][key] = output_obj
-            config['extra_scratch'][key] = scratch
 
 
 def SetupExtraOutputsForImage(config, logger=None):
@@ -123,13 +106,9 @@ def SetupExtraOutputsForImage(config, logger=None):
     """
     if 'output' in config:
         for key in [ k for k in valid_extra_outputs.keys() if k in config['output'] ]:
-            scratch = config['extra_scratch'][key]
-            setup_func = valid_extra_outputs[key]['setup']
-            if setup_func is not None:
-                extra_obj = config['extra_objs'][key]
-                field = config['output'][key]
-                setup_func(extra_obj, scratch, field, config, logger)
-
+            builder = config['extra_builder'][key]
+            field = config['output'][key]
+            builder.setupImage(field, config, logger)
 
 def ProcessExtraOutputsForStamp(config, logger=None):
     """Run the appropriate processing code for any extra output items that need to do something
@@ -144,12 +123,9 @@ def ProcessExtraOutputsForStamp(config, logger=None):
     if 'output' in config:
         obj_num = config['obj_num']
         for key in [ k for k in valid_extra_outputs.keys() if k in config['output'] ]:
-            stamp_func = valid_extra_outputs[key]['stamp']
-            if stamp_func is not None:
-                extra_obj = config['extra_objs'][key]
-                scratch = config['extra_scratch'][key]
-                field = config['output'][key]
-                stamp_func(extra_obj, scratch, field, config, obj_num, logger)
+            builder = config['extra_builder'][key]
+            field = config['output'][key]
+            builder.processStamp(obj_num, field, config, logger)
 
 
 def ProcessExtraOutputsForImage(config, logger=None):
@@ -162,41 +138,21 @@ def ProcessExtraOutputsForImage(config, logger=None):
     if 'output' in config:
         obj_nums = None
         for key in [ k for k in valid_extra_outputs.keys() if k in config['output'] ]:
-            image_func = valid_extra_outputs[key]['image']
-            if image_func is not None:
-                if obj_nums is None:
-                    # Figure out which obj_nums were used for this image.
-                    file_num = config['file_num']
-                    image_num = config['image_num']
-                    start_image_num = config['start_image_num']
-                    start_obj_num = config['start_obj_num']
-                    nobj = config['nobj']
-                    k = image_num - start_image_num
-                    for i in range(k):
-                        start_obj_num += nobj[i]
-                    obj_nums = range(start_obj_num, start_obj_num+nobj[k])
-                extra_obj = config['extra_objs'][key]
-                scratch = config['extra_scratch'][key]
-                field = config['output'][key]
-                image_func(extra_obj, scratch, field, config, obj_nums, logger)
-
-
-def GetFinalExtraOutput(key, config, logger=None):
-    """Get the finalized output object for the given extra output key
-
-    @param key          The name of the output field in config['output']
-    @param config       The configuration dict.
-    @param logger       If given, a logger object to log progress. [default: None]
-
-    @returns the final data to be output.
-    """
-    extra_obj = config['extra_objs'][key]
-    final_func = valid_extra_outputs[key]['final']
-    if final_func is not None:
-        scratch = config['extra_scratch'][key]
-        field = config['output'][key]
-        extra_obj = final_func(extra_obj, scratch, field, config, logger)
-    return extra_obj
+            if obj_nums is None:
+                # Figure out which obj_nums were used for this image.
+                file_num = config['file_num']
+                image_num = config['image_num']
+                start_image_num = config['start_image_num']
+                start_obj_num = config['start_obj_num']
+                nobj = config['nobj']
+                k = image_num - start_image_num
+                for i in range(k):
+                    start_obj_num += nobj[i]
+                obj_nums = range(start_obj_num, start_obj_num+nobj[k])
+            builder = config['extra_builder'][key]
+            field = config['output'][key]
+            index = config['image_num'] - config['start_image_num']
+            builder.processImage(index, obj_nums, field, config, logger)
 
 
 def WriteExtraOutputs(config, logger=None):
@@ -227,13 +183,10 @@ def WriteExtraOutputs(config, logger=None):
         else:
             noclobber = False
 
-        if 'extra_objs_last_file' not in config:
-            config['extra_objs_last_file'] = {}
+        if 'extra_last_file' not in config:
+            config['extra_last_file'] = {}
 
         for key in [ k for k in valid_extra_outputs.keys() if k in output ]:
-            write_func = valid_extra_outputs[key]['write']
-            if write_func is None: continue
-
             field = output[key]
             if 'file_name' in field:
                 galsim.config.SetDefaultExt(field, '.fits')
@@ -250,31 +203,30 @@ def WriteExtraOutputs(config, logger=None):
                 file_name = os.path.join(dir,file_name)
 
             if noclobber and os.path.isfile(file_name):
-                if logger and logger.isEnabledFor(logging.WARN):
+                if logger:
                     logger.warn('Not writing %s file %d = %s because output.noclobber = True' +
                                 ' and file exists',key,config['file_num'],file_name)
                 continue
 
-            if config['extra_objs_last_file'].get(key, None) == file_name:
+            if config['extra_last_file'].get(key, None) == file_name:
                 # If we already wrote this file, skip it this time around.
                 # (Typically this is applicable for psf, where we may only want 1 psf file.)
-                if logger and logger.isEnabledFor(logging.INFO):
+                if logger:
                     logger.info('Not writing %s file %d = %s because already written',
                                 key,config['file_num'],file_name)
                 continue
 
-            extra_obj = GetFinalExtraOutput(key, config, logger)
+            builder = config['extra_builder'][key]
 
-            # If we have a method, we need to attach it to the extra_obj, since it might
-            # be a proxy, in which case the method call won't work.
-            if inspect.ismethod(write_func):
-                write_func = eval('extra_obj.' + write_func.__name__)
-                args = (file_name,)
-            else:
-                args = (extra_obj, file_name)
+            # Do any final processing that needs to happen.
+            builder.finalize(field, config, logger)
+
+            # Call the write function, possible multiple times to account for IO failures.
+            write_func = builder.writeFile
+            args = (file_name,field,config,logger)
             galsim.config.RetryIO(write_func, args, ntries, file_name, logger)
-            config['extra_objs_last_file'][key] = file_name
-            if logger and logger.isEnabledFor(logging.DEBUG):
+            config['extra_last_file'][key] = file_name
+            if logger:
                 logger.debug('file %d: Wrote %s to %r',config['file_num'],key,file_name)
 
 
@@ -297,9 +249,6 @@ def BuildExtraOutputHDUs(config, logger=None, first=1):
         output = config['output']
         hdus = {}
         for key in [ k for k in valid_extra_outputs.keys() if k in output ]:
-            hdu_func = valid_extra_outputs[key]['hdu']
-            if hdu_func is None: continue
-
             field = output[key]
             if 'hdu' in field:
                 hdu = galsim.config.ParseValue(field,'hdu',config,int)[0]
@@ -309,15 +258,13 @@ def BuildExtraOutputHDUs(config, logger=None, first=1):
             if hdu <= 0 or hdu in hdus.keys():
                 raise ValueError("%s hdu = %d is invalid or a duplicate."%hdu)
 
-            extra_obj = GetFinalExtraOutput(key, config, logger)
+            builder = config['extra_builder'][key]
 
-            # If we have a method, we need to attach it to the extra_obj, since it might
-            # be a proxy, in which case the method call won't work.
-            if inspect.ismethod(hdu_func):
-                hdu_func = eval('extra_obj.' + hdu_func.__name__)
-                hdus[hdu] = hdu_func()
-            else:
-                hdus[hdu] = hdu_func(extra_obj)
+            # Do any final processing that needs to happen.
+            builder.finalize(field, config, logger)
+
+            # Build the HDU for this output object.
+            hdus[hdu] = builder.writeHdu(field,config,logger)
 
         for h in range(first,len(hdus)+first):
             if h not in hdus.keys():
@@ -328,50 +275,138 @@ def BuildExtraOutputHDUs(config, logger=None, first=1):
     else:
         return []
 
-valid_extra_outputs = {}
+class ExtraOutputBuilder(object):
+    """A base class for building some kind of extra output object along with the main output.
 
-def RegisterExtraOutput(key, init_func=None, kwargs_func=None, setup_func=None, stamp_func=None,
-                        image_func=None, final_func=None, write_func=None, hdu_func=None):
+    The base class doesn't do anything, but it defines the function signatures that a derived
+    class can override to perform specific processing at any of several steps in the processing.
+
+    The builder gets initialized with a list and and dict to use as work space.
+    The typical work flow is to save something in scratch[obj_num] for each object built, and then
+    process them all at the end of each image into data[k].  Then finalize may do something
+    additional at the end of the processing to prepare the data to be written.
+
+    It's worth remembering that the objects could potentially be processed in a random order if
+    multiprocessing is being used.  The above work flow will thus work regardless of the order
+    that the stamps and/or images are processed.
+
+    Also, because of how objects are duplicated across processes during multiprocessing, you
+    should not count on attributes you set in the builder object during the stamp or image
+    processing stages to be present in the later finalize or write stages.  You should write
+    any information you want to persist into the scratch or data objects, which are set up
+    to handle the multiprocessing communication properly.
+    """
+    def initialize(self, data, scratch, config, base, logger):
+        """Do any initial setup for this builder at the start of a new output file.
+
+        The base class implementation saves two work space items into self.data and self.scratch
+        that can be used to safely communicate across multiple processes.
+
+        @param data         An empty list of length nimages to use as work space.
+        @param scratch      An empty dict that can be used as work space.
+        @param config       The configuration field for this output object.
+        @param base         The base configuration dict.
+        @param logger       If given, a logger object to log progress. [default: None]
+        """
+        self.data = data
+        self.scratch = scratch
+
+    def setupImage(self, config, base, logger):
+        """Perform any necessary setup at the start of an image.
+
+        This function will be called at the start of each image to allow for any setup that
+        needs to happen at this point in the processing.
+
+        @param config       The configuration field for this output object.
+        @param base         The base configuration dict.
+        @param logger       If given, a logger object to log progress. [default: None]
+        """
+        pass
+
+    def processStamp(self, obj_num, config, base, logger):
+        """Perform any necessary processing at the end of each stamp construction.
+
+        This function will be called after each stamp is built, but before the noise is added,
+        so the existing stamp image has the true surface brightness profile (unless photon shooting
+        was used, in which case there will necessarily be noise from that process).
+
+        Remember, these stamps may be processed out of order.  Saving data to the scratch dict
+        is safe, even if multiprocessing is being used.
+
+        @param obj_num      The object number
+        @param config       The configuration field for this output object.
+        @param base         The base configuration dict.
+        @param logger       If given, a logger object to log progress. [default: None]
+        """
+        pass
+
+    def processImage(self, index, obj_nums, config, base, logger):
+        """Perform any necessary processing at the end of each image construction.
+
+        This function will be called after each full image is built.
+
+        Remember, these images may be processed out of order.  But if using the default
+        constructor, the data list is already set to be the correct size, so it is safe to
+        access self.data[k], where k = base['image_num'] - base['start_image_num'] is the
+        appropriate index to use for this image.
+
+        @param index        The index in self.data to use for this image.  This isn't the image_num
+                            (which can be accessed at base['image_num'] if needed), but rather
+                            an index that starts at 0 for the first image being worked on and
+                            goes up to nimages-1.
+        @param obj_nums     The object numbers that were used for this image.
+        @param config       The configuration field for this output object.
+        @param base         The base configuration dict.
+        @param logger       If given, a logger object to log progress. [default: None]
+        """
+        pass
+
+    def finalize(self, config, base, logger):
+        """Perform any final processing at the end of all the image processing.
+
+        This function will be called after all images have been built.
+
+        @param config       The configuration field for this output object.
+        @param base         The base configuration dict.
+        @param logger       If given, a logger object to log progress. [default: None]
+        """
+        pass
+
+    def writeFile(self, file_name, config, base, logger):
+        """Write this output object to a file.
+
+        @param file_name    The file to write to.
+        @param config       The configuration field for this output object.
+        @param base         The base configuration dict.
+        @param logger       If given, a logger object to log progress. [default: None]
+        """
+        pass
+
+    def writeHdu(self, config, base, logger):
+        """Write the data to a FITS HDU with the data for this output object.
+
+        @param config       The configuration field for this output object.
+        @param base         The base configuration dict.
+        @param logger       If given, a logger object to log progress. [default: None]
+
+        @returns an HDU with the output data.
+        """
+        raise NotImplemented("The %s class has not overridden writeHdu."%self.__class__)
+
+
+def RegisterExtraOutput(key, builder):
     """Register an extra output field for use by the config apparatus.
 
+    The builder parameter should be a subclass of galsim.config.ExtraOutputBuilder.
+    See that class for the functions that should be defined and their signatures.
+    Not all functions need to be overridden.  If nothing needs to be done at a particular place
+    in the processing, you can leave the base class function, which doesn't do anything.
+
     @param key              The name of the output field in config['output']
-    @param init_func        A function or class name to use to build the output object. 
-                            [default: None, in which case the output "object" will be a list
-                            of length nimages that can be used to construct what is needed.]
-    @param kwargs_func      A function to get the initialization kwargs. [default: None, which
-                            means initialize with no arguments.]
-    @param setup_func       A function to call at the start of each image. 
-                            The call signature is
-                                Setup(output_obj, scratch, config, base, logger)
-    @param stamp_func       A function to call at the end of building each stamp.
-                            The call signature is 
-                                ProcessStamp(output_obj, scratch, config, base, obj_num, logger)
-    @param image_func       A function to call at the end of building each image
-                            The call signature is 
-                                ProcessImage(output_obj, scratch, config, base, obj_nums, logger)
-                            where obj_nums is a list of the object numbers used for this image.
-    @param final_func       A function to call at the end of the file processing to construct
-                            the final object to be written. [default: None, which means the
-                            init_func already created the correct object, so just use that.]
-                            The call signature is 
-                                output_obj = Finalize(output_obj, scratch, config, base, logger)
-    @param write_func       A function to call to write the output file
-                            The call signature is 
-                                WriteFile(output_obj, file_name)
-    @param hdu_func         A function to call to build a FITS HDU or an Image to put in an HDU.
-                            The call signature is   
-                                hdu = WriteToHDU(output_obj)
+    @param builder          A builder object to use for building the extra output object.
+                            It should be an instance of a subclass of ExtraOutputBuilder.
     """
-    valid_extra_outputs[key] = {
-        'init' : init_func,
-        'kwargs' : kwargs_func,
-        'setup' : setup_func,
-        'stamp' : stamp_func,
-        'image' : image_func,
-        'final' : final_func,
-        'write' : write_func,
-        'hdu' : hdu_func
-    }
+    valid_extra_outputs[key] = builder
 
 # Nothing is registered here.  The appropriate items are registered in extra_*.py.
 

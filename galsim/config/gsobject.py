@@ -22,6 +22,17 @@ import logging
 # This file includes many of the simple object types.  Additional types are defined in
 # gsobject_ring.py, input_real.py, and input_cosmos.py.
 
+# This module-level dict will store all the registered gsobject types.
+# See the RegisterObjectType function at the end of this file.
+# The keys will be the (string) names of the object types, and the values are the function
+# to call to build an object of that type.
+valid_gsobject_types = {}
+
+# A list of gsobject types that define a block of inter-related stamps.  This is only necessary
+# to support the deprecated Ring gsobject type.  Once that feature is fully removed, we can 
+# remove this structure.
+block_gsobject_types = []
+
 class SkipThisObject(Exception):
     """
     A class that a builder can throw to indicate that nothing went wrong, but for some
@@ -53,7 +64,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     if base is None:
         base = config
 
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('obj %d: Start BuildGSObject %s',base['obj_num'],key)
 
     # If key isn't in config, then just return None.
@@ -61,11 +72,11 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         param = config[key]
     except KeyError:
         return None, True
-    if False:
+    if logger:
         logger.debug('obj %d: param = %s',base['obj_num'],param)
 
     # Save these, so we can edit them based on parameters at this level in the tree to take
-    # effect an all lower branches, and then we can reset it back to this at the end.
+    # effect on all lower branches, and then we can reset it back to this at the end.
     orig_index_key = base.get('index_key',None)
     orig_rng = base.get('rng',None)
 
@@ -88,7 +99,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     if ('current_val' in param and
             (param['current_safe'] or param['current_index']//repeat == index//repeat)):
         # If logging, explain why we are using the current object.
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             if param['current_safe']:
                 logger.debug('obj %d: current is safe',base['obj_num'])
             elif repeat > 1:
@@ -109,7 +120,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     if 'skip' in param:
         skip = galsim.config.ParseValue(param, 'skip', base, bool)[0]
         if skip:
-            if logger and logger.isEnabledFor(logging.DEBUG):
+            if logger:
                 logger.debug('obj %d: Skipping because field skip=True',base['obj_num'])
             raise SkipThisObject()
 
@@ -169,8 +180,8 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
 
     # See if this type has a specialized build function:
     if type_name in valid_gsobject_types:
-        build_func = valid_gsobject_types[type_name]['func']
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        build_func = valid_gsobject_types[type_name]
+        if logger:
             logger.debug('obj %d: build_func = %s',base['obj_num'],build_func)
         gsobject, safe = build_func(param, base, ignore, gsparams, logger)
     # Next, we check if this name is in the galsim dictionary.
@@ -237,7 +248,7 @@ def _BuildSimple(config, base, ignore, gsparams, logger):
         init_func = eval("galsim."+type_name)
     else:
         init_func = eval(type_name)
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('obj %d: BuildSimple for type = %s',base['obj_num'],type_name)
         logger.debug('obj %d: init_func = %s',base['obj_num'],init_func)
 
@@ -254,7 +265,7 @@ def _BuildSimple(config, base, ignore, gsparams, logger):
         kwargs['rng'] = base['rng']
         safe = False
 
-    if False:
+    if logger:
         logger.debug('obj %d: kwargs = %s',base['obj_num'],kwargs)
 
     # Finally, after pulling together all the params, try making the GSObject.
@@ -285,7 +296,7 @@ def _BuildAdd(config, base, ignore, gsparams, logger):
         gsobject, safe1 = BuildGSObject(items, i, base, gsparams, logger)
         # Skip items with flux=0
         if 'flux' in items[i] and galsim.config.GetCurrentValue('flux',items[i],float) == 0.:
-            if logger and logger.isEnabledFor(logging.DEBUG):
+            if logger:
                 logger.debug('obj %d: Not including component with flux == 0',base['obj_num'])
             continue
         safe = safe and safe1
@@ -315,7 +326,7 @@ def _BuildAdd(config, base, ignore, gsparams, logger):
 
     if 'flux' in config:
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             logger.debug('obj %d: flux == %f',base['obj_num'],flux)
         gsobject = gsobject.withFlux(flux)
         safe = safe and safe1
@@ -351,7 +362,7 @@ def _BuildConvolve(config, base, ignore, gsparams, logger):
     
     if 'flux' in config:
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             logger.debug('obj %d: flux == %f',base['obj_num'],flux)
         gsobject = gsobject.withFlux(flux)
         safe = safe and safe1
@@ -381,7 +392,7 @@ def _BuildList(config, base, ignore, gsparams, logger):
 
     if 'flux' in config:
         flux, safe1 = galsim.config.ParseValue(config, 'flux', base, float)
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             logger.debug('obj %d: flux == %f',base['obj_num'],flux)
         gsobject = gsobject.withFlux(flux)
         safe = safe and safe1
@@ -445,42 +456,42 @@ def TransformObject(gsobject, config, base, logger):
 
 def _Shear(gsobject, config, key, base, logger):
     shear, safe = galsim.config.ParseValue(config, key, base, galsim.Shear)
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('obj %d: shear = %f,%f',base['obj_num'],shear.g1,shear.g2)
     gsobject = gsobject.shear(shear)
     return gsobject, safe
 
 def _Rotate(gsobject, config, key, base, logger):
     theta, safe = galsim.config.ParseValue(config, key, base, galsim.Angle)
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('obj %d: theta = %f rad',base['obj_num'],theta.rad())
     gsobject = gsobject.rotate(theta)
     return gsobject, safe
 
 def _ScaleFlux(gsobject, config, key, base, logger):
     flux_ratio, safe = galsim.config.ParseValue(config, key, base, float)
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('obj %d: flux_ratio  = %f',base['obj_num'],flux_ratio)
     gsobject = gsobject * flux_ratio
     return gsobject, safe
 
 def _Dilate(gsobject, config, key, base, logger):
     scale, safe = galsim.config.ParseValue(config, key, base, float)
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('obj %d: scale  = %f',base['obj_num'],scale)
     gsobject = gsobject.dilate(scale)
     return gsobject, safe
 
 def _Magnify(gsobject, config, key, base, logger):
     mu, safe = galsim.config.ParseValue(config, key, base, float)
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('obj %d: mu  = %f',base['obj_num'],mu)
     gsobject = gsobject.magnify(mu)
     return gsobject, safe
 
 def _Shift(gsobject, config, key, base, logger):
     shift, safe = galsim.config.ParseValue(config, key, base, galsim.PositionD)
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('obj %d: shift  = %f,%f',base['obj_num'],shift.x,shift.y)
     gsobject = gsobject.shift(shift.x,shift.y)
     return gsobject, safe
@@ -496,7 +507,7 @@ def _GetMinimumBlock(config, base):
     """
     if isinstance(config, dict) and 'type' in config:
         type_name = config['type']
-        if type_name in valid_gsobject_types and valid_gsobject_types[type_name]['block']:
+        if type_name in block_gsobject_types:
             num = galsim.config.ParseValue(config, 'num', base, int)[0]
             return num
         else:
@@ -504,8 +515,6 @@ def _GetMinimumBlock(config, base):
     else:
         return 1
 
-
-valid_gsobject_types = {}
 
 def RegisterObjectType(type_name, build_func, _is_block=False):
     """Register an object type for use by the config apparatus.
@@ -532,13 +541,12 @@ def RegisterObjectType(type_name, build_func, _is_block=False):
                             The call signature is
                                 obj, safe = Build(config, base, ignore, gsparams, logger)
     """
-    # Note: the is_block parameter is an undocumented feature only needed to support the
+    # Note: the _is_block parameter is an undocumented feature only needed to support the
     # now-deprecated type=Ring.  Once that feature is fully removed, we can remove the _is_block
     # parameter here.
-    valid_gsobject_types[type_name] = {
-        'func' : build_func,
-        'block' : _is_block
-    }
+    valid_gsobject_types[type_name] = build_func
+    if _is_block:
+        block_gsobject_types.append(type_name)
 
 RegisterObjectType('None', _BuildNone)
 RegisterObjectType('Add', _BuildAdd)

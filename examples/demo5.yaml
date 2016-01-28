@@ -41,6 +41,7 @@
 # - shift type : RandomCircle (radius)
 # - image type : Tiled (nx_tiles, ny_tiles, stamp_xsize, stamp_ysize, border)
 # - output type : Fits (file_name, dir)
+# - output.psf : shift
 
 
 # Define the PSF profile
@@ -164,3 +165,9 @@ output :
     
     psf :
         file_name : g08_psf.fits
+
+        # The psf output is also allowed to specify a shift if desired.
+        # There is a special allowed value here: 'galaxy' means to copy the same shift that was
+        # applied to the galaxy.  Whatever shift was chosen for the galaxy will be applied to the
+        # PSF as well.
+        shift : galaxy
