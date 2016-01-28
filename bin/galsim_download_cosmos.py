@@ -19,7 +19,7 @@
 A program to download the COSMOS RealGalaxy catalog for use with GalSim.
 """
 
-import os, sys, urllib2, tarfile, subprocess
+import os, sys, urllib2, tarfile, subprocess, shutil
 
 # Since this will be installed in the same directory as our galsim executable,
 # we need to do the same trick about changing the path so it imports the real
@@ -67,6 +67,12 @@ def parse_args():
         parser.add_argument(
             '-s', '--save', action='store_const', default=False, const=True,
             help="Save the tarball after unpacking.")
+        parser.add_argument(
+            '-d', '--dir', action='store', default=None,
+            help="Install into an alternate directory and link from the share/galsim directory")
+        parser.add_argument(
+            '--nolink', action='store_const', default=False, const=True,
+            help="Don't link to the alternate directory from share/galsim")
         args = parser.parse_args()
 
     except ImportError:
@@ -93,6 +99,12 @@ def parse_args():
         parser.add_option(
             '-s', '--save', action='store_const', default=False, const=True,
             help="Save the tarball after unpacking.")
+        parser.add_option(
+            '-d', '--dir', action='store', default=None,
+            help="Install into an alternate directory and link from the share/galsim directory")
+        parser.add_option(
+            '--nolink', action='store_const', default=False, const=True,
+            help="Don't link to the alternate directory from share/galsim")
         (args, posargs) = parser.parse_args()
 
         # Remembering to convert to an integer type
@@ -137,18 +149,25 @@ def query_yes_no(question, default="yes"):
             sys.stdout.write("Please respond with 'yes' or 'no' "\
                              "(or 'y' or 'n').\n")
 
-def download(url, target, unpack_dir, args, logger):
+def ensure_dir(target):
+    d = os.path.dirname(target)
+    if not os.path.exists(d):
+        os.makedirs(d)
 
+def download(url, target, unpack_dir, args, logger):
     logger.info('Downloading from url:\n  %s',url)
-    logger.info('Target location is:\n  %s',target)
+    logger.info('Target location is:\n  %s\n',target)
 
     # See how large the file to be downloaded is.
     u = urllib2.urlopen(url)
     meta = u.info()
-    logger.debug("\nMeta information about url:\n%s",str(meta))
+    logger.debug("Meta information about url:\n%s",str(meta))
     file_size = int(meta.getheaders("Content-Length")[0]) / 1024**2
     file_name = os.path.basename(url)
-    logger.info("\nSize of %s: %d MBytes" , file_name, file_size)
+    logger.info("Size of %s: %d MBytes" , file_name, file_size)
+
+    # Make sure the directory we want to put this file exists.
+    ensure_dir(target)
 
     # Check if the file already exists and if it is the right size
     do_download = True
@@ -182,49 +201,60 @@ def download(url, target, unpack_dir, args, logger):
         if args.force:
             logger.info("Target file has already been downloaded and unpacked.  "+
                         "Forced re-download.")
+        elif args.quiet:
+            logger.info("Target file has already been downloaded and unpacked.  "+
+                        "Not re-downloading.")
+            do_download = False
+            args.save = True  # Don't try to re-delete it!
         else:
-            if args.quiet:
-                logger.info("Target file has already been downloaded and unpacked.  "+
-                            "Not re-downloading.")
+            q = "Target file has already been downloaded and unpacked.  Re-download?"
+            yn = query_yes_no(q, default='no')
+            if yn == 'no':
                 do_download = False
-                args.save = True  # Don't try to re-delete it!
-            else:
-                q = "Target file has already been downloaded and unpacked.  Re-download?"
-                yn = query_yes_no(q, default='no')
-                if yn == 'no':
-                    do_download = False
-                    args.save = True
+                args.save = True
 
     # The next bit is based on one of the answers here: (by PabloG)
     # http://stackoverflow.com/questions/22676/how-do-i-download-a-file-over-http-using-python
-    # The progress bar feature in that answer is important here, since this will take a while,
-    # since the file is so big.
+    # The progress feature in that answer is important here, since downloading such a large file
+    # will take a while.
     if do_download:
         logger.info("")
-        with open(target, 'wb') as f:
-            file_size_dl = 0
-            block_sz = 32 * 1024
-            while True:
-                buffer = u.read(block_sz)
-                if not buffer:
-                    break
+        try:
+            with open(target, 'wb') as f:
+                file_size_dl = 0
+                block_sz = 32 * 1024
+                while True:
+                    buffer = u.read(block_sz)
+                    if not buffer:
+                        break
 
-                file_size_dl += len(buffer) / 1024
-                f.write(buffer)
+                    file_size_dl += len(buffer) / 1024
+                    f.write(buffer)
 
-                # Status bar
-                if args.verbosity >= 2:
-                    fsdl = file_size_dl / 1024
-                    status = r"Downloading: %5d / %d MBytes  [%3.2f%%]" % (
-                        fsdl, file_size, fsdl * 100. / file_size)
-                    status = status + chr(8)*(len(status)+1)
-                    print status,
-                    sys.stdout.flush()
-        logger.info("Download complete.")
+                    # Status bar
+                    if args.verbosity >= 2:
+                        fsdl = file_size_dl / 1024
+                        status = r"Downloading: %5d / %d MBytes  [%3.2f%%]" % (
+                            fsdl, file_size, fsdl * 100. / file_size)
+                        status = status + chr(8)*(len(status)+1)
+                        print status,
+                        sys.stdout.flush()
+            logger.info("Download complete.")
+        except IOError as e:
+            # Try to give a reasonable suggestion for some common IOErrors.
+            logger.error("\n\nIOError: %s",str(e))
+            if 'Permission denied' in str(e):
+                logger.error("Rerun using sudo %s",script_name)
+                logger.error("If this is not possible, you can download to an alternate location:")
+                logger.error("    %s -d dir_name --nolink\n",script_name)
+            elif 'Disk quota' in str(e) or 'No space' in str(e):
+                logger.error("You might need to download this in an alternate location and link:")
+                logger.error("    %s -d dir_name\n",script_name)
+            raise
 
     return do_download, target
 
-def unpack(new_download, target, share_dir, args, logger):
+def unpack(new_download, target, target_dir, args, logger):
     if new_download or args.unpack:
         logger.info("Unpacking the tarball...")
         with tarfile.open(target) as tar:
@@ -232,7 +262,7 @@ def unpack(new_download, target, share_dir, args, logger):
                 tar.list(verbose=True)
             elif args.verbosity >= 2:
                 tar.list(verbose=False)
-            tar.extractall(share_dir)
+            tar.extractall(target_dir)
         logger.info("Extracted contents of tar file.")
 
     if not args.save:
@@ -244,6 +274,42 @@ def unzip(target, args, logger):
     subprocess.call(["gunzip", target])
     logger.info("Done")
 
+def link_target(unpack_dir, link_dir, args, logger):
+    logger.debug("Linking to %s from %s", unpack_dir, link_dir)
+    if os.path.exists(link_dir):
+        if os.path.islink(link_dir):
+            # If it exists and is a link, we just remove it and relink without any fanfare.
+            logger.debug("Removing existing link")
+            os.remove(link_dir)
+        else:
+            # If it is not a link, we need to figure out what to do with it.
+            if os.path.isdir(link_dir):
+                # If it's a directory, probably want to keep it.
+                logger.warn("%s already exists and is a directory.",link_dir)
+                if args.force:
+                    logger.warn("Removing the existing files to make the link.")
+                elif args.quiet:
+                    logger.warn("Link cannot be made.  (Use -f to force removal of existing dir.)")
+                    return
+                else:
+                    q = "Remove the existing files to make the link?"
+                    yn = query_yes_no(q, default='no')
+                    if yn == 'no':
+                        return
+                shutil.rmtree(link_dir)
+            else:
+                # If it's not a directory, it's probably corrupt, so the default is to remove it.
+                logger.warn("%s already exists, but strangely isn't a directory.",link_dir)
+                if args.force or args.quiet:
+                    logger.warn("Removing the existing file.")
+                else:
+                    q = "Remove the existing file?"
+                    yn = query_yes_no(q, default='yes')
+                    if yn == 'no':
+                        return
+                os.path.remove(link_dir)
+    os.symlink(unpack_dir, link_dir)
+    logger.info("Made link to %s from %s", unpack_dir, link_dir)
 
 def main():
     args = parse_args()
@@ -266,10 +332,17 @@ def main():
     logger.info("Type %s -h to see command line options.",script_name)
 
     url = "http://great3.jb.man.ac.uk/leaderboard/data/public/COSMOS_23.5_training_sample.tar.gz"
+
     share_dir = galsim.meta_data.share_dir
+    if args.dir is not None:
+        target_dir = args.dir
+        link = not args.nolink
+    else:
+        target_dir = share_dir
+        link = False
 
     file_name = os.path.basename(url)
-    target = os.path.join(share_dir, file_name)
+    target = os.path.join(target_dir, file_name)
     unpack_dir = target[:-len('.tar.gz')]
 
     url2 = "http://great3.jb.man.ac.uk/leaderboard/data/public/real_galaxy_galsim_selection.fits.gz"
@@ -286,7 +359,13 @@ def main():
 
     else:
         new_download, target = download(url, target, unpack_dir, args, logger)
-        unpack(new_download, target, share_dir, args, logger)
+        unpack(new_download, target, target_dir, args, logger)
+
+    if link:
+        # Get the directory where this would normally have been unpacked.
+        link_dir = os.path.join(share_dir, file_name)[:-len('.tar.gx')]
+        link_target(unpack_dir, link_dir, args, logger)
+
 
 if __name__ == "__main__":
     main()
