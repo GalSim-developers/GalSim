@@ -28,6 +28,7 @@ See documentation here:
 """
 
 import galsim
+import galsim.config
 
 class DES_PSFEx(object):
     """Class that handles DES files describing interpolated principal component images
@@ -94,8 +95,8 @@ class DES_PSFEx(object):
                            directory.) (Default `dir = None`).  Cannot pass an HDU with this option.
     """
     # For config, image_file_name is required, since that always works in world coordinates.
-    _req_params = { 'file_name' : str , 'image_file_name' : str }
-    _opt_params = { 'dir' : str }
+    _req_params = { 'file_name' : str }
+    _opt_params = { 'dir' : str, 'image_file_name' : str }
     _single_params = []
     _takes_rng = False
 
@@ -294,38 +295,36 @@ class DES_PSFEx(object):
             xto[i] = x*xto[i-1]
         return xto
 
-# Now add this class to the config framework.
-import galsim.config
 
-# Allow the user to not provide the image file.  In this case, we'll grab the wcs from the
-# config dict.
-def DES_PSFExKwargs(config, base):
-    req = { 'file_name' : str }
-    opt = { 'dir' : str, 'image_file_name' : str }
-    kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
+class PSFExLoader(galsim.config.InputLoader):
+    # Allow the user to not provide the image file.  In this case, we'll grab the wcs from the
+    # config dict.
+    def getKwargs(self, config, base, logger):
+        req = { 'file_name' : str }
+        opt = { 'dir' : str, 'image_file_name' : str }
+        kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
 
-    if 'image_file_name' not in kwargs:
-        if 'wcs' in base:
-            wcs = base['wcs']
-            if wcs.isLocal():
-                # Then the wcs is already fine.
-                pass
-            elif 'image_pos' in base:
-                image_pos = base['image_pos']
-                wcs = wcs.local(image_pos)
-                safe = False
+        if 'image_file_name' not in kwargs:
+            if 'wcs' in base:
+                wcs = base['wcs']
+                if wcs.isLocal():
+                    # Then the wcs is already fine.
+                    pass
+                elif 'image_pos' in base:
+                    image_pos = base['image_pos']
+                    wcs = wcs.local(image_pos)
+                    safe = False
+                else:
+                    raise RuntimeError("No image_pos found in config, but wcs is not local.")
+                kwargs['wcs'] = wcs
             else:
-                raise RuntimeError("No image_pos found in config, but wcs is not local.")
-            kwargs['wcs'] = wcs
-        else:
-            # Then we aren't doing normal config processing, so just use pixel scale = 1.
-            kwargs['wcs'] = galsim.PixelScale(1.)
+                # Then we aren't doing normal config processing, so just use pixel scale = 1.
+                kwargs['wcs'] = galsim.PixelScale(1.)
 
-    return kwargs, safe
+        return kwargs, safe
 
 # First we need to add the class itself as a valid input_type.
-galsim.config.RegisterInputType('des_psfex',
-                                galsim.config.InputLoader(DES_PSFEx, ['DES_PSFEx']))
+galsim.config.RegisterInputType('des_psfex', PSFExLoader(DES_PSFEx, ['DES_PSFEx']))
 
 # Also make a builder to create the PSF object for a given position.
 # The builders require 4 args.

@@ -96,6 +96,7 @@ class TruthBuilder(ExtraOutputBuilder):
         for obj_num in obj_nums:
             row = self.scratch[obj_num]
             self.cat.addRow(row)
+        return self.cat
 
     # Write the catalog to a file
     def writeFile(self, file_name, config, base, logger):

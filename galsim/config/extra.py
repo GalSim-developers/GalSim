@@ -279,6 +279,19 @@ def AddExtraOutputHDUs(data, config, logger=None):
     else:
         return data
 
+def GetFinalExtraOutput(key, config, data, logger=None):
+    """Get the finalized output object for the given extra output key
+
+    @param key          The name of the output field in config['output']
+    @param config       The configuration dict.
+    @param data         The main file data in case it is needed.
+    @param logger       If given, a logger object to log progress. [default: None]
+
+    @returns the final data to be output.
+    """
+    field = config['output'][key]
+    return config['extra_builder'][key].finalize(field, config, logger)
+
 class ExtraOutputBuilder(object):
     """A base class for building some kind of extra output object along with the main output.
 
@@ -370,11 +383,17 @@ class ExtraOutputBuilder(object):
 
         This function will be called after all images have been built.
 
+        It returns some sort of final version of the object.  In the base class, it just returns
+        self.data, but depending on the meaning of the output object, something else might be
+        more appropriate.
+
         @param config       The configuration field for this output object.
         @param base         The base configuration dict.
         @param logger       If given, a logger object to log progress. [default: None]
+
+        @returns the final version of the object.
         """
-        pass
+        return self.data
 
     def writeFile(self, file_name, config, base, logger):
         """Write this output object to a file.

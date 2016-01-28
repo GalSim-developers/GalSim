@@ -24,6 +24,7 @@ stored in *_fitpsf.fits files.
 """
 
 import galsim
+import galsim.config
 
 class DES_Shapelet(object):
     """Class that handles DES files describing interpolated polar shapelet decompositions.
@@ -223,9 +224,6 @@ class DES_Shapelet(object):
         for i in range(2,self.fit_order+1):
             temp[i] = ((2.*i-1.)*x1*temp[i-1] - (i-1.)*temp[i-2]) / float(i)
         return temp
-
-# Now add this class to the config framework.
-import galsim.config
 
 # First we need to add the class itself as a valid input_type.
 galsim.config.RegisterInputType('des_shapelet',

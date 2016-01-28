@@ -27,6 +27,7 @@ output can subsequently be simulated directly using a config file.
 
 import numpy
 import galsim
+import galsim.config
 
 # these image stamp sizes are available in MEDS format
 BOX_SIZES = [32,48,64,96,128,192,256]
@@ -410,86 +411,85 @@ def WriteMEDS(obj_list, file_name, clobber=True):
     hdu_list.writeto(file_name,clobber=clobber)
 
 
-def BuildMEDS(config, file_num, image_num, obj_num, ignore, logger):
-    """
-    Build a meds file as specified in config.
+# Make the class that will 
+class MEDSBuilder(galsim.config.OutputBuilder):
 
-    @param config           A configuration dict.
-    @param file_num         The current file_num.
-    @param image_num        The current image_num.
-    @param obj_num          The current obj_num.
-    @param ignore           A list of parameters that are allowed to be in config['output']
-                            that we can ignore here.
-    @param logger           If given, a logger object to log progress.
+    def buildImages(self, config, base, file_num, image_num, obj_num, ignore, logger):
+        """
+        Build a meds file as specified in config.
 
-    @returns obj_list
-    """
-    import time
-    t1 = time.time()
+        @param config           The configuration dict for the output field.
+        @param base             The base configuration dict.
+        @param file_num         The current file_num.
+        @param image_num        The current image_num.
+        @param obj_num          The current obj_num.
+        @param ignore           A list of parameters that are allowed to be in config that we can
+                                ignore here.
+        @param logger           If given, a logger object to log progress.
 
-    if 'image' in config and 'type' in config['image']:
-        image_type = config['image']['type']
-        if image_type != 'Single':
-            raise AttibuteError("MEDS files are not compatible with image type %s."%image_type)
+        @returns obj_list
+        """
+        import time
+        t1 = time.time()
 
-    req = { 'nobjects' : int , 'nstamps_per_object' : int }
-    params = galsim.config.GetAllParams(config['output'],config,ignore=ignore,req=req)[0]
+        if 'image' in base and 'type' in base['image']:
+            image_type = base['image']['type']
+            if image_type != 'Single':
+                raise AttibuteError("MEDS files are not compatible with image type %s."%image_type)
 
-    nobjects = params['nobjects']
-    nstamps_per_object = params['nstamps_per_object']
-    ntot = nobjects * nstamps_per_object
+        req = { 'nobjects' : int , 'nstamps_per_object' : int }
+        params = galsim.config.GetAllParams(config,base,ignore=ignore,req=req)[0]
 
-    main_images = galsim.config.BuildImages(ntot, config, image_num=image_num,  obj_num=obj_num,
-                                            logger=logger)
+        nobjects = params['nobjects']
+        nstamps_per_object = params['nstamps_per_object']
+        ntot = nobjects * nstamps_per_object
 
-    weight_images = galsim.config.GetFinalExtraOutput('weight', config, logger)
-    if 'badpix' in config['output']:
-        badpix_images = galsim.config.GetFinalExtraOutput('badpix', config, logger)
-    else:
-        badpix_images = None
-    psf_images = galsim.config.GetFinalExtraOutput('psf', config, logger)
+        main_images = galsim.config.BuildImages(ntot, base, image_num=image_num,  obj_num=obj_num,
+                                                logger=logger)
 
-    obj_list = []
-    for i in range(nobjects):
-        k1 = i*nstamps_per_object
-        k2 = (i+1)*nstamps_per_object
-        if badpix_images is not None:
-            bpk = badpix_images[k1:k2]
+        weight_images = galsim.config.GetFinalExtraOutput('weight', base, logger)
+        if 'badpix' in config:
+            badpix_images = galsim.config.GetFinalExtraOutput('badpix', base, logger)
         else:
-            bpk = None
-        obj = MultiExposureObject(images = main_images[k1:k2],
-                                  weight = weight_images[k1:k2],
-                                  badpix = bpk,
-                                  psf = psf_images[k1:k2])
-        obj_list.append(obj)
+            badpix_images = None
+        psf_images = galsim.config.GetFinalExtraOutput('psf', base, logger)
 
-    return obj_list
+        obj_list = []
+        for i in range(nobjects):
+            k1 = i*nstamps_per_object
+            k2 = (i+1)*nstamps_per_object
+            if badpix_images is not None:
+                bpk = badpix_images[k1:k2]
+            else:
+                bpk = None
+            obj = MultiExposureObject(images = main_images[k1:k2],
+                                      weight = weight_images[k1:k2],
+                                      badpix = bpk,
+                                      psf = psf_images[k1:k2])
+            obj_list.append(obj)
 
-def NObjMEDS(config, file_num):
-    # This gets called before starting work on the file, so we can use this opportunity
-    # to make sure that weight and psf processing are turned on.
-    # We just add these as empty dicts, so there is no hdu or file_name parameter, which
-    # means they won't actually output anything, but the images will be built, so we can use
-    # them in BuildMEDS above.
-    if 'weight' not in config['output']:
-        config['output']['weight'] = {}
-    if 'psf' not in config['output']:
-        config['output']['psf'] = {}
+        return obj_list
 
-    output = config['output']
-    nobjects = galsim.config.ParseValue(output,'nobjects',config,int)[0]
-    nstamps_per_object = galsim.config.ParseValue(output,'nstamps_per_object',config,int)[0]
+    def writeFile(self, data, file_name):
+        WriteMEDS(data, file_name)
 
-    ntot = nobjects * nstamps_per_object
-    return ntot
+    def getNImages(self, config, base, file_num):
+        # This gets called before starting work on the file, so we can use this opportunity
+        # to make sure that weight and psf processing are turned on.
+        # We just add these as empty dicts, so there is no hdu or file_name parameter, which
+        # means they won't actually output anything, but the images will be built, so we can use
+        # them in BuildMEDS above.
+        if 'weight' not in config:
+            config['weight'] = {}
+        if 'psf' not in config:
+            config['psf'] = {}
 
-# Now add this to the config framework.
-import galsim.config
+        nobjects = galsim.config.ParseValue(config,'nobjects',base,int)[0]
+        nstamps_per_object = galsim.config.ParseValue(config,'nstamps_per_object',base,int)[0]
+
+        ntot = nobjects * nstamps_per_object
+        return ntot
 
 # Make this a valid output type:
-galsim.config.RegisterOutputType('MEDS',
-                                 build_func = BuildMEDS,
-                                 write_func = WriteMEDS,
-                                 nimages_func = NObjMEDS)
-
+galsim.config.RegisterOutputType('MEDS', MEDSBuilder())
 
