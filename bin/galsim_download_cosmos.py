@@ -29,6 +29,8 @@ sys.path = sys.path[1:]
 import galsim
 sys.path = [temp] + sys.path
 
+script_name = os.path.basename(__file__)
+
 
 def parse_args():
     """Handle the command line arguments using either argparse (if available) or optparse.
@@ -52,19 +54,19 @@ def parse_args():
         parser = argparse.ArgumentParser(description=description, epilog=epilog, add_help=True)
         parser.add_argument(
             '-v', '--verbosity', type=int, action='store', default=2, choices=(0, 1, 2, 3),
-            help='integer verbosity level: min=0, max=3 [default=2]')
+            help='Integer verbosity level: min=0, max=3 [default=2]')
         parser.add_argument(
             '-f', '--force', action='store_const', default=False, const=True,
-            help='force overwriting the current file if one exists')
+            help='Force overwriting the current file if one exists')
         parser.add_argument(
             '-q', '--quiet', action='store_const', default=False, const=True,
-            help="don't ask about re-downloading an existing file. (implied by verbosity=0)")
+            help="Don't ask about re-downloading an existing file. (implied by verbosity=0)")
         parser.add_argument(
             '-u', '--unpack', action='store_const', default=False, const=True,
-            help='re-unpack the tar file if not downloading')
+            help='Re-unpack the tar file if not downloading')
         parser.add_argument(
             '-s', '--save', action='store_const', default=False, const=True,
-            help="save the tarball after unpacking.")
+            help="Save the tarball after unpacking.")
         args = parser.parse_args()
 
     except ImportError:
@@ -72,25 +74,26 @@ def parse_args():
         import optparse
 
         # Usage string not automatically generated for optparse, so generate it
-        usage = """usage: galsim_download_cosmos [-h] [-v {0,1,2,3}] [-f] [-q] [-u] [-d]"""
+        usage = "usage: %s [-h] [-v {0,1,2,3}] [-f] [-q] [-u] [-s] [-d] [--nolink]"%script_name
         # Build the parser
         parser = optparse.OptionParser(usage=usage, description=description, epilog=epilog)
         # optparse only allows string choices, so take verbosity as a string and make it int later
         parser.add_option(
             '-v', '--verbosity', type="choice", action='store', choices=('0', '1', '2', '3'),
-            default='2', help='integer verbosity level: min=0, max=3 [default=2]')
+            default='2', help='Integer verbosity level: min=0, max=3 [default=2]')
         parser.add_option(
             '-f', '--force', action='store_const', default=False, const=True,
-            help='force overwriting the current file if one exists')
-        parser.add_argument(
+            help='Force overwriting the current file if one exists')
+        parser.add_option(
             '-q', '--quiet', action='store_const', default=False, const=True,
-            help="don't ask about re-downloading an existing file. (implied by verbosity=0)")
-        parser.add_argument(
+            help="Don't ask about re-downloading an existing file. (implied by verbosity=0)")
+        parser.add_option(
             '-u', '--unpack', action='store_const', default=False, const=True,
             help='Re-unpack the tar file if not downloading')
-        parser.add_argument(
+        parser.add_option(
             '-s', '--save', action='store_const', default=False, const=True,
-            help="save the tarball after unpacking.")
+            help="Save the tarball after unpacking.")
+        (args, posargs) = parser.parse_args()
 
         # Remembering to convert to an integer type
         args.verbosity = int(args.verbosity)
@@ -256,6 +259,11 @@ def main():
     # Setup logging to go to sys.stdout or (if requested) to an output file
     logging.basicConfig(format="%(message)s", level=logging_level, stream=sys.stdout)
     logger = logging.getLogger('galsim')
+
+    # Give diagnostic about GalSim version
+    logger.debug("GalSim version: %s",galsim.__version__)
+    logger.debug("This download script is: %s",__file__)
+    logger.info("Type %s -h to see command line options.",script_name)
 
     url = "http://great3.jb.man.ac.uk/leaderboard/data/public/COSMOS_23.5_training_sample.tar.gz"
     share_dir = galsim.meta_data.share_dir
