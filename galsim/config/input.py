@@ -151,6 +151,11 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                     try:
                         kwargs, safe = loader.getKwargs(field, config, logger)
                     except Exception as e:
+                        # If an exception was raised here, and we are doing the safe_only run,
+                        # then it probably needed an rng that we don't have yet.  So really, that
+                        # just implies that this input object isn't safe to keep around anyway.
+                        # So in this case, we just continue on.  If it was not a safe_only run,
+                        # the exception is reraised.
                         if safe_only:
                             if logger and logger.isEnabledFor(logging.DEBUG):
                                 logger.debug('file %d: Skip %s %d, since caugt exception: %s',
