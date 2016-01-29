@@ -368,7 +368,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
 
             # Sometimes, depending on the image type, we go on to do the rest of the noise as well.
             if do_noise:
-                im = builder.addNoise(config,im,skip,current_var,logger)
+                im = builder.addNoise(stamp,config,im,skip,current_var,logger)
 
             return im, current_var
 
@@ -460,7 +460,7 @@ class StampBuilder(object):
 
     def buildProfile(self, config, base, psf, gsparams, logger):
         """Build the surface brightness profile (a GSObject) to be drawn.
- 
+
         For the Basic stamp type, this builds a galaxy from the base['gal'] dict and convolves
         it with the psf (if given).  If either the psf or the galaxy is None, then the other one
         is returned as is.
@@ -642,12 +642,12 @@ class StampBuilder(object):
         else:
             return 1.
 
-    def addNoise(config, base, image, skip, current_var, logger):
+    def addNoise(self, config, base, image, skip, current_var, logger):
         """Add the sky level and the noise to the stamp.
 
         Note: This only gets called if the image type requests that the noise be added to each
               stamp individually, rather than to the full image and the end.
- 
+
         @param config           The configuration dict for the stamp field.
         @param base             The base configuration dict.
         @param image            The current image.
@@ -655,7 +655,7 @@ class StampBuilder(object):
                                 any noise.)
         @param current_var      The current noise variance present in the image already.
         @param logger           If given, a logger object to log progress. [default: None]
- 
+
         @returns the image with noise
         """
         galsim.config.AddSky(base,image)
