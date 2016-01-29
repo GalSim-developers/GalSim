@@ -387,6 +387,78 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 continue
 
 
+def DrawBasic(prof, image, method, offset, config, base, **kwargs):
+    """The basic implementation of the draw command
+
+    This function is provided as a free function, rather than just the base class implementation
+    in StampBuilder to make it easier for classes derived from StampBuilder to use to help
+    implement their draw functions.  The base class, StampBuilder, just calls this function
+    for its draw method.
+
+    This version also allows for additional kwargs, which are passed on to the drawImage function.
+    e.g. you can add add_to_image=True or setup_only=True if these are helpful.
+
+    @param prof         The profile to draw.
+    @param image        The image onto which to draw the profile (which may be None).
+    @param method       The method to use in drawImage.
+    @param offset       The offset to apply when drawing.
+    @param config       The configuration dict for the stamp field.
+    @param base         The base configuration dict.
+    @param **kwargs     Any additional kwargs are passed along to the drawImage function.
+
+    @returns the resulting image
+    """
+    # Setup the kwargs to pass to drawImage
+    # (Start with any additional kwargs given as extra kwargs to DrawBasic and add to it.)
+    kwargs['image'] = image
+    kwargs['offset'] = offset
+    kwargs['method'] = method
+    if 'wmult' in config and 'wmult' not in kwargs:
+        kwargs['wmult'] = galsim.config.ParseValue(config, 'wmult', base, float)[0]
+    if 'wcs' not in kwargs:
+        kwargs['wcs'] = base['wcs'].local(image_pos = base['image_pos'])
+    if method == 'phot' and 'rng' not in kwargs:
+        kwargs['rng'] = base['rng']
+
+    # Check validity of extra phot options:
+    max_extra_noise = None
+    if 'n_photons' in config and 'n_photons' not in kwargs:
+        if method != 'phot':
+            raise AttributeError('n_photons is invalid with method != phot')
+        if 'max_extra_noise' in config:
+            if logger:
+                logger.warn(
+                    "Both 'max_extra_noise' and 'n_photons' are set in config dict, "+
+                    "ignoring 'max_extra_noise'.")
+        kwargs['n_photons'] = galsim.config.ParseValue(config, 'n_photons', base, int)[0]
+    elif 'max_extra_noise' in config:
+        if method != 'phot':
+            raise AttributeError('max_extra_noise is invalid with method != phot')
+        max_extra_noise = galsim.config.ParseValue(config, 'max_extra_noise', base, float)[0]
+    elif method == 'phot':
+        max_extra_noise = 0.01
+
+    if 'poisson_flux' in config and 'poisson_flux' not in kwargs:
+        if method != 'phot':
+            raise AttributeError('poisson_flux is invalid with method != phot')
+        kwargs['poisson_flux'] = galsim.config.ParseValue(config, 'poisson_flux', base, bool)[0]
+
+    if max_extra_noise is not None and 'max_extra_noise' not in kwargs:
+        if max_extra_noise < 0.:
+            raise ValueError("image.max_extra_noise cannot be negative")
+        if max_extra_noise > 0.:
+            if 'image' in base and 'noise' in base['image']:
+                noise_var = galsim.config.CalculateNoiseVar(base)
+            else:
+                raise AttributeError("Need to specify noise level when using max_extra_noise")
+            if noise_var < 0.:
+                raise ValueError("noise_var calculated to be < 0.")
+            max_extra_noise *= noise_var
+            kwargs['max_extra_noise'] = max_extra_noise
+
+    image = prof.drawImage(**kwargs)
+    return image
+
 class StampBuilder(object):
     """A base class for building stamp images of individual objects.
 
@@ -520,55 +592,7 @@ class StampBuilder(object):
 
         @returns the resulting image
         """
-        # Setup the kwargs to pass to drawImage
-        kwargs = {}
-        kwargs['image'] = image
-        kwargs['offset'] = offset
-        kwargs['method'] = method
-        if 'wmult' in config:
-            kwargs['wmult'] = galsim.config.ParseValue(config, 'wmult', base, float)[0]
-        kwargs['wcs'] = base['wcs'].local(image_pos = base['image_pos'])
-        if method == 'phot':
-            kwargs['rng'] = base['rng']
-
-        # Check validity of extra phot options:
-        max_extra_noise = None
-        if 'n_photons' in config:
-            if method != 'phot':
-                raise AttributeError('n_photons is invalid with method != phot')
-            if 'max_extra_noise' in config:
-                if logger:
-                    logger.warn(
-                        "Both 'max_extra_noise' and 'n_photons' are set in config dict, "+
-                        "ignoring 'max_extra_noise'.")
-            kwargs['n_photons'] = galsim.config.ParseValue(config, 'n_photons', base, int)[0]
-        elif 'max_extra_noise' in config:
-            if method != 'phot':
-                raise AttributeError('max_extra_noise is invalid with method != phot')
-            max_extra_noise = galsim.config.ParseValue(config, 'max_extra_noise', base, float)[0]
-        elif method == 'phot':
-            max_extra_noise = 0.01
-
-        if 'poisson_flux' in config:
-            if method != 'phot':
-                raise AttributeError('poisson_flux is invalid with method != phot')
-            kwargs['poisson_flux'] = galsim.config.ParseValue(config, 'poisson_flux', base, bool)[0]
-
-        if max_extra_noise is not None:
-            if max_extra_noise < 0.:
-                raise ValueError("image.max_extra_noise cannot be negative")
-            if max_extra_noise > 0.:
-                if 'image' in base and 'noise' in base['image']:
-                    noise_var = galsim.config.CalculateNoiseVar(base)
-                else:
-                    raise AttributeError("Need to specify noise level when using max_extra_noise")
-                if noise_var < 0.:
-                    raise ValueError("noise_var calculated to be < 0.")
-                max_extra_noise *= noise_var
-                kwargs['max_extra_noise'] = max_extra_noise
-
-        image = prof.drawImage(**kwargs)
-        return image
+        return DrawBasic(prof,image,method,offset,config,base)
 
     def whiten(self, prof, image, config, base):
         """If appropriate, whiten the resulting image according to the requested noise profile
