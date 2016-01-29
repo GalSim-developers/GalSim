@@ -145,6 +145,10 @@ stamp:
     retry_failures: 500
 
 eval_variables:
+    # We use the fwhm of the PSF in a couple of other places.  To make sure the config parser
+    # knows its a float variable, we put it here with the f code.
+    fpsf_fwhm: { type: Current, key : 'psf.items.0.fwhm' }
+
     # Here is the line in the original great3 scripts:
     # https://github.com/barnabytprowe/great3-public/blob/master/great3sims/noise.py#L97
     # The point was to have a consistent lower limit on the S/N level of the galaxies for
@@ -153,7 +157,7 @@ eval_variables:
     # was based on running experiments with different seeing values, and checking how the S/N varied
     # at fixed noise variance.  The results of those experiments were used to create a LookupTable
     # in the GREAT3 scripts, but the formula below is pretty close.
-    fmax_var: '$0.004 * math.exp(2.9 * (1.1-@psf.items.0.fwhm) * (0.95-@psf.items.0.fwhm))'
+    fmax_var: '$0.004 * math.exp(2.9 * (1.1-psf_fwhm) * (0.95-psf_fwhm))'
 
 
 image:
@@ -207,19 +211,23 @@ input:
         # default, but specify it in case that changes in future.
         exclusion_level: marginal
 
-        # We just need some parameters to tell it which galaxies to include in the selection.
-        # For now, just a maximum hlr to exclude huge objects, although cf. issue #693.
-        #max_hlr : 2.5  # arcsec
+        # The Great3Reject code (in great3_reject.py) rejects a large fraction of the objects
+        # in the COSMOS catalog.  Mostly because they are too small compared to the PSF.
+        # We can apply a preselection based on the half-light-radius that cuts out about
+        # 80% of the galaxies that would otherwise get cut by the resolution check, while
+        # only removing 5% of the galaxies that would have passed.  This helps to significantly
+        # speed up the calculation, because these galaxies never get selected in the first place,
+        # so they don't get drawn and then rejected.
+        # The code that estimates this is in GalSim/devel/external/radius_flux_cuts.py
+        # Note that the min_hlr is referring to the half-light-radius in the COSMOS catalog,
+        # so without the dilation factor of 0.6 applied above.
+        min_hlr : '$(psf_fwhm * 0.085/0.45 + 0.064) / 0.6'
 
-        # This still leaves in a lot of bright objects that visibly overflow the edge of the
-        # postage stamps.  Great3 imposed a maximum S/N of 100 and a minimum of 17.
-        # Using the noise over 50 pixels as a *very rough!* estimate of the total noise
-        # (50 ~= pi r^2 where r = 4 pixels is close to the typical FWHM.), I find that the
-        # corresponding flux range is around 8 to 50 ADU.
-        # Again, hopefully, this can be improved as part of issue #693 and we can
-        # just give max_snr, min_snr, given a noise level.
+        # Great3 also imposed a maximum S/N of 100 and a minimum of 17.  A similar preselection
+        # on the flux can cut out most of the objects that would otherwise be rejected for the
+        # S/N cut while only cutting out a small fraction of the objects that would pass.
         #min_flux : 8
-        #max_flux : 50
+        max_flux : '$32.5 + 32.5*(psf_fwhm-0.76)**2'
 
 output:
     type: Fits
