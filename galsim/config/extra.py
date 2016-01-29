@@ -415,15 +415,21 @@ class ExtraOutputBuilder(object):
     def writeFile(self, file_name, config, base, logger):
         """Write this output object to a file.
 
+        The base class implementation is appropriate for the cas that the result of finalize
+        is a list of images to be written to a FITS file.
+
         @param file_name    The file to write to.
         @param config       The configuration field for this output object.
         @param base         The base configuration dict.
         @param logger       If given, a logger object to log progress. [default: None]
         """
-        pass
+        galsim.fits.writeMulti(self.final_data, file_name)
 
     def writeHdu(self, config, base, logger):
         """Write the data to a FITS HDU with the data for this output object.
+
+        The base class implementation is appropriate for the cas that the result of finalize
+        is a list of images of length 1 to be written to a FITS file.
 
         @param config       The configuration field for this output object.
         @param base         The base configuration dict.
@@ -431,7 +437,13 @@ class ExtraOutputBuilder(object):
 
         @returns an HDU with the output data.
         """
-        raise NotImplemented("The %s class has not overridden writeHdu."%self.__class__)
+        n = len(self.data)
+        if n == 0:
+            raise RuntimeError("No %s images were created."%self._extra_output_key)
+        elif n > 1:
+            raise RuntimeError(
+                    "%d %s images were created, but expecting only 1."%(n,self._extra_output_key))
+        return self.data[0]
 
 
 def RegisterExtraOutput(key, builder):
@@ -446,6 +458,7 @@ def RegisterExtraOutput(key, builder):
     @param builder          A builder object to use for building the extra output object.
                             It should be an instance of a subclass of ExtraOutputBuilder.
     """
+    builder._extra_output_key = key
     valid_extra_outputs[key] = builder
 
 # Nothing is registered here.  The appropriate items are registered in extra_*.py.

@@ -60,19 +60,6 @@ class BadPixBuilder(ExtraOutputBuilder):
             pass
         self.data[index] = image
 
-    # Write the image(s) to a file
-    def writeFile(self, file_name, config, base, logger):
-        galsim.fits.writeMulti(self.data, file_name)
-
-    # For the hdu, just return the first element
-    def writeHdu(self, config, base, logger):
-        n = len(self.data)
-        if n == 0:
-            raise RuntimeError("No badpix images were created.")
-        elif n > 1:
-            raise RuntimeError("%d badpix images were created, but expecting only 1."%n)
-        return self.data[0]
-
 
 # Register this as a valid extra output
 from .extra import RegisterExtraOutput
