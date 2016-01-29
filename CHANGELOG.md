@@ -37,7 +37,6 @@ New Features
   truth information.  cf. demos 9 and 10. (#301, #691)
 - Added methods calculateHLR, calculateMomentRadius, and calculateFWHM to both
   GSObject and Image. (#308)
-- Added OutputCatalog class (#301, #691)
 - Added BoundsI.numpyShape() to easily get the numpy shape that corresponds
   to a given bounds instance. (#654)
 - Changed `galsim.fits.writeMulti` to allow any of the "image"s to be
