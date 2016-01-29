@@ -155,13 +155,13 @@ def ProcessExtraOutputsForImage(config, logger=None):
             builder.processImage(index, obj_nums, field, config, logger)
 
 
-def WriteExtraOutputs(config, data, logger=None):
+def WriteExtraOutputs(config, main_data, logger=None):
     """Write the extra output objects to files.
 
     This gets run at the end of the functions for building the regular output files.
 
     @param config       The configuration dict.
-    @param data         The main file data in case it is needed.
+    @param main_data    The main file data in case it is needed.
     @param logger       If given, a logger object to log progress. [default: None]
     """
     config['index_key'] = 'file_num'
@@ -220,7 +220,7 @@ def WriteExtraOutputs(config, data, logger=None):
             builder = config['extra_builder'][key]
 
             # Do any final processing that needs to happen.
-            builder.ensureFinalized(field, config, logger)
+            builder.ensureFinalized(field, config, main_data, logger)
 
             # Call the write function, possible multiple times to account for IO failures.
             write_func = builder.writeFile
@@ -231,7 +231,7 @@ def WriteExtraOutputs(config, data, logger=None):
                 logger.debug('file %d: Wrote %s to %r',config['file_num'],key,file_name)
 
 
-def AddExtraOutputHDUs(config, data, logger=None):
+def AddExtraOutputHDUs(config, main_data, logger=None):
     """Write the extra output objects to either HDUS or images as appropriate and add them
     to the existing data.
 
@@ -241,7 +241,7 @@ def AddExtraOutputHDUs(config, data, logger=None):
     at len(data).  Typically first = 1, since the main image is the primary HDU, numbered 0.
 
     @param config       The configuration dict.
-    @param data         The main file data as a list of images.  Usually just [image] where
+    @param main_data    The main file data as a list of images.  Usually just [image] where
                         image is the primary image to be written to the output file.
     @param logger       If given, a logger object to log progress. [default: None]
 
@@ -264,33 +264,33 @@ def AddExtraOutputHDUs(config, data, logger=None):
             builder = config['extra_builder'][key]
 
             # Do any final processing that needs to happen.
-            builder.ensureFinalized(field, config, logger)
+            builder.ensureFinalized(field, config, main_data, logger)
 
             # Build the HDU for this output object.
             hdus[hdu] = builder.writeHdu(field,config,logger)
 
-        first = len(data)
+        first = len(main_data)
         for h in range(first,len(hdus)+first):
             if h not in hdus.keys():
                 raise ValueError("Cannot skip hdus.  Not output found for hdu %d"%h)
         # Turn hdus into a list (in order)
         hdulist = [ hdus[k] for k in range(first,len(hdus)+first) ]
-        return data + hdulist
+        return main_data + hdulist
     else:
-        return data
+        return main_data
 
-def GetFinalExtraOutput(key, config, data, logger=None):
+def GetFinalExtraOutput(key, config, main_data, logger=None):
     """Get the finalized output object for the given extra output key
 
     @param key          The name of the output field in config['output']
     @param config       The configuration dict.
-    @param data         The main file data in case it is needed.
+    @param main_data    The main file data in case it is needed.
     @param logger       If given, a logger object to log progress. [default: None]
 
     @returns the final data to be output.
     """
     field = config['output'][key]
-    return config['extra_builder'][key].ensureFinalized(field, config, logger)
+    return config['extra_builder'][key].ensureFinalized(field, config, main_data, logger)
 
 class ExtraOutputBuilder(object):
     """A base class for building some kind of extra output object along with the main output.
@@ -379,21 +379,22 @@ class ExtraOutputBuilder(object):
         """
         pass
 
-    def ensureFinalized(self, config, base, logger):
+    def ensureFinalized(self, config, base, main_data, logger):
         """A helper function in the base class to make sure finalize only gets called once by the
         different possible locations that might need it to have been called.
 
         @param config       The configuration field for this output object.
         @param base         The base configuration dict.
+        @param main_data    The main file data in case it is needed.
         @param logger       If given, a logger object to log progress. [default: None]
 
         @returns the final version of the object.
         """
         if self.final_data is None:
-            self.final_data = self.finalize(config, base, logger)
+            self.final_data = self.finalize(config, base, main_data, logger)
         return self.final_data
 
-    def finalize(self, config, base, logger):
+    def finalize(self, config, base, main_data, logger):
         """Perform any final processing at the end of all the image processing.
 
         This function will be called after all images have been built.
@@ -404,6 +405,7 @@ class ExtraOutputBuilder(object):
 
         @param config       The configuration field for this output object.
         @param base         The base configuration dict.
+        @param main_data    The main file data in case it is needed.
         @param logger       If given, a logger object to log progress. [default: None]
 
         @returns the final version of the object.
