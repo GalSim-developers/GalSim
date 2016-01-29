@@ -216,7 +216,7 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     data = builder.buildImages(output, config, file_num, image_num, obj_num, ignore, logger)
 
     if builder.canAddHdus():
-        data = galsim.config.AddExtraOutputHDUs(data,config,logger)
+        data = galsim.config.AddExtraOutputHDUs(config,data,logger)
 
     if 'retry_io' in output:
         ntries = galsim.config.ParseValue(output,'retry_io',config,int)[0]

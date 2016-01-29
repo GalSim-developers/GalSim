@@ -231,7 +231,7 @@ def WriteExtraOutputs(config, data, logger=None):
                 logger.debug('file %d: Wrote %s to %r',config['file_num'],key,file_name)
 
 
-def AddExtraOutputHDUs(data, config, logger=None):
+def AddExtraOutputHDUs(config, data, logger=None):
     """Write the extra output objects to either HDUS or images as appropriate and add them
     to the existing data.
 
