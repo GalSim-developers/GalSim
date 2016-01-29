@@ -101,17 +101,19 @@ def _GenerateFromEval(config, base, value_type):
         exec(key[1:] + ' = params[key]')
         #print key[1:],'=',eval(key[1:])
 
-    # Also bring in any top level eval_variables
-    if 'eval_variables' in base and not 'parsing_eval_variables' in base:
+    # Also bring in any top level eval_variables that might be relevant.
+    if 'eval_variables' in base:
         #print 'found eval_variables = ',base['eval_variables']
         if not isinstance(base['eval_variables'],dict):
             raise AttributeError("eval_variables must be a dict")
-        # Make sure we don't recurse this process if any eval_variables are also Eval type.
-        base['parsing_eval_variables'] = True
         opt = {}
+        ignore = []
         for key in base['eval_variables'].keys():
-            if key not in ignore:
+            # Only add variables that appear in the string.
+            if key[1:] in string:
                 opt[key] = _type_by_letter(key)
+            else:
+                ignore.append(key)
         #print 'opt = ',opt
         params, safe1 = galsim.config.GetAllParams(base['eval_variables'],
                                                    base, opt=opt, ignore=ignore)
@@ -120,7 +122,6 @@ def _GenerateFromEval(config, base, value_type):
         for key in opt.keys():
             exec(key[1:] + ' = params[key]')
             #print key[1:],'=',eval(key[1:])
-        del base['parsing_eval_variables']
 
     # Try evaluating the string as is.
     try:
