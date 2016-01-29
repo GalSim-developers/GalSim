@@ -27,29 +27,19 @@ Bug Fixes
   ChromaticObjects and image-setup keyword arguments (#683)
 - Added ability to manipulate the width of the moment-measuring weight function
   for the KSB shear estimation method of the galsim.hsm package. (#686)
-<<<<<<< HEAD
-- Fixed bug the (undocumented) function COSMOSCatalog._makeSingleGalaxy,
-=======
 - Fixed bug in the (undocumented) function COSMOSCatalog._makeSingleGalaxy,
->>>>>>> #691
   where the resulting object did not set the index attribute properly. (#694)
 
 
 New Features
 ------------
-<<<<<<< HEAD
+- Added OutputCatalog class, which can be used to keep track of and then output
+  truth information.  cf. demos 9 and 10. (#301, #691)
 - Added methods calculateHLR, calculateMomentRadius, and calculateFWHM to both
   GSObject and Image. (#308)
 - Added OutputCatalog class (#301, #691)
 - Added BoundsI.numpyShape() to easily get the numpy shape that corresponds
   to a given bounds instance. (#654)
-=======
-
-- Added OutputCatalog class, which can be used to keep track of and then output
-  truth information.  cf. demos 9 and 10. (#301, #691)
-- Added methods calculateHLR, calculateMomentRadius, and calculateFWHM to both
-  GSObject and Image. (#308)
->>>>>>> #691
 - Changed `galsim.fits.writeMulti` to allow any of the "image"s to be
   already-built hdus, which are included as is. (#691)
 - Added optional `wcs` argument to `Image.resize()`. (#691)
@@ -88,7 +78,4 @@ New config features
   'gsparams', among other less commonly used parameters.  However, for
   backwards compatibility, they are all still allowed in the image field
   as well. (#691)
-<<<<<<< HEAD
-=======
 
->>>>>>> #691
