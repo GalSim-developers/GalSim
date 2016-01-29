@@ -220,7 +220,7 @@ def WriteExtraOutputs(config, data, logger=None):
             builder = config['extra_builder'][key]
 
             # Do any final processing that needs to happen.
-            builder.finalize(field, config, logger)
+            builder.ensureFinalized(field, config, logger)
 
             # Call the write function, possible multiple times to account for IO failures.
             write_func = builder.writeFile
@@ -264,7 +264,7 @@ def AddExtraOutputHDUs(config, data, logger=None):
             builder = config['extra_builder'][key]
 
             # Do any final processing that needs to happen.
-            builder.finalize(field, config, logger)
+            builder.ensureFinalized(field, config, logger)
 
             # Build the HDU for this output object.
             hdus[hdu] = builder.writeHdu(field,config,logger)
@@ -290,7 +290,7 @@ def GetFinalExtraOutput(key, config, data, logger=None):
     @returns the final data to be output.
     """
     field = config['output'][key]
-    return config['extra_builder'][key].finalize(field, config, logger)
+    return config['extra_builder'][key].ensureFinalized(field, config, logger)
 
 class ExtraOutputBuilder(object):
     """A base class for building some kind of extra output object along with the main output.
@@ -327,6 +327,7 @@ class ExtraOutputBuilder(object):
         """
         self.data = data
         self.scratch = scratch
+        self.final_data = None
 
     def setupImage(self, config, base, logger):
         """Perform any necessary setup at the start of an image.
@@ -377,6 +378,20 @@ class ExtraOutputBuilder(object):
         @param logger       If given, a logger object to log progress. [default: None]
         """
         pass
+
+    def ensureFinalized(self, config, base, logger):
+        """A helper function in the base class to make sure finalize only gets called once by the
+        different possible locations that might need it to have been called.
+
+        @param config       The configuration field for this output object.
+        @param base         The base configuration dict.
+        @param logger       If given, a logger object to log progress. [default: None]
+
+        @returns the final version of the object.
+        """
+        if self.final_data is None:
+            self.final_data = self.finalize(config, base, logger)
+        return self.final_data
 
     def finalize(self, config, base, logger):
         """Perform any final processing at the end of all the image processing.
