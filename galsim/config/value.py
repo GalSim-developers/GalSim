@@ -738,7 +738,7 @@ def _GenerateFromCurrent(config, base, value_type):
     try:
         return GetCurrentValue(key, base, value_type, return_safe=True)
     except ValueError:
-        raise ValueError("Invalid key = %s given for type=Current")
+        raise ValueError("Invalid key = %s given for type=Current"%key)
 
 
 def RegisterValueType(type_name, gen_func, valid_types):
