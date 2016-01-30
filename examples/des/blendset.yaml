@@ -47,10 +47,17 @@ psf:
 
 
 gal:
-    # Choose random real galaxies from the COSMOS catalog.
+    # Choose random galaxies from the COSMOS catalog.
     type: COSMOSGalaxy
-    gal_type: real
     index: { type: Random }
+
+    # Either of these will work here, but the real galaxies are much slower on such a small
+    # simulation, since they require a lot of setup time to read in each of the RealGalaxy
+    # image files.  On a typically large simulation, this time gets amortized over a lot
+    # of objects, so the difference isn't as huge.  So to keep the running time reasonable,
+    # we use parameteric here.
+    gal_type: parametric
+    #gal_type: real
 
     # Randomly spin the original profile
     rotate: { type: Random }
@@ -67,8 +74,8 @@ gal:
     # Just a constant shear for now.
     shear:
         type: G1G2
-        g1: 0.23
-        g2: -0.17
+        g1: 0.03
+        g2: -0.02
 
 stamp:
     # In blend.py (loaded by the modules field above), we define a custom stamp type
@@ -105,7 +112,7 @@ image:
     noise:
         type: Poisson
         sky_level: 800
-        whiten: True
+        whiten: True  # Only relevant for gal_type = real, but it doesn't hurt to leave this in.
 
 
 input:
