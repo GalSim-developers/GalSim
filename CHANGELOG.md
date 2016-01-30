@@ -33,6 +33,7 @@ Bug Fixes
 
 New Features
 ------------
+
 - Added OutputCatalog class, which can be used to keep track of and then output
   truth information.  cf. demos 9 and 10. (#301, #691)
 - Added methods calculateHLR, calculateMomentRadius, and calculateFWHM to both
