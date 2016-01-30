@@ -58,14 +58,22 @@ class GSObject(object):
         >>> conv = galsim.Convolve([gal,psf])
 
     All of these classes are subclasses of GSObject, so you should see those docstrings for
-    more details about how to construct the various profiles.
+    more details about how to construct the various profiles.  Here we discuss attributes and
+    methods that are common to all GSObjects.
 
-    Note that most GSObjects have some kind of size specification.  Typically, these would be
-    given in terms of arcsec, with the connection to the pixel size being given in the Pixel
-    class (0.2 arcsec/pixel in the above example).  However, you can have a more complicated
-    relationship between pixel and sky coordinates.  See BaseWCS for more details about
-    how to specify various kinds of world coordinate systems.
+    GSObjects are always defined in sky coordinates.  So all sizes and other linear dimensions
+    should be in terms of some kind of units on the sky, arcsec for instance.  Only later (when
+    they are drawn) is the connection to pixel coordinates established via a pixel scale or WCS.
+    (See the documentation for galsim.BaseWCS for more details about how to specify various kinds
+    of world coordinate systems more complicated than a simple pixel scale.)
 
+    For instance, if you eventually draw onto an image that has a pixel scale of 0.2 arcsec/pixel,
+    then the normal thing to do would be to define your surface brightness profiles in terms of
+    arcsec and then draw with `pixel_scale=0.2`.  However, nowhere in GalSim do we enforce that sky
+    coordinates need to be in arcsec.  If you wanted, you could instead define the sizes of all 
+    your galaxies and PSFs in terms of radians and then use `pixel_scale=0.2/206265` when you
+    draw them.
+    
     Transforming Methods
     --------------------
 
@@ -781,6 +789,21 @@ class GSObject(object):
         Note: in addition to the dx,dy parameter names, you may also supply dx,dy as a tuple,
         or as a PositionD or PositionI object.
 
+        The shift coordinates here are sky coordinates.  GSObjects are always defined in sky
+        coordinates and only later (when they are drawn) is the connection to pixel coordinates
+        established (via a pixel_scale or WCS).  So a shift of dx moves the object horizontally
+        in the sky (e.g. west in the local tangent plane of the observation), and dy moves the
+        object vertically (north in the local tangent plane).
+        
+        The units are typically arcsec, but we don't enforce that anywhere.  The units here just
+        need to be consistent with the units used for any size values used by the GSObject.
+        The connection of these units to the eventual image pixels is defined by either the
+        `pixel_scale` or the `wcs` parameter of `drawImage`.
+
+        Note: if you want to shift the object by a set number (or fraction) of pixels in the
+        drawn image, you probably want to use the `offset` parameter of `drawImage` rather than
+        this method.
+
         @param dx       Horizontal shift to apply.
         @param dy       Vertical shift to apply.
 
@@ -1134,9 +1157,10 @@ class GSObject(object):
                             of the image (using the function image.bounds.trueCenter()).
                             If you would rather use the integer center (given by
                             image.bounds.center()), set this to `False`.  [default: True]
-        @param offset       The location at which to center the profile being drawn relative to the
-                            center of the image (either the true center if `use_true_center=True`,
-                            or the nominal center if `use_true_center=False`). [default: None]
+        @param offset       The location in pixel coordinates at which to center the profile being
+                            drawn relative to the center of the image (either the true center if
+                            `use_true_center=True` or nominal center if `use_true_center=False`).
+                            [default: None]
         @param n_photons    If provided, the number of photons to use for photon shooting.
                             If not provided (i.e. `n_photons = 0`), use as many photons as
                             necessary to result in an image with the correct Poisson shot
