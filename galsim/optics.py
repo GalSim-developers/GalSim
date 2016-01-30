@@ -52,12 +52,26 @@ class OpticalPSF(GSObject):
 
     The diffraction effects are characterized by the diffraction angle, which is a function of the
     ratio lambda / D, where lambda is the wavelength of the light and D is the diameter of the
-    telescope.  Users can specify this diffraction angle in one of two ways.  The first option is to
-    specify the ratio as `lam_over_diam` in whatever arbitrary units they choose (and then
-    self-consistently specify the image scale in the same units).  The second option is to specify
-    the wavelength as `lam` in units of nanometers and the telescope diameter as `diam` in units of
-    meters.  OpticalPSF will then convert the ratio to units of `scale_units`, and image scales must
-    be specified in `scale_units` as well.
+    telescope.  The natural units for this value is radians, which is not normally a convenient
+    unit to use for other GSObject dimensions.  Assuming that the other sky coordinates you are
+    using are all in arcsec (e.g. the pixel scale when you draw the image, the size of the galaxy,
+    etc.), then you should convert this to arcsec as well:
+
+        >>> lam = 700  # nm
+        >>> diam = 4.0    # meters
+        >>> lam_over_diam = (lam * 1.e-9) / diam  # radians
+        >>> lam_over_diam *= 206265  # Convert to arcsec
+        >>> psf = galsim.OpticalPSF(lam_over_diam, ...)
+
+    To make this process a bit simpler, we recommend instead providing the wavelength and diameter
+    separately using the `lam` and `diam` parameters.  GalSim will then convert this to any of
+    the normal kinds of angular units using the `scale_unit` parameter (the default if omitted
+    is arcsec):
+
+        >>> psf = galsim.OpticalPSF(lam=lam, diam=diam, scale_unit=galsim.arcsec, ...)
+
+    When drawing images, the scale_unit should match the unit used for the pixel scale or the WCS.
+    e.g. in this case, a pixel scale of 0.2 arcsec/pixel would be specified as `pixel_scale=0.2`.
 
     Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
     to the Zernike polynomials in the Noll convention defined in
@@ -96,7 +110,7 @@ class OpticalPSF(GSObject):
     Initialization
     --------------
 
-    Either specify the lam/diam ratio directly in arbitrary units:
+    As described above, either specify the lam/diam ratio directly in arbitrary units:
 
         >>> optical_psf = galsim.OpticalPSF(lam_over_diam=lam_over_diam, defocus=0., astig1=0.,
                                             astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0.,
@@ -189,11 +203,10 @@ class OpticalPSF(GSObject):
     @param pupil_angle      If `pupil_plane_im` is not None, rotation angle for the pupil plane
                             (positive in the counter-clockwise direction).  Must be an Angle
                             instance. [default: 0. * galsim.degrees]
-    @param scale_unit       Units used to define the diffraction limit and draw images, if the user
-                            has supplied a separate value for `lam` and `diam`.  Should be either a
-                            galsim.AngleUnit, or a string that can be used to construct one (e.g.,
-                            'arcsec', 'radians', etc.).
-                            [default: galsim.arcsec]
+    @param scale_unit       Units to use for the sky coordinates when calculating lam/diam if these
+                            are supplied separately.  Should be either a galsim.AngleUnit or a
+                            string that can be used to construct one (e.g., 'arcsec', 'radians',
+                            etc.).  [default: galsim.arcsec]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 

@@ -70,10 +70,10 @@ class GSObject(object):
     For instance, if you eventually draw onto an image that has a pixel scale of 0.2 arcsec/pixel,
     then the normal thing to do would be to define your surface brightness profiles in terms of
     arcsec and then draw with `pixel_scale=0.2`.  However, nowhere in GalSim do we enforce that sky
-    coordinates need to be in arcsec.  If you wanted, you could instead define the sizes of all 
+    coordinates need to be in arcsec.  If you wanted, you could instead define the sizes of all
     your galaxies and PSFs in terms of radians and then use `pixel_scale=0.2/206265` when you
     draw them.
-    
+
     Transforming Methods
     --------------------
 
@@ -794,7 +794,7 @@ class GSObject(object):
         established (via a pixel_scale or WCS).  So a shift of dx moves the object horizontally
         in the sky (e.g. west in the local tangent plane of the observation), and dy moves the
         object vertically (north in the local tangent plane).
-        
+
         The units are typically arcsec, but we don't enforce that anywhere.  The units here just
         need to be consistent with the units used for any size values used by the GSObject.
         The connection of these units to the eventual image pixels is defined by either the
@@ -1746,9 +1746,12 @@ class Airy(GSObject):
 
     The Airy profile is defined in terms of the diffraction angle, which is a function of the
     ratio lambda / D, where lambda is the wavelength of the light (say in the middle of the
-    bandpass you are using) and D is the diameter of the telescope.  This ratio is the input
-    parameter to pass to the Airy constructor, but as it is naturally in radians, you would
-    typically convert to arcsec.  e.g.
+    bandpass you are using) and D is the diameter of the telescope.
+
+    The natural units for this value is radians, which is not normally a convenient unit to use for
+    other GSObject dimensions.  Assuming that the other sky coordinates you are using are all in
+    arcsec (e.g. the pixel scale when you draw the image, the size of the galaxy, etc.), then you
+    should convert this to arcsec as well:
 
         >>> lam = 700  # nm
         >>> diam = 4.0    # meters
@@ -1756,15 +1759,14 @@ class Airy(GSObject):
         >>> lam_over_diam *= 206265  # Convert to arcsec
         >>> airy = galsim.Airy(lam_over_diam)
 
-    Or, use separate keywords for the telescope diameter and wavelength in meters and nanometers,
-    respectively:
+    To make this process a bit simpler, we recommend instead providing the wavelength and diameter
+    separately using the `lam` and `diam` parameters.  GalSim will then convert this to any of
+    the normal kinds of angular units using the `scale_unit` parameter:
 
-        >>> airy = galsim.Airy(lam=lam, diam=diam)
+        >>> airy = galsim.Airy(lam=lam, diam=diam, scale_unit=galsim.arcsec)
 
-    in which case the user can also choose what units to use for internal descriptions of the light
-    profile using the `scale_unit` keyword (default: galsim.arcsec).  When drawing images, users
-    should then use units of `scale_unit` to specify the pixel scale.
-
+    When drawing images, the scale_unit should match the unit used for the pixel scale or the WCS.
+    e.g. in this case, a pixel scale of 0.2 arcsec/pixel would be specified as `pixel_scale=0.2`.
 
     @param lam_over_diam    The parameter that governs the scale size of the profile.
                             See above for details about calculating it.
@@ -1777,12 +1779,11 @@ class Airy(GSObject):
     @param obscuration      The linear dimension of a central obscuration as a fraction of the
                             pupil dimension.  [default: 0]
     @param flux             The flux (in photons) of the profile. [default: 1]
-    @param scale_unit       Units used to define the diffraction limit and draw images, if the user
-                            has supplied a separate value for `lam` and `diam`.  Note that the
-                            results of calling methods like getFWHM() will be returned in units of
-                            `scale_unit`, as well.  Should be either a galsim.AngleUnit, or a string
-                            that can be used to construct one (e.g., 'arcsec', 'radians', etc.).
-                            [default: galsim.arcsec]
+    @param scale_unit       Units to use for the sky coordinates when calculating lam/diam if these
+                            are supplied separately.  Note that the results of calling methods like
+                            getFWHM() will be returned in units of `scale_unit` as well.  Should be
+                            either a galsim.AngleUnit or a string that can be used to construct one
+                            (e.g., 'arcsec', 'radians', etc.).  [default: galsim.arcsec]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
