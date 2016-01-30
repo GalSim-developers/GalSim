@@ -68,7 +68,7 @@ class MetaImage(type):
         return Image_dict[t]
 
 class Image(object):
-    """A class for storing image data along with the pixel scale or wcs information
+    """A class for storing image data along with the pixel scale or WCS information
 
     The Image class encapsulates all the relevant information about an image including a NumPy array
     for the pixel values, a bounding box, and some kind of WCS that converts between pixel
@@ -80,6 +80,15 @@ class Image(object):
     subimages of larger images (for example, to successively draw many galaxies into one large
     image).  For other implications of this convention, see the description of initialization
     instructions below.
+
+    In most applications with images, we will use (x,y) to refer to the coordinates.  We adopt
+    the same meaning for these coordinates as most astronomy applications do: ds9, SAOImage,
+    SExtractor, etc. all treat x as the column number and y as the row number.  However, this
+    is different from the default convention used by numpy.  In numpy, the access is by
+    [row_num,col_num], which means this is really [y,x] in terms of the normal x,y values.
+    Users are typically insulated from this concern by the Image API, but if you access the
+    numpy array directly via the `array` attribute, you will need to be careful about this
+    difference.
 
     There are 4 data types that the Image can use for the data values.  These are `numpy.int16`,
     `numpy.int32`, `numpy.float32`, and `numpy.float64`.  If you are constructing a new Image from
@@ -96,6 +105,9 @@ class Image(object):
                 the number of columns and rows.  You can specify the data type as `dtype` if you
                 want.  The default is `numpy.float32` if you don't specify it.  You can also
                 optionally provide an initial value for the pixels, which defaults to 0.
+                Reminder, with our convention for x,y coordinates described above, ncol is the
+                number of pixels in the x direction, and nrow is the number of pixels in the y
+                direction.
 
         Image(bounds, dtype=numpy.float32, init_value=0, ...)
 
@@ -164,7 +176,10 @@ class Image(object):
 
     The `array` attribute is a NumPy array of the Image's pixels.  The individual elements in the
     array attribute are accessed as `image.array[y,x]`, matching the standard NumPy convention,
-    while the Image class's own accessor uses `(x,y)`.
+    while the Image class's own accessor uses `(x,y)`.  That is, the following are equivalent:
+
+        >>> ixy = image(x,y)
+        >>> ixy = image.array[y,x]
 
 
     Methods
@@ -513,6 +528,15 @@ class Image(object):
 
         The arguments here may be either (dx, dy) or a PositionI instance.
         Or you can provide dx, dy as named kwargs.
+
+        In terms of columns and rows, dx means a shift in the x value of each column in the
+        array, and dy means a shift in the y value of each row.  In other words, the following
+        will return the same value for ixy.  The shift function just changes the coordinates (x,y)
+        used for that pixel:
+
+            >>> ixy = im(x,y)
+            >>> im.shift(3,9)
+            >>> ixy = im(x+3, y+9)
         """
         delta = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy', integer=True)
         self._shift(delta)
@@ -530,6 +554,34 @@ class Image(object):
 
         The arguments here may be either (xcen, ycen) or a PositionI instance.
         Or you can provide xcen, ycen as named kwargs.
+
+        In terms of the rows and columns, xcen is the new x value for the central column, and ycen
+        is the new y value of the central row.  For even-sized arrays, there is no central column
+        or row, so the convention we adopt in this case is to round up.  For example:
+
+            >>> im = galsim.Image(numpy.array(range(16),dtype=float).reshape((4,4)))
+            >>> im(1,1)
+            0.0
+            >>> im(4,1)
+            3.0
+            >>> im(4,4)
+            15.0
+            >>> im(3,3)
+            10.0
+            >>> im.setCenter(0,0)
+            >>> im(0,0)
+            10.0
+            >>> im(-2,-2)
+            0.0
+            >>> im(1,-2)
+            3.0
+            >>> im(1,1)
+            15.0
+            >>> im.setCenter(234,456)
+            >>> im(234,456)
+            10.0
+            >>> im.bounds
+            galsim.BoundsI(xmin=232, xmax=235, ymin=454, ymax=457)
         """
         cen = galsim.utilities.parse_pos_args(args, kwargs, 'xcen', 'ycen', integer=True)
         self._shift(cen - self.image.bounds.center())
@@ -539,31 +591,97 @@ class Image(object):
 
         The arguments here may be either (x0, y0) or a PositionI instance.
         Or you can provide x0, y0 as named kwargs.
-        """
+
+        In terms of the rows and columns, x0 is the new x value for the first column,
+        and y0 is the new y value of the first row.  For example:
+
+            >>> im = galsim.Image(numpy.array(range(16),dtype=float).reshape((4,4)))
+            >>> im(1,1)
+            0.0
+            >>> im(4,1)
+            3.0
+            >>> im(1,4)
+            12.0
+            >>> im(4,4)
+            15.0
+            >>> im.setOrigin(0,0)
+            >>> im(0,0)
+            0.0
+            >>> im(3,0)
+            3.0
+            >>> im(0,3)
+            12.0
+            >>> im(3,3)
+            15.0
+            >>> im.setOrigin(234,456)
+            >>> im(234,456)
+            0.0
+            >>> im.bounds
+            galsim.BoundsI(xmin=234, xmax=237, ymin=456, ymax=459)
+         """
         origin = galsim.utilities.parse_pos_args(args, kwargs, 'x0', 'y0', integer=True)
         self._shift(origin - self.image.bounds.origin())
 
     def center(self):
-        """Return the current nominal center of the image.  This is a PositionI instance,
-        which means that for even-sized images, it won't quite be the true center, since
-        the true center is between two pixels.
+        """Return the current nominal center (xcen,ycen) of the image as a PositionI instance.
 
-        e.g the nominal center of an image with bounds (1,32,1,32) will be (17, 17).
+        In terms of the rows and columns, xcen is the x value for the central column, and ycen
+        is the y value of the central row.  For even-sized arrays, there is no central column
+        or row, so the convention we adopt in this case is to round up.  For example:
+
+            >>> im = galsim.Image(numpy.array(range(16),dtype=float).reshape((4,4)))
+            >>> im.center()
+            galsim.PositionI(x=3, y=3)
+            >>> im(im.center())
+            10.0
+            >>> im.setCenter(56,72)
+            >>> im.center()
+            galsim.PositionI(x=56, y=72)
+            >>> im(im.center())
+            10.0
         """
         return self.bounds.center()
 
     def trueCenter(self):
-        """Return the current true center of the image.  This is a PositionD instance,
-        and it may be half-way between two pixels.
+        """Return the current true center of the image as a PositionD instance.
 
-        e.g the true center of an image with bounds (1,32,1,32) will be (16.5, 16.5).
+        Unline the nominal center returned by im.center(), this value may be half-way between
+        two pixels if the image has an even number of rows or columns.  It gives the position
+        (x,y) at the exact center of the image, regardless of whether this is at the center of
+        a pixel (integer value) or halfway between two (half-integer).  For example:
+
+            >>> im = galsim.Image(numpy.array(range(16),dtype=float).reshape((4,4)))
+            >>> im.center()
+            galsim.PositionI(x=2.5, y=2.5)
+            >>> im.setCenter(56,72)
+            >>> im.trueCenter()
+            galsim.PositionD(x=55.5, y=71.5)
+            >>> im.setOrigin(0,0)
+            >>> im.trueCenter()
+            galsim.PositionD(x=1.5, y=1.5)
         """
         return self.bounds.trueCenter()
 
     def origin(self):
-        """Return the origin of the image.  i.e. the position of the lower-left pixel.
+        """Return the origin of the image.  i.e. the (x,y) position of the lower-left pixel.
 
-        e.g the origin of an image with bounds (1,32,1,32) will be (1, 1).
+        In terms of the rows and columns, this is the (x,y) coordinate of the first column, and
+        first row of the array.  For example:
+
+            >>> im = galsim.Image(numpy.array(range(16),dtype=float).reshape((4,4)))
+            >>> im.origin()
+            galsim.PositionI(x=1, y=1)
+            >>> im(im.origin())
+            0.0
+            >>> im.setOrigin(23,45)
+            >>> im.origin()
+            galsim.PositionI(x=23, y=45)
+            >>> im(im.origin())
+            0.0
+            >>> im(23,45)
+            0.0
+            >>> im.bounds
+            galsim.BoundsI(xmin=23, xmax=26, ymin=45, ymax=48)
         """
         return self.bounds.origin()
 
@@ -584,7 +702,7 @@ class Image(object):
         return self.image(x,y)
 
     def setValue(self, *args, **kwargs):
-        """Set the pixel value at given position
+        """Set the pixel value at given (x,y) position
 
         The arguments here may be either (x, y, value) or (pos, value) where pos is a PositionI.
         Or you can provide x, y, value as named kwargs.
