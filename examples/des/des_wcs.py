@@ -22,56 +22,60 @@ import os
 # This class works, but it's pretty slow.  I'm leaving it here as an example of a relatively
 # straightforward wcs builder.  But the better class that uses an input field is below.
 
-def DES_SlowLocalWCS(config, base):
-    """Build a local WCS from the given location in a DES focal plane, given a directory
-    with the image files.  By default, it will pick a random chipnum and image position,
-    but these can be optionally specified.
-    """
+class DES_SlowLocalWCSBuilder(galsim.config.WCSBuilder):
 
-    req = { "dir" : str,  # The directory with the files. We'll use 'des_data' here.
-            "root" : str,  # The root name of the files. We'll use 'DECam_00154912' here.
-          }
-    opt = { "chipnum" : int,  # Which chip to use: 1-62.  Default is to pick a random chip.
-            "image_pos" : galsim.PositionD,  # The position in the chip.  Default is random.
-            "ext" : str,  # The file extension.  Default is ".fits.fz"
-          }
-    params, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
+    def __init__(self): pass
 
-    # These will already have been checked to be present, since they are in the req dict.
-    dir = params['dir']
-    root = params['root']
+    def buildWCS(self, config, base):
+        """Build a local WCS from the given location in a DES focal plane, given a directory
+        with the image files.  By default, it will pick a random chipnum and image position,
+        but these can be optionally specified.
+        """
 
-    rng = base['rng']
-    ud = galsim.UniformDeviate(rng)  # Will give float values between 0 and 1.
+        req = { "dir" : str,  # The directory with the files. We'll use 'des_data' here.
+                "root" : str,  # The root name of the files. We'll use 'DECam_00154912' here.
+            }
+        opt = { "chipnum" : int,  # Which chip to use: 1-62.  Default is to pick a random chip.
+                "image_pos" : galsim.PositionD,  # The position in the chip.  Default is random.
+                "ext" : str,  # The file extension.  Default is ".fits.fz"
+            }
+        params, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
 
-    if 'chipnum' in params:
-        chipnum = params['chipnum']
-    else:
-        chipnum = int(ud() * 62) + 1
-        if chipnum == 63: chipnum = 62  # Just in case.
+        # These will already have been checked to be present, since they are in the req dict.
+        dir = params['dir']
+        root = params['root']
 
-    ext = params.get('ext','.fits.fz')
+        rng = base['rng']
+        ud = galsim.UniformDeviate(rng)  # Will give float values between 0 and 1.
 
-    # Build the full path of the file to use.
-    file_name = os.path.join(dir, "%s_%02d%s"%(root,chipnum,ext))
+        if 'chipnum' in params:
+            chipnum = params['chipnum']
+        else:
+            chipnum = int(ud() * 62) + 1
+            if chipnum == 63: chipnum = 62  # Just in case.
 
-    # Read the full WCS as a regular FitsWCS.
-    full_wcs = galsim.FitsWCS(file_name)
+        ext = params.get('ext','.fits.fz')
 
-    # Determine where in the image we will get the local WCS
-    if 'image_pos' in params:
-        image_pos = params['image_pos']
-    else:
-        x = ud() * 2048. + 0.5  # The pixel centers go from 1-2048, so edges are 0.5-2048.5
-        y = ud() * 4096. + 0.5
-        image_pos = galsim.PositionD(x,y)
+        # Build the full path of the file to use.
+        file_name = os.path.join(dir, "%s_%02d%s"%(root,chipnum,ext))
 
-    # Finally, return the local wcs at this location.
-    local_wcs = full_wcs.local(image_pos)
-    return local_wcs
+        # Read the full WCS as a regular FitsWCS.
+        full_wcs = galsim.FitsWCS(file_name)
+
+        # Determine where in the image we will get the local WCS
+        if 'image_pos' in params:
+            image_pos = params['image_pos']
+        else:
+            x = ud() * 2048. + 0.5  # The pixel centers go from 1-2048, so edges are 0.5-2048.5
+            y = ud() * 4096. + 0.5
+            image_pos = galsim.PositionD(x,y)
+
+        # Finally, return the local wcs at this location.
+        local_wcs = full_wcs.local(image_pos)
+        return local_wcs
 
 # Register this with GalSim:
-galsim.config.RegisterWCSType('DES_SlowLocal', DES_SlowLocalWCS)
+galsim.config.RegisterWCSType('DES_SlowLocal', DES_SlowLocalWCSBuilder())
 
 # The above class works, but it's slow, since it reads in a file for every stamp.  (Hence
 # the name SlowLocal.)  Now we'll do a version that reads in all the wcs files at the start
@@ -114,50 +118,56 @@ class DES_FullFieldWCS(object):
         return self.all_wcs[chipnum]
 
 
-def DES_LocalWCS(config, base):
-    """Build a local WCS from the given location in a DES focal plane.
+class DES_LocalWCSBuilder(galsim.config.WCSBuilder):
 
-    This function is used in conjunction with the des_wcs input field, which loads all the
-    files at the start.  
+    def __init__(self): pass
 
-    By default, it will pick a random chipnum and image position, but these can be optionally
-    specified.
-    """
+    def buildWCS(self, config, base):
+        """Build a local WCS from the given location in a DES focal plane.
 
-    opt = { "chipnum" : int,  # Which chip to use: 1-62.  Default is to pick a random chip.
-            "image_pos" : galsim.PositionD,  # The position in the chip.  Default is random.
-          }
-    params, safe = galsim.config.GetAllParams(config, base, opt=opt)
+        This function is used in conjunction with the des_wcs input field, which loads all the
+        files at the start.  
 
-    rng = base['rng']
-    ud = galsim.UniformDeviate(rng)  # Will give float values between 0 and 1.
+        By default, it will pick a random chipnum and image position, but these can be optionally
+        specified.
+        """
 
-    # Get the input des_wcs object.  The last parameter is just used for error reporting, and
-    # should be the name of the current type being processed.
-    des_wcs = galsim.config.GetInputObj('des_wcs', config, base, 'DES_LocalWCS')
+        opt = { "chipnum" : int,  # Which chip to use: 1-62.  Default is to pick a random chip.
+                "image_pos" : galsim.PositionD,  # The position in the chip.  Default is random.
+            }
+        params, safe = galsim.config.GetAllParams(config, base, opt=opt)
 
-    if 'chipnum' in params:
-        chipnum = params['chipnum']
-    else:
-        chipnum = int(ud() * 62) + 1
-        if chipnum == 63: chipnum = 62  # Just in case.
+        rng = base['rng']
+        ud = galsim.UniformDeviate(rng)  # Will give float values between 0 and 1.
 
-    full_wcs = des_wcs.get_chip_wcs(chipnum)
+        # Get the input des_wcs object.  The last parameter is just used for error reporting, and
+        # should be the name of the current type being processed.
+        des_wcs = galsim.config.GetInputObj('des_wcs', config, base, 'DES_LocalWCS')
 
-    # Determine where in the image we will get the local WCS
-    if 'image_pos' in params:
-        image_pos = params['image_pos']
-    else:
-        x = ud() * 2048. + 0.5  # The pixel centers go from 1-2048, so edges are 0.5-2048.5
-        y = ud() * 4096. + 0.5
-        image_pos = galsim.PositionD(x,y)
+        if 'chipnum' in params:
+            chipnum = params['chipnum']
+        else:
+            chipnum = int(ud() * 62) + 1
+            if chipnum == 63: chipnum = 62  # Just in case.
 
-    # Finally, return the local wcs at this location.
-    local_wcs = full_wcs.local(image_pos)
-    return local_wcs
+        full_wcs = des_wcs.get_chip_wcs(chipnum)
+
+        # Determine where in the image we will get the local WCS
+        if 'image_pos' in params:
+            image_pos = params['image_pos']
+        else:
+            x = ud() * 2048. + 0.5  # The pixel centers go from 1-2048, so edges are 0.5-2048.5
+            y = ud() * 4096. + 0.5
+            image_pos = galsim.PositionD(x,y)
+
+        # Finally, return the local wcs at this location.
+        local_wcs = full_wcs.local(image_pos)
+        return local_wcs
 
 # Register these with GalSim:
-galsim.config.RegisterInputType('des_wcs', DES_FullFieldWCS, ['DES_LocalWCS'])
-galsim.config.RegisterWCSType('DES_Local', DES_LocalWCS)
+galsim.config.RegisterInputType('des_wcs',
+    galsim.config.InputLoader(DES_FullFieldWCS, ['DES_LocalWCS']))
+
+galsim.config.RegisterWCSType('DES_Local', DES_LocalWCSBuilder())
 
 
