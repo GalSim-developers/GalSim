@@ -210,18 +210,12 @@ def test_shearest_precomputed():
         # define input filenames
         img_file = os.path.join(img_dir, gal_file_prefix + str(file_indices[index]) + img_suff)
         psf_file = os.path.join(img_dir, psf_file_prefix + str(file_indices[index]) + img_suff)
-        print 'img_file = ',img_file
-        print 'psf_file = ',psf_file
 
         # read in information for objects and expected results
         img = galsim.fits.read(img_file)
-        print 'img = ',img
-        print 'dtype = ',img.array.dtype
         img -= 1000
         psf = galsim.fits.read(psf_file)
         psf -= 1000
-        print 'psf = ',psf
-        print 'dtype = ',psf.array.dtype
 
         # get PSF moments for later tests
         psf_mom = psf.FindAdaptiveMom()
