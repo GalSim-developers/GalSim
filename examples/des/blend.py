@@ -138,7 +138,9 @@ class BlendSetBuilder(galsim.config.StampBuilder):
     def setup(self, config, base, xsize, ysize, ignore, logger):
         """Do the appropriate setup for a Blend stamp.
         """
-        self.first = None  # Mark that we don't have anything stored yet.
+        # Make sure that we start over on the start of a new file.
+        if base['obj_num'] == base['start_obj_num']:
+            self.first = None
 
         # Parse the necessary parameters and make sure they are the right type.
         req = { 'n_neighbors' : int, 'min_sep' : float, 'max_sep' : float }
