@@ -1951,7 +1951,7 @@ class Kolmogorov(GSObject):
                             [One of `lam_over_r0`, `fwhm`, `half_light_radius`, or both `lam` and
                             `r0` is required.]
     @param lam              Lambda (wavelength) in units of nanometers.  Must be supplied with
-                            `diam`, and in this case, image scales (`scale`) should be specified in
+                            `r0`, and in this case, image scales (`scale`) should be specified in
                             units of `scale_unit`.
     @param r0               The Fried parameter in units of cm.  Must be supplied with `lam`, and
                             in this case, image scales (`scale`) should be specified in units of
