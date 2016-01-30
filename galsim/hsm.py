@@ -335,8 +335,8 @@ def _convertImage(image):
     """
     # if weight is an ImageS, then convert to ImageI.
     import numpy
-    if image.dtype == numpy.int16:
-        image = galsim.ImageI(image)
+    #if image.dtype == numpy.int16:
+        #image = galsim.ImageI(image)
 
     # Return this as an ImageView
     return image.image.view()

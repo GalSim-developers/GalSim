@@ -40,6 +40,12 @@ New Features
   GSObject and Image. (#308)
 - Added BoundsI.numpyShape() to easily get the numpy shape that corresponds
   to a given bounds instance. (#654)
+- Have FITS files with unsigned integer data automatically convert that into
+  the corresponding signed integer data type for use in GalSim, rather than
+  converting to float64, which it had been doing. (#654)
+- Made COSMOSCatalog write an index parameter for both parameteric and real
+  galaxy types to indicate the index of the object in the full COSMOS catalog.
+  (#654, #694)
 - Changed `galsim.fits.writeMulti` to allow any of the "image"s to be
   already-built hdus, which are included as is. (#691)
 - Added optional `wcs` argument to `Image.resize()`. (#691)
@@ -78,4 +84,7 @@ New config features
   'gsparams', among other less commonly used parameters.  However, for
   backwards compatibility, they are all still allowed in the image field
   as well. (#691)
-
+- Added more example scripts to showcase how to use some of the new config
+  features to make fairly sophisticated simulations.  cf. examples/great3 and
+  examples/des. (#654, #691)
+  
