@@ -970,6 +970,7 @@ def test_airy():
     """Test the generation of a specific Airy profile against a known result.
     """
     import time
+    import math
     t1 = time.time()
     savedImg = galsim.fits.read(os.path.join(imgdir, "airy_.8_.1.fits"))
     dx = 0.2
@@ -1014,13 +1015,16 @@ def test_airy():
     # have lam/diam = 1./0.8 in arbitrary units, we will tell it that lam=1.e9 nm and diam=0.8 m,
     # and use `scale_unit` of galsim.radians.  This is rather silly, but it should work.
     airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=1.7)
-    test_im1 = airy.drawImage(scale=0.2)
-    test_im2 = test_im1.copy()
     airy2 = galsim.Airy(lam=1.e9, diam=0.8, scale_unit=galsim.radians, obscuration=0.1, flux=1.7)
-    airy2.drawImage(image=test_im2, scale=0.2)
-    np.testing.assert_array_almost_equal(
-            test_im1.array, test_im2.array, 8,
-            err_msg="Using GSObject Airy with different kwargs disagrees with expected result")
+    gsobject_compare(airy,airy2)
+    # For lam/diam = 1.25 arcsec, and diam = 0.3 m, lam = (1.25/3600/180*pi) * 0.3 * 1.e9
+    lam = 1.25 * 0.3 / 3600. / 180. * math.pi * 1.e9
+    print 'lam = ',lam
+    airy3 = galsim.Airy(lam=lam, diam=0.3, scale_unit=galsim.arcsec, obscuration=0.1, flux=1.7)
+    gsobject_compare(airy,airy3)
+    # arcsec is the default scale_unit, so can leave this off.
+    airy4 = galsim.Airy(lam=lam, diam=0.3, obscuration=0.1, flux=1.7)
+    gsobject_compare(airy,airy4)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1660,6 +1664,7 @@ def test_kolmogorov():
     """Test the generation of a specific Kolmogorov profile against a known result.
     """
     import time
+    import math
     t1 = time.time()
     dx = 0.2
     # This savedImg was created from the SBKolmogorov implementation in
@@ -1702,6 +1707,21 @@ def test_kolmogorov():
     do_pickle(kolm, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(kolm)
     do_pickle(kolm.SBProfile)
+
+    # Test initialization separately with lam and r0, in various units.  Since the above profiles
+    # have lam/r0 = 3./2. in arbitrary units, we will tell it that lam=3.e7 nm and r0=2.0 cm,
+    # and use `scale_unit` of galsim.radians.  This is rather silly, but it should work.
+    kolm = galsim.Kolmogorov(lam_over_r0=1.5, flux=test_flux)
+    kolm2 = galsim.Kolmogorov(lam=3.e7, r0=2.0, scale_unit=galsim.radians, flux=test_flux)
+    gsobject_compare(kolm,kolm2)
+    # For lam/r0 = 1.5 arcsec, and r0 = 20, lam = (1.5/3600/180*pi) * 20 * 1.e7
+    lam = 1.5 * 20 / 3600. / 180. * math.pi * 1.e7
+    print 'lam = ',lam
+    kolm3 = galsim.Kolmogorov(lam=lam, r0=20., scale_unit=galsim.arcsec, flux=test_flux)
+    gsobject_compare(kolm,kolm3)
+    # arcsec is the default scale_unit, so can leave this off.
+    kolm4 = galsim.Kolmogorov(lam=lam, r0=20., flux=test_flux)
+    gsobject_compare(kolm,kolm4)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
