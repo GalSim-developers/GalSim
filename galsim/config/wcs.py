@@ -190,14 +190,25 @@ class TanWCSBuilder(WCSBuilder):
         return galsim.TanWCS(affine=affine, world_origin=world_origin, units=units)
 
 
-def RegisterWCSType(wcs_type, builder):
+def RegisterWCSType(wcs_type, builder, input_type=None):
     """Register a wcs type for use by the config apparatus.
 
     @param wcs_type         The name of the type in config['image']['wcs']
     @param builder          A builder object to use for building the WCS object.  It should
                             be an instance of WCSBuilder or a subclass thereof.
+    @param input_type       If the WCS builder utilises an input object, give the key name of the
+                            input type here.  (If it uses more than one, this may be a list.)
+                            [default: None]
     """
     valid_wcs_types[wcs_type] = builder
+    if input_type is not None:
+        from .input import RegisterInputConnectedType
+        if isinstance(input_type, list):
+            for key in input_type:
+                RegisterInputConnectedType(key, wcs_type)
+        else:
+            RegisterInputConnectedType(input_type, wcs_type)
+
 
 RegisterWCSType('PixelScale', OriginWCSBuilder(galsim.PixelScale, galsim.OffsetWCS))
 RegisterWCSType('Shear', OriginWCSBuilder(galsim.ShearWCS, galsim.OffsetShearWCS))

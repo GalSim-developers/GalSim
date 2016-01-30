@@ -22,8 +22,7 @@ import galsim
 # The RealGalaxyCatalog doesn't need anything special other than registration as a valid
 # input type.
 from .input import RegisterInputType, InputLoader
-RegisterInputType('real_catalog',
-                  InputLoader(galsim.RealGalaxyCatalog, ['RealGalaxy', 'RealGalaxyOriginal']))
+RegisterInputType('real_catalog', InputLoader(galsim.RealGalaxyCatalog))
 
 # There are two gsobject types that are coupled to this: RealGalaxy and RealGalaxyOriginal.
 
@@ -73,5 +72,5 @@ def _BuildRealGalaxyOriginal(config, base, ignore, gsparams, logger):
 
 # Register these as valid gsobject types
 from .gsobject import RegisterObjectType
-RegisterObjectType('RealGalaxy', _BuildRealGalaxy)
-RegisterObjectType('RealGalaxyOriginal', _BuildRealGalaxyOriginal)
+RegisterObjectType('RealGalaxy', _BuildRealGalaxy, input_type='real_catalog')
+RegisterObjectType('RealGalaxyOriginal', _BuildRealGalaxyOriginal, input_type='real_catalog')

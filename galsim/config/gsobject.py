@@ -510,7 +510,7 @@ def GetMinimumBlock(config, base):
         return 1
 
 
-def RegisterObjectType(type_name, build_func, is_block=False):
+def RegisterObjectType(type_name, build_func, is_block=False, input_type=None):
     """Register an object type for use by the config apparatus.
 
     A few notes about the signature of the build functions:
@@ -538,10 +538,20 @@ def RegisterObjectType(type_name, build_func, is_block=False):
                             some way where they need to be done by the same process.  If True,
                             then this type should include a 'num' parameter that gives the
                             number of objects in the block. [default: False]
+    @param input_type       If the type utilises an input object, give the key name of the input
+                            type here.  (If it uses more than one, this may be a list.)
+                            [default: None]
     """
     valid_gsobject_types[type_name] = build_func
     if is_block:
         block_gsobject_types.append(type_name)
+    if input_type is not None:
+        from .input import RegisterInputConnectedType
+        if isinstance(input_type, list):
+            for key in input_type:
+                RegisterInputConnectedType(key, type_name)
+        else:
+            RegisterInputConnectedType(input_type, type_name)
 
 RegisterObjectType('None', _BuildNone)
 RegisterObjectType('Add', _BuildAdd)

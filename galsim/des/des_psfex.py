@@ -324,7 +324,7 @@ class PSFExLoader(galsim.config.InputLoader):
         return kwargs, safe
 
 # First we need to add the class itself as a valid input_type.
-galsim.config.RegisterInputType('des_psfex', PSFExLoader(DES_PSFEx, ['DES_PSFEx']))
+galsim.config.RegisterInputType('des_psfex', PSFExLoader(DES_PSFEx))
 
 # Also make a builder to create the PSF object for a given position.
 # The builders require 4 args.
@@ -370,5 +370,5 @@ def BuildDES_PSFEx(config, base, ignore, gsparams, logger):
     return psf, False
 
 # Register this builder with the config framework:
-galsim.config.RegisterObjectType('DES_PSFEx', BuildDES_PSFEx)
+galsim.config.RegisterObjectType('DES_PSFEx', BuildDES_PSFEx, input_type='des_psfex')
 

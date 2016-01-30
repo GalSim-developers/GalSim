@@ -29,9 +29,6 @@ import math
 
 from .input import InputLoader
 class PowerSpectrumLoader(InputLoader):
-    def __init__(self):
-        types = ['PowerSpectrumShear', 'PowerSpectrumMagnification']
-        super(self.__class__, self).__init__(galsim.PowerSpectrum, types)
 
     def getKwargs(self, config, base, logger):
         """Parse the config dict and return the kwargs needed to build the PowerSpectrum object.
@@ -105,7 +102,7 @@ class PowerSpectrumLoader(InputLoader):
 
 # Register this as a valid input type
 from .input import RegisterInputType
-RegisterInputType('power_spectrum', PowerSpectrumLoader())
+RegisterInputType('power_spectrum', PowerSpectrumLoader(galsim.PowerSpectrum))
 
 
 # There are two value types associated with this: PowerSpectrumShear and
@@ -167,5 +164,7 @@ def _GenerateFromPowerSpectrumMagnification(config, base, value_type):
 
 # Register these as valid value types
 from .value import RegisterValueType
-RegisterValueType('PowerSpectrumShear', _GenerateFromPowerSpectrumShear, [ galsim.Shear ])
-RegisterValueType('PowerSpectrumMagnification', _GenerateFromPowerSpectrumMagnification, [ float ])
+RegisterValueType('PowerSpectrumShear', _GenerateFromPowerSpectrumShear, [ galsim.Shear ],
+                  input_type='power_spectrum')
+RegisterValueType('PowerSpectrumMagnification', _GenerateFromPowerSpectrumMagnification, [ float ],
+                  input_type='power_spectrum')

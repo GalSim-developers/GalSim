@@ -165,9 +165,6 @@ class DES_LocalWCSBuilder(galsim.config.WCSBuilder):
         return local_wcs
 
 # Register these with GalSim:
-galsim.config.RegisterInputType('des_wcs',
-    galsim.config.InputLoader(DES_FullFieldWCS, ['DES_LocalWCS']))
-
-galsim.config.RegisterWCSType('DES_Local', DES_LocalWCSBuilder())
-
+galsim.config.RegisterInputType('des_wcs', galsim.config.InputLoader(DES_FullFieldWCS))
+galsim.config.RegisterWCSType('DES_Local', DES_LocalWCSBuilder(), input_type='des_wcs')
 

@@ -33,6 +33,10 @@ import logging
 # process the input object correctly.
 valid_input_types = {}
 
+# We also keep track of the connected value or gsobject types.
+# These are registered by the value or gsobject types that use each input object.
+connected_types = {}
+
 
 def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_only=False):
     """
@@ -193,7 +197,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                     # Invalidate any currently cached values that use this kind of input object:
                     # TODO: This isn't quite correct if there are multiple versions of this input
                     #       item.  e.g. you might want to invalidate dict0, but not dict1.
-                    for value_type in loader.types:
+                    for value_type in connected_types[key]:
                         galsim.config.RemoveCurrent(config, type=value_type)
                         if logger:
                             logger.debug('file %d: Cleared current_vals for items with type %s',
@@ -308,9 +312,6 @@ class InputLoader(object):
 
         init_func   The class or function that will be used to build the input object.
 
-        types       A list of value or object types that use this input type.  These items will
-                    have their "current" values invalidated when the input object changes.
-
         has_nobj    Whether the object can be used to automatically determine the number of
                     objects to build for a given file or image.  For example, a galsim.Catalog has
                     a specific number of rows in it.  In many cases, you will just want to run
@@ -330,9 +331,8 @@ class InputLoader(object):
                     dict input object. Thus, dict is our canonical example of an input type for
                     which this parameter should be True.
     """
-    def __init__(self, init_func, types, has_nobj=False, file_scope=False):
+    def __init__(self, init_func, has_nobj=False, file_scope=False):
         self.init_func = init_func
-        self.types = types
         self.has_nobj = has_nobj
         self.file_scope = file_scope
 
@@ -389,13 +389,26 @@ def RegisterInputType(input_type, loader):
     @param input_type       The name of the type in config['input']
     @param loader           A loader object to use for loading in the input object.
                             It should be an instance of InputLoader or a subclass thereof.
+
     """
     valid_input_types[input_type] = loader
+    if input_type not in connected_types:
+        connected_types[input_type] = set()
+
+def RegisterInputConnectedType(input_type, type_name):
+    """Register that some gsobject or value type is connected to a given input type.
+
+    @param input_type       The name of the type in config['input']
+    @param type_name        The name of the type that uses this input object.
+    """
+    if input_type not in connected_types:
+        connected_types[input_type] = set()
+    connected_types[input_type].add(type_name)
 
 # We define in this file two simple input types: catalog and dict, which read in a Catalog
 # or Dict from a file and then can use that to generate values.
-RegisterInputType('catalog', InputLoader(galsim.Catalog, ['Catalog'], has_nobj=True))
-RegisterInputType('dict', InputLoader(galsim.Dict, ['Dict'], file_scope=True))
+RegisterInputType('catalog', InputLoader(galsim.Catalog, has_nobj=True))
+RegisterInputType('dict', InputLoader(galsim.Dict, file_scope=True))
 
 
 
@@ -450,5 +463,5 @@ def _GenerateFromDict(config, base, value_type):
 
 # Register these as valid value types
 from .value import RegisterValueType
-RegisterValueType('Catalog', _GenerateFromCatalog, [ float, int, bool, str ])
-RegisterValueType('Dict', _GenerateFromDict, [ float, int, bool, str ])
+RegisterValueType('Catalog', _GenerateFromCatalog, [ float, int, bool, str ], input_type='catalog')
+RegisterValueType('Dict', _GenerateFromDict, [ float, int, bool, str ], input_type='dict')

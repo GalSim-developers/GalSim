@@ -741,7 +741,7 @@ def _GenerateFromCurrent(config, base, value_type):
         raise ValueError("Invalid key = %s given for type=Current")
 
 
-def RegisterValueType(type_name, gen_func, valid_types):
+def RegisterValueType(type_name, gen_func, valid_types, input_type=None):
     """Register a value type for use by the config apparatus.
 
     A few notes about the signature of the generating function:
@@ -768,8 +768,18 @@ def RegisterValueType(type_name, gen_func, valid_types):
                             The call signature is
                                 value, safe = Generate(config, base, value_type)
     @param valid_types      A list of types for which this type name is valid.
+    @param input_type       If the generator utilises an input object, give the key name of the
+                            input type here.  (If it uses more than one, this may be a list.)
+                            [default: None]
     """
     valid_value_types[type_name] = (gen_func, tuple(valid_types))
+    if input_type is not None:
+        from .input import RegisterInputConnectedType
+        if isinstance(input_type, list):
+            for key in input_type:
+                RegisterInputConnectedType(key, type_name)
+        else:
+            RegisterInputConnectedType(input_type, type_name)
 
 
 RegisterValueType('List', _GenerateFromList, 

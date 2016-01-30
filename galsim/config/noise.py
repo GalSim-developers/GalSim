@@ -557,14 +557,25 @@ class COSMOSNoiseBuilder(NoiseBuilder):
         return cn.getVariance()
 
 
-def RegisterNoiseType(noise_type, builder):
+def RegisterNoiseType(noise_type, builder, input_type=None):
     """Register a noise type for use by the config apparatus.
 
     @param noise_type       The name of the type in config['image']['noise']
     @param builder          A builder object to use for building the noise.  It should be an
                             instance of a subclass of NoiseBuilder.
+    @param input_type       If the builder utilises an input object, give the key name of the
+                            input type here.  (If it uses more than one, this may be a list.)
+                            [default: None]
     """
     valid_noise_types[noise_type] = builder
+    if input_type is not None:
+        from .input import RegisterInputConnectedType
+        if isinstance(input_type, list):
+            for key in input_type:
+                RegisterInputConnectedType(key, noise_type)
+        else:
+            RegisterInputConnectedType(input_type, noise_type)
+
 
 RegisterNoiseType('Gaussian', GaussianNoiseBuilder())
 RegisterNoiseType('Poisson', PoissonNoiseBuilder())
