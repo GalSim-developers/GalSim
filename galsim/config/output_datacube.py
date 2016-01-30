@@ -20,136 +20,102 @@ import os
 import galsim
 import logging
 
-
-def BuildDataCube(file_name, config, logger=None, 
-                  file_num=0, image_num=0, obj_num=0,
-                  psf_file_name=None, weight_file_name=None, badpix_file_name=None):
+from .output import OutputBuilder
+class DataCubeBuilder(OutputBuilder):
+    """Builder class for constructing and writing DataCube output types.
     """
-    Build a multi-image fits data cube as specified in config.
-    
-    @param file_name        The name of the output file.
-    @param config           A configuration dict.
-    @param logger           If given, a logger object to log progress. [default: None]
-    @param file_num         If given, the current file_num. [default: 0]
-    @param image_num        If given, the current image_num. [default: 0]
-    @param obj_num          If given, the current obj_num. [default: 0]
-    @param psf_file_name    If given, write a psf image to this file. [default: None]
-    @param weight_file_name If given, write a weight image to this file. [default: None]
-    @param badpix_file_name If given, write a badpix image to this file. [default: None]
 
-    @returns the time taken to build file.
-    """
-    import time
-    t1 = time.time()
+    def buildImages(self, config, base, file_num, image_num, obj_num, ignore, logger):
+        """Build the images
 
-    galsim.config.SetupConfigFileNum(config,file_num,image_num,obj_num)
-    seed = galsim.config.SetupConfigRNG(config)
-    if logger and logger.isEnabledFor(logging.DEBUG):
-        logger.debug('file %d: seed = %d',file_num,seed)
+        A point of attention for DataCubes is that they must all be the same size.
+        This function builds the first image alone, finds out its size and then forces
+        all subsequent images to be the same size.
 
-    nimages = galsim.config.GetNImagesForFile(config, file_num)
+        @param config           The configuration dict for the output field.
+        @param base             The base configuration dict.
+        @param file_num         The current file_num.
+        @param image_num        The current image_num.
+        @param obj_num          The current obj_num.
+        @param ignore           A list of parameters that are allowed to be in config that we can
+                                ignore here.  i.e. it won't be an error if they are present.
+        @param logger           If given, a logger object to log progress.
 
-    if psf_file_name:
-        make_psf_image = True
-    else:
-        make_psf_image = False
+        @returns a list of the images built
+        """
+        import time
+        nimages = self.getNImages(config, base, file_num)
 
-    if weight_file_name:
-        make_weight_image = True
-    else:
-        make_weight_image = False
+        # The above call sets up a default nimages if appropriate.  Now, check that there are no
+        # invalid parameters in the config dict.
+        req = { 'nimages' : int }
+        galsim.config.CheckAllParams(config, ignore=ignore, req=req)
 
-    if badpix_file_name:
-        make_badpix_image = True
-    else:
-        make_badpix_image = False
+        # All images need to be the same size for a data cube.
+        # Enforce this by building the first image outside the below loop and setting
+        # config['image_force_xsize'] and config['image_force_ysize'] to be the size of the first
+        # image.
+        t1 = time.time()
+        base1 = galsim.config.CopyConfig(base)
+        image0 = galsim.config.BuildImage(base1, image_num, obj_num, logger=logger)
+        t2 = time.time()
+        if logger:
+            # Note: numpy shape is y,x
+            ys, xs = image0.array.shape
+            logger.info('Image %d: size = %d x %d, time = %f sec', image_num, xs, ys, t2-t1)
 
-    # All images need to be the same size for a data cube.
-    # Enforce this by buliding the first image outside the below loop and setting
-    # config['image_force_xsize'] and config['image_force_ysize'] to be the size of the first 
-    # image.
-    t2 = time.time()
-    config1 = galsim.config.CopyConfig(config)
-    all_images = galsim.config.BuildImage(
-            config=config1, logger=logger, image_num=image_num, obj_num=obj_num,
-            make_psf_image=make_psf_image, 
-            make_weight_image=make_weight_image,
-            make_badpix_image=make_badpix_image)
-    obj_num += galsim.config.GetNObjForImage(config, image_num)
-    t3 = time.time()
-    if logger and logger.isEnabledFor(logging.INFO):
         # Note: numpy shape is y,x
-        ys, xs = all_images[0].array.shape
-        logger.info('Image %d: size = %d x %d, time = %f sec', image_num, xs, ys, t3-t2)
+        image_ysize, image_xsize = image0.array.shape
+        base['image_force_xsize'] = image_xsize
+        base['image_force_ysize'] = image_ysize
 
-    # Note: numpy shape is y,x
-    image_ysize, image_xsize = all_images[0].array.shape
-    config['image_force_xsize'] = image_xsize
-    config['image_force_ysize'] = image_ysize
+        images = [ image0 ]
 
-    main_images = [ all_images[0] ]
-    psf_images = [ all_images[1] ]
-    weight_images = [ all_images[2] ]
-    badpix_images = [ all_images[3] ]
+        if nimages > 1:
+            obj_num += galsim.config.GetNObjForImage(base, image_num)
+            images += galsim.config.BuildImages(nimages-1, base, logger=logger,
+                                                image_num=image_num+1, obj_num=obj_num)
 
-    if nimages > 1:
-        all_images = galsim.config.BuildImages(
-            nimages-1, config=config, logger=logger,
-            image_num=image_num+1, obj_num=obj_num,
-            make_psf_image=make_psf_image,
-            make_weight_image=make_weight_image,
-            make_badpix_image=make_badpix_image)
+        return images
 
-        main_images += all_images[0]
-        psf_images += all_images[1]
-        weight_images += all_images[2]
-        badpix_images += all_images[3]
+    def getNImages(self, config, base, file_num):
+        """Returns the number of images to be built.
 
-    if 'output' in config and 'retry_io' in config['output']:
-        ntries = galsim.config.ParseValue(config['output'],'retry_io',config,int)[0]
-        # This is how many _re_-tries.  Do at least 1, so ntries is 1 more than this.
-        ntries = ntries + 1
-    else:
-        ntries = 1
+        @param config           The configuration dict for the output field.
+        @param base             The base configuration dict.
+        @param file_num         The current file number.
 
-    galsim.config.output.RetryIO(galsim.fits.writeCube, (main_images, file_name), ntries, file_name, logger)
-    if logger and logger.isEnabledFor(logging.DEBUG):
-        logger.debug('file %d: Wrote image to fits data cube %r',
-                     config['file_num'],file_name)
+        @returns the number of images to build.
+        """
+        # Allow nimages to be automatic based on input catalog if image type is Single
+        if ( 'nimages' not in config and
+            ( 'image' not in base or 'type' not in base['image'] or
+            base['image']['type'] == 'Single' ) ):
+            nimages = galsim.config.ProcessInputNObjects(base)
+            if nimages:
+                config['nimages'] = nimages
+        if 'nimages' not in config:
+            raise AttributeError("Attribute output.nimages is required for output.type = MultiFits")
+        return galsim.config.ParseValue(config,'nimages',base,int)[0]
 
-    if psf_file_name:
-        galsim.config.output.RetryIO(galsim.fits.writeCube, (psf_images, psf_file_name),
-                  ntries, psf_file_name, logger)
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: Wrote psf images to fits data cube %r',
-                         config['file_num'],psf_file_name)
+    def writeFile(self, data, file_name):
+        """Write the data to a file.
 
-    if weight_file_name:
-        galsim.config.output.RetryIO(galsim.fits.writeCube, (weight_images, weight_file_name),
-                  ntries, weight_file_name, logger)
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: Wrote weight images to fits data cube %r',
-                         config['file_num'],weight_file_name)
+        @param data             The data to write.  Usually a list of images returned by
+                                buildImages, but possibly with extra HDUs tacked onto the end
+                                from the extra output items.
+        @param file_name        The file_name to write to.
+        """
+        galsim.fits.writeCube(data,file_name)
 
-    if badpix_file_name:
-        galsim.config.output.RetryIO(galsim.fits.writeCube, (badpix_images, badpix_file_name),
-                  ntries, badpix_file_name, logger)
-        if logger and logger.isEnabledFor(logging.DEBUG):
-            logger.debug('file %d: Wrote badpix images to fits data cube %r',
-                         config['file_num'],badpix_file_name)
+    def canAddHdus(self):
+        """Returns whether it is permissible to add extra HDUs to the end of the data list.
 
-    t4 = time.time()
-    return t4-t1
+        False for DataCube.
+        """
+        return False
 
-def GetNImagesDataCube(config, file_num):
-    # Allow nimages to be automatic based on input catalog if image type is Single
-    if ( 'nimages' not in config['output'] and 
-         ( 'image' not in config or 'type' not in config['image'] or 
-           config['image']['type'] == 'Single' ) ):
-        nimages = galsim.config.ProcessInputNObjects(config)
-        if nimages:
-            config['output']['nimages'] = nimages
-    if 'nimages' not in config['output']:
-        raise AttributeError("Attribute output.nimages is required for output.type = MultiFits")
-    return galsim.config.ParseValue(config['output'],'nimages',config,int)[0]
 
+# Register this as a valid output type
+from .output import RegisterOutputType
+RegisterOutputType('DataCube', DataCubeBuilder())

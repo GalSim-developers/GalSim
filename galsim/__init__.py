@@ -95,7 +95,7 @@ from .position import PositionI, PositionD
 from .bounds import BoundsI, BoundsD
 from .shear import Shear
 from .angle import Angle, AngleUnit, radians, hours, degrees, arcmin, arcsec, HMS_Angle, DMS_Angle
-from .catalog import Catalog, Dict
+from .catalog import Catalog, Dict, OutputCatalog
 from .scene import COSMOSCatalog
 from .table import LookupTable
 

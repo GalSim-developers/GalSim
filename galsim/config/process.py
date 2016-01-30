@@ -20,8 +20,19 @@ import os
 import galsim
 import logging
 
-from .input import *
-from .output import *
+
+# Python 2.6 doesn't include OrderedDict natively.  There is a package ordereddict that you
+# can pip install.  But if the user hasn't done that, we'll just read into a regular dict.
+# The only feature that requires the OrderedDict is the truth catalog output.  With a regular
+# dict the columns will appear in arbitrary order.
+try:
+    from collections import OrderedDict
+except ImportError:
+    try:
+        from ordereddict import OrderedDict
+    except ImportError:
+        OrderedDict = dict
+
 
 def ReadYaml(config_file):
     """Read in a YAML configuration file and return the corresponding dicts.
@@ -43,8 +54,19 @@ def ReadYaml(config_file):
     """
     import yaml
 
+    # cf. coldfix's answer here:
+    # http://stackoverflow.com/questions/5121931/in-python-how-can-you-load-yaml-mappings-as-ordereddicts
+    class OrderedLoader(yaml.SafeLoader):
+        pass
+    def construct_mapping(loader, node):
+        loader.flatten_mapping(node)
+        return OrderedDict(loader.construct_pairs(node))
+    OrderedLoader.add_constructor(
+        yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+        construct_mapping)
+
     with open(config_file) as f:
-        all_config = [ c for c in yaml.load_all(f.read()) ]
+        all_config = [ c for c in yaml.load_all(f.read(), OrderedLoader) ]
 
     # If there is only 1 yaml document, then it is of course used for the configuration.
     # If there are multiple yaml documents, then the first one defines a common starting
@@ -81,7 +103,17 @@ def ReadJson(config_file):
     import json
 
     with open(config_file) as f:
-        config = json.load(f)
+        try:
+            # cf. http://stackoverflow.com/questions/6921699/can-i-get-json-to-load-into-an-ordereddict-in-python
+            config = json.load(f, object_pairs_hook=OrderedDict)
+        except TypeError:
+            # for python2.6, json doesn't come with the object_pairs_hook, so 
+            # try using simplejson, and if that doesn't work, just use a regular dict.
+            try:
+                import simplejson
+                config = simplejson.load(f, object_pairs_hook=OrderedDict)
+            except ImportError:
+                config = json.load(f)
 
     # JSON files are just processed as is.  This is equivalent to having an empty 
     # base_config, so we just do that and use the same structure.
@@ -107,6 +139,10 @@ def ReadConfig(config_file, file_type=None, logger=None):
     A JSON file does not have this feature, but to be consistent, we always return the tuple
     (base_config, all_config).
 
+    Also, we actually read in the config file into an OrderedDict.  The main advantage of
+    this is for the truth catalog.  This lets the columns be in the same order as the entries
+    in the config file.  With a normal dict, they get scrambled.
+
     @param config_file      The name of the configuration file to read.
     @param file_type        If given, the type of file to read.  [default: None, which mean
                             infer the file type from the extension.]
@@ -123,26 +159,27 @@ def ReadConfig(config_file, file_type=None, logger=None):
         else:
             # Let YAML be the default if the extension is not .y* or .j*.
             file_type = 'yaml'
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             logger.debug('File type determined to be %s', file_type)
     else:
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             logger.debug('File type specified to be %s', file_type)
 
     if file_type == 'yaml':
-        if logger and logger.isEnabledFor(logging.INFO):
+        if logger:
             logger.info('Reading YAML config file %s', config_file)
         return galsim.config.ReadYaml(config_file)
     else:
-        if logger and logger.isEnabledFor(logging.INFO):
+        if logger:
             logger.info('Reading JSON config file %s', config_file)
         return galsim.config.ReadJson(config_file)
+
 
 def RemoveCurrent(config, keep_safe=False, type=None):
     """
     Remove any "current values" stored in the config dict at any level.
 
-    @param config       The config dict to process.
+    @param config       The configuration dict.
     @param keep_safe    Should current values that are marked as safe be preserved? 
                         [default: False]
     @param type         If provided, only clear the current value of objects that use this 
@@ -168,32 +205,31 @@ def RemoveCurrent(config, keep_safe=False, type=None):
     if ( 'current_val' in config 
           and not (keep_safe and config['current_safe'])
           and (type == None or ('type' in config and config['type'] == type)) ):
-        del config['current_val']
-        del config['current_safe']
-        if 'current_obj_num' in config:
-            del config['current_obj_num']
-            del config['current_image_num']
-            del config['current_file_num']
-            del config['current_value_type']
+        config.pop('current_val')
+        config.pop('current_safe')
+        config.pop('current_index')
+        config.pop('current_value_type',None)  # This one might not be there.
         return True
     else:
         return force
 
-
 def CopyConfig(config):
     """
     If you want to use a config dict for multiprocessing, you need to deep copy
-    the gal, psf, and pix fields, since they get cache values that are not picklable.
+    the gal, psf, and pix fields, since they cache values that are not picklable.
     If you don't do the deep copy, then python balks when trying to send the updated
     config dict back to the root process.  We do this a few different times, so encapsulate
     the copy semantics once here.
+
+    @param config           The configuration dict to copy. 
+
+    @returns a deep copy of the config dict.
     """
     import copy
     config1 = copy.copy(config)
   
     # Make sure the input_manager isn't in the copy
-    if 'input_manager' in config1:
-        del config1['input_manager']
+    config1.pop('input_manager',None)
 
     # Now deepcopy all the regular config fields to make sure things like current_val don't
     # get clobbered by two processes writing to the same dict.
@@ -217,6 +253,10 @@ def CopyConfig(config):
 def GetLoggerProxy(logger):
     """Make a proxy for the given logger that can be passed into multiprocessing Processes
     and used safely.
+
+    @param logger       The logger to make a copy of
+
+    @returns a proxy for the given logger
     """
     from multiprocessing.managers import BaseManager
     if logger:
@@ -230,16 +270,53 @@ def GetLoggerProxy(logger):
         logger_proxy = None
     return logger_proxy
 
+class LoggerWrapper(object):
+    """A wrap around a Logger object that checks whether a debug or info or warn call will
+    actually produce any output before calling the functions.
+
+    This seems like a gratuitous wrapper, and it is if the object being wrapped is a real
+    Logger object.  However, we use it to wrap proxy objects (returned from GetLoggerProxy)
+    that would otherwise send the arguments of logger.debug(...) calls through a multiprocessing
+    pipe before (typically) being ignored.  Here, we check whether the call will actually
+    produce any output before calling the functions.
+
+    @param logger       The logger object to wrap.
+    """
+    def __init__(self, logger):
+        self.logger = logger
+
+    def debug(self, *args, **kwargs):
+        if self.logger and self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug(*args, **kwargs)
+
+    def info(self, *args, **kwargs):
+        if self.logger and self.logger.isEnabledFor(logging.INFO):
+            self.logger.info(*args, **kwargs)
+
+    def warn(self, *args, **kwargs):
+        if self.logger and self.logger.isEnabledFor(logging.WARN):
+            self.logger.warn(*args, **kwargs)
+
+    def error(self, *args, **kwargs):
+        if self.logger and self.logger.isEnabledFor(logging.ERROR):
+            self.logger.error(*args, **kwargs)
+
+    def isEnabledFor(self, *args, **kwargs):
+        return self.logger.isEnabledFor(*args,**kwargs)
+
 
 def UpdateNProc(nproc, ntot, config, logger=None):
     """Update nproc
+
     - If nproc < 0, set nproc to ncpu
     - Make sure nproc <= ntot
+
     @param nproc        The nominal number of processes from the config dict
     @param ntot         The total number of files/images/stamps to do, so the maximum number of
                         processes that would make sense.
     @param config       The configuration dict to copy.
     @param logger       If given, a logger object to log progress. [default: None]
+
     @returns the number of processes to use.
     """
     # First if nproc < 0, update based on ncpu
@@ -248,24 +325,24 @@ def UpdateNProc(nproc, ntot, config, logger=None):
         try:
             from multiprocessing import cpu_count
             nproc = cpu_count()
-            if logger and logger.isEnabledFor(logging.DEBUG):
+            if logger:
                 logger.debug("ncpu = %d.",nproc)
         except:
-            if logger and logger.isEnabledFor(logging.WARN):
+            if logger:
                 logger.warn("nproc <= 0, but unable to determine number of cpus.")
                 logger.warn("Using single process")
             nproc = 1
  
     # Second, make sure we aren't already in a multiprocessing mode
     if nproc > 1 and 'current_nproc' in config:
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             logger.debug("Already multiprocessing.  Ignoring image.nproc")
         nproc = 1
 
     # Finally, don't try to use more processes than jobs.  It wouldn't fail or anything.
     # It just looks bad to have 3 images processed with 8 processes or something like that.
     if nproc > ntot:
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             logger.debug("There are only %d jobs to do.  Reducing nproc to %d."%(ntot,ntot))
         nproc = ntot
     return nproc
@@ -273,10 +350,14 @@ def UpdateNProc(nproc, ntot, config, logger=None):
 
 def SetupConfigRNG(config, seed_offset=0):
     """Set up the RNG in the config dict.
+
     - Setup config['image']['random_seed'] if necessary
     - Set config['rng'] based on appropriate random_seed 
+
     @param config           The configuration dict.
     @param seed_offset      An offset to use relative to what config['image']['random_seed'] gives.
+                            [default: 0]
+
     @returns the seed used to initialize the RNG.
     """
     # Normally, random_seed is just a number, which really means to use that number
@@ -296,25 +377,58 @@ def SetupConfigRNG(config, seed_offset=0):
                  'first' : first
          }
 
+    index_key = config['index_key']
+
+    # If we are starting a new file, clear out the existing rngs.
+    if index_key == 'file_num':
+        for key in ['seed', 'rng', 'obj_num_rng', 'image_num_rng', 'file_num_rng']:
+            config.pop(key, None)
+
     if 'random_seed' in config['image']:
-        orig_key = config['index_key']
         config['index_key'] = 'obj_num'
+        if index_key != 'obj_num' and 'start_obj_num' in config:
+            config['obj_num'] = config['start_obj_num']
         seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['index_key'] = orig_key
+        config['index_key'] = index_key
         seed += seed_offset
     else:
         seed = 0
 
-    config['seed'] = seed
-    config['rng'] = galsim.BaseDeviate(seed)
+    # Normally, the file_num rng and the image_num rng can be the same.  So if seed
+    # comes out the same as what we already built, then just use the existing file_num_rng.
+    if index_key == 'image_num' and 'file_num_rng' in config and seed == config.get('seed',None):
+        rng = config['file_num_rng']
+    else:
+        config['seed'] = seed
+        rng = galsim.BaseDeviate(seed)
+        config['rng'] = rng
+
+    # Also save this rng as 'file_num_rng' or 'image_num_rng' or 'obj_num_rng' according
+    # to whatever the index_key is.
+    config[index_key + '_rng'] = rng
 
     # This can be present for efficiency, since GaussianDeviates produce two values at a time, 
     # so it is more efficient to not create a new GaussianDeviate object each time.
     # But if so, we need to remove it now.
-    if 'gd' in config:
-        del config['gd']
+    config.pop('gd',None)
 
     return seed
+ 
+def ImportModules(config):
+    """Import any modules listed in config['modules'].
+
+    These won't be brought into the running scope of the config processing, but any side
+    effects of the import statements will persist.  In particular, these are allowed to 
+    register additional custom types that can then be used in the current config dict.
+
+    @param config           The configuration dict.
+    """
+    if 'modules' in config:
+        for module in config['modules']:
+            try:
+                exec('import '+module)
+            except ImportError:
+                exec('import galsim.'+module)
 
 
 def ParseExtendedKey(config, key):
@@ -383,16 +497,86 @@ def UpdateConfig(config, new_params):
         SetInConfig(config, key, value)
 
 
-def Process(config, logger=None, new_params=None):
+def ProcessTemplate(config, logger=None):
+    """If the config dict has a 'template' item, read in the appropriate file and 
+    make any requested updates.
+
+    @param config           The configuration dict.
+    @param logger           If given, a logger object to log progress. [default: None]
+    """
+    if 'template' in config:
+        template_string = config.pop('template')
+        if logger:
+            logger.debug("Processing template specified as %s",template_string)
+        if ':' in template_string:
+            config_file, field = template_string.split(':')
+        else:
+            config_file = template_string
+            field = None
+        base, all_config = ReadConfig(config_file, logger=logger)
+        if base != {} or len(all_config) != 1:
+            raise RuntimeError("Template config file %s is not allowed to have multiple documents.",
+                               config_file)
+        # Copy over the template config into this one.
+        new_params = config.copy()  # N.B. Already popped config['template'].
+        config.clear()
+        if field is None:
+            config.update(all_config[0])
+        else:
+            config.update(GetFromConfig(all_config[0],field))
+
+        # Update the config with the requested changes
+        UpdateConfig(config, new_params)
+
+
+def ProcessAllTemplates(config, logger=None):
+    """Check through the full config dict and process any fields that have a 'template' item.
+
+    @param config           The configuration dict.
+    @param logger           If given, a logger object to log progress. [default: None]
+    """
+    ProcessTemplate(config, logger)
+    for (key, field) in config.items():
+        if isinstance(field, dict):
+            ProcessAllTemplates(field, logger)
+
+# This is the main script to process everything in the configuration dict.
+def Process(config, logger=None, njobs=1, job=1, new_params=None):
     """
     Do all processing of the provided configuration dict.  In particular, this
     function handles processing the output field, calling other functions to
     build and write the specified files.  The input field is processed before
     building each file.
+
+    Sometimes, it can be helpful to split up a processing jobs over multiple machines
+    (i.e. not just multiple processes, which can be handled natively with the output.nproc
+    or image.nproc options).  In this case, you can ask the Process command to split up
+    the total amount of work into njobs and only do one of those jobs here.  To do this,
+    set njobs to be the number of jobs total and job to be which job should be done here.
+
+    @param config           The configuration dict.
+    @param logger           If given, a logger object to log progress. [default: None]
+    @param njobs            The total number of jobs to split the work into. [default: 1]
+    @param job              Which job should be worked on here (1..njobs). [default: 1]
+    @param new_params       A dict of new parameter values that should be used to update the config
+                            dict after any template loading (if any). [default: None]
     """
+    if njobs < 1:
+        raise ValueError("Invalid number of jobs %d"%njobs)
+    if job < 1:
+        raise ValueError("Invalid job number %d.  Must be >= 1."%job)
+    if job > njobs:
+        raise ValueError("Invalid job number %d.  Must be <= njobs (%d)"%(job,njobs))
+
     # First thing to do is deep copy the input config to make sure we don't modify the original.
     import copy
     config = copy.deepcopy(config)
+
+    # Import any modules if requested
+    ImportModules(config)
+
+    # Process any template specifications in the dict.
+    ProcessAllTemplates(config, logger)
 
     # Update using any new_params that are given:
     if new_params is not None:
@@ -406,7 +590,7 @@ def Process(config, logger=None, new_params=None):
         # Strip off a final suffix if present.
         config['root'] = os.path.splitext(script_name)[0]
 
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         import pprint
         logger.debug("Final config dict to be processed: \n%s", pprint.pformat(config))
 
@@ -426,17 +610,54 @@ def Process(config, logger=None, new_params=None):
         nfiles = galsim.config.ParseValue(output, 'nfiles', config, int)[0]
     else:
         nfiles = 1 
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('nfiles = %d',nfiles)
 
-    # Figure out how many processes we will use for building the files.
-    # (If nfiles = 1, but nimages > 1, we'll do the multi-processing at the image stage.)
-    if 'nproc' in output:
-        nproc = galsim.config.ParseValue(output, 'nproc', config, int)[0]
+    if njobs > 1:
+        # Start each job at file_num = nfiles * job / njobs
+        start = nfiles * (job-1) // njobs
+        end = nfiles * job // njobs
+        logger.warn('Splitting work into %d jobs.  Doing job %d',njobs,job)
+        logger.warn('Building %d out of %d total files: file_num = %d .. %d',
+                    end-start,nfiles,start,end-1)
+        nfiles = end-start
     else:
-        nproc = 1 
+        start = 0
 
-    galsim.config.BuildFiles(nfiles, config, nproc=nproc, logger=logger)
+    galsim.config.BuildFiles(nfiles, config, file_num=start, logger=logger)
+
+def CalculateNObjPerTask(nproc, ntot, config):
+    """A helper function for calculating an appropriate number of objects to do per task.
+    In particular, it accounts for object types that require some number of objects to be done
+    together (e.g. Ring).  Aside from that detail, it shoots for something close to sqrt(ntot).
+
+    @param nproc        The number of processes
+    @param ntot         The total number of objects
+    @param config       The configuration dict.
+
+    @returns nobj_per_task
+    """
+    if nproc != 1:
+        # Figure out how many jobs to do per task.
+        # Number of objects to do in each task:
+        #  - At most nobjects / nproc.
+        #  - At least 1 normally, but number in Ring if doing a Ring test (or other block type)
+        # Shoot for geometric mean of these two.
+        max_nobj = ntot // nproc
+        min_nobj = 1
+        if 'gal' in config:
+            min_nobj = galsim.config.GetMinimumBlock(config['gal'], config)
+        if max_nobj < min_nobj:
+            nobj_per_task = min_nobj
+        else:
+            import math
+            # This formula keeps nobj a multiple of min_nobj, so Rings are intact.
+            nobj_per_task = int(math.sqrt(float(max_nobj)) / min_nobj) * min_nobj
+            if nobj_per_task == 0:
+                nobj_per_task = min_nobj
+    else:
+        nobj_per_task = 1
+    return nobj_per_task
 
 
 def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
@@ -469,9 +690,26 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
     # except_func to write something appropriate in the logger.
     def worker(task_queue, results_queue, config, logger):
         proc = current_process().name
+
+        # The logger object passed in here is a proxy object.  This means that all the arguments
+        # to any logging commands are passed through the pipe to the real Logger object on the
+        # other end of the pipe.  This tends to produce a lot of unnecessary communication, since
+        # most of those commands don't actually produce any output (e.g. logger.debug(..) commands
+        # when the logging level is not DEBUG).  So it is helpful to wrap this object in a
+        # LoggerWrapper that checks whether it is worth sending the arguments back to the original
+        # Logger before calling the functions.
+        logger = LoggerWrapper(logger)
+
+        if 'profile' in config and config['profile']:
+            import cProfile, pstats, StringIO
+            pr = cProfile.Profile()
+            pr.enable()
+        else:
+            pr = None
+
         for task in iter(task_queue.get, 'STOP'):
             try :
-                if logger and logger.isEnabledFor(logging.DEBUG):
+                if logger:
                     logger.debug('%s: Received job to do %d %ss, starting with %s',
                                  proc,len(task),item,task[0][1])
                 for kwargs, k in task:
@@ -484,14 +722,22 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
             except Exception as e:
                 import traceback
                 tr = traceback.format_exc()
-                if logger and logger.isEnabledFor(logging.WARN):
-                    logger.warn('%s: Caught exception: %s\n%s',proc,str(e),tr)
+                if logger:
+                    logger.debug('%s: Caught exception: %s\n%s',proc,str(e),tr)
                 results_queue.put( (e, k, tr, proc) )
-        if logger and logger.isEnabledFor(logging.DEBUG):
+        if logger:
             logger.debug('%s: Received STOP', proc)
+        if pr:
+            pr.disable()
+            s = StringIO.StringIO()
+            sortby = 'tottime'
+            ps = pstats.Stats(pr,stream=s).sort_stats(sortby).reverse_order()
+            ps.print_stats()
+            logger.error("*** Start profile for %s ***\n%s\n*** End profile for %s ***",
+                         proc,s.getvalue(),proc)
 
     if nproc > 1:
-        if logger and logger.isEnabledFor(logging.WARN):
+        if logger:
             logger.warn("Using %d processes for %s processing",nproc,item)
 
         from multiprocessing import Process, Queue, current_process
@@ -552,6 +798,10 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
                 # The normal case
                 done_func(logger, proc, jobs[k][1], res, t)
                 results[k] = res
+
+        # If there are any failures, then there will still be some Nones in the results list.
+        # Remove them.
+        results = [ r for r in results if r is not None ]
  
         # Stop the processes
         # The 'STOP's could have been put on the task list before starting the processes, or you

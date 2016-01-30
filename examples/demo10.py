@@ -28,7 +28,8 @@ is 48 x 48 pixels.  Instead of putting the PSF images on a separate image, we pa
 as the second HDU in the file.  For the galaxies, we use a random selection from 5 specific
 RealGalaxy objects, selected to be 5 particularly irregular ones. (These are taken from 
 the same catalog of 100 objects that demo6 used.)  The galaxies are oriented in a ring 
-test (Nakajima & Bernstein 2007) of 20 each.
+test (Nakajima & Bernstein 2007) of 20 each.  And we again output a truth catalog with the
+correct applied shear for each object (among other information).
 
 New features introduced in this demo:
 
@@ -115,6 +116,8 @@ def main(argv):
     # This means the Fourier transforms of the real galaxy images don't need to be recalculated 
     # each time, so it's a bit more efficient.
     gal_list = [ galsim.RealGalaxy(real_galaxy_catalog, id=id) for id in id_list ]
+    # Grab the index numbers before we transform them and lose the index attribute.
+    cosmos_index = [ gal.index for gal in gal_list ]
 
     # Make the galaxies a bit larger than their original observed size.
     gal_list = [ gal.dilate(gal_dilation) for gal in gal_list ]
@@ -137,10 +140,13 @@ def main(argv):
     # explicitly and then construct anything else you need from that.
     # Note: A BaseDeviate cannot be used to generate any values.  It can
     # only be used in the constructor for other kinds of deviates.
-    # The seeds for the objects are random_seed..random_seed+nobj-1 (which comes later), 
-    # so use the next one.
+    # The seeds for the objects are random_seed+1..random_seed+nobj.
+    # The seeds for things at the image or file level use random_seed itself.
     nobj = n_tiles * n_tiles
-    rng = galsim.BaseDeviate(random_seed+nobj)
+    rng = galsim.BaseDeviate(random_seed)
+
+    # Have the PowerSpectrum object build a grid of shear values for us to use.
+    grid_g1, grid_g2 = ps.buildGrid(grid_spacing=stamp_size*pixel_scale, ngrid=n_tiles, rng=rng)
 
     # Setup the images:
     gal_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles)
@@ -166,14 +172,21 @@ def main(argv):
     # applied.
     galsim.random.permute(rng, ix_list, iy_list)
 
-    # Now have the PowerSpectrum object build a grid of shear values for us to use.
-    grid_g1, grid_g2 = ps.buildGrid(grid_spacing=stamp_size*pixel_scale, ngrid=n_tiles,
-                                    rng=rng)
+    # Initialize the OutputCatalog for the truth values
+    names = [ 'gal_num', 'x_image', 'y_image', 
+              'psf_e1', 'psf_e2', 'psf_fwhm',
+              'cosmos_id', 'cosmos_index', 'theta',
+              'g1', 'g2', 'shift_x', 'shift_y' ]
+    types = [ int, float, float,
+              float, float, float,
+              str, int, float, 
+              float, float, float, float ]
+    truth_catalog = galsim.OutputCatalog(names, types)
 
     # Build each postage stamp:
     for k in range(nobj):
         # The usual random number generator using a different seed for each galaxy.
-        rng = galsim.BaseDeviate(random_seed+k)
+        rng = galsim.BaseDeviate(random_seed+k+1)
 
         # Determine the bounds for this stamp and its center position.
         ix = ix_list[k]
@@ -186,14 +199,17 @@ def main(argv):
         pos = wcs.toWorld(b.trueCenter())
         # The image comes out as about 211 arcsec across, so we define our variable
         # parameters in terms of (r/100 arcsec), so roughly the scale size of the image.
-        r = math.sqrt(pos.x**2 + pos.y**2) / 100
-        psf_fwhm = 0.9 + 0.5 * r**2   # arcsec
-        psf_e = 0.4 * r**1.5
+        rsq = (pos.x**2 + pos.y**2)
+        r = math.sqrt(rsq)
+
+        psf_fwhm = 0.9 + 0.5 * rsq / 100**2   # arcsec
+        psf_e = 0.4 * (r/100.)**1.5
         psf_beta = (math.atan2(pos.y,pos.x) + math.pi/2) * galsim.radians
 
         # Define the PSF profile
         psf = galsim.Gaussian(fwhm=psf_fwhm)
-        psf = psf.shear(e=psf_e, beta=psf_beta)
+        psf_shape = galsim.Shear(e=psf_e, beta=psf_beta)
+        psf = psf.shear(psf_shape)
 
         # Define the galaxy profile:
 
@@ -201,10 +217,11 @@ def main(argv):
         # orientations stepped uniformly in angle, making a ring in e1-e2 space.
         # We're drawing each profile at 20 different orientations and then skipping to the
         # next galaxy in the list.  So theta steps by 1/20 * 360 degrees:
-        theta = k/20. * 360. * galsim.degrees
+        theta_deg = (k%20) * 360. / 20
+        theta = theta_deg * galsim.degrees
 
         # The index needs to increment every 20 objects so we use k/20 using integer math.
-        index = k / 20
+        index = k // 20
         gal = gal_list[index]
 
         # This makes a new copy so we're not changing the object in the gal_list.
@@ -222,9 +239,9 @@ def main(argv):
         # Apply half-pixel shift in a random direction.
         shift_r = pixel_scale * 0.5
         ud = galsim.UniformDeviate(rng)
-        theta = ud() * 2. * math.pi
-        dx = shift_r * math.cos(theta)
-        dy = shift_r * math.sin(theta)
+        t = ud() * 2. * math.pi
+        dx = shift_r * math.cos(t)
+        dy = shift_r * math.sin(t)
         gal = gal.shift(dx,dy)
 
         # Make the final image, convolving with the psf
@@ -233,31 +250,54 @@ def main(argv):
         # Draw the image
         final.drawImage(sub_gal_image)
 
-        # Now add noise to get our desired S/N
-        # See demo5.py for more info about how this works.
-        sky_level_pixel = sky_level * pixel_scale**2
-        noise = galsim.PoissonNoise(rng, sky_level=sky_level_pixel)
-        sub_gal_image.addNoiseSNR(noise, gal_signal_to_noise)
-
-        # For the PSF image, we also shift the PSF by the same amount.
-        psf = psf.shift(dx,dy)
+        # For the PSF image, we don't match the galaxy shift.  Rather, we use the offset
+        # parameter to drawImage to apply a random offset of up to 0.5 pixels in each direction.
+        # Note the difference in units between shift and offset.  The shift is applied to the
+        # surface brightness profile, so it is in sky coordinates (as all dimension are for
+        # GSObjects), which are arcsec here.  The offset though is applied to the image itself,
+        # so it is in pixels.  Hence, we don't multiply by pixel_scale.
+        psf_dx = ud() - 0.5
+        psf_dy = ud() - 0.5
+        psf_offset = galsim.PositionD(psf_dx, psf_dy)
 
         # Draw the PSF image:
         # We use real space integration over the pixels to avoid some of the 
         # artifacts that can show up with Fourier convolution.
         # The level of the artifacts is quite low, but when drawing with
         # so little noise, they are apparent with ds9's zscale viewing.
-        psf.drawImage(sub_psf_image, method='real_space')
+        psf.drawImage(sub_psf_image, method='real_space', offset=psf_offset)
 
-        # Again, add noise, but at higher S/N this time.
+        # Build the noise model: Poisson noise with a given sky level.
+        sky_level_pixel = sky_level * pixel_scale**2
+        noise = galsim.PoissonNoise(rng, sky_level=sky_level_pixel)
+
+        # Add noise to the PSF image, using the normal noise model, but scaling the
+        # PSF flux high enough to reach the desired signal-to-noise.
+        # See demo5.py for more info about how this works.
         sub_psf_image.addNoiseSNR(noise, psf_signal_to_noise)
+
+        # And also to the galaxy image using its signal-to-noise.
+        sub_gal_image.addNoiseSNR(noise, gal_signal_to_noise)
+
+        # Add the truth values to the truth catalog
+        row = [ k, b.trueCenter().x, b.trueCenter().y,
+                psf_shape.e1, psf_shape.e2, psf_fwhm,
+                id_list[index], cosmos_index[index], (theta_deg % 360.),
+                alt_g1, alt_g2, dx, dy ]
+        truth_catalog.addRow(row)
 
         logger.info('Galaxy (%d,%d): position relative to center = %s', ix,iy,str(pos))
 
     logger.info('Done making images of postage stamps')
 
+    # In this case, we'll attach the truth catalog as an additional HDU in the same file as
+    # the image data.
+    truth_hdu = truth_catalog.writeFitsHdu()
+
     # Now write the images to disk.
-    images = [ gal_image , psf_image ]
+    images = [ gal_image , psf_image, truth_hdu ]
+    # Any items in the "images" list that is already an hdu is just used directly.
+    # The actual images are converted to FITS hdus that contain the image data.
     galsim.fits.writeMulti(images, file_name)
     logger.info('Wrote image to %r',file_name) 
 

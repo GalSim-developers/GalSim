@@ -175,6 +175,15 @@ def test_uniform():
             np.array(testResult), np.array(testResult2),
             err_msg='Wrong uniform random number sequence generated after reset(rng)')
 
+    # Check dump, raw
+    np.testing.assert_equal(u.raw(), u2.raw(),
+            err_msg='Uniform deviates generate different raw values')
+
+    rng2 = galsim.BaseDeviate(testseed)
+    rng2.discard(4)
+    np.testing.assert_equal(rng.raw(), rng2.raw(),
+            err_msg='BaseDeviates generate different raw values after discard')
+
     # Check that two connected uniform deviates work correctly together.
     u2 = galsim.UniformDeviate(testseed)
     u.reset(u2)

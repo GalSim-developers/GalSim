@@ -129,7 +129,7 @@ def main(argv):
         t1 = time.time()
 
         # Initialize the random number generator we will be using.
-        rng = galsim.UniformDeviate(random_seed+k)
+        rng = galsim.UniformDeviate(random_seed+k+1)
 
         gal = galsim.RealGalaxy(real_galaxy_catalog, index = k)
         logger.debug('   Read in training sample galaxy and PSF from file')

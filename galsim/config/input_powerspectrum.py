@@ -15,46 +15,101 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
 import galsim
+import math
 
-def PowerSpectrumInit(ps, config, base):
-    if 'grid_spacing' in config:
-        grid_spacing = galsim.config.ParseValue(config, 'grid_spacing', base, float)[0]
-    elif 'tile_xsize' in base:
-        # Then we have a tiled image.  Can use the tile spacing as the grid spacing.
-        stamp_size = min(base['tile_xsize'], base['tile_ysize'])
-        # Note: we use the (max) pixel scale at the image center.  This isn't 
-        # necessarily optimal, but it seems like the best choice.
-        scale = base['wcs'].maxLinearScale(base['image_center'])
-        grid_spacing = stamp_size * scale
-    else:
-        raise AttributeError("power_spectrum.grid_spacing required for non-tiled images")
+# This file adds input type nfw_halo and value types PowerSpectrumShear and
+# PowerSpectrumMagnification.
 
-    if 'tile_xsize' in base and base['tile_xsize'] == base['tile_ysize']:
-        # PowerSpectrum can only do a square FFT, so make it the larger of the two n's.
-        ngrid = max(base['nx_tiles'], base['ny_tiles'])
-        # Normally that's good, but if tiles aren't square, need to drop through to the
-        # second option.
-    else:
-        import math
-        image_size = max(base['image_xsize'], base['image_ysize'])
-        scale = base['wcs'].maxLinearScale(base['image_center'])
-        ngrid = int(math.ceil(image_size * scale / grid_spacing))
+# A PowerSpectrum input type requires a special initialization at the start of each image
+# to build the shear grid.  This is done in SetupPowerSpecrum.  There are also a couple of
+# parameters that are specific to that step, which we want to ignore when getting the
+# initialization kwargs, so we define a special GetPowerSpectrumKwargs function here.
 
-    if 'interpolant' in config:
-        interpolant = galsim.config.ParseValue(config, 'interpolant', base, str)[0]
-    else:
-        interpolant = None
+from .input import InputLoader
+class PowerSpectrumLoader(InputLoader):
+    def __init__(self):
+        types = ['PowerSpectrumShear', 'PowerSpectrumMagnification']
+        super(self.__class__, self).__init__(galsim.PowerSpectrum, types)
 
-    # We don't care about the output here.  This just builds the grid, which we'll
-    # access for each object using its position.
-    if base['wcs'].isCelestial():
-        world_center = galsim.PositionD(0,0)
-    else:
-        world_center = base['wcs'].toWorld(base['image_center'])
-    ps.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid, center=world_center,
-                 rng=base['rng'], interpolant=interpolant)
+    def getKwargs(self, config, base, logger):
+        """Parse the config dict and return the kwargs needed to build the PowerSpectrum object.
 
+        @param config       The configuration dict for 'power_spectrum'
+        @param base         The base configuration dict
+        @param logger       If given, a logger object to log progress.
+
+        @returns kwargs, safe
+        """
+        # Ignore these parameters here, since they are for the buildGrid step, not the
+        # initialization of the PowerSpectrum object.
+        ignore = ['grid_spacing', 'interpolant']
+        opt = galsim.PowerSpectrum._opt_params
+        return galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
+
+    def setupImage(self, input_obj, config, base, logger=None):
+        """Set up the PowerSpectrum input object's gridded values based on the
+        size of the image and the grid spacing.
+
+        @param input_obj    The PowerSpectrum object to use
+        @param config       The configuration dict for 'power_spectrum'
+        @param base         The base configuration dict.
+        @param logger       If given, a logger object to log progress.
+        """
+        if 'grid_spacing' in config:
+            grid_spacing = galsim.config.ParseValue(config, 'grid_spacing', base, float)[0]
+        elif 'grid_xsize' in base and 'grid_ysize' in base:
+            # Then we have a tiled image.  Can use the tile spacing as the grid spacing.
+            grid_size = min(base['grid_xsize'], base['grid_ysize'])
+            # This size is in pixels, so we need to convert to arcsec using the pixel scale.
+            # Note: we use the (max) pixel scale at the image center.  This isn't
+            # necessarily optimal, but it seems like the best choice for a non-trivial WCS.
+            scale = base['wcs'].maxLinearScale(base['image_center'])
+            grid_spacing = grid_size * scale
+        else:
+            raise AttributeError("power_spectrum.grid_spacing required for non-tiled images")
+
+        if 'grid_xsize' in base and base['grid_xsize'] == base['grid_ysize']:
+            # PowerSpectrum can only do a square FFT, so make it the larger of the two n's.
+            nx_grid = int(math.ceil(base['image_xsize']/base['grid_xsize']))
+            ny_grid = int(math.ceil(base['image_ysize']/base['grid_ysize']))
+            ngrid = max(nx_grid, ny_grid)
+            # Normally that's good, but if tiles aren't square, need to drop through to the
+            # second option.
+        else:
+            image_size = max(base['image_xsize'], base['image_ysize'])
+            scale = base['wcs'].maxLinearScale(base['image_center'])
+            ngrid = int(math.ceil(image_size * scale / grid_spacing))
+
+        if 'interpolant' in config:
+            interpolant = galsim.config.ParseValue(config, 'interpolant', base, str)[0]
+        else:
+            interpolant = None
+
+        # We don't care about the output here.  This just builds the grid, which we'll
+        # access for each object using its position.
+        if base['wcs'].isCelestial():
+            world_center = galsim.PositionD(0,0)
+        else:
+            world_center = base['wcs'].toWorld(base['image_center'])
+        input_obj.buildGrid(grid_spacing=grid_spacing, ngrid=ngrid, center=world_center,
+                    rng=base['rng'], interpolant=interpolant)
+
+        # Make sure this process gives consistent results regardless of the number of processes
+        # being used.
+        if not isinstance(input_obj, galsim.PowerSpectrum):
+            # Then input_obj is really a proxy, which means the rng was pickled, so we need to
+            # discard the same number of random calls from the one in the config dict.
+            base['rng'].discard(input_obj.nRandCallsForBuildGrid())
+
+# Register this as a valid input type
+from .input import RegisterInputType
+RegisterInputType('power_spectrum', PowerSpectrumLoader())
+
+
+# There are two value types associated with this: PowerSpectrumShear and
+# PowerSpectrumMagnification.
 
 def _GenerateFromPowerSpectrumShear(config, base, value_type):
     """@brief Return a shear calculated from a PowerSpectrum object.
@@ -97,8 +152,9 @@ def _GenerateFromPowerSpectrumMagnification(config, base, value_type):
     mu = power_spectrum.getMagnification(pos)
 
     max_mu = kwargs.get('max_mu', 25.)
-    if not max_mu > 0.: 
-        raise ValueError("Invalid max_mu=%f (must be > 0) for PowerSpectrumMagnification"%max_mu)
+    if not max_mu > 0.:
+        raise ValueError(
+            "Invalid max_mu=%f (must be > 0) for type = PowerSpectrumMagnification"%max_mu)
 
     if mu < 0 or mu > max_mu:
         import warnings
@@ -109,3 +165,7 @@ def _GenerateFromPowerSpectrumMagnification(config, base, value_type):
     #print base['obj_num'],'PS mu = ',mu
     return mu, False
 
+# Register these as valid value types
+from .value import RegisterValueType
+RegisterValueType('PowerSpectrumShear', _GenerateFromPowerSpectrumShear, [ galsim.Shear ])
+RegisterValueType('PowerSpectrumMagnification', _GenerateFromPowerSpectrumMagnification, [ float ])

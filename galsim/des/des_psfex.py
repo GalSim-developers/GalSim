@@ -297,8 +297,8 @@ class DES_PSFEx(object):
 import galsim.config
 
 # First we need to add the class itself as a valid input_type.
-galsim.config.process.valid_input_types['des_psfex'] = ('galsim.des.DES_PSFEx',
-                                                        [], False, False, None, ['DES_PSFEx'])
+galsim.config.RegisterInputType('des_psfex',
+                                galsim.config.InputLoader(DES_PSFEx, ['DES_PSFEx']))
 
 # Also make a builder to create the PSF object for a given position.
 # The builders require 4 args.
@@ -340,7 +340,6 @@ def BuildDES_PSFEx(config, base, ignore, gsparams, logger):
     # that, since they will be at different positions, so the interpolated PSF will be different.
     return psf, False
 
-
 # Register this builder with the config framework:
-galsim.config.gsobject.valid_gsobject_types['DES_PSFEx'] = 'galsim.des.BuildDES_PSFEx'
+galsim.config.RegisterObjectType('DES_PSFEx', BuildDES_PSFEx)
 

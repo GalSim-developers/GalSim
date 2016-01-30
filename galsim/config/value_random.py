@@ -17,12 +17,15 @@
 #
 import galsim
 
+# This file adds extra value types involving random deviates: Random, RandomGaussian,
+# RandomPoisson, RandomBinomial, RandomWeibull, RandomGamma, RandomChi2, RandomDistribution,
+# and RandomCircle.
 
 def _GenerateFromRandom(config, base, value_type):
     """@brief Return a random value drawn from a uniform distribution
     """
     if 'rng' not in base:
-        raise ValueError("No base['rng'] available for Random")
+        raise ValueError("No base['rng'] available for type = Random")
     rng = base['rng']
     ud = galsim.UniformDeviate(rng)
 
@@ -62,7 +65,7 @@ def _GenerateFromRandomGaussian(config, base, value_type):
     """@brief Return a random value drawn from a Gaussian distribution
     """
     if 'rng' not in base:
-        raise ValueError("No base['rng'] available for RandomGaussian")
+        raise ValueError("No base['rng'] available for type = RandomGaussian")
     rng = base['rng']
 
     req = { 'sigma' : float }
@@ -125,7 +128,7 @@ def _GenerateFromRandomPoisson(config, base, value_type):
     """@brief Return a random value drawn from a Poisson distribution
     """
     if 'rng' not in base:
-        raise ValueError("No base['rng'] available for RandomPoisson")
+        raise ValueError("No base['rng'] available for type = RandomPoisson")
     rng = base['rng']
 
     req = { 'mean' : float }
@@ -143,7 +146,7 @@ def _GenerateFromRandomBinomial(config, base, value_type):
     """@brief Return a random value drawn from a Binomial distribution
     """
     if 'rng' not in base:
-        raise ValueError("No base['rng'] available for RandomBinomial")
+        raise ValueError("No base['rng'] available for type = RandomBinomial")
     rng = base['rng']
 
     req = {}
@@ -159,7 +162,7 @@ def _GenerateFromRandomBinomial(config, base, value_type):
     N = kwargs.get('N',1)
     p = kwargs.get('p',0.5)
     if value_type is bool and N != 1:
-        raise ValueError("N must = 1 for RandomBinomial used in bool context")
+        raise ValueError("N must = 1 for type = RandomBinomial used in bool context")
 
     dev = galsim.BinomialDeviate(rng,N=N,p=p)
     val = dev()
@@ -172,7 +175,7 @@ def _GenerateFromRandomWeibull(config, base, value_type):
     """@brief Return a random value drawn from a Weibull distribution
     """
     if 'rng' not in base:
-        raise ValueError("No base['rng'] available for RandomWeibull")
+        raise ValueError("No base['rng'] available for type = RandomWeibull")
     rng = base['rng']
 
     req = { 'a' : float, 'b' : float }
@@ -191,7 +194,7 @@ def _GenerateFromRandomGamma(config, base, value_type):
     """@brief Return a random value drawn from a Gamma distribution
     """
     if 'rng' not in base:
-        raise ValueError("No base['rng'] available for RandomGamma")
+        raise ValueError("No base['rng'] available for type = RandomGamma")
     rng = base['rng']
 
     req = { 'k' : float, 'theta' : float }
@@ -210,7 +213,7 @@ def _GenerateFromRandomChi2(config, base, value_type):
     """@brief Return a random value drawn from a Chi^2 distribution
     """
     if 'rng' not in base:
-        raise ValueError("No base['rng'] available for RandomChi2")
+        raise ValueError("No base['rng'] available for type = RandomChi2")
     rng = base['rng']
 
     req = { 'n' : float }
@@ -228,26 +231,41 @@ def _GenerateFromRandomDistribution(config, base, value_type):
     """@brief Return a random value drawn from a user-defined probability distribution
     """
     if 'rng' not in base:
-        raise ValueError("No rng available for RandomDistribution")
+        raise ValueError("No rng available for type = RandomDistribution")
     rng = base['rng']
 
+    ignore = [ 'x', 'f', 'x_log', 'f_log' ]
     opt = {'function' : str, 'interpolant' : str, 'npoints' : int, 
            'x_min' : float, 'x_max' : float }
-    kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt)
-    
-    if '_distdev' in config:
+    kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
+
+    # Allow the user to give x,f instead of function to define a LookupTable.
+    if 'x' in config or 'f' in config:
+        if 'x' not in config or 'f' not in config:
+            raise AttributeError("Both x and f must be provided for type=RandomDistribution")
+        if 'function' in kwargs:
+            raise AttributeError("Cannot provide function with x,f for type=RandomDistribution")
+        x = config['x']
+        f = config['f']
+        x_log = config.get('x_log', False)
+        f_log = config.get('f_log', False)
+        interpolant = kwargs.pop('interpolant', 'spline')
+        kwargs['function'] = galsim.LookupTable(x=x, f=f, x_log=x_log, f_log=f_log,
+                                                interpolant=interpolant)
+    else:
+        if 'function' not in kwargs:
+            raise AttributeError("function or x,f  must be provided for type=RandomDistribution")
+        if 'x_log' in config or 'f_log' in config:
+            raise AttributeError("x_log, f_log are invalid with function for type=RandomDistribution")
+
+    if '_distdev' not in config or config['_distdev_kwargs'] != kwargs:
         # The overhead for making a DistDeviate is large enough that we'd rather not do it every 
         # time, so first check if we've already made one:
-        distdev = config['_distdev']
-        if config['_distdev_kwargs'] != kwargs:
-            distdev=galsim.DistDeviate(rng,**kwargs)
-            config['_distdev'] = distdev
-            config['_distdev_kwargs'] = kwargs
-    else:
-        # Otherwise, just go ahead and make a new one.
         distdev=galsim.DistDeviate(rng,**kwargs)
         config['_distdev'] = distdev
         config['_distdev_kwargs'] = kwargs
+    else:
+        distdev = config['_distdev']
 
     # Typically, the rng will change between successive calls to this, so reset the 
     # seed.  (The other internal calculations don't need to be redone unless the rest of the
@@ -263,7 +281,7 @@ def _GenerateFromRandomCircle(config, base, value_type):
     """@brief Return a PositionD drawn from a circular top hat distribution.
     """
     if 'rng' not in base:
-        raise ValueError("No base['rng'] available for= RandomCircle")
+        raise ValueError("No base['rng'] available for type = RandomCircle")
     rng = base['rng']
 
     req = { 'radius' : float }
@@ -292,4 +310,14 @@ def _GenerateFromRandomCircle(config, base, value_type):
     #print base['obj_num'],'RandomCircle: ',pos
     return pos, False
 
-
+# Register these as valid value types
+from .value import RegisterValueType
+RegisterValueType('Random', _GenerateFromRandom, [ float, int, bool, galsim.Angle ])
+RegisterValueType('RandomGaussian', _GenerateFromRandomGaussian, [ float ])
+RegisterValueType('RandomPoisson', _GenerateFromRandomPoisson, [ float, int ])
+RegisterValueType('RandomBinomial', _GenerateFromRandomBinomial, [ float, int, bool ])
+RegisterValueType('RandomWeibull', _GenerateFromRandomWeibull, [ float ])
+RegisterValueType('RandomGamma', _GenerateFromRandomGamma, [ float ])
+RegisterValueType('RandomChi2', _GenerateFromRandomChi2, [ float ])
+RegisterValueType('RandomDistribution', _GenerateFromRandomDistribution, [ float ])
+RegisterValueType('RandomCircle', _GenerateFromRandomCircle, [ galsim.PositionD ])
