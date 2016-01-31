@@ -557,7 +557,8 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True
 
     The details of how the images are written to file depends on the arguments.
 
-    @param image_list   A Python list of Images.
+    @param image_list   A Python list of Images.  (For convenience, some items in this list
+                        may be HDUs already.  Any Images will be converted into pyfits HDUs.)
     @param file_name    The name of the file to write to.  [Either `file_name` or `hdu_list` is 
                         required.]
     @param dir          Optionally a directory name can be provided if `file_name` does not 
@@ -583,13 +584,19 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True
         hdu_list = pyfits.HDUList()
 
     for image in image_list:
-        hdu = _add_hdu(hdu_list, image.array, pyfits_compress)
-        if image.wcs:
-            image.wcs.writeToFitsHeader(hdu.header, image.bounds)
+        if isinstance(image, galsim.Image):
+            hdu = _add_hdu(hdu_list, image.array, pyfits_compress)
+            if image.wcs:
+                image.wcs.writeToFitsHeader(hdu.header, image.bounds)
+        else:
+            # Assume that image is really an HDU.  If not, this should give a reasonable error
+            # message.  (The base type of HDUs vary among versions of pyfits, so it's hard to
+            # check explicitly with an isinstance call.  For newer pyfits versions, it is
+            # pyfits.hdu.base.ExtensionHDU, but not in older versions.)
+            hdu_list.append(image)
 
     if file_name:
         _write_file(file_name, dir, hdu_list, clobber, file_compress, pyfits_compress)
-
 
 
 def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
@@ -771,7 +778,7 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
 
     @returns the image as an Image instance.
     """
-    
+
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
     if file_name and hdu_list is not None:

@@ -212,7 +212,7 @@ class DistDeviate(_galsim.BaseDeviate):
                         BaseDeviate.  Using 0 means to generate a seed from the system. [default: 0]
     @param function     A callable function giving a probability distribution or the name of a 
                         file containing a probability distribution as a 2-column ASCII table.
-                        [default: None]
+                        [required]
     @param x_min        The minimum desired return value (required for non-LookupTable
                         callable functions; will raise an error if not passed in that case, or if
                         passed in any other case) [default: None]

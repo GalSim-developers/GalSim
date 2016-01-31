@@ -14,7 +14,7 @@
 "#" : "varies among the images.  Each galaxy has the same applied shear.  The noise is simple",
 "#" : "Poisson noise.  We write the images out into a multi-extension fits file.",
 
-"#" : "See deom4.yaml for more extensive commentary about the features here.",
+"#" : "See demo4.yaml for more extensive commentary about the features here.",
 
 "psf" : {
     "type" : "Moffat",

@@ -28,20 +28,23 @@
 # as the second HDU in the file.  For the galaxies, we use a random selection from 5 specific
 # RealGalaxy objects, selected to be 5 particularly irregular ones.  (These are taken from 
 # the same catalog of 100 objects that demo6 used.)  The galaxies are oriented in a ring 
-# test (Nakajima & Bernstein 2007) of 20 each.
+# test (Nakajima & Bernstein 2007) of 20 each.  And we again output a truth catalog with the
+# correct applied shear for each object (among other information).
 #
 # New features introduced in this demo:
 #
 # - obj type : Ring (..., full_rotation)
 # - obj type : RealGalaxy (..., id)
 # - type : Eval using world_pos variable, user-defined variables and math functions
-# - top level field eval_variables
+# - type : Current
 # - shear_value : PowerSpectrumShear 
 # - pos_value : RTheta (r, theta)
 # - image type : Tiled (..., order)
 # - input : power_spectrum (e_power_function, b_power_function)
-# - output.psf : hdu, signal_to_noise, draw_method
+# - output.psf : hdu, signal_to_noise, draw_method, offset
+# - output.truth : hdu
 #
+# - Evaluated values in output.truth.columns
 
 # Define the PSF profile
 psf : 
@@ -69,11 +72,13 @@ psf :
             #     b = bool
             #     s = string
             #     a = Angle
-            #     p = Position
+            #     p = PositionD
             #     g = Shear
+            #     x = GSObject
             # Thus, fr here is a float variable named r.
+            # (Examples of i, p, g, and x codes can be seen below in the output.truth field.)
             fr : { type : Eval , str : '(world_pos.x**2 + world_pos.y**2)**0.5' } 
-            # Now we can use this variable (without the first letter) in our string:
+            # Now we can use this variable (as r, not fr) in our string:
             str : '0.4 * (r/100)**1.5'   # large value at the edge, so visible by eye.
         beta:
             type : Eval
@@ -89,7 +94,7 @@ gal :
     # Last time we used Ring (demo5), we had num=2 to make pairs of 90 degree rotated
     # galaxies.  This example is more like a typical ring test where the same galaxy profile
     # is drawn at many orientations stepped uniformly in angle, making a ring in e1-e2 space.
-    num : &num_in_ring 20
+    num : 20
 
     first :
         type : RealGalaxy
@@ -100,12 +105,18 @@ gal :
             # However, sequences are indexed by the overall object number, so in order to
             # step through the items in this list once for each time it gets to the "first"
             # item, we need to set the index to repeat 20 times before incrementing.
-            # We again use the convenient YAML variable name notation to do so.
-            index : { type : Sequence , repeat : *num_in_ring }
+            index :
+                type : Sequence
+                # You can access the current value of any other item in the config dict using
+                # type = Current.  The syntax for the key is to treat the config levels as
+                # attributes.  So the number of galaxies in the ring defined above is gal.num.
+                # You can use any value this way.  If it hasn't actually been evaluated yet,
+                # it will evaluate it as needed for the current object.
+                repeat : { type : Current, key : gal.num }
 
-        # Make the galaxies a factor of 3 larger (in linear size, not area) than their
-        # original observed size.
-        dilation : 3
+    # Make the galaxies a factor of 3 larger (in linear size, not area) than their
+    # original observed size.
+    dilation : 3
 
     # If your underlying galaxy (defined in first) has rotational symmetry (e.g. a sheared 
     # exponential profile), then you would typically want the full rotation spanned by the 
@@ -120,21 +131,15 @@ gal :
 
     shift : 
         type : RTheta
-        # Half a pixel in a random direction
-        # This time, we use the pixel_scale variable defined in eval_variables (below), 
-        # so we don't need to define it here.
-        r : { type : Eval , str : 'pixel_scale * 0.5' }
+        # Half a pixel in a random direction.
+        r :
+            type : Eval
+            str : 'pixel_scale * 0.5'
+            # We again use the Current type, this time to access image.pixel_scale defined below.
+            fpixel_scale : { type : Current, key : image.pixel_scale }
         theta : { type : Random }
 
     signal_to_noise : 100
-
-
-# Anything defined in eval_variables will be available for all Eval commands, so you don't 
-# have to repeat them for each one.  This is most useful when the same variable is used 
-# in multiple places.  In this case, we use the pixel_scale for the shift above, and also
-# as a trivial evaluation for the image pixel_scale below.
-eval_variables :
-    fpixel_scale : 0.44  # arcsec / pixel
 
 
 # Define some other information about the images 
@@ -159,7 +164,7 @@ image :
     # We use 'random' here so the ring test galaxies don't appear in order along the rows.
     order : 'random'
 
-    pixel_scale : { type : Eval , str : 'pixel_scale' }
+    pixel_scale : 0.44  # arcsec / pixel
 
     wcs :
         # This time, we only want to set the world coordinates to be (0,0) at the center
@@ -215,4 +220,93 @@ output :
         # If there is a signal_to_noise value, then it uses the same kind of noise as in the 
         # main image.
         signal_to_noise : 1000
+
+        # Offset the PSF images randomly within the central pixel to better sample the
+        # sub-pixel surface brightness profile.  Note: as with the output.psf.shift parameter
+        # (cf. demo5.yaml), the output field may also take the value 'galaxy', which would mean
+        # to apply the same offset as was applied to the galaxy.  In this case, there is no
+        # such offset, so it wouldn't apply here, but it's an option if you want to match the
+        # offsets of the PSF and galaxy.
+        offset:
+            type : XY
+            x : { type: Random, min: -0.5, max: 0.5 }
+            y : { type: Random, min: -0.5, max: 0.5 }
+
+
+    # Make a truth catalog as a binary table in hdu 2
+    truth :
+        hdu : 2
+
+        columns :
+            gal_num : obj_num
+
+            # We saw in demo9 that position values in the output catalog get converted into two
+            # float values, and the column names get '.x' and '.y' appended to the given name.
+            # If you want, you can instead specify the x and y column names directly, but you
+            # need to do a little calculation to get the values, since these aren't natively
+            # stored anywhere.  To enable this, truth columns can be calculated quantities,
+            # just like any other field in the configuration.  However, only Eval and Current
+            # types are allowed.
+            x_image : { type : Eval, str : 'image_pos.x' }
+            y_image : { type : Eval, str : 'image_pos.y' }
+
+            # Similarly, shear values append '.g1' and '.g2' to the name and output a column
+            # for each of the two components.  However, this isn't necessarily what you want.
+            # E.g. you might want to catalog the e1,e2 definitions of the shape rather than g1,g2.
+            psf_e1 :
+                type : Eval
+                str : 'ellip.e1'
+                # Reminder g is the Eval code for Shear types. (s = str was already taken)
+                gellip : { type : Current, key : 'psf.ellip' }
+            psf_e2 :
+                type : Eval
+                str : 'ellip.e2'
+                gellip : { type : Current, key : 'psf.ellip' }
+
+            psf_fwhm : psf.fwhm
+
+            cosmos_id : gal.first.id
+
+            # Even though we accessed the catalog by id, we can still get the index number
+            # in the catalog via the RealGalaxy index attribute.
+            cosmos_index :
+                type : Eval
+                str : 'orig_gal.index'
+                # The orig_gal variable uses the x code, which is a little different from the
+                # other codes we've seen.  It refers to a GSObject, which needs to already be
+                # built by some other part of the code; the only type that works for these then
+                # is Current.  Here we take the current value stored in gal.first, which is the
+                # RealGalaxy object that was built in that field before the transformations
+                # were applied in the main gal field.
+                xorig_gal : { type : Current, key : 'gal.first' }
+
+            # Fields that are automatically generated are also available.
+            # List, Ring, and Catalog all have an index parameter, but it is often omitted
+            # from the configuration file because the ordering is obvious, so the default is
+            # what you want.  However, we can still use the Ring index here to compute the
+            # rotation angle that was applied.
+            theta :
+                type : Eval
+                str : "index * 360. / num"
+                iindex : { type : Current, key : 'gal.index' }
+                inum : { type : Current, key : 'gal.num' }
+
+            g1 :
+                type : Eval
+                str : 'shear.g1'
+                gshear : { type : Current, key : 'gal.shear' }
+            g2 :
+                type : Eval
+                str : 'shear.g2'
+                gshear : { type : Current, key : 'gal.shear' }
+
+            shift_x :
+                type : Eval
+                str : 'shift.x'
+                pshift : { type : Current, key : 'gal.shift' }
+            shift_y :
+                type : Eval
+                str : 'shift.y'
+                pshift : { type : Current, key : 'gal.shift' }
+
 

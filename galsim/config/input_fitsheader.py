@@ -15,7 +15,14 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
 import galsim
+
+# This file adds input type fits_header and value type FitsHeader.
+
+# The FitsHeader doesn't need anything special other than registration as a valid input type.
+from .input import RegisterInputType, InputLoader
+RegisterInputType('fits_header', InputLoader(galsim.FitsHeader,['FitsHeader'], file_scope=True))
 
 def _GenerateFromFitsHeader(config, base, value_type):
     """@brief Return a value read from a FITS header
@@ -32,4 +39,6 @@ def _GenerateFromFitsHeader(config, base, value_type):
     #print base['file_num'],'Header: key = %s, val = %s'%(key,val)
     return val, safe
 
-
+# Register this as a valid value type
+from .value import RegisterValueType
+RegisterValueType('FitsHeader', _GenerateFromFitsHeader, [ float, int, bool, str ])

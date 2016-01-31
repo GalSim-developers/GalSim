@@ -211,6 +211,19 @@ def ErrorExit(*args, **kwargs):
             conftest_out = p.stdout.readlines()
             out.write('Output of the command %s is:\n'%cmd)
             out.write(''.join(conftest_out) + '\n')
+
+            # For executables, it's often helpful to have a look at what libraries it's trying
+            # to load.
+            if os.access(conftest, os.X_OK):
+                if sys.platform.find('darwin') != -1:
+                    cmd = 'otool -L ' + conftest
+                else:
+                    cmd = 'ldd ' + conftest
+                p = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                     shell=True)
+                otool_out = p.stdout.readlines()
+                out.write('Output of the command %s is:\n'%cmd)
+                out.write(''.join(otool_out) + '\n')
     except:
         out.write("Error trying to get output of conftest executables.\n")
         out.write(sys.exc_info()[0])

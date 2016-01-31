@@ -12,7 +12,7 @@
 "#" : "a secondary mirror.  The noise model includes both a gain and read noise.  And finally,",
 "#" : "we include the effect of a slight telescope distortion.",
       
-"#" : "See deom3.yaml for more extensive commentary about the features here.",
+"#" : "See demo3.yaml for more extensive commentary about the features here.",
 
 "gal" : {
     "type" : "Sum",

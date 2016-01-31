@@ -64,12 +64,14 @@ class Catalog(object):
 
         # First build full file_name
         self.file_name = file_name.strip()
-        if dir:
+        if dir is not None:
             import os
             self.file_name = os.path.join(dir,self.file_name)
     
-        if not file_type:
-            if self.file_name.lower().endswith('.fits'):
+        if file_type is None:
+            import os
+            name, ext = os.path.splitext(file_name)
+            if ext.lower().startswith('.fit'):
                 file_type = 'FITS'
             else:
                 file_type = 'ASCII'
@@ -81,16 +83,18 @@ class Catalog(object):
         self.hdu = hdu
 
         if file_type == 'FITS':
-            self.read_fits(hdu, _nobjects_only)
+            self.readFits(hdu, _nobjects_only)
+        elif file_type == 'ASCII':
+            self.readAscii(comments, _nobjects_only)
         else:
-            self.read_ascii(comments, _nobjects_only)
+            raise ValueError("Invalid file_type %s"%file_type)
             
     # When we make a proxy of this class (cf. galsim/config/stamp.py), the attributes
     # don't get proxied.  Only callable methods are.  So make method versions of these.
     def getNObjects(self) : return self.nobjects
     def isFits(self) : return self.isfits
 
-    def read_ascii(self, comments, _nobjects_only=False):
+    def readAscii(self, comments, _nobjects_only=False):
         """Read in an input catalog from an ASCII file.
         """
         # If all we care about is nobjects, this is quicker:
@@ -122,7 +126,7 @@ class Catalog(object):
         self.ncols = self.data.shape[1]
         self.isfits = False
 
-    def read_fits(self, hdu, _nobjects_only=False):
+    def readFits(self, hdu, _nobjects_only=False):
         """Read in an input catalog from a FITS file.
         """
         from galsim._pyfits import pyfits, pyfits_version
@@ -240,11 +244,11 @@ class Dict(object):
 
         # First build full file_name
         self.file_name = file_name.strip()
-        if dir:
+        if dir is not None:
             import os
             self.file_name = os.path.join(dir,self.file_name)
     
-        if not file_type:
+        if file_type is None:
             import os
             name, ext = os.path.splitext(self.file_name)
             if ext.lower().startswith('.p'):
@@ -255,6 +259,7 @@ class Dict(object):
                 file_type = 'JSON'
             else:
                 raise ValueError('Unable to determine file_type from file_name ending')
+
         file_type = file_type.upper()
         if file_type not in ['PICKLE','YAML','JSON']:
             raise ValueError("file_type must be one of Pickle, YAML, or JSON if specified.")
@@ -270,10 +275,11 @@ class Dict(object):
             elif file_type == 'YAML':
                 import yaml
                 self.dict = yaml.load(f)
-            else:
+            elif file_type == 'JSON':
                 import json
                 self.dict = json.load(f)
-
+            else:
+                raise ValueError("Invalid file_type %s"%file_type)
 
     def get(self, key, default=None):
         # Make a list of keys according to our key_split parameter
@@ -342,4 +348,249 @@ class Dict(object):
     def __hash__(self): return hash(repr(self))
 
 
+
+class OutputCatalog(object):
+    """A class for building up a catalog for output, typically storing truth information
+    about a simulation.
+
+    Each row corresponds to a different object, and each column stores some item of
+    information about that object (e.g. flux or half_light_radius).
+
+    Note: no type checking is done when the data are added in addRow().  It is up to
+    the user to make sure that the values added for each row are compatible with the
+    types given here in the `types` parameter.
+
+    Initialization
+    --------------
+
+    @param names    A list of names for the output columns.
+    @param types    A list of types for the output columns. [default: None, which assumes all
+                    columns are float]
+
+    Attributes
+    ----------
+
+    After construction, the following attributes are available:
+
+        nobjects    The number of objects so far in the catalog.
+        ncols       The number of columns in the catalog.
+        names       The names of the columns.
+        types       The types of the columns.
+        rows        The rows of data that have been accumulated so far.
+
+    """
+    # Watch out for this "Gotcha".  Using _rows=[] as the default argument doesn't work!
+    # https://pythonconquerstheuniverse.wordpress.com/2012/02/15/mutable-default-arguments/
+    def __init__(self, names, types=None, _rows=(), _sort_keys=()):
+        self.names = names
+        if types is None:
+            self.types = [ float for i in names ]
+        else:
+            self.types = types
+        self.rows = list(_rows)
+        self.sort_keys = list(_sort_keys)
+
+    @property
+    def nobjects(self): return len(self.rows)
+    @property
+    def ncols(self): return len(self.names)
+
+    # Again, when we use this through a proxy, we need getters for the attributes.
+    def getNames(self): return self.names
+    def getTypes(self): return self.types
+    def setTypes(self, types): self.types = types
+    def getNObjects(self): return self.nobjects
+    def getNCols(self): return self.ncols
+
+    def addRow(self, row, sort_key=None):
+        """Add a row of data to the catalog.
+
+        Warning: no type checking is done at this point.  If the values in the row do not
+        match the column types, you may get an error when writing, or you may lose precision,
+        depending on the nature of the mismatch.
+
+        @param row          A list with one item per column in the same order as the names list.
+        @param sort_key     If the rows may be added out of order, you can provide a sort_key,
+                            which will be used at the end to re-sort the rows.
+        """
+        if len(row) != self.ncols:
+            raise ValueError("Length of row does not match the number of columns")
+        self.rows.append(tuple(row))
+        if sort_key is None:
+            self.sort_keys.append(self.nobjects)
+        else:
+            self.sort_keys.append(sort_key)
+
+    def write(self, file_name, dir=None, file_type=None, prec=8):
+        """Write the catalog to a file.
+
+        @param file_name    The name of the file to write to.
+        @param dir          Optionally a directory name can be provided if `file_name` does not 
+                            already include it. [default: None]
+        @param file_type    Which kind of file to write to. [default: determine from the file_name
+                            extension]
+        @param prec         Output precision for ASCII. [default: 8]
+        """
+        if dir is not None:
+            import os
+            file_name = os.path.join(dir,file_name)
+
+        # Figure out which file type the catalog is
+        if file_type is None:
+            import os
+            name, ext = os.path.splitext(file_name)
+            if ext.lower().startswith('.fit'):
+                file_type = 'FITS'
+            else:
+                file_type = 'ASCII'
+        file_type = file_type.upper()
+        if file_type not in ['FITS', 'ASCII']:
+            raise ValueError("file_type must be either FITS or ASCII if specified.")
+
+        if file_type == 'FITS':
+            self.writeFits(file_name)
+        elif file_type == 'ASCII':
+            self.writeAscii(file_name, prec)
+        else:
+            raise ValueError("Invalid file_type %s"%file_type)
+
+    def makeData(self):
+        """Returns a numpy array of the data as it should be written to an output file.
+        """
+        import numpy
+
+        cols = zip(*self.rows)
+
+        dtypes = []
+        new_cols = []
+        for col, name, t in zip(cols, self.names, self.types):
+            name = str(name)  # numpy will barf if the name is a unicode string
+            dt = numpy.dtype(t) # just used to categorize the type into int, float, str
+            if dt.kind in numpy.typecodes['AllInteger']:
+                dtypes.append( (name, int) )
+                new_cols.append(col)
+            elif dt.kind in numpy.typecodes['AllFloat']:
+                dtypes.append( (name, float) )
+                new_cols.append(col)
+            elif t == galsim.Angle:
+                dtypes.append( (name + ".rad", float) )
+                new_cols.append( [ val.rad() for val in col ] )
+            elif t == galsim.PositionI:
+                dtypes.append( (name + ".x", int) )
+                dtypes.append( (name + ".y", int) )
+                new_cols.append( [ val.x for val in col ] )
+                new_cols.append( [ val.y for val in col ] )
+            elif t == galsim.PositionD:
+                dtypes.append( (name + ".x", float) )
+                dtypes.append( (name + ".y", float) )
+                new_cols.append( [ val.x for val in col ] )
+                new_cols.append( [ val.y for val in col ] )
+            elif t == galsim.Shear:
+                dtypes.append( (name + ".g1", float) )
+                dtypes.append( (name + ".g2", float) )
+                new_cols.append( [ val.g1 for val in col ] )
+                new_cols.append( [ val.g2 for val in col ] )
+            else:
+                col = [ str(s) for s in col ]
+                maxlen = numpy.max([ len(s) for s in col ])
+                dtypes.append( (name, str, maxlen) )
+                new_cols.append(col)
+
+        data = numpy.array(zip(*new_cols), dtype=dtypes)
+
+        sort_index = numpy.argsort(self.sort_keys)
+        data = data[sort_index]
+
+        return data
+
+    def writeAscii(self, file_name, prec=8):
+        """Write catalog to an ASCII file.
+
+        @param file_name    The name of the file to write to.
+        @param prec         Output precision for floats. [default: 8]
+        """
+        import numpy
+
+        data = self.makeData()
+
+        width = prec+8
+        header_form = ""
+        for i in range(len(data.dtype.names)):
+            header_form += "{%d:^%d} "%(i,width)
+        header = header_form.format(*data.dtype.names)
+
+        fmt = []
+        for name in data.dtype.names:
+            dt = data.dtype[name]
+            if dt.kind in numpy.typecodes['AllInteger']:
+                fmt.append('%%%dd'%(width))
+            elif dt.kind in numpy.typecodes['AllFloat']:
+                fmt.append('%%%d.%de'%(width,prec))
+            else:
+                fmt.append('%%%ds'%(width))
+
+        try:
+            numpy.savetxt(file_name, data, fmt=fmt, header=header)
+        except (AttributeError, TypeError):
+            # header was added with version 1.7, so do it by hand if not available.
+            with open(file_name, 'w') as fid:
+                fid.write('#' + header + '\n')
+                numpy.savetxt(fid, data, fmt=fmt)
+
+    def writeFits(self, file_name):
+        """Write catalog to a FITS file.
+
+        @param file_name    The name of the file to write to.
+        """
+        tbhdu = self.writeFitsHdu()
+        tbhdu.writeto(file_name, clobber=True)
+
+    def writeFitsHdu(self):
+        """Write catalog to a FITS hdu.
+
+        @returns an HDU with the FITS binary table of the catalog.
+        """
+        # Note to developers: Because of problems with pickling in older pyfits versions, this
+        # code is duplicated in galsim/config/extra_truth.py, BuildTruthHDU.  If you change
+        # this function, you should update BuildTruthHDU as well.
+        import numpy
+        from galsim._pyfits import pyfits
+
+        data = self.makeData()
+
+        cols = []
+        for name in data.dtype.names:
+            dt = data.dtype[name]
+            if dt.kind in numpy.typecodes['AllInteger']:
+                cols.append(pyfits.Column(name=name, format='J', array=data[name]))
+            elif dt.kind in numpy.typecodes['AllFloat']:
+                cols.append(pyfits.Column(name=name, format='D', array=data[name]))
+            else:
+                cols.append(pyfits.Column(name=name, format='%dA'%dt.itemsize, array=data[name]))
+
+        cols = pyfits.ColDefs(cols)
+
+        # Depending on the version of pyfits, one of these should work:
+        try:
+            tbhdu = pyfits.BinTableHDU.from_columns(cols)
+        except:
+            tbhdu = pyfits.new_table(cols)
+        return tbhdu
+
+    def __repr__(self):
+        def make_type_str(t):
+            s = repr(t)
+            if s[1:5] == 'type': return s[7:-2]
+            elif s[1:6] == 'class': return s[8:-2]
+            else: return s
+        type_str = "( " + ", ".join([ make_type_str(t) for t in self.types ]) + " )"
+        return "galsim.OutputCatalog(names=%r, types=%s, _rows=%r)"%(
+                self.names, type_str, self.rows)
+
+    def __str__(self):
+        return "galsim.OutputCatalog(name=%r)"%self.names
+
+    def __eq__(self, other): return repr(self) == repr(other)
+    def __ne__(self, other): return not self.__eq__(other)
+    def __hash__(self): return hash(repr(self))
 

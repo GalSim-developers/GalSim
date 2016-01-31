@@ -81,8 +81,8 @@ def parse_args():
             help='additional variables or modifications to variables in the config file. ' +
             'e.g. galsim foo.yaml output.nproc=-1 gal.rotate="{type : Random}"')
         parser.add_argument(
-            '-v', '--verbosity', type=int, action='store', default=2, choices=(0, 1, 2, 3),
-            help='integer verbosity level: min=0, max=3 [default=2]')
+            '-v', '--verbosity', type=int, action='store', default=1, choices=(0, 1, 2, 3),
+            help='integer verbosity level: min=0, max=3 [default=1]')
         parser.add_argument(
             '-l', '--log_file', type=str, action='store', default=None,
             help='filename for storing logging output [default is to stream to stdout]')
@@ -94,6 +94,17 @@ def parse_args():
         parser.add_argument(
             '-m', '--module', type=str, action='append', default=None, 
             help='python module to import before parsing config file')
+        parser.add_argument(
+            '-p', '--profile', action='store_const', default=False, const=True,
+            help='output profiling information at the end of the run')
+        parser.add_argument(
+            '-n', '--njobs', type=int, action='store', default=1, 
+            help='set the total number of jobs that this run is a part of. ' + 
+            'Used in conjunction with -j (--job)')
+        parser.add_argument(
+            '-j', '--job', type=int, action='store', default=1,
+            help='set the job number for this particular run. Must be in [1,njobs]. ' +
+            'Used in conjunction with -n (--njobs)')
         parser.add_argument(
             '--version', action='store_const', default=False, const=True,
             help='show the version of GalSim')
@@ -120,7 +131,7 @@ def parse_args():
         # optparse only allows string choices, so take verbosity as a string and make it int later
         parser.add_option(
             '-v', '--verbosity', type="choice", action='store', choices=('0', '1', '2', '3'),
-            default='2', help='integer verbosity level: min=0, max=3 [default=2]')
+            default='1', help='integer verbosity level: min=0, max=3 [default=1]')
         parser.add_option(
             '-l', '--log_file', type=str, action='store', default=None,
             help='filename for storing logging output [default is to stream to stdout]')
@@ -132,6 +143,17 @@ def parse_args():
         parser.add_option(
             '-m', '--module', type=str, action='append', default=None, 
             help='python module to import before parsing config file')
+        parser.add_option(
+            '-n', '--njobs', type=int, action='store', default=1, 
+            help='set the total number of jobs that this run is a part of. ' + 
+            'Used in conjunction with -j (--job)')
+        parser.add_option(
+            '-j', '--job', type=int, action='store', default=1,
+            help='set the job number for this particular run. Must be in [1,njobs]. ' +
+            'Used in conjunction with -n (--njobs)')
+        parser.add_option(
+            '-p', '--profile', action='store_const', default=False, const=True,
+            help='output profiling information at the end of the run')
         parser.add_option(
             '--version', action='store_const', default=False, const=True,
             help='show the version of GalSim')
@@ -181,8 +203,22 @@ def ParseVariables(variables, logger):
     return new_params
 
 
+def AddModules(config, modules):
+    if modules:
+        if 'modules' not in config:
+            config['modules'] = modules
+        else:
+            config['modules'].extend(modules)
+
 def main():
     args = parse_args()
+
+    if args.njobs < 1:
+        raise ValueError("Invalid number of jobs %d"%args.njobs)
+    if args.job < 1:
+        raise ValueError("Invalid job number %d.  Must be >= 1"%args.job)
+    if args.job > args.njobs:
+        raise ValueError("Invalid job number %d.  Must be <= njobs (%d)"%(args.job,args.njobs))
 
     # Parse the integer verbosity level from the command line args into a logging_level string
     logging_levels = { 0: logging.CRITICAL, 
@@ -191,13 +227,19 @@ def main():
                        3: logging.DEBUG }
     logging_level = logging_levels[args.verbosity]
 
+    # If requested, load the profiler
+    if args.profile:
+        import cProfile, pstats, StringIO
+        pr = cProfile.Profile()
+        pr.enable()
+
     # Setup logging to go to sys.stdout or (if requested) to an output file
     if args.log_file is None:
         logging.basicConfig(format="%(message)s", level=logging_level, stream=sys.stdout)
     else:
         logging.basicConfig(format="%(message)s", level=logging_level, filename=args.log_file)
     logger = logging.getLogger('galsim')
-    
+
     logger.warn('Using config file %s', args.config_file)
     base_config, all_config = galsim.config.ReadConfig(args.config_file, args.file_type, logger)
     logger.debug('Successfully read in config file.')
@@ -205,14 +247,6 @@ def main():
     # Set the root value in base_config
     if 'root' not in base_config:
         base_config['root'] = os.path.splitext(args.config_file)[0]
-
-    # Import any modules if requested
-    if args.module:
-        for module in args.module:
-            try:
-                exec('import galsim.'+module)
-            except:
-                exec('import '+module)
 
     # Process each config document
     for config in all_config:
@@ -223,11 +257,29 @@ def main():
         # Parse the command-line variables:
         new_params = ParseVariables(args.variables, logger)
 
+        # Add modules to the config['modules'] list
+        AddModules(config, args.module)
+
+        # Profiling doesn't work well with multiple processes.  We'll need to separately
+        # enable profiling withing the workers and output when the process ends.  Set
+        # config['profile'] = True to enable this.
+        if args.profile:
+            config['profile'] = True
+
         logger.debug("Process config dict: \n%s", pprint.pformat(config))
 
         # Process the configuration
-        galsim.config.Process(config, logger, new_params=new_params)
+        galsim.config.Process(config, logger, njobs=args.njobs, job=args.job, new_params=new_params)
 
+    if args.profile:
+        # cf. example code here: https://docs.python.org/2/library/profile.html
+        pr.disable()
+        s = StringIO.StringIO()
+        sortby = 'tottime'
+        ps = pstats.Stats(pr, stream=s).sort_stats(sortby).reverse_order()
+        ps.print_stats()
+        logger.error(s.getvalue())
+ 
 
 if __name__ == "__main__":
     main()

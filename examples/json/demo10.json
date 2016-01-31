@@ -11,9 +11,10 @@
 "#" : "as the second HDU in the file.  For the galaxies, we use a random selection from 5 specific",
 "#" : "RealGalaxy objects, selected to be 5 particularly irregular ones.  (These are taken from",
 "#" : "the same catalog of 100 objects that demo6 used.)  The galaxies are oriented in a ring",
-"#" : "test (Nakajima & Bernstein 2007) of 20 each.",
+"#" : "test (Nakajima & Bernstein 2007) of 20 each.  And we again output a truth catalog with the",
+"#" : "correct applied shear for each object (among other information).",
 
-"#" : "See deom10.yaml for more extensive commentary about the features here.",
+"#" : "See demo10.yaml for more extensive commentary about the features here.",
 
 
 "psf" : {
@@ -46,25 +47,28 @@
         "id" : {
             "type" : "List",
             "items" : [ 106416, 106731, 108402, 116045, 116448 ],
-            "index" : { "type" : "Sequence" , "repeat" : 20 }
-        },
-        "dilation" : 3
+            "index" : {
+                "type" : "Sequence",
+                "repeat" : { "type" : "Current", "key" : "gal.num" }
+            }
+        }
     },
+    "dilation" : 3,
     "full_rotation" : "360 deg",
 
     "shear" : { "type" : "PowerSpectrumShear" },
 
     "shift" : {
         "type" : "RTheta",
-        "r" : { "type" : "Eval" , "str" : "pixel_scale * 0.5" },
+        "r" : {
+            "type" : "Eval",
+            "str" : "pixel_scale * 0.5",
+            "fpixel_scale" : { "type" : "Current", "key" : "image.pixel_scale" }
+        },
         "theta" : { "type" : "Random" }
     },
 
     "signal_to_noise" : 100
-},
-
-"eval_variables" : {
-    "fpixel_scale" : 0.44
 },
 
 "image" : {
@@ -97,7 +101,69 @@
     "psf" :  {
         "hdu" : 1,
         "draw_method" : "real_space",
-        "signal_to_noise" : 1000
+        "signal_to_noise" : 1000,
+        "offset" : {
+            "type" : "XY",
+            "x" : { "type": "Random", "min": -0.5, "max": 0.5 },
+            "y" : { "type": "Random", "min": -0.5, "max": 0.5 }
+        }
+    },
+
+    "truth" : {
+        "hdu" : 2,
+        "columns" : {
+            "gal_num" : "obj_num",
+            "x_image" : { "type" : "Eval", "str" : "image_pos.x" },
+            "y_image" : { "type" : "Eval", "str" : "image_pos.y" },
+
+            "psf_e1" : {
+                "type" : "Eval",
+                "str" : "ellip.e1",
+                "gellip" : { "type" : "Current", "key" : "psf.ellip" }
+            },
+            "psf_e2" : {
+                "type" : "Eval",
+                "str" : "ellip.e2",
+                "gellip" : { "type" : "Current", "key" : "psf.ellip" }
+            },
+
+            "psf_fwhm" : "psf.fwhm",
+            "cosmos_id" : "gal.first.id",
+            "cosmos_index" : {
+                "type" : "Eval",
+                "str" : "orig_gal.index",
+                "xorig_gal" : { "type" : "Current", "key" : "gal.first" }
+            },
+
+            "theta" : {
+                "type" : "Eval",
+                "str" : "index * 360. / num",
+                "iindex" : { "type" : "Current", "key" : "gal.index" },
+                "inum" : { "type" : "Current", "key" : "gal.num" }
+            },
+
+            "g1" : {
+                "type" : "Eval",
+                "str" : "shear.g1",
+                "gshear" : { "type" : "Current", "key" : "gal.shear" }
+            },
+            "g2" : {
+                "type" : "Eval",
+                "str" : "shear.g2",
+                "gshear" : { "type" : "Current", "key" : "gal.shear" }
+            },
+
+            "shift_x" : {
+                "type" : "Eval",
+                "str" : "shift.x",
+                "pshift" : { "type" : "Current", "key" : "gal.shift" }
+            },
+            "shift_y" : {
+                "type" : "Eval",
+                "str" : "shift.y",
+                "pshift" : { "type" : "Current", "key" : "gal.shift" }
+            }
+        }
     }
 }
 

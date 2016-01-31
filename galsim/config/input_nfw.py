@@ -15,7 +15,16 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
 import galsim
+
+# This file adds input type nfw_halo and value types NFWHaloShear and NFWHaloMagnification.
+
+# The NFWHalo doesn't need anything special other than registration as a valid input type.
+from .input import RegisterInputType, InputLoader
+RegisterInputType('nfw_halo', InputLoader(galsim.NFWHalo, ['NFWHaloShear', 'NFWHaloMagnification']))
+
+# There are two value types associated with this: NFWHaloShear and NFWHaloMagnification.
 
 def _GenerateFromNFWHaloShear(config, base, value_type):
     """@brief Return a shear calculated from an NFWHalo object.
@@ -28,7 +37,7 @@ def _GenerateFromNFWHaloShear(config, base, value_type):
 
     if 'gal' not in base or 'redshift' not in base['gal']:
         raise ValueError("NFWHaloShear requested, but no gal.redshift defined.")
-    redshift = galsim.config.GetCurrentValue(base['gal'],'redshift')
+    redshift = galsim.config.GetCurrentValue('gal.redshift', base, float)
 
     # There aren't any parameters for this, so just make sure num is the only (optional)
     # one present.
@@ -58,7 +67,7 @@ def _GenerateFromNFWHaloMagnification(config, base, value_type):
 
     if 'gal' not in base or 'redshift' not in base['gal']:
         raise ValueError("NFWHaloMagnification requested, but no gal.redshift defined.")
-    redshift = galsim.config.GetCurrentValue(base['gal'],'redshift')
+    redshift = galsim.config.GetCurrentValue('gal.redshift', base, float)
 
     opt = { 'max_mu' : float, 'num' : int }
     kwargs = galsim.config.GetAllParams(config, base, opt=opt)[0]
@@ -66,8 +75,9 @@ def _GenerateFromNFWHaloMagnification(config, base, value_type):
     mu = nfw_halo.getMagnification(pos,redshift)
 
     max_mu = kwargs.get('max_mu', 25.)
-    if not max_mu > 0.: 
-        raise ValueError("Invalid max_mu=%f (must be > 0) for NFWHaloMagnification"%max_mu)
+    if not max_mu > 0.:
+        raise ValueError(
+            "Invalid max_mu=%f (must be > 0) for type = NFWHaloMagnification"%max_mu)
 
     if mu < 0 or mu > max_mu:
         import warnings
@@ -78,3 +88,7 @@ def _GenerateFromNFWHaloMagnification(config, base, value_type):
     return mu, False
 
 
+# Register these as valid value types
+from .value import RegisterValueType
+RegisterValueType('NFWHaloShear', _GenerateFromNFWHaloShear, [ galsim.Shear ])
+RegisterValueType('NFWHaloMagnification', _GenerateFromNFWHaloMagnification, [ float ])

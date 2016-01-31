@@ -345,7 +345,7 @@ class GSObject(object):
         general case, we draw the profile and estimate the half-light radius directly.
 
         This function (by default at least) is only accurate to a few percent, typically.
-        Possibly worse depending on the profile being measured.  If you care about a high 
+        Possibly worse depending on the profile being measured.  If you care about a high
         precision estimate of the half-light radius, the accuracy can be improved using the
         optional parameter scale to change the pixel scale used to draw the profile.
 
@@ -376,7 +376,7 @@ class GSObject(object):
 
         @returns an estimate of the half-light radius in physical units
         """
-        if hasattr(self, 'half_light_radius'): 
+        if hasattr(self, 'half_light_radius'):
             return self.half_light_radius
 
         if scale is None:
@@ -403,7 +403,7 @@ class GSObject(object):
         where i,j may be either x or y.
 
         If I(x,y) is a Gaussian, then T = Tr(Q) = Qxx + Qyy = 2 sigma^2.  Thus, one reasonable
-        choice for a "radius" for an arbitrary profile is sqrt(T/2).  
+        choice for a "radius" for an arbitrary profile is sqrt(T/2).
 
         In addition, det(Q) = sigma^4.  So another choice for an arbitrary profile is det(Q)^1/4.
 
@@ -412,18 +412,18 @@ class GSObject(object):
         it to return det(Q)^1/4.  And `rtype='both'` will return a tuple with both values.
 
         Note that for the special case of a Gaussian profile, no calculation is necessary, and
-        the `sigma` attribute will be used in both cases.  In the limit as scale->0, this 
+        the `sigma` attribute will be used in both cases.  In the limit as scale->0, this
         function will return the same value, but because finite pixels are drawn, the results
         will not be precisely equal for real use cases.  The approximation being made is that
         the integral of I(x,y) i j dx dy over each pixel can be approximated as
         int(I(x,y) dx dy) * i_center * j_center.
 
         This function (by default at least) is only accurate to a few percent, typically.
-        Possibly worse depending on the profile being measured.  If you care about a high 
+        Possibly worse depending on the profile being measured.  If you care about a high
         precision estimate of the radius, the accuracy can be improved using the optional
         parameters size and scale to change the size and pixel scale used to draw the profile.
 
-        The default is to use the the Nyquist scale for the pixel scale and let drawImage 
+        The default is to use the the Nyquist scale for the pixel scale and let drawImage
         choose a size for the stamp that will enclose at least 99.5% of the flux.  These
         were found to produce results accurate to a few percent on our internal tests.
         Using a smaller scale and larger size will be more accurate at the expense of speed.
@@ -448,7 +448,7 @@ class GSObject(object):
         if rtype not in ['trace', 'det', 'both']:
             raise ValueError("rtype must be one of 'trace', 'det', or 'both'")
 
-        if hasattr(self, 'sigma'): 
+        if hasattr(self, 'sigma'):
             if rtype == 'both':
                 return self.sigma, self.sigma
             else:
@@ -489,7 +489,7 @@ class GSObject(object):
 
         @returns an estimate of the full-width half-maximum in physical units
         """
-        if hasattr(self, 'fwhm'): 
+        if hasattr(self, 'fwhm'):
             return self.fwhm
 
         if scale is None:
@@ -498,7 +498,7 @@ class GSObject(object):
         if centroid is None:
             centroid = self.centroid()
 
-        # Draw the image.  Note: draw with method='sb' here, since the fwhm is a property of the 
+        # Draw the image.  Note: draw with method='sb' here, since the fwhm is a property of the
         # raw surface brightness profile, not integrated over pixels.
         # The offset is to make all the rsq values different to help the precision a bit.
         offset = galsim.PositionD(0.2, 0.33)

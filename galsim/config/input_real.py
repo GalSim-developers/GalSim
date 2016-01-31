@@ -17,24 +17,31 @@
 #
 import galsim
 
+# This file adds input type real_catalog and gsobject types RealGalaxy and RealGalaxyOriginal.
+
+# The RealGalaxyCatalog doesn't need anything special other than registration as a valid
+# input type.
+from .input import RegisterInputType, InputLoader
+RegisterInputType('real_catalog',
+                  InputLoader(galsim.RealGalaxyCatalog, ['RealGalaxy', 'RealGalaxyOriginal']))
+
+# There are two gsobject types that are coupled to this: RealGalaxy and RealGalaxyOriginal.
 
 def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGalaxy'):
     """@brief Build a RealGalaxy from the real_catalog input item.
     """
     real_cat = galsim.config.GetInputObj('real_catalog', config, base, param_name)
 
-    ignore.append('num')
-
     # Special: if index is Sequence or Random, and max isn't set, set it to nobjects-1.
     # But not if they specify 'id' which overrides that.
     if 'id' not in config:
         galsim.config.SetDefaultIndex(config, real_cat.getNObjects())
 
-    kwargs, safe = galsim.config.GetAllParams(config, base, 
+    kwargs, safe = galsim.config.GetAllParams(config, base,
         req = galsim.__dict__['RealGalaxy']._req_params,
         opt = galsim.__dict__['RealGalaxy']._opt_params,
         single = galsim.__dict__['RealGalaxy']._single_params,
-        ignore = ignore)
+        ignore = ignore + ['num'])
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
     if 'rng' not in base:
@@ -48,8 +55,8 @@ def _BuildRealGalaxy(config, base, ignore, gsparams, logger, param_name='RealGal
                 "%s index has gone past the number of entries in the catalog"%index)
 
     kwargs['real_galaxy_catalog'] = real_cat
-    if False:
-        logger.debug('obj %d: %s kwargs = %s',base['obj_num'],param_name,str(kwargs))
+    if logger:
+        logger.debug('obj %d: %s kwargs = %s',base['obj_num'],param_name,kwargs)
 
     gal = galsim.RealGalaxy(**kwargs)
 
@@ -64,3 +71,7 @@ def _BuildRealGalaxyOriginal(config, base, ignore, gsparams, logger):
     return image.original_image, safe
 
 
+# Register these as valid gsobject types
+from .gsobject import RegisterObjectType
+RegisterObjectType('RealGalaxy', _BuildRealGalaxy)
+RegisterObjectType('RealGalaxyOriginal', _BuildRealGalaxyOriginal)

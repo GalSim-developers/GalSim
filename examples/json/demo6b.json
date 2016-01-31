@@ -21,7 +21,7 @@
 "#" : "of output files to make.  The first, demo6a.json is for the PSF output,",
 "#" : "and the second, demo6b.json is for the convolved galaxy images.",
 
-"#" : "See deom6.yaml for more extensive commentary about the features here.",
+"#" : "See demo6.yaml for more extensive commentary about the features here.",
 
 "psf" : {
     "type" : "Sum",

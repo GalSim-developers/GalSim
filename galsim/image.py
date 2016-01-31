@@ -411,13 +411,17 @@ class Image(object):
     def copy(self):
         return Image(image=self.image.copy(), wcs=self.wcs)
 
-    def resize(self, bounds):
+    def resize(self, bounds, wcs=None):
         """Resize the image to have a new bounds (must be a BoundsI instance)
 
         Note that the resized image will have uninitialized data.  If you want to preserve
         the existing data values, you should either use `subImage` (if you want a smaller
         portion of the current Image) or make a new Image and copy over the current values
         into a portion of the new image (if you are resizing to a larger Image).
+
+        @param bounds   The new bounds to resize to.
+        @param wcs      If provided, also update the wcs to the given value. [default: None,
+                        which means keep the existing wcs]
         """
         if not isinstance(bounds, galsim.BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
@@ -426,9 +430,13 @@ class Image(object):
         except:
             # if the image wasn't an ImageAlloc, then above won't work.  So just make it one.
             self.image = _galsim.ImageAlloc[self.dtype](bounds)
+        if wcs is not None:
+            self.wcs = wcs
 
     def subImage(self, bounds):
         """Return a view of a portion of the full image
+
+        This is equivalent to self[bounds]
         """
         if not isinstance(bounds, galsim.BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
@@ -438,6 +446,13 @@ class Image(object):
         # reorigin that you need to update the wcs.  So that's taken care of in im.shift.
         return Image(image=subimage, wcs=self.wcs)
 
+    def setSubImage(self, bounds, rhs):
+        """Set a portion of the full image to the values in another image
+
+        This is equivalent to self[bounds] = rhs
+        """
+        self.subImage(bounds).image.copyFrom(rhs.image)
+
     def __getitem__(self, bounds):
         """Return a view of a portion of the full image
         """
@@ -446,7 +461,7 @@ class Image(object):
     def __setitem__(self, bounds, rhs):
         """Set a portion of the full image to the values in another image
         """
-        self.subImage(bounds).image.copyFrom(rhs.image)
+        self.setSubImage(bounds,rhs)
 
     def copyFrom(self, rhs):
         """Copy the contents of another image

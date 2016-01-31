@@ -16,8 +16,9 @@
 #    and/or other materials provided with the distribution.
 #
 import galsim
-import logging
 
+# This file adds gsobject type Ring which builds an object once every n times, and then
+# rotates it in a ring for the other n-1 times per per group.
 
 def _BuildRing(config, base, ignore, gsparams, logger):
     """@brief  Build a GSObject in a Ring.
@@ -44,7 +45,7 @@ def _BuildRing(config, base, ignore, gsparams, logger):
         full_rotation = math.pi * galsim.radians
 
     dtheta = full_rotation / num
-    if logger and logger.isEnabledFor(logging.DEBUG):
+    if logger:
         logger.debug('obj %d: Ring dtheta = %f',base['obj_num'],dtheta.rad())
 
     if index % num == 0:
@@ -57,3 +58,6 @@ def _BuildRing(config, base, ignore, gsparams, logger):
 
     return gsobject, False
 
+# Register this as a valid gsobject type
+from .gsobject import RegisterObjectType
+RegisterObjectType('Ring', _BuildRing, is_block=True)

@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -16,36 +14,18 @@
 # 2. Redistributions in binary form must reproduce the above copyright notice,
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
-#
 
-cd des
+# The Great3 real-ground-constant branch configuration file
+# Note: This configuration will not produce images _identical_ to the ones used for Great3, 
+# since the order of random number generation is different.  However, it is intended to
+# produce an _equivalent_ simulation as the one produced for Great3.
 
-python=../../bin/installed_python  # For python scripts
-bin=../../bin  # For galsim executable
+# The real-galaxy branch is almost identical to the control branch.  So rather than duplicate
+# everything from cgc_psf.yaml and change one item, we use the template feature of GalSim config.
 
-if [ ! -d "output" ]; then
-    mkdir output
-fi
-if [ ! -d "output_yaml" ]; then
-    mkdir output_yaml
-fi
+# This copies over everything from cgc_psf.yaml
+template : cgc_psf.yaml
 
-/bin/rm -rf output/DECam*
-/bin/rm -rf output_yaml/DECam*
-
-nfiles=1
-time $python draw_psf.py last=$nfiles || exit
-time $bin/galsim draw_psf.yaml output.nfiles=$nfiles || exit
-
-echo 'Checking diffs:'
-
-for chip_num in {1..$nfiles} 
-do
-    root=DECam_00154912_01
-    file_name=${root}_psfex_image.fits
-    ../check_diff output/$file_name output_yaml/$file_name
-    file_name=${root}_fitpsf_image.fits
-    ../check_diff output/$file_name output_yaml/$file_name
-done
-
+# Change the output directory
+output.dir : real/ground/constant
 

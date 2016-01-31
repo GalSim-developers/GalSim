@@ -17,6 +17,13 @@
 #
 import galsim
 
+# This file adds input type cosmos_catalog and gsobject typs COSMOSGalaxy.
+
+# The COSMOSCatalog doesn't need anything special other than registration as a valid input type.
+from .input import RegisterInputType, InputLoader
+RegisterInputType('cosmos_catalog', InputLoader(galsim.COSMOSCatalog, ['COSMOSGalaxy']))
+
+# The gsobject type coupled to this is COSMOSGalaxy.
 
 def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
     """@brief Build a COSMOS galaxy using the cosmos_catalog input item.
@@ -37,7 +44,7 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
 
     if 'gal_type' in kwargs and kwargs['gal_type'] == 'real':
         if 'rng' not in base:
-            raise ValueError("No base['rng'] available for COSMOSGalaxy")
+            raise ValueError("No base['rng'] available for type = COSMOSGalaxy")
         kwargs['rng'] = base['rng']
 
     if 'index' in kwargs:
@@ -46,8 +53,8 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
             raise IndexError(
                 "%s index has gone past the number of entries in the catalog"%index)
 
-    if False:
-        logger.debug('obj %d: COSMOSGalaxy kwargs = %s',base['obj_num'],str(kwargs))
+    if logger:
+        logger.debug('obj %d: COSMOSGalaxy kwargs = %s',base['obj_num'],kwargs)
 
     kwargs['cosmos_catalog'] = cosmos_cat
 
@@ -58,4 +65,6 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
 
     return gal, safe
 
-
+# Register this as a valid gsobject type
+from .gsobject import RegisterObjectType
+RegisterObjectType('COSMOSGalaxy', _BuildCOSMOSGalaxy)

@@ -73,7 +73,7 @@ class COSMOSCatalog(object):
         >>> indices = np.arange(10)
         >>> real_gal_list = cosmos_cat.makeGalaxy(indices, gal_type='real',
         ...                                       noise_pad_size=im_size*pix_scale)
-        >>> param_gal_list = cosmosm_cat.makeGalaxy(indices, gal_type='parametric', chromatic=True)
+        >>> param_gal_list = cosmos_cat.makeGalaxy(indices, gal_type='parametric', chromatic=True)
         >>> for ind in indices:
         >>>     real_gal = galsim.Convolve(real_gal_list[ind], psf)
         >>>     param_gal = galsim.Convolve(param_gal_list[ind], psf)
@@ -118,8 +118,14 @@ class COSMOSCatalog(object):
     @param exclude_fail Exclude galaxies that have failures in the parametric fits? [default: True]
     @param exclude_bad  Exclude those that have evidence of probably being a bad fit?  e.g. n > 5
                         and hlr > 1 arcsec, probably indicates poor sky subtraction. [default: True]
+    @param min_hlr      Exclude galaxies whose fitted half-light-radius is smaller than this value
+                        (in arcsec).  [default: 0, meaning no limit]
     @param max_hlr      Exclude galaxies whose fitted half-light-radius is larger than this value
                         (in arcsec).  [default: 0, meaning no limit]
+    @param min_flux     Exclude galaxies whose fitted flux is smaller than this value.  
+                        [default: 0, meaning no limit]
+    @param max_flux     Exclude galaxies whose fitted flux is larger than this value.  
+                        [default: 0, meaning no limit]
 
     Attributes
     ----------
@@ -131,12 +137,15 @@ class COSMOSCatalog(object):
     _req_params = {}
     _opt_params = { 'file_name' : str, 'image_dir' : str , 'dir' : str, 'preload' : bool,
                     'noise_dir' : str, 'use_real' : bool,
-                    'exclude_fail' : bool, 'exclude_bad' : bool, 'max_hlr' : float  }
+                    'exclude_fail' : bool, 'exclude_bad' : bool, 
+                    'min_hlr' : float, 'max_hlr' : float, 'min_flux' : float, 'max_flux' : float
+                  }
     _single_params = []
     _takes_rng = False
 
     def __init__(self, file_name=None, image_dir=None, dir=None, preload=False, noise_dir=None,
-                 use_real=True, exclude_fail=True, exclude_bad=True, max_hlr=0.,
+                 use_real=True, exclude_fail=True, exclude_bad=True, 
+                 min_hlr=0, max_hlr=0., min_flux=0., max_flux=0.,
                  _nobjects_only=False):
         from galsim._pyfits import pyfits
         self.use_real = use_real
@@ -162,6 +171,7 @@ class COSMOSCatalog(object):
             try:
                 # Read in data.
                 self.param_cat = pyfits.getdata(param_file_name)
+                # Check if this was the right file.  It should have a 'fit_status' column.
                 self.param_cat['fit_status']
             except KeyError:
                 # But if that doesn't work, then the name might be the name of the real catalog,
@@ -170,37 +180,73 @@ class COSMOSCatalog(object):
                 param_file_name = param_file_name[:k] + '_fits' + param_file_name[k:]
                 self.param_cat = pyfits.getdata(param_file_name)
 
-        # If requested, select galaxies based on existence of a usable fit.
+        # NB. The pyfits FITS_Rec class has a bug where it makes a copy of the full
+        # record array in each record (e.g. in getParametricRecord) and then doesn't 
+        # garbage collect it until the top-level FITS_Record goes out of scope.  
+        # This leads to a memory leak of order 10MB or so each time we make a parametric
+        # galaxy.  
+        # cf. https://mail.scipy.org/pipermail/astropy/2014-June/003218.html
+        # also https://github.com/astropy/astropy/pull/520
+        # The simplest workaround seems to be to convert it to a regular numpy recarray.
+        # (This also makes it run much faster, as an extra bonus!)
+        self.param_cat = np.array(self.param_cat, copy=True)
+
         self.orig_index = np.arange(len(self.param_cat))
-        if exclude_fail or exclude_bad or max_hlr > 0.:
-            mask = True
-            if exclude_fail:
-                sersicfit_status = self.param_cat['fit_status'][:,4]
-                bulgefit_status = self.param_cat['fit_status'][:,0]
-                mask &= ( (sersicfit_status > 0) &
-                          (sersicfit_status < 5) &
-                          (bulgefit_status > 0) &
-                          (bulgefit_status < 5) )
+        mask = np.ones(len(self.orig_index), dtype=bool)
 
-            if exclude_bad:
-                hlr = self.param_cat['sersicfit'][:,1]
-                n = self.param_cat['sersicfit'][:,2]
-                mask &= ( (n < 5) | (hlr < 1./cosmos_pix_scale) ) 
-                # May add more cuts here if we discover other kinds of problematic objects.
+        # If requested, select galaxies based on existence of a usable fit.
+        if exclude_fail:
+            sersicfit_status = self.param_cat['fit_status'][:,4]
+            bulgefit_status = self.param_cat['fit_status'][:,0]
+            mask &= ( (sersicfit_status > 0) &
+                      (sersicfit_status < 5) &
+                      (bulgefit_status > 0) &
+                      (bulgefit_status < 5) )
 
+        if exclude_bad:
+            hlr = self.param_cat['sersicfit'][:,1]
+            n = self.param_cat['sersicfit'][:,2]
+            mask &= ( (n < 5) | (hlr < 1./cosmos_pix_scale) ) 
+            # May add more cuts here if we discover other kinds of problematic objects.
+
+        if min_hlr > 0. or max_hlr > 0. or min_flux > 0. or max_flux > 0.:
+            sparams = self.param_cat['sersicfit']
+            hlr_pix = sparams[:,1]
+            n = sparams[:,2]
+            q = sparams[:,3]
+            hlr = cosmos_pix_scale*hlr_pix*np.sqrt(q)
+            if min_hlr > 0.:
+                mask &= (hlr > min_hlr)
             if max_hlr > 0.:
-                hlr = self.param_cat['sersicfit'][:,1]
-                mask &= (hlr < max_hlr / cosmos_pix_scale)
+                mask &= (hlr < max_hlr)
 
-            self.orig_index = self.orig_index[mask]
+            if min_flux > 0. or max_flux > 0.:
+                flux_hlr = sparams[:,0]
+                # The prefactor for n=4 is 3.607.  For n=1, it is 1.901.
+                # It's not linear in these values, but for the sake of efficiency and the 
+                # ability to work on the whole array at once, just linearly interpolate.
+                # Hopefully, this can be improved as part of issue #693.  Maybe by storing the
+                # calculated directly flux in the catalog, rather than just the amplitude of the
+                # surface brightness profile at the half-light-radius?
+                #prefactor = ( (n-1.)*3.607 + (4.-n)*1.901 ) / (4.-1.)
+                prefactor = ((3.607-1.901)/3.) * n + (4.*1.901 - 1.*3.607)/3.
+                flux = 2.0*np.pi*prefactor*(hlr**2)*flux_hlr/cosmos_pix_scale**2
+                if min_flux > 0.:
+                    mask &= (flux > min_flux)
+                if max_flux > 0.:
+                    mask &= (flux < max_flux)
+
+        self.orig_index = self.orig_index[mask]
         self.nobjects = len(self.orig_index)
 
     # We need this method because the config apparatus will use this via a Proxy, and they cannot
     # access attributes directly -- just call methods.  So this is how we get nobjects there.
     def getNObjects(self) : return self.nobjects
 
+    def getOrigIndex(self, index): return self.orig_index[index]
+
     def makeGalaxy(self, index=None, gal_type=None, chromatic=False, noise_pad_size=5,
-                   deep=False, rng=None, gsparams=None):
+                   deep=False, sersic_prec=0.05, rng=None, gsparams=None):
         """
         Routine to construct GSObjects corresponding to the catalog entry with a particular index 
         or indices.
@@ -248,6 +294,13 @@ class COSMOSCatalog(object):
                                 ridiculous choice.]
         @param deep             Modify fluxes and sizes of galaxies in order to roughly simulate
                                 an F814W<25 sample? [default: False]
+        @param sersic_prec      The desired precision on the Sersic index n in parametric galaxies.
+                                GalSim is significantly faster if it gets a smallish number of
+                                Sersic values, so it can cache some of the calculations and use
+                                them again the next time it gets a galaxy with the same index.
+                                If `sersic_prec` is 0.0, then use the exact value of index n from
+                                the catalog.  But if it is >0, then round the index to that
+                                precision.  [default: 0.05]
         @param rng              A random number generator to use for selecting a random galaxy
                                 (may be any kind of BaseDeviate or None) and to use in generating
                                 any noise field when padding.  [default: None]
@@ -293,7 +346,7 @@ class COSMOSCatalog(object):
                 raise RuntimeError("Cannot yet make real chromatic galaxies!")
             gal_list = self._makeReal(indices, noise_pad_size, rng, gsparams)
         else:
-            gal_list = self._makeParametric(indices, chromatic, gsparams)
+            gal_list = self._makeParametric(indices, chromatic, sersic_prec, gsparams)
 
         # If deep, rescale the size and flux
         if deep:
@@ -314,7 +367,7 @@ class COSMOSCatalog(object):
                                    noise_pad_size=noise_pad_size, rng=rng, gsparams=gsparams)
                  for i in indices ]
 
-    def _makeParametric(self, indices, chromatic, gsparams):
+    def _makeParametric(self, indices, chromatic, sersic_prec, gsparams):
         if chromatic:
             # Defer making the Bandpass and reading in SEDs until we actually are going to use them.
             # It's not a huge calculation, but the thin() call especially isn't trivial.
@@ -345,13 +398,18 @@ class COSMOSCatalog(object):
         gal_list = []
         for index in indices:
             record = self.param_cat[self.orig_index[index]]
-            gal = self._buildParametric(record, gsparams, chromatic, self._bandpass, self._sed)
+            gal = self._buildParametric(record, sersic_prec, gsparams,
+                                        chromatic, self._bandpass, self._sed)
             gal_list.append(gal)
 
         return gal_list
 
     @staticmethod
-    def _buildParametric(record, gsparams=None, chromatic=False, bandpass=None, sed=None):
+    def _round_sersic(n, sersic_prec):
+        return float(int(n/sersic_prec + 0.5)) * sersic_prec
+
+    @staticmethod
+    def _buildParametric(record, sersic_prec, gsparams, chromatic, bandpass=None, sed=None):
         # Get fit parameters.  For 'sersicfit', the result is an array of 8 numbers for each
         # galaxy:
         #     SERSICFIT[0]: intensity of light profile at the half-light radius.
@@ -466,6 +524,10 @@ class COSMOSCatalog(object):
             # in case other samples are swapped in that go to higher value of sersic n.
             if gal_n < 0.3: gal_n = 0.3
             if gal_n > 6.0: gal_n = 6.0
+            # GalSim is much more efficient if only a finite number of Sersic n values are used.
+            # This (optionally given constructor args) rounds n to the nearest 0.05.
+            if sersic_prec > 0.:
+                gal_n = COSMOSCatalog._round_sersic(gal_n, sersic_prec)
             gal_q = sparams[3]
             gal_beta = sparams[7]*galsim.radians
             gal_hlr = cosmos_pix_scale*np.sqrt(gal_q)*sparams[1]
@@ -511,7 +573,12 @@ class COSMOSCatalog(object):
     def getParametricRecord(self, index):
         """Get the parametric record for a given index"""
         # Used by _makeSingleGalaxy to circumvent pickling the result.
-        return self.param_cat[self.orig_index[index]]
+        record = self.param_cat[self.orig_index[index]]
+        # Convert to a dict, since on some systems, the numpy record doesn't seem to 
+        # pickle correctly.
+        #record_dict = { k:record[k] for k in record.dtype.names }  # doesn't work in python 2.6
+        record_dict = dict( ((k,record[k]) for k in record.dtype.names) )  # equivalent.
+        return record_dict
 
     def canMakeReal(self):
         """Is it permissible to call makeGalaxy with gal_type='real'?"""
@@ -519,7 +586,7 @@ class COSMOSCatalog(object):
 
     @staticmethod
     def _makeSingleGalaxy(cosmos_catalog, index, gal_type, noise_pad_size=5, deep=False,
-                          rng=None, gsparams=None):
+                          rng=None, sersic_prec=0.05, gsparams=None):
         # A static function that mimics the functionality of COSMOSCatalog.makeGalaxy()
         # for single index and chromatic=False.
         # The only point of this class is to circumvent some pickling issues when using
@@ -543,9 +610,11 @@ class COSMOSCatalog(object):
             real_params = cosmos_catalog.getRealParams(index)
             gal = galsim.RealGalaxy(real_params, noise_pad_size=noise_pad_size, rng=rng,
                                     gsparams=gsparams)
+            # Store the orig_index as gal.index, since the above just sets it as 0.
+            gal.index = cosmos_catalog.getOrigIndex(index)
         else:
             record = cosmos_catalog.getParametricRecord(index)
-            gal = COSMOSCatalog._buildParametric(record, gsparams=gsparams)
+            gal = COSMOSCatalog._buildParametric(record, sersic_prec, gsparams, chromatic=False)
 
         # If deep, rescale the size and flux
         if deep:
@@ -566,7 +635,8 @@ class COSMOSCatalog(object):
     makeGalaxy._opt_params = { "index" : int,
                                "gal_type" : str,
                                "noise_pad_size" : float,
-                               "deep" : bool
+                               "deep" : bool,
+                               "sersic_prec": float,
                              }
     makeGalaxy._single_params = []
     makeGalaxy._takes_rng = True
