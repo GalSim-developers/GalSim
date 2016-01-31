@@ -320,7 +320,7 @@ class LookupTable2D(object):
             raise ValueError("Unknown edge_mode")
         self.edge_mode = edge_mode
 
-        self.f = np.ascontiguousarray(f)
+        self.f = np.array(f)
         ny, nx = self.f.shape
         self.xmin = x0
         self.xmax = x0 + (nx-1)*dx
@@ -357,7 +357,7 @@ class LookupTable2D(object):
         # "local" wcs (the pixel shape part) through the wcs framework.
         wcs = galsim.wcs.JacobianWCS(dx, 0.0, 0.0, dy)
 
-        img = galsim.ImageD(self.f, wcs=wcs)
+        img = galsim.ImageD(np.ascontiguousarray(self.f), wcs=wcs)
         self._ii = galsim.InterpolatedImage(
             img, x_interpolant=self.interpolant, normalization='sb', calculate_stepk=False,
             calculate_maxk=False, pad_factor=1,
