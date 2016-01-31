@@ -65,7 +65,7 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
         obj_num += galsim.config.GetNObjForImage(config, image_num)
         image_num += 1
 
-    def done_func(logger, proc, image_num, image, t):
+    def done_func(logger, proc, k, image, t):
         if logger and image is not None:
             # Note: numpy shape is y,x
             ys, xs = image.array.shape
