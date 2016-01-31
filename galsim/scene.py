@@ -338,6 +338,8 @@ class COSMOSCatalog(object):
 
     def getOrigIndex(self, index): return self.orig_index[index]
 
+    def getNTot(self) : return len(self.param_cat)
+
     def makeGalaxy(self, index=None, gal_type=None, chromatic=False, noise_pad_size=5,
                    deep=False, sersic_prec=0.05, rng=None, gsparams=None):
         """
