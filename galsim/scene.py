@@ -310,31 +310,44 @@ class COSMOSCatalog(object):
                 mask &= ( np.abs(self.selection_cat['dmag']) < 0.8)
 
         if min_hlr > 0. or max_hlr > 0. or min_flux > 0. or max_flux > 0.:
-            sparams = self.param_cat['sersicfit']
-            hlr_pix = sparams[:,1]
-            n = sparams[:,2]
-            q = sparams[:,3]
-            hlr = cosmos_pix_scale*hlr_pix*np.sqrt(q)
+            if 'hlr' not in self.param_cat.dtype.names:
+                # Check if they have a new version of the selection catalog that has precomputed
+                # fluxes etc.  If not, do the calculations, which include some approximations in
+                # getting the flux.
+                import warnings
+                warnings.warn(
+                    'You seem to have an old version of the COSMOS parameter file.\n'+
+                    'Please run `galsim_download_cosmos -f` to force a re-download\n' +
+                    'of the COSMOS catalog to get faster and more accurate selection.')
+
+                sparams = self.param_cat['sersicfit']
+                hlr_pix = sparams[:,1]
+                n = sparams[:,2]
+                q = sparams[:,3]
+                hlr = cosmos_pix_scale*hlr_pix*np.sqrt(q)
+                if min_flux > 0. or max_flux > 0.:
+                    flux_hlr = sparams[:,0]
+                    # The prefactor for n=4 is 3.607.  For n=1, it is 1.901.
+                    # It's not linear in these values, but for the sake of efficiency and the 
+                    # ability to work on the whole array at once, just linearly interpolate.
+                    # Hopefully, this can be improved as part of issue #693.  Maybe by storing the
+                    # calculated directly flux in the catalog, rather than just the amplitude of the
+                    # surface brightness profile at the half-light-radius?
+                    #prefactor = ( (n-1.)*3.607 + (4.-n)*1.901 ) / (4.-1.)
+                    prefactor = ((3.607-1.901)/3.) * n + (4.*1.901 - 1.*3.607)/3.
+                    flux = 2.0*np.pi*prefactor*(hlr**2)*flux_hlr/cosmos_pix_scale**2
+            else:
+                hlr = self.param_cat['hlr'][:,0] # sersic half-light radius
+                flux = self.param_cat['flux'][:,0]
+
             if min_hlr > 0.:
                 mask &= (hlr > min_hlr)
             if max_hlr > 0.:
                 mask &= (hlr < max_hlr)
-
-            if min_flux > 0. or max_flux > 0.:
-                flux_hlr = sparams[:,0]
-                # The prefactor for n=4 is 3.607.  For n=1, it is 1.901.
-                # It's not linear in these values, but for the sake of efficiency and the 
-                # ability to work on the whole array at once, just linearly interpolate.
-                # Hopefully, this can be improved as part of issue #693.  Maybe by storing the
-                # calculated directly flux in the catalog, rather than just the amplitude of the
-                # surface brightness profile at the half-light-radius?
-                #prefactor = ( (n-1.)*3.607 + (4.-n)*1.901 ) / (4.-1.)
-                prefactor = ((3.607-1.901)/3.) * n + (4.*1.901 - 1.*3.607)/3.
-                flux = 2.0*np.pi*prefactor*(hlr**2)*flux_hlr/cosmos_pix_scale**2
-                if min_flux > 0.:
-                    mask &= (flux > min_flux)
-                if max_flux > 0.:
-                    mask &= (flux < max_flux)
+            if min_flux > 0.:
+                mask &= (flux > min_flux)
+            if max_flux > 0.:
+                mask &= (flux < max_flux)
 
         self.orig_index = self.orig_index[mask]
         self.nobjects = len(self.orig_index)
@@ -448,6 +461,18 @@ class COSMOSCatalog(object):
                 raise RuntimeError("Cannot yet make real chromatic galaxies!")
             gal_list = self._makeReal(indices, noise_pad_size, rng, gsparams)
         else:
+            # If no pre-selection was done based on radius or flux, then we won't have checked
+            # whether we're using the old or new catalog (the latter of which has a lot of
+            # precomputations done).  Just in case, let's check here, though it does seem like a bit
+            # of overkill to emit this warning each time.
+            if 'hlr' not in self.param_cat.dtype.names:
+                import warnings
+                warnings.warn(
+                    'You seem to have an old version of the COSMOS parameter file.\n'+
+                    'Please run `galsim_download_cosmos -f` to force a re-download\n' +
+                    'of the COSMOS catalog and take advantage of pre-computation of\n' +
+                    'many quantities..')
+
             gal_list = self._makeParametric(indices, chromatic, sersic_prec, gsparams)
 
         # If deep, rescale the size and flux
@@ -530,72 +555,86 @@ class COSMOSCatalog(object):
         # the last 8 are for the bulge, with n=4.
         bparams = record['bulgefit']
         sparams = record['sersicfit']
-        # Get the status flag for the fits.  Entries 0 and 4 in 'fit_status' are relevant for
-        # bulgefit and sersicfit, respectively.
-        bstat = record['fit_status'][0]
-        sstat = record['fit_status'][4]
-        # Get the precomputed bulge-to-total flux ratio for the 2-component fits.
-        dvc_btt = record['fit_dvc_btt']
-        # Get the precomputed median absolute deviation for the 1- and 2-component fits.
-        # These quantities are used to ascertain whether the 2-component fit is really
-        # justified, or if the 1-component Sersic fit is sufficient to describe the galaxy
-        # light profile.
-        bmad = record['fit_mad_b']
-        smad = record['fit_mad_s']
+        if 'hlr' not in record:
+            # This code is here for backwards compatibility; if they have an old version of the
+            # catalog, then we have to do all calculations.
+            #
+            # Get the status flag for the fits.  Entries 0 and 4 in 'fit_status' are relevant for
+            # bulgefit and sersicfit, respectively.
+            bstat = record['fit_status'][0]
+            sstat = record['fit_status'][4]
+            # Get the precomputed bulge-to-total flux ratio for the 2-component fits.
+            dvc_btt = record['fit_dvc_btt']
+            # Get the precomputed median absolute deviation for the 1- and 2-component fits.  These
+            # quantities are used to ascertain whether the 2-component fit is really justified, or
+            # if the 1-component Sersic fit is sufficient to describe the galaxy light profile.
+            bmad = record['fit_mad_b']
+            smad = record['fit_mad_s']
 
-        # First decide if we can / should use bulgefit, otherwise sersicfit.  This decision
-        # process depends on: the status flags for the fits, the bulge-to-total ratios (if near
-        # 0 or 1, just use single component fits), the sizes for the bulge and disk (if <=0 then
-        # use single component fits), the axis ratios for the bulge and disk (if <0.051 then use
-        # single component fits), and a comparison of the median absolute deviations to see
-        # which is better.  The reason for the 0.051 cutoff is that the fits were bound at 0.05
-        # as a minimum, so anything below 0.051 generally means that the fitter hit the boundary
-        # for the 2-component fits, typically meaning that we don't have enough information to
-        # make reliable 2-component fits.
-        use_bulgefit = True
-        if ( bstat < 1 or bstat > 4 or dvc_btt < 0.1 or dvc_btt > 0.9 or
-                np.isnan(dvc_btt) or bparams[9] <= 0 or 
-                bparams[1] <= 0 or bparams[11] < 0.051 or bparams[3] < 0.051 or
-                smad < bmad ):
-            use_bulgefit = False
-        # Then check if sersicfit is viable; if not, this galaxy is a total failure.
-        # Note that we can avoid including these in the catalog in the first place by using
-        # `exclusion_level=bad_fits` or `exclusion_level=marginal` when making the catalog.
-        if sstat < 1 or sstat > 4 or sparams[1] <= 0 or sparams[0] <= 0:
-            raise RuntimeError("Cannot make parametric model for this galaxy!")
+            # First decide if we can / should use bulgefit, otherwise sersicfit.  This decision
+            # process depends on: the status flags for the fits, the bulge-to-total ratios (if near
+            # 0 or 1, just use single component fits), the sizes for the bulge and disk (if <=0 then
+            # use single component fits), the axis ratios for the bulge and disk (if <0.051 then use
+            # single component fits), and a comparison of the median absolute deviations to see
+            # which is better.  The reason for the 0.051 cutoff is that the fits were bound at 0.05
+            # as a minimum, so anything below 0.051 generally means that the fitter hit the boundary
+            # for the 2-component fits, typically meaning that we don't have enough information to
+            # make reliable 2-component fits.
+            use_bulgefit = True
+            if ( bstat < 1 or bstat > 4 or dvc_btt < 0.1 or dvc_btt > 0.9 or
+                 np.isnan(dvc_btt) or bparams[9] <= 0 or 
+                 bparams[1] <= 0 or bparams[11] < 0.051 or bparams[3] < 0.051 or
+                 smad < bmad ):
+                use_bulgefit = False
+            # Then check if sersicfit is viable; if not, this galaxy is a total failure.
+            # Note that we can avoid including these in the catalog in the first place by using
+            # `exclusion_level=bad_fits` or `exclusion_level=marginal` when making the catalog.
+            if sstat < 1 or sstat > 4 or sparams[1] <= 0 or sparams[0] <= 0:
+                raise RuntimeError("Cannot make parametric model for this galaxy!")
+        else:
+            use_bulgefit = record['use_bulgefit']
+            if not use_bulgefit and not record['viable_sersic']:
+                raise RuntimeError("Cannot make parametric model for this galaxy!")
 
-        # If we're supposed to use the 2-component fits, get all the parameters.
         if use_bulgefit:
             # Bulge parameters:
             # Minor-to-major axis ratio:
             bulge_q = bparams[11]
             # Position angle, now represented as a galsim.Angle:
             bulge_beta = bparams[15]*galsim.radians
-            # We have to convert from the stored half-light radius along the major axis, to an
-            # azimuthally averaged one (multiplying by sqrt(bulge_q)).  We also have to convert
-            # to our native units of arcsec, from units of COSMOS pixels.
-            bulge_hlr = cosmos_pix_scale*np.sqrt(bulge_q)*bparams[9]
-            # The stored quantity is the surface brightness at the half-light radius.  We have
-            # to convert to total flux within an n=4 surface brightness profile.
-            bulge_flux = 2.0*np.pi*3.607*(bulge_hlr**2)*bparams[8]/cosmos_pix_scale**2
-            # Disk parameters, defined analogously:
             disk_q = bparams[3]
             disk_beta = bparams[7]*galsim.radians
-            disk_hlr = cosmos_pix_scale*np.sqrt(disk_q)*bparams[1]
-            disk_flux = 2.0*np.pi*1.901*(disk_hlr**2)*bparams[0]/cosmos_pix_scale**2
-            bfrac = bulge_flux/(bulge_flux+disk_flux)
+            if 'hlr' not in record:
+                # If we're supposed to use the 2-component fits, get all the parameters.
+                # We have to convert from the stored half-light radius along the major axis, to an
+                # azimuthally averaged one (multiplying by sqrt(bulge_q)).  We also have to convert
+                # to our native units of arcsec, from units of COSMOS pixels.
+                bulge_hlr = cosmos_pix_scale*np.sqrt(bulge_q)*bparams[9]
+                # The stored quantity is the surface brightness at the half-light radius.  We have
+                # to convert to total flux within an n=4 surface brightness profile.
+                bulge_flux = 2.0*np.pi*3.607*(bulge_hlr**2)*bparams[8]/cosmos_pix_scale**2
+                # Disk parameters, defined analogously:
+                disk_hlr = cosmos_pix_scale*np.sqrt(disk_q)*bparams[1]
+                disk_flux = 2.0*np.pi*1.901*(disk_hlr**2)*bparams[0]/cosmos_pix_scale**2
+            else:
+                bulge_hlr = record['hlr'][1]
+                bulge_flux = record['flux'][1]
+                disk_hlr = record['hlr'][2]
+                disk_flux = record['flux'][2]
+
             # Make sure the bulge-to-total flux ratio is not nonsense.
+            bfrac = bulge_flux/(bulge_flux+disk_flux)
             if bfrac < 0 or bfrac > 1 or np.isnan(bfrac):
                 raise RuntimeError("Cannot make parametric model for this galaxy")
 
-            # Then make the two components of the galaxy.
+            # Then combine the two components of the galaxy.
             if chromatic:
                 # We define the GSObjects with flux=1, then multiply by an SED defined to have
                 # the appropriate (observed) magnitude at the redshift in the COSMOS passband.
                 z = record['zphot']
                 target_bulge_mag = record['mag_auto']-2.5*math.log10(bfrac)
                 bulge_sed = sed[0].atRedshift(z).withMagnitude(
-                        target_bulge_mag, bandpass)
+                    target_bulge_mag, bandpass)
                 bulge = galsim.DeVaucouleurs(half_light_radius=bulge_hlr, gsparams=gsparams)
                 bulge *= bulge_sed
                 target_disk_mag = record['mag_auto']-2.5*math.log10((1.-bfrac))
@@ -604,9 +643,9 @@ class COSMOSCatalog(object):
                 disk *= disk_sed
             else:
                 bulge = galsim.DeVaucouleurs(flux=bulge_flux, half_light_radius=bulge_hlr,
-                                                gsparams=gsparams)
+                                             gsparams=gsparams)
                 disk = galsim.Exponential(flux=disk_flux, half_light_radius=disk_hlr,
-                                            gsparams=gsparams)
+                                          gsparams=gsparams)
 
             # Apply shears for intrinsic shape.
             if bulge_q < 1.:
@@ -617,13 +656,12 @@ class COSMOSCatalog(object):
             gal = bulge + disk
         else:
             # Do a similar manipulation to the stored quantities for the single Sersic profiles.
-
             gal_n = sparams[2]
-            # Fudge this if it is at the edge of the allowed n values.  Since GalSim (as of
-            # #325 and #449) allow Sersic n in the range 0.3<=n<=6, the only problem is that
-            # the fits occasionally go as low as n=0.2.  The fits in this file only go to n=6,
-            # so there is no issue with too-high values, but we also put a guard on that side
-            # in case other samples are swapped in that go to higher value of sersic n.
+            # Fudge this if it is at the edge of the allowed n values.  Since GalSim (as of #325 and
+            # #449) allow Sersic n in the range 0.3<=n<=6, the only problem is that the fits
+            # occasionally go as low as n=0.2.  The fits in this file only go to n=6, so there is no
+            # issue with too-high values, but we also put a guard on that side in case other samples
+            # are swapped in that go to higher value of sersic n.
             if gal_n < 0.3: gal_n = 0.3
             if gal_n > 6.0: gal_n = 6.0
             # GalSim is much more efficient if only a finite number of Sersic n values are used.
@@ -632,13 +670,19 @@ class COSMOSCatalog(object):
                 gal_n = COSMOSCatalog._round_sersic(gal_n, sersic_prec)
             gal_q = sparams[3]
             gal_beta = sparams[7]*galsim.radians
-            gal_hlr = cosmos_pix_scale*np.sqrt(gal_q)*sparams[1]
-            # Below is the calculation of the full Sersic n-dependent quantity that goes into
-            # the conversion from surface brightness to flux, which here we're calling
-            # 'prefactor'.  In the n=4 and n=1 cases above, this was precomputed, but here we
-            # have to calculate for each value of n.
-            tmp_ser = galsim.Sersic(gal_n, half_light_radius=gal_hlr, gsparams=gsparams)
-            gal_flux = sparams[0] / tmp_ser.xValue(0,gal_hlr) / cosmos_pix_scale**2
+
+            if 'hlr' not in record:
+                gal_hlr = cosmos_pix_scale*np.sqrt(gal_q)*sparams[1]
+                # Below is the calculation of the full Sersic n-dependent quantity that goes into
+                # the conversion from surface brightness to flux, which here we're calling
+                # 'prefactor'.  In the n=4 and n=1 cases above, this was precomputed, but here we
+                # have to calculate for each value of n.
+                tmp_ser = galsim.Sersic(gal_n, half_light_radius=gal_hlr, gsparams=gsparams)
+                gal_flux = sparams[0] / tmp_ser.xValue(0,gal_hlr) / cosmos_pix_scale**2
+            else:
+                gal_hlr = record['hlr'][0]
+                gal_flux = record['flux'][0]
+                
 
             if chromatic:
                 gal = galsim.Sersic(gal_n, flux=1., half_light_radius=gal_hlr,
