@@ -808,7 +808,7 @@ class PhaseScreenPSF(GSObject):
         self.scale = 1e-9*self.lam/self._pupil_size * galsim.radians / self.scale_unit
 
         self.aper = generate_pupil(self._nu, self._pupil_size, self.diam, self.obscuration)
-        self.img = np.zeros_like(self.aper, dtype=np.float64)
+        self.img = np.zeros_like(self.aper)
 
         self._nstep = int(np.ceil(self.exptime/self.screen_list.time_step))
         # Generate at least one time sample
