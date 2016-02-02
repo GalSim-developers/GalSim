@@ -33,7 +33,7 @@ data_dir = '/Users/rmandelb/great3/data-23.5'
 dmag_file = 'real_galaxy_deltamag_info.fits'
 sn_file = 'real_galaxy_image_selection_info.fits'
 mask_file = 'real_galaxy_mask_info.fits'
-out_file = 'real_galaxy_galsim_selection.fits'
+out_file = 'real_galaxy_catalog_23.5_selection.fits'
 
 # Load the appropriate data from each file.
 dat = pyfits.getdata(os.path.join(data_dir, dmag_file))
