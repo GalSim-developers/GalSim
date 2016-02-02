@@ -602,7 +602,7 @@ class PhaseScreenList(object):
         # failures would occur late rather than early, which makes debugging more difficult.
 
         # Must have unique time_step or time_step is None (for time-indep screen)
-        time_step = {l.time_step for l in self if l.time_step is not None}
+        time_step = set([l.time_step for l in self if l.time_step is not None])
         if len(time_step) == 0:
             self.time_step = None
         elif len(time_step) == 1:

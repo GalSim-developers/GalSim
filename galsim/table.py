@@ -316,7 +316,7 @@ class LookupTable2D(object):
         self.interpolant = interpolant
         if edge_mode is None:
             edge_mode = 'warn'
-        if edge_mode not in {'warn', 'wrap', 'none'}:
+        if edge_mode not in ['warn', 'wrap', 'none']:
             raise ValueError("Unknown edge_mode")
         self.edge_mode = edge_mode
 

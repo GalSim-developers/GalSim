@@ -173,14 +173,14 @@ def test_phase_psf_batch():
 
     t3 = time.time()
     psfs = atm.getPSF(theta_x=theta_x, theta_y=theta_y, exptime=exptime, diam=4.0)
-    print 'time for {} PSFs in batch: {:.2f} s'.format(NPSFs, time.time() - t3)
+    print 'time for {0} PSFs in batch: {1:.2f} s'.format(NPSFs, time.time() - t3)
 
     t4 = time.time()
     more_psfs = []
     for tx, ty in zip(theta_x, theta_y):
         atm.reset()
         more_psfs.append(atm.getPSF(theta_x=tx, theta_y=ty, exptime=exptime, diam=4.0))
-    print 'time for {} PSFs in serial: {:.2f} s'.format(NPSFs, time.time() - t4)
+    print 'time for {0} PSFs in serial: {1:.2f} s'.format(NPSFs, time.time() - t4)
 
     for psf1, psf2 in zip(psfs, more_psfs):
         np.testing.assert_array_equal(
