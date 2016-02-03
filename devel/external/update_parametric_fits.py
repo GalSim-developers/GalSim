@@ -141,7 +141,7 @@ flux[find_double,1] = \
     2.0*np.pi*3.607*(hlr[find_double,1]**2)*bparams[find_double,8]/cosmos_pix_scale**2
 hlr[find_double,2] = cosmos_pix_scale*np.sqrt(bparams[find_double,3])*bparams[find_double,1]
 flux[find_double,2] = \
-    2.0*np.pi*1.901*(hlr[find_double,1]**2)*bparams[find_double,0]/cosmos_pix_scale**2
+    2.0*np.pi*1.901*(hlr[find_double,2]**2)*bparams[find_double,0]/cosmos_pix_scale**2
 flux[find_double,3] = flux[find_double,1] + flux[find_double,2]
 
 # Make useful diagnostic comments and plots

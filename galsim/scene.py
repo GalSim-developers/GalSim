@@ -555,7 +555,7 @@ class COSMOSCatalog(object):
         # the last 8 are for the bulge, with n=4.
         bparams = record['bulgefit']
         sparams = record['sersicfit']
-        if 'hlr' not in record:
+        if 'hlr' not in record.dtype.names:
             # This code is here for backwards compatibility; if they have an old version of the
             # catalog, then we have to do all calculations.
             #
@@ -604,7 +604,7 @@ class COSMOSCatalog(object):
             bulge_beta = bparams[15]*galsim.radians
             disk_q = bparams[3]
             disk_beta = bparams[7]*galsim.radians
-            if 'hlr' not in record:
+            if 'hlr' not in record.dtype.names:
                 # If we're supposed to use the 2-component fits, get all the parameters.
                 # We have to convert from the stored half-light radius along the major axis, to an
                 # azimuthally averaged one (multiplying by sqrt(bulge_q)).  We also have to convert
@@ -671,7 +671,7 @@ class COSMOSCatalog(object):
             gal_q = sparams[3]
             gal_beta = sparams[7]*galsim.radians
 
-            if 'hlr' not in record:
+            if 'hlr' not in record.dtype.names:
                 gal_hlr = cosmos_pix_scale*np.sqrt(gal_q)*sparams[1]
                 # Below is the calculation of the full Sersic n-dependent quantity that goes into
                 # the conversion from surface brightness to flux, which here we're calling
