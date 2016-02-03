@@ -77,9 +77,9 @@ def generate_pupil(nu, pupil_size, diam=None, obscuration=None):
         u = np.fft.fftshift(np.fft.fftfreq(nu, 1./pupil_size))
         u, v = np.meshgrid(u, u)
         rsqr = u**2 + v**2
-        aper = rsqr <= radius**2
+        aper[rsqr > radius**2] = 0.0
         if obscuration is not None:
-            aper *= rsqr >= (radius*obscuration)**2
+            aper[rsqr < (radius*obscuration)**2] = 0.0
     return aper
 
 
