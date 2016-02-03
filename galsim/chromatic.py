@@ -1012,11 +1012,6 @@ class ChromaticAtmosphere(ChromaticObject):
     default values for these are expected to be appropriate for LSST at Cerro Pachon, Chile, but
     they are broadly reasonable for most observatories.
 
-    Note that this function implicitly assumes that lengths are in arcseconds.  Thus, to use this
-    function, you should specify properties like FWHM, half_light_radius, and pixel scales in
-    arcsec.  This is unlike the rest of GalSim, in which Position units only need to be internally
-    consistent.
-
     Note that a ChromaticAtmosphere by itself is NOT the correct thing to use to draw an image of a
     star. Stars (and galaxies too, of course) have an SED that is not flat. To draw a real star, you
     should either multiply the ChromaticAtmosphere object by an SED, or convolve it with a point
@@ -1029,6 +1024,8 @@ class ChromaticAtmosphere(ChromaticObject):
 
     @param base_obj             Fiducial PSF, equal to the monochromatic PSF at `base_wavelength`
     @param base_wavelength      Wavelength represented by the fiducial PSF, in nanometers.
+    @param scale_unit           Units used by base_obj for its linear dimensions.
+                                [default: galsim.arcsec]
     @param alpha                Power law index for wavelength-dependent seeing.  [default: -0.2,
                                 the prediction for Kolmogorov turbulence]
     @param zenith_angle         Angle from object to zenith, expressed as an Angle
@@ -1045,13 +1042,17 @@ class ChromaticAtmosphere(ChromaticObject):
     @param temperature          Temperature in Kelvins.  [default: 293.15 K]
     @param H2O_pressure         Water vapor pressure in kiloPascals.  [default: 1.067 kPa]
     """
-    def __init__(self, base_obj, base_wavelength, **kwargs):
+    def __init__(self, base_obj, base_wavelength, scale_unit=galsim.arcsec, **kwargs):
 
         self.separable = False
         self.wave_list = np.array([], dtype=float)
 
         self.base_obj = base_obj
         self.base_wavelength = base_wavelength
+
+        if isinstance(scale_unit, basestring):
+            scale_unit = galsim.angle.get_angle_unit(scale_unit)
+        self.scale_unit = scale_unit
 
         self.alpha = kwargs.pop('alpha', -0.2)
         # Determine zenith_angle and parallactic_angle from kwargs
@@ -1110,7 +1111,7 @@ class ChromaticAtmosphere(ChromaticObject):
         def shift_fn(w):
             shift_magnitude = galsim.dcr.get_refraction(w, self.zenith_angle, **self.kw)
             shift_magnitude -= self.base_refraction
-            shift_magnitude = shift_magnitude * (galsim.radians / galsim.arcsec)
+            shift_magnitude = shift_magnitude * galsim.radians / self.scale_unit
             sinp, cosp = self.parallactic_angle.sincos()
             shift = (-shift_magnitude * sinp, shift_magnitude * cosp)
             return shift
@@ -2086,14 +2087,18 @@ class ChromaticOpticalPSF(ChromaticObject):
                            docstring for a complete list of options.
     """
     def __init__(self, lam, diam=None, lam_over_diam=None, aberrations=None,
-                           scale_unit=galsim.arcsec, **kwargs):
+                 scale_unit=galsim.arcsec, **kwargs):
         # First, take the basic info.
+        if isinstance(scale_unit, basestring):
+            scale_unit = galsim.angle.get_angle_unit(scale_unit)
+        self.scale_unit = scale_unit
+
         # We have to require either diam OR lam_over_diam:
         if (diam is None and lam_over_diam is None) or \
                 (diam is not None and lam_over_diam is not None):
             raise TypeError("Need to specify telescope diameter OR wavelength/diam ratio")
         if diam is not None:
-            self.lam_over_diam = (1.e-9*lam/diam)*galsim.radians/scale_unit
+            self.lam_over_diam = (1.e-9*lam/diam)*galsim.radians/self.scale_unit
         else:
             self.lam_over_diam = lam_over_diam
         self.lam = lam
@@ -2103,7 +2108,6 @@ class ChromaticOpticalPSF(ChromaticObject):
         else:
             self.aberrations = np.zeros(12)
         self.kwargs = kwargs
-        self.scale_unit = scale_unit
 
         # Define the necessary attributes for this ChromaticObject.
         self.separable = False
@@ -2165,17 +2169,20 @@ class ChromaticAiry(ChromaticObject):
     def __init__(self, lam, diam=None, lam_over_diam=None, scale_unit=galsim.arcsec, **kwargs):
         # First, take the basic info.
         # We have to require either diam OR lam_over_diam:
+        if isinstance(scale_unit, basestring):
+            scale_unit = galsim.angle.get_angle_unit(scale_unit)
+        self.scale_unit = scale_unit
+
         if (diam is None and lam_over_diam is None) or \
                 (diam is not None and lam_over_diam is not None):
             raise TypeError("Need to specify telescope diameter OR wavelength/diam ratio")
         if diam is not None:
-            self.lam_over_diam = (1.e-9*lam/diam)*galsim.radians/scale_unit
+            self.lam_over_diam = (1.e-9*lam/diam)*galsim.radians/self.scale_unit
         else:
             self.lam_over_diam = float(lam_over_diam)
         self.lam = float(lam)
 
         self.kwargs = kwargs
-        self.scale_unit = scale_unit
 
         # Define the necessary attributes for this ChromaticObject.
         self.separable = False
