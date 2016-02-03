@@ -64,9 +64,8 @@ class OpticalPSF(GSObject):
         >>> psf = galsim.OpticalPSF(lam_over_diam, ...)
 
     To make this process a bit simpler, we recommend instead providing the wavelength and diameter
-    separately using the `lam` and `diam` parameters.  GalSim will then convert this to any of
-    the normal kinds of angular units using the `scale_unit` parameter (the default if omitted
-    is arcsec):
+    separately using the parameters `lam` (in nm) and `diam` (in m).  GalSim will then convert this
+    to any of the normal kinds of angular units using the `scale_unit` parameter:
 
         >>> psf = galsim.OpticalPSF(lam=lam, diam=diam, scale_unit=galsim.arcsec, ...)
 
