@@ -184,8 +184,8 @@ class AtmosphericScreen(PhaseScreen):
     @param r0_500        Fried parameter setting the amplitude of turbulence; contributes to "size"
                          of the resulting atmospheric PSF.  Specified at wavelength 500 nm, in units
                          of meters.  [Default: 0.2]
-    @param L0_inv        Inverse outer scale in inverse meters, beyond which turbulence power
-                         spectrum smoothly approaches zero.  [Default: 1./25]
+    @param L0            Outer scale in meters.  The turbulence power spectrum will smoothly
+                         approach zero at scales larger than L0.  [Default: 25.0]
     @param vx            x-component wind velocity in meters/second.  [Default: 0.]
     @param vy            y-component wind velocity in meters/second.  [Default: 0.]
     @param alpha         Square root of fraction of phase that is "remembered" between time_steps
@@ -207,7 +207,7 @@ class AtmosphericScreen(PhaseScreen):
     September 2014
     """
     def __init__(self, screen_size, screen_scale=None, altitude=0.0, time_step=0.03,
-                 r0_500=0.2, L0_inv=1./25.0, vx=0.0, vy=0.0, alpha=1.0, rng=None):
+                 r0_500=0.2, L0=25.0, vx=0.0, vy=0.0, alpha=1.0, rng=None):
 
         if screen_scale is None:
             screen_scale = 0.5 * r0_500
@@ -215,7 +215,7 @@ class AtmosphericScreen(PhaseScreen):
 
         self.time_step = time_step
         self.r0_500 = r0_500
-        self.L0_inv = L0_inv
+        self.L0 = L0
         self.vx = vx
         self.vy = vy
         self.alpha = alpha
@@ -244,16 +244,16 @@ class AtmosphericScreen(PhaseScreen):
 
     def __repr__(self):
         outstr = ("galsim.AtmosphericScreen(%r, %r, altitude=%r, time_step=%r, " +
-                  "r0_500=%r, L0_inv=%r, vx=%r, vy=%r, alpha=%r, rng=%r)")
+                  "r0_500=%r, L0=%r, vx=%r, vy=%r, alpha=%r, rng=%r)")
         return outstr % (self.screen_size, self.screen_scale, self.altitude, self.time_step,
-                         self.r0_500, self.L0_inv, self.vx, self.vy, self.alpha, self.rng)
+                         self.r0_500, self.L0, self.vx, self.vy, self.alpha, self.rng)
 
     def __eq__(self, other):
         return (self.screen_size == other.screen_size and
                 self.screen_scale == other.screen_scale and
                 self.altitude == other.altitude and
                 self.r0_500 == other.r0_500 and
-                self.L0_inv == other.L0_inv and
+                self.L0 == other.L0 and
                 self.vx == other.vx and
                 self.vy == other.vy and
                 self.alpha == other.alpha and
@@ -276,7 +276,7 @@ class AtmosphericScreen(PhaseScreen):
         fx, fy = np.meshgrid(fx, fx)
 
         self.psi = (1./self.screen_size*self.kolmogorov_constant*(self.r0_500**(-5.0/6.0)) *
-                    (fx*fx + fy*fy + self.L0_inv*self.L0_inv)**(-11.0/12.0) *
+                    (fx*fx + fy*fy + 1./(self.L0*self.L0))**(-11.0/12.0) *
                     self.npix * np.sqrt(np.sqrt(2.0)))
         self.psi *= 500.0  # Multiply by 500 here so we can divide by arbitrary lam later.
         self.psi[0, 0] = 0.0
@@ -811,9 +811,8 @@ def Atmosphere(r0_500=0.2, screen_size=30.0, time_step=0.03, altitude=0.0, L0=25
                          [Default: 0.03]
     @param altitude      Altitude of phase screen in km.  This is with respect to the telescope, not
                          sea-level.  [Default: 0.0]
-    @param L0            Outer scale in meters, beyond which turbulence power spectrum smoothly
-                         approaches zero.  Use a value of `None` to effectively set L0 to infinity
-                         (no outer scale).  [Default: 25.0]
+    @param L0            Outer scale in meters.  The turbulence power spectrum will smoothly
+                         approach zero at scales larger than L0.  [Default: 25.0]
     @param velocity      Wind speed in meters/second.  [Default: 0.0]
     @param direction     Wind direction as galsim.Angle [Default: 0.0 * galsim.degrees]
     @param alpha         Fraction of phase that is "remembered" between time_steps.  The fraction
@@ -847,14 +846,11 @@ def Atmosphere(r0_500=0.2, screen_size=30.0, time_step=0.03, altitude=0.0, L0=25
         raise ValueError("r0_500, screen_size, L0, velocity, direction, alpha, " +
                          "screen_scale not broadcastable")
 
-    # Invert L0, with `L0 is None` interpretted as L0 = infinity => L0_inv = 0.0
-    L0_invs = [1./L if L is not None else 0.0 for L in L0s]
-
     # decompose velocities
     vxs, vys = zip(*[v*d.sincos() for v, d in zip(velocities, directions)])
 
-    layers = [AtmosphericScreen(size, scale, alt, time_step=time_step, r0_500=r0_500, L0_inv=L0_inv,
+    layers = [AtmosphericScreen(size, scale, alt, time_step=time_step, r0_500=r0_500, L0=L,
                                 vx=vx, vy=vy, alpha=a, rng=rng)
-              for r0, size, alt, L0_inv, vx, vy, a, scale
-              in zip(r0_500s, sizes, altitudes, L0_invs, vxs, vys, alphas, scales)]
+              for r0, size, alt, L, vx, vy, a, scale
+              in zip(r0_500s, sizes, altitudes, L0s, vxs, vys, alphas, scales)]
     return PhaseScreenList(layers)

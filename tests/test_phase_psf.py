@@ -37,8 +37,9 @@ def test_phase_screen_list():
     rng = galsim.BaseDeviate(1234)
     rng2 = galsim.BaseDeviate(123)
 
-    ar1 = galsim.AtmosphericScreen(10, 1, alpha=0.997, rng=rng)
-    ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.997, rng=rng)
+    # Check that L0=np.inf works here too.
+    ar1 = galsim.AtmosphericScreen(10, 1, alpha=0.997, L0=np.inf, rng=rng)
+    ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.997, L0=np.inf, rng=rng)
     assert ar1 == ar2
     ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.995, rng=rng2)
     assert ar1 != ar2
