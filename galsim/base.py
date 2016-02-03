@@ -1922,7 +1922,7 @@ class Kolmogorov(GSObject):
 
         >>> lam = 700  # nm
         >>> r0 = 15 * (lam/500)**1.2  # cm
-        >>> lam_over_r0 = (lam * 1.e-9) / r0  # radians
+        >>> lam_over_r0 = (lam * 1.e-7) / r0  # radians
         >>> lam_over_r0 *= 206265  # Convert to arcsec
         >>> psf = galsim.Kolmogorov(lam_over_r0)
 
