@@ -25,11 +25,9 @@ where x, y are focal plane coordinates and u, v are pupil plane coordinates
 
 The main classes of note are:
 
-FrozenAtmosphericScreen
-  Class implementing phase(u, v, x, y, t) for frozen flow von Karman type turbulence
-
-ARAtmosphericScreen
-  Class implementing phase(u, v, x, y, t) for "boiling" von Karman type turbulence
+AtmosphericScreen
+  Class implementing phase(u, v, x, y, t) for von Karman type turbulence, with possibly evolving
+  "non-frozen-flow" phases.
 
 PhaseScreenList
   Python sequence type to hold multiple phase screens, for instance to simulate turbulence at
@@ -44,7 +42,6 @@ Atmosphere
   Convenience function to quickly assemble multiple AtmosphericScreens into a PhaseScreenList.
 """
 
-import copy
 import numpy as np
 import galsim
 import utilities
@@ -164,17 +161,19 @@ class PhaseScreen(object):
 
 
 class AtmosphericScreen(PhaseScreen):
-    """ Abstract base class for an atmospheric phase screen.  Not intended to be instantiated
-    directly.  Holds methods common to concrete subclasses.
+    """ An atmospheric phase screen that can drift in the wind and evolves ("boils") over time.  The
+    initial phases and fractional phase updates are drawn from a von Karman power spectrum, which is
+    defined by a Fried parameter that effectively sets the amplitude of the turbulence, and an outer
+    scale that sets the scale beyond which the turbulence power goes (smoothly) to zero.
 
     @param screen_size   Physical extent of square phase screen in meters.  This should be large
                          enough to accommodate the desired field-of-view of the telescope as well as
                          the meta-pupil defined by the wind velocity and exposure time.  Note that
-                         the screen will have periodic boundary conditions, so it's technically
-                         possible to use a smaller sized screen than technically necessary, though
-                         this may introduce artifacts into PSFs or PSF correlations functions.
-                         Note that screen_size may be tweaked by the initializer to ensure
-                         screen_size is a multiple of screen_scale.
+                         the screen will have periodic boundary conditions, so in principle one can
+                         run with a screen smaller than the meta-pupil, though this may introduce
+                         artifacts into PSFs or PSF correlations functions. Note that screen_size
+                         may be tweaked by the initializer to ensure screen_size is a multiple of
+                         screen_scale.
     @param screen_scale  Physical pixel scale of phase screen in meters.  A fraction of the Fried
                          parameter is usually sufficiently small, but users should test the effects
                          of this parameter to ensure robust results. [Default: half of r0_500]
@@ -189,27 +188,115 @@ class AtmosphericScreen(PhaseScreen):
                          spectrum smoothly approaches zero.  [Default: 1./25]
     @param vx            x-component wind velocity in meters/second.  [Default: 0.]
     @param vy            y-component wind velocity in meters/second.  [Default: 0.]
+    @param alpha         Square root of fraction of phase that is "remembered" between time_steps
+                         (i.e., alpha**2 is the fraction remembered). The fraction sqrt(1-alpha**2)
+                         is then the amount of turbulence freshly generated in each step.  Setting
+                         alpha=1.0 results in a frozen-flow atmosphere.  Note that computing PSFs
+                         from frozen-flow atmospheres may be significantly faster than computing
+                         PSFs with non-frozen-flow atmospheres.  [Default: 1.0]
     @param rng           Random number generator as a galsim.BaseDeviate().  If None, then use the
                          clock time or system entropy to seed a new generator.  [Default: None]
+
+    Relevant SPIE paper:
+    "Remembrance of phases past: An autoregressive method for generating realistic atmospheres in
+    simulations"
+    Srikar Srinath, Univ. of California, Santa Cruz;
+    Lisa A. Poyneer, Lawrence Livermore National Lab.;
+    Alexander R. Rudy, UCSC; S. Mark Ammons, LLNL
+    Published in Proceedings Volume 9148: Adaptive Optics Systems IV
+    September 2014
     """
     def __init__(self, screen_size, screen_scale=None, altitude=0.0, time_step=0.03,
-                 r0_500=0.2, L0_inv=1./25.0, vx=0.0, vy=0.0, rng=None):
+                 r0_500=0.2, L0_inv=1./25.0, vx=0.0, vy=0.0, alpha=1.0, rng=None):
 
         if screen_scale is None:
             screen_scale = 0.5 * r0_500
         super(AtmosphericScreen, self).__init__(screen_size, screen_scale, altitude)
 
-        if rng is None:
-            rng = galsim.BaseDeviate()
-        self.rng = rng
-        self.orig_rng = copy.deepcopy(rng)
-
         self.time_step = time_step
-        self.altitude = altitude
         self.r0_500 = r0_500
         self.L0_inv = L0_inv
         self.vx = vx
         self.vy = vy
+        self.alpha = alpha
+
+        if rng is None:
+            rng = galsim.BaseDeviate()
+        self.rng = rng
+        self.orig_rng = rng.duplicate()
+
+        # Aperture origin.  Handle moving phase screen by moving aperture in opposite direction.
+        self.origin = np.array([0.0, 0.0])
+
+        self._init_psi()
+        self.screen = self._random_screen()
+        # Use a LookupTable2D to interpolate/extrapolate with periodic boundary conditions.
+        self._x0 = self._y0 = -0.5*(self.npix-1)*self.screen_scale
+        self._dx = self._dy = self.screen_scale
+        self.tab2d = galsim.LookupTable2D(self._x0, self._y0, self._dx, self._dy, self.screen,
+                                          edge_mode='wrap')
+        # Can reclaim some RAM if screen is frozen
+        if self.alpha == 1.0:
+            del self.psi, self.screen
+
+    def __str__(self):
+        return "galsim.AtmosphericScreen(altitude=%s)" % self.altitude
+
+    def __repr__(self):
+        outstr = ("galsim.AtmosphericScreen(%r, %r, altitude=%r, time_step=%r, " +
+                  "r0_500=%r, L0_inv=%r, vx=%r, vy=%r, alpha=%r, rng=%r)")
+        return outstr % (self.screen_size, self.screen_scale, self.altitude, self.time_step,
+                         self.r0_500, self.L0_inv, self.vx, self.vy, self.alpha, self.rng)
+
+    def __eq__(self, other):
+        return (self.screen_size == other.screen_size and
+                self.screen_scale == other.screen_scale and
+                self.altitude == other.altitude and
+                self.r0_500 == other.r0_500 and
+                self.L0_inv == other.L0_inv and
+                self.vx == other.vx and
+                self.vy == other.vy and
+                self.alpha == other.alpha and
+                self.rng == other.rng)
+
+    def __ne__(self, other):
+        return not self == other
+
+    # Note the magic number 0.00058 is actually ... wait for it ...
+    # (5 * (24/5 * gamma(6/5))**(5/6) * gamma(11/6)) / (6 * pi**(8/3) * gamma(1/6)) / (2 pi)**2
+    # It nearly impossible to figure this out from a single source, but it can be derived from a
+    # combination of Roddier (1981), Sasiela (1994), and Noll (1976).  (These atmosphere people
+    # sure like to work alone... )
+    kolmogorov_constant = np.sqrt(0.00058)
+
+    def _init_psi(self):
+        """Assemble 2D von Karman sqrt power spectrum.
+        """
+        fx = np.fft.fftfreq(self.npix, self.screen_scale)
+        fx, fy = np.meshgrid(fx, fx)
+
+        self.psi = (1./self.screen_size*self.kolmogorov_constant*(self.r0_500**(-5.0/6.0)) *
+                    (fx*fx + fy*fy + self.L0_inv*self.L0_inv)**(-11.0/12.0) *
+                    self.npix * np.sqrt(np.sqrt(2.0)))
+        self.psi *= 500.0  # Multiply by 500 here so we can divide by arbitrary lam later.
+        self.psi[0, 0] = 0.0
+
+    def _random_screen(self):
+        """Generate a random phase screen with power spectrum given by self.psi**2"""
+        gd = galsim.GaussianDeviate(self.rng)
+        noise = utilities.rand_arr(self.psi.shape, gd)
+        return np.fft.ifft2(np.fft.fft2(noise)*self.psi).real
+
+    def advance(self):
+        """Advance phase screen realization by self.time_step."""
+        # Moving the origin of the aperture in the opposite direction of the wind is equivalent to
+        # moving the screen with the wind.
+        self.origin -= (self.vx*self.time_step, self.vy*self.time_step)
+        # "Boil" the atmsopheric screen if alpha not 1.
+        if self.alpha != 1.0:
+            self.screen = self.alpha*self.screen + np.sqrt(1.-self.alpha**2)*self._random_screen()
+            self.tab2d = galsim.LookupTable2D(self._x0, self._y0, self._dx, self._dy, self.screen,
+                                              edge_mode='wrap')
 
     def advance_by(self, dt):
         """Advance phase screen by specified amount of time.
@@ -218,37 +305,14 @@ class AtmosphericScreen(PhaseScreen):
         @returns   The actual amount of time updated, which will differ from `dt` when `dt` is not a
                    multiple of self.time_step.
         """
-        _nstep = int(np.ceil(dt/self.time_step))
+        if dt < 0:
+            raise ValueError("Cannot advance phase screen backwards in time.")
+        _nstep = int(np.round(dt/self.time_step))
+        if _nstep == 0:
+            _nstep = 1
         for i in xrange(_nstep):
             self.advance()
         return _nstep*self.time_step  # return the time *actually* advanced
-
-    # Collect a few methods common to both FrozenAtmosphericScreen and ARAtmosphericScreen
-    def _freq(self):
-        """Return arrays of sampling frequencies for Discrete Fourier Transform of phase screen."""
-        fx = np.fft.fftfreq(self.npix, self.screen_scale)
-        return np.meshgrid(fx, fx)
-
-    def _init_screen(self, fx, fy):
-        """Initialize a phase screen from von Karman power spectrum."""
-        # Note the magic number 0.00058 is actually ... wait for it ...
-        # (5 * (24/5 * gamma(6/5))**(5/6) * gamma(11/6)) / (6 * pi**(8/3) * gamma(1/6)) / (2 pi)**2
-        # It nearly impossible to figure this out from a single source, but it can be derived from a
-        # combination of Roddier (1981), Sasiela (1994), and Noll (1976).  (These atmosphere people
-        # sure like to work alone... )
-        self.psi = (1./self.screen_size*np.sqrt(0.00058)*(self.r0_500**(-5.0/6.0)) *
-                    (fx*fx + fy*fy + self.L0_inv*self.L0_inv)**(-11.0/12.0) *
-                    self.npix * np.sqrt(np.sqrt(2.0)))
-        self.psi *= 500.0  # Multiply by 500 here so we can divide by arbitrary lam later.
-        self.psi[0, 0] = 0.0
-        self._phaseFT = self._noiseFT()
-        self.screen = np.fft.ifft2(self._phaseFT).real
-
-    def _noiseFT(self):
-        """Return Discrete Fourier Transform of screen with power spectrum given by self.psi**2"""
-        gd = galsim.GaussianDeviate(self.rng)
-        noise = utilities.rand_arr(self.psi.shape, gd)
-        return np.fft.fft2(noise)*self.psi
 
     # Both types of atmospheric screens determine their pupil scales (essentially stepK()) from the
     # Kolmogorov profile with matched Fried parameter r0.
@@ -262,243 +326,30 @@ class AtmosphericScreen(PhaseScreen):
         obj = galsim.Kolmogorov(lam=lam, r0=self.r0_500 * (lam/500.0)**(6./5))
         return obj.stepK() * lam*1.e-9 * galsim.radians / scale_unit
 
-
-class FrozenAtmosphericScreen(AtmosphericScreen):
-    """ An atmospheric phase screen that can drift in the wind, but otherwise does not evolve with
-    time.  The phases are drawn from a von Karman power spectrum, which is defined by a Fried
-    parameter that effectively sets the amplitude of the turbulence, and an outer scale that sets
-    the scale beyond which the turbulence power goes (smoothly) to zero.
-
-    @param screen_size   Physical extent of square phase screen in meters.  This should be large
-                         enough to accommodate the desired field-of-view of the telescope as well as
-                         the meta-pupil defined by the wind velocity and exposure time.  Note that
-                         the screen will have periodic boundary conditions, so it's technically
-                         possible to use a smaller sized screen than technically necessary, though
-                         this may introduce artifacts into PSFs or PSF correlations functions.
-                         Note that screen_size may be tweaked by the initializer to ensure
-                         screen_size is a multiple of screen_scale.
-    @param screen_scale  Physical pixel scale of phase screen in meters.  A fraction of the Fried
-                         parameter is usually sufficiently small, but users should test the effects
-                         of this parameter to ensure robust results. [Default: half of r0_500]
-    @param altitude      Altitude of phase screen in km.  This is with respect to the telescope, not
-                         sea-level.  [Default: 0.0]
-    @param time_step     Interval to use when advancing the screen in time in seconds.
-                         [Default: 0.03]
-    @param r0_500        Fried parameter setting the amplitude of turbulence; contributes to "size"
-                         of the resulting atmospheric PSF.  Specified at wavelength 500 nm, in units
-                         of meters.  [Default: 0.2]
-    @param L0_inv        Inverse outer scale in inverse meters, beyond which turbulence power
-                         spectrum smoothly approaches zero.  [Default: 1./25]
-    @param vx            x-component wind velocity in meters/second.  [Default: 0.]
-    @param vy            y-component wind velocity in meters/second.  [Default: 0.]
-    @param rng           Random number generator as a galsim.BaseDeviate().  If None, then use the
-                         clock time or system entropy to seed a new generator.  [Default: None]
-    """
-    def __init__(self, screen_size, screen_scale=None, altitude=0.0, time_step=0.03,
-                 r0_500=0.2, L0_inv=1./25.0, vx=0.0, vy=0.0, rng=None):
-        super(FrozenAtmosphericScreen, self).__init__(screen_size, screen_scale, altitude,
-                                                      time_step, r0_500, L0_inv,
-                                                      vx, vy, rng)
-
-        # Note that _init_screen is here instead of in superclass since ARAtmosphericScreen reuses
-        # fx, fy, but we don't want to store these in the class or recompute them.  So instead, we
-        # just provide the `_freq` method in the superclass that each AtmosphericScreen subclass can
-        # use.
-        fx, fy = self._freq()
-        self._init_screen(fx, fy)
-        # Use a LookupTable2D to interpolate/extrapolate with periodic boundary conditions.
-        nx = self.screen_size/self.screen_scale
-        # x0 = y0 = -self.screen_size/2.0
-        x0 = y0 = -0.5*(nx-1)*self.screen_scale
-        dx = dy = self.screen_scale
-
-        self.tab2d = galsim.LookupTable2D(x0, y0, dx, dy, self.screen, edge_mode='wrap')
-        # Don't need these anymore, so free memory
-        del self._phaseFT, self.psi, self.screen
-
-        # To handle wind, we will interpolate the LookupTable2D with an offset origin.
-        self.origin = np.r_[0.0, 0.0]
-
-    def __str__(self):
-        return "galsim.FrozenAtmosphericScreen(altitude=%s)" % self.altitude
-
-    def __repr__(self):
-        outstr = ("galsim.FrozenAtmosphericScreen(%r, %r, altitude=%r, time_step=%r, " +
-                  "r0_500=%r, L0_inv=%r, vx=%r, vy=%r, rng=%r)")
-        return outstr % (self.screen_size, self.screen_scale, self.altitude, self.time_step,
-                         self.r0_500, self.L0_inv, self.vx, self.vy, self.rng)
-
-    def __eq__(self, other):
-        return (self.screen_size == other.screen_size and
-                self.screen_scale == other.screen_scale and
-                self.altitude == other.altitude and
-                self.vx == other.vx and
-                self.vy == other.vy and
-                self.tab2d == other.tab2d and
-                np.array_equal(self.origin, other.origin))
-
-    def __ne__(self, other):
-        return not self == other
-
-    def advance(self):
-        """Advance phase screen realization by self.time_step."""
-        # If wind blows right, then origin moves left, so use minus sign.
-        self.origin -= (self.vx*self.time_step, self.vy*self.time_step)
-
-    def advance_by(self, dt):
-        """Advance phase screen by specified amount of time.
-
-        @param dt  Amount of time in seconds by which to update the screen.
-        @returns   The actual amount of time updated, which is equal to the input argument in this
-                   case.
-        """
-        self.origin -= (self.vx*dt, self.vy*dt)
-        return dt
-
     def path_difference(self, nx, scale, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
         """ Compute effective pathlength differences due to phase screen.
 
         @param nx       Size of output array
         @param scale    Scale of output array pixels in meters
-        @param theta_x  Field angle corresponding to center of output array.
-        @param theta_y  Ditto.
+        @param theta_x  x-component of field angle corresponding to center of output array.
+        @param theta_y  y-component of field angle corresponding to center of output array.
         @returns   Array of pathlength differences in nanometers.  Multiply by 2pi/wavelength to get
                    array of phase differences.
         """
         xmin = self.origin[0] + 1000*self.altitude*theta_x.tan() - 0.5*scale*(nx-1)
-        # xmin = self.origin[0] + 1000*self.altitude*theta_x.tan() - 0.5*scale*nx
         xmax = xmin + scale*(nx-1)
         ymin = self.origin[1] + 1000*self.altitude*theta_y.tan() - 0.5*scale*(nx-1)
-        # ymin = self.origin[1] + 1000*self.altitude*theta_y.tan() - 0.5*scale*nx
         ymax = ymin + scale*(nx-1)
         return self.tab2d.eval_grid(xmin, xmax, nx, ymin, ymax, nx)
 
     def reset(self):
         """Reset phase screen back to time=0."""
-        self.origin = np.r_[0.0, 0.0]
-
-
-class ARAtmosphericScreen(AtmosphericScreen):
-    """ An atmospheric phase screen that can drift in the wind and evolves ("boils") over time.  The
-    initial phases and fractional phase updates are drawn from a von Karman power spectrum, which is
-    defined by a Fried parameter that effectively sets the amplitude of the turbulence, and an outer
-    scale that sets the scale beyond which the turbulence power goes (smoothly) to zero.
-
-    @param screen_size   Physical extent of square phase screen in meters.  This should be large
-                         enough to accommodate the desired field-of-view of the telescope as well as
-                         the meta-pupil defined by the wind velocity and exposure time.  Note that
-                         the screen will have periodic boundary conditions, so it's technically
-                         possible to use a smaller sized screen than technically necessary, though
-                         this may introduce artifacts into PSFs or PSF correlations functions.
-                         Note that screen_size may be tweaked by the initializer to ensure
-                         screen_size is a multiple of screen_scale.
-    @param screen_scale  Physical pixel scale of phase screen in meters.  A fraction of the Fried
-                         parameter is usually sufficiently small, but users should test the effects
-                         of this parameter to ensure robust results. [Default: half of r0_500]
-    @param altitude      Altitude of phase screen in km.  This is with respect to the telescope, not
-                         sea-level.  [Default: 0.0]
-    @param time_step     Interval to use when advancing the screen in time in seconds.
-                         [Default: 0.03]
-    @param r0_500        Fried parameter setting the amplitude of turbulence; contributes to "size"
-                         of the resulting atmospheric PSF.  Specified at wavelength 500 nm, in units
-                         of meters.  [Default: 0.2]
-    @param L0_inv        Inverse outer scale in inverse meters, beyond which turbulence power
-                         spectrum smoothly approaches zero.  [Default: 1./25]
-    @param vx            x-component wind velocity in meters/second.  [Default: 0.]
-    @param vy            y-component wind velocity in meters/second.  [Default: 0.]
-    @param alpha_mag     Fraction of phase that is "remembered" between time_steps.  The fraction
-                         1-alpha_mag is then the amount of turbulence freshly generated in each
-                         step.  [Default: 0.997]
-    @param rng           Random number generator as a galsim.BaseDeviate().  If None, then use the
-                         clock time or system entropy to seed a new generator.  [Default: None]
-
-    Relevant SPIE paper:
-    "Remembrance of phases past: An autoregressive method for generating realistic atmospheres in
-    simulations"
-    Srikar Srinath, Univ. of California, Santa Cruz;
-    Lisa A. Poyneer, Lawrence Livermore National Lab.;
-    Alexander R. Rudy, UCSC; S. Mark Ammons, LLNL
-    Published in Proceedings Volume 9148: Adaptive Optics Systems IV
-    September 2014
-    """
-    def __init__(self, screen_size, screen_scale, altitude=0.0, time_step=0.03,
-                 r0_500=0.2, L0_inv=1./25.0, vx=0.0, vy=0.0, alpha_mag=0.997, rng=None):
-
-        super(ARAtmosphericScreen, self).__init__(screen_size, screen_scale, altitude,
-                                                  time_step, r0_500, L0_inv,
-                                                  vx, vy, rng)
-
-        self.alpha_mag = alpha_mag
-        fx, fy = self._freq()
-        self._init_screen(fx, fy)
-
-        # Work wind directly into "boiling" phase updating.
-        alpha_phase = -(fx*vx + fy*vy) * time_step
-        self.alpha = alpha_mag * np.exp(2j*np.pi*alpha_phase)
-
-        self.noise_frac = np.sqrt(1.0 - np.abs(self.alpha**2)[0, 0])
-
-        # Ignore boiling for *really* large alpha, but don't let amplitudes decay
-        if self.noise_frac < 1.e-12:
-            self.alpha /= np.abs(self.alpha)
-
-    def __str__(self):
-        return "galsim.ARAtmosphericScreen(altitude=%s)" % self.altitude
-
-    def __repr__(self):
-        outstr = ("galsim.ARAtmosphericScreen(%r, %r, altitude=%r, time_step=%r, " +
-                  "r0_500=%r, L0_inv=%r, vx=%r, vy=%r, alpha_mag=%r, rng=%r)")
-        return outstr % (self.screen_size, self.screen_scale, self.altitude, self.time_step,
-                         self.r0_500, self.L0_inv, self.vx, self.vy, self.alpha_mag, self.rng)
-
-    def __eq__(self, other):
-        return (self.screen_size == other.screen_size and
-                self.screen_scale == other.screen_scale and
-                self.altitude == other.altitude and
-                self.r0_500 == other.r0_500 and
-                self.L0_inv == other.L0_inv and
-                self.vx == other.vx and
-                self.vy == other.vy and
-                self.alpha_mag == other.alpha_mag and
-                self.rng == other.rng)
-
-    def __ne__(self, other):
-        return not self == other
-
-    def advance(self):
-        """Advance phase screen realization by self.time_step."""
-        # For ARAtmosphericScreen, since we use Fourier methods to update the screen each step
-        # anyway, it's easy to simultaneously move the screen with the wind.
-        if self.noise_frac < 1.e-12:
-            # Frozen flow (but slower than FrozenAtmosphericScreen, since using Fourier methods to
-            # move the screen in the wind).
-            self._phaseFT = self.alpha*self._phaseFT
-        else:
-            # Boiling, do a fractional random phase update.
-            self._phaseFT = self.alpha*self._phaseFT + self._noiseFT()*self.noise_frac
-        self.screen = np.fft.ifft2(self._phaseFT).real
-
-    def path_difference(self, nx, scale, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
-        """ Compute effective pathlength differences due to phase screen.
-
-        @param nx       Size of output array
-        @param scale    Scale of output array pixels in meters
-        @param theta_x  Field angle corresponding to center of output array.
-        @param theta_y  Ditto.
-        @returns   Array of pathlength differences in nanometers.  Multiply by 2pi/wavelength to get
-                   array of phase differences.
-        """
-        img = galsim.Image(np.ascontiguousarray(self.screen), scale=self.screen_scale)
-        ii = galsim.InterpolatedImage(img, calculate_stepk=False, calculate_maxk=False,
-                                      normalization='sb')
-        ii = ii.shift(1000*self.altitude * theta_x.tan(), 1000*self.altitude * theta_y.tan())
-        return ii.drawImage(nx=nx, ny=nx, scale=scale, method='sb', dtype=np.float64).array
-
-    def reset(self):
-        """Reset phase screen back to time=0."""
-        self.rng = copy.deepcopy(self.orig_rng)
-        fx, fy = self._freq()
-        self._init_screen(fx, fy)
+        self.rng = self.orig_rng.duplicate()
+        self.origin = np.array([0.0, 0.0])
+        if self.alpha != 1.0:
+            self.screen = self._random_screen()
+            self.tab2d = galsim.LookupTable2D(self._x0, self._y0, self._dx, self._dy, self.screen,
+                                              edge_mode='wrap')
 
 
 class PhaseScreenList(object):
@@ -507,12 +358,12 @@ class PhaseScreenList(object):
     the function `Atmosphere`.  Layers can be added, removed, appended, etc. just like items can be
     manipulated in a python list.  For example:
 
-    # Create an atmosphere with three layers, two of which are frozen and one not frozen.
-    > screens = galsim.PhaseScreenList([galsim.FrozenAtmosphericScreen(...),
-                                        galsim.FrozenAtmosphericScreen(...),
-                                        galsim.ARAtmosphericScreen(...)])
+    # Create an atmosphere with three layers.
+    > screens = galsim.PhaseScreenList([galsim.AtmosphericScreen(...),
+                                        galsim.AtmosphericScreen(...),
+                                        galsim.AtmosphericScreen(...)])
     # Add another layer
-    > screens.append(galsim.FrozenAtmosphericScreen(...))
+    > screens.append(galsim.AtmosphericScreen(...))
     # Remove the second layer
     > del screens[1]
     # Switch the first and second layer.  Silly, but works...
@@ -694,11 +545,11 @@ class PhaseScreenList(object):
             flux = kwargs.get('flux', 1.0)
             gsparams = kwargs.get('gsparams', None)
             _nstep = PSFs[0]._nstep
-            # For ARAtmosphericScreens, it can take much longer to update the atmospheric layers
-            # than it does to create an instantaneous PSF, so we exchange the order of the PSF and
-            # time loops so we're not recomputing atmospheres needlessly when we go from PSF1 to
-            # PSF2 and so on.  For FrozenAtmosphericScreen, there's not much difference with either
-            # loop order, so we just always exchange the orders.
+            # For non-frozen-flow AtmosphericScreens, it can take much longer to update the
+            # atmospheric layers than it does to create an instantaneous PSF, so we exchange the
+            # order of the PSF and time loops so we're not recomputing screens needlessly when we go
+            # from PSF1 to PSF2 and so on.  For frozen-flow AtmosphericScreens, there's not much
+            # difference with either loop order, so we just always make the PSF loop the inner loop.
             for i in xrange(_nstep):
                 for PSF in PSFs:
                     PSF._step()
@@ -710,6 +561,7 @@ class PhaseScreenList(object):
 
     @property
     def r0_500_effective(self):
+        """Effective r0_500 for set of screens in list that define an r0_500 attribute."""
         return sum(l.r0_500**(-5./3) for l in self if hasattr(l, 'r0_500'))**(-3./5)
 
 
@@ -776,6 +628,8 @@ class PhaseScreenPSF(GSObject):
                  pad_factor=1.5, oversampling=1.5,
                  _pupil_size=None, _pupil_scale=None,
                  gsparams=None, _eval_now=True, _bar=None):
+        # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
+        # progress bar during long calculations.
 
         self.screen_list = screen_list
         self.lam = lam
@@ -794,7 +648,7 @@ class PhaseScreenPSF(GSObject):
             #   scale = sum(s**-2 for s in scales)**(-0.5)
             # We're not actually doing convolution between screens here, though.  In fact, the right
             # relation for Kolmogorov screens uses exponents -5./3 and -3./5:
-            #   scale = sum(s**-5./3 for s in scales)**(-3./5)
+            #   scale = sum(s**(-5./3) for s in scales)**(-3./5)
             # Since most of the layers in a PhaseScreenList are likely to be (nearly) Kolmogorov
             # screens, we'll use that relation.
             _pupil_scale = (sum(layer.pupil_scale(lam)**(-5./3) for layer in screen_list))**(-3./5)
@@ -810,7 +664,9 @@ class PhaseScreenPSF(GSObject):
         self.aper = generate_pupil(self._nu, self._pupil_size, self.diam, self.obscuration)
         self.img = np.zeros_like(self.aper)
 
-        self._nstep = int(np.ceil(self.exptime/self.screen_list.time_step))
+        if self.exptime < 0:
+            raise ValueError("Cannot integrate PSF for negative time.")
+        self._nstep = int(np.round(self.exptime/self.screen_list.time_step))
         # Generate at least one time sample
         if self._nstep == 0:
             self._nstep = 1
@@ -877,8 +733,7 @@ class PhaseScreenPSF(GSObject):
 
 
 def Atmosphere(r0_500=0.2, screen_size=30.0, time_step=0.03, altitude=0.0, L0=25.0,
-               velocity=0.0, direction=0.0*galsim.degrees, alpha_mag=0.997,
-               frozen=True, screen_scale=None, rng=None):
+               velocity=0.0, direction=0.0*galsim.degrees, alpha=1.0, screen_scale=None, rng=None):
     """Create an atmosphere as a list of turbulent phase screens at different altitudes.  The
     atmosphere model can then be used to simulate atmospheric PSFs.
 
@@ -913,11 +768,11 @@ def Atmosphere(r0_500=0.2, screen_size=30.0, time_step=0.03, altitude=0.0, L0=25
     The one exception to the above is the keyword `r0_500`.  The effective Fried parameter for a set
     of atmospheric layers is r0_500_effective = (sum(r**(-5./3) for r in r0_500s))**(-3./5).
     Providing `r0_500` as a scalar or length-1 list will result in broadcasting such that the
-    effective Fried parameter for the whole set of layers equal to the input argument.
+    effective Fried parameter for the whole set of layers equals the input argument.
 
     As an example, the following code approximately creates the atmosphere used by Jee+Tyson(2011)
     for their study of atmospheric PSFs for LSST.  Note this code takes about ~3-4 minutes to run on
-    a fast laptop, and will consume about (8192 ** 2 pixels) * (8 bytes) * (6 screens) ~ 3 GB of
+    a fast laptop, and will consume about (8192**2 pixels) * (8 bytes) * (6 screens) ~ 3 GB of
     RAM in its final state, and more at intermediate states.
 
     > altitude = [0, 2.58, 5.16, 7.73, 12.89, 15.46]  # km
@@ -932,9 +787,8 @@ def Atmosphere(r0_500=0.2, screen_size=30.0, time_step=0.03, altitude=0.0, L0=25
                               altitude=altitude, L0=25.0, velocity=velocity, direction=direction,
                               screen_scale=screen_scale)
 
-    Once the atmosphere is constructed (takes a few minutes on a fast laptop), a 15-sec exposure PSF
-    (using an 8.4 meter aperture and default settings) takes about 150 sec to generate on a fast
-    laptop.
+    Once the atmosphere is constructed, a 15-sec exposure PSF (using an 8.4 meter aperture and
+    default settings) takes about 150 sec to generate on a fast laptop.
 
     > psf = atm.getPSF(exptime=15.0, diam=8.4, obscuration=0.6)
 
@@ -962,11 +816,9 @@ def Atmosphere(r0_500=0.2, screen_size=30.0, time_step=0.03, altitude=0.0, L0=25
                          (no outer scale).  [Default: 25.0]
     @param velocity      Wind speed in meters/second.  [Default: 0.0]
     @param direction     Wind direction as galsim.Angle [Default: 0.0 * galsim.degrees]
-    @param alpha_mag     Fraction of phase that is "remembered" between time_steps.  The fraction
-                         1-alpha_mag is then the amount of turbulence freshly generated in each
-                         step.  [Default: 0.997]
-    @param frozen        If true, use FrozenAtmosphericScreen layers, otherwise use
-                         ARAtmosphericScreen layers.
+    @param alpha         Fraction of phase that is "remembered" between time_steps.  The fraction
+                         1-alpha is then the amount of turbulence freshly generated in each step.
+                         [Default: 1.0]
     @param screen_scale  Physical pixel scale of phase screen in meters.  A fraction of the Fried
                          parameter is usually sufficiently small, but users should test the effects
                          of this parameter to ensure robust results.
@@ -975,25 +827,24 @@ def Atmosphere(r0_500=0.2, screen_size=30.0, time_step=0.03, altitude=0.0, L0=25
                          clock time or system entropy to seed a new generator.  [Default: None]
     """
     # Listify
-    r0_500s, sizes, altitudes, L0s, velocities, directions, alpha_mags, frozens, scales = (
+    r0_500s, sizes, altitudes, L0s, velocities, directions, alphas, scales = (
         listify(i) for i in (
-            r0_500, screen_size, altitude, L0, velocity, direction, alpha_mag, frozen,
-            screen_scale))
+            r0_500, screen_size, altitude, L0, velocity, direction, alpha, screen_scale))
 
     # Broadcast
     n_layers = max(len(i) for i in (
-        r0_500s, sizes, altitudes, L0s, velocities, directions, alpha_mags, frozens, scales))
+        r0_500s, sizes, altitudes, L0s, velocities, directions, alphas, scales))
     if n_layers > 1:
-        sizes, altitudes, L0s, velocities, directions, alpha_mags, frozens, scales = (
+        sizes, altitudes, L0s, velocities, directions, alphas, scales = (
             broadcast(i, n_layers) for i in (
-                sizes, altitudes, L0s, velocities, directions, alpha_mags, frozens, scales))
+                sizes, altitudes, L0s, velocities, directions, alphas, scales))
     # Broadcast r0_500 separately, since combination of indiv layers' r0s is more complex:
     if len(r0_500s) == 1:
         r0_500s = [n_layers**(3./5) * r0_500s[0]] * n_layers
 
-    if any(len(i) != n_layers for i in (r0_500s, sizes, L0s, velocities, directions, alpha_mags,
-                                        frozens, scales)):
-        raise ValueError("r0_500, screen_size, L0, velocity, direction, alpha_mag, frozen, " +
+    if any(len(i) != n_layers for i in (
+        r0_500s, sizes, L0s, velocities, directions, alphas, scales)):
+        raise ValueError("r0_500, screen_size, L0, velocity, direction, alpha, " +
                          "screen_scale not broadcastable")
 
     # Invert L0, with `L0 is None` interpretted as L0 = infinity => L0_inv = 0.0
@@ -1002,16 +853,8 @@ def Atmosphere(r0_500=0.2, screen_size=30.0, time_step=0.03, altitude=0.0, L0=25
     # decompose velocities
     vxs, vys = zip(*[v*d.sincos() for v, d in zip(velocities, directions)])
 
-    layers = []
-    for r0, size, alt, L0_inv, vx, vy, amag, froze, scale in zip(r0_500s, sizes, altitudes, L0_invs,
-                                                                 vxs, vys, alpha_mags, frozens,
-                                                                 scales):
-        if froze:
-            layers.append(FrozenAtmosphericScreen(
-                size, scale, alt, time_step=time_step, r0_500=r0, L0_inv=L0_inv, vx=vx, vy=vy,
-                rng=rng))
-        else:
-            layers.append(ARAtmosphericScreen(
-                size, scale, alt, time_step=time_step, r0_500=r0, L0_inv=L0_inv, vx=vx, vy=vy,
-                alpha_mag=amag, rng=rng))
+    layers = [AtmosphericScreen(size, scale, alt, time_step=time_step, r0_500=r0_500, L0_inv=L0_inv,
+                                vx=vx, vy=vy, alpha=a, rng=rng)
+              for r0, size, alt, L0_inv, vx, vy, a, scale
+              in zip(r0_500s, sizes, altitudes, L0_invs, vxs, vys, alphas, scales)]
     return PhaseScreenList(layers)

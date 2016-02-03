@@ -37,10 +37,10 @@ def test_phase_screen_list():
     rng = galsim.BaseDeviate(1234)
     rng2 = galsim.BaseDeviate(123)
 
-    ar1 = galsim.ARAtmosphericScreen(10, 1, rng=rng)
-    ar2 = galsim.ARAtmosphericScreen(10, 1, rng=rng)
+    ar1 = galsim.AtmosphericScreen(10, 1, alpha=0.997, rng=rng)
+    ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.997, rng=rng)
     assert ar1 == ar2
-    ar2 = galsim.ARAtmosphericScreen(10, 1, rng=rng2)
+    ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.995, rng=rng2)
     assert ar1 != ar2
 
     atm = galsim.Atmosphere(altitude=[0.0, 1.0],
@@ -48,7 +48,7 @@ def test_phase_screen_list():
                             direction=[0.0*galsim.degrees, 120*galsim.degrees],
                             r0_500=0.15,
                             rng=rng)
-    atm.append(ar1)  # Mix of ARAtmosphericScreen and FrozenAtmosphericScreen this way
+    atm.append(ar1)
 
     # testing append, extend, __getitem__, __setitem__, __delitem__, __eq__, __ne__
     atm2 = galsim.PhaseScreenList(atm[:-1])
@@ -114,7 +114,7 @@ def test_frozen_flow():
     dx = x
     alt = x/1000   # -> 0.00005 km; silly example, but yields exact results...
 
-    screen = galsim.FrozenAtmosphericScreen(1.0, dx, alt, vx=vx, time_step=dt, rng=rng)
+    screen = galsim.phase_psf.AtmosphericScreen(1.0, dx, alt, vx=vx, time_step=dt, rng=rng)
     pd0 = screen.path_difference(20, dx)
     screen.advance_by(t)
     pd1 = screen.path_difference(20, dx, theta_x=45*galsim.degrees)
@@ -130,8 +130,8 @@ def test_phase_psf_reset():
     t1 = time.time()
 
     rng = galsim.BaseDeviate(1234)
-    # Test FrozenAtmosphericScreen first
-    atm = galsim.Atmosphere(altitude=10.0, frozen=True, velocity=0.1, rng=rng)
+    # Test frozen AtmosphericScreen first
+    atm = galsim.Atmosphere(altitude=10.0, velocity=0.1, alpha=1.0, rng=rng)
     pd1 = atm.path_difference(16, 0.1)
     atm.advance()
     pd2 = atm.path_difference(16, 0.1)
@@ -143,8 +143,8 @@ def test_phase_psf_reset():
     pd3 = atm.path_difference(16, 0.1)
     np.testing.assert_array_equal(pd1, pd3, "Phase screen didn't reset")
 
-    # Now check ARAtmosphericScreen, boiling means don't even need wind in this case.
-    atm = galsim.Atmosphere(altitude=10.0, frozen=False, rng=rng)
+    # Now check with boilin, but no wind.
+    atm = galsim.Atmosphere(altitude=10.0, alpha=0.997, rng=rng)
     pd1 = atm.path_difference(16, 0.1)
     atm.advance()
     pd2 = atm.path_difference(16, 0.1)
@@ -167,7 +167,7 @@ def test_phase_psf_batch():
     NPSFs = 20
     exptime = 0.09
     rng = galsim.BaseDeviate(1234)
-    atm = galsim.Atmosphere(screen_size=10.0, altitude=10.0, frozen=False, rng=rng)
+    atm = galsim.Atmosphere(screen_size=10.0, altitude=10.0, alpha=0.997, rng=rng)
     theta_x = [i * galsim.arcsec for i in xrange(NPSFs)]
     theta_y = [i * galsim.arcsec for i in xrange(NPSFs)]
 
@@ -191,44 +191,8 @@ def test_phase_psf_batch():
     print 'time for %s = %.2f' % (funcname(), t2-t1)
 
 
-def test_frozen_AR_screen():
-    # Check that ARAtmosphericScreen with alpha=1.0 matches FrozenAtmosphericScreen.
-    import time
-    t1 = time.time()
-
-    rng1 = galsim.BaseDeviate(1234)
-    rng2 = galsim.BaseDeviate(1234)
-
-    frozen_screen = galsim.FrozenAtmosphericScreen(screen_size=10.0, screen_scale=0.1, altitude=0.0,
-                                                   vx=1.0, vy=2.0, rng=rng1)
-    ar_screen = galsim.ARAtmosphericScreen(screen_size=10.0, screen_scale=0.1, altitude=0.0,
-                                           vx=1.0, vy=2.0, rng=rng2, alpha_mag=1.0)
-
-    ar_pd = ar_screen.path_difference(100, 0.1)
-    frozen_pd = frozen_screen.path_difference(100, 0.1)
-
-    # I feel like these should agree better, but this is probably fine in practice
-    # (picometer agreement in path differences)
-    np.testing.assert_array_almost_equal(frozen_pd, ar_pd, 4,
-                                         "Frozen screen and AR screen with alpha=1 do not agree.")
-
-    for t in [0.3, 3.0, 5.1]:
-        # Let the wind blow and check again.
-        frozen_screen.advance_by(t)
-        ar_screen.advance_by(t)
-        ar_pd2 = ar_screen.path_difference(100, 0.1)
-        frozen_pd2 = frozen_screen.path_difference(100, 0.1)
-        assert np.any(ar_pd != ar_pd2)  # make sure we actually updated
-        np.testing.assert_array_almost_equal(
-            frozen_pd2, ar_pd2, 4, "Frozen screen and AR screen with alpha=1 do not agree.")
-
-    t2 = time.time()
-    print 'time for %s = %.2f' % (funcname(), t2-t1)
-
-
 if __name__ == "__main__":
     test_phase_screen_list()
     test_frozen_flow()
     test_phase_psf_reset()
     test_phase_psf_batch()
-    test_frozen_AR_screen()
