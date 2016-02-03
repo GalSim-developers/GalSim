@@ -96,11 +96,10 @@ class PhaseScreen(object):
     @param screen_size   Physical extent of square phase screen in meters.  This should be large
                          enough to accommodate the desired field-of-view of the telescope as well as
                          the meta-pupil defined by the wind velocity and exposure time.  Note that
-                         the screen will have periodic boundary conditions, so it's technically
-                         possible to use a smaller sized screen than technically necessary, though
-                         this may introduce artifacts into PSFs or PSF correlations functions.
-                         Note that screen_size may be tweaked by the initializer to ensure
-                         screen_size is a multiple of screen_scale.
+                         the screen will have periodic boundary conditions, so the code will run
+                         with a smaller sized screen, though this may introduce artifacts into PSFs
+                         or PSF correlations functions. Note that screen_size may be tweaked by the
+                         initializer to ensure screen_size is a multiple of screen_scale.
     @param screen_scale  Physical pixel scale of phase screen in meters.  A fraction of the Fried
                          parameter is usually sufficiently small, but users should test the effects
                          of this parameter to ensure robust results.
@@ -801,11 +800,10 @@ def Atmosphere(r0_500=0.2, screen_size=30.0, time_step=0.03, altitude=0.0, L0=25
     @param screen_size   Physical extent of square phase screen in meters.  This should be large
                          enough to accommodate the desired field-of-view of the telescope as well as
                          the meta-pupil defined by the wind velocity and exposure time.  Note that
-                         the screen will have periodic boundary conditions, so it's technically
-                         possible to use a smaller sized screen than technically necessary, though
-                         this may introduce artifacts into PSFs or PSF correlations functions.
-                         Note that screen_size may be tweaked by the initializer to ensure
-                         screen_size is a multiple of screen_scale.
+                         the screen will have periodic boundary conditions, so the code will run
+                         with a smaller sized screen, though this may introduce artifacts into PSFs
+                         or PSF correlations functions. Note that screen_size may be tweaked by the
+                         initializer to ensure screen_size is a multiple of screen_scale.
     @param time_step     Interval to use when advancing the screen in time in seconds.
                          [Default: 0.03]
     @param altitude      Altitude of phase screen in km.  This is with respect to the telescope, not
