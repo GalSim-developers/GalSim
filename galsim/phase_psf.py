@@ -169,11 +169,10 @@ class AtmosphericScreen(PhaseScreen):
     @param screen_size   Physical extent of square phase screen in meters.  This should be large
                          enough to accommodate the desired field-of-view of the telescope as well as
                          the meta-pupil defined by the wind velocity and exposure time.  Note that
-                         the screen will have periodic boundary conditions, so in principle one can
-                         run with a screen smaller than the meta-pupil, though this may introduce
-                         artifacts into PSFs or PSF correlations functions. Note that screen_size
-                         may be tweaked by the initializer to ensure screen_size is a multiple of
-                         screen_scale.
+                         the screen will have periodic boundary conditions, so the code will run
+                         with a smaller sized screen, though this may introduce artifacts into PSFs
+                         or PSF correlations functions. Note that screen_size may be tweaked by the
+                         initializer to ensure screen_size is a multiple of screen_scale.
     @param screen_scale  Physical pixel scale of phase screen in meters.  A fraction of the Fried
                          parameter is usually sufficiently small, but users should test the effects
                          of this parameter to ensure robust results. [Default: half of r0_500]
