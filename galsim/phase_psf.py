@@ -220,20 +220,13 @@ class AtmosphericScreen(PhaseScreen):
 
         if rng is None:
             rng = galsim.BaseDeviate()
-        self.rng = rng
-        self.orig_rng = rng.duplicate()
-
-        # Aperture origin.  Handle moving phase screen by moving aperture in opposite direction.
-        self.origin = np.array([0.0, 0.0])
+        self.orig_rng = rng
 
         self._init_psi()
-        self.screen = self._random_screen()
-        # Use a LookupTable2D to interpolate/extrapolate with periodic boundary conditions.
-        self._x0 = self._y0 = -0.5*(self.npix-1)*self.screen_scale
-        self._dx = self._dy = self.screen_scale
-        self.tab2d = galsim.LookupTable2D(self._x0, self._y0, self._dx, self._dy, self.screen,
-                                          edge_mode='wrap')
-        # Can reclaim some RAM if screen is frozen
+
+        self.reset()
+
+        # Free some RAM for frozen-flow screen
         if self.alpha == 1.0:
             del self.psi, self.screen
 
@@ -344,8 +337,12 @@ class AtmosphericScreen(PhaseScreen):
         """Reset phase screen back to time=0."""
         self.rng = self.orig_rng.duplicate()
         self.origin = np.array([0.0, 0.0])
-        if self.alpha != 1.0:
+
+        # Only need to reset/create tab2d if not frozen or doesn't already exist
+        if self.alpha != 1.0 or not hasattr(self, 'tab2d'):
             self.screen = self._random_screen()
+            self._x0 = self._y0 = -0.5*(self.npix-1)*self.screen_scale
+            self._dx = self._dy = self.screen_scale
             self.tab2d = galsim.LookupTable2D(self._x0, self._y0, self._dx, self._dy, self.screen,
                                               edge_mode='wrap')
 
