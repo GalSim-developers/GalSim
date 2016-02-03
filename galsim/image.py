@@ -652,8 +652,12 @@ class Image(object):
 
             >>> im = galsim.Image(numpy.array(range(16),dtype=float).reshape((4,4)))
             >>> im.center()
+            galsim.PositionI(x=3, y=3)
+            >>> im.trueCenter()
             galsim.PositionI(x=2.5, y=2.5)
             >>> im.setCenter(56,72)
+            >>> im.center()
+            galsim.PositionI(x=56, y=72)
             >>> im.trueCenter()
             galsim.PositionD(x=55.5, y=71.5)
             >>> im.setOrigin(0,0)
