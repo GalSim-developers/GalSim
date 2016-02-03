@@ -31,7 +31,7 @@ AtmosphericScreen
 
 PhaseScreenList
   Python sequence type to hold multiple phase screens, for instance to simulate turbulence at
-  different altitudes.  A key method is getPSF(), which will take the list of phase screens,
+  different altitudes.  A key method is makePSF(), which will take the list of phase screens,
   add them together linearly (Fraunhofer approximation), and evaluate the above diffraction
   equation to yield a PhaseScreenPSF object.
 
@@ -378,19 +378,14 @@ class PhaseScreenList(object):
 
     > more_screens = galsim.PhaseScreenList(screens)
     > screens.reset()
-    > psf = screens.getPSF(exptime=exptime, ...)        # starts at t=0
-    > psf2 = more_screens.getPSF(exptime=exptime, ...)  # starts at t=exptime
+    > psf = screens.makePSF(exptime=exptime, ...)        # starts at t=0
+    > psf2 = more_screens.makePSF(exptime=exptime, ...)  # starts at t=exptime
     > assert psf != psf2
 
     Methods
     -------
-    getPSF()           Obtain a PSF from this set of phase screens.  See PhaseScreenPSF docstring
+    makePSF()          Obtain a PSF from this set of phase screens.  See PhaseScreenPSF docstring
                        for more details.
-    getPSFs()          Optimized method for obtaining multiple PSFs from a single PhaseScreenList.
-                       Whether this is faster or slower than looping over PSFs "manually" depends on
-                       the number of PSFs to be generated, details of the PhaseScreenList, such as
-                       the physical size and scale of the screens, and details passed to getPSFs,
-                       such as `pad_factor` and `oversampling`.
     advance()          Advance each phase screen in list by self.time_step.
     advance_by()       Advance each phase screen in list by specified amount.
     reset()            Reset each phase screen to t=0.
@@ -493,7 +488,7 @@ class PhaseScreenList(object):
         """
         return np.sum(layer.path_difference(*args, **kwargs) for layer in self)
 
-    def getPSF(self, **kwargs):
+    def makePSF(self, **kwargs):
         """Compute one PSF or multiple PSFs from the current PhaseScreenList, depending on the type
         of `theta_x` and `theta_y`.  If `theta_x` and `theta_y` are iterable, then return PSFs at
         the implied field angles in a list.  If `theta_x` and `theta_y` are scalars, return a single
@@ -570,25 +565,25 @@ class PhaseScreenPSF(GSObject):
 
     There are at least three ways construct a PhaseScreenPSF given a PhaseScreenList.  The following
     two statements are equivalent:
-    > psf = screen_list.getPSF(...)
+    > psf = screen_list.makePSF(...)
     > psf = PhaseScreenPSF(screen_list, ...)
 
-    The third option is to use screen_list.getPSF() to obtain multiple PSFs at different field
+    The third option is to use screen_list.makePSF() to obtain multiple PSFs at different field
     angles from the same PhaseScreenList over the same simulated time interval.  Depending on the
     details of PhaseScreenList and other arguments, this may be significantly faster than manually
-    looping over getPSF().
-    > psfs = screen_list.getPSF(..., theta_x=[...], theta_y=[...])
+    looping over makePSF().
+    > psfs = screen_list.makePSF(..., theta_x=[...], theta_y=[...])
 
     Note that constructing a PhaseScreenPSF advances each PhaseScreen in `screen_list`, so PSFs
     constructed consecutively with the same arguments will generally be different.  Use
     PhaseScreenList.reset() to reset the time to t=0.
 
     > screen_list.reset()
-    > psf1 = screen_list.getPSF(...)
-    > psf2 = screen_list.getPSF(...)
+    > psf1 = screen_list.makePSF(...)
+    > psf2 = screen_list.makePSF(...)
     > assert psf1 != psf2
     > screen_list.reset()
-    > psf3 = screen_list.getPSF(...)
+    > psf3 = screen_list.makePSF(...)
     > assert psf1 == psf3
 
     @param screen_list      PhaseScreenList object from which to create PSF.
@@ -670,9 +665,9 @@ class PhaseScreenPSF(GSObject):
         if self._nstep == 0:
             self._nstep = 1
 
-        # PhaseScreenList.getPSFs() optimizes multiple PSF evaluation by iterating over PSFs inside
+        # PhaseScreenList.makePSFs() optimizes multiple PSF evaluation by iterating over PSFs inside
         # of the normal iterate over time loop.  So only do the time loop here and now if we're not
-        # doing a getPSFs().
+        # doing a makePSFs().
         if _eval_now:
             for i in xrange(self._nstep):
                 self._step()
@@ -789,11 +784,11 @@ def Atmosphere(r0_500=0.2, screen_size=30.0, time_step=0.03, altitude=0.0, L0=25
     Once the atmosphere is constructed, a 15-sec exposure PSF (using an 8.4 meter aperture and
     default settings) takes about 150 sec to generate on a fast laptop.
 
-    > psf = atm.getPSF(exptime=15.0, diam=8.4, obscuration=0.6)
+    > psf = atm.makePSF(exptime=15.0, diam=8.4, obscuration=0.6)
 
     Many factors will affect the timing of results, of course, including aperture diameter, gsparams
-    settings, pad_factor and oversampling options to getPSF, time_step and exposure time, frozen vs.
-    non-frozen atmospheric layers, and so on.
+    settings, pad_factor and oversampling options to makePSF, time_step and exposure time, frozen
+    vs. non-frozen atmospheric layers, and so on.
 
     @param r0_500        Fried parameter setting the amplitude of turbulence; contributes to "size"
                          of the resulting atmospheric PSF.  Specified at wavelength 500 nm, in units

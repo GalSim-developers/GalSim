@@ -81,18 +81,18 @@ def test_phase_screen_list():
 
     # Check some actual derived PSFs too, not just phase screens.
     atm.reset()
-    psf = atm.getPSF(exptime=0.06, diam=4.0)
+    psf = atm.makePSF(exptime=0.06, diam=4.0)
 
     # Need to reset atm2 since both atm and atm2 reference the same layer objects (not copies).
     # Not sure if this is a feature or a bug, but it's also how regular python lists work.
     atm2.reset()
-    psf2 = atm2.getPSF(exptime=0.06, diam=4.0)
+    psf2 = atm2.makePSF(exptime=0.06, diam=4.0)
 
     atm3.reset()
-    psf3 = atm3.getPSF(exptime=0.06, diam=4.0)
+    psf3 = atm3.makePSF(exptime=0.06, diam=4.0)
 
     atm4.reset()
-    psf4 = atm4.getPSF(exptime=0.06, diam=4.0)
+    psf4 = atm4.makePSF(exptime=0.06, diam=4.0)
 
     np.testing.assert_array_equal(psf.img, psf2.img, "PhaseScreenPSFs are inconsistent")
     np.testing.assert_array_equal(psf.img, psf3.img, "PhaseScreenPSFs are inconsistent")
@@ -173,14 +173,14 @@ def test_phase_psf_batch():
     theta_y = [i * galsim.arcsec for i in xrange(NPSFs)]
 
     t3 = time.time()
-    psfs = atm.getPSF(theta_x=theta_x, theta_y=theta_y, exptime=exptime, diam=4.0)
+    psfs = atm.makePSF(theta_x=theta_x, theta_y=theta_y, exptime=exptime, diam=4.0)
     print 'time for {0} PSFs in batch: {1:.2f} s'.format(NPSFs, time.time() - t3)
 
     t4 = time.time()
     more_psfs = []
     for tx, ty in zip(theta_x, theta_y):
         atm.reset()
-        more_psfs.append(atm.getPSF(theta_x=tx, theta_y=ty, exptime=exptime, diam=4.0))
+        more_psfs.append(atm.makePSF(theta_x=tx, theta_y=ty, exptime=exptime, diam=4.0))
     print 'time for {0} PSFs in serial: {1:.2f} s'.format(NPSFs, time.time() - t4)
 
     for psf1, psf2 in zip(psfs, more_psfs):
