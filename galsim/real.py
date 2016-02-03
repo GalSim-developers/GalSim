@@ -82,6 +82,10 @@ class RealGalaxy(GSObject):
     for exposures taken with a different telescope diameter than the HST 2.4 meter diameter
     this way.
 
+    Note that RealGalaxy objects use arcsec for the units of their linear dimension.  If you
+    are using a different unit for other things (the PSF, WCS, etc.), then you should dilate
+    the resulting object with `gal.dilate(galsim.arcsec / scale_unit)`.
+
     @param real_galaxy_catalog  A RealGalaxyCatalog object with basic information about where to
                             find the data, etc.
     @param index            Index of the desired galaxy in the catalog. [One of `index`, `id`, or
