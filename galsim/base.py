@@ -69,10 +69,9 @@ class GSObject(object):
 
     For instance, if you eventually draw onto an image that has a pixel scale of 0.2 arcsec/pixel,
     then the normal thing to do would be to define your surface brightness profiles in terms of
-    arcsec and then draw with `pixel_scale=0.2`.  However, nowhere in GalSim do we enforce that sky
-    coordinates need to be in arcsec.  If you wanted, you could instead define the sizes of all
-    your galaxies and PSFs in terms of radians and then use `pixel_scale=0.2/206265` when you
-    draw them.
+    arcsec and then draw with `pixel_scale=0.2`.  However, while arcsec are the usual choice of
+    units for the sky coordinates, if you wanted, you could instead define the sizes of all your
+    galaxies and PSFs in terms of radians and then use `pixel_scale=0.2/206265` when you draw them.
 
     Transforming Methods
     --------------------
