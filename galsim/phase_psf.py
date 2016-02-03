@@ -183,7 +183,8 @@ class AtmosphericScreen(PhaseScreen):
                          of the resulting atmospheric PSF.  Specified at wavelength 500 nm, in units
                          of meters.  [Default: 0.2]
     @param L0            Outer scale in meters.  The turbulence power spectrum will smoothly
-                         approach zero at scales larger than L0.  [Default: 25.0]
+                         approach zero at scales larger than L0.  Set to `None` or `np.inf` for a
+                         power spectrum without an outer scale.  [Default: 25.0]
     @param vx            x-component wind velocity in meters/second.  [Default: 0.]
     @param vy            y-component wind velocity in meters/second.  [Default: 0.]
     @param alpha         Square root of fraction of phase that is "remembered" between time_steps
@@ -240,11 +241,13 @@ class AtmosphericScreen(PhaseScreen):
                          self.r0_500, self.L0, self.vx, self.vy, self.alpha, self.rng)
 
     def __eq__(self, other):
+        sL0 = self.L0 if self.L0 is not None else np.inf
+        oL0 = other.L0 if other.L0 is not None else np.inf
         return (self.screen_size == other.screen_size and
                 self.screen_scale == other.screen_scale and
                 self.altitude == other.altitude and
                 self.r0_500 == other.r0_500 and
-                self.L0 == other.L0 and
+                sL0 == oL0 and
                 self.vx == other.vx and
                 self.vy == other.vy and
                 self.alpha == other.alpha and
@@ -266,8 +269,9 @@ class AtmosphericScreen(PhaseScreen):
         fx = np.fft.fftfreq(self.npix, self.screen_scale)
         fx, fy = np.meshgrid(fx, fx)
 
+        L0_inv = 1./self.L0 if self.L0 is not None else 0.0
         self.psi = (1./self.screen_size*self.kolmogorov_constant*(self.r0_500**(-5.0/6.0)) *
-                    (fx*fx + fy*fy + 1./(self.L0*self.L0))**(-11.0/12.0) *
+                    (fx*fx + fy*fy + L0_inv*L0_inv)**(-11.0/12.0) *
                     self.npix * np.sqrt(np.sqrt(2.0)))
         self.psi *= 500.0  # Multiply by 500 here so we can divide by arbitrary lam later.
         self.psi[0, 0] = 0.0
@@ -806,7 +810,8 @@ def Atmosphere(r0_500=0.2, screen_size=30.0, time_step=0.03, altitude=0.0, L0=25
     @param altitude      Altitude of phase screen in km.  This is with respect to the telescope, not
                          sea-level.  [Default: 0.0]
     @param L0            Outer scale in meters.  The turbulence power spectrum will smoothly
-                         approach zero at scales larger than L0.  [Default: 25.0]
+                         approach zero at scales larger than L0.  Set to `None` or `np.inf` for a
+                         power spectrum without an outer scale.  [Default: 25.0]
     @param velocity      Wind speed in meters/second.  [Default: 0.0]
     @param direction     Wind direction as galsim.Angle [Default: 0.0 * galsim.degrees]
     @param alpha         Fraction of phase that is "remembered" between time_steps.  The fraction
