@@ -684,7 +684,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
         img /= 1.0*len(im_list)
 
     # Assign an appropriate WCS for the output
-    if scale is not None:
+    if wcs.isPixelScale():
         if n1==n2:
             img.wcs = galsim.PixelScale(1.*scale/n1)
         else:
