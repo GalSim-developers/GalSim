@@ -488,7 +488,7 @@ class PhaseScreenList(object):
         """
         return np.sum(layer.path_difference(*args, **kwargs) for layer in self)
 
-    def makePSF(self, **kwargs):
+    def makePSF(self, diam, **kwargs):
         """Compute one PSF or multiple PSFs from the current PhaseScreenList, depending on the type
         of `theta_x` and `theta_y`.  If `theta_x` and `theta_y` are iterable, then return PSFs at
         the implied field angles in a list.  If `theta_x` and `theta_y` are scalars, return a single
@@ -498,6 +498,7 @@ class PhaseScreenList(object):
         same arguments will generally return different PSFs.  Use PhaseScreenList.reset() to reset
         the time to t=0.  See galsim.PhaseScreenPSF docstring for more details.
 
+        @param diam             Diameter in meters of aperture used to compute PSF from phases.
         @param lam              Wavelength in nanometers used to compute PSF.  [Default: 500]
         @param exptime          Time in seconds overwhich to accumulate evolving instantaneous PSFs
                                 [Default: 0.0]
@@ -510,8 +511,6 @@ class PhaseScreenList(object):
                                 [Default: 0.0*galsim.arcmin]
         @param scale_unit       Units to use for the sky coordinates of the output profile.
                                 [Default: galsim.arcsec]
-        @param diam             Diameter in meters of aperture used to compute PSF from phases.
-                                [Default: 8.4]
         @param obscuration      Linear dimension of central obscuration as fraction of pupil linear
                                 dimension, [0., 1.).  [Default: 0]
         @param interpolant      Either an Interpolant instance or a string indicating which
@@ -530,12 +529,12 @@ class PhaseScreenList(object):
         theta_x = kwargs.get('theta_x', 0.0*galsim.arcmin)
         theta_y = kwargs.get('theta_y', 0.0*galsim.arcmin)
         if not hasattr(theta_x, '__iter__') and not hasattr(theta_y, '__iter__'):
-            return PhaseScreenPSF(self, **kwargs)
+            return PhaseScreenPSF(self, diam, **kwargs)
         else:
             kwargs['_eval_now'] = False
             PSFs = []
             for theta_x, theta_y in zip(kwargs.pop('theta_x'), kwargs.pop('theta_y')):
-                PSFs.append(PhaseScreenPSF(self, theta_x=theta_x, theta_y=theta_y, **kwargs))
+                PSFs.append(PhaseScreenPSF(self, diam, theta_x=theta_x, theta_y=theta_y, **kwargs))
 
             flux = kwargs.get('flux', 1.0)
             gsparams = kwargs.get('gsparams', None)
@@ -588,6 +587,7 @@ class PhaseScreenPSF(GSObject):
     > assert psf1 == psf3
 
     @param screen_list      PhaseScreenList object from which to create PSF.
+    @param diam             Diameter in meters of aperture used to compute PSF from phases.
     @param lam              Wavelength in nanometers used to compute PSF.  [Default: 500]
     @param exptime          Time in seconds overwhich to accumulate evolving instantaneous PSF.
                             [Default: 0.0]
@@ -598,8 +598,6 @@ class PhaseScreenPSF(GSObject):
                             resulting PSF.  [Default: 0.0*galsim.arcmin]
     @param scale_unit       Units to use for the sky coordinates of the output profile.
                             [Default: galsim.arcsec]
-    @param diam             Diameter in meters of aperture used to compute PSF from phases.
-                            [Default: 8.4]
     @param obscuration      Linear dimension of central obscuration as fraction of pupil linear
                             dimension, [0., 1.).  [Default: 0]
     @param interpolant      Either an Interpolant instance or a string indicating which interpolant
@@ -617,10 +615,10 @@ class PhaseScreenPSF(GSObject):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
     """
-    def __init__(self, screen_list, lam=500., exptime=0.0, flux=1.0,
+    def __init__(self, screen_list, diam, lam=500., exptime=0.0, flux=1.0,
                  theta_x=0.0*galsim.arcmin, theta_y=0.0*galsim.arcmin,
                  scale_unit=galsim.arcsec, interpolant=None,
-                 diam=8.4, obscuration=0.6,
+                 obscuration=0.0,
                  pad_factor=1.5, oversampling=1.5,
                  _pupil_plane_size=None, _pupil_scale=None,
                  gsparams=None, _eval_now=True, _bar=None):
