@@ -357,30 +357,30 @@ class PhaseScreenList(object):
     the function `Atmosphere`.  Layers can be added, removed, appended, etc. just like items can be
     manipulated in a python list.  For example:
 
-    # Create an atmosphere with three layers.
-    > screens = galsim.PhaseScreenList([galsim.AtmosphericScreen(...),
-                                        galsim.AtmosphericScreen(...),
-                                        galsim.AtmosphericScreen(...)])
-    # Add another layer
-    > screens.append(galsim.AtmosphericScreen(...))
-    # Remove the second layer
-    > del screens[1]
-    # Switch the first and second layer.  Silly, but works...
-    > screens[0], screens[1] = screens[1], screens[0]
+        # Create an atmosphere with three layers.
+        >>> screens = galsim.PhaseScreenList([galsim.AtmosphericScreen(...),
+                                              galsim.AtmosphericScreen(...),
+                                              galsim.AtmosphericScreen(...)])
+        # Add another layer
+        >>> screens.append(galsim.AtmosphericScreen(...))
+        # Remove the second layer
+        >>> del screens[1]
+        # Switch the first and second layer.  Silly, but works...
+        >>> screens[0], screens[1] = screens[1], screens[0]
 
     Note that creating new PhaseScreenLists from old PhaseScreenLists copies the wrapped phase
     screens by reference, not value.  Thus, advancing the screens in one list will also advance the
     screens in a copy:
 
-    > more_screens = screens[0:2]
-    > more_screens.advance()
-    > assert more_screens[0] == screens[0]
+        >>> more_screens = screens[0:2]
+        >>> more_screens.advance()
+        >>> assert more_screens[0] == screens[0]
 
-    > more_screens = galsim.PhaseScreenList(screens)
-    > screens.reset()
-    > psf = screens.makePSF(exptime=exptime, ...)        # starts at t=0
-    > psf2 = more_screens.makePSF(exptime=exptime, ...)  # starts at t=exptime
-    > assert psf != psf2
+        >>> more_screens = galsim.PhaseScreenList(screens)
+        >>> screens.reset()
+        >>> psf = screens.makePSF(exptime=exptime, ...)        # starts at t=0
+        >>> psf2 = more_screens.makePSF(exptime=exptime, ...)  # starts at t=exptime
+        >>> assert psf != psf2
 
     Methods
     -------
@@ -394,7 +394,7 @@ class PhaseScreenList(object):
     @param layers  Sequence of phase screens.
     """
     def __init__(self, layers):
-        self._layers = layers
+        self._layers = list(layers)
         self._update_attrs()  # for now, just updating self.time_step
 
     def __len__(self):
@@ -565,26 +565,26 @@ class PhaseScreenPSF(GSObject):
 
     There are at least three ways construct a PhaseScreenPSF given a PhaseScreenList.  The following
     two statements are equivalent:
-    > psf = screen_list.makePSF(...)
-    > psf = PhaseScreenPSF(screen_list, ...)
+        >>> psf = screen_list.makePSF(...)
+        >>> psf = PhaseScreenPSF(screen_list, ...)
 
     The third option is to use screen_list.makePSF() to obtain multiple PSFs at different field
     angles from the same PhaseScreenList over the same simulated time interval.  Depending on the
     details of PhaseScreenList and other arguments, this may be significantly faster than manually
     looping over makePSF().
-    > psfs = screen_list.makePSF(..., theta_x=[...], theta_y=[...])
+        >>> psfs = screen_list.makePSF(..., theta_x=[...], theta_y=[...])
 
     Note that constructing a PhaseScreenPSF advances each PhaseScreen in `screen_list`, so PSFs
     constructed consecutively with the same arguments will generally be different.  Use
     PhaseScreenList.reset() to reset the time to t=0.
 
-    > screen_list.reset()
-    > psf1 = screen_list.makePSF(...)
-    > psf2 = screen_list.makePSF(...)
-    > assert psf1 != psf2
-    > screen_list.reset()
-    > psf3 = screen_list.makePSF(...)
-    > assert psf1 == psf3
+        >>> screen_list.reset()
+        >>> psf1 = screen_list.makePSF(...)
+        >>> psf2 = screen_list.makePSF(...)
+        >>> assert psf1 != psf2
+        >>> screen_list.reset()
+        >>> psf3 = screen_list.makePSF(...)
+        >>> assert psf1 == psf3
 
     @param screen_list      PhaseScreenList object from which to create PSF.
     @param diam             Diameter in meters of aperture used to compute PSF from phases.
@@ -764,22 +764,22 @@ def Atmosphere(r0_500=0.2, screen_size=30.0, time_step=0.03, altitude=0.0, L0=25
     a fast laptop, and will consume about (8192**2 pixels) * (8 bytes) * (6 screens) ~ 3 GB of
     RAM in its final state, and more at intermediate states.
 
-    > altitude = [0, 2.58, 5.16, 7.73, 12.89, 15.46]  # km
-    > r0_500_effective = 0.16  # m
-    > weights = [0.652, 0.172, 0.055, 0.025, 0.074, 0.022]
-    > r0_500 = [r0_500_effective * w**(-3./5) for w in weights]
-    > velocity = np.random.uniform(0, 20, size=6)  # m/s
-    > direction = [np.random.uniform(0, 360)*galsim.degrees for i in xrange(6)]
-    > npix = 8192
-    > screen_scale = 0.5 * r0_500_effective
-    > atm = galsim.Atmosphere(r0_500=r0_500, screen_size=screen_scale*npix, time_step=0.005,
-                              altitude=altitude, L0=25.0, velocity=velocity, direction=direction,
-                              screen_scale=screen_scale)
+        >>> altitude = [0, 2.58, 5.16, 7.73, 12.89, 15.46]  # km
+        >>> r0_500_effective = 0.16  # m
+        >>> weights = [0.652, 0.172, 0.055, 0.025, 0.074, 0.022]
+        >>> r0_500 = [r0_500_effective * w**(-3./5) for w in weights]
+        >>> velocity = np.random.uniform(0, 20, size=6)  # m/s
+        >>> direction = [np.random.uniform(0, 360)*galsim.degrees for i in xrange(6)]
+        >>> npix = 8192
+        >>> screen_scale = 0.5 * r0_500_effective
+        >>> atm = galsim.Atmosphere(r0_500=r0_500, screen_size=screen_scale*npix, time_step=0.005,
+                                    altitude=altitude, L0=25.0, velocity=velocity,
+                                    direction=direction, screen_scale=screen_scale)
 
     Once the atmosphere is constructed, a 15-sec exposure PSF (using an 8.4 meter aperture and
     default settings) takes about 150 sec to generate on a fast laptop.
 
-    > psf = atm.makePSF(exptime=15.0, diam=8.4, obscuration=0.6)
+        >>> psf = atm.makePSF(diam=8.4, exptime=15.0, obscuration=0.6)
 
     Many factors will affect the timing of results, of course, including aperture diameter, gsparams
     settings, pad_factor and oversampling options to makePSF, time_step and exposure time, frozen
