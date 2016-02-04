@@ -152,8 +152,8 @@ class PhaseScreen(object):
     def pupil_scale(self, lam, scale_unit=galsim.arcsec):
         """Compute a good pupil_scale in meters for this atmospheric layer.
 
-        @param lam        Wavelength in nanometers.
-        @param scale_unit Scale unit assumed when eventually image.  [Default: galsim.arcsec]
+        @param lam         Wavelength in nanometers.
+        @param scale_unit  Sky coordinate units of output profile. [Default: galsim.arcsec]
         @returns  Good pupil scale size in meters.
         """
         raise NotImplementedError
@@ -183,8 +183,8 @@ class AtmosphericScreen(PhaseScreen):
                          of the resulting atmospheric PSF.  Specified at wavelength 500 nm, in units
                          of meters.  [Default: 0.2]
     @param L0            Outer scale in meters.  The turbulence power spectrum will smoothly
-                         approach zero at scales larger than L0.  Set to `None` or `np.inf` for a
-                         power spectrum without an outer scale.  [Default: 25.0]
+                         approach a constant at scales larger than L0.  Set to `None` or `np.inf`
+                         for a power spectrum without an outer scale.  [Default: 25.0]
     @param vx            x-component wind velocity in meters/second.  [Default: 0.]
     @param vy            y-component wind velocity in meters/second.  [Default: 0.]
     @param alpha         Square root of fraction of phase that is "remembered" between time_steps
@@ -314,8 +314,8 @@ class AtmosphericScreen(PhaseScreen):
     def pupil_scale(self, lam, scale_unit=galsim.arcsec):
         """Compute a good pupil_scale in meters for this atmospheric layer.
 
-        @param lam        Wavelength in nanometers.
-        @param scale_unit Scale unit assumed when eventually image.  [Default: galsim.arcsec]
+        @param lam         Wavelength in nanometers.
+        @param scale_unit  Sky coordinate units of output profile. [Default: galsim.arcsec]
         @returns  Good pupil scale size in meters.
         """
         obj = galsim.Kolmogorov(lam=lam, r0=self.r0_500 * (lam/500.0)**(6./5))
@@ -508,7 +508,8 @@ class PhaseScreenList(object):
         @param theta_y          Iterable or scalar for y-component of field angle at which to
                                 evaluate phase screens and the resulting PSF(s).
                                 [Default: 0.0*galsim.arcmin]
-        @param scale_unit       Scale of output profile.  [Default: galsim.arcsec]
+        @param scale_unit       Units to use for the sky coordinates of the output profile.
+                                [Default: galsim.arcsec]
         @param diam             Diameter in meters of aperture used to compute PSF from phases.
                                 [Default: 8.4]
         @param obscuration      Linear dimension of central obscuration as fraction of pupil linear
@@ -595,7 +596,8 @@ class PhaseScreenPSF(GSObject):
                             resulting PSF.  [Default: 0.0*galsim.arcmin]
     @param theta_y          y-component of field angle at which to evaluate phase screens and
                             resulting PSF.  [Default: 0.0*galsim.arcmin]
-    @param scale_unit       Scale of output profile.  [Default: galsim.arcsec]
+    @param scale_unit       Units to use for the sky coordinates of the output profile.
+                            [Default: galsim.arcsec]
     @param diam             Diameter in meters of aperture used to compute PSF from phases.
                             [Default: 8.4]
     @param obscuration      Linear dimension of central obscuration as fraction of pupil linear
@@ -689,17 +691,10 @@ class PhaseScreenPSF(GSObject):
                          self.obscuration, self.pad_factor, self.oversampling, self.gsparams)
 
     def __eq__(self, other):
-        return (self.screen_list == other.screen_list and
-                self.lam == other.lam and
-                self.exptime == other.exptime and
-                self.theta_x == other.theta_x and
-                self.theta_y == other.theta_y and
-                self.scale_unit == other.scale_unit and
-                self.interpolant == other.interpolant and
-                self.diam == other.diam and
-                self.obscuration == other.obscuration and
-                self._pupil_scale == other._pupil_scale and
-                self._pupil_size == other.pupil_size)
+        # Even if two PSFs were generated with different sets of parameters, they will act
+        # identically if their img and interpolant match.
+        return (self.img == other.img and
+                self.interpolant == other.interpolant)
 
     def __ne__(self, other):
         return not self == other
@@ -805,8 +800,8 @@ def Atmosphere(r0_500=0.2, screen_size=30.0, time_step=0.03, altitude=0.0, L0=25
     @param altitude      Altitude of phase screen in km.  This is with respect to the telescope, not
                          sea-level.  [Default: 0.0]
     @param L0            Outer scale in meters.  The turbulence power spectrum will smoothly
-                         approach zero at scales larger than L0.  Set to `None` or `np.inf` for a
-                         power spectrum without an outer scale.  [Default: 25.0]
+                         approach a constant at scales larger than L0.  Set to `None` or `np.inf`
+                         for a power spectrum without an outer scale.  [Default: 25.0]
     @param velocity      Wind speed in meters/second.  [Default: 0.0]
     @param direction     Wind direction as galsim.Angle [Default: 0.0 * galsim.degrees]
     @param alpha         Fraction of phase that is "remembered" between time_steps.  The fraction
