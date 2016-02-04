@@ -138,7 +138,6 @@ class RealGalaxy(GSObject):
                   }
     _single_params = [ { "index" : int , "id" : str } ]
     _takes_rng = True
-    _takes_logger = True
 
     def __init__(self, real_galaxy_catalog, index=None, id=None, random=False,
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, flux_rescale=None,
@@ -384,7 +383,6 @@ class RealGalaxyCatalog(object):
                     'preload' : bool, 'noise_dir' : str }
     _single_params = []
     _takes_rng = False
-    _takes_logger = True
 
     # _nobject_only is an intentionally undocumented kwarg that should be used only by
     # the config structure.  It indicates that all we care about is the nobjects parameter.
@@ -410,8 +408,10 @@ class RealGalaxyCatalog(object):
         self.psf_file_name = self.cat.field('PSF_filename') # file containing the PSF image
 
         # Add the directories:
-        self.gal_file_name = [ os.path.join(self.image_dir,f) for f in self.gal_file_name ]
-        self.psf_file_name = [ os.path.join(self.image_dir,f) for f in self.psf_file_name ]
+        # Note the strip call.  Sometimes the filenames have an extra space at the end. 
+        # This gets rid of that space.
+        self.gal_file_name = [ os.path.join(self.image_dir,f.strip()) for f in self.gal_file_name ]
+        self.psf_file_name = [ os.path.join(self.image_dir,f.strip()) for f in self.psf_file_name ]
 
         # We don't require the noise_filename column.  If it is not present, we will use
         # Uncorrelated noise based on the variance column.

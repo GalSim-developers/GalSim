@@ -177,7 +177,7 @@ def main(argv):
             # Of course, this script isn't using multiple processes, so it isn't required here.
             # However, we do it nonetheless in order to get the same results as the config
             # version of this demo script (demo5.yaml).
-            ud = galsim.UniformDeviate(random_seed+k)
+            ud = galsim.UniformDeviate(random_seed+k+1)
 
             # Any kind of random number generator can take another RNG as its first 
             # argument rather than a seed value.  This makes both objects use the same

@@ -17,17 +17,29 @@
 #
 
 import galsim
+import logging
 
-def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
-                xsize=0, ysize=0, do_noise=True,
-                make_psf_image=False, make_weight_image=False, make_badpix_image=False):
+# This file handles the building of postage stamps to place onto a larger image.
+# There is only one type of stamp currently, called Basic, which builds a galaxy from
+# config['gal'] and a PSF from config['psf'] (either but not both of which may be absent),
+# colvolves them together, and draws onto a postage stamp.  This is the default functionality
+# and is typically not specified explicitly.  But there are hooks in place to allow for other
+# options, either in future versions of GalSim or through user modules.
+
+# This module-level dict will store all the registered stamp types.
+# See the RegisterStampType function at the end of this file.
+# The keys are the (string) names of the output types, and the values will be builder objects
+# that will perform the different stages of processing to build each stamp image.
+valid_stamp_types = {}
+
+
+def BuildStamps(nobjects, config, obj_num=0,
+                xsize=0, ysize=0, do_noise=True, logger=None):
     """
     Build a number of postage stamp images as specified by the config dict.
 
     @param nobjects         How many postage stamps to build.
     @param config           A configuration dict.
-    @param nproc            How many processes to use. [default: 1]
-    @param logger           If given, a logger object to log progress. [default: None]
     @param obj_num          If given, the current obj_num. [default: 0]
     @param xsize            The size of a single stamp in the x direction. [default: 0,
                             which means to look for config.image.stamp_xsize, and if that's
@@ -37,266 +49,219 @@ def BuildStamps(nobjects, config, nproc=1, logger=None, obj_num=0,
                             not there, use automatic sizing.]
     @param do_noise         Whether to add noise to the image (according to config['noise']).
                             [default: True]
-    @param make_psf_image   Whether to make psf_image. [default: False]
-    @param make_weight_image  Whether to make weight_image. [default: False]
-    @param make_badpix_image  Whether to make badpix_image. [default: False]
+    @param logger           If given, a logger object to log progress. [default: None]
 
-    @returns the tuple (images, psf_images, weight_images, badpix_images, current_vars).
-             All in tuple are lists.
+    @returns the tuple (images, current_vars).  Both are lists.
     """
-    config['obj_num'] = obj_num
-
-    def worker(input, output):
-        proc = current_process().name
-        for job in iter(input.get, 'STOP'):
-            try :
-                (kwargs, obj_num, nobj, info, logger) = job
-                if logger:
-                    logger.debug('%s: Received job to do %d stamps, starting with %d',
-                                 proc,nobj,obj_num)
-                results = []
-                for k in range(nobj):
-                    kwargs['obj_num'] = obj_num + k
-                    kwargs['logger'] = logger
-                    result = BuildSingleStamp(**kwargs)
-                    results.append(result)
-                    # Note: numpy shape is y,x
-                    ys, xs = result[0].array.shape
-                    t = result[5]
-                    if logger:
-                        logger.info('%s: Stamp %d: size = %d x %d, time = %f sec', 
-                                    proc, obj_num+k, xs, ys, t)
-                output.put( (results, info, proc) )
-                if logger:
-                    logger.debug('%s: Finished job %d -- %d',proc,obj_num,obj_num+nobj-1)
-            except Exception as e:
-                import traceback
-                tr = traceback.format_exc()
-                if logger:
-                    logger.error('%s: Caught exception %s\n%s',proc,str(e),tr)
-                output.put( (e, info, tr) )
-        if logger:
-            logger.debug('%s: Received STOP',proc)
-    
-    # The kwargs to pass to build_func.
-    # We'll be adding to this below...
-    kwargs = {
-        'xsize' : xsize, 'ysize' : ysize, 
-        'do_noise' : do_noise,
-        'make_psf_image' : make_psf_image,
-        'make_weight_image' : make_weight_image,
-        'make_badpix_image' : make_badpix_image
-    }
-
-    if nproc > nobjects:
-        if logger:
-            logger.warn(
-                "Trying to use more processes than objects: image.nproc=%d, "%nproc +
-                "nobjects=%d.  Reducing nproc to %d."%(nobjects,nobjects))
-        nproc = nobjects
-
-    if nproc <= 0:
-        # Try to figure out a good number of processes to use
-        try:
-            from multiprocessing import cpu_count
-            ncpu = cpu_count()
-            if ncpu > nobjects:
-                nproc = nobjects
-            else:
-                nproc = ncpu
-            if logger:
-                logger.info("ncpu = %d.  Using %d processes",ncpu,nproc)
-        except:
-            if logger:
-                logger.warn("config.image.nproc <= 0, but unable to determine number of cpus.")
-            nproc = 1
-            if logger:
-                logger.info("Unable to determine ncpu.  Using %d processes",nproc)
-    
-    if nproc > 1:
-        from multiprocessing import Process, Queue, current_process
-        from multiprocessing.managers import BaseManager
-
-        # Initialize the images list to have the correct size.
-        # This is important here, since we'll be getting back images in a random order,
-        # and we need them to go in the right places (in order to have deterministic
-        # output files).  So we initialize the list to be the right size.
-        images = [ None for i in range(nobjects) ]
-        psf_images = [ None for i in range(nobjects) ]
-        weight_images = [ None for i in range(nobjects) ]
-        badpix_images = [ None for i in range(nobjects) ]
-        current_vars = [ None for i in range(nobjects) ]
-
-        # Number of objects to do in each task:
-        # At most nobjects / nproc.
-        # At least 1 normally, but number in Ring if doing a Ring test
-        # Shoot for geometric mean of these two.
-        max_nobj = nobjects / nproc
-        min_nobj = 1
-        if ( 'gal' in config and isinstance(config['gal'],dict) and 'type' in config['gal'] and
-             config['gal']['type'] == 'Ring' and 'num' in config['gal'] ):
-            min_nobj = galsim.config.ParseValue(config['gal'], 'num', config, int)[0]
-        if max_nobj < min_nobj: 
-            nobj_per_task = min_nobj
-        else:
-            import math
-            # This formula keeps nobj a multiple of min_nobj, so Rings are intact.
-            nobj_per_task = min_nobj * int(math.sqrt(float(max_nobj) / float(min_nobj)))
-        
-        # The logger is not picklable, se we set up a proxy object.  See comments in process.py
-        # for more details about how this works.
-        class LoggerManager(BaseManager): pass
-        if logger:
-            logger_generator = galsim.utilities.SimpleGenerator(logger)
-            LoggerManager.register('logger', callable = logger_generator)
-            logger_manager = LoggerManager()
-            logger_manager.start()
-
-        # Set up the task list
-        task_queue = Queue()
-        for k in range(0,nobjects,nobj_per_task):
-            import copy
-            kwargs1 = copy.copy(kwargs)
-            kwargs1['config'] = galsim.config.CopyConfig(config)
-            if logger:
-                logger_proxy = logger_manager.logger()
-            else:
-                logger_proxy = None
-            nobj1 = min(nobj_per_task, nobjects-k)
-            task_queue.put( ( kwargs1, obj_num+k, nobj1, k, logger_proxy ) )
-
-        # Run the tasks
-        # Each Process command starts up a parallel process that will keep checking the queue 
-        # for a new task. If there is one there, it grabs it and does it. If not, it waits 
-        # until there is one to grab. When it finds a 'STOP', it shuts down. 
-        done_queue = Queue()
-        p_list = []
-        for j in range(nproc):
-            # The name is actually the default name for the first time we do this,
-            # but after that it just keeps incrementing the numbers, rather than starting
-            # over at Process-1.  As far as I can tell, it's not actually spawning more 
-            # processes, so for the sake of the info output, we name the processes 
-            # explicitly.
-            p = Process(target=worker, args=(task_queue, done_queue), name='Process-%d'%(j+1))
-            p.start()
-            p_list.append(p)
-
-        # In the meanwhile, the main process keeps going.  We pull each set of images off of the 
-        # done_queue and put them in the appropriate place in the lists.
-        # This loop is happening while the other processes are still working on their tasks.
-        # You'll see that these logging statements get print out as the stamp images are still 
-        # being drawn.  
-        for i in range(0,nobjects,nobj_per_task):
-            results, k0, proc = done_queue.get()
-            if isinstance(results,Exception):
-                # results is really the exception, e
-                # proc is really the traceback
-                if logger:
-                    logger.error('Exception caught during job starting with stamp %d', k0)
-                    logger.error('Aborting the rest of this image')
-                for j in range(nproc):
-                    p_list[j].terminate()
-                raise results
-            k = k0
-            for result in results:
-                images[k] = result[0]
-                psf_images[k] = result[1]
-                weight_images[k] = result[2]
-                badpix_images[k] = result[3]
-                current_vars[k] = result[4]
-                k += 1
-            if logger:
-                logger.debug('%s: Successfully returned results for stamps %d--%d', proc, k0, k-1)
-
-        # Stop the processes
-        # The 'STOP's could have been put on the task list before starting the processes, or you
-        # can wait.  In some cases it can be useful to clear out the done_queue (as we just did)
-        # and then add on some more tasks.  We don't need that here, but it's perfectly fine to do.
-        # Once you are done with the processes, putting nproc 'STOP's will stop them all.
-        # This is important, because the program will keep running as long as there are running
-        # processes, even if the main process gets to the end.  So you do want to make sure to 
-        # add those 'STOP's at some point!
-        for j in range(nproc):
-            task_queue.put('STOP')
-        for j in range(nproc):
-            p_list[j].join()
-        task_queue.close()
-
-    else : # nproc == 1
-
-        images = []
-        psf_images = []
-        weight_images = []
-        badpix_images = []
-        current_vars = []
-
-        for k in range(nobjects):
-            kwargs['config'] = config
-            kwargs['obj_num'] = obj_num+k
-            kwargs['logger'] = logger
-            result = BuildSingleStamp(**kwargs)
-            images += [ result[0] ]
-            psf_images += [ result[1] ]
-            weight_images += [ result[2] ]
-            badpix_images += [ result[3] ]
-            current_vars += [ result[4] ]
-            if logger:
-                # Note: numpy shape is y,x
-                ys, xs = result[0].array.shape
-                t = result[5]
-                logger.info('Stamp %d: size = %d x %d, time = %f sec', obj_num+k, xs, ys, t)
-
-
     if logger:
-        logger.debug('image %d: Done making stamps',config.get('image_num',0))
+        logger.debug('image %d: BuildStamp nobjects = %d: obj = %d',
+                     config.get('image_num',0),nobjects,obj_num)
 
-    return images, psf_images, weight_images, badpix_images, current_vars
- 
+    # Figure out how many processes we will use for building the stamps:
+    if nobjects > 1 and 'image' in config and 'nproc' in config['image']:
+        nproc = galsim.config.ParseValue(config['image'], 'nproc', config, int)[0]
+        # Update this in case the config value is -1
+        nproc = galsim.config.UpdateNProc(nproc, nobjects, config, logger)
+    else:
+        nproc = 1
 
-def BuildSingleStamp(config, xsize=0, ysize=0,
-                     obj_num=0, do_noise=True, logger=None,
-                     make_psf_image=False, make_weight_image=False, make_badpix_image=False):
-    """
-    Build a single image using the given config file
+    nobj_per_task = galsim.config.CalculateNObjPerTask(nproc, nobjects, config)
+    if logger:
+        logger.debug('image %d: nobj_per_task = %d',config.get('image_num',0), nobj_per_task)
+
+    jobs = []
+    for k in range(nobjects):
+        kwargs = {
+            'obj_num' : obj_num + k,
+            'xsize' : xsize,
+            'ysize' : ysize,
+            'do_noise' : do_noise,
+        }
+        jobs.append( (kwargs, obj_num+k) )
+
+    def done_func(logger, proc, obj_num, result, t):
+        if logger and result[0] is not None:
+            # Note: numpy shape is y,x
+            image = result[0]
+            ys, xs = image.array.shape
+            if proc is None: s0 = ''
+            else: s0 = '%s: '%proc
+            logger.info(s0 + 'Stamp %d: size = %d x %d, time = %f sec', obj_num, xs, ys, t)
+
+    def except_func(logger, proc, e, tr, obj_num):
+        if logger:
+            if proc is None: s0 = ''
+            else: s0 = '%s: '%proc
+            logger.error(s0 + 'Exception caught when building stamp %d', obj_num)
+            #logger.error('%s',tr)
+            logger.error('Aborting the rest of this image')
+
+    results = galsim.config.MultiProcess(nproc, config, BuildStamp, jobs, 'stamp', logger,
+                                         njobs_per_task = nobj_per_task,
+                                         done_func = done_func,
+                                         except_func = except_func)
+
+    if not results:
+        images, current_vars = [], []
+        if logger:
+            logger.error('No images were built.  All were either skipped or had errors.')
+    else:
+        images, current_vars = zip(*results)
+        if logger:
+            logger.debug('image %d: Done making stamps',config.get('image_num',0))
+
+    return images, current_vars
+
+
+def SetupConfigObjNum(config, obj_num):
+    """Do the basic setup of the config dict at the stamp (or object) processing level.
+
+    Includes:
+    - Set config['obj_num'] = obj_num
+    - Set config['index_key'] = 'obj_num'
+    - Make sure config['stamp'] exists
+    - Set default config['stamp']['type'] to 'Basic'
+    - Copy over values from config['image'] that are allowed there, but really belong
+      in config['stamp'].
+    - Set config['stamp']['draw_method'] to 'auto' if not given.
 
     @param config           A configuration dict.
+    @param obj_num          The current obj_num.
+    """
+    config['obj_num'] = obj_num
+    config['index_key'] = 'obj_num'
+
+    # Make config['stamp'] exist if it doesn't yet.
+    if 'stamp' not in config:
+        config['stamp'] = {}
+    stamp = config['stamp']
+    if not isinstance(stamp, dict):
+        raise AttributeError("config.stamp is not a dict.")
+    if 'type' not in stamp:
+        stamp['type'] = 'Basic'
+
+    # Copy over some things from config['image'] if they are given there.
+    # These are things that we used to advertise as being in the image field, but now that
+    # we have a stamp field, they really make more sense here.  But for backwards compatibility,
+    # or just because they can make sense in either place, we allow them to be in 'image' still.
+    if '_copied_image_keys_to_stamp' not in config and 'image' in config:
+        image = config['image']
+        for key in ['offset', 'retry_failures', 'gsparams',
+                    'draw_method', 'wmult', 'nphotons', 'max_extra_noise', 'poisson_flux']:
+            if key in image and key not in stamp:
+                stamp[key] = image[key]
+        config['_copied_image_keys_to_stamp'] = True
+
+    if 'draw_method' not in stamp:
+        stamp['draw_method'] = 'auto'
+
+
+
+def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
+    """Do further setup of the config dict at the stamp (or object) processing level reflecting
+    the stamp size and position in either image or world coordinates.
+
+    Includes:
+    - If given, set config['stamp_xsize'] = xsize
+    - If given, set config['stamp_ysize'] = ysize
+    - If only image_pos or world_pos is given, compute the other from config['wcs']
+    - Set config['index_pos'] = image_pos
+    - Set config['world_pos'] = world_pos
+    - Calculate the appropriate value of the center of the stamp, to be used with the
+      command: stamp_image.setCenter(stamp_center).  Save this as config['stamp_center']
+    - Calculate the appropriate offset for the position of the object from the center of
+      the stamp due to just the fractional part of the image position, not including
+      any config['stamp']['offset'] item that may be present in the config dict.
+      Save this as config['stamp_offset']
+
+    @param config           A configuration dict.
+    @param xsize            The size of the stamp in the x-dimension. [may be None]
+    @param ysize            The size of the stamp in the y-dimension. [may be None]
+    @param image_pos        The position of the stamp in image coordinates. [may be None]
+    @param world_pos        The position of the stamp in world coordinates. [may be None]
+    """
+
+    if xsize: config['stamp_xsize'] = xsize
+    if ysize: config['stamp_ysize'] = ysize
+    if image_pos is not None and world_pos is None:
+        # Calculate and save the position relative to the image center
+        world_pos = config['wcs'].toWorld(image_pos)
+
+        # Wherever we use the world position, we expect a Euclidean position, not a
+        # CelestialCoord.  So if it is the latter, project it onto a tangent plane at the
+        # image center.
+        if isinstance(world_pos, galsim.CelestialCoord):
+            # Then project this position relative to the image center.
+            world_center = config['wcs'].toWorld(config['image_center'])
+            world_pos = world_center.project(world_pos, projection='gnomonic')
+
+    elif world_pos is not None and image_pos is None:
+        # Calculate and save the position relative to the image center
+        image_pos = config['wcs'].toImage(world_pos)
+
+    if image_pos is not None:
+        import math
+        # The image_pos refers to the location of the true center of the image, which is
+        # not necessarily the nominal center we need for adding to the final image.  In
+        # particular, even-sized images have their nominal center offset by 1/2 pixel up
+        # and to the right.
+        # N.B. This works even if xsize,ysize == 0, since the auto-sizing always produces
+        # even sized images.
+        nominal_x = image_pos.x        # Make sure we don't change image_pos, which is
+        nominal_y = image_pos.y        # stored in config['image_pos'].
+        if xsize % 2 == 0: nominal_x += 0.5
+        if ysize % 2 == 0: nominal_y += 0.5
+
+        stamp_center = galsim.PositionI(int(math.floor(nominal_x+0.5)),
+                                        int(math.floor(nominal_y+0.5)))
+        config['stamp_center'] = stamp_center
+        config['stamp_offset'] = galsim.PositionD(nominal_x-stamp_center.x,
+                                                  nominal_y-stamp_center.y)
+        config['image_pos'] = image_pos
+        config['world_pos'] = world_pos
+
+    else:
+        config['stamp_center'] = None
+        config['stamp_offset'] = galsim.PositionD(0.,0.)
+        # Set the image_pos to (0,0) in case the wcs needs it.  Probably, if
+        # there is no image_pos or world_pos defined, then it is unlikely a
+        # non-trivial wcs will have been set.  So anything would actually be fine.
+        config['image_pos'] = galsim.PositionD(0.,0.)
+        config['world_pos'] = world_pos
+
+# Ignore these when parsing the parameters for specific stamp types:
+stamp_ignore = ['offset', 'retry_failures', 'gsparams', 'draw_method',
+                'wmult', 'nphotons', 'max_extra_noise', 'poisson_flux']
+
+def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
+    """
+    Build a single stamp image using the given config file
+
+    @param config           A configuration dict.
+    @param obj_num          If given, the current obj_num [default: 0]
     @param xsize            The xsize of the image to build (if known). [default: 0]
     @param ysize            The ysize of the image to build (if known). [default: 0]
-    @param obj_num          If given, the current obj_num [default: 0]
     @param do_noise         Whether to add noise to the image (according to config['noise']).
                             [default: True]
     @param logger           If given, a logger object to log progress. [default: None]
-    @param make_psf_image   Whether to make psf_image. [default: False]
-    @param make_weight_image  Whether to make weight_image. [default: False]
-    @param make_badpix_image  Whether to make badpix_image. [default: False]
 
-    @returns the tuple (image, psf_image, weight_image, badpix_image, current_var, time)
+    @returns the tuple (image, current_var)
     """
-    import time
-    t1 = time.time()
+    SetupConfigObjNum(config,obj_num)
 
-    # For everything except random_seed, the default key is obj_num_in_file
-    config['index_key'] = 'obj_num_in_file'
-    config['obj_num'] = obj_num
+    stamp = config['stamp']
+    stamp_type = stamp['type']
+    if stamp_type not in valid_stamp_types:
+        raise AttributeErro("Invalid stamp.type=%s."%stamp_type)
+    builder = valid_stamp_types[stamp_type]
 
-    # Initialize the random number generator we will be using.
-    if 'random_seed' in config['image']:
-        config['index_key'] = 'obj_num'
-        seed = galsim.config.ParseValue(config['image'],'random_seed',config,int)[0]
-        config['index_key'] = 'obj_num_in_file'
-        if logger:
-            logger.debug('obj %d: seed = %d',obj_num,seed)
-        rng = galsim.BaseDeviate(seed)
-    else:
-        rng = galsim.BaseDeviate()
+    # Add 1 to the seed here so the first object has a different rng than the file or image.
+    seed = galsim.config.SetupConfigRNG(config, seed_offset=1)
+    if logger:
+        logger.debug('obj %d: seed = %d',obj_num,seed)
 
-    # Store the rng in the config for use by BuildGSObject function.
-    config['rng'] = rng
-    if 'gd' in config:
-        del config['gd']  # In case it was set.
-
-    if 'image' in config and 'retry_failures' in config['image']:
-        ntries = galsim.config.ParseValue(config['image'],'retry_failures',config,int)[0]
+    if 'retry_failures' in stamp:
+        ntries = galsim.config.ParseValue(stamp,'retry_failures',config,int)[0]
         # This is how many _re_-tries.  Do at least 1, so ntries is 1 more than this.
         ntries = ntries + 1
     else:
@@ -304,194 +269,110 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
 
     for itry in range(ntries):
 
-        try:  # The rest of the stamp generation stage is wrapped in a try/except block.
-              # If we catch an exception, we continue the for loop to try again.
-              # On the last time through, we reraise any exception caught.
-              # If no exception is thrown, we simply break the loop and return.
+        # The rest of the stamp generation stage is wrapped in a try/except block.
+        # If we catch an exception, we continue the for loop to try again.
+        # On the last time through, we reraise any exception caught.
+        # If no exception is thrown, we simply break the loop and return.
+        try:
 
-            # Determine the size of this stamp
-            if not xsize:
-                if 'stamp_xsize' in config['image']:
-                    xsize = galsim.config.ParseValue(config['image'],'stamp_xsize',config,int)[0]
-                elif 'stamp_size' in config['image']:
-                    xsize = galsim.config.ParseValue(config['image'],'stamp_size',config,int)[0]
-            if not ysize:
-                if 'stamp_ysize' in config['image']:
-                    ysize = galsim.config.ParseValue(config['image'],'stamp_ysize',config,int)[0]
-                elif 'stamp_size' in config['image']:
-                    ysize = galsim.config.ParseValue(config['image'],'stamp_size',config,int)[0]
-            if False:
-                logger.debug('obj %d: xsize,ysize = %d,%d',obj_num,xsize,ysize)
-            if xsize: config['stamp_xsize'] = xsize
-            if ysize: config['stamp_ysize'] = ysize
-
-            # Determine where this object is going to go:
-            if 'image_pos' in config['image'] and 'world_pos' in config['image']:
-                image_pos = galsim.config.ParseValue(
-                    config['image'], 'image_pos', config, galsim.PositionD)[0]
-                world_pos = galsim.config.ParseValue(
-                    config['image'], 'world_pos', config, galsim.PositionD)[0]
-
-            elif 'image_pos' in config['image']:
-                image_pos = galsim.config.ParseValue(
-                    config['image'], 'image_pos', config, galsim.PositionD)[0]
-                # Calculate and save the position relative to the image center
-                world_pos = config['wcs'].toWorld(image_pos)
-
-                # Wherever we use the world position, we expect a Euclidean position, not a 
-                # CelestialCoord.  So if it is the latter, project it onto a tangent plane at the 
-                # image center.
-                if isinstance(world_pos, galsim.CelestialCoord):
-                    # Then project this position relative to the image center.
-                    world_center = config['wcs'].toWorld(config['image_center'])
-                    world_pos = world_center.project(world_pos, projection='gnomonic')
-
-            elif 'world_pos' in config['image']:
-                world_pos = galsim.config.ParseValue(
-                    config['image'], 'world_pos', config, galsim.PositionD)[0]
-                # Calculate and save the position relative to the image center
-                image_pos = config['wcs'].toImage(world_pos)
-
-            else:
-                image_pos = None
-                world_pos = None
+            # Do the necessary initial setup for this stamp type.
+            xsize, ysize, image_pos, world_pos = builder.setup(
+                    stamp, config, xsize, ysize, stamp_ignore, logger)
 
             # Save these values for possible use in Evals or other modules
-            if image_pos is not None:
-                config['image_pos'] = image_pos
-                if logger:
-                    logger.debug('obj %d: image_pos = %s',obj_num,str(config['image_pos']))
-            if world_pos is not None:
-                config['world_pos'] = world_pos
-                if logger:
-                    logger.debug('obj %d: world_pos = %s',obj_num,str(config['world_pos']))
+            SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos)
+            stamp_center = config['stamp_center']
+            if logger:
+                if xsize:
+                    logger.debug('obj %d: xsize,ysize = %s,%s',obj_num,xsize,ysize)
+                if image_pos:
+                    logger.debug('obj %d: image_pos = %s',obj_num,image_pos)
+                if world_pos:
+                    logger.debug('obj %d: world_pos = %s',obj_num,world_pos)
+                if stamp_center:
+                    logger.debug('obj %d: stamp_center = %s',obj_num,stamp_center)
 
-            if image_pos is not None:
-                import math
-                # The image_pos refers to the location of the true center of the image, which is 
-                # not necessarily the nominal center we need for adding to the final image.  In 
-                # particular, even-sized images have their nominal center offset by 1/2 pixel up 
-                # and to the right.
-                # N.B. This works even if xsize,ysize == 0, since the auto-sizing always produces
-                # even sized images.
-                nominal_x = image_pos.x        # Make sure we don't change image_pos, which is
-                nominal_y = image_pos.y        # stored in config['image_pos'].
-                if xsize % 2 == 0: nominal_x += 0.5
-                if ysize % 2 == 0: nominal_y += 0.5
-                if False:
-                    logger.debug('obj %d: nominal pos = %f,%f',obj_num,nominal_x,nominal_y)
-
-                icenter = galsim.PositionI(
-                    int(math.floor(nominal_x+0.5)),
-                    int(math.floor(nominal_y+0.5)) )
-                if False:
-                    logger.debug('obj %d: nominal icenter = %s',obj_num,str(icenter))
-                offset = galsim.PositionD(nominal_x-icenter.x , nominal_y-icenter.y)
-                if False:
-                    logger.debug('obj %d: offset = %s',obj_num,str(offset))
-
-            else:
-                icenter = None
-                offset = galsim.PositionD(0.,0.)
-                # Set the image_pos to (0,0) in case the wcs needs it.  Probably, if 
-                # there is no image_pos or world_pos defined, then it is unlikely a
-                # non-trivial wcs will have been set.  So anything would actually be fine.
-                config['image_pos'] = galsim.PositionD(0.,0.)
-                if False:
-                    logger.debug('obj %d: no offset',obj_num)
-
+            # Get the global gsparams kwargs.  Individual objects can add to this.
             gsparams = {}
-            if 'gsparams' in config['image']:
+            if 'gsparams' in stamp:
                 gsparams = galsim.config.UpdateGSParams(
-                    gsparams, config['image']['gsparams'], 'gsparams', config)
+                    gsparams, stamp['gsparams'], config)
 
             skip = False
             try :
-                t4=t3=t2=t1  # in case we throw.
-        
-                psf = BuildPSF(config,logger,gsparams)
-                t2 = time.time()
+                psf = galsim.config.BuildGSObject(config, 'psf', gsparams=gsparams,
+                                                  logger=logger)[0]
 
-                gal = BuildGal(config,logger,gsparams)
-                t4 = time.time()
-
-                # Check that we have at least gal or psf.
-                if not (gal or psf):
-                    raise AttributeError("At least one of gal or psf must be specified in config.")
+                prof = builder.buildProfile(stamp, config, psf, gsparams, logger)
 
             except galsim.config.gsobject.SkipThisObject, e:
                 if logger:
                     logger.debug('obj %d: Caught SkipThisObject: e = %s',obj_num,e.msg)
+                if logger:
                     if e.msg:
                         # If there is a message, upgrade to info level
                         logger.info('Skipping object %d: %s',obj_num,e.msg)
                 skip = True
 
-            if not skip and 'offset' in config['image']:
-                offset1 = galsim.config.ParseValue(config['image'], 'offset', config,
-                                                   galsim.PositionD)[0]
-                offset += offset1
+            im = builder.makeStamp(stamp, config, xsize, ysize)
 
-            if 'image' in config and 'draw_method' in config['image']:
-                method = galsim.config.ParseValue(config['image'],'draw_method',config,str)[0]
-            else:
-                method = 'auto'
-            if method not in ['auto', 'fft', 'phot', 'real_space', 'no_pixel', 'sb']:
-                raise AttributeError("Invalid draw_method: %s"%method)
-
-            if skip: 
-                if xsize and ysize:
-                    # If the size is set, we need to do something reasonable to return this size.
-                    im = galsim.ImageF(xsize, ysize)
-                    im.setOrigin(config['image_origin'])
-                    im.setZero()
-                    if do_noise:
-                        galsim.config.AddNoise(config,'skip',im,weight_im,current_var,logger)
+            if not skip:
+                if 'draw_method' in stamp:
+                    method = galsim.config.ParseValue(stamp,'draw_method',config,str)[0]
                 else:
-                    # Otherwise, we don't set the bounds, so it will be noticed as invalid upstream.
-                    im = galsim.ImageF()
+                    method = 'auto'
+                if method not in ['auto', 'fft', 'phot', 'real_space', 'no_pixel', 'sb']:
+                    raise AttributeError("Invalid draw_method: %s"%method)
 
-                if make_weight_image:
-                    weight_im = galsim.ImageF(im.bounds, wcs=im.wcs)
-                    weight_im.setZero()
-                else:
-                    weight_im = None
-                current_var = 0
+                offset = config['stamp_offset']
+                if 'offset' in stamp:
+                    offset += galsim.config.ParseValue(stamp, 'offset', config, galsim.PositionD)[0]
+                if logger:
+                    logger.debug('obj %d: offset = %s',obj_num,offset)
 
+                im = builder.draw(prof, im, method, offset, stamp, config)
+
+                scale_factor = builder.getSNRScale(im, stamp, config)
+                if scale_factor != 1.0:
+                    if method == 'phot':
+                        logger.error(
+                            "signal_to_noise calculation is not accurate for draw_method = phot")
+                    im *= scale_factor
+                    prof *= scale_factor
+
+            # Set the origin appropriately
+            if im is None:
+                # Note: im might be None here if the stamp size isn't given and skip==True.
+                pass
+            elif stamp_center:
+                im.setCenter(stamp_center)
             else:
-                im, current_var = DrawStamp(psf,gal,config,xsize,ysize,offset,method)
-                if icenter:
-                    im.setCenter(icenter.x, icenter.y)
-                if make_weight_image:
-                    weight_im = galsim.ImageF(im.bounds, wcs=im.wcs)
-                    weight_im.setZero()
-                else:
-                    weight_im = None
-                if do_noise:
-                    galsim.config.AddNoise(config,method,im,weight_im,current_var,logger)
+                im.setOrigin(config['image_origin'])
 
-            if make_badpix_image:
-                badpix_im = galsim.ImageS(im.bounds, wcs=im.wcs)
-                badpix_im.setZero()
+            # Store the current stamp in the base-level config for reference
+            config['current_stamp'] = im
+            # This is also information that the weight image calculation needs
+            config['do_noise_in_stamps'] = do_noise
+
+            galsim.config.ProcessExtraOutputsForStamp(config, logger)
+
+            # We always need to do the whiten step here in the stamp processing
+            if not skip:
+                current_var = builder.whiten(prof, im, stamp, config)
+                if current_var != 0.:
+                    if logger:
+                        logger.debug('obj %d: whitening noise brought current var to %f',
+                                     config['obj_num'],current_var)
             else:
-                badpix_im = None
+                current_var = 0.
 
-            t5 = time.time()
+            # Sometimes, depending on the image type, we go on to do the rest of the noise as well.
+            if do_noise:
+                galsim.config.AddSky(config,im)
+                if not skip:
+                    galsim.config.AddNoise(config,im,current_var,logger)
 
-            if make_psf_image:
-                psf_im = DrawPSFStamp(psf,config,im.bounds,offset,method)
-                if ('output' in config and 'psf' in config['output'] and 
-                        'signal_to_noise' in config['output']['psf'] and
-                        'noise' in config['image']):
-                    galsim.config.AddNoise(config,'fft',psf_im,None,0,logger,add_sky=False)
-            else:
-                psf_im = None
-
-            t6 = time.time()
-
-            if logger:
-                logger.debug('obj %d: Times: %f, %f, %f, %f, %f',
-                             obj_num, t2-t1, t3-t2, t4-t3, t5-t4, t6-t5)
+            return im, current_var
 
         except Exception as e:
 
@@ -504,228 +385,273 @@ def BuildSingleStamp(config, xsize=0, ysize=0,
                     logger.info('This is try %d/%d, so trying again.',itry+1,ntries)
                 # Need to remove the "current_val"s from the config dict.  Otherwise,
                 # the value generators will do a quick return with the cached value.
-                galsim.config.process.RemoveCurrent(config, keep_safe=True)
+                galsim.config.RemoveCurrent(config, keep_safe=True)
                 continue
 
-    return im, psf_im, weight_im, badpix_im, current_var, t6-t1
+
+class StampBuilder(object):
+    """A base class for building stamp images of individual objects.
+
+    The base class defines the call signatures of the methods that any derived class should follow.
+    It also includes the implementation of the default stamp type: Basic.
+    """
+
+    def setup(self, config, base, xsize, ysize, ignore, logger):
+        """
+        Do the initialization and setup for building a postage stamp.
+
+        In the base class, we check for and parse the appropriate size and position values in
+        config (aka base['stamp'] or base['image'].
+
+        Values given in base['stamp'] take precedence if these are given in both places (which
+        would be confusing, so probably shouldn't do that, but there might be a use case where it
+        would make sense).
+
+        @param config       The configuration dict for the stamp field.
+        @param base         The base configuration dict.
+        @param xsize        The xsize of the image to build (if known).
+        @param ysize        The ysize of the image to build (if known).
+        @param ignore       A list of parameters that are allowed to be in config that we can
+                            ignore here. i.e. it won't be an error if these parameters are present.
+        @param logger       If given, a logger object to log progress.
+
+        @returns xsize, ysize, image_pos, world_pos
+        """
+        # Check for spurious parameters
+        galsim.config.CheckAllParams(config, ignore=ignore)
+
+        # Update the size if necessary
+        image = base['image']
+        if not xsize:
+            if 'xsize' in config:
+                xsize = galsim.config.ParseValue(config,'xsize',base,int)[0]
+            elif 'size' in config:
+                xsize = galsim.config.ParseValue(config,'size',base,int)[0]
+            elif 'stamp_xsize' in image:
+                xsize = galsim.config.ParseValue(image,'stamp_xsize',base,int)[0]
+            elif 'stamp_size' in image:
+                xsize = galsim.config.ParseValue(image,'stamp_size',base,int)[0]
+
+        if not ysize:
+            if 'ysize' in config:
+                ysize = galsim.config.ParseValue(config,'ysize',base,int)[0]
+            elif 'size' in config:
+                ysize = galsim.config.ParseValue(config,'size',base,int)[0]
+            elif 'stamp_ysize' in image:
+                ysize = galsim.config.ParseValue(image,'stamp_ysize',base,int)[0]
+            elif 'stamp_size' in image:
+                ysize = galsim.config.ParseValue(image,'stamp_size',base,int)[0]
+
+        # Determine where this object is going to go:
+        if 'image_pos' in config:
+            image_pos = galsim.config.ParseValue(config, 'image_pos', base, galsim.PositionD)[0]
+        elif 'image_pos' in image:
+            image_pos = galsim.config.ParseValue(image, 'image_pos', base, galsim.PositionD)[0]
+        else:
+            image_pos = None
+
+        if 'world_pos' in config:
+            world_pos = galsim.config.ParseValue(config, 'world_pos', base, galsim.PositionD)[0]
+        elif 'world_pos' in image:
+            world_pos = galsim.config.ParseValue(image, 'world_pos', base, galsim.PositionD)[0]
+        else:
+            world_pos = None
+
+        return xsize, ysize, image_pos, world_pos
 
 
-def BuildPSF(config, logger=None, gsparams={}):
-    """
-    Parse the field config['psf'] returning the built psf object.
-    """
+    def buildProfile(self, config, base, psf, gsparams, logger):
+        """Build the surface brightness profile (a GSObject) to be drawn.
  
-    if 'psf' in config:
-        if not isinstance(config['psf'], dict):
-            raise AttributeError("config.psf is not a dict.")
-        if False:
-            logger.debug('obj %d: Start BuildPSF with %s',config['obj_num'],str(config['psf']))
-        psf = galsim.config.BuildGSObject(config, 'psf', config, gsparams, logger)[0]
-    else:
-        psf = None
+        For the Basic stamp type, this builds a galaxy from the base['gal'] dict and convolves
+        it with the psf (if given).  If either the psf or the galaxy is None, then the other one
+        is returned as is.
 
-    return psf
+        @param config       The configuration dict for the stamp field.
+        @param base         The base configuration dict.
+        @param psf          The PSF, if any.  This may be None, in which case, no PSF is convolved.
+        @param gsparams     A dict of kwargs to use for a GSParams.  More may be added to this
+                            list by the galaxy object.
+        @param logger       If given, a logger object to log progress.
+
+        @returns the final profile
+        """
+        gal = galsim.config.BuildGSObject(base, 'gal', gsparams=gsparams, logger=logger)[0]
+
+        if psf:
+            if gal:
+                return galsim.Convolve(gal,psf)
+            else:
+                return psf
+        else:
+            if gal:
+                return gal
+            else:
+                raise AttributeError("At least one of gal or psf must be specified in config.")
+
+    def makeStamp(self, config, base, xsize, ysize):
+        """Make the initial empty postage stamp image, if possible.
+
+        If we don't know xsize, ysize, return None, in which case the stamp will be created
+        automatically by the drawImage command based on the natural size of the profile.
+
+        @param config       The configuration dict for the stamp field.
+        @param base         The base configuration dict.
+        @param xsize        The xsize of the image to build (if known).
+        @param ysize        The ysize of the image to build (if known).
+
+        @returns the image
+        """
+        if xsize and ysize:
+            # If the size is set, we need to do something reasonable to return this size.
+            im = galsim.ImageF(xsize, ysize)
+            im.setZero()
+            return im
+        else:
+            return None
+
+    def draw(self, prof, image, method, offset, config, base):
+        """Draw the profile on the postage stamp image.
+
+        @param prof         The profile to draw.
+        @param image        The image onto which to draw the profile (which may be None).
+        @param method       The method to use in drawImage.
+        @param offset       The offset to apply when drawing.
+        @param config       The configuration dict for the stamp field.
+        @param base         The base configuration dict.
+
+        @returns the resulting image
+        """
+        # Setup the kwargs to pass to drawImage
+        kwargs = {}
+        kwargs['image'] = image
+        kwargs['offset'] = offset
+        kwargs['method'] = method
+        if 'wmult' in config:
+            kwargs['wmult'] = galsim.config.ParseValue(config, 'wmult', base, float)[0]
+        kwargs['wcs'] = base['wcs'].local(image_pos = base['image_pos'])
+        if method == 'phot':
+            kwargs['rng'] = base['rng']
+
+        # Check validity of extra phot options:
+        max_extra_noise = None
+        if 'n_photons' in config:
+            if method != 'phot':
+                raise AttributeError('n_photons is invalid with method != phot')
+            if 'max_extra_noise' in config:
+                if logger:
+                    logger.warn(
+                        "Both 'max_extra_noise' and 'n_photons' are set in config dict, "+
+                        "ignoring 'max_extra_noise'.")
+            kwargs['n_photons'] = galsim.config.ParseValue(config, 'n_photons', base, int)[0]
+        elif 'max_extra_noise' in config:
+            if method != 'phot':
+                raise AttributeError('max_extra_noise is invalid with method != phot')
+            max_extra_noise = galsim.config.ParseValue(config, 'max_extra_noise', base, float)[0]
+        elif method == 'phot':
+            max_extra_noise = 0.01
+
+        if 'poisson_flux' in config:
+            if method != 'phot':
+                raise AttributeError('poisson_flux is invalid with method != phot')
+            kwargs['poisson_flux'] = galsim.config.ParseValue(config, 'poisson_flux', base, bool)[0]
+
+        if max_extra_noise is not None:
+            if max_extra_noise < 0.:
+                raise ValueError("image.max_extra_noise cannot be negative")
+            if max_extra_noise > 0.:
+                if 'image' in base and 'noise' in base['image']:
+                    noise_var = galsim.config.CalculateNoiseVar(base)
+                else:
+                    raise AttributeError("Need to specify noise level when using max_extra_noise")
+                if noise_var < 0.:
+                    raise ValueError("noise_var calculated to be < 0.")
+                max_extra_noise *= noise_var
+                kwargs['max_extra_noise'] = max_extra_noise
+
+        image = prof.drawImage(**kwargs)
+        return image
+
+    def whiten(self, prof, image, config, base):
+        """If appropriate, whiten the resulting image according to the requested noise profile
+        and the amount of noise originally present in the profile.
+
+        @param prof         The profile to draw.
+        @param image        The image onto which to draw the profile.
+        @param config       The configuration dict for the stamp field.
+        @param base         The base configuration dict.
+
+        @returns the variance of the resulting whitened (or symmetrized) image.
+        """
+        # If the object has a noise attribute, then check if we need to do anything with it.
+        current_var = 0.  # Default if not overwritten
+        if hasattr(prof,'noise'):
+            if 'image' in base and 'noise' in base['image']:
+                noise = base['image']['noise']
+                if 'whiten' in noise:
+                    if 'symmetrize' in noise:
+                        raise AttributeError('Only one of whiten or symmetrize is allowed')
+                    whiten, safe = galsim.config.ParseValue(noise, 'whiten', base, bool)
+                    current_var = prof.noise.whitenImage(image)
+                elif 'symmetrize' in noise:
+                    symmetrize, safe = galsim.config.ParseValue(noise, 'symmetrize', base, int)
+                    current_var = prof.noise.symmetrizeImage(image, symmetrize)
+        return current_var
 
 
-def BuildGal(config, logger=None, gsparams={}):
-    """
-    Parse the field config['gal'] returning the built gal object.
-    """
- 
-    if 'gal' in config:
-        if not isinstance(config['gal'], dict):
-            raise AttributeError("config.gal is not a dict.")
-        if False:
-            logger.debug('obj %d: Start BuildGal with %s',config['obj_num'],str(config['gal']))
-        gal = galsim.config.BuildGSObject(config, 'gal', config, gsparams, logger)[0]
-    else:
-        gal = None
-    return gal
+    def getSNRScale(self, image, config, base):
+        """Calculate the factor by which to rescale the image based on a desired S/N level.
 
+        @param image        The current image.
+        @param config       The configuration dict for the stamp field.
+        @param base         The base configuration dict.
 
+        @returns scale_factor
+        """
+        if (('gal' in base and 'signal_to_noise' in base['gal']) or
+            ('gal' not in base and 'psf' in base and 'signal_to_noise' in base['psf'])):
+            import math
+            import numpy
+            if 'gal' in base: root_key = 'gal'
+            else: root_key = 'psf'
 
-def DrawStamp(psf, gal, config, xsize, ysize, offset, method):
-    """
-    Draw an image using the given psf and gal profiles (which may be None)
-    using the FFT method for doing the convolution.
+            if 'flux' in base[root_key]:
+                raise AttributeError(
+                    'Only one of signal_to_noise or flux may be specified for %s'%root_key)
 
-    @returns the resulting image.
-    """
-
-    # Setup the object to draw:
-    prof_list = [ prof for prof in (gal,psf) if prof is not None ]
-    assert len(prof_list) > 0  # Should have already been checked.
-    if len(prof_list) > 1:
-        final = galsim.Convolve(prof_list)
-    else:
-        final = prof_list[0]
-
-    # Setup the kwargs to pass to drawImage
-    kwargs = {}
-    if xsize:
-        kwargs['image'] = galsim.ImageF(xsize, ysize)
-    kwargs['offset'] = offset
-    kwargs['method'] = method
-    if 'image' in config and 'wmult' in config['image']:
-        kwargs['wmult'] = galsim.config.ParseValue(config['image'], 'wmult', config, float)[0]
-    kwargs['wcs'] = config['wcs'].local(image_pos = config['image_pos'])
-    if method == 'phot':
-        kwargs['rng'] = config['rng']
-
-    # Check validity of extra phot options:
-    max_extra_noise = None
-    if 'image' in config and 'n_photons' in config['image']:
-        if method != 'phot':
-            raise AttributeError('n_photons is invalid with method != phot')
-        if 'max_extra_noise' in config['image']:
-            import warnings
-            warnings.warn(
-                "Both 'max_extra_noise' and 'n_photons' are set in config['image'], "+
-                "ignoring 'max_extra_noise'.")
-        kwargs['n_photons'] = galsim.config.ParseValue(config['image'], 'n_photons', config, int)[0]
-    elif 'image' in config and 'max_extra_noise' in config['image']:
-        if method != 'phot':
-            raise AttributeError('max_extra_noise is invalid with method != phot')
-        max_extra_noise = galsim.config.ParseValue(
-            config['image'], 'max_extra_noise', config, float)[0]
-    elif method == 'phot':
-        max_extra_noise = 0.01
-
-    if 'image' in config and 'poisson_flux' in config['image']:
-        if method != 'phot':
-            raise AttributeError('poisson_flux is invalid with method != phot')
-        kwargs['poisson_flux'] = galsim.config.ParseValue(
-                config['image'], 'poisson_flux', config, bool)[0]
-
-    if max_extra_noise is not None:
-        if max_extra_noise < 0.:
-            raise ValueError("image.max_extra_noise cannot be negative")
-        if max_extra_noise > 0.:
-            if 'image' in config and 'noise' in config['image']:
-                noise_var = galsim.config.CalculateNoiseVar(config)
+            if 'image' in base and 'noise' in base['image']:
+                noise_var = galsim.config.CalculateNoiseVar(base)
             else:
                 raise AttributeError(
-                    "Need to specify noise level when using draw_method = phot")
-            if noise_var < 0.:
-                raise ValueError("noise_var calculated to be < 0.")
-            max_extra_noise *= noise_var
-            kwargs['max_extra_noise'] = max_extra_noise
+                    "Need to specify noise level when using %s.signal_to_noise"%root_key)
+            sn_target = galsim.config.ParseValue(base[root_key], 'signal_to_noise', base, float)[0]
 
-    im = final.drawImage(**kwargs)
-    im.setOrigin(config['image_origin'])
+            # Now determine what flux we need to get our desired S/N
+            # There are lots of definitions of S/N, but here is the one used by Great08
+            # We use a weighted integral of the flux:
+            # S = sum W(x,y) I(x,y) / sum W(x,y)
+            # N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
+            # Now we assume that Var(I(x,y)) is dominated by the sky noise, so
+            # Var(I(x,y)) = var
+            # We also assume that we are using a matched filter for W, so W(x,y) = I(x,y).
+            # Then a few things cancel and we find that
+            # S/N = sqrt( sum I(x,y)^2 / var )
 
-    # If the object has a noise attribute, then check if we need to do anything with it.
-    current_var = 0.  # Default if not overwritten
-    if hasattr(final,'noise'):
-        if 'noise' in config['image']:
-            noise = config['image']['noise']
-            if 'whiten' in noise:
-                if 'symmetrize' in noise:
-                    raise AttributeError('Only one of whiten or symmetrize is allowed')
-                whiten, safe = galsim.config.ParseValue(noise, 'whiten', config, bool)
-                current_var = final.noise.whitenImage(im)
-
-            elif 'symmetrize' in noise:
-                symmetrize, safe = galsim.config.ParseValue(noise, 'symmetrize', config, int)
-                current_var = final.noise.symmetrizeImage(im, symmetrize)
-
-    if (('gal' in config and 'signal_to_noise' in config['gal']) or
-        ('gal' not in config and 'psf' in config and 'signal_to_noise' in config['psf'])):
-        if method == 'phot':
-            raise NotImplementedError(
-                "signal_to_noise option not implemented for draw_method = phot")
-        import math
-        import numpy
-        if 'gal' in config: root_key = 'gal'
-        else: root_key = 'psf'
-
-        if 'flux' in config[root_key]:
-            raise AttributeError(
-                'Only one of signal_to_noise or flux may be specified for %s'%root_key)
-
-        if 'image' in config and 'noise' in config['image']:
-            noise_var = galsim.config.CalculateNoiseVar(config)
+            sn_meas = math.sqrt( numpy.sum(image.array**2) / noise_var )
+            # Now we rescale the flux to get our desired S/N
+            scale_factor = sn_target / sn_meas
+            return scale_factor
         else:
-            raise AttributeError(
-                "Need to specify noise level when using %s.signal_to_noise"%root_key)
-        sn_target = galsim.config.ParseValue(config[root_key], 'signal_to_noise', config, float)[0]
-            
-        # Now determine what flux we need to get our desired S/N
-        # There are lots of definitions of S/N, but here is the one used by Great08
-        # We use a weighted integral of the flux:
-        # S = sum W(x,y) I(x,y) / sum W(x,y)
-        # N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
-        # Now we assume that Var(I(x,y)) is dominated by the sky noise, so
-        # Var(I(x,y)) = var
-        # We also assume that we are using a matched filter for W, so W(x,y) = I(x,y).
-        # Then a few things cancel and we find that
-        # S/N = sqrt( sum I(x,y)^2 / var )
+            return 1.
 
-        sn_meas = math.sqrt( numpy.sum(im.array**2) / noise_var )
-        # Now we rescale the flux to get our desired S/N
-        flux = sn_target / sn_meas
-        im *= flux
-        if hasattr(final,'noise'):
-            current_var *= flux**2
+def RegisterStampType(stamp_type, builder):
+    """Register an image type for use by the config apparatus.
 
-    return im, current_var
-
-
-def DrawPSFStamp(psf, config, bounds, offset, method):
+    @param stamp_type       The name of the type in config['stamp']
+    @param builder          A builder object to use for building the stamp images.  It should be
+                            an instance of StampBuilder or a subclass thereof.
     """
-    Draw an image using the given psf profile.
+    valid_stamp_types[stamp_type] = builder
 
-    @returns the resulting image.
-    """
-
-    if not psf:
-        raise AttributeError("DrawPSFStamp requires psf to be provided.")
-
-    if ('output' in config and 'psf' in config['output'] and 
-        'draw_method' in config['output']['psf'] ):
-        method = galsim.config.ParseValue(config['output']['psf'],'draw_method',config,str)[0]
-        if method not in ['auto', 'fft', 'phot', 'real_space', 'no_pixel', 'sb']:
-            raise AttributeError("Invalid draw_method: %s"%method)
-    else:
-        method = 'auto'
-
-    # Special: if the galaxy was shifted, then also shift the psf 
-    if 'shift' in config['gal']:
-        gal_shift = galsim.config.GetCurrentValue(config['gal'],'shift')
-        if False:
-            logger.debug('obj %d: psf shift (1): %s',config['obj_num'],str(gal_shift))
-        psf = psf.shift(gal_shift)
-
-    wcs = config['wcs'].local(config['image_pos'])
-    im = galsim.ImageF(bounds, wcs=wcs)
-    im = psf.drawImage(image=im, offset=offset, method=method)
-
-    if (('output' in config and 'psf' in config['output'] 
-            and 'signal_to_noise' in config['output']['psf']) or
-        ('gal' not in config and 'psf' in config and 'signal_to_noise' in config['psf'])):
-        if method == 'phot':
-            raise NotImplementedError(
-                "signal_to_noise option not implemented for draw_method = phot")
-        import math
-        import numpy
-
-        if 'image' in config and 'noise' in config['image']:
-            noise_var = galsim.config.CalculateNoiseVar(config)
-        else:
-            raise AttributeError(
-                "Need to specify noise level when using psf.signal_to_noise")
-
-        if ('output' in config and 'psf' in config['output'] 
-                and 'signal_to_noise' in config['output']['psf']):
-            cf = config['output']['psf']
-        else:
-            cf = config['psf']
-        sn_target = galsim.config.ParseValue(cf, 'signal_to_noise', config, float)[0]
-            
-        sn_meas = math.sqrt( numpy.sum(im.array**2) / noise_var )
-        flux = sn_target / sn_meas
-        im *= flux
-
-    return im
-           
+RegisterStampType('Basic', StampBuilder())
 

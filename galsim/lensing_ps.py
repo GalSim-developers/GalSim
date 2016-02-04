@@ -177,7 +177,6 @@ class PowerSpectrum(object):
                     'delta2' : bool, 'units' : str }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, e_power_function=None, b_power_function=None, delta2=False,
                  units=galsim.arcsec):
@@ -569,8 +568,9 @@ class PowerSpectrum(object):
             p_B = lambda k : b_power_function(k) * bandlimit_func(k, k_max)
 
         # Build the grid
-        psr = PowerSpectrumRealizer(ngrid*kmin_factor*kmax_factor, grid_spacing/kmax_factor,
-                                    p_E, p_B)
+        self.ngrid_tot = ngrid * kmin_factor * kmax_factor
+        self.pixel_size = grid_spacing/kmax_factor
+        psr = PowerSpectrumRealizer(self.ngrid_tot, self.pixel_size, p_E, p_B)
         self.grid_g1, self.grid_g2, self.grid_kappa = psr(gd)
         if kmin_factor != 1 or kmax_factor != 1:
             # Need to make sure the rows are contiguous so we can use it in the constructor
@@ -591,6 +591,23 @@ class PowerSpectrum(object):
             return self.grid_g1, self.grid_g2, self.grid_kappa
         else:
             return self.grid_g1, self.grid_g2
+
+    def nRandCallsForBuildGrid(self):
+        """Return the number of times the rng() was called the last time buildGrid was called.
+
+        This can be useful for keeping rngs in sync if the connection between them is broken
+        (e.g. when calling the function through a Proxy object).
+        """
+        if not hasattr(self,'ngrid_tot'):
+            raise RuntimeError("BuildGrid has not been called yet.")
+        ntot = 0
+        # cf. PowerSpectrumRealizer._generate_power_array
+        temp = 2 * np.product( (self.ngrid_tot, self.ngrid_tot/2 +1 ) )
+        if self.e_power_function is not None:
+            ntot += temp
+        if self.b_power_function is not None:
+            ntot += temp
+        return int(ntot)
 
     def subsampleGrid(self, subsample_fac, get_convergence=False):
         """Routine to use a regular subset of the grid points without a completely new call to

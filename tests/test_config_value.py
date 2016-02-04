@@ -65,7 +65,9 @@ def test_float_value():
                      'sigma' : 0.3, 'mean' : 0.5, 'min' : 0, 'max' : 0.5 },
         'dist1' : { 'type' : 'RandomDistribution', 'function' : 'config_input/distribution.txt', 
                     'interpolant' : 'linear' },
-        'dist2' : { 'type' : 'RandomDistribution', 'function' : 'config_input/distribution2.txt', 
+        'dist2' : { 'type' : 'RandomDistribution',
+                    'x' : [ 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 ],
+                    'f' : [ 0.1, 0.1, 0.1, 0.1, 0.2, 0.2, 0.2, 0.1, 0.1, 0.1, 0.1 ],
                     'interpolant' : 'linear' },
         'dist3' : { 'type' : 'RandomDistribution', 'function' : 'x*x', 
                     'x_min' : 0., 'x_max' : 2.0 },
@@ -137,6 +139,7 @@ def test_float_value():
     np.testing.assert_array_almost_equal(cat4, [ 4.131, -900, 8000, 4.131, -900 ])
 
     # Test values generated from a uniform deviate
+    del config['index_key']
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
     for k in range(6):
@@ -256,6 +259,7 @@ def test_float_value():
         config['obj_num'] = k+10
         seq4.append(galsim.config.ParseValue(config,'seq4',config, float)[0])
         seq5.append(galsim.config.ParseValue(config,'seq5',config, float)[0])
+    del config['start_obj_num']
 
     np.testing.assert_array_almost_equal(seq1, [ 0, 1, 2, 3, 4, 5 ])
     np.testing.assert_array_almost_equal(seq2, [ 0, 0.1, 0.2, 0.3, 0.4, 0.5 ])
@@ -388,6 +392,7 @@ def test_int_value():
     np.testing.assert_array_equal(cat4, [ -3, 8, 17, -3, 8 ])
 
     # Test values generated from a uniform deviate
+    del config['index_key']
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
     for k in range(6):
@@ -453,6 +458,7 @@ def test_int_value():
                 config['obj_num'] += 1
             config['image_num'] += 1
         config['file_num'] += 1
+    del config['start_obj_num']
 
     np.testing.assert_array_equal(seq_file, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                               1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -871,6 +877,7 @@ def test_angle_value():
     np.testing.assert_array_almost_equal(cat4, [ 23, 15, 82, 23, 15 ])
 
     # Test values generated from a uniform deviate
+    del config['index_key']
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
     for k in range(6):
@@ -1038,6 +1045,7 @@ def test_pos_value():
     # Test values generated from a uniform deviate
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
+    config['index_key'] = 'image_num'
     for k in range(6):
         config['image_num'] = k
         ran1 = galsim.config.ParseValue(config,'ran1',config, galsim.PositionD)[0]

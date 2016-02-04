@@ -107,8 +107,8 @@ opts.Add(BoolVariable('WITH_PROF',
             'Use the compiler flag -pg to include profiling info for gprof', False))
 opts.Add(BoolVariable('MEM_TEST','Test for memory leaks', False))
 opts.Add(BoolVariable('TMV_DEBUG','Turn on extra debugging statements within TMV library',False))
-# None of the code uses openmp yet.  Probably make this default True if we start using it.
-opts.Add(BoolVariable('WITH_OPENMP','Look for openmp and use if found.', False))
+# None of the code uses openmp yet.  Re-enable this if we start using it.
+#opts.Add(BoolVariable('WITH_OPENMP','Look for openmp and use if found.', False))
 opts.Add(BoolVariable('USE_UNKNOWN_VARS',
             'Allow other parameters besides the ones listed here.',False))
 
@@ -211,6 +211,19 @@ def ErrorExit(*args, **kwargs):
             conftest_out = p.stdout.readlines()
             out.write('Output of the command %s is:\n'%cmd)
             out.write(''.join(conftest_out) + '\n')
+
+            # For executables, it's often helpful to have a look at what libraries it's trying
+            # to load.
+            if os.access(conftest, os.X_OK):
+                if sys.platform.find('darwin') != -1:
+                    cmd = 'otool -L ' + conftest
+                else:
+                    cmd = 'ldd ' + conftest
+                p = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                     shell=True)
+                otool_out = p.stdout.readlines()
+                out.write('Output of the command %s is:\n'%cmd)
+                out.write(''.join(otool_out) + '\n')
     except:
         out.write("Error trying to get output of conftest executables.\n")
         out.write(sys.exc_info()[0])
@@ -327,6 +340,8 @@ def BasicCCFlags(env):
             env.AppendUnique(LINKFLAGS=flag)
 
 
+# Note: I'm leaving this function here, in case we ever want to use OpenMP, but we
+# don't currently use any OpenMP features, so this function never gets called.
 def AddOpenMPFlag(env):
     """
     Make sure you do this after you have determined the version of
@@ -1379,7 +1394,7 @@ except:
     config.Result(result)
 
     if not result:
-         print """
+        print """
 WARNING: There seems to be a mismatch between this C++ compiler and the one
          that was used to build either python or boost.python (or both).
          This might be ok, but if you get a linking error in the subsequent 
@@ -1633,7 +1648,8 @@ def DoConfig(env):
     BasicCCFlags(env)
 
     # Some extra flags depending on the options:
-    if env['WITH_OPENMP']:
+    #if env['WITH_OPENMP']:
+    if False:  # We don't use OpenMP anywhere, so don't bother with this.
         print 'Using OpenMP'
         AddOpenMPFlag(env)
     if not env['DEBUG']:

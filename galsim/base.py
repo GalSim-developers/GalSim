@@ -276,7 +276,7 @@ class GSObject(object):
 
         NB. This is a shallow copy, which is normally fine.  However, if the object has a noise
         attribute, then the copy will use the same rng, so calls to things like noise.whitenImage
-        from the two copies would produce different realizations of the noise.  If you want 
+        from the two copies would produce different realizations of the noise.  If you want
         these to be precisely identical, then copy.deepcopy will make an exact duplicate, which
         will have identical noise realizations for that kind of application.
         """
@@ -337,6 +337,184 @@ class GSObject(object):
         """Returns the GSParams for the object.
         """
         return self.SBProfile.getGSParams()
+
+    def calculateHLR(self, size=None, scale=None, centroid=None, flux_frac=0.5):
+        """Returns the half-light radius of the object.
+
+        If the profile has a half_light_radius attribute, it will just return that, but in the
+        general case, we draw the profile and estimate the half-light radius directly.
+
+        This function (by default at least) is only accurate to a few percent, typically.
+        Possibly worse depending on the profile being measured.  If you care about a high
+        precision estimate of the half-light radius, the accuracy can be improved using the
+        optional parameter scale to change the pixel scale used to draw the profile.
+
+        The default scale is half the Nyquist scale, which were found to produce results accurate
+        to a few percent on our internal tests.  Using a smaller scale will be more accurate at
+        the expense of speed.
+
+        In addition, you can optionally specify the size of the image to draw. The default size is
+        None, which means drawImage will choose a size designed to contain around 99.5% of the
+        flux.  This is overkill for this calculation, so choosing a smaller size than this may
+        speed up this calculation somewhat.
+
+        Also, while the name of this function refers to the half-light radius, in fact it can also
+        calculate radii that enclose other fractions of the light, according to the parameter
+        `flux_frac`.  E.g. for r90, you would set flux_frac=0.90.
+
+        The default scale should usually be acceptable for things like testing that a galaxy
+        has a reasonable resolution, but they should not be trusted for very fine grain
+        discriminations.
+
+        @param size         If given, the stamp size to use for the drawn image. [default: None,
+                            which will let drawImage choose the size automatically]
+        @param scale        If given, the pixel scale to use for the drawn image. [default:
+                            0.5 * self.nyquistScale()]
+        @param centroid     The position to use for the centroid. [default: self.centroid()]
+        @param flux_frac    The fraction of light to be enclosed by the returned radius.
+                            [default: 0.5]
+
+        @returns an estimate of the half-light radius in physical units
+        """
+        if hasattr(self, 'half_light_radius'):
+            return self.half_light_radius
+
+        if scale is None:
+            scale = self.nyquistScale() * 0.5
+
+        if centroid is None:
+            centroid = self.centroid()
+
+        # Draw the image.  Note: need a method that integrates over pixels to get flux right.
+        # The offset is to make all the rsq values different to help the precision a bit.
+        offset = galsim.PositionD(0.2, 0.33)
+        im = self.drawImage(nx=size, ny=size, scale=scale, offset=offset)
+
+        center = im.trueCenter() + offset + centroid/scale
+        return im.calculateHLR(center=center, flux=self.flux, flux_frac=flux_frac)
+
+
+    def calculateMomentRadius(self, size=None, scale=None, centroid=None, rtype='det'):
+        """Returns an estimate of the radius based on unweighted second moments.
+
+        The second moments are defined as:
+
+        Q_ij = int( I(x,y) i j dx dy ) / int( I(x,y) dx dy )
+        where i,j may be either x or y.
+
+        If I(x,y) is a Gaussian, then T = Tr(Q) = Qxx + Qyy = 2 sigma^2.  Thus, one reasonable
+        choice for a "radius" for an arbitrary profile is sqrt(T/2).
+
+        In addition, det(Q) = sigma^4.  So another choice for an arbitrary profile is det(Q)^1/4.
+
+        This routine can return either of these measures according to the value of the `rtype`
+        parameter.  `rtype='trace'` will cause it to return sqrt(T/2).  `rtype='det'` will cause
+        it to return det(Q)^1/4.  And `rtype='both'` will return a tuple with both values.
+
+        Note that for the special case of a Gaussian profile, no calculation is necessary, and
+        the `sigma` attribute will be used in both cases.  In the limit as scale->0, this
+        function will return the same value, but because finite pixels are drawn, the results
+        will not be precisely equal for real use cases.  The approximation being made is that
+        the integral of I(x,y) i j dx dy over each pixel can be approximated as
+        int(I(x,y) dx dy) * i_center * j_center.
+
+        This function (by default at least) is only accurate to a few percent, typically.
+        Possibly worse depending on the profile being measured.  If you care about a high
+        precision estimate of the radius, the accuracy can be improved using the optional
+        parameters size and scale to change the size and pixel scale used to draw the profile.
+
+        The default is to use the the Nyquist scale for the pixel scale and let drawImage
+        choose a size for the stamp that will enclose at least 99.5% of the flux.  These
+        were found to produce results accurate to a few percent on our internal tests.
+        Using a smaller scale and larger size will be more accurate at the expense of speed.
+
+        The default parameters should usually be acceptable for things like testing that a galaxy
+        has a reasonable resolution, but they should not be trusted for very fine grain
+        discriminations.  For a more accurate estimate, see galsim.hsm.FindAdaptiveMom.
+
+        @param size         If given, the stamp size to use for the drawn image. [default: None,
+                            which will let drawImage choose the size automatically]
+        @param scale        If given, the pixel scale to use for the drawn image. [default:
+                            self.nyquistScale()]
+        @param centroid     The position to use for the centroid. [default: self.centroid()]
+        @param rtype        There are three options for this parameter:
+                            - 'trace' means return sqrt(T/2)
+                            - 'det' means return det(Q)^1/4
+                            - 'both' means return both: (sqrt(T/2), det(Q)^1/4)
+                            [default: 'det']
+
+        @returns an estimate of the radius in physical units (or both estimates if rtype == 'both')
+        """
+        if rtype not in ['trace', 'det', 'both']:
+            raise ValueError("rtype must be one of 'trace', 'det', or 'both'")
+
+        if hasattr(self, 'sigma'):
+            if rtype == 'both':
+                return self.sigma, self.sigma
+            else:
+                return self.sigma
+
+        if scale is None:
+            scale = self.nyquistScale()
+
+        if centroid is None:
+            centroid = self.centroid()
+
+        # Draw the image.  Note: need a method that integrates over pixels to get flux right.
+        im = self.drawImage(nx=size, ny=size, scale=scale)
+
+        center = im.trueCenter() + centroid/scale
+        return im.calculateMomentRadius(center=center, flux=self.flux, rtype=rtype)
+
+
+    def calculateFWHM(self, size=None, scale=None, centroid=None):
+        """Returns the full-width half-maximum (FWHM) of the object.
+
+        If the profile has a fwhm attribute, it will just return that, but in the general case,
+        we draw the profile and estimate the FWHM directly.
+
+        As with calculateHLR and calculateMomentRadius, this function optionally takes size and
+        scale values to use for the image drawing.  The default is to use the the Nyquist scale
+        for the pixel scale and let drawImage choose a size for the stamp that will enclose at
+        least 99.5% of the flux.  These were found to produce results accurate to well below
+        one percent on our internal tests, so it is unlikely that you will want to adjust
+        them for accuracy.  However, using a smaller size than default could help speed up
+        the calculation, since the default is usually much larger than is needed.
+
+        @param size         If given, the stamp size to use for the drawn image. [default: None,
+                            which will let drawImage choose the size automatically]
+        @param scale        If given, the pixel scale to use for the drawn image. [default:
+                            self.nyquistScale()]
+        @param centroid     The position to use for the centroid. [default: self.centroid()]
+
+        @returns an estimate of the full-width half-maximum in physical units
+        """
+        if hasattr(self, 'fwhm'):
+            return self.fwhm
+
+        if scale is None:
+            scale = self.nyquistScale()
+
+        if centroid is None:
+            centroid = self.centroid()
+
+        # Draw the image.  Note: draw with method='sb' here, since the fwhm is a property of the
+        # raw surface brightness profile, not integrated over pixels.
+        # The offset is to make all the rsq values different to help the precision a bit.
+        offset = galsim.PositionD(0.2, 0.33)
+
+        im = self.drawImage(nx=size, ny=size, scale=scale, offset=offset, method='sb')
+
+        # Get the maximum value, assuming the maximum is at the centroid.
+        if self.isAnalyticX():
+            Imax = self.xValue(centroid)
+        else:
+            im1 = self.drawImage(nx=1, ny=1, scale=scale, method='sb', offset=-centroid/scale)
+            Imax = im1(1,1)
+
+        center = im.trueCenter() + offset + centroid/scale
+        return im.calculateFWHM(center=center, Imax=Imax)
+
 
     @property
     def flux(self): return self.getFlux()
@@ -1269,8 +1447,8 @@ class GSObject(object):
 # Pickling an SBProfile is a bit tricky, since it's a base class for lots of other classes.
 # Normally, we'll know what the derived class is, so we can just use the pickle stuff that is
 # appropriate for that.  But if we get a SBProfile back from say the getObj() method of
-# SBTransform, then we won't know what class it should be.  So, in this case, we use the 
-# repr to do the pickling.  This isn't usually a great idea in general, but it provides a 
+# SBTransform, then we won't know what class it should be.  So, in this case, we use the
+# repr to do the pickling.  This isn't usually a great idea in general, but it provides a
 # convenient way to get the SBProfile to be the correct type in this case.
 # So, getstate just returns the repr string.  And setstate builds the right kind of object
 # by essentially doing `self = eval(repr)`.
@@ -1339,12 +1517,10 @@ class Gaussian(GSObject):
     # _opt_params are optional
     # _single_params are a list of sets for which exactly one in the list is required.
     # _takes_rng indicates whether the constructor should be given the current rng.
-    # _takes_logger indicates whether the constructor takes a logger object for debug logging.
     _req_params = {}
     _opt_params = { "flux" : float }
     _single_params = [ { "sigma" : float, "half_light_radius" : float, "fwhm" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     # The FWHM of a Gaussian is 2 sqrt(2 ln2) sigma
     _fwhm_factor = 2.3548200450309493
@@ -1410,12 +1586,12 @@ class Gaussian(GSObject):
 _galsim.SBGaussian.__getinitargs__ = lambda self: (
         self.getSigma(), self.getFlux(), self.getGSParams())
 # SBProfile defines __getstate__ and __setstate__.  We don't actually want to use those here.
-# Just the __getinitargs__ is sufficient.  But we define these two to override the base class 
+# Just the __getinitargs__ is sufficient.  But we define these two to override the base class
 # definitions.
 # Note: __setstate__ just returns 1, which means it is a no op.  I would use pass to make that
 # clear, but pass doesn't work for a lambda expression since it needs to return something.
 _galsim.SBGaussian.__getstate__ = lambda self: None
-_galsim.SBGaussian.__setstate__ = lambda self, state: 1 
+_galsim.SBGaussian.__setstate__ = lambda self, state: 1
 _galsim.SBGaussian.__repr__ = lambda self: \
         'galsim._galsim.SBGaussian(%r, %r, %r)'%self.__getinitargs__()
 
@@ -1465,7 +1641,6 @@ class Moffat(GSObject):
     _opt_params = { "trunc" : float , "flux" : float }
     _single_params = [ { "scale_radius" : float, "half_light_radius" : float, "fwhm" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     # The conversion from hlr or fwhm to scale radius is complicated for Moffat, especially
     # since we allow it to be truncated, which matters for hlr.  So we do these calculations
@@ -1526,7 +1701,7 @@ class Moffat(GSObject):
         return s
 
 _galsim.SBMoffat.__getinitargs__ = lambda self: (
-        self.getBeta(), self.getScaleRadius(), None, None, self.getTrunc(), 
+        self.getBeta(), self.getScaleRadius(), None, None, self.getTrunc(),
         self.getFlux(), self.getGSParams())
 _galsim.SBMoffat.__getstate__ = lambda self: None
 _galsim.SBMoffat.__setstate__ = lambda self, state: 1
@@ -1607,7 +1782,6 @@ class Airy(GSObject):
     # error.
     _single_params = [{ "lam_over_diam" : float , "lam" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     # For an unobscured Airy, we have the following factor which can be derived using the
     # integral result given in the Wikipedia page (http://en.wikipedia.org/wiki/Airy_disk),
@@ -1753,7 +1927,6 @@ class Kolmogorov(GSObject):
     _opt_params = { "flux" : float }
     _single_params = [ { "lam_over_r0" : float, "fwhm" : float, "half_light_radius" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
     # In SBKolmogorov.cpp we refine this factor to 0.975865
@@ -1807,7 +1980,7 @@ class Kolmogorov(GSObject):
     def half_light_radius(self): return self.getHalfLightRadius()
     @property
     def fwhm(self): return self.getFWHM()
- 
+
     def __repr__(self):
         return 'galsim.Kolmogorov(lam_over_r0=%r, flux=%r, gsparams=%r)'%(
             self.lam_over_r0, self.flux, self._gsparams)
@@ -1855,7 +2028,6 @@ class Pixel(GSObject):
     _opt_params = { "flux" : float }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, scale, flux=1., gsparams=None):
         GSObject.__init__(self, _galsim.SBBox(scale, scale, flux, gsparams))
@@ -1907,7 +2079,6 @@ class Box(GSObject):
     _opt_params = { "flux" : float }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, width, height, flux=1., gsparams=None):
         width = float(width)
@@ -1973,7 +2144,6 @@ class TopHat(GSObject):
     _opt_params = { "flux" : float }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, radius, flux=1., gsparams=None):
         radius = float(radius)
@@ -1987,7 +2157,7 @@ class TopHat(GSObject):
 
     @property
     def radius(self): return self.getRadius()
- 
+
     def __repr__(self):
         return 'galsim.TopHat(radius=%r, flux=%r, gsparams=%r)'%(
             self.radius, self.flux, self._gsparams)
@@ -2173,7 +2343,6 @@ class Sersic(GSObject):
     _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     # The conversion from hlr to scale radius is complicated for Sersic, especially since we
     # allow it to be truncated.  So we do these calculations in the C++-layer constructor.
@@ -2270,7 +2439,6 @@ class Exponential(GSObject):
     _opt_params = { "flux" : float }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     # The half-light-radius is not analytic, but can be calculated numerically.
     _hlr_factor = 1.6783469900166605
@@ -2343,7 +2511,7 @@ class DeVaucouleurs(GSObject):
     A DeVaucouleurs can be initialized using one (and only one) of two possible size parameters:
     `scale_radius` or `half_light_radius`.  Exactly one of these two is required.
 
-    @param scale_radius     The value of sigma of the profile.  Typically given in arcsec.
+    @param scale_radius     The value of scale radius of the profile.  Typically given in arcsec.
                             [One of `scale_radius` or `half_light_radius` is required.]
     @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
                             [One of `scale_radius` or `half_light_radius` is required.]
@@ -2369,7 +2537,6 @@ class DeVaucouleurs(GSObject):
     _opt_params = { "flux" : float, "trunc" : float, "flux_untruncated" : bool }
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, half_light_radius=None, scale_radius=None, flux=1., trunc=0.,
                  flux_untruncated=False, gsparams=None):
@@ -2490,11 +2657,10 @@ class Spergel(GSObject):
     _opt_params = { "flux" : float}
     _single_params = [ { "scale_radius" : float , "half_light_radius" : float } ]
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, nu, half_light_radius=None, scale_radius=None,
                  flux=1., gsparams=None):
-        GSObject.__init__(self, _galsim.SBSpergel(nu, scale_radius, half_light_radius, flux, 
+        GSObject.__init__(self, _galsim.SBSpergel(nu, scale_radius, half_light_radius, flux,
                                                   gsparams))
         self._gsparams = gsparams
 
@@ -2639,10 +2805,10 @@ small_fraction_of_flux      When photon shooting, intervals with less than this 
 """
 
 _galsim.GSParams.__getinitargs__ = lambda self: (
-        self.minimum_fft_size, self.maximum_fft_size, 
+        self.minimum_fft_size, self.maximum_fft_size,
         self.folding_threshold, self.stepk_minimum_hlr, self.maxk_threshold,
         self.kvalue_accuracy, self.xvalue_accuracy, self.table_spacing,
-        self.realspace_relerr, self.realspace_abserr, 
+        self.realspace_relerr, self.realspace_abserr,
         self.integration_relerr, self.integration_abserr,
         self.shoot_accuracy, self.allowed_flux_variation,
         self.range_division_for_extrema, self.small_fraction_of_flux)
