@@ -58,20 +58,20 @@ def broadcast(arg, n):
     return [arg[0]]*n if len(arg) == 1 else arg
 
 
-def generate_pupil(nu, pupil_size, diam=None, obscuration=None):
+def generate_pupil(npix, pupil_size, diam=None, obscuration=None):
     """ Generate a pupil transmission array (0's and 1's) for a circular aperture and potentially a
     central circular obscuration.
 
-    @param nu          Number of pixels across pupil array.
+    @param npix        Number of pixels across pupil array.
     @param pupil_size  Physical size of pupil array in meters.
     @param diam        Diameter of aperture in meters.
     @param obscuration Fractional linear obscuration.
     @returns array of 0's and 1's indicating pupil transmission function.
     """
-    aper = np.ones((nu, nu), dtype=np.float64)
+    aper = np.ones((npix, npix), dtype=np.float64)
     if diam is not None:
         radius = 0.5*diam
-        u = np.fft.fftshift(np.fft.fftfreq(nu, 1./pupil_size))
+        u = np.fft.fftshift(np.fft.fftfreq(npix, 1./pupil_size))
         u, v = np.meshgrid(u, u)
         rsqr = u**2 + v**2
         aper[rsqr > radius**2] = 0.0
@@ -652,12 +652,12 @@ class PhaseScreenPSF(GSObject):
         self._pupil_scale = _pupil_scale
         if _pupil_size is None:
             _pupil_size = self.diam * self.pad_factor
-        self._nu = int(np.ceil(_pupil_size/self._pupil_scale))
-        self._pupil_size = self._nu * self._pupil_scale
+        self._npix = int(np.ceil(_pupil_size/self._pupil_scale))
+        self._pupil_size = self._npix * self._pupil_scale
 
         self.scale = 1e-9*self.lam/self._pupil_size * galsim.radians / self.scale_unit
 
-        self.aper = generate_pupil(self._nu, self._pupil_size, self.diam, self.obscuration)
+        self.aper = generate_pupil(self._npix, self._pupil_size, self.diam, self.obscuration)
         self.img = np.zeros_like(self.aper)
 
         if self.exptime < 0:
@@ -701,7 +701,7 @@ class PhaseScreenPSF(GSObject):
 
     def _step(self):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
-        path_difference = self.screen_list.path_difference(self._nu, self._pupil_scale,
+        path_difference = self.screen_list.path_difference(self._npix, self._pupil_scale,
                                                            self.theta_x, self.theta_y)
         wf = self.aper * np.exp(2j * np.pi * path_difference / self.lam)
         ftwf = np.fft.ifft2(np.fft.ifftshift(wf))
