@@ -58,20 +58,20 @@ def broadcast(arg, n):
     return [arg[0]]*n if len(arg) == 1 else arg
 
 
-def generate_pupil(npix, pupil_size, diam=None, obscuration=None):
+def generate_pupil(npix, pupil_plane_size, diam=None, obscuration=None):
     """ Generate a pupil transmission array (0's and 1's) for a circular aperture and potentially a
     central circular obscuration.
 
-    @param npix        Number of pixels across pupil array.
-    @param pupil_size  Physical size of pupil array in meters.
-    @param diam        Diameter of aperture in meters.
-    @param obscuration Fractional linear obscuration.
+    @param npix              Number of pixels across pupil array.
+    @param pupil_plane_size  Physical size of the array defining the pupil in meters.
+    @param diam              Diameter of aperture in meters.
+    @param obscuration       Fractional linear obscuration.
     @returns array of 0's and 1's indicating pupil transmission function.
     """
     aper = np.ones((npix, npix), dtype=np.float64)
     if diam is not None:
         radius = 0.5*diam
-        u = np.fft.fftshift(np.fft.fftfreq(npix, 1./pupil_size))
+        u = np.fft.fftshift(np.fft.fftfreq(npix, 1./pupil_plane_size))
         u, v = np.meshgrid(u, u)
         rsqr = u**2 + v**2
         aper[rsqr > radius**2] = 0.0
@@ -622,7 +622,7 @@ class PhaseScreenPSF(GSObject):
                  scale_unit=galsim.arcsec, interpolant=None,
                  diam=8.4, obscuration=0.6,
                  pad_factor=1.5, oversampling=1.5,
-                 _pupil_size=None, _pupil_scale=None,
+                 _pupil_plane_size=None, _pupil_scale=None,
                  gsparams=None, _eval_now=True, _bar=None):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
         # progress bar during long calculations.
@@ -650,14 +650,16 @@ class PhaseScreenPSF(GSObject):
             _pupil_scale = (sum(layer.pupil_scale(lam)**(-5./3) for layer in screen_list))**(-3./5)
             _pupil_scale /= oversampling
         self._pupil_scale = _pupil_scale
-        if _pupil_size is None:
-            _pupil_size = self.diam * self.pad_factor
-        self._npix = int(np.ceil(_pupil_size/self._pupil_scale))
-        self._pupil_size = self._npix * self._pupil_scale
+        # Note _pupil_plane_size sets the size of the array defining the pupil, which will generally
+        # be somewhat larger than the diameter of the pupil itself.
+        if _pupil_plane_size is None:
+            _pupil_plane_size = self.diam * self.pad_factor
+        self._npix = int(np.ceil(_pupil_plane_size/self._pupil_scale))
+        self._pupil_plane_size = self._npix * self._pupil_scale
 
-        self.scale = 1e-9*self.lam/self._pupil_size * galsim.radians / self.scale_unit
+        self.scale = 1e-9*self.lam/self._pupil_plane_size * galsim.radians / self.scale_unit
 
-        self.aper = generate_pupil(self._npix, self._pupil_size, self.diam, self.obscuration)
+        self.aper = generate_pupil(self._npix, self._pupil_plane_size, self.diam, self.obscuration)
         self.img = np.zeros_like(self.aper)
 
         if self.exptime < 0:
