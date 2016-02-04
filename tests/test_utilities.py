@@ -472,6 +472,6 @@ if __name__ == "__main__":
     test_kxky()
     test_kxky_plusone()
     test_check_all_contiguous()
-    #test_deInterleaveImage()
+    test_deInterleaveImage()
     test_interleaveImages()
     test_python_LRU_Cache()
