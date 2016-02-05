@@ -484,7 +484,8 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
 
     y_size,x_size = image.array.shape
     if x_size%n1 or y_size%n2:
-        raise ValueError("Dimensions mismatch")
+        raise ValueError("The value of 'N' is incompatible with the dimensions of the image to "+
+                         +"be 'deinterleaved'")
 
     wcs = image.wcs
     if wcs is not None:
