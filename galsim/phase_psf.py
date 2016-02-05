@@ -428,7 +428,7 @@ class PhaseScreenList(object):
         self._update_attrs()
 
     def __str__(self):
-        return "galsim.PhaseScreenList(%s)" % self._layers
+        return "galsim.PhaseScreenList([%s])" % ",".join(str(l) for l in self._layers)
 
     def __repr__(self):
         return "galsim.PhaseScreenList(%r)" % self._layers
