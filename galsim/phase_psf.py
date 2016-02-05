@@ -838,7 +838,7 @@ def Atmosphere(r0_500=0.2, screen_size=30.0, time_step=0.03, altitude=0.0, L0=25
     # decompose velocities
     vxs, vys = zip(*[v*d.sincos() for v, d in zip(velocities, directions)])
 
-    layers = [AtmosphericScreen(size, scale, alt, time_step=time_step, r0_500=r0_500, L0=L,
+    layers = [AtmosphericScreen(size, scale, alt, time_step=time_step, r0_500=r0, L0=L,
                                 vx=vx, vy=vy, alpha=a, rng=rng)
               for r0, size, alt, L, vx, vy, a, scale
               in zip(r0_500s, sizes, altitudes, L0s, vxs, vys, alphas, scales)]
