@@ -524,7 +524,7 @@ class COSMOSCatalog(object):
 
         gal_list = []
         for index in indices:
-            record = cosmos_catalog.getParametricRecord(index)
+            record = self.getParametricRecord(index)
             gal = self._buildParametric(record, sersic_prec, gsparams,
                                         chromatic, self._bandpass, self._sed)
             gal_list.append(gal)
