@@ -39,6 +39,7 @@ New Features
 - Added optional `wcs` argument to `Image.resize()`. (#691)
 - Added `BaseDeviate.discard(n)` and `BaseDeviate.raw()`. (#691)
 - Added `sersic_prec` option to COSMOSCatalog.makeGalaxy(). (#691)
+- Added `epsilon` as a parameter of HSMParams. (#709)
 
 
 Updates to galsim executable
