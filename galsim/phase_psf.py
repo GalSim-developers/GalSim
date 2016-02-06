@@ -80,6 +80,33 @@ def generate_pupil(npix, pupil_plane_size, diam=None, obscuration=None):
     return aper
 
 
+class Aperture(object):
+    def __init__(self, pupil_plane_size, npix, diam=None, obscuration=None):
+        self.pupil_plane_size = pupil_plane_size
+        self.npix = npix
+        self.pupil_scale = self.pupil_plane_size/self.npix
+
+        self.illuminated = np.ones((npix, npix), dtype=np.float64)
+        if diam is not None:
+            radius = 0.5*diam
+            u = np.fft.fftshift(np.fft.fftfreq(npix, 1./pupil_plane_size))
+            u, v = np.meshgrid(u, u)
+            rsqr = u**2 + v**2
+            self.illuminated[rsqr > radius**2] = 0.0
+            if obscuration is not None:
+                self.illuminated[rsqr < (radius*obscuration)**2] = 0.0
+
+    @property
+    def rho(self):
+        if not hasattr(self, '_rho'):
+            u = np.fft.fftshift(np.fft.fftfreq(self.npix, 1./self.pupil_plane_size))
+            u, v = np.meshgrid(u, u)
+            rsqr = u**2 + v**2
+            rsqrmax_illum = max(rsqr[self.illuminated > 0])
+            self._rho = np.sqrt(rsqr/rsqrmax_illum)
+        return self._rho
+
+
 class PhaseScreen(object):
     # ABC for phase screens.  Subclasses should implement:
     # advance()
@@ -657,8 +684,10 @@ class PhaseScreenPSF(GSObject):
 
         self.scale = 1e-9*self.lam/self._pupil_plane_size * galsim.radians / self.scale_unit
 
-        self.aper = generate_pupil(self._npix, self._pupil_plane_size, self.diam, self.obscuration)
-        self.img = np.zeros_like(self.aper)
+        self.aper = Aperture(self._pupil_plane_size, self._npix, diam=self.diam,
+                             obscuration=self.obscuration)
+
+        self.img = np.zeros_like(self.aper.illuminated)
 
         if self.exptime < 0:
             raise ValueError("Cannot integrate PSF for negative time.")
@@ -703,7 +732,7 @@ class PhaseScreenPSF(GSObject):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
         path_difference = self.screen_list.path_difference(self._npix, self._pupil_scale,
                                                            self.theta_x, self.theta_y)
-        wf = self.aper * np.exp(2j * np.pi * path_difference / self.lam)
+        wf = self.aper.illuminated * np.exp(2j * np.pi * path_difference / self.lam)
         ftwf = np.fft.ifft2(np.fft.ifftshift(wf))
         self.img += np.abs(ftwf)**2
 
