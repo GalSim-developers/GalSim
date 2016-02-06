@@ -1722,6 +1722,10 @@ def test_kolmogorov():
     # arcsec is the default scale_unit, so can leave this off.
     kolm4 = galsim.Kolmogorov(lam=lam, r0=0.2, flux=test_flux)
     gsobject_compare(kolm,kolm4)
+    # Test using r0_500 instead
+    r0_500 = 0.2 * (lam/500)**-1.2
+    kolm5 = galsim.Kolmogorov(lam=lam, r0_500=r0_500, flux=test_flux)
+    gsobject_compare(kolm,kolm5)
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
