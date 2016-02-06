@@ -1082,7 +1082,7 @@ def test_airy_flux_scaling():
     test_loD = 1.9
     test_obscuration = 0.32
 
-    # init with lam_over_r0 and flux only (should be ok given last tests)
+    # init with lam_over_diam and flux only (should be ok given last tests)
     obj = galsim.Airy(lam_over_diam=test_loD, flux=test_flux, obscuration=test_obscuration)
     obj *= 2.
     np.testing.assert_almost_equal(
@@ -1709,18 +1709,18 @@ def test_kolmogorov():
     do_pickle(kolm.SBProfile)
 
     # Test initialization separately with lam and r0, in various units.  Since the above profiles
-    # have lam/r0 = 3./2. in arbitrary units, we will tell it that lam=3.e7 nm and r0=2.0 cm,
+    # have lam/r0 = 3./2. in arbitrary units, we will tell it that lam=3.e9 nm and r0=2.0 m,
     # and use `scale_unit` of galsim.radians.  This is rather silly, but it should work.
     kolm = galsim.Kolmogorov(lam_over_r0=1.5, flux=test_flux)
-    kolm2 = galsim.Kolmogorov(lam=3.e7, r0=2.0, scale_unit=galsim.radians, flux=test_flux)
+    kolm2 = galsim.Kolmogorov(lam=3.e9, r0=2.0, scale_unit=galsim.radians, flux=test_flux)
     gsobject_compare(kolm,kolm2)
-    # For lam/r0 = 1.5 arcsec, and r0 = 20, lam = (1.5/3600/180*pi) * 20 * 1.e7
-    lam = 1.5 * 20 / 3600. / 180. * math.pi * 1.e7
+    # For lam/r0 = 1.5 arcsec, and r0 = 0.2, lam = (1.5/3600/180*pi) * 0.2 * 1.e9
+    lam = 1.5 * 0.2 / 3600. / 180. * math.pi * 1.e9
     print 'lam = ',lam
-    kolm3 = galsim.Kolmogorov(lam=lam, r0=20., scale_unit=galsim.arcsec, flux=test_flux)
+    kolm3 = galsim.Kolmogorov(lam=lam, r0=0.2, scale_unit=galsim.arcsec, flux=test_flux)
     gsobject_compare(kolm,kolm3)
     # arcsec is the default scale_unit, so can leave this off.
-    kolm4 = galsim.Kolmogorov(lam=lam, r0=20., flux=test_flux)
+    kolm4 = galsim.Kolmogorov(lam=lam, r0=0.2, flux=test_flux)
     gsobject_compare(kolm,kolm4)
 
     t2 = time.time()

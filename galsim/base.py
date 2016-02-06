@@ -1911,8 +1911,8 @@ class Kolmogorov(GSObject):
 
     The Kolmogorov profile is normally defined in terms of the ratio lambda / r0, where lambda is
     the wavelength of the light (say in the middle of the bandpass you are using) and r0 is the
-    Fried parameter.  Typical values for the Fried parameter are on the order of 10cm for
-    most observatories and up to 20cm for excellent sites. The values are usually quoted at
+    Fried parameter.  Typical values for the Fried parameter are on the order of 0.1 m for
+    most observatories and up to 0.2 m for excellent sites. The values are usually quoted at
     lambda = 500nm and r0 depends on wavelength as [r0 ~ lambda^(6/5)].
 
     The natural units for this ratio is radians, which is not normally a convenient unit to use for
@@ -1921,13 +1921,13 @@ class Kolmogorov(GSObject):
     should convert this to arcsec as well:
 
         >>> lam = 700  # nm
-        >>> r0 = 15 * (lam/500)**1.2  # cm
-        >>> lam_over_r0 = (lam * 1.e-7) / r0  # radians
+        >>> r0 = 0.15 * (lam/500)**1.2  # meters
+        >>> lam_over_r0 = (lam * 1.e-9) / r0  # radians
         >>> lam_over_r0 *= 206265  # Convert to arcsec
         >>> psf = galsim.Kolmogorov(lam_over_r0)
 
     To make this process a bit simpler, we recommend instead providing the wavelength and Fried
-    parameter separately using the parameters `lam` (in nm) and `r0` (in cm).  GalSim will then
+    parameter separately using the parameters `lam` (in nm) and `r0` (in m).  GalSim will then
     convert this to any of the normal kinds of angular units using the `scale_unit` parameter:
 
         >>> psf = galsim.Kolmogorov(lam=lam, r0=r0, scale_unit=galsim.arcsec)
@@ -1952,9 +1952,9 @@ class Kolmogorov(GSObject):
     @param lam              Lambda (wavelength) in units of nanometers.  Must be supplied with
                             `r0`, and in this case, image scales (`scale`) should be specified in
                             units of `scale_unit`.
-    @param r0               The Fried parameter in units of centimeters.  Must be supplied with
-                            `lam`, and in this case, image scales (`scale`) should be specified in
-                            units of `scale_unit`.
+    @param r0               The Fried parameter in units of meters.  Must be supplied with `lam`,
+                            and in this case, image scales (`scale`) should be specified in units
+                            of `scale_unit`.
     @param flux             The flux (in photons) of the profile. [default: 1]
     @param scale_unit       Units to use for the sky coordinates when calculating lam/r0 if these
                             are supplied separately.  Note that the results of calling methods like
@@ -2017,7 +2017,7 @@ class Kolmogorov(GSObject):
             # In this case we're going to use scale_unit, so parse it in case of string input:
             if isinstance(scale_unit, basestring):
                 scale_unit = galsim.angle.get_angle_unit(scale_unit)
-            lam_over_r0 = (1.e-7*lam/r0)*(galsim.radians/scale_unit)
+            lam_over_r0 = (1.e-9*lam/r0)*(galsim.radians/scale_unit)
 
         GSObject.__init__(self, _galsim.SBKolmogorov(lam_over_r0, flux, gsparams))
         self._gsparams = gsparams
