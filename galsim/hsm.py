@@ -264,12 +264,12 @@ _galsim.CppShapeData.__hash__ = lambda self: hash(repr(self))
 
 _galsim.HSMParams.__getinitargs__ = lambda self: (
         self.nsig_rg, self.nsig_rg2, self.max_moment_nsig2, self.regauss_too_small,
-        self.adapt_order, self.max_mom2_iter, self.num_iter_default, self.bound_correct_wt,
-        self.max_amoment, self.max_ashift, self.ksb_moments_max, self.ksb_sig_weight,
-        self.ksb_sig_factor, self.failed_moments)
+        self.adapt_order, self.epsilon, self.max_mom2_iter, self.num_iter_default,
+        self.bound_correct_wt, self.max_amoment, self.max_ashift,
+        self.ksb_moments_max, self.ksb_sig_weight, self.ksb_sig_factor, self.failed_moments)
 
 _galsim.HSMParams.__repr__ = lambda self: \
-        ('galsim.hsm.HSMParams(' + 13*'%r,' + '%r)')%self.__getinitargs__()
+        ('galsim.hsm.HSMParams(' + 14*'%r,' + '%r)')%self.__getinitargs__()
 
 _galsim.HSMParams.__eq__ = lambda self, other: repr(self) == repr(other)
 _galsim.HSMParams.__ne__ = lambda self, other: not self.__eq__(other)

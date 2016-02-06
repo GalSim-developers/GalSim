@@ -122,6 +122,10 @@ namespace hsm {
      *                           KSB method of PSF correction.  Warning: deviating from default
      *                           value of 2 results in code running more slowly, and results have
      *                           not been significantly tested.
+     * @param epsilon            Accuracy (in x0, y0, and sigma as a fraction of sigma) when
+     *                           calculating adaptive moments. The value of sigma used for the
+     *                           convergence criterion is the minimum of the "guessed" value and
+     *                           the "current" value.
      * @param max_mom2_iter      Maximum number of iterations to use when calculating adaptive
      *                           moments.  This should be sufficient in nearly all situations, with
      *                           the possible exception being very flattened profiles.
@@ -151,6 +155,7 @@ namespace hsm {
                   double _max_moment_nsig2,
                   int _regauss_too_small,
                   int _adapt_order,
+                  double _epsilon,
                   long _max_mom2_iter,
                   long _num_iter_default,
                   double _bound_correct_wt,
@@ -165,6 +170,7 @@ namespace hsm {
             max_moment_nsig2(_max_moment_nsig2),
             regauss_too_small(_regauss_too_small),
             adapt_order(_adapt_order),
+            epsilon(_epsilon),
             max_mom2_iter(_max_mom2_iter),
             num_iter_default(_num_iter_default),
             bound_correct_wt(_bound_correct_wt),
@@ -185,6 +191,7 @@ namespace hsm {
             max_moment_nsig2(25.0),
             regauss_too_small(1),
             adapt_order(2),
+            epsilon(1.e-6),
             max_mom2_iter(400),
             num_iter_default(-1),
             bound_correct_wt(0.25),
@@ -202,6 +209,7 @@ namespace hsm {
         double max_moment_nsig2;
         int regauss_too_small;
         int adapt_order;
+        double epsilon;
         long max_mom2_iter;
         long num_iter_default;
         double bound_correct_wt;

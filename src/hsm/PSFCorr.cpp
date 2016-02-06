@@ -1329,7 +1329,7 @@ namespace hsm {
         y0 = y0_gal;
         sigma0 = sig_gal;
         find_mom_2(gal_image, moments, hsmparams->ksb_moments_max, x0_gal, y0_gal, sig_gal,
-                   1.0e-6, num_iter, hsmparams);
+                   hsmparams->epsilon, num_iter, hsmparams);
         if (num_iter == hsmparams->num_iter_default) {
             status |= 0x0002; /* Report convergence failure */
             x0_gal = x0;
@@ -1354,7 +1354,7 @@ namespace hsm {
         y0 = y0_psf;
         sigma0 = sig_psf;
         find_mom_2(PSF_image, psfmoms, hsmparams->ksb_moments_max, x0_psf, y0_psf, sig_psf,
-                   1.0e-6, num_iter, hsmparams);
+                   hsmparams->epsilon, num_iter, hsmparams);
         if (num_iter == hsmparams->num_iter_default) {
             status |= 0x0001; /* Report convergence failure */
             x0_psf = x0;
