@@ -114,7 +114,7 @@ from .base import GSParams, GSObject, Gaussian, Moffat, Airy, Kolmogorov, Pixel,
 from .base import Exponential, Sersic, DeVaucouleurs, Spergel
 from .real import RealGalaxy, RealGalaxyCatalog, simReal
 from .optics import OpticalPSF
-from .phase_psf import AtmosphericScreen, PhaseScreenList, PhaseScreenPSF, Atmosphere
+from .phase_psf import AtmosphericScreen, PhaseScreenList, PhaseScreenPSF, Atmosphere, Aperture
 from .shapelet import Shapelet, ShapeletSize, FitShapelet
 from .interpolatedimage import Interpolant
 from .interpolatedimage import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta

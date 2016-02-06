@@ -82,9 +82,9 @@ def generate_pupil(npix, pupil_plane_size, diam=None, obscuration=None):
 
 class Aperture(object):
     def __init__(self, pupil_plane_size, npix, diam=None, obscuration=None):
-        self.pupil_plane_size = pupil_plane_size
-        self.npix = npix
-        self.pupil_scale = self.pupil_plane_size/self.npix
+        self.pupil_plane_size = float(pupil_plane_size)
+        self.npix = int(npix)
+        self.pupil_scale = self.pupil_plane_size/(self.npix-1)
 
         self.illuminated = np.ones((npix, npix), dtype=np.float64)
         if diam is not None:
@@ -160,13 +160,12 @@ class PhaseScreen(object):
         # For time-independent screens, this is a no-op.
         pass
 
-    def path_difference(self, nx, scale, theta_x=None, theta_y=None):
+    def path_difference(self, aper, theta_x=None, theta_y=None):
         """ Compute effective pathlength differences due to phase screen.
 
-        @param nx       Size of output array
-        @param scale    Scale of output array pixels in meters
-        @param theta_x  Field angle corresponding to center of output array.
-        @param theta_y  Ditto.
+        @param aper     `galsim.Aperture` over which to compute pathlength differences.
+        @param theta_x  x-component of field angle corresponding to center of output array.
+        @param theta_y  y-component of field angle corresponding to center of output array.
         @returns   Array of pathlength differences in nanometers.  Multiply by 2pi/wavelength to get
                    array of phase differences.
         """
@@ -348,16 +347,17 @@ class AtmosphericScreen(PhaseScreen):
         obj = galsim.Kolmogorov(lam=lam, r0=self.r0_500 * (lam/500.0)**(6./5))
         return obj.stepK() * lam*1.e-9 * galsim.radians / scale_unit
 
-    def path_difference(self, nx, scale, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
+    def path_difference(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
         """ Compute effective pathlength differences due to phase screen.
 
-        @param nx       Size of output array
-        @param scale    Scale of output array pixels in meters
+        @param aper     `galsim.Aperture` over which to compute pathlength differences.
         @param theta_x  x-component of field angle corresponding to center of output array.
         @param theta_y  y-component of field angle corresponding to center of output array.
         @returns   Array of pathlength differences in nanometers.  Multiply by 2pi/wavelength to get
                    array of phase differences.
         """
+        scale = aper.pupil_scale
+        nx = aper.npix
         xmin = self.origin[0] + 1000*self.altitude*theta_x.tan() - 0.5*scale*(nx-1)
         xmax = xmin + scale*(nx-1)
         ymin = self.origin[1] + 1000*self.altitude*theta_y.tan() - 0.5*scale*(nx-1)
@@ -730,7 +730,7 @@ class PhaseScreenPSF(GSObject):
 
     def _step(self):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
-        path_difference = self.screen_list.path_difference(self._npix, self._pupil_scale,
+        path_difference = self.screen_list.path_difference(self.aper,
                                                            self.theta_x, self.theta_y)
         wf = self.aper.illuminated * np.exp(2j * np.pi * path_difference / self.lam)
         ftwf = np.fft.ifft2(np.fft.ifftshift(wf))

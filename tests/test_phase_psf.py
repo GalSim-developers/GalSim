@@ -70,10 +70,11 @@ def test_phase_screen_list():
     atm4.append(atm[-1])
     assert atm == atm4
 
-    pd = atm.path_difference(20, 0.01)
-    pd2 = atm2.path_difference(20, 0.01)
-    pd3 = atm3.path_difference(20, 0.01)
-    pd4 = atm4.path_difference(20, 0.01)
+    aper = galsim.Aperture(20, 2000)
+    pd = atm.path_difference(aper)
+    pd2 = atm2.path_difference(aper)
+    pd3 = atm3.path_difference(aper)
+    pd4 = atm4.path_difference(aper)
 
     np.testing.assert_array_equal(pd, pd2, "PhaseScreenLists are inconsistent")
     np.testing.assert_array_equal(pd, pd3, "PhaseScreenLists are inconsistent")
@@ -116,9 +117,10 @@ def test_frozen_flow():
     alt = x/1000   # -> 0.00005 km; silly example, but yields exact results...
 
     screen = galsim.phase_psf.AtmosphericScreen(1.0, dx, alt, vx=vx, time_step=dt, rng=rng)
-    pd0 = screen.path_difference(20, dx)
+    aper = galsim.Aperture(20, 20/dx)
+    pd0 = screen.path_difference(aper)
     screen.advance_by(t)
-    pd1 = screen.path_difference(20, dx, theta_x=45*galsim.degrees)
+    pd1 = screen.path_difference(aper, theta_x=45*galsim.degrees)
 
     np.testing.assert_array_almost_equal(pd0, pd1, 5, "Flow is not frozen")
 
@@ -133,28 +135,29 @@ def test_phase_psf_reset():
     rng = galsim.BaseDeviate(1234)
     # Test frozen AtmosphericScreen first
     atm = galsim.Atmosphere(altitude=10.0, velocity=0.1, alpha=1.0, rng=rng)
-    pd1 = atm.path_difference(16, 0.1)
+    aper = galsim.Aperture(16, 160)
+    pd1 = atm.path_difference(aper)
     atm.advance()
-    pd2 = atm.path_difference(16, 0.1)
+    pd2 = atm.path_difference(aper)
     # Verify that atmosphere did advance
     assert not np.all(pd1 == pd2)
 
     # Now verify that reset brings back original atmosphere
     atm.reset()
-    pd3 = atm.path_difference(16, 0.1)
+    pd3 = atm.path_difference(aper)
     np.testing.assert_array_equal(pd1, pd3, "Phase screen didn't reset")
 
     # Now check with boilin, but no wind.
     atm = galsim.Atmosphere(altitude=10.0, alpha=0.997, rng=rng)
-    pd1 = atm.path_difference(16, 0.1)
+    pd1 = atm.path_difference(aper)
     atm.advance()
-    pd2 = atm.path_difference(16, 0.1)
+    pd2 = atm.path_difference(aper)
     # Verify that atmosphere did advance
     assert not np.all(pd1 == pd2)
 
     # Now verify that reset brings back original atmosphere
     atm.reset()
-    pd3 = atm.path_difference(16, 0.1)
+    pd3 = atm.path_difference(aper)
     np.testing.assert_array_equal(pd1, pd3, "Phase screen didn't reset")
 
     t2 = time.time()
