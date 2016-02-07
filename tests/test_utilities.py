@@ -166,8 +166,8 @@ def test_deInterleaveImage():
     im_list, offsets = galsim.utilities.deInterleaveImage(img,8)
     img1 = galsim.utilities.interleaveImages(im_list,8,offsets)
     np.testing.assert_array_equal(img1.array,img.array,\
-       err_msg = "interleaveImages cannot reproduce the input to deInterleaveImage for square "+\
-                  "images")
+      err_msg = "interleaveImages cannot reproduce the input to deInterleaveImage for square "+\
+                "images")
 
     assert img.wcs == img1.wcs
 
@@ -175,8 +175,8 @@ def test_deInterleaveImage():
     im_list, offsets = galsim.utilities.deInterleaveImage(img,(2,5))
     img1 = galsim.utilities.interleaveImages(im_list,(2,5),offsets)
     np.testing.assert_array_equal(img1.array,img.array,\
-       err_msg = "interleaveImages cannot reproduce the input to deInterleaveImage for rectangular"\
-                  +" images")
+      err_msg = "interleaveImages cannot reproduce the input to deInterleaveImage for rectangular"\
+                +" images")
 
     assert img.wcs == img1.wcs
 
@@ -191,8 +191,8 @@ def test_deInterleaveImage():
     ## Checking if offsets are separated by (i/4,j/2) for some integers i,j
     offset0 = offsets[0]
     for offset in offsets[1:]:
-      assert 4.*(offset.x-offset0.x) == int(4.*(offset.x-offset0.x))
-      assert 2.*(offset.y-offset0.y) == int(2.*(offset.y-offset0.y))
+        assert 4.*(offset.x-offset0.x) == int(4.*(offset.x-offset0.x))
+        assert 2.*(offset.y-offset0.y) == int(2.*(offset.y-offset0.y))
 
     # 3a) Decreasing resolution
     g0 = galsim.Gaussian(sigma=0.8,flux=100.)
@@ -202,11 +202,11 @@ def test_deInterleaveImage():
     im_list0, offsets0 = galsim.utilities.deInterleaveImage(img0,2,conserve_flux=True)
 
     for n in xrange(len(im_list0)):
-      im = galsim.Image(16,16)
-      g0.drawImage(image=im,offset=offsets0[n],scale=0.5,method='no_pixel')
-      np.testing.assert_array_equal(im,im_list0[n],\
+        im = galsim.Image(16,16)
+        g0.drawImage(image=im,offset=offsets0[n],scale=0.5,method='no_pixel')
+        np.testing.assert_array_equal(im,im_list0[n],\
           err_msg="deInterleaveImage does not reduce the resolution of the input image correctly")
-      assert im.wcs == im_list0[n].wcs
+        assert im.wcs == im_list0[n].wcs
 
     # 3b) Increasing directional resolution
     g = galsim.Gaussian(sigma=0.7,flux=1000.)
@@ -226,19 +226,19 @@ def test_deInterleaveImage():
     im_list2, offsets2 = galsim.utilities.deInterleaveImage(img2,[1,n2**2],conserve_flux=False)
 
     for n in xrange(n1**2):
-      im, offset = im_list1[n], offsets1[n]
-      img = g.drawImage(image=img,offset=offset,scale=0.5,method='no_pixel')
-      np.testing.assert_array_equal(im.array,img.array,\
+        im, offset = im_list1[n], offsets1[n]
+        img = g.drawImage(image=img,offset=offset,scale=0.5,method='no_pixel')
+        np.testing.assert_array_equal(im.array,img.array,\
           err_msg='deInterleaveImage does not reduce the resolution correctly along the \
                    vertical direction')
 
     for n in xrange(n2**2):
-      im, offset = im_list2[n], offsets2[n]
-      g.drawImage(image=img,offset=offset,scale=0.5,method='no_pixel')
-      np.testing.assert_array_equal(im.array*n2**2,img.array,\
+        im, offset = im_list2[n], offsets2[n]
+        g.drawImage(image=img,offset=offset,scale=0.5,method='no_pixel')
+        np.testing.assert_array_equal(im.array*n2**2,img.array,\
           err_msg='deInterleaveImage does not reduce the resolution correctly along the \
                    horizontal direction')
-      # im is scaled to account for flux not being conserved
+        # im is scaled to account for flux not being conserved
     
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)      

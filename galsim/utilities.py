@@ -496,18 +496,18 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
 
     im_list, offsets = [], []
     for i in xrange(n1):
-      for j in xrange(n2):
-        # The tricky part - going from array indices to Image coordinates (x,y)
-        # DX[i'] = -(i+0.5)/n+0.5 = -i/n + 0.5*(n-1)/n
-        #    i  = -n DX[i'] + 0.5*(n-1)
-        dx,dy = -(i+0.5)/n1+0.5,-(j+0.5)/n2+0.5
-        offset = galsim.PositionD(dx,dy)
-        img_arr = image.array[j::n2,i::n1].copy()
-        img = galsim.Image(img_arr)
-        if conserve_flux is True:
-            img *= n1*n2
-        im_list.append(img)
-        offsets.append(offset)
+        for j in xrange(n2):
+            # The tricky part - going from array indices to Image coordinates (x,y)
+            # DX[i'] = -(i+0.5)/n+0.5 = -i/n + 0.5*(n-1)/n
+            #    i  = -n DX[i'] + 0.5*(n-1)
+            dx,dy = -(i+0.5)/n1+0.5,-(j+0.5)/n2+0.5
+            offset = galsim.PositionD(dx,dy)
+            img_arr = image.array[j::n2,i::n1].copy()
+            img = galsim.Image(img_arr)
+            if conserve_flux is True:
+                img *= n1*n2
+            im_list.append(img)
+            offsets.append(offset)
 
     if scale is not None:
         if n1==n2:
