@@ -86,8 +86,8 @@ namespace hsm {
 
     void find_ellipmom_2(
         ConstImageView<double> data, double& A, double& x0, double& y0,
-        double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter,
-        boost::shared_ptr<HSMParams> hsmparams);
+        double& Mxx, double& Mxy, double& Myy, double& rho4, double convergence_threshold,
+        int& num_iter, boost::shared_ptr<HSMParams> hsmparams);
 
     // Make a masked_image based on the input image and mask.  The returned ImageView is a
     // sub-image of the given masked_image.  It is the smallest sub-image that contains all the
@@ -583,7 +583,7 @@ namespace hsm {
      * > x0: Gaussian-weighted centroid (x-coordinate)
      * > y0: " (y-coordinate)
      * > sigma: width of Gaussian to measure image (best fit 1sigma)
-     *   epsilon: accuracy (in x0, y0, and sigma as a fraction of sigma.
+     *   convergence_threshold: accuracy (in x0, y0, and sigma as a fraction of sigma.
      *      The value of sigma used for the convergence criterion is the
      *      minimum of the "guessed" value and the "current" value.)
      * > num_iter: number of iterations required for convergence
@@ -592,7 +592,7 @@ namespace hsm {
     void find_mom_2(
         ConstImageView<double> data,
         tmv::Matrix<double>& moments, int max_order,
-        double& x0, double& y0, double& sigma, double epsilon, int& num_iter,
+        double& x0, double& y0, double& sigma, double convergence_threshold, int& num_iter,
         boost::shared_ptr<HSMParams> hsmparams)
     {
 
@@ -603,13 +603,13 @@ namespace hsm {
         tmv::Matrix<double> iter_moments(hsmparams->adapt_order+1,hsmparams->adapt_order+1);
 
 #ifdef N_CHECKVAL
-        if (epsilon <= 0) {
-            throw HSMError("Error: epsilon out of range in find_mom_2.\n");
+        if (convergence_threshold <= 0) {
+            throw HSMError("Error: convergence_threshold out of range in find_mom_2.\n");
         }
 #endif
 
         /* Iterate until we converge */
-        while(convergence_factor > epsilon) {
+        while(convergence_factor > convergence_threshold) {
 
             /* Get moments */
             find_mom_1(data,iter_moments,hsmparams->adapt_order,x0,y0,sigma);
@@ -805,14 +805,14 @@ namespace hsm {
      * > Mxy: adaptive covariance (xy)
      * > Myy: adaptive covariance (yy)
      * > rho4: rho4 moment
-     *   epsilon: required accuracy
+     *   convergence_threshold: required accuracy
      * > num_iter: number of iterations required to converge
      */
 
     void find_ellipmom_2(
         ConstImageView<double> data, double& A, double& x0, double& y0,
-        double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter,
-        boost::shared_ptr<HSMParams> hsmparams)
+        double& Mxx, double& Mxy, double& Myy, double& rho4, double convergence_threshold,
+        int& num_iter, boost::shared_ptr<HSMParams> hsmparams)
     {
 
         double convergence_factor = 1.0;
@@ -826,8 +826,8 @@ namespace hsm {
         num_iter = 0;
 
 #ifdef N_CHECKVAL
-        if (epsilon <= 0 || epsilon >= convergence_factor) {
-            throw HSMError("Error: epsilon out of range in find_ellipmom_2.\n");
+        if (convergence_threshold <= 0 || convergence_threshold >= convergence_factor) {
+            throw HSMError("Error: convergence_threshold out of range in find_ellipmom_2.\n");
         }
 #endif
 
@@ -839,7 +839,7 @@ namespace hsm {
         Amp = -1000.;
 
         /* Iterate until we converge */
-        while(convergence_factor > epsilon) {
+        while(convergence_factor > convergence_threshold) {
 
             /* Get moments */
             find_ellipmom_1(data, x0, y0, Mxx, Mxy, Myy, Amp, Bx, By, Cxx, Cxy, Cyy, rho4, hsmparams);
@@ -1329,7 +1329,7 @@ namespace hsm {
         y0 = y0_gal;
         sigma0 = sig_gal;
         find_mom_2(gal_image, moments, hsmparams->ksb_moments_max, x0_gal, y0_gal, sig_gal,
-                   hsmparams->epsilon, num_iter, hsmparams);
+                   hsmparams->convergence_threshold, num_iter, hsmparams);
         if (num_iter == hsmparams->num_iter_default) {
             status |= 0x0002; /* Report convergence failure */
             x0_gal = x0;
@@ -1354,7 +1354,7 @@ namespace hsm {
         y0 = y0_psf;
         sigma0 = sig_psf;
         find_mom_2(PSF_image, psfmoms, hsmparams->ksb_moments_max, x0_psf, y0_psf, sig_psf,
-                   hsmparams->epsilon, num_iter, hsmparams);
+                   hsmparams->convergence_threshold, num_iter, hsmparams);
         if (num_iter == hsmparams->num_iter_default) {
             status |= 0x0001; /* Report convergence failure */
             x0_psf = x0;

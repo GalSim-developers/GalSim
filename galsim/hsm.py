@@ -264,7 +264,7 @@ _galsim.CppShapeData.__hash__ = lambda self: hash(repr(self))
 
 _galsim.HSMParams.__getinitargs__ = lambda self: (
         self.nsig_rg, self.nsig_rg2, self.max_moment_nsig2, self.regauss_too_small,
-        self.adapt_order, self.epsilon, self.max_mom2_iter, self.num_iter_default,
+        self.adapt_order, self.convergence_threshold, self.max_mom2_iter, self.num_iter_default,
         self.bound_correct_wt, self.max_amoment, self.max_ashift,
         self.ksb_moments_max, self.ksb_sig_weight, self.ksb_sig_factor, self.failed_moments)
 

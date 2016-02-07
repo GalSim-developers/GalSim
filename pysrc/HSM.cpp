@@ -95,7 +95,7 @@ struct PyHSMParams {
             "                  KSB method of PSF correction.  Warning: deviating from default\n"
             "                  value of 2 results in code running more slowly, and results have\n"
             "                  not been significantly tested.\n"
-            "epsilon           Accuracy (in x0, y0, and sigma as a fraction of sigma) when\n"
+            "convergence_threshold  Accuracy (in x0, y0, and sigma as a fraction of sigma) when\n"
             "                  calculating adaptive moments. The value of sigma used for the\n"
             "                  convergence criterion is the minimum of the \"guessed\" value and\n"
             "                  the \"current\" value.\n"
@@ -133,7 +133,7 @@ struct PyHSMParams {
                       bp::arg("max_moment_nsig2")=25.0,
                       bp::arg("regauss_too_small")=1,
                       bp::arg("adapt_order")=2,
-                      bp::arg("epsilon")=1.e-6,
+                      bp::arg("convergence_threshold")=1.e-6,
                       bp::arg("max_mom2_iter")=400,
                       bp::arg("num_iter_default")=-1,
                       bp::arg("bound_correct_wt")=0.25,
@@ -150,7 +150,7 @@ struct PyHSMParams {
             .def_readonly("max_moment_nsig2",&HSMParams::max_moment_nsig2)
             .def_readonly("regauss_too_small",&HSMParams::regauss_too_small)
             .def_readonly("adapt_order",&HSMParams::adapt_order)
-            .def_readonly("epsilon",&HSMParams::epsilon)
+            .def_readonly("convergence_threshold",&HSMParams::convergence_threshold)
             .def_readonly("max_mom2_iter",&HSMParams::max_mom2_iter)
             .def_readonly("num_iter_default",&HSMParams::num_iter_default)
             .def_readonly("bound_correct_wt",&HSMParams::bound_correct_wt)

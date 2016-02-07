@@ -122,7 +122,7 @@ namespace hsm {
      *                           KSB method of PSF correction.  Warning: deviating from default
      *                           value of 2 results in code running more slowly, and results have
      *                           not been significantly tested.
-     * @param epsilon            Accuracy (in x0, y0, and sigma as a fraction of sigma) when
+     * @param convergence_threshold Accuracy (in x0, y0, and sigma as a fraction of sigma) when
      *                           calculating adaptive moments. The value of sigma used for the
      *                           convergence criterion is the minimum of the "guessed" value and
      *                           the "current" value.
@@ -155,7 +155,7 @@ namespace hsm {
                   double _max_moment_nsig2,
                   int _regauss_too_small,
                   int _adapt_order,
-                  double _epsilon,
+                  double _convergence_threshold,
                   long _max_mom2_iter,
                   long _num_iter_default,
                   double _bound_correct_wt,
@@ -170,7 +170,7 @@ namespace hsm {
             max_moment_nsig2(_max_moment_nsig2),
             regauss_too_small(_regauss_too_small),
             adapt_order(_adapt_order),
-            epsilon(_epsilon),
+            convergence_threshold(_convergence_threshold),
             max_mom2_iter(_max_mom2_iter),
             num_iter_default(_num_iter_default),
             bound_correct_wt(_bound_correct_wt),
@@ -191,7 +191,7 @@ namespace hsm {
             max_moment_nsig2(25.0),
             regauss_too_small(1),
             adapt_order(2),
-            epsilon(1.e-6),
+            convergence_threshold(1.e-6),
             max_mom2_iter(400),
             num_iter_default(-1),
             bound_correct_wt(0.25),
@@ -209,7 +209,7 @@ namespace hsm {
         double max_moment_nsig2;
         int regauss_too_small;
         int adapt_order;
-        double epsilon;
+        double convergence_threshold;
         long max_mom2_iter;
         long num_iter_default;
         double bound_correct_wt;
@@ -498,15 +498,15 @@ namespace hsm {
      * @param[out] Mxy      The xy component of the moment matrix.
      * @param[out] Myy      The yy component of the moment matrix.
      * @param[out] rho4     The weighted radial fourth moment.
-     * @param[in] epsilon   The required level of accuracy.
+     * @param[in] convergence_threshold   The required level of accuracy.
      * @param[out] num_iter The number of iterations needed to converge.
      * @param[in] hsmparams Optional argument to specify parameters to be used for shape
      *                      measurement routines, as an HSMParams object.
      */
     void find_ellipmom_2(
         ConstImageView<double> data, double& A, double& x0, double& y0,
-        double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter,
-        boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
+        double& Mxx, double& Mxy, double& Myy, double& rho4, double convergence_threshold,
+        int& num_iter, boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
 
 }
 }
