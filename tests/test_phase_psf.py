@@ -44,7 +44,8 @@ def test_phase_screen_list():
     ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.995, rng=rng2)
     assert ar1 != ar2
 
-    atm = galsim.Atmosphere(altitude=[0.0, 1.0],
+    atm = galsim.Atmosphere(screen_size=30.0,
+                            altitude=[0.0, 1.0],
                             velocity=[1.0, 2.0],
                             direction=[0.0*galsim.degrees, 120*galsim.degrees],
                             r0_500=0.15,
@@ -134,7 +135,7 @@ def test_phase_psf_reset():
 
     rng = galsim.BaseDeviate(1234)
     # Test frozen AtmosphericScreen first
-    atm = galsim.Atmosphere(altitude=10.0, velocity=0.1, alpha=1.0, rng=rng)
+    atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, velocity=0.1, alpha=1.0, rng=rng)
     aper = galsim.Aperture(16, 160)
     pd1 = atm.path_difference(aper)
     atm.advance()
@@ -148,7 +149,7 @@ def test_phase_psf_reset():
     np.testing.assert_array_equal(pd1, pd3, "Phase screen didn't reset")
 
     # Now check with boilin, but no wind.
-    atm = galsim.Atmosphere(altitude=10.0, alpha=0.997, rng=rng)
+    atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, alpha=0.997, rng=rng)
     pd1 = atm.path_difference(aper)
     atm.advance()
     pd2 = atm.path_difference(aper)

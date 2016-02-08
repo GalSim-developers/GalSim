@@ -48,38 +48,6 @@ import utilities
 from galsim import GSObject
 
 
-def listify(arg):
-    """Turn argument into a list if not already iterable."""
-    return [arg] if not hasattr(arg, '__iter__') else arg
-
-
-def broadcast(arg, n):
-    """Turn length-1 iterable into length-n list."""
-    return [arg[0]]*n if len(arg) == 1 else arg
-
-
-def generate_pupil(npix, pupil_plane_size, diam=None, obscuration=None):
-    """ Generate a pupil transmission array (0's and 1's) for a circular aperture and potentially a
-    central circular obscuration.
-
-    @param npix              Number of pixels across pupil array.
-    @param pupil_plane_size  Physical size of the array defining the pupil in meters.
-    @param diam              Diameter of aperture in meters.
-    @param obscuration       Fractional linear obscuration.
-    @returns array of 0's and 1's indicating pupil transmission function.
-    """
-    aper = np.ones((npix, npix), dtype=np.float64)
-    if diam is not None:
-        radius = 0.5*diam
-        u = np.fft.fftshift(np.fft.fftfreq(npix, 1./pupil_plane_size))
-        u, v = np.meshgrid(u, u)
-        rsqr = u**2 + v**2
-        aper[rsqr > radius**2] = 0.0
-        if obscuration is not None:
-            aper[rsqr < (radius*obscuration)**2] = 0.0
-    return aper
-
-
 class Aperture(object):
     def __init__(self, pupil_plane_size, npix, diam=None, obscuration=None):
         self.pupil_plane_size = float(pupil_plane_size)
@@ -750,8 +718,37 @@ class PhaseScreenPSF(GSObject):
         GSObject.__init__(self, ii)
 
 
-def Atmosphere(r0_500=0.2, screen_size=30.0, time_step=0.03, altitude=0.0, L0=25.0,
-               velocity=0.0, direction=0.0*galsim.degrees, alpha=1.0, screen_scale=None, rng=None):
+def _listify(arg):
+    """Turn argument into a list if not already iterable."""
+    return [arg] if not hasattr(arg, '__iter__') else arg
+
+
+def _lod_to_dol(lod, N=None):
+    """ Generate list of dicts from dict of lists (with broadcasting).
+    Specifically, generate list of kwargs dictionaries from a kwarg dictionary with values that are
+    length-N lists, or possibly length-1 lists or scalars that should be broadcasted up to length-N
+    lists.
+    """
+    if N is None:
+        N = max(len(v) for v in lod.values() if hasattr(v, '__len__'))
+    # Loop through broadcast range
+    for i in xrange(N):
+        out = {}
+        for k, v in lod.iteritems():
+            try:
+                out[k] = v[i]
+            except IndexError: # It's list-like, but too short.
+                if len(v) != 1:
+                    raise ValueError("Cannot broadcast kwargs of different non-length-1 lengths.")
+                out[k] = v[0]
+            except TypeError: # Value is not list-like, so broadcast whole value
+                out[k] = v
+            except:
+                raise "Cannot broadcast non-indexable kwargs"
+        yield out
+
+
+def Atmosphere(screen_size, rng=None, **kwargs):
     """Create an atmosphere as a list of turbulent phase screens at different altitudes.  The
     atmosphere model can then be used to simulate atmospheric PSFs.
 
@@ -843,32 +840,31 @@ def Atmosphere(r0_500=0.2, screen_size=30.0, time_step=0.03, altitude=0.0, L0=25
     @param rng           Random number generator as a galsim.BaseDeviate().  If None, then use the
                          clock time or system entropy to seed a new generator.  [Default: None]
     """
-    # Listify
-    r0_500s, sizes, altitudes, L0s, velocities, directions, alphas, scales = (
-        listify(i) for i in (
-            r0_500, screen_size, altitude, L0, velocity, direction, alpha, screen_scale))
+    # Fill in screen_size here, since there isn't a default in AtmosphericScreen
+    kwargs['screen_size'] = _listify(screen_size)
 
-    # Broadcast
-    n_layers = max(len(i) for i in (
-        r0_500s, sizes, altitudes, L0s, velocities, directions, alphas, scales))
-    if n_layers > 1:
-        sizes, altitudes, L0s, velocities, directions, alphas, scales = (
-            broadcast(i, n_layers) for i in (
-                sizes, altitudes, L0s, velocities, directions, alphas, scales))
-    # Broadcast r0_500 separately, since combination of indiv layers' r0s is more complex:
-    if len(r0_500s) == 1:
-        r0_500s = [n_layers**(3./5) * r0_500s[0]] * n_layers
+    # Set default r0_500 here, so that by default it gets broadcasted below such that the
+    # _total_ r0_500 from _all_ screens is 0.2 m.
+    if 'r0_500' not in kwargs:
+        kwargs['r0_500'] = [0.2]
+    kwargs['r0_500'] = _listify(kwargs['r0_500'])
 
-    if any(len(i) != n_layers for i in (
-        r0_500s, sizes, L0s, velocities, directions, alphas, scales)):
-        raise ValueError("r0_500, screen_size, L0, velocity, direction, alpha, " +
-                         "screen_scale not broadcastable")
+    # Turn velocity, direction into vx, vy
+    if 'velocity' in kwargs:
+        kwargs['velocity'] = _listify(kwargs['velocity'])
+        if not 'direction' in kwargs:
+            kwargs['direction'] = [0*galsim.degrees]*len(kwargs['velocity'])
+        kwargs['vx'], kwargs['vy'] = zip(*[v*d.sincos()
+                                           for v, d in zip(kwargs['velocity'],
+                                                           kwargs['direction'])])
+        del kwargs['velocity']
+        del kwargs['direction']
 
-    # decompose velocities
-    vxs, vys = zip(*[v*d.sincos() for v, d in zip(velocities, directions)])
+    # Determine broadcast size
+    nmax = max(len(v) for v in kwargs.values() if hasattr(v, '__len__'))
 
-    layers = [AtmosphericScreen(size, scale, alt, time_step=time_step, r0_500=r0, L0=L,
-                                vx=vx, vy=vy, alpha=a, rng=rng)
-              for r0, size, alt, L, vx, vy, a, scale
-              in zip(r0_500s, sizes, altitudes, L0s, vxs, vys, alphas, scales)]
-    return PhaseScreenList(layers)
+    # Broadcast r0_500 here, since logical combination of indiv layers' r0s is complex:
+    if len(kwargs['r0_500']) == 1:
+        kwargs['r0_500'] = [nmax**(3./5) * kwargs['r0_500'][0]] * nmax
+
+    return PhaseScreenList(AtmosphericScreen(rng=rng, **kw) for kw in _lod_to_dol(kwargs, nmax))
