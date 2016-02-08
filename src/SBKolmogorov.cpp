@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -47,10 +47,19 @@ namespace galsim {
 
     SBKolmogorov::~SBKolmogorov() {}
 
-    double SBKolmogorov::getLamOverR0() const 
+    double SBKolmogorov::getLamOverR0() const
     {
         assert(dynamic_cast<const SBKolmogorovImpl*>(_pimpl.get()));
-        return static_cast<const SBKolmogorovImpl&>(*_pimpl).getLamOverR0(); 
+        return static_cast<const SBKolmogorovImpl&>(*_pimpl).getLamOverR0();
+    }
+
+    std::string SBKolmogorov::SBKolmogorovImpl::repr() const 
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SBKolmogorov("<<getLamOverR0()<<", "<<getFlux();
+        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
     }
 
     LRUCache<GSParamsPtr, KolmogorovInfo> SBKolmogorov::SBKolmogorovImpl::cache(
@@ -58,7 +67,7 @@ namespace galsim {
 
     // The "magic" number 2.992934 below comes from the standard form of the Kolmogorov spectrum
     // from Racine, 1996 PASP, 108, 699 (who in turn is quoting Fried, 1966, JOSA, 56, 1372):
-    // T(k) = exp(-1/2 D(k)) 
+    // T(k) = exp(-1/2 D(k))
     // D(k) = 6.8839 (lambda/r0 k/2Pi)^(5/3)
     //
     // We convert this into T(k) = exp(-(k/k0)^5/3) for efficiency,
@@ -68,12 +77,12 @@ namespace galsim {
     SBKolmogorov::SBKolmogorovImpl::SBKolmogorovImpl(
         double lam_over_r0, double flux, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
-        _lam_over_r0(lam_over_r0), 
-        _k0(2.992934 / lam_over_r0), 
+        _lam_over_r0(lam_over_r0),
+        _k0(2.992934 / lam_over_r0),
         _k0sq(_k0*_k0),
         _inv_k0(1./_k0),
         _inv_k0sq(1./_k0sq),
-        _flux(flux), 
+        _flux(flux),
         _xnorm(_flux * _k0sq),
         _info(cache.get(this->gsparams.duplicate()))
     {
@@ -84,13 +93,13 @@ namespace galsim {
         dbg<<"xnorm = "<<_xnorm<<std::endl;
     }
 
-    double SBKolmogorov::SBKolmogorovImpl::xValue(const Position<double>& p) const 
+    double SBKolmogorov::SBKolmogorovImpl::xValue(const Position<double>& p) const
     {
         double r = sqrt(p.x*p.x+p.y*p.y) * _k0;
         return _xnorm * _info->xValue(r);
     }
 
-    double KolmogorovInfo::xValue(double r) const 
+    double KolmogorovInfo::xValue(double r) const
     { return r < _radial.argMax() ? _radial(r) : 0.; }
 
     std::complex<double> SBKolmogorov::SBKolmogorovImpl::kValue(const Position<double>& k) const
@@ -100,15 +109,15 @@ namespace galsim {
     }
 
     void SBKolmogorov::SBKolmogorovImpl::fillXValue(tmv::MatrixView<double> val,
-                                                    double x0, double dx, int ix_zero,
-                                                    double y0, double dy, int iy_zero) const
+                                                    double x0, double dx, int izero,
+                                                    double y0, double dy, int jzero) const
     {
         dbg<<"SBKolmogorov fillXValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
-        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
-        if (ix_zero != 0 || iy_zero != 0) {
+        dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
+        dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
             xdbg<<"Use Quadrant\n";
-            fillXValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+            fillXValueQuadrant(val,x0,dx,izero,y0,dy,jzero);
         } else {
             xdbg<<"Non-Quadrant\n";
             assert(val.stepi() == 1);
@@ -134,15 +143,15 @@ namespace galsim {
     }
 
     void SBKolmogorov::SBKolmogorovImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                                    double x0, double dx, int ix_zero,
-                                                    double y0, double dy, int iy_zero) const
+                                                    double kx0, double dkx, int izero,
+                                                    double ky0, double dky, int jzero) const
     {
         dbg<<"SBKolmogorov fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
-        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
-        if (ix_zero != 0 || iy_zero != 0) {
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
             xdbg<<"Use Quadrant\n";
-            fillKValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+            fillKValueQuadrant(val,kx0,dkx,izero,ky0,dky,jzero);
         } else {
             xdbg<<"Non-Quadrant\n";
             assert(val.stepi() == 1);
@@ -150,16 +159,16 @@ namespace galsim {
             const int n = val.rowsize();
             typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
 
-            x0 *= _inv_k0;
-            dx *= _inv_k0;
-            y0 *= _inv_k0;
-            dy *= _inv_k0;
+            kx0 *= _inv_k0;
+            dkx *= _inv_k0;
+            ky0 *= _inv_k0;
+            dky *= _inv_k0;
 
-            for (int j=0;j<n;++j,y0+=dy) {
-                double x = x0;
-                double ysq = y0*y0;
-                It valit(val.col(j).begin().getP(),1);
-                for (int i=0;i<m;++i,x+=dx) *valit++ = _flux * _info->kValue(x*x + ysq);
+            for (int j=0;j<n;++j,ky0+=dky) {
+                double kx = kx0;
+                double kysq = ky0*ky0;
+                It valit = val.col(j).begin();
+                for (int i=0;i<m;++i,kx+=dkx) *valit++ = _flux * _info->kValue(kx*kx + kysq);
             }
         }
     }
@@ -169,8 +178,8 @@ namespace galsim {
                                                     double y0, double dy, double dyx) const
     {
         dbg<<"SBKolmogorov fillXValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
         assert(val.stepi() == 1);
         assert(val.canLinearize());
         const int m = val.colsize();
@@ -188,7 +197,6 @@ namespace galsim {
         for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
             double x = x0;
             double y = y0;
-            It valit = val.col(j).begin();
             for (int i=0;i<m;++i,x+=dx,y+=dyx) {
                 double r = sqrt(x*x + y*y);
                 *valit++ = _xnorm * _info->xValue(r);
@@ -197,46 +205,45 @@ namespace galsim {
     }
 
     void SBKolmogorov::SBKolmogorovImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                                    double x0, double dx, double dxy,
-                                                    double y0, double dy, double dyx) const
+                                                    double kx0, double dkx, double dkxy,
+                                                    double ky0, double dky, double dkyx) const
     {
         dbg<<"SBKolmogorov fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         assert(val.stepi() == 1);
         assert(val.canLinearize());
         const int m = val.colsize();
         const int n = val.rowsize();
         typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
 
-        x0 *= _inv_k0;
-        dx *= _inv_k0;
-        dxy *= _inv_k0;
-        y0 *= _inv_k0;
-        dy *= _inv_k0;
-        dyx *= _inv_k0;
+        kx0 *= _inv_k0;
+        dkx *= _inv_k0;
+        dkxy *= _inv_k0;
+        ky0 *= _inv_k0;
+        dky *= _inv_k0;
+        dkyx *= _inv_k0;
 
-        It valit(val.linearView().begin().getP(),1);
-        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
-            double x = x0;
-            double y = y0;
-            It valit(val.col(j).begin().getP(),1);
-            for (int i=0;i<m;++i,x+=dx,y+=dyx) *valit++ = _flux * _info->kValue(x*x+y*y);
+        It valit = val.linearView().begin();
+        for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
+            double kx = kx0;
+            double ky = ky0;
+            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx) *valit++ = _flux * _info->kValue(kx*kx+ky*ky);
         }
     }
 
     // Set maxK to where kValue drops to maxk_threshold
-    double SBKolmogorov::SBKolmogorovImpl::maxK() const 
+    double SBKolmogorov::SBKolmogorovImpl::maxK() const
     { return _info->maxK() * _k0; }
 
-    // The amount of flux missed in a circle of radius pi/stepk should be at 
+    // The amount of flux missed in a circle of radius pi/stepk should be at
     // most folding_threshold of the flux.
     double SBKolmogorov::SBKolmogorovImpl::stepK() const
     { return _info->stepK() * _k0; }
 
     // f(k) = exp(-(k/k0)^5/3)
     // The input value should already be (k/k0)^2
-    double KolmogorovInfo::kValue(double ksq) const 
+    double KolmogorovInfo::kValue(double ksq) const
     { return exp(-std::pow(ksq,5./6.)); }
 
     // Integrand class for the Hankel transform of Kolmogorov
@@ -258,7 +265,7 @@ namespace galsim {
         KolmXValue(const GSParamsPtr& gsparams) : _gsparams(gsparams) {}
 
         double operator()(double r) const
-        { 
+        {
             const double integ_maxK = integ::MOCK_INF;
             KolmIntegrand I(r);
             return integ::int1d(I, 0., integ_maxK,
@@ -298,7 +305,7 @@ namespace galsim {
     public:
         KolmEnclosedFlux(const GSParamsPtr& gsparams) :
             f(gsparams), _gsparams(gsparams) {}
-        double operator()(double r) const 
+        double operator()(double r) const
         {
             return integ::int1d(f, 0., r,
                                 _gsparams->integration_relerr,
@@ -333,7 +340,7 @@ namespace galsim {
         dbg<<"maxK = "<<_maxk<<std::endl;
 
         // Build the table for the radial function.
-        
+
         // Start with f(0), which is analytic:
         // According to Wolfram Alpha:
         // Integrate[k*exp(-k^5/3),{k,0,infinity}] = 3/5 Gamma(6/5)
@@ -344,7 +351,7 @@ namespace galsim {
 
         // We use a cubic spline for the interpolation, which has an error of O(h^4) max(f'''').
         // I have no idea what range the fourth derivative can take for the f(r),
-        // so let's take the completely arbitrary value of 10.  (This value was found to be 
+        // so let's take the completely arbitrary value of 10.  (This value was found to be
         // conservative for Sersic, but I haven't investigated here.)
         // 10 h^4 <= xvalue_accuracy
         // h = (xvalue_accuracy/10)^0.25

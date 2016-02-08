@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -57,6 +57,8 @@ def test_PSE_basic():
     my_pse = galsim.pse.PowerSpectrumEstimator(N=array_size,
                                                sky_size_deg=array_size*grid_spacing,
                                                nbin=n_ell)
+
+    do_pickle(my_pse)
 
     # Estimate the power spectrum using the PSE, without weighting.
     ell, P_e1, P_b1, P_eb1 = my_pse.estimate(g1, g2)

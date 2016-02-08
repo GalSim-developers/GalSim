@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,10 +21,10 @@
 #define GalSim_PsfCorr_H
 
 /**
- * @file PSFCorr.h 
+ * @file PSFCorr.h
  *
  * @brief Contains functions for the hsm shape measurement code, which has functions to carry out
- *        PSF correction and measurement of adaptive moments. 
+ *        PSF correction and measurement of adaptive moments.
  *
  * All functions are in the hsm namespace.
  */
@@ -60,7 +60,6 @@ damages of any kind.
 
 /* object data type */
 
-#include "../CppShear.h"
 #include "../Image.h"
 #include "../Bounds.h"
 
@@ -138,6 +137,12 @@ namespace hsm {
      *                           exception.
      * @param ksb_moments_max    Use moments up to ksb_moments_max order for KSB method of PSF
      *                           correction.
+     * @param ksb_sig_weight     The width of the weight function (in pixels) to use for the KSB
+     *                           method.  Normally, this is derived from the measured moments of the
+     *                           galaxy image; this keyword overrides this calculation.  Can be
+     *                           combined with ksb_sig_factor.
+     * @param ksb_sig_factor     Factor by which to multiply the weight function width for the KSB
+     *                           method (default: 1.0).  Can be combined with ksb_sig_weight.
      * @param failed_moments     Value to report for ellipticities and resolution factor if shape
      *                           measurement fails.
      */
@@ -152,6 +157,8 @@ namespace hsm {
                   double _max_amoment,
                   double _max_ashift,
                   int _ksb_moments_max,
+                  double _ksb_sig_weight,
+                  double _ksb_sig_factor,
                   double _failed_moments) :
             nsig_rg(_nsig_rg),
             nsig_rg2(_nsig_rg2),
@@ -164,6 +171,8 @@ namespace hsm {
             max_amoment(_max_amoment),
             max_ashift(_max_ashift),
             ksb_moments_max(_ksb_moments_max),
+            ksb_sig_weight(_ksb_sig_weight),
+            ksb_sig_factor(_ksb_sig_factor),
             failed_moments(_failed_moments)
         {}
 
@@ -182,6 +191,8 @@ namespace hsm {
             max_amoment(8000.),
             max_ashift(15.),
             ksb_moments_max(4),
+            ksb_sig_weight(0.0),
+            ksb_sig_factor(1.0),
             failed_moments(-1000.)
             {}
 
@@ -197,6 +208,8 @@ namespace hsm {
         double max_amoment;
         double max_ashift;
         int ksb_moments_max;
+        double ksb_sig_weight;
+        double ksb_sig_factor;
         double failed_moments;
     };
 
@@ -232,26 +245,26 @@ namespace hsm {
      * aligned with the pixel grid and the 2nd aligned at 45 degrees with respect to it.  There are
      * two choices for measurement type: 'e' = Bernstein & Jarvis (2002) ellipticity (or
      * distortion), 'g' = shear estimator = shear*responsivity.  The sigma is defined based on the
-     * observed moments M_xx, M_xy, and M_yy as sigma = (Mxx Myy - M_xy^2)^(1/4) = 
+     * observed moments M_xx, M_xy, and M_yy as sigma = (Mxx Myy - M_xy^2)^(1/4) =
      * [ det(M) ]^(1/4). */
-    struct ObjectData 
+    struct ObjectData
     {
         // Make sure everything starts with 0's.
-        ObjectData() : 
+        ObjectData() :
             x0(0.), y0(0.), sigma(0.), flux(0.), e1(0.), e2(0.), responsivity(0.),
             meas_type('\0'), resolution(0.) {}
 
-        double x0; ///< x centroid position within the postage stamp
-        double y0; ///< y centroid position within the postage stamp
+        double x0; ///< x centroid position within the postage stamp, in units of pixels
+        double y0; ///< y centroid position within the postage stamp, in units of pixels
         double sigma; ///< size parameter
         double flux; ///< total flux
         double e1; ///< first ellipticity component
         double e2; ///< second ellipticity component
-        double responsivity; ///< responsivity of ellipticity estimator 
-        char meas_type; ///< type of measurement (see function description) 
-        double resolution; ///< resolution factor (0=unresolved, 1=resolved) 
+        double responsivity; ///< responsivity of ellipticity estimator
+        char meas_type; ///< type of measurement (see function description)
+        double resolution; ///< resolution factor (0=unresolved, 1=resolved)
     };
-  
+
     /**
      * @brief Struct containing information about the shape of an object.
      *
@@ -275,8 +288,8 @@ namespace hsm {
         /// @brief Status after measuring adaptive moments; -1 indicates no attempt to measure them
         int moments_status;
 
-        /// @brief galsim::CppShear object representing the observed shape
-        CppShear observed_shape;
+        /// @brief The observed shape e1,e2
+        float observed_e1, observed_e2;
 
         /// @brief Size sigma = (det M)^(1/4) from the adaptive moments, in units of pixels; -1 if
         /// not measured
@@ -330,34 +343,46 @@ namespace hsm {
         /// perfect resolution; default -1
         float resolution_factor;
 
+        /// @brief PSF size sigma = (det M)^(1/4) from the adaptive moments, in units of pixels;
+        /// default -1.
+        float psf_sigma;
+
+        /// @brief PSF shape from the adaptive moments
+        float psf_e1, psf_e2;
+
         /// @brief A string containing any error messages from the attempted measurements, to
         /// facilitate proper error handling in both C++ and python
         std::string error_message;
 
         /// @brief Constructor, setting defaults
+        // NB: To avoid errors associated with the infamous Mac dynamic string bug, we initialize
+        // all strings with a non-empty string.  Including error_message, which otherwise would
+        // make more sense to initialize with "".
+        // cf. http://stackoverflow.com/questions/4697859/mac-os-x-and-static-boost-libs-stdstring-fail
         CppShapeData() : image_bounds(galsim::Bounds<int>()), moments_status(-1),
-            observed_shape(galsim::CppShear()), moments_sigma(-1.), moments_amp(-1.),
+            observed_e1(0.), observed_e2(0.), moments_sigma(-1.), moments_amp(-1.),
             moments_centroid(galsim::Position<double>(0.,0.)), moments_rho4(-1.), moments_n_iter(0),
-            correction_status(-1), corrected_e1(-10.), corrected_e2(-10.), corrected_g1(-10.), 
+            correction_status(-1), corrected_e1(-10.), corrected_e2(-10.), corrected_g1(-10.),
             corrected_g2(-10.), meas_type("None"), corrected_shape_err(-1.),
-            correction_method("None"), resolution_factor(-1.), error_message("")
+            correction_method("None"), resolution_factor(-1.),
+            psf_sigma(-1.0), psf_e1(0.), psf_e2(0.), error_message("None")
         {}
     };
 
     /* functions that the user will want to call from outside */
 
     /**
-     * @brief Carry out PSF correction directly using ImageViews.
+     * @brief Carry out PSF correction directly using Images.
      *
      * A template function to carry out one of the multiple possible methods of PSF correction using
-     * the HSM package, directly accessing the input ImageViews.  The input arguments get repackaged
+     * the HSM package, directly accessing the input Images.  The input arguments get repackaged
      * before calling general_shear_estimator, and results for the shape measurement are returned as
      * CppShapeData.  There are two arguments that have default values, namely shear_est (the
      * type of shear estimator) and recompute_flux (for the REGAUSS method only).
      *
-     * @param[in] gal_image        The ImageView for the galaxy being measured
-     * @param[in] PSF_image        The ImageView for the PSF
-     * @param[in] gal_mask_image   The ImageView for the mask image to be applied to the galaxy
+     * @param[in] gal_image        The BaseImage for the galaxy being measured
+     * @param[in] PSF_image        The BaseImage for the PSF
+     * @param[in] gal_mask_image   The BaseImage for the mask image to be applied to the galaxy
      *                             being measured (integer array, 1=use pixel and 0=do not use
      *                             pixel).
      * @param[in] sky_var          The variance of the sky level, used for estimating uncertainty on
@@ -373,10 +398,7 @@ namespace hsm {
      * @param[in] guess_sig_PSF    Optional argument with an initial guess for the Gaussian sigma of
      *                             the PSF, default 3.0 (pixels).
      * @param[in] precision        The convergence criterion for the moments; default 1e-6.
-     * @param[in] guess_x_centroid Optional argument with an initial guess for the x centroid of the
-     *                             galaxy; if not set, then the code will try the center of the
-     *                             image.
-     * @param[in] guess_y_centroid Optional argument with an initial guess for the y centroid of the
+     * @param[in] guess_centroid   Optional argument with an initial guess for the centroid of the
      *                             galaxy; if not set, then the code will try the center of the
      *                             image.
      * @param[in] hsmparams        Optional argument to specify parameters to be used for shape
@@ -385,35 +407,32 @@ namespace hsm {
      */
     template <typename T, typename U>
     CppShapeData EstimateShearView(
-        const ImageView<T> &gal_image, const ImageView<U> &PSF_image,
-        const ImageView<int> &gal_mask_image,
+        const BaseImage<T> &gal_image, const BaseImage<U> &PSF_image,
+        const BaseImage<int> &gal_mask_image,
         float sky_var = 0.0, const char *shear_est = "REGAUSS",
         const std::string& recompute_flux = "FIT",
         double guess_sig_gal = 5.0, double guess_sig_PSF = 3.0, double precision = 1.0e-6,
-        double guess_x_centroid = -1000.0, double guess_y_centroid = -1000.0,
+        galsim::Position<double> guess_centroid = galsim::Position<double>(-1000.,-1000.),
         boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
 
     /**
-     * @brief Measure the adaptive moments of an object directly using ImageViews.
+     * @brief Measure the adaptive moments of an object directly using Images.
      *
-     * This function repackages the input ImageView in a format that find_ellipmom_2 accepts, in
+     * This function repackages the input BaseImage in a format that find_ellipmom_2 accepts, in
      * order to iteratively compute the adaptive moments of an object.  The key result is the
      * best-fit elliptical Gaussian to the object, which is computed by initially guessing a
      * circular Gaussian that is used as a weight function, computing the weighted moments,
      * recomputing the moments using the result of the previous step as the weight function, and so
      * on until the moments that are measured are the same as those used for the weight function.
      *
-     * @param[in] object_image      The ImageView for the object being measured.
-     * @param[in] object_mask_image The ImageView for the mask image to be applied to the object
+     * @param[in] object_image      The BaseImage for the object being measured.
+     * @param[in] object_mask_image The BaseImage for the mask image to be applied to the object
      *                              being measured (integer array, 1=use pixel and 0=do not use
      *                              pixel).
      * @param[in] guess_sig         Optional argument with an initial guess for the Gaussian sigma
      *                              of the object, default 5.0 (pixels).
      * @param[in] precision         The convergence criterion for the moments; default 1e-6.
-     * @param[in] guess_x_centroid  Optional argument with an initial guess for the x centroid of
-     *                              the galaxy; if not set, then the code will try the center of the
-     *                              image.
-     * @param[in] guess_y_centroid  Optional argument with an initial guess for the y centroid of
+     * @param[in] guess_centroid    Optional argument with an initial guess for the centroid of
      *                              the galaxy; if not set, then the code will try the center of the
      *                              image.
      * @param[in] hsmparams         Optional argument to specify parameters to be used for shape
@@ -422,9 +441,9 @@ namespace hsm {
      */
     template <typename T>
     CppShapeData FindAdaptiveMomView(
-        const ImageView<T> &object_image, const ImageView<int> &object_mask_image,
-        double guess_sig = 5.0, double precision = 1.0e-6, double guess_x_centroid = -1000.0,
-        double guess_y_centroid = -1000.0,
+        const BaseImage<T> &object_image, const BaseImage<int> &object_mask_image,
+        double guess_sig = 5.0, double precision = 1.0e-6,
+        galsim::Position<double> guess_centroid = galsim::Position<double>(-1000.,-1000.),
         boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
 
     /**
@@ -435,7 +454,7 @@ namespace hsm {
      * flags parameter is only used for the REGAUSS shape measurement method, and is defined as
      * follows: 0x1=recompute galaxy flux by summing unmasked pixels, 0x2=recompute galaxy flux from
      * Gaussian-quartic fit, 0x4=cut off Gaussian approximator at NSIG_RG sigma to save time,
-     * 0x8=cut off PSF residual at NSIG_RG2 to save time.    
+     * 0x8=cut off PSF residual at NSIG_RG2 to save time.
      * @param[in] gal_image    The galaxy Image.
      * @param[in] PSF_image    The PSF Image.
      * @param[in] gal_data     The ObjectData object for the galaxy
@@ -448,8 +467,8 @@ namespace hsm {
      * @return A status flag that should be zero if the measurement was successful.
      */
     unsigned int general_shear_estimator(
-        ConstImageView<double> gal_image, ConstImageView<double> PSF_image, 
-        ObjectData& gal_data, ObjectData& PSF_data, 
+        ConstImageView<double> gal_image, ConstImageView<double> PSF_image,
+        ObjectData& gal_data, ObjectData& PSF_data,
         const std::string& shear_est, unsigned long flags,
         boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
 
@@ -480,7 +499,7 @@ namespace hsm {
         ConstImageView<double> data, double& A, double& x0, double& y0,
         double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter,
         boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
-  
+
 }
 }
 #endif

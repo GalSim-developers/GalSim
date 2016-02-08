@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -27,7 +27,7 @@
 namespace galsim {
 
     /// @brief A private class that caches the needed parameters for each Sersic index `n`.
-    class SersicInfo 
+    class SersicInfo
     {
     public:
         /// @brief Constructor
@@ -94,11 +94,11 @@ namespace galsim {
         const GSParamsPtr _gsparams; ///< The GSParams object.
 
         // Some derived values calculated in the constructor:
-        double _invn;    ///< 1/n
-        double _inv2n;   ///< 1/(2n)
+        double _invn;      ///< 1/n
+        double _inv2n;     ///< 1/(2n)
         double _trunc_sq;  ///< trunc^2
-        bool _truncated; ///< True if this Sersic profile is truncated.
-        double _gamma2n; ///< Gamma(2n) = 1/n * int(exp(-r^1/n)*r,r=0..inf)
+        bool _truncated;   ///< True if this Sersic profile is truncated.
+        double _gamma2n;   ///< Gamma(2n) = 1/n * int(exp(-r^1/n)*r,r=0..inf)
 
         // Parameters calculated when they are first needed, and then stored:
         mutable double _maxk;    ///< Value of k beyond which aliasing can be neglected.
@@ -108,7 +108,7 @@ namespace galsim {
         mutable double _flux;    ///< Flux relative to the untruncated profile.
 
         // Parameters for the Hankel transform:
-        mutable Table<double,double> _ft;  ///< Lookup table for fourier transform.
+        mutable Table<double,double> _ft;  ///< Lookup table for Fourier transform.
         mutable double _kderiv2; ///< Quadratic dependence of F near k=0.
         mutable double _kderiv4; ///< Quartic dependence of F near k=0.
         mutable double _ksq_min; ///< Minimum ksq to use lookup table.
@@ -116,9 +116,9 @@ namespace galsim {
         mutable double _highk_a; ///< Coefficient of 1/k^2 in high-k asymptote
         mutable double _highk_b; ///< Coefficient of 1/k^3 in high-k asymptote
 
-        /// Classes used for photon shooting
-        mutable boost::shared_ptr<FluxDensity> _radial;  
-        mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;   
+        // Classes used for photon shooting
+        mutable boost::shared_ptr<FluxDensity> _radial;
+        mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
 
         // Helper functions used internally:
         void buildFT() const;
@@ -141,21 +141,21 @@ namespace galsim {
         double maxK() const;
         double stepK() const;
 
-        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
+        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const
         {
             splits.push_back(0.);
             if (!_truncated) { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; }
             else { xmin = -_trunc; xmax = _trunc; }
         }
 
-        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
+        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const
         {
             splits.push_back(0.);
             if (!_truncated) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
             else { ymin = -_trunc; ymax = _trunc; }
         }
 
-        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
+        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const
         {
             if (!_truncated) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
             else if (std::abs(x) >= _trunc) { ymin = 0; ymax = 0; }
@@ -169,7 +169,7 @@ namespace galsim {
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }  // 1d lookup table
 
-        Position<double> centroid() const 
+        Position<double> centroid() const
         { return Position<double>(0., 0.); }
 
         /// @brief Returns the true flux (may be different from the specified flux)
@@ -184,32 +184,34 @@ namespace galsim {
         double getHalfLightRadius() const { return _re; }
         /// @brief Returns the scale radius
         double getScaleRadius() const { return _r0; }
+        /// @brief Returns the truncation radius
+        double getTrunc() const { return _trunc; }
 
         // Overrides for better efficiency
         void fillXValue(tmv::MatrixView<double> val,
-                        double x0, double dx, int ix_zero,
-                        double y0, double dy, int iy_zero) const;
+                        double x0, double dx, int izero,
+                        double y0, double dy, int jzero) const;
         void fillXValue(tmv::MatrixView<double> val,
                         double x0, double dx, double dxy,
                         double y0, double dy, double dyx) const;
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
-                        double x0, double dx, int ix_zero,
-                        double y0, double dy, int iy_zero) const;
+                        double kx0, double dkx, int izero,
+                        double ky0, double dky, int jzero) const;
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
-                        double x0, double dx, double dxy,
-                        double y0, double dy, double dyx) const;
+                        double kx0, double dkx, double dkxy,
+                        double ky0, double dky, double dkyx) const;
+
+        std::string repr() const;
 
     private:
-        double _n;     ///< Sersic index.
-        double _flux;  ///< Actual flux (may differ from that specified at the constructor).
-        double _r0;    ///< Scale radius specified at the constructor.
-        double _re;    ///< Half-light radius specified at the constructor.
-        double _trunc;  ///< The truncation radius (if any)
+        double _n;       ///< Sersic index.
+        double _flux;    ///< Actual flux (may differ from that specified at the constructor).
+        double _r0;      ///< Scale radius specified at the constructor.
+        double _re;      ///< Half-light radius specified at the constructor.
+        double _trunc;   ///< The truncation radius (if any)
         bool _truncated; ///< True if this Sersic profile is truncated.
 
-
         double _xnorm;     ///< Normalization of xValue relative to what SersicInfo returns.
-        double _knorm;     ///< Normalization of kValue relative to what SersicInfo returns.
         double _shootnorm; ///< Normalization for photon shooting.
 
         double _r0_sq;
@@ -229,4 +231,3 @@ namespace galsim {
 }
 
 #endif
-

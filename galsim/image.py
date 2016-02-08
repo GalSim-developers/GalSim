@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -56,7 +56,9 @@ _galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
 # cf. http://stackoverflow.com/questions/6187932/how-to-write-a-static-python-getitem-method
 class MetaImage(type):
     def __getitem__(cls,t):
-        """An obsolete syntax that treats Image as a dict indexed by type"""
+        """A deprecated syntax that treats Image as a dict indexed by type"""
+        from galsim.deprecated import depr
+        depr('Image[type]', 1.1, 'Image(..., dtype=type)')
         Image_dict = {
             numpy.int16 : ImageS,
             numpy.int32 : ImageI,
@@ -68,10 +70,16 @@ class MetaImage(type):
 class Image(object):
     """A class for storing image data along with the pixel scale or wcs information
 
-    The Image class encapsulates all the relevant information about an image including a NumPy
-    array for the pixel values, a bounding box, and some kind of WCS that converts between pixel
+    The Image class encapsulates all the relevant information about an image including a NumPy array
+    for the pixel values, a bounding box, and some kind of WCS that converts between pixel
     coordinates and world coordinates.  The NumPy array may be constructed by the Image class
     itself, or an existing array can be provided by the user.
+
+    This class creates shallow copies unless a deep copy is explicitly requested using the `copy`
+    method.  The main reason for this is that it allows users to work directly with and modify
+    subimages of larger images (for example, to successively draw many galaxies into one large
+    image).  For other implications of this convention, see the description of initialization
+    instructions below.
 
     There are 4 data types that the Image can use for the data values.  These are `numpy.int16`,
     `numpy.int32`, `numpy.float32`, and `numpy.float64`.  If you are constructing a new Image from
@@ -99,18 +107,22 @@ class Image(object):
 
         Image(array, xmin=1, ymin=1, make_const=False, ...)
 
-                This views an existing NumPy array as an Image.  The dtype is taken from
-                `array.dtype`, which must be one of the allowed types listed above.  You can also
-                optionally set the origin `(xmin, ymin)` if you want it to be something other
-                than (1,1).  You can also optionally force the image to be read-only with
-                `make_const=True`.
+                This views an existing NumPy array as an Image, with updates to the array or Image
+                being affecting the other object unless `Image(array.copy(), ...)` is used.  The
+                dtype is taken from `array.dtype`, which must be one of the allowed types listed
+                above.  You can also optionally set the origin `(xmin, ymin)` if you want it to be
+                something other than (1,1).  You can also optionally force the Image to be read-only
+                with `make_const=True`, though if the original NumPy array is modified then the
+                contents of `Image.array` will change.
 
         Image(image, dtype=dtype)
 
-                This creates a copy of an Image, possibly changing the type.  e.g.
+                This creates a shallow copy of an Image, possibly changing the type.  e.g.
 
                     >>> image_float = galsim.Image(64, 64) # default dtype=numpy.float32
                     >>> image_double = galsim.Image(image_float, dtype=numpy.float64)
+
+                To get a deep copy, use the `copy` method rather than the `Image` constructor.
 
     You can specify the `ncol`, `nrow`, `bounds`, `array`, or `image`  parameters by keyword
     argument if you want, or you can pass them as simple arg as shown aboves, and the constructor
@@ -158,7 +170,7 @@ class Image(object):
     Methods
     -------
 
-        view        Return a view of the image.
+        view        Return a view of the image, possibly giving it a new scale or wcs.
         subImage    Return a view of a portion of the full image.
         shift       Shift the origin of the image by (dx,dy).
         setCenter   Set a new position for the center of the image.
@@ -169,20 +181,23 @@ class Image(object):
         fill        Fill the image with the same value in all pixels.
         setZero     Fill the image with zeros.
         invertSelf  Convert each value x to 1/x.
+        copy        Return a deep copy of the image.
 
     See their doc strings for more details.
 
     """
     __metaclass__ = MetaImage
+
     cpp_valid_dtypes = _galsim.ImageView.keys()
     alias_dtypes = {
         int : numpy.int32,          # So that user gets what they would expect
         float : numpy.float64,      # if using dtype=int or float
     }
     # Note: Numpy uses int64 for int on 64 bit machines.  We don't implement int64 at all,
-    # so we cannot follow this pattern.  If this becomes too confusing, we might need to
-    # add an ImageL class that uses int64.  Hard to imagine a use case where this would
-    # be required though...
+    # so we cannot quite match up to the numpy convention for dtype=int.  e.g. via
+    #     int : numpy.zeros(1,dtype=int).dtype.type
+    # If this becomes too confusing, we might need to add an ImageL class that uses int64.
+    # Hard to imagine a use case where this would be required though...
     valid_dtypes = cpp_valid_dtypes + alias_dtypes.keys()
 
     def __init__(self, *args, **kwargs):
@@ -215,6 +230,14 @@ class Image(object):
                 xmin = kwargs.pop('xmin',1)
                 ymin = kwargs.pop('ymin',1)
                 make_const = kwargs.pop('make_const',False)
+                if 'bounds' in kwargs:
+                    b = kwargs.pop('bounds')
+                    if b.xmax-b.xmin+1 != array.shape[1]:
+                        raise ValueError("Shape of array is inconsistent with provided bounds")
+                    if b.ymax-b.ymin+1 != array.shape[0]:
+                        raise ValueError("Shape of array is inconsistent with provided bounds")
+                    xmin = b.xmin
+                    ymin = b.ymin
             elif 'bounds' in kwargs:
                 bounds = kwargs.pop('bounds')
             elif 'image' in kwargs:
@@ -334,6 +357,18 @@ class Image(object):
                 raise TypeError("wcs parameters must be a galsim.BaseWCS instance")
             self.wcs = wcs
 
+    def __repr__(self):
+        return 'galsim.Image(bounds=%r, array=array(%r, dtype=%s), wcs=%r)'%(
+                self.bounds, self.array.tolist(), self.array.dtype, self.wcs)
+
+    def __str__(self):
+        if self.wcs is not None and self.wcs.isPixelScale():
+            return 'galsim.Image(bounds=%s, scale=%s)'%(self.bounds, self.scale)
+        else:
+            return 'galsim.Image(bounds=%s, wcs=%s)'%(self.bounds, self.wcs)
+
+    def __hash__(self): return hash(repr(self))
+
     # bounds and array are really properties which pass the request to the image
     @property
     def bounds(self): return self.image.bounds
@@ -376,13 +411,17 @@ class Image(object):
     def copy(self):
         return Image(image=self.image.copy(), wcs=self.wcs)
 
-    def resize(self, bounds):
+    def resize(self, bounds, wcs=None):
         """Resize the image to have a new bounds (must be a BoundsI instance)
 
         Note that the resized image will have uninitialized data.  If you want to preserve
         the existing data values, you should either use `subImage` (if you want a smaller
         portion of the current Image) or make a new Image and copy over the current values
         into a portion of the new image (if you are resizing to a larger Image).
+
+        @param bounds   The new bounds to resize to.
+        @param wcs      If provided, also update the wcs to the given value. [default: None,
+                        which means keep the existing wcs]
         """
         if not isinstance(bounds, galsim.BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
@@ -391,9 +430,13 @@ class Image(object):
         except:
             # if the image wasn't an ImageAlloc, then above won't work.  So just make it one.
             self.image = _galsim.ImageAlloc[self.dtype](bounds)
+        if wcs is not None:
+            self.wcs = wcs
 
     def subImage(self, bounds):
         """Return a view of a portion of the full image
+
+        This is equivalent to self[bounds]
         """
         if not isinstance(bounds, galsim.BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
@@ -403,6 +446,13 @@ class Image(object):
         # reorigin that you need to update the wcs.  So that's taken care of in im.shift.
         return Image(image=subimage, wcs=self.wcs)
 
+    def setSubImage(self, bounds, rhs):
+        """Set a portion of the full image to the values in another image
+
+        This is equivalent to self[bounds] = rhs
+        """
+        self.subImage(bounds).image.copyFrom(rhs.image)
+
     def __getitem__(self, bounds):
         """Return a view of a portion of the full image
         """
@@ -411,24 +461,52 @@ class Image(object):
     def __setitem__(self, bounds, rhs):
         """Set a portion of the full image to the values in another image
         """
-        self.subImage(bounds).image.copyFrom(rhs.image)
+        self.setSubImage(bounds,rhs)
 
     def copyFrom(self, rhs):
         """Copy the contents of another image
         """
         self.image.copyFrom(rhs.image)
 
-    def view(self, make_const=False):
+    def view(self, scale=None, wcs=None, origin=None, center=None, make_const=False):
         """Make a view of this image, which lets you change the scale, wcs, origin, etc.
         but view the same underlying data as the original image.
 
-        You can make this a const view with the `make_const` parameter.
+        If you do not provide either `scale` or `wcs`, the view will keep the same wcs
+        as the current Image object.
+
+        @param scale        If provided, use this as the pixel scale for the image. [default: None]
+        @param wcs          If provided, use this as the wcs for the image. [default: None]
+        @param origin       If profided, use this as the origin position of the view.
+                            [default: None]
+        @param center       If profided, use this as the center position of the view.
+                            [default: None]
+        @param make_const   Make the view's data array immutable. [default: False]
         """
-        if make_const:
-            return Image(image=_galsim.ConstImageView[self.dtype](self.image.view()),
-                         wcs=self.wcs)
+        if origin is not None and center is not None:
+            raise TypeError("Cannot provide both center and origin")
+
+        if scale is not None:
+            if wcs is not None:
+                raise TypeError("Cannot provide both scale and wcs")
+            wcs = galsim.PixelScale(scale)
+        elif wcs is not None:
+            if not isinstance(wcs,galsim.BaseWCS):
+                raise TypeError("wcs parameters must be a galsim.BaseWCS instance")
         else:
-            return Image(image=self.image.view(), wcs=self.wcs)
+            wcs = self.wcs
+
+        if make_const:
+            ret = Image(image=_galsim.ConstImageView[self.dtype](self.image.view()), wcs=wcs)
+        else:
+            ret = Image(image=self.image.view(), wcs=wcs)
+
+        if origin is not None:
+            ret.setOrigin(origin)
+        elif center is not None:
+            ret.setCenter(center)
+
+        return ret
 
     def shift(self, *args, **kwargs):
         """Shift the pixel coordinates by some (integral) dx,dy.
@@ -530,6 +608,182 @@ class Image(object):
         """
         self.image.invertSelf()
 
+    def calculateHLR(self, center=None, flux=None, flux_frac=0.5):
+        """Returns the half-light radius of a drawn object.
+
+        This method is equivalent to GSObject.calculateHLR when the object has already been
+        been drawn onto an image.  Note that the profile should be drawn using a method that
+        integrates over pixels and does not add noise. (The default method='auto' is acceptable.)
+
+        If the image has a wcs other than a PixelScale, an AttributeError will be raised.
+
+        @param center       The position in pixels to use for the center, r=0. 
+                            [default: self.trueCenter()]
+        @param flux         The total flux.  [default: sum(self.array)]
+        @param flux_frac    The fraction of light to be enclosed by the returned radius.
+                            [default: 0.5]
+
+        @returns an estimate of the half-light radius in physical units defined by the pixel scale.
+        """
+        if center is None:
+            center = self.trueCenter()
+
+        if flux is None:
+            flux = numpy.sum(self.array)
+
+        # Use radii at centers of pixels as approximation to the radial integral
+        x,y = numpy.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
+        x = x - center.x + self.bounds.xmin
+        y = y - center.y + self.bounds.ymin
+        rsq = x*x + y*y
+
+        # Sort by radius
+        indx = numpy.argsort(rsq.flatten())
+        rsqf = rsq.flatten()[indx]
+        data = self.array.flatten()[indx]
+        cumflux = numpy.cumsum(data)
+
+        # Find the first value with cumflux > 0.5 * flux
+        k = numpy.argmax(cumflux > flux_frac * flux)
+        flux_k = cumflux[k] / flux  # normalize to unit total flux
+
+        # Interpolate (linearly) between this and the previous value.
+        if k == 0:
+            hlrsq = rsqf[0] * (flux_frac / flux_k)
+        else:
+            fkm1 = cumflux[k-1] / flux
+            # For brevity in the next formula:
+            fk = flux_k
+            f = flux_frac
+            hlrsq = (rsqf[k-1] * (fk-f) + rsqf[k] * (f-fkm1)) / (fk-fkm1)
+
+        # This has all been done in pixels.  So normalize according to the pixel scale.
+        hlr = numpy.sqrt(hlrsq) * self.scale
+
+        return hlr
+
+
+    def calculateMomentRadius(self, center=None, flux=None, rtype='det'):
+        """Returns an estimate of the radius based on unweighted second moments of a drawn object.
+
+        This method is equivalent to GSObject.calculateMomentRadius when the object has already
+        been drawn onto an image.  Note that the profile should be drawn using a method that
+        integrates over pixels and does not add noise. (The default method='auto' is acceptable.)
+
+        If the image has a wcs other than a PixelScale, an AttributeError will be raised.
+
+        @param center       The position in pixels to use for the center, r=0. 
+                            [default: self.trueCenter()]
+        @param flux         The total flux.  [default: sum(self.array)]
+        @param rtype        There are three options for this parameter:
+                            - 'trace' means return sqrt(T/2)
+                            - 'det' means return det(Q)^1/4
+                            - 'both' means return both: (sqrt(T/2), det(Q)^1/4)
+                            [default: 'det']
+
+        @returns an estimate of the radius in physical units defined by the pixel scale 
+                 (or both estimates if rtype == 'both').
+        """
+        if rtype not in ['trace', 'det', 'both']:
+            raise ValueError("rtype must be one of 'trace', 'det', or 'both'")
+
+        if center is None:
+            center = self.trueCenter()
+
+        if flux is None:
+            flux = numpy.sum(self.array)
+
+        # Use radii at centers of pixels as approximation to the radial integral
+        x,y = numpy.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
+        x = x - center.x + self.bounds.xmin
+        y = y - center.y + self.bounds.ymin
+
+        if rtype in ['trace', 'both']:
+            # Calculate trace measure:
+            rsq = x*x + y*y
+            Irr = numpy.sum(rsq * self.array) / flux
+
+            # This has all been done in pixels.  So normalize according to the pixel scale.
+            sigma_trace = (Irr/2.)**0.5 * self.scale
+
+        if rtype in ['det', 'both']:
+            # Calculate det measure:
+            Ixx = numpy.sum(x*x * self.array) / flux
+            Iyy = numpy.sum(y*y * self.array) / flux
+            Ixy = numpy.sum(x*y * self.array) / flux
+
+            # This has all been done in pixels.  So normalize according to the pixel scale.
+            sigma_det = (Ixx*Iyy-Ixy**2)**0.25 * self.scale
+
+        if rtype == 'trace':
+            return sigma_trace
+        elif rtype == 'det':
+            return sigma_det
+        else:
+            return sigma_trace, sigma_det
+
+
+    def calculateFWHM(self, center=None, Imax=0.):
+        """Returns the full-width half-maximum (FWHM) of a drawn object.
+
+        This method is equivalent to GSObject.calculateMomentRadius when the object has already
+        been drawn onto an image.  Note that the profile should be drawn using a method that
+        does not integrate over pixels, so either 'sb' or 'no_pixel'.  Also, if there is a
+        significant amount of noise in the image, this method may not work well.
+
+        If the image has a wcs other than a PixelScale, an AttributeError will be raised.
+
+        @param center       The position in pixels to use for the center, r=0. 
+                            [default: self.trueCenter()]
+        @param Imax         The maximum surface brightness.  [default: max(self.array)]
+                            Note: If Imax is provided, and the maximum pixel value is larger than
+                            this value, Imax will be updated to use the larger value.
+
+        @returns an estimate of the full-width half-maximum in physical units defined by the
+                 pixel scale.
+        """
+        if center is None:
+            center = self.trueCenter()
+
+        # If the full image has a larger maximum, use that.
+        Imax2 = numpy.max(self.array)
+        if Imax2 > Imax: Imax = Imax2
+
+        # Use radii at centers of pixels.
+        x,y = numpy.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
+        x = x - center.x + self.bounds.xmin
+        y = y - center.y + self.bounds.ymin
+        rsq = x*x + y*y
+
+        # Sort by radius
+        indx = numpy.argsort(rsq.flatten())
+        rsqf = rsq.flatten()[indx]
+        data = self.array.flatten()[indx]
+
+        # Find the first value with I < 0.5 * Imax
+        k = numpy.argmax(data < 0.5 * Imax)
+        Ik = data[k] / Imax
+
+        # Interpolate (linearly) between this and the previous value.
+        if k == 0:
+            rsqhm = rsqf[0] * (0.5 / Ik)
+        else:
+            Ikm1 = data[k-1] / Imax
+            rsqhm = (rsqf[k-1] * (Ik-0.5) + rsqf[k] * (0.5-Ikm1)) / (Ik-Ikm1)
+
+        # This has all been done in pixels.  So normalize according to the pixel scale.
+        fwhm = 2. * numpy.sqrt(rsqhm) * self.scale
+
+        return fwhm
+
+
+    def __eq__(self, other):
+        return ( isinstance(other, Image) and
+                 self.bounds == other.bounds and
+                 self.wcs == other.wcs and
+                 numpy.array_equal(self.array,other.array) )
+    def __ne__(self, other): return not self.__eq__(other)
+
 
 # These are essentially aliases for the regular Image with the correct dtype
 def ImageS(*args, **kwargs):
@@ -555,74 +809,6 @@ def ImageD(*args, **kwargs):
     """
     kwargs['dtype'] = numpy.float64
     return Image(*args, **kwargs)
-
-def ImageViewS(*args, **kwargs):
-    """Alias for galsim.Image(..., dtype=numpy.int16)
-    """
-    kwargs['dtype'] = numpy.int16
-    return Image(*args, **kwargs)
-
-def ImageViewI(*args, **kwargs):
-    """Alias for galsim.Image(..., dtype=numpy.int32)
-    """
-    kwargs['dtype'] = numpy.int32
-    return Image(*args, **kwargs)
-
-def ImageViewF(*args, **kwargs):
-    """Alias for galsim.Image(..., dtype=numpy.float32)
-    """
-    kwargs['dtype'] = numpy.float32
-    return Image(*args, **kwargs)
-
-def ImageViewD(*args, **kwargs):
-    """Alias for galsim.Image(..., dtype=numpy.float64)
-    """
-    kwargs['dtype'] = numpy.float64
-    return Image(*args, **kwargs)
-
-def ConstImageViewS(*args, **kwargs):
-    """An obsolete alias for galsim.Image(..., dtype=numpy.int16, make_const=True)
-    """
-    kwargs['dtype'] = numpy.int16
-    kwargs['make_const'] = True
-    return Image(*args, **kwargs)
-
-def ConstImageViewI(*args, **kwargs):
-    """An obsolete alias for galsim.Image(..., dtype=numpy.int32, make_const=True)
-    """
-    kwargs['dtype'] = numpy.int32
-    kwargs['make_const'] = True
-    return Image(*args, **kwargs)
-
-def ConstImageViewF(*args, **kwargs):
-    """An obsolete alias for galsim.Image(..., dtype=numpy.float32, make_const=True)
-    """
-    kwargs['dtype'] = numpy.float32
-    kwargs['make_const'] = True
-    return Image(*args, **kwargs)
-
-def ConstImageViewD(*args, **kwargs):
-    """An obsolete alias for galsim.Image(..., dtype=numpy.float64, make_const=True)
-    """
-    kwargs['dtype'] = numpy.float64
-    kwargs['make_const'] = True
-    return Image(*args, **kwargs)
-
-ImageView = {
-    numpy.int16 : ImageViewS,
-    numpy.int32 : ImageViewI,
-    numpy.float32 : ImageViewF,
-    numpy.float64 : ImageViewD
-}
-
-ConstImageView = {
-    numpy.int16 : ConstImageViewS,
-    numpy.int32 : ConstImageViewI,
-    numpy.float32 : ConstImageViewF,
-    numpy.float64 : ConstImageViewD
-}
-
-
 
 
 ################################################################################################
@@ -654,9 +840,15 @@ def Image_add(self, other):
 def Image_iadd(self, other):
     check_image_consistency(self, other)
     try:
-        self.array[:,:] += other.array
+        a = other.array
+        dt = a.dtype
     except AttributeError:
-        self.array[:,:] += other
+        a = other
+        dt = type(a)
+    if dt == self.array.dtype:
+        self.array[:,:] += a
+    else:
+        self.array[:,:] = (self.array + a).astype(self.array.dtype)
     return self
 
 def Image_sub(self, other):
@@ -673,9 +865,15 @@ def Image_rsub(self, other):
 def Image_isub(self, other):
     check_image_consistency(self, other)
     try:
-        self.array[:,:] -= other.array
+        a = other.array
+        dt = a.dtype
     except AttributeError:
-        self.array[:,:] -= other
+        a = other
+        dt = type(a)
+    if dt == self.array.dtype:
+        self.array[:,:] -= a
+    else:
+        self.array[:,:] = (self.array - a).astype(self.array.dtype)
     return self
 
 def Image_mul(self, other):
@@ -686,9 +884,15 @@ def Image_mul(self, other):
 def Image_imul(self, other):
     check_image_consistency(self, other)
     try:
-        self.array[:,:] *= other.array
+        a = other.array
+        dt = a.dtype
     except AttributeError:
-        self.array[:,:] *= other
+        a = other
+        dt = type(a)
+    if dt == self.array.dtype:
+        self.array[:,:] *= a
+    else:
+        self.array[:,:] = (self.array * a).astype(self.array.dtype)
     return self
 
 def Image_div(self, other):
@@ -705,9 +909,15 @@ def Image_rdiv(self, other):
 def Image_idiv(self, other):
     check_image_consistency(self, other)
     try:
-        self.array[:,:] /= other.array
+        a = other.array
+        dt = a.dtype
     except AttributeError:
-        self.array[:,:] /= other
+        a = other
+        dt = type(a)
+    if dt == self.array.dtype:
+        self.array[:,:] /= a
+    else:
+        self.array[:,:] = (self.array / a).astype(self.array.dtype)
     return self
 
 def Image_pow(self, other):
@@ -785,6 +995,9 @@ def ImageAlloc_setstate(self, args):
     self.__class__ = _galsim.ImageView[self_type]
     self.__init__(*args)
 
+def ImageHash(self):
+    return hash(repr(self))
+
 # inject the arithmetic operators as methods of the Image class:
 Image.__add__ = Image_add
 Image.__radd__ = Image_add
@@ -837,6 +1050,7 @@ for Class in _galsim.ImageAlloc.itervalues():
     Class.__getstate_manages_dict__ = 1
     Class.__getstate__ = ImageAlloc_getstate
     Class.__setstate__ = ImageAlloc_setstate
+    Class.__hash__ = ImageHash
 
 for Class in _galsim.ImageView.itervalues():
     Class.__setitem__ = Image_setitem
@@ -861,6 +1075,7 @@ for Class in _galsim.ImageView.itervalues():
     Class.__neg__ = Image_neg
     Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs
+    Class.__hash__ = ImageHash
 
 for Class in _galsim.ConstImageView.itervalues():
     Class.__getitem__ = Image_getitem
@@ -878,6 +1093,7 @@ for Class in _galsim.ConstImageView.itervalues():
     Class.__neg__ = Image_neg
     Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs
+    Class.__hash__ = ImageHash
 
 for int_type in [ numpy.int16, numpy.int32 ]:
     for Class in [ _galsim.ImageAlloc[int_type], _galsim.ImageView[int_type],
@@ -891,3 +1107,37 @@ for int_type in [ numpy.int16, numpy.int32 ]:
         Class.__ior__ = Image_ior
 
 del Class    # cleanup public namespace
+
+galsim._galsim.ImageAllocS.__repr__ = lambda self: 'galsim._galsim.ImageAllocS(%r,%r)'%(
+        self.bounds, self.array)
+galsim._galsim.ImageAllocI.__repr__ = lambda self: 'galsim._galsim.ImageAllocI(%r,%r)'%(
+        self.bounds, self.array)
+galsim._galsim.ImageAllocF.__repr__ = \
+        lambda self: 'galsim._galsim.ImageAllocF(%r,array(%r, dtype=%s))'%(
+            self.bounds, self.array.tolist(), self.array.dtype)
+galsim._galsim.ImageAllocD.__repr__ = \
+        lambda self: 'galsim._galsim.ImageAllocD(%r,array(%r, dtype=%s))'%(
+            self.bounds, self.array.tolist(), self.array.dtype)
+
+galsim._galsim.ImageViewS.__repr__ = lambda self: 'galsim._galsim.ImageViewS(%r,%r,%r)'%(
+        self.array, self.xmin, self.xmax)
+galsim._galsim.ImageViewI.__repr__ = lambda self: 'galsim._galsim.ImageViewI(%r,%r,%r)'%(
+        self.array, self.xmin, self.xmax)
+galsim._galsim.ImageViewF.__repr__ = \
+        lambda self: 'galsim._galsim.ImageViewF(array(%r, dtype=%s),%r,%r)'%(
+            self.array.tolist(), self.array.dtype, self.xmin, self.xmax)
+galsim._galsim.ImageViewD.__repr__ = \
+        lambda self: 'galsim._galsim.ImageViewD(array(%r, dtype=%s),%r,%r)'%(
+            self.array.tolist(), self.array.dtype, self.xmin, self.xmax)
+
+galsim._galsim.ConstImageViewS.__repr__ = lambda self: 'galsim._galsim.ConstImageViewS(%r,%r,%r)'%(
+        self.array, self.xmin, self.xmax)
+galsim._galsim.ConstImageViewI.__repr__ = lambda self: 'galsim._galsim.ConstImageViewI(%r,%r,%r)'%(
+        self.array, self.xmin, self.xmax)
+galsim._galsim.ConstImageViewF.__repr__ = \
+        lambda self: 'galsim._galsim.ConstImageViewF(array(%r, dtype=%s),%r,%r)'%(
+            self.array.tolist(), self.array.dtype, self.xmin, self.xmax)
+galsim._galsim.ConstImageViewD.__repr__ = \
+        lambda self: 'galsim._galsim.ConstImageViewD(array(%r, dtype=%s),%r,%r)'%(
+            self.array.tolist(), self.array.dtype, self.xmin, self.xmax)
+

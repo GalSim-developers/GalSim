@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -42,8 +42,8 @@
 #include "Solve.h"
 #include "bessel/Roots.h"
 
-// Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by 
-// drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit 
+// Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by
+// drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit
 // circle and rejecting corner photons.
 // The relative speed of the two methods was tested as part of issue #163, and the results
 // are collated in devutils/external/time_photon_shooting.
@@ -68,31 +68,48 @@ namespace galsim {
 
     SBMoffat::~SBMoffat() {}
 
-    double SBMoffat::getBeta() const 
+    double SBMoffat::getBeta() const
     {
         assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
-        return static_cast<const SBMoffatImpl&>(*_pimpl).getBeta(); 
+        return static_cast<const SBMoffatImpl&>(*_pimpl).getBeta();
     }
 
-    double SBMoffat::getFWHM() const 
+    double SBMoffat::getFWHM() const
     {
         assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
-        return static_cast<const SBMoffatImpl&>(*_pimpl).getFWHM(); 
+        return static_cast<const SBMoffatImpl&>(*_pimpl).getFWHM();
     }
 
-    double SBMoffat::getScaleRadius() const 
+    double SBMoffat::getScaleRadius() const
     {
         assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
         return static_cast<const SBMoffatImpl&>(*_pimpl).getScaleRadius();
     }
 
-    double SBMoffat::getHalfLightRadius() const 
+    double SBMoffat::getHalfLightRadius() const
     {
         assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
         return static_cast<const SBMoffatImpl&>(*_pimpl).getHalfLightRadius();
     }
 
-    class MoffatScaleRadiusFunc 
+    double SBMoffat::getTrunc() const
+    {
+        assert(dynamic_cast<const SBMoffatImpl*>(_pimpl.get()));
+        return static_cast<const SBMoffatImpl&>(*_pimpl).getTrunc();
+    }
+
+    std::string SBMoffat::SBMoffatImpl::repr() const 
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SBMoffat("<<getBeta()<<", "<<getScaleRadius();
+        oss << ", None, None, "<<getTrunc()<<", "<<getFlux();
+        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
+
+
+    class MoffatScaleRadiusFunc
     {
     public:
         MoffatScaleRadiusFunc(double re, double rm, double beta) :
@@ -117,12 +134,12 @@ namespace galsim {
         //         = (pi rd^2 / (beta-1)) (1 - (1+R^2/rd^2)^(1-beta) )
         // For now, we can ignore the first factor.  We call the second factor fluxfactor below,
         // or in this function f(R).
-        // 
+        //
         // We are given two values of R for which we know that the ratio of their fluxes is 1/2:
         // f(re) = 0.5 * f(rm)
         //
         if (rm == 0.) {
-            // If rm = infinity (which we actually indicate with rm=0), then we can solve for 
+            // If rm = infinity (which we actually indicate with rm=0), then we can solve for
             // rd analytically:
             //
             // f(rm) = 1
@@ -137,8 +154,8 @@ namespace galsim {
             // f(rm) = 1 - (1 + rm^2/rd^2)^(1-beta)
             // 2*f(re) = 2 - 2*(1 + re^2/rd^2)^(1-beta)
             // 2*(1+re^2/rd^2)^(1-beta) = 1 + (1+rm^2/rd^2)^(1-beta)
-            // 
-            // As rm decreases, rd increases.  
+            //
+            // As rm decreases, rd increases.
             // Eventually rd increases to infinity.  When does that happen:
             // Take the limit as rd->infinity in the above equation:
             // 2 + 2*(1-beta) re^2/rd^2) = 1 + 1 + (1-beta) rm^2/rd^2
@@ -183,10 +200,10 @@ namespace galsim {
         xdbg<<"flux = "<<_flux<<"\n";
         xdbg<<"trunc = "<<_trunc<<"\n";
 
-        if (_trunc == 0. && beta <= 1.1) 
+        if (_trunc == 0. && beta <= 1.1)
             throw SBError("Moffat profiles with beta <= 1.1 must be truncated.");
 
-        if (_trunc < 0.) 
+        if (_trunc < 0.)
             throw SBError("Invalid negative truncation radius provided to SBMoffat.");
 
         // First, relation between FWHM and rD:
@@ -198,7 +215,7 @@ namespace galsim {
           case FWHM:
                _rD = size / FWHMrD;
                break;
-          case HALF_LIGHT_RADIUS: 
+          case HALF_LIGHT_RADIUS:
                {
                    _re = size;
                    // This is a bit complicated, so break it out into its own function.
@@ -241,44 +258,44 @@ namespace galsim {
         dbg << "Moffat rD " << _rD << " fluxFactor " << _fluxFactor
             << " norm " << _norm << " maxR " << _maxR << std::endl;
 
-        if (std::abs(_beta-1) < this->gsparams->xvalue_accuracy) 
+        if (std::abs(_beta-1) < this->gsparams->xvalue_accuracy)
             _pow_beta = &SBMoffatImpl::pow_1;
-        else if (std::abs(_beta-1.5) < this->gsparams->xvalue_accuracy) 
+        else if (std::abs(_beta-1.5) < this->gsparams->xvalue_accuracy)
             _pow_beta = &SBMoffatImpl::pow_15;
-        else if (std::abs(_beta-2) < this->gsparams->xvalue_accuracy) 
+        else if (std::abs(_beta-2) < this->gsparams->xvalue_accuracy)
             _pow_beta = &SBMoffatImpl::pow_2;
-        else if (std::abs(_beta-2.5) < this->gsparams->xvalue_accuracy) 
+        else if (std::abs(_beta-2.5) < this->gsparams->xvalue_accuracy)
             _pow_beta = &SBMoffatImpl::pow_25;
-        else if (std::abs(_beta-3) < this->gsparams->xvalue_accuracy) 
+        else if (std::abs(_beta-3) < this->gsparams->xvalue_accuracy)
             _pow_beta = &SBMoffatImpl::pow_3;
-        else if (std::abs(_beta-3.5) < this->gsparams->xvalue_accuracy) 
+        else if (std::abs(_beta-3.5) < this->gsparams->xvalue_accuracy)
             _pow_beta = &SBMoffatImpl::pow_35;
-        else if (std::abs(_beta-4) < this->gsparams->xvalue_accuracy) 
+        else if (std::abs(_beta-4) < this->gsparams->xvalue_accuracy)
             _pow_beta = &SBMoffatImpl::pow_4;
         else _pow_beta = &SBMoffatImpl::pow_gen;
 
         if (_trunc > 0.) _kV = &SBMoffatImpl::kV_trunc;
-        else if (std::abs(_beta-1.5) < this->gsparams->kvalue_accuracy) 
+        else if (std::abs(_beta-1.5) < this->gsparams->kvalue_accuracy)
             _kV = &SBMoffatImpl::kV_15;
-        else if (std::abs(_beta-2) < this->gsparams->kvalue_accuracy) 
-            _kV = &SBMoffatImpl::kV_2; 
-        else if (std::abs(_beta-2.5) < this->gsparams->kvalue_accuracy) 
+        else if (std::abs(_beta-2) < this->gsparams->kvalue_accuracy)
+            _kV = &SBMoffatImpl::kV_2;
+        else if (std::abs(_beta-2.5) < this->gsparams->kvalue_accuracy)
             _kV = &SBMoffatImpl::kV_25;
-        else if (std::abs(_beta-3) < this->gsparams->kvalue_accuracy) { 
-            _kV = &SBMoffatImpl::kV_3; _knorm /= 2.; 
+        else if (std::abs(_beta-3) < this->gsparams->kvalue_accuracy) {
+            _kV = &SBMoffatImpl::kV_3; _knorm /= 2.;
         } else if (std::abs(_beta-3.5) < this->gsparams->kvalue_accuracy) {
-            _kV = &SBMoffatImpl::kV_35; _knorm /= 3.; 
+            _kV = &SBMoffatImpl::kV_35; _knorm /= 3.;
         } else if (std::abs(_beta-4) < this->gsparams->kvalue_accuracy) {
-            _kV = &SBMoffatImpl::kV_4; _knorm /= 8.; 
+            _kV = &SBMoffatImpl::kV_4; _knorm /= 8.;
         } else {
             _kV = &SBMoffatImpl::kV_gen;
             _knorm *= 4. / (boost::math::tgamma(beta-1.) * std::pow(2.,beta));
         }
     }
 
-    double SBMoffat::SBMoffatImpl::getHalfLightRadius() const 
+    double SBMoffat::SBMoffatImpl::getHalfLightRadius() const
     {
-        // Done here since _re depends on _fluxFactor and thus requires _rD in advance, so this 
+        // Done here since _re depends on _fluxFactor and thus requires _rD in advance, so this
         // needs to happen largely post setup. Doesn't seem efficient to ALWAYS calculate it above,
         // so we'll just calculate it once if requested and store it.
         if (_re == 0.) {
@@ -287,14 +304,14 @@ namespace galsim {
         return _re;
     }
 
-    double SBMoffat::SBMoffatImpl::xValue(const Position<double>& p) const 
+    double SBMoffat::SBMoffatImpl::xValue(const Position<double>& p) const
     {
         double rsq = (p.x*p.x + p.y*p.y)*_inv_rD_sq;
         if (rsq > _maxRrD_sq) return 0.;
         else return _norm / _pow_beta(1.+rsq, _beta);
     }
 
-    std::complex<double> SBMoffat::SBMoffatImpl::kValue(const Position<double>& k) const 
+    std::complex<double> SBMoffat::SBMoffatImpl::kValue(const Position<double>& k) const
     {
         double ksq = (k.x*k.x + k.y*k.y)*_rD_sq;
         return _knorm * (this->*_kV)(ksq);
@@ -362,15 +379,15 @@ namespace galsim {
     }
 
     void SBMoffat::SBMoffatImpl::fillXValue(tmv::MatrixView<double> val,
-                                            double x0, double dx, int ix_zero,
-                                            double y0, double dy, int iy_zero) const
+                                            double x0, double dx, int izero,
+                                            double y0, double dy, int jzero) const
     {
         dbg<<"SBMoffat fillXValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
-        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
-        if (ix_zero != 0 || iy_zero != 0) {
+        dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
+        dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
             xdbg<<"Use Quadrant\n";
-            fillXValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+            fillXValueQuadrant(val,x0,dx,izero,y0,dy,jzero);
         } else {
             xdbg<<"Non-Quadrant\n";
             assert(val.stepi() == 1);
@@ -397,15 +414,15 @@ namespace galsim {
     }
 
     void SBMoffat::SBMoffatImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                            double x0, double dx, int ix_zero,
-                                            double y0, double dy, int iy_zero) const
+                                            double kx0, double dkx, int izero,
+                                            double ky0, double dky, int jzero) const
     {
         dbg<<"SBMoffat fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
-        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
-        if (ix_zero != 0 || iy_zero != 0) {
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
             xdbg<<"Use Quadrant\n";
-            fillKValueQuadrant(val,x0,dx,ix_zero,y0,dy,iy_zero);
+            fillKValueQuadrant(val,kx0,dkx,izero,ky0,dky,jzero);
         } else {
             xdbg<<"Non-Quadrant\n";
             assert(val.stepi() == 1);
@@ -413,17 +430,17 @@ namespace galsim {
             const int n = val.rowsize();
             typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
 
-            x0 *= _rD;
-            dx *= _rD;
-            y0 *= _rD;
-            dy *= _rD;
+            kx0 *= _rD;
+            dkx *= _rD;
+            ky0 *= _rD;
+            dky *= _rD;
 
-            for (int j=0;j<n;++j,y0+=dy) {
-                double x = x0;
-                double ysq = y0*y0;
-                It valit(val.col(j).begin().getP(),1);
-                for (int i=0;i<m;++i,x+=dx) {
-                    double ksq = x*x + ysq;
+            for (int j=0;j<n;++j,ky0+=dky) {
+                double kx = kx0;
+                double kysq = ky0*ky0;
+                It valit = val.col(j).begin();
+                for (int i=0;i<m;++i,kx+=dkx) {
+                    double ksq = kx*kx + kysq;
                     *valit++ = _knorm * (this->*_kV)(ksq);
                 }
             }
@@ -435,8 +452,8 @@ namespace galsim {
                                             double y0, double dy, double dyx) const
     {
         dbg<<"SBMoffat fillXValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
         assert(val.stepi() == 1);
         assert(val.canLinearize());
         const int m = val.colsize();
@@ -454,7 +471,6 @@ namespace galsim {
         for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
             double x = x0;
             double y = y0;
-            It valit = val.col(j).begin();
             for (int i=0;i<m;++i,x+=dx,y+=dyx) {
                 double rsq = x*x + y*y;
                 if (rsq > _maxRrD_sq) *valit++ = 0.;
@@ -464,51 +480,50 @@ namespace galsim {
     }
 
     void SBMoffat::SBMoffatImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                            double x0, double dx, double dxy,
-                                            double y0, double dy, double dyx) const
+                                            double kx0, double dkx, double dkxy,
+                                            double ky0, double dky, double dkyx) const
     {
         dbg<<"SBMoffat fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         assert(val.stepi() == 1);
         assert(val.canLinearize());
         const int m = val.colsize();
         const int n = val.rowsize();
         typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
 
-        x0 *= _rD;
-        dx *= _rD;
-        dxy *= _rD;
-        y0 *= _rD;
-        dy *= _rD;
-        dyx *= _rD;
+        kx0 *= _rD;
+        dkx *= _rD;
+        dkxy *= _rD;
+        ky0 *= _rD;
+        dky *= _rD;
+        dkyx *= _rD;
 
-        It valit(val.linearView().begin().getP());
-        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
-            double x = x0;
-            double y = y0;
-            It valit(val.col(j).begin().getP(),1);
-            for (int i=0;i<m;++i,x+=dx,y+=dyx) {
-                double ksq = x*x + y*y;
+        It valit = val.linearView().begin();
+        for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
+            double kx = kx0;
+            double ky = ky0;
+            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx) {
+                double ksq = kx*kx + ky*ky;
                 *valit++ = _knorm * (this->*_kV)(ksq);
             }
         }
     }
 
     // Set maxK to the value where the FT is down to maxk_threshold
-    double SBMoffat::SBMoffatImpl::maxK() const 
+    double SBMoffat::SBMoffatImpl::maxK() const
     {
         if (_maxk == 0.) {
             if (_trunc == 0.) {
                 // f(k) = 4 K(beta-1,k) (k/2)^beta / Gamma(beta-1)
                 //
-                // The asymptotic formula for K(beta-1,k) is 
-                //     K(beta-1,k) ~= sqrt(pi/(2k)) exp(-k) 
-                // 
+                // The asymptotic formula for K(beta-1,k) is
+                //     K(beta-1,k) ~= sqrt(pi/(2k)) exp(-k)
+                //
                 // So f(k) becomes
                 //
                 // f(k) ~= 2 sqrt(pi) (k/2)^(beta-1/2) exp(-k) / Gamma(beta-1)
-                // 
+                //
                 // Solve for f(k) = maxk_threshold
                 //
                 double temp = (this->gsparams->maxk_threshold
@@ -517,7 +532,7 @@ namespace galsim {
                                / (2. * sqrt(M_PI)));
                 // Solve k^(beta-1/2) exp(-k) = temp
                 // (beta-1/2) log(k) - k = log(temp)
-                // k = (beta-1/2) log(k) - log(temp) 
+                // k = (beta-1/2) log(k) - log(temp)
                 temp = std::log(temp);
                 _maxk = -temp;
                 dbg<<"temp = "<<temp<<std::endl;
@@ -526,7 +541,7 @@ namespace galsim {
                     dbg<<"_maxk = "<<_maxk<<std::endl;
                 }
             } else {
-                // _maxk is determined during setupFT() as the last k value to have a  
+                // _maxk is determined during setupFT() as the last k value to have a
                 // kValue > 1.e-3.
                 setupFT();
             }
@@ -534,7 +549,7 @@ namespace galsim {
         return _maxk*_inv_rD;
     }
 
-    // The amount of flux missed in a circle of radius pi/stepk should be at 
+    // The amount of flux missed in a circle of radius pi/stepk should be at
     // most folding_threshold of the flux.
     double SBMoffat::SBMoffatImpl::stepK() const
     {
@@ -569,9 +584,9 @@ namespace galsim {
     class MoffatIntegrand : public std::unary_function<double,double>
     {
     public:
-        MoffatIntegrand(double beta, double k, double (*pb)(double, double)) : 
+        MoffatIntegrand(double beta, double k, double (*pb)(double, double)) :
             _beta(beta), _k(k), _pow_beta(pb) {}
-        double operator()(double r) const 
+        double operator()(double r) const
         { return r/_pow_beta(1.+r*r, _beta)*j0(_k*r); }
 
     private:
@@ -597,7 +612,7 @@ namespace galsim {
 
         // We use a cubic spline for the interpolation, which has an error of O(h^4) max(f'''').
         // I have no idea what range the fourth derivative can take for the hankel transform,
-        // so let's take the completely arbitrary value of 10.  (This value was found to be 
+        // so let's take the completely arbitrary value of 10.  (This value was found to be
         // conservative for Sersic, but I haven't investigated here.)
         // 10 h^4 <= kvalue_accuracy
         // h = (kvalue_accuracy/10)^0.25
@@ -626,7 +641,7 @@ namespace galsim {
 
             double val = integ::int1d(
                 I, reg,
-                this->gsparams->integration_relerr, 
+                this->gsparams->integration_relerr,
                 this->gsparams->integration_abserr);
             val *= prefactor;
 
@@ -654,14 +669,8 @@ namespace galsim {
             // First get a point uniformly distributed on unit circle
             double theta = 2.*M_PI*u();
             double rsq = u(); // cumulative dist function P(<r) = r^2 for unit circle
-#ifdef _GLIBCXX_HAVE_SINCOS
-            // Most optimizing compilers will do this automatically, but just in case...
             double sint,cost;
-            sincos(theta,&sint,&cost);
-#else
-            double cost = std::cos(theta);
-            double sint = std::sin(theta);
-#endif
+            (theta * radians).sincos(sint,cost);
             // Then map radius to the Moffat flux distribution
             double newRsq = std::pow(1. - rsq * _fluxFactor, 1. / (1. - _beta)) - 1.;
             double rFactor = _rD * std::sqrt(newRsq);

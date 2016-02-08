@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -33,6 +33,10 @@
 #include "SBProfile.h"
 
 namespace galsim {
+
+    // This is used both here and by SBBox.
+    // This particular definition is sinc(x) = sin(Pi x) / (Pi x)
+    double sinc(double x);
 
     class Interpolant;
 
@@ -171,6 +175,8 @@ namespace galsim {
         virtual boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const 
         { checkSampler(); return _sampler->shoot(N, ud); }
 
+        virtual std::string makeStr() const =0;
+
     protected:
 
         const GSParamsPtr _gsparams;
@@ -256,7 +262,7 @@ namespace galsim {
         double xval1d(double x) const { return _i1d->xval(x); }
         double xvalWrapped1d(double x, int N) const { return _i1d->xvalWrapped(x,N); }
         double uval1d(double u) const { return _i1d->uval(u); }
-        const Interpolant* get1d() const { return _i1d.get(); }
+        boost::shared_ptr<Interpolant> get1d() const { return _i1d; }
 
     private:
         boost::shared_ptr<Interpolant> _i1d;  // The 1d function used in both axes here.
@@ -304,6 +310,8 @@ namespace galsim {
         double getNegativeFlux() const { return 0.; }
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
+        std::string makeStr() const;
+
     private:
         double _width;
     };
@@ -346,6 +354,8 @@ namespace galsim {
         double getNegativeFlux() const { return 0.; }
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
+        std::string makeStr() const;
+
     private:
         double _tolerance;
     };
@@ -384,6 +394,8 @@ namespace galsim {
         double uval(double u) const;
 
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
+
+        std::string makeStr() const;
 
     private:
         double _tolerance;
@@ -426,6 +438,8 @@ namespace galsim {
         // Linear interpolant has fast photon-shooting by adding two uniform deviates per
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
+        std::string makeStr() const;
+
     private:
         double _tolerance;
     };
@@ -462,6 +476,8 @@ namespace galsim {
         // Override numerical calculation with known analytic integral
         double getPositiveFlux() const { return 13./12.; }
         double getNegativeFlux() const { return 1./12.; }
+
+        std::string makeStr() const;
 
     private:
         // x range, reduced slightly from n=2 so we're not using zero-valued endpoints.
@@ -504,6 +520,8 @@ namespace galsim {
 
         double xval(double x) const;
         double uval(double u) const;
+
+        std::string makeStr() const;
 
     protected:
         // Override default sampler configuration because Quintic filter has sign change in
@@ -562,9 +580,13 @@ namespace galsim {
         int ixrange() const { return 2*_n; }
         double urange() const { return _uMax; }
         double getTolerance() const { return _tolerance; }
+        int getN() const { return _n; }
+        bool conservesDC() const { return _conserve_dc; }
 
         double xval(double x) const;
         double uval(double u) const;
+
+        std::string makeStr() const;
 
     private:
         int _n; // Store the filter order, n

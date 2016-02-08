@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -57,6 +57,12 @@ def main(argv):
     #first_chip = 12
     #last_chip = 12
 
+    # quick and dirty command line parsing.
+    for var in argv:
+        if var.startswith('first='): first_chip = int(var[6:])
+        if var.startswith('last='): last_chip = int(var[5:])
+    print 'Processing chips %d .. %d'%(first_chip, last_chip)
+
     out_dir = 'output'
 
     # The random seed, so the results are deterministic
@@ -113,10 +119,6 @@ def main(argv):
         for k in range(nobj):
             sys.stdout.write('.')
             sys.stdout.flush()
-            # The usual random number generator using a different seed for each galaxy.
-            # I'm not actually using the rng for object creation (everything comes from the
-            # input files), but the rng that matches the config version is here just in case.
-            rng = galsim.BaseDeviate(random_seed+k)
 
             # Skip objects with a non-zero flag
             flag = cat.getInt(k,flag_col)
@@ -187,14 +189,14 @@ def main(argv):
         fitpsf_image += sky_level
 
         # Add noise
-        rng = galsim.BaseDeviate(random_seed+nobj)
+        rng = galsim.BaseDeviate(random_seed)
         noise = galsim.CCDNoise(rng, gain=gain)
         psfex_image.addNoise(noise)
         # Reset the random seed to match the action of the yaml version
-        # Note: the different between seed and reset matters here.
+        # Note: the difference between seed and reset matters here.
         # reset would sever the connection between this rng instance and the one stored in noise.  
         # seed changes the seed while keeping the connection between them.
-        rng.seed(random_seed+nobj)
+        rng.seed(random_seed)
         fitpsf_image.addNoise(noise)
 
         # Now write the images to disk.

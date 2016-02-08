@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -76,7 +76,9 @@ def main(argv):
     logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
 
     # Initialize the (pseudo-)random number generator that we will be using below.
-    rng = galsim.BaseDeviate(random_seed)
+    # For a technical reason that will be explained later (demo9.py), we add 1 to the 
+    # given random seed here.
+    rng = galsim.BaseDeviate(random_seed+1)
 
     # Define the galaxy profile.
     gal = galsim.Exponential(flux=gal_flux, scale_radius=gal_r0)

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -32,6 +32,7 @@
 #include <map>
 #include <vector>
 #include <algorithm>
+#include <complex>
 
 // Some versions of boost don't have the right guard to avoid C++-11 extensions. 
 // This #define helps avoid warnings on clang, and it doesn't hurt elsewhere.
@@ -39,7 +40,6 @@
 #include <boost/shared_ptr.hpp>
 
 #include "Std.h"
-#include "CppShear.h"
 #include "Random.h"
 #include "Angle.h"
 #include "GSParams.h"
@@ -135,6 +135,9 @@ namespace galsim {
 
         /// Destructor isn't virtual, since derived classes don't have anything to cleanup.
         ~SBProfile();
+
+        /// Get the GSParams object for this SBProfile
+        const boost::shared_ptr<GSParams> getGSParams() const;
 
         /** 
          * @brief Return value of SBProfile at a chosen 2D position in real space.
@@ -243,11 +246,6 @@ namespace galsim {
          * @brief Apply an overall scale change to the profile, preserving surface brightness.
          */
         SBTransform expand(double scale) const;
-
-        /**
-         * @brief Apply a given shear.
-         */
-        SBTransform shear(CppShear s) const;
 
         /**
          * @brief Apply a given rotation.
@@ -526,6 +524,9 @@ namespace galsim {
          */
         template <typename T>
         void fourierDrawK(ImageView<T> re, ImageView<T> im, double gain, double wmult) const; 
+
+        /// @brief Return a string that can act as the repr in python
+        std::string repr() const;
 
     protected:
 

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -587,7 +587,6 @@ namespace galsim {
                 throw std::runtime_error("Cannot scaleVariance to < 0");
             throw std::runtime_error("scaleVariance not implemented for DeviateNoise");
         }
-
 
         /**
          * @brief Add noise to an Image.

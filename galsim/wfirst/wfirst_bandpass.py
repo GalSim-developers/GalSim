@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -25,8 +25,8 @@ import galsim
 import numpy as np
 import os
 
-def getBandpasses(AB_zeropoint=True, exptime=None):
-    """Utility to get a dictionary containing the WFIRST bandpasses.
+def getBandpasses(AB_zeropoint=True, exptime=None, thin_err=1.e-4):
+    """Utility to get a dictionary containing the WFIRST bandpasses used for imaging.
 
     This routine reads in a file containing a list of wavelengths and throughput for all WFIRST
     bandpasses, and uses the information in the file to create a dictionary.
@@ -37,44 +37,43 @@ def getBandpasses(AB_zeropoint=True, exptime=None):
     - There is a column called 'Wave', containing the wavelengths in microns.
     - The other columns are labeled by the name of the bandpass.
 
-    Currently the bandpasses are not truncated or thinned in any way.  We leave it to the user to
-    decide whether they wish to do either of those operations.
+    Currently the bandpasses are not truncated.  We leave it to the user to decide whether they wish
+    to truncate after getting the bandpasses, and the `thin_err` keyword allows the user to choose
+    the relative errors allowed when thinning.
 
     By default, the routine will set an AB zeropoint using the WFIRST effective diameter and default
     exposure time.  Setting the zeropoint can be avoided by setting `AB_zeropoint=False`; changing
-    the exposure time that is used for the calculation can be used by setting the `exptime`
-    keyword.
+    the exposure time that is used for the zeropoint calculation can be used by setting the
+    `exptime` keyword.
 
     This routine also loads information about sky backgrounds in each filter, to be used by the
     galsim.wfirst.getSkyLevel() routine.  The sky background information is saved as an attribute in
     each Bandpass object.
 
+    There are some subtle points related to the filter edges, which seem to depend on the field
+    angle at some level.  This is more important for the grism than for the imaging, so currently
+    this effect is not included in the WFIRST bandpasses in GalSim.
+
     Example usage
     -------------
 
         >>> wfirst_bandpasses = galsim.wfirst.getBandpasses()
-        >>> f184 = wfirst_bandpasses['F184']
+        >>> f184_bp = wfirst_bandpasses['F184']
 
     @param AB_zeropoint     Should the routine set an AB zeropoint before returning the bandpass?
                             If False, then it is up to the user to set a zero point.  [default:
                             True]
     @param exptime          Exposure time to use for setting the zeropoint; if None, use the default
                             WFIRST exposure time, taken from galsim.wfirst.exptime.  [default: None]
+    @param thin_err         Relative error allowed when thinning the bandpasses.  [default: 1e-4]
 
-    @returns A dictionary containing bandpasses for all WFIRST filters and grisms.
+    @returns A dictionary containing bandpasses for all WFIRST imaging filters.
     """
     # Begin by reading in the file containing the info.
     datafile = os.path.join(galsim.meta_data.share_dir, "afta_throughput.txt")
     # One line with the column headings, and the rest as a NumPy array.
-    data = np.loadtxt(datafile, skiprows=1).transpose()
-    first_line = open(datafile).readline().rstrip().split()
-    if len(first_line) != data.shape[0]:
-        raise RuntimeError("Inconsistency in number of columns and header line in file %s"%datafile)
-
-    # Identify the index of the column containing the wavelength in microns.  Get the wavelength and
-    # convert to nm.
-    wave_ind = first_line.index('Wave')
-    wave = 1000.*data[wave_ind,:]
+    data = np.genfromtxt(datafile, names=True)
+    wave = 1000.*data['Wave']
 
     if AB_zeropoint:
         # Note that withZeropoint wants an effective diameter in cm, not m.  Also, the effective
@@ -90,15 +89,14 @@ def getBandpasses(AB_zeropoint=True, exptime=None):
 
     # Set up a dictionary.
     bandpass_dict = {}
-    i_band = 0
     # Loop over the bands.
-    for index in range(len(first_line)):
-        # Need to skip the entry for wavelength.
-        if index==wave_ind:
+    for index, bp_name in enumerate(data.dtype.names[1:]):
+        # Need to skip the prism and grism (not used for weak lensing imaging).
+        if bp_name=='SNPrism' or bp_name=='BAOGrism':
             continue
 
         # Initialize the bandpass object.
-        bp = galsim.Bandpass(galsim.LookupTable(wave, data[index,:]), wave_type='nm')
+        bp = galsim.Bandpass(galsim.LookupTable(wave, data[bp_name]), wave_type='nm').thin(thin_err)
         # Set the zeropoint if requested by the user:
         if AB_zeropoint:
             if exptime is None:
@@ -108,11 +106,10 @@ def getBandpasses(AB_zeropoint=True, exptime=None):
         # Store the sky level information as an attribute.
         bp._ecliptic_lat = ecliptic_lat
         bp._ecliptic_lon = ecliptic_lon
-        bp._sky_level = sky_data[2+i_band, :]
+        bp._sky_level = sky_data[2+index, :]
 
         # Add it to the dictionary.
-        bandpass_dict[first_line[index]] = bp
-        i_band += 1
+        bandpass_dict[bp_name] = bp
 
     return bandpass_dict
 

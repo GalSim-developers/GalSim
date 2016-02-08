@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -40,8 +40,7 @@ namespace galsim {
 
         static void wrap() {
 
-            bp::class_<GSParams> pyGSParams("GSParams", "", bp::no_init);
-            pyGSParams
+            bp::class_<GSParams, boost::shared_ptr<GSParams> > ("GSParams", bp::no_init)
                 .def(bp::init<
                     int, int, double, double, double, double, double, double, double, double,
                     double, double, double, double, int, double>((
@@ -63,22 +62,24 @@ namespace galsim {
                         bp::arg("small_fraction_of_flux")=1.e-4)
                     )
                 )
-                .def_readwrite("minimum_fft_size", &GSParams::minimum_fft_size)
-                .def_readwrite("maximum_fft_size", &GSParams::maximum_fft_size)
-                .def_readwrite("folding_threshold", &GSParams::folding_threshold)
-                .def_readwrite("stepk_minimum_hlr", &GSParams::stepk_minimum_hlr)
-                .def_readwrite("maxk_threshold", &GSParams::maxk_threshold)
-                .def_readwrite("kvalue_accuracy", &GSParams::kvalue_accuracy)
-                .def_readwrite("xvalue_accuracy", &GSParams::xvalue_accuracy)
-                .def_readwrite("table_spacing", &GSParams::table_spacing)
-                .def_readwrite("realspace_relerr", &GSParams::realspace_relerr)
-                .def_readwrite("realspace_abserr", &GSParams::realspace_abserr)
-                .def_readwrite("integration_relerr", &GSParams::integration_relerr)
-                .def_readwrite("integration_abserr", &GSParams::integration_abserr)
-                .def_readwrite("shoot_accuracy", &GSParams::shoot_accuracy)
-                .def_readwrite("allowed_flux_variation", &GSParams::allowed_flux_variation)
-                .def_readwrite("range_division_for_extrema", &GSParams::range_division_for_extrema)
-                .def_readwrite("small_fraction_of_flux", &GSParams::small_fraction_of_flux)
+                .def_readonly("minimum_fft_size", &GSParams::minimum_fft_size)
+                .def_readonly("maximum_fft_size", &GSParams::maximum_fft_size)
+                .def_readonly("folding_threshold", &GSParams::folding_threshold)
+                .def_readonly("stepk_minimum_hlr", &GSParams::stepk_minimum_hlr)
+                .def_readonly("maxk_threshold", &GSParams::maxk_threshold)
+                .def_readonly("kvalue_accuracy", &GSParams::kvalue_accuracy)
+                .def_readonly("xvalue_accuracy", &GSParams::xvalue_accuracy)
+                .def_readonly("table_spacing", &GSParams::table_spacing)
+                .def_readonly("realspace_relerr", &GSParams::realspace_relerr)
+                .def_readonly("realspace_abserr", &GSParams::realspace_abserr)
+                .def_readonly("integration_relerr", &GSParams::integration_relerr)
+                .def_readonly("integration_abserr", &GSParams::integration_abserr)
+                .def_readonly("shoot_accuracy", &GSParams::shoot_accuracy)
+                .def_readonly("allowed_flux_variation", &GSParams::allowed_flux_variation)
+                .def_readonly("range_division_for_extrema", &GSParams::range_division_for_extrema)
+                .def_readonly("small_fraction_of_flux", &GSParams::small_fraction_of_flux)
+                .def(bp::self == bp::other<GSParams>())
+                .enable_pickling()
                 ;
         }
     };
@@ -103,7 +104,7 @@ namespace galsim {
                       bp::arg("poisson_flux")=true, bp::arg("add_to_image")=false),
                      "Draw object into existing image using photon shooting.\n"
                      "\n"
-                     "Setting optional integer arg possionFlux != 0 allows profile flux to vary\n"
+                     "Setting optional integer arg poissonFlux != 0 allows profile flux to vary\n"
                      "according to Poisson statistics for N samples.\n"
                      "\n"
                      "Returns total flux of photons that landed inside image bounds.")
@@ -122,7 +123,7 @@ namespace galsim {
         static void wrap() {
             static char const * doc = 
                 "\n"
-                "SBProfile is an abstract base class represented all of the 2d surface\n"
+                "SBProfile is an abstract base class representing all of the 2d surface\n"
                 "brightness that we know how to draw.  Every SBProfile knows how to\n"
                 "draw an Image<float> of itself in real and k space.  Each also knows\n"
                 "what is needed to prevent aliasing or truncation of itself when drawn.\n"
@@ -135,11 +136,14 @@ namespace galsim {
                 "drawK() routines are normalized such that I(0,0) is the total flux.\n"
                 "\n"
                 "Currently we have the following possible implementations of SBProfile:\n"
-                "Basic shapes: SBBox, SBGaussian, SBExponential, SBAiry, SBSersic\n"
-                "SBLaguerre: Gauss-Laguerre expansion\n"
+                "Basic shapes: SBBox, SBGaussian, SBExponential, SBAiry, SBSersic,\n"
+                "              SBMoffat, SBKolmogorov, SBSpergel\n"
+                "SBInterpolatedImage: a representation of some arbitrary image\n"
+                "SBShapelet: an object represented as a shapelets decomposition\n"
                 "SBTransform: affine transformation of another SBProfile\n"
                 "SBAdd: sum of SBProfiles\n"
                 "SBConvolve: convolution of other SBProfiles\n"
+                "SBDeconvolve: deconvolution of an SBProfile\n"
                 "\n"
                 "==== Drawing routines ====\n"
                 "Grid on which SBProfile is drawn has pitch dx, which is taken from the\n"
@@ -154,7 +158,9 @@ namespace galsim {
 
             bp::class_<SBProfile> pySBProfile("SBProfile", doc, bp::no_init);
             pySBProfile
+                .def(bp::init<>())
                 .def(bp::init<const SBProfile &>())
+                .def("getGSParams", &SBProfile::getGSParams)
                 .def("xValue", &SBProfile::xValue,
                      "Return value of SBProfile at a chosen 2d position in real space.\n"
                      "May not be implemented for derived classes (e.g. SBConvolve) that\n"
@@ -179,12 +185,13 @@ namespace galsim {
                 .def("centroid", &SBProfile::centroid)
                 .def("getFlux", &SBProfile::getFlux)
                 .def("scaleFlux", &SBProfile::scaleFlux, bp::args("fluxRatio"))
-                .def("shear", &SBProfile::shear, bp::arg("shear"))
                 .def("rotate", &SBProfile::rotate, bp::args("theta"))
                 .def("shift", &SBProfile::shift, bp::args("delta"))
                 .def("expand", &SBProfile::expand, bp::args("scale"))
                 .def("transform", &SBProfile::transform, bp::args("dudx", "dudy", "dvdx", "dvdy"))
                 .def("shoot", &SBProfile::shoot, bp::args("n", "u"))
+                .def("__repr__", &SBProfile::repr)
+                .enable_pickling()
                 ;
             wrapTemplates<float>(pySBProfile);
             wrapTemplates<double>(pySBProfile);

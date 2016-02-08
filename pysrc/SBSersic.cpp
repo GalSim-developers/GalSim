@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -33,7 +33,7 @@ namespace bp = boost::python;
 
 namespace galsim {
 
-    struct PySBSersic 
+    struct PySBSersic
     {
 
         static SBSersic* construct(
@@ -54,7 +54,7 @@ namespace galsim {
             return new SBSersic(n, s, rType, flux, trunc, flux_untruncated, gsparams);
         }
 
-        static void wrap() 
+        static void wrap()
         {
             bp::class_<SBSersic,bp::bases<SBProfile> >("SBSersic", bp::no_init)
                 .def("__init__",
@@ -72,11 +72,13 @@ namespace galsim {
                 .def("getN", &SBSersic::getN)
                 .def("getHalfLightRadius", &SBSersic::getHalfLightRadius)
                 .def("getScaleRadius", &SBSersic::getScaleRadius)
+                .def("getTrunc", &SBSersic::getTrunc)
+                .enable_pickling()
                 ;
         }
     };
 
-    struct PySBDeVaucouleurs 
+    struct PySBDeVaucouleurs
     {
 
         static SBDeVaucouleurs* construct(
@@ -97,7 +99,7 @@ namespace galsim {
             return new SBDeVaucouleurs(s, rType, flux, trunc, flux_untruncated, gsparams);
         }
 
-        static void wrap() 
+        static void wrap()
         {
             bp::class_<SBDeVaucouleurs,bp::bases<SBSersic> >("SBDeVaucouleurs",bp::no_init)
                 .def("__init__",
@@ -113,11 +115,12 @@ namespace galsim {
                 .def(bp::init<const SBDeVaucouleurs &>())
                 .def("getHalfLightRadius", &SBDeVaucouleurs::getHalfLightRadius)
                 .def("getScaleRadius", &SBDeVaucouleurs::getScaleRadius)
+                .def("getTrunc", &SBDeVaucouleurs::getTrunc)
                 ;
         }
     };
 
-    void pyExportSBSersic() 
+    void pyExportSBSersic()
     {
         PySBSersic::wrap();
         PySBDeVaucouleurs::wrap();

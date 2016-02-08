@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -37,6 +37,23 @@ namespace galsim {
     
     SBAdd::~SBAdd() {}
 
+    std::list<SBProfile> SBAdd::getObjs() const
+    {
+        assert(dynamic_cast<const SBAddImpl*>(_pimpl.get()));
+        return static_cast<const SBAddImpl&>(*_pimpl).getObjs();
+    }
+
+    std::string SBAdd::SBAddImpl::repr() const 
+    {
+        std::ostringstream oss(" ");
+        oss << "galsim._galsim.SBAdd([";
+        ConstIter sptr = _plist.begin(); 
+        oss << sptr->repr();
+        for (++sptr; sptr!=_plist.end(); ++sptr) oss << ", " << sptr->repr();
+        oss << "], galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
+
     SBAdd::SBAddImpl::SBAddImpl(const std::list<SBProfile>& slist,
                                 const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams ? gsparams : GetImpl(slist.front())->gsparams)
@@ -45,7 +62,6 @@ namespace galsim {
             add(*sptr);
         initialize();
     }
-
 
     void SBAdd::SBAddImpl::add(const SBProfile& rhs)
     {
@@ -108,38 +124,38 @@ namespace galsim {
     } 
 
     void SBAdd::SBAddImpl::fillXValue(tmv::MatrixView<double> val,
-                                      double x0, double dx, int ix_zero,
-                                      double y0, double dy, int iy_zero) const
+                                      double x0, double dx, int izero,
+                                      double y0, double dy, int jzero) const
     {
         dbg<<"SBAdd fillXValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
-        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+        dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
+        dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
         ConstIter pptr = _plist.begin();
         assert(pptr != _plist.end());
-        GetImpl(*pptr)->fillXValue(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        GetImpl(*pptr)->fillXValue(val,x0,dx,izero,y0,dy,jzero);
         if (++pptr != _plist.end()) {
             tmv::Matrix<double> val2(val.colsize(),val.rowsize());
             for (; pptr != _plist.end(); ++pptr) {
-                GetImpl(*pptr)->fillXValue(val2.view(),x0,dx,ix_zero,y0,dy,iy_zero);
+                GetImpl(*pptr)->fillXValue(val2.view(),x0,dx,izero,y0,dy,jzero);
                 val += val2;
             }
         }
     }
 
     void SBAdd::SBAddImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                      double x0, double dx, int ix_zero,
-                                      double y0, double dy, int iy_zero) const
+                                      double kx0, double dkx, int izero,
+                                      double ky0, double dky, int jzero) const
     {
         dbg<<"SBAdd fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<", ix_zero = "<<ix_zero<<std::endl;
-        dbg<<"y = "<<y0<<" + iy * "<<dy<<", iy_zero = "<<iy_zero<<std::endl;
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
         ConstIter pptr = _plist.begin();
         assert(pptr != _plist.end());
-        GetImpl(*pptr)->fillKValue(val,x0,dx,ix_zero,y0,dy,iy_zero);
+        GetImpl(*pptr)->fillKValue(val,kx0,dkx,izero,ky0,dky,jzero);
         if (++pptr != _plist.end()) {
             tmv::Matrix<std::complex<double> > val2(val.colsize(),val.rowsize());
             for (; pptr != _plist.end(); ++pptr) {
-                GetImpl(*pptr)->fillKValue(val2.view(),x0,dx,ix_zero,y0,dy,iy_zero);
+                GetImpl(*pptr)->fillKValue(val2.view(),kx0,dkx,izero,ky0,dky,jzero);
                 val += val2;
             }
         }
@@ -150,8 +166,8 @@ namespace galsim {
                                       double y0, double dy, double dyx) const
     {
         dbg<<"SBAdd fillXValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
         ConstIter pptr = _plist.begin();
         assert(pptr != _plist.end());
         GetImpl(*pptr)->fillXValue(val,x0,dx,dxy,y0,dy,dyx);
@@ -165,19 +181,19 @@ namespace galsim {
     }
 
     void SBAdd::SBAddImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                      double x0, double dx, double dxy,
-                                      double y0, double dy, double dyx) const
+                                      double kx0, double dkx, double dkxy,
+                                      double ky0, double dky, double dkyx) const
     {
         dbg<<"SBAdd fillKValue\n";
-        dbg<<"x = "<<x0<<" + ix * "<<dx<<" + iy * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + ix * "<<dyx<<" + iy * "<<dy<<std::endl;
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         ConstIter pptr = _plist.begin();
         assert(pptr != _plist.end());
-        GetImpl(*pptr)->fillKValue(val,x0,dx,dxy,y0,dy,dyx);
+        GetImpl(*pptr)->fillKValue(val,kx0,dkx,dkxy,ky0,dky,dkyx);
         if (++pptr != _plist.end()) {
             tmv::Matrix<std::complex<double> > val2(val.colsize(),val.rowsize());
             for (; pptr != _plist.end(); ++pptr) {
-                GetImpl(*pptr)->fillKValue(val2.view(),x0,dx,dxy,y0,dy,dyx);
+                GetImpl(*pptr)->fillKValue(val2.view(),kx0,dkx,dkxy,ky0,dky,dkyx);
                 val += val2;
             }
         }

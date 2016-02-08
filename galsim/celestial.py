@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -79,11 +79,8 @@ class CelestialCoord(object):
 
     def _set_aux(self):
         if self._x is None:
-            import math
-            self._cosdec = math.cos(self._dec.rad())
-            self._sindec = math.sin(self._dec.rad())
-            self._cosra = math.cos(self._ra.rad())
-            self._sinra = math.sin(self._ra.rad())
+            self._sindec, self._cosdec = self._dec.sincos()
+            self._sinra, self._cosra = self._ra.sincos()
             self._x = self._cosdec * self._cosra
             self._y = self._cosdec * self._sinra
             self._z = self._sindec
@@ -320,7 +317,7 @@ class CelestialCoord(object):
     def deproject(self, pos, projection='lambert'):
         """Do the reverse process from the project() function.
 
-        i.e. This takes in a position (u,v) as a PositionD object and returns the
+        i.e. This takes in a position (u,v) in arcsec as a PositionD object and returns the
         corresponding celestial coordinate, using the current coordinate as the center
         point of the tangent plane projection.
         """
@@ -503,6 +500,7 @@ class CelestialCoord(object):
            and (c) Lieske (1979) A&A 73, 282-284.
         """
         if from_epoch == to_epoch: return self
+        import math
 
         # t0, t below correspond to Lieske's big T and little T
         t0 = (from_epoch-2000.)/100.
@@ -518,13 +516,9 @@ class CelestialCoord(object):
               (1.09468 + 0.000066*t0) * t2 + 0.018203 * t3 ) * galsim.arcsec
         c = ( (2004.3109 - 0.85330*t0 - 0.000217*t02) * t +
               (-0.42665 - 0.000217*t0) * t2 - 0.041833 * t3 ) * galsim.arcsec
-        import math
-        cosa = math.cos(a.rad())
-        sina = math.sin(a.rad())
-        cosb = math.cos(b.rad())
-        sinb = math.sin(b.rad())
-        cosc = math.cos(c.rad())
-        sinc = math.sin(c.rad())
+        sina, cosa = a.sincos()
+        sinb, cosb = b.sincos()
+        sinc, cosc = c.sincos()
 
         # This is the precession rotation matrix:
         xx = cosa*cosc*cosb - sina*sinb
@@ -565,16 +559,11 @@ class CelestialCoord(object):
         el0 = 33. * galsim.degrees
         r0 = 282.25 * galsim.degrees
         d0 = 62.6 * galsim.degrees
-        cosd0 = math.cos(d0.rad())
-        sind0 = math.sin(d0.rad())
+        sind0, cosd0 = d0.sincos()
 
         temp = self.precess(epoch, 1950.)
-        d = temp.dec
-        r = temp.ra
-        cosd = math.cos(d.rad())
-        sind = math.sin(d.rad())
-        cosr = math.cos(r.rad() - r0.rad())
-        sinr = math.sin(r.rad() - r0.rad())
+        sind, cosd = temp.dec.sincos()
+        sinr, cosr = (temp.ra-r0).sincos()
 
         cbcl = cosd*cosr
         cbsl = sind*sind0 + cosd*sinr*cosd0
@@ -585,18 +574,21 @@ class CelestialCoord(object):
 
         return (el, b)
 
-    def ecliptic(self):
+    def ecliptic(self, epoch=2000., date=None):
         """Get the longitude and latitude in ecliptic coordinates corresponding to this position.
 
-        The formulae for this are quite straightforward.  It requires just a single parameter for
-        the transformation, the obliquity of the ecliptic (the Earth's axial tilt).  This routine
-        gives results that agree with a pre-existing online calculator,
-        http://lambda.gsfc.nasa.gov/toolbox/tb_coordconv.cfm, to very good precision, but it's not
-        perfect.  Based on the pattern of the errors, it seems that that converter has a more
-        precise value for the axial tilt.  However, this routine is not currently being used for
-        really precise calculations, so a percent error is tolerable.  If you need really high
-        accuracy then this routine would require improvements (not just higher precision on the
-        axial tilt but also including its very slight time dependence).
+        The `epoch` parameter is used to get an accurate value for the (time-varying) obliquity of
+        the ecliptic.  The formulae for this are quite straightforward.  It requires just a single
+        parameter for the transformation, the obliquity of the ecliptic (the Earth's axial tilt).
+
+        @param  epoch        The epoch to be used for estimating the obliquity of the ecliptic, if
+                             `date` is None.  But if `date` is given, then use that to determine the
+                             epoch.
+                             [default: 2000.]
+        @param  date         If a date is given as a python datetime object, then return the
+                             position in ecliptic coordinates with respect to the sun position at
+                             that date.  If None, then return the true ecliptic coordiantes.
+                             [default: None]
 
         @returns the longitude and latitude as a tuple (lambda, beta), given as Angle instances.
         """
@@ -605,7 +597,10 @@ class CelestialCoord(object):
         # We are going to work in terms of the (x, y, z) projections.
         self._set_aux()
 
-        ep = 23.4*galsim.degrees # obliquity of the ecliptic, epsilon
+        # Get the obliquity of the ecliptic.
+        if date is not None:
+            epoch = date.year
+        ep = _ecliptic_obliquity(epoch)
         cos_ep = math.cos(ep.rad())
         sin_ep = math.sin(ep.rad())
 
@@ -617,9 +612,97 @@ class CelestialCoord(object):
         beta = math.asin(z_ecl)*galsim.radians
         lam = math.atan2(y_ecl, x_ecl)*galsim.radians
 
-        return (lam, beta)
+        if date is not None:
+            # Find the sun position in ecliptic coordinates on this date.  We have to convert to
+            # Julian day in order to use our helper routine to find the Sun position in ecliptic
+            # coordinates.
+            lam_sun, _ = _sun_position_ecliptic(date)
+            # Subtract it off, to get ecliptic coordinates relative to the sun.
+            lam -= lam_sun
+
+        return (lam.wrap(), beta)
 
     def copy(self): return CelestialCoord(self._ra, self._dec)
 
-    def __repr__(self): return 'CelestialCoord('+repr(self._ra)+','+repr(self._dec)+')'
+    def __repr__(self): return 'galsim.CelestialCoord(%r, %r)'%(self._ra,self._dec)
+    def __str__(self): return 'galsim.CelestialCoord(%s, %s)'%(self._ra,self._dec)
+    def __hash__(self): return hash(repr(self))
 
+    def __eq__(self, other): 
+        return (isinstance(other, CelestialCoord) and 
+                self.ra == other.ra and self.dec == other.dec)
+    def __ne__(self, other): return not self.__eq__(other)
+
+def _sun_position_ecliptic(date):
+    # This is a helper routine to calculate the position of the sun in ecliptic coordinates given a
+    # python datetime object.  It is most precise for dates between 1950-2050, and is based on
+    # http://en.wikipedia.org/wiki/Position_of_the_Sun#Ecliptic_coordinates
+    # We start by getting the number of days since Greenwich noon on 1 January 2000 (J2000).
+    import math
+    jd = _date_to_julian_day(date)
+    n = jd - 2451545.0
+    L = (280.46*galsim.degrees + (0.9856474*galsim.degrees)*n).wrap()
+    g = (357.528*galsim.degrees + (0.9856003*galsim.degrees)*n).wrap()
+    lam = L + (1.915*galsim.degrees)*math.sin(g.rad()) + \
+        (0.020*galsim.degrees)*math.sin((2*g).rad())
+    return (lam.wrap(), 0.*galsim.degrees)
+
+def _date_to_julian_day(date):
+    # From http://code-highlights.blogspot.com/2013/01/julian-date-in-python.html, this code returns
+    # the Julian day for a given date.  If 'date' is a datetime.datetime instance, then it uses the
+    # full time info.  If it's a datetime.date, then it does the calculation for noon of that day.
+    import datetime
+    if not (isinstance(date, datetime.date) or isinstance(date, datetime.datetime)):
+        raise ValueError("Date must be a python datetime object!")
+    a = (14. - date.month)//12
+    y = date.year + 4800 - a
+    m = date.month + 12*a - 3
+    retval = date.day + ((153*m + 2)//5) + 365*y + y//4 - y//100 + y//400 - 32045
+    if isinstance(date, datetime.datetime):
+        dayfrac = (date.hour + date.minute/60. + date.second/3600.)/24
+        # The default is the value at noon, so we want to add 0 if dayfrac = 0.5
+        dayfrac -= 0.5
+        retval += dayfrac
+    return retval
+
+def _ecliptic_to_equatorial(ecliptic_pos, epoch):
+    # Helper routine to go backwards from ecliptic coordinates to equatorial using a given epoch for
+    # the obliquity of the ecliptic.
+    # Should input a tuple of (lam, beta) values and an epoch, and get back a CelestialCoord.
+    lam, beta = ecliptic_pos
+    import math
+    # Get the (x, y, z)_ecliptic from (lam, beta).
+    cosbeta = math.cos(beta.rad())
+    sinbeta = math.sin(beta.rad())
+    coslam = math.cos(lam.rad())
+    sinlam = math.sin(lam.rad())
+    x_ecl = cosbeta*coslam
+    y_ecl = cosbeta*sinlam
+    z_ecl = sinbeta
+    # Transform to (x, y, z)_equatorial.
+    ep = _ecliptic_obliquity(epoch)
+    cos_ep = math.cos(ep.rad())
+    sin_ep = math.sin(ep.rad())
+    x_eq = x_ecl
+    y_eq = cos_ep*y_ecl - sin_ep*z_ecl
+    z_eq = sin_ep*y_ecl + cos_ep*z_ecl
+    # Transform to RA, dec.
+    dec = math.asin(z_eq)*galsim.radians
+    ra = math.atan2(y_eq, x_eq)*galsim.radians
+    # Return as a CelestialCoord
+    return galsim.CelestialCoord(ra, dec)
+
+def _ecliptic_obliquity(epoch):
+    # Routine to return the obliquity of the ecliptic for a given date.
+    # We need to figure out the time in Julian centuries from J2000 for this epoch.
+    t = (epoch - 2000.)/100.
+    # Then we use the last (most recent) formula listed under
+    # http://en.wikipedia.org/wiki/Ecliptic#Obliquity_of_the_ecliptic, from
+    # JPL's 2010 calculations.
+    ep = galsim.DMS_Angle('23:26:21.406')
+    ep -= galsim.DMS_Angle('00:00:46.836769')*t
+    ep -= galsim.DMS_Angle('00:00:0.0001831')*(t**2)
+    ep += galsim.DMS_Angle('00:00:0.0020034')*(t**3)
+    # There are even higher order terms, but they are really not important for any reasonable
+    # calculation we could ever do with GalSim.
+    return ep

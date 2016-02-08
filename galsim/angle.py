@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -43,24 +43,26 @@ There are five built-in AngleUnits which are always available for use:
 """
 
 def AngleUnit_repr(self):
-    if self is galsim.radians:
+    if self == galsim.radians:
         return 'galsim.radians'
-    elif self is galsim.degrees:
+    elif self == galsim.degrees:
         return 'galsim.degrees'
-    elif self is galsim.hours:
-        return 'galsim.house'
-    elif self is galsim.arcmin:
+    elif self == galsim.hours:
+        return 'galsim.hours'
+    elif self == galsim.arcmin:
         return 'galsim.arcmin'
-    elif self is galsim.arcsec:
+    elif self == galsim.arcsec:
         return 'galsim.arcsec'
     else:
-        return 'galsim.AngleUnit(' + str(self.getValue()) + ')'
+        return 'galsim.AngleUnit(%r)'%self.getValue()
 AngleUnit.__repr__ = AngleUnit_repr
+AngleUnit.__eq__ = lambda self, other: (
+    isinstance(other,AngleUnit) and self.getValue() == other.getValue())
+AngleUnit.__ne__ = lambda self, other: not self.__eq__(other)
+AngleUnit.__hash__ = lambda self: hash(self.getValue())
 
 # Enable pickling
-def AngleUnit_getinitargs(self):
-    return self.getValue()
-AngleUnit.__getinitargs__ = AngleUnit_getinitargs
+AngleUnit.__getinitargs__ = lambda self: (self.getValue(), )
 
 
 def get_angle_unit(unit):
@@ -150,6 +152,15 @@ Operations on NumPy arrays containing Angles are permitted, provided that they a
 of the allowed operations on Angles listed above (e.g., addition/subtraction of Angles,
 multiplication of an Angle by a float, but not multiplication of Angles together).
 
+There are convenience function for getting the sin, cos, and tan of an angle, along with
+one for getting sin and cos together, which should be more efficient than doing sin and 
+cos separately:
+
+    >>> sint = theta.sin()  # equivalent to sint = math.sin(theta.rad())
+    >>> cost = theta.cos()  # equivalent to sint = math.cos(theta.rad())
+    >>> tant = theta.tan()  # equivalent to sint = math.tan(theta.rad())
+    >>> sint, cost = theta.sincos()
+
 Wrapping
 --------
 
@@ -163,16 +174,12 @@ calculating the difference between them.
 
 """
 
-def __str__(self):
-    angle_rad = self.rad()
-    return str(angle_rad)+" radians"
-
-def __repr__(self):
-    angle_rad = self.rad()
-    return str(angle_rad)+" * galsim.radians"
-
-def __neg__(self):
-    return -1. * self
+Angle.__str__ = lambda self: str(self.rad()) + ' radians'
+Angle.__repr__ = lambda self: 'galsim.Angle(%r, galsim.radians)'%self.rad()
+Angle.__eq__ = lambda self, other: isinstance(other,Angle) and self.rad() == other.rad()
+Angle.__ne__ = lambda self, other: not self.__eq__(other)
+Angle.__neg__ = lambda self: -1. * self
+Angle.__hash__ = lambda self: hash(repr(self))
 
 def _make_dms_string(decimal, sep):
     if decimal >= 0:
@@ -246,9 +253,6 @@ def dms(self, sep=":"):
     d = self.wrap() / galsim.degrees
     return _make_dms_string(d,sep)
 
-Angle.__str__ = __str__
-Angle.__repr__ = __repr__
-Angle.__neg__ = __neg__
 Angle.hms = hms
 Angle.dms = dms
 

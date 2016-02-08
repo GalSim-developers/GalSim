@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -108,7 +108,13 @@ def main(argv):
     for k in range(cat.nobjects):
         # Initialize the (pseudo-)random number generator that we will be using below.
         # Use a different random seed for each object to get different noise realizations.
-        rng = galsim.BaseDeviate(random_seed+k)
+        # Using sequential random seeds here is safer than it sounds.  We use Mersenne Twister
+        # random number generators that are designed to be used with this kind of seeding.
+        # However, to be extra safe, we actually initialize one random number generator with this
+        # seed, generate and throw away two random values with that, and then use the next value
+        # to seed a completely different Mersenne Twister RNG.  The result is that successive
+        # RNGs created this way produce very independent random number streams.
+        rng = galsim.BaseDeviate(random_seed+k+1)
 
         # Take the Moffat beta from the first column (called 0) of the input catalog:
         # Note: cat.get(k,col) returns a string.  To get the value as a float, use either

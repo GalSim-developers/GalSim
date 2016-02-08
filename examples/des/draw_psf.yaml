@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -18,7 +18,7 @@
 #
 # Draw DES PSFs at the locations of observed galaxies.  To run it type:
 # 
-#     galsim -m des -v1 draw_psf.yaml
+#     galsim draw_psf.yaml
 #
 # This demo probably isn't so useful as an actual program, but it does showcase how to
 # use the DES module that comes with GalSim, which can be modified to do what you actually
@@ -58,7 +58,11 @@ eval_variables :
     ilast_chip : &last_chip 62
     #ifirst_chip : &first_chip 12
     #ilast_chip : &last_chip 12
-    
+
+# This uses the galsim.des module, which is not loaded by default, so we need to tell it
+# to import that module to get the des-specific types.
+modules :
+    - galsim.des
 
 # Define the PSF profile.  For now, just the items common to both shapelet and PSFEx PSFs.
 psf : 

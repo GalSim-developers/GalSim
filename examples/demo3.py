@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -104,7 +104,7 @@ def main(argv):
     gain = 1.7             # photons / ADU
     read_noise = 0.3       # ADU / pixel
 
-    random_seed = 1314662  
+    random_seed = 1314662
 
     logger.info('Starting demo script 3 using:')
     logger.info('    - Galaxy is bulge plus disk, flux = %.1e',gal_flux)
@@ -126,7 +126,7 @@ def main(argv):
     logger.info('    - Gaussian read noise (sigma = %.2f).',read_noise)
 
     # Initialize the (pseudo-)random number generator that we will be using below.
-    rng = galsim.BaseDeviate(random_seed)
+    rng = galsim.BaseDeviate(random_seed+1)
  
     # Define the galaxy profile.
     # Normally Sersic profiles are specified by half-light radius, the radius that 
@@ -169,11 +169,17 @@ def main(argv):
     atmos = atmos.shear(e=atmos_e, beta=atmos_beta*galsim.radians)
     logger.debug('Made atmospheric PSF profile')
 
-    # Define the optical part of the PSF.
-    # The first argument of OpticalPSF below is lambda/diam, which needs to be in arcsec,
-    # so do the calculation:
+    # Define the optical part of the PSF:
+    # The first argument of OpticalPSF below is lambda/diam (wavelength of light / telescope
+    # diameter), which needs to be in the same units used to specify the image scale.  We are using
+    # arcsec for that, so we have to self-consistently use arcsec here, using the following
+    # calculation:
     lam_over_diam = lam * 1.e-9 / tel_diam # radians
     lam_over_diam *= 206265  # arcsec
+    # Note that we could also have made GalSim do the conversion for us if we did not know the right
+    # factor:
+    # lam_over_diam = lam * 1.e-9 / tel_diam * galsim.radians
+    # lam_over_diam = lam_over_diam / galsim.arcsec
     logger.debug('Calculated lambda over diam = %f arcsec', lam_over_diam)
     # The rest of the values should be given in units of the wavelength of the incident light.
     optics = galsim.OpticalPSF(lam_over_diam, 

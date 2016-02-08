@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -22,13 +22,8 @@ Shapelet is a GSObject that implements a shapelet decomposition of a profile.
 
 import galsim
 from galsim import GSObject
-import galsim._galsim
+import _galsim
 from ._galsim import LVector, ShapeletSize
-
-def LVectorSize(order):
-    """An obsolete synonym for ShapeletSize"""
-    return ShapeletSize(order)
-
 
 class Shapelet(GSObject):
     """A class describing polar shapelet surface brightness profiles.
@@ -112,15 +107,11 @@ class Shapelet(GSObject):
     Furthermore, there are specializations of the rotate() and expand() methods that let
     them be performed more efficiently than the usual GSObject implementation.
     """
-
-    # Initialization parameters of the object, with type information
     _req_params = { "sigma" : float, "order" : int }
     _opt_params = {}
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
-    # --- Public Class methods ---
     def __init__(self, sigma, order, bvec=None, gsparams=None):
         # Make sure order and sigma are the right type:
         order = int(order)
@@ -136,68 +127,32 @@ class Shapelet(GSObject):
             import numpy
             bvec = LVector(order,numpy.array(bvec))
 
-        GSObject.__init__(self, galsim._galsim.SBShapelet(sigma, bvec, gsparams))
+        GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec, gsparams))
+        self._gsparams = gsparams
 
-    @property
-    def sigma(self): 
+    def getSigma(self):
         return self.SBProfile.getSigma()
-    @property
-    def order(self): 
+
+    def getOrder(self):
         return self.SBProfile.getBVec().order
-    @property
-    def bvec(self): 
+
+    def getBVec(self):
         return self.SBProfile.getBVec().array
 
-    # For backwards compatibility only.  Obsolete.
-    def getSigma(self):
-        return self.sigma
-    def getOrder(self):
-        return self.order
-    def getBVec(self):
-        return self.bvec
+    @property
+    def sigma(self): return self.getSigma()
+    @property
+    def order(self): return self.getOrder()
+    @property
+    def bvec(self): return self.getBVec()
 
     def getPQ(self,p,q):
         return self.SBProfile.getBVec().getPQ(p,q)
     def getNM(self,N,m):
         return self.SBProfile.getBVec().getPQ((N+m)/2,(N-m)/2)
 
-    # Note: Since SBProfiles are officially immutable, these create a new
-    # SBProfile object for this GSObject.  This is of course inefficient, but not
-    # outrageously so, since the SBShapelet constructor is pretty minimalistic, and 
-    # presumably anyone who cares about efficiency would not be using these functions.
-    # They would create the Shapelet with the right bvec from the start.
-    def setSigma(self,sigma):
-        """This method is discouraged and will be deprecated."""
-        GSObject.__init__(self, galsim._galsim.SBShapelet(sigma, self.SBProfile.getBVec()))
-    def setOrder(self,order):
-        """This method is discouraged and will be deprecated."""
-        if self.order == order: return
-        # Preserve the existing values as much as possible.
-        if self.order > order:
-            bvec = LVector(order, self.bvec[0:ShapeletSize(order)])
-        else:
-            import numpy
-            a = numpy.zeros(ShapeletSize(order))
-            a[0:len(self.bvec)] = self.bvec
-            bvec = LVector(order,a)
-        GSObject.__init__(self, galsim._galsim.SBShapelet(self.sigma, bvec))
-    def setBVec(self,bvec):
-        """This method is discouraged and will be deprecated."""
-        bvec_size = ShapeletSize(self.order)
-        if len(bvec) != bvec_size:
-            raise ValueError("bvec is the wrong size for the Shapelet order")
-        import numpy
-        bvec = LVector(self.order,numpy.array(bvec))
-        GSObject.__init__(self, galsim._galsim.SBShapelet(self.sigma, bvec))
-    def setPQ(self,p,q,re,im=0.):
-        """This method is discouraged and will be deprecated."""
-        bvec = self.SBProfile.getBVec().copy()
-        bvec.setPQ(p,q,re,im)
-        GSObject.__init__(self, galsim._galsim.SBShapelet(self.sigma, bvec))
-    def setNM(self,N,m,re,im=0.):
-        """This method is discouraged and will be deprecated."""
-        self.setPQ((N+m)/2,(N-m)/2,re,im)
-
+    # These act directly on the bvector, so they may be a bit more efficient than the 
+    # regular methods in GSObject
     def rotate(self, theta):
         if not isinstance(theta, galsim.Angle):
             raise TypeError("Input theta should be an Angle")
@@ -213,13 +168,24 @@ class Shapelet(GSObject):
         sigma = self.sigma * scale
         return Shapelet(sigma, self.order, self.bvec)
 
-    def fitImage(self, image, center=None, normalization='flux'):
-        """An obsolete method that is roughly equivalent to 
-        self = galsim.FitShapelet(self.sigma, self.order, image)
-        """
-        new_obj = galsim.FitShapelet(self.sigma, self.order, image, center, normalization)
-        bvec = new_obj.SBProfile.getBVec()
-        GSObject.__init__(self, galsim._galsim.SBShapelet(self.sigma, bvec))
+    def __repr__(self): 
+        return 'galsim.Shapelet(sigma=%r, order=%r, bvec=%r, gsparams=%r)'%(
+                self.sigma, self.order, self.bvec, self._gsparams)
+
+    def __str__(self): 
+        return 'galsim.Shapelet(sigma=%s, order=%s, bvec=%s)'%(self.sigma, self.order, self.bvec)
+
+_galsim.SBShapelet.__getinitargs__ = lambda self: (
+        self.getSigma(), self.getBVec(), self.getGSParams())
+_galsim.SBShapelet.__getstate__ = lambda self: None
+_galsim.SBShapelet.__setstate__ = lambda self, state: 1
+_galsim.SBShapelet.__repr__ = lambda self: 'galsim._galsim.SBShapelet(%r, %r, %r)'%(
+        self.getSigma(), self.getBVec(), self.getGSParams())
+_galsim.LVector.__getinitargs__ = lambda self: (self.order, self.array)
+_galsim.LVector.__repr__ = lambda self: 'galsim._galsim.LVector(%r, %r)'%(self.order, self.array)
+_galsim.LVector.__eq__ = lambda self, other: repr(self) == repr(other)
+_galsim.LVector.__ne__ = lambda self, other: not self.__eq__(other)
+_galsim.LVector.__hash__ = lambda self: hash(repr(self))
 
 
 def FitShapelet(sigma, order, image, center=None, normalization='flux', gsparams=None):
@@ -269,7 +235,7 @@ def FitShapelet(sigma, order, image, center=None, normalization='flux', gsparams
         raise NotImplementedError("Sorry, cannot (yet) fit a shapelet model to an image "+
                                     "with a non-trivial WCS.")
 
-    galsim._galsim.ShapeletFitImage(sigma, bvec, image.image, image.scale, center)
+    _galsim.ShapeletFitImage(sigma, bvec, image.image, image.scale, center)
 
     if normalization.lower() == "flux" or normalization.lower() == "f":
         bvec /= image.scale**2

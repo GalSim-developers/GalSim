@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -129,7 +129,7 @@ def main(argv):
         t1 = time.time()
 
         # Initialize the random number generator we will be using.
-        rng = galsim.UniformDeviate(random_seed+k)
+        rng = galsim.UniformDeviate(random_seed+k+1)
 
         gal = galsim.RealGalaxy(real_galaxy_catalog, index = k)
         logger.debug('   Read in training sample galaxy and PSF from file')

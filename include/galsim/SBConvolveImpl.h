@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -32,6 +32,9 @@ namespace galsim {
         SBConvolveImpl(const std::list<SBProfile>& slist, bool real_space,
                        const GSParamsPtr& gsparams);
         ~SBConvolveImpl() {}
+
+        std::list<SBProfile> getObjs() const { return _plist; }
+        bool isRealSpace() const { return _real_space; }
 
         void add(const SBProfile& rhs); 
 
@@ -112,11 +115,13 @@ namespace galsim {
 
         // Overrides for better efficiency
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
-                        double x0, double dx, int ix_zero,
-                        double y0, double dy, int iy_zero) const;
+                        double kx0, double dkx, int izero,
+                        double ky0, double dky, int jzero) const;
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
-                        double x0, double dx, double dxy,
-                        double y0, double dy, double dyx) const;
+                        double kx0, double dkx, double dkxy,
+                        double ky0, double dky, double dkyx) const;
+
+        std::string repr() const;
 
     private:
         typedef std::list<SBProfile>::iterator Iter;
@@ -150,6 +155,9 @@ namespace galsim {
 
         ~SBAutoConvolveImpl() {}
 
+        SBProfile getObj() const { return _adaptee; }
+        bool isRealSpace() const { return _real_space; }
+
         double xValue(const Position<double>& p) const;
 
         std::complex<double> kValue(const Position<double>& k) const
@@ -173,13 +181,15 @@ namespace galsim {
 
         // Overrides for better efficiency
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
-                        double x0, double dx, int ix_zero,
-                        double y0, double dy, int iy_zero) const;
+                        double kx0, double dkx, int izero,
+                        double ky0, double dky, int jzero) const;
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
-                        double x0, double dx, double dxy,
-                        double y0, double dy, double dyx) const;
+                        double kx0, double dkx, double dkxy,
+                        double ky0, double dky, double dkyx) const;
 
         const SBProfile& getAdaptee() const { return _adaptee; }
+
+        std::string repr() const;
 
     private:
         SBProfile _adaptee;
@@ -200,6 +210,9 @@ namespace galsim {
         SBAutoCorrelateImpl(const SBProfile& s, bool real_space, const GSParamsPtr& gsparams);
 
         ~SBAutoCorrelateImpl() {}
+
+        SBProfile getObj() const { return _adaptee; }
+        bool isRealSpace() const { return _real_space; }
 
         double xValue(const Position<double>& p) const;
 
@@ -224,13 +237,15 @@ namespace galsim {
 
         // Overrides for better efficiency
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
-                        double x0, double dx, int ix_zero,
-                        double y0, double dy, int iy_zero) const;
+                        double kx0, double dkx, int izero,
+                        double ky0, double dky, int jzero) const;
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
-                        double x0, double dx, double dxy,
-                        double y0, double dy, double dyx) const;
+                        double kx0, double dkx, double dkxy,
+                        double ky0, double dky, double dkyx) const;
 
         const SBProfile& getAdaptee() const { return _adaptee; }
+
+        std::string repr() const;
 
     private:
         SBProfile _adaptee;

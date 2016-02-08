@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2014 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -9,15 +9,16 @@
 # conditions are met:
 #
 # 1. Redistributions of source code must retain the above copyright notice, this
-# list of conditions, and the disclaimer given in the accompanying LICENSE file.
+#    list of conditions, and the disclaimer given in the accompanying LICENSE
+#    file.
 # 2. Redistributions in binary form must reproduce the above copyright notice,
-# this list of conditions, and the disclaimer given in the documentation
-# and/or other materials provided with the distribution.
-#
+#    this list of conditions, and the disclaimer given in the documentation
+#    and/or other materials provided with the distribution.
 """@file detectors.py
 
 Module with routines to simulate CCD and NIR detector effects like nonlinearity, reciprocity
-failure, interpixel capacitance, etc. """
+failure, interpixel capacitance, etc.
+"""
 
 import galsim
 import numpy
@@ -79,7 +80,7 @@ def applyNonlinearity(self, NLfunc, *args):
 
 def addReciprocityFailure(self, exp_time, alpha, base_flux):
     """
-    Accounts for the reciprocity failure and corrects the original Image for it directly.
+    Accounts for the reciprocity failure and includes it in the original Image directly.
 
     Reciprocity, in the context of photography, is the inverse relationship between the incident
     flux (I) of a source object and the exposure time (t) required to produce a given response (p)
@@ -128,8 +129,6 @@ def addReciprocityFailure(self, exp_time, alpha, base_flux):
                             units of 'per decade'.
     @param base_flux        The flux (p'/t') at which the gain is calibrated to have its nominal
                             value.
-    
-    @returns None
     """
 
     if not isinstance(alpha, float) or alpha < 0.:
@@ -158,9 +157,12 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     coupling of sense nodes.
 
     This interpixel capacitance is approximated as a linear effect that can be described by a 3x3
-    kernel that is convolved with the image. The kernel could be intrinsically anisotropic. A
-    sensible kernel must have non-negative entries and must be normalized such that the sum of the
-    elements is 1, in order to conserve the total charge.
+    kernel that is convolved with the image. The kernel must be an Image instance and could be
+    intrinsically anisotropic. A sensible kernel must have non-negative entries and must be
+    normalized such that the sum of the elements is 1, in order to conserve the total charge.
+    The (1,1) element of the kernel is the contribution to the voltage read at a pixel from the
+    electrons in the pixel to its bottom-left, the (1,2) element of the kernel is the contribution
+    from the charges to its left and so on.
 
     The argument 'edge_treatment' specifies how the edges of the image should be treated, which
     could be in one of the three ways:
@@ -179,10 +181,10 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     Calling
     -------
 
-        >>> img.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend',
+        >>> img.applyIPC(IPC_kernel=ipc_kernel, edge_treatment='extend', fill_value=0,
             kernel_nonnegativity=True, kernel_normalization=True)
 
-    @param IPC_kernel              A 3x3 NumPy array that is convolved with the Image instance
+    @param IPC_kernel              A 3x3 Image instance that is convolved with the Image instance
     @param edge_treatment          Specifies the method of handling edges and should be one of
                                    'crop', 'extend' or 'wrap'. See above for details.
                                    [default: 'extend']
@@ -198,34 +200,35 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     @returns None
     """
 
-    # IPC kernel has to be a 3x3 numpy array
-    if not isinstance(IPC_kernel,numpy.ndarray):
-        raise ValueError("IPC_kernel must be a NumPy array.")
-    if not IPC_kernel.shape==(3,3):
-        raise ValueError("IPC kernel must be a NumPy array of size 3x3.")
+    # IPC kernel has to be a 3x3 Image instance
+    if not isinstance(IPC_kernel,galsim.Image):
+        raise ValueError("IPC_kernel must be an Image instance .")
+    ipc_kernel = IPC_kernel.array
+    if not ipc_kernel.shape==(3,3):
+        raise ValueError("IPC kernel must be an Image instance of size 3x3.")
 
     # Check for non-negativity of the kernel
     if kernel_nonnegativity is True:
-        if (IPC_kernel<0).any() is True:
+        if (ipc_kernel<0).any() is True:
             raise ValueError("IPC kernel must not contain negative entries")
 
     # Check and enforce correct normalization for the kernel
     if kernel_normalization is True:
-        if IPC_kernel.sum() != 1.0:
+        if abs(ipc_kernel.sum() - 1.0) > 10.*numpy.finfo(ipc_kernel.dtype.type).eps:
             import warnings
-            warnings.warn("The entries in the kernel did not sum to 1. Scaling the kernel to "
-                "ensure correct normalization.")
-            IPC_kernel = IPC_kernel/IPC_kernel.sum() 
+            warnings.warn("The entries in the IPC kernel did not sum to 1. Scaling the kernel to "\
+                +"ensure correct normalization.")
+            IPC_kernel = IPC_kernel/ipc_kernel.sum()
 
     # edge_treatment can be 'extend', 'wrap' or 'crop'
-    if edge_treatment is 'crop':
+    if edge_treatment=='crop':
         # Simply re-label the array of the Image instance
         pad_array = self.array
-    elif edge_treatment is 'extend':
+    elif edge_treatment=='extend':
         # Copy the array of the Image instance and pad with zeros
         pad_array = numpy.zeros((self.array.shape[0]+2,self.array.shape[1]+2))
         pad_array[1:-1,1:-1] = self.array
-    elif edge_treatment is 'wrap':
+    elif edge_treatment=='wrap':
         # Copy the array of the Image instance and pad with zeros initially
         pad_array = numpy.zeros((self.array.shape[0]+2,self.array.shape[1]+2))
         pad_array[1:-1,1:-1] = self.array
@@ -237,32 +240,41 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     else:
         raise ValueError("edge_treatment has to be one of 'extend', 'wrap' or 'crop'. ")
 
-    #Generating different segments of the padded array
+    # Generating different segments of the padded array
     center = pad_array[1:-1,1:-1]
-    top = pad_array[:-2,1:-1]
-    bottom = pad_array[2:,1:-1]
+    top = pad_array[2:,1:-1]
+    bottom = pad_array[:-2,1:-1]
     left = pad_array[1:-1,:-2]
     right = pad_array[1:-1,2:]
-    topleft = pad_array[:-2,:-2]
-    bottomright = pad_array[2:,2:]
-    topright = pad_array[:-2,2:]
-    bottomleft = pad_array[2:,:-2]
+    topleft = pad_array[2:,:-2]
+    bottomright = pad_array[:-2,2:]
+    topright = pad_array[2:,2:]
+    bottomleft = pad_array[:-2,:-2]
 
-    #Generating the output array, with 2 rows and 2 columns lesser than the padded array
-    out_array = IPC_kernel[0,0]*topleft + IPC_kernel[0,1]*top + IPC_kernel[0,2]*topright + \
-        IPC_kernel[1,0]*left + IPC_kernel[1,1]*center + IPC_kernel[1,2]*right + \
-        IPC_kernel[2,0]*bottomleft + IPC_kernel[2,1]*bottom + IPC_kernel[2,2]*bottomright
+    # Ensure that the origin is (1,1)
+    kernel = IPC_kernel.view()
+    kernel.setOrigin(1,1)
 
-    if edge_treatment is 'crop':
+    # Generating the output array, with 2 rows and 2 columns lesser than the padded array
+    # Image values have been used to make the code look more intuitive
+    out_array = kernel(1,3)*topleft + kernel(2,3)*top + kernel(3,3)*topright + \
+        kernel(1,2)*left + kernel(2,2)*center + kernel(3,2)*right + \
+        kernel(1,1)*bottomleft + kernel(2,1)*bottom + kernel(3,1)*bottomright
+
+    if edge_treatment=='crop':
         self.array[1:-1,1:-1] = out_array
         #Explicit edge effects handling with filling the edges with the value given in fill_value
         if fill_value is not None:
-            self.array[0,:] = fill_value
-            self.array[-1,:] = fill_value
-            self.array[:,0] = fill_value
-            self.array[:,-1] = fill_value
+            if isinstance(fill_value, float) or isinstance(fill_value, int):
+                self.array[0,:] = fill_value
+                self.array[-1,:] = fill_value
+                self.array[:,0] = fill_value
+                self.array[:,-1] = fill_value
+            else:
+                raise ValueError("'fill_value' must be either a float or an int")
     else:
         self.array[:,:] = out_array
+
 
 def addPersistence(self,imgs,coeffs):
     """
@@ -313,7 +325,31 @@ def addPersistence(self,imgs,coeffs):
             Image objects and 'coeffs' must be a list of float or int or a NumPy array of the \
             same size. ")
 
+def quantize(self):
+    """
+    Rounds the pixel values in an image to integer values, while preserving the type of the data.
+
+    At certain stages in the astronomical image generation process, detectors effectively round to
+    the nearest integer.  The exact stage at which this happens depends on the type of device (CCD
+    vs. NIR detector).  For example, for H2RG detectors, quantization happens in two stages: first,
+    when detecting a certain number of photons, corresponding to the sum of background and signal
+    multiplied by the QE and including reciprocity failure.  After this, a number of other processes
+    occur (e.g., nonlinearity, IPC, read noise) that could result in non-integer pixel values, only
+    rounding to an integer at the stage of analog-to-digital conversion.
+
+    Because we cannot guarantee that quantization will always be the last step in the process, the
+    quantize() routine does not actually modify the type of the image to 'int'.  However, users can
+    easily do so by doing
+
+        image.quantize()
+        int_image = galsim.Image(image, dtype=int)
+
+    """
+    self.applyNonlinearity(numpy.round)
+
+
 galsim.Image.applyNonlinearity = applyNonlinearity
 galsim.Image.addReciprocityFailure = addReciprocityFailure
 galsim.Image.applyIPC = applyIPC
 galsim.Image.addPersistence = addPersistence
+galsim.Image.quantize = quantize

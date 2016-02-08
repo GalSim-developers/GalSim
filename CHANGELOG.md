@@ -1,63 +1,75 @@
-Changes from v1.1 to v1.2
+Changes from v1.3 to v1.4
 =========================
+
+API Changes
+-----------
+
+- Changed the default shift and/or offset for the output.psf field in a config
+  file to not do any shift or offset.  It had been the default to match what
+  was applied to the galaxy (cf. demo5).  However, we thought that was probably
+  not the most intuitive default.  Now, matching the galaxy is still possible,
+  but requires explicit specification of output.psf.shift = "galaxy" or
+  output.psf.offset = "galaxy". (#691)
+
+
+Bug Fixes
+---------
+
+- Fixed a bug in some of the WCS classes if the RA/Dec axes in the FITS header
+  are reversed (which is allowed by the FITS standard). (#681)
+- Improved ability of ChromaticObjects to find fiducial achromatic profiles
+  and wavelengths with non-zero flux. (#680)
+- Fixed a bug in the way Images are instantiated for certain combinations of
+  ChromaticObjects and image-setup keyword arguments (#683)
+- Added ability to manipulate the width of the moment-measuring weight function
+  for the KSB shear estimation method of the galsim.hsm package. (#686)
+- Fixed bug in the (undocumented) function COSMOSCatalog._makeSingleGalaxy,
+  where the resulting object did not set the index attribute properly. (#694)
+
 
 New Features
 ------------
 
-- Changed name of noise whitening routine from noise.applyWhiteningTo(image)
-  to image.whitenNoise(noise), parallel to image.addNoise(noise); use of 
-  noise.applyWhiteningTo() is deprecated. (#529)
-- Added an option to impose N-fold symmetry (for user-selected even values of
-  N>=4) on the noise in images with correlated noise rather than fully whiten
-  the noise called image.symmetrizeNoise(noise, N). (#529)
-- Added magnitudes as a method to set the flux of SED objects. (#547)
-- Added SED.calculateDCRMomentShifts and SED.calculateChromaticSeeingRatio convenience functions
-  for estimating chromatic PSF moment shifts. (#547)
-- Added new methods of the image class to simulate two detector effects: nonlinearity and
-  reciprocity failure. (#552)
-- Renamed the GSParams parameter `alias_threshold` to `folding_threshold`, a clearer term for the
-  profile image folding in real space that this GSParam controls. (#562)
-- Modified the internals of noise generation by correlated noise models to use Hermitian symmetry,
-  for greater efficiency. (#563)
-- Extended to the `rotate`, `shear`, and `transform` methods of ChromaticObject the ability
-  to take functions of wavelength for the arguments. (#581)
-- Added a module to describe charge deflection in CCD pixels (also known as the "brighter-fatter"
-  effect) following the model of Antilogus et al (2014). (#524)
-- Make it possible for OpticalPSF to model non-trivially complicated obscuration and/or struts
-  by allowing it to take an optional image of the pupil plane. (#601)
+- Added OutputCatalog class, which can be used to keep track of and then output
+  truth information.  cf. demos 9 and 10. (#301, #691)
+- Added methods calculateHLR, calculateMomentRadius, and calculateFWHM to both
+  GSObject and Image. (#308)
+- Changed `galsim.fits.writeMulti` to allow any of the "image"s to be
+  already-built hdus, which are included as is. (#691)
+- Added optional `wcs` argument to `Image.resize()`. (#691)
+- Added `BaseDeviate.discard(n)` and `BaseDeviate.raw()`. (#691)
+- Added `sersic_prec` option to COSMOSCatalog.makeGalaxy(). (#691)
 
-Bug Fixes and Improvements
---------------------------
 
-- Modified BoundsI and PositionI initialization to ensure that integer elements
-  in NumPy arrays with `dtype==int` are handled without error. (#486)
-- Changed the default seed used for Deviate objects when no seed is given to use /dev/urandom
-  if it is available.  If not, it reverts to the old behavior of using the current time to
-  generate a seed value. (#537)
-- Changed SED and Bandpass methods that return a new SED or Bandpass to attempt to preserve the
-  type of the calling object if it is a subclass of SED or Bandpass respectively. (#547)
-- Changed the the `file_name` argument to `CorrelatedNoise.getCOSMOSNoise()` to no longer be
-  required.  The normal file to use is now installed along with GalSim (in the directory
-  PREFIX/share/galsim), so that file can be used by default. (#548)
-- Fixed the `dtype=` kwarg used when initializing `Image` instances to interpret the aliases `int`
-  and `float` as the `numpy.int32` and `numpy.float64` data types, respectively.  Previously the
-  behavior was unpredictable and platform dependent. (#571)
-- Switched the sign of the angle returned by `CelestialCoord.angleBetween`.  The sign is now
-  positive when the angle as seen from the ground sweeps in the counter-clockwise direction,
-  which is a more sensible definition than what it had used. (#590)
-- Fixed the Image constructor so that if it is passed a NumPy array with the opposite byteorder
-  as the native one on the system, it does not return an Image with different contents. (#594)
-- Fixed bug that prevented calling LookupTables on non-square 2d arrays. (#599)
-- Updated the code to account for a planned change in NumPy that `array == None` will be an
-  element-wise comparison rather than equivalent to `array is None`. (#604)
-- Fixed a bug where the dtype of an Image could change when resizing, which should not be the
-  case.  (#604)
+Updates to galsim executable
+----------------------------
 
-Updates to config options
--------------------------
+- Dropped default verbosity from 2 to 1, since for real simulations, 2 is
+  usually too much output. (#691)
+- Added ability to easily split the total work into several jobs with
+  galsim -n njobs -j jobnum. (#691)
+- Added galsim -p to perform profiling on the run. (#691)
 
-- Moved noise whitening option from being an attribute of the RealGalaxy class,
-  to being a part of the description of the noise. (#529)
-- Added RandomPoisson, RandomBinomial, RandomWeibull, RandomGamma, and RandomChi2 random number
-  generators, corresponding to the random deviate classes in the python layer. (#537)
+
+New config features
+-------------------
+
+- Added ability to write truth catalogs using output.truth field. (#301, #691)
+- Improved the extensibility of the config parsing.  It is now easier to write
+  custom image types, object types, value types, etc. and register them with
+  the config parser.  The code with the new type definitions should be given
+  as a module for the code to import using the new 'modules' top-level
+  config field. (#691)
+- Added the 'template' option to read another config file and use either the 
+  whole file as a template or just a given field from the file. (#691)
+- Made '$' and '@' shorthand for 'Eval' and 'Current' types respectively in
+  string values.  e.g. '$(@image.pixel_scale) * 2' would be parsed to mean
+  2 times the current value of image.pixel_scale.  (#691)
+- Allowed gsobjects to be referenced from Current types. (#691)
+- Added x,f specification for a RandomDistribution. (#691)
+- Added a new 'stamp' top level field and moved some of the items that had
+  belonged in 'image' over to 'stamp'.  Notably, 'draw_method', 'offset', and
+  'gsparams', among other less commonly used parameters.  However, for
+  backwards compatibility, they are all still allowed in the image field
+  as well. (#691)
 
