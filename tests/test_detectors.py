@@ -478,8 +478,8 @@ def test_Persistence_basic():
     t1 = time.time()
 
     # Make an image with non-trivially interesting scale and bounds.
-    g = galsim.Gaussian(sigma=3.7)
-    im = g.draw(scale=0.25)
+    g = galsim.Gaussian(sigma=3.7,flux=1000.)
+    im = g.drawImage(scale=0.25)
     im.shift(dx=-5, dy=3)
     im_save = im.copy()
 
@@ -488,8 +488,8 @@ def test_Persistence_basic():
     dy = [-1.0, 0.0, 2.0]
     im_prev = []
     for i in xrange(3):
-        g = galsim.Gaussian(sigma=3.7)
-        im_prev += [g.draw(scale=0.25)]
+        g = galsim.Gaussian(sigma=3.7,flux=1000.)
+        im_prev += [g.drawImage(scale=0.25)]
         im_prev[i].shift(dx=dx[i],dy=dy[i])
 
     # Test for zero coefficient
@@ -514,11 +514,9 @@ def test_Persistence_basic():
 
     # Test for identical copies of same image
     im_new = im.copy()
-    n_im = 1
-    im_new.addPersistence(imgs=[im]*n_im, coeffs=0.5**np.linspace(1,n_im,n_im)) #0.1,0.01,0.001
-    print im.array.max(), im_new.array.max(), im.array.max()*(2.-1./2**n_im), (2.-1./2**n_im)
-    assert im_new.array.max()==im.array.max()*(2.-1./2**n_im)
-    np.testing.assert_array_equal(im_new.array, im.array*(2.-1./2**n_im),
+    n_im = 3
+    im_new.addPersistence(imgs=[im]*n_im, coeffs=0.5**np.linspace(1,n_im,n_im)) #0.5,0.25,0.125
+    np.testing.assert_array_almost_equal(im_new.array, im.array*(2.-1./2**n_im),7,
             err_msg="Images differ when identical copies of the same image persist.")
 
     # Test for different lengths of imgs and coeffs
