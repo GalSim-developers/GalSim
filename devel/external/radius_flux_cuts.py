@@ -20,7 +20,6 @@ min_ground_fwhm = 0.5 # minimum value of FWHM for which results are tabulated
 ground_dfwhm = 0.15 # spacing between tabulated FWHM values
 ground_nfwhm = 4 # number of FWHM values for ground
 fwhm_arr = min_ground_fwhm + ground_dfwhm*np.arange(ground_nfwhm)
-size_rescale = 0.6
 noise_var = [0.0088, 0.0060, 0.0046, 0.0040]
 noise_fail_val = 1.e-10
 sn_min = 17.0
@@ -35,19 +34,8 @@ noise_max_var = selection_catalog.field('max_var')[:,1:]
 # 2-component bulge + disk fits, just because radius and n are better-defined with a single galaxy
 # model.
 fit_catalog = pyfits.getdata(os.path.join(gal_dir, rgc_fits_file))
-params = fit_catalog.field('sersicfit')
-fit_gal_flux = params[:,0]
-fit_gal_hlr = params[:,1]
-fit_gal_n = params[:,2]
-fit_gal_q = params[:,3]
-fit_gal_n[fit_gal_n < 0.3] = 0.3
-gal_hlr = 0.03*size_rescale*np.sqrt(fit_gal_q)*fit_gal_hlr
-gal_flux = np.zeros_like(gal_hlr)
-for ind in range(len(gal_flux)):
-    tmp_ser = galsim.Sersic(fit_gal_n[ind],
-                            half_light_radius=gal_hlr[ind]/size_rescale)
-    gal_flux[ind] = fit_gal_flux[ind] / tmp_ser.xValue(0,gal_hlr[ind]) / 0.03**2
-# Use log(flux) when plotting, to better capture the dynamic range of this parameter.
+gal_hlr = fit_catalog.field('hlr')[:,0] # sersic HLR
+gal_flux = fit_catalog.field('flux')[:,0] # sersic flux
 lg_gal_flux = np.log10(gal_flux)
 
 # Check, for each FWHM value, what are the radius and flux distributions for objects that pass/fail
