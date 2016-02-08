@@ -737,11 +737,11 @@ def _lod_to_dol(lod, N=None):
         for k, v in lod.iteritems():
             try:
                 out[k] = v[i]
-            except IndexError: # It's list-like, but too short.
+            except IndexError:  # It's list-like, but too short.
                 if len(v) != 1:
                     raise ValueError("Cannot broadcast kwargs of different non-length-1 lengths.")
                 out[k] = v[0]
-            except TypeError: # Value is not list-like, so broadcast whole value
+            except TypeError:  # Value is not list-like, so broadcast whole value
                 out[k] = v
             except:
                 raise "Cannot broadcast non-indexable kwargs"
