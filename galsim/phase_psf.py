@@ -852,7 +852,7 @@ def Atmosphere(screen_size, rng=None, **kwargs):
     # Turn speed, direction into vx, vy
     if 'speed' in kwargs:
         kwargs['speed'] = _listify(kwargs['speed'])
-        if not 'direction' in kwargs:
+        if 'direction' not in kwargs:
             kwargs['direction'] = [0*galsim.degrees]*len(kwargs['speed'])
         kwargs['vx'], kwargs['vy'] = zip(*[v*d.sincos()
                                            for v, d in zip(kwargs['speed'],
