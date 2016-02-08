@@ -275,19 +275,20 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     else:
         self.array[:,:] = out_array
 
-
 def addPersistence(self,imgs,coeffs):
     """
     Adds the effects of persistence to the Image instance.
 
     Persistence refers to the retention of a small fraction of the signal after resetting the
-    imager pixel elements. The persistence signal of a previous image is left in the pixel even
+    imager pixel elements. The persistence signal of a previous exposure is left in the pixel even
     after several detector resets. This effect is most likely due to charge traps in the material.
     The laboratory tests show that if exposures and readouts are taken in a fixed cadence, the
     persistence signal can be given as a linear combination of prior pixel values that can be
     added to the current image.
 
-    During the image generation process, the user has to maintain a list of previous Image
+    This routine takes in one or multiple Image instances and adds them to Image weighted by the
+    values passed on to 'coeffs'. This routine does NOT keep track of realistic dither patterns.
+    During the image simulation process, the user has to queue a list of previous Image
     instances (img_list) outside the routine by inserting the latest image in the beginning of the
     list and deleting the oldest image. The values in 'coeffs' tell how much of each Image is to
     be added. This usually remains constant in the image generation process.
@@ -297,8 +298,10 @@ def addPersistence(self,imgs,coeffs):
 
         >>> img.addPersistence(imgs=img_list, coeffs=coeffs_list)
 
-    @ param imgs:       list of previous Image instances that still persist
-    @ param coeffs:     list of corresponding weights for each of the Image instances
+    @ param imgs:       an Image instance or a list of previous Image instances that still persist
+    @ param coeffs:     specifies the retention factor for one or all of the Image instances listed
+                        in 'imgs'. Different retention factors for different instances can be
+                        specified as a list or tuples in the same order as that of the images.
 
     @ returns None
     """
@@ -321,9 +324,9 @@ def addPersistence(self,imgs,coeffs):
         self += coeffs*imgs
 
     else:
-        raise TypeError("Type mismatch between 'imgs' and 'coeffs'. 'imgs' must be a list of \
-            Image objects and 'coeffs' must be a list of float or int or a NumPy array of the \
-            same size. ")
+        raise TypeError("Type mismatch between 'imgs' and 'coeffs' in 'addPersistence' routine.
+            'imgs' must be a list of Image objects and 'coeffs' must be a list of float or int or \
+             a NumPy array of the same size.")
 
 def quantize(self):
     """
