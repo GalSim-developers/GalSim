@@ -291,7 +291,7 @@ def addPersistence(self,imgs,coeffs):
     @ returns None
     """
 
-    if isinstance(imgs,list) and (isinstance(coeffs,list) or isinstance(coeffs,numpy.ndarray)):
+    if isinstance(imgs,list) and hasattr(coeffs,'__iter__'):
         if not len(imgs)==len(coeffs):
             raise TypeError("The length of 'imgs' and 'coeffs' must be the same, if passed as a \
                 list")

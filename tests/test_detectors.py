@@ -388,6 +388,15 @@ def test_Persistence_basic():
     np.testing.assert_array_equal(im_new.array, im.array+0.4*im_prev[0].array,
             err_msg="Images differ for persistence length is 1.")
 
+    # Test for identical copies of same image
+    im_new = im.copy()
+    n_im = 1
+    im_new.addPersistence(imgs=[im]*n_im, coeffs=0.5**np.linspace(1,n_im,n_im)) #0.1,0.01,0.001
+    print im.array.max(), im_new.array.max(), im.array.max()*(2.-1./2**n_im), (2.-1./2**n_im)
+    assert im_new.array.max()==im.array.max()*(2.-1./2**n_im)
+    np.testing.assert_array_equal(im_new.array, im.array*(2.-1./2**n_im),
+            err_msg="Images differ when identical copies of the same image persist.")
+
     # Test for different lengths of imgs and coeffs
     im_new = im.copy()
     try:
@@ -402,14 +411,14 @@ def test_Persistence_basic():
     except ImportError:
         print 'The assert_raises tests require nose'
 
-    # Testing the math
+    # Testing the multiple images and varying coeffs
     im1 = im.copy()
     im2 = im.copy()
     im1.addPersistence(imgs=im_prev, coeffs=np.linspace(1,len(im_prev), len(im_prev)))
     for i in xrange(len(im_prev)):
         im2 += (i+1)*im_prev[i]
     np.testing.assert_array_equal(im1.array, im2.array,
-        err_msg="Something gone wrong with the math in addPersistence routine.")
+        err_msg="'addPersistence' routine fails for multiple images with varying coefficients.")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
