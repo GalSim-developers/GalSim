@@ -46,7 +46,7 @@ def test_phase_screen_list():
 
     atm = galsim.Atmosphere(screen_size=30.0,
                             altitude=[0.0, 1.0],
-                            velocity=[1.0, 2.0],
+                            speed=[1.0, 2.0],
                             direction=[0.0*galsim.degrees, 120*galsim.degrees],
                             r0_500=0.15,
                             rng=rng)
@@ -135,7 +135,7 @@ def test_phase_psf_reset():
 
     rng = galsim.BaseDeviate(1234)
     # Test frozen AtmosphericScreen first
-    atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, velocity=0.1, alpha=1.0, rng=rng)
+    atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, speed=0.1, alpha=1.0, rng=rng)
     aper = galsim.Aperture(16, 160)
     pd1 = atm.path_difference(aper)
     atm.advance()

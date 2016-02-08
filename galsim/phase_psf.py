@@ -90,7 +90,7 @@ class PhaseScreen(object):
 
     @param screen_size   Physical extent of square phase screen in meters.  This should be large
                          enough to accommodate the desired field-of-view of the telescope as well as
-                         the meta-pupil defined by the wind velocity and exposure time.  Note that
+                         the meta-pupil defined by the wind speed and exposure time.  Note that
                          the screen will have periodic boundary conditions, so the code will run
                          with a smaller sized screen, though this may introduce artifacts into PSFs
                          or PSF correlations functions. Note that screen_size may be tweaked by the
@@ -161,7 +161,7 @@ class AtmosphericScreen(PhaseScreen):
 
     @param screen_size   Physical extent of square phase screen in meters.  This should be large
                          enough to accommodate the desired field-of-view of the telescope as well as
-                         the meta-pupil defined by the wind velocity and exposure time.  Note that
+                         the meta-pupil defined by the wind speed and exposure time.  Note that
                          the screen will have periodic boundary conditions, so the code will run
                          with a smaller sized screen, though this may introduce artifacts into PSFs
                          or PSF correlations functions. Note that screen_size may be tweaked by the
@@ -794,12 +794,12 @@ def Atmosphere(screen_size, rng=None, **kwargs):
         >>> r0_500_effective = 0.16  # m
         >>> weights = [0.652, 0.172, 0.055, 0.025, 0.074, 0.022]
         >>> r0_500 = [r0_500_effective * w**(-3./5) for w in weights]
-        >>> velocity = np.random.uniform(0, 20, size=6)  # m/s
+        >>> speed = np.random.uniform(0, 20, size=6)  # m/s
         >>> direction = [np.random.uniform(0, 360)*galsim.degrees for i in xrange(6)]
         >>> npix = 8192
         >>> screen_scale = 0.5 * r0_500_effective
         >>> atm = galsim.Atmosphere(r0_500=r0_500, screen_size=screen_scale*npix, time_step=0.005,
-                                    altitude=altitude, L0=25.0, velocity=velocity,
+                                    altitude=altitude, L0=25.0, speed=speed,
                                     direction=direction, screen_scale=screen_scale)
 
     Once the atmosphere is constructed, a 15-sec exposure PSF (using an 8.4 meter aperture and
@@ -816,7 +816,7 @@ def Atmosphere(screen_size, rng=None, **kwargs):
                          of meters.  [Default: 0.2]
     @param screen_size   Physical extent of square phase screen in meters.  This should be large
                          enough to accommodate the desired field-of-view of the telescope as well as
-                         the meta-pupil defined by the wind velocity and exposure time.  Note that
+                         the meta-pupil defined by the wind speed and exposure time.  Note that
                          the screen will have periodic boundary conditions, so the code will run
                          with a smaller sized screen, though this may introduce artifacts into PSFs
                          or PSF correlations functions. Note that screen_size may be tweaked by the
@@ -828,7 +828,7 @@ def Atmosphere(screen_size, rng=None, **kwargs):
     @param L0            Outer scale in meters.  The turbulence power spectrum will smoothly
                          approach a constant at scales larger than L0.  Set to `None` or `np.inf`
                          for a power spectrum without an outer scale.  [Default: 25.0]
-    @param velocity      Wind speed in meters/second.  [Default: 0.0]
+    @param speed         Wind speed in meters/second.  [Default: 0.0]
     @param direction     Wind direction as galsim.Angle [Default: 0.0 * galsim.degrees]
     @param alpha         Fraction of phase that is "remembered" between time_steps.  The fraction
                          1-alpha is then the amount of turbulence freshly generated in each step.
@@ -849,15 +849,15 @@ def Atmosphere(screen_size, rng=None, **kwargs):
         kwargs['r0_500'] = [0.2]
     kwargs['r0_500'] = _listify(kwargs['r0_500'])
 
-    # Turn velocity, direction into vx, vy
-    if 'velocity' in kwargs:
-        kwargs['velocity'] = _listify(kwargs['velocity'])
+    # Turn speed, direction into vx, vy
+    if 'speed' in kwargs:
+        kwargs['speed'] = _listify(kwargs['speed'])
         if not 'direction' in kwargs:
-            kwargs['direction'] = [0*galsim.degrees]*len(kwargs['velocity'])
+            kwargs['direction'] = [0*galsim.degrees]*len(kwargs['speed'])
         kwargs['vx'], kwargs['vy'] = zip(*[v*d.sincos()
-                                           for v, d in zip(kwargs['velocity'],
+                                           for v, d in zip(kwargs['speed'],
                                                            kwargs['direction'])])
-        del kwargs['velocity']
+        del kwargs['speed']
         del kwargs['direction']
 
     # Determine broadcast size
