@@ -204,9 +204,9 @@ def test_deInterleaveImage():
     for n in xrange(len(im_list0)):
         im = galsim.Image(16,16)
         g0.drawImage(image=im,offset=offsets0[n],scale=0.5,method='no_pixel')
-        np.testing.assert_array_equal(im,im_list0[n],\
+        np.testing.assert_array_equal(im.array,im_list0[n].array,\
           err_msg="deInterleaveImage does not reduce the resolution of the input image correctly")
-        assert im.wcs == im_list0[n].wcs
+        assert im_list0[n].wcs == im.wcs.jacobian()
 
     # 3b) Increasing directional resolution
     g = galsim.Gaussian(sigma=0.7,flux=1000.)
@@ -410,7 +410,7 @@ def test_interleaveImages():
     for k in xrange(n**2):
         assert offset_list_1[k] == offset_list[k]
         np.testing.assert_array_equal(im_list_1[k].array, im_list[k].array)
-        assert im_list_1[k].wcs == im_list[k].wcs 
+        assert im_list_1[k].wcs == im_list[k].wcs.jacobian()
 
     # Checking for non-default flux option
     img = galsim.utilities.interleaveImages(im_list,N=n,offsets=offset_list,add_flux=False)
@@ -419,7 +419,7 @@ def test_interleaveImages():
     for k in xrange(n**2):
         assert offset_list_2[k] == offset_list[k]
         np.testing.assert_array_equal(im_list_2[k].array, im_list[k].array)
-        assert im_list_2[k].wcs == im_list[k].wcs
+        assert im_list_2[k].wcs == im_list[k].wcs.jacobian()
     
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

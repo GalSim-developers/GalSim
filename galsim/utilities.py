@@ -487,13 +487,6 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
         raise ValueError("The value of 'N' is incompatible with the dimensions of the image to "+
                          +"be 'deinterleaved'")
 
-    wcs = image.wcs
-    if wcs is not None:
-        if wcs.isPixelScale():
-            scale = wcs.scale
-    else:
-        scale = None
-
     im_list, offsets = [], []
     for i in xrange(n1):
         for j in xrange(n2):
@@ -509,21 +502,12 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
             im_list.append(img)
             offsets.append(offset)
 
-    if scale is not None:
-        if n1==n2:
-            for img in im_list:
-                img.wcs = galsim.PixelScale(scale*n1)
-        else:
-            for img in im_list:
-                img.wcs = galsim.JacobianWCS(scale*n1, 0., 0., scale*n2)
-    elif isinstance(wcs,galsim.JacobianWCS): # from say, a previously interleaved Image.
-        dudx, dudy, dvdx, dvdy = wcs.dudx, wcs.dudy, wcs.dvdx, wcs.dvdy
-        if (dudx*n1==dvdy*n2) and (dudy==0.0) and (dvdx==0.0):
-            for img in im_list:
-                img.wcs = galsim.PixelScale(dudx*n1)
-        else:
-            for img in im_list:
-                img.wcs = galsim.JacobianWCS(dudx*n1,dudy*n2,dvdx*n1,dvdy*n2)
+    wcs = image.wcs
+    if wcs is not None and wcs.isLocal():
+        jac = wcs.jacobian()
+        for img in im_list:
+            img.wcs = galsim.JacobianWCS(jac.dudx*n1,jac.dudy*n2,jac.dvdx*n1,jac.dvdy*n2)
+
     elif suppress_warnings is False:
         import warnings
         warnings.warn("Individual images could not be assigned a WCS automatically.")
