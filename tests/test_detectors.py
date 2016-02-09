@@ -493,9 +493,14 @@ def test_Persistence_basic():
         im_prev[i].shift(dx=dx[i],dy=dy[i])
 
     # Test for zero coefficient
-    im_new = im.copy()
-    im_new.addPersistence(imgs=im_prev,coeffs=0.0)
-    np.testing.assert_array_equal(im_new.array, im.array,
+    im1 = im.copy()
+    im1.addPersistence(imgs=im_prev,coeffs=0.0)
+    np.testing.assert_array_equal(im1.array, im.array,
+        err_msg="Images do not agree when the persistence coefficient is zero.")
+
+    im2 = im.copy()
+    im2.addPersistence(imgs=im_prev,coeffs=[0.0]*len(im_prev))
+    np.testing.assert_array_equal(im2.array, im.array,
         err_msg="Images do not agree when the persistence coefficients are all zeros.")
 
     # Test for a float coeff and constant array
@@ -516,7 +521,7 @@ def test_Persistence_basic():
     im_new = im.copy()
     n_im = 3
     im_new.addPersistence(imgs=[im]*n_im, coeffs=0.5**np.linspace(1,n_im,n_im)) #0.5,0.25,0.125
-    np.testing.assert_array_almost_equal(im_new.array, im.array*(2.-1./2**n_im),7,
+    np.testing.assert_array_almost_equal(im_new.array, im.array*(2.-1./2**n_im),7, #sum of GP terms
             err_msg="Images differ when identical copies of the same image persist.")
 
     # Test for different lengths of imgs and coeffs
