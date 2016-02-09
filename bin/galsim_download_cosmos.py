@@ -254,25 +254,20 @@ def download(url, target, unpack_dir, args, logger):
 
     return do_download, target
 
-def unpack(new_download, target, target_dir, args, logger):
-    if new_download or args.unpack:
-        logger.info("Unpacking the tarball...")
-        #with tarfile.open(target) as tar:
-        # The above line works on python 2.7+.  But to make sure we work for 2.6, we use the 
-        # following workaround.
-        # cf. http://stackoverflow.com/questions/6086603/statement-with-and-tarfile
-        from contextlib import closing
-        with closing(tarfile.open(target)) as tar:
-            if args.verbosity >= 3:
-                tar.list(verbose=True)
-            elif args.verbosity >= 2:
-                tar.list(verbose=False)
-            tar.extractall(target_dir)
-        logger.info("Extracted contents of tar file.")
-
-    if not args.save:
-        logger.info("Removing the tarball to save space")
-        os.remove(target)
+def unpack(target, target_dir, args, logger):
+    logger.info("Unpacking the tarball...")
+    #with tarfile.open(target) as tar:
+    # The above line works on python 2.7+.  But to make sure we work for 2.6, we use the
+    # following workaround.
+    # cf. http://stackoverflow.com/questions/6086603/statement-with-and-tarfile
+    from contextlib import closing
+    with closing(tarfile.open(target)) as tar:
+        if args.verbosity >= 3:
+            tar.list(verbose=True)
+        elif args.verbosity >= 2:
+            tar.list(verbose=False)
+        tar.extractall(target_dir)
+    logger.info("Extracted contents of tar file.")
 
 def unzip(target, args, logger):
     logger.info("Unzipping file")
@@ -364,7 +359,33 @@ def main():
 
     else:
         new_download, target = download(url, target, unpack_dir, args, logger)
-        unpack(new_download, target, target_dir, args, logger)
+        do_unpack = new_download or args.unpack
+        # If the unpack dir is missing, then need to unpack
+        if not os.path.exists(unpack_dir):
+            do_unpack = True
+        # If we have a downloaded tar file, ask if it should be re-unpacked.
+        if not do_unpack and not args.quiet and os.path.isfile(target):
+            logger.info("")
+            q = "Tar file is already unpacked.  Re-unpack?"
+            yn = query_yes_no(q, default='no')
+            if yn == 'yes':
+                do_unpack=True
+        # Unpack the tarball
+        if do_unpack:
+            unpack(target, target_dir, args, logger)
+
+        do_remove = do_unpack and not args.save
+        # If we didn't unpack it, and they didn't say to save it, ask if we should remove it.
+        if not do_remove and not args.save and not args.quiet:
+            logger.info("")
+            q = "Remove the tarball?"
+            yn = query_yes_no(q, default='no')
+            if yn == 'yes':
+                do_remove = True
+        # Remove the tarball
+        if do_remove:
+            logger.info("Removing the tarball to save space")
+            os.remove(target)
 
     if link:
         # Get the directory where this would normally have been unpacked.
