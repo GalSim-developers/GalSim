@@ -227,7 +227,7 @@ input:
         # on the flux can cut out most of the objects that would otherwise be rejected for the
         # S/N cut while only cutting out a small fraction of the objects that would pass.
         #min_flux : 8
-        max_flux : '$32.5 + 32.5*(psf_fwhm-0.76)**2'
+        max_flux : '$63.9 + 75.8*(psf_fwhm-0.76)**2'
 
 output:
     type: Fits
