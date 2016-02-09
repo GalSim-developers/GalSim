@@ -310,9 +310,11 @@ class AtmosphericScreen(PhaseScreen):
         fx, fy = np.meshgrid(fx, fx)
 
         L0_inv = 1./self.L0 if self.L0 is not None else 0.0
+        old_settings = np.seterr(all='ignore')
         self.psi = (1./self.screen_size*self.kolmogorov_constant*(self.r0_500**(-5.0/6.0)) *
                     (fx*fx + fy*fy + L0_inv*L0_inv)**(-11.0/12.0) *
                     self.npix * np.sqrt(np.sqrt(2.0)))
+        np.seterr(**old_settings)
         self.psi *= 500.0  # Multiply by 500 here so we can divide by arbitrary lam later.
         self.psi[0, 0] = 0.0
 
