@@ -49,20 +49,66 @@ from galsim import GSObject
 
 
 class Aperture(object):
-    def __init__(self, pupil_plane_size, npix, diam=None, obscuration=None):
+    """ Class representing a telescope aperture as part of a larger pupil plane.
+
+        The constructed object has two key attributes:
+            `illuminated`  a boolean array indicating which positions in the pupil plane are exposed
+                           to the sky.
+            `rho`          array of unit disc-scaled pupil coordinates for use by Zernike
+                           polynomials (as a complex number).
+
+        `rho` is
+
+        @param pupil_plane_size  Size of the pupil plane in meters.  Note, this may be (in fact, it
+                                 usually *should* be) larger than the aperture diameter.
+        @param npix              Number of pupil plane resolution elements.
+        @param diam              Aperture diameter in meters. [default: pupil_plane_size]
+        @param circular_pupil    Adopt a circular pupil? [default: True].
+        @param obscuration       Fractional linear circular obscuration of pupil. [default: 0.]
+        @param nstruts           Number of radial support struts to add to the central obscuration.
+                                 [default: 0]
+        @param strut_thick       Thickness of support struts as a fraction of pupil diameter.
+                                 [default: 0.05]
+        @param strut_angle       Angle made between the vertical and the first strut in the CCW
+                                 direction; must be an Angle instance.
+                                 [default: 0. * galsim.degrees]
+    """
+    def __init__(self, pupil_plane_size, npix, diam=None, circular_pupil=True, obscuration=0.,
+                 nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees):
+        if obscuration >= 1.:
+            raise ValueError("Pupil fully obscured! obscuration = {1} (>= 1)".format(obscuration))
+        if diam is None:
+            diam = pupil_plane_size
         self.pupil_plane_size = float(pupil_plane_size)
         self.npix = int(npix)
         self.pupil_scale = self.pupil_plane_size/(self.npix-1)
 
-        self.illuminated = np.ones((npix, npix), dtype=np.float64)
-        if diam is not None:
-            radius = 0.5*diam
-            u = np.fft.fftshift(np.fft.fftfreq(npix, 1./pupil_plane_size))
-            u, v = np.meshgrid(u, u)
-            rsqr = u**2 + v**2
-            self.illuminated[rsqr > radius**2] = 0.0
-            if obscuration is not None:
-                self.illuminated[rsqr < (radius*obscuration)**2] = 0.0
+        u = np.fft.fftshift(np.fft.fftfreq(self.npix, 1./pupil_plane_size))
+        u, v = np.meshgrid(u, u)
+        rsqr = u**2 + v**2
+
+        radius = 0.5*diam
+        if circular_pupil:
+            self.illuminated = (rsqr < radius**2)
+            if obscuration > 0.:
+                self.illuminated *= rsqr >= (radius*obscuration)**2
+        else:
+            self.illuminated = (np.abs(u) < radius) & (np.abs(v) < radius)
+            if obscuration > 0.:
+                self.illuminated *= ((np.abs(u) >= radius*obscuration) *
+                                     (np.abs(v) >= radius*obscuration))
+
+        if nstruts > 0:
+            if not isinstance(strut_angle, galsim.Angle):
+                raise TypeError("Input kwarg strut_angle must be a galsim.Angle instance.")
+            # Add the initial rotation if requested, converting to radians.
+            if strut_angle.rad != 0.:
+                u, v = utilities.rotate_xy(u, v, -strut_angle)
+            rotang = 360. * galsim.degrees / float(nstruts)
+            # Then loop through struts setting to zero the regions which lie under the strut
+            for istrut in xrange(nstruts):
+                u, v = utilities.rotate_xy(u, v, -rotang)
+                self.illuminated *= ((np.abs(u) >= radius * strut_thick) + (v < 0.0))
 
     @property
     def rho(self):
@@ -71,7 +117,7 @@ class Aperture(object):
             u, v = np.meshgrid(u, u)
             rsqr = u**2 + v**2
             rsqrmax_illum = max(rsqr[self.illuminated > 0])
-            self._rho = np.sqrt(rsqr/rsqrmax_illum)
+            self._rho = (u + 1j * v) / np.sqrt(rsqrmax_illum)
         return self._rho
 
 
@@ -655,7 +701,7 @@ class PhaseScreenPSF(GSObject):
         self.aper = Aperture(self._pupil_plane_size, self._npix, diam=self.diam,
                              obscuration=self.obscuration)
 
-        self.img = np.zeros_like(self.aper.illuminated)
+        self.img = np.zeros(self.aper.illuminated.shape, dtype=np.float64)
 
         if self.exptime < 0:
             raise ValueError("Cannot integrate PSF for negative time.")
