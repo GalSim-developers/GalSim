@@ -15,7 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 
-# The Great3 control-ground-constant branch configuration file
+# An alterate version of the Great3 control-ground-constant branch configuration file, 
+# using an I<25.2 sample (instead of faking a deeper sample using I<23.5 images).
 # Note: This configuration will not produce images _identical_ to the ones used for Great3,
 # since the order of random number generation is different.  However, it is intended to
 # produce an _equivalent_ simulation as the one produced for Great3.
