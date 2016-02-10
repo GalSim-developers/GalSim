@@ -159,6 +159,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                             input_objs[i] = None
                             input_objs_safe[i] = None
                             continue
+                        raise
 
                     if safe_only and not safe:
                         if logger:
