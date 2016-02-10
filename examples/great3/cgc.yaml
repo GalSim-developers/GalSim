@@ -141,9 +141,6 @@ stamp:
     reject:
         type: Great3Reject
 
-    # For now.  Hopefully can remove this.
-    retry_failures: 500
-
 eval_variables:
     # We use the fwhm of the PSF in a couple of other places.  To make sure the config parser
     # knows its a float variable, we put it here with the f code.
