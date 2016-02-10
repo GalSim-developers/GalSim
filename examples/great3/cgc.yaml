@@ -143,7 +143,7 @@ stamp:
 
 eval_variables:
     # We use the fwhm of the PSF in a couple of other places.  To make sure the config parser
-    # knows its a float variable, we put it here with the f code.
+    # knows it's a float variable, we put it here with the f code.
     fpsf_fwhm: { type: Current, key : 'psf.items.0.fwhm' }
 
     # Here is the line in the original great3 scripts:
