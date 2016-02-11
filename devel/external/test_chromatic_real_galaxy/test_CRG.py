@@ -9,7 +9,12 @@ def test_CRG(args):
 
     print "Constructing chromatic PSFs"
     in_PSF = galsim.ChromaticAiry(lam=700, diam=2.4)
-    out_PSF = galsim.ChromaticAiry(lam=700, diam=1.2)
+    if args.lsst_psf:
+        out_PSF = galsim.ChromaticAtmosphere(galsim.Kolmogorov(fwhm=0.6), 500.0,
+                                             zenith_angle=0*galsim.degrees,
+                                             parallactic_angle=0.0*galsim.degrees)
+    else:
+        out_PSF = galsim.ChromaticAiry(lam=700, diam=1.2)
 
     print "Constructing filters and SEDs"
     waves = np.arange(550.0, 900.1, 10.0)
@@ -17,6 +22,7 @@ def test_CRG(args):
     split_points = np.linspace(550.0, 900.1, args.Nim+1, endpoint=True)
     bands = [visband.truncate(blue_limit=blim, red_limit=rlim)
              for blim, rlim in zip(split_points[:-1], split_points[1:])]
+    outband = visband.truncate(blue_limit=args.out_blim, red_limit=args.out_rlim)
 
     maxk = max([out_PSF.evaluateAtWavelength(waves[0]).maxK(),
                 out_PSF.evaluateAtWavelength(waves[-1]).maxK()])
@@ -29,7 +35,7 @@ def test_CRG(args):
     rng = galsim.BaseDeviate(args.seed)
     in_xis = [galsim.getCOSMOSNoise(cosmos_scale=args.in_scale, rng=rng)
               .dilate(1 + i * 0.05)
-              .rotate(5 * i * galsim.degrees)
+              .rotate(30 * i * galsim.degrees)
               for i in xrange(args.Nim)]
 
     print "Constructing galaxy"
@@ -52,7 +58,7 @@ def test_CRG(args):
     [img.addNoiseSNR(xi, args.SNR, preserve_flux=True) for xi, img in zip(in_xis, in_imgs)]
 
     print "Drawing true output image"
-    out_img = out_prof.drawImage(visband, nx=args.out_Nx, ny=args.out_Nx, scale=args.out_scale)
+    out_img = out_prof.drawImage(outband, nx=args.out_Nx, ny=args.out_Nx, scale=args.out_scale)
 
     # Now "deconvolve" the chromatic HST PSF while asserting the correct SEDs.
     print "Constructing ChromaticRealGalaxy"
@@ -60,7 +66,7 @@ def test_CRG(args):
     # crg should be effectively the same thing as gal now.  Let's test.
 
     crg_prof = galsim.Convolve(crg, out_PSF)
-    crg_img = crg_prof.drawImage(visband, nx=args.out_Nx, ny=args.out_Nx, scale=args.out_scale)
+    crg_img = crg_prof.drawImage(outband, nx=args.out_Nx, ny=args.out_Nx, scale=args.out_scale)
     print "Max comparison:", out_img.array.max(), crg_img.array.max()
     print "Sum comparison:", out_img.array.sum(), crg_img.array.sum()
 
@@ -134,8 +140,11 @@ if __name__ == '__main__':
     parser.add_argument('--in_scale', type=float, default=0.03, help="[Default: 0.03]")
     parser.add_argument('--out_scale', type=float, default=0.1, help="[Default: 0.1]")
     parser.add_argument('--out_Nx', type=int, default=30, help="[Default: 30]")
+    parser.add_argument('--out_blim', type=float, default=550.0, help="[Default: 550.0]")
+    parser.add_argument('--out_rlim', type=float, default=900.1, help="[Default: 900.1]")
     parser.add_argument('--seed', type=int, default=1, help="[Default: 1]")
     parser.add_argument('--iimult', type=int, default=1, help="[Default: 1]")
     parser.add_argument('--SNR', type=float, default=100.0, help="[Default: 100]")
+    parser.add_argument('--lsst_psf', action='store_true')
     args = parser.parse_args()
     test_CRG(args)
