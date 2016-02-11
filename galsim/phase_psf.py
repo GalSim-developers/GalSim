@@ -189,10 +189,11 @@ class PhaseScreen(object):
         # the focal plane, or equivalently the position on the sky from which the rays originate.
         raise NotImplementedError
 
-    def pupil_scale(self, lam, scale_unit=galsim.arcsec):
+    def pupil_scale(self, lam, diam, scale_unit=galsim.arcsec):
         """Compute a good pupil_scale in meters for this atmospheric layer.
 
         @param lam         Wavelength in nanometers.
+        @param diam        Diameter of aperture in meters.
         @param scale_unit  Sky coordinate units of output profile. [Default: galsim.arcsec]
         @returns  Good pupil scale size in meters.
         """
@@ -353,10 +354,11 @@ class AtmosphericScreen(PhaseScreen):
 
     # Both types of atmospheric screens determine their pupil scales (essentially stepK()) from the
     # Kolmogorov profile with matched Fried parameter r0.
-    def pupil_scale(self, lam, scale_unit=galsim.arcsec):
+    def pupil_scale(self, lam, diam, scale_unit=galsim.arcsec):
         """Compute a good pupil_scale in meters for this atmospheric layer.
 
         @param lam         Wavelength in nanometers.
+        @param diam        Diameter of aperture in meters.
         @param scale_unit  Sky coordinate units of output profile. [Default: galsim.arcsec]
         @returns  Good pupil scale size in meters.
         """
@@ -392,6 +394,190 @@ class AtmosphericScreen(PhaseScreen):
             self._dx = self._dy = self.screen_scale
             self.tab2d = galsim.LookupTable2D(self._x0, self._y0, self._dx, self._dy, self.screen,
                                               edge_mode='wrap')
+
+
+# Some utilities for working with Zernike polynomials
+# Combinations.  n choose r.
+def _nCr(n, r):
+    from math import factorial
+    return factorial(n) / (factorial(r)*factorial(n-r))
+
+
+# Stolen from https://github.com/tvwerkhoven/libtim-py/blob/master/libtim/zern.py
+def _noll_to_zern(j):
+    """
+    Convert linear Noll index to tuple of Zernike indices.
+    j is the linear Noll coordinate, n is the radial Zernike index and m is the azimuthal Zernike index.
+    @param [in] j Zernike mode Noll index
+    @return (n, m) tuple of Zernike indices
+    @see <https://oeis.org/A176988>.
+    """
+    if (j == 0):
+        raise ValueError("Noll indices start at 1, 0 is invalid.")
+
+    n = 0
+    j1 = j-1
+    while (j1 > n):
+        n += 1
+        j1 -= n
+
+    m = (-1)**j * ((n % 2) + 2 * int((j1+((n+1) % 2)) / 2.0))
+    return (n, m)
+
+
+def _zern_norm(n, m):
+    """Normalization coefficient for zernike (n, m).
+
+    Defined such that \int Z(n1, m1) Z(n2, m2) r dr dtheta = \pi delta(n1, n2) delta(m1, m2)
+    """
+    if m == 0:
+        return np.sqrt(1./(n+1))
+    else:
+        return np.sqrt(1./(2.*n+2))
+
+
+def _zern_rho_coefs(n, m):
+    """Compute coefficients of radial coordinate series given Zernike (n, m).
+    """
+    kmax = (n-abs(m))/2
+    A = [0]*(n+1)
+    for k in xrange(kmax+1):
+        val = (-1)**k * _nCr(n-k, k) * _nCr(n-2*k, kmax-k) / _zern_norm(n, m)
+        A[n-2*k] = val
+    return A
+
+
+def _zern_horner_array(n, m, shape=None):
+    """Assemble Horner's method array for evaluating Zernike (n, m) as a polynomial in
+    abs(rho)^2 and rho, where rho is a complex array indicating position on a unit disc.
+    """
+    if shape is None:
+        shape = ((n//2)+1, abs(m)+1)
+    out = np.zeros(shape, dtype=np.complex128)
+    coefs = np.array(_zern_rho_coefs(n, m), dtype=np.complex128)
+    if m < 0:
+        coefs *= -1j
+
+    for i, c in enumerate(coefs[abs(m)::2]):
+        out[i, abs(m)] = c
+    return out
+
+
+def horner(x, coef):
+    """Evaluate univariate polynomial using Horner's method.
+
+    @param x     Where to evaluate polynomial.
+    @param coef  Polynomial coefficients of increasing powers of x.
+    @returns     Polynomial evaluation.
+    """
+    result = 0
+    for c in coef[::-1]:
+        result = result*x + c
+    return result
+
+
+def horner2d(x, y, coefs):
+    """Evaluate bivariate polynomial using Horner's method.
+
+    @param x      Where to evaluate polynomial.
+    @param y      Where to evaluate polynomial.
+    @param coefs  2D array-like of coefficients in increasing powers of x and y.
+                  The first axis corresponds to increasing the power of y, and the second to
+                  increasing the power of x.
+    @returns      Polynomial evaluation.
+    """
+    result = 0
+    for coef in coefs[::-1]:
+        result = result*x + horner(y, coef)
+    return result
+
+
+class OpticalScreen(PhaseScreen):
+    """
+
+    @param screen_size   Physical extent of square phase screen in meters.  This should be large
+                         enough to accommodate the desired field-of-view of the telescope as well as
+                         the meta-pupil defined by the wind speed and exposure time.  Note that
+                         the screen will have periodic boundary conditions, so the code will run
+                         with a smaller sized screen, though this may introduce artifacts into PSFs
+                         or PSF correlations functions. Note that screen_size may be tweaked by the
+                         initializer to ensure screen_size is a multiple of screen_scale.
+    @param screen_scale  Physical pixel scale of phase screen in meters.
+    @param aberrations   Zernike polynomial aberrations sequence in waves.
+    @param lam_0         Reference wavelength in nanometers at which Zernike aberrations are being
+                         specified.  [Default: 500]
+    """
+    def __init__(self, screen_size, screen_scale, aberrations=None, lam_0=500.0):
+        super(OpticalScreen, self).__init__(screen_size, screen_scale, altitude=0.0)
+
+        self.time_step = None
+
+        self.aberrations = aberrations
+        self.lam_0 = lam_0
+
+        # print (_noll_to_zern(j) for j in range(1, len(self.aberrations)-1))
+
+        maxn = max(_noll_to_zern(j)[0] for j in range(1, len(self.aberrations)))
+        shape = (maxn//2+1, maxn+1)
+        horner_array = np.zeros(shape, dtype=np.complex128)
+
+        for j, ab in enumerate(self.aberrations):
+            if j == 0:
+                continue
+            horner_array += _zern_horner_array(*_noll_to_zern(j), shape=shape) * ab
+        self.horner_array = horner_array
+
+    # def __str__(self):
+    #     return "galsim.AtmosphericScreen(altitude=%s)" % self.altitude
+    #
+    # def __repr__(self):
+    #     outstr = ("galsim.AtmosphericScreen(%r, %r, altitude=%r, time_step=%r, " +
+    #               "r0_500=%r, L0=%r, vx=%r, vy=%r, alpha=%r, rng=%r)")
+    #     return outstr % (self.screen_size, self.screen_scale, self.altitude, self.time_step,
+    #                      self.r0_500, self.L0, self.vx, self.vy, self.alpha, self.rng)
+    #
+    # def __eq__(self, other):
+    #     sL0 = self.L0 if self.L0 is not None else np.inf
+    #     oL0 = other.L0 if other.L0 is not None else np.inf
+    #     return (self.screen_size == other.screen_size and
+    #             self.screen_scale == other.screen_scale and
+    #             self.altitude == other.altitude and
+    #             self.r0_500 == other.r0_500 and
+    #             sL0 == oL0 and
+    #             self.vx == other.vx and
+    #             self.vy == other.vy and
+    #             self.alpha == other.alpha and
+    #             self.rng == other.rng)
+    #
+    # def __ne__(self, other):
+    #     return not self == other
+
+    def pupil_scale(self, lam, diam, scale_unit=galsim.arcsec):
+        """Compute a good pupil_scale in meters for this phase screen.
+
+        @param lam         Wavelength in nanometers.
+        @param diam        Diameter of aperture in meters.
+        @param scale_unit  Sky coordinate units of output profile. [Default: galsim.arcsec]
+        @returns  Good pupil scale size in meters.
+        """
+        obj = galsim.Airy(lam=lam, diam=diam)
+        return obj.stepK() * lam*1.e-9 * galsim.radians / scale_unit
+
+    def path_difference(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
+        """ Compute effective pathlength differences due to phase screen.
+
+        @param aper     `galsim.Aperture` over which to compute pathlength differences.
+        @param theta_x  x-component of field angle corresponding to center of output array.
+        @param theta_y  y-component of field angle corresponding to center of output array.
+        @returns   Array of pathlength differences in nanometers.  Multiply by 2pi/wavelength to get
+                   array of phase differences.
+        """
+        # ignore theta_x, theta_y
+        r = aper.rho[aper.illuminated]
+        rsqr = np.abs(r)**2
+        wf = np.zeros(aper.illuminated.shape, dtype=np.float64)
+        wf[aper.illuminated] = horner2d(rsqr, r, self.horner_array).real
+        return wf * self.lam_0
 
 
 class PhaseScreenList(object):
@@ -688,7 +874,8 @@ class PhaseScreenPSF(GSObject):
             #   scale = sum(s**(-5./3) for s in scales)**(-3./5)
             # Since most of the layers in a PhaseScreenList are likely to be (nearly) Kolmogorov
             # screens, we'll use that relation.
-            _pupil_scale = (sum(layer.pupil_scale(lam)**(-5./3) for layer in screen_list))**(-3./5)
+            _pupil_scale = (sum(layer.pupil_scale(lam, diam)**(-5./3)
+                                for layer in screen_list))**(-3./5)
             _pupil_scale /= oversampling
         self._pupil_scale = _pupil_scale
         # Note _pupil_plane_size sets the size of the array defining the pupil, which will generally
@@ -707,7 +894,10 @@ class PhaseScreenPSF(GSObject):
 
         if self.exptime < 0:
             raise ValueError("Cannot integrate PSF for negative time.")
-        self._nstep = int(np.round(self.exptime/self.screen_list.time_step))
+        if self.screen_list.time_step is None:
+            self._nstep = 1
+        else:
+            self._nstep = int(np.round(self.exptime/self.screen_list.time_step))
         # Generate at least one time sample
         if self._nstep == 0:
             self._nstep = 1
