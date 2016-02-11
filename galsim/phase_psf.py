@@ -403,11 +403,12 @@ def _nCr(n, r):
     return factorial(n) / (factorial(r)*factorial(n-r))
 
 
-# Stolen from https://github.com/tvwerkhoven/libtim-py/blob/master/libtim/zern.py
+# This function stolen from https://github.com/tvwerkhoven/libtim-py/blob/master/libtim/zern.py
 def _noll_to_zern(j):
     """
     Convert linear Noll index to tuple of Zernike indices.
-    j is the linear Noll coordinate, n is the radial Zernike index and m is the azimuthal Zernike index.
+    j is the linear Noll coordinate, n is the radial Zernike index and m is the azimuthal Zernike
+    index.
     @param [in] j Zernike mode Noll index
     @return (n, m) tuple of Zernike indices
     @see <https://oeis.org/A176988>.
@@ -428,7 +429,7 @@ def _noll_to_zern(j):
 def _zern_norm(n, m):
     """Normalization coefficient for zernike (n, m).
 
-    Defined such that \int Z(n1, m1) Z(n2, m2) r dr dtheta = \pi delta(n1, n2) delta(m1, m2)
+    Defined such that \int_{unit disc} Z(n1, m1) Z(n2, m2) dA = \pi if n1==n2 and m1==m2 else 0.0
     """
     if m == 0:
         return np.sqrt(1./(n+1))
@@ -437,7 +438,7 @@ def _zern_norm(n, m):
 
 
 def _zern_rho_coefs(n, m):
-    """Compute coefficients of radial coordinate series given Zernike (n, m).
+    """Compute coefficients of radial part of Zernike (n, m).
     """
     kmax = (n-abs(m))/2
     A = [0]*(n+1)
@@ -447,9 +448,10 @@ def _zern_rho_coefs(n, m):
     return A
 
 
-def _zern_horner_array(n, m, shape=None):
-    """Assemble Horner's method array for evaluating Zernike (n, m) as a polynomial in
-    abs(rho)^2 and rho, where rho is a complex array indicating position on a unit disc.
+def _zern_coef_array(n, m, shape=None):
+    """Assemble coefficient array array for evaluating Zernike (n, m) as the real part of a
+    bivariate polynomial in abs(rho)^2 and rho, where rho is a complex array indicating position on
+    a unit disc.
     """
     if shape is None:
         shape = ((n//2)+1, abs(m)+1)
@@ -466,9 +468,12 @@ def _zern_horner_array(n, m, shape=None):
 def horner(x, coef):
     """Evaluate univariate polynomial using Horner's method.
 
+    I.e., take A + Bx + Cx^2 + Dx^3 and evaluate it as
+    A + x(B + x(C + x(D)))
+
     @param x     Where to evaluate polynomial.
     @param coef  Polynomial coefficients of increasing powers of x.
-    @returns     Polynomial evaluation.
+    @returns     Polynomial evaluation.  Will take on the shape of x if x is an ndarray.
     """
     result = 0
     for c in coef[::-1]:
@@ -477,14 +482,14 @@ def horner(x, coef):
 
 
 def horner2d(x, y, coefs):
-    """Evaluate bivariate polynomial using Horner's method.
+    """Evaluate bivariate polynomial using nested Horner's method.
 
-    @param x      Where to evaluate polynomial.
-    @param y      Where to evaluate polynomial.
+    @param x      Where to evaluate polynomial (first covariate).  Must be same shape as y.
+    @param y      Where to evaluate polynomial (second covariate).  Must be same shape as x.
     @param coefs  2D array-like of coefficients in increasing powers of x and y.
                   The first axis corresponds to increasing the power of y, and the second to
                   increasing the power of x.
-    @returns      Polynomial evaluation.
+    @returns      Polynomial evaluation.  Will take on the shape of x and y if these are ndarrays.
     """
     result = 0
     for coef in coefs[::-1]:
@@ -515,17 +520,14 @@ class OpticalScreen(PhaseScreen):
         self.aberrations = aberrations
         self.lam_0 = lam_0
 
-        # print (_noll_to_zern(j) for j in range(1, len(self.aberrations)-1))
-
         maxn = max(_noll_to_zern(j)[0] for j in range(1, len(self.aberrations)))
-        shape = (maxn//2+1, maxn+1)
-        horner_array = np.zeros(shape, dtype=np.complex128)
+        shape = (maxn//2+1, maxn+1)  # (max power of |rho|^2,  max power of rho)
+        self.coef_array = np.zeros(shape, dtype=np.complex128)
 
         for j, ab in enumerate(self.aberrations):
             if j == 0:
                 continue
-            horner_array += _zern_horner_array(*_noll_to_zern(j), shape=shape) * ab
-        self.horner_array = horner_array
+            self.coef_array += _zern_coef_array(*_noll_to_zern(j), shape=shape) * ab
 
     # def __str__(self):
     #     return "galsim.AtmosphericScreen(altitude=%s)" % self.altitude
@@ -576,7 +578,7 @@ class OpticalScreen(PhaseScreen):
         r = aper.rho[aper.illuminated]
         rsqr = np.abs(r)**2
         wf = np.zeros(aper.illuminated.shape, dtype=np.float64)
-        wf[aper.illuminated] = horner2d(rsqr, r, self.horner_array).real
+        wf[aper.illuminated] = horner2d(rsqr, r, self.coef_array).real
         return wf * self.lam_0
 
 
@@ -962,10 +964,10 @@ def _listify(arg):
 
 
 def _lod_to_dol(lod, N=None):
-    """ Generate list of dicts from dict of lists (with broadcasting).
-    Specifically, generate list of kwargs dictionaries from a kwarg dictionary with values that are
-    length-N lists, or possibly length-1 lists or scalars that should be broadcasted up to length-N
-    lists.
+    """ Generate dicts from dict of lists (with broadcasting).
+    Specifically, generate "scalar-valued" kwargs dictionaries from a kwarg dictionary with values
+    that are length-N lists, or possibly length-1 lists or scalars that should be broadcasted up to
+    length-N lists.
     """
     if N is None:
         N = max(len(v) for v in lod.values() if hasattr(v, '__len__'))
@@ -979,10 +981,10 @@ def _lod_to_dol(lod, N=None):
                 if len(v) != 1:
                     raise ValueError("Cannot broadcast kwargs of different non-length-1 lengths.")
                 out[k] = v[0]
-            except TypeError:  # Value is not list-like, so broadcast whole value
+            except TypeError:  # Value is not list-like, so broadcast it in its entirety.
                 out[k] = v
             except:
-                raise "Cannot broadcast non-indexable kwargs"
+                raise "Cannot broadcast kwarg {1}={2}".format(k, v)
         yield out
 
 
