@@ -70,6 +70,11 @@ def parse_args():
         parser.add_argument(
             '-d', '--dir', action='store', default=None,
             help="Install into an alternate directory and link from the share/galsim directory")
+        # Having this be -a is kind of awkward, but both -s (for "sample") and -f (for "flux limit")
+        # are already taken.  So "a" for "sAmple"??
+        parser.add_argument(
+            '-a', '--sample', action='store_const', default='25.2', choices=('23.5', '25.2'),
+            help='Flux limit for sample to download; either 23.5 or 25.2')
         parser.add_argument(
             '--nolink', action='store_const', default=False, const=True,
             help="Don't link to the alternate directory from share/galsim")
@@ -331,7 +336,7 @@ def main():
     logger.debug("This download script is: %s",__file__)
     logger.info("Type %s -h to see command line options.",script_name)
 
-    url = "http://great3.jb.man.ac.uk/leaderboard/data/public/COSMOS_23.5_training_sample.tar.gz"
+    url = "http://great3.jb.man.ac.uk/leaderboard/data/public/COSMOS_"+sample+"_training_sample.tar.gz"
 
     share_dir = galsim.meta_data.share_dir
     if args.dir is not None:
@@ -345,47 +350,34 @@ def main():
     target = os.path.join(target_dir, file_name)
     unpack_dir = target[:-len('.tar.gz')]
 
-    url2 = "http://great3.jb.man.ac.uk/leaderboard/data/public/real_galaxy_galsim_selection.fits.gz"
-    file_name2 = os.path.basename(url2)
-    target2 = os.path.join(unpack_dir, file_name2)
-    target2_nogz = target2[:-len('.gz')]
+    new_download, target = download(url, target, unpack_dir, args, logger)
+    do_unpack = new_download or args.unpack
+    # If the unpack dir is missing, then need to unpack
+    if not os.path.exists(unpack_dir):
+        do_unpack = True
+    # If we have a downloaded tar file, ask if it should be re-unpacked.
+    if not do_unpack and not args.quiet and os.path.isfile(target):
+        logger.info("")
+        q = "Tar file is already unpacked.  Re-unpack?"
+        yn = query_yes_no(q, default='no')
+        if yn == 'yes':
+            do_unpack=True
+    # Unpack the tarball
+    if do_unpack:
+        unpack(target, target_dir, args, logger)
 
-    if os.path.exists(unpack_dir) and not os.path.exists(target2_nogz):
-        logger.info("Detected old version without %s",file_name2)
-        logger.info("Only downloading %s",file_name2)
-
-        download(url2, target2, None, args, logger)
-        unzip(target2, args, logger)
-
-    else:
-        new_download, target = download(url, target, unpack_dir, args, logger)
-        do_unpack = new_download or args.unpack
-        # If the unpack dir is missing, then need to unpack
-        if not os.path.exists(unpack_dir):
-            do_unpack = True
-        # If we have a downloaded tar file, ask if it should be re-unpacked.
-        if not do_unpack and not args.quiet and os.path.isfile(target):
-            logger.info("")
-            q = "Tar file is already unpacked.  Re-unpack?"
-            yn = query_yes_no(q, default='no')
-            if yn == 'yes':
-                do_unpack=True
-        # Unpack the tarball
-        if do_unpack:
-            unpack(target, target_dir, args, logger)
-
-        do_remove = do_unpack and not args.save
-        # If we didn't unpack it, and they didn't say to save it, ask if we should remove it.
-        if not do_remove and not args.save and not args.quiet:
-            logger.info("")
-            q = "Remove the tarball?"
-            yn = query_yes_no(q, default='no')
-            if yn == 'yes':
-                do_remove = True
-        # Remove the tarball
-        if do_remove:
-            logger.info("Removing the tarball to save space")
-            os.remove(target)
+    do_remove = do_unpack and not args.save
+    # If we didn't unpack it, and they didn't say to save it, ask if we should remove it.
+    if not do_remove and not args.save and not args.quiet:
+        logger.info("")
+        q = "Remove the tarball?"
+        yn = query_yes_no(q, default='no')
+        if yn == 'yes':
+            do_remove = True
+    # Remove the tarball
+    if do_remove:
+        logger.info("Removing the tarball to save space")
+        os.remove(target)
 
     if link:
         # Get the directory where this would normally have been unpacked.
