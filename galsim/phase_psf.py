@@ -750,12 +750,15 @@ class PhaseScreenList(object):
                                 interpolant should be used.  Options are 'nearest', 'sinc',
                                 'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the
                                 integer order to use. [Default: galsim.Quintic()]
-        @param pad_factor       Additional multiple by which to zero-pad wavefront images before
-                                Fourier Transforming to produce the PSF.  [Default: 1.5]
-        @param oversampling     Optional oversampling factor for the wavefront image.  Higher
-                                sampling reduces folding of the PSF and allows one to better model
-                                the PSF wings.  Usually `oversampling` should be somewhat larger
-                                than 1.  1.5 is usually a safe choice.  [Default: 1.5]
+        @param oversampling     Optional oversampling factor for the InterpolatedImage. Setting
+                                `oversampling < 1` will produce aliasing in the PSF (not good).
+                                Usually `oversampling` should be somewhat larger than 1.  1.5 is
+                                usually a safe choice.  [default: 1.5]
+        @param pad_factor       Additional multiple by which to zero-pad the PSF image to avoid
+                                folding compared to what would be employed for a simple Airy.  Note
+                                that `pad_factor` may need to be increased for stronger aberrations,
+                                i.e. when the equivalent Zernike coefficients become larger than
+                                order unity.  [default: 1.5]
         @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                                 details. [default: None]
         """
@@ -837,14 +840,15 @@ class PhaseScreenPSF(GSObject):
                             should be used.  Options are 'nearest', 'sinc', 'linear', 'cubic',
                             'quintic', or 'lanczosN' where N should be the integer order to use.
                             [default: galsim.Quintic()]
-    @param pad_factor       Additional multiple by which to zero-pad the PSF image to avoid folding
-                            compared to what would be employed for a simple Airy.  Note that
-                            `pad_factor` may need to be increased for stronger aberrations, i.e.
-                            those larger than order unity.  [default: 1.5]
-    @param oversampling     Optional oversampling factor for the wrapped InterpolatedImage. Setting
+    @param oversampling     Optional oversampling factor for the InterpolatedImage. Setting
                             `oversampling < 1` will produce aliasing in the PSF (not good).
                             Usually `oversampling` should be somewhat larger than 1.  1.5 is
                             usually a safe choice.  [default: 1.5]
+    @param pad_factor       Additional multiple by which to zero-pad the PSF image to avoid
+                            folding compared to what would be employed for a simple Airy.  Note
+                            that `pad_factor` may need to be increased for stronger aberrations,
+                            i.e. when the equivalent Zernike coefficients become larger than
+                            order unity.  [default: 1.5]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
     """
@@ -852,7 +856,7 @@ class PhaseScreenPSF(GSObject):
                  theta_x=0.0*galsim.arcmin, theta_y=0.0*galsim.arcmin,
                  scale_unit=galsim.arcsec, interpolant=None,
                  obscuration=0.0,
-                 pad_factor=1.5, oversampling=1.5,
+                 oversampling=1.5, pad_factor=1.5,
                  _pupil_plane_size=None, _pupil_scale=None,
                  gsparams=None, _eval_now=True, _bar=None):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
@@ -882,10 +886,10 @@ class PhaseScreenPSF(GSObject):
             # screens, we'll use that relation.
             _pupil_scale = (sum(layer.pupil_scale(lam, diam)**(-5./3)
                                 for layer in screen_list))**(-3./5)
-            _pupil_scale /= oversampling
+            _pupil_scale /= self.pad_factor
         self._pupil_scale = _pupil_scale
         # Note _pupil_plane_size sets the size of the array defining the pupil, which will generally
-        # be somewhat larger than the diameter of the pupil itself.
+        # be somewhat larger than twice the diameter of the pupil itself.
         if _pupil_plane_size is None:
             _pupil_plane_size = 2 * self.diam * self.pad_factor
         self._npix = int(np.ceil(_pupil_plane_size/self._pupil_scale))
@@ -925,10 +929,10 @@ class PhaseScreenPSF(GSObject):
     def __repr__(self):
         outstr = ("galsim.PhaseScreenPSF(%r, lam=%r, exptime=%r, flux=%r, theta_x=%r, " +
                   "theta_y=%r, scale_unit=%r, interpolant=%r, diam=%r, obscuration=%r, " +
-                  "pad_factor=%r, oversampling=%r, gsparam=%r)")
+                  "oversampling=%r, pad_factor=%r, gsparam=%r)")
         return outstr % (self.screen_list, self.lam, self.exptime, self.flux, self.theta_x,
                          self.theta_y, self.scale_unit, self.interpolant, self.diam,
-                         self.obscuration, self.pad_factor, self.oversampling, self.gsparams)
+                         self.obscuration, self.oversampling, self.pad_factor, self.gsparams)
 
     def __eq__(self, other):
         # Even if two PSFs were generated with different sets of parameters, they will act
