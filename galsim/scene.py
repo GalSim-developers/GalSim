@@ -192,8 +192,8 @@ class COSMOSCatalog(object):
             raise ValueError("Invalid value of exclusion_level: %s"%exclusion_level)
 
         # Start by parsing the file names, since we'll need the image_dir below.
-        full_file_name, full_image_dir, _ = galsim.real._parse_files_dirs(
-                file_name, image_dir, dir, noise_dir, sample)
+        full_file_name, full_image_dir, _, use_sample = galsim.real._parse_files_dirs(
+            file_name, image_dir, dir, noise_dir, sample)
 
         if self.use_real:
             if not _nobjects_only:
@@ -201,7 +201,8 @@ class COSMOSCatalog(object):
                 # constructor do most of the work.  But note that we don't actually need to 
                 # bother with this if all we care about is the nobjects attribute.
                 self.real_cat = galsim.RealGalaxyCatalog(
-                    file_name, image_dir=image_dir, dir=dir, preload=preload, noise_dir=noise_dir)
+                    file_name, sample=sample, image_dir=image_dir, dir=dir, preload=preload,
+                    noise_dir=noise_dir)
 
             # The fits name has _fits inserted before the .fits ending.
             # Note: don't just use k = -5 in case it actually ends with .fits.fz
@@ -282,13 +283,22 @@ class COSMOSCatalog(object):
             # for self.selection_cat['peak_image_pixel_count'].  To make sure we don't divide by
             # zero (generating a RuntimeWarning), and still eliminate those, we will first set that
             # column to 1.e-5.
+            # We choose a sample-dependent mask ratio cut, since this depends on the peak object
+            # flux, which will differ for the two samples (and we can't really cut on this for
+            # arbitrary user-defined samples).
+            if use_sample == "23.5":
+                cut_ratio = 0.2
+                sn_limit = 20.0
+            else:
+                cut_ratio = 0.8
+                sn_limit = 12.0
             if self.selection_cat is not None:
                 div_val = self.selection_cat['peak_image_pixel_count']
                 div_val[div_val == 0.] = 1.e-5
-                mask &= ( (self.selection_cat['sn_ellip_gauss'] >= 20.0) &
+                mask &= ( (self.selection_cat['sn_ellip_gauss'] >= sn_limit) &
                           ((self.selection_cat['min_mask_dist_pixels'] > 11.0) |
                            (self.selection_cat['average_mask_adjacent_pixel_count'] / \
-                               div_val < 0.2)) )
+                               div_val < cut_ratio)) )
 
         if exclusion_level == 'bad_fits' or exclusion_level == 'marginal':
             # This 'exclusion_level' involves eliminating failed parametric fits (bad fit status

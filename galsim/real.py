@@ -406,7 +406,7 @@ class RealGalaxyCatalog(object):
             raise ValueError("Cannot specify both the sample and file_name!")
 
         from galsim._pyfits import pyfits
-        self.file_name, self.image_dir, self.noise_dir = \
+        self.file_name, self.image_dir, self.noise_dir, _ = \
             _parse_files_dirs(file_name, image_dir, dir, noise_dir, sample)
 
         self.cat = pyfits.getdata(self.file_name)
@@ -761,17 +761,22 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
 
 def _parse_files_dirs(file_name, image_dir, dir, noise_dir, sample):
     if sample is None:
-        sample = '25.2'
+        if file_name is None:
+            use_sample = '25.2'
     else:
-        if sample is not '25.2' and sample is not '23.5':
-            raise ValueError("Sample name not recognized: %s"%sample)
+        use_sample = sample
+        if use_sample != '25.2' and use_sample != '23.5':
+            raise ValueError("Sample name not recognized: %s"%use_sample)
+    # after that piece of code, use_sample is either "23.5", "25.2" (if using one of the default
+    # catalogs) or it is still None, if a file_name was given.
 
     if file_name is None:
         if image_dir is not None:
             raise ValueError('Cannot specify image_dir when using default file_name.')
-        file_name = 'real_galaxy_catalog_' + sample + '.fits'
+        file_name = 'real_galaxy_catalog_' + use_sample + '.fits'
         if dir is None:
-            dir = os.path.join(galsim.meta_data.share_dir, 'COSMOS_'+sample+'_training_sample')
+            dir = os.path.join(galsim.meta_data.share_dir,
+                               'COSMOS_'+use_sample+'_training_sample')
         full_file_name = os.path.join(dir,file_name)
         full_image_dir = dir
         if not os.path.isfile(full_file_name):
@@ -804,4 +809,4 @@ def _parse_files_dirs(file_name, image_dir, dir, noise_dir, sample):
             raise IOError(noise_dir+' directory does not exist!')
         full_noise_dir = noise_dir
 
-    return full_file_name, full_image_dir, full_noise_dir
+    return full_file_name, full_image_dir, full_noise_dir, use_sample
