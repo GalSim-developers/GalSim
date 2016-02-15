@@ -381,7 +381,7 @@ def main():
 
     if link:
         # Get the directory where this would normally have been unpacked.
-        link_dir = os.path.join(share_dir, file_name)[:-len('.tar.gx')]
+        link_dir = os.path.join(share_dir, file_name)[:-len('.tar.gz')]
         link_target(unpack_dir, link_dir, args, logger)
 
 
