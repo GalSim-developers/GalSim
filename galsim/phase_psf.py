@@ -121,86 +121,7 @@ class Aperture(object):
         return self._rho
 
 
-class PhaseScreen(object):
-    # ABC for phase screens.  Subclasses should implement:
-    # advance()
-    # advance_by()
-    # reset()
-    # path_difference()
-    # pupil_scale()
-    # Non-evolving screens, such as one representing optical aberrations, can probably accept the
-    # default advance(), advance_by(), and reset() methods which are all no-ops.  All subclasses
-    # will need to implement their own path_difference() and pupil_scale() though.
-    """ Abstract base class for a phase screen to use in generating a PSF using Fourier optics.
-    Not intended to be instantiated directly.
-
-    @param screen_size   Physical extent of square phase screen in meters.  This should be large
-                         enough to accommodate the desired field-of-view of the telescope as well as
-                         the meta-pupil defined by the wind speed and exposure time.  Note that
-                         the screen will have periodic boundary conditions, so the code will run
-                         with a smaller sized screen, though this may introduce artifacts into PSFs
-                         or PSF correlations functions. Note that screen_size may be tweaked by the
-                         initializer to ensure screen_size is a multiple of screen_scale.
-    @param screen_scale  Physical pixel scale of phase screen in meters.  A fraction of the Fried
-                         parameter is usually sufficiently small, but users should test the effects
-                         of this parameter to ensure robust results.
-    @param altitude      Altitude of phase screen in km.  This is with respect to the telescope, not
-                         sea-level.  [Default: 0.0]
-    """
-    def __init__(self, screen_size, screen_scale, altitude=0.0):
-        self.npix = int(np.ceil(screen_size/screen_scale))
-        self.screen_scale = screen_scale
-        self.screen_size = self.screen_scale * self.npix
-        self.altitude = altitude
-
-    def advance(self):
-        """Advance phase screen realization by self.time_step."""
-        # Default is a no-op, which would be appropriate for an optics phase screen, for example.
-        # For an atmsopheric phase screen, this should update the atmospheric layer to account for
-        # wind, boiling, etc.
-        pass
-
-    def advance_by(self, dt):
-        """Advance phase screen by specified amount of time.
-
-        @param dt  Amount of time in seconds by which to update the screen.
-        @returns   The actual amount of time updated, which can potentially (though not necessarily)
-                   differ from `dt` when `dt` is not a multiple of self.time_step.
-        """
-        return dt
-
-    def reset(self):
-        """Reset phase screen back to time=0."""
-        # For time-independent screens, this is a no-op.
-        pass
-
-    def path_difference(self, aper, theta_x=None, theta_y=None):
-        """ Compute effective pathlength differences due to phase screen.
-
-        @param aper     `galsim.Aperture` over which to compute pathlength differences.
-        @param theta_x  x-component of field angle corresponding to center of output array.
-        @param theta_y  y-component of field angle corresponding to center of output array.
-        @returns   Array of pathlength differences in nanometers.  Multiply by 2pi/wavelength to get
-                   array of phase differences.
-        """
-        # This should return an nx-by-nx pixel array with scale `scale` (in meters) representing the
-        # effective difference in path length (nanometers) for rays originating from different
-        # points in the pupil plane.  The `theta_x` and `theta_y` params indicate the position on
-        # the focal plane, or equivalently the position on the sky from which the rays originate.
-        raise NotImplementedError
-
-    def pupil_scale(self, lam, diam, scale_unit=galsim.arcsec):
-        """Compute a good pupil_scale in meters for this atmospheric layer.
-
-        @param lam         Wavelength in nanometers.
-        @param diam        Diameter of aperture in meters.
-        @param scale_unit  Sky coordinate units of output profile. [Default: galsim.arcsec]
-        @returns  Good pupil scale size in meters.
-        """
-        raise NotImplementedError
-
-
-class AtmosphericScreen(PhaseScreen):
+class AtmosphericScreen(object):
     """ An atmospheric phase screen that can drift in the wind and evolves ("boils") over time.  The
     initial phases and fractional phase updates are drawn from a von Karman power spectrum, which is
     defined by a Fried parameter that effectively sets the amplitude of the turbulence, and an outer
@@ -251,8 +172,10 @@ class AtmosphericScreen(PhaseScreen):
 
         if screen_scale is None:
             screen_scale = 0.5 * r0_500
-        super(AtmosphericScreen, self).__init__(screen_size, screen_scale, altitude)
-
+        self.npix = galsim._galsim.goodFFTSize(int(np.ceil(screen_size/screen_scale)))
+        self.screen_scale = screen_scale
+        self.screen_size = screen_size
+        self.altitude = altitude
         self.time_step = time_step
         self.r0_500 = r0_500
         self.L0 = L0
@@ -282,6 +205,8 @@ class AtmosphericScreen(PhaseScreen):
                          self.r0_500, self.L0, self.vx, self.vy, self.alpha, self.rng)
 
     def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return False
         sL0 = self.L0 if self.L0 is not None else np.inf
         oL0 = other.L0 if other.L0 is not None else np.inf
         return (self.screen_size == other.screen_size and
@@ -498,24 +423,13 @@ def horner2d(x, y, coefs):
     return result
 
 
-class OpticalScreen(PhaseScreen):
+class OpticalScreen(object):
     """
-
-    @param screen_size   Physical extent of square phase screen in meters.  This should be large
-                         enough to accommodate the desired field-of-view of the telescope as well as
-                         the meta-pupil defined by the wind speed and exposure time.  Note that
-                         the screen will have periodic boundary conditions, so the code will run
-                         with a smaller sized screen, though this may introduce artifacts into PSFs
-                         or PSF correlations functions. Note that screen_size may be tweaked by the
-                         initializer to ensure screen_size is a multiple of screen_scale.
-    @param screen_scale  Physical pixel scale of phase screen in meters.
     @param aberrations   Zernike polynomial aberrations sequence in waves.
     @param lam_0         Reference wavelength in nanometers at which Zernike aberrations are being
                          specified.  [Default: 500]
     """
-    def __init__(self, screen_size, screen_scale, aberrations=None, lam_0=500.0):
-        super(OpticalScreen, self).__init__(screen_size, screen_scale, altitude=0.0)
-
+    def __init__(self, aberrations=None, lam_0=500.0):
         self.time_step = None
 
         self.aberrations = aberrations
@@ -691,7 +605,11 @@ class PhaseScreenList(object):
     def advance(self):
         """Advance each phase screen in list by self.time_step."""
         for layer in self:
-            layer.advance()
+            try:
+                layer.advance()
+            except AttributeError:
+                # Time indep phase screen.
+                pass
 
     def advance_by(self, dt):
         """Advance each phase screen in list by specified amount of time.
@@ -701,13 +619,21 @@ class PhaseScreenList(object):
                    differ from `dt` when `dt` is not a multiple of self.time_step.
         """
         for layer in self:
-            out = layer.advance_by(dt)
+            try:
+                out = layer.advance_by(dt)
+            except AttributeError:
+                # Time indep phase screen
+                pass
         return out
 
     def reset(self):
         """Reset phase screens back to time=0."""
         for layer in self:
-            layer.reset()
+            try:
+                layer.reset()
+            except AttributeError:
+                # Time indep phase screen
+                pass
 
     def path_difference(self, *args, **kwargs):
         """ Compute cumulative effective pathlength differences due to phase screens.

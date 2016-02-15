@@ -43,13 +43,14 @@ def test_phase_screen_list():
     assert ar1 == ar2
     ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.995, rng=rng2)
     assert ar1 != ar2
+    ar3 = galsim.OpticalScreen(aberrations=[0, 0, 0, 0, 0, 0, 0, 0, 0.1])
     atm = galsim.Atmosphere(screen_size=30.0,
                             altitude=[0.0, 1.0],
                             speed=[1.0, 2.0],
                             direction=[0.0*galsim.degrees, 120*galsim.degrees],
                             r0_500=0.15,
                             rng=rng)
-    atm.append(ar1)
+    atm.append(ar3)
 
     # testing append, extend, __getitem__, __setitem__, __delitem__, __eq__, __ne__
     atm2 = galsim.PhaseScreenList(atm[:-1])
