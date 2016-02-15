@@ -319,6 +319,10 @@ class RealGalaxyCatalog(object):
     there is no functionality that lets this be a FITS data cube, because we assume that the object
     postage stamps will in general need to be different sizes depending on the galaxy size.
 
+    Note that when simulating galaxies based on HST but using either realistic or parametric galaxy
+    models, the COSMOSCatalog class may be more useful.  It allows the imposition of selection
+    criteria and other subtleties that are more difficult to impose with RealGalaxyCatalog.
+
     While you could create your own catalog to use with this class, the typical use cases would
     be to use one of the catalogs that we have created and distributed.  There are three such
     catalogs currently, which can be use with one of the following initializations:
@@ -333,9 +337,9 @@ class RealGalaxyCatalog(object):
                                               dir='path/to/GalSim/examples/data')
 
     2. There are two larger catalogs based on HST observations of the COSMOS field with around
-       26,000 and 56,000 galaxies each.  (The former is a subset of the latter.) For information
-       about how to download these catalogs, see the RealGalaxy Data Download Page on the GalSim
-       Wiki:
+       26,000 and 56,000 galaxies each with a limiting magnitude of F814W=23.5.  (The former is 
+       a subset of the latter.) For information about how to download these catalogs, see the
+       RealGalaxy Data Download Page on the GalSim Wiki:
 
            https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data
 
@@ -348,7 +352,11 @@ class RealGalaxyCatalog(object):
        There is also an optional `image_dir` parameter that lets you have the image files in
        a different location than the catalog.
 
-    3. Finally, we provide a program that will download the large COSMOS sample for you and
+    3. There is a catalog containing a random subsample of the HST COSMOS images with a limiting
+       magnitude of F814W=25.2.  More information about downloading these catalogs can be found on
+       the RealGalaxy Data Download page linked above.
+
+    4. Finally, we provide a program that will download the large COSMOS sample for you and
        put it in the $PREFIX/share/galsim directory of your installation path.  The program is
 
            galsim_download_cosmos
@@ -362,8 +370,13 @@ class RealGalaxyCatalog(object):
        look for it there.
 
     @param file_name  The file containing the catalog. [default: None, which will look for the
-                      COSMOS catalog in $PREFIX/share/galsim.  It will raise an exception if the
-                      catalog is not there telling you to run galsim_download_cosmos.]
+                      F814W<25.2 COSMOS catalog in $PREFIX/share/galsim.  It will raise an
+                      exception if the catalog is not there telling you to run
+                      galsim_download_cosmos.]
+    @param sample     A keyword argument that can be used to specify the sample to use, i.e.,
+                      "23.5" or "25.2".  At most one of `file_name` and `sample` should be
+                      specified.
+                      [default: None, which results in the same default as `file_name=None`.]
     @param image_dir  The directory of the image files.  If the string contains '/', then it is an
                       absolute path, else it is taken to be a relative path from the location of
                       the catalog file.  [default: None, which means to use the same directory
@@ -379,7 +392,7 @@ class RealGalaxyCatalog(object):
     @param logger     An optional logger object to log progress. [default: None]
     """
     _req_params = {}
-    _opt_params = { 'file_name' : str, 'image_dir' : str , 'dir' : str,
+    _opt_params = { 'file_name' : str, 'sample' : str, 'image_dir' : str , 'dir' : str,
                     'preload' : bool, 'noise_dir' : str }
     _single_params = []
     _takes_rng = False
@@ -387,12 +400,14 @@ class RealGalaxyCatalog(object):
     # _nobject_only is an intentionally undocumented kwarg that should be used only by
     # the config structure.  It indicates that all we care about is the nobjects parameter.
     # So skip any other calculations that might normally be necessary on construction.
-    def __init__(self, file_name=None, image_dir=None, dir=None, preload=False,
+    def __init__(self, file_name=None, sample=None, image_dir=None, dir=None, preload=False,
                  noise_dir=None, logger=None, _nobjects_only=False):
+        if sample is not None and file_name is not None:
+            raise ValueError("Cannot specify both the sample and file_name!")
 
         from galsim._pyfits import pyfits
         self.file_name, self.image_dir, self.noise_dir = \
-            _parse_files_dirs(file_name, image_dir, dir, noise_dir)
+            _parse_files_dirs(file_name, image_dir, dir, noise_dir, sample)
 
         self.cat = pyfits.getdata(self.file_name)
         self.nobjects = len(self.cat) # number of objects in the catalog
@@ -744,19 +759,25 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     # return simulated image
     return image
 
-def _parse_files_dirs(file_name, image_dir, dir, noise_dir):
+def _parse_files_dirs(file_name, image_dir, dir, noise_dir, sample):
+    if sample is None:
+        sample = '25.2'
+    else:
+        if sample is not '25.2' and sample is not '23.5':
+            raise ValueError("Sample name not recognized: %s"%sample)
+
     if file_name is None:
         if image_dir is not None:
             raise ValueError('Cannot specify image_dir when using default file_name.')
-        file_name = 'real_galaxy_catalog_23.5.fits'
+        file_name = 'real_galaxy_catalog_' + sample + '.fits'
         if dir is None:
-            dir = os.path.join(galsim.meta_data.share_dir, 'COSMOS_23.5_training_sample')
+            dir = os.path.join(galsim.meta_data.share_dir, 'COSMOS_'+sample+'_training_sample')
         full_file_name = os.path.join(dir,file_name)
         full_image_dir = dir
         if not os.path.isfile(full_file_name):
             raise RuntimeError('No RealGalaxy catalog found in %s.  '%dir +
-                               'Run the program galsim_download_cosmos to download catalog '+
-                               'and accompanying image files.')
+                               'Run the program galsim_download_cosmos for this sample '+
+                               'to download catalog and accompanying image files.')
     elif dir is None:
         full_file_name = file_name
         if image_dir is None:

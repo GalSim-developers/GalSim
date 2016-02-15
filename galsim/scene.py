@@ -33,7 +33,8 @@ cosmos_pix_scale = 0.03
 
 class COSMOSCatalog(object):
     """
-    A class representing a sample of galaxies from the COSMOS sample with F814W<23.5.
+    A class representing a random subsample of galaxies from the COSMOS sample with F814W<25.2
+    (default), or alternatively the entire sample with F814W<23.5 (which was the previous default).
 
     Depending on the keyword arguments, particularly `use_real`, the catalog will either have
     information about real galaxies, or parametric ones.  To use this with either type of galaxies,
@@ -43,8 +44,8 @@ class COSMOSCatalog(object):
 
     option (1) for more information.  Note that if you want to make real galaxies you need to
     download and store the full tarball with all galaxy images, whereas if you want to make
-    parametric galaxies you only need the catalog real_galaxy_catalog_23.5_fits.fits (and the
-    selection file real_galaxy_catalog_23.5_selection.fits if you want to place cuts on the
+    parametric galaxies you only need the catalog real_galaxy_catalog_25.2_fits.fits (and the
+    selection file real_galaxy_catalog_25.2_selection.fits if you want to place cuts on the
     postage stamp quality) and can delete the galaxy and PSF image files.
 
     Finally, we provide a program that will download the large COSMOS sample for you and
@@ -59,6 +60,10 @@ class COSMOSCatalog(object):
 
     GalSim knows the location of the installation share directory, so it will automatically
     look for it there.
+
+    In addition to the option of specifying catalog names, this class also accepts a keyword
+    argument `sample` that can be used to switch between the samples with limiting magnitudes of
+    23.5 and 25.2.
 
     After getting the catalogs, there is a method makeGalaxy() that can make a GSObject
     corresponding to any chosen galaxy in the catalog (whether real or parametric).  See
@@ -93,8 +98,13 @@ class COSMOSCatalog(object):
     --------------
 
     @param file_name        The file containing the catalog. [default: None, which will look for the
-                            COSMOS catalog in $PREFIX/share/galsim.  It will raise an exception if
-                            the catalog is not there telling you to run galsim_download_cosmos.]
+                            F814W<25.2 COSMOS catalog in $PREFIX/share/galsim.  It will raise an
+                            exception if the catalog is not there telling you to run
+                            galsim_download_cosmos.]
+    @param sample           A keyword argument that can be used to specify the sample to use, i.e.,
+                            "23.5" or "25.2".  At most one of `file_name` and `sample` should be
+                            specified.
+                            [default: None, which results in the same default as `file_name=None`.]
     @param image_dir        Keyword that is only used for real galaxies, not parametric ones, to
                             specify the directory of the image files.
                             If a string containing no `/`, it is the relative path from the location
@@ -143,16 +153,21 @@ class COSMOSCatalog(object):
     nobjects     The number of objects in the catalog
     """
     _req_params = {}
-    _opt_params = { 'file_name' : str, 'image_dir' : str , 'dir' : str, 'preload' : bool,
-                    'noise_dir' : str, 'use_real' : bool, 'exclusion_level' : str, 
-                    'min_hlr' : float, 'max_hlr' : float, 'min_flux' : float, 'max_flux' : float
+    _opt_params = { 'file_name' : str, 'sample' : str, 'image_dir' : str , 'dir' : str,
+                    'preload' : bool, 'noise_dir' : str, 'use_real' : bool,
+                    'exclusion_level' : str, 'min_hlr' : float, 'max_hlr' : float,
+                    'min_flux' : float, 'max_flux' : float
                   }
     _single_params = []
     _takes_rng = False
 
-    def __init__(self, file_name=None, image_dir=None, dir=None, preload=False, noise_dir=None,
-                 use_real=True, exclusion_level='marginal', min_hlr=0, max_hlr=0., min_flux=0.,
-                 max_flux=0., _nobjects_only=False, exclude_bad=None, exclude_fail=None):
+    def __init__(self, file_name=None, sample=None, image_dir=None, dir=None, preload=False,
+                 noise_dir=None, use_real=True, exclusion_level='marginal', min_hlr=0, max_hlr=0.,
+                 min_flux=0., max_flux=0., _nobjects_only=False, exclude_bad=None,
+                 exclude_fail=None):
+        if sample is not None and file_name is not None:
+            raise ValueError("Cannot specify both the sample and file_name!")
+
         # Check for deprecated exclude_bad or exclude_fail args.
         if exclude_bad is not None or exclude_fail is not None:
             from .deprecated import depr
@@ -178,7 +193,7 @@ class COSMOSCatalog(object):
 
         # Start by parsing the file names, since we'll need the image_dir below.
         full_file_name, full_image_dir, _ = galsim.real._parse_files_dirs(
-                file_name, image_dir, dir, noise_dir)
+                file_name, image_dir, dir, noise_dir, sample)
 
         if self.use_real:
             if not _nobjects_only:
@@ -240,10 +255,7 @@ class COSMOSCatalog(object):
                 warnings.warn(
                     'File with GalSim selection criteria not found!\n'+
                     'Not all of the requested exclusions will be performed.\n'+
-                    'Run the program galsim_download_cosmos to get the necessary selection file.\n'+
-                    'Or directly download the selection file from\n '+
-                    '  http://great3.jb.man.ac.uk/leaderboard/data/public/real_galaxy_catalog_23.5_selection.fits.gz\n'+
-                    'Then gunzip and put it with the catalog and image files.')
+                    'Run the program galsim_download_cosmos to get the necessary selection file.\n')
 
         # NB. The pyfits FITS_Rec class has a bug where it makes a copy of the full
         # record array in each record (e.g. in getParametricRecord) and then doesn't 
@@ -407,8 +419,9 @@ class COSMOSCatalog(object):
         @param noise_pad_size   For realistic galaxies, the size of region to pad with noise,
                                 in arcsec.  [default: 5, an arbitrary, but not completely
                                 ridiculous choice.]
-        @param deep             Modify fluxes and sizes of galaxies in order to roughly simulate
-                                an F814W<25 sample? [default: False]
+        @param deep             Modify fluxes and sizes of galaxies from the F814W<23.5 sample in
+                                order to roughly simulate an F814W<25 sample but with higher S/N, as
+                                in GREAT3? [default: False]
         @param sersic_prec      The desired precision on the Sersic index n in parametric galaxies.
                                 GalSim is significantly faster if it gets a smallish number of
                                 Sersic values, so it can cache some of the calculations and use
@@ -475,11 +488,11 @@ class COSMOSCatalog(object):
 
             gal_list = self._makeParametric(indices, chromatic, sersic_prec, gsparams)
 
-        # If deep, rescale the size and flux
+        # If trying to use the 23.5 sample and "fake" a deep sample, rescale the size and flux as
+        # suggested in the GREAT3 handbook.
         if deep:
-            # Rescale the flux to get a limiting mag of 25 in F814W.  Current limiting mag is 23.5,
-            # so it's a magnitude difference of 1.5.  Make the galaxies a factor of 0.6 smaller and
-            # appropriately fainter.
+            # Rescale the flux to get a limiting mag of 25 in F814W when starting with a limiting
+            # mag of 23.5.  Make the galaxies a factor of 0.6 smaller and appropriately fainter.
             flux_factor = 10.**(-0.4*1.5)
             size_factor = 0.6
             gal_list = [ gal.dilate(size_factor) * flux_factor for gal in gal_list ]
@@ -762,11 +775,11 @@ class COSMOSCatalog(object):
             record = cosmos_catalog.getParametricRecord(index)
             gal = COSMOSCatalog._buildParametric(record, sersic_prec, gsparams, chromatic=False)
 
-        # If deep, rescale the size and flux
+        # If trying to use the 23.5 sample and "fake" a deep sample, rescale the size and flux as
+        # suggested in the GREAT3 handbook.
         if deep:
-            # Rescale the flux to get a limiting mag of 25 in F814W.  Current limiting mag is 23.5,
-            # so it's a magnitude difference of 1.5.  Make the galaxies a factor of 0.6 smaller and
-            # appropriately fainter.
+            # Rescale the flux to get a limiting mag of 25 in F814W when starting with a limiting
+            # mag of 23.5.  Make the galaxies a factor of 0.6 smaller and appropriately fainter.
             flux_factor = 10.**(-0.4*1.5)
             size_factor = 0.6
             gal = gal.dilate(size_factor) * flux_factor
