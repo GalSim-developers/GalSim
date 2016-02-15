@@ -43,7 +43,6 @@ def test_phase_screen_list():
     assert ar1 == ar2
     ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.995, rng=rng2)
     assert ar1 != ar2
-
     atm = galsim.Atmosphere(screen_size=30.0,
                             altitude=[0.0, 1.0],
                             speed=[1.0, 2.0],
@@ -71,7 +70,7 @@ def test_phase_screen_list():
     atm4.append(atm[-1])
     assert atm == atm4
 
-    aper = galsim.Aperture(20, 2000)
+    aper = galsim.Aperture(20, 200)
     pd = atm.path_difference(aper)
     pd2 = atm2.path_difference(aper)
     pd3 = atm3.path_difference(aper)
@@ -83,18 +82,19 @@ def test_phase_screen_list():
 
     # Check some actual derived PSFs too, not just phase screens.
     atm.reset()
-    psf = atm.makePSF(exptime=0.06, diam=4.0)
+    kwargs = dict(exptime=0.06, diam=4.0, _pupil_plane_size=6.0, _pupil_scale=6.0/192)
+    psf = atm.makePSF(**kwargs)
 
     # Need to reset atm2 since both atm and atm2 reference the same layer objects (not copies).
     # Not sure if this is a feature or a bug, but it's also how regular python lists work.
     atm2.reset()
-    psf2 = atm2.makePSF(exptime=0.06, diam=4.0)
+    psf2 = atm2.makePSF(**kwargs)
 
     atm3.reset()
-    psf3 = atm3.makePSF(exptime=0.06, diam=4.0)
+    psf3 = atm3.makePSF(**kwargs)
 
     atm4.reset()
-    psf4 = atm4.makePSF(exptime=0.06, diam=4.0)
+    psf4 = atm4.makePSF(**kwargs)
 
     np.testing.assert_array_equal(psf.img, psf2.img, "PhaseScreenPSFs are inconsistent")
     np.testing.assert_array_equal(psf.img, psf3.img, "PhaseScreenPSFs are inconsistent")
@@ -176,15 +176,17 @@ def test_phase_psf_batch():
     theta_x = [i * galsim.arcsec for i in xrange(NPSFs)]
     theta_y = [i * galsim.arcsec for i in xrange(NPSFs)]
 
+    kwargs = dict(exptime=exptime, diam=4.0, _pupil_plane_size=6.0, _pupil_scale=6.0/192)
+
     t3 = time.time()
-    psfs = atm.makePSF(theta_x=theta_x, theta_y=theta_y, exptime=exptime, diam=4.0)
+    psfs = atm.makePSF(theta_x=theta_x, theta_y=theta_y, **kwargs)
     print 'time for {0} PSFs in batch: {1:.2f} s'.format(NPSFs, time.time() - t3)
 
     t4 = time.time()
     more_psfs = []
     for tx, ty in zip(theta_x, theta_y):
         atm.reset()
-        more_psfs.append(atm.makePSF(theta_x=tx, theta_y=ty, exptime=exptime, diam=4.0))
+        more_psfs.append(atm.makePSF(theta_x=tx, theta_y=ty, **kwargs))
     print 'time for {0} PSFs in serial: {1:.2f} s'.format(NPSFs, time.time() - t4)
 
     for psf1, psf2 in zip(psfs, more_psfs):

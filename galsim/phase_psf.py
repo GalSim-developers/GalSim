@@ -363,7 +363,8 @@ class AtmosphericScreen(PhaseScreen):
         @returns  Good pupil scale size in meters.
         """
         obj = galsim.Kolmogorov(lam=lam, r0=self.r0_500 * (lam/500.0)**(6./5))
-        return obj.stepK() * lam*1.e-9 * galsim.radians / scale_unit
+        stepk = obj.stepK() * lam*1.e-9 * galsim.radians / scale_unit
+        return stepk / (2 * np.pi)
 
     def path_difference(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
         """ Compute effective pathlength differences due to phase screen.
@@ -563,7 +564,8 @@ class OpticalScreen(PhaseScreen):
         @returns  Good pupil scale size in meters.
         """
         obj = galsim.Airy(lam=lam, diam=diam)
-        return obj.stepK() * lam*1.e-9 * galsim.radians / scale_unit
+        stepk = obj.stepK() * lam*1.e-9 * galsim.radians / scale_unit
+        return stepk / (2 * np.pi)
 
     def path_difference(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
         """ Compute effective pathlength differences due to phase screen.
@@ -856,17 +858,19 @@ class PhaseScreenPSF(GSObject):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
         # progress bar during long calculations.
 
+        if obscuration is None:
+            obscuration = 0.0
         self.screen_list = screen_list
-        self.lam = lam
-        self.exptime = exptime
+        self.lam = float(lam)
+        self.exptime = float(exptime)
         self.theta_x = theta_x
         self.theta_y = theta_y
         self.scale_unit = scale_unit
         self.interpolant = interpolant
-        self.diam = diam
-        self.obscuration = obscuration
-        self.pad_factor = pad_factor
-        self.oversampling = oversampling
+        self.diam = float(diam)
+        self.obscuration = float(obscuration)
+        self.pad_factor = float(pad_factor)
+        self.oversampling = float(oversampling)
 
         if _pupil_scale is None:
             # Generically, Galsim propagates stepK() for convolutions using
@@ -883,10 +887,9 @@ class PhaseScreenPSF(GSObject):
         # Note _pupil_plane_size sets the size of the array defining the pupil, which will generally
         # be somewhat larger than the diameter of the pupil itself.
         if _pupil_plane_size is None:
-            _pupil_plane_size = self.diam * self.pad_factor
+            _pupil_plane_size = 2 * self.diam * self.pad_factor
         self._npix = int(np.ceil(_pupil_plane_size/self._pupil_scale))
         self._pupil_plane_size = self._npix * self._pupil_scale
-
         self.scale = 1e-9*self.lam/self._pupil_plane_size * galsim.radians / self.scale_unit
 
         self.aper = Aperture(self._pupil_plane_size, self._npix, diam=self.diam,
