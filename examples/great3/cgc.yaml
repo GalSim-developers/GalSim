@@ -109,6 +109,8 @@ gal:
 
 stamp:
     # Use a Ring type with num=2 to do pairs of 90 degree rotated galaxies.
+    # Note that selection criteria get imposed in a way that eliminates either both galaxies in
+    # the pair, or neither.
     type: Ring
     num: 2
 
