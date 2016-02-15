@@ -276,7 +276,7 @@ class RealGalaxy(GSObject):
                                    +"objects.")
 
     def __repr__(self):
-        s = 'galsim.RealGalaxy(%r, %r, '%(self.catalog, self.index)
+        s = 'galsim.RealGalaxy(%r, index=%r, '%(self.catalog, self.index)
         if self._x_interpolant is not None:
             s += 'x_interpolant=%r, '%self._x_interpolant
         if self._k_interpolant is not None:
@@ -636,7 +636,7 @@ class RealGalaxyCatalog(object):
         return cf
 
     def __repr__(self):
-        s = 'galsim.RealGalaxyCatalog(%r,%r'%(self.file_name,self.image_dir)
+        s = 'galsim.RealGalaxyCatalog(%r,image_dir=%r'%(self.file_name,self.image_dir)
         if self.noise_dir != self.image_dir: s += ',noise_dir=%r'%self.noise_dir
         s += ')'
         return s
@@ -763,6 +763,8 @@ def _parse_files_dirs(file_name, image_dir, dir, noise_dir, sample):
     if sample is None:
         if file_name is None:
             use_sample = '25.2'
+        else:
+            use_sample = None
     else:
         use_sample = sample
         if use_sample != '25.2' and use_sample != '23.5':

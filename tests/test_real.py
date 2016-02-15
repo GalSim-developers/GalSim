@@ -80,8 +80,8 @@ def test_real_galaxy_ideal():
     import time
     t1 = time.time()
     # read in faked Gaussian RealGalaxy from file
-    rgc = galsim.RealGalaxyCatalog(catalog_file, image_dir)
-    rg = galsim.RealGalaxy(rgc, index = ind_fake)
+    rgc = galsim.RealGalaxyCatalog(catalog_file, image_dir=image_dir)
+    rg = galsim.RealGalaxy(rgc, index=ind_fake)
     # as a side note, make sure it behaves okay given a legit RNG and a bad RNG
     # or when trying to specify the galaxy too many ways
     rg_1 = galsim.RealGalaxy(rgc, index = ind_fake, rng = galsim.BaseDeviate(1234))
@@ -164,8 +164,8 @@ def test_real_galaxy_saved():
     import time
     t1 = time.time()
     # read in real RealGalaxy from file
-    rgc = galsim.RealGalaxyCatalog(catalog_file, image_dir)
-    rg = galsim.RealGalaxy(rgc, index = ind_real)
+    rgc = galsim.RealGalaxyCatalog(catalog_file, image_dir=image_dir)
+    rg = galsim.RealGalaxy(rgc, index=ind_real)
 
     # read in expected result for some shear
     shera_image = galsim.fits.read(shera_file)
