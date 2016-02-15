@@ -892,7 +892,7 @@ class PhaseScreenPSF(GSObject):
         # be somewhat larger than twice the diameter of the pupil itself.
         if _pupil_plane_size is None:
             _pupil_plane_size = 2 * self.diam * self.pad_factor
-        self._npix = int(np.ceil(_pupil_plane_size/self._pupil_scale))
+        self._npix = galsim._galsim.goodFFTSize(int(np.ceil(_pupil_plane_size/self._pupil_scale)))
         self._pupil_plane_size = self._npix * self._pupil_scale
         self.scale = 1e-9*self.lam/self._pupil_plane_size * galsim.radians / self.scale_unit
 
