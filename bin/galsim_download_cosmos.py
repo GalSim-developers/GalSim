@@ -65,15 +65,13 @@ def parse_args():
             '-u', '--unpack', action='store_const', default=False, const=True,
             help='Re-unpack the tar file if not downloading')
         parser.add_argument(
-            '-s', '--save', action='store_const', default=False, const=True,
+            '--save', action='store_const', default=False, const=True,
             help="Save the tarball after unpacking.")
         parser.add_argument(
             '-d', '--dir', action='store', default=None,
             help="Install into an alternate directory and link from the share/galsim directory")
-        # Having this be -a is kind of awkward, but both -s (for "sample") and -f (for "flux limit")
-        # are already taken.  So "a" for "sAmple"??
         parser.add_argument(
-            '-a', '--sample', action='store_const', default='25.2', choices=('23.5', '25.2'),
+            '-s', '--sample', action='store_const', default='25.2', choices=('23.5', '25.2'),
             help='Flux limit for sample to download; either 23.5 or 25.2')
         parser.add_argument(
             '--nolink', action='store_const', default=False, const=True,
