@@ -71,8 +71,8 @@ def parse_args():
             '-d', '--dir', action='store', default=None,
             help="Install into an alternate directory and link from the share/galsim directory")
         parser.add_argument(
-            '-s', '--sample', action='store_const', default='25.2', choices=('23.5', '25.2'),
-            help='Flux limit for sample to download; either 23.5 or 25.2')
+            '-s', '--sample', action='store', default='25.2', choices=('23.5', '25.2'),
+            help="Flux limit for sample to download; either 23.5 or 25.2")
         parser.add_argument(
             '--nolink', action='store_const', default=False, const=True,
             help="Don't link to the alternate directory from share/galsim")
@@ -100,11 +100,14 @@ def parse_args():
             '-u', '--unpack', action='store_const', default=False, const=True,
             help='Re-unpack the tar file if not downloading')
         parser.add_option(
-            '-s', '--save', action='store_const', default=False, const=True,
+            '--save', action='store_const', default=False, const=True,
             help="Save the tarball after unpacking.")
         parser.add_option(
             '-d', '--dir', action='store', default=None,
             help="Install into an alternate directory and link from the share/galsim directory")
+        parser.add_option(
+            '-s', '--sample', type="choice", action='store', choices=('23.5', '25.2'),
+            default='25.2', help="Flux limit for sample to download; either 23.5 or 25.2")
         parser.add_option(
             '--nolink', action='store_const', default=False, const=True,
             help="Don't link to the alternate directory from share/galsim")
