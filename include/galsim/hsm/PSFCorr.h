@@ -123,9 +123,7 @@ namespace hsm {
      *                           value of 2 results in code running more slowly, and results have
      *                           not been significantly tested.
      * @param convergence_threshold Accuracy (in x0, y0, and sigma as a fraction of sigma) when
-     *                           calculating adaptive moments. The value of sigma used for the
-     *                           convergence criterion is the minimum of the "guessed" value and
-     *                           the "current" value.
+     *                           calculating adaptive moments.
      * @param max_mom2_iter      Maximum number of iterations to use when calculating adaptive
      *                           moments.  This should be sufficient in nearly all situations, with
      *                           the possible exception being very flattened profiles.
