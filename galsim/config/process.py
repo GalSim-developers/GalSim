@@ -496,7 +496,11 @@ def SetInConfig(config, key, value):
     @returns the value of that key from the config.
     """
     config, key = ParseExtendedKey(config, key)
-    config[key] = value
+    if value == '':
+        # This means remove it, if it is there.
+        config.pop(key,None)
+    else:
+        config[key] = value
 
 
 def UpdateConfig(config, new_params):
