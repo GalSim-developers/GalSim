@@ -433,7 +433,6 @@ class OpticalScreen(object):
     """
     def __init__(self, tip=0.0, tilt=0.0, defocus=0.0, astig1=0.0, astig2=0.0, coma1=0.0, coma2=0.0,
                  trefoil1=0.0, trefoil2=0.0, spher=0.0, aberrations=None, lam_0=500.0):
-        self.time_step = None
         if aberrations is None:
             aberrations = np.zeros(12)
             aberrations[2] = tip
@@ -622,8 +621,8 @@ class PhaseScreenList(object):
         # Could have made self.time_step a @property instead of defining _update_attrs(), but then
         # failures would occur late rather than early, which makes debugging more difficult.
 
-        # Must have unique time_step or time_step is None (for time-indep screen)
-        time_step = set([l.time_step for l in self if l.time_step is not None])
+        # Each layer must have same value for time_step or no attr time_step.
+        time_step = set([l.time_step for l in self if hasattr(l, 'time_step')])
         if len(time_step) == 0:
             self.time_step = None
         elif len(time_step) == 1:
