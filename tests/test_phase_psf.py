@@ -72,14 +72,14 @@ def test_phase_screen_list():
     assert atm == atm4
 
     aper = galsim.Aperture(20, 200)
-    pd = atm.path_difference(aper)
-    pd2 = atm2.path_difference(aper)
-    pd3 = atm3.path_difference(aper)
-    pd4 = atm4.path_difference(aper)
+    wf = atm.wavefront(aper)
+    wf2 = atm2.wavefront(aper)
+    wf3 = atm3.wavefront(aper)
+    wf4 = atm4.wavefront(aper)
 
-    np.testing.assert_array_equal(pd, pd2, "PhaseScreenLists are inconsistent")
-    np.testing.assert_array_equal(pd, pd3, "PhaseScreenLists are inconsistent")
-    np.testing.assert_array_equal(pd, pd4, "PhaseScreenLists are inconsistent")
+    np.testing.assert_array_equal(wf, wf2, "PhaseScreenLists are inconsistent")
+    np.testing.assert_array_equal(wf, wf3, "PhaseScreenLists are inconsistent")
+    np.testing.assert_array_equal(wf, wf4, "PhaseScreenLists are inconsistent")
 
     # Check some actual derived PSFs too, not just phase screens.
     atm.reset()
@@ -120,11 +120,11 @@ def test_frozen_flow():
 
     screen = galsim.phase_psf.AtmosphericScreen(1.0, dx, alt, vx=vx, time_step=dt, rng=rng)
     aper = galsim.Aperture(20, 20/dx)
-    pd0 = screen.path_difference(aper)
+    wf0 = screen.wavefront(aper)
     screen.advance_by(t)
-    pd1 = screen.path_difference(aper, theta_x=45*galsim.degrees)
+    wf1 = screen.wavefront(aper, theta_x=45*galsim.degrees)
 
-    np.testing.assert_array_almost_equal(pd0, pd1, 5, "Flow is not frozen")
+    np.testing.assert_array_almost_equal(wf0, wf1, 5, "Flow is not frozen")
 
     t2 = time.time()
     print 'time for %s = %.2f' % (funcname(), t2-t1)
@@ -138,29 +138,29 @@ def test_phase_psf_reset():
     # Test frozen AtmosphericScreen first
     atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, speed=0.1, alpha=1.0, rng=rng)
     aper = galsim.Aperture(16, 160)
-    pd1 = atm.path_difference(aper)
+    wf1 = atm.wavefront(aper)
     atm.advance()
-    pd2 = atm.path_difference(aper)
+    wf2 = atm.wavefront(aper)
     # Verify that atmosphere did advance
-    assert not np.all(pd1 == pd2)
+    assert not np.all(wf1 == wf2)
 
     # Now verify that reset brings back original atmosphere
     atm.reset()
-    pd3 = atm.path_difference(aper)
-    np.testing.assert_array_equal(pd1, pd3, "Phase screen didn't reset")
+    wf3 = atm.wavefront(aper)
+    np.testing.assert_array_equal(wf1, wf3, "Phase screen didn't reset")
 
     # Now check with boilin, but no wind.
     atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, alpha=0.997, rng=rng)
-    pd1 = atm.path_difference(aper)
+    wf1 = atm.wavefront(aper)
     atm.advance()
-    pd2 = atm.path_difference(aper)
+    wf2 = atm.wavefront(aper)
     # Verify that atmosphere did advance
-    assert not np.all(pd1 == pd2)
+    assert not np.all(wf1 == wf2)
 
     # Now verify that reset brings back original atmosphere
     atm.reset()
-    pd3 = atm.path_difference(aper)
-    np.testing.assert_array_equal(pd1, pd3, "Phase screen didn't reset")
+    wf3 = atm.wavefront(aper)
+    np.testing.assert_array_equal(wf1, wf3, "Phase screen didn't reset")
 
     t2 = time.time()
     print 'time for %s = %.2f' % (funcname(), t2-t1)

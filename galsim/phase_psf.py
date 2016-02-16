@@ -291,14 +291,16 @@ class AtmosphericScreen(object):
         stepk = obj.stepK() * lam*1.e-9 * galsim.radians / scale_unit
         return stepk / (2 * np.pi)
 
-    def path_difference(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
-        """ Compute effective pathlength differences due to phase screen.
+    def wavefront(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
+        """ Compute wavefront due to phase screen.
 
-        @param aper     `galsim.Aperture` over which to compute pathlength differences.
+        Wavefront here indicates the distance by which the physical wavefront lags or leads the
+        ideal plane wave (pre-optics) or spherical wave (post-optics).
+
+        @param aper     `galsim.Aperture` over which to compute wavefront.
         @param theta_x  x-component of field angle corresponding to center of output array.
         @param theta_y  y-component of field angle corresponding to center of output array.
-        @returns   Array of pathlength differences in nanometers.  Multiply by 2pi/wavelength to get
-                   array of phase differences.
+        @returns        Wavefront lag or lead in nanometers over aperture.
         """
         scale = aper.pupil_scale
         nx = aper.npix
@@ -481,14 +483,16 @@ class OpticalScreen(object):
         stepk = obj.stepK() * lam*1.e-9 * galsim.radians / scale_unit
         return stepk / (2 * np.pi)
 
-    def path_difference(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
-        """ Compute effective pathlength differences due to phase screen.
+    def wavefront(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
+        """ Compute wavefront due to phase screen.
 
-        @param aper     `galsim.Aperture` over which to compute pathlength differences.
+        Wavefront here indicates the distance by which the physical wavefront lags or leads the
+        ideal plane wave (pre-optics) or spherical wave (post-optics).
+
+        @param aper     `galsim.Aperture` over which to compute wavefront.
         @param theta_x  x-component of field angle corresponding to center of output array.
         @param theta_y  y-component of field angle corresponding to center of output array.
-        @returns   Array of pathlength differences in nanometers.  Multiply by 2pi/wavelength to get
-                   array of phase differences.
+        @returns        Wavefront lag or lead in nanometers over aperture.
         """
         # ignore theta_x, theta_y
         r = aper.rho[aper.illuminated]
@@ -536,7 +540,7 @@ class PhaseScreenList(object):
     advance()          Advance each phase screen in list by self.time_step.
     advance_by()       Advance each phase screen in list by specified amount.
     reset()            Reset each phase screen to t=0.
-    path_difference()  Compute the cumulative pathlength difference due to all screens.
+    wavefront()        Compute the cumulative wavefront due to all screens.
 
     @param layers  Sequence of phase screens.
     """
@@ -635,17 +639,18 @@ class PhaseScreenList(object):
                 # Time indep phase screen
                 pass
 
-    def path_difference(self, *args, **kwargs):
-        """ Compute cumulative effective pathlength differences due to phase screens.
+    def wavefront(self, *args, **kwargs):
+        """ Compute wavefront due to phase screen.
 
-        @param nx       Size of output array
-        @param scale    Scale of output array pixels in meters
-        @param theta_x  Field angle corresponding to center of output array.
-        @param theta_y  Ditto.
-        @returns   Array of pathlength differences in nanometers.  Multiply by 2pi/wavelength to get
-                   array of phase differences.
+        Wavefront here indicates the distance by which the physical wavefront lags or leads the
+        ideal plane wave (pre-optics) or spherical wave (post-optics).
+
+        @param aper     `galsim.Aperture` over which to compute wavefront.
+        @param theta_x  x-component of field angle corresponding to center of output array.
+        @param theta_y  y-component of field angle corresponding to center of output array.
+        @returns        Wavefront lag or lead in nanometers over aperture.
         """
-        return np.sum(layer.path_difference(*args, **kwargs) for layer in self)
+        return np.sum(layer.wavefront(*args, **kwargs) for layer in self)
 
     def makePSF(self, diam, **kwargs):
         """Compute one PSF or multiple PSFs from the current PhaseScreenList, depending on the type
@@ -871,11 +876,10 @@ class PhaseScreenPSF(GSObject):
 
     def _step(self):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
-        path_difference = self.screen_list.path_difference(self.aper,
-                                                           self.theta_x, self.theta_y)
-        wf = self.aper.illuminated * np.exp(2j * np.pi * path_difference / self.lam)
-        ftwf = np.fft.ifft2(np.fft.ifftshift(wf))
-        self.img += np.abs(ftwf)**2
+        wf = self.screen_list.wavefront(self.aper, self.theta_x, self.theta_y)
+        expwf = self.aper.illuminated * np.exp(2j * np.pi * wf / self.lam)
+        ftexpwf = np.fft.ifft2(np.fft.ifftshift(expwf))
+        self.img += np.abs(ftexpwf)**2
 
     def _finalize(self, flux, gsparams):
         """Take accumulated integrated PSF image and turn it into a proper GSObject."""
