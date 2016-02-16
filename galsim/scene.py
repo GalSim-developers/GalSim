@@ -232,8 +232,7 @@ class COSMOSCatalog(object):
             import warnings
             warnings.warn(
                 'You seem to have an old version of the COSMOS parameter file.\n'+
-                'Please run `galsim_download_cosmos -f` to force a re-download\n' +
-                'of the COSMOS catalog.')
+                'Please run `galsim_download_cosmos` to re-download the COSMOS catalog.')
 
         # Do the reading of what we need to impose selection criteria, if the appropriate
         # exclusion_level was chosen.
@@ -339,8 +338,8 @@ class COSMOSCatalog(object):
                 import warnings
                 warnings.warn(
                     'You seem to have an old version of the COSMOS parameter file.\n'+
-                    'Please run `galsim_download_cosmos -f` to force a re-download\n' +
-                    'of the COSMOS catalog to get faster and more accurate selection.')
+                    'Please run `galsim_download_cosmos` to re-download the COSMOS catalog\n' +
+                    'to get faster and more accurate selection.')
 
                 sparams = self.param_cat['sersicfit']
                 hlr_pix = sparams[:,1]
@@ -492,9 +491,8 @@ class COSMOSCatalog(object):
                 import warnings
                 warnings.warn(
                     'You seem to have an old version of the COSMOS parameter file.\n'+
-                    'Please run `galsim_download_cosmos -f` to force a re-download\n' +
-                    'of the COSMOS catalog and take advantage of pre-computation of\n' +
-                    'many quantities..')
+                    'Please run `galsim_download_cosmos` to re-download the COSMOS catalog\n' +
+                    'and take advantage of pre-computation of many quantities..')
 
             gal_list = self._makeParametric(indices, chromatic, sersic_prec, gsparams)
 
