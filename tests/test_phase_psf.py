@@ -199,8 +199,28 @@ def test_phase_psf_batch():
     print 'time for %s = %.2f' % (funcname(), t2-t1)
 
 
+def test_opt_indiv_aberrations():
+    import time
+    t1 = time.time()
+
+    screen1 = galsim.OpticalScreen(tip=0.2, tilt=0.3, defocus=0.4, astig1=0.5, astig2=0.6,
+                                   coma1=0.7, coma2=0.8, trefoil1=0.9, trefoil2=1.0, spher=1.1)
+    screen2 = galsim.OpticalScreen(aberrations=[0.0, 0.0, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,
+                                                1.0, 1.1])
+
+    psf1 = galsim.PhaseScreenList([screen1]).makePSF(diam=4.0)
+    psf2 = galsim.PhaseScreenList([screen2]).makePSF(diam=4.0)
+
+    np.testing.assert_array_equal(
+        psf1.img, psf2.img,
+        "Individually specified aberrations differs from aberrations specified as list.")
+    t2 = time.time()
+    print 'time for %s = %.2f' % (funcname(), t2-t1)
+
+
 if __name__ == "__main__":
     test_phase_screen_list()
     test_frozen_flow()
     test_phase_psf_reset()
     test_phase_psf_batch()
+    test_opt_indiv_aberrations()

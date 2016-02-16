@@ -431,8 +431,33 @@ class OpticalScreen(object):
     @param lam_0         Reference wavelength in nanometers at which Zernike aberrations are being
                          specified.  [Default: 500]
     """
-    def __init__(self, aberrations=None, lam_0=500.0):
+    def __init__(self, tip=0.0, tilt=0.0, defocus=0.0, astig1=0.0, astig2=0.0, coma1=0.0, coma2=0.0,
+                 trefoil1=0.0, trefoil2=0.0, spher=0.0, aberrations=None, lam_0=500.0):
         self.time_step = None
+        if aberrations is None:
+            aberrations = np.zeros(12)
+            aberrations[2] = tip
+            aberrations[3] = tilt
+            aberrations[4] = defocus
+            aberrations[5] = astig1
+            aberrations[6] = astig2
+            aberrations[7] = coma1
+            aberrations[8] = coma2
+            aberrations[9] = trefoil1
+            aberrations[10] = trefoil2
+            aberrations[11] = spher
+        else:
+            # Make sure no individual aberrations were passed in, since they will be ignored.
+            if any([tip, tilt, defocus, astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher]):
+                raise TypeError("Cannot pass in individual aberrations and array!")
+            # Aberrations were passed in, so check for right number of entries.
+            if len(aberrations) <= 2:
+                raise ValueError("Aberrations keyword must have length > 2")
+            # Check for non-zero value in first place.  Probably a mistake.
+            if aberrations[0] != 0.0:
+                import warnings
+                warnings.warn(
+                    "Detected non-zero value in aberrations[0] -- this value is ignored!")
 
         self.aberrations = aberrations
         self.lam_0 = lam_0
