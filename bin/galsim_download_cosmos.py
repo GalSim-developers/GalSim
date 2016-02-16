@@ -19,7 +19,7 @@
 A program to download the COSMOS RealGalaxy catalog for use with GalSim.
 """
 
-import os, sys, urllib2, tarfile, subprocess, shutil
+import os, sys, urllib2, tarfile, subprocess, shutil, json
 
 # Since this will be installed in the same directory as our galsim executable,
 # we need to do the same trick about changing the path so it imports the real
@@ -204,7 +204,42 @@ def download(url, target, unpack_dir, args, logger):
                     do_download = False
     elif unpack_dir is not None and os.path.isdir(unpack_dir):
         logger.info("")
-        if args.force:
+
+        # Check that this is the current version.
+        meta_file = os.path.join(unpack_dir, 'meta.json')
+        if os.path.isfile(meta_file):
+            with open(meta_file) as fp:
+                saved_meta_dict = json.load(fp)
+                # Get rid of the unicode
+                saved_meta_dict = dict([ (str(k),str(v)) for k,v in saved_meta_dict.items()])
+            logger.debug("current meta information is %s",saved_meta_dict)
+            meta_dict = dict(meta)
+            logger.debug("url's meta information is %s",meta_dict)
+            obsolete = False
+            for k in meta_dict:
+                if k == 'date':
+                    continue  # This one isn't expected to match.
+                elif k not in saved_meta_dict:
+                    logger.debug("key %s is missing in saved meta information",k)
+                    obsolete = True
+                elif meta_dict[k] != saved_meta_dict[k]:
+                    logger.debug("key %s differs: %s != %s",k,meta_dict[k],saved_meta_dict[k])
+                    obsolete = True
+                else:
+                    logger.debug("key %s matches",k)
+        else:
+            obsolete = True
+
+        if obsolete:
+            if args.quiet or args.force:
+                logger.info("The version currently on disk is obsolete.  "+
+                            "Downloading new version.")
+            else:
+                q = "The version currently on disk is obsolete.  Download new version?"
+                yn = query_yes_no(q, default='yes')
+                if yn == 'no':
+                    do_download = False
+        elif args.force:
             logger.info("Target file has already been downloaded and unpacked.  "+
                         "Forced re-download.")
         elif args.quiet:
@@ -257,9 +292,9 @@ def download(url, target, unpack_dir, args, logger):
                 logger.error("    %s -d dir_name\n",script_name)
             raise
 
-    return do_download, target
+    return do_download, target, meta
 
-def unpack(target, target_dir, args, logger):
+def unpack(target, target_dir, unpack_dir, meta, args, logger):
     logger.info("Unpacking the tarball...")
     #with tarfile.open(target) as tar:
     # The above line works on python 2.7+.  But to make sure we work for 2.6, we use the
@@ -272,6 +307,12 @@ def unpack(target, target_dir, args, logger):
         elif args.verbosity >= 2:
             tar.list(verbose=False)
         tar.extractall(target_dir)
+
+    # Write the meta information to a file, meta.json to mark what version this all is.
+    meta_file = os.path.join(unpack_dir, 'meta.json')
+    with open(meta_file,'w') as fp:
+        json.dump(dict(meta), fp)
+
     logger.info("Extracted contents of tar file.")
 
 def unzip(target, args, logger):
@@ -359,7 +400,7 @@ def main():
     unpack_dir = target[:-len('.tar.gz')]
 
     # Download the tarball
-    new_download, target = download(url, target, unpack_dir, args, logger)
+    new_download, target, meta = download(url, target, unpack_dir, args, logger)
 
     # Usually we unpack if we downloaded the tarball or if specified by the command line option.
     do_unpack = new_download or args.unpack
@@ -382,7 +423,7 @@ def main():
 
     # Unpack the tarball
     if do_unpack:
-        unpack(target, target_dir, args, logger)
+        unpack(target, target_dir, unpack_dir, meta, args, logger)
 
     # Usually, we remove the tarball if we unpacked it and command line doesn't specify to save it.
     do_remove = do_unpack and not args.save
