@@ -432,7 +432,7 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
     image.
 
     Drawing multiple low resolution images of a light profile can be a lot slower than drawing a
-    high resolution image of the same profile, even if the total number of pixels being the same. A
+    high resolution image of the same profile, even if the total number of pixels is the same. A
     uniformly offset dither sequence can be extracted from a well-resolved image that is drawn by
     convolving the surface brightness profile explicitly with the native pixel response and setting
     a lower sampling scale (or higher sampling rate) using the `pixel_scale' argument in drawImage()
