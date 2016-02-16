@@ -168,9 +168,9 @@ def download(url, target, unpack_dir, args, logger):
     u = urllib2.urlopen(url)
     meta = u.info()
     logger.debug("Meta information about url:\n%s",str(meta))
-    file_size = int(meta.getheaders("Content-Length")[0]) / 1024**2
+    file_size = int(meta.getheaders("Content-Length")[0])
     file_name = os.path.basename(url)
-    logger.info("Size of %s: %d MBytes" , file_name, file_size)
+    logger.info("Size of %s: %d MBytes" , file_name, file_size/1024**2)
 
     # Make sure the directory we want to put this file exists.
     ensure_dir(target)
@@ -179,10 +179,10 @@ def download(url, target, unpack_dir, args, logger):
     do_download = True
     if os.path.isfile(target):
         logger.info("")
-        existing_file_size = os.path.getsize(target) / 1024**2
+        existing_file_size = os.path.getsize(target)
         if args.force:
             logger.info("Target file already exists.  Size = %d MBytes.  Forced re-download.",
-                        existing_file_size)
+                        existing_file_size/1024**2)
         elif file_size == existing_file_size:
             if args.quiet:
                 logger.info("Target file already exists.  Not re-downloading.")
@@ -193,12 +193,12 @@ def download(url, target, unpack_dir, args, logger):
                 if yn == 'no':
                     do_download = False
         else:
-            logger.warn("Target file already exists, but it seems to be incomplete.")
+            logger.warn("Target file already exists, but it seems to be incomplete or corrupt.")
             if args.quiet:
                 logger.warn("Size of existing file = %d MBytes.  Re-downloading.",
-                            existing_file_size)
+                            existing_file_size/1024**2)
             else:
-                q = "Size of existing file = %d MBytes.  Re-download?"%(existing_file_size)
+                q = "Size of existing file = %d MBytes.  Re-download?"%(existing_file_size/1024**2)
                 yn = query_yes_no(q, default='yes')
                 if yn == 'no':
                     do_download = False
@@ -211,7 +211,7 @@ def download(url, target, unpack_dir, args, logger):
             logger.info("Target file has already been downloaded and unpacked.  "+
                         "Not re-downloading.")
             do_download = False
-            args.save = True  # Don't try to re-delete it!
+            args.save = True  # Don't delete it!
         else:
             q = "Target file has already been downloaded and unpacked.  Re-download?"
             yn = query_yes_no(q, default='no')
@@ -234,14 +234,13 @@ def download(url, target, unpack_dir, args, logger):
                     if not buffer:
                         break
 
-                    file_size_dl += len(buffer) / 1024
+                    file_size_dl += len(buffer)
                     f.write(buffer)
 
                     # Status bar
                     if args.verbosity >= 2:
-                        fsdl = file_size_dl / 1024
                         status = r"Downloading: %5d / %d MBytes  [%3.2f%%]" % (
-                            fsdl, file_size, fsdl * 100. / file_size)
+                            file_size_dl/1024**2, file_size/1024**2, file_size_dl*100./file_size)
                         status = status + chr(8)*(len(status)+1)
                         print status,
                         sys.stdout.flush()
@@ -335,9 +334,15 @@ def main():
     # Give diagnostic about GalSim version
     logger.debug("GalSim version: %s",galsim.__version__)
     logger.debug("This download script is: %s",__file__)
-    logger.info("Type %s -h to see command line options.",script_name)
+    logger.info("Type %s -h to see command line options.\n",script_name)
 
-    url = "http://great3.jb.man.ac.uk/leaderboard/data/public/COSMOS_"+sample+"_training_sample.tar.gz"
+    # Some definitions:
+    # share_dir is the base galsim share directory, e.g. /usr/local/share/galsim/
+    # target_dir is where we will put the downloaded file, usually == share_dir.
+    # unpack_dir is the directory that the tarball will unpack into.
+    # url is the url from which we will download the tarball.
+    # file_name is the name of the file to download, taken from the url.
+    # target is the full path of the downloaded tarball
 
     share_dir = galsim.meta_data.share_dir
     if args.dir is not None:
@@ -347,15 +352,26 @@ def main():
         target_dir = share_dir
         link = False
 
+    url = "http://great3.jb.man.ac.uk/leaderboard/data/public/COSMOS_%s_training_sample.tar.gz"%(
+            args.sample)
     file_name = os.path.basename(url)
     target = os.path.join(target_dir, file_name)
     unpack_dir = target[:-len('.tar.gz')]
 
+    # Download the tarball
     new_download, target = download(url, target, unpack_dir, args, logger)
+
+    # Usually we unpack if we downloaded the tarball or if specified by the command line option.
     do_unpack = new_download or args.unpack
+
     # If the unpack dir is missing, then need to unpack
     if not os.path.exists(unpack_dir):
         do_unpack = True
+
+    # But of course if there is no tarball, we can't unpack it
+    if not os.path.isfile(target):
+        do_unpack = False
+
     # If we have a downloaded tar file, ask if it should be re-unpacked.
     if not do_unpack and not args.quiet and os.path.isfile(target):
         logger.info("")
@@ -363,23 +379,28 @@ def main():
         yn = query_yes_no(q, default='no')
         if yn == 'yes':
             do_unpack=True
+
     # Unpack the tarball
     if do_unpack:
         unpack(target, target_dir, args, logger)
 
+    # Usually, we remove the tarball if we unpacked it and command line doesn't specify to save it.
     do_remove = do_unpack and not args.save
-    # If we didn't unpack it, and they didn't say to save it, ask if we should remove it.
-    if not do_remove and not args.save and not args.quiet:
+
+    # But if we didn't unpack it, and they didn't say to save it, ask if we should remove it.
+    if os.path.isfile(target) and not do_remove and not args.save and not args.quiet:
         logger.info("")
         q = "Remove the tarball?"
         yn = query_yes_no(q, default='no')
         if yn == 'yes':
             do_remove = True
+
     # Remove the tarball
     if do_remove:
         logger.info("Removing the tarball to save space")
         os.remove(target)
 
+    # If we are downloading to an alternate directory, we (usually) link to it from share/galsim
     if link:
         # Get the directory where this would normally have been unpacked.
         link_dir = os.path.join(share_dir, file_name)[:-len('.tar.gz')]
