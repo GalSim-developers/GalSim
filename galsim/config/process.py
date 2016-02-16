@@ -590,15 +590,15 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None):
     import copy
     config = copy.deepcopy(config)
 
-    # Import any modules if requested
-    ImportModules(config)
-
     # Process any template specifications in the dict.
     ProcessAllTemplates(config, logger)
 
     # Update using any new_params that are given:
     if new_params is not None:
         UpdateConfig(config, new_params)
+
+    # Import any modules if requested
+    ImportModules(config)
 
     # If we don't have a root specified yet, we generate it from the current script.
     if 'root' not in config:
