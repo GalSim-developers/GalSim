@@ -369,7 +369,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 if itry+1 < ntries:
                     if logger and logger.isEnabledFor(logging.WARN):
                         logger.warn('Object %d: Rejecting this object and rebuilding',obj_num)
-                    reset = builder.reset(config, logger)
+                    builder.reset(config, logger)
                     continue
                 else:
                     if logger:
@@ -409,7 +409,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                     logger.debug('obj %d: Traceback = %s',obj_num,tr)
                 # Need to remove the "current_val"s from the config dict.  Otherwise,
                 # the value generators will do a quick return with the cached value.
-                reset = builder.reset(config, logger)
+                builder.reset(config, logger)
                 continue
 
 def MakeStampTasks(config, jobs, logger):
