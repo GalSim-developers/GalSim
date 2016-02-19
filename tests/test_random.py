@@ -363,7 +363,7 @@ def test_gaussian():
             err_msg="GaussianNoise getSigma returns wrong value")
 
     # Check that the noise model really does produce this variance.
-    big_im = galsim.Image(2048,2048)
+    big_im = galsim.Image(2048,2048,dtype=float)
     big_im.addNoise(gn)
     var = np.var(big_im.array)
     print 'variance = ',var
@@ -694,7 +694,7 @@ def test_poisson():
             err_msg="PoissonNoise getSkyLevel returns wrong value")
  
     # Check that the noise model really does produce this variance.
-    big_im = galsim.Image(2048,2048)
+    big_im = galsim.Image(2048,2048,dtype=float)
     big_im.addNoise(pn)
     var = np.var(big_im.array)
     print 'variance = ',var
@@ -1439,7 +1439,10 @@ def test_ccdnoise():
             err_msg="CCDNoise getReadNoise returns wrong value")
 
     # Check that the noise model really does produce this variance.
-    big_im = galsim.Image(2048,2048)
+    # NB. If default float32 is used here, older versions of numpy will compute the variance
+    # in single precision, and with 2048^2 values, the final answer comes out significantly 
+    # wrong (19.33 instead of 19.42, which gets compared to the nominal value of 19.44).
+    big_im = galsim.Image(2048,2048,dtype=float)
     big_im.addNoise(ccdnoise)
     var = np.var(big_im.array)
     print 'variance = ',var
