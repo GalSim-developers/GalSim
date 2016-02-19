@@ -127,7 +127,7 @@ system.  Then
 
     pip install numpy
     pip install astropy
-    pip install yaml
+    pip install pyyaml
     pip install starlink-pyast
     pip install scipy
 

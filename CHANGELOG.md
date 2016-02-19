@@ -40,15 +40,16 @@ New Features
   truth information.  cf. demos 9 and 10. (#301, #691)
 - Added methods calculateHLR, calculateMomentRadius, and calculateFWHM to both
   GSObject and Image. (#308)
+- Made it possible to initialize an InterpolatedImage from a user-specified 
+  HDU in a FITS file with multiple extensions. (#660)
 - Changed `galsim.fits.writeMulti` to allow any of the "image"s to be
   already-built hdus, which are included as is. (#691)
 - Added optional `wcs` argument to `Image.resize()`. (#691)
 - Added `BaseDeviate.discard(n)` and `BaseDeviate.raw()`. (#691)
 - Added `sersic_prec` option to COSMOSCatalog.makeGalaxy(). (#691)
-- Made it possible to initialize an InterpolatedImage from a user-specified 
-  HDU in a FITS file with multiple extensions. (#660)
 - Made it possible to impose some cuts on galaxy image quality in the
   COSMOSCatalog class. (#693)
+- Added `convergence_threshold` as a parameter of HSMParams. (#709)
 
 
 Updates to galsim executable
