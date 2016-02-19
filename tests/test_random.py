@@ -362,6 +362,16 @@ def test_gaussian():
             gn.getSigma(), gSigma, precision, 
             err_msg="GaussianNoise getSigma returns wrong value")
 
+    # Check that the noise model really does produce this variance.
+    big_im = galsim.Image(2048,2048)
+    big_im.addNoise(gn)
+    var = np.var(big_im.array)
+    print 'variance = ',var
+    print 'getVar = ',gn.getVariance()
+    np.testing.assert_almost_equal(
+            var, gn.getVariance(), 1,
+            err_msg='Realized variance for GaussianNoise did not match getVariance()')
+
     # Check withVariance
     gn = gn.withVariance(9.)
     np.testing.assert_almost_equal(
@@ -683,6 +693,16 @@ def test_poisson():
             pn.getSkyLevel(), pMean, precision, 
             err_msg="PoissonNoise getSkyLevel returns wrong value")
  
+    # Check that the noise model really does produce this variance.
+    big_im = galsim.Image(2048,2048)
+    big_im.addNoise(pn)
+    var = np.var(big_im.array)
+    print 'variance = ',var
+    print 'getVar = ',pn.getVariance()
+    np.testing.assert_almost_equal(
+            var, pn.getVariance(), 1,
+            err_msg='Realized variance for PoissonNoise did not match getVariance()')
+
     # Check withVariance
     pn = pn.withVariance(9.)
     np.testing.assert_almost_equal(
@@ -1404,7 +1424,7 @@ def test_ccdnoise():
                 " using addNoise with sky_level included in noise")
 
     # Check CCDNoise variance:
-    var1 = (sky+cReadNoise**2)/cGain
+    var1 = sky/cGain + (cReadNoise/cGain)**2
     np.testing.assert_almost_equal(
             ccdnoise.getVariance(), var1, precision, 
             err_msg="CCDNoise getVariance returns wrong variance")
@@ -1417,6 +1437,16 @@ def test_ccdnoise():
     np.testing.assert_almost_equal(
             ccdnoise.getReadNoise(), cReadNoise, precision, 
             err_msg="CCDNoise getReadNoise returns wrong value")
+
+    # Check that the noise model really does produce this variance.
+    big_im = galsim.Image(2048,2048)
+    big_im.addNoise(ccdnoise)
+    var = np.var(big_im.array)
+    print 'variance = ',var
+    print 'getVar = ',ccdnoise.getVariance()
+    np.testing.assert_almost_equal(
+            var, ccdnoise.getVariance(), 1,
+            err_msg='Realized variance for CCDNoise did not match getVariance()')
 
     # Check withVariance
     ccdnoise = galsim.CCDNoise(rng, sky_level=sky, gain=cGain, read_noise=cReadNoise)
