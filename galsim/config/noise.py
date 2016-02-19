@@ -470,7 +470,7 @@ class CCDNoiseBuilder(NoiseBuilder):
                         base['image_num'],base['obj_num'],gain,read_noise)
 
     def getNoiseVariance(self, config, base):
-        # The noise variance is sky / gain + read_noise^2
+        # The noise variance is sky / gain + (read_noise/gain)**2
         gain, read_noise, read_noise_var = self.getCCDNoiseParams(config, base)
 
         # Start with the background sky level for the image
@@ -478,28 +478,21 @@ class CCDNoiseBuilder(NoiseBuilder):
         sky += GetSky(config, base)
 
         # Account for the gain and read_noise
-        return sky / gain + read_noise_var
+        read_noise_var_adu = read_noise_var / gain**2
+        return sky / gain + read_noise_var_adu
 
     def addNoiseVariance(self, config, base, im, include_obj_var, logger):
         gain, read_noise, read_noise_var = self.getCCDNoiseParams(config, base)
         if include_obj_var:
             # The current image at this point should be the noise-free, sky-free image,
             # which is the object variance in each pixel.
-            im += base['current_image']
-
-            # Account for the gain and read noise
             if gain != 1.0:
-                import math
-                im /= math.sqrt(gain)
-            if read_noise_var != 0.0:
-                im += read_noise_var
+                im += base['current_image']/gain
+            else:
+                im += base['current_image']
 
-        # Otherwise, just add in the current sky noise and read noise:
-        sky = GetSky(base['image'], base)
-        sky += GetSky(config, base)
-
-        if sky or read_noise_var != 0.0:
-            im += sky / gain + read_noise_var
+        # Now add on the regular CCDNoise from the sky and read noise.
+        im += self.getNoiseVariance(config,base)
 
 
 #
