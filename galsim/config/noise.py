@@ -69,7 +69,7 @@ def AddNoise(config, im, current_var=0., logger=None):
     else:
         noise_type = 'Poisson'  # Default is Poisson
     if noise_type not in valid_noise_types:
-        raise AttributeError("Invalid type %s for noise",noise_type)
+        raise AttributeError("Invalid type %s for noise"%noise_type)
 
     # We need to use image_num for the index_key, but if we are in the stamp processing
     # make sure to reset it back when we are done.  Also, we want to use obj_num_rng in this
@@ -105,7 +105,7 @@ def CalculateNoiseVar(config):
     else:
         noise_type = 'Poisson'  # Default is Poisson
     if noise_type not in valid_noise_types:
-        raise AttributeError("Invalid type %s for noise",noise_type)
+        raise AttributeError("Invalid type %s for noise"%noise_type)
 
     orig_index = config.get('index_key','image_num')
     if orig_index == 'obj_num':
@@ -142,7 +142,7 @@ def AddNoiseVariance(config, im, include_obj_var=False, logger=None):
     else:
         noise_type = 'Poisson'  # Default is Poisson
     if noise_type not in valid_noise_types:
-        raise AttributeError("Invalid type %s for noise",noise_type)
+        raise AttributeError("Invalid type %s for noise"%noise_type)
 
     orig_index = config.get('index_key','image_num')
     if orig_index == 'obj_num':
@@ -407,25 +407,26 @@ class CCDNoiseBuilder(NoiseBuilder):
         # It's not precisely accurate, since the existing variance is Gaussian, rather than
         # Poisson, but it's the best we can do.
         if current_var:
-            if logger:
-                logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
-                            base['image_num'],base['obj_num'],
-                            read_noise_var+extra_sky, current_var)
+            read_noise_var_adu = read_noise_var / gain**2
             if isinstance(sky, galsim.Image) or isinstance(extra_sky, galsim.Image):
-                test = ((sky+extra_sky).image.array/gain + read_noise_var < current_var).any()
+                test = ((sky+extra_sky).image.array/gain + read_noise_var_adu < current_var).any()
             else:
-                test = (sky+extra_sky) / gain + read_noise_var < current_var
+                target_var = (sky+extra_sky) / gain + read_noise_var_adu
+                if logger:
+                    logger.debug('image %d, obj %d: Target variance is %f, current variance is %f',
+                                 base['image_num'],base['obj_num'],target_var,current_var)
+                test = target_var < current_var
             if test:
                 raise RuntimeError(
                     "Whitening already added more noise than the requested CCD noise.")
-            if read_noise_var >= current_var:
+            if read_noise_var_adu >= current_var:
                 # First try to take away from the read_noise, since this one is actually Gaussian.
                 import math
-                read_noise_var -= current_var
+                read_noise_var -= current_var * gain**2
                 read_noise = math.sqrt(read_noise_var)
             else:
                 # Take read_noise down to zero, since already have at least that much already.
-                current_var -= read_noise_var
+                current_var -= read_noise_var_adu
                 read_noise = 0
                 read_noise_var = 0
                 # Take the rest away from the sky level
@@ -457,7 +458,7 @@ class CCDNoiseBuilder(NoiseBuilder):
                     im -= total_sky
             # And add the read noise
             if read_noise != 0.:
-                im.addNoise(galsim.GaussianNoise(rng, sigma=read_noise))
+                im.addNoise(galsim.GaussianNoise(rng, sigma=read_noise/gain))
         else:
             # Do the normal CCDNoise calculation.
             im += extra_sky
