@@ -25,7 +25,8 @@ Bug Fixes
   for the KSB shear estimation method of the galsim.hsm package. (#686)
 - Fixed bug in the (undocumented) function COSMOSCatalog._makeSingleGalaxy,
   where the resulting object did not set the index attribute properly. (#694)
-- Fixed an error in the `CCDNoise.getVariance()` function. (#713)
+- Fixed an error in the `CCDNoise.getVariance()` function, as well as some
+  errors in the documentation about the units of CCDNoise parameters. (#713)
 
 
 New Features
