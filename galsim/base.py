@@ -58,13 +58,20 @@ class GSObject(object):
         >>> conv = galsim.Convolve([gal,psf])
 
     All of these classes are subclasses of GSObject, so you should see those docstrings for
-    more details about how to construct the various profiles.
+    more details about how to construct the various profiles.  Here we discuss attributes and
+    methods that are common to all GSObjects.
 
-    Note that most GSObjects have some kind of size specification.  Typically, these would be
-    given in terms of arcsec, with the connection to the pixel size being given in the Pixel
-    class (0.2 arcsec/pixel in the above example).  However, you can have a more complicated
-    relationship between pixel and sky coordinates.  See BaseWCS for more details about
-    how to specify various kinds of world coordinate systems.
+    GSObjects are always defined in sky coordinates.  So all sizes and other linear dimensions
+    should be in terms of some kind of units on the sky, arcsec for instance.  Only later (when
+    they are drawn) is the connection to pixel coordinates established via a pixel scale or WCS.
+    (See the documentation for galsim.BaseWCS for more details about how to specify various kinds
+    of world coordinate systems more complicated than a simple pixel scale.)
+
+    For instance, if you eventually draw onto an image that has a pixel scale of 0.2 arcsec/pixel,
+    then the normal thing to do would be to define your surface brightness profiles in terms of
+    arcsec and then draw with `pixel_scale=0.2`.  However, while arcsec are the usual choice of
+    units for the sky coordinates, if you wanted, you could instead define the sizes of all your
+    galaxies and PSFs in terms of radians and then use `pixel_scale=0.2/206265` when you draw them.
 
     Transforming Methods
     --------------------
@@ -781,6 +788,21 @@ class GSObject(object):
         Note: in addition to the dx,dy parameter names, you may also supply dx,dy as a tuple,
         or as a PositionD or PositionI object.
 
+        The shift coordinates here are sky coordinates.  GSObjects are always defined in sky
+        coordinates and only later (when they are drawn) is the connection to pixel coordinates
+        established (via a pixel_scale or WCS).  So a shift of dx moves the object horizontally
+        in the sky (e.g. west in the local tangent plane of the observation), and dy moves the
+        object vertically (north in the local tangent plane).
+
+        The units are typically arcsec, but we don't enforce that anywhere.  The units here just
+        need to be consistent with the units used for any size values used by the GSObject.
+        The connection of these units to the eventual image pixels is defined by either the
+        `pixel_scale` or the `wcs` parameter of `drawImage`.
+
+        Note: if you want to shift the object by a set number (or fraction) of pixels in the
+        drawn image, you probably want to use the `offset` parameter of `drawImage` rather than
+        this method.
+
         @param dx       Horizontal shift to apply.
         @param dy       Vertical shift to apply.
 
@@ -1134,9 +1156,10 @@ class GSObject(object):
                             of the image (using the function image.bounds.trueCenter()).
                             If you would rather use the integer center (given by
                             image.bounds.center()), set this to `False`.  [default: True]
-        @param offset       The location at which to center the profile being drawn relative to the
-                            center of the image (either the true center if `use_true_center=True`,
-                            or the nominal center if `use_true_center=False`). [default: None]
+        @param offset       The location in pixel coordinates at which to center the profile being
+                            drawn relative to the center of the image (either the true center if
+                            `use_true_center=True` or nominal center if `use_true_center=False`).
+                            [default: None]
         @param n_photons    If provided, the number of photons to use for photon shooting.
                             If not provided (i.e. `n_photons = 0`), use as many photons as
                             necessary to result in an image with the correct Poisson shot
@@ -1722,9 +1745,12 @@ class Airy(GSObject):
 
     The Airy profile is defined in terms of the diffraction angle, which is a function of the
     ratio lambda / D, where lambda is the wavelength of the light (say in the middle of the
-    bandpass you are using) and D is the diameter of the telescope.  This ratio is the input
-    parameter to pass to the Airy constructor, but as it is naturally in radians, you would
-    typically convert to arcsec.  e.g.
+    bandpass you are using) and D is the diameter of the telescope.
+
+    The natural units for this value is radians, which is not normally a convenient unit to use for
+    other GSObject dimensions.  Assuming that the other sky coordinates you are using are all in
+    arcsec (e.g. the pixel scale when you draw the image, the size of the galaxy, etc.), then you
+    should convert this to arcsec as well:
 
         >>> lam = 700  # nm
         >>> diam = 4.0    # meters
@@ -1732,15 +1758,14 @@ class Airy(GSObject):
         >>> lam_over_diam *= 206265  # Convert to arcsec
         >>> airy = galsim.Airy(lam_over_diam)
 
-    Or, use separate keywords for the telescope diameter and wavelength in meters and nanometers,
-    respectively:
+    To make this process a bit simpler, we recommend instead providing the wavelength and diameter
+    separately using the parameters `lam` (in nm) and `diam` (in m).  GalSim will then convert this
+    to any of the normal kinds of angular units using the `scale_unit` parameter:
 
-        >>> airy = galsim.Airy(lam=lam, diam=diam)
+        >>> airy = galsim.Airy(lam=lam, diam=diam, scale_unit=galsim.arcsec)
 
-    in which case the user can also choose what units to use for internal descriptions of the light
-    profile using the `scale_unit` keyword (default: galsim.arcsec).  When drawing images, users
-    should then use units of `scale_unit` to specify the pixel scale.
-
+    When drawing images, the scale_unit should match the unit used for the pixel scale or the WCS.
+    e.g. in this case, a pixel scale of 0.2 arcsec/pixel would be specified as `pixel_scale=0.2`.
 
     @param lam_over_diam    The parameter that governs the scale size of the profile.
                             See above for details about calculating it.
@@ -1753,12 +1778,11 @@ class Airy(GSObject):
     @param obscuration      The linear dimension of a central obscuration as a fraction of the
                             pupil dimension.  [default: 0]
     @param flux             The flux (in photons) of the profile. [default: 1]
-    @param scale_unit       Units used to define the diffraction limit and draw images, if the user
-                            has supplied a separate value for `lam` and `diam`.  Note that the
-                            results of calling methods like getFWHM() will be returned in units of
-                            `scale_unit`, as well.  Should be either a galsim.AngleUnit, or a string
-                            that can be used to construct one (e.g., 'arcsec', 'radians', etc.).
-                            [default: galsim.arcsec]
+    @param scale_unit       Units to use for the sky coordinates when calculating lam/diam if these
+                            are supplied separately.  Note that the results of calling methods like
+                            getFWHM() will be returned in units of `scale_unit` as well.  Should be
+                            either a galsim.AngleUnit or a string that can be used to construct one
+                            (e.g., 'arcsec', 'radians', etc.).  [default: galsim.arcsec]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
@@ -1887,11 +1911,14 @@ class Kolmogorov(GSObject):
 
     The Kolmogorov profile is normally defined in terms of the ratio lambda / r0, where lambda is
     the wavelength of the light (say in the middle of the bandpass you are using) and r0 is the
-    Fried parameter.  Typical values for the Fried parameter are on the order of 10cm for
-    most observatories and up to 20cm for excellent sites. The values are usually quoted at
+    Fried parameter.  Typical values for the Fried parameter are on the order of 0.1 m for
+    most observatories and up to 0.2 m for excellent sites. The values are usually quoted at
     lambda = 500nm and r0 depends on wavelength as [r0 ~ lambda^(6/5)].
 
-    This ratio is naturally in radians, so you would typically convert to arcsec.  e.g.
+    The natural units for this ratio is radians, which is not normally a convenient unit to use for
+    other GSObject dimensions.  Assuming that the other sky coordinates you are using are all in
+    arcsec (e.g. the pixel scale when you draw the image, the size of the galaxy, etc.), then you
+    should convert this to arcsec as well:
 
         >>> lam = 700  # nm
         >>> r0 = 0.15 * (lam/500)**1.2  # meters
@@ -1899,40 +1926,50 @@ class Kolmogorov(GSObject):
         >>> lam_over_r0 *= 206265  # Convert to arcsec
         >>> psf = galsim.Kolmogorov(lam_over_r0)
 
-    Or, use separate keywords for r0 and wavelength in meters and nanometers, respectively:
+    To make this process a bit simpler, we recommend instead providing the wavelength and Fried
+    parameter separately using the parameters `lam` (in nm) and either `r0` or `r0_500` (in m).
+    GalSim will then convert this to any of the normal kinds of angular units using the
+    `scale_unit` parameter:
 
-        >>> psf = galsim.Kolmogorov(lam=lam, r0=r0)
+        >>> psf = galsim.Kolmogorov(lam=lam, r0=r0, scale_unit=galsim.arcsec)
 
-    in which case the user can also choose what units to use for internal descriptions of the light
-    profile using the `scale_unit` keyword (default: galsim.arcsec).  When drawing images, users
-    should then use units of `scale_unit` to specify the pixel scale.
+    or
 
-    The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
+        >>> psf = galsim.Kolmogorov(lam=lam, r0_500=0.15, scale_unit=galsim.arcsec)
 
-    A Kolmogorov can be initialized using one (and only one) of four possible size parameter
-    combinations: `lam` and `r0`, `lam_over_r0`, `fwhm`, or `half_light_radius`. Exactly one of
-    these three is required.
+    When drawing images, the scale_unit should match the unit used for the pixel scale or the WCS.
+    e.g. in this case, a pixel scale of 0.2 arcsec/pixel would be specified as `pixel_scale=0.2`.
+
+    A Kolmogorov object may also be initialized using `fwhm` or `half_light_radius`.  Exactly one
+    of these four ways to define the size is required.
+
+    The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 arcsec (e.g., Racine 1996, PASP 699, 108).
 
     @param lam_over_r0      The parameter that governs the scale size of the profile.
-                            See above for details about calculating it.  [One of `lam_over_r0`,
-                            `fwhm`, or `half_light_radius` is required.]
-    @param lam              Lambda (wavelength) in units of nanometers.  Must be supplied with
-                            `diam`, and in this case, image scales (`scale`) should be specified in
-                            units of `scale_unit`.
-    @param diam             Telescope diameter in units of meters.  Must be supplied with
-                            `lam`, and in this case, image scales (`scale`) should be specified in
-                            units of `scale_unit`.
+                            See above for details about calculating it. [One of `lam_over_r0`,
+                            `fwhm`, `half_light_radius`, or `lam` (along with either `r0` or
+                            `r0_500`) is required.]
     @param fwhm             The full-width-half-max of the profile.  Typically given in arcsec.
-                            [One of `lam_over_r0`, `fwhm`, or `half_light_radius` is required.]
+                            [One of `lam_over_r0`, `fwhm`, `half_light_radius`, or `lam` (along
+                            with either `r0` or `r0_500`) is required.]
     @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
-                            [One of `lam_over_r0`, `fwhm`, or `half_light_radius` is required.]
+                            [One of `lam_over_r0`, `fwhm`, `half_light_radius`, or `lam` (along
+                            with either `r0` or `r0_500`) is required.]
+    @param lam              Lambda (wavelength) in units of nanometers.  Must be supplied with
+                            either `r0` or `r0_500`, and in this case, image scales (`scale`)
+                            should be specified in units of `scale_unit`.
+    @param r0               The Fried parameter in units of meters.  Must be supplied with `lam`,
+                            and in this case, image scales (`scale`) should be specified in units
+                            of `scale_unit`.
+    @param r0_500           The Fried parameter in units of meters at 500 nm.  The Fried parameter
+                            at the given wavelength, `lam`, will be computed using the standard
+                            ralation r0 = r0_500 * (lam/500)**1.2.
     @param flux             The flux (in photons) of the profile. [default: 1]
-    @param scale_unit       Units used to define the seeing and draw images, if the user has
-                            supplied a separate value for `lam` and `r0`.  Note that the results of
-                            calling methods like getFWHM() will be returned in units of
-                            `scale_unit`, as well.  Should be either a galsim.AngleUnit, or a string
-                            that can be used to construct one (e.g., 'arcsec', 'radians', etc.).
-                            [default: galsim.arcsec]
+    @param scale_unit       Units to use for the sky coordinates when calculating lam/r0 if these
+                            are supplied separately.  Note that the results of calling methods like
+                            getFWHM() will be returned in units of `scale_unit` as well.  Should be
+                            either a galsim.AngleUnit or a string that can be used to construct one
+                            (e.g., 'arcsec', 'radians', etc.).  [default: galsim.arcsec]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
@@ -1946,9 +1983,12 @@ class Kolmogorov(GSObject):
         >>> hlr = kolm.getHalfLightRadius()
     """
     _req_params = {}
-    _opt_params = { "flux" : float }
-    _single_params = [ { "lam_over_r0" : float, "lam": float,
-                         "fwhm" : float, "half_light_radius" : float } ]
+    _opt_params = { "flux" : float, "r0" : float, "r0_500" : float, "scale_unit" : str }
+    # Note that this is not quite right; it's true that exactly one of these 4 should be supplied,
+    # but if lam is supplied then r0 is required.  Errors in which parameters are used may be
+    # caught either by config or by the python code itself, depending on the particular error.
+    _single_params = [ { "lam_over_r0" : float, "fwhm" : float, "half_light_radius" : float,
+                         "lam" : float } ]
     _takes_rng = False
 
     # The FWHM of the Kolmogorov PSF is ~0.976 lambda/r0 (e.g., Racine 1996, PASP 699, 108).
@@ -1957,35 +1997,37 @@ class Kolmogorov(GSObject):
     # Similarly, SBKolmogorov calculates the relation between lambda/r0 and half-light radius
     _hlr_factor = 0.554811
 
-    def __init__(self, lam_over_r0=None, lam=None, r0=None, fwhm=None, half_light_radius=None,
-                 flux=1., scale_unit=galsim.arcsec, gsparams=None):
+    def __init__(self, lam_over_r0=None, fwhm=None, half_light_radius=None, lam=None, r0=None,
+                 r0_500=None, flux=1., scale_unit=galsim.arcsec, gsparams=None):
 
-        if fwhm is not None:
-            if any(item is not None for item in (lam_over_r0, lam, r0, half_light_radius)):
+        if fwhm is not None :
+            if any(item is not None for item in (lam_over_r0, lam, r0, r0_500, half_light_radius)):
                 raise TypeError(
-                    "Only one of (lam, r0), lam_over_r0, fwhm, and half_light_radius may be " +
-                    "specified for Kolmogorov")
+                        "Only one of lam_over_r0, fwhm, half_light_radius, or lam (with r0 or "+
+                        "r0_500) may be specified for Kolmogorov")
             else:
                 lam_over_r0 = fwhm / Kolmogorov._fwhm_factor
         elif half_light_radius is not None:
-            if any(item is not None for item in (lam_over_r0, lam, r0, fwhm)):
+            if any(item is not None for item in (lam_over_r0, lam, r0, r0_500)):
                 raise TypeError(
-                    "Only one of (lam, r0), lam_over_r0, fwhm, and half_light_radius may be " +
-                    "specified for Kolmogorov")
+                        "Only one of lam_over_r0, fwhm, half_light_radius, or lam (with r0 or "+
+                        "r0_500) may be specified for Kolmogorov")
             else:
                 lam_over_r0 = half_light_radius / Kolmogorov._hlr_factor
-        elif lam is not None:
-            if r0 is None:
-                raise TypeError("Must specify r0 if specifying lam in Kolmogorov")
-            if any(item is not None for item in (lam_over_r0, fwhm, half_light_radius)):
+        elif lam_over_r0 is not None:
+            if any(item is not None for item in (lam, r0, r0_500)):
+                raise TypeError("Cannot specify lam, r0 or r0_500 in conjunction with lam_over_r0.")
+        else:
+            if lam is None or (r0 is None and r0_500 is None):
                 raise TypeError(
-                    "Only one of (lam, r0), lam_over_r0, fwhm, and half_light_radius may be " +
-                    "specified for Kolmogorov")
-            lam_over_r0 = (1.e-9*lam / r0) * (galsim.radians / scale_unit)
-        elif lam_over_r0 is None:
-            raise TypeError(
-                "One of (lam, r0), lam_over_r0, fwhm, or half_light_radius must be " +
-                "specified for Kolmogorov")
+                        "One of lam_over_r0, fwhm, half_light_radius, or lam (with r0 or "+
+                        "r0_500) must be specified for Kolmogorov")
+            # In this case we're going to use scale_unit, so parse it in case of string input:
+            if isinstance(scale_unit, basestring):
+                scale_unit = galsim.angle.get_angle_unit(scale_unit)
+            if r0 is None:
+                r0 = r0_500 * (lam/500)**1.2
+            lam_over_r0 = (1.e-9*lam/r0)*(galsim.radians/scale_unit)
 
         GSObject.__init__(self, _galsim.SBKolmogorov(lam_over_r0, flux, gsparams))
         self._gsparams = gsparams
