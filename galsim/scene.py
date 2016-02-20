@@ -280,6 +280,10 @@ class COSMOSCatalog(object):
         appropriate for the HST effective telescope diameter and a 1 second exposure time, so users
         who are simulating another scenario should account for this.
 
+        Note that the returned objects use arcsec for the units of their linear dimension.  If you
+        are using a different unit for other things (the PSF, WCS, etc.), then you should dilate
+        the resulting object with `gal.dilate(galsim.arcsec / scale_unit)`.
+
         @param index            Index of the desired galaxy in the catalog for which a GSObject
                                 should be constructed.  You may also provide a list or array of
                                 indices, in which case a list of objects is returned. If None,
