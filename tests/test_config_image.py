@@ -181,11 +181,11 @@ def test_ccdnoise():
 
     print 'config-built image: '
     print 'mean = ',np.mean(image.array)
-    print 'var = ',np.var(image.array)
-    test_var = np.var(image.array)
+    print 'var = ',np.var(image.array.astype(float))
+    test_var = np.var(image.array.astype(float))
 
     # Build another image that should have equivalent noise properties.
-    image2 = galsim.Image(size, size, scale=0.3)
+    image2 = galsim.Image(size, size, scale=0.3, dtype=float)
     rng = galsim.BaseDeviate(124)
     noise = galsim.CCDNoise(rng=rng, gain=gain, read_noise=rn)
     image2 += sky
