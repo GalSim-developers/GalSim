@@ -19,6 +19,7 @@
 import numpy as np
 import os
 import sys
+import warnings
 
 from galsim_test_helpers import *
 
@@ -1564,8 +1565,10 @@ def test_astropywcs():
     t1 = time.time()
 
     try:
-        import astropy.wcs
-        import scipy  # AstropyWCS constructor will do this, so check now.
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore",category=RuntimeWarning)
+            import astropy.wcs
+            import scipy  # AstropyWCS constructor will do this, so check now.
     except ImportError:
         print 'Unable to import astropy.wcs.  Skipping AstropyWCS tests.'
         return

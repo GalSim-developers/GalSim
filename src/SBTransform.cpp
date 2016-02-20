@@ -189,8 +189,6 @@ namespace galsim {
         xdbg<<"maxK() = "<<_maxk<<std::endl;
         xdbg<<"stepK() = "<<_stepk<<std::endl;
 
-
-
         // Calculate the values for getXRange and getYRange:
         if (_adaptee.isAxisymmetric()) {
             // The original is a circle, so first get its radius.

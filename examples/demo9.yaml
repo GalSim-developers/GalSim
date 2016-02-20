@@ -27,7 +27,8 @@
 # has its own file, organized into 4 directories (one for each mass).  For each cluster, we
 # draw 20 lensed galaxies at random positions on the image.  The PSF is appropriate for a 
 # space-like simulation.  (Some of the numbers used are the values for HST.)  And we apply
-# a cubic telescope distortion for the WCS.
+# a cubic telescope distortion for the WCS.  Finally, we also output a truth catalog for each
+# +output image that could be used for testing the accuracy of shape or flux measurements.
 #
 # New features introduced in this demo:
 #
@@ -47,6 +48,7 @@
 # - output : nproc
 # - output : weight
 # - output : badpix
+# - output : truth
 # - output : skip
 # - output : noclobber
 
@@ -378,6 +380,64 @@ output :
     # determine the number of CPUs you have and use that many processes.
     nproc : -1
 
+    # A truth catalog records a number of calculated values for each object made by the script.
+    # We make a truth catalog file for each output file. 
+    truth :
+        file_name :
+            type : NumberedFile
+            root : 'truth'
+            num : 
+                type : Sequence
+                first : 0
+                nitems : *n_clusters_per_mass
+            digits : 4
+
+            # Again, the default extension is '.fits', in which case it will build a fits 
+            # binary table.  However, if you use ext : '.dat' (or anything that doesn't 
+            # start with '.fit'), it will make an ASCII file instead.
+            ext : '.dat'
+
+        # You can also specify dir, as the output directory, but the default is to use
+        # the same directory as the main output files, so we'll just do that.
+
+        columns :
+            # The columns are specified as a dict giving the name of the output column
+            # and which calculated value to use for the data.
+
+            # There are some special values that can be used that the config apparatus
+            # calculates automatically.  Some useful ones are:
+            #
+            # - obj_num is the running object number, starting at 0
+            # - image_num is the running image number, starting at 0
+            # - file_num is the running file number, starting at 0
+            #
+            # See the documentation of the Eval type for the complete list:
+            # https://github.com/GalSim-developers/GalSim/wiki/Config-Documentation-v1.3#eval-type
+            object_id : obj_num
+            halo_id : file_num
+
+            # Most items will typically be given by their location in the config dict.
+            # e.g. gal.flux accesses the calculated value of the galaxy flux.
+            flux : gal.flux
+            size : gal.half_light_radius
+            eta1 : gal.ellip.eta1
+            eta2 : gal.ellip.eta2
+            mu : gal.magnification
+            redshift : gal.redshift
+
+            # For positions and shears, the data will be split into two columns, and the given
+            # column name will have ('.g1', '.g2) or ('.x', '.y') appended to what is listed here.
+            # i.e. There will be output columns named 'shear.g1', 'shear.g2', 'pos.x', 'pos.y'.
+            shear : gal.shear
+            pos : image.world_pos
+
+            # Things in the input field don't change for each object, but they can 
+            # still be placed in the truth catalog.  These columns will have all identical
+            # values within each catalog, but different across catalogs.
+            halo_mass : input.nfw_halo.mass
+            halo_conc : input.nfw_halo.conc
+            halo_redshift : input.nfw_halo.redshift
+ 
 ---
 
 output :

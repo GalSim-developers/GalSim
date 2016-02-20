@@ -16,7 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 # - obj type : InterpolatedImage(image, scale)
-# - obj type : COSMOS
+# - obj type : COSMOSGalaxy
 # - obj : scale_flus
 # - image : draw_method (no_pixel)
 # - input : power_spectrum (e_power_file, delta2, units)
@@ -25,17 +25,25 @@
 # - image.noise : whiten
 # - image.noise : symmetrize
 # - wcs type : Tan(dudx, dudy, dvdx, dvdy, units, origin, ra, dec)
+# - top level field eval_variables
 #
 # - Power spectrum shears and magnifications for non-gridded positions.
 # - Reading a compressed FITS image (using BZip2 compression).
 # - Writing a compressed FITS image (using Rice compression).
 #
 
-# Some variable we use in the Evals below.
-# It can be convenient to combine this with the YAML variable naming scheme to let you use
-# variables both directly as a YAML tag and in Eval strings.
-# Here, the only one use use both ways is pixel_scale, but we show it for all of them to give
-# you the idea.
+# Sometimes there are variables that you want to use in multiple Eval commands.
+# Rather than defining the variable multiple times, once for each time you use it,
+# GalSim allows you to put such variables in a special top-level field called eval_variables.
+# Anything defined in eval_variables will be available for all Eval commands, so you don't 
+# have to repeat them for each one.  In this case, pixel_scale and theta are used below in the
+# Eval strings of dudx, dudy, dvdx, and dvdy for the field image.wcs.  
+#
+# We've also seen (in demo4.yaml) that YAML lets you tag values with an & in one place and
+# use them later with *.  It can be convenient to combine this notation with eval_variables
+# to let you define all the useful variables near the top of the config file and use them
+# either in Eval strings or as YAML tags.  Here, the only one we use both ways is pixel_scale,
+# but we show it for all of them to give you the idea.
 eval_variables :
 
     # pixel_scale = the pixel scale in arcsec.  Used in setting up the WCS.
@@ -52,6 +60,14 @@ eval_variables :
 
     # exp_time = the exposure time in seconds.
     fexp_time : &exp_time 300
+
+    # image_size = size in pixels
+    # 0.1 degrees * 3600 arcsec/deg / 0.2 arcsec/pixel
+    fimage_size : &image_size 1800 
+
+    # nobjects = number of objects per image
+    # corresponds to 2 gal / arcmin^2
+    inobjects : &nobjects 288 
 
 
 # Define the PSF profile
@@ -143,9 +159,9 @@ gal :
 image :
     type : Scattered
 
-    size : 1800 # 0.1 degrees * 3600 arcsec/deg / 0.2 arcsec/pixel
+    size : *image_size 
 
-    nobjects : 288 # corresponds to 2 gal / arcmin^2
+    nobjects : *nobjects
 
     # The default convention on positions is to follow the FITS standard where the lower left
     # pixel is called (1,1).  However, this can be counter-intuitive to people more used
@@ -232,6 +248,14 @@ image :
         ra : 19.3 hours
         dec : -33.1 degrees
 
+    random_seed : 24783923
+
+    nproc : -1
+
+
+# Define some image properties that are specific to the stamp generation phase.
+stamp :
+
     # Normally, the draw routine accounts for a convolution by the pixel.  In this case we 
     # we don't want it to do that, since the psf here is what is sometimes called an 
     # "effective PSF".  It is already the convolution of the real PSF with a square pixel.
@@ -239,7 +263,6 @@ image :
     # draw_method = no_pixel.
     draw_method : no_pixel
 
-    random_seed : 24783923
 
 # Define the input files
 input :

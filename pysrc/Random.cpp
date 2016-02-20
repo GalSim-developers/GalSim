@@ -75,6 +75,8 @@ namespace galsim {
                 .def("clearCache", &BaseDeviate::clearCache)
                 .def("serialize", &BaseDeviate::serialize)
                 .def("duplicate", &BaseDeviate::duplicate)
+                .def("discard", &BaseDeviate::discard)
+                .def("raw", &BaseDeviate::raw)
                 .def("__repr__", &BaseDeviate::repr)
                 .def("__str__", &BaseDeviate::str)
                 .enable_pickling()

@@ -19,6 +19,7 @@
 """
 
 import numpy as np
+import warnings
 
 from galsim_test_helpers import *
 
@@ -42,7 +43,9 @@ def test_j0():
     print 'vals1 = ',vals1
 
     try:
-        import scipy.special
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore",category=RuntimeWarning)
+            import scipy.special
         vals2 = [ scipy.special.j0(x) for x in x_list ]
         print 'vals2 = ',vals2
         np.testing.assert_almost_equal(
@@ -75,7 +78,9 @@ def test_j1():
     print 'vals1 = ',vals1
 
     try:
-        import scipy.special
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore",category=RuntimeWarning)
+            import scipy.special
         vals2 = [ scipy.special.j1(x) for x in x_list ]
         print 'vals2 = ',vals2
         np.testing.assert_almost_equal(
@@ -110,7 +115,9 @@ def test_jn():
     print 'vals1 = ',vals1
 
     try:
-        import scipy.special
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore",category=RuntimeWarning)
+            import scipy.special
         vals2 = [ scipy.special.jn(n,x) for n,x in zip(n_list,x_list) ]
         print 'vals2 = ',vals2
         np.testing.assert_almost_equal(
@@ -145,7 +152,9 @@ def test_jv():
     print 'vals1 = ',vals1
 
     try:
-        import scipy.special
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore",category=RuntimeWarning)
+            import scipy.special
         vals2 = [ scipy.special.jv(v,x) for v,x in zip(v_list,x_list) ]
         print 'vals2 = ',vals2
         np.testing.assert_almost_equal(
@@ -179,7 +188,9 @@ def test_kn():
     print 'vals1 = ',vals1
 
     try:
-        import scipy.special
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore",category=RuntimeWarning)
+            import scipy.special
         vals2 = [ scipy.special.kn(n,x) for n,x in zip(n_list,x_list) ]
         print 'vals2 = ',vals2
         np.testing.assert_almost_equal(
@@ -214,7 +225,9 @@ def test_kv():
     print 'vals1 = ',vals1
 
     try:
-        import scipy.special
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore",category=RuntimeWarning)
+            import scipy.special
         vals2 = [ scipy.special.kv(v,x) for v,x in zip(v_list,x_list) ]
         print 'vals2 = ',vals2
         np.testing.assert_almost_equal(
@@ -247,7 +260,9 @@ def test_j0_root():
     print 'vals1 = ',vals1
 
     try:
-        import scipy.special
+        with warnings.catch_warnings():
+            warnings.filterwarnings("ignore",category=RuntimeWarning)
+            import scipy.special
         vals2 = scipy.special.jn_zeros(0,50)
         print 'vals2 = ',vals2
         np.testing.assert_almost_equal(

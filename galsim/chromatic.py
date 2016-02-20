@@ -140,6 +140,30 @@ class ChromaticObject(object):
         """
         ChromaticObject._multiplier_cache.resize(maxsize)
 
+    def _fiducial_profile(self, bandpass):
+        """
+        Return a fiducial achromatic profile of a chromatic object that can be used to estimate
+        default output image characteristics, or in the case of separable profiles, can be scaled to
+        give the monochromatic profile at any wavelength or the wavelength-integrated profile.
+        """
+        bpwave = bandpass.effective_wavelength
+        prof0 = self.evaluateAtWavelength(bpwave)
+        if prof0.flux != 0:
+            return bpwave, prof0
+
+        candidate_waves = np.concatenate(
+            [np.array([0.5 * (bandpass.blue_limit + bandpass.red_limit)]),
+             bandpass.wave_list,
+             self.wave_list])
+        # Prioritize wavelengths near the bandpass effective wavelength.
+        candidate_waves = candidate_waves[np.argsort(np.abs(candidate_waves - bpwave))]
+        for w in candidate_waves:
+            prof0 = self.evaluateAtWavelength(w)
+            if prof0.flux != 0:
+                return w, prof0
+
+        raise ValueError("Could not locate fiducial wavelength where SED * Bandpass is nonzero.")
+
     def __repr__(self):
         return 'galsim.ChromaticObject(%r)'%self.obj
 
@@ -279,8 +303,8 @@ class ChromaticObject(object):
         if self.separable: assert hasattr(self, 'SED')
         assert hasattr(self, 'wave_list')
 
-        # setup output image (semi-arbitrarily using the bandpass effective wavelength)
-        prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
+        # setup output image using fiducial profile
+        wave0, prof0 = self._fiducial_profile(bandpass)
         image = prof0.drawImage(image=image, setup_only=True, **kwargs)
         _remove_setup_kwargs(kwargs)
 
@@ -289,7 +313,7 @@ class ChromaticObject(object):
 
         if self.separable:
             multiplier = ChromaticObject._multiplier_cache(self.SED, bandpass, tuple(wave_list))
-            prof0 *= multiplier/self.SED(bandpass.effective_wavelength)
+            prof0 *= multiplier/self.SED(wave0)
             image = prof0.drawImage(image=image, **kwargs)
             return image
 
@@ -972,7 +996,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         # with whatever pixel scale was required to sample all the images properly.  We want to set
         # up an output image that has the requested pixel scale, which might change the image size
         # and so on.
-        prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
+        _, prof0 = self._fiducial_profile(bandpass)
         image = prof0.drawImage(image=image, setup_only=True, **kwargs)
         _remove_setup_kwargs(kwargs)
 
@@ -1080,11 +1104,6 @@ class ChromaticAtmosphere(ChromaticObject):
     default values for these are expected to be appropriate for LSST at Cerro Pachon, Chile, but
     they are broadly reasonable for most observatories.
 
-    Note that this function implicitly assumes that lengths are in arcseconds.  Thus, to use this
-    function, you should specify properties like FWHM, half_light_radius, and pixel scales in
-    arcsec.  This is unlike the rest of GalSim, in which Position units only need to be internally
-    consistent.
-
     Note that a ChromaticAtmosphere by itself is NOT the correct thing to use to draw an image of a
     star. Stars (and galaxies too, of course) have an SED that is not flat. To draw a real star, you
     should either multiply the ChromaticAtmosphere object by an SED, or convolve it with a point
@@ -1097,6 +1116,8 @@ class ChromaticAtmosphere(ChromaticObject):
 
     @param base_obj             Fiducial PSF, equal to the monochromatic PSF at `base_wavelength`
     @param base_wavelength      Wavelength represented by the fiducial PSF, in nanometers.
+    @param scale_unit           Units used by base_obj for its linear dimensions.
+                                [default: galsim.arcsec]
     @param alpha                Power law index for wavelength-dependent seeing.  [default: -0.2,
                                 the prediction for Kolmogorov turbulence]
     @param zenith_angle         Angle from object to zenith, expressed as an Angle
@@ -1113,13 +1134,17 @@ class ChromaticAtmosphere(ChromaticObject):
     @param temperature          Temperature in Kelvins.  [default: 293.15 K]
     @param H2O_pressure         Water vapor pressure in kiloPascals.  [default: 1.067 kPa]
     """
-    def __init__(self, base_obj, base_wavelength, **kwargs):
+    def __init__(self, base_obj, base_wavelength, scale_unit=galsim.arcsec, **kwargs):
 
         self.separable = False
         self.wave_list = np.array([], dtype=float)
 
         self.base_obj = base_obj
         self.base_wavelength = base_wavelength
+
+        if isinstance(scale_unit, basestring):
+            scale_unit = galsim.angle.get_angle_unit(scale_unit)
+        self.scale_unit = scale_unit
 
         self.alpha = kwargs.pop('alpha', -0.2)
         # Determine zenith_angle and parallactic_angle from kwargs
@@ -1178,7 +1203,7 @@ class ChromaticAtmosphere(ChromaticObject):
         def shift_fn(w):
             shift_magnitude = galsim.dcr.get_refraction(w, self.zenith_angle, **self.kw)
             shift_magnitude -= self.base_refraction
-            shift_magnitude = shift_magnitude * (galsim.radians / galsim.arcsec)
+            shift_magnitude = shift_magnitude * galsim.radians / self.scale_unit
             sinp, cosp = self.parallactic_angle.sincos()
             shift = (-shift_magnitude * sinp, shift_magnitude * cosp)
             return shift
@@ -1768,7 +1793,8 @@ class ChromaticConvolution(ChromaticObject):
             SED = lambda w: reduce(lambda x,y:x*y, [s(w) for s in sep_SED], 1)
             insep_obj = galsim.Convolve(insep_profs, gsparams=gsparams)
             # Find scale at which to draw effective profile
-            iiscale = insep_obj.evaluateAtWavelength(bandpass.effective_wavelength).nyquistScale()
+            _, prof0 = insep_obj._fiducial_profile(bandpass)
+            iiscale = prof0.nyquistScale()
             if iimult is not None:
                 iiscale /= iimult
             # Create the effective bandpass.
@@ -1944,7 +1970,7 @@ class ChromaticConvolution(ChromaticObject):
         # and non-ChromaticConvolution).  (The latter case was dealt with in the constructor.)
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength)
-        prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
+        wave0, prof0 = self._fiducial_profile(bandpass)
         image = prof0.drawImage(image=image, setup_only=True, **kwargs)
         _remove_setup_kwargs(kwargs)
 
@@ -1959,8 +1985,8 @@ class ChromaticConvolution(ChromaticObject):
                 if isinstance(obj, galsim.GSObject):
                     sep_profs.append(obj) # The g(x,y)'s (see above)
                 else:
-                    sep_profs.append(obj.evaluateAtWavelength(bandpass.effective_wavelength)
-                                     /obj.SED(bandpass.effective_wavelength)) # more g(x,y)'s
+                    wave0, prof0 = obj._fiducial_profile(bandpass)
+                    sep_profs.append(prof0 / obj.SED(wave0)) # more g(x,y)'s
                     sep_SED.append(obj.SED) # The h(lambda)'s (see above)
                     wave_list = np.union1d(wave_list, obj.wave_list)
             else:
@@ -2153,14 +2179,18 @@ class ChromaticOpticalPSF(ChromaticObject):
                            docstring for a complete list of options.
     """
     def __init__(self, lam, diam=None, lam_over_diam=None, aberrations=None,
-                           scale_unit=galsim.arcsec, **kwargs):
+                 scale_unit=galsim.arcsec, **kwargs):
         # First, take the basic info.
+        if isinstance(scale_unit, basestring):
+            scale_unit = galsim.angle.get_angle_unit(scale_unit)
+        self.scale_unit = scale_unit
+
         # We have to require either diam OR lam_over_diam:
         if (diam is None and lam_over_diam is None) or \
                 (diam is not None and lam_over_diam is not None):
             raise TypeError("Need to specify telescope diameter OR wavelength/diam ratio")
         if diam is not None:
-            self.lam_over_diam = (1.e-9*lam/diam)*galsim.radians/scale_unit
+            self.lam_over_diam = (1.e-9*lam/diam)*galsim.radians/self.scale_unit
         else:
             self.lam_over_diam = lam_over_diam
         self.lam = lam
@@ -2170,7 +2200,6 @@ class ChromaticOpticalPSF(ChromaticObject):
         else:
             self.aberrations = np.zeros(12)
         self.kwargs = kwargs
-        self.scale_unit = scale_unit
 
         # Define the necessary attributes for this ChromaticObject.
         self.separable = False
@@ -2232,17 +2261,20 @@ class ChromaticAiry(ChromaticObject):
     def __init__(self, lam, diam=None, lam_over_diam=None, scale_unit=galsim.arcsec, **kwargs):
         # First, take the basic info.
         # We have to require either diam OR lam_over_diam:
+        if isinstance(scale_unit, basestring):
+            scale_unit = galsim.angle.get_angle_unit(scale_unit)
+        self.scale_unit = scale_unit
+
         if (diam is None and lam_over_diam is None) or \
                 (diam is not None and lam_over_diam is not None):
             raise TypeError("Need to specify telescope diameter OR wavelength/diam ratio")
         if diam is not None:
-            self.lam_over_diam = (1.e-9*lam/diam)*galsim.radians/scale_unit
+            self.lam_over_diam = (1.e-9*lam/diam)*galsim.radians/self.scale_unit
         else:
             self.lam_over_diam = float(lam_over_diam)
         self.lam = float(lam)
 
         self.kwargs = kwargs
-        self.scale_unit = scale_unit
 
         # Define the necessary attributes for this ChromaticObject.
         self.separable = False

@@ -33,14 +33,19 @@ fi
 /bin/rm -rf output/DECam*
 /bin/rm -rf output_yaml/DECam*
 
-time $python draw_psf.py || exit
-time $bin/galsim -m des -v1 draw_psf.yaml || exit
+nfiles=1
+time $python draw_psf.py last=$nfiles || exit
+time $bin/galsim draw_psf.yaml output.nfiles=$nfiles || exit
 
 echo 'Checking diffs:'
 
-cd output
-for f in $(ls DECam*.fits)
+for chip_num in {1..$nfiles} 
 do
-    echo diff -q $f ../output_yaml/$f
-    diff -q $f ../output_yaml/$f
+    root=DECam_00154912_01
+    file_name=${root}_psfex_image.fits
+    ../check_diff output/$file_name output_yaml/$file_name
+    file_name=${root}_fitpsf_image.fits
+    ../check_diff output/$file_name output_yaml/$file_name
 done
+
+

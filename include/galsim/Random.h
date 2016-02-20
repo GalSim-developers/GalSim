@@ -234,6 +234,16 @@ namespace galsim {
         virtual void clearCache() {}
 
         /**
+         * @brief Discard some number of values from the random number generator.
+         */
+        void discard(int n) { _rng->discard(n); }
+
+        /**
+         * @brief Get a random value in its raw form as a long integer.
+         */
+        long raw() { return (*_rng)(); }
+
+        /**
          * @brief Draw a new random number from the distribution
          *
          * This is invalid for a BaseDeviate object that is not a derived class.

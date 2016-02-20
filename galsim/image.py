@@ -68,7 +68,7 @@ class MetaImage(type):
         return Image_dict[t]
 
 class Image(object):
-    """A class for storing image data along with the pixel scale or wcs information
+    """A class for storing image data along with the pixel scale or WCS information
 
     The Image class encapsulates all the relevant information about an image including a NumPy array
     for the pixel values, a bounding box, and some kind of WCS that converts between pixel
@@ -80,6 +80,15 @@ class Image(object):
     subimages of larger images (for example, to successively draw many galaxies into one large
     image).  For other implications of this convention, see the description of initialization
     instructions below.
+
+    In most applications with images, we will use (x,y) to refer to the coordinates.  We adopt
+    the same meaning for these coordinates as most astronomy applications do: ds9, SAOImage,
+    SExtractor, etc. all treat x as the column number and y as the row number.  However, this
+    is different from the default convention used by numpy.  In numpy, the access is by
+    [row_num,col_num], which means this is really [y,x] in terms of the normal x,y values.
+    Users are typically insulated from this concern by the Image API, but if you access the
+    numpy array directly via the `array` attribute, you will need to be careful about this
+    difference.
 
     There are 4 data types that the Image can use for the data values.  These are `numpy.int16`,
     `numpy.int32`, `numpy.float32`, and `numpy.float64`.  If you are constructing a new Image from
@@ -96,6 +105,9 @@ class Image(object):
                 the number of columns and rows.  You can specify the data type as `dtype` if you
                 want.  The default is `numpy.float32` if you don't specify it.  You can also
                 optionally provide an initial value for the pixels, which defaults to 0.
+                Reminder, with our convention for x,y coordinates described above, ncol is the
+                number of pixels in the x direction, and nrow is the number of pixels in the y
+                direction.
 
         Image(bounds, dtype=numpy.float32, init_value=0, ...)
 
@@ -164,7 +176,10 @@ class Image(object):
 
     The `array` attribute is a NumPy array of the Image's pixels.  The individual elements in the
     array attribute are accessed as `image.array[y,x]`, matching the standard NumPy convention,
-    while the Image class's own accessor uses `(x,y)`.
+    while the Image class's own accessor uses `(x,y)`.  That is, the following are equivalent:
+
+        >>> ixy = image(x,y)
+        >>> ixy = image.array[y,x]
 
 
     Methods
@@ -411,13 +426,17 @@ class Image(object):
     def copy(self):
         return Image(image=self.image.copy(), wcs=self.wcs)
 
-    def resize(self, bounds):
+    def resize(self, bounds, wcs=None):
         """Resize the image to have a new bounds (must be a BoundsI instance)
 
         Note that the resized image will have uninitialized data.  If you want to preserve
         the existing data values, you should either use `subImage` (if you want a smaller
         portion of the current Image) or make a new Image and copy over the current values
         into a portion of the new image (if you are resizing to a larger Image).
+
+        @param bounds   The new bounds to resize to.
+        @param wcs      If provided, also update the wcs to the given value. [default: None,
+                        which means keep the existing wcs]
         """
         if not isinstance(bounds, galsim.BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
@@ -426,9 +445,13 @@ class Image(object):
         except:
             # if the image wasn't an ImageAlloc, then above won't work.  So just make it one.
             self.image = _galsim.ImageAlloc[self.dtype](bounds)
+        if wcs is not None:
+            self.wcs = wcs
 
     def subImage(self, bounds):
         """Return a view of a portion of the full image
+
+        This is equivalent to self[bounds]
         """
         if not isinstance(bounds, galsim.BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
@@ -438,6 +461,13 @@ class Image(object):
         # reorigin that you need to update the wcs.  So that's taken care of in im.shift.
         return Image(image=subimage, wcs=self.wcs)
 
+    def setSubImage(self, bounds, rhs):
+        """Set a portion of the full image to the values in another image
+
+        This is equivalent to self[bounds] = rhs
+        """
+        self.subImage(bounds).image.copyFrom(rhs.image)
+
     def __getitem__(self, bounds):
         """Return a view of a portion of the full image
         """
@@ -446,7 +476,7 @@ class Image(object):
     def __setitem__(self, bounds, rhs):
         """Set a portion of the full image to the values in another image
         """
-        self.subImage(bounds).image.copyFrom(rhs.image)
+        self.setSubImage(bounds,rhs)
 
     def copyFrom(self, rhs):
         """Copy the contents of another image
@@ -498,6 +528,15 @@ class Image(object):
 
         The arguments here may be either (dx, dy) or a PositionI instance.
         Or you can provide dx, dy as named kwargs.
+
+        In terms of columns and rows, dx means a shift in the x value of each column in the
+        array, and dy means a shift in the y value of each row.  In other words, the following
+        will return the same value for ixy.  The shift function just changes the coordinates (x,y)
+        used for that pixel:
+
+            >>> ixy = im(x,y)
+            >>> im.shift(3,9)
+            >>> ixy = im(x+3, y+9)
         """
         delta = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy', integer=True)
         self._shift(delta)
@@ -515,6 +554,34 @@ class Image(object):
 
         The arguments here may be either (xcen, ycen) or a PositionI instance.
         Or you can provide xcen, ycen as named kwargs.
+
+        In terms of the rows and columns, xcen is the new x value for the central column, and ycen
+        is the new y value of the central row.  For even-sized arrays, there is no central column
+        or row, so the convention we adopt in this case is to round up.  For example:
+
+            >>> im = galsim.Image(numpy.array(range(16),dtype=float).reshape((4,4)))
+            >>> im(1,1)
+            0.0
+            >>> im(4,1)
+            3.0
+            >>> im(4,4)
+            15.0
+            >>> im(3,3)
+            10.0
+            >>> im.setCenter(0,0)
+            >>> im(0,0)
+            10.0
+            >>> im(-2,-2)
+            0.0
+            >>> im(1,-2)
+            3.0
+            >>> im(1,1)
+            15.0
+            >>> im.setCenter(234,456)
+            >>> im(234,456)
+            10.0
+            >>> im.bounds
+            galsim.BoundsI(xmin=232, xmax=235, ymin=454, ymax=457)
         """
         cen = galsim.utilities.parse_pos_args(args, kwargs, 'xcen', 'ycen', integer=True)
         self._shift(cen - self.image.bounds.center())
@@ -524,31 +591,101 @@ class Image(object):
 
         The arguments here may be either (x0, y0) or a PositionI instance.
         Or you can provide x0, y0 as named kwargs.
-        """
+
+        In terms of the rows and columns, x0 is the new x value for the first column,
+        and y0 is the new y value of the first row.  For example:
+
+            >>> im = galsim.Image(numpy.array(range(16),dtype=float).reshape((4,4)))
+            >>> im(1,1)
+            0.0
+            >>> im(4,1)
+            3.0
+            >>> im(1,4)
+            12.0
+            >>> im(4,4)
+            15.0
+            >>> im.setOrigin(0,0)
+            >>> im(0,0)
+            0.0
+            >>> im(3,0)
+            3.0
+            >>> im(0,3)
+            12.0
+            >>> im(3,3)
+            15.0
+            >>> im.setOrigin(234,456)
+            >>> im(234,456)
+            0.0
+            >>> im.bounds
+            galsim.BoundsI(xmin=234, xmax=237, ymin=456, ymax=459)
+         """
         origin = galsim.utilities.parse_pos_args(args, kwargs, 'x0', 'y0', integer=True)
         self._shift(origin - self.image.bounds.origin())
 
     def center(self):
-        """Return the current nominal center of the image.  This is a PositionI instance,
-        which means that for even-sized images, it won't quite be the true center, since
-        the true center is between two pixels.
+        """Return the current nominal center (xcen,ycen) of the image as a PositionI instance.
 
-        e.g the nominal center of an image with bounds (1,32,1,32) will be (17, 17).
+        In terms of the rows and columns, xcen is the x value for the central column, and ycen
+        is the y value of the central row.  For even-sized arrays, there is no central column
+        or row, so the convention we adopt in this case is to round up.  For example:
+
+            >>> im = galsim.Image(numpy.array(range(16),dtype=float).reshape((4,4)))
+            >>> im.center()
+            galsim.PositionI(x=3, y=3)
+            >>> im(im.center())
+            10.0
+            >>> im.setCenter(56,72)
+            >>> im.center()
+            galsim.PositionI(x=56, y=72)
+            >>> im(im.center())
+            10.0
         """
         return self.bounds.center()
 
     def trueCenter(self):
-        """Return the current true center of the image.  This is a PositionD instance,
-        and it may be half-way between two pixels.
+        """Return the current true center of the image as a PositionD instance.
 
-        e.g the true center of an image with bounds (1,32,1,32) will be (16.5, 16.5).
+        Unline the nominal center returned by im.center(), this value may be half-way between
+        two pixels if the image has an even number of rows or columns.  It gives the position
+        (x,y) at the exact center of the image, regardless of whether this is at the center of
+        a pixel (integer value) or halfway between two (half-integer).  For example:
+
+            >>> im = galsim.Image(numpy.array(range(16),dtype=float).reshape((4,4)))
+            >>> im.center()
+            galsim.PositionI(x=3, y=3)
+            >>> im.trueCenter()
+            galsim.PositionI(x=2.5, y=2.5)
+            >>> im.setCenter(56,72)
+            >>> im.center()
+            galsim.PositionI(x=56, y=72)
+            >>> im.trueCenter()
+            galsim.PositionD(x=55.5, y=71.5)
+            >>> im.setOrigin(0,0)
+            >>> im.trueCenter()
+            galsim.PositionD(x=1.5, y=1.5)
         """
         return self.bounds.trueCenter()
 
     def origin(self):
-        """Return the origin of the image.  i.e. the position of the lower-left pixel.
+        """Return the origin of the image.  i.e. the (x,y) position of the lower-left pixel.
 
-        e.g the origin of an image with bounds (1,32,1,32) will be (1, 1).
+        In terms of the rows and columns, this is the (x,y) coordinate of the first column, and
+        first row of the array.  For example:
+
+            >>> im = galsim.Image(numpy.array(range(16),dtype=float).reshape((4,4)))
+            >>> im.origin()
+            galsim.PositionI(x=1, y=1)
+            >>> im(im.origin())
+            0.0
+            >>> im.setOrigin(23,45)
+            >>> im.origin()
+            galsim.PositionI(x=23, y=45)
+            >>> im(im.origin())
+            0.0
+            >>> im(23,45)
+            0.0
+            >>> im.bounds
+            galsim.BoundsI(xmin=23, xmax=26, ymin=45, ymax=48)
         """
         return self.bounds.origin()
 
@@ -569,7 +706,7 @@ class Image(object):
         return self.image(x,y)
 
     def setValue(self, *args, **kwargs):
-        """Set the pixel value at given position
+        """Set the pixel value at given (x,y) position
 
         The arguments here may be either (x, y, value) or (pos, value) where pos is a PositionI.
         Or you can provide x, y, value as named kwargs.
@@ -592,6 +729,175 @@ class Image(object):
         """Set all pixel values to their inverse: x -> 1/x.
         """
         self.image.invertSelf()
+
+    def calculateHLR(self, center=None, flux=None, flux_frac=0.5):
+        """Returns the half-light radius of a drawn object.
+
+        This method is equivalent to GSObject.calculateHLR when the object has already been
+        been drawn onto an image.  Note that the profile should be drawn using a method that
+        integrates over pixels and does not add noise. (The default method='auto' is acceptable.)
+
+        If the image has a wcs other than a PixelScale, an AttributeError will be raised.
+
+        @param center       The position in pixels to use for the center, r=0. 
+                            [default: self.trueCenter()]
+        @param flux         The total flux.  [default: sum(self.array)]
+        @param flux_frac    The fraction of light to be enclosed by the returned radius.
+                            [default: 0.5]
+
+        @returns an estimate of the half-light radius in physical units defined by the pixel scale.
+        """
+        if center is None:
+            center = self.trueCenter()
+
+        if flux is None:
+            flux = numpy.sum(self.array)
+
+        # Use radii at centers of pixels as approximation to the radial integral
+        x,y = numpy.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
+        x = x - center.x + self.bounds.xmin
+        y = y - center.y + self.bounds.ymin
+        rsq = x*x + y*y
+
+        # Sort by radius
+        indx = numpy.argsort(rsq.flatten())
+        rsqf = rsq.flatten()[indx]
+        data = self.array.flatten()[indx]
+        cumflux = numpy.cumsum(data)
+
+        # Find the first value with cumflux > 0.5 * flux
+        k = numpy.argmax(cumflux > flux_frac * flux)
+        flux_k = cumflux[k] / flux  # normalize to unit total flux
+
+        # Interpolate (linearly) between this and the previous value.
+        if k == 0:
+            hlrsq = rsqf[0] * (flux_frac / flux_k)
+        else:
+            fkm1 = cumflux[k-1] / flux
+            # For brevity in the next formula:
+            fk = flux_k
+            f = flux_frac
+            hlrsq = (rsqf[k-1] * (fk-f) + rsqf[k] * (f-fkm1)) / (fk-fkm1)
+
+        # This has all been done in pixels.  So normalize according to the pixel scale.
+        hlr = numpy.sqrt(hlrsq) * self.scale
+
+        return hlr
+
+
+    def calculateMomentRadius(self, center=None, flux=None, rtype='det'):
+        """Returns an estimate of the radius based on unweighted second moments of a drawn object.
+
+        This method is equivalent to GSObject.calculateMomentRadius when the object has already
+        been drawn onto an image.  Note that the profile should be drawn using a method that
+        integrates over pixels and does not add noise. (The default method='auto' is acceptable.)
+
+        If the image has a wcs other than a PixelScale, an AttributeError will be raised.
+
+        @param center       The position in pixels to use for the center, r=0. 
+                            [default: self.trueCenter()]
+        @param flux         The total flux.  [default: sum(self.array)]
+        @param rtype        There are three options for this parameter:
+                            - 'trace' means return sqrt(T/2)
+                            - 'det' means return det(Q)^1/4
+                            - 'both' means return both: (sqrt(T/2), det(Q)^1/4)
+                            [default: 'det']
+
+        @returns an estimate of the radius in physical units defined by the pixel scale 
+                 (or both estimates if rtype == 'both').
+        """
+        if rtype not in ['trace', 'det', 'both']:
+            raise ValueError("rtype must be one of 'trace', 'det', or 'both'")
+
+        if center is None:
+            center = self.trueCenter()
+
+        if flux is None:
+            flux = numpy.sum(self.array)
+
+        # Use radii at centers of pixels as approximation to the radial integral
+        x,y = numpy.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
+        x = x - center.x + self.bounds.xmin
+        y = y - center.y + self.bounds.ymin
+
+        if rtype in ['trace', 'both']:
+            # Calculate trace measure:
+            rsq = x*x + y*y
+            Irr = numpy.sum(rsq * self.array) / flux
+
+            # This has all been done in pixels.  So normalize according to the pixel scale.
+            sigma_trace = (Irr/2.)**0.5 * self.scale
+
+        if rtype in ['det', 'both']:
+            # Calculate det measure:
+            Ixx = numpy.sum(x*x * self.array) / flux
+            Iyy = numpy.sum(y*y * self.array) / flux
+            Ixy = numpy.sum(x*y * self.array) / flux
+
+            # This has all been done in pixels.  So normalize according to the pixel scale.
+            sigma_det = (Ixx*Iyy-Ixy**2)**0.25 * self.scale
+
+        if rtype == 'trace':
+            return sigma_trace
+        elif rtype == 'det':
+            return sigma_det
+        else:
+            return sigma_trace, sigma_det
+
+
+    def calculateFWHM(self, center=None, Imax=0.):
+        """Returns the full-width half-maximum (FWHM) of a drawn object.
+
+        This method is equivalent to GSObject.calculateMomentRadius when the object has already
+        been drawn onto an image.  Note that the profile should be drawn using a method that
+        does not integrate over pixels, so either 'sb' or 'no_pixel'.  Also, if there is a
+        significant amount of noise in the image, this method may not work well.
+
+        If the image has a wcs other than a PixelScale, an AttributeError will be raised.
+
+        @param center       The position in pixels to use for the center, r=0. 
+                            [default: self.trueCenter()]
+        @param Imax         The maximum surface brightness.  [default: max(self.array)]
+                            Note: If Imax is provided, and the maximum pixel value is larger than
+                            this value, Imax will be updated to use the larger value.
+
+        @returns an estimate of the full-width half-maximum in physical units defined by the
+                 pixel scale.
+        """
+        if center is None:
+            center = self.trueCenter()
+
+        # If the full image has a larger maximum, use that.
+        Imax2 = numpy.max(self.array)
+        if Imax2 > Imax: Imax = Imax2
+
+        # Use radii at centers of pixels.
+        x,y = numpy.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
+        x = x - center.x + self.bounds.xmin
+        y = y - center.y + self.bounds.ymin
+        rsq = x*x + y*y
+
+        # Sort by radius
+        indx = numpy.argsort(rsq.flatten())
+        rsqf = rsq.flatten()[indx]
+        data = self.array.flatten()[indx]
+
+        # Find the first value with I < 0.5 * Imax
+        k = numpy.argmax(data < 0.5 * Imax)
+        Ik = data[k] / Imax
+
+        # Interpolate (linearly) between this and the previous value.
+        if k == 0:
+            rsqhm = rsqf[0] * (0.5 / Ik)
+        else:
+            Ikm1 = data[k-1] / Imax
+            rsqhm = (rsqf[k-1] * (Ik-0.5) + rsqf[k] * (0.5-Ikm1)) / (Ik-Ikm1)
+
+        # This has all been done in pixels.  So normalize according to the pixel scale.
+        fwhm = 2. * numpy.sqrt(rsqhm) * self.scale
+
+        return fwhm
+
 
     def __eq__(self, other):
         return ( isinstance(other, Image) and

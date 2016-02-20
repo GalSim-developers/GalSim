@@ -224,7 +224,7 @@ def main(argv):
                 t1 = time.time()
 
                 # Initialize the random number generator we will be using.
-                rng = galsim.UniformDeviate(random_seed+k)
+                rng = galsim.UniformDeviate(random_seed+k+1)
 
                 # Generate random variates:
                 flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
@@ -280,7 +280,7 @@ def main(argv):
 
                 # The next two lines are just to get the output from this demo script
                 # to match the output from the parsing of demo7.yaml.
-                rng = galsim.UniformDeviate(random_seed+k)
+                rng = galsim.UniformDeviate(random_seed+k+1)
                 rng(); rng(); rng(); rng();
 
                 # Repeat for photon shooting image.

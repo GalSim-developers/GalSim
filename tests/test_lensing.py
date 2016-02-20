@@ -208,10 +208,15 @@ def test_shear_variance():
     # pk_flat_lim returns 1.
     test_ps = galsim.PowerSpectrum(e_power_function=pk_flat_lim, b_power_function=pk_flat_lim)
     # get shears on 500x500 grid with spacing 0.1 degree
+    rng2 = rng.duplicate()
     g1, g2 = test_ps.buildGrid(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
                                units=galsim.degrees)
     assert g1.shape == (ngrid, ngrid)
     assert g2.shape == (ngrid, ngrid)
+
+    # Test nRandCallsForBuildGrid:
+    rng2.discard(test_ps.nRandCallsForBuildGrid())
+    assert rng == rng2
 
     # Now we should compare the variance with the predictions.  We use
     # ../devel/modules/lensing_engine.pdf section 5.3 to get
@@ -396,6 +401,7 @@ def test_shear_variance():
     erfmin = 0.007978712629263206
     s = 2.5/kmax
     test_ps = galsim.PowerSpectrum(lambda k : np.exp(-0.5*((s*k)**2)))
+    rng2 = rng.duplicate()
     g1, g2 = test_ps.buildGrid(grid_spacing = grid_size/ngrid, ngrid=ngrid,
                                rng=rng, units=galsim.degrees, kmax_factor=kmax_factor)
     assert g1.shape == (ngrid, ngrid)
@@ -408,6 +414,8 @@ def test_shear_variance():
     print 'fractional diff = ',((var1+var2)/predicted_variance-1)
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum with kmax_factor=2"
+    rng2.discard(test_ps.nRandCallsForBuildGrid())
+    assert rng == rng2
 
     # change ngrid implicitly with kmin_factor
     grid_size = 50. # degrees
@@ -431,6 +439,8 @@ def test_shear_variance():
     print 'fractional diff = ',((var1+var2)/predicted_variance-1)
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum with kmin_factor=2"
+    rng2.discard(test_ps.nRandCallsForBuildGrid())
+    assert rng == rng2
 
     # Now check the variances post-interpolation to random (off-grid) points.  Ideally, our default
     # interpolant should not alter the power spectrum very much from kmin to kmax, so the shear

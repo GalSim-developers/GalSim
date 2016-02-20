@@ -78,7 +78,7 @@ def test_scattered():
             config['image']['stamp_size'] = test_stamp_size
             config['image']['index_convention'] = convention
     
-            image, _, _, _  = galsim.config.BuildImage(config)
+            image = galsim.config.BuildImage(config)
             np.testing.assert_equal(image.getXMin(), convention)
             np.testing.assert_equal(image.getYMin(), convention)
 
@@ -115,7 +115,7 @@ def test_scattered():
         'nobjects' : 3 
     }
 
-    image, _, _, _  = galsim.config.BuildImage(config)
+    image = galsim.config.BuildImage(config)
 
     image2 = galsim.ImageF(size,size, scale=scale)
     image2.setZero()

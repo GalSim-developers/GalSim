@@ -245,7 +245,6 @@ class InterpolatedImage(GSObject):
     }
     _single_params = []
     _takes_rng = True
-    _takes_logger = False
     _cache_noise_pad = {}
 
     def __init__(self, image, x_interpolant=None, k_interpolant=None, normalization='flux',
@@ -618,7 +617,6 @@ class InterpolatedKImage(GSObject):
     }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, real_kimage, imag_kimage, k_interpolant=None, stepk=None,
                  gsparams=None):
