@@ -113,6 +113,13 @@ class Aperture(object):
 
     @property
     def rho(self):
+        """ Pupil plane coordinate array.
+
+        Each element encodes the coordinate, (normalized to a unit disk) as a complex number:
+        (x, y) => x + 1j * y.
+
+        Computed on demand and cached for reuse.
+        """
         if not hasattr(self, '_rho'):
             u = np.fft.fftshift(np.fft.fftfreq(self.npix, 1./self.pupil_plane_size))
             u, v = np.meshgrid(u, u)
