@@ -78,7 +78,7 @@ def Great3Reject(config, base, value_type):
     if hasattr(gal, 'noise'):
         final = galsim.Convolve(gal,psf)
         current_noise_var = final.noise.getVariance()
-        npix = numpy.prod(im.array.shape)
+        npix = np.prod(im.array.shape)
         sumsq -= current_noise_var * npix
 
     snr = np.sqrt(sumsq / var)
