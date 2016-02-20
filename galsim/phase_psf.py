@@ -59,10 +59,11 @@ class Aperture(object):
 
         `rho` is
 
+        @param diam              Aperture diameter in meters.
+        @param npix              Number of pupil plane resolution elements.
         @param pupil_plane_size  Size of the pupil plane in meters.  Note, this may be (in fact, it
                                  usually *should* be) larger than the aperture diameter.
-        @param npix              Number of pupil plane resolution elements.
-        @param diam              Aperture diameter in meters. [default: pupil_plane_size]
+                                 [default: 2.*diam]
         @param circular_pupil    Adopt a circular pupil? [default: True].
         @param obscuration       Fractional linear circular obscuration of pupil. [default: 0.]
         @param nstruts           Number of radial support struts to add to the central obscuration.
@@ -73,12 +74,12 @@ class Aperture(object):
                                  direction; must be an Angle instance.
                                  [default: 0. * galsim.degrees]
     """
-    def __init__(self, pupil_plane_size, npix, diam=None, circular_pupil=True, obscuration=0.,
+    def __init__(self, diam, npix, pupil_plane_size=None, circular_pupil=True, obscuration=0.,
                  nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees):
         if obscuration >= 1.:
             raise ValueError("Pupil fully obscured! obscuration = {1} (>= 1)".format(obscuration))
-        if diam is None:
-            diam = pupil_plane_size
+        if pupil_plane_size is None:
+            pupil_plane_size = 2*diam
         self.pupil_plane_size = float(pupil_plane_size)
         self.npix = int(npix)
         self.pupil_scale = self.pupil_plane_size/(self.npix-1)
@@ -851,7 +852,7 @@ class PhaseScreenPSF(GSObject):
         self._pupil_plane_size = self._npix * self._pupil_scale
         self.scale = 1e-9*self.lam/self._pupil_plane_size * galsim.radians / self.scale_unit
 
-        self.aper = Aperture(self._pupil_plane_size, self._npix, diam=self.diam,
+        self.aper = Aperture(self.diam, self._npix, pupil_plane_size=self._pupil_plane_size,
                              obscuration=self.obscuration)
 
         self.img = np.zeros(self.aper.illuminated.shape, dtype=np.float64)
