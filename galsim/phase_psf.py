@@ -54,10 +54,10 @@ class Aperture(object):
         The constructed object has two key attributes:
             `illuminated`  a boolean array indicating which positions in the pupil plane are exposed
                            to the sky.
-            `rho`          array of unit disc-scaled pupil coordinates for use by Zernike
+            `rho`          array of unit-disc-scaled pupil coordinates for use by Zernike
                            polynomials (as a complex number).
 
-        `rho` is
+        Each element of `rho` encodes the corresponding coordinate as (x, y) => x + 1j * y.
 
         @param diam              Aperture diameter in meters.
         @param npix              Number of pupil plane resolution elements.
