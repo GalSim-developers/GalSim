@@ -306,7 +306,10 @@ def applyPersistence(self,imgs,coeffs):
     @ returns None
     """
 
-    if isinstance(imgs,list) and hasattr(coeffs,'__iter__'):
+    if isinstance(imgs,galsim.Image) and (isinstance(coeffs,float) or isinstance(coeffs,int)):
+        self += coeffs*imgs
+
+    elif hasattr(imgs,'__iter__') and hasattr(coeffs,'__iter__'):
         if not len(imgs)==len(coeffs):
             raise TypeError("The length of 'imgs' and 'coeffs' must be the same, if passed as a \
                 list")
@@ -314,19 +317,19 @@ def applyPersistence(self,imgs,coeffs):
             # exhausted.
         else:
             for img,coeff in zip(imgs,coeffs):
+                if not isinstance(img,galsim.Image):
+                    raise ValueError("In 'applyPersistence', the objects in 'imgs' must be
+                                      galsim.Image instances")
+                if not isinstance(coeff,float) and not isinstance(coeff,int):
+                    raise ValueError("In 'applyPersistence', the objects in 'coeffs' must be
+                                      of type float or int")
+
                 self += coeff*img
 
-    elif isinstance(imgs,list) and (isinstance(coeffs,float) or isinstance(coeffs,int)):
-        for img in imgs:
-            self += coeffs*img
-
-    elif isinstance(imgs,galsim.Image) and (isinstance(coeffs,float) or isinstance(coeffs,int)):
-        self += coeffs*imgs
-
     else:
-        raise TypeError("Type mismatch between 'imgs' and 'coeffs' in 'addPersistence' routine.
-            'imgs' must be a list of Image objects and 'coeffs' must be a list of float or int or \
-             a NumPy array of the same size.")
+        raise TypeError("Type mismatch between 'imgs' and 'coeffs' in 'applyPersistence' routine. \
+        'imgs' must be an Image instance or a list of Image instances and 'coeffs' must be a \
+        float or a list of floats of the same size.")
 
 def quantize(self):
     """
