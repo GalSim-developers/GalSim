@@ -275,16 +275,16 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     else:
         self.array[:,:] = out_array
 
-def addPersistence(self,imgs,coeffs):
+def applyPersistence(self,imgs,coeffs):
     """
-    Adds the effects of persistence to the Image instance.
+    Applies the effects of persistence to the Image instance.
 
     Persistence refers to the retention of a small fraction of the signal after resetting the
     imager pixel elements. The persistence signal of a previous exposure is left in the pixel even
     after several detector resets. This effect is most likely due to charge traps in the material.
-    The laboratory tests show that if exposures and readouts are taken in a fixed cadence, the
-    persistence signal can be given as a linear combination of prior pixel values that can be
-    added to the current image.
+    Laboratory tests on the WFIRST CMOS detectors show that if exposures and readouts are taken in
+    a fixed cadence, the persistence signal can be given as a linear combination of prior pixel
+    values that can be added to the current image.
 
     This routine takes in one or multiple Image instances and adds them to Image weighted by the
     values passed on to 'coeffs'. This routine does NOT keep track of realistic dither patterns.
@@ -296,7 +296,7 @@ def addPersistence(self,imgs,coeffs):
     Calling
     -------
 
-        >>> img.addPersistence(imgs=img_list, coeffs=coeffs_list)
+        >>> img.applyPersistence(imgs=img_list, coeffs=coeffs_list)
 
     @ param imgs:       an Image instance or a list of previous Image instances that still persist
     @ param coeffs:     specifies the retention factor for one or all of the Image instances listed
@@ -354,5 +354,5 @@ def quantize(self):
 galsim.Image.applyNonlinearity = applyNonlinearity
 galsim.Image.addReciprocityFailure = addReciprocityFailure
 galsim.Image.applyIPC = applyIPC
-galsim.Image.addPersistence = addPersistence
+galsim.Image.applyPersistence = applyPersistence
 galsim.Image.quantize = quantize
