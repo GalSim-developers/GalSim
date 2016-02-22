@@ -24,8 +24,6 @@ import os
 
 class DES_SlowLocalWCSBuilder(galsim.config.WCSBuilder):
 
-    def __init__(self): pass
-
     def buildWCS(self, config, base):
         """Build a local WCS from the given location in a DES focal plane, given a directory
         with the image files.  By default, it will pick a random chipnum and image position,
@@ -119,8 +117,6 @@ class DES_FullFieldWCS(object):
 
 
 class DES_LocalWCSBuilder(galsim.config.WCSBuilder):
-
-    def __init__(self): pass
 
     def buildWCS(self, config, base):
         """Build a local WCS from the given location in a DES focal plane.
