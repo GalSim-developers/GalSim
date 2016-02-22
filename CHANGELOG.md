@@ -34,11 +34,14 @@ New Features
   truth information.  cf. demos 9 and 10. (#301, #691)
 - Added methods calculateHLR, calculateMomentRadius, and calculateFWHM to both
   GSObject and Image. (#308)
+- Added ability to specify lambda and r0 separately for Kolmogorov to have
+  GalSim do the conversion from radians to the given scale unit. (#657)
 - Changed `galsim.fits.writeMulti` to allow any of the "image"s to be
   already-built hdus, which are included as is. (#691)
 - Added optional `wcs` argument to `Image.resize()`. (#691)
 - Added `BaseDeviate.discard(n)` and `BaseDeviate.raw()`. (#691)
 - Added `sersic_prec` option to COSMOSCatalog.makeGalaxy(). (#691)
+- Added `convergence_threshold` as a parameter of HSMParams. (#709)
 
 
 Updates to galsim executable
