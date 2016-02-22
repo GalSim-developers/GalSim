@@ -503,10 +503,20 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
             offsets.append(offset)
 
     wcs = image.wcs
-    if wcs is not None and wcs.isLocal():
+    if wcs is not None: # and wcs.isLocal():
         jac = wcs.jacobian()
         for img in im_list:
-            img.wcs = galsim.JacobianWCS(jac.dudx*n1,jac.dudy*n2,jac.dvdx*n1,jac.dvdy*n2)
+            img_wcs = galsim.JacobianWCS(jac.dudx*n1,jac.dudy*n2,jac.dvdx*n1,jac.dvdy*n2)
+            ## Since pixel scale WCS is not equal to its jacobian, checking if img_wcs is a pixel
+            ## scale
+            img_wcs_decomp = img_wcs.getDecomposition()
+            if img_wcs_decomp[1].g==0:
+                img.wcs = galsim.PixelScale(img_wcs_decomp[0])
+            else:
+               img.wcs = img_wcs
+            ## Preserve the origin so that the interleaved image has the same bounds as the image
+            ## that is being deinterleaved.
+            img.setOrigin(image.origin())
 
     elif suppress_warnings is False:
         import warnings
@@ -669,20 +679,31 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
         img /= 1.0*len(im_list)
 
     # Assign an appropriate WCS for the output
-    if wcs.isPixelScale():
-        if n1==n2:
-            img.wcs = galsim.PixelScale(1.*scale/n1)
+    if wcs is not None: # and wcs.isLocal():
+        jac = wcs.jacobian()
+        dudx, dudy, dvdx, dvdy = jac.dudx, jac.dudy, jac.dvdx, jac.dvdy
+        img_wcs = galsim.JacobianWCS(1.*dudx/n1,1.*dudy/n2,1.*dvdx/n1,1.*dvdy/n2)
+        ## Since pixel scale WCS is not equal to its jacobian, checking if img_wcs is a pixel scale
+        img_wcs_decomp = img_wcs.getDecomposition()
+        if img_wcs_decomp[1].g==0: ## getDecomposition returns scale,shear,angle,flip
+            img.wcs = galsim.PixelScale(img_wcs_decomp[0])
         else:
-            img.wcs = galsim.JacobianWCS(1.*scale/n1, 0., 0., 1.*scale/n2)
-    elif isinstance(wcs,galsim.JacobianWCS): # from say, a previously interleaved Image.
-        dudx, dudy, dvdx, dvdy = wcs.dudx, wcs.dudy, wcs.dvdx, wcs.dvdy
-        if (1.0*dudx/n1==1.0*dvdy/n2) and (dudy==0.0) and (dvdx==0.0):
-            img.wcs = galsim.PixelScale(1.*dudx/n1)
-        else:
-            img.wcs = galsim.JacobianWCS(1.*dudx/n1,1.*dudy/n2,1.*dvdx/n1,1.*dvdy/n2)
+            img.wcs = img_wcs
+
     elif suppress_warnings is False:
         import warnings
         warnings.warn("Interleaved image could not be assigned a WCS automatically.")
+
+    # Assign a possibly non-trivial origin and warn if individual image have different origins.
+    orig = im_list[0].origin()
+    img.setOrigin(orig)
+    for im in im_list[1:]:
+        if not im.origin()==orig:
+            import warnings
+            warnings.warn("Images in `im_list' have multiple values for origin. Assigning the \
+            origin of the first Image instance in 'im_list' to the interleaved image.")
+            break
+
     return img
 
 class LRU_Cache:

@@ -28,7 +28,6 @@ except ImportError:
     import galsim
 import galsim.utilities
 
-
 testshape = (512, 512)  # shape of image arrays for all tests
 decimal = 6     # Last decimal place used for checking equality of float arrays, see
                 # np.testing.assert_array_almost_equal(), low since many are ImageF
@@ -163,6 +162,7 @@ def test_deInterleaveImage():
 
     # 1) Check compatability with interleaveImages
     img = galsim.Image(np.random.randn(64,64),scale=0.25)
+    img.setOrigin(galsim.PositionI(5,7)) ## for non-trivial bounds
     im_list, offsets = galsim.utilities.deInterleaveImage(img,8)
     img1 = galsim.utilities.interleaveImages(im_list,8,offsets)
     np.testing.assert_array_equal(img1.array,img.array,\
@@ -170,8 +170,10 @@ def test_deInterleaveImage():
                 "images")
 
     assert img.wcs == img1.wcs
+    assert img.bounds == img1.bounds
 
     img = galsim.Image(abs(np.random.randn(16*5,16*2)),scale=0.5)
+    img.setCenter(0,0) ## for non-trivial bounds
     im_list, offsets = galsim.utilities.deInterleaveImage(img,(2,5))
     img1 = galsim.utilities.interleaveImages(im_list,(2,5),offsets)
     np.testing.assert_array_equal(img1.array,img.array,\
@@ -179,6 +181,7 @@ def test_deInterleaveImage():
                 +" images")
 
     assert img.wcs == img1.wcs
+    assert img.bounds == img1.bounds
 
     # 2) Checking for offsets
     img = galsim.Image(np.random.randn(32,32),scale=2.0)
@@ -206,7 +209,7 @@ def test_deInterleaveImage():
         g0.drawImage(image=im,offset=offsets0[n],scale=0.5,method='no_pixel')
         np.testing.assert_array_equal(im.array,im_list0[n].array,\
           err_msg="deInterleaveImage does not reduce the resolution of the input image correctly")
-        assert im_list0[n].wcs == im.wcs.jacobian()
+        assert im_list0[n].wcs == im.wcs
 
     # 3b) Increasing directional resolution
     g = galsim.Gaussian(sigma=0.7,flux=1000.)
@@ -402,6 +405,7 @@ def test_interleaveImages():
             offset = galsim.PositionD(-(i+0.5)/n+0.5,-(j+0.5)/n+0.5)
             offset_list.append(offset)
             gal.drawImage(image=im,method='no_pixel',offset=offset,scale=0.5)
+            im.setOrigin(3,3) # for non-trivial bounds
             im_list.append(im)
 
     img = galsim.utilities.interleaveImages(im_list,N=n,offsets=offset_list)
@@ -410,7 +414,10 @@ def test_interleaveImages():
     for k in xrange(n**2):
         assert offset_list_1[k] == offset_list[k]
         np.testing.assert_array_equal(im_list_1[k].array, im_list[k].array)
-        assert im_list_1[k].wcs == im_list[k].wcs.jacobian()
+        assert im_list_1[k].wcs == im_list[k].wcs
+
+        assert im_list[k].origin() == img.origin()
+        assert im_list[k].bounds == im_list_1[k].bounds
 
     # Checking for non-default flux option
     img = galsim.utilities.interleaveImages(im_list,N=n,offsets=offset_list,add_flux=False)
@@ -419,11 +426,10 @@ def test_interleaveImages():
     for k in xrange(n**2):
         assert offset_list_2[k] == offset_list[k]
         np.testing.assert_array_equal(im_list_2[k].array, im_list[k].array)
-        assert im_list_2[k].wcs == im_list[k].wcs.jacobian()
+        assert im_list_2[k].wcs == im_list[k].wcs
     
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
-
 
 def test_python_LRU_Cache():
     f = lambda x: x+1
