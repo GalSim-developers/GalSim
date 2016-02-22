@@ -446,8 +446,8 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
         >>> n = 2
         >>> gal = galsim.Gaussian(sigma=2.8)
         >>> gal_pix = galsim.Convolve([gal,galsim.Pixel(scale=1.0)])
-        >>> img = gal_pix.drawImage(gal_pix,scale=1.0*n,method='no_pixel')
-        >>> im_list, offsets = galsim.utilities.deInterleaveImage(gal_pix,N=n)
+        >>> img = gal_pix.drawImage(gal_pix,scale=1.0/n,method='no_pixel')
+        >>> im_list, offsets = galsim.utilities.deInterleaveImage(img,N=n)
         >>> for im in im_list:
         >>>     im.applyNonlinearity(lambda x: x-0.01*x**2) #detector effects
         >>> img_new = galsim.utilities.interleaveImages(im_list,N=n,offsets)
