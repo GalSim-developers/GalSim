@@ -342,12 +342,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 im = builder.draw(prof, im, method, offset, stamp, config, logger)
 
                 scale_factor = builder.getSNRScale(im, stamp, config, logger)
-                if scale_factor != 1.0:
-                    if method == 'phot':
-                        logger.error(
-                            "signal_to_noise calculation is not accurate for draw_method = phot")
-                    im *= scale_factor
-                    prof *= scale_factor
+                im, prof = builder.applySNRScale(im, prof, scale_factor, method, logger)
 
             # Set the origin appropriately
             if im is None:
@@ -694,6 +689,28 @@ class StampBuilder(object):
             return scale_factor
         else:
             return 1.
+
+    def applySNRScale(self, image, prof, scale_factor, method, logger):
+        """Apply the scale_factor from getSNRScale to the image and profile.
+
+        The default implementaion just multiplies each of them, but if prof is not a regular
+        GSObject, then you might need to do something different.
+
+        @param image        The current image.
+        @param prof         The profile that was drawn.
+        @param scale_factor The factor by which to scale both image and prof.
+        @param method       The method used by drawImage.
+        @param logger       If given, a logger object to log progress.
+
+        @returns image, prof  (after being properly scaled)
+        """
+        if scale_factor != 1.0:
+            if method == 'phot':
+                logger.warn(
+                    "signal_to_noise calculation is not accurate for draw_method = phot")
+            image *= scale_factor
+            prof *= scale_factor
+        return image, prof
 
     def reject(self, config, base, prof, psf, image, logger):
         """Check to see if this object should be rejected.
