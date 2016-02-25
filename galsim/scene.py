@@ -125,8 +125,10 @@ class COSMOSCatalog(object):
     @param use_real         Enable the use of realistic galaxies?  [default: True]
                             If this parameter is False, then `makeGalaxy(gal_type='real')` will
                             not be allowed.
-    @param exclusion_level  Level of cuts to make on the galaxies based on the quality of postage
-                            stamp definition and/or parametric fit quality.  Options:
+    @param exclusion_level  Level of additional cuts to make on the galaxies based on the quality 
+                            of postage stamp definition and/or parametric fit quality [beyond the
+                            minimal cuts imposed when making the catalog - see Mandelbaum et
+                            al. (2012, MNRAS, 420, 1518) for details].  Options:
                             "none": No cuts.
                             "bad_stamp": Apply cuts to eliminate galaxies that have failures in 
                                          postage stamp definition.  These cuts may also eliminate a
