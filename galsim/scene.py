@@ -34,7 +34,8 @@ cosmos_pix_scale = 0.03
 class COSMOSCatalog(object):
     """
     A class representing a random subsample of galaxies from the COSMOS sample with F814W<25.2
-    (default), or alternatively the entire sample with F814W<23.5 (which was the previous default).
+    (default for GalSim v1.4), or alternatively the entire sample with F814W<23.5 (which was the
+    default for GalSim v1.3).
 
     Depending on the keyword arguments, particularly `use_real`, the catalog will either have
     information about real galaxies, or parametric ones.  To use this with either type of galaxies,
