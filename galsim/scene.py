@@ -235,9 +235,23 @@ class COSMOSCatalog(object):
                 'You seem to have an old version of the COSMOS parameter file.\n'+
                 'Please run `galsim_download_cosmos` to re-download the COSMOS catalog.')
 
-        # Do the reading of what we need to impose selection criteria, if the appropriate
-        # exclusion_level was chosen.
+        # NB. The pyfits FITS_Rec class has a bug where it makes a copy of the full
+        # record array in each record (e.g. in getParametricRecord) and then doesn't
+        # garbage collect it until the top-level FITS_Record goes out of scope.
+        # This leads to a memory leak of order 10MB or so each time we make a parametric
+        # galaxy.
+        # cf. https://mail.scipy.org/pipermail/astropy/2014-June/003218.html
+        # also https://github.com/astropy/astropy/pull/520
+        # The simplest workaround seems to be to convert it to a regular numpy recarray.
+        # (This also makes it run much faster, as an extra bonus!)
+        self.param_cat = np.array(self.param_cat, copy=True)
+
+        self.orig_index = np.arange(len(self.param_cat))
+        mask = np.ones(len(self.orig_index), dtype=bool)
+
         if exclusion_level in ['marginal', 'bad_ps']:
+            # First, read in what we need to impose selection criteria, if the appropriate
+            # exclusion_level was chosen.
             k = full_file_name.find('.fits')
             try:
                 # This should work if the user passed in (or we defaulted to) the real galaxy
@@ -250,55 +264,43 @@ class COSMOSCatalog(object):
                     # we have to strip off the _fits.fits (instead of just the .fits)
                     selection_file_name = full_file_name[:k-5] + '_selection' + full_file_name[k:]
                     self.selection_cat = pyfits.getdata(selection_file_name)
-            except IOError:
-                self.selection_cat = None
-                import warnings
-                warnings.warn(
-                    'File with GalSim selection criteria not found!\n'+
-                    'Not all of the requested exclusions will be performed.\n'+
-                    'Run the program galsim_download_cosmos to get the necessary selection file.\n')
 
-        # NB. The pyfits FITS_Rec class has a bug where it makes a copy of the full
-        # record array in each record (e.g. in getParametricRecord) and then doesn't 
-        # garbage collect it until the top-level FITS_Record goes out of scope.  
-        # This leads to a memory leak of order 10MB or so each time we make a parametric
-        # galaxy.  
-        # cf. https://mail.scipy.org/pipermail/astropy/2014-June/003218.html
-        # also https://github.com/astropy/astropy/pull/520
-        # The simplest workaround seems to be to convert it to a regular numpy recarray.
-        # (This also makes it run much faster, as an extra bonus!)
-        self.param_cat = np.array(self.param_cat, copy=True)
 
-        self.orig_index = np.arange(len(self.param_cat))
-        mask = np.ones(len(self.orig_index), dtype=bool)
-
-        # If requested, select galaxies in a way that excludes suspect postage stamps (e.g., with
-        # deblending issues), suspect parametric model fits, or both of the above plus marginal
-        # ones.
-        if exclusion_level in ['bad_ps', 'marginal']:
-            # This 'exclusion_level' involves placing cuts on the S/N of the object detection in the
-            # original postage stamp, and on issues with masking that can indicate deblending or
-            # detection failures.  These cuts were used in GREAT3.
-            # In the case of the masking cut, in some cases there are messed up ones that have a 0
-            # for self.selection_cat['peak_image_pixel_count'].  To make sure we don't divide by
-            # zero (generating a RuntimeWarning), and still eliminate those, we will first set that
-            # column to 1.e-5.
-            # We choose a sample-dependent mask ratio cut, since this depends on the peak object
-            # flux, which will differ for the two samples (and we can't really cut on this for
-            # arbitrary user-defined samples).
-            if use_sample == "23.5":
-                cut_ratio = 0.2
-                sn_limit = 20.0
-            else:
-                cut_ratio = 0.8
-                sn_limit = 12.0
-            if self.selection_cat is not None:
+                # At this point we've read in the catalog one way or another (otherwise we would
+                # have gotten tossed out of this part of the code to throw an IOError).  So, we can
+                # proceed to select galaxies in a way that excludes suspect postage stamps (e.g.,
+                # with deblending issues), suspect parametric model fits, or both of the above plus
+                # marginal ones.  These two options for 'exclusion_level' involve placing cuts on
+                # the S/N of the object detection in the original postage stamp, and on issues with
+                # masking that can indicate deblending or detection failures.  These cuts were used
+                # in GREAT3.  In the case of the masking cut, in some cases there are messed up ones
+                # that have a 0 for self.selection_cat['peak_image_pixel_count'].  To make sure we
+                # don't divide by zero (generating a RuntimeWarning), and still eliminate those, we
+                # will first set that column to 1.e-5.  We choose a sample-dependent mask ratio cut,
+                # since this depends on the peak object flux, which will differ for the two samples
+                # (and we can't really cut on this for arbitrary user-defined samples).
+                if use_sample == "23.5":
+                    cut_ratio = 0.2
+                    sn_limit = 20.0
+                else:
+                    cut_ratio = 0.8
+                    sn_limit = 12.0
                 div_val = self.selection_cat['peak_image_pixel_count']
                 div_val[div_val == 0.] = 1.e-5
                 mask &= ( (self.selection_cat['sn_ellip_gauss'] >= sn_limit) &
                           ((self.selection_cat['min_mask_dist_pixels'] > 11.0) |
                            (self.selection_cat['average_mask_adjacent_pixel_count'] / \
                                div_val < cut_ratio)) )
+            except IOError:
+                # We can't make any of the above cuts (or any later ones that depend on the
+                # selection catalog) because we couldn't find the selection catalog.  Bummer.  Warn
+                # the user, and move on.
+                self.selection_cat = None
+                import warnings
+                warnings.warn(
+                    'File with GalSim selection criteria not found!\n'+
+                    'Not all of the requested exclusions will be performed.\n'+
+                    'Run the program galsim_download_cosmos to get the necessary selection file.\n')
 
         if exclusion_level in ['bad_fits', 'marginal']:
             # This 'exclusion_level' involves eliminating failed parametric fits (bad fit status
