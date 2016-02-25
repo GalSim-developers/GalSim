@@ -275,7 +275,7 @@ class COSMOSCatalog(object):
         # If requested, select galaxies in a way that excludes suspect postage stamps (e.g., with
         # deblending issues), suspect parametric model fits, or both of the above plus marginal
         # ones.
-        if exclusion_level == 'bad_ps' or exclusion_level == 'marginal':
+        if exclusion_level in ['bad_ps', 'marginal']:
             # This 'exclusion_level' involves placing cuts on the S/N of the object detection in the
             # original postage stamp, and on issues with masking that can indicate deblending or
             # detection failures.  These cuts were used in GREAT3.
@@ -300,7 +300,7 @@ class COSMOSCatalog(object):
                            (self.selection_cat['average_mask_adjacent_pixel_count'] / \
                                div_val < cut_ratio)) )
 
-        if exclusion_level == 'bad_fits' or exclusion_level == 'marginal':
+        if exclusion_level in ['bad_fits', 'marginal']:
             # This 'exclusion_level' involves eliminating failed parametric fits (bad fit status
             # flags).  In this case we only get rid of those with failed bulge+disk AND failed
             # Sersic fits, so there is no viable parametric model for the galaxy.
