@@ -321,10 +321,18 @@ class COSMOSCatalog(object):
                       ((bulgefit_status > 0) &
                       (bulgefit_status < 5)) )
         
-            # Some fit parameters can indicate a likely sky subtraction error
-            hlr = self.param_cat['sersicfit'][:,1]
+            # Some fit parameters can indicate a likely sky subtraction error: very high sersic n
+            # AND abnormally large half-light radius (>1 arcsec).
+            if 'hlr' not in self.param_cat.dtype.names:
+                # This is the circularized HLR in arcsec, which we have to compute from the stored
+                # parametric fits.
+                hlr = cosmos_pix_scale * self.param_cat['sersicfit'][:,1] * \
+                    np.sqrt(self.param_cat['sersicfit'][:,2])
+            else:
+                # This is the pre-computed circularized HLR in arcsec.
+                hlr = self.param_cat['hlr'][:,0]
             n = self.param_cat['sersicfit'][:,2]
-            mask &= ( (n < 5) | (hlr < 1./cosmos_pix_scale) )
+            mask &= ( (n < 5) | (hlr < 1.) )
 
             # Major flux differences in the parametric model vs. the COSMOS catalog can indicate fit
             # issues, deblending problems, etc.
