@@ -352,9 +352,10 @@ class COSMOSCatalog(object):
                     # The prefactor for n=4 is 3.607.  For n=1, it is 1.901.
                     # It's not linear in these values, but for the sake of efficiency and the 
                     # ability to work on the whole array at once, just linearly interpolate.
-                    # Hopefully, this can be improved as part of issue #693.  Maybe by storing the
-                    # calculated directly flux in the catalog, rather than just the amplitude of the
-                    # surface brightness profile at the half-light-radius?
+                    # This was improved as part of issue #693, for which part of the work involved
+                    # updating the catalogs to include precomputed fluxes and radii.  So as shown
+                    # below, if that info is in the catalog we just use it directly instead of using
+                    # this approximate calculation.
                     #prefactor = ( (n-1.)*3.607 + (4.-n)*1.901 ) / (4.-1.)
                     prefactor = ((3.607-1.901)/3.) * n + (4.*1.901 - 1.*3.607)/3.
                     flux = 2.0*np.pi*prefactor*(hlr**2)*flux_hlr/cosmos_pix_scale**2
