@@ -40,8 +40,25 @@ PhaseScreenPSF
 
 Atmosphere
   Convenience function to quickly assemble multiple AtmosphericScreens into a PhaseScreenList.
+
+TelescopePSF
+    Interface to field-dependent Zernike mode amplitudes from a common abberated optics model.
+    It takes as input a dict specifying the parameters of the model for a telescope (see
+    `lsst_telescope_model` in this module).
+
+OpticsParameters
+    Hold all the figure error and body motion parameters for a component of the telescope optical
+    system. The `set_perturbation_params` method of `TelescopePSF` ingests an instance of
+    `OpticsParameters`.
+
+ZernikeCoefsBendingModes
+    Calculate wavefront Zernike coefficients for mirror bending modes.
+
+ZernikeCoefsBodyMotions
+    Calculate wavefront Zernike coefficients for optical element tilts and decenters.
 """
 
+import os
 import numpy as np
 import galsim
 import utilities
@@ -1077,3 +1094,643 @@ def Atmosphere(screen_size, rng=None, **kwargs):
         kwargs['r0_500'] = [nmax**(3./5) * kwargs['r0_500'][0]] * nmax
 
     return PhaseScreenList(AtmosphericScreen(rng=rng, **kw) for kw in _lod_to_dol(kwargs, nmax))
+
+# --------------------------------------------------------------------------------------------------
+# Field-dependent optics PSF methods
+# --------------------------------------------------------------------------------------------------
+
+def parse_zemax_coefs_file(infile="data/lsst_aberration_coefs_rband_markedup.txt"):
+    """
+    Load a text file with the wavefront power-series expansion coefficients
+    output from Zemax (compatible versions...?).
+
+    FIXME: This version requires manually removing the header lines in the file first.
+    """
+    dt = np.dtype([('surf', float), ('W040', float), ('W131', float),
+        ('W222', float), ('W220', float), ('W311', float), ('W020', float),
+        ('W111', float), ('object', float)])
+    # dat = np.fromfile(infile, dtype=dt, sep=" ")
+    dat = np.loadtxt(infile)
+    W = np.core.records.array(dat, dtype=dt)[:, 0]
+    ### Convert defocus to 'medial defocus'
+    W['W220'] = W['W220'] + 0.5 * W['W222']
+    return W
+
+ksqrt2 = np.sqrt(2.)
+ksqrt3 = np.sqrt(3.)
+ksqrt5 = np.sqrt(5.)
+ksqrt6 = np.sqrt(6.)
+k_rad2arcsec = 180. * 60. * 60. / np.pi
+
+
+
+class TelescopePSF(object):
+    """
+    Model for the aberrated PSF of a telescope.
+
+    The model has 2 levels of 'parameters':
+
+        1. Fixed parameters describing the geometry of the optics such as mirror diameters,
+           locations, focal lengths, reference wavefront, and wavefront expansion coefficients.
+           [n_surfaces, {diam_i, a_i, c_i, W_{ref}, W_{klm,i}; i=1, ..., n_surfaces}]
+           These are specified by the `telescope_model` argument to __init__.
+        2. Perturbation parameters describing optical element tilts and decenters ('body motions')
+           and figure errors ('bending modes').
+           These are the parameters stored in `OpticsParameters` instances and passed to the
+           `set_perturbation_params` method.
+
+    Attributes
+    ----------
+    @param telescope_model dict The parameters for the telescope model
+    @param verbose bool Enable verbose output
+    @param npad int Padding factor for the pupil FFT (multiplies the number of grid points per
+                    dimension)
+
+    References
+    ----------
+    [1] K. Thompson, "Description of the third-order optical aberrations of near-circular pupil optical
+        systems without symmetry,"
+        J Opt Soc Am A Opt Image Sci Vis 22(7), 1389–1401, Optical Society of America (2005)
+        [doi:10.1364/JOSAA.22.001389].
+    [2] A. M. Manuel, J. H. Burge, and R. Tessieres, "Orthogonal Field-Dependent Aberrations for
+        Misaligned Optical Systems,"
+        presented at Frontiers in Optics, 2009, Washington, D.C., FThH3, OSA
+        [doi:10.1364/FIO.2009.FThH3].
+    [3] A. Manuel, "Field-Dependent Aberrations for Misaligned Reflective Optical Systems",
+        Ph.D. Thesis (2009).
+    [4] P. L. Schechter and R. S. Levinson, "Generic Misalignment Aberration Patterns in Wide-Field
+        Telescopes,"
+        Publications of the Astronomical Society of the Pacific 123, 812–832 (2011)
+        [doi:10.1086/661111].
+    [5] P. L. Schechter and R. S. Levinson, "Generic Misalignment Aberration Patterns and the Subspace
+        of Benign Misalignment,"
+        in arXiv astro-ph.IM (2012).
+    [6] R. Tessieres and J. H. Berge, "Alignment strategy for the LSST", Version 2, LSST Corporation
+    """
+    def __init__(self, telescope_model=lsst_telescope_model, verbose=False, npad=2):
+        self.telescope_model = telescope_model
+        self.verbose = verbose
+        self.npad = npad
+
+        self._init_telescope_parameters()
+        self._init_perturbations()
+
+        self.focus_W220 = 0.
+        self.focus_W040 = 0.
+
+    def _init_telescope_parameters(self):
+        self.n_surfs_bend_modes = len(self.telescope_model['coefs_bending_modes'])
+        self.n_surfs_body_motion = len(self.telescope_model['W_coefs']['W220'])
+
+    def pixel_scale_arcsec(self, wavelength=500.e-9):
+        """
+        Get the pixel size for computing GalSim PSFs via FFT.
+
+        Return the pixel size in arcseconds.
+
+        @param wavelength in meters
+        """
+        return (wavelength / (self.npad * self.telescope_model['telescope_diameter_meters']) *
+            k_rad2arcsec)
+
+    def _init_perturbations(self):
+        """
+        Instantiate objects describing the bending modes and body motion aberrations.
+        """
+        ### ----- Bending modes
+        self.bend = {k: ZernikeCoefsBendingModes(
+            a=self.telescope_model['coefs_bending_modes'][k]['a'],
+            c=self.telescope_model['coefs_bending_modes'][k]['c'])
+            for k in self.telescope_model['coefs_bending_modes'].keys()}
+        self.n_bend_modes = self.bend.values()[0].n_modes()
+        ### ----- Body motions
+        self.body = ZernikeCoeffsBodyMotions(self.telescope_model)
+        if self.verbose:
+            print "Reference body motion parameters (in waves):"
+            for i, key in enumerate(self.body.params_ref):
+                print "\t",key,":", self.body.params_ref[key]
+        return None
+
+    def set_perturbation_params(self, optics_params):
+        """
+        Set parameters describing the configuration of optics perturbations.
+
+        Take as input a list of perturbation parameters for each optical surface and update the
+        entire aberrated telescope model.
+
+        These parameters are, e.g., physical tilts and decenters of optical elements or
+        particular bending mode amplitudes on an optical surface.
+
+        @param optics_params    A dict of objects of class `OpticsParameters` for each optic.
+        """
+        ### Collect the bending modes coefficients into a single array for exit pupil predictions
+        self.surf_coefs = {k: optics_params[k].bending_modes()
+                           for i, k in enumerate(self.bend.keys())}
+
+        ### Tilts/decenters mapped to image plane displacements
+        self.misalignments = np.zeros((self.n_surfs_body_motion, 2), dtype=np.float64)
+        for i, key in enumerate(optics_params):
+            op = optics_params[key]
+            self.misalignments[self.telescope_model['zemax_coefs_rownums'][op.surface], :] = op.body_motions()
+
+        if self.verbose:
+            print "surf_coefs:", self.surf_coefs
+            print "misalignments:", self.misalignments
+        return None
+
+    def set_focus(self, defocus_mm=0.):
+        """
+        Defocus the entire image to model engineering diagnostics or curvature wavefront sensors.
+
+        @param defocus_mm   Longitudinal defocus in millimeters. [default: 0]
+        @param wavelength   Wavelength in meters. [default: 500e-9]
+        """
+        D = self.telescope_model['telescope_diameter_meters']
+        defocus_m = 1.e-3 * defocus_mm
+        R = D * self.telescope_model['f-ratio']
+        Rd = R + defocus_m
+        self.focus_W220 = (0.5 * (1./R - 1./Rd)) * (D/2) ** 2
+        self.focus_W040 = (0.125 * (1./R**3) * (2*R/Rd - (R/Rd)**3 - 1)) * (D/2) ** 2
+        return None
+
+    def zernike_coefs(self, h, wavelength):
+        """
+        Evaluate the exit pupil wavefront Zernike expansion coefficients at a
+        specific focal plane location h.
+
+        @param h            Focal plane 2D position normalized to the unit disk as an (x,y) tuple.
+        @param wavelength   Wavelength in meters.
+        """
+        if h[0] > 1. or h[1] > 1. or h[0] < -1. or h[1] < -1.:
+            import warnings
+            warnings.warn("h should be normalized to unit disk over the image plane.")
+
+        ### Match argument for galsim.optics.wavefront with indices in the Noll convention
+        ### See galsim.optics.wavefront for the description of the index labels for the zernike modes.
+        ### Index '0' is not used - it's a placeholder so we can number the
+        ### Zernike modes starting with '1'.
+        ### At '3rd order' in the wavefront expansion, we need the first 11 Zernike terms,
+        ### although the trefoil terms (Zernike index 9,10) are identically zero.
+        zernike_coefs = np.zeros(12, dtype=np.float64)
+
+        ### The aberration coefficients from the bending modes are just sums
+        ### over the coefficients calculated for each surface in the telescope
+        ### model.
+        zernike_coefs[2:12] = np.sum([self.bend[k].get_pupil_coefs(h, wavelength=wavelength,
+            surf_coefs=self.surf_coefs[k]) for k in self.bend.keys()], axis=0)
+        # print("bending mode zernike coefs:\n", zernike_coefs)
+
+        ### Body motion coefficients return values for modes 1-12
+        self.body.set_zernike_coef_params_from_displ(self.misalignments)
+        self.body.print_coefs(h)
+        body_coefs = self.body.get_pupil_coefs(h)
+
+        zernike_coefs[1:12] += body_coefs
+
+        ### Add the aberrations from a focus term
+        # print "focus W220, W040:", self.focus_W220, self.focus_W040
+        zernike_coefs[4] += (np.sqrt(3.)/2.) * (self.focus_W220 + self.focus_W040) / wavelength
+        zernike_coefs[11] += (np.sqrt(5.) / 6.) * self.focus_W040 / wavelength
+
+        return zernike_coefs
+
+
+# ---------------------------------------------------------
+# Level 2: Contributions to optics PSF
+#   - ZernikeCoefsBendingModes
+#   - ZernikeCoefsBodyMotions
+# ---------------------------------------------------------
+class OpticsParameters(object):
+    """
+    Parameters for perturbations of a mirror, including bending modes and body motions.
+
+    Initialize with random draws for each parameter by default unless `set_perts_to_zero`.
+    """
+    def __init__(self, surface="M1", wavelength=622.e-9, rng_seed=None, n_bend_modes=10,
+                 set_perts_to_zero=False):
+        self.surface = surface
+        self.wavelength = wavelength
+
+        self.n_bend_modes = n_bend_modes
+        self.n_body_motions = 2 ### Tilt and decenter
+
+        ### Tilt / decenter displacements.
+        ### The upper bound must be chosen carefully so that the aberrations
+        ### are not too large for the Fourier grid used to compute the PSF.
+        self.sigma_range = {
+            "min": 1.e-9,
+            "max": 4.85e-5, ### ~10 arcseconds
+            "scale": "log"
+            }
+
+        ### Bending mode ranges
+        self.zernike_coef_range = {
+            "min": 1.e-4 * wavelength,
+            "max": 2.e2 * wavelength,
+            "scale": "log"
+            }
+
+        if set_perts_to_zero:
+            self.u_surface = np.zeros(self.n_bend_modes, dtype=np.float64)
+            self.u_body = np.zeros(self.n_body_motions, dtype=np.float64)
+            ### Add some small values to avoid hitting the bottom of the allowed ranges
+            # self.u_surface += 1.e-3
+            # self.u_body += 1.e-3
+        else:
+            np.random.seed(rng_seed)
+            self.u_surface = np.random.uniform(size=self.n_bend_modes)
+            self.u_body = np.random.uniform(size=2)  ## 2 lateral displacements
+
+    def __repr__(self):
+        return "<OpticsParameters> {}, wavelength: {} meters".format(
+            self.surface, self.wavelength)
+
+    def bending_modes(self):
+        return map_unit_to_log_interval(self.u_surface,
+            self.zernike_coef_range["min"],
+            self.zernike_coef_range["max"])
+
+    def body_motions(self):
+        return map_unit_to_log_interval(self.u_body,
+            self.sigma_range["min"],
+            self.sigma_range["max"])
+
+    def get_bend_mode_amplitude(self, index):
+        """
+        Get the amplitude for a single bending mode.
+        """
+        return self.bending_modes()[index]
+
+    def set_bend_mode_amplitude(self, index, value):
+        """
+        Set the value of a single bending mode amplitude.
+        """
+        ui = map_log_interval_to_unit(value,
+            self.zernike_coef_range["min"],
+            self.zernike_coef_range["max"])
+        self.u_surface[index] = ui
+        return None
+
+    def get_body_motion(self, index):
+        return self.body_motions()[index]
+
+    def set_body_motion(self, index, value):
+        ui = map_log_interval_to_unit(value,
+            self.sigma_range["min"],
+            self.sigma_range["max"])
+        self.u_body[index] = ui
+        return None
+
+def map_unit_to_log_interval(u, xmin, xmax):
+    delta = np.log(xmax) - np.log(xmin)
+    return xmin * np.exp(delta * u)
+
+def map_log_interval_to_unit(val, xmin, xmax):
+    return np.log(val / xmin) / (np.log(xmax) - np.log(xmin))
+
+
+class ZernikeCoefsBendingModes(object):
+    """
+    Field-dependent Zernike coefficients in the exit pupil induced by bending modes
+    (expanded in Zernike polynomials) on a mirror.
+
+    Ref. [6], Table I.3, I.4, Appendix A
+        See also Eqs (2.2) and (2.3)
+    """
+    def __init__(self, a=1.0, c=0.0):
+        self.a = a
+        self.c = c
+        self.n_modes_large = 5
+        self.n_modes_small = 5
+
+        self.mode_labels = ['Tilt X', 'Tilt Y', 'Defocus',
+                            'Astig 3 at 45 deg', 'Astig 3 at 0 deg',
+                            'Coma 3 at 90 deg', 'Coma 3 at 0 deg',
+                            'Trefoil 5 at 30 deg', 'Trefoil 5 at 0 deg',
+                            'Spherical aberration']
+    def n_modes(self):
+        return self.n_modes_large + self.n_modes_small
+
+    def get_pupil_coefs(self, h, surf_coefs=None, wavelength=500.e-9):
+        """
+        Get Zernike coefficients of the exit pupil wavefront expansion.
+
+        This is the primary interface method for this class.
+        The number of bending modes `n_bend_modes` is hard-coded to 10.
+
+        @param h            The 2D focal plane location normalized to the unit disk.
+        @param surf_coefs   An array of dimension `n_bend_modes` giving the bending
+                            modes Zernike coefficients on the optic surface.
+        @param wavelength   The wavelength in meters.
+        """
+        mode_map = self.mode_mapping_matrix(h)
+        # mode_map = np.eye((10, 10), dtype=np.float64)
+        if surf_coefs is None:
+            surf_coefs = self._draw_zernike_amplitudes(wavelength)
+        # print("surf_coefs:", surf_coefs)
+        return np.dot(mode_map.transpose(), surf_coefs)
+
+    def mode_mapping_matrix(self, h):
+        """
+        The transpose of this output maps Zernike modes on a mirror to Zernike modes in the
+        exit pupil for a field position h.
+
+        @param h 2-component list or array with x,y position in the image plane.
+               Coordinates should be normalized to the unit interval on the image plane.
+
+        Matrix entries are for Zernike modes Z2 - Z11.
+        0  Z2  Tilt X
+        1  Z3  Tilt Y
+        2  Z4  Defocus
+        3  Z5  Astigmatism 3 at 45 deg.
+        4  Z6  Astigmatism 3 at 0 deg.
+        5  Z7  Coma 3 at 90 deg.
+        6  Z8  Coma 3 at 0 deg.
+        7  Z9  Trefoil 5 at 30 deg.
+        8  Z10 Trefoil 5 at 0 deg.
+        9  Z11 Spherical aberration
+
+        References
+        ----------
+        Table I.3 of [6]
+        """
+        n = 10
+        mm = np.zeros((n, n), dtype=np.float64)
+        asq = self.a ** 2
+        acb = asq * self.a
+        csq = self.c ** 2
+        #
+        mm[0, 0] = self.a
+        #
+        mm[1, 1] = self.a
+        #
+        mm[2, 0] = 2. * ksqrt3 * self.a * self.c * h[0]
+        mm[2, 1] = 2. * ksqrt3 * self.a * self.c * h[1]
+        mm[2, 2] = asq
+        #
+        mm[3, 0] = ksqrt6 * self.a * self.c * h[1]
+        mm[3, 1] = ksqrt6 * self.a * self.c * h[0]
+        mm[3, 3] = asq
+        #
+        mm[4, 0] = ksqrt6 * self.a * self.c * h[0]
+        mm[4, 1] = -ksqrt6 * self.a * self.c * h[1]
+        mm[4, 4] = asq
+        #
+        mm[5, 0] = 6. * ksqrt2 * self.a * csq * h[0] * h[1]
+        ### FIXME: Why isn't this zero when c = 0?
+        mm[5, 1] = ksqrt2 * self.a * (9. * csq * h[1] ** 2 +
+            3. * csq * h[0] ** 2 + 2. * asq - 2)
+        mm[5, 2] = 2. * ksqrt6 * asq * self.c * h[1]
+        mm[5, 3] = 2. * ksqrt3 * asq * self.c * h[0]
+        mm[5, 4] = -2. * ksqrt3 * asq * self.c * h[1]
+        mm[5, 5] = acb
+        #
+        ### FIXME: Why isn't this zero when c = 0?
+        mm[6, 0] = ksqrt2 * self.a * (3. * csq * h[1] ** 2 +
+            9. * csq * h[0] ** 2 + 2. * asq - 2)
+        mm[6, 1] = 6. * ksqrt2 * csq * self.a * h[0] * h[1]
+        mm[6, 2] = 2. * ksqrt6 * asq * self.c * h[0]
+        mm[6, 3] = 2. * ksqrt3 * asq * self.c * h[1]
+        mm[6, 4] = 2. * ksqrt3 * asq * self.c * h[0]
+        mm[6, 6] = acb
+        #
+        mm[7, 0] = 6. * ksqrt2 * self.a * csq * h[0] * h[1]
+        mm[7, 1] = 3. * ksqrt2 * self.a * csq * (h[0] ** 2 - h[1] ** 2)
+        mm[7, 3] = 2. * ksqrt3 * asq * self.c * h[0]
+        mm[7, 4] = 2. * ksqrt3 * asq * self.c * h[1]
+        mm[7, 7] = acb
+        #
+        mm[8, 0] = 3. * ksqrt2 * self.a * csq * (h[0] ** 2 - h[1] ** 2)
+        mm[8, 1] = -6. * ksqrt2 * self.a * csq * h[0] * h[1]
+        mm[8, 3] = -2. * ksqrt3 * asq * self.c * h[1]
+        mm[8, 4] = 2. * ksqrt3 * asq * self.c * h[0]
+        mm[8, 8] = acb
+        #
+        mm[9, 0] = 2. * ksqrt5 * self.a * self.c * h[0] * (4. * asq +
+            6. * csq * h[0] ** 2 + 6. * csq * h[1] ** 2 - 3.)
+        mm[9, 1] = 2. * ksqrt5 * self.a * self.c * h[1] * (4. * asq +
+            6. * csq * h[0] ** 2 + 6. * csq * h[1] ** 2 - 3.)
+        mm[9, 2] = ksqrt3 * ksqrt5 * ((4*h[1]**2 + 4*h[0]**2)*csq +
+            asq - 1) * asq
+        mm[9, 3] = 4. * ksqrt6*ksqrt5 * asq * csq * h[0] * h[1]
+        mm[9, 4] = 2. * ksqrt6*ksqrt5 * asq * csq * (h[0]**2 - h[1]**2)
+        mm[9, 5] = 2. * ksqrt2*ksqrt5 * acb*self.c*h[1]
+        mm[9, 6] = 2. * ksqrt2*ksqrt5 * acb*self.c*h[0]
+        mm[9, 9] = asq * asq
+        return mm
+
+    def _draw_zernike_amplitudes(self, wavelength):
+        """
+        Draw random realizations of the Zernike mode amplitudes for the bending
+        modes on the mirror surface.
+
+        This method is mostly for testing and shouldn't be used in physical modeling given
+        the arbitrary ranges of the output coefficients.
+        """
+        print "Drawing new Zernike amplitudes for bending modes"
+        u1 = np.random.uniform(size=self.n_modes_large,
+            low=-2. * wavelength * 10., high=2. * wavelength * 10.)
+        u2 = np.random.uniform(size=self.n_modes_small,
+            low=-0.5 * wavelength * 10., high=0.5 * wavelength * 10.)
+        return np.concatenate((u1, u2))
+
+
+class ZernikeCoeffsBodyMotions(object):
+    """
+    Field-dependent coefficients for low-order Zernike expansion of the pupil wavefront
+    for a mis-aligned system.
+
+    @param telescope_model  Dictionary of telescope configuration parameters. See
+                            `lsst_telescope_model` in this module as an example.
+    """
+    def __init__(self, telescope_model=lsst_telescope_model):
+        self.telescope_model = telescope_model
+
+        self.W = self.telescope_model['W_coefs']
+
+        self.n_surfaces = len(self.telescope_model['W_coefs']['W220'])
+        self.sigma_aligned = np.zeros(shape=(self.n_surfaces, 2), dtype=np.float64)
+        ### self.params set here:
+        self.set_zernike_coef_params_from_displ(self.sigma_aligned)
+        self.params_ref = copy.copy(self.params)
+
+        # self.piston_ref = (self.piston((0,0)) - np.sqrt(3.)*self.defocus((0,0)) +
+            # np.sqrt(5.)*self.spherical_aberr((0,0)))
+        # print "piston ref:", self.piston_ref
+
+    def _V220(self, h):
+        return np.array([self.params['W220'][0] * (h[0] ** 2 + h[1] ** 2) -
+                2.*self.params['W220'][1][0] * h[0] -
+                2.*self.params['W220'][1][1] * h[1] +
+                self.params['W220'][2]])
+
+    def _V222(self, h):
+        x = 0.5 * self.params['W222'][0] * (h[0]*h[0] - h[1]*h[1])
+        y = self.params['W222'][0] * (h[1]*h[0] + h[0]*h[1])
+        #
+        x -= self.params['W222'][1][0] * h[0] - self.params['W222'][1][1] * h[1]
+        y -= self.params['W222'][1][0] * h[1] + self.params['W222'][1][1] * h[0]
+        #
+        x += 0.5 * self.params['W222'][3][0]
+        y += 0.5 * self.params['W222'][3][1]
+        return np.array([x,y])
+
+    def piston(self, h):
+        """
+        Coefficient C1 for the Zernike series in the Noll convention
+
+        This Zernike mode gets contributions from the Hopkins terms:
+            piston + defocus + astigmatism + spher. aber. + focus
+        """
+        V200 = 0. # Quadratic piston
+        V220 = self._V220(h)
+        V400 = 0. # Quartic piston
+        V222 = self._V222(h)
+        return (1. / 12.) * (12*V200 + 6*V220 + 12*V400 +
+                3*V222[0]**2 + 3*V222[1]**2 +
+                4*self.params['W040'][0] + 6*self.params['W020'][0])
+
+    def tip_tilt(self, _h):
+        """
+        Coefficients C2, C3 for the Zernike series in the Noll convention
+
+        This Zernike mode gets contributions from the Hopkins terms:
+            tilt + coma + distortion
+        """
+        h = np.array(_h)
+        hsq = h[0] ** 2 + h[1] ** 2
+        V111 = self.params['W111'][0] * h - self.params['W111'][1]
+        V131 = self.params['W131'][0] * h - self.params['W131'][1]
+        Bsq = self.params['W311'][3]
+        V311 = (self.params['W311'][0] * hsq * h -
+            2 * np.dot(h,self.params['W311'][1]) * h +
+            2 * self.params['W311'][2] * h -
+            hsq * self.params['W311'][1] +
+            np.array([Bsq[0]*h[0] + Bsq[1]*h[1], Bsq[1]*h[0]-Bsq[0]*h[1]]) -
+            self.params['W311'][4]
+            )
+        return (1./12.) * (3.*V111 + 2.*V131 + 3.*V311)
+
+    def defocus(self, h):
+        """
+        Coefficient C4 for the Zernike series in the Noll convention
+
+        See Table 3.4 of Ref. [3]
+        """
+        C4 = (self._V220(h) + self.params['W020'][0] + self.params['W040'][0])
+        V222 = self._V222(h)
+        C4 += V222[0] ** 2 + V222[1] ** 2
+        return C4 / (np.sqrt(3.)*4.)
+
+    def astigmatism(self, h):
+        """
+        Coefficients C5, C6 for the Zernike series in the Noll convention
+
+        See Table 3.4 of Ref. [3]
+        """
+        # C5 = 2. * self.params['W222'][0] * h[0] * h[1]
+        # C5 += self.params['W222'][1][0] * h[0]
+        # C5 += self.params['W222'][1][1] * h[1]
+        # C5 += self.params['W222'][3][0]
+        # #
+        # C6 = self.params['W222'][0] * (h[0] ** 2 - h[1] ** 2)
+        # C6 -= self.params['W222'][1][0] * h[1]
+        # C6 += self.params['W222'][1][1] * h[0]
+        # C6 += self.params['W222'][3][1]
+        # return np.array([C5, C6]) * np.sqrt(3./2.) / 6.
+        V222 = self._V222(h)
+        C5 = V222[1]
+        C6 = V222[0]
+        return np.array([C5, C6]) / np.sqrt(6.)
+
+    def coma(self, h):
+        """
+        Coefficients C7, C8 for the Zernike series in the Noll convention
+
+        See Table 3.4 of Ref. [3]
+        """
+        C7 = self.params['W131'][0] * h[1] - self.params['W131'][1][1]
+        #
+        C8 = self.params['W131'][0] * h[0] - self.params['W131'][1][0]
+        return np.array([C7, C8]) * np.sqrt(2)/12.
+
+    def trefoil(self, h):
+        """
+        Coefficient C9, C10 for the Zernike series in the Noll convention
+
+        See Table 3.6 of Ref. [3]
+        """
+        ### Trefoil is zero at 3rd order
+        C9 = 0.
+        C10 = 0.
+        return np.array([C9, C10])
+
+    def spherical_aberr(self, h=None):
+        """
+        Coefficient C11 for the Zernike series in the Noll convention
+
+        See Table 3.1 of Ref. [3]
+        """
+        return np.array([self.params['W040'][0]]) / (np.sqrt(5.) * 6.)
+
+    def print_coefs(self, h):
+        print "(C1)   Piston:           ", self.piston(h)
+        print "(C2,3) Tip / tilt:       ", self.tip_tilt(h)
+        print "(C4)   Defocus:          ", self.defocus(h)
+        print "(C5,6) Astigmatism:      ", self.astigmatism(h)
+        print "(C7,8) Coma:             ", self.coma(h)
+        print "(C11)  Spherical Aberr.: ", self.spherical_aberr()
+        return None
+
+    def get_pupil_coefs(self, h):
+        """
+        Compute coefficients with the reference design subtracted off.
+
+        This is the primary interface routine for this class.
+
+        Order of output terms:
+        piston
+        tip/tilt
+        defocus
+        astigmatism (2 terms)
+        coma (2 terms)
+        trefoil (2 terms)
+        spherical aberration
+        """
+        modes = ['piston', 'tip_tilt', 'defocus', 'astigmatism', 'coma',
+                 'trefoil', 'spherical_aberr']
+        # params = copy.copy(self.params)
+        # self.params = copy.copy(self.params_ref)
+        # coefs_ref = [self.__getattribute__(mode)(h) for mode in modes]
+        # self.params = params
+        coefs = [self.__getattribute__(mode)(h) for mode in modes]
+        # return np.concatenate([coefs[i] - coefs_ref[i] for i in xrange(len(modes))])
+        return np.concatenate(coefs)
+
+    def merit_function(self, h):
+        coefs = self.get_pupil_coefs(h)
+        return np.sqrt(np.sum([x ** 2 for x in coefs]))
+
+    def set_zernike_coef_params_from_displ(self, sigma):
+        """
+        Calculate Zernike expansion coefficients for the exit pupil wavefront
+        given displacemnts `sigma` for each optical element.
+
+        This calculates the A, B, C, ... vectors from Ref. [3], Table 3.3
+
+        @param sigma    Focal plane displacements in radians.
+                        Must have shape (self.n_surfaces, 2)
+        """
+        sigma_sq = np.diag(np.dot(sigma, sigma.transpose()))
+        self.params = {
+            lab: [np.sum(self.W[lab]), # W
+                  np.dot(self.W[lab], sigma), # A
+                  np.sum(self.W[lab] * sigma_sq), # B
+                  np.dot(self.W[lab],
+                         np.column_stack((sigma[:,0]**2 - sigma[:,1]**2,
+                                          2*sigma[:,0]*sigma[:,1]))), # B^2
+                  np.dot(self.W[lab] * sigma_sq, sigma) # C
+                  ]
+            for lab in ["W020", "W111", "W220", "W311", "W131", "W040", "W222"]
+        }
+        return None
