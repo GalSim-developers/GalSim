@@ -754,9 +754,9 @@ def test_dep_scene():
                      file_name='real_galaxy_catalog_example.fits',
                      dir=datapath, exclude_fail=False)  # i.e. leave exclude_bad=True
     assert cat2.nobjects>=cat.nobjects
-    # Equivalent to current exclusion_level='bad_ps'
+    # Equivalent to current exclusion_level='bad_stamp'
     cat3 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
-                                dir=datapath, exclusion_level='bad_ps')
+                                dir=datapath, exclusion_level='bad_stamp')
     assert cat2.nobjects==cat3.nobjects
 
     # Just exclude_fail=True

@@ -128,9 +128,9 @@ class COSMOSCatalog(object):
     @param exclusion_level  Level of cuts to make on the galaxies based on the quality of postage
                             stamp definition and/or parametric fit quality.  Options:
                             "none": No cuts.
-                            "bad_ps": Apply cuts to eliminate galaxies that have failures in postage
-                                      stamp definition.  These cuts may also eliminate a small
-                                      subset of the good postage stamps as well.
+                            "bad_stamp": Apply cuts to eliminate galaxies that have failures in 
+                                         postage stamp definition.  These cuts may also eliminate a
+                                         small subset of the good postage stamps as well.
                             "bad_fits": Apply cuts to eliminate galaxies that have failures in the
                                         parametric fits.  These cuts may also eliminate a small
                                         subset of the good parametric fits as well.
@@ -181,7 +181,7 @@ class COSMOSCatalog(object):
             if exclude_bad is False and exclude_fail is False:
                 exclusion_level = 'none'
             elif exclude_fail is False:  # implying exclude_bad=True is intended
-                exclusion_level = 'bad_ps'
+                exclusion_level = 'bad_stamp'
             elif exclude_bad is False:   # implying exclude_fail=True is intended
                 exclusion_level = 'bad_fits'
             # else leave exclusion_level as 'marginal'
@@ -189,7 +189,7 @@ class COSMOSCatalog(object):
         from galsim._pyfits import pyfits
         self.use_real = use_real
 
-        if exclusion_level not in ['none', 'bad_ps', 'bad_fits', 'marginal']:
+        if exclusion_level not in ['none', 'bad_stamp', 'bad_fits', 'marginal']:
             raise ValueError("Invalid value of exclusion_level: %s"%exclusion_level)
 
         # Start by parsing the file names, since we'll need the image_dir below.
@@ -249,7 +249,7 @@ class COSMOSCatalog(object):
         self.orig_index = np.arange(len(self.param_cat))
         mask = np.ones(len(self.orig_index), dtype=bool)
 
-        if exclusion_level in ['marginal', 'bad_ps']:
+        if exclusion_level in ['marginal', 'bad_stamp']:
             # First, read in what we need to impose selection criteria, if the appropriate
             # exclusion_level was chosen.
             k = full_file_name.find('.fits')
