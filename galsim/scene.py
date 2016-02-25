@@ -38,8 +38,8 @@ class COSMOSCatalog(object):
     default for GalSim v1.3).
 
     Depending on the keyword arguments, particularly `use_real`, the catalog will either have
-    information about real galaxies, or parametric ones.  To use this with either type of galaxies,
-    you need to get the COSMOS datasets in the format that GalSim recognizes; see
+    information about real galaxies, and/or parametric ones.  To use this with either type of
+    galaxies, you need to get the COSMOS datasets in the format that GalSim recognizes; see
 
         https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy-Data
 
@@ -124,7 +124,10 @@ class COSMOSCatalog(object):
                             image files.  [default: image_dir]
     @param use_real         Enable the use of realistic galaxies?  [default: True]
                             If this parameter is False, then `makeGalaxy(gal_type='real')` will
-                            not be allowed.
+                            not be allowed, and there will be a (modest) decrease in RAM and time
+                            spent on I/O when initializing the COSMOSCatalog, and if the real
+                            catalog is not available for some reason, it will still be possible to
+                            make parametric images.
     @param exclusion_level  Level of additional cuts to make on the galaxies based on the quality 
                             of postage stamp definition and/or parametric fit quality [beyond the
                             minimal cuts imposed when making the catalog - see Mandelbaum et
