@@ -198,8 +198,8 @@ class COSMOSCatalog(object):
             raise ValueError("Invalid value of exclusion_level: %s"%exclusion_level)
 
         # Start by parsing the file names, since we'll need the image_dir below.
-        full_file_name, full_image_dir, _, use_sample = galsim.real._parse_files_dirs(
-            file_name, image_dir, dir, noise_dir, sample)
+        full_file_name, full_image_dir, _, self.use_sample = \
+            galsim.real._parse_files_dirs(file_name, image_dir, dir, noise_dir, sample)
 
         if self.use_real:
             if not _nobjects_only:
@@ -284,7 +284,7 @@ class COSMOSCatalog(object):
                 # will first set that column to 1.e-5.  We choose a sample-dependent mask ratio cut,
                 # since this depends on the peak object flux, which will differ for the two samples
                 # (and we can't really cut on this for arbitrary user-defined samples).
-                if use_sample == "23.5":
+                if self.use_sample == "23.5":
                     cut_ratio = 0.2
                     sn_limit = 20.0
                 else:
@@ -451,7 +451,9 @@ class COSMOSCatalog(object):
                                 ridiculous choice.]
         @param deep             Modify fluxes and sizes of galaxies from the F814W<23.5 sample in
                                 order to roughly simulate an F814W<25 sample but with higher S/N, as
-                                in GREAT3? [default: False]
+                                in GREAT3? [default: False]  Note that this keyword will be ignored
+                                (except for issuing a warning) if the input catalog already
+                                represents the F814W<25.2 sample.
         @param sersic_prec      The desired precision on the Sersic index n in parametric galaxies.
                                 GalSim is significantly faster if it gets a smallish number of
                                 Sersic values, so it can cache some of the calculations and use
@@ -520,11 +522,18 @@ class COSMOSCatalog(object):
         # If trying to use the 23.5 sample and "fake" a deep sample, rescale the size and flux as
         # suggested in the GREAT3 handbook.
         if deep:
-            # Rescale the flux to get a limiting mag of 25 in F814W when starting with a limiting
-            # mag of 23.5.  Make the galaxies a factor of 0.6 smaller and appropriately fainter.
-            flux_factor = 10.**(-0.4*1.5)
-            size_factor = 0.6
-            gal_list = [ gal.dilate(size_factor) * flux_factor for gal in gal_list ]
+            if self.use_sample == '23.5':
+                # Rescale the flux to get a limiting mag of 25 in F814W when starting with a
+                # limiting mag of 23.5.  Make the galaxies a factor of 0.6 smaller and appropriately
+                # fainter.
+                flux_factor = 10.**(-0.4*1.5)
+                size_factor = 0.6
+                gal_list = [ gal.dilate(size_factor) * flux_factor for gal in gal_list ]
+            else:
+                import warnings
+                warnings.warn(
+                    'Ignoring `deep` argument, because the sample being used already \n'+
+                    'corresponds to a flux limit of F814W<25.2')
 
         if hasattr(index, '__iter__'):
             return gal_list
@@ -807,11 +816,18 @@ class COSMOSCatalog(object):
         # If trying to use the 23.5 sample and "fake" a deep sample, rescale the size and flux as
         # suggested in the GREAT3 handbook.
         if deep:
-            # Rescale the flux to get a limiting mag of 25 in F814W when starting with a limiting
-            # mag of 23.5.  Make the galaxies a factor of 0.6 smaller and appropriately fainter.
-            flux_factor = 10.**(-0.4*1.5)
-            size_factor = 0.6
-            gal = gal.dilate(size_factor) * flux_factor
+            if self.use_sample == '23.5':
+                # Rescale the flux to get a limiting mag of 25 in F814W when starting with a
+                # limiting mag of 23.5.  Make the galaxies a factor of 0.6 smaller and appropriately
+                # fainter.
+                flux_factor = 10.**(-0.4*1.5)
+                size_factor = 0.6
+                gal = gal.dilate(size_factor) * flux_factor
+            else:
+                import warnings
+                warnings.warn(
+                    'Ignoring `deep` argument, because the sample being used already \n'+
+                    'corresponds to a flux limit of F814W<25.2')
 
         return gal
 
