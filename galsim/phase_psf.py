@@ -285,19 +285,19 @@ class AtmosphericScreen(object):
             self.advance()
         return _nstep*self.time_step  # return the time *actually* advanced
 
-    # Both types of atmospheric screens determine their pupil scales (essentially stepK()) from the
-    # Kolmogorov profile with matched Fried parameter r0.
-    def pupil_scale(self, lam, diam, scale_unit=galsim.arcsec):
+    # Atmospheric screens determine their pupil scales (essentially stepK()) from the
+    # Kolmogorov profile with appropriate Fried parameter r0 and wavelength lam.
+    def pupil_scale(self, **kwargs):
         """Compute a good pupil_scale in meters for this atmospheric layer.
 
         @param lam         Wavelength in nanometers.
-        @param diam        Diameter of aperture in meters.
         @param scale_unit  Sky coordinate units of output profile. [Default: galsim.arcsec]
         @returns  Good pupil scale size in meters.
         """
+        lam = kwargs['lam']
+        scale_unit = kwargs.get('scale_unit', galsim.arcsec)
         obj = galsim.Kolmogorov(lam=lam, r0=self.r0_500 * (lam/500.0)**(6./5))
-        stepk = obj.stepK() * lam*1.e-9 * galsim.radians / scale_unit
-        return stepk / (2 * np.pi)
+        return obj.stepK() * lam*1.e-9 * galsim.radians / scale_unit / (2 * np.pi)
 
     def wavefront(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
         """ Compute wavefront due to phase screen.
@@ -503,17 +503,21 @@ class OpticalScreen(object):
     # def __ne__(self, other):
     #     return not self == other
 
-    def pupil_scale(self, lam, diam, scale_unit=galsim.arcsec):
+    def pupil_scale(self, **kwargs):
         """Compute a good pupil_scale in meters for this phase screen.
 
         @param lam         Wavelength in nanometers.
-        @param diam        Diameter of aperture in meters.
+        @param diam        Aperture diameter in meters.
+        @param obscuration Fractional linear aperture obscuration. [Default: 0.0]
         @param scale_unit  Sky coordinate units of output profile. [Default: galsim.arcsec]
         @returns  Good pupil scale size in meters.
         """
-        obj = galsim.Airy(lam=lam, diam=diam)
-        stepk = obj.stepK() * lam*1.e-9 * galsim.radians / scale_unit
-        return stepk / (2 * np.pi)
+        lam = kwargs['lam']
+        diam = kwargs['diam']
+        obscuration = kwargs.get('obscuration', 0.0)
+        scale_unit = kwargs.get('scale_unit', galsim.arcsec)
+        obj = galsim.Airy(lam=lam, diam=diam, obscuration=obscuration)
+        return obj.stepK() * lam*1.e-9 * galsim.radians / scale_unit / (2 * np.pi)
 
     def wavefront(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
         """ Compute wavefront due to phase screen.
@@ -757,6 +761,16 @@ class PhaseScreenList(object):
         """Effective r0_500 for set of screens in list that define an r0_500 attribute."""
         return sum(l.r0_500**(-5./3) for l in self if hasattr(l, 'r0_500'))**(-3./5)
 
+    def pupil_scale(self, **kwargs):
+        # Generically, Galsim propagates stepK() for convolutions using
+        #   scale = sum(s**-2 for s in scales)**(-0.5)
+        # We're not actually doing convolution between screens here, though.  In fact, the right
+        # relation for Kolmogorov screens uses exponents -5./3 and -3./5:
+        #   scale = sum(s**(-5./3) for s in scales)**(-3./5)
+        # Since most of the layers in a PhaseScreenList are likely to be (nearly) Kolmogorov
+        # screens, we'll use that relation.
+        return sum(layer.pupil_scale(**kwargs)**(-5./3) for layer in self)**(-3./5)
+
 
 class PhaseScreenPSF(GSObject):
     """A PSF surface brightness profile constructed by integrating over time the instantaneous PSF
@@ -854,7 +868,7 @@ class PhaseScreenPSF(GSObject):
         # Note _pupil_plane_size sets the size of the array defining the pupil, which will generally
         # be somewhat larger than twice the diameter of the pupil itself.
         if _pupil_plane_size is None:
-            _pupil_plane_size = 2 * self.diam * self.pad_factor
+            _pupil_plane_size = 2 * self.diam * self.oversampling
         self._npix = galsim._galsim.goodFFTSize(int(np.ceil(_pupil_plane_size/self._pupil_scale)))
         self._pupil_plane_size = self._npix * self._pupil_scale
         self.scale = 1e-9*self.lam/self._pupil_plane_size * galsim.radians / self.scale_unit
