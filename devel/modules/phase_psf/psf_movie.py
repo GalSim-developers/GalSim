@@ -10,13 +10,13 @@ from astropy.utils.console import ProgressBar
 def make_movie(args):
     rng = galsim.BaseDeviate(args.seed)
     # GalSim Atmospheric PSF code
-    vel = []
+    spd = []
     dirn = []
     for i in xrange(args.nlayers):
-        vel.append(galsim.UniformDeviate(rng)()*5.0)
+        spd.append(galsim.UniformDeviate(rng)()*5.0)
         dirn.append(galsim.UniformDeviate(rng)()*360*galsim.degrees)
 
-    atm = galsim.Atmosphere(r0_500=args.r0_500, velocity=vel, direction=dirn, rng=rng,
+    atm = galsim.Atmosphere(r0_500=args.r0_500, speed=spd, direction=dirn, rng=rng,
                             time_step=args.time_step, screen_size=args.screen_size,
                             screen_scale=args.screen_scale)
 
@@ -45,9 +45,9 @@ def make_movie(args):
         with writer.saving(fig, args.outfile, 100):
             for i in xrange(nstep):
                 # GalSim PSF code
-                psf = atm.getPSF(exptime=args.time_step, diam=args.diam,
-                                 obscuration=args.obscuration, pad_factor=args.pad_factor,
-                                 oversampling=args.oversampling)
+                psf = atm.makePSF(exptime=args.time_step, diam=args.diam,
+                                  obscuration=args.obscuration, pad_factor=args.pad_factor,
+                                  oversampling=args.oversampling)
                 psfim = psf.drawImage(nx=args.nx, ny=args.nx, scale=args.scale)
                 if args.accumulate:
                     imgsum += psfim.array
