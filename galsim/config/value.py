@@ -64,6 +64,7 @@ def ParseValue(config, key, base, value_type):
         is_seq = param['type'] == 'Sequence'
         # Note: this call will also set base['index_key'] and base['rng'] to the right values
         index, index_key = _get_index(param, base, is_seq)
+        #print 'index, index_key = ',index,index_key
 
         if index is None:
             # This is probably something artificial where we aren't keeping track of indices.

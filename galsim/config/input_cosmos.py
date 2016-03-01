@@ -26,8 +26,8 @@ from .input import RegisterInputType, InputLoader
 class COSMOSLoader(InputLoader):
     def setupImage(self, cosmos_cat, config, base, logger):
         if logger:
-            logger.info("COSMOS catalog has %d total objects of which %d passed the initial cuts.",
-                        cosmos_cat.getNTot(), cosmos_cat.getNObjects())
+            logger.info("file %d: COSMOS catalog has %d total objects; %d passed initial cuts.",
+                        base['file_num'], cosmos_cat.getNTot(), cosmos_cat.getNObjects())
 
 RegisterInputType('cosmos_catalog', COSMOSLoader(galsim.COSMOSCatalog, ['COSMOSGalaxy']))
 
