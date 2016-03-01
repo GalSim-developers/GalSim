@@ -861,7 +861,7 @@ class PhaseScreenPSF(GSObject):
             #   scale = sum(s**(-5./3) for s in scales)**(-3./5)
             # Since most of the layers in a PhaseScreenList are likely to be (nearly) Kolmogorov
             # screens, we'll use that relation.
-            _pupil_scale = (sum(layer.pupil_scale(lam, diam)**(-5./3)
+            _pupil_scale = (sum(layer.pupil_scale(lam=lam, diam=diam)**(-5./3)
                                 for layer in screen_list))**(-3./5)
             _pupil_scale /= self.pad_factor
         self._pupil_scale = _pupil_scale
