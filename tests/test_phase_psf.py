@@ -71,7 +71,7 @@ def test_phase_screen_list():
     atm4.append(atm[-1])
     assert atm == atm4
 
-    aper = galsim.Aperture(20, 200)
+    aper = galsim.Aperture(20, npix=256)
     wf = atm.wavefront(aper)
     wf2 = atm2.wavefront(aper)
     wf3 = atm3.wavefront(aper)
@@ -83,7 +83,8 @@ def test_phase_screen_list():
 
     # Check some actual derived PSFs too, not just phase screens.
     atm.reset()
-    kwargs = dict(exptime=0.06, diam=4.0, _pupil_plane_size=6.0, _pupil_scale=6.0/192)
+    kwargs = dict(exptime=0.06, diam=4.0, pupil_plane_size=6.0, pupil_scale=6.0/192)
+
     psf = atm.makePSF(**kwargs)
 
     # Need to reset atm2 since both atm and atm2 reference the same layer objects (not copies).
@@ -177,7 +178,7 @@ def test_phase_psf_batch():
     theta_x = [i * galsim.arcsec for i in xrange(NPSFs)]
     theta_y = [i * galsim.arcsec for i in xrange(NPSFs)]
 
-    kwargs = dict(exptime=exptime, diam=4.0, _pupil_plane_size=6.0, _pupil_scale=6.0/192)
+    kwargs = dict(exptime=exptime, diam=4.0, pupil_plane_size=6.0, pupil_scale=6.0/192)
 
     t3 = time.time()
     psfs = atm.makePSF(theta_x=theta_x, theta_y=theta_y, **kwargs)
