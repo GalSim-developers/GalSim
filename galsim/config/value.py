@@ -167,23 +167,26 @@ def ParseValue(config, key, base, value_type):
 
     return val, safe
 
-def GetCurrentValue(key, base, value_type=None, return_safe=False):
+def GetCurrentValue(key, config, value_type=None, base=None, return_safe=False):
     """@brief Get the current value of another config item given the key name.
 
     @param key          The key value in the dict to get the current value of.
-    @param base         The base config dict.
+    @param config       The config dict from which to get the key.
     @param value_type   The value_type expected.  [default: None, which means it won't check
                         that the value is the right type.]
+    @param base         The base config dict.  [default: None, which means use base=config]
     @param return_safe  If True, also return the current_safe value: (value, safe).
 
     @returns the current value (or value, safe if return_safe = True)
     """
     #print 'GetCurrent %s.  value_type = %s'%(key,value_type)
+    if base is None:
+        base = config
 
     # This next bit is basically identical to the code for Dict.get(key) in catalog.py.
     # Make a list of keys
     chain = key.split('.')
-    d = base
+    d = config
 
     # We may need to make one adjustment.  If the first item in the key is 'input', then
     # the key is probably wrong relative to the current config dict.  We make each input
@@ -196,6 +199,8 @@ def GetCurrentValue(key, base, value_type=None, return_safe=False):
     if chain[0] == 'input' and len(chain) > 2:
         try:
             k = int(chain[2])
+        except KeyboardInterrupt:
+            raise
         except:
             chain.insert(2,0)
     #print 'chain = ',chain
@@ -434,6 +439,8 @@ def _GetAngleValue(param):
         value = float(value)
         unit = galsim.angle.get_angle_unit(unit)
         return galsim.Angle(value, unit)
+    except KeyboardInterrupt:
+        raise
     except Exception as e:
         raise AttributeError("Unable to parse %s as an Angle."%param)
 
@@ -444,11 +451,15 @@ def _GetPositionValue(param):
     try:
         x = float(param[0])
         y = float(param[1])
+    except KeyboardInterrupt:
+        raise
     except:
         try:
             x, y = param.split(',')
             x = float(x.strip())
             y = float(y.strip())
+        except KeyboardInterrupt:
+            raise
         except:
             raise AttributeError("Unable to parse %s as a PositionD."%param)
     return galsim.PositionD(x,y)
@@ -466,12 +477,16 @@ def _GetBoolValue(param):
             try:
                 val = bool(int(param))
                 return val
+            except KeyboardInterrupt:
+                raise
             except:
                 raise AttributeError("Unable to parse %s as a bool."%param)
     else:
         try:
             val = bool(param)
             return val
+        except KeyboardInterrupt:
+            raise
         except:
             raise AttributeError("Unable to parse %s as a bool."%param)
 

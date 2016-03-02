@@ -130,6 +130,8 @@ def _GenerateFromEval(config, base, value_type):
             val = value_type(val)
         #print base['obj_num'],'Simple Eval(%s) = %s'%(string,val)
         return val, safe
+    except KeyboardInterrupt:
+        raise
     except:
         pass
 
@@ -168,6 +170,8 @@ def _GenerateFromEval(config, base, value_type):
         if value_type is not None:
             val = value_type(val)
         return val, False
+    except KeyboardInterrupt:
+        raise
     except:
         raise ValueError("Unable to evaluate string %r as a %s"%(string,value_type))
 

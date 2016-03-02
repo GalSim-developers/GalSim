@@ -295,7 +295,7 @@ def _BuildAdd(config, base, ignore, gsparams, logger):
     for i in range(len(items)):
         gsobject, safe1 = BuildGSObject(items, i, base, gsparams, logger)
         # Skip items with flux=0
-        if 'flux' in items[i] and galsim.config.GetCurrentValue('flux',items[i],float) == 0.:
+        if 'flux' in items[i] and galsim.config.GetCurrentValue('flux',items[i],float,base) == 0.:
             if logger:
                 logger.debug('obj %d: Not including component with flux == 0',base['obj_num'])
             continue
@@ -312,7 +312,7 @@ def _BuildAdd(config, base, ignore, gsparams, logger):
         if ('flux' not in items[-1]) and all('flux' in item for item in items[0:-1]):
             sum = 0
             for item in items[0:-1]:
-                sum += galsim.config.GetCurrentValue('flux',item,float)
+                sum += galsim.config.GetCurrentValue('flux',item,float,base)
             f = 1. - sum
             if (f < 0):
                 import warnings

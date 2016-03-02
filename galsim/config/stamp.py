@@ -391,6 +391,8 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
 
             return im, current_var
 
+        except KeyboardInterrupt:
+            raise
         except Exception as e:
             if itry == ntries-1:
                 # Then this was the last try.  Just re-raise the exception.

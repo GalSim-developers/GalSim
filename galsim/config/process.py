@@ -332,6 +332,8 @@ def UpdateNProc(nproc, ntot, config, logger=None):
             nproc = cpu_count()
             if logger:
                 logger.debug("ncpu = %d.",nproc)
+        except KeyboardInterrupt:
+            raise
         except:
             if logger:
                 logger.warn("nproc <= 0, but unable to determine number of cpus.")
@@ -722,6 +724,8 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                     result = job_func(**kwargs)
                     t2 = time.time()
                     results_queue.put( (result, k, t2-t1, proc) )
+            except KeyboardInterrupt:
+                raise
             except Exception as e:
                 import traceback
                 tr = traceback.format_exc()
@@ -830,6 +834,8 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                     if done_func is not None:
                         done_func(logger, None, k, result, t2-t1)
                     results[k] = result
+                except KeyboardInterrupt:
+                    raise
                 except Exception as e:
                     import traceback
                     tr = traceback.format_exc()
