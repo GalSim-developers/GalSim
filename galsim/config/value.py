@@ -200,6 +200,8 @@ def GetCurrentValue(key, base, value_type=None, return_safe=False):
             chain.insert(2,0)
     #print 'chain = ',chain
 
+    use_index_key = None
+
     while len(chain):
         k = chain.pop(0)
         #print 'k = ',k
@@ -209,8 +211,17 @@ def GetCurrentValue(key, base, value_type=None, return_safe=False):
         except ValueError: pass
 
         if chain: 
-            # If there are more keys, just set d to the next in the chanin.
+            # If there are more keys, just set d to the next in the chain.
             d = d[k]
+
+            # One subtlety here.  Normally the normal tree traversal will keep track of the index
+            # key so that all lower levels inherit an index_key specification at a higher level.
+            # This can circumvent that, so we need to do it here as well.  The easiest way to
+            # handle it is to watch for an index_key specification along our chain, and if there
+            # is one, set that in the final dict.
+            if 'index_key' in d:
+                use_index_key = d['index_key']
+                #print 'Set use_index_key = ',use_index_key
         else:
             if not isinstance(d[k], dict):
                 if value_type is None:
@@ -225,7 +236,10 @@ def GetCurrentValue(key, base, value_type=None, return_safe=False):
                     #print 'Not dict. Parse value normally'
                     val, safe = ParseValue(d, k, base, value_type)
             else:
-                if 'current_val' in d[k]:
+                if use_index_key is not None and 'index_key' not in d[k]:
+                    #print 'Set d[k] index_key to ',use_index_key
+                    d[k]['index_key'] = use_index_key
+                if value_type is None and 'current_val' in d[k]:
                     # If there is already a current_val, use it.
                     #print 'Dict with current_val.  Use it: ',d[k]['current_val']
                     val = d[k]['current_val']
@@ -234,7 +248,7 @@ def GetCurrentValue(key, base, value_type=None, return_safe=False):
                     # Otherwise, parse the value for this key
                     #print 'Parse value normally'
                     val, safe = ParseValue(d, k, base, value_type)
-            #print base['obj_num'],'Current key = %s, value = %s'%(key,val)
+            #print base.get('obj_num',''),'Current key = %s, value = %s'%(key,val)
             if return_safe:
                 return val, safe
             else:
