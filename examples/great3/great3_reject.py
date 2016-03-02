@@ -41,14 +41,14 @@ def Great3Reject(config, base, value_type):
         psf_image = psf.drawImage(scale=im.scale)
         base['cached_psf_image'] = psf_image
         base['cached_psf'] = psf
-        print 'psf fwhm = ',psf_image.calculateFWHM()
+        #print 'psf fwhm = ',psf_image.calculateFWHM()
     # We will define resolution using the resolution factor from re-Gaussianization, which uses a
     # trace-based size estimate of the post-seeing object.  For simplicity, we run
     # re-Gaussianization directly.
     res = galsim.hsm.EstimateShear(im, psf_image, strict='False')
     # Cut based on the resolution failure, or if the measurement simply failed.
     if res.error_message != "" or res.resolution_factor < 1./3:
-        print 'Resolution rejection: ',res.error_message, 'resolution =',res.resolution_factor
+        #print 'Resolution rejection: ',res.error_message, 'resolution =',res.resolution_factor
         reject = True
 
     # Next we check the SNR using the idealized SNR estimator used for GREAT3.  For a derivation of
@@ -86,10 +86,10 @@ def Great3Reject(config, base, value_type):
     # We nominally used a cut at SNR=17 (in an attempt to compensate for the SNR estimator being
     # overly optimistic) and also eliminated SNR>100.
     if snr < 17.:
-        print 'Low SNR rejection: ',snr
+        #print 'Low SNR rejection: ',snr
         reject = True
     if snr > 100.:
-        print 'High SNR rejection: ',snr
+        #print 'High SNR rejection: ',snr
         reject = True
 
     # False here is a "safe" parameter, which tells GalSim not to cache this result to use again
