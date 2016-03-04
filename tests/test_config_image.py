@@ -151,6 +151,8 @@ def test_njobs():
     However, Josh caught a very subtle bug when splitting up cgc.yaml in the examples/great3
     directory.  So this test explicitly checks for that.
     """
+    import time
+    t1 = time.time()
     # The bug was related to using a Current specification in the input field that accessed
     # a value that should have used the index_key = image_num, rather than the default when
     # processing the input field, being index_key = file_num.  Here is a fairly minimal
@@ -212,6 +214,8 @@ def test_njobs():
     np.testing.assert_equal(one01.array, two01.array,
                             err_msg="01 image was different for one job vs two jobs")
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 if __name__ == "__main__":
