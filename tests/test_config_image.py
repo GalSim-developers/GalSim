@@ -229,8 +229,8 @@ def test_ccdnoise():
     image2.fill(0)
     rng.reset(124)
     galsim.config.noise.CCDNoiseBuilder().addNoise(
-            config['image']['noise'],config,image2,rng,
-            current_var = 1.e-20, logger=logger)
+            config['image']['noise'], config, image2, rng,
+            current_var = 1.e-20, draw_method='fft', logger=logger)
 
     print 'Use CCDNoiseBuilder with negligible current_var'
     print 'mean = ',np.mean(image2.array)
@@ -243,8 +243,8 @@ def test_ccdnoise():
     gn = galsim.GaussianNoise(rng=rng, sigma=rn/gain)
     image2.addNoise(gn)
     galsim.config.noise.CCDNoiseBuilder().addNoise(
-            config['image']['noise'],config,image2,rng,
-            current_var = (rn/gain)**2, logger=logger)
+            config['image']['noise'], config, image2, rng,
+            current_var = (rn/gain)**2, draw_method='fft', logger=logger)
 
     print 'Use CCDNoiseBuilder with current_var == read_noise'
     print 'mean = ',np.mean(image2.array)
@@ -260,8 +260,8 @@ def test_ccdnoise():
     gn = galsim.GaussianNoise(rng=rng, sigma=0.5*rn/gain)
     image2.addNoise(gn)
     galsim.config.noise.CCDNoiseBuilder().addNoise(
-            config['image']['noise'],config,image2,rng,
-            current_var = (0.5*rn/gain)**2, logger=logger)
+            config['image']['noise'], config, image2, rng,
+            current_var = (0.5*rn/gain)**2, draw_method='fft', logger=logger)
 
     print 'Use CCDNoiseBuilder with current_var < read_noise'
     print 'mean = ',np.mean(image2.array)
@@ -274,8 +274,8 @@ def test_ccdnoise():
     gn = galsim.GaussianNoise(rng=rng, sigma=2.*rn/gain)
     image2.addNoise(gn)
     galsim.config.noise.CCDNoiseBuilder().addNoise(
-            config['image']['noise'],config,image2,rng,
-            current_var = (2.*rn/gain)**2, logger=logger)
+            config['image']['noise'], config, image2, rng,
+            current_var = (2.*rn/gain)**2, draw_method='fft', logger=logger)
 
     print 'Use CCDNoiseBuilder with current_var > read_noise'
     print 'mean = ',np.mean(image2.array)
