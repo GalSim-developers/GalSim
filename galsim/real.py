@@ -632,9 +632,9 @@ class RealGalaxyCatalog(object):
         return cf
 
     def __repr__(self):
-        s = 'galsim.RealGalaxyCatalog(%r,image_dir=%r'%(self.file_name,self.image_dir)
-        if self.noise_dir != self.image_dir: s += ',noise_dir=%r'%self.noise_dir
-        s += ')'
+        import os
+        dir, file_name = os.path.split(self.file_name)
+        s = 'galsim.RealGalaxyCatalog(%r,dir=%r)'%(file_name, dir)
         return s
 
     def __str__(self):
