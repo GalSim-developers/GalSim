@@ -77,7 +77,7 @@ if __name__ == '__main__':
                         help="Incremental time step for advancing phase screens and accumulating "
                              " instantaneous PSFs in seconds.  Default: 0.03")
     parser.add_argument("--exptime", type=float, default=3.0,
-                        help="Total amount of time to integrate in seconds.  Default: 15.0")
+                        help="Total amount of time to integrate in seconds.  Default: 3.0")
     parser.add_argument("--nx", type=int, default=128,
                         help="Output image dimensions in pixels.  Default: 128")
     parser.add_argument("--scale", type=float, default=0.02,
