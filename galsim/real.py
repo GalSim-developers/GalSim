@@ -281,7 +281,7 @@ class RealGalaxy(GSObject):
                                    +"objects.")
 
     def __repr__(self):
-        s = 'galsim.RealGalaxy(%r, %r, '%(self.catalog, self.index)
+        s = 'galsim.RealGalaxy(%r, index=%r, '%(self.catalog, self.index)
         if self._x_interpolant is not None:
             s += 'x_interpolant=%r, '%self._x_interpolant
         if self._k_interpolant is not None:
@@ -324,6 +324,10 @@ class RealGalaxyCatalog(object):
     there is no functionality that lets this be a FITS data cube, because we assume that the object
     postage stamps will in general need to be different sizes depending on the galaxy size.
 
+    Note that when simulating galaxies based on HST but using either realistic or parametric galaxy
+    models, the COSMOSCatalog class may be more useful.  It allows the imposition of selection
+    criteria and other subtleties that are more difficult to impose with RealGalaxyCatalog.
+
     While you could create your own catalog to use with this class, the typical use cases would
     be to use one of the catalogs that we have created and distributed.  There are three such
     catalogs currently, which can be use with one of the following initializations:
@@ -338,9 +342,9 @@ class RealGalaxyCatalog(object):
                                               dir='path/to/GalSim/examples/data')
 
     2. There are two larger catalogs based on HST observations of the COSMOS field with around
-       26,000 and 56,000 galaxies each.  (The former is a subset of the latter.) For information
-       about how to download these catalogs, see the RealGalaxy Data Download Page on the GalSim
-       Wiki:
+       26,000 and 56,000 galaxies each with a limiting magnitude of F814W=23.5.  (The former is 
+       a subset of the latter.) For information about how to download these catalogs, see the
+       RealGalaxy Data Download Page on the GalSim Wiki:
 
            https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data
 
@@ -350,10 +354,11 @@ class RealGalaxyCatalog(object):
            >>> rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog_23.5.fits',
                                               dir='path/to/download/directory')
 
-       There is also an optional `image_dir` parameter that lets you have the image files in
-       a different location than the catalog.
+    3. There is a catalog containing a random subsample of the HST COSMOS images with a limiting
+       magnitude of F814W=25.2.  More information about downloading these catalogs can be found on
+       the RealGalaxy Data Download page linked above.
 
-    3. Finally, we provide a program that will download the large COSMOS sample for you and
+    4. Finally, we provide a program that will download the large COSMOS sample for you and
        put it in the $PREFIX/share/galsim directory of your installation path.  The program is
 
            galsim_download_cosmos
@@ -367,24 +372,24 @@ class RealGalaxyCatalog(object):
        look for it there.
 
     @param file_name  The file containing the catalog. [default: None, which will look for the
-                      COSMOS catalog in $PREFIX/share/galsim.  It will raise an exception if the
-                      catalog is not there telling you to run galsim_download_cosmos.]
-    @param image_dir  The directory of the image files.  If the string contains '/', then it is an
-                      absolute path, else it is taken to be a relative path from the location of
-                      the catalog file.  [default: None, which means to use the same directory
-                      as the catalog file.]
-    @param dir        The directory of catalog file. [default: None]
+                      F814W<25.2 COSMOS catalog in $PREFIX/share/galsim.  It will raise an
+                      exception if the catalog is not there telling you to run
+                      galsim_download_cosmos.]
+    @param sample     A keyword argument that can be used to specify the sample to use, i.e.,
+                      "23.5" or "25.2".  At most one of `file_name` and `sample` should be
+                      specified.
+                      [default: None, which results in the same default as `file_name=None`.]
+    @param dir        The directory containing the catalog, image, and noise files, or symlinks to
+                      them. [default: None]
     @param preload    Whether to preload the header information.  If `preload=True`, the bulk of
                       the I/O time is in the constructor.  If `preload=False`, there is
                       approximately the same total I/O time (assuming you eventually use most of
                       the image files referenced in the catalog), but it is spread over the
                       various calls to getGal() and getPSF().  [default: False]
-    @param noise_dir  The directory of the noise files if different from the directory of the
-                      image files.  [default: image_dir]
     @param logger     An optional logger object to log progress. [default: None]
     """
     _req_params = {}
-    _opt_params = { 'file_name' : str, 'image_dir' : str , 'dir' : str,
+    _opt_params = { 'file_name' : str, 'sample' : str, 'image_dir' : str , 'dir' : str,
                     'preload' : bool, 'noise_dir' : str }
     _single_params = []
     _takes_rng = False
@@ -392,12 +397,14 @@ class RealGalaxyCatalog(object):
     # _nobject_only is an intentionally undocumented kwarg that should be used only by
     # the config structure.  It indicates that all we care about is the nobjects parameter.
     # So skip any other calculations that might normally be necessary on construction.
-    def __init__(self, file_name=None, image_dir=None, dir=None, preload=False,
+    def __init__(self, file_name=None, sample=None, image_dir=None, dir=None, preload=False,
                  noise_dir=None, logger=None, _nobjects_only=False):
+        if sample is not None and file_name is not None:
+            raise ValueError("Cannot specify both the sample and file_name!")
 
         from galsim._pyfits import pyfits
-        self.file_name, self.image_dir, self.noise_dir = \
-            _parse_files_dirs(file_name, image_dir, dir, noise_dir)
+        self.file_name, self.image_dir, self.noise_dir, _ = \
+            _parse_files_dirs(file_name, image_dir, dir, noise_dir, sample)
 
         self.cat = pyfits.getdata(self.file_name)
         self.nobjects = len(self.cat) # number of objects in the catalog
@@ -626,13 +633,7 @@ class RealGalaxyCatalog(object):
         return cf
 
     def __repr__(self):
-        s = 'galsim.RealGalaxyCatalog(%r,%r'%(self.file_name,self.image_dir)
-        if self.noise_dir != self.image_dir: s += ',noise_dir=%r'%self.noise_dir
-        s += ')'
-        return s
-
-    def __str__(self):
-        return 'galsim.RealGalaxyCatalog(%r)'%(self.file_name)
+        return 'galsim.RealGalaxyCatalog(%r)'%self.file_name
 
     def __eq__(self, other):
         return (isinstance(other, RealGalaxyCatalog) and
@@ -749,19 +750,39 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     # return simulated image
     return image
 
-def _parse_files_dirs(file_name, image_dir, dir, noise_dir):
+def _parse_files_dirs(file_name, image_dir, dir, noise_dir, sample):
+    if image_dir is not None or noise_dir is not None:
+        from .deprecated import depr
+        if image_dir is not None:
+            depr('image_dir', 1.4, 'dir')
+        if noise_dir is not None:
+            depr('noise_dir', 1.4, 'dir')
+
+    if sample is None:
+        if file_name is None:
+            use_sample = '25.2'
+        else:
+            use_sample = None
+    else:
+        use_sample = sample
+        if use_sample != '25.2' and use_sample != '23.5':
+            raise ValueError("Sample name not recognized: %s"%use_sample)
+    # after that piece of code, use_sample is either "23.5", "25.2" (if using one of the default
+    # catalogs) or it is still None, if a file_name was given.
+
     if file_name is None:
         if image_dir is not None:
             raise ValueError('Cannot specify image_dir when using default file_name.')
-        file_name = 'real_galaxy_catalog_23.5.fits'
+        file_name = 'real_galaxy_catalog_' + use_sample + '.fits'
         if dir is None:
-            dir = os.path.join(galsim.meta_data.share_dir, 'COSMOS_23.5_training_sample')
+            dir = os.path.join(galsim.meta_data.share_dir,
+                               'COSMOS_'+use_sample+'_training_sample')
         full_file_name = os.path.join(dir,file_name)
         full_image_dir = dir
         if not os.path.isfile(full_file_name):
             raise RuntimeError('No RealGalaxy catalog found in %s.  '%dir +
-                               'Run the program galsim_download_cosmos to download catalog '+
-                               'and accompanying image files.')
+                               'Run the program galsim_download_cosmos for this sample '+
+                               'to download catalog and accompanying image files.')
     elif dir is None:
         full_file_name = file_name
         if image_dir is None:
@@ -777,18 +798,18 @@ def _parse_files_dirs(file_name, image_dir, dir, noise_dir):
         else:
             full_image_dir = os.path.join(dir,image_dir)
     if not os.path.isfile(full_file_name):
-        raise RuntimeError(full_file_name+' not found.')
+        raise IOError(full_file_name+' not found.')
     if not os.path.isdir(full_image_dir):
-        raise RuntimeError(full_image_dir+' directory does not exist!')
+        raise IOError(full_image_dir+' directory does not exist!')
 
     if noise_dir is None:
         full_noise_dir = full_image_dir
     else:
         if not os.path.isdir(noise_dir):
-            raise RuntimeError(noise_dir+' directory does not exist!')
+            raise IOError(noise_dir+' directory does not exist!')
         full_noise_dir = noise_dir
 
-    return full_file_name, full_image_dir, full_noise_dir
+    return full_file_name, full_image_dir, full_noise_dir, use_sample
 
 
 class ChromaticRealGalaxy(ChromaticSum):

@@ -19,7 +19,7 @@
 A program to download the COSMOS RealGalaxy catalog for use with GalSim.
 """
 
-import os, sys, urllib2, tarfile
+import os, sys, urllib2, tarfile, subprocess, shutil, json
 
 # Since this will be installed in the same directory as our galsim executable,
 # we need to do the same trick about changing the path so it imports the real
@@ -28,6 +28,8 @@ temp = sys.path[0]
 sys.path = sys.path[1:]
 import galsim
 sys.path = [temp] + sys.path
+
+script_name = os.path.basename(__file__)
 
 
 def parse_args():
@@ -44,27 +46,36 @@ def parse_args():
     description += "See https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data\n"
     description += "for more details about the files being downloaded."
     epilog = "Note: The unpacked files total almost 6 GB in size!\n"
-    
+
     try:
         import argparse
-        
+
         # Build the parser and add arguments
         parser = argparse.ArgumentParser(description=description, epilog=epilog, add_help=True)
         parser.add_argument(
             '-v', '--verbosity', type=int, action='store', default=2, choices=(0, 1, 2, 3),
-            help='integer verbosity level: min=0, max=3 [default=2]')
+            help='Integer verbosity level: min=0, max=3 [default=2]')
         parser.add_argument(
             '-f', '--force', action='store_const', default=False, const=True,
-            help='force overwriting the current file if one exists')
+            help='Force overwriting the current file if one exists')
         parser.add_argument(
             '-q', '--quiet', action='store_const', default=False, const=True,
-            help="don't ask about re-downloading an existing file. (implied by verbosity=0)")
+            help="Don't ask about re-downloading an existing file. (implied by verbosity=0)")
         parser.add_argument(
             '-u', '--unpack', action='store_const', default=False, const=True,
-            help='re-unpack the tar file if not downloading')
+            help='Re-unpack the tar file if not downloading')
         parser.add_argument(
-            '-s', '--save', action='store_const', default=False, const=True,
-            help="save the tarball after unpacking.")
+            '--save', action='store_const', default=False, const=True,
+            help="Save the tarball after unpacking.")
+        parser.add_argument(
+            '-d', '--dir', action='store', default=None,
+            help="Install into an alternate directory and link from the share/galsim directory")
+        parser.add_argument(
+            '-s', '--sample', action='store', default='25.2', choices=('23.5', '25.2'),
+            help="Flux limit for sample to download; either 23.5 or 25.2")
+        parser.add_argument(
+            '--nolink', action='store_const', default=False, const=True,
+            help="Don't link to the alternate directory from share/galsim")
         args = parser.parse_args()
 
     except ImportError:
@@ -72,28 +83,38 @@ def parse_args():
         import optparse
 
         # Usage string not automatically generated for optparse, so generate it
-        usage = """usage: galsim_download_cosmos [-h] [-v {0,1,2,3}] [-f] [-q] [-u] [-d]"""
+        usage = "usage: %s [-h] [-v {0,1,2,3}] [-f] [-q] [-u] [-s] [-d] [--nolink]"%script_name
         # Build the parser
         parser = optparse.OptionParser(usage=usage, description=description, epilog=epilog)
         # optparse only allows string choices, so take verbosity as a string and make it int later
         parser.add_option(
             '-v', '--verbosity', type="choice", action='store', choices=('0', '1', '2', '3'),
-            default='2', help='integer verbosity level: min=0, max=3 [default=2]')
+            default='2', help='Integer verbosity level: min=0, max=3 [default=2]')
         parser.add_option(
             '-f', '--force', action='store_const', default=False, const=True,
-            help='force overwriting the current file if one exists')
-        parser.add_argument(
+            help='Force overwriting the current file if one exists')
+        parser.add_option(
             '-q', '--quiet', action='store_const', default=False, const=True,
-            help="don't ask about re-downloading an existing file. (implied by verbosity=0)")
-        parser.add_argument(
+            help="Don't ask about re-downloading an existing file. (implied by verbosity=0)")
+        parser.add_option(
             '-u', '--unpack', action='store_const', default=False, const=True,
             help='Re-unpack the tar file if not downloading')
-        parser.add_argument(
-            '-s', '--save', action='store_const', default=False, const=True,
-            help="save the tarball after unpacking.")
+        parser.add_option(
+            '--save', action='store_const', default=False, const=True,
+            help="Save the tarball after unpacking.")
+        parser.add_option(
+            '-d', '--dir', action='store', default=None,
+            help="Install into an alternate directory and link from the share/galsim directory")
+        parser.add_option(
+            '-s', '--sample', type="choice", action='store', choices=('23.5', '25.2'),
+            default='25.2', help="Flux limit for sample to download; either 23.5 or 25.2")
+        parser.add_option(
+            '--nolink', action='store_const', default=False, const=True,
+            help="Don't link to the alternate directory from share/galsim")
+        (args, posargs) = parser.parse_args()
 
         # Remembering to convert to an integer type
-        args.verbosity = int(args.verbosity) 
+        args.verbosity = int(args.verbosity)
 
     if args.verbosity == 0:
         args.quiet = True
@@ -104,7 +125,7 @@ def parse_args():
 # Based on recipe 577058: http://code.activestate.com/recipes/577058/
 def query_yes_no(question, default="yes"):
     """Ask a yes/no question via raw_input() and return their answer.
-    
+
     "question" is a string that is presented to the user.
     "default" is the presumed answer if the user just hits <Enter>.
         It must be "yes" (the default), "no" or None (meaning
@@ -134,47 +155,34 @@ def query_yes_no(question, default="yes"):
             sys.stdout.write("Please respond with 'yes' or 'no' "\
                              "(or 'y' or 'n').\n")
 
+def ensure_dir(target):
+    d = os.path.dirname(target)
+    if not os.path.exists(d):
+        os.makedirs(d)
 
-def main():
-    args = parse_args()
-
-    # Parse the integer verbosity level from the command line args into a logging_level string
-    import logging
-    logging_levels = { 0: logging.CRITICAL, 
-                       1: logging.WARNING,
-                       2: logging.INFO,
-                       3: logging.DEBUG }
-    logging_level = logging_levels[args.verbosity]
-
-    # Setup logging to go to sys.stdout or (if requested) to an output file
-    logging.basicConfig(format="%(message)s", level=logging_level, stream=sys.stdout)
-    logger = logging.getLogger('galsim')
-    
-    url = "http://great3.jb.man.ac.uk/leaderboard/data/public/COSMOS_23.5_training_sample.tar.gz"
-    file_name = os.path.basename(url)
-    share_dir = galsim.meta_data.share_dir
-    target = os.path.join(share_dir, file_name)
-
-    unpack_dir = target[:-len('.tar.gz')]
-
+def download(url, target, unpack_dir, args, logger):
     logger.info('Downloading from url:\n  %s',url)
-    logger.info('Target location is:\n  %s',target)
+    logger.info('Target location is:\n  %s\n',target)
 
     # See how large the file to be downloaded is.
     u = urllib2.urlopen(url)
     meta = u.info()
-    logger.debug("\nMeta information about url:\n%s",str(meta))
-    file_size = int(meta.getheaders("Content-Length")[0]) / 1024**2
-    logger.info("\nSize of %s: %d MBytes" , file_name, file_size)
+    logger.debug("Meta information about url:\n%s",str(meta))
+    file_size = int(meta.getheaders("Content-Length")[0])
+    file_name = os.path.basename(url)
+    logger.info("Size of %s: %d MBytes" , file_name, file_size/1024**2)
+
+    # Make sure the directory we want to put this file exists.
+    ensure_dir(target)
 
     # Check if the file already exists and if it is the right size
     do_download = True
     if os.path.isfile(target):
         logger.info("")
-        existing_file_size = os.path.getsize(target) / 1024**2
+        existing_file_size = os.path.getsize(target)
         if args.force:
             logger.info("Target file already exists.  Size = %d MBytes.  Forced re-download.",
-                        existing_file_size)
+                        existing_file_size/1024**2)
         elif file_size == existing_file_size:
             if args.quiet:
                 logger.info("Target file already exists.  Not re-downloading.")
@@ -185,73 +193,260 @@ def main():
                 if yn == 'no':
                     do_download = False
         else:
-            logger.warn("Target file already exists, but it seems to be incomplete.")
+            logger.warn("Target file already exists, but it seems to be incomplete or corrupt.")
             if args.quiet:
                 logger.warn("Size of existing file = %d MBytes.  Re-downloading.",
-                            existing_file_size)
+                            existing_file_size/1024**2)
             else:
-                q = "Size of existing file = %d MBytes.  Re-download?"%(existing_file_size)
+                q = "Size of existing file = %d MBytes.  Re-download?"%(existing_file_size/1024**2)
                 yn = query_yes_no(q, default='yes')
                 if yn == 'no':
                     do_download = False
-    elif os.path.isdir(unpack_dir):
+    elif unpack_dir is not None and os.path.isdir(unpack_dir):
         logger.info("")
-        if args.force:
-            logger.info("Target file has already been downloaded and unpacked.  "+
-                        "Forced re-download.")
+
+        # Check that this is the current version.
+        meta_file = os.path.join(unpack_dir, 'meta.json')
+        if os.path.isfile(meta_file):
+            with open(meta_file) as fp:
+                saved_meta_dict = json.load(fp)
+                # Get rid of the unicode
+                saved_meta_dict = dict([ (str(k),str(v)) for k,v in saved_meta_dict.items()])
+            logger.debug("current meta information is %s",saved_meta_dict)
+            meta_dict = dict(meta)
+            logger.debug("url's meta information is %s",meta_dict)
+            obsolete = False
+            for k in meta_dict:
+                if k == 'date':
+                    continue  # This one isn't expected to match.
+                elif k not in saved_meta_dict:
+                    logger.debug("key %s is missing in saved meta information",k)
+                    obsolete = True
+                elif meta_dict[k] != saved_meta_dict[k]:
+                    logger.debug("key %s differs: %s != %s",k,meta_dict[k],saved_meta_dict[k])
+                    obsolete = True
+                else:
+                    logger.debug("key %s matches",k)
         else:
-            if args.quiet:
-                logger.info("Target file has already been downloaded and unpacked.  "+
-                            "Not re-downloading.")
-                do_download = False
-                args.save = True  # Don't try to re-delete it!
+            obsolete = True
+
+        if obsolete:
+            if args.quiet or args.force:
+                logger.info("The version currently on disk is obsolete.  "+
+                            "Downloading new version.")
             else:
-                q = "Target file has already been downloaded and unpacked.  Re-download?"
-                yn = query_yes_no(q, default='no')
+                q = "The version currently on disk is obsolete.  Download new version?"
+                yn = query_yes_no(q, default='yes')
                 if yn == 'no':
                     do_download = False
-                    args.save = True
- 
+        elif args.force:
+            logger.info("Target file has already been downloaded and unpacked.  "+
+                        "Forced re-download.")
+        elif args.quiet:
+            logger.info("Target file has already been downloaded and unpacked.  "+
+                        "Not re-downloading.")
+            do_download = False
+            args.save = True  # Don't delete it!
+        else:
+            q = "Target file has already been downloaded and unpacked.  Re-download?"
+            yn = query_yes_no(q, default='no')
+            if yn == 'no':
+                do_download = False
+                args.save = True
+
     # The next bit is based on one of the answers here: (by PabloG)
     # http://stackoverflow.com/questions/22676/how-do-i-download-a-file-over-http-using-python
-    # The progress bar feature in that answer is important here, since this will take a while,
-    # since the file is so big.
+    # The progress feature in that answer is important here, since downloading such a large file
+    # will take a while.
     if do_download:
         logger.info("")
-        with open(target, 'wb') as f:
-            file_size_dl = 0
-            block_sz = 32 * 1024
-            while True:
-                buffer = u.read(block_sz)
-                if not buffer:
-                    break
+        try:
+            with open(target, 'wb') as f:
+                file_size_dl = 0
+                block_sz = 32 * 1024
+                while True:
+                    buffer = u.read(block_sz)
+                    if not buffer:
+                        break
 
-                file_size_dl += len(buffer) / 1024
-                f.write(buffer)
+                    file_size_dl += len(buffer)
+                    f.write(buffer)
 
-                # Status bar
-                if args.verbosity >= 2:
-                    fsdl = file_size_dl / 1024
-                    status = r"Downloading: %5d / %d MBytes  [%3.2f%%]" % (
-                        fsdl, file_size, fsdl * 100. / file_size)
-                    status = status + chr(8)*(len(status)+1)
-                    print status,
-                    sys.stdout.flush()
-        logger.info("Download complete.")
+                    # Status bar
+                    if args.verbosity >= 2:
+                        status = r"Downloading: %5d / %d MBytes  [%3.2f%%]" % (
+                            file_size_dl/1024**2, file_size/1024**2, file_size_dl*100./file_size)
+                        status = status + chr(8)*(len(status)+1)
+                        print status,
+                        sys.stdout.flush()
+            logger.info("Download complete.")
+        except IOError as e:
+            # Try to give a reasonable suggestion for some common IOErrors.
+            logger.error("\n\nIOError: %s",str(e))
+            if 'Permission denied' in str(e):
+                logger.error("Rerun using sudo %s",script_name)
+                logger.error("If this is not possible, you can download to an alternate location:")
+                logger.error("    %s -d dir_name --nolink\n",script_name)
+            elif 'Disk quota' in str(e) or 'No space' in str(e):
+                logger.error("You might need to download this in an alternate location and link:")
+                logger.error("    %s -d dir_name\n",script_name)
+            raise
 
-    if do_download or args.unpack:
-        logger.info("Unpacking the tarball...")
-        with tarfile.open(target) as tar:
-            if args.verbosity >= 3:
-                tar.list(verbose=True)
-            elif args.verbosity >= 2:
-                tar.list(verbose=False)
-            tar.extractall(share_dir)
-        logger.info("Extracted contents of tar file.")
+    return do_download, target, meta
 
-    if not args.save:
+def unpack(target, target_dir, unpack_dir, meta, args, logger):
+    logger.info("Unpacking the tarball...")
+    #with tarfile.open(target) as tar:
+    # The above line works on python 2.7+.  But to make sure we work for 2.6, we use the
+    # following workaround.
+    # cf. http://stackoverflow.com/questions/6086603/statement-with-and-tarfile
+    from contextlib import closing
+    with closing(tarfile.open(target)) as tar:
+        if args.verbosity >= 3:
+            tar.list(verbose=True)
+        elif args.verbosity >= 2:
+            tar.list(verbose=False)
+        tar.extractall(target_dir)
+
+    # Write the meta information to a file, meta.json to mark what version this all is.
+    meta_file = os.path.join(unpack_dir, 'meta.json')
+    with open(meta_file,'w') as fp:
+        json.dump(dict(meta), fp)
+
+    logger.info("Extracted contents of tar file.")
+
+def unzip(target, args, logger):
+    logger.info("Unzipping file")
+    subprocess.call(["gunzip", target])
+    logger.info("Done")
+
+def link_target(unpack_dir, link_dir, args, logger):
+    logger.debug("Linking to %s from %s", unpack_dir, link_dir)
+    if os.path.exists(link_dir):
+        if os.path.islink(link_dir):
+            # If it exists and is a link, we just remove it and relink without any fanfare.
+            logger.debug("Removing existing link")
+            os.remove(link_dir)
+        else:
+            # If it is not a link, we need to figure out what to do with it.
+            if os.path.isdir(link_dir):
+                # If it's a directory, probably want to keep it.
+                logger.warn("%s already exists and is a directory.",link_dir)
+                if args.force:
+                    logger.warn("Removing the existing files to make the link.")
+                elif args.quiet:
+                    logger.warn("Link cannot be made.  (Use -f to force removal of existing dir.)")
+                    return
+                else:
+                    q = "Remove the existing files to make the link?"
+                    yn = query_yes_no(q, default='no')
+                    if yn == 'no':
+                        return
+                shutil.rmtree(link_dir)
+            else:
+                # If it's not a directory, it's probably corrupt, so the default is to remove it.
+                logger.warn("%s already exists, but strangely isn't a directory.",link_dir)
+                if args.force or args.quiet:
+                    logger.warn("Removing the existing file.")
+                else:
+                    q = "Remove the existing file?"
+                    yn = query_yes_no(q, default='yes')
+                    if yn == 'no':
+                        return
+                os.path.remove(link_dir)
+    os.symlink(unpack_dir, link_dir)
+    logger.info("Made link to %s from %s", unpack_dir, link_dir)
+
+def main():
+    args = parse_args()
+
+    # Parse the integer verbosity level from the command line args into a logging_level string
+    import logging
+    logging_levels = { 0: logging.CRITICAL,
+                       1: logging.WARNING,
+                       2: logging.INFO,
+                       3: logging.DEBUG }
+    logging_level = logging_levels[args.verbosity]
+
+    # Setup logging to go to sys.stdout or (if requested) to an output file
+    logging.basicConfig(format="%(message)s", level=logging_level, stream=sys.stdout)
+    logger = logging.getLogger('galsim')
+
+    # Give diagnostic about GalSim version
+    logger.debug("GalSim version: %s",galsim.__version__)
+    logger.debug("This download script is: %s",__file__)
+    logger.info("Type %s -h to see command line options.\n",script_name)
+
+    # Some definitions:
+    # share_dir is the base galsim share directory, e.g. /usr/local/share/galsim/
+    # target_dir is where we will put the downloaded file, usually == share_dir.
+    # unpack_dir is the directory that the tarball will unpack into.
+    # url is the url from which we will download the tarball.
+    # file_name is the name of the file to download, taken from the url.
+    # target is the full path of the downloaded tarball
+
+    share_dir = galsim.meta_data.share_dir
+    if args.dir is not None:
+        target_dir = args.dir
+        link = not args.nolink
+    else:
+        target_dir = share_dir
+        link = False
+
+    url = "http://great3.jb.man.ac.uk/leaderboard/data/public/COSMOS_%s_training_sample.tar.gz"%(
+            args.sample)
+    file_name = os.path.basename(url)
+    target = os.path.join(target_dir, file_name)
+    unpack_dir = target[:-len('.tar.gz')]
+
+    # Download the tarball
+    new_download, target, meta = download(url, target, unpack_dir, args, logger)
+
+    # Usually we unpack if we downloaded the tarball or if specified by the command line option.
+    do_unpack = new_download or args.unpack
+
+    # If the unpack dir is missing, then need to unpack
+    if not os.path.exists(unpack_dir):
+        do_unpack = True
+
+    # But of course if there is no tarball, we can't unpack it
+    if not os.path.isfile(target):
+        do_unpack = False
+
+    # If we have a downloaded tar file, ask if it should be re-unpacked.
+    if not do_unpack and not args.quiet and os.path.isfile(target):
+        logger.info("")
+        q = "Tar file is already unpacked.  Re-unpack?"
+        yn = query_yes_no(q, default='no')
+        if yn == 'yes':
+            do_unpack=True
+
+    # Unpack the tarball
+    if do_unpack:
+        unpack(target, target_dir, unpack_dir, meta, args, logger)
+
+    # Usually, we remove the tarball if we unpacked it and command line doesn't specify to save it.
+    do_remove = do_unpack and not args.save
+
+    # But if we didn't unpack it, and they didn't say to save it, ask if we should remove it.
+    if os.path.isfile(target) and not do_remove and not args.save and not args.quiet:
+        logger.info("")
+        q = "Remove the tarball?"
+        yn = query_yes_no(q, default='no')
+        if yn == 'yes':
+            do_remove = True
+
+    # Remove the tarball
+    if do_remove:
         logger.info("Removing the tarball to save space")
         os.remove(target)
+
+    # If we are downloading to an alternate directory, we (usually) link to it from share/galsim
+    if link:
+        # Get the directory where this would normally have been unpacked.
+        link_dir = os.path.join(share_dir, file_name)[:-len('.tar.gz')]
+        link_target(unpack_dir, link_dir, args, logger)
+
 
 if __name__ == "__main__":
     main()

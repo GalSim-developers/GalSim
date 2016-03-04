@@ -101,8 +101,10 @@ def main(argv):
     wcs_g1 = -0.02         #
     wcs_g2 = 0.01          #
     sky_level = 2.5e4      # ADU / arcsec^2
-    gain = 1.7             # photons / ADU
-    read_noise = 0.3       # ADU / pixel
+    gain = 1.7             # e- / ADU
+                           # Note: here we assume 1 photon -> 1 e-, ignoring QE.  If you wanted,
+                           # you could include the QE factor as part of the gain.
+    read_noise = 0.3       # e- / pixel
 
     random_seed = 1314662
 
@@ -242,11 +244,11 @@ def main(argv):
     # gain, and read noise, so it can be a bit more realistic than the simpler GaussianNoise
     # or PoissonNoise that we used in demos 1 and 2.  
     # 
-    # The gain is in units of photons/ADU.  Technically, real CCDs quote the gain as e-/ADU.
-    # An ideal CCD has one electron per incident photon, but real CCDs have quantum efficiencies
-    # less than 1, so not every photon triggers an electron.  We are essentially folding
+    # The gain is in units of e-/ADU.  Technically, one should also account for quantum efficiency
+    # (QE) of the detector. An ideal CCD has one electron per incident photon, but real CCDs have
+    # QE less than 1, so not every photon triggers an electron.  We are essentially folding
     # the quantum efficiency (and filter transmission and anything else like that) into the gain.
-    # The read_noise value is given as ADU/pixel.  This is modeled as a pure Gaussian noise
+    # The read_noise value is given as e-/pixel.  This is modeled as a pure Gaussian noise
     # added to the image after applying the pure Poisson noise.
     image.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
 

@@ -32,6 +32,9 @@
 
 namespace galsim {
 
+    template <typename T>
+    inline T SQR(T x) { return x*x; }
+
     /** 
      * @brief Base class for noise models.  
      *
@@ -154,7 +157,7 @@ namespace galsim {
         /**
          * @brief Get the variance of the noise model
          */
-        double getVariance() const { return _sigma*_sigma; }
+        double getVariance() const { return SQR(_sigma); }
 
         /**
          * @brief Set the variance of the noise model
@@ -402,8 +405,8 @@ namespace galsim {
          */
         double getVariance() const 
         {
-            if (_gain > 0) return (_sky_level + _read_noise*_read_noise) / _gain;
-            else return _read_noise * _read_noise;
+            if (_gain > 0) return _sky_level/_gain + SQR(_read_noise/_gain);
+            else return SQR(_read_noise);
         }
 
         /**
