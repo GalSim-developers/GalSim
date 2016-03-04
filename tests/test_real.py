@@ -32,7 +32,7 @@ except ImportError:
 ### Note: changes to either of the tests below might require regeneration of the catalog and image
 ### files that are saved here.  Modify with care!!!
 image_dir = './real_comparison_images'
-catalog_file = os.path.join(image_dir,'test_catalog.fits')
+catalog_file = 'test_catalog.fits'
 
 ind_fake = 1 # index of mock galaxy (Gaussian) in catalog
 fake_gal_fwhm = 0.7 # arcsec
@@ -80,8 +80,8 @@ def test_real_galaxy_ideal():
     import time
     t1 = time.time()
     # read in faked Gaussian RealGalaxy from file
-    rgc = galsim.RealGalaxyCatalog(catalog_file, image_dir)
-    rg = galsim.RealGalaxy(rgc, index = ind_fake)
+    rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
+    rg = galsim.RealGalaxy(rgc, index=ind_fake)
     # as a side note, make sure it behaves okay given a legit RNG and a bad RNG
     # or when trying to specify the galaxy too many ways
     rg_1 = galsim.RealGalaxy(rgc, index = ind_fake, rng = galsim.BaseDeviate(1234))
@@ -164,8 +164,11 @@ def test_real_galaxy_saved():
     import time
     t1 = time.time()
     # read in real RealGalaxy from file
-    rgc = galsim.RealGalaxyCatalog(catalog_file, image_dir)
-    rg = galsim.RealGalaxy(rgc, index = ind_real)
+    #rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
+    # This is an alternate way to give the directory -- as part of the catalog file name.
+    full_catalog_file = os.path.join(image_dir,catalog_file)
+    rgc = galsim.RealGalaxyCatalog(full_catalog_file)
+    rg = galsim.RealGalaxy(rgc, index=ind_real)
 
     # read in expected result for some shear
     shera_image = galsim.fits.read(shera_file)
