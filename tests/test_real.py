@@ -164,7 +164,10 @@ def test_real_galaxy_saved():
     import time
     t1 = time.time()
     # read in real RealGalaxy from file
-    rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
+    #rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
+    # This is an alternate way to give the directory -- as part of the catalog file name.
+    catalog_file = os.path.join(image_dir,'test_catalog.fits')
+    rgc = galsim.RealGalaxyCatalog(catalog_file)
     rg = galsim.RealGalaxy(rgc, index=ind_real)
 
     # read in expected result for some shear

@@ -632,13 +632,7 @@ class RealGalaxyCatalog(object):
         return cf
 
     def __repr__(self):
-        import os
-        dir, file_name = os.path.split(self.file_name)
-        s = 'galsim.RealGalaxyCatalog(%r,dir=%r)'%(file_name, dir)
-        return s
-
-    def __str__(self):
-        return 'galsim.RealGalaxyCatalog(%r)'%(self.file_name)
+        return 'galsim.RealGalaxyCatalog(%r)'%self.file_name
 
     def __eq__(self, other):
         return (isinstance(other, RealGalaxyCatalog) and
