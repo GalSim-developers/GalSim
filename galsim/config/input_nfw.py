@@ -46,6 +46,8 @@ def _GenerateFromNFWHaloShear(config, base, value_type):
     try:
         g1,g2 = nfw_halo.getShear(pos,redshift)
         shear = galsim.Shear(g1=g1,g2=g2)
+    except KeyboardInterrupt:
+        raise
     except Exception as e:
         import warnings
         warnings.warn("Warning: NFWHalo shear is invalid -- probably strong lensing!  " +

@@ -127,6 +127,8 @@ def _GenerateFromPowerSpectrumShear(config, base, value_type):
     try:
         g1,g2 = power_spectrum.getShear(pos)
         shear = galsim.Shear(g1=g1,g2=g2)
+    except KeyboardInterrupt:
+        raise
     except Exception as e:
         import warnings
         warnings.warn("Warning: PowerSpectrum shear is invalid -- probably strong lensing!  " +

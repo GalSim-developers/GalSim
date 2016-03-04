@@ -27,20 +27,30 @@ Bug Fixes
   where the resulting object did not set the index attribute properly. (#694)
 
 
+Deprecated Features
+-------------------
+- Deprecated the gal.type=Ring option in the config files.  The preferred way
+  to get a ring test is now with the new stamp.type=Ring.  See demo5 and demo10
+  for examples of the new syntax. (#698)
+
+
 New Features
 ------------
-
 - Added OutputCatalog class, which can be used to keep track of and then output
   truth information.  cf. demos 9 and 10. (#301, #691)
 - Added methods calculateHLR, calculateMomentRadius, and calculateFWHM to both
   GSObject and Image. (#308)
 - Added ability to specify lambda and r0 separately for Kolmogorov to have
   GalSim do the conversion from radians to the given scale unit. (#657)
+- Made it possible to initialize an InterpolatedImage from a user-specified 
+  HDU in a FITS file with multiple extensions. (#660)
 - Changed `galsim.fits.writeMulti` to allow any of the "image"s to be
   already-built hdus, which are included as is. (#691)
 - Added optional `wcs` argument to `Image.resize()`. (#691)
 - Added `BaseDeviate.discard(n)` and `BaseDeviate.raw()`. (#691)
 - Added `sersic_prec` option to COSMOSCatalog.makeGalaxy(). (#691)
+- Made it possible to impose some cuts on galaxy image quality in the
+  COSMOSCatalog class. (#693)
 - Added `convergence_threshold` as a parameter of HSMParams. (#709)
 
 
@@ -75,4 +85,6 @@ New config features
   'gsparams', among other less commonly used parameters.  However, for
   backwards compatibility, they are all still allowed in the image field
   as well. (#691)
-
+- Added new stamp type=Ring to effect ring tests.  This replaces the old 
+  gsobject type=Ring, which is now deprecated.  See demo5 and demo10 for 
+  examples of the new preferred syntax. (#698)
