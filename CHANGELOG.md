@@ -29,11 +29,19 @@ Bug Fixes
   for the KSB shear estimation method of the galsim.hsm package. (#686)
 - Fixed bug in the (undocumented) function COSMOSCatalog._makeSingleGalaxy,
   where the resulting object did not set the index attribute properly. (#694)
+- Fixed an error in the `CCDNoise.getVariance()` function, as well as some
+  errors in the documentation about the units of CCDNoise parameters. (#713)
+
+
+Deprecated Features
+-------------------
+- Deprecated the gal.type=Ring option in the config files.  The preferred way
+  to get a ring test is now with the new stamp.type=Ring.  See demo5 and demo10
+  for examples of the new syntax. (#698)
 
 
 New Features
 ------------
-
 - Added OutputCatalog class, which can be used to keep track of and then output
   truth information.  cf. demos 9 and 10. (#301, #691)
 - Added methods calculateHLR, calculateMomentRadius, and calculateFWHM to both
@@ -48,11 +56,15 @@ New Features
   (#654, #694)
 - Added ability to specify lambda and r0 separately for Kolmogorov to have
   GalSim do the conversion from radians to the given scale unit. (#657)
+- Made it possible to initialize an InterpolatedImage from a user-specified 
+  HDU in a FITS file with multiple extensions. (#660)
 - Changed `galsim.fits.writeMulti` to allow any of the "image"s to be
   already-built hdus, which are included as is. (#691)
 - Added optional `wcs` argument to `Image.resize()`. (#691)
 - Added `BaseDeviate.discard(n)` and `BaseDeviate.raw()`. (#691)
 - Added `sersic_prec` option to COSMOSCatalog.makeGalaxy(). (#691)
+- Made it possible to impose some cuts on galaxy image quality in the
+  COSMOSCatalog class. (#693)
 - Added `convergence_threshold` as a parameter of HSMParams. (#709)
 
 
@@ -90,4 +102,6 @@ New config features
 - Added more example scripts to showcase how to use some of the new config
   features to make fairly sophisticated simulations.  cf. examples/great3 and
   examples/des. (#654, #691)
-  
+- Added new stamp type=Ring to effect ring tests.  This replaces the old 
+  gsobject type=Ring, which is now deprecated.  See demo5 and demo10 for 
+  examples of the new preferred syntax. (#698)

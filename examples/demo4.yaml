@@ -123,14 +123,22 @@ gal :
     # Note: If you want to use a variable defined above, you use a *
     flux : *gal_flux
 
-    # An object may have an ellip and a shear, each of which can be specified in terms
-    # of either E1E2 (distortion) or G1G2 (reduced shear).
-    # The only difference between the two is if there is also a rotation specified.
-    # The order of the various modifications are:
-    # - ellip
-    # - rotation
-    # - shear
-    # - shift
+    # An object may have an ellip and a shear, each of which can be specified in any format:
+    #   - E1E2 or EBeta (distortion)
+    #   - G1G2 or GBeta (reduced shear)
+    #   - Eta1Eta2 or EtaBeta (conformal shear, cf. demo9)
+    #   - QBeta (axis ratio, cf. demo3)
+    # Furthermore, the shear operations do not commute, so it matters which one is applied first.
+    # We use ellip to mean the intrinsic shape of the object and shear to mean the shear that
+    # is applied by lensing or other sources.  These also don't commute with either rotations or
+    # shifts, so here is the full list of transformations in the order that they are applied:
+    #
+    # - dilate or dilation        = scale linear size of the object preserving flux
+    # - ellip                     = set the intrinsic shape of the object
+    # - rotate or rotation        = rotate by some angle
+    # - magnify or magnification  = scale linear size of object preserving surface brightness
+    # - shear                     = apply the gravitational shear
+    # - shift                     = shift the centroid of the object
     shear : 
         type : G1G2 
         g1 : *gal_g1

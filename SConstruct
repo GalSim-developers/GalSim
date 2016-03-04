@@ -1552,17 +1552,25 @@ int main()
         import platform
         import subprocess
         print 'Mac version is',platform.mac_ver()[0]
-        p = subprocess.Popen(['xcodebuild','-version'], stdout=subprocess.PIPE)
-        xcode_version = p.stdout.readlines()[0].split()[1]
-        print 'XCode version is',xcode_version
-        if (platform.mac_ver()[0] >= '10.7' and #xcode_version < '5.1' and
-            '-latlas' not in tmv_link and ('-lblas' in tmv_link or '-lcblas' in tmv_link)):
+        try:
+            p = subprocess.Popen(['xcodebuild','-version'], stdout=subprocess.PIPE)
+            xcode_version = p.stdout.readlines()[0].split()[1]
+            print 'XCode version is',xcode_version
+        except:
+            # Don't require the user to have xcode installed.
+            xcode_version = None
+            print 'Unable to determine XCode version'
+        if (platform.mac_ver()[0] >= '10.7' and '-latlas' not in tmv_link and
+                ('-lblas' in tmv_link or '-lcblas' in tmv_link)):
             print 'WARNING: The Apple BLAS library has been found not to be thread safe on'
             print '         Mac OS versions 10.7+, even across multiple processes (i.e. not'
             print '         just multiple threads in the same process.)  The symptom is that'
             print '         `scons tests` may hang when running nosetests using multiple'
             print '         processes.'
-            if xcode_version < '5.1':
+            if xcode_version is None:
+                # If we couldn't run xcodebuild, then don't give any more information about this.
+                pass
+            elif xcode_version < '5.1':
                 print '         This seems to have been partially fixed with XCode 5.1, so we'
                 print '         recommend upgrading to the latest XCode version.  However, even'
                 print '         with 5.1, some systems still seem to have problems.'

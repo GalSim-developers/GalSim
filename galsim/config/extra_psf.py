@@ -79,7 +79,12 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
         if 'shift' in config:
             # Special: output.psf.shift = 'galaxy' means use the galaxy shift.
             if config['shift'] == 'galaxy':
-                shift = galsim.config.GetCurrentValue('gal.shift',base, galsim.PositionD)
+                # This shift value might be in either stamp or gal.
+                if 'shift' in base['stamp']:
+                    shift = galsim.config.GetCurrentValue('stamp.shift',base, galsim.PositionD)
+                else:
+                    # This will raise an appropriate error if there is no gal.shift or stamp.shift.
+                    shift = galsim.config.GetCurrentValue('gal.shift',base, galsim.PositionD)
             else:
                 shift = galsim.config.ParseValue(config, 'shift', base, galsim.PositionD)[0]
             if logger:
@@ -90,8 +95,8 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
         offset = base['stamp_offset']
         # Check if we should apply any additional offset:
         if 'offset' in config:
-            # Special: output.psf.offset = 'galaxy' means use the same offset as in the galaxy image,
-            #          which note is actually in config.stamp, not config.gal.
+            # Special: output.psf.offset = 'galaxy' means use the same offset as in the galaxy
+            #          image, which is actually in config.stamp, not config.gal.
             if config['offset'] == 'galaxy':
                 offset += galsim.config.GetCurrentValue('stamp.offset',base, galsim.PositionD)
             else:

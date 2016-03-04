@@ -1037,6 +1037,8 @@ def test_stepk_maxk():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_kround_trip():
+    import time
+    t1 = time.time()
     a = final
     real_a, imag_a = a.drawKImage()
     b = galsim.InterpolatedKImage(real_a, imag_a)
@@ -1114,6 +1116,39 @@ def test_kround_trip():
     np.testing.assert_array_almost_equal(a_conv_c_img.array, b_conv_c_img.array, 5,
                                          "Convolution of InterpolatedKImage drawn incorrectly.")
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+def test_multihdu_readin():
+    """Test the ability to read in from a file with multiple FITS extensions.
+    """
+    import time
+    t1 = time.time()
+
+    # Check that when we read in from the different HDUs using the keyword, we get the expected set
+    # of shear values after drawing.  The file was created using
+    # fits_files/make_interpim_hdu_test.py, so if that script gets changed, the test has to change
+    # too.
+    g2_vals = [0., 0.1, 0.7, 0.3]
+    scale = 0.2
+    infile = os.path.join(path, "fits_files", 'interpim_hdu_test.fits')
+    for ind,g2 in enumerate(g2_vals):
+        obj = galsim.InterpolatedImage(image=infile, hdu=ind)
+        im = obj.drawImage(scale=scale, method='no_pixel')
+        test_g2 = im.FindAdaptiveMom().observed_shape.g2
+        np.testing.assert_almost_equal(
+            test_g2, g2, decimal=3,
+            err_msg='Did not get right shape image after reading from HDU')
+
+    # Check for exception with invalid HDU.
+    try:
+        np.testing.assert_raises(ValueError, galsim.InterpolatedImage, infile, hdu=37)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 if __name__ == "__main__":
     test_roundtrip()
     test_fluxnorm()
@@ -1131,3 +1166,4 @@ if __name__ == "__main__":
     test_conserve_dc()
     test_stepk_maxk()
     test_kround_trip()
+    test_multihdu_readin()

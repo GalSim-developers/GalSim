@@ -20,8 +20,16 @@ import galsim
 # This file adds input type cosmos_catalog and gsobject typs COSMOSGalaxy.
 
 # The COSMOSCatalog doesn't need anything special other than registration as a valid input type.
+# However, we do make a custom Loader so that we can add a logger line with some information about
+# the number of objects in the catalog that passed the initial cuts.
 from .input import RegisterInputType, InputLoader
-RegisterInputType('cosmos_catalog', InputLoader(galsim.COSMOSCatalog))
+class COSMOSLoader(InputLoader):
+    def setupImage(self, cosmos_cat, config, base, logger):
+        if logger:
+            logger.info("file %d: COSMOS catalog has %d total objects; %d passed initial cuts.",
+                        base['file_num'], cosmos_cat.getNTot(), cosmos_cat.getNObjects())
+
+RegisterInputType('cosmos_catalog', COSMOSLoader(galsim.COSMOSCatalog))
 
 # The gsobject type coupled to this is COSMOSGalaxy.
 

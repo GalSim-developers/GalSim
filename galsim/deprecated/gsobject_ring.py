@@ -16,13 +16,19 @@
 #    and/or other materials provided with the distribution.
 #
 import galsim
+import galsim.config
+from galsim.deprecated import depr
 
 # This file adds gsobject type Ring which builds an object once every n times, and then
 # rotates it in a ring for the other n-1 times per per group.
 
 def _BuildRing(config, base, ignore, gsparams, logger):
-    """@brief  Build a GSObject in a Ring.
+    """@brief  Build a GSObject in a Ring.  Now deprecated.
     """
+    depr('gal.type = Ring', 1.4, 'stamp.type = Ring',
+         'The galaxy Ring type may not work properly in conjunction with image.nproc != 1. '+
+         'See demo5 and demo10 for examples of the new stamp type=Ring syntax.')
+
     req = { 'num' : int, 'first' : dict }
     opt = { 'full_rotation' : galsim.Angle , 'index' : int }
     # Only Check, not Get.  We need to handle first a bit differently, since it's a gsobject.
@@ -59,5 +65,4 @@ def _BuildRing(config, base, ignore, gsparams, logger):
     return gsobject, False
 
 # Register this as a valid gsobject type
-from .gsobject import RegisterObjectType
-RegisterObjectType('Ring', _BuildRing, is_block=True)
+galsim.config.RegisterObjectType('Ring', _BuildRing, _is_block=True)
