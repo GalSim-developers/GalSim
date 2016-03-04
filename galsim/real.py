@@ -353,9 +353,6 @@ class RealGalaxyCatalog(object):
            >>> rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog_23.5.fits',
                                               dir='path/to/download/directory')
 
-       There is also an optional `image_dir` parameter that lets you have the image files in
-       a different location than the catalog.
-
     3. There is a catalog containing a random subsample of the HST COSMOS images with a limiting
        magnitude of F814W=25.2.  More information about downloading these catalogs can be found on
        the RealGalaxy Data Download page linked above.
@@ -381,18 +378,13 @@ class RealGalaxyCatalog(object):
                       "23.5" or "25.2".  At most one of `file_name` and `sample` should be
                       specified.
                       [default: None, which results in the same default as `file_name=None`.]
-    @param image_dir  The directory of the image files.  If the string contains '/', then it is an
-                      absolute path, else it is taken to be a relative path from the location of
-                      the catalog file.  [default: None, which means to use the same directory
-                      as the catalog file.]
-    @param dir        The directory of catalog file. [default: None]
+    @param dir        The directory containing the catalog, image, and noise files, or symlinks to
+                      them. [default: None]
     @param preload    Whether to preload the header information.  If `preload=True`, the bulk of
                       the I/O time is in the constructor.  If `preload=False`, there is
                       approximately the same total I/O time (assuming you eventually use most of
                       the image files referenced in the catalog), but it is spread over the
                       various calls to getGal() and getPSF().  [default: False]
-    @param noise_dir  The directory of the noise files if different from the directory of the
-                      image files.  [default: image_dir]
     @param logger     An optional logger object to log progress. [default: None]
     """
     _req_params = {}
@@ -764,6 +756,13 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     return image
 
 def _parse_files_dirs(file_name, image_dir, dir, noise_dir, sample):
+    if image_dir is not None or noise_dir is not None:
+        from .deprecated import depr
+        if image_dir is not None:
+            depr('image_dir', 1.4, 'dir')
+        if noise_dir is not None:
+            depr('noise_dir', 1.4, 'dir')
+
     if sample is None:
         if file_name is None:
             use_sample = '25.2'

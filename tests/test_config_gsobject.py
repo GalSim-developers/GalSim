@@ -621,10 +621,10 @@ def test_realgalaxy():
     # I don't want to gratuitously copy the real_catalog catalog, so use the 
     # version in the examples directory.
     real_gal_dir = os.path.join('..','examples','data')
-    real_gal_cat = os.path.join(real_gal_dir,'real_galaxy_catalog_example.fits')
+    real_gal_cat = 'real_galaxy_catalog_example.fits'
     config = {
         'input' : { 'real_catalog' : 
-                        { 'image_dir' : real_gal_dir , 
+                        { 'dir' : real_gal_dir , 
                           'file_name' : real_gal_cat ,
                           'preload' : True } 
                   },
@@ -648,7 +648,7 @@ def test_realgalaxy():
     galsim.config.ProcessInput(config)
 
     real_cat = galsim.RealGalaxyCatalog(
-        image_dir=real_gal_dir, file_name=real_gal_cat, preload=True)
+        dir=real_gal_dir, file_name=real_gal_cat, preload=True)
 
     # For these profiles, we convolve by a gaussian to smooth out the profile.
     # This makes the comparison much faster without changing the validity of the test.

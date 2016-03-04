@@ -106,22 +106,15 @@ class COSMOSCatalog(object):
                             "23.5" or "25.2".  At most one of `file_name` and `sample` should be
                             specified.
                             [default: None, which results in the same default as `file_name=None`.]
-    @param image_dir        Keyword that is only used for real galaxies, not parametric ones, to
-                            specify the directory of the image files.
-                            If a string containing no `/`, it is the relative path from the location
-                            of the catalog file to the directory containing the galaxy/PDF images.
-                            If a path (a string containing `/`), it is the full path to the
-                            directory containing the galaxy/PDF images. [default: None]
-    @param dir              The directory of catalog file. [default: None]
+    @param dir              The directory with the catalog file and, if making realistic galaxies,
+                            the image and noise files (or symlinks to them). [default: None, which
+                            will look in $PREFIX/share/galsim.]
     @param preload          Keyword that is only used for real galaxies, not parametric ones, to
                             choose whether to preload the header information.  If `preload=True`,
                             the bulk of the I/O time is in the constructor.  If `preload=False`,
                             there is approximately the same total I/O time (assuming you eventually
                             use most of the image files referenced in the catalog), but it is spread
                             over the calls to makeGalaxy().  [default: False]
-    @param noise_dir        Keyword that is only used for real galaxies, not parametric ones.
-                            The directory of the noise files if different from the directory of the 
-                            image files.  [default: image_dir]
     @param use_real         Enable the use of realistic galaxies?  [default: True]
                             If this parameter is False, then `makeGalaxy(gal_type='real')` will
                             not be allowed, and there will be a (modest) decrease in RAM and time
