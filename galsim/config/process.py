@@ -637,9 +637,10 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None):
         # Start each job at file_num = nfiles * job / njobs
         start = nfiles * (job-1) // njobs
         end = nfiles * job // njobs
-        logger.warn('Splitting work into %d jobs.  Doing job %d',njobs,job)
-        logger.warn('Building %d out of %d total files: file_num = %d .. %d',
-                    end-start,nfiles,start,end-1)
+        if logger:
+            logger.warn('Splitting work into %d jobs.  Doing job %d',njobs,job)
+            logger.warn('Building %d out of %d total files: file_num = %d .. %d',
+                        end-start,nfiles,start,end-1)
         nfiles = end-start
     else:
         start = 0

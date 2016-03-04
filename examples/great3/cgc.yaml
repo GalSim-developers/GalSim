@@ -208,7 +208,8 @@ input:
         # Note that we could use the F814W<25.2 sample that is now available.  However, for
         # real galaxy branches, we would have to be careful to avoid issues with the noise
         # in the input images being greater than the desired final noise level.  This would
-        # require messing with some settings, so for now we avoid this and always use the 23.5 sample.
+        # require messing with some settings, so for now we avoid this and always use the 23.5
+        # sample.
         sample: 23.5
 
         # Make sure we use some cuts on postage stamp and fit quality as in GREAT3, specified using
