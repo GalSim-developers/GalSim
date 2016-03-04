@@ -759,9 +759,9 @@ class PhaseScreenList(object):
 
     def makePSF(self, **kwargs):
         """Compute one PSF or multiple PSFs from the current PhaseScreenList, depending on the type
-        of `theta_x` and `theta_y`.  If `theta_x` and `theta_y` are iterable, then return PSFs at
-        the implied field angles in a list.  If `theta_x` and `theta_y` are scalars, return a single
-        PSF at the specified field angle.
+        of (`theta_x`, `theta_y`) or `theta`.  If (`theta_x`, `theta_y`) or `theta` are iterable,
+        then return PSFs at the implied field angles in a list.  If `theta_x` and `theta_y` are
+        scalars or `theta` is a single tuple, then return a single PSF at the specified field angle.
 
         Note that this method advances each PhaseScreen in the list, so consecutive calls with the
         same arguments will generally return different PSFs.  Use PhaseScreenList.reset() to reset
@@ -775,6 +775,8 @@ class PhaseScreenList(object):
                                  resulting PSF.  [Default: 0.0*galsim.arcmin]
         @param theta_y           y-component of field angle at which to evaluate phase screens and
                                  resulting PSF.  [Default: 0.0*galsim.arcmin]
+        @param theta             Alternative field angle specification.  Single tuple or iterable of
+                                 tuples (theta_x, theta_y).
         @param scale_unit        Units to use for the sky coordinates of the output profile.
                                  [Default: galsim.arcsec]
         @param interpolant       Either an Interpolant instance or a string indicating which
@@ -812,14 +814,43 @@ class PhaseScreenList(object):
                                  aberrations, i.e., when the equivalent Zernike coefficients become
                                  larger than order unity.  [default: 1.5]
         """
-        theta_x = kwargs.get('theta_x', 0.0*galsim.arcmin)
-        theta_y = kwargs.get('theta_y', 0.0*galsim.arcmin)
-        if not hasattr(theta_x, '__iter__') and not hasattr(theta_y, '__iter__'):
-            return PhaseScreenPSF(self, **kwargs)
+        from itertools import izip, chain
+        # Assemble theta as an iterable over 2-tuples of Angles.
+        # 5 possible input kwargs cases for theta, theta_x, theta_y.
+        # 1) All undefined, in which case set to [(Angle(0), Angle(0))]
+        # 2) theta = tuple(Angle, Angle), in which case just need to listify
+        # 3) theta_x = Angle, theta_y = Angle, in which case need to listify and zip
+        # 4) theta_x/y = [Angle, Angle, ...], in which case need to zip
+        # 5) theta = [(Angle, Angle), (Angle, Angle), ...], in which case we're already done.
+        single = False
+        if 'theta' not in kwargs:  # Case 1, 3, or 4
+            theta_x = kwargs.pop('theta_x', 0.0*galsim.arcmin)
+            theta_y = kwargs.pop('theta_y', 0.0*galsim.arcmin)
+            if not hasattr(theta_x, '__iter__'):
+                single = True
+            else:
+                theta = izip(theta_x, theta_y)
+        else:  # Case 2 or 5
+            theta = kwargs.pop('theta')
+            # 2-tuples are iterable, so to check whether theta is indicating a single pointing, or a
+            # generator of pointings we need to look at the first item.  If the first item is
+            # iterable itself, then assume theta is an interable of 2-tuple field angles.  We then
+            # replace the consumed tuple at the beginning of the generator and go on.  If the first
+            # item is scalar, then assume that it's the x-component of a single field angle.
+            theta = iter(theta)
+            th0 = theta.next()
+            if hasattr(th0, '__iter__'):
+                theta = chain([th0], theta)
+            else:
+                theta_x, theta_y = th0, theta.next()
+                single = True
+
+        if single:
+            return PhaseScreenPSF(self, theta_x=theta_x, theta_y=theta_y, **kwargs)
         else:
             kwargs['_eval_now'] = False
             PSFs = []
-            for theta_x, theta_y in zip(kwargs.pop('theta_x'), kwargs.pop('theta_y')):
+            for theta_x, theta_y in theta:
                 PSFs.append(PhaseScreenPSF(self, theta_x=theta_x, theta_y=theta_y, **kwargs))
 
             flux = kwargs.get('flux', 1.0)

@@ -171,8 +171,8 @@ def test_phase_psf_batch():
     # Check that PSFs generated serially match those generated in batch.
     import time
     t1 = time.time()
-    NPSFs = 20
-    exptime = 0.09
+    NPSFs = 10
+    exptime = 0.06
     rng = galsim.BaseDeviate(1234)
     atm = galsim.Atmosphere(screen_size=10.0, altitude=10.0, alpha=0.997, rng=rng)
     theta_x = [i * galsim.arcsec for i in xrange(NPSFs)]
@@ -192,6 +192,24 @@ def test_phase_psf_batch():
     print 'time for {0} PSFs in serial: {1:.2f} s'.format(NPSFs, time.time() - t4)
 
     for psf1, psf2 in zip(psfs, more_psfs):
+        np.testing.assert_array_equal(
+            psf1.img, psf2.img,
+            "Individually generated AtmosphericPSF differs from AtmosphericPSF generated in batch")
+
+    # Check that `theta` kwarg works.
+    atm.reset()
+    even_more_psfs = atm.makePSF(theta=zip(theta_x, theta_y), **kwargs)
+    for psf1, psf2 in zip(psfs, even_more_psfs):
+        np.testing.assert_array_equal(
+            psf1.img, psf2.img,
+            "Individually generated AtmosphericPSF differs from AtmosphericPSF generated in batch")
+
+    # Check that `theta` kwarg works 1 PSF at a time.
+    yet_another_list_of_psfs = []
+    for th in zip(theta_x, theta_y):
+        atm.reset()
+        yet_another_list_of_psfs.append(atm.makePSF(theta=th, **kwargs))
+    for psf1, psf2 in zip(psfs, yet_another_list_of_psfs):
         np.testing.assert_array_equal(
             psf1.img, psf2.img,
             "Individually generated AtmosphericPSF differs from AtmosphericPSF generated in batch")
