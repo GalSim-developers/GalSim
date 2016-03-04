@@ -77,7 +77,7 @@ def test_scattered():
             config = copy.deepcopy(base_config)
             config['image']['stamp_size'] = test_stamp_size
             config['image']['index_convention'] = convention
-    
+
             image = galsim.config.BuildImage(config)
             np.testing.assert_equal(image.getXMin(), convention)
             np.testing.assert_equal(image.getYMin(), convention)
@@ -286,9 +286,85 @@ def test_ccdnoise():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_njobs():
+    """Test that splitting up jobs works correctly.
+
+    Note that there is also an implicit test of this feature in the check_yaml script.
+    It runs demo9.yaml using 3 jobs and compares the result to demo9.py that does everything
+    in a single run.
+
+    However, Josh caught a very subtle bug when splitting up cgc.yaml in the examples/great3
+    directory.  So this test explicitly checks for that.
+    """
+    import time
+    t1 = time.time()
+    # The bug was related to using a Current specification in the input field that accessed
+    # a value that should have used the index_key = image_num, rather than the default when
+    # processing the input field, being index_key = file_num.  Here is a fairly minimal
+    # example that reproduces the error.
+    config = {
+        'psf' : {
+            'index_key' : 'image_num',
+            'type' : 'Convolve',
+            'items' : [
+                { 'type' : 'Gaussian', 'sigma' : 0.3 },
+                {
+                    'type' : 'Gaussian',
+                    'sigma' : { 'type' : 'Random', 'min' : 0.3, 'max' : 1.1 },
+                },
+            ],
+        },
+        'gal' : {
+            'type' : 'COSMOSGalaxy',
+            'gal_type' : 'parametric',
+            'index' : { 'type': 'Random' },
+        },
+        'image' : {
+            'pixel_scale' : 0.2,
+            'size' : 64,
+            'random_seed' : 31415,
+        },
+        'input' : {
+            'cosmos_catalog' : {
+                'min_hlr' : '@psf.items.1.sigma',
+                'dir' : os.path.join('..','examples','data'),
+                'file_name' : 'real_galaxy_catalog_example.fits',
+            },
+        },
+        'output' : {
+            'nfiles' : 2,
+            'dir' : 'output',
+            'file_name' : {
+                'type' : 'NumberedFile',
+                'root' : 'test_one_job_',
+                'digits' : 2,
+            },
+        },
+    }
+    galsim.config.Process(config)
+
+    # Repeat with 2 jobs
+    config['output']['file_name']['root'] = 'test_two_jobs_'
+    galsim.config.Process(config, njobs=2, job=1)
+    galsim.config.Process(config, njobs=2, job=2)
+
+    # Check that the images are equal:
+    one00 = galsim.fits.read('test_one_job_00.fits', dir='output')
+    one01 = galsim.fits.read('test_one_job_01.fits', dir='output')
+    two00 = galsim.fits.read('test_two_jobs_00.fits', dir='output')
+    two01 = galsim.fits.read('test_two_jobs_01.fits', dir='output')
+
+    np.testing.assert_equal(one00.array, two00.array,
+                            err_msg="00 image was different for one job vs two jobs")
+    np.testing.assert_equal(one01.array, two01.array,
+                            err_msg="01 image was different for one job vs two jobs")
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 if __name__ == "__main__":
     test_scattered()
     test_ccdnoise()
-
+    test_njobs()
 

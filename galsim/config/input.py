@@ -148,7 +148,20 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                 else:
                     if logger:
                         logger.debug('file %d: Build input type %s',file_num,key)
-                    kwargs, safe = loader.getKwargs(field, config, logger)
+                    try:
+                        kwargs, safe = loader.getKwargs(field, config, logger)
+                    except KeyboardInterrupt:
+                        raise
+                    except:
+                        # If we get an exception here, then probably not safe.
+                        # e.g. it might need an rng that we haven't made yet.
+                        # So if we are doing the safe_only run, just consider this one unsafe
+                        # and move on.
+                        if safe_only:
+                            input_objs[i] = None
+                            input_objs_safe[i] = None
+                            continue
+                        raise
 
                     if safe_only and not safe:
                         if logger:
@@ -157,6 +170,8 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                         input_objs_safe[i] = None
                         continue
 
+                    if logger:
+                        logger.debug('file %d: %s kwargs = %s',file_num,key,kwargs)
                     if use_manager:
                         tag = key + str(i)
                         input_obj = getattr(config['input_manager'],tag)(**kwargs)

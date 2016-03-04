@@ -28,8 +28,9 @@ import logging
 # to call to build an object of that type.
 valid_gsobject_types = {}
 
-# A list of gsobject types that define a block of inter-related stamps.  This will go away
-# once the Ring type is turned into a stamp type rather than an object type.  Issue #698
+# A list of gsobject types that define a block of inter-related stamps.  This is only necessary
+# to support the deprecated Ring gsobject type.  Once that feature is fully removed, we can 
+# remove this structure.
 block_gsobject_types = []
 
 class SkipThisObject(Exception):
@@ -74,14 +75,14 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     if logger:
         logger.debug('obj %d: param = %s',base['obj_num'],param)
 
-    # Save these, so we can edit them based on parameters at this level in the tree to take 
+    # Save these, so we can edit them based on parameters at this level in the tree to take
     # effect on all lower branches, and then we can reset it back to this at the end.
     orig_index_key = base.get('index_key',None)
     orig_rng = base.get('rng',None)
 
     # Check what index key we want to use for this object.
     # Note: this call will also set base['index_key'] and base['rng'] to the right values
-    index = galsim.config.value._get_index(param, base)
+    index, index_key = galsim.config.value._get_index(param, base)
 
     # Get the type to be parsed.
     if not 'type' in param:
@@ -95,7 +96,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         repeat = 1
 
     # Check if we can use the current cached object
-    if ('current_val' in param and 
+    if ('current_val' in param and
             (param['current_safe'] or param['current_index']//repeat == index//repeat)):
         # If logging, explain why we are using the current object.
         if logger:
@@ -118,16 +119,17 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     # Check if we need to skip this object
     if 'skip' in param:
         skip = galsim.config.ParseValue(param, 'skip', base, bool)[0]
-        if skip: 
+        if skip:
             if logger:
                 logger.debug('obj %d: Skipping because field skip=True',base['obj_num'])
             raise SkipThisObject()
 
     # Set up the initial default list of attributes to ignore while building the object:
-    ignore = [ 
+    ignore = [
         'dilate', 'dilation', 'ellip', 'rotate', 'rotation', 'scale_flux',
-        'magnify', 'magnification', 'shear', 'shift', 
-        'gsparams', 'skip', 'current_val', 'current_safe', 'current_index',
+        'magnify', 'magnification', 'shear', 'shift',
+        'gsparams', 'skip',
+        'current_val', 'current_safe', 'current_value_type', 'current_index', 'current_index_key',
         'index_key', 'repeat'
     ]
     # There are a few more that are specific to which key we have.
@@ -200,12 +202,14 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
             pass
     
     # Apply any dilation, ellip, shear, etc. modifications.
-    gsobject, safe1 = _TransformObject(gsobject, param, base, logger)
+    gsobject, safe1 = TransformObject(gsobject, param, base, logger)
     safe = safe and safe1
  
     param['current_val'] = gsobject
     param['current_safe'] = safe
+    param['current_value_type'] = None
     param['current_index'] = index
+    param['current_index_key'] = index_key
 
     # Reset these values in case they were changed.
     if orig_index_key is not None:
@@ -291,7 +295,7 @@ def _BuildAdd(config, base, ignore, gsparams, logger):
     for i in range(len(items)):
         gsobject, safe1 = BuildGSObject(items, i, base, gsparams, logger)
         # Skip items with flux=0
-        if 'flux' in items[i] and galsim.config.GetCurrentValue('flux',items[i],float) == 0.:
+        if 'flux' in items[i] and galsim.config.GetCurrentValue('flux',items[i],float,base) == 0.:
             if logger:
                 logger.debug('obj %d: Not including component with flux == 0',base['obj_num'])
             continue
@@ -308,7 +312,7 @@ def _BuildAdd(config, base, ignore, gsparams, logger):
         if ('flux' not in items[-1]) and all('flux' in item for item in items[0:-1]):
             sum = 0
             for item in items[0:-1]:
-                sum += galsim.config.GetCurrentValue('flux',item,float)
+                sum += galsim.config.GetCurrentValue('flux',item,float,base)
             f = 1. - sum
             if (f < 0):
                 import warnings
@@ -423,7 +427,7 @@ def _BuildOpticalPSF(config, base, ignore, gsparams, logger):
 # Now the functions for performing transformations
 #
 
-def _TransformObject(gsobject, config, base, logger):
+def TransformObject(gsobject, config, base, logger):
     """@brief Applies ellipticity, rotation, gravitational shearing and centroid shifting to a
     supplied GSObject, in that order.
 
@@ -492,9 +496,11 @@ def _Shift(gsobject, config, key, base, logger):
     gsobject = gsobject.shift(shift.x,shift.y)
     return gsobject, safe
 
-def GetMinimumBlock(config, base):
+def _GetMinimumBlock(config, base):
     """Get the minimum number of objects that should be done on the same process for a 
     particular object configuration.
+
+    This function is only needed for backwards-compatibility support of gsobject type=Ring.
 
     @param config       A dict with the configuration information.
     @param base         The base dict of the configuration. [default: config]
@@ -510,7 +516,7 @@ def GetMinimumBlock(config, base):
         return 1
 
 
-def RegisterObjectType(type_name, build_func, is_block=False):
+def RegisterObjectType(type_name, build_func, _is_block=False):
     """Register an object type for use by the config apparatus.
 
     A few notes about the signature of the build functions:
@@ -534,13 +540,12 @@ def RegisterObjectType(type_name, build_func, is_block=False):
     @param build_func       A function to build a GSObject from the config information.
                             The call signature is
                                 obj, safe = Build(config, base, ignore, gsparams, logger)
-    @param is_block         Does the type define a block of galaxies that are inter-related in
-                            some way where they need to be done by the same process.  If True,
-                            then this type should include a 'num' parameter that gives the
-                            number of objects in the block. [default: False]
     """
+    # Note: the _is_block parameter is an undocumented feature only needed to support the
+    # now-deprecated type=Ring.  Once that feature is fully removed, we can remove the _is_block
+    # parameter here.
     valid_gsobject_types[type_name] = build_func
-    if is_block:
+    if _is_block:
         block_gsobject_types.append(type_name)
 
 RegisterObjectType('None', _BuildNone)

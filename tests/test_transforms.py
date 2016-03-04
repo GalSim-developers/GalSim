@@ -643,8 +643,8 @@ def test_flip():
     ]
     if __name__ == "__main__":
         image_dir = './real_comparison_images'
-        catalog_file = os.path.join(image_dir,'test_catalog.fits')
-        rgc = galsim.RealGalaxyCatalog(catalog_file, image_dir)
+        catalog_file = 'test_catalog.fits'
+        rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
         # Some of these are slow, so only do the Shapelet test as part of the normal unit tests.
         prof_list += [
             galsim.Airy(lam_over_diam=0.17, flux=1.7),
