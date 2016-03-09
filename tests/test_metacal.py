@@ -208,8 +208,9 @@ def test_metacal_tracking():
         #       a maxk = that of the psf.  Which is too small for an accurate rendering of the
         #       correlation function (here just an autocorrelation of a Pixel.
         #       Strangely, even with a manifestly inaccurate description of the correlated noise,
-        #       the symmetrize step does successfully symmetrize the noise.  At least to the 
-        #       accuracy I'm testing it here.  Whitening on the other hand doesn't work.
+        #       the symmetrize step does successfully symmetrize the noise.  At least for square 
+        #       pixels to the  accuracy I'm testing it here.  Whitening on the other hand doesn't
+        #       work.
 
         # First, deconvolve and reconvolve by the same PSF:
         test_obj = galsim.Convolve([ii, psf, galsim.Deconvolve(psf)])
@@ -323,25 +324,25 @@ def test_metacal_tracking():
         jac = wcs.jacobian()
         J = jac.getMatrix()
         Jinv = jac.inverse().getMatrix()
-        print 'shear = ',shear
+        #print 'shear = ',shear
         S1 = shear.getMatrix()
         JinvS1 = Jinv.dot(S1)
-        print 'JinvS1 = ',JinvS1
-        print '= ',galsim.JacobianWCS(*JinvS1.flatten()).getDecomposition()
+        #print 'JinvS1 = ',JinvS1
+        #print '= ',galsim.JacobianWCS(*JinvS1.flatten()).getDecomposition()
         _, net_shear, _, _ = galsim.JacobianWCS(*JinvS1.flatten()).getDecomposition()
-        print 'net_shear = ',net_shear
+        #print 'net_shear = ',net_shear
         Ginv = (-net_shear).getMatrix()
-        print 'S1 = ',S1
-        print 'J = ',J
-        print 'JinvS1 = ',JinvS1
-        print 'Ginv = ',Ginv
+        #print 'S1 = ',S1
+        #print 'J = ',J
+        #print 'JinvS1 = ',JinvS1
+        #print 'Ginv = ',Ginv
         S2 = J.dot(Ginv).dot(Ginv).dot(JinvS1)
-        print 'S2 = ',S2
+        #print 'S2 = ',S2
         scale, rev_shear, rev_theta, flip = galsim.JacobianWCS(*S2.flatten()).getDecomposition()
-        print '= ',scale,rev_theta,rev_shear,flip
-        print 'rev_shear = ',rev_shear
-        print 'JinvS2 = ',Jinv.dot(S2)
-        print '= ',galsim.JacobianWCS(*Jinv.dot(S2).flatten()).getDecomposition()
+        #print '= ',scale,rev_theta,rev_shear,flip
+        #print 'rev_shear = ',rev_shear
+        #print 'JinvS2 = ',Jinv.dot(S2)
+        #print '= ',galsim.JacobianWCS(*Jinv.dot(S2).flatten()).getDecomposition()
         # Flip should be False, and scale should be essentially 1.0.
         assert flip == False
         assert np.abs(scale - 1.) < 1.e-8
