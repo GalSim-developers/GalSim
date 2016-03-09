@@ -49,18 +49,18 @@ from galsim import GSObject
 
 
 class Aperture(object):
-    """ Class representing a telescope aperture as part of a larger pupil plane.
+    """ Class representing a telescope aperture embedded in a larger pupil plane array.
 
     There are several options for setting the size and resolution of the pupil plane array.
 
     The first option, which is implemented by the default constructor, is to set the size either
     directly with `pupil_plane_size` or automatically based on the aperture diameter `diam`, and set
-    the resolution either directly with `pupil_scale` or via `npix`.  Note that setting the pupil
-    plane array size via `diam` also depends on the value of `oversampling`.
+    the resolution either directly with `pupil_scale` or implicitly via `npix`.  Note that setting
+    the pupil plane array size via `diam` also depends on the value of `oversampling`.
 
     The second way to set the pupil plane array size and resolution is via the alternative
     constructor `Aperture.fromPhaseScreenList`.  This constructor will examine the supplied
-    PhaseScreenList argument and supplied wavelength to pick good values for size and resolution.
+    PhaseScreenList argument and wavelength argument to pick good values for size and resolution.
     These values will then be modified via the `oversampling` and `pad_factor` keywords, and can be
     overridden entirely with `pupil_plane_size` and `pupil_scale`.
 
@@ -80,8 +80,8 @@ class Aperture(object):
     The constructed object has two key attributes:
         `illuminated`  a boolean array indicating which positions in the pupil plane are exposed to
                        the sky.
-        `rho`          array of unit-disc-scaled pupil coordinates for use by Zernike polynomials
-                       (as a complex number).
+        `rho`          complex array of unit-disc-scaled pupil coordinates for defining Zernike
+                       polynomials.
 
     Each element of `rho` encodes the corresponding coordinate as (x, y) => x + 1j * y.
 
@@ -111,10 +111,18 @@ class Aperture(object):
                  circular_pupil=True, obscuration=0.,
                  nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees,
                  oversampling=1.5):
+        self.diam = diam
         if obscuration >= 1.:
             raise ValueError("Pupil fully obscured! obscuration = {1} (>= 1)".format(obscuration))
+        self._obscuration = float(obscuration)
+        self._circular_pupil = circular_pupil
+        self._nstruts = nstruts
+        self._strut_thick = strut_thick
+        self._strut_angle = strut_angle
+        self._oversampling = oversampling
+
         if pupil_plane_size is None:
-            pupil_plane_size = 2.0*diam*oversampling
+            pupil_plane_size = 2.0*self.diam*oversampling
         self.pupil_plane_size = float(pupil_plane_size)
 
         # Use one of `npix` or `pupil_scale` to set the scale.
@@ -128,32 +136,64 @@ class Aperture(object):
         self.npix = int(npix)
         self.pupil_scale = self.pupil_plane_size/(self.npix-1)
 
-        u = np.fft.fftshift(np.fft.fftfreq(self.npix, 1./pupil_plane_size))
+        u = np.fft.fftshift(np.fft.fftfreq(self.npix, 1./self.pupil_plane_size))
         u, v = np.meshgrid(u, u)
         rsqr = u**2 + v**2
 
-        radius = 0.5*diam
+        radius = 0.5*self.diam
         if circular_pupil:
             self.illuminated = (rsqr < radius**2)
-            if obscuration > 0.:
-                self.illuminated *= rsqr >= (radius*obscuration)**2
+            if self._obscuration > 0.:
+                self.illuminated *= rsqr >= (radius*self._obscuration)**2
         else:
             self.illuminated = (np.abs(u) < radius) & (np.abs(v) < radius)
-            if obscuration > 0.:
-                self.illuminated *= ((np.abs(u) >= radius*obscuration) *
-                                     (np.abs(v) >= radius*obscuration))
+            if self._obscuration > 0.:
+                self.illuminated *= ((np.abs(u) >= radius*self._obscuration) *
+                                     (np.abs(v) >= radius*self._obscuration))
 
-        if nstruts > 0:
-            if not isinstance(strut_angle, galsim.Angle):
+        if self._nstruts > 0:
+            if not isinstance(self._strut_angle, galsim.Angle):
                 raise TypeError("Input kwarg strut_angle must be a galsim.Angle instance.")
             # Add the initial rotation if requested, converting to radians.
-            if strut_angle.rad != 0.:
-                u, v = utilities.rotate_xy(u, v, -strut_angle)
-            rotang = 360. * galsim.degrees / float(nstruts)
+            if self._strut_angle.rad != 0.:
+                u, v = utilities.rotate_xy(u, v, -self._strut_angle)
+            rotang = 360. * galsim.degrees / float(self._nstruts)
             # Then loop through struts setting to zero the regions which lie under the strut
-            for istrut in xrange(nstruts):
+            for istrut in xrange(self._nstruts):
                 u, v = utilities.rotate_xy(u, v, -rotang)
-                self.illuminated *= ((np.abs(u) >= radius * strut_thick) + (v < 0.0))
+                self.illuminated *= ((np.abs(u) >= radius * self._strut_thick) + (v < 0.0))
+
+    def __str__(self):
+        s = "galsim.Aperture(%r" % self.diam
+        if self._obscuration != 0:
+            s += ", obscuration=%r" % self._obscuration
+        if self._nstruts != 0:
+            s += ", nstruts=%r" % self._nstruts
+        if self._strut_thick != 0.05:
+            s += ", strut_thick=%r" % self._strut_thick
+        if self._strut_angle != 0*galsim.degrees:
+            s += ", strut_angle=%r" % self._strut_angle
+        if self._oversampling != 1.5:
+            s += ", oversampling=%r" % self._oversampling
+        s += ")"
+        return s
+
+    def __repr__(self):
+        s = "galsim.Aperture(%r" % self.diam
+        s += ", npix=%r" % self.npix
+        s += ", pupil_plane_size=%r" % self.pupil_plane_size
+        if self._obscuration != 0:
+            s += ", obscuration=%r" % self._obscuration
+        if self._nstruts != 0:
+            s += ", nstruts=%r" % self._nstruts
+        if self._strut_thick != 0.05:
+            s += ", strut_thick=%r" % self._strut_thick
+        if self._strut_angle != 0*galsim.degrees:
+            s += ", strut_angle=%r" % self._strut_angle
+        if self._oversampling != 1.5:
+            s += ", oversampling=%r" % self._oversampling
+        s += ")"
+        return s
 
     @classmethod
     def fromPhaseScreenList(cls, screen_list, lam, pad_factor=1.5, scale_unit=galsim.arcsec,
