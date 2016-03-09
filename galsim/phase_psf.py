@@ -108,10 +108,76 @@ class Aperture(object):
                              directly, then this keyword is ignored.  [default: 1.5]
     """
     def __init__(self, diam, npix=None, pupil_scale=None, pupil_plane_size=None,
+                 pupil_plane_im=None, pupil_angle=0.*galsim.degrees,
                  circular_pupil=True, obscuration=0.,
                  nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees,
                  oversampling=1.5):
         self.diam = diam
+        if pupil_plane_im is not None:
+            self._load_pupil_plane(pupil_plane_im, pupil_angle)
+        else:
+            self._generate_pupil_plane(
+                npix=npix, pupil_scale=pupil_scale, pupil_plane_size=pupil_plane_size,
+                circular_pupil=circular_pupil, obscuration=obscuration, nstruts=nstruts,
+                strut_thick=strut_thick, strut_angle=strut_angle, oversampling=oversampling)
+
+    def _load_pupil_plane(self, pupil_plane_im, pupil_angle):
+        # Handle multiple types of input: NumPy array, galsim.Image, or string for filename with
+        # image.
+        if isinstance(pupil_plane_im, np.ndarray):
+            # Make it into an image.
+            pupil_plane_im = galsim.Image(pupil_plane_im)
+        elif isinstance(pupil_plane_im, galsim.Image):
+            # Make sure not to overwrite input image.
+            pupil_plane_im = pupil_plane_im.copy()
+        else:
+            # Read in image of pupil plane from file.
+            pupil_plane_im = galsim.fits.read(pupil_plane_im)
+
+        # Sanity checks
+        if pupil_plane_im.array.shape[0] != pupil_plane_im.array.shape[1]:
+            raise ValueError("We require square input pupil plane arrays!")
+        if pupil_plane_im.array.shape[0] % 2 == 1:
+            raise ValueError("Even-sized input arrays are required for the pupil plane!")
+
+        # TODO: Determine if we still need to pad the image.
+        # Pad image here if necessary.
+
+        self.npix = pupil_plane_im.array.shape[0]
+        u = np.fft.fftshift(np.fft.fftfreq(self.npix))
+        u, v = np.meshgrid(u, u)
+        rsqr = u**2 + v**2
+        rsqrmax_illum = max(rsqr[pupil_plane_im > 0])
+        self._rho = (u + 1j * v) / np.sqrt(rsqrmax_illum)
+        # Figure out the scale given the diam and illuminated pixels.
+        self.pupil_plane_size = self.diam / (2.0 * np.sqrt(rsqrmax_illum))
+        self.pupil_scale = self.pupil_plane_size / (self.npix-1)
+
+        if pupil_angle.rad() == 0.:
+            self.illuminated = pupil_plane_im.array
+        else:
+            # Rotate the pupil plane image as required based on the `pupil_angle`, being careful to
+            # ensure that the image is one of the allowed types.  We ignore the scale.
+            int_im = galsim.InterpolatedImage(galsim.Image(pupil_plane_im, scale=1.,
+                                                           dtype=np.float64),
+                                              x_interpolant='linear', calculate_stepk=False,
+                                              calculate_maxk=False)
+            int_im = int_im.rotate(pupil_angle)
+            new_im = galsim.ImageF(pupil_plane_im.array.shape[0], pupil_plane_im.array.shape[0])
+            new_im = int_im.drawImage(image=new_im, scale=1., method='no_pixel')
+            pp_arr = new_im.array
+            # Restore hard edges that might have been lost during the interpolation.  To do this, we
+            # check the maximum value of the entries.  Values after interpolation that are >half
+            # that maximum value are kept as nonzero (True), but those that are <half the maximum
+            # value are set to zero (False).
+            max_pp_val = np.max(pp_arr)
+            pp_arr[pp_arr < 0.5*max_pp_val] = 0.
+            self.illuminated = pp_arr.astype(bool)
+
+    def _generate_pupil_plane(self, npix=None, pupil_scale=None, pupil_plane_size=None,
+                              circular_pupil=True, obscuration=0.,
+                              nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees,
+                              oversampling=1.5):
         if obscuration >= 1.:
             raise ValueError("Pupil fully obscured! obscuration = {1} (>= 1)".format(obscuration))
         self._obscuration = float(obscuration)
@@ -120,7 +186,6 @@ class Aperture(object):
         self._strut_thick = strut_thick
         self._strut_angle = strut_angle
         self._oversampling = oversampling
-
         if pupil_plane_size is None:
             pupil_plane_size = 2.0*self.diam*oversampling
         self.pupil_plane_size = float(pupil_plane_size)
