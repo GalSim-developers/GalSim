@@ -1371,7 +1371,7 @@ class JacobianWCS(LocalWCS):
         a flip of (x,y) -> (y,x).
 
             ( dudx  dudy ) = scale/sqrt(1-g1^2-g2^2) ( 1+g1  g2  ) ( cos(theta)  -sin(theta) ) F
-            ( dvdx  dvdy )                           (  g2  1-g2 ) ( sin(theta)   cos(theta) )
+            ( dvdx  dvdy )                           (  g2  1-g1 ) ( sin(theta)   cos(theta) )
 
         where F is either the identity matrix, ( 1 0 ), or a flip matrix, ( 0 1 ).
                                                ( 0 1 )                    ( 1 0 )
