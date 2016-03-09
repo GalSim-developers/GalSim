@@ -200,7 +200,7 @@ def test_metacal_tracking():
     if didnt_fail:
         assert False, 'Initial image was expected to fail symmetric noise test, but passed.'
 
-    if False:
+    if True:
         print '\n\nStrategy 1:'
         # Strategy 1: Use the noise attribute attached to ii and use it to either whiten or
         #             symmetrize the noise in the final image.
@@ -248,7 +248,7 @@ def test_metacal_tracking():
         print 'Time for noise tracking with symmetrize = ',t4-t3
 
 
-    if False:
+    if True:
         print '\n\nStrategy 2:'
         # Strategy 2: Don't trust the noise tracking. Track a noise image through the same process
         #             and then measure the noise from that image.  Use it to either whiten or
