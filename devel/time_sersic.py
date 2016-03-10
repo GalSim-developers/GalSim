@@ -19,7 +19,7 @@ for iter in range(2):
     print 'Total time = %f'%(tend-tstart)
 
 gsparams = galsim.GSParams(xvalue_accuracy=1.e-2, kvalue_accuracy=1.e-2,
-                           maxk_threshold=1.e-2, alias_threshold=1.e-2)
+                           maxk_threshold=1.e-2, folding_threshold=1.e-2)
 
 for iter in range(2):
     tstart = time.time()
