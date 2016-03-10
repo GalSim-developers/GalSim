@@ -155,7 +155,8 @@ def test_metacal_tracking():
     # The last two are working.
     #wcs = galsim.JacobianWCS(0.26, 0.03, 0.08, -0.21)
     #wcs = galsim.JacobianWCS(0.26, 0.03, 0.03, 0.26)
-    wcs = galsim.JacobianWCS(0.26, 0.03, -0.03, 0.26)
+    wcs = galsim.JacobianWCS(0.03, 0.26, 0.26, -0.03)
+    #wcs = galsim.JacobianWCS(0.26, 0.03, -0.03, 0.26)
     #wcs = galsim.PixelScale(0.26)
     psf = galsim.Gaussian(fwhm=0.9)
     psf_target = psf.dilate(1. + 2.*dg)
@@ -297,7 +298,35 @@ def test_metacal_tracking():
         # Strategy 3: Make a noise field and do the same operations as we do to the main image
         #             except use the opposite shear value.  Add this noise field to the final
         #             image to get a white noise field.
-        # Note: This method works!  But not for non-trivial wcs yet.
+        # Note: This method works!  But only for square pixels.  However, they may be rotated
+        # or flipped. Just not sheared.
+        t3 = time.time()
+
+        # Make another noise image, since we don't actually have access to a pure noise image
+        # for real objects.  But we should be able to estimate the variance in the image.
+        rev_image = galsim.Image(im_size,im_size, init_value=0, wcs=wcs)
+        rev_image.addNoise(galsim.GaussianNoise(rng=rng, sigma=math.sqrt(noise_var)))
+        rev_ii = galsim.InterpolatedImage(rev_image, pad_factor=1)
+
+        rev_sheared_obj = galsim.Convolve(rev_ii, galsim.Deconvolve(psf)).shear(-shear)
+        rev_final_obj = galsim.Convolve(psf_target, rev_sheared_obj)
+        rev_final_image = rev_final_obj.drawImage(obs_image.copy(), method='no_pixel')
+
+        # Add the reverse-sheared noise image to the original image.
+        final_image2 = final_image - rev_final_image
+        t4 = time.time()
+
+        # The noise variance in the end should be 2x as large as the original
+        final_var = np.var(final_image2.array)
+        print 'Reverse shear method: final_var = ',final_var
+        check_symm_noise(final_image2, 'using reverse shear does not work')
+        print 'Time for reverse shear method = ',t4-t3
+
+    if True:
+        print '\n\nStrategy 4:'
+        # Strategy 4: The same as strategy 3, except we try to have the shear be such that
+        #             the net shear in the image plane is negated, not the shear in world coords.
+        # Note: This method also only works for square pixels.
         t3 = time.time()
 
         # Make another noise image, since we don't actually have access to a pure noise image
@@ -358,13 +387,13 @@ def test_metacal_tracking():
 
         # The noise variance in the end should be 2x as large as the original
         final_var = np.var(final_image2.array)
-        print 'Reverse shear method: final_var = ',final_var
+        print 'Reverse in image-coords shear method: final_var = ',final_var
         check_symm_noise(final_image2, 'using reverse shear does not work')
         print 'Time for reverse shear method = ',t4-t3
 
     if False:
-        print '\n\nStrategy 4:'
-        # Strategy 4: Make a noise field and do the same operations as we do to the main image
+        print '\n\nStrategy 5:'
+        # Strategy 5: Make a noise field and do the same operations as we do to the main image
         #             Subtract off the difference between this and the original noise field.
         # Note: I don't think this method should ever work (i.e. I don't think the failure
         #       here points to a bug in anything), but it's included here since I tried it,
@@ -390,6 +419,7 @@ def test_metacal_tracking():
         print 'd(noise) method: final_var = ',final_var
         check_symm_noise(final_image2, 'subtracting d(noise) does not work')
         print 'Time for d(noise) method = ',t4-t3
+
 
     t2 = time.time()
     print 'total time for tests = %.2f'%(t2-t1)
