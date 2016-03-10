@@ -16,7 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 import numpy as np
-from galsim_test_helpers import funcname
+from galsim_test_helpers import timer
 
 try:
     import galsim
@@ -29,11 +29,9 @@ except ImportError:
     import galsim
 
 
+@timer
 def test_phase_screen_list():
     # Check list-like behaviors of PhaseScreenList
-
-    import time
-    t1 = time.time()
     rng = galsim.BaseDeviate(1234)
     rng2 = galsim.BaseDeviate(123)
 
@@ -102,15 +100,10 @@ def test_phase_screen_list():
     np.testing.assert_array_equal(psf.img, psf3.img, "PhaseScreenPSFs are inconsistent")
     np.testing.assert_array_equal(psf.img, psf4.img, "PhaseScreenPSFs are inconsistent")
 
-    t2 = time.time()
-    print 'time for %s = %.2f' % (funcname(), t2-t1)
 
-
+@timer
 def test_frozen_flow():
     # Check frozen flow: phase(x=0, t=0) == phase(x=v*t, t=t)
-
-    import time
-    t1 = time.time()
     rng = galsim.BaseDeviate(1234)
     vx = 1.0  # m/s
     dt = 0.01  # s
@@ -127,14 +120,9 @@ def test_frozen_flow():
 
     np.testing.assert_array_almost_equal(wf0, wf1, 5, "Flow is not frozen")
 
-    t2 = time.time()
-    print 'time for %s = %.2f' % (funcname(), t2-t1)
 
-
+@timer
 def test_phase_psf_reset():
-    import time
-    t1 = time.time()
-
     rng = galsim.BaseDeviate(1234)
     # Test frozen AtmosphericScreen first
     atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, speed=0.1, alpha=1.0, rng=rng)
@@ -163,10 +151,8 @@ def test_phase_psf_reset():
     wf3 = atm.wavefront(aper)
     np.testing.assert_array_equal(wf1, wf3, "Phase screen didn't reset")
 
-    t2 = time.time()
-    print 'time for %s = %.2f' % (funcname(), t2-t1)
 
-
+@timer
 def test_phase_psf_batch():
     # Check that PSFs generated serially match those generated in batch.
     import time
@@ -214,14 +200,9 @@ def test_phase_psf_batch():
             psf1.img, psf2.img,
             "Individually generated AtmosphericPSF differs from AtmosphericPSF generated in batch")
 
-    t2 = time.time()
-    print 'time for %s = %.2f' % (funcname(), t2-t1)
 
-
+@timer
 def test_opt_indiv_aberrations():
-    import time
-    t1 = time.time()
-
     screen1 = galsim.OpticalScreen(tip=0.2, tilt=0.3, defocus=0.4, astig1=0.5, astig2=0.6,
                                    coma1=0.7, coma2=0.8, trefoil1=0.9, trefoil2=1.0, spher=1.1)
     screen2 = galsim.OpticalScreen(aberrations=[0.0, 0.0, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,
@@ -233,8 +214,6 @@ def test_opt_indiv_aberrations():
     np.testing.assert_array_equal(
         psf1.img, psf2.img,
         "Individually specified aberrations differs from aberrations specified as list.")
-    t2 = time.time()
-    print 'time for %s = %.2f' % (funcname(), t2-t1)
 
 
 if __name__ == "__main__":

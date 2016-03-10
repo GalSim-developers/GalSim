@@ -121,6 +121,25 @@ class Aperture(object):
                 circular_pupil=circular_pupil, obscuration=obscuration, nstruts=nstruts,
                 strut_thick=strut_thick, strut_angle=strut_angle, oversampling=oversampling)
 
+    @classmethod
+    def fromPhaseScreenList(cls, screen_list, lam, pad_factor=1.5, scale_unit=galsim.arcsec,
+                            **kwargs):
+        kwargs.pop('npix', None)
+        pupil_scale = kwargs.pop('pupil_scale', None)
+        if pupil_scale is None:
+            pupil_scale = screen_list.pupil_scale(lam=lam, scale_unit=scale_unit, **kwargs)
+            pupil_scale /= pad_factor
+        return cls(pupil_scale=pupil_scale, **kwargs)
+
+    @classmethod
+    def fromGSObject(cls, obj, lam, pad_factor=1.5, scale_unit=galsim.arcsec, **kwargs):
+        kwargs.pop('npix', None)
+        pupil_scale = kwargs.pop('pupil_scale', None)
+        if pupil_scale is None:
+            pupil_scale = obj.stepK() * lam*1.e-9 * galsim.radians / scale_unit / (2 * np.pi)
+            pupil_scale /= pad_factor
+        return cls(pupil_scale=pupil_scale, **kwargs)
+
     def _load_pupil_plane(self, pupil_plane_im, pupil_angle):
         # Handle multiple types of input: NumPy array, galsim.Image, or string for filename with
         # image.
@@ -259,25 +278,6 @@ class Aperture(object):
             s += ", oversampling=%r" % self._oversampling
         s += ")"
         return s
-
-    @classmethod
-    def fromPhaseScreenList(cls, screen_list, lam, pad_factor=1.5, scale_unit=galsim.arcsec,
-                            **kwargs):
-        kwargs.pop('npix', None)
-        pupil_scale = kwargs.pop('pupil_scale', None)
-        if pupil_scale is None:
-            pupil_scale = screen_list.pupil_scale(lam=lam, scale_unit=scale_unit, **kwargs)
-            pupil_scale /= pad_factor
-        return cls(pupil_scale=pupil_scale, **kwargs)
-
-    @classmethod
-    def fromGSObject(cls, obj, lam, pad_factor=1.5, scale_unit=galsim.arcsec, **kwargs):
-        kwargs.pop('npix', None)
-        pupil_scale = kwargs.pop('pupil_scale', None)
-        if pupil_scale is None:
-            pupil_scale = obj.stepK() * lam*1.e-9 * galsim.radians / scale_unit / (2 * np.pi)
-            pupil_scale /= pad_factor
-        return cls(pupil_scale=pupil_scale, **kwargs)
 
     @property
     def rho(self):
@@ -630,7 +630,7 @@ class OpticalScreen(object):
             # Aberrations were passed in, so check for right number of entries.
             if len(aberrations) <= 2:
                 raise ValueError("Aberrations keyword must have length > 2")
-            # Check for non-zero value in first place.  Probably a mistake.
+            # Check for non-zero value in first two places.  Probably a mistake.
             if aberrations[0] != 0.0:
                 import warnings
                 warnings.warn(
@@ -1083,6 +1083,8 @@ class PhaseScreenPSF(GSObject):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
         # progress bar during long calculations.
 
+        if not isinstance(screen_list, PhaseScreenList):
+            screen_list = PhaseScreenList(screen_list)
         self.screen_list = screen_list
         self.lam = float(lam)
         self.exptime = float(exptime)
@@ -1312,3 +1314,46 @@ def Atmosphere(screen_size, rng=None, **kwargs):
         kwargs['r0_500'] = [nmax**(3./5) * kwargs['r0_500'][0]] * nmax
 
     return PhaseScreenList(AtmosphericScreen(rng=rng, **kw) for kw in _lod_to_dol(kwargs, nmax))
+
+
+#  Args not yet implemented:
+#  suppress_warning, max_size
+#  Also pickling.
+class OpticalPSF(GSObject):
+    def __init__(self, lam_over_diam=None, lam=None, diam=None, tip=0., tilt=0., defocus=0.,
+                 astig1=0., astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0.,
+                 aberrations=None, circular_pupil=True, obscuration=0., interpolant=None,
+                 oversampling=1.5, pad_factor=1.5, flux=1., nstruts=0, strut_thick=0.05,
+                 strut_angle=0.*galsim.degrees, pupil_plane_im=None,
+                 pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None):
+        # Handle lam/diam vs. lam_over_diam
+        if lam_over_diam is not None:
+            if lam is not None or diam is not None:
+                raise TypeError("If specifying lam_over_diam, then do not specify lam or diam")
+            lam = 500.
+            diam = lam*1.e-9 / lam_over_diam * galsim.radians / scale_unit
+        else:
+            if lam is None or diam is None:
+                raise TypeError("If not specifying lam_over_diam, then specify lam AND diam")
+
+        # Make the optical screen.
+        optics_screen = galsim.OpticalScreen(
+            defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2,
+            trefoil1=trefoil1, trefoil2=trefoil2, spher=spher, aberrations=aberrations)
+        screens = galsim.PhaseScreenList([optics_screen])
+
+        # Make the aperture.
+        if pupil_plane_im is not None:
+            aper = galsim.Aperture(diam, pupil_plane_im=pupil_plane_im, pupil_angle=pupil_angle)
+        else:
+            airy = galsim.Airy(lam=lam, diam=diam, obscuration=obscuration, scale_unit=scale_unit,
+                               gsparams=gsparams)
+            aper = galsim.Aperture.fromGSObject(
+                airy, lam, pad_factor=pad_factor, scale_unit=scale_unit,
+                diam=diam, obscuration=obscuration, nstruts=nstruts, strut_thick=strut_thick,
+                strut_angle=strut_angle)
+
+        # Finally, put together to make the PSF.
+        psf = galsim.PhaseScreenPSF(screens, lam=lam, flux=flux, interpolant=interpolant, aper=aper,
+                                    scale_unit=scale_unit, gsparams=gsparams)
+        GSObject.__init__(self, psf)
