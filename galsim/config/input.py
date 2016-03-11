@@ -164,7 +164,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                         # the exception is reraised.
                         if safe_only:
                             if logger and logger.isEnabledFor(logging.DEBUG):
-                                logger.debug('file %d: Skip %s %d, since caugt exception: %s',
+                                logger.debug('file %d: Skip %s %d, since caught exception: %s',
                                              file_num,key,i,e)
                             input_objs[i] = None
                             input_objs_safe[i] = None
