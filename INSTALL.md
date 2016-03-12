@@ -341,6 +341,17 @@ than the default `g++`, type
 
     scons CXX=icpc
 
+On El Capitan, Apple instituted a new security measure wherein system calls
+lose some of the system environment variables, including DYLD_LIBRARY_PATH
+among others.  If your system is set up to use that environment variable to
+resolve library locations at runtime, then this will cause problems when SCons
+is trying to figure out if things are installed correctly.  To override this
+behavior, you can explicitly send this environment variable to SCons by writing
+
+    scons DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH
+
+and it will be able to re-set this value within the SCons processing.
+
 One nice feature of SCons is that once you have specified a parameter, it will
 save that value for future builds in the file `gs_scons.conf`, so once you have
 the build process working, for later builds you only need to type `scons`. It
