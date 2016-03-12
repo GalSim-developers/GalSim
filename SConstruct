@@ -107,6 +107,11 @@ opts.Add(PathVariable('DYLD_LIBRARY_PATH',
          'this option enables SCons to set it back in for you by doing '+
          '`scons DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH`.',
          '', PathVariable.PathAccept))
+opts.Add(PathVariable('LD_LIBRARY_PATH',
+         'Set the LD_LIBRARY_PATH inside of SCons. '+
+         'cf. DYLD_LIBRARY_PATH for why this may be useful.',
+         '', PathVariable.PathAccept))
+
 opts.Add('NOSETESTS','Name of nosetests executable','')
 opts.Add(BoolVariable('CACHE_LIB','Cache the results of the library checks',True))
 opts.Add(BoolVariable('WITH_PROF',
@@ -734,6 +739,9 @@ def AltTryRun(config, text, extension):
         if 'DYLD_LIBRARY_PATH' in sconf.env:
             pre = 'DYLD_LIBRARY_PATH=%r'%sconf.env['DYLD_LIBRARY_PATH']
             pname = "%s %s"%(pre,pname)
+        if 'LD_LIBRARY_PATH' in sconf.env:
+            pre = 'LD_LIBRARY_PATH=%r'%sconf.env['LD_LIBRARY_PATH']
+            pname = "%s %s"%(pre,pname)
         node = config.env.Command(output, prog, [ [ 'bash', '-c', pname, ">", "${TARGET}"] ]) 
         ok = sconf.BuildNodes(node) 
     if ok:
@@ -996,6 +1004,9 @@ def TryScript(config,text,executable):
     # Just like in AltTryRun, we need to add the DYLD_LIBRARY_PATH for El Capitan.
     if 'DYLD_LIBRARY_PATH' in config.sconf.env:
         pre = 'DYLD_LIBRARY_PATH=%r'%config.sconf.env['DYLD_LIBRARY_PATH']
+        executable = "%s %s"%(pre,executable)
+    if 'LD_LIBRARY_PATH' in config.sconf.env:
+        pre = 'LD_LIBRARY_PATH=%r'%config.sconf.env['LD_LIBRARY_PATH']
         executable = "%s %s"%(pre,executable)
     node = config.env.Command(output, source, 
             [[ 'bash', '-c', executable, "<", "${SOURCE}", ">", "${TARGET}", "2>&1"]]) 
