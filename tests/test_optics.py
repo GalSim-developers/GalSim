@@ -47,12 +47,23 @@ decimal_dft = 3  # Last decimal place used for checking near equality of DFT pro
 # test_optics.py directly, you will get the slow tests (~5 minutes for all of them).  When running
 # `scons tests`, you will get faster, less stringent tests.
 if __name__ == "__main__":
-    pp_decimal = 5
-    pp_file = 'sample_pupil_rolled_oversample.fits.gz'
-    pp_oversampling = 4.
-    pp_pad_factor = 4.
-    # In this case, we test the entire images.
-    pp_test_type = 'image'
+    # pp_decimal = 5
+    # pp_file = 'sample_pupil_rolled_oversample.fits.gz'
+    # pp_oversampling = 4.
+    # pp_pad_factor = 4.
+    # # In this case, we test the entire images.
+    # pp_test_type = 'image'
+    pp_decimal = 4
+    pp_file = 'sample_pupil_rolled.fits'
+    pp_oversampling = 1.5
+    pp_pad_factor = 1.5
+    # In the less stringent tests, we may opt to test only the 2nd moments rather than the images
+    # themselves.  This is because when the original tests were set up, I found low-level artifacts
+    # that made it hard to get image-based tests to pass, yet the adaptive moments agreed quite
+    # well.  Given that there were no such problems in the image-based tests with high-res inputs, I
+    # believe these artifacts in the low-res tests should be ignored (by doing moments-based tests
+    # only).
+    pp_test_type = 'moments'
 else:
     pp_decimal = 4
     pp_file = 'sample_pupil_rolled.fits'
@@ -811,11 +822,11 @@ if __name__ == "__main__":
     # test_otf_image_view()
     # test_mtf_image_view()
     # test_ptf_image_view()
-    # test_OpticalPSF_flux()
-    # test_OpticalPSF_vs_Airy()
-    # test_OpticalPSF_vs_Airy_with_obs()
-    # test_OpticalPSF_aberrations_struts()
-    # test_OpticalPSF_aberrations_kwargs()
-    # test_OpticalPSF_flux_scaling()
-    # test_OpticalPSF_pupil_plane()
+    test_OpticalPSF_flux()
+    test_OpticalPSF_vs_Airy()
+    test_OpticalPSF_vs_Airy_with_obs()
+    test_OpticalPSF_aberrations_struts()
+    test_OpticalPSF_aberrations_kwargs()
+    test_OpticalPSF_flux_scaling()
+    test_OpticalPSF_pupil_plane()
     test_OpticalPSF_lamdiam()

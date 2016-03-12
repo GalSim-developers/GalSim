@@ -162,27 +162,28 @@ class Aperture(object):
         # TODO: Determine if we still need to pad the image.
         # Pad image here if necessary.
 
+        # Convert to bool
         self.npix = pupil_plane_im.array.shape[0]
         u = np.fft.fftshift(np.fft.fftfreq(self.npix))
         u, v = np.meshgrid(u, u)
-        rsqr = u**2 + v**2
-        rsqrmax_illum = max(rsqr[pupil_plane_im > 0])
-        self._rho = (u + 1j * v) / np.sqrt(rsqrmax_illum)
+        r = np.hypot(u, v)
+        rmax_illum = np.max(r*(pupil_plane_im.array > 0))
         # Figure out the scale given the diam and illuminated pixels.
-        self.pupil_plane_size = self.diam / (2.0 * np.sqrt(rsqrmax_illum))
-        self.pupil_scale = self.pupil_plane_size / (self.npix-1)
-
+        self.pupil_plane_size = self.diam / (2.0 * rmax_illum)
+        self.pupil_scale = self.pupil_plane_size / self.npix
+        # Assemble rho array.
+        self._rho = (u + 1j * v) / rmax_illum
         if pupil_angle.rad() == 0.:
-            self.illuminated = pupil_plane_im.array
+            self.illuminated = pupil_plane_im.array.astype(bool)
         else:
             # Rotate the pupil plane image as required based on the `pupil_angle`, being careful to
             # ensure that the image is one of the allowed types.  We ignore the scale.
-            int_im = galsim.InterpolatedImage(galsim.Image(pupil_plane_im, scale=1.,
+            int_im = galsim.InterpolatedImage(galsim.Image(pupil_plane_im.array, scale=1.,
                                                            dtype=np.float64),
                                               x_interpolant='linear', calculate_stepk=False,
                                               calculate_maxk=False)
             int_im = int_im.rotate(pupil_angle)
-            new_im = galsim.ImageF(pupil_plane_im.array.shape[0], pupil_plane_im.array.shape[0])
+            new_im = galsim.ImageF(pupil_plane_im.array.shape[1], pupil_plane_im.array.shape[0])
             new_im = int_im.drawImage(image=new_im, scale=1., method='no_pixel')
             pp_arr = new_im.array
             # Restore hard edges that might have been lost during the interpolation.  To do this, we
@@ -218,7 +219,7 @@ class Aperture(object):
             if pupil_scale is not None:
                 raise ValueError("Cannot supply both `npix` and `pupil_scale`.")
         self.npix = int(npix)
-        self.pupil_scale = self.pupil_plane_size/(self.npix-1)
+        self.pupil_scale = self.pupil_plane_size/self.npix
 
         u = np.fft.fftshift(np.fft.fftfreq(self.npix, 1./self.pupil_plane_size))
         u, v = np.meshgrid(u, u)
@@ -247,17 +248,25 @@ class Aperture(object):
                 u, v = utilities.rotate_xy(u, v, -rotang)
                 self.illuminated *= ((np.abs(u) >= radius * self._strut_thick) + (v < 0.0))
 
+    def _geometry_str(self):
+        s = ""
+        if hasattr(self, '_obscuration') and self._obscuration != 0:
+            s += ", obscuration=%r" % self._obscuration
+        if hasattr(self, '_nstruts') and self._nstruts != 0:
+            s += ", nstruts=%r" % self._nstruts
+        if hasattr(self, '_strut_thick') and self._strut_thick != 0.05:
+            s += ", strut_thick=%r" % self._strut_thick
+        if hasattr(self, '_strut_angle') and self._strut_angle != 0*galsim.degrees:
+            s += ", strut_angle=%r" % self._strut_angle
+        return s
+
     def __str__(self):
         s = "galsim.Aperture(%r" % self.diam
-        if self._obscuration != 0:
-            s += ", obscuration=%r" % self._obscuration
-        if self._nstruts != 0:
-            s += ", nstruts=%r" % self._nstruts
-        if self._strut_thick != 0.05:
-            s += ", strut_thick=%r" % self._strut_thick
-        if self._strut_angle != 0*galsim.degrees:
-            s += ", strut_angle=%r" % self._strut_angle
-        if self._oversampling != 1.5:
+        if hasattr(self, 'pupil_plane_im'):
+            pass
+        else:
+            s += self._geometry_str()
+        if hasattr(self, '_oversampling') and self._oversampling != 1.5:
             s += ", oversampling=%r" % self._oversampling
         s += ")"
         return s
@@ -266,15 +275,11 @@ class Aperture(object):
         s = "galsim.Aperture(%r" % self.diam
         s += ", npix=%r" % self.npix
         s += ", pupil_plane_size=%r" % self.pupil_plane_size
-        if self._obscuration != 0:
-            s += ", obscuration=%r" % self._obscuration
-        if self._nstruts != 0:
-            s += ", nstruts=%r" % self._nstruts
-        if self._strut_thick != 0.05:
-            s += ", strut_thick=%r" % self._strut_thick
-        if self._strut_angle != 0*galsim.degrees:
-            s += ", strut_angle=%r" % self._strut_angle
-        if self._oversampling != 1.5:
+        if hasattr(self, 'pupil_plane_im'):
+            pass
+        else:
+            s += self._geometry_str()
+        if hasattr(self, '_oversampling') and self._oversampling != 1.5:
             s += ", oversampling=%r" % self._oversampling
         s += ")"
         return s
@@ -1341,7 +1346,7 @@ class OpticalPSF(GSObject):
             defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2,
             trefoil1=trefoil1, trefoil2=trefoil2, spher=spher, aberrations=aberrations)
         screens = galsim.PhaseScreenList([optics_screen])
-
+        self._screens = screens
         # Make the aperture.
         if pupil_plane_im is not None:
             aper = galsim.Aperture(diam, pupil_plane_im=pupil_plane_im, pupil_angle=pupil_angle)
@@ -1352,8 +1357,9 @@ class OpticalPSF(GSObject):
                 airy, lam, pad_factor=pad_factor, scale_unit=scale_unit,
                 diam=diam, obscuration=obscuration, nstruts=nstruts, strut_thick=strut_thick,
                 strut_angle=strut_angle)
-
+        self._aper = aper
         # Finally, put together to make the PSF.
         psf = galsim.PhaseScreenPSF(screens, lam=lam, flux=flux, interpolant=interpolant, aper=aper,
                                     scale_unit=scale_unit, gsparams=gsparams)
+        self._psf = psf
         GSObject.__init__(self, psf)
