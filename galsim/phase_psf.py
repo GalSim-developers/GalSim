@@ -1325,6 +1325,34 @@ def Atmosphere(screen_size, rng=None, **kwargs):
 #  suppress_warning, max_size
 #  Also pickling.
 class OpticalPSF(GSObject):
+    _req_params = {}
+    _opt_params = {
+        "diam": float,
+        "defocus": float,
+        "astig1": float,
+        "astig2": float,
+        "coma1": float,
+        "coma2": float,
+        "trefoil1": float,
+        "trefoil2": float,
+        "spher": float,
+        "circular_pupil": bool,
+        "obscuration": float,
+        "oversampling": float,
+        "pad_factor": float,
+        "suppress_warning": bool,
+        "max_size": float,
+        "interpolant": str,
+        "flux": float,
+        "nstruts": int,
+        "strut_thick": float,
+        "strut_angle": galsim.Angle,
+        "pupil_plane_im": str,
+        "pupil_angle": galsim.Angle,
+        "scale_unit": str}
+    _single_params = [{"lam_over_diam": float, "lam": float}]
+    _takes_rng = False
+
     def __init__(self, lam_over_diam=None, lam=None, diam=None, tip=0., tilt=0., defocus=0.,
                  astig1=0., astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0.,
                  aberrations=None, circular_pupil=True, obscuration=0., interpolant=None,
