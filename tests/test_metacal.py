@@ -153,11 +153,12 @@ def test_metacal_tracking():
     # Use a non-trivial wcs...
     # The first two don't work yet (even for strategy 3)
     # The last two are working.
-    #wcs = galsim.JacobianWCS(0.26, 0.03, 0.08, -0.21)
-    #wcs = galsim.JacobianWCS(0.26, 0.03, 0.03, 0.26)
-    wcs = galsim.JacobianWCS(0.03, 0.26, 0.26, -0.03)
-    #wcs = galsim.JacobianWCS(0.26, 0.03, -0.03, 0.26)
-    #wcs = galsim.PixelScale(0.26)
+    #wcs = galsim.JacobianWCS(0.26, 0.03, 0.08, -0.21)  # Fully complex
+    wcs = galsim.JacobianWCS(0.26, 0.03, -0.03, 0.26)  # just rotation
+    #wcs = galsim.JacobianWCS(0.26, 0., 0., 0.32)       # g1 > 0
+    #wcs = galsim.JacobianWCS(0.26, 0.03, 0.03, 0.26)   # g2 > 0
+    #wcs = galsim.JacobianWCS(0.03, 0.26, 0.26, -0.03)  # flip and rotation
+    #wcs = galsim.PixelScale(0.26)                      # pixel scale
     psf = galsim.Gaussian(fwhm=0.9)
     psf_target = psf.dilate(1. + 2.*dg)
 
@@ -297,13 +298,12 @@ def test_metacal_tracking():
         print '\n\nStrategy 3:'
         # Strategy 3: Make a noise field and do the same operations as we do to the main image
         #             except use the opposite shear value.  Add this noise field to the final
-        #             image to get a white noise field.
+        #             image to get a symmetric noise field.
         # Note: This method works!  But only for square pixels.  However, they may be rotated
         # or flipped. Just not sheared.
         t3 = time.time()
 
-        # Make another noise image, since we don't actually have access to a pure noise image
-        # for real objects.  But we should be able to estimate the variance in the image.
+        # Make another noise image
         rev_image = galsim.Image(im_size,im_size, init_value=0, wcs=wcs)
         rev_image.addNoise(galsim.GaussianNoise(rng=rng, sigma=math.sqrt(noise_var)))
         rev_ii = galsim.InterpolatedImage(rev_image, pad_factor=1)
@@ -313,7 +313,7 @@ def test_metacal_tracking():
         rev_final_image = rev_final_obj.drawImage(obs_image.copy(), method='no_pixel')
 
         # Add the reverse-sheared noise image to the original image.
-        final_image2 = final_image - rev_final_image
+        final_image2 = final_image + rev_final_image
         t4 = time.time()
 
         # The noise variance in the end should be 2x as large as the original
@@ -324,70 +324,86 @@ def test_metacal_tracking():
 
     if True:
         print '\n\nStrategy 4:'
-        # Strategy 4: The same as strategy 3, except we try to have the shear be such that
-        #             the net shear in the image plane is negated, not the shear in world coords.
-        # Note: This method also only works for square pixels.
+        # Strategy 4: Make a noise field and do the same operations as we do to the main image,
+        #             then rotate it by 90 degress and add it to the final image.
+        # This method works!  Even for an arbitrarily sheared wcs.
         t3 = time.time()
 
-        # Make another noise image, since we don't actually have access to a pure noise image
-        # for real objects.  But we should be able to estimate the variance in the image.
+        # Make another noise image
+        noise_image = galsim.Image(im_size,im_size, init_value=0, wcs=wcs)
+        noise_image.addNoise(galsim.GaussianNoise(rng=rng, sigma=math.sqrt(noise_var)))
+        noise_ii = galsim.InterpolatedImage(noise_image, pad_factor=1)
+
+        noise_sheared_obj = galsim.Convolve(noise_ii, galsim.Deconvolve(psf)).shear(shear)
+        noise_final_obj = galsim.Convolve(psf_target, noise_sheared_obj)
+        noise_final_image = noise_final_obj.drawImage(obs_image.copy(), method='no_pixel')
+
+        # Rotate the image by 90 degrees
+        rot_noise_final_image = galsim.Image(np.ascontiguousarray(np.rot90(noise_final_image.array)))
+
+        # Add the rotated noise image to the original image.
+        final_image2 = final_image + rot_noise_final_image
+        t4 = time.time()
+
+        # The noise variance in the end should be 2x as large as the original
+        final_var = np.var(final_image2.array)
+        print 'Rotate image method: final_var = ',final_var
+        check_symm_noise(final_image2, 'using rotated noise image does not work')
+        print 'Time for rotate image method = ',t4-t3
+
+    if True:
+        print '\n\nStrategy 5:'
+        # Strategy 5: The same as strategy 3, except we target the effective net transformation
+        #             done by strategy 4.
+        t3 = time.time()
+
+        # Make another noise image
         rev_image = galsim.Image(im_size,im_size, init_value=0, wcs=wcs)
         rev_image.addNoise(galsim.GaussianNoise(rng=rng, sigma=math.sqrt(noise_var)))
         rev_ii = galsim.InterpolatedImage(rev_image, pad_factor=1)
 
-        # Note: the "reverse" shear needs to take into account the wcs.  The shear is applied
-        #       in sky coordinates, but we want the opposite shear in image coordinates.
-        #local_theta, local_shear = wcs.shearToImage(galsim.Shear(shear))
-        #rev_local_shear = -local_shear
-        #rev_theta, rev_shear = wcs.shearToWorld(rev_local_shear)
-        # I thought this would be simply transforming the shearToImage, taking -shear, 
-        # and then going back with shearToWorld.  However, the rotations mess that up.
-        # This result does not give the inverse shear in image coordinates.
+        # Find the effective transformation to apply in sky coordinates that matches what
+        # you would get by applying the shear in sky coords, going to image coords and then
+        # rotating by 90 degrees.
         #
         # If J is the jacobian of the wcs, and S1 is the applied shear, then we want to find
-        # S2 such that the net application in image coords has the same net rotation, but the 
-        # opposite shear as S1.
-        # i.e. if J^-1 S1 = m G R F
-        # then we want to find S2, such that J^-1 S2 = m G^-1 R F
-        # S2 = J G^-1 G^-1 (m G R F) = J G^-1 G^-1 J^-1 S1
+        # S2 such that
+        # i.e. if J^-1 S2 = R90 J^-1 S1
         jac = wcs.jacobian()
         J = jac.getMatrix()
         Jinv = jac.inverse().getMatrix()
-        #print 'shear = ',shear
+        print 'J = ',galsim.JacobianWCS(*J.flatten()).getDecomposition()
+        print 'Jinv = ',galsim.JacobianWCS(*Jinv.flatten()).getDecomposition()
         S1 = shear.getMatrix()
-        JinvS1 = Jinv.dot(S1)
-        #print 'JinvS1 = ',JinvS1
-        #print '= ',galsim.JacobianWCS(*JinvS1.flatten()).getDecomposition()
-        _, net_shear, _, _ = galsim.JacobianWCS(*JinvS1.flatten()).getDecomposition()
-        #print 'net_shear = ',net_shear
-        Ginv = (-net_shear).getMatrix()
-        #print 'S1 = ',S1
-        #print 'J = ',J
-        #print 'JinvS1 = ',JinvS1
-        #print 'Ginv = ',Ginv
-        S2 = J.dot(Ginv).dot(Ginv).dot(JinvS1)
-        #print 'S2 = ',S2
+        print 'S1 = ',galsim.JacobianWCS(*S1.flatten()).getDecomposition()
+        R90 = np.array([[0,-1],[1,0]])
+        S2 = J.dot(R90).dot(Jinv).dot(S1)
+        print 'S2 = ',S2
         scale, rev_shear, rev_theta, flip = galsim.JacobianWCS(*S2.flatten()).getDecomposition()
-        #print '= ',scale,rev_theta,rev_shear,flip
-        #print 'rev_shear = ',rev_shear
-        #print 'JinvS2 = ',Jinv.dot(S2)
-        #print '= ',galsim.JacobianWCS(*Jinv.dot(S2).flatten()).getDecomposition()
+        print '= ',scale,rev_theta,rev_shear,flip
         # Flip should be False, and scale should be essentially 1.0.
         assert flip == False
-        assert np.abs(scale - 1.) < 1.e-8
+        assert abs(scale - 1.) < 1.e-8
 
         rev_sheared_obj = galsim.Convolve(rev_ii, galsim.Deconvolve(psf)).rotate(rev_theta).shear(rev_shear)
         #rev_sheared_obj = galsim.Convolve(rev_ii, galsim.Deconvolve(psf)).shear(rev_shear)
         rev_final_obj = galsim.Convolve(psf_target, rev_sheared_obj)
+        print 'rev_final_obj = ',rev_final_obj
         rev_final_image = rev_final_obj.drawImage(obs_image.copy(), method='no_pixel')
+        print 'rev_final_image = ',rev_final_image
 
+        print 'Correlated noise on final_image:'
+        check_symm_noise(final_image, 'Correlated noise of final_image not expected to be isotropic')
+        print 'Correlated noise on rev_final_image:'
+        check_symm_noise(rev_final_image, 'Correlated noise of rev_final_image not expected to be isotropic')
         # Add the reverse-sheared noise image to the original image.
-        final_image2 = final_image - rev_final_image
+        final_image2 = final_image + rev_final_image
         t4 = time.time()
 
         # The noise variance in the end should be 2x as large as the original
         final_var = np.var(final_image2.array)
         print 'Reverse in image-coords shear method: final_var = ',final_var
+        print 'Correlated noise on final_image2:'
         check_symm_noise(final_image2, 'using reverse shear does not work')
         print 'Time for reverse shear method = ',t4-t3
 
