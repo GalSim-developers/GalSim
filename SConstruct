@@ -1,4 +1,4 @@
-
+# vim: set filetype=python et ts=4 sw=4:
 
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
@@ -43,7 +43,7 @@ subdirs=['src', 'pysrc', 'bin', 'galsim', 'share']
 config_file = 'gs_scons.conf'
 
 # Default directory for installation.
-
+# This is the only UNIX specific things I am aware
 # of in the script.  On the other hand, these are not required for the
 # script to work since prefix can be set on the command line and the
 # extra paths are not needed, but I wish I knew how to get the default
