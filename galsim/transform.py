@@ -172,7 +172,8 @@ class Transformation(galsim.GSObject):
             if single == 0:
                 # If flip or there are two components, then revert to transform as simpler.
                 single = '.transform(%s,%s,%s,%s)'%(dudx,dudy,dvdx,dvdy)
-            s += single
+            if single is not None:
+                s += single
         if self.offset.x != 0 or self.offset.y != 0:
             s += '.shift(%s,%s)'%(self.offset.x,self.offset.y)
         if self.flux_ratio != 1.:
