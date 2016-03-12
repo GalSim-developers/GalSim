@@ -100,7 +100,12 @@ opts.Add(BoolVariable('IMPORT_ENV',
 opts.Add('EXTRA_LIBS','Libraries to send to the linker','')
 opts.Add(BoolVariable('IMPORT_PREFIX',
          'Use PREFIX/include and PREFIX/lib in search paths', True))
-
+opts.Add(PathVariable('DYLD_LIBRARY_PATH',
+         'Set the DYLD_LIBRARY_PATH inside of SCons.  '+
+         'Particularly useful on El Capitan (and later), since Apple strips out '+
+         'DYLD_LIBRARY_PATH from the environment that SCons sees, so if you need it, '+
+         'this option enables SCons to set it back in for you.',
+         '', PathVariable.PathAccept))
 opts.Add('NOSETESTS','Name of nosetests executable','')
 opts.Add(BoolVariable('CACHE_LIB','Cache the results of the library checks',True))
 opts.Add(BoolVariable('WITH_PROF',
@@ -686,6 +691,41 @@ def ReadFileList(fname):
     files = [f.strip() for f in files]
     return files
 
+def AltTryRun(config, text, extension):
+    #ok, out = config.TryRun(text,'.cpp')
+    # The above line works on most systems, but on El Capitan, Apple decided to
+    # strip out the DYLD_LIBRARY_PATH from any system call.  So the above won't
+    # be able to find the right runtime libraries that are in their 
+    # DYLD_LIBRARY_PATH.  The next few lines are a copy of the SCons TryRun
+    # implementation, but then adding the DYLD_LIBRARY_PATH to the environment
+    # on the command line.
+    ok = config.TryLink(text, '.cpp')
+    if ok: 
+        prog = config.lastTarget 
+        try:
+            pname = prog.get_internal_path() 
+        except:
+            pname = prog.get_abspath()
+        try:
+            # I didn't track this down, but sometimes we TryRun (now AltTryRun)
+            # with config as a SConfBase, other times it is a CheckContext instance,
+            # so the SConfBase object is found as config.sconf.
+            # Just try this and if it fails, assume that config is already the sconf.
+            sconf = config.sconf
+        except:
+            sconf = config
+        output = sconf.confdir.File(os.path.basename(pname)+'.out') 
+        if 'DYLD_LIBRARY_PATH' in sconf.env:
+            pre = 'DYLD_LIBRARY_PATH=%r'%sconf.env['DYLD_LIBRARY_PATH']
+            pname = "%s %s"%(pre,pname)
+        node = config.env.Command(output, prog, [ [ 'bash', '-c', pname, ">", "${TARGET}"] ]) 
+        ok = sconf.BuildNodes(node) 
+    if ok:
+        # For successful execution, also return the output contents
+        outputStr = output.get_contents()
+        return 1, outputStr.strip()
+    else:
+        return 0, ""
 
 def TryRunResult(config,text,name):
     # Check if a particular program (given as text) is compilable, runs, and returns the
@@ -695,9 +735,8 @@ def TryRunResult(config,text,name):
     save_spawn = config.sconf.env['SPAWN']
     config.sconf.env['SPAWN'] = config.sconf.pspawn_wrapper
 
-    # First use the normal TryRun command
-    ok, out = config.TryRun(text,'.cpp')
-
+    # This is the normal TryRun command that I am slightly modifying:
+    ok, out = AltTryRun(config,text,'.cpp')
     config.sconf.env['SPAWN'] = save_spawn
 
     # We have an arbitrary requirement that the executable output the answer 23.
@@ -865,7 +904,7 @@ def CheckBoost(config):
 #include "boost/version.hpp"
 int main() { std::cout<<BOOST_VERSION<<std::endl; return 0; }
 """
-    ok, boost_version = config.TryRun(boost_version_file,'.cpp')
+    ok, boost_version = AltTryRun(config,boost_version_file,'.cpp')
     boost_version = int(boost_version.strip())
     print 'Boost version is %d.%d.%d' % (
             boost_version / 100000, boost_version / 100 % 1000, boost_version % 100)
@@ -937,9 +976,15 @@ def TryScript(config,text,executable):
 
     # Run the given executable with the source file we just built
     output = config.sconf.confdir.File(f + '.out')
-    node = config.env.Command(output, source, executable + " < $SOURCE >& $TARGET")
+    #node = config.env.Command(output, source, executable + " < $SOURCE >& $TARGET")
+    # Just like in AltTryRun, we need to add the DYLD_LIBRARY_PATH for El Capitan.
+    if 'DYLD_LIBRARY_PATH' in config.sconf.env:
+        pre = 'DYLD_LIBRARY_PATH=%r'%config.sconf.env['DYLD_LIBRARY_PATH']
+        executable = "%s %s"%(pre,executable)
+    node = config.env.Command(output, source, 
+            [[ 'bash', '-c', executable, "<", "${SOURCE}", ">", "${TARGET}", "2>&1"]]) 
     ok = config.sconf.BuildNodes(node)
-
+ 
     config.sconf.env['SPAWN'] = save_spawn
 
     if ok:
@@ -1504,7 +1549,7 @@ def DoCppChecks(config):
 int main()
 { std::cout<<tmv::TMV_Version()<<std::endl; return 0; }
 """
-    ok, tmv_version = config.TryRun(tmv_version_file,'.cpp')
+    ok, tmv_version = AltTryRun(config,tmv_version_file,'.cpp')
     print 'TMV version is '+tmv_version.strip()
 
     compiler = config.env['CXXTYPE']
