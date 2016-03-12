@@ -712,6 +712,26 @@ def ReadFileList(fname):
     files = [f.strip() for f in files]
     return files
 
+def PrependLibraryPaths(pname, env):
+    """Turn a system command, pname, into "DYLD_LIBRARY_PATH=blah "+pname
+
+    env is the relevant SCons environment.  But also check os.environ if nothing is there.
+    """
+    osenv = os.environ
+    if 'DYLD_LIBRARY_PATH' in env and env['DYLD_LIBRARY_PATH'] != '':
+        pre = 'DYLD_LIBRARY_PATH=%r'%env['DYLD_LIBRARY_PATH']
+        pname = "%s %s"%(pre,pname)
+    elif 'DYLD_LIBRARY_PATH' in osenv and osenv['DYLD_LIBRARY_PATH'] != '':
+        pre = 'DYLD_LIBRARY_PATH=%r'%osenv['DYLD_LIBRARY_PATH']
+        pname = "%s %s"%(pre,pname)
+    if 'LD_LIBRARY_PATH' in env and env['LD_LIBRARY_PATH'] != '':
+        pre = 'LD_LIBRARY_PATH=%r'%env['LD_LIBRARY_PATH']
+        pname = "%s %s"%(pre,pname)
+    elif 'LD_LIBRARY_PATH' in osenv and osenv['LD_LIBRARY_PATH'] != '':
+        pre = 'LD_LIBRARY_PATH=%r'%osenv['LD_LIBRARY_PATH']
+        pname = "%s %s"%(pre,pname)
+    return pname
+
 def AltTryRun(config, text, extension):
     #ok, out = config.TryRun(text,'.cpp')
     # The above line works on most systems, but on El Capitan, Apple decided to
@@ -736,12 +756,7 @@ def AltTryRun(config, text, extension):
         except:
             sconf = config
         output = sconf.confdir.File(os.path.basename(pname)+'.out') 
-        if 'DYLD_LIBRARY_PATH' in sconf.env:
-            pre = 'DYLD_LIBRARY_PATH=%r'%sconf.env['DYLD_LIBRARY_PATH']
-            pname = "%s %s"%(pre,pname)
-        if 'LD_LIBRARY_PATH' in sconf.env:
-            pre = 'LD_LIBRARY_PATH=%r'%sconf.env['LD_LIBRARY_PATH']
-            pname = "%s %s"%(pre,pname)
+        pname = PrependLibraryPaths(pname, sconf.env)
         node = config.env.Command(output, prog, [ [ 'bash', '-c', pname, ">", "${TARGET}"] ]) 
         ok = sconf.BuildNodes(node) 
     if ok:
@@ -975,9 +990,9 @@ int main()
     return 1
 
 
-def TryScript(config,text,executable):
+def TryScript(config,text,pname):
     # Check if a particular script (given as text) is runnable with the
-    # executable (given as executable).
+    # executable (given as pname).
     #
     # I couldn't find a way to do this using the existing SCons functions, so this
     # is basically taken from parts of the code for TryBuild and TryRun.
@@ -1000,16 +1015,11 @@ def TryScript(config,text,executable):
 
     # Run the given executable with the source file we just built
     output = config.sconf.confdir.File(f + '.out')
-    #node = config.env.Command(output, source, executable + " < $SOURCE >& $TARGET")
+    #node = config.env.Command(output, source, pname + " < $SOURCE >& $TARGET")
     # Just like in AltTryRun, we need to add the DYLD_LIBRARY_PATH for El Capitan.
-    if 'DYLD_LIBRARY_PATH' in config.sconf.env:
-        pre = 'DYLD_LIBRARY_PATH=%r'%config.sconf.env['DYLD_LIBRARY_PATH']
-        executable = "%s %s"%(pre,executable)
-    if 'LD_LIBRARY_PATH' in config.sconf.env:
-        pre = 'LD_LIBRARY_PATH=%r'%config.sconf.env['LD_LIBRARY_PATH']
-        executable = "%s %s"%(pre,executable)
+    pname = PrependLibraryPaths(pname, config.sconf.env)
     node = config.env.Command(output, source, 
-            [[ 'bash', '-c', executable, "<", "${SOURCE}", ">", "${TARGET}", "2>&1"]]) 
+            [[ 'bash', '-c', pname, "<", "${SOURCE}", ">", "${TARGET}", "2>&1"]])
     ok = config.sconf.BuildNodes(node)
  
     config.sconf.env['SPAWN'] = save_spawn
