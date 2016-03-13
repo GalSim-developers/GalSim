@@ -373,16 +373,14 @@ class Image(object):
             self.wcs = wcs
 
     def __repr__(self):
-        return 'galsim.Image(bounds=%r, array=array(%r, dtype=%s), wcs=%r)'%(
-                self.bounds, self.array.tolist(), self.array.dtype, self.wcs)
+        return 'galsim.Image(bounds=%r, \n%r, wcs=%r)'%(
+                self.bounds, self.array, self.wcs)
 
     def __str__(self):
         if self.wcs is not None and self.wcs.isPixelScale():
             return 'galsim.Image(bounds=%s, scale=%s)'%(self.bounds, self.scale)
         else:
             return 'galsim.Image(bounds=%s, wcs=%s)'%(self.bounds, self.wcs)
-
-    def __hash__(self): return hash(repr(self))
 
     # bounds and array are really properties which pass the request to the image
     @property
@@ -739,7 +737,7 @@ class Image(object):
 
         If the image has a wcs other than a PixelScale, an AttributeError will be raised.
 
-        @param center       The position in pixels to use for the center, r=0. 
+        @param center       The position in pixels to use for the center, r=0.
                             [default: self.trueCenter()]
         @param flux         The total flux.  [default: sum(self.array)]
         @param flux_frac    The fraction of light to be enclosed by the returned radius.
@@ -794,7 +792,7 @@ class Image(object):
 
         If the image has a wcs other than a PixelScale, an AttributeError will be raised.
 
-        @param center       The position in pixels to use for the center, r=0. 
+        @param center       The position in pixels to use for the center, r=0.
                             [default: self.trueCenter()]
         @param flux         The total flux.  [default: sum(self.array)]
         @param rtype        There are three options for this parameter:
@@ -803,7 +801,7 @@ class Image(object):
                             - 'both' means return both: (sqrt(T/2), det(Q)^1/4)
                             [default: 'det']
 
-        @returns an estimate of the radius in physical units defined by the pixel scale 
+        @returns an estimate of the radius in physical units defined by the pixel scale
                  (or both estimates if rtype == 'both').
         """
         if rtype not in ['trace', 'det', 'both']:
@@ -855,7 +853,7 @@ class Image(object):
 
         If the image has a wcs other than a PixelScale, an AttributeError will be raised.
 
-        @param center       The position in pixels to use for the center, r=0. 
+        @param center       The position in pixels to use for the center, r=0.
                             [default: self.trueCenter()]
         @param Imax         The maximum surface brightness.  [default: max(self.array)]
                             Note: If Imax is provided, and the maximum pixel value is larger than
@@ -898,13 +896,16 @@ class Image(object):
 
         return fwhm
 
-
     def __eq__(self, other):
-        return ( isinstance(other, Image) and
-                 self.bounds == other.bounds and
-                 self.wcs == other.wcs and
-                 numpy.array_equal(self.array,other.array) )
-    def __ne__(self, other): return not self.__eq__(other)
+        return (isinstance(other, Image) and
+                self.bounds == other.bounds and
+                self.wcs == other.wcs and
+                numpy.array_equal(self.array, other.array))
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    __hash__ = None
 
 
 # These are essentially aliases for the regular Image with the correct dtype
@@ -1117,9 +1118,6 @@ def ImageAlloc_setstate(self, args):
     self.__class__ = _galsim.ImageView[self_type]
     self.__init__(*args)
 
-def ImageHash(self):
-    return hash(repr(self))
-
 # inject the arithmetic operators as methods of the Image class:
 Image.__add__ = Image_add
 Image.__radd__ = Image_add
@@ -1172,7 +1170,7 @@ for Class in _galsim.ImageAlloc.itervalues():
     Class.__getstate_manages_dict__ = 1
     Class.__getstate__ = ImageAlloc_getstate
     Class.__setstate__ = ImageAlloc_setstate
-    Class.__hash__ = ImageHash
+    Class.__hash__ = None
 
 for Class in _galsim.ImageView.itervalues():
     Class.__setitem__ = Image_setitem
@@ -1197,7 +1195,7 @@ for Class in _galsim.ImageView.itervalues():
     Class.__neg__ = Image_neg
     Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs
-    Class.__hash__ = ImageHash
+    Class.__hash__ = None
 
 for Class in _galsim.ConstImageView.itervalues():
     Class.__getitem__ = Image_getitem
@@ -1215,7 +1213,7 @@ for Class in _galsim.ConstImageView.itervalues():
     Class.__neg__ = Image_neg
     Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs
-    Class.__hash__ = ImageHash
+    Class.__hash__ = None
 
 for int_type in [ numpy.int16, numpy.int32 ]:
     for Class in [ _galsim.ImageAlloc[int_type], _galsim.ImageView[int_type],
@@ -1234,32 +1232,25 @@ galsim._galsim.ImageAllocS.__repr__ = lambda self: 'galsim._galsim.ImageAllocS(%
         self.bounds, self.array)
 galsim._galsim.ImageAllocI.__repr__ = lambda self: 'galsim._galsim.ImageAllocI(%r,%r)'%(
         self.bounds, self.array)
-galsim._galsim.ImageAllocF.__repr__ = \
-        lambda self: 'galsim._galsim.ImageAllocF(%r,array(%r, dtype=%s))'%(
-            self.bounds, self.array.tolist(), self.array.dtype)
-galsim._galsim.ImageAllocD.__repr__ = \
-        lambda self: 'galsim._galsim.ImageAllocD(%r,array(%r, dtype=%s))'%(
-            self.bounds, self.array.tolist(), self.array.dtype)
+galsim._galsim.ImageAllocF.__repr__ = lambda self: 'galsim._galsim.ImageAllocF(%r,%r)'%(
+        self.bounds, self.array)
+galsim._galsim.ImageAllocD.__repr__ = lambda self: 'galsim._galsim.ImageAllocD(%r,%r)'%(
+        self.bounds, self.array)
 
 galsim._galsim.ImageViewS.__repr__ = lambda self: 'galsim._galsim.ImageViewS(%r,%r,%r)'%(
         self.array, self.xmin, self.xmax)
 galsim._galsim.ImageViewI.__repr__ = lambda self: 'galsim._galsim.ImageViewI(%r,%r,%r)'%(
         self.array, self.xmin, self.xmax)
-galsim._galsim.ImageViewF.__repr__ = \
-        lambda self: 'galsim._galsim.ImageViewF(array(%r, dtype=%s),%r,%r)'%(
-            self.array.tolist(), self.array.dtype, self.xmin, self.xmax)
-galsim._galsim.ImageViewD.__repr__ = \
-        lambda self: 'galsim._galsim.ImageViewD(array(%r, dtype=%s),%r,%r)'%(
-            self.array.tolist(), self.array.dtype, self.xmin, self.xmax)
+galsim._galsim.ImageViewF.__repr__ = lambda self: 'galsim._galsim.ImageViewF(%r,%r,%r)'%(
+        self.array, self.xmin, self.xmax)
+galsim._galsim.ImageViewD.__repr__ = lambda self: 'galsim._galsim.ImageViewD(%r,%r,%r)'%(
+        self.array, self.xmin, self.xmax)
 
 galsim._galsim.ConstImageViewS.__repr__ = lambda self: 'galsim._galsim.ConstImageViewS(%r,%r,%r)'%(
         self.array, self.xmin, self.xmax)
 galsim._galsim.ConstImageViewI.__repr__ = lambda self: 'galsim._galsim.ConstImageViewI(%r,%r,%r)'%(
         self.array, self.xmin, self.xmax)
-galsim._galsim.ConstImageViewF.__repr__ = \
-        lambda self: 'galsim._galsim.ConstImageViewF(array(%r, dtype=%s),%r,%r)'%(
-            self.array.tolist(), self.array.dtype, self.xmin, self.xmax)
-galsim._galsim.ConstImageViewD.__repr__ = \
-        lambda self: 'galsim._galsim.ConstImageViewD(array(%r, dtype=%s),%r,%r)'%(
-            self.array.tolist(), self.array.dtype, self.xmin, self.xmax)
-
+galsim._galsim.ConstImageViewF.__repr__ = lambda self: 'galsim._galsim.ConstImageViewF(%r,%r,%r)'%(
+        self.array, self.xmin, self.xmax)
+galsim._galsim.ConstImageViewD.__repr__ = lambda self: 'galsim._galsim.ConstImageViewD(%r,%r,%r)'%(
+        self.array, self.xmin, self.xmax)

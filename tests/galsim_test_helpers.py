@@ -18,6 +18,7 @@
 import numpy as np
 import os
 import sys
+from contextlib import contextmanager
 
 try:
     import galsim
@@ -217,6 +218,16 @@ def drawNoise(noise):
     im.addNoise(noise)
     return im.array.astype(np.float32).tolist()
 
+
+# http://stackoverflow.com/questions/2891790/pretty-printing-of-numpy-array
+@contextmanager
+def printoptions(*args, **kwargs):
+    original = np.get_printoptions()
+    np.set_printoptions(*args, **kwargs)
+    yield
+    np.set_printoptions(**original)
+
+
 def do_pickle(obj1, func = lambda x : x):
     """Check that the object is picklable.  Also that it has basic == and != functionality.
     """
@@ -241,8 +252,10 @@ def do_pickle(obj1, func = lambda x : x):
     assert f1 == f2
 
     # Test the hash values are equal for two equivalent objects.
-    #print 'hash = ',hash(obj1),hash(obj2)
-    assert hash(obj1) == hash(obj2)
+    from collections import Hashable
+    if isinstance(obj1, Hashable):
+        # print 'hash = ',hash(obj1),hash(obj2)
+        assert hash(obj1) == hash(obj2)
 
     obj3 = copy.copy(obj1)
     assert obj3 is not obj1
@@ -262,14 +275,25 @@ def do_pickle(obj1, func = lambda x : x):
 
     # Also test that the repr is an accurate representation of the object.
     # The gold standard is that eval(repr(obj)) == obj.  So check that here as well.
-    #print 'repr = ',repr(obj1)
-    obj5 = eval(repr(obj1))
-    #print 'obj5 = ',repr(obj5)
-    f5 = func(obj5)
-    if random: f1 = func(obj1)
-    #print 'func(obj1) = ',repr(f1)
-    #print 'func(obj5) = ',repr(f5)
-    assert f5 == f1
+    # One caveat is that some objects (e.g., Images, Deviates) truncate their repr strings to avoid
+    # excessively long output.  So we wrap the eval(repr(obj)) in a try/except block and only check
+    # that we reconstructed the original object if the eval statement succeeded.
+    try:
+        # A further complication is that the default numpy print options do not have sufficient
+        # precision for the eval string to exactly reproduce the original object.  So we temporarily
+        # bump up the numpy print precision.
+        with printoptions(precision=18):
+            #print 'repr = ',repr(obj1)
+            obj5 = eval(repr(obj1))
+    except:
+        pass
+    else:
+        #print 'obj5 = ',repr(obj5)
+        f5 = func(obj5)
+        if random: f1 = func(obj1)
+        #print 'func(obj1) = ',repr(f1)
+        #print 'func(obj5) = ',repr(f5)
+        assert f5 == f1
 
 
 def funcname():
