@@ -279,6 +279,11 @@ def do_pickle(obj1, func = lambda x : x):
     # excessively long output.  So we wrap the eval(repr(obj)) in a try/except block and only check
     # that we reconstructed the original object if the eval statement succeeded.
     try:
+        # It turns out that random deviates will still be successfully constructed even with a
+        # truncated repr string.  They will just be the 'wrong' random deviates.  So look for that
+        # here and just raise an exception to skip this test and get out of the try block.
+        if random:
+            raise TypeError
         # A further complication is that the default numpy print options do not have sufficient
         # precision for the eval string to exactly reproduce the original object.  So we temporarily
         # bump up the numpy print precision.

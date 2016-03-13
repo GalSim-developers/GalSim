@@ -93,7 +93,7 @@ def test_uncorrelated_noise_zero_lag():
         ucf_zero = ucn._profile.xValue(galsim.PositionD(0.,0.))
         np.testing.assert_almost_equal(
             ucf_zero / sigma**2, 1., decimal=5,
-            err_msg="Zero distance noise correlation value does not match variance value " + 
+            err_msg="Zero distance noise correlation value does not match variance value " +
             "provided to UncorrelatedNoise.")
 
         # Check picklability
@@ -168,7 +168,7 @@ def test_uncorrelated_noise_output():
         err_msg="Generated uncorrelated noise field (2) does not have expected variance")
 
     # If we provide a wcs, then the wcs given to UncorrelatedNoise should match the wcs
-    # of the image.  In this case, the resulting pixel variance should still match the 
+    # of the image.  In this case, the resulting pixel variance should still match the
     # provided variance parameter.
     if False:
         # The last one is a sufficient unit test, but if it fails, it is helpful to
@@ -216,7 +216,7 @@ def test_uncorrelated_noise_output():
 
 def test_uncorrelated_noise_symmetry_90degree_rotation():
     """Test that the non-zero lag correlation of an input uncorrelated noise field has two-fold
-    rotational symmetry and that CorrelatedNoise rotation methods produce the same output when 
+    rotational symmetry and that CorrelatedNoise rotation methods produce the same output when
     initializing with a 90 degree-rotated input field.
     """
     t1 = time.time()
@@ -235,7 +235,7 @@ def test_uncorrelated_noise_symmetry_90degree_rotation():
             cf_test1, cf_test2, decimal=7,
             err_msg="Non-zero distance noise correlation values not two-fold rotationally "+
             "symmetric.")
-    # Then test that CorrelatedNoise rotation methods produces the same output as initializing 
+    # Then test that CorrelatedNoise rotation methods produces the same output as initializing
     # with a 90 degree-rotated input field
     angles = [
         90. * galsim.degrees, 180. * galsim.degrees, 270. * galsim.degrees, 360. * galsim.degrees]
@@ -285,7 +285,7 @@ def test_xcorr_noise_basics_symmetry_90degree_rotation():
     np.testing.assert_almost_equal(
         cf_10, .5, decimal=2,
         err_msg="Noise correlation value at (1, 0) does not match input covariance.")
-    # Then set up some random positions (within and outside) the bounds of the table inside the 
+    # Then set up some random positions (within and outside) the bounds of the table inside the
     # corrfunc (the last one made is fine) then test for symmetry
     for i in range(npos_test):
         rpos = ud() * smallim_size # this can go outside lookup table bounds
@@ -298,7 +298,7 @@ def test_xcorr_noise_basics_symmetry_90degree_rotation():
             cf_test1, cf_test2, decimal=12, # should be good to machine precision
             err_msg="Non-zero distance noise correlation values not two-fold rotationally "+
             "symmetric for x correlated noise field.")
-    # Then test that CorrelatedNoise rotation methods produces the same output as initializing 
+    # Then test that CorrelatedNoise rotation methods produces the same output as initializing
     # with a 90 degree-rotated input field
     angles = [
         90. * galsim.degrees, 180. * galsim.degrees, 270. * galsim.degrees, 360. * galsim.degrees]
@@ -348,7 +348,7 @@ def test_ycorr_noise_basics_symmetry_90degree_rotation():
     np.testing.assert_almost_equal(
         cf_01, .5, decimal=2,
         err_msg="Noise correlation value at (0, 1) does not match input covariance.")
-    # Then set up some random positions (within and outside) the bounds of the table inside the 
+    # Then set up some random positions (within and outside) the bounds of the table inside the
     # corrfunc (the last one made is fine) then test for symmetry
     for i in range(npos_test):
         rpos = ud() * smallim_size # this can go outside lookup table bounds
@@ -361,7 +361,7 @@ def test_ycorr_noise_basics_symmetry_90degree_rotation():
             cf_test1, cf_test2, decimal=12, # should be good to machine precision
             err_msg="Non-zero distance noise correlation values not two-fold rotationally "+
             "symmetric for x correlated noise field.")
-    # Then test that CorrelatedNoise rotation methods produces the same output as initializing 
+    # Then test that CorrelatedNoise rotation methods produces the same output as initializing
     # with a 90 degree-rotated input field
     angles = [
         90. * galsim.degrees, 180. * galsim.degrees, 270. * galsim.degrees, 360. * galsim.degrees]
@@ -468,10 +468,10 @@ def test_drawImage():
     from galsim import utilities
     gd = galsim.GaussianDeviate(rseed)
     # We have slightly different expectations for how the CorrelatedNoise will represent and store
-    # CFs from even and odd sized noise fields, so we will test both here.  
+    # CFs from even and odd sized noise fields, so we will test both here.
     #
     # First let's do odd (an uncorrelated noise field is fine for the tests we want to do):
-    uncorr_noise_small_odd = setup_uncorrelated_noise(gd, smallim_size_odd) 
+    uncorr_noise_small_odd = setup_uncorrelated_noise(gd, smallim_size_odd)
     uncorr_noise_small_odd -= uncorr_noise_small_odd.array.mean() # Subtract mean as in CF estimates
     # Build a noise correlated noise using DFTs
     ft_array = np.fft.fft2(uncorr_noise_small_odd.array)
@@ -529,7 +529,7 @@ def test_output_generation_basic():
     # Summed (average) CorrelatedNoises should be approximately equal to the input, so average
     # multiple CFs
     cn_2ndlevel = galsim.CorrelatedNoise(outimage, ud, correct_periodicity=False)
-    # Draw the summed CF to an image for comparison 
+    # Draw the summed CF to an image for comparison
     testim = galsim.ImageD(smallim_size, smallim_size+11)
     cn_2ndlevel.drawImage(testim, scale=.18, add_to_image=True)
     for i in range(nsum_test - 1):
@@ -569,7 +569,7 @@ def test_output_generation_rotated():
     # TODO: It would be good to understand more about the detailed interpolant behaviour though...
     ud = galsim.UniformDeviate(rseed)
     # Get the correlated noise from an image of some y-correlated noise
-    xlargeim_size =long(np.ceil(1.41421356 * largeim_size)) 
+    xlargeim_size =long(np.ceil(1.41421356 * largeim_size))
     # need a very large image that will fit a large image within it, even if rotated
     ynoise_xlarge = make_ycorr_from_uncorr(setup_uncorrelated_noise(ud, xlargeim_size))
     # Subtract the mean
@@ -596,7 +596,7 @@ def test_output_generation_rotated():
             cn_2ndlevel += galsim.CorrelatedNoise(outimage, ud, subtract_mean=False,
                                                   correct_periodicity=False)
         cn_2ndlevel /= float(nsum_test)
-        # Then draw the summed CF to an image for comparison 
+        # Then draw the summed CF to an image for comparison
         testim = galsim.ImageD(smallim_size, smallim_size)
         cn_2ndlevel.drawImage(testim, scale=1.)
         np.testing.assert_array_almost_equal(
@@ -637,7 +637,7 @@ def test_output_generation_magnified():
             cn_2ndlevel += galsim.CorrelatedNoise(outimage, ud, scale=1., correct_periodicity=False)
         # Divide by nsum_test to get average quantities
         cn_2ndlevel /= float(nsum_test)
-        # Then draw the summed CF to an image for comparison 
+        # Then draw the summed CF to an image for comparison
         testim = galsim.ImageD(smallim_size, smallim_size)
         cn_2ndlevel.drawImage(testim, scale=1.)
         np.testing.assert_array_almost_equal(
@@ -737,7 +737,7 @@ def test_cosmos_and_whitening():
         err_msg="Noise field generated with COSMOS CorrelatedNoise does not approximately match "+
         "input variance")
     # Then test (1, 0), (0, 1), (1,-1) and (1,1) values
-    for xpos, ypos in zip((cosmos_scale, 0., cosmos_scale, cosmos_scale), 
+    for xpos, ypos in zip((cosmos_scale, 0., cosmos_scale, cosmos_scale),
                           (0., cosmos_scale, -cosmos_scale, cosmos_scale)):
         pos = galsim.PositionD(xpos, ypos)
         cf = ccn._profile.xValue(pos)
@@ -757,7 +757,7 @@ def test_cosmos_and_whitening():
         err_msg="Noise field generated by whitening COSMOS CorrelatedNoise does not approximately "+
         "match theoretical variance")
     # Then test (1, 0), (0, 1), (1,-1) and (1,1) values
-    for xpos, ypos in zip((cosmos_scale, 0., cosmos_scale, cosmos_scale), 
+    for xpos, ypos in zip((cosmos_scale, 0., cosmos_scale, cosmos_scale),
                           (0., cosmos_scale, -cosmos_scale, cosmos_scale)):
         pos = galsim.PositionD(xpos, ypos)
         cftest = cntest_whitened._profile.xValue(pos)
@@ -778,7 +778,7 @@ def test_cosmos_and_whitening():
         err_msg="Noise field generated by whitening rotated, sheared, magnified COSMOS "+
         "CorrelatedNoise does not approximately match theoretical variance")
     # Then test (1, 0), (0, 1), (1,-1) and (1,1) values
-    for xpos, ypos in zip((cosmos_scale, 0.,  cosmos_scale, cosmos_scale), 
+    for xpos, ypos in zip((cosmos_scale, 0.,  cosmos_scale, cosmos_scale),
                           (0., cosmos_scale, -cosmos_scale, cosmos_scale)):
         pos = galsim.PositionD(xpos, ypos)
         cftest = cntest_whitened._profile.xValue(pos)
@@ -810,7 +810,7 @@ def test_cosmos_and_whitening():
         err_msg="Noise field generated by whitening rotated, sheared, magnified, convolved COSMOS "+
         "CorrelatedNoise does not approximately match theoretical variance")
     # Then test (1, 0), (0, 1), (1,-1) and (1,1) values
-    for xpos, ypos in zip((scale, 0.,  scale, scale), 
+    for xpos, ypos in zip((scale, 0.,  scale, scale),
                           (0., scale, -scale, scale)):
         pos = galsim.PositionD(xpos, ypos)
         cftest = cntest_whitened._profile.xValue(pos)
@@ -859,7 +859,7 @@ def test_symmetrizing():
         "approximately match theoretical variance")
     # Then test (1, 0), (0, 1), (-1,0) and (0,-1) values
     cftest = []
-    for xpos, ypos in zip((cosmos_scale, 0., -cosmos_scale, 0.), 
+    for xpos, ypos in zip((cosmos_scale, 0., -cosmos_scale, 0.),
                           (0., cosmos_scale, 0., -cosmos_scale)):
         pos = galsim.PositionD(xpos, ypos)
         cftest.append(cntest_symmetrized._profile.xValue(pos))
@@ -887,7 +887,7 @@ def test_symmetrizing():
         "CorrelatedNoise does not approximately match theoretical variance")
     # Then test (1, 0), (0, 1), (-1,0) and (0,-1) values
     cftest = []
-    for xpos, ypos in zip((cosmos_scale, 0., -cosmos_scale, 0.), 
+    for xpos, ypos in zip((cosmos_scale, 0., -cosmos_scale, 0.),
                           (0., cosmos_scale, 0., -cosmos_scale)):
         pos = galsim.PositionD(xpos, ypos)
         cftest.append(cntest_symmetrized._profile.xValue(pos))
@@ -924,7 +924,7 @@ def test_symmetrizing():
         "COSMOS CorrelatedNoise does not approximately match theoretical variance")
     # Then test (1, 0), (0, 1), (-1, 0) and (0, -1) values
     cftest = []
-    for xpos, ypos in zip((scale, 0.,  -scale, 0), 
+    for xpos, ypos in zip((scale, 0.,  -scale, 0),
                           (0., scale, 0, -scale)):
         pos = galsim.PositionD(xpos, ypos)
         cftest.append(cntest_symmetrized._profile.xValue(pos))
@@ -1012,15 +1012,15 @@ def test_convolve_cosmos():
         imobj_padded = galsim.InterpolatedImage(
             cosimage_padded, calculate_stepk=False, calculate_maxk=False,
             normalization='sb', scale=cosmos_scale, x_interpolant=interp)
-        cimobj_padded = galsim.Convolve(imobj_padded, psf_shera) 
-        convimage.setZero() # See above 
+        cimobj_padded = galsim.Convolve(imobj_padded, psf_shera)
+        convimage.setZero() # See above
         # Draw convolved image into convimage
         cimobj_padded.drawImage(convimage, scale=0.18, method='sb')
         conv_list.append(convimage.array.copy()) # See above
         mnsq_list.append(np.mean(convimage.array**2))
         var_list.append(convimage.array.var())
         cn_test = galsim.CorrelatedNoise(convimage, gd, correct_periodicity=True,
-                                         subtract_mean=False) 
+                                         subtract_mean=False)
         cn_test.drawImage(testim, scale=0.18, add_to_image=True)
         del imobj_padded
         del cimobj_padded
@@ -1186,7 +1186,7 @@ def test_cosmos_wcs():
         cn_raw = galsim.CorrelatedNoise(test_im.view(scale=cosmos_scale))
 
         # Check basic correlation function values of the 3x3 pixel region around (0,0)
-        for xpos, ypos in zip((0., cosmos_scale, 0., cosmos_scale, cosmos_scale), 
+        for xpos, ypos in zip((0., cosmos_scale, 0., cosmos_scale, cosmos_scale),
                               (0., 0., cosmos_scale, -cosmos_scale, cosmos_scale)):
             pos = galsim.PositionD(xpos, ypos)
             cf_orig = cn_orig._profile.xValue(pos)
@@ -1205,7 +1205,7 @@ def test_cosmos_wcs():
         cn_raw = galsim.CorrelatedNoise(test_im.view(scale=cosmos_scale))
 
         # This time it is the raw cf values that should match.
-        for xpos, ypos in zip((0., cosmos_scale, 0., cosmos_scale, cosmos_scale), 
+        for xpos, ypos in zip((0., cosmos_scale, 0., cosmos_scale, cosmos_scale),
                               (0., 0., cosmos_scale, -cosmos_scale, cosmos_scale)):
             pos = galsim.PositionD(xpos, ypos)
             cf_orig = cn_orig._profile.xValue(pos)
@@ -1246,4 +1246,3 @@ if __name__ == "__main__":
     test_uncorrelated_noise_tracking()
     test_variance_changes()
     test_cosmos_wcs()
-
