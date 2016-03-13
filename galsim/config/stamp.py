@@ -359,19 +359,22 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             config['do_noise_in_stamps'] = do_noise
 
             # Check if this object should be rejected.
-            reject = builder.reject(stamp, config, prof, psf, im, logger)
-            if reject:
-                if itry+1 < ntries:
-                    if logger and logger.isEnabledFor(logging.WARN):
-                        logger.warn('Object %d: Rejecting this object and rebuilding',obj_num)
-                    builder.reset(config, logger)
-                    continue
-                else:
-                    if logger:
-                        logger.error('Object %d: Too many rejections for this object. Aborting.',
-                                     obj_num)
-                    raise RuntimeError("Rejected an object %d times. If this is expected, "%ntries+
-                                       "you should specify a larger retry_failures.")
+            if not skip:
+                reject = builder.reject(stamp, config, prof, psf, im, logger)
+                if reject:
+                    if itry+1 < ntries:
+                        if logger and logger.isEnabledFor(logging.WARN):
+                            logger.warn('Object %d: Rejecting this object and rebuilding',obj_num)
+                        builder.reset(config, logger)
+                        continue
+                    else:
+                        if logger:
+                            logger.error(
+                                'Object %d: Too many rejections for this object. Aborting.',
+                                obj_num)
+                        raise RuntimeError(
+                                "Rejected an object %d times. If this is expected, "%ntries+
+                                "you should specify a larger retry_failures.")
 
             galsim.config.ProcessExtraOutputsForStamp(config, logger)
 
