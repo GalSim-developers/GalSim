@@ -110,9 +110,11 @@ def test_metacal_tracking():
     def check_symm_noise(noise_image, msg):
         # A helper funciton to see if a noise image has 4-fold symmetric noise.
         im2 = noise_image.copy()
+        #print 'im2 = ',im2.array
         # Clear out any wcs to make the test simpler
         im2.wcs = galsim.PixelScale(1.)
         noise = galsim.CorrelatedNoise(im2)
+        #print 'noise = ',noise
         cf = noise.drawImage(galsim.Image(bounds=galsim.BoundsI(-1,1,-1,1), scale=1))
         #print 'noise cf = ',cf
         # First check the variance
@@ -153,13 +155,14 @@ def test_metacal_tracking():
     # Use a non-trivial wcs...
     # The first two don't work yet (even for strategy 3)
     # The last two are working.
-    #wcs = galsim.JacobianWCS(0.26, 0.03, 0.08, -0.21)  # Fully complex
-    wcs = galsim.JacobianWCS(0.26, 0.03, -0.03, 0.26)  # just rotation
+    wcs = galsim.JacobianWCS(0.26, 0.03, 0.08, -0.21)  # Fully complex
+    #wcs = galsim.JacobianWCS(0.26, 0.03, -0.03, 0.26)  # just rotation
     #wcs = galsim.JacobianWCS(0.26, 0., 0., 0.32)       # g1 > 0
     #wcs = galsim.JacobianWCS(0.26, 0.03, 0.03, 0.26)   # g2 > 0
     #wcs = galsim.JacobianWCS(0.03, 0.26, 0.26, -0.03)  # flip and rotation
     #wcs = galsim.PixelScale(0.26)                      # pixel scale
-    psf = galsim.Gaussian(fwhm=0.9)
+    #psf = galsim.Gaussian(fwhm=0.9)
+    psf = galsim.Gaussian(fwhm=0.9).shear(g1=0.05, g2=0.03)
     psf_target = psf.dilate(1. + 2.*dg)
 
     # First make an image of pure (white) Gaussian noise
@@ -185,8 +188,12 @@ def test_metacal_tracking():
     # We'll try a few different methods.
     shear = galsim.Shear(g1=dg)
     sheared_obj = galsim.Convolve(ii, galsim.Deconvolve(psf)).shear(shear)
+    #print 'sheared_obj = ',sheared_obj
     final_obj = galsim.Convolve(psf_target, sheared_obj)
+    #print 'final_obj = ',final_obj
     final_image = final_obj.drawImage(obs_image.copy(), method='no_pixel')
+    #print 'final_image = ',final_image
+    #print final_image.array
 
     try:
         check_symm_noise(final_image, 'Initial image')
@@ -355,6 +362,10 @@ def test_metacal_tracking():
         print '\n\nStrategy 5:'
         # Strategy 5: The same as strategy 3, except we target the effective net transformation
         #             done by strategy 4.
+        # I think this strategy probably can't work for non-square pixels, because in the shear
+        # happens before the convolution by the PSF.  And if the wcs is non-square, then the 
+        # PSF is sheared relative to the pixels.  That shear isn't being accounted for here,
+        # so the net result isn't equivalent to rotating by 90 degrees at the end.
         t3 = time.time()
 
         # Make another noise image
@@ -367,20 +378,19 @@ def test_metacal_tracking():
         # rotating by 90 degrees.
         #
         # If J is the jacobian of the wcs, and S1 is the applied shear, then we want to find
-        # S2 such that
-        # i.e. if J^-1 S2 = R90 J^-1 S1
+        # S2 such that J^-1 S2 = R90 J^-1 S1
         jac = wcs.jacobian()
         J = jac.getMatrix()
         Jinv = jac.inverse().getMatrix()
-        print 'J = ',galsim.JacobianWCS(*J.flatten()).getDecomposition()
-        print 'Jinv = ',galsim.JacobianWCS(*Jinv.flatten()).getDecomposition()
+        #print 'J = ',galsim.JacobianWCS(*J.flatten()).getDecomposition()
+        #print 'Jinv = ',galsim.JacobianWCS(*Jinv.flatten()).getDecomposition()
         S1 = shear.getMatrix()
-        print 'S1 = ',galsim.JacobianWCS(*S1.flatten()).getDecomposition()
+        #print 'S1 = ',galsim.JacobianWCS(*S1.flatten()).getDecomposition()
         R90 = np.array([[0,-1],[1,0]])
         S2 = J.dot(R90).dot(Jinv).dot(S1)
-        print 'S2 = ',S2
+        #print 'S2 = ',S2
         scale, rev_shear, rev_theta, flip = galsim.JacobianWCS(*S2.flatten()).getDecomposition()
-        print '= ',scale,rev_theta,rev_shear,flip
+        #print '= ',scale,rev_theta,rev_shear,flip
         # Flip should be False, and scale should be essentially 1.0.
         assert flip == False
         assert abs(scale - 1.) < 1.e-8
@@ -388,28 +398,24 @@ def test_metacal_tracking():
         rev_sheared_obj = galsim.Convolve(rev_ii, galsim.Deconvolve(psf)).rotate(rev_theta).shear(rev_shear)
         #rev_sheared_obj = galsim.Convolve(rev_ii, galsim.Deconvolve(psf)).shear(rev_shear)
         rev_final_obj = galsim.Convolve(psf_target, rev_sheared_obj)
-        print 'rev_final_obj = ',rev_final_obj
+        #print 'rev_final_obj = ',rev_final_obj
         rev_final_image = rev_final_obj.drawImage(obs_image.copy(), method='no_pixel')
-        print 'rev_final_image = ',rev_final_image
+        #print 'rev_final_image = ',rev_final_image
 
-        print 'Correlated noise on final_image:'
-        check_symm_noise(final_image, 'Correlated noise of final_image not expected to be isotropic')
-        print 'Correlated noise on rev_final_image:'
-        check_symm_noise(rev_final_image, 'Correlated noise of rev_final_image not expected to be isotropic')
         # Add the reverse-sheared noise image to the original image.
         final_image2 = final_image + rev_final_image
         t4 = time.time()
 
         # The noise variance in the end should be 2x as large as the original
         final_var = np.var(final_image2.array)
-        print 'Reverse in image-coords shear method: final_var = ',final_var
-        print 'Correlated noise on final_image2:'
-        check_symm_noise(final_image2, 'using reverse shear does not work')
-        print 'Time for reverse shear method = ',t4-t3
+        print 'Alternate reverse shear method: final_var = ',final_var
+        #print 'Correlated noise on final_image2:'
+        check_symm_noise(final_image2, 'using alternate reverse shear does not work')
+        print 'Time for alternate reverse shear method = ',t4-t3
 
     if False:
-        print '\n\nStrategy 5:'
-        # Strategy 5: Make a noise field and do the same operations as we do to the main image
+        print '\n\nStrategy 6:'
+        # Strategy 6: Make a noise field and do the same operations as we do to the main image
         #             Subtract off the difference between this and the original noise field.
         # Note: I don't think this method should ever work (i.e. I don't think the failure
         #       here points to a bug in anything), but it's included here since I tried it,
