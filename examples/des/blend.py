@@ -88,14 +88,14 @@ class BlendBuilder(galsim.config.StampBuilder):
     def buildProfile(self, config, base, psf, gsparams, logger):
         return BuildBlendProfiles(self, config, base, psf, gsparams, logger)
 
-    def draw(self, profiles, image, method, offset, config, base):
+    def draw(self, profiles, image, method, offset, config, base, logger):
         """
         Draw the profiles onto the stamp.
         """
         n_neighbors = len(profiles)-1
 
         # Draw the central galaxy using the basic draw function.
-        image = galsim.config.DrawBasic(profiles[0], image, method, offset, config, base)
+        image = galsim.config.DrawBasic(profiles[0], image, method, offset, config, base, logger)
 
         # We'll want a copy of just the neighbors for the deblend image.
         # Otherwise we could have just drawn these on the main image with add_to_image = True
@@ -104,7 +104,7 @@ class BlendBuilder(galsim.config.StampBuilder):
 
         # Draw all the neighbor stamps
         for p in profiles[1:]:
-            galsim.config.DrawBasic(p, self.neighbor_image, method, offset, config, base,
+            galsim.config.DrawBasic(p, self.neighbor_image, method, offset, config, base, logger,
                                     add_to_image=True)
 
         # Save this in base for the deblend output
@@ -114,12 +114,12 @@ class BlendBuilder(galsim.config.StampBuilder):
 
         return image
 
-    def whiten(self, profiles, image, config, base):
+    def whiten(self, profiles, image, config, base, logger):
         """
         Whiten the noise on the stamp according to the existing noise in all the profiles.
         """
         total = galsim.Add(profiles)
-        return super(self.__class__,self).whiten(total, image, config, base)
+        return super(self.__class__,self).whiten(total, image, config, base, logger)
 
 
 galsim.config.RegisterStampType('Blend', BlendBuilder())
@@ -166,7 +166,7 @@ class BlendSetBuilder(galsim.config.StampBuilder):
             self.first = base['obj_num']
             return self.profiles
 
-    def draw(self, profiles, image, method, offset, config, base):
+    def draw(self, profiles, image, method, offset, config, base, logger):
         """
         Draw the profiles onto the stamp.
         """
@@ -191,7 +191,8 @@ class BlendSetBuilder(galsim.config.StampBuilder):
             self.full_images = []
             for prof in profiles:
                 im = galsim.ImageF(bounds=bounds, wcs=wcs)
-                galsim.config.DrawBasic(prof, im, method, offset-im.trueCenter(), config, base)
+                galsim.config.DrawBasic(prof, im, method, offset-im.trueCenter(), config, base,
+                                        logger)
                 self.full_images.append(im)
 
         # Figure out what bounds to use for the cutouts.
@@ -221,7 +222,7 @@ class BlendSetBuilder(galsim.config.StampBuilder):
 
         return image
 
-    def whiten(self, profiles, image, config, base):
+    def whiten(self, profiles, image, config, base, logger):
         """
         Whiten the noise on the stamp according to the existing noise in all the profiles.
         """
@@ -230,7 +231,8 @@ class BlendSetBuilder(galsim.config.StampBuilder):
         if k == 0:
             self.current_var = 0
             for prof, full_im in zip(self.profiles, self.full_images):
-                self.current_var += super(self.__class__,self).whiten(prof, full_im, config, base)
+                self.current_var += super(self.__class__,self).whiten(
+                        prof, full_im, config, base, logger)
             if self.current_var != 0:
                 # Then we whitened the noise somewhere.  Rebuild the stamp
                 image.setZero()
@@ -251,11 +253,11 @@ class BlendSetBuilder(galsim.config.StampBuilder):
             # If we are on the first galaxy, draw the noise.
             self.full_noise_image = self.full_images[0].copy()
             self.full_noise_image.setZero()
-            super(self.__class__,self).addNoise(
+            self.full_noise_image, self.current_var = super(self.__class__,self).addNoise(
                     config, base, self.full_noise_image, skip, current_var, logger)
 
         image += self.full_noise_image[self.bounds]
-        return image
+        return image, self.current_var
 
 
 # Use the regular Blend functions for Setup and Whiten.

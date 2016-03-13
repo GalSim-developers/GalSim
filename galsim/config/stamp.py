@@ -434,7 +434,7 @@ def MakeStampTasks(config, jobs, logger):
     return valid_stamp_types[stamp_type].makeTasks(stamp, config, jobs, logger)
 
 
-def DrawBasic(prof, image, method, offset, config, base, **kwargs):
+def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
     """The basic implementation of the draw command
 
     This function is provided as a free function, rather than just the base class implementation
@@ -451,6 +451,7 @@ def DrawBasic(prof, image, method, offset, config, base, **kwargs):
     @param offset       The offset to apply when drawing.
     @param config       The configuration dict for the stamp field.
     @param base         The base configuration dict.
+    @param logger       If given, a logger object to log progress.
     @param **kwargs     Any additional kwargs are passed along to the drawImage function.
 
     @returns the resulting image
@@ -640,7 +641,7 @@ class StampBuilder(object):
 
         @returns the resulting image
         """
-        return DrawBasic(prof,image,method,offset,config,base)
+        return DrawBasic(prof,image,method,offset,config,base,logger)
 
     def whiten(self, prof, image, config, base, logger):
         """If appropriate, whiten the resulting image according to the requested noise profile
