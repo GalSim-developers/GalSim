@@ -109,9 +109,11 @@ def ParseValue(config, key, base, value_type):
         raise AttributeError(
             "%s.type attribute required in config for non-constant parameter %s."%(key,key))
     elif 'current_val' in param and param['current_index']//repeat == index//repeat:
-        if value_type is not None and param['current_value_type'] != value_type:
+        if (value_type is not None and param['current_value_type'] is not None and
+                param['current_value_type'] != value_type):
             raise ValueError(
-                "Attempt to parse %s multiple times with different value types"%key)
+                "Attempt to parse %s multiple times with different value types:"%key +
+                " %s and %s"%(value_type, param['current_value_type']))
         #print index,'Using current value of ',key,' = ',param['current_val']
         val,safe = param['current_val'], param['current_safe']
     else:
