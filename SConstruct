@@ -1892,6 +1892,7 @@ if not GetOption('help'):
     env['_RunInstall'] = RunInstall
     env['_RunUninstall'] = RunUninstall
     env['_AddRPATH'] = AddRPATH
+    env['_PrependLibraryPaths'] = PrependLibraryPaths
 
     # Both bin and examples use this:
     env['BUILDERS']['ExecScript'] = Builder(action = BuildExecutableScript)
