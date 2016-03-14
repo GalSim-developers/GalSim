@@ -35,9 +35,9 @@
 # PSF, so no interpolation is necessary.  In this sim, the PSF is actually a constant, but
 # when we start making the PSF variable, this will be useful.
 #
-# Notably, this config file uses a number of custom types, the code for which is also in this
-# directory in the files hsm_shape.py, log_normal.py, and des_wcs.py.  So this serves as an
-# example for how to write custom extensions to the GalSim config apparatus.
+# Notably, this config file uses a couple of custom types, the code for which is also in this
+# directory in the files hsm_shape.py and des_wcs.py.  So this serves as an example for how to
+# write custom extensions to the GalSim config apparatus.
 
 modules:
     # The GalSim config processor will import each of these at the start of processing this

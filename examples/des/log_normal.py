@@ -19,16 +19,6 @@
 import galsim
 import numpy
 
-# This uses the ngmix code, downloadable from here:
-# https://github.com/esheldon/ngmix
-import ngmix
-
-# Specifically, we use the LogNormal class here:
-# https://github.com/esheldon/ngmix/blob/master/ngmix/priors.py#L2832
-
-# The only thing we need to be careful about is the random number generator.  
-# Erin's code uses numpy.random, not a GalSim rng.  So we use the GalSim rng to 
-# seed numpy.random.  This should produce deterministic results.
 
 def GenLogNormal(config, base, value_type):
     """Generate a random number from a log-normal distribution.
@@ -44,10 +34,34 @@ def GenLogNormal(config, base, value_type):
     mean = params['mean']
     sigma = params['sigma']
 
-    lgn = ngmix.priors.LogNormal(mean, sigma)
-    seed = rng.raw()
-    numpy.random.seed(seed)
-    value = lgn.sample()
+    try:
+        # This uses the ngmix code, downloadable from here:
+        # https://github.com/esheldon/ngmix
+
+        # Specifically, we use the LogNormal class here:
+        # https://github.com/esheldon/ngmix/blob/master/ngmix/priors.py
+
+        # The only thing we need to be careful about is the random number generator.
+        # Erin's code uses numpy.random, not a GalSim rng.  So we use the GalSim rng to
+        # seed numpy.random.  This should produce deterministic results.
+        import ngmix
+
+        lgn = ngmix.priors.LogNormal(mean, sigma)
+        seed = rng.raw()
+        numpy.random.seed(seed)
+        value = lgn.sample()
+
+    except ImportError:
+        # If the user doesn't have ngmix installed, it will use this branch, which is equivalent.
+        # The above was mostly a demonstration of how one could use an external module such as
+        # ngmix that uses numpy.random for its random number generator.
+        # Here is an equivalent code using GalSim's GaussianDeviate class.
+
+        logmean  = numpy.log(mean) - 0.5*numpy.log( 1 + sigma**2/mean**2 )
+        logvar   = numpy.log(1 + sigma**2/mean**2 )
+        logsigma = numpy.sqrt(logvar)
+        gd = galsim.GaussianDeviate(rng, mean=logmean, sigma=logsigma)
+        return numpy.exp(gd())
 
     return value, False
 

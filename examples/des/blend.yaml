@@ -20,7 +20,6 @@
 # There are two parallel runs, one normal and the other where the neighbor only contributes
 # to the noise, not the flux.  So this simulates a perfect deblender that removes the flux
 # correctly, but there is still the extra noise from the neighbor.
-#
 
 modules:
 
@@ -28,6 +27,9 @@ modules:
     - blend
 
     # A module that defines the LogNormal distribution.
+    # This optionally uses the ngmix module: https://github.com/esheldon/ngmix
+    # to show how that can work.  But if you don't have it, it has its own implementation
+    # as well (since it's pretty simple).
     - log_normal
 
 
