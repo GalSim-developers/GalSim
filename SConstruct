@@ -715,20 +715,13 @@ def ReadFileList(fname):
 def PrependLibraryPaths(pname, env):
     """Turn a system command, pname, into "DYLD_LIBRARY_PATH=blah "+pname
 
-    env is the relevant SCons environment.  But also check os.environ if nothing is there.
+    env is the relevant SCons environment.
     """
-    osenv = os.environ
     if 'DYLD_LIBRARY_PATH' in env and env['DYLD_LIBRARY_PATH'] != '':
         pre = 'DYLD_LIBRARY_PATH=%r'%env['DYLD_LIBRARY_PATH']
         pname = "%s %s"%(pre,pname)
-    elif 'DYLD_LIBRARY_PATH' in osenv and osenv['DYLD_LIBRARY_PATH'] != '':
-        pre = 'DYLD_LIBRARY_PATH=%r'%osenv['DYLD_LIBRARY_PATH']
-        pname = "%s %s"%(pre,pname)
     if 'LD_LIBRARY_PATH' in env and env['LD_LIBRARY_PATH'] != '':
         pre = 'LD_LIBRARY_PATH=%r'%env['LD_LIBRARY_PATH']
-        pname = "%s %s"%(pre,pname)
-    elif 'LD_LIBRARY_PATH' in osenv and osenv['LD_LIBRARY_PATH'] != '':
-        pre = 'LD_LIBRARY_PATH=%r'%osenv['LD_LIBRARY_PATH']
         pname = "%s %s"%(pre,pname)
     return pname
 
