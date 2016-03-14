@@ -62,11 +62,6 @@ gal:
     # Randomly spin the original profile
     rotate: { type: Random }
 
-    # The COSMOS galaxy sample is shallower than we want, so make them a bit smaller to simulate
-    # a fainter sample.  Don't worry about the flux, since we'll just adjust the noise to
-    # an appropriate level.
-    dilate: 0.6
-
     # This works out about right for the sky level we chose below.  The galaxies mostly seem
     # to have pretty decent S/N based on visual inspection of image.
     scale_flux: 1000
