@@ -239,6 +239,22 @@ def ErrorExit(*args, **kwargs):
         out.write("Error trying to get output of conftest executables.\n")
         out.write(sys.exc_info()[0])
 
+    # Give a helpful message if running El Capitan.
+    if sys.platform.find('darwin') != -1:
+        import platform
+        major, minor, rev = platform.mac_ver()[0].split('.')
+        print 'Mac version: ',major,minor
+        if int(major) > 10 or int(minor) >= 11:
+            print
+            print 'Starting with El Capitan (OSX 10.11), Apple instituted a new policy called'
+            print '"System Integrity Protection" (SIP) where they strip "dangerous" environment'
+            print 'variables from system calls (including SCons).  So if your system is using'
+            print 'DYLD_LIBRARY_PATH for run-time library resolution, then SCons cannot see it'
+            print 'so that may be why this is failing.  cf. Issues #721 and #725.'
+            print 'You should try executing:'
+            print
+            print '    scons DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH'
+
     print
     print 'Please fix the above error(s) and rerun scons.'
     print 'Note: you may want to look through the file INSTALL.md for advice.'
@@ -1620,7 +1636,8 @@ int main()
             # Don't require the user to have xcode installed.
             xcode_version = None
             print 'Unable to determine XCode version'
-        if (platform.mac_ver()[0] >= '10.7' and '-latlas' not in tmv_link and
+        major, minor, rev = platform.mac_ver()[0].split('.')
+        if ((int(major) > 10 or int(minor) >= 7) and '-latlas' not in tmv_link and
                 ('-lblas' in tmv_link or '-lcblas' in tmv_link)):
             print 'WARNING: The Apple BLAS library has been found not to be thread safe on'
             print '         Mac OS versions 10.7+, even across multiple processes (i.e. not'
@@ -1825,7 +1842,6 @@ Help(opts.GenerateHelpText(env))
 env['final_messages'] = []
 # Everything we are going to build so we can have the final message depend on these.
 env['all_builds'] = []
-
 
 if not GetOption('help'):
 
