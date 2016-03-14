@@ -267,7 +267,8 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
         ntries = galsim.config.ParseValue(stamp,'retry_failures',config,int)[0]
         # This is how many _re_-tries.  Do at least 1, so ntries is 1 more than this.
         ntries = ntries + 1
-    elif 'reject' in stamp or 'min_flux_frac' in stamp:
+    elif ('reject' in stamp or 'min_flux_frac' in stamp or
+          'min_snr' in stamp or 'max_snr' in stamp):
         # Still impose a maximum number of tries to prevent infinite loops.
         ntries = 20
     else:
