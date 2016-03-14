@@ -10,6 +10,7 @@ import glob
 Import('env')
 ReadFileList = env['_ReadFileList']
 AddRPATH = env['_AddRPATH']
+PrependLibraryPaths = env['_PrependLibraryPaths']
 
 libs=['galsim']
 
@@ -40,6 +41,8 @@ def run_tests(target, source, env):
     if env['NOSETESTS']:
         print 'Using nosetests from: ',env['NOSETESTS']
         cmd = env['NOSETESTS']
+        # Account for SIP on El Capitan
+        cmd = PrependLibraryPaths(cmd,env)
         if env['NOSETESTSVERSION'] >= '1.1' and env.GetOption('num_jobs') > 1:
             cmd += ' --processes=%d --process-timeout=60'%(env.GetOption('num_jobs'))
             print 'nosetests is version %s... running tests in parallel with %d jobs'%(
