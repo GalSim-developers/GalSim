@@ -147,6 +147,10 @@ stamp:
     # Make sure we get most of the flux in the postage stamps
     min_flux_frac: 0.99
 
+    # Also impose a minimum S/N.  There are some stamps with negative flux, so this will find
+    # those and reject them, as well as any that just have very low signal-to-noise.
+    min_snr: 5
+
 image:
     # Eventually, it would be nice to have variable stamp sizes based on the galaxy size, but
     # don't bother with that for now.
