@@ -116,8 +116,9 @@ input:
         template : "meds.yaml:input.cosmos_catalog"
 
         # Also impose a minimum size, which we didn't there, to avoid very small galaxies.
-        min_hlr : 1.0  # arcsec
-
+        # This is just a cosmetic choice for this example to make the galaxies easier to see.
+        # You probably wouldn't want to do this for something that was attempting to be realistic.
+        min_hlr : 0.5  # arcsec
 
     des_psfex :
         dir : 'des_data'
