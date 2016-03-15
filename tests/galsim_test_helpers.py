@@ -228,7 +228,7 @@ def printoptions(*args, **kwargs):
     np.set_printoptions(**original)
 
 
-def do_pickle(obj1, func = lambda x : x):
+def do_pickle(obj1, func = lambda x : x, irreprable=False):
     """Check that the object is picklable.  Also that it has basic == and != functionality.
     """
     import cPickle, copy
@@ -281,8 +281,11 @@ def do_pickle(obj1, func = lambda x : x):
     try:
         # It turns out that random deviates will still be successfully constructed even with a
         # truncated repr string.  They will just be the 'wrong' random deviates.  So look for that
-        # here and just raise an exception to skip this test and get out of the try block.
-        if random:
+        # here and just raise an exception to skip this test and get out of the try block.  Also
+        # raise an exception if the `irreprable` flag is explicitly set, which is occassionally
+        # needed for objects that succeed the `eval(repr(obj))` step but fail in a subsequent
+        # comparison due to truncated floating point precision of the reconstructed object.
+        if random or irreprable:
             raise TypeError
         # A further complication is that the default numpy print options do not have sufficient
         # precision for the eval string to exactly reproduce the original object.  So we temporarily

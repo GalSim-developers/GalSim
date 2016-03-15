@@ -117,7 +117,7 @@ namespace galsim {
 
     private:
 
-        int _Ninitial;
+        int _Ninitial, _Ninitx, _Ninity;
         int _Nk;
         Bounds<int> _init_bounds;
         double _xcentroid;
@@ -162,6 +162,7 @@ namespace galsim {
         mutable ProbabilityTree<Pixel> _pt; ///< Binary tree of pixels, for photon-shooting
 
         std::string repr() const;
+        std::string serialize() const;
 
     private:
 

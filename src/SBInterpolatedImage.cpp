@@ -108,8 +108,9 @@ namespace galsim {
         assert(_xInterp.get());
         assert(_kInterp.get());
 
-        _Ninitial = std::max(image.getXMax()-image.getXMin()+1,
-                             image.getYMax()-image.getYMin()+1);
+        _Ninitx = image.getXMax()-image.getXMin()+1;
+        _Ninity = image.getYMax()-image.getYMin()+1;
+        _Ninitial = std::max(_Ninitx, _Ninity);
         _init_bounds = image.getBounds();
         dbg<<"Ninitial = "<<_Ninitial<<std::endl;
         assert(pad_factor > 0.);
@@ -426,7 +427,91 @@ namespace galsim {
         }
     }
 
+    std::string row_string(ConstImageView<double> &im, const int &row) {
+        Bounds<int> _bds = im.getBounds();
+        const int row_len = _bds.getXMax() - _bds.getXMin() + 1;
+        std::ostringstream oss;
+        oss << "[";
+        BaseImage<double>::const_iterator it = im.rowBegin(row);
+        BaseImage<double>::const_iterator end = im.rowEnd(row);
+        if (row_len <= 6) {
+            for (;it != end;){
+                oss.width(15);
+                oss.precision(8);
+                oss << *it++;
+                if (it != end) oss << ",";
+            }
+        } else {
+            for (int i=0; i<3; i++){
+                oss.width(15);
+                oss.precision(8);
+                oss << *it++;
+                oss << ",";
+            }
+            oss << " ...,";
+            it = end-3;
+            for (int i=0; i<3; i++){
+                oss.width(15);
+                oss.precision(8);
+                oss << *it++;
+                if (it != end) oss << ",";
+            }
+        }
+        oss << "]";
+        return oss.str();
+    }
+
+    std::string image_string(ConstImageView<double> &im) {
+        Bounds<int> _bds = im.getBounds();
+        const int ymin = _bds.getYMin();
+        const int ymax = _bds.getYMax();
+
+        const int col_len = ymax - ymin;
+        std::ostringstream oss;
+        if (col_len <= 6) {
+            for (int y=ymin; y<=ymax; y++) {
+                if (y == ymin) oss << "array([";
+                else oss << "       ";
+                oss << row_string(im, y);
+                if (y != ymax) oss << "," << std::endl;
+            }
+        } else {
+            for (int y=ymin; y<ymin+3; y++) {
+                if (y == ymin) oss << "array([";
+                else oss << "       ";
+                oss << row_string(im, y) << "," << std::endl;
+            }
+            oss << "       ...," << std::endl;
+            for (int y=ymax-2; y<=ymax; y++) {
+                oss << "       ";
+                oss << row_string(im, y);
+                if (y != ymax) oss << "," << std::endl;
+            }
+        }
+        oss << "], dtype=float)";
+        return oss.str();
+    }
+
     std::string SBInterpolatedImage::SBInterpolatedImageImpl::repr() const
+    {
+        std::ostringstream oss(" ");
+        oss << "galsim._galsim.SBInterpolatedImage(";
+        oss << "galsim._galsim.ConstImageViewD(" << std::endl;
+        ConstImageView<double> im = getImage()[_init_bounds];
+        oss << image_string(im) << ", ";
+
+        boost::shared_ptr<Interpolant> xinterp = getXInterp();
+        boost::shared_ptr<Interpolant> kinterp = getKInterp();
+        oss << "galsim.Interpolant('"<<xinterp->makeStr()<<"', "<<xinterp->getTolerance()<<"), ";
+        oss << "galsim.Interpolant('"<<kinterp->makeStr()<<"', "<<kinterp->getTolerance()<<"), ";
+
+        oss << "1., "<<stepK()<<", "<<maxK()<<", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
+
+    // Alternative to repr that's more annoying for a human to read, but can be used to *exactly*
+    // reconstruct the SBInterpolatedImage object when pickling.
+    std::string SBInterpolatedImage::SBInterpolatedImageImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
@@ -456,8 +541,15 @@ namespace galsim {
     ConstImageView<double> SBInterpolatedImage::SBInterpolatedImageImpl::getImage() const
     {
         int N = _xtab->getN();
+        int xmin = _init_bounds.getXMin()-(N-_Ninitx+1)/2;
+        int ymin = _init_bounds.getYMin()-(N-_Ninity+1)/2;
+        int xmax = xmin + N - 1;
+        int ymax = ymin + N - 1;
+        dbg << "_Ninitx: " << _Ninitx << std::endl;
+        dbg << "xmin: " << xmin << std::endl;
+        dbg << "xmax: " << xmax << std::endl;
         return ConstImageView<double>(_xtab->getArray(), boost::shared_ptr<double>(),
-                                      N, Bounds<int>(0,N-1,0,N-1));
+                                      N, Bounds<int>(xmin,xmax,ymin,ymax));
     }
 
     void SBInterpolatedImage::SBInterpolatedImageImpl::getXRange(
