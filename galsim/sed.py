@@ -18,11 +18,12 @@
 """@file sed.py
 Simple spectral energy distribution class.  Used by galsim/chromatic.py
 """
+from __future__ import absolute_import
 
 import numpy as np
 
 import galsim
-import utilities
+from . import utilities
 
 class SED(object):
     """Simple SED object to represent the spectral energy distributions of stars and galaxies.

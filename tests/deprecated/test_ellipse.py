@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -156,10 +157,10 @@ def test_ellipse_initialization():
         np.testing.assert_raises(TypeError, galsim.deprecated.Ellipse, g1=0.1, randomkwarg=0.7)
         np.testing.assert_raises(TypeError, galsim.deprecated.Ellipse, shear=0.1)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 if __name__ == "__main__":
     test_ellipse_initialization()

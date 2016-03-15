@@ -18,6 +18,7 @@
 """
 Script to generate some test images of Spergel profiles.
 """
+from __future__ import print_function
 
 import os
 import numpy as np
@@ -54,7 +55,7 @@ for nu in [-0.85, -0.5, 0.0, 0.85, 4.0]:
     else:
         img[(stamp_size-1)/2, (stamp_size-1)/2] = np.inf
 
-    print nu, c(nu)
+    print(nu, c(nu))
     output_file = "spergel_nu{:.2f}.fits".format(nu)
 
     hdulist = fits.HDUList()

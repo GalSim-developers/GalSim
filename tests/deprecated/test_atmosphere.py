@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -69,7 +70,7 @@ def test_AtmosphericPSF_properties():
     np.testing.assert_almost_equal(apsf.kValue(cen), 1+0j, 4,
                                    err_msg="Atmospheric PSF k value at (0, 0) is not 1+0j.")
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_AtmosphericPSF_flux():
     """Test that the flux of the atmospheric PSF is normalized to unity.
@@ -79,7 +80,7 @@ def test_AtmosphericPSF_flux():
     lors = np.linspace(0.5, 2., 5) # Different lambda_over_r0 values
     for lor in lors:
         apsf = galsim.deprecated.AtmosphericPSF(lam_over_r0=lor)
-        print 'apsf.getFlux = ',apsf.getFlux()
+        print('apsf.getFlux = ',apsf.getFlux())
         np.testing.assert_almost_equal(apsf.getFlux(), 1., 6, 
                                        err_msg="Flux of atmospheric PSF (ImageViewD) is not 1.")
         # .draw() throws a warning if it doesn't get a float. This includes np.float64. Convert to
@@ -90,7 +91,7 @@ def test_AtmosphericPSF_flux():
         np.testing.assert_almost_equal(img_array.sum(), 1., 3,
                                        err_msg="Flux of atmospheric PSF (image array) is not 1.")
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
         
 def test_AtmosphericPSF_fwhm():
     """Test that the FWHM of the atmospheric PSF corresponds to the one expected from the
@@ -115,7 +116,7 @@ def test_AtmosphericPSF_fwhm():
         np.testing.assert_equal(hwhm_index, dx_scale / 2, 
                                 err_msg="Kolmogorov PSF does not have the expected FWHM.")
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
  
 def test_atmos_flux_scaling():
     """Test flux scaling for AtmosphericPSF.
@@ -164,7 +165,7 @@ def test_atmos_flux_scaling():
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
        
 if __name__ == "__main__":

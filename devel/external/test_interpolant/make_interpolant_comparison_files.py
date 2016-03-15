@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -60,7 +61,7 @@ testobj = galsim.SBInterpolatedImage(image.view(), interp, dx=dx)
 for i in xrange(len(kxvals)):
     posk = galsim.PositionD(kxvals[i], kyvals[i])
     absoutk[i] = np.abs(testobj.kValue(posk))
-print absoutk
+print(absoutk)
 np.savetxt(os.path.join(dir,'absfKCubic_test.txt'), absoutk)
 
 # Then make a Quintic interpolant
@@ -69,7 +70,7 @@ testobj = galsim.SBInterpolatedImage(image.view(), interp, dx=dx)
 for i in xrange(len(kxvals)):
     posk = galsim.PositionD(kxvals[i], kyvals[i])
     absoutk[i] = np.abs(testobj.kValue(posk))
-print absoutk
+print(absoutk)
 np.savetxt(os.path.join(dir,'absfKQuintic_test.txt'), absoutk)
 
 # Then make a Lanczos5 interpolant
@@ -78,7 +79,7 @@ testobj = galsim.SBInterpolatedImage(image.view(), interp, dx=dx)
 for i in xrange(len(kxvals)):
     posk = galsim.PositionD(kxvals[i], kyvals[i])
     absoutk[i] = np.abs(testobj.kValue(posk))
-print absoutk
+print(absoutk)
 np.savetxt(os.path.join(dir,'absfKLanczos5_test.txt'), absoutk)
 
 # Then make a Lanczos7 interpolant
@@ -87,7 +88,7 @@ testobj = galsim.SBInterpolatedImage(image.view(), interp, dx=dx)
 for i in xrange(len(kxvals)):
     posk = galsim.PositionD(kxvals[i], kyvals[i])
     absoutk[i] = np.abs(testobj.kValue(posk))
-print absoutk
+print(absoutk)
 np.savetxt(os.path.join(dir,'absfKLanczos7_test.txt'), absoutk)
 
 

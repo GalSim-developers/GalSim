@@ -17,6 +17,7 @@
 #
 """Unit tests for inclusion of detector effects (nonlinearity, etc.).
 """
+from __future__ import print_function
 
 import numpy as np
 import warnings
@@ -46,7 +47,7 @@ def test_nonlinearity_basic():
     try:
         np.testing.assert_raises(ValueError, im.applyNonlinearity, lambda x : 1.0)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     # Check for constant function as NLfunc
     im_new = im.copy()
@@ -158,8 +159,8 @@ def test_nonlinearity_basic():
         assert im2.bounds == im.bounds
 
         # Let the user know that this test happened
-        print "SciPy was found installed. Using SciPy modules in the unit test for",\
-        "'applyNonlinearity'"
+        print("SciPy was found installed. Using SciPy modules in the unit test for",\
+        "'applyNonlinearity'")
         # Note, don't be quite as stringent as in previous test; there can be small interpolation
         # errors.
         np.testing.assert_array_almost_equal(
@@ -171,7 +172,7 @@ def test_nonlinearity_basic():
         # skipped. The user is not alerted.
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_recipfail_basic():
     """Check for overall sensible behavior of the reciprocity failure routine."""
@@ -188,7 +189,7 @@ def test_recipfail_basic():
     try:
         np.testing.assert_raises(ValueError, im.addReciprocityFailure, -1.0, 200, 1.0)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     # Preservation of data type / scale / bounds
     im_new = im.copy()
@@ -266,7 +267,7 @@ def test_recipfail_basic():
         err_msg='Difference between power law and log behavior')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(), t2-t1)
+    print('time for %s = %.2f'%(funcname(), t2-t1))
 
 def test_quantize():
     """Check behavior of the image quantization routine."""
@@ -309,7 +310,7 @@ def test_quantize():
         assert image_q.bounds == image.bounds
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(), t2-t1)
+    print('time for %s = %.2f'%(funcname(), t2-t1))
 
 def test_IPC_basic():
     import time
@@ -427,7 +428,7 @@ def test_IPC_basic():
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore",category=RuntimeWarning)
             from scipy import signal
-        print "SciPy found installed. Checking IPC kernel convolution against SciPy's `convolve2d`"
+        print("SciPy found installed. Checking IPC kernel convolution against SciPy's `convolve2d`")
         # SciPy is going to emit a warning that we don't want to worry about, so let's deliberately
         # ignore it by going into a `catch_warnings` context.
         with warnings.catch_warnings():
@@ -471,7 +472,7 @@ def test_IPC_basic():
         pass
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 if __name__ == "__main__":
     test_nonlinearity_basic()

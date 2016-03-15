@@ -22,6 +22,7 @@ All configuration is specified in a config yaml file.
 See photon_vs_fft.yaml for an example.
 The script generates the images and compares the pixel intensities as well as images moments.
 """
+from __future__ import print_function
 import logging
 import galsim
 import sys
@@ -113,7 +114,7 @@ def GetShapeMeasurements(image_gal, image_psf, ident=-1):
     # find adaptive moments  
 
     try: moments = galsim.hsm.FindAdaptiveMom(image_gal)
-    except Exception, emsg : raise RuntimeError('FindAdaptiveMom error: %s' % emsg)
+    except Exception as emsg : raise RuntimeError('FindAdaptiveMom error: %s' % emsg)
         
 
     # find HSM moments
@@ -122,7 +123,7 @@ def GetShapeMeasurements(image_gal, image_psf, ident=-1):
         try: 
             hsmcorr   = galsim.hsm.EstimateShear(image_gal,image_psf,strict=True,  
                                                                        shear_est=HSM_SHEAR_EST)
-        except Exception, emsg: raise RuntimeError('EstimateShearHSM error: %s' % emsg)
+        except Exception as emsg: raise RuntimeError('EstimateShearHSM error: %s' % emsg)
                 
         logger.debug('galaxy %d : adaptive moments G1=% 2.6f\tG2=% 2.6f\tsigma=%2.6f\t hsm \
             corrected moments G1=% 2.6f\tG2=% 2.6f' 
@@ -204,7 +205,7 @@ def RunMeasurementsFFT(config,filename_results):
         # this bit is still serial, not too good...
         try: 
             result = GetShapeMeasurements(img_gals[i],img_psfs[i],obj_num)
-        except Exception,e: 
+        except Exception as e: 
             logger.error('failed to get GetShapeMeasurements for galaxy %d. Message %s' % (obj_num,e))
             result = _ErrorResults(HSM_ERROR_VALUE,i)
 
@@ -295,7 +296,7 @@ def RunMeasurementsPhotAndFFT(config,filename_results_pht,filename_results_fft):
 
             logger.info('finished getting photon and FFT measurements from gal %d : time :\
                 %s min' % (i,str(res.time/60.)))
-        except Exception,e:
+        except Exception as e:
             logger.error('failed to get compare_dft_vs_photon_config for galaxy %d. Message:\n %s' 
                 % (i,e))
             # if failure, create results with failure flags
@@ -363,8 +364,8 @@ def ChangeConfigValue(config,path,value):
         exec(eval_str + '=' + str(value))
         logging.debug('changed %s to %f' % (eval_str,eval(eval_str)))
     except:
-        print config
-        print 'wrong path in config : %s' % eval_str
+        print(config)
+        print('wrong path in config : %s' % eval_str)
         raise
 
 def RunComparisonForVariedParams(config):

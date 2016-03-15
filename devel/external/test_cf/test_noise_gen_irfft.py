@@ -32,6 +32,7 @@ was ramped up.
 
 More details are posted on the issue linked above.
 """
+from __future__ import print_function
 import sys
 import numpy as np
 
@@ -45,7 +46,7 @@ ps = np.exp(-2. * np.pi**2 * sigma**2 * u**2) # using result for FT of a Gaussia
                                               # from memory, but not crucial for demonstration)
 
 # 1D plots first
-print "Generating 1D plots..."
+print("Generating 1D plots...")
 psests = []
 psests_r = []
 for i in range(nsamples):
@@ -89,13 +90,13 @@ nsamplesxy = 1000000
 # NEWFIX - this is an attempt to reftify the code prior to this point in 2D, which seems to include
 # quite a bit of muddled thinking!
 # See: https://github.com/GalSim-developers/GalSim/issues/563#issuecomment-47344100
-print "Generating 2D plots with Gary's fix..."
+print("Generating 2D plots with Gary's fix...")
 rt2 = np.sqrt(2.)
 irt2 = 1. / rt2
 for nu in (21, 22): # number of array elements, odd first then even
 
     u = np.fft.fftfreq(nu) # get the u0, u1, u2 etc. frequency values
-    print "Running case with nu = "+str(nu)
+    print("Running case with nu = "+str(nu))
     # Set up the 2D arrays and PS
     ux, uy = np.meshgrid(u, u)
     psxy = np.exp(-2. * np.pi**2 * sigma**2 * (ux**2 + uy**2))
@@ -178,14 +179,14 @@ for nu in (21, 22): # number of array elements, odd first then even
     plt.ylim(0, ux.shape[0])
     plt.savefig("cfxy_rfft_gary_fixed-cf_nu"+str(nu)+"_N"+str(nsamplesxy)+".png")
 
-print "Generating 2D plots, odd/even sized, with Gary's fix..."
+print("Generating 2D plots, odd/even sized, with Gary's fix...")
 rt2 = np.sqrt(2.)
 irt2 = 1. / rt2
 for nu in (21, 22): # number of array elements, odd first then even
 
     u1 = np.fft.fftfreq(nu) # get the u0, u1, u2 etc. frequency values
     u2 = np.fft.fftfreq(nu + 1) # get the u0, u1, u2 etc. frequency values
-    print "Running case with nu = "+str(nu)
+    print("Running case with nu = "+str(nu))
     # Set up the 2D arrays and PS
     ux, uy = np.meshgrid(u1, u2)
     psxy = np.exp(-2. * np.pi**2 * sigma**2 * (ux**2 + uy**2))

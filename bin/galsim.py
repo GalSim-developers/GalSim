@@ -19,6 +19,7 @@
 The main driver program for making images of galaxies whose parameters are specified
 in a configuration file.
 """
+from __future__ import print_function
 
 import sys
 import os
@@ -112,12 +113,12 @@ def parse_args():
 
         if args.config_file == None:
             if args.version:
-                print version_str
+                print(version_str)
             else:
                 parser.print_help()
             sys.exit()
         elif args.version:
-            print version_str
+            print(version_str)
 
     except ImportError:
         # Use optparse instead
@@ -165,7 +166,7 @@ def parse_args():
         # Store the positional arguments in the args object as well:
         if len(posargs) == 0:
             if args.version:
-                print version_str
+                print(version_str)
             else:
                 parser.print_help()
             sys.exit()
@@ -173,7 +174,7 @@ def parse_args():
             args.config_file = posargs[0]
             args.variables = posargs[1:]
             if args.version:
-                print version_str
+                print(version_str)
 
     # Return the args
     return args

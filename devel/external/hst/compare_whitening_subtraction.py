@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -52,14 +53,14 @@ for noisearray, i in zip(noisearrays, range(len(noisearrays))):
     cntest2 = galsim.CorrelatedNoise(ud, noise2)
     cntest1.draw(testim1, dx=1., add_to_image=True)
     cntest2.draw(testim2, dx=1., add_to_image=True)
-    print "Done "+str(i + 1)+"/"+str(len(noisearrays))
+    print("Done "+str(i + 1)+"/"+str(len(noisearrays)))
 
 testim1 /= len(noisearrays)
 testim2 /= len(noisearrays)
 var1 /= len(noisearrays)
 var2 /= len(noisearrays)
 
-print var1, var2
+print(var1, var2)
 
 delx = np.arange(7) - 3.
 

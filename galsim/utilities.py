@@ -22,7 +22,7 @@ Module containing general utilities for the GalSim software.
 import numpy as np
 import galsim
 
-def roll2d(image, (iroll, jroll)):
+def roll2d(image, xxx_todo_changeme):
     """Perform a 2D roll (circular shift) on a supplied 2D NumPy array, conveniently.
 
     @param image            The NumPy array to be circular shifted.
@@ -30,6 +30,7 @@ def roll2d(image, (iroll, jroll)):
 
     @returns the rolled image.
     """
+    (iroll, jroll) = xxx_todo_changeme
     return np.roll(np.roll(image, jroll, axis=1), iroll, axis=0)
 
 def kxky(array_shape=(256, 256)):

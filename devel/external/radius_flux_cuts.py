@@ -2,6 +2,7 @@
 A script to set up some cuts on intrinsic galaxy radius / flux etc. to eliminate galaxies that would
 not be simulated in GREAT3.  Used to make cuts imposed in examples/great3/cgc.yaml.
 """
+from __future__ import print_function
 import pyfits
 import matplotlib.pyplot as plt
 import numpy as np
@@ -42,7 +43,7 @@ lg_gal_flux = np.log10(gal_flux)
 # the resolution and S/N cuts.   Use these distributions to make cuts.
 for ind in range(len(fwhm_arr)):
     fwhm = fwhm_arr[ind]
-    print 'Beginning work for FWHM=%.2f arcsec:'%fwhm
+    print('Beginning work for FWHM=%.2f arcsec:'%fwhm)
 
     # Get the resolution for this FWHM value.
     res = resolution_arr[:,ind]
@@ -56,7 +57,7 @@ for ind in range(len(fwhm_arr)):
     # eliminated.
     cut_val = np.percentile(gal_hlr[pass_cuts], 5.)
     elim_frac = float(np.sum(gal_hlr[fail_cuts] < cut_val))/len(gal_hlr[fail_cuts])
-    print '    Radius cut at %.3f arcsec eliminates a fraction %f of res failures'%(cut_val,elim_frac)
+    print('    Radius cut at %.3f arcsec eliminates a fraction %f of res failures'%(cut_val,elim_frac))
 
     if do_plot:
         fig = plt.figure()
@@ -89,8 +90,8 @@ for ind in range(len(fwhm_arr)):
     # Check what fraction of the failing ones AT HIGH S/N are eliminated.  Should be a lot more!
     elim_frac_high = float(np.sum(gal_flux[fail_cuts_flux] > cut_val))/\
         len(gal_flux[fail_cuts_highflux])
-    print '    Flux cut at %.3f eliminates a fraction %f of SNR failures'%(cut_val,elim_frac)
-    print '    ...or, a fraction %f of SNR failures at the high end'%elim_frac_high
+    print('    Flux cut at %.3f eliminates a fraction %f of SNR failures'%(cut_val,elim_frac))
+    print('    ...or, a fraction %f of SNR failures at the high end'%elim_frac_high)
 
     if do_plot:
         fig = plt.figure()

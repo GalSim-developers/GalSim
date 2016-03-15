@@ -29,6 +29,7 @@ Consider this as an "example", as work in progress, use at your own risk !
 
 A demo usage is provided at the bottom of this file.
 """
+from __future__ import print_function
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -68,7 +69,7 @@ class ps:
 		self.min_l_mode = 2.0 * np.pi / (self.size * np.pi/180.0)
 		self.nyquist_deg = self.size / self.n
 		
-		print "Range of l modes : %f to %f" % (self.min_l_mode, self.max_l_mode)
+		print("Range of l modes : %f to %f" % (self.min_l_mode, self.max_l_mode))
 		
 		#print "Builing logarithmics l bins ..."
 		self.dlogl = (self.max_l_mode - self.min_l_mode)/(self.nbin2 - 1.0)
@@ -138,7 +139,7 @@ class ps:
 					self.gPowBB[ibin] += self.gCBB_2[i1,j1] * l
 					self.gPowEB[ibin] += self.gCEB_2[i1,j1] * l
 				else:
-					print "Hmm, l out of min-max range, this part should be improved ..."
+					print("Hmm, l out of min-max range, this part should be improved ...")
 					
 				self.ll[ibin] = l # the array of l values
 				if ibin > 1:
@@ -174,8 +175,8 @@ def readells(filepath, n = 100, step = 48.0):
 	"""
 
 	data = np.loadtxt(filepath).transpose()
-	print "Reading %s ..." % (filepath)
-	print "Input data shape : %s" % (str(data.shape))
+	print("Reading %s ..." % (filepath))
+	print("Input data shape : %s" % (str(data.shape)))
 
 	e1 = data[0]
 	e2 = -data[1]
@@ -192,7 +193,7 @@ def readells(filepath, n = 100, step = 48.0):
 		if iindex>=0 and iindex <len(x) and jindex>=0 and jindex<len(x) :
 			ein[iindex,jindex] = np.complex(e1[i], e2[i])
 		else:
-			print "OUCH, index out of bounds."
+			print("OUCH, index out of bounds.")
 			sys.exit()
 
 	return ein

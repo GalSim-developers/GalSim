@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -49,7 +50,7 @@ try:
         abs_tol_size=test_sersic_highn_basic.TOL_SIZE, logger=logger)
     test_ran = True
 except RuntimeError as err:
-    print err
+    print(err)
     test_ran = False
     # Uncomment lines below to ouput a check image
     import copy

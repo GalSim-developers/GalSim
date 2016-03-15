@@ -1877,17 +1877,17 @@ def _writeFuncToHeader(func, letter, header):
         # In particular, marshal can serialize arbitrary code. (!)
         import types, cPickle, marshal, base64
         if type(func) == types.FunctionType:
-            code = marshal.dumps(func.func_code)
-            name = func.func_name
-            defaults = func.func_defaults
+            code = marshal.dumps(func.__code__)
+            name = func.__name__
+            defaults = func.__defaults__
 
             # Functions may also have something called closure cells.  If there are any, we need
             # to include them as well.  Help for this part came from:
             # http://stackoverflow.com/questions/573569/
-            if func.func_closure:
+            if func.__closure__:
                 from types import ModuleType
                 closure = []
-                for c in func.func_closure:
+                for c in func.__closure__:
                     if isinstance(c.cell_contents, ModuleType):
                         # Can't really pickle the modules.  e.g. math if they use math functions.
                         # The modules just need to be loaded on the other side.  But we still need 
@@ -1937,7 +1937,7 @@ def _makecell(value):
     # This is a little trick to make a closure cell.
     # We make a function that has the given value in closure, then then get the 
     # first (only) closure item, which will be the closure cell we need.
-    return (lambda : value).func_closure[0]
+    return (lambda : value).__closure__[0]
 
 def _readFuncFromHeader(letter, header):
     # This undoes the process of _writeFuncToHeader.  See the comments in that code for details.

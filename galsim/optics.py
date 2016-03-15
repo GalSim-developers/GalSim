@@ -39,11 +39,12 @@ PTF = phase transfer function = p, where OTF = MTF * exp(i * p)
 Wavefront = the amplitude and phase of the incident light on the telescope pupil, encoded as a
 complex number. The OTF is the autocorrelation function of the wavefront.
 """
+from __future__ import absolute_import
 
 
 import numpy as np
 import galsim
-import utilities
+from . import utilities
 from galsim import GSObject
 
 class OpticalPSF(GSObject):

@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -67,8 +68,8 @@ ratio1 = galsim_del_ee
 ratio2 = galsim_del_ee/galsim_del_theory
 for ell_ind in range(len(ell)):
     ratio1[ell_ind] /= tab(ell[ell_ind])
-print ratio1
-print ratio2
+print(ratio1)
+print(ratio2)
 fig = plt.figure()
 ax = fig.add_subplot(111)
 ax.plot(ell, ratio1, label='Ratio vs. theory')

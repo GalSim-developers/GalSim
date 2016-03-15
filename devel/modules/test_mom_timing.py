@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -34,7 +35,7 @@ sn_noisy = 25.0 # desired S/N for noisy case
 seed = 1234
 save_im = 0
 
-print "Doing all tests with ",ntest," trials"
+print("Doing all tests with ",ntest," trials")
 
 # for 48x48 image, Gaussian PSF with FWHM=2.5 pix and Gaussian galaxy with same size, make objects
 epsf = galsim.Gaussian(fwhm = psf_fwhm) # let's say this is the epsf
@@ -62,9 +63,9 @@ for sizemult in range(1, nmult):
     t2 = time.time()
     time_per_call = (t2-t1)/ntest
     # check results
-    print "\nFor image size ",this_imsize," per side, no noise, time to get moments was ",time_per_call," per call"
-    print "Results for e1, e2, sigma: ",res.observed_shape.e1, res.observed_shape.e2, res.moments_sigma
-    print "Expected: ",0.5*gal_e1, 0.5*gal_e2, exp_sigma
+    print("\nFor image size ",this_imsize," per side, no noise, time to get moments was ",time_per_call," per call")
+    print("Results for e1, e2, sigma: ",res.observed_shape.e1, res.observed_shape.e2, res.moments_sigma)
+    print("Expected: ",0.5*gal_e1, 0.5*gal_e2, exp_sigma)
 
 # for 48x48 image, Gaussian PSF with FWHM=2.5 pix and Gaussian galaxy with same size, make noisy image
 # get adaptive moments some number of times so we can average over the calls to get an average speed
@@ -100,8 +101,8 @@ mean_sigma /= ntest
 mean_e1 /= ntest
 mean_e2 /= ntest
 # check results
-print "\nFor image size ",imsize," per side, with noise, time to get moments was ",time_per_call," per call"
-print "Final results for e1, e2, sigma: ",mean_e1, mean_e2, mean_sigma
+print("\nFor image size ",imsize," per side, with noise, time to get moments was ",time_per_call," per call")
+print("Final results for e1, e2, sigma: ",mean_e1, mean_e2, mean_sigma)
 
 # do shear estimation in the noiseless case
 t1 = time.time()
@@ -110,9 +111,9 @@ for i in range(ntest):
 t2 = time.time()
 time_per_call = (t2-t1)/ntest
 # check results
-print "\nFor image size ",imsize," per side, no noise, time to estimate shear was ",time_per_call," per call"
-print "Results for e1, e2: ",res.corrected_e1, res.corrected_e2
-print "Expected: ",gal_e1, gal_e2
+print("\nFor image size ",imsize," per side, no noise, time to estimate shear was ",time_per_call," per call")
+print("Results for e1, e2: ",res.corrected_e1, res.corrected_e2)
+print("Expected: ",gal_e1, gal_e2)
 
 # do shear estimation in the noisy case
 tot_time_meas = 0.0
@@ -136,8 +137,8 @@ time_per_call = tot_time_meas / ntest
 mean_e1 /= ntest
 mean_e2 /= ntest
 # check results
-print "\nFor image size ",imsize," per side, with noise, time to estimate shear was ",time_per_call," per call"
-print "Final results for e1, e2: ",mean_e1, mean_e2
+print("\nFor image size ",imsize," per side, with noise, time to estimate shear was ",time_per_call," per call")
+print("Final results for e1, e2: ",mean_e1, mean_e2)
 
 # let's try something more complicated, like Sersic n=3 (same HLR as the Gaussian)
 # and Kolmogorov with same FWHM of 2.5 pix, convolved with pixel
@@ -167,10 +168,10 @@ for i in range(ntest):
 time_mom /= ntest
 time_shear /= ntest
 # check results
-print "\nFor Kolmogorov, Pixel, Sersic, ",imsize," per side, no noise, time to get moments was ",time_mom," per call"
-print "time to estimate shear was ",time_shear," per call"
-print "Results for e1, e2 (corrected): ",res2.corrected_e1, res2.corrected_e2
-print "Results for sigma observed: ",res1.moments_sigma
+print("\nFor Kolmogorov, Pixel, Sersic, ",imsize," per side, no noise, time to get moments was ",time_mom," per call")
+print("time to estimate shear was ",time_shear," per call")
+print("Results for e1, e2 (corrected): ",res2.corrected_e1, res2.corrected_e2)
+print("Results for sigma observed: ",res1.moments_sigma)
 
 # and also Sersic n=3 with an Airy
 psf = galsim.Airy(lam_over_diam = psf_fwhm) # lam_over_diam is pretty close to FWHM
@@ -198,7 +199,7 @@ for i in range(ntest):
 time_mom /= ntest
 time_shear /= ntest
 # check results
-print "\nFor Airy, Pixel, Sersic, ",imsize," per side, no noise, time to get moments was ",time_mom," per call"
-print "time to estimate shear was ",time_shear," per call"
-print "Results for e1, e2 (corrected): ",res2.corrected_e1, res2.corrected_e2
-print "Results for sigma observed: ",res1.moments_sigma
+print("\nFor Airy, Pixel, Sersic, ",imsize," per side, no noise, time to get moments was ",time_mom," per call")
+print("time to estimate shear was ",time_shear," per call")
+print("Results for e1, e2 (corrected): ",res2.corrected_e1, res2.corrected_e2)
+print("Results for sigma observed: ",res1.moments_sigma)

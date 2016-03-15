@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -295,7 +296,7 @@ def test_float_value():
     np.testing.assert_almost_equal(sum1, 72 + 2.33 + 23.17)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 
@@ -499,7 +500,7 @@ def test_int_value():
     np.testing.assert_almost_equal(sum1, 72 + 2 + 17)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 
@@ -652,7 +653,7 @@ def test_bool_value():
     np.testing.assert_array_equal(dict, [ True, False, False ])
  
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 
@@ -782,7 +783,7 @@ def test_str_value():
     np.testing.assert_array_equal(dict, [ 'Life', 'of', 'Brian' ])
  
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_angle_value():
@@ -911,7 +912,7 @@ def test_angle_value():
     np.testing.assert_almost_equal(sum1 / galsim.degrees, 72 + 2.33)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_shear_value():
@@ -1010,7 +1011,7 @@ def test_shear_value():
     np.testing.assert_almost_equal(sum1.getG2(), s.getG2())
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_pos_value():
@@ -1081,7 +1082,7 @@ def test_pos_value():
     np.testing.assert_almost_equal(sum1.y, -0.3 + 0.2 + 0.0)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 if __name__ == "__main__":

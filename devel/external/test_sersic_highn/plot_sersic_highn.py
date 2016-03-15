@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -30,7 +31,7 @@ for test_case in ("basic",):# "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2"
     # "shoot_accuracy2", "shoot_relerr2", "shoot_abserr2"):
 
     outfile = os.path.join("outputs", "sersic_highn_"+test_case+"_output_N"+str(nobs)+".asc")
-    print "Generating plots for "+outfile
+    print("Generating plots for "+outfile)
     # Ready some empty arrays for storing the output
     g1obs_draw = np.empty((nobs, ntest))
     g2obs_draw = np.empty((nobs, ntest))
@@ -123,17 +124,17 @@ for test_case in ("basic",):# "alias2", "maxk2", "wmult2", "alias2_maxk2_wmult2"
     XMAX = 0.7 # in arcsec
     plt.clf()
     plt.xlim(XMIN, XMAX)
-    print ""
-    print ""
-    print ""
+    print("")
+    print("")
+    print("")
     for i in range(ntest)[:-1]:
         # First fit a line to the points
         c, m, var_c, cov_cm, var_m = fitting.fitline(
             sigma_draw[0:data.shape[0]/ntest, i], delta_sigma[0:data.shape[0]/ntest, i])
-        print "sigma results for n = "+str(test_sersic_highn_basic.SERSIC_N_TEST[i])+":"
-        print "c = %.2e +/- %.2e arcsec" % (
+        print("sigma results for n = "+str(test_sersic_highn_basic.SERSIC_N_TEST[i])+":")
+        print("c = %.2e +/- %.2e arcsec" % (
             c * test_sersic_highn_basic.PIXEL_SCALE,
-            np.sqrt(var_c) * test_sersic_highn_basic.PIXEL_SCALE)
+            np.sqrt(var_c) * test_sersic_highn_basic.PIXEL_SCALE))
         if i < 7:
             fmt='x'
         else:

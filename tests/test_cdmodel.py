@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -179,7 +180,7 @@ def test_simplegeometry():
     np.testing.assert_array_almost_equal(itcdrx.array, i0.array, 10,
                                    "itcdrx array is not 0 where it should be")
     t2 = time.time()
-    print 'time for %s = %.2f' % (funcname(), t2 - t1)
+    print('time for %s = %.2f' % (funcname(), t2 - t1))
 
 def test_fluxconservation():
     """Test flux conservation of charge deflection model for galaxy and flat image.
@@ -220,7 +221,7 @@ def test_fluxconservation():
     do_pickle(cd)
 
     t2 = time.time()
-    print 'time for %s = %.2f' % (funcname(), t2 - t1)
+    print('time for %s = %.2f' % (funcname(), t2 - t1))
 
 def test_forwardbackward():
     """Test invariance (to first order) under forward-backward transformation.
@@ -261,7 +262,7 @@ def test_forwardbackward():
     assert maxres<10, ("maximum positive residual of forward-backward transformation is too large")
     assert minres>-10, ("maximum negative residual of forward-backward transformation is too large")
     t2 = time.time()
-    print 'time for %s = %.2f' % (funcname(), t2 - t1)
+    print('time for %s = %.2f' % (funcname(), t2 - t1))
 
 def test_gainratio():
     """Test gain ratio functionality
@@ -293,7 +294,7 @@ def test_gainratio():
     np.testing.assert_array_almost_equal(2.*image2_cd.array, image_cd.array, 13-int(np.log10(galflux)),
                                    "images with different gain not transformed equally")
     t2 = time.time()
-    print 'time for %s = %.2f' % (funcname(), t2 - t1)
+    print('time for %s = %.2f' % (funcname(), t2 - t1))
 
 def test_exampleimage():
     """Test application of model compared to an independent implementation that was run on the
@@ -332,7 +333,7 @@ def test_exampleimage():
         # that the difference images do not show coherent structure other than a border feature
         # which is expected
     t2 = time.time()
-    print 'time for %s = %.2f' % (funcname(), t2 - t1)
+    print('time for %s = %.2f' % (funcname(), t2 - t1))
 
 
 if __name__ == "__main__":

@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -42,9 +43,9 @@ test_ps_eb=galsim.PowerSpectrum(e_power_function = tab, b_power_function = tab, 
 my_pse = pse.PowerSpectrumEstimator(grid_nx, theta, n_ell)
 
 for ireal in range(n_realization):
-    print "Iteration ",ireal
+    print("Iteration ",ireal)
 
-    print "Getting shears on a grid"
+    print("Getting shears on a grid")
     g1, g2 = test_ps_e.buildGrid(grid_spacing=dtheta, ngrid=grid_nx, units=galsim.degrees)
     this_ell, this_pe, this_pb, this_peb, this_theory = my_pse.estimate(g1, g2, theory_func=tab)
 

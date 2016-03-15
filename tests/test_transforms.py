@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -107,7 +108,7 @@ def test_smallshear():
     do_pickle(gauss.SBProfile)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_largeshear():
@@ -165,7 +166,7 @@ def test_largeshear():
     do_pickle(gauss.SBProfile)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
  
 
@@ -217,7 +218,7 @@ def test_rotate():
     do_pickle(gal.SBProfile)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_mag():
@@ -292,7 +293,7 @@ def test_mag():
     do_pickle(gal.SBProfile)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_lens():
     """Test the lensing (shear, magnification) of a Sersic profile carried out 2 ways.
@@ -317,7 +318,7 @@ def test_lens():
         err_msg="Lensing of Sersic profile done in two different ways gives different answer")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_shift():
@@ -368,7 +369,7 @@ def test_shift():
     do_pickle(gauss.SBProfile)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_rescale():
@@ -432,13 +433,13 @@ def test_rescale():
     gsp1 = galsim.GSParams(folding_threshold=1.e-3, maxk_threshold=5.e-4)
     sersic_acc = galsim.Sersic(n=3, flux=1, half_light_radius=1, gsparams=gsp1)
     myImg2 = sersic_acc.drawImage(scale=dx, use_true_center=False)
-    print myImg2.array.sum(), myImg2.added_flux
+    print(myImg2.array.sum(), myImg2.added_flux)
     np.testing.assert_almost_equal(myImg2.array.sum(), 1., 3,
             err_msg="Drawing with gsp1 results in wrong flux")
     np.testing.assert_almost_equal(myImg2.added_flux, 1., 3,
             err_msg="Drawing with gsp1 returned wrong added_flux")
     myImg2 = sersic_acc.drawImage(myImg2, add_to_image=True, use_true_center=False)
-    print myImg2.array.sum(), myImg2.added_flux
+    print(myImg2.array.sum(), myImg2.added_flux)
     np.testing.assert_almost_equal(myImg2.array.sum(), 2., 3,
             err_msg="Drawing with add_to_image=True results in wrong flux")
     np.testing.assert_almost_equal(myImg2.added_flux, 1., 3,
@@ -449,21 +450,21 @@ def test_rescale():
     gsp2 = galsim.GSParams(folding_threshold=1.e-5, maxk_threshold=1.e-5)
     gauss = galsim.Gaussian(flux=1.e5, sigma=2., gsparams=gsp2)
     myImg2 = gauss.drawImage(scale=dx, use_true_center=False)
-    print 'image size = ',myImg2.array.shape
-    print myImg2.array.sum(), myImg2.added_flux
+    print('image size = ',myImg2.array.shape)
+    print(myImg2.array.sum(), myImg2.added_flux)
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 1., 4,
             err_msg="Drawing Gaussian results in wrong flux")
     np.testing.assert_almost_equal(myImg2.added_flux/1.e5, 1., 4,
             err_msg="Drawing Gaussian returns wrong added_flux")
     myImg2 = gauss.drawImage(myImg2, add_to_image=True, use_true_center=False)
-    print myImg2.array.sum(), myImg2.added_flux
+    print(myImg2.array.sum(), myImg2.added_flux)
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 2., 4,
             err_msg="Drawing Gaussian with add_to_image=True results in wrong flux")
     np.testing.assert_almost_equal(myImg2.added_flux/1.e5, 1., 4,
             err_msg="Drawing Gaussian with add_to_image=True returns wrong added_flux")
     rng = galsim.BaseDeviate(12345)
     myImg2 = gauss.drawImage(myImg2, add_to_image=True, poisson_flux=False, rng=rng, method='phot')
-    print myImg2.array.sum(), myImg2.added_flux
+    print(myImg2.array.sum(), myImg2.added_flux)
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 3., 4,
             err_msg="Drawing Gaussian with method=phot, add_to_image=True, poisson_flux=False "+
                     "results in wrong flux")
@@ -471,7 +472,7 @@ def test_rescale():
             err_msg="Drawing Gaussian with method=phot, add_to_image=True, poisson_flux=False "+
                     "returned wrong added_flux")
     myImg2 = gauss.drawImage(myImg2, add_to_image=True, rng=rng, method='phot')
-    print myImg2.array.sum(), myImg2.added_flux
+    print(myImg2.array.sum(), myImg2.added_flux)
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 4., 1,
             err_msg="Drawing Gaussian with method=phot, add_to_image=True, poisson_flux=True "+
                     "results in wrong flux")
@@ -513,7 +514,7 @@ def test_rescale():
     do_pickle(sersic2.SBProfile)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_integer_shift_fft():
     """Test if shift works correctly for integer shifts using drawImage method.
@@ -565,7 +566,7 @@ def test_integer_shift_fft():
         err_msg="Integer shift failed for FFT rendered Gaussian GSObject with only PSF shifted ")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_integer_shift_photon():
     """Test if shift works correctly for integer shifts using method=phot.
@@ -624,7 +625,7 @@ def test_integer_shift_photon():
         err_msg="Integer shift failed for FFT rendered Gaussian GSObject with only PSF shifted ")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_flip():
     """Test several ways to flip a profile
@@ -719,7 +720,7 @@ def test_flip():
     im = galsim.ImageD(16,16, scale=0.05)
 
     for prof in prof_list:
-        print 'prof = ',prof
+        print('prof = ',prof)
 
         # Make sure we hit all 4 fill functions.  
         # image_x uses fillXValue with izero, jzero
@@ -826,7 +827,7 @@ def test_flip():
         do_pickle(flip3)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 if __name__ == "__main__":

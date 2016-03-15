@@ -17,6 +17,7 @@
 #
 """This script makes some multi-extension FITS files with images to be used for tests of making
 interpolated images using the 'hdu' keyword."""
+from __future__ import print_function
 
 import galsim
 
@@ -31,7 +32,7 @@ im_list = []
 for g2 in g2_vals:
     gal = obj.shear(g2=g2)
     im = gal.drawImage(scale=pix_scale, method='no_pixel')
-    print 'For shear ',g2,':',im.FindAdaptiveMom()
+    print('For shear ',g2,':',im.FindAdaptiveMom())
     im_list.append(im)
 
 galsim.fits.writeMulti(im_list, outfile)

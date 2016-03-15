@@ -20,6 +20,7 @@ Grab LSST Bandpasses from the web, and then thin with rel_err = 1.e-5.  Note tha
 this script, which are the files GALSIM_DIR/examples/data/LSST_?.dat, are already included in the
 repository.  This script just lets users know where these files came from and how they were altered.
 """
+from __future__ import print_function
 
 import galsim
 import urllib2
@@ -38,8 +39,8 @@ for band in 'ugrizy':
     x1,f1 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-5)
     x2,f2 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-4)
     x3,f3 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-3)
-    print "{0} raw size = {1}".format(base,len(x))
-    print "    thinned sizes = {0}, {1}, {2}".format(len(x1),len(x2),len(x3))
+    print("{0} raw size = {1}".format(base,len(x)))
+    print("    thinned sizes = {0}, {1}, {2}".format(len(x1),len(x2),len(x3)))
 
     with open(base, 'w') as out:
         out.write(

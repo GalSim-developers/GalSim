@@ -26,6 +26,7 @@ way they can simply be read in.
 Set up to point to data that live in a particular spot, so likely nobody else can actually run this
 script.
 """
+from __future__ import print_function
 
 import numpy as np
 import pyfits
@@ -129,7 +130,7 @@ hlr[viable_sersic_flag,0] = use_hlr
 use_flux = np.zeros_like(use_hlr)
 for ind in range(len(gal_n)):
     if ind % 1000 == 0:
-        print 'Calculations: %d...'%ind
+        print('Calculations: %d...'%ind)
     tmp_ser = galsim.Sersic(gal_n[ind],
                             half_light_radius=use_hlr[ind])
     use_flux[ind] = sparams[viable_sersic_flag,0][ind] / \
@@ -145,10 +146,10 @@ flux[find_double,2] = \
 flux[find_double,3] = flux[find_double,1] + flux[find_double,2]
 
 # Make useful diagnostic comments and plots
-print 'Total number in catalog:',len(use_bulgefit)
-print 'Number for which we are going to use 2-component fits:',np.sum(use_bulgefit.astype(int))
-print 'Number with viable Sersic fits (even if not using):',np.sum(viable_sersic.astype(int))
-print 'Number of failures: cannot use either type of fit:',np.sum(failure.astype(int))
+print('Total number in catalog:',len(use_bulgefit))
+print('Number for which we are going to use 2-component fits:',np.sum(use_bulgefit.astype(int)))
+print('Number with viable Sersic fits (even if not using):',np.sum(viable_sersic.astype(int)))
+print('Number of failures: cannot use either type of fit:',np.sum(failure.astype(int)))
 # Compare the flux from the two types of fits, for cases that have both.
 to_plot = np.logical_and.reduce([
         use_bulgefit,
@@ -198,5 +199,5 @@ hdu = pyfits.new_table(new_table)
 
 # Output to file.
 out_file = os.path.join(data_dir, param_fit_file)
-print "Writing to file ",out_file
+print("Writing to file ",out_file)
 hdu.writeto(out_file,clobber=True)

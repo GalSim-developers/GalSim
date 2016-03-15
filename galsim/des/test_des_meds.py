@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -102,10 +103,10 @@ def test_meds():
     # save objects to MEDS file
     filename_meds = 'test_meds.fits'
     galsim.des.write_meds(filename_meds, objlist, clobber=True)
-    print 'wrote MEDS file %s ' % filename_meds
+    print('wrote MEDS file %s ' % filename_meds)
 
     # test functions in des_meds.py
-    print 'reading %s' % filename_meds
+    print('reading %s' % filename_meds)
     import meds
     m = meds.MEDS(filename_meds)
 
@@ -118,8 +119,8 @@ def test_meds():
     # check if the number of objects is correct
     numpy.testing.assert_equal(n_obj,n_obj_test)
 
-    print 'number of objects is %d' % n_obj
-    print 'testing if loaded images are the same as original images'
+    print('number of objects is %d' % n_obj)
+    print('testing if loaded images are the same as original images')
     
     # loop over objects and exposures - test get_cutout
     for iobj in range(n_obj):
@@ -154,7 +155,7 @@ def test_meds():
                       wcs_orig.origin.x, wcs_orig.origin.y ])
             numpy.testing.assert_array_equal(wcs_array_meds, wcs_array_orig)
 
-            print 'test passed get_cutout obj=%d icut=%d' % (iobj, icut)
+            print('test passed get_cutout obj=%d icut=%d' % (iobj, icut))
 
     # loop over objects - test get_mosaic
     for iobj in range(n_obj):
@@ -174,9 +175,9 @@ def test_meds():
         numpy.testing.assert_array_equal(true_mosaic_wth, wth)
         numpy.testing.assert_array_equal(true_mosaic_seg, seg)
 
-        print 'test passed get_mosaic for obj=%d' % (iobj)
+        print('test passed get_mosaic for obj=%d' % (iobj))
 
-    print 'all asserts succeeded'
+    print('all asserts succeeded')
 
 def test_meds_config():
     """
@@ -235,10 +236,10 @@ def test_meds_config():
     galsim.config.Process(config, logger=logger)
 
     # test functions in des_meds.py
-    print 'reading %s' % file_name
+    print('reading %s' % file_name)
     import meds
     m = meds.MEDS(file_name)
-    print 'number of objects is %d' % m.size
+    print('number of objects is %d' % m.size)
     assert m.size == nobj
 
     # get the catalog
@@ -260,7 +261,7 @@ def test_meds_config():
         meds_wt_array = m.get_mosaic(iobj, type='weight')
         meds_seg_array = m.get_mosaic(iobj, type='seg')
 
-    print 'all asserts succeeded'
+    print('all asserts succeeded')
 
 if __name__ == "__main__":
 

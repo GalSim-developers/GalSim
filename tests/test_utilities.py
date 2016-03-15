@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -50,7 +51,7 @@ def test_roll2d_circularity():
                                   galsim.utilities.roll2d(flt_image, flt_image.shape),
                                   err_msg='galsim.utilities.roll2D failed flt array circularity')
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_roll2d_fwdbck():
     """Test both integer and float arrays are unchanged by unit forward and backward roll.
@@ -72,7 +73,7 @@ def test_roll2d_fwdbck():
                                                           (-1, -1)),
                                   err_msg='galsim.utilities.roll2D failed flt array fwd/back test')
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_roll2d_join():
     """Test both integer and float arrays are equivalent if rolling +1/-1 or -/+(shape[i/j] - 1).
@@ -100,7 +101,7 @@ def test_roll2d_join():
                                                                    -(flt_image.shape[1] - 1))),
                                   err_msg='galsim.utilities.roll2D failed flt array -/+ join test')
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_kxky():
     """Test that the basic properties of kx and ky are right.
@@ -117,7 +118,7 @@ def test_kxky():
         np.testing.assert_array_almost_equal(ky[:, j], kyref, decimal=decimal,
                                              err_msg='failed ky equivalence on row j = '+str(j))
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_kxky_plusone():
     """Test that the basic properties of kx and ky are right...
@@ -135,7 +136,7 @@ def test_kxky_plusone():
         np.testing.assert_array_almost_equal(ky[:, j], kyref, decimal=decimal,
                                              err_msg='failed ky equivalence on row j = '+str(j))
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_check_all_contiguous():
     """Test all galsim.optics outputs are C-contiguous as required by the galsim.Image class.
@@ -154,7 +155,7 @@ def test_check_all_contiguous():
     assert kx.flags.c_contiguous
     assert ky.flags.c_contiguous
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_interleaveImages():
     import time
@@ -228,7 +229,7 @@ def test_interleaveImages():
         N = (n,n)
         np.testing.assert_raises(ValueError,galsim.utilities.interleaveImages,im_list,N,offset_list)
     except ImportError:
-        print "The assert_raises tests require nose"
+        print("The assert_raises tests require nose")
 
     offset_list = []
     im_list = []
@@ -247,7 +248,7 @@ def test_interleaveImages():
         N = (n,n)
         np.testing.assert_raises(ValueError,galsim.utilities.interleaveImages,im_list,N,offset_list)
     except ImportError:
-        print "The assert_raises tests require nose"
+        print("The assert_raises tests require nose")
 
     # 2a) Increase resolution along one direction - square to rectangular images
     n = 2
@@ -302,7 +303,7 @@ def test_interleaveImages():
     assert img.wcs == galsim.JacobianWCS(1.*scale/n**2,0.0,0.0,scale)
     
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_python_LRU_Cache():

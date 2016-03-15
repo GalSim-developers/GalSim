@@ -25,6 +25,7 @@ meant to be used with plot_test_interpolants.py.  The column mapping is hard-cod
 print function here and the main function of plot_test_interpolants.py, so changes to the column
 structure here should be replicated there.
 """
+from __future__ import print_function
 
 import galsim
 import copy
@@ -306,9 +307,9 @@ def main(args):
         f = open(output_file,'w')
         for padding in padding_list:                            # Amount of padding
             for interpolant in use_interpolants:                # Possible interpolants
-                print 'Angle test ', 
+                print('Angle test ', end=' ') 
                 for angle in angle_list:                        # Possible rotation angles
-                    print i,
+                    print(i, end=' ')
                     i+=1
                     print_results(f, g1_list, g2_list, sigma_list, 
                                   test_realgalaxy(base_config, angle=angle,
@@ -320,10 +321,10 @@ def main(args):
                                     k_interpolant=interpolant, padding=padding, 
                                     seed=rseed+args.first_index),
                                   first_index=args.first_index)
-                print ''
-                print 'Shear/magnification test ',
+                print('')
+                print('Shear/magnification test ', end=' ')
                 for (g1, g2, mag) in shear_and_magnification_list: # Shear and magnification
-                    print i, "(", g1, g2, ")",
+                    print(i, "(", g1, g2, ")", end=' ')
                     i+=1
                     print_results(f, g1_list, g2_list, sigma_list, 
                                   test_realgalaxy(base_config, shear=(g1,g2),
@@ -335,9 +336,9 @@ def main(args):
                                     magnification=mag, k_interpolant=interpolant,
                                     padding=padding, seed=rseed+args.first_index),
                                   first_index=args.first_index)
-                print ''
+                print('')
                 for shift in shift_list:
-                    print i, "(", shift, ")",
+                    print(i, "(", shift, ")", end=' ')
                     i+=1
                     print_results(f, g1_list, g2_list, sigma_list, 
                                   test_realgalaxy(base_config, shift=shift,
@@ -349,7 +350,7 @@ def main(args):
                                     k_interpolant=interpolant, padding=padding, 
                                     seed=rseed+args.first_index),
                                   first_index=args.first_index)
-                print ''
+                print('')
         f.close()            
     
 if __name__ == "__main__":

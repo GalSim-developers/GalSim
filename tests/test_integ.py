@@ -17,6 +17,7 @@
 #
 """Unit tests for integration routines at the Python layer.
 """
+from __future__ import print_function
 
 import numpy as np
 
@@ -68,7 +69,7 @@ def test_gaussian_finite_limits():
         err_msg="Gaussian integral failed across interval [-50, -40].")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_gaussian_infinite_limits():
     """Test the integration of a 1D zero-mean Gaussian across intervals of [0, inf], [-inf, 5.4]
@@ -101,7 +102,7 @@ def test_gaussian_infinite_limits():
         err_msg="Gaussian integral failed across interval [-inf, inf].")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_sinxsqexpabsx_finite_limits():
     """Test the integration of a slightly tricky oscillating sin(x^2) * exp(-|x|) function across 
@@ -133,7 +134,7 @@ def test_sinxsqexpabsx_finite_limits():
         err_msg="Sin(x^2) * exp(-|x|) integral failed across interval [-15, -14].")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_sinxsqexpabsx_infinite_limits():
     """Test the integration of a slightly tricky oscillating sin(x^2) * exp(-|x|) function across 
@@ -166,7 +167,7 @@ def test_sinxsqexpabsx_infinite_limits():
         err_msg="Sin(x^2) * exp(-|x|) integral failed across interval [-inf, inf].")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_invroot_finite_limits():
     """Test the integration of |x|^(-1/2) across intervals [0,1], [0,300] (integrable pole at x=0).
@@ -190,7 +191,7 @@ def test_invroot_finite_limits():
         err_msg="|x|^(-1/2) integral failed across interval [0, 300].")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_invroot_infinite_limits():
     """Test the integration of |x|^(-2) across intervals [1,2], [1,inf].
@@ -218,10 +219,10 @@ def test_invroot_infinite_limits():
             RuntimeError,
             galsim.integ.int1d, test_func, 0., 1., test_rel_err, test_abs_err)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_midpoint_basic():
     """Test the basic functionality of the midpt() method.
@@ -239,7 +240,7 @@ def test_midpoint_basic():
         err_msg='Simple test of midpt() method failed for f(x)=x^2 from 0 to 10')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 if __name__ == "__main__":
     test_gaussian_finite_limits()
