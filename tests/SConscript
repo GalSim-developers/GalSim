@@ -119,11 +119,13 @@ def run_tests(target, source, env):
     # Always run cpp tests
     if True:
         print '\nStarting cpp tests...'
+        cmd = str(source[0])
+        cmd = PrependLibraryPaths(cmd,env)
         cpp_proc = subprocess.Popen(
-            str(source[0]),
+            ['bash', '-c', cmd],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            shell=True)
+            shell=False)
         
         while cpp_proc.poll() == None:
             buf = os.read(cpp_proc.stdout.fileno(),1)

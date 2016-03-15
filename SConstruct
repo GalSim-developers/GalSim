@@ -217,8 +217,9 @@ def ErrorExit(*args, **kwargs):
                 cmd = conftest
             else:
                 cmd = env['PYTHON'] + " < " + conftest
-            p = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                 shell=True)
+            cmd = PrependLibraryPaths(cmd,env)
+            p = subprocess.Popen(['bash','-c',cmd], stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT, shell=False)
             conftest_out = p.stdout.readlines()
             out.write('Output of the command %s is:\n'%cmd)
             out.write(''.join(conftest_out) + '\n')
