@@ -29,13 +29,13 @@ namespace galsim {
     /**
      * @brief A private class that caches the photon shooting objects for a given
      *         obscuration value, so they don't have to be set up again each time.
-     * 
+     *
      * This is helpful if people use only 1 or a small number of obscuration values.
      */
     class AiryInfo
     {
     public:
-        /** 
+        /**
          * @brief Constructor
          */
         AiryInfo() {}
@@ -43,7 +43,7 @@ namespace galsim {
         /// @brief Destructor: deletes photon-shooting classes if necessary
         virtual ~AiryInfo() {}
 
-        /** 
+        /**
          * @brief Returns the real space value of the Airy function,
          * normalized to unit flux (see private attributes).
          * @param[in] r should be given in units of lam_over_D  (i.e. r_true*D)
@@ -55,7 +55,7 @@ namespace galsim {
 
         /**
          * @brief Returns the k-space value of the Airy function.
-         * @param[in] ksq_over_pisq should be given in units of lam_over_D  
+         * @param[in] ksq_over_pisq should be given in units of lam_over_D
          * (i.e. k_true^2 / (pi^2 * D^2))
          *
          * This is used to calculate the real kValue, but it comes back unnormalized.
@@ -78,12 +78,12 @@ namespace galsim {
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
     protected:
-        double _stepk; ///< Sampling in k space necessary to avoid folding 
+        double _stepk; ///< Sampling in k space necessary to avoid folding
 
         virtual void checkSampler() const = 0;
 
         ///< Class that can sample radial distribution
-        mutable boost::shared_ptr<OneDimensionalDeviate> _sampler; 
+        mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
 
     private:
         AiryInfo(const AiryInfo& rhs); ///< Hides the copy constructor.
@@ -95,7 +95,7 @@ namespace galsim {
     class AiryInfoObs : public AiryInfo
     {
     public:
-        AiryInfoObs(double obscuration, const GSParamsPtr& _gsparams); 
+        AiryInfoObs(double obscuration, const GSParamsPtr& _gsparams);
         ~AiryInfoObs() {}
 
         double xValue(double r) const;
@@ -110,7 +110,7 @@ namespace galsim {
          * Input radius is in units of lambda/D.  Output normalized
          * to integrate to unity over input units.
          */
-        class RadialFunction : public FluxDensity 
+        class RadialFunction : public FluxDensity
         {
         public:
             /**
@@ -118,7 +118,7 @@ namespace galsim {
              * @param[in] obscuration Fractional linear size of central obscuration of pupil.
              * @param[in] obssq       Pre-computed obscuration^2 supplied as input for speed.
              */
-            RadialFunction(double obscuration, double obssq, const GSParamsPtr& gsparams) : 
+            RadialFunction(double obscuration, double obssq, const GSParamsPtr& gsparams) :
                 _obscuration(obscuration), _obssq(obssq),
                 _norm(M_PI / (1.-_obssq)), _gsparams(gsparams) {}
 
@@ -143,16 +143,16 @@ namespace galsim {
         const GSParamsPtr _gsparams;
 
         /// Circle chord length at `h < r`.
-        double chord(double r, double h, double rsq, double hsq) const; 
+        double chord(double r, double h, double rsq, double hsq) const;
 
         /// @brief Area inside intersection of 2 circles radii `r` & `s`, seperated by `t`.
         double circle_intersection(
-            double r, double s, double rsq, double ssq, double tsq) const; 
-        double circle_intersection(double r, double rsq, double tsq) const; 
+            double r, double s, double rsq, double ssq, double tsq) const;
+        double circle_intersection(double r, double rsq, double tsq) const;
 
         /// @brief Area of two intersecting identical annuli.
         double annuli_intersect(
-            double r1, double r2, double r1sq, double r2sq, double tsq) const; 
+            double r1, double r2, double r1sq, double r2sq, double tsq) const;
 
         void checkSampler() const; ///< Check if `OneDimensionalDeviate` is configured.
     };
@@ -168,7 +168,7 @@ namespace galsim {
         double kValue(double ksq_over_pisq) const;
 
     private:
-        class RadialFunction : public FluxDensity 
+        class RadialFunction : public FluxDensity
         {
         public:
             RadialFunction(const GSParamsPtr& gsparams) : _gsparams(gsparams) {}
@@ -186,7 +186,7 @@ namespace galsim {
         void checkSampler() const; ///< Check if `OneDimensionalDeviate` is configured.
     };
 
-    class SBAiry::SBAiryImpl : public SBProfileImpl 
+    class SBAiry::SBAiryImpl : public SBProfileImpl
     {
     public:
         SBAiryImpl(double lam_over_D, double obs, double flux,
@@ -197,7 +197,7 @@ namespace galsim {
         double xValue(const Position<double>& p) const;
         std::complex<double> kValue(const Position<double>& k) const;
 
-        bool isAxisymmetric() const { return true; } 
+        bool isAxisymmetric() const { return true; }
         bool hasHardEdges() const { return false; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
@@ -205,7 +205,7 @@ namespace galsim {
         double maxK() const;
         double stepK() const;
 
-        Position<double> centroid() const 
+        Position<double> centroid() const
         { return Position<double>(0., 0.); }
 
         double getFlux() const { return _flux; }
@@ -235,13 +235,13 @@ namespace galsim {
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 
-        std::string repr() const;
+        std::string serialize() const;
 
     private:
-        
+
         double _lam_over_D;  ///< inverse of _D (see below), harmonise inputs with other GSObjects
-        /** 
-         * `_D` = (telescope diam) / (lambda * focal length) if arg is focal plane position, 
+        /**
+         * `_D` = (telescope diam) / (lambda * focal length) if arg is focal plane position,
          *  else `_D` = (telescope diam) / lambda if arg is in radians of field angle.
          */
         double _D;
@@ -259,9 +259,9 @@ namespace galsim {
         SBAiryImpl(const SBAiryImpl& rhs);
         void operator=(const SBAiryImpl& rhs);
 
-        /// Info object that stores things that are common to all Airy functions with this 
+        /// Info object that stores things that are common to all Airy functions with this
         /// obscuration value.
-        const boost::shared_ptr<AiryInfo> _info; 
+        const boost::shared_ptr<AiryInfo> _info;
 
         /// One static map of all `AiryInfo` structures for whole program.
         static LRUCache< std::pair< double, GSParamsPtr >, AiryInfo > cache;
@@ -269,4 +269,3 @@ namespace galsim {
 }
 
 #endif
-

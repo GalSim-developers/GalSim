@@ -22,8 +22,8 @@
 #include "SBGaussian.h"
 #include "SBGaussianImpl.h"
 
-// Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by 
-// drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit 
+// Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by
+// drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit
 // circle and rejecting corner photons.
 // The relative speed of the two methods was tested as part of issue #163, and the results
 // are collated in devutils/external/time_photon_shooting.
@@ -42,20 +42,20 @@ namespace galsim {
 
 
     SBGaussian::SBGaussian(double sigma, double flux,
-                           const GSParamsPtr& gsparams) : 
+                           const GSParamsPtr& gsparams) :
         SBProfile(new SBGaussianImpl(sigma, flux, gsparams)) {}
 
     SBGaussian::SBGaussian(const SBGaussian& rhs) : SBProfile(rhs) {}
 
     SBGaussian::~SBGaussian() {}
 
-    double SBGaussian::getSigma() const 
-    { 
+    double SBGaussian::getSigma() const
+    {
         assert(dynamic_cast<const SBGaussianImpl*>(_pimpl.get()));
-        return static_cast<const SBGaussianImpl&>(*_pimpl).getSigma(); 
+        return static_cast<const SBGaussianImpl&>(*_pimpl).getSigma();
     }
 
-    std::string SBGaussian::SBGaussianImpl::repr() const 
+    std::string SBGaussian::SBGaussianImpl::serialize() const 
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
@@ -93,10 +93,10 @@ namespace galsim {
     }
 
     // Set maxK to the value where the FT is down to maxk_threshold
-    double SBGaussian::SBGaussianImpl::maxK() const 
+    double SBGaussian::SBGaussianImpl::maxK() const
     { return sqrt(-2.*std::log(this->gsparams->maxk_threshold))*_inv_sigma; }
 
-    // The amount of flux missed in a circle of radius pi/stepk should be at 
+    // The amount of flux missed in a circle of radius pi/stepk should be at
     // most folding_threshold of the flux.
     double SBGaussian::SBGaussianImpl::stepK() const
     {
@@ -152,7 +152,7 @@ namespace galsim {
             dy *= _inv_sigma;
 
             // The Gaussian profile is separable:
-            //    val = _norm * exp(-0.5 * (x*x + y*y) 
+            //    val = _norm * exp(-0.5 * (x*x + y*y)
             //        = _norm * exp(-0.5 * x*x) * exp(-0.5 * y*y)
             tmv::Vector<double> gauss_x(m);
             It xit = gauss_x.begin();
@@ -222,7 +222,7 @@ namespace galsim {
         for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
             double x = x0;
             double y = y0;
-            for (int i=0;i<m;++i,x+=dx,y+=dyx) 
+            for (int i=0;i<m;++i,x+=dx,y+=dyx)
                 *valit++ = _norm * std::exp( -0.5 * (x*x + y*y) );
         }
     }
@@ -264,7 +264,7 @@ namespace galsim {
         }
     }
 
-    boost::shared_ptr<PhotonArray> SBGaussian::SBGaussianImpl::shoot(int N, UniformDeviate u) const 
+    boost::shared_ptr<PhotonArray> SBGaussian::SBGaussianImpl::shoot(int N, UniformDeviate u) const
     {
         dbg<<"Gaussian shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;

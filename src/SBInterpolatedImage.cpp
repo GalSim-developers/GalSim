@@ -1065,7 +1065,7 @@ namespace galsim {
                                       Bounds<int>(0,2*N-1,0,N/2));
     }
 
-    std::string SBInterpolatedKImage::SBInterpolatedKImageImpl::repr() const
+    std::string SBInterpolatedKImage::SBInterpolatedKImageImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);

@@ -248,7 +248,7 @@ namespace galsim {
         double _dk; ///< Pitch of stored KTable
         mutable bool _cenIsSet;
 
-        std::string repr() const;
+        std::string serialize() const;
 
     private:
 

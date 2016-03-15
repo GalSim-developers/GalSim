@@ -41,9 +41,9 @@ namespace galsim {
         double maxK() const { return _maxMaxK; }
         double stepK() const { return _minStepK; }
 
-        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
-        { 
-            xmin = integ::MOCK_INF; xmax = -integ::MOCK_INF; 
+        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const
+        {
+            xmin = integ::MOCK_INF; xmax = -integ::MOCK_INF;
             for (ConstIter pptr = _plist.begin(); pptr!=_plist.end(); ++pptr) {
                 double xmin_1, xmax_1;
                 pptr->getXRange(xmin_1,xmax_1,splits);
@@ -52,9 +52,9 @@ namespace galsim {
             }
         }
 
-        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
+        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const
         {
-            ymin = integ::MOCK_INF; ymax = -integ::MOCK_INF; 
+            ymin = integ::MOCK_INF; ymax = -integ::MOCK_INF;
             for (ConstIter pptr = _plist.begin(); pptr!=_plist.end(); ++pptr) {
                 double ymin_1, ymax_1;
                 pptr->getYRange(ymin_1,ymax_1,splits);
@@ -63,9 +63,9 @@ namespace galsim {
             }
         }
 
-        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
+        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const
         {
-            ymin = integ::MOCK_INF; ymax = -integ::MOCK_INF; 
+            ymin = integ::MOCK_INF; ymax = -integ::MOCK_INF;
             for (ConstIter pptr = _plist.begin(); pptr!=_plist.end(); ++pptr) {
                 double ymin_1, ymax_1;
                 pptr->getYRangeX(x,ymin_1,ymax_1,splits);
@@ -79,7 +79,7 @@ namespace galsim {
         bool isAnalyticX() const { return _allAnalyticX; }
         bool isAnalyticK() const { return _allAnalyticK; }
 
-        Position<double> centroid() const 
+        Position<double> centroid() const
         { return Position<double>(_sumfx / _sumflux, _sumfy / _sumflux); }
 
         double getFlux() const { return _sumflux; }
@@ -134,12 +134,12 @@ namespace galsim {
         typedef std::list<SBProfile>::iterator Iter;
         typedef std::list<SBProfile>::const_iterator ConstIter;
 
-        std::string repr() const;
+        std::string serialize() const;
 
     private:
 
         /// @brief The plist content is a pointer to a fresh copy of the summands.
-        std::list<SBProfile> _plist; 
+        std::list<SBProfile> _plist;
         double _sumflux; ///< Keeps track of the cumulated flux of all summands.
         double _sumfx; ///< Keeps track of the cumulated `fx` of all summands.
         double _sumfy; ///< Keeps track of the cumulated `fy` of all summands.
@@ -156,11 +156,11 @@ namespace galsim {
         /// @brief Keeps track of whether any summands have hard edges.
         bool _anyHardEdges;
 
-        /// @brief Keeps track of the cumulated `isAnalyticX()` property of all summands. 
-        bool _allAnalyticX; 
+        /// @brief Keeps track of the cumulated `isAnalyticX()` property of all summands.
+        bool _allAnalyticX;
 
         /// @brief Keeps track of the cumulated `isAnalyticK()` properties of all summands.
-        bool _allAnalyticK; 
+        bool _allAnalyticK;
 
         void initialize();  ///< Sets all private book-keeping variables to starting state.
 
@@ -172,4 +172,3 @@ namespace galsim {
 }
 
 #endif
-

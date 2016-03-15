@@ -1475,7 +1475,7 @@ class GSObject(object):
 # convenient way to get the SBProfile to be the correct type in this case.
 # So, getstate just returns the repr string.  And setstate builds the right kind of object
 # by essentially doing `self = eval(repr)`.
-_galsim.SBProfile.__getstate__ = lambda self: self.__repr__()
+_galsim.SBProfile.__getstate__ = lambda self: self.serialize()
 def SBProfile_setstate(self, state):
     import galsim
     # In case the repr uses these:
