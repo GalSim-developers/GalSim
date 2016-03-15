@@ -516,11 +516,11 @@ namespace galsim {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBInterpolatedImage(";
-
         oss << "galsim._galsim.ConstImageViewD(array([";
+
         ConstImageView<double> im = getImage();
-        int N = _xtab->getN();
-        for (int y = 0; y<N; ++y) {
+        Bounds<int> _bds = im.getBounds();
+        for (int y = _bds.getYMin(); y<_bds.getYMax(); ++y) {
             if (y > 0) oss <<",";
             BaseImage<double>::const_iterator it = im.rowBegin(y);
             oss << "[" << *it++;

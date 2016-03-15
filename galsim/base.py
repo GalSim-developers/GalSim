@@ -1478,21 +1478,21 @@ class GSObject(object):
 _galsim.SBProfile.__getstate__ = lambda self: self.serialize()
 def SBProfile_setstate(self, state):
     import galsim
-    # In case the repr uses these:
+    # In case the serialization uses these:
     from numpy import array, int16, int32, float32, float64
-    # The repr of an SBProfile object should eval to the right thing.
+    # The serialization of an SBProfile object should eval to the right thing.
     # We essentially want to do `self = eval(state)`.  But that doesn't work in python of course.
-    # Se we break up the repr into the class and the args, then call init with that.
+    # Se we break up the serialization into the class and the args, then call init with that.
     cls, args = state.split('(',1)
     args = args[:-1]  # Remove final paren
     args = eval(args)
     self.__class__ = eval(cls)
     self.__init__(*args)
 _galsim.SBProfile.__setstate__ = SBProfile_setstate
-# Quick and dirty.  Just check reprs are equal.
-_galsim.SBProfile.__eq__ = lambda self, other: repr(self) == repr(other)
+# Quick and dirty.  Just check serializations are equal.
+_galsim.SBProfile.__eq__ = lambda self, other: self.serialize() == other.serialize()
 _galsim.SBProfile.__ne__ = lambda self, other: not self.__eq__(other)
-_galsim.SBProfile.__hash__ = lambda self: hash(repr(self))
+_galsim.SBProfile.__hash__ = lambda self: hash(self.serialize())
 
 
 # --- Now defining the derived classes ---
