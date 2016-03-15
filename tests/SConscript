@@ -61,7 +61,7 @@ def run_tests(target, source, env):
         log.write('Nosetests version is: ' + env['NOSETESTSVERSION'] + '\n')
         log.write('Nosetests command is:\n' + cmd + '\n')
         py_proc = subprocess.Popen(
-            cmd.split(),
+            ['bash', '-c', cmd],
             cwd='tests',
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
