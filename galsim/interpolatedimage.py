@@ -684,7 +684,7 @@ class InterpolatedKImage(GSObject):
             self._real_kimage.scale, self._stepk, self.k_interpolant, gsparams))
 
     def __repr__(self):
-        return ('galsim.InterpolatedKImage(%r, %r, %r, stepk=%r, gsparams=%r)')%(
+        return ('galsim.InterpolatedKImage(\n%r,\n%r,\n%r, stepk=%r, gsparams=%r)')%(
             self._real_kimage, self._imag_kimage, self.k_interpolant,
             self._stepk, self._gsparams)
 
@@ -716,6 +716,7 @@ _galsim.SBInterpolatedImage.__repr__ = lambda self: \
         'galsim._galsim.SBInterpolatedImage(%r, %r, %r, %r, %r, %r, %r)'%self.__getinitargs__()
 
 def _SBIKI_getinitargs(self):
+    print "Using python serializer"
     if self._cenIsSet():
         return (self._getKData(), self.dK(), self.stepK(), self.maxK(), self.getKInterp(),
                 self.centroid().x, self.centroid().y, True, self.getGSParams())

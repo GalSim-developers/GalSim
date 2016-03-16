@@ -234,7 +234,7 @@ namespace galsim {
 
     protected:
 
-        int _Ninitial;
+        int _Ninitx, _Ninity, _Ninitial;
         int _Nk;
         mutable double _xcentroid;
         mutable double _ycentroid;
@@ -248,6 +248,7 @@ namespace galsim {
         double _dk; ///< Pitch of stored KTable
         mutable bool _cenIsSet;
 
+        std::string repr() const;
         std::string serialize() const;
 
     private:

@@ -492,6 +492,8 @@ namespace galsim {
         return oss.str();
     }
 
+    // Note you can trigger this function from python with an InterpolatedImage object in hand via:
+    // >>> repr(ii.SBProfile)
     std::string SBInterpolatedImage::SBInterpolatedImageImpl::repr() const
     {
         std::ostringstream oss(" ");
@@ -943,8 +945,9 @@ namespace galsim {
         dbg<<"kimage bounds = "<<realKImage.getBounds()<<std::endl;
         assert(_kInterp.get());
 
-        _Ninitial = std::max(realKImage.getXMax()-realKImage.getXMin()+1,
-                             realKImage.getYMax()-realKImage.getYMin()+1);
+        _Ninitx = realKImage.getXMax()-realKImage.getXMin()+1;
+        _Ninity = realKImage.getYMax()-realKImage.getYMin()+1;
+        _Ninitial = std::max(_Ninitx, _Ninity);
         dbg<<"_Ninitial = "<<_Ninitial<<std::endl;
         _Nk = goodFFTSize(int(_Ninitial));
         dbg<<"_Nk = "<<_Nk<<std::endl;
@@ -989,7 +992,7 @@ namespace galsim {
         dbg << "_Nk = " << _Nk << std::endl;
         // Original _Ninitial could have been smaller, but setting it equal to _Nk should be
         // safe nonetheless.
-        _Ninitial = _Nk;
+        _Ninitial = _Ninitx = _Ninity = _Nk;
         _ktab = boost::shared_ptr<KTable>(new KTable(_Nk, _dk));
         double *kptr = reinterpret_cast<double*>(_ktab->getArray());
         const double* ptr = data.getData();
@@ -1065,6 +1068,146 @@ namespace galsim {
                                       Bounds<int>(0,2*N-1,0,N/2));
     }
 
+    std::string realpart_row_string(const boost::shared_ptr<KTable> &_ktab, const int _Ninitx,
+                                    const int row)
+    {
+        int xmin = -_Ninitx/2;
+        int xmax = _Ninitx/2-1; // be inclusive
+        std::ostringstream oss;
+        oss << "[";
+        if (_Ninitx <= 6) {
+            for (int kx=xmin; kx<=xmax; kx++) {
+                oss.width(15);
+                oss.precision(8);
+                oss << _ktab->kval(kx, row).real();
+                if (kx != xmax) oss << ",";
+            }
+        } else {
+            for (int kx=xmin; kx<xmin+3; kx++) {
+                oss.width(15);
+                oss.precision(8);
+                oss << _ktab->kval(kx, row).real() << ",";
+            }
+            oss << " ...,";
+            for (int kx=xmax-2; kx<=xmax; kx++) {
+                oss.width(15);
+                oss.precision(8);
+                oss << _ktab->kval(kx, row).real();
+                if (kx != xmax) oss << ",";
+            }
+        }
+        oss << "]";
+        return oss.str();
+    }
+
+    std::string imagpart_row_string(const boost::shared_ptr<KTable> &_ktab, const int _Ninitx,
+                                    const int row)
+    {
+        int xmin = -_Ninitx/2;
+        int xmax = (_Ninitx-1)/2; // be inclusive
+        std::ostringstream oss;
+        oss << "[";
+        if (_Ninitx <= 6) {
+            for (int kx=xmin; kx<=xmax; kx++) {
+                oss.width(15);
+                oss.precision(8);
+                oss << _ktab->kval(kx, row).imag();
+                if (kx != xmax) oss << ",";
+            }
+        } else {
+            for (int kx=xmin; kx<xmin+3; kx++) {
+                oss.width(15);
+                oss.precision(8);
+                oss << _ktab->kval(kx, row).imag() << ",";
+            }
+            oss << " ...,";
+            for (int kx=xmax-2; kx<=xmax; kx++) {
+                oss.width(15);
+                oss.precision(8);
+                oss << _ktab->kval(kx, row).imag();
+                if (kx != xmax) oss << ",";
+            }
+        }
+        oss << "]";
+        return oss.str();
+    }
+
+    std::string realpart_kimage_string(const boost::shared_ptr<KTable> &_ktab, const int _Ninitx,
+                                       const int _Ninity)
+    {
+        std::ostringstream oss;
+        int ymin = -_Ninity/2;
+        int ymax = (_Ninity-1)/2;  //Inclusive
+        if (_Ninity <= 6) {
+            for (int ky=ymin; ky<=ymax; ky++) {
+                if (ky == ymin) oss << "array([";
+                else oss << "       ";
+                oss << realpart_row_string(_ktab, _Ninitx, ky);
+                if (ky != ymax) oss << "," << std::endl;
+            }
+        } else {
+            for (int ky=ymin; ky<ymin+3; ky++) {
+                if (ky == ymin) oss << "array([";
+                else oss << "       ";
+                oss << realpart_row_string(_ktab, _Ninitx, ky) << "," << std::endl;
+            }
+            oss << "       ...," << std::endl;
+            for (int ky=ymax-2; ky<=ymax; ky++) {
+                oss << "       ";
+                oss << realpart_row_string(_ktab, _Ninitx, ky);
+                if (ky != ymax) oss << "," << std::endl;
+            }
+        }
+        oss << "], dtype=float)";
+        return oss.str();
+    }
+
+    std::string imagpart_kimage_string(const boost::shared_ptr<KTable> &_ktab, const int _Ninitx,
+                                       const int _Ninity)
+    {
+        std::ostringstream oss;
+        int ymin = -_Ninity/2;
+        int ymax = _Ninity/2-1;  //Inclusive
+        if (_Ninity <= 6) {
+            for (int ky=ymin; ky<=ymax; ky++) {
+                if (ky == ymin) oss << "array([";
+                else oss << "       ";
+                oss << imagpart_row_string(_ktab, _Ninitx, ky);
+                if (ky != ymax) oss << "," << std::endl;
+            }
+        } else {
+            for (int ky=ymin; ky<ymin+3; ky++) {
+                if (ky == ymin) oss << "array([";
+                else oss << "       ";
+                oss << imagpart_row_string(_ktab, _Ninitx, ky) << "," << std::endl;
+            }
+            oss << "       ...," << std::endl;
+            for (int ky=ymax-2; ky<=ymax; ky++) {
+                oss << "       ";
+                oss << imagpart_row_string(_ktab, _Ninitx, ky);
+                if (ky != ymax) oss << "," << std::endl;
+            }
+        }
+        oss << "], dtype=float)";
+        return oss.str();
+    }
+
+    // Note you can trigger this function from python with an InterpolatedKImage object in hand via:
+    // >>> repr(galsim._galsim.SBAdd([iki.SBProfile]))
+    std::string SBInterpolatedKImage::SBInterpolatedKImageImpl::repr() const
+    {
+        std::ostringstream oss(" ");
+        oss << "galsim._galsim.SBInterpolatedKImage(";
+        oss << "galsim._galsim.ConstImageViewD(" << std::endl;
+        oss << realpart_kimage_string(_ktab, _Ninitx, _Ninity) << "," << std::endl;
+        oss << imagpart_kimage_string(_ktab, _Ninitx, _Ninity) << "," << std::endl;
+        oss << _ktab->getDk() << ", " << stepK() << ", ";
+        boost::shared_ptr<Interpolant> kinterp = getKInterp();
+        oss << "galsim.Interpolant('"<<kinterp->makeStr()<<"', "<<kinterp->getTolerance()<<"), "
+            << "galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
+
     std::string SBInterpolatedKImage::SBInterpolatedKImageImpl::serialize() const
     {
         std::ostringstream oss(" ");
@@ -1073,7 +1216,10 @@ namespace galsim {
 
         oss << "galsim._galsim.ConstImageViewD(array([";
         ConstImageView<double> data = getKData();
-        for (int y = 0; y<_Nk; ++y) {
+        Bounds<int> _bds = data.getBounds();
+        int ymin = _bds.getYMin();
+        int ymax = _bds.getYMax();
+        for (int y = ymin; y<=ymax; ++y) {
             if (y > 0) oss <<",";
             BaseImage<double>::const_iterator it = data.rowBegin(y);
             oss << "[" << *it++;
