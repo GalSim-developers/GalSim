@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <numeric>
 #include "PhotonArray.h"
+#include "silicon.h"
 
 #ifdef DEBUGLOGGING
 #include <fstream>
@@ -164,7 +165,28 @@ namespace galsim {
     template <class T>
     double PhotonArray::addTo(ImageView<T>& target) const 
     {
-        Bounds<int> b = target.getBounds();
+      // Modified by Craig Lage - UC Davis to incorporate the brighter-fatter effect
+      // 16-Mar-16
+      Silicon* silicon = new Silicon("../poisson/BF_256_9x9_0_Vertices"); // Create and read in pixel distortions
+      bool FoundPixel;
+      int xoff[9] = {0,1,1,0,-1,-1,-1,0,1};// Displacements to neighboring pixels
+      int yoff[9] = {0,0,1,1,1,0,-1,-1,-1};// Displacements to neighboring pixels
+      int n=0, step, ix_off, iy_off;
+      double x, y, x_off, y_off;
+      double zconv = 95.0; // Z coordinate of photoconversion in microns
+                           // Will add more detail later
+      double ccdtemp = 173; // CCD temp in K
+      double DiffStep; // Mean diffusion step size in microns
+      if (zconv <= 10.0)
+	{
+	  DiffStep = 0.0;
+	}
+      else
+	{
+	  DiffStep = silicon->DiffStep * (zconv - 10.0) / 100.0 * sqrt(ccdtemp / 173.0);
+	}
+      
+      Bounds<int> b = target.getBounds();
 
         if (!b.isDefined()) 
             throw std::runtime_error("Attempting to PhotonArray::addTo an Image with"
@@ -183,9 +205,77 @@ namespace galsim {
         std::vector<std::vector<double> > posFlux(nx,std::vector<double>(ny,0.));
         std::vector<std::vector<double> > negFlux(nx,std::vector<double>(ny,0.));
 #endif
-        for (int i=0; i<int(size()); i++) {
-            int ix = int(floor(_x[i] + 0.5));
-            int iy = int(floor(_y[i] + 0.5));
+	int zerocount = 0, nearestcount = 0, othercount = 0, misscount = 0;
+        for (int i=0; i<int(size()); i++)
+	  {
+	    double x, y, x_off, y_off;
+	    bool FoundPixel;
+	    int ix, iy;
+	    // First we add in a displacement due to diffusion
+	    x = _x[i] + DiffStep * silicon->random_gaussian() / 10.0;
+	    y = _y[i] + DiffStep * silicon->random_gaussian() / 10.0;
+	    // Now we find the undistorted pixel
+	    ix = int(floor(x + 0.5));
+            iy = int(floor(y + 0.5));
+	    int n=0, step, ix_off, iy_off;
+	    x = x - (double) ix + 0.5;
+	    y = y - (double) iy + 0.5;
+	    // (ix,iy) are the undistorted pixel coordinates.
+	    // (x,y) are the coordinates within the pixel, centered at the lower left
+
+	    // The following code finds which pixel we are in given
+	    // pixel distortion due to the brighter-fatter effect
+	    FoundPixel = false;
+	    // The following are set up to start the search in the undistorted pixel, then
+	    // search in the nearest neighbor first if it's not in the undistorted pixel.
+	    if      ((x > y) && (x > 1.0 - y)) step = 1;
+	    else if ((x > y) && (x < 1.0 - y)) step = 7;
+	    else if ((x < y) && (x > 1.0 - y)) step = 3;
+	    else                                               step = 5;
+	    for (int m=0; m<9; m++)
+	      {
+		ix_off = ix + xoff[n];
+		iy_off = iy + yoff[n];	
+		x_off = x - (double)xoff[n];
+		y_off = y - (double)yoff[n];
+		if (silicon->InsidePixel(ix_off, iy_off, x_off, y_off, zconv, (ImageView<float>&)target))
+		  {
+		    //printf("Found in pixel %d, ix = %d, iy = %d, x=%f, y = %f, target(ix,iy)=%f\n",n, ix, iy, x, y, target(ix,iy));
+		    if (m == 0) zerocount += 1;
+		    else if (m == 1) nearestcount += 1;
+		    else othercount +=1;
+		    ix = ix_off;
+		    iy = iy_off;
+		    FoundPixel = true;
+		    break;
+		  }
+		n = ((n-1)+step) % 8 + 1;
+		// This is intended to start with the nearest neighbor, then cycle through the others.
+	      }
+	    if (!FoundPixel)
+	      {
+		// We should never arrive here, since this means we didn't find it in the undistorted pixel
+		// or any of the neighboring pixels.  However, sometimes (about 0.01% of the time) we do
+		// arrive here due to roundoff error of the pixel boundary.  When this happens, I put
+		// the electron in the undistorted pixel or the nearest neighbor with equal probability.
+		misscount += 1;
+		if (drand48() > 0.5)
+		  {
+		    n = 0;
+		    zerocount +=1;
+		  }
+		else
+		  {
+		    n = step;
+		    nearestcount +=1;
+		  }
+		ix = ix + xoff[n];
+		iy = iy + yoff[n];
+		FoundPixel = true;
+		//printf("Not found in any pixel\n");
+		}
+		// (ix, iy) now give the actual pixel which will receive the charge
+
 #ifdef DEBUGLOGGING
             totalFlux += _flux[i];
             xdbg<<"  photon: ("<<_x[i]<<','<<_y[i]<<")  f = "<<_flux[i]<<std::endl;
@@ -220,7 +310,9 @@ namespace galsim {
             }
         }
 #endif
-
+	// These counts are mainly for debug purposes and can be removed later.
+	printf("Found %d photons in undistorted pixel, %d in closest neighbor, %d in other neighbor. %d not in any pixel\n",zerocount, nearestcount, othercount, misscount);
+	delete silicon;
         return addedFlux;
     }
 

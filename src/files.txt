@@ -26,3 +26,5 @@ RealSpaceConvolve.cpp
 Random.cpp
 CorrelatedNoise.cpp
 CDModel.cpp
+polygon.cpp
+silicon.cpp
