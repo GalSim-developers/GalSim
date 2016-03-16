@@ -716,7 +716,6 @@ _galsim.SBInterpolatedImage.__repr__ = lambda self: \
         'galsim._galsim.SBInterpolatedImage(%r, %r, %r, %r, %r, %r, %r)'%self.__getinitargs__()
 
 def _SBIKI_getinitargs(self):
-    print "Using python serializer"
     if self._cenIsSet():
         return (self._getKData(), self.dK(), self.stepK(), self.maxK(), self.getKInterp(),
                 self.centroid().x, self.centroid().y, True, self.getGSParams())
