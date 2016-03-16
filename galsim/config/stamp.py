@@ -232,7 +232,8 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
         config['world_pos'] = world_pos
 
 # Ignore these when parsing the parameters for specific stamp types:
-stamp_ignore = ['offset', 'retry_failures', 'gsparams', 'draw_method',
+stamp_ignore = ['xsize', 'ysize', 'size', 'image_pos', 'world_pos',
+                'offset', 'retry_failures', 'gsparams', 'draw_method',
                 'wmult', 'nphotons', 'max_extra_noise', 'poisson_flux',
                 'reject', 'min_flux_frac', 'min_snr', 'max_snr']
 
