@@ -99,10 +99,10 @@ def test_roundtrip():
         # Check picklability
         do_pickle(interp._sbii, lambda x: (galsim.Image(x.getImage()), x.stepK(), x.maxK()),
                   irreprable=True)
-        # do_pickle(interp.SBProfile, lambda x: repr(x), irreprable=True)
+        do_pickle(interp.SBProfile, lambda x: repr(x), irreprable=True)
         do_pickle(interp, lambda x: x.drawImage(method='no_pixel'))
         do_pickle(interp)
-        # do_pickle(interp.SBProfile, irreprable=True)
+        do_pickle(interp.SBProfile)
 
     # Also check picklability of the Interpolants
     im = galsim.Gaussian(sigma=4).drawImage()

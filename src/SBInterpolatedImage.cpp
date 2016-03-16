@@ -522,8 +522,8 @@ namespace galsim {
 
         ConstImageView<double> im = getImage();
         Bounds<int> _bds = im.getBounds();
-        for (int y = _bds.getYMin(); y<_bds.getYMax(); ++y) {
-            if (y > 0) oss <<",";
+        for (int y = _bds.getYMin(); y<=_bds.getYMax(); ++y) {
+            if (y > _bds.getYMin()) oss <<",";
             BaseImage<double>::const_iterator it = im.rowBegin(y);
             oss << "[" << *it++;
             for (; it != im.rowEnd(y); ++it) oss << "," << *it;
