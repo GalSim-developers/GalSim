@@ -91,6 +91,12 @@ namespace galsim {
         return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).getImage();
     }
 
+    ConstImageView<double> SBInterpolatedImage::getPaddedImage() const
+    {
+        assert(dynamic_cast<const SBInterpolatedImageImpl*>(_pimpl.get()));
+        return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).getPaddedImage();
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // SBInterpolatedImageImpl methods
 
@@ -499,7 +505,7 @@ namespace galsim {
         std::ostringstream oss(" ");
         oss << "galsim._galsim.SBInterpolatedImage(";
         oss << "galsim._galsim.ConstImageViewD(" << std::endl;
-        ConstImageView<double> im = getImage()[_init_bounds];
+        ConstImageView<double> im = getImage();
         oss << image_string(im) << ", ";
 
         boost::shared_ptr<Interpolant> xinterp = getXInterp();
@@ -540,7 +546,8 @@ namespace galsim {
         return oss.str();
     }
 
-    ConstImageView<double> SBInterpolatedImage::SBInterpolatedImageImpl::getImage() const
+    // In case anybody wants it, here's the internal padded image accessor.
+    ConstImageView<double> SBInterpolatedImage::SBInterpolatedImageImpl::getPaddedImage() const
     {
         int N = _xtab->getN();
         int xmin = _init_bounds.getXMin()-(N-_Ninitx+1)/2;
@@ -552,6 +559,13 @@ namespace galsim {
         dbg << "xmax: " << xmax << std::endl;
         return ConstImageView<double>(_xtab->getArray(), boost::shared_ptr<double>(),
                                       N, Bounds<int>(xmin,xmax,ymin,ymax));
+    }
+
+    // The accessor for the original, unpadded image should be faster/smaller to serialize and
+    // move around.
+    ConstImageView<double> SBInterpolatedImage::SBInterpolatedImageImpl::getImage() const
+    {
+        return getPaddedImage()[_init_bounds];
     }
 
     void SBInterpolatedImage::SBInterpolatedImageImpl::getXRange(

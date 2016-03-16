@@ -60,6 +60,7 @@ namespace galsim {
                      bp::arg("max_stepk")=0.)
                 .def("calculateMaxK", &SBInterpolatedImage::calculateMaxK, bp::arg("max_maxk")=0.)
                 .def("getImage", &SBInterpolatedImage::getImage)
+                .def("getPaddedImage", &SBInterpolatedImage::getPaddedImage)
                 .def("getXInterp", &SBInterpolatedImage::getXInterp)
                 .def("getKInterp", &SBInterpolatedImage::getKInterp)
                 ;

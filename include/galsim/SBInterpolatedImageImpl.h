@@ -109,6 +109,7 @@ namespace galsim {
         boost::shared_ptr<Interpolant> getXInterp() const;
         boost::shared_ptr<Interpolant> getKInterp() const;
         ConstImageView<double> getImage() const;
+        ConstImageView<double> getPaddedImage() const;
 
         void calculateMaxK(double max_stepk) const;
         void calculateStepK(double max_maxk) const;
