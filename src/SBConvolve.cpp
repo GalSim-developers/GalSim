@@ -63,6 +63,18 @@ namespace galsim {
         return oss.str();
     }
 
+    std::string SBConvolve::SBConvolveImpl::repr() const
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SBConvolve([";
+        ConstIter sptr = _plist.begin();
+        oss << sptr->repr();
+        for (++sptr; sptr!=_plist.end(); ++sptr) oss << ", " << sptr->repr();
+        oss << "], galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
+
     SBConvolve::SBConvolveImpl::SBConvolveImpl(const std::list<SBProfile>& slist, bool real_space,
                                                const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams ? gsparams : GetImpl(slist.front())->gsparams),
@@ -303,6 +315,17 @@ namespace galsim {
         return oss.str();
     }
 
+    std::string SBAutoConvolve::SBAutoConvolveImpl::repr() const
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SBAutoConvolve(" << _adaptee.repr() << ", ";
+        if (_real_space) oss << "True";
+        else oss << "False";
+        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
+
     SBAutoConvolve::SBAutoConvolveImpl::SBAutoConvolveImpl(const SBProfile& s, bool real_space,
                                                            const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams ? gsparams : GetImpl(s)->gsparams),
@@ -386,6 +409,17 @@ namespace galsim {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBAutoCorrelate(" << _adaptee.serialize() << ", ";
+        if (_real_space) oss << "True";
+        else oss << "False";
+        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
+
+    std::string SBAutoCorrelate::SBAutoCorrelateImpl::repr() const
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SBAutoCorrelate(" << _adaptee.repr() << ", ";
         if (_real_space) oss << "True";
         else oss << "False";
         oss << ", galsim.GSParams("<<*gsparams<<"))";

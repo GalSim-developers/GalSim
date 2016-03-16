@@ -46,6 +46,14 @@ namespace galsim {
         return oss.str();
     }
 
+    std::string SBDeconvolve::SBDeconvolveImpl::repr() const
+    {
+        std::ostringstream oss(" ");
+        oss << "galsim._galsim.SBDeconvolve(" << _adaptee.repr();
+        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
+
     SBDeconvolve::SBDeconvolveImpl::SBDeconvolveImpl(const SBProfile& adaptee,
                                                      const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams ? gsparams : GetImpl(adaptee)->gsparams),

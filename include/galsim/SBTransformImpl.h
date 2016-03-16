@@ -94,6 +94,7 @@ namespace galsim {
                         double ky0, double dky, double dkyx) const;
 
         std::string serialize() const;
+        std::string repr() const;
 
     private:
         SBProfile _adaptee; ///< SBProfile being adapted/transformed

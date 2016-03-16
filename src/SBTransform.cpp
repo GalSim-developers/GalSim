@@ -56,6 +56,20 @@ namespace galsim {
         return oss.str();
     }
 
+    std::string SBTransform::SBTransformImpl::repr() const
+    {
+        std::ostringstream oss(" ");
+        oss.precision(std::numeric_limits<double>::digits10 + 4);
+        oss << "galsim._galsim.SBTransform(" << getObj().repr() << ", ";
+        double mA, mB, mC, mD;
+        getJac(mA,mB,mC,mD);
+        oss << mA<<", "<<mB<<", "<<mC<<", "<<mD<<", ";
+        Position<double> shift = getOffset();
+        oss << "galsim.PositionD("<<shift.x<<", "<<shift.y<<"), "<<getFluxScaling();
+        oss << ", galsim.GSParams("<<*gsparams<<"))";
+        return oss.str();
+    }
+
     SBProfile SBTransform::getObj() const
     {
         assert(dynamic_cast<const SBTransformImpl*>(_pimpl.get()));
