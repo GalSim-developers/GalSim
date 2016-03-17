@@ -1150,21 +1150,50 @@ def test_multihdu_readin():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+def test_ineq():
+    """ Check that inequality works as expected for corner cases where the reprs of two
+    InterpolatedImages or InterpolatedKImages may be the same due to truncation.
+    """
+    import time
+    t1 = time.time()
+
+    obj1 = galsim.InterpolatedImage(ref_image, calculate_maxk=False, calculate_stepk=False)
+
+    # Copy ref_image and perturb it slightly in the middle, away from where the InterpolatedImage
+    # repr string will report.
+    perturb_image = ref_image.copy()
+    perturb_image.array[64, 64] *= 1000
+    obj2 = galsim.InterpolatedImage(perturb_image, calculate_maxk=False, calculate_stepk=False)
+
+    with printoptions(threshold=128*128):
+        assert repr(obj1) != repr(obj2)
+
+    with printoptions(threshold=1000):
+        assert repr(obj1) == repr(obj2)
+
+    assert obj1 != obj2
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 if __name__ == "__main__":
-    test_roundtrip()
+    # test_roundtrip()
     test_fluxnorm()
-    test_exceptions()
-    test_operations_simple()
-    test_operations()
-    test_uncorr_padding()
-    test_pad_image()
-    test_corr_padding()
-    test_realspace_conv()
-    test_Cubic_ref()
-    test_Quintic_ref()
-    test_Lanczos5_ref()
-    test_Lanczos7_ref()
-    test_conserve_dc()
-    test_stepk_maxk()
-    test_kround_trip()
-    test_multihdu_readin()
+    # test_exceptions()
+    # test_operations_simple()
+    # test_operations()
+    # test_uncorr_padding()
+    # test_pad_image()
+    # test_corr_padding()
+    # test_realspace_conv()
+    # test_Cubic_ref()
+    # test_Quintic_ref()
+    # test_Lanczos5_ref()
+    # test_Lanczos7_ref()
+    # test_conserve_dc()
+    # test_stepk_maxk()
+    # test_kround_trip()
+    # test_multihdu_readin()
+    # test_ineq()
