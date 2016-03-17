@@ -300,6 +300,21 @@ class COSMOSCatalog(object):
                     'Not all of the requested exclusions will be performed.\n'+
                     'Run the program galsim_download_cosmos to get the necessary selection file.\n')
 
+            # Finally, impose a cut that the total flux in the postage stamp should be positive,
+            # which excludes a tiny number of galaxies (of order 10 in each sample) with some sky
+            # subtraction or deblending errors.  Some of these are eliminated by other cuts when
+            # using exclusion_level='marginal'.
+            if hasattr(self.real_cat, 'stamp_flux'):
+                mask &= self.real_cat.stamp_flux > 0
+            else:
+                import warnings
+                warnings.warn(
+                    'This version of the COSMOS catalog does not have info about total flux in\n'+
+                    'the galaxy postage stamps.  Exclusion of negative-flux stamps in advance\n'+
+                    'cannot be done.\n'+
+                    'Run the program galsim_download_cosmos to get the updated catalog with this\n'+
+                    'information precomputed.\n')
+
         if exclusion_level in ['bad_fits', 'marginal']:
             # This 'exclusion_level' involves eliminating failed parametric fits (bad fit status
             # flags).  In this case we only get rid of those with failed bulge+disk AND failed
