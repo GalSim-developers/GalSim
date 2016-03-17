@@ -1462,8 +1462,11 @@ class GSObject(object):
 
         return re,im
 
-    # Quick and dirty.  Just check reprs are equal.
-    def __eq__(self, other): return repr(self) == repr(other)
+    def __eq__(self, other):
+        if repr(self) != repr(other):
+            return False
+        return self.SBProfile == other.SBProfile
+
     def __ne__(self, other): return not self.__eq__(other)
     def __hash__(self): return hash(repr(self))
 
