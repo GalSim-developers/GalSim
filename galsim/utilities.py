@@ -503,7 +503,7 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
             offsets.append(offset)
 
     wcs = image.wcs
-    if wcs is not None: # and wcs.isLocal():
+    if wcs is not None:
         jac = wcs.jacobian()
         for img in im_list:
             img_wcs = galsim.JacobianWCS(jac.dudx*n1,jac.dudy*n2,jac.dvdx*n1,jac.dvdy*n2)
