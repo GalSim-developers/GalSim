@@ -632,12 +632,6 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     y_size, x_size = im_list[0].array.shape
     wcs = im_list[0].wcs
 
-    if wcs is not None:
-        if wcs.isPixelScale():
-            scale = wcs.scale
-    else:
-        scale = None
-
     for im in im_list[1:]:
         if not isinstance(im,galsim.Image):
             raise TypeError("'im_list' must be a list of galsim.Image instances")
