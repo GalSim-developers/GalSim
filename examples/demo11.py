@@ -74,7 +74,7 @@ def main(argv):
         telescope. However, in order that the galaxy resolution not be too poor, we tell GalSim that
         the pixel scale for that PSF image is 0.2" rather than 0.396".  We are simultaneously lying
         about the intrinsic size of the PSF and about the pixel scale when we do this.
-      - The galxies come from COSMOSCatalog, which can produce either RealGalaxy profiles
+      - The galaxies come from COSMOSCatalog, which can produce either RealGalaxy profiles
         (like in demo10) and parametric fits to those profiles.  We choose 30% of the galaxies
         to use the images, and the other 60% to use the parametric fits
       - The real galaxy images include some initial correlated noise from the original HST

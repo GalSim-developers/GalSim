@@ -18,6 +18,7 @@
 
 import galsim
 import logging
+import numpy
 
 # This file handles the building of postage stamps to place onto a larger image.
 # There is only one type of stamp currently, called Basic, which builds a galaxy from
@@ -65,10 +66,6 @@ def BuildStamps(nobjects, config, obj_num=0,
     else:
         nproc = 1
 
-    nobj_per_task = galsim.config.CalculateNObjPerTask(nproc, nobjects, config)
-    if logger:
-        logger.debug('image %d: nobj_per_task = %d',config.get('image_num',0), nobj_per_task)
-
     jobs = []
     for k in range(nobjects):
         kwargs = {
@@ -77,27 +74,32 @@ def BuildStamps(nobjects, config, obj_num=0,
             'ysize' : ysize,
             'do_noise' : do_noise,
         }
-        jobs.append( (kwargs, obj_num+k) )
+        jobs.append(kwargs)
 
-    def done_func(logger, proc, obj_num, result, t):
+    def done_func(logger, proc, k, result, t):
         if logger and result[0] is not None:
             # Note: numpy shape is y,x
             image = result[0]
             ys, xs = image.array.shape
             if proc is None: s0 = ''
             else: s0 = '%s: '%proc
+            obj_num = jobs[k]['obj_num']
             logger.info(s0 + 'Stamp %d: size = %d x %d, time = %f sec', obj_num, xs, ys, t)
 
-    def except_func(logger, proc, e, tr, obj_num):
+    def except_func(logger, proc, k, e, tr):
         if logger:
             if proc is None: s0 = ''
             else: s0 = '%s: '%proc
+            obj_num = jobs[k]['obj_num']
             logger.error(s0 + 'Exception caught when building stamp %d', obj_num)
             #logger.error('%s',tr)
             logger.error('Aborting the rest of this image')
 
-    results = galsim.config.MultiProcess(nproc, config, BuildStamp, jobs, 'stamp', logger,
-                                         njobs_per_task = nobj_per_task,
+    # Convert to the tasks structure we need for MultiProcess.
+    # Each task is a list of (job, k) tuples.
+    tasks = MakeStampTasks(config, jobs, logger)
+
+    results = galsim.config.MultiProcess(nproc, config, BuildStamp, tasks, 'stamp', logger,
                                          done_func = done_func,
                                          except_func = except_func)
 
@@ -231,7 +233,8 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
 
 # Ignore these when parsing the parameters for specific stamp types:
 stamp_ignore = ['offset', 'retry_failures', 'gsparams', 'draw_method',
-                'wmult', 'nphotons', 'max_extra_noise', 'poisson_flux']
+                'wmult', 'nphotons', 'max_extra_noise', 'poisson_flux',
+                'reject', 'min_flux_frac', 'min_snr', 'max_snr']
 
 def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
     """
@@ -264,6 +267,9 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
         ntries = galsim.config.ParseValue(stamp,'retry_failures',config,int)[0]
         # This is how many _re_-tries.  Do at least 1, so ntries is 1 more than this.
         ntries = ntries + 1
+    elif 'reject' in stamp or 'min_flux_frac' in stamp:
+        # Still impose a maximum number of tries to prevent infinite loops.
+        ntries = 20
     else:
         ntries = 1
 
@@ -302,9 +308,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             try :
                 psf = galsim.config.BuildGSObject(config, 'psf', gsparams=gsparams,
                                                   logger=logger)[0]
-
                 prof = builder.buildProfile(stamp, config, psf, gsparams, logger)
-
             except galsim.config.gsobject.SkipThisObject, e:
                 if logger:
                     logger.debug('obj %d: Caught SkipThisObject: e = %s',obj_num,e.msg)
@@ -313,8 +317,13 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                         # If there is a message, upgrade to info level
                         logger.info('Skipping object %d: %s',obj_num,e.msg)
                 skip = True
+                # Note: Skip is different from Reject.
+                #       Skip means we return None for this stamp image and continue on.
+                #       Reject means we retry this object using the same obj_num.
+                #       This has implications for the total number of objects as well as
+                #       things like ring tests that rely on objects being made in pairs.
 
-            im = builder.makeStamp(stamp, config, xsize, ysize)
+            im = builder.makeStamp(stamp, config, xsize, ysize, logger)
 
             if not skip:
                 if 'draw_method' in stamp:
@@ -330,15 +339,10 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 if logger:
                     logger.debug('obj %d: offset = %s',obj_num,offset)
 
-                im = builder.draw(prof, im, method, offset, stamp, config)
+                im = builder.draw(prof, im, method, offset, stamp, config, logger)
 
-                scale_factor = builder.getSNRScale(im, stamp, config)
-                if scale_factor != 1.0:
-                    if method == 'phot':
-                        logger.error(
-                            "signal_to_noise calculation is not accurate for draw_method = phot")
-                    im *= scale_factor
-                    prof *= scale_factor
+                scale_factor = builder.getSNRScale(im, stamp, config, logger)
+                im, prof = builder.applySNRScale(im, prof, scale_factor, method, logger)
 
             # Set the origin appropriately
             if im is None:
@@ -354,11 +358,26 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             # This is also information that the weight image calculation needs
             config['do_noise_in_stamps'] = do_noise
 
+            # Check if this object should be rejected.
+            reject = builder.reject(stamp, config, prof, psf, im, logger)
+            if reject:
+                if itry+1 < ntries:
+                    if logger and logger.isEnabledFor(logging.WARN):
+                        logger.warn('Object %d: Rejecting this object and rebuilding',obj_num)
+                    builder.reset(config, logger)
+                    continue
+                else:
+                    if logger:
+                        logger.error('Object %d: Too many rejections for this object. Aborting.',
+                                     obj_num)
+                    raise RuntimeError("Rejected an object %d times. If this is expected, "%ntries+
+                                       "you should specify a larger retry_failures.")
+
             galsim.config.ProcessExtraOutputsForStamp(config, logger)
 
             # We always need to do the whiten step here in the stamp processing
             if not skip:
-                current_var = builder.whiten(prof, im, stamp, config)
+                current_var = builder.whiten(prof, im, stamp, config, logger)
                 if current_var != 0.:
                     if logger:
                         logger.debug('obj %d: whitening noise brought current var to %f',
@@ -368,14 +387,13 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
 
             # Sometimes, depending on the image type, we go on to do the rest of the noise as well.
             if do_noise:
-                galsim.config.AddSky(config,im)
-                if not skip:
-                    galsim.config.AddNoise(config,im,current_var,logger)
+                im, current_var = builder.addNoise(stamp,config,skip,im,current_var,logger)
 
             return im, current_var
 
+        except KeyboardInterrupt:
+            raise
         except Exception as e:
-
             if itry == ntries-1:
                 # Then this was the last try.  Just re-raise the exception.
                 raise
@@ -383,10 +401,37 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 if logger:
                     logger.info('Object %d: Caught exception %s',obj_num,str(e))
                     logger.info('This is try %d/%d, so trying again.',itry+1,ntries)
+                if logger and logger.isEnabledFor(logging.DEBUG):
+                    import traceback
+                    tr = traceback.format_exc()
+                    logger.debug('obj %d: Traceback = %s',obj_num,tr)
                 # Need to remove the "current_val"s from the config dict.  Otherwise,
                 # the value generators will do a quick return with the cached value.
-                galsim.config.RemoveCurrent(config, keep_safe=True)
+                builder.reset(config, logger)
                 continue
+
+def MakeStampTasks(config, jobs, logger):
+    """Turn a list of jobs into a list of tasks.
+
+    See the doc string for galsim.config.MultiProcess for the meaning of this distinction.
+
+    For the Basic stamp type, there is just one job per task, so the tasks list is just:
+
+        tasks = [ [ (job, k) ] for k, job in enumerate(jobs) ]
+
+    But other stamp types may need groups of jobs to be done sequentially by the same process.
+    cf. stamp type=Ring.
+
+    @param config           The configuration dict
+    @param jobs             A list of jobs to split up into tasks.  Each job in the list is a
+                            dict of parameters that includes 'obj_num'.
+    @param logger           If given, a logger object to log progress.
+
+    @returns a list of tasks
+    """
+    stamp = config.get('stamp', {})
+    stamp_type = stamp.get('type', 'Basic')
+    return valid_stamp_types[stamp_type].makeTasks(stamp, config, jobs, logger)
 
 
 class StampBuilder(object):
@@ -459,7 +504,6 @@ class StampBuilder(object):
 
         return xsize, ysize, image_pos, world_pos
 
-
     def buildProfile(self, config, base, psf, gsparams, logger):
         """Build the surface brightness profile (a GSObject) to be drawn.
  
@@ -489,7 +533,7 @@ class StampBuilder(object):
             else:
                 raise AttributeError("At least one of gal or psf must be specified in config.")
 
-    def makeStamp(self, config, base, xsize, ysize):
+    def makeStamp(self, config, base, xsize, ysize, logger):
         """Make the initial empty postage stamp image, if possible.
 
         If we don't know xsize, ysize, return None, in which case the stamp will be created
@@ -499,6 +543,7 @@ class StampBuilder(object):
         @param base         The base configuration dict.
         @param xsize        The xsize of the image to build (if known).
         @param ysize        The ysize of the image to build (if known).
+        @param logger       If given, a logger object to log progress.
 
         @returns the image
         """
@@ -510,7 +555,7 @@ class StampBuilder(object):
         else:
             return None
 
-    def draw(self, prof, image, method, offset, config, base):
+    def draw(self, prof, image, method, offset, config, base, logger):
         """Draw the profile on the postage stamp image.
 
         @param prof         The profile to draw.
@@ -519,6 +564,7 @@ class StampBuilder(object):
         @param offset       The offset to apply when drawing.
         @param config       The configuration dict for the stamp field.
         @param base         The base configuration dict.
+        @param logger       If given, a logger object to log progress.
 
         @returns the resulting image
         """
@@ -572,7 +618,7 @@ class StampBuilder(object):
         image = prof.drawImage(**kwargs)
         return image
 
-    def whiten(self, prof, image, config, base):
+    def whiten(self, prof, image, config, base, logger):
         """If appropriate, whiten the resulting image according to the requested noise profile
         and the amount of noise originally present in the profile.
 
@@ -580,6 +626,7 @@ class StampBuilder(object):
         @param image        The image onto which to draw the profile.
         @param config       The configuration dict for the stamp field.
         @param base         The base configuration dict.
+        @param logger       If given, a logger object to log progress.
 
         @returns the variance of the resulting whitened (or symmetrized) image.
         """
@@ -598,13 +645,13 @@ class StampBuilder(object):
                     current_var = prof.noise.symmetrizeImage(image, symmetrize)
         return current_var
 
-
-    def getSNRScale(self, image, config, base):
+    def getSNRScale(self, image, config, base, logger):
         """Calculate the factor by which to rescale the image based on a desired S/N level.
 
         @param image        The current image.
         @param config       The configuration dict for the stamp field.
         @param base         The base configuration dict.
+        @param logger       If given, a logger object to log progress.
 
         @returns scale_factor
         """
@@ -617,6 +664,7 @@ class StampBuilder(object):
 
             if 'flux' in base[root_key]:
                 raise AttributeError(
+
                     'Only one of signal_to_noise or flux may be specified for %s'%root_key)
 
             if 'image' in base and 'noise' in base['image']:
@@ -643,6 +691,148 @@ class StampBuilder(object):
             return scale_factor
         else:
             return 1.
+
+    def applySNRScale(self, image, prof, scale_factor, method, logger):
+        """Apply the scale_factor from getSNRScale to the image and profile.
+
+        The default implementaion just multiplies each of them, but if prof is not a regular
+        GSObject, then you might need to do something different.
+
+        @param image        The current image.
+        @param prof         The profile that was drawn.
+        @param scale_factor The factor by which to scale both image and prof.
+        @param method       The method used by drawImage.
+        @param logger       If given, a logger object to log progress.
+
+        @returns image, prof  (after being properly scaled)
+        """
+        if scale_factor != 1.0:
+            if method == 'phot':
+                logger.warn(
+                    "signal_to_noise calculation is not accurate for draw_method = phot")
+            image *= scale_factor
+            prof *= scale_factor
+        return image, prof
+
+    def reject(self, config, base, prof, psf, image, logger):
+        """Check to see if this object should be rejected.
+
+        @param config       The configuration dict for the stamp field.
+        @param base         The base configuration dict.
+        @param prof         The profile that was drawn.
+        @param psf          The psf that was used to build the profile.
+        @param image        The postage stamp image.  No noise is on it yet at this point.
+        @param logger       If given, a logger object to log progress.
+
+        @returns whether to reject this object
+        """
+        # Check that we aren't on a second or later item in a Ring.
+        # This check can be removed once we do not need to support the deprecated gsobject
+        # type=Ring.
+        if 'gal' in base:
+            block_size = galsim.config.gsobject._GetMinimumBlock(base['gal'], base)
+            if base['obj_num'] % block_size != 0:
+                # Don't reject, since the first item passed.
+                # If we reject now, it will mess things up.
+                return False
+
+        reject = False
+        if 'reject' in config:
+            reject = galsim.config.ParseValue(config, 'reject', base, bool)[0]
+        if 'min_flux_frac' in config:
+            if not isinstance(prof, galsim.GSObject):
+                raise ValueError("Cannot apply min_flux_frac for stamp types that do not use "+
+                                "a single GSObject profile.")
+            expected_flux = prof.flux
+            measured_flux = numpy.sum(image.array)
+            min_flux_frac = galsim.config.ParseValue(config, 'min_flux_frac', base, float)[0]
+            if measured_flux < min_flux_frac * expected_flux:
+                if logger and logger.isEnabledFor(logging.WARN):
+                    logger.warn('Object %d: Measured flux = %f < %s * %f.',
+                                base['obj_num'], measured_flux, min_flux_frac, expected_flux)
+                reject = True
+        if 'min_snr' in config or 'max_snr' in config:
+            if not isinstance(prof, galsim.GSObject):
+                raise ValueError("Cannot apply min_snr for stamp types that do not use "+
+                                "a single GSObject profile.")
+            var = galsim.config.CalculateNoiseVar(base)
+            sumsq = numpy.sum(image.array**2)
+            snr = numpy.sqrt(sumsq / var)
+            if 'min_snr' in config:
+                min_snr = galsim.config.ParseValue(config, 'min_snr', base, float)[0]
+                if snr < min_snr:
+                    if logger and logger.isEnabledFor(logging.WARN):
+                        logger.warn('Object %d: Measured snr = %f < %s.',
+                                    base['obj_num'], snr, min_snr)
+                    reject = True
+            if 'max_snr' in config:
+                max_snr = galsim.config.ParseValue(config, 'max_snr', base, float)[0]
+                if snr > max_snr:
+                    if logger and logger.isEnabledFor(logging.WARN):
+                        logger.warn('Object %d: Measured snr = %f > %s.',
+                                    base['obj_num'], snr, max_snr)
+                    reject = True
+        return reject
+
+    def reset(self, base, logger):
+        """Reset some aspects of the config dict so the object can be rebuilt after rejecting the
+        current object.
+
+        @param base         The base configuration dict.
+        @param logger       If given, a logger object to log progress.
+        """
+        # Clear current values out of psf, gal, and stamp if they are not safe to reuse.
+        # This means they are either marked as safe or indexed by something other than obj_num.
+        for field in ['psf', 'gal', 'stamp']:
+            galsim.config.RemoveCurrent(base[field], keep_safe=True, index_key='obj_num')
+
+    def addNoise(self, config, base, skip, image, current_var, logger):
+        """
+        Add the sky level and the noise to the stamp.
+
+        Note: This only gets called if the image type requests that the noise be added to each
+            stamp individually, rather than to the full image and the end.
+
+        @param config       The configuration dict for the stamp field.
+        @param base         The base configuration dict.
+        @param skip         Are we skipping this image? (Usually means to add sky, but not noise.)
+        @param image        The current image.
+        @param current_var  The current noise variance present in the image already.
+        @param logger       If given, a logger object to log progress.
+
+        @returns the new values of image, current_var
+        """
+        galsim.config.AddSky(base,image)
+        if not skip:
+            current_var = galsim.config.AddNoise(base,image,current_var,logger)
+        return image, current_var
+
+    def makeTasks(self, config, base, jobs, logger):
+        """Turn a list of jobs into a list of tasks.
+
+        For the Basic stamp type, there is just one job per task, so the tasks list is just:
+
+            tasks = [ [ (job, k) ] for k, job in enumerate(jobs) ]
+
+        @param config       The configuration dict for the stamp field.
+        @param base         The base configuration dict.
+        @param jobs         A list of jobs to split up into tasks.  Each job in the list is a
+                            dict of parameters that includes 'obj_num'.
+        @param logger       If given, a logger object to log progress.
+
+        @returns a list of tasks
+        """
+        # For backwards compatibility with the old Ring gsobject type, we actually check for that
+        # here and make a list of tasks that work for that.  This is undocumented though, since the
+        # gsobject type=Ring is now deprecated.
+        block_size = 1
+        if 'gal' in base:
+            block_size = galsim.config.gsobject._GetMinimumBlock(base['gal'], base)
+        tasks = [ [ (jobs[j], j) for j in range(k,min(k+block_size,len(jobs))) ]
+                    for k in range(0, len(jobs), block_size) ]
+        return tasks
+
+
 
 def RegisterStampType(stamp_type, builder):
     """Register an image type for use by the config apparatus.

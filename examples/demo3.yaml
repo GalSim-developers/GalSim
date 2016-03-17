@@ -158,11 +158,11 @@ image :
         # You can also specify a gain and a read_noise for the CCD.
         # The gain indicates how many photons (or electrons, technically) correspond
         # to each final ADU.  And the read_noise is an additional Gaussian noise
-        # (specified as the sigma or rms value) to be added to each pixel at the end.
+        # (specified as the sigma or rms value) also in unit of electrons.
         type : CCD
         sky_level : 2.5e4  # ADU / arcsec^2
-        gain : 1.7  # e- / ADU 
-        read_noise : 0.3  # ADU / pixel
+        gain : 1.7  # e- / ADU
+        read_noise : 0.3  # e- / pixel
 
 
     # If you want the random values used to be deterministic, you can provide an initial seed.

@@ -95,6 +95,8 @@ struct PyHSMParams {
             "                  KSB method of PSF correction.  Warning: deviating from default\n"
             "                  value of 2 results in code running more slowly, and results have\n"
             "                  not been significantly tested.\n"
+            "convergence_threshold  Accuracy (in x0, y0, and sigma, each as a fraction of sigma)\n"
+            "                  when calculating adaptive moments.\n"
             "max_mom2_iter     Maximum number of iterations to use when calculating adaptive\n"
             "                  moments.  This should be sufficient in nearly all situations, with\n"
             "                  the possible exception being very flattened profiles.\n"
@@ -122,13 +124,14 @@ struct PyHSMParams {
         bp::class_<HSMParams> pyHSMParams("HSMParams", doc, bp::no_init);
         pyHSMParams
             .def(bp::init<
-                 double, double, double, int, int, long, long, double, double, double, int, double,
-                 double, double>(
+                 double, double, double, int, int, double, long, long, double, double, double,
+                 int, double, double, double>(
                      (bp::arg("nsig_rg")=3.0,
                       bp::arg("nsig_rg2")=3.6,
                       bp::arg("max_moment_nsig2")=25.0,
                       bp::arg("regauss_too_small")=1,
                       bp::arg("adapt_order")=2,
+                      bp::arg("convergence_threshold")=1.e-6,
                       bp::arg("max_mom2_iter")=400,
                       bp::arg("num_iter_default")=-1,
                       bp::arg("bound_correct_wt")=0.25,
@@ -145,6 +148,7 @@ struct PyHSMParams {
             .def_readonly("max_moment_nsig2",&HSMParams::max_moment_nsig2)
             .def_readonly("regauss_too_small",&HSMParams::regauss_too_small)
             .def_readonly("adapt_order",&HSMParams::adapt_order)
+            .def_readonly("convergence_threshold",&HSMParams::convergence_threshold)
             .def_readonly("max_mom2_iter",&HSMParams::max_mom2_iter)
             .def_readonly("num_iter_default",&HSMParams::num_iter_default)
             .def_readonly("bound_correct_wt",&HSMParams::bound_correct_wt)
