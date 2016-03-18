@@ -1151,9 +1151,9 @@ def test_multihdu_readin():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
-def test_ineq():
+def test_ne():
     """ Check that inequality works as expected for corner cases where the reprs of two
-    InterpolatedImages or InterpolatedKImages may be the same due to truncation.
+    unequal InterpolatedImages or InterpolatedKImages may be the same due to truncation.
     """
     import time
     t1 = time.time()
@@ -1219,4 +1219,4 @@ if __name__ == "__main__":
     test_stepk_maxk()
     test_kround_trip()
     test_multihdu_readin()
-    test_ineq()
+    test_ne()
