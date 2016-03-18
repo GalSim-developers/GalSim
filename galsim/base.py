@@ -1468,7 +1468,7 @@ class GSObject(object):
         return self.SBProfile == other.SBProfile
 
     def __ne__(self, other): return not self.__eq__(other)
-    def __hash__(self): return hash(repr(self))
+    def __hash__(self): return hash((repr(self), self.SBProfile.serialize()))
 
 # Pickling an SBProfile is a bit tricky, since it's a base class for lots of other classes.
 # Normally, we'll know what the derived class is, so we can just use the pickle stuff that is
