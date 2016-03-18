@@ -353,8 +353,8 @@ class OpticalPSF(GSObject):
         # Hence calculate_stepk=True and calculate_maxk=True above.
 
         self._optimage = optimage
-        self._stepk = ii._stepk
-        self._maxk = ii._maxk
+        self._serialize_stepk = ii._serialize_stepk
+        self._serialize_maxk = ii._serialize_maxk
 
         GSObject.__init__(self, ii)
 
@@ -421,8 +421,9 @@ class OpticalPSF(GSObject):
     def __setstate__(self, d):
         self.__dict__ = d
         ii =  galsim.InterpolatedImage(self._optimage, x_interpolant=self._interpolant,
-                                       _force_stepk=self._stepk, _force_maxk=self._maxk,
                                        use_true_center=False, normalization='sb',
+                                       _serialize_stepk=self._serialize_stepk,
+                                       _serialize_maxk=self._serialize_maxk,
                                        gsparams=self._gsparams)
         GSObject.__init__(self, ii)
 
