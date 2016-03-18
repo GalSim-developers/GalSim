@@ -63,7 +63,7 @@ namespace galsim {
         return static_cast<const SBExponentialImpl&>(*_pimpl).getScaleRadius();
     }
 
-    std::string SBExponential::SBExponentialImpl::serialize() const 
+    std::string SBExponential::SBExponentialImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
