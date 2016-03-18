@@ -256,7 +256,8 @@ class InterpolatedImage(GSObject):
                  scale=None, wcs=None, flux=None, pad_factor=4., noise_pad_size=0, noise_pad=0.,
                  rng=None, pad_image=None, calculate_stepk=True, calculate_maxk=True,
                  use_cache=True, use_true_center=True, offset=None, gsparams=None, dx=None,
-                 _force_stepk=0., _force_maxk=0., hdu=None):
+                 _force_stepk=0., _force_maxk=0., _serialize_stepk=None, _serialize_maxk=None,
+                 hdu=None):
 
         # Check for obsolete dx parameter
         if dx is not None and scale is None:
@@ -425,15 +426,29 @@ class InterpolatedImage(GSObject):
             calculate_maxk = False
             _force_maxk *= self.max_scale
 
+        # Due to floating point rounding errors, for pickling it's necessary to store the exact
+        # _force_maxk and _force_stepk used to create the SBInterpolatedImage, as opposed to the
+        # values before being scaled by self.min_scale and self.max_scale.  So we do that via the
+        # _serialize_maxk and _serialize_stepk hidden kwargs, which should only get used during
+        # pickling.
+        if _serialize_stepk is not None:
+            calculate_stepk = False
+            _force_stepk = _serialize_stepk
+        if _serialize_maxk is not None:
+            calculate_maxk = False
+            _force_maxk = _serialize_maxk
+
         # Save these values for pickling
         self._pad_image = pad_image
         self._pad_factor = pad_factor
         self._gsparams = gsparams
 
         # Make the SBInterpolatedImage out of the image.
+        # print "SBII maxk: {:30.28f}".format(_force_maxk)
+        # print "SBII stepk: {:30.28f}".format(_force_stepk)
         sbii = galsim._galsim.SBInterpolatedImage(
-                pad_image.image, self.x_interpolant, self.k_interpolant, pad_factor,
-                _force_stepk, _force_maxk, gsparams)
+            pad_image.image, self.x_interpolant, self.k_interpolant, pad_factor,
+            _force_stepk, _force_maxk, gsparams)
 
         if calculate_stepk:
             if calculate_stepk is True:
@@ -458,6 +473,9 @@ class InterpolatedImage(GSObject):
         self._stepk = sbii.stepK() / self.min_scale
         self._maxk = sbii.maxK() / self.max_scale
         self._flux = flux
+
+        self._serialize_stepk = sbii.stepK()
+        self._serialize_maxk = sbii.maxK()
 
         prof = GSObject(sbii)
 
@@ -548,7 +566,8 @@ class InterpolatedImage(GSObject):
                       x_interpolant=self.x_interpolant, k_interpolant=self.k_interpolant,
                       pad_factor=self._pad_factor, flux=self._flux,
                       offset=self._offset, use_true_center=False, gsparams=self._gsparams,
-                      _force_stepk=self._stepk, _force_maxk=self._maxk)
+                      _serialize_stepk=self._serialize_stepk,
+                      _serialize_maxk=self._serialize_maxk)
 
 
 class InterpolatedKImage(GSObject):
