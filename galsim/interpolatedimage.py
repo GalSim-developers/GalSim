@@ -444,8 +444,6 @@ class InterpolatedImage(GSObject):
         self._gsparams = gsparams
 
         # Make the SBInterpolatedImage out of the image.
-        # print "SBII maxk: {:30.28f}".format(_force_maxk)
-        # print "SBII stepk: {:30.28f}".format(_force_stepk)
         sbii = galsim._galsim.SBInterpolatedImage(
             pad_image.image, self.x_interpolant, self.k_interpolant, pad_factor,
             _force_stepk, _force_maxk, gsparams)
