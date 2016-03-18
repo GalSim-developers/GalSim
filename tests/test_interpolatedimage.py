@@ -1166,10 +1166,10 @@ def test_ne():
     perturb_image.array[64, 64] *= 1000
     obj2 = galsim.InterpolatedImage(perturb_image, calculate_maxk=False, calculate_stepk=False)
 
-    with printoptions(threshold=128*128):
+    with galsim.utilities.printoptions(threshold=128*128):
         assert repr(obj1) != repr(obj2)
 
-    with printoptions(threshold=1000):
+    with galsim.utilities.printoptions(threshold=1000):
         assert repr(obj1) == repr(obj2)
 
     assert obj1 != obj2
@@ -1189,10 +1189,10 @@ def test_ne():
 
     obj4 = galsim.InterpolatedKImage(perturb_re, perturb_im)
 
-    with printoptions(threshold=128*128):
+    with galsim.utilities.printoptions(threshold=128*128):
         assert repr(obj3) != repr(obj4)
 
-    with printoptions(threshold=1000):
+    with galsim.utilities.printoptions(threshold=1000):
         assert repr(obj3) == repr(obj4)
 
     assert obj3 != obj4

@@ -20,6 +20,7 @@ A few adjustments to galsim.LookupTable at the Python layer, including the
 addition of the docstring and few extra features.
 """
 from . import _galsim
+import galsim
 
 
 class LookupTable(object):
@@ -229,8 +230,10 @@ class LookupTable(object):
         return not self.__eq__(other)
 
     def __repr__(self):
-        return 'galsim.LookupTable(x=%r, f=%r, x_log=%r, f_log=%r, interpolant=%r)' % (
-            self.x, self.f, self.x_log, self.f_log, self.interpolant)
+        with galsim.utilities.printoptions(threshold=6):
+            outstr = 'galsim.LookupTable(x=%r, f=%r, x_log=%r, f_log=%r, interpolant=%r)' % (
+                self.x, self.f, self.x_log, self.f_log, self.interpolant)
+        return outstr
 
     def __str__(self):
         if self.file is not None:
@@ -247,9 +250,15 @@ class LookupTable(object):
 # A function to enable pickling of tables
 _galsim._LookupTable.__getinitargs__ = lambda self: \
     (self.getArgs(), self.getVals(), self.getInterp())
-_galsim._LookupTable.__repr__ = lambda self: \
-    'galsim._galsim._LookupTable(array(%r), array(%r), %r)' % (
-        self.getArgs(), self.getVals(), self.getInterp())
+
+
+def _gs_LT_repr(self):
+    with galsim.utilities.printoptions(threshold=6):
+        outstr = 'galsim._galsim._LookupTable(array(%r), array(%r), %r)' % (
+            self.getArgs(), self.getVals(), self.getInterp())
+    return outstr
+
+_galsim._LookupTable.__repr__ = _gs_LT_repr
 _galsim._LookupTable.__eq__ = lambda self, other: repr(self) == repr(other)
 _galsim._LookupTable.__ne__ = lambda self, other: not self.__eq__(other)
-_galsim._LookupTable.__hash__ = lambda self: hash(repr(other))
+_galsim._LookupTable.__hash__ = lambda self: hash(repr(self))

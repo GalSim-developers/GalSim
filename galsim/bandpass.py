@@ -509,9 +509,11 @@ class Bandpass(object):
             wave_type = 'Angstroms'
         else:
             wave_type = 'nm'
-        return ('galsim.Bandpass(%r, blue_limit=%r, red_limit=%r, wave_type=%r, zeropoint=%r, ' +
-                '_wave_list=%r)') % (self._orig_tp, self.blue_limit, self.red_limit, wave_type,
-                                     self.zeropoint, self.wave_list)
+        with galsim.utilities.printoptions(threshold=6):
+            outstr = ('galsim.Bandpass(%r, blue_limit=%r, red_limit=%r, wave_type=%r, zeropoint=%r, ' +
+                      '_wave_list=%r)') % (self._orig_tp, self.blue_limit, self.red_limit, wave_type,
+                                           self.zeropoint, self.wave_list)
+        return outstr
 
     def __str__(self):
         orig_tp = repr(self._orig_tp)

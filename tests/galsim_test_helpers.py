@@ -18,7 +18,6 @@
 import numpy as np
 import os
 import sys
-from contextlib import contextmanager
 
 try:
     import galsim
@@ -219,15 +218,6 @@ def drawNoise(noise):
     return im.array.astype(np.float32).tolist()
 
 
-# http://stackoverflow.com/questions/2891790/pretty-printing-of-numpy-array
-@contextmanager
-def printoptions(*args, **kwargs):
-    original = np.get_printoptions()
-    np.set_printoptions(*args, **kwargs)
-    yield
-    np.set_printoptions(**original)
-
-
 def do_pickle(obj1, func = lambda x : x, irreprable=False):
     """Check that the object is picklable.  Also that it has basic == and != functionality.
     """
@@ -290,7 +280,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
         # A further complication is that the default numpy print options do not have sufficient
         # precision for the eval string to exactly reproduce the original object.  So we temporarily
         # bump up the numpy print precision.
-        with printoptions(precision=18):
+        with galsim.utilities.printoptions(precision=18):
             #print 'repr = ',repr(obj1)
             obj5 = eval(repr(obj1))
     except:

@@ -18,6 +18,7 @@
 """@file utilities.py
 Module containing general utilities for the GalSim software.
 """
+from contextlib import contextmanager
 
 import numpy as np
 import galsim
@@ -432,7 +433,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     equivalent to convolution by the pixel profile and then sampling at the centers of the pixels.
     This procedure simulates an observation sampled at a higher resolution than the original images,
     while retaining the original pixel convolution.
-    
+
     Such an image can be obtained in a fairly simple manner in simulations of surface brightness
     profiles by convolving them explicitly with the native pixel response and setting a lower
     sampling scale (or higher sampling rate) using the `pixel_scale' argument in drawImage()
@@ -448,7 +449,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     ther others is that the images must be offset in equal steps in each direction. This is
     difficult to acheive with real observations but can be precisely acheived in a series of
     simulated images.
-    
+
     An advantage of this procedure is that the noise in the final image is not correlated as the
     pixel values are each taken from just a single input image. Thus, this routine preserves the
     noise properties of the pixels.
@@ -536,7 +537,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
 
         if im.array.shape != (y_size,x_size):
             raise ValueError("All galsim.Image instances in 'im_list' must be of the same size")
- 
+
         if im.wcs != wcs:
             raise ValueError(
                 "All galsim.Image instances in 'im_list' must have the same WCS")
@@ -682,3 +683,12 @@ class LRU_Cache:
                     root[1] = link
             else:
                 raise ValueError("Invalid maxsize: {0:}".format(maxsize))
+
+
+# http://stackoverflow.com/questions/2891790/pretty-printing-of-numpy-array
+@contextmanager
+def printoptions(*args, **kwargs):
+    original = np.get_printoptions()
+    np.set_printoptions(*args, **kwargs)
+    yield
+    np.set_printoptions(**original)
