@@ -1704,6 +1704,13 @@ def test_ne():
     assert repr(a) == repr(b)
     assert a != b
 
+    # Check DistDeviate separately, since it overrides __repr__ and __eq__
+    d1 = galsim.DistDeviate(seed=a, function=galsim.LookupTable([1, 2, 3], [4, 5, 6]))
+    d2 = galsim.DistDeviate(seed=b, function=galsim.LookupTable([1, 2, 3], [4, 5, 6]))
+    assert repr(d1) == repr(d2)
+    assert d1 != d2
+
+
 if __name__ == "__main__":
     test_uniform()
     test_gaussian()
