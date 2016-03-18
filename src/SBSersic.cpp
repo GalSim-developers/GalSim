@@ -83,7 +83,7 @@ namespace galsim {
         return static_cast<const SBSersicImpl&>(*_pimpl).getTrunc();
     }
 
-    std::string SBSersic::SBSersicImpl::repr() const 
+    std::string SBSersic::SBSersicImpl::repr() const
     {
         std::ostringstream oss(" ");
         // NB. The choice of digits10 + 4 is because the normal general output
@@ -91,7 +91,7 @@ namespace galsim {
         // to scientific for smaller numbers.  So those first 4 digits in 0.0001 don't
         // count for the number of required digits, which is nominally given by digits10.
         // cf. http://stackoverflow.com/questions/4738768/printing-double-without-losing-precision
-        // Unfortunately, there doesn't seem to be an easy equivalent of python's %r for 
+        // Unfortunately, there doesn't seem to be an easy equivalent of python's %r for
         // printing the repr of a double that always works and doesn't print more digits than
         // it needs.  This is the reason why we reimplement the __repr__ methods in python
         // for all the SB classes except SBProfile.  Only the last one can't be done properly
