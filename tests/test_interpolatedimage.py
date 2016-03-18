@@ -1174,26 +1174,49 @@ def test_ineq():
 
     assert obj1 != obj2
 
+    # Now repeat for InterpolatedKImage
+    re, im = obj1.drawKImage(nx=128, ny=128, scale=1)
+    obj3 = galsim.InterpolatedKImage(re, im)
+    perturb_re = re.copy()
+    perturb_im = im.copy()
+    x = np.arange(128)
+    x, y = np.meshgrid(x, x)
+    w = ((perturb_re.array**2 - perturb_im.array**2 > 1e-10) &
+         (50 < x) & (x < (128-50)) &
+         (50 < y) & (y < (128-50)))
+    perturb_re.array[w] *= 2
+    perturb_im.array[w] *= 2
+
+    obj4 = galsim.InterpolatedKImage(perturb_re, perturb_im)
+
+    with printoptions(threshold=128*128):
+        assert repr(obj3) != repr(obj4)
+
+    with printoptions(threshold=1000):
+        assert repr(obj3) == repr(obj4)
+
+    assert obj3 != obj4
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 if __name__ == "__main__":
-    # test_roundtrip()
+    test_roundtrip()
     test_fluxnorm()
-    # test_exceptions()
-    # test_operations_simple()
-    # test_operations()
-    # test_uncorr_padding()
-    # test_pad_image()
-    # test_corr_padding()
-    # test_realspace_conv()
-    # test_Cubic_ref()
-    # test_Quintic_ref()
-    # test_Lanczos5_ref()
-    # test_Lanczos7_ref()
-    # test_conserve_dc()
-    # test_stepk_maxk()
-    # test_kround_trip()
-    # test_multihdu_readin()
-    # test_ineq()
+    test_exceptions()
+    test_operations_simple()
+    test_operations()
+    test_uncorr_padding()
+    test_pad_image()
+    test_corr_padding()
+    test_realspace_conv()
+    test_Cubic_ref()
+    test_Quintic_ref()
+    test_Lanczos5_ref()
+    test_Lanczos7_ref()
+    test_conserve_dc()
+    test_stepk_maxk()
+    test_kround_trip()
+    test_multihdu_readin()
+    test_ineq()
