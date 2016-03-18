@@ -244,7 +244,7 @@ class LookupTable(object):
                 self.x[0], self.x[-1], self.f[0], self.f[-1], self.interpolant)
 
     def __hash__(self):
-        return hash((repr(self), repr(self.x.tolist()), repr(self.f.tolist())))
+        return hash(repr(self)) ^ hash(repr(self.x.tolist())) ^ hash(repr(self.f.tolist()))
 
 
 # A function to enable pickling of tables
@@ -258,7 +258,17 @@ def _gs_LT_repr(self):
             self.getArgs(), self.getVals(), self.getInterp())
     return outstr
 
+
+def _gs_LT_eq(self, other):
+    return (self.getArgs() == other.getArgs() and
+            self.getVals() == other.getVals() and
+            self.getInterp() == other.getInterp())
+
+
+def _gs_LT_hash(self):
+    return hash(self.getArgs()) ^ hash(self.getVals()) ^ hash(self.getInterp())
+
 _galsim._LookupTable.__repr__ = _gs_LT_repr
-_galsim._LookupTable.__eq__ = lambda self, other: repr(self) == repr(other)
+_galsim._LookupTable.__eq__ = _gs_LT_eq
 _galsim._LookupTable.__ne__ = lambda self, other: not self.__eq__(other)
-_galsim._LookupTable.__hash__ = lambda self: hash(repr(self))
+_galsim._LookupTable.__hash__ = _gs_LT_hash
