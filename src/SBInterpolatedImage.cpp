@@ -437,20 +437,19 @@ namespace galsim {
         Bounds<int> _bds = im.getBounds();
         const int row_len = _bds.getXMax() - _bds.getXMin() + 1;
         std::ostringstream oss;
+        oss.precision(8);
         oss << "[";
         BaseImage<double>::const_iterator it = im.rowBegin(row);
         BaseImage<double>::const_iterator end = im.rowEnd(row);
         if (row_len <= 6) {
             for (;it != end;){
                 oss.width(15);
-                oss.precision(8);
                 oss << *it++;
                 if (it != end) oss << ",";
             }
         } else {
             for (int i=0; i<3; i++){
                 oss.width(15);
-                oss.precision(8);
                 oss << *it++;
                 oss << ",";
             }
@@ -458,7 +457,6 @@ namespace galsim {
             it = end-3;
             for (int i=0; i<3; i++){
                 oss.width(15);
-                oss.precision(8);
                 oss << *it++;
                 if (it != end) oss << ",";
             }
@@ -1088,24 +1086,22 @@ namespace galsim {
         int xmin = -_Ninitx/2;
         int xmax = _Ninitx/2-1; // be inclusive
         std::ostringstream oss;
+        oss.precision(8);
         oss << "[";
         if (_Ninitx <= 6) {
             for (int kx=xmin; kx<=xmax; kx++) {
                 oss.width(15);
-                oss.precision(8);
                 oss << _ktab->kval(kx, row).real();
                 if (kx != xmax) oss << ",";
             }
         } else {
             for (int kx=xmin; kx<xmin+3; kx++) {
                 oss.width(15);
-                oss.precision(8);
                 oss << _ktab->kval(kx, row).real() << ",";
             }
             oss << " ...,";
             for (int kx=xmax-2; kx<=xmax; kx++) {
                 oss.width(15);
-                oss.precision(8);
                 oss << _ktab->kval(kx, row).real();
                 if (kx != xmax) oss << ",";
             }
@@ -1120,24 +1116,22 @@ namespace galsim {
         int xmin = -_Ninitx/2;
         int xmax = (_Ninitx-1)/2; // be inclusive
         std::ostringstream oss;
+        oss.precision(8);
         oss << "[";
         if (_Ninitx <= 6) {
             for (int kx=xmin; kx<=xmax; kx++) {
                 oss.width(15);
-                oss.precision(8);
                 oss << _ktab->kval(kx, row).imag();
                 if (kx != xmax) oss << ",";
             }
         } else {
             for (int kx=xmin; kx<xmin+3; kx++) {
                 oss.width(15);
-                oss.precision(8);
                 oss << _ktab->kval(kx, row).imag() << ",";
             }
             oss << " ...,";
             for (int kx=xmax-2; kx<=xmax; kx++) {
                 oss.width(15);
-                oss.precision(8);
                 oss << _ktab->kval(kx, row).imag();
                 if (kx != xmax) oss << ",";
             }
