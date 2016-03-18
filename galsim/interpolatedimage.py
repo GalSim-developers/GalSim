@@ -673,8 +673,8 @@ class InterpolatedKImage(GSObject):
                             real_kimage.ymax)
         if not (np.allclose(real_kimage[bd].array,
                             real_kimage[bd].array[::-1,::-1])
-                or np.allclose(imag_kimage[bd].array,
-                               -imag_kimage[bd].array[::-1,::-1])):
+                and np.allclose(imag_kimage[bd].array,
+                                -imag_kimage[bd].array[::-1,::-1])):
             raise ValueError("Real and Imag kimages must form a Hermitian complex matrix.")
 
         if stepk is None:
