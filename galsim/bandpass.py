@@ -24,6 +24,7 @@ import numpy as np
 import galsim
 import utilities
 
+
 class Bandpass(object):
     """Simple bandpass object, which models the transmission fraction of incident light as a
     function of wavelength, for either an entire optical path (e.g., atmosphere, reflecting and
@@ -93,13 +94,13 @@ class Bandpass(object):
         # `wave_list` is normally constructed (see `Bandpass.__mul__` below)
 
         self._orig_tp = throughput  # Save this for pickling.
-        self._tp = _tp              # This will normally become orig_tp turned into an actual 
-                                    # function (see _initialize_tp()), although in some cases,
-                                    # it can be supplied directly as a constructor argument.
-
+        #  self._tp will normally become orig_tp turned into an actual function
+        #  (see _initialize_tp()), although in some cases, it can be supplied directly as a
+        # constructor argument.
+        self._tp = _tp
         if blue_limit is not None and red_limit is not None and blue_limit >= red_limit:
             raise ValueError("blue_limit must be less than red_limit")
-        self.blue_limit = blue_limit # These may change as we go through this.
+        self.blue_limit = blue_limit  # These may change as we go through this.
         self.red_limit = red_limit
         self.zeropoint = zeropoint
         self.wave_type = wave_type
@@ -147,14 +148,14 @@ class Bandpass(object):
             self.wave_list = np.array(self._tp.getArgs())/self.wave_factor
             # Make sure that blue_limit and red_limit are within LookupTable region of support.
             if self.blue_limit < (self._tp.x_min/self.wave_factor):
-                raise ValueError("Cannot set blue_limit to be less than throughput "
-                                 + "LookupTable.x_min")
+                raise ValueError("Cannot set blue_limit to be less than throughput " +
+                                 "LookupTable.x_min")
             if self.red_limit > (self._tp.x_max/self.wave_factor):
-                raise ValueError("Cannot set red_limit to be greater than throughput "
-                                 + "LookupTable.x_max")
+                raise ValueError("Cannot set red_limit to be greater than throughput " +
+                                 "LookupTable.x_max")
             # Remove any values that are outside the limits
             self.wave_list = self.wave_list[np.logical_and(self.wave_list >= self.blue_limit,
-                                                           self.wave_list <= self.red_limit) ]
+                                                           self.wave_list <= self.red_limit)]
             # Make sure that blue_limit and red_limit are part of wave_list.
             if self.red_limit not in self.wave_list:
                 np.append(self.wave_list, self.red_limit)
@@ -179,7 +180,6 @@ class Bandpass(object):
             except:
                 raise ValueError(
                     "Throughput function was unable to evaluate at wave = {0}.".format(test_wave))
- 
 
     def _initialize_tp(self):
         # Turn the input tp into a real function self.func.
@@ -195,7 +195,7 @@ class Bandpass(object):
                 # Evaluate the function somewhere to make sure it is valid before continuing on.
                 if self.red_limit is not None:
                     test_wave = self.red_limit * self.wave_factor
-                elif blue_limit is not None:
+                elif self.blue_limit is not None:
                     test_wave = self.blue_limit * self.wave_factor
                 else:
                     # If neither `blue_limit` nor `red_limit` is defined, then the Bandpass should
@@ -206,7 +206,7 @@ class Bandpass(object):
                     self._tp(test_wave)
                 except:
                     raise ValueError(
-                        "String throughput must either be a valid filename or something that "+
+                        "String throughput must either be a valid filename or something that " +
                         "can eval to a function of wave. Input provided: {0}".format(self._orig_tp))
         else:
             self._tp = self._orig_tp
@@ -229,15 +229,15 @@ class Bandpass(object):
         if hasattr(other, '__call__'):
             tp = lambda w: self.func(w) * other(w)
         elif isinstance(self._tp, galsim.LookupTable):
-            # If other is not a function, then there is no loss of accuracy by applying the 
+            # If other is not a function, then there is no loss of accuracy by applying the
             # factor directly to the LookupTable, if that's what we are using.
             # Make sure to keep the same properties about the table, wave_type.
             if self.wave_factor == 10.0:
                 wave_type = 'Angstroms'
             x = self._tp.getArgs()
-            f = [ val * other for val in self._tp.getVals() ]
+            f = [val * other for val in self._tp.getVals()]
             tp = galsim.LookupTable(x, f, x_log=self._tp.x_log, f_log=self._tp.f_log,
-                                      interpolant=self._tp.interpolant)
+                                    interpolant=self._tp.interpolant)
         else:
             tp = lambda w: self.func(w) * other
 
@@ -263,22 +263,22 @@ class Bandpass(object):
         if hasattr(other, '__call__'):
             tp = lambda w: self.func(w) / other(w)
         elif isinstance(self._tp, galsim.LookupTable):
-            # If other is not a function, then there is no loss of accuracy by applying the 
+            # If other is not a function, then there is no loss of accuracy by applying the
             # factor directly to the LookupTable, if that's what we are using.
             # Make sure to keep the same properties about the table, wave_type.
             if self.wave_factor == 10.0:
                 wave_type = 'Angstroms'
             x = self._tp.getArgs()
-            f = [ val / other for val in self._tp.getVals() ]
+            f = [val / other for val in self._tp.getVals()]
             tp = galsim.LookupTable(x, f, x_log=self._tp.x_log, f_log=self._tp.f_log,
-                                      interpolant=self._tp.interpolant)
+                                    interpolant=self._tp.interpolant)
         else:
             tp = lambda w: self.func(w) / other
 
         return Bandpass(tp, blue_limit, red_limit, wave_type=wave_type, _wave_list=wave_list)
 
     def __truediv__(self, other):
-        return __div__(self, other)
+        return self.__div__(other)
 
     def copy(self):
         import copy
@@ -314,7 +314,7 @@ class Bandpass(object):
             return self.func(wave) if (wave >= self.blue_limit and wave <= self.red_limit) else 0.0
 
     @property
-    def effective_wavelength(self): 
+    def effective_wavelength(self):
         return self.calculateEffectiveWavelength()
 
     def calculateEffectiveWavelength(self, precise=False):
@@ -364,17 +364,16 @@ class Bandpass(object):
         """
         if isinstance(zeropoint, basestring):
             if effective_diameter is None or exptime is None:
-                raise ValueError("Cannot calculate Zeropoint from string {0} without "
-                                 +"telescope effective diameter or exposure time.")
-            if zeropoint.upper()=='AB':
-                AB_source = 3631e-23 # 3631 Jy in units of erg/s/Hz/cm^2
-                c = 2.99792458e17 # speed of light in nm/s
+                raise ValueError("Cannot calculate Zeropoint from string {0} without " +
+                                 "telescope effective diameter or exposure time.")
+            if zeropoint.upper() == 'AB':
+                AB_source = 3631e-23  # 3631 Jy in units of erg/s/Hz/cm^2
                 sed = galsim.SED(lambda wave: AB_source, flux_type='fnu')
-            elif zeropoint.upper()=='ST':
+            elif zeropoint.upper() == 'ST':
                 # Use HST STmags: http://www.stsci.edu/hst/acs/analysis/zeropoints
-                ST_flambda = 3.63e-8 # erg/s/cm^2/nm
+                ST_flambda = 3.63e-8  # erg/s/cm^2/nm
                 sed = galsim.SED(lambda wave: ST_flambda, flux_type='flambda')
-            elif zeropoint.upper()=='VEGA':
+            elif zeropoint.upper() == 'VEGA':
                 # Use vega spectrum for SED
                 import os
                 vegafile = os.path.join(galsim.meta_data.share_dir, "vega.txt")
@@ -435,11 +434,11 @@ class Bandpass(object):
                 blue_limit = max([min(wave[w]), blue_limit])
                 red_limit = min([max(wave[w]), red_limit])
             wave_list = wave_list[np.logical_and(wave_list >= blue_limit,
-                                                 wave_list <= red_limit) ]
+                                                 wave_list <= red_limit)]
         elif relative_throughput is not None:
             raise ValueError(
-                "Can only truncate with relative_throughput argument if throughput is "
-                + "a LookupTable")
+                "Can only truncate with relative_throughput argument if throughput is " +
+                "a LookupTable")
 
         return Bandpass(self._orig_tp, blue_limit, red_limit, self.wave_type,
                         _wave_list=wave_list, _tp=self._tp)
@@ -486,8 +485,10 @@ class Bandpass(object):
                 self.blue_limit == other.blue_limit and
                 self.wave_factor == other.wave_factor and
                 self.zeropoint == other.zeropoint and
-                np.array_equal(self.wave_list,other.wave_list))
-    def __ne__(self, other): return not self.__eq__(other)
+                np.array_equal(self.wave_list, other.wave_list))
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -508,16 +509,15 @@ class Bandpass(object):
             wave_type = 'Angstroms'
         else:
             wave_type = 'nm'
-        return ('galsim.Bandpass(%r, blue_limit=%r, red_limit=%r, wave_type=%r, zeropoint=%r, '+
-                                 '_wave_list=array(%r))')%(
-                self._orig_tp, self.blue_limit, self.red_limit, wave_type, self.zeropoint,
-                self.wave_list.tolist())
+        return ('galsim.Bandpass(%r, blue_limit=%r, red_limit=%r, wave_type=%r, zeropoint=%r, ' +
+                '_wave_list=%r)') % (self._orig_tp, self.blue_limit, self.red_limit, wave_type,
+                                     self.zeropoint, self.wave_list)
 
     def __str__(self):
         orig_tp = repr(self._orig_tp)
         if len(orig_tp) > 80:
             orig_tp = str(self._orig_tp)
-        return 'galsim.Bandpass(%s)'%self._orig_tp
+        return 'galsim.Bandpass(%s)' % self._orig_tp
 
-    def __hash__(self): return hash(repr(self))
-
+    def __hash__(self):
+        return hash((repr(self), repr(self.wave_list.tolist())))
