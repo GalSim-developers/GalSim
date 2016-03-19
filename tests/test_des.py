@@ -201,10 +201,11 @@ def test_meds():
             seg = m.get_cutout(iobj, icut, type='seg')
             psf = m.get_psf(iobj, icut)
             wcs_meds = m.get_jacobian(iobj, icut)
+            # Note: col == x, row == y.
             wcs_array_meds= numpy.array(
-                [ wcs_meds['dudrow'], wcs_meds['dudcol'],
-                  wcs_meds['dvdrow'], wcs_meds['dvdcol'], wcs_meds['row0'],
-                  wcs_meds['col0'] ] )
+                [ wcs_meds['dudcol'], wcs_meds['dudrow'],
+                  wcs_meds['dvdcol'], wcs_meds['dvdrow'],
+                  wcs_meds['col0'], wcs_meds['row0'] ] )
 
             # compare
             numpy.testing.assert_array_equal(img, objlist[iobj].images[icut].array,
