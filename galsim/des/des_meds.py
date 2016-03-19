@@ -467,7 +467,8 @@ class MEDSBuilder(galsim.config.OutputBuilder):
             obj = MultiExposureObject(images = main_images[k1:k2],
                                       weight = weight_images[k1:k2],
                                       badpix = bpk,
-                                      psf = psf_images[k1:k2])
+                                      psf = psf_images[k1:k2],
+                                      id = obj_num + i)
             obj_list.append(obj)
 
         return obj_list
