@@ -25,7 +25,7 @@
 
 namespace galsim {
 
-    class SBBox::SBBoxImpl : public SBProfileImpl 
+    class SBBox::SBBoxImpl : public SBProfileImpl
     {
     public:
         SBBoxImpl(double width, double height, double flux, const GSParamsPtr& gsparams);
@@ -34,7 +34,7 @@ namespace galsim {
         double xValue(const Position<double>& p) const;
         std::complex<double> kValue(const Position<double>& k) const;
 
-        bool isAxisymmetric() const { return false; } 
+        bool isAxisymmetric() const { return false; }
         bool hasHardEdges() const { return true; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
@@ -42,13 +42,13 @@ namespace galsim {
         double maxK() const;
         double stepK() const;
 
-        void getXRange(double& xmin, double& xmax, std::vector<double>& ) const 
+        void getXRange(double& xmin, double& xmax, std::vector<double>& ) const
         { xmin = -_wo2;  xmax = _wo2; }
 
-        void getYRange(double& ymin, double& ymax, std::vector<double>& ) const 
+        void getYRange(double& ymin, double& ymax, std::vector<double>& ) const
         { ymin = -_ho2;  ymax = _ho2; }
 
-        Position<double> centroid() const 
+        Position<double> centroid() const
         { return Position<double>(0., 0.); }
 
         double getFlux() const { return _flux; }
@@ -91,7 +91,7 @@ namespace galsim {
         void operator=(const SBBoxImpl& rhs);
     };
 
-    class SBTopHat::SBTopHatImpl : public SBProfileImpl 
+    class SBTopHat::SBTopHatImpl : public SBProfileImpl
     {
     public:
         SBTopHatImpl(double radius, double flux, const GSParamsPtr& gsparams);
@@ -100,7 +100,7 @@ namespace galsim {
         double xValue(const Position<double>& p) const;
         std::complex<double> kValue(const Position<double>& k) const;
 
-        bool isAxisymmetric() const { return true; } 
+        bool isAxisymmetric() const { return true; }
         bool hasHardEdges() const { return true; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
@@ -108,20 +108,20 @@ namespace galsim {
         double maxK() const;
         double stepK() const;
 
-        void getXRange(double& xmin, double& xmax, std::vector<double>& ) const 
+        void getXRange(double& xmin, double& xmax, std::vector<double>& ) const
         { xmin = -_r0;  xmax = _r0; }
 
-        void getYRange(double& ymin, double& ymax, std::vector<double>& ) const 
+        void getYRange(double& ymin, double& ymax, std::vector<double>& ) const
         { ymin = -_r0;  ymax = _r0; }
 
         void getYRangeX(
             double x, double& ymin, double& ymax, std::vector<double>& ) const
-        { 
+        {
             ymax = sqrt(_r0*_r0 - x*x);
             ymin = -ymax;
         }
 
-        Position<double> centroid() const 
+        Position<double> centroid() const
         { return Position<double>(0., 0.); }
 
         double getFlux() const { return _flux; }
@@ -164,5 +164,4 @@ namespace galsim {
 
 }
 
-#endif 
-
+#endif

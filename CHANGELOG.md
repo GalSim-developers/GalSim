@@ -56,7 +56,7 @@ New Features
   (#654, #694)
 - Added ability to specify lambda and r0 separately for Kolmogorov to have
   GalSim do the conversion from radians to the given scale unit. (#657)
-- Made it possible to initialize an InterpolatedImage from a user-specified 
+- Made it possible to initialize an InterpolatedImage from a user-specified
   HDU in a FITS file with multiple extensions. (#660)
 - Changed `galsim.fits.writeMulti` to allow any of the "image"s to be
   already-built hdus, which are included as is. (#691)
@@ -87,7 +87,7 @@ New config features
   the config parser.  The code with the new type definitions should be given
   as a module for the code to import using the new 'modules' top-level
   config field. (#691)
-- Added the 'template' option to read another config file and use either the 
+- Added the 'template' option to read another config file and use either the
   whole file as a template or just a given field from the file. (#691)
 - Made '$' and '@' shorthand for 'Eval' and 'Current' types respectively in
   string values.  e.g. '$(@image.pixel_scale) * 2' would be parsed to mean
@@ -102,6 +102,6 @@ New config features
 - Added more example scripts to showcase how to use some of the new config
   features to make fairly sophisticated simulations.  cf. examples/great3 and
   examples/des. (#654, #691)
-- Added new stamp type=Ring to effect ring tests.  This replaces the old 
-  gsobject type=Ring, which is now deprecated.  See demo5 and demo10 for 
+- Added new stamp type=Ring to effect ring tests.  This replaces the old
+  gsobject type=Ring, which is now deprecated.  See demo5 and demo10 for
   examples of the new preferred syntax. (#698)

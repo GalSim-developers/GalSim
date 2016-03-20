@@ -64,7 +64,7 @@ namespace galsim {
         _pimpl.reset();
     }
 
-    std::string SBProfile::repr() const 
+    std::string SBProfile::repr() const
     {
         assert(_pimpl.get());
         return _pimpl->repr();
