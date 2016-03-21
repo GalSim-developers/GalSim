@@ -56,6 +56,7 @@ Finally as a controlled investigation of the sample variance bias correction, we
 viii) We look at ii) data using no periodicity correction (the data is periodic).
 
 """
+from __future__ import print_function
 
 import time
 import numpy as np
@@ -103,15 +104,15 @@ if __name__ == "__main__":
     # Number of tests
     nsum_test = 3000
 
-    print "Calculating results for size_factor = "+str(size_factor)
+    print("Calculating results for size_factor = "+str(size_factor))
     cosimage = galsim.ImageD(
         int(size_factor * largeim_size * 6), # Note 6 here since 0.18 = 6 * 0.03
         int(size_factor * largeim_size * 6)) # large image to beat down noise
-    print "Unpadded underlying COSMOS noise image bounds = "+str(cosimage.bounds)
+    print("Unpadded underlying COSMOS noise image bounds = "+str(cosimage.bounds))
     cosimage_padded = galsim.ImageD(
         int(size_factor * largeim_size * 6) + 256, # Note 6 here since 0.18 = 6 * 0.03
         int(size_factor * largeim_size * 6) + 256) # large image to beat down noise + padding
-    print "Padded underlying COSMOS noise image bounds = "+str(cosimage_padded.bounds)
+    print("Padded underlying COSMOS noise image bounds = "+str(cosimage_padded.bounds))
 
     cosimage.scale = dx_cosmos # Use COSMOS pixel scale
     cosimage_padded.scale = dx_cosmos # Use COSMOS pixel scale
@@ -132,14 +133,14 @@ if __name__ == "__main__":
     convimage2 = galsim.ImageD(int(largeim_size * size_factor), int(largeim_size * size_factor))
     convimage4 = galsim.ImageD(int(largeim_size * size_factor), int(largeim_size * size_factor))
 
-    print "Unpadded convolved image bounds = "+str(convimage1.bounds)
+    print("Unpadded convolved image bounds = "+str(convimage1.bounds))
     convimage3_padded = galsim.ImageD(
         int(largeim_size * size_factor) + 32, int(largeim_size * size_factor) + 32)
     # Set the scales of convimage2 & 3 to be 0.18 so that addNoise() works correctly
     convimage2.scale = 0.18
     convimage3_padded.scale = 0.18
-    print "Padded convolved image bounds = "+str(convimage3_padded.bounds)
-    print ""
+    print("Padded convolved image bounds = "+str(convimage3_padded.bounds))
+    print("")
 
     # We draw, calculate a correlation function for the resulting field, and repeat to get an
     # average over nsum_test trials
@@ -293,7 +294,7 @@ if __name__ == "__main__":
             convimage2, gd, dx=0.18, correct_periodicity=False, subtract_mean=True)
         cn_test8.draw(testim8, dx=0.18, add_to_image=True)
  
-        if ((i + 2) % 100 == 0): print "Completed "+str(i + 2)+"/"+str(nsum_test)+" trials"
+        if ((i + 2) % 100 == 0): print("Completed "+str(i + 2)+"/"+str(nsum_test)+" trials")
         del imobj
         del cimobj
         del cn_test1
@@ -346,152 +347,152 @@ if __name__ == "__main__":
     mnsq4_all = np.mean(conv4_array**2)
     var4_all = conv4_array.var()
 
-    print ""
-    print "Case 1 (noise 'hand convolved'):"
-    print "Mean square estimate from avg. of individual field mean squares = "+str(mnsq1_individual)
-    print "Mean square estimate from all fields = "+str(mnsq1_all)
-    print "Ratio of mean squares = %e" % (mnsq1_individual / mnsq1_all)
-    print "Variance estimate from avg. of individual field variances = "+str(var1_individual)
-    print "Variance estimate from all fields = "+str(var1_all)
-    print "Ratio of variances = %e" % (var1_individual / var1_all)
-    print "Zero lag CF from avg. of individual field CFs = "+str(testim1.array[8, 8])
-    print "Zero lag CF in reference case = "+str(refim.array[8, 8])
-    print "Ratio of zero lag CFs = %e" % (testim1.array[8, 8] / refim.array[8, 8])
-    print ""
-    print "Case 2 (noise generated directly from the convolved CN):"
-    print "Mean square estimate from avg. of individual field mean squares = "+str(mnsq2_individual)
-    print "Mean square estimate from all fields = "+str(mnsq2_all)
-    print "Ratio of mean squares = %e" % (mnsq2_individual / mnsq2_all)
-    print "Variance estimate from avg. of individual field variances = "+str(var2_individual)
-    print "Variance estimate from all fields = "+str(var2_all)
-    print "Ratio of variances = %e" % (var2_individual / var2_all)
-    print "Zero lag CF from avg. of individual field CFs = "+str(testim2.array[8, 8])
-    print "Zero lag CF in reference case = "+str(refim.array[8, 8])
-    print "Ratio of zero lag CFs = %e" % (testim2.array[8, 8] / refim.array[8, 8])
-    print ""
-    print "Case 3 (noise generated directly from convolved CN, with padding to avoid adding edge "+\
-        "effects):"
-    print "Mean square estimate from avg. of individual field mean squares = "+str(mnsq3_individual)
-    print "Mean square estimate from all fields = "+str(mnsq3_all)
-    print "Ratio of mean squares = %e" % (mnsq3_individual / mnsq3_all)
-    print "Variance estimate from avg. of individual field variances = "+str(var3_individual)
-    print "Variance estimate from all fields = "+str(var3_all)
-    print "Ratio of variances = %e" % (var3_individual / var3_all)
-    print "Zero lag CF from avg. of individual field CFs = "+str(testim3.array[8, 8])
-    print "Zero lag CF in reference case = "+str(refim.array[8, 8])
-    print "Ratio of zero lag CFs = %e" % (testim3.array[8, 8] / refim.array[8, 8])
-    print ""
-    print "Case 4 (noise hand convolved, but with padding of inital image to avoid edge effects):"
-    print "Mean square estimate from avg. of individual field mean squares = "+str(mnsq4_individual)
-    print "Mean square estimate from all fields = "+str(mnsq4_all)
-    print "Ratio of mean squares = %e" % (mnsq4_individual / mnsq4_all)
-    print "Variance estimate from avg. of individual field variances = "+str(var4_individual)
-    print "Variance estimate from all fields = "+str(var4_all)
-    print "Ratio of variances = %e" % (var4_individual / var4_all)
-    print "Zero lag CF from avg. of individual field CFs = "+str(testim4.array[8, 8])
-    print "Zero lag CF in reference case = "+str(refim.array[8, 8])
-    print "Ratio of zero lag CFs = %e" % (testim4.array[8, 8] / refim.array[8, 8])
-    print ""
-    print "Printing analysis of central 4x4 of CF from case 1, with subtract_mean=True and no corrections:"
+    print("")
+    print("Case 1 (noise 'hand convolved'):")
+    print("Mean square estimate from avg. of individual field mean squares = "+str(mnsq1_individual))
+    print("Mean square estimate from all fields = "+str(mnsq1_all))
+    print("Ratio of mean squares = %e" % (mnsq1_individual / mnsq1_all))
+    print("Variance estimate from avg. of individual field variances = "+str(var1_individual))
+    print("Variance estimate from all fields = "+str(var1_all))
+    print("Ratio of variances = %e" % (var1_individual / var1_all))
+    print("Zero lag CF from avg. of individual field CFs = "+str(testim1.array[8, 8]))
+    print("Zero lag CF in reference case = "+str(refim.array[8, 8]))
+    print("Ratio of zero lag CFs = %e" % (testim1.array[8, 8] / refim.array[8, 8]))
+    print("")
+    print("Case 2 (noise generated directly from the convolved CN):")
+    print("Mean square estimate from avg. of individual field mean squares = "+str(mnsq2_individual))
+    print("Mean square estimate from all fields = "+str(mnsq2_all))
+    print("Ratio of mean squares = %e" % (mnsq2_individual / mnsq2_all))
+    print("Variance estimate from avg. of individual field variances = "+str(var2_individual))
+    print("Variance estimate from all fields = "+str(var2_all))
+    print("Ratio of variances = %e" % (var2_individual / var2_all))
+    print("Zero lag CF from avg. of individual field CFs = "+str(testim2.array[8, 8]))
+    print("Zero lag CF in reference case = "+str(refim.array[8, 8]))
+    print("Ratio of zero lag CFs = %e" % (testim2.array[8, 8] / refim.array[8, 8]))
+    print("")
+    print("Case 3 (noise generated directly from convolved CN, with padding to avoid adding edge "+\
+        "effects):")
+    print("Mean square estimate from avg. of individual field mean squares = "+str(mnsq3_individual))
+    print("Mean square estimate from all fields = "+str(mnsq3_all))
+    print("Ratio of mean squares = %e" % (mnsq3_individual / mnsq3_all))
+    print("Variance estimate from avg. of individual field variances = "+str(var3_individual))
+    print("Variance estimate from all fields = "+str(var3_all))
+    print("Ratio of variances = %e" % (var3_individual / var3_all))
+    print("Zero lag CF from avg. of individual field CFs = "+str(testim3.array[8, 8]))
+    print("Zero lag CF in reference case = "+str(refim.array[8, 8]))
+    print("Ratio of zero lag CFs = %e" % (testim3.array[8, 8] / refim.array[8, 8]))
+    print("")
+    print("Case 4 (noise hand convolved, but with padding of inital image to avoid edge effects):")
+    print("Mean square estimate from avg. of individual field mean squares = "+str(mnsq4_individual))
+    print("Mean square estimate from all fields = "+str(mnsq4_all))
+    print("Ratio of mean squares = %e" % (mnsq4_individual / mnsq4_all))
+    print("Variance estimate from avg. of individual field variances = "+str(var4_individual))
+    print("Variance estimate from all fields = "+str(var4_all))
+    print("Ratio of variances = %e" % (var4_individual / var4_all))
+    print("Zero lag CF from avg. of individual field CFs = "+str(testim4.array[8, 8]))
+    print("Zero lag CF in reference case = "+str(refim.array[8, 8]))
+    print("Ratio of zero lag CFs = %e" % (testim4.array[8, 8] / refim.array[8, 8]))
+    print("")
+    print("Printing analysis of central 4x4 of CF from case 1, with subtract_mean=True and no corrections:")
     # Show ratios etc in central 4x4 where CF is definitely non-zero
-    print 'mean diff = ',np.mean(testim1.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'var diff = ',np.var(testim1.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'min diff = ',np.min(testim1.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'max diff = ',np.max(testim1.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'mean ratio = %e' % np.mean(testim1.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'var ratio = ',np.var(testim1.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'min ratio = %e' % np.min(testim1.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'max ratio = %e' % np.max(testim1.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print ''
-    print "Printing analysis of central 4x4 of CF from case 2, with subtract_mean=True and no corrections:"
+    print('mean diff = ',np.mean(testim1.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('var diff = ',np.var(testim1.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('min diff = ',np.min(testim1.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('max diff = ',np.max(testim1.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('mean ratio = %e' % np.mean(testim1.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('var ratio = ',np.var(testim1.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('min ratio = %e' % np.min(testim1.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('max ratio = %e' % np.max(testim1.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('')
+    print("Printing analysis of central 4x4 of CF from case 2, with subtract_mean=True and no corrections:")
     # Show ratios etc in central 4x4 where CF is definitely non-zero
-    print 'mean diff = ',np.mean(testim2.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'var diff = ',np.var(testim2.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'min diff = ',np.min(testim2.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'max diff = ',np.max(testim2.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'mean ratio = %e' % np.mean(testim2.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'var ratio = ',np.var(testim2.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'min ratio = %e' % np.min(testim2.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'max ratio = %e' % np.max(testim2.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print ''
-    print "Printing analysis of central 4x4 of CF from case 3, with subtract_mean=True and no corrections:"
+    print('mean diff = ',np.mean(testim2.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('var diff = ',np.var(testim2.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('min diff = ',np.min(testim2.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('max diff = ',np.max(testim2.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('mean ratio = %e' % np.mean(testim2.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('var ratio = ',np.var(testim2.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('min ratio = %e' % np.min(testim2.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('max ratio = %e' % np.max(testim2.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('')
+    print("Printing analysis of central 4x4 of CF from case 3, with subtract_mean=True and no corrections:")
     # Show ratios etc in central 4x4 where CF is definitely non-zero
-    print 'mean diff = ',np.mean(testim3.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'var diff = ',np.var(testim3.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'min diff = ',np.min(testim3.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'max diff = ',np.max(testim3.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'mean ratio = %e' % np.mean(testim3.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'var ratio = ',np.var(testim3.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'min ratio = %e' % np.min(testim3.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'max ratio = %e' % np.max(testim3.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print ''
-    print "Printing analysis of central 4x4 of CF from case 4, with subtract_mean=True and no corrections:"
+    print('mean diff = ',np.mean(testim3.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('var diff = ',np.var(testim3.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('min diff = ',np.min(testim3.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('max diff = ',np.max(testim3.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('mean ratio = %e' % np.mean(testim3.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('var ratio = ',np.var(testim3.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('min ratio = %e' % np.min(testim3.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('max ratio = %e' % np.max(testim3.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('')
+    print("Printing analysis of central 4x4 of CF from case 4, with subtract_mean=True and no corrections:")
     # Show ratios etc in central 4x4 where CF is definitely non-zero
-    print 'mean diff = ',np.mean(testim4.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'var diff = ',np.var(testim4.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'min diff = ',np.min(testim4.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'max diff = ',np.max(testim4.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'mean ratio = %e' % np.mean(testim4.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'var ratio = ',np.var(testim4.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'min ratio = %e' % np.min(testim4.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'max ratio = %e' % np.max(testim4.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print ''
-    print "Printing analysis of central 4x4 of CF from case 4 using case 3 as the reference:"
+    print('mean diff = ',np.mean(testim4.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('var diff = ',np.var(testim4.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('min diff = ',np.min(testim4.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('max diff = ',np.max(testim4.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('mean ratio = %e' % np.mean(testim4.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('var ratio = ',np.var(testim4.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('min ratio = %e' % np.min(testim4.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('max ratio = %e' % np.max(testim4.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('')
+    print("Printing analysis of central 4x4 of CF from case 4 using case 3 as the reference:")
     # Show ratios etc in central 4x4 where CF is definitely non-zero
-    print 'mean diff = ',np.mean(testim4.array[4:12, 4:12] - testim3.array[4:12, 4:12])
-    print 'var diff = ',np.var(testim4.array[4:12, 4:12] - testim3.array[4:12, 4:12])
-    print 'min diff = ',np.min(testim4.array[4:12, 4:12] - testim3.array[4:12, 4:12])
-    print 'max diff = ',np.max(testim4.array[4:12, 4:12] - testim3.array[4:12, 4:12])
-    print 'mean ratio = %e' % np.mean(testim4.array[4:12, 4:12] / testim3.array[4:12, 4:12])
-    print 'var ratio = ',np.var(testim4.array[4:12, 4:12] / testim3.array[4:12, 4:12])
-    print 'min ratio = %e' % np.min(testim4.array[4:12, 4:12] / testim3.array[4:12, 4:12])
-    print 'max ratio = %e' % np.max(testim4.array[4:12, 4:12] / testim3.array[4:12, 4:12])
-    print ''
-    print 'Printing analysis of central 4x4 of CF from case 4 using periodicity correction '+\
-        'with subtract_mean=False (Case 5):'
+    print('mean diff = ',np.mean(testim4.array[4:12, 4:12] - testim3.array[4:12, 4:12]))
+    print('var diff = ',np.var(testim4.array[4:12, 4:12] - testim3.array[4:12, 4:12]))
+    print('min diff = ',np.min(testim4.array[4:12, 4:12] - testim3.array[4:12, 4:12]))
+    print('max diff = ',np.max(testim4.array[4:12, 4:12] - testim3.array[4:12, 4:12]))
+    print('mean ratio = %e' % np.mean(testim4.array[4:12, 4:12] / testim3.array[4:12, 4:12]))
+    print('var ratio = ',np.var(testim4.array[4:12, 4:12] / testim3.array[4:12, 4:12]))
+    print('min ratio = %e' % np.min(testim4.array[4:12, 4:12] / testim3.array[4:12, 4:12]))
+    print('max ratio = %e' % np.max(testim4.array[4:12, 4:12] / testim3.array[4:12, 4:12]))
+    print('')
+    print('Printing analysis of central 4x4 of CF from case 4 using periodicity correction '+\
+        'with subtract_mean=False (Case 5):')
     # Show ratios etc in central 4x4 where CF is definitely non-zero
-    print 'mean diff = ',np.mean(testim5.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'var diff = ',np.var(testim5.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'min diff = ',np.min(testim5.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'max diff = ',np.max(testim5.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'mean ratio = %e' % np.mean(testim5.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'var ratio = ',np.var(testim5.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'min ratio = %e' % np.min(testim5.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'max ratio = %e' % np.max(testim5.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print ''
-    print 'Printing analysis of central 4x4 of CF from case 4 using periodicity correction '+\
-        'with subtract_mean=True but no sample bias correction (Case 6):'
+    print('mean diff = ',np.mean(testim5.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('var diff = ',np.var(testim5.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('min diff = ',np.min(testim5.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('max diff = ',np.max(testim5.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('mean ratio = %e' % np.mean(testim5.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('var ratio = ',np.var(testim5.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('min ratio = %e' % np.min(testim5.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('max ratio = %e' % np.max(testim5.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('')
+    print('Printing analysis of central 4x4 of CF from case 4 using periodicity correction '+\
+        'with subtract_mean=True but no sample bias correction (Case 6):')
     # Show ratios etc in central 4x4 where CF is definitely non-zero
-    print 'mean diff = ',np.mean(testim6.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'var diff = ',np.var(testim6.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'min diff = ',np.min(testim6.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'max diff = ',np.max(testim6.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'mean ratio = %e' % np.mean(testim6.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'var ratio = ',np.var(testim6.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'min ratio = %e' % np.min(testim6.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'max ratio = %e' % np.max(testim6.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print ''
-    print 'Printing analysis of central 4x4 of CF from case 4 using periodicity correction '+\
-        'with subtract_mean=True but with a sample bias correction (Case 7):'
+    print('mean diff = ',np.mean(testim6.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('var diff = ',np.var(testim6.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('min diff = ',np.min(testim6.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('max diff = ',np.max(testim6.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('mean ratio = %e' % np.mean(testim6.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('var ratio = ',np.var(testim6.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('min ratio = %e' % np.min(testim6.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('max ratio = %e' % np.max(testim6.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('')
+    print('Printing analysis of central 4x4 of CF from case 4 using periodicity correction '+\
+        'with subtract_mean=True but with a sample bias correction (Case 7):')
     # Show ratios etc in central 4x4 where CF is definitely non-zero
-    print 'mean diff = ',np.mean(testim7.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'var diff = ',np.var(testim7.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'min diff = ',np.min(testim7.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'max diff = ',np.max(testim7.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'mean ratio = %e' % np.mean(testim7.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'var ratio = ',np.var(testim7.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'min ratio = %e' % np.min(testim7.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'max ratio = %e' % np.max(testim7.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print ''
-    print 'Printing analysis of central 4x4 of CF from case 2 using no periodicity correction '+\
-        'with subtract_mean=True but with a sample bias correction (Case 8):'
+    print('mean diff = ',np.mean(testim7.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('var diff = ',np.var(testim7.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('min diff = ',np.min(testim7.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('max diff = ',np.max(testim7.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('mean ratio = %e' % np.mean(testim7.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('var ratio = ',np.var(testim7.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('min ratio = %e' % np.min(testim7.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('max ratio = %e' % np.max(testim7.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('')
+    print('Printing analysis of central 4x4 of CF from case 2 using no periodicity correction '+\
+        'with subtract_mean=True but with a sample bias correction (Case 8):')
     # Show ratios etc in central 4x4 where CF is definitely non-zero
-    print 'mean diff = ',np.mean(testim8.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'var diff = ',np.var(testim8.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'min diff = ',np.min(testim8.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'max diff = ',np.max(testim8.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'mean ratio = %e' % np.mean(testim8.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'var ratio = ',np.var(testim8.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'min ratio = %e' % np.min(testim8.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'max ratio = %e' % np.max(testim8.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print ''
+    print('mean diff = ',np.mean(testim8.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('var diff = ',np.var(testim8.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('min diff = ',np.min(testim8.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('max diff = ',np.max(testim8.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('mean ratio = %e' % np.mean(testim8.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('var ratio = ',np.var(testim8.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('min ratio = %e' % np.min(testim8.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('max ratio = %e' % np.max(testim8.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('')

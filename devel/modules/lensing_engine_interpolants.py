@@ -39,6 +39,7 @@ the correlation function.
 Any given call to this script will result in only one of the above functions being called, depending
 on the user-supplied test parameters.
 """
+from __future__ import print_function
 
 import galsim
 import numpy as np
@@ -95,7 +96,7 @@ def check_dir(dir):
     """
     try:
         os.makedirs(dir)
-        print "Created directory %s for outputs"%dir
+        print("Created directory %s for outputs"%dir)
     except OSError:
         if os.path.isdir(dir):
             # It was already a directory.
@@ -156,7 +157,7 @@ def generate_ps_cutoff_plots(ell, ps, theory_ps,
     # Write to file.
     outfile = ps_plot_prefix + interpolant + '_grid_cutoff_' + type + '.png'
     plt.savefig(outfile)
-    print "Wrote power spectrum (grid cutoff) plot to file %r"%outfile
+    print("Wrote power spectrum (grid cutoff) plot to file %r"%outfile)
 
 
 def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
@@ -257,7 +258,7 @@ def generate_ps_plots(ell, ps, interpolated_ps, interpolant, ps_plot_prefix,
     # Write to file.
     outfile = ps_plot_prefix + interpolant + '_' + type + '.png'
     plt.savefig(outfile)
-    print "Wrote power spectrum plots to file %r"%outfile
+    print("Wrote power spectrum plots to file %r"%outfile)
 
 def generate_cf_cutoff_plots(th, cf, nocutoff_th, nocutoff_cf, interpolant, cf_plot_prefix,
                              type='p'):
@@ -303,7 +304,7 @@ def generate_cf_cutoff_plots(th, cf, nocutoff_th, nocutoff_cf, interpolant, cf_p
     # Write to file.
     outfile = cf_plot_prefix + interpolant + '_grid_cutoff_' + type + '.png'
     plt.savefig(outfile)
-    print "Wrote correlation function (grid cutoff) plots to file %r"%outfile
+    print("Wrote correlation function (grid cutoff) plots to file %r"%outfile)
 
 def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
                       dth, type='p', theory_raw=None, theory_binned=None, theory_rand=None):
@@ -380,7 +381,7 @@ def generate_cf_plots(th, cf, interpolated_cf, interpolant, cf_plot_prefix,
     # Write to file.
     outfile = cf_plot_prefix + interpolant + '_' + type + '.png'
     plt.savefig(outfile)
-    print "Wrote correlation function plots to file %r"%outfile
+    print("Wrote correlation function plots to file %r"%outfile)
 
 def write_ps_output(ell, ps, interpolated_ps, interpolant, ps_plot_prefix, type='EE'):
     """Routine to write final power spectra to file.
@@ -405,7 +406,7 @@ def write_ps_output(ell, ps, interpolated_ps, interpolant, ps_plot_prefix, type=
     # Make ascii output.
     outfile = ps_plot_prefix + interpolant + '_' + type + '.dat'
     np.savetxt(outfile, np.column_stack((ell, ps, interpolated_ps)), fmt='%12.4e')
-    print "Wrote ascii output to file %r"%outfile
+    print("Wrote ascii output to file %r"%outfile)
 
     # Set up a FITS table for output file.
     ell_col = pyfits.Column(name='ell', format='1D', array=ell)
@@ -418,7 +419,7 @@ def write_ps_output(ell, ps, interpolated_ps, interpolant, ps_plot_prefix, type=
     hdus = pyfits.HDUList([phdu,table])
     outfile = ps_plot_prefix + interpolant + '_' + type + '.fits'
     hdus.writeto(outfile, clobber=True)
-    print "Wrote FITS output to file %r"%outfile
+    print("Wrote FITS output to file %r"%outfile)
 
 def write_cf_output(th, cf, interpolated_cf, interpolant, cf_plot_prefix, type='p'):
     """Routine to write final correlation functions to file.
@@ -443,7 +444,7 @@ def write_cf_output(th, cf, interpolated_cf, interpolant, cf_plot_prefix, type='
     # Make ascii output.
     outfile = cf_plot_prefix + interpolant + '_' + type + '.dat'
     np.savetxt(outfile, np.column_stack((th, cf, interpolated_cf)), fmt='%12.4e')
-    print "Wrote ascii output to file %r"%outfile
+    print("Wrote ascii output to file %r"%outfile)
 
     # Set up a FITS table for output file.
     th_col = pyfits.Column(name='theta', format='1D', array=th)
@@ -456,7 +457,7 @@ def write_cf_output(th, cf, interpolated_cf, interpolant, cf_plot_prefix, type='
     hdus = pyfits.HDUList([phdu,table])
     outfile = cf_plot_prefix + interpolant + '_' + type + '.fits'
     hdus.writeto(outfile, clobber=True)
-    print "Wrote FITS output to file %r"%outfile
+    print("Wrote FITS output to file %r"%outfile)
 
 def getCF(x, y, g1, g2, dtheta, ngrid, n_output_bins):
     """Routine to estimate shear correlation functions using corr2.
@@ -574,7 +575,7 @@ def interpolant_test_grid(n_realizations, dithering, n_output_bins, kmin_factor,
     # Get basic grid information
     grid_spacing = grid_size / ngrid
 
-    print "Doing initial PS / correlation function setup..."
+    print("Doing initial PS / correlation function setup...")
     # Set up PowerSpectrum object.  We have to be careful to watch out for aliasing due to our
     # initial P(k) including power on scales above those that can be represented by our grid.  In
     # order to deal with that, we will define a power spectrum function that equals a cosmological
@@ -636,8 +637,8 @@ def interpolant_test_grid(n_realizations, dithering, n_output_bins, kmin_factor,
     mean_interpolated_cfm = np.zeros((n_output_bins, n_interpolants))
     mean_cfm = np.zeros(n_output_bins)
 
-    print "Test type: offset/dithered grids, correlation function and power spectrum."
-    print "Doing calculations for %d realizations"%n_realizations
+    print("Test type: offset/dithered grids, correlation function and power spectrum.")
+    print("Doing calculations for %d realizations"%n_realizations)
     # Loop over realizations.
     for i_real in range(n_realizations):
 
@@ -754,7 +755,7 @@ def interpolant_test_grid(n_realizations, dithering, n_output_bins, kmin_factor,
             mean_interpolated_cfm[:,i_int] += interpolated_cfm
 
     # Now get the average over all realizations
-    print "Done generating realizations, now getting mean 2-point functions"
+    print("Done generating realizations, now getting mean 2-point functions")
     mean_interpolated_ps_ee /= n_realizations
     mean_ps_ee /= n_realizations
     mean_interpolated_ps_bb /= n_realizations
@@ -785,7 +786,7 @@ def interpolant_test_grid(n_realizations, dithering, n_output_bins, kmin_factor,
 
     for i_int in range(n_interpolants):
         interpolant = interpolant_list[i_int]
-        print "Running plotting routines for interpolant=%s..."%interpolant
+        print("Running plotting routines for interpolant=%s..."%interpolant)
         generate_ps_plots(ell, mean_ps_ee, mean_interpolated_ps_ee[:,i_int], interpolant,
                           ps_plot_prefix, grid_spacing, type='EE')
         generate_ps_plots(ell, mean_ps_bb, mean_interpolated_ps_bb[:,i_int], interpolant,
@@ -800,7 +801,7 @@ def interpolant_test_grid(n_realizations, dithering, n_output_bins, kmin_factor,
                           theory_raw=(theory_th_vals, theory_cfm_vals))
 
         # Output results.
-        print "Outputting tables of results..."
+        print("Outputting tables of results...")
         write_ps_output(ell, mean_ps_ee, mean_interpolated_ps_ee[:,i_int],
                         interpolant, ps_plot_prefix, type='EE')
         write_ps_output(ell, mean_ps_bb, mean_interpolated_ps_bb[:,i_int],
@@ -811,7 +812,7 @@ def interpolant_test_grid(n_realizations, dithering, n_output_bins, kmin_factor,
                         cf_plot_prefix, type='p')
         write_cf_output(th, mean_cfm, mean_interpolated_cfm[:,i_int], interpolant,
                         cf_plot_prefix, type='m')
-        print ""
+        print("")
 
 def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
                             cf_plot_prefix, edge_cutoff=False, periodic=False):
@@ -841,7 +842,7 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
     # Get basic grid information
     grid_spacing = grid_size / ngrid
 
-    print "Doing initial PS / correlation function setup..."
+    print("Doing initial PS / correlation function setup...")
     # Set up PowerSpectrum object.  We have to be careful to watch out for aliasing due to our
     # initial P(k) including power on scales above those that can be represented by our grid.  In
     # order to deal with that, we will define a power spectrum function that equals a cosmological
@@ -901,8 +902,8 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
     else:
         n_points = ngrid**2
 
-    print "Test type: random target positions, correlation function only."
-    print "Doing calculations for %d realizations with %d points each."%(n_realizations,n_points)
+    print("Test type: random target positions, correlation function only.")
+    print("Doing calculations for %d realizations with %d points each."%(n_realizations,n_points))
 
     # Loop over realizations.
     for i_real in range(n_realizations):
@@ -1003,7 +1004,7 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
             mean_cfm[:,i_int] += cfm
 
     # Now get the average over all realizations
-    print "Done generating realizations, now getting mean 2-point functions"
+    print("Done generating realizations, now getting mean 2-point functions")
     mean_interpolated_cfp /= n_realizations
     mean_cfp /= n_realizations
     mean_interpolated_cfm /= n_realizations
@@ -1012,7 +1013,7 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
     # Plot statistics, and ratios with vs. without interpolants.
     for i_int in range(n_interpolants):
         interpolant = interpolant_list[i_int]
-        print "Running plotting routines for interpolant=%s..."%interpolant
+        print("Running plotting routines for interpolant=%s..."%interpolant)
 
         generate_cf_plots(th, mean_cfp[:,i_int], mean_interpolated_cfp[:,i_int], interpolant,
                           cf_plot_prefix, grid_spacing, type='p',
@@ -1022,12 +1023,12 @@ def interpolant_test_random(n_realizations, n_output_bins, kmin_factor,
                           theory_raw=(theory_th_vals, theory_cfm_vals))
 
         # Output results.
-        print "Outputting tables of results..."
+        print("Outputting tables of results...")
         write_cf_output(th, mean_cfp[:,i_int], mean_interpolated_cfp[:,i_int], interpolant,
                         cf_plot_prefix, type='p')
         write_cf_output(th, mean_cfm[:,i_int], mean_interpolated_cfm[:,i_int], interpolant,
                         cf_plot_prefix, type='m')
-        print ""
+        print("")
 
 if __name__ == "__main__":
     description='Run tests of GalSim interpolants on lensing engine outputs.'

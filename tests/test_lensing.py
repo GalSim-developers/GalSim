@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -137,7 +138,7 @@ def test_nfwhalo():
             err_msg="Computation of convergence deviates from reference.")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_cosmology():
     """Test the NFWHalo class in conjunction with non-default cosmologies"""
@@ -181,7 +182,7 @@ def test_cosmology():
         assert halo == halo2
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_shear_variance():
     """Test that shears from several toy power spectra have the expected variances."""
@@ -229,9 +230,9 @@ def test_shear_variance():
     predicted_variance *= 2
     var1 = np.var(g1)
     var2 = np.var(g2)
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from flat power spectrum!"
         
@@ -253,9 +254,9 @@ def test_shear_variance():
     predicted_variance = (1./np.pi**2)*(0.25*np.pi*(klim**2) - kmin**2)
     var1 = np.var(g1)
     var2 = np.var(g2)
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from flat E-mode power spectrum!"
 
@@ -282,9 +283,9 @@ def test_shear_variance():
     predicted_variance *= 2
     var1 = np.var(g1)
     var2 = np.var(g2)
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from flat power spectrum with smaller grid_size"
 
@@ -302,9 +303,9 @@ def test_shear_variance():
     predicted_variance *= 2
     var1 = np.var(g1)
     var2 = np.var(g2)
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from flat power spectrum with smaller ngrid"
 
@@ -339,9 +340,9 @@ def test_shear_variance():
     var1 = np.var(g1)
     var2 = np.var(g2)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum"
 
@@ -361,9 +362,9 @@ def test_shear_variance():
     var1 = np.var(g1)
     var2 = np.var(g2)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum with smaller grid_size"
 
@@ -383,9 +384,9 @@ def test_shear_variance():
     var1 = np.var(g1)
     var2 = np.var(g2)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum with smaller ngrid"
 
@@ -409,9 +410,9 @@ def test_shear_variance():
     var1 = np.var(g1)
     var2 = np.var(g2)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum with kmax_factor=2"
     rng2.discard(test_ps.nRandCallsForBuildGrid())
@@ -434,9 +435,9 @@ def test_shear_variance():
     var1 = np.var(g1)
     var2 = np.var(g2)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum with kmin_factor=2"
     rng2.discard(test_ps.nRandCallsForBuildGrid())
@@ -467,14 +468,14 @@ def test_shear_variance():
     var1 = np.var(g1)
     var2 = np.var(g2)
     # Use the predicted variance from before
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance post-interpolation"
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_shear_seeds():
     """Test that shears from lensing engine behave appropriate when given same/different seeds"""
@@ -503,7 +504,7 @@ def test_shear_seeds():
     assert not ((g1[0,0]==g1new[0,0]) or (g2[0,0]==g2new[0,0]))
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_shear_reference():
     """Test shears from lensing engine compared to stored reference values"""
@@ -541,7 +542,7 @@ def test_shear_reference():
                                    err_msg = "Convergence differences from references!")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_shear_get():
     """Check that using gridded outputs and the various getFoo methods gives consistent results"""
@@ -589,7 +590,7 @@ def test_shear_get():
                                    err_msg="Magnifications from grid and getLensing disagree!")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_shear_units():
     """Test that the shears we get out do not depend on the input PS and grid units."""
@@ -629,7 +630,7 @@ def test_shear_units():
     np.testing.assert_array_almost_equal(g2, g2_3, decimal=9,
                                          err_msg='Incorrect unit handling in lensing engine')
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_tabulated():
     """Test using a LookupTable to interpolate a P(k) that is known at certain k"""
@@ -763,7 +764,7 @@ def test_tabulated():
         err_msg = 'Unexpected result for linear interpolation of power-law in log space')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_kappa_gauss():
     """Test that our Kaiser-Squires inversion routine correctly recovers the convergence map
@@ -824,7 +825,7 @@ def test_kappa_gauss():
         err_msg="Reconstructed kappaE is non-zero at greater than 3 decimal places for rotated "+
         "shear field.")
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_power_spectrum_with_kappa():
     """Test that the convergence map generated by the PowerSpectrum class is consistent with the
@@ -908,7 +909,7 @@ def test_power_spectrum_with_kappa():
         err_msg="KS inverted kappaB from E/B PowerSpectrum fails rotation test.")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_corr_func():
     """Test that the correlation function calculation in calculateXi() works properly.
@@ -1017,7 +1018,7 @@ def test_corr_func():
             err_msg='Integrated xi+ differs from reference values')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_periodic():
     """Test that the periodic interpolation option is working properly.
@@ -1151,7 +1152,7 @@ def test_periodic():
 
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_bandlimit():
     """Test that the band-limiting of the power spectrum is working properly.
@@ -1181,7 +1182,7 @@ def test_bandlimit():
     assert var>1.05*varb,"Comparison of shear variances without/with band-limiting is not as expected"
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_psr():
     """Test PowerSpectrumRealizer"""
@@ -1198,7 +1199,7 @@ def test_psr():
     do_pickle(psr)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 if __name__ == "__main__":
     test_nfwhalo()

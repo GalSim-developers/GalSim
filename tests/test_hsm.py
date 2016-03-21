@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -168,7 +169,7 @@ def test_moments_basic():
 
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_shearest_basic():
     """Test that we can recover shears for Gaussian galaxies and PSFs."""
@@ -199,7 +200,7 @@ def test_shearest_basic():
                                                decimal = decimal_shape)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_shearest_precomputed():
     """Test that we can recover shears the same as before the code was put into GalSim."""
@@ -228,7 +229,7 @@ def test_shearest_precomputed():
                 guess_centroid = galsim.PositionD(x_centroid[index], y_centroid[index]))
 
             # compare results with precomputed
-            print result.meas_type, correction_methods[method_index]
+            print(result.meas_type, correction_methods[method_index])
             if result.meas_type == 'e':
                 np.testing.assert_almost_equal(
                     result.corrected_e1, e1_expected[index][method_index], decimal = decimal_shape)
@@ -263,7 +264,7 @@ def test_shearest_precomputed():
             first = False
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_masks():
     """Test that moments and shear estimation routines respond appropriately to masks."""
@@ -452,7 +453,7 @@ def test_masks():
                 "when masking with badpix and weight map")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_shearest_shape():
     """Test that shear estimation is insensitive to shape of input images."""
@@ -476,7 +477,7 @@ def test_shearest_shape():
 
     imsize = [128, 256]
     for method_index in range(len(correction_methods)):
-        print correction_methods[method_index]
+        print(correction_methods[method_index])
 
         save_e1 = -100.
         save_e2 = -100.
@@ -510,7 +511,7 @@ def test_shearest_shape():
                         save_e2 = e2
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_hsmparams():
     """Test the ability to set/change parameters that define how moments/shape estimation are done."""
@@ -576,10 +577,10 @@ def test_hsmparams():
         np.testing.assert_raises(RuntimeError, galsim.hsm.EstimateShear, tot_gal_image,
                                  tot_psf_image, hsmparams=new_params_size)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_hsmparams_nodefault():
     """Test that when non-default hsmparams are used, the results change."""
@@ -643,11 +644,11 @@ def test_hsmparams_nodefault():
             guess_centroid=galsim.PositionD(47., tot_gal_image.trueCenter().y),
             hsmparams=galsim.hsm.HSMParams(max_ashift=0.1))
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_shapedata():
     """Check for basic issues with initialization of ShapeData objects."""
@@ -660,7 +661,7 @@ def test_shapedata():
         np.testing.assert_raises(TypeError, galsim.hsm.ShapeData, x, x)
         np.testing.assert_raises(TypeError, galsim.hsm.ShapeData, x)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     # Check that if initialized when empty, the resulting object has certain properties.
     foo = galsim.hsm.ShapeData()
@@ -668,7 +669,7 @@ def test_shapedata():
         raise AssertionError("Default ShapeData object was not as expected!")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_strict():
     """Check that using strict=True results in the behavior we expect."""
@@ -692,7 +693,7 @@ def test_strict():
     try:
         np.testing.assert_raises(RuntimeError, galsim.hsm.FindAdaptiveMom, im)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
     try:
         res2 = im.FindAdaptiveMom()
     except RuntimeError as err:
@@ -706,7 +707,7 @@ def test_strict():
     try:
         np.testing.assert_raises(RuntimeError, galsim.hsm.EstimateShear, im, im)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
     try:
         res2 = galsim.hsm.EstimateShear(im, im)
     except RuntimeError as err:
@@ -714,7 +715,7 @@ def test_strict():
             raise AssertionError("Error messages do not match when running identical tests!")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_bounds_centroid():
     """Check that the input bounds are respected, and centroid coordinates make sense."""
@@ -766,7 +767,7 @@ def test_bounds_centroid():
     try:
         np.testing.assert_raises(RuntimeError, galsim.hsm.FindAdaptiveMom, sub_im)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     # ... and that it passes if we hand in a good centroid guess.  Note that this test is a bit less
     # stringent than some of the previous ones, because our subimage cut off a decent part of the
@@ -781,7 +782,7 @@ def test_bounds_centroid():
         err_msg='Moments y centroid differs from true center of asymmetric subimage')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_ksb_sig():
     """Check that modification of KSB weight function width works."""
@@ -822,7 +823,7 @@ def test_ksb_sig():
                                  "Galaxy ellipticity gradient not captured by ksb_sig_factor.")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 if __name__ == "__main__":
     test_moments_basic()

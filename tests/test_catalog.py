@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -56,7 +57,7 @@ def test_basic_catalog():
     do_pickle(cat)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_basic_dict():
     """Test basic operations on Dict."""
@@ -100,7 +101,7 @@ def test_basic_dict():
     do_pickle(d)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_single_row():
@@ -118,7 +119,7 @@ def test_single_row():
         err_msg="galsim.Catalog.__init__ failed to read 1-row file")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_output_catalog():
@@ -198,7 +199,7 @@ def test_output_catalog():
     do_pickle(out_cat2)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 if __name__ == "__main__":

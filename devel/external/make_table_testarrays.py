@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -41,25 +42,25 @@ interps = [ 'linear', 'spline', 'floor', 'ceil' ]
 dir = '../../tests/table_comparison_files'
 
 for interp in interps:
-    print 'args1 = ',args1
-    print 'vals1 = ',vals1
-    print 'interp = ',interp
+    print('args1 = ',args1)
+    print('vals1 = ',vals1)
+    print('interp = ',interp)
     table1 = galsim.LookupTable(args1,vals1,interp)
-    print 'table1.getArgs() = ',table1.getArgs()
-    print 'table1.getVals() = ',table1.getVals()
-    print 'testargs1 = ',testargs1
+    print('table1.getArgs() = ',table1.getArgs())
+    print('table1.getVals() = ',table1.getVals())
+    print('testargs1 = ',testargs1)
     testvals1 = [ table1(x) for x in testargs1 ]
-    print 'testvals1 = ',testvals1
+    print('testvals1 = ',testvals1)
 
-    print 'args2 = ',args2
-    print 'vals2 = ',vals2
-    print 'interp = ',interp
+    print('args2 = ',args2)
+    print('vals2 = ',vals2)
+    print('interp = ',interp)
     table2 = galsim.LookupTable(args2,vals2,interp)
-    print 'table2.getArgs() = ',table2.getArgs()
-    print 'table2.getVals() = ',table2.getVals()
-    print 'testargs2 = ',testargs2
+    print('table2.getArgs() = ',table2.getArgs())
+    print('table2.getVals() = ',table2.getVals())
+    print('testargs2 = ',testargs2)
     testvals2 = [ table2(x) for x in testargs2 ]
-    print 'testvals2 = ',testvals2
+    print('testvals2 = ',testvals2)
 
     np.savetxt(os.path.join(dir, 'table_test1_%s.txt'%interp), testvals1)
     np.savetxt(os.path.join(dir, 'table_test2_%s.txt'%interp), testvals2)

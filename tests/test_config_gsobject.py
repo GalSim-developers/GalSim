@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -80,7 +81,7 @@ def test_gaussian():
     gsobject_compare(gal5a, gal5b)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_moffat():
@@ -142,10 +143,10 @@ def test_moffat():
         np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c,
                                  conv=galsim.Gaussian(sigma=0.01))
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_airy():
@@ -208,10 +209,10 @@ def test_airy():
         gal5c = galsim.Airy(lam_over_diam=45)
         np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_kolmogorov():
@@ -266,10 +267,10 @@ def test_kolmogorov():
         gal5c = galsim.Kolmogorov(lam_over_r0=1, flux=50)
         np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_opticalpsf():
@@ -347,7 +348,7 @@ def test_opticalpsf():
     gsobject_compare(gal6a, gal6b)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_exponential():
@@ -403,10 +404,10 @@ def test_exponential():
         np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c, 
                                  conv=galsim.Gaussian(sigma=1))
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_sersic():
@@ -481,7 +482,7 @@ def test_sersic():
                                  conv=galsim.Gaussian(sigma=1))
 
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
     gsparams = galsim.GSParams(realspace_relerr=1.e-2, realspace_abserr=1.e-4)
@@ -495,11 +496,11 @@ def test_sersic():
         gal7c = galsim.Sersic(n=3.2, half_light_radius=1.7, flux=50, trunc=4.3)
         np.testing.assert_raises(AssertionError,gsobject_compare, gal7a, gal7c, conv=conv)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_devaucouleurs():
@@ -555,10 +556,10 @@ def test_devaucouleurs():
         np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c,
                                  conv=galsim.Gaussian(sigma=1))
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_pixel():
@@ -609,7 +610,7 @@ def test_pixel():
         gsobject_compare(gal4a, gal4b, conv=galsim.Gaussian(0.1))
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_realgalaxy():
@@ -687,7 +688,7 @@ def test_realgalaxy():
     gsobject_compare(gal5a.noise._profile, gal5b.noise._profile, conv=conv)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_interpolated_image():
@@ -765,7 +766,7 @@ def test_interpolated_image():
         err_msg='Did not get right shape image after reading InterpolatedImage from HDU')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_add():
@@ -871,10 +872,10 @@ def test_add():
         np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c,
                                  conv=galsim.Gaussian(sigma=1))
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_convolve():
@@ -981,10 +982,10 @@ def test_convolve():
         gal5c = galsim.Convolve([gal5c_1, gal5c_2])
         np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_list():
@@ -1061,10 +1062,10 @@ def test_list():
         np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c,
                                  conv=galsim.Gaussian(sigma=1))
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_ring():
@@ -1104,8 +1105,8 @@ def test_ring():
         ring_builder.setup(config['stamp'], config, None, None, ignore, None)
         gal1a = ring_builder.buildProfile(config['stamp'], config, None, {}, None)
         gal1b = gauss.shear(e1=e1_list[k], e2=e2_list[k])
-        print 'gal1a = ',gal1a
-        print 'gal1b = ',gal1b
+        print('gal1a = ',gal1a)
+        print('gal1b = ',gal1b)
         gsobject_compare(gal1a, gal1b)
 
     config = {
@@ -1204,10 +1205,10 @@ def test_ring():
         np.testing.assert_raises(AssertionError,gsobject_compare, gal4a, gal4c,
                                  conv=galsim.Gaussian(sigma=1))
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 if __name__ == "__main__":

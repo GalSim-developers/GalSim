@@ -36,13 +36,14 @@ For a description of units conventions for scale radii for our base classes see
 between the scale radii used to specify the size of the GSObject and between the pixel scale of the
 Image is acceptable.
 """
+from __future__ import absolute_import
 
 import os
 
 import numpy as np
 
 import galsim
-import utilities
+from . import utilities
 
 from . import _galsim
 from ._galsim import GSParams

@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -81,7 +82,7 @@ def test_check_all_contiguous():
     assert galsim.optics.mtf(array_shape=testshape).flags.c_contiguous
     assert galsim.optics.ptf(array_shape=testshape).flags.c_contiguous
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_simple_wavefront():
     """Test the wavefront of a pure circular pupil against the known result.
@@ -101,7 +102,7 @@ def test_simple_wavefront():
     wf, _ = galsim.optics.wavefront(array_shape=testshape, scale=dx_test, lam_over_diam=lod_test)
     np.testing.assert_array_almost_equal(wf, wf_true, decimal=decimal)
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_simple_mtf():
     """Test the MTF of a pure circular pupil against the known result.
@@ -122,7 +123,7 @@ def test_simple_mtf():
     mtf = galsim.optics.mtf(array_shape=testshape, scale=dx_test, lam_over_diam=lod_test)
     np.testing.assert_array_almost_equal(mtf, mtf_true, decimal=decimal_dft)
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_simple_ptf():
     """Test the PTF of a pure circular pupil against the known result (zero).
@@ -137,7 +138,7 @@ def test_simple_ptf():
     nmad_ptfdiff = np.median(np.abs(ptf - np.median(ptf_true)))
     assert nmad_ptfdiff <= 10.**(-decimal)
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_consistency_psf_mtf():
     """Test that the MTF of a pure circular pupil is |FT{PSF}|.
@@ -155,7 +156,7 @@ def test_consistency_psf_mtf():
     mtf = galsim.optics.mtf(array_shape=testshape, scale=dx_test, lam_over_diam=lod_test)
     np.testing.assert_array_almost_equal(mtf, mtf_test, decimal=decimal_dft)
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_wavefront_image_view():
     """Test that the ImageF.array view of the wavefront is consistent with the wavefront array.
@@ -167,7 +168,7 @@ def test_wavefront_image_view():
     np.testing.assert_array_almost_equal(array.real.astype(np.float32), real.array, decimal)
     np.testing.assert_array_almost_equal(array.imag.astype(np.float32), imag.array, decimal)
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_psf_image_view():
     """Test that the ImageF.array view of the PSF is consistent with the PSF array.
@@ -178,7 +179,7 @@ def test_psf_image_view():
     image = galsim.optics.psf_image(array_shape=testshape)
     np.testing.assert_array_almost_equal(array.astype(np.float32), image.array, decimal)
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_otf_image_view():
     """Test that the ImageF.array view of the OTF is consistent with the OTF array.
@@ -190,7 +191,7 @@ def test_otf_image_view():
     np.testing.assert_array_almost_equal(array.real.astype(np.float32), real.array, decimal)
     np.testing.assert_array_almost_equal(array.imag.astype(np.float32), imag.array, decimal)
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_mtf_image_view():
     """Test that the ImageF.array view of the MTF is consistent with the MTF array.
@@ -201,7 +202,7 @@ def test_mtf_image_view():
     image = galsim.optics.mtf_image(array_shape=testshape)
     np.testing.assert_array_almost_equal(array.astype(np.float32), image.array)
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_ptf_image_view():
     """Test that the ImageF.array view of the OTF is consistent with the OTF array.
@@ -212,7 +213,7 @@ def test_ptf_image_view():
     image = galsim.optics.ptf_image(array_shape=testshape)
     np.testing.assert_array_almost_equal(array.astype(np.float32), image.array)
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_OpticalPSF_flux():
     """Compare an unaberrated OpticalPSF flux to unity.
@@ -231,7 +232,7 @@ def test_OpticalPSF_flux():
     do_pickle(optics_test)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_OpticalPSF_vs_Airy():
     """Compare the array view on an unaberrated OpticalPSF to that of an Airy.
@@ -251,7 +252,7 @@ def test_OpticalPSF_vs_Airy():
                 err_msg="Unaberrated Optical not quite equal to Airy")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_OpticalPSF_vs_Airy_with_obs():
     """Compare the array view on an unaberrated OpticalPSF with obscuration to that of an Airy.
@@ -274,7 +275,7 @@ def test_OpticalPSF_vs_Airy_with_obs():
     do_pickle(optics_test)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_OpticalPSF_aberrations_struts():
     """Test the generation of optical aberrations and struts against a known result.
@@ -378,7 +379,7 @@ def test_OpticalPSF_aberrations_struts():
         np.testing.assert_raises(TypeError, galsim.OpticalPSF, lod, nstruts=5, strut_thick=0.01,
                                  strut_angle=8.) # wrong units
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
     do_pickle(optics, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
     do_pickle(optics)
 
@@ -401,7 +402,7 @@ def test_OpticalPSF_aberrations_struts():
     do_pickle(optics)
 
     t2 = time.time()
-    print 'time for %s = %.2f' % (funcname(), t2 - t1)
+    print('time for %s = %.2f' % (funcname(), t2 - t1))
 
 def test_OpticalPSF_aberrations_kwargs():
     """Test that OpticalPSF aberrations kwarg works just like specifying aberrations.
@@ -455,11 +456,11 @@ def test_OpticalPSF_aberrations_kwargs():
         np.testing.assert_raises(TypeError,galsim.OpticalPSF,lod,aberrations=np.zeros(8),
                                  defocus=-0.12)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
     t2 = time.time()
-    print 'time for %s = %.2f' % (funcname(), t2 - t1)
+    print('time for %s = %.2f' % (funcname(), t2 - t1))
 
 def test_OpticalPSF_flux_scaling():
     """Test flux scaling for OpticalPSF.
@@ -532,7 +533,7 @@ def test_OpticalPSF_flux_scaling():
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_OpticalPSF_pupil_plane():
     """Test the ability to generate a PSF using an image of the pupil plane.
@@ -789,7 +790,7 @@ def test_OpticalPSF_pupil_plane():
         err_msg="Inconsistent OpticalPSF image from Image vs. file read-in.")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_OpticalPSF_lamdiam():
     """Test the ability to generate an OpticalPSF using different lam/diam specifications.
@@ -827,10 +828,10 @@ def test_OpticalPSF_lamdiam():
         np.testing.assert_raises(TypeError, galsim.OpticalPSF, lam_over_diam=1., diam=1.)
         np.testing.assert_raises(TypeError, galsim.OpticalPSF, lam_over_diam=1., lam=1.)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 if __name__ == "__main__":
     test_check_all_contiguous()

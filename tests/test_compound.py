@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -116,7 +117,7 @@ def test_convolve():
         do_shoot(conv,myImg,"Moffat * Pixel")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_convolve_flux_scaling():
     """Test flux scaling for Convolve.
@@ -179,7 +180,7 @@ def test_convolve_flux_scaling():
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 
@@ -233,7 +234,7 @@ def test_shearconvolve():
         do_shoot(conv,myImg,"sheared Gaussian * Pixel")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_realspace_convolve():
@@ -306,7 +307,7 @@ def test_realspace_convolve():
     do_pickle(conv.SBProfile)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
  
 
 def test_realspace_distorted_convolve():
@@ -368,7 +369,7 @@ def test_realspace_distorted_convolve():
             err_msg="Using Convolve([pixel,psf]) (distorted) disagrees with expected result")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
  
 def test_realspace_shearconvolve():
     """Test the real-space convolution of a sheared Gaussian and a Box SBProfile against a 
@@ -424,7 +425,7 @@ def test_realspace_shearconvolve():
             err_msg="Using GSObject Convolve([pixel,psf]) disagrees with expected result")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_add():
@@ -510,7 +511,7 @@ def test_add():
     do_pickle(sum.SBProfile)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_add_flux_scaling():
     """Test flux scaling for Add.
@@ -568,7 +569,7 @@ def test_add_flux_scaling():
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_autoconvolve():
@@ -650,7 +651,7 @@ def test_autoconvolve():
     do_pickle(conv2.SBProfile)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_autocorrelate():
@@ -693,7 +694,7 @@ def test_autocorrelate():
     do_pickle(corr.SBProfile)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 

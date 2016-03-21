@@ -24,6 +24,7 @@ the issues with interpolators.
 
 The parameters of the Sersic images come from a COSMOS best-fitting Sersic model catalog.
 """
+from __future__ import print_function
 
 import cPickle
 import numpy as np
@@ -197,7 +198,7 @@ def draw_sersic_images(narr, hlrarr, gobsarr, random_seed=None, nmin=0.3, nmax=4
 
     # Loop over all the input params and make an sersic galaxy image from each
     sersic_images = []
-    print "Drawing Sersic images"
+    print("Drawing Sersic images")
     for n, hlr, gobs in zip(narr, hlrarr, gobsarr):
 
         # First check we are only using Sersic indices in range
@@ -253,7 +254,7 @@ def run_tests(use_interpolants, nitems=test_interpolants.default_nitems):
     g1_list = []
     g2_list = []
     sigma_list = []
-    print "Calculating reference g1, g2 & sigma for "+str(len(sersic_images))+" Sersic images"
+    print("Calculating reference g1, g2 & sigma for "+str(len(sersic_images))+" Sersic images")
     for sersic_image in sersic_images:
         shape = test_interpolants.CatchAdaptiveMomErrors(sersic_image)
         if isinstance(shape, float):
@@ -279,7 +280,7 @@ def run_tests(use_interpolants, nitems=test_interpolants.default_nitems):
         "original" : (
             None, test_interpolants.pixel_scale, ORIGINAL_FILENAME),
     }
-    print''
+    print('')
     # Then we start the grand loop producing output in a similar fashion to test_interpolants.py
     for image_type in ("delta", "original"):
  
@@ -287,14 +288,14 @@ def run_tests(use_interpolants, nitems=test_interpolants.default_nitems):
         psf = psf_dict[image_type][0]
         dx_test = psf_dict[image_type][1]
         outfile = open(psf_dict[image_type][2], 'wb')
-        print "Writing test results to "+str(outfile)
+        print("Writing test results to "+str(outfile))
         for padding in test_interpolants.padding_list:
 
-            print "Using padding = "+str(padding)
+            print("Using padding = "+str(padding))
             for interpolant in use_interpolants:
 
-                print "Using interpolant: "+str(interpolant)
-                print 'Running Angle tests'
+                print("Using interpolant: "+str(interpolant))
+                print('Running Angle tests')
                 for angle in test_interpolants.angle_list: # Possible rotation angles
 
                     sys.stdout.write('.')
@@ -315,7 +316,7 @@ def run_tests(use_interpolants, nitems=test_interpolants.default_nitems):
                         outfile, g1_list, g2_list, sigma_list, dataKint)
                 sys.stdout.write('\n')
  
-                print 'Running Shear/Magnification tests'
+                print('Running Shear/Magnification tests')
                 for (g1, g2, mag) in test_interpolants.shear_and_magnification_list:
 
                     sys.stdout.write('.')
@@ -336,7 +337,7 @@ def run_tests(use_interpolants, nitems=test_interpolants.default_nitems):
                         outfile, g1_list, g2_list, sigma_list, dataKint)
                 sys.stdout.write('\n')
 
-                print 'Running Shift tests'
+                print('Running Shift tests')
                 for shift in test_interpolants.shift_list:
 
                     sys.stdout.write('.')
@@ -357,10 +358,10 @@ def run_tests(use_interpolants, nitems=test_interpolants.default_nitems):
                         outfile, g1_list, g2_list, sigma_list, dataKint)
                 sys.stdout.write('\n')
 
-                print ''
+                print('')
 
-        print "Finished tests for image_type: "+str(image_type) 
-        print ""
+        print("Finished tests for image_type: "+str(image_type)) 
+        print("")
         outfile.close()
 
 

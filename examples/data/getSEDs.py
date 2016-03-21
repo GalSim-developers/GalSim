@@ -21,6 +21,7 @@ Note that the outputs of this script, which are the files GALSIM_DIR/examples/da
 already included in the repository.  This script just lets users know where these files came from
 and how they were altered.
 """
+from __future__ import print_function
 
 import os
 import galsim
@@ -49,8 +50,8 @@ for sedname in sednames:
     x1,f1 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-5)
     x2,f2 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-4)
     x3,f3 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-3)
-    print "{0} raw size = {1}".format(base,len(x))
-    print "    thinned sizes = {0}, {1}, {2}".format(len(x1),len(x2),len(x3))
+    print("{0} raw size = {1}".format(base,len(x)))
+    print("    thinned sizes = {0}, {1}, {2}".format(len(x1),len(x2),len(x3)))
 
     with open(base, 'w') as out:
         out.write(

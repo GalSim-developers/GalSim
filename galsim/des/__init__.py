@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -15,6 +16,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-from des_shapelet import *
-from des_psfex import *
-from des_meds import *
+from .des_shapelet import *
+from .des_psfex import *
+from .des_meds import *

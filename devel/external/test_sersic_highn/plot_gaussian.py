@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -26,7 +27,7 @@ import test_gaussian_basic
 # use the Sersic n=.5 results from there directly
 import plot_sersic_highn
 
-print "Plotting the Gaussian results"
+print("Plotting the Gaussian results")
 nobs = test_sersic_highn_basic.NOBS
 
 outfile = os.path.join("outputs", "gaussian_basic_output_N"+str(nobs)+".asc")

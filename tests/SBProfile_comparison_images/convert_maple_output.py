@@ -23,6 +23,7 @@ The Maple program is saved in the same directory as moffat_pixel.mw.
 And the output that it produces is saved as moffat_pixel.dat.
 This program converts that into a fits file called moffat_pixel.fits.
 """
+from __future__ import print_function
 
 import numpy
 from galsim import pyfits
@@ -31,7 +32,7 @@ import os
 for input_file in [ "moffat_pixel.dat" , "moffat_pixel_distorted.dat" ]:
 
     output_file = input_file.split('.')[0] + '.fits'
-    print input_file, output_file
+    print(input_file, output_file)
 
     nx = 61
     ny = 61

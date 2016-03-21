@@ -33,10 +33,11 @@ page on the GalSim Wiki: https://github.com/GalSim-developers/GalSim/wiki/RealGa
 The function simReal() takes this information and uses it to simulate a (no-noise-added) image from
 some lower-resolution telescope.
 """
+from __future__ import absolute_import
 
 
 import galsim
-import utilities
+from . import utilities
 from galsim import GSObject
 import os
 

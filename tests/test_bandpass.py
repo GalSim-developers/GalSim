@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -75,7 +76,7 @@ def test_Bandpass_basic():
     ]
 
     for k,b in enumerate(b_list):
-        print k,' b = ',b
+        print(k,' b = ',b)
         if k not in [k1-1, len(b_list)-1]:
             np.testing.assert_almost_equal(b.blue_limit, 400, decimal=12)
             np.testing.assert_almost_equal(b.red_limit, 550, decimal=12)
@@ -94,13 +95,13 @@ def test_Bandpass_basic():
         # Default calculation isn't very accurate for widely spaced wavelengths like this 
         # example.  Only accurate to 1 digit!
         lam_eff = b.effective_wavelength
-        print 'lam_eff = ',lam_eff
+        print('lam_eff = ',lam_eff)
         true_lam_eff = (9100./19)  # analytic answer
         np.testing.assert_almost_equal(lam_eff / true_lam_eff, 1.0, 1)
 
         # Can get a more precise calculation with the following: (much more precise in this case)
         lam_eff = b.calculateEffectiveWavelength(precise=True)
-        print 'precise lam_eff = ',lam_eff
+        print('precise lam_eff = ',lam_eff)
         np.testing.assert_almost_equal(lam_eff, true_lam_eff, 12)
 
         # After which, the simple attribute syntax keeps the improved precision
@@ -113,7 +114,7 @@ def test_Bandpass_basic():
             do_pickle(b, lambda x: (x(390), x(470), x(490), x(510), x(560)) )
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_Bandpass_mul():
     """Check that Bandpasses multiply like I think they should...
@@ -171,7 +172,7 @@ def test_Bandpass_mul():
     do_pickle(f)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_Bandpass_div():
     """Check that Bandpasses multiply like I think they should...
@@ -214,7 +215,7 @@ def test_Bandpass_div():
     do_pickle(f)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_Bandpass_wave_type():
     """Check that `wave_type='ang'` works in Bandpass.__init__
@@ -246,7 +247,7 @@ def test_Bandpass_wave_type():
                                err_msg="Bandpass.__call__ doesn't respect wave_type")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 if __name__ == "__main__":

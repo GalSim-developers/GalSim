@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -96,8 +97,8 @@ def test_Image_basic():
         # Check basic constructor from ncol, nrow
         array_type = types[i]
         np_array_type = np_types[i]
-        print 'array_type = ',array_type
-        print 'np_array_type = ',np_array_type
+        print('array_type = ',array_type)
+        print('np_array_type = ',np_array_type)
         im1 = galsim.Image(ncol,nrow,dtype=array_type)
         bounds = galsim.BoundsI(1,ncol,1,nrow)
 
@@ -175,7 +176,7 @@ def test_Image_basic():
             np.testing.assert_raises(RuntimeError,im1.view().setValue,ncol+1,nrow+1,1)
             np.testing.assert_raises(RuntimeError,im1.view().__call__,ncol+1,nrow+1)
         except ImportError:
-            print 'The assert_raises tests require nose'
+            print('The assert_raises tests require nose')
 
         # Check view of given data
         im3_view = galsim.Image(ref_array.astype(np_array_type))
@@ -220,7 +221,7 @@ def test_Image_basic():
     do_pickle(galsim.BoundsD(2.1, 4.3, 6.5, 9.1))
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_Image_FITS_IO():
@@ -377,7 +378,7 @@ def test_Image_FITS_IO():
                     err_msg="Image"+tchar[i]+" write failed for plio")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_Image_MultiFITS_IO():
@@ -600,7 +601,7 @@ def test_Image_MultiFITS_IO():
                         err_msg="Image"+tchar[i]+" writeMulti failed for plio")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_Image_CubeFITS_IO():
@@ -794,7 +795,7 @@ def test_Image_CubeFITS_IO():
                         err_msg="Image"+tchar[i]+" writeCube failed for plio")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_Image_array_view():
@@ -815,7 +816,7 @@ def test_Image_array_view():
                 err_msg="Array look into Image class does not match input for dtype = "+
                 str(types[i]))
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_Image_binary_add():
     """Test that all four types of supported Images add correctly.
@@ -864,7 +865,7 @@ def test_Image_binary_add():
             pass
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_Image_binary_subtract():
     """Test that all four types of supported Images subtract correctly.
@@ -897,7 +898,7 @@ def test_Image_binary_subtract():
                     err_msg="Inplace add in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_Image_binary_multiply():
     """Test that all four types of supported Images multiply correctly.
@@ -930,7 +931,7 @@ def test_Image_binary_multiply():
                     err_msg="Inplace add in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_Image_binary_divide():
     """Test that all four types of supported Images divide correctly.
@@ -964,7 +965,7 @@ def test_Image_binary_divide():
                     err_msg="Inplace add in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_Image_binary_scalar_add():
     """Test that all four types of supported Images add scalars correctly.
@@ -994,7 +995,7 @@ def test_Image_binary_scalar_add():
                 err_msg="Binary radd scalar in Image class does not match reference for dtype = "
                 +str(types[i]))
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_Image_binary_scalar_subtract():
     """Test that all four types of supported Images binary scalar subtract correctly.
@@ -1016,7 +1017,7 @@ def test_Image_binary_scalar_subtract():
                 err_msg="Binary add scalar in Image class does not match reference for dtype = "
                 +str(types[i]))
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_Image_binary_scalar_multiply():
     """Test that all four types of supported Images binary scalar multiply correctly.
@@ -1046,7 +1047,7 @@ def test_Image_binary_scalar_multiply():
                 err_msg="Binary rmultiply scalar in Image class does"
                 +" not match reference for dtype = "+str(types[i]))
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_Image_binary_scalar_divide():
     """Test that all four types of supported Images binary scalar divide correctly.
@@ -1068,7 +1069,7 @@ def test_Image_binary_scalar_divide():
                 err_msg="Binary divide scalar in Image class does"
                 +" not match reference for dtype = "+str(types[i]))
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
         
 def test_Image_binary_scalar_pow():
     """Test that all four types of supported Images can be raised to a power (scalar) correctly.
@@ -1111,7 +1112,7 @@ def test_Image_binary_scalar_pow():
                 +" not match reference for dtype = "+str(types[i]))
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_Image_inplace_add():
     """Test that all four types of supported Images inplace add correctly.
@@ -1143,7 +1144,7 @@ def test_Image_inplace_add():
                     err_msg="Inplace add in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_Image_inplace_subtract():
     """Test that all four types of supported Images inplace subtract correctly.
@@ -1175,7 +1176,7 @@ def test_Image_inplace_subtract():
                     err_msg="Inplace subtract in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_Image_inplace_multiply():
     """Test that all four types of supported Images inplace multiply correctly.
@@ -1207,7 +1208,7 @@ def test_Image_inplace_multiply():
                     err_msg="Inplace multiply in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_Image_inplace_divide():
     """Test that all four types of supported Images inplace divide correctly.
@@ -1239,7 +1240,7 @@ def test_Image_inplace_divide():
                     err_msg="Inplace divide in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_Image_inplace_scalar_add():
@@ -1262,7 +1263,7 @@ def test_Image_inplace_scalar_add():
                 err_msg="Inplace scalar add in Image class does not match reference for dtype = "
                 +str(types[i]))
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_Image_inplace_scalar_subtract():
     """Test that all four types of supported Images inplace scalar subtract correctly.
@@ -1284,7 +1285,7 @@ def test_Image_inplace_scalar_subtract():
                 err_msg="Inplace scalar subtract in Image class does"
                 +" not match reference for dtype = "+str(types[i]))
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_Image_inplace_scalar_multiply():
     """Test that all four types of supported Images inplace scalar multiply correctly.
@@ -1308,7 +1309,7 @@ def test_Image_inplace_scalar_multiply():
                 err_msg="Inplace scalar multiply in Image class does"
                 +" not match reference for dtype = "+str(types[i]))
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_Image_inplace_scalar_divide():
     """Test that all four types of supported Images inplace scalar divide correctly.
@@ -1332,7 +1333,7 @@ def test_Image_inplace_scalar_divide():
                 err_msg="Inplace scalar divide in Image class does"
                 +" not match reference for dtype = "+str(types[i]))
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
         
 def test_Image_inplace_scalar_pow():
     """Test that all four types of supported Images can be raised (in-place) to a scalar correctly.
@@ -1367,7 +1368,7 @@ def test_Image_inplace_scalar_pow():
                 err_msg="Inplace scalar pow in Image class (dictionary "
                 +"call) does not match reference for dtype = "+str(types[i]))
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_Image_subImage():
     """Test that subImages are accessed and written correctly.
@@ -1463,7 +1464,7 @@ def test_Image_subImage():
         do_pickle(image)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_Image_resize():
@@ -1547,7 +1548,7 @@ def test_Image_resize():
             do_pickle(im3)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_ConstImage_array_constness():
@@ -1587,7 +1588,7 @@ def test_ConstImage_array_constness():
         do_pickle(image)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
             
 def test_BoundsI_init_with_non_pure_ints():
     """Test that BoundsI converts its input args to int variables on input.
@@ -1624,10 +1625,10 @@ def test_BoundsI_init_with_non_pure_ints():
                                  xmin=bound_arr_flt_nonint[0], xmax=bound_arr_flt_nonint[1],
                                  ymin=bound_arr_flt_nonint[2], ymax=bound_arr_flt_nonint[3])
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_Image_constructor():
     """Check that the Image constructor that takes NumPy array does not mangle input.
@@ -1669,7 +1670,7 @@ def test_Image_constructor():
         do_pickle(test_im)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_Image_view():
@@ -1765,7 +1766,7 @@ def test_Image_view():
     assert im.array.max() == 17
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_Image_writeheader():
     """Test the functionality of image.write(...) for images that have header attributes
@@ -1792,7 +1793,7 @@ def test_Image_writeheader():
     assert new_header['CD1_1'] == 0.0
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 if __name__ == "__main__":
     test_Image_basic()

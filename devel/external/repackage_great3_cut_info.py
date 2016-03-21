@@ -24,6 +24,7 @@ use to make cuts in the COSMOSCatalog class.
 Set up to point to data that live in a particular spot, so likely nobody else can actually run this
 script.
 """
+from __future__ import print_function
 
 import numpy as np
 import pyfits
@@ -73,5 +74,5 @@ tbhdu = pyfits.new_table(pyfits.ColDefs([
 
 # Output to file.
 out_file = os.path.join(data_dir, out_file)
-print "Writing to file ",out_file
+print("Writing to file ",out_file)
 tbhdu.writeto(out_file)

@@ -22,6 +22,7 @@ Compares interpolated values a LookupTable that were created using a previous ve
 the code (commit: e267f058351899f1f820adf4d6ab409d5b2605d5), using the
 script devutils/external/make_table_testarrays.py
 """
+from __future__ import print_function
 import os
 import numpy as np
 import pickle
@@ -100,7 +101,7 @@ def test_table():
             np.testing.assert_raises(RuntimeError,table2,args2[-1]+0.01)
             np.testing.assert_raises(ValueError,table1,np.zeros((3,3,3))+args1[0])
         except ImportError:
-            print 'The assert_raises tests require nose'
+            print('The assert_raises tests require nose')
 
         # These shouldn't raise any exception:
         table1(args1[0]+0.01)
@@ -124,7 +125,7 @@ def test_table():
 
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_init():
     """Some simple tests of LookupTable initialization."""
@@ -146,7 +147,7 @@ def test_init():
                                  file='../examples/data/cosmo-fid.zmed1.00_smoothed.out',
                                  interpolant='foo')
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
     # Also make sure nothing bad happens when we try to read in a stored power spectrum and assume
     # we can use the default interpolant (spline).
     tab_ps = galsim.LookupTable(file='../examples/data/cosmo-fid.zmed1.00_smoothed.out')
@@ -155,7 +156,7 @@ def test_init():
     do_pickle(tab_ps)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_log():
     """Some simple tests of interpolation using logs."""
@@ -180,7 +181,7 @@ def test_log():
         result_2 = tab_2(test_val)
         result_3 = tab_3(test_val)
         result_4 = tab_4(test_val)
-        print result_1, result_2, result_3, result_4
+        print(result_1, result_2, result_3, result_4)
         np.testing.assert_almost_equal(
             result_2, result_1, decimal=3,
             err_msg='Disagreement when interpolating in log(f) and log(x)')
@@ -224,10 +225,10 @@ def test_log():
         np.testing.assert_raises(ValueError, galsim.LookupTable, x=x_neg, f=y_neg, x_log=True,
                                  f_log=True)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_roundoff():
     import time
@@ -243,10 +244,10 @@ def test_roundoff():
         np.testing.assert_raises(RuntimeError, table1, 1.0-1.e5)
         np.testing.assert_raises(RuntimeError, table1, 10.0+1.e5)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 if __name__ == "__main__":
     test_table()

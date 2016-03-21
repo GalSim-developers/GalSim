@@ -187,6 +187,7 @@ obtained in such cases by generating multiple images with offsets (a dither sequ
 combining them using galsim.utilities.interleaveImages(). See docstring for more details on the
 usage.
 """
+from __future__ import absolute_import
 import os
 import galsim
 import numpy
@@ -222,11 +223,11 @@ n_pix = 4088
 jitter_rms = 0.014
 charge_diffusion = 0.1
 
-from wfirst_bandpass import getBandpasses
-from wfirst_backgrounds import getSkyLevel
-from wfirst_psfs import getPSF, storePSFImages, loadPSFImages
-from wfirst_wcs import getWCS, findSCA, allowedPos, bestPA
-from wfirst_detectors import applyNonlinearity, addReciprocityFailure, applyIPC, allDetectorEffects
+from .wfirst_bandpass import getBandpasses
+from .wfirst_backgrounds import getSkyLevel
+from .wfirst_psfs import getPSF, storePSFImages, loadPSFImages
+from .wfirst_wcs import getWCS, findSCA, allowedPos, bestPA
+from .wfirst_detectors import applyNonlinearity, addReciprocityFailure, applyIPC, allDetectorEffects
 
 def NLfunc(x):
     return x + nonlinearity_beta*(x**2)

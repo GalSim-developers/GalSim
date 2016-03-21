@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -230,7 +231,7 @@ def check_world(pos1, pos2, digits, err_msg):
 
 def do_wcs_image(wcs, name, approx=False):
     
-    print 'Start image tests for WCS '+name
+    print('Start image tests for WCS '+name)
     #print 'wcs = ',wcs
 
     # Use the "blank" image as our test image.  It's not blank in the sense of having all
@@ -372,7 +373,7 @@ def do_wcs_image(wcs, name, approx=False):
 
 def do_local_wcs(wcs, ufunc, vfunc, name):
 
-    print 'Start testing local WCS '+name
+    print('Start testing local WCS '+name)
     #print 'wcs = ',wcs
 
     # Check that local and setOrigin work correctly:
@@ -558,7 +559,7 @@ def do_jac_decomp(wcs, name):
 
 def do_nonlocal_wcs(wcs, ufunc, vfunc, name, test_pickle=True):
 
-    print 'Start testing non-local WCS '+name
+    print('Start testing non-local WCS '+name)
     #print 'wcs = ',wcs
 
     # Check that withOrigin and local work correctly:
@@ -673,7 +674,7 @@ def do_celestial_wcs(wcs, name, test_pickle=True):
     # (usually) we don't have an exact formula to compare with.  So the tests here
     # are a bit sparer.
 
-    print 'Start testing celestial WCS '+name
+    print('Start testing celestial WCS '+name)
     #print 'wcs = ',wcs
 
     # Check that withOrigin and local work correctly:
@@ -849,7 +850,7 @@ def test_pixelscale():
     do_wcs_image(wcs, 'OffsetWCS')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_shearwcs():
     """Test the ShearWCS class
@@ -944,7 +945,7 @@ def test_shearwcs():
     do_wcs_image(wcs, 'OffsetShearWCS')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_affinetransform():
     """Test the AffineTransform class
@@ -1062,7 +1063,7 @@ def test_affinetransform():
     do_wcs_image(wcs, 'AffineTransform')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def radial_u(x, y):
     """A cubic radial function used for a u(x,y) function """
@@ -1280,7 +1281,7 @@ def test_uvfunction():
         do_wcs_image(wcs, 'UVFunction_math')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_radecfunction():
@@ -1507,7 +1508,7 @@ def test_radecfunction():
         do_wcs_image(wcs3, 'RaDecFunction')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def do_ref(wcs, ref_list, name, approx=False, image=None):
     # Test that the given wcs object correctly converts the reference positions
@@ -1524,7 +1525,7 @@ def do_ref(wcs, ref_list, name, approx=False, image=None):
     else:
         digits2 = digits
 
-    print 'Start reference testing for '+name
+    print('Start reference testing for '+name)
     for ref in ref_list:
         ra = galsim.HMS_Angle(ref[0])
         dec = galsim.DMS_Angle(ref[1])
@@ -1570,7 +1571,7 @@ def test_astropywcs():
             import astropy.wcs
             import scipy  # AstropyWCS constructor will do this, so check now.
     except ImportError:
-        print 'Unable to import astropy.wcs.  Skipping AstropyWCS tests.'
+        print('Unable to import astropy.wcs.  Skipping AstropyWCS tests.')
         return
 
     # These all work, but it is quite slow, so only test one of them for the regular unit tests.
@@ -1583,7 +1584,7 @@ def test_astropywcs():
     dir = 'fits_files'
     for tag in test_tags:
         file_name, ref_list = references[tag]
-        print tag,' file_name = ',file_name
+        print(tag,' file_name = ',file_name)
         wcs = galsim.AstropyWCS(file_name, dir=dir)
 
         do_ref(wcs, ref_list, 'AstropyWCS '+tag)
@@ -1593,7 +1594,7 @@ def test_astropywcs():
         do_wcs_image(wcs, 'AstropyWCS_'+tag)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_pyastwcs():
     """Test the PyAstWCS class
@@ -1604,7 +1605,7 @@ def test_pyastwcs():
     try:
         import starlink.Ast
     except ImportError:
-        print 'Unable to import starlink.Ast.  Skipping PyAstWCS tests.'
+        print('Unable to import starlink.Ast.  Skipping PyAstWCS tests.')
         return
 
     # These all work, but it is quite slow, so only test one of them for the regular unit tests.
@@ -1618,7 +1619,7 @@ def test_pyastwcs():
     dir = 'fits_files'
     for tag in test_tags:
         file_name, ref_list = references[tag]
-        print tag,' file_name = ',file_name
+        print(tag,' file_name = ',file_name)
         wcs = galsim.PyAstWCS(file_name, dir=dir)
 
         # The PyAst implementation of the SIP type only gets the inverse transformation
@@ -1634,7 +1635,7 @@ def test_pyastwcs():
         do_wcs_image(wcs, 'PyAstWCS_'+tag, approx)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_wcstools():
@@ -1659,12 +1660,12 @@ def test_wcstools():
     try:
         galsim.WcsToolsWCS(references['TAN'][0], dir=dir)
     except OSError:
-        print 'Unable to execute xy2sky.  Skipping WcsToolsWCS tests.'
+        print('Unable to execute xy2sky.  Skipping WcsToolsWCS tests.')
         return
 
     for tag in test_tags:
         file_name, ref_list = references[tag]
-        print tag,' file_name = ',file_name
+        print(tag,' file_name = ',file_name)
         wcs = galsim.WcsToolsWCS(file_name, dir=dir)
 
         # The wcstools implementation of the SIP and TPV types only gets the inverse 
@@ -1682,7 +1683,7 @@ def test_wcstools():
         do_wcs_image(wcs, 'WcsToolsWCS_'+tag)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_gsfitswcs():
     """Test the GSFitsWCS class
@@ -1702,7 +1703,7 @@ def test_gsfitswcs():
 
     for tag in test_tags:
         file_name, ref_list = references[tag]
-        print tag,' file_name = ',file_name
+        print(tag,' file_name = ',file_name)
         wcs = galsim.GSFitsWCS(file_name, dir=dir)
 
         do_ref(wcs, ref_list, 'GSFitsWCS '+tag)
@@ -1754,7 +1755,7 @@ def test_gsfitswcs():
     do_celestial_wcs(wcs, 'TanWCS 3')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_fitswcs():
     """Test the FitsWCS factory function
@@ -1776,9 +1777,9 @@ def test_fitswcs():
 
     for tag in test_tags:
         file_name, ref_list = references[tag]
-        print tag,' file_name = ',file_name
+        print(tag,' file_name = ',file_name)
         wcs = galsim.FitsWCS(file_name, dir=dir, suppress_warning=True)
-        print 'FitsWCS is really ',type(wcs)
+        print('FitsWCS is really ',type(wcs))
 
         if isinstance(wcs, galsim.AffineTransform):
             import warnings
@@ -1802,7 +1803,7 @@ def test_fitswcs():
         galsim.fits.closeHDUList(hdu_list, fin)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_scamp():
     """Test that we can read in a SCamp .head file correctly
@@ -1814,7 +1815,7 @@ def test_scamp():
     file_name = 'scamp.head'
 
     wcs = galsim.FitsWCS(file_name, dir=dir, text_file=True)
-    print 'SCamp FitsWCS is really ',type(wcs)
+    print('SCamp FitsWCS is really ',type(wcs))
 
     # These are just random points that I checked on one machine with this file.
     # For this test, we don't care much about an independent accuracy test, since that should
@@ -1829,7 +1830,7 @@ def test_scamp():
     do_ref(wcs, ref_list, 'Scamp FitsWCS')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 if __name__ == "__main__":

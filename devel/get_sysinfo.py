@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -19,6 +20,6 @@
 import sys
 import subprocess
 
-print "Native byteorder = "+str(sys.byteorder)+" endian"
+print("Native byteorder = "+str(sys.byteorder)+" endian")
 subprocess.check_call(['../bin/sizeof_SIFD'])
 

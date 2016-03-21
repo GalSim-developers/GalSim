@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -96,7 +97,7 @@ def test_SED_basic():
     ]
  
     for k,s in enumerate(s_list):
-        print k,' s = ',s
+        print(k,' s = ',s)
         np.testing.assert_almost_equal(s(400)*h*c/400, 200, decimal=10)
         np.testing.assert_almost_equal(s(900)*h*c/900, 200, decimal=10)
         waves = np.arange(700,800,10)
@@ -113,7 +114,7 @@ def test_SED_basic():
             do_pickle(s)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_SED_add():
     """Check that SEDs add like I think they should...
@@ -148,10 +149,10 @@ def test_SED_add():
         d = b.atRedshift(0.1)
         np.testing.assert_raises(ValueError, b.__add__, d)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_SED_sub():
     """Check that SEDs subtract like I think they should...
@@ -187,10 +188,10 @@ def test_SED_sub():
         d = b.atRedshift(0.1)
         np.testing.assert_raises(ValueError, b.__sub__, d)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_SED_mul():
     """Check that SEDs multiply like I think they should...
@@ -229,7 +230,7 @@ def test_SED_mul():
         do_pickle(d)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_SED_div():
     """Check that SEDs divide like I think they should...
@@ -263,7 +264,7 @@ def test_SED_div():
         do_pickle(d)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_SED_atRedshift():
     """Check that SEDs redshift correctly.
@@ -290,7 +291,7 @@ def test_SED_atRedshift():
                                            err_msg="error redshifting and thinning SED")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_SED_roundoff_guard():
     """Check that SED.__init__ roundoff error guard works. (Issue #520).
@@ -309,7 +310,7 @@ def test_SED_roundoff_guard():
                                         err_msg="error using wave_list limits in redshifted SED")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_SED_init():
     """Check that certain invalid SED initializations are trapped.
@@ -326,7 +327,7 @@ def test_SED_init():
         np.testing.assert_raises(ValueError, galsim.SED, spec=lambda w:1.0, wave_type='bar')
         np.testing.assert_raises(ValueError, galsim.SED, spec=lambda w:1.0, flux_type='bar')
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
     # These should succeed.
     galsim.SED(spec='wave')
     galsim.SED(spec='wave/wave')
@@ -340,10 +341,10 @@ def test_SED_init():
         np.testing.assert_raises(ValueError, sed, 0.5)
         np.testing.assert_raises(ValueError, sed, 12.0)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_SED_withFlux():
     """ Check that setting the flux works.
@@ -360,7 +361,7 @@ def test_SED_withFlux():
         np.testing.assert_array_almost_equal(a.calculateFlux(rband), 1.0, 5,
                                              "Setting SED flux failed.")
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_SED_withFluxDensity():
@@ -378,7 +379,7 @@ def test_SED_withFluxDensity():
                                              "Setting SED flux density failed.")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_SED_calculateMagnitude():
     """ Check that magnitudes work as expected.
@@ -438,7 +439,7 @@ def test_SED_calculateMagnitude():
         assert (abs((AB_mag - vega_mag) - conversion) < 0.1)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_SED_calculateDCRMomentShifts():
     import time
@@ -475,7 +476,7 @@ def test_SED_calculateDCRMomentShifts():
     np.testing.assert_almost_equal(Vnum/den, V[1,1], 5)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_SED_calculateSeeingMomentRatio():
     import time
@@ -496,7 +497,7 @@ def test_SED_calculateSeeingMomentRatio():
     np.testing.assert_almost_equal(relative_size, num/den, 5)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_fnu_vs_flambda():
     import time
@@ -540,7 +541,7 @@ def test_fnu_vs_flambda():
                                              err_msg="Check nm and Ang SED wavelengths consistency.")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 if __name__ == "__main__":
     test_SED_basic()

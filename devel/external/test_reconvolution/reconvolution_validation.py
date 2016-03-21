@@ -22,6 +22,7 @@ Calculate the accuracy of the reconvolution engine
 by comparing the shapes of reconvolved images of elliptical galaxies with
 those created directly.
 """
+from __future__ import print_function
 
 import os
 import pdb
@@ -109,7 +110,7 @@ def CreateRGC(config):
         logger.info('creating RGC - running galsim.Process')
         galsim.config.Process(cosmos_config,logger=use_logger)
         logger.info('created RGC images')
-    except Exception,e:
+    except Exception as e:
         logger.error('failed to build RGC images, message %s' % e)
     # this is a hack - there should be a better way to get this number
     n_gals = len(galsim.config.GetNObjForMultiFits(cosmos_config,0,0))
@@ -277,7 +278,7 @@ def GetShapeMeasurements(image_gal, image_psf, ident=-1):
 
     # find adaptive moments  
     try: moments = galsim.hsm.FindAdaptiveMom(image_gal)
-    except Exception,e: raise RuntimeError('FindAdaptiveMom error, message: %s' % e)
+    except Exception as e: raise RuntimeError('FindAdaptiveMom error, message: %s' % e)
 
     # find HSM moments
     if image_psf == None: hsmcorr_phot_e1 =  hsmcorr_phot_e2  = NO_PSF_VALUE 
@@ -285,7 +286,7 @@ def GetShapeMeasurements(image_gal, image_psf, ident=-1):
         try: 
             hsmcorr   = galsim.hsm.EstimateShear(image_gal,image_psf,strict=True,  
                                                                        shear_est=HSM_SHEAR_EST)
-        except Exception,e: raise RuntimeError('EstimateShear error, message: %s' % e)
+        except Exception as e: raise RuntimeError('EstimateShear error, message: %s' % e)
                 
         logger.debug('galaxy %d : adaptive moments G1=% 2.6f\tG2=% 2.6f\tsigma=%2.6f\t hsm \
             corrected moments G1=% 2.6f\tG2=% 2.6f' 
@@ -345,7 +346,7 @@ def RunMeasurement(config,filename_results,mode):
         try:
             logger.info('creating RGC')
             CreateRGC(config)
-        except Exception,e:
+        except Exception as e:
             raise ValueError('creating RGC failed, message: %s ' % e)
         image_fun = GetReconvImage
     elif mode == 'direct':
@@ -357,7 +358,7 @@ def RunMeasurement(config,filename_results,mode):
     try:
         (img_gals,img_psfs) = image_fun(config)
         logger.info('finished getting %s image' % mode)
-    except Exception,e:
+    except Exception as e:
         logger.error('building image failed, message: %s' % e)
 
     # get number of objects
@@ -373,7 +374,7 @@ def RunMeasurement(config,filename_results,mode):
         # get shapes and pixel differences
         try:
             result = GetShapeMeasurements(img_gal, img_psf, i)
-        except Exception,e:
+        except Exception as e:
             logger.error('failed to get shapes for for galaxy %d. Message:\n %s' % (i,e))
             result = _ErrorResults(HSM_ERROR_VALUE,i)
   
@@ -416,7 +417,7 @@ def ChangeConfigValue(config,path,value):
         exec(eval_str + '=' + str(value))
         logger.debug('changed %s to %f' % (eval_str,eval(eval_str)))
     except:
-        print config
+        print(config)
         raise ValueError('wrong path in config : %s' % eval_str)
 
 def RunComparisonForVariedParams(config):

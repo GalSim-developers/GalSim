@@ -20,6 +20,7 @@
 A script to plot outputs from test_interpolants.py.  The columns-to-quantity relationship is 
 hard-coded in, so both of the scripts need to be altered in tandem if the outputs change.
 """
+from __future__ import print_function
 # These two lines allow you to run this script on a terminal with no Display defined, eg through
 # a PBS queue
 import matplotlib
@@ -311,7 +312,7 @@ def plot_interpolants(plotfile, filenamebase):
             
 if __name__=='__main__':
     if len(sys.argv)<3:
-        print "To use this script, call "
-        print "./plot_test_interpolants.py name-of-file-to-plot root-of-image-file-names"
+        print("To use this script, call ")
+        print("./plot_test_interpolants.py name-of-file-to-plot root-of-image-file-names")
     else:   
         plot_interpolants(sys.argv[-2], sys.argv[-1])

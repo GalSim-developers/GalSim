@@ -17,6 +17,7 @@
 #
 """Unit tests for the WFIRST module (galsim.wfirst)
 """
+from __future__ import print_function
 
 import numpy as np
 
@@ -164,7 +165,7 @@ def test_wfirst_wcs():
     np.testing.assert_almost_equal(pa.rad(), -np.pi/2, decimal=3)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_wfirst_backgrounds():
     """Test the WFIRST background estimation routines for basic sanity.
@@ -188,7 +189,7 @@ def test_wfirst_backgrounds():
                                                                  5.*galsim.degrees),
                                  date=datetime.date(2025,9,15))
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     # The routine should have some obvious symmetry, for example, ecliptic latitude above vs. below
     # plane and ecliptic longitude positive vs. negative (or vs. 360 degrees - original value).
@@ -211,7 +212,7 @@ def test_wfirst_backgrounds():
     np.testing.assert_almost_equal(1.7*level_p, level_p_2, decimal=8)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_wfirst_bandpass():
     """Test the WFIRST bandpasses for basic sanity.
@@ -284,7 +285,7 @@ def test_wfirst_bandpass():
             "{0}".format(filter_name))
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_wfirst_detectors():
     """Test the WFIRST detector routines for consistency with standard detector routines.
@@ -342,7 +343,7 @@ def test_wfirst_detectors():
         err_msg='IPC results depend on function used.')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_wfirst_psfs():
     """Test the WFIRST PSF routines for reasonable behavior.
@@ -480,10 +481,10 @@ def test_wfirst_psfs():
         np.testing.assert_raises(ValueError, galsim.wfirst.getPSF,
                                  SCAs=0)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 if __name__ == "__main__":
     test_wfirst_wcs()

@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -23,7 +24,7 @@
 
 import sys
 import subprocess
-print 'Note: galsim_json has been deprecated.  Use galsim instead.'
-print 'Running galsim -f json',' '.join(sys.argv[1:])
-print
+print('Note: galsim_json has been deprecated.  Use galsim instead.')
+print('Running galsim -f json',' '.join(sys.argv[1:]))
+print()
 subprocess.call( ['galsim','-f','json'] + sys.argv[1:] )

@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -42,7 +43,7 @@ def check_dep(f, *args, **kwargs):
         res = f(*args, **kwargs)
     #print 'w = ',w
     assert len(w) >= 1, "Calling %s did not raise a warning"%str(f)
-    print [ str(wk.message) for wk in w ]
+    print([ str(wk.message) for wk in w ])
     return res
 
 
@@ -72,7 +73,7 @@ def test_dep_bandpass():
                                          err_msg="wrong wave_list in Bandpass.__rdiv__")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_dep_base():
@@ -181,7 +182,7 @@ def test_dep_base():
     np.testing.assert_equal(gsp1.folding_threshold, check_dep(getattr, gsp2, 'alias_threshold'))
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_dep_bounds():
@@ -230,7 +231,7 @@ def test_dep_bounds():
         np.testing.assert_almost_equal(b2.ymax, 503)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
  
 
 def test_dep_chromatic():
@@ -257,7 +258,7 @@ def test_dep_chromatic():
     np.testing.assert_array_almost_equal(im1.array, im2.array)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
  
 
 def test_dep_correlatednoise():
@@ -347,7 +348,7 @@ def test_dep_correlatednoise():
     np.testing.assert_array_almost_equal(im1.array, im2.array)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_dep_gsobject_ring():
@@ -473,10 +474,10 @@ def test_dep_gsobject_ring():
         np.testing.assert_raises(AssertionError,gsobject_compare, gal4a, gal4c,
                                  conv=galsim.Gaussian(sigma=1))
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_dep_image():
@@ -597,7 +598,7 @@ def test_dep_image():
                     assert im3_view(x+dx,y+dy) == 10*x+y
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_dep_noise():
@@ -646,7 +647,7 @@ def test_dep_noise():
     np.testing.assert_almost_equal(cn.getReadNoise(), 11)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_dep_random():
@@ -724,7 +725,7 @@ def test_dep_random():
 
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_dep_scene():
@@ -780,7 +781,7 @@ def test_dep_scene():
     assert cat2.nobjects==cat3.nobjects
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_dep_sed():
@@ -808,7 +809,7 @@ def test_dep_sed():
                                    err_msg="Found wrong value in SED.__rdiv__")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_dep_shapelet():
@@ -934,7 +935,7 @@ def test_dep_shapelet():
     np.testing.assert_array_almost_equal(s1.getBVec(), s2.getBVec())
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_dep_shear():
@@ -969,7 +970,7 @@ def test_dep_shear():
     np.testing.assert_almost_equal(s.beta / galsim.degrees, 52)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 if __name__ == "__main__":
     test_dep_bandpass()

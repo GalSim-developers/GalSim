@@ -19,6 +19,7 @@
 """@file reconvolution_validation_plots.py 
 Create various plot from data produced by reconvolution_validation.py.
 """
+from __future__ import print_function
 
 import logging
 import sys
@@ -121,14 +122,14 @@ def PlotStatsForParam(config,param_name):
         m1 = [b['m1'] for b in bias_moments_list[iv]]
         # m2 = [b['m2'] for b in bias_moments_list[iv]]
 
-        print any(numpy.isnan(m1))
+        print(any(numpy.isnan(m1)))
 
         pylab.plot(numpy.ones([len(m1)])*values_float[iv],m1,'x')
         pylab.errorbar(values_float[iv],numpy.mean(m1),yerr=numpy.std(m1,ddof=1),fmt='o',capsize=30)
         # pylab.plot(numpy.ones([len(m2)])*values_float[iv],m2,'o')
 
-    print values_float
-    print values_float_ticklabels
+    print(values_float)
+    print(values_float_ticklabels)
     pylab.xticks(values_float , values_float_ticklabels)
     pylab.yscale('symlog',linthreshy=1e-2)
     pylab.ylabel('m1')

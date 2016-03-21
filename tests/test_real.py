@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -93,7 +94,7 @@ def test_real_galaxy_ideal():
         np.testing.assert_raises(AttributeError, galsim.RealGalaxy, rgc, id=0, random=True)
         np.testing.assert_raises(AttributeError, galsim.RealGalaxy, rgc)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     do_pickle(rgc, lambda x: [ x.getGal(ind_fake), x.getPSF(ind_fake),
                                x.getNoiseProperties(ind_fake) ])
@@ -123,7 +124,7 @@ def test_real_galaxy_ideal():
         for tpf in targ_PSF_fwhm:
             for tps1 in targ_PSF_shear1:
                 for tps2 in targ_PSF_shear2:
-                    print 'tps,tpf,tps1,tps2 = ',tps,tpf,tps1,tps2
+                    print('tps,tpf,tps1,tps2 = ',tps,tpf,tps1,tps2)
                     # make target PSF
                     targ_PSF = galsim.Gaussian(fwhm = tpf).shear(g1=tps1, g2=tps2)
                     # simulate image
@@ -157,7 +158,7 @@ def test_real_galaxy_ideal():
                         err_msg = "Error in comparison of ideal Gaussian RealGalaxy calculations")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_real_galaxy_saved():
     """Test accuracy of various calculations with real RealGalaxy vs. stored SHERA result"""
@@ -203,7 +204,7 @@ def test_real_galaxy_saved():
     do_pickle(rg)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 if __name__ == "__main__":
     test_real_galaxy_ideal()

@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -51,10 +52,10 @@ def test_cosmos_basic():
         np.testing.assert_raises(IOError, galsim.COSMOSCatalog,
                                  file_name='real_galaxy_catalog_example.fits')
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_cosmos_fluxnorm():
     """Check for flux normalization properties of COSMOSCatalog class."""
@@ -97,7 +98,7 @@ def test_cosmos_fluxnorm():
                                err_msg='Flux normalization problem in COSMOS galaxies')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 if __name__ == "__main__":

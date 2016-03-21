@@ -19,6 +19,7 @@
 """Script for testing the generation of Gaussian profiles by both DFT and photon shooting, for
 comparison of the size and ellipticity in the resulting images.
 """
+from __future__ import print_function
 
 # Basic params of problem that will be consistent across tests:
 PIXEL_SCALE = 0.03
@@ -95,8 +96,8 @@ def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logg
         'err_g1obs err_g2obs err_sigma\n')
     # Start looping through the sample objects and collect the results
     for i, hlr, gabs in zip(range(NOBS), hlr_cosmos, gabs_cosmos):
-        print "Testing galaxy #"+str(i+1)+"/"+str(NOBS)+\
-              " with (hlr, |g|) = "+str(hlr)+", "+str(gabs)
+        print("Testing galaxy #"+str(i+1)+"/"+str(NOBS)+\
+              " with (hlr, |g|) = "+str(hlr)+", "+str(gabs))
         random_theta = 2. * np.pi * ud()
         g1 = gabs * np.cos(2. * random_theta)
         g2 = gabs * np.sin(2. * random_theta)
@@ -132,7 +133,7 @@ def run_tests(random_seed, outfile, config=None, gsparams=None, wmult=None, logg
                     abs_tol_ellip=TOL_ELLIP, abs_tol_size=TOL_SIZE,
                     n_photons_per_trial=NPHOTONS, wmult=wmult)
                 test_ran = True
-            except RuntimeError, err:
+            except RuntimeError as err:
                 test_ran = False
                 pass
 

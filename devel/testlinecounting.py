@@ -18,6 +18,7 @@
 
 """Totally dumb thing Melanie Simet put together to test line-counting algorithms in Python.
 """
+from __future__ import print_function
 
 import numpy
 import time
@@ -105,108 +106,108 @@ def main():
         t1=time.time()
         n = dumbcount(filename)
         t2=time.time()
-        print "Dumb test: trial without comments", i, "took", t2-t1, "with result", n, "(should be 10000)"
+        print("Dumb test: trial without comments", i, "took", t2-t1, "with result", n, "(should be 10000)")
         dumbtime+=t2-t1
     for i in range(ntrials):
         t1=time.time()
         n = dumbcount(filename_with_hashes)
         t2=time.time()
-        print "Dumb test: trial with comments", i, "took", t2-t1, "with result", n, "(should be 599)"
+        print("Dumb test: trial with comments", i, "took", t2-t1, "with result", n, "(should be 599)")
         dumbhashtime+=t2-t1
 
     for i in range(ntrials):
         t1=time.time()
         n = dumbcount_v2(filename)
         t2=time.time()
-        print "Dumb test v2: trial without comments", i, "took", t2-t1, "with result", n, "(should be 10000)"
+        print("Dumb test v2: trial without comments", i, "took", t2-t1, "with result", n, "(should be 10000)")
         dumbtimev2+=t2-t1
     for i in range(ntrials):
         t1=time.time()
         n = dumbcount_v2(filename_with_hashes)
         t2=time.time()
-        print "Dumb test v2: trial with comments", i, "took", t2-t1, "with result", n, "(should be 599)"
+        print("Dumb test v2: trial with comments", i, "took", t2-t1, "with result", n, "(should be 599)")
         dumbhashtimev2+=t2-t1
     
     for i in range(ntrials):
         t1=time.time()
         n = dumbcount_v3(filename)
         t2=time.time()
-        print "Dumb test v3: trial without comments", i, "took", t2-t1, "with result", n, "(should be 10000)"
+        print("Dumb test v3: trial without comments", i, "took", t2-t1, "with result", n, "(should be 10000)")
         dumbtimev3+=t2-t1
     for i in range(ntrials):
         t1=time.time()
         n = dumbcount_v3(filename_with_hashes)
         t2=time.time()
-        print "Dumb test v3: trial with comments", i, "took", t2-t1, "with result", n, "(should be 599)"
+        print("Dumb test v3: trial with comments", i, "took", t2-t1, "with result", n, "(should be 599)")
         dumbhashtimev3+=t2-t1
     
     for i in range(ntrials):
         t1=time.time()
         n = bufcount(filename)
         t2=time.time()
-        print "Buffer test: trial without comments", i, "took", t2-t1, "with result", n, "(should be 10000)"
+        print("Buffer test: trial without comments", i, "took", t2-t1, "with result", n, "(should be 10000)")
         buftime+=t2-t1
     for i in range(ntrials):
         t1=time.time()
         n = bufcount(filename_with_hashes)
         t2=time.time()
-        print "Buffer test: trial with comments", i, "took", t2-t1, "with result", n, "(should be 599)"
+        print("Buffer test: trial with comments", i, "took", t2-t1, "with result", n, "(should be 599)")
         bufhashtime+=t2-t1
     
     for i in range(ntrials):
         t1=time.time()
         n = numpycount(filename)
         t2=time.time()
-        print "Numpy test: trial without comments", i, "took", t2-t1, "with result", n, "(should be 10000)"
+        print("Numpy test: trial without comments", i, "took", t2-t1, "with result", n, "(should be 10000)")
         numpytime+=t2-t1
     for i in range(ntrials):
         t1=time.time()
         n = numpycount(filename_with_hashes)
         t2=time.time()
-        print "Numpy test: trial with comments", i, "took", t2-t1, "with result", n, "(should be 599)"
+        print("Numpy test: trial with comments", i, "took", t2-t1, "with result", n, "(should be 599)")
         numpyhashtime+=t2-t1
     
     for i in range(ntrials):
         t1=time.time()
         n = readlinescount(filename)
         t2=time.time()
-        print "Readlines test: trial without comments", i, "took", t2-t1, "with result", n, "(should be 10000)"
+        print("Readlines test: trial without comments", i, "took", t2-t1, "with result", n, "(should be 10000)")
         readlinestime+=t2-t1
     for i in range(ntrials):
         t1=time.time()
         n = readlinescount(filename_with_hashes)
         t2=time.time()
-        print "Readlines test: trial with comments", i, "took", t2-t1, "with result", n, "(should be 599)"
+        print("Readlines test: trial with comments", i, "took", t2-t1, "with result", n, "(should be 599)")
         readlineshashtime+=t2-t1
     
     for i in range(ntrials):
         t1=time.time()
         n = readlines2count(filename)
         t2=time.time()
-        print "Readlines2 test: trial without comments", i, "took", t2-t1, "with result", n, "(should be 10000)"
+        print("Readlines2 test: trial without comments", i, "took", t2-t1, "with result", n, "(should be 10000)")
         readlines2time+=t2-t1
     for i in range(ntrials):
         t1=time.time()
         n = readlines2count(filename_with_hashes)
         t2=time.time()
-        print "Readlines2 test: trial with comments", i, "took", t2-t1, "with result", n, "(should be 599)"
+        print("Readlines2 test: trial with comments", i, "took", t2-t1, "with result", n, "(should be 599)")
         readlines2hashtime+=t2-t1
     
-    print "***FINAL RESULTS***"
-    print "Dumb test:", dumbtime/ntrials, "without comments"
-    print "Dumb test:", dumbhashtime/ntrials, "with comments"
-    print "Dumb test v2:", dumbtimev2/ntrials, "without comments"
-    print "Dumb test v2:", dumbhashtimev2/ntrials, "with comments"
-    print "Dumb test v3:", dumbtimev3/ntrials, "without comments"
-    print "Dumb test v3:", dumbhashtimev3/ntrials, "with comments"
-    print "Buffer test:", buftime/ntrials, "without comments"
-    print "Buffer test:", bufhashtime/ntrials, "with comments"
-    print "Numpy test:", numpytime/ntrials, "without comments"
-    print "Numpy test:", numpyhashtime/ntrials, "with comments"
-    print "Readlines test:", readlinestime/ntrials, "without comments"
-    print "Readlines test:", readlineshashtime/ntrials, "with comments"
-    print "Readlines2 test:", readlines2time/ntrials, "without comments"
-    print "Readlines2 test:", readlines2hashtime/ntrials, "with comments"
+    print("***FINAL RESULTS***")
+    print("Dumb test:", dumbtime/ntrials, "without comments")
+    print("Dumb test:", dumbhashtime/ntrials, "with comments")
+    print("Dumb test v2:", dumbtimev2/ntrials, "without comments")
+    print("Dumb test v2:", dumbhashtimev2/ntrials, "with comments")
+    print("Dumb test v3:", dumbtimev3/ntrials, "without comments")
+    print("Dumb test v3:", dumbhashtimev3/ntrials, "with comments")
+    print("Buffer test:", buftime/ntrials, "without comments")
+    print("Buffer test:", bufhashtime/ntrials, "with comments")
+    print("Numpy test:", numpytime/ntrials, "without comments")
+    print("Numpy test:", numpyhashtime/ntrials, "with comments")
+    print("Readlines test:", readlinestime/ntrials, "without comments")
+    print("Readlines test:", readlineshashtime/ntrials, "with comments")
+    print("Readlines2 test:", readlines2time/ntrials, "without comments")
+    print("Readlines2 test:", readlines2hashtime/ntrials, "with comments")
     
 if __name__=='__main__':
     main()

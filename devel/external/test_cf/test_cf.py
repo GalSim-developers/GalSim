@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -28,12 +29,12 @@ if __name__ == "__main__":
     # First make a noise field with an even number of elements
     enoise = galsim.ImageViewD(np.random.randn(IMSIZE, IMSIZE))
     encf = galsim.correlatednoise.CorrFunc(enoise)
-    print encf.SBProfile.xValue(galsim.PositionD(0, 0))
+    print(encf.SBProfile.xValue(galsim.PositionD(0, 0)))
 
     # Then make a noise field with an odd number of elements
     onoise = galsim.ImageViewD(np.random.randn(IMSIZE + 1, IMSIZE + 1))
     oncf = galsim.correlatednoise.CorrFunc(onoise)
-    print oncf.SBProfile.xValue(galsim.PositionD(0, 0))
+    print(oncf.SBProfile.xValue(galsim.PositionD(0, 0)))
 
     testim = galsim.ImageD(10, 10)
     cv = encf.SBProfile.getCovarianceMatrix(testim.view(), dx=1.)

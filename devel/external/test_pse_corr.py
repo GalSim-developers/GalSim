@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -101,7 +102,7 @@ def doplot(r, t_xip, t_xim, xip, xim, pref):
     plt.legend(loc='upper right')
     figfile = pref + '.png'
     plt.savefig(figfile)
-    print 'Wrote to file ',figfile
+    print('Wrote to file ',figfile)
 
 def run_treecorr(x, y, g1, g2):
     """Helper routine to take outputs of GalSim shear grid routine, and run treecorr on it."""
@@ -139,12 +140,12 @@ x, y = np.meshgrid(grid_range, grid_range)
 
 # Now we do the iterations to build the shear grids.
 for ind in range(n_iter):
-    print 'Building grid %d'%ind
+    print('Building grid %d'%ind)
     g1, g2 = test_ps.buildGrid(grid_spacing=dtheta, ngrid=grid_nx,
                                rng=rng, units='degrees', kmin_factor=kmin_factor,
                                kmax_factor=kmax_factor)
 
-    print 'Calculating correlations %d'%ind
+    print('Calculating correlations %d'%ind)
     gg = run_treecorr(x,y,g1,g2)
     if ind == 0:
         r = np.exp(gg.meanlogr)
@@ -158,11 +159,11 @@ for ind in range(n_iter):
 xip /= n_iter
 xim /= n_iter
 
-print "Converting theory from PS to correlation functions"
+print("Converting theory from PS to correlation functions")
 theory_xip = calculate_xi(r,theory_tab,0)
 theory_xim = calculate_xi(r,theory_tab,4)
 theory_xiket = calculate_xi(r,theory_tab,2)
 
-print "Making figures of dimensionless power, and writing to files"
+print("Making figures of dimensionless power, and writing to files")
 doplot(r, theory_xip, theory_xim,  xip, xim,  file_prefix)
 

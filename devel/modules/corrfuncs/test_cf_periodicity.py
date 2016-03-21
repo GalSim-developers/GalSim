@@ -21,6 +21,7 @@ the periodicity correction, and other effects.
 
 See the full discussion at https://github.com/GalSim-developers/GalSim/issues/430 
 """
+from __future__ import print_function
 import numpy as np
 import galsim
 
@@ -100,19 +101,19 @@ for dim in range(TESTSTART, TESTEND):
     if np.any(
         ps_from_halfcfreal_testsize.real < -1.e-12 * np.mean(ps_from_halfcfreal_testsize.real)):
         failed7 += 1
-print ""
-print "With periodicity correction failed                                              "+\
-    str(failed1)+"/"+str(TESTEND - TESTSTART)+" times"
-print "Without periodicity correction failed                                           "+\
-    str(failed2)+"/"+str(TESTEND - TESTSTART)+" times"
-print "By hand, PS from real part of CF failed                                         "+\
-    str(failed3)+"/"+str(TESTEND - TESTSTART)+" times"
-print "By hand, PS from abs() of CF failed                                             "+\
-    str(failed4)+"/"+str(TESTEND - TESTSTART)+" times"
-print "By hand, PS from real part of CF + periodicity correction failed                "+\
-    str(failed5)+"/"+str(TESTEND - TESTSTART)+" times"
-print "By hand, PS from real part of CF, expanded to test size, failed                 "+\
-    str(failed6)+"/"+str(TESTEND - TESTSTART)+" times"
-print "By hand, PS from Hermitian half real part of CF, expanded to test size, failed  "+\
-    str(failed7)+"/"+str(TESTEND - TESTSTART)+" times"
-print ""
+print("")
+print("With periodicity correction failed                                              "+\
+    str(failed1)+"/"+str(TESTEND - TESTSTART)+" times")
+print("Without periodicity correction failed                                           "+\
+    str(failed2)+"/"+str(TESTEND - TESTSTART)+" times")
+print("By hand, PS from real part of CF failed                                         "+\
+    str(failed3)+"/"+str(TESTEND - TESTSTART)+" times")
+print("By hand, PS from abs() of CF failed                                             "+\
+    str(failed4)+"/"+str(TESTEND - TESTSTART)+" times")
+print("By hand, PS from real part of CF + periodicity correction failed                "+\
+    str(failed5)+"/"+str(TESTEND - TESTSTART)+" times")
+print("By hand, PS from real part of CF, expanded to test size, failed                 "+\
+    str(failed6)+"/"+str(TESTEND - TESTSTART)+" times")
+print("By hand, PS from Hermitian half real part of CF, expanded to test size, failed  "+\
+    str(failed7)+"/"+str(TESTEND - TESTSTART)+" times")
+print("")

@@ -1,3 +1,4 @@
+from __future__ import print_function
 # Copyright (c) 2012-2015 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
@@ -61,7 +62,7 @@ decimal = 5
 
 #### some helper functions
 def all_shear_vals(test_shear, index, mult_val = 1.0):
-    print 'test_shear = ',repr(test_shear)
+    print('test_shear = ',repr(test_shear))
     # this function tests that all values of some Shear object are consistent with the tabulated
     # values, given the appropriate index against which to test, and properly accounting for the
     # fact that SBProfile sometimes has the angle in the range [pi, 2*pi)
@@ -190,10 +191,10 @@ def test_shear_initialization():
         np.testing.assert_raises(TypeError,galsim.Shear,beta=45.0,g=0.3)
         np.testing.assert_raises(TypeError,galsim.Shear,q=0.1,beta=0.)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_shear_methods():
@@ -241,7 +242,7 @@ def test_shear_methods():
     # in test_shear_initialization, where we checked the values directly
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_shear_matrix():
     """Test that the shear matrix is calculated correctly.
@@ -273,7 +274,7 @@ def test_shear_matrix():
                                                  err_msg="rotationWith returned wrong angle")
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 if __name__ == "__main__":
