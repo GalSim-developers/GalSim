@@ -74,10 +74,13 @@ gal:
 
 stamp:
     # In blend.py (loaded by the modules field above), we define a custom stamp type
-    # called Blend.
+    # called BlendSet.
+    # The first stamp is similar to what we did in blend.yaml with the stamp type Blend.
     # It has one galaxy centered (more or less -- cf image.offset) on the stamp, and then
     # some number of neighbors also appearing on the stamp placed randomly within some range
     # of allowed separations.
+    # However, then BlendSet repeats the image n_neighbors more times centering on each of the
+    # neighbors in turn.
     type: BlendSet
 
     # Up to 5 neighbors.  Each neighbor has a prob of p=0.3 of being included.
