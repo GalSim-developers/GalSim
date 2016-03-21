@@ -765,7 +765,7 @@ namespace galsim {
     template <class T>
     double SBProfile::drawShoot(
         ImageView<T> img, double N, UniformDeviate u, double gain, double max_extra_noise,
-        bool poisson_flux, bool add_to_image, Silicon* = NULL) const
+        bool poisson_flux, bool add_to_image, Silicon* silicon) const
     {
         // If N = 0, this routine will try to end up with an image with the number of real
         // photons = flux that has the corresponding Poisson noise. For profiles that are
@@ -1049,10 +1049,10 @@ namespace galsim {
 
     template double SBProfile::drawShoot(
         ImageView<float> image, double N, UniformDeviate ud, double gain,
-        double max_extra_noise, bool poisson_flux, bool add_to_image) const;
+        double max_extra_noise, bool poisson_flux, bool add_to_image, Silicon* silicon) const;
     template double SBProfile::drawShoot(
         ImageView<double> image, double N, UniformDeviate ud, double gain,
-        double max_extra_noise, bool poisson_flux, bool add_to_image) const;
+        double max_extra_noise, bool poisson_flux, bool add_to_image, Silicon* silicon) const;
 
     template double SBProfile::draw(ImageView<float> img, double gain, double wmult) const;
     template double SBProfile::draw(ImageView<double> img, double gain, double wmult) const;

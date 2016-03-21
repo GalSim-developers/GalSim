@@ -7,6 +7,9 @@
 
 //****************** silicon.h **************************
 
+#ifndef SILICON_H
+#define SILICON_H
+
 #include "polygon.h"
 #include "Image.h"
 
@@ -26,4 +29,6 @@ namespace galsim
      bool InsidePixel(int, int, double, double, double, ImageView<float>&);
      double random_gaussian(void);
  };
-}  
+}
+
+#endif

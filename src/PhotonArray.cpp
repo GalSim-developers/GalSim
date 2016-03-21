@@ -163,12 +163,10 @@ namespace galsim {
     }
 
     template <class T>
-    double PhotonArray::addTo(ImageView<T>& target, UniformDeviate ud, Silicon* silicon = NULL) const
+    double PhotonArray::addTo(ImageView<T>& target, UniformDeviate ud, Silicon* silicon) const
     {
       // Modified by Craig Lage - UC Davis to incorporate the brighter-fatter effect
       // 16-Mar-16
-      if (silicon!=NULL)
-      {
       // 'silicon' must be passed to the function, optionally
       // Silicon* silicon = new Silicon("../poisson/BF_256_9x9_0_Vertices"); // Create and read in pixel distortions
       bool FoundPixel;
@@ -188,7 +186,6 @@ namespace galsim {
 	  { DiffStep = silicon->DiffStep * (zconv - 10.0) / 100.0 * sqrt(ccdtemp / 173.0); }
 
  	  int zerocount = 0, nearestcount = 0, othercount = 0, misscount = 0;
-      }
       
       Bounds<int> b = target.getBounds();
 
@@ -212,7 +209,7 @@ namespace galsim {
         for (int i=0; i<int(size()); i++)
 	  {
 	    int ix, iy;
-        if (silicon!==NULL)
+        if (silicon!=NULL)
         {
 	      // First we add in a displacement due to diffusion
 	      x = _x[i] + DiffStep * gd() / 10.0;
@@ -323,7 +320,9 @@ namespace galsim {
         }
 #endif
 	// These counts are mainly for debug purposes and can be removed later.
-	printf("Found %d photons in undistorted pixel, %d in closest neighbor, %d in other neighbor. %d not in any pixel\n",zerocount, nearestcount, othercount, misscount);
+	std::cout << "Found "<< zerocount << " photons in undistorted pixel, " << nearestcount <<
+      " in closest neighbor, " << othercount << " in other neighbor. " << misscount << " not in any pixel\n"
+        << std::endl;
 	    // delete silicon;
         return addedFlux;
     }

@@ -32,7 +32,7 @@
 #include "Random.h"
 #include "Image.h"
 
-#include "Silicon.h"
+#include "silicon.h"
 
 namespace galsim {
 

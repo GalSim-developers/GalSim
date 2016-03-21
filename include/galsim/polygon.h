@@ -7,6 +7,8 @@
 
 //****************** polygon.h **************************
 
+#ifndef POLYGON_H
+#define POLYGON_H
 
 class Point
 {
@@ -32,4 +34,4 @@ class Polygon
   double Area();
   bool PointInside(Point*);
 };
-
+#endif
