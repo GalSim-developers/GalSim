@@ -370,6 +370,33 @@ class OpticalPSF(GSObject):
                     "This could lead to aliasing problems. " +
                     "Using pad_factor >= %f is recommended."%(pad_factor * stepk / final_stepk))
 
+    def __eq__(self, other):
+        return (isinstance(other, galsim.OpticalPSF) and
+                self._lam_over_diam == other._lam_over_diam and
+                np.array_equal(self._aberrations, other._aberrations) and
+                self._oversampling == other._oversampling and
+                self._pad_factor == other._pad_factor and
+                self._obscuration == other._obscuration and
+                self._nstruts == other._nstruts and
+                self._strut_thick == other._strut_thick and
+                self._strut_angle == other._strut_angle and
+                self._pupil_plane_im == other._pupil_plane_im and
+                self._circular_pupil == other._circular_pupil and
+                self._max_size == other._max_size and
+                self._interpolant == other._interpolant and
+                self._flux == other._flux and
+                self._gsparams == other._gsparams)
+
+    def __hash__(self):
+        hsh = hash(("galsim.OpticalPSF", self._lam_over_diam, tuple(self._aberrations),
+                    self._oversampling, self._pad_factor, self._obscuration, self._nstruts,
+                    self._strut_thick, self._strut_angle, self._pupil_angle, self._circular_pupil,
+                    self._max_size, self._interpolant, self._flux, self._gsparams))
+        if self._pupil_plane_im is not None:
+            hsh ^= hash((tuple(self._pupil_plane_im.array.ravel()), self._pupil_plane_im.bounds,
+                         self._pupil_plane_im.wcs))
+        return hsh
+
     def __repr__(self):
         s = 'galsim.OpticalPSF(lam_over_diam=%r, aberrations=%r, oversampling=%r, pad_factor=%r'%(
                 self._lam_over_diam, self._aberrations, self._oversampling, self._pad_factor)
