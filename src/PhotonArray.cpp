@@ -163,7 +163,7 @@ namespace galsim {
     }
 
     template <class T>
-    double PhotonArray::addTo(ImageView<T>& target) const 
+    double PhotonArray::addTo(ImageView<T>& target, UniformDeviate ud) const
     {
       // Modified by Craig Lage - UC Davis to incorporate the brighter-fatter effect
       // 16-Mar-16
@@ -177,6 +177,8 @@ namespace galsim {
                            // Will add more detail later
       double ccdtemp = 173; // CCD temp in K
       double DiffStep; // Mean diffusion step size in microns
+      GaussianDeviate gd(ud,0,1);
+
       if (zconv <= 10.0)
 	{
 	  DiffStep = 0.0;
@@ -212,11 +214,11 @@ namespace galsim {
 	    bool FoundPixel;
 	    int ix, iy;
 	    // First we add in a displacement due to diffusion
-	    x = _x[i] + DiffStep * silicon->random_gaussian() / 10.0;
-	    y = _y[i] + DiffStep * silicon->random_gaussian() / 10.0;
+	    x = _x[i] + DiffStep * gd() / 10.0;
+	    y = _y[i] + DiffStep * gd() / 10.0;
 	    // Now we find the undistorted pixel
-	    ix = int(floor(x + 0.5));
-            iy = int(floor(y + 0.5));
+        ix = int(floor(x + 0.5));
+        iy = int(floor(y + 0.5));
 	    int n=0, step, ix_off, iy_off;
 	    x = x - (double) ix + 0.5;
 	    y = y - (double) iy + 0.5;
@@ -259,7 +261,7 @@ namespace galsim {
 		// arrive here due to roundoff error of the pixel boundary.  When this happens, I put
 		// the electron in the undistorted pixel or the nearest neighbor with equal probability.
 		misscount += 1;
-		if (drand48() > 0.5)
+		if (ud() > 0.5)
 		  {
 		    n = 0;
 		    zerocount +=1;
@@ -317,7 +319,7 @@ namespace galsim {
     }
 
     // instantiate template functions for expected image types
-    template double PhotonArray::addTo(ImageView<float>& image) const;
-    template double PhotonArray::addTo(ImageView<double>& image) const;
+    template double PhotonArray::addTo(ImageView<float>& image, UniformDeviate ud) const;
+    template double PhotonArray::addTo(ImageView<double>& image, UniformDeviate ud) const;
 
 }
