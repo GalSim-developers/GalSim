@@ -569,7 +569,7 @@ class SED(object):
         return not self.__eq__(other)
 
     def __hash__(self):
-        return hash((self._orig_spec, self.wave_factor, self.flux_type, self.redshift,
+        return hash(("galsim.SED", self._orig_spec, self.wave_factor, self.flux_type, self.redshift,
                      self.blue_limit, self.red_limit, tuple(self.wave_list)))
 
     def __repr__(self):
