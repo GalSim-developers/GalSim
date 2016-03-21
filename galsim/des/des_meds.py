@@ -254,12 +254,14 @@ def WriteMEDS(obj_list, file_name, clobber=True):
             vec['psf'].append(obj.psf[i].array.flatten())
 
             # append the Jacobian
-            dudrow[i] = obj.wcs[i].dudx
-            dudcol[i] = obj.wcs[i].dudy
-            dvdrow[i] = obj.wcs[i].dvdx
-            dvdcol[i] = obj.wcs[i].dvdy
-            row0[i]   = obj.wcs[i].origin.x
-            col0[i]   = obj.wcs[i].origin.y
+            # col == x
+            # row == y
+            dudcol[i] = obj.wcs[i].dudx
+            dudrow[i] = obj.wcs[i].dudy
+            dvdcol[i] = obj.wcs[i].dvdx
+            dvdrow[i] = obj.wcs[i].dvdy
+            col0[i]   = obj.wcs[i].origin.x
+            row0[i]   = obj.wcs[i].origin.y
 
             # check if we are running out of memory
             if sys.getsizeof(vec) > MAX_MEMORY:
@@ -465,7 +467,8 @@ class MEDSBuilder(galsim.config.OutputBuilder):
             obj = MultiExposureObject(images = main_images[k1:k2],
                                       weight = weight_images[k1:k2],
                                       badpix = bpk,
-                                      psf = psf_images[k1:k2])
+                                      psf = psf_images[k1:k2],
+                                      id = obj_num + i)
             obj_list.append(obj)
 
         return obj_list

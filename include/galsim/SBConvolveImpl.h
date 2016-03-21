@@ -36,7 +36,7 @@ namespace galsim {
         std::list<SBProfile> getObjs() const { return _plist; }
         bool isRealSpace() const { return _real_space; }
 
-        void add(const SBProfile& rhs); 
+        void add(const SBProfile& rhs);
 
         // Do the real-space convolution to calculate this.
         double xValue(const Position<double>& p) const;
@@ -50,11 +50,11 @@ namespace galsim {
         double maxK() const { return _minMaxK; }
         double stepK() const { return _netStepK; }
 
-        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const 
-        { 
+        void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const
+        {
             // Getting the splits correct would require a bit of work.
-            // So if we ever do real-space convolutions where one of the elements 
-            // is (or includes) another convolution, we might want to rework this a 
+            // So if we ever do real-space convolutions where one of the elements
+            // is (or includes) another convolution, we might want to rework this a
             // bit.  But I don't think this is really every going to be used, so
             // I didn't try to get that right.  (Note: ignoring the splits won't be
             // wrong -- just not optimal.)
@@ -69,7 +69,7 @@ namespace galsim {
             }
         }
 
-        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const 
+        void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const
         {
             std::vector<double> splits0;
             ConstIter pptr = _plist.begin();
@@ -82,7 +82,7 @@ namespace galsim {
             }
         }
 
-        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const 
+        void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const
         {
             std::vector<double> splits0;
             ConstIter pptr = _plist.begin();
@@ -95,7 +95,7 @@ namespace galsim {
             }
         }
 
-        Position<double> centroid() const 
+        Position<double> centroid() const
         { return Position<double>(_x0, _y0); }
 
         double getFlux() const { return _fluxProduct; }
