@@ -46,6 +46,8 @@
 #include "Image.h"
 #include "PhotonArray.h"
 
+#include "Silicon.h"
+
 namespace galsim {
 
     // All code between the @cond and @endcond is excluded from Doxygen documentation
@@ -396,7 +398,7 @@ namespace galsim {
         template <typename T>
         double drawShoot(
             ImageView<T> image, double N, UniformDeviate ud, double gain,
-            double max_extra_noise, bool poisson_flux, bool add_to_image) const;
+            double max_extra_noise, bool poisson_flux, bool add_to_image, Silicon* silicon=NULL) const;
 
 
         /** 

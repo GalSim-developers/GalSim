@@ -163,11 +163,14 @@ namespace galsim {
     }
 
     template <class T>
-    double PhotonArray::addTo(ImageView<T>& target, UniformDeviate ud) const
+    double PhotonArray::addTo(ImageView<T>& target, UniformDeviate ud, Silicon* silicon = NULL) const
     {
       // Modified by Craig Lage - UC Davis to incorporate the brighter-fatter effect
       // 16-Mar-16
-      Silicon* silicon = new Silicon("../poisson/BF_256_9x9_0_Vertices"); // Create and read in pixel distortions
+      if (silicon!=NULL)
+      {
+      // 'silicon' must be passed to the function, optionally
+      // Silicon* silicon = new Silicon("../poisson/BF_256_9x9_0_Vertices"); // Create and read in pixel distortions
       bool FoundPixel;
       int xoff[9] = {0,1,1,0,-1,-1,-1,0,1};// Displacements to neighboring pixels
       int yoff[9] = {0,0,1,1,1,0,-1,-1,-1};// Displacements to neighboring pixels
@@ -175,18 +178,17 @@ namespace galsim {
       double x, y, x_off, y_off;
       double zconv = 95.0; // Z coordinate of photoconversion in microns
                            // Will add more detail later
-      double ccdtemp = 173; // CCD temp in K
+      double ccdtemp =  173; // CCD temp in K <- THIS SHOULD COME FROM silicon
       double DiffStep; // Mean diffusion step size in microns
-      GaussianDeviate gd(ud,0,1);
+      GaussianDeviate gd(ud,0,1); // Random variable from Standard Normal dist.
 
       if (zconv <= 10.0)
-	{
-	  DiffStep = 0.0;
-	}
+	  { DiffStep = 0.0; }
       else
-	{
-	  DiffStep = silicon->DiffStep * (zconv - 10.0) / 100.0 * sqrt(ccdtemp / 173.0);
-	}
+	  { DiffStep = silicon->DiffStep * (zconv - 10.0) / 100.0 * sqrt(ccdtemp / 173.0); }
+
+ 	  int zerocount = 0, nearestcount = 0, othercount = 0, misscount = 0;
+      }
       
       Bounds<int> b = target.getBounds();
 
@@ -207,23 +209,31 @@ namespace galsim {
         std::vector<std::vector<double> > posFlux(nx,std::vector<double>(ny,0.));
         std::vector<std::vector<double> > negFlux(nx,std::vector<double>(ny,0.));
 #endif
-	int zerocount = 0, nearestcount = 0, othercount = 0, misscount = 0;
         for (int i=0; i<int(size()); i++)
 	  {
-	    double x, y, x_off, y_off;
-	    bool FoundPixel;
 	    int ix, iy;
-	    // First we add in a displacement due to diffusion
-	    x = _x[i] + DiffStep * gd() / 10.0;
-	    y = _y[i] + DiffStep * gd() / 10.0;
+        if (silicon!==NULL)
+        {
+	      // First we add in a displacement due to diffusion
+	      x = _x[i] + DiffStep * gd() / 10.0;
+	      y = _y[i] + DiffStep * gd() / 10.0;
+        }
+        else
+        {
+          x = _x[i];
+          y = _y[i];
+        }
 	    // Now we find the undistorted pixel
         ix = int(floor(x + 0.5));
         iy = int(floor(y + 0.5));
+        if (silicon!=NULL)
+        {
 	    int n=0, step, ix_off, iy_off;
 	    x = x - (double) ix + 0.5;
 	    y = y - (double) iy + 0.5;
 	    // (ix,iy) are the undistorted pixel coordinates.
-	    // (x,y) are the coordinates within the pixel, centered at the lower left
+	    // (x,y) are the coordinates within the pixel, centered at the lower left - CRAIG, BETTER TO
+	    // CALL IT (dx,dy)
 
 	    // The following code finds which pixel we are in given
 	    // pixel distortion due to the brighter-fatter effect
@@ -233,7 +243,7 @@ namespace galsim {
 	    if      ((x > y) && (x > 1.0 - y)) step = 1;
 	    else if ((x > y) && (x < 1.0 - y)) step = 7;
 	    else if ((x < y) && (x > 1.0 - y)) step = 3;
-	    else                                               step = 5;
+	    else step = 5;
 	    for (int m=0; m<9; m++)
 	      {
 		ix_off = ix + xoff[n];
@@ -275,9 +285,9 @@ namespace galsim {
 		iy = iy + yoff[n];
 		FoundPixel = true;
 		//printf("Not found in any pixel\n");
-		}
+		  } 
 		// (ix, iy) now give the actual pixel which will receive the charge
-
+        } // end if (silicon!=NULL)
 #ifdef DEBUGLOGGING
             totalFlux += _flux[i];
             xdbg<<"  photon: ("<<_x[i]<<','<<_y[i]<<")  f = "<<_flux[i]<<std::endl;
@@ -314,12 +324,14 @@ namespace galsim {
 #endif
 	// These counts are mainly for debug purposes and can be removed later.
 	printf("Found %d photons in undistorted pixel, %d in closest neighbor, %d in other neighbor. %d not in any pixel\n",zerocount, nearestcount, othercount, misscount);
-	delete silicon;
+	    // delete silicon;
         return addedFlux;
     }
 
     // instantiate template functions for expected image types
-    template double PhotonArray::addTo(ImageView<float>& image, UniformDeviate ud) const;
-    template double PhotonArray::addTo(ImageView<double>& image, UniformDeviate ud) const;
+    template double PhotonArray::addTo(ImageView<float>& image, UniformDeviate ud,
+                                       Silicon* silicon = NULL) const;
+    template double PhotonArray::addTo(ImageView<double>& image, UniformDeviate ud,
+                                       Silicon* silicon = NULL) const;
 
 }

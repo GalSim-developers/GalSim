@@ -259,6 +259,7 @@ Silicon::~Silicon () {
   double Silicon::random_gaussian(void)
   {
     // Copied from PhoSim
+    // - SHOULD NOT BE USED!
     double u1 = 0.0, u2 = 0.0, v1 = 0.0, v2 = 0.0, s = 2.0;
     while(s >= 1)
       {
