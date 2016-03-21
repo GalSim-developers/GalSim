@@ -226,13 +226,15 @@ class LookupTable(object):
                 self.f_log == other.f_log and
                 self.interpolant == other.interpolant)
 
+    def __hash__(self):
+        return hash((tuple(self.x), tuple(self.f), self.x_log, self.f_log, self.interpolant))
+
     def __ne__(self, other):
         return not self.__eq__(other)
 
     def __repr__(self):
-        with galsim.utilities.printoptions(threshold=6):
-            outstr = 'galsim.LookupTable(x=%r, f=%r, x_log=%r, f_log=%r, interpolant=%r)' % (
-                self.x, self.f, self.x_log, self.f_log, self.interpolant)
+        outstr = 'galsim.LookupTable(x=%r, f=%r, x_log=%r, f_log=%r, interpolant=%r)' % (
+            self.x, self.f, self.x_log, self.f_log, self.interpolant)
         return outstr
 
     def __str__(self):
@@ -242,9 +244,6 @@ class LookupTable(object):
         else:
             return 'galsim.LookupTable(x=[%s,..,%s], f=[%s,...,%s], interpolant=%r)' % (
                 self.x[0], self.x[-1], self.f[0], self.f[-1], self.interpolant)
-
-    def __hash__(self):
-        return hash(repr(self)) ^ hash(repr(self.x.tolist())) ^ hash(repr(self.f.tolist()))
 
 
 # A function to enable pickling of tables

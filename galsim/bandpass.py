@@ -481,14 +481,34 @@ class Bandpass(object):
     def __eq__(self, other):
         return (isinstance(other, Bandpass) and
                 self._orig_tp == other._orig_tp and
-                self.red_limit == other.red_limit and
                 self.blue_limit == other.blue_limit and
+                self.red_limit == other.red_limit and
                 self.wave_factor == other.wave_factor and
                 self.zeropoint == other.zeropoint and
                 np.array_equal(self.wave_list, other.wave_list))
 
     def __ne__(self, other):
         return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash((self._orig_tp, self.blue_limit, self.red_limit, self.wave_factor,
+                     self.zeropoint, tuple(self.wave_list)))
+
+    def __repr__(self):
+        if self.wave_factor == 10.0:
+            wave_type = 'Angstroms'
+        else:
+            wave_type = 'nm'
+        outstr = ('galsim.Bandpass(%r, blue_limit=%r, red_limit=%r, wave_type=%r, zeropoint=%r, ' +
+                  '_wave_list=%r)') % (self._orig_tp, self.blue_limit, self.red_limit, wave_type,
+                                       self.zeropoint, self.wave_list)
+        return outstr
+
+    def __str__(self):
+        orig_tp = repr(self._orig_tp)
+        if len(orig_tp) > 80:
+            orig_tp = str(self._orig_tp)
+        return 'galsim.Bandpass(%s)' % self._orig_tp
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -503,23 +523,3 @@ class Bandpass(object):
             self._tp = None
         # If _tp is already set, this is will just set func.
         self._initialize_tp()
-
-    def __repr__(self):
-        if self.wave_factor == 10.0:
-            wave_type = 'Angstroms'
-        else:
-            wave_type = 'nm'
-        with galsim.utilities.printoptions(threshold=6):
-            outstr = ('galsim.Bandpass(%r, blue_limit=%r, red_limit=%r, wave_type=%r, zeropoint=%r, ' +
-                      '_wave_list=%r)') % (self._orig_tp, self.blue_limit, self.red_limit, wave_type,
-                                           self.zeropoint, self.wave_list)
-        return outstr
-
-    def __str__(self):
-        orig_tp = repr(self._orig_tp)
-        if len(orig_tp) > 80:
-            orig_tp = str(self._orig_tp)
-        return 'galsim.Bandpass(%s)' % self._orig_tp
-
-    def __hash__(self):
-        return hash((repr(self), repr(self.wave_list.tolist())))
