@@ -649,6 +649,14 @@ The best success seems to be achieved in Mavericks by *explicitly* specifying
 `clang` and `clang++` as the compiler to GalSim and all its dependencies when
 building (as in the example above).
 
+iv) Docker
+----------
+
+Karen Ng has created a Docker file for containerizing GalSim.  See her repo:
+
+    https://github.com/karenyyng/GalSim_dockerfile
+
+for instructions about how to either use her image or create your own.
 
 5. More SCons options
 =====================
