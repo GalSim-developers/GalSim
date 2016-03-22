@@ -419,7 +419,7 @@ class Convolution(galsim.GSObject):
     # >                     galsim.Gaussian(fwhm=2))
     # Uncached:
     # In [5]: timeit hash(a)
-    # 10000 loops, best of 3: 31.2 µs per loop
+    # 10000 loops, best of 3: 31.2 us per loop
     # Cached:
     # In [8]: timeit hash(a)
     # 1000000 loops, best of 3: 316 ns per loop
