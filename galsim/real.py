@@ -279,6 +279,23 @@ class RealGalaxy(GSObject):
         raise NotImplementedError("Half light radius calculation not implemented for RealGalaxy "
                                    +"objects.")
 
+    def __eq__(self, other):
+        return (isinstance(other, galsim.RealGalaxy) and
+                self.catalog == other.catalog and
+                self.index == other.index and
+                self._x_interpolant == other._x_interpolant and
+                self._k_interpolant == other._k_interpolant and
+                self._pad_factor == other._pad_factor and
+                self._noise_pad_size == other._noise_pad_size and
+                self._flux == other._flux and
+                self._rng == other._rng and
+                self._gsparams == other._gsparams)
+
+    def __hash__(self):
+        return hash(("galsim.RealGalaxy", self.catalog, self.index, self._x_interpolant,
+                     self._k_interpolant, self._pad_factor, self._noise_pad_size, self._flux,
+                     self._rng.serialize(), self._gsparams))
+
     def __repr__(self):
         s = 'galsim.RealGalaxy(%r, index=%r, '%(self.catalog, self.index)
         if self._x_interpolant is not None:
@@ -341,7 +358,7 @@ class RealGalaxyCatalog(object):
                                               dir='path/to/GalSim/examples/data')
 
     2. There are two larger catalogs based on HST observations of the COSMOS field with around
-       26,000 and 56,000 galaxies each with a limiting magnitude of F814W=23.5.  (The former is 
+       26,000 and 56,000 galaxies each with a limiting magnitude of F814W=23.5.  (The former is
        a subset of the latter.) For information about how to download these catalogs, see the
        RealGalaxy Data Download Page on the GalSim Wiki:
 
@@ -419,7 +436,7 @@ class RealGalaxyCatalog(object):
         self.psf_file_name = self.cat.field('PSF_filename') # file containing the PSF image
 
         # Add the directories:
-        # Note the strip call.  Sometimes the filenames have an extra space at the end. 
+        # Note the strip call.  Sometimes the filenames have an extra space at the end.
         # This gets rid of that space.
         self.gal_file_name = [ os.path.join(self.image_dir,f.strip()) for f in self.gal_file_name ]
         self.psf_file_name = [ os.path.join(self.image_dir,f.strip()) for f in self.psf_file_name ]
@@ -639,6 +656,7 @@ class RealGalaxyCatalog(object):
                 self.file_name == other.file_name and
                 self.image_dir == other.image_dir and
                 self.noise_dir == other.noise_dir)
+
     def __ne__(self, other): return not self.__eq__(other)
 
     def __hash__(self): return hash(repr(self))

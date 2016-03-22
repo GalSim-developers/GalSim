@@ -140,6 +140,19 @@ class Transformation(galsim.GSObject):
     @property
     def flux_ratio(self): return self.getFluxRatio()
 
+    def __eq__(self, other):
+        import numpy as np
+        return (isinstance(other, galsim.Transformation) and
+                self.original == other.original and
+                np.array_equal(self.jac, other.jac) and
+                self.offset == other.offset and
+                self.flux_ratio == other.flux_ratio and
+                self._gsparams == other._gsparams)
+
+    def __hash__(self):
+        return hash(("galsim.Transformation", self.original, tuple(self.jac.ravel()),
+                     self.offset, self.flux_ratio, self._gsparams))
+
     def __repr__(self):
         return 'galsim.Transformation(%r, jac=%r, offset=%r, flux_ratio=%r, gsparams=%r)'%(
             self.original, self.jac.tolist(), self.offset, self.flux_ratio, self._gsparams)
