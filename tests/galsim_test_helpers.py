@@ -221,9 +221,11 @@ def drawNoise(noise):
 def do_pickle(obj1, func = lambda x : x, irreprable=False):
     """Check that the object is picklable.  Also that it has basic == and != functionality.
     """
+    # import sys
+    from numbers import Integral, Real, Complex
     import cPickle, copy
     # In case the repr uses these:
-    from numpy import array, int16, int32, float32, float64
+    from numpy import array, int16, int32, float32, float64, ndarray
     try:
         import astropy.io.fits
     except:
@@ -291,7 +293,54 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
         if random: f1 = func(obj1)
         #print 'func(obj1) = ',repr(f1)
         #print 'func(obj5) = ',repr(f5)
-        # assert f5 == f1
+        assert f5 == f1
+
+    # Try perturbing obj1 pickling arguments and verify that inequality results.
+    # Generally, only objects pickled with __getinitargs__, i.e. old-style classes, reveal
+    # anything about what construction attributes may be important to check for assessing equality.
+    # (Even in this case, it's possible that an argument supplied by __getinitargs__ isn't actually
+    # important for assessing equality, though this doesn't appear to be the case for GalSim so
+    # far.)  Our strategy below is to loop through all arguments returned by __getinitargs__ and
+    # attempt to perturb them a bit after inferring their type, and checking that the object
+    # constructed with the perturbed argument list then compares inequally to the original object.
+    try:
+        args = obj1.__getinitargs__()
+    except:
+        pass
+    else:
+        classname = type(obj1).__name__
+        for i in range(len(args)):
+            # sys.stderr.write("Attempting arg {}\n".format(i))
+            newargs = list(args)
+            if isinstance(args[i], bool):
+                newargs[i] = not args[i]
+            elif isinstance(args[i], Integral):
+                newargs[i] = args[i] + 2
+            elif isinstance(args[i], Real):
+                newargs[i] = args[i] * 1.01 + 0.01
+            elif isinstance(args[i], Complex):
+                newargs[i] = args[i] * (1.01 + 0.01j) + (0.99 - 0.01j)
+            elif isinstance(args[i], ndarray):
+                newargs[i] = args[i] * 1.01 + 0.01
+            elif isinstance(args[i], galsim.GSParams):
+                newargs[i] = galsim.GSParams(folding_threshold=5.1e-3, maxk_threshold=1.1e-3)
+            elif args[i] is None:
+                continue
+            else:
+                # sys.stderr.write("Unknown type: {}\n".format(args[i]))
+                continue
+            try:
+                obj6 = eval('galsim.' + classname + repr(tuple(newargs)))
+            except:
+                try:
+                    obj6 = eval('galsim._galsim.' + classname + repr(tuple(newargs)))
+                except:
+                    pass
+                    # outstr = "{} not `eval`able after arg {} transformed {} -> {}\n"
+                    # sys.stderr.write(outstr.format(obj1, i, args[i], newargs[i]))
+            else:
+                assert obj1 != obj6
+                # sys.stderr.write("SUCCESS\n")
 
 
 def funcname():
