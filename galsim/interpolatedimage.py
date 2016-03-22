@@ -553,7 +553,8 @@ class InterpolatedImage(GSObject):
 
     def __hash__(self):
         hsh = hash(("galsim.InterpolatedImage", self.x_interpolant, self.k_interpolant,
-                    self._pad_factor, self._flux, self._offset, self._gsparams))
+                    self._pad_factor, self._flux, self._offset, self._gsparams,
+                    self._stepk, self._maxk))
         hsh ^= hash(tuple(self._pad_image.array.ravel()))
         hsh ^= hash((self._pad_image.bounds, self._pad_image.wcs))
         return hsh

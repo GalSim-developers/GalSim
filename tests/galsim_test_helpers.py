@@ -357,7 +357,7 @@ def all_obj_diff(objs):
             print "Found multiple equivalent objects:"
             for i, obj in enumerate(objs):
                 if obj == k:
-                    print i, obj
+                    print i, repr(obj)
         raise
     if not isinstance(objs[0], Hashable):
         return
@@ -365,13 +365,13 @@ def all_obj_diff(objs):
     try:
         assert len(hashes) == len(set(hashes))
     except AssertionError:
-        for k, v in Counter(objs).iteritems():
+        for k, v in Counter(hashes).iteritems():
             if v <= 1:
                 continue
             print "Found multiple equivalent object hashes:"
             for i, obj in enumerate(objs):
-                if obj == k:
-                    print i, obj
+                if hash(obj) == k:
+                    print i, repr(obj)
         raise
 
 

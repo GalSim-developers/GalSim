@@ -1197,26 +1197,55 @@ def test_ne():
 
     assert obj3 != obj4
 
+    # And now do the same types of tests as in test_base.py and test_chromatic.py to make sure that
+    # slightly different objects compare and hash appropriately.
+    gsp = galsim.GSParams(maxk_threshold=1.1e-3, folding_threshold=5.1e-3)
+    gals = [galsim.InterpolatedImage(ref_image),
+            galsim.InterpolatedImage(ref_image, calculate_maxk=False),
+            galsim.InterpolatedImage(ref_image, calculate_stepk=False),
+            galsim.InterpolatedImage(ref_image, flux=1.1),
+            galsim.InterpolatedImage(ref_image, offset=(0.0, 1.1)),
+            galsim.InterpolatedImage(ref_image, x_interpolant='Linear'),
+            galsim.InterpolatedImage(ref_image, k_interpolant='Linear'),
+            galsim.InterpolatedImage(ref_image, pad_factor=1.),
+            galsim.InterpolatedImage(ref_image, normalization='sb'),
+            galsim.InterpolatedImage(ref_image, noise_pad_size=100, noise_pad=0.1),
+            galsim.InterpolatedImage(ref_image, noise_pad_size=100, noise_pad=0.2),
+            galsim.InterpolatedImage(ref_image, noise_pad_size=100, noise_pad=0.2),
+            galsim.InterpolatedImage(ref_image, _force_stepk=1.0),
+            galsim.InterpolatedImage(ref_image, _force_maxk=1.0),
+            galsim.InterpolatedImage(ref_image, scale=0.2),
+            galsim.InterpolatedImage(ref_image, use_true_center=False),
+            galsim.InterpolatedImage(ref_image, gsparams=gsp)]
+    all_obj_diff(gals)
+
+    # And repeat for InterpolatedKImage
+    gals = [galsim.InterpolatedKImage(re, im),
+            galsim.InterpolatedKImage(re, im, k_interpolant='Linear'),
+            galsim.InterpolatedKImage(re, im, stepk=1.1),
+            galsim.InterpolatedKImage(re, im, gsparams=gsp)]
+    all_obj_diff(gals)
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 if __name__ == "__main__":
-    test_roundtrip()
-    test_fluxnorm()
-    test_exceptions()
-    test_operations_simple()
-    test_operations()
-    test_uncorr_padding()
-    test_pad_image()
-    test_corr_padding()
-    test_realspace_conv()
-    test_Cubic_ref()
-    test_Quintic_ref()
-    test_Lanczos5_ref()
-    test_Lanczos7_ref()
-    test_conserve_dc()
-    test_stepk_maxk()
-    test_kround_trip()
-    test_multihdu_readin()
+    # test_roundtrip()
+    # test_fluxnorm()
+    # test_exceptions()
+    # test_operations_simple()
+    # test_operations()
+    # test_uncorr_padding()
+    # test_pad_image()
+    # test_corr_padding()
+    # test_realspace_conv()
+    # test_Cubic_ref()
+    # test_Quintic_ref()
+    # test_Lanczos5_ref()
+    # test_Lanczos7_ref()
+    # test_conserve_dc()
+    # test_stepk_maxk()
+    # test_kround_trip()
+    # test_multihdu_readin()
     test_ne()
