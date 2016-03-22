@@ -343,6 +343,38 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
                 # sys.stderr.write("SUCCESS\n")
 
 
+def all_obj_diff(objs):
+    """ Helper function that verifies that each element in `objs` is unique and, if hashable,
+    produces a unique hash."""
+
+    from collections import Counter, Hashable
+    try:
+        assert len(objs) == len(set(objs))
+    except AssertionError:
+        for k, v in Counter(objs).iteritems():
+            if v <= 1:
+                continue
+            print "Found multiple equivalent objects:"
+            for i, obj in enumerate(objs):
+                if obj == k:
+                    print i, obj
+        raise
+    if not isinstance(objs[0], Hashable):
+        return
+    hashes = [hash(obj) for obj in objs]
+    try:
+        assert len(hashes) == len(set(hashes))
+    except AssertionError:
+        for k, v in Counter(objs).iteritems():
+            if v <= 1:
+                continue
+            print "Found multiple equivalent object hashes:"
+            for i, obj in enumerate(objs):
+                if obj == k:
+                    print i, obj
+        raise
+
+
 def funcname():
     import inspect
     return inspect.stack()[1][3]

@@ -25,6 +25,8 @@ Possible uses include galaxies with color gradients, automatically drawing a giv
 different filters, or implementing wavelength-dependent point spread functions.
 """
 
+from collections import Counter
+
 import numpy as np
 import copy
 
@@ -1119,11 +1121,14 @@ class ChromaticAtmosphere(ChromaticObject):
                 self.base_obj == other.base_obj and
                 self.base_wavelength == other.base_wavelength and
                 self.alpha == other.alpha and
+                self.zenith_angle == other.zenith_angle and
+                self.parallactic_angle == other.parallactic_angle and
                 self.kw == other.kw)
 
     def __hash__(self):
         return hash(("galsim.ChromaticAtmosphere", self.base_obj, self.base_wavelength,
-                     self.alpha, frozenset(self.kw.items())))
+                     self.alpha, self.zenith_angle, self.parallactic_angle,
+                     frozenset(self.kw.items())))
 
     def __repr__(self):
         s = 'galsim.ChromaticAtmosphere(%r, base_wavelength=%r, alpha=%r' % (
@@ -1624,11 +1629,12 @@ class ChromaticSum(ChromaticObject):
 
     def __eq__(self, other):
         return (isinstance(other, galsim.ChromaticSum) and
-                frozenset(self.objlist) == frozenset(other.objlist) and
+                Counter(self.objlist) == Counter(other.objlist) and
                 self.gsparams == other.gsparams)
 
     def __hash__(self):
-        return hash(("galsim.ChromaticSum", frozenset(self.objlist), self.gsparams))
+        return hash(("galsim.ChromaticSum", frozenset(Counter(self.objlist).items()),
+                     self.gsparams))
 
     def __repr__(self):
         return 'galsim.ChromaticSum(%r, gsparams=%r)' % (self.objlist, self.gsparams)
@@ -1838,11 +1844,12 @@ class ChromaticConvolution(ChromaticObject):
 
     def __eq__(self, other):
         return (isinstance(other, galsim.ChromaticConvolution) and
-                frozenset(self.objlist) == frozenset(other.objlist) and
+                Counter(self.objlist) == Counter(other.objlist) and
                 self.gsparams == other.gsparams)
 
     def __hash__(self):
-        return hash(("galsim.ChromaticConvolution", frozenset(self.objlist), self.gsparams))
+        return hash(("galsim.ChromaticConvolution", frozenset(Counter(self.objlist).items()),
+                     self.gsparams))
 
     def __repr__(self):
         return 'galsim.ChromaticConvolution(%r, gsparams=%r)' % (self.objlist, self.gsparams)
@@ -2227,8 +2234,16 @@ class ChromaticOpticalPSF(ChromaticObject):
 
         if aberrations is not None:
             self.aberrations = np.asarray(aberrations)
+            if len(self.aberrations) < 12:
+                self.aberrations = np.append(self.aberrations, [0] * (12-len(self.aberrations)))
         else:
             self.aberrations = np.zeros(12)
+        # Pop named aberrations from kwargs so aberrations=[0,0,0,0,1] means the same as
+        # defocus=1 (w/ all other named aberrations 0).
+        for i, ab in enumerate(['defocus', 'astig1', 'astig2', 'coma1', 'coma2', 'trefoil1',
+                                'trefoil2', 'spher']):
+            if ab in kwargs:
+                self.aberrations[i+4] = kwargs.pop(ab)
         self.kwargs = kwargs
 
         # Define the necessary attributes for this ChromaticObject.
@@ -2237,11 +2252,15 @@ class ChromaticOpticalPSF(ChromaticObject):
 
     def __eq__(self, other):
         return (isinstance(other, galsim.ChromaticOpticalPSF) and
+                self.lam == other.lam and
+                self.lam_over_diam == other.lam_over_diam and
+                np.array_equal(self.aberrations, other.aberrations) and
                 self.scale_unit == other.scale_unit and
                 self.kwargs == other.kwargs)
 
     def __hash__(self):
-        return hash(("galsim.ChromaticOpticalPSF", self.scale_unit, frozenset(self.kwargs.items())))
+        return hash(("galsim.ChromaticOpticalPSF", self.lam, self.lam_over_diam,
+                     tuple(self.aberrations), self.scale_unit, frozenset(self.kwargs.items())))
 
     def __repr__(self):
         s = 'galsim.ChromaticOpticalPSF(lam=%r, lam_over_diam=%r, aberrations=%r' % (
@@ -2321,11 +2340,14 @@ class ChromaticAiry(ChromaticObject):
 
     def __eq__(self, other):
         return (isinstance(other, galsim.ChromaticAiry) and
+                self.lam == other.lam and
+                self.lam_over_diam == other.lam_over_diam and
                 self.scale_unit == other.scale_unit and
                 self.kwargs == other.kwargs)
 
     def __hash__(self):
-        return hash(("galsim.ChromaticAiry", self.scale_unit, frozenset(self.kwargs.items())))
+        return hash(("galsim.ChromaticAiry", self.lam, self.lam_over_diam, self.scale_unit,
+                     frozenset(self.kwargs.items())))
 
     def __repr__(self):
         s = 'galsim.ChromaticAiry(lam=%r, lam_over_diam=%r' % (self.lam, self.lam_over_diam)

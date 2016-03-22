@@ -2189,7 +2189,7 @@ def test_ne():
     gsp = galsim.GSParams(maxk_threshold=1.1e-3, folding_threshold=5.1e-3)
 
     # Gaussian.  Params include sigma, fwhm, half_light_radius, flux, and gsparams.
-    # The following should all test inequal:
+    # The following should all test unequal:
     gals = [galsim.Gaussian(sigma=1.0),
             galsim.Gaussian(sigma=1.1),
             galsim.Gaussian(fwhm=1.0),
@@ -2199,10 +2199,10 @@ def test_ne():
             galsim.Gaussian(sigma=1.2, flux=1.1),
             galsim.Gaussian(sigma=1.2, gsparams=gsp)]
     # Check that setifying doesn't remove any duplicate items.
-    assert len(gals) == len(set(gals))
+    all_obj_diff(gals)
 
     # Moffat.  Params include beta, scale_radius, half_light_radius, fwhm, trunc, flux and gsparams.
-    # The following should all test inequal:
+    # The following should all test unequal:
     gals = [galsim.Moffat(beta=3.0, scale_radius=1.0),
             galsim.Moffat(beta=3.1, scale_radius=1.1),
             galsim.Moffat(beta=3.0, scale_radius=1.1),
@@ -2211,10 +2211,10 @@ def test_ne():
             galsim.Moffat(beta=3.0, scale_radius=1.1, trunc=2.0),
             galsim.Moffat(beta=3.0, scale_radius=1.0, flux=1.1),
             galsim.Moffat(beta=3.0, scale_radius=1.0, gsparams=gsp)]
-    assert len(gals) == len(set(gals))
+    all_obj_diff(gals)
 
     # Airy.  Params include lam_over_diam, lam, diam, obscuration, flux, and gsparams.
-    # The following should all test inequal:
+    # The following should all test unequal:
     gals = [galsim.Airy(lam_over_diam=1.0),
             galsim.Airy(lam_over_diam=1.1),
             galsim.Airy(lam=1.0, diam=1.2),
@@ -2222,11 +2222,11 @@ def test_ne():
             galsim.Airy(lam=1.0, diam=1.0, obscuration=0.1),
             galsim.Airy(lam_over_diam=1.0, flux=1.1),
             galsim.Airy(lam_over_diam=1.0, gsparams=gsp)]
-    assert len(gals) == len(set(gals))
+    all_obj_diff(gals)
 
     # Kolmogorov.  Params include lam_over_r0, fwhm, half_light_radius, lam/r0, lam/r0_500, flux
     # gsparams.
-    # The following should all test inequal:
+    # The following should all test unequal:
     gals = [galsim.Kolmogorov(lam_over_r0=1.0),
             galsim.Kolmogorov(lam=1.0, r0=1.1),
             galsim.Kolmogorov(fwhm=1.0),
@@ -2236,39 +2236,39 @@ def test_ne():
             galsim.Kolmogorov(lam=1.0, r0_500=1.0),
             galsim.Kolmogorov(lam=1.0, r0=1.0, flux=1.1),
             galsim.Kolmogorov(lam=1.0, r0=1.0, flux=1.1, gsparams=gsp)]
-    assert len(gals) == len(set(gals))
+    all_obj_diff(gals)
 
     # Pixel.  Params include scale, flux, gsparams.
     # gsparams.
-    # The following should all test inequal:
+    # The following should all test unequal:
     gals = [galsim.Pixel(scale=1.0),
             galsim.Pixel(scale=1.1),
             galsim.Pixel(scale=1.0, flux=1.1),
             galsim.Pixel(scale=1.0, gsparams=gsp)]
-    assert len(gals) == len(set(gals))
+    all_obj_diff(gals)
 
     # Box.  Params include width, height, flux, gsparams.
     # gsparams.
-    # The following should all test inequal:
+    # The following should all test unequal:
     gals = [galsim.Box(width=1.0, height=1.0),
             galsim.Box(width=1.1, height=1.0),
             galsim.Box(width=1.0, height=1.1),
             galsim.Box(width=1.0, height=1.0, flux=1.1),
             galsim.Box(width=1.0, height=1.0, gsparams=gsp)]
-    assert len(gals) == len(set(gals))
+    all_obj_diff(gals)
 
     # Tophat.  Params include radius, flux, gsparams.
     # gsparams.
-    # The following should all test inequal:
+    # The following should all test unequal:
     gals = [galsim.TopHat(radius=1.0),
             galsim.TopHat(radius=1.1),
             galsim.TopHat(radius=1.0, flux=1.1),
             galsim.TopHat(radius=1.0, gsparams=gsp)]
-    assert len(gals) == len(set(gals))
+    all_obj_diff(gals)
 
     # Sersic.  Params include n, half_light_radius, scale_radius, flux, trunc, flux_untruncated
     # and gsparams.
-    # The following should all test inequal:
+    # The following should all test unequal:
     gals = [galsim.Sersic(n=1.1, half_light_radius=1.0),
             galsim.Sersic(n=1.2, half_light_radius=1.0),
             galsim.Sersic(n=1.1, half_light_radius=1.1),
@@ -2277,20 +2277,20 @@ def test_ne():
             galsim.Sersic(n=1.1, half_light_radius=1.0, trunc=1.8),
             galsim.Sersic(n=1.1, half_light_radius=1.0, trunc=1.8, flux_untruncated=True),
             galsim.Sersic(n=1.1, half_light_radius=1.0, gsparams=gsp)]
-    assert len(gals) == len(set(gals))
+    all_obj_diff(gals)
 
     # Exponential.  Params include half_light_radius, scale_radius, flux, gsparams
-    # The following should all test inequal:
+    # The following should all test unequal:
     gals = [galsim.Exponential(half_light_radius=1.0),
             galsim.Exponential(half_light_radius=1.1),
             galsim.Exponential(scale_radius=1.0),
             galsim.Exponential(half_light_radius=1.0, flux=1.1),
             galsim.Exponential(half_light_radius=1.0, gsparams=gsp)]
-    assert len(gals) == len(set(gals))
+    all_obj_diff(gals)
 
     # DeVaucouleurs.  Params include half_light_radius, scale_radius, flux, trunc, flux_untruncated,
     # and gsparams.
-    # The following should all test inequal:
+    # The following should all test unequal:
     gals = [galsim.DeVaucouleurs(half_light_radius=1.0),
             galsim.DeVaucouleurs(half_light_radius=1.1),
             galsim.DeVaucouleurs(scale_radius=1.0),
@@ -2298,17 +2298,17 @@ def test_ne():
             galsim.DeVaucouleurs(half_light_radius=1.0, trunc=2.0),
             galsim.DeVaucouleurs(half_light_radius=1.0, trunc=2.0, flux_untruncated=True),
             galsim.DeVaucouleurs(half_light_radius=1.0, gsparams=gsp)]
-    assert len(gals) == len(set(gals))
+    all_obj_diff(gals)
 
     # Spergel.  Params include nu, half_light_radius, scale_radius, flux, and gsparams.
-    # The following should all test inequal:
+    # The following should all test unequal:
     gals = [galsim.Spergel(nu=0.0, half_light_radius=1.0),
             galsim.Spergel(nu=0.1, half_light_radius=1.0),
             galsim.Spergel(nu=0.0, half_light_radius=1.1),
             galsim.Spergel(nu=0.0, scale_radius=1.0),
             galsim.Spergel(nu=0.0, half_light_radius=1.0, flux=1.1),
             galsim.Spergel(nu=0.0, half_light_radius=1.0, gsparams=gsp)]
-    assert len(gals) == len(set(gals))
+    all_obj_diff(gals)
 
 
 if __name__ == "__main__":
