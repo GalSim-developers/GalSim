@@ -183,10 +183,6 @@ class ChromaticObject(object):
     def __str__(self):
         return 'galsim.ChromaticObject(%s)' % self.obj
 
-    # def __eq__(self, other): return repr(self) == repr(other)
-    # def __ne__(self, other): return not self.__eq__(other)
-    # def __hash__(self): return hash(repr(self))
-
     def interpolate(self, waves, oversample_fac=1.):
         """
         This method is used as a pre-processing step that can expedite image rendering using objects
