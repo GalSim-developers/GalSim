@@ -151,41 +151,36 @@ def test_metacal_tracking():
                                            err_msg=msg + ': cross pattern is not constant')
 
     noise_var = 1.3
-    #seed = 1234567  # For use as a unit test, we need a specific seed
-    seed = 0  # During testing, it's useful to see how numbers flop around to know if 
-              # something is systematic or random.
+    seed = 1234567  # For use as a unit test, we need a specific seed
+    #seed = 0  # During testing, it's useful to see how numbers flop around to know if
+               # something is systematic or random.
     im_size = 1024
     dg = 0.1  # This is bigger than metacal would use, but it makes the test easier.
     rng = galsim.BaseDeviate(seed)
     # Use a non-trivial wcs...
-    # The first two don't work yet (even for strategy 3)
-    # The last two are working.
     wcs = galsim.JacobianWCS(0.26, 0.03, 0.08, -0.21)  # Fully complex
-    #wcs = galsim.JacobianWCS(0.26, 0.03, -0.03, 0.26)  # just rotation
-    #wcs = galsim.JacobianWCS(0.26, 0., 0., 0.32)       # g1 > 0
-    #wcs = galsim.JacobianWCS(0.26, 0.03, 0.03, 0.26)   # g2 > 0
-    #wcs = galsim.JacobianWCS(0.03, 0.26, 0.26, -0.03)  # flip and rotation
-    #wcs = galsim.PixelScale(0.26)                      # pixel scale
-    #psf = galsim.Gaussian(fwhm=0.9)
 
-    pixel     = wcs.toWorld(galsim.Pixel(scale=1))
+    # And an asymmetric PSF
+    psf = galsim.Gaussian(fwhm=0.9).shear(g1=0.05, g2=0.03)
+
+    # pixel is the pixel in world coords
+    pixel = wcs.toWorld(galsim.Pixel(scale=1))
     pixel_inv = galsim.Deconvolve(pixel)
 
-    psf_obj0 = galsim.Gaussian(fwhm=0.9).shear(g1=0.05, g2=0.03)
-    psf_image = galsim.Image(im_size, im_size, init_value=0, wcs=wcs)
-    psf_obj0.drawImage(image=psf_image)
+    psf_image = psf.drawImage(nx=im_size, ny=im_size, wcs=wcs)
 
-    psf_ii = galsim.InterpolatedImage(psf_image)
-    psf_ii_nopix = galsim.Convolve([psf_ii, pixel_inv])
+    # Metacal only has access to the PSF as an image, so use this from here on.
+    psf = galsim.InterpolatedImage(psf_image)
+    psf_nopix = galsim.Convolve([psf, pixel_inv])
+    psf_inv = galsim.Deconvolve(psf)
 
-    psf_inv = galsim.Deconvolve(psf_ii)
+    # The target PSF dilates the part without the pixel, but reconvolve by the real pixel.
+    psf_target_nopix = psf_nopix.dilate(1. + 2.*dg)
+    psf_target = galsim.Convolve([psf_target_nopix, pixel])
 
-    psf_target_obj_nopix = psf_ii_nopix.dilate(1. + 2.*dg)
-    psf_target_obj = galsim.Convolve([psf_target_obj_nopix, pixel])
-
-    # First make an image of pure (white) Gaussian noise
+    # Make an image of pure (white) Gaussian noise
     # Normally, there would be a galaxy in this image, but for the tests, we just have noise.
-    obs_image = galsim.Image(im_size,im_size, init_value=0, wcs=wcs)
+    obs_image = galsim.Image(im_size, im_size, init_value=0, wcs=wcs)
     obs_image.addNoise(galsim.GaussianNoise(rng=rng, sigma=math.sqrt(noise_var)))
 
     # The noise on this image should be describable as an UncorrelatedNoise object:
@@ -193,8 +188,8 @@ def test_metacal_tracking():
     check_noise(obs_image, noise, 'initial UncorrelatedNoise model is wrong')
 
     # Make an InterpolatedImage profile to use for manipulating this image
-    #noise_pad_size = 4.*im_size / wcs.minLinearScale()
-    #ii = galsim.InterpolatedImage(obs_image, noise_pad_size=noise_pad_size, noise_pad=noise_var, pad_factor=1)
+    # We can get away with no padding here, since our image is so large, but normally, you would
+    # probably want to pad this with noise padding.
     ii = galsim.InterpolatedImage(obs_image, pad_factor=1)
     ii.noise = noise
 
@@ -206,9 +201,7 @@ def test_metacal_tracking():
     # We'll try a few different methods.
     shear = galsim.Shear(g1=dg)
     sheared_obj = galsim.Convolve(ii, psf_inv).shear(shear)
-
-    final_obj = galsim.Convolve(psf_target_obj, sheared_obj)
-
+    final_obj = galsim.Convolve(psf_target, sheared_obj)
     final_image = final_obj.drawImage(obs_image.copy(), method='no_pixel')
 
     try:
@@ -232,25 +225,28 @@ def test_metacal_tracking():
         # Note: The check_noise tests fail.  I think because the convolve and deconvolve impose
         #       a maxk = that of the psf.  Which is too small for an accurate rendering of the
         #       correlation function (here just an autocorrelation of a Pixel.
-        #       Strangely, even with a manifestly inaccurate description of the correlated noise,
-        #       the symmetrize step does successfully symmetrize the noise.  At least for square 
-        #       pixels to the  accuracy I'm testing it here.  Whitening on the other hand doesn't
-        #       work.
+        # The whiten tests kind of work, but they add a lot of extra noise.  Much more than
+        # strategy 4 below.  So the level of correlation remaining is pretty well below the
+        # dc variance.  Symmetrize doesn't add much noise, but the residual correlation is about
+        # the same, which means it doesn't pass the test relative to the lower dc variance.
 
         # First, deconvolve and reconvolve by the same PSF:
-        test_obj = galsim.Convolve([ii, psf_ii, psf_inv])
+        test_obj = galsim.Convolve([ii, psf, psf_inv])
         # This fails...
-        #check_noise(test_obj.drawImage(obs_image.copy(), method='no_pixel'), test_obj.noise,
-                    #'noise model is wrong after convolve/deconvolve by psf')
+        if False:
+            check_noise(test_obj.drawImage(obs_image.copy(), method='no_pixel'), test_obj.noise,
+                        'noise model is wrong after convolve/deconvolve by psf')
 
         # Now use a slightly dilated PSF for the reconvolution:
-        test_obj = galsim.Convolve([ii, psf_target_obj, psf_inv])
-        #check_noise(test_obj.drawImage(obs_image.copy(), method='no_pixel'), test_obj.noise,
-                    #'noise model is wrong for dilated target psf')
+        test_obj = galsim.Convolve([ii, psf_target, psf_inv])
+        if False:
+            check_noise(test_obj.drawImage(obs_image.copy(), method='no_pixel'), test_obj.noise,
+                        'noise model is wrong for dilated target psf')
 
         # Finally, include the shear step.  This was done above with sheared_obj, final_obj.
-        #check_noise(final_image, final_obj.noise,
-                    #'noise model is wrong when including small shear')
+        if False:
+            check_noise(final_image, final_obj.noise,
+                        'noise model is wrong when including small shear')
 
         # If we whiten using this noise model, we should get back to white noise.
         t3 = time.time()
@@ -269,7 +265,6 @@ def test_metacal_tracking():
         t4 = time.time()
         print 'Noise tracking method with symmetrize: final_var = ',final_var
         print 'Check: direct variance = ',np.var(final_image2.array)
-        # Oddly, this one works, despite the previous ones failing...
         check_symm_noise(final_image2, 'noise symmetrizing does not work')
         print 'Time for noise tracking with symmetrize = ',t4-t3
 
@@ -279,8 +274,9 @@ def test_metacal_tracking():
         # Strategy 2: Don't trust the noise tracking. Track a noise image through the same process
         #             and then measure the noise from that image.  Use it to either whiten or
         #             symmetrize the noise in the final image.
-        # Note: This method doesn't work.  Even the symmetrize option.  Also, it seems to always
-        #       add more noise than the noise tracking method above.
+        # Note: This method doesn't work any better.  The added noise for whitening is even more
+        # than strategy 1.  And the remaining correlations are still similarly significant for the
+        # symmetrize version.  A little smaller than strategy 1, but not enough to pass our tests.
 
         # Make another noise image, since we don't actually have access to a pure noise image
         # for real objects.  But we should be able to estimate the variance in the image.
@@ -289,7 +285,7 @@ def test_metacal_tracking():
         noise_image.addNoise(galsim.GaussianNoise(rng=rng, sigma=math.sqrt(noise_var)))
         noise_ii = galsim.InterpolatedImage(noise_image, pad_factor=1)
         sheared_noise_obj = galsim.Convolve(noise_ii, psf_inv).shear(shear)
-        final_noise_obj = galsim.Convolve(psf_target_obj, sheared_noise_obj)
+        final_noise_obj = galsim.Convolve(psf_target, sheared_noise_obj)
         final_noise_image = final_noise_obj.drawImage(obs_image.copy(), method='no_pixel')
 
         # Use this to construct an appropriate CorrelatedNoise object
@@ -317,13 +313,15 @@ def test_metacal_tracking():
         check_symm_noise(final_image2, 'symmetrizing the noise using direct noise model failed')
         print 'Time for direct noise with symmetrizing = ',t7-t6 + t4-t3
 
-    if True:
+    if False:
         print '\n\nStrategy 3:'
         # Strategy 3: Make a noise field and do the same operations as we do to the main image
         #             except use the opposite shear value.  Add this noise field to the final
         #             image to get a symmetric noise field.
         # Note: This method works!  But only for square pixels.  However, they may be rotated
         # or flipped. Just not sheared.
+        # Update: I think this method won't ever work for non-square pixels.  The reason it works
+        # for square pixels is that in that case, it is equivalent to strategy 4.
         t3 = time.time()
 
         # Make another noise image
@@ -332,7 +330,7 @@ def test_metacal_tracking():
         rev_ii = galsim.InterpolatedImage(rev_image, pad_factor=1)
 
         rev_sheared_obj = galsim.Convolve(rev_ii, psf_inv).shear(-shear)
-        rev_final_obj = galsim.Convolve(psf_target_obj, rev_sheared_obj)
+        rev_final_obj = galsim.Convolve(psf_target, rev_sheared_obj)
         rev_final_image = rev_final_obj.drawImage(obs_image.copy(), method='no_pixel')
 
         # Add the reverse-sheared noise image to the original image.
@@ -358,7 +356,7 @@ def test_metacal_tracking():
         noise_ii = galsim.InterpolatedImage(noise_image, pad_factor=1)
 
         noise_sheared_obj = galsim.Convolve(noise_ii, psf_inv).shear(shear)
-        noise_final_obj = galsim.Convolve(psf_target_obj, noise_sheared_obj)
+        noise_final_obj = galsim.Convolve(psf_target, noise_sheared_obj)
         noise_final_image = noise_final_obj.drawImage(obs_image.copy(), method='no_pixel')
 
         # Rotate the image by 90 degrees
@@ -378,7 +376,7 @@ def test_metacal_tracking():
         print '\n\nStrategy 5:'
         # Strategy 5: The same as strategy 3, except we target the effective net transformation
         #             done by strategy 4.
-        # I think this strategy probably can't work for non-square pixels, because in the shear
+        # I think this strategy probably can't work for non-square pixels, because the shear
         # happens before the convolution by the PSF.  And if the wcs is non-square, then the 
         # PSF is sheared relative to the pixels.  That shear isn't being accounted for here,
         # so the net result isn't equivalent to rotating by 90 degrees at the end.
@@ -398,25 +396,17 @@ def test_metacal_tracking():
         jac = wcs.jacobian()
         J = jac.getMatrix()
         Jinv = jac.inverse().getMatrix()
-        #print 'J = ',galsim.JacobianWCS(*J.flatten()).getDecomposition()
-        #print 'Jinv = ',galsim.JacobianWCS(*Jinv.flatten()).getDecomposition()
         S1 = shear.getMatrix()
-        #print 'S1 = ',galsim.JacobianWCS(*S1.flatten()).getDecomposition()
         R90 = np.array([[0,-1],[1,0]])
         S2 = J.dot(R90).dot(Jinv).dot(S1)
-        #print 'S2 = ',S2
         scale, rev_shear, rev_theta, flip = galsim.JacobianWCS(*S2.flatten()).getDecomposition()
-        #print '= ',scale,rev_theta,rev_shear,flip
         # Flip should be False, and scale should be essentially 1.0.
         assert flip == False
         assert abs(scale - 1.) < 1.e-8
 
         rev_sheared_obj = galsim.Convolve(rev_ii, psf_inv).rotate(rev_theta).shear(rev_shear)
-        #rev_sheared_obj = galsim.Convolve(rev_ii, psf_inv).shear(rev_shear)
-        rev_final_obj = galsim.Convolve(psf_target_obj, rev_sheared_obj)
-        #print 'rev_final_obj = ',rev_final_obj
+        rev_final_obj = galsim.Convolve(psf_target, rev_sheared_obj)
         rev_final_image = rev_final_obj.drawImage(obs_image.copy(), method='no_pixel')
-        #print 'rev_final_image = ',rev_final_image
 
         # Add the reverse-sheared noise image to the original image.
         final_image2 = final_image + rev_final_image
@@ -443,8 +433,8 @@ def test_metacal_tracking():
         noise_ii = galsim.InterpolatedImage(noise_image, pad_factor=1)
         deconv_noise_obj = galsim.Convolve(noise_ii, psf_inv)
         sheared_noise_obj = deconv_noise_obj.shear(shear)
-        final_noise_obj = galsim.Convolve(psf_target_obj, sheared_noise_obj)
-        noshear_noise_obj = galsim.Convolve(psf_target_obj, deconv_noise_obj)
+        final_noise_obj = galsim.Convolve(psf_target, sheared_noise_obj)
+        noshear_noise_obj = galsim.Convolve(psf_target, deconv_noise_obj)
         final_noise_image = final_noise_obj.drawImage(obs_image.copy(), method='no_pixel')
         noshear_noise_image = noshear_noise_obj.drawImage(obs_image.copy(), method='no_pixel')
 
