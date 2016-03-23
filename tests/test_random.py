@@ -1700,7 +1700,7 @@ def test_ne():
     unequal BaseDeviates may be the same due to truncation.
     """
     a = galsim.BaseDeviate(seed='1 2 3 4 5 6 7 8 9 10')
-    b = galsim.BaseDeviate(seed='1 2 3 7 6 5 4 6 8 10')
+    b = galsim.BaseDeviate(seed='1 2 3 7 6 5 4 8 9 10')
     assert repr(a) == repr(b)
     assert a != b
 
