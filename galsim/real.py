@@ -36,9 +36,9 @@ some lower-resolution telescope.
 
 
 import galsim
-import utilities
 from galsim import GSObject
 import os
+
 
 class RealGalaxy(GSObject):
     """A class describing real galaxies from some training dataset.  Its underlying implementation
