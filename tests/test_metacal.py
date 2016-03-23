@@ -124,30 +124,30 @@ def test_metacal_tracking():
         #print 'noise cf = ',cf
         # First check the variance
         print 'variance: ',cf(0,0), noise.getVariance()
-        np.testing.assert_almost_equal(cf(0,0), noise.getVariance(), decimal=VAR_NDECIMAL,
+        np.testing.assert_almost_equal(cf(0,0)/noise.getVariance(), 1.0, decimal=VAR_NDECIMAL,
                                        err_msg=msg + ':: noise variance is wrong.')
-        cf_plus = [ cf(1,0), cf(-1,0), cf(0,1), cf(0,-1) ]
-        cf_cross = [ cf(1,1), cf(-1,-1), cf(-1,1), cf(1,-1) ]
+        cf_plus = np.array([ cf(1,0), cf(-1,0), cf(0,1), cf(0,-1) ])
+        cf_cross = np.array([ cf(1,1), cf(-1,-1), cf(-1,1), cf(1,-1) ])
         print 'plus pattern: ',cf_plus
-        print 'relative to mean: ',cf_plus/np.mean(cf_plus)
+        print 'diff relative to dc: ',(cf_plus-np.mean(cf_plus))/cf(0,0)
         print 'cross pattern: ',cf_cross
-        print 'relative to mean: ',cf_cross/np.mean(cf_cross)
+        print 'diff relative to dc: ',(cf_cross-np.mean(cf_cross))/cf(0,0)
         # For now, don't make these asserts.  Just print whether they will pass or fail.
         if True:
-            if np.all(np.abs(cf_plus/np.mean(cf_plus)-1) < 0.01):
+            if np.all(np.abs((cf_plus-np.mean(cf_plus))/cf(0,0)) < 0.01):
                 print 'plus test passes'
             else:
                 print '*** FAIL ***'
                 print msg + ': plus pattern is not constant'
-            if np.all(np.abs(cf_cross/np.mean(cf_cross)-1) < 0.01):
+            if np.all(np.abs((cf_cross-np.mean(cf_cross))/cf(0,0)) < 0.01):
                 print 'cross test passes'
             else:
                 print '*** FAIL ***'
                 print msg + ': cross pattern is not constant'
         else:
-            np.testing.assert_almost_equal(cf_plus/np.mean(cf_plus), 1.0, decimal=2,
+            np.testing.assert_almost_equal((cf_plus-np.mean(cf_plus))/cf(0,0), 0.0, decimal=2,
                                            err_msg=msg + ': plus pattern is not constant')
-            np.testing.assert_almost_equal(cf_cross/np.mean(cf_cross), 1.0, decimal=2,
+            np.testing.assert_almost_equal((cf_cross-np.mean(cf_cross))/cf(0,0), 0.0, decimal=2,
                                            err_msg=msg + ': cross pattern is not constant')
 
     noise_var = 1.3
