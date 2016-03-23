@@ -1921,7 +1921,6 @@ def test_ne():
             galsim.ChromaticAiry(lam=1.0, lam_over_diam=1.0, gsparams=gsp)]
     all_obj_diff(gals)
 
-    #
 
 if __name__ == "__main__":
     test_draw_add_commutativity()

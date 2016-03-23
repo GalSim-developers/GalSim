@@ -25,6 +25,8 @@ AutoConvolution = convolution of a profile by itself
 AutoCorrelation = convolution of a profile by its reflection
 """
 
+from collections import Counter
+
 import galsim
 from . import _galsim
 
@@ -163,12 +165,13 @@ class Sum(galsim.GSObject):
 
     def __eq__(self, other):
         return (isinstance(other, galsim.Sum) and
-                frozenset(self.obj_list) == frozenset(other.obj_list) and
+                Counter(self._obj_list) == Counter(other._obj_list) and
                 self._gsparams == other._gsparams)
 
     def __hash__(self):
         if not hasattr(self, '_hash'):
-            self._hash = hash(("galsim.Sum", frozenset(self.obj_list), self._gsparams))
+            self._hash = hash(("galsim.Sum", frozenset(Counter(self._obj_list).items()),
+                               self._gsparams))
         return self._hash
 
     def __repr__(self):
@@ -410,7 +413,7 @@ class Convolution(galsim.GSObject):
 
     def __eq__(self, other):
         return (isinstance(other, galsim.Convolution) and
-                frozenset(self.obj_list) == frozenset(other.obj_list) and
+                Counter(self._obj_list) == Counter(other._obj_list) and
                 self.real_space == other.real_space and
                 self._gsparams == other._gsparams)
 
@@ -426,8 +429,8 @@ class Convolution(galsim.GSObject):
     # So caching it is!  (At least for compound types and InterpolatedImages)
     def __hash__(self):
         if not hasattr(self, '_hash'):
-            self._hash = hash(("galsim.Convolution", frozenset(self.obj_list), self.real_space,
-                               self._gsparams))
+            self._hash = hash(("galsim.Convolution", frozenset(Counter(self._obj_list).items()),
+                               self._real_space, self._gsparams))
         return self._hash
 
     def __repr__(self):

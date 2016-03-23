@@ -897,6 +897,14 @@ class Image(object):
         return fwhm
 
     def __eq__(self, other):
+        # Note that numpy.array_equal can return True if the dtypes of the two arrays involved are
+        # different, as long as the contents of the two arrays are logically the same.  For example:
+        #
+        # >>> double_array = np.arange(1024).reshape(32, 32)*np.pi
+        # >>> int_array = np.arange(1024).reshape(32, 32)
+        # >>> assert galsim.ImageD(int_array) == galsim.ImageF(int_array) # passes
+        # >>> assert galsim.ImageD(double_array) == galsim.ImageF(double_array) # fails
+
         return (isinstance(other, Image) and
                 self.bounds == other.bounds and
                 self.wcs == other.wcs and

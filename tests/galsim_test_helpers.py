@@ -348,17 +348,19 @@ def all_obj_diff(objs):
     produces a unique hash."""
 
     from collections import Counter, Hashable
-    try:
-        assert len(objs) == len(set(objs))
-    except AssertionError:
-        for k, v in Counter(objs).iteritems():
-            if v <= 1:
+    # Check that all objects are unique.
+    # Would like to use `assert len(objs) == len(set(objs))` here, but this requires that the
+    # elements of objs are hashable (and that they have unique hashes!, which is what we're trying
+    # to test!.  So instead, we just loop over all combinations.
+    for i, obji in enumerate(objs):
+        # Could probably start the next loop at `i+1`, but we start at 0 for completeness
+        # (and to verify a != b implies b != a)
+        for j, objj in enumerate(objs):
+            if i == j:
                 continue
-            print "Found multiple equivalent objects:"
-            for i, obj in enumerate(objs):
-                if obj == k:
-                    print i, repr(obj)
-        raise
+            assert obji != objj, "Found equivalent objects {} == {}".format(obji, objj)
+
+    # Now check that all hashes are unique (if the items are hashable).
     if not isinstance(objs[0], Hashable):
         return
     hashes = [hash(obj) for obj in objs]
