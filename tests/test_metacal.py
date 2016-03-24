@@ -158,10 +158,16 @@ def test_metacal_tracking():
     dg = 0.1  # This is bigger than metacal would use, but it makes the test easier.
     rng = galsim.BaseDeviate(seed)
     # Use a non-trivial wcs...
-    wcs = galsim.JacobianWCS(0.26, 0.03, 0.08, -0.21)  # Fully complex
+
+    dudx =  0.12*0.26
+    dudy =  1.10*0.26
+    dvdx = -0.915*0.26
+    dvdy = -0.04*0.26
+    #wcs = galsim.JacobianWCS(0.26, 0.03, 0.08, -0.21)  # Fully complex
+    wcs = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)  # Fully complex
 
     # And an asymmetric PSF
-    psf = galsim.Gaussian(fwhm=0.9).shear(g1=0.05, g2=0.03)
+    psf = galsim.Gaussian(fwhm=0.79).shear(g1=0.05, g2=0.03)
 
     # pixel is the pixel in world coords
     pixel = wcs.toWorld(galsim.Pixel(scale=1))
@@ -218,7 +224,7 @@ def test_metacal_tracking():
     if didnt_fail:
         assert False, 'Initial image was expected to fail symmetric noise test, but passed.'
 
-    if True:
+    if False:
         print '\n\nStrategy 1:'
         # Strategy 1: Use the noise attribute attached to ii and use it to either whiten or
         #             symmetrize the noise in the final image.
@@ -269,7 +275,7 @@ def test_metacal_tracking():
         print 'Time for noise tracking with symmetrize = ',t4-t3
 
 
-    if True:
+    if False:
         print '\n\nStrategy 2:'
         # Strategy 2: Don't trust the noise tracking. Track a noise image through the same process
         #             and then measure the noise from that image.  Use it to either whiten or
