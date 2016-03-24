@@ -3,7 +3,7 @@ Changes from v1.1 to v1.2
 
 Note: v1.2 is the official version we are tying the GalSim paper to.
 (Nearly published -- we are responding to the referee report now!)
-A few of the changes herein were made to address perceived deficiencies 
+A few of the changes herein were made to address perceived deficiencies
 we noticed as we were writing the paper.
 
 New Features
@@ -75,3 +75,9 @@ Updates to config options
 - Added RandomPoisson, RandomBinomial, RandomWeibull, RandomGamma, and
   RandomChi2 random number generators, corresponding to the random deviate
   classes in the python layer. (#537)
+
+
+Changes from v1.2 to v1.2.1
+===========================
+- Updated ups table file so that setup command is `setup galsim` instead of
+  `setup GalSim.`
