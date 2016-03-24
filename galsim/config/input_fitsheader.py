@@ -22,7 +22,7 @@ import galsim
 
 # The FitsHeader doesn't need anything special other than registration as a valid input type.
 from .input import RegisterInputType, InputLoader
-RegisterInputType('fits_header', InputLoader(galsim.FitsHeader,['FitsHeader'], file_scope=True))
+RegisterInputType('fits_header', InputLoader(galsim.FitsHeader, file_scope=True))
 
 def _GenerateFromFitsHeader(config, base, value_type):
     """@brief Return a value read from a FITS header
@@ -41,4 +41,5 @@ def _GenerateFromFitsHeader(config, base, value_type):
 
 # Register this as a valid value type
 from .value import RegisterValueType
-RegisterValueType('FitsHeader', _GenerateFromFitsHeader, [ float, int, bool, str ])
+RegisterValueType('FitsHeader', _GenerateFromFitsHeader, [ float, int, bool, str ],
+                  input_type='fits_header')

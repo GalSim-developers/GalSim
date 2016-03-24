@@ -230,7 +230,7 @@ class COSMOSCatalog(object):
             # do try to make a parametric galaxy.
             import warnings
             warnings.warn(
-                'You seem to have an old version of the COSMOS parameter file.\n'+
+                'You seem to have an old version of the COSMOS parameter file. '+
                 'Please run `galsim_download_cosmos` to re-download the COSMOS catalog.')
 
         # NB. The pyfits FITS_Rec class has a bug where it makes a copy of the full
@@ -296,9 +296,24 @@ class COSMOSCatalog(object):
                 self.selection_cat = None
                 import warnings
                 warnings.warn(
-                    'File with GalSim selection criteria not found!\n'+
-                    'Not all of the requested exclusions will be performed.\n'+
-                    'Run the program galsim_download_cosmos to get the necessary selection file.\n')
+                    'File with GalSim selection criteria not found! '+
+                    'Not all of the requested exclusions will be performed. '+
+                    'Run the program galsim_download_cosmos to get the necessary selection file.')
+
+            # Finally, impose a cut that the total flux in the postage stamp should be positive,
+            # which excludes a tiny number of galaxies (of order 10 in each sample) with some sky
+            # subtraction or deblending errors.  Some of these are eliminated by other cuts when
+            # using exclusion_level='marginal'.
+            if hasattr(self.real_cat, 'stamp_flux'):
+                mask &= self.real_cat.stamp_flux > 0
+            else:
+                import warnings
+                warnings.warn(
+                    'This version of the COSMOS catalog does not have info about total flux in '+
+                    'the galaxy postage stamps.  Exclusion of negative-flux stamps in advance '+
+                    'cannot be done. '+
+                    'Run the program galsim_download_cosmos to get the updated catalog with this '+
+                    'information precomputed.')
 
         if exclusion_level in ['bad_fits', 'marginal']:
             # This 'exclusion_level' involves eliminating failed parametric fits (bad fit status
@@ -346,8 +361,8 @@ class COSMOSCatalog(object):
                 # getting the flux.
                 import warnings
                 warnings.warn(
-                    'You seem to have an old version of the COSMOS parameter file.\n'+
-                    'Please run `galsim_download_cosmos` to re-download the COSMOS catalog\n' +
+                    'You seem to have an old version of the COSMOS parameter file. '+
+                    'Please run `galsim_download_cosmos` to re-download the COSMOS catalog ' +
                     'to get faster and more accurate selection.')
 
                 sparams = self.param_cat['sersicfit']
@@ -506,8 +521,8 @@ class COSMOSCatalog(object):
             if 'hlr' not in self.param_cat.dtype.names:
                 import warnings
                 warnings.warn(
-                    'You seem to have an old version of the COSMOS parameter file.\n'+
-                    'Please run `galsim_download_cosmos` to re-download the COSMOS catalog\n' +
+                    'You seem to have an old version of the COSMOS parameter file. '+
+                    'Please run `galsim_download_cosmos` to re-download the COSMOS catalog ' +
                     'and take advantage of pre-computation of many quantities..')
 
             gal_list = self._makeParametric(indices, chromatic, sersic_prec, gsparams)
@@ -525,8 +540,15 @@ class COSMOSCatalog(object):
             else:
                 import warnings
                 warnings.warn(
-                    'Ignoring `deep` argument, because the sample being used already \n'+
+                    'Ignoring `deep` argument, because the sample being used already '+
                     'corresponds to a flux limit of F814W<25.2')
+
+        # Store the orig_index as gal.index regardless of whether we have a RealGalaxy or not.
+        # It gets set by _makeReal, but not by _makeParametric.
+        # And if we are doing the deep scaling, then it gets messed up by that.
+        # So just put it in here at the end to be sure.
+        for gal, index in zip(gal_list, indices):
+            gal.index = self.orig_index[index]
 
         if hasattr(index, '__iter__'):
             return gal_list
@@ -800,8 +822,6 @@ class COSMOSCatalog(object):
             real_params = cosmos_catalog.getRealParams(index)
             gal = galsim.RealGalaxy(real_params, noise_pad_size=noise_pad_size, rng=rng,
                                     gsparams=gsparams)
-            # Store the orig_index as gal.index, since the above just sets it as 0.
-            gal.index = cosmos_catalog.getOrigIndex(index)
         else:
             record = cosmos_catalog.getParametricRecord(index)
             gal = COSMOSCatalog._buildParametric(record, sersic_prec, gsparams, chromatic=False)
@@ -819,8 +839,13 @@ class COSMOSCatalog(object):
             else:
                 import warnings
                 warnings.warn(
-                    'Ignoring `deep` argument, because the sample being used already \n'+
+                    'Ignoring `deep` argument, because the sample being used already '+
                     'corresponds to a flux limit of F814W<25.2')
+
+        # Store the orig_index as gal.index, since the above RealGalaxy initialization
+        # just sets it as 0.  Plus, it isn't set at all if we make a parametric galaxy.
+        # And if we are doing the deep scaling, then it gets messed up by that
+        gal.index = cosmos_catalog.getOrigIndex(index)
 
         return gal
 
