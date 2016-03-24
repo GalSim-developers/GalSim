@@ -84,7 +84,7 @@ class TruthBuilder(ExtraOutputBuilder):
         self.scratch[obj_num] = row
 
     # The function to call at the end of building each file to finalize the truth catalog
-    def finalize(self, config, base, logger):
+    def finalize(self, config, base, main_data, logger):
         # Make the OutputCatalog
         cols = config['columns']
         types = self.scratch.pop('types')
@@ -96,6 +96,7 @@ class TruthBuilder(ExtraOutputBuilder):
         for obj_num in obj_nums:
             row = self.scratch[obj_num]
             self.cat.addRow(row)
+        return self.cat
 
     # Write the catalog to a file
     def writeFile(self, file_name, config, base, logger):

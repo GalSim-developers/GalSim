@@ -154,6 +154,8 @@ def _GenerateFromEval(config, base, value_type):
         stamp_ysize = base['stamp_ysize']
     if 'pixel_scale' in base:
         pixel_scale = base['pixel_scale']
+    if 'wcs' in base:
+        wcs = base['wcs']
     if 'rng' in base:
         rng = base['rng']
     if 'file_num' in base:
@@ -172,8 +174,8 @@ def _GenerateFromEval(config, base, value_type):
         return val, False
     except KeyboardInterrupt:
         raise
-    except:
-        raise ValueError("Unable to evaluate string %r as a %s"%(string,value_type))
+    except Exception as e:
+        raise ValueError("Unable to evaluate string %r as a %s\n"%(string,value_type) + str(e))
 
 
 # Register this as a valid value type
