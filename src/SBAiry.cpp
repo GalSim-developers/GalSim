@@ -65,7 +65,7 @@ namespace galsim {
 
     SBAiry::~SBAiry() {}
 
-    std::string SBAiry::SBAiryImpl::repr() const 
+    std::string SBAiry::SBAiryImpl::repr() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
@@ -74,25 +74,25 @@ namespace galsim {
         return oss.str();
     }
 
-    double SBAiry::getLamOverD() const 
+    double SBAiry::getLamOverD() const
     {
         assert(dynamic_cast<const SBAiryImpl*>(_pimpl.get()));
-        return static_cast<const SBAiryImpl&>(*_pimpl).getLamOverD(); 
+        return static_cast<const SBAiryImpl&>(*_pimpl).getLamOverD();
     }
 
-    double SBAiry::getObscuration() const 
+    double SBAiry::getObscuration() const
     {
         assert(dynamic_cast<const SBAiryImpl*>(_pimpl.get()));
-        return static_cast<const SBAiryImpl&>(*_pimpl).getObscuration(); 
+        return static_cast<const SBAiryImpl&>(*_pimpl).getObscuration();
     }
 
     SBAiry::SBAiryImpl::SBAiryImpl(double lam_over_D, double obscuration, double flux,
                                    const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
-        _lam_over_D(lam_over_D), 
-        _D(1. / lam_over_D), 
-        _obscuration(obscuration), 
-        _flux(flux), 
+        _lam_over_D(lam_over_D),
+        _D(1. / lam_over_D),
+        _obscuration(obscuration),
+        _flux(flux),
         _Dsq(_D*_D), _obssq(_obscuration*_obscuration),
         _inv_D_pi(1. / (_D * M_PI)),
         _inv_Dsq_pisq(_inv_D_pi * _inv_D_pi),
@@ -111,7 +111,7 @@ namespace galsim {
     // This is a scale-free version of the Airy radial function.
     // Input radius is in units of lambda/D.  Output normalized
     // to integrate to unity over input units.
-    double AiryInfoObs::RadialFunction::operator()(double radius) const 
+    double AiryInfoObs::RadialFunction::operator()(double radius) const
     {
         double nu = radius*M_PI;
         // Taylor expansion of j1(u)/u = 1/2 - 1/16 x^2 + ...
@@ -125,7 +125,7 @@ namespace galsim {
             xval =  0.5 * (1.-_obssq);
         } else {
             // See Schroeder eq (10.1.10)
-            xval = ( j1(nu) - _obscuration*j1(_obscuration*nu) ) / nu ; 
+            xval = ( j1(nu) - _obscuration*j1(_obscuration*nu) ) / nu ;
         }
         xval *= xval;
         // Normalize to give unit flux integrated over area.
@@ -133,13 +133,13 @@ namespace galsim {
         return xval;
     }
 
-    double SBAiry::SBAiryImpl::xValue(const Position<double>& p) const 
+    double SBAiry::SBAiryImpl::xValue(const Position<double>& p) const
     {
         double r = sqrt(p.x*p.x+p.y*p.y) * _D;
         return _xnorm * _info->xValue(r);
     }
 
-    double AiryInfoObs::xValue(double r) const 
+    double AiryInfoObs::xValue(double r) const
     { return _radial(r); }
 
     std::complex<double> SBAiry::SBAiryImpl::kValue(const Position<double>& k) const
@@ -175,7 +175,7 @@ namespace galsim {
                 double x = x0;
                 double ysq = y0*y0;
                 It valit = val.col(j).begin();
-                for (int i=0;i<m;++i,x+=dx) 
+                for (int i=0;i<m;++i,x+=dx)
                     *valit++ = _xnorm * _info->xValue(sqrt(x*x + ysq));
             }
         }
@@ -207,7 +207,7 @@ namespace galsim {
                 double kx = kx0;
                 double kysq = ky0*ky0;
                 It valit = val.col(j).begin();
-                for (int i=0;i<m;++i,kx+=dkx) 
+                for (int i=0;i<m;++i,kx+=dkx)
                     *valit++ = _knorm * _info->kValue(kx*kx + kysq);
             }
         }
@@ -237,7 +237,7 @@ namespace galsim {
         for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
             double x = x0;
             double y = y0;
-            for (int i=0;i<m;++i,x+=dx,y+=dyx) 
+            for (int i=0;i<m;++i,x+=dx,y+=dyx)
                 *valit++ = _xnorm * _info->xValue(sqrt(x*x + y*y));
         }
     }
@@ -266,28 +266,28 @@ namespace galsim {
         for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
             double kx = kx0;
             double ky = ky0;
-            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx) 
+            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx)
                 *valit++ = _knorm * _info->kValue(kx*kx + ky*ky);
         }
     }
 
     // Set maxK to hard limit for Airy disk.
-    double SBAiry::SBAiryImpl::maxK() const 
+    double SBAiry::SBAiryImpl::maxK() const
     { return 2.*M_PI*_D; }
 
-    // The amount of flux missed in a circle of radius pi/stepk should be at 
+    // The amount of flux missed in a circle of radius pi/stepk should be at
     // most folding_threshold of the flux.
     double SBAiry::SBAiryImpl::stepK() const
     { return _info->stepK() * _D; }
 
-    double AiryInfoObs::chord(double r, double h, double rsq, double hsq) const 
+    double AiryInfoObs::chord(double r, double h, double rsq, double hsq) const
     {
-        if (r==0.) 
+        if (r==0.)
             return 0.;
 #ifdef AIRY_DEBUG
-        else if (r<h) 
+        else if (r<h)
             throw SBError("Airy calculation r<h");
-        else if (h < 0.) 
+        else if (h < 0.)
             throw SBError("Airy calculation h<0");
 #endif
         else
@@ -296,7 +296,7 @@ namespace galsim {
 
     /* area inside intersection of 2 circles radii r & s, seperated by t*/
     double AiryInfoObs::circle_intersection(
-        double r, double s, double rsq, double ssq, double tsq) const 
+        double r, double s, double rsq, double ssq, double tsq) const
     {
         assert(r >= s);
         assert(s >= 0.);
@@ -312,7 +312,7 @@ namespace galsim {
 #endif
         double h = sqrt(hsq);
 
-        if (tsq < rsq - ssq) 
+        if (tsq < rsq - ssq)
             return M_PI*ssq - chord(s,h,ssq,hsq) + chord(r,h,rsq,hsq);
         else
             return chord(s,h,ssq,hsq) + chord(r,h,rsq,hsq);
@@ -320,7 +320,7 @@ namespace galsim {
 
     /* area inside intersection of 2 circles both with radius r, seperated by t*/
     double AiryInfoObs::circle_intersection(
-        double r, double rsq, double tsq) const 
+        double r, double rsq, double tsq) const
     {
         assert(r >= 0.);
         if (tsq >= 4.*rsq) return 0.;
@@ -338,7 +338,7 @@ namespace galsim {
 
     /* area of two intersecting identical annuli */
     double AiryInfoObs::annuli_intersect(
-        double r1, double r2, double r1sq, double r2sq, double tsq) const 
+        double r1, double r2, double r1sq, double r2sq, double tsq) const
     {
         assert(r1 >= r2);
         return circle_intersection(r1,r1sq,tsq)
@@ -349,12 +349,12 @@ namespace galsim {
     // Beam pattern of annular aperture, in k space, which is just the
     // autocorrelation of two annuli.
     // Unnormalized -- value at k=0 is Pi * (1-obs^2)
-    double AiryInfoObs::kValue(double ksq_over_pisq) const 
+    double AiryInfoObs::kValue(double ksq_over_pisq) const
     { return annuli_intersect(1.,_obscuration,1.,_obssq,ksq_over_pisq); }
 
     // Constructor to initialize Airy constants and k lookup table
-    AiryInfoObs::AiryInfoObs(double obscuration, const GSParamsPtr& gsparams) : 
-        _obscuration(obscuration), 
+    AiryInfoObs::AiryInfoObs(double obscuration, const GSParamsPtr& gsparams) :
+        _obscuration(obscuration),
         _obssq(obscuration * obscuration),
         _radial(_obscuration, _obssq, gsparams),
         _gsparams(gsparams)
@@ -396,7 +396,7 @@ namespace galsim {
         return _sampler->shoot(N, u);
     }
 
-    void AiryInfoObs::checkSampler() const 
+    void AiryInfoObs::checkSampler() const
     {
         if (this->_sampler.get()) return;
         dbg<<"Airy sampler\n";
@@ -416,10 +416,10 @@ namespace galsim {
     }
 
     // Now the specializations for when obs = 0
-    double AiryInfoNoObs::xValue(double r) const 
+    double AiryInfoNoObs::xValue(double r) const
     { return _radial(r); }
 
-    double AiryInfoNoObs::kValue(double ksq_over_pisq) const 
+    double AiryInfoNoObs::kValue(double ksq_over_pisq) const
     {
         if (ksq_over_pisq >= 4.) return 0.;
         if (ksq_over_pisq == 0.) return M_PI;
@@ -434,7 +434,7 @@ namespace galsim {
         return 2. * (std::asin(h) - h*sqrt(1.-hsq));
     }
 
-    double AiryInfoNoObs::RadialFunction::operator()(double radius) const 
+    double AiryInfoNoObs::RadialFunction::operator()(double radius) const
     {
         double nu = radius*M_PI;
         // Taylor expansion of j1(u)/u = 1/2 - 1/16 x^2 + ...
@@ -472,7 +472,7 @@ namespace galsim {
         this->_stepk = M_PI / R;
     }
 
-    void AiryInfoNoObs::checkSampler() const 
+    void AiryInfoNoObs::checkSampler() const
     {
         if (this->_sampler.get()) return;
         dbg<<"AiryNoObs sampler\n";

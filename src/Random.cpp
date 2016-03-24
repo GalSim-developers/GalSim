@@ -23,7 +23,7 @@
 
 namespace galsim {
 
-    void BaseDeviate::seedurandom() 
+    void BaseDeviate::seedurandom()
     {
         // This implementation shamelessly taken from:
         // http://stackoverflow.com/questions/2572366/how-to-use-dev-random-or-urandom-in-c
@@ -42,7 +42,7 @@ namespace galsim {
         _rng->seed(myRandomInteger);
     }
 
-    void BaseDeviate::seedtime() 
+    void BaseDeviate::seedtime()
     {
         struct timeval tp;
         gettimeofday(&tp,NULL);
@@ -66,10 +66,10 @@ namespace galsim {
             // (See http://www.boost.org/doc/libs/1_51_0/boost/random/mersenne_twister.hpp).
             // The issue itself is described briefly here:
             // http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/MT2002/emt19937ar.html,
-            // and in more detail for an algorithm tt880 that is apparently a 'little cousin' to 
+            // and in more detail for an algorithm tt880 that is apparently a 'little cousin' to
             // the Mersenne Twister: http://random.mat.sbg.ac.at/news/seedingTT800.html
             //
-            // The worry is that updates to the methods claim improvements to the behaviour of 
+            // The worry is that updates to the methods claim improvements to the behaviour of
             // close (in a bitwise sense) patterns, but we have not found ready quantified data.
             //
             // So just to be sure, we send the initial seed through a _different_ random number
