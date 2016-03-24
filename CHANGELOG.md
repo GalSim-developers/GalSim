@@ -31,7 +31,8 @@ Bug Fixes
   where the resulting object did not set the index attribute properly. (#694)
 - Fixed an error in the `CCDNoise.getVariance()` function, as well as some
   errors in the documentation about the units of CCDNoise parameters. (#713)
-
+- Updated ups table file so that setup command is `setup galsim` instead of
+  `setup GalSim` (#724)
 
 Deprecated Features
 -------------------
