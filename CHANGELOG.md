@@ -80,4 +80,4 @@ Updates to config options
 Changes from v1.2 to v1.2.1
 ===========================
 - Updated ups table file so that setup command is `setup galsim` instead of
-  `setup GalSim.`
+  `setup GalSim.` (#724)
