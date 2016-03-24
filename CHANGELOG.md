@@ -124,3 +124,8 @@ Updates to config options
 - Added Spergel type. (#616)
 - Added lam, diam, scale_units options to Airy and OpticalPSF types. (#618)
 - Added TopHat type. (#639)
+
+Changes from v1.3 to v1.3.1
+===========================
+- Updated ups table file so that setup command is `setup galsim` instead of
+  `setup GalSim` (#724)
