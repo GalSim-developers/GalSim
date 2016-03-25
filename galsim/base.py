@@ -1433,8 +1433,12 @@ class GSObject(object):
             dk = float(scale)
         if re is not None and re.bounds.isDefined():
             dx = 2.*np.pi/( np.max(re.array.shape) * dk )
-        else:
+        elif scale is None or scale <= 0:
             dx = self.nyquistScale()
+        else:
+            # Then dk = scale, which implies that we need to have dx smaller than nyquistScale
+            # by a factor of (dk/stepk)
+            dx = self.nyquistScale() * dk / self.stepK()
 
         # If the profile needs to be constructed from scratch, the _setup_image function will
         # do that, but only if the profile is in image coordinates for the real space image.
