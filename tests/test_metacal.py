@@ -150,38 +150,66 @@ def test_metacal_tracking():
             np.testing.assert_almost_equal((cf_cross-np.mean(cf_cross))/cf(0,0), 0.0, decimal=2,
                                            err_msg=msg + ': cross pattern is not constant')
 
-    noise_var = 1.3
     seed = 1234567  # For use as a unit test, we need a specific seed
     #seed = 0  # During testing, it's useful to see how numbers flop around to know if
                # something is systematic or random.
+    rng = galsim.BaseDeviate(seed)
+
+    noise_var = 1.3
     im_size = 1024
     dg = 0.1  # This is bigger than metacal would use, but it makes the test easier.
-    rng = galsim.BaseDeviate(seed)
-    # Use a non-trivial wcs...
 
+    # Use a non-trivial wcs...
+    #wcs = galsim.JacobianWCS(0.26, 0.04, -0.04, -0.26)  # Rotation + flip.  No shear.
+    #wcs = galsim.JacobianWCS(0.26, 0.03, 0.08, -0.21)   # Fully complex
     dudx =  0.12*0.26
     dudy =  1.10*0.26
     dvdx = -0.915*0.26
     dvdy = -0.04*0.26
-    #wcs = galsim.JacobianWCS(0.26, 0.03, 0.08, -0.21)  # Fully complex
-    wcs = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)  # Fully complex
+    wcs = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)  # Even more extreme
 
     # And an asymmetric PSF
-    psf = galsim.Gaussian(fwhm=0.79).shear(g1=0.05, g2=0.03)
+    #orig_psf = galsim.Gaussian(fwhm=0.9).shear(g1=0.05, g2=0.03)
+    # This one is small enough not to be fully Nyquist sampled, which makes things harder.
+    orig_psf = galsim.Gaussian(fwhm=0.7).shear(g1=0.05, g2=0.03)
 
     # pixel is the pixel in world coords
     pixel = wcs.toWorld(galsim.Pixel(scale=1))
     pixel_inv = galsim.Deconvolve(pixel)
 
-    psf_image = psf.drawImage(nx=im_size, ny=im_size, wcs=wcs)
+    psf_image = orig_psf.drawImage(nx=im_size, ny=im_size, wcs=wcs)
 
     # Metacal only has access to the PSF as an image, so use this from here on.
     psf = galsim.InterpolatedImage(psf_image)
     psf_nopix = galsim.Convolve([psf, pixel_inv])
     psf_inv = galsim.Deconvolve(psf)
 
+    # Not what is done currently, but using a smoother target PSF helps make sure the
+    # zeros in the deconvolved PSF get adequately zeroed out.
+    def get_target_psf(psf):
+        dk = 0.1              # The resolution in k space for the KImage
+        small_kval = 1.e-2    # Find the k where the given psf hits this kvalue
+        smaller_kval = 3.e-3  # Target PSF will have this kvalue at the same k
+
+        kim_r, kim_i = psf.drawKImage(scale=dk)
+        karr_r = kim_r.array
+        # Find the smallest r where the kval < small_kval
+        nk = karr_r.shape[0]
+        kx, ky = np.meshgrid(np.arange(-nk/2,nk/2), np.arange(-nk/2,nk/2))
+        ksq = (kx**2 + ky**2) * dk**2
+        ksq_max = np.min(ksq[karr_r < small_kval * psf.flux])
+
+        # We take our target PSF to be the (round) Gaussian that is even smaller at this ksq
+        # exp(-0.5 * ksq_max * sigma_sq) = smaller_kval
+        sigma_sq = -2. * np.log(smaller_kval) / ksq_max
+        return galsim.Gaussian(sigma = np.sqrt(sigma_sq))
+
     # The target PSF dilates the part without the pixel, but reconvolve by the real pixel.
-    psf_target_nopix = psf_nopix.dilate(1. + 2.*dg)
+    #psf_target_nopix = psf_nopix.dilate(1. + 2.*dg)
+    #psf_target_nopix = orig_psf.dilate(1. + 4.*dg)
+    psf_target_nopix = get_target_psf(psf_nopix.shear(g1=dg))
+    print 'PSF target HLR = ',psf_target_nopix.calculateHLR()
+    print 'PSF target FWHM = ',psf_target_nopix.calculateFWHM()
     psf_target = galsim.Convolve([psf_target_nopix, pixel])
 
     # Make an image of pure (white) Gaussian noise
@@ -224,7 +252,7 @@ def test_metacal_tracking():
     if didnt_fail:
         assert False, 'Initial image was expected to fail symmetric noise test, but passed.'
 
-    if False:
+    if True:
         print '\n\nStrategy 1:'
         # Strategy 1: Use the noise attribute attached to ii and use it to either whiten or
         #             symmetrize the noise in the final image.
@@ -275,7 +303,7 @@ def test_metacal_tracking():
         print 'Time for noise tracking with symmetrize = ',t4-t3
 
 
-    if False:
+    if True:
         print '\n\nStrategy 2:'
         # Strategy 2: Don't trust the noise tracking. Track a noise image through the same process
         #             and then measure the noise from that image.  Use it to either whiten or
