@@ -1188,7 +1188,7 @@ def test_gsparam():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 def test_separable_ChromaticSum():
-    """ Test that ChromaticSum separable profile grouping.
+    """ Test ChromaticSum separable profile grouping.
     """
     import time
     t1 = time.time()
@@ -1867,7 +1867,9 @@ def test_ne():
     # The following should test unequal.
     gals = [galsim.ChromaticSum(cgal1),
             galsim.ChromaticSum(cgal1, cgal2),
-            galsim.ChromaticSum(cgal1, cgal2, cgal2),
+            galsim.ChromaticSum(cgal2, cgal1),  # Not! commutative.
+            galsim.ChromaticSum(galsim.ChromaticSum(cgal1, cgal2), cgal2),
+            galsim.ChromaticSum(cgal1, galsim.ChromaticSum(cgal2, cgal2)),  # Not! associative.
             galsim.ChromaticSum(cgal1, gsparams=gsp)]
     all_obj_diff(gals)
 
@@ -1875,7 +1877,10 @@ def test_ne():
     # The following should test unequal
     gals = [galsim.ChromaticConvolution(cgal1),
             galsim.ChromaticConvolution(cgal1, cgal2),
-            galsim.ChromaticConvolution(cgal1, cgal2, cgal2),
+            galsim.ChromaticConvolution(cgal2, cgal1),  # Not! commutative.
+            galsim.ChromaticConvolution(galsim.ChromaticConvolution(cgal1, cgal2), cgal2),
+            # ChromaticConvolution is associative! (unlike galsim.Convolution)
+            # galsim.ChromaticConvolution(cgal1, galsim.ChromaticConvolution(cgal2, cgal2)),
             galsim.ChromaticConvolution(cgal1, gsparams=gsp)]
     all_obj_diff(gals)
 

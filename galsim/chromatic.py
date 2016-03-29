@@ -25,8 +25,6 @@ Possible uses include galaxies with color gradients, automatically drawing a giv
 different filters, or implementing wavelength-dependent point spread functions.
 """
 
-from collections import Counter
-
 import numpy as np
 import copy
 
@@ -1629,12 +1627,11 @@ class ChromaticSum(ChromaticObject):
 
     def __eq__(self, other):
         return (isinstance(other, galsim.ChromaticSum) and
-                Counter(self.objlist) == Counter(other.objlist) and
+                self.objlist == other.objlist and
                 self.gsparams == other.gsparams)
 
     def __hash__(self):
-        return hash(("galsim.ChromaticSum", frozenset(Counter(self.objlist).items()),
-                     self.gsparams))
+        return hash(("galsim.ChromaticSum", tuple(self.objlist), self.gsparams))
 
     def __repr__(self):
         return 'galsim.ChromaticSum(%r, gsparams=%r)' % (self.objlist, self.gsparams)
@@ -1844,12 +1841,11 @@ class ChromaticConvolution(ChromaticObject):
 
     def __eq__(self, other):
         return (isinstance(other, galsim.ChromaticConvolution) and
-                Counter(self.objlist) == Counter(other.objlist) and
+                self.objlist == other.objlist and
                 self.gsparams == other.gsparams)
 
     def __hash__(self):
-        return hash(("galsim.ChromaticConvolution", frozenset(Counter(self.objlist).items()),
-                     self.gsparams))
+        return hash(("galsim.ChromaticConvolution", tuple(self.objlist), self.gsparams))
 
     def __repr__(self):
         return 'galsim.ChromaticConvolution(%r, gsparams=%r)' % (self.objlist, self.gsparams)

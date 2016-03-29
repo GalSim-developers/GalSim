@@ -695,6 +695,7 @@ def test_autocorrelate():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
 def test_ne():
     import time
     t1 = time.time()
@@ -706,7 +707,9 @@ def test_ne():
     # Sum.  Params are objs to add and potentially gsparams.
     gals = [galsim.Sum(gal1),
             galsim.Sum(gal1, gal2),
-            galsim.Sum(gal1, gal2, gal2),  # Repeated obj to test that Counter works.
+            galsim.Sum(gal2, gal1),  # Not! commutative.
+            galsim.Sum(galsim.Sum(gal1, gal2), gal2),
+            galsim.Sum(gal1, galsim.Sum(gal2, gal2)),  # Not! associative.
             galsim.Sum(gal1, gsparams=gsp)]
     all_obj_diff(gals)
 
@@ -714,8 +717,10 @@ def test_ne():
     # The following should test unequal
     gals = [galsim.Convolution(gal1),
             galsim.Convolution(gal1, gal2),
+            galsim.Convolution(gal2, gal1),  # Not! commutative.
             galsim.Convolution(gal1, gal2, real_space=True),
-            galsim.Convolution(gal1, gal2, gal2),
+            galsim.Convolution(galsim.Convolution(gal1, gal2), gal2),
+            galsim.Convolution(gal1, galsim.Convolution(gal2, gal2)),  # Not! associative.
             galsim.Convolution(gal1, gsparams=gsp)]
     all_obj_diff(gals)
 
