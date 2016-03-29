@@ -465,7 +465,7 @@ def AddNoiseCOSMOS(noise, config, draw_method, rng, im, weight_im, current_var, 
                                         ignore=noise_ignore)[0]
 
     # Build the correlated noise 
-    cn = galsim.correlatednoise.getCOSMOSNoise(rng, **kwargs)
+    cn = galsim.correlatednoise.getCOSMOSNoise(rng=rng, **kwargs)
     var = cn.getVariance()
 
     # If we are saving the noise level in a weight image, do that now.
@@ -498,7 +498,7 @@ def NoiseVarCOSMOS(noise, config):
     # for default variance: quick and ensures we don't needlessly duplicate code) 
     # Note: the rng being passed here is arbitrary, since we don't need it to calculate the
     # variance.  Building a BaseDeviate with a particular seed is the fastest option.
-    cn = galsim.correlatednoise.getCOSMOSNoise(galsim.BaseDeviate(123), **kwargs)
+    cn = galsim.correlatednoise.getCOSMOSNoise(rng=galsim.BaseDeviate(123), **kwargs)
 
     # zero distance correlation function value returned as variance
     return cn.getVariance()
