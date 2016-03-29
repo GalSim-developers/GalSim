@@ -15,6 +15,8 @@ API Changes
 Bug Fixes
 ---------
 
+- Fixed bug in config that did not allow users to pass in a filename for
+  COSMOS (correlated) noise.  (#732)
 - Improved ability of galsim.fits.read to handle invalid but fixable FITS
   headers. (#602)
 - Fixed bug in des module related to building meds file with wcs taken from
