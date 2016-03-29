@@ -184,7 +184,7 @@ def GetSky(config, base):
             return sky_level * wcs.pixelArea(base['image_pos'])
         else:
             # This calculation is non-trivial, so store this in case we need it again.
-            tag = (base['file_num'], base['image_num'])
+            tag = (id(base), base['file_num'], base['image_num'])
             if config.get('current_sky_tag',None) == tag:
                 return config['current_sky']
             else:
@@ -526,7 +526,7 @@ class COSMOSNoiseBuilder(NoiseBuilder):
 
     def getCOSMOSNoise(self, config, base, rng=None):
         # Save the constructed CorrelatedNoise object, since we might need it again.
-        tag = (base['file_num'], base['image_num'])
+        tag = (id(base), base['file_num'], base['image_num'])
         if self.current_cn_tag == tag:
             return self.current_cn
         else:
