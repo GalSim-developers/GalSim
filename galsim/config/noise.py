@@ -530,10 +530,9 @@ class COSMOSNoiseBuilder(NoiseBuilder):
         if self.current_cn_tag == tag:
             return self.current_cn
         else:
-            req = { 'file_name' : str }
-            opt = { 'cosmos_scale' : float, 'variance' : float }
+            opt = { 'file_name' : str, 'cosmos_scale' : float, 'variance' : float }
 
-            kwargs = galsim.config.GetAllParams(config, base, req=req, opt=opt,
+            kwargs = galsim.config.GetAllParams(config, base, opt=opt,
                                                 ignore=noise_ignore)[0]
             if rng is None:
                 rng = base['rng']
