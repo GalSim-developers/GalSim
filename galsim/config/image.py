@@ -121,6 +121,9 @@ def SetupConfigImageNum(config, image_num, obj_num):
     if not isinstance(image, dict):
         raise AttributeError("config.image is not a dict.")
 
+    if 'file_num' not in config:
+        config['file_num'] = 0
+
     if 'type' not in image:
         image['type'] = 'Single'
     image_type = image['type']
