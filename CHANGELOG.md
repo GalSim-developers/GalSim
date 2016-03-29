@@ -125,7 +125,18 @@ Updates to config options
 - Added lam, diam, scale_units options to Airy and OpticalPSF types. (#618)
 - Added TopHat type. (#639)
 
-Changes from v1.3 to v1.3.1
-===========================
+
+Changes from v1.3.0 to v1.3.1
+=============================
 - Updated ups table file so that setup command is `setup galsim` instead of
   `setup GalSim` (#724)
+  
+Changes from v1.3.1 to v1.3.2
+=============================
+- Updated SCons to workaround a new "feature" in El Capitan OSX that makes
+  DYLD_LIBRARY_PATH not work from within SCons.  If you use DYLD_LIBRARY_PATH,
+  you will now need to run SCons with
+      scons DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH
+  (#721)
+- Fixed bug in config that did not allow users to pass in a filename for
+  COSMOS (correlated) noise.  (#732)
