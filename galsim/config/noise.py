@@ -537,7 +537,7 @@ class COSMOSNoiseBuilder(NoiseBuilder):
                                                 ignore=noise_ignore)[0]
             if rng is None:
                 rng = base['rng']
-            cn = galsim.correlatednoise.getCOSMOSNoise(rng, **kwargs)
+            cn = galsim.correlatednoise.getCOSMOSNoise(rng=rng, **kwargs)
             self.current_cn = cn
             self.current_cn_tag = tag
             return cn
