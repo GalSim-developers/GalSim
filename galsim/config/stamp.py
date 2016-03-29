@@ -142,6 +142,11 @@ def SetupConfigObjNum(config, obj_num):
     if 'type' not in stamp:
         stamp['type'] = 'Basic'
 
+    if 'file_num' not in config:
+        config['file_num'] = 0
+    if 'image_num' not in config:
+        config['image_num'] = 0
+
     # Copy over some things from config['image'] if they are given there.
     # These are things that we used to advertise as being in the image field, but now that
     # we have a stamp field, they really make more sense here.  But for backwards compatibility,
