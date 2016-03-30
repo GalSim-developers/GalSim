@@ -146,13 +146,13 @@ class SED(object):
 
         # Do some SED unit conversions to make internal representation proportional to photons/nm.
         # Note that w should have units of nm below.
-        c = 2.99792458e17  # speed of light in nm/s
+        c = 2.99792458e17   # speed of light in nm/s
         h = 6.62606957e-27  # Planck's constant in erg seconds
         if self.flux_type == 'flambda':
             # photons/nm = (erg/nm) * (photons/erg)
             #            = spec(w) * 1/(h nu) = spec(w) * lambda / hc
             self._rest_photons = lambda w: (
-                self._spec(w * self.wave_factor) * w * self.wave_factor / (h*c))
+                    self._spec(w * self.wave_factor) * w * self.wave_factor / (h*c))
         elif self.flux_type == 'fnu':
             # photons/nm = (erg/Hz) * (photons/erg) * (Hz/nm)
             #            = spec(w) * 1/(h nu) * |dnu/dlambda|
@@ -197,13 +197,13 @@ class SED(object):
 
         @returns the photon density in units of photons/nm
         """
-        if hasattr(wave, '__iter__'):  # Only iterables respond to min(), max()
+        if hasattr(wave, '__iter__'): # Only iterables respond to min(), max()
             wmin = min(wave)
             wmax = max(wave)
-        else:  # python scalar
+        else: # python scalar
             wmin = wave
             wmax = wave
-        extrapolation_slop = 1.e-6  # allow a small amount of extrapolation
+        extrapolation_slop = 1.e-6 # allow a small amount of extrapolation
         if self.blue_limit is not None:
             if wmin < self.blue_limit - extrapolation_slop:
                 raise ValueError("Requested wavelength ({0}) is bluer than blue_limit ({1})"
@@ -245,7 +245,7 @@ class SED(object):
                 wave_type = 'Angstroms'
             flux_type = self.flux_type
             x = self._spec.getArgs()
-            f = [val * other for val in self._spec.getVals()]
+            f = [ val * other for val in self._spec.getVals() ]
             spec = galsim.LookupTable(x, f, x_log=self._spec.x_log, f_log=self._spec.f_log,
                                       interpolant=self._spec.interpolant)
         else:
@@ -272,7 +272,7 @@ class SED(object):
                 wave_type = 'Angstroms'
             flux_type = self.flux_type
             x = self._spec.getArgs()
-            f = [val / other for val in self._spec.getVals()]
+            f = [ val / other for val in self._spec.getVals() ]
             spec = galsim.LookupTable(x, f, x_log=self._spec.x_log, f_log=self._spec.f_log,
                                       interpolant=self._spec.interpolant)
         else:
@@ -392,17 +392,17 @@ class SED(object):
 
         @returns the flux through the bandpass.
         """
-        if bandpass is None:  # do bolometric flux
+        if bandpass is None: # do bolometric flux
             if self.blue_limit is None:
                 blue_limit = 0.0
             else:
                 blue_limit = self.blue_limit
             if self.red_limit is None:
-                red_limit = 1.e11  # = infinity in int1d
+                red_limit = 1.e11 # = infinity in int1d
             else:
                 red_limit = self.red_limit
             return galsim.integ.int1d(self._rest_photons, blue_limit, red_limit)
-        else:  # do flux through bandpass
+        else: # do flux through bandpass
             if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
                 x = np.union1d(bandpass.wave_list, self.wave_list)
                 x = x[(x <= bandpass.red_limit) & (x >= bandpass.blue_limit)]
@@ -565,8 +565,7 @@ class SED(object):
                 self.blue_limit == other.blue_limit and
                 np.array_equal(self.wave_list, other.wave_list))
 
-    def __ne__(self, other):
-        return not self.__eq__(other)
+    def __ne__(self, other): return not self.__eq__(other)
 
     def __hash__(self):
         # Cache this in case self._orig_spec or self.wave_list is long.

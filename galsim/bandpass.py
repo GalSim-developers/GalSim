@@ -94,10 +94,10 @@ class Bandpass(object):
         # `wave_list` is normally constructed (see `Bandpass.__mul__` below)
 
         self._orig_tp = throughput  # Save this for pickling.
-        #  self._tp will normally become orig_tp turned into an actual function
-        #  (see _initialize_tp()), although in some cases, it can be supplied directly as a
-        # constructor argument.
-        self._tp = _tp
+        self._tp = _tp              # This will normally become orig_tp turned into an actual
+                                    # function (see _initialize_tp()), although in some cases, it
+                                    # can be supplied directly as a constructor argument.
+
         if blue_limit is not None and red_limit is not None and blue_limit >= red_limit:
             raise ValueError("blue_limit must be less than red_limit")
         self.blue_limit = blue_limit  # These may change as we go through this.
@@ -235,7 +235,7 @@ class Bandpass(object):
             if self.wave_factor == 10.0:
                 wave_type = 'Angstroms'
             x = self._tp.getArgs()
-            f = [val * other for val in self._tp.getVals()]
+            f = [ val * other for val in self._tp.getVals() ]
             tp = galsim.LookupTable(x, f, x_log=self._tp.x_log, f_log=self._tp.f_log,
                                     interpolant=self._tp.interpolant)
         else:
@@ -269,7 +269,7 @@ class Bandpass(object):
             if self.wave_factor == 10.0:
                 wave_type = 'Angstroms'
             x = self._tp.getArgs()
-            f = [val / other for val in self._tp.getVals()]
+            f = [ val / other for val in self._tp.getVals() ]
             tp = galsim.LookupTable(x, f, x_log=self._tp.x_log, f_log=self._tp.f_log,
                                     interpolant=self._tp.interpolant)
         else:
@@ -487,8 +487,7 @@ class Bandpass(object):
                 self.zeropoint == other.zeropoint and
                 np.array_equal(self.wave_list, other.wave_list))
 
-    def __ne__(self, other):
-        return not self.__eq__(other)
+    def __ne__(self, other): return not self.__eq__(other)
 
     def __hash__(self):
         # Cache this in case self._orig_tp or self.wave_list is long.

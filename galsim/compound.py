@@ -173,7 +173,7 @@ class Sum(galsim.GSObject):
         return 'galsim.Sum(%r, gsparams=%r)' % (self.obj_list, self._gsparams)
 
     def __str__(self):
-        str_list = [str(obj) for obj in self.obj_list]
+        str_list = [ str(obj) for obj in self.obj_list ]
         return '(' + ' + '.join(str_list) + ')'
 
     def __getstate__(self):
@@ -379,7 +379,7 @@ class Convolution(galsim.GSObject):
                     noise = None
                     break
                 noise = obj.noise
-                others = [obj2 for obj2 in args if obj2 is not obj]
+                others = [ obj2 for obj2 in args if obj2 is not obj ]
                 assert len(others) > 0
                 if len(others) == 1:
                     noise = noise.convolvedWith(others[0])
@@ -392,19 +392,17 @@ class Convolution(galsim.GSObject):
         self._obj_list = args
 
         # Then finally initialize the SBProfile using the objects' SBProfiles.
-        SBList = [obj.SBProfile for obj in args]
+        SBList = [ obj.SBProfile for obj in args ]
         sbp = galsim._galsim.SBConvolve(SBList, real_space, gsparams)
         galsim.GSObject.__init__(self, sbp)
         if noise is not None:
             self.noise = noise
 
     @property
-    def obj_list(self):
-        return self._obj_list
+    def obj_list(self): return self._obj_list
 
     @property
-    def real_space(self):
-        return self._real_space
+    def real_space(self): return self._real_space
 
     def __eq__(self, other):
         return (isinstance(other, galsim.Convolution) and
@@ -420,7 +418,7 @@ class Convolution(galsim.GSObject):
             self.obj_list, self.real_space, self._gsparams)
 
     def __str__(self):
-        str_list = [str(obj) for obj in self.obj_list]
+        str_list = [ str(obj) for obj in self.obj_list ]
         s = 'galsim.Convolve(%s' % (', '.join(str_list))
         if self.real_space:
             s += ', real_space=True'
@@ -438,7 +436,7 @@ class Convolution(galsim.GSObject):
 
 
 _galsim.SBConvolve.__getinitargs__ = lambda self: (
-    self.getObjs(), self.isRealSpace(), self.getGSParams())
+        self.getObjs(), self.isRealSpace(), self.getGSParams())
 _galsim.SBConvolve.__getstate__ = lambda self: None
 _galsim.SBConvolve.__setstate__ = lambda self, state: 1
 _galsim.SBConvolve.__repr__ = lambda self: \
@@ -541,7 +539,7 @@ _galsim.SBDeconvolve.__getinitargs__ = lambda self: (self.getObj(), self.getGSPa
 _galsim.SBDeconvolve.__getstate__ = lambda self: None
 _galsim.SBDeconvolve.__setstate__ = lambda self, state: 1
 _galsim.SBDeconvolve.__repr__ = lambda self: \
-    'galsim._galsim.SBDeConvolve(%r, %r)' % self.__getinitargs__()
+        'galsim._galsim.SBDeConvolve(%r, %r)' % self.__getinitargs__()
 
 
 def AutoConvolve(obj, real_space=None, gsparams=None):
@@ -636,12 +634,10 @@ class AutoConvolution(galsim.GSObject):
             warnings.warn("Unable to propagate noise in galsim.AutoConvolution")
 
     @property
-    def orig_obj(self):
-        return self._orig_obj
+    def orig_obj(self): return self._orig_obj
 
     @property
-    def real_space(self):
-        return self._real_space
+    def real_space(self): return self._real_space
 
     def __eq__(self, other):
         return (isinstance(other, galsim.AutoConvolution) and
@@ -654,12 +650,11 @@ class AutoConvolution(galsim.GSObject):
 
     def __repr__(self):
         return 'galsim.AutoConvolution(%r, real_space=%r, gsparams=%r)' % (
-            self.orig_obj, self.real_space, self._gsparams)
+                self.orig_obj, self.real_space, self._gsparams)
 
     def __str__(self):
         s = 'galsim.AutoConvolve(%s' % self.orig_obj
-        if self.real_space:
-            s += ', real_space=True'
+        if self.real_space: s += ', real_space=True'
         s += ')'
         return s
 
@@ -674,11 +669,11 @@ class AutoConvolution(galsim.GSObject):
 
 
 _galsim.SBAutoConvolve.__getinitargs__ = lambda self: (
-    self.getObj(), self.isRealSpace(), self.getGSParams())
+        self.getObj(), self.isRealSpace(), self.getGSParams())
 _galsim.SBAutoConvolve.__getstate__ = lambda self: None
 _galsim.SBAutoConvolve.__setstate__ = lambda self, state: 1
 _galsim.SBAutoConvolve.__repr__ = lambda self: \
-    'galsim._galsim.SBAutoConvolve(%r, %r, %r)' % self.__getinitargs__()
+        'galsim._galsim.SBAutoConvolve(%r, %r, %r)' % self.__getinitargs__()
 
 
 def AutoCorrelate(obj, real_space=None, gsparams=None):
@@ -778,12 +773,10 @@ class AutoCorrelation(galsim.GSObject):
             warnings.warn("Unable to propagate noise in galsim.AutoCorrelation")
 
     @property
-    def orig_obj(self):
-        return self._orig_obj
+    def orig_obj(self): return self._orig_obj
 
     @property
-    def real_space(self):
-        return self._real_space
+    def real_space(self): return self._real_space
 
     def __eq__(self, other):
         return (isinstance(other, galsim.AutoCorrelation) and
@@ -800,8 +793,7 @@ class AutoCorrelation(galsim.GSObject):
 
     def __str__(self):
         s = 'galsim.AutoCorrelate(%s' % self.orig_obj
-        if self.real_space:
-            s += ', real_space=True'
+        if self.real_space: s += ', real_space=True'
         s += ')'
         return s
 
@@ -816,8 +808,8 @@ class AutoCorrelation(galsim.GSObject):
 
 
 _galsim.SBAutoCorrelate.__getinitargs__ = lambda self: (
-    self.getObj(), self.isRealSpace(), self.getGSParams())
+        self.getObj(), self.isRealSpace(), self.getGSParams())
 _galsim.SBAutoCorrelate.__getstate__ = lambda self: None
 _galsim.SBAutoCorrelate.__setstate__ = lambda self, state: 1
 _galsim.SBAutoCorrelate.__repr__ = lambda self: \
-    'galsim._galsim.SBAutoCorrelate(%r, %r, %r)' % self.__getinitargs__()
+        'galsim._galsim.SBAutoCorrelate(%r, %r, %r)' % self.__getinitargs__()

@@ -133,32 +133,24 @@ class Shapelet(GSObject):
         GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec, gsparams))
         self._gsparams = gsparams
 
-    def getSigma(self):
-        return self.SBProfile.getSigma()
+    def getSigma(self): return self.SBProfile.getSigma()
 
-    def getOrder(self):
-        return self.SBProfile.getBVec().order
+    def getOrder(self): return self.SBProfile.getBVec().order
 
-    def getBVec(self):
-        return self.SBProfile.getBVec().array
+    def getBVec(self): return self.SBProfile.getBVec().array
 
     @property
-    def sigma(self):
-        return self.getSigma()
+    def sigma(self): return self.getSigma()
 
     @property
-    def order(self):
-        return self.getOrder()
+    def order(self): return self.getOrder()
 
     @property
-    def bvec(self):
-        return self.getBVec()
+    def bvec(self): return self.getBVec()
 
-    def getPQ(self, p, q):
-        return self.SBProfile.getBVec().getPQ(p, q)
+    def getPQ(self, p, q): return self.SBProfile.getBVec().getPQ(p, q)
 
-    def getNM(self, N, m):
-        return self.SBProfile.getBVec().getPQ((N+m)/2, (N-m)/2)
+    def getNM(self, N, m): return self.SBProfile.getBVec().getPQ((N+m)/2, (N-m)/2)
 
     # These act directly on the bvector, so they may be a bit more efficient than the
     # regular methods in GSObject
@@ -190,17 +182,17 @@ class Shapelet(GSObject):
 
     def __repr__(self):
         return 'galsim.Shapelet(sigma=%r, order=%r, bvec=%r, gsparams=%r)' % (
-            self.sigma, self.order, self.bvec, self._gsparams)
+                self.sigma, self.order, self.bvec, self._gsparams)
 
     def __str__(self):
         return 'galsim.Shapelet(sigma=%s, order=%s, bvec=%s)' % (self.sigma, self.order, self.bvec)
 
 _galsim.SBShapelet.__getinitargs__ = lambda self: (
-    self.getSigma(), self.getBVec(), self.getGSParams())
+        self.getSigma(), self.getBVec(), self.getGSParams())
 _galsim.SBShapelet.__getstate__ = lambda self: None
 _galsim.SBShapelet.__setstate__ = lambda self, state: 1
 _galsim.SBShapelet.__repr__ = lambda self: 'galsim._galsim.SBShapelet(%r, %r, %r)' % (
-    self.getSigma(), self.getBVec(), self.getGSParams())
+        self.getSigma(), self.getBVec(), self.getGSParams())
 _galsim.LVector.__getinitargs__ = lambda self: (self.order, self.array)
 _galsim.LVector.__repr__ = lambda self: 'galsim._galsim.LVector(%r, %r)' % (self.order, self.array)
 _galsim.LVector.__eq__ = lambda self, other: repr(self) == repr(other)

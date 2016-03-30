@@ -320,8 +320,7 @@ class InterpolatedImage(GSObject):
         # Set up the GaussianDeviate if not provided one, or check that the user-provided one is
         # of a valid type.
         if rng is None:
-            if noise_pad:
-                rng = galsim.BaseDeviate()
+            if noise_pad: rng = galsim.BaseDeviate()
         elif not isinstance(rng, galsim.BaseDeviate):
             raise TypeError("rng provided to InterpolatedImage constructor is not a BaseDeviate")
 
@@ -447,8 +446,8 @@ class InterpolatedImage(GSObject):
 
         # Make the SBInterpolatedImage out of the image.
         sbii = galsim._galsim.SBInterpolatedImage(
-            pad_image.image, self.x_interpolant, self.k_interpolant, pad_factor,
-            _force_stepk, _force_maxk, gsparams)
+                pad_image.image, self.x_interpolant, self.k_interpolant, pad_factor,
+                _force_stepk, _force_maxk, gsparams)
 
         if calculate_stepk:
             if calculate_stepk is True:
@@ -532,8 +531,8 @@ class InterpolatedImage(GSObject):
                 InterpolatedImage._cache_noise_pad[noise_pad] = noise
         else:
             raise ValueError(
-                "Input noise_pad must be a float/int, a CorrelatedNoise, Image, or filename "
-                "containing an image to use to make a CorrelatedNoise!")
+                    "Input noise_pad must be a float/int, a CorrelatedNoise, Image, or filename "
+                    "containing an image to use to make a CorrelatedNoise!")
         # Add the noise
         pad_image.addNoise(noise)
 
@@ -564,9 +563,9 @@ class InterpolatedImage(GSObject):
     def __repr__(self):
         return ('galsim.InterpolatedImage(%r, %r, %r, pad_factor=%r, flux=%r, offset=%r, '
                 'use_true_center=False, gsparams=%r, _force_stepk=%r, _force_maxk=%r)') % (
-            self._pad_image, self.x_interpolant, self.k_interpolant,
-            self._pad_factor, self._flux, self._offset, self._gsparams,
-            self._stepk, self._maxk)
+                self._pad_image, self.x_interpolant, self.k_interpolant,
+                self._pad_factor, self._flux, self._offset, self._gsparams,
+                self._stepk, self._maxk)
 
     def __str__(self):
         return 'galsim.InterpolatedImage(image=%s, flux=%s)' % (self.image, self.flux)
@@ -745,8 +744,8 @@ class InterpolatedKImage(GSObject):
 
     def __repr__(self):
         return ('galsim.InterpolatedKImage(\n%r,\n%r,\n%r, stepk=%r, gsparams=%r)') % (
-            self._real_kimage, self._imag_kimage, self.k_interpolant,
-            self._stepk, self._gsparams)
+                self._real_kimage, self._imag_kimage, self.k_interpolant,
+                self._stepk, self._gsparams)
 
     def __str__(self):
         return 'galsim.InterpolatedKImage(real_kimage=%s)' % self._real_kimage
@@ -768,12 +767,12 @@ class InterpolatedKImage(GSObject):
             self._real_kimage.scale, self._stepk, self.k_interpolant, self._gsparams)
 
 _galsim.SBInterpolatedImage.__getinitargs__ = lambda self: (
-    self.getImage(), self.getXInterp(), self.getKInterp(), 1.0,
-    self.stepK(), self.maxK(), self.getGSParams())
+        self.getImage(), self.getXInterp(), self.getKInterp(), 1.0,
+        self.stepK(), self.maxK(), self.getGSParams())
 _galsim.SBInterpolatedImage.__getstate__ = lambda self: None
 _galsim.SBInterpolatedImage.__setstate__ = lambda self, state: 1
 _galsim.SBInterpolatedImage.__repr__ = lambda self: \
-    'galsim._galsim.SBInterpolatedImage(%r, %r, %r, %r, %r, %r, %r)' % self.__getinitargs__()
+        'galsim._galsim.SBInterpolatedImage(%r, %r, %r, %r, %r, %r, %r)' % self.__getinitargs__()
 
 
 def _SBIKI_getinitargs(self):
@@ -787,8 +786,8 @@ _galsim.SBInterpolatedKImage.__getinitargs__ = _SBIKI_getinitargs
 _galsim.SBInterpolatedKImage.__getstate__ = lambda self: None
 _galsim.SBInterpolatedKImage.__setstate__ = lambda self, state: 1
 _galsim.SBInterpolatedKImage.__repr__ = lambda self: (
-    'galsim._galsim.SBInterpolatedKImage(%r, %r, %r, %r, %r, %r, %r, %r, %r, )'
-    % self.__getinitargs__())
+        'galsim._galsim.SBInterpolatedKImage(%r, %r, %r, %r, %r, %r, %r, %r, %r, )'
+        % self.__getinitargs__())
 
 _galsim.Interpolant.__getinitargs__ = lambda self: (self.makeStr(), self.getTol())
 _galsim.Delta.__getinitargs__ = lambda self: (self.getTol(), )

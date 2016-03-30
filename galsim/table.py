@@ -130,16 +130,13 @@ class LookupTable(object):
         self.table = _galsim._LookupTable(x, f, interpolant)
 
     @property
-    def x_min(self):
-        return min(self.x)
+    def x_min(self): return min(self.x)
 
     @property
-    def x_max(self):
-        return max(self.x)
+    def x_max(self): return max(self.x)
 
     @property
-    def n_x(self):
-        return len(self.x)
+    def n_x(self): return len(self.x)
 
     def __call__(self, x):
         """Interpolate the LookupTable to get `f(x)` at some `x` value(s).
@@ -238,16 +235,16 @@ class LookupTable(object):
 
     def __repr__(self):
         outstr = 'galsim.LookupTable(x=%r, f=%r, x_log=%r, f_log=%r, interpolant=%r)' % (
-            self.x, self.f, self.x_log, self.f_log, self.interpolant)
+                self.x, self.f, self.x_log, self.f_log, self.interpolant)
         return outstr
 
     def __str__(self):
         if self.file is not None:
             return 'galsim.LookupTable(file=%r, interpolant=%r)' % (
-                self.file, self.interpolant)
+                    self.file, self.interpolant)
         else:
             return 'galsim.LookupTable(x=[%s,..,%s], f=[%s,...,%s], interpolant=%r)' % (
-                self.x[0], self.x[-1], self.f[0], self.f[-1], self.interpolant)
+                    self.x[0], self.x[-1], self.f[0], self.f[-1], self.interpolant)
 
 # A function to enable pickling of tables
 _galsim._LookupTable.__getinitargs__ = lambda self: \

@@ -433,7 +433,7 @@ namespace galsim {
         }
     }
 
-    std::string row_string(ConstImageView<double> &im, const int &row) {
+    std::string row_string(ConstImageView<double>& im, const int& row) {
         Bounds<int> _bds = im.getBounds();
         const int row_len = _bds.getXMax() - _bds.getXMin() + 1;
         std::ostringstream oss;
@@ -465,7 +465,7 @@ namespace galsim {
         return oss.str();
     }
 
-    std::string image_string(ConstImageView<double> &im) {
+    std::string image_string(ConstImageView<double>& im) {
         Bounds<int> _bds = im.getBounds();
         const int ymin = _bds.getYMin();
         const int ymax = _bds.getYMax();
@@ -1080,7 +1080,7 @@ namespace galsim {
                                       Bounds<int>(0,2*N-1,0,N/2));
     }
 
-    std::string realpart_row_string(const boost::shared_ptr<KTable> &_ktab, const int _Ninitx,
+    std::string realpart_row_string(const boost::shared_ptr<KTable>& _ktab, const int _Ninitx,
                                     const int row)
     {
         int xmin = -_Ninitx/2;
@@ -1110,7 +1110,7 @@ namespace galsim {
         return oss.str();
     }
 
-    std::string imagpart_row_string(const boost::shared_ptr<KTable> &_ktab, const int _Ninitx,
+    std::string imagpart_row_string(const boost::shared_ptr<KTable>& _ktab, const int _Ninitx,
                                     const int row)
     {
         int xmin = -_Ninitx/2;
@@ -1140,7 +1140,7 @@ namespace galsim {
         return oss.str();
     }
 
-    std::string realpart_kimage_string(const boost::shared_ptr<KTable> &_ktab, const int _Ninitx,
+    std::string realpart_kimage_string(const boost::shared_ptr<KTable>& _ktab, const int _Ninitx,
                                        const int _Ninity)
     {
         std::ostringstream oss;
@@ -1170,7 +1170,7 @@ namespace galsim {
         return oss.str();
     }
 
-    std::string imagpart_kimage_string(const boost::shared_ptr<KTable> &_ktab, const int _Ninitx,
+    std::string imagpart_kimage_string(const boost::shared_ptr<KTable>& _ktab, const int _Ninitx,
                                        const int _Ninity)
     {
         std::ostringstream oss;
