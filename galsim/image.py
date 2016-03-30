@@ -382,7 +382,7 @@ class Image(object):
             self.wcs = wcs
 
     def __repr__(self):
-        return 'galsim.Image(bounds=%r, \n%r, wcs=%r)'%(
+        return 'galsim.Image(bounds=%r, array=\n%r, wcs=%r)'%(
                 self.bounds, self.array, self.wcs)
 
     def __str__(self):
