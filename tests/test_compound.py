@@ -22,7 +22,7 @@ import sys
 from galsim_test_helpers import *
 
 imgdir = os.path.join(".", "SBProfile_comparison_images") # Directory containing the reference
-                                                          # images. 
+                                                          # images.
 
 try:
     import galsim
@@ -31,7 +31,7 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-# These are the default GSParams used when unspecified.  We'll check that specifying 
+# These are the default GSParams used when unspecified.  We'll check that specifying
 # these explicitly produces the same results.
 default_params = galsim.GSParams(
         minimum_fft_size = 128,
@@ -64,12 +64,12 @@ def test_convolve():
     savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
- 
+
     # Code was formerly:
     # psf = galsim.Moffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
     #
-    # ...but this is no longer quite so simple since we changed the handling of trunc to be in 
-    # physical units.  However, the same profile can be constructed using 
+    # ...but this is no longer quite so simple since we changed the handling of trunc to be in
+    # physical units.  However, the same profile can be constructed using
     # fwhm=1.0927449310213702,
     # as calculated by interval bisection in devutils/external/calculate_moffat_radii.py
     fwhm_backwards_compatible = 1.0927449310213702
@@ -109,7 +109,7 @@ def test_convolve():
                 myImg.array, savedImg.array, 4,
                 err_msg="Using GSObject Convolve([psf,pixel]) with GSParams() disagrees with"
                 "expected result")
- 
+
     # Test photon shooting.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -218,14 +218,14 @@ def test_shearconvolve():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve([psf,pixel]) with GSParams() disagrees with "
             "expected result")
- 
+
     # Other ways to do the convolution:
     conv = galsim.Convolve(psf,pixel)
     conv.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve(psf,pixel) disagrees with expected result")
- 
+
     # Test photon shooting.
     import warnings
     with warnings.catch_warnings():
@@ -251,8 +251,8 @@ def test_realspace_convolve():
     # Code was formerly:
     # psf = galsim.Moffat(beta=1.5, truncationFWHM=4, flux=1, half_light_radius=1)
     #
-    # ...but this is no longer quite so simple since we changed the handling of trunc to be in 
-    # physical units.  However, the same profile can be constructed using 
+    # ...but this is no longer quite so simple since we changed the handling of trunc to be in
+    # physical units.  However, the same profile can be constructed using
     # fwhm=1.0927449310213702,
     # as calculated by interval bisection in devutils/external/calculate_moffat_radii.py
     fwhm_backwards_compatible = 1.0927449310213702
@@ -307,7 +307,7 @@ def test_realspace_convolve():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
- 
+
 
 def test_realspace_distorted_convolve():
     """
@@ -369,9 +369,9 @@ def test_realspace_distorted_convolve():
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
- 
+
 def test_realspace_shearconvolve():
-    """Test the real-space convolution of a sheared Gaussian and a Box SBProfile against a 
+    """Test the real-space convolution of a sheared Gaussian and a Box SBProfile against a
        known result.
     """
     import time
@@ -496,7 +496,7 @@ def test_add():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject sum += 0.25 * gauss2 disagrees with expected result")
- 
+
     # Test photon shooting.
     do_shoot(sum,myImg,"sum of 2 Gaussians")
 

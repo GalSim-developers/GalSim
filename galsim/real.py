@@ -341,7 +341,7 @@ class RealGalaxyCatalog(object):
                                               dir='path/to/GalSim/examples/data')
 
     2. There are two larger catalogs based on HST observations of the COSMOS field with around
-       26,000 and 56,000 galaxies each with a limiting magnitude of F814W=23.5.  (The former is 
+       26,000 and 56,000 galaxies each with a limiting magnitude of F814W=23.5.  (The former is
        a subset of the latter.) For information about how to download these catalogs, see the
        RealGalaxy Data Download Page on the GalSim Wiki:
 
@@ -419,7 +419,7 @@ class RealGalaxyCatalog(object):
         self.psf_file_name = self.cat.field('PSF_filename') # file containing the PSF image
 
         # Add the directories:
-        # Note the strip call.  Sometimes the filenames have an extra space at the end. 
+        # Note the strip call.  Sometimes the filenames have an extra space at the end.
         # This gets rid of that space.
         self.gal_file_name = [ os.path.join(self.image_dir,f.strip()) for f in self.gal_file_name ]
         self.psf_file_name = [ os.path.join(self.image_dir,f.strip()) for f in self.psf_file_name ]

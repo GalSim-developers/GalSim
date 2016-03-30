@@ -1274,7 +1274,7 @@ def test_tophat():
 
     # Check sheared tophat the same way
     tophat = galsim.TopHat(radius=1.2, flux=test_flux)
-    # Again, the test is very sensitive to the choice of shear here.  Most values fail because 
+    # Again, the test is very sensitive to the choice of shear here.  Most values fail because
     # some pixel center gets too close to the resulting ellipse for the fourier draw to match
     # the real-space draw at the required accuracy.
     tophat = tophat.shear(galsim.Shear(g1=0.15, g2=-0.33))
@@ -1922,7 +1922,7 @@ def test_spergel():
 
     mathica_enclosed_fluxes = [3.06256e-2, 9.99995e-6, 6.06443e-10, 2.94117e-11, 6.25011e-12]
     mathica_enclosing_radii = [2.3973e-17, 1.00001e-5, 1.69047e-3, 5.83138e-3, 1.26492e-2]
-    
+
     for nu, enclosed_flux, enclosing_radius in zip(test_spergel_nu,
                                                    mathica_enclosed_fluxes,
                                                    mathica_enclosing_radii):
@@ -1980,7 +1980,7 @@ def test_spergel():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-        
+
 def test_spergel_properties():
     """Test some basic properties of the Spergel profile.
     """
