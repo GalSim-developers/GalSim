@@ -20,7 +20,6 @@ A few adjustments to galsim.LookupTable at the Python layer, including the
 addition of the docstring and few extra features.
 """
 from . import _galsim
-import galsim
 
 
 class LookupTable(object):
