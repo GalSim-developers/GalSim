@@ -151,10 +151,8 @@ class Transformation(galsim.GSObject):
                 self.gsparams == other.gsparams)
 
     def __hash__(self):
-        if not hasattr(self, '_hash'):
-            self._hash = hash(("galsim.Transformation", self.original, tuple(self.jac.ravel()),
-                               self.offset.x, self.offset.y, self.flux_ratio, self.gsparams))
-        return self._hash
+        return hash(("galsim.Transformation", self.original, tuple(self.jac.ravel()), self.offset.x,
+                     self.offset.y, self.flux_ratio, self.gsparams))
 
     def __repr__(self):
         return 'galsim.Transformation(%r, jac=%r, offset=%r, flux_ratio=%r, gsparams=%r)'%(

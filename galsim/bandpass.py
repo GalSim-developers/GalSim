@@ -491,8 +491,11 @@ class Bandpass(object):
         return not self.__eq__(other)
 
     def __hash__(self):
-        return hash(("galsim.Bandpass", self._orig_tp, self.blue_limit, self.red_limit,
-                     self.wave_factor, self.zeropoint, tuple(self.wave_list)))
+        # Cache this in case self._orig_tp or self.wave_list is long.
+        if not hasattr(self, '_hash'):
+            self._hash = hash(("galsim.Bandpass", self._orig_tp, self.blue_limit, self.red_limit,
+                               self.wave_factor, self.zeropoint, tuple(self.wave_list)))
+        return self._hash
 
     def __repr__(self):
         if self.wave_factor == 10.0:

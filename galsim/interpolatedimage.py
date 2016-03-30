@@ -552,12 +552,14 @@ class InterpolatedImage(GSObject):
                 self._maxk == other._maxk)
 
     def __hash__(self):
-        hsh = hash(("galsim.InterpolatedImage", self.x_interpolant, self.k_interpolant,
-                    self._pad_factor, self._flux, self._offset, self._gsparams,
-                    self._stepk, self._maxk))
-        hsh ^= hash(tuple(self._pad_image.array.ravel()))
-        hsh ^= hash((self._pad_image.bounds, self._pad_image.wcs))
-        return hsh
+        # Definitely want to cache this, since the size of the image could be large.
+        if not hasattr(self, '_hash'):
+            self._hash = hash(("galsim.InterpolatedImage", self.x_interpolant, self.k_interpolant,
+                               self._pad_factor, self._flux, self._offset, self._gsparams,
+                               self._stepk, self._maxk))
+            self._hash ^= hash(tuple(self._pad_image.array.ravel()))
+            self._hash ^= hash((self._pad_image.bounds, self._pad_image.wcs))
+        return self._hash
 
     def __repr__(self):
         return ('galsim.InterpolatedImage(%r, %r, %r, pad_factor=%r, flux=%r, offset=%r, '
@@ -732,11 +734,14 @@ class InterpolatedKImage(GSObject):
                 self._gsparams == other._gsparams)
 
     def __hash__(self):
-        hsh = hash(("galsim.InterpolatedKImage", self.k_interpolant, self._stepk, self._gsparams))
-        for img in [self._real_kimage, self._imag_kimage]:
-            hsh ^= hash(tuple(img.array.ravel()))
-            hsh ^= hash((img.bounds, img.wcs))
-        return hsh
+        # Definitely want to cache this, since the real and image kimages could be large.
+        if not hasattr(self, '_hash'):
+            self._hash = hash(("galsim.InterpolatedKImage", self.k_interpolant, self._stepk,
+                               self._gsparams))
+            for img in [self._real_kimage, self._imag_kimage]:
+                self._hash ^= hash(tuple(img.array.ravel()))
+                self._hash ^= hash((img.bounds, img.wcs))
+        return self._hash
 
     def __repr__(self):
         return ('galsim.InterpolatedKImage(\n%r,\n%r,\n%r, stepk=%r, gsparams=%r)') % (

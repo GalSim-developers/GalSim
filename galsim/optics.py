@@ -388,14 +388,17 @@ class OpticalPSF(GSObject):
                 self._gsparams == other._gsparams)
 
     def __hash__(self):
-        hsh = hash(("galsim.OpticalPSF", self._lam_over_diam, tuple(self._aberrations),
-                    self._oversampling, self._pad_factor, self._obscuration, self._nstruts,
-                    self._strut_thick, self._strut_angle, self._pupil_angle, self._circular_pupil,
-                    self._max_size, self._interpolant, self._flux, self._gsparams))
-        if self._pupil_plane_im is not None:
-            hsh ^= hash((tuple(self._pupil_plane_im.array.ravel()), self._pupil_plane_im.bounds,
-                         self._pupil_plane_im.wcs))
-        return hsh
+        # Cache this in case self._pupil_plane_im is large.
+        if not hasattr(self, '_hash'):
+            self._hash = hash(("galsim.OpticalPSF", self._lam_over_diam, tuple(self._aberrations),
+                               self._oversampling, self._pad_factor, self._obscuration,
+                               self._nstruts, self._strut_thick, self._strut_angle,
+                               self._pupil_angle, self._circular_pupil, self._max_size,
+                               self._interpolant, self._flux, self._gsparams))
+            if self._pupil_plane_im is not None:
+                self._hash ^= hash((tuple(self._pupil_plane_im.array.ravel()),
+                                    self._pupil_plane_im.bounds, self._pupil_plane_im.wcs))
+        return self._hash
 
     def __repr__(self):
         s = 'galsim.OpticalPSF(lam_over_diam=%r, aberrations=%r, oversampling=%r, pad_factor=%r'%(

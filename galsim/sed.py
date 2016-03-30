@@ -569,8 +569,12 @@ class SED(object):
         return not self.__eq__(other)
 
     def __hash__(self):
-        return hash(("galsim.SED", self._orig_spec, self.wave_factor, self.flux_type, self.redshift,
-                     self.blue_limit, self.red_limit, tuple(self.wave_list)))
+        # Cache this in case self._orig_spec or self.wave_list is long.
+        if not hasattr(self, '_hash'):
+            self._hash = hash(("galsim.SED", self._orig_spec, self.wave_factor, self.flux_type,
+                               self.redshift, self.blue_limit, self.red_limit,
+                               tuple(self.wave_list)))
+        return self._hash
 
     def __repr__(self):
         wave_type = ''

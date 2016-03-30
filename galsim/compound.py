@@ -167,10 +167,7 @@ class Sum(galsim.GSObject):
                 self._gsparams == other._gsparams)
 
     def __hash__(self):
-        if not hasattr(self, '_hash'):
-            self._hash = hash(("galsim.Sum", tuple(self._obj_list),
-                               self._gsparams))
-        return self._hash
+        return hash(("galsim.Sum", tuple(self._obj_list), self._gsparams))
 
     def __repr__(self):
         return 'galsim.Sum(%r, gsparams=%r)' % (self.obj_list, self._gsparams)
@@ -415,21 +412,8 @@ class Convolution(galsim.GSObject):
                 self.real_space == other.real_space and
                 self._gsparams == other._gsparams)
 
-    # I did a quick timing test of both a cached and uncached __hash__ here:
-    # > a = galsim.Convolve(galsim.InterpolatedImage(galsim.Gaussian(fwhm=1).drawImage()),
-    # >                     galsim.Gaussian(fwhm=2))
-    # Uncached:
-    # In [5]: timeit hash(a)
-    # 10000 loops, best of 3: 31.2 us per loop
-    # Cached:
-    # In [8]: timeit hash(a)
-    # 1000000 loops, best of 3: 316 ns per loop
-    # So caching it is!  (At least for compound types and InterpolatedImages)
     def __hash__(self):
-        if not hasattr(self, '_hash'):
-            self._hash = hash(("galsim.Convolution", tuple(self._obj_list),
-                               self._real_space, self._gsparams))
-        return self._hash
+        return hash(("galsim.Convolution", tuple(self._obj_list), self._real_space, self._gsparams))
 
     def __repr__(self):
         return 'galsim.Convolution(%r, real_space=%r, gsparams=%r)' % (
@@ -535,9 +519,7 @@ class Deconvolution(galsim.GSObject):
                 self._gsparams == other._gsparams)
 
     def __hash__(self):
-        if not hasattr(self, '_hash'):
-            self._hash = hash(("galsim.Deconvolution", self._orig_obj, self._gsparams))
-        return self._hash
+        return hash(("galsim.Deconvolution", self._orig_obj, self._gsparams))
 
     def __repr__(self):
         return 'galsim.Deconvolution(%r, gsparams=%r)' % (self.orig_obj, self._gsparams)
@@ -668,10 +650,7 @@ class AutoConvolution(galsim.GSObject):
                 self._gsparams == other._gsparams)
 
     def __hash__(self):
-        if not hasattr(self, '_hash'):
-            self._hash = hash(("galsim.AutoConvolution", self.orig_obj, self.real_space,
-                               self._gsparams))
-        return self._hash
+        return hash(("galsim.AutoConvolution", self.orig_obj, self.real_space, self._gsparams))
 
     def __repr__(self):
         return 'galsim.AutoConvolution(%r, real_space=%r, gsparams=%r)' % (
@@ -813,10 +792,7 @@ class AutoCorrelation(galsim.GSObject):
                 self._gsparams == other._gsparams)
 
     def __hash__(self):
-        if not hasattr(self, '_hash'):
-            self._hash = hash(("galsim.AutoCorrelation", self.orig_obj, self.real_space,
-                               self._gsparams))
-        return self._hash
+        return hash(("galsim.AutoCorrelation", self.orig_obj, self.real_space, self._gsparams))
 
     def __repr__(self):
         return 'galsim.AutoCorrelation(%r, real_space=%r, gsparams=%r)' % (

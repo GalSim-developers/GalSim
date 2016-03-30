@@ -227,8 +227,11 @@ class LookupTable(object):
                 self.interpolant == other.interpolant)
 
     def __hash__(self):
-        return hash(("galsim.LookupTable", tuple(self.x), tuple(self.f), self.x_log, self.f_log,
-                     self.interpolant))
+        # Cache this in case self.x, self.f are long.
+        if not hasattr(self, '_hash'):
+            self._hash = hash(("galsim.LookupTable", tuple(self.x), tuple(self.f), self.x_log,
+                               self.f_log, self.interpolant))
+        return self._hash
 
     def __ne__(self, other):
         return not self.__eq__(other)

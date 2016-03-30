@@ -1599,7 +1599,7 @@ class Gaussian(GSObject):
     def fwhm(self): return self.getFWHM()
 
     def __eq__(self, other):
-        return (isinstance(other, Gaussian) and
+        return (isinstance(other, galsim.Gaussian) and
                 self.sigma == other.sigma and
                 self.flux == other.flux and
                 self._gsparams == other._gsparams)
