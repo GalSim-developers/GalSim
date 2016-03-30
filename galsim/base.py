@@ -1463,12 +1463,11 @@ class GSObject(object):
         return re,im
 
     def __eq__(self, other):
-        if repr(self) != repr(other):
-            return False
-        return self.SBProfile == other.SBProfile
+        return (type(self) == type(other) and
+                self.SBProfile == other.SBProfile)
 
     def __ne__(self, other): return not self.__eq__(other)
-    def __hash__(self): return hash((repr(self), self.SBProfile.serialize()))
+    def __hash__(self): return hash(("galsim.GSObject", self.SBProfile))
 
 # Pickling an SBProfile is a bit tricky, since it's a base class for lots of other classes.
 # Normally, we'll know what the derived class is, so we can just use the pickle stuff that is
