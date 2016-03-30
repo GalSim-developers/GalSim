@@ -286,6 +286,57 @@ def test_ccdnoise():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_cosmosnoise():
+    """Test that the config layer COSMOS noise works with keywords.
+    """
+    import logging
+    import time
+    t1 = time.time()
+
+    logger = None
+
+    pix_scale = 0.03
+    random_seed = 123
+
+    # First make the image using COSMOSNoise without kwargs.
+    config = {}
+    # Either gal or psf is required, so just give it a Gaussian with 0 flux.
+    config['gal'] = {
+        'type' : 'Gaussian',
+        'sigma' : 0.1,
+        'flux' : 0
+    }
+    config['image'] = {
+        'type' : 'Single',
+        'pixel_scale' : pix_scale,
+        'random_seed' : 123 # Note: this means the seed for the noise will really be 124
+                            # since it is applied at the stamp level, so uses seed + obj_num
+    }
+    config['image']['noise'] = {
+        'type' : 'COSMOS'
+    }
+    image = galsim.config.BuildImage(config,logger=logger)
+
+    # Then make using kwargs explicitly, to make sure they are getting passed through properly.
+    config2 = {}
+    # Either gal or psf is required, so just give it a Gaussian with 0 flux.
+    config2['gal'] = config['gal']
+    config2['image'] = config['image']
+    config2['image']['noise'] = {
+        'type' : 'COSMOS',
+        'file_name' : os.path.join(galsim.meta_data.share_dir,'acs_I_unrot_sci_20_cf.fits'),
+        'cosmos_scale' : pix_scale
+    }
+    image2 = galsim.config.BuildImage(config2,logger=logger)
+
+    # We used the same RNG and noise file / properties, so should get the same exact noise field.
+    np.testing.assert_allclose(
+        image.array, image2.array, rtol=1.e-5,
+        err_msg='Config COSMOS noise does not reproduce results given kwargs')
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 def test_njobs():
     """Test that splitting up jobs works correctly.
 
@@ -366,5 +417,6 @@ def test_njobs():
 if __name__ == "__main__":
     test_scattered()
     test_ccdnoise()
+    test_cosmosnoise()
     test_njobs()
 

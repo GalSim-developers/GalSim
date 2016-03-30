@@ -121,6 +121,9 @@ def SetupConfigImageNum(config, image_num, obj_num):
     if not isinstance(image, dict):
         raise AttributeError("config.image is not a dict.")
 
+    if 'file_num' not in config:
+        config['file_num'] = 0
+
     if 'type' not in image:
         image['type'] = 'Single'
     image_type = image['type']
@@ -230,6 +233,15 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
 
     # Store the current image in the base-level config for reference
     config['current_image'] = image
+
+    # Just in case these changed from their initial values, make sure they are correct now:
+    config['image_origin'] = image.origin()
+    config['image_center'] = image.trueCenter()
+    config['image_bounds'] = image.bounds
+    if logger:
+        logger.debug('image %d: image_origin => %s',image_num,config['image_origin'])
+        logger.debug('image %d: image_center => %s',image_num,config['image_center'])
+        logger.debug('image %d: image_bounds => %s',image_num,config['image_bounds'])
 
     # Mark that we are no longer doing a single galaxy by deleting image_pos from config top
     # level, so it cannot be used for things like wcs.pixelArea(image_pos).
@@ -412,7 +424,6 @@ class ImageBuilder(object):
 
         image, current_var = galsim.config.BuildStamp(
                 base, obj_num=obj_num, xsize=xsize, ysize=ysize, do_noise=True, logger=logger)
-
         return image
 
     def makeTasks(self, config, base, jobs, logger):

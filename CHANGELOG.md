@@ -15,10 +15,16 @@ API Changes
 Bug Fixes
 ---------
 
-- Fixed a bug in some of the WCS classes if the RA/Dec axes in the FITS header
-  are reversed (which is allowed by the FITS standard). (#681)
+- Fixed bug in config that did not allow users to pass in a filename for
+  COSMOS (correlated) noise.  (#732)
+- Improved ability of galsim.fits.read to handle invalid but fixable FITS
+  headers. (#602)
+- Fixed bug in des module related to building meds file with wcs taken from
+  the input images. (#654)
 - Improved ability of ChromaticObjects to find fiducial achromatic profiles
   and wavelengths with non-zero flux. (#680)
+- Fixed a bug in some of the WCS classes if the RA/Dec axes in the FITS header
+  are reversed (which is allowed by the FITS standard). (#681)
 - Fixed a bug in the way Images are instantiated for certain combinations of
   ChromaticObjects and image-setup keyword arguments (#683)
 - Added ability to manipulate the width of the moment-measuring weight function
@@ -29,7 +35,8 @@ Bug Fixes
   errors in the documentation about the units of CCDNoise parameters. (#713)
 - Fixed a bug where InterpolatedKImage incorrectly checked that its input real
   and imaginary image were Hermitian.
-
+- Updated ups table file so that setup command is `setup galsim` instead of
+  `setup GalSim` (#724)
 
 Deprecated Features
 -------------------
@@ -44,6 +51,14 @@ New Features
   truth information.  cf. demos 9 and 10. (#301, #691)
 - Added methods calculateHLR, calculateMomentRadius, and calculateFWHM to both
   GSObject and Image. (#308)
+- Added BoundsI.numpyShape() to easily get the numpy shape that corresponds
+  to a given bounds instance. (#654)
+- Have FITS files with unsigned integer data automatically convert that into
+  the corresponding signed integer data type for use in GalSim, rather than
+  converting to float64, which it had been doing. (#654)
+- Made COSMOSCatalog write an index parameter for both parameteric and real
+  galaxy types to indicate the index of the object in the full COSMOS catalog.
+  (#654, #694)
 - Added ability to specify lambda and r0 separately for Kolmogorov to have
   GalSim do the conversion from radians to the given scale unit. (#657)
 - Made it possible to initialize an InterpolatedImage from a user-specified
@@ -90,6 +105,9 @@ New config features
   'gsparams', among other less commonly used parameters.  However, for
   backwards compatibility, they are all still allowed in the image field
   as well. (#691)
+- Added more example scripts to showcase how to use some of the new config
+  features to make fairly sophisticated simulations.  cf. examples/great3 and
+  examples/des. (#654, #691)
 - Added new stamp type=Ring to effect ring tests.  This replaces the old
   gsobject type=Ring, which is now deprecated.  See demo5 and demo10 for
   examples of the new preferred syntax. (#698)

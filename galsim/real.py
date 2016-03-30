@@ -459,6 +459,8 @@ class RealGalaxyCatalog(object):
         self.band = self.cat.field('band') # bandpass in which apparent mag is measured, e.g., F814W
         self.weight = self.cat.field('weight') # weight factor to account for size-dependent
                                                # probability
+        if 'stamp_flux' in self.cat.names:
+            self.stamp_flux = self.cat.field('stamp_flux')
 
         self.saved_noise_im = {}
         self.loaded_files = {}

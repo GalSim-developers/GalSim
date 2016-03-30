@@ -28,6 +28,7 @@ See documentation here:
 """
 
 import galsim
+import galsim.config
 
 class DES_PSFEx(object):
     """Class that handles DES files describing interpolated principal component images
@@ -46,7 +47,7 @@ class DES_PSFEx(object):
     object profiles in world coordinates.  However, PSFEx does not consider the WCS of the 
     image when building its bases.  The bases are built in image coordinates.  So there are 
     two options to get GalSim to handle this difference.
-    
+
     1. Ignore the WCS of the original image.  In this case, the *.psf files have all the
        information you need:
 
@@ -94,8 +95,8 @@ class DES_PSFEx(object):
                            directory.) (Default `dir = None`).  Cannot pass an HDU with this option.
     """
     # For config, image_file_name is required, since that always works in world coordinates.
-    _req_params = { 'file_name' : str , 'image_file_name' : str }
-    _opt_params = { 'dir' : str }
+    _req_params = { 'file_name' : str }
+    _opt_params = { 'dir' : str, 'image_file_name' : str }
     _single_params = []
     _takes_rng = False
 
@@ -106,7 +107,8 @@ class DES_PSFEx(object):
                 raise ValueError("Cannot provide dir and an HDU instance")
             import os
             file_name = os.path.join(dir,file_name)
-            image_file_name = os.path.join(dir,image_file_name)
+            if image_file_name is not None:
+                image_file_name = os.path.join(dir,image_file_name)
         self.file_name = file_name
         if image_file_name:
             if wcs is not None:
@@ -293,12 +295,36 @@ class DES_PSFEx(object):
             xto[i] = x*xto[i-1]
         return xto
 
-# Now add this class to the config framework.
-import galsim.config
+
+class PSFExLoader(galsim.config.InputLoader):
+    # Allow the user to not provide the image file.  In this case, we'll grab the wcs from the
+    # config dict.
+    def getKwargs(self, config, base, logger):
+        req = { 'file_name' : str }
+        opt = { 'dir' : str, 'image_file_name' : str }
+        kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
+
+        if 'image_file_name' not in kwargs:
+            if 'wcs' in base:
+                wcs = base['wcs']
+                if wcs.isLocal():
+                    # Then the wcs is already fine.
+                    pass
+                elif 'image_pos' in base:
+                    image_pos = base['image_pos']
+                    wcs = wcs.local(image_pos)
+                    safe = False
+                else:
+                    raise RuntimeError("No image_pos found in config, but wcs is not local.")
+                kwargs['wcs'] = wcs
+            else:
+                # Then we aren't doing normal config processing, so just use pixel scale = 1.
+                kwargs['wcs'] = galsim.PixelScale(1.)
+
+        return kwargs, safe
 
 # First we need to add the class itself as a valid input_type.
-galsim.config.RegisterInputType('des_psfex',
-                                galsim.config.InputLoader(DES_PSFEx, ['DES_PSFEx']))
+galsim.config.RegisterInputType('des_psfex', PSFExLoader(DES_PSFEx))
 
 # Also make a builder to create the PSF object for a given position.
 # The builders require 4 args.
@@ -310,12 +336,15 @@ def BuildDES_PSFEx(config, base, ignore, gsparams, logger):
     """
     des_psfex = galsim.config.GetInputObj('des_psfex', config, base, 'DES_PSFEx')
 
-    opt = { 'flux' : float , 'num' : int }
-    kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
+    opt = { 'flux' : float , 'num' : int, 'image_pos' : galsim.PositionD }
+    params, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
 
-    if 'image_pos' not in base:
+    if 'image_pos' in params:
+        image_pos = params['image_pos']
+    elif 'image_pos' in base:
+        image_pos = base['image_pos']
+    else:
         raise ValueError("DES_PSFEx requested, but no image_pos defined in base.")
-    image_pos = base['image_pos']
 
     # Convert gsparams from a dict to an actual GSParams object
     if gsparams: gsparams = galsim.GSParams(**gsparams)
@@ -332,8 +361,8 @@ def BuildDES_PSFEx(config, base, ignore, gsparams, logger):
                                    x_interpolant=galsim.Lanczos(3), gsparams=gsparams)
     psf = des_psfex.getLocalWCS(image_pos).toWorld(psf)
 
-    if 'flux' in kwargs:
-        psf = psf.withFlux(kwargs['flux'])
+    if 'flux' in params:
+        psf = psf.withFlux(params['flux'])
 
     # The second item here is "safe", a boolean that declares whether the returned value is 
     # safe to save and use again for later objects.  In this case, we wouldn't want to do 
@@ -341,5 +370,5 @@ def BuildDES_PSFEx(config, base, ignore, gsparams, logger):
     return psf, False
 
 # Register this builder with the config framework:
-galsim.config.RegisterObjectType('DES_PSFEx', BuildDES_PSFEx)
+galsim.config.RegisterObjectType('DES_PSFEx', BuildDES_PSFEx, input_type='des_psfex')
 
