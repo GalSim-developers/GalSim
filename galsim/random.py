@@ -133,18 +133,18 @@ GaussianDeviate, since it generates two values at a time, saving the second one 
 next output value.
 """
 
-def _gs_BD__eq__(self, other):
-    if repr(self) != repr(other):
-        return False
-    return self.serialize() == other.serialize()
-_galsim.BaseDeviate.__eq__ = _gs_BD__eq__
+def _BaseDeviate_eq(self, other):
+    return (type(self) == type(other) and
+            self.serialize() == other.serialize())
+
+_galsim.BaseDeviate.__eq__ = _BaseDeviate_eq
 _galsim.BaseDeviate.__ne__ = lambda self, other: not self.__eq__(other)
 _galsim.BaseDeviate.__hash__ = None
 
-def _gs_BD_seed_repr(self):
+def _BaseDeviate_seed_repr(self):
     s = self.serialize().split(' ')
     return " ".join(s[:3])+" ... "+" ".join(s[-3:])
-_galsim.BaseDeviate._seed_repr = _gs_BD_seed_repr
+_galsim.BaseDeviate._seed_repr = _BaseDeviate_seed_repr
 
 
 def permute(rng, *args):
@@ -689,3 +689,33 @@ _galsim.PoissonDeviate.__getinitargs__ = lambda self: (self.serialize(), self.ge
 _galsim.WeibullDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getA(), self.getB())
 _galsim.GammaDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getK(), self.getTheta())
 _galsim.Chi2Deviate.__getinitargs__ = lambda self: (self.serialize(), self.getN())
+
+# Deviate __eq__
+_galsim.GaussianDeviate.__eq__ = lambda self, other: (
+        isinstance(other, _galsim.GaussianDeviate) and
+        self.serialize() == other.serialize() and
+        self.getMean() == other.getMean() and
+        self.getSigma() == other.getSigma())
+_galsim.BinomialDeviate.__eq__ = lambda self, other: (
+        isinstance(other, _galsim.BinomialDeviate) and
+        self.serialize() == other.serialize() and
+        self.getN() == other.getN() and
+        self.getP() == other.getP())
+_galsim.PoissonDeviate.__eq__ = lambda self, other: (
+        isinstance(other, _galsim.PoissonDeviate) and
+        self.serialize() == other.serialize() and
+        self.getMean() == other.getMean())
+_galsim.WeibullDeviate.__eq__ = lambda self, other: (
+        isinstance(other, _galsim.WeibullDeviate) and
+        self.serialize() == other.serialize() and
+        self.getA() == other.getA() and
+        self.getB() == other.getB())
+_galsim.GammaDeviate.__eq__ = lambda self, other: (
+        isinstance(other, _galsim.GammaDeviate) and
+        self.serialize() == other.serialize() and
+        self.getK() == other.getK() and
+        self.getTheta() == other.getTheta())
+_galsim.Chi2Deviate.__eq__ = lambda self, other: (
+        isinstance(other, _galsim.Chi2Deviate) and
+        self.serialize() == other.serialize() and
+        self.getN() == other.getN())
