@@ -172,18 +172,22 @@ class LookupTable(object):
             if dimen > 2:
                 raise ValueError("Arrays with dimension larger than 2 not allowed!")
             elif dimen == 2:
-                f = np.zeros_like(x)
-                for i in xrange(x.shape[0]):
-                    f[i,:] = np.fromiter((self.table(float(q)) for q in x[i,:]), dtype='float')
+                f = np.empty_like(x.flatten(), dtype=float)
+                self.table.interpMany(x.astype(float).flatten(),f)
+                f = f.reshape(x.shape)
             else:
-                f = np.fromiter((self.table(float(q)) for q in x), dtype='float')
+                f = np.empty_like(x, dtype=float)
+                self.table.interpMany(x.astype(float),f)
         # option 2: a tuple
         elif isinstance(x, tuple):
-            f = [ self.table(q) for q in x ]
+            f = np.empty_like(x, dtype=float)
+            self.table.interpMany(np.array(x, dtype=float),f)
             f = tuple(f)
         # option 3: a list
         elif isinstance(x, list):
-            f = [ self.table(q) for q in x ]
+            f = np.empty_like(x, dtype=float)
+            self.table.interpMany(np.array(x, dtype=float),f)
+            f = list(f)
         # option 4: a single value
         else:
             f = self.table(x)

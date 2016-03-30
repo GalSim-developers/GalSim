@@ -135,6 +135,9 @@ namespace galsim {
         /// interp, but exception if beyond bounds
         V lookup(const A a) const;
 
+        /// interp many values at once.
+        void interpMany(const A* argvec, V* valvec, int N) const;
+
         /// size of table
         int size() const { return v.size(); }
 
