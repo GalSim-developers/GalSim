@@ -89,7 +89,14 @@ class LookupTable(object):
         if file:
             if x is not None or f is not None:
                 raise ValueError("Cannot provide both file _and_ x,f for LookupTable")
-            data = np.loadtxt(file).transpose()
+            # We don't require pandas as a dependency, but it it's available, this is much faster.
+            # cf. http://stackoverflow.com/questions/15096269/the-fastest-way-to-read-input-in-python
+            try:
+                import pandas
+                data = pandas.read_csv(file, comment='#', delim_whitespace=True, header=None)
+                data = data.values.transpose()
+            except ImportError:
+                data = np.loadtxt(file).transpose()
             if data.shape[0] != 2:
                 raise ValueError("File %s provided for LookupTable does not have 2 columns"%file)
             x=data[0]
