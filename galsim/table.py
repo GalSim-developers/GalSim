@@ -134,10 +134,17 @@ class LookupTable(object):
         # as _LookupTable.
         self.table = _galsim._LookupTable(x, f, interpolant)
 
+        # Get the min/max x values, making sure to account properly for x_log.
+        self._x_min = self.table.argMin()
+        self._x_max = self.table.argMax()
+        if x_log:
+            self._x_min = np.exp(self._x_min)
+            self._x_max = np.exp(self._x_max)
+
     @property
-    def x_min(self): return self.table.argMin()
+    def x_min(self): return self._x_min
     @property
-    def x_max(self): return self.table.argMax()
+    def x_max(self): return self._x_max
     @property
     def n_x(self): return len(self.x)
 
