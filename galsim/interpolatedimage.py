@@ -748,7 +748,8 @@ class InterpolatedKImage(GSObject):
                 self._stepk, self._gsparams)
 
     def __str__(self):
-        return 'galsim.InterpolatedKImage(real_kimage=%s)' % self._real_kimage
+        return 'galsim.InterpolatedKImage(real_kimage=%s, imag_kimage=%s)' % (
+                self._real_kimage, self._imag_kimage)
 
     def __getstate__(self):
         # The SBInterpolatedKImage and the SBProfile both are picklable, but they are pretty
