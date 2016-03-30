@@ -135,9 +135,9 @@ class LookupTable(object):
         self.table = _galsim._LookupTable(x, f, interpolant)
 
     @property
-    def x_min(self): return min(self.x)
+    def x_min(self): return self.table.argMin()
     @property
-    def x_max(self): return max(self.x)
+    def x_max(self): return self.table.argMax()
     @property
     def n_x(self): return len(self.x)
 
