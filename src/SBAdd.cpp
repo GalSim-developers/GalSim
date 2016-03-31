@@ -54,19 +54,6 @@ namespace galsim {
         return oss.str();
     }
 
-    // We can't rely on SBProfileImpl::repr for SBAdd b/c it will end up calling the
-    // summands serialize method instead of repr method.  So we override here.
-    std::string SBAdd::SBAddImpl::repr() const
-    {
-        std::ostringstream oss(" ");
-        oss << "galsim._galsim.SBAdd([";
-        ConstIter sptr = _plist.begin();
-        oss << sptr->repr();
-        for (++sptr; sptr!=_plist.end(); ++sptr) oss << ", " << sptr->repr();
-        oss << "], galsim.GSParams("<<*gsparams<<"))";
-        return oss.str();
-    }
-
     SBAdd::SBAddImpl::SBAddImpl(const std::list<SBProfile>& slist,
                                 const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams ? gsparams : GetImpl(slist.front())->gsparams)

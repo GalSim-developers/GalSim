@@ -135,7 +135,6 @@ namespace galsim {
         typedef std::list<SBProfile>::const_iterator ConstIter;
 
         std::string serialize() const;
-        std::string repr() const;
 
     private:
 

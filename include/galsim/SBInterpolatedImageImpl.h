@@ -162,7 +162,6 @@ namespace galsim {
         mutable double _negativeFlux;    ///< Sum of all negative pixels' flux
         mutable ProbabilityTree<Pixel> _pt; ///< Binary tree of pixels, for photon-shooting
 
-        std::string repr() const;
         std::string serialize() const;
 
     private:
@@ -249,7 +248,6 @@ namespace galsim {
         double _dk; ///< Pitch of stored KTable
         mutable bool _cenIsSet;
 
-        std::string repr() const;
         std::string serialize() const;
 
     private:
