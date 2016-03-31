@@ -1037,7 +1037,7 @@ def test_stepk_maxk():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_kround_trip():
+def test_kroundtrip():
     import time
     t1 = time.time()
     a = final
@@ -1246,6 +1246,6 @@ if __name__ == "__main__":
     test_Lanczos7_ref()
     test_conserve_dc()
     test_stepk_maxk()
-    test_kround_trip()
+    test_kroundtrip()
     test_multihdu_readin()
     test_ne()
