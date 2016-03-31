@@ -221,7 +221,6 @@ def drawNoise(noise):
 def do_pickle(obj1, func = lambda x : x, irreprable=False):
     """Check that the object is picklable.  Also that it has basic == and != functionality.
     """
-    # import sys
     from numbers import Integral, Real, Complex
     import cPickle, copy
     # In case the repr uses these:
@@ -303,6 +302,8 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     # far.)  Our strategy below is to loop through all arguments returned by __getinitargs__ and
     # attempt to perturb them a bit after inferring their type, and checking that the object
     # constructed with the perturbed argument list then compares inequally to the original object.
+
+    # import sys
     try:
         args = obj1.__getinitargs__()
     except:
@@ -329,18 +330,17 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
             else:
                 # sys.stderr.write("Unknown type: {}\n".format(args[i]))
                 continue
-            try:
-                obj6 = eval('galsim.' + classname + repr(tuple(newargs)))
-            except:
+            with galsim.utilities.printoptions(precision=18, threshold=1e6):
                 try:
-                    obj6 = eval('galsim._galsim.' + classname + repr(tuple(newargs)))
+                    obj6 = eval('galsim.' + classname + repr(tuple(newargs)))
                 except:
-                    pass
-                    # outstr = "{} not `eval`able after arg {} transformed {} -> {}\n"
-                    # sys.stderr.write(outstr.format(obj1, i, args[i], newargs[i]))
-            else:
-                assert obj1 != obj6
-                # sys.stderr.write("SUCCESS\n")
+                    try:
+                        obj6 = eval('galsim._galsim.' + classname + repr(tuple(newargs)))
+                    except:
+                        raise TypeError("{} not `eval`able!".format(obj1))
+                else:
+                    assert obj1 != obj6
+                    # sys.stderr.write("SUCCESS\n")
 
 
 def all_obj_diff(objs):
