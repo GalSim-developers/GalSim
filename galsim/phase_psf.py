@@ -42,6 +42,8 @@ Atmosphere
   Convenience function to quickly assemble multiple AtmosphericScreens into a PhaseScreenList.
 """
 
+from itertools import izip, chain
+
 import numpy as np
 import galsim
 import utilities
@@ -250,6 +252,8 @@ class Aperture(object):
 
     def _geometry_str(self):
         s = ""
+        if not self._circular_pupil:
+            s += ", circular_pupil=False"
         if hasattr(self, '_obscuration') and self._obscuration != 0:
             s += ", obscuration=%r" % self._obscuration
         if hasattr(self, '_nstruts') and self._nstruts != 0:
@@ -283,6 +287,21 @@ class Aperture(object):
             s += ", oversampling=%r" % self._oversampling
         s += ")"
         return s
+
+    def __eq__(self, other):
+        return (isinstance(other, galsim.Aperture) and
+                self.diam == other.diam and
+                self.pupil_scale == other.pupil_scale and
+                self.pupil_plane_size == other.pupil_plane_size and
+                self.npix == other.npix and
+                np.array_equal(self.illuminated, other.illuminated))
+
+    def __hash__(self):
+        # Cache since self.illuminated may be large.
+        if not hasattr(self, '_hash'):
+            self._hash = hash(("galsim.Aperture", self.diam))
+            self._hash ^= hash(tuple(self.illuminated.ravel()))
+        return self._hash
 
     @property
     def rho(self):
@@ -359,7 +378,8 @@ class AtmosphericScreen(object):
         self.altitude = altitude
         self.time_step = time_step
         self.r0_500 = r0_500
-        self.L0 = L0
+        if self.L0 is None:  # Allow None as synonym for infinite.
+            self.L0 = np.inf
         self.vx = vx
         self.vy = vy
         self.alpha = alpha
@@ -386,22 +406,27 @@ class AtmosphericScreen(object):
                          self.r0_500, self.L0, self.vx, self.vy, self.alpha, self.rng)
 
     def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            return False
-        sL0 = self.L0 if self.L0 is not None else np.inf
-        oL0 = other.L0 if other.L0 is not None else np.inf
-        return (self.screen_size == other.screen_size and
+        # This is a bit draconian since two phase screens with different `time_step`s but otherwise
+        # equivalent attributes at least start out equal.  However, I like the idea of comparing
+        # rng, orig_rng, and time_step better than comparing self.tab2d, so I'm going with that.
+        return (isinstance(other, galsim.AtmosphericScreen) and
+                self.screen_size == other.screen_size and
                 self.screen_scale == other.screen_scale and
                 self.altitude == other.altitude and
                 self.r0_500 == other.r0_500 and
-                sL0 == oL0 and
+                self.L0 == other.L0 and
                 self.vx == other.vx and
                 self.vy == other.vy and
                 self.alpha == other.alpha and
-                self.rng == other.rng)
+                self.orig_rng == other.orig_rng and
+                self.rng == other.rng and
+                self.time_step == other.time_step and
+                self.origin == other.origin)
 
-    def __ne__(self, other):
-        return not self == other
+    # No hash since this is a mutable class
+    __hash__ = None
+
+    def __ne__(self, other): return not self == other
 
     # Note the magic number 0.00058 is actually ... wait for it ...
     # (5 * (24/5 * gamma(6/5))**(5/6) * gamma(11/6)) / (6 * pi**(8/3) * gamma(1/6)) / (2 pi)**2
@@ -653,30 +678,25 @@ class OpticalScreen(object):
                 continue
             self.coef_array += _zern_coef_array(*_noll_to_zern(j), shape=shape) * ab
 
-    # def __str__(self):
-    #     return "galsim.AtmosphericScreen(altitude=%s)" % self.altitude
-    #
-    # def __repr__(self):
-    #     outstr = ("galsim.AtmosphericScreen(%r, %r, altitude=%r, time_step=%r, " +
-    #               "r0_500=%r, L0=%r, vx=%r, vy=%r, alpha=%r, rng=%r)")
-    #     return outstr % (self.screen_size, self.screen_scale, self.altitude, self.time_step,
-    #                      self.r0_500, self.L0, self.vx, self.vy, self.alpha, self.rng)
-    #
-    # def __eq__(self, other):
-    #     sL0 = self.L0 if self.L0 is not None else np.inf
-    #     oL0 = other.L0 if other.L0 is not None else np.inf
-    #     return (self.screen_size == other.screen_size and
-    #             self.screen_scale == other.screen_scale and
-    #             self.altitude == other.altitude and
-    #             self.r0_500 == other.r0_500 and
-    #             sL0 == oL0 and
-    #             self.vx == other.vx and
-    #             self.vy == other.vy and
-    #             self.alpha == other.alpha and
-    #             self.rng == other.rng)
-    #
-    # def __ne__(self, other):
-    #     return not self == other
+    def __str__(self):
+        return "galsim.OpticalScreen(lam_0=%s)" % self.lam_0
+
+    def __repr__(self):
+        s = "galsim.OpticalScreen(lam_0=%s" % self.lam_0
+        if any(self.aberrations):
+            s += ", aberrations=["+",".join(self.aberrations)+"]"
+        s += ")"
+        return s
+
+    def __eq__(self, other):
+        return (isinstance(other, galsim.OpticalScreen) and
+                np.array_equal(self.aberrations/self.lam_0, other.aberrations/other.lam_0))
+
+    def __ne__(self, other): return not self == other
+
+    # This screen is immutable, so make a hash for it.
+    def __hash__(self):
+        return hash(("galsim.AtmosphericScreen", tuple((self.aberattions/self.lam_0).ravel())))
 
     # Note -- use **kwargs here so that AtmosphericScreen.pupil_scale and OpticalScreen.pupil_scale
     # can use the same signature, even though they depend on different parameters.
@@ -800,11 +820,9 @@ class PhaseScreenList(object):
         return "galsim.PhaseScreenList(%r)" % self._layers
 
     def __eq__(self, other):
-        return (len(self) == len(other) and
-                all(sl == ol for sl, ol in zip(self._layers, other._layers)))
+        return self._layers == other._layers
 
-    def __ne__(self, other):
-        return not self == other
+    def __ne__(self, other): return not self == other
 
     def _update_attrs(self):
         # Update object attributes for current set of layers.  Currently the only attribute is
@@ -924,7 +942,6 @@ class PhaseScreenList(object):
                                  aberrations, i.e., when the equivalent Zernike coefficients become
                                  larger than order unity.  [default: 1.5]
         """
-        from itertools import izip, chain
         # Assemble theta as an iterable over 2-tuples of Angles.
         # 5 possible input kwargs cases for theta, theta_x, theta_y.
         # 1) All undefined, in which case set to [(Angle(0), Angle(0))]
@@ -1143,8 +1160,12 @@ class PhaseScreenPSF(GSObject):
         return (self.img == other.img and
                 self.interpolant == other.interpolant)
 
-    def __ne__(self, other):
-        return not self == other
+    def __hash__(self):
+        # Cache since self.img may be large
+        if not hasattr(self, '_hash'):
+            self._hash = hash(("galsim.PhaseScreenPSF", self.interpolant))
+            self._hash ^= hash((tuple(self.img.array.ravel()), self.img.wcs, self.img.bounds))
+        return self._hash
 
     def _step(self):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
@@ -1357,11 +1378,12 @@ class OpticalPSF(GSObject):
                  oversampling=1.5, pad_factor=1.5, flux=1., nstruts=0, strut_thick=0.05,
                  strut_angle=0.*galsim.degrees, pupil_plane_im=None,
                  pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None):
-        # Handle lam/diam vs. lam_over_diam
+        # Need to handle lam/diam vs. lam_over_diam here since lam by itself is needed for
+        # OpticalScreen.
         if lam_over_diam is not None:
             if lam is not None or diam is not None:
                 raise TypeError("If specifying lam_over_diam, then do not specify lam or diam")
-            lam = 500.
+            lam = 500.  # Arbitrary
             diam = lam*1.e-9 / lam_over_diam * galsim.radians / scale_unit
         else:
             if lam is None or diam is None:
@@ -1369,10 +1391,11 @@ class OpticalPSF(GSObject):
 
         # Make the optical screen.
         optics_screen = galsim.OpticalScreen(
-            defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2,
-            trefoil1=trefoil1, trefoil2=trefoil2, spher=spher, aberrations=aberrations)
-        screens = galsim.PhaseScreenList([optics_screen])
-        self._screens = screens
+                defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2,
+                trefoil1=trefoil1, trefoil2=trefoil2, spher=spher, aberrations=aberrations,
+                lam_0=lam)
+        self._screens = galsim.PhaseScreenList([optics_screen])
+
         # Make the aperture.
         if pupil_plane_im is not None:
             aper = galsim.Aperture(diam, pupil_plane_im=pupil_plane_im, pupil_angle=pupil_angle)
@@ -1380,12 +1403,44 @@ class OpticalPSF(GSObject):
             airy = galsim.Airy(lam=lam, diam=diam, obscuration=obscuration, scale_unit=scale_unit,
                                gsparams=gsparams)
             aper = galsim.Aperture.fromGSObject(
-                airy, lam, pad_factor=pad_factor, scale_unit=scale_unit,
-                diam=diam, obscuration=obscuration, nstruts=nstruts, strut_thick=strut_thick,
-                strut_angle=strut_angle)
+                    airy, lam, pad_factor=pad_factor, scale_unit=scale_unit,
+                    diam=diam, obscuration=obscuration, nstruts=nstruts, strut_thick=strut_thick,
+                    strut_angle=strut_angle, circular_pupil=circular_pupil)
         self._aper = aper
+
         # Finally, put together to make the PSF.
-        psf = galsim.PhaseScreenPSF(screens, lam=lam, flux=flux, interpolant=interpolant, aper=aper,
-                                    scale_unit=scale_unit, gsparams=gsparams)
-        self._psf = psf
-        GSObject.__init__(self, psf)
+        self._psf = galsim.PhaseScreenPSF(self._screens, lam=lam, flux=flux, aper=aper,
+                                          interpolant=interpolant, scale_unit=scale_unit,
+                                          gsparams=gsparams)
+        GSObject.__init__(self, self._psf)
+
+    def __str__(self):
+        screen = self._psf.screen_list[0]
+        s = "galsim.OpticalPSF(lam=%s, diam=%s" % (screen.lam_0, self._aper.diam)
+        if any(screen.aberrations):
+            s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
+        s += self._aper._geometry_str()
+        if self._psf.flux != 1.0:
+            s += ", flux=%s" % self._psf.flux
+        s += ")"
+        return s
+
+    def __repr__(self):
+        screen = self._psf.screen_list[0]
+        s = "galsim.OpticalPSF(lam=%s, diam=%s" % (screen.lam_0, self._aper.diam)
+        if any(screen.aberrations):
+            s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
+        s += self._aper._geometry_str()
+        if self._psf.flux != 1.0:
+            s += ", flux=%s" % self._psf.flux
+        s += ")"
+        return s
+
+    def __eq__(self, other):
+        # Should it be possible for an OpticalPSF to be equal to a PhaseScreenPSF?  It seems simpler
+        # to just vote no, so I'm doing that for now, though I'm certainly open to changing this.
+        return (isinstance(other, galsim.OpticalPSF) and
+                self._psf == other._psf)
+
+    def __hash__(self):
+        return hash(("galsim.OpticalPSF", self._psf))
