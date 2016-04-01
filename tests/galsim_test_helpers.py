@@ -217,12 +217,14 @@ def drawNoise(noise):
     im.addNoise(noise)
     return im.array.astype(np.float32).tolist()
 
-def do_pickle(obj1, func = lambda x : x):
+
+def do_pickle(obj1, func = lambda x : x, irreprable=False):
     """Check that the object is picklable.  Also that it has basic == and != functionality.
     """
+    from numbers import Integral, Real, Complex
     import cPickle, copy
     # In case the repr uses these:
-    from numpy import array, int16, int32, float32, float64
+    from numpy import array, int16, int32, float32, float64, ndarray
     try:
         import astropy.io.fits
     except:
@@ -241,8 +243,10 @@ def do_pickle(obj1, func = lambda x : x):
     assert f1 == f2
 
     # Test the hash values are equal for two equivalent objects.
-    #print 'hash = ',hash(obj1),hash(obj2)
-    assert hash(obj1) == hash(obj2)
+    from collections import Hashable
+    if isinstance(obj1, Hashable):
+        # print 'hash = ',hash(obj1),hash(obj2)
+        assert hash(obj1) == hash(obj2)
 
     obj3 = copy.copy(obj1)
     assert obj3 is not obj1

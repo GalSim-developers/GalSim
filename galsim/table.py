@@ -328,6 +328,10 @@ class LookupTable2D(object):
         self.ymax = y0 + (ny-1)*dy
         self.slop = min((self.xmax-self.xmin, self.ymax-self.ymin))*1e-6
 
+        # Save for __repr__
+        self._dx = dx
+        self._dy = dy
+
         xorigin = x0
         yorigin = y0
 
@@ -504,6 +508,17 @@ class LookupTable2D(object):
             ix += nxtmp
         return out
 
+    def __str__(self):
+        return "galsim.LookupTable2D(interpolant=%r, edge_mode=%r)" % (
+                self.interpolant, self.edge_mode)
+
+    def __repr__(self):
+        f = self.f if self.edge_mode != 'wrap' else self.f[3:-3, 3:-3]
+        outstr = ("galsim.LookupTable2D(x0=%r, y0=%r, dx=%r, dy=%r, f=array(%r, dtype=%s), "
+                  "interpolant=%r, edge_mode=%r)")
+        return outstr % (self.xmin, self.ymin, self._dx, self._dy, f.tolist(),
+                         self.f.dtype, self.interpolant, self.edge_mode)
+
     def __eq__(self, other):
         import numpy as np
         return (isinstance(other, LookupTable2D) and
@@ -515,13 +530,14 @@ class LookupTable2D(object):
                 np.array_equal(self.f, other.f) and
                 self.interpolant == other.interpolant)
 
-    def __ne__(self, other):
-        return not self == other
+    def __ne__(self, other): return not self == other
+
+    def __hash__(self):
+        return hash(("galsim.LookupTable2D", self.xmin, self.xmax, self.ymin, self.ymax,
+                     self.edge_mode, self.interpolant, tuple(self.f.ravel())))
 
 
-def _lohi(i, x0, dx):
-    return x0 + i * dx, x0 + (i+1) * dx
+def _lohi(i, x0, dx): return x0 + i * dx, x0 + (i+1) * dx
 
 
-def _ceildiv(a, b):
-    return -(-a // b)
+def _ceildiv(a, b): return -(-a // b)

@@ -249,10 +249,8 @@ def test_roundoff():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+@timer
 def test_table2d():
-    import time
-    t1 = time.time()
-
     # Should be able to interpolate quadratic function exactly with cubic interpolant
     def f(x, y):
         return (1.1142351 + 0.9863461*x + 1.4123753*y)**2
@@ -271,6 +269,9 @@ def test_table2d():
     xs, ys = np.meshgrid(xs, ys)
     fs = f(xs, ys)
     tab2d = galsim.LookupTable2D(x0, y0, dx, dy, fs)
+
+    do_pickle(tab2d)
+    do_pickle(tab2d, lambda x: x(1.0, 1.0))
 
     # Should always get the right result at the input grid points
     for x, y in zip(xs.flat, ys.flat):
@@ -306,6 +307,8 @@ def test_table2d():
 
     # Check edge wrapping.
     tab2d = galsim.LookupTable2D(x0, y0, dx, dy, fs, edge_mode='wrap')
+    do_pickle(tab2d)
+    do_pickle(tab2d, lambda x: x(1.0, 1.5))
 
     for x in xtest:
         for y in ytest:
@@ -338,9 +341,6 @@ def test_table2d():
         np.testing.assert_warns(UserWarning, tab2d.eval_grid, *args)
     except ImportError:
         print 'The assert_raises tests require nose'
-
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 if __name__ == "__main__":
