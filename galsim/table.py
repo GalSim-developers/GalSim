@@ -95,7 +95,7 @@ class LookupTable(object):
                 import pandas
                 data = pandas.read_csv(file, comment='#', delim_whitespace=True, header=None)
                 data = data.values.transpose()
-            except ImportError:
+            except (ImportError, AttributeError):
                 data = np.loadtxt(file).transpose()
             if data.shape[0] != 2:
                 raise ValueError("File %s provided for LookupTable does not have 2 columns"%file)
