@@ -179,8 +179,8 @@ class LookupTable(object):
             if dimen > 2:
                 raise ValueError("Arrays with dimension larger than 2 not allowed!")
             elif dimen == 2:
-                f = np.empty_like(x.flatten(), dtype=float)
-                self.table.interpMany(x.astype(float).flatten(),f)
+                f = np.empty_like(x.ravel(), dtype=float)
+                self.table.interpMany(x.astype(float).ravel(),f)
                 f = f.reshape(x.shape)
             else:
                 f = np.empty_like(x, dtype=float)
