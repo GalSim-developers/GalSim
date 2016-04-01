@@ -164,7 +164,6 @@ class Aperture(object):
         # TODO: Determine if we still need to pad the image.
         # Pad image here if necessary.
 
-        # Convert to bool
         self.npix = pupil_plane_im.array.shape[0]
         u = np.fft.fftshift(np.fft.fftfreq(self.npix))
         u, v = np.meshgrid(u, u)
@@ -195,6 +194,9 @@ class Aperture(object):
             max_pp_val = np.max(pp_arr)
             pp_arr[pp_arr < 0.5*max_pp_val] = 0.
             self.illuminated = pp_arr.astype(bool)
+        # Save for repr
+        self._pupil_plane_im = pupil_plane_im
+        self._pupil_angle = pupil_angle
 
     def _generate_pupil_plane(self, npix=None, pupil_scale=None, pupil_plane_size=None,
                               circular_pupil=True, obscuration=0.,
@@ -250,9 +252,10 @@ class Aperture(object):
                 u, v = utilities.rotate_xy(u, v, -rotang)
                 self.illuminated *= ((np.abs(u) >= radius * self._strut_thick) + (v < 0.0))
 
+    # Pull this common bit out for use below and in OpticalPSF repr/str.
     def _geometry_str(self):
         s = ""
-        if not self._circular_pupil:
+        if hasattr(self, '_circular_pupil') and not self._circular_pupil:
             s += ", circular_pupil=False"
         if hasattr(self, '_obscuration') and self._obscuration != 0:
             s += ", obscuration=%r" % self._obscuration
@@ -265,9 +268,9 @@ class Aperture(object):
         return s
 
     def __str__(self):
-        s = "galsim.Aperture(%r" % self.diam
-        if hasattr(self, 'pupil_plane_im'):
-            pass
+        s = "galsim.Aperture(diam=%s" % self.diam
+        if hasattr(self, '_pupil_plane_im'):
+            s += ", pupil_plane_im=%s" % self._pupil_plane_im
         else:
             s += self._geometry_str()
         if hasattr(self, '_oversampling') and self._oversampling != 1.5:
@@ -276,11 +279,11 @@ class Aperture(object):
         return s
 
     def __repr__(self):
-        s = "galsim.Aperture(%r" % self.diam
+        s = "galsim.Aperture(diam=%r" % self.diam
         s += ", npix=%r" % self.npix
         s += ", pupil_plane_size=%r" % self.pupil_plane_size
-        if hasattr(self, 'pupil_plane_im'):
-            pass
+        if hasattr(self, '_pupil_plane_im'):
+            s += ", pupil_plane_im=%r" % self._pupil_plane_im
         else:
             s += self._geometry_str()
         if hasattr(self, '_oversampling') and self._oversampling != 1.5:
@@ -378,8 +381,9 @@ class AtmosphericScreen(object):
         self.altitude = altitude
         self.time_step = time_step
         self.r0_500 = r0_500
-        if self.L0 is None:  # Allow None as synonym for infinite.
-            self.L0 = np.inf
+        if L0 is None:  # Allow None as synonym for infinite.
+            L0 = np.inf
+        self.L0 = L0
         self.vx = vx
         self.vy = vy
         self.alpha = alpha
@@ -421,7 +425,7 @@ class AtmosphericScreen(object):
                 self.orig_rng == other.orig_rng and
                 self.rng == other.rng and
                 self.time_step == other.time_step and
-                self.origin == other.origin)
+                np.array_equal(self.origin, other.origin))
 
     # No hash since this is a mutable class
     __hash__ = None

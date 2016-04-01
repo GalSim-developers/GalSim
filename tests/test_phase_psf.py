@@ -15,18 +15,32 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+import os
 import numpy as np
-from galsim_test_helpers import timer
+from galsim_test_helpers import *
 
 try:
     import galsim
 
 except ImportError:
-    import os
     import sys
     path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
+
+
+imgdir = os.path.join(".", "Optics_comparison_images") # Directory containing the reference images.
+pp_file = 'sample_pupil_rolled.fits'
+
+
+@timer
+def test_aperture():
+    # Simple tests for constructing Apertures.
+    aper1 = galsim.Aperture(diam=1.0, npix=512)
+    im = galsim.fits.read(os.path.join(imgdir, pp_file))
+    aper2 = galsim.Aperture(diam=1.0, pupil_plane_im=im)
+    do_pickle(aper1)
+    do_pickle(aper2)
 
 
 @timer
@@ -156,7 +170,6 @@ def test_phase_psf_reset():
 def test_phase_psf_batch():
     # Check that PSFs generated serially match those generated in batch.
     import time
-    t1 = time.time()
     NPSFs = 10
     exptime = 0.06
     rng = galsim.BaseDeviate(1234)
@@ -166,16 +179,16 @@ def test_phase_psf_batch():
 
     kwargs = dict(exptime=exptime, diam=4.0, pupil_plane_size=6.0, pupil_scale=6.0/192)
 
-    t3 = time.time()
+    t1 = time.time()
     psfs = atm.makePSF(theta_x=theta_x, theta_y=theta_y, **kwargs)
-    print 'time for {0} PSFs in batch: {1:.2f} s'.format(NPSFs, time.time() - t3)
+    print 'time for {0} PSFs in batch: {1:.2f} s'.format(NPSFs, time.time() - t1)
 
-    t4 = time.time()
+    t2 = time.time()
     more_psfs = []
     for tx, ty in zip(theta_x, theta_y):
         atm.reset()
         more_psfs.append(atm.makePSF(theta_x=tx, theta_y=ty, **kwargs))
-    print 'time for {0} PSFs in serial: {1:.2f} s'.format(NPSFs, time.time() - t4)
+    print 'time for {0} PSFs in serial: {1:.2f} s'.format(NPSFs, time.time() - t2)
 
     for psf1, psf2 in zip(psfs, more_psfs):
         np.testing.assert_array_equal(
@@ -217,6 +230,7 @@ def test_opt_indiv_aberrations():
 
 
 if __name__ == "__main__":
+    test_aperture()
     test_phase_screen_list()
     test_frozen_flow()
     test_phase_psf_reset()
