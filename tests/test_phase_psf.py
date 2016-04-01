@@ -55,6 +55,9 @@ def test_phase_screen_list():
     assert ar1 == ar2
     ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.995, rng=rng2)
     assert ar1 != ar2
+    do_pickle(ar1)
+    do_pickle(ar1, func=lambda x: x.tab2d(0, 0))
+    do_pickle(ar1, func=lambda x: x.tab2d(12.3, 45.6))
     ar3 = galsim.OpticalScreen(aberrations=[0, 0, 0, 0, 0, 0, 0, 0, 0.1])
     atm = galsim.Atmosphere(screen_size=30.0,
                             altitude=[0.0, 1.0],

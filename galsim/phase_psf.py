@@ -371,7 +371,8 @@ class AtmosphericScreen(object):
     September 2014
     """
     def __init__(self, screen_size, screen_scale=None, altitude=0.0, time_step=0.03,
-                 r0_500=0.2, L0=25.0, vx=0.0, vy=0.0, alpha=1.0, rng=None):
+                 r0_500=0.2, L0=25.0, vx=0.0, vy=0.0, alpha=1.0, rng=None,
+                 _orig_rng=None, _tab2d=None, _psi=None, _screen=None, _origin=None):
 
         if screen_scale is None:
             screen_scale = 0.5 * r0_500
@@ -381,8 +382,8 @@ class AtmosphericScreen(object):
         self.altitude = altitude
         self.time_step = time_step
         self.r0_500 = r0_500
-        if L0 is None:  # Allow None as synonym for infinite.
-            L0 = np.inf
+        if L0 == np.inf:  # Allow np.inf as synonym for None.
+            L0 = None
         self.L0 = L0
         self.vx = vx
         self.vy = vy
@@ -390,13 +391,23 @@ class AtmosphericScreen(object):
 
         if rng is None:
             rng = galsim.BaseDeviate()
-        self.orig_rng = rng
 
-        self._init_psi()
+        # Should only be using private constructor variables when reconstituting from
+        # eval(repr(obj)).
+        if _orig_rng is not None:
+            self.orig_rng = _orig_rng
+            self.rng = rng
+            self.tab2d = _tab2d
+            # Last two might get quickly deleted if alpha==1, but that's okay.
+            self.psi = _psi
+            self.screen = _screen
+            self.origin = _origin
+        else:
+            self.orig_rng = rng
+            self._init_psi()
+            self.reset()
 
-        self.reset()
-
-        # Free some RAM for frozen-flow screen
+        # Free some RAM for frozen-flow screen.
         if self.alpha == 1.0:
             del self.psi, self.screen
 
@@ -404,10 +415,16 @@ class AtmosphericScreen(object):
         return "galsim.AtmosphericScreen(altitude=%s)" % self.altitude
 
     def __repr__(self):
-        outstr = ("galsim.AtmosphericScreen(%r, %r, altitude=%r, time_step=%r, " +
-                  "r0_500=%r, L0=%r, vx=%r, vy=%r, alpha=%r, rng=%r)")
-        return outstr % (self.screen_size, self.screen_scale, self.altitude, self.time_step,
-                         self.r0_500, self.L0, self.vx, self.vy, self.alpha, self.rng)
+        s = ("galsim.AtmosphericScreen(%r, %r, altitude=%r, time_step=%r, r0_500=%r, L0=%r, " +
+             "vx=%r, vy=%r, alpha=%r, rng=%r, _origin=array(%r), _orig_rng=%r, _tab2d=%r") % (
+                self.screen_size, self.screen_scale, self.altitude, self.time_step, self.r0_500,
+                self.L0, self.vx, self.vy, self.alpha, self.rng, self.origin, self.orig_rng,
+                self.tab2d)
+        if self.alpha == 1.0:
+            s += ", _screen=array(%r, dtype=%s)" % (self.screen.to_list(), self.screen.dtype)
+            s += ", _psi=array(%r, dtype=%s)" % (self.screen.to_list(), self.screen.dtype)
+        s += ")"
+        return s
 
     def __eq__(self, other):
         # This is a bit draconian since two phase screens with different `time_step`s but otherwise
