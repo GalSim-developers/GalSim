@@ -126,8 +126,7 @@ class Shapelet(GSObject):
             bvec_size = ShapeletSize(order)
             if len(bvec) != bvec_size:
                 raise ValueError("bvec is the wrong size for the provided order")
-            import numpy
-            bvec = LVector(order,numpy.array(bvec))
+            bvec = LVector(order,np.array(bvec))
 
         GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec, gsparams))
         self._gsparams = gsparams
