@@ -38,7 +38,7 @@ namespace galsim {
 
     SBDeconvolve::~SBDeconvolve() {}
 
-    std::string SBDeconvolve::SBDeconvolveImpl::repr() const 
+    std::string SBDeconvolve::SBDeconvolveImpl::repr() const
     {
         std::ostringstream oss(" ");
         oss << "galsim._galsim.SBDeconvolve(" << _adaptee.repr();
@@ -60,7 +60,7 @@ namespace galsim {
     }
 
     // xValue() not implemented for SBDeconvolve.
-    double SBDeconvolve::SBDeconvolveImpl::xValue(const Position<double>& p) const 
+    double SBDeconvolve::SBDeconvolveImpl::xValue(const Position<double>& p) const
     { throw SBError("SBDeconvolve::xValue() not implemented (and not possible)"); }
 
     std::complex<double> SBDeconvolve::SBDeconvolveImpl::kValue(const Position<double>& k) const
@@ -142,14 +142,14 @@ namespace galsim {
         }
     }
 
-    Position<double> SBDeconvolve::SBDeconvolveImpl::centroid() const 
+    Position<double> SBDeconvolve::SBDeconvolveImpl::centroid() const
     { return -_adaptee.centroid(); }
 
-    double SBDeconvolve::SBDeconvolveImpl::getFlux() const 
+    double SBDeconvolve::SBDeconvolveImpl::getFlux() const
     { return 1./_adaptee.getFlux(); }
 
     boost::shared_ptr<PhotonArray> SBDeconvolve::SBDeconvolveImpl::shoot(
-        int N, UniformDeviate u) const 
+        int N, UniformDeviate u) const
     {
         throw SBError("SBDeconvolve::shoot() not implemented");
         return boost::shared_ptr<PhotonArray>();

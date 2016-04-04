@@ -29,7 +29,7 @@ class COSMOSLoader(InputLoader):
             logger.info("file %d: COSMOS catalog has %d total objects; %d passed initial cuts.",
                         base['file_num'], cosmos_cat.getNTot(), cosmos_cat.getNObjects())
 
-RegisterInputType('cosmos_catalog', COSMOSLoader(galsim.COSMOSCatalog, ['COSMOSGalaxy']))
+RegisterInputType('cosmos_catalog', COSMOSLoader(galsim.COSMOSCatalog))
 
 # The gsobject type coupled to this is COSMOSGalaxy.
 
@@ -75,4 +75,4 @@ def _BuildCOSMOSGalaxy(config, base, ignore, gsparams, logger):
 
 # Register this as a valid gsobject type
 from .gsobject import RegisterObjectType
-RegisterObjectType('COSMOSGalaxy', _BuildCOSMOSGalaxy)
+RegisterObjectType('COSMOSGalaxy', _BuildCOSMOSGalaxy, input_type='cosmos_catalog')

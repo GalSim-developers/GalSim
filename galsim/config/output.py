@@ -222,7 +222,7 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     data = builder.buildImages(output, config, file_num, image_num, obj_num, ignore, logger)
 
     if builder.canAddHdus():
-        data = data + galsim.config.BuildExtraOutputHDUs(config,logger,len(data))
+        data = galsim.config.AddExtraOutputHDUs(config,data,logger)
 
     if 'retry_io' in output:
         ntries = galsim.config.ParseValue(output,'retry_io',config,int)[0]
@@ -236,7 +236,7 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     if logger:
         logger.debug('file %d: Wrote %s to file %r',file_num,output_type,file_name)
 
-    galsim.config.WriteExtraOutputs(config,logger)
+    galsim.config.WriteExtraOutputs(config,data,logger)
     t2 = time.time()
 
     return file_name, t2-t1

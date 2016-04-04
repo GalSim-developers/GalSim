@@ -22,8 +22,8 @@
 #include "SBExponential.h"
 #include "SBExponentialImpl.h"
 
-// Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by 
-// drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit 
+// Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by
+// drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit
 // circle and rejecting corner photons.
 // The relative speed of the two methods was tested as part of issue #163, and the results
 // are collated in devutils/external/time_photon_shooting.
@@ -57,13 +57,13 @@ namespace galsim {
 
     SBExponential::~SBExponential() {}
 
-    double SBExponential::getScaleRadius() const 
-    { 
+    double SBExponential::getScaleRadius() const
+    {
         assert(dynamic_cast<const SBExponentialImpl*>(_pimpl.get()));
-        return static_cast<const SBExponentialImpl&>(*_pimpl).getScaleRadius(); 
+        return static_cast<const SBExponentialImpl&>(*_pimpl).getScaleRadius();
     }
 
-    std::string SBExponential::SBExponentialImpl::repr() const 
+    std::string SBExponential::SBExponentialImpl::repr() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
@@ -104,9 +104,9 @@ namespace galsim {
         dbg<<"stepK() = "<<stepK()<<std::endl;
     }
 
-    double SBExponential::SBExponentialImpl::maxK() const 
+    double SBExponential::SBExponentialImpl::maxK() const
     { return _info->maxK() * _inv_r0; }
-    double SBExponential::SBExponentialImpl::stepK() const 
+    double SBExponential::SBExponentialImpl::stepK() const
     { return _info->stepK() * _inv_r0; }
 
     double SBExponential::SBExponentialImpl::xValue(const Position<double>& p) const
@@ -115,7 +115,7 @@ namespace galsim {
         return _norm * std::exp(-r * _inv_r0);
     }
 
-    std::complex<double> SBExponential::SBExponentialImpl::kValue(const Position<double>& k) const 
+    std::complex<double> SBExponential::SBExponentialImpl::kValue(const Position<double>& k) const
     {
         double ksq = (k.x*k.x + k.y*k.y)*_r0_sq;
 
@@ -154,7 +154,7 @@ namespace galsim {
                 double x = x0;
                 double ysq = y0*y0;
                 It valit = val.col(j).begin();
-                for (int i=0;i<m;++i,x+=dx) 
+                for (int i=0;i<m;++i,x+=dx)
                     *valit++ = _norm * std::exp(-sqrt(x*x + ysq));
             }
         }
@@ -303,10 +303,10 @@ namespace galsim {
     }
 
     // Set maxK to the value where the FT is down to maxk_threshold
-    double ExponentialInfo::maxK() const 
+    double ExponentialInfo::maxK() const
     { return _maxk; }
 
-    // The amount of flux missed in a circle of radius pi/stepk should be at 
+    // The amount of flux missed in a circle of radius pi/stepk should be at
     // most folding_threshold of the flux.
     double ExponentialInfo::stepK() const
     { return _stepk; }
@@ -353,7 +353,7 @@ namespace galsim {
                 r = r + (1.+r)*dy/r;
                 dy = y - r + std::log(1.+r);
             }
-            // Draw another (or multiple) randoms for azimuthal angle 
+            // Draw another (or multiple) randoms for azimuthal angle
 #ifdef USE_COS_SIN
             double theta = 2. * M_PI * u();
             double sint,cost;

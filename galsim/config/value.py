@@ -109,9 +109,11 @@ def ParseValue(config, key, base, value_type):
         raise AttributeError(
             "%s.type attribute required in config for non-constant parameter %s."%(key,key))
     elif 'current_val' in param and param['current_index']//repeat == index//repeat:
-        if value_type is not None and param['current_value_type'] != value_type:
+        if (value_type is not None and param['current_value_type'] is not None and
+                param['current_value_type'] != value_type):
             raise ValueError(
-                "Attempt to parse %s multiple times with different value types"%key)
+                "Attempt to parse %s multiple times with different value types:"%key +
+                " %s and %s"%(value_type, param['current_value_type']))
         #print index,'Using current value of ',key,' = ',param['current_val']
         val,safe = param['current_val'], param['current_safe']
     else:
@@ -336,7 +338,10 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
         if key in config:
             get[key] = value_type
         else:
-            raise AttributeError("Attribute %s is required for type = %s"%(key,config['type']))
+            if 'type' in config:
+                raise AttributeError("Attribute %s is required for type = %s"%(key,config['type']))
+            else:
+                raise AttributeError("Attribute %s is required"%key)
 
     # Check optional items:
     for (key, value_type) in opt.items():
@@ -353,13 +358,19 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
             if key in config:
                 count += 1
                 if count > 1:
-                    raise AttributeError(
-                        "Only one of the attributes %s is allowed for type = %s"%(
-                            s.keys(),config['type']))
+                    if 'type' in config:
+                        raise AttributeError(
+                            "Only one of the attributes %s is allowed for type = %s"%(
+                                s.keys(),config['type']))
+                    else:
+                        raise AttributeError("Only one of the attributes %s is allowed"%s.keys())
                 get[key] = value_type
         if count == 0:
-            raise AttributeError(
-                "One of the attributes %s is required for type = %s"%(s.keys(),config['type']))
+            if 'type' in config:
+                raise AttributeError(
+                    "One of the attributes %s is required for type = %s"%(s.keys(),config['type']))
+            else:
+                raise AttributeError("One of the attributes %s is required"%s.keys())
 
     # Check that there aren't any extra keys in config aside from a few we expect:
     valid_keys += ignore
@@ -771,7 +782,7 @@ def _GenerateFromCurrent(config, base, value_type):
         raise ValueError("Invalid key = %s given for type=Current"%key)
 
 
-def RegisterValueType(type_name, gen_func, valid_types):
+def RegisterValueType(type_name, gen_func, valid_types, input_type=None):
     """Register a value type for use by the config apparatus.
 
     A few notes about the signature of the generating function:
@@ -798,8 +809,18 @@ def RegisterValueType(type_name, gen_func, valid_types):
                             The call signature is
                                 value, safe = Generate(config, base, value_type)
     @param valid_types      A list of types for which this type name is valid.
+    @param input_type       If the generator utilises an input object, give the key name of the
+                            input type here.  (If it uses more than one, this may be a list.)
+                            [default: None]
     """
     valid_value_types[type_name] = (gen_func, tuple(valid_types))
+    if input_type is not None:
+        from .input import RegisterInputConnectedType
+        if isinstance(input_type, list):
+            for key in input_type:
+                RegisterInputConnectedType(key, type_name)
+        else:
+            RegisterInputConnectedType(input_type, type_name)
 
 
 RegisterValueType('List', _GenerateFromList, 

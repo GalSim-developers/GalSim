@@ -22,3 +22,7 @@ changed from TPV to TAN.
 The file tanflip.fits is made by the script test_pyast_tpv.py.  It has
 the RA, Dec axes flipped relative to the normal ordering, which is apparently
 an allowed thing in the FITS standard.
+
+The file DECam_00158414_01.fits.fz is from DES SV observations, and has some header
+values with NAN.0 that natively give VerifyWarning's from astropy.  We can now 
+handle these kinds of problems seamlessly in GalSim.

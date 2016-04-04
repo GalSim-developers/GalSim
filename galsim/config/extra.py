@@ -155,12 +155,13 @@ def ProcessExtraOutputsForImage(config, logger=None):
             builder.processImage(index, obj_nums, field, config, logger)
 
 
-def WriteExtraOutputs(config, logger=None):
+def WriteExtraOutputs(config, main_data, logger=None):
     """Write the extra output objects to files.
 
     This gets run at the end of the functions for building the regular output files.
 
     @param config       The configuration dict.
+    @param main_data    The main file data in case it is needed.
     @param logger       If given, a logger object to log progress. [default: None]
     """
     config['index_key'] = 'file_num'
@@ -219,7 +220,7 @@ def WriteExtraOutputs(config, logger=None):
             builder = config['extra_builder'][key]
 
             # Do any final processing that needs to happen.
-            builder.finalize(field, config, logger)
+            builder.ensureFinalized(field, config, main_data, logger)
 
             # Call the write function, possible multiple times to account for IO failures.
             write_func = builder.writeFile
@@ -230,19 +231,21 @@ def WriteExtraOutputs(config, logger=None):
                 logger.debug('file %d: Wrote %s to %r',config['file_num'],key,file_name)
 
 
-def BuildExtraOutputHDUs(config, logger=None, first=1):
-    """Write the extra output objects to either HDUS or images as appropriate.
+def AddExtraOutputHDUs(config, main_data, logger=None):
+    """Write the extra output objects to either HDUS or images as appropriate and add them
+    to the existing data.
 
     This gets run at the end of the functions for building the regular output files.
 
     Note: the extra items must have hdu numbers ranging continuously (in any order) starting
-    at first.  Typically first = 1, since the main image is the primary HDU, numbered 0.
+    at len(data).  Typically first = 1, since the main image is the primary HDU, numbered 0.
 
     @param config       The configuration dict.
+    @param main_data    The main file data as a list of images.  Usually just [image] where
+                        image is the primary image to be written to the output file.
     @param logger       If given, a logger object to log progress. [default: None]
-    @param first        The first number allowed for the extra hdus. [default: 1]
 
-    @returns a list of HDUs and/or Images to put in the output FITS file.
+    @returns data with additional hdus added
     """
     config['index_key'] = 'file_num'
     if 'output' in config:
@@ -261,19 +264,33 @@ def BuildExtraOutputHDUs(config, logger=None, first=1):
             builder = config['extra_builder'][key]
 
             # Do any final processing that needs to happen.
-            builder.finalize(field, config, logger)
+            builder.ensureFinalized(field, config, main_data, logger)
 
             # Build the HDU for this output object.
             hdus[hdu] = builder.writeHdu(field,config,logger)
 
+        first = len(main_data)
         for h in range(first,len(hdus)+first):
             if h not in hdus.keys():
                 raise ValueError("Cannot skip hdus.  Not output found for hdu %d"%h)
         # Turn hdus into a list (in order)
         hdulist = [ hdus[k] for k in range(first,len(hdus)+first) ]
-        return hdulist
+        return main_data + hdulist
     else:
-        return []
+        return main_data
+
+def GetFinalExtraOutput(key, config, main_data, logger=None):
+    """Get the finalized output object for the given extra output key
+
+    @param key          The name of the output field in config['output']
+    @param config       The configuration dict.
+    @param main_data    The main file data in case it is needed.
+    @param logger       If given, a logger object to log progress. [default: None]
+
+    @returns the final data to be output.
+    """
+    field = config['output'][key]
+    return config['extra_builder'][key].ensureFinalized(field, config, main_data, logger)
 
 class ExtraOutputBuilder(object):
     """A base class for building some kind of extra output object along with the main output.
@@ -310,6 +327,7 @@ class ExtraOutputBuilder(object):
         """
         self.data = data
         self.scratch = scratch
+        self.final_data = None
 
     def setupImage(self, config, base, logger):
         """Perform any necessary setup at the start of an image.
@@ -361,29 +379,57 @@ class ExtraOutputBuilder(object):
         """
         pass
 
-    def finalize(self, config, base, logger):
+    def ensureFinalized(self, config, base, main_data, logger):
+        """A helper function in the base class to make sure finalize only gets called once by the
+        different possible locations that might need it to have been called.
+
+        @param config       The configuration field for this output object.
+        @param base         The base configuration dict.
+        @param main_data    The main file data in case it is needed.
+        @param logger       If given, a logger object to log progress. [default: None]
+
+        @returns the final version of the object.
+        """
+        if self.final_data is None:
+            self.final_data = self.finalize(config, base, main_data, logger)
+        return self.final_data
+
+    def finalize(self, config, base, main_data, logger):
         """Perform any final processing at the end of all the image processing.
 
         This function will be called after all images have been built.
 
+        It returns some sort of final version of the object.  In the base class, it just returns
+        self.data, but depending on the meaning of the output object, something else might be
+        more appropriate.
+
         @param config       The configuration field for this output object.
         @param base         The base configuration dict.
+        @param main_data    The main file data in case it is needed.
         @param logger       If given, a logger object to log progress. [default: None]
+
+        @returns the final version of the object.
         """
-        pass
+        return self.data
 
     def writeFile(self, file_name, config, base, logger):
         """Write this output object to a file.
+
+        The base class implementation is appropriate for the cas that the result of finalize
+        is a list of images to be written to a FITS file.
 
         @param file_name    The file to write to.
         @param config       The configuration field for this output object.
         @param base         The base configuration dict.
         @param logger       If given, a logger object to log progress. [default: None]
         """
-        pass
+        galsim.fits.writeMulti(self.final_data, file_name)
 
     def writeHdu(self, config, base, logger):
         """Write the data to a FITS HDU with the data for this output object.
+
+        The base class implementation is appropriate for the cas that the result of finalize
+        is a list of images of length 1 to be written to a FITS file.
 
         @param config       The configuration field for this output object.
         @param base         The base configuration dict.
@@ -391,7 +437,13 @@ class ExtraOutputBuilder(object):
 
         @returns an HDU with the output data.
         """
-        raise NotImplemented("The %s class has not overridden writeHdu."%self.__class__)
+        n = len(self.data)
+        if n == 0:
+            raise RuntimeError("No %s images were created."%self._extra_output_key)
+        elif n > 1:
+            raise RuntimeError(
+                    "%d %s images were created, but expecting only 1."%(n,self._extra_output_key))
+        return self.data[0]
 
 
 def RegisterExtraOutput(key, builder):
@@ -406,6 +458,7 @@ def RegisterExtraOutput(key, builder):
     @param builder          A builder object to use for building the extra output object.
                             It should be an instance of a subclass of ExtraOutputBuilder.
     """
+    builder._extra_output_key = key
     valid_extra_outputs[key] = builder
 
 # Nothing is registered here.  The appropriate items are registered in extra_*.py.

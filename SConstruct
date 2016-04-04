@@ -100,6 +100,17 @@ opts.Add(BoolVariable('IMPORT_ENV',
 opts.Add('EXTRA_LIBS','Libraries to send to the linker','')
 opts.Add(BoolVariable('IMPORT_PREFIX',
          'Use PREFIX/include and PREFIX/lib in search paths', True))
+opts.Add(PathVariable('DYLD_LIBRARY_PATH',
+         'Set the DYLD_LIBRARY_PATH inside of SCons.  '+
+         'Particularly useful on El Capitan (and later), since Apple strips out '+
+         'DYLD_LIBRARY_PATH from the environment that SCons sees, so if you need it, '+
+         'this option enables SCons to set it back in for you by doing '+
+         '`scons DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH`.',
+         '', PathVariable.PathAccept))
+opts.Add(PathVariable('LD_LIBRARY_PATH',
+         'Set the LD_LIBRARY_PATH inside of SCons. '+
+         'cf. DYLD_LIBRARY_PATH for why this may be useful.',
+         '', PathVariable.PathAccept))
 
 opts.Add('NOSETESTS','Name of nosetests executable','')
 opts.Add(BoolVariable('CACHE_LIB','Cache the results of the library checks',True))
@@ -206,8 +217,9 @@ def ErrorExit(*args, **kwargs):
                 cmd = conftest
             else:
                 cmd = env['PYTHON'] + " < " + conftest
-            p = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                 shell=True)
+            cmd = PrependLibraryPaths(cmd,env)
+            p = subprocess.Popen(['bash','-c',cmd], stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT, shell=False)
             conftest_out = p.stdout.readlines()
             out.write('Output of the command %s is:\n'%cmd)
             out.write(''.join(conftest_out) + '\n')
@@ -227,6 +239,22 @@ def ErrorExit(*args, **kwargs):
     except:
         out.write("Error trying to get output of conftest executables.\n")
         out.write(sys.exc_info()[0])
+
+    # Give a helpful message if running El Capitan.
+    if sys.platform.find('darwin') != -1:
+        import platform
+        major, minor, rev = platform.mac_ver()[0].split('.')
+        print 'Mac version: ',major,minor
+        if int(major) > 10 or int(minor) >= 11:
+            print
+            print 'Starting with El Capitan (OSX 10.11), Apple instituted a new policy called'
+            print '"System Integrity Protection" (SIP) where they strip "dangerous" environment'
+            print 'variables from system calls (including SCons).  So if your system is using'
+            print 'DYLD_LIBRARY_PATH for run-time library resolution, then SCons cannot see it'
+            print 'so that may be why this is failing.  cf. Issues #721 and #725.'
+            print 'You should try executing:'
+            print
+            print '    scons DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH'
 
     print
     print 'Please fix the above error(s) and rerun scons.'
@@ -701,6 +729,52 @@ def ReadFileList(fname):
     files = [f.strip() for f in files]
     return files
 
+def PrependLibraryPaths(pname, env):
+    """Turn a system command, pname, into "DYLD_LIBRARY_PATH=blah "+pname
+
+    env is the relevant SCons environment.
+    """
+    if 'DYLD_LIBRARY_PATH' in env and env['DYLD_LIBRARY_PATH'] != '':
+        pre = 'DYLD_LIBRARY_PATH=%r'%env['DYLD_LIBRARY_PATH']
+        pname = "%s %s"%(pre,pname)
+    if 'LD_LIBRARY_PATH' in env and env['LD_LIBRARY_PATH'] != '':
+        pre = 'LD_LIBRARY_PATH=%r'%env['LD_LIBRARY_PATH']
+        pname = "%s %s"%(pre,pname)
+    return pname
+
+def AltTryRun(config, text, extension):
+    #ok, out = config.TryRun(text,'.cpp')
+    # The above line works on most systems, but on El Capitan, Apple decided to
+    # strip out the DYLD_LIBRARY_PATH from any system call.  So the above won't
+    # be able to find the right runtime libraries that are in their 
+    # DYLD_LIBRARY_PATH.  The next few lines are a copy of the SCons TryRun
+    # implementation, but then adding the DYLD_LIBRARY_PATH to the environment
+    # on the command line.
+    ok = config.TryLink(text, '.cpp')
+    if ok: 
+        prog = config.lastTarget 
+        try:
+            pname = prog.get_internal_path() 
+        except:
+            pname = prog.get_abspath()
+        try:
+            # I didn't track this down, but sometimes we TryRun (now AltTryRun)
+            # with config as a SConfBase, other times it is a CheckContext instance,
+            # so the SConfBase object is found as config.sconf.
+            # Just try this and if it fails, assume that config is already the sconf.
+            sconf = config.sconf
+        except:
+            sconf = config
+        output = sconf.confdir.File(os.path.basename(pname)+'.out') 
+        pname = PrependLibraryPaths(pname, sconf.env)
+        node = config.env.Command(output, prog, [ [ 'bash', '-c', pname, ">", "${TARGET}"] ]) 
+        ok = sconf.BuildNodes(node) 
+    if ok:
+        # For successful execution, also return the output contents
+        outputStr = output.get_contents()
+        return 1, outputStr.strip()
+    else:
+        return 0, ""
 
 def TryRunResult(config,text,name):
     # Check if a particular program (given as text) is compilable, runs, and returns the
@@ -710,9 +784,8 @@ def TryRunResult(config,text,name):
     save_spawn = config.sconf.env['SPAWN']
     config.sconf.env['SPAWN'] = config.sconf.pspawn_wrapper
 
-    # First use the normal TryRun command
-    ok, out = config.TryRun(text,'.cpp')
-
+    # This is the normal TryRun command that I am slightly modifying:
+    ok, out = AltTryRun(config,text,'.cpp')
     config.sconf.env['SPAWN'] = save_spawn
 
     # We have an arbitrary requirement that the executable output the answer 23.
@@ -880,7 +953,7 @@ def CheckBoost(config):
 #include "boost/version.hpp"
 int main() { std::cout<<BOOST_VERSION<<std::endl; return 0; }
 """
-    ok, boost_version = config.TryRun(boost_version_file,'.cpp')
+    ok, boost_version = AltTryRun(config,boost_version_file,'.cpp')
     boost_version = int(boost_version.strip())
     print 'Boost version is %d.%d.%d' % (
             boost_version / 100000, boost_version / 100 % 1000, boost_version % 100)
@@ -927,9 +1000,9 @@ int main()
     return 1
 
 
-def TryScript(config,text,executable):
+def TryScript(config,text,pname):
     # Check if a particular script (given as text) is runnable with the
-    # executable (given as executable).
+    # executable (given as pname).
     #
     # I couldn't find a way to do this using the existing SCons functions, so this
     # is basically taken from parts of the code for TryBuild and TryRun.
@@ -952,9 +1025,13 @@ def TryScript(config,text,executable):
 
     # Run the given executable with the source file we just built
     output = config.sconf.confdir.File(f + '.out')
-    node = config.env.Command(output, source, executable + " < $SOURCE > $TARGET 2>&1")
+    #node = config.env.Command(output, source, pname + " < $SOURCE >& $TARGET")
+    # Just like in AltTryRun, we need to add the DYLD_LIBRARY_PATH for El Capitan.
+    pname = PrependLibraryPaths(pname, config.sconf.env)
+    node = config.env.Command(output, source, 
+            [[ 'bash', '-c', pname, "<", "${SOURCE}", ">", "${TARGET}", "2>&1"]])
     ok = config.sconf.BuildNodes(node)
-
+ 
     config.sconf.env['SPAWN'] = save_spawn
 
     if ok:
@@ -1526,7 +1603,7 @@ def DoCppChecks(config):
 int main()
 { std::cout<<tmv::TMV_Version()<<std::endl; return 0; }
 """
-    ok, tmv_version = config.TryRun(tmv_version_file,'.cpp')
+    ok, tmv_version = AltTryRun(config,tmv_version_file,'.cpp')
     print 'TMV version is '+tmv_version.strip()
 
     compiler = config.env['CXXTYPE']
@@ -1560,7 +1637,8 @@ int main()
             # Don't require the user to have xcode installed.
             xcode_version = None
             print 'Unable to determine XCode version'
-        if (platform.mac_ver()[0] >= '10.7' and '-latlas' not in tmv_link and
+        major, minor, rev = platform.mac_ver()[0].split('.')
+        if ((int(major) > 10 or int(minor) >= 7) and '-latlas' not in tmv_link and
                 ('-lblas' in tmv_link or '-lcblas' in tmv_link)):
             print 'WARNING: The Apple BLAS library has been found not to be thread safe on'
             print '         Mac OS versions 10.7+, even across multiple processes (i.e. not'
@@ -1766,7 +1844,6 @@ env['final_messages'] = []
 # Everything we are going to build so we can have the final message depend on these.
 env['all_builds'] = []
 
-
 if not GetOption('help'):
 
     # If there is a gs.error file, then this means the last run ended
@@ -1816,6 +1893,7 @@ if not GetOption('help'):
     env['_RunInstall'] = RunInstall
     env['_RunUninstall'] = RunUninstall
     env['_AddRPATH'] = AddRPATH
+    env['_PrependLibraryPaths'] = PrependLibraryPaths
 
     # Both bin and examples use this:
     env['BUILDERS']['ExecScript'] = Builder(action = BuildExecutableScript)

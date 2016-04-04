@@ -22,7 +22,7 @@ import sys
 from galsim_test_helpers import *
 
 imgdir = os.path.join(".", "SBProfile_comparison_images") # Directory containing the reference
-                                                          # images. 
+                                                          # images.
 
 try:
     import galsim
@@ -34,7 +34,7 @@ except ImportError:
 # for flux normalization tests
 test_flux = 1.8
 
-# These are the default GSParams used when unspecified.  We'll check that specifying 
+# These are the default GSParams used when unspecified.  We'll check that specifying
 # these explicitly produces the same results.
 default_params = galsim.GSParams(
         minimum_fft_size = 128,
@@ -79,7 +79,7 @@ def test_smallshear():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject shear disagrees with expected result")
- 
+
     # Check with default_params
     gauss = galsim.Gaussian(flux=1, sigma=1, gsparams=default_params)
     gauss = gauss.shear(myShear)
@@ -93,7 +93,7 @@ def test_smallshear():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject shear with GSParams() disagrees with expected result")
- 
+
     # Test photon shooting.
     do_shoot(gauss,myImg,"sheared Gaussian")
 
@@ -145,14 +145,14 @@ def test_largeshear():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject shear with GSParams() disagrees with expected result")
- 
+
     # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
     devauc2 = galsim.Convolve(devauc, galsim.Gaussian(sigma=0.3))
     do_shoot(devauc2,myImg,"sheared DeVauc")
 
     # Test kvalues.
-    # Testing a sheared devauc requires a rather large fft.  What we really care about 
+    # Testing a sheared devauc requires a rather large fft.  What we really care about
     # testing though is the accuracy of the shear function.  So just shear a Gaussian here.
     gauss = galsim.Gaussian(sigma=2.3)
     gauss = gauss.shear(myShear)
@@ -167,7 +167,7 @@ def test_largeshear():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
- 
+
 
 def test_rotate():
     """Test the 45 degree rotation of a sheared Sersic profile against a known result.
@@ -201,7 +201,7 @@ def test_rotate():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject rotate with GSParams() disagrees with expected result")
- 
+
     # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
     gal2 = galsim.Convolve(gal, galsim.Gaussian(sigma=0.3))
@@ -240,7 +240,7 @@ def test_mag():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject dilate disagrees with expected result")
- 
+
     # Check with default_params
     gal = galsim.Exponential(flux=1, scale_radius=r0, gsparams=default_params)
     gal = gal.dilate(1.5)
@@ -336,7 +336,7 @@ def test_shift():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject shift disagrees with expected result")
- 
+
     # Check with default_params
     pixel = galsim.Pixel(scale=dx, gsparams=default_params)
     pixel = pixel.shift(dx, -dx)
@@ -350,12 +350,12 @@ def test_shift():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject shift with GSParams() disagrees with expected result")
- 
+
     # Test photon shooting.
     do_shoot(pixel,myImg,"shifted Box")
 
     # Test kvalues.
-    # Testing a shifted box requires a ridiculously large fft.  What we really care about 
+    # Testing a shifted box requires a ridiculously large fft.  What we really care about
     # testing though is the accuracy of the shift function.  So just shift a Gaussian here.
     gauss = galsim.Gaussian(sigma=2.3)
     gauss = gauss.shift(dx,-dx)
@@ -417,7 +417,7 @@ def test_rescale():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject *= 2 with GSParams() disagrees with expected result")
- 
+
     # Can also get a flux of 2 by drawing flux=1 twice with add_to_image=True
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1)
     sersic.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
@@ -427,7 +427,7 @@ def test_rescale():
             myImg.array, savedImg.array, 5,
             err_msg="Drawing with add_to_image=True disagrees with expected result")
 
-    # With lower folding_threshold and maxk_threshold, the calculated flux should come out right 
+    # With lower folding_threshold and maxk_threshold, the calculated flux should come out right
     # so long as we also convolve by a pixel:
     gsp1 = galsim.GSParams(folding_threshold=1.e-3, maxk_threshold=5.e-4)
     sersic_acc = galsim.Sersic(n=3, flux=1, half_light_radius=1, gsparams=gsp1)
@@ -497,7 +497,7 @@ def test_rescale():
     sersic_acc.drawImage(myImg2, gain=4., add_to_image=True, use_true_center=False)
     np.testing.assert_almost_equal(myImg2.array.sum(), 0.5, 3,
             err_msg="Drawing with gain=4. results in wrong flux")
- 
+
     # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
     sersic_smooth = galsim.Convolve(sersic2, galsim.Gaussian(sigma=0.3))
@@ -525,7 +525,7 @@ def test_integer_shift_fft():
     psf = galsim.Airy(lam_over_diam=test_hlr)
 
     # shift galaxy only
- 
+
     final=galsim.Convolve([gal, psf])
     img_center = galsim.ImageD(n_pix_x,n_pix_y)
     final.drawImage(img_center,scale=1)
@@ -580,7 +580,7 @@ def test_integer_shift_photon():
     psf = galsim.Airy(lam_over_diam=test_hlr)
 
     # shift galaxy only
- 
+
     final=galsim.Convolve([gal, psf])
     img_center = galsim.ImageD(n_pix_x,n_pix_y)
     test_deviate = galsim.BaseDeviate(seed)
@@ -591,7 +591,7 @@ def test_integer_shift_photon():
     img_shift = galsim.ImageD(n_pix_x,n_pix_y)
     test_deviate = galsim.BaseDeviate(seed)
     final.drawImage(img_shift,scale=1,rng=test_deviate,n_photons=n_photons_low, method='phot')
-    
+
     sub_center = img_center.array[
         (n_pix_y - delta_sub) / 2 : (n_pix_y + delta_sub) / 2,
         (n_pix_x - delta_sub) / 2 : (n_pix_x + delta_sub) / 2]
@@ -703,7 +703,7 @@ def test_flip():
                 (galsim.AutoCorrelate(galsim.Box(0.2, 0.3)) * 11).shift(3,2).shift(2,-3) * 0.31
             ]).shift(0,0).transform(0,-1,-1,0).shift(-1,1)
         ]
-     
+
     s = galsim.Shear(g1=0.11, g2=-0.21)
     s1 = galsim.Shear(g1=0.11, g2=0.21)  # Appropriate for the flips around x and y axes
     s2 = galsim.Shear(g1=-0.11, g2=-0.21)  # Appropriate for the flip around x=y
@@ -715,13 +715,13 @@ def test_flip():
 
     decimal=6  # Oddly, these aren't as precise as I would have expected.
                # Even when we only go to this many digits of accuracy, the Exponential needed
-               # a lower than default value for maxk_threshold. 
+               # a lower than default value for maxk_threshold.
     im = galsim.ImageD(16,16, scale=0.05)
 
     for prof in prof_list:
         print 'prof = ',prof
 
-        # Make sure we hit all 4 fill functions.  
+        # Make sure we hit all 4 fill functions.
         # image_x uses fillXValue with izero, jzero
         # image_x1 uses fillXValue with izero, jzero, and unequal dx,dy
         # image_x2 uses fillXValue with dxy, dyx

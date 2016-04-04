@@ -80,4 +80,4 @@ namespace galsim {
 
 }
 
-#endif 
+#endif

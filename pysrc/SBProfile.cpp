@@ -44,7 +44,7 @@ namespace galsim {
                 .def(bp::init<
                     int, int, double, double, double, double, double, double, double, double,
                     double, double, double, double, int, double>((
-                        bp::arg("minimum_fft_size")=128, 
+                        bp::arg("minimum_fft_size")=128,
                         bp::arg("maximum_fft_size")=4096,
                         bp::arg("folding_threshold")=5.e-3,
                         bp::arg("stepk_minimum_hlr")=5.,
@@ -85,7 +85,7 @@ namespace galsim {
     };
 
 
-    struct PySBProfile 
+    struct PySBProfile
     {
 
         template <typename U, typename W>
@@ -95,7 +95,7 @@ namespace galsim {
             // We also don't need to make 'W' a template parameter in this case,
             // but it's easier to do that than write out the full class_ type.
             wrapper
-                .def("drawShoot", 
+                .def("drawShoot",
                      (double (SBProfile::*)(ImageView<U>, double, UniformDeviate,
                                             double, double, bool, bool)
                       const)&SBProfile::drawShoot,
@@ -108,12 +108,12 @@ namespace galsim {
                      "according to Poisson statistics for N samples.\n"
                      "\n"
                      "Returns total flux of photons that landed inside image bounds.")
-                .def("draw", 
+                .def("draw",
                      (double (SBProfile::*)(ImageView<U>, double, double) const)&SBProfile::draw,
                      (bp::arg("image"), bp::arg("gain")=1., bp::arg("wmult")=1.),
                      "Draw in-place and return the summed flux.")
-                .def("drawK", 
-                     (void (SBProfile::*)(ImageView<U>, ImageView<U>, 
+                .def("drawK",
+                     (void (SBProfile::*)(ImageView<U>, ImageView<U>,
                                           double, double) const)&SBProfile::drawK,
                      (bp::arg("re"), bp::arg("im"), bp::arg("gain")=1., bp::arg("wmult")=1.),
                      "Draw k-space image (real and imaginary components).")
@@ -121,7 +121,7 @@ namespace galsim {
         }
 
         static void wrap() {
-            static char const * doc = 
+            static char const * doc =
                 "\n"
                 "SBProfile is an abstract base class representing all of the 2d surface\n"
                 "brightness that we know how to draw.  Every SBProfile knows how to\n"
@@ -200,7 +200,7 @@ namespace galsim {
     };
 
 
-    void pyExportSBProfile() 
+    void pyExportSBProfile()
     {
         PySBProfile::wrap();
         PyGSParams::wrap();

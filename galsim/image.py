@@ -215,6 +215,13 @@ class Image(object):
     # Hard to imagine a use case where this would be required though...
     valid_dtypes = cpp_valid_dtypes + alias_dtypes.keys()
 
+    unsigned_dtypes = {
+        # We don't have unsigned image code, so just use signed int types.
+        numpy.uint32 : numpy.int32,
+        numpy.uint16 : numpy.int16,
+    }
+    valid_array_dtypes = cpp_valid_dtypes + unsigned_dtypes.keys()
+
     def __init__(self, *args, **kwargs):
         import numpy
 
@@ -277,6 +284,8 @@ class Image(object):
             raise ValueError("dtype must be one of "+str(Image.valid_dtypes)+
                              ".  Instead got "+str(dtype))
         if array is not None:
+            if array.dtype.type in Image.unsigned_dtypes and dtype is None:
+                dtype = Image.unsigned_dtypes[array.dtype.type]
             if array.dtype.type not in Image.cpp_valid_dtypes and dtype is None:
                 raise ValueError("array's dtype.type must be one of "+str(Image.cpp_valid_dtypes)+
                                  ".  Instead got "+str(array.dtype.type)+".  Or can set "+
@@ -739,7 +748,7 @@ class Image(object):
 
         If the image has a wcs other than a PixelScale, an AttributeError will be raised.
 
-        @param center       The position in pixels to use for the center, r=0. 
+        @param center       The position in pixels to use for the center, r=0.
                             [default: self.trueCenter()]
         @param flux         The total flux.  [default: sum(self.array)]
         @param flux_frac    The fraction of light to be enclosed by the returned radius.
@@ -794,7 +803,7 @@ class Image(object):
 
         If the image has a wcs other than a PixelScale, an AttributeError will be raised.
 
-        @param center       The position in pixels to use for the center, r=0. 
+        @param center       The position in pixels to use for the center, r=0.
                             [default: self.trueCenter()]
         @param flux         The total flux.  [default: sum(self.array)]
         @param rtype        There are three options for this parameter:
@@ -803,7 +812,7 @@ class Image(object):
                             - 'both' means return both: (sqrt(T/2), det(Q)^1/4)
                             [default: 'det']
 
-        @returns an estimate of the radius in physical units defined by the pixel scale 
+        @returns an estimate of the radius in physical units defined by the pixel scale
                  (or both estimates if rtype == 'both').
         """
         if rtype not in ['trace', 'det', 'both']:
@@ -855,7 +864,7 @@ class Image(object):
 
         If the image has a wcs other than a PixelScale, an AttributeError will be raised.
 
-        @param center       The position in pixels to use for the center, r=0. 
+        @param center       The position in pixels to use for the center, r=0.
                             [default: self.trueCenter()]
         @param Imax         The maximum surface brightness.  [default: max(self.array)]
                             Note: If Imax is provided, and the maximum pixel value is larger than
@@ -1262,4 +1271,3 @@ galsim._galsim.ConstImageViewF.__repr__ = \
 galsim._galsim.ConstImageViewD.__repr__ = \
         lambda self: 'galsim._galsim.ConstImageViewD(array(%r, dtype=%s),%r,%r)'%(
             self.array.tolist(), self.array.dtype, self.xmin, self.xmax)
-
