@@ -99,7 +99,7 @@ class Bandpass(object):
 
         if blue_limit is not None and red_limit is not None and blue_limit >= red_limit:
             raise ValueError("blue_limit must be less than red_limit")
-        self.blue_limit = blue_limit  # These may change as we go through this.
+        self.blue_limit = blue_limit # These may change as we go through this.
         self.red_limit = red_limit
         self.zeropoint = zeropoint
         self.wave_type = wave_type
@@ -154,7 +154,7 @@ class Bandpass(object):
                                  + "LookupTable.x_max")
             # Remove any values that are outside the limits
             self.wave_list = self.wave_list[np.logical_and(self.wave_list >= self.blue_limit,
-                                                           self.wave_list <= self.red_limit)]
+                                                           self.wave_list <= self.red_limit) ]
             # Make sure that blue_limit and red_limit are part of wave_list.
             if self.red_limit not in self.wave_list:
                 np.append(self.wave_list, self.red_limit)
@@ -179,6 +179,7 @@ class Bandpass(object):
             except:
                 raise ValueError(
                     "Throughput function was unable to evaluate at wave = {0}.".format(test_wave))
+
 
     def _initialize_tp(self):
         # Turn the input tp into a real function self.func.
@@ -205,7 +206,7 @@ class Bandpass(object):
                     self._tp(test_wave)
                 except:
                     raise ValueError(
-                        "String throughput must either be a valid filename or something that " +
+                        "String throughput must either be a valid filename or something that "+
                         "can eval to a function of wave. Input provided: {0}".format(self._orig_tp))
         else:
             self._tp = self._orig_tp
@@ -365,14 +366,14 @@ class Bandpass(object):
             if effective_diameter is None or exptime is None:
                 raise ValueError("Cannot calculate Zeropoint from string {0} without "
                                  +"telescope effective diameter or exposure time.")
-            if zeropoint.upper() == 'AB':
-                AB_source = 3631e-23  # 3631 Jy in units of erg/s/Hz/cm^2
+            if zeropoint.upper()=='AB':
+                AB_source = 3631e-23 # 3631 Jy in units of erg/s/Hz/cm^2
                 sed = galsim.SED(lambda wave: AB_source, flux_type='fnu')
-            elif zeropoint.upper() == 'ST':
+            elif zeropoint.upper()=='ST':
                 # Use HST STmags: http://www.stsci.edu/hst/acs/analysis/zeropoints
-                ST_flambda = 3.63e-8  # erg/s/cm^2/nm
+                ST_flambda = 3.63e-8 # erg/s/cm^2/nm
                 sed = galsim.SED(lambda wave: ST_flambda, flux_type='flambda')
-            elif zeropoint.upper() == 'VEGA':
+            elif zeropoint.upper()=='VEGA':
                 # Use vega spectrum for SED
                 import os
                 vegafile = os.path.join(galsim.meta_data.share_dir, "vega.txt")
@@ -433,7 +434,7 @@ class Bandpass(object):
                 blue_limit = max([min(wave[w]), blue_limit])
                 red_limit = min([max(wave[w]), red_limit])
             wave_list = wave_list[np.logical_and(wave_list >= blue_limit,
-                                                 wave_list <= red_limit)]
+                                                 wave_list <= red_limit) ]
         elif relative_throughput is not None:
             raise ValueError(
                 "Can only truncate with relative_throughput argument if throughput is "
@@ -484,7 +485,7 @@ class Bandpass(object):
                 self.red_limit == other.red_limit and
                 self.wave_factor == other.wave_factor and
                 self.zeropoint == other.zeropoint and
-                np.array_equal(self.wave_list, other.wave_list))
+                np.array_equal(self.wave_list,other.wave_list))
     def __ne__(self, other): return not self.__eq__(other)
 
     def __hash__(self):
@@ -508,7 +509,7 @@ class Bandpass(object):
         orig_tp = repr(self._orig_tp)
         if len(orig_tp) > 80:
             orig_tp = str(self._orig_tp)
-        return 'galsim.Bandpass(%s)' % self._orig_tp
+        return 'galsim.Bandpass(%s)'%self._orig_tp
 
     def __getstate__(self):
         d = self.__dict__.copy()
