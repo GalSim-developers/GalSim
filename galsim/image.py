@@ -914,13 +914,11 @@ class Image(object):
         # >>> assert galsim.ImageD(int_array) == galsim.ImageF(int_array) # passes
         # >>> assert galsim.ImageD(double_array) == galsim.ImageF(double_array) # fails
 
-        return (isinstance(other, Image) and
-                self.bounds == other.bounds and
-                self.wcs == other.wcs and
-                numpy.array_equal(self.array, other.array))
-
-    def __ne__(self, other):
-        return not self.__eq__(other)
+        return ( isinstance(other, Image) and
+                 self.bounds == other.bounds and
+                 self.wcs == other.wcs and
+                 numpy.array_equal(self.array,other.array) )
+    def __ne__(self, other): return not self.__eq__(other)
 
     __hash__ = None
 

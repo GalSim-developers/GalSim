@@ -27,7 +27,6 @@ from ._galsim import Interpolant
 from ._galsim import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
 import numpy as np
 
-
 class InterpolatedImage(GSObject):
     """A class describing non-parametric profiles specified using an Image, which can be
     interpolated for the purpose of carrying out transformations.
@@ -286,7 +285,7 @@ class InterpolatedImage(GSObject):
         # check what normalization was specified for the image: is it an image of surface
         # brightness, or flux?
         if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
-            raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "
+            raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
                               "'f', 'surface brightness', or 'sb'.") % normalization)
 
         # set up the interpolants if none was provided by user, or check that the user-provided ones
@@ -354,7 +353,7 @@ class InterpolatedImage(GSObject):
         else:
             im_cen = self.image.bounds.center()
 
-        local_wcs = self.image.wcs.local(image_pos=im_cen)
+        local_wcs = self.image.wcs.local(image_pos = im_cen)
         self.min_scale = local_wcs.minLinearScale()
         self.max_scale = local_wcs.maxLinearScale()
 
@@ -384,8 +383,8 @@ class InterpolatedImage(GSObject):
                 # We will change the bounds here, so make a new view to avoid modifying the
                 # input pad_image.
                 pad_image = pad_image.view()
-                pad_image.setCenter(0, 0)
-                new_pad_image.setCenter(0, 0)
+                pad_image.setCenter(0,0)
+                new_pad_image.setCenter(0,0)
                 if new_pad_image.bounds.includes(pad_image.bounds):
                     new_pad_image[pad_image.bounds] = pad_image
                 else:
@@ -399,8 +398,8 @@ class InterpolatedImage(GSObject):
 
         # Now place the given image in the center of the padding image:
         if pad_image:
-            pad_image.setCenter(0, 0)
-            self.image.setCenter(0, 0)
+            pad_image.setCenter(0,0)
+            self.image.setCenter(0,0)
             if pad_image.bounds.includes(self.image.bounds):
                 pad_image[self.image.bounds] = self.image
                 pad_image.wcs = self.image.wcs
@@ -464,7 +463,7 @@ class InterpolatedImage(GSObject):
 
         # If the user specified a surface brightness normalization for the input Image, then
         # need to rescale flux by the pixel area to get proper normalization.
-        if flux is None and normalization.lower() in ['surface brightness', 'sb']:
+        if flux is None and normalization.lower() in ['surface brightness','sb']:
             flux = sbii.getFlux() * local_wcs.pixelArea()
 
         # Save this intermediate profile
@@ -514,10 +513,10 @@ class InterpolatedImage(GSObject):
 
         # Figure out what kind of noise to apply to the image
         if isinstance(noise_pad, float):
-            noise = galsim.GaussianNoise(rng, sigma=np.sqrt(noise_pad))
+            noise = galsim.GaussianNoise(rng, sigma = np.sqrt(noise_pad))
         elif isinstance(noise_pad, galsim.correlatednoise._BaseCorrelatedNoise):
             noise = noise_pad.copy(rng=rng)
-        elif isinstance(noise_pad, galsim.Image):
+        elif isinstance(noise_pad,galsim.Image):
             noise = galsim.CorrelatedNoise(noise_pad, rng)
         elif self.use_cache and noise_pad in InterpolatedImage._cache_noise_pad:
             noise = InterpolatedImage._cache_noise_pad[noise_pad]
@@ -531,8 +530,8 @@ class InterpolatedImage(GSObject):
                 InterpolatedImage._cache_noise_pad[noise_pad] = noise
         else:
             raise ValueError(
-                    "Input noise_pad must be a float/int, a CorrelatedNoise, Image, or filename "
-                    "containing an image to use to make a CorrelatedNoise!")
+                "Input noise_pad must be a float/int, a CorrelatedNoise, Image, or filename "+
+                "containing an image to use to make a CorrelatedNoise!")
         # Add the noise
         pad_image.addNoise(noise)
 
@@ -561,14 +560,13 @@ class InterpolatedImage(GSObject):
         return self._hash
 
     def __repr__(self):
-        return ('galsim.InterpolatedImage(%r, %r, %r, pad_factor=%r, flux=%r, offset=%r, '
-                'use_true_center=False, gsparams=%r, _force_stepk=%r, _force_maxk=%r)') % (
+        return ('galsim.InterpolatedImage(%r, %r, %r, pad_factor=%r, flux=%r, offset=%r, '+
+                'use_true_center=False, gsparams=%r, _force_stepk=%r, _force_maxk=%r)')%(
                 self._pad_image, self.x_interpolant, self.k_interpolant,
                 self._pad_factor, self._flux, self._offset, self._gsparams,
                 self._stepk, self._maxk)
 
-    def __str__(self):
-        return 'galsim.InterpolatedImage(image=%s, flux=%s)' % (self.image, self.flux)
+    def __str__(self): return 'galsim.InterpolatedImage(image=%s, flux=%s)'%(self.image, self.flux)
 
     def __getstate__(self):
         # The SBInterpolatedImage and the SBProfile both are picklable, but they are pretty
@@ -670,8 +668,8 @@ class InterpolatedKImage(GSObject):
         # make sure real_kimage, imag_kimage are really `Image`s, are floats, and are congruent.
         if not isinstance(real_kimage, galsim.Image) or not isinstance(imag_kimage, galsim.Image):
             raise ValueError("Supplied kimage is not an Image instance")
-        if ((real_kimage.dtype != np.float32 and real_kimage.dtype != np.float64) or
-            (imag_kimage.dtype != np.float32 and imag_kimage.dtype != np.float64)):
+        if ((real_kimage.dtype != np.float32 and real_kimage.dtype != np.float64)
+            or (imag_kimage.dtype != np.float32 and imag_kimage.dtype != np.float64)):
             raise ValueError("Supplied image does not have dtype of float32 or float64!")
         if real_kimage.bounds != imag_kimage.bounds:
             raise ValueError("Real and Imag kimages must have same bounds.")
@@ -679,24 +677,24 @@ class InterpolatedKImage(GSObject):
             raise ValueError("Real and Imag kimages must have same scale.")
 
         # Make sure any `wcs`s are `PixelScale`s.
-        if ((real_kimage.wcs is not None and
-             not real_kimage.wcs.isPixelScale()) or
-            (imag_kimage.wcs is not None and
-                not imag_kimage.wcs.isPixelScale())):
+        if ((real_kimage.wcs is not None
+             and not real_kimage.wcs.isPixelScale())
+            or (imag_kimage.wcs is not None
+                and not imag_kimage.wcs.isPixelScale())):
             raise ValueError("Real and Imag kimage wcs's must be PixelScale's or None.")
 
         # Check for Hermitian symmetry properties of real_kimage and imag_kimage
         shape = real_kimage.array.shape
         # If image is even-sized, ignore first row/column since in this case not every pixel has
         # a symmetric partner to which to compare.
-        bd = galsim.BoundsI(real_kimage.xmin + (1 if shape[1] % 2 == 0 else 0),
+        bd = galsim.BoundsI(real_kimage.xmin + (1 if shape[1]%2==0 else 0),
                             real_kimage.xmax,
-                            real_kimage.ymin + (1 if shape[0] % 2 == 0 else 0),
+                            real_kimage.ymin + (1 if shape[0]%2==0 else 0),
                             real_kimage.ymax)
         if not (np.allclose(real_kimage[bd].array,
-                            real_kimage[bd].array[::-1, ::-1]) and
+                            real_kimage[bd].array[::-1,::-1]) and
                 np.allclose(imag_kimage[bd].array,
-                            -imag_kimage[bd].array[::-1, ::-1])):
+                            -imag_kimage[bd].array[::-1,::-1])):
             raise ValueError("Real and Imag kimages must form a Hermitian complex matrix.")
 
         if stepk is None:
@@ -743,12 +741,12 @@ class InterpolatedKImage(GSObject):
         return self._hash
 
     def __repr__(self):
-        return ('galsim.InterpolatedKImage(\n%r,\n%r,\n%r, stepk=%r, gsparams=%r)') % (
+        return ('galsim.InterpolatedKImage(\n%r,\n%r,\n%r, stepk=%r, gsparams=%r)')%(
                 self._real_kimage, self._imag_kimage, self.k_interpolant,
                 self._stepk, self._gsparams)
 
     def __str__(self):
-        return 'galsim.InterpolatedKImage(real_kimage=%s, imag_kimage=%s)' % (
+        return 'galsim.InterpolatedKImage(real_kimage=%s, imag_kimage=%s)'%(
                 self._real_kimage, self._imag_kimage)
 
     def __getstate__(self):
@@ -773,8 +771,7 @@ _galsim.SBInterpolatedImage.__getinitargs__ = lambda self: (
 _galsim.SBInterpolatedImage.__getstate__ = lambda self: None
 _galsim.SBInterpolatedImage.__setstate__ = lambda self, state: 1
 _galsim.SBInterpolatedImage.__repr__ = lambda self: \
-        'galsim._galsim.SBInterpolatedImage(%r, %r, %r, %r, %r, %r, %r)' % self.__getinitargs__()
-
+        'galsim._galsim.SBInterpolatedImage(%r, %r, %r, %r, %r, %r, %r)'%self.__getinitargs__()
 
 def _SBIKI_getinitargs(self):
     if self._cenIsSet():
@@ -787,8 +784,8 @@ _galsim.SBInterpolatedKImage.__getinitargs__ = _SBIKI_getinitargs
 _galsim.SBInterpolatedKImage.__getstate__ = lambda self: None
 _galsim.SBInterpolatedKImage.__setstate__ = lambda self, state: 1
 _galsim.SBInterpolatedKImage.__repr__ = lambda self: (
-        'galsim._galsim.SBInterpolatedKImage(%r, %r, %r, %r, %r, %r, %r, %r, %r, )'
-        % self.__getinitargs__())
+    'galsim._galsim.SBInterpolatedKImage(%r, %r, %r, %r, %r, %r, %r, %r, %r, )'
+    %self.__getinitargs__())
 
 _galsim.Interpolant.__getinitargs__ = lambda self: (self.makeStr(), self.getTol())
 _galsim.Delta.__getinitargs__ = lambda self: (self.getTol(), )
@@ -799,14 +796,14 @@ _galsim.Cubic.__getinitargs__ = lambda self: (self.getTol(), )
 _galsim.Quintic.__getinitargs__ = lambda self: (self.getTol(), )
 _galsim.Lanczos.__getinitargs__ = lambda self: (self.getN(), self.conservesDC(), self.getTol())
 
-_galsim.Interpolant.__repr__ = lambda self: 'galsim.Interpolant(%r, %r)' % self.__getinitargs__()
-_galsim.Delta.__repr__ = lambda self: 'galsim.Delta(%r)' % self.getTol()
-_galsim.Nearest.__repr__ = lambda self: 'galsim.Nearest(%r)' % self.getTol()
-_galsim.SincInterpolant.__repr__ = lambda self: 'galsim.SincInterpolant(%r)' % self.getTol()
-_galsim.Linear.__repr__ = lambda self: 'galsim.Linear(%r)' % self.getTol()
-_galsim.Cubic.__repr__ = lambda self: 'galsim.Cubic(%r)' % self.getTol()
-_galsim.Quintic.__repr__ = lambda self: 'galsim.Quintic(%r)' % self.getTol()
-_galsim.Lanczos.__repr__ = lambda self: 'galsim.Lanczos(%r, %r, %r)' % self.__getinitargs__()
+_galsim.Interpolant.__repr__ = lambda self: 'galsim.Interpolant(%r, %r)'%self.__getinitargs__()
+_galsim.Delta.__repr__ = lambda self: 'galsim.Delta(%r)'%self.getTol()
+_galsim.Nearest.__repr__ = lambda self: 'galsim.Nearest(%r)'%self.getTol()
+_galsim.SincInterpolant.__repr__ = lambda self: 'galsim.SincInterpolant(%r)'%self.getTol()
+_galsim.Linear.__repr__ = lambda self: 'galsim.Linear(%r)'%self.getTol()
+_galsim.Cubic.__repr__ = lambda self: 'galsim.Cubic(%r)'%self.getTol()
+_galsim.Quintic.__repr__ = lambda self: 'galsim.Quintic(%r)'%self.getTol()
+_galsim.Lanczos.__repr__ = lambda self: 'galsim.Lanczos(%r, %r, %r)'%self.__getinitargs__()
 
 # Quick and dirty.  Just check reprs are equal.
 _galsim.Interpolant.__eq__ = lambda self, other: repr(self) == repr(other)
