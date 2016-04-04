@@ -89,7 +89,7 @@ class LookupTable(object):
         if file:
             if x is not None or f is not None:
                 raise ValueError("Cannot provide both file _and_ x,f for LookupTable")
-            # We don't require pandas as a dependency, but it it's available, this is much faster.
+            # We don't require pandas as a dependency, but if it's available, this is much faster.
             # cf. http://stackoverflow.com/questions/15096269/the-fastest-way-to-read-input-in-python
             try:
                 import pandas
