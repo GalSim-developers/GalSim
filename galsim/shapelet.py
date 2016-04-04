@@ -27,7 +27,6 @@ from galsim import GSObject
 import _galsim
 from ._galsim import LVector, ShapeletSize
 
-
 class Shapelet(GSObject):
     """A class describing polar shapelet surface brightness profiles.
 
@@ -128,29 +127,31 @@ class Shapelet(GSObject):
             if len(bvec) != bvec_size:
                 raise ValueError("bvec is the wrong size for the provided order")
             import numpy
-            bvec = LVector(order, numpy.array(bvec))
+            bvec = LVector(order,numpy.array(bvec))
 
         GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec, gsparams))
         self._gsparams = gsparams
 
-    def getSigma(self): return self.SBProfile.getSigma()
+    def getSigma(self):
+        return self.SBProfile.getSigma()
 
-    def getOrder(self): return self.SBProfile.getBVec().order
+    def getOrder(self):
+        return self.SBProfile.getBVec().order
 
-    def getBVec(self): return self.SBProfile.getBVec().array
+    def getBVec(self):
+        return self.SBProfile.getBVec().array
 
     @property
     def sigma(self): return self.getSigma()
-
     @property
     def order(self): return self.getOrder()
-
     @property
     def bvec(self): return self.getBVec()
 
-    def getPQ(self, p, q): return self.SBProfile.getBVec().getPQ(p, q)
-
-    def getNM(self, N, m): return self.SBProfile.getBVec().getPQ((N+m)/2, (N-m)/2)
+    def getPQ(self,p,q):
+        return self.SBProfile.getBVec().getPQ(p,q)
+    def getNM(self,N,m):
+        return self.SBProfile.getBVec().getPQ((N+m)/2,(N-m)/2)
 
     # These act directly on the bvector, so they may be a bit more efficient than the
     # regular methods in GSObject
@@ -181,20 +182,20 @@ class Shapelet(GSObject):
                      self._gsparams))
 
     def __repr__(self):
-        return 'galsim.Shapelet(sigma=%r, order=%r, bvec=%r, gsparams=%r)' % (
+        return 'galsim.Shapelet(sigma=%r, order=%r, bvec=%r, gsparams=%r)'%(
                 self.sigma, self.order, self.bvec, self._gsparams)
 
     def __str__(self):
-        return 'galsim.Shapelet(sigma=%s, order=%s, bvec=%s)' % (self.sigma, self.order, self.bvec)
+        return 'galsim.Shapelet(sigma=%s, order=%s, bvec=%s)'%(self.sigma, self.order, self.bvec)
 
 _galsim.SBShapelet.__getinitargs__ = lambda self: (
         self.getSigma(), self.getBVec(), self.getGSParams())
 _galsim.SBShapelet.__getstate__ = lambda self: None
 _galsim.SBShapelet.__setstate__ = lambda self, state: 1
-_galsim.SBShapelet.__repr__ = lambda self: 'galsim._galsim.SBShapelet(%r, %r, %r)' % (
+_galsim.SBShapelet.__repr__ = lambda self: 'galsim._galsim.SBShapelet(%r, %r, %r)'%(
         self.getSigma(), self.getBVec(), self.getGSParams())
 _galsim.LVector.__getinitargs__ = lambda self: (self.order, self.array)
-_galsim.LVector.__repr__ = lambda self: 'galsim._galsim.LVector(%r, %r)' % (self.order, self.array)
+_galsim.LVector.__repr__ = lambda self: 'galsim._galsim.LVector(%r, %r)'%(self.order, self.array)
 _galsim.LVector.__eq__ = lambda self, other: repr(self) == repr(other)
 _galsim.LVector.__ne__ = lambda self, other: not self.__eq__(other)
 _galsim.LVector.__hash__ = lambda self: hash(repr(self))
@@ -234,18 +235,18 @@ def FitShapelet(sigma, order, image, center=None, normalization='flux', gsparams
     if not center:
         center = image.bounds.trueCenter()
     # convert from PositionI if necessary
-    center = galsim.PositionD(center.x, center.y)
+    center = galsim.PositionD(center.x,center.y)
 
     if not normalization.lower() in ("flux", "f", "surface brightness", "sb"):
-        raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "
-                          "'f', 'surface brightness' or 'sb'.") % normalization)
+        raise ValueError(("Invalid normalization requested: '%s'. Expecting one of 'flux', "+
+                            "'f', 'surface brightness' or 'sb'.") % normalization)
 
     bvec = LVector(order)
 
     if image.wcs is not None and not image.wcs.isPixelScale():
         # TODO: Add ability for ShapeletFitImage to take jacobian matrix.
-        raise NotImplementedError("Sorry, cannot (yet) fit a shapelet model to an image "
-                                  "with a non-trivial WCS.")
+        raise NotImplementedError("Sorry, cannot (yet) fit a shapelet model to an image "+
+                                    "with a non-trivial WCS.")
 
     _galsim.ShapeletFitImage(sigma, bvec, image.image, image.scale, center)
 

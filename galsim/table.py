@@ -21,7 +21,6 @@ addition of the docstring and few extra features.
 """
 from . import _galsim
 
-
 class LookupTable(object):
     """
     LookupTable represents a lookup table to store function values that may be slow to calculate,
@@ -92,9 +91,9 @@ class LookupTable(object):
                 raise ValueError("Cannot provide both file _and_ x,f for LookupTable")
             data = np.loadtxt(file).transpose()
             if data.shape[0] != 2:
-                raise ValueError("File %s provided for LookupTable does not have 2 columns" % file)
-            x = data[0]
-            f = data[1]
+                raise ValueError("File %s provided for LookupTable does not have 2 columns"%file)
+            x=data[0]
+            f=data[1]
         else:
             if x is None or f is None:
                 raise ValueError("Must specify either file or x,f for LookupTable")
@@ -130,10 +129,8 @@ class LookupTable(object):
 
     @property
     def x_min(self): return min(self.x)
-
     @property
     def x_max(self): return max(self.x)
-
     @property
     def n_x(self): return len(self.x)
 
@@ -170,16 +167,16 @@ class LookupTable(object):
             elif dimen == 2:
                 f = np.zeros_like(x)
                 for i in xrange(x.shape[0]):
-                    f[i, :] = np.fromiter((self.table(float(q)) for q in x[i, :]), dtype='float')
+                    f[i,:] = np.fromiter((self.table(float(q)) for q in x[i,:]), dtype='float')
             else:
                 f = np.fromiter((self.table(float(q)) for q in x), dtype='float')
         # option 2: a tuple
         elif isinstance(x, tuple):
-            f = [self.table(q) for q in x]
+            f = [ self.table(q) for q in x ]
             f = tuple(f)
         # option 3: a list
         elif isinstance(x, list):
-            f = [self.table(q) for q in x]
+            f = [ self.table(q) for q in x ]
         # option 4: a single value
         else:
             f = self.table(x)
@@ -216,11 +213,12 @@ class LookupTable(object):
     def __eq__(self, other):
         import numpy as np
         return (isinstance(other, LookupTable) and
-                np.array_equal(self.x, other.x) and
-                np.array_equal(self.f, other.f) and
+                np.array_equal(self.x,other.x) and
+                np.array_equal(self.f,other.f) and
                 self.x_log == other.x_log and
                 self.f_log == other.f_log and
                 self.interpolant == other.interpolant)
+    def __ne__(self, other): return not self.__eq__(other)
 
     def __hash__(self):
         # Cache this in case self.x, self.f are long.
@@ -229,44 +227,35 @@ class LookupTable(object):
                                self.f_log, self.interpolant))
         return self._hash
 
-    def __ne__(self, other):
-        return not self.__eq__(other)
 
     def __repr__(self):
-        outstr = 'galsim.LookupTable(x=%r, f=%r, x_log=%r, f_log=%r, interpolant=%r)' % (
-                self.x, self.f, self.x_log, self.f_log, self.interpolant)
-        return outstr
+        return 'galsim.LookupTable(x=array(%r), f=array(%r), x_log=%r, f_log=%r, interpolant=%r)'%(
+            self.x.tolist(), self.f.tolist(), self.x_log, self.f_log, self.interpolant)
 
     def __str__(self):
         if self.file is not None:
-            return 'galsim.LookupTable(file=%r, interpolant=%r)' % (
-                    self.file, self.interpolant)
+            return 'galsim.LookupTable(file=%r, interpolant=%r)'%(
+                self.file, self.interpolant)
         else:
-            return 'galsim.LookupTable(x=[%s,..,%s], f=[%s,...,%s], interpolant=%r)' % (
-                    self.x[0], self.x[-1], self.f[0], self.f[-1], self.interpolant)
+            return 'galsim.LookupTable(x=[%s,..,%s], f=[%s,...,%s], interpolant=%r)'%(
+                self.x[0], self.x[-1], self.f[0], self.f[-1], self.interpolant)
 
 # A function to enable pickling of tables
 _galsim._LookupTable.__getinitargs__ = lambda self: \
-    (self.getArgs(), self.getVals(), self.getInterp())
+        (self.getArgs(), self.getVals(), self.getInterp())
+_galsim._LookupTable.__repr__ = lambda self: \
+        'galsim._galsim._LookupTable(array(%r), array(%r), %r)'%(
+            self.getArgs(), self.getVals(), self.getInterp())
 
-
-def _gs_LT_repr(self):
-    outstr = 'galsim._galsim._LookupTable(array(%r), array(%r), %r)' % (
-        self.getArgs(), self.getVals(), self.getInterp())
-    return outstr
-
-
-def _gs_LT_eq(self, other):
+def _LookupTable_eq(self, other):
     return (isinstance(other, _galsim._LookupTable) and
             self.getArgs() == other.getArgs() and
             self.getVals() == other.getVals() and
             self.getInterp() == other.getInterp())
 
-
-def _gs_LT_hash(self):
+def _LookupTable_hash(self):
     return hash(("_galsim._LookupTable", self.getArgs(), self.getVals(), self.getInterp()))
 
-_galsim._LookupTable.__repr__ = _gs_LT_repr
-_galsim._LookupTable.__eq__ = _gs_LT_eq
+_galsim._LookupTable.__eq__ = _LookupTable_eq
 _galsim._LookupTable.__ne__ = lambda self, other: not self.__eq__(other)
-_galsim._LookupTable.__hash__ = _gs_LT_hash
+_galsim._LookupTable.__hash__ = _LookupTable_hash
