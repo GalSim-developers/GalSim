@@ -24,7 +24,6 @@ import numpy as np
 import galsim
 import utilities
 
-
 class SED(object):
     """Simple SED object to represent the spectral energy distributions of stars and galaxies.
 
@@ -79,7 +78,7 @@ class SED(object):
     @param redshift      Optionally shift the spectrum to the given redshift. [default: 0]
     """
     def __init__(self, spec, wave_type='nm', flux_type='flambda', redshift=0.,
-                 _blue_limit=None, _red_limit=None, _wave_list=None, _spec=None):
+                 _blue_limit=None, _red_limit=None, _wave_list=None, _spec=None ):
 
         self._orig_spec = spec  # Save this for pickling
         self._spec = _spec      # This is orig_spec turned into a function
@@ -138,7 +137,7 @@ class SED(object):
                     pass
                 except:
                     raise ValueError(
-                        "String spec must either be a valid filename or something that " +
+                        "String spec must either be a valid filename or something that "+
                         "can eval to a function of wave. Input provided: {0}".format(
                             self._orig_spec))
         else:
@@ -146,8 +145,8 @@ class SED(object):
 
         # Do some SED unit conversions to make internal representation proportional to photons/nm.
         # Note that w should have units of nm below.
-        c = 2.99792458e17   # speed of light in nm/s
-        h = 6.62606957e-27  # Planck's constant in erg seconds
+        c = 2.99792458e17  # speed of light in nm/s
+        h = 6.62606957e-27 # Planck's constant in erg seconds
         if self.flux_type == 'flambda':
             # photons/nm = (erg/nm) * (photons/erg)
             #            = spec(w) * 1/(h nu) = spec(w) * lambda / hc
@@ -281,6 +280,7 @@ class SED(object):
         return SED(spec, flux_type=flux_type, wave_type=wave_type, redshift=self.redshift,
                    _wave_list=self.wave_list,
                    _blue_limit=self.blue_limit, _red_limit=self.red_limit)
+
 
     def __truediv__(self, other):
         return self.__div__(other)
@@ -458,6 +458,7 @@ class SED(object):
         else:
             return self
 
+
     def calculateDCRMomentShifts(self, bandpass, **kwargs):
         """ Calculates shifts in first and second moments of PSF due to differential chromatic
         refraction (DCR).  I.e., equations (1) and (2) from Plazas and Bernstein (2012)
@@ -491,7 +492,7 @@ class SED(object):
                     obj_coord=obj_coord, zenith_coord=zenith_coord)
             else:
                 if 'HA' not in kwargs or 'latitude' not in kwargs:
-                    raise TypeError("calculateDCRMomentShifts requires either zenith_coord or " +
+                    raise TypeError("calculateDCRMomentShifts requires either zenith_coord or "+
                                     "(HA, latitude) when obj_coord is specified!")
                 HA = kwargs.pop('HA')
                 latitude = kwargs.pop('latitude')
@@ -527,7 +528,7 @@ class SED(object):
         # need to rotate our frame by the parallactic angle to get the desired output.
         sinp, cosp = parallactic_angle.sincos()
         rot = np.array([[cosp, -sinp], [sinp, cosp]])
-        Rbar = Rbar * rot.dot(np.array([0, 1]))
+        Rbar = Rbar * rot.dot(np.array([0,1]))
         V = rot.dot(np.array([[0, 0], [0, V]])).dot(rot.T)
         return Rbar, V
 
@@ -563,8 +564,7 @@ class SED(object):
                 self.redshift == other.redshift and
                 self.red_limit == other.red_limit and
                 self.blue_limit == other.blue_limit and
-                np.array_equal(self.wave_list, other.wave_list))
-
+                np.array_equal(self.wave_list,other.wave_list))
     def __ne__(self, other): return not self.__eq__(other)
 
     def __hash__(self):
