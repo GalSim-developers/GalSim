@@ -93,7 +93,14 @@ class LookupTable(object):
         if file:
             if x is not None or f is not None:
                 raise ValueError("Cannot provide both file _and_ x,f for LookupTable")
-            data = np.loadtxt(file).transpose()
+            # We don't require pandas as a dependency, but if it's available, this is much faster.
+            # cf. http://stackoverflow.com/questions/15096269/the-fastest-way-to-read-input-in-python
+            try:
+                import pandas
+                data = pandas.read_csv(file, comment='#', delim_whitespace=True, header=None)
+                data = data.values.transpose()
+            except (ImportError, AttributeError):
+                data = np.loadtxt(file).transpose()
             if data.shape[0] != 2:
                 raise ValueError("File %s provided for LookupTable does not have 2 columns"%file)
             x=data[0]
@@ -131,10 +138,17 @@ class LookupTable(object):
         # as _LookupTable.
         self.table = _galsim._LookupTable(x, f, interpolant)
 
+        # Get the min/max x values, making sure to account properly for x_log.
+        self._x_min = self.table.argMin()
+        self._x_max = self.table.argMax()
+        if x_log:
+            self._x_min = np.exp(self._x_min)
+            self._x_max = np.exp(self._x_max)
+
     @property
-    def x_min(self): return min(self.x)
+    def x_min(self): return self._x_min
     @property
-    def x_max(self): return max(self.x)
+    def x_max(self): return self._x_max
     @property
     def n_x(self): return len(self.x)
 
@@ -169,18 +183,22 @@ class LookupTable(object):
             if dimen > 2:
                 raise ValueError("Arrays with dimension larger than 2 not allowed!")
             elif dimen == 2:
-                f = np.zeros_like(x)
-                for i in xrange(x.shape[0]):
-                    f[i,:] = np.fromiter((self.table(float(q)) for q in x[i,:]), dtype='float')
+                f = np.empty_like(x.ravel(), dtype=float)
+                self.table.interpMany(x.astype(float).ravel(),f)
+                f = f.reshape(x.shape)
             else:
-                f = np.fromiter((self.table(float(q)) for q in x), dtype='float')
+                f = np.empty_like(x, dtype=float)
+                self.table.interpMany(x.astype(float),f)
         # option 2: a tuple
         elif isinstance(x, tuple):
-            f = [ self.table(q) for q in x ]
+            f = np.empty_like(x, dtype=float)
+            self.table.interpMany(np.array(x, dtype=float),f)
             f = tuple(f)
         # option 3: a list
         elif isinstance(x, list):
-            f = [ self.table(q) for q in x ]
+            f = np.empty_like(x, dtype=float)
+            self.table.interpMany(np.array(x, dtype=float),f)
+            f = list(f)
         # option 4: a single value
         else:
             f = self.table(x)

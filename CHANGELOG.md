@@ -15,6 +15,8 @@ API Changes
 Bug Fixes
 ---------
 
+- Fixed bug in config that did not allow users to pass in a filename for
+  COSMOS (correlated) noise.  (#732)
 - Improved ability of galsim.fits.read to handle invalid but fixable FITS
   headers. (#602)
 - Fixed bug in des module related to building meds file with wcs taken from
@@ -73,6 +75,8 @@ New Features
 - Made it possible to impose some cuts on galaxy image quality in the
   COSMOSCatalog class. (#693)
 - Added `convergence_threshold` as a parameter of HSMParams. (#709)
+- Sped up some Bandpass and SED functionality (and LookupTable class in
+  general). (#735)
 
 
 Updates to galsim executable

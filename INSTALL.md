@@ -86,6 +86,9 @@ The GalSim package also requires
   is kind of a gargantuan package.  But if you are willing to install that
   too, then you can use the galsim.AstropyWCS class.
   
+* Optional dependency: Pandas.  This has a very fast function for reading ASCII
+  tables.  If this is not available (e.g. when reading in Bandpass or SED
+  files) then we fall back to the (much) slower numpy loadtxt function.
 
 These should installed onto your Python system so that they can be imported by:
 
@@ -96,6 +99,7 @@ These should installed onto your Python system so that they can be imported by:
                                   plan to parse .yaml configuration files ]
     >>> import starlink.Ast     [ if planning to use PyAstWCS class ]
     >>> import astropy.wcs      [ if planning to use AstropyWCS class ]
+    >>> import pandas           [ for faster ASCII table input ]
 
 within Python.  You can test this by loading up the Python interpreter for the
 version of Python you will be using with the GalSim toolkit. This is usually
