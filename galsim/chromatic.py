@@ -1340,7 +1340,7 @@ class ChromaticTransformation(ChromaticObject):
         if hasattr(self._jac, '__call__'):
             jac = self._jac
         else:
-            jac = self._jac.flatten().tolist()
+            jac = self._jac.ravel().tolist()
         if hasattr(self._offset, '__call__'):
             offset = self._offset
         else:
@@ -1353,7 +1353,7 @@ class ChromaticTransformation(ChromaticObject):
         if hasattr(self._jac, '__call__'):
             s += '.transform(%s)'%self._jac
         else:
-            dudx, dudy, dvdx, dvdy = self._jac.flatten()
+            dudx, dudy, dvdx, dvdy = self._jac.ravel()
             if dudx != 1 or dudy != 0 or dvdx != 0 or dvdy != 1:
                 # Figure out the shear/rotate/dilate calls that are equivalent.
                 jac = galsim.JacobianWCS(dudx,dudy,dvdx,dvdy)
