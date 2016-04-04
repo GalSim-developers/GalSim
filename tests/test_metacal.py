@@ -162,12 +162,12 @@ def test_metacal_tracking():
 
     # Use a non-trivial wcs...
     #wcs = galsim.JacobianWCS(0.26, 0.04, -0.04, -0.26)  # Rotation + flip.  No shear.
-    #wcs = galsim.JacobianWCS(0.26, 0.03, 0.08, -0.21)   # Fully complex
-    dudx =  0.12*0.26
-    dudy =  1.10*0.26
-    dvdx = -0.915*0.26
-    dvdy = -0.04*0.26
-    wcs = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)  # Even more extreme
+    wcs = galsim.JacobianWCS(0.26, 0.03, 0.08, -0.21)   # Fully complex
+    #dudx =  0.12*0.26
+    #dudy =  1.10*0.26
+    #dvdx = -0.915*0.26
+    #dvdy = -0.04*0.26
+    #wcs = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)  # Even more extreme
 
     # And an asymmetric PSF
     #orig_psf = galsim.Gaussian(fwhm=0.9).shear(g1=0.05, g2=0.03)
