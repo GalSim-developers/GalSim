@@ -106,7 +106,7 @@ namespace galsim {
         return elems;
     }
 
-    std::string seedstring(std::vector<std::string> seed) {
+    std::string seedstring(const std::vector<std::string>& seed) {
         std::ostringstream oss;
         int nseed = seed.size();
         oss << "seed='";
