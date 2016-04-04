@@ -418,9 +418,6 @@ class DistDeviate(_galsim.BaseDeviate):
                 self._interpolant == other._interpolant and
                 self._npoints == other._npoints)
 
-    def __ne__(self, other):
-        return not self.__eq__(other)
-
     # Functions aren't picklable, so for pickling, we reinitialize the DistDeviate using the
     # original function parameter, which may be a string or a file name.
     def __getinitargs__(self):

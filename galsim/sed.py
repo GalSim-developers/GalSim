@@ -581,9 +581,9 @@ class SED(object):
         if self.wave_factor == 10.0:
             wave_type = ' wave_type="Angstroms",'
         if self.flux_type != 'flambda':
-            flux_type = ' flux_type=%r,' % self.flux_type
+            flux_type = ' flux_type=%r,'%self.flux_type
         outstr = ('galsim.SED(%r, redshift=%r,%s%s' +
-                  ' _wave_list=%r, _blue_limit=%r, _red_limit=%r)') % (
+                  ' _wave_list=%r, _blue_limit=%r, _red_limit=%r)')%(
                       self._orig_spec, self.redshift, wave_type, flux_type,
                       self.wave_list, self.blue_limit, self.red_limit)
         return outstr
@@ -592,7 +592,7 @@ class SED(object):
         orig_spec = repr(self._orig_spec)
         if len(orig_spec) > 80:
             orig_spec = str(self._orig_spec)
-        return 'galsim.SED(%s, redshift=%s)' % (orig_spec, self.redshift)
+        return 'galsim.SED(%s, redshift=%s)'%(orig_spec, self.redshift)
 
     def __getstate__(self):
         d = self.__dict__.copy()

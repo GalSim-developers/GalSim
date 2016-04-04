@@ -1290,7 +1290,6 @@ def test_centroid():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
 def test_interpolated_ChromaticObject():
     """Test the ChromaticObject interpolation functionality."""
     import time
@@ -1310,8 +1309,8 @@ def test_interpolated_ChromaticObject():
         def evaluateAtWavelength(self, wave):
             this_sigma = self.sigma * (wave / 500.)
             this_shear = 0.1 * ((wave/500.)-1.)
-            ret = galsim.Gaussian(sigma=this_sigma)
-            ret = ret.shear(g1=this_shear)
+            ret = galsim.Gaussian(sigma = this_sigma)
+            ret = ret.shear(g1 = this_shear)
             return ret
 
         def __eq__(self, other):
@@ -1322,7 +1321,7 @@ def test_interpolated_ChromaticObject():
             return hash(("ChromaticGaussian", self.sigma))
 
         def __repr__(self):
-            return 'galsim.ChromaticGaussian(%r)' % self.sigma
+            return 'galsim.ChromaticGaussian(%r)'%self.sigma
 
     # For this test, we're going to use the ChromaticGaussian defined above.  This class is simple
     # enough that evaluation of both the interpolated and exact versions is very fast, so it won't

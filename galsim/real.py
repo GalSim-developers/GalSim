@@ -39,7 +39,6 @@ import galsim
 from galsim import GSObject
 import os
 
-
 class RealGalaxy(GSObject):
     """A class describing real galaxies from some training dataset.  Its underlying implementation
     uses a Convolution instance of an InterpolatedImage (for the observed galaxy) with a
@@ -658,7 +657,6 @@ class RealGalaxyCatalog(object):
                 self.file_name == other.file_name and
                 self.image_dir == other.image_dir and
                 self.noise_dir == other.noise_dir)
-
     def __ne__(self, other): return not self.__eq__(other)
 
     def __hash__(self): return hash(repr(self))
