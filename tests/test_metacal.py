@@ -22,8 +22,9 @@ import galsim
 VAR_NDECIMAL=4
 CHECKNOISE_NDECIMAL=2
 
-# A couple helper functions that should be in the BaseWCS class, but it's not.
+# A couple helper functions that could be in the BaseWCS class, but are not.
 # So for now implement it here, and mokey patch it in.
+# Not sure that they are actually worth moving from here into the BaseWCS class....
 def _transformShear(shear, jac):
     # We're basically trying to commute the matrices J and S.
     # J S -> S' J
@@ -39,16 +40,16 @@ def shearToWorld(self, shear, image_pos=None, world_pos=None):
     """Convert a shear in image coordinates into the corresponding effect in world coordinates.
 
     If the input shear is applied to an object and then drawn onto an image with unit pixel scale,
-    then the result is equivalent to converting both to world coordinates, applying the 
+    then the result is equivalent to converting both to world coordinates, applying the
     transformation there, and then drawing onto an image with this wcs.
 
     The subtlety here is that the appropriate transformation is not just a shear.  Now it is
-    both a rotation and a shear.  Hence the return is a tuple (theta, shear) which are the 
+    both a rotation and a shear.  Hence the return is a tuple (theta, shear) which are the
     transformations to apply in world coordinates (in that order).
 
         >>> profile = ...
         >>> shear = ...
-        >>> wcs = ... 
+        >>> wcs = ...
         >>> im1 = profile.shear(shear).drawImage(scale=1.)
         >>> world_profile = wcs.toWorld(profile)
         >>> world_theta, world_shear = shearToWorld(wcs, shear)
@@ -63,12 +64,12 @@ def shearToImage(self, shear, image_pos=None, world_pos=None):
     """Convert a shear in world coordinates into the corresponding effect in image coordinates.
 
     If the input shear is applied to an object and then drawn onto an image with this wcs,
-    then the result is equivalent to converting both to image coordinates, applying the 
+    then the result is equivalent to converting both to image coordinates, applying the
     shear there, and then drawing onto an image with unit pixel scale.
 
         >>> profile = ...
         >>> shear = ...
-        >>> wcs = ... 
+        >>> wcs = ...
         >>> im1 = profile.shear(shear).drawImage(wcs=wcs)
         >>> image_profile = wcs.toImage(profile)
         >>> image_theta, image_shear = shearToImage(wcs, shear)
@@ -87,7 +88,7 @@ def test_metacal_tracking():
     """Test that the noise tracking works for the metacal use case involving deconvolution and
     reconvolution by almost the same PSF.
 
-    This test is similar to the above test_uncorrelated_noise_tracking, except the modifications 
+    This test is similar to the above test_uncorrelated_noise_tracking, except the modifications
     are based on what is done for the metacal procedure.
     """
     t1 = time.time()
@@ -411,7 +412,7 @@ def test_metacal_tracking():
         # Strategy 5: The same as strategy 3, except we target the effective net transformation
         #             done by strategy 4.
         # I think this strategy probably can't work for non-square pixels, because the shear
-        # happens before the convolution by the PSF.  And if the wcs is non-square, then the 
+        # happens before the convolution by the PSF.  And if the wcs is non-square, then the
         # PSF is sheared relative to the pixels.  That shear isn't being accounted for here,
         # so the net result isn't equivalent to rotating by 90 degrees at the end.
         t3 = time.time()
@@ -519,7 +520,7 @@ def test_wcs_convert_shear():
     im2 = world_profile.rotate(world_theta).shear(world_shear).drawImage(nx=nx, ny=ny, wcs=wcs)
     np.testing.assert_almost_equal(im1.array, im2.array, decimal=12,
                                    err_msg="wcs.shearToWorld didn't work correctly")
- 
+
 if __name__ == "__main__":
     test_metacal_tracking()
     test_wcs_convert_shear()
