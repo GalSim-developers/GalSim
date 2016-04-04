@@ -93,7 +93,7 @@ class Bandpass(object):
         # `wave_list` is normally constructed (see `Bandpass.__mul__` below)
 
         self._orig_tp = throughput  # Save this for pickling.
-        self._tp = _tp              # This will normally become orig_tp turned into an actual 
+        self._tp = _tp              # This will normally become orig_tp turned into an actual
                                     # function (see _initialize_tp()), although in some cases,
                                     # it can be supplied directly as a constructor argument.
 
@@ -179,7 +179,7 @@ class Bandpass(object):
             except:
                 raise ValueError(
                     "Throughput function was unable to evaluate at wave = {0}.".format(test_wave))
- 
+
 
     def _initialize_tp(self):
         # Turn the input tp into a real function self.func.
@@ -229,7 +229,7 @@ class Bandpass(object):
         if hasattr(other, '__call__'):
             tp = lambda w: self.func(w) * other(w)
         elif isinstance(self._tp, galsim.LookupTable):
-            # If other is not a function, then there is no loss of accuracy by applying the 
+            # If other is not a function, then there is no loss of accuracy by applying the
             # factor directly to the LookupTable, if that's what we are using.
             # Make sure to keep the same properties about the table, wave_type.
             if self.wave_factor == 10.0:
@@ -263,7 +263,7 @@ class Bandpass(object):
         if hasattr(other, '__call__'):
             tp = lambda w: self.func(w) / other(w)
         elif isinstance(self._tp, galsim.LookupTable):
-            # If other is not a function, then there is no loss of accuracy by applying the 
+            # If other is not a function, then there is no loss of accuracy by applying the
             # factor directly to the LookupTable, if that's what we are using.
             # Make sure to keep the same properties about the table, wave_type.
             if self.wave_factor == 10.0:
@@ -314,7 +314,7 @@ class Bandpass(object):
             return self.func(wave) if (wave >= self.blue_limit and wave <= self.red_limit) else 0.0
 
     @property
-    def effective_wavelength(self): 
+    def effective_wavelength(self):
         return self.calculateEffectiveWavelength()
 
     def calculateEffectiveWavelength(self, precise=False):
@@ -520,4 +520,3 @@ class Bandpass(object):
         return 'galsim.Bandpass(%s)'%self._orig_tp
 
     def __hash__(self): return hash(repr(self))
-
