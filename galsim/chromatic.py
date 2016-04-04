@@ -27,10 +27,8 @@ different filters, or implementing wavelength-dependent point spread functions.
 
 import numpy as np
 import copy
-from itertools import izip
 
 import galsim
-
 
 class ChromaticObject(object):
     """Base class for defining wavelength-dependent objects.
@@ -110,6 +108,7 @@ class ChromaticObject(object):
     # attribute representing a manipulated `GSObject` or `ChromaticObject`, or an `objlist`
     # attribute in the case of compound classes like `ChromaticSum` and `ChromaticConvolution`.
 
+
     def __init__(self, obj):
         self.obj = obj
         if isinstance(obj, galsim.GSObject):
@@ -121,7 +120,7 @@ class ChromaticObject(object):
             self.wave_list = obj.wave_list
             if self.separable: self.SED = obj.SED
         else:
-            raise TypeError("Can only directly instantiate ChromaticObject with a GSObject "
+            raise TypeError("Can only directly instantiate ChromaticObject with a GSObject "+
                             "or ChromaticObject argument.")
 
     @staticmethod
@@ -175,9 +174,11 @@ class ChromaticObject(object):
 
     def __hash__(self): return hash(("galsim.ChromaticObject", self.obj))
 
-    def __repr__(self): return 'galsim.ChromaticObject(%r)' % self.obj
+    def __repr__(self):
+        return 'galsim.ChromaticObject(%r)'%self.obj
 
-    def __str__(self): return 'galsim.ChromaticObject(%s)' % self.obj
+    def __str__(self):
+        return 'galsim.ChromaticObject(%s)'%self.obj
 
     def interpolate(self, waves, oversample_fac=1.):
         """
@@ -251,6 +252,7 @@ class ChromaticObject(object):
                  (This will be an InterpolatedChromaticObject instance.)
         """
         return InterpolatedChromaticObject(self, waves, oversample_fac)
+
 
     def drawImage(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
         """Base implementation for drawing an image of a ChromaticObject.
@@ -330,7 +332,7 @@ class ChromaticObject(object):
             elif integrator == 'midpoint':
                 rule = galsim.integ.midpt
             else:
-                raise TypeError("Unrecognized integration rule: %s" % integrator)
+                raise TypeError("Unrecognized integration rule: %s"%integrator)
             if len(wave_list) > 0:
                 integrator = galsim.integ.SampleIntegrator(rule)
             else:
@@ -434,11 +436,9 @@ class ChromaticObject(object):
             return galsim.PositionD(xcentroid, ycentroid)
         else:
             flux_integrand = lambda w: self.evaluateAtWavelength(w).getFlux() * bandpass(w)
-
             def xcentroid_integrand(w):
                 mono = self.evaluateAtWavelength(w)
                 return mono.centroid().x * mono.getFlux() * bandpass(w)
-
             def ycentroid_integrand(w):
                 mono = self.evaluateAtWavelength(w)
                 return mono.centroid().y * mono.getFlux() * bandpass(w)
@@ -509,7 +509,7 @@ class ChromaticObject(object):
         if hasattr(scale, '__call__'):
             def buildScaleJac(w):
                 s = scale(w)
-                return np.diag([s, s])
+                return np.diag([s,s])
             jac = buildScaleJac
         else:
             jac = np.diag([scale, scale])
@@ -626,7 +626,7 @@ class ChromaticObject(object):
 
         @returns the lensed object.
         """
-        if any(hasattr(g, '__call__') for g in [g1, g2]):
+        if any(hasattr(g, '__call__') for g in [g1,g2]):
             _g1 = g1
             _g2 = g2
             if not hasattr(g1, '__call__'): _g1 = lambda w: g1
@@ -634,7 +634,7 @@ class ChromaticObject(object):
             S = lambda w: galsim.Shear(g1=_g1(w), g2=_g2(w))
             sheared = self.shear(S)
         else:
-            sheared = self.shear(g1=g1, g2=g2)
+            sheared = self.shear(g1=g1,g2=g2)
         return sheared.magnify(mu)
 
     def rotate(self, theta):
@@ -724,7 +724,6 @@ class ChromaticObject(object):
                     args[0](700.).x
                     # If the function returns a Position, recast it as a function returning
                     # a numpy array.
-
                     def offset_func(w):
                         d = args[0](w)
                         return np.asarray( (d.x, d.y) )
@@ -745,7 +744,7 @@ class ChromaticObject(object):
         else:
             raise TypeError("Too many arguments supplied!")
         if kwargs:
-            raise TypeError("Got unexpected keyword arguments: %s", kwargs.keys())
+            raise TypeError("Got unexpected keyword arguments: %s",kwargs.keys())
 
         if offset is None:
             if hasattr(dx, '__call__'):
@@ -819,7 +818,7 @@ class InterpolatedChromaticObject(ChromaticObject):
             # Figure out the rescaling factor for the SED.
             objs = [ obj.withFlux(1.0) for obj in objs ]
             if not hasattr(self, 'SED'):
-                self.SED = lambda w: 1.0
+                self.SED = lambda w : 1.0
             self.SED = galsim.LookupTable(x=self.waves, f=self.SED(self.waves)*fluxes,
                                           interpolant='linear')
 
@@ -854,14 +853,14 @@ class InterpolatedChromaticObject(ChromaticObject):
                      self.oversample))
 
     def __repr__(self):
-        s = 'galsim.InterpolatedChromaticObject(%r, %r' % (self.original, self.waves)
+        s = 'galsim.InterpolatedChromaticObject(%r,%r'%(self.original, self.waves)
         if self.oversample != 1.0:
-            s += ', oversample_fac=%r' % self.oversample
+            s += ', oversample_fac=%r'%self.oversample
         s += ')'
         return s
 
     def __str__(self):
-        return 'galsim.InterpolatedChromaticObject(%s, %s)' % (self.original, self.waves)
+        return 'galsim.InterpolatedChromaticObject(%s,%s)'%(self.original, self.waves)
 
     def _imageAtWavelength(self, wave):
         """
@@ -876,7 +875,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         # First, some wavelength-related sanity checks.
         if wave < min(self.waves) or wave > max(self.waves):
             raise RuntimeError("Requested wavelength %.1f is outside the allowed range:"
-                               " %.1f to %.1f nm" % (wave, min(self.waves), max(self.waves)))
+                               " %.1f to %.1f nm"%(wave, min(self.waves), max(self.waves)))
 
         # Figure out where the supplied wavelength is compared to the list of wavelengths on which
         # images were originally tabulated.
@@ -911,7 +910,7 @@ class InterpolatedChromaticObject(ChromaticObject):
             if not isinstance(integrator, str):
                 raise TypeError("Integrator should be a string indicating trapezoidal"
                                 " or midpoint rule for integration")
-            raise TypeError("Unknown integrator: %s" % integrator)
+            raise TypeError("Unknown integrator: %s"%integrator)
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength).
         # Note: we cannot just use self._imageAtWavelength, because that routine returns an image
@@ -966,14 +965,14 @@ class InterpolatedChromaticObject(ChromaticObject):
                 weight_fac[lower_idx+1] += frac*b/2.
 
         # Do the integral as a weighted sum.
-        integral = sum(w*im for w, im in izip(weight_fac, self.ims))
+        integral = sum([w*im for w,im in zip(weight_fac, self.ims)])
 
         # Figure out stepK and maxK using the minimum and maximum (respectively) that have nonzero
         # weight.  This is the most conservative possible choice, since it's possible that some of
         # the images that have non-zero weights might have such tiny weights that they don't change
         # the effective stepk and maxk we should use.
-        stepk = min(np.array(self.stepK_vals)[weight_fac > 0])
-        maxk = max(np.array(self.maxK_vals)[weight_fac > 0])
+        stepk = min(np.array(self.stepK_vals)[weight_fac>0])
+        maxk = max(np.array(self.maxK_vals)[weight_fac>0])
 
         # Instantiate the InterpolatedImage, using these conservative stepK and maxK choices.
         return galsim.InterpolatedImage(integral, _force_stepk=stepk, _force_maxk=maxk)
@@ -1085,7 +1084,7 @@ class ChromaticAtmosphere(ChromaticObject):
             else:
                 if 'HA' not in kwargs or 'latitude' not in kwargs:
                     raise TypeError("ChromaticAtmosphere requires either zenith_coord or (HA, "
-                                    "latitude) when obj_coord is specified!")
+                                    +"latitude) when obj_coord is specified!")
                 HA = kwargs.pop('HA')
                 latitude = kwargs.pop('latitude')
                 self.zenith_angle, self.parallactic_angle = galsim.dcr.zenith_parallactic_angles(
@@ -1118,16 +1117,16 @@ class ChromaticAtmosphere(ChromaticObject):
                      frozenset(self.kw.items())))
 
     def __repr__(self):
-        s = 'galsim.ChromaticAtmosphere(%r, base_wavelength=%r, alpha=%r' % (
+        s = 'galsim.ChromaticAtmosphere(%r, base_wavelength=%r, alpha=%r'%(
                 self.base_obj, self.base_wavelength, self.alpha)
-        s += ', zenith_angle=%r, parallactic_angle=%r' % (self.zenith_angle, self.parallactic_angle)
-        for k, v in self.kw.items():
-            s += ', %s=%r' % (k, v)
+        s += ', zenith_angle=%r, parallactic_angle=%r'%(self.zenith_angle, self.parallactic_angle)
+        for k,v in self.kw.items():
+            s += ', %s=%r'%(k,v)
         s += ')'
         return s
 
     def __str__(self):
-        return 'galsim.ChromaticAtmosphere(%s, base_wavelength=%s, alpha=%s)' % (
+        return 'galsim.ChromaticAtmosphere(%s, base_wavelength=%s, alpha=%s)'%(
                 self.base_obj, self.base_wavelength, self.alpha)
 
     def build_obj(self):
@@ -1247,10 +1246,10 @@ class Chromatic(ChromaticObject):
         return hash(("galsim.Chromatic", self.obj, self.SED))
 
     def __repr__(self):
-        return 'galsim.Chromatic(%r,%r)' % (self.obj, self.SED)
+        return 'galsim.Chromatic(%r,%r)'%(self.obj, self.SED)
 
     def __str__(self):
-        return 'galsim.Chromatic(%s,%s)' % (self.obj, self.SED)
+        return 'galsim.Chromatic(%s,%s)'%(self.obj, self.SED)
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength.
@@ -1290,13 +1289,13 @@ class ChromaticTransformation(ChromaticObject):
     def __init__(self, obj, jac=np.identity(2), offset=(0,0), flux_ratio=1., gsparams=None):
         if isinstance(offset, galsim.PositionD) or isinstance(offset, galsim.PositionI):
             offset = (offset.x, offset.y)
-        if not hasattr(jac, '__call__'):
-            jac = np.asarray(jac).reshape(2, 2)
-        if not hasattr(offset, '__call__'):
+        if not hasattr(jac,'__call__'):
+            jac = np.asarray(jac).reshape(2,2)
+        if not hasattr(offset,'__call__'):
             offset = np.asarray(offset)
 
-        self.chromatic = (hasattr(jac, '__call__') or hasattr(offset, '__call__') or
-                          hasattr(flux_ratio, '__call__'))
+        self.chromatic = (hasattr(jac,'__call__') or hasattr(offset,'__call__') or
+                          hasattr(flux_ratio,'__call__'))
         self.separable = obj.separable and not self.chromatic
 
         if isinstance(obj, InterpolatedChromaticObject) and self.chromatic:
@@ -1419,48 +1418,48 @@ class ChromaticTransformation(ChromaticObject):
             offset = self._offset
         else:
             offset = galsim.PositionD(*(self._offset.tolist()))
-        outstr = 'galsim.ChromaticTransformation(%r, jac=%r, offset=%r, flux_ratio=%r, gsparams=%r)'
-        return outstr % (self.original, jac, offset, self._flux_ratio, self.gsparams)
+        return 'galsim.ChromaticTransformation(%r, jac=%r, offset=%r, flux_ratio=%r, gsparams=%r)'%(
+            self.original, jac, offset, self._flux_ratio, self.gsparams)
 
     def __str__(self):
         s = str(self.original)
         if hasattr(self._jac, '__call__'):
-            s += '.transform(%s)' % self._jac
+            s += '.transform(%s)'%self._jac
         else:
             dudx, dudy, dvdx, dvdy = self._jac.flatten()
             if dudx != 1 or dudy != 0 or dvdx != 0 or dvdy != 1:
                 # Figure out the shear/rotate/dilate calls that are equivalent.
-                jac = galsim.JacobianWCS(dudx, dudy, dvdx, dvdy)
+                jac = galsim.JacobianWCS(dudx,dudy,dvdx,dvdy)
                 scale, shear, theta, flip = jac.getDecomposition()
                 single = None
                 if flip:
                     single = 0  # Special value indicating to just use transform.
                 if abs(theta.rad()) > 1.e-12:
                     if single is None:
-                        single = '.rotate(%s)' % theta
+                        single = '.rotate(%s)'%theta
                     else:
                         single = 0
                 if shear.getG() > 1.e-12:
                     if single is None:
-                        single = '.shear(%s)' % shear
+                        single = '.shear(%s)'%shear
                     else:
                         single = 0
                 if abs(scale-1.0) > 1.e-12:
                     if single is None:
-                        single = '.expand(%s)' % scale
+                        single = '.expand(%s)'%scale
                     else:
                         single = 0
                 if single == 0:
-                    single = '.transform(%s, %s, %s, %s)' % (dudx, dudy, dvdx, dvdy)
+                    single = '.transform(%s,%s,%s,%s)'%(dudx,dudy,dvdx,dvdy)
                 s += single
         if hasattr(self._offset, '__call__'):
-            s += '.shift(%s)' % self._offset
-        elif np.array_equal(self._offset, (0, 0)):
-            s += '.shift(%s,%s)' % (self._offset[0], self._offset[1])
+            s += '.shift(%s)'%self._offset
+        elif np.array_equal(self._offset,(0,0)):
+            s += '.shift(%s,%s)'%(self._offset[0],self._offset[1])
         if hasattr(self._flux_ratio, '__call__'):
-            s += '.withScaledFlux(%s)' % self._flux_ratio
+            s += '.withScaledFlux(%s)'%self._flux_ratio
         elif self._flux_ratio != 1.:
-            s += '.withScaledFlux(%s)' % self._flux_ratio
+            s += '.withScaledFlux(%s)'%self._flux_ratio
         return s
 
     def _getTransformations(self, wave):
@@ -1563,7 +1562,7 @@ class ChromaticSum(ChromaticObject):
 
         # Make sure there is nothing left in the dict.
         if kwargs:
-            raise TypeError("Got unexpected keyword argument(s): %s" % kwargs.keys())
+            raise TypeError("Got unexpected keyword argument(s): %s"%kwargs.keys())
 
         if len(args) == 0:
             # No arguments. Could initialize with an empty list but draw then segfaults. Raise an
@@ -1577,7 +1576,7 @@ class ChromaticSum(ChromaticObject):
                 args = args[0]
             else:
                 raise TypeError("Single input argument must be a GSObject, a ChromaticObject,"
-                                " or list of them.")
+                                +" or list of them.")
         # else args is already the list of objects
 
         # check for separability
@@ -1625,11 +1624,11 @@ class ChromaticSum(ChromaticObject):
         return hash(("galsim.ChromaticSum", tuple(self.objlist), self.gsparams))
 
     def __repr__(self):
-        return 'galsim.ChromaticSum(%r, gsparams=%r)' % (self.objlist, self.gsparams)
+        return 'galsim.ChromaticSum(%r, gsparams=%r)'%(self.objlist, self.gsparams)
 
     def __str__(self):
-        str_list = [str(obj) for obj in self.objlist]
-        return 'galsim.ChromaticSum([%s])' % ', '.join(str_list)
+        str_list = [ str(obj) for obj in self.objlist ]
+        return 'galsim.ChromaticSum([%s])'%', '.join(str_list)
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength `wave`.
@@ -1672,7 +1671,8 @@ class ChromaticSum(ChromaticObject):
                 bandpass, image=image, add_to_image=add_to_image, **kwargs)
         _remove_setup_kwargs(kwargs)
         for obj in self.objlist[1:]:
-            image = obj.drawImage(bandpass, image=image, add_to_image=True, **kwargs)
+            image = obj.drawImage(
+                    bandpass, image=image, add_to_image=True, **kwargs)
         return image
 
     def withScaledFlux(self, flux_ratio):
@@ -1726,7 +1726,7 @@ class ChromaticConvolution(ChromaticObject):
             else:
                 raise TypeError(
                     "Single input argument must be a GSObject, or a ChromaticObject,"
-                    " or list of them.")
+                    +" or list of them.")
 
         # Check kwargs
         # real space convolution is not implemented for chromatic objects.
@@ -1738,7 +1738,7 @@ class ChromaticConvolution(ChromaticObject):
 
         # Make sure there is nothing left in the dict.
         if kwargs:
-            raise TypeError("Got unexpected keyword argument(s): %s" % kwargs.keys())
+            raise TypeError("Got unexpected keyword argument(s): %s"%kwargs.keys())
 
         self.objlist = []
         for obj in args:
@@ -1758,15 +1758,12 @@ class ChromaticConvolution(ChromaticObject):
         # For the case of ChromaticSums, as long as each object in the sum is separable (even if the
         # entire object is not) then interpolation can still be used.  So we do not warn about this
         # here.
-        # n_nonsep = 0
-        # n_interp = 0
-        # for obj in self.objlist:
-        #     if not obj.separable and not isinstance(obj, galsim.ChromaticSum): n_nonsep += 1
-        #     if isinstance(obj, InterpolatedChromaticObject): n_interp += 1
-
-        n_nonsep = sum(o.separable and not isinstance(o, galsim.ChromaticSum) for o in self.objlist)
-        n_interp = sum(isinstance(o, InterpolatedChromaticObject) for o in self.objlist)
-        if n_nonsep > 1 and n_interp > 0:
+        n_nonsep = 0
+        n_interp = 0
+        for obj in self.objlist:
+            if not obj.separable and not isinstance(obj, galsim.ChromaticSum): n_nonsep += 1
+            if isinstance(obj, InterpolatedChromaticObject): n_interp += 1
+        if n_nonsep>1 and n_interp>0:
             import warnings
             warnings.warn(
                 "Image rendering for this convolution cannot take advantage of " +
@@ -1782,7 +1779,7 @@ class ChromaticConvolution(ChromaticObject):
                             iimult, wave_list, wmult, integrator,
                             gsparams):
             # Collapse inseparable profiles into one effective profile
-            SED = lambda w: reduce(lambda x, y: x*y, [s(w) for s in sep_SED], 1)
+            SED = lambda w: reduce(lambda x,y:x*y, [s(w) for s in sep_SED], 1)
             insep_obj = galsim.Convolve(insep_profs, gsparams=gsparams)
             # Find scale at which to draw effective profile
             _, prof0 = insep_obj._fiducial_profile(bandpass)
@@ -1828,7 +1825,7 @@ class ChromaticConvolution(ChromaticObject):
         elif len(sedlist) == 1:
             self.SED = sedlist[0]
         else:
-            self.SED = lambda w: reduce(lambda x, y: x*y, [sed(w) for sed in sedlist])
+            self.SED = lambda w: reduce(lambda x,y:x*y, [sed(w) for sed in sedlist])
 
     def __eq__(self, other):
         return (isinstance(other, galsim.ChromaticConvolution) and
@@ -1839,11 +1836,11 @@ class ChromaticConvolution(ChromaticObject):
         return hash(("galsim.ChromaticConvolution", tuple(self.objlist), self.gsparams))
 
     def __repr__(self):
-        return 'galsim.ChromaticConvolution(%r, gsparams=%r)' % (self.objlist, self.gsparams)
+        return 'galsim.ChromaticConvolution(%r, gsparams=%r)'%(self.objlist, self.gsparams)
 
     def __str__(self):
-        str_list = [str(obj) for obj in self.objlist]
-        return 'galsim.ChromaticConvolution([%s])' % ', '.join(str_list)
+        str_list = [ str(obj) for obj in self.objlist ]
+        return 'galsim.ChromaticConvolution([%s])'%', '.join(str_list)
 
     def __getstate__(self):
         d = self.__dict__.copy()
@@ -2044,10 +2041,10 @@ class ChromaticDeconvolution(ChromaticObject):
         return hash(("galsim.ChromaticDeconvolution", self.obj, frozenset(self.kwargs.items())))
 
     def __repr__(self):
-        return 'galsim.ChromaticDeconvolution(%r, %r)' % (self.obj, self.kwargs)
+        return 'galsim.ChromaticDeconvolution(%r, %r)'%(self.obj, self.kwargs)
 
     def __str__(self):
-        return 'galsim.ChromaticDeconvolution(%s)' % self.obj
+        return 'galsim.ChromaticDeconvolution(%s)'%self.obj
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength `wave`.
@@ -2092,10 +2089,10 @@ class ChromaticAutoConvolution(ChromaticObject):
         return hash(("galsim.ChromaticAutoConvolution", self.obj, frozenset(self.kwargs.items())))
 
     def __repr__(self):
-        return 'galsim.ChromaticAutoConvolution(%r, %r)' % (self.obj, self.kwargs)
+        return 'galsim.ChromaticAutoConvolution(%r, %r)'%(self.obj, self.kwargs)
 
     def __str__(self):
-        return 'galsim.ChromaticAutoConvolution(%s)' % self.obj
+        return 'galsim.ChromaticAutoConvolution(%s)'%self.obj
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength `wave`.
@@ -2141,10 +2138,10 @@ class ChromaticAutoCorrelation(ChromaticObject):
         return hash(("galsim.ChromaticAutoCorrelation", self.obj, frozenset(self.kwargs.items())))
 
     def __repr__(self):
-        return 'galsim.ChromaticAutoCorrelation(%r, %r)' % (self.obj, self.kwargs)
+        return 'galsim.ChromaticAutoCorrelation(%r, %r)'%(self.obj, self.kwargs)
 
     def __str__(self):
-        return 'galsim.ChromaticAutoCorrelation(%s)' % self.obj
+        return 'galsim.ChromaticAutoCorrelation(%s)'%self.obj
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength `wave`.
@@ -2250,18 +2247,18 @@ class ChromaticOpticalPSF(ChromaticObject):
                      tuple(self.aberrations), self.scale_unit, frozenset(self.kwargs.items())))
 
     def __repr__(self):
-        s = 'galsim.ChromaticOpticalPSF(lam=%r, lam_over_diam=%r, aberrations=%r' % (
-            self.lam, self.lam_over_diam, self.aberrations.tolist())
+        s = 'galsim.ChromaticOpticalPSF(lam=%r, lam_over_diam=%r, aberrations=%r'%(
+                self.lam, self.lam_over_diam, self.aberrations.tolist())
         if self.scale_unit != galsim.arcsec:
-            s += ', scale_unit=%r' % self.scale_unit
-        for k, v in self.kwargs.items():
-            s += ', %s=%r' % (k, v)
+            s += ', scale_unit=%r'%self.scale_unit
+        for k,v in self.kwargs.items():
+            s += ', %s=%r'%(k,v)
         s += ')'
         return s
 
     def __str__(self):
-        return 'galsim.ChromaticOpticalPSF(lam=%s, lam_over_diam=%s, aberrations=%s)' % (
-            self.lam, self.lam_over_diam, self.aberrations.tolist())
+        return 'galsim.ChromaticOpticalPSF(lam=%s, lam_over_diam=%s, aberrations=%s)'%(
+                self.lam, self.lam_over_diam, self.aberrations.tolist())
 
     def evaluateAtWavelength(self, wave):
         """
@@ -2277,7 +2274,6 @@ class ChromaticOpticalPSF(ChromaticObject):
             aberrations=self.aberrations*(self.lam/wave), scale_unit=self.scale_unit,
             **self.kwargs)
         return ret
-
 
 class ChromaticAiry(ChromaticObject):
     """A subclass of ChromaticObject meant to represent chromatic Airy profiles.
@@ -2337,16 +2333,16 @@ class ChromaticAiry(ChromaticObject):
                      frozenset(self.kwargs.items())))
 
     def __repr__(self):
-        s = 'galsim.ChromaticAiry(lam=%r, lam_over_diam=%r' % (self.lam, self.lam_over_diam)
+        s = 'galsim.ChromaticAiry(lam=%r, lam_over_diam=%r'%(self.lam, self.lam_over_diam)
         if self.scale_unit != galsim.arcsec:
-            s += ', scale_unit=%r' % self.scale_unit
-        for k, v in self.kwargs.items():
-            s += ', %s=%r' % (k, v)
+            s += ', scale_unit=%r'%self.scale_unit
+        for k,v in self.kwargs.items():
+            s += ', %s=%r'%(k,v)
         s += ')'
         return s
 
     def __str__(self):
-        return 'galsim.ChromaticAiry(lam=%s, lam_over_diam=%s)' % (self.lam, self.lam_over_diam)
+        return 'galsim.ChromaticAiry(lam=%s, lam_over_diam=%s)'%(self.lam, self.lam_over_diam)
 
     def evaluateAtWavelength(self, wave):
         """
@@ -2360,7 +2356,6 @@ class ChromaticAiry(ChromaticObject):
             lam_over_diam=self.lam_over_diam*(wave/self.lam), scale_unit=self.scale_unit,
             **self.kwargs)
         return ret
-
 
 def _findWave(wave_list, wave):
     """
@@ -2376,7 +2371,6 @@ def _findWave(wave_list, wave):
     frac = (wave-wave_list[lower_idx]) / (wave_list[lower_idx+1]-wave_list[lower_idx])
     return lower_idx, frac
 
-
 def _linearInterp(list, frac, lower_idx):
     """
     Helper routine for linear interpolation between values in lists (which could be lists of
@@ -2385,7 +2379,6 @@ def _linearInterp(list, frac, lower_idx):
     interpolation later on if we want to enable something other than linear interpolation.
     """
     return frac*list[lower_idx+1] + (1.-frac)*list[lower_idx]
-
 
 def _remove_setup_kwargs(kwargs):
     """
