@@ -22,68 +22,6 @@ import galsim
 VAR_NDECIMAL=4
 CHECKNOISE_NDECIMAL=2
 
-# A couple helper functions that could be in the BaseWCS class, but are not.
-# So for now implement it here, and mokey patch it in.
-# Not sure that they are actually worth moving from here into the BaseWCS class....
-def _transformShear(shear, jac):
-    # We're basically trying to commute the matrices J and S.
-    # J S -> S' J
-    # S' = J S J^-1
-    J = jac.getMatrix()
-    Jinv = jac.inverse().getMatrix()
-    S = J.dot(shear.getMatrix()).dot(Jinv)
-    Sjac = galsim.JacobianWCS(*S.flatten())
-    scale, new_shear, theta, flip = Sjac.getDecomposition()
-    return theta, new_shear
-
-def shearToWorld(self, shear, image_pos=None, world_pos=None):
-    """Convert a shear in image coordinates into the corresponding effect in world coordinates.
-
-    If the input shear is applied to an object and then drawn onto an image with unit pixel scale,
-    then the result is equivalent to converting both to world coordinates, applying the
-    transformation there, and then drawing onto an image with this wcs.
-
-    The subtlety here is that the appropriate transformation is not just a shear.  Now it is
-    both a rotation and a shear.  Hence the return is a tuple (theta, shear) which are the
-    transformations to apply in world coordinates (in that order).
-
-        >>> profile = ...
-        >>> shear = ...
-        >>> wcs = ...
-        >>> im1 = profile.shear(shear).drawImage(scale=1.)
-        >>> world_profile = wcs.toWorld(profile)
-        >>> world_theta, world_shear = shearToWorld(wcs, shear)
-        >>> im2 = world_profile.rotate(world_theta).shear(world_shear).drawImage(wcs=wcs)
-        >>> assert im1 == im2   # At least within numerical precision.
-    """
-    # Use a helper function, since the other direction will be almost the same.
-    jac = self.jacobian(image_pos, world_pos)
-    return _transformShear(shear, jac)
-
-def shearToImage(self, shear, image_pos=None, world_pos=None):
-    """Convert a shear in world coordinates into the corresponding effect in image coordinates.
-
-    If the input shear is applied to an object and then drawn onto an image with this wcs,
-    then the result is equivalent to converting both to image coordinates, applying the
-    shear there, and then drawing onto an image with unit pixel scale.
-
-        >>> profile = ...
-        >>> shear = ...
-        >>> wcs = ...
-        >>> im1 = profile.shear(shear).drawImage(wcs=wcs)
-        >>> image_profile = wcs.toImage(profile)
-        >>> image_theta, image_shear = shearToImage(wcs, shear)
-        >>> im2 = image_profile.rotate(image_theta).shear(image_shear).drawImage(scale=1.)
-        >>> assert im1 == im2   # At least within numerical precision.
-    """
-    # This one is the same method, but using the inverse jacobian.
-    jac = self.jacobian(image_pos, world_pos).inverse()
-    return _transformShear(shear, jac)
-
-
-galsim.BaseWCS.shearToImage = shearToImage
-galsim.BaseWCS.shearToWorld = shearToWorld
-
 def test_metacal_tracking():
     """Test that the noise tracking works for the metacal use case involving deconvolution and
     reconvolution by almost the same PSF.
@@ -487,40 +425,5 @@ def test_metacal_tracking():
     t2 = time.time()
     print 'total time for tests = %.2f'%(t2-t1)
 
-def test_wcs_convert_shear():
-    """Test the routines wcs.shearToImage and wcs.shearToWorld"""
-
-    # Code taken directly from the doc string of wcs.shearToImage:
-    # Simple, but with ellipticity and a shift.
-    profile = galsim.Exponential(half_light_radius=0.2).shear(e1=0.3, e2=-0.4).shift(0.01,-0.03)
-    # Largish to make sure we notice if operations are done in the wrong order.
-    shear = galsim.Shear(g1=-0.3, g2=0.2)
-    # Something complicated.  Including a flip.
-    wcs = galsim.JacobianWCS(0.26, 0.04, -0.09, -0.21)
-
-    nx=48
-    ny=48
-    im1 = profile.shear(shear).drawImage(nx=nx, ny=ny, wcs=wcs)
-    print 'world profile = ',profile.shear(shear)
-    print 'world->image = ',wcs.toImage(profile.shear(shear))
-    image_profile = wcs.toImage(profile)
-    image_theta, image_shear = shearToImage(wcs, shear)
-    print 'local = ',image_profile.rotate(image_theta).shear(image_shear)
-    im2 = image_profile.rotate(image_theta).shear(image_shear).drawImage(nx=nx, ny=ny, scale=1.)
-    np.testing.assert_almost_equal(im1.array, im2.array, decimal=12,
-                                   err_msg="wcs.shearToImage didn't work correctly")
-
-    # Now check the reverse process, shearToWorld.
-    im1 = profile.shear(shear).drawImage(nx=nx, ny=ny, scale=1.)
-    print 'image profile = ',profile.shear(shear)
-    print 'image->world = ',wcs.toWorld(profile.shear(shear))
-    world_profile = wcs.toWorld(profile)
-    world_theta, world_shear = shearToWorld(wcs, shear)
-    print 'world = ',world_profile.rotate(world_theta).shear(world_shear)
-    im2 = world_profile.rotate(world_theta).shear(world_shear).drawImage(nx=nx, ny=ny, wcs=wcs)
-    np.testing.assert_almost_equal(im1.array, im2.array, decimal=12,
-                                   err_msg="wcs.shearToWorld didn't work correctly")
-
 if __name__ == "__main__":
     test_metacal_tracking()
-    test_wcs_convert_shear()
