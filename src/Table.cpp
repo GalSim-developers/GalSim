@@ -350,7 +350,7 @@ namespace galsim {
     template<class V, class A>
     Table2D<V,A>::Table2D(A _x0, A _y0, A _dx, A _dy, int _Nx, int _Ny, const V* valarray,
         interpolant in) : iType(in), Nx(_Nx), Ny(_Ny), x0(_x0), y0(_y0), dx(_dx), dy(_dy),
-                          xmax(x0+Nx*dx), ymax(y0+Ny*dy)
+                          xmax(x0+(Nx-1)*dx), ymax(y0+(Ny-1)*dy)
     {
         // Allocate array.
         vals = new V*[Ny];
@@ -363,6 +363,9 @@ namespace galsim {
             for (int j=0; j<Nx; j++, k++)
                 vals[i][j] = *k;
         }
+
+        xslop = dx * 1.e-6;
+        yslop = dy * 1.e-6;
 
         // Map specific interpolator to `interpolate`.
         switch (iType) {
@@ -382,8 +385,18 @@ namespace galsim {
     }
 
     template<class V, class A>
-    void Table2D<V,A>::upperIndices(const A x, const A y, int& i, int& j, A& xi, A& yj) const
+    void Table2D<V,A>::upperIndices(A x, A y, int& i, int& j, A& xi, A& yj) const
     {
+        if (x<x0-xslop || x>xmax+xslop)
+            throw TableOutOfRange(x,x0,xmax);
+        if (y<y0-yslop || y>ymax+yslop)
+            throw TableOutOfRange(y,y0,ymax);
+        // check for slop
+        if (x < x0) x=x0;
+        if (x > xmax) x=xmax;
+        if (y < y0) y=y0;
+        if (y > ymax) y=ymax;
+
         i = int( std::ceil( (x-x0) / dx) );
         if (i >= Nx) --i; // in case of rounding error
         if (i == 0) ++i;
