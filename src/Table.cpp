@@ -434,6 +434,17 @@ namespace galsim {
     }
 
     template<class V, class A>
+    void Table2D<V,A>::interpMany(const A* xvec, const A* yvec, V* valvec, int N) const
+    {
+        int i, j;
+        A xi, yj;
+        for (int k=0; k<N; k++) {
+            upperIndices(xvec[k], yvec[k], i, j, xi, yj);
+            valvec[k] = interpolate(xvec[k], yvec[k], xi, yj, dx, dy, i, j, const_cast<const V**>(vals));
+        }
+    }
+
+    template<class V, class A>
     V Table2D<V,A>::linearInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j,
         const V** vals)
     {

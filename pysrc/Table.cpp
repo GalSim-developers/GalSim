@@ -165,6 +165,17 @@ namespace {
             return new Table2D<double,double>(x0, y0, dx, dy, Nx, Ny, vals, i);
         }
 
+        static void interpMany(const Table2D<double,double>& table2d,
+                               const bp::object& x, const bp::object& y,
+                               const bp::object& vals)
+        {
+            const double* xvec = GetNumpyArrayData<double>(x.ptr());
+            const double* yvec = GetNumpyArrayData<double>(y.ptr());
+            double * valvec = GetNumpyArrayData<double>(vals.ptr());
+            int N = GetNumpyArrayDim(x.ptr(), 0);
+            table2d.interpMany(xvec, yvec, valvec, N);
+        }
+
         static void wrap()
         {
             bp::class_<Table2D<double,double> > pyTable2D("_LookupTable2D", bp::no_init);
@@ -178,6 +189,7 @@ namespace {
                 )
                 .def("dump", &Table2D<double,double>::dump)
                 .def("__call__", &Table2D<double,double>::lookup)
+                .def("interpMany", &interpMany)
                 ;
         }
     };
