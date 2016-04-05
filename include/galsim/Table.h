@@ -303,17 +303,15 @@ namespace galsim {
 
         const int Nx, Ny; // Array dimensions
         const A x0, y0, dx, dy;
+        const A xmax, ymax;
 
-        /// get index to 1st element >= argument in given dimension.  Can throw the exception here.
-        int upperIndexX(const A a) const;
-        int upperIndexY(const A a) const;
+        void upperIndices(const A x, const A y, int& i, int& j, A& xi, A& yj) const;
 
         /// Interpolate value btwn p & --p:
-        mutable V (*interpolate)(A x, A y, int i, int j, V* val);
-        static V linearInterpolate(A x, A y, int i, int j, V* val);
-        static V floorInterpolate(A x, A y, int i, int j, V* val);
-        static V ceilInterpolate(A x, A y, int i, int j, V* val);
-
+        mutable V (*interpolate)(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const V** vals);
+        static V linearInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const V** vals);
+        static V floorInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const V** vals);
+        static V ceilInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const V** vals);
     };
 }
 

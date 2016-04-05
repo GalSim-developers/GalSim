@@ -349,7 +349,8 @@ namespace galsim {
     // Should dx, dy be higher precision types than x0, y0?  Maybe x0, xend would be better params?
     template<class V, class A>
     Table2D<V,A>::Table2D(A _x0, A _y0, A _dx, A _dy, int _Nx, int _Ny, const V* valarray,
-        interpolant in) : iType(in), Nx(_Nx), Ny(_Ny), x0(_x0), y0(_y0), dx(_dx), dy(_dy)
+        interpolant in) : iType(in), Nx(_Nx), Ny(_Ny), x0(_x0), y0(_y0), dx(_dx), dy(_dy),
+                          xmax(x0+Nx*dx), ymax(y0+Ny*dy)
     {
         // Allocate array.
         vals = new V*[Ny];
@@ -362,6 +363,86 @@ namespace galsim {
             for (int j=0; j<Nx; j++, k++)
                 vals[i][j] = *k;
         }
+
+        // Map specific interpolator to `interpolate`.
+        switch (iType) {
+          case linear:
+               interpolate = &Table2D<V,A>::linearInterpolate;
+               break;
+        //   case floor:
+        //        interpolate = &Table2D<V,A>::floorInterpolate;
+        //        break;
+        //   case ceil:
+        //        interpolate = &Table2D<V,A>::ceilInterpolate;
+        //        break;
+          default:
+               throw TableError("interpolation method not yet implemented");
+        }
+
+    }
+
+    template<class V, class A>
+    void Table2D<V,A>::upperIndices(const A x, const A y, int& i, int& j, A& xi, A& yj) const
+    {
+        i = int( std::ceil( (x-x0) / dx) );
+        if (i >= Nx) --i; // in case of rounding error
+        if (i == 0) ++i;
+        xi = x0 + i*dx;
+        j = int( std::ceil( (y-y0) / dy) );
+        if (j >= Ny) --j; // in case of rounding error
+        if (j == 0) ++j;
+        yj = y0 + j*dy;
+    }
+
+    // //lookup & interp. function value. - this one returns 0 out of bounds.
+    // template<class V, class A>
+    // V Table2D<V,A>::operator() (const A x, const A y) const
+    // {
+    //
+    //
+    //     if (a<_argMin() || a>_argMax()) return V(0);
+    //     else {
+    //         int i = upperIndex(a);
+    //         return interpolate(a,i,v,y2);
+    //     }
+    // }
+
+    //lookup & interp. function value.
+    template<class V, class A>
+    V Table2D<V,A>::lookup(const A x, const A y) const
+    {
+        int i, j;
+        A xi, yj;
+        upperIndices(x, y, i, j, xi, yj);
+        std::cerr << "x=" << x << std::endl;
+        std::cerr << "y=" << y << std::endl;
+        std::cerr << "i=" << i << std::endl;
+        std::cerr << "j=" << j << std::endl;
+        std::cerr << "xi=" << xi << std::endl;
+        std::cerr << "yj=" << yj << std::endl;
+        return interpolate(x, y, xi, yj, dx, dy, i, j, const_cast<const V**>(vals));
+    }
+
+    template<class V, class A>
+    V Table2D<V,A>::linearInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j,
+        const V** vals)
+    {
+        A ax = (xi - x) / dx;
+        A bx = 1.0 - ax;
+        A ay = (yj - y) / dy;
+        A by = 1.0 - ay;
+        std::cerr << "ax=" << ax << std::endl;
+        std::cerr << "bx=" << bx << std::endl;
+        std::cerr << "ay=" << ay << std::endl;
+        std::cerr << "by=" << by << std::endl;
+        std::cerr << "vals[i-1][j-1]=" << vals[i-1][j-1] << std::endl;
+        std::cerr << "vals[i][j-1]=" << vals[i][j-1] << std::endl;
+        std::cerr << "vals[i-1][j]=" << vals[i-1][j] << std::endl;
+        std::cerr << "vals[i][j]=" << vals[i][j] << std::endl;
+        return (vals[i-1][j-1] * ax * ay
+                + vals[i][j-1] * bx * ay
+                + vals[i-1][j] * ax * by
+                + vals[i][j] * bx * by);
     }
 
     template class Table2D<double,double>;

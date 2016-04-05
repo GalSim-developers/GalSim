@@ -177,6 +177,7 @@ namespace {
                     )
                 )
                 .def("dump", &Table2D<double,double>::dump)
+                .def("__call__", &Table2D<double,double>::lookup)
                 ;
         }
     };
