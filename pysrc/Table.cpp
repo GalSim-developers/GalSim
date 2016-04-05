@@ -121,7 +121,7 @@ namespace {
             table.interpMany(argvec, valvec, N);
         }
 
-        static void wrap() 
+        static void wrap()
         {
             // docstrings are in galsim/table.py
             bp::class_<Table<double,double> > pyTable("_LookupTable", bp::no_init);
@@ -137,7 +137,7 @@ namespace {
                 .def("argMax", &Table<double,double>::argMax)
 
                 // Use version that throws expection if out of bounds
-                .def("__call__", &Table<double,double>::lookup) 
+                .def("__call__", &Table<double,double>::lookup)
                 .def("interpMany", &interpMany)
                 .def("getArgs", &convertGetArgs)
                 .def("getVals", &convertGetVals)
@@ -146,13 +146,51 @@ namespace {
                 ;
         }
 
+    }; // struct PyTable
+
+    struct PyTable2D{
+        static Table2D<double,double>* makeTable2D(
+            double x0, double y0, double dx, double dy, int Nx, int Ny, const bp::object& valarray,
+            const std::string& interp)
+        {
+            const double* vals = GetNumpyArrayData<double>(valarray.ptr());
+            Table2D<double,double>::interpolant i = Table2D<double,double>::linear;
+            if (interp == "linear") i = Table2D<double,double>::linear;
+            else if (interp == "floor") i = Table2D<double,double>::floor;
+            else if (interp == "ceil") i = Table2D<double,double>::ceil;
+            else {
+                PyErr_SetString(PyExc_ValueError, "Invalid interpolant");
+                bp::throw_error_already_set();
+            }
+            return new Table2D<double,double>(x0, y0, dx, dy, Nx, Ny, vals, i);
+        }
+
+        static void wrap()
+        {
+            bp::class_<Table2D<double,double> > pyTable2D("_LookupTable2D", bp::no_init);
+            pyTable2D
+                .def("__init__",
+                    bp::make_constructor(
+                        &makeTable2D, bp::default_call_policies(),
+                        (bp::arg("x0"), bp::arg("y0"), bp::arg("dx"), bp::arg("dy"), bp::arg("Nx"),
+                         bp::arg("Ny"), bp::arg("valarray"), bp::arg("interp"))
+                    )
+                )
+                .def("dump", &Table2D<double,double>::dump)
+                ;
+        }
     };
 
 } // anonymous
 
-void pyExportTable() 
+void pyExportTable()
 {
     PyTable::wrap();
+}
+
+void pyExportTable2D()
+{
+    PyTable2D::wrap();
 }
 
 } // namespace galsim

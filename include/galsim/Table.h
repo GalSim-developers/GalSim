@@ -246,6 +246,75 @@ namespace galsim {
         double operator()(double a) const { return Table<double,double>::operator()(a); }
     };
 
+    /**
+     * @brief A class to represent lookup tables for a function z = f(x, y).
+     *
+     * A is the type of the argument of the function.
+     * V is the type of the value of the function.
+     *
+     * Requirements for A,V:
+     *   A must have ordering operators (< > ==) and the normal arithmetic ops (+ - * /)
+     *   V must have + and *.
+     */
+    template<class V, class A>
+    class Table2D
+    {
+    public:
+        enum interpolant { linear, floor, ceil };
+
+        /// Table from offset, stepsize, Nstep, and value array.
+        Table2D(A x0, A y0, A dx, A dy, int Nx, int Ny,
+                const V* valarray, interpolant in);
+
+        ~Table2D() {
+            for (int i=0; i<Ny; i++) delete[] vals[i];
+            delete[] vals;
+        }
+
+        void dump() const
+        {
+            std::cout << '[';
+            for (int i=0; i<Ny; i++) {
+                std::cout << '[';
+                for (int j=0; j<Nx; j++) {
+                    std::cout << vals[i][j];
+                    if (j != Nx-1) std::cout << ',';
+                }
+                std::cout << ']';
+                if (i != Ny-1) std::cout << ',' << std::endl;
+            }
+            std::cout << ']' << std::endl;
+        }
+
+        /// lookup & interp. function value.
+        V operator() (const A x, const A y) const;
+
+        /// interp, but exception if beyond bounds
+        V lookup(const A x, const A y) const;
+
+        /// interp many values at once.
+        void interpMany(const A* xvec, const A* yvec, V* valvec, int N) const;
+
+        interpolant getInterp() const { return iType; }
+
+    private:
+        interpolant iType;
+        V** vals;
+
+        const int Nx, Ny; // Array dimensions
+        const A x0, y0, dx, dy;
+
+        /// get index to 1st element >= argument in given dimension.  Can throw the exception here.
+        int upperIndexX(const A a) const;
+        int upperIndexY(const A a) const;
+
+        /// Interpolate value btwn p & --p:
+        mutable V (*interpolate)(A x, A y, int i, int j, V* val);
+        static V linearInterpolate(A x, A y, int i, int j, V* val);
+        static V floorInterpolate(A x, A y, int i, int j, V* val);
+        static V ceilInterpolate(A x, A y, int i, int j, V* val);
+
+    };
 }
 
 #endif

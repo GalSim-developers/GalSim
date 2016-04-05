@@ -346,4 +346,23 @@ namespace galsim {
 
     template class Table<double,double>;
 
+    // Should dx, dy be higher precision types than x0, y0?  Maybe x0, xend would be better params?
+    template<class V, class A>
+    Table2D<V,A>::Table2D(A _x0, A _y0, A _dx, A _dy, int _Nx, int _Ny, const V* valarray,
+        interpolant in) : iType(in), Nx(_Nx), Ny(_Ny), x0(_x0), y0(_y0), dx(_dx), dy(_dy)
+    {
+        // Allocate array.
+        vals = new V*[Ny];
+        for (int i=0; i<Ny; i++) {
+            vals[i] = new V[Nx];
+        }
+        // Fill in array.
+        const V* k = valarray;
+        for (int i=0; i<Ny; i++) {
+            for (int j=0; j<Nx; j++, k++)
+                vals[i][j] = *k;
+        }
+    }
+
+    template class Table2D<double,double>;
 }
