@@ -197,8 +197,8 @@ class SED(object):
         @returns the photon density in units of photons/nm
         """
         if hasattr(wave, '__iter__'): # Only iterables respond to min(), max()
-            wmin = min(wave)
-            wmax = max(wave)
+            wmin = np.min(wave)
+            wmax = np.max(wave)
         else: # python scalar
             wmin = wave
             wmax = wave
@@ -237,7 +237,7 @@ class SED(object):
         if hasattr(other, '__call__'):
             spec = lambda w: self._rest_photons(w) * other(w * wave_factor)
         elif isinstance(self._spec, galsim.LookupTable):
-            # If other is not a function, then there is no loss of accuracy by applying the 
+            # If other is not a function, then there is no loss of accuracy by applying the
             # factor directly to the LookupTable, if that's what we are using.
             # Make sure to keep the same properties about the table, flux_type, wave_type.
             if self.wave_factor == 10.0:
@@ -264,7 +264,7 @@ class SED(object):
         if hasattr(other, '__call__'):
             spec = lambda w: self._rest_photons(w) / other(w * wave_factor)
         elif isinstance(self._spec, galsim.LookupTable):
-            # If other is not a function, then there is no loss of accuracy by applying the 
+            # If other is not a function, then there is no loss of accuracy by applying the
             # factor directly to the LookupTable, if that's what we are using.
             # Make sure to keep the same properties about the table, flux_type, wave_type.
             if self.wave_factor == 10.0:

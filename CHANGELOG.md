@@ -69,6 +69,8 @@ New Features
 - Made it possible to impose some cuts on galaxy image quality in the
   COSMOSCatalog class. (#693)
 - Added `convergence_threshold` as a parameter of HSMParams. (#709)
+- Sped up some Bandpass and SED functionality (and LookupTable class in
+  general). (#735)
 
 
 Updates to galsim executable

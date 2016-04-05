@@ -63,10 +63,10 @@ def test_SED_basic():
                    flux_type='fphotons'),
         galsim.SED(galsim.LookupTable([1,1e4],[2/(h*c),2e4/(h*c)], interpolant='linear'),
                    flux_type='fphotons', wave_type='A'),
-        galsim.SED(galsim.LookupTable([1,1e3],[200/c,2e8/c], interpolant='linear', 
+        galsim.SED(galsim.LookupTable([1,1e3],[200/c,2e8/c], interpolant='linear',
                                       x_log=True, f_log=True),
                    flux_type='fnu'),
-        galsim.SED(galsim.LookupTable([1,1e4],[2/c,2e8/c], interpolant='linear', 
+        galsim.SED(galsim.LookupTable([1,1e4],[2/c,2e8/c], interpolant='linear',
                                       x_log=True, f_log=True),
                    flux_type='fnu', wave_type='A'),
         galsim.SED(galsim.LookupTable(nm_w, 200.*np.ones(100)), flux_type='flambda'),
@@ -94,7 +94,7 @@ def test_SED_basic():
         galsim.SED('1000', redshift=4),
         galsim.SED('1000').atRedshift(4.0),
     ]
- 
+
     for k,s in enumerate(s_list):
         print k,' s = ',s
         np.testing.assert_almost_equal(s(400)*h*c/400, 200, decimal=10)

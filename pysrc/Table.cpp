@@ -28,6 +28,7 @@
 #include <boost/python/stl_iterator.hpp>
 
 #include "Table.h"
+#include "NumpyHelper.h"
 
 namespace bp = boost::python;
 
@@ -111,6 +112,15 @@ namespace {
             return std::string("");
         }
 
+        static void interpMany(const Table<double,double>& table,
+                               const bp::object& args, const bp::object& vals)
+        {
+            const double* argvec = GetNumpyArrayData<double>(args.ptr());
+            double* valvec = GetNumpyArrayData<double>(vals.ptr());
+            int N = GetNumpyArrayDim(args.ptr(), 0);
+            table.interpMany(argvec, valvec, N);
+        }
+
         static void wrap() 
         {
             // docstrings are in galsim/table.py
@@ -128,7 +138,7 @@ namespace {
 
                 // Use version that throws expection if out of bounds
                 .def("__call__", &Table<double,double>::lookup) 
-
+                .def("interpMany", &interpMany)
                 .def("getArgs", &convertGetArgs)
                 .def("getVals", &convertGetVals)
                 .def("getInterp", &convertGetInterp)
