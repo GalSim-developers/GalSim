@@ -299,12 +299,12 @@ namespace galsim {
 
     private:
         interpolant iType;
-        mutable A xslop, yslop;
         V** vals;
 
         const int Nx, Ny; // Array dimensions
         const A x0, y0, dx, dy;
         const A xmax, ymax;
+        const A xslop, yslop;
 
 
         void upperIndices(A x, A y, int& i, int& j, A& xi, A& yj) const;

@@ -350,7 +350,7 @@ namespace galsim {
     template<class V, class A>
     Table2D<V,A>::Table2D(A _x0, A _y0, A _dx, A _dy, int _Nx, int _Ny, const V* valarray,
         interpolant in) : iType(in), Nx(_Nx), Ny(_Ny), x0(_x0), y0(_y0), dx(_dx), dy(_dy),
-                          xmax(x0+(Nx-1)*dx), ymax(y0+(Ny-1)*dy)
+                          xmax(x0+(Nx-1)*dx), ymax(y0+(Ny-1)*dy), xslop(dx*1e-6), yslop(1e-6)
     {
         // Allocate array.
         vals = new V*[Ny];
@@ -363,9 +363,6 @@ namespace galsim {
             for (int j=0; j<Nx; j++, k++)
                 vals[i][j] = *k;
         }
-
-        xslop = dx * 1.e-6;
-        yslop = dy * 1.e-6;
 
         // Map specific interpolator to `interpolate`.
         switch (iType) {
