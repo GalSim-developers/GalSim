@@ -769,9 +769,9 @@ class Image(object):
         rsq = x*x + y*y
 
         # Sort by radius
-        indx = numpy.argsort(rsq.flatten())
-        rsqf = rsq.flatten()[indx]
-        data = self.array.flatten()[indx]
+        indx = numpy.argsort(rsq.ravel())
+        rsqf = rsq.ravel()[indx]
+        data = self.array.ravel()[indx]
         cumflux = numpy.cumsum(data)
 
         # Find the first value with cumflux > 0.5 * flux
@@ -887,9 +887,9 @@ class Image(object):
         rsq = x*x + y*y
 
         # Sort by radius
-        indx = numpy.argsort(rsq.flatten())
-        rsqf = rsq.flatten()[indx]
-        data = self.array.flatten()[indx]
+        indx = numpy.argsort(rsq.ravel())
+        rsqf = rsq.ravel()[indx]
+        data = self.array.ravel()[indx]
 
         # Find the first value with I < 0.5 * Imax
         k = numpy.argmax(data < 0.5 * Imax)

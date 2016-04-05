@@ -197,8 +197,8 @@ class SED(object):
         @returns the photon density in units of photons/nm
         """
         if hasattr(wave, '__iter__'): # Only iterables respond to min(), max()
-            wmin = min(wave)
-            wmax = max(wave)
+            wmin = np.min(wave)
+            wmax = np.max(wave)
         else: # python scalar
             wmin = wave
             wmax = wave

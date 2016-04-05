@@ -787,12 +787,12 @@ class EuclideanWCS(BaseWCS):
         y -= self.y0
         try:
             # First try to use the _u, _v function with the numpy arrays.
-            u = self._u(x.flatten(),y.flatten())
-            v = self._v(x.flatten(),y.flatten())
+            u = self._u(x.ravel(),y.ravel())
+            v = self._v(x.ravel(),y.ravel())
         except:
             # If that didn't work, we have to do it manually for each position. :(  (SLOW!)
-            u = numpy.array([ self._u(x1,y1) for x1,y1 in zip(x.flatten(),y.flatten()) ])
-            v = numpy.array([ self._v(x1,y1) for x1,y1 in zip(x.flatten(),y.flatten()) ])
+            u = numpy.array([ self._u(x1,y1) for x1,y1 in zip(x.ravel(),y.ravel()) ])
+            v = numpy.array([ self._v(x1,y1) for x1,y1 in zip(x.ravel(),y.ravel()) ])
         u = numpy.reshape(u, x.shape)
         v = numpy.reshape(v, x.shape)
         # Use the finite differences to estimate the derivatives.
@@ -965,10 +965,10 @@ class CelestialWCS(BaseWCS):
         y -= self.y0
         try:
             # First try to use the _radec function with the numpy arrays.
-            ra, dec = self._radec(x.flatten(),y.flatten())
+            ra, dec = self._radec(x.ravel(),y.ravel())
         except:
             # If that didn't work, we have to do it manually for each position. :(  (SLOW!)
-            rd = [ self._radec(x1,y1) for x1,y1 in zip(x.flatten(),y.flatten()) ]
+            rd = [ self._radec(x1,y1) for x1,y1 in zip(x.ravel(),y.ravel()) ]
             ra = numpy.array([ radec[0] for radec in rd ])
             dec = numpy.array([ radec[1] for radec in rd ])
         ra = numpy.reshape(ra, x.shape)
