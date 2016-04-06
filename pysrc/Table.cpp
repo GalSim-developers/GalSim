@@ -150,9 +150,13 @@ namespace {
 
     struct PyTable2D{
         static Table2D<double,double>* makeTable2D(
-            double x0, double y0, double dx, double dy, int Nx, int Ny, const bp::object& valarray,
+            double x0, double y0, double dx, double dy, const bp::object& valarray,
             const std::string& interp)
         {
+            const int Nx = GetNumpyArrayDim(valarray.ptr(), 0);
+            const int Ny = GetNumpyArrayDim(valarray.ptr(), 1);
+            // std::cout << "Nx=" << Nx << std::endl;
+            // std::cout << "Ny=" << Ny << std::endl;
             const double* vals = GetNumpyArrayData<double>(valarray.ptr());
             Table2D<double,double>::interpolant i = Table2D<double,double>::linear;
             if (interp == "linear") i = Table2D<double,double>::linear;
@@ -183,8 +187,8 @@ namespace {
                 .def("__init__",
                     bp::make_constructor(
                         &makeTable2D, bp::default_call_policies(),
-                        (bp::arg("x0"), bp::arg("y0"), bp::arg("dx"), bp::arg("dy"), bp::arg("Nx"),
-                         bp::arg("Ny"), bp::arg("valarray"), bp::arg("interp"))
+                        (bp::arg("x0"), bp::arg("y0"), bp::arg("dx"), bp::arg("dy"),
+                         bp::arg("valarray"), bp::arg("interp"))
                     )
                 )
                 .def("dump", &Table2D<double,double>::dump)

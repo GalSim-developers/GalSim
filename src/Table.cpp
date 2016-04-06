@@ -404,19 +404,6 @@ namespace galsim {
         yj = y0 + j*dy;
     }
 
-    // //lookup & interp. function value. - this one returns 0 out of bounds.
-    // template<class V, class A>
-    // V Table2D<V,A>::operator() (const A x, const A y) const
-    // {
-    //
-    //
-    //     if (a<_argMin() || a>_argMax()) return V(0);
-    //     else {
-    //         int i = upperIndex(a);
-    //         return interpolate(a,i,v,y2);
-    //     }
-    // }
-
     //lookup & interp. function value.
     template<class V, class A>
     V Table2D<V,A>::lookup(const A x, const A y) const
@@ -424,12 +411,6 @@ namespace galsim {
         int i, j;
         A xi, yj;
         upperIndices(x, y, i, j, xi, yj);
-        std::cerr << "x=" << x << std::endl;
-        std::cerr << "y=" << y << std::endl;
-        std::cerr << "i=" << i << std::endl;
-        std::cerr << "j=" << j << std::endl;
-        std::cerr << "xi=" << xi << std::endl;
-        std::cerr << "yj=" << yj << std::endl;
         return interpolate(x, y, xi, yj, dx, dy, i, j, const_cast<const V**>(vals));
     }
 
@@ -452,14 +433,6 @@ namespace galsim {
         A bx = 1.0 - ax;
         A ay = (yj - y) / dy;
         A by = 1.0 - ay;
-        std::cerr << "ax=" << ax << std::endl;
-        std::cerr << "bx=" << bx << std::endl;
-        std::cerr << "ay=" << ay << std::endl;
-        std::cerr << "by=" << by << std::endl;
-        std::cerr << "vals[i-1][j-1]=" << vals[i-1][j-1] << std::endl;
-        std::cerr << "vals[i][j-1]=" << vals[i][j-1] << std::endl;
-        std::cerr << "vals[i-1][j]=" << vals[i-1][j] << std::endl;
-        std::cerr << "vals[i][j]=" << vals[i][j] << std::endl;
         return (vals[i-1][j-1] * ax * ay
                 + vals[i][j-1] * bx * ay
                 + vals[i-1][j] * ax * by

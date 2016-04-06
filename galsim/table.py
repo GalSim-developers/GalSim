@@ -559,3 +559,26 @@ def _lohi(i, x0, dx): return x0 + i * dx, x0 + (i+1) * dx
 
 
 def _ceildiv(a, b): return -(-a // b)
+
+
+class LookupTable2D2(object):
+    def __init__(self, x0=0.0, y0=0.0, dx=1.0, dy=1.0, f=None, interpolant='linear'):
+        self.table = _galsim._LookupTable2D(x0, y0, dx, dy, f.astype(float), interpolant)
+
+    def __call__(self, x, y):
+        import numpy as np
+        if isinstance(x, np.ndarray):
+            f = np.empty_like(x.ravel(), dtype=float)
+            self.table.interpMany(x.astype(float).ravel(), y.astype(float).ravel(), f)
+            f = f.reshape(x.shape)
+        elif isinstance(x, tuple):
+            f = np.empty_like(x, dtype=float)
+            self.table.interpMany(np.array(x, dtype=float), f)
+            f = tuple(f)
+        elif isinstance(x, list):
+            f = np.empty_like(x, dtype=float)
+            self.table.interpMany(np.array(x, dtype=float), f)
+            f = list(f)
+        else:
+            f = self.table(float(x), float(y))
+        return f
