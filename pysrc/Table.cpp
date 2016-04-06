@@ -153,10 +153,8 @@ namespace {
             double x0, double y0, double dx, double dy, const bp::object& valarray,
             const std::string& interp)
         {
-            const int Nx = GetNumpyArrayDim(valarray.ptr(), 0);
-            const int Ny = GetNumpyArrayDim(valarray.ptr(), 1);
-            // std::cout << "Nx=" << Nx << std::endl;
-            // std::cout << "Ny=" << Ny << std::endl;
+            const int Nx = GetNumpyArrayDim(valarray.ptr(), 1);
+            const int Ny = GetNumpyArrayDim(valarray.ptr(), 0);
             const double* vals = GetNumpyArrayData<double>(valarray.ptr());
             Table2D<double,double>::interpolant i = Table2D<double,double>::linear;
             if (interp == "linear") i = Table2D<double,double>::linear;
@@ -189,10 +187,10 @@ namespace {
             double* valvec = GetNumpyArrayData<double>(vals.ptr());
             int Nx = GetNumpyArrayDim(x.ptr(), 0);
             int Ny = GetNumpyArrayDim(y.ptr(), 0);
-            int outNx = GetNumpyArrayDim(vals.ptr(), 0);
-            int outNy = GetNumpyArrayDim(vals.ptr(), 1);
-            xassert(Nx == outNx+1);
-            xassert(Ny == outNy);
+            int outNx = GetNumpyArrayDim(vals.ptr(), 1);
+            int outNy = GetNumpyArrayDim(vals.ptr(), 0);
+            assert(Nx == outNx);
+            assert(Ny == outNy);
             table2d.interpManyOuter(xvec, yvec, valvec, Nx, Ny);
         }
 
@@ -207,7 +205,6 @@ namespace {
                          bp::arg("valarray"), bp::arg("interp"))
                     )
                 )
-                .def("dump", &Table2D<double,double>::dump)
                 .def("__call__", &Table2D<double,double>::lookup)
                 .def("interpManyScatter", &interpManyScatter)
                 .def("interpManyOuter", &interpManyOuter)

@@ -371,7 +371,6 @@ namespace galsim {
           default:
                throw TableError("interpolation method not yet implemented");
         }
-
     }
 
     template<class V, class A>
@@ -397,14 +396,14 @@ namespace galsim {
         yj = y0 + j*dy;
     }
 
-    //lookup & interp. function value.
+    //lookup and interpolate function value.
     template<class V, class A>
     V Table2D<V,A>::lookup(const A x, const A y) const
     {
         int i, j;
         A xi, yj;
         upperIndices(x, y, i, j, xi, yj);
-        return interpolate(x, y, xi, yj, dx, dy, i, j, const_cast<const V*>(vals), Ny);
+        return interpolate(x, y, xi, yj, dx, dy, i, j, const_cast<const V*>(vals), Nx);
     }
 
     template<class V, class A>
@@ -415,7 +414,7 @@ namespace galsim {
         for (int k=0; k<N; k++) {
             upperIndices(xvec[k], yvec[k], i, j, xi, yj);
             valvec[k] = interpolate(xvec[k], yvec[k], xi, yj, dx, dy, i, j,
-                const_cast<const V*>(vals), Ny);
+                const_cast<const V*>(vals), Nx);
         }
     }
 
@@ -428,24 +427,24 @@ namespace galsim {
         for (int outi=0; outi<outNx; outi++) {
             for (int outj=0; outj<outNy; outj++) {
                 upperIndices(xvec[outi], yvec[outj], i, j, xi, yj);
-                valvec[outi*outNy+outj] = interpolate(xvec[outi], yvec[outj], xi, yj, dx, dy, i, j,
-                    const_cast<const V*>(vals), Ny);
+                valvec[outj*outNx+outi] = interpolate(xvec[outi], yvec[outj], xi, yj, dx, dy, i, j,
+                    const_cast<const V*>(vals), Nx);
             }
         }
     }
 
     template<class V, class A>
     V Table2D<V,A>::linearInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j,
-        const V* vals, int Ny)
+        const V* vals, int Nx)
     {
         A ax = (xi - x) / dx;
         A bx = 1.0 - ax;
         A ay = (yj - y) / dy;
         A by = 1.0 - ay;
-        return (vals[(i-1)*Ny+j-1] * ax * ay
-                + vals[i*Ny+j-1] * bx * ay
-                + vals[(i-1)*Ny+j] * ax * by
-                + vals[i*Ny+j] * bx * by);
+        return (vals[(j-1)*Nx+i-1] * ax * ay
+                + vals[j*Nx+i-1] * ax * by
+                + vals[(j-1)*Nx+i] * bx * ay
+                + vals[j*Nx+i] * bx * by);
     }
 
     template class Table2D<double,double>;

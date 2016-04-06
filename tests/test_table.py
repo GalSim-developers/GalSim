@@ -342,10 +342,32 @@ def test_table2d():
     except ImportError:
         print 'The assert_raises tests require nose'
 
+@timer
+def test_table2d2_scipy():
+    try:
+        from scipy.interpolate import interp2d
+    except ImportError:
+        print "test_table2d2_scipy requires scipy!"
+
+    def f(x, y):
+        return np.sin(x) * np.cos(y)
+
+    x = np.linspace(0.1, 3.3, 25)
+    y = np.linspace(0.2, 10.4, 75)
+    xx, yy = np.meshgrid(x, y)
+    z = f(xx, yy)
+
+    tab2d = galsim.table.LookupTable2D2(x[0], y[0], x[1]-x[0], y[1]-y[0], z)
+    sci2d = interp2d(x, y, z)
+
+    np.testing.assert_array_almost_equal(sci2d(x, y), tab2d(xx, yy, scatter=True))
+    np.testing.assert_array_almost_equal(sci2d(x, y), tab2d(x, y))
+
 
 if __name__ == "__main__":
-    test_table()
-    test_init()
-    test_log()
-    test_roundoff()
-    test_table2d()
+    # test_table()
+    # test_init()
+    # test_log()
+    # test_roundoff()
+    # test_table2d()
+    test_table2d2_scipy()

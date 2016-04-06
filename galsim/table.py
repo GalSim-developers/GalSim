@@ -589,6 +589,6 @@ class LookupTable2D2(object):
             if isinstance(x, Real):
                 f = self.table(float(x), float(y))
             else:
-                f = np.empty((len(x), len(y)), dtype=float)
+                f = np.empty((len(y), len(x)), dtype=float)
                 self.table.interpManyOuter(np.array(x, dtype=float), np.array(y, dtype=float), f)
         return f
