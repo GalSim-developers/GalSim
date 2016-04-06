@@ -267,17 +267,18 @@ namespace galsim {
                 const V* valarray, interpolant in);
 
         ~Table2D() {
-            for (int i=0; i<Ny; i++) delete[] vals[i];
             delete[] vals;
         }
 
         void dump() const
         {
+            int offset;
             std::cout << '[';
             for (int i=0; i<Ny; i++) {
+                offset = i*Nx;
                 std::cout << '[';
                 for (int j=0; j<Nx; j++) {
-                    std::cout << vals[i][j];
+                    std::cout << vals[offset+j];
                     if (j != Nx-1) std::cout << ',';
                 }
                 std::cout << ']';
@@ -292,14 +293,15 @@ namespace galsim {
         /// interp, but exception if beyond bounds
         V lookup(const A x, const A y) const;
 
-        /// interp many values at once.
-        void interpMany(const A* xvec, const A* yvec, V* valvec, int N) const;
+        /// interp many values at once
+        void interpManyScatter(const A* xvec, const A* yvec, V* valvec, int N) const;
+        void interpManyOuter(const A* xvec, const A* yvec, V* valvec, int Nx, int Ny) const;
 
         interpolant getInterp() const { return iType; }
 
     private:
         interpolant iType;
-        V** vals;
+        V* vals;
 
         const int Nx, Ny; // Array dimensions
         const A x0, y0, dx, dy;
@@ -310,10 +312,10 @@ namespace galsim {
         void upperIndices(A x, A y, int& i, int& j, A& xi, A& yj) const;
 
         /// Interpolate value btwn p & --p:
-        mutable V (*interpolate)(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const V** vals);
-        static V linearInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const V** vals);
-        static V floorInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const V** vals);
-        static V ceilInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const V** vals);
+        mutable V (*interpolate)(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const V* vals, int Ny);
+        static V linearInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const V* vals, int Ny);
+        static V floorInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const V* vals, int Ny);
+        static V ceilInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const V* vals, int Ny);
     };
 }
 

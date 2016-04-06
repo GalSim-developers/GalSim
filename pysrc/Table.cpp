@@ -169,15 +169,31 @@ namespace {
             return new Table2D<double,double>(x0, y0, dx, dy, Nx, Ny, vals, i);
         }
 
-        static void interpMany(const Table2D<double,double>& table2d,
-                               const bp::object& x, const bp::object& y,
-                               const bp::object& vals)
+        static void interpManyScatter(const Table2D<double,double>& table2d,
+                                      const bp::object& x, const bp::object& y,
+                                      const bp::object& vals)
         {
             const double* xvec = GetNumpyArrayData<double>(x.ptr());
             const double* yvec = GetNumpyArrayData<double>(y.ptr());
-            double * valvec = GetNumpyArrayData<double>(vals.ptr());
+            double* valvec = GetNumpyArrayData<double>(vals.ptr());
             int N = GetNumpyArrayDim(x.ptr(), 0);
-            table2d.interpMany(xvec, yvec, valvec, N);
+            table2d.interpManyScatter(xvec, yvec, valvec, N);
+        }
+
+        static void interpManyOuter(const Table2D<double,double>& table2d,
+                                    const bp::object& x, const bp::object& y,
+                                    const bp::object& vals)
+        {
+            const double* xvec = GetNumpyArrayData<double>(x.ptr());
+            const double* yvec = GetNumpyArrayData<double>(y.ptr());
+            double* valvec = GetNumpyArrayData<double>(vals.ptr());
+            int Nx = GetNumpyArrayDim(x.ptr(), 0);
+            int Ny = GetNumpyArrayDim(y.ptr(), 0);
+            int outNx = GetNumpyArrayDim(vals.ptr(), 0);
+            int outNy = GetNumpyArrayDim(vals.ptr(), 1);
+            xassert(Nx == outNx+1);
+            xassert(Ny == outNy);
+            table2d.interpManyOuter(xvec, yvec, valvec, Nx, Ny);
         }
 
         static void wrap()
@@ -193,7 +209,8 @@ namespace {
                 )
                 .def("dump", &Table2D<double,double>::dump)
                 .def("__call__", &Table2D<double,double>::lookup)
-                .def("interpMany", &interpMany)
+                .def("interpManyScatter", &interpManyScatter)
+                .def("interpManyOuter", &interpManyOuter)
                 ;
         }
     };

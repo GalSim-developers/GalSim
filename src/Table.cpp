@@ -353,16 +353,9 @@ namespace galsim {
                           xmax(x0+(Nx-1)*dx), ymax(y0+(Ny-1)*dy), xslop(dx*1e-6), yslop(1e-6)
     {
         // Allocate array.
-        vals = new V*[Ny];
-        for (int i=0; i<Ny; i++) {
-            vals[i] = new V[Nx];
-        }
+        vals = new V[Nx*Ny];
         // Fill in array.
-        const V* k = valarray;
-        for (int i=0; i<Ny; i++) {
-            for (int j=0; j<Nx; j++, k++)
-                vals[i][j] = *k;
-        }
+        memcpy(vals, valarray, sizeof(V)*Nx*Ny);
 
         // Map specific interpolator to `interpolate`.
         switch (iType) {
@@ -411,32 +404,48 @@ namespace galsim {
         int i, j;
         A xi, yj;
         upperIndices(x, y, i, j, xi, yj);
-        return interpolate(x, y, xi, yj, dx, dy, i, j, const_cast<const V**>(vals));
+        return interpolate(x, y, xi, yj, dx, dy, i, j, const_cast<const V*>(vals), Ny);
     }
 
     template<class V, class A>
-    void Table2D<V,A>::interpMany(const A* xvec, const A* yvec, V* valvec, int N) const
+    void Table2D<V,A>::interpManyScatter(const A* xvec, const A* yvec, V* valvec, int N) const
     {
         int i, j;
         A xi, yj;
         for (int k=0; k<N; k++) {
             upperIndices(xvec[k], yvec[k], i, j, xi, yj);
-            valvec[k] = interpolate(xvec[k], yvec[k], xi, yj, dx, dy, i, j, const_cast<const V**>(vals));
+            valvec[k] = interpolate(xvec[k], yvec[k], xi, yj, dx, dy, i, j,
+                const_cast<const V*>(vals), Ny);
+        }
+    }
+
+    template<class V, class A>
+    void Table2D<V,A>::interpManyOuter(const A* xvec, const A* yvec, V* valvec,
+                                       int outNx, int outNy) const
+    {
+        int i, j;
+        A xi, yj;
+        for (int outi=0; outi<outNx; outi++) {
+            for (int outj=0; outj<outNy; outj++) {
+                upperIndices(xvec[outi], yvec[outj], i, j, xi, yj);
+                valvec[outi*outNy+outj] = interpolate(xvec[outi], yvec[outj], xi, yj, dx, dy, i, j,
+                    const_cast<const V*>(vals), Ny);
+            }
         }
     }
 
     template<class V, class A>
     V Table2D<V,A>::linearInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j,
-        const V** vals)
+        const V* vals, int Ny)
     {
         A ax = (xi - x) / dx;
         A bx = 1.0 - ax;
         A ay = (yj - y) / dy;
         A by = 1.0 - ay;
-        return (vals[i-1][j-1] * ax * ay
-                + vals[i][j-1] * bx * ay
-                + vals[i-1][j] * ax * by
-                + vals[i][j] * bx * by);
+        return (vals[(i-1)*Ny+j-1] * ax * ay
+                + vals[i*Ny+j-1] * bx * ay
+                + vals[(i-1)*Ny+j] * ax * by
+                + vals[i*Ny+j] * bx * by);
     }
 
     template class Table2D<double,double>;

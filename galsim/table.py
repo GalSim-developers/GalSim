@@ -565,20 +565,30 @@ class LookupTable2D2(object):
     def __init__(self, x0=0.0, y0=0.0, dx=1.0, dy=1.0, f=None, interpolant='linear'):
         self.table = _galsim._LookupTable2D(x0, y0, dx, dy, f.astype(float), interpolant)
 
-    def __call__(self, x, y):
+    def __call__(self, x, y, scatter=False):
         import numpy as np
-        if isinstance(x, np.ndarray):
-            f = np.empty_like(x.ravel(), dtype=float)
-            self.table.interpMany(x.astype(float).ravel(), y.astype(float).ravel(), f)
-            f = f.reshape(x.shape)
-        elif isinstance(x, tuple):
-            f = np.empty_like(x, dtype=float)
-            self.table.interpMany(np.array(x, dtype=float), f)
-            f = tuple(f)
-        elif isinstance(x, list):
-            f = np.empty_like(x, dtype=float)
-            self.table.interpMany(np.array(x, dtype=float), f)
-            f = list(f)
+        if scatter:
+            if isinstance(x, np.ndarray):
+                f = np.empty_like(x.ravel(), dtype=float)
+                self.table.interpManyScatter(x.astype(float).ravel(), y.astype(float).ravel(), f)
+                f = f.reshape(x.shape)
+            elif isinstance(x, tuple):
+                f = np.empty_like(x, dtype=float)
+                self.table.interpManyScatter(np.array(x, dtype=float), np.array(y, dtype=float), f)
+                f = tuple(f)
+            elif isinstance(x, list):
+                f = np.empty_like(x, dtype=float)
+                self.table.interpManyScatter(np.array(x, dtype=float), np.array(y, dtype=float), f)
+                f = list(f)
+            else:
+                f = self.table(float(x), float(y))
         else:
-            f = self.table(float(x), float(y))
+            # For outer product type interpolation, return an ndarray regardless if input is a list,
+            # tuple, or ndarray.  Still return a scalar if given a scalar, though.
+            from numbers import Real
+            if isinstance(x, Real):
+                f = self.table(float(x), float(y))
+            else:
+                f = np.empty((len(x), len(y)), dtype=float)
+                self.table.interpManyOuter(np.array(x, dtype=float), np.array(y, dtype=float), f)
         return f
