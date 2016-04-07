@@ -21,6 +21,8 @@ addition of the docstring and few extra features.
 
 Also, a simple 2D table for uniformly gridded input data: LookupTable2D.
 """
+import numpy as np
+
 from . import _galsim
 import galsim
 
@@ -84,7 +86,6 @@ class LookupTable(object):
                          interpolation is done. [default: False]
     """
     def __init__(self, x=None, f=None, file=None, interpolant=None, x_log=False, f_log=False):
-        import numpy as np
         self.x_log = x_log
         self.f_log = f_log
         self.file = file
@@ -169,7 +170,6 @@ class LookupTable(object):
 
         @returns the interpolated `f(x)` value(s).
         """
-        import numpy as np
         # first, keep track of whether interpolation was done in x or log(x)
         if self.x_log:
             if np.any(np.array(x) <= 0.):
@@ -210,7 +210,6 @@ class LookupTable(object):
     def getArgs(self):
         args = self.table.getArgs()
         if self.x_log:
-            import numpy as np
             return np.exp(args)
         else:
             return args
@@ -218,7 +217,6 @@ class LookupTable(object):
     def getVals(self):
         vals = self.table.getVals()
         if self.f_log:
-            import numpy as np
             return np.exp(vals)
         else:
             return vals
@@ -233,7 +231,6 @@ class LookupTable(object):
         return self.f_log
 
     def __eq__(self, other):
-        import numpy as np
         return (isinstance(other, LookupTable) and
                 np.array_equal(self.x,other.x) and
                 np.array_equal(self.f,other.f) and
@@ -328,7 +325,6 @@ class LookupTable2D(object):
     """
     def __init__(self, x0=0.0, y0=0.0, dx=1.0, dy=1.0, f=None, interpolant=None,
                  edge_mode=None):
-        import numpy as np
         if interpolant is None:
             interpolant = 'cubic'
         self.interpolant = interpolant
@@ -471,7 +467,6 @@ class LookupTable2D(object):
     def _eval_grid_wrap(self, xmin, xmax, nx, ymin, ymax, ny, dtype=None):
         # implement edge wrapping by repeatedly identifying grid cells that map back onto
         # the "fundamental" input cell coordinates.
-        import numpy as np
         out = np.empty((ny, nx), dtype=np.float64)
         # Output grid spacing
         dx = (xmax-xmin)/(nx-1.0)
@@ -538,7 +533,6 @@ class LookupTable2D(object):
                          self.f.dtype, self.interpolant, self.edge_mode)
 
     def __eq__(self, other):
-        import numpy as np
         return (isinstance(other, LookupTable2D) and
                 self.xmin == other.xmin and
                 self.xmax == other.xmax and
@@ -562,33 +556,40 @@ def _ceildiv(a, b): return -(-a // b)
 
 
 class LookupTable2D2(object):
-    def __init__(self, x0=0.0, y0=0.0, dx=1.0, dy=1.0, f=None, interpolant='linear'):
+    def __init__(self, x0=0.0, y0=0.0, dx=1.0, dy=1.0, f=None, interpolant='linear',
+                 edge_mode='warn'):
+
+        self.edge_mode = edge_mode
+        if self.edge_mode == 'wrap':
+            self.xperiod = dx*f.shape[1]
+            self.yperiod = dy*f.shape[0]
+            f = np.pad(f, [(0,1), (0,1)], mode='wrap')
         self.table = _galsim._LookupTable2D(x0, y0, dx, dy, f.astype(float), interpolant)
 
     def __call__(self, x, y, scatter=False):
-        import numpy as np
-        if scatter:
-            if isinstance(x, np.ndarray):
-                f = np.empty_like(x.ravel(), dtype=float)
-                self.table.interpManyScatter(x.astype(float).ravel(), y.astype(float).ravel(), f)
-                f = f.reshape(x.shape)
-            elif isinstance(x, tuple):
-                f = np.empty_like(x, dtype=float)
-                self.table.interpManyScatter(np.array(x, dtype=float), np.array(y, dtype=float), f)
-                f = tuple(f)
-            elif isinstance(x, list):
-                f = np.empty_like(x, dtype=float)
-                self.table.interpManyScatter(np.array(x, dtype=float), np.array(y, dtype=float), f)
-                f = list(f)
+        from numbers import Real
+        if isinstance(x, Real):
+            if self.edge_mode == 'wrap':
+                return self.table(x % self.xperiod, y % self.yperiod)
             else:
-                f = self.table(float(x), float(y))
+                return self.table(x, y)
         else:
-            # For outer product type interpolation, return an ndarray regardless if input is a list,
-            # tuple, or ndarray.  Still return a scalar if given a scalar, though.
-            from numbers import Real
-            if isinstance(x, Real):
-                f = self.table(float(x), float(y))
+            if scatter:
+                shape = x.shape
+                f = np.empty_like(x.ravel(), dtype=float)
+                x = x.astype(float).ravel()
+                y = y.astype(float).ravel()
+                if self.edge_mode == 'wrap':
+                    self.table.interpManyScatter(x % self.xperiod, y % self.yperiod, f)
+                else:
+                    self.table.interpManyScatter(x, y, f)
+                f = f.reshape(shape)
             else:
                 f = np.empty((len(y), len(x)), dtype=float)
-                self.table.interpManyOuter(np.array(x, dtype=float), np.array(y, dtype=float), f)
-        return f
+                x = np.array(x, dtype=float)
+                y = np.array(y, dtype=float)
+                if self.edge_mode == 'wrap':
+                    self.table.interpManyOuter(x % self.xperiod, y % self.yperiod, f)
+                else:
+                    self.table.interpManyOuter(x, y, f)
+            return f
