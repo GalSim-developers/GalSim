@@ -310,6 +310,8 @@ namespace galsim {
 
 
         void upperIndices(A x, A y, int& i, int& j, A& xi, A& yj) const;
+        void upperIndexX(A x, int& i, A& xi) const;
+        void upperIndexY(A y, int& j, A& yj) const;
 
         /// Interpolate value btwn p & --p:
         mutable V (*interpolate)(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const V* vals, int Ny);

@@ -396,13 +396,44 @@ namespace galsim {
         yj = y0 + j*dy;
     }
 
+    template<class V, class A>
+    void Table2D<V,A>::upperIndexX(A x, int& i, A& xi) const
+    {
+        if (x<x0-xslop || x>xmax+xslop)
+            throw TableOutOfRange(x,x0,xmax);
+        // check for slop
+        if (x < x0) x=x0;
+        if (x > xmax) x=xmax;
+
+        i = int( std::ceil( (x-x0) / dx) );
+        if (i >= Nx) --i; // in case of rounding error
+        if (i == 0) ++i;
+        xi = x0 + i*dx;
+    }
+
+    template<class V, class A>
+    void Table2D<V,A>::upperIndexY(A y, int& j, A& yj) const
+    {
+        if (y<y0-yslop || y>ymax+yslop)
+            throw TableOutOfRange(y,y0,ymax);
+        // check for slop
+        if (y < y0) y=y0;
+        if (y > ymax) y=ymax;
+
+        j = int( std::ceil( (y-y0) / dy) );
+        if (j >= Ny) --j; // in case of rounding error
+        if (j == 0) ++j;
+        yj = y0 + j*dy;
+    }
+
     //lookup and interpolate function value.
     template<class V, class A>
     V Table2D<V,A>::lookup(const A x, const A y) const
     {
         int i, j;
         A xi, yj;
-        upperIndices(x, y, i, j, xi, yj);
+        upperIndexX(x, i, xi);
+        upperIndexY(y, j, yj);
         return interpolate(x, y, xi, yj, dx, dy, i, j, const_cast<const V*>(vals), Nx);
     }
 
@@ -412,7 +443,8 @@ namespace galsim {
         int i, j;
         A xi, yj;
         for (int k=0; k<N; k++) {
-            upperIndices(xvec[k], yvec[k], i, j, xi, yj);
+            upperIndexX(xvec[k], i, xi);
+            upperIndexY(yvec[k], j, yj);
             valvec[k] = interpolate(xvec[k], yvec[k], xi, yj, dx, dy, i, j,
                 const_cast<const V*>(vals), Nx);
         }
@@ -425,8 +457,9 @@ namespace galsim {
         int i, j;
         A xi, yj;
         for (int outi=0; outi<outNx; outi++) {
+            upperIndexX(xvec[outi], i, xi);
             for (int outj=0; outj<outNy; outj++) {
-                upperIndices(xvec[outi], yvec[outj], i, j, xi, yj);
+                upperIndexY(yvec[outj], j, yj);
                 valvec[outj*outNx+outi] = interpolate(xvec[outi], yvec[outj], xi, yj, dx, dy, i, j,
                     const_cast<const V*>(vals), Nx);
             }
