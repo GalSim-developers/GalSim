@@ -360,15 +360,20 @@ def test_table2d2_scipy():
     tab2d = galsim.table.LookupTable2D2(x[0], y[0], x[1]-x[0], y[1]-y[0], z)
     sci2d = interp2d(x, y, z)
 
-    np.testing.assert_array_almost_equal(sci2d(x, y), tab2d(xx, yy, scatter=True))
-    np.testing.assert_array_almost_equal(sci2d(x, y), tab2d(x, y))
-    np.testing.assert_array_almost_equal(sci2d(x, y), np.array([[tab2d(x0, y0) for x0 in x]
-                                                                for y0 in y]))
+    newx = np.linspace(0.2, 3.1, 45)
+    newy = np.linspace(0.3, 10.1, 85)
+    newxx, newyy = np.meshgrid(newx, newy)
+
+    np.testing.assert_array_almost_equal(sci2d(newx, newy), tab2d(newxx, newyy, scatter=True))
+    np.testing.assert_array_almost_equal(sci2d(newx, newy), tab2d(newx, newy))
+    np.testing.assert_array_almost_equal(sci2d(newx, newy), np.array([[tab2d(x0, y0)
+                                                                       for x0 in newx]
+                                                                      for y0 in newy]))
 
 if __name__ == "__main__":
-    # test_table()
-    # test_init()
-    # test_log()
-    # test_roundoff()
-    # test_table2d()
+    test_table()
+    test_init()
+    test_log()
+    test_roundoff()
+    test_table2d()
     test_table2d2_scipy()
