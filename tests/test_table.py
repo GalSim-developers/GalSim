@@ -362,7 +362,8 @@ def test_table2d2_scipy():
 
     np.testing.assert_array_almost_equal(sci2d(x, y), tab2d(xx, yy, scatter=True))
     np.testing.assert_array_almost_equal(sci2d(x, y), tab2d(x, y))
-
+    np.testing.assert_array_almost_equal(sci2d(x, y), np.array([[tab2d(x0, y0) for x0 in x]
+                                                                for y0 in y]))
 
 if __name__ == "__main__":
     # test_table()
