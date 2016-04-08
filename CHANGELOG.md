@@ -72,6 +72,8 @@ New Features
   COSMOSCatalog class. (#693)
 - Added `convergence_threshold` as a parameter of HSMParams. (#709)
 - Improved the readability of Image and BaseDeviate reprs. (#723)
+- Sped up some Bandpass and SED functionality (and LookupTable class in
+  general). (#735)
 
 
 Updates to galsim executable

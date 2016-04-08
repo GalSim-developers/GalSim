@@ -825,12 +825,12 @@ class InterpolatedChromaticObject(ChromaticObject):
         # Find the Nyquist scale for each, and to be safe, choose the minimum value to use for the
         # array of images that is being stored.
         nyquist_scale_vals = [ obj.nyquistScale() for obj in objs ]
-        scale = min(nyquist_scale_vals) / oversample_fac
+        scale = np.min(nyquist_scale_vals) / oversample_fac
 
         # Find the suggested image size for each object given the choice of scale, and use the
         # maximum just to be safe.
         possible_im_sizes = [ obj.SBProfile.getGoodImageSize(scale, 1.0) for obj in objs ]
-        im_size = max(possible_im_sizes)
+        im_size = np.max(possible_im_sizes)
 
         # Find the stepK and maxK values for each object.  These will be used later on, so that we
         # can force these values when instantiating InterpolatedImages before drawing.
@@ -873,9 +873,9 @@ class InterpolatedChromaticObject(ChromaticObject):
         @returns an Image of the object at the given wavelength.
         """
         # First, some wavelength-related sanity checks.
-        if wave < min(self.waves) or wave > max(self.waves):
+        if wave < np.min(self.waves) or wave > np.max(self.waves):
             raise RuntimeError("Requested wavelength %.1f is outside the allowed range:"
-                               " %.1f to %.1f nm"%(wave, min(self.waves), max(self.waves)))
+                               " %.1f to %.1f nm"%(wave, np.min(self.waves), np.max(self.waves)))
 
         # Figure out where the supplied wavelength is compared to the list of wavelengths on which
         # images were originally tabulated.
@@ -971,8 +971,8 @@ class InterpolatedChromaticObject(ChromaticObject):
         # weight.  This is the most conservative possible choice, since it's possible that some of
         # the images that have non-zero weights might have such tiny weights that they don't change
         # the effective stepk and maxk we should use.
-        stepk = min(np.array(self.stepK_vals)[weight_fac>0])
-        maxk = max(np.array(self.maxK_vals)[weight_fac>0])
+        stepk = np.min(np.array(self.stepK_vals)[weight_fac>0])
+        maxk = np.max(np.array(self.maxK_vals)[weight_fac>0])
 
         # Instantiate the InterpolatedImage, using these conservative stepK and maxK choices.
         return galsim.InterpolatedImage(integral, _force_stepk=stepk, _force_maxk=maxk)
@@ -1413,7 +1413,7 @@ class ChromaticTransformation(ChromaticObject):
         if hasattr(self._jac, '__call__'):
             jac = self._jac
         else:
-            jac = self._jac.flatten().tolist()
+            jac = self._jac.ravel().tolist()
         if hasattr(self._offset, '__call__'):
             offset = self._offset
         else:
@@ -1426,7 +1426,7 @@ class ChromaticTransformation(ChromaticObject):
         if hasattr(self._jac, '__call__'):
             s += '.transform(%s)'%self._jac
         else:
-            dudx, dudy, dvdx, dvdy = self._jac.flatten()
+            dudx, dudy, dvdx, dvdy = self._jac.ravel()
             if dudx != 1 or dudy != 0 or dvdx != 0 or dvdy != 1:
                 # Figure out the shear/rotate/dilate calls that are equivalent.
                 jac = galsim.JacobianWCS(dudx,dudy,dvdx,dvdy)

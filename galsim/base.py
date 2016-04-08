@@ -702,7 +702,7 @@ class GSObject(object):
         else:
             shear = galsim.Shear(**kwargs)
 
-        new_obj = galsim.Transform(self, jac=shear.getMatrix().flatten().tolist())
+        new_obj = galsim.Transform(self, jac=shear.getMatrix().ravel().tolist())
 
         if hasattr(self,'noise'):
             new_obj.noise = self.noise.shear(shear)

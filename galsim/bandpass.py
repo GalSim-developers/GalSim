@@ -431,8 +431,8 @@ class Bandpass(object):
             tp = self.func(wave)
             if relative_throughput is not None:
                 w = (tp >= tp.max()*relative_throughput).nonzero()
-                blue_limit = max([min(wave[w]), blue_limit])
-                red_limit = min([max(wave[w]), red_limit])
+                blue_limit = max([np.min(wave[w]), blue_limit])
+                red_limit = min([np.max(wave[w]), red_limit])
             wave_list = wave_list[np.logical_and(wave_list >= blue_limit,
                                                  wave_list <= red_limit) ]
         elif relative_throughput is not None:

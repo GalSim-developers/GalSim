@@ -59,7 +59,7 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio
         # NB. Even better, if the flux scaling is chromatic, would be to find a component
         # that is already non-separable.  But we don't bother trying to do that currently.
         elif (isinstance(obj, galsim.ChromaticConvolution or isinstance(obj, galsim.Convolution))
-              and np.array_equal(np.asarray(jac).flatten(),(1,0,0,1))
+              and np.array_equal(np.asarray(jac).ravel(),(1,0,0,1))
               and offset == galsim.PositionD(0.,0.)):
             first = Transform(obj.objlist[0],flux_ratio=flux_ratio,gsparams=gsparams)
             return galsim.ChromaticConvolution( [first] + [o for o in obj.objlist[1:]] )
@@ -106,7 +106,7 @@ class Transformation(galsim.GSObject):
     """
     def __init__(self, obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio=1.,
                  gsparams=None):
-        dudx, dudy, dvdx, dvdy = np.asarray(jac, dtype=float).flatten()
+        dudx, dudy, dvdx, dvdy = np.asarray(jac, dtype=float).ravel()
         if hasattr(obj, 'original'):
             self._original = obj.original
         else:
@@ -160,7 +160,7 @@ class Transformation(galsim.GSObject):
 
     def __str__(self):
         s = str(self.original)
-        dudx, dudy, dvdx, dvdy = self.jac.flatten()
+        dudx, dudy, dvdx, dvdy = self.jac.ravel()
         if dudx != 1 or dudy != 0 or dvdx != 0 or dvdy != 1:
             # Figure out the shear/rotate/dilate calls that are equivalent.
             jac = galsim.JacobianWCS(dudx,dudy,dvdx,dvdy)
