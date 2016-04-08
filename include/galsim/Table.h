@@ -266,10 +266,6 @@ namespace galsim {
         Table2D(A x0, A y0, A dx, A dy, int Nx, int Ny,
                 const V* valarray, interpolant in);
 
-        ~Table2D() {
-            delete[] vals;
-        }
-
         void dump() const
         {
             int offset;
@@ -301,23 +297,21 @@ namespace galsim {
 
     private:
         interpolant iType;
-        V* vals;
+        std::vector<V> vals;
 
         const int Nx, Ny; // Array dimensions
         const A x0, y0, dx, dy;
         const A xmax, ymax;
         const A xslop, yslop;
 
-
-        void upperIndices(A x, A y, int& i, int& j, A& xi, A& yj) const;
         void upperIndexX(A x, int& i, A& xi) const;
         void upperIndexY(A y, int& j, A& yj) const;
 
         /// Interpolate value btwn p & --p:
-        mutable V (*interpolate)(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const V* vals, int Ny);
-        static V linearInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const V* vals, int Ny);
-        static V floorInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const V* vals, int Ny);
-        static V ceilInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const V* vals, int Ny);
+        mutable V (*interpolate)(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const std::vector<V>&, int Ny);
+        static V linearInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const std::vector<V>& vals, int Ny);
+        static V floorInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const std::vector<V>& vals, int Ny);
+        static V ceilInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const std::vector<V>& vals, int Ny);
     };
 }
 

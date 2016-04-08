@@ -353,9 +353,14 @@ namespace galsim {
                           xmax(x0+(Nx-1)*dx), ymax(y0+(Ny-1)*dy), xslop(dx*1e-6), yslop(1e-6)
     {
         // Allocate array.
-        vals = new V[Nx*Ny];
+        vals.reserve(Nx*Ny);
+
         // Fill in array.
-        memcpy(vals, valarray, sizeof(V)*Nx*Ny);
+        const V* vptr;
+        int i;
+        for (i=0, vptr=valarray; i<Nx*Ny; i++, vptr++) {
+            vals.push_back(*vptr);
+        }
 
         // Map specific interpolator to `interpolate`.
         switch (iType) {
@@ -371,29 +376,6 @@ namespace galsim {
           default:
                throw TableError("interpolation method not yet implemented");
         }
-    }
-
-    template<class V, class A>
-    void Table2D<V,A>::upperIndices(A x, A y, int& i, int& j, A& xi, A& yj) const
-    {
-        if (x<x0-xslop || x>xmax+xslop)
-            throw TableOutOfRange(x,x0,xmax);
-        if (y<y0-yslop || y>ymax+yslop)
-            throw TableOutOfRange(y,y0,ymax);
-        // check for slop
-        if (x < x0) x=x0;
-        if (x > xmax) x=xmax;
-        if (y < y0) y=y0;
-        if (y > ymax) y=ymax;
-
-        i = int( std::ceil( (x-x0) / dx) );
-        if (i >= Nx) --i; // in case of rounding error
-        if (i == 0) ++i;
-        xi = x0 + i*dx;
-        j = int( std::ceil( (y-y0) / dy) );
-        if (j >= Ny) --j; // in case of rounding error
-        if (j == 0) ++j;
-        yj = y0 + j*dy;
     }
 
     template<class V, class A>
@@ -434,7 +416,7 @@ namespace galsim {
         A xi, yj;
         upperIndexX(x, i, xi);
         upperIndexY(y, j, yj);
-        return interpolate(x, y, xi, yj, dx, dy, i, j, const_cast<const V*>(vals), Nx);
+        return interpolate(x, y, xi, yj, dx, dy, i, j, vals, Nx);
     }
 
     template<class V, class A>
@@ -445,8 +427,7 @@ namespace galsim {
         for (int k=0; k<N; k++) {
             upperIndexX(xvec[k], i, xi);
             upperIndexY(yvec[k], j, yj);
-            valvec[k] = interpolate(xvec[k], yvec[k], xi, yj, dx, dy, i, j,
-                const_cast<const V*>(vals), Nx);
+            valvec[k] = interpolate(xvec[k], yvec[k], xi, yj, dx, dy, i, j, vals, Nx);
         }
     }
 
@@ -456,19 +437,18 @@ namespace galsim {
     {
         int i, j;
         A xi, yj;
-        for (int outi=0; outi<outNx; outi++) {
-            upperIndexX(xvec[outi], i, xi);
-            for (int outj=0; outj<outNy; outj++) {
-                upperIndexY(yvec[outj], j, yj);
-                valvec[outj*outNx+outi] = interpolate(xvec[outi], yvec[outj], xi, yj, dx, dy, i, j,
-                    const_cast<const V*>(vals), Nx);
+        for (int outj=0; outj<outNy; outj++) {
+            upperIndexY(yvec[outj], j, yj);
+            for (int outi=0; outi<outNx; outi++, valvec++) {
+                upperIndexX(xvec[outi], i, xi);
+                *valvec = interpolate(xvec[outi], yvec[outj], xi, yj, dx, dy, i, j, vals, Nx);
             }
         }
     }
 
     template<class V, class A>
     V Table2D<V,A>::linearInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j,
-        const V* vals, int Nx)
+        const std::vector<V>& vals, int Nx)
     {
         A ax = (xi - x) / dx;
         A bx = 1.0 - ax;
