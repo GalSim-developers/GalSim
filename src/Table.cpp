@@ -367,12 +367,12 @@ namespace galsim {
           case linear:
                interpolate = &Table2D<V,A>::linearInterpolate;
                break;
-        //   case floor:
-        //        interpolate = &Table2D<V,A>::floorInterpolate;
-        //        break;
-        //   case ceil:
-        //        interpolate = &Table2D<V,A>::ceilInterpolate;
-        //        break;
+          case floor:
+               interpolate = &Table2D<V,A>::floorInterpolate;
+               break;
+          case ceil:
+               interpolate = &Table2D<V,A>::ceilInterpolate;
+               break;
           default:
                throw TableError("interpolation method not yet implemented");
         }
@@ -458,6 +458,24 @@ namespace galsim {
                 + vals[j*Nx+i-1] * ax * by
                 + vals[(j-1)*Nx+i] * bx * ay
                 + vals[j*Nx+i] * bx * by);
+    }
+
+    template<class V, class A>
+    V Table2D<V,A>::floorInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j,
+        const std::vector<V>& vals, int Nx)
+    {
+        if (x == xi) i++;
+        if (y == yj) j++;
+        return vals[(j-1)*Nx+i-1];
+    }
+
+    template<class V, class A>
+    V Table2D<V,A>::ceilInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j,
+        const std::vector<V>& vals, int Nx)
+    {
+        if (x == xi) i++;
+        if (y == yj) j++;
+        return vals[j*Nx+i];
     }
 
     template class Table2D<double,double>;
