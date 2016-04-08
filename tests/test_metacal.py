@@ -392,35 +392,6 @@ def test_metacal_tracking():
         check_symm_noise(final_image2, 'using alternate reverse shear does not work')
         print 'Time for alternate reverse shear method = ',t4-t3
 
-    if False:
-        print '\n\nStrategy 6:'
-        # Strategy 6: Make a noise field and do the same operations as we do to the main image
-        #             Subtract off the difference between this and the original noise field.
-        # Note: I don't think this method should ever work (i.e. I don't think the failure
-        #       here points to a bug in anything), but it's included here since I tried it,
-        #       and Eric had thought it should work.
-        t3 = time.time()
-
-        noise_image = galsim.Image(im_size,im_size, init_value=0, wcs=wcs)
-        noise_image.addNoise(galsim.GaussianNoise(rng=rng, sigma=math.sqrt(noise_var)))
-        noise_ii = galsim.InterpolatedImage(noise_image, pad_factor=1)
-        deconv_noise_obj = galsim.Convolve(noise_ii, psf_inv)
-        sheared_noise_obj = deconv_noise_obj.shear(shear)
-        final_noise_obj = galsim.Convolve(psf_target, sheared_noise_obj)
-        noshear_noise_obj = galsim.Convolve(psf_target, deconv_noise_obj)
-        final_noise_image = final_noise_obj.drawImage(obs_image.copy(), method='no_pixel')
-        noshear_noise_image = noshear_noise_obj.drawImage(obs_image.copy(), method='no_pixel')
-
-        # Add the difference between the sheared and unsheared noise fields.
-        final_image2 = final_image.copy()
-        final_image2 += (noshear_noise_image - final_noise_image)
-        t4 = time.time()
-
-        final_var = np.var(final_image2.array)
-        print 'd(noise) method: final_var = ',final_var
-        check_symm_noise(final_image2, 'subtracting d(noise) does not work')
-        print 'Time for d(noise) method = ',t4-t3
-
 
     t2 = time.time()
     print 'total time for tests = %.2f'%(t2-t1)
