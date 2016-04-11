@@ -317,16 +317,64 @@ def lin_approx_split(x, f):
     i = np.argmin(np.sum(errs, axis=1))
     return i+1, errs[i]
 
-def thin_tabulated_values2(x, f, rel_err=1.e-4):
+def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
     import numpy as np
     x = np.array(x)
     f = np.array(f)
 
+    # Check for valid inputs
+    if len(x) != len(f):
+        raise ValueError("len(x) != len(f)")
+    if rel_err <= 0 or rel_err >= 1:
+        raise ValueError("rel_err must be between 0 and 1")
+    if not (np.diff(x) >= 0).all():
+        raise ValueError("input x is not sorted.")
+
+    # Check for trivial noop.
+    if len(x) <= 2:
+        # Nothing to do
+        return x,f
+
     total_integ = np.trapz(abs(f), x)
     thresh = total_integ * rel_err
 
-    splitpoints = [0, len(x)-1]
-    errs = [np.inf]
+    if not preserve_range:
+        # arbitrarily allocate half of error budget to trimming the endpoints.
+        errleft = 0.5 * (abs(f[1])+abs(f[0])) * (x[1]-x[0])
+        errright = 0.5 * (abs(f[-1])+abs(f[-2])) * (x[-1]-x[-2])
+        accumulated_err = 0.0
+        # while at least one endpoint can be trimmed:
+        while accumulated_err+min(errleft, errright) < thresh * 0.5:
+            # if either endpoint could be trimmed, then trim the one leading to the smaller error,
+            # under the assumption that this is more likely to lead to trimming a larger total
+            # number of points.
+            if accumulated_err+max(errleft, errright) < thresh * 0.5:
+                if errleft < errright:
+                    x, f = x[1:], f[1:]
+                    accumulated_err += errleft
+                    errleft = 0.5 * (abs(f[1])+abs(f[0])) * (x[1]-x[0])
+                else:
+                    x, f = x[:-1], f[:-1]
+                    accumulated_err += errright
+                    errright = 0.5 * (abs(f[-1])+abs(f[-2])) * (x[-1]-x[-2])
+            elif accumulated_err+errleft < thresh * 0.5:
+                x, f = x[1:], f[1:]
+                accumulated_err += errleft
+                errleft = 0.5 * (abs(f[1])+abs(f[0])) * (x[1]-x[0])
+            else:  # accumulated_err+effright < thresh * 0.5:
+                x, f = x[:-1], f[:-1]
+                accumulated_err += errright
+                errright = 0.5 * (abs(f[-1])+abs(f[-2])) * (x[-1]-x[-2])
+        thresh -= accumulated_err  # in case we didn't use all of thresh*0.5
+
+    # Check again for noop after trimming endpoints.
+    if len(x) <= 2:
+        return x,f
+
+    # Thin interior points.  Start with no interior points and then greedily add them back in one at
+    # a time until relative error goal is met.
+    splitpoints = [0, len(x)-1]  # Start with single interval
+    errs = [np.inf]  # Current error for each interval
     while sum(errs) > thresh:
         # Find the worst current interval
         index = np.argmax(errs)
@@ -336,12 +384,12 @@ def thin_tabulated_values2(x, f, rel_err=1.e-4):
         i, (errleft, errright) = lin_approx_split(x[left:right+1], f[left:right+1])
         # Update splitpoints and errs
         splitpoints.insert(index+1, i+left)
-        errs[index] = errright  # overwrites previous interval error
+        errs[index] = errright
         errs.insert(index, errleft)
-    return x[splitpoints], f[splitpoints]
+    return x[splitpoints].tolist(), f[splitpoints].tolist()
 
 
-def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
+def thin_tabulated_values2(x, f, rel_err=1.e-4, preserve_range=False):
     """
     Remove items from a set of tabulated f(x) values so that the error in the integral is still
     accurate to a given relative accuracy.
