@@ -43,13 +43,13 @@ namespace galsim {
         return static_cast<const SBAddImpl&>(*_pimpl).getObjs();
     }
 
-    std::string SBAdd::SBAddImpl::repr() const
+    std::string SBAdd::SBAddImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss << "galsim._galsim.SBAdd([";
         ConstIter sptr = _plist.begin();
-        oss << sptr->repr();
-        for (++sptr; sptr!=_plist.end(); ++sptr) oss << ", " << sptr->repr();
+        oss << sptr->serialize();
+        for (++sptr; sptr!=_plist.end(); ++sptr) oss << ", " << sptr->serialize();
         oss << "], galsim.GSParams("<<*gsparams<<"))";
         return oss.str();
     }

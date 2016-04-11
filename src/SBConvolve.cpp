@@ -51,14 +51,14 @@ namespace galsim {
         return static_cast<const SBConvolveImpl&>(*_pimpl).isRealSpace();
     }
 
-    std::string SBConvolve::SBConvolveImpl::repr() const
+    std::string SBConvolve::SBConvolveImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBConvolve([";
         ConstIter sptr = _plist.begin();
-        oss << sptr->repr();
-        for (++sptr; sptr!=_plist.end(); ++sptr) oss << ", " << sptr->repr();
+        oss << sptr->serialize();
+        for (++sptr; sptr!=_plist.end(); ++sptr) oss << ", " << sptr->serialize();
         oss << "], galsim.GSParams("<<*gsparams<<"))";
         return oss.str();
     }
@@ -292,11 +292,11 @@ namespace galsim {
         return static_cast<const SBAutoConvolveImpl&>(*_pimpl).isRealSpace();
     }
 
-    std::string SBAutoConvolve::SBAutoConvolveImpl::repr() const
+    std::string SBAutoConvolve::SBAutoConvolveImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.SBAutoConvolve(" << _adaptee.repr() << ", ";
+        oss << "galsim._galsim.SBAutoConvolve(" << _adaptee.serialize() << ", ";
         if (_real_space) oss << "True";
         else oss << "False";
         oss << ", galsim.GSParams("<<*gsparams<<"))";
@@ -381,11 +381,11 @@ namespace galsim {
         return static_cast<const SBAutoCorrelateImpl&>(*_pimpl).isRealSpace();
     }
 
-    std::string SBAutoCorrelate::SBAutoCorrelateImpl::repr() const
+    std::string SBAutoCorrelate::SBAutoCorrelateImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.SBAutoCorrelate(" << _adaptee.repr() << ", ";
+        oss << "galsim._galsim.SBAutoCorrelate(" << _adaptee.serialize() << ", ";
         if (_real_space) oss << "True";
         else oss << "False";
         oss << ", galsim.GSParams("<<*gsparams<<"))";

@@ -353,8 +353,8 @@ class OpticalPSF(GSObject):
         # Hence calculate_stepk=True and calculate_maxk=True above.
 
         self._optimage = optimage
-        self._stepk = ii._stepk
-        self._maxk = ii._maxk
+        self._serialize_stepk = ii._serialize_stepk
+        self._serialize_maxk = ii._serialize_maxk
 
         GSObject.__init__(self, ii)
 
@@ -369,6 +369,36 @@ class OpticalPSF(GSObject):
                     "than what was used to build the wavefront (%g). "%stepk +
                     "This could lead to aliasing problems. " +
                     "Using pad_factor >= %f is recommended."%(pad_factor * stepk / final_stepk))
+
+    def __eq__(self, other):
+        return (isinstance(other, galsim.OpticalPSF) and
+                self._lam_over_diam == other._lam_over_diam and
+                np.array_equal(self._aberrations, other._aberrations) and
+                self._oversampling == other._oversampling and
+                self._pad_factor == other._pad_factor and
+                self._obscuration == other._obscuration and
+                self._nstruts == other._nstruts and
+                self._strut_thick == other._strut_thick and
+                self._strut_angle == other._strut_angle and
+                self._pupil_plane_im == other._pupil_plane_im and
+                self._circular_pupil == other._circular_pupil and
+                self._max_size == other._max_size and
+                self._interpolant == other._interpolant and
+                self._flux == other._flux and
+                self._gsparams == other._gsparams)
+
+    def __hash__(self):
+        # Cache this in case self._pupil_plane_im is large.
+        if not hasattr(self, '_hash'):
+            self._hash = hash(("galsim.OpticalPSF", self._lam_over_diam, tuple(self._aberrations),
+                               self._oversampling, self._pad_factor, self._obscuration,
+                               self._nstruts, self._strut_thick, self._strut_angle,
+                               self._pupil_angle, self._circular_pupil, self._max_size,
+                               self._interpolant, self._flux, self._gsparams))
+            if self._pupil_plane_im is not None:
+                self._hash ^= hash((tuple(self._pupil_plane_im.array.ravel()),
+                                    self._pupil_plane_im.bounds, self._pupil_plane_im.wcs))
+        return self._hash
 
     def __repr__(self):
         s = 'galsim.OpticalPSF(lam_over_diam=%r, aberrations=%r, oversampling=%r, pad_factor=%r'%(
@@ -421,8 +451,9 @@ class OpticalPSF(GSObject):
     def __setstate__(self, d):
         self.__dict__ = d
         ii =  galsim.InterpolatedImage(self._optimage, x_interpolant=self._interpolant,
-                                       _force_stepk=self._stepk, _force_maxk=self._maxk,
                                        use_true_center=False, normalization='sb',
+                                       _serialize_stepk=self._serialize_stepk,
+                                       _serialize_maxk=self._serialize_maxk,
                                        gsparams=self._gsparams)
         GSObject.__init__(self, ii)
 

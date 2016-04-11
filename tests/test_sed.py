@@ -63,10 +63,10 @@ def test_SED_basic():
                    flux_type='fphotons'),
         galsim.SED(galsim.LookupTable([1,1e4],[2/(h*c),2e4/(h*c)], interpolant='linear'),
                    flux_type='fphotons', wave_type='A'),
-        galsim.SED(galsim.LookupTable([1,1e3],[200/c,2e8/c], interpolant='linear', 
+        galsim.SED(galsim.LookupTable([1,1e3],[200/c,2e8/c], interpolant='linear',
                                       x_log=True, f_log=True),
                    flux_type='fnu'),
-        galsim.SED(galsim.LookupTable([1,1e4],[2/c,2e8/c], interpolant='linear', 
+        galsim.SED(galsim.LookupTable([1,1e4],[2/c,2e8/c], interpolant='linear',
                                       x_log=True, f_log=True),
                    flux_type='fnu', wave_type='A'),
         galsim.SED(galsim.LookupTable(nm_w, 200.*np.ones(100)), flux_type='flambda'),
@@ -94,7 +94,7 @@ def test_SED_basic():
         galsim.SED('1000', redshift=4),
         galsim.SED('1000').atRedshift(4.0),
     ]
- 
+
     for k,s in enumerate(s_list):
         print k,' s = ',s
         np.testing.assert_almost_equal(s(400)*h*c/400, 200, decimal=10)
@@ -542,6 +542,27 @@ def test_fnu_vs_flambda():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_ne():
+    import time
+    t1 = time.time()
+
+    spec1 = lambda x: x/1000
+    spec2 = galsim.LookupTable([400, 550], [0.4, 0.55], interpolant='linear')
+    spec3 = '3'
+
+    # These should all compare unequal.
+    seds = [galsim.SED(spec1),
+            galsim.SED(spec1, wave_type='A'),
+            galsim.SED(spec1, flux_type='fnu'),
+            galsim.SED(spec1, redshift=1.0),
+            galsim.SED(spec2),
+            galsim.SED(spec3)]
+    all_obj_diff(seds)
+
+    t2 = time.time()
+    print 'time for %s = %.2f' % (funcname(), t2-t1)
+
+
 if __name__ == "__main__":
     test_SED_basic()
     test_SED_add()
@@ -557,3 +578,4 @@ if __name__ == "__main__":
     test_SED_calculateDCRMomentShifts()
     test_SED_calculateSeeingMomentRatio()
     test_fnu_vs_flambda()
+    test_ne()

@@ -828,6 +828,35 @@ def test_flip():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_ne():
+    import time
+    t1 = time.time()
+
+    gal1 = galsim.Gaussian(fwhm=1)
+    gal2 = galsim.Gaussian(fwhm=2)
+    gsp = galsim.GSParams(maxk_threshold=1.1e-3, folding_threshold=5.1e-3)
+
+    # Transforms using the callables below will produce galsim.ChromaticTransformation objects
+    # instead of galsim.Transformation objects, but they should still compare unequal so we go ahead
+    # and test them too.
+    jac = lambda w: [[w, 0], [0, 1]]
+    offset = lambda w: (0, w)
+    flux_ratio = lambda w: w
+
+    objs = [galsim.Transform(gal1),
+            galsim.Transform(gal2),
+            galsim.Transform(gal1, jac=(1, 0.5, 0.5, 1)),
+            galsim.Transform(gal1, jac=jac),
+            galsim.Transform(gal1, offset=galsim.PositionD(2, 2)),
+            galsim.Transform(gal1, offset=offset),
+            galsim.Transform(gal1, flux_ratio=1.1),
+            galsim.Transform(gal1, flux_ratio=flux_ratio),
+            galsim.Transform(gal1, gsparams=gsp)]
+    all_obj_diff(objs)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 if __name__ == "__main__":
     test_smallshear()
@@ -840,3 +869,4 @@ if __name__ == "__main__":
     test_integer_shift_fft()
     test_integer_shift_photon()
     test_flip()
+    test_ne()

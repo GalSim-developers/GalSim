@@ -58,7 +58,7 @@ namespace galsim {
         return static_cast<const SBBoxImpl&>(*_pimpl).getHeight();
     }
 
-    std::string SBBox::SBBoxImpl::repr() const
+    std::string SBBox::SBBoxImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
@@ -358,7 +358,7 @@ namespace galsim {
         return static_cast<const SBTopHatImpl&>(*_pimpl).getRadius();
     }
 
-    std::string SBTopHat::SBTopHatImpl::repr() const
+    std::string SBTopHat::SBTopHatImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);

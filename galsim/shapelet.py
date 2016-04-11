@@ -20,6 +20,8 @@
 Shapelet is a GSObject that implements a shapelet decomposition of a profile.
 """
 
+import numpy as np
+
 import galsim
 from galsim import GSObject
 import _galsim
@@ -124,8 +126,7 @@ class Shapelet(GSObject):
             bvec_size = ShapeletSize(order)
             if len(bvec) != bvec_size:
                 raise ValueError("bvec is the wrong size for the provided order")
-            import numpy
-            bvec = LVector(order,numpy.array(bvec))
+            bvec = LVector(order,np.array(bvec))
 
         GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec, gsparams))
         self._gsparams = gsparams
@@ -167,6 +168,17 @@ class Shapelet(GSObject):
     def dilate(self, scale):
         sigma = self.sigma * scale
         return Shapelet(sigma, self.order, self.bvec)
+
+    def __eq__(self, other):
+        return (isinstance(other, galsim.Shapelet) and
+                self.sigma == other.sigma and
+                self.order == other.order and
+                np.array_equal(self.bvec, other.bvec) and
+                self._gsparams == other._gsparams)
+
+    def __hash__(self):
+        return hash(("galsim.Shapelet", self.sigma, self.order, tuple(self.bvec),
+                     self._gsparams))
 
     def __repr__(self):
         return 'galsim.Shapelet(sigma=%r, order=%r, bvec=%r, gsparams=%r)'%(

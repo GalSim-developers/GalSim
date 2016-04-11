@@ -376,6 +376,21 @@ def test_table2d2_scipy():
     np.testing.assert_array_almost_equal(tab2d(newx, newy), tab2d(newx, newy+tab2d.yperiod))
 
 
+@timer
+def test_ne():
+    # These should all compare as unequal.
+    x = [1, 2, 3]
+    f = [4, 5, 6]
+    x2 = [1.1, 2.2, 3.3]
+    f2 = [4.4, 5.5, 6.6]
+    lts = [galsim.LookupTable(x, f),
+           galsim.LookupTable(x, f2),
+           galsim.LookupTable(x2, f),
+           galsim.LookupTable(x, f, interpolant='floor'),
+           galsim.LookupTable(x, f, x_log=True),
+           galsim.LookupTable(x, f, f_log=True)]
+    all_obj_diff(lts)
+
 
 if __name__ == "__main__":
     # test_table()
@@ -384,3 +399,4 @@ if __name__ == "__main__":
     # test_roundoff()
     # test_table2d()
     test_table2d2_scipy()
+    test_ne()

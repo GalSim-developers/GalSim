@@ -191,6 +191,7 @@ namespace galsim {
                 .def("transform", &SBProfile::transform, bp::args("dudx", "dudy", "dvdx", "dvdy"))
                 .def("shoot", &SBProfile::shoot, bp::args("n", "u"))
                 .def("__repr__", &SBProfile::repr)
+                .def("serialize", &SBProfile::serialize)
                 .enable_pickling()
                 ;
             wrapTemplates<float>(pySBProfile);

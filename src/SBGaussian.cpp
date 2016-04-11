@@ -55,7 +55,7 @@ namespace galsim {
         return static_cast<const SBGaussianImpl&>(*_pimpl).getSigma();
     }
 
-    std::string SBGaussian::SBGaussianImpl::repr() const
+    std::string SBGaussian::SBGaussianImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);

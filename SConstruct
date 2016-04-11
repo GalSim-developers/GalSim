@@ -107,6 +107,13 @@ opts.Add(PathVariable('DYLD_LIBRARY_PATH',
          'this option enables SCons to set it back in for you by doing '+
          '`scons DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH`.',
          '', PathVariable.PathAccept))
+opts.Add(PathVariable('DYLD_FALLBACK_LIBRARY_PATH',
+         'Set the DYLD_FALLBACK_LIBRARY_PATH inside of SCons.  '+
+         'Particularly useful on El Capitan (and later), since Apple strips out '+
+         'DYLD_FALLBACK_LIBRARY_PATH from the environment that SCons sees, so if you need it, '+
+         'this option enables SCons to set it back in for you by doing '+
+         '`scons DYLD_FALLBACK_LIBRARY_PATH=$DYLD_FALLBACK_LIBRARY_PATH`.',
+         '', PathVariable.PathAccept))
 opts.Add(PathVariable('LD_LIBRARY_PATH',
          'Set the LD_LIBRARY_PATH inside of SCons. '+
          'cf. DYLD_LIBRARY_PATH for why this may be useful.',
@@ -711,6 +718,11 @@ def AddExtraPaths(env):
         paths=paths.split(os.pathsep)
         AddPath(lib_paths, paths)
 
+    if env['IMPORT_PATHS'] and os.environ.has_key('DYLD_FALLBACK_LIBRARY_PATH'):
+        paths=os.environ['DYLD_FALLBACK_LIBRARY_PATH']
+        paths=paths.split(os.pathsep)
+        AddPath(lib_paths, paths)
+
     env.PrependENVPath('PATH', bin_paths)
     env.Prepend(LIBPATH= lib_paths)
     env.Prepend(CPPPATH= cpp_paths)
@@ -734,12 +746,11 @@ def PrependLibraryPaths(pname, env):
 
     env is the relevant SCons environment.
     """
-    if 'DYLD_LIBRARY_PATH' in env and env['DYLD_LIBRARY_PATH'] != '':
-        pre = 'DYLD_LIBRARY_PATH=%r'%env['DYLD_LIBRARY_PATH']
-        pname = "%s %s"%(pre,pname)
-    if 'LD_LIBRARY_PATH' in env and env['LD_LIBRARY_PATH'] != '':
-        pre = 'LD_LIBRARY_PATH=%r'%env['LD_LIBRARY_PATH']
-        pname = "%s %s"%(pre,pname)
+    for var in ['DYLD_LIBRARY_PATH', 'DYLD_FALLBACK_LIBRARY_PATH', 'LD_LIBRARY_PATH']:
+        if var in env and env[var] != '':
+            pre = '%s=%r'%(var,env[var])
+            pname = "%s %s"%(pre,pname)
+
     return pname
 
 def AltTryRun(config, text, extension):

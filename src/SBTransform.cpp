@@ -42,11 +42,11 @@ namespace galsim {
 
     SBTransform::~SBTransform() {}
 
-    std::string SBTransform::SBTransformImpl::repr() const
+    std::string SBTransform::SBTransformImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.SBTransform(" << getObj().repr() << ", ";
+        oss << "galsim._galsim.SBTransform(" << getObj().serialize() << ", ";
         double mA, mB, mC, mD;
         getJac(mA,mB,mC,mD);
         oss << mA<<", "<<mB<<", "<<mC<<", "<<mD<<", ";

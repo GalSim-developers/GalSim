@@ -811,6 +811,51 @@ def test_OpticalPSF_lamdiam():
     except ImportError:
         print 'The assert_raises tests require nose'
 
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+def test_ne():
+    import time
+    t1 = time.time()
+    # Use some very forgiving settings to speed up this test.  We're not actually going to draw
+    # any images (other than internally the PSF), so should be okay.
+    gsp1 = galsim.GSParams(maxk_threshold=5.e-2, folding_threshold=5e-2, kvalue_accuracy=1e-3,
+                           xvalue_accuracy=1e-3)
+    gsp2 = galsim.GSParams(maxk_threshold=5.1e-2, folding_threshold=5e-2, kvalue_accuracy=1e-3,
+                           xvalue_accuracy=1e-3)
+    pupil_plane_im = galsim.fits.read(os.path.join(imgdir, pp_file))
+
+    # Params include: lam_over_diam, (lam/diam), aberrations by name, aberrations by list, nstruts,
+    # strut_thick, strut_angle, obscuration, oversampling, pad_factor, flux, gsparams,
+    # circular_pupil, interpolant, pupil_plane_im, pupil_angle, scale_unit
+    objs = [galsim.OpticalPSF(lam_over_diam=1.0, gsparams=gsp1),
+            galsim.OpticalPSF(lam_over_diam=1.0, gsparams=gsp2),
+            galsim.OpticalPSF(lam=1.0, diam=1.0, gsparams=gsp1),
+            galsim.OpticalPSF(lam=1.0, diam=1.0, scale_unit=galsim.arcmin, gsparams=gsp1),
+            galsim.OpticalPSF(lam_over_diam=1.0, defocus=0.1, gsparams=gsp1),
+            galsim.OpticalPSF(lam_over_diam=1.0, aberrations=[0, 0, 0, 0, 0.2], gsparams=gsp1),
+            galsim.OpticalPSF(lam_over_diam=1.0, nstruts=2, gsparams=gsp1),
+            galsim.OpticalPSF(lam_over_diam=1.0, nstruts=2, strut_thick=0.1, gsparams=gsp1),
+            galsim.OpticalPSF(lam_over_diam=1.0, nstruts=2, strut_angle=10.*galsim.degrees,
+                              gsparams=gsp1),
+            galsim.OpticalPSF(lam_over_diam=1.0, obscuration=0.5, gsparams=gsp1),
+            galsim.OpticalPSF(lam_over_diam=1.0, oversampling=2.0, gsparams=gsp1),
+            galsim.OpticalPSF(lam_over_diam=1.0, pad_factor=2.0, gsparams=gsp1),
+            galsim.OpticalPSF(lam_over_diam=1.0, flux=2.0, gsparams=gsp1),
+            galsim.OpticalPSF(lam_over_diam=1.0, circular_pupil=False, gsparams=gsp1),
+            galsim.OpticalPSF(lam_over_diam=1.0, interpolant='Linear', gsparams=gsp1)]
+    if __name__ == "__main__":
+        objs += [galsim.OpticalPSF(lam_over_diam=1.0, pupil_plane_im=pupil_plane_im, gsparams=gsp1,
+                                   suppress_warning=True),
+                 galsim.OpticalPSF(lam_over_diam=1.0, pupil_plane_im=pupil_plane_im,
+                                   pupil_angle=10*galsim.degrees, suppress_warning=True)]
+    all_obj_diff(objs)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 if __name__ == "__main__":
     # test_check_all_contiguous()
     # test_simple_wavefront()
@@ -830,3 +875,4 @@ if __name__ == "__main__":
     test_OpticalPSF_flux_scaling()
     test_OpticalPSF_pupil_plane()
     test_OpticalPSF_lamdiam()
+    test_ne()

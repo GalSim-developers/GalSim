@@ -65,7 +65,7 @@ namespace galsim {
 
     SBAiry::~SBAiry() {}
 
-    std::string SBAiry::SBAiryImpl::repr() const
+    std::string SBAiry::SBAiryImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
