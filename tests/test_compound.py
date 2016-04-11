@@ -696,6 +696,55 @@ def test_autocorrelate():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+def test_ne():
+    import time
+    t1 = time.time()
+
+    gsp = galsim.GSParams(maxk_threshold=1.1e-3, folding_threshold=5.1e-3)
+    gal1 = galsim.Gaussian(fwhm=1)
+    gal2 = galsim.Gaussian(fwhm=2)
+
+    # Sum.  Params are objs to add and potentially gsparams.
+    gals = [galsim.Sum(gal1),
+            galsim.Sum(gal1, gal2),
+            galsim.Sum(gal2, gal1),  # Not! commutative.
+            galsim.Sum(galsim.Sum(gal1, gal2), gal2),
+            galsim.Sum(gal1, galsim.Sum(gal2, gal2)),  # Not! associative.
+            galsim.Sum(gal1, gsparams=gsp)]
+    all_obj_diff(gals)
+
+    # Convolution.  Params are objs to convolve and potentially gsparams.
+    # The following should test unequal
+    gals = [galsim.Convolution(gal1),
+            galsim.Convolution(gal1, gal2),
+            galsim.Convolution(gal2, gal1),  # Not! commutative.
+            galsim.Convolution(gal1, gal2, real_space=True),
+            galsim.Convolution(galsim.Convolution(gal1, gal2), gal2),
+            galsim.Convolution(gal1, galsim.Convolution(gal2, gal2)),  # Not! associative.
+            galsim.Convolution(gal1, gsparams=gsp)]
+    all_obj_diff(gals)
+
+    # Deconvolution.  Only params here are obj to deconvolve and gsparams.
+    gals = [galsim.Deconvolution(gal1),
+            galsim.Deconvolution(gal2),
+            galsim.Deconvolution(gal1, gsparams=gsp)]
+    all_obj_diff(gals)
+
+    # AutoConvolution.  Only params here are obj to deconvolve and gsparams.
+    gals = [galsim.AutoConvolution(gal1),
+            galsim.AutoConvolution(gal2),
+            galsim.AutoConvolution(gal1, gsparams=gsp)]
+    all_obj_diff(gals)
+
+    # AutoCorrelation.  Only params here are obj to deconvolve and gsparams.
+    gals = [galsim.AutoCorrelation(gal1),
+            galsim.AutoCorrelation(gal2),
+            galsim.AutoCorrelation(gal1, gsparams=gsp)]
+    all_obj_diff(gals)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
 
 if __name__ == "__main__":
     test_convolve()
@@ -708,3 +757,4 @@ if __name__ == "__main__":
     test_add_flux_scaling()
     test_autoconvolve()
     test_autocorrelate()
+    test_ne()

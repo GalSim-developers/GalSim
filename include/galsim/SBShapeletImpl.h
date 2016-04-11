@@ -75,7 +75,7 @@ namespace galsim {
                         const tmv::Matrix<double>& kx,
                         const tmv::Matrix<double>& ky) const;
 
-        std::string repr() const;
+        std::string serialize() const;
 
     private:
         double _sigma;

@@ -527,6 +527,8 @@ namespace galsim {
 
         /// @brief Return a string that can act as the repr in python
         std::string repr() const;
+        /// @brief Return a string that can act as the pickle serialization string in python
+        std::string serialize() const;
 
     protected:
 

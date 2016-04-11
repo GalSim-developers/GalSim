@@ -121,7 +121,7 @@ namespace galsim {
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 
-        std::string repr() const;
+        std::string serialize() const;
 
     private:
         typedef std::list<SBProfile>::iterator Iter;
@@ -189,7 +189,7 @@ namespace galsim {
 
         const SBProfile& getAdaptee() const { return _adaptee; }
 
-        std::string repr() const;
+        std::string serialize() const;
 
     private:
         SBProfile _adaptee;
@@ -245,7 +245,7 @@ namespace galsim {
 
         const SBProfile& getAdaptee() const { return _adaptee; }
 
-        std::string repr() const;
+        std::string serialize() const;
 
     private:
         SBProfile _adaptee;

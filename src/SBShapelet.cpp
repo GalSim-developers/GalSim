@@ -50,7 +50,7 @@ namespace galsim {
         return static_cast<const SBShapeletImpl&>(*_pimpl).getSigma();
     }
 
-    std::string SBShapelet::SBShapeletImpl::repr() const
+    std::string SBShapelet::SBShapeletImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);

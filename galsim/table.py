@@ -238,6 +238,14 @@ class LookupTable(object):
                 self.interpolant == other.interpolant)
     def __ne__(self, other): return not self.__eq__(other)
 
+    def __hash__(self):
+        # Cache this in case self.x, self.f are long.
+        if not hasattr(self, '_hash'):
+            self._hash = hash(("galsim.LookupTable", tuple(self.x), tuple(self.f), self.x_log,
+                               self.f_log, self.interpolant))
+        return self._hash
+
+
     def __repr__(self):
         return 'galsim.LookupTable(x=array(%r), f=array(%r), x_log=%r, f_log=%r, interpolant=%r)'%(
             self.x.tolist(), self.f.tolist(), self.x_log, self.f_log, self.interpolant)
@@ -250,15 +258,22 @@ class LookupTable(object):
             return 'galsim.LookupTable(x=[%s,..,%s], f=[%s,...,%s], interpolant=%r)'%(
                 self.x[0], self.x[-1], self.f[0], self.f[-1], self.interpolant)
 
-    def __hash__(self): return hash(repr(self))
-
-
 # A function to enable pickling of tables
 _galsim._LookupTable.__getinitargs__ = lambda self: \
         (self.getArgs(), self.getVals(), self.getInterp())
 _galsim._LookupTable.__repr__ = lambda self: \
         'galsim._galsim._LookupTable(array(%r), array(%r), %r)'%(
             self.getArgs(), self.getVals(), self.getInterp())
-_galsim._LookupTable.__eq__ = lambda self, other: repr(self) == repr(other)
+
+def _LookupTable_eq(self, other):
+    return (isinstance(other, _galsim._LookupTable) and
+            self.getArgs() == other.getArgs() and
+            self.getVals() == other.getVals() and
+            self.getInterp() == other.getInterp())
+
+def _LookupTable_hash(self):
+    return hash(("_galsim._LookupTable", self.getArgs(), self.getVals(), self.getInterp()))
+
+_galsim._LookupTable.__eq__ = _LookupTable_eq
 _galsim._LookupTable.__ne__ = lambda self, other: not self.__eq__(other)
-_galsim._LookupTable.__hash__ = lambda self: hash(repr(other))
+_galsim._LookupTable.__hash__ = _LookupTable_hash

@@ -133,10 +133,19 @@ GaussianDeviate, since it generates two values at a time, saving the second one 
 next output value.
 """
 
-# Quick and dirty.  Just check reprs are equal.
-_galsim.BaseDeviate.__eq__ = lambda self, other: repr(self) == repr(other)
+def _BaseDeviate_eq(self, other):
+    return (type(self) == type(other) and
+            self.serialize() == other.serialize())
+
+_galsim.BaseDeviate.__eq__ = _BaseDeviate_eq
 _galsim.BaseDeviate.__ne__ = lambda self, other: not self.__eq__(other)
-_galsim.BaseDeviate.__hash__ = lambda self: hash(repr(self))
+_galsim.BaseDeviate.__hash__ = None
+
+def _BaseDeviate_seed_repr(self):
+    s = self.serialize().split(' ')
+    return " ".join(s[:3])+" ... "+" ".join(s[-3:])
+_galsim.BaseDeviate._seed_repr = _BaseDeviate_seed_repr
+
 
 def permute(rng, *args):
     """Randomly permute one or more lists.
@@ -166,8 +175,8 @@ class DistDeviate(_galsim.BaseDeviate):
 
     DistDeviate is a BaseDeviate class that can be used to draw from an arbitrary probability
     distribution.  The probability distribution passed to DistDeviate can be given one of three
-    ways: as the name of a file containing a 2d ASCII array of x and P(x) or as a callable
-    function.
+    ways: as the name of a file containing a 2d ASCII array of x and P(x), as a LookupTable mapping
+    x to P(x), or as a callable function.
 
     Once given a probability, DistDeviate creates a table of the cumulative probability and draws
     from it using a UniformDeviate.  The precision of its outputs can be controlled with the
@@ -393,11 +402,21 @@ class DistDeviate(_galsim.BaseDeviate):
 
     def __repr__(self):
         return ('galsim.DistDeviate(seed=%r, function=%r, x_min=%r, x_max=%r, interpolant=%r, '+
-                'npoints=%r)')%(self._ud.serialize(), self._function, self._xmin, self._xmax,
+                'npoints=%r)')%(self._ud._seed_repr(), self._function, self._xmin, self._xmax,
                                 self._interpolant, self._npoints)
     def __str__(self):
         return 'galsim.DistDeviate(function="%s", x_min=%s, x_max=%s, interpolant=%s, npoints=%s)'%(
                 self._function, self._xmin, self._xmax, self._interpolant, self._npoints)
+
+    def __eq__(self, other):
+        if repr(self) != repr(other):
+            return False
+        return (self._ud.serialize() == other._ud.serialize() and
+                self._function == other._function and
+                self._xmin == other._xmin and
+                self._xmax == other._xmax and
+                self._interpolant == other._interpolant and
+                self._npoints == other._npoints)
 
     # Functions aren't picklable, so for pickling, we reinitialize the DistDeviate using the
     # original function parameter, which may be a string or a file name.
@@ -667,3 +686,33 @@ _galsim.PoissonDeviate.__getinitargs__ = lambda self: (self.serialize(), self.ge
 _galsim.WeibullDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getA(), self.getB())
 _galsim.GammaDeviate.__getinitargs__ = lambda self: (self.serialize(), self.getK(), self.getTheta())
 _galsim.Chi2Deviate.__getinitargs__ = lambda self: (self.serialize(), self.getN())
+
+# Deviate __eq__
+_galsim.GaussianDeviate.__eq__ = lambda self, other: (
+        isinstance(other, _galsim.GaussianDeviate) and
+        self.serialize() == other.serialize() and
+        self.getMean() == other.getMean() and
+        self.getSigma() == other.getSigma())
+_galsim.BinomialDeviate.__eq__ = lambda self, other: (
+        isinstance(other, _galsim.BinomialDeviate) and
+        self.serialize() == other.serialize() and
+        self.getN() == other.getN() and
+        self.getP() == other.getP())
+_galsim.PoissonDeviate.__eq__ = lambda self, other: (
+        isinstance(other, _galsim.PoissonDeviate) and
+        self.serialize() == other.serialize() and
+        self.getMean() == other.getMean())
+_galsim.WeibullDeviate.__eq__ = lambda self, other: (
+        isinstance(other, _galsim.WeibullDeviate) and
+        self.serialize() == other.serialize() and
+        self.getA() == other.getA() and
+        self.getB() == other.getB())
+_galsim.GammaDeviate.__eq__ = lambda self, other: (
+        isinstance(other, _galsim.GammaDeviate) and
+        self.serialize() == other.serialize() and
+        self.getK() == other.getK() and
+        self.getTheta() == other.getTheta())
+_galsim.Chi2Deviate.__eq__ = lambda self, other: (
+        isinstance(other, _galsim.Chi2Deviate) and
+        self.serialize() == other.serialize() and
+        self.getN() == other.getN())
