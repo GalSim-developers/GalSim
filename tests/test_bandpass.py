@@ -276,9 +276,26 @@ def test_ne():
     t2 = time.time()
     print 'time for %s = %.2f' % (funcname(), t2-t1)
 
+
+def test_thin():
+    import time
+    t1 = time.time()
+
+    s = galsim.SED('1', flux_type='fphotons')
+    bp = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
+    flux = s.calculateFlux(bp)
+    for err in [1.e-2, 1.e-3, 1.e-4, 1.e-5]:
+        thin_bp = bp.thin(rel_err=err)
+        thin_flux = s.calculateFlux(thin_bp)
+        assert (flux-thin_flux)/flux < err, "Thinned bandpass failed accuracy goal."
+
+    t2 = time.time()
+    print 'time for %s = %.2f' % (funcname(), t2-t1)
+
 if __name__ == "__main__":
     test_Bandpass_basic()
     test_Bandpass_mul()
     test_Bandpass_div()
     test_Bandpass_wave_type()
     test_ne()
+    test_thin()
