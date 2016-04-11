@@ -296,7 +296,7 @@ def _convertPositions(pos, units, func):
 
     return pos
 
-def lin_approx_err(x, f, i):
+def _lin_approx_err(x, f, i):
     """Error in abs(f(x) - approx(x)) when using ith data point to make piecewise linear
     approximation."""
     import numpy as np
@@ -309,15 +309,32 @@ def lin_approx_err(x, f, i):
     f2right = fi+mright*(xright-xi)
     return np.trapz(np.abs(fleft-f2left), xleft), np.trapz(np.abs(fright-f2right), xright)
 
-def lin_approx_split(x, f):
+def _lin_approx_split(x, f):
     """Optimally split a tabulated function into two piecewise linear approximations.
     """
     import numpy as np
-    errs = [lin_approx_err(x, f, i) for i in xrange(1, len(x)-1)]
+    errs = [_lin_approx_err(x, f, i) for i in xrange(1, len(x)-1)]
     i = np.argmin(np.sum(errs, axis=1))
     return i+1, errs[i]
 
 def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
+    """
+    Remove items from a set of tabulated f(x) values so that the error in the integral is still
+    accurate to a given relative accuracy.
+
+    The input `x,f` values can be lists, NumPy arrays, or really anything that can be converted
+    to a NumPy array.  The new lists will be output as python lists.
+
+    @param x                The `x` values in the f(x) tabulation.
+    @param f                The `f` values in the f(x) tabulation.
+    @param rel_err          The maximum relative error to allow in the integral from the removal.
+                            [default: 1.e-4]
+    @param preserve_range   Should the original range of `x` be preserved? (True) Or should the ends
+                            be trimmed to include only the region where the integral is
+                            significant? (False)  [default: False]
+
+    @returns a tuple of lists `(x_new, y_new)` with the thinned tabulation.
+    """
     import numpy as np
     x = np.array(x)
     f = np.array(f)
@@ -381,104 +398,13 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
         # Optimally split that interval
         left = splitpoints[index]
         right = splitpoints[index+1]
-        i, (errleft, errright) = lin_approx_split(x[left:right+1], f[left:right+1])
+        i, (errleft, errright) = _lin_approx_split(x[left:right+1], f[left:right+1])
         # Update splitpoints and errs
         splitpoints.insert(index+1, i+left)
         errs[index] = errright
         errs.insert(index, errleft)
     return x[splitpoints].tolist(), f[splitpoints].tolist()
 
-
-def thin_tabulated_values2(x, f, rel_err=1.e-4, preserve_range=False):
-    """
-    Remove items from a set of tabulated f(x) values so that the error in the integral is still
-    accurate to a given relative accuracy.
-
-    The input `x,f` values can be lists, NumPy arrays, or really anything that can be converted
-    to a NumPy array.  The new lists will be output as python lists.
-
-    @param x                The `x` values in the f(x) tabulation.
-    @param f                The `f` values in the f(x) tabulation.
-    @param rel_err          The maximum relative error to allow in the integral from the removal.
-                            [default: 1.e-4]
-    @param preserve_range   Should the original range of `x` be preserved? (True) Or should the ends
-                            be trimmed to include only the region where the integral is
-                            significant? (False)  [default: False]
-
-    @returns a tuple of lists `(x_new, y_new)` with the thinned tabulation.
-    """
-    x = np.array(x)
-    f = np.array(f)
-
-    # Check for valid inputs
-    if len(x) != len(f):
-        raise ValueError("len(x) != len(f)")
-    if rel_err <= 0 or rel_err >= 1:
-        raise ValueError("rel_err must be between 0 and 1")
-    if not (np.diff(x) >= 0).all():
-        raise ValueError("input x is not sorted.")
-
-    # Check for trivial noop.
-    if len(x) <= 2:
-        # Nothing to do
-        return x,f
-
-    # Start by calculating the complete integral of |f|
-    total_integ = np.trapz(abs(f),x)
-    if total_integ == 0:
-        return np.array([ x[0], x[-1] ]), np.array([ f[0], f[-1] ])
-    thresh = rel_err * total_integ
-
-    if not preserve_range:
-        # Remove values from the front that integrate to less than thresh.
-        integ = 0.5 * (abs(f[0]) + abs(f[1])) * (x[1] - x[0])
-        k0 = 0
-        while k0 < len(x)-2 and integ < thresh:
-            k0 = k0+1
-            integ += 0.5 * (abs(f[k0]) + abs(f[k0+1])) * (x[k0+1] - x[k0])
-        # Now the integral from 0 to k0+1 (inclusive) is a bit too large.
-        # That means k0 is the largest value we can use that will work as the staring value.
-
-        # Remove values from the back that integrate to less than thresh.
-        k1 = len(x)-1
-        integ = 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
-        while k1 > k0 and integ < thresh:
-            k1 = k1-1
-            integ += 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
-        # Now the integral from k1-1 to len(x)-1 (inclusive) is a bit too large.
-        # That means k1 is the smallest value we can use that will work as the ending value.
-
-        x = x[k0:k1+1]  # +1 since end of range is given as one-past-the-end.
-        f = f[k0:k1+1]
-
-    # Start a new list with just the first item so far
-    newx = [ x[0] ]
-    newf = [ f[0] ]
-
-    k0 = 0  # The last item currently in the new array
-    k1 = 1  # The current item we are considering to skip or include
-    while k1 < len(x)-1:
-        # We are considering replacing all the true values between k0 and k1+1 (non-inclusive)
-        # with a linear approxmation based on the points at k0 and k1+1.
-        lin_f = f[k0] + (f[k1+1]-f[k0])/(x[k1+1]-x[k0]) * (x[k0:k1+2] - x[k0])
-        # Integrate | f(x) - lin_f(x) | from k0 to k1+1, inclusive.
-        integ = np.trapz(abs(f[k0:k1+2] - lin_f), x[k0:k1+2])
-        # If the integral of the difference is < thresh, we can skip this item.
-        if integ < thresh:
-            # OK to skip item k1
-            k1 = k1 + 1
-        else:
-            # Have to include this one.
-            newx.append(x[k1])
-            newf.append(f[k1])
-            k0 = k1
-            k1 = k1 + 1
-
-    # Always include the last item
-    newx.append(x[-1])
-    newf.append(f[-1])
-
-    return newx, newf
 
 def _gammafn(x):
     """
