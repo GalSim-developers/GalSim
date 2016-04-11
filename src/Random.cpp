@@ -20,6 +20,9 @@
 #include <sys/time.h>
 #include "Random.h"
 #include <fcntl.h>
+#include <string>
+#include <vector>
+#include <sstream>
 
 namespace galsim {
 
@@ -85,13 +88,43 @@ namespace galsim {
         clearCache();
     }
 
+    // Next two functions shamelessly stolen from
+    // http://stackoverflow.com/questions/236129/split-a-string-in-c
+    std::vector<std::string>& split(const std::string& s, char delim,
+                                    std::vector<std::string>& elems) {
+        std::stringstream ss(s);
+        std::string item;
+        while (std::getline(ss, item, delim)) {
+            elems.push_back(item);
+        }
+        return elems;
+    }
+
+    std::vector<std::string> split(const std::string& s, char delim) {
+        std::vector<std::string> elems;
+        split(s, delim, elems);
+        return elems;
+    }
+
+    std::string seedstring(const std::vector<std::string>& seed) {
+        std::ostringstream oss;
+        int nseed = seed.size();
+        oss << "seed='";
+        for (int i=0; i < 3; i++) oss << seed[i] << ' ';
+        oss << "...";
+        for (int i=nseed-3; i < nseed; i++) oss << ' ' << seed[i];
+        oss << "'";
+        return oss.str();
+    }
+
     std::string BaseDeviate::make_repr(bool incl_seed)
     {
         // Remember: Don't start with nothing!  See discussion in FormatAndThrow in Std.h
         std::ostringstream oss(" ");
         oss << "galsim.BaseDeviate(";
-        if (incl_seed) oss << "seed='"<<serialize()<<"'";
+        if (incl_seed) oss << seedstring(split(serialize(), ' '));
         oss<<")";
+
         return oss.str();
     }
 
@@ -99,7 +132,7 @@ namespace galsim {
     {
         std::ostringstream oss(" ");
         oss << "galsim.UniformDeviate(";
-        if (incl_seed) oss << "seed='"<<serialize()<<"'";
+        if (incl_seed) oss << seedstring(split(serialize(), ' '));
         oss<<")";
         return oss.str();
     }
@@ -109,7 +142,7 @@ namespace galsim {
     {
         std::ostringstream oss(" ");
         oss << "galsim.GaussianDeviate(";
-        if (incl_seed) oss << "seed='"<<serialize()<<"', ";
+        if (incl_seed) oss << seedstring(split(serialize(), ' ')) << ", ";
         oss << "mean="<<getMean()<<", ";
         oss << "sigma="<<getSigma()<<")";
         return oss.str();
@@ -120,7 +153,7 @@ namespace galsim {
     {
         std::ostringstream oss(" ");
         oss << "galsim.BinomialDeviate(";
-        if (incl_seed) oss << "seed='"<<serialize()<<"',";
+        if (incl_seed) oss << seedstring(split(serialize(), ' ')) << ", ";
         oss << "N="<<getN()<<", ";
         oss << "p="<<getP()<<")";
         return oss.str();
@@ -131,7 +164,7 @@ namespace galsim {
     {
         std::ostringstream oss(" ");
         oss << "galsim.PoissonDeviate(";
-        if (incl_seed) oss << "seed='"<<serialize()<<"',";
+        if (incl_seed) oss << seedstring(split(serialize(), ' ')) << ", ";
         oss << "mean="<<getMean()<<")";
         return oss.str();
     }
@@ -141,7 +174,7 @@ namespace galsim {
     {
         std::ostringstream oss(" ");
         oss << "galsim.WeibullDeviate(";
-        if (incl_seed) oss << "seed='"<<serialize()<<"',";
+        if (incl_seed) oss << seedstring(split(serialize(), ' ')) << ", ";
         oss << "a="<<getA()<<", ";
         oss << "b="<<getB()<<")";
         return oss.str();
@@ -152,7 +185,7 @@ namespace galsim {
     {
         std::ostringstream oss(" ");
         oss << "galsim.GammaDeviate(";
-        if (incl_seed) oss << "seed='"<<serialize()<<"',";
+        if (incl_seed) oss << seedstring(split(serialize(), ' ')) << ", ";
         oss << "k="<<getK()<<", ";
         oss << "theta="<<getTheta()<<")";
         return oss.str();
@@ -163,7 +196,7 @@ namespace galsim {
     {
         std::ostringstream oss(" ");
         oss << "galsim.Chi2Deviate(";
-        if (incl_seed) oss << "seed='"<<serialize()<<"',";
+        if (incl_seed) oss << seedstring(split(serialize(), ' ')) << ", ";
         oss << "n="<<getN()<<")";
         return oss.str();
     }

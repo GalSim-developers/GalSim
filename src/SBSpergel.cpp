@@ -71,7 +71,7 @@ namespace galsim {
         return static_cast<const SBSpergelImpl&>(*_pimpl).getHalfLightRadius();
     }
 
-    std::string SBSpergel::SBSpergelImpl::repr() const
+    std::string SBSpergel::SBSpergelImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);

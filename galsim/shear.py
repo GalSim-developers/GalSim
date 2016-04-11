@@ -15,12 +15,12 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file shear.py 
+"""@file shear.py
 Redefinition of the Shear class at the Python layer.
 """
 
 import galsim
-import numpy
+import numpy as np
 
 class Shear(object):
     """A class to represent shears in a variety of ways.
@@ -42,11 +42,11 @@ class Shear(object):
     g1 = |g| cos(2*beta)
     g2 = |g| sin(2*beta)
 
-    Note: beta is _not_ the phase of a complex valued shear.  Rather, the complex shear is 
+    Note: beta is _not_ the phase of a complex valued shear.  Rather, the complex shear is
     g1 + i g2 = g exp(2 i beta).  Likewise for eta or e.  The phase of the complex value is 2 beta.
 
     The following are all examples of valid calls to initialize a Shear object:
-    
+
         >>> s = galsim.Shear()                    # empty constructor sets ellipticity/shear to zero
         >>> s = galsim.Shear(g1=0.05, g2=0.05)
         >>> s = galsim.Shear(g1=0.05)             # assumes g2=0
@@ -59,9 +59,9 @@ class Shear(object):
         >>> s = galsim.Shear(q=0.5, beta=0.0*galsim.radians)
 
     There can be no mixing and matching, e.g., specifying `g1` and `e2`.  It is permissible to only
-    specify one of two components, with the other assumed to be zero.  If a magnitude such as `e`, 
-    `g`, `eta`, or `q` is specified, then `beta` is also required to be specified.  It is possible 
-    to initialize a Shear with zero reduced shear by specifying no args or kwargs, i.e. 
+    specify one of two components, with the other assumed to be zero.  If a magnitude such as `e`,
+    `g`, `eta`, or `q` is specified, then `beta` is also required to be specified.  It is possible
+    to initialize a Shear with zero reduced shear by specifying no args or kwargs, i.e.
     galsim.Shear().
 
     Since we have defined a Shear as a transformation that preserves area, this means that it is not
@@ -88,7 +88,7 @@ class Shear(object):
                 "Shear constructor received >1 non-keyword arguments: %s"%args)
 
         # If a component of e, g, or eta, then require that the other component is zero if not set,
-        # and don't allow specification of mixed pairs like e1 and g2. 
+        # and don't allow specification of mixed pairs like e1 and g2.
         # Also, require a position angle if we didn't get g1/g2, e1/e2, or eta1/eta2
 
         # Unnamed arg must be a complex shear
@@ -115,7 +115,7 @@ class Shear(object):
             e2 = kwargs.pop('e2', 0.)
             absesq = e1**2 + e2**2
             if absesq > 1.:
-                raise ValueError("Requested distortion exceeds 1: %s"%numpy.sqrt(absesq))
+                raise ValueError("Requested distortion exceeds 1: %s"%np.sqrt(absesq))
             self._g = (e1 + 1j * e2) * self._e2g(absesq)
 
         # eta1,eta2
@@ -130,7 +130,7 @@ class Shear(object):
         elif 'g' in kwargs:
             if 'beta' not in kwargs:
                 raise TypeError(
-                    "Shear constructor requires position angle when g is specified!") 
+                    "Shear constructor requires position angle when g is specified!")
             beta = kwargs.pop('beta')
             if not isinstance(beta, galsim.Angle):
                 raise TypeError(
@@ -138,7 +138,7 @@ class Shear(object):
             g = kwargs.pop('g')
             if g > 1 or g < 0:
                 raise ValueError("Requested |shear| is outside [0,1]: %f"%g)
-            self._g = g * numpy.exp(2j * beta.rad())
+            self._g = g * np.exp(2j * beta.rad())
 
         # e,beta
         elif 'e' in kwargs:
@@ -152,7 +152,7 @@ class Shear(object):
             e = kwargs.pop('e')
             if e > 1 or e < 0:
                 raise ValueError("Requested distortion is outside [0,1]: %f"%e)
-            self._g = self._e2g(e**2) * e * numpy.exp(2j * beta.rad())
+            self._g = self._e2g(e**2) * e * np.exp(2j * beta.rad())
 
         # eta,beta
         elif 'eta' in kwargs:
@@ -166,7 +166,7 @@ class Shear(object):
             eta = kwargs.pop('eta')
             if eta < 0:
                 raise ValueError("Requested eta is below 0: %f"%eta)
-            self._g = self._eta2g(eta) * eta * numpy.exp(2j * beta.rad())
+            self._g = self._eta2g(eta) * eta * np.exp(2j * beta.rad())
 
         # q,beta
         elif 'q' in kwargs:
@@ -180,8 +180,8 @@ class Shear(object):
             q = kwargs.pop('q')
             if q <= 0 or q > 1:
                 raise ValueError("Cannot use requested axis ratio of %f!"%q)
-            eta = -numpy.log(q)
-            self._g = self._eta2g(eta) * eta * numpy.exp(2j * beta.rad())
+            eta = -np.log(q)
+            self._g = self._eta2g(eta) * eta * np.exp(2j * beta.rad())
 
         elif 'beta' in kwargs:
             raise TypeError("beta provided to Shear constructor, but not g/e/eta/q")
@@ -193,7 +193,7 @@ class Shear(object):
                 "Shear constructor got unexpected extra argument(s): %s"%kwargs.keys())
 
     # define all the methods to get shear values
-    def getG1(self): 
+    def getG1(self):
         """Return the g1 component of the reduced shear.
         Note: s.getG1() is equivalent to s.g1
         """
@@ -205,7 +205,7 @@ class Shear(object):
         """
         return self._g.imag
 
-    def getG(self): 
+    def getG(self):
         """Return the magnitude of the reduced shear |g1 + i g2| = sqrt(g1**2 + g2**2)
         Note: s.getG() is equivalent to s.g
         """
@@ -215,7 +215,7 @@ class Shear(object):
         """Return the position angle of the reduced shear g exp(2i beta) == g1 + i g2
         Note: s.getBeta() is equivalent to s.beta
         """
-        return 0.5 * numpy.angle(self._g) * galsim.radians
+        return 0.5 * np.angle(self._g) * galsim.radians
 
     def getShear(self):
         """Return the reduced shear as a complex number g1 + 1j * g2
@@ -272,17 +272,17 @@ class Shear(object):
     def _g2e(self, absgsq):
         return 2. / (1.+absgsq)
 
-    def _e2g(self, absesq): 
+    def _e2g(self, absesq):
         if absesq > 1.e-4:
-            #return (1. - numpy.sqrt(1.-absesq)) / absesq
-            return 1. / (1. + numpy.sqrt(1.-absesq)) 
+            #return (1. - np.sqrt(1.-absesq)) / absesq
+            return 1. / (1. + np.sqrt(1.-absesq))
         else:
             # Avoid numerical issues near e=0 using Taylor expansion
             return 0.5 + absesq*(0.125 + absesq*(0.0625 + absesq*0.0390625))
 
-    def _g2eta(self, absg): 
+    def _g2eta(self, absg):
         if absg > 1.e-4:
-            return 2.*numpy.arctanh(absg)/absg
+            return 2.*np.arctanh(absg)/absg
         else:
             # This doesn't have as much trouble with accuracy, but have to avoid absg=0,
             # so might as well Taylor expand for small values.
@@ -291,7 +291,7 @@ class Shear(object):
 
     def _eta2g(self, abseta):
         if abseta > 1.e-4:
-            return numpy.tanh(0.5*abseta)/abseta
+            return np.tanh(0.5*abseta)/abseta
         else:
             absetasq = abseta * abseta
             return 0.5 + absetasq*((-1./24.) + absetasq*(1./240.))
@@ -300,7 +300,7 @@ class Shear(object):
     def __neg__(self): return Shear(-self._g)
 
     # order of operations: shear by other._shear, then by self._shear
-    def __add__(self, other): 
+    def __add__(self, other):
         return Shear((self._g + other._g) / (1. + self._g.conjugate() * other._g))
 
     # order of operations: shear by -other._shear, then by self._shear
@@ -309,7 +309,7 @@ class Shear(object):
     def __eq__(self, other): return self._g == other._g
     def __ne__(self, other): return not self.__eq__(other)
 
-    def getMatrix(self): 
+    def getMatrix(self):
         """Return the matrix that tells how this shear acts on a position vector:
 
         If a field is sheared by some shear, s, then the position (x,y) -> (x',y')
@@ -320,11 +320,11 @@ class Shear(object):
 
         where S = s.getMatrix().
 
-        Specifically, the matrix is S = (1-g^2)^(-1/2) [ 1+g1 ,  g2  ] 
+        Specifically, the matrix is S = (1-g^2)^(-1/2) [ 1+g1 ,  g2  ]
                                                        [  g2  , 1-g1 ]
         """
-        return numpy.array([[ 1.+self.g1,  self.g2   ],
-                            [  self.g2  , 1.-self.g1 ]]) / numpy.sqrt(1.-self.g**2)
+        return np.array([[ 1.+self.g1,  self.g2   ],
+                         [  self.g2  , 1.-self.g1 ]]) / np.sqrt(1.-self.g**2)
 
     def rotationWith(self, other):
         """Return the rotation angle associated with the addition of two shears.
@@ -343,7 +343,7 @@ class Shear(object):
         # Save a little time by only working on the first column.
         S3 = self.getMatrix().dot(other.getMatrix()[:,:1])
         R = (-(self + other)).getMatrix().dot(S3)
-        theta = numpy.arctan2(R[1,0], R[0,0])
+        theta = np.arctan2(R[1,0], R[0,0])
         return theta * galsim.radians
 
     def __repr__(self):

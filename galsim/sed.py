@@ -567,6 +567,33 @@ class SED(object):
                 np.array_equal(self.wave_list,other.wave_list))
     def __ne__(self, other): return not self.__eq__(other)
 
+    def __hash__(self):
+        # Cache this in case self._orig_spec or self.wave_list is long.
+        if not hasattr(self, '_hash'):
+            self._hash = hash(("galsim.SED", self._orig_spec, self.wave_factor, self.flux_type,
+                               self.redshift, self.blue_limit, self.red_limit,
+                               tuple(self.wave_list)))
+        return self._hash
+
+    def __repr__(self):
+        wave_type = ''
+        flux_type = ''
+        if self.wave_factor == 10.0:
+            wave_type = ' wave_type="Angstroms",'
+        if self.flux_type != 'flambda':
+            flux_type = ' flux_type=%r,'%self.flux_type
+        outstr = ('galsim.SED(%r, redshift=%r,%s%s' +
+                  ' _wave_list=%r, _blue_limit=%r, _red_limit=%r)')%(
+                      self._orig_spec, self.redshift, wave_type, flux_type,
+                      self.wave_list, self.blue_limit, self.red_limit)
+        return outstr
+
+    def __str__(self):
+        orig_spec = repr(self._orig_spec)
+        if len(orig_spec) > 80:
+            orig_spec = str(self._orig_spec)
+        return 'galsim.SED(%s, redshift=%s)'%(orig_spec, self.redshift)
+
     def __getstate__(self):
         d = self.__dict__.copy()
         if not isinstance(d['_spec'], galsim.LookupTable):
@@ -580,25 +607,3 @@ class SED(object):
             self._spec = None
         # If _spec is already set, this is will just set _rest_photons
         self._initialize_spec()
-
-    def __repr__(self):
-        red = self.red_limit
-        blue = self.blue_limit
-        wave_type = ''
-        flux_type = ''
-        if self.wave_factor == 10.0:
-            wave_type = ' wave_type="Angstroms",'
-        if self.flux_type != 'flambda':
-            flux_type = ' flux_type=%r,'%self.flux_type
-        return ('galsim.SED(%r, redshift=%r,%s%s' +
-                ' _wave_list=array(%r), _blue_limit=%r, _red_limit=%r)')%(
-                    self._orig_spec, self.redshift, wave_type, flux_type,
-                    self.wave_list.tolist(), self.blue_limit, self.red_limit)
-
-    def __str__(self):
-        orig_spec = repr(self._orig_spec)
-        if len(orig_spec) > 80:
-            orig_spec = str(self._orig_spec)
-        return 'galsim.SED(%s, redshift=%s)'%(orig_spec, self.redshift)
-
-    def __hash__(self): return hash(repr(self))

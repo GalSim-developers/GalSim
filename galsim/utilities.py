@@ -18,6 +18,7 @@
 """@file utilities.py
 Module containing general utilities for the GalSim software.
 """
+from contextlib import contextmanager
 
 import numpy as np
 import galsim
@@ -358,16 +359,15 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
 
     @returns a tuple of lists `(x_new, y_new)` with the thinned tabulation.
     """
-    import numpy
-    x = numpy.array(x)
-    f = numpy.array(f)
+    x = np.array(x)
+    f = np.array(f)
 
     # Check for valid inputs
     if len(x) != len(f):
         raise ValueError("len(x) != len(f)")
     if rel_err <= 0 or rel_err >= 1:
         raise ValueError("rel_err must be between 0 and 1")
-    if not (numpy.diff(x) >= 0).all():
+    if not (np.diff(x) >= 0).all():
         raise ValueError("input x is not sorted.")
 
     # Check for trivial noop.
@@ -376,9 +376,9 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
         return x,f
 
     # Start by calculating the complete integral of |f|
-    total_integ = numpy.trapz(abs(f),x)
+    total_integ = np.trapz(abs(f),x)
     if total_integ == 0:
-        return numpy.array([ x[0], x[-1] ]), numpy.array([ f[0], f[-1] ])
+        return np.array([ x[0], x[-1] ]), np.array([ f[0], f[-1] ])
     thresh = rel_err * total_integ
 
     if not preserve_range:
@@ -414,7 +414,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
         # with a linear approxmation based on the points at k0 and k1+1.
         lin_f = f[k0] + (f[k1+1]-f[k0])/(x[k1+1]-x[k0]) * (x[k0:k1+2] - x[k0])
         # Integrate | f(x) - lin_f(x) | from k0 to k1+1, inclusive.
-        integ = numpy.trapz(abs(f[k0:k1+2] - lin_f), x[k0:k1+2])
+        integ = np.trapz(abs(f[k0:k1+2] - lin_f), x[k0:k1+2])
         # If the integral of the difference is < thresh, we can skip this item.
         if integ < thresh:
             # OK to skip item k1
@@ -840,3 +840,12 @@ class LRU_Cache:
                     root[1] = link
             else:
                 raise ValueError("Invalid maxsize: {0:}".format(maxsize))
+
+
+# http://stackoverflow.com/questions/2891790/pretty-printing-of-numpy-array
+@contextmanager
+def printoptions(*args, **kwargs):
+    original = np.get_printoptions()
+    np.set_printoptions(*args, **kwargs)
+    yield
+    np.set_printoptions(**original)

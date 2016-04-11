@@ -36,7 +36,6 @@ some lower-resolution telescope.
 
 
 import galsim
-import utilities
 from galsim import GSObject
 import os
 
@@ -278,6 +277,23 @@ class RealGalaxy(GSObject):
     def getHalfLightRadius(self):
         raise NotImplementedError("Half light radius calculation not implemented for RealGalaxy "
                                    +"objects.")
+
+    def __eq__(self, other):
+        return (isinstance(other, galsim.RealGalaxy) and
+                self.catalog == other.catalog and
+                self.index == other.index and
+                self._x_interpolant == other._x_interpolant and
+                self._k_interpolant == other._k_interpolant and
+                self._pad_factor == other._pad_factor and
+                self._noise_pad_size == other._noise_pad_size and
+                self._flux == other._flux and
+                self._rng == other._rng and
+                self._gsparams == other._gsparams)
+
+    def __hash__(self):
+        return hash(("galsim.RealGalaxy", self.catalog, self.index, self._x_interpolant,
+                     self._k_interpolant, self._pad_factor, self._noise_pad_size, self._flux,
+                     self._rng.serialize(), self._gsparams))
 
     def __repr__(self):
         s = 'galsim.RealGalaxy(%r, index=%r, '%(self.catalog, self.index)

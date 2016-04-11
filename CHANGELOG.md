@@ -33,6 +33,8 @@ Bug Fixes
   where the resulting object did not set the index attribute properly. (#694)
 - Fixed an error in the `CCDNoise.getVariance()` function, as well as some
   errors in the documentation about the units of CCDNoise parameters. (#713)
+- Fixed a bug in how InterpolatedKImage checked for properly Hermitian input
+  images.
 - Updated ups table file so that setup command is `setup galsim` instead of
   `setup GalSim` (#724)
 
@@ -69,6 +71,7 @@ New Features
 - Made it possible to impose some cuts on galaxy image quality in the
   COSMOSCatalog class. (#693)
 - Added `convergence_threshold` as a parameter of HSMParams. (#709)
+- Improved the readability of Image and BaseDeviate reprs. (#723)
 - Sped up some Bandpass and SED functionality (and LookupTable class in
   general). (#735)
 

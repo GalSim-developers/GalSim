@@ -297,6 +297,19 @@ def test_shapelet_adjustments():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_ne():
+    import time
+    t1 = time.time()
+    gsp = galsim.GSParams(maxk_threshold=5.1e-3, folding_threshold=1.1e-3)
+    objs = [galsim.Shapelet(1., 2),
+            galsim.Shapelet(1., 3),
+            galsim.Shapelet(2., 2),
+            galsim.Shapelet(1., 2, bvec=[1, 0, 0, 0.2, 0.3, -0.1]),
+            galsim.Shapelet(1., 2, gsparams=gsp)]
+    all_obj_diff(objs)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 if __name__ == "__main__":
@@ -305,3 +318,4 @@ if __name__ == "__main__":
     test_shapelet_properties()
     test_shapelet_fit()
     test_shapelet_adjustments()
+    test_ne()

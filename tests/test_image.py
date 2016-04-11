@@ -1794,6 +1794,25 @@ def test_Image_writeheader():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+def test_ne():
+    import time
+    t1 = time.time()
+
+    array1 = np.arange(32*32).reshape(32, 32).astype(float)
+    array2 = array1.copy()
+    array2[15, 15] += 2
+
+    objs = [galsim.ImageD(array1),
+            galsim.ImageD(array2),
+            galsim.ImageD(array1, wcs=galsim.PixelScale(0.2)),
+            galsim.ImageD(array1, xmin=2)]
+    all_obj_diff(objs)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 if __name__ == "__main__":
     test_Image_basic()
     test_Image_FITS_IO()
@@ -1825,3 +1844,4 @@ if __name__ == "__main__":
     test_Image_constructor()
     test_Image_view()
     test_Image_writeheader()
+    test_ne()

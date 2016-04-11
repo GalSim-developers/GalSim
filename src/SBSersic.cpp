@@ -83,7 +83,8 @@ namespace galsim {
         return static_cast<const SBSersicImpl&>(*_pimpl).getTrunc();
     }
 
-    std::string SBSersic::SBSersicImpl::repr() const
+    // NB.  This function is virtually wrapped by repr() in SBProfile.cpp
+    std::string SBSersic::SBSersicImpl::serialize() const
     {
         std::ostringstream oss(" ");
         // NB. The choice of digits10 + 4 is because the normal general output

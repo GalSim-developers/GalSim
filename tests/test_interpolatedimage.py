@@ -97,8 +97,9 @@ def test_roundtrip():
         do_kvalue(interp,test_im,"InterpolatedImage")
 
         # Check picklability
-        do_pickle(interp._sbii, lambda x: (galsim.Image(x.getImage()), x.stepK(), x.maxK()))
-        do_pickle(interp.SBProfile, lambda x: repr(x))
+        do_pickle(interp._sbii, lambda x: (galsim.Image(x.getImage()), x.stepK(), x.maxK()),
+                  irreprable=True)
+        do_pickle(interp.SBProfile, lambda x: repr(x), irreprable=True)
         do_pickle(interp, lambda x: x.drawImage(method='no_pixel'))
         do_pickle(interp)
         do_pickle(interp.SBProfile)
@@ -1036,7 +1037,7 @@ def test_stepk_maxk():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_kround_trip():
+def test_kroundtrip():
     import time
     t1 = time.time()
     a = final
@@ -1149,6 +1150,86 @@ def test_multihdu_readin():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+def test_ne():
+    """ Check that inequality works as expected for corner cases where the reprs of two
+    unequal InterpolatedImages or InterpolatedKImages may be the same due to truncation.
+    """
+    import time
+    t1 = time.time()
+
+    obj1 = galsim.InterpolatedImage(ref_image, calculate_maxk=False, calculate_stepk=False)
+
+    # Copy ref_image and perturb it slightly in the middle, away from where the InterpolatedImage
+    # repr string will report.
+    perturb_image = ref_image.copy()
+    perturb_image.array[64, 64] *= 1000
+    obj2 = galsim.InterpolatedImage(perturb_image, calculate_maxk=False, calculate_stepk=False)
+
+    with galsim.utilities.printoptions(threshold=128*128):
+        assert repr(obj1) != repr(obj2)
+
+    with galsim.utilities.printoptions(threshold=1000):
+        assert repr(obj1) == repr(obj2)
+
+    assert obj1 != obj2
+
+    # Now repeat for InterpolatedKImage
+    re, im = obj1.drawKImage(nx=128, ny=128, scale=1)
+    obj3 = galsim.InterpolatedKImage(re, im)
+    perturb_re = re.copy()
+    perturb_im = im.copy()
+    x = np.arange(128)
+    x, y = np.meshgrid(x, x)
+    w = ((perturb_re.array**2 - perturb_im.array**2 > 1e-10) &
+         (50 < x) & (x < (128-50)) &
+         (50 < y) & (y < (128-50)))
+    perturb_re.array[w] *= 2
+    perturb_im.array[w] *= 2
+
+    obj4 = galsim.InterpolatedKImage(perturb_re, perturb_im)
+
+    with galsim.utilities.printoptions(threshold=128*128):
+        assert repr(obj3) != repr(obj4)
+
+    with galsim.utilities.printoptions(threshold=1000):
+        assert repr(obj3) == repr(obj4)
+
+    assert obj3 != obj4
+
+    # And now do the same types of tests as in test_base.py and test_chromatic.py to make sure that
+    # slightly different objects compare and hash appropriately.
+    gsp = galsim.GSParams(maxk_threshold=1.1e-3, folding_threshold=5.1e-3)
+    gals = [galsim.InterpolatedImage(ref_image),
+            galsim.InterpolatedImage(ref_image, calculate_maxk=False),
+            galsim.InterpolatedImage(ref_image, calculate_stepk=False),
+            galsim.InterpolatedImage(ref_image, flux=1.1),
+            galsim.InterpolatedImage(ref_image, offset=(0.0, 1.1)),
+            galsim.InterpolatedImage(ref_image, x_interpolant='Linear'),
+            galsim.InterpolatedImage(ref_image, k_interpolant='Linear'),
+            galsim.InterpolatedImage(ref_image, pad_factor=1.),
+            galsim.InterpolatedImage(ref_image, normalization='sb'),
+            galsim.InterpolatedImage(ref_image, noise_pad_size=100, noise_pad=0.1),
+            galsim.InterpolatedImage(ref_image, noise_pad_size=100, noise_pad=0.2),
+            galsim.InterpolatedImage(ref_image, noise_pad_size=100, noise_pad=0.2),
+            galsim.InterpolatedImage(ref_image, _force_stepk=1.0),
+            galsim.InterpolatedImage(ref_image, _force_maxk=1.0),
+            galsim.InterpolatedImage(ref_image, scale=0.2),
+            galsim.InterpolatedImage(ref_image, use_true_center=False),
+            galsim.InterpolatedImage(ref_image, gsparams=gsp)]
+    all_obj_diff(gals)
+
+    # And repeat for InterpolatedKImage
+    gals = [galsim.InterpolatedKImage(re, im),
+            galsim.InterpolatedKImage(re, im, k_interpolant='Linear'),
+            galsim.InterpolatedKImage(re, im, stepk=1.1),
+            galsim.InterpolatedKImage(re, im, gsparams=gsp)]
+    all_obj_diff(gals)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 if __name__ == "__main__":
     test_roundtrip()
     test_fluxnorm()
@@ -1165,5 +1246,6 @@ if __name__ == "__main__":
     test_Lanczos7_ref()
     test_conserve_dc()
     test_stepk_maxk()
-    test_kround_trip()
+    test_kroundtrip()
     test_multihdu_readin()
+    test_ne()
