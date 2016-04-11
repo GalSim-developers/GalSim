@@ -295,6 +295,51 @@ def _convertPositions(pos, units, func):
 
     return pos
 
+def lin_approx_err(x, f, i):
+    """Error in abs(f(x) - approx(x)) when using ith data point to make piecewise linear
+    approximation."""
+    import numpy as np
+    xleft, xright = x[:i+1], x[i:]
+    fleft, fright = f[:i+1], f[i:]
+    xi, fi = x[i], f[i]
+    mleft = (fi-f[0])/(xi-x[0])
+    mright = (f[-1]-fi)/(x[-1]-xi)
+    f2left = f[0]+mleft*(xleft-x[0])
+    f2right = fi+mright*(xright-xi)
+    return np.trapz(np.abs(fleft-f2left), xleft), np.trapz(np.abs(fright-f2right), xright)
+
+def lin_approx_split(x, f):
+    """Optimally split a tabulated function into two piecewise linear approximations.
+    """
+    import numpy as np
+    errs = [lin_approx_err(x, f, i) for i in xrange(1, len(x)-1)]
+    i = np.argmin(np.sum(errs, axis=1))
+    return i+1, errs[i]
+
+def thin_tabulated_values2(x, f, rel_err=1.e-4):
+    import numpy as np
+    x = np.array(x)
+    f = np.array(f)
+
+    total_integ = np.trapz(abs(f), x)
+    thresh = total_integ * rel_err
+
+    splitpoints = [0, len(x)-1]
+    errs = [np.inf]
+    while sum(errs) > thresh:
+        # Find the worst current interval
+        index = np.argmax(errs)
+        # Optimally split that interval
+        left = splitpoints[index]
+        right = splitpoints[index+1]
+        i, (errleft, errright) = lin_approx_split(x[left:right+1], f[left:right+1])
+        # Update splitpoints and errs
+        splitpoints.insert(index+1, i+left)
+        errs[index] = errright  # overwrites previous interval error
+        errs.insert(index, errleft)
+    return x[splitpoints], f[splitpoints]
+
+
 def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
     """
     Remove items from a set of tabulated f(x) values so that the error in the integral is still
