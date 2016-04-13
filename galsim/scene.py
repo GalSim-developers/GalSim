@@ -547,8 +547,8 @@ class COSMOSCatalog(object):
         # It gets set by _makeReal, but not by _makeParametric.
         # And if we are doing the deep scaling, then it gets messed up by that.
         # So just put it in here at the end to be sure.
-        for gal, index in zip(gal_list, indices):
-            gal.index = self.orig_index[index]
+        for gal, idx in zip(gal_list, indices):
+            gal.index = self.orig_index[idx]
 
         if hasattr(index, '__iter__'):
             return gal_list
