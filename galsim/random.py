@@ -326,7 +326,8 @@ class DistDeviate(_galsim.BaseDeviate):
         # Quietly renormalize the probability if it wasn't already normalized
         totalprobability = cdf[-1]
         cdf = numpy.array(cdf)/totalprobability
-        dcdf = numpy.array(dcdf)/totalprobability
+        # Recompute delta CDF in case of floating-point differences in near-flat probabilities
+        dcdf = numpy.diff(cdf)
         # Check that the probability is nonnegative
         if not numpy.all(dcdf >= 0):
             raise ValueError('Negative probability passed to DistDeviate: %s'%function)
@@ -348,9 +349,15 @@ class DistDeviate(_galsim.BaseDeviate):
             xarray = numpy.delete(xarray,zeroindex[dindex])
             dcdf = numpy.diff(cdf)
             # Tweak the edges of dx=0 regions so function is always increasing
-            for index in numpy.where(dcdf == 0)[0]:
-                if index+1 < len(cdf):
-                    cdf[index+1] += 2.23E-16
+            for index in numpy.where(dcdf == 0)[0][::-1]:  # reverse in case we need to delete
+                if index+2 < len(cdf):
+                    # get epsilon, the smallest element where 1+eps>1
+                    eps = numpy.finfo(cdf[index+1].dtype).eps
+                    if cdf[index+2]-cdf[index+1] > eps:
+                        cdf[index+1] += eps
+                    else:
+                        cdf = numpy.delete(cdf, index)
+                        xarray = numpy.delete(xarray, index)
                 else:
                     cdf = cdf[:-1]
                     xarray = xarray[:-1]
