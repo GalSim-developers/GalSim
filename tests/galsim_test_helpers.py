@@ -292,7 +292,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
         if random: f1 = func(obj1)
         #print 'func(obj1) = ',repr(f1)
         #print 'func(obj5) = ',repr(f5)
-        assert f5 == f1
+        assert f5 == f1, "func(obj1) = %r\nfunc(obj5) = %r"%(f1, f5)
 
     # Try perturbing obj1 pickling arguments and verify that inequality results.
     # Generally, only objects pickled with __getinitargs__, i.e. old-style classes, reveal
