@@ -381,7 +381,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                                 obj_num)
                         raise RuntimeError(
                                 "Rejected an object %d times. If this is expected, "%ntries+
-                                "you should specify a larger retry_failures.")
+                                "you should specify a larger stamp.retry_failures.")
 
             galsim.config.ProcessExtraOutputsForStamp(config, logger)
 

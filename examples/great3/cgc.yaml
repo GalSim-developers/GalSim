@@ -273,8 +273,10 @@ output:
             - 0
         columns:
             num: obj_num
-            x: image.offset.x
-            y: image.offset.y
+            x: "$(@image_pos).x"
+            y: "$(@image_pos).y"
+            dx: image.offset.x
+            dy: image.offset.y
             atmos_psf_e1: "$(@psf.items.0.ellip).e1"
             atmos_psf_e2: "$(@psf.items.0.ellip).e2"
             atmos_psf_fwhm: psf.items.0.fwhm
@@ -290,12 +292,12 @@ output:
             opt_psf_trefoil1: psf.items.1.trefoil1
             opt_psf_trefoil2: psf.items.1.trefoil2
             opt_psf_spher: psf.items.1.spher
-            cosmos_index: gal.index
+            cosmos_index: "$(@gal).original.index"
             theta: "$(@gal.rotate + @stamp.index * math.pi/@stamp.num * galsim.radians).rad()"
             mu: stamp.magnification
             g1: "$(@stamp.shear).g1"
             g2: "$(@stamp.shear).g2"
-            # The parameteric components aren't really available here
+            # The parametric components aren't really available here.
             # So we don't have:
             #   bulge_beta_radians
             #   bulge_q
@@ -307,4 +309,10 @@ output:
             #   disk_flux
             #   disk_hlr
             # Instead, we only have cosmos_index and theta, which covers the same
-            # information, but in a less specific way.
+            # information, but in a less specific way.  Here cosmos_index is the
+            # index into the full COSMOS catalog, before application of any cuts at all.
+            # (Not even the rejection of marginal postage stamps.)
+            # So if you want to retrieve the true galaxy properties for the galaxies,
+            # you should read in the COSMOSCatalog using exclusion_level=None, in which
+            # case you can use these indices, or just read in the catalog directly using
+            # pyfits.

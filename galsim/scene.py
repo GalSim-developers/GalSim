@@ -842,10 +842,16 @@ class COSMOSCatalog(object):
                     'Ignoring `deep` argument, because the sample being used already '+
                     'corresponds to a flux limit of F814W<25.2')
 
-        # Store the orig_index as gal.index, since the above RealGalaxy initialization
-        # just sets it as 0.  Plus, it isn't set at all if we make a parametric galaxy.
-        # And if we are doing the deep scaling, then it gets messed up by that
-        gal.index = cosmos_catalog.getOrigIndex(index)
+        # Store the orig_index as gal.index, since the above RealGalaxy initialization just sets it
+        # as 0.  Plus, it isn't set at all if we make a parametric galaxy.  And if we are doing the
+        # deep scaling, then it gets messed up by that.  If we have done some transformations, and
+        # are also doing later transformation, it will take the `original` attribute that is already
+        # there.  So having `index` doesn't help, and we also need `original.index`.
+        if not hasattr(gal, 'original'):
+            gal.index = cosmos_catalog.getOrigIndex(index)
+        else:
+            gal.index = cosmos_catalog.getOrigIndex(index)
+            gal.original.index = cosmos_catalog.getOrigIndex(index)
 
         return gal
 
