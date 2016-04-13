@@ -337,7 +337,8 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
                     try:
                         obj6 = eval('galsim._galsim.' + classname + repr(tuple(newargs)))
                     except:
-                        raise TypeError("{} not `eval`able!".format(obj1))
+                        raise TypeError("{} not `eval`able!".format(
+                                classname + repr(tuple(newargs))))
                 else:
                     assert obj1 != obj6
                     # sys.stderr.write("SUCCESS\n")
