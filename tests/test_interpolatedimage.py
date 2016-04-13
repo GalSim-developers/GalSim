@@ -1167,10 +1167,11 @@ def test_ne():
     obj2 = galsim.InterpolatedImage(perturb_image, calculate_maxk=False, calculate_stepk=False)
 
     with galsim.utilities.printoptions(threshold=128*128):
-        assert repr(obj1) != repr(obj2)
+        assert repr(obj1) != repr(obj2), "Reprs unexpectedly agree: %r"%obj1
 
     with galsim.utilities.printoptions(threshold=1000):
-        assert repr(obj1) == repr(obj2)
+        assert repr(obj1) == repr(obj2), "Reprs disagree: repr(obj1)=%r\nrepr(obj2)=%r"%(
+                obj1, obj2)
 
     assert obj1 != obj2
 
