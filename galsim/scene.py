@@ -219,7 +219,7 @@ class COSMOSCatalog(object):
                 # But if that doesn't work, then the name might be the name of the real catalog,
                 # so try adding _fits to it as above.
                 k = full_file_name.find('.fits')
-                param_file_name = full_file_name[:k] + '_fits' + param_file_name[k:]
+                param_file_name = full_file_name[:k] + '_fits' + full_file_name[k:]
                 self.param_cat = pyfits.getdata(param_file_name)
 
         # Check for the old-style parameter catalog
@@ -304,7 +304,7 @@ class COSMOSCatalog(object):
             # which excludes a tiny number of galaxies (of order 10 in each sample) with some sky
             # subtraction or deblending errors.  Some of these are eliminated by other cuts when
             # using exclusion_level='marginal'.
-            if hasattr(self.real_cat, 'stamp_flux'):
+            if hasattr(self,'real_cat') and hasattr(self.real_cat, 'stamp_flux'):
                 mask &= self.real_cat.stamp_flux > 0
             else:
                 import warnings
