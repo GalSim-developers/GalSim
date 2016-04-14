@@ -346,21 +346,29 @@ namespace galsim {
 
     template class Table<double,double>;
 
+    // Start Table2D
+
     // Should dx, dy be higher precision types than x0, y0?  Maybe x0, xend would be better params?
     template<class V, class A>
     Table2D<V,A>::Table2D(A _x0, A _y0, A _dx, A _dy, int _Nx, int _Ny, const V* valarray,
         interpolant in) : iType(in), Nx(_Nx), Ny(_Ny), x0(_x0), y0(_y0), dx(_dx), dy(_dy),
                           xmax(x0+(Nx-1)*dx), ymax(y0+(Ny-1)*dy), xslop(dx*1e-6), yslop(1e-6)
     {
-        // Allocate array.
+        // Allocate vectors.
         vals.reserve(Nx*Ny);
+        xgrid.reserve(Nx);
+        ygrid.reserve(Ny);
 
-        // Fill in array.
+        // Fill in vectors.
         const V* vptr;
         int i;
         for (i=0, vptr=valarray; i<Nx*Ny; i++, vptr++) {
             vals.push_back(*vptr);
         }
+        for (i=0; i<Nx; i++) xgrid.push_back(x0+dx*i);
+        for (i=0; i<Ny; i++) ygrid.push_back(y0+dy*i);
+
+        equalSpaced = true;
 
         // Map specific interpolator to `interpolate`.
         switch (iType) {
@@ -379,55 +387,62 @@ namespace galsim {
     }
 
     template<class V, class A>
-    void Table2D<V,A>::upperIndexX(A x, int& i, A& xi) const
+    int Table2D<V,A>::upperIndexX(A x) const
     {
-        if (x<x0-xslop || x>xmax+xslop)
-            throw TableOutOfRange(x,x0,xmax);
+        if (x<_xArgMin()-xslop || x>_xArgMax()+xslop)
+            throw TableOutOfRange(x,_xArgMin(),_xArgMax());
         // check for slop
-        if (x < x0) x=x0;
-        if (x > xmax) x=xmax;
+        if (x < _xArgMin()) return 1;
+        if (x > _xArgMax()) return xgrid.size()-1;
 
-        i = int( std::ceil( (x-x0) / dx) );
-        if (i >= Nx) --i; // in case of rounding error
-        if (i == 0) ++i;
-        xi = x0 + i*dx;
+        if (equalSpaced) {
+            int i = int( std::ceil( (x-_xArgMin()) / dx) );
+            if (i >= int(xgrid.size())) --i; // in case of rounding error
+            if (i == 0) ++i;
+            // check if we need to move ahead or back one step due to rounding errors
+            while (x > xgrid[i]) ++i;
+            while (x < xgrid[i-1]) --i;
+            return i;
+        }
     }
 
     template<class V, class A>
-    void Table2D<V,A>::upperIndexY(A y, int& j, A& yj) const
+    int Table2D<V,A>::upperIndexY(A y) const
     {
-        if (y<y0-yslop || y>ymax+yslop)
-            throw TableOutOfRange(y,y0,ymax);
+        if (y<_yArgMin()-yslop || y>_yArgMax()+yslop)
+            throw TableOutOfRange(y,_yArgMin(),_yArgMax());
         // check for slop
-        if (y < y0) y=y0;
-        if (y > ymax) y=ymax;
+        if (y < _yArgMin()) y=ygrid.front();
+        if (y > _yArgMax()) y=ygrid.back();
 
-        j = int( std::ceil( (y-y0) / dy) );
-        if (j >= Ny) --j; // in case of rounding error
-        if (j == 0) ++j;
-        yj = y0 + j*dy;
+        if (equalSpaced) {
+            int j = int( std::ceil( (y-_yArgMin()) / dy) );
+            if (j >= int(ygrid.size())) --j; // in case of rounding error
+            if (j == 0) ++j;
+            // check if we need to move ahead or back one step due to rounding errors
+            while (y > ygrid[j]) ++j;
+            while (y < ygrid[j-1]) --j;
+            return j;
+        }
     }
 
     //lookup and interpolate function value.
     template<class V, class A>
     V Table2D<V,A>::lookup(const A x, const A y) const
     {
-        int i, j;
-        A xi, yj;
-        upperIndexX(x, i, xi);
-        upperIndexY(y, j, yj);
-        return interpolate(x, y, xi, yj, dx, dy, i, j, vals, Nx);
+        int i = upperIndexX(x);
+        int j = upperIndexY(y);
+        return interpolate(x, y, xgrid[i], ygrid[j], dx, dy, i, j, vals, Nx);
     }
 
     template<class V, class A>
     void Table2D<V,A>::interpManyScatter(const A* xvec, const A* yvec, V* valvec, int N) const
     {
         int i, j;
-        A xi, yj;
         for (int k=0; k<N; k++) {
-            upperIndexX(xvec[k], i, xi);
-            upperIndexY(yvec[k], j, yj);
-            valvec[k] = interpolate(xvec[k], yvec[k], xi, yj, dx, dy, i, j, vals, Nx);
+            i = upperIndexX(xvec[k]);
+            j = upperIndexY(yvec[k]);
+            valvec[k] = interpolate(xvec[k], yvec[k], xgrid[i], ygrid[j], dx, dy, i, j, vals, Nx);
         }
     }
 
@@ -436,12 +451,11 @@ namespace galsim {
                                        int outNx, int outNy) const
     {
         int i, j;
-        A xi, yj;
         for (int outj=0; outj<outNy; outj++) {
-            upperIndexY(yvec[outj], j, yj);
+            j = upperIndexY(yvec[outj]);
             for (int outi=0; outi<outNx; outi++, valvec++) {
-                upperIndexX(xvec[outi], i, xi);
-                *valvec = interpolate(xvec[outi], yvec[outj], xi, yj, dx, dy, i, j, vals, Nx);
+                i = upperIndexX(xvec[outi]);
+                *valvec = interpolate(xvec[outi], yvec[outj], xgrid[i], ygrid[j], dx, dy, i, j, vals, Nx);
             }
         }
     }

@@ -298,14 +298,26 @@ namespace galsim {
     private:
         interpolant iType;
         std::vector<V> vals;
+        std::vector<A> xgrid;
+        std::vector<A> ygrid;
+
+        mutable bool equalSpaced;
+
+        //@{
+        /// Private versions that don't check for a null table:
+        A _xArgMin() const { return xgrid.front(); }
+        A _xArgMax() const { return xgrid.back(); }
+        A _yArgMin() const { return ygrid.front(); }
+        A _yArgMax() const { return ygrid.back(); }
+        //@}
 
         const int Nx, Ny; // Array dimensions
         const A x0, y0, dx, dy;
         const A xmax, ymax;
         const A xslop, yslop;
 
-        void upperIndexX(A x, int& i, A& xi) const;
-        void upperIndexY(A y, int& j, A& yj) const;
+        int upperIndexX(A x) const;
+        int upperIndexY(A y) const;
 
         /// Interpolate value btwn p & --p:
         mutable V (*interpolate)(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const std::vector<V>&, int Ny);
