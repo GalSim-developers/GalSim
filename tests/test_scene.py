@@ -78,7 +78,7 @@ def test_cosmos_basic():
 
     # Check for parametric catalog
     cat_param = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example_fits.fits',
-                                 dir=datapath, use_real=False)
+                                     dir=datapath, use_real=False)
 
     # Try making galaxies
     gal = cat_param.makeGalaxy(index=1)
