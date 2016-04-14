@@ -821,5 +821,9 @@ class LRU_Cache:
 def printoptions(*args, **kwargs):
     original = np.get_printoptions()
     np.set_printoptions(*args, **kwargs)
-    yield
-    np.set_printoptions(**original)
+    # contextmanager exception handling is tricky.  Don't forget to wrap the yield:
+    # http://preshing.com/20110920/the-python-with-statement-by-example/
+    try:
+        yield
+    finally:
+        np.set_printoptions(**original)
