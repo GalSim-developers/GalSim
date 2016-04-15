@@ -299,6 +299,8 @@ namespace galsim {
         interpolant getInterp() const { return iType; }
 
     private:
+        typedef typename std::vector<A>::const_iterator citer;
+        typedef typename std::vector<A>::iterator iter;
         interpolant iType;
         std::vector<V> vals;
         std::vector<A> xgrid;
@@ -306,6 +308,8 @@ namespace galsim {
 
         mutable bool xEqualSpaced;
         mutable bool yEqualSpaced;
+        mutable int lastXIndex; //< Index for last x lookup into table.
+        mutable int lastYIndex; //< Index for last y lookup into table.
 
         //@{
         /// Private versions that don't check for a null table:

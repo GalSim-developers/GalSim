@@ -363,14 +363,12 @@ namespace galsim {
         // Fill in vectors.
         const V* vptr;
         int i;
-        for (i=0, vptr=valarray; i<Nx*Ny; i++, vptr++) {
-            vals.push_back(*vptr);
-        }
+        for (i=0, vptr=valarray; i<Nx*Ny; i++, vptr++) vals.push_back(*vptr);
         for (i=0; i<Nx; i++) xgrid.push_back(x0+dx*i);
         for (i=0; i<Ny; i++) ygrid.push_back(y0+dy*i);
 
-        xEqualSpaced = true;
-        yEqualSpaced = true;
+        xEqualSpaced = yEqualSpaced = true;
+        lastXIndex = lastYIndex = 1;
 
         // Map specific interpolator to `interpolate`.
         switch (iType) {
@@ -415,18 +413,18 @@ namespace galsim {
             throw TableError("First and last Table2D x arguments are equal.");
         if (dy == 0.)
             throw TableError("First and last Table2D y arguments are equal.");
-        xEqualSpaced = true;
+        xEqualSpaced = yEqualSpaced = true;
         for (i=1; i<Nx; i++) {
             if (std::abs(((xgrid[i]-xgrid.front())/dx - i)) > tolerance) xEqualSpaced = false;
             if (xgrid[i] == xgrid[i-1])
                 throw TableError("Table has repeated x arguments.");
         }
-        yEqualSpaced = true;
         for (i=1; i<Ny; i++) {
             if (std::abs(((ygrid[i]-ygrid.front())/dy - i)) > tolerance) yEqualSpaced = false;
             if (ygrid[i] == ygrid[i-1])
                 throw TableError("Table has repeated y arguments.");
         }
+        lastXIndex = lastYIndex = 1;
 
         xlower_slop = (xgrid[1] - xgrid[0]) * 1.e-6;
         xupper_slop = (xgrid[Nx-1] - xgrid[Nx-2]) * 1.e-6;
@@ -466,8 +464,39 @@ namespace galsim {
             while (x > xgrid[i]) ++i;
             while (x < xgrid[i-1]) --i;
             return i;
+        } else {
+            xassert(lastXIndex >= 1);
+            xassert(lastXIndex < Nx);
+
+            if ( x < xgrid[lastXIndex-1] ) {
+                xassert(lastXIndex-2 >= 0);
+                // Check to see if the previous one is it.
+                if (x >= xgrid[lastXIndex-2]) return --lastXIndex;
+                else {
+                    // Look for the entry from 0..lastXIndex-1:
+                    citer p = std::upper_bound(xgrid.begin(), xgrid.begin()+lastXIndex-1, x);
+                    xassert(p != xgrid.begin());
+                    xassert(p != xgrid.begin()+lastXIndex-1);
+                    lastXIndex = p-xgrid.begin();
+                    return lastXIndex;
+                }
+            } else if (x > xgrid[lastXIndex]) {
+                xassert(lastXIndex+1 < Nx);
+                // Check to see if the next one is it.
+                if (x <= xgrid[lastXIndex+1]) return ++lastXIndex;
+                else {
+                    // Look for the entry from lastXIndex..end
+                    citer p = std::lower_bound(xgrid.begin()+lastXIndex+1, xgrid.end(), x);
+                    xassert(p != xgrid.begin()+lastXIndex+1);
+                    xassert(p != xgrid.end());
+                    lastXIndex = p-xgrid.begin();
+                    return lastXIndex;
+                }
+            } else {
+                // Then lastXIndex is correct.
+                return lastXIndex;
+            }
         }
-        std::cerr << "ERR" << std::endl;
     }
 
     template<class V, class A>
@@ -487,8 +516,39 @@ namespace galsim {
             while (y > ygrid[i]) ++i;
             while (y < ygrid[i-1]) --i;
             return i;
+        } else {
+            xassert(lastYIndex >= 1);
+            xassert(lastYIndex < Ny);
+
+            if ( y < ygrid[lastYIndex-1] ) {
+                xassert(lastYIndex-2 >= 0);
+                // Check to see if the previous one is it.
+                if (y >= ygrid[lastYIndex-2]) return --lastYIndex;
+                else {
+                    // Look for the entry from 0..lastXIndex-1:
+                    citer p = std::upper_bound(ygrid.begin(), ygrid.begin()+lastYIndex-1, y);
+                    xassert(p != ygrid.begin());
+                    xassert(p != ygrid.begin()+lastYIndex-1);
+                    lastYIndex = p-ygrid.begin();
+                    return lastYIndex;
+                }
+            } else if (y > ygrid[lastYIndex]) {
+                xassert(lastYIndex+1 < Ny);
+                // Check to see if the next one is it.
+                if (y <= ygrid[lastYIndex+1]) return ++lastYIndex;
+                else {
+                    // Look for the entry from lastYIndex..end
+                    citer p = std::lower_bound(ygrid.begin()+lastYIndex+1, ygrid.end(), y);
+                    xassert(p != ygrid.begin()+lastYIndex+1);
+                    xassert(p != ygrid.end());
+                    lastYIndex = p-ygrid.begin();
+                    return lastYIndex;
+                }
+            } else {
+                // Then lastYIndex is correct.
+                return lastYIndex;
+            }
         }
-        std::cerr << "ERR" << std::endl;
     }
 
     //lookup and interpolate function value.
