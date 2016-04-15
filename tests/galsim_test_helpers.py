@@ -227,7 +227,8 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     from numpy import array, int16, int32, float32, float64, ndarray
     try:
         import astropy.io.fits
-        if astropy.__version__ < '1.0.6':
+        from distutils.version import LooseVersion
+        if LooseVersion(astropy.__version__) < LooseVersion('1.0.6'):
             irreprable = True
     except:
         import pyfits

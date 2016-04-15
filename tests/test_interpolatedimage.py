@@ -1158,13 +1158,6 @@ def test_ne():
     import time
     t1 = time.time()
 
-    # These tests won't always work if astropy < 1.0.6 has been imported, so look for that.
-    try:
-        if astropy.__version__ < '1.0.6':
-            return
-    except:
-        pass
-
     obj1 = galsim.InterpolatedImage(ref_image, calculate_maxk=False, calculate_stepk=False)
 
     # Copy ref_image and perturb it slightly in the middle, away from where the InterpolatedImage
@@ -1172,6 +1165,17 @@ def test_ne():
     perturb_image = ref_image.copy()
     perturb_image.array[64, 64] *= 1000
     obj2 = galsim.InterpolatedImage(perturb_image, calculate_maxk=False, calculate_stepk=False)
+
+    # These tests won't always work if astropy < 1.0.6 has been imported, so look for that.
+    try:
+        import sys
+        if 'astropy' in sys.modules:
+            import astropy  # Just b/c someone imported it, doesn't mean we can see it yet.
+            from distutils.version import LooseVersion
+            if LooseVersion(astropy.__version__) < LooseVersion('1.0.6'):
+                return
+    except:
+        pass
 
     with galsim.utilities.printoptions(threshold=128*128):
         assert repr(obj1) != repr(obj2), "Reprs unexpectedly agree: %r"%obj1
