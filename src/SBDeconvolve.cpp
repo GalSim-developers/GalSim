@@ -38,10 +38,10 @@ namespace galsim {
 
     SBDeconvolve::~SBDeconvolve() {}
 
-    std::string SBDeconvolve::SBDeconvolveImpl::repr() const
+    std::string SBDeconvolve::SBDeconvolveImpl::serialize() const
     {
         std::ostringstream oss(" ");
-        oss << "galsim._galsim.SBDeconvolve(" << _adaptee.repr();
+        oss << "galsim._galsim.SBDeconvolve(" << _adaptee.serialize();
         oss << ", galsim.GSParams("<<*gsparams<<"))";
         return oss.str();
     }

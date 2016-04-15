@@ -1694,6 +1694,23 @@ def test_permute():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+def test_ne():
+    """ Check that inequality works as expected for corner cases where the reprs of two
+    unequal BaseDeviates may be the same due to truncation.
+    """
+    a = galsim.BaseDeviate(seed='1 2 3 4 5 6 7 8 9 10')
+    b = galsim.BaseDeviate(seed='1 2 3 7 6 5 4 8 9 10')
+    assert repr(a) == repr(b)
+    assert a != b
+
+    # Check DistDeviate separately, since it overrides __repr__ and __eq__
+    d1 = galsim.DistDeviate(seed=a, function=galsim.LookupTable([1, 2, 3], [4, 5, 6]))
+    d2 = galsim.DistDeviate(seed=b, function=galsim.LookupTable([1, 2, 3], [4, 5, 6]))
+    assert repr(d1) == repr(d2)
+    assert d1 != d2
+
+
 if __name__ == "__main__":
     test_uniform()
     test_gaussian()
@@ -1708,3 +1725,4 @@ if __name__ == "__main__":
     test_multiprocess()
     test_addnoisesnr()
     test_permute()
+    test_ne()

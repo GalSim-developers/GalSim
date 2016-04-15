@@ -39,6 +39,8 @@ Bug Fixes
   identically equal to zero. (#720)
 - Fixed a potential instability in drawing with deconvolution.  Now the fft of
   the deconvolved image will not be made larger than 1/kvalue_accuracy. (#720)
+- Fixed a bug in how InterpolatedKImage checked for properly Hermitian input
+  images. (#723)
 - Updated ups table file so that setup command is `setup galsim` instead of
   `setup GalSim` (#724)
 
@@ -76,6 +78,7 @@ New Features
 - Made it possible to impose some cuts on galaxy image quality in the
   COSMOSCatalog class. (#693)
 - Added `convergence_threshold` as a parameter of HSMParams. (#709)
+- Improved the readability of Image and BaseDeviate reprs. (#723)
 - Sped up some Bandpass and SED functionality (and LookupTable class in
   general). (#735)
 

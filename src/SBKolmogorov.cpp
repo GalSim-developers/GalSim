@@ -53,7 +53,7 @@ namespace galsim {
         return static_cast<const SBKolmogorovImpl&>(*_pimpl).getLamOverR0();
     }
 
-    std::string SBKolmogorov::SBKolmogorovImpl::repr() const
+    std::string SBKolmogorov::SBKolmogorovImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
