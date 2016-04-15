@@ -266,6 +266,9 @@ namespace galsim {
         Table2D(A x0, A y0, A dx, A dy, int Nx, int Ny,
                 const V* valarray, interpolant in);
 
+        /// Table from xargs, yargs, vals
+        Table2D(const A* xargs, const A* yargs, const V* valarray, int Nx, int Ny, interpolant in);
+
         void dump() const
         {
             int offset;
@@ -312,9 +315,8 @@ namespace galsim {
         //@}
 
         const int Nx, Ny; // Array dimensions
-        const A x0, y0, dx, dy;
-        const A xmax, ymax;
-        const A xslop, yslop;
+        A dx, dy;
+        A xslop, yslop;
 
         int upperIndexX(A x) const;
         int upperIndexY(A y) const;

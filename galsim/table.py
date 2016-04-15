@@ -579,7 +579,11 @@ class LookupTable2D2(object):
             self.xperiod = dx*f.shape[1]
             self.yperiod = dy*f.shape[0]
             f = np.pad(f, [(0,1), (0,1)], mode='wrap')
-        self.table = _galsim._LookupTable2D(x0, y0, dx, dy, f.astype(float), interpolant)
+        # self.table = _galsim._LookupTable2D(x0, y0, dx, dy, f.astype(float), interpolant)
+        ny, nx = f.shape
+        xs = np.arange(nx)*dx+x0
+        ys = np.arange(ny)*dy+y0
+        self.table = _galsim._LookupTable2D(xs, ys, f.astype(float), interpolant)
 
     def __call__(self, x, y, scatter=False):
         from numbers import Real

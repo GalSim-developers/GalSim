@@ -149,12 +149,34 @@ namespace {
     }; // struct PyTable
 
     struct PyTable2D{
-        static Table2D<double,double>* makeTable2D(
-            double x0, double y0, double dx, double dy, const bp::object& valarray,
+        // static Table2D<double,double>* makeTable2D(
+        //     double x0, double y0, double dx, double dy, const bp::object& valarray,
+        //     const std::string& interp)
+        // {
+        //     const int Nx = GetNumpyArrayDim(valarray.ptr(), 1);
+        //     const int Ny = GetNumpyArrayDim(valarray.ptr(), 0);
+        //     const double* vals = GetNumpyArrayData<double>(valarray.ptr());
+        //     Table2D<double,double>::interpolant i = Table2D<double,double>::linear;
+        //     if (interp == "linear") i = Table2D<double,double>::linear;
+        //     else if (interp == "floor") i = Table2D<double,double>::floor;
+        //     else if (interp == "ceil") i = Table2D<double,double>::ceil;
+        //     else {
+        //         PyErr_SetString(PyExc_ValueError, "Invalid interpolant");
+        //         bp::throw_error_already_set();
+        //     }
+        //     return new Table2D<double,double>(x0, y0, dx, dy, Nx, Ny, vals, i);
+        // }
+
+        static Table2D<double, double>* makeTable2D(
+            const bp::object& xs, const bp::object& ys, const bp::object& valarray,
             const std::string& interp)
         {
             const int Nx = GetNumpyArrayDim(valarray.ptr(), 1);
             const int Ny = GetNumpyArrayDim(valarray.ptr(), 0);
+            assert(Nx == GetNumpyArrayDim(xs.ptr(), 0));
+            assert(Ny == GetNumpyArrayDim(ys.ptr(), 0));
+            const double* xargs = GetNumpyArrayData<double>(xs.ptr());
+            const double* yargs = GetNumpyArrayData<double>(ys.ptr());
             const double* vals = GetNumpyArrayData<double>(valarray.ptr());
             Table2D<double,double>::interpolant i = Table2D<double,double>::linear;
             if (interp == "linear") i = Table2D<double,double>::linear;
@@ -164,7 +186,7 @@ namespace {
                 PyErr_SetString(PyExc_ValueError, "Invalid interpolant");
                 bp::throw_error_already_set();
             }
-            return new Table2D<double,double>(x0, y0, dx, dy, Nx, Ny, vals, i);
+            return new Table2D<double,double>(xargs, yargs, vals, Nx, Ny, i);
         }
 
         static void interpManyScatter(const Table2D<double,double>& table2d,
@@ -201,10 +223,16 @@ namespace {
                 .def("__init__",
                     bp::make_constructor(
                         &makeTable2D, bp::default_call_policies(),
-                        (bp::arg("x0"), bp::arg("y0"), bp::arg("dx"), bp::arg("dy"),
-                         bp::arg("valarray"), bp::arg("interp"))
+                        (bp::arg("xs"), bp::arg("ys"), bp::arg("valarray"), bp::arg("interp"))
                     )
                 )
+                // .def("__init__",
+                //     bp::make_constructor(
+                //         &makeTable2D, bp::default_call_policies(),
+                //         (bp::arg("x0"), bp::arg("y0"), bp::arg("dx"), bp::arg("dy"),
+                //          bp::arg("valarray"), bp::arg("interp"))
+                //     )
+                // )
                 .def("__call__", &Table2D<double,double>::lookup)
                 .def("interpManyScatter", &interpManyScatter)
                 .def("interpManyOuter", &interpManyOuter)

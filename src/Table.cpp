@@ -350,9 +350,9 @@ namespace galsim {
 
     // Should dx, dy be higher precision types than x0, y0?  Maybe x0, xend would be better params?
     template<class V, class A>
-    Table2D<V,A>::Table2D(A _x0, A _y0, A _dx, A _dy, int _Nx, int _Ny, const V* valarray,
-        interpolant in) : iType(in), Nx(_Nx), Ny(_Ny), x0(_x0), y0(_y0), dx(_dx), dy(_dy),
-                          xmax(x0+(Nx-1)*dx), ymax(y0+(Ny-1)*dy), xslop(dx*1e-6), yslop(1e-6)
+    Table2D<V,A>::Table2D(A x0, A y0, A _dx, A _dy, int _Nx, int _Ny, const V* valarray,
+                          interpolant in) :
+        iType(in), Nx(_Nx), Ny(_Ny), dx(_dx), dy(_dy), xslop(dx*1e-6), yslop(dy*1e-6)
     {
         // Allocate vectors.
         vals.reserve(Nx*Ny);
@@ -369,6 +369,47 @@ namespace galsim {
         for (i=0; i<Ny; i++) ygrid.push_back(y0+dy*i);
 
         equalSpaced = true;
+
+        // Map specific interpolator to `interpolate`.
+        switch (iType) {
+          case linear:
+               interpolate = &Table2D<V,A>::linearInterpolate;
+               break;
+          case floor:
+               interpolate = &Table2D<V,A>::floorInterpolate;
+               break;
+          case ceil:
+               interpolate = &Table2D<V,A>::ceilInterpolate;
+               break;
+          default:
+               throw TableError("interpolation method not yet implemented");
+        }
+    }
+
+    template<class V, class A>
+    Table2D<V,A>::Table2D(const A* xargs, const A* yargs, const V* valarray, int _Nx, int _Ny,
+        interpolant in) : iType(in), Nx(_Nx), Ny(_Ny)
+    {
+        // Allocate vectors.
+        vals.reserve(Nx*Ny);
+        xgrid.reserve(Nx);
+        ygrid.reserve(Ny);
+
+        // Fill in vectors.
+        int i;
+        for (i=0; i<Nx*Ny; i++, valarray++)
+            vals.push_back(*valarray);
+        for (i=0; i<Nx; i++, xargs++)
+            xgrid.push_back(*xargs);
+        for (i=0; i<Ny; i++, yargs++)
+            ygrid.push_back(*yargs);
+
+        dx = xgrid[1] - xgrid[0];
+        dy = ygrid[1] - ygrid[0];
+        xslop = dx*1e-6;
+        yslop = dy*1e-6;
+
+        equalSpaced = true;   // for now...
 
         // Map specific interpolator to `interpolate`.
         switch (iType) {
