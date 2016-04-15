@@ -227,6 +227,8 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     from numpy import array, int16, int32, float32, float64, ndarray
     try:
         import astropy.io.fits
+        if astropy.__version__ < '1.0.6':
+            irreprable = True
     except:
         import pyfits
     print 'Try pickling ',obj1
@@ -262,21 +264,20 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     if random: f1 = func(obj1)
     #print 'func(obj1) = ',repr(f1)
     #print 'func(obj4) = ',repr(f4)
-    assert f4 == f1  # But everythong should be idenical with deepcopy.
+    assert f4 == f1  # But everything should be identical with deepcopy.
 
     # Also test that the repr is an accurate representation of the object.
     # The gold standard is that eval(repr(obj)) == obj.  So check that here as well.
-    # One caveat is that some objects (e.g., Images, Deviates) truncate their repr strings to avoid
-    # excessively long output.  So we wrap the eval(repr(obj)) in a try/except block and only check
-    # that we reconstructed the original object if the eval statement succeeded.
+    # A few objects we don't expect to work this way in GalSim, either because their repr strings
+    # are truncated or because they include floating point numbers with truncated precision.  For
+    # these, we just exit here.
+    if irreprable: return
+
     try:
         # It turns out that random deviates will still be successfully constructed even with a
         # truncated repr string.  They will just be the 'wrong' random deviates.  So look for that
-        # here and just raise an exception to skip this test and get out of the try block.  Also
-        # raise an exception if the `irreprable` flag is explicitly set, which is occassionally
-        # needed for objects that succeed the `eval(repr(obj))` step but fail in a subsequent
-        # comparison due to truncated floating point precision of the reconstructed object.
-        if random or irreprable:
+        # here and just raise an exception to skip this test and get out of the try block.
+        if random:
             raise TypeError
         # A further complication is that the default numpy print options do not have sufficient
         # precision for the eval string to exactly reproduce the original object.  So we temporarily
