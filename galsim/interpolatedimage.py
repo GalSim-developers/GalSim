@@ -448,7 +448,9 @@ class InterpolatedImage(GSObject):
                 pad_image.image, self.x_interpolant, self.k_interpolant, pad_factor,
                 _force_stepk, _force_maxk, gsparams)
 
-        if (calculate_stepk or calculate_maxk) and sbii.getFlux() == 0.:
+        # I think the only things that will mess up if getFlux() == 0 are the
+        # calculateStepK and calculateMaxK functions, and rescaling the flux to some value.
+        if (calculate_stepk or calculate_maxk or flux is not None) and sbii.getFlux() == 0.:
             raise RuntimeError("This input image has zero total flux. "
                                "It does not define a valid surface brightness profile.")
 
