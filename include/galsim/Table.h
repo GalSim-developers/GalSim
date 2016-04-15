@@ -304,7 +304,8 @@ namespace galsim {
         std::vector<A> xgrid;
         std::vector<A> ygrid;
 
-        mutable bool equalSpaced;
+        mutable bool xEqualSpaced;
+        mutable bool yEqualSpaced;
 
         //@{
         /// Private versions that don't check for a null table:
@@ -316,7 +317,7 @@ namespace galsim {
 
         const int Nx, Ny; // Array dimensions
         A dx, dy;
-        A xslop, yslop;
+        A xlower_slop, xupper_slop, ylower_slop, yupper_slop;
 
         int upperIndexX(A x) const;
         int upperIndexY(A y) const;

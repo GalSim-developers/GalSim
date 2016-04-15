@@ -352,7 +352,8 @@ namespace galsim {
     template<class V, class A>
     Table2D<V,A>::Table2D(A x0, A y0, A _dx, A _dy, int _Nx, int _Ny, const V* valarray,
                           interpolant in) :
-        iType(in), Nx(_Nx), Ny(_Ny), dx(_dx), dy(_dy), xslop(dx*1e-6), yslop(dy*1e-6)
+        iType(in), Nx(_Nx), Ny(_Ny), dx(_dx), dy(_dy), xlower_slop(dx*1e-6), xupper_slop(dx*1e-6),
+        ylower_slop(dy*1e-6), yupper_slop(dy*1e-6)
     {
         // Allocate vectors.
         vals.reserve(Nx*Ny);
@@ -368,7 +369,8 @@ namespace galsim {
         for (i=0; i<Nx; i++) xgrid.push_back(x0+dx*i);
         for (i=0; i<Ny; i++) ygrid.push_back(y0+dy*i);
 
-        equalSpaced = true;
+        xEqualSpaced = true;
+        yEqualSpaced = true;
 
         // Map specific interpolator to `interpolate`.
         switch (iType) {
@@ -404,12 +406,32 @@ namespace galsim {
         for (i=0; i<Ny; i++, yargs++)
             ygrid.push_back(*yargs);
 
-        dx = xgrid[1] - xgrid[0];
-        dy = ygrid[1] - ygrid[0];
-        xslop = dx*1e-6;
-        yslop = dy*1e-6;
+        // See if arguments are equally spaced
+        // ...within this fractional error:
+        const double tolerance = 0.01;
+        dx = (xgrid.back() - xgrid.front()) / (Nx - 1);
+        dy = (ygrid.back() - ygrid.front()) / (Ny - 1);
+        if (dx == 0.)
+            throw TableError("First and last Table2D x arguments are equal.");
+        if (dy == 0.)
+            throw TableError("First and last Table2D y arguments are equal.");
+        xEqualSpaced = true;
+        for (i=1; i<Nx; i++) {
+            if (std::abs(((xgrid[i]-xgrid.front())/dx - i)) > tolerance) xEqualSpaced = false;
+            if (xgrid[i] == xgrid[i-1])
+                throw TableError("Table has repeated x arguments.");
+        }
+        yEqualSpaced = true;
+        for (i=1; i<Ny; i++) {
+            if (std::abs(((ygrid[i]-ygrid.front())/dy - i)) > tolerance) yEqualSpaced = false;
+            if (ygrid[i] == ygrid[i-1])
+                throw TableError("Table has repeated y arguments.");
+        }
 
-        equalSpaced = true;   // for now...
+        xlower_slop = (xgrid[1] - xgrid[0]) * 1.e-6;
+        xupper_slop = (xgrid[Nx-1] - xgrid[Nx-2]) * 1.e-6;
+        ylower_slop = (ygrid[1] - ygrid[0]) * 1.e-6;
+        yupper_slop = (ygrid[Ny-1] - ygrid[Ny-2]) * 1.e-6;
 
         // Map specific interpolator to `interpolate`.
         switch (iType) {
@@ -430,41 +452,43 @@ namespace galsim {
     template<class V, class A>
     int Table2D<V,A>::upperIndexX(A x) const
     {
-        if (x<_xArgMin()-xslop || x>_xArgMax()+xslop)
+        if (x<_xArgMin()-xlower_slop || x>_xArgMax()+xupper_slop)
             throw TableOutOfRange(x,_xArgMin(),_xArgMax());
         // check for slop
         if (x < _xArgMin()) return 1;
-        if (x > _xArgMax()) return xgrid.size()-1;
+        if (x > _xArgMax()) return Nx-1;
 
-        if (equalSpaced) {
+        if (xEqualSpaced) {
             int i = int( std::ceil( (x-_xArgMin()) / dx) );
-            if (i >= int(xgrid.size())) --i; // in case of rounding error
+            if (i >= Nx) --i; // in case of rounding error
             if (i == 0) ++i;
             // check if we need to move ahead or back one step due to rounding errors
             while (x > xgrid[i]) ++i;
             while (x < xgrid[i-1]) --i;
             return i;
         }
+        std::cerr << "ERR" << std::endl;
     }
 
     template<class V, class A>
     int Table2D<V,A>::upperIndexY(A y) const
     {
-        if (y<_yArgMin()-yslop || y>_yArgMax()+yslop)
+        if (y<_yArgMin()-ylower_slop || y>_yArgMax()+yupper_slop)
             throw TableOutOfRange(y,_yArgMin(),_yArgMax());
         // check for slop
-        if (y < _yArgMin()) y=ygrid.front();
-        if (y > _yArgMax()) y=ygrid.back();
+        if (y < _yArgMin()) return 1;
+        if (y > _yArgMax()) return Ny-1;
 
-        if (equalSpaced) {
-            int j = int( std::ceil( (y-_yArgMin()) / dy) );
-            if (j >= int(ygrid.size())) --j; // in case of rounding error
-            if (j == 0) ++j;
+        if (yEqualSpaced) {
+            int i = int( std::ceil( (y-_yArgMin()) / dy) );
+            if (i >= Ny) --i; // in case of rounding error
+            if (i == 0) ++i;
             // check if we need to move ahead or back one step due to rounding errors
-            while (y > ygrid[j]) ++j;
-            while (y < ygrid[j-1]) --j;
-            return j;
+            while (y > ygrid[i]) ++i;
+            while (y < ygrid[i-1]) --i;
+            return i;
         }
+        std::cerr << "ERR" << std::endl;
     }
 
     //lookup and interpolate function value.
