@@ -1158,6 +1158,13 @@ def test_ne():
     import time
     t1 = time.time()
 
+    # These tests won't always work if astropy < 1.0.6 has been imported, so look for that.
+    try:
+        if astropy.__version__ < '1.0.6':
+            return
+    except:
+        pass
+
     obj1 = galsim.InterpolatedImage(ref_image, calculate_maxk=False, calculate_stepk=False)
 
     # Copy ref_image and perturb it slightly in the middle, away from where the InterpolatedImage
