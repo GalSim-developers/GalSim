@@ -571,18 +571,14 @@ def _ceildiv(a, b): return -(-a // b)
 
 
 class LookupTable2D2(object):
-    def __init__(self, x0=0.0, y0=0.0, dx=1.0, dy=1.0, f=None, interpolant='linear',
-                 edge_mode='warn'):
+    def __init__(self, xs, ys, f=None, interpolant='linear', edge_mode='warn'):
 
         self.edge_mode = edge_mode
-        if self.edge_mode == 'wrap':
-            self.xperiod = dx*f.shape[1]
-            self.yperiod = dy*f.shape[0]
-            f = np.pad(f, [(0,1), (0,1)], mode='wrap')
+        # if self.edge_mode == 'wrap':
+        #     self.xperiod = dx*f.shape[1]
+        #     self.yperiod = dy*f.shape[0]
+        #     f = np.pad(f, [(0,1), (0,1)], mode='wrap')
         # self.table = _galsim._LookupTable2D(x0, y0, dx, dy, f.astype(float), interpolant)
-        ny, nx = f.shape
-        xs = np.arange(nx)*dx+x0
-        ys = np.arange(ny)*dy+y0
         self.table = _galsim._LookupTable2D(xs, ys, f.astype(float), interpolant)
 
     def __call__(self, x, y, scatter=False):

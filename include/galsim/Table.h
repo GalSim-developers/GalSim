@@ -326,11 +326,14 @@ namespace galsim {
         int upperIndexX(A x) const;
         int upperIndexY(A y) const;
 
-        /// Interpolate value btwn p & --p:
-        mutable V (*interpolate)(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const std::vector<V>&, int Ny);
-        static V linearInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const std::vector<V>& vals, int Ny);
-        static V floorInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const std::vector<V>& vals, int Ny);
-        static V ceilInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j, const std::vector<V>& vals, int Ny);
+        mutable V (*interpolate)(A x, A y, int i, int j,
+            const std::vector<A>&, const std::vector<A>&, const std::vector<V>&);
+        static V linearInterpolate(A x, A y, int i, int j,
+            const std::vector<A>&, const std::vector<A>&, const std::vector<V>&);
+        static V floorInterpolate(A x, A y, int i, int j,
+            const std::vector<A>&, const std::vector<A>&, const std::vector<V>&);
+        static V ceilInterpolate(A x, A y, int i, int j,
+            const std::vector<A>&, const std::vector<A>&, const std::vector<V>&);
     };
 }
 

@@ -346,7 +346,8 @@ namespace galsim {
 
     template class Table<double,double>;
 
-    // Start Table2D
+
+    // Table2D
 
     // Should dx, dy be higher precision types than x0, y0?  Maybe x0, xend would be better params?
     template<class V, class A>
@@ -355,6 +356,7 @@ namespace galsim {
         iType(in), Nx(_Nx), Ny(_Ny), dx(_dx), dy(_dy), xlower_slop(dx*1e-6), xupper_slop(dx*1e-6),
         ylower_slop(dy*1e-6), yupper_slop(dy*1e-6)
     {
+        std::cerr << "Old constructor" << std::endl;
         // Allocate vectors.
         vals.reserve(Nx*Ny);
         xgrid.reserve(Nx);
@@ -557,7 +559,7 @@ namespace galsim {
     {
         int i = upperIndexX(x);
         int j = upperIndexY(y);
-        return interpolate(x, y, xgrid[i], ygrid[j], dx, dy, i, j, vals, Nx);
+        return interpolate(x, y, i, j, xgrid, ygrid, vals);
     }
 
     template<class V, class A>
@@ -567,7 +569,7 @@ namespace galsim {
         for (int k=0; k<N; k++) {
             i = upperIndexX(xvec[k]);
             j = upperIndexY(yvec[k]);
-            valvec[k] = interpolate(xvec[k], yvec[k], xgrid[i], ygrid[j], dx, dy, i, j, vals, Nx);
+            valvec[k] = interpolate(xvec[k], yvec[k], i, j, xgrid, ygrid, vals);
         }
     }
 
@@ -580,19 +582,20 @@ namespace galsim {
             j = upperIndexY(yvec[outj]);
             for (int outi=0; outi<outNx; outi++, valvec++) {
                 i = upperIndexX(xvec[outi]);
-                *valvec = interpolate(xvec[outi], yvec[outj], xgrid[i], ygrid[j], dx, dy, i, j, vals, Nx);
+                *valvec = interpolate(xvec[outi], yvec[outj], i, j, xgrid, ygrid, vals);
             }
         }
     }
 
     template<class V, class A>
-    V Table2D<V,A>::linearInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j,
-        const std::vector<V>& vals, int Nx)
+    V Table2D<V,A>::linearInterpolate(A x, A y, int i, int j,
+        const std::vector<A>& xgrid, const std::vector<A>& ygrid, const std::vector<V>& vals)
     {
-        A ax = (xi - x) / dx;
+        A ax = (xgrid[i] - x) / (xgrid[i] - xgrid[i-1]);
         A bx = 1.0 - ax;
-        A ay = (yj - y) / dy;
+        A ay = (ygrid[j] - y) / (ygrid[j] - ygrid[j-1]);
         A by = 1.0 - ay;
+        int Nx = xgrid.size();
         return (vals[(j-1)*Nx+i-1] * ax * ay
                 + vals[j*Nx+i-1] * ax * by
                 + vals[(j-1)*Nx+i] * bx * ay
@@ -600,20 +603,22 @@ namespace galsim {
     }
 
     template<class V, class A>
-    V Table2D<V,A>::floorInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j,
-        const std::vector<V>& vals, int Nx)
+    V Table2D<V,A>::floorInterpolate(A x, A y, int i, int j,
+        const std::vector<A>& xgrid, const std::vector<A>& ygrid, const std::vector<V>& vals)
     {
-        if (x == xi) i++;
-        if (y == yj) j++;
+        if (x == xgrid[i]) i++;
+        if (y == ygrid[j]) j++;
+        int Nx = xgrid.size();
         return vals[(j-1)*Nx+i-1];
     }
 
     template<class V, class A>
-    V Table2D<V,A>::ceilInterpolate(A x, A y, A xi, A yj, A dx, A dy, int i, int j,
-        const std::vector<V>& vals, int Nx)
+    V Table2D<V,A>::ceilInterpolate(A x, A y, int i, int j,
+        const std::vector<A>& xgrid, const std::vector<A>& ygrid, const std::vector<V>& vals)
     {
-        if (x == xi) i++;
-        if (y == yj) j++;
+        if (x == xgrid[i]) i++;
+        if (y == ygrid[j]) j++;
+        int Nx = xgrid.size();
         return vals[j*Nx+i];
     }
 

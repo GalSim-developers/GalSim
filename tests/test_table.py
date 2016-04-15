@@ -350,14 +350,13 @@ def test_table2d2_scipy():
         print "test_table2d2_scipy requires scipy!"
 
     def f(x, y):
-        return np.sin(x) * np.cos(y)
+        return np.sin(x) * np.cos(y) + 100*x
 
     x = np.linspace(0.1, 3.3, 25)
     y = np.linspace(0.2, 10.4, 75)
-    xx, yy = np.meshgrid(x, y)
-    z = f(xx, yy)
+    z = f(*np.meshgrid(x, y))
 
-    tab2d = galsim.table.LookupTable2D2(x[0], y[0], x[1]-x[0], y[1]-y[0], z)
+    tab2d = galsim.table.LookupTable2D2(x, y, z)
     sci2d = interp2d(x, y, z)
 
     newx = np.linspace(0.2, 3.1, 45)
@@ -370,10 +369,16 @@ def test_table2d2_scipy():
                                                                        for x0 in newx]
                                                                       for y0 in newy]))
 
-    # Test edge wrapping
-    tab2d = galsim.table.LookupTable2D2(x[0], y[0], x[1]-x[0], y[1]-y[0], z, edge_mode='wrap')
-    np.testing.assert_array_almost_equal(tab2d(newx, newy), tab2d(newx+tab2d.xperiod, newy))
-    np.testing.assert_array_almost_equal(tab2d(newx, newy), tab2d(newx, newy+tab2d.yperiod))
+    # Test non-equally-spaced table.
+    x = np.delete(x, 10)
+    y = np.delete(y, 10)
+    z = f(*np.meshgrid(x, y))
+
+    tab2d = galsim.table.LookupTable2D2(x, y, z)
+    sci2d = interp2d(x, y, z)
+
+    np.testing.assert_array_almost_equal(sci2d(newx, newy), tab2d(newx, newy))
+
 
 
 @timer
