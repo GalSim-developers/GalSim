@@ -194,14 +194,13 @@ class COSMOSCatalog(object):
         full_file_name, full_image_dir, _, self.use_sample = \
             galsim.real._parse_files_dirs(file_name, image_dir, dir, noise_dir, sample)
 
-        if self.use_real:
-            if not _nobjects_only:
-                # First, do the easy thing: real galaxies.  We make the galsim.RealGalaxyCatalog()
-                # constructor do most of the work.  But note that we don't actually need to 
-                # bother with this if all we care about is the nobjects attribute.
-                self.real_cat = galsim.RealGalaxyCatalog(
-                    file_name, sample=sample, image_dir=image_dir, dir=dir, preload=preload,
-                    noise_dir=noise_dir)
+        if self.use_real and not _nobjects_only:
+            # First, do the easy thing: real galaxies.  We make the galsim.RealGalaxyCatalog()
+            # constructor do most of the work.  But note that we don't actually need to
+            # bother with this if all we care about is the nobjects attribute.
+            self.real_cat = galsim.RealGalaxyCatalog(
+                file_name, sample=sample, image_dir=image_dir, dir=dir, preload=preload,
+                noise_dir=noise_dir)
 
             # The fits name has _fits inserted before the .fits ending.
             # Note: don't just use k = -5 in case it actually ends with .fits.fz
