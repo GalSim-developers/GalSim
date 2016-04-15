@@ -273,8 +273,8 @@ output:
             - 0
         columns:
             num: obj_num
-            x: "$(@image_pos).x"
-            y: "$(@image_pos).y"
+            x: "$image_pos.x"
+            y: "$image_pos.y"
             dx: image.offset.x
             dy: image.offset.y
             atmos_psf_e1: "$(@psf.items.0.ellip).e1"
