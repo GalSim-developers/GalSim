@@ -349,45 +349,6 @@ namespace galsim {
 
     // Table2D
 
-    // Should dx, dy be higher precision types than x0, y0?  Maybe x0, xend would be better params?
-    template<class V, class A>
-    Table2D<V,A>::Table2D(A x0, A y0, A _dx, A _dy, int _Nx, int _Ny, const V* valarray,
-                          interpolant in) :
-        iType(in), Nx(_Nx), Ny(_Ny), dx(_dx), dy(_dy), xlower_slop(dx*1e-6), xupper_slop(dx*1e-6),
-        ylower_slop(dy*1e-6), yupper_slop(dy*1e-6)
-    {
-        std::cerr << "Old constructor" << std::endl;
-        // Allocate vectors.
-        vals.reserve(Nx*Ny);
-        xgrid.reserve(Nx);
-        ygrid.reserve(Ny);
-
-        // Fill in vectors.
-        const V* vptr;
-        int i;
-        for (i=0, vptr=valarray; i<Nx*Ny; i++, vptr++) vals.push_back(*vptr);
-        for (i=0; i<Nx; i++) xgrid.push_back(x0+dx*i);
-        for (i=0; i<Ny; i++) ygrid.push_back(y0+dy*i);
-
-        xEqualSpaced = yEqualSpaced = true;
-        lastXIndex = lastYIndex = 1;
-
-        // Map specific interpolator to `interpolate`.
-        switch (iType) {
-          case linear:
-               interpolate = &Table2D<V,A>::linearInterpolate;
-               break;
-          case floor:
-               interpolate = &Table2D<V,A>::floorInterpolate;
-               break;
-          case ceil:
-               interpolate = &Table2D<V,A>::ceilInterpolate;
-               break;
-          default:
-               throw TableError("interpolation method not yet implemented");
-        }
-    }
-
     template<class V, class A>
     Table2D<V,A>::Table2D(const A* xargs, const A* yargs, const V* valarray, int _Nx, int _Ny,
         interpolant in) : iType(in), Nx(_Nx), Ny(_Ny)
@@ -452,14 +413,14 @@ namespace galsim {
     template<class V, class A>
     int Table2D<V,A>::upperIndexX(A x) const
     {
-        if (x<_xArgMin()-xlower_slop || x>_xArgMax()+xupper_slop)
-            throw TableOutOfRange(x,_xArgMin(),_xArgMax());
+        if (x<xgrid.front()-xlower_slop || x>xgrid.back()+xupper_slop)
+            throw TableOutOfRange(x,xgrid.front(),xgrid.back());
         // check for slop
-        if (x < _xArgMin()) return 1;
-        if (x > _xArgMax()) return Nx-1;
+        if (x < xgrid.front()) return 1;
+        if (x > xgrid.back()) return Nx-1;
 
         if (xEqualSpaced) {
-            int i = int( std::ceil( (x-_xArgMin()) / dx) );
+            int i = int( std::ceil( (x-xgrid.front()) / dx) );
             if (i >= Nx) --i; // in case of rounding error
             if (i == 0) ++i;
             // check if we need to move ahead or back one step due to rounding errors
@@ -504,14 +465,14 @@ namespace galsim {
     template<class V, class A>
     int Table2D<V,A>::upperIndexY(A y) const
     {
-        if (y<_yArgMin()-ylower_slop || y>_yArgMax()+yupper_slop)
-            throw TableOutOfRange(y,_yArgMin(),_yArgMax());
+        if (y<ygrid.front()-ylower_slop || y>ygrid.back()+yupper_slop)
+            throw TableOutOfRange(y,ygrid.front(),ygrid.back());
         // check for slop
-        if (y < _yArgMin()) return 1;
-        if (y > _yArgMax()) return Ny-1;
+        if (y < ygrid.front()) return 1;
+        if (y > ygrid.back()) return Ny-1;
 
         if (yEqualSpaced) {
-            int i = int( std::ceil( (y-_yArgMin()) / dy) );
+            int i = int( std::ceil( (y-ygrid.front() / dy) ));
             if (i >= Ny) --i; // in case of rounding error
             if (i == 0) ++i;
             // check if we need to move ahead or back one step due to rounding errors

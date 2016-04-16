@@ -226,13 +226,6 @@ namespace {
                         (bp::arg("xs"), bp::arg("ys"), bp::arg("valarray"), bp::arg("interp"))
                     )
                 )
-                // .def("__init__",
-                //     bp::make_constructor(
-                //         &makeTable2D, bp::default_call_policies(),
-                //         (bp::arg("x0"), bp::arg("y0"), bp::arg("dx"), bp::arg("dy"),
-                //          bp::arg("valarray"), bp::arg("interp"))
-                //     )
-                // )
                 .def("__call__", &Table2D<double,double>::lookup)
                 .def("interpManyScatter", &interpManyScatter)
                 .def("interpManyOuter", &interpManyOuter)

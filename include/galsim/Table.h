@@ -262,10 +262,6 @@ namespace galsim {
     public:
         enum interpolant { linear, floor, ceil };
 
-        /// Table from offset, stepsize, Nstep, and value array.
-        Table2D(A x0, A y0, A dx, A dy, int Nx, int Ny,
-                const V* valarray, interpolant in);
-
         /// Table from xargs, yargs, vals
         Table2D(const A* xargs, const A* yargs, const V* valarray, int Nx, int Ny, interpolant in);
 
@@ -310,14 +306,6 @@ namespace galsim {
         mutable bool yEqualSpaced;
         mutable int lastXIndex; //< Index for last x lookup into table.
         mutable int lastYIndex; //< Index for last y lookup into table.
-
-        //@{
-        /// Private versions that don't check for a null table:
-        A _xArgMin() const { return xgrid.front(); }
-        A _xArgMax() const { return xgrid.back(); }
-        A _yArgMin() const { return ygrid.front(); }
-        A _yArgMax() const { return ygrid.back(); }
-        //@}
 
         const int Nx, Ny; // Array dimensions
         A dx, dy;
