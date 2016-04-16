@@ -559,7 +559,7 @@ namespace galsim {
     {
         int i = upperIndexX(x);
         int j = upperIndexY(y);
-        return interpolate(x, y, i, j, xgrid, ygrid, vals);
+        return (this->*interpolate)(x, y, i, j);
     }
 
     template<class V, class A>
@@ -569,7 +569,7 @@ namespace galsim {
         for (int k=0; k<N; k++) {
             i = upperIndexX(xvec[k]);
             j = upperIndexY(yvec[k]);
-            valvec[k] = interpolate(xvec[k], yvec[k], i, j, xgrid, ygrid, vals);
+            valvec[k] = (this->*interpolate)(xvec[k], yvec[k], i, j);
         }
     }
 
@@ -582,20 +582,18 @@ namespace galsim {
             j = upperIndexY(yvec[outj]);
             for (int outi=0; outi<outNx; outi++, valvec++) {
                 i = upperIndexX(xvec[outi]);
-                *valvec = interpolate(xvec[outi], yvec[outj], i, j, xgrid, ygrid, vals);
+                *valvec = (this->*interpolate)(xvec[outi], yvec[outj], i, j);
             }
         }
     }
 
     template<class V, class A>
-    V Table2D<V,A>::linearInterpolate(A x, A y, int i, int j,
-        const std::vector<A>& xgrid, const std::vector<A>& ygrid, const std::vector<V>& vals)
+    V Table2D<V,A>::linearInterpolate(A x, A y, int i, int j) const
     {
         A ax = (xgrid[i] - x) / (xgrid[i] - xgrid[i-1]);
         A bx = 1.0 - ax;
         A ay = (ygrid[j] - y) / (ygrid[j] - ygrid[j-1]);
         A by = 1.0 - ay;
-        int Nx = xgrid.size();
         return (vals[(j-1)*Nx+i-1] * ax * ay
                 + vals[j*Nx+i-1] * ax * by
                 + vals[(j-1)*Nx+i] * bx * ay
@@ -603,22 +601,18 @@ namespace galsim {
     }
 
     template<class V, class A>
-    V Table2D<V,A>::floorInterpolate(A x, A y, int i, int j,
-        const std::vector<A>& xgrid, const std::vector<A>& ygrid, const std::vector<V>& vals)
+    V Table2D<V,A>::floorInterpolate(A x, A y, int i, int j) const
     {
         if (x == xgrid[i]) i++;
         if (y == ygrid[j]) j++;
-        int Nx = xgrid.size();
         return vals[(j-1)*Nx+i-1];
     }
 
     template<class V, class A>
-    V Table2D<V,A>::ceilInterpolate(A x, A y, int i, int j,
-        const std::vector<A>& xgrid, const std::vector<A>& ygrid, const std::vector<V>& vals)
+    V Table2D<V,A>::ceilInterpolate(A x, A y, int i, int j) const
     {
-        if (x == xgrid[i]) i++;
-        if (y == ygrid[j]) j++;
-        int Nx = xgrid.size();
+        if (x == xgrid[i-1]) i--;
+        if (y == ygrid[j-1]) j--;
         return vals[j*Nx+i];
     }
 

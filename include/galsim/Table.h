@@ -326,14 +326,11 @@ namespace galsim {
         int upperIndexX(A x) const;
         int upperIndexY(A y) const;
 
-        mutable V (*interpolate)(A x, A y, int i, int j,
-            const std::vector<A>&, const std::vector<A>&, const std::vector<V>&);
-        static V linearInterpolate(A x, A y, int i, int j,
-            const std::vector<A>&, const std::vector<A>&, const std::vector<V>&);
-        static V floorInterpolate(A x, A y, int i, int j,
-            const std::vector<A>&, const std::vector<A>&, const std::vector<V>&);
-        static V ceilInterpolate(A x, A y, int i, int j,
-            const std::vector<A>&, const std::vector<A>&, const std::vector<V>&);
+        typedef V (Table2D<V,A>::*Table2DMemFn)(A x, A y, int i, int j) const;
+        Table2DMemFn interpolate;
+        V linearInterpolate(A x, A y, int i, int j) const;
+        V floorInterpolate(A x, A y, int i, int j) const;
+        V ceilInterpolate(A x, A y, int i, int j) const;
     };
 }
 
