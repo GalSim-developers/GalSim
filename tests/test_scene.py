@@ -80,8 +80,8 @@ def test_cosmos_fluxnorm():
     # Then check that if we draw a parametric representation that is achromatic, that the flux
     # matches reasonably well (won't be exact because model isn't perfect).
     gal1_param = cat.makeGalaxy(test_ind, gal_type='parametric', chromatic=False)
-    gal1_param = galsim.Convolve(gal1_param, final_psf)
-    im1_param = gal1_param.drawImage(scale=0.05)
+    gal1_param_final = galsim.Convolve(gal1_param, final_psf)
+    im1_param = gal1_param_final.drawImage(scale=0.05)
 
     # Then check the same for a chromatic parametric representation that is drawn into the same
     # band.
@@ -95,6 +95,14 @@ def test_cosmos_fluxnorm():
     test_val = [im2.array.sum(), im1_param.array.sum(), im1_chrom.array.sum()]
     np.testing.assert_allclose(ref_val, test_val, rtol=0.1,
                                err_msg='Flux normalization problem in COSMOS galaxies')
+
+    # Finally, check that the original COSMOS info is stored properly after transformations, for
+    # both Sersic galaxies (like galaxy 0 in the catalog) and the one that is gal1_param above.
+    gal0_param = cat.makeGalaxy(0, gal_type='parametric', chromatic=False)
+    assert hasattr(gal0_param.shear(g1=0.05).original, 'index'), \
+        'Sersic galaxy does not retain index information after transformation'
+    assert hasattr(gal1_param.shear(g1=0.05).original, 'index'), \
+        'Bulge+disk galaxy does not retain index information after transformation'
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)

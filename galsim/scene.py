@@ -549,6 +549,7 @@ class COSMOSCatalog(object):
         # So just put it in here at the end to be sure.
         for gal, index in zip(gal_list, indices):
             gal.index = self.orig_index[index]
+            if hasattr(gal, 'original'): gal.original.index = self.orig_index[index]
 
         if hasattr(index, '__iter__'):
             return gal_list
