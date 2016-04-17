@@ -392,7 +392,16 @@ def test_table2d2_scipy():
 
     np.testing.assert_array_almost_equal(sci2d(newx, newy), tab2d(newx, newy))
 
+    # Test edge wrapping
+    np.testing.assert_raises(ValueError, galsim.table.LookupTable,
+                             (x, y, z), dict(edge_mode='wrap'))
+    x = np.append(x, x[-1] + (x[-1]-x[-2]))
+    y = np.append(y, y[-1] + (y[-1]-y[-2]))
+    z = np.pad(z,[(0,1), (0,1)], mode='wrap')
+    tab2d = galsim.table.LookupTable2D2(x, y, z, edge_mode='wrap')
 
+    np.testing.assert_array_almost_equal(tab2d(newx, newy), tab2d(newx+3*(x[-1]-x[0]), newy))
+    np.testing.assert_array_almost_equal(tab2d(newx, newy), tab2d(newx, newy+13*(y[-1]-y[0])))
 
 @timer
 def test_ne():

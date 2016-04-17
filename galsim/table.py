@@ -572,21 +572,28 @@ def _ceildiv(a, b): return -(-a // b)
 
 class LookupTable2D2(object):
     def __init__(self, xs, ys, f=None, interpolant='linear', edge_mode='warn'):
-
+        self.xs = xs
+        self.ys = ys
+        self.f = np.ascontiguousarray(f, dtype=float)
+        fshape = self.f.shape
+        if fshape != (len(ys), len(xs)):
+            raise ValueError("Shape of `f` must be (len(`xs`), len(`ys`)).")
+        self.interpolant = interpolant
         self.edge_mode = edge_mode
-        # if self.edge_mode == 'wrap':
-        #     self.xperiod = dx*f.shape[1]
-        #     self.yperiod = dy*f.shape[0]
-        #     f = np.pad(f, [(0,1), (0,1)], mode='wrap')
-        # self.table = _galsim._LookupTable2D(x0, y0, dx, dy, f.astype(float), interpolant)
-        self.table = _galsim._LookupTable2D(xs, ys, np.ascontiguousarray(f, dtype=float),
-                                            interpolant)
+        if self.edge_mode == 'wrap':
+            # Can only wrap if the first column/row is the same as the last column/row.
+            if (not all(f[0] == f[-1]) or not all(f[:, 0] == f[:, -1])):
+                raise ValueError("Cannot wrap `f` array with unequal first/last column/row.")
+            self.xperiod = self.xs[-1] - self.xs[0]
+            self.yperiod = self.ys[-1] - self.ys[0]
+        self.table = _galsim._LookupTable2D(self.xs, self.ys, f, self.interpolant)
 
     def __call__(self, x, y, scatter=False):
         from numbers import Real
         if isinstance(x, Real):
             if self.edge_mode == 'wrap':
-                return self.table(x % self.xperiod, y % self.yperiod)
+                return self.table((x-self.xs[0]) % self.xperiod + self.xs[0],
+                                  (y-self.ys[0]) % self.yperiod + self.ys[0])
             else:
                 return self.table(x, y)
         else:
@@ -596,16 +603,18 @@ class LookupTable2D2(object):
                 x = x.astype(float).ravel()
                 y = y.astype(float).ravel()
                 if self.edge_mode == 'wrap':
-                    self.table.interpManyScatter(x % self.xperiod, y % self.yperiod, f)
+                    self.table.interpManyScatter((x-self.xs[0]) % self.xperiod + self.xs[0],
+                                                 (y-self.ys[0]) % self.yperiod + self.ys[0], f)
                 else:
                     self.table.interpManyScatter(x, y, f)
                 f = f.reshape(shape)
-            else:
+            else:  # outer
                 f = np.empty((len(y), len(x)), dtype=float)
                 x = np.array(x, dtype=float)
                 y = np.array(y, dtype=float)
                 if self.edge_mode == 'wrap':
-                    self.table.interpManyOuter(x % self.xperiod, y % self.yperiod, f)
+                    self.table.interpManyOuter((x-self.xs[0]) % self.xperiod + self.xs[0],
+                                               (y-self.ys[0]) % self.yperiod + self.ys[0], f)
                 else:
                     self.table.interpManyOuter(x, y, f)
             return f
