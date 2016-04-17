@@ -349,8 +349,8 @@ def test_table2d2_scipy():
     except ImportError:
         print "test_table2d2_scipy requires scipy!"
 
-    def f(x, y):
-        return np.sin(x) * np.cos(y) + 100*x
+    def f(x_, y_):
+        return np.sin(x_) * np.cos(y_) + x_
 
     x = np.linspace(0.1, 3.3, 25)
     y = np.linspace(0.2, 10.4, 75)
@@ -368,6 +368,19 @@ def test_table2d2_scipy():
     np.testing.assert_array_almost_equal(sci2d(newx, newy), np.array([[tab2d(x0, y0)
                                                                        for x0 in newx]
                                                                       for y0 in newy]))
+
+    # import matplotlib.pyplot as plt
+    # plt.figure(0)
+    # plt.imshow(z)
+    # plt.figure(1)
+    # plt.imshow(sci2d(newx, newy))
+    # plt.figure(2)
+    # plt.imshow(tab2d(newxx, newyy, scatter=True))
+    # plt.figure(3)
+    # plt.imshow(tab2d(newx, newy))
+    # plt.figure(4)
+    # plt.imshow(np.array([[tab2d(x0, y0) for x0 in newx] for y0 in newy]))
+    # plt.show()
 
     # Test non-equally-spaced table.
     x = np.delete(x, 10)
