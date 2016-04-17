@@ -247,6 +247,36 @@ namespace galsim {
     };
 
     /**
+     * @brief A class to represent an argument grid for a Table2D.
+     *
+     * Basically a std::vector with a few extra bells and whistles to deal with potentially
+     * equally-spaced arguments, upper and lower slop, and fast indexing.
+     */
+    template<class A>
+    class ArgGrid
+    {
+    public:
+        ArgGrid(const A* args, int N);
+
+        int upperIndex(const A a) const;
+
+        // pass through a few std::vector methods.
+        const A& front() const {return grid.front();}
+        const A& back() const {return grid.back();}
+        const A& operator[](int i) const {return grid[i];}
+
+        // A few convenient additional member variables.
+        A lower_slop, upper_slop;
+        bool equalSpaced;
+        A da;
+        mutable int lastIndex;
+
+    private:
+        typedef typename std::vector<A>::const_iterator citer;
+        std::vector<A> grid;
+    };
+
+    /**
      * @brief A class to represent lookup tables for a function z = f(x, y).
      *
      * A is the type of the argument of the function.
@@ -265,26 +295,6 @@ namespace galsim {
         /// Table from xargs, yargs, vals
         Table2D(const A* xargs, const A* yargs, const V* valarray, int Nx, int Ny, interpolant in);
 
-        void dump() const
-        {
-            int offset;
-            std::cout << '[';
-            for (int i=0; i<Ny; i++) {
-                offset = i*Nx;
-                std::cout << '[';
-                for (int j=0; j<Nx; j++) {
-                    std::cout << vals[offset+j];
-                    if (j != Nx-1) std::cout << ',';
-                }
-                std::cout << ']';
-                if (i != Ny-1) std::cout << ',' << std::endl;
-            }
-            std::cout << ']' << std::endl;
-        }
-
-        /// lookup & interp. function value.
-        V operator() (const A x, const A y) const;
-
         /// interp, but exception if beyond bounds
         V lookup(const A x, const A y) const;
 
@@ -295,30 +305,18 @@ namespace galsim {
         interpolant getInterp() const { return iType; }
 
     private:
-        typedef typename std::vector<A>::const_iterator citer;
-        typedef typename std::vector<A>::iterator iter;
         interpolant iType;
-        std::vector<V> vals;
-        std::vector<A> xgrid;
-        std::vector<A> ygrid;
-
-        mutable bool xEqualSpaced;
-        mutable bool yEqualSpaced;
-        mutable int lastXIndex; //< Index for last x lookup into table.
-        mutable int lastYIndex; //< Index for last y lookup into table.
-
         const int Nx, Ny; // Array dimensions
-        A dx, dy;
-        A xlower_slop, xupper_slop, ylower_slop, yupper_slop;
+        const ArgGrid<A> xgrid;
+        const ArgGrid<A> ygrid;
 
-        int upperIndexX(A x) const;
-        int upperIndexY(A y) const;
+        std::vector<V> vals;
 
-        typedef V (Table2D<V,A>::*Table2DMemFn)(A x, A y, int i, int j) const;
+        typedef V (Table2D<V,A>::*Table2DMemFn)(const A x, const A y, int i, int j) const;
         Table2DMemFn interpolate;
-        V linearInterpolate(A x, A y, int i, int j) const;
-        V floorInterpolate(A x, A y, int i, int j) const;
-        V ceilInterpolate(A x, A y, int i, int j) const;
+        V linearInterpolate(const A x, const A y, int i, int j) const;
+        V floorInterpolate(const A x, const A y, int i, int j) const;
+        V ceilInterpolate(const A x, const A y, int i, int j) const;
     };
 }
 

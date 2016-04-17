@@ -347,52 +347,89 @@ namespace galsim {
     template class Table<double,double>;
 
 
+    // ArgGrid
+
+    template<class A>
+    ArgGrid<A>::ArgGrid(const A* args, int N)
+    {
+        grid.reserve(N);
+        for (int i=0; i<N; i++, args++) grid.push_back(*args);
+        const double tolerance = 0.01;
+        da = (grid.back() - grid.front()) / (N-1);
+        if (da == 0.) throw TableError("First and last arguments are equal.");
+        equalSpaced = true;
+        for (int i=0; i<N; i++) {
+            if (std::abs((grid[i] - grid.front())/da - i) > tolerance) equalSpaced = false;
+            if (grid[i] == grid[i-1]) throw TableError("Table has repeated arguments.");
+        }
+        lastIndex = 1;
+        lower_slop = (grid[1]-grid[0]) * 1.e-6;
+        upper_slop = (grid[N-1]-grid[N-2]) * 1.e-6;
+    }
+
+    // Look up an index.  Use STL binary search.
+    template<class A>
+    int ArgGrid<A>::upperIndex(const A a) const {
+        if (a<grid.front()-lower_slop || a>grid.back()+upper_slop)
+            throw TableOutOfRange(a,grid.front(),grid.back());
+        // check for slop
+        if (a < grid.front()) return 1;
+        if (a > grid.back()) return grid.size()-1;
+
+        if (equalSpaced) {
+            int i = int( std::ceil( (a-grid.front()) / da) );
+            if (i >= grid.size()) --i; // in case of rounding error
+            if (i == 0) ++i;
+            // check if we need to move ahead or back one step due to rounding errors
+            while (a > grid[i]) ++i;
+            while (a < grid[i-1]) --i;
+            return i;
+        } else {
+            xassert(lastIndex >= 1);
+            xassert(lastIndex < grid.size());
+
+            if ( a < grid[lastIndex-1] ) {
+                xassert(lastIndex-2 >= 0);
+                // Check to see if the previous one is it.
+                if (a >= grid[lastIndex-2]) return --lastIndex;
+                else {
+                    // Look for the entry from 0..lastIndex-1:
+                    citer p = std::upper_bound(grid.begin(), grid.begin()+lastIndex-1, a);
+                    xassert(p != grid.begin());
+                    xassert(p != grid.begin()+lastIndex-1);
+                    lastIndex = p-grid.begin();
+                    return lastIndex;
+                }
+            } else if (a > grid[lastIndex]) {
+                xassert(lastIndex+1 < grid.size());
+                // Check to see if the next one is it.
+                if (a <= grid[lastIndex+1]) return ++lastIndex;
+                else {
+                    // Look for the entry from lastIndex..end
+                    citer p = std::lower_bound(grid.begin()+lastIndex+1, grid.end(), a);
+                    xassert(p != grid.begin()+lastIndex+1);
+                    xassert(p != grid.end());
+                    lastIndex = p-grid.begin();
+                    return lastIndex;
+                }
+            } else {
+                // Then lastIndex is correct.
+                return lastIndex;
+            }
+        }
+    }
+
+
     // Table2D
 
     template<class V, class A>
     Table2D<V,A>::Table2D(const A* xargs, const A* yargs, const V* valarray, int _Nx, int _Ny,
-        interpolant in) : iType(in), Nx(_Nx), Ny(_Ny)
+        interpolant in) : iType(in), Nx(_Nx), Ny(_Ny), xgrid(xargs, Nx), ygrid(yargs, Ny)
     {
-        // Allocate vectors.
+        // Allocate and fill vals
         vals.reserve(Nx*Ny);
-        xgrid.reserve(Nx);
-        ygrid.reserve(Ny);
-
-        // Fill in vectors.
-        int i;
-        for (i=0; i<Nx*Ny; i++, valarray++)
+        for (int i=0; i<Nx*Ny; i++, valarray++)
             vals.push_back(*valarray);
-        for (i=0; i<Nx; i++, xargs++)
-            xgrid.push_back(*xargs);
-        for (i=0; i<Ny; i++, yargs++)
-            ygrid.push_back(*yargs);
-
-        // See if arguments are equally spaced
-        // ...within this fractional error:
-        const double tolerance = 0.01;
-        dx = (xgrid.back() - xgrid.front()) / (Nx - 1);
-        dy = (ygrid.back() - ygrid.front()) / (Ny - 1);
-        if (dx == 0.)
-            throw TableError("First and last Table2D x arguments are equal.");
-        if (dy == 0.)
-            throw TableError("First and last Table2D y arguments are equal.");
-        xEqualSpaced = yEqualSpaced = true;
-        for (i=1; i<Nx; i++) {
-            if (std::abs(((xgrid[i]-xgrid.front())/dx - i)) > tolerance) xEqualSpaced = false;
-            if (xgrid[i] == xgrid[i-1])
-                throw TableError("Table has repeated x arguments.");
-        }
-        for (i=1; i<Ny; i++) {
-            if (std::abs(((ygrid[i]-ygrid.front())/dy - i)) > tolerance) yEqualSpaced = false;
-            if (ygrid[i] == ygrid[i-1])
-                throw TableError("Table has repeated y arguments.");
-        }
-        lastXIndex = lastYIndex = 1;
-
-        xlower_slop = (xgrid[1] - xgrid[0]) * 1.e-6;
-        xupper_slop = (xgrid[Nx-1] - xgrid[Nx-2]) * 1.e-6;
-        ylower_slop = (ygrid[1] - ygrid[0]) * 1.e-6;
-        yupper_slop = (ygrid[Ny-1] - ygrid[Ny-2]) * 1.e-6;
 
         // Map specific interpolator to `interpolate`.
         switch (iType) {
@@ -410,146 +447,47 @@ namespace galsim {
         }
     }
 
-    template<class V, class A>
-    int Table2D<V,A>::upperIndexX(A x) const
-    {
-        if (x<xgrid.front()-xlower_slop || x>xgrid.back()+xupper_slop)
-            throw TableOutOfRange(x,xgrid.front(),xgrid.back());
-        // check for slop
-        if (x < xgrid.front()) return 1;
-        if (x > xgrid.back()) return Nx-1;
-
-        if (xEqualSpaced) {
-            int i = int( std::ceil( (x-xgrid.front()) / dx) );
-            if (i >= Nx) --i; // in case of rounding error
-            if (i == 0) ++i;
-            // check if we need to move ahead or back one step due to rounding errors
-            while (x > xgrid[i]) ++i;
-            while (x < xgrid[i-1]) --i;
-            return i;
-        } else {
-            xassert(lastXIndex >= 1);
-            xassert(lastXIndex < Nx);
-
-            if ( x < xgrid[lastXIndex-1] ) {
-                xassert(lastXIndex-2 >= 0);
-                // Check to see if the previous one is it.
-                if (x >= xgrid[lastXIndex-2]) return --lastXIndex;
-                else {
-                    // Look for the entry from 0..lastXIndex-1:
-                    citer p = std::upper_bound(xgrid.begin(), xgrid.begin()+lastXIndex-1, x);
-                    xassert(p != xgrid.begin());
-                    xassert(p != xgrid.begin()+lastXIndex-1);
-                    lastXIndex = p-xgrid.begin();
-                    return lastXIndex;
-                }
-            } else if (x > xgrid[lastXIndex]) {
-                xassert(lastXIndex+1 < Nx);
-                // Check to see if the next one is it.
-                if (x <= xgrid[lastXIndex+1]) return ++lastXIndex;
-                else {
-                    // Look for the entry from lastXIndex..end
-                    citer p = std::lower_bound(xgrid.begin()+lastXIndex+1, xgrid.end(), x);
-                    xassert(p != xgrid.begin()+lastXIndex+1);
-                    xassert(p != xgrid.end());
-                    lastXIndex = p-xgrid.begin();
-                    return lastXIndex;
-                }
-            } else {
-                // Then lastXIndex is correct.
-                return lastXIndex;
-            }
-        }
-    }
-
-    template<class V, class A>
-    int Table2D<V,A>::upperIndexY(A y) const
-    {
-        if (y<ygrid.front()-ylower_slop || y>ygrid.back()+yupper_slop)
-            throw TableOutOfRange(y,ygrid.front(),ygrid.back());
-        // check for slop
-        if (y < ygrid.front()) return 1;
-        if (y > ygrid.back()) return Ny-1;
-
-        if (yEqualSpaced) {
-            int i = int( std::ceil( (y-ygrid.front() / dy) ));
-            if (i >= Ny) --i; // in case of rounding error
-            if (i == 0) ++i;
-            // check if we need to move ahead or back one step due to rounding errors
-            while (y > ygrid[i]) ++i;
-            while (y < ygrid[i-1]) --i;
-            return i;
-        } else {
-            xassert(lastYIndex >= 1);
-            xassert(lastYIndex < Ny);
-
-            if ( y < ygrid[lastYIndex-1] ) {
-                xassert(lastYIndex-2 >= 0);
-                // Check to see if the previous one is it.
-                if (y >= ygrid[lastYIndex-2]) return --lastYIndex;
-                else {
-                    // Look for the entry from 0..lastXIndex-1:
-                    citer p = std::upper_bound(ygrid.begin(), ygrid.begin()+lastYIndex-1, y);
-                    xassert(p != ygrid.begin());
-                    xassert(p != ygrid.begin()+lastYIndex-1);
-                    lastYIndex = p-ygrid.begin();
-                    return lastYIndex;
-                }
-            } else if (y > ygrid[lastYIndex]) {
-                xassert(lastYIndex+1 < Ny);
-                // Check to see if the next one is it.
-                if (y <= ygrid[lastYIndex+1]) return ++lastYIndex;
-                else {
-                    // Look for the entry from lastYIndex..end
-                    citer p = std::lower_bound(ygrid.begin()+lastYIndex+1, ygrid.end(), y);
-                    xassert(p != ygrid.begin()+lastYIndex+1);
-                    xassert(p != ygrid.end());
-                    lastYIndex = p-ygrid.begin();
-                    return lastYIndex;
-                }
-            } else {
-                // Then lastYIndex is correct.
-                return lastYIndex;
-            }
-        }
-    }
-
     //lookup and interpolate function value.
     template<class V, class A>
     V Table2D<V,A>::lookup(const A x, const A y) const
     {
-        int i = upperIndexX(x);
-        int j = upperIndexY(y);
+        int i = xgrid.upperIndex(x);
+        int j = ygrid.upperIndex(y);
         return (this->*interpolate)(x, y, i, j);
     }
 
+    //lookup and interpolate an array of function values.
+    //In this case, the length of xvec is assumed to be the same as the length of yvec, and
+    //will also equal the length of the result array.
     template<class V, class A>
     void Table2D<V,A>::interpManyScatter(const A* xvec, const A* yvec, V* valvec, int N) const
     {
         int i, j;
         for (int k=0; k<N; k++) {
-            i = upperIndexX(xvec[k]);
-            j = upperIndexY(yvec[k]);
+            i = xgrid.upperIndex(xvec[k]);
+            j = ygrid.upperIndex(yvec[k]);
             valvec[k] = (this->*interpolate)(xvec[k], yvec[k], i, j);
         }
     }
 
+    //lookup and interpolate along the outer product of an x-array and a y-array.
+    //The result will be an array with length outNx * outNy.
     template<class V, class A>
     void Table2D<V,A>::interpManyOuter(const A* xvec, const A* yvec, V* valvec,
                                        int outNx, int outNy) const
     {
         int i, j;
         for (int outj=0; outj<outNy; outj++) {
-            j = upperIndexY(yvec[outj]);
+            j = ygrid.upperIndex(yvec[outj]);
             for (int outi=0; outi<outNx; outi++, valvec++) {
-                i = upperIndexX(xvec[outi]);
+                i = xgrid.upperIndex(xvec[outi]);
                 *valvec = (this->*interpolate)(xvec[outi], yvec[outj], i, j);
             }
         }
     }
 
     template<class V, class A>
-    V Table2D<V,A>::linearInterpolate(A x, A y, int i, int j) const
+    V Table2D<V,A>::linearInterpolate(const A x, const A y, int i, int j) const
     {
         A ax = (xgrid[i] - x) / (xgrid[i] - xgrid[i-1]);
         A bx = 1.0 - ax;
@@ -562,15 +500,18 @@ namespace galsim {
     }
 
     template<class V, class A>
-    V Table2D<V,A>::floorInterpolate(A x, A y, int i, int j) const
+    V Table2D<V,A>::floorInterpolate(const A x, const A y, int i, int j) const
     {
+        // On entry, it is only guaranteed that xgrid[i-1] <= x <= xgrid[i] (and similarly y).
+        // Normally those ='s are ok, but for floor and ceil we make the extra
+        // check to see if we should choose the opposite bound.
         if (x == xgrid[i]) i++;
         if (y == ygrid[j]) j++;
         return vals[(j-1)*Nx+i-1];
     }
 
     template<class V, class A>
-    V Table2D<V,A>::ceilInterpolate(A x, A y, int i, int j) const
+    V Table2D<V,A>::ceilInterpolate(const A x, const A y, int i, int j) const
     {
         if (x == xgrid[i-1]) i--;
         if (y == ygrid[j-1]) j--;
