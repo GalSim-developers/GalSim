@@ -59,7 +59,7 @@ def test_cosmos_basic():
         raise TypeError("COSMOS Catalog makeGalaxy routine does not return an instance of \
                          'galsim.RealGalaxy'")
 
-    gal_param = cat.makeGalaxy(index=10,gal_type='parametric',chromatic=False)
+    gal_param = cat.makeGalaxy(index=10,gal_type='parametric',chromatic=True)
     if not isinstance(gal_param, galsim.GSObject):
         raise TypeError("COSMOS Catalog makeGalaxy routine does not return an instance of \
                          'galsim.GSObject' for parametric galaxies")
