@@ -848,10 +848,8 @@ class COSMOSCatalog(object):
         # deep scaling, then it gets messed up by that.  If we have done some transformations, and
         # are also doing later transformation, it will take the `original` attribute that is already
         # there.  So having `index` doesn't help, and we also need `original.index`.
-        if not hasattr(gal, 'original'):
-            gal.index = cosmos_catalog.getOrigIndex(index)
-        else:
-            gal.index = cosmos_catalog.getOrigIndex(index)
+        gal.index = cosmos_catalog.getOrigIndex(index)
+        if hasattr(gal, 'original'):
             gal.original.index = cosmos_catalog.getOrigIndex(index)
 
         return gal
