@@ -37,6 +37,8 @@ Bug Fixes
   images.
 - Updated ups table file so that setup command is `setup galsim` instead of
   `setup GalSim` (#724)
+- Improved utilities.thin_tabulated_values() (used by SED.thin and
+  Bandpass.thin) to better meet relative error constraint. (#739).
 
 Deprecated Features
 -------------------
