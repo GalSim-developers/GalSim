@@ -256,7 +256,7 @@ class LookupTable(object):
             return 'galsim.LookupTable(file=%r, interpolant=%r)'%(
                 self.file, self.interpolant)
         else:
-            return 'galsim.LookupTable(x=[%s,..,%s], f=[%s,...,%s], interpolant=%r)'%(
+            return 'galsim.LookupTable(x=[%s,...,%s], f=[%s,...,%s], interpolant=%r)'%(
                 self.x[0], self.x[-1], self.f[0], self.f[-1], self.interpolant)
 
 # A function to enable pickling of tables
@@ -424,9 +424,13 @@ class LookupTable2D(object):
                 self.table.interpManyOuter(x, y, f)
             return f
 
-    # def __str__(self):
-    #     pass
-    #
+    def __str__(self):
+        return ("galsim.LookupTable2D(x=[%s,...,%s], y=[%s,...,%s], "
+                "f=[[%s,...,%s],...,[%s,...,%s]], interpolant=%r, edge_mode=%r)"%(
+            self.xs[0], self.xs[-1], self.ys[0], self.ys[-1],
+            self.f[0,0], self.f[0,-1], self.f[-1,0], self.f[-1,-1],
+            self.interpolant, self.edge_mode))
+
     # def __repr__(self):
     #     pass
     #
