@@ -295,6 +295,11 @@ namespace galsim {
         /// Table from xargs, yargs, vals
         Table2D(const A* xargs, const A* yargs, const V* valarray, int Nx, int Ny, interpolant in);
 
+        A xmin() const {return xgrid.front();}
+        A xmax() const {return xgrid.back();}
+        A ymin() const {return ygrid.front();}
+        A ymax() const {return ygrid.back();}
+
         /// interp, but exception if beyond bounds
         V lookup(const A x, const A y) const;
 

@@ -149,24 +149,6 @@ namespace {
     }; // struct PyTable
 
     struct PyTable2D{
-        // static Table2D<double,double>* makeTable2D(
-        //     double x0, double y0, double dx, double dy, const bp::object& valarray,
-        //     const std::string& interp)
-        // {
-        //     const int Nx = GetNumpyArrayDim(valarray.ptr(), 1);
-        //     const int Ny = GetNumpyArrayDim(valarray.ptr(), 0);
-        //     const double* vals = GetNumpyArrayData<double>(valarray.ptr());
-        //     Table2D<double,double>::interpolant i = Table2D<double,double>::linear;
-        //     if (interp == "linear") i = Table2D<double,double>::linear;
-        //     else if (interp == "floor") i = Table2D<double,double>::floor;
-        //     else if (interp == "ceil") i = Table2D<double,double>::ceil;
-        //     else {
-        //         PyErr_SetString(PyExc_ValueError, "Invalid interpolant");
-        //         bp::throw_error_already_set();
-        //     }
-        //     return new Table2D<double,double>(x0, y0, dx, dy, Nx, Ny, vals, i);
-        // }
-
         static Table2D<double, double>* makeTable2D(
             const bp::object& xs, const bp::object& ys, const bp::object& valarray,
             const std::string& interp)
@@ -229,6 +211,10 @@ namespace {
                 .def("__call__", &Table2D<double,double>::lookup)
                 .def("interpManyScatter", &interpManyScatter)
                 .def("interpManyOuter", &interpManyOuter)
+                .def("xmin", &Table2D<double,double>::xmin)
+                .def("xmax", &Table2D<double,double>::xmax)
+                .def("ymin", &Table2D<double,double>::ymin)
+                .def("ymax", &Table2D<double,double>::ymax)
                 ;
         }
     };
