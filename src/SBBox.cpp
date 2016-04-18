@@ -46,19 +46,19 @@ namespace galsim {
 
     SBBox::~SBBox() {}
 
-    double SBBox::getWidth() const 
+    double SBBox::getWidth() const
     {
         assert(dynamic_cast<const SBBoxImpl*>(_pimpl.get()));
-        return static_cast<const SBBoxImpl&>(*_pimpl).getWidth(); 
+        return static_cast<const SBBoxImpl&>(*_pimpl).getWidth();
     }
 
-    double SBBox::getHeight() const 
+    double SBBox::getHeight() const
     {
         assert(dynamic_cast<const SBBoxImpl*>(_pimpl.get()));
-        return static_cast<const SBBoxImpl&>(*_pimpl).getHeight(); 
+        return static_cast<const SBBoxImpl&>(*_pimpl).getHeight();
     }
 
-    std::string SBBox::SBBoxImpl::repr() const 
+    std::string SBBox::SBBoxImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
@@ -80,7 +80,7 @@ namespace galsim {
     }
 
 
-    double SBBox::SBBoxImpl::xValue(const Position<double>& p) const 
+    double SBBox::SBBoxImpl::xValue(const Position<double>& p) const
     {
         if (fabs(p.x) < _wo2 && fabs(p.y) < _ho2) return _norm;
         else return 0.;  // do not use this function for filling image!
@@ -131,7 +131,7 @@ namespace galsim {
             val.subMatrix(ix1,ix2,iy1,iy2).setAllTo(_norm);
 
 #if 0
-        // We used to implement this by making the pixels that cross the edge have a 
+        // We used to implement this by making the pixels that cross the edge have a
         // fractional flux value appropriate for the fraction of the box that goes through
         // each pixel.  However, this isn't actually correct.  SBProfile objects are always
         // rendered as the local surface brightness at the center of the pixel.  To get
@@ -144,7 +144,7 @@ namespace galsim {
         // We need to make sure the pixels where the edges of the box fall only get
         // a fraction of the flux.
         //
-        // We divide up the range into 3 sections in x: 
+        // We divide up the range into 3 sections in x:
         //    left of the box where val = 0
         //    in the box where val = _norm
         //    right of the box where val = 0 again
@@ -166,32 +166,32 @@ namespace galsim {
 
         // If the box goes off the image, it's ok, but it will cause us problems
         // later on if we don't change it.  Just use ix_left = 0.
-        if (ix_left < 0) { ix_left = 0; x_left = 1.; } 
+        if (ix_left < 0) { ix_left = 0; x_left = 1.; }
 
         // If the whole box is off the image, just zero and return.
-        else if (ix_left >= m) { val.setZero(); return; } 
+        else if (ix_left >= m) { val.setZero(); return; }
 
         // Normal case: calculate the fractional flux in the edge
         else x_left = tmp+x0+ix_left;
 
         // Now the right side.
-        if (ix_right >= m) { ix_right = m-1; x_right = 1.; } 
-        else if (ix_right < 0) { val.setZero(); return; } 
+        if (ix_right >= m) { ix_right = m-1; x_right = 1.; }
+        else if (ix_right < 0) { val.setZero(); return; }
         else x_right = tmp-x0-ix_right;
         xdbg<<"ix_left = "<<ix_left<<" with partial flux "<<x_left<<std::endl;
         xdbg<<"ix_right = "<<ix_right<<" with partial flux "<<x_right<<std::endl;
-        
+
         // Repeat for y values
         tmp = 0.5*height + 0.5;
         iy_bottom = int(-tmp-y0+1);
         iy_top = int(tmp-y0);
 
-        if (iy_bottom < 0) { iy_bottom = 0; y_bottom = 1.; } 
-        else if (iy_bottom >= n) { val.setZero(); return; } 
+        if (iy_bottom < 0) { iy_bottom = 0; y_bottom = 1.; }
+        else if (iy_bottom >= n) { val.setZero(); return; }
         else y_bottom = tmp+y0+iy_bottom;
 
-        if (iy_top >= n) { iy_top = n-1; y_top = 1.; } 
-        else if (iy_top < 0) { val.setZero(); return; } 
+        if (iy_top >= n) { iy_top = n-1; y_top = 1.; }
+        else if (iy_top < 0) { val.setZero(); return; }
         else y_top = tmp-y0-iy_top;
         xdbg<<"iy_bottom = "<<iy_bottom<<" with partial flux "<<y_bottom<<std::endl;
         xdbg<<"iy_top = "<<iy_top<<" with partial flux "<<y_top<<std::endl;
@@ -250,7 +250,7 @@ namespace galsim {
             dky *= _ho2pi;
 
             // The Box profile in Fourier space is separable:
-            //    val(x,y) = _flux * sinc(x * _width/2pi) * sinc(y * _height/2pi) 
+            //    val(x,y) = _flux * sinc(x * _width/2pi) * sinc(y * _height/2pi)
             tmv::Vector<double> sinc_kx(m);
             It kxit = sinc_kx.begin();
             for (int i=0;i<m;++i,kx0+=dkx) *kxit++ = sinc(kx0);
@@ -312,18 +312,18 @@ namespace galsim {
         for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
             double kx = kx0;
             double ky = ky0;
-            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx) 
+            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx)
                 *valit++ = _flux * sinc(kx) * sinc(ky);
         }
     }
 
     // Set maxK to the value where the FT is down to maxk_threshold
-    double SBBox::SBBoxImpl::maxK() const 
-    { 
+    double SBBox::SBBoxImpl::maxK() const
+    {
         return 2. / (this->gsparams->maxk_threshold * std::min(_width,_height));
     }
 
-    // The amount of flux missed in a circle of radius pi/stepk should be at 
+    // The amount of flux missed in a circle of radius pi/stepk should be at
     // most folding_threshold of the flux.
     double SBBox::SBBoxImpl::stepK() const
     {
@@ -352,13 +352,13 @@ namespace galsim {
 
     SBTopHat::~SBTopHat() {}
 
-    double SBTopHat::getRadius() const 
+    double SBTopHat::getRadius() const
     {
         assert(dynamic_cast<const SBTopHatImpl*>(_pimpl.get()));
-        return static_cast<const SBTopHatImpl&>(*_pimpl).getRadius(); 
+        return static_cast<const SBTopHatImpl&>(*_pimpl).getRadius();
     }
 
-    std::string SBTopHat::SBTopHatImpl::repr() const 
+    std::string SBTopHat::SBTopHatImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
@@ -376,7 +376,7 @@ namespace galsim {
     }
 
 
-    double SBTopHat::SBTopHatImpl::xValue(const Position<double>& p) const 
+    double SBTopHat::SBTopHatImpl::xValue(const Position<double>& p) const
     {
         double rsq = p.x*p.x + p.y*p.y;
         if (rsq < _r0sq) return _norm;
@@ -491,7 +491,7 @@ namespace galsim {
             // So start with zeroes until in the circle, then _norm, then more zeroes.
             // Note: this could be sped up somewhat using the same kind of calculation we did
             // for the non-sheared fillXValue (the one with izero, jzero), but I didn't
-            // bother.  This is probably plenty fast enough for as often as the function is 
+            // bother.  This is probably plenty fast enough for as often as the function is
             // called (i.e. almost never!)
             for (;i<m && (x*x+y*y > _r0sq); ++i,x+=dx,y+=dyx) ++valit;
             for (;i<m && (x*x+y*y < _r0sq); ++i,x+=dx,y+=dyx) *valit++ = _norm;
@@ -531,14 +531,14 @@ namespace galsim {
     }
 
     // Set maxK to the value where the FT is down to maxk_threshold
-    double SBTopHat::SBTopHatImpl::maxK() const 
-    { 
+    double SBTopHat::SBTopHatImpl::maxK() const
+    {
         // |j1(x)| ~ sqrt(2/(Pi x)) for large x, so using this, we get
         // maxk_thresh = 2 * sqrt(2/(Pi k r0)) / (k r0) = 2 sqrt(2/Pi) (k r0)^-3/2
         return std::pow(2. * sqrt(2./M_PI) / this->gsparams->maxk_threshold, 2./3.) / _r0;
     }
 
-    // The amount of flux missed in a circle of radius pi/stepk should be at 
+    // The amount of flux missed in a circle of radius pi/stepk should be at
     // most folding_threshold of the flux.
     double SBTopHat::SBTopHatImpl::stepK() const
     {

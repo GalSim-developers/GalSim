@@ -41,8 +41,8 @@ def check_dep(f, *args, **kwargs):
     with warnings.catch_warnings(galsim.GalSimDeprecationWarning) as w:
         res = f(*args, **kwargs)
     #print 'w = ',w
-    assert len(w) == 1, "Calling %s did not raise a warning"%str(f)
-    print str(w[0].message)
+    assert len(w) >= 1, "Calling %s did not raise a warning"%str(f)
+    print [ str(wk.message) for wk in w ]
     return res
 
 
@@ -349,6 +349,136 @@ def test_dep_correlatednoise():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+def test_dep_gsobject_ring():
+    """Test building a GSObject from a ring test:
+    """
+    import time
+    t1 = time.time()
+
+    config = {
+        'gal' : { 
+            'type' : 'Ring' ,
+            'num' : 2,
+            'first' : { 
+                'type' : 'Gaussian' ,
+                'sigma' : 2 , 
+                'ellip' : {
+                    'type' : 'E1E2',
+                    'e1' : { 'type' : 'List' ,
+                             'items' : [ 0.3, 0.2, 0.8 ],
+                             'index' : { 'type' : 'Sequence', 'repeat' : 2 } 
+                           },
+                    'e2' : 0.1
+                }
+            }
+        }
+    }
+
+    gauss = galsim.Gaussian(sigma=2)
+    e1_list = [ 0.3, -0.3, 0.2, -0.2, 0.8, -0.8 ]
+    e2_list = [ 0.1, -0.1, 0.1, -0.1, 0.1, -0.1 ]
+
+    for k in range(6):
+        config['obj_num'] = k
+        gal1a = check_dep(galsim.config.BuildGSObject, config, 'gal')[0]
+        gal1b = gauss.shear(e1=e1_list[k], e2=e2_list[k])
+        gsobject_compare(gal1a, gal1b)
+
+    config = {
+        'gal' : {
+            'type' : 'Ring' ,
+            'num' : 10,
+            'first' : { 'type' : 'Exponential', 'half_light_radius' : 2,
+                        'ellip' : galsim.Shear(e2=0.3) 
+                      },
+        }
+    }
+
+    disk = galsim.Exponential(half_light_radius=2).shear(e2=0.3)
+
+    for k in range(25):
+        config['obj_num'] = k
+        gal2a = check_dep(galsim.config.BuildGSObject, config, 'gal')[0]
+        gal2b = disk.rotate(theta = k * 18 * galsim.degrees)
+        gsobject_compare(gal2a, gal2b)
+
+    config = {
+        'gal' : {
+            'type' : 'Ring' ,
+            'num' : 5,
+            'full_rotation' : 360. * galsim.degrees,
+            'first' : { 
+                'type' : 'Sum',
+                'items' : [
+                    { 'type' : 'Exponential', 'half_light_radius' : 2,
+                      'ellip' : galsim.Shear(e2=0.3) 
+                    },
+                    { 'type' : 'Sersic', 'n' : 3, 'half_light_radius' : 1.3, 
+                      'ellip' : galsim.Shear(e1=0.12,e2=-0.08) 
+                    } 
+                ]
+            },
+            'index' : { 'type' : 'Sequence', 'repeat' : 4 }
+        }
+    }
+
+    disk = galsim.Exponential(half_light_radius=2).shear(e2=0.3)
+    bulge = galsim.Sersic(n=3, half_light_radius=1.3).shear(e1=0.12,e2=-0.08)
+    sum = disk + bulge
+
+    for k in range(25):
+        config['obj_num'] = k
+        index = k // 4  # make sure we use integer division
+        gal3a = check_dep(galsim.config.BuildGSObject, config, 'gal')[0]
+        gal3b = sum.rotate(theta = index * 72 * galsim.degrees)
+        gsobject_compare(gal3a, gal3b)
+
+    # Check that the ring items correctly inherit their gsparams from the top level
+    config = {
+        'gal' : {
+            'type' : 'Ring' ,
+            'num' : 20,
+            'full_rotation' : 360. * galsim.degrees,
+            'first' : { 
+                'type' : 'Sum',
+                'items' : [
+                    { 'type' : 'Exponential', 'half_light_radius' : 2,
+                      'ellip' : galsim.Shear(e2=0.3) 
+                    },
+                    { 'type' : 'Sersic', 'n' : 3, 'half_light_radius' : 1.3, 
+                      'ellip' : galsim.Shear(e1=0.12,e2=-0.08) 
+                    } 
+                ]
+            },
+            'gsparams' : { 'maxk_threshold' : 1.e-2,
+                           'folding_threshold' : 1.e-2,
+                           'stepk_minimum_hlr' : 3 }
+        }
+    }
+
+    config['obj_num'] = 0
+    gal4a = check_dep(galsim.config.BuildGSObject, config, 'gal')[0]
+    gsparams = galsim.GSParams(maxk_threshold=1.e-2, folding_threshold=1.e-2, stepk_minimum_hlr=3)
+    disk = galsim.Exponential(half_light_radius=2, gsparams=gsparams).shear(e2=0.3)
+    bulge = galsim.Sersic(n=3,half_light_radius=1.3, gsparams=gsparams).shear(e1=0.12,e2=-0.08)
+    gal4b = disk + bulge
+    gsobject_compare(gal4a, gal4b, conv=galsim.Gaussian(sigma=1))
+
+    try:
+        # Make sure they don't match when using the default GSParams
+        disk = galsim.Exponential(half_light_radius=2).shear(e2=0.3)
+        bulge = galsim.Sersic(n=3,half_light_radius=1.3).shear(e1=0.12,e2=-0.08)
+        gal4c = disk + bulge
+        np.testing.assert_raises(AssertionError,gsobject_compare, gal4a, gal4c,
+                                 conv=galsim.Gaussian(sigma=1))
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 def test_dep_image():
     """Test that the old obsolete syntax still works (for now)
     """
@@ -597,6 +727,62 @@ def test_dep_random():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+def test_dep_scene():
+    """Test the deprecated exclude_bad and exclude_fail args to COSMOSCatalog
+    """
+    import time
+    t1 = time.time()
+
+    path, filename = os.path.split(__file__)
+    datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
+
+    # Initialize one that doesn't exclude failures.  It should be >= the previous one in length.
+    cat2 = check_dep(galsim.COSMOSCatalog,
+                     file_name='real_galaxy_catalog_example.fits',
+                     dir=datapath, exclude_fail=False, exclude_bad=False)
+    # Initialize a COSMOSCatalog with all defaults.
+    cat = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+                               dir=datapath)
+    assert cat2.nobjects>=cat.nobjects
+    # Equivalent to current exclusion_level='none'
+    cat3 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+                                dir=datapath, exclusion_level='none')
+    assert cat2.nobjects==cat3.nobjects
+
+    # Just exclude_bad=True
+    cat2 = check_dep(galsim.COSMOSCatalog,
+                     file_name='real_galaxy_catalog_example.fits',
+                     dir=datapath, exclude_fail=False)  # i.e. leave exclude_bad=True
+    assert cat2.nobjects>=cat.nobjects
+    # Equivalent to current exclusion_level='bad_stamp'
+    cat3 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+                                dir=datapath, exclusion_level='bad_stamp')
+    assert cat2.nobjects==cat3.nobjects
+
+    # Just exclude_fail=True
+    cat2 = check_dep(galsim.COSMOSCatalog,
+                     file_name='real_galaxy_catalog_example.fits',
+                     dir=datapath, exclude_bad=False)  # i.e. leave exclude_fail=True
+    assert cat2.nobjects>=cat.nobjects
+    # Equivalent to current exclusion_level='bad_fits'
+    cat3 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+                                dir=datapath, exclusion_level='bad_fits')
+    assert cat2.nobjects==cat3.nobjects
+
+    # Both=True
+    cat2 = check_dep(galsim.COSMOSCatalog,
+                     file_name='real_galaxy_catalog_example.fits',
+                     dir=datapath, exclude_fail=True, exclude_bad=True)
+    assert cat2.nobjects>=cat.nobjects
+    # Equivalent to current exclusion_level='marginal'
+    cat3 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+                                dir=datapath, exclusion_level='marginal')
+    assert cat2.nobjects==cat3.nobjects
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 def test_dep_sed():
     """Test the deprecated methods in galsim/deprecated/sed.py.
     """
@@ -791,9 +977,11 @@ if __name__ == "__main__":
     test_dep_bounds()
     test_dep_chromatic()
     test_dep_correlatednoise()
+    test_dep_gsobject_ring()
     test_dep_image()
     test_dep_noise()
     test_dep_random()
+    test_dep_scene()
     test_dep_sed()
     test_dep_shapelet()
     test_dep_shear()

@@ -38,10 +38,10 @@ namespace galsim {
 
     SBDeconvolve::~SBDeconvolve() {}
 
-    std::string SBDeconvolve::SBDeconvolveImpl::repr() const 
+    std::string SBDeconvolve::SBDeconvolveImpl::serialize() const
     {
         std::ostringstream oss(" ");
-        oss << "galsim._galsim.SBDeconvolve(" << _adaptee.repr();
+        oss << "galsim._galsim.SBDeconvolve(" << _adaptee.serialize();
         oss << ", galsim.GSParams("<<*gsparams<<"))";
         return oss.str();
     }
@@ -57,10 +57,10 @@ namespace galsim {
     }
 
     // xValue() not implemented for SBDeconvolve.
-    double SBDeconvolve::SBDeconvolveImpl::xValue(const Position<double>& p) const 
+    double SBDeconvolve::SBDeconvolveImpl::xValue(const Position<double>& p) const
     { throw SBError("SBDeconvolve::xValue() not implemented (and not possible)"); }
 
-    std::complex<double> SBDeconvolve::SBDeconvolveImpl::kValue(const Position<double>& k) const 
+    std::complex<double> SBDeconvolve::SBDeconvolveImpl::kValue(const Position<double>& k) const
     {
         return (k.x*k.x + k.y*k.y <= _maxksq) ? 1./_adaptee.kValue(k) : 0.;
     }
@@ -83,7 +83,7 @@ namespace galsim {
         for (int j=0;j<n;++j,ky0+=dky) {
             double kx = kx0;
             double kysq = ky0*ky0;
-            for (int i=0;i<m;++i,kx+=dkx,++valit) 
+            for (int i=0;i<m;++i,kx+=dkx,++valit)
                 *valit = (kx*kx+kysq <= _maxksq) ? 1./(*valit) : 0.;
         }
     }
@@ -106,19 +106,19 @@ namespace galsim {
         for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
             double kx = kx0;
             double ky = ky0;
-            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx,++valit) 
+            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx,++valit)
                 *valit = (kx*kx+ky*ky <= _maxksq) ? 1./(*valit) : 0.;
         }
     }
 
-    Position<double> SBDeconvolve::SBDeconvolveImpl::centroid() const 
+    Position<double> SBDeconvolve::SBDeconvolveImpl::centroid() const
     { return -_adaptee.centroid(); }
 
-    double SBDeconvolve::SBDeconvolveImpl::getFlux() const 
+    double SBDeconvolve::SBDeconvolveImpl::getFlux() const
     { return 1./_adaptee.getFlux(); }
 
     boost::shared_ptr<PhotonArray> SBDeconvolve::SBDeconvolveImpl::shoot(
-        int N, UniformDeviate u) const 
+        int N, UniformDeviate u) const
     {
         throw SBError("SBDeconvolve::shoot() not implemented");
         return boost::shared_ptr<PhotonArray>();

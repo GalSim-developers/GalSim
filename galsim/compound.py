@@ -34,7 +34,7 @@ def Add(*args, **kwargs):
     This function will inspect its input arguments to decide if a Sum object or a
     ChromaticSum object is required to represent the sum of surface brightness profiles.
 
-    Typically, you do not need to call Add() explicitly.  Normally, you would just use the + 
+    Typically, you do not need to call Add() explicitly.  Normally, you would just use the +
     operator, which returns a Sum:
 
         >>> bulge = galsim.Sersic(n=3, half_light_radius=0.8)
@@ -159,6 +159,14 @@ class Sum(galsim.GSObject):
     @property
     def obj_list(self): return self._obj_list
 
+    def __eq__(self, other):
+        return (isinstance(other, galsim.Sum) and
+                self._obj_list == other._obj_list and
+                self._gsparams == other._gsparams)
+
+    def __hash__(self):
+        return hash(("galsim.Sum", tuple(self._obj_list), self._gsparams))
+
     def __repr__(self):
         return 'galsim.Sum(%r, gsparams=%r)'%(self.obj_list, self._gsparams)
 
@@ -260,7 +268,7 @@ class Convolution(galsim.GSObject):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
-    Note: if `gsparams` is unspecified (or None), then the Convolution instance inherits the same 
+    Note: if `gsparams` is unspecified (or None), then the Convolution instance inherits the same
     GSParams as the first item in the list.  Also, note that parameters related to the Fourier-
     space calculations must be set when initializing the individual GSObjects that go into the Sum,
     NOT when creating the Sum (at which point the accuracy and threshold parameters will simply be
@@ -361,7 +369,6 @@ class Convolution(galsim.GSObject):
         # If one of the objects has a noise attribute, then we convolve it by the others.
         # More than one is not allowed.
         noise = None
-        noise_convolve = []
         for obj in args:
             if hasattr(obj,'noise'):
                 if noise is not None:
@@ -373,9 +380,9 @@ class Convolution(galsim.GSObject):
                 noise = obj.noise
                 others = [ obj2 for obj2 in args if obj2 is not obj ]
                 assert len(others) > 0
-                if len(others) == 1: 
+                if len(others) == 1:
                     noise = noise.convolvedWith(others[0])
-                else: 
+                else:
                     noise = noise.convolvedWith(galsim.Convolve(others))
 
         # Save the construction parameters (as they are at this point) as attributes so they
@@ -394,6 +401,15 @@ class Convolution(galsim.GSObject):
     def obj_list(self): return self._obj_list
     @property
     def real_space(self): return self._real_space
+
+    def __eq__(self, other):
+        return (isinstance(other, galsim.Convolution) and
+                self._obj_list == other._obj_list and
+                self.real_space == other.real_space and
+                self._gsparams == other._gsparams)
+
+    def __hash__(self):
+        return hash(("galsim.Convolution", tuple(self._obj_list), self._real_space, self._gsparams))
 
     def __repr__(self):
         return 'galsim.Convolution(%r, real_space=%r, gsparams=%r)'%(
@@ -491,6 +507,14 @@ class Deconvolution(galsim.GSObject):
 
     @property
     def orig_obj(self): return self._orig_obj
+
+    def __eq__(self, other):
+        return (isinstance(other, galsim.Deconvolution) and
+                self._orig_obj == other._orig_obj and
+                self._gsparams == other._gsparams)
+
+    def __hash__(self):
+        return hash(("galsim.Deconvolution", self._orig_obj, self._gsparams))
 
     def __repr__(self):
         return 'galsim.Deconvolution(%r, gsparams=%r)'%(self.orig_obj, self._gsparams)
@@ -611,6 +635,15 @@ class AutoConvolution(galsim.GSObject):
     def orig_obj(self): return self._orig_obj
     @property
     def real_space(self): return self._real_space
+
+    def __eq__(self, other):
+        return (isinstance(other, galsim.AutoConvolution) and
+                self.orig_obj == other.orig_obj and
+                self.real_space == other.real_space and
+                self._gsparams == other._gsparams)
+
+    def __hash__(self):
+        return hash(("galsim.AutoConvolution", self.orig_obj, self.real_space, self._gsparams))
 
     def __repr__(self):
         return 'galsim.AutoConvolution(%r, real_space=%r, gsparams=%r)'%(
@@ -743,6 +776,15 @@ class AutoCorrelation(galsim.GSObject):
     @property
     def real_space(self): return self._real_space
 
+    def __eq__(self, other):
+        return (isinstance(other, galsim.AutoCorrelation) and
+                self.orig_obj == other.orig_obj and
+                self.real_space == other.real_space and
+                self._gsparams == other._gsparams)
+
+    def __hash__(self):
+        return hash(("galsim.AutoCorrelation", self.orig_obj, self.real_space, self._gsparams))
+
     def __repr__(self):
         return 'galsim.AutoCorrelation(%r, real_space=%r, gsparams=%r)'%(
                 self.orig_obj, self.real_space, self._gsparams)
@@ -771,4 +813,3 @@ _galsim.SBAutoCorrelate.__getstate__ = lambda self: None
 _galsim.SBAutoCorrelate.__setstate__ = lambda self, state: 1
 _galsim.SBAutoCorrelate.__repr__ = lambda self: \
         'galsim._galsim.SBAutoCorrelate(%r, %r, %r)'%self.__getinitargs__()
-

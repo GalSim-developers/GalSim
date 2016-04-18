@@ -175,16 +175,19 @@ def ReadConfig(config_file, file_type=None, logger=None):
         return galsim.config.ReadJson(config_file)
 
 
-def RemoveCurrent(config, keep_safe=False, type=None):
+def RemoveCurrent(config, keep_safe=False, type=None, index_key=None):
     """
     Remove any "current values" stored in the config dict at any level.
 
     @param config       The configuration dict.
-    @param keep_safe    Should current values that are marked as safe be preserved? 
+    @param keep_safe    Should current values that are marked as safe be preserved?
                         [default: False]
-    @param type         If provided, only clear the current value of objects that use this 
+    @param type         If provided, only clear the current value of objects that use this
                         particular type.  [default: None, which means to remove current values
                         of all types.]
+    @param index_key    If provided, only clear the current value of objects that use this
+                        index_key (or start with this index_key, so obj_num also does
+                        obj_num_in_file).  [default: None]
     """
     # End recursion if this is not a dict.
     if not isinstance(config,dict): return
@@ -194,21 +197,23 @@ def RemoveCurrent(config, keep_safe=False, type=None):
     for key in config:
         if isinstance(config[key],list):
             for item in config[key]:
-                force = RemoveCurrent(item, keep_safe, type) or force
+                force = RemoveCurrent(item, keep_safe, type, index_key) or force
         else:
-            force = RemoveCurrent(config[key], keep_safe, type) or force
-    if force: 
+            force = RemoveCurrent(config[key], keep_safe, type, index_key) or force
+    if force:
         keep_safe = False
         type = None
+        index_key = None
 
     # Delete the current_val at this level, if any
-    if ( 'current_val' in config 
+    if ( 'current_val' in config
           and not (keep_safe and config['current_safe'])
-          and (type == None or ('type' in config and config['type'] == type)) ):
-        config.pop('current_val')
-        config.pop('current_safe')
-        config.pop('current_index')
-        config.pop('current_value_type',None)  # This one might not be there.
+          and (type is None or ('type' in config and config['type'] == type))
+          and (index_key is None or config['current_index_key'].startswith(index_key)) ):
+        del config['current_val']
+        del config['current_safe']
+        del config['current_index']
+        del config['current_value_type']
         return True
     else:
         return force
@@ -327,6 +332,8 @@ def UpdateNProc(nproc, ntot, config, logger=None):
             nproc = cpu_count()
             if logger:
                 logger.debug("ncpu = %d.",nproc)
+        except KeyboardInterrupt:
+            raise
         except:
             if logger:
                 logger.warn("nproc <= 0, but unable to determine number of cpus.")
@@ -385,11 +392,18 @@ def SetupConfigRNG(config, seed_offset=0):
             config.pop(key, None)
 
     if 'random_seed' in config['image']:
-        config['index_key'] = 'obj_num'
-        if index_key != 'obj_num' and 'start_obj_num' in config:
-            config['obj_num'] = config['start_obj_num']
-        seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
-        config['index_key'] = index_key
+        if index_key == 'obj_num':
+            # The normal case
+            seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+        else:
+            # If we are setting either the file_num or image_num rng, we need to be careful.
+            config['index_key'] = 'obj_num'
+            obj_num = config['obj_num']
+            if 'start_obj_num' in config:
+                config['obj_num'] = config['start_obj_num']
+            seed = galsim.config.ParseValue(config['image'], 'random_seed', config, int)[0]
+            config['index_key'] = index_key
+            config['obj_num'] = obj_num
         seed += seed_offset
     else:
         seed = 0
@@ -423,12 +437,21 @@ def ImportModules(config):
 
     @param config           The configuration dict.
     """
+    import sys
     if 'modules' in config:
         for module in config['modules']:
             try:
+                # Do this first to let user modules take precedence
                 exec('import '+module)
             except ImportError:
-                exec('import galsim.'+module)
+                try:
+                    exec('import galsim.'+module)
+                except ImportError:
+                    # But do it again if everything fails to give a better error message.
+                    # Also make sure '.' in the path to load local modules.
+                    if '.' not in sys.path:
+                        sys.path.append('.')
+                    exec('import '+module)
 
 
 def ParseExtendedKey(config, key):
@@ -482,7 +505,11 @@ def SetInConfig(config, key, value):
     @returns the value of that key from the config.
     """
     config, key = ParseExtendedKey(config, key)
-    config[key] = value
+    if value == '':
+        # This means remove it, if it is there.
+        config.pop(key,None)
+    else:
+        config[key] = value
 
 
 def UpdateConfig(config, new_params):
@@ -572,15 +599,15 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None):
     import copy
     config = copy.deepcopy(config)
 
-    # Import any modules if requested
-    ImportModules(config)
-
     # Process any template specifications in the dict.
     ProcessAllTemplates(config, logger)
 
     # Update using any new_params that are given:
     if new_params is not None:
         UpdateConfig(config, new_params)
+
+    # Import any modules if requested
+    ImportModules(config)
 
     # If we don't have a root specified yet, we generate it from the current script.
     if 'root' not in config:
@@ -617,64 +644,52 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None):
         # Start each job at file_num = nfiles * job / njobs
         start = nfiles * (job-1) // njobs
         end = nfiles * job // njobs
-        logger.warn('Splitting work into %d jobs.  Doing job %d',njobs,job)
-        logger.warn('Building %d out of %d total files: file_num = %d .. %d',
-                    end-start,nfiles,start,end-1)
+        if logger:
+            logger.warn('Splitting work into %d jobs.  Doing job %d',njobs,job)
+            logger.warn('Building %d out of %d total files: file_num = %d .. %d',
+                        end-start,nfiles,start,end-1)
         nfiles = end-start
     else:
         start = 0
 
     galsim.config.BuildFiles(nfiles, config, file_num=start, logger=logger)
 
-def CalculateNObjPerTask(nproc, ntot, config):
-    """A helper function for calculating an appropriate number of objects to do per task.
-    In particular, it accounts for object types that require some number of objects to be done
-    together (e.g. Ring).  Aside from that detail, it shoots for something close to sqrt(ntot).
 
-    @param nproc        The number of processes
-    @param ntot         The total number of objects
-    @param config       The configuration dict.
-
-    @returns nobj_per_task
-    """
-    if nproc != 1:
-        # Figure out how many jobs to do per task.
-        # Number of objects to do in each task:
-        #  - At most nobjects / nproc.
-        #  - At least 1 normally, but number in Ring if doing a Ring test (or other block type)
-        # Shoot for geometric mean of these two.
-        max_nobj = ntot // nproc
-        min_nobj = 1
-        if 'gal' in config:
-            min_nobj = galsim.config.GetMinimumBlock(config['gal'], config)
-        if max_nobj < min_nobj:
-            nobj_per_task = min_nobj
-        else:
-            import math
-            # This formula keeps nobj a multiple of min_nobj, so Rings are intact.
-            nobj_per_task = int(math.sqrt(float(max_nobj)) / min_nobj) * min_nobj
-            if nobj_per_task == 0:
-                nobj_per_task = min_nobj
-    else:
-        nobj_per_task = 1
-    return nobj_per_task
-
-
-def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
-                 njobs_per_task=1, done_func=None, except_func=None, except_abort=True):
+def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
+                 done_func=None, except_func=None, except_abort=True):
     """A helper function for performing a task using multiprocessing.
+
+    A note about the nomenclature here.  We use the term "job" to mean the job of building a single
+    file or image or stamp.  The output of each job is gathered into the list of results that
+    is returned.  A task is a collection of one or more jobs that are all done by the same
+    processor.  For simple cases, each task is just a single job, but for things like a Ring
+    test, the task needs to have the jobs for a full ring.
+
+    The tasks argument is a list of tasks.
+    Each task in that list is a list of jobs.
+    Each job is a tuple consisting of (kwargs, k), where kwargs is the dict of kwargs to pass to
+    the job_func and k is the index of this job in the full list of jobs.
 
     @param nproc            How many processes to use.
     @param config           The configuration dict.
-    @param job_func         The function to run for each job.
-    @param jobs             A list of jobs to run.  Each item is a tuple (kwargs, info).
+    @param job_func         The function to run for each job.  It will be called as
+                                result = job_func(**kwargs)
+                            where kwargs is from one of the jobs in the task list.
+    @param tasks            A list of tasks to run.  Each task is a list of jobs, each of which is
+                            a tuple (kwargs, k).
     @param item             A string indicating what is being worked on.
     @param logger           If given, a logger object to log progress. [default: None]
-    @param njobs_per_task   The number of jobs to send to the worker at a time. [default: 1]
-    @param done_func        A function to run upon completion of each job. [default: None]
-    @param except_func      A function to run if an exception is encountered. [default: None]
+    @param done_func        A function to run upon completion of each job.  It will be called as
+                                done_func(logger, proc, k, result, t)
+                            where proc is the process name, k is the index of the job, result is
+                            the return value of that job, and t is the time taken. [default: None]
+    @param except_func      A function to run if an exception is encountered.  It will be called as
+                                except_func(logger, proc, k, ex, tr)
+                            where proc is the process name, k is the index of the job that failed,
+                            ex is the exception caught, and tr is the traceback. [default: None]
     @param except_abort     Whether an exception should abort the rest of the processing.
-                            [default: True]
+                            If False, then the returned results list will not include anything
+                            for the jobs that failed.  [default: True]
 
     @returns a list of the outputs from job_func for each job
     """
@@ -685,9 +700,7 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
     # to send them back to the main process.
     # The *tasks* can be made up of more than one *job*.  Each job involves calling job_func
     # with the kwargs from the list of jobs.
-    # Each job also carries with it some kind of information, like the file_num, file_name, etc.
-    # to help identify what the job is about.  This is mostly useful for the done_func and
-    # except_func to write something appropriate in the logger.
+    # Each job also carries with it its index in the original list of all jobs.
     def worker(task_queue, results_queue, config, logger):
         proc = current_process().name
 
@@ -719,6 +732,8 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
                     result = job_func(**kwargs)
                     t2 = time.time()
                     results_queue.put( (result, k, t2-t1, proc) )
+            except KeyboardInterrupt:
+                raise
             except Exception as e:
                 import traceback
                 tr = traceback.format_exc()
@@ -736,6 +751,8 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
             logger.error("*** Start profile for %s ***\n%s\n*** End profile for %s ***",
                          proc,s.getvalue(),proc)
 
+    njobs = sum([len(task) for task in tasks])
+
     if nproc > 1:
         if logger:
             logger.warn("Using %d processes for %s processing",nproc,item)
@@ -743,22 +760,16 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
         from multiprocessing import Process, Queue, current_process
         from multiprocessing.managers import BaseManager
 
-        # Set up the task list.  Each task is defined as a list of jobs and the index k of the
-        # first job to be done.  The index k is mostly important for putting the results in
-        # the right order, since they will be done out of order.
+        # Send the tasks to the task_queue.
         task_queue = Queue()
-        njobs = len(jobs)
-        for k in range(0, njobs, njobs_per_task):
-            k2 = k + njobs_per_task
-            if k2 > njobs: k2 = njobs
-            task = [ (jobs[k][0], k) for k in range(k,k2) ]
+        for task in tasks:
             task_queue.put(task)
 
         # Temporarily mark that we are multiprocessing, so we know not to start another
         # round of multiprocessing later.
         config['current_nproc'] = nproc
 
-        # The logger is not picklable, so we need to make a proxy for it so all the 
+        # The logger is not picklable, so we need to make a proxy for it so all the
         # processes can emit logging information safely.
         logger_proxy = GetLoggerProxy(logger)
 
@@ -782,27 +793,25 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
         # In the meanwhile, the main process keeps going.  We pull each set of images off of the
         # results_queue and put them in the appropriate place in the lists.
         # This loop is happening while the other processes are still working on their tasks.
-        results = [ None for k in range(len(jobs)) ]
+        results = [ None for k in range(njobs) ]
         for kk in range(njobs):
             res, k, t, proc = results_queue.get()
             if isinstance(res,Exception):
                 # res is really the exception, e
                 # t is really the traceback
-                # k is the job number that failed, so jobs[k][1] is the info for that job.
-                except_func(logger, proc, res, t, jobs[k][1])
+                # k is the index for the job that failed
+                if except_func is not None:
+                    except_func(logger, proc, k, res, t)
                 if except_abort:
                     for j in range(nproc):
                         p_list[j].terminate()
                     raise res
             else:
                 # The normal case
-                done_func(logger, proc, jobs[k][1], res, t)
+                if done_func is not None:
+                    done_func(logger, proc, k, res, t)
                 results[k] = res
 
-        # If there are any failures, then there will still be some Nones in the results list.
-        # Remove them.
-        results = [ r for r in results if r is not None ]
- 
         # Stop the processes
         # The 'STOP's could have been put on the task list before starting the processes, or you
         # can wait.  In some cases it can be useful to clear out the results_queue (as we just did)
@@ -821,21 +830,30 @@ def MultiProcess(nproc, config, job_func, jobs, item, logger=None,
         config['current_nproc'] = nproc
 
     else : # nproc == 1
-        results = []
-        for kwargs, info in jobs:
-            try:
-                t1 = time.time()
-                kwargs['config'] = config
-                kwargs['logger'] = logger
-                result = job_func(**kwargs)
-                t2 = time.time()
-                done_func(logger, None, info, result, t2-t1)
-                results.append(result)
-            except Exception as e:
-                import traceback
-                tr = traceback.format_exc()
-                except_func(logger, None, e, tr, info)
-                if except_abort: raise
- 
+        results = [ None ] * njobs
+        for task in tasks:
+            for kwargs, k in task:
+                try:
+                    t1 = time.time()
+                    kwargs['config'] = config
+                    kwargs['logger'] = logger
+                    result = job_func(**kwargs)
+                    t2 = time.time()
+                    if done_func is not None:
+                        done_func(logger, None, k, result, t2-t1)
+                    results[k] = result
+                except KeyboardInterrupt:
+                    raise
+                except Exception as e:
+                    import traceback
+                    tr = traceback.format_exc()
+                    if except_func is not None:
+                        except_func(logger, None, k, e, tr)
+                    if except_abort: raise
+
+    # If there are any failures, then there will still be some Nones in the results list.
+    # Remove them.
+    results = [ r for r in results if r is not None ]
+
     return results
- 
+

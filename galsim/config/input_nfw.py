@@ -22,7 +22,7 @@ import galsim
 
 # The NFWHalo doesn't need anything special other than registration as a valid input type.
 from .input import RegisterInputType, InputLoader
-RegisterInputType('nfw_halo', InputLoader(galsim.NFWHalo, ['NFWHaloShear', 'NFWHaloMagnification']))
+RegisterInputType('nfw_halo', InputLoader(galsim.NFWHalo))
 
 # There are two value types associated with this: NFWHaloShear and NFWHaloMagnification.
 
@@ -46,6 +46,8 @@ def _GenerateFromNFWHaloShear(config, base, value_type):
     try:
         g1,g2 = nfw_halo.getShear(pos,redshift)
         shear = galsim.Shear(g1=g1,g2=g2)
+    except KeyboardInterrupt:
+        raise
     except Exception as e:
         import warnings
         warnings.warn("Warning: NFWHalo shear is invalid -- probably strong lensing!  " +
@@ -90,5 +92,7 @@ def _GenerateFromNFWHaloMagnification(config, base, value_type):
 
 # Register these as valid value types
 from .value import RegisterValueType
-RegisterValueType('NFWHaloShear', _GenerateFromNFWHaloShear, [ galsim.Shear ])
-RegisterValueType('NFWHaloMagnification', _GenerateFromNFWHaloMagnification, [ float ])
+RegisterValueType('NFWHaloShear', _GenerateFromNFWHaloShear, [ galsim.Shear ],
+                  input_type='nfw_halo')
+RegisterValueType('NFWHaloMagnification', _GenerateFromNFWHaloMagnification, [ float ],
+                  input_type='nfw_halo')

@@ -33,7 +33,7 @@ valid_value_types = {}
 # Standard keys to ignore while parsing values:
 standard_ignore = [ 
     'type',
-    'current_val', 'current_safe', 'current_value_type', 'current_index',
+    'current_val', 'current_safe', 'current_value_type', 'current_index', 'current_index_key',
     'index_key', 'repeat',
     '#' # When we read in json files, there represent comments
 ]
@@ -63,7 +63,8 @@ def ParseValue(config, key, base, value_type):
     if isinstance(param, dict):
         is_seq = param['type'] == 'Sequence'
         # Note: this call will also set base['index_key'] and base['rng'] to the right values
-        index = _get_index(param, base, is_seq)
+        index, index_key = _get_index(param, base, is_seq)
+        #print 'index, index_key = ',index,index_key
 
         if index is None:
             # This is probably something artificial where we aren't keeping track of indices.
@@ -108,9 +109,11 @@ def ParseValue(config, key, base, value_type):
         raise AttributeError(
             "%s.type attribute required in config for non-constant parameter %s."%(key,key))
     elif 'current_val' in param and param['current_index']//repeat == index//repeat:
-        if value_type is not None and param['current_value_type'] != value_type:
+        if (value_type is not None and param['current_value_type'] is not None and
+                param['current_value_type'] != value_type):
             raise ValueError(
-                "Attempt to parse %s multiple times with different value types"%key)
+                "Attempt to parse %s multiple times with different value types:"%key +
+                " %s and %s"%(value_type, param['current_value_type']))
         #print index,'Using current value of ',key,' = ',param['current_val']
         val,safe = param['current_val'], param['current_safe']
     else:
@@ -135,8 +138,16 @@ def ParseValue(config, key, base, value_type):
                     value_type, key, type_name))
 
         #print 'generate_func = ',generate_func
-        val, safe = generate_func(param, base, value_type)
-        #print 'returned val, safe = ',val,safe
+        val_safe = generate_func(param, base, value_type)
+        #print 'returned val, safe = ',val_safe
+        if isinstance(val_safe, tuple):
+            val, safe = val_safe
+        else:
+            # If a user-defined type forgot to return safe, just assume safe = False
+            # It's an easy mistake to make and the TypeError that gets emitted isn't
+            # terribly informative about what the error is.
+            val = val_safe
+            safe = False
 
         # Make sure we really got the right type back.  (Just in case...)
         if value_type is not None and not isinstance(val,value_type):
@@ -147,6 +158,7 @@ def ParseValue(config, key, base, value_type):
         param['current_safe'] = safe
         param['current_value_type'] = value_type
         param['current_index'] = index
+        param['current_index_key'] = index_key
         #print key,' = ',val
 
     # Reset these values in case they were changed.
@@ -157,23 +169,26 @@ def ParseValue(config, key, base, value_type):
 
     return val, safe
 
-def GetCurrentValue(key, base, value_type=None, return_safe=False):
+def GetCurrentValue(key, config, value_type=None, base=None, return_safe=False):
     """@brief Get the current value of another config item given the key name.
 
     @param key          The key value in the dict to get the current value of.
-    @param base         The base config dict.
+    @param config       The config dict from which to get the key.
     @param value_type   The value_type expected.  [default: None, which means it won't check
                         that the value is the right type.]
+    @param base         The base config dict.  [default: None, which means use base=config]
     @param return_safe  If True, also return the current_safe value: (value, safe).
 
     @returns the current value (or value, safe if return_safe = True)
     """
     #print 'GetCurrent %s.  value_type = %s'%(key,value_type)
+    if base is None:
+        base = config
 
     # This next bit is basically identical to the code for Dict.get(key) in catalog.py.
     # Make a list of keys
     chain = key.split('.')
-    d = base
+    d = config
 
     # We may need to make one adjustment.  If the first item in the key is 'input', then
     # the key is probably wrong relative to the current config dict.  We make each input
@@ -186,9 +201,13 @@ def GetCurrentValue(key, base, value_type=None, return_safe=False):
     if chain[0] == 'input' and len(chain) > 2:
         try:
             k = int(chain[2])
+        except KeyboardInterrupt:
+            raise
         except:
             chain.insert(2,0)
     #print 'chain = ',chain
+
+    use_index_key = None
 
     while len(chain):
         k = chain.pop(0)
@@ -199,8 +218,17 @@ def GetCurrentValue(key, base, value_type=None, return_safe=False):
         except ValueError: pass
 
         if chain: 
-            # If there are more keys, just set d to the next in the chanin.
+            # If there are more keys, just set d to the next in the chain.
             d = d[k]
+
+            # One subtlety here.  Normally the normal tree traversal will keep track of the index
+            # key so that all lower levels inherit an index_key specification at a higher level.
+            # This can circumvent that, so we need to do it here as well.  The easiest way to
+            # handle it is to watch for an index_key specification along our chain, and if there
+            # is one, set that in the final dict.
+            if 'index_key' in d:
+                use_index_key = d['index_key']
+                #print 'Set use_index_key = ',use_index_key
         else:
             if not isinstance(d[k], dict):
                 if value_type is None:
@@ -215,7 +243,10 @@ def GetCurrentValue(key, base, value_type=None, return_safe=False):
                     #print 'Not dict. Parse value normally'
                     val, safe = ParseValue(d, k, base, value_type)
             else:
-                if 'current_val' in d[k]:
+                if use_index_key is not None and 'index_key' not in d[k]:
+                    #print 'Set d[k] index_key to ',use_index_key
+                    d[k]['index_key'] = use_index_key
+                if value_type is None and 'current_val' in d[k]:
                     # If there is already a current_val, use it.
                     #print 'Dict with current_val.  Use it: ',d[k]['current_val']
                     val = d[k]['current_val']
@@ -224,7 +255,7 @@ def GetCurrentValue(key, base, value_type=None, return_safe=False):
                     # Otherwise, parse the value for this key
                     #print 'Parse value normally'
                     val, safe = ParseValue(d, k, base, value_type)
-            #print base['obj_num'],'Current key = %s, value = %s'%(key,val)
+            #print base.get('obj_num',''),'Current key = %s, value = %s'%(key,val)
             if return_safe:
                 return val, safe
             else:
@@ -307,7 +338,10 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
         if key in config:
             get[key] = value_type
         else:
-            raise AttributeError("Attribute %s is required for type = %s"%(key,config['type']))
+            if 'type' in config:
+                raise AttributeError("Attribute %s is required for type = %s"%(key,config['type']))
+            else:
+                raise AttributeError("Attribute %s is required"%key)
 
     # Check optional items:
     for (key, value_type) in opt.items():
@@ -324,13 +358,19 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
             if key in config:
                 count += 1
                 if count > 1:
-                    raise AttributeError(
-                        "Only one of the attributes %s is allowed for type = %s"%(
-                            s.keys(),config['type']))
+                    if 'type' in config:
+                        raise AttributeError(
+                            "Only one of the attributes %s is allowed for type = %s"%(
+                                s.keys(),config['type']))
+                    else:
+                        raise AttributeError("Only one of the attributes %s is allowed"%s.keys())
                 get[key] = value_type
         if count == 0:
-            raise AttributeError(
-                "One of the attributes %s is required for type = %s"%(s.keys(),config['type']))
+            if 'type' in config:
+                raise AttributeError(
+                    "One of the attributes %s is required for type = %s"%(s.keys(),config['type']))
+            else:
+                raise AttributeError("One of the attributes %s is required"%s.keys())
 
     # Check that there aren't any extra keys in config aside from a few we expect:
     valid_keys += ignore
@@ -367,7 +407,7 @@ def _get_index(config, base, is_sequence=False):
     Then if base[index_key] is other than obj_num, use that.
     Finally, if this is a sequence, default to 'obj_num_in_file', otherwise 'obj_num'.
 
-    @returns index
+    @returns index, index_key
     """
     if 'index_key' in config:
         index_key = config['index_key']
@@ -393,7 +433,7 @@ def _get_index(config, base, is_sequence=False):
         if rng is not None:
             base['rng'] = rng
 
-    return index
+    return index, index_key
 
 
 
@@ -410,6 +450,8 @@ def _GetAngleValue(param):
         value = float(value)
         unit = galsim.angle.get_angle_unit(unit)
         return galsim.Angle(value, unit)
+    except KeyboardInterrupt:
+        raise
     except Exception as e:
         raise AttributeError("Unable to parse %s as an Angle."%param)
 
@@ -420,11 +462,15 @@ def _GetPositionValue(param):
     try:
         x = float(param[0])
         y = float(param[1])
+    except KeyboardInterrupt:
+        raise
     except:
         try:
             x, y = param.split(',')
             x = float(x.strip())
             y = float(y.strip())
+        except KeyboardInterrupt:
+            raise
         except:
             raise AttributeError("Unable to parse %s as a PositionD."%param)
     return galsim.PositionD(x,y)
@@ -442,12 +488,16 @@ def _GetBoolValue(param):
             try:
                 val = bool(int(param))
                 return val
+            except KeyboardInterrupt:
+                raise
             except:
                 raise AttributeError("Unable to parse %s as a bool."%param)
     else:
         try:
             val = bool(param)
             return val
+        except KeyboardInterrupt:
+            raise
         except:
             raise AttributeError("Unable to parse %s as a bool."%param)
 
@@ -569,7 +619,7 @@ def _GenerateFromSequence(config, base, value_type):
         raise AttributeError(
             "At most one of the attributes last and nitems is allowed for type = Sequence")
 
-    index = _get_index(kwargs, base, is_sequence=True)
+    index, index_key = _get_index(kwargs, base, is_sequence=True)
     if index is None:
         raise ValueError("The base config dict does not have index_key set correctly.")
 
@@ -729,10 +779,10 @@ def _GenerateFromCurrent(config, base, value_type):
     try:
         return GetCurrentValue(key, base, value_type, return_safe=True)
     except ValueError:
-        raise ValueError("Invalid key = %s given for type=Current")
+        raise ValueError("Invalid key = %s given for type=Current"%key)
 
 
-def RegisterValueType(type_name, gen_func, valid_types):
+def RegisterValueType(type_name, gen_func, valid_types, input_type=None):
     """Register a value type for use by the config apparatus.
 
     A few notes about the signature of the generating function:
@@ -759,8 +809,18 @@ def RegisterValueType(type_name, gen_func, valid_types):
                             The call signature is
                                 value, safe = Generate(config, base, value_type)
     @param valid_types      A list of types for which this type name is valid.
+    @param input_type       If the generator utilises an input object, give the key name of the
+                            input type here.  (If it uses more than one, this may be a list.)
+                            [default: None]
     """
     valid_value_types[type_name] = (gen_func, tuple(valid_types))
+    if input_type is not None:
+        from .input import RegisterInputConnectedType
+        if isinstance(input_type, list):
+            for key in input_type:
+                RegisterInputConnectedType(key, type_name)
+        else:
+            RegisterInputConnectedType(input_type, type_name)
 
 
 RegisterValueType('List', _GenerateFromList, 

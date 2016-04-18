@@ -58,37 +58,35 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
     else:
         nproc = 1
 
-    # If the images are Single (one stamp per image), then we need to check for Rings and the like.
-    if ('image' not in config or 'type' not in image or image['type'] == 'Single'):
-        nim_per_task = galsim.config.CalculateNObjPerTask(nproc, nimages, config)
-    else:
-        nim_per_task = 1
-
     jobs = []
     for k in range(nimages):
         kwargs = { 'image_num' : image_num, 'obj_num' : obj_num }
-        jobs.append( (kwargs, image_num) )
+        jobs.append(kwargs)
         obj_num += galsim.config.GetNObjForImage(config, image_num)
         image_num += 1
 
-    def done_func(logger, proc, image_num, image, t):
+    def done_func(logger, proc, k, image, t):
         if logger and image is not None:
             # Note: numpy shape is y,x
             ys, xs = image.array.shape
             if proc is None: s0 = ''
             else: s0 = '%s: '%proc
+            image_num = jobs[k]['image_num']
             logger.info(s0 + 'Image %d: size = %d x %d, time = %f sec', image_num, xs, ys, t)
 
-    def except_func(logger, proc, e, tr, image_num):
+    def except_func(logger, proc, k, e, tr):
         if logger:
             if proc is None: s0 = ''
             else: s0 = '%s: '%proc
+            image_num = jobs[k]['image_num']
             logger.error(s0 + 'Exception caught when building image %d', image_num)
             #logger.error('%s',tr)
             logger.error('Aborting the rest of this file')
 
-    images = galsim.config.MultiProcess(nproc, config, BuildImage, jobs, 'image', logger,
-                                        njobs_per_task = nim_per_task,
+    # Convert to the tasks structure we need for MultiProcess
+    tasks = MakeImageTasks(config, jobs, logger)
+
+    images = galsim.config.MultiProcess(nproc, config, BuildImage, tasks, 'image', logger,
                                         done_func = done_func,
                                         except_func = except_func)
 
@@ -122,6 +120,9 @@ def SetupConfigImageNum(config, image_num, obj_num):
     image = config['image']
     if not isinstance(image, dict):
         raise AttributeError("config.image is not a dict.")
+
+    if 'file_num' not in config:
+        config['file_num'] = 0
 
     if 'type' not in image:
         image['type'] = 'Single'
@@ -233,6 +234,15 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
     # Store the current image in the base-level config for reference
     config['current_image'] = image
 
+    # Just in case these changed from their initial values, make sure they are correct now:
+    config['image_origin'] = image.origin()
+    config['image_center'] = image.trueCenter()
+    config['image_bounds'] = image.bounds
+    if logger:
+        logger.debug('image %d: image_origin => %s',image_num,config['image_origin'])
+        logger.debug('image %d: image_center => %s',image_num,config['image_center'])
+        logger.debug('image %d: image_bounds => %s',image_num,config['image_bounds'])
+
     # Mark that we are no longer doing a single galaxy by deleting image_pos from config top
     # level, so it cannot be used for things like wcs.pixelArea(image_pos).
     config.pop('image_pos', None)
@@ -319,6 +329,32 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
     return max_current_var
 
 
+def MakeImageTasks(config, jobs, logger):
+    """Turn a list of jobs into a list of tasks.
+
+    See the doc string for galsim.config.MultiProcess for the meaning of this distinction.
+
+    For most image types, there is just one job per task, so the tasks list is just:
+
+        tasks = [ [ (job, k) ] for k, job in enumerate(jobs) ]
+
+    But some image types may need groups of jobs to be done sequentially by the same process.
+    The image type=Single for instance uses whatever grouping is needed for the stamp type.
+
+    @param config           The configuration dict
+    @param jobs             A list of jobs to split up into tasks.  Each job in the list is a
+                            dict of parameters that includes 'image_num' and 'obj_num'.
+    @param logger           If given, a logger object to log progress.
+
+    @returns a list of tasks
+    """
+    image = config.get('image', {})
+    image_type = image.get('type', 'Single')
+    if image_type not in valid_image_types:
+        raise AttributeError("Invalid image.type=%s."%type)
+    return valid_image_types[image_type].makeTasks(image, config, jobs, logger)
+
+
 class ImageBuilder(object):
     """A base class for building full images.
 
@@ -388,8 +424,27 @@ class ImageBuilder(object):
 
         image, current_var = galsim.config.BuildStamp(
                 base, obj_num=obj_num, xsize=xsize, ysize=ysize, do_noise=True, logger=logger)
-
         return image
+
+    def makeTasks(self, config, base, jobs, logger):
+        """Turn a list of jobs into a list of tasks.
+
+        For Single, this passes the job onto the MakeStampTasks function.
+
+        Most other types though probably want one job per task, for which the appropriate
+        code would be:
+
+            return [ [ (job, k) ] for k, job in enumerate(jobs) ]
+
+        @param config       The configuration dict for the image field.
+        @param base         The base configuration dict.
+        @param jobs         A list of jobs to split up into tasks.  Each job in the list is a
+                            dict of parameters that includes 'image_num' and 'obj_num'.
+        @param logger       If given, a logger object to log progress.
+
+        @returns a list of tasks
+        """
+        return galsim.config.MakeStampTasks(base, jobs, logger)
 
     def addNoise(self, image, config, base, image_num, obj_num, logger):
         """Add the final noise to the image.
