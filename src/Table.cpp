@@ -358,9 +358,10 @@ namespace galsim {
         da = (grid.back() - grid.front()) / (N-1);
         if (da == 0.) throw TableError("First and last arguments are equal.");
         equalSpaced = true;
-        for (int i=0; i<N; i++) {
+        for (int i=1; i<N; i++) {
             if (std::abs((grid[i] - grid.front())/da - i) > tolerance) equalSpaced = false;
-            if (grid[i] == grid[i-1]) throw TableError("Table has repeated arguments.");
+            if (grid[i] <= grid[i-1])
+                throw TableError("Table2D arguments not strictly increasing.");
         }
         lastIndex = 1;
         lower_slop = (grid[1]-grid[0]) * 1.e-6;
