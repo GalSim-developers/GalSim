@@ -571,7 +571,11 @@ def _ceildiv(a, b): return -(-a // b)
 
 
 class LookupTable2D2(object):
-    def __init__(self, xs, ys, f=None, interpolant='linear', edge_mode='warn'):
+    def __init__(self, xs, ys, f=None, interpolant='linear', edge_mode=None):
+        if edge_mode is None:
+            edge_mode = 'raise'
+        if edge_mode not in ['raise', 'wrap']:
+            raise ValueError("Unknown edge_mode: {:0}".format(edge_mode))
         self.xs = xs
         self.ys = ys
         self.f = np.ascontiguousarray(f, dtype=float)
@@ -588,7 +592,15 @@ class LookupTable2D2(object):
             self.yperiod = self.ys[-1] - self.ys[0]
         self.table = _galsim._LookupTable2D(self.xs, self.ys, f, self.interpolant)
 
+    def _inbounds(self, x, y):
+        return (np.min(x) >= self.xs[0] and np.max(x) <= self.xs[-1] and
+                np.min(y) >= self.ys[0] and np.max(y) <= self.ys[-1])
+
     def __call__(self, x, y, scatter=False):
+        if self.edge_mode == 'raise':
+            if not self._inbounds(x, y):
+                raise ValueError("Extrapolating beyond input range.")
+
         from numbers import Real
         if isinstance(x, Real):
             if self.edge_mode == 'wrap':

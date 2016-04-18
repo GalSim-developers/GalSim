@@ -342,12 +342,10 @@ def test_table2d():
     except ImportError:
         print 'The assert_raises tests require nose'
 
+
+
 @timer
-def test_table2d2_scipy():
-    try:
-        from scipy.interpolate import interp2d
-    except ImportError:
-        print "test_table2d2_scipy requires scipy!"
+def test_table2d2():
 
     def f(x_, y_):
         return np.sin(x_) * np.cos(y_) + x_
@@ -357,17 +355,22 @@ def test_table2d2_scipy():
     z = f(*np.meshgrid(x, y))
 
     tab2d = galsim.table.LookupTable2D2(x, y, z)
-    sci2d = interp2d(x, y, z)
 
     newx = np.linspace(0.2, 3.1, 45)
     newy = np.linspace(0.3, 10.1, 85)
     newxx, newyy = np.meshgrid(newx, newy)
 
-    np.testing.assert_array_almost_equal(sci2d(newx, newy), tab2d(newxx, newyy, scatter=True))
-    np.testing.assert_array_almost_equal(sci2d(newx, newy), tab2d(newx, newy))
-    np.testing.assert_array_almost_equal(sci2d(newx, newy), np.array([[tab2d(x0, y0)
-                                                                       for x0 in newx]
-                                                                      for y0 in newy]))
+    try:
+        from scipy.interpolate import interp2d
+    except ImportError:
+        print "SciPy tests require SciPy"
+    else:
+        sci2d = interp2d(x, y, z)
+        np.testing.assert_array_almost_equal(sci2d(newx, newy), tab2d(newxx, newyy, scatter=True))
+        np.testing.assert_array_almost_equal(sci2d(newx, newy), tab2d(newx, newy))
+        np.testing.assert_array_almost_equal(sci2d(newx, newy), np.array([[tab2d(x0, y0)
+                                                                           for x0 in newx]
+                                                                          for y0 in newy]))
 
     # import matplotlib.pyplot as plt
     # plt.figure(0)
@@ -388,13 +391,29 @@ def test_table2d2_scipy():
     z = f(*np.meshgrid(x, y))
 
     tab2d = galsim.table.LookupTable2D2(x, y, z)
-    sci2d = interp2d(x, y, z)
+    try:
+        from scipy.interpolate import interp2d
+    except ImportError:
+        print "SciPy tests require SciPy"
+    else:
+        sci2d = interp2d(x, y, z)
+        np.testing.assert_array_almost_equal(sci2d(newx, newy), tab2d(newx, newy))
 
-    np.testing.assert_array_almost_equal(sci2d(newx, newy), tab2d(newx, newy))
+    # Test edge exception
+    try:
+        np.testing.assert_raises(ValueError, tab2d, 1e6, 1e6)
+    except ImportError:
+        print 'The assert_raises tests require nose'
 
     # Test edge wrapping
-    np.testing.assert_raises(ValueError, galsim.table.LookupTable,
-                             (x, y, z), dict(edge_mode='wrap'))
+    # Chech that can't construct table with edge-wrapping if edges don't match
+    try:
+        np.testing.assert_raises(ValueError, galsim.table.LookupTable,
+                                 (x, y, z), dict(edge_mode='wrap'))
+    except ImportError:
+        print 'The assert_warns tests require nose'
+
+    # Extend edges and make vals match
     x = np.append(x, x[-1] + (x[-1]-x[-2]))
     y = np.append(y, y[-1] + (y[-1]-y[-2]))
     z = np.pad(z,[(0,1), (0,1)], mode='wrap')
@@ -402,6 +421,7 @@ def test_table2d2_scipy():
 
     np.testing.assert_array_almost_equal(tab2d(newx, newy), tab2d(newx+3*(x[-1]-x[0]), newy))
     np.testing.assert_array_almost_equal(tab2d(newx, newy), tab2d(newx, newy+13*(y[-1]-y[0])))
+
 
 @timer
 def test_ne():
@@ -425,5 +445,5 @@ if __name__ == "__main__":
     # test_log()
     # test_roundoff()
     # test_table2d()
-    test_table2d2_scipy()
+    test_table2d2()
     test_ne()
