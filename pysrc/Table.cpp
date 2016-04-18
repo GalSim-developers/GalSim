@@ -198,6 +198,53 @@ namespace {
             table2d.interpManyOuter(xvec, yvec, valvec, Nx, Ny);
         }
 
+        static bp::list convertGetXArgs(const Table2D<double,double>& table2d)
+        {
+            const std::vector<double>& x = table2d.getXArgs();
+            bp::list l;
+            for (size_t i=0; i!=x.size(); ++i) l.append(x[i]);
+            return l;
+        }
+
+        static bp::list convertGetYArgs(const Table2D<double,double>& table2d)
+        {
+            const std::vector<double>& y = table2d.getYArgs();
+            bp::list l;
+            for (size_t i=0; i!=y.size(); ++i) l.append(y[i]);
+            return l;
+        }
+
+        static bp::list convertGetVals(const Table2D<double,double>& table2d)
+        {
+            const std::vector<double>& v = table2d.getVals();
+            std::vector<double>::const_iterator viter=v.begin();
+            bp::list l;
+            for (size_t i=0; i!=table2d.getNy(); i++) {
+                bp::list in;
+                for (size_t j=0; j!=table2d.getNx(); j++, viter++) in.append(*viter);
+                l.append(in);
+            }
+            return l;
+        }
+
+        static std::string convertGetInterp(const Table2D<double,double>& table2d)
+        {
+            Table2D<double,double>::interpolant i = table2d.getInterp();
+            switch (i) {
+                case Table2D<double,double>::linear:
+                     return std::string("linear");
+                case Table2D<double,double>::floor:
+                     return std::string("floor");
+                case Table2D<double,double>::ceil:
+                     return std::string("ceil");
+                default:
+                     PyErr_SetString(PyExc_ValueError, "Invalid interpolant");
+                     bp::throw_error_already_set();
+            }
+            // Shouldn't get here...
+            return std::string("");
+        }
+
         static void wrap()
         {
             bp::class_<Table2D<double,double> > pyTable2D("_LookupTable2D", bp::no_init);
@@ -215,6 +262,11 @@ namespace {
                 .def("xmax", &Table2D<double,double>::xmax)
                 .def("ymin", &Table2D<double,double>::ymin)
                 .def("ymax", &Table2D<double,double>::ymax)
+                .def("getXArgs", &convertGetXArgs)
+                .def("getYArgs", &convertGetYArgs)
+                .def("getVals", &convertGetVals)
+                .def("getInterp", &convertGetInterp)
+                .enable_pickling()
                 ;
         }
     };

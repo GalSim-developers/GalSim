@@ -431,14 +431,46 @@ class LookupTable2D(object):
             self.f[0,0], self.f[0,-1], self.f[-1,0], self.f[-1,-1],
             self.interpolant, self.edge_mode))
 
-    # def __repr__(self):
-    #     pass
-    #
-    # def __eq__(self, other):
-    #     pass
-    #
-    # def __ne__(self, other):
-    #     return not self.__eq__(self, other)
-    #
-    # def __hash__(self):
-    #     pass
+    def __repr__(self):
+        return ("galsim.LookupTable2D(x=array(%r), y=array(%r), "
+                "f=array(%r), interpolant=%r, edge_mode=%r)"%(
+            self.xs.tolist(), self.ys.tolist(), self.f.tolist(), self.interpolant, self.edge_mode))
+
+    def __eq__(self, other):
+        return (isinstance(other, galsim.LookupTable2D) and
+                self.table == other.table and
+                self.edge_mode == other.edge_mode)
+
+    def __ne__(self, other):
+        return not self.__eq__(self, other)
+
+    def __hash__(self):
+        return hash(("galsim._galsim._LookupTable2D", self.table, self.edge_mode))
+
+def _LookupTable2D_eq(self, other):
+    return (isinstance(other, galsim._galsim._LookupTable2D)
+            and self.getXArgs() == other.getXArgs()
+            and self.getYArgs() == other.getYArgs()
+            and self.getVals() == other.getVals()
+            and self.getInterp() == other.getInterp())
+
+def _LookupTable2D_str(self):
+    xs = self.getXArgs()
+    ys = self.getYArgs()
+    v = self.getVals()
+    return ("galsim._galsim._LookupTable2D(x=[%s,...,%s], y=[%s,...,%s], "
+            "f=[[%s,...,%s],...,[%s,...,%s]]), interpolant=%r"%(
+            xs[0], xs[-1], ys[0], ys[-1], v[0][0], v[0][-1], v[-1][0], v[-1][-1], self.getInterp()))
+
+
+_galsim._LookupTable2D.__getinitargs__ = lambda self: \
+        (np.array(self.getXArgs()), np.array(self.getYArgs()), np.array(self.getVals()),
+         self.getInterp())
+_galsim._LookupTable2D.__eq__ = _LookupTable2D_eq
+_galsim._LookupTable2D.__hash__ = lambda self: \
+        hash(("_galsim._LookupTable2D", tuple(self.getXArgs()), tuple(self.getYArgs()),
+              tuple(np.array(self.getVals()).ravel()), self.getInterp()))
+_galsim._LookupTable2D.__repr__ = lambda self: \
+        "galsim._galsim._LookupTable2D(array(%r), array(%r), array(%r), %r)"%(
+        self.getXArgs(), self.getYArgs(), self.getVals(), self.getInterp())
+_galsim._LookupTable2D.__str__ = _LookupTable2D_str

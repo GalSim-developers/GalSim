@@ -354,6 +354,8 @@ def test_table2d():
     z = f(*np.meshgrid(x, y))
 
     tab2d = galsim.table.LookupTable2D(x, y, z)
+    do_pickle(tab2d)
+    do_pickle(tab2d.table)
 
     newx = np.linspace(0.2, 3.1, 45)
     newy = np.linspace(0.3, 10.1, 85)

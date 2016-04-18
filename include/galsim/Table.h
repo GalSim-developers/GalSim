@@ -271,6 +271,8 @@ namespace galsim {
         A da;
         mutable int lastIndex;
 
+        const std::vector<A>& getGrid() const { return grid; }
+
     private:
         typedef typename std::vector<A>::const_iterator citer;
         std::vector<A> grid;
@@ -307,6 +309,11 @@ namespace galsim {
         void interpManyScatter(const A* xvec, const A* yvec, V* valvec, int N) const;
         void interpManyOuter(const A* xvec, const A* yvec, V* valvec, int Nx, int Ny) const;
 
+        const std::vector<A>& getXArgs() const { return xgrid.getGrid(); }
+        const std::vector<A>& getYArgs() const { return ygrid.getGrid(); }
+        const std::vector<V>& getVals() const { return vals; }
+        int getNx() const {return Nx;}
+        int getNy() const {return Ny;}
         interpolant getInterp() const { return iType; }
 
     private:
