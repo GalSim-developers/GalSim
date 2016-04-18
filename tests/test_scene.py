@@ -53,6 +53,45 @@ def test_cosmos_basic():
     except ImportError:
         print 'The assert_raises tests require nose'
 
+    # Try making galaxies
+    gal_real = cat2.makeGalaxy(index=0,gal_type='real',chromatic=False)
+    if not isinstance(gal_real, galsim.RealGalaxy):
+        raise TypeError("COSMOS Catalog makeGalaxy routine does not return an instance of "
+                        "'galsim.RealGalaxy'")
+
+    gal_param = cat.makeGalaxy(index=10,gal_type='parametric',chromatic=True)
+    if not isinstance(gal_param, galsim.ChromaticObject):
+        raise TypeError("COSMOS Catalog makeGalaxy routine does not return an instance of "
+                        "'galsim.ChromaticObject' for parametric galaxies")
+
+    gal_real_list = cat.makeGalaxy(index=[3,6],gal_type='real',chromatic=False)
+    for gal_real in gal_real_list:
+        if not isinstance(gal_real, galsim.RealGalaxy):
+            raise TypeError("COSMOS Catalog makeGalaxy routine does not return a list of instances "
+                            "of 'galsim.RealGalaxy'")
+
+    gal_param_list = cat.makeGalaxy(index=[4,7],gal_type='parametric',chromatic=False)
+    for gal_param in gal_param_list:
+        if not isinstance(gal_param, galsim.GSObject):
+            raise TypeError("COSMOS Catalog makeGalaxy routine does not return a list of instances "
+                            "of 'galsim.GSObect'")
+
+    # Check for parametric catalog
+    cat_param = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example_fits.fits',
+                                     dir=datapath, use_real=False)
+
+    # Try making galaxies
+    gal = cat_param.makeGalaxy(index=1)
+    if not isinstance(gal, galsim.GSObject):
+        raise TypeError("COSMOS Catalog makeGalaxy routine does not return an instance of "
+                        "'galsim.GSObject when loaded from a fits file.")
+
+    gal_list = cat_param.makeGalaxy(index=[2,3])
+    for gal in gal_list:
+        if not isinstance(gal, galsim.GSObject):
+            raise TypeError("COSMOS Catalog makeGalaxy routine does not return a list of instances "
+                            "of 'galsim.GSObject when loaded from a fits file.")
+
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
