@@ -297,7 +297,7 @@ def _convertPositions(pos, units, func):
     return pos
 
 def _lin_approx_err(x, f, i):
-    """Error in abs(f(x) - approx(x)) when using ith data point to make piecewise linear
+    """Error as \int abs(f(x) - approx(x)) when using ith data point to make piecewise linear
     approximation."""
     import numpy as np
     xleft, xright = x[:i+1], x[i:]
@@ -310,7 +310,7 @@ def _lin_approx_err(x, f, i):
     return np.trapz(np.abs(fleft-f2left), xleft), np.trapz(np.abs(fright-f2right), xright)
 
 def _lin_approx_split(x, f):
-    """Optimally split a tabulated function into two piecewise linear approximations.
+    """Optimally split a tabulated function into two-part piecewise linear approximation.
     """
     import numpy as np
     errs = [_lin_approx_err(x, f, i) for i in xrange(1, len(x)-1)]
@@ -356,10 +356,10 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
     thresh = total_integ * rel_err
 
     if not preserve_range:
-        # arbitrarily allocate half of error budget to trimming the endpoints.
         errleft = 0.5 * (abs(f[1])+abs(f[0])) * (x[1]-x[0])
         errright = 0.5 * (abs(f[-1])+abs(f[-2])) * (x[-1]-x[-2])
         accumulated_err = 0.0
+        # arbitrarily allocate half of error budget to trimming the endpoints.
         # while at least one endpoint can be trimmed:
         while accumulated_err+min(errleft, errright) < thresh * 0.5:
             # if either endpoint could be trimmed, then trim the one leading to the smaller error,
@@ -391,7 +391,9 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
     # Thin interior points.  Start with no interior points and then greedily add them back in one at
     # a time until relative error goal is met.
     splitpoints = [0, len(x)-1]  # Start with single interval
-    errs = [np.inf]  # Current error for each interval
+    m = (f[-1]-f[0])/(x[-1]-x[0]) # slope
+    fapprox = f[0]+m*(x-x[0])
+    errs = [np.trapz(np.abs(fapprox-f), x)]  # Current error for each interval
     while sum(errs) > thresh:
         # Find the worst current interval
         index = np.argmax(errs)
@@ -401,7 +403,8 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
         i, (errleft, errright) = _lin_approx_split(x[left:right+1], f[left:right+1])
         # Update splitpoints and errs
         splitpoints.insert(index+1, i+left)
-        errs[index] = errright
+        del errs[index]
+        errs.insert(index, errright)
         errs.insert(index, errleft)
     return x[splitpoints].tolist(), f[splitpoints].tolist()
 
