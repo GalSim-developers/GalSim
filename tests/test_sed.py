@@ -563,6 +563,21 @@ def test_ne():
     print 'time for %s = %.2f' % (funcname(), t2-t1)
 
 
+def test_thin():
+    import time
+    t1 = time.time()
+
+    s = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang')
+    bp = galsim.Bandpass('1', blue_limit=s.blue_limit, red_limit=s.red_limit)
+    flux = s.calculateFlux(bp)
+    for err in [1.e-2, 1.e-3, 1.e-4, 1.e-5]:
+        thin_s = s.thin(rel_err=err)
+        thin_flux = thin_s.calculateFlux(bp)
+        assert (flux-thin_flux)/flux < err, "Thinned SED failed accuracy goal."
+
+    t2 = time.time()
+    print 'time for %s = %.2f' % (funcname(), t2-t1)
+
 if __name__ == "__main__":
     test_SED_basic()
     test_SED_add()
