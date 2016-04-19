@@ -194,14 +194,13 @@ class COSMOSCatalog(object):
         full_file_name, full_image_dir, _, self.use_sample = \
             galsim.real._parse_files_dirs(file_name, image_dir, dir, noise_dir, sample)
 
-        if self.use_real:
-            if not _nobjects_only:
-                # First, do the easy thing: real galaxies.  We make the galsim.RealGalaxyCatalog()
-                # constructor do most of the work.  But note that we don't actually need to 
-                # bother with this if all we care about is the nobjects attribute.
-                self.real_cat = galsim.RealGalaxyCatalog(
-                    file_name, sample=sample, image_dir=image_dir, dir=dir, preload=preload,
-                    noise_dir=noise_dir)
+        if self.use_real and not _nobjects_only:
+            # First, do the easy thing: real galaxies.  We make the galsim.RealGalaxyCatalog()
+            # constructor do most of the work.  But note that we don't actually need to
+            # bother with this if all we care about is the nobjects attribute.
+            self.real_cat = galsim.RealGalaxyCatalog(
+                file_name, sample=sample, image_dir=image_dir, dir=dir, preload=preload,
+                noise_dir=noise_dir)
 
             # The fits name has _fits inserted before the .fits ending.
             # Note: don't just use k = -5 in case it actually ends with .fits.fz
@@ -219,7 +218,7 @@ class COSMOSCatalog(object):
                 # But if that doesn't work, then the name might be the name of the real catalog,
                 # so try adding _fits to it as above.
                 k = full_file_name.find('.fits')
-                param_file_name = full_file_name[:k] + '_fits' + param_file_name[k:]
+                param_file_name = full_file_name[:k] + '_fits' + full_file_name[k:]
                 self.param_cat = pyfits.getdata(param_file_name)
 
         # Check for the old-style parameter catalog
@@ -304,16 +303,17 @@ class COSMOSCatalog(object):
             # which excludes a tiny number of galaxies (of order 10 in each sample) with some sky
             # subtraction or deblending errors.  Some of these are eliminated by other cuts when
             # using exclusion_level='marginal'.
-            if hasattr(self.real_cat, 'stamp_flux'):
-                mask &= self.real_cat.stamp_flux > 0
-            else:
-                import warnings
-                warnings.warn(
-                    'This version of the COSMOS catalog does not have info about total flux in '+
-                    'the galaxy postage stamps.  Exclusion of negative-flux stamps in advance '+
-                    'cannot be done. '+
-                    'Run the program galsim_download_cosmos to get the updated catalog with this '+
-                    'information precomputed.')
+            if hasattr(self,'real_cat'):
+                if hasattr(self.real_cat, 'stamp_flux'):
+                    mask &= self.real_cat.stamp_flux > 0
+                else:
+                    import warnings
+                    warnings.warn(
+                        'This version of the COSMOS catalog does not have info about total flux in '+
+                        'the galaxy postage stamps.  Exclusion of negative-flux stamps in advance '+
+                        'cannot be done. '+
+                        'Run the program galsim_download_cosmos to get the updated catalog with this '+
+                        'information precomputed.')
 
         if exclusion_level in ['bad_fits', 'marginal']:
             # This 'exclusion_level' involves eliminating failed parametric fits (bad fit status
@@ -547,8 +547,9 @@ class COSMOSCatalog(object):
         # It gets set by _makeReal, but not by _makeParametric.
         # And if we are doing the deep scaling, then it gets messed up by that.
         # So just put it in here at the end to be sure.
-        for gal, index in zip(gal_list, indices):
-            gal.index = self.orig_index[index]
+        for gal, idx in zip(gal_list, indices):
+            gal.index = self.orig_index[idx]
+            if hasattr(gal, 'original'): gal.original.index = self.orig_index[idx]
 
         if hasattr(index, '__iter__'):
             return gal_list
@@ -842,10 +843,14 @@ class COSMOSCatalog(object):
                     'Ignoring `deep` argument, because the sample being used already '+
                     'corresponds to a flux limit of F814W<25.2')
 
-        # Store the orig_index as gal.index, since the above RealGalaxy initialization
-        # just sets it as 0.  Plus, it isn't set at all if we make a parametric galaxy.
-        # And if we are doing the deep scaling, then it gets messed up by that
+        # Store the orig_index as gal.index, since the above RealGalaxy initialization just sets it
+        # as 0.  Plus, it isn't set at all if we make a parametric galaxy.  And if we are doing the
+        # deep scaling, then it gets messed up by that.  If we have done some transformations, and
+        # are also doing later transformation, it will take the `original` attribute that is already
+        # there.  So having `index` doesn't help, and we also need `original.index`.
         gal.index = cosmos_catalog.getOrigIndex(index)
+        if hasattr(gal, 'original'):
+            gal.original.index = cosmos_catalog.getOrigIndex(index)
 
         return gal
 

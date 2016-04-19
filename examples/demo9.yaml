@@ -431,6 +431,12 @@ output :
             shear : gal.shear
             pos : image.world_pos
 
+            # The world position is an explicit generated value in the config dict in this case,
+            # but image_pos and world_pos are always available values (like obj_num, file_num
+            # above), since GalSim will generate them itself if necessary.  Here, we output
+            # image_pos, which is generated from world_pos and the WCS.
+            image_pos : image_pos
+
             # Things in the input field don't change for each object, but they can 
             # still be placed in the truth catalog.  These columns will have all identical
             # values within each catalog, but different across catalogs.

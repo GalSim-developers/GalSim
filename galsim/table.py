@@ -96,11 +96,14 @@ class LookupTable(object):
                 raise ValueError("Cannot provide both file _and_ x,f for LookupTable")
             # We don't require pandas as a dependency, but if it's available, this is much faster.
             # cf. http://stackoverflow.com/questions/15096269/the-fastest-way-to-read-input-in-python
+            CParserError = AttributeError # In case we don't get to the line below where we import
+                                          # it from pandas.parser
             try:
                 import pandas
+                from pandas.parser import CParserError
                 data = pandas.read_csv(file, comment='#', delim_whitespace=True, header=None)
                 data = data.values.transpose()
-            except (ImportError, AttributeError):
+            except (ImportError, AttributeError, CParserError):
                 data = np.loadtxt(file).transpose()
             if data.shape[0] != 2:
                 raise ValueError("File %s provided for LookupTable does not have 2 columns"%file)
