@@ -447,28 +447,35 @@ def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
     if total_integ == 0:
         return np.array([ x[0], x[-1] ]), np.array([ f[0], f[-1] ])
     thresh = rel_err * total_integ
+    x_range = x[-1] - x[0]
 
     if not preserve_range:
         # Remove values from the front that integrate to less than thresh.
-        integ = 0.5 * (abs(f[0]) + abs(f[1])) * (x[1] - x[0])
+        err_integ1 = 0.5 * (abs(f[0]) + abs(f[1])) * (x[1] - x[0])
         k0 = 0
-        while k0 < len(x)-2 and integ < thresh:
+        while k0 < len(x)-2 and err_integ1 < thresh * (x[k0+1]-x[0]) / x_range:
             k0 = k0+1
-            integ += 0.5 * (abs(f[k0]) + abs(f[k0+1])) * (x[k0+1] - x[k0])
+            err_integ1 += 0.5 * (abs(f[k0]) + abs(f[k0+1])) * (x[k0+1] - x[k0])
         # Now the integral from 0 to k0+1 (inclusive) is a bit too large.
         # That means k0 is the largest value we can use that will work as the staring value.
 
         # Remove values from the back that integrate to less than thresh.
         k1 = len(x)-1
-        integ = 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
-        while k1 > k0 and integ < thresh:
+        err_integ2 = 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
+        while k1 > k0 and err_integ2 < thresh * (x[-1]-x[k1-1]) / x_range:
             k1 = k1-1
-            integ += 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
+            err_integ2 += 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
         # Now the integral from k1-1 to len(x)-1 (inclusive) is a bit too large.
         # That means k1 is the smallest value we can use that will work as the ending value.
 
+        # Subtract the error so far from thresh
+        thresh -= np.trapz(abs(f[:k0]),x[:k0]) + np.trapz(abs(f[k1:]),x[k1:])
+
         x = x[k0:k1+1]  # +1 since end of range is given as one-past-the-end.
         f = f[k0:k1+1]
+
+        # And update x_range for the new values
+        x_range = x[-1] - x[0]
 
     # Start a new list with just the first item so far
     newx = [ x[0] ]
@@ -481,17 +488,23 @@ def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
         # with a linear approxmation based on the points at k0 and k1+1.
         lin_f = f[k0] + (f[k1+1]-f[k0])/(x[k1+1]-x[k0]) * (x[k0:k1+2] - x[k0])
         # Integrate | f(x) - lin_f(x) | from k0 to k1+1, inclusive.
-        integ = np.trapz(abs(f[k0:k1+2] - lin_f), x[k0:k1+2])
-        # If the integral of the difference is < thresh, we can skip this item.
-        if integ < thresh:
+        err_integ = np.trapz(np.abs(f[k0:k1+2] - lin_f), x[k0:k1+2])
+        # If the integral of the difference is < thresh * (dx/x_range), we can skip this item.
+        if abs(err_integ) < thresh * (x[k1+1]-x[k0]) / x_range:
             # OK to skip item k1
             k1 = k1 + 1
         else:
-            # Have to include this one.
-            newx.append(x[k1])
-            newf.append(f[k1])
-            k0 = k1
-            k1 = k1 + 1
+            # Also ok to keep if its own relative error is less than rel_err
+            true_integ = np.trapz(f[k0:k1+2], x[k0:k1+2])
+            if abs(err_integ) < rel_err * abs(true_integ):
+                # OK to skip item k1
+                k1 = k1 + 1
+            else:
+                # Have to include this one.
+                newx.append(x[k1])
+                newf.append(f[k1])
+                k0 = k1
+                k1 = k1 + 1
 
     # Always include the last item
     newx.append(x[-1])
