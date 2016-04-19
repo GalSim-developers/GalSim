@@ -594,3 +594,4 @@ if __name__ == "__main__":
     test_SED_calculateSeeingMomentRatio()
     test_fnu_vs_flambda()
     test_ne()
+    test_thin()
