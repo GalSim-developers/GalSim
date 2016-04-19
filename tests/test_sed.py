@@ -570,10 +570,21 @@ def test_thin():
     s = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang')
     bp = galsim.Bandpass('1', blue_limit=s.blue_limit, red_limit=s.red_limit)
     flux = s.calculateFlux(bp)
+    print "Original number of SED samples = ",len(s.wave_list)
     for err in [1.e-2, 1.e-3, 1.e-4, 1.e-5]:
-        thin_s = s.thin(rel_err=err)
+        print "Test err = ",err
+        thin_s = s.thin(rel_err=err, preserve_range=True)
         thin_flux = thin_s.calculateFlux(bp)
-        assert (flux-thin_flux)/flux < err, "Thinned SED failed accuracy goal."
+        thin_err = (flux-thin_flux)/flux
+        print "num samples with preserve_range = True: ",len(thin_s.wave_list)
+        print "realized error = ",(flux-thin_flux)/flux
+        assert np.abs(thin_err) < err, "Thinned SED failed accuracy goal, preserving range."
+        thin_s = s.thin(rel_err=err, preserve_range=False)
+        thin_flux = thin_s.calculateFlux(bp)
+        thin_err = (flux-thin_flux)/flux
+        print "num samples with preserve_range = False: ",len(thin_s.wave_list)
+        print "realized error = ",(flux-thin_flux)/flux
+        assert np.abs(thin_err) < err, "Thinned SED failed accuracy goal, w/ range shrinkage."
 
     t2 = time.time()
     print 'time for %s = %.2f' % (funcname(), t2-t1)
