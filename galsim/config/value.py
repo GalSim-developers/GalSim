@@ -219,17 +219,27 @@ def GetCurrentValue(key, config, value_type=None, base=None, return_safe=False):
 
         if chain: 
             # If there are more keys, just set d to the next in the chain.
-            d = d[k]
+            try:
+                d = d[k]
+            except (TypeError, KeyError):
+                # TypeError for the case where d is a float or Position2D, so d[k] is invalid.
+                # KeyError for the case where d is a dict, but k is not a valid key.
+                raise ValueError("Invalid key in GetCurrentValue = %s"%key)
 
             # One subtlety here.  Normally the normal tree traversal will keep track of the index
             # key so that all lower levels inherit an index_key specification at a higher level.
             # This can circumvent that, so we need to do it here as well.  The easiest way to
             # handle it is to watch for an index_key specification along our chain, and if there
             # is one, set that in the final dict.
-            if 'index_key' in d:
+            if isinstance(d,dict) and 'index_key' in d:
                 use_index_key = d['index_key']
                 #print 'Set use_index_key = ',use_index_key
         else:
+            try:
+                dk = d[k]
+            except (TypeError, KeyError):
+                raise ValueError("Invalid key in GetCurrentValue = %s"%key)
+
             if not isinstance(d[k], dict):
                 if value_type is None:
                     # If we are not given the value_type, and it's not a dict, then the
@@ -261,7 +271,7 @@ def GetCurrentValue(key, config, value_type=None, base=None, return_safe=False):
             else:
                 return val
 
-    raise ValueError("Invalid key = %s"%key)
+    raise ValueError("Invalid key in GetCurrentValue = %s"%key)
 
 
 def SetDefaultIndex(config, num):

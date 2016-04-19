@@ -68,6 +68,9 @@ class TruthBuilder(ExtraOutputBuilder):
             elif key[0] == '$':
                 # This can also be handled by ParseValue
                 value = galsim.config.ParseValue(cols,name,base,None)[0]
+            elif key[0] == '@':
+                # Pop off an initial @ if there is one.
+                value = galsim.config.GetCurrentValue(key[1:], base)
             else:
                 value = galsim.config.GetCurrentValue(key, base)
             row.append(value)

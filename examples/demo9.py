@@ -241,11 +241,11 @@ def main(argv):
         # columns.
         names = [ 'object_id', 'halo_id',
                   'flux', 'size', 'eta1', 'eta2', 'mu', 'redshift', 
-                  'shear.g1', 'shear.g2', 'pos.x', 'pos.y', 
+                  'shear.g1', 'shear.g2', 'pos.x', 'pos.y', 'image_pos.x', 'image_pos.y',
                   'halo_mass', 'halo_conc', 'halo_redshift' ]
         types = [ int, int,
                   float, float, float, float, float, float,
-                  float, float, float, float,
+                  float, float, float, float, float, float,
                   float, float, float ]
         truth_cat = galsim.OutputCatalog(names, types)
 
@@ -398,6 +398,7 @@ def main(argv):
             row = ( (first_obj_id + k), halo_id, 
                     flux, hlr, eta1, eta2, nfw_mu, nfw_z_source,
                     total_shear.g1, total_shear.g2, pos.x, pos.y,
+                    image_pos.x, image_pos.y,
                     mass, nfw_conc, nfw_z_halo )
             truth_cat.addRow(row)
 

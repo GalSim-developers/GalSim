@@ -157,6 +157,7 @@
 
             "shear" : "gal.shear",
             "pos" : "image.world_pos",
+            "image_pos" : "image_pos",
 
             "halo_mass" : "input.nfw_halo.mass",
             "halo_conc" : "input.nfw_halo.conc",
