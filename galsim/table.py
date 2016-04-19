@@ -449,9 +449,9 @@ class LookupTable2D(object):
 
 def _LookupTable2D_eq(self, other):
     return (isinstance(other, galsim._galsim._LookupTable2D)
-            and self.getXArgs() == other.getXArgs()
-            and self.getYArgs() == other.getYArgs()
-            and self.getVals() == other.getVals()
+            and np.array_equal(self.getXArgs(), other.getXArgs())
+            and np.array_equal(self.getYArgs(),other.getYArgs())
+            and np.array_equal(self.getVals(), other.getVals())
             and self.getInterp() == other.getInterp())
 
 def _LookupTable2D_str(self):
@@ -460,12 +460,11 @@ def _LookupTable2D_str(self):
     v = self.getVals()
     return ("galsim._galsim._LookupTable2D(x=[%s,...,%s], y=[%s,...,%s], "
             "f=[[%s,...,%s],...,[%s,...,%s]]), interpolant=%r"%(
-            xs[0], xs[-1], ys[0], ys[-1], v[0][0], v[0][-1], v[-1][0], v[-1][-1], self.getInterp()))
+            xs[0], xs[-1], ys[0], ys[-1], v[0,0], v[0,-1], v[-1,0], v[-1,-1], self.getInterp()))
 
 
 _galsim._LookupTable2D.__getinitargs__ = lambda self: \
-        (np.array(self.getXArgs()), np.array(self.getYArgs()), np.array(self.getVals()),
-         self.getInterp())
+        (self.getXArgs(), self.getYArgs(), self.getVals(), self.getInterp())
 _galsim._LookupTable2D.__eq__ = _LookupTable2D_eq
 _galsim._LookupTable2D.__hash__ = lambda self: \
         hash(("_galsim._LookupTable2D", tuple(self.getXArgs()), tuple(self.getYArgs()),

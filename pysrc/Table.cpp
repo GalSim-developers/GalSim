@@ -198,33 +198,41 @@ namespace {
             table2d.interpManyOuter(xvec, yvec, valvec, Nx, Ny);
         }
 
-        static bp::list convertGetXArgs(const Table2D<double,double>& table2d)
+        static bp::object convertGetXArgs(const Table2D<double,double>& table2d)
         {
             const std::vector<double>& x = table2d.getXArgs();
-            bp::list l;
-            for (size_t i=0; i!=x.size(); ++i) l.append(x[i]);
-            return l;
+            bp::object numpy_array = MakeNumpyArray(
+                &x[0],
+                x.size(),
+                1,
+                true
+            );
+            return numpy_array;
         }
 
-        static bp::list convertGetYArgs(const Table2D<double,double>& table2d)
+        static bp::object convertGetYArgs(const Table2D<double,double>& table2d)
         {
             const std::vector<double>& y = table2d.getYArgs();
-            bp::list l;
-            for (size_t i=0; i!=y.size(); ++i) l.append(y[i]);
-            return l;
+            bp::object numpy_array = MakeNumpyArray(
+                &y[0],
+                y.size(),
+                1,
+                true
+            );
+            return numpy_array;
         }
 
-        static bp::list convertGetVals(const Table2D<double,double>& table2d)
+        static bp::object convertGetVals(const Table2D<double,double>& table2d)
         {
             const std::vector<double>& v = table2d.getVals();
-            std::vector<double>::const_iterator viter=v.begin();
-            bp::list l;
-            for (size_t i=0; i!=table2d.getNy(); i++) {
-                bp::list in;
-                for (size_t j=0; j!=table2d.getNx(); j++, viter++) in.append(*viter);
-                l.append(in);
-            }
-            return l;
+            bp::object numpy_array = MakeNumpyArray(
+                &v[0],
+                table2d.getNy(),
+                table2d.getNx(),
+                table2d.getNx(),
+                true
+            );
+            return numpy_array;
         }
 
         static std::string convertGetInterp(const Table2D<double,double>& table2d)
