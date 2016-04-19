@@ -408,6 +408,12 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
         errs.insert(index, errleft)
     return x[splitpoints].tolist(), f[splitpoints].tolist()
 
+# In Issue #739, Josh wrote the above algorithm as a replacement for the one here.
+# It had been buggy, not actually hitting its target relative accuracy, so on the same issue,
+# Mike fixed this algorithm to at least work correctly.  However, we recommend using the above
+# algorith, since it keeps fewer sample locations for a given rel_err than the old algorithm.
+# On the other hand, the old algorithm can be quite a bit faster, being O(N), not O(N^2), so
+# we retain the old algorithm here in case we want to re-enable it for certain applications.
 def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
     """
     Remove items from a set of tabulated f(x) values so that the error in the integral is still
