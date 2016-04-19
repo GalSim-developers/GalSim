@@ -221,7 +221,9 @@ def GetCurrentValue(key, config, value_type=None, base=None, return_safe=False):
             # If there are more keys, just set d to the next in the chain.
             try:
                 d = d[k]
-            except TypeError:
+            except (TypeError, KeyError):
+                # TypeError for the case where d is a float or Position2D, so d[k] is invalid.
+                # KeyError for the case where d is a dict, but k is not a valid key.
                 raise ValueError("Invalid key in GetCurrentValue = %s"%key)
 
             # One subtlety here.  Normally the normal tree traversal will keep track of the index
@@ -235,7 +237,7 @@ def GetCurrentValue(key, config, value_type=None, base=None, return_safe=False):
         else:
             try:
                 dk = d[k]
-            except TypeError:
+            except (TypeError, KeyError):
                 raise ValueError("Invalid key in GetCurrentValue = %s"%key)
 
             if not isinstance(d[k], dict):
