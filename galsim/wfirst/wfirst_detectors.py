@@ -82,7 +82,24 @@ def applyIPC(img, edge_treatment='extend', fill_value=None):
     """
     img.applyIPC(galsim.wfirst.ipc_kernel, edge_treatment=edge_treatment, fill_value=fill_value)
 
-def allDetectorEffects(img, rng=None, exptime=None):
+def applyPersistence(img, prev_exposures):
+    """
+    Applies the persistence effect to the Image instance by adding a small fraction of the previous
+    exposures (up to 8) supplied as the 'prev_exposures' argument.
+
+    For more information about persistence, see the docstring for galsim.Image.applyPersistence.
+    Unlike that routine, this one does not need the coefficients to be specified. However, the list
+    of previous eight exposures will have to be supplied. Earlier exposures, if supplied, will be
+    ignored.
+
+    @param img               The Image to be transformed.
+    @param prev_exposures    List of up to 8 Image instances in the order of exposures, with the
+                             recent exposure being the first element.
+    """
+    img.applyPersistence(img_list,wfirst.persistence_coefficients)
+
+
+def allDetectorEffects(img, rng=None, exptime=None, prev_exposures=[]):
     """
     This utility applies all sources of noise and detector effects for WFIRST that are implemented
     in GalSim.  In terms of noise, this includes the Poisson noise due to the signal (sky +
@@ -93,11 +110,13 @@ def allDetectorEffects(img, rng=None, exptime=None):
     include all subsequent steps in the image generation process for WFIRST that are implemented in
     GalSim.
 
-    @param img       The Image to be modified.
-    @param rng       An optional galsim.BaseDeviate to use for the addition of noise.  If None, a
-                     new one will be initialized.  [default: None]
-    @param exptime   The exposure time, in seconds.  If None, then the WFIRST default exposure time
-                     will be used.  [default: None]
+    @param img               The Image to be modified.
+    @param rng               An optional galsim.BaseDeviate to use for the addition of noise.  If
+                             None, a new one will be initialized.  [default: None]
+    @param exptime           The exposure time, in seconds.  If None, then the WFIRST default
+                             exposure time will be used.  [default: None]
+    @param prev_exposures    List of up to 8 Image instances in the order of exposures, with the
+                             recent exposure being the first element. [default: []]
     """
     # Deal appropriately with passed-in RNG, exposure time.
     if rng is None:
@@ -121,6 +140,9 @@ def allDetectorEffects(img, rng=None, exptime=None):
     dark_current = galsim.wfirst.dark_current*exptime
     dark_noise = galsim.DeviateNoise(galsim.PoissonDeviate(rng, dark_current))
     img.addNoise(dark_noise)
+
+    # Persistence (use WFIRST coefficients)
+    applyPersistence(img,previous_exposures)
 
     # Nonlinearity (use WFIRST routine).
     applyNonlinearity(img)

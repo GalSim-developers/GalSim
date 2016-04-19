@@ -216,6 +216,7 @@ ipc_kernel = numpy.array([ [0.001269938, 0.015399776, 0.001199862], \
                            [0.001270391, 0.016129619, 0.001200137] ])
 ipc_kernel /= numpy.sum(ipc_kernel)
 ipc_kernel = galsim.Image(ipc_kernel)
+persistence_coefficients = np.array([0.2246,0.0225,0.0085,0.0043,0.0025,0.0016,0.0011,0.0008])/100.
 n_sca = 18
 n_pix_tot = 4096 
 n_pix = 4088
