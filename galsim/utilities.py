@@ -299,7 +299,6 @@ def _convertPositions(pos, units, func):
 def _lin_approx_err(x, f, i):
     """Error as \int abs(f(x) - approx(x)) when using ith data point to make piecewise linear
     approximation."""
-    import numpy as np
     xleft, xright = x[:i+1], x[i:]
     fleft, fright = f[:i+1], f[i:]
     xi, fi = x[i], f[i]
@@ -312,7 +311,6 @@ def _lin_approx_err(x, f, i):
 def _lin_approx_split(x, f):
     """Optimally split a tabulated function into two-part piecewise linear approximation.
     """
-    import numpy as np
     errs = [_lin_approx_err(x, f, i) for i in xrange(1, len(x)-1)]
     i = np.argmin(np.sum(errs, axis=1))
     return i+1, errs[i]
@@ -335,7 +333,6 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
 
     @returns a tuple of lists `(x_new, y_new)` with the thinned tabulation.
     """
-    import numpy as np
     x = np.array(x)
     f = np.array(f)
 
