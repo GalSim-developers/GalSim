@@ -22,7 +22,7 @@ import sys
 from galsim_test_helpers import *
 
 imgdir = os.path.join(".", "SBProfile_comparison_images") # Directory containing the reference
-                                                          # images. 
+                                                          # images.
 
 try:
     import galsim
@@ -97,8 +97,8 @@ def test_shapelet_drawImage():
             print 'shapelet vector = ',bvec
             shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
 
-            # Test normalization  (This is normally part of do_shoot.  When we eventually 
-            # implement photon shooting, we should go back to the normal do_shoot call, 
+            # Test normalization  (This is normally part of do_shoot.  When we eventually
+            # implement photon shooting, we should go back to the normal do_shoot call,
             # and remove this section.)
             shapelet = shapelet.withFlux(test_flux)
             shapelet.drawImage(im)
@@ -109,10 +109,10 @@ def test_shapelet_drawImage():
 
             # Test centroid
             # Note: this only works if the image has odd sizes.  If they are even, then
-            # setCenter doesn't actually set the center to the true center of the image 
+            # setCenter doesn't actually set the center to the true center of the image
             # (since it falls between pixels).
             im.setCenter(0,0)
-            x,y = np.meshgrid(np.arange(im.array.shape[0]).astype(float) + im.getXMin(), 
+            x,y = np.meshgrid(np.arange(im.array.shape[0]).astype(float) + im.getXMin(),
                               np.arange(im.array.shape[1]).astype(float) + im.getYMin())
             x *= scale
             y *= scale
@@ -297,6 +297,19 @@ def test_shapelet_adjustments():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_ne():
+    import time
+    t1 = time.time()
+    gsp = galsim.GSParams(maxk_threshold=5.1e-3, folding_threshold=1.1e-3)
+    objs = [galsim.Shapelet(1., 2),
+            galsim.Shapelet(1., 3),
+            galsim.Shapelet(2., 2),
+            galsim.Shapelet(1., 2, bvec=[1, 0, 0, 0.2, 0.3, -0.1]),
+            galsim.Shapelet(1., 2, gsparams=gsp)]
+    all_obj_diff(objs)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 if __name__ == "__main__":
@@ -305,3 +318,4 @@ if __name__ == "__main__":
     test_shapelet_properties()
     test_shapelet_fit()
     test_shapelet_adjustments()
+    test_ne()

@@ -25,7 +25,7 @@
 
 namespace galsim {
 
-    class SBShapelet::SBShapeletImpl : public SBProfile::SBProfileImpl 
+    class SBShapelet::SBShapeletImpl : public SBProfile::SBProfileImpl
     {
     public:
         SBShapeletImpl(double sigma, const LVector& bvec, const GSParamsPtr& gsparams);
@@ -50,7 +50,7 @@ namespace galsim {
         const LVector& getBVec() const;
 
         /// @brief Photon-shooting is not implemented for SBShapelet, will throw an exception.
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const 
+        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const
         { throw SBError("SBShapelet::shoot() is not implemented"); }
 
         // Overrides for better efficiency
@@ -75,11 +75,11 @@ namespace galsim {
                         const tmv::Matrix<double>& kx,
                         const tmv::Matrix<double>& ky) const;
 
-        std::string repr() const;
+        std::string serialize() const;
 
     private:
         double _sigma;
-        LVector _bvec;  
+        LVector _bvec;
 
         // Copy constructor and op= are undefined.
         SBShapeletImpl(const SBShapeletImpl& rhs);
@@ -89,4 +89,3 @@ namespace galsim {
 }
 
 #endif
-

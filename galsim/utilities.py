@@ -18,6 +18,7 @@
 """@file utilities.py
 Module containing general utilities for the GalSim software.
 """
+from contextlib import contextmanager
 
 import numpy as np
 import galsim
@@ -313,16 +314,15 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
 
     @returns a tuple of lists `(x_new, y_new)` with the thinned tabulation.
     """
-    import numpy
-    x = numpy.array(x)
-    f = numpy.array(f)
+    x = np.array(x)
+    f = np.array(f)
 
     # Check for valid inputs
     if len(x) != len(f):
         raise ValueError("len(x) != len(f)")
     if rel_err <= 0 or rel_err >= 1:
         raise ValueError("rel_err must be between 0 and 1")
-    if not (numpy.diff(x) >= 0).all():
+    if not (np.diff(x) >= 0).all():
         raise ValueError("input x is not sorted.")
 
     # Check for trivial noop.
@@ -331,9 +331,9 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
         return x,f
 
     # Start by calculating the complete integral of |f|
-    total_integ = numpy.trapz(abs(f),x)
+    total_integ = np.trapz(abs(f),x)
     if total_integ == 0:
-        return numpy.array([ x[0], x[-1] ]), numpy.array([ f[0], f[-1] ])
+        return np.array([ x[0], x[-1] ]), np.array([ f[0], f[-1] ])
     thresh = rel_err * total_integ
 
     if not preserve_range:
@@ -369,7 +369,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
         # with a linear approxmation based on the points at k0 and k1+1.
         lin_f = f[k0] + (f[k1+1]-f[k0])/(x[k1+1]-x[k0]) * (x[k0:k1+2] - x[k0])
         # Integrate | f(x) - lin_f(x) | from k0 to k1+1, inclusive.
-        integ = numpy.trapz(abs(f[k0:k1+2] - lin_f), x[k0:k1+2])
+        integ = np.trapz(abs(f[k0:k1+2] - lin_f), x[k0:k1+2])
         # If the integral of the difference is < thresh, we can skip this item.
         if integ < thresh:
             # OK to skip item k1
@@ -418,6 +418,113 @@ _gammafn._a = ( 1.00000000000000000000, 0.57721566490153286061, -0.6558780715202
                0.00000000000000000141, -0.00000000000000000023, 0.00000000000000000002
              )
 
+def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
+    """
+    The routine to do the opposite of what 'interleaveImages' routine does. It generates a
+    (uniform) dither sequence of low resolution images from a high resolution image.
+
+    Many pixel level detector effects, such as interpixel capacitance, persistence, charge
+    diffusion etc. can be included only on images drawn at the native pixel scale, which happen to
+    be undersampled in most cases. Nyquist-sampled images that also include the effects of detector
+    non-idealities can be obtained by drawing multiple undersampled images (with the detector
+    effects included) that are offset from each other by a fraction of a pixel. If the offsets are
+    uniformly spaced, then images can be combined using 'interleaveImages' into a Nyquist-sampled
+    image.
+
+    Drawing multiple low resolution images of a light profile can be a lot slower than drawing a
+    high resolution image of the same profile, even if the total number of pixels is the same. A
+    uniformly offset dither sequence can be extracted from a well-resolved image that is drawn by
+    convolving the surface brightness profile explicitly with the native pixel response and setting
+    a lower sampling scale (or higher sampling rate) using the `pixel_scale' argument in drawImage()
+    routine and setting the `method' parameter to `no_pixel'.
+
+    Here is an example script using this routine:
+
+    Interleaving four Gaussian images
+    ---------------------------------
+
+        >>> n = 2
+        >>> gal = galsim.Gaussian(sigma=2.8)
+        >>> gal_pix = galsim.Convolve([gal,galsim.Pixel(scale=1.0)])
+        >>> img = gal_pix.drawImage(gal_pix,scale=1.0/n,method='no_pixel')
+        >>> im_list, offsets = galsim.utilities.deInterleaveImage(img,N=n)
+        >>> for im in im_list:
+        >>>     im.applyNonlinearity(lambda x: x-0.01*x**2) #detector effects
+        >>> img_new = galsim.utilities.interleaveImages(im_list,N=n,offsets)
+
+    @param image             Input image from which lower resolution images are extracted.
+    @param N                 Number of images extracted in either directions. It can be of type
+                             'int' if equal number of images are extracted in both directions or a
+                             list or tuple of two integers, containing the number of images in x
+                             and y directions respectively.
+    @param conserve_flux     Should the routine output images that have, on average, same total
+                             pixel values as the input image (True) or should the pixel values
+                             summed over all the images equal the sum of pixel values of the input
+                             image (False)? [default: False]
+    @param suppress_warnings Suppresses the warnings about the pixel scale of the output, if True.
+                             [default: False]
+
+    @returns a list of images and offsets to reconstruct the input image using 'interleaveImages'.
+    """
+
+    if isinstance(N,int):
+        n1,n2 = N,N
+    elif hasattr(N,'__iter__'):
+        if len(N)==2:
+            n1,n2 = N
+        else:
+            raise TypeError("'N' has to be a list or a tuple of two integers")
+        if not (isinstance(n1,int) and  isinstance(n2,int)):
+            raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
+    else:
+        raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
+
+    if not isinstance(image,galsim.Image):
+        raise TypeError("'image' has to be an instance of galsim.Image")
+
+    y_size,x_size = image.array.shape
+    if x_size%n1 or y_size%n2:
+        raise ValueError("The value of 'N' is incompatible with the dimensions of the image to "+
+                         +"be 'deinterleaved'")
+
+    im_list, offsets = [], []
+    for i in xrange(n1):
+        for j in xrange(n2):
+            # The tricky part - going from array indices to Image coordinates (x,y)
+            # DX[i'] = -(i+0.5)/n+0.5 = -i/n + 0.5*(n-1)/n
+            #    i  = -n DX[i'] + 0.5*(n-1)
+            dx,dy = -(i+0.5)/n1+0.5,-(j+0.5)/n2+0.5
+            offset = galsim.PositionD(dx,dy)
+            img_arr = image.array[j::n2,i::n1].copy()
+            img = galsim.Image(img_arr)
+            if conserve_flux is True:
+                img *= n1*n2
+            im_list.append(img)
+            offsets.append(offset)
+
+    wcs = image.wcs
+    if wcs is not None and wcs.isUniform():
+        jac = wcs.jacobian()
+        for img in im_list:
+            img_wcs = galsim.JacobianWCS(jac.dudx*n1,jac.dudy*n2,jac.dvdx*n1,jac.dvdy*n2)
+            ## Since pixel scale WCS is not equal to its jacobian, checking if img_wcs is a pixel
+            ## scale
+            img_wcs_decomp = img_wcs.getDecomposition()
+            if img_wcs_decomp[1].g==0:
+                img.wcs = galsim.PixelScale(img_wcs_decomp[0])
+            else:
+               img.wcs = img_wcs
+            ## Preserve the origin so that the interleaved image has the same bounds as the image
+            ## that is being deinterleaved.
+            img.setOrigin(image.origin())
+
+    elif suppress_warnings is False:
+        import warnings
+        warnings.warn("Individual images could not be assigned a WCS automatically.")
+
+    return im_list, offsets
+
+
 def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False,
     catch_offset_errors=True):
     """
@@ -432,7 +539,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     equivalent to convolution by the pixel profile and then sampling at the centers of the pixels.
     This procedure simulates an observation sampled at a higher resolution than the original images,
     while retaining the original pixel convolution.
-    
+
     Such an image can be obtained in a fairly simple manner in simulations of surface brightness
     profiles by convolving them explicitly with the native pixel response and setting a lower
     sampling scale (or higher sampling rate) using the `pixel_scale' argument in drawImage()
@@ -448,7 +555,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     ther others is that the images must be offset in equal steps in each direction. This is
     difficult to acheive with real observations but can be precisely acheived in a series of
     simulated images.
-    
+
     An advantage of this procedure is that the noise in the final image is not correlated as the
     pixel values are each taken from just a single input image. Thus, this routine preserves the
     noise properties of the pixels.
@@ -525,18 +632,13 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     y_size, x_size = im_list[0].array.shape
     wcs = im_list[0].wcs
 
-    if wcs.isPixelScale():
-        scale = wcs.scale
-    else:
-        scale = None
-
     for im in im_list[1:]:
         if not isinstance(im,galsim.Image):
             raise TypeError("'im_list' must be a list of galsim.Image instances")
 
         if im.array.shape != (y_size,x_size):
             raise ValueError("All galsim.Image instances in 'im_list' must be of the same size")
- 
+
         if im.wcs != wcs:
             raise ValueError(
                 "All galsim.Image instances in 'im_list' must have the same WCS")
@@ -571,20 +673,31 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
         img /= 1.0*len(im_list)
 
     # Assign an appropriate WCS for the output
-    if scale is not None:
-        if n1==n2:
-            img.wcs = galsim.PixelScale(1.*scale/n1)
+    if wcs is not None and wcs.isUniform():
+        jac = wcs.jacobian()
+        dudx, dudy, dvdx, dvdy = jac.dudx, jac.dudy, jac.dvdx, jac.dvdy
+        img_wcs = galsim.JacobianWCS(1.*dudx/n1,1.*dudy/n2,1.*dvdx/n1,1.*dvdy/n2)
+        ## Since pixel scale WCS is not equal to its jacobian, checking if img_wcs is a pixel scale
+        img_wcs_decomp = img_wcs.getDecomposition()
+        if img_wcs_decomp[1].g==0: ## getDecomposition returns scale,shear,angle,flip
+            img.wcs = galsim.PixelScale(img_wcs_decomp[0])
         else:
-            img.wcs = galsim.JacobianWCS(1.*scale/n1, 0., 0., 1.*scale/n2)
-    elif isinstance(wcs,galsim.JacobianWCS): # from say, a previously interleaved Image.
-        dudx, dudy, dvdx, dvdy = wcs.dudx, wcs.dudy, wcs.dvdx, wcs.dvdy
-        if (1.0*dudx/n1==1.0*dvdy/n2) and (dudy==0.0) and (dvdx==0.0):
-            img.wcs = galsim.PixelScale(1.*dudx/n1)
-        else:
-            img.wcs = galsim.JacobianWCS(1.*dudx/n1,1.*dudy/n2,1.*dvdx/n1,1.*dvdy/n2)
+            img.wcs = img_wcs
+
     elif suppress_warnings is False:
         import warnings
         warnings.warn("Interleaved image could not be assigned a WCS automatically.")
+
+    # Assign a possibly non-trivial origin and warn if individual image have different origins.
+    orig = im_list[0].origin()
+    img.setOrigin(orig)
+    for im in im_list[1:]:
+        if not im.origin()==orig:
+            import warnings
+            warnings.warn("Images in `im_list' have multiple values for origin. Assigning the \
+            origin of the first Image instance in 'im_list' to the interleaved image.")
+            break
+
     return img
 
 class LRU_Cache:
@@ -682,3 +795,12 @@ class LRU_Cache:
                     root[1] = link
             else:
                 raise ValueError("Invalid maxsize: {0:}".format(maxsize))
+
+
+# http://stackoverflow.com/questions/2891790/pretty-printing-of-numpy-array
+@contextmanager
+def printoptions(*args, **kwargs):
+    original = np.get_printoptions()
+    np.set_printoptions(*args, **kwargs)
+    yield
+    np.set_printoptions(**original)

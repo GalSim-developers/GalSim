@@ -161,6 +161,16 @@ namespace galsim {
         return interpolate(a,i,v,y2);
     }
 
+    template <class V, class A>
+    void Table<V,A>::interpMany(const A* argvec, V* valvec, int N) const
+    {
+        setup();
+        for (int k=0; k<N; ++k) {
+            int i = upperIndex(argvec[k]);
+            valvec[k] = interpolate(argvec[k],i,v,y2);
+        }
+    }
+
     template<class V, class A>
     V Table<V,A>::linearInterpolate(
         A a, int i, const std::vector<Entry>& v, const std::vector<V>& )

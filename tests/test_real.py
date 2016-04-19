@@ -205,6 +205,27 @@ def test_real_galaxy_saved():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_ne():
+    import time
+    t1 = time.time()
+    rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
+    gsp = galsim.GSParams(folding_threshold=1.1e-3)
+
+    gals = [galsim.RealGalaxy(rgc, index=0),
+            galsim.RealGalaxy(rgc, index=1),
+            galsim.RealGalaxy(rgc, index=0, x_interpolant='Linear'),
+            galsim.RealGalaxy(rgc, index=0, k_interpolant='Linear'),
+            galsim.RealGalaxy(rgc, index=0, flux=1.1),
+            galsim.RealGalaxy(rgc, index=0, pad_factor=1.1),
+            galsim.RealGalaxy(rgc, index=0, noise_pad_size=5.0),
+            galsim.RealGalaxy(rgc, index=0, gsparams=gsp)]
+    all_obj_diff(gals)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 if __name__ == "__main__":
     test_real_galaxy_ideal()
     test_real_galaxy_saved()
+    test_ne()

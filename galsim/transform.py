@@ -20,7 +20,7 @@ A class that handles affine tranformations of a profile including a possible flu
 """
 
 import galsim
-import numpy
+import numpy as np
 from . import _galsim
 
 def Transform(obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio=1.,
@@ -63,7 +63,7 @@ def Transform(obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio
         # NB. Even better, if the flux scaling is chromatic, would be to find a component
         # that is already non-separable.  But we don't bother trying to do that currently.
         elif (isinstance(obj, galsim.ChromaticConvolution or isinstance(obj, galsim.Convolution))
-              and numpy.array_equal(numpy.asarray(jac).flatten(),(1,0,0,1))
+              and np.array_equal(np.asarray(jac).ravel(),(1,0,0,1))
               and offset == galsim.PositionD(0.,0.)):
             first = Transform(obj.objlist[0],flux_ratio=flux_ratio,gsparams=gsparams)
             return galsim.ChromaticConvolution( [first] + [o for o in obj.objlist[1:]] )
@@ -110,7 +110,7 @@ class Transformation(galsim.GSObject):
     """
     def __init__(self, obj, jac=(1.,0.,0.,1.), offset=galsim.PositionD(0.,0.), flux_ratio=1.,
                  gsparams=None):
-        dudx, dudy, dvdx, dvdy = numpy.asarray(jac, dtype=float).flatten()
+        dudx, dudy, dvdx, dvdy = np.asarray(jac, dtype=float).ravel()
         if hasattr(obj, 'original'):
             self._original = obj.original
         else:
@@ -138,11 +138,25 @@ class Transformation(galsim.GSObject):
     @property
     def original(self): return self._original
     @property
-    def jac(self): return numpy.asarray(self.getJac()).reshape(2,2)
+    def jac(self): return np.asarray(self.getJac()).reshape(2,2)
     @property
     def offset(self): return self.getOffset()
     @property
     def flux_ratio(self): return self.getFluxRatio()
+
+    # There's really no good way to check that two callables are equal, except if they literally
+    # point to the same object.  So we'll just check for that for _jac, _offset, and _flux_ratio.
+    def __eq__(self, other):
+        return (isinstance(other, galsim.Transformation) and
+                self.original == other.original and
+                np.array_equal(self.jac, other.jac) and
+                np.array_equal(self.offset, other.offset) and
+                self.flux_ratio == other.flux_ratio and
+                self.gsparams == other.gsparams)
+
+    def __hash__(self):
+        return hash(("galsim.Transformation", self.original, tuple(self.jac.ravel()), self.offset.x,
+                     self.offset.y, self.flux_ratio, self.gsparams))
 
     def __repr__(self):
         return 'galsim.Transformation(%r, jac=%r, offset=%r, flux_ratio=%r, gsparams=%r)'%(
@@ -150,7 +164,7 @@ class Transformation(galsim.GSObject):
 
     def __str__(self):
         s = str(self.original)
-        dudx, dudy, dvdx, dvdy = self.jac.flatten()
+        dudx, dudy, dvdx, dvdy = self.jac.ravel()
         if dudx != 1 or dudy != 0 or dvdx != 0 or dvdy != 1:
             # Figure out the shear/rotate/dilate calls that are equivalent.
             jac = galsim.JacobianWCS(dudx,dudy,dvdx,dvdy)

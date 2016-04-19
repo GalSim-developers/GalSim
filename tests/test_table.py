@@ -248,8 +248,31 @@ def test_roundoff():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+def test_ne():
+    import time
+    t1 = time.time()
+
+    # These should all compare as unequal.
+    x = [1, 2, 3]
+    f = [4, 5, 6]
+    x2 = [1.1, 2.2, 3.3]
+    f2 = [4.4, 5.5, 6.6]
+    lts = [galsim.LookupTable(x, f),
+           galsim.LookupTable(x, f2),
+           galsim.LookupTable(x2, f),
+           galsim.LookupTable(x, f, interpolant='floor'),
+           galsim.LookupTable(x, f, x_log=True),
+           galsim.LookupTable(x, f, f_log=True)]
+    all_obj_diff(lts)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 if __name__ == "__main__":
     test_table()
     test_init()
     test_log()
     test_roundoff()
+    test_ne()

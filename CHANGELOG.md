@@ -15,10 +15,16 @@ API Changes
 Bug Fixes
 ---------
 
-- Fixed a bug in some of the WCS classes if the RA/Dec axes in the FITS header
-  are reversed (which is allowed by the FITS standard). (#681)
+- Fixed bug in config that did not allow users to pass in a filename for
+  COSMOS (correlated) noise.  (#732)
+- Improved ability of galsim.fits.read to handle invalid but fixable FITS
+  headers. (#602)
+- Fixed bug in des module related to building meds file with wcs taken from
+  the input images. (#654)
 - Improved ability of ChromaticObjects to find fiducial achromatic profiles
   and wavelengths with non-zero flux. (#680)
+- Fixed a bug in some of the WCS classes if the RA/Dec axes in the FITS header
+  are reversed (which is allowed by the FITS standard). (#681)
 - Fixed a bug in the way Images are instantiated for certain combinations of
   ChromaticObjects and image-setup keyword arguments (#683)
 - Added ability to manipulate the width of the moment-measuring weight function
@@ -27,7 +33,10 @@ Bug Fixes
   where the resulting object did not set the index attribute properly. (#694)
 - Fixed an error in the `CCDNoise.getVariance()` function, as well as some
   errors in the documentation about the units of CCDNoise parameters. (#713)
-
+- Fixed a bug in how InterpolatedKImage checked for properly Hermitian input
+  images.
+- Updated ups table file so that setup command is `setup galsim` instead of
+  `setup GalSim` (#724)
 
 Deprecated Features
 -------------------
@@ -42,9 +51,17 @@ New Features
   truth information.  cf. demos 9 and 10. (#301, #691)
 - Added methods calculateHLR, calculateMomentRadius, and calculateFWHM to both
   GSObject and Image. (#308)
+- Added BoundsI.numpyShape() to easily get the numpy shape that corresponds
+  to a given bounds instance. (#654)
+- Have FITS files with unsigned integer data automatically convert that into
+  the corresponding signed integer data type for use in GalSim, rather than
+  converting to float64, which it had been doing. (#654)
+- Made COSMOSCatalog write an index parameter for both parameteric and real
+  galaxy types to indicate the index of the object in the full COSMOS catalog.
+  (#654, #694)
 - Added ability to specify lambda and r0 separately for Kolmogorov to have
   GalSim do the conversion from radians to the given scale unit. (#657)
-- Made it possible to initialize an InterpolatedImage from a user-specified 
+- Made it possible to initialize an InterpolatedImage from a user-specified
   HDU in a FITS file with multiple extensions. (#660)
 - Changed `galsim.fits.writeMulti` to allow any of the "image"s to be
   already-built hdus, which are included as is. (#691)
@@ -54,6 +71,9 @@ New Features
 - Made it possible to impose some cuts on galaxy image quality in the
   COSMOSCatalog class. (#693)
 - Added `convergence_threshold` as a parameter of HSMParams. (#709)
+- Improved the readability of Image and BaseDeviate reprs. (#723)
+- Sped up some Bandpass and SED functionality (and LookupTable class in
+  general). (#735)
 
 
 Updates to galsim executable
@@ -75,7 +95,7 @@ New config features
   the config parser.  The code with the new type definitions should be given
   as a module for the code to import using the new 'modules' top-level
   config field. (#691)
-- Added the 'template' option to read another config file and use either the 
+- Added the 'template' option to read another config file and use either the
   whole file as a template or just a given field from the file. (#691)
 - Made '$' and '@' shorthand for 'Eval' and 'Current' types respectively in
   string values.  e.g. '$(@image.pixel_scale) * 2' would be parsed to mean
@@ -87,6 +107,9 @@ New config features
   'gsparams', among other less commonly used parameters.  However, for
   backwards compatibility, they are all still allowed in the image field
   as well. (#691)
-- Added new stamp type=Ring to effect ring tests.  This replaces the old 
-  gsobject type=Ring, which is now deprecated.  See demo5 and demo10 for 
+- Added more example scripts to showcase how to use some of the new config
+  features to make fairly sophisticated simulations.  cf. examples/great3 and
+  examples/des. (#654, #691)
+- Added new stamp type=Ring to effect ring tests.  This replaces the old
+  gsobject type=Ring, which is now deprecated.  See demo5 and demo10 for
   examples of the new preferred syntax. (#698)

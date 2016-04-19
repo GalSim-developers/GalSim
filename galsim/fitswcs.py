@@ -272,7 +272,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             # though it won't do anything, since that's how the numpy array fmod2 has to work.
             func = lambda pix: (
                     (numpy.fmod(self._wcs.all_pix2world(numpy.atleast_2d(pix),origin) - 
-                                rd + 180,360) - 180).flatten() )
+                                rd + 180,360) - 180).ravel() )
 
             # This is the main bit that the astropy function is missing.
             # The scipy.optimize.broyden1 function can't handle starting at exactly the right
@@ -710,7 +710,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
         # Need this to look like 
         #    [ x1, y1, x2, y2, ... ] 
         # if input is either scalar x,y or two arrays.
-        xy = numpy.array([x, y]).transpose().flatten()
+        xy = numpy.array([x, y]).transpose().ravel()
         
         # The OS cannot handle arbitrarily long command lines, so we may need to split up
         # the list into smaller chunks.
@@ -789,7 +789,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
     def _xy(self, ra, dec):
         import subprocess
         import numpy
-        rd = numpy.array([ra, dec]).transpose().flatten()
+        rd = numpy.array([ra, dec]).transpose().ravel()
         rd *= galsim.radians / galsim.degrees
         for digits in range(10,5,-1):
             rd_strs = [ str(z) for z in rd ]
