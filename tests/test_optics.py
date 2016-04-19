@@ -811,9 +811,6 @@ def test_OpticalPSF_lamdiam():
     except ImportError:
         print 'The assert_raises tests require nose'
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
 
 def test_ne():
     import time
@@ -836,7 +833,7 @@ def test_ne():
             galsim.OpticalPSF(lam_over_diam=1.0, defocus=0.1, gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, aberrations=[0, 0, 0, 0, 0.2], gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, nstruts=2, gsparams=gsp1),
-            galsim.OpticalPSF(lam_over_diam=1.0, nstruts=2, strut_thick=0.1, gsparams=gsp1),
+            galsim.OpticalPSF(lam_over_diam=1.0, nstruts=2, strut_thick=0.3, gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, nstruts=2, strut_angle=10.*galsim.degrees,
                               gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, obscuration=0.5, gsparams=gsp1),
@@ -867,12 +864,12 @@ if __name__ == "__main__":
     # test_otf_image_view()
     # test_mtf_image_view()
     # test_ptf_image_view()
-    test_OpticalPSF_flux()
-    test_OpticalPSF_vs_Airy()
-    test_OpticalPSF_vs_Airy_with_obs()
+    # test_OpticalPSF_flux()
+    # test_OpticalPSF_vs_Airy()
+    # test_OpticalPSF_vs_Airy_with_obs()
     test_OpticalPSF_aberrations_struts()
-    test_OpticalPSF_aberrations_kwargs()
-    test_OpticalPSF_flux_scaling()
-    test_OpticalPSF_pupil_plane()
-    test_OpticalPSF_lamdiam()
-    test_ne()
+    # test_OpticalPSF_aberrations_kwargs()
+    # test_OpticalPSF_flux_scaling()
+    # test_OpticalPSF_pupil_plane()
+    # test_OpticalPSF_lamdiam()
+    # test_ne()

@@ -485,8 +485,8 @@ class AtmosphericScreen(object):
         # "Boil" the atmsopheric screen if alpha not 1.
         if self.alpha != 1.0:
             self.screen = self.alpha*self.screen + np.sqrt(1.-self.alpha**2)*self._random_screen()
-            self.tab2d = galsim.LookupTable2D(self._x0, self._y0, self._dx, self._dy, self.screen,
-                                              edge_mode='wrap')
+            wrap_screen = np.pad(self.screen, [(0,1), (0,1)], mode='wrap')
+            self.tab2d = galsim.LookupTable2D(self._xs, self._ys, wrap_screen, edge_mode='wrap')
 
     def advance_by(self, dt):
         """Advance phase screen by specified amount of time.
@@ -531,13 +531,10 @@ class AtmosphericScreen(object):
         @param theta_y  y-component of field angle corresponding to center of output array.
         @returns        Wavefront lag or lead in nanometers over aperture.
         """
-        scale = aper.pupil_scale
-        nx = aper.npix
-        xmin = self.origin[0] + 1000*self.altitude*theta_x.tan() - 0.5*scale*(nx-1)
-        xmax = xmin + scale*(nx-1)
-        ymin = self.origin[1] + 1000*self.altitude*theta_y.tan() - 0.5*scale*(nx-1)
-        ymax = ymin + scale*(nx-1)
-        return self.tab2d.eval_grid(xmin, xmax, nx, ymin, ymax, nx)
+        xs = ys = np.arange(aper.npix)*aper.pupil_scale
+        xs += self.origin[0] + 1000*self.altitude*theta_x.tan() - 0.5*aper.pupil_scale*(aper.npix-1)
+        ys += self.origin[1] + 1000*self.altitude*theta_y.tan() - 0.5*aper.pupil_scale*(aper.npix-1)
+        return self.tab2d(xs, ys)
 
     def reset(self):
         """Reset phase screen back to time=0."""
@@ -547,10 +544,10 @@ class AtmosphericScreen(object):
         # Only need to reset/create tab2d if not frozen or doesn't already exist
         if self.alpha != 1.0 or not hasattr(self, 'tab2d'):
             self.screen = self._random_screen()
-            self._x0 = self._y0 = -0.5*(self.npix-1)*self.screen_scale
-            self._dx = self._dy = self.screen_scale
-            self.tab2d = galsim.LookupTable2D(self._x0, self._y0, self._dx, self._dy, self.screen,
-                                              edge_mode='wrap')
+            wrap_screen = np.pad(self.screen, [(0,1), (0,1)], mode='wrap')
+            self._xs = np.linspace(-0.5*self.screen_size, 0.5*self.screen_size, self.npix+1)
+            self._ys = self._xs
+            self.tab2d = galsim.LookupTable2D(self._xs, self._ys, wrap_screen, edge_mode='wrap')
 
 
 # Some utilities for working with Zernike polynomials
@@ -1179,14 +1176,11 @@ class PhaseScreenPSF(GSObject):
         # Even if two PSFs were generated with different sets of parameters, they will act
         # identically if their img and interpolant match.
         return (self.img == other.img and
-                self.interpolant == other.interpolant)
+                self.interpolant == other.interpolant and
+                self.gsparams == other.gsparams)
 
     def __hash__(self):
-        # Cache since self.img may be large
-        if not hasattr(self, '_hash'):
-            self._hash = hash(("galsim.PhaseScreenPSF", self.interpolant))
-            self._hash ^= hash((tuple(self.img.array.ravel()), self.img.wcs, self.img.bounds))
-        return self._hash
+        return hash(("galsim.PhaseScreenPSF", self.ii))
 
     def _step(self):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
@@ -1202,11 +1196,11 @@ class PhaseScreenPSF(GSObject):
         self.img *= (flux / (self.img.sum() * self.scale**2))
         self.img = galsim.ImageD(self.img.astype(np.float64), scale=self.scale)
 
-        ii = galsim.InterpolatedImage(
+        self.ii = galsim.InterpolatedImage(
             self.img, x_interpolant=self.interpolant, calculate_stepk=True, calculate_maxk=True,
             use_true_center=False, normalization='sb', gsparams=gsparams
         )
-        GSObject.__init__(self, ii)
+        GSObject.__init__(self, self.ii)
 
 
 def _listify(arg):
@@ -1426,7 +1420,8 @@ class OpticalPSF(GSObject):
             aper = galsim.Aperture.fromGSObject(
                     airy, lam, pad_factor=pad_factor, scale_unit=scale_unit,
                     diam=diam, obscuration=obscuration, nstruts=nstruts, strut_thick=strut_thick,
-                    strut_angle=strut_angle, circular_pupil=circular_pupil)
+                    strut_angle=strut_angle, circular_pupil=circular_pupil,
+                    oversampling=oversampling)
         self._aper = aper
 
         # Finally, put together to make the PSF.

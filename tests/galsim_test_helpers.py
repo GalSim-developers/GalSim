@@ -358,7 +358,8 @@ def all_obj_diff(objs):
         for j, objj in enumerate(objs):
             if i == j:
                 continue
-            assert obji != objj, "Found equivalent objects {} == {}".format(obji, objj)
+            assert obji != objj, ("Found equivalent objects {} == {} at indices {} and {}"
+                                  .format(obji, objj, i, j))
 
     # Now check that all hashes are unique (if the items are hashable).
     if not isinstance(objs[0], Hashable):
