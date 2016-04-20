@@ -354,34 +354,34 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
         return np.array([ x[0], x[-1] ]), np.array([ f[0], f[-1] ])
     thresh = total_integ * rel_err
 
+    x_range = x[-1] - x[0]
     if not preserve_range:
-        errleft = 0.5 * (abs(f[1])+abs(f[0])) * (x[1]-x[0])
-        errright = 0.5 * (abs(f[-1])+abs(f[-2])) * (x[-1]-x[-2])
-        accumulated_err = 0.0
-        # arbitrarily allocate half of error budget to trimming the endpoints.
-        # while at least one endpoint can be trimmed:
-        while accumulated_err+min(errleft, errright) < thresh * 0.5:
-            # if either endpoint could be trimmed, then trim the one leading to the smaller error,
-            # under the assumption that this is more likely to lead to trimming a larger total
-            # number of points.
-            if accumulated_err+max(errleft, errright) < thresh * 0.5:
-                if errleft < errright:
-                    x, f = x[1:], f[1:]
-                    accumulated_err += errleft
-                    errleft = 0.5 * (abs(f[1])+abs(f[0])) * (x[1]-x[0])
-                else:
-                    x, f = x[:-1], f[:-1]
-                    accumulated_err += errright
-                    errright = 0.5 * (abs(f[-1])+abs(f[-2])) * (x[-1]-x[-2])
-            elif accumulated_err+errleft < thresh * 0.5:
-                x, f = x[1:], f[1:]
-                accumulated_err += errleft
-                errleft = 0.5 * (abs(f[1])+abs(f[0])) * (x[1]-x[0])
-            else:  # accumulated_err+effright < thresh * 0.5:
-                x, f = x[:-1], f[:-1]
-                accumulated_err += errright
-                errright = 0.5 * (abs(f[-1])+abs(f[-2])) * (x[-1]-x[-2])
-        thresh -= accumulated_err  # in case we didn't use all of thresh*0.5
+        # Remove values from the front that integrate to less than thresh.
+        err_integ1 = 0.5 * (abs(f[0]) + abs(f[1])) * (x[1] - x[0])
+        k0 = 0
+        while k0 < len(x)-2 and err_integ1 < thresh * (x[k0+1]-x[0]) / x_range:
+            k0 = k0+1
+            err_integ1 += 0.5 * (abs(f[k0]) + abs(f[k0+1])) * (x[k0+1] - x[k0])
+        # Now the integral from 0 to k0+1 (inclusive) is a bit too large.
+        # That means k0 is the largest value we can use that will work as the starting value.
+
+        # Remove values from the back that integrate to less than thresh.
+        k1 = len(x)-1
+        err_integ2 = 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
+        while k1 > k0 and err_integ2 < thresh * (x[-1]-x[k1-1]) / x_range:
+            k1 = k1-1
+            err_integ2 += 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
+        # Now the integral from k1-1 to len(x)-1 (inclusive) is a bit too large.
+        # That means k1 is the smallest value we can use that will work as the ending value.
+
+        # Subtract the error so far from thresh
+        thresh -= np.trapz(abs(f[:k0]),x[:k0]) + np.trapz(abs(f[k1:]),x[k1:])
+
+        x = x[k0:k1+1]  # +1 since end of range is given as one-past-the-end.
+        f = f[k0:k1+1]
+
+        # And update x_range for the new values
+        x_range = x[-1] - x[0]
 
     # Check again for noop after trimming endpoints.
     if len(x) <= 2:
@@ -410,7 +410,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
 # In Issue #739, Josh wrote the above algorithm as a replacement for the one here.
 # It had been buggy, not actually hitting its target relative accuracy, so on the same issue,
 # Mike fixed this algorithm to at least work correctly.  However, we recommend using the above
-# algorith, since it keeps fewer sample locations for a given rel_err than the old algorithm.
+# algorithm, since it keeps fewer sample locations for a given rel_err than the old algorithm.
 # On the other hand, the old algorithm can be quite a bit faster, being O(N), not O(N^2), so
 # we retain the old algorithm here in case we want to re-enable it for certain applications.
 def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
@@ -462,7 +462,7 @@ def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
             k0 = k0+1
             err_integ1 += 0.5 * (abs(f[k0]) + abs(f[k0+1])) * (x[k0+1] - x[k0])
         # Now the integral from 0 to k0+1 (inclusive) is a bit too large.
-        # That means k0 is the largest value we can use that will work as the staring value.
+        # That means k0 is the largest value we can use that will work as the starting value.
 
         # Remove values from the back that integrate to less than thresh.
         k1 = len(x)-1
