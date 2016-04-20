@@ -1118,7 +1118,7 @@ class PhaseScreenPSF(GSObject):
     def __init__(self, screen_list, lam=500., exptime=0.0, flux=1.0,
                  theta_x=0.0*galsim.arcmin, theta_y=0.0*galsim.arcmin,
                  interpolant=None, aper=None, scale_unit=galsim.arcsec,
-                 gsparams=None, _eval_now=True, _bar=None,
+                 gsparams=None, _eval_now=True, _bar=None, suppress_warning=False,
                  **kwargs):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
         # progress bar during long calculations.
@@ -1160,7 +1160,7 @@ class PhaseScreenPSF(GSObject):
                 self.screen_list.advance()
                 if _bar is not None:
                     _bar.update()
-            self._finalize(flux, gsparams)
+            self._finalize(flux, gsparams, suppress_warning)
 
     def __str__(self):
         return ("galsim.PhaseScreenPSF(%s, lam=%s, exptime=%s)" %
@@ -1189,18 +1189,37 @@ class PhaseScreenPSF(GSObject):
         ftexpwf = np.fft.fft2(np.fft.fftshift(expwf))
         self.img += np.abs(ftexpwf)**2
 
-    def _finalize(self, flux, gsparams):
+    def _finalize(self, flux, gsparams, suppress_warning):
         """Take accumulated integrated PSF image and turn it into a proper GSObject."""
-        del self.aper  # don't need this any more, save some RAM
         self.img = np.fft.fftshift(self.img)
         self.img *= (flux / (self.img.sum() * self.scale**2))
         self.img = galsim.ImageD(self.img.astype(np.float64), scale=self.scale)
 
         self.ii = galsim.InterpolatedImage(
-            self.img, x_interpolant=self.interpolant, calculate_stepk=True, calculate_maxk=True,
-            use_true_center=False, normalization='sb', gsparams=gsparams
-        )
+                self.img, x_interpolant=self.interpolant, calculate_stepk=True, calculate_maxk=True,
+                use_true_center=False, normalization='sb', gsparams=gsparams)
+
         GSObject.__init__(self, self.ii)
+
+        if not suppress_warning:
+            specified_stepk = 2*np.pi/(self.img.array.shape[0]*self.scale)
+            specified_maxk = np.pi/self.scale
+            observed_stepk = self.SBProfile.stepK()
+            observed_maxk = self.SBProfile.maxK()
+
+            if observed_stepk < specified_stepk:
+                import warnings
+                warnings.warn(
+                    "The calculated stepk (%g) for PhasePSF is smaller "%observed_stepk +
+                    "than what was used to build the wavefront (%g). "%specified_stepk +
+                    "This could lead to aliasing problems. ") # +
+                    # "Using pad_factor >= %f is recommended."%(pad_factor * stepk / final_stepk))
+            # if observed_maxk < 0.5*specified_maxk:
+            #     import warnings
+            #     warnings.warn(
+            #         "The calculated maxk (%g) for PhasePSF is much smaller "%observed_maxk +
+            #         "than what was used to build the wavefront (%g). "%specified_maxk +
+            #         "This could indicate that oversampling is set too small.")
 
 
 def _listify(arg):
