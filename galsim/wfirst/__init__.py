@@ -101,6 +101,9 @@ Currently, the module includes the following numbers:
     ipc_kernel - The 3x3 kernel to be used in simulations of interpixel capacitance (IPC), using
                  galsim.wfirst.applyIPC().
 
+    persistence_coefficients - The retention fraction of the previous eight exposures in a simple,
+                               linear model for persistence.
+
     n_sca - The number of SCAs in the focal plane.
 
     n_pix_tot - Each SCA has n_pix_tot x n_pix_tot pixels.
@@ -138,6 +141,9 @@ This module also contains the following routines:
                               the level expected for WFIRST.
 
     applyIPC() - A routine to incorporate the effects of interpixel capacitance in WFIRST images.
+
+    applyPersistence() - A routine to incorporate the effects of persistence - the residual images
+                         from earlier exposures after resetting.
 
     allDetectorEffects() - A routine to add all sources of noise and all (implemented) detector
                            effects to an image containing astronomical objects plus background.  In
