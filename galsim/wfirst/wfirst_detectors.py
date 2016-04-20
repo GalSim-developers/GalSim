@@ -96,7 +96,11 @@ def applyPersistence(img, prev_exposures):
     @param prev_exposures    List of up to 8 Image instances in the order of exposures, with the
                              recent exposure being the first element.
     """
-    img.applyPersistence(img_list,wfirst.persistence_coefficients)
+    if hasattr(prev_exposures,'__iter__'):
+      n_exp = min(len(prev_exposures),len(galsim.wfirst.persistence_coefficients))
+      img.applyPersistence(prev_exposures[:n_exp],galsim.wfirst.persistence_coefficients[:n_exp])
+    else: # only the previous exposure provided
+      img.applyPersistence(prev_exposures,galsim.wfirst.persistence_coefficients[0])
 
 
 def allDetectorEffects(img, rng=None, exptime=None, prev_exposures=[]):
