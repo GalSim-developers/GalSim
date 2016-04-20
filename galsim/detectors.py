@@ -298,8 +298,8 @@ def applyPersistence(self,imgs,coeffs):
 
         >>> img.applyPersistence(imgs=img_list, coeffs=coeffs_list)
 
-    @ param imgs:       an Image instance or a list of previous Image instances that still persist
-    @ param coeffs:     specifies the retention factor for one or all of the Image instances listed
+    @ param imgs        An Image instance or a list of previous Image instances that still persist
+    @ param coeffs      Specifies the retention factor for one or all of the Image instances listed
                         in 'imgs'. Different retention factors for different instances can be
                         specified as a list or tuples in the same order as that of the images.
 
