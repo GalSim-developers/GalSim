@@ -350,6 +350,8 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
         return x,f
 
     total_integ = np.trapz(abs(f), x)
+    if total_integ == 0:
+        return np.array([ x[0], x[-1] ]), np.array([ f[0], f[-1] ])
     thresh = total_integ * rel_err
 
     if not preserve_range:
