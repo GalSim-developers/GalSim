@@ -97,10 +97,10 @@ def applyPersistence(img, prev_exposures):
                              recent exposure being the first element.
     """
     if hasattr(prev_exposures,'__iter__'):
-      n_exp = min(len(prev_exposures),len(galsim.wfirst.persistence_coefficients))
-      img.applyPersistence(prev_exposures[:n_exp],galsim.wfirst.persistence_coefficients[:n_exp])
+        n_exp = min(len(prev_exposures),len(galsim.wfirst.persistence_coefficients))
+        img.applyPersistence(prev_exposures[:n_exp],galsim.wfirst.persistence_coefficients[:n_exp])
     else: # only the previous exposure provided
-      img.applyPersistence(prev_exposures,galsim.wfirst.persistence_coefficients[0])
+        img.applyPersistence(prev_exposures,galsim.wfirst.persistence_coefficients[0])
 
 
 def allDetectorEffects(img, rng=None, exptime=None, prev_exposures=[]):
