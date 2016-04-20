@@ -405,7 +405,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
         del errs[index]
         errs.insert(index, errright)
         errs.insert(index, errleft)
-    return x[splitpoints].tolist(), f[splitpoints].tolist()
+    return x[splitpoints], f[splitpoints]
 
 # In Issue #739, Josh wrote the above algorithm as a replacement for the one here.
 # It had been buggy, not actually hitting its target relative accuracy, so on the same issue,
