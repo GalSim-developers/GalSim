@@ -494,58 +494,54 @@ def test_Persistence_basic():
 
     # Test for zero coefficient
     im1 = im.copy()
-    im1.addPersistence(imgs=im_prev,coeffs=0.0)
+    im1.applyPersistence(imgs=im_prev,coeffs=[0.0]*len(im_prev))
     np.testing.assert_array_equal(im1.array, im.array,
-        err_msg="Images do not agree when the persistence coefficient is zero.")
-
-    im2 = im.copy()
-    im2.addPersistence(imgs=im_prev,coeffs=[0.0]*len(im_prev))
-    np.testing.assert_array_equal(im2.array, im.array,
         err_msg="Images do not agree when the persistence coefficients are all zeros.")
 
-    # Test for a float coeff and constant array
+    # Test for a constant array
     im1 = im.copy()
     im2 = im.copy()
-    im1.addPersistence(imgs=im_prev, coeffs=0.1)
-    im2.addPersistence(imgs=im_prev, coeffs=0.1*np.ones_like(im_prev))
+    for img in im_prev:
+      im1 += 0.1*img
+    im2.applyPersistence(imgs=im_prev, coeffs=0.1*np.ones_like(im_prev))
     np.testing.assert_array_equal(im1.array, im2.array,
-        err_msg="Images differ when the persistence coefficient is a float.")
+        err_msg="Images differ when the persistence coefficients is a constant array.")
 
     # Test for a single previous image
     im_new = im.copy()
-    im_new.addPersistence(imgs=im_prev[0], coeffs=0.4)
+    im_new.applyPersistence(imgs=im_prev[0], coeffs=0.4)
     np.testing.assert_array_equal(im_new.array, im.array+0.4*im_prev[0].array,
             err_msg="Images differ for persistence length is 1.")
 
     # Test for identical copies of same image
     im_new = im.copy()
     n_im = 3
-    im_new.addPersistence(imgs=[im]*n_im, coeffs=0.5**np.linspace(1,n_im,n_im)) #0.5,0.25,0.125
+    im_new.applyPersistence(imgs=[im]*n_im, coeffs=0.5**np.linspace(1,n_im,n_im)) #0.5,0.25,0.125
     np.testing.assert_array_almost_equal(im_new.array, im.array*(2.-1./2**n_im),7, #sum of GP terms
             err_msg="Images differ when identical copies of the same image persist.")
 
     # Test for different lengths of imgs and coeffs
     im_new = im.copy()
     try:
-        np.testing.assert_raises(TypeError, im_new.addPersistence, im_prev, [0.2, 0.3])
+        np.testing.assert_raises(TypeError, im_new.applyPersistence, im_prev, [0.2, 0.3])
     except ImportError:
         print 'The assert_raises tests require nose'
 
     # Test for a single image and coeffs as list of length 1
     im_new = im.copy()
     try:
-        np.testing.assert_raises(TypeError, im_new.addPersistence, im_prev[0], [1.0])
+        np.testing.assert_raises(TypeError, im_new.applyPersistence, im_prev[0], [1.0])
     except ImportError:
         print 'The assert_raises tests require nose'
 
     # Testing the multiple images and varying coeffs
     im1 = im.copy()
     im2 = im.copy()
-    im1.addPersistence(imgs=im_prev, coeffs=np.linspace(1,len(im_prev), len(im_prev)))
+    im1.applyPersistence(imgs=im_prev, coeffs=np.linspace(1,len(im_prev), len(im_prev)))
     for i in xrange(len(im_prev)):
         im2 += (i+1)*im_prev[i]
     np.testing.assert_array_equal(im1.array, im2.array,
-        err_msg="'addPersistence' routine fails for multiple images with varying coefficients.")
+        err_msg="'applyPersistence' routine fails for multiple images with varying coefficients.")
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
