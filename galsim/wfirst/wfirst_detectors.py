@@ -85,7 +85,7 @@ def applyIPC(img, edge_treatment='extend', fill_value=None):
 def applyPersistence(img, prev_exposures):
     """
     Applies the persistence effect to the Image instance by adding a small fraction of the previous
-    exposures (upto 8) supplied as the 'prev_exposures' argument.
+    exposures (up to 8) supplied as the 'prev_exposures' argument.
 
     For more information about persistence, see the docstring for galsim.Image.applyPersistence.
     Unlike that routine, this one does not need the coefficients to be specified. However, the list
@@ -93,7 +93,7 @@ def applyPersistence(img, prev_exposures):
     ignored.
 
     @param img               The Image to be transformed.
-    @param prev_exposures    List of upto 8 Image instances in the order of exposures, with the
+    @param prev_exposures    List of up to 8 Image instances in the order of exposures, with the
                              recent exposure being the first element.
     """
     img.applyPersistence(img_list,wfirst.persistence_coefficients)
@@ -115,7 +115,7 @@ def allDetectorEffects(img, rng=None, exptime=None, prev_exposures=[]):
                              None, a new one will be initialized.  [default: None]
     @param exptime           The exposure time, in seconds.  If None, then the WFIRST default
                              exposure time will be used.  [default: None]
-    @param prev_exposures    List of upto 8 Image instances in the order of exposures, with the
+    @param prev_exposures    List of up to 8 Image instances in the order of exposures, with the
                              recent exposure being the first element. [default: []]
     """
     # Deal appropriately with passed-in RNG, exposure time.
