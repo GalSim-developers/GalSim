@@ -443,7 +443,7 @@ class Bandpass(object):
         return Bandpass(self._orig_tp, blue_limit, red_limit, self.wave_type,
                         _wave_list=wave_list, _tp=self._tp)
 
-    def thin(self, rel_err=1.e-4, preserve_range=False):
+    def thin(self, rel_err=1.e-4, preserve_range=True):
         """Thin out the internal wavelengths of a Bandpass that uses a LookupTable.
 
         If the bandpass was initialized with a LookupTable or from a file (which internally
@@ -461,7 +461,7 @@ class Bandpass(object):
         @param preserve_range     Should the original range (`blue_limit` and `red_limit`) of the
                                   Bandpass be preserved? (True) Or should the ends be trimmed to
                                   include only the region where the integral is significant? (False)
-                                  [default: False]
+                                  [default: True]
 
         @returns the thinned Bandpass.
         """

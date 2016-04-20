@@ -315,7 +315,7 @@ def _lin_approx_split(x, f):
     i = np.argmin(np.sum(errs, axis=1))
     return i+1, errs[i]
 
-def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
+def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=True):
     """
     Remove items from a set of tabulated f(x) values so that the error in the integral is still
     accurate to a given relative accuracy.
@@ -329,7 +329,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
                             [default: 1.e-4]
     @param preserve_range   Should the original range of `x` be preserved? (True) Or should the ends
                             be trimmed to include only the region where the integral is
-                            significant? (False)  [default: False]
+                            significant? (False)  [default: True]
 
     @returns a tuple of lists `(x_new, y_new)` with the thinned tabulation.
     """
