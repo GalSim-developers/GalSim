@@ -306,7 +306,7 @@ def applyPersistence(self,imgs,coeffs):
     @ returns None
     """
 
-    if isinstance(imgs,galsim.Image) and (isinstance(coeffs,float) or isinstance(coeffs,int)):
+    if isinstance(imgs,galsim.Image) and isinstance(coeffs,float):
         self += coeffs*imgs
 
     elif hasattr(imgs,'__iter__') and hasattr(coeffs,'__iter__'):
@@ -320,9 +320,9 @@ def applyPersistence(self,imgs,coeffs):
                 if not isinstance(img,galsim.Image):
                     raise ValueError("In 'applyPersistence', the objects in 'imgs' must be "
                                      "galsim.Image instances")
-                if not isinstance(coeff,float) and not isinstance(coeff,int):
+                if not isinstance(coeff,float):
                     raise ValueError("In 'applyPersistence', the objects in 'coeffs' must be "
-                                     "of type float or int")
+                                     "of type float")
 
                 self += coeff*img
 
