@@ -1683,9 +1683,12 @@ def test_ChromaticAiry():
     #
     # path, filename = os.path.split(__file__)
     # datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
-    # bandpass = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat')).thin()
-    # disk_SED = galsim.SED(os.path.join(datapath, 'CWW_Sbc_ext.sed'), wave_type='ang')
-    # disk_SED = disk_SED.withFluxDensity(target_flux_density=0.3, wavelength=500.0)
+    # bandpass = (galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
+    #             .truncate(relative_throughput=1e-3)
+    #             .thin(rel_err=1e-3))
+    # disk_SED = (galsim.SED(os.path.join(datapath, 'CWW_Sbc_ext.sed'), wave_type='ang')
+    #             .thin(rel_err=1e-3)
+    #             .withFluxDensity(target_flux_density=0.3, wavelength=500.0))
     #
     # star = galsim.Gaussian(sigma=1.e-8)*disk_SED
     #
