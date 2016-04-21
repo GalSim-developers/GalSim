@@ -1341,7 +1341,7 @@ def test_interpolated_ChromaticObject():
     sigma_0 = 0.06
     scale = 0.02
     n_interp = 100
-    oversample_fac = 1.5
+    oversample_fac = 1.6
     blue_limit = min(bandpass.blue_limit, bandpass_g.blue_limit)
     red_limit = max(bandpass.red_limit, bandpass_g.red_limit)
     waves = np.linspace(blue_limit, red_limit, n_interp)
@@ -1448,11 +1448,11 @@ def test_interpolated_ChromaticObject():
     # The 0.5 in the line below used to be 1.0.  When we improved the .thin() method, this test
     # started to fail in 0.1% of pixels.  Making the chromaticity less extreme allowed the test
     # to pass.
-    chrom_shift_y = lambda w: 0.5*scale*(w-500.)
+    chrom_shift_y = lambda w: scale*(w-500.)
     # The 0.05 in the line below used to be 0.1.  When we went to the new extended SEDs, this unit
     # test began to fail by a tiny margin (0.02%).  Since this was so marginal I changed the
     # transformation to be a bit less extreme.
-    chrom_dilate = lambda w: 1.0+0.05*(w-500.)/500.
+    chrom_dilate = lambda w: 1.0+0.1*(w-500.)/500.
     exact_psf = exact_psf.shear(shear=chrom_shear).shift(dx=0.,dy=chrom_shift_y).dilate(chrom_dilate)
     # Note here we are checking the use of more difficult input wavelengths.
     interp_psf = exact_psf.interpolate(tricky_waves, oversample_fac=oversample_fac)
@@ -1970,29 +1970,29 @@ def test_ne():
 
 
 if __name__ == "__main__":
-    test_draw_add_commutativity()
-    test_ChromaticConvolution_InterpolatedImage()
-    test_chromatic_add()
-    test_dcr_moments()
-    test_chromatic_seeing_moments()
-    test_monochromatic_filter()
-    test_chromatic_flux()
-    test_double_ChromaticSum()
-    test_ChromaticConvolution_of_ChromaticConvolution()
-    test_ChromaticAutoConvolution()
-    test_ChromaticAutoCorrelation()
-    test_ChromaticObject_expand()
-    test_ChromaticObject_rotate()
-    test_ChromaticObject_shear()
-    test_ChromaticObject_shift()
-    test_ChromaticObject_compound_affine_transformation()
-    test_analytic_integrator()
-    test_gsparam()
-    test_separable_ChromaticSum()
-    test_centroid()
+    # test_draw_add_commutativity()
+    # test_ChromaticConvolution_InterpolatedImage()
+    # test_chromatic_add()
+    # test_dcr_moments()
+    # test_chromatic_seeing_moments()
+    # test_monochromatic_filter()
+    # test_chromatic_flux()
+    # test_double_ChromaticSum()
+    # test_ChromaticConvolution_of_ChromaticConvolution()
+    # test_ChromaticAutoConvolution()
+    # test_ChromaticAutoCorrelation()
+    # test_ChromaticObject_expand()
+    # test_ChromaticObject_rotate()
+    # test_ChromaticObject_shear()
+    # test_ChromaticObject_shift()
+    # test_ChromaticObject_compound_affine_transformation()
+    # test_analytic_integrator()
+    # test_gsparam()
+    # test_separable_ChromaticSum()
+    # test_centroid()
     test_interpolated_ChromaticObject()
-    test_ChromaticOpticalPSF()
-    test_ChromaticAiry()
-    test_chromatic_fiducial_wavelength()
-    test_chromatic_image_setup()
-    test_ne()
+    # test_ChromaticOpticalPSF()
+    # test_ChromaticAiry()
+    # test_chromatic_fiducial_wavelength()
+    # test_chromatic_image_setup()
+    # test_ne()
