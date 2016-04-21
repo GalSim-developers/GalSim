@@ -46,9 +46,9 @@ for band in 'ugrizy':
 """# LSST {0}-band total throughput at airmass 1.2
 # File taken from https://dev.lsstcorp.org/cgit/LSST/sims/throughputs.git/snapshot/throughputs-1.2.tar.gz
 #
-#  Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-5
+#  Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
 #
 # Wavelength(nm)  Throughput(0-1)
 """.format(band))
-        for i in range(len(x1)):
-            out.write(" {0:>10.2f}    {1:>10.5f}\n".format(x1[i], f1[i]))
+        for i in range(len(x3)):
+            out.write(" {0:>10.2f}    {1:>10.5f}\n".format(x3[i], f3[i]))

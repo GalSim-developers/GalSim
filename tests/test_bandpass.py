@@ -54,7 +54,7 @@ def test_Bandpass_basic():
                         blue_limit=400, red_limit=550),
         galsim.Bandpass(galsim.LookupTable([3000,8700], [0.3, 0.87], interpolant='linear'),
                           wave_type='Angstroms').truncate(400,550),
-        galsim.Bandpass(galsim.LookupTable([100, 400-1.e-10, 400, 550, 550+1.e-10, 900],
+        galsim.Bandpass(galsim.LookupTable([100, 400-1.e-12, 400, 550, 550+1.e-12, 900],
                                            [0., 0., 0.4, 0.55, 0., 0.], interpolant='linear')),
     ]
     k1 = len(b_list)
@@ -68,15 +68,16 @@ def test_Bandpass_basic():
         b_list[4].thin(),
         b_list[5].thin(),
         b_list[6].thin(),
-        b_list[6].thin(preserve_range=True),
+        b_list[6].thin(preserve_range=False),
         b_list[7].thin(),
-        b_list[11].thin(),
-        b_list[11].thin(preserve_range=True),
+        b_list[11].thin(preserve_range=False, trim_leading_zeros=False),
+        b_list[11].thin(preserve_range=False),
+        b_list[11].thin()
     ]
 
     for k,b in enumerate(b_list):
         print k,' b = ',b
-        if k not in [k1-1, len(b_list)-1]:
+        if k not in [k1-1, len(b_list)-2, len(b_list)-1]:
             np.testing.assert_almost_equal(b.blue_limit, 400, decimal=12)
             np.testing.assert_almost_equal(b.red_limit, 550, decimal=12)
         np.testing.assert_almost_equal(b(400), 0.4, decimal=12)

@@ -62,11 +62,11 @@ for sedname in sednames:
 #  Obtained from ZPHOT code at
 #  'http://webast.ast.obs-mip.fr/hyperz/zphot_src_1.1.tar.gz'
 #
-#  Truncated to wavelengths less than 12000 Angstroms, and thinned by
-#  galsim.utilities.thin_tabulated_values to a relative error of 1.e-5
+#  Truncated to wavelengths less than 22050 Angstroms, and thinned by
+#  galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
 #
 #  Angstroms     Flux/A
 #
 """.format(base.split('_')[1]))
-        for i in range(len(x1)):
-            out.write(" {0:>10.2f}    {1:>10.5f}\n".format(x1[i], f1[i]))
+        for i in range(len(x3)):
+            out.write(" {0:>10.2f}    {1:>10.5f}\n".format(x3[i], f3[i]))
