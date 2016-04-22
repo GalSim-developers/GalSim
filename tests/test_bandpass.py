@@ -70,7 +70,7 @@ def test_Bandpass_basic():
         b_list[6].thin(),
         b_list[6].thin(preserve_range=False),
         b_list[7].thin(),
-        b_list[11].thin(preserve_range=False, trim_leading_zeros=False),
+        b_list[11].thin(preserve_range=False, trim_zeros=False),
         b_list[11].thin(preserve_range=False),
         b_list[11].thin()
     ]

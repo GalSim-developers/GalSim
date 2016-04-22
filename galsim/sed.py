@@ -429,14 +429,14 @@ class SED(object):
         current_flux = self.calculateFlux(bandpass)
         return -2.5 * np.log10(current_flux) + bandpass.zeropoint
 
-    def thin(self, rel_err=1.e-4, trim_leading_zeros=True, preserve_range=True):
+    def thin(self, rel_err=1.e-4, trim_zeros=True, preserve_range=True):
         """ If the SED was initialized with a LookupTable or from a file (which internally creates a
         LookupTable), then remove tabulated values while keeping the integral over the set of
         tabulated values still accurate to `rel_err`.
 
         @param rel_err            The relative error allowed in the integral over the SED
                                   [default: 1.e-4]
-        @param trim_leading_zeros Remove redundant leading and trailing points where f=0?  (The last
+        @param trim_zeros         Remove redundant leading and trailing points where f=0?  (The last
                                   leading point with f=0 and the first trailing point with f=0 will
                                   be retained).  Note that if both trim_leading_zeros and
                                   preserve_range are True, then the only the range of `x` *after*
@@ -453,7 +453,7 @@ class SED(object):
             x = self.wave_list / wave_factor
             f = self._rest_photons(x)
             newx, newf = utilities.thin_tabulated_values(x, f, rel_err=rel_err,
-                                                         trim_leading_zeros=trim_leading_zeros,
+                                                         trim_zeros=trim_zeros,
                                                          preserve_range=preserve_range)
             spec = galsim.LookupTable(newx, newf, interpolant='linear')
             blue_limit = np.min(newx) * wave_factor

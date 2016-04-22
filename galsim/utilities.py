@@ -343,7 +343,7 @@ def _lin_approx_split(x, f):
     i = np.argmin(errleft+errright)
     return i+1, _lin_approx_err(x, f, i+1)
 
-def thin_tabulated_values(x, f, rel_err=1.e-4, trim_leading_zeros=True, preserve_range=True):
+def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=True):
     """
     Remove items from a set of tabulated f(x) values so that the error in the integral is still
     accurate to a given relative accuracy.
@@ -355,11 +355,11 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_leading_zeros=True, preserve
     @param f                The `f` values in the f(x) tabulation.
     @param rel_err          The maximum relative error to allow in the integral from the removal.
                             [default: 1.e-4]
-    @param trim_leading_zeros  Remove redundant leading and trailing points where f=0?  (The last
-                               leading point with f=0 and the first trailing point with f=0 will be
-                               retained).  Note that if both trim_leading_zeros and preserve_range
-                               are True, then the only the range of `x` *after* zero trimming is
-                               preserved.  [default: True]
+    @param trim_zeros       Remove redundant leading and trailing points where f=0?  (The last
+                            leading point with f=0 and the first trailing point with f=0 will be
+                            retained).  Note that if both trim_leading_zeros and preserve_range are
+                            True, then the only the range of `x` *after* zero trimming is preserved.
+                            [default: True]
     @param preserve_range   Should the original range of `x` be preserved? (True) Or should the ends
                             be trimmed to include only the region where the integral is
                             significant? (False)  [default: True]
@@ -384,7 +384,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_leading_zeros=True, preserve
         # Nothing to do
         return x,f
 
-    if trim_leading_zeros:
+    if trim_zeros:
         first = max(f.nonzero()[0][0]-1, 0)  # -1 to keep one non-redundant zero.
         last = min(f.nonzero()[0][-1]+1, len(x)-1)  # +1 to keep one non-redundant zero.
         x, f = x[first:last+1], f[first:last+1]
