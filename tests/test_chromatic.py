@@ -1445,13 +1445,7 @@ def test_interpolated_ChromaticObject():
         parallactic_angle=0.*galsim.degrees)
     chrom_shear = lambda w: galsim.Shear(g1=0.2+0.2*(w-500.)/500.,g2=0.) if w<1000. else \
         galsim.Shear(g1=0.4, g2=0.)
-    # The 0.5 in the line below used to be 1.0.  When we improved the .thin() method, this test
-    # started to fail in 0.1% of pixels.  Making the chromaticity less extreme allowed the test
-    # to pass.
     chrom_shift_y = lambda w: scale*(w-500.)
-    # The 0.05 in the line below used to be 0.1.  When we went to the new extended SEDs, this unit
-    # test began to fail by a tiny margin (0.02%).  Since this was so marginal I changed the
-    # transformation to be a bit less extreme.
     chrom_dilate = lambda w: 1.0+0.1*(w-500.)/500.
     exact_psf = exact_psf.shear(shear=chrom_shear).shift(dx=0.,dy=chrom_shift_y).dilate(chrom_dilate)
     # Note here we are checking the use of more difficult input wavelengths.
@@ -1582,9 +1576,9 @@ def test_ChromaticOpticalPSF():
     # im_r.write('./chromatic_reference_images/r_exact.fits')
     #
     #
-    # That script took 51 seconds to run on a new-ish Macbook Pro, nearly all in the image rendering
+    # That script took 30 seconds to run on a new-ish Macbook Pro, nearly all in the image rendering
     # process.  In contrast, the ChromaticOpticalPSF with interpolation that is used for this unit
-    # test takes about 10 seconds to initialize, and 2.0s for the image rendering process.
+    # test takes about 15 seconds to initialize, and 1.2s for the image rendering process.
     # Obviously, if many images are to be rendered after incurring the overhead of initializing this
     # object, the interpolated calculation leads to a huge savings compared to doing the exact
     # calculation each time.
@@ -1602,10 +1596,9 @@ def test_ChromaticOpticalPSF():
     nstruts = 4
     scale = 0.02
     n_interp = 15
-    oversample_fac = 2.0
+    oversample_fac = 4.0
     waves = np.linspace(bandpass.blue_limit, bandpass.red_limit, n_interp)
 
-    # For sanity checking...
     # from pylab import *
     # wexact = np.union1d(bandpass.wave_list, disk_SED.wave_list)
     # wexact = wexact[(wexact>bandpass.blue_limit) & (wexact<bandpass.red_limit)]
@@ -1634,16 +1627,14 @@ def test_ChromaticOpticalPSF():
     obj.drawImage(bandpass, image=im_r, scale=scale)
     t7 = time.time()
     print "Time to draw InterpolatedChromaticObject: {}s".format(t7-t6)
-    print im_r.array.sum()
-    print im_r_ref.array.sum()
-    # np.testing.assert_almost_equal(
-    #     im_r.array.sum(), im_r_ref.array.sum(), decimal=2,
-    #     err_msg='Interpolated ChromaticOpticalPSF total flux disagrees with reference in r band')
-    # np.testing.assert_almost_equal(
-        # im_r.array.max(), im_r_ref.array.max(), decimal=2,
-        # err_msg='Interpolated ChromaticOpticalPSF peak flux disagrees with reference in r band')
+    printval(im_r, im_r_ref)
+    np.testing.assert_almost_equal(
+        im_r.array.sum()/im_r_ref.array.sum(), 1.0, decimal=3,
+        err_msg='Interpolated ChromaticOpticalPSF total flux disagrees with reference in r band')
+    np.testing.assert_almost_equal(
+        im_r.array.max()/im_r_ref.array.max(), 1.0, decimal=3,
+        err_msg='Interpolated ChromaticOpticalPSF peak flux disagrees with reference in r band')
 
-    import ipdb; ipdb.set_trace()
     im_r_ref /= im_r_ref.array.max()
     im_r /= im_r.array.max()
     # Test nearly passes at decimal=4, but 0.08% of pixels disagree.  However, decimal=3 after
@@ -1659,12 +1650,11 @@ def test_ChromaticOpticalPSF():
     obj_conv = galsim.Convolve(psf, gal)
     im = obj_conv.drawImage(bandpass, scale=scale)
     expected_flux = disk_SED.calculateFlux(bandpass)
-    frac_diff_exact = abs(im.array.sum()/expected_flux-1.0)/2.
-    # Check to 2%
-    np.testing.assert_almost_equal(
-        frac_diff_exact, 0.0, decimal=2,
-        err_msg='ChromaticObject flux is wrong when convolved with ChromaticOpticalPSF '
-        ' (interpolated calculation)')
+
+    frac_diff_exact = abs(im.array.sum()/expected_flux-1.0)
+    assert np.isclose(im.array.sum(), expected_flux, rtol=0.02), \
+        "ChromaticObject flux is wrong when convolved with ChromaticOpticalPSF " \
+        " (interpolated calculation)"
 
     t8 = time.time()
     print 'time for %s = %.2f'%(funcname(),t8-t1)
@@ -1970,29 +1960,29 @@ def test_ne():
 
 
 if __name__ == "__main__":
-    # test_draw_add_commutativity()
-    # test_ChromaticConvolution_InterpolatedImage()
-    # test_chromatic_add()
-    # test_dcr_moments()
-    # test_chromatic_seeing_moments()
-    # test_monochromatic_filter()
-    # test_chromatic_flux()
-    # test_double_ChromaticSum()
-    # test_ChromaticConvolution_of_ChromaticConvolution()
-    # test_ChromaticAutoConvolution()
-    # test_ChromaticAutoCorrelation()
-    # test_ChromaticObject_expand()
-    # test_ChromaticObject_rotate()
-    # test_ChromaticObject_shear()
-    # test_ChromaticObject_shift()
-    # test_ChromaticObject_compound_affine_transformation()
-    # test_analytic_integrator()
-    # test_gsparam()
-    # test_separable_ChromaticSum()
-    # test_centroid()
+    test_draw_add_commutativity()
+    test_ChromaticConvolution_InterpolatedImage()
+    test_chromatic_add()
+    test_dcr_moments()
+    test_chromatic_seeing_moments()
+    test_monochromatic_filter()
+    test_chromatic_flux()
+    test_double_ChromaticSum()
+    test_ChromaticConvolution_of_ChromaticConvolution()
+    test_ChromaticAutoConvolution()
+    test_ChromaticAutoCorrelation()
+    test_ChromaticObject_expand()
+    test_ChromaticObject_rotate()
+    test_ChromaticObject_shear()
+    test_ChromaticObject_shift()
+    test_ChromaticObject_compound_affine_transformation()
+    test_analytic_integrator()
+    test_gsparam()
+    test_separable_ChromaticSum()
+    test_centroid()
     test_interpolated_ChromaticObject()
-    # test_ChromaticOpticalPSF()
-    # test_ChromaticAiry()
-    # test_chromatic_fiducial_wavelength()
-    # test_chromatic_image_setup()
-    # test_ne()
+    test_ChromaticOpticalPSF()
+    test_ChromaticAiry()
+    test_chromatic_fiducial_wavelength()
+    test_chromatic_image_setup()
+    test_ne()
