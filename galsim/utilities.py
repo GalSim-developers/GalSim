@@ -338,6 +338,8 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_leading_zeros=True, preserve
 
     @returns a tuple of lists `(x_new, y_new)` with the thinned tabulation.
     """
+    from heapq import heappush, heappop
+
     x = np.array(x)
     f = np.array(f)
 
@@ -399,23 +401,18 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_leading_zeros=True, preserve
 
     # Thin interior points.  Start with no interior points and then greedily add them back in one at
     # a time until relative error goal is met.
-    splitpoints = [0, len(x)-1]  # Start with single interval
-    m = (f[-1]-f[0])/(x[-1]-x[0]) # slope
-    fapprox = f[0]+m*(x-x[0])
-    errs = [np.trapz(np.abs(fapprox-f), x)]  # Current error for each interval
-    while sum(errs) > thresh:
-        # Find the worst current interval
-        index = np.argmax(errs)
-        # Optimally split that interval
-        left = splitpoints[index]
-        right = splitpoints[index+1]
+    # Use a heap to track:
+    heap = [(-2*thresh,  # -err
+             0,          # first index of interval
+             len(x)-1)]  # last index of interval
+    while (-sum(h[0] for h in heap) > thresh):
+        _, left, right = heappop(heap)
         i, (errleft, errright) = _lin_approx_split(x[left:right+1], f[left:right+1])
-        # Update splitpoints and errs
-        splitpoints.insert(index+1, i+left)
-        del errs[index]
-        errs.insert(index, errright)
-        errs.insert(index, errleft)
+        heappush(heap, (-errleft, left, i+left))
+        heappush(heap, (-errright, i+left, right))
+    splitpoints = sorted([0]+[h[2] for h in heap])
     return x[splitpoints], f[splitpoints]
+
 
 # In Issue #739, Josh wrote the above algorithm as a replacement for the one here.
 # It had been buggy, not actually hitting its target relative accuracy, so on the same issue,
