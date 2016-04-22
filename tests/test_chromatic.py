@@ -1576,9 +1576,9 @@ def test_ChromaticOpticalPSF():
     # im_r.write('./chromatic_reference_images/r_exact.fits')
     #
     #
-    # That script took 30 seconds to run on a new-ish Macbook Pro, nearly all in the image rendering
+    # That script took 32 seconds to run on a new-ish Macbook Pro, nearly all in the image rendering
     # process.  In contrast, the ChromaticOpticalPSF with interpolation that is used for this unit
-    # test takes about 15 seconds to initialize, and 1.2s for the image rendering process.
+    # test takes about 9.5 seconds to initialize, and 1.7s for the image rendering process.
     # Obviously, if many images are to be rendered after incurring the overhead of initializing this
     # object, the interpolated calculation leads to a huge savings compared to doing the exact
     # calculation each time.

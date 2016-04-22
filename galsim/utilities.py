@@ -308,12 +308,40 @@ def _lin_approx_err(x, f, i):
     f2right = fi+mright*(xright-xi)
     return np.trapz(np.abs(fleft-f2left), xleft), np.trapz(np.abs(fright-f2right), xright)
 
-def _lin_approx_split(x, f):
-    """Optimally split a tabulated function into two-part piecewise linear approximation.
+def _exact_lin_approx_split(x, f):
+    """Split a tabulated function into a two-part piecewise linear approximation by exactly
+    minimizing \int abs(f(x) - approx(x)) dx.  Operates in O(N^2) time.
     """
     errs = [_lin_approx_err(x, f, i) for i in xrange(1, len(x)-1)]
     i = np.argmin(np.sum(errs, axis=1))
     return i+1, errs[i]
+
+def _lin_approx_split(x, f):
+    """Split a tabulated function into a two-part piecewise linear approximation by approximately
+    minimizing \int abs(f(x) - approx(x)) dx.  Chooses the split point by exactly minimizing
+    \int (f(x) - approx(x))^2 dx in O(N) time.
+    """
+    dx = x[2:] - x[:-2]
+    # Error contribution on the left.
+    ff0 = f[1:-1]-f[0]  # Only need to search between j=1..(N-1)
+    xx0 = x[1:-1]-x[0]
+    mleft = ff0/xx0  # slope
+    errleft = (np.cumsum(dx*ff0**2)
+               - 2*mleft*np.cumsum(dx*ff0*xx0)
+               + mleft**2*np.cumsum(dx*xx0**2))
+    # Error contribution on the right.
+    dx = dx[::-1]  # Reversed so that np.cumsum effectively works right-to-left.
+    ffN = f[-2:0:-1]-f[-1]
+    xxN = x[-2:0:-1]-x[-1]
+    mright = ffN/xxN
+    errright = (np.cumsum(dx*ffN**2)
+                - 2*mright*np.cumsum(dx*ffN*xxN)
+                + mright**2*np.cumsum(dx*xxN**2))
+    errright = errright[::-1]
+
+    # Get absolute error for the found point.
+    i = np.argmin(errleft+errright)
+    return i+1, _lin_approx_err(x, f, i+1)
 
 def thin_tabulated_values(x, f, rel_err=1.e-4, trim_leading_zeros=True, preserve_range=True):
     """
@@ -402,7 +430,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_leading_zeros=True, preserve
     # Thin interior points.  Start with no interior points and then greedily add them back in one at
     # a time until relative error goal is met.
     # Use a heap to track:
-    heap = [(-2*thresh,  # -err
+    heap = [(-2*thresh,  # -err; initialize large enough to trigger while loop below.
              0,          # first index of interval
              len(x)-1)]  # last index of interval
     while (-sum(h[0] for h in heap) > thresh):
