@@ -288,6 +288,11 @@ def test_thin():
     print "Original number of bandpass samples = ",len(bp.wave_list)
     for err in [1.e-2, 1.e-3, 1.e-4, 1.e-5]:
         print "Test err = ",err
+        thin_bp = bp.thin(rel_err=err, preserve_range=True, fast_search=False)
+        thin_flux = s.calculateFlux(thin_bp)
+        thin_err = (flux-thin_flux)/flux
+        print "num samples with preserve_range = True, fast_search = False: ",len(thin_bp.wave_list)
+        print "realized error = ",(flux-thin_flux)/flux
         thin_bp = bp.thin(rel_err=err, preserve_range=True)
         thin_flux = s.calculateFlux(thin_bp)
         thin_err = (flux-thin_flux)/flux

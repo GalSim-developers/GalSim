@@ -573,6 +573,11 @@ def test_thin():
     print "Original number of SED samples = ",len(s.wave_list)
     for err in [1.e-2, 1.e-3, 1.e-4, 1.e-5]:
         print "Test err = ",err
+        thin_s = s.thin(rel_err=err, preserve_range=True, fast_search=False)
+        thin_flux = thin_s.calculateFlux(bp)
+        thin_err = (flux-thin_flux)/flux
+        print "num samples with preserve_range = True, fast_search = False: ",len(thin_s.wave_list)
+        print "realized error = ",(flux-thin_flux)/flux
         thin_s = s.thin(rel_err=err, preserve_range=True)
         thin_flux = thin_s.calculateFlux(bp)
         thin_err = (flux-thin_flux)/flux

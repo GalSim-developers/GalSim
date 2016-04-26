@@ -343,13 +343,14 @@ def _lin_approx_split(x, f):
     i = np.argmin(errleft+errright)
     return i+1, _lin_approx_err(x, f, i+1)
 
-def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=True):
+def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=True,
+                          fast_search=True):
     """
     Remove items from a set of tabulated f(x) values so that the error in the integral is still
     accurate to a given relative accuracy.
 
     The input `x,f` values can be lists, NumPy arrays, or really anything that can be converted
-    to a NumPy array.  The new lists will be output as python lists.
+    to a NumPy array.  The new lists will be output as numpy arrays.
 
     @param x                The `x` values in the f(x) tabulation.
     @param f                The `f` values in the f(x) tabulation.
@@ -363,10 +364,17 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=T
     @param preserve_range   Should the original range of `x` be preserved? (True) Or should the ends
                             be trimmed to include only the region where the integral is
                             significant? (False)  [default: True]
+    @param fast_search      If set to True, then the underlying algorithm will use a relatively fast
+                            O(N) algorithm to select points to include in the thinned approximation.
+                            If set to False, then a slower O(N^2) algorithm will be used.  The
+                            slower algorithm usually yields a slightly more optimal thinned
+                            representation of the original tabulated function.  [default: True]
 
     @returns a tuple of lists `(x_new, y_new)` with the thinned tabulation.
     """
     from heapq import heappush, heappop
+
+    split_fn = _lin_approx_split if fast_search else _exact_lin_approx_split
 
     x = np.array(x)
     f = np.array(f)
@@ -435,7 +443,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=T
              len(x)-1)]  # last index of interval
     while (-sum(h[0] for h in heap) > thresh):
         _, left, right = heappop(heap)
-        i, (errleft, errright) = _lin_approx_split(x[left:right+1], f[left:right+1])
+        i, (errleft, errright) = split_fn(x[left:right+1], f[left:right+1])
         heappush(heap, (-errleft, left, i+left))
         heappush(heap, (-errright, i+left, right))
     splitpoints = sorted([0]+[h[2] for h in heap])

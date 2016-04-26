@@ -443,7 +443,7 @@ class Bandpass(object):
         return Bandpass(self._orig_tp, blue_limit, red_limit, self.wave_type,
                         _wave_list=wave_list, _tp=self._tp)
 
-    def thin(self, rel_err=1.e-4, trim_zeros=True, preserve_range=True):
+    def thin(self, rel_err=1.e-4, trim_zeros=True, preserve_range=True, fast_search=True):
         """Thin out the internal wavelengths of a Bandpass that uses a LookupTable.
 
         If the bandpass was initialized with a LookupTable or from a file (which internally
@@ -467,6 +467,12 @@ class Bandpass(object):
                                   Bandpass be preserved? (True) Or should the ends be trimmed to
                                   include only the region where the integral is significant? (False)
                                   [default: True]
+        @param fast_search        If set to True, then the underlying algorithm will use a
+                                  relatively fast O(N) algorithm to select points to include in the
+                                  thinned approximation.  If set to False, then a slower O(N^2)
+                                  algorithm will be used.  The slower algorithm usually yields a
+                                  slightly more optimal thinned representation of the original
+                                  tabulated function.  [default: True]
 
         @returns the thinned Bandpass.
         """
@@ -475,7 +481,8 @@ class Bandpass(object):
             f = self(x)
             newx, newf = utilities.thin_tabulated_values(x, f, rel_err=rel_err,
                                                          trim_zeros=trim_zeros,
-                                                         preserve_range=preserve_range)
+                                                         preserve_range=preserve_range,
+                                                         fast_search=fast_search)
             tp = galsim.LookupTable(newx, newf, interpolant='linear')
             blue_limit = np.min(newx)
             red_limit = np.max(newx)
