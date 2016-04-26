@@ -98,21 +98,28 @@ def applyPersistence(img, prev_exposures):
     """
     if hasattr(prev_exposures,'__iter__'):
         n_exp = min(len(prev_exposures),len(galsim.wfirst.persistence_coefficients))
+        if n_exp > len(galsim.wfirst.persistence_coefficients):
+            import warnings
+            warnings.warn("More than 8 Image instances were passed to"
+                          " galsim.wfirst.applyPersistence routine. Ignoring the earlier"
+                          " exposures")
         img.applyPersistence(prev_exposures[:n_exp],galsim.wfirst.persistence_coefficients[:n_exp])
-    else: # only the previous exposure provided
-        img.applyPersistence(prev_exposures,galsim.wfirst.persistence_coefficients[0])
-
+    else:
+        raise TypeError("In wfirst.applyPersistence, 'prev_exposures' must be a list of Image"
+        " instances")
 
 def allDetectorEffects(img, rng=None, exptime=None, prev_exposures=[]):
     """
     This utility applies all sources of noise and detector effects for WFIRST that are implemented
     in GalSim.  In terms of noise, this includes the Poisson noise due to the signal (sky +
     background), dark current, and read noise.  The detector effects that are included are
-    reciprocity failure, quantization, nonlinearity, and interpixel capacitance.  It also includes
-    the necessary factors of gain.  In short, the user should be able to pass in an Image with all
-    sources of signal (background plus astronomical objects), and the Image will be modified to
-    include all subsequent steps in the image generation process for WFIRST that are implemented in
-    GalSim.
+    reciprocity failure, quantization, persistence, nonlinearity, and interpixel capacitance. It
+    also includes the necessary factors of gain.  In short, the user should be able to pass in an
+    Image with all sources of signal (background plus astronomical objects), and the Image will be
+    modified to include all subsequent steps in the image generation process for WFIRST that are
+    implemented in GalSim. However, to include the effect of persistence, the user needs to provide
+    a list of up to 8 recent exposures (without the readout effects such nonlinearity and interpixel
+    capacitance included) and the routine returns an updated list of up to 8 recent exposures.
 
     @param img               The Image to be modified.
     @param rng               An optional galsim.BaseDeviate to use for the addition of noise.  If
@@ -121,6 +128,8 @@ def allDetectorEffects(img, rng=None, exptime=None, prev_exposures=[]):
                              exposure time will be used.  [default: None]
     @param prev_exposures    List of up to 8 Image instances in the order of exposures, with the
                              recent exposure being the first element. [default: []]
+
+    @returns prev_exposures  Updated list of previous exposures containing up to 8 Image instances.
     """
     # Deal appropriately with passed-in RNG, exposure time.
     if rng is None:
@@ -146,7 +155,12 @@ def allDetectorEffects(img, rng=None, exptime=None, prev_exposures=[]):
     img.addNoise(dark_noise)
 
     # Persistence (use WFIRST coefficients)
-    applyPersistence(img,previous_exposures)
+    applyPersistence(img,prev_exposures)
+
+    # Update the 'prev_exposures' queue
+    if len(prev_exposures)>len(galsim.wfirst.persistence_coefficients):
+        prev_exposures.pop()
+    prev_exposures.insert(0,img.copy())
 
     # Nonlinearity (use WFIRST routine).
     applyNonlinearity(img)
@@ -163,3 +177,5 @@ def allDetectorEffects(img, rng=None, exptime=None, prev_exposures=[]):
 
     # Quantize.
     img.quantize()
+
+    return prev_exposures
