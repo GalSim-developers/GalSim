@@ -142,6 +142,60 @@ class Aperture(object):
             pupil_scale /= pad_factor
         return cls(pupil_scale=pupil_scale, **kwargs)
 
+    def _generate_pupil_plane(self, npix=None, pupil_scale=None, pupil_plane_size=None,
+                              circular_pupil=True, obscuration=0.,
+                              nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees,
+                              oversampling=1.5):
+        if obscuration >= 1.:
+            raise ValueError("Pupil fully obscured! obscuration = {1} (>= 1)".format(obscuration))
+        self._obscuration = float(obscuration)
+        self._circular_pupil = circular_pupil
+        self._nstruts = nstruts
+        self._strut_thick = strut_thick
+        self._strut_angle = strut_angle
+        self._oversampling = oversampling
+        if pupil_plane_size is None:
+            pupil_plane_size = 2.0*self.diam*oversampling
+        self.pupil_plane_size = float(pupil_plane_size)
+
+        # Use one of `npix` or `pupil_scale` to set the scale.
+        if npix is None:
+            if pupil_scale is None:
+                raise ValueError("Require either `npix` or `pupil_scale`.")
+            npix = galsim._galsim.goodFFTSize(int(np.ceil(self.pupil_plane_size/pupil_scale)))
+        else:
+            if pupil_scale is not None:
+                raise ValueError("Cannot supply both `npix` and `pupil_scale`.")
+        self.npix = int(npix)
+        self.pupil_scale = self.pupil_plane_size/self.npix
+
+        u = np.fft.fftshift(np.fft.fftfreq(self.npix, 1./self.pupil_plane_size))
+        u, v = np.meshgrid(u, u)
+        rsqr = u**2 + v**2
+
+        radius = 0.5*self.diam
+        if circular_pupil:
+            self.illuminated = (rsqr < radius**2)
+            if self._obscuration > 0.:
+                self.illuminated *= rsqr >= (radius*self._obscuration)**2
+        else:
+            self.illuminated = (np.abs(u) < radius) & (np.abs(v) < radius)
+            if self._obscuration > 0.:
+                self.illuminated *= ((np.abs(u) >= radius*self._obscuration) *
+                                     (np.abs(v) >= radius*self._obscuration))
+
+        if self._nstruts > 0:
+            if not isinstance(self._strut_angle, galsim.Angle):
+                raise TypeError("Input kwarg strut_angle must be a galsim.Angle instance.")
+            # Add the initial rotation if requested, converting to radians.
+            if self._strut_angle.rad != 0.:
+                u, v = utilities.rotate_xy(u, v, -self._strut_angle)
+            rotang = 360. * galsim.degrees / float(self._nstruts)
+            # Then loop through struts setting to zero the regions which lie under the strut
+            for istrut in xrange(self._nstruts):
+                u, v = utilities.rotate_xy(u, v, -rotang)
+                self.illuminated *= ((np.abs(u) >= radius * self._strut_thick) + (v < 0.0))
+
     def _load_pupil_plane(self, pupil_plane_im, pupil_angle):
         # Handle multiple types of input: NumPy array, galsim.Image, or string for filename with
         # image.
@@ -197,60 +251,6 @@ class Aperture(object):
         # Save for repr
         self._pupil_plane_im = pupil_plane_im
         self._pupil_angle = pupil_angle
-
-    def _generate_pupil_plane(self, npix=None, pupil_scale=None, pupil_plane_size=None,
-                              circular_pupil=True, obscuration=0.,
-                              nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees,
-                              oversampling=1.5):
-        if obscuration >= 1.:
-            raise ValueError("Pupil fully obscured! obscuration = {1} (>= 1)".format(obscuration))
-        self._obscuration = float(obscuration)
-        self._circular_pupil = circular_pupil
-        self._nstruts = nstruts
-        self._strut_thick = strut_thick
-        self._strut_angle = strut_angle
-        self._oversampling = oversampling
-        if pupil_plane_size is None:
-            pupil_plane_size = 2.0*self.diam*oversampling
-        self.pupil_plane_size = float(pupil_plane_size)
-
-        # Use one of `npix` or `pupil_scale` to set the scale.
-        if npix is None:
-            if pupil_scale is None:
-                raise ValueError("Require either `npix` or `pupil_scale`.")
-            npix = galsim._galsim.goodFFTSize(int(np.ceil(self.pupil_plane_size/pupil_scale)))
-        else:
-            if pupil_scale is not None:
-                raise ValueError("Cannot supply both `npix` and `pupil_scale`.")
-        self.npix = int(npix)
-        self.pupil_scale = self.pupil_plane_size/self.npix
-
-        u = np.fft.fftshift(np.fft.fftfreq(self.npix, 1./self.pupil_plane_size))
-        u, v = np.meshgrid(u, u)
-        rsqr = u**2 + v**2
-
-        radius = 0.5*self.diam
-        if circular_pupil:
-            self.illuminated = (rsqr < radius**2)
-            if self._obscuration > 0.:
-                self.illuminated *= rsqr >= (radius*self._obscuration)**2
-        else:
-            self.illuminated = (np.abs(u) < radius) & (np.abs(v) < radius)
-            if self._obscuration > 0.:
-                self.illuminated *= ((np.abs(u) >= radius*self._obscuration) *
-                                     (np.abs(v) >= radius*self._obscuration))
-
-        if self._nstruts > 0:
-            if not isinstance(self._strut_angle, galsim.Angle):
-                raise TypeError("Input kwarg strut_angle must be a galsim.Angle instance.")
-            # Add the initial rotation if requested, converting to radians.
-            if self._strut_angle.rad != 0.:
-                u, v = utilities.rotate_xy(u, v, -self._strut_angle)
-            rotang = 360. * galsim.degrees / float(self._nstruts)
-            # Then loop through struts setting to zero the regions which lie under the strut
-            for istrut in xrange(self._nstruts):
-                u, v = utilities.rotate_xy(u, v, -rotang)
-                self.illuminated *= ((np.abs(u) >= radius * self._strut_thick) + (v < 0.0))
 
     # Pull this common bit out for use below and in OpticalPSF repr/str.
     def _geometry_str(self):
@@ -322,6 +322,47 @@ class Aperture(object):
             rsqrmax_illum = max(rsqr[self.illuminated > 0])
             self._rho = (u + 1j * v) / np.sqrt(rsqrmax_illum)
         return self._rho
+
+    # Some quick notes for Josh:
+    # - Relation between real-space grid with size L and pitch dL (dimensions of angle) and
+    #   corresponding Fourier grid with size 2*maxK and pitch stepK (dimensions of inverse angle):
+    #     stepK = 2*pi/L
+    #     maxK = pi/dL
+    # - Relation between aperture of size N*dx and pitch dx (dimensions of length, not angle!) and
+    #   Fourier grid:
+    #     dx = stepK * lambda / (2 * pi)
+    #     N*dx = maxK * lambda / pi
+    # - Implies relation between aperture grid and real-space grid:
+    #     dx = lambda/L
+    #     N*dx = lambda/dL
+    def _stepK(self, wave, scale_unit=galsim.arcsec):
+        """Return the Fourier grid spacing for this aperture at given wavelength.
+
+        @param wave        Wavelength in nanometers.
+        @param scale_unit  Inverse units in which to return result [default: galsim.arcsec]
+        @returns           Fourier grid spacing.
+        """
+        return 2*np.pi*self.pupil_scale/(wave*1e-9) * scale_unit/galsim.radians
+
+    def _maxK(self, wave, scale_unit=galsim.arcsec):
+        """Return the Fourier grid half-size for this aperture at given wavelength.
+
+        @param wave        Wavelength in nanometers.
+        @param scale_unit  Inverse units in which to return result [default: galsim.arcsec]
+        @returns           Fourier grid half-size.
+        """
+        return np.pi*self.pupil_plane_size/(wave*1e-9) * scale_unit/galsim.radians
+
+    def _scale(self, wave, scale_unit=galsim.arcsec):
+        """Return the image scale for this aperture at given wavelength.
+        @param wave        Wavelength in nanometers.
+        @param scale_unit  Units in which to return result [default: galsim.arcsec]
+        @returns           Image scale.
+        """
+        return (wave*1e-9) / self.pupil_plane_size * galsim.radians/scale_unit
+
+    def _size(self, wave, scale_unit=galsim.arcsec):
+        return (wave*1e-9) / self.pupil_scale * galsim.radians/scale_unit
 
 
 class AtmosphericScreen(object):
@@ -1137,7 +1178,7 @@ class PhaseScreenPSF(GSObject):
             aper = Aperture.fromPhaseScreenList(screen_list, lam, scale_unit=self.scale_unit,
                                                 **kwargs)
         self.aper = aper
-        self.scale = 1e-9*self.lam/self.aper.pupil_plane_size * galsim.radians / self.scale_unit
+        self.scale = aper._scale(self.lam, self.scale_unit)
 
         self.img = np.zeros(self.aper.illuminated.shape, dtype=np.float64)
 
