@@ -507,12 +507,6 @@ def test_Persistence_basic():
     np.testing.assert_array_equal(im1.array, im2.array,
         err_msg="Images differ when the persistence coefficients is a constant array.")
 
-    # Test for a single previous image
-    im_new = im.copy()
-    im_new.applyPersistence(imgs=im_prev[0], coeffs=0.4)
-    np.testing.assert_array_equal(im_new.array, im.array+0.4*im_prev[0].array,
-            err_msg="Images differ for persistence length is 1.")
-
     # Test for identical copies of same image
     im_new = im.copy()
     n_im = 3
@@ -527,10 +521,10 @@ def test_Persistence_basic():
     except ImportError:
         print 'The assert_raises tests require nose'
 
-    # Test for a single image and coeffs as list of length 1
+    # Test for a single image and coeffs as a float
     im_new = im.copy()
     try:
-        np.testing.assert_raises(TypeError, im_new.applyPersistence, im_prev[0], [1.0])
+        np.testing.assert_raises(TypeError, im_new.applyPersistence, im_prev[0], 1.0)
     except ImportError:
         print 'The assert_raises tests require nose'
 

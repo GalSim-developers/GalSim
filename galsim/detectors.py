@@ -286,30 +286,27 @@ def applyPersistence(self,imgs,coeffs):
     a fixed cadence, the persistence signal can be given as a linear combination of prior pixel
     values that can be added to the current image.
 
-    This routine takes in one or multiple Image instances and adds them to Image weighted by the
-    values passed on to 'coeffs'. This routine does NOT keep track of realistic dither patterns.
-    During the image simulation process, the user has to queue a list of previous Image
-    instances (img_list) outside the routine by inserting the latest image in the beginning of the
-    list and deleting the oldest image. The values in 'coeffs' tell how much of each Image is to
-    be added. This usually remains constant in the image generation process.
+    This routine takes in a list of Image instances and adds them to Image weighted by the values
+    passed on to 'coeffs'. The pixel values of the Image instances in the list must correspond to
+    the electron counts before the readout. This routine does NOT keep track of realistic dither
+    patterns. During the image simulation process, the user has to queue a list of previous Image
+    instances (imgs) outside the routine by inserting the latest image in the beginning of the list
+    and deleting the oldest image. The values in 'coeffs' tell how much of each Image is to be
+    added. This usually remains constant in the image generation process.
 
     Calling
     -------
 
         >>> img.applyPersistence(imgs=img_list, coeffs=coeffs_list)
 
-    @ param imgs        An Image instance or a list of previous Image instances that still persist
-    @ param coeffs      Specifies the retention factor for one or all of the Image instances listed
-                        in 'imgs'. Different retention factors for different instances can be
-                        specified as a list or tuples in the same order as that of the images.
+    @ param imgs        A list of previous Image instances that still persist.
+    @ param coeffs      A list of floats that specifies the retention factors for the corresponding
+                        Image instances listed in 'imgs'.
 
     @ returns None
     """
 
-    if isinstance(imgs,galsim.Image) and isinstance(coeffs,float):
-        self += coeffs*imgs
-
-    elif hasattr(imgs,'__iter__') and hasattr(coeffs,'__iter__'):
+    if hasattr(imgs,'__iter__') and hasattr(coeffs,'__iter__'):
         if not len(imgs)==len(coeffs):
             raise TypeError("The length of 'imgs' and 'coeffs' must be the same, if passed as a "
                             "list")
@@ -328,8 +325,8 @@ def applyPersistence(self,imgs,coeffs):
 
     else:
         raise TypeError("Type mismatch between 'imgs' and 'coeffs' in 'applyPersistence' routine. "
-        "'imgs' must be an Image instance or a list of Image instances and 'coeffs' must be a "
-        "float or a list of floats of the same size.")
+        "'imgs' must be a list of Image instances and 'coeffs' must be a list of floats of the same
+        length.")
 
 def quantize(self):
     """
