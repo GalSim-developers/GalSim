@@ -35,9 +35,9 @@ for band in 'ugrizy':
         base = 'LSST_y.dat'
     file_ = urllib2.urlopen(urlfile)
     x,f = np.loadtxt(file_, unpack=True)
-    x1,f1 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-5)
-    x2,f2 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-4)
-    x3,f3 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-3)
+    x1,f1 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-5, fast_search=False)
+    x2,f2 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-4, fast_search=False)
+    x3,f3 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-3, fast_search=False)
     print "{0} raw size = {1}".format(base,len(x))
     print "    thinned sizes = {0}, {1}, {2}".format(len(x1),len(x2),len(x3))
 
@@ -47,6 +47,7 @@ for band in 'ugrizy':
 # File taken from https://dev.lsstcorp.org/cgit/LSST/sims/throughputs.git/snapshot/throughputs-1.2.tar.gz
 #
 #  Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
+#  with fast_search=False.
 #
 # Wavelength(nm)  Throughput(0-1)
 """.format(band))

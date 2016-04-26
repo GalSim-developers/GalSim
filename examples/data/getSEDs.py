@@ -46,9 +46,9 @@ for sedname in sednames:
     w = x<=22050 # Angstroms
     x = x[w]
     f = f[w]
-    x1,f1 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-5)
-    x2,f2 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-4)
-    x3,f3 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-3)
+    x1,f1 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-5, fast_search=False)
+    x2,f2 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-4, fast_search=False)
+    x3,f3 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-3, fast_search=False)
     print "{0} raw size = {1}".format(base,len(x))
     print "    thinned sizes = {0}, {1}, {2}".format(len(x1),len(x2),len(x3))
 
@@ -64,6 +64,7 @@ for sedname in sednames:
 #
 #  Truncated to wavelengths less than 22050 Angstroms, and thinned by
 #  galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
+#  with fast_search=False.
 #
 #  Angstroms     Flux/A
 #
