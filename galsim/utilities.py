@@ -366,9 +366,10 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=T
                             significant? (False)  [default: True]
     @param fast_search      If set to True, then the underlying algorithm will use a relatively fast
                             O(N) algorithm to select points to include in the thinned approximation.
-                            If set to False, then a slower O(N^2) algorithm will be used.  The
-                            slower algorithm usually yields a slightly more optimal thinned
-                            representation of the original tabulated function.  [default: True]
+                            If set to False, then a slower O(N^2) algorithm will be used.  We have
+                            found that the slower algorithm tends to yield a thinned representation
+                            that retains fewer samples while still meeting the relative error
+                            requirement.  [default: True]
 
     @returns a tuple of lists `(x_new, y_new)` with the thinned tabulation.
     """

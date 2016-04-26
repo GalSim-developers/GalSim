@@ -470,9 +470,13 @@ class Bandpass(object):
         @param fast_search        If set to True, then the underlying algorithm will use a
                                   relatively fast O(N) algorithm to select points to include in the
                                   thinned approximation.  If set to False, then a slower O(N^2)
-                                  algorithm will be used.  The slower algorithm usually yields a
-                                  slightly more optimal thinned representation of the original
-                                  tabulated function.  [default: True]
+                                  algorithm will be used.  We have found that the slower algorithm
+                                  tends to yield a thinned representation that retains fewer samples
+                                  while still meeting the relative error requirement, and may also
+                                  be somewhat more robust when computing SED fluxes through
+                                  Bandpasses when a significant fraction of the integrated flux
+                                  passes through low throughput bandpass light leaks.
+                                  [default: True]
 
         @returns the thinned Bandpass.
         """
