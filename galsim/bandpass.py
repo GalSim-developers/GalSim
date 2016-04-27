@@ -443,7 +443,7 @@ class Bandpass(object):
         return Bandpass(self._orig_tp, blue_limit, red_limit, self.wave_type,
                         _wave_list=wave_list, _tp=self._tp)
 
-    def thin(self, rel_err=1.e-4, preserve_range=False):
+    def thin(self, rel_err=1.e-4, trim_zeros=True, preserve_range=True, fast_search=True):
         """Thin out the internal wavelengths of a Bandpass that uses a LookupTable.
 
         If the bandpass was initialized with a LookupTable or from a file (which internally
@@ -458,10 +458,25 @@ class Bandpass(object):
 
         @param rel_err            The relative error allowed in the integral over the throughput
                                   function. [default: 1.e-4]
+        @param trim_zeros         Remove redundant leading and trailing points where f=0?  (The last
+                                  leading point with f=0 and the first trailing point with f=0 will
+                                  be retained).  Note that if both trim_leading_zeros and
+                                  preserve_range are True, then the only the range of `x` *after*
+                                  zero trimming is preserved.  [default: True]
         @param preserve_range     Should the original range (`blue_limit` and `red_limit`) of the
                                   Bandpass be preserved? (True) Or should the ends be trimmed to
                                   include only the region where the integral is significant? (False)
-                                  [default: False]
+                                  [default: True]
+        @param fast_search        If set to True, then the underlying algorithm will use a
+                                  relatively fast O(N) algorithm to select points to include in the
+                                  thinned approximation.  If set to False, then a slower O(N^2)
+                                  algorithm will be used.  We have found that the slower algorithm
+                                  tends to yield a thinned representation that retains fewer samples
+                                  while still meeting the relative error requirement, and may also
+                                  be somewhat more robust when computing SED fluxes through
+                                  Bandpasses when a significant fraction of the integrated flux
+                                  passes through low throughput bandpass light leaks.
+                                  [default: True]
 
         @returns the thinned Bandpass.
         """
@@ -469,7 +484,9 @@ class Bandpass(object):
             x = self.wave_list
             f = self(x)
             newx, newf = utilities.thin_tabulated_values(x, f, rel_err=rel_err,
-                                                         preserve_range=preserve_range)
+                                                         trim_zeros=trim_zeros,
+                                                         preserve_range=preserve_range,
+                                                         fast_search=fast_search)
             tp = galsim.LookupTable(newx, newf, interpolant='linear')
             blue_limit = np.min(newx)
             red_limit = np.max(newx)
