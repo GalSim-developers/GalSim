@@ -924,6 +924,11 @@ class InterpolatedChromaticObject(ChromaticObject):
         # determine combination of self.wave_list and bandpass.wave_list
         wave_list = self._getCombinedWaveList(bandpass)
 
+        if np.min(wave_list) < np.min(self.waves) or np.max(wave_list) > np.max(self.waves):
+            raise RuntimeError("Requested wavelength %.1f is outside the allowed range:"
+                               " %.1f to %.1f nm"%(np.min(wave_list), np.min(self.waves),
+                                                   np.max(self.waves)))
+
         # The integration is carried out using the following two basic principles:
         # (1) We use linear interpolation between the stored images to get an image at a given
         #     wavelength.

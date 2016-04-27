@@ -429,17 +429,29 @@ class SED(object):
         current_flux = self.calculateFlux(bandpass)
         return -2.5 * np.log10(current_flux) + bandpass.zeropoint
 
-    def thin(self, rel_err=1.e-4, preserve_range=False):
+    def thin(self, rel_err=1.e-4, trim_zeros=True, preserve_range=True, fast_search=True):
         """ If the SED was initialized with a LookupTable or from a file (which internally creates a
         LookupTable), then remove tabulated values while keeping the integral over the set of
         tabulated values still accurate to `rel_err`.
 
         @param rel_err            The relative error allowed in the integral over the SED
                                   [default: 1.e-4]
+        @param trim_zeros         Remove redundant leading and trailing points where f=0?  (The last
+                                  leading point with f=0 and the first trailing point with f=0 will
+                                  be retained).  Note that if both trim_leading_zeros and
+                                  preserve_range are True, then the only the range of `x` *after*
+                                  zero trimming is preserved.  [default: True]
         @param preserve_range     Should the original range (`blue_limit` and `red_limit`) of the
                                   SED be preserved? (True) Or should the ends be trimmed to
                                   include only the region where the integral is significant? (False)
-                                  [default: False]
+                                  [default: True]
+        @param fast_search        If set to True, then the underlying algorithm will use a
+                                  relatively fast O(N) algorithm to select points to include in the
+                                  thinned approximation.  If set to False, then a slower O(N^2)
+                                  algorithm will be used.  We have found that the slower algorithm
+                                  tends to yield a thinned representation that retains fewer samples
+                                  while still meeting the relative error requirement.
+                                  [default: True]
 
         @returns the thinned SED.
         """
@@ -448,7 +460,9 @@ class SED(object):
             x = self.wave_list / wave_factor
             f = self._rest_photons(x)
             newx, newf = utilities.thin_tabulated_values(x, f, rel_err=rel_err,
-                                                         preserve_range=preserve_range)
+                                                         trim_zeros=trim_zeros,
+                                                         preserve_range=preserve_range,
+                                                         fast_search=fast_search)
             spec = galsim.LookupTable(newx, newf, interpolant='linear')
             blue_limit = np.min(newx) * wave_factor
             red_limit = np.max(newx) * wave_factor

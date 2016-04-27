@@ -43,6 +43,8 @@ Bug Fixes
   images. (#723)
 - Updated ups table file so that setup command is `setup galsim` instead of
   `setup GalSim` (#724)
+- Added new default algorithm for thinning SEDs and Bandpasses to enable faster
+  calculations while still meeting relative error constraints. (#739).
 
 
 Deprecated Features
