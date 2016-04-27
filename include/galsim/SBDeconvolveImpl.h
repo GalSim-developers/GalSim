@@ -68,6 +68,11 @@ namespace galsim {
         SBProfile _adaptee;
         double _maxksq;
 
+        // The minimum k value we can expect to be accurate.  Anything closer to zero than this
+        // will be reset to this instead before doing 1/value.
+        // It is calculated as flux_adaptee * kvalue_accuracy.
+        double _min_acc_kval;
+
         // Copy constructor and op= are undefined.
         SBDeconvolveImpl(const SBDeconvolveImpl& rhs);
         void operator=(const SBDeconvolveImpl& rhs);
