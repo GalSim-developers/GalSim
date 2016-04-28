@@ -161,7 +161,7 @@ def allDetectorEffects(img, rng=None, exptime=None, prev_exposures=[]):
     applyPersistence(img,prev_exposures)
 
     # Update the 'prev_exposures' queue
-    if len(prev_exposures)>len(galsim.wfirst.persistence_coefficients):
+    if len(prev_exposures)>=len(galsim.wfirst.persistence_coefficients):
         prev_exposures.pop()
     prev_exposures.insert(0,img.copy())
 
