@@ -453,7 +453,7 @@ class LookupTable2D(object):
 def _LookupTable2D_eq(self, other):
     return (isinstance(other, galsim._galsim._LookupTable2D)
             and np.array_equal(self.getXArgs(), other.getXArgs())
-            and np.array_equal(self.getYArgs(),other.getYArgs())
+            and np.array_equal(self.getYArgs(), other.getYArgs())
             and np.array_equal(self.getVals(), other.getVals())
             and self.getInterp() == other.getInterp())
 
@@ -473,6 +473,6 @@ _galsim._LookupTable2D.__hash__ = lambda self: \
         hash(("_galsim._LookupTable2D", tuple(self.getXArgs()), tuple(self.getYArgs()),
               tuple(np.array(self.getVals()).ravel()), self.getInterp()))
 _galsim._LookupTable2D.__repr__ = lambda self: \
-        "galsim._galsim._LookupTable2D(array(%r), array(%r), array(%r), %r)"%(
+        "galsim._galsim._LookupTable2D(%r, %r, %r, %r)"%(
         self.getXArgs(), self.getYArgs(), self.getVals(), self.getInterp())
 _galsim._LookupTable2D.__str__ = _LookupTable2D_str

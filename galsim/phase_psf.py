@@ -490,7 +490,7 @@ class AtmosphericScreen(object):
                 self.screen_size, self.screen_scale, self.altitude, self.time_step, self.r0_500,
                 self.L0, self.vx, self.vy, self.alpha, self.rng, self.origin, self.orig_rng,
                 self.tab2d)
-        if self.alpha == 1.0:
+        if self.alpha != 1.0:
             s += ", _screen=array(%r, dtype=%s)" % (self.screen.to_list(), self.screen.dtype)
             s += ", _psi=array(%r, dtype=%s)" % (self.screen.to_list(), self.screen.dtype)
         s += ")"
@@ -751,7 +751,7 @@ class OpticalScreen(object):
                 warnings.warn(
                     "Detected non-zero value in aberrations[0] -- this value is ignored!")
 
-        self.aberrations = aberrations
+        self.aberrations = np.array(aberrations)
         self.lam_0 = lam_0
 
         maxn = max(_noll_to_zern(j)[0] for j in range(1, len(self.aberrations)))
@@ -759,8 +759,7 @@ class OpticalScreen(object):
         self.coef_array = np.zeros(shape, dtype=np.complex128)
 
         for j, ab in enumerate(self.aberrations):
-            if j == 0:
-                continue
+            if j == 0: continue
             self.coef_array += _zern_coef_array(*_noll_to_zern(j), shape=shape) * ab
 
     def __str__(self):
@@ -769,19 +768,19 @@ class OpticalScreen(object):
     def __repr__(self):
         s = "galsim.OpticalScreen(lam_0=%s" % self.lam_0
         if any(self.aberrations):
-            s += ", aberrations=["+",".join(self.aberrations)+"]"
+            s += ", aberrations=%r"%self.aberrations
         s += ")"
         return s
 
     def __eq__(self, other):
         return (isinstance(other, galsim.OpticalScreen) and
-                np.array_equal(self.aberrations/self.lam_0, other.aberrations/other.lam_0))
+                np.array_equal(self.aberrations*self.lam_0, other.aberrations*other.lam_0))
 
     def __ne__(self, other): return not self == other
 
     # This screen is immutable, so make a hash for it.
     def __hash__(self):
-        return hash(("galsim.AtmosphericScreen", tuple((self.aberattions/self.lam_0).ravel())))
+        return hash(("galsim.AtmosphericScreen", tuple((self.aberrations*self.lam_0).ravel())))
 
     # Note -- use **kwargs here so that AtmosphericScreen.stepK and OpticalScreen.stepK
     # can use the same signature, even though they depend on different parameters.
@@ -906,6 +905,8 @@ class PhaseScreenList(object):
         return self._layers == other._layers
 
     def __ne__(self, other): return not self == other
+
+    __hash__ = None  # Mutable means not hashable.
 
     def _update_attrs(self):
         # Update object attributes for current set of layers.  Currently the only attribute is
@@ -1064,7 +1065,6 @@ class PhaseScreenList(object):
                 PSFs.append(PhaseScreenPSF(self, lam, theta_x=theta_x, theta_y=theta_y, **kwargs))
 
             flux = kwargs.get('flux', 1.0)
-            gsparams = kwargs.get('gsparams', None)
             _nstep = PSFs[0]._nstep
             # For non-frozen-flow AtmosphericScreens, it can take much longer to update the
             # atmospheric layers than it does to create an instantaneous PSF, so we exchange the
@@ -1078,7 +1078,7 @@ class PhaseScreenList(object):
 
             suppress_warning = kwargs.pop('suppress_warning', False)
             for PSF in PSFs:
-                PSF._finalize(flux, gsparams, suppress_warning)
+                PSF._finalize(flux, suppress_warning)
             return PSFs
 
     @property
@@ -1158,7 +1158,7 @@ class PhaseScreenPSF(GSObject):
     The following are optional keywords to use to setup the aperture if `aper` is not provided.
 
     @param diam              Diameter in meters of aperture used to compute PSF from phases.
-    @param pupil_plane_scale       Sampling resolution of the pupil plane in meters.  Either `pupil_plane_scale`
+    @param pupil_plane_scale Sampling resolution of the pupil plane in meters.  Either `pupil_plane_scale`
                              or `npix` must be specified.
     @param pupil_plane_size  Size of the pupil plane in meters.  Note, this may be (in fact, it
                              usually *should* be) larger than the aperture diameter.
@@ -1198,6 +1198,7 @@ class PhaseScreenPSF(GSObject):
         self.theta_y = theta_y
         self.scale_unit = scale_unit
         self.interpolant = interpolant
+        self._gsparams = gsparams
 
         if aper is None:
             aper = Aperture(lam=lam, screen_list=screen_list, **kwargs)
@@ -1226,7 +1227,7 @@ class PhaseScreenPSF(GSObject):
                 self.screen_list.advance()
                 if _bar is not None:
                     _bar.update()
-            self._finalize(flux, gsparams, suppress_warning)
+            self._finalize(flux, suppress_warning)
 
     def __str__(self):
         return ("galsim.PhaseScreenPSF(%s, lam=%s, exptime=%s)" %
@@ -1255,7 +1256,7 @@ class PhaseScreenPSF(GSObject):
         ftexpwf = np.fft.fft2(np.fft.fftshift(expwf))
         self.img += np.abs(ftexpwf)**2
 
-    def _finalize(self, flux, gsparams, suppress_warning):
+    def _finalize(self, flux, suppress_warning):
         """Take accumulated integrated PSF image and turn it into a proper GSObject."""
         self.img = np.fft.fftshift(self.img)
         self.img *= (flux / (self.img.sum() * self.scale**2))
@@ -1263,7 +1264,9 @@ class PhaseScreenPSF(GSObject):
 
         self.ii = galsim.InterpolatedImage(
                 self.img, x_interpolant=self.interpolant, calculate_stepk=True, calculate_maxk=True,
-                use_true_center=False, normalization='sb', gsparams=gsparams)
+                use_true_center=False, normalization='sb', gsparams=self._gsparams)
+        self._serialize_stepk = self.ii._serialize_stepk
+        self._serialize_maxk = self.ii._serialize_maxk
 
         GSObject.__init__(self, self.ii)
 
@@ -1276,16 +1279,33 @@ class PhaseScreenPSF(GSObject):
             if observed_stepk < specified_stepk:
                 import warnings
                 warnings.warn(
-                    "The calculated stepk (%g) for PhasePSF is smaller "%observed_stepk +
+                    "The calculated stepk (%g) for PhaseScreenPSF is smaller "%observed_stepk +
                     "than what was used to build the wavefront (%g). "%specified_stepk +
                     "This could lead to aliasing problems. ") # +
                     # "Using pad_factor >= %f is recommended."%(pad_factor * stepk / final_stepk))
             # if observed_maxk < 0.5*specified_maxk:
             #     import warnings
             #     warnings.warn(
-            #         "The calculated maxk (%g) for PhasePSF is much smaller "%observed_maxk +
+            #         "The calculated maxk (%g) for PhaseScreenPSF is much smaller "%observed_maxk +
             #         "than what was used to build the wavefront (%g). "%specified_maxk +
             #         "This could indicate that oversampling is set too small.")
+
+    def __getstate__(self):
+        # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
+        # written as a string.  Better to pickle the image and remake the InterpolatedImage.
+        d = self.__dict__.copy()
+        del d['SBProfile']
+        del d['ii']
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self.ii =  galsim.InterpolatedImage(self.img, x_interpolant=self.interpolant,
+                                       use_true_center=False, normalization='sb',
+                                       _serialize_stepk=self._serialize_stepk,
+                                       _serialize_maxk=self._serialize_maxk,
+                                       gsparams=self._gsparams)
+        GSObject.__init__(self, self.ii)
 
 
 def _listify(arg):
@@ -1442,7 +1462,6 @@ def Atmosphere(screen_size, rng=None, **kwargs):
 
 #  Args not yet implemented:
 #  suppress_warning, max_size
-#  Also pickling.
 class OpticalPSF(GSObject):
     _req_params = {}
     _opt_params = {

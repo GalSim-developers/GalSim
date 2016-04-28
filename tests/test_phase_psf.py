@@ -35,8 +35,8 @@ pp_file = 'sample_pupil_rolled.fits'
 
 @timer
 def test_aperture():
-    # Simple tests for constructing Apertures.
-    aper1 = galsim.Aperture(diam=1.0, obscuration=0.0, lam=500.0)
+    # Simple tests for constructing and pickling Apertures.
+    aper1 = galsim.Aperture(diam=1.0, lam=500.0)
     im = galsim.fits.read(os.path.join(imgdir, pp_file))
     aper2 = galsim.Aperture(diam=1.0, pupil_plane_im=im)
     do_pickle(aper1)
@@ -49,16 +49,21 @@ def test_phase_screen_list():
     rng = galsim.BaseDeviate(1234)
     rng2 = galsim.BaseDeviate(123)
 
-    # Check that L0=np.inf and L0=None yield the same thing here too.
+    aper = galsim.Aperture(diam=1.0, lam=500)
+
     ar1 = galsim.AtmosphericScreen(10, 1, alpha=0.997, L0=None, rng=rng)
+    do_pickle(ar1)
+    do_pickle(ar1, func=lambda x: x.tab2d(12.3, 45.6))
+    do_pickle(ar1, func=lambda x: x.wavefront(aper).sum())
+
+    # Check that L0=np.inf and L0=None yield the same thing here too.
     ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.997, L0=np.inf, rng=rng)
     assert ar1 == ar2
     ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.995, rng=rng2)
     assert ar1 != ar2
-    do_pickle(ar1)
-    do_pickle(ar1, func=lambda x: x.tab2d(0, 0))
-    do_pickle(ar1, func=lambda x: x.tab2d(12.3, 45.6))
     ar3 = galsim.OpticalScreen(aberrations=[0, 0, 0, 0, 0, 0, 0, 0, 0.1])
+    do_pickle(ar3)
+    do_pickle(ar3, func=lambda x:x.wavefront(aper).sum())
     atm = galsim.Atmosphere(screen_size=30.0,
                             altitude=[0.0, 1.0],
                             speed=[1.0, 2.0],
@@ -66,6 +71,7 @@ def test_phase_screen_list():
                             r0_500=0.15,
                             rng=rng)
     atm.append(ar3)
+    do_pickle(atm)
 
     # testing append, extend, __getitem__, __setitem__, __delitem__, __eq__, __ne__
     atm2 = galsim.PhaseScreenList(atm[:-1])
@@ -86,7 +92,6 @@ def test_phase_screen_list():
     atm4.append(atm[-1])
     assert atm == atm4
 
-    aper = galsim.Aperture(diam=1.0, lam=500)
     wf = atm.wavefront(aper)
     wf2 = atm2.wavefront(aper)
     wf3 = atm3.wavefront(aper)
@@ -98,11 +103,15 @@ def test_phase_screen_list():
 
     # Check some actual derived PSFs too, not just phase screens.  Use a small pupil_plane_size and
     # relatively large pupil_plane_scale to speed up the unit test.
+    atm.advance_by(1.0)
+    do_pickle(atm)
     atm.reset()
     kwargs = dict(exptime=0.06, diam=4.0, lam=500.0,
                   _pupil_plane_size=6.0, _pupil_plane_scale=6.0/256)
 
     psf = atm.makePSF(**kwargs)
+    do_pickle(psf)
+    do_pickle(psf, func=lambda x:x.drawImage(nx=20, ny=20, scale=0.1))
 
     # Need to reset atm2 since both atm and atm2 reference the same layer objects (not copies).
     # Not sure if this is a feature or a bug, but it's also how regular python lists work.
@@ -233,12 +242,12 @@ def test_opt_indiv_aberrations():
     np.testing.assert_array_equal(
         psf1.img, psf2.img,
         "Individually specified aberrations differs from aberrations specified as list.")
-#
-#
-# if __name__ == "__main__":
-#     test_aperture()
-#     test_phase_screen_list()
-#     test_frozen_flow()
-#     test_phase_psf_reset()
-#     test_phase_psf_batch()
-#     test_opt_indiv_aberrations()
+
+
+if __name__ == "__main__":
+    test_aperture()
+    test_phase_screen_list()
+    test_frozen_flow()
+    test_phase_psf_reset()
+    test_phase_psf_batch()
+    test_opt_indiv_aberrations()
