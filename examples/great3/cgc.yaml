@@ -203,7 +203,8 @@ input:
     cosmos_catalog :
         # If the command galsim_download_cosmos has been run for the F814W<23.5 sample,
         # the catalog will have been downloaded from the GalSim web site and saved in a
-        # directory that GalSim knows about.
+        # directory that GalSim knows about.  (This requires use of the "-s 23.5" option
+        # when running galsim_download_cosmos, to make sure you get the right one.)
         # So file_name and dir are not necessary, but we do need to say which sample to use.
         # Note that we could use the F814W<25.2 sample that is now available.  However, for
         # real galaxy branches, we would have to be careful to avoid issues with the noise

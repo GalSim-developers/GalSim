@@ -46,9 +46,9 @@ for sedname in sednames:
     w = x<=22050 # Angstroms
     x = x[w]
     f = f[w]
-    x1,f1 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-5)
-    x2,f2 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-4)
-    x3,f3 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-3)
+    x1,f1 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-5, fast_search=False)
+    x2,f2 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-4, fast_search=False)
+    x3,f3 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-3, fast_search=False)
     print "{0} raw size = {1}".format(base,len(x))
     print "    thinned sizes = {0}, {1}, {2}".format(len(x1),len(x2),len(x3))
 
@@ -62,11 +62,12 @@ for sedname in sednames:
 #  Obtained from ZPHOT code at
 #  'http://webast.ast.obs-mip.fr/hyperz/zphot_src_1.1.tar.gz'
 #
-#  Truncated to wavelengths less than 12000 Angstroms, and thinned by
-#  galsim.utilities.thin_tabulated_values to a relative error of 1.e-5
+#  Truncated to wavelengths less than 22050 Angstroms, and thinned by
+#  galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
+#  with fast_search=False.
 #
 #  Angstroms     Flux/A
 #
 """.format(base.split('_')[1]))
-        for i in range(len(x1)):
-            out.write(" {0:>10.2f}    {1:>10.5f}\n".format(x1[i], f1[i]))
+        for i in range(len(x3)):
+            out.write(" {0:>10.2f}    {1:>10.5f}\n".format(x3[i], f3[i]))

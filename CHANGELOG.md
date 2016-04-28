@@ -33,10 +33,19 @@ Bug Fixes
   where the resulting object did not set the index attribute properly. (#694)
 - Fixed an error in the `CCDNoise.getVariance()` function, as well as some
   errors in the documentation about the units of CCDNoise parameters. (#713)
+- Fixed a bug in drawKImage when non-default scale is given, but no images
+  are provided. (#720)
+- Fixed an assert failure in InterpolatedImage if the input image is 
+  identically equal to zero. (#720)
+- Fixed a potential instability in drawing with deconvolution.  Now the fft of
+  the deconvolved image will not be made larger than 1/kvalue_accuracy. (#720)
 - Fixed a bug in how InterpolatedKImage checked for properly Hermitian input
-  images.
+  images. (#723)
 - Updated ups table file so that setup command is `setup galsim` instead of
   `setup GalSim` (#724)
+- Added new default algorithm for thinning SEDs and Bandpasses to enable faster
+  calculations while still meeting relative error constraints. (#739).
+
 
 Deprecated Features
 -------------------

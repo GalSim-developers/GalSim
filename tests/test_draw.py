@@ -587,7 +587,7 @@ def test_drawKImage():
             "obj.drawKImage(re5,im5) produced image with wrong bounds")
 
     # Test if we provide a scale to use.  It should:
-    #   - create a new image using that dx for the scale
+    #   - create a new image using that scale for the scale
     #   - return the new image
     #   - set the size large enough to contain 99.5% of the flux
     scale = 0.51   # Just something different from 1 or dx_nyq
@@ -602,7 +602,8 @@ def test_drawKImage():
                                    "obj.drawKImage(dx) produced non-zero imaginary image")
     np.testing.assert_almost_equal(CalculateScale(re7), 2, 1,
                                    "Measured wrong scale after obj.drawKImage(dx)")
-    assert im7.bounds == galsim.BoundsI(1,N,1,N),(
+    # This image is smaller because not using nyquist scale for stepk
+    assert im7.bounds == galsim.BoundsI(1,72,1,72),(
             "obj.drawKImage(dx) produced image with wrong bounds")
 
     # Test if we provide an image with a defined scale.  It should:
