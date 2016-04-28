@@ -271,6 +271,8 @@ class OpticalPSF(GSObject):
         airy = galsim.Airy(lam_over_diam = lam_over_diam, obscuration = obscuration,
                            gsparams = gsparams)
         stepk_airy = airy.stepK()
+        print repr(airy)
+        print stepk_airy
 
         # Boost Airy image size by a user-specifed pad_factor to allow for larger, aberrated PSFs
         stepk = stepk_airy / pad_factor
@@ -281,6 +283,8 @@ class OpticalPSF(GSObject):
             twoR = max_size
 
         # Get a good FFT size.  i.e. 2^n or 3 * 2^n.
+        print twoR
+        print scale_lookup
         npix = galsim._galsim.goodFFTSize(int(np.ceil(twoR / scale_lookup)))
 
         if aberrations is None:
@@ -342,6 +346,20 @@ class OpticalPSF(GSObject):
             aberrations=aberrations, circular_pupil=circular_pupil, obscuration=obscuration,
             flux=flux, nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle,
             pupil_plane_im=pupil_plane_im, pupil_angle=pupil_angle, oversampling=oversampling)
+
+        wf, effective_oversampling = galsim.optics.wavefront(
+            array_shape=(npix, npix), scale=scale_lookup, lam_over_diam=lam_over_diam, aberrations=aberrations,
+            circular_pupil=circular_pupil, obscuration=obscuration, nstruts=nstruts,
+            strut_thick=strut_thick, strut_angle=strut_angle, pupil_plane_im=pupil_plane_im,
+            pupil_angle=pupil_angle)
+        self._wf = wf
+
+
+        rho, in_pupil = generate_pupil_plane(array_shape=(npix, npix), scale=scale_lookup, lam_over_diam=lam_over_diam, circular_pupil=circular_pupil,
+                                             obscuration=obscuration, nstruts=nstruts, strut_thick=strut_thick,
+                                             strut_angle=strut_angle)
+        self.rho = rho
+        self.illuminated = in_pupil
 
         # Initialize the GSObject (InterpolatedImage)
         ii = galsim.InterpolatedImage(optimage, x_interpolant=interpolant,
