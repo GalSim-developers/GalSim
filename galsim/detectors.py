@@ -306,27 +306,27 @@ def applyPersistence(self,imgs,coeffs):
     @ returns None
     """
 
-    if hasattr(imgs,'__iter__') and hasattr(coeffs,'__iter__'):
-        if not len(imgs)==len(coeffs):
-            raise TypeError("The length of 'imgs' and 'coeffs' must be the same, if passed as a "
-                            "list")
-            # If this error is not raised, then the images are added as long as one of the list is
-            # exhausted.
-        else:
-            for img,coeff in zip(imgs,coeffs):
-                if not isinstance(img,galsim.Image):
-                    raise ValueError("In 'applyPersistence', the objects in 'imgs' must be "
-                                     "galsim.Image instances")
-                if not isinstance(coeff,float):
-                    raise ValueError("In 'applyPersistence', the objects in 'coeffs' must be "
-                                     "of type float")
-
-                self += coeff*img
-
-    else:
+    if not hasattr(imgs,'__iter__') or not hasattr(coeffs,'__iter__'):
         raise TypeError("Type mismatch between 'imgs' and 'coeffs' in 'applyPersistence' routine. "
         "'imgs' must be a list of Image instances and 'coeffs' must be a list of floats of the same
         length.")
+
+    if not len(imgs)==len(coeffs):
+        raise TypeError("The length of 'imgs' and 'coeffs' must be the same, if passed as a "
+                        "list")
+        # If this error is not raised, then the images are added as long as one of the list is
+        # exhausted.
+
+    for img,coeff in zip(imgs,coeffs):
+        if not isinstance(img,galsim.Image):
+            raise ValueError("In 'applyPersistence', the objects in 'imgs' must be "
+                             "galsim.Image instances")
+
+        if not isinstance(coeff,float):
+            raise ValueError("In 'applyPersistence', the objects in 'coeffs' must be "
+                             "of type float")
+
+        self += coeff*img
 
 def quantize(self):
     """

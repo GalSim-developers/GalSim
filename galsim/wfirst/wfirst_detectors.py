@@ -85,7 +85,7 @@ def applyIPC(img, edge_treatment='extend', fill_value=None):
 def applyPersistence(img, prev_exposures):
     """
     Applies the persistence effect to the Image instance by adding a small fraction of the previous
-    exposures (up to 8) supplied as the 'prev_exposures' argument.
+    exposures (up to {ncoeff}) supplied as the 'prev_exposures' argument.
 
     For more information about persistence, see the docstring for galsim.Image.applyPersistence.
     Unlike that routine, this one does not need the coefficients to be specified. However, the list
@@ -93,20 +93,21 @@ def applyPersistence(img, prev_exposures):
     ignored.
 
     @param img               The Image to be transformed.
-    @param prev_exposures    List of up to 8 Image instances in the order of exposures, with the
+    @param prev_exposures    List of up to {ncoeff} Image instances in the order of exposures, with the
                              recent exposure being the first element.
-    """
-    if hasattr(prev_exposures,'__iter__'):
-        n_exp = min(len(prev_exposures),len(galsim.wfirst.persistence_coefficients))
-        if n_exp > len(galsim.wfirst.persistence_coefficients):
-            import warnings
-            warnings.warn("More than 8 Image instances were passed to"
-                          " galsim.wfirst.applyPersistence routine. Ignoring the earlier"
-                          " exposures")
-        img.applyPersistence(prev_exposures[:n_exp],galsim.wfirst.persistence_coefficients[:n_exp])
-    else:
+    """.format(ncoeff=galsim.wfirst.persistence_coefficients)
+    if not hasattr(prev_exposures,'__iter__'):
         raise TypeError("In wfirst.applyPersistence, 'prev_exposures' must be a list of Image"
         " instances")
+
+    n_exp = min(len(prev_exposures),len(galsim.wfirst.persistence_coefficients))
+    if n_exp > len(galsim.wfirst.persistence_coefficients):
+        import warnings
+        warnings.warn("More than {ncoeff} Image instances were passed to"
+                      " galsim.wfirst.applyPersistence routine. Ignoring the earlier"
+                      " exposures".format(ncoeff=galsim.wfirst.persistence_coefficients))
+
+    img.applyPersistence(prev_exposures[:n_exp],galsim.wfirst.persistence_coefficients[:n_exp])
 
 def allDetectorEffects(img, rng=None, exptime=None, prev_exposures=[]):
     """
@@ -118,19 +119,21 @@ def allDetectorEffects(img, rng=None, exptime=None, prev_exposures=[]):
     Image with all sources of signal (background plus astronomical objects), and the Image will be
     modified to include all subsequent steps in the image generation process for WFIRST that are
     implemented in GalSim. However, to include the effect of persistence, the user needs to provide
-    a list of up to 8 recent exposures (without the readout effects such nonlinearity and interpixel
-    capacitance included) and the routine returns an updated list of up to 8 recent exposures.
+    a list of up to {ncoeff} recent exposures (without the readout effects such nonlinearity and
+    interpixel capacitance included) and the routine returns an updated list of up to {ncoeff}
+    recent exposures.
 
     @param img               The Image to be modified.
     @param rng               An optional galsim.BaseDeviate to use for the addition of noise.  If
                              None, a new one will be initialized.  [default: None]
     @param exptime           The exposure time, in seconds.  If None, then the WFIRST default
                              exposure time will be used.  [default: None]
-    @param prev_exposures    List of up to 8 Image instances in the order of exposures, with the
-                             recent exposure being the first element. [default: []]
+    @param prev_exposures    List of up to {ncoeff} Image instances in the order of exposures, with
+                             the recent exposure being the first element. [default: []]
 
-    @returns prev_exposures  Updated list of previous exposures containing up to 8 Image instances.
-    """
+    @returns prev_exposures  Updated list of previous exposures containing up to {ncoeff} Image
+                             instances.
+    """.format(ncoeff=galsim.wfirst.persistence_coefficients)
     # Deal appropriately with passed-in RNG, exposure time.
     if rng is None:
         rng = galsim.BaseDeviate()
