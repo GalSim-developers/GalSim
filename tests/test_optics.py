@@ -557,13 +557,20 @@ def test_OpticalPSF_pupil_plane():
     ref_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, nstruts=nstruts,
                                 oversampling=pp_oversampling, strut_angle=strut_angle,
                                 pad_factor=pp_pad_factor)
-    im = galsim.fits.read(os.path.join(imgdir, pp_file))
+    if os.path.isfile(os.path.join(imgdir, pp_file)):
+        im = galsim.fits.read(os.path.join(imgdir, pp_file))
+    else:
+        im = galsim.Image(ref_psf._aper.illuminated.astype(float))
+        im.write(os.path.join(imgdir, pp_file))
+    ref_im_scale = ref_psf._aper.pupil_plane_scale
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
                                  oversampling=pp_oversampling, pupil_plane_im=im,
-                                 pad_factor=pp_pad_factor)
+                                 pad_factor=pp_pad_factor,
+                                 _pupil_plane_scale=ref_im_scale)
     im_ref_psf = ref_psf.drawImage(scale=scale)
     im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
     im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
+
     if pp_test_type == 'image':
         np.testing.assert_array_almost_equal(
             im_test_psf.array, im_ref_psf.array, decimal=pp_decimal,
@@ -574,6 +581,7 @@ def test_OpticalPSF_pupil_plane():
         np.testing.assert_almost_equal(
             test_moments.moments_sigma, ref_moments.moments_sigma, decimal=pp_decimal,
             err_msg="Inconsistent OpticalPSF image for basic model after loading pupil plane.")
+
     # if __name__ == '__main__':
         # do_pickle(test_psf, lambda x: x.drawImage(nx=20, ny=20, scale=0.07, method='no_pixel'))
         # do_pickle(test_psf)
@@ -581,9 +589,11 @@ def test_OpticalPSF_pupil_plane():
     # It is supposed to be able to figure this out even if we *don't* tell it the pad factor. So
     # make sure that it still works even if we don't tell it that value.
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
-                                 oversampling=pp_oversampling)
+                                 oversampling=pp_oversampling,
+                                 _pupil_plane_scale=ref_im_scale)
     im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
     im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
+
     if pp_test_type == 'image':
         np.testing.assert_array_almost_equal(
             im_test_psf.array, im_ref_psf.array, decimal=pp_decimal,
@@ -606,7 +616,8 @@ def test_OpticalPSF_pupil_plane():
                                 pad_factor=pp_pad_factor)
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
                                  pupil_angle=rot_angle, oversampling=pp_oversampling,
-                                 pad_factor=pp_pad_factor)
+                                 pad_factor=pp_pad_factor,
+                                 _pupil_plane_scale=ref_im_scale)
     im_ref_psf = ref_psf.drawImage(scale=scale)
     im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
     im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
@@ -632,7 +643,8 @@ def test_OpticalPSF_pupil_plane():
                                 oversampling=pp_oversampling, pad_factor=pp_pad_factor)
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
                                  defocus=defocus, coma1=coma1, spher=spher,
-                                 oversampling=pp_oversampling, pad_factor=pp_pad_factor)
+                                 oversampling=pp_oversampling, pad_factor=pp_pad_factor,
+                                 _pupil_plane_scale=ref_im_scale)
     im_ref_psf = ref_psf.drawImage(scale=scale)
     im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
     im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
@@ -657,7 +669,8 @@ def test_OpticalPSF_pupil_plane():
         rot_angle = ind*2.*np.pi/nstruts
         test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
                                      pupil_angle=rot_angle*galsim.radians,
-                                     oversampling=pp_oversampling, pad_factor=pp_pad_factor)
+                                     oversampling=pp_oversampling, pad_factor=pp_pad_factor,
+                                     _pupil_plane_scale=ref_im_scale)
         im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
         im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
         if pp_test_type == 'image':
@@ -710,7 +723,8 @@ def test_OpticalPSF_pupil_plane():
                                       x_interpolant='linear')
     new_im = int_im.drawImage(scale=rescale_fac*im.scale, method='no_pixel')
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
-                                 pupil_plane_im=new_im, oversampling=pp_oversampling)
+                                 pupil_plane_im=new_im, oversampling=pp_oversampling,
+                                 _pupil_plane_scale=ref_im_scale*rescale_fac)
     im_ref_psf = ref_psf.drawImage(scale=scale)
     im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
     im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
@@ -731,7 +745,8 @@ def test_OpticalPSF_pupil_plane():
     sub_im = im[im.bounds.withBorder(remove_pad)]
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
                                  pupil_plane_im=sub_im, oversampling=pp_oversampling,
-                                 pad_factor=pp_pad_factor)
+                                 pad_factor=pp_pad_factor,
+                                 _pupil_plane_scale=ref_im_scale)
     im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
     im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
     test_moments = im_test_psf.FindAdaptiveMom()
@@ -746,7 +761,8 @@ def test_OpticalPSF_pupil_plane():
     big_im[im.bounds] = im
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
                                  pupil_plane_im=big_im, oversampling=pp_oversampling,
-                                 pad_factor=pp_pad_factor)
+                                 pad_factor=pp_pad_factor,
+                                 _pupil_plane_scale=ref_im_scale)
     im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
     im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
     test_moments = im_test_psf.FindAdaptiveMom()
@@ -758,15 +774,18 @@ def test_OpticalPSF_pupil_plane():
 
     # Check for same answer if we use image, array, or filename for reading in array.
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im,
-                                 oversampling=pp_oversampling, pad_factor=pp_pad_factor)
+                                 oversampling=pp_oversampling, pad_factor=pp_pad_factor,
+                                 _pupil_plane_scale=ref_im_scale)
     im_test_psf = test_psf.drawImage(scale=scale)
     test_psf_2 = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im.array,
-                                   oversampling=pp_oversampling, pad_factor=pp_pad_factor)
+                                   oversampling=pp_oversampling, pad_factor=pp_pad_factor,
+                                   _pupil_plane_scale=ref_im_scale)
     im_test_psf_2 = test_psf_2.drawImage(scale=scale)
     test_psf_3 = galsim.OpticalPSF(
         lam_over_diam, obscuration=obscuration, oversampling=pp_oversampling,
         pupil_plane_im=os.path.join(imgdir, pp_file),
-        pad_factor=pp_pad_factor)
+        pad_factor=pp_pad_factor,
+        _pupil_plane_scale=ref_im_scale)
     im_test_psf_3 = test_psf_3.drawImage(scale=scale)
     np.testing.assert_almost_equal(
         im_test_psf.array, im_test_psf_2.array, decimal=pp_decimal,
