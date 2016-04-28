@@ -44,26 +44,21 @@ decimal_dft = 3  # Last decimal place used for checking near equality of DFT pro
 
 # The lines below control the behavior of the tests that involve making PSFs from pupil plane
 # images.  The best tests involve very high resolution images, but these are slow.  So, when running
-# test_optics.py directly, you will get the slow tests (~5 minutes for all of them).  When running
+# test_optics.py directly, you will get the slow tests (~25 minutes for all of them).  When running
 # `scons tests`, you will get faster, less stringent tests.
 if __name__ == "__main__":
-    # pp_decimal = 5
-    # pp_file = 'sample_pupil_rolled_oversample.fits.gz'
-    # pp_oversampling = 4.
-    # pp_pad_factor = 4.
+    pp_decimal = 5
+    pp_file = 'sample_pupil_rolled_oversample.fits.gz'
+    pp_oversampling = 4.
+    pp_pad_factor = 4.
     # # In this case, we test the entire images.
-    # pp_test_type = 'image'
-    pp_decimal = 4
-    pp_file = 'sample_pupil_rolled.fits'
-    pp_oversampling = 1.5
-    pp_pad_factor = 1.5
+    pp_test_type = 'image'
     # In the less stringent tests, we may opt to test only the 2nd moments rather than the images
     # themselves.  This is because when the original tests were set up, I found low-level artifacts
     # that made it hard to get image-based tests to pass, yet the adaptive moments agreed quite
     # well.  Given that there were no such problems in the image-based tests with high-res inputs, I
     # believe these artifacts in the low-res tests should be ignored (by doing moments-based tests
     # only).
-    pp_test_type = 'moments'
 else:
     pp_decimal = 4
     pp_file = 'sample_pupil_rolled.fits'
@@ -225,6 +220,7 @@ else:
 #     t2 = time.time()
 #     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
 @timer
 def test_OpticalPSF_flux():
     """Compare an unaberrated OpticalPSF flux to unity.
@@ -237,8 +233,9 @@ def test_OpticalPSF_flux():
         optics_array = optics_test.drawImage(scale=.25*lod, image=image, method='no_pixel').array
         np.testing.assert_almost_equal(optics_array.sum(), 1., 2,
                 err_msg="Unaberrated Optical flux not quite unity.")
-    # do_pickle(optics_test, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
-    # do_pickle(optics_test)
+    do_pickle(optics_test, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
+    do_pickle(optics_test)
+
 
 @timer
 def test_OpticalPSF_vs_Airy():
@@ -257,6 +254,7 @@ def test_OpticalPSF_vs_Airy():
         np.testing.assert_array_almost_equal(optics_array, airy_array, decimal_dft,
                 err_msg="Unaberrated Optical not quite equal to Airy")
 
+
 @timer
 def test_OpticalPSF_vs_Airy_with_obs():
     """Compare the array view on an unaberrated OpticalPSF with obscuration to that of an Airy.
@@ -274,8 +272,9 @@ def test_OpticalPSF_vs_Airy_with_obs():
         optics_array = optics_test.drawImage(scale=1.,image=image, method='no_pixel').array
         np.testing.assert_array_almost_equal(optics_array, airy_array, decimal_dft,
                 err_msg="Unaberrated Optical with obscuration not quite equal to Airy")
-    # do_pickle(optics_test, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
-    # do_pickle(optics_test)
+    do_pickle(optics_test, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
+    do_pickle(optics_test)
+
 
 @timer
 def test_OpticalPSF_aberrations_struts():
@@ -363,8 +362,8 @@ def test_OpticalPSF_aberrations_struts():
     np.testing.assert_array_almost_equal(
         myImg.array, savedImg.array, 6,
         err_msg="Optical aberration (all aberrations) disagrees with expected result")
-    # do_pickle(optics, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
-    # do_pickle(optics)
+    do_pickle(optics, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
+    do_pickle(optics)
 
     # test struts
     savedImg = galsim.fits.read(os.path.join(imgdir, "optics_struts.fits"))
@@ -376,8 +375,8 @@ def test_OpticalPSF_aberrations_struts():
                                  strut_angle=8.) # wrong units
     except ImportError:
         print 'The assert_raises tests require nose'
-    # do_pickle(optics, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
-    # do_pickle(optics)
+    do_pickle(optics, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
+    do_pickle(optics)
 
     # Make sure it doesn't have some weird error if strut_angle=0 (should be the easiest case, but
     # check anyway...)
@@ -400,8 +399,9 @@ def test_OpticalPSF_aberrations_struts():
     optics = galsim.OpticalPSF(
         lod, obscuration=obscuration, nstruts=5, strut_thick=0.04, strut_angle=8.*galsim.degrees,
         astig2=0.04, coma1=-0.07, defocus=0.09, circular_pupil=False)
-    # do_pickle(optics, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
-    # do_pickle(optics)
+    do_pickle(optics, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
+    do_pickle(optics)
+
 
 @timer
 def test_OpticalPSF_aberrations_kwargs():
@@ -435,8 +435,8 @@ def test_OpticalPSF_aberrations_kwargs():
         opt1.drawImage(scale=0.2*lod, method='no_pixel').array,
         opt2.drawImage(scale=0.2*lod, method='no_pixel').array,
         err_msg="Optical PSF depends on how aberrations are specified (full list)")
-    # do_pickle(opt2, lambda x: x.drawImage(nx=20, ny=20, scale=0.01, method='no_pixel'))
-    # do_pickle(opt2)
+    do_pickle(opt2, lambda x: x.drawImage(nx=20, ny=20, scale=0.01, method='no_pixel'))
+    do_pickle(opt2)
 
     # Also, check for proper response to weird inputs.
     try:
@@ -452,6 +452,7 @@ def test_OpticalPSF_aberrations_kwargs():
                                  defocus=-0.12)
     except ImportError:
         print 'The assert_raises tests require nose'
+
 
 @timer
 def test_OpticalPSF_flux_scaling():
@@ -584,9 +585,9 @@ def test_OpticalPSF_pupil_plane():
             test_moments.moments_sigma, ref_moments.moments_sigma, decimal=pp_decimal,
             err_msg="Inconsistent OpticalPSF image for basic model after loading pupil plane.")
 
-    # if __name__ == '__main__':
-        # do_pickle(test_psf, lambda x: x.drawImage(nx=20, ny=20, scale=0.07, method='no_pixel'))
-        # do_pickle(test_psf)
+    if __name__ == '__main__':
+        do_pickle(test_psf, lambda x: x.drawImage(nx=20, ny=20, scale=0.07, method='no_pixel'))
+        do_pickle(test_psf)
 
     # It is supposed to be able to figure this out even if we *don't* tell it the pad factor. So
     # make sure that it still works even if we don't tell it that value.
@@ -833,9 +834,8 @@ def test_OpticalPSF_lamdiam():
         print 'The assert_raises tests require nose'
 
 
+@timer
 def test_ne():
-    import time
-    t1 = time.time()
     # Use some very forgiving settings to speed up this test.  We're not actually going to draw
     # any images (other than internally the PSF), so should be okay.
     gsp1 = galsim.GSParams(maxk_threshold=5.e-2, folding_threshold=5e-2, kvalue_accuracy=1e-3,
@@ -864,14 +864,14 @@ def test_ne():
             galsim.OpticalPSF(lam_over_diam=1.0, circular_pupil=False, gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, interpolant='Linear', gsparams=gsp1)]
     if __name__ == "__main__":
-        objs += [galsim.OpticalPSF(lam_over_diam=1.0, pupil_plane_im=pupil_plane_im, gsparams=gsp1,
-                                   suppress_warning=True),
+        objs += [galsim.OpticalPSF(lam_over_diam=1.0, pupil_plane_im=pupil_plane_im, gsparams=gsp1),
                  galsim.OpticalPSF(lam_over_diam=1.0, pupil_plane_im=pupil_plane_im,
-                                   pupil_angle=10*galsim.degrees, suppress_warning=True)]
+                                   pupil_angle=10*galsim.degrees)]
+        # objs += [galsim.OpticalPSF(lam_over_diam=1.0, pupil_plane_im=pupil_plane_im, gsparams=gsp1,
+        #                            suppress_warning=True),
+        #          galsim.OpticalPSF(lam_over_diam=1.0, pupil_plane_im=pupil_plane_im,
+        #                            pupil_angle=10*galsim.degrees, suppress_warning=True)]
     all_obj_diff(objs)
-
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 if __name__ == "__main__":
@@ -885,12 +885,12 @@ if __name__ == "__main__":
     # test_otf_image_view()
     # test_mtf_image_view()
     # test_ptf_image_view()
-    # test_OpticalPSF_flux()
-    # test_OpticalPSF_vs_Airy()
-    # test_OpticalPSF_vs_Airy_with_obs()
-    # test_OpticalPSF_aberrations_struts()
-    # test_OpticalPSF_aberrations_kwargs()
-    # test_OpticalPSF_flux_scaling()
+    test_OpticalPSF_flux()
+    test_OpticalPSF_vs_Airy()
+    test_OpticalPSF_vs_Airy_with_obs()
+    test_OpticalPSF_aberrations_struts()
+    test_OpticalPSF_aberrations_kwargs()
+    test_OpticalPSF_flux_scaling()
     test_OpticalPSF_pupil_plane()
-    # test_OpticalPSF_lamdiam()
-    # test_ne()
+    test_OpticalPSF_lamdiam()
+    test_ne()
