@@ -308,8 +308,8 @@ def applyPersistence(self,imgs,coeffs):
 
     if not hasattr(imgs,'__iter__') or not hasattr(coeffs,'__iter__'):
         raise TypeError("Type mismatch between 'imgs' and 'coeffs' in 'applyPersistence' routine. "
-        "'imgs' must be a list of Image instances and 'coeffs' must be a list of floats of the same
-        length.")
+                        "'imgs' must be a list of Image instances and 'coeffs' must be a list of "
+                        "floats of the same length.")
 
     if not len(imgs)==len(coeffs):
         raise TypeError("The length of 'imgs' and 'coeffs' must be the same, if passed as a "
