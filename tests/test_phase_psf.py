@@ -36,7 +36,7 @@ pp_file = 'sample_pupil_rolled.fits'
 @timer
 def test_aperture():
     # Simple tests for constructing Apertures.
-    aper1 = galsim.Aperture(diam=1.0, npix=512)
+    aper1 = galsim.Aperture(diam=1.0, obscuration=0.0, lam=500.0)
     im = galsim.fits.read(os.path.join(imgdir, pp_file))
     aper2 = galsim.Aperture(diam=1.0, pupil_plane_im=im)
     do_pickle(aper1)
@@ -86,7 +86,7 @@ def test_phase_screen_list():
     atm4.append(atm[-1])
     assert atm == atm4
 
-    aper = galsim.Aperture(20, npix=256)
+    aper = galsim.Aperture(diam=1.0, lam=500)
     wf = atm.wavefront(aper)
     wf2 = atm2.wavefront(aper)
     wf3 = atm3.wavefront(aper)
@@ -96,9 +96,11 @@ def test_phase_screen_list():
     np.testing.assert_array_equal(wf, wf3, "PhaseScreenLists are inconsistent")
     np.testing.assert_array_equal(wf, wf4, "PhaseScreenLists are inconsistent")
 
-    # Check some actual derived PSFs too, not just phase screens.
+    # Check some actual derived PSFs too, not just phase screens.  Use a small pupil_plane_size and
+    # relatively large pupil_plane_scale to speed up the unit test.
     atm.reset()
-    kwargs = dict(exptime=0.06, diam=4.0, pupil_plane_size=6.0, pupil_scale=6.0/192)
+    kwargs = dict(exptime=0.06, diam=4.0, lam=500.0,
+                  _pupil_plane_size=6.0, _pupil_plane_scale=6.0/256)
 
     psf = atm.makePSF(**kwargs)
 
@@ -130,7 +132,7 @@ def test_frozen_flow():
     alt = x/1000   # -> 0.00005 km; silly example, but yields exact results...
 
     screen = galsim.phase_psf.AtmosphericScreen(1.0, dx, alt, vx=vx, time_step=dt, rng=rng)
-    aper = galsim.Aperture(20, 20/dx)
+    aper = galsim.Aperture(diam=1, _pupil_plane_size=20., _pupil_plane_scale=20./dx)
     wf0 = screen.wavefront(aper)
     screen.advance_by(t)
     wf1 = screen.wavefront(aper, theta_x=45*galsim.degrees)
@@ -143,7 +145,7 @@ def test_phase_psf_reset():
     rng = galsim.BaseDeviate(1234)
     # Test frozen AtmosphericScreen first
     atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, speed=0.1, alpha=1.0, rng=rng)
-    aper = galsim.Aperture(16, 160)
+    aper = galsim.Aperture(diam=1.0, lam=500.0)
     wf1 = atm.wavefront(aper)
     atm.advance()
     wf2 = atm.wavefront(aper)
@@ -180,7 +182,8 @@ def test_phase_psf_batch():
     theta_x = [i * galsim.arcsec for i in xrange(NPSFs)]
     theta_y = [i * galsim.arcsec for i in xrange(NPSFs)]
 
-    kwargs = dict(exptime=exptime, diam=4.0, pupil_plane_size=6.0, pupil_scale=6.0/192)
+    kwargs = dict(lam=500.0, exptime=exptime, diam=4.0,
+                  _pupil_plane_size=6.0, _pupil_plane_scale=6.0/192)
 
     t1 = time.time()
     psfs = atm.makePSF(theta_x=theta_x, theta_y=theta_y, **kwargs)
@@ -224,18 +227,18 @@ def test_opt_indiv_aberrations():
     screen2 = galsim.OpticalScreen(aberrations=[0.0, 0.0, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,
                                                 1.0, 1.1])
 
-    psf1 = galsim.PhaseScreenList([screen1]).makePSF(diam=4.0)
-    psf2 = galsim.PhaseScreenList([screen2]).makePSF(diam=4.0)
+    psf1 = galsim.PhaseScreenList([screen1]).makePSF(diam=4.0, lam=500.0)
+    psf2 = galsim.PhaseScreenList([screen2]).makePSF(diam=4.0, lam=500.0)
 
     np.testing.assert_array_equal(
         psf1.img, psf2.img,
         "Individually specified aberrations differs from aberrations specified as list.")
-
-
-if __name__ == "__main__":
-    test_aperture()
-    test_phase_screen_list()
-    test_frozen_flow()
-    test_phase_psf_reset()
-    test_phase_psf_batch()
-    test_opt_indiv_aberrations()
+#
+#
+# if __name__ == "__main__":
+#     test_aperture()
+#     test_phase_screen_list()
+#     test_frozen_flow()
+#     test_phase_psf_reset()
+#     test_phase_psf_batch()
+#     test_opt_indiv_aberrations()
