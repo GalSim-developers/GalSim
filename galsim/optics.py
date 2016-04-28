@@ -347,20 +347,6 @@ class OpticalPSF(GSObject):
             flux=flux, nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle,
             pupil_plane_im=pupil_plane_im, pupil_angle=pupil_angle, oversampling=oversampling)
 
-        wf, effective_oversampling = galsim.optics.wavefront(
-            array_shape=(npix, npix), scale=scale_lookup, lam_over_diam=lam_over_diam, aberrations=aberrations,
-            circular_pupil=circular_pupil, obscuration=obscuration, nstruts=nstruts,
-            strut_thick=strut_thick, strut_angle=strut_angle, pupil_plane_im=pupil_plane_im,
-            pupil_angle=pupil_angle)
-        self._wf = wf
-
-
-        rho, in_pupil = generate_pupil_plane(array_shape=(npix, npix), scale=scale_lookup, lam_over_diam=lam_over_diam, circular_pupil=circular_pupil,
-                                             obscuration=obscuration, nstruts=nstruts, strut_thick=strut_thick,
-                                             strut_angle=strut_angle)
-        self.rho = rho
-        self.illuminated = in_pupil
-
         # Initialize the GSObject (InterpolatedImage)
         ii = galsim.InterpolatedImage(optimage, x_interpolant=interpolant,
                                       calculate_stepk=True, calculate_maxk=True,
