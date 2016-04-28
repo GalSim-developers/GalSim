@@ -159,7 +159,7 @@ class Aperture(object):
             else:
                 self.npix = int(np.ceil(self.pupil_plane_size/_pupil_plane_scale))
             # Make sure pupil_plane_size is an integer multiple of pupil_plane_scale.
-            self.pupil_plane_scale = _pupil_plane_size/self.npix
+            self.pupil_plane_scale = self.pupil_plane_size/self.npix
 
             # With the array parameters set, we're ready to actually parametrically draw the pupil
             # plane.
@@ -168,6 +168,13 @@ class Aperture(object):
 
     def _generate_pupil_plane(self, circular_pupil=True, obscuration=0.,
                               nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees):
+        # Save params for str/repr
+        self._circular_pupil = circular_pupil
+        self._obscuration = obscuration
+        self._nstruts = nstruts
+        self._strut_thick = strut_thick
+        self._strut_angle = strut_angle
+
         u = np.fft.fftshift(np.fft.fftfreq(self.npix, 1./self.pupil_plane_size))
         u, v = np.meshgrid(u, u)
         rsqr = u**2 + v**2
@@ -266,44 +273,56 @@ class Aperture(object):
             pp_arr[pp_arr < 0.5*max_pp_val] = 0.
             self.illuminated = pp_arr.astype(bool)
 
-    # Pull this common bit out for use below and in OpticalPSF repr/str.
-    # def _geometry_str(self):
-    #     s = ""
-    #     if hasattr(self, '_circular_pupil') and not self._circular_pupil:
-    #         s += ", circular_pupil=False"
-    #     if hasattr(self, '_obscuration') and self._obscuration != 0:
-    #         s += ", obscuration=%r" % self._obscuration
-    #     if hasattr(self, '_nstruts') and self._nstruts != 0:
-    #         s += ", nstruts=%r" % self._nstruts
-    #     if hasattr(self, '_strut_thick') and self._strut_thick != 0.05:
-    #         s += ", strut_thick=%r" % self._strut_thick
-    #     if hasattr(self, '_strut_angle') and self._strut_angle != 0*galsim.degrees:
-    #         s += ", strut_angle=%r" % self._strut_angle
-    #     return s
-    #
-    # def __str__(self):
-    #     s = "galsim.Aperture(diam=%s" % self.diam
-    #     if hasattr(self, '_pupil_plane_im'):
-    #         s += ", pupil_plane_im=%s" % self._pupil_plane_im
-    #     else:
-    #         s += self._geometry_str()
-    #     if hasattr(self, '_oversampling') and self._oversampling != 1.5:
-    #         s += ", oversampling=%r" % self._oversampling
-    #     s += ")"
-    #     return s
-    #
-    # def __repr__(self):
-    #     s = "galsim.Aperture(diam=%r" % self.diam
-    #     s += ", npix=%r" % self.npix
-    #     s += ", pupil_plane_size=%r" % self.pupil_plane_size
-    #     if hasattr(self, '_pupil_plane_im'):
-    #         s += ", pupil_plane_im=%r" % self._pupil_plane_im
-    #     else:
-    #         s += self._geometry_str()
-    #     if hasattr(self, '_oversampling') and self._oversampling != 1.5:
-    #         s += ", oversampling=%r" % self._oversampling
-    #     s += ")"
-    #     return s
+    # Used in Aperture.__str__ and OpticalPSF.__str__
+    def _geometry_str(self):
+        s = ""
+        if not self._circular_pupil:
+            s += ", circular_pupil=False"
+        if self._obscuration != 0.0:
+            s += ", obscuration=%s"%self._obscuration
+        if self._nstruts != 0:
+            s += ", nstruts=%s"%self._nstruts
+            if self._strut_thick != 0.05:
+                s += ", strut_thick=%s"%self._strut_thick
+            if self._strut_angle != 0*galsim.degrees:
+                s += ", strut_angle=%s"%self._strut_angle
+        return s
+
+    def __str__(self):
+        s = "galsim.Aperture(diam=%r"%self.diam
+        if hasattr(self, '_circular_pupil'):  # Pupil was created geometrically, so use that here.
+            s += self._geometry_str()
+        s += ", _pupil_plane_scale=%s"%self.pupil_plane_scale
+        s += ", _pupil_plane_size=%s"%self.pupil_plane_size
+        s += ")"
+        return s
+
+    # Used in Aperture.__repr__ and OpticalPSF.__repr__
+    def _geometry_repr(self):
+        s = ""
+        if not self._circular_pupil:
+            s += ", circular_pupil=False"
+        if self._obscuration != 0.0:
+            s += ", obscuration=%r"%self._obscuration
+        if self._nstruts != 0:
+            s += ", nstruts=%r"%self._nstruts
+            if self._strut_thick != 0.05:
+                s += ", strut_thick=%r"%self._strut_thick
+            if self._strut_angle != 0*galsim.degrees:
+                s += ", strut_angle=%r"%self._strut_angle
+        s += ", _pupil_plane_scale=%r"%self.pupil_plane_scale
+        s += ", _pupil_plane_size=%r"%self.pupil_plane_size
+        return s
+
+    def __repr__(self):
+        s = "galsim.Aperture(diam=%r"%self.diam
+        if hasattr(self, '_circular_pupil'):  # Pupil was created geometrically, so use that here.
+            s += self._geometry_repr()
+        else:  # Pupil was created from image, so use that instead.
+            s += ", pupil_plane_im=array(%r"%self.illuminated.tolist()+", dtype='float')"
+            s += ", _pupil_plane_scale=%r"%self.pupil_plane_scale
+        s += ")"
+        return s
 
     def __eq__(self, other):
         return (isinstance(other, galsim.Aperture) and
@@ -1233,7 +1252,6 @@ class PhaseScreenPSF(GSObject):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
         wf = self.screen_list.wavefront(self.aper, self.theta_x, self.theta_y)
         expwf = self.aper.illuminated * np.exp(2j * np.pi * wf / self.lam)
-        self._wf = expwf
         ftexpwf = np.fft.fft2(np.fft.fftshift(expwf))
         self.img += np.abs(ftexpwf)**2
 
@@ -1460,7 +1478,7 @@ class OpticalPSF(GSObject):
                  oversampling=1.5, pad_factor=1.5, flux=1., nstruts=0, strut_thick=0.05,
                  strut_angle=0.*galsim.degrees, pupil_plane_im=None,
                  pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None,
-                 _pupil_plane_scale=None):
+                 _pupil_plane_scale=None, _pupil_plane_size=None):
         # Need to handle lam/diam vs. lam_over_diam here since lam by itself is needed for
         # OpticalScreen.
         if lam_over_diam is not None:
@@ -1485,7 +1503,7 @@ class OpticalPSF(GSObject):
                 nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle,
                 oversampling=oversampling, pad_factor=pad_factor,
                 pupil_plane_im=pupil_plane_im, pupil_angle=pupil_angle,
-                _pupil_plane_scale=_pupil_plane_scale)
+                _pupil_plane_scale=_pupil_plane_scale, _pupil_plane_size=_pupil_plane_size)
 
         # Finally, put together to make the PSF.
         self._psf = galsim.PhaseScreenPSF(self._screens, lam=lam, flux=flux, aper=self._aper,
@@ -1498,7 +1516,8 @@ class OpticalPSF(GSObject):
         s = "galsim.OpticalPSF(lam=%s, diam=%s" % (screen.lam_0, self._aper.diam)
         if any(screen.aberrations):
             s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
-        s += self._aper._geometry_str()
+        if hasattr(self._aper, '_circular_pupil'):
+            s += self._aper._geometry_str()
         if self._psf.flux != 1.0:
             s += ", flux=%s" % self._psf.flux
         s += ")"
@@ -1509,7 +1528,8 @@ class OpticalPSF(GSObject):
         s = "galsim.OpticalPSF(lam=%s, diam=%s" % (screen.lam_0, self._aper.diam)
         if any(screen.aberrations):
             s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
-        s += self._aper._geometry_str()
+        if hasattr(self._aper, '_circular_pupil'):
+            s += self._aper._geometry_repr()
         if self._psf.flux != 1.0:
             s += ", flux=%s" % self._psf.flux
         s += ")"
