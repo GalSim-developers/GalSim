@@ -19,12 +19,11 @@
 A few adjustments to galsim.LookupTable at the Python layer, including the
 addition of the docstring and few extra features.
 
-Also, a simple 2D table for uniformly gridded input data: LookupTable2D.
+Also, a simple 2D table for gridded input data: LookupTable2D.
 """
 import numpy as np
 
 from . import _galsim
-import galsim
 
 
 class LookupTable(object):
@@ -295,7 +294,7 @@ class LookupTable2D(object):
     combinations of x and y values.  For instance:
 
         >>> x = y = np.arange(5)
-        >>> z = x + y[:, np.newaxis]  # function is x + y
+        >>> z = x + y[:, np.newaxis]  # function is x + y, dimensions of z is (5, 5)
         >>> tab2d = galsim.LookupTable2D(x, y, z)
 
     To evaluate new function values with the lookup table, use the () operator:
@@ -335,7 +334,7 @@ class LookupTable2D(object):
       - 'raise': raise an exception.  (This is the default.)
       - 'wrap': infinitely wrap the initial range in both directions.
     In order to use edge_mode='wrap', the first and last column of f, as well as the first and last
-    row of f must match.
+    row of f must match.  (This way we know what the period is in each dimension.)
 
         >>> tab2d = galsim.LookupTable2D(x, y, z, edge_mode='raise')
         >>> tab2d(7, 7)
@@ -343,13 +342,15 @@ class LookupTable2D(object):
 
         >>> tab2d = galsim.LookupTable2D(x, y, z, edge_mode='wrap')
         ValueError: Cannot wrap `f` array with unequal first/last column/row.
+
+    We extend the x and y arrays with a uniform spacing, though any monotonic spacing would work.
         >>> x = np.append(x, x[-1] + (x[-1]-x[-2]))
         >>> y = np.append(y, y[-1] + (y[-1]-y[-2]))
         >>> z = np.pad(z,[(0,1), (0,1)], mode='wrap')
         >>> tab2d = galsim.LookupTable2D(x, y, z, edge_mode='wrap')
         >>> tab2d(2., 2.)
         4.0
-        >>> tab2d(2.+5, 2.)
+        >>> tab2d(2.+5, 2.)  # The period is 5 in either direction.
         4.0
         >>> tab2d(2.+15, 2.+35)
         4.0
@@ -357,7 +358,8 @@ class LookupTable2D(object):
     @param x              Strictly increasing array of `x` positions at which to create table.
     @param y              Strictly increasing array of `y` positions at which to create table.
     @param f              Ny by Nx input array of function values.
-    @param interpolant    Interpolant to use.  [Default: 'linear']
+    @param interpolant    Interpolant to use.  One of 'floor', 'ceil', or 'linear'.
+                          [Default: 'linear']
     @param edge_mode      Keyword controlling how extrapolation beyond the input range is handled.
                           See above for details.  [Default: 'raise']
     """
@@ -389,10 +391,13 @@ class LookupTable2D(object):
         self.table = _galsim._LookupTable2D(self.xs, self.ys, self.f, self.interpolant)
 
     def _inbounds(self, x, y):
+        """Return whether or not *all* coords specified by x and y are in bounds of the original
+        interpolated array."""
         return (np.min(x) >= self.xs[0] and np.max(x) <= self.xs[-1] and
                 np.min(y) >= self.ys[0] and np.max(y) <= self.ys[-1])
 
     def _wrap_args(self, x, y):
+        """Wrap points back into the fundamental period."""
         return ((x-self.xs[0]) % self.xperiod + self.xs[0],
                 (y-self.ys[0]) % self.yperiod + self.ys[0])
 
@@ -440,7 +445,7 @@ class LookupTable2D(object):
             self.xs.tolist(), self.ys.tolist(), self.f.tolist(), self.interpolant, self.edge_mode))
 
     def __eq__(self, other):
-        return (isinstance(other, galsim.LookupTable2D) and
+        return (isinstance(other, LookupTable2D) and
                 self.table == other.table and
                 self.edge_mode == other.edge_mode)
 
@@ -451,7 +456,7 @@ class LookupTable2D(object):
         return hash(("galsim._galsim._LookupTable2D", self.table, self.edge_mode))
 
 def _LookupTable2D_eq(self, other):
-    return (isinstance(other, galsim._galsim._LookupTable2D)
+    return (isinstance(other, _galsim._LookupTable2D)
             and np.array_equal(self.getXArgs(), other.getXArgs())
             and np.array_equal(self.getYArgs(), other.getYArgs())
             and np.array_equal(self.getVals(), other.getVals())
