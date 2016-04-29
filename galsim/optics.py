@@ -271,8 +271,6 @@ class OpticalPSF(GSObject):
         airy = galsim.Airy(lam_over_diam = lam_over_diam, obscuration = obscuration,
                            gsparams = gsparams)
         stepk_airy = airy.stepK()
-        print repr(airy)
-        print stepk_airy
 
         # Boost Airy image size by a user-specifed pad_factor to allow for larger, aberrated PSFs
         stepk = stepk_airy / pad_factor
@@ -283,8 +281,6 @@ class OpticalPSF(GSObject):
             twoR = max_size
 
         # Get a good FFT size.  i.e. 2^n or 3 * 2^n.
-        print twoR
-        print scale_lookup
         npix = galsim._galsim.goodFFTSize(int(np.ceil(twoR / scale_lookup)))
 
         if aberrations is None:
