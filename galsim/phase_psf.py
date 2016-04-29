@@ -105,7 +105,7 @@ class Aperture(object):
     def __init__(self, diam, lam=None, circular_pupil=True, obscuration=0.0,
                  nstruts=0, strut_thick=0.05, strut_angle=0.0*galsim.degrees,
                  oversampling=1.5, pad_factor=1.5,
-                 screen_list=None,
+                 screen_list=None, max_size=None, scale_unit=galsim.arcsec,
                  pupil_plane_im=None, pupil_angle=0.0*galsim.degrees,
                  _pupil_plane_size=None, _pupil_plane_scale=None):
 
@@ -156,6 +156,10 @@ class Aperture(object):
                          (2 * np.pi * pad_factor))
                 self.npix = galsim._galsim.goodFFTSize(int(np.ceil(self.pupil_plane_size/scale)))
                 _pupil_plane_scale = _pupil_plane_size/self.npix
+                if max_size is not None:
+                    ppscale = lam*1e-9 / (max_size * scale_unit / galsim.radians)
+                    if ppscale > _pupil_plane_scale:
+                        _pupil_plane_scale = ppscale
             else:
                 self.npix = int(np.ceil(self.pupil_plane_size/_pupil_plane_scale))
             # Make sure pupil_plane_size is an integer multiple of pupil_plane_scale.
@@ -1491,7 +1495,7 @@ class OpticalPSF(GSObject):
                  oversampling=1.5, pad_factor=1.5, flux=1., nstruts=0, strut_thick=0.05,
                  strut_angle=0.*galsim.degrees, pupil_plane_im=None,
                  pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None,
-                 suppress_warning=False,
+                 suppress_warning=False, max_size=None,
                  _pupil_plane_scale=None, _pupil_plane_size=None):
         # Need to handle lam/diam vs. lam_over_diam here since lam by itself is needed for
         # OpticalScreen.
@@ -1515,7 +1519,7 @@ class OpticalPSF(GSObject):
         self._aper = galsim.Aperture(
                 diam, lam=lam, circular_pupil=circular_pupil, obscuration=obscuration,
                 nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle,
-                oversampling=oversampling, pad_factor=pad_factor,
+                oversampling=oversampling, pad_factor=pad_factor, max_size=max_size,
                 pupil_plane_im=pupil_plane_im, pupil_angle=pupil_angle,
                 _pupil_plane_scale=_pupil_plane_scale, _pupil_plane_size=_pupil_plane_size)
 
