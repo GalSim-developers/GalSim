@@ -1281,14 +1281,8 @@ class PhaseScreenPSF(GSObject):
                 warnings.warn(
                     "The calculated stepk (%g) for PhaseScreenPSF is smaller "%observed_stepk +
                     "than what was used to build the wavefront (%g). "%specified_stepk +
-                    "This could lead to aliasing problems. ") # +
-                    # "Using pad_factor >= %f is recommended."%(pad_factor * stepk / final_stepk))
-            # if observed_maxk < 0.5*specified_maxk:
-            #     import warnings
-            #     warnings.warn(
-            #         "The calculated maxk (%g) for PhaseScreenPSF is much smaller "%observed_maxk +
-            #         "than what was used to build the wavefront (%g). "%specified_maxk +
-            #         "This could indicate that oversampling is set too small.")
+                    "This could lead to aliasing problems. " +
+                    "Increasing pad_factor by factor >= %f is recommended."%(stepk / final_stepk))
 
     def __getstate__(self):
         # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
@@ -1461,7 +1455,7 @@ def Atmosphere(screen_size, rng=None, **kwargs):
 
 
 #  Args not yet implemented:
-#  suppress_warning, max_size
+#  max_size
 class OpticalPSF(GSObject):
     _req_params = {}
     _opt_params = {
@@ -1497,6 +1491,7 @@ class OpticalPSF(GSObject):
                  oversampling=1.5, pad_factor=1.5, flux=1., nstruts=0, strut_thick=0.05,
                  strut_angle=0.*galsim.degrees, pupil_plane_im=None,
                  pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None,
+                 suppress_warning=False,
                  _pupil_plane_scale=None, _pupil_plane_size=None):
         # Need to handle lam/diam vs. lam_over_diam here since lam by itself is needed for
         # OpticalScreen.
@@ -1524,11 +1519,21 @@ class OpticalPSF(GSObject):
                 pupil_plane_im=pupil_plane_im, pupil_angle=pupil_angle,
                 _pupil_plane_scale=_pupil_plane_scale, _pupil_plane_size=_pupil_plane_size)
 
+        # Save for pickling
+        self._lam = lam
+        self._flux = flux
+        self._interpolant = interpolant
+        self._scale_unit = scale_unit
+        self._gsparams = gsparams
+        self._suppress_warning = suppress_warning
+
         # Finally, put together to make the PSF.
-        self._psf = galsim.PhaseScreenPSF(self._screens, lam=lam, flux=flux, aper=self._aper,
-                                          interpolant=interpolant, scale_unit=scale_unit,
-                                          gsparams=gsparams)
+        self._psf = galsim.PhaseScreenPSF(self._screens, lam=self._lam, flux=self._flux,
+                                          aper=self._aper, interpolant=self._interpolant,
+                                          scale_unit=self._scale_unit, gsparams=self._gsparams,
+                                          suppress_warning=self._suppress_warning)
         GSObject.__init__(self, self._psf)
+
 
     def __str__(self):
         screen = self._psf.screen_list[0]
@@ -1562,3 +1567,19 @@ class OpticalPSF(GSObject):
 
     def __hash__(self):
         return hash(("galsim.OpticalPSF", self._psf))
+
+    def __getstate__(self):
+        # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
+        # written as a string.  Better to pickle the psf and remake the PhaseScreenPSF.
+        d = self.__dict__.copy()
+        del d['SBProfile']
+        del d['_psf']
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self._psf = galsim.PhaseScreenPSF(self._screens, lam=self._lam, flux=self._flux,
+                                          aper=self._aper, interpolant=self._interpolant,
+                                          scale_unit=self._scale_unit, gsparams=self._gsparams,
+                                          suppress_warning=self._suppress_warning)
+        GSObject.__init__(self, self._psf)

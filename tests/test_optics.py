@@ -241,8 +241,7 @@ def test_OpticalPSF_vs_Airy():
     for lod in lods:
         airy_test = galsim.Airy(lam_over_diam=lod, obscuration=0., flux=1.)
         #pad same as an Airy, natch!
-        # optics_test = galsim.OpticalPSF(lam_over_diam=lod, pad_factor=1, suppress_warning=True)
-        optics_test = galsim.OpticalPSF(lam_over_diam=lod, pad_factor=1)
+        optics_test = galsim.OpticalPSF(lam_over_diam=lod, pad_factor=1, suppress_warning=True)
         airy_array = airy_test.drawImage(scale=.25*lod, image=image, method='no_pixel').array
         optics_array = optics_test.drawImage(scale=.25*lod, image=image, method='no_pixel').array
         np.testing.assert_array_almost_equal(optics_array, airy_array, decimal_dft,
@@ -259,9 +258,8 @@ def test_OpticalPSF_vs_Airy_with_obs():
     image = galsim.ImageF(nlook,nlook)
     for obs in obses:
         airy_test = galsim.Airy(lam_over_diam=lod, obscuration=obs, flux=1.)
-        optics_test = galsim.OpticalPSF(lam_over_diam=lod, pad_factor=1, obscuration=obs)
-        # optics_test = galsim.OpticalPSF(lam_over_diam=lod, pad_factor=1, obscuration=obs,
-        #                                 suppress_warning=True)
+        optics_test = galsim.OpticalPSF(lam_over_diam=lod, pad_factor=1, obscuration=obs,
+                                        suppress_warning=True)
         airy_array = airy_test.drawImage(scale=1.,image=image, method='no_pixel').array
         optics_array = optics_test.drawImage(scale=1.,image=image, method='no_pixel').array
         np.testing.assert_array_almost_equal(optics_array, airy_array, decimal_dft,
@@ -381,9 +379,9 @@ def test_OpticalPSF_aberrations_struts():
 
     # This test failed at precision=6 when switching to the new optics framework (for 0.04% of
     # pixels).  However, upon investigation, it appears that the differences are due the
-    # illumination of 3 extra pixels under the old framework compared to the new framework.  When
-    # manually zeroing these pixels in the old framework and producing a PSF, the test passes.  So
-    # here, we simply degrade the precision to 5.
+    # illumination of 3 extra aperture pixels under the old framework compared to the new framework.
+    # When manually zeroing these pixels in the old framework and reproducing a PSF, the test
+    # passes.  So here, we simply degrade the precision to 5.
     np.testing.assert_array_almost_equal(
         myImg.array, savedImg.array, 5,
         err_msg="Optical PSF (with struts) disagrees with expected result")
@@ -528,21 +526,12 @@ def test_OpticalPSF_pupil_plane():
     # from the vertical of -15 degrees.  There are two versions of these tests at different
     # oversampling levels.
     #
-    # To generate the pupil plane that was saved for this case, I did the following:
-    # - Temporarily edited galsim/optics.py right after the call to generate_pupil_plane() in the
-    #   wavefront() method, adding the following lines:
-    #   tmp_im = utilities.roll2d(in_pupil, (in_pupil.shape[0] / 2, in_pupil.shape[1] / 2))
-    #   tmp_im = galsim.Image(np.ascontiguousarray(tmp_im).astype(np.int32))
-    #   tmp_im.write('tests/Optics_comparison_images/sample_pupil_rolled.fits')
-    # - Executed the following command:
-    #   oversampling = 1.5
-    #   pad_factor = 1.5
-    #   galsim.OpticalPSF(0.12, obscuration=0.18, nstruts=4, strut_angle=-15.*galsim.degrees,
-    #                     oversampling=oversampling, pad_factor=pad_factor)
-    # - Then I made it write to
-    #   tests/Optics_comparison_images/sample_pupil_rolled_oversample.fits.gz, and reran the command
-    #   with oversampling = 4. and pad_factor = 4.
-    #
+    # To (re-)generate the pupil plane images for this test, simply delete
+    # tests/Optics_comparison_images/sample_pupil_rolled.fits and
+    # tests/Optics_comparison_images/sample_pupil_rolled_oversample.fits.gz,
+    # and then rerun this function.  Note that these images are also used in test_ne(), so there
+    # may be some racing if this script is tested in parallel before the fits files are regenerated.
+
     # First test: should get excellent agreement between that particular OpticalPSF with specified
     # options and one from loading the pupil plane image.  Note that this won't work if you change
     # the optical PSF parameters, unless you also regenerate the test image.
@@ -858,13 +847,10 @@ def test_ne():
             galsim.OpticalPSF(lam_over_diam=1.0, circular_pupil=False, gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, interpolant='Linear', gsparams=gsp1)]
     if __name__ == "__main__":
-        objs += [galsim.OpticalPSF(lam_over_diam=1.0, pupil_plane_im=pupil_plane_im, gsparams=gsp1),
+        objs += [galsim.OpticalPSF(lam_over_diam=1.0, pupil_plane_im=pupil_plane_im, gsparams=gsp1,
+                                   suppress_warning=True),
                  galsim.OpticalPSF(lam_over_diam=1.0, pupil_plane_im=pupil_plane_im,
-                                   pupil_angle=10*galsim.degrees)]
-        # objs += [galsim.OpticalPSF(lam_over_diam=1.0, pupil_plane_im=pupil_plane_im, gsparams=gsp1,
-        #                            suppress_warning=True),
-        #          galsim.OpticalPSF(lam_over_diam=1.0, pupil_plane_im=pupil_plane_im,
-        #                            pupil_angle=10*galsim.degrees, suppress_warning=True)]
+                                   pupil_angle=10*galsim.degrees, suppress_warning=True)]
     all_obj_diff(objs)
 
 
