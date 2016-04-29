@@ -51,14 +51,8 @@ if __name__ == "__main__":
     pp_file = 'sample_pupil_rolled_oversample.fits.gz'
     pp_oversampling = 4.
     pp_pad_factor = 4.
-    # # In this case, we test the entire images.
+    # In this case, we test the entire images.
     pp_test_type = 'image'
-    # In the less stringent tests, we may opt to test only the 2nd moments rather than the images
-    # themselves.  This is because when the original tests were set up, I found low-level artifacts
-    # that made it hard to get image-based tests to pass, yet the adaptive moments agreed quite
-    # well.  Given that there were no such problems in the image-based tests with high-res inputs, I
-    # believe these artifacts in the low-res tests should be ignored (by doing moments-based tests
-    # only).
 else:
     pp_decimal = 4
     pp_file = 'sample_pupil_rolled.fits'

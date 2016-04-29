@@ -249,100 +249,6 @@ def test_roundoff():
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
-# @timer
-# def test_table2d():
-#     # Should be able to interpolate quadratic function exactly with cubic interpolant
-#     def f(x, y):
-#         return (1.1142351 + 0.9863461*x + 1.4123753*y)**2
-#
-#     x0 = 0.5
-#     y0 = 0.6
-#     dx = 0.1
-#     dy = 0.2
-#     nx = 10  # xmax = 1.4
-#     ny = 10  # ymax = 2.4
-#     xrepeat = dx*nx  # 1.0
-#     yrepeat = dy*ny  # 2.0
-#
-#     xs = np.arange(x0, x0+nx*dx, dx)
-#     ys = np.arange(y0, y0+ny*dy, dy)
-#     xs, ys = np.meshgrid(xs, ys)
-#     fs = f(xs, ys)
-#     tab2d = galsim.LookupTable2D(x0, y0, dx, dy, fs)
-#
-#     do_pickle(tab2d)
-#     do_pickle(tab2d, lambda x: x(1.0, 1.0))
-#
-#     # Should always get the right result at the input grid points
-#     for x, y in zip(xs.flat, ys.flat):
-#         np.testing.assert_almost_equal(tab2d(x, y), f(x, y), decimal=12)
-#
-#     # Check with eval_grid
-#     grid = tab2d.eval_grid(x0, x0+dx*(nx-1), nx, y0, y0+dy*(ny-1), ny, dtype=np.float64)
-#     np.testing.assert_almost_equal(grid, fs, decimal=14)
-#
-#     # Cubic interpolant has 5x5 pixel support, so make sure test points are sufficiently far from
-#     # the input grid border.
-#     xtest = [0.72, 1.05, 1.19]
-#     ytest = [1.01, 1.67, 2.07]
-#     for x in xtest:
-#         for y in ytest:
-#             np.testing.assert_almost_equal(tab2d(x, y), f(x, y), decimal=13)
-#             np.testing.assert_almost_equal(tab2d.at(x, y), tab2d(x, y), decimal=14)
-#
-#     # Next test the eval_grid method
-#     xmin = 0.72
-#     xmax = 1.19
-#     nxtest = 17
-#     ymin = 1.01
-#     ymax = 2.07
-#     nytest = 36
-#     grid = tab2d.eval_grid(xmin, xmax, nxtest, ymin, ymax, nytest, dtype=np.float64)
-#
-#     xstest = np.linspace(xmin, xmax, nxtest)
-#     ystest = np.linspace(ymin, ymax, nytest)
-#     xstest, ystest = np.meshgrid(xstest, ystest)
-#     grid2 = f(xstest, ystest)
-#     np.testing.assert_array_almost_equal(grid, grid2, decimal=13)
-#
-#     # Check edge wrapping.
-#     tab2d = galsim.LookupTable2D(x0, y0, dx, dy, fs, edge_mode='wrap')
-#     do_pickle(tab2d)
-#     do_pickle(tab2d, lambda x: x(1.0, 1.5))
-#
-#     for x in xtest:
-#         for y in ytest:
-#             # Non-edge-wrapped tests should still work
-#             np.testing.assert_almost_equal(tab2d(x, y), f(x, y), decimal=13)
-#             np.testing.assert_almost_equal(tab2d.at(x, y), tab2d(x, y), decimal=14)
-#             # Also test adding multiple of the input period.
-#             np.testing.assert_almost_equal(tab2d(x + nx*dx*3, y - ny*dy*5),
-#                                            f(x, y), decimal=13)
-#             np.testing.assert_almost_equal(tab2d.at(x + nx*dx*2, y + ny*dy*7),
-#                                            tab2d(x, y), decimal=13)
-#     # Check eval_grid with edge wrapping
-#     grid3 = tab2d.eval_grid(xmin+3*xrepeat, xmax+3*xrepeat, nxtest,
-#                             ymin-2*yrepeat, ymax-2*yrepeat, nytest, dtype=np.float64)
-#     np.testing.assert_array_almost_equal(grid, grid3, decimal=13)
-#
-#     xmin = -0.5
-#     xmax = 2.6
-#     nxtest = 201
-#     ymin = -1.01
-#     ymax = 4.07
-#     nytest = 201
-#     grid = tab2d.eval_grid(xmin, xmax, nxtest, ymin, ymax, nytest, dtype=np.float64)
-#
-#     # Check edge warning
-#     tab2d = galsim.LookupTable2D(x0, y0, dx, dy, fs, edge_mode='warn')
-#     try:
-#         np.testing.assert_warns(UserWarning, tab2d, 10, 10)
-#         args = (xmin, xmax+10, nxtest, ymin, ymax-9, nytest)
-#         np.testing.assert_warns(UserWarning, tab2d.eval_grid, *args)
-#     except ImportError:
-#         print 'The assert_raises tests require nose'
-
-
 @timer
 def test_table2d():
 
@@ -464,9 +370,9 @@ def test_ne():
 
 
 if __name__ == "__main__":
-    # test_table()
-    # test_init()
-    # test_log()
-    # test_roundoff()
+    test_table()
+    test_init()
+    test_log()
+    test_roundoff()
     test_table2d()
     test_ne()
