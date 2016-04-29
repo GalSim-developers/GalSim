@@ -60,6 +60,8 @@ New Features
   truth information.  cf. demos 9 and 10. (#301, #691)
 - Added methods calculateHLR, calculateMomentRadius, and calculateFWHM to both
   GSObject and Image. (#308)
+- Added a simple, linear model for persistence in the detectors that accepts a
+  list of galsim.Image instances and a list of an equal number of floats. (#554)
 - Added BoundsI.numpyShape() to easily get the numpy shape that corresponds
   to a given bounds instance. (#654)
 - Have FITS files with unsigned integer data automatically convert that into

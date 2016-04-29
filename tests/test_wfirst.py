@@ -328,6 +328,30 @@ def test_wfirst_detectors():
         im_2.array, im_1.array,
         err_msg='Reciprocity failure results depend on function used.')
 
+    # Then we do Persistence
+    im_1 = im.copy()
+    im_2 = im.copy()
+
+    rng = galsim.BaseDeviate(1234567)
+    im0 = galsim.Image(im.bounds)       # create a new image for two noise images as 'ghost images'
+    im0_1 = im0.copy()
+    im0_1.addNoise(galsim.GaussianNoise(rng,sigma=10.))
+
+    im0_2 = im0_1.copy()
+    im0_2.addNoise(galsim.PoissonNoise(rng))
+
+    im_list = [im0_1,im0_2]*4
+
+    im_1.applyPersistence(im_list,galsim.wfirst.persistence_coefficients)
+    galsim.wfirst.applyPersistence(im_2, im_list)
+    assert im_2.scale == im_1.scale
+    assert im_2.wcs == im_1.wcs
+    assert im_2.dtype == im_1.dtype
+    assert im_2.bounds == im_1.bounds
+    np.testing.assert_array_equal(
+        im_2.array, im_1.array,
+        err_msg='Persistence results depend on function used.')
+
     # Then we do IPC:
     im_1 = im.copy()
     im_2 = im.copy()
