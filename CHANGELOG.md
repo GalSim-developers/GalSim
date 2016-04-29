@@ -35,7 +35,7 @@ Bug Fixes
   errors in the documentation about the units of CCDNoise parameters. (#713)
 - Fixed a bug in drawKImage when non-default scale is given, but no images
   are provided. (#720)
-- Fixed an assert failure in InterpolatedImage if the input image is 
+- Fixed an assert failure in InterpolatedImage if the input image is
   identically equal to zero. (#720)
 - Fixed a potential instability in drawing with deconvolution.  Now the fft of
   the deconvolved image will not be made larger than 1/kvalue_accuracy. (#720)
@@ -62,10 +62,13 @@ New Features
   GSObject and Image. (#308)
 - Added LookupTable2D to facilitate quick interpolation of two-dimensional
   tabular data. (#465)
-- Added PhaseScreen, PhaseScreenList, and PhaseScreenPSF objects to use Fourier
-  optics to create PSFs from phase screens.  Added Atmosphere to quickly
-  assemble a list of von Karman phase screens to realistically simulate an
-  atmospheric PSF. (#549)
+- Added AtmosphericPhaseScreen, OpticalPhaseScreen, and PhaseScreenList used
+  to generate PSFs via Fourier optics. (#549)
+- Added PhaseScreenPSF to transform PhaseScreens into GSObjects.  (#549)
+- Added Atmosphere function to conveniently assemble a multi-layer atmosphere
+  PhaseScreenList. (#549)
+- Rewrote OpticalPSF to operate under the PhaseScreen framework to enable
+  fully self-consistent optics+atmospheric PSFs. (#549)
 - Added BoundsI.numpyShape() to easily get the numpy shape that corresponds
   to a given bounds instance. (#654)
 - Have FITS files with unsigned integer data automatically convert that into
