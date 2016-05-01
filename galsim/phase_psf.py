@@ -1455,7 +1455,11 @@ def Atmosphere(screen_size, rng=None, **kwargs):
     if len(kwargs['r0_500']) == 1:
         kwargs['r0_500'] = [nmax**(3./5) * kwargs['r0_500'][0]] * nmax
 
-    return PhaseScreenList(AtmosphericScreen(rng=rng, **kw) for kw in _lod_to_dol(kwargs, nmax))
+    if rng is None:
+        rng = galsim.BaseDeviate()
+    kwargs['rng'] = [galsim.BaseDeviate(rng.raw()) for i in xrange(nmax)]
+
+    return PhaseScreenList(AtmosphericScreen(**kw) for kw in _lod_to_dol(kwargs, nmax))
 
 
 #  Args not yet implemented:
