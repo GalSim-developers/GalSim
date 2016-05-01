@@ -174,7 +174,7 @@ def main(argv):
         # Note that we could use wcs.toWorld() to get the (RA, dec) for these (x, y) positions.  Or,
         # if we had started with (RA, dec) positions, we could have used wcs.toImage() to get the
         # CCD coordinates for those positions.
-        mag_stamp.append(cat.param_cat.mag_auto[pos_rng()*cat.nobjects])
+        mag_stamp.append(cat.param_cat[pos_rng()*cat.nobjects][1])
         n_rot_stamp.append(int(4*pos_rng()))
         flip_stamp.append(pos_rng())
 
@@ -206,7 +206,7 @@ def main(argv):
         # distribution.  So we need to save the original magnitude in F814W, to compare with a
         # randomly drawn one from the catalog.  This is not something that most users would need to
         # do.
-        mag_list.append(cat.param_cat.mag_auto[cat.orig_index[rand_indices[ind]]])
+        mag_list.append(cat.param_cat[cat.orig_index[rand_indices[ind]]][1])
 
         # Convolve the chromatic galaxy and the chromatic PSF, and rescale flux.
         final = galsim.Convolve(flux_scaling*obj_list[ind], PSF)
