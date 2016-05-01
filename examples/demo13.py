@@ -174,7 +174,7 @@ def main(argv):
         # Note that we could use wcs.toWorld() to get the (RA, dec) for these (x, y) positions.  Or,
         # if we had started with (RA, dec) positions, we could have used wcs.toImage() to get the
         # CCD coordinates for those positions.
-        mag_stamp.append(cat.param_cat[pos_rng()*cat.nobjects][1])
+        mag_stamp.append(cat.param_cat['mag_auto'][int(pos_rng()*cat.nobjects)])
         n_rot_stamp.append(int(4*pos_rng()))
         flip_stamp.append(pos_rng())
 
@@ -193,7 +193,7 @@ def main(argv):
         tmp_ind = int(pos_rng()*cat.nobjects)
         if tmp_ind not in rand_indices:
             rand_indices.append(tmp_ind)
-    obj_list = cat.makeGalaxy(rand_indices, chromatic=True, gal_type='parametric', deep=True)
+    obj_list = cat.makeGalaxy(rand_indices, chromatic=True, gal_type='parametric')
     gal_list = []
     hst_eff_area = 2.4**2 * (1.-0.33**2)
     wfirst_eff_area = galsim.wfirst.diameter**2 * (1.-galsim.wfirst.obscuration**2)
@@ -206,7 +206,7 @@ def main(argv):
         # distribution.  So we need to save the original magnitude in F814W, to compare with a
         # randomly drawn one from the catalog.  This is not something that most users would need to
         # do.
-        mag_list.append(cat.param_cat[cat.orig_index[rand_indices[ind]]][1])
+        mag_list.append(cat.param_cat['mag_auto'][cat.orig_index[rand_indices[ind]]])
 
         # Convolve the chromatic galaxy and the chromatic PSF, and rescale flux.
         final = galsim.Convolve(flux_scaling*obj_list[ind], PSF)
