@@ -93,11 +93,11 @@ def main(argv):
     logger.debug('Read in WFIRST imaging filters.')
 
     logger.info('Reading from a parametric COSMOS catalog.')
-    # Read in a galaxy catalog - just a random subsample of 100 galaxies for F814W<23.5 from COSMOS.
+    # Read in a galaxy catalog - just a random subsample of 100 galaxies for F814W<25.2 from COSMOS.
     cat_file_name = 'real_galaxy_catalog_example_fits.fits'
     dir = 'data'
     # Use the routine that can take COSMOS real or parametric galaxy information, and tell it we
-    # want parametric galaxies that represent an I<23.5 sample.
+    # want parametric galaxies that represent an I<25.2 sample.
     cat = galsim.COSMOSCatalog(cat_file_name, dir=dir, use_real=False)
     logger.info('Read in %d galaxies from catalog'%cat.nobjects)
     # Just use a few galaxies, to save time.  Note that we are going to put 4000 galaxy images into
@@ -106,9 +106,9 @@ def main(argv):
     # something larger (but it should be <=100, the number of galaxies in this small example
     # catalog).  With 4000 galaxies in a 4k x 4k image with the WFIRST pixel scale, the effective
     # galaxy number density is 74/arcmin^2.  This is not the number density that is expected for a
-    # sample that is so bright (I<23.5) but it makes the image more visually interesting.  One could
+    # sample that is so bright (I<25.2) but it makes the image more visually interesting.  One could
     # think of it as what you'd get if you added up several images at once, making the images for a
-    # sample that is much deeper have the same S/N as that for an I<23.5 sample in a single image.
+    # sample that is much deeper have the same S/N as that for an I<25.2 sample in a single image.
     n_use = 10
     n_tot = 4000
 
