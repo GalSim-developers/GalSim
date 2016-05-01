@@ -1253,19 +1253,19 @@ galsim._galsim.ImageAllocD.__repr__ = lambda self: 'galsim._galsim.ImageAllocD(%
         self.bounds, self.array)
 
 galsim._galsim.ImageViewS.__repr__ = lambda self: 'galsim._galsim.ImageViewS(%r,%r,%r)'%(
-        self.array, self.xmin, self.xmax)
+        self.array, self.xmin, self.ymin)
 galsim._galsim.ImageViewI.__repr__ = lambda self: 'galsim._galsim.ImageViewI(%r,%r,%r)'%(
-        self.array, self.xmin, self.xmax)
+        self.array, self.xmin, self.ymin)
 galsim._galsim.ImageViewF.__repr__ = lambda self: 'galsim._galsim.ImageViewF(%r,%r,%r)'%(
-        self.array, self.xmin, self.xmax)
+        self.array, self.xmin, self.ymin)
 galsim._galsim.ImageViewD.__repr__ = lambda self: 'galsim._galsim.ImageViewD(%r,%r,%r)'%(
-        self.array, self.xmin, self.xmax)
+        self.array, self.xmin, self.ymin)
 
 galsim._galsim.ConstImageViewS.__repr__ = lambda self: 'galsim._galsim.ConstImageViewS(%r,%r,%r)'%(
-        self.array, self.xmin, self.xmax)
+        self.array, self.xmin, self.ymin)
 galsim._galsim.ConstImageViewI.__repr__ = lambda self: 'galsim._galsim.ConstImageViewI(%r,%r,%r)'%(
-        self.array, self.xmin, self.xmax)
+        self.array, self.xmin, self.ymin)
 galsim._galsim.ConstImageViewF.__repr__ = lambda self: 'galsim._galsim.ConstImageViewF(%r,%r,%r)'%(
-        self.array, self.xmin, self.xmax)
+        self.array, self.xmin, self.ymin)
 galsim._galsim.ConstImageViewD.__repr__ = lambda self: 'galsim._galsim.ConstImageViewD(%r,%r,%r)'%(
-        self.array, self.xmin, self.xmax)
+        self.array, self.xmin, self.ymin)

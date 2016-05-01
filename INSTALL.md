@@ -209,7 +209,7 @@ is often distributed as fftw3.  See Section 4 for some suggestions about
 installing this on your platform.
 
 
-iv) TMV (http://code.google.com/p/tmv-cpp/) (version >= 0.72 required)
+iv) TMV (https://github.com/rmjarvis/tmv/) (version >= 0.72 required)
 -----------------------------------------------------------------------
 
 GalSim uses the TMV library for its linear algebra routines. You should
