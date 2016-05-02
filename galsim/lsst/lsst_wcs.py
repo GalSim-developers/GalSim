@@ -146,8 +146,8 @@ class LsstCamera(object):
         ------------
         origin is a CelestialCoord indicating the direction the telescope is pointing
 
-        rotation_angle is an angle in degrees indicating the orientation of the camera
-        with respect to the sky.  The convention for rotation_angle is:
+        rotation_angle is an angle indicating the orientation of the camera with
+        respect to the sky.  The convention for rotation_angle is:
 
         rotation_angle = 0 degrees means north is in the +x direction (in pixel coordinates)
                          and east is in the +y direction
