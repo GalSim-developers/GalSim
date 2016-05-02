@@ -164,22 +164,8 @@ class LsstCameraTestClass(unittest.TestCase):
         cls.decPointing = -33.015167519966
         cls.rotation = 27.0
 
-        cls.validation_msg = "The LSST Camera outputs are no longer consistent\n" \
-                             + "with the LSST Stack.  Contact Scott Daniel at scottvalscott@gmail.com\n" \
-                             + "to make sure you have the correct version\n" \
-                             + "\nYou can also try re-creating the test validation data\n" \
-                             + "using the script GalSim/devel/external/generate_galsim_lsst_camera_validation.py"
-
         pointing = CelestialCoord(cls.raPointing*galsim.degrees, cls.decPointing*galsim.degrees)
         cls.camera = LsstCamera(pointing, cls.rotation*galsim.degrees)
-
-        path, filename = os.path.split(__file__)
-        file_name = os.path.join(path, 'random_data', 'galsim_afwCameraGeom_data.txt')
-        dtype = np.dtype([('ra', np.float), ('dec', np.float), ('chipName', str, 100),
-                           ('xpix', np.float), ('ypix', np.float),
-                           ('xpup', np.float), ('ypup', np.float)])
-
-        cls.camera_data = np.genfromtxt(file_name, dtype=dtype, delimiter='; ')
 
 
     def test_attribute_exceptions(self):
@@ -319,164 +305,6 @@ class LsstCameraTestClass(unittest.TestCase):
         np.testing.assert_array_almost_equal(np.sin(decList), np.sin(dec_test), 10)
 
 
-    def test_get_chip_name(self):
-        """
-        Test the method which associates positions on the sky with names of chips
-        """
-
-        # test case of a mapping a single location
-        for rr, dd, control_name in \
-            zip(self.camera_data['ra'], self.camera_data['dec'], self.camera_data['chipName']):
-
-            point = CelestialCoord(rr*galsim.degrees, dd*galsim.degrees)
-            test_name = self.camera.chipNameFromPoint(point)
-
-            try:
-                if control_name != 'None':
-                    self.assertEqual(test_name, control_name)
-                else:
-                    self.assertEqual(test_name, None)
-            except AssertionError as aa:
-                print 'triggering error: ',aa.args[0]
-                raise AssertionError(self.validation_msg)
-
-        # test case of mapping a list of celestial coords
-        point_list = []
-        for rr, dd in zip(self.camera_data['ra'], self.camera_data['dec']):
-            point_list.append(CelestialCoord(rr*galsim.degrees, dd*galsim.degrees))
-
-        test_name_list = self.camera.chipNameFromPoint(point_list)
-        for test_name, control_name in zip(test_name_list, self.camera_data['chipName']):
-            try:
-                if control_name != 'None':
-                    self.assertEqual(test_name, control_name)
-                else:
-                    self.assertEqual(test_name, None)
-            except AssertionError as aa:
-                print 'triggering error: ',aa.args[0]
-                raise AssertionError(self.validation_msg)
-
-
-    def test_get_chip_name_from_float(self):
-        """
-        Test the method which associates positions on the sky (in terms of floats) with names of chips
-        """
-
-        # test case of a mapping a single location
-        for rr, dd, control_name in \
-            zip(self.camera_data['ra'], self.camera_data['dec'], self.camera_data['chipName']):
-
-            test_name = self.camera.chipNameFromFloat(np.radians(rr), np.radians(dd))
-
-            try:
-                if control_name != 'None':
-                    self.assertEqual(test_name, control_name)
-                else:
-                    self.assertEqual(test_name, None)
-            except AssertionError as aa:
-                print 'triggering error: ',aa.args[0]
-                raise AssertionError(self.validation_msg)
-
-        # test case of mapping a list of celestial coords
-        test_name_list = self.camera.chipNameFromFloat(np.radians(self.camera_data['ra']), np.radians(self.camera_data['dec']))
-        for test_name, control_name in zip(test_name_list, self.camera_data['chipName']):
-            try:
-                if control_name != 'None':
-                    self.assertEqual(test_name, control_name)
-                else:
-                    self.assertEqual(test_name, None)
-            except AssertionError as aa:
-                print 'triggering error: ',aa.args[0]
-                raise AssertionError(self.validation_msg)
-
-
-    def test_pixel_coords_from_point(self):
-        """
-        Test method that goes from CelestialCoord to pixel coordinates
-        """
-
-        # test one at a time
-        for rr, dd, x_control, y_control, name_control in \
-            zip(self.camera_data['ra'], self.camera_data['dec'],
-                self.camera_data['xpix'], self.camera_data['ypix'], self.camera_data['chipName']):
-
-            point = CelestialCoord(rr*galsim.degrees, dd*galsim.degrees)
-            x_test, y_test, name_test = self.camera.pixelCoordsFromPoint(point)
-            try:
-                if not np.isnan(x_test):
-                    self.assertAlmostEqual(x_test, x_control, 6)
-                    self.assertAlmostEqual(y_test, y_control, 6)
-                    self.assertEqual(name_test, name_control)
-                else:
-                    self.assertTrue(np.isnan(x_control))
-                    self.assertTrue(np.isnan(y_control))
-                    self.assertTrue(np.isnan(y_test))
-                    self.assertIsNone(name_test)
-            except AssertionError as aa:
-                print 'triggering error: ',aa.args[0]
-                raise AssertionError(self.validation_msg)
-
-        # test lists
-        pointing_list = []
-        for rr, dd in zip(self.camera_data['ra'], self.camera_data['dec']):
-            pointing_list.append(CelestialCoord(rr*galsim.degrees, dd*galsim.degrees))
-
-        x_test, y_test, name_test_0 = self.camera.pixelCoordsFromPoint(pointing_list)
-
-        name_test = np.array([nn if nn is not None else 'None' for nn in name_test_0])
-
-        try:
-            np.testing.assert_array_almost_equal(x_test, self.camera_data['xpix'], 6)
-            np.testing.assert_array_almost_equal(y_test, self.camera_data['ypix'], 6)
-            np.testing.assert_array_equal(name_test, self.camera_data['chipName'])
-        except AssertionError as aa:
-            print 'triggering error: ',aa.args[0]
-            raise AssertionError(self.validation_msg)
-
-
-    def test_pixel_coords_from_float(self):
-        """
-        Test method that goes from floats of RA, Dec to pixel coordinates
-        """
-
-        # test one at a time
-        for rr, dd, x_control, y_control, name_control in \
-            zip(self.camera_data['ra'], self.camera_data['dec'],
-                self.camera_data['xpix'], self.camera_data['ypix'], self.camera_data['chipName']):
-
-            x_test, y_test, name_test = self.camera.pixelCoordsFromFloat(np.radians(rr), np.radians(dd))
-            try:
-                if not np.isnan(x_test):
-                    self.assertAlmostEqual(x_test, x_control, 6)
-                    self.assertAlmostEqual(y_test, y_control, 6)
-                    self.assertEqual(name_test, name_control)
-                else:
-                    self.assertTrue(np.isnan(x_control))
-                    self.assertTrue(np.isnan(y_control))
-                    self.assertTrue(np.isnan(y_test))
-                    self.assertIsNone(name_test)
-            except AssertionError as aa:
-                print 'triggering error: ',aa.args[0]
-                raise AssertionError(self.validation_msg)
-
-        # test lists
-        pointing_list = []
-        for rr, dd in zip(self.camera_data['ra'], self.camera_data['dec']):
-            pointing_list.append(CelestialCoord(rr*galsim.degrees, dd*galsim.degrees))
-
-        x_test, y_test, name_test_0 = self.camera.pixelCoordsFromFloat(np.radians(self.camera_data['ra']), np.radians(self.camera_data['dec']))
-
-        name_test = np.array([nn if nn is not None else 'None' for nn in name_test_0])
-
-        try:
-            np.testing.assert_array_almost_equal(x_test, self.camera_data['xpix'], 6)
-            np.testing.assert_array_almost_equal(y_test, self.camera_data['ypix'], 6)
-            np.testing.assert_array_equal(name_test, self.camera_data['chipName'])
-        except AssertionError as aa:
-            print 'triggering error: ',aa.args[0]
-            raise AssertionError(self.validation_msg)
-
-
     def test_pupil_coords_from_pixel_coords(self):
         """
         Test the conversion from pixel coordinates back into pupil coordinates
@@ -524,58 +352,6 @@ class LsstCameraTestClass(unittest.TestCase):
             self.assertTrue(np.isnan(yp))
 
 
-    def test_ra_dec_from_pixel_coordinates(self):
-        """
-        Test the method that converts from pixel coordinates back to RA, Dec
-        """
-
-        ra_test, dec_test = self.camera.raDecFromPixelCoords(self.camera_data['xpix'], self.camera_data['ypix'], self.camera_data['chipName'])
-
-        for rt, dt, rc, dc, name in \
-            zip(ra_test, dec_test, np.radians(self.camera_data['ra']), np.radians(self.camera_data['dec']), self.camera_data['chipName']):
-
-            if name != 'None':
-                self.assertAlmostEqual(np.cos(rt), np.cos(rc))
-                self.assertAlmostEqual(np.sin(rt), np.sin(rc))
-                self.assertAlmostEqual(np.cos(dt), np.cos(dc))
-                self.assertAlmostEqual(np.sin(dt), np.sin(dc))
-            else:
-                self.assertTrue(np.isnan(rt))
-                self.assertTrue(np.isnan(dt))
-
-
-        np.random.seed(99)
-        n_samples = 100
-        raList = (np.random.random_sample(n_samples)-0.5)*np.radians(1.5) + np.radians(self.raPointing)
-        decList = (np.random.random_sample(n_samples)-0.5)*np.radians(1.5) + np.radians(self.decPointing)
-
-        x_pup_control, y_pup_control = self.camera.pupilCoordsFromFloat(raList, decList)
-
-        camera_point_list = self.camera._get_afw_pupil_coord_list_from_float(raList, decList)
-
-        chip_name_possibilities = ('R:0,1 S:1,1', 'R:0,3 S:0,2', 'R:4,2 S:2,2', 'R:3,4 S:0,2')
-
-        chip_name_list = [chip_name_possibilities[ii] for ii in np.random.random_integers(0,3,n_samples)]
-        x_pix_list, y_pix_list = self.camera._pixel_coord_from_point_and_name(camera_point_list, chip_name_list)
-
-        ra_test, dec_test = self.camera.raDecFromPixelCoords(x_pix_list, y_pix_list, chip_name_list)
-        np.testing.assert_array_almost_equal(np.cos(ra_test), np.cos(raList), 10)
-        np.testing.assert_array_almost_equal(np.sin(ra_test), np.sin(raList), 10)
-        np.testing.assert_array_almost_equal(np.cos(dec_test), np.cos(decList), 10)
-        np.testing.assert_array_almost_equal(np.sin(dec_test), np.sin(decList), 10)
-
-
-        # test one at a time
-        for xx, yy, name, ra_control, dec_control in \
-            zip(x_pix_list, y_pix_list, chip_name_list, raList, decList):
-
-            ra_test, dec_test = self.camera.raDecFromPixelCoords(xx, yy, name)
-            self.assertAlmostEqual(np.cos(ra_test), np.cos(ra_control), 10)
-            self.assertAlmostEqual(np.sin(ra_test), np.sin(ra_control), 10)
-            self.assertAlmostEqual(np.cos(dec_test), np.cos(dec_control), 10)
-            self.assertAlmostEqual(np.sin(dec_test), np.sin(dec_control), 10)
-
-
 class LsstWcsTestCase(unittest.TestCase):
 
     @classmethod
@@ -588,20 +364,8 @@ class LsstWcsTestCase(unittest.TestCase):
         cls.rotation = 27.0 * galsim.degrees
         cls.chip_name = 'R:0,1 S:1,2'
 
-        cls.validation_msg = "The LSST WCS outputs are no longer consistent\n" \
-                             + "with the LSST Stack.  Contact Scott Daniel at scottvalscott@gmail.com\n" \
-                             + "to make sure you have the correct version\n" \
-                             + "\nYou can also try re-creating the test validation data\n" \
-                             + "using the script GalSim/devel/external/generate_galsim_lsst_camera_validation.py"
-
         cls.pointing = CelestialCoord(cls.raPointing, cls.decPointing)
         cls.wcs = LsstWCS(cls.pointing, cls.rotation, cls.chip_name)
-
-        dtype = np.dtype([('ra', np.float), ('dec', np.float), ('xpix', np.float), ('ypix', np.float)])
-
-        path, filename = os.path.split(__file__)
-        file_name = os.path.join(path, 'random_data', 'galsim_afwCameraGeom_forced_data.txt')
-        cls.wcs_data = np.genfromtxt(file_name, dtype=dtype, delimiter='; ')
 
 
     def test_constructor(self):
@@ -634,65 +398,6 @@ class LsstWcsTestCase(unittest.TestCase):
 
         with self.assertRaises(AttributeError) as context:
             self.wcs.chip_name = 'R:4,4 S:1,1'
-
-
-    def test_xy(self):
-        """
-        Test that the conversion from RA, Dec to pixel coordinates works
-        """
-
-        # test one-at-a-time use case
-        for rr, dd, x_control, y_control in \
-            zip(np.radians(self.wcs_data['ra']), np.radians(self.wcs_data['dec']), self.wcs_data['xpix'], self.wcs_data['ypix']):
-
-            x_test, y_test = self.wcs._xy(rr, dd)
-            try:
-                self.assertAlmostEqual(x_test, x_control, 6)
-                self.assertAlmostEqual(y_test, y_control, 6)
-            except AssertionError as aa:
-                print 'triggering error: ',aa.args[0]
-                raise AssertionError(self.validation_msg)
-
-        # test list use case
-        x_test, y_test = self.wcs._xy(np.radians(self.wcs_data['ra']), np.radians(self.wcs_data['dec']))
-        try:
-            np.testing.assert_array_almost_equal(x_test, self.wcs_data['xpix'], 6)
-            np.testing.assert_array_almost_equal(y_test, self.wcs_data['ypix'], 6)
-        except AssertionError as aa:
-            print 'triggering error: ',aa.args[0]
-            raise AssertionError(self.validation_msg)
-
-
-    def test_radec(self):
-        """
-        Test that the conversion from pixel coordinates to RA, Dec orks
-        """
-
-        # test one-at-a-time use case
-        for ra_control, dec_control, xx, yy in \
-            zip(np.radians(self.wcs_data['ra']), np.radians(self.wcs_data['dec']), self.wcs_data['xpix'], self.wcs_data['ypix']):
-
-            ra_test, dec_test = self.wcs._radec(xx, yy)
-            try:
-                self.assertAlmostEqual(np.cos(ra_test), np.cos(ra_control), 10)
-                self.assertAlmostEqual(np.sin(ra_test), np.sin(ra_control), 10)
-                self.assertAlmostEqual(np.cos(dec_test), np.cos(dec_control), 10)
-                self.assertAlmostEqual(np.sin(dec_test), np.sin(dec_control), 10)
-            except AssertionError as aa:
-                print 'triggering error: ',aa.args[0]
-                raise AssertionError(self.validation_msg)
-
-
-        # test list inputs
-        ra_test, dec_test = self.wcs._radec(self.wcs_data['xpix'], self.wcs_data['ypix'])
-        try:
-            np.testing.assert_array_almost_equal(np.cos(ra_test), np.cos(np.radians(self.wcs_data['ra'])))
-            np.testing.assert_array_almost_equal(np.sin(ra_test), np.sin(np.radians(self.wcs_data['ra'])))
-            np.testing.assert_array_almost_equal(np.cos(dec_test), np.cos(np.radians(self.wcs_data['dec'])))
-            np.testing.assert_array_almost_equal(np.sin(dec_test), np.sin(np.radians(self.wcs_data['dec'])))
-        except AssertionError as aa:
-            print 'triggering error: ',aa.args[0]
-            raise AssertionError(self.validation_msg)
 
 
     def test_tan_wcs(self):
