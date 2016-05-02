@@ -857,7 +857,9 @@ class LsstWCS(galsim.wcs.CelestialWCS):
 
 
     def _newOrigin(self, origin):
-        self.origin = origin
+        newWcs = LsstWCS(self._pointing, self._rotation_angle, self._chip_name, camera=self._camera)
+        newWcs.origin = origin
+        return newWcs
 
 
     def _xy(self, ra, dec):
@@ -1109,7 +1111,7 @@ class LsstWCS(galsim.wcs.CelestialWCS):
 
     def copy(self):
         other = LsstWCS(self._camera._pointing, self._camera._rotation_angle, self._chip_name)
-        other._newOrigin(self.origin)
+        other = other._newOrigin(self.origin)
         return other
 
 
@@ -1150,4 +1152,4 @@ class LsstWCS(galsim.wcs.CelestialWCS):
         self._rotation_angle = input_dict['rotation_angle']
         self._chip_name = input_dict['chip_name']
         self._initialize()
-        self._newOrigin(input_dict['origin'])
+        self.origin = input_dict['origin']

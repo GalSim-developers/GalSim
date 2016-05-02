@@ -549,7 +549,7 @@ class LsstWcsTestCase(unittest.TestCase):
         self.assertEqual(self.wcs, wcs1)
 
         new_origin = galsim.PositionI(9, 9)
-        wcs1._newOrigin(new_origin)
+        wcs1 = wcs1._newOrigin(new_origin)
         self.assertNotEqual(self.wcs, wcs1)
 
         other_pointing = CelestialCoord(1.9*galsim.degrees, -34.0*galsim.degrees)
@@ -571,11 +571,11 @@ class LsstWcsTestCase(unittest.TestCase):
         rotation = 116.8*galsim.degrees
         chip_name = 'R:1,2 S:2,2'
         wcs0 = LsstWCS(pointing, rotation, chip_name)
-        wcs0._newOrigin(galsim.PositionI(112, 4))
+        wcs0 = wcs0._newOrigin(galsim.PositionI(112, 4))
         wcs1 = wcs0.copy()
         self.assertEqual(wcs0, wcs1)
 
-        wcs0._newOrigin(galsim.PositionI(66, 77))
+        wcs0 = wcs0._newOrigin(galsim.PositionI(66, 77))
         self.assertNotEqual(wcs0, wcs1)
 
 
