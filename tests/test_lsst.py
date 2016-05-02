@@ -926,3 +926,8 @@ class LsstWcsTestCase(unittest.TestCase):
                          "pointing and rotation angle as you asked for for this WCS.\n"
                          "LsstWCS is creating a new camera with the pointing and\n"
                          "rotation angle you specified in the constructor for LsstWCS.")
+
+
+if __name__ == "__main__":
+
+    unittest.main()
