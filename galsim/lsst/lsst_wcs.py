@@ -328,7 +328,7 @@ class LsstCamera(object):
                 if len(names)>1:
                     raise RuntimeError("This method does not know how to deal with cameras " +
                                        "where points can be on multiple detectors.  " +
-                                       "Override LSSTWCS._get_chip_name to add this.")
+                                       "Override LSSTWCS._get_chip_name_from_afw_point_list to add this.")
                 elif len(names)==0:
                     chip_name_list.append(None)
                 else:
