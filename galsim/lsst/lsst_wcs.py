@@ -1017,9 +1017,6 @@ class LsstWCS(galsim.wcs.CelestialWCS):
 
         coeffs = np.linalg.solve(aMatrix, bVector)
 
-        crValPoint = afwGeom.Point2D(np.degrees(raPointing), np.degrees(decPointing))
-        crPixPoint = afwGeom.Point2D(crPix1[0], crPix2[0])
-
         fitsHeader = dafBase.PropertyList()
         fitsHeader.set("RADESYS", "ICRS")
         fitsHeader.set("EQUINOX", 2000.0)
