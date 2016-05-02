@@ -1122,7 +1122,7 @@ class LsstWCS(galsim.wcs.CelestialWCS):
 
     def __repr__(self):
         return "galsim.lsst.LsstWCS(galsim.CelestialCoord(%e*galsim.radians, %e*galsim.radians), %e*galsim.radians, '%s')" \
-        % (self._camera._pointing.ra/galsim.radians, self._camera._poiting.dec/galsim.radians,
+        % (self._camera._pointing.ra/galsim.radians, self._camera._pointing.dec/galsim.radians,
            self._camera._rotation_angle/galsim.radians, self._chip_name)
 
 
