@@ -25,18 +25,25 @@ where x, y are focal plane coordinates and u, v are pupil plane coordinates
 
 The main classes of note are:
 
+Aperture
+  Class to representing the illuminated region of pupil.
+
 AtmosphericScreen
   Class implementing phase(u, v, x, y, t) for von Karman type turbulence, with possibly evolving
   "non-frozen-flow" phases.
 
+OpticalScreen
+  Class implementing optical aberrations using Zernike polynomial expansions in the wavefront.
+
 PhaseScreenList
   Python sequence type to hold multiple phase screens, for instance to simulate turbulence at
-  different altitudes.  A key method is makePSF(), which will take the list of phase screens,
-  add them together linearly (Fraunhofer approximation), and evaluate the above diffraction
-  equation to yield a PhaseScreenPSF object.
+  different altitudes, or self-consistently model atmospheric and optical phase aberrations.  A key
+  method is makePSF(), which will take the list of phase screens, add them together linearly
+  (Fraunhofer approximation), and evaluate the above diffraction equation to yield a
+  PhaseScreenPSF object.
 
 PhaseScreenPSF
-  A GSObject holding the evaluated PSF.
+  A GSObject holding the evaluated PSF from a set of phase screens.
 
 Atmosphere
   Convenience function to quickly assemble multiple AtmosphericScreens into a PhaseScreenList.
@@ -395,6 +402,11 @@ class Aperture(object):
         return (lam*1e-9) / self.pupil_plane_size * galsim.radians/scale_unit
 
     def _sky_size(self, lam, scale_unit=galsim.arcsec):
+        """Return the image size for this aperture at given wavelength.
+        @param lam         Wavelength in nanometers.
+        @param scale_unit  Units in which to return result [default: galsim.arcsec]
+        @returns           Image size.
+        """
         return (lam*1e-9) / self.pupil_plane_scale * galsim.radians/scale_unit
 
 
@@ -1286,7 +1298,7 @@ class PhaseScreenPSF(GSObject):
                     "The calculated stepk (%g) for PhaseScreenPSF is smaller "%observed_stepk +
                     "than what was used to build the wavefront (%g). "%specified_stepk +
                     "This could lead to aliasing problems. " +
-                    "Increasing pad_factor by factor >= %f is recommended."%(stepk / final_stepk))
+                    "Increasing pad_factor is recommended.")
 
     def __getstate__(self):
         # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
