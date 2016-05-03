@@ -352,6 +352,110 @@ class LsstCameraTestClass(unittest.TestCase):
             self.assertTrue(np.isnan(yp))
 
 
+    def test_rotation_angle_pupil_coordinate_convention(self):
+        """
+        Test the convention on how rotation angle affects the orientation of north
+        on the focal plane (in pupil coordinates) by calculating the puipil
+        coordinates of positions slightly displaced from the center of the camera.
+        """
+
+        ra = 30.0
+        dec = 0.0
+        delta = 0.001
+
+        pointing = CelestialCoord(ra*galsim.degrees, dec*galsim.degrees)
+        north = CelestialCoord(ra*galsim.degrees, (dec+delta)*galsim.degrees)
+        east = CelestialCoord((ra+delta)*galsim.degrees, dec*galsim.degrees)
+
+        camera = LsstCamera(pointing, 0.0*galsim.degrees)
+        x_0, y_0 = camera.pupilCoordsFromPoint(pointing)
+        x_n, y_n = camera.pupilCoordsFromPoint(north)
+        x_e, y_e = camera.pupilCoordsFromPoint(east)
+        self.assertAlmostEqual(0.0, x_0/galsim.degrees, 7)
+        self.assertAlmostEqual(0.0, y_0/galsim.degrees, 7)
+        self.assertAlmostEqual(0.0, x_n/galsim.degrees, 7)
+        self.assertGreater(y_n/galsim.degrees, 1.0e-4)
+        self.assertLess(x_e/galsim.degrees, -1.0e-4)
+        self.assertAlmostEqual(y_e/galsim.degrees, 0.0, 7)
+
+        camera = LsstCamera(pointing, 90.0*galsim.degrees)
+        x_n, y_n = camera.pupilCoordsFromPoint(north)
+        x_e, y_e = camera.pupilCoordsFromPoint(east)
+        self.assertLess(x_n/galsim.degrees, -1.0e-4)
+        self.assertAlmostEqual(y_n/galsim.degrees, 0.0, 7)
+        self.assertAlmostEqual(x_e/galsim.degrees, 0.0, 7)
+        self.assertLess(y_e/galsim.degrees, -1.0e-4)
+
+        camera = LsstCamera(pointing, -90.0*galsim.degrees)
+        x_n, y_n = camera.pupilCoordsFromPoint(north)
+        x_e, y_e = camera.pupilCoordsFromPoint(east)
+        self.assertGreater(x_n/galsim.degrees, 1.0e-4)
+        self.assertAlmostEqual(y_n/galsim.degrees, 0.0, 7)
+        self.assertAlmostEqual(x_e/galsim.degrees, 0.0, 7)
+        self.assertGreater(y_e/galsim.degrees, 1.0e-4)
+
+        camera = LsstCamera(pointing, 180.0*galsim.degrees)
+        x_n, y_n = camera.pupilCoordsFromPoint(north)
+        x_e, y_e = camera.pupilCoordsFromPoint(east)
+        self.assertAlmostEqual(x_n/galsim.degrees, 0, 7)
+        self.assertLess(y_n/galsim.degrees, -1.0e-4)
+        self.assertGreater(x_e/galsim.degrees, 1.0e-4)
+        self.assertAlmostEqual(y_e/galsim.degrees, 0.0, 7)
+
+
+    def test_rotation_angle_pixel_coordinate_convention(self):
+        """
+        Test the convention on how rotation angle affects the orientation of north
+        on the focal plane (in pixel coordinates) by calculating the pixel
+        coordinates of positions slightly displaced from the center of the camera.
+        """
+
+        ra = 30.0
+        dec = 0.0
+        delta = 0.001
+
+        pointing = CelestialCoord(ra*galsim.degrees, dec*galsim.degrees)
+        north = CelestialCoord(ra*galsim.degrees, (dec+delta)*galsim.degrees)
+        east = CelestialCoord((ra+delta)*galsim.degrees, dec*galsim.degrees)
+
+        camera = LsstCamera(pointing, 0.0*galsim.degrees)
+        x_0, y_0, name = camera.pixelCoordsFromPoint(pointing)
+        x_n, y_n, name = camera.pixelCoordsFromPoint(north)
+        x_e, y_e, name = camera.pixelCoordsFromPoint(east)
+        self.assertGreater(x_n-x_0, 10.0)
+        self.assertAlmostEqual(y_n-y_0, 0.0, 7)
+        self.assertAlmostEqual(x_e-x_0, 0.0, 7)
+        self.assertGreater(y_e-y_0, 10.0)
+
+        camera = LsstCamera(pointing, 90.0*galsim.degrees)
+        x_0, y_0, name = camera.pixelCoordsFromPoint(pointing)
+        x_n, y_n, name = camera.pixelCoordsFromPoint(north)
+        x_e, y_e, name = camera.pixelCoordsFromPoint(east)
+        self.assertAlmostEqual(x_n-x_0, 0.0, 7)
+        self.assertGreater(y_n-y_0, 10.0)
+        self.assertLess(x_e-x_0, -10.0)
+        self.assertAlmostEqual(y_e-y_0, 0.0, 7)
+
+        camera = LsstCamera(pointing, -90.0*galsim.degrees)
+        x_0, y_0, name = camera.pixelCoordsFromPoint(pointing)
+        x_n, y_n, name = camera.pixelCoordsFromPoint(north)
+        x_e, y_e, name = camera.pixelCoordsFromPoint(east)
+        self.assertAlmostEqual(x_n-x_0, 0.0, 7)
+        self.assertLess(y_n-y_0, -10.0)
+        self.assertGreater(x_e-x_0, 10.0)
+        self.assertAlmostEqual(y_e-y_0, 0.0, 7)
+
+        camera = LsstCamera(pointing, 180.0*galsim.degrees)
+        x_0, y_0, name = camera.pixelCoordsFromPoint(pointing)
+        x_n, y_n, name = camera.pixelCoordsFromPoint(north)
+        x_e, y_e, name = camera.pixelCoordsFromPoint(east)
+        self.assertLess(x_n-x_0, -10.0)
+        self.assertAlmostEqual(y_n-y_0, 0.0, 7)
+        self.assertAlmostEqual(x_e-x_0, 0.0, 7)
+        self.assertLess(y_e-y_0, -10.0)
+
+
+
 class LsstWcsTestCase(unittest.TestCase):
 
     @classmethod
