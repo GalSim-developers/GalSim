@@ -3,7 +3,9 @@ import unittest
 import numpy as np
 import warnings
 import os
+import time
 import galsim
+from galsim_test_helpers import funcname
 from galsim.lsst import LsstCamera, LsstWCS, _nativeLonLatFromRaDec
 from galsim.celestial import CelestialCoord
 import lsst.afw.geom as afwGeom
@@ -43,6 +45,8 @@ class NativeLonLatTest(unittest.TestCase):
         at intuitive locations
         """
 
+        start = time.clock()
+
         raList = [0.0, 0.0, 0.0, 1.5*np.pi]
         decList = [0.5*np.pi, 0.5*np.pi, 0.0, 0.0]
 
@@ -58,12 +62,16 @@ class NativeLonLatTest(unittest.TestCase):
             self.assertAlmostEqual(lon, lonc, 10)
             self.assertAlmostEqual(lat, latc, 10)
 
+        print 'time to run %s = %e seconds' % (funcname(), time.clock()-start)
+
 
     def testNativeLongLatComplicated(self):
         """
         Test that nativeLongLatFromRaDec works by considering stars and pointings
         at non-intuitive locations.
         """
+
+        start = time.clock()
 
         np.random.seed(42)
         nPointings = 10
@@ -126,6 +134,8 @@ class NativeLonLatTest(unittest.TestCase):
                 np.testing.assert_array_almost_equal(controlPosition, testPosition, decimal=10)
 
 
+        print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
+
 
     def testNativeLonLatVector(self):
         """
@@ -134,6 +144,8 @@ class NativeLonLatTest(unittest.TestCase):
         by performing a bunch of tansformations passing in ra and dec as numpy arrays
         and then comparing them to results computed in an element-wise way)
         """
+
+        start = time.clock()
 
         raPoint = np.radians(145.0)
         decPoint = np.radians(-35.0)
@@ -150,6 +162,8 @@ class NativeLonLatTest(unittest.TestCase):
             self.assertAlmostEqual(lat, latControl, 10)
             if np.abs(np.abs(lat) - 0.5*np.pi)>1.0e-9:
                 self.assertAlmostEqual(lon, lonControl, 10)
+
+        print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
 
 
 class LsstCameraTestClass(unittest.TestCase):
@@ -172,11 +186,16 @@ class LsstCameraTestClass(unittest.TestCase):
         """
         Test that exceptions are raised when you try to set attributes
         """
+
+        start = time.clock()
+
         with self.assertRaises(AttributeError) as context:
             self.camera.pointing = galsim.CelestialCoord(34.0*galsim.degrees, 18.0*galsim.degrees)
 
         with self.assertRaises(AttributeError) as context:
             self.camera.rotation_angle = 56.0*galsim.degrees
+
+        print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
 
 
     def test_pupil_coordinates(self):
@@ -184,6 +203,8 @@ class LsstCameraTestClass(unittest.TestCase):
         Test the conversion between (RA, Dec) and pupil coordinates.
         Results are checked against the routine provided by PALPY.
         """
+
+        start = time.clock()
 
         def palpyPupilCoords(star, pointing):
             """
@@ -253,12 +274,16 @@ class LsstCameraTestClass(unittest.TestCase):
             np.testing.assert_array_almost_equal((xTest/galsim.arcsec) - (xControl/galsim.arcsec), np.zeros(len(xControl)),  7)
             np.testing.assert_array_almost_equal((yTest/galsim.arcsec) - (yControl/galsim.arcsec), np.zeros(len(yControl)), 7)
 
+        print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
+
 
     def test_pupil_coordinates_from_floats(self):
         """
         Test that the method which converts floats into pupil coordinates agrees with the method
         that converts CelestialCoords into pupil coordinates
         """
+
+        start = time.clock()
 
         raPointing = 113.0
         decPointing = -25.6
@@ -284,11 +309,15 @@ class LsstCameraTestClass(unittest.TestCase):
         np.testing.assert_array_almost_equal((test_y - control_y/galsim.radians)*arcsec_per_radian,
                                              np.zeros(len(test_y)), 10)
 
+        print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
+
 
     def test_ra_dec_from_pupil_coords(self):
         """
         Test that the method which converts from pupil coordinates back to RA, Dec works
         """
+
+        start = time.clock()
 
         np.random.seed(55)
         n_samples = 100
@@ -304,11 +333,15 @@ class LsstCameraTestClass(unittest.TestCase):
         np.testing.assert_array_almost_equal(np.cos(decList), np.cos(dec_test), 10)
         np.testing.assert_array_almost_equal(np.sin(decList), np.sin(dec_test), 10)
 
+        print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
+
 
     def test_pupil_coords_from_pixel_coords(self):
         """
         Test the conversion from pixel coordinates back into pupil coordinates
         """
+
+        start = time.clock()
 
         np.random.seed(88)
         n_samples = 100
@@ -351,6 +384,8 @@ class LsstCameraTestClass(unittest.TestCase):
             self.assertTrue(np.isnan(xp))
             self.assertTrue(np.isnan(yp))
 
+        print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
+
 
     def test_rotation_angle_pupil_coordinate_convention(self):
         """
@@ -358,6 +393,8 @@ class LsstCameraTestClass(unittest.TestCase):
         on the focal plane (in pupil coordinates) by calculating the puipil
         coordinates of positions slightly displaced from the center of the camera.
         """
+
+        start = time.clock()
 
         ra = 30.0
         dec = 0.0
@@ -402,6 +439,8 @@ class LsstCameraTestClass(unittest.TestCase):
         self.assertGreater(x_e/galsim.degrees, 1.0e-4)
         self.assertAlmostEqual(y_e/galsim.degrees, 0.0, 7)
 
+        print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
+
 
     def test_rotation_angle_pixel_coordinate_convention(self):
         """
@@ -409,6 +448,8 @@ class LsstCameraTestClass(unittest.TestCase):
         on the focal plane (in pixel coordinates) by calculating the pixel
         coordinates of positions slightly displaced from the center of the camera.
         """
+
+        start = time.clock()
 
         ra = 30.0
         dec = 0.0
@@ -454,6 +495,7 @@ class LsstCameraTestClass(unittest.TestCase):
         self.assertAlmostEqual(x_e-x_0, 0.0, 7)
         self.assertLess(y_e-y_0, -10.0)
 
+        print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
 
 
 class LsstWcsTestCase(unittest.TestCase):
@@ -478,6 +520,8 @@ class LsstWcsTestCase(unittest.TestCase):
         a nonsense chip.
         """
 
+        start = time.clock()
+
         pointing = CelestialCoord(112.0*galsim.degrees, -39.0*galsim.degrees)
         rotation = 23.1*galsim.degrees
 
@@ -488,11 +532,15 @@ class LsstWcsTestCase(unittest.TestCase):
         self.assertEqual(context.exception.args[0],
                          "R:1,1 S:3,3 is not a valid chip_name for an LsstWCS")
 
+        print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
+
 
     def test_attribute_exceptions(self):
         """
         Test that exceptions are raised when you try to re-assign LsstWCS attributes
         """
+
+        start = time.clock()
 
         with self.assertRaises(AttributeError) as context:
             self.wcs.pointing = CelestialCoord(22.0*galsim.degrees, -17.0*galsim.degrees)
@@ -502,6 +550,8 @@ class LsstWcsTestCase(unittest.TestCase):
 
         with self.assertRaises(AttributeError) as context:
             self.wcs.chip_name = 'R:4,4 S:1,1'
+
+        print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
 
 
     def test_tan_wcs(self):
@@ -514,6 +564,8 @@ class LsstWcsTestCase(unittest.TestCase):
         Note: if you use a bigger camera, it is possible to have disagreements of
         order a few milliarcseconds.
         """
+
+        start = time.clock()
 
         arcsec_per_radian = 180.0*3600.0/np.pi
 
@@ -548,6 +600,8 @@ class LsstWcsTestCase(unittest.TestCase):
         msg = 'maxError in tanWcs was %e ' % maxDistance
         self.assertLess(maxDistance, 0.001, msg=msg)
 
+        print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
+
 
     def test_tan_sip_wcs(self):
         """
@@ -555,6 +609,8 @@ class LsstWcsTestCase(unittest.TestCase):
         the a detector with distortions and verifying that the TAN-SIP WCS better approximates
         the truth.
         """
+
+        start = time.clock()
 
         arcsec_per_radian = 180.0*3600.0/np.pi
 
@@ -604,12 +660,16 @@ class LsstWcsTestCase(unittest.TestCase):
         self.assertLess(maxDistanceTanSip, 0.001, msg=msg)
         self.assertGreater(maxDistanceTan-maxDistanceTanSip, 1.0e-10, msg=msg)
 
+        print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
+
 
     def test_round_trip(self):
         """
         Test writing out an image with an LsstWCS, reading it back in, and comparing
         the resulting pixel -> ra, dec mappings
         """
+
+        start = time.clock()
 
         path, filename = os.path.split(__file__)
 
@@ -643,11 +703,15 @@ class LsstWcsTestCase(unittest.TestCase):
         if os.path.exists(outputFile):
             os.unlink(outputFile)
 
+        print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
+
 
     def test_eq(self):
         """
         Test that __eq__ works for LsstWCS
         """
+
+        start = time.clock()
 
         wcs1 = LsstWCS(self.pointing, self.rotation, self.chip_name)
         self.assertEqual(self.wcs, wcs1)
@@ -666,11 +730,16 @@ class LsstWcsTestCase(unittest.TestCase):
         wcs4 = LsstWCS(self.pointing, self.rotation, 'R:2,2 S:2,2')
         self.assertNotEqual(self.wcs, wcs4)
 
+        print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
+
 
     def test_copy(self):
         """
         Test that copy() works
         """
+
+        start = time.clock()
+
         pointing = CelestialCoord(64.82*galsim.degrees, -16.73*galsim.degrees)
         rotation = 116.8*galsim.degrees
         chip_name = 'R:1,2 S:2,2'
@@ -682,11 +751,16 @@ class LsstWcsTestCase(unittest.TestCase):
         wcs0 = wcs0._newOrigin(galsim.PositionI(66, 77))
         self.assertNotEqual(wcs0, wcs1)
 
+        print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
+
 
     def test_pickling(self):
         """
         Test that LsstWCS can be pickled and un-pickled
         """
+
+        start = time.clock()
+
         path, filename = os.path.split(__file__)
         file_name = os.path.join(path,'scratch_space','pickle_LsstWCS.txt')
 
@@ -703,11 +777,15 @@ class LsstWcsTestCase(unittest.TestCase):
         if os.path.exists(file_name):
             os.unlink(file_name)
 
+        print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
+
 
     def test_passing_camera_by_hand(self):
         """
         Test that you can pass a camera from one WCS to another
         """
+
+        start = time.clock()
 
         with warnings.catch_warnings(record=True) as ww:
             wcs1 = LsstWCS(self.pointing, self.rotation, chip_name='R:0,1 S:1,1', camera=self.wcs.camera)
@@ -737,6 +815,8 @@ class LsstWcsTestCase(unittest.TestCase):
                          "pointing and rotation angle as you asked for for this WCS.\n"
                          "LsstWCS is creating a new camera with the pointing and\n"
                          "rotation angle you specified in the constructor for LsstWCS.")
+
+        print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
 
 
 if __name__ == "__main__":
