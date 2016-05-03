@@ -275,6 +275,59 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     else:
         self.array[:,:] = out_array
 
+def applyPersistence(self,imgs,coeffs):
+    """
+    Applies the effects of persistence to the Image instance.
+
+    Persistence refers to the retention of a small fraction of the signal after resetting the
+    imager pixel elements. The persistence signal of a previous exposure is left in the pixel even
+    after several detector resets. This effect is most likely due to charge traps in the material.
+    Laboratory tests on the WFIRST CMOS detectors show that if exposures and readouts are taken in
+    a fixed cadence, the persistence signal can be given as a linear combination of prior pixel
+    values that can be added to the current image.
+
+    This routine takes in a list of Image instances and adds them to Image weighted by the values
+    passed on to 'coeffs'. The pixel values of the Image instances in the list must correspond to
+    the electron counts before the readout. This routine does NOT keep track of realistic dither
+    patterns. During the image simulation process, the user has to queue a list of previous Image
+    instances (imgs) outside the routine by inserting the latest image in the beginning of the list
+    and deleting the oldest image. The values in 'coeffs' tell how much of each Image is to be
+    added. This usually remains constant in the image generation process.
+
+    Calling
+    -------
+
+        >>> img.applyPersistence(imgs=img_list, coeffs=coeffs_list)
+
+    @ param imgs        A list of previous Image instances that still persist.
+    @ param coeffs      A list of floats that specifies the retention factors for the corresponding
+                        Image instances listed in 'imgs'.
+
+    @ returns None
+    """
+
+    if not hasattr(imgs,'__iter__') or not hasattr(coeffs,'__iter__'):
+        raise TypeError("Type mismatch between 'imgs' and 'coeffs' in 'applyPersistence' routine. "
+                        "'imgs' must be a list of Image instances and 'coeffs' must be a list of "
+                        "floats of the same length.")
+
+    if not len(imgs)==len(coeffs):
+        raise TypeError("The length of 'imgs' and 'coeffs' must be the same, if passed as a "
+                        "list")
+        # If this error is not raised, then the images are added as long as one of the list is
+        # exhausted.
+
+    for img,coeff in zip(imgs,coeffs):
+        if not isinstance(img,galsim.Image):
+            raise ValueError("In 'applyPersistence', the objects in 'imgs' must be "
+                             "galsim.Image instances")
+
+        if not isinstance(coeff,float):
+            raise ValueError("In 'applyPersistence', the objects in 'coeffs' must be "
+                             "of type float")
+
+        self += coeff*img
+
 def quantize(self):
     """
     Rounds the pixel values in an image to integer values, while preserving the type of the data.
@@ -297,7 +350,9 @@ def quantize(self):
     """
     self.applyNonlinearity(np.round)
 
+
 galsim.Image.applyNonlinearity = applyNonlinearity
 galsim.Image.addReciprocityFailure = addReciprocityFailure
 galsim.Image.applyIPC = applyIPC
+galsim.Image.applyPersistence = applyPersistence
 galsim.Image.quantize = quantize
