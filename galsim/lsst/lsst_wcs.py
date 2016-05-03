@@ -249,9 +249,6 @@ class LsstCamera(object):
         """
         Convert from RA, Dec into coordinates on the pupil
 
-        Note: this method just reimplements the PALPY method Ds2tp
-        with some minor adjustments for sign conventions.
-
         inputs
         ------------
         ra is in radians.  Can be a list.
@@ -263,15 +260,10 @@ class LsstCamera(object):
         The x and y coordinates on the pupil in radians
         """
 
-        dra = ra - self._pointing.ra/galsim.radians
-        cradif = np.cos(dra)
-        sradif = np.sin(dra)
-        sdec = np.sin(dec)
-        cdec = np.cos(dec)
-        denom = sdec * self._sin_dec + cdec * self._cos_dec * cradif
-        xx = cdec * sradif/denom
-        yy = (sdec * self._cos_dec - cdec * self._sin_dec * cradif)/denom
-        xx *= -1.0
+        xx, yy = self._pointing.project_rad(ra, dec, projection='gnomonic')
+        factor = galsim.arcsec/galsim.radians
+        xx *= factor
+        yy *= factor
         return xx*self._cos_rot - yy*self._sin_rot, xx*self._sin_rot + yy*self._cos_rot
 
 
