@@ -195,14 +195,14 @@ class Aperture(object):
 
         radius = 0.5*self.diam
         if circular_pupil:
-            self.illuminated = (rsqr < radius**2)
+            self._illuminated = (rsqr < radius**2)
             if obscuration > 0.:
-                self.illuminated *= rsqr >= (radius*obscuration)**2
+                self._illuminated *= rsqr >= (radius*obscuration)**2
         else:
-            self.illuminated = (np.abs(u) < radius) & (np.abs(v) < radius)
+            self._illuminated = (np.abs(u) < radius) & (np.abs(v) < radius)
             if obscuration > 0.:
-                self.illuminated *= ((np.abs(u) >= radius*obscuration) *
-                                     (np.abs(v) >= radius*obscuration))
+                self._illuminated *= ((np.abs(u) >= radius*obscuration) *
+                                      (np.abs(v) >= radius*obscuration))
 
         if nstruts > 0:
             if not isinstance(strut_angle, galsim.Angle):
@@ -214,7 +214,7 @@ class Aperture(object):
             # Then loop through struts setting to zero the regions which lie under the strut
             for istrut in xrange(nstruts):
                 u, v = utilities.rotate_xy(u, v, -rotang)
-                self.illuminated *= ((np.abs(u) >= radius * strut_thick) + (v < 0.0))
+                self._illuminated *= ((np.abs(u) >= radius * strut_thick) + (v < 0.0))
 
     def _load_pupil_plane(self, pupil_plane_im, pupil_angle, obscuration=0.0,
                           _pupil_plane_scale=None):
@@ -267,7 +267,7 @@ class Aperture(object):
                           "OpticalPSF outputs for signs of folding in real space."%ratio)
 
         if pupil_angle.rad() == 0.:
-            self.illuminated = pupil_plane_im.array.astype(bool)
+            self._illuminated = pupil_plane_im.array.astype(bool)
         else:
             # Rotate the pupil plane image as required based on the `pupil_angle`, being careful to
             # ensure that the image is one of the allowed types.  We ignore the scale.
@@ -285,7 +285,7 @@ class Aperture(object):
             # value are set to zero (False).
             max_pp_val = np.max(pp_arr)
             pp_arr[pp_arr < 0.5*max_pp_val] = 0.
-            self.illuminated = pp_arr.astype(bool)
+            self._illuminated = pp_arr.astype(bool)
 
     # Used in Aperture.__str__ and OpticalPSF.__str__
     def _geometry_str(self):
@@ -353,14 +353,19 @@ class Aperture(object):
             self._hash ^= hash(tuple(self.illuminated.ravel()))
         return self._hash
 
+    # Properties show up nicely in the interactive terminal for
+    #     >>>help(Aperture)
+    # So we make a thin wrapper here.
+    @property
+    def illuminated(self):
+        """  A boolean array indicating which positions in the pupil plane are exposed to the sky.
+        """
+        return self._illuminated
+
     @property
     def rho(self):
-        """ Pupil plane coordinate array.
-
-        Each element encodes the coordinate, (normalized to a unit disk) as a complex number:
+        """ Unit-disk normalized pupil plane coordinate as a complex number:
         (x, y) => x + 1j * y.
-
-        Computed on demand and cached for reuse.
         """
         if not hasattr(self, '_rho') or self._rho is None:
             u = np.fft.fftshift(np.fft.fftfreq(self.npix, self.diam/self.pupil_plane_size/2.0))
