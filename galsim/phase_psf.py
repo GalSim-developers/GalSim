@@ -471,7 +471,8 @@ class AtmosphericScreen(object):
                  _orig_rng=None, _tab2d=None, _psi=None, _screen=None, _origin=None):
 
         if screen_scale is None:
-            screen_scale = 0.5 * r0_500
+            # We copy Jee+Tyson(2011) and (arbitrarily) set the screen scale equal to r0 by default.
+            screen_scale = r0_500
         self.npix = galsim._galsim.goodFFTSize(int(np.ceil(screen_size/screen_scale)))
         self.screen_scale = screen_scale
         self.screen_size = screen_size
