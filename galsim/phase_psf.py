@@ -164,12 +164,11 @@ class Aperture(object):
                     stepk = airy.stepK()
                 scale = (stepk * lam*1.e-9 * (galsim.radians / galsim.arcsec) /
                          (2 * np.pi * pad_factor))
+                if max_size is not None:
+                    max_size_scale = lam*1e-9 / (max_size * scale_unit / galsim.radians)
+                    scale = max(max_size_scale, scale)
                 self.npix = galsim._galsim.goodFFTSize(int(np.ceil(self.pupil_plane_size/scale)))
                 _pupil_plane_scale = _pupil_plane_size/self.npix
-                if max_size is not None:
-                    ppscale = lam*1e-9 / (max_size * scale_unit / galsim.radians)
-                    if ppscale > _pupil_plane_scale:
-                        _pupil_plane_scale = ppscale
             else:
                 self.npix = int(np.ceil(self.pupil_plane_size/_pupil_plane_scale))
             # Make sure pupil_plane_size is an integer multiple of pupil_plane_scale.
