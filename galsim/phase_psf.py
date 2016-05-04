@@ -114,7 +114,7 @@ class Aperture(object):
                  oversampling=1.5, pad_factor=1.5,
                  screen_list=None, max_size=None, scale_unit=galsim.arcsec,
                  pupil_plane_im=None, pupil_angle=0.0*galsim.degrees,
-                 _pupil_plane_size=None, _pupil_plane_scale=None):
+                 _pupil_plane_size=None, _pupil_plane_scale=None, gsparams=None):
 
         self.diam = diam  # Always need to explicitly specify an aperture diameter.
 
@@ -137,6 +137,7 @@ class Aperture(object):
             self._load_pupil_plane(pupil_plane_im, pupil_angle, obscuration=obscuration,
                                    _pupil_plane_scale=_pupil_plane_scale)
         else:  # Use geometric parameters.
+            self._gsparams = gsparams
             if obscuration >= 1.:
                 raise ValueError("Pupil fully obscured! obscuration = {:0} (>= 1)"
                                  .format(obscuration))
@@ -155,9 +156,11 @@ class Aperture(object):
                 if lam is None:
                     raise ValueError("Must provide lam if not providing pupil_plane_im.")
                 if screen_list is not None:
-                    stepk = screen_list.stepK(lam=lam, diam=diam, obscuration=obscuration)
+                    stepk = screen_list.stepK(lam=lam, diam=diam, obscuration=obscuration,
+                                              gsparams=self._gsparams)
                 else:
-                    airy = galsim.Airy(diam=diam, lam=lam, obscuration=obscuration)
+                    airy = galsim.Airy(diam=diam, lam=lam, obscuration=obscuration,
+                                       gsparams=self._gsparams)
                     stepk = airy.stepK()
                 scale = (stepk * lam*1.e-9 * (galsim.radians / galsim.arcsec) /
                          (2 * np.pi * pad_factor))
@@ -332,6 +335,8 @@ class Aperture(object):
         else:  # Pupil was created from image, so use that instead.
             s += ", pupil_plane_im=array(%r"%self.illuminated.tolist()+", dtype='float')"
             s += ", _pupil_plane_scale=%r"%self.pupil_plane_scale
+        if hasattr(self, '_gsparams') and self._gsparams is not None:
+            s += ", gsparams=%r"%self._gsparams
         s += ")"
         return s
 
@@ -597,10 +602,13 @@ class AtmosphericScreen(object):
 
         @param lam         Wavelength in nanometers.
         @param scale_unit  Sky coordinate units of output profile. [Default: galsim.arcsec]
+        @param gsparams    An optional GSParams argument.  See the docstring for GSParams for
+                           details. [default: None]
         @returns  Good pupil scale size in meters.
         """
         lam = kwargs['lam']
-        obj = galsim.Kolmogorov(lam=lam, r0=self.r0_500 * (lam/500.0)**(6./5))
+        gsparams = kwargs.pop('gsparams', None)
+        obj = galsim.Kolmogorov(lam=lam, r0=self.r0_500 * (lam/500.0)**(6./5), gsparams=gsparams)
         return obj.stepK()
 
     def wavefront(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
@@ -806,14 +814,16 @@ class OpticalScreen(object):
         @param lam         Wavelength in nanometers.
         @param diam        Aperture diameter in meters.
         @param obscuration Fractional linear aperture obscuration. [Default: 0.0]
-        @param scale_unit  Sky coordinate units of output profile. [Default: galsim.arcsec]
-        @returns  Good pupil scale size in meters.
+        @param gsparams    An optional GSParams argument.  See the docstring for GSParams for
+                           details. [default: None]
+        @returns  stepK in inverse arcsec.
         """
         lam = kwargs['lam']
         diam = kwargs['diam']
         obscuration = kwargs.get('obscuration', 0.0)
+        gsparams = kwargs.get('gsparams', None)
         # Use an Airy for get appropriate stepK.
-        obj = galsim.Airy(lam=lam, diam=diam, obscuration=obscuration)
+        obj = galsim.Airy(lam=lam, diam=diam, obscuration=obscuration, gsparams=gsparams)
         return obj.stepK()
 
     def wavefront(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
@@ -1217,7 +1227,7 @@ class PhaseScreenPSF(GSObject):
         self._gsparams = gsparams
 
         if aper is None:
-            aper = Aperture(lam=lam, screen_list=screen_list, **kwargs)
+            aper = Aperture(lam=lam, screen_list=screen_list, gsparams=gsparams, **kwargs)
 
         self.aper = aper
         self.scale = aper._sky_scale(self.lam, self.scale_unit)
@@ -1537,7 +1547,8 @@ class OpticalPSF(GSObject):
                 nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle,
                 oversampling=oversampling, pad_factor=pad_factor, max_size=max_size,
                 pupil_plane_im=pupil_plane_im, pupil_angle=pupil_angle,
-                _pupil_plane_scale=_pupil_plane_scale, _pupil_plane_size=_pupil_plane_size)
+                _pupil_plane_scale=_pupil_plane_scale, _pupil_plane_size=_pupil_plane_size,
+                gsparams=gsparams)
 
         # Save for pickling
         self._lam = lam
