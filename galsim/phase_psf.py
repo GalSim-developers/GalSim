@@ -45,6 +45,9 @@ PhaseScreenList
 PhaseScreenPSF
   A GSObject holding the evaluated PSF from a set of phase screens.
 
+OpticalPSF
+  A GSObject for optical PSFs with potentially complicated pupils and Zernike aberrations.
+
 Atmosphere
   Convenience function to quickly assemble multiple AtmosphericScreens into a PhaseScreenList.
 """
@@ -749,9 +752,34 @@ def horner2d(x, y, coefs):
 
 class OpticalScreen(object):
     """
-    @param aberrations   Zernike polynomial aberrations sequence in waves.
-    @param lam_0         Reference wavelength in nanometers at which Zernike aberrations are being
-                         specified.  [Default: 500]
+    Class to describe optical aberrations in terms of Zernike polynomial coefficients.
+
+    Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
+    to the Zernike polynomials in the Noll convention defined in
+    Noll, J. Opt. Soc. Am. 66, 207-211(1976).  For a brief summary of the polynomials, refer to
+    http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials.
+
+    @param tip              Tip aberration in units of reference wavelength.  [default: 0]
+    @param tilt             Tilt aberration in units of reference wavelength.  [default: 0]
+    @param defocus          Defocus in units of reference wavelength. [default: 0]
+    @param astig1           Astigmatism (like e2) in units of reference wavelength.
+                            [default: 0]
+    @param astig2           Astigmatism (like e1) in units of reference wavelength.
+                            [default: 0]
+    @param coma1            Coma along y in units of reference wavelength. [default: 0]
+    @param coma2            Coma along x in units of reference wavelength. [default: 0]
+    @param trefoil1         Trefoil (one of the arrows along y) in units of reference wavelength.
+                            [default: 0]
+    @param trefoil2         Trefoil (one of the arrows along x) in units of reference wavelength.
+                            [default: 0]
+    @param spher            Spherical aberration in units of reference wavelength.
+                            [default: 0]
+    @param aberrations      Optional keyword, to pass in a list, tuple, or NumPy array of
+                            aberrations in units of reference wavelength (ordered according to
+                            the Noll convention), rather than passing in individual values for each
+                            individual aberration.
+    @param lam_0            Reference wavelength in nanometers at which Zernike aberrations are
+                            being specified.  [Default: 500]
     """
     def __init__(self, tip=0.0, tilt=0.0, defocus=0.0, astig1=0.0, astig2=0.0, coma1=0.0, coma2=0.0,
                  trefoil1=0.0, trefoil2=0.0, spher=0.0, aberrations=None, lam_0=500.0):
