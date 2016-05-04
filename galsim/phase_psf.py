@@ -63,61 +63,91 @@ from galsim import GSObject
 class Aperture(object):
     """ Class representing a telescope aperture embedded in a larger pupil plane array.
 
-    There are several options for setting the size and resolution of the pupil plane array.
+    For many use cases, an Aperture object need not be specified directly, but will be
+    automatically created by GalSim internally.  For example, the OpticalPSF class constructor takes
+    arguments specifying the aperture geometry (see below), which it uses internally to create an
+    Aperture object used to turn phase aberrations into a PSF image.  Similarly, the PhaseScreenPSF
+    constructor (or equivalently, the PhaseScreenList.makePSF method) will automatically create an
+    appropriate Aperture if needed.  However, we both of these classes can also accept a previously-
+    created Aperture.
 
-    The first option, which is implemented by the default constructor, is to set the size either
-    directly with `pupil_plane_size` or automatically based on the aperture diameter `diam`, and set
-    the resolution either directly with `pupil_scale` or implicitly via `npix`.  Note that setting
-    the pupil plane array size via `diam` also depends on the value of `oversampling`.
+    The pupil plane array is specified by its size, sampling interval, and pattern of illuminated
+    pixels.  The size of the array (in meters) is generally computed directly from the `diam`
+    argument supplied to the class constructor (modified by the optional `oversampling` keyword
+    argument).  The sampling interval or scale (also in meters) is determined either by the
+    scale needed to avoid folding for an obscured Airy profile at the wavelength specified
+    by `lam`, or, if present, by the scale needed to avoid folding for a provided `screen_list` at
+    wavelength `lam`.  In both cases, the sampling interval is then increased by a factor of
+    `pad_factor`. (Padding the size of the PSF is equivalent to sampling the pupil more finely.)
 
-    The second way to set the pupil plane array size and resolution is via the alternative
-    constructor `Aperture.fromPhaseScreenList`.  This constructor will examine the supplied
-    PhaseScreenList argument and wavelength argument to pick good values for size and resolution.
-    These values will then be modified via the `oversampling` and `pad_factor` keywords, and can be
-    overridden entirely with `pupil_plane_size` and `pupil_scale`.
+    There are two ways to specify the geometry of the pupil plane, i.e., the obscuration disk size
+    and the areas that will be illuminated outside of it.  The first way is to use keywords that
+    specify the size of the obscuration, and the nature of the support struts holding up the
+    secondary mirror (or prime focus cage, etc.).  These are taken to be rectangular obscurations
+    extending from the outer edge of the pupil to the outer edge of the obscuration disk (or the
+    pupil center if `obscuration = 0.`).  You can specify how many struts there are (evenly spaced
+    in angle), how thick they are as a fraction of the pupil diameter, and what angle they start at
+    relative to the positive y direction.  If specifying the pupil plane geometrically, then a
+    wavelength `lam` is required to determine the appropriate sampling interval.
 
-    The last way to set the pupil plane array size and resolution is via the alternative constructor
-    `Aperture.fromGSObject`.  This constructor will examine the supplied GSObject and wavelength to
-    pick good values for size and resolution.  These values will then be modified via the
-    `oversampling` and `pad_factor` keywords, and can be overridden entirely with `pupil_plane_size`
-    and `pupil_scale`.
+    The second way to specify the pupil plane configuration is by passing in an image of it.  This
+    can be useful for example if the struts are not evenly spaced or are not radially directed, as
+    is assumed by the simple model for struts described above.  In this case, keywords related to
+    struts are ignored; moreover, the `obscuration` keyword is used to ensure that the images are
+    properly sampled (so it is still needed), but the keyword is then ignored when using the
+    supplied image of the pupil plane.  The `pupil_plane_im` that is passed in can be rotated during
+    internal calculations by specifying a `pupil_angle` keyword.  Also note that given how the
+    `obscuration` keyword is used, the obscuration in the supplied pupil plane image should indeed
+    be reasonably circular rather than having an arbitrary shape; however, minor deviations from a
+    perfect circle do not cause significant problems.  Note that when specifying a pupil from an
+    image, the wavelength `lam` keyword is ignored.
 
-    Note that a good Aperture can also be constructed by the PhaseScreenPSF constructor directly
-    (which internally uses `Aperture.fromPhaseScreenList`), or equivalently by
-    PhaseScreenList.makePSF.
+    If you choose to pass in a pupil plane image, it must be a square array in which the image of
+    the pupil is centered.  The areas that are illuminated should have some value >0, and the other
+    areas should have a value of precisely zero.  Based on what the Aperture class thinks is the
+    required sampling to make a PSF image, the image that is passed in of the pupil plane might be
+    zero-padded during internal calculations.  If the pupil plane image has a scale associated with
+    it, that scale will be completely ignored; the scale is determined internally using basic
+    physical considerations.  Finally, to ensure accuracy of calculations using a pupil plane image,
+    we recommend sampling it as finely as possible.
 
-    All three Aperture construction mechanisms also accept keywords to control the pupil geometry,
-    such as the size of a central obstruction or a description of supporting struts.
-
-    The constructed object has two key attributes:
-        `illuminated`  a boolean array indicating which positions in the pupil plane are exposed to
-                       the sky.
-        `rho`          complex array of unit-disc-scaled pupil coordinates for defining Zernike
-                       polynomials.
-
-    Each element of `rho` encodes the corresponding coordinate as (x, y) => x + 1j * y.
-
-    @param diam              Aperture diameter in meters.
-    @param circular_pupil    Adopt a circular pupil? [default: True].
-    @param obscuration       Fractional linear circular obscuration of pupil. [default: 0.]
-    @param nstruts           Number of radial support struts to add to the central obscuration.
-                             [default: 0]
-    @param strut_thick       Thickness of support struts as a fraction of pupil diameter.
-                             [default: 0.05]
-    @param strut_angle       Angle made between the vertical and the first strut in the CCW
-                             direction; must be an Angle instance.  [default: 0. * galsim.degrees]
-    @param oversampling      Optional oversampling factor for the PSF produced with this aperture.
-                             Setting `oversampling < 1` will produce aliasing in the PSF (not good).
-                             Usually `oversampling` should be somewhat larger than 1.  1.5 is
-                             usually a safe choice.  Note that if `pupil_plane_size` is specified
-                             directly, then this keyword is ignored.  [default: 1.5]
+    @param diam             Aperture diameter in meters.
+    @param lam              Wavelength in nanometers.
+    @param circular_pupil   Adopt a circular pupil?  [default: True]
+    @param obscuration      Linear dimension of central obscuration as fraction of aperture linear
+                            dimension. [0., 1.).
+    @param nstruts          Number of radial support struts to add to the central obscuration.
+                            [default: 0]
+    @param strut_thick      Thickness of support struts as a fraction of aperture diameter.
+                            [default: 0.05]
+    @param strut_angle      Angle made between the vertical and the strut strating closest to it,
+                            defined to be positive in the counter-clockwise direction; must be an
+                            Angle instance. [default: 0. * galsim.degrees]
+    @param oversampling     Optional oversampling factor *in the image plane* for the PSF eventually
+                            constructed using this Aperture.  Setting `oversampling < 1` will
+                            produce aliasing in the PSF (not good).  Usually, `oversampling` should
+                            be somewhat larger than 1.  1.5 is usually a safe choice.
+                            [default: 1.5]
+    @param pad_factor       Additional multiple by which to extend the PSF image to avoid folding.
+                            [default: 1.5]
+    @param screen_list
+    @param max_size         Set a maximum size for the internal image for the PSF profile in arcsec.
+    @param pupil_plane_im   The GalSim.Image, NumPy array, or name of file containing the pupil
+                            plane image, to be used instead of generating one based on the
+                            obscuration and strut parameters.  Note that if the image is saved as
+                            unsigned integers, you will get a warning about conversion to floats,
+                            which is harmless. [default: None]
+    @param pupil_angle      If `pupil_plane_im` is not None, rotation angle for the pupil plane
+                            (positive in the counter-clockwise direction).  Must be an Angle
+                            instance. [default: 0. * galsim.degrees]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
     """
     def __init__(self, diam, lam=None, circular_pupil=True, obscuration=0.0,
                  nstruts=0, strut_thick=0.05, strut_angle=0.0*galsim.degrees,
-                 oversampling=1.5, pad_factor=1.5,
-                 screen_list=None, max_size=None, scale_unit=galsim.arcsec,
-                 pupil_plane_im=None, pupil_angle=0.0*galsim.degrees,
-                 _pupil_plane_size=None, _pupil_plane_scale=None, gsparams=None):
+                 oversampling=1.5, pad_factor=1.5, screen_list=None, max_size=None,
+                 pupil_plane_im=None, pupil_angle=0.0*galsim.degrees, gsparams=None,
+                 _pupil_plane_size=None, _pupil_plane_scale=None):
 
         self.diam = diam  # Always need to explicitly specify an aperture diameter.
 
@@ -168,7 +198,7 @@ class Aperture(object):
                 scale = (stepk * lam*1.e-9 * (galsim.radians / galsim.arcsec) /
                          (2 * np.pi * pad_factor))
                 if max_size is not None:
-                    max_size_scale = lam*1e-9 / (max_size * scale_unit / galsim.radians)
+                    max_size_scale = lam*1e-9 / (max_size * galsim.arcsec / galsim.radians)
                     scale = max(max_size_scale, scale)
                 self.npix = galsim._galsim.goodFFTSize(int(np.ceil(self.pupil_plane_size/scale)))
                 _pupil_plane_scale = _pupil_plane_size/self.npix
@@ -1031,12 +1061,12 @@ class PhaseScreenList(object):
     def makePSF(self, lam, **kwargs):
         """Compute one PSF or multiple PSFs from the current PhaseScreenList, depending on the type
         of (`theta_x`, `theta_y`) or `theta`.  If (`theta_x`, `theta_y`) or `theta` are iterable,
-        then return PSFs at the implied field angles in a list.  If `theta_x` and `theta_y` are
+        then return a list of PSFs at the specified field angles.  If `theta_x` and `theta_y` are
         scalars or `theta` is a single tuple, then return a single PSF at the specified field angle.
 
-        Note that this method advances each PhaseScreen in the list, so consecutive calls with the
-        same arguments will generally return different PSFs.  Use PhaseScreenList.reset() to reset
-        the time to t=0.  See galsim.PhaseScreenPSF docstring for more details.
+        Note that this method advances each PhaseScreen in the PhaseScreenList, so consecutive calls
+        with the same arguments will generally return different PSFs.  Use PhaseScreenList.reset()
+        to reset the time to t=0.  See the galsim.PhaseScreenPSF docstring for more details.
 
         @param lam               Wavelength in nanometers at which to compute PSF.
         @param exptime           Time in seconds overwhich to accumulate evolving instantaneous PSF.
@@ -1061,11 +1091,6 @@ class PhaseScreenList(object):
         The following are optional keywords to use to setup the aperture if `aper` is not provided.
 
         @param diam              Diameter in meters of aperture used to compute PSF from phases.
-        @param pupil_plane_scale       Sampling resolution of the pupil plane in meters.  Either
-                                 `pupil_plane_scale` or `npix` must be specified.
-        @param pupil_plane_size  Size of the pupil plane in meters.  Note, this may be (in fact, it
-                                 usually *should* be) larger than the aperture diameter.
-                                 [default: 2.*diam]
         @param circular_pupil    Adopt a circular pupil? [default: True].
         @param obscuration       Fractional linear circular obscuration of pupil. [default: 0.]
         @param nstruts           Number of radial support struts to add to the central obscuration.
@@ -1118,6 +1143,11 @@ class PhaseScreenList(object):
         if single:
             return PhaseScreenPSF(self, lam, theta_x=theta_x, theta_y=theta_y, **kwargs)
         else:
+            # For non-frozen-flow AtmosphericScreens, it can take much longer to update the
+            # atmospheric layers than it does to create an instantaneous PSF, so we exchange the
+            # order of the PSF and time loops so we're not recomputing screens needlessly when we go
+            # from PSF1 to PSF2 and so on.  For frozen-flow AtmosphericScreens, there's not much
+            # difference with either loop order, so we just always make the PSF loop the inner loop.
             kwargs['_eval_now'] = False
             PSFs = []
             for theta_x, theta_y in theta:
@@ -1125,11 +1155,6 @@ class PhaseScreenList(object):
 
             flux = kwargs.get('flux', 1.0)
             _nstep = PSFs[0]._nstep
-            # For non-frozen-flow AtmosphericScreens, it can take much longer to update the
-            # atmospheric layers than it does to create an instantaneous PSF, so we exchange the
-            # order of the PSF and time loops so we're not recomputing screens needlessly when we go
-            # from PSF1 to PSF2 and so on.  For frozen-flow AtmosphericScreens, there's not much
-            # difference with either loop order, so we just always make the PSF loop the inner loop.
             for i in xrange(_nstep):
                 for PSF in PSFs:
                     PSF._step()
@@ -1429,7 +1454,7 @@ def Atmosphere(screen_size, rng=None, **kwargs):
     effective Fried parameter for the whole set of layers equals the input argument.
 
     As an example, the following code approximately creates the atmosphere used by Jee+Tyson(2011)
-    for their study of atmospheric PSFs for LSST.  Note this code takes about ~3-4 minutes to run on
+    for their study of atmospheric PSFs for LSST.  Note this code takes about ~3 minutes to run on
     a fast laptop, and will consume about (8192**2 pixels) * (8 bytes) * (6 screens) ~ 3 GB of
     RAM in its final state, and more at intermediate states.
 
@@ -1517,8 +1542,6 @@ def Atmosphere(screen_size, rng=None, **kwargs):
     return PhaseScreenList(AtmosphericScreen(**kw) for kw in _lod_to_dol(kwargs, nmax))
 
 
-#  Args not yet implemented:
-#  max_size
 class OpticalPSF(GSObject):
     """A class describing aberrated PSFs due to telescope optics.  Its underlying implementation
     uses an InterpolatedImage to characterize the profile.
@@ -1634,6 +1657,7 @@ class OpticalPSF(GSObject):
                             (piston, tip, and tilt), while not true optical aberrations, are
                             permitted to be non-zero and will be treated appropriately, while the
                             first number will be ignored. [default: None]
+    @param aper             Aperture object to use when creating PSF.  [default: None]
     @param circular_pupil   Adopt a circular pupil?  [default: True]
     @param obscuration      Linear dimension of central obscuration as fraction of pupil linear
                             dimension, [0., 1.). This should be specified even if you are providing
@@ -1665,7 +1689,7 @@ class OpticalPSF(GSObject):
     @param nstruts          Number of radial support struts to add to the central obscuration.
                             [default: 0]
     @param strut_thick      Thickness of support struts as a fraction of pupil diameter.
-                            [default:`0.05]
+                            [default: 0.05]
     @param strut_angle      Angle made between the vertical and the strut starting closest to it,
                             defined to be positive in the counter-clockwise direction; must be an
                             Angle instance. [default: 0. * galsim.degrees]
@@ -1719,7 +1743,7 @@ class OpticalPSF(GSObject):
 
     def __init__(self, lam_over_diam=None, lam=None, diam=None, tip=0., tilt=0., defocus=0.,
                  astig1=0., astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0.,
-                 aberrations=None, circular_pupil=True, obscuration=0., interpolant=None,
+                 aberrations=None, aper=None, circular_pupil=True, obscuration=0., interpolant=None,
                  oversampling=1.5, pad_factor=1.5, flux=1., nstruts=0, strut_thick=0.05,
                  strut_angle=0.*galsim.degrees, pupil_plane_im=None,
                  pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None,
@@ -1744,13 +1768,14 @@ class OpticalPSF(GSObject):
         self._screens = galsim.PhaseScreenList([optics_screen])
 
         # Make the aperture.
-        self._aper = galsim.Aperture(
-                diam, lam=lam, circular_pupil=circular_pupil, obscuration=obscuration,
-                nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle,
-                oversampling=oversampling, pad_factor=pad_factor, max_size=max_size,
-                pupil_plane_im=pupil_plane_im, pupil_angle=pupil_angle,
-                _pupil_plane_scale=_pupil_plane_scale, _pupil_plane_size=_pupil_plane_size,
-                gsparams=gsparams)
+        if aper is None:
+            aper = galsim.Aperture(
+                    diam, lam=lam, circular_pupil=circular_pupil, obscuration=obscuration,
+                    nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle,
+                    oversampling=oversampling, pad_factor=pad_factor, max_size=max_size,
+                    pupil_plane_im=pupil_plane_im, pupil_angle=pupil_angle,
+                    _pupil_plane_scale=_pupil_plane_scale, _pupil_plane_size=_pupil_plane_size,
+                    gsparams=gsparams)
 
         # Save for pickling
         self._lam = lam
@@ -1762,7 +1787,7 @@ class OpticalPSF(GSObject):
 
         # Finally, put together to make the PSF.
         self._psf = galsim.PhaseScreenPSF(self._screens, lam=self._lam, flux=self._flux,
-                                          aper=self._aper, interpolant=self._interpolant,
+                                          aper=aper, interpolant=self._interpolant,
                                           scale_unit=self._scale_unit, gsparams=self._gsparams,
                                           suppress_warning=self._suppress_warning)
         GSObject.__init__(self, self._psf)
@@ -1770,11 +1795,11 @@ class OpticalPSF(GSObject):
 
     def __str__(self):
         screen = self._psf.screen_list[0]
-        s = "galsim.OpticalPSF(lam=%s, diam=%s" % (screen.lam_0, self._aper.diam)
+        s = "galsim.OpticalPSF(lam=%s, diam=%s" % (screen.lam_0, self._psf.aper.diam)
         if any(screen.aberrations):
             s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
-        if hasattr(self._aper, '_circular_pupil'):
-            s += self._aper._geometry_str()
+        if hasattr(self._psf.aper, '_circular_pupil'):
+            s += self._psf.aper._geometry_str()
         if self._psf.flux != 1.0:
             s += ", flux=%s" % self._psf.flux
         s += ")"
@@ -1782,11 +1807,11 @@ class OpticalPSF(GSObject):
 
     def __repr__(self):
         screen = self._psf.screen_list[0]
-        s = "galsim.OpticalPSF(lam=%s, diam=%s" % (screen.lam_0, self._aper.diam)
+        s = "galsim.OpticalPSF(lam=%s, diam=%s" % (screen.lam_0, self._psf.aper.diam)
         if any(screen.aberrations):
             s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
-        if hasattr(self._aper, '_circular_pupil'):
-            s += self._aper._geometry_repr()
+        if hasattr(self._psf.aper, '_circular_pupil'):
+            s += self._psf.aper._geometry_repr()
         if self._psf.flux != 1.0:
             s += ", flux=%s" % self._psf.flux
         s += ")"
@@ -1805,14 +1830,16 @@ class OpticalPSF(GSObject):
         # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
         # written as a string.  Better to pickle the psf and remake the PhaseScreenPSF.
         d = self.__dict__.copy()
+        d['aper'] = d['_psf'].aper
         del d['SBProfile']
         del d['_psf']
         return d
 
     def __setstate__(self, d):
         self.__dict__ = d
+        aper = self.__dict__.pop('aper')
         self._psf = galsim.PhaseScreenPSF(self._screens, lam=self._lam, flux=self._flux,
-                                          aper=self._aper, interpolant=self._interpolant,
+                                          aper=aper, interpolant=self._interpolant,
                                           scale_unit=self._scale_unit, gsparams=self._gsparams,
                                           suppress_warning=self._suppress_warning)
         GSObject.__init__(self, self._psf)

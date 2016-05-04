@@ -546,9 +546,9 @@ def test_OpticalPSF_pupil_plane():
     if os.path.isfile(os.path.join(imgdir, pp_file)):
         im = galsim.fits.read(os.path.join(imgdir, pp_file))
     else:
-        im = galsim.Image(ref_psf._aper.illuminated.astype(float))
+        im = galsim.Image(ref_psf._psf.aper.illuminated.astype(float))
         im.write(os.path.join(imgdir, pp_file))
-    ref_im_scale = ref_psf._aper.pupil_plane_scale
+    ref_im_scale = ref_psf._psf.aper.pupil_plane_scale
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
                                  oversampling=pp_oversampling, pupil_plane_im=im,
                                  pad_factor=pp_pad_factor,
