@@ -1520,6 +1520,175 @@ def Atmosphere(screen_size, rng=None, **kwargs):
 #  Args not yet implemented:
 #  max_size
 class OpticalPSF(GSObject):
+    """A class describing aberrated PSFs due to telescope optics.  Its underlying implementation
+    uses an InterpolatedImage to characterize the profile.
+
+    The diffraction effects are characterized by the diffraction angle, which is a function of the
+    ratio lambda / D, where lambda is the wavelength of the light and D is the diameter of the
+    telescope.  The natural units for this value is radians, which is not normally a convenient
+    unit to use for other GSObject dimensions.  Assuming that the other sky coordinates you are
+    using are all in arcsec (e.g. the pixel scale when you draw the image, the size of the galaxy,
+    etc.), then you should convert this to arcsec as well:
+
+        >>> lam = 700  # nm
+        >>> diam = 4.0    # meters
+        >>> lam_over_diam = (lam * 1.e-9) / diam  # radians
+        >>> lam_over_diam *= 206265  # Convert to arcsec
+        >>> psf = galsim.OpticalPSF(lam_over_diam, ...)
+
+    To make this process a bit simpler, we recommend instead providing the wavelength and diameter
+    separately using the parameters `lam` (in nm) and `diam` (in m).  GalSim will then convert this
+    to any of the normal kinds of angular units using the `scale_unit` parameter:
+
+        >>> psf = galsim.OpticalPSF(lam=lam, diam=diam, scale_unit=galsim.arcsec, ...)
+
+    When drawing images, the scale_unit should match the unit used for the pixel scale or the WCS.
+    e.g. in this case, a pixel scale of 0.2 arcsec/pixel would be specified as `pixel_scale=0.2`.
+
+    Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
+    to the Zernike polynomials in the Noll convention defined in
+    Noll, J. Opt. Soc. Am. 66, 207-211(1976).  For a brief summary of the polynomials, refer to
+    http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials.
+
+    There are two ways to specify the geometry of the pupil plane, i.e., the obscuration disk size
+    and the areas that will be illuminated outside of it.  The first way is to use keywords that
+    specify the size of the obscuration, and the nature of the support struts holding up the
+    secondary mirror (or prime focus cage, etc.).  These are taken to be rectangular obscurations
+    extending from the outer edge of the pupil to the outer edge of the obscuration disk (or the
+    pupil center if `obscuration = 0.`).  You can specify how many struts there are (evenly spaced
+    in angle), how thick they are as a fraction of the pupil diameter, and what angle they start at
+    relative to the positive y direction.
+
+    The second way to specify the pupil plane configuration is by passing in an image of it.  This
+    can be useful for example if the struts are not evenly spaced or are not radially directed, as
+    is assumed by the simple model for struts described above.  In this case, keywords related to
+    struts are ignored; moreover, the `obscuration` keyword is used to ensure that the images are
+    properly sampled (so it is still needed), but the keyword is then ignored when using the
+    supplied image of the pupil plane.  The `pupil_plane_im` that is passed in can be rotated during
+    internal calculations by specifying a `pupil_angle` keyword.  Also note that given how the
+    `obscuration` keyword is used, the obscuration in the supplied pupil plane image should indeed
+    be reasonably circular rather than having an arbitrary shape; however, minor deviations from a
+    perfect circle do not cause significant problems.
+
+    If you choose to pass in a pupil plane image, it must be a square array in which the image of
+    the pupil is centered.  The areas that are illuminated should have some value >0, and the other
+    areas should have a value of precisely zero.  Based on what the OpticalPSF class thinks is the
+    required sampling to make the PSF image, the image that is passed in of the pupil plane might be
+    zero-padded during internal calculations.  If the pupil plane image has a scale associated with
+    it, that scale will be completely ignored; the scale is determined internally using basic
+    physical considerations.  Finally, to ensure accuracy of calculations using a pupil plane image,
+    we recommend sampling it as finely as possible.
+
+    Initialization
+    --------------
+
+    As described above, either specify the lam/diam ratio directly in arbitrary units:
+
+        >>> optical_psf = galsim.OpticalPSF(lam_over_diam=lam_over_diam, defocus=0., astig1=0.,
+                                            astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0.,
+                                            spher=0., aberrations=None, circular_pupil=True,
+                                            obscuration=0., interpolant=None, oversampling=1.5,
+                                            pad_factor=1.5, max_size=None, nstruts=0,
+                                            strut_thick=0.05, strut_angle=0.*galsim.degrees,
+                                            pupil_plane_im=None, pupil_angle=0.*galsim.degrees)
+
+    or, use separate keywords for the telescope diameter and wavelength in meters and nanometers,
+    respectively:
+
+        >>> optical_psf = galsim.OpticalPSF(lam=lam, diam=diam, defocus=0., ...)
+
+    Either of these options initializes `optical_psf` as an OpticalPSF instance.
+
+    @param lam_over_diam    Lambda / telescope diameter in the physical units adopted for `scale`
+                            (user responsible for consistency).  Either `lam_over_diam`, or `lam`
+                            and `diam`, must be supplied.
+    @param lam              Lambda (wavelength) in units of nanometers.  Must be supplied with
+                            `diam`, and in this case, image scales (`scale`) should be specified in
+                            units of `scale_unit`.
+    @param diam             Telescope diameter in units of meters.  Must be supplied with
+                            `lam`, and in this case, image scales (`scale`) should be specified in
+                            units of `scale_unit`.
+    @param tip              Tip in units of incident light wavelength. [default: 0]
+    @param tilt             Tilt in units of incident light wavelength. [default: 0]
+    @param defocus          Defocus in units of incident light wavelength. [default: 0]
+    @param astig1           Astigmatism (like e2) in units of incident light wavelength.
+                            [default: 0]
+    @param astig2           Astigmatism (like e1) in units of incident light wavelength.
+                            [default: 0]
+    @param coma1            Coma along y in units of incident light wavelength. [default: 0]
+    @param coma2            Coma along x in units of incident light wavelength. [default: 0]
+    @param trefoil1         Trefoil (one of the arrows along y) in units of incident light
+                            wavelength. [default: 0]
+    @param trefoil2         Trefoil (one of the arrows along x) in units of incident light
+                            wavelength. [default: 0]
+    @param spher            Spherical aberration in units of incident light wavelength.
+                            [default: 0]
+    @param aberrations      Optional keyword, to pass in a list, tuple, or NumPy array of
+                            aberrations in units of incident light wavelength (ordered according to
+                            the Noll convention), rather than passing in individual values for each
+                            individual aberration.  Currently GalSim supports aberrations from
+                            defocus through third-order spherical (`spher`), which are aberrations
+                            4-11 in the Noll convention, and hence `aberrations` should be an
+                            object of length 12, with the 5th number (index 4) being the defocus,
+                            and so on through index 11 corresponding to `spher`.  Orders 1-3
+                            (piston, tip, and tilt), while not true optical aberrations, are
+                            permitted to be non-zero and will be treated appropriately, while the
+                            first number will be ignored. [default: None]
+    @param circular_pupil   Adopt a circular pupil?  [default: True]
+    @param obscuration      Linear dimension of central obscuration as fraction of pupil linear
+                            dimension, [0., 1.). This should be specified even if you are providing
+                            a `pupil_plane_im`, since we need an initial value of obscuration to use
+                            to figure out the necessary image sampling. [default: 0]
+    @param interpolant      Either an Interpolant instance or a string indicating which interpolant
+                            should be used.  Options are 'nearest', 'sinc', 'linear', 'cubic',
+                            'quintic', or 'lanczosN' where N should be the integer order to use.
+                            [default: galsim.Quintic()]
+    @param oversampling     Optional oversampling factor for the InterpolatedImage. Setting
+                            `oversampling < 1` will produce aliasing in the PSF (not good).
+                            Usually `oversampling` should be somewhat larger than 1.  1.5 is
+                            usually a safe choice.  [default: 1.5]
+    @param pad_factor       Additional multiple by which to zero-pad the PSF image to avoid folding
+                            compared to what would be employed for a simple Airy.  Note that
+                            `pad_factor` may need to be increased for stronger aberrations, i.e.
+                            those larger than order unity.  [default: 1.5]
+    @param suppress_warning If `pad_factor` is too small, the code will emit a warning telling you
+                            its best guess about how high you might want to raise it.  However,
+                            you can suppress this warning by using `suppress_warning=True`.
+                            [default: False]
+    @param max_size         Set a maximum size of the internal image for the optical PSF profile
+                            in arcsec.  Sometimes the code calculates a rather large image size
+                            to describe the optical PSF profile.  If you will eventually be
+                            drawing onto a smallish postage stamp, you might want to save some
+                            CPU time by setting `max_size` to be the size of your postage stamp.
+                            [default: None]
+    @param flux             Total flux of the profile. [default: 1.]
+    @param nstruts          Number of radial support struts to add to the central obscuration.
+                            [default: 0]
+    @param strut_thick      Thickness of support struts as a fraction of pupil diameter.
+                            [default:`0.05]
+    @param strut_angle      Angle made between the vertical and the strut starting closest to it,
+                            defined to be positive in the counter-clockwise direction; must be an
+                            Angle instance. [default: 0. * galsim.degrees]
+    @param pupil_plane_im   The GalSim.Image, NumPy array, or name of file containing the pupil
+                            plane image, to be used instead of generating one based on the
+                            obscuration and strut parameters.  Note that if the image is saved as
+                            unsigned integers, you will get a warning about conversion to floats,
+                            which is harmless. [default: None]
+    @param pupil_angle      If `pupil_plane_im` is not None, rotation angle for the pupil plane
+                            (positive in the counter-clockwise direction).  Must be an Angle
+                            instance. [default: 0. * galsim.degrees]
+    @param scale_unit       Units to use for the sky coordinates when calculating lam/diam if these
+                            are supplied separately.  Should be either a galsim.AngleUnit or a
+                            string that can be used to construct one (e.g., 'arcsec', 'radians',
+                            etc.).  [default: galsim.arcsec]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+    Methods
+    -------
+
+    There are no additional methods for OpticalPSF beyond the usual GSObject methods.
+    """
     _req_params = {}
     _opt_params = {
         "diam": float,
