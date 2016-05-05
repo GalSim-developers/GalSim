@@ -991,6 +991,16 @@ class LsstWCS(galsim.wcs.CelestialWCS):
         uList = radiusList*np.sin(lonList)
         vList = -radiusList*np.cos(lonList)
 
+        # Now that we have converted into the intermediate world coordinates u and v
+        # solve for the coefficients [c1, c2, c3, c4] that best (in the least-squares
+        # sense) satisfy
+        #
+        # u = c1 * deltaX + c2 * deltaY
+        # v = c3 * deltaX + c4 * deltaY
+        #
+        # where (x, y) is a position on the focal plain in pixel coordinates and
+        # deltaX = (x - crPix1) and deltaY = (y - crPix2)
+
         delta_xList = xPixList - crPix1[0]
         delta_yList = yPixList - crPix2[0]
 
