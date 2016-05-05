@@ -310,7 +310,8 @@ class LsstCamera(object):
                 if len(names)>1:
                     raise RuntimeError("This method does not know how to deal with cameras " +
                                        "where points can be on multiple detectors.  " +
-                                       "Override LSSTWCS._get_chip_name_from_afw_point_list to add this.")
+                                       "Override LSSTWCS._get_chip_name_from_afw_point_list " +
+                                       "to add this.")
                 elif len(names)==0:
                     chip_name_list.append(None)
                 else:
@@ -422,7 +423,8 @@ class LsstCamera(object):
         """
         inputs
         ------------
-        point_list is a list of afwGeom.Point2D objects corresponding to pupil coordinates (in radians)
+        point_list is a list of afwGeom.Point2D objects corresponding to pupil coordinates
+        (in radians)
 
         name_list is a list of chip names
 
@@ -458,7 +460,8 @@ class LsstCamera(object):
         """
         inputs
         ------------
-        point_list is a list of afwGeom.Point2D objects corresponding to pupil coordinates (in radians)
+        point_list is a list of afwGeom.Point2D objects corresponding to pupil coordinates
+        (in radians)
 
         name_list is a list of chip names
 
@@ -598,7 +601,9 @@ class LsstCamera(object):
             if name not in self._pupil_system_dict:
                 self._pupil_system_dict[name] = self._camera[name].makeCameraSys(PUPIL)
 
-            pt = self._camera.transform(self._camera.makeCameraPoint(afwGeom.Point2D(xx, yy), self._pixel_system_dict[name]),
+            pt = self._camera.transform(self._camera.makeCameraPoint(
+                                            afwGeom.Point2D(xx, yy),
+                                            self._pixel_system_dict[name]),
                                         self._pupil_system_dict[name]).getPoint()
 
             x_pupil.append(pt.getX())
@@ -654,7 +659,9 @@ class LsstCamera(object):
             if name not in self._pupil_system_dict:
                 self._pupil_system_dict[name] = self._camera[name].makeCameraSys(PUPIL)
 
-            pt = self._camera.transform(self._camera.makeCameraPoint(afwGeom.Point2D(xx, yy), self._tan_pixel_system_dict[name]),
+            pt = self._camera.transform(self._camera.makeCameraPoint(
+                                               afwGeom.Point2D(xx, yy),
+                                               self._tan_pixel_system_dict[name]),
                                         self._pupil_system_dict[name]).getPoint()
 
             x_pupil.append(pt.getX())
@@ -839,7 +846,8 @@ class LsstWCS(galsim.wcs.CelestialWCS):
 
 
     def _newOrigin(self, origin):
-        newWcs = LsstWCS(self._pointing, self._rotation_angle, self._chip_name, camera=self._camera)
+        newWcs = LsstWCS(self._pointing, self._rotation_angle,
+                         self._chip_name, camera=self._camera)
         newWcs.origin = origin
         return newWcs
 
@@ -859,8 +867,9 @@ class LsstWCS(galsim.wcs.CelestialWCS):
         a list of y pixel coordinates on the chip specified for this WCS
         """
         camera_point_list = self._camera._get_afw_pupil_coord_list_from_float(ra, dec)
-        xx, yy = self._camera._pixel_coord_from_point_and_name(camera_point_list,
-                                                               [self._chip_name]*len(camera_point_list))
+        xx, yy = \
+        self._camera._pixel_coord_from_point_and_name(camera_point_list,
+                                                      [self._chip_name]*len(camera_point_list))
 
         if len(xx)==1:
             return xx[0], yy[0]
@@ -962,8 +971,11 @@ class LsstWCS(galsim.wcs.CelestialWCS):
         raPointing = self._camera._pointing.ra/galsim.radians
         decPointing = self._camera._pointing.dec/galsim.radians
 
-        camera_point_list = self._camera._get_afw_pupil_coord_list_from_float(raPointing, decPointing)
-        crPix1, crPix2 = self._camera._tan_pixel_coord_from_point_and_name(camera_point_list, [self._chip_name])
+        camera_point_list = \
+        self._camera._get_afw_pupil_coord_list_from_float(raPointing, decPointing)
+
+        crPix1, crPix2 = \
+        self._camera._tan_pixel_coord_from_point_and_name(camera_point_list, [self._chip_name])
 
         lonList, latList = _nativeLonLatFromRaDec(raList, decList, raPointing, decPointing)
 
@@ -1055,10 +1067,12 @@ class LsstWCS(galsim.wcs.CelestialWCS):
         mockExposure.setDetector(self._detector)
 
         distortedWcs = afwImageUtils.getDistortedWcs(mockExposure.getInfo())
-        tanSipWcs = measAstrom.approximateWcs(distortedWcs, bbox,
-                                              order=order,
-                                              skyTolerance=skyToleranceArcSec*afwGeom.arcseconds,
-                                              pixelTolerance=pixelTolerance)
+
+        tanSipWcs = \
+        measAstrom.approximateWcs(distortedWcs, bbox,
+                                  order=order,
+                                  skyTolerance=skyToleranceArcSec*afwGeom.arcseconds,
+                                  pixelTolerance=pixelTolerance)
 
         return tanSipWcs
 
@@ -1103,9 +1117,10 @@ class LsstWCS(galsim.wcs.CelestialWCS):
 
 
     def __repr__(self):
-        return "galsim.lsst.LsstWCS(galsim.CelestialCoord(%e*galsim.radians, %e*galsim.radians), %e*galsim.radians, '%s')" \
-        % (self._camera._pointing.ra/galsim.radians, self._camera._pointing.dec/galsim.radians,
-           self._camera._rotation_angle/galsim.radians, self._chip_name)
+        return "galsim.lsst.LsstWCS(galsim.CelestialCoord(%e*galsim.radians, %e*galsim.radians), " \
+               "%e*galsim.radians, '%s')" % (self._camera._pointing.ra/galsim.radians, \
+               self._camera._pointing.dec/galsim.radians, self._camera._rotation_angle/galsim.radians, \
+               self._chip_name)
 
 
     def __str__(self):
