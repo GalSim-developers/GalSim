@@ -62,15 +62,15 @@ class NativeLonLatTest(unittest.TestCase):
 
         start = time.clock()
 
-        np.random.seed(42)
+        rng = np.random.RandomState(42)
         nPointings = 10
-        raPointingList = np.random.random_sample(nPointings)*2.0*np.pi
-        decPointingList = np.random.random_sample(nPointings)*np.pi - 0.5*np.pi
+        raPointingList = rng.random_sample(nPointings)*2.0*np.pi
+        decPointingList = rng.random_sample(nPointings)*np.pi - 0.5*np.pi
 
         nStars = 10
         for raPointing, decPointing in zip(raPointingList, decPointingList):
-            raList = np.random.random_sample(nStars)*2.0*np.pi
-            decList = np.random.random_sample(nStars)*np.pi - 0.5*np.pi
+            raList = rng.random_sample(nStars)*2.0*np.pi
+            decList = rng.random_sample(nStars)*np.pi - 0.5*np.pi
             for raRad, decRad in zip(raList, decList):
 
                 sinRa = np.sin(raRad)
@@ -140,9 +140,9 @@ class NativeLonLatTest(unittest.TestCase):
         decPoint = np.radians(-35.0)
 
         nSamples = 100
-        np.random.seed(42)
-        raList = np.random.random_sample(nSamples)*2.0*np.pi
-        decList = np.random.random_sample(nSamples)*np.pi - 0.5*np.pi
+        rng = np.random.RandomState(42)
+        raList = rng.random_sample(nSamples)*2.0*np.pi
+        decList = rng.random_sample(nSamples)*np.pi - 0.5*np.pi
 
         lonList, latList = _nativeLonLatFromRaDec(raList, decList, raPoint, decPoint)
 
@@ -232,11 +232,11 @@ class LsstCameraTestClass(unittest.TestCase):
             return xx, yy
 
 
-        np.random.seed(42)
+        rng = np.random.RandomState(42)
         n_pointings = 10
-        ra_pointing_list = np.random.random_sample(n_pointings)*2.0*np.pi
-        dec_pointing_list = 0.5*(np.random.random_sample(n_pointings)-0.5)*np.pi
-        rotation_angle_list = np.random.random_sample(n_pointings)*2.0*np.pi
+        ra_pointing_list = rng.random_sample(n_pointings)*2.0*np.pi
+        dec_pointing_list = 0.5*(rng.random_sample(n_pointings)-0.5)*np.pi
+        rotation_angle_list = rng.random_sample(n_pointings)*2.0*np.pi
 
         radians_to_arcsec = 3600.0*np.degrees(1.0)
 
@@ -245,8 +245,8 @@ class LsstCameraTestClass(unittest.TestCase):
             pointing = CelestialCoord(ra*galsim.radians, dec*galsim.radians)
             camera = LsstCamera(pointing, rotation*galsim.radians)
 
-            dra_list = (np.random.random_sample(100)-0.5)*0.5
-            ddec_list = (np.random.random_sample(100)-0.5)*0.5
+            dra_list = (rng.random_sample(100)-0.5)*0.5
+            ddec_list = (rng.random_sample(100)-0.5)*0.5
 
             star_list = np.array([CelestialCoord((ra+dra)*galsim.radians,
                                                 (dec+ddec)*galsim.radians)
@@ -290,9 +290,9 @@ class LsstCameraTestClass(unittest.TestCase):
         camera = LsstCamera(pointing, rot*galsim.degrees)
 
         arcsec_per_radian = 180.0*3600.0/np.pi
-        np.random.seed(33)
-        raList = (np.random.random_sample(100)-0.5)*20.0+raPointing
-        decList = (np.random.random_sample(100)-0.5)*20.0+decPointing
+        rng = np.random.RandomState(33)
+        raList = (rng.random_sample(100)-0.5)*20.0+raPointing
+        decList = (rng.random_sample(100)-0.5)*20.0+decPointing
         pointingList = []
         for rr, dd in zip(raList, decList):
             pointingList.append(CelestialCoord(rr*galsim.degrees, dd*galsim.degrees))
@@ -317,10 +317,10 @@ class LsstCameraTestClass(unittest.TestCase):
 
         start = time.clock()
 
-        np.random.seed(55)
+        rng = np.random.RandomState(55)
         n_samples = 100
-        raList = (np.random.random_sample(n_samples)-0.5)*1.0 + np.radians(self.raPointing)
-        decList = (np.random.random_sample(n_samples)-0.5)*1.0 + np.radians(self.decPointing)
+        raList = (rng.random_sample(n_samples)-0.5)*1.0 + np.radians(self.raPointing)
+        decList = (rng.random_sample(n_samples)-0.5)*1.0 + np.radians(self.decPointing)
 
         x_pupil, y_pupil = self.camera.pupilCoordsFromFloat(raList, decList)
 
@@ -341,12 +341,12 @@ class LsstCameraTestClass(unittest.TestCase):
 
         start = time.clock()
 
-        np.random.seed(88)
+        rng = np.random.RandomState(88)
         n_samples = 100
-        raList = (np.random.random_sample(n_samples)-0.5)*np.radians(1.5) + \
+        raList = (rng.random_sample(n_samples)-0.5)*np.radians(1.5) + \
                   np.radians(self.raPointing)
 
-        decList = (np.random.random_sample(n_samples)-0.5)*np.radians(1.5) + \
+        decList = (rng.random_sample(n_samples)-0.5)*np.radians(1.5) + \
                    np.radians(self.decPointing)
 
         x_pup_control, y_pup_control = self.camera.pupilCoordsFromFloat(raList, decList)
@@ -356,7 +356,7 @@ class LsstCameraTestClass(unittest.TestCase):
         chip_name_possibilities = ('R:0,1 S:1,1', 'R:0,3 S:0,2', 'R:4,2 S:2,2', 'R:3,4 S:0,2')
 
         chip_name_list = [chip_name_possibilities[ii]
-                          for ii in np.random.random_integers(0,3,n_samples)]
+                          for ii in rng.random_integers(0,3,n_samples)]
 
         x_pix_list, y_pix_list = \
         self.camera._pixel_coord_from_point_and_name(camera_point_list, chip_name_list)
