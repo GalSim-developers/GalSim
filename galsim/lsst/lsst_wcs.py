@@ -228,21 +228,13 @@ class LsstCamera(object):
         """
 
         if not hasattr(point, '__len__'):
-            pt = self._pointing.project(point, projection='gnomonic')
-            x = pt.x
-            y = pt.y
+            ra = point.ra
+            dec = point.dec
         else:
-            x = []
-            y = []
-            for pp in point:
-                pt = self._pointing.project(pp, projection='gnomonic')
-                x.append(pt.x)
-                y.append(pt.y)
-            x = np.array(x)
-            y = np.array(y)
+            ra = np.array([pp.ra for pp in point])
+            dec = np.array([pp.dec for pp in point])
 
-        return (x*self._cos_rot - y*self._sin_rot)*galsim.arcsec, \
-               (x*self._sin_rot + y*self._cos_rot)*galsim.arcsec
+        return self.pupilCoordsFromFloat(ra, dec)
 
 
     def pupilCoordsFromFloat(self, ra, dec):
@@ -340,9 +332,9 @@ class LsstCamera(object):
         x_pupil, y_pupil = self.pupilCoordsFromPoint(point)
 
         if hasattr(x_pupil, '__len__'):
-            camera_point_list = [afwGeom.Point2D(x/galsim.radians, y/galsim.radians) for x,y in zip(x_pupil, y_pupil)]
+            camera_point_list = [afwGeom.Point2D(x, y) for x,y in zip(x_pupil, y_pupil)]
         else:
-            camera_point_list = [afwGeom.Point2D(x_pupil/galsim.radians, y_pupil/galsim.radians)]
+            camera_point_list = [afwGeom.Point2D(x_pupil, y_pupil)]
 
         return camera_point_list
 

@@ -239,7 +239,7 @@ class LsstCameraTestClass(unittest.TestCase):
             denom = sdec * sdecz + cdec * cdecz * cradif
             xx = cdec * sradif/denom
             yy = (sdec * cdecz - cdec * sdecz * cradif)/denom
-            return xx*galsim.radians, yy*galsim.radians
+            return xx, yy
 
 
         np.random.seed(42)
@@ -247,6 +247,8 @@ class LsstCameraTestClass(unittest.TestCase):
         ra_pointing_list = np.random.random_sample(n_pointings)*2.0*np.pi
         dec_pointing_list = 0.5*(np.random.random_sample(n_pointings)-0.5)*np.pi
         rotation_angle_list = np.random.random_sample(n_pointings)*2.0*np.pi
+
+        radians_to_arcsec = 3600.0*np.degrees(1.0)
 
         for ra, dec, rotation in zip(ra_pointing_list, dec_pointing_list, rotation_angle_list):
 
@@ -271,8 +273,8 @@ class LsstCameraTestClass(unittest.TestCase):
             xControl = np.array(xControl)
             yControl = np.array(yControl)
 
-            np.testing.assert_array_almost_equal((xTest/galsim.arcsec) - (xControl/galsim.arcsec), np.zeros(len(xControl)),  7)
-            np.testing.assert_array_almost_equal((yTest/galsim.arcsec) - (yControl/galsim.arcsec), np.zeros(len(yControl)), 7)
+            np.testing.assert_array_almost_equal((xTest*radians_to_arcsec) - (xControl*radians_to_arcsec), np.zeros(len(xControl)),  7)
+            np.testing.assert_array_almost_equal((yTest*radians_to_arcsec) - (yControl*radians_to_arcsec), np.zeros(len(yControl)), 7)
 
         print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
 
@@ -302,11 +304,11 @@ class LsstCameraTestClass(unittest.TestCase):
         control_x, control_y = camera.pupilCoordsFromPoint(pointingList)
         test_x, test_y = camera.pupilCoordsFromFloat(np.radians(raList), np.radians(decList))
 
-        np.testing.assert_array_almost_equal((test_x - control_x/galsim.radians)*arcsec_per_radian,
+        np.testing.assert_array_almost_equal((test_x - control_x)*arcsec_per_radian,
                                              np.zeros(len(test_x)), 10)
 
 
-        np.testing.assert_array_almost_equal((test_y - control_y/galsim.radians)*arcsec_per_radian,
+        np.testing.assert_array_almost_equal((test_y - control_y)*arcsec_per_radian,
                                              np.zeros(len(test_y)), 10)
 
         print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
@@ -408,36 +410,36 @@ class LsstCameraTestClass(unittest.TestCase):
         x_0, y_0 = camera.pupilCoordsFromPoint(pointing)
         x_n, y_n = camera.pupilCoordsFromPoint(north)
         x_e, y_e = camera.pupilCoordsFromPoint(east)
-        self.assertAlmostEqual(0.0, x_0/galsim.degrees, 7)
-        self.assertAlmostEqual(0.0, y_0/galsim.degrees, 7)
-        self.assertAlmostEqual(0.0, x_n/galsim.degrees, 7)
-        self.assertGreater(y_n/galsim.degrees, 1.0e-4)
-        self.assertLess(x_e/galsim.degrees, -1.0e-4)
-        self.assertAlmostEqual(y_e/galsim.degrees, 0.0, 7)
+        self.assertAlmostEqual(0.0, np.degrees(x_0), 7)
+        self.assertAlmostEqual(0.0, np.degrees(y_0), 7)
+        self.assertAlmostEqual(0.0, np.degrees(x_n), 7)
+        self.assertGreater(np.degrees(y_n), 1.0e-4)
+        self.assertLess(np.degrees(x_e), -1.0e-4)
+        self.assertAlmostEqual(np.degrees(y_e), 0.0, 7)
 
         camera = LsstCamera(pointing, 90.0*galsim.degrees)
         x_n, y_n = camera.pupilCoordsFromPoint(north)
         x_e, y_e = camera.pupilCoordsFromPoint(east)
-        self.assertLess(x_n/galsim.degrees, -1.0e-4)
-        self.assertAlmostEqual(y_n/galsim.degrees, 0.0, 7)
-        self.assertAlmostEqual(x_e/galsim.degrees, 0.0, 7)
-        self.assertLess(y_e/galsim.degrees, -1.0e-4)
+        self.assertLess(np.degrees(x_n), -1.0e-4)
+        self.assertAlmostEqual(np.degrees(y_n), 0.0, 7)
+        self.assertAlmostEqual(np.degrees(x_e), 0.0, 7)
+        self.assertLess(np.degrees(y_e), -1.0e-4)
 
         camera = LsstCamera(pointing, -90.0*galsim.degrees)
         x_n, y_n = camera.pupilCoordsFromPoint(north)
         x_e, y_e = camera.pupilCoordsFromPoint(east)
-        self.assertGreater(x_n/galsim.degrees, 1.0e-4)
-        self.assertAlmostEqual(y_n/galsim.degrees, 0.0, 7)
-        self.assertAlmostEqual(x_e/galsim.degrees, 0.0, 7)
-        self.assertGreater(y_e/galsim.degrees, 1.0e-4)
+        self.assertGreater(np.degrees(x_n), 1.0e-4)
+        self.assertAlmostEqual(np.degrees(y_n), 0.0, 7)
+        self.assertAlmostEqual(np.degrees(x_e), 0.0, 7)
+        self.assertGreater(np.degrees(y_e), 1.0e-4)
 
         camera = LsstCamera(pointing, 180.0*galsim.degrees)
         x_n, y_n = camera.pupilCoordsFromPoint(north)
         x_e, y_e = camera.pupilCoordsFromPoint(east)
-        self.assertAlmostEqual(x_n/galsim.degrees, 0, 7)
-        self.assertLess(y_n/galsim.degrees, -1.0e-4)
-        self.assertGreater(x_e/galsim.degrees, 1.0e-4)
-        self.assertAlmostEqual(y_e/galsim.degrees, 0.0, 7)
+        self.assertAlmostEqual(np.degrees(x_n), 0, 7)
+        self.assertLess(np.degrees(y_n), -1.0e-4)
+        self.assertGreater(np.degrees(x_e), 1.0e-4)
+        self.assertAlmostEqual(np.degrees(y_e), 0.0, 7)
 
         print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
 
