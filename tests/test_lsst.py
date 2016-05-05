@@ -10,7 +10,6 @@ from galsim.lsst import LsstCamera, LsstWCS, _nativeLonLatFromRaDec
 from galsim.celestial import CelestialCoord
 import lsst.afw.geom as afwGeom
 
-warnings.filterwarnings('always', 'The camera*')
 
 def haversine(long1, lat1, long2, lat2):
     """

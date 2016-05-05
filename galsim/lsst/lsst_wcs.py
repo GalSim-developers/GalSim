@@ -29,6 +29,9 @@ except ImportError:
                       "setup obs_lsstSim -t sims\n")
 
 
+warnings.filterwarnings('always', '.*LsstWCS*')
+
+
 __all__ = ["LsstCamera", "LsstWCS", "_nativeLonLatFromRaDec"]
 
 
