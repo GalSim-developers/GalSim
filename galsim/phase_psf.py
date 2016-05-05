@@ -1485,7 +1485,7 @@ def Atmosphere(screen_size, rng=None, **kwargs):
                                     direction=direction, screen_scale=screen_scale)
 
     Once the atmosphere is constructed, a 15-sec exposure PSF (using an 8.4 meter aperture and
-    default settings) takes about 150 sec to generate on a fast laptop.
+    default settings) takes about 3 hours (!) to generate on a fast laptop.
 
         >>> psf = atm.makePSF(diam=8.4, exptime=15.0, obscuration=0.6)
 
