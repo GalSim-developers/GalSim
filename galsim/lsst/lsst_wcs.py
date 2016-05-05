@@ -2,6 +2,9 @@ import numpy as np
 import warnings
 import galsim
 
+warnings.filterwarnings('ignore', 'Matplotlib is building the font cache ' +
+                                   'using fc-list. This may take a moment')
+
 try:
     import lsst.pex.logging as pexLog
     import lsst.daf.base as dafBase
