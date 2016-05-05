@@ -25,31 +25,6 @@ if have_lsst_stack:
         have_lsst_stack = False
 
 
-def haversine(long1, lat1, long2, lat2):
-    """
-    Return the angular distance between two points in radians
-
-    inputs
-    ------------
-    long1 is the longitude of point 1 in radians
-
-    lat1 is the latitude of point 1 in radians
-
-    long2 is the longitude of point 2 in radians
-
-    lat2 is the latitude of point 2 in radians
-
-    outputs
-    ------------
-    the angular separation between points 1 and 2 in radians
-
-    From http://en.wikipedia.org/wiki/Haversine_formula
-    """
-    t1 = np.sin(lat2/2.-lat1/2.)**2
-    t2 = np.cos(lat1)*np.cos(lat2)*np.sin(long2/2. - long1/2.)**2
-    return 2*np.arcsin(np.sqrt(t1 + t2))
-
-
 @unittest.skipIf(not have_lsst_stack, "LSST stack not installed")
 class NativeLonLatTest(unittest.TestCase):
 
@@ -602,8 +577,6 @@ class LsstWcsTestCase(unittest.TestCase):
 
         start = time.clock()
 
-        arcsec_per_radian = 180.0*3600.0/np.pi
-
         xPixList = []
         yPixList = []
 
@@ -630,11 +603,14 @@ class LsstWcsTestCase(unittest.TestCase):
         self.wcs._camera.raDecFromTanPixelCoords(xPixList, yPixList,
                                                 [self.wcs._chip_name]*len(xPixList))
 
-        distanceList = arcsec_per_radian*haversine(raTest, decTest, wcsRa, wcsDec)
-        maxDistance = distanceList.max()
+        for rr1, dd1, rr2, dd2 in zip(raTest, decTest, wcsRa, wcsDec):
+            pp = CelestialCoord(rr1*galsim.radians, dd1*galsim.radians)
 
-        msg = 'maxError in tanWcs was %e ' % maxDistance
-        self.assertLess(maxDistance, 0.001, msg=msg)
+            dist = \
+            pp.distanceTo(CelestialCoord(rr2*galsim.radians, dd2*galsim.radians))/galsim.arcsec
+
+            msg = 'error in tanWcs was %e arcsec' % dist
+            self.assertLess(dist, 0.001, msg=msg)
 
         print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
 
@@ -687,17 +663,20 @@ class LsstWcsTestCase(unittest.TestCase):
         self.wcs._camera.raDecFromPixelCoords(xPixList, yPixList,
                                              [self.wcs._chip_name]*len(xPixList))
 
-        tanDistanceList = arcsec_per_radian*haversine(raTest, decTest, tanWcsRa, tanWcsDec)
+        for rrTest, ddTest, rrTan, ddTan, rrSip, ddSip in \
+        zip(raTest, decTest, tanWcsRa, tanWcsDec, tanSipWcsRa, tanSipWcsDec):
 
-        tanSipDistanceList = \
-        arcsec_per_radian*haversine(raTest, decTest, tanSipWcsRa, tanSipWcsDec)
+            pp = CelestialCoord(rrTest*galsim.radians, ddTest*galsim.radians)
 
-        maxDistanceTan = tanDistanceList.max()
-        maxDistanceTanSip = tanSipDistanceList.max()
+            distTan = \
+            pp.distanceTo(CelestialCoord(rrTan*galsim.radians, ddTan*galsim.radians))/galsim.arcsec
 
-        msg = 'max error in TAN WCS %e; in TAN-SIP %e' % (maxDistanceTan, maxDistanceTanSip)
-        self.assertLess(maxDistanceTanSip, 0.001, msg=msg)
-        self.assertGreater(maxDistanceTan-maxDistanceTanSip, 1.0e-10, msg=msg)
+            distSip = \
+            pp.distanceTo(CelestialCoord(rrSip*galsim.radians, ddSip*galsim.radians))/galsim.arcsec
+
+            msg = 'error in TAN WCS %e arcsec; error in TAN-SIP WCS %e arcsec' % (distTan, distSip)
+            self.assertLess(distSip, 0.001, msg=msg)
+            self.assertGreater(distTan-distSip, 1.0e-10, msg=msg)
 
         print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
 
