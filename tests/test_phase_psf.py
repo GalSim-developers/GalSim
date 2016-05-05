@@ -41,6 +41,12 @@ def test_aperture():
     aper2 = galsim.Aperture(diam=1.0, pupil_plane_im=im)
     do_pickle(aper1)
     do_pickle(aper2)
+    # Automatically created Aperture should match one created via OpticalScreen
+    aper1 = galsim.Aperture(diam=1.0, lam=500.0)
+    aper2 = galsim.Aperture(diam=1.0, lam=500.0, screen_list=[galsim.OpticalScreen()])
+    err_str = ("Aperture created implicitly using Airy does not match Aperture created using "
+               "OpticalScreen.")
+    assert aper1 == aper2, err_str
 
 
 @timer
@@ -244,6 +250,85 @@ def test_opt_indiv_aberrations():
         "Individually specified aberrations differs from aberrations specified as list.")
 
 
+@timer
+def test_ne():
+    import copy
+    pupil_plane_im = galsim.fits.read(os.path.join(imgdir, pp_file))
+
+    # Test galsim.Aperture __ne__
+    objs = [galsim.Aperture(diam=1.0),
+            galsim.Aperture(diam=1.1),
+            galsim.Aperture(diam=1.0, oversampling=1.0),
+            galsim.Aperture(diam=1.0, pad_factor=1.0),
+            galsim.Aperture(diam=1.0, max_size=0.1),
+            galsim.Aperture(diam=1.0, circular_pupil=False),
+            galsim.Aperture(diam=1.0, obscuration=0.3),
+            galsim.Aperture(diam=1.0, nstruts=3),
+            galsim.Aperture(diam=1.0, nstruts=3, strut_thick=0.2),
+            galsim.Aperture(diam=1.0, nstruts=3, strut_angle=15*galsim.degrees),
+            galsim.Aperture(diam=1.0, pupil_plane_im=pupil_plane_im),
+            galsim.Aperture(diam=1.0, pupil_plane_im=pupil_plane_im,
+                            pupil_angle=10.0*galsim.degrees)]
+    all_obj_diff(objs)
+
+    # Test AtmosphericScreen __ne__
+    rng = galsim.BaseDeviate(1)
+    objs = [galsim.AtmosphericScreen(10.0, rng=rng),
+            galsim.AtmosphericScreen(10.0, rng=rng, vx=1.0),
+            galsim.AtmosphericScreen(10.0, rng=rng, vx=1.0),  # advance this one below
+            galsim.AtmosphericScreen(10.0, rng=rng, vy=1.0),
+            galsim.AtmosphericScreen(10.0, rng=rng, alpha=0.999),
+            galsim.AtmosphericScreen(10.0, rng=rng, altitude=1.0),
+            galsim.AtmosphericScreen(10.0, rng=rng, time_step=0.1),
+            galsim.AtmosphericScreen(10.0, rng=rng, r0_500=0.1),
+            galsim.AtmosphericScreen(10.0, rng=rng, L0=10.0),
+            galsim.AtmosphericScreen(10.0, rng=rng, vx=10.0),
+            ]
+    objs[2].advance()
+    all_obj_diff(objs)
+
+    # Test OpticalScreen __ne__
+    objs = [galsim.OpticalScreen(),
+            galsim.OpticalScreen(tip=1.0),
+            galsim.OpticalScreen(tilt=1.0),
+            galsim.OpticalScreen(defocus=1.0),
+            galsim.OpticalScreen(astig1=1.0),
+            galsim.OpticalScreen(astig2=1.0),
+            galsim.OpticalScreen(coma1=1.0),
+            galsim.OpticalScreen(coma2=1.0),
+            galsim.OpticalScreen(trefoil1=1.0),
+            galsim.OpticalScreen(trefoil2=1.0),
+            galsim.OpticalScreen(spher=1.0),
+            galsim.OpticalScreen(spher=1.0, lam_0=100.0),
+            galsim.OpticalScreen(aberrations=[0,0,1.1]), # tip=1.1
+            ]
+    all_obj_diff(objs)
+
+    # Test PhaseScreenList __ne__
+    atm = galsim.Atmosphere(10.0, vx=1.0)
+    objs = [galsim.PhaseScreenList(atm),
+            galsim.PhaseScreenList(copy.deepcopy(atm)),  # advance down below
+            galsim.PhaseScreenList(objs),  # Reuse list of OpticalScreens above
+            galsim.PhaseScreenList(objs[0:2])]
+    objs[1].advance()
+    all_obj_diff(objs)
+
+    # Test PhaseScreenPSF __ne__
+    objs[0].reset()
+    psl = galsim.PhaseScreenList(atm)
+    objs = [galsim.PhaseScreenPSF(psl, 500.0, exptime=0.03, diam=1.0),
+            galsim.PhaseScreenPSF(psl, 500.0, exptime=0.03, diam=1.0)] # advanced so differs
+    psl.reset()
+    objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0)]
+    psl.reset()
+    objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.1)]
+    psl.reset()
+    objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0, flux=1.1)]
+    psl.reset()
+    objs += [galsim.PhaseScreenPSF(psl, 700.0, exptime=0.03, diam=1.0, interpolant='linear')]
+    all_obj_diff(objs)
+
+
 if __name__ == "__main__":
     test_aperture()
     test_phase_screen_list()
@@ -251,3 +336,4 @@ if __name__ == "__main__":
     test_phase_psf_reset()
     test_phase_psf_batch()
     test_opt_indiv_aberrations()
+    test_ne()

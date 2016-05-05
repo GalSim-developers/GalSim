@@ -130,7 +130,8 @@ class Aperture(object):
                             [default: 1.5]
     @param pad_factor       Additional multiple by which to extend the PSF image to avoid folding.
                             [default: 1.5]
-    @param screen_list
+    @param screen_list      An optional PhaseScreenList object.  If present, then get a good pupil
+                            sampling interval using this object.  [default: None]
     @param max_size         Set a maximum size for the internal image for the PSF profile in arcsec.
     @param pupil_plane_im   The GalSim.Image, NumPy array, or name of file containing the pupil
                             plane image, to be used instead of generating one based on the
@@ -185,23 +186,27 @@ class Aperture(object):
                 _pupil_plane_size = 2.0*diam*oversampling
             self.pupil_plane_size = _pupil_plane_size
 
+            # Set npix, which will then be used to set pupil_plane_scale
             if _pupil_plane_scale is None:
-                if lam is None:
-                    raise ValueError("Must provide lam if not providing pupil_plane_im.")
                 if screen_list is not None:
+                    screen_list = galsim.PhaseScreenList(screen_list)
+                    if lam is None:
+                        raise ValueError("Wavelength must be specified with `screen_list`.")
                     stepk = screen_list.stepK(lam=lam, diam=diam, obscuration=obscuration,
                                               gsparams=self._gsparams)
                 else:
-                    airy = galsim.Airy(diam=diam, lam=lam, obscuration=obscuration,
+                    # For Airy, pupil_plane_scale is indep of wavelength, so just use 500.0
+                    if lam is None:
+                        lam = 500.0
+                    airy = galsim.Airy(diam=diam, lam=500.0, obscuration=obscuration,
                                        gsparams=self._gsparams)
                     stepk = airy.stepK()
-                scale = (stepk * lam*1.e-9 * (galsim.radians / galsim.arcsec) /
+                scale = (stepk * 500.0*1.e-9 * (galsim.radians / galsim.arcsec) /
                          (2 * np.pi * pad_factor))
                 if max_size is not None:
                     max_size_scale = lam*1e-9 / (max_size * galsim.arcsec / galsim.radians)
                     scale = max(max_size_scale, scale)
                 self.npix = galsim._galsim.goodFFTSize(int(np.ceil(self.pupil_plane_size/scale)))
-                _pupil_plane_scale = _pupil_plane_size/self.npix
             else:
                 self.npix = int(np.ceil(self.pupil_plane_size/_pupil_plane_scale))
             # Make sure pupil_plane_size is an integer multiple of pupil_plane_scale.
@@ -646,7 +651,7 @@ class AtmosphericScreen(object):
         """
         lam = kwargs['lam']
         gsparams = kwargs.pop('gsparams', None)
-        obj = galsim.Kolmogorov(lam=lam, r0=self.r0_500 * (lam/500.0)**(6./5), gsparams=gsparams)
+        obj = galsim.Kolmogorov(lam=lam, r0_500=self.r0_500, gsparams=gsparams)
         return obj.stepK()
 
     def wavefront(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
@@ -839,9 +844,13 @@ class OpticalScreen(object):
                     "Detected non-zero value in aberrations[0] -- this value is ignored!")
 
         self.aberrations = np.array(aberrations)
+        # strip any trailing zeros.
+        self.aberrations = np.trim_zeros(self.aberrations, trim='b')
         self.lam_0 = lam_0
-
-        maxn = max(_noll_to_zern(j)[0] for j in range(1, len(self.aberrations)))
+        try:
+            maxn = max(_noll_to_zern(j)[0] for j in range(1, len(self.aberrations)))
+        except:
+            maxn = 0
         shape = (maxn//2+1, maxn+1)  # (max power of |rho|^2,  max power of rho)
         self.coef_array = np.zeros(shape, dtype=np.complex128)
 
@@ -951,6 +960,8 @@ class PhaseScreenList(object):
     @param layers  Sequence of phase screens.
     """
     def __init__(self, layers):
+        if isinstance(layers, galsim.PhaseScreenList):
+            self._layers = list(layers._layers)
         self._layers = list(layers)
         self._update_attrs()  # for now, just updating self.time_step
 
@@ -1285,6 +1296,9 @@ class PhaseScreenPSF(GSObject):
         self._gsparams = gsparams
 
         if aper is None:
+            # Check here for diameter.
+            if 'diam' not in kwargs:
+                raise ValueError("Diameter required if aperture not specified directly.")
             aper = Aperture(lam=lam, screen_list=screen_list, gsparams=gsparams, **kwargs)
 
         self.aper = aper
@@ -1504,7 +1518,7 @@ def Atmosphere(screen_size, rng=None, **kwargs):
     @param screen_scale  Physical pixel scale of phase screen in meters.  A fraction of the Fried
                          parameter is usually sufficiently small, but users should test the effects
                          of this parameter to ensure robust results.
-                         [Default: half of r0_500 for each screen]
+                         [Default: same as each screen's r0_500]
     @param rng           Random number generator as a galsim.BaseDeviate().  If None, then use the
                          clock time or system entropy to seed a new generator.  [Default: None]
     """
