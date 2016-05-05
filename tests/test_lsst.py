@@ -88,14 +88,14 @@ class NativeLonLatTest(unittest.TestCase):
                 ca = np.cos(alpha)
                 sa = np.sin(alpha)
                 rotX = np.array([[1.0, 0.0, 0.0],
-                                    [0.0, ca, sa],
-                                    [0.0, -sa, ca]])
+                                 [0.0, ca, sa],
+                                 [0.0, -sa, ca]])
 
                 cb = np.cos(raPointing)
                 sb = np.sin(raPointing)
                 rotZ = np.array([[cb, -sb, 0.0],
-                                    [sb, cb, 0.0],
-                                    [0.0, 0.0, 1.0]])
+                                 [sb, cb, 0.0],
+                                 [0.0, 0.0, 1.0]])
 
                 # rotate the coordinate axes into the local basis
                 xAxis = np.dot(rotZ, np.dot(rotX, np.array([1.0, 0.0, 0.0])))
