@@ -982,10 +982,10 @@ class LsstWCS(galsim.wcs.CelestialWCS):
 
         lonList, latList = _nativeLonLatFromRaDec(raList, decList, raPointing, decPointing)
 
-        #convert from native longitude and latitude to intermediate world coordinates
-        #according to equations (12), (13), (54) and (55) of
+        # convert from native longitude and latitude to intermediate world coordinates
+        # according to equations (12), (13), (54) and (55) of
         #
-        #Calabretta and Greisen (2002), A&A 395, p. 1077
+        # Calabretta and Greisen (2002), A&A 395, p. 1077
         #
         radiusList = 180.0/(np.tan(latList)*np.pi)
         uList = radiusList*np.sin(lonList)
