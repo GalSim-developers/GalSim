@@ -6,9 +6,23 @@ import os
 import time
 import galsim
 from galsim_test_helpers import funcname
-from galsim.lsst import LsstCamera, LsstWCS, _nativeLonLatFromRaDec
 from galsim.celestial import CelestialCoord
-import lsst.afw.geom as afwGeom
+
+have_lsst_stack = True
+
+try:
+    from galsim.lsst import LsstCamera, LsstWCS, _nativeLonLatFromRaDec
+except ImportError, ee:
+    # make sure that you are failing because the stack isn't there,
+    # rather than because of some bug in lsst_wcs.py
+    if "You cannot use the LSST module" in ee.message:
+        have_lsst_stack = False
+
+if have_lsst_stack:
+    try:
+        import lsst.afw.geom as afwGeom
+    except ImportError:
+        have_lsst_stack = False
 
 
 def haversine(long1, lat1, long2, lat2):
@@ -36,6 +50,7 @@ def haversine(long1, lat1, long2, lat2):
     return 2*np.arcsin(np.sqrt(t1 + t2))
 
 
+@unittest.skipIf(not have_lsst_stack, "LSST stack not installed")
 class NativeLonLatTest(unittest.TestCase):
 
     def testNativeLonLat(self):
@@ -165,6 +180,7 @@ class NativeLonLatTest(unittest.TestCase):
         print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
 
 
+@unittest.skipIf(not have_lsst_stack, "LSST stack not installed")
 class LsstCameraTestClass(unittest.TestCase):
 
     @classmethod
@@ -516,6 +532,7 @@ class LsstCameraTestClass(unittest.TestCase):
         print 'time to run %s = %e sec' % (funcname(), time.clock()-start)
 
 
+@unittest.skipIf(not have_lsst_stack, "LSST stack not installed")
 class LsstWcsTestCase(unittest.TestCase):
 
     @classmethod
