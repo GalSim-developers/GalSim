@@ -72,7 +72,7 @@ def shear_gaussian(theta1_array, theta2_array, sigma, pos, amp=1., rotate45=Fals
     t2 = theta2_array - pos.y
     theta2 = t1 * t1 + t2 * t2
     gammat = 2. * amp * sigma2 * (
-        1. - (1. + .5 * theta2 / sigma2) * np.exp(-.5 * theta2 / sigma2)) / theta2 
+        1. - (1. + .5 * theta2 / sigma2) * np.exp(-.5 * theta2 / sigma2)) / theta2
     if rotate45:
         g2 = -gammat * (t1**2 - t2**2) / theta2
         g1 =  gammat * 2. * t1 * t2 / theta2
@@ -81,11 +81,10 @@ def shear_gaussian(theta1_array, theta2_array, sigma, pos, amp=1., rotate45=Fals
         g2 = -gammat * 2. * t1 * t2 / theta2
     return g1, g2
 
+
+@timer
 def test_nfwhalo():
     """Various tests of the NFWHalo class (against reference data, and basic sanity tests)"""
-    import time
-    t1 = time.time()
-
     # reference data comes from Matthias Bartelmann's libastro code
     # cluster properties: M=1e15, conc=4, redshift=1
     # sources at redshift=2
@@ -136,14 +135,10 @@ def test_nfwhalo():
             ref[:,4], kappa, decimal=4,
             err_msg="Computation of convergence deviates from reference.")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_cosmology():
     """Test the NFWHalo class in conjunction with non-default cosmologies"""
-    import time
-    t1 = time.time()
-
     # MJ: I don't really have a good way to test that the NFWHalo class is accurate with respect
     # to the cosmology.  If someone with a more theoretical bent is interested in writing some
     # unit tests here, that would be fabulous!
@@ -180,14 +175,10 @@ def test_cosmology():
         do_pickle(halo2)
         assert halo == halo2
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_shear_variance():
     """Test that shears from several toy power spectra have the expected variances."""
-    import time
-    t1 = time.time()
-
     # setup the random number generator to use for these tests
     rng = galsim.BaseDeviate(512342)
 
@@ -234,7 +225,7 @@ def test_shear_variance():
     print 'fractional diff = ',((var1+var2)/predicted_variance-1)
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from flat power spectrum!"
-        
+
     # check: are g1, g2 uncorrelated with each other?
     top= np.sum((g1-np.mean(g1))*(g2-np.mean(g2)))
     bottom1 = np.sum((g1-np.mean(g1))**2)
@@ -291,7 +282,7 @@ def test_shear_variance():
     # check for proper scaling with number of grid points, for fixed grid spacing
     grid_size = 25. # degrees
     ngrid = 250 # grid points
-    klim = klim_test 
+    klim = klim_test
     kmin = 2.*np.pi/grid_size/3600. # arcsec^-1
     test_ps = galsim.PowerSpectrum(e_power_function=pk_flat_lim, b_power_function=pk_flat_lim)
     g1, g2 = test_ps.buildGrid(grid_spacing=grid_size/ngrid, ngrid=ngrid, rng=rng,
@@ -473,14 +464,10 @@ def test_shear_variance():
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance post-interpolation"
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_shear_seeds():
     """Test that shears from lensing engine behave appropriate when given same/different seeds"""
-    import time
-    t1 = time.time()
-
     # make a power spectrum for some E, B power function
     test_ps = galsim.PowerSpectrum(e_power_function=pk2, b_power_function=pk2)
 
@@ -502,14 +489,10 @@ def test_shear_seeds():
     g1new, g2new = test_ps.buildGrid(grid_spacing=1.0, ngrid = 10, rng=galsim.BaseDeviate(1379))
     assert not ((g1[0,0]==g1new[0,0]) or (g2[0,0]==g2new[0,0]))
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_shear_reference():
     """Test shears from lensing engine compared to stored reference values"""
-    import time
-    t1 = time.time()
-
     # read input data
     ref = np.loadtxt(refdir + '/shearfield_reference.dat')
     g1_in = ref[:,0]
@@ -540,14 +523,10 @@ def test_shear_reference():
     np.testing.assert_almost_equal(kappa_in, kappavec, 9,
                                    err_msg = "Convergence differences from references!")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_shear_get():
     """Check that using gridded outputs and the various getFoo methods gives consistent results"""
-    import time
-    t1 = time.time()
-
     # choose a power spectrum and grid setup
     my_ps = galsim.PowerSpectrum(lambda k : k**0.5)
     # build the grid
@@ -588,14 +567,10 @@ def test_shear_get():
     np.testing.assert_almost_equal(mu.flatten(), test_mu_2, 9,
                                    err_msg="Magnifications from grid and getLensing disagree!")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_shear_units():
     """Test that the shears we get out do not depend on the input PS and grid units."""
-    import time
-    t1 = time.time()
-
     rand_seed = 123456
 
     grid_size = 10. # degrees
@@ -628,14 +603,11 @@ def test_shear_units():
                                          err_msg='Incorrect unit handling in lensing engine')
     np.testing.assert_array_almost_equal(g2, g2_3, decimal=9,
                                          err_msg='Incorrect unit handling in lensing engine')
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+@timer
 def test_tabulated():
     """Test using a LookupTable to interpolate a P(k) that is known at certain k"""
-    import time
-    t1 = time.time()
-
     # make PowerSpectrum with some obvious analytic form, P(k)=k^2
     ps_analytic = galsim.PowerSpectrum(pk2)
 
@@ -762,15 +734,12 @@ def test_tabulated():
     np.testing.assert_almost_equal(t(2.5), 2.5**2, decimal = 6,
         err_msg = 'Unexpected result for linear interpolation of power-law in log space')
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_kappa_gauss():
     """Test that our Kaiser-Squires inversion routine correctly recovers the convergence map
     for a field containing known Gaussian-profile halos.
     """
-    import time
-    t1 = time.time()
     # Setup coordinates for gridded kappa/gamma
     # Note: if the grid extent is made larger (i.e. the image is zero padded) then accuracy on
     # the output kappa map is increased, and decimal can be increased too.  We confirmed this
@@ -823,15 +792,13 @@ def test_kappa_gauss():
         kr_testE[np.ix_(icent, icent)], np.zeros((ngrid / 2, ngrid / 2)), decimal=3,
         err_msg="Reconstructed kappaE is non-zero at greater than 3 decimal places for rotated "+
         "shear field.")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+@timer
 def test_power_spectrum_with_kappa():
     """Test that the convergence map generated by the PowerSpectrum class is consistent with the
     Kaiser Squires inversion of the corresponding shear field.
     """
-    import time
-    t1 = time.time()
     # Note that in order for this test to pass, we have to control aliasing by smoothing the power
     # spectrum to go to zero above some maximum k.  This is the only way to get agreement at high
     # precision between the gamma's and kappa's from the lensing engine vs. that from a Kaiser and
@@ -878,7 +845,7 @@ def test_power_spectrum_with_kappa():
         err_msg="B-mode only PowerSpectrum output kappaE from KS does not match zero to 16 d.p.")
 
     # Then for luck take B-mode only shears but rotate by 45 degrees before KS, and check
-    # consistency 
+    # consistency
     kE_ks_rotated, kB_ks_rotated = galsim.lensing_ps.kappaKaiserSquires(g2B, -g1B)
     np.testing.assert_array_almost_equal(
         kE_ks_rotated, kB_ks, decimal=exact_dp,
@@ -907,15 +874,11 @@ def test_power_spectrum_with_kappa():
         kB_ks_rotated, -kE_ks, decimal=exact_dp,
         err_msg="KS inverted kappaB from E/B PowerSpectrum fails rotation test.")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_corr_func():
     """Test that the correlation function calculation in calculateXi() works properly.
     """
-    import time
-    t1 = time.time()
-
     # We want to compare the integration that is done by galsim.PowerSpectrum.calculateXi() is
     # accurate.  Ideally this would be done by comparison with some power spectrum for which the
     # conversion to a correlation function is analytic.  Given that the conversion to correlation
@@ -1016,15 +979,11 @@ def test_corr_func():
             test_xim, theory_val, decimal=10,
             err_msg='Integrated xi+ differs from reference values')
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_periodic():
     """Test that the periodic interpolation option is working properly.
     """
-    import time
-    t1 = time.time()
-
     # Periodic interpolation is an option in the lensing power spectrum module primarily because,
     # with our shear grids being implicitly periodic, it will give the right shear power spectrum
     # within kmin<k<kmax if we do interpolation in some periodic way.
@@ -1150,15 +1109,10 @@ def test_periodic():
                                    err_msg='Magnification variance altered by periodic interpolation')
 
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
+@timer
 def test_bandlimit():
     """Test that the band-limiting of the power spectrum is working properly.
     """
-    import time
-    t1 = time.time()
-
     # If we do not impose a band limit on the power spectrum, then it's going to lead to aliasing in
     # both the E and B modes, which gives spurious power within kmin<k<kmax.   In practice this is
     # typically a 5-10% effect.  We are just going to test that the shear variance is suitably
@@ -1180,14 +1134,10 @@ def test_bandlimit():
     varb = np.var(g1b)+np.var(g2b)
     assert var>1.05*varb,"Comparison of shear variances without/with band-limiting is not as expected"
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_psr():
     """Test PowerSpectrumRealizer"""
-    import time
-    t1 = time.time()
-
     # Most of the tests of this class are implicit in its use by PowerSpectrum.
     # But since it is technically documented, we should make sure things like the repr and ==
     # work correctly.
@@ -1197,8 +1147,6 @@ def test_psr():
     psr = galsim.lensing_ps.PowerSpectrumRealizer(100, 0.005, pe, pb)
     do_pickle(psr)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_nfwhalo()

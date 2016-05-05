@@ -780,6 +780,7 @@ def test_OpticalPSF_pupil_plane():
         im_test_psf.array, im_test_psf_3.array, decimal=pp_decimal,
         err_msg="Inconsistent OpticalPSF image from Image vs. file read-in.")
 
+
 @timer
 def test_OpticalPSF_lamdiam():
     """Test the ability to generate an OpticalPSF using different lam/diam specifications.

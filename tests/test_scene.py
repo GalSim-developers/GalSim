@@ -30,10 +30,10 @@ except ImportError:
 path, filename = os.path.split(__file__)
 datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
 
+
+@timer
 def test_cosmos_basic():
     """Check some basic functionality of the COSMOSCatalog class."""
-    import time
-    t1 = time.time()
     # Note, there's not much here yet.   Could try to think of other tests that are more
     # interesting.
 
@@ -92,14 +92,10 @@ def test_cosmos_basic():
             raise TypeError("COSMOS Catalog makeGalaxy routine does not return a list of instances "
                             "of 'galsim.GSObject when loaded from a fits file.")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_cosmos_fluxnorm():
     """Check for flux normalization properties of COSMOSCatalog class."""
-    import time
-    t1 = time.time()
-
     # Check that if we make a RealGalaxy catalog, and a COSMOSCatalog, and draw the real object, the
     # fluxes should match very well.  These correspond to 1s exposures.
     test_ind = 54
@@ -142,9 +138,6 @@ def test_cosmos_fluxnorm():
         'Sersic galaxy does not retain index information after transformation'
     assert hasattr(gal1_param.shear(g1=0.05).original, 'index'), \
         'Bulge+disk galaxy does not retain index information after transformation'
-
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 if __name__ == "__main__":

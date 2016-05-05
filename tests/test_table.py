@@ -51,12 +51,11 @@ testargs2 = [ 1.1, 10.8, 12.3, 15.6, 25.6, 41.9 ] # < 0.7 or > 42.5 is invalid
 
 interps = [ 'linear', 'spline', 'floor', 'ceil' ]
 
+
+@timer
 def test_table():
     """Test the spline tabulation of the k space Cubic interpolant.
     """
-    import time
-    t1 = time.time()
-
     for interp in interps:
         table1 = galsim.LookupTable(x=args1,f=vals1,interpolant=interp)
         testvals1 = [ table1(x) for x in testargs1 ]
@@ -123,14 +122,9 @@ def test_table():
         do_pickle(table2)
 
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
+@timer
 def test_init():
     """Some simple tests of LookupTable initialization."""
-    import time
-    t1 = time.time()
-
     interp = 'linear'
     try:
         # Check for bad input: 1 column file, or specifying file and x, or just x, or bad
@@ -154,14 +148,10 @@ def test_init():
     # Check picklability
     do_pickle(tab_ps)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_log():
     """Some simple tests of interpolation using logs."""
-    import time
-    t1 = time.time()
-
     # Set up some test vectors that are strictly positive, and others that are negative.
     x = 0.01*np.arange(1000)+0.01
     y = 1.*x
@@ -226,13 +216,9 @@ def test_log():
     except ImportError:
         print 'The assert_raises tests require nose'
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_roundoff():
-    import time
-    t1 = time.time()
-
     table1 = galsim.LookupTable([1,2,3,4,5,6,7,8,9,10], [1,2,3,4,5,6,7,8,9,10])
     try:
         table1(1.0 - 1.e-7)
@@ -245,13 +231,11 @@ def test_roundoff():
     except ImportError:
         print 'The assert_raises tests require nose'
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
 
 @timer
 def test_table2d():
-
+    """Check LookupTable2D functionality.
+    """
     def f(x_, y_):
         return np.sin(x_) * np.cos(y_) + x_
 
@@ -353,8 +337,10 @@ def test_table2d():
     tab2d = galsim.LookupTable2D(x, y, z, interpolant='floor')
     assert tab2d(2.5, 3.5) == 2+3, "Floor interpolant failed."
 
+
 @timer
 def test_ne():
+    """ Check that inequality works as expected."""
     # These should all compare as unequal.
     x = [1, 2, 3]
     f = [4, 5, 6]

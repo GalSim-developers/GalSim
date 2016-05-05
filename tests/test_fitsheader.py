@@ -31,14 +31,13 @@ except ImportError:
 # Get whatever version of pyfits or astropy we are using
 from galsim._pyfits import pyfits, pyfits_version
 
+
+@timer
 def test_read():
     """Test reading a FitsHeader from an existing FITS file
     """
-    import time
-    t1 = time.time()
-
     # Older pyfits versions treat the blank rows differently, so it comes out as 213.
-    # I don't know exactly when it switched, but for < 3.1, I'll just update this to 
+    # I don't know exactly when it switched, but for < 3.1, I'll just update this to
     # whatever the initial value is.
     tpv_len = 215
 
@@ -137,16 +136,11 @@ def test_read():
     assert len(header) == 0
     do_pickle(header)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_scamp():
     """Test that we can read in a SCamp .head file correctly
     """
-    import time
-    t1 = time.time()
-
     dir = 'fits_files'
     file_name = 'scamp.head'
 
@@ -157,16 +151,11 @@ def test_scamp():
     assert header['ASTINST'] == 39
     do_pickle(header)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_dict():
     """Test that we can create a FitsHeader from a dict
     """
-    import time
-    t1 = time.time()
-
     d = { 'TIME-OBS' : '04:28:14.105' ,
           'FILTER'   : 'I',
           'AIRMASS'  : 1.185 }
@@ -198,7 +187,7 @@ def test_dict():
         header[k] = (d[k], 'The value of ' + k)
     check_dict(header)
     do_pickle(header)
-    
+
     # Use update
     header = galsim.FitsHeader({})
     header.update(d)
@@ -212,9 +201,6 @@ def test_dict():
     header.update(d)
     check_dict(header)
     do_pickle(header)
-
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 if __name__ == "__main__":

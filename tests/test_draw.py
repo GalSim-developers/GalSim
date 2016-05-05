@@ -51,13 +51,12 @@ def CalculateScale(im):
     np.testing.assert_almost_equal(2*mxy/s2, 0, 5, "Found e2 != 0 for Exponential draw")
     return np.sqrt(s2/6) * im.scale
 
+
+@timer
 def test_drawImage():
     """Test the various optional parameters to the draw function.
        In particular test the parameters image, dx, and wmult in various combinations.
     """
-    import time
-    t1 = time.time()
-
     # We use a simple Exponential for our object:
     obj = galsim.Exponential(flux=test_flux, scale_radius=2)
 
@@ -362,15 +361,11 @@ def test_drawImage():
     except ImportError:
         print 'The assert_raises tests require nose'
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_draw_methods():
     """Test the the different method options do the right thing.
     """
-    import time
-    t1 = time.time()
-
     # We use a simple Exponential for our object:
     obj = galsim.Exponential(flux=test_flux, scale_radius=1.09)
     test_scale = 0.28
@@ -487,16 +482,12 @@ def test_draw_methods():
             im5.array * test_scale**2, im6.array, 6,
             "obj.drawImage(sb) * scale**2 differs from obj.drawImage(no_pixel)")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_drawKImage():
     """Test the various optional parameters to the drawKImage function.
        In particular test the parameters image, and scale in various combinations.
     """
-    import time
-    t1 = time.time()
-
     # We use a Moffat profile with beta = 1.5, since its real-space profile is
     #    flux / (2 pi rD^2) * (1 + (r/rD)^2)^3/2
     # and the 2-d Fourier transform of that is
@@ -756,17 +747,13 @@ def test_drawKImage():
         im4.array.shape, (ny, nx), 9,
         "obj.drawKImage(bounds,scale) produced imag image with wrong shape")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_drawKImage_Gaussian():
     """Test the drawKImage function using known symmetries of the Gaussian Hankel transform.
 
     See http://en.wikipedia.org/wiki/Hankel_transform.
     """
-    import time
-    t1 = time.time()
-
     test_flux = 2.3     # Choose a non-unity flux
     test_sigma = 17.    # ...likewise for sigma
     test_imsize = 45    # Dimensions of comparison image, doesn't need to be large
@@ -800,18 +787,14 @@ def test_drawKImage_Gaussian():
             err_msg="Non-zero imaginary part for drawKImage from test object that is purely "
             "centred on the origin.")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_drawKImage_Exponential_Moffat():
-    """Test the drawKImage function using known symmetries of the Exponential Hankel transform 
+    """Test the drawKImage function using known symmetries of the Exponential Hankel transform
     (which is a Moffat with beta=1.5).
 
     See http://mathworld.wolfram.com/HankelTransform.html.
     """
-    import time
-    t1 = time.time()
-
     test_flux = 4.1         # Choose a non-unity flux
     test_scale_radius = 13. # ...likewise for scale_radius
     test_imsize = 45        # Dimensions of comparison image, doesn't need to be large
@@ -847,15 +830,11 @@ def test_drawKImage_Exponential_Moffat():
             err_msg="Non-zero imaginary part for drawKImage from test object that is purely "+
             "centred on the origin.")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_offset():
     """Test the offset parameter to the drawImage function.
     """
-    import time
-    t1 = time.time()
-
     scale = 0.23
 
     # Use some more exact GSParams.  We'll be comparing FFT images to real-space convolved values,
@@ -1033,8 +1012,6 @@ def test_offset():
                 im.array, im2.array, 6,
                 "obj.drawImage(im, offset=%f,%f) different from use_true_center=False")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_drawImage()
