@@ -833,6 +833,8 @@ class LsstWCS(galsim.wcs.CelestialWCS):
           self._camera.rotation_angle!=self._rotation_angle:
 
             if self._camera is not None:
+               # changing the text of this warning will necessitate a change in the
+               # test_passing_camera_by_hand method in test_lsst.py
                warnings.warn("The camera you passed to LsstWCS does not have the same\n"
                              "pointing and rotation angle as you asked for for this WCS.\n"
                              "LsstWCS is creating a new camera with the pointing and\n"
