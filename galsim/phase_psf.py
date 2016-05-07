@@ -1280,7 +1280,7 @@ class PhaseScreenPSF(GSObject):
                  theta_x=0.0*galsim.arcmin, theta_y=0.0*galsim.arcmin,
                  interpolant=None, aper=None, scale_unit=galsim.arcsec,
                  gsparams=None, _eval_now=True, _bar=None, suppress_warning=False,
-                 **kwargs):
+                 _force_stepk=None, _force_maxk=None, **kwargs):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
         # progress bar during long calculations.
 
@@ -1294,6 +1294,8 @@ class PhaseScreenPSF(GSObject):
         self.scale_unit = scale_unit
         self.interpolant = interpolant
         self._gsparams = gsparams
+        self._serialize_stepk = _force_stepk
+        self._serialize_maxk = _force_maxk
 
         if aper is None:
             # Check here for diameter.
@@ -1360,11 +1362,19 @@ class PhaseScreenPSF(GSObject):
         self.img *= (flux / (self.img.sum() * self.scale**2))
         self.img = galsim.ImageD(self.img.astype(np.float64), scale=self.scale)
 
-        self.ii = galsim.InterpolatedImage(
-                self.img, x_interpolant=self.interpolant, calculate_stepk=True, calculate_maxk=True,
-                use_true_center=False, normalization='sb', gsparams=self._gsparams)
-        self._serialize_stepk = self.ii._serialize_stepk
-        self._serialize_maxk = self.ii._serialize_maxk
+        if self._serialize_maxk is None:
+            self.ii = galsim.InterpolatedImage(
+                    self.img, x_interpolant=self.interpolant,
+                    calculate_stepk=True, calculate_maxk=True,
+                    use_true_center=False, normalization='sb', gsparams=self._gsparams)
+            self._serialize_stepk = self.ii._serialize_stepk
+            self._serialize_maxk = self.ii._serialize_maxk
+        else:
+            self.ii = galsim.InterpolatedImage(
+                    self.img, x_interpolant=self.interpolant,
+                    _serialize_stepk=self._serialize_stepk, _serialize_maxk=self._serialize_maxk,
+                    use_true_center=False, normalization='sb', gsparams=self._gsparams)
+
 
         GSObject.__init__(self, self.ii)
 
