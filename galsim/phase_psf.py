@@ -226,32 +226,29 @@ class Aperture(object):
         self._strut_thick = strut_thick
         self._strut_angle = strut_angle
 
-        u = np.fft.fftshift(np.fft.fftfreq(self.npix, 1./self.pupil_plane_size))
-        u, v = np.meshgrid(u, u)
-        rsqr = u**2 + v**2
-
         radius = 0.5*self.diam
         if circular_pupil:
-            self._illuminated = (rsqr < radius**2)
+            self._illuminated = (self.rsqr < radius**2)
             if obscuration > 0.:
-                self._illuminated *= rsqr >= (radius*obscuration)**2
+                self._illuminated *= self.rsqr >= (radius*obscuration)**2
         else:
-            self._illuminated = (np.abs(u) < radius) & (np.abs(v) < radius)
+            self._illuminated = (np.abs(self.u) < radius) & (np.abs(self.v) < radius)
             if obscuration > 0.:
-                self._illuminated *= ((np.abs(u) >= radius*obscuration) *
-                                      (np.abs(v) >= radius*obscuration))
+                self._illuminated *= ((np.abs(self.u) >= radius*obscuration) *
+                                      (np.abs(self.v) >= radius*obscuration))
 
         if nstruts > 0:
             if not isinstance(strut_angle, galsim.Angle):
                 raise TypeError("Input kwarg strut_angle must be a galsim.Angle instance.")
             # Add the initial rotation if requested, converting to radians.
+            rot_u, rot_v = self.u, self.v
             if strut_angle.rad != 0.:
-                u, v = utilities.rotate_xy(u, v, -strut_angle)
+                rot_u, rot_v = utilities.rotate_xy(rot_u, rot_v, -strut_angle)
             rotang = 360. * galsim.degrees / nstruts
             # Then loop through struts setting to zero the regions which lie under the strut
             for istrut in xrange(nstruts):
-                u, v = utilities.rotate_xy(u, v, -rotang)
-                self._illuminated *= ((np.abs(u) >= radius * strut_thick) + (v < 0.0))
+                rot_u, rot_v = utilities.rotate_xy(rot_u, rot_v, -rotang)
+                self._illuminated *= ((np.abs(rot_u) >= radius * strut_thick) + (rot_v < 0.0))
 
     def _load_pupil_plane(self, pupil_plane_im, pupil_angle, obscuration=0.0,
                           _pupil_plane_scale=None):
@@ -409,6 +406,37 @@ class Aperture(object):
             u, v = np.meshgrid(u, u)
             self._rho = u + 1j * v
         return self._rho
+
+    @property
+    def u(self):
+        """Pupil horizontal coordinate array in meters."""
+        if not hasattr(self, '_u'):
+            u = np.fft.fftshift(np.fft.fftfreq(self.npix, 1./self.pupil_plane_size))
+            self._u, self._v = np.meshgrid(u, u)
+        return self._u
+
+    @property
+    def v(self):
+        """Pupil vertical coordinate array in meters."""
+        if not hasattr(self, '_v'):
+            u = np.fft.fftshift(np.fft.fftfreq(self.npix, 1./self.pupil_plane_size))
+            self._u, self._v = np.meshgrid(u, u)
+        return self._v
+
+    @property
+    def rsqr(self):
+        """Pupil radius squared array in meters squared."""
+        if not hasattr(self, '_rsqr'):
+            self._rsqr = self.u**2 + self.v**2
+        return self._rsqr
+
+    def __getstate__(self):
+        # Let unpickled object reconstruct cached values on-the-fly instead of including them in the
+        # pickle.
+        d = self.__dict__
+        for k in ['_rho', '_u', '_v', '_rsqr']:
+            d.pop(k, None)
+        return d
 
     # Some quick notes for Josh:
     # - Relation between real-space grid with size L and pitch dL (dimensions of angle) and
@@ -665,10 +693,15 @@ class AtmosphericScreen(object):
         @param theta_y  y-component of field angle corresponding to center of output array.
         @returns        Wavefront lag or lead in nanometers over aperture.
         """
-        xs = ys = np.arange(aper.npix)*aper.pupil_plane_scale
-        xs += self.origin[0] + 1000*self.altitude*theta_x.tan() - 0.5*aper.pupil_plane_scale*(aper.npix-1)
-        ys += self.origin[1] + 1000*self.altitude*theta_y.tan() - 0.5*aper.pupil_plane_scale*(aper.npix-1)
-        return self.tab2d(xs, ys)
+        # xs = ys = np.arange(aper.npix)*aper.pupil_plane_scale
+        # xs += self.origin[0] + 1000*self.altitude*theta_x.tan() - 0.5*aper.pupil_plane_scale*(aper.npix-1)
+        # ys += self.origin[1] + 1000*self.altitude*theta_y.tan() - 0.5*aper.pupil_plane_scale*(aper.npix-1)
+        u, v = aper.u[aper.illuminated], aper.v[aper.illuminated]
+        u += self.origin[0] + 1000*self.altitude*theta_x.tan()
+        v += self.origin[1] + 1000*self.altitude*theta_y.tan()
+        wf = np.zeros(aper.illuminated.shape, dtype=np.float64)
+        wf[aper.illuminated] = self.tab2d(u, v, scatter=True)
+        return wf
 
     def reset(self):
         """Reset phase screen back to time=0."""
