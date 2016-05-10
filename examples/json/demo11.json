@@ -6,8 +6,8 @@
 
 "#" : "This script uses a constant PSF from real data (an image read in from a bzipped FITS file,",
 "#" : "not a parametric model) and variable shear and magnification according to some cosmological",
-"#" : "model for which we have a tabulated power spectrum at specific k values only.  The 288",
-"#" : "galaxies in the 0.2 x 0.2 degree field (representing a low number density of 2/arcmin^2)",
+"#" : "model for which we have a tabulated shear power spectrum at specific k values only.  The 288",
+"#" : "galaxies in the 0.1 x 0.1 degree field (representing a low number density of 8/arcmin^2)",
 "#" : "are randomly located and permitted to overlap, but we do take care to avoid being too close",
 "#" : "to the edge of the large image.  For the galaxies, we use a random selection from 5",
 "#" : "specific RealGalaxy objects, selected to be 5 particularly irregular ones. These are taken",
