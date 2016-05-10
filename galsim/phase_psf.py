@@ -895,7 +895,7 @@ class OpticalScreen(object):
         return "galsim.OpticalScreen(lam_0=%s)" % self.lam_0
 
     def __repr__(self):
-        s = "galsim.OpticalScreen(lam_0=%s" % self.lam_0
+        s = "galsim.OpticalScreen(lam_0=%r" % self.lam_0
         if any(self.aberrations):
             s += ", aberrations=%r"%self.aberrations
         s += ")"
@@ -1864,7 +1864,7 @@ class OpticalPSF(GSObject):
 
     def __repr__(self):
         screen = self._psf.screen_list[0]
-        s = "galsim.OpticalPSF(lam=%s, diam=%s" % (screen.lam_0, self._psf.aper.diam)
+        s = "galsim.OpticalPSF(lam=%r, diam=%r" % (screen.lam_0, self._psf.aper.diam)
         if any(screen.aberrations):
             s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
         if hasattr(self._psf.aper, '_circular_pupil'):
