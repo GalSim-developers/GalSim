@@ -39,7 +39,8 @@ def getBandpasses(AB_zeropoint=True, exptime=None, **kwargs):
 
     The bandpasses can be either truncated or thinned before setting the zero points, by passing in
     the keyword arguments that need to get propagated through to the Bandpass.thin() and/or
-    Bandpass.truncate() routines.
+    Bandpass.truncate() routines.  Or, if the user wishes to thin and truncate using the defaults
+    for those two routines, they can pass in `default_thin_trunc=True` option.
 
     By default, the routine will set an AB zeropoint using the WFIRST effective diameter and default
     exposure time.  Setting the zeropoint can be avoided by setting `AB_zeropoint=False`; changing
@@ -67,7 +68,8 @@ def getBandpasses(AB_zeropoint=True, exptime=None, **kwargs):
                             WFIRST exposure time, taken from galsim.wfirst.exptime.  [default: None]
 
     It's also possible to pass through keyword arguments for the Bandpass.thin() and
-    Bandpass.truncate() routines.
+    Bandpass.truncate() routines, or use `default_thin_trunc=True` to use both of those routines at
+    their default settings.
 
     @returns A dictionary containing bandpasses for all WFIRST imaging filters.
     """
@@ -94,18 +96,26 @@ def getBandpasses(AB_zeropoint=True, exptime=None, **kwargs):
     thin_kwargs = ['rel_err', 'trim_zeros', 'preserve_range', 'fast_search']
     tmp_truncate_dict = {}
     tmp_thin_dict = {}
-    if any(x in kwargs.keys() for x in truncate_kwargs):
-        for key in kwargs.keys():
-            if key in truncate_kwargs:
-                tmp_truncate_dict[key] = kwargs[key]
-                del kwargs[key]
-    if any(x in kwargs.keys() for x in thin_kwargs):
-        for key in kwargs.keys():
-            if key in thin_kwargs:
-                tmp_thin_dict[key] = kwargs[key]
-                del kwargs[key]
-    if len(kwargs) != 0:
-        raise ValueError("Unknown kwargs: %s"%(' '.join(kwargs.keys())))
+    if 'default_thin_trunc' in kwargs.keys():
+        if len(kwargs) > 1:
+            raise ValueError("Cannot pass default_thin_trunc with other kwargs!")
+        if kwargs['default_thin_trunc']:
+            pass
+        else:
+            del kwargs['default_thin_trunc']
+    else:
+        if any(x in kwargs.keys() for x in truncate_kwargs):
+            for key in kwargs.keys():
+                if key in truncate_kwargs:
+                    tmp_truncate_dict[key] = kwargs[key]
+                    del kwargs[key]
+        if any(x in kwargs.keys() for x in thin_kwargs):
+            for key in kwargs.keys():
+                if key in thin_kwargs:
+                    tmp_thin_dict[key] = kwargs[key]
+                    del kwargs[key]
+        if len(kwargs) != 0:
+            raise ValueError("Unknown kwargs: %s"%(' '.join(kwargs.keys())))
 
     # Set up a dictionary.
     bandpass_dict = {}
@@ -119,9 +129,9 @@ def getBandpasses(AB_zeropoint=True, exptime=None, **kwargs):
         bp = galsim.Bandpass(galsim.LookupTable(wave, data[bp_name]), wave_type='nm')
 
         # Use any arguments related to truncation, thinning, etc.
-        if len(tmp_truncate_dict) > 0:
+        if len(tmp_truncate_dict) > 0 or 'default_thin_trunc' in kwargs.keys():
             bp = bp.truncate(**tmp_truncate_dict)
-        if len(tmp_thin_dict) > 0:
+        if len(tmp_thin_dict) > 0 or 'default_thin_trunc' in kwargs.keys():
             bp = bp.thin(**tmp_thin_dict)
 
         # Set the zeropoint if requested by the user:
