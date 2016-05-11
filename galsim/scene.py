@@ -583,11 +583,14 @@ class COSMOSCatalog(object):
                 # Read in some SEDs.
                 self._sed = [
                     # bulge
-                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_E_ext.sed')),
+                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_E_ext.sed'),
+                               wave_type='Ang'),
                     # disk
-                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_Scd_ext.sed')),
+                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_Scd_ext.sed'),
+                               wave_type='Ang'),
                     # intermediate
-                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_Sbc_ext.sed'))]
+                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_Sbc_ext.sed'),
+                               wave_type='Ang')]
 
         gal_list = []
         for index in indices:
