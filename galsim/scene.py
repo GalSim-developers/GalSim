@@ -580,16 +580,18 @@ class COSMOSCatalog(object):
                 # This means that when drawing chromatic parametric galaxies, the outputs will be
                 # properly normalized in terms of counts.
 
-                # Read in some SEDs.
+                # Read in some SEDs.  We are using some fairly truncated and thinned ones, because
+                # in any case the SED assignment here is somewhat arbitrary and should not be taken
+                # too seriously.
                 self._sed = [
                     # bulge
-                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_E_ext.sed'),
+                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_E_ext_more.sed'),
                                wave_type='Ang'),
                     # disk
-                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_Scd_ext.sed'),
+                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_Scd_ext_more.sed'),
                                wave_type='Ang'),
                     # intermediate
-                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_Sbc_ext.sed'),
+                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_Sbc_ext_more.sed'),
                                wave_type='Ang')]
 
         gal_list = []
