@@ -303,7 +303,7 @@ class SED(object):
         wave_list = wave_list[wave_list <= red_limit]
         wave_list = wave_list[wave_list >= blue_limit]
 
-        return SED(spec, wave_type=self.wave_type, flux_type='fphotons',
+        return SED(spec, wave_type='nm', flux_type='fphotons',
                    redshift=self.redshift, _wave_list=wave_list,
                    _blue_limit=blue_limit, _red_limit=red_limit)
 
@@ -468,7 +468,7 @@ class SED(object):
             blue_limit = np.min(newx) * wave_factor
             red_limit = np.max(newx) * wave_factor
             wave_list = np.array(newx) * wave_factor
-            return SED(spec, wave_type=self.wave_type, flux_type='fphotons',
+            return SED(spec, wave_type='nm', flux_type='fphotons',
                        redshift=self.redshift, _wave_list=wave_list,
                        _blue_limit=blue_limit, _red_limit=red_limit)
         else:

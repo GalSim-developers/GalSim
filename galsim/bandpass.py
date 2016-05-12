@@ -513,9 +513,13 @@ class Bandpass(object):
         return self._hash
 
     def __repr__(self):
+        if self.wave_factor == 10.0:
+            wave_type = 'Angstroms'
+        else:
+            wave_type = 'nm'
         return ('galsim.Bandpass(%r, wave_type=%r, blue_limit=%r, red_limit=%r, zeropoint=%r, '+
                                  '_wave_list=array(%r))')%(
-                self._orig_tp, self.wave_type, self.blue_limit, self.red_limit, self.zeropoint,
+                self._orig_tp, wave_type, self.blue_limit, self.red_limit, self.zeropoint,
                 self.wave_list.tolist())
 
     def __str__(self):
