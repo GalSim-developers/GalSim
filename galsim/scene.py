@@ -586,13 +586,13 @@ class COSMOSCatalog(object):
                 self._sed = [
                     # bulge
                     galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_E_ext_more.sed'),
-                               wave_type='Ang'),
+                               wave_type='Ang', flux_type='flambda'),
                     # disk
                     galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_Scd_ext_more.sed'),
-                               wave_type='Ang'),
+                               wave_type='Ang', flux_type='flambda'),
                     # intermediate
                     galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_Sbc_ext_more.sed'),
-                               wave_type='Ang')]
+                               wave_type='Ang', flux_type='flambda')]
 
         gal_list = []
         for index in indices:

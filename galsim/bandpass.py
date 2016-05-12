@@ -62,10 +62,10 @@ class Bandpass(object):
        via `eval('lambda wave : '+throughput)`
        e.g. throughput = '0.8 + 0.2 * (wave-800)'
 
-    The argument of `throughput` will be the wavelength in either nanometers (default) or
-    Angstroms depending on the value of `wave_type`.  The output should be the dimensionless
-    throughput at that wavelength.  (Note we use `wave` rather than `lambda`, since `lambda` is a
-    python reserved word.)
+    The argument of `throughput` will be the wavelength in either nanometers or Angstroms depending
+    on the value of `wave_type`.  The output should be the dimensionless throughput at that
+    wavelength.  (Note we use `wave` rather than `lambda`, since `lambda` is a python reserved
+    word.)
 
     The argument `wave_type` specifies the units to assume for wavelength and must be one of
     'nm', 'nanometer', 'nanometers', 'A', 'Ang', 'Angstrom', or 'Angstroms'. Text case here
@@ -77,17 +77,17 @@ class Bandpass(object):
 
     @param throughput   Function defining the throughput at each wavelength.  See above for
                         valid options for this parameter.
+    @param wave_type    The units to use for the wavelength argument of the `throughput`
+                        function. See above for details.
     @param blue_limit   Hard cut off of bandpass on the blue side. [default: None, but required
                         if throughput is not a LookupTable or file.  See above.]
     @param red_limit    Hard cut off of bandpass on the red side. [default: None, but required
                         if throughput is not a LookupTable or file.  See above.]
-    @param wave_type    The units to use for the wavelength argument of the `throughput`
-                        function. See above for details. [default: 'nm']
     @param zeropoint    Set the zero-point for this Bandpass.  Here, this can only be a float
                         value.  See the method `withZeroPoint` for other options for how to
                         set this using a particular spectrum (AB, Vega, etc.) [default: None]
     """
-    def __init__(self, throughput, blue_limit=None, red_limit=None, wave_type='nm',
+    def __init__(self, throughput, wave_type, blue_limit=None, red_limit=None,
                  zeropoint=None, _wave_list=None, _tp=None):
         # Note that `_wave_list` acts as a private construction variable that overrides the way that
         # `wave_list` is normally constructed (see `Bandpass.__mul__` below)
@@ -241,7 +241,7 @@ class Bandpass(object):
         else:
             tp = lambda w: self.func(w) * other
 
-        return Bandpass(tp, blue_limit, red_limit, wave_type=wave_type, _wave_list=wave_list)
+        return Bandpass(tp, wave_type, blue_limit, red_limit, _wave_list=wave_list)
 
     def __rmul__(self, other):
         return self*other
@@ -275,7 +275,7 @@ class Bandpass(object):
         else:
             tp = lambda w: self.func(w) / other
 
-        return Bandpass(tp, blue_limit, red_limit, wave_type=wave_type, _wave_list=wave_list)
+        return Bandpass(tp, wave_type, blue_limit, red_limit, _wave_list=wave_list)
 
     def __truediv__(self, other):
         return self.__div__(other)
@@ -368,16 +368,16 @@ class Bandpass(object):
                                  +"telescope effective diameter or exposure time.")
             if zeropoint.upper()=='AB':
                 AB_source = 3631e-23 # 3631 Jy in units of erg/s/Hz/cm^2
-                sed = galsim.SED(lambda wave: AB_source, flux_type='fnu')
+                sed = galsim.SED(lambda wave: AB_source, wave_type='nm', flux_type='fnu')
             elif zeropoint.upper()=='ST':
                 # Use HST STmags: http://www.stsci.edu/hst/acs/analysis/zeropoints
                 ST_flambda = 3.63e-8 # erg/s/cm^2/nm
-                sed = galsim.SED(lambda wave: ST_flambda, flux_type='flambda')
+                sed = galsim.SED(lambda wave: ST_flambda, wave_type='nm', flux_type='flambda')
             elif zeropoint.upper()=='VEGA':
                 # Use vega spectrum for SED
                 import os
                 vegafile = os.path.join(galsim.meta_data.share_dir, "vega.txt")
-                sed = galsim.SED(vegafile)
+                sed = galsim.SED(vegafile, wave_type='nm', flux_type='flambda')
             else:
                 raise ValueError("Do not recognize Zeropoint string {0}.".format(zeropoint))
             flux = sed.calculateFlux(self)
@@ -396,7 +396,7 @@ class Bandpass(object):
             raise ValueError(
                 "Don't know how to handle zeropoint of type: {0}".format(type(zeropoint)))
 
-        return Bandpass(self._orig_tp, self.blue_limit, self.red_limit, self.wave_type,
+        return Bandpass(self._orig_tp, self.wave_type, self.blue_limit, self.red_limit,
                         new_zeropoint, self.wave_list, self._tp)
 
     def truncate(self, blue_limit=None, red_limit=None, relative_throughput=None):
@@ -440,7 +440,7 @@ class Bandpass(object):
                 "Can only truncate with relative_throughput argument if throughput is "
                 + "a LookupTable")
 
-        return Bandpass(self._orig_tp, blue_limit, red_limit, self.wave_type,
+        return Bandpass(self._orig_tp, self.wave_type, blue_limit, red_limit,
                         _wave_list=wave_list, _tp=self._tp)
 
     def thin(self, rel_err=1.e-4, trim_zeros=True, preserve_range=True, fast_search=True):
@@ -491,7 +491,7 @@ class Bandpass(object):
             blue_limit = np.min(newx)
             red_limit = np.max(newx)
             wave_list = np.array(newx)
-            return Bandpass(tp, blue_limit, red_limit, _wave_list=wave_list)
+            return Bandpass(tp, self.wave_type, blue_limit, red_limit, _wave_list=wave_list)
         else:
             return self
 
@@ -517,9 +517,9 @@ class Bandpass(object):
             wave_type = 'Angstroms'
         else:
             wave_type = 'nm'
-        return ('galsim.Bandpass(%r, blue_limit=%r, red_limit=%r, wave_type=%r, zeropoint=%r, '+
+        return ('galsim.Bandpass(%r, wave_type=%r, blue_limit=%r, red_limit=%r, zeropoint=%r, '+
                                  '_wave_list=array(%r))')%(
-                self._orig_tp, self.blue_limit, self.red_limit, wave_type, self.zeropoint,
+                self._orig_tp, wave_type, self.blue_limit, self.red_limit, self.zeropoint,
                 self.wave_list.tolist())
 
     def __str__(self):

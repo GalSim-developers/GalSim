@@ -72,12 +72,12 @@ class SED(object):
 
     @param spec          Function defining the z=0 spectrum at each wavelength.  See above for
                          valid options for this parameter.
-    @param wave_type     String specifying units for wavelength input to `spec`. [default: 'nm']
+    @param wave_type     String specifying units for wavelength input to `spec`.
     @param flux_type     String specifying what type of spectral density `spec` represents.  See
-                         above for valid options for this parameter. [default: 'flambda']
+                         above for valid options for this parameter.
     @param redshift      Optionally shift the spectrum to the given redshift. [default: 0]
     """
-    def __init__(self, spec, wave_type='nm', flux_type='flambda', redshift=0.,
+    def __init__(self, spec, wave_type, flux_type, redshift=0.,
                  _blue_limit=None, _red_limit=None, _wave_list=None, _spec=None ):
 
         self._orig_spec = spec  # Save this for pickling
@@ -303,8 +303,9 @@ class SED(object):
         wave_list = wave_list[wave_list <= red_limit]
         wave_list = wave_list[wave_list >= blue_limit]
 
-        return SED(spec, flux_type='fphotons', redshift=self.redshift,
-                   _wave_list=wave_list, _blue_limit=blue_limit, _red_limit=red_limit)
+        return SED(spec, wave_type=self.wave_type, flux_type='fphotons',
+                   redshift=self.redshift, _wave_list=wave_list,
+                   _blue_limit=blue_limit, _red_limit=red_limit)
 
     def __sub__(self, other):
         # Subtract two SEDs, with the same caveats as adding two SEDs.
@@ -467,8 +468,9 @@ class SED(object):
             blue_limit = np.min(newx) * wave_factor
             red_limit = np.max(newx) * wave_factor
             wave_list = np.array(newx) * wave_factor
-            return SED(spec, flux_type='fphotons', redshift=self.redshift,
-                       _wave_list=wave_list, _blue_limit=blue_limit, _red_limit=red_limit)
+            return SED(spec, wave_type=self.wave_type, flux_type='fphotons',
+                       redshift=self.redshift, _wave_list=wave_list,
+                       _blue_limit=blue_limit, _red_limit=red_limit)
         else:
             return self
 
