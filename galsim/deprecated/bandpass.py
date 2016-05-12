@@ -43,7 +43,7 @@ def Bandpass_rdiv(self, other):
         wave_type = 'Angstroms'
     else:
         wave_type = 'nm'
-    return galsim.Bandpass(tp, wave_type, blue_limit, red_limit,
+    return galsim.Bandpass(tp, 'nm', blue_limit, red_limit,
                            _wave_list=wave_list)
 
 galsim.Bandpass.__rdiv__ = Bandpass_rdiv
