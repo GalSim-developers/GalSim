@@ -334,8 +334,11 @@ def test_SED_init():
                                  wave_type='nm', flux_type='flambda')
         np.testing.assert_raises(ValueError, galsim.SED, spec=lambda w:1.0,
                                  wave_type='bar', flux_type='flambda')
-        np.testing.assert_raises(ValueError, galsim.SED, spec=lambda w:1.0,
-                                 wave_type='nm', flux_type='bar')
+        np.testing.assert_raises(TypeError, galsim.SED, spec=lambda w:1.0,
+                                 wave_type='nm')
+        np.testing.assert_raises(TypeError, galsim.SED, spec=lambda w:1.0,
+                                 flux_type='bar')
+        np.testing.assert_raises(TypeError, galsim.SED, spec=lambda w:1.0)
     except ImportError:
         print 'The assert_raises tests require nose'
     # These should succeed.

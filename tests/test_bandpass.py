@@ -36,6 +36,12 @@ def test_Bandpass_basic():
     import time
     t1 = time.time()
 
+    try:
+        # Cannot initialize bandpass without wave_type:
+        np.testing.assert_raises(TypeError, galsim.Bandpass, throughput=lambda x:x)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
     # All of these should be equivalent
     b_list = [
         galsim.Bandpass(throughput=lambda x: x/1000, wave_type='nm', blue_limit=400, red_limit=550),
