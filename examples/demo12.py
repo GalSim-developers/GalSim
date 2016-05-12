@@ -42,9 +42,9 @@ For all cases, suggested parameters for viewing in ds9 are also included.
 
 New features introduced in this demo:
 
-- SED = galsim.SED(wave, flambda)
+- SED = galsim.SED(wave, flambda, wave_type, flux_type)
 - SED2 = SED.atRedshift(redshift)
-- bandpass = galsim.Bandpass(filename)
+- bandpass = galsim.Bandpass(filename, wave_type)
 - bandpass2 = bandpass.truncate(relative_throughput)
 - bandpass3 = bandpass2.thin(rel_err)
 - gal = galsim.Chromatic(GSObject, SED)
@@ -83,10 +83,9 @@ def main(argv):
         # Here we create some galsim.SED objects to hold star or galaxy spectra.  The most
         # convenient way to create realistic spectra is to read them in from a two-column ASCII
         # file, where the first column is wavelength and the second column is flux. Wavelengths in
-        # the example SED files are in Angstroms, flux in flambda.  The default wavelength type for
-        # galsim.SED is nanometers, however, so we need to override by specifying
+        # the example SED files are in Angstroms, flux in flambda.
         # `wave_type = 'Ang'`.
-        SED = galsim.SED(SED_filename, wave_type='Ang')
+        SED = galsim.SED(SED_filename, wave_type='Ang', flux_type='flambda')
         # The normalization of SEDs affects how many photons are eventually drawn into an image.
         # One way to control this normalization is to specify the flux density in photons per nm
         # at a particular wavelength.  For example, here we normalize such that the photon density
@@ -106,7 +105,7 @@ def main(argv):
         # wavelength and the second column is dimensionless flux. The example filter files have
         # units of nanometers and dimensionless throughput, which is exactly what galsim.Bandpass
         # expects, so we just specify the filename.
-        filters[filter_name] = galsim.Bandpass(filter_filename)
+        filters[filter_name] = galsim.Bandpass(filter_filename, wave_type='nm')
         # For speed, we can thin out the wavelength sampling of the filter a bit.
         # In the following line, `rel_err` specifies the relative error when integrating over just
         # the filter (however, this is not necessarily the relative error when integrating over the
