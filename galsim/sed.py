@@ -51,10 +51,10 @@ class SED(object):
        via `eval('lambda wave : '+spec)
        e.g. spec = '0.8 + 0.2 * (wave-800)`
 
-    The argument of `spec` will be the wavelength in either nanometers (default) or Angstroms
-    depending on the value of `wave_type`.  The output should be the flux density at that
-    wavelength.  (Note we use `wave` rather than `lambda`, since `lambda` is a python reserved
-    word.)
+    The argument of `spec` will be the wavelength in either nanometers or Angstroms depending on
+    the value of `wave_type`.  (Note we use `wave` rather than `lambda`, since `lambda` is a
+    python reserved word.)  The output should be the flux density at that wavelength, defined
+    according to one of the `flux_type` options below.
 
     The argument `wave_type` specifies the units to assume for wavelength and must be one of
     'nm', 'nanometer', 'nanometers', 'A', 'Ang', 'Angstrom', or 'Angstroms'. Text case here
@@ -592,8 +592,8 @@ class SED(object):
         return self._hash
 
     def __repr__(self):
-        wave_type = ''
-        flux_type = ''
+        wave_type = ' wave_type="nm",'
+        flux_type = ' flux_type="flambda",'
         if self.wave_factor == 10.0:
             wave_type = ' wave_type="Angstroms",'
         if self.flux_type != 'flambda':
