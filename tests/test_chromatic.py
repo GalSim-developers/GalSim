@@ -468,7 +468,7 @@ def test_monochromatic_filter():
         chromatic_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
         narrow_filter = galsim.Bandpass(galsim.LookupTable([fw-0.01, fw, fw+0.01],
                                                            [1.0, 1.0, 1.0],
-                                                           interpolant='linear'))
+                                                           interpolant='linear'), 'nm')
         chromatic_image = chromatic_final.drawImage(narrow_filter, image=chromatic_image)
         # take out normalization
         chromatic_image /= 0.02
@@ -755,7 +755,7 @@ def test_ChromaticObject_expand():
     # functional syntax.
     gal1 = galsim.ChromaticObject(gal).expand(lambda w: 1.2)
     # Use a simple bandpass so we can do the integral below analytically
-    bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 500, 700)
+    bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 'nm', 500, 700)
     im1 = gal1.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mx, my, mxx, myy, mxy = getmoments(im1)
     print 'simple growth = ',mxx/(sigma/pixel_scale)**2, 1.2**2
@@ -876,7 +876,7 @@ def test_ChromaticObject_rotate():
     # First a very simple case with no actual wavelength dependence, but using the
     # functional syntax.
     gal1 = galsim.ChromaticObject(gal).rotate(lambda w: 0.4 * galsim.radians)
-    bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 500, 700)
+    bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 'nm', 500, 700)
     im1 = gal1.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mx, my, mxx, myy, mxy = getmoments(im1)
     print 'simple angle = ',(np.arctan2(2.*mxy,mxx-myy)/2.), 0.4
@@ -976,7 +976,7 @@ def test_ChromaticObject_shear():
     # First a very simple case with no actual wavelength dependence, but using the
     # functional syntax.
     gal1 = galsim.ChromaticObject(gal).shear(lambda w: galsim.Shear(e1=0.23, e2=0.13))
-    bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 500, 700)
+    bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 'nm', 500, 700)
     im1 = gal1.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mx, my, mxx, myy, mxy = getmoments(im1)
     print 'mxx+myy = ',mxx+myy
@@ -1124,8 +1124,8 @@ def test_analytic_integrator():
     psf = galsim.Moffat(fwhm=1.0, beta=2.7)
 
     # pure analytic
-    band1 = galsim.Bandpass('1', blue_limit=500, red_limit=750)
-    sed1 = galsim.SED('wave**1.1', flux_type='fphotons').withFluxDensity(1.0, 500)
+    band1 = galsim.Bandpass('1', 'nm', blue_limit=500, red_limit=750)
+    sed1 = galsim.SED('wave**1.1', wave_type='nm', flux_type='fphotons').withFluxDensity(1.0, 500)
     gal1 = galsim.Gaussian(fwhm=1.0) * sed1
     final1 = galsim.Convolve(gal1, psf)
     image1 = galsim.ImageD(32, 32, scale=0.2)
@@ -1140,7 +1140,7 @@ def test_analytic_integrator():
     x = [band2.blue_limit + h * i for i in range(N+1)]
     # make a sampled SED
     sed2 = galsim.SED(galsim.LookupTable(x, sed1(x), interpolant='linear'),
-                      flux_type='fphotons')
+                      wave_type='nm', flux_type='fphotons')
     gal2 = galsim.Gaussian(fwhm=1.0) * sed2
     final2 = galsim.Convolve(gal2, psf)
     image2 = galsim.ImageD(32, 32, scale=0.2)
@@ -1150,7 +1150,7 @@ def test_analytic_integrator():
 
     # try making the Bandpass sampled
     sed3 = sed1
-    band3 = galsim.Bandpass(galsim.LookupTable(x, band1(x), interpolant='linear'))
+    band3 = galsim.Bandpass(galsim.LookupTable(x, band1(x), interpolant='linear'), 'nm')
     gal3 = galsim.Gaussian(fwhm=1.0) * sed3
     final3 = galsim.Convolve(gal3, psf)
     image3 = galsim.ImageD(32, 32, scale=0.2)
@@ -1278,8 +1278,8 @@ def test_centroid():
     import time
     t1 = time.time()
 
-    sed = galsim.SED('wave', flux_type='fphotons')
-    bp = galsim.Bandpass('wave', blue_limit=0, red_limit=1)
+    sed = galsim.SED('wave', wave_type='nm', flux_type='fphotons')
+    bp = galsim.Bandpass('wave', 'nm', blue_limit=0, red_limit=1)
     shift_fn = lambda w: (w, 0)
     gal = sed * galsim.Gaussian(fwhm=1)
     gal = gal.shift(shift_fn)
@@ -1768,9 +1768,11 @@ def test_chromatic_fiducial_wavelength():
     waves = np.arange(500., 600.1, 10.)
     blue_flux = waves < 550.0
     red_flux = waves > 550.0
-    bp = galsim.Bandpass(galsim.LookupTable(waves, waves**0, interpolant='linear'))
-    blue_sed = galsim.SED(galsim.LookupTable(waves, blue_flux, interpolant='linear'))
-    red_sed = galsim.SED(galsim.LookupTable(waves, red_flux, interpolant='linear'))
+    bp = galsim.Bandpass(galsim.LookupTable(waves, waves**0, interpolant='linear'), 'nm')
+    blue_sed = galsim.SED(galsim.LookupTable(waves, blue_flux, interpolant='linear'),
+                          'nm', 'flambda')
+    red_sed = galsim.SED(galsim.LookupTable(waves, red_flux, interpolant='linear'),
+                         'nm', 'flambda')
 
     gal1 = galsim.Gaussian(fwhm=1) * blue_sed
     gal2 = galsim.Gaussian(fwhm=1) * red_sed
@@ -1872,8 +1874,8 @@ def test_ne():
     all_obj_diff(gals)
 
     # Chromatic.  Params are a gsobject and an SED.
-    sed1 = galsim.SED(lambda w: w)
-    sed2 = galsim.SED(lambda w: 2*w)
+    sed1 = galsim.SED(lambda w: w, 'nm', 'flambda')
+    sed2 = galsim.SED(lambda w: 2*w, 'nm', 'flambda')
     # The following should test unequal.
     gals = [galsim.Chromatic(gal1, sed1),
             galsim.Chromatic(gal2, sed1),
