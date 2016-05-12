@@ -38,24 +38,26 @@ def test_Bandpass_basic():
 
     # All of these should be equivalent
     b_list = [
-        galsim.Bandpass(throughput=lambda x: x/1000, blue_limit=400, red_limit=550),
-        galsim.Bandpass(throughput='wave/1000', blue_limit=400, red_limit=550),
-        galsim.Bandpass(throughput='wave/10000', blue_limit=4000, red_limit=5500, wave_type='A'),
-        galsim.Bandpass('wave/1000', 400, 550, 'nanometers', 30.),
-        galsim.Bandpass(galsim.LookupTable([400,550], [0.4, 0.55], interpolant='linear')),
+        galsim.Bandpass(throughput=lambda x: x/1000, wave_type='nm', blue_limit=400, red_limit=550),
+        galsim.Bandpass(throughput='wave/1000', wave_type='nm', blue_limit=400, red_limit=550),
+        galsim.Bandpass(throughput='wave/10000', wave_type='A', blue_limit=4000, red_limit=5500),
+        galsim.Bandpass('wave/1000', 'nanometers', 400, 550, 30.),
+        galsim.Bandpass(galsim.LookupTable([400,550], [0.4, 0.55], interpolant='linear'),
+                        wave_type='nm'),
         galsim.Bandpass(galsim.LookupTable([4000,5500], [0.4, 0.55], interpolant='linear'),
                         wave_type='ang'),
         galsim.Bandpass(galsim.LookupTable([3000,8700], [0.3, 0.87], interpolant='linear'),
                         wave_type='Angstroms', red_limit=5500, blue_limit=4000),
         galsim.Bandpass(galsim.LookupTable(np.arange(300,651,10),np.arange(0.3,0.651,0.01)),
-                        400, 550),
-        galsim.Bandpass('chromatic_reference_images/simple_bandpass.dat'),
-        galsim.Bandpass('chromatic_reference_images/simple_bandpass.dat',
+                        'nm', 400, 550),
+        galsim.Bandpass('chromatic_reference_images/simple_bandpass.dat', wave_type='nm'),
+        galsim.Bandpass('chromatic_reference_images/simple_bandpass.dat', wave_type='nm',
                         blue_limit=400, red_limit=550),
         galsim.Bandpass(galsim.LookupTable([3000,8700], [0.3, 0.87], interpolant='linear'),
-                          wave_type='Angstroms').truncate(400,550),
+                        wave_type='Angstroms').truncate(400,550),
         galsim.Bandpass(galsim.LookupTable([100, 400-1.e-12, 400, 550, 550+1.e-12, 900],
-                                           [0., 0., 0.4, 0.55, 0., 0.], interpolant='linear')),
+                                           [0., 0., 0.4, 0.55, 0., 0.], interpolant='linear'),
+                        wave_type='nm'),
     ]
     k1 = len(b_list)
     b_list += [
@@ -122,8 +124,8 @@ def test_Bandpass_mul():
     import time
     t1 = time.time()
 
-    a = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]))
-    b = galsim.Bandpass(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]))
+    a = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]), 'nm')
+    b = galsim.Bandpass(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]), 'nm')
 
     # Bandpass * Bandpass
     c = a*b
@@ -180,8 +182,8 @@ def test_Bandpass_div():
     import time
     t1 = time.time()
 
-    a = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]))
-    b = galsim.Bandpass(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]))
+    a = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]), 'nm')
+    b = galsim.Bandpass(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]), 'nm')
 
     # Bandpass / Bandpass
     c = a/b
@@ -223,7 +225,7 @@ def test_Bandpass_wave_type():
     import time
     t1 = time.time()
 
-    a0 = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
+    a0 = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), wave_type='nm')
     a1 = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), wave_type='ang')
 
     np.testing.assert_approx_equal(a0.red_limit, a1.red_limit*10,
@@ -234,7 +236,7 @@ def test_Bandpass_wave_type():
                                    err_msg="Bandpass.effective_wavelength doesn't respect"
                                            +" wave_type")
 
-    b0 = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]))
+    b0 = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]), wave_type='nm')
     b1 = galsim.Bandpass(galsim.LookupTable([10,20,30,40,50], [1,2,3,4,5]), wave_type='ang')
     np.testing.assert_approx_equal(b0.red_limit, b1.red_limit,
                                    err_msg="Bandpass.red_limit doesn't respect wave_type")
@@ -256,22 +258,28 @@ def test_ne():
 
     tput = lambda x: x/1000
     lt = galsim.LookupTable([400, 550], [0.4, 0.55], interpolant='linear')
-    sed = galsim.SED('3')
+    sed = galsim.SED('3', 'nm', 'flambda')
 
     # These should all compare unequal.
-    bps = [galsim.Bandpass(throughput=tput, blue_limit=400, red_limit=550),
-           galsim.Bandpass(throughput=tput, blue_limit=400, red_limit=551),
-           galsim.Bandpass(throughput=tput, blue_limit=401, red_limit=550),
-           galsim.Bandpass(throughput=lt),
+    bps = [galsim.Bandpass(throughput=tput, wave_type='nm', blue_limit=400, red_limit=550),
+           galsim.Bandpass(throughput=tput, wave_type='nm', blue_limit=400, red_limit=551),
+           galsim.Bandpass(throughput=tput, wave_type='nm', blue_limit=401, red_limit=550),
+           galsim.Bandpass(throughput=lt, wave_type='nm'),
            galsim.Bandpass(throughput=lt, wave_type='A'),
-           galsim.Bandpass(throughput=lt, zeropoint=10.0),
-           galsim.Bandpass(throughput=lt).withZeropoint('AB', effective_diameter=1.0, exptime=1.0),
-           galsim.Bandpass(throughput=lt).withZeropoint('AB', effective_diameter=1.0, exptime=2.0),
-           galsim.Bandpass(throughput=lt).withZeropoint('AB', effective_diameter=2.0, exptime=1.0),
-           galsim.Bandpass(throughput=lt).withZeropoint('ST', effective_diameter=1.0, exptime=1.0),
-           galsim.Bandpass(throughput=lt).withZeropoint('Vega', effective_diameter=1.0,
+           galsim.Bandpass(throughput=lt, wave_type='nm', zeropoint=10.0),
+           galsim.Bandpass(throughput=lt,
+                           wave_type='nm').withZeropoint('AB', effective_diameter=1.0, exptime=1.0),
+           galsim.Bandpass(throughput=lt,
+                           wave_type='nm').withZeropoint('AB', effective_diameter=1.0, exptime=2.0),
+           galsim.Bandpass(throughput=lt,
+                           wave_type='nm').withZeropoint('AB', effective_diameter=2.0, exptime=1.0),
+           galsim.Bandpass(throughput=lt,
+                           wave_type='nm').withZeropoint('ST', effective_diameter=1.0, exptime=1.0),
+           galsim.Bandpass(throughput=lt,
+                           wave_type='nm').withZeropoint('Vega', effective_diameter=1.0,
                                                         exptime=1.0),
-           galsim.Bandpass(throughput=lt).withZeropoint(sed, effective_diameter=1.0, exptime=1.0)]
+           galsim.Bandpass(throughput=lt,
+                           wave_type='nm').withZeropoint(sed, effective_diameter=1.0, exptime=1.0)]
     all_obj_diff(bps)
 
     t2 = time.time()
@@ -282,8 +290,8 @@ def test_thin():
     import time
     t1 = time.time()
 
-    s = galsim.SED('1', flux_type='fphotons')
-    bp = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
+    s = galsim.SED('1', wave_type='nm', flux_type='fphotons')
+    bp = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), 'nm')
     flux = s.calculateFlux(bp)
     print "Original number of bandpass samples = ",len(bp.wave_list)
     for err in [1.e-2, 1.e-3, 1.e-4, 1.e-5]:

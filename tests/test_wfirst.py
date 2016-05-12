@@ -227,7 +227,7 @@ def test_wfirst_bandpass():
     # Check if the zeropoints have been set correctly
     AB_spec = lambda x: (3631e-23)*exp_time*(np.pi)*(100.**2)*\
               (galsim.wfirst.diameter**2)*(1-galsim.wfirst.obscuration**2)/4.
-    AB_sed = galsim.SED(spec=AB_spec,flux_type='fnu')
+    AB_sed = galsim.SED(spec=AB_spec, wave_type='nm', flux_type='fnu')
     for filter_name, filter_ in bp.iteritems():
         mag = AB_sed.calculateMagnitude(bandpass=filter_)
         np.testing.assert_almost_equal(mag,0.0,decimal=6,
@@ -249,7 +249,7 @@ def test_wfirst_bandpass():
     lam = sed_data.WAVELENGTH.astype(np.float64)
     t = sed_data.g40.astype(np.float64)
     sed_tab = galsim.LookupTable(x=lam, f=t, interpolant='linear')
-    sed = galsim.SED(sed_tab, wave_type='A')
+    sed = galsim.SED(sed_tab, wave_type='A', flux_type='flambda')
 
     # Now take the SDSS g bandpass:
     gfile =  '/Users/rmandelb/Downloads/g.dat'
@@ -479,7 +479,9 @@ def test_wfirst_psfs():
         # Make a comparable image from the original interpolated object.  This requires convolving with
         # a star that has a flat SED.
         star = galsim.Gaussian(sigma=1.e-8, flux=1.)
-        star_sed = galsim.SED(lambda x:1).withFlux(1, full_bp_list[bp_list[0]])
+        star_sed = galsim.SED(lambda x:1,
+                              wave_type='nanometers',
+                              flux_type='flambda').withFlux(1, full_bp_list[bp_list[0]])
         obj = galsim.Convolve(wfirst_psfs_int[other_sca], star*star_sed)
         test_im = img_stored.copy()
         test_im = obj.drawImage(full_bp_list[bp_list[0]],

@@ -55,22 +55,24 @@ shear_g1 = 0.01
 shear_g2 = 0.02
 
 # load a filter
-bandpass = (galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
+bandpass = (galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), 'nm')
             .truncate(relative_throughput=1e-3)
             .thin(rel_err=1e-3))
-bandpass_g = (galsim.Bandpass(os.path.join(datapath, 'LSST_g.dat'))
+bandpass_g = (galsim.Bandpass(os.path.join(datapath, 'LSST_g.dat'), 'nm')
               .truncate(relative_throughput=1e-3)
               .thin(rel_err=1e-3))
-bandpass_z = (galsim.Bandpass(os.path.join(datapath, 'LSST_z.dat'))
+bandpass_z = (galsim.Bandpass(os.path.join(datapath, 'LSST_z.dat'), 'nm')
               .truncate(relative_throughput=1e-3)
               .thin(rel_err=1e-3))
 
 # load some spectra
-bulge_SED = (galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang')
+bulge_SED = (galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang',
+                        flux_type='flambda')
              .thin(rel_err=1e-3)
              .withFluxDensity(target_flux_density=0.3, wavelength=500.0))
 
-disk_SED = (galsim.SED(os.path.join(datapath, 'CWW_Sbc_ext.sed'), wave_type='ang')
+disk_SED = (galsim.SED(os.path.join(datapath, 'CWW_Sbc_ext.sed'), wave_type='ang',
+            flux_type='flambda')
             .thin(rel_err=1e-3)
             .withFluxDensity(target_flux_density=0.3, wavelength=500.0))
 
