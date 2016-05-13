@@ -439,17 +439,18 @@ class Aperture(object):
         return d
 
     # Some quick notes for Josh:
-    # - Relation between real-space grid with size L and pitch dL (dimensions of angle) and
-    #   corresponding Fourier grid with size 2*maxK and pitch stepK (dimensions of inverse angle):
-    #     stepK = 2*pi/L
-    #     maxK = pi/dL
-    # - Relation between aperture of size N*dx and pitch dx (dimensions of length, not angle!) and
-    #   Fourier grid:
-    #     dx = stepK * lambda / (2 * pi)
-    #     N*dx = maxK * lambda / pi
+    # - Relation between real-space grid with size theta and pitch dtheta (dimensions of angle)
+    #   and corresponding (fast) Fourier grid with size 2*maxK and pitch stepK (dimensions of
+    #   inverse angle):
+    #     stepK = 2*pi/theta
+    #     maxK = pi/dtheta
+    # - Relation between aperture of size L and pitch dL (dimensions of length, not angle!) and
+    #   (fast) Fourier grid:
+    #     dL = stepK * lambda / (2 * pi)
+    #     L = maxK * lambda / pi
     # - Implies relation between aperture grid and real-space grid:
-    #     dx = lambda/L
-    #     N*dx = lambda/dL
+    #     dL = lambda/theta
+    #     L = lambda/dtheta
     def _stepK(self, wave, scale_unit=galsim.arcsec):
         """Return the Fourier grid spacing for this aperture at given wavelength.
 
