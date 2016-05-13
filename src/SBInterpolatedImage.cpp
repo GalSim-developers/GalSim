@@ -588,7 +588,7 @@ namespace galsim {
         dbg<<"Done: flux = "<<flux<<", d1 = "<<d1<<std::endl;
         dbg<<"max_flux = "<<max_flux<<", current fluxTot = "<<fluxTot<<std::endl;
         // Should have added up to the total flux.
-        assert( std::abs(flux - fluxTot) < 1.e-3 * std::abs(fluxTot) );
+        assert( std::abs(flux - fluxTot) <= 1.e-3 * std::abs(fluxTot) );
 
         if (d1 == 0) {
             dbg<<"No smaller radius found.  Keep current value of stepk\n";
