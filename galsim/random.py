@@ -356,8 +356,8 @@ class DistDeviate(_galsim.BaseDeviate):
                     if cdf[index+2]-cdf[index+1] > eps:
                         cdf[index+1] += eps
                     else:
-                        cdf = numpy.delete(cdf, index)
-                        xarray = numpy.delete(xarray, index)
+                        cdf = numpy.delete(cdf, index+1)
+                        xarray = numpy.delete(xarray, index+1)
                 else:
                     cdf = cdf[:-1]
                     xarray = xarray[:-1]
