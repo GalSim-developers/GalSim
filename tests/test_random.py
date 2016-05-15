@@ -120,7 +120,7 @@ dLookupTable=galsim.LookupTable(x=dx,f=dp,interpolant='linear')
 dLookupTableResult = (0.23721845680847731, 0.42913599265739233, 0.86176396813243539)
 # File with the same values
 dLookupTableFile = os.path.join('random_data','dLookupTable.dat')
-# x and p arrays with and without a small (epsilson) step
+# x and p arrays with and without a small (epsilon) step
 dx_eps = np.arange(6)
 dp1_eps = np.zeros(dx_eps.shape)
 dp2_eps = np.zeros(dx_eps.shape)
