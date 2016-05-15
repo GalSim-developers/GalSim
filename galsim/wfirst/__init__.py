@@ -101,6 +101,9 @@ Currently, the module includes the following numbers:
     ipc_kernel - The 3x3 kernel to be used in simulations of interpixel capacitance (IPC), using
                  galsim.wfirst.applyIPC().
 
+    persistence_coefficients - The retention fraction of the previous eight exposures in a simple,
+                               linear model for persistence.
+
     n_sca - The number of SCAs in the focal plane.
 
     n_pix_tot - Each SCA has n_pix_tot x n_pix_tot pixels.
@@ -138,6 +141,9 @@ This module also contains the following routines:
                               the level expected for WFIRST.
 
     applyIPC() - A routine to incorporate the effects of interpixel capacitance in WFIRST images.
+
+    applyPersistence() - A routine to incorporate the effects of persistence - the residual images
+                         from earlier exposures after resetting.
 
     allDetectorEffects() - A routine to add all sources of noise and all (implemented) detector
                            effects to an image containing astronomical objects plus background.  In
@@ -216,6 +222,7 @@ ipc_kernel = numpy.array([ [0.001269938, 0.015399776, 0.001199862], \
                            [0.001270391, 0.016129619, 0.001200137] ])
 ipc_kernel /= numpy.sum(ipc_kernel)
 ipc_kernel = galsim.Image(ipc_kernel)
+persistence_coefficients = numpy.array([0.2246,0.0225,0.0085,0.0043,0.0025,0.0016,0.0011,0.0008])/100.
 n_sca = 18
 n_pix_tot = 4096 
 n_pix = 4088
@@ -226,7 +233,7 @@ from wfirst_bandpass import getBandpasses
 from wfirst_backgrounds import getSkyLevel
 from wfirst_psfs import getPSF, storePSFImages, loadPSFImages
 from wfirst_wcs import getWCS, findSCA, allowedPos, bestPA
-from wfirst_detectors import applyNonlinearity, addReciprocityFailure, applyIPC, allDetectorEffects
+from wfirst_detectors import applyNonlinearity, addReciprocityFailure, applyIPC, applyPersistence, allDetectorEffects
 
 def NLfunc(x):
     return x + nonlinearity_beta*(x**2)

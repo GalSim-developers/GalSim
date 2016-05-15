@@ -296,7 +296,168 @@ def _convertPositions(pos, units, func):
 
     return pos
 
-def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
+def _lin_approx_err(x, f, i):
+    """Error as \int abs(f(x) - approx(x)) when using ith data point to make piecewise linear
+    approximation."""
+    xleft, xright = x[:i+1], x[i:]
+    fleft, fright = f[:i+1], f[i:]
+    xi, fi = x[i], f[i]
+    mleft = (fi-f[0])/(xi-x[0])
+    mright = (f[-1]-fi)/(x[-1]-xi)
+    f2left = f[0]+mleft*(xleft-x[0])
+    f2right = fi+mright*(xright-xi)
+    return np.trapz(np.abs(fleft-f2left), xleft), np.trapz(np.abs(fright-f2right), xright)
+
+def _exact_lin_approx_split(x, f):
+    """Split a tabulated function into a two-part piecewise linear approximation by exactly
+    minimizing \int abs(f(x) - approx(x)) dx.  Operates in O(N^2) time.
+    """
+    errs = [_lin_approx_err(x, f, i) for i in xrange(1, len(x)-1)]
+    i = np.argmin(np.sum(errs, axis=1))
+    return i+1, errs[i]
+
+def _lin_approx_split(x, f):
+    """Split a tabulated function into a two-part piecewise linear approximation by approximately
+    minimizing \int abs(f(x) - approx(x)) dx.  Chooses the split point by exactly minimizing
+    \int (f(x) - approx(x))^2 dx in O(N) time.
+    """
+    dx = x[2:] - x[:-2]
+    # Error contribution on the left.
+    ff0 = f[1:-1]-f[0]  # Only need to search between j=1..(N-1)
+    xx0 = x[1:-1]-x[0]
+    mleft = ff0/xx0  # slope
+    errleft = (np.cumsum(dx*ff0**2)
+               - 2*mleft*np.cumsum(dx*ff0*xx0)
+               + mleft**2*np.cumsum(dx*xx0**2))
+    # Error contribution on the right.
+    dx = dx[::-1]  # Reversed so that np.cumsum effectively works right-to-left.
+    ffN = f[-2:0:-1]-f[-1]
+    xxN = x[-2:0:-1]-x[-1]
+    mright = ffN/xxN
+    errright = (np.cumsum(dx*ffN**2)
+                - 2*mright*np.cumsum(dx*ffN*xxN)
+                + mright**2*np.cumsum(dx*xxN**2))
+    errright = errright[::-1]
+
+    # Get absolute error for the found point.
+    i = np.argmin(errleft+errright)
+    return i+1, _lin_approx_err(x, f, i+1)
+
+def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=True,
+                          fast_search=True):
+    """
+    Remove items from a set of tabulated f(x) values so that the error in the integral is still
+    accurate to a given relative accuracy.
+
+    The input `x,f` values can be lists, NumPy arrays, or really anything that can be converted
+    to a NumPy array.  The new lists will be output as numpy arrays.
+
+    @param x                The `x` values in the f(x) tabulation.
+    @param f                The `f` values in the f(x) tabulation.
+    @param rel_err          The maximum relative error to allow in the integral from the removal.
+                            [default: 1.e-4]
+    @param trim_zeros       Remove redundant leading and trailing points where f=0?  (The last
+                            leading point with f=0 and the first trailing point with f=0 will be
+                            retained).  Note that if both trim_leading_zeros and preserve_range are
+                            True, then the only the range of `x` *after* zero trimming is preserved.
+                            [default: True]
+    @param preserve_range   Should the original range of `x` be preserved? (True) Or should the ends
+                            be trimmed to include only the region where the integral is
+                            significant? (False)  [default: True]
+    @param fast_search      If set to True, then the underlying algorithm will use a relatively fast
+                            O(N) algorithm to select points to include in the thinned approximation.
+                            If set to False, then a slower O(N^2) algorithm will be used.  We have
+                            found that the slower algorithm tends to yield a thinned representation
+                            that retains fewer samples while still meeting the relative error
+                            requirement.  [default: True]
+
+    @returns a tuple of lists `(x_new, y_new)` with the thinned tabulation.
+    """
+    from heapq import heappush, heappop
+
+    split_fn = _lin_approx_split if fast_search else _exact_lin_approx_split
+
+    x = np.array(x)
+    f = np.array(f)
+
+    # Check for valid inputs
+    if len(x) != len(f):
+        raise ValueError("len(x) != len(f)")
+    if rel_err <= 0 or rel_err >= 1:
+        raise ValueError("rel_err must be between 0 and 1")
+    if not (np.diff(x) >= 0).all():
+        raise ValueError("input x is not sorted.")
+
+    # Check for trivial noop.
+    if len(x) <= 2:
+        # Nothing to do
+        return x,f
+
+    if trim_zeros:
+        first = max(f.nonzero()[0][0]-1, 0)  # -1 to keep one non-redundant zero.
+        last = min(f.nonzero()[0][-1]+1, len(x)-1)  # +1 to keep one non-redundant zero.
+        x, f = x[first:last+1], f[first:last+1]
+
+    total_integ = np.trapz(abs(f), x)
+    if total_integ == 0:
+        return np.array([ x[0], x[-1] ]), np.array([ f[0], f[-1] ])
+    thresh = total_integ * rel_err
+
+    x_range = x[-1] - x[0]
+    if not preserve_range:
+        # Remove values from the front that integrate to less than thresh.
+        err_integ1 = 0.5 * (abs(f[0]) + abs(f[1])) * (x[1] - x[0])
+        k0 = 0
+        while k0 < len(x)-2 and err_integ1 < thresh * (x[k0+1]-x[0]) / x_range:
+            k0 = k0+1
+            err_integ1 += 0.5 * (abs(f[k0]) + abs(f[k0+1])) * (x[k0+1] - x[k0])
+        # Now the integral from 0 to k0+1 (inclusive) is a bit too large.
+        # That means k0 is the largest value we can use that will work as the starting value.
+
+        # Remove values from the back that integrate to less than thresh.
+        k1 = len(x)-1
+        err_integ2 = 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
+        while k1 > k0 and err_integ2 < thresh * (x[-1]-x[k1-1]) / x_range:
+            k1 = k1-1
+            err_integ2 += 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
+        # Now the integral from k1-1 to len(x)-1 (inclusive) is a bit too large.
+        # That means k1 is the smallest value we can use that will work as the ending value.
+
+        # Subtract the error so far from thresh
+        thresh -= np.trapz(abs(f[:k0]),x[:k0]) + np.trapz(abs(f[k1:]),x[k1:])
+
+        x = x[k0:k1+1]  # +1 since end of range is given as one-past-the-end.
+        f = f[k0:k1+1]
+
+        # And update x_range for the new values
+        x_range = x[-1] - x[0]
+
+    # Check again for noop after trimming endpoints.
+    if len(x) <= 2:
+        return x,f
+
+    # Thin interior points.  Start with no interior points and then greedily add them back in one at
+    # a time until relative error goal is met.
+    # Use a heap to track:
+    heap = [(-2*thresh,  # -err; initialize large enough to trigger while loop below.
+             0,          # first index of interval
+             len(x)-1)]  # last index of interval
+    while (-sum(h[0] for h in heap) > thresh):
+        _, left, right = heappop(heap)
+        i, (errleft, errright) = split_fn(x[left:right+1], f[left:right+1])
+        heappush(heap, (-errleft, left, i+left))
+        heappush(heap, (-errright, i+left, right))
+    splitpoints = sorted([0]+[h[2] for h in heap])
+    return x[splitpoints], f[splitpoints]
+
+
+# In Issue #739, Josh wrote the above algorithm as a replacement for the one here.
+# It had been buggy, not actually hitting its target relative accuracy, so on the same issue,
+# Mike fixed this algorithm to at least work correctly.  However, we recommend using the above
+# algorithm, since it keeps fewer sample locations for a given rel_err than the old algorithm.
+# On the other hand, the old algorithm can be quite a bit faster, being O(N), not O(N^2), so
+# we retain the old algorithm here in case we want to re-enable it for certain applications.
+def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
     """
     Remove items from a set of tabulated f(x) values so that the error in the integral is still
     accurate to a given relative accuracy.
@@ -335,28 +496,35 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
     if total_integ == 0:
         return np.array([ x[0], x[-1] ]), np.array([ f[0], f[-1] ])
     thresh = rel_err * total_integ
+    x_range = x[-1] - x[0]
 
     if not preserve_range:
         # Remove values from the front that integrate to less than thresh.
-        integ = 0.5 * (abs(f[0]) + abs(f[1])) * (x[1] - x[0])
+        err_integ1 = 0.5 * (abs(f[0]) + abs(f[1])) * (x[1] - x[0])
         k0 = 0
-        while k0 < len(x)-2 and integ < thresh:
+        while k0 < len(x)-2 and err_integ1 < thresh * (x[k0+1]-x[0]) / x_range:
             k0 = k0+1
-            integ += 0.5 * (abs(f[k0]) + abs(f[k0+1])) * (x[k0+1] - x[k0])
+            err_integ1 += 0.5 * (abs(f[k0]) + abs(f[k0+1])) * (x[k0+1] - x[k0])
         # Now the integral from 0 to k0+1 (inclusive) is a bit too large.
-        # That means k0 is the largest value we can use that will work as the staring value.
+        # That means k0 is the largest value we can use that will work as the starting value.
 
         # Remove values from the back that integrate to less than thresh.
         k1 = len(x)-1
-        integ = 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
-        while k1 > k0 and integ < thresh:
+        err_integ2 = 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
+        while k1 > k0 and err_integ2 < thresh * (x[-1]-x[k1-1]) / x_range:
             k1 = k1-1
-            integ += 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
+            err_integ2 += 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
         # Now the integral from k1-1 to len(x)-1 (inclusive) is a bit too large.
         # That means k1 is the smallest value we can use that will work as the ending value.
 
+        # Subtract the error so far from thresh
+        thresh -= np.trapz(abs(f[:k0]),x[:k0]) + np.trapz(abs(f[k1:]),x[k1:])
+
         x = x[k0:k1+1]  # +1 since end of range is given as one-past-the-end.
         f = f[k0:k1+1]
+
+        # And update x_range for the new values
+        x_range = x[-1] - x[0]
 
     # Start a new list with just the first item so far
     newx = [ x[0] ]
@@ -369,23 +537,30 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
         # with a linear approxmation based on the points at k0 and k1+1.
         lin_f = f[k0] + (f[k1+1]-f[k0])/(x[k1+1]-x[k0]) * (x[k0:k1+2] - x[k0])
         # Integrate | f(x) - lin_f(x) | from k0 to k1+1, inclusive.
-        integ = np.trapz(abs(f[k0:k1+2] - lin_f), x[k0:k1+2])
-        # If the integral of the difference is < thresh, we can skip this item.
-        if integ < thresh:
+        err_integ = np.trapz(np.abs(f[k0:k1+2] - lin_f), x[k0:k1+2])
+        # If the integral of the difference is < thresh * (dx/x_range), we can skip this item.
+        if abs(err_integ) < thresh * (x[k1+1]-x[k0]) / x_range:
             # OK to skip item k1
             k1 = k1 + 1
         else:
-            # Have to include this one.
-            newx.append(x[k1])
-            newf.append(f[k1])
-            k0 = k1
-            k1 = k1 + 1
+            # Also ok to keep if its own relative error is less than rel_err
+            true_integ = np.trapz(f[k0:k1+2], x[k0:k1+2])
+            if abs(err_integ) < rel_err * abs(true_integ):
+                # OK to skip item k1
+                k1 = k1 + 1
+            else:
+                # Have to include this one.
+                newx.append(x[k1])
+                newf.append(f[k1])
+                k0 = k1
+                k1 = k1 + 1
 
     # Always include the last item
     newx.append(x[-1])
     newf.append(f[-1])
 
     return newx, newf
+
 
 def _gammafn(x):
     """
@@ -802,5 +977,9 @@ class LRU_Cache:
 def printoptions(*args, **kwargs):
     original = np.get_printoptions()
     np.set_printoptions(*args, **kwargs)
-    yield
-    np.set_printoptions(**original)
+    # contextmanager exception handling is tricky.  Don't forget to wrap the yield:
+    # http://preshing.com/20110920/the-python-with-statement-by-example/
+    try:
+        yield
+    finally:
+        np.set_printoptions(**original)
