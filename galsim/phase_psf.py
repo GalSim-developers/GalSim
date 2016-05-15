@@ -451,14 +451,14 @@ class Aperture(object):
     # - Implies relation between aperture grid and real-space grid:
     #     dL = lambda/theta
     #     L = lambda/dtheta
-    def _stepK(self, wave, scale_unit=galsim.arcsec):
+    def _stepK(self, lam, scale_unit=galsim.arcsec):
         """Return the Fourier grid spacing for this aperture at given wavelength.
 
-        @param wave        Wavelength in nanometers.
+        @param lam         Wavelength in nanometers.
         @param scale_unit  Inverse units in which to return result [default: galsim.arcsec]
         @returns           Fourier grid spacing.
         """
-        return 2*np.pi*self.pupil_plane_scale/(wave*1e-9) * scale_unit/galsim.radians
+        return 2*np.pi*self.pupil_plane_scale/(lam*1e-9) * scale_unit/galsim.radians
 
     def _maxK(self, lam, scale_unit=galsim.arcsec):
         """Return the Fourier grid half-size for this aperture at given wavelength.
@@ -467,7 +467,7 @@ class Aperture(object):
         @param scale_unit  Inverse units in which to return result [default: galsim.arcsec]
         @returns           Fourier grid half-size.
         """
-        return np.pi*self.pupil_plane_size/(wave*1e-9) * scale_unit/galsim.radians
+        return np.pi*self.pupil_plane_size/(lam*1e-9) * scale_unit/galsim.radians
 
     def _sky_scale(self, lam, scale_unit=galsim.arcsec):
         """Return the image scale for this aperture at given wavelength.
@@ -683,7 +683,8 @@ class AtmosphericScreen(object):
         obj = galsim.Kolmogorov(lam=lam, r0_500=self.r0_500, gsparams=gsparams)
         return obj.stepK()
 
-    def wavefront(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
+    def wavefront(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees,
+                  compact=True):
         """ Compute wavefront due to phase screen.
 
         Wavefront here indicates the distance by which the physical wavefront lags or leads the
@@ -692,17 +693,16 @@ class AtmosphericScreen(object):
         @param aper     `galsim.Aperture` over which to compute wavefront.
         @param theta_x  x-component of field angle corresponding to center of output array.
         @param theta_y  y-component of field angle corresponding to center of output array.
+        @param compact  If true, then only return wavefront for illuminated pixels.
         @returns        Wavefront lag or lead in nanometers over aperture.
         """
-        # xs = ys = np.arange(aper.npix)*aper.pupil_plane_scale
-        # xs += self.origin[0] + 1000*self.altitude*theta_x.tan() - 0.5*aper.pupil_plane_scale*(aper.npix-1)
-        # ys += self.origin[1] + 1000*self.altitude*theta_y.tan() - 0.5*aper.pupil_plane_scale*(aper.npix-1)
-        u, v = aper.u[aper.illuminated], aper.v[aper.illuminated]
+        if compact:
+            u, v = aper.u[aper.illuminated], aper.v[aper.illuminated]
+        else:
+            u, v = aper.u, aper.v
         u += self.origin[0] + 1000*self.altitude*theta_x.tan()
         v += self.origin[1] + 1000*self.altitude*theta_y.tan()
-        wf = np.zeros(aper.illuminated.shape, dtype=np.float64)
-        wf[aper.illuminated] = self.tab2d(u, v, scatter=True)
-        return wf
+        return self.tab2d(u, v, scatter=True)
 
     def reset(self):
         """Reset phase screen back to time=0."""
@@ -932,7 +932,8 @@ class OpticalScreen(object):
         obj = galsim.Airy(lam=lam, diam=diam, obscuration=obscuration, gsparams=gsparams)
         return obj.stepK()
 
-    def wavefront(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
+    def wavefront(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees,
+                  compact=True):
         """ Compute wavefront due to phase screen.
 
         Wavefront here indicates the distance by which the physical wavefront lags or leads the
@@ -941,14 +942,18 @@ class OpticalScreen(object):
         @param aper     `galsim.Aperture` over which to compute wavefront.
         @param theta_x  x-component of field angle corresponding to center of output array.
         @param theta_y  y-component of field angle corresponding to center of output array.
+        @param compact  If true, then only return wavefront for illuminated pixels.
         @returns        Wavefront lag or lead in nanometers over aperture.
         """
         # ignore theta_x, theta_y
-        r = aper.rho[aper.illuminated]
-        rsqr = np.abs(r)**2
-        wf = np.zeros(aper.illuminated.shape, dtype=np.float64)
-        wf[aper.illuminated] = horner2d(rsqr, r, self.coef_array).real
-        return wf * self.lam_0
+        if compact:
+            r = aper.rho[aper.illuminated]
+            rsqr = np.abs(r)**2
+            return horner2d(rsqr, r, self.coef_array).real * self.lam_0
+        else:
+            r = aper.rho
+            rsqr = np.abs(r)**2
+            return horner2d(rsqr, r, self.coef_array).real * self.lam_0
 
 
 class PhaseScreenList(object):
@@ -1386,8 +1391,10 @@ class PhaseScreenPSF(GSObject):
     def _step(self):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
         wf = self.screen_list.wavefront(self.aper, self.theta_x, self.theta_y)
-        expwf = self.aper.illuminated * np.exp(2j * np.pi * wf / self.lam)
-        ftexpwf = np.fft.fft2(np.fft.fftshift(expwf))
+        expwf = np.exp(2j * np.pi * wf / self.lam)
+        expwf_grid = np.zeros_like(self.aper.illuminated, dtype=np.complex128)
+        expwf_grid[self.aper.illuminated] = expwf
+        ftexpwf = np.fft.fft2(np.fft.fftshift(expwf_grid))
         self.img += np.abs(ftexpwf)**2
 
     def _finalize(self, flux, suppress_warning):
@@ -1414,9 +1421,7 @@ class PhaseScreenPSF(GSObject):
 
         if not suppress_warning:
             specified_stepk = 2*np.pi/(self.img.array.shape[0]*self.scale)
-            specified_maxk = np.pi/self.scale
             observed_stepk = self.SBProfile.stepK()
-            observed_maxk = self.SBProfile.maxK()
 
             if observed_stepk < specified_stepk:
                 import warnings

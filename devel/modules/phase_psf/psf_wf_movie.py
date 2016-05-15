@@ -65,7 +65,6 @@ def make_movie(args):
 
     nstep = int(args.exptime / args.time_step)
     psf_img_sum = np.zeros((args.psf_nx, args.psf_nx), dtype=np.float64)
-    wf_img_sum = np.zeros((args.wf_nx, args.wf_nx), dtype=np.float64)
 
     psf_aper = galsim.Aperture(diam=args.diam, lam=args.lam, obscuration=args.obscuration,
                                screen_list=atm, pad_factor=args.pad_factor,
@@ -76,23 +75,11 @@ def make_movie(args):
                               _pupil_plane_size=args.wf_scale*args.wf_nx,
                               _pupil_plane_scale=args.wf_scale)
 
-    # psf_aper = galsim.Aperture.fromPhaseScreenList(
-    #     atm, lam=args.lam,
-    #     diam=args.diam, obscuration=args.obscuration,
-    #     pad_factor=args.pad_factor,
-    #     oversampling=args.oversampling)
-    #
-    # wf_aper = galsim.Aperture.fromPhaseScreenList(
-    #     atm, lam=args.lam,
-    #     diam=args.diam, obscuration=args.obscuration,
-    #     pupil_scale=args.wf_scale,
-    #     pupil_plane_size=args.wf_nx * args.wf_scale)
-
     with ProgressBar(nstep) as bar:
         with writer.saving(fig, args.outfile, 100):
             for i in xrange(nstep):
                 # GalSim wavefront code
-                wf = atm.wavefront(wf_aper) * 2*np.pi / args.lam  # radians
+                wf = atm.wavefront(wf_aper, compact=False) * 2*np.pi / args.lam  # radians
                 wf = galsim.InterpolatedImage(galsim.Image(wf, scale=wf_aper.pupil_plane_scale),
                                               normalization='sb')
                 wf_img = wf.drawImage(nx=args.wf_nx, ny=args.wf_nx, scale=args.wf_scale,
