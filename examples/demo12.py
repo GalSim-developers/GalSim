@@ -56,8 +56,6 @@ New features introduced in this demo:
 
 import sys
 import os
-import math
-import numpy
 import logging
 import galsim
 
@@ -84,7 +82,6 @@ def main(argv):
         # convenient way to create realistic spectra is to read them in from a two-column ASCII
         # file, where the first column is wavelength and the second column is flux. Wavelengths in
         # the example SED files are in Angstroms, flux in flambda.
-        # `wave_type = 'Ang'`.
         SED = galsim.SED(SED_filename, wave_type='Ang', flux_type='flambda')
         # The normalization of SEDs affects how many photons are eventually drawn into an image.
         # One way to control this normalization is to specify the flux density in photons per nm
@@ -102,9 +99,8 @@ def main(argv):
         # through.  These include the entire imaging system throughput including the atmosphere,
         # reflective and refractive optics, filters, and the CCD quantum efficiency.  These are
         # also conveniently read in from two-column ASCII files where the first column is
-        # wavelength and the second column is dimensionless flux. The example filter files have
-        # units of nanometers and dimensionless throughput, which is exactly what galsim.Bandpass
-        # expects, so we just specify the filename.
+        # wavelength and the second column is dimensionless throughput. The example filter files
+        # units of nanometers for the wavelength type, so we specify that as a keyword.
         filters[filter_name] = galsim.Bandpass(filter_filename, wave_type='nm')
         # For speed, we can thin out the wavelength sampling of the filter a bit.
         # In the following line, `rel_err` specifies the relative error when integrating over just
