@@ -8,7 +8,7 @@
 #
 #  Truncated to wavelengths less than 22050 Angstroms, and thinned by
 #  galsim.utilities.thin_tabulated_values to a relative error of 1.e-5
-#  with fast_search=False.  See examples/data/getSEDs.py for details.
+#  with fast_search=False.  See devel/modules/getSEDs.py for details.
 #
 #  Angstroms     Flux/A
 #
