@@ -1575,6 +1575,11 @@ def test_ChromaticOpticalPSF():
     do_pickle(psf)
 
     if not os.path.isfile(os.path.join(refdir, 'r_exact.fits')):
+        import warnings
+        warnings.warn("Could not find file r_exact.fits, so generating it from scratch.  This "
+                      "should only happen if you intentionally deleted the file in order to "
+                      "regenerate it!")
+
         # Generate exact results inside this if-block.
         # This block took ~30 seconds to run on a new-ish Macbook Pro, nearly all in the image
         # rendering process.  In contrast, the ChromaticOpticalPSF with interpolation that is used
