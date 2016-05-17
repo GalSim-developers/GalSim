@@ -22,14 +22,15 @@ import numpy as np
 import galsim
 
 path, filename = os.path.split(__file__)
-datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
+sedpath = os.path.abspath(os.path.join(path, "../share/"))
+bppath = os.path.abspath(os.path.join(path, "../examples/data/"))
 
 def dDCR_moments(SED1, SED2, bandpass):
     zenith_angle = np.pi/4.0 * galsim.radians
-    R500 = galsim.dcr.get_refraction(500, zenith_angle)
+    R500 = galsim.dcr.get_refraction(500, zenith_angle) * galsim.radians
 
     # analytic first moment differences
-    R = lambda w:(galsim.dcr.get_refraction(w, zenith_angle) - R500) / galsim.arcsec
+    R = lambda w:(galsim.dcr.get_refraction(w, zenith_angle)*galsim.radians - R500) / galsim.arcsec
     x1 = np.union1d(bandpass.wave_list, SED1.wave_list)
     x1 = x1[(x1 >= bandpass.blue_limit) & (x1 <= bandpass.red_limit)]
     x2 = np.union1d(bandpass.wave_list, SED2.wave_list)
@@ -79,12 +80,15 @@ def compare_thin():
     # sigma(dV) < 0.0001 arcsec^2
     # sigma(dseeing) < 0.0001
     import glob
-    SED_files = glob.glob(os.path.join(datapath, '*.sed'))
-    bp_files = glob.glob(os.path.join(datapath, '*.dat'))
-    SED1 = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed')).withFluxDensity(0.01, 500.0)
-    SEDs = dict([(os.path.basename(SED_file), galsim.SED(SED_file)) for SED_file in SED_files])
+    SED_files = glob.glob(os.path.join(sedpath, '*.sed'))
+    bp_files = glob.glob(os.path.join(bppath, '*.dat'))
+    SED1 = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'),
+                      wave_type='nm', flux_type='flambda').withFluxDensity(0.01, 500.0)
+    SEDs = dict([(os.path.basename(SED_file),
+                  galsim.SED(SED_file, wave_type='nm', flux_type='flambda')) for SED_file in SED_files])
     del SEDs['CWW_E_ext.sed']
-    bands = dict([(os.path.basename(bp_file), galsim.Bandpass(bp_file)) for bp_file in bp_files])
+    bands = dict([(os.path.basename(bp_file),
+                   galsim.Bandpass(bp_file, wave_type='nm')) for bp_file in bp_files])
     redshifts = [0.0, 0.5, 1.0]
     rel_errs = [1.e-4, 1.e-3]
     for SED_name, SED0 in SEDs.iteritems():
