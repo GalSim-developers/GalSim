@@ -120,18 +120,6 @@ dLookupTable=galsim.LookupTable(x=dx,f=dp,interpolant='linear')
 dLookupTableResult = (0.23721845680847731, 0.42913599265739233, 0.86176396813243539)
 # File with the same values
 dLookupTableFile = os.path.join('random_data','dLookupTable.dat')
-# x and p arrays with and without a small (epsilon) step
-dx_eps = np.arange(6)
-dp1_eps = np.zeros(dx_eps.shape)
-dp2_eps = np.zeros(dx_eps.shape)
-eps = np.finfo(dp1_eps[0].dtype).eps
-dp1_eps[0] = 0.5
-dp2_eps[0] = 0.5
-dp1_eps[-1] = 0.5
-dp2_eps[-2] = eps
-dp2_eps[-1] = 0.5-eps
-dLookupTableEps1 = galsim.LookupTable(x=dx_eps, f=dp1_eps, interpolant='linear')
-dLookupTableEps2 = galsim.LookupTable(x=dx_eps, f=dp2_eps, interpolant='linear')
 
 def test_uniform():
     """Test uniform random number generator
@@ -1366,6 +1354,18 @@ def test_distLookupTable():
             'interpolant')
 
     # Test a case with nearly flat probabilities
+    # x and p arrays with and without a small (epsilson) step
+    dx_eps = np.arange(6)
+    dp1_eps = np.zeros(dx_eps.shape)
+    dp2_eps = np.zeros(dx_eps.shape)
+    eps = np.finfo(dp1_eps[0].dtype).eps
+    dp1_eps[0] = 0.5
+    dp2_eps[0] = 0.5
+    dp1_eps[-1] = 0.5
+    dp2_eps[-2] = eps
+    dp2_eps[-1] = 0.5-eps
+    dLookupTableEps1 = galsim.LookupTable(x=dx_eps, f=dp1_eps, interpolant='linear')
+    dLookupTableEps2 = galsim.LookupTable(x=dx_eps, f=dp2_eps, interpolant='linear')
     d1 = galsim.DistDeviate(testseed, function=dLookupTableEps1, npoints=len(dx_eps))
     d2 = galsim.DistDeviate(testseed, function=dLookupTableEps2, npoints=len(dx_eps))
     # If these were successfully created everything is probably fine, but check they create the same
