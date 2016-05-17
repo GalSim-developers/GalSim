@@ -39,6 +39,7 @@ namespace galsim {
     void pyExportSBAdd();
     void pyExportSBConvolve();
     void pyExportSBDeconvolve();
+    void pyExportSBFourierSqrt();
     void pyExportSBTransform();
     void pyExportSBBox();
     void pyExportSBGaussian();
@@ -81,6 +82,7 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::pyExportSBAdd();
     galsim::pyExportSBConvolve();
     galsim::pyExportSBDeconvolve();
+    galsim::pyExportSBFourierSqrt();
     galsim::pyExportSBTransform();
     galsim::pyExportSBBox();
     galsim::pyExportSBGaussian();
