@@ -77,11 +77,12 @@ def main(argv):
     SED_names = ['CWW_E_ext', 'CWW_Sbc_ext', 'CWW_Scd_ext', 'CWW_Im_ext']
     SEDs = {}
     for SED_name in SED_names:
-        SED_filename = os.path.join(datapath, '{0}.sed'.format(SED_name))
+        SED_filename = os.path.join(galsim.meta_data.share_dir, '{0}.sed'.format(SED_name))
         # Here we create some galsim.SED objects to hold star or galaxy spectra.  The most
         # convenient way to create realistic spectra is to read them in from a two-column ASCII
         # file, where the first column is wavelength and the second column is flux. Wavelengths in
-        # the example SED files are in Angstroms, flux in flambda.
+        # the example SED files are in Angstroms, flux in flambda.  We use a set of files that are
+        # distributed with GalSim in the share/ directory.
         SED = galsim.SED(SED_filename, wave_type='Ang', flux_type='flambda')
         # The normalization of SEDs affects how many photons are eventually drawn into an image.
         # One way to control this normalization is to specify the flux density in photons per nm
