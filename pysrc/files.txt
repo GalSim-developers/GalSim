@@ -6,6 +6,7 @@ SBProfile.cpp
 SBAdd.cpp
 SBConvolve.cpp
 SBDeconvolve.cpp
+SBFourierSqrt.cpp
 SBTransform.cpp
 SBBox.cpp
 SBGaussian.cpp

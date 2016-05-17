@@ -19,6 +19,7 @@ SBConvolve.cpp
 SBTransform.cpp
 SBInterpolatedImage.cpp
 SBDeconvolve.cpp
+SBFourierSqrt.cpp
 SBKolmogorov.cpp
 SBSpergel.cpp
 Table.cpp

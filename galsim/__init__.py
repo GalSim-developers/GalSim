@@ -119,6 +119,7 @@ from interpolatedimage import Interpolant
 from interpolatedimage import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
 from interpolatedimage import InterpolatedImage, InterpolatedKImage
 from compound import Add, Sum, Convolve, Convolution, Deconvolve, Deconvolution
+from compound import FourierSqrt, FourierSqrtProfile
 from compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
 from transform import Transform, Transformation
 
@@ -127,6 +128,7 @@ from chromatic import ChromaticObject, ChromaticAtmosphere, Chromatic, Chromatic
 from chromatic import ChromaticConvolution, ChromaticDeconvolution, ChromaticAutoConvolution
 from chromatic import ChromaticAutoCorrelation, ChromaticTransformation
 from chromatic import ChromaticOpticalPSF, ChromaticAiry, InterpolatedChromaticObject
+from chromatic import ChromaticFourierSqrtProfile
 from sed import SED
 from bandpass import Bandpass
 
