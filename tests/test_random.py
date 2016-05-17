@@ -1354,7 +1354,7 @@ def test_distLookupTable():
             'interpolant')
 
     # Test a case with nearly flat probabilities
-    # x and p arrays with and without a small (epsilson) step
+    # x and p arrays with and without a small (epsilon) step
     dx_eps = np.arange(6)
     dp1_eps = np.zeros(dx_eps.shape)
     dp2_eps = np.zeros(dx_eps.shape)
