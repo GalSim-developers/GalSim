@@ -24,7 +24,6 @@ script devutils/external/make_table_testarrays.py
 """
 import os
 import numpy as np
-import pickle
 
 from galsim_test_helpers import *
 
@@ -236,6 +235,18 @@ def test_roundoff():
 def test_table2d():
     """Check LookupTable2D functionality.
     """
+    has_scipy = False
+    try:
+        import scipy
+        from distutils.version import LooseVersion
+        if LooseVersion(scipy.__version__) < LooseVersion('0.11'):
+            raise ImportError
+    except ImportError:
+        print "SciPy tests require SciPy version 0.11 or greater"
+    else:
+        from scipy.interpolate import interp2d
+        has_scipy = True
+
     def f(x_, y_):
         return np.sin(x_) * np.cos(y_) + x_
 
@@ -251,18 +262,14 @@ def test_table2d():
     newy = np.linspace(0.3, 10.1, 85)
     newxx, newyy = np.meshgrid(newx, newy)
 
-    # Compare galsim LookupTable2D to scipy interp2d
-    try:
-        from scipy.interpolate import interp2d
-    except ImportError:
-        print "SciPy tests require SciPy"
-    else:
-        sci2d = interp2d(x, y, z)
-        np.testing.assert_array_almost_equal(sci2d(newx, newy), tab2d(newxx, newyy, scatter=True))
-        np.testing.assert_array_almost_equal(sci2d(newx, newy), tab2d(newx, newy))
-        np.testing.assert_array_almost_equal(sci2d(newx, newy), np.array([[tab2d(x0, y0)
-                                                                           for x0 in newx]
-                                                                          for y0 in newy]))
+    # Compare different ways of evaluating Table2D
+    ref = tab2d(newx, newy)
+    np.testing.assert_array_almost_equal(ref, tab2d(newxx, newyy, scatter=True))
+    np.testing.assert_array_almost_equal(ref, np.array([[tab2d(x0, y0)
+                                                         for x0 in newx]
+                                                        for y0 in newy]))
+    if has_scipy:
+        np.testing.assert_array_almost_equal(ref, interp2d(x, y, z)(newx, newy))
 
     # import matplotlib.pyplot as plt
     # plt.figure(0)
@@ -281,16 +288,14 @@ def test_table2d():
     x = np.delete(x, 10)
     y = np.delete(y, 10)
     z = f(*np.meshgrid(x, y))
-    newxx, newyy = np.meshgrid(newx, newy)
-
     tab2d = galsim.table.LookupTable2D(x, y, z)
-    try:
-        from scipy.interpolate import interp2d
-    except ImportError:
-        print "SciPy tests require SciPy"
-    else:
-        sci2d = interp2d(x, y, z)
-        np.testing.assert_array_almost_equal(sci2d(newx, newy), tab2d(newx, newy))
+    ref = tab2d(newx, newy)
+    np.testing.assert_array_almost_equal(ref, tab2d(newxx, newyy, scatter=True))
+    np.testing.assert_array_almost_equal(ref, np.array([[tab2d(x0, y0)
+                                                         for x0 in newx]
+                                                        for y0 in newy]))
+    if has_scipy:
+        np.testing.assert_array_almost_equal(ref, interp2d(x, y, z)(newx, newy))
 
     # Try a simpler interpolation function.  We should be able to interpolate a (bi-)linear function
     # exactly with a linear interpolant.
