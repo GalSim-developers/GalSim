@@ -100,12 +100,13 @@ def main(argv):
         # reflective and refractive optics, filters, and the CCD quantum efficiency.  These are
         # also conveniently read in from two-column ASCII files where the first column is
         # wavelength and the second column is dimensionless throughput. The example filter files
-        # units of nanometers for the wavelength type, so we specify that as a keyword.
+        # units of nanometers for the wavelength type, so we specify that using the required
+        # `wave_type` argument.
         filters[filter_name] = galsim.Bandpass(filter_filename, wave_type='nm')
         # For speed, we can thin out the wavelength sampling of the filter a bit.
         # In the following line, `rel_err` specifies the relative error when integrating over just
         # the filter (however, this is not necessarily the relative error when integrating over the
-        # filter times an SED)
+        # filter times an SED).
         filters[filter_name] = filters[filter_name].thin(rel_err=1e-4)
     logger.debug('Read in filters')
 
