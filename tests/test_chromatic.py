@@ -1641,70 +1641,30 @@ def test_ChromaticAiry():
     import time
     t1 = time.time()
 
-    # First, compare the interpolated result with saved, exact results.
-    # Exact results were generated using the following code, sitting in this directory:
-    #
-    # import galsim
-    # import os
-    # import numpy as np
-    #
-    # path, filename = os.path.split(__file__)
-    # datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
-    # bandpass = (galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
-    #             .truncate(relative_throughput=1e-3)
-    #             .thin(rel_err=1e-3))
-    # disk_SED = (galsim.SED(os.path.join(datapath, 'CWW_Sbc_ext.sed'), wave_type='ang')
-    #             .thin(rel_err=1e-3)
-    #             .withFluxDensity(target_flux_density=0.3, wavelength=500.0))
-    #
-    # star = galsim.Gaussian(sigma=1.e-8)*disk_SED
-    #
-    # lam = 750. # nm
-    # diam = 3.1 # meters
-    # obscuration = 0.11
-    # scale = 0.02
-    #
-    # psf = galsim.ChromaticAiry(lam=lam, diam=diam, obscuration=obscuration)
-    # obj = galsim.Convolve(psf, star)
-    # im_r = obj.drawImage(bandpass, scale=scale)
-    # im_r.write('./chromatic_reference_images/r_exact_Airy.fits')
-    #
-    # Note that exact results will have to be regenerated if any of the bandpasses or other
-    # parameters defined here are changed.  For example, had to regenerate on #590 because of new
-    # version of r bandpass.
-
     # Define parameters:
     lam = 750. # nm
     diam = 3.1 # meters
     obscuration = 0.11
     scale = 0.02
 
-    # Read in reference image:
-    im_r_ref = galsim.fits.read(os.path.join(refdir, 'r_exact_Airy.fits'))
-    im_r_tmp = im_r_ref.copy()
-
-    # Make new object, and compare:
     psf = galsim.ChromaticAiry(lam=lam, diam=diam, obscuration=obscuration)
     do_pickle(psf)
 
+    # Generate a reference image
     star = galsim.Gaussian(fwhm=1.e-8) * disk_SED
     obj = galsim.Convolve(psf, star)
-    obj.drawImage(bandpass, image=im_r_tmp, scale=scale)
-    np.testing.assert_array_almost_equal(
-        im_r_tmp.array, im_r_ref.array, decimal=8,
-        err_msg='ChromaticAiry image disagrees with reference in r band')
+    im_r = obj.drawImage(bandpass, scale=scale)
 
     # Initialize object in different way, make sure results are identical:
     lam_over_diam = (1.e-9*lam/diam)*galsim.radians
     psf = galsim.ChromaticAiry(lam=lam, lam_over_diam=lam_over_diam/galsim.arcsec,
                                obscuration=obscuration)
     obj = galsim.Convolve(psf, star)
-    im_r_2 = im_r_tmp.copy()
+    im_r_2 = im_r.copy()
     obj.drawImage(bandpass, image=im_r_2, scale=scale)
     np.testing.assert_array_almost_equal(
-        im_r_2.array, im_r_ref.array, decimal=8,
-        err_msg='ChromaticAiry image disagrees with reference in r band when initializing'
-                ' a different way')
+        im_r_2.array, im_r.array, decimal=8,
+        err_msg='Inconsistent ChromaticAiry image when initializing a different way')
 
     # Also check evaluation at a single wavelength.
     chromatic_psf_400 = psf.evaluateAtWavelength(400.)
