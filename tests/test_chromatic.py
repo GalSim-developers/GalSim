@@ -73,7 +73,7 @@ bulge_SED = (galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang',
              .withFluxDensity(target_flux_density=0.3, wavelength=500.0))
 
 disk_SED = (galsim.SED(os.path.join(sedpath, 'CWW_Sbc_ext.sed'), wave_type='ang',
-            flux_type='flambda')
+                       flux_type='flambda')
             .thin(rel_err=1e-3)
             .withFluxDensity(target_flux_density=0.3, wavelength=500.0))
 
@@ -1542,50 +1542,10 @@ def test_ChromaticOpticalPSF():
     # and interpolated evaluation match in general (given reasonable settings).
 
     # First, compare the interpolated result with saved, exact results.
-    # Exact results were generated using the following code, sitting in this directory:
-    #
-    # import galsim
-    # import os
-    # import numpy as np
-    #
-    # path, filename = os.path.split(__file__)
-    # datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
-    # bandpass = (galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
-    #             .truncate(relative_throughput=1e-3)
-    #             .thin(rel_err=1e-3))
-    # disk_SED = (galsim.SED(os.path.join(datapath, 'CWW_Sbc_ext.sed'), wave_type='ang')
-    #             .thin(rel_err=1e-3)
-    #             .withFluxDensity(target_flux_density=0.3, wavelength=500.0))
-    #
-    # star = galsim.Gaussian(sigma=1.e-8)*disk_SED
-    #
-    # aberrations = np.zeros(12)
-    # aberrations[4] = 40. # nm
-    # aberrations[7] = 20. # nm
-    # lam = 600. # nm
-    # aberrations /= lam
-    # diam = 2.4 # meters
-    # obscuration = 0.18
-    # nstruts = 4
-    # scale = 0.02
-    #
-    # psf = galsim.ChromaticOpticalPSF(lam=lam, diam=diam, aberrations=aberrations,
-    #                                  obscuration=obscuration, nstruts=nstruts)
-    # obj = galsim.Convolve(psf, star)
-    # t2 = time.time()
-    # im_r = obj.drawImage(bandpass, scale=scale)
-    # t3 = time.time()
-    # print "Time to draw ChromaticOpticalPSF: {}s".format(t3-t2)
-    # im_r.write('./chromatic_reference_images/r_exact.fits')
-    #
-    #
-    # That script took 28 seconds to run on a new-ish Macbook Pro, nearly all in the image rendering
-    # process.  In contrast, the ChromaticOpticalPSF with interpolation that is used for this unit
-    # test takes about 9.1 seconds to initialize, and 1.2s for the image rendering process.
-    # Obviously, if many images are to be rendered after incurring the overhead of initializing this
-    # object, the interpolated calculation leads to a huge savings compared to doing the exact
-    # calculation each time.
-    #
+    # Note that if the saved results file cannot be found, then this function will (slowly)
+    # generate the exact image.  Note that this may need to be done outside of nosetests to avoid
+    # the default nose time limit.
+
     # Note that exact results will have to be regenerated if any of the bandpasses or other
     # parameters defined here are changed.  Because of the parameters chosen here, there is a lot of
     # non-trivially complex structure in the PSFs, so this is a stringent test.
@@ -1609,15 +1569,30 @@ def test_ChromaticOpticalPSF():
     # plot(waves, bandpass(waves)*disk_SED(waves), ls=' ', marker='o', c='r', markersize=10)
     # show()
 
+    star = galsim.Gaussian(fwhm=1.e-8) * disk_SED
     psf = galsim.ChromaticOpticalPSF(lam=lam, diam=diam, aberrations=aberrations,
                                      obscuration=obscuration, nstruts=nstruts)
     do_pickle(psf)
+
+    if not os.path.isfile(os.path.join(refdir, 'r_exact.fits')):
+        # Generate exact results inside this if-block.
+        # This block took ~30 seconds to run on a new-ish Macbook Pro, nearly all in the image
+        # rendering process.  In contrast, the ChromaticOpticalPSF with interpolation that is used
+        # for this unit test takes about ~9 seconds to initialize, and ~1s for the image rendering
+        # process.  Obviously, if many images are to be rendered after incurring the overhead of
+        # initializing this object, the interpolated calculation leads to a huge savings compared to
+        # doing the exact calculation each time.
+        t2 = time.time()
+        obj = galsim.Convolve(star, psf)
+        im_r_ref = obj.drawImage(bandpass, scale=scale)
+        im_r_ref.write(os.path.join(refdir, 'r_exact.fits'))
+        t3 = time.time()
+        print "Time to draw ChromaticOpticalPSF: {}s".format(t3-t2)
 
     t4 = time.time()
     psf = psf.interpolate(waves, oversample_fac=oversample_fac)
     t5 = time.time()
     print "Time to initialize InterpolatedChromaticObject: {}s".format(t5-t4)
-    star = galsim.Gaussian(fwhm=1.e-8) * disk_SED
     obj = galsim.Convolve(star, psf)
 
     if __name__ == '__main__':
@@ -1654,7 +1629,6 @@ def test_ChromaticOpticalPSF():
     im = obj_conv.drawImage(bandpass, scale=scale)
     expected_flux = disk_SED.calculateFlux(bandpass)
 
-    frac_diff_exact = abs(im.array.sum()/expected_flux-1.0)
     assert np.isclose(im.array.sum(), expected_flux, rtol=0.02), \
         "ChromaticObject flux is wrong when convolved with ChromaticOpticalPSF " \
         " (interpolated calculation)"
