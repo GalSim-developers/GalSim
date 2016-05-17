@@ -107,13 +107,11 @@ def getBandpasses(AB_zeropoint=True, exptime=None, **kwargs):
         if any(x in kwargs.keys() for x in truncate_kwargs):
             for key in kwargs.keys():
                 if key in truncate_kwargs:
-                    tmp_truncate_dict[key] = kwargs[key]
-                    del kwargs[key]
+                    tmp_truncate_dict[key] = kwargs.pop(key)
         if any(x in kwargs.keys() for x in thin_kwargs):
             for key in kwargs.keys():
                 if key in thin_kwargs:
-                    tmp_thin_dict[key] = kwargs[key]
-                    del kwargs[key]
+                    tmp_thin_dict[key] = kwargs.pop(key)
         if len(kwargs) != 0:
             raise ValueError("Unknown kwargs: %s"%(' '.join(kwargs.keys())))
 
