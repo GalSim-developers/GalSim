@@ -28,7 +28,8 @@ except ImportError:
     import galsim
 
 path, filename = os.path.split(__file__)
-datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
+bppath = os.path.abspath(os.path.join(path, "../examples/data/"))
+sedpath = os.path.abspath(os.path.join(path, "../share/"))
 
 def test_SED_basic():
     """Basic tests of SED functionality
@@ -275,7 +276,7 @@ def test_SED_atRedshift():
     import time
     t1 = time.time()
 
-    a = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang', flux_type='flambda')
+    a = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang', flux_type='flambda')
     bolo_flux = a.calculateFlux(bandpass=None)
     for z1, z2 in zip([0.5, 1.0, 1.4], [1.0, 1.0, 1.0]):
         b = a.atRedshift(z1)
@@ -302,7 +303,7 @@ def test_SED_roundoff_guard():
     import time
     t1 = time.time()
 
-    a = galsim.SED(os.path.join(datapath, 'CWW_Scd_ext.sed'), wave_type='nanometers',
+    a = galsim.SED(os.path.join(sedpath, 'CWW_Scd_ext.sed'), wave_type='nanometers',
                    flux_type='flambda')
     for z in np.arange(0.0, 0.5, 0.001):
         b = a.atRedshift(z)
@@ -365,9 +366,9 @@ def test_SED_withFlux():
     import time
     t1 = time.time()
 
-    rband = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), 'nm')
+    rband = galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm')
     for z in [0, 0.2, 0.4]:
-        a = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang',
+        a = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang',
                        flux_type='flambda')
         if z != 0:
             a = a.atRedshift(z)
@@ -385,7 +386,7 @@ def test_SED_withFluxDensity():
     t1 = time.time()
 
     for z in [0, 0.2, 0.4]:
-        a = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang',
+        a = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang',
                        flux_type='flambda')
         if z != 0:
             a = a.atRedshift(z)
@@ -447,7 +448,7 @@ def test_SED_calculateMagnitude():
     filter_names = 'ugrizy'
     sed = sed.atRedshift(0.0)
     for conversion, filter_name in zip(ugrizy_vega_ab_conversions, filter_names):
-        filter_filename = os.path.join(datapath, 'LSST_{0}.dat'.format(filter_name))
+        filter_filename = os.path.join(bppath, 'LSST_{0}.dat'.format(filter_name))
         AB_bandpass = (galsim.Bandpass(filter_filename, 'nm')
                        .withZeropoint('AB', effective_diameter=640, exptime=15))
         vega_bandpass = (galsim.Bandpass(filter_filename, 'nm')
@@ -464,8 +465,8 @@ def test_SED_calculateDCRMomentShifts():
     t1 = time.time()
 
     # compute some moment shifts
-    sed = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), 'nm', 'flambda')
-    bandpass = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), 'nm')
+    sed = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), 'nm', 'flambda')
+    bandpass = galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm')
     Rbar, V = sed.calculateDCRMomentShifts(bandpass, zenith_angle=45*galsim.degrees)
     # now rotate parallactic angle 180 degrees, and see if the output makes sense.
     Rbar2, V2 = sed.calculateDCRMomentShifts(bandpass, zenith_angle=45*galsim.degrees,
@@ -501,8 +502,8 @@ def test_SED_calculateSeeingMomentRatio():
     t1 = time.time()
 
     # compute a relative moment shift and compare to externally generated known result.
-    sed = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), 'nm', 'flambda')
-    bandpass = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), 'nm')
+    sed = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), 'nm', 'flambda')
+    bandpass = galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm')
     relative_size = sed.calculateSeeingMomentRatio(bandpass)
 
     # and now do the integral right here to compare.
@@ -586,7 +587,7 @@ def test_thin():
     import time
     t1 = time.time()
 
-    s = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang', flux_type='flambda')
+    s = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang', flux_type='flambda')
     bp = galsim.Bandpass('1', 'nm', blue_limit=s.blue_limit, red_limit=s.red_limit)
     flux = s.calculateFlux(bp)
     print "Original number of SED samples = ",len(s.wave_list)
