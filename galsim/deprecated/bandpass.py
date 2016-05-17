@@ -39,10 +39,6 @@ def Bandpass_rdiv(self, other):
     else:
         tp = lambda w: other / self.func(w)
 
-    if self.wave_factor == 10.0:
-        wave_type = 'Angstroms'
-    else:
-        wave_type = 'nm'
     return galsim.Bandpass(tp, 'nm', blue_limit, red_limit,
                            _wave_list=wave_list)
 
