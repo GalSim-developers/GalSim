@@ -119,12 +119,12 @@ namespace galsim {
 
     Position<double> SBFourierSqrt::SBFourierSqrtImpl::centroid() const
     {
-        throw SBError("SBFourierSqrt::centroid() not implemented");
+        return 0.5*_adaptee.centroid();
     }
 
     double SBFourierSqrt::SBFourierSqrtImpl::getFlux() const
     {
-        throw SBError("SBFourierSqrt::getFlux() not implemented");
+        return std::sqrt(_adaptee.getFlux());
     }
 
     boost::shared_ptr<PhotonArray> SBFourierSqrt::SBFourierSqrtImpl::shoot(

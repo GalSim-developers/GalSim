@@ -722,6 +722,7 @@ def test_fourier_sqrt():
 
     # Test non-trivial case where we compare (in Fourier space) sqrt(a*a + b*b + 2*a*b) against (a + b)
     a = galsim.Moffat(beta=3.8, fwhm=1.3, flux=5)
+    a.shift(dx=0.5, dy=-0.3)  # need nonzero centroid to test centroid()
     b = galsim.Moffat(beta=2.5, fwhm=1.6, flux=3)
     check = galsim.Sum([a, b])
     sqrt = galsim.FourierSqrt(
@@ -733,6 +734,9 @@ def test_fourier_sqrt():
     )
     check.drawImage(myImg1, method='no_pixel')
     sqrt.drawImage(myImg2, method='no_pixel')
+    np.testing.assert_almost_equal(check.centroid().x, sqrt.centroid().x)
+    np.testing.assert_almost_equal(check.centroid().y, sqrt.centroid().y)
+    np.testing.assert_almost_equal(check.getFlux(), sqrt.getFlux())
     printval(myImg1, myImg2)
     np.testing.assert_array_almost_equal(
             myImg1.array, myImg2.array, 4,
