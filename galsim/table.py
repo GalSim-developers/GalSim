@@ -336,6 +336,9 @@ class LookupTable2D(object):
     In order to use edge_mode='wrap', the first and last column of f, as well as the first and last
     row of f must match.  (This way we know what the period is in each dimension.)
 
+
+        >>> x = y = np.arange(5)
+        >>> z = x + y[:, np.newaxis]  # function is x + y, dimensions of z is (5, 5)
         >>> tab2d = galsim.LookupTable2D(x, y, z, edge_mode='raise')
         >>> tab2d(7, 7)
         ValueError: Extrapolating beyond input range.
@@ -344,9 +347,12 @@ class LookupTable2D(object):
         ValueError: Cannot wrap `f` array with unequal first/last column/row.
 
     We extend the x and y arrays with a uniform spacing, though any monotonic spacing would work.
+    Note that the [(0,1), (0,1)] argument in np.pad below extends the z array by 0 rows/columns in
+    the leading direction, and 1 row/column in the trailing direction.
+
         >>> x = np.append(x, x[-1] + (x[-1]-x[-2]))
         >>> y = np.append(y, y[-1] + (y[-1]-y[-2]))
-        >>> z = np.pad(z,[(0,1), (0,1)], mode='wrap')
+        >>> z = np.pad(z, [(0,1), (0,1)], mode='wrap')
         >>> tab2d = galsim.LookupTable2D(x, y, z, edge_mode='wrap')
         >>> tab2d(2., 2.)
         4.0
