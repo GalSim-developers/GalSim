@@ -27,7 +27,7 @@ def test_CRG_noise(args):
                        flux_type='fphotons').withFlux(1.0, visband)
             for i in xrange(args.NSED)]
 
-    print "Construction input noise correlation functions"
+    print "Constructing input noise correlation functions"
     rng = galsim.BaseDeviate(args.seed)
     in_xis = [galsim.getCOSMOSNoise(cosmos_scale=args.in_scale, rng=rng)
               .dilate(1 + i * 0.05)
@@ -51,8 +51,6 @@ def test_CRG_noise(args):
             crgs.append(galsim.ChromaticRealGalaxy((imgs, bands, SEDs, in_xis, in_PSF), maxk=maxk))
             bar.update()
 
-    noise = crgs[0].covspec.toNoise(visband, out_PSF, galsim.wcs.PixelScale(args.out_scale))
-
     print "Convolving by output PSF"
     objs = [galsim.Convolve(crg, out_PSF) for crg in crgs]
 
@@ -60,6 +58,8 @@ def test_CRG_noise(args):
     out_imgs = [obj.drawImage(visband, nx=args.out_Nx, ny=args.out_Nx, scale=args.out_scale,
                               iimult=args.iimult)
                 for obj in objs]
+
+    noise = objs[0].noise
 
     print "Measuring images' correlation functions"
     xi_obs = galsim.correlatednoise.CorrelatedNoise(out_imgs[0])

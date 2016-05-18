@@ -302,6 +302,8 @@ class ChromaticObject(object):
 
         @returns the drawn Image.
         """
+        # Store the last bandpass used and any extra kwargs.
+        self._last_bp = bandpass
         # To help developers debug extensions to ChromaticObject, check that ChromaticObject has
         # the expected attributes
         if self.separable: assert hasattr(self, 'SED')
@@ -360,6 +362,7 @@ class ChromaticObject(object):
         if not add_to_image:
             image.setZero()
         image += integral
+        self._last_wcs = image.wcs
         return image
 
     def drawKImage(self, bandpass, re=None, im=None, integrator='trapezoidal', **kwargs):
@@ -1086,8 +1089,11 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         @returns the drawn Image.
         """
+        # Store the last bandpass used.
+        self._last_bp = bandpass
         int_im = self._get_interp_image(bandpass, image=image, integrator=integrator, **kwargs)
         image = int_im.drawImage(image=image, **kwargs)
+        self._last_wcs = image.wcs
         return image
 
 
@@ -1273,7 +1279,11 @@ class ChromaticAtmosphere(ChromaticObject):
 
         @returns the drawn Image.
         """
-        return self.build_obj().drawImage(bandpass, image, integrator, **kwargs)
+        # Store the last bandpass used.
+        self._last_bp = bandpass
+        image = self.build_obj().drawImage(bandpass, image, integrator, **kwargs)
+        self._last_wcs = image.wcs
+        return image
 
 
 class Chromatic(ChromaticObject):
@@ -1608,6 +1618,8 @@ class ChromaticTransformation(ChromaticObject):
 
         @returns the drawn Image.
         """
+        # Store the last bandpass used.
+        self._last_bp = bandpass
         if isinstance(self.original, InterpolatedChromaticObject):
             int_im = self.original._get_interp_image(bandpass, image=image, integrator=integrator,
                                                      **kwargs)
@@ -1617,9 +1629,12 @@ class ChromaticTransformation(ChromaticObject):
             int_im = galsim.Transform(int_im, jac=jac, offset=offset, flux_ratio=flux_ratio,
                                       gsparams=self.gsparams)
             image = int_im.drawImage(image=image, **kwargs)
+            self._last_wcs = image.wcs
             return image
         else:
-            return ChromaticObject.drawImage(self, bandpass, image, integrator, **kwargs)
+            image = ChromaticObject.drawImage(self, bandpass, image, integrator, **kwargs)
+            self._last_wcs = image.wcs
+            return image
 
 
 class ChromaticSum(ChromaticObject):
@@ -1757,6 +1772,8 @@ class ChromaticSum(ChromaticObject):
 
         @returns the drawn Image.
         """
+        # Store the last bandpass used.
+        self._last_bp = bandpass
         add_to_image = kwargs.pop('add_to_image', False)
         # Use given add_to_image for the first one, then add_to_image=False for the rest.
         image = self.objlist[0].drawImage(
@@ -1765,6 +1782,7 @@ class ChromaticSum(ChromaticObject):
         for obj in self.objlist[1:]:
             image = obj.drawImage(
                     bandpass, image=image, add_to_image=True, **kwargs)
+        self._last_wcs = image.wcs
         return image
 
     def withScaledFlux(self, flux_ratio):
@@ -1986,9 +2004,13 @@ class ChromaticConvolution(ChromaticObject):
 
         @returns the drawn Image.
         """
+        # Store the last bandpass used.
+        self._last_bp = bandpass
         # `ChromaticObject.drawImage()` can just as efficiently handle separable cases.
         if self.separable:
-            return ChromaticObject.drawImage(self, bandpass, image=image, **kwargs)
+            image = ChromaticObject.drawImage(self, bandpass, image=image, **kwargs)
+            self._last_wcs = image.wcs
+            return image
 
         # Only make temporary changes to objlist...
         objlist = [o.copy() for o in self.objlist]
@@ -2053,6 +2075,7 @@ class ChromaticConvolution(ChromaticObject):
                 # Return the image here, breaking the loop early.  If there are two ChromaticSum
                 # instances in objlist, then the next pass through will repeat the procedure
                 # on the other one, effectively distributing the multiplication over both sums.
+                self._last_wcs = image.wcs
                 return image
 
         # If program gets this far, the objects in objlist should be atomic (non-ChromaticSum
@@ -2093,7 +2116,27 @@ class ChromaticConvolution(ChromaticObject):
         sep_profs.append(effective_prof)
         # finally, convolve and draw.
         final_prof = galsim.Convolve(sep_profs, gsparams=self.gsparams)
-        return final_prof.drawImage(image=image, **kwargs)
+        image = final_prof.drawImage(image=image, **kwargs)
+        self._last_wcs = image.wcs
+        return image
+
+    @property
+    def noise(self):
+        # Condition for being able to propagate noise:
+        # Exactly one of the convolutants has a .covspec attribute.
+        has_covspec = [hasattr(obj, 'covspec') for obj in self.objlist]
+        ncovspec = sum(has_covspec)
+        if ncovspec != 1:
+            raise TypeError("Cannot compute noise for ChromaticConvolution for which number "
+                            "of convolutants with covspec attribute is not 1.")
+        if not hasattr(self, '_last_bp'):
+            raise TypeError("Cannot compute noise for ChromaticConvolution until after drawImage "
+                            "has been called.")
+
+        covspec = self.objlist[has_covspec.index(True)].covspec
+        other = galsim.Convolve([obj for obj in self.objlist if not hasattr(obj, 'covspec')])
+        return covspec.toNoise(self._last_bp, other, self._last_wcs)  # rng=?
+
 
 ChromaticConvolution._effective_prof_cache = galsim.utilities.LRU_Cache(
     ChromaticConvolution._get_effective_prof, maxsize=10)
