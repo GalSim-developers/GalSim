@@ -19,7 +19,8 @@ import os
 import numpy as np
 from galsim_test_helpers import *
 path, filename = os.path.split(__file__)
-datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
+bppath = os.path.abspath(os.path.join(path, "../examples/data/"))
+sedpath = os.path.abspath(os.path.join(path, "../share/"))
 try:
     import galsim
 except ImportError:
@@ -55,22 +56,24 @@ shear_g1 = 0.01
 shear_g2 = 0.02
 
 # load a filter
-bandpass = (galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
+bandpass = (galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm')
             .truncate(relative_throughput=1e-3)
             .thin(rel_err=1e-3))
-bandpass_g = (galsim.Bandpass(os.path.join(datapath, 'LSST_g.dat'))
+bandpass_g = (galsim.Bandpass(os.path.join(bppath, 'LSST_g.dat'), 'nm')
               .truncate(relative_throughput=1e-3)
               .thin(rel_err=1e-3))
-bandpass_z = (galsim.Bandpass(os.path.join(datapath, 'LSST_z.dat'))
+bandpass_z = (galsim.Bandpass(os.path.join(bppath, 'LSST_z.dat'), 'nm')
               .truncate(relative_throughput=1e-3)
               .thin(rel_err=1e-3))
 
 # load some spectra
-bulge_SED = (galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang')
+bulge_SED = (galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang',
+                        flux_type='flambda')
              .thin(rel_err=1e-3)
              .withFluxDensity(target_flux_density=0.3, wavelength=500.0))
 
-disk_SED = (galsim.SED(os.path.join(datapath, 'CWW_Sbc_ext.sed'), wave_type='ang')
+disk_SED = (galsim.SED(os.path.join(sedpath, 'CWW_Sbc_ext.sed'), wave_type='ang',
+                       flux_type='flambda')
             .thin(rel_err=1e-3)
             .withFluxDensity(target_flux_density=0.3, wavelength=500.0))
 
@@ -466,7 +469,7 @@ def test_monochromatic_filter():
         chromatic_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
         narrow_filter = galsim.Bandpass(galsim.LookupTable([fw-0.01, fw, fw+0.01],
                                                            [1.0, 1.0, 1.0],
-                                                           interpolant='linear'))
+                                                           interpolant='linear'), 'nm')
         chromatic_image = chromatic_final.drawImage(narrow_filter, image=chromatic_image)
         # take out normalization
         chromatic_image /= 0.02
@@ -753,7 +756,7 @@ def test_ChromaticObject_expand():
     # functional syntax.
     gal1 = galsim.ChromaticObject(gal).expand(lambda w: 1.2)
     # Use a simple bandpass so we can do the integral below analytically
-    bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 500, 700)
+    bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 'nm', 500, 700)
     im1 = gal1.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mx, my, mxx, myy, mxy = getmoments(im1)
     print 'simple growth = ',mxx/(sigma/pixel_scale)**2, 1.2**2
@@ -874,7 +877,7 @@ def test_ChromaticObject_rotate():
     # First a very simple case with no actual wavelength dependence, but using the
     # functional syntax.
     gal1 = galsim.ChromaticObject(gal).rotate(lambda w: 0.4 * galsim.radians)
-    bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 500, 700)
+    bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 'nm', 500, 700)
     im1 = gal1.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mx, my, mxx, myy, mxy = getmoments(im1)
     print 'simple angle = ',(np.arctan2(2.*mxy,mxx-myy)/2.), 0.4
@@ -974,7 +977,7 @@ def test_ChromaticObject_shear():
     # First a very simple case with no actual wavelength dependence, but using the
     # functional syntax.
     gal1 = galsim.ChromaticObject(gal).shear(lambda w: galsim.Shear(e1=0.23, e2=0.13))
-    bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 500, 700)
+    bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 'nm', 500, 700)
     im1 = gal1.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mx, my, mxx, myy, mxy = getmoments(im1)
     print 'mxx+myy = ',mxx+myy
@@ -1122,8 +1125,8 @@ def test_analytic_integrator():
     psf = galsim.Moffat(fwhm=1.0, beta=2.7)
 
     # pure analytic
-    band1 = galsim.Bandpass('1', blue_limit=500, red_limit=750)
-    sed1 = galsim.SED('wave**1.1', flux_type='fphotons').withFluxDensity(1.0, 500)
+    band1 = galsim.Bandpass('1', 'nm', blue_limit=500, red_limit=750)
+    sed1 = galsim.SED('wave**1.1', wave_type='nm', flux_type='fphotons').withFluxDensity(1.0, 500)
     gal1 = galsim.Gaussian(fwhm=1.0) * sed1
     final1 = galsim.Convolve(gal1, psf)
     image1 = galsim.ImageD(32, 32, scale=0.2)
@@ -1138,7 +1141,7 @@ def test_analytic_integrator():
     x = [band2.blue_limit + h * i for i in range(N+1)]
     # make a sampled SED
     sed2 = galsim.SED(galsim.LookupTable(x, sed1(x), interpolant='linear'),
-                      flux_type='fphotons')
+                      wave_type='nm', flux_type='fphotons')
     gal2 = galsim.Gaussian(fwhm=1.0) * sed2
     final2 = galsim.Convolve(gal2, psf)
     image2 = galsim.ImageD(32, 32, scale=0.2)
@@ -1148,7 +1151,7 @@ def test_analytic_integrator():
 
     # try making the Bandpass sampled
     sed3 = sed1
-    band3 = galsim.Bandpass(galsim.LookupTable(x, band1(x), interpolant='linear'))
+    band3 = galsim.Bandpass(galsim.LookupTable(x, band1(x), interpolant='linear'), 'nm')
     gal3 = galsim.Gaussian(fwhm=1.0) * sed3
     final3 = galsim.Convolve(gal3, psf)
     image3 = galsim.ImageD(32, 32, scale=0.2)
@@ -1276,8 +1279,8 @@ def test_centroid():
     import time
     t1 = time.time()
 
-    sed = galsim.SED('wave', flux_type='fphotons')
-    bp = galsim.Bandpass('wave', blue_limit=0, red_limit=1)
+    sed = galsim.SED('wave', wave_type='nm', flux_type='fphotons')
+    bp = galsim.Bandpass('wave', 'nm', blue_limit=0, red_limit=1)
     shift_fn = lambda w: (w, 0)
     gal = sed * galsim.Gaussian(fwhm=1)
     gal = gal.shift(shift_fn)
@@ -1539,50 +1542,10 @@ def test_ChromaticOpticalPSF():
     # and interpolated evaluation match in general (given reasonable settings).
 
     # First, compare the interpolated result with saved, exact results.
-    # Exact results were generated using the following code, sitting in this directory:
-    #
-    # import galsim
-    # import os
-    # import numpy as np
-    #
-    # path, filename = os.path.split(__file__)
-    # datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
-    # bandpass = (galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
-    #             .truncate(relative_throughput=1e-3)
-    #             .thin(rel_err=1e-3))
-    # disk_SED = (galsim.SED(os.path.join(datapath, 'CWW_Sbc_ext.sed'), wave_type='ang')
-    #             .thin(rel_err=1e-3)
-    #             .withFluxDensity(target_flux_density=0.3, wavelength=500.0))
-    #
-    # star = galsim.Gaussian(sigma=1.e-8)*disk_SED
-    #
-    # aberrations = np.zeros(12)
-    # aberrations[4] = 40. # nm
-    # aberrations[7] = 20. # nm
-    # lam = 600. # nm
-    # aberrations /= lam
-    # diam = 2.4 # meters
-    # obscuration = 0.18
-    # nstruts = 4
-    # scale = 0.02
-    #
-    # psf = galsim.ChromaticOpticalPSF(lam=lam, diam=diam, aberrations=aberrations,
-    #                                  obscuration=obscuration, nstruts=nstruts)
-    # obj = galsim.Convolve(psf, star)
-    # t2 = time.time()
-    # im_r = obj.drawImage(bandpass, scale=scale)
-    # t3 = time.time()
-    # print "Time to draw ChromaticOpticalPSF: {}s".format(t3-t2)
-    # im_r.write('./chromatic_reference_images/r_exact.fits')
-    #
-    #
-    # That script took 28 seconds to run on a new-ish Macbook Pro, nearly all in the image rendering
-    # process.  In contrast, the ChromaticOpticalPSF with interpolation that is used for this unit
-    # test takes about 9.1 seconds to initialize, and 1.2s for the image rendering process.
-    # Obviously, if many images are to be rendered after incurring the overhead of initializing this
-    # object, the interpolated calculation leads to a huge savings compared to doing the exact
-    # calculation each time.
-    #
+    # Note that if the saved results file cannot be found, then this function will (slowly)
+    # generate the exact image.  Note that this may need to be done outside of nosetests to avoid
+    # the default nose time limit.
+
     # Note that exact results will have to be regenerated if any of the bandpasses or other
     # parameters defined here are changed.  Because of the parameters chosen here, there is a lot of
     # non-trivially complex structure in the PSFs, so this is a stringent test.
@@ -1606,15 +1569,35 @@ def test_ChromaticOpticalPSF():
     # plot(waves, bandpass(waves)*disk_SED(waves), ls=' ', marker='o', c='r', markersize=10)
     # show()
 
+    star = galsim.Gaussian(fwhm=1.e-8) * disk_SED
     psf = galsim.ChromaticOpticalPSF(lam=lam, diam=diam, aberrations=aberrations,
                                      obscuration=obscuration, nstruts=nstruts)
     do_pickle(psf)
+
+    if not os.path.isfile(os.path.join(refdir, 'r_exact.fits')):
+        import warnings
+        warnings.warn("Could not find file r_exact.fits, so generating it from scratch.  This "
+                      "should only happen if you intentionally deleted the file in order to "
+                      "regenerate it!")
+
+        # Generate exact results inside this if-block.
+        # This block took ~30 seconds to run on a new-ish Macbook Pro, nearly all in the image
+        # rendering process.  In contrast, the ChromaticOpticalPSF with interpolation that is used
+        # for this unit test takes about ~9 seconds to initialize, and ~1s for the image rendering
+        # process.  Obviously, if many images are to be rendered after incurring the overhead of
+        # initializing this object, the interpolated calculation leads to a huge savings compared to
+        # doing the exact calculation each time.
+        t2 = time.time()
+        obj = galsim.Convolve(star, psf)
+        im_r_ref = obj.drawImage(bandpass, scale=scale)
+        im_r_ref.write(os.path.join(refdir, 'r_exact.fits'))
+        t3 = time.time()
+        print "Time to draw ChromaticOpticalPSF: {}s".format(t3-t2)
 
     t4 = time.time()
     psf = psf.interpolate(waves, oversample_fac=oversample_fac)
     t5 = time.time()
     print "Time to initialize InterpolatedChromaticObject: {}s".format(t5-t4)
-    star = galsim.Gaussian(fwhm=1.e-8) * disk_SED
     obj = galsim.Convolve(star, psf)
 
     if __name__ == '__main__':
@@ -1651,7 +1634,6 @@ def test_ChromaticOpticalPSF():
     im = obj_conv.drawImage(bandpass, scale=scale)
     expected_flux = disk_SED.calculateFlux(bandpass)
 
-    frac_diff_exact = abs(im.array.sum()/expected_flux-1.0)
     assert np.isclose(im.array.sum(), expected_flux, rtol=0.02), \
         "ChromaticObject flux is wrong when convolved with ChromaticOpticalPSF " \
         " (interpolated calculation)"
@@ -1664,70 +1646,30 @@ def test_ChromaticAiry():
     import time
     t1 = time.time()
 
-    # First, compare the interpolated result with saved, exact results.
-    # Exact results were generated using the following code, sitting in this directory:
-    #
-    # import galsim
-    # import os
-    # import numpy as np
-    #
-    # path, filename = os.path.split(__file__)
-    # datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
-    # bandpass = (galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'))
-    #             .truncate(relative_throughput=1e-3)
-    #             .thin(rel_err=1e-3))
-    # disk_SED = (galsim.SED(os.path.join(datapath, 'CWW_Sbc_ext.sed'), wave_type='ang')
-    #             .thin(rel_err=1e-3)
-    #             .withFluxDensity(target_flux_density=0.3, wavelength=500.0))
-    #
-    # star = galsim.Gaussian(sigma=1.e-8)*disk_SED
-    #
-    # lam = 750. # nm
-    # diam = 3.1 # meters
-    # obscuration = 0.11
-    # scale = 0.02
-    #
-    # psf = galsim.ChromaticAiry(lam=lam, diam=diam, obscuration=obscuration)
-    # obj = galsim.Convolve(psf, star)
-    # im_r = obj.drawImage(bandpass, scale=scale)
-    # im_r.write('./chromatic_reference_images/r_exact_Airy.fits')
-    #
-    # Note that exact results will have to be regenerated if any of the bandpasses or other
-    # parameters defined here are changed.  For example, had to regenerate on #590 because of new
-    # version of r bandpass.
-
     # Define parameters:
     lam = 750. # nm
     diam = 3.1 # meters
     obscuration = 0.11
     scale = 0.02
 
-    # Read in reference image:
-    im_r_ref = galsim.fits.read(os.path.join(refdir, 'r_exact_Airy.fits'))
-    im_r_tmp = im_r_ref.copy()
-
-    # Make new object, and compare:
     psf = galsim.ChromaticAiry(lam=lam, diam=diam, obscuration=obscuration)
     do_pickle(psf)
 
+    # Generate a reference image
     star = galsim.Gaussian(fwhm=1.e-8) * disk_SED
     obj = galsim.Convolve(psf, star)
-    obj.drawImage(bandpass, image=im_r_tmp, scale=scale)
-    np.testing.assert_array_almost_equal(
-        im_r_tmp.array, im_r_ref.array, decimal=8,
-        err_msg='ChromaticAiry image disagrees with reference in r band')
+    im_r = obj.drawImage(bandpass, scale=scale)
 
     # Initialize object in different way, make sure results are identical:
     lam_over_diam = (1.e-9*lam/diam)*galsim.radians
     psf = galsim.ChromaticAiry(lam=lam, lam_over_diam=lam_over_diam/galsim.arcsec,
                                obscuration=obscuration)
     obj = galsim.Convolve(psf, star)
-    im_r_2 = im_r_tmp.copy()
+    im_r_2 = im_r.copy()
     obj.drawImage(bandpass, image=im_r_2, scale=scale)
     np.testing.assert_array_almost_equal(
-        im_r_2.array, im_r_ref.array, decimal=8,
-        err_msg='ChromaticAiry image disagrees with reference in r band when initializing'
-                ' a different way')
+        im_r_2.array, im_r.array, decimal=8,
+        err_msg='Inconsistent ChromaticAiry image when initializing a different way')
 
     # Also check evaluation at a single wavelength.
     chromatic_psf_400 = psf.evaluateAtWavelength(400.)
@@ -1766,9 +1708,11 @@ def test_chromatic_fiducial_wavelength():
     waves = np.arange(500., 600.1, 10.)
     blue_flux = waves < 550.0
     red_flux = waves > 550.0
-    bp = galsim.Bandpass(galsim.LookupTable(waves, waves**0, interpolant='linear'))
-    blue_sed = galsim.SED(galsim.LookupTable(waves, blue_flux, interpolant='linear'))
-    red_sed = galsim.SED(galsim.LookupTable(waves, red_flux, interpolant='linear'))
+    bp = galsim.Bandpass(galsim.LookupTable(waves, waves**0, interpolant='linear'), 'nm')
+    blue_sed = galsim.SED(galsim.LookupTable(waves, blue_flux, interpolant='linear'),
+                          'nm', 'flambda')
+    red_sed = galsim.SED(galsim.LookupTable(waves, red_flux, interpolant='linear'),
+                         'nm', 'flambda')
 
     gal1 = galsim.Gaussian(fwhm=1) * blue_sed
     gal2 = galsim.Gaussian(fwhm=1) * red_sed
@@ -1870,8 +1814,8 @@ def test_ne():
     all_obj_diff(gals)
 
     # Chromatic.  Params are a gsobject and an SED.
-    sed1 = galsim.SED(lambda w: w)
-    sed2 = galsim.SED(lambda w: 2*w)
+    sed1 = galsim.SED(lambda w: w, 'nm', 'flambda')
+    sed2 = galsim.SED(lambda w: 2*w, 'nm', 'flambda')
     # The following should test unequal.
     gals = [galsim.Chromatic(gal1, sed1),
             galsim.Chromatic(gal2, sed1),
