@@ -63,10 +63,10 @@ def test_SED_basic():
                    flux_type='fphotons'),
         galsim.SED(galsim.LookupTable([1,1e4],[2/(h*c),2e4/(h*c)], interpolant='linear'),
                    flux_type='fphotons', wave_type='A'),
-        galsim.SED(galsim.LookupTable([1,1e3],[200/c,2e8/c], interpolant='linear', 
+        galsim.SED(galsim.LookupTable([1,1e3],[200/c,2e8/c], interpolant='linear',
                                       x_log=True, f_log=True),
                    flux_type='fnu'),
-        galsim.SED(galsim.LookupTable([1,1e4],[2/c,2e8/c], interpolant='linear', 
+        galsim.SED(galsim.LookupTable([1,1e4],[2/c,2e8/c], interpolant='linear',
                                       x_log=True, f_log=True),
                    flux_type='fnu', wave_type='A'),
         galsim.SED(galsim.LookupTable(nm_w, 200.*np.ones(100)), flux_type='flambda'),
@@ -94,7 +94,7 @@ def test_SED_basic():
         galsim.SED('1000', redshift=4),
         galsim.SED('1000').atRedshift(4.0),
     ]
- 
+
     for k,s in enumerate(s_list):
         print k,' s = ',s
         np.testing.assert_almost_equal(s(400)*h*c/400, 200, decimal=10)
@@ -542,6 +542,58 @@ def test_fnu_vs_flambda():
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+def test_ne():
+    import time
+    t1 = time.time()
+
+    spec1 = lambda x: x/1000
+    spec2 = galsim.LookupTable([400, 550], [0.4, 0.55], interpolant='linear')
+    spec3 = '3'
+
+    # These should all compare unequal.
+    seds = [galsim.SED(spec1),
+            galsim.SED(spec1, wave_type='A'),
+            galsim.SED(spec1, flux_type='fnu'),
+            galsim.SED(spec1, redshift=1.0),
+            galsim.SED(spec2),
+            galsim.SED(spec3)]
+    all_obj_diff(seds)
+
+    t2 = time.time()
+    print 'time for %s = %.2f' % (funcname(), t2-t1)
+
+
+def test_thin():
+    import time
+    t1 = time.time()
+
+    s = galsim.SED(os.path.join(datapath, 'CWW_E_ext.sed'), wave_type='ang')
+    bp = galsim.Bandpass('1', blue_limit=s.blue_limit, red_limit=s.red_limit)
+    flux = s.calculateFlux(bp)
+    print "Original number of SED samples = ",len(s.wave_list)
+    for err in [1.e-2, 1.e-3, 1.e-4, 1.e-5]:
+        print "Test err = ",err
+        thin_s = s.thin(rel_err=err, preserve_range=True, fast_search=False)
+        thin_flux = thin_s.calculateFlux(bp)
+        thin_err = (flux-thin_flux)/flux
+        print "num samples with preserve_range = True, fast_search = False: ",len(thin_s.wave_list)
+        print "realized error = ",(flux-thin_flux)/flux
+        thin_s = s.thin(rel_err=err, preserve_range=True)
+        thin_flux = thin_s.calculateFlux(bp)
+        thin_err = (flux-thin_flux)/flux
+        print "num samples with preserve_range = True: ",len(thin_s.wave_list)
+        print "realized error = ",(flux-thin_flux)/flux
+        assert np.abs(thin_err) < err, "Thinned SED failed accuracy goal, preserving range."
+        thin_s = s.thin(rel_err=err, preserve_range=False)
+        thin_flux = thin_s.calculateFlux(bp)
+        thin_err = (flux-thin_flux)/flux
+        print "num samples with preserve_range = False: ",len(thin_s.wave_list)
+        print "realized error = ",(flux-thin_flux)/flux
+        assert np.abs(thin_err) < err, "Thinned SED failed accuracy goal, w/ range shrinkage."
+
+    t2 = time.time()
+    print 'time for %s = %.2f' % (funcname(), t2-t1)
+
 if __name__ == "__main__":
     test_SED_basic()
     test_SED_add()
@@ -557,3 +609,5 @@ if __name__ == "__main__":
     test_SED_calculateDCRMomentShifts()
     test_SED_calculateSeeingMomentRatio()
     test_fnu_vs_flambda()
+    test_ne()
+    test_thin()

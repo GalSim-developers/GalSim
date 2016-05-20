@@ -18,6 +18,7 @@
 """@file utilities.py
 Module containing general utilities for the GalSim software.
 """
+from contextlib import contextmanager
 
 import numpy as np
 import galsim
@@ -295,7 +296,168 @@ def _convertPositions(pos, units, func):
 
     return pos
 
-def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
+def _lin_approx_err(x, f, i):
+    """Error as \int abs(f(x) - approx(x)) when using ith data point to make piecewise linear
+    approximation."""
+    xleft, xright = x[:i+1], x[i:]
+    fleft, fright = f[:i+1], f[i:]
+    xi, fi = x[i], f[i]
+    mleft = (fi-f[0])/(xi-x[0])
+    mright = (f[-1]-fi)/(x[-1]-xi)
+    f2left = f[0]+mleft*(xleft-x[0])
+    f2right = fi+mright*(xright-xi)
+    return np.trapz(np.abs(fleft-f2left), xleft), np.trapz(np.abs(fright-f2right), xright)
+
+def _exact_lin_approx_split(x, f):
+    """Split a tabulated function into a two-part piecewise linear approximation by exactly
+    minimizing \int abs(f(x) - approx(x)) dx.  Operates in O(N^2) time.
+    """
+    errs = [_lin_approx_err(x, f, i) for i in xrange(1, len(x)-1)]
+    i = np.argmin(np.sum(errs, axis=1))
+    return i+1, errs[i]
+
+def _lin_approx_split(x, f):
+    """Split a tabulated function into a two-part piecewise linear approximation by approximately
+    minimizing \int abs(f(x) - approx(x)) dx.  Chooses the split point by exactly minimizing
+    \int (f(x) - approx(x))^2 dx in O(N) time.
+    """
+    dx = x[2:] - x[:-2]
+    # Error contribution on the left.
+    ff0 = f[1:-1]-f[0]  # Only need to search between j=1..(N-1)
+    xx0 = x[1:-1]-x[0]
+    mleft = ff0/xx0  # slope
+    errleft = (np.cumsum(dx*ff0**2)
+               - 2*mleft*np.cumsum(dx*ff0*xx0)
+               + mleft**2*np.cumsum(dx*xx0**2))
+    # Error contribution on the right.
+    dx = dx[::-1]  # Reversed so that np.cumsum effectively works right-to-left.
+    ffN = f[-2:0:-1]-f[-1]
+    xxN = x[-2:0:-1]-x[-1]
+    mright = ffN/xxN
+    errright = (np.cumsum(dx*ffN**2)
+                - 2*mright*np.cumsum(dx*ffN*xxN)
+                + mright**2*np.cumsum(dx*xxN**2))
+    errright = errright[::-1]
+
+    # Get absolute error for the found point.
+    i = np.argmin(errleft+errright)
+    return i+1, _lin_approx_err(x, f, i+1)
+
+def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=True,
+                          fast_search=True):
+    """
+    Remove items from a set of tabulated f(x) values so that the error in the integral is still
+    accurate to a given relative accuracy.
+
+    The input `x,f` values can be lists, NumPy arrays, or really anything that can be converted
+    to a NumPy array.  The new lists will be output as numpy arrays.
+
+    @param x                The `x` values in the f(x) tabulation.
+    @param f                The `f` values in the f(x) tabulation.
+    @param rel_err          The maximum relative error to allow in the integral from the removal.
+                            [default: 1.e-4]
+    @param trim_zeros       Remove redundant leading and trailing points where f=0?  (The last
+                            leading point with f=0 and the first trailing point with f=0 will be
+                            retained).  Note that if both trim_leading_zeros and preserve_range are
+                            True, then the only the range of `x` *after* zero trimming is preserved.
+                            [default: True]
+    @param preserve_range   Should the original range of `x` be preserved? (True) Or should the ends
+                            be trimmed to include only the region where the integral is
+                            significant? (False)  [default: True]
+    @param fast_search      If set to True, then the underlying algorithm will use a relatively fast
+                            O(N) algorithm to select points to include in the thinned approximation.
+                            If set to False, then a slower O(N^2) algorithm will be used.  We have
+                            found that the slower algorithm tends to yield a thinned representation
+                            that retains fewer samples while still meeting the relative error
+                            requirement.  [default: True]
+
+    @returns a tuple of lists `(x_new, y_new)` with the thinned tabulation.
+    """
+    from heapq import heappush, heappop
+
+    split_fn = _lin_approx_split if fast_search else _exact_lin_approx_split
+
+    x = np.array(x)
+    f = np.array(f)
+
+    # Check for valid inputs
+    if len(x) != len(f):
+        raise ValueError("len(x) != len(f)")
+    if rel_err <= 0 or rel_err >= 1:
+        raise ValueError("rel_err must be between 0 and 1")
+    if not (np.diff(x) >= 0).all():
+        raise ValueError("input x is not sorted.")
+
+    # Check for trivial noop.
+    if len(x) <= 2:
+        # Nothing to do
+        return x,f
+
+    if trim_zeros:
+        first = max(f.nonzero()[0][0]-1, 0)  # -1 to keep one non-redundant zero.
+        last = min(f.nonzero()[0][-1]+1, len(x)-1)  # +1 to keep one non-redundant zero.
+        x, f = x[first:last+1], f[first:last+1]
+
+    total_integ = np.trapz(abs(f), x)
+    if total_integ == 0:
+        return np.array([ x[0], x[-1] ]), np.array([ f[0], f[-1] ])
+    thresh = total_integ * rel_err
+
+    x_range = x[-1] - x[0]
+    if not preserve_range:
+        # Remove values from the front that integrate to less than thresh.
+        err_integ1 = 0.5 * (abs(f[0]) + abs(f[1])) * (x[1] - x[0])
+        k0 = 0
+        while k0 < len(x)-2 and err_integ1 < thresh * (x[k0+1]-x[0]) / x_range:
+            k0 = k0+1
+            err_integ1 += 0.5 * (abs(f[k0]) + abs(f[k0+1])) * (x[k0+1] - x[k0])
+        # Now the integral from 0 to k0+1 (inclusive) is a bit too large.
+        # That means k0 is the largest value we can use that will work as the starting value.
+
+        # Remove values from the back that integrate to less than thresh.
+        k1 = len(x)-1
+        err_integ2 = 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
+        while k1 > k0 and err_integ2 < thresh * (x[-1]-x[k1-1]) / x_range:
+            k1 = k1-1
+            err_integ2 += 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
+        # Now the integral from k1-1 to len(x)-1 (inclusive) is a bit too large.
+        # That means k1 is the smallest value we can use that will work as the ending value.
+
+        # Subtract the error so far from thresh
+        thresh -= np.trapz(abs(f[:k0]),x[:k0]) + np.trapz(abs(f[k1:]),x[k1:])
+
+        x = x[k0:k1+1]  # +1 since end of range is given as one-past-the-end.
+        f = f[k0:k1+1]
+
+        # And update x_range for the new values
+        x_range = x[-1] - x[0]
+
+    # Check again for noop after trimming endpoints.
+    if len(x) <= 2:
+        return x,f
+
+    # Thin interior points.  Start with no interior points and then greedily add them back in one at
+    # a time until relative error goal is met.
+    # Use a heap to track:
+    heap = [(-2*thresh,  # -err; initialize large enough to trigger while loop below.
+             0,          # first index of interval
+             len(x)-1)]  # last index of interval
+    while (-sum(h[0] for h in heap) > thresh):
+        _, left, right = heappop(heap)
+        i, (errleft, errright) = split_fn(x[left:right+1], f[left:right+1])
+        heappush(heap, (-errleft, left, i+left))
+        heappush(heap, (-errright, i+left, right))
+    splitpoints = sorted([0]+[h[2] for h in heap])
+    return x[splitpoints], f[splitpoints]
+
+
+# In Issue #739, Josh wrote the above algorithm as a replacement for the one here.
+# It had been buggy, not actually hitting its target relative accuracy, so on the same issue,
+# Mike fixed this algorithm to at least work correctly.  However, we recommend using the above
+# algorithm, since it keeps fewer sample locations for a given rel_err than the old algorithm.
+# On the other hand, the old algorithm can be quite a bit faster, being O(N), not O(N^2), so
+# we retain the old algorithm here in case we want to re-enable it for certain applications.
+def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
     """
     Remove items from a set of tabulated f(x) values so that the error in the integral is still
     accurate to a given relative accuracy.
@@ -313,16 +475,15 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
 
     @returns a tuple of lists `(x_new, y_new)` with the thinned tabulation.
     """
-    import numpy
-    x = numpy.array(x)
-    f = numpy.array(f)
+    x = np.array(x)
+    f = np.array(f)
 
     # Check for valid inputs
     if len(x) != len(f):
         raise ValueError("len(x) != len(f)")
     if rel_err <= 0 or rel_err >= 1:
         raise ValueError("rel_err must be between 0 and 1")
-    if not (numpy.diff(x) >= 0).all():
+    if not (np.diff(x) >= 0).all():
         raise ValueError("input x is not sorted.")
 
     # Check for trivial noop.
@@ -331,32 +492,39 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
         return x,f
 
     # Start by calculating the complete integral of |f|
-    total_integ = numpy.trapz(abs(f),x)
+    total_integ = np.trapz(abs(f),x)
     if total_integ == 0:
-        return numpy.array([ x[0], x[-1] ]), numpy.array([ f[0], f[-1] ])
+        return np.array([ x[0], x[-1] ]), np.array([ f[0], f[-1] ])
     thresh = rel_err * total_integ
+    x_range = x[-1] - x[0]
 
     if not preserve_range:
         # Remove values from the front that integrate to less than thresh.
-        integ = 0.5 * (abs(f[0]) + abs(f[1])) * (x[1] - x[0])
+        err_integ1 = 0.5 * (abs(f[0]) + abs(f[1])) * (x[1] - x[0])
         k0 = 0
-        while k0 < len(x)-2 and integ < thresh:
+        while k0 < len(x)-2 and err_integ1 < thresh * (x[k0+1]-x[0]) / x_range:
             k0 = k0+1
-            integ += 0.5 * (abs(f[k0]) + abs(f[k0+1])) * (x[k0+1] - x[k0])
+            err_integ1 += 0.5 * (abs(f[k0]) + abs(f[k0+1])) * (x[k0+1] - x[k0])
         # Now the integral from 0 to k0+1 (inclusive) is a bit too large.
-        # That means k0 is the largest value we can use that will work as the staring value.
+        # That means k0 is the largest value we can use that will work as the starting value.
 
         # Remove values from the back that integrate to less than thresh.
         k1 = len(x)-1
-        integ = 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
-        while k1 > k0 and integ < thresh:
+        err_integ2 = 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
+        while k1 > k0 and err_integ2 < thresh * (x[-1]-x[k1-1]) / x_range:
             k1 = k1-1
-            integ += 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
+            err_integ2 += 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
         # Now the integral from k1-1 to len(x)-1 (inclusive) is a bit too large.
         # That means k1 is the smallest value we can use that will work as the ending value.
 
+        # Subtract the error so far from thresh
+        thresh -= np.trapz(abs(f[:k0]),x[:k0]) + np.trapz(abs(f[k1:]),x[k1:])
+
         x = x[k0:k1+1]  # +1 since end of range is given as one-past-the-end.
         f = f[k0:k1+1]
+
+        # And update x_range for the new values
+        x_range = x[-1] - x[0]
 
     # Start a new list with just the first item so far
     newx = [ x[0] ]
@@ -369,23 +537,30 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
         # with a linear approxmation based on the points at k0 and k1+1.
         lin_f = f[k0] + (f[k1+1]-f[k0])/(x[k1+1]-x[k0]) * (x[k0:k1+2] - x[k0])
         # Integrate | f(x) - lin_f(x) | from k0 to k1+1, inclusive.
-        integ = numpy.trapz(abs(f[k0:k1+2] - lin_f), x[k0:k1+2])
-        # If the integral of the difference is < thresh, we can skip this item.
-        if integ < thresh:
+        err_integ = np.trapz(np.abs(f[k0:k1+2] - lin_f), x[k0:k1+2])
+        # If the integral of the difference is < thresh * (dx/x_range), we can skip this item.
+        if abs(err_integ) < thresh * (x[k1+1]-x[k0]) / x_range:
             # OK to skip item k1
             k1 = k1 + 1
         else:
-            # Have to include this one.
-            newx.append(x[k1])
-            newf.append(f[k1])
-            k0 = k1
-            k1 = k1 + 1
+            # Also ok to keep if its own relative error is less than rel_err
+            true_integ = np.trapz(f[k0:k1+2], x[k0:k1+2])
+            if abs(err_integ) < rel_err * abs(true_integ):
+                # OK to skip item k1
+                k1 = k1 + 1
+            else:
+                # Have to include this one.
+                newx.append(x[k1])
+                newf.append(f[k1])
+                k0 = k1
+                k1 = k1 + 1
 
     # Always include the last item
     newx.append(x[-1])
     newf.append(f[-1])
 
     return newx, newf
+
 
 def _gammafn(x):
     """
@@ -418,6 +593,113 @@ _gammafn._a = ( 1.00000000000000000000, 0.57721566490153286061, -0.6558780715202
                0.00000000000000000141, -0.00000000000000000023, 0.00000000000000000002
              )
 
+def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
+    """
+    The routine to do the opposite of what 'interleaveImages' routine does. It generates a
+    (uniform) dither sequence of low resolution images from a high resolution image.
+
+    Many pixel level detector effects, such as interpixel capacitance, persistence, charge
+    diffusion etc. can be included only on images drawn at the native pixel scale, which happen to
+    be undersampled in most cases. Nyquist-sampled images that also include the effects of detector
+    non-idealities can be obtained by drawing multiple undersampled images (with the detector
+    effects included) that are offset from each other by a fraction of a pixel. If the offsets are
+    uniformly spaced, then images can be combined using 'interleaveImages' into a Nyquist-sampled
+    image.
+
+    Drawing multiple low resolution images of a light profile can be a lot slower than drawing a
+    high resolution image of the same profile, even if the total number of pixels is the same. A
+    uniformly offset dither sequence can be extracted from a well-resolved image that is drawn by
+    convolving the surface brightness profile explicitly with the native pixel response and setting
+    a lower sampling scale (or higher sampling rate) using the `pixel_scale' argument in drawImage()
+    routine and setting the `method' parameter to `no_pixel'.
+
+    Here is an example script using this routine:
+
+    Interleaving four Gaussian images
+    ---------------------------------
+
+        >>> n = 2
+        >>> gal = galsim.Gaussian(sigma=2.8)
+        >>> gal_pix = galsim.Convolve([gal,galsim.Pixel(scale=1.0)])
+        >>> img = gal_pix.drawImage(gal_pix,scale=1.0/n,method='no_pixel')
+        >>> im_list, offsets = galsim.utilities.deInterleaveImage(img,N=n)
+        >>> for im in im_list:
+        >>>     im.applyNonlinearity(lambda x: x-0.01*x**2) #detector effects
+        >>> img_new = galsim.utilities.interleaveImages(im_list,N=n,offsets)
+
+    @param image             Input image from which lower resolution images are extracted.
+    @param N                 Number of images extracted in either directions. It can be of type
+                             'int' if equal number of images are extracted in both directions or a
+                             list or tuple of two integers, containing the number of images in x
+                             and y directions respectively.
+    @param conserve_flux     Should the routine output images that have, on average, same total
+                             pixel values as the input image (True) or should the pixel values
+                             summed over all the images equal the sum of pixel values of the input
+                             image (False)? [default: False]
+    @param suppress_warnings Suppresses the warnings about the pixel scale of the output, if True.
+                             [default: False]
+
+    @returns a list of images and offsets to reconstruct the input image using 'interleaveImages'.
+    """
+
+    if isinstance(N,int):
+        n1,n2 = N,N
+    elif hasattr(N,'__iter__'):
+        if len(N)==2:
+            n1,n2 = N
+        else:
+            raise TypeError("'N' has to be a list or a tuple of two integers")
+        if not (isinstance(n1,int) and  isinstance(n2,int)):
+            raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
+    else:
+        raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
+
+    if not isinstance(image,galsim.Image):
+        raise TypeError("'image' has to be an instance of galsim.Image")
+
+    y_size,x_size = image.array.shape
+    if x_size%n1 or y_size%n2:
+        raise ValueError("The value of 'N' is incompatible with the dimensions of the image to "+
+                         +"be 'deinterleaved'")
+
+    im_list, offsets = [], []
+    for i in xrange(n1):
+        for j in xrange(n2):
+            # The tricky part - going from array indices to Image coordinates (x,y)
+            # DX[i'] = -(i+0.5)/n+0.5 = -i/n + 0.5*(n-1)/n
+            #    i  = -n DX[i'] + 0.5*(n-1)
+            dx,dy = -(i+0.5)/n1+0.5,-(j+0.5)/n2+0.5
+            offset = galsim.PositionD(dx,dy)
+            img_arr = image.array[j::n2,i::n1].copy()
+            img = galsim.Image(img_arr)
+            if conserve_flux is True:
+                img *= n1*n2
+            im_list.append(img)
+            offsets.append(offset)
+
+    wcs = image.wcs
+    if wcs is not None and wcs.isUniform():
+        jac = wcs.jacobian()
+        for img in im_list:
+            img_wcs = galsim.JacobianWCS(jac.dudx*n1,jac.dudy*n2,jac.dvdx*n1,jac.dvdy*n2)
+            ## Since pixel scale WCS is not equal to its jacobian, checking if img_wcs is a pixel
+            ## scale
+            img_wcs_decomp = img_wcs.getDecomposition()
+            if img_wcs_decomp[1].g==0:
+                img.wcs = galsim.PixelScale(img_wcs_decomp[0])
+            else:
+               img.wcs = img_wcs
+            ## Preserve the origin so that the interleaved image has the same bounds as the image
+            ## that is being deinterleaved.
+            img.setOrigin(image.origin())
+
+    elif suppress_warnings is False:
+        import warnings
+        warnings.warn("Individual images could not be assigned a WCS automatically.")
+
+    return im_list, offsets
+
+
 def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False,
     catch_offset_errors=True):
     """
@@ -432,7 +714,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     equivalent to convolution by the pixel profile and then sampling at the centers of the pixels.
     This procedure simulates an observation sampled at a higher resolution than the original images,
     while retaining the original pixel convolution.
-    
+
     Such an image can be obtained in a fairly simple manner in simulations of surface brightness
     profiles by convolving them explicitly with the native pixel response and setting a lower
     sampling scale (or higher sampling rate) using the `pixel_scale' argument in drawImage()
@@ -448,7 +730,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     ther others is that the images must be offset in equal steps in each direction. This is
     difficult to acheive with real observations but can be precisely acheived in a series of
     simulated images.
-    
+
     An advantage of this procedure is that the noise in the final image is not correlated as the
     pixel values are each taken from just a single input image. Thus, this routine preserves the
     noise properties of the pixels.
@@ -525,18 +807,13 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     y_size, x_size = im_list[0].array.shape
     wcs = im_list[0].wcs
 
-    if wcs.isPixelScale():
-        scale = wcs.scale
-    else:
-        scale = None
-
     for im in im_list[1:]:
         if not isinstance(im,galsim.Image):
             raise TypeError("'im_list' must be a list of galsim.Image instances")
 
         if im.array.shape != (y_size,x_size):
             raise ValueError("All galsim.Image instances in 'im_list' must be of the same size")
- 
+
         if im.wcs != wcs:
             raise ValueError(
                 "All galsim.Image instances in 'im_list' must have the same WCS")
@@ -571,20 +848,31 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
         img /= 1.0*len(im_list)
 
     # Assign an appropriate WCS for the output
-    if scale is not None:
-        if n1==n2:
-            img.wcs = galsim.PixelScale(1.*scale/n1)
+    if wcs is not None and wcs.isUniform():
+        jac = wcs.jacobian()
+        dudx, dudy, dvdx, dvdy = jac.dudx, jac.dudy, jac.dvdx, jac.dvdy
+        img_wcs = galsim.JacobianWCS(1.*dudx/n1,1.*dudy/n2,1.*dvdx/n1,1.*dvdy/n2)
+        ## Since pixel scale WCS is not equal to its jacobian, checking if img_wcs is a pixel scale
+        img_wcs_decomp = img_wcs.getDecomposition()
+        if img_wcs_decomp[1].g==0: ## getDecomposition returns scale,shear,angle,flip
+            img.wcs = galsim.PixelScale(img_wcs_decomp[0])
         else:
-            img.wcs = galsim.JacobianWCS(1.*scale/n1, 0., 0., 1.*scale/n2)
-    elif isinstance(wcs,galsim.JacobianWCS): # from say, a previously interleaved Image.
-        dudx, dudy, dvdx, dvdy = wcs.dudx, wcs.dudy, wcs.dvdx, wcs.dvdy
-        if (1.0*dudx/n1==1.0*dvdy/n2) and (dudy==0.0) and (dvdx==0.0):
-            img.wcs = galsim.PixelScale(1.*dudx/n1)
-        else:
-            img.wcs = galsim.JacobianWCS(1.*dudx/n1,1.*dudy/n2,1.*dvdx/n1,1.*dvdy/n2)
+            img.wcs = img_wcs
+
     elif suppress_warnings is False:
         import warnings
         warnings.warn("Interleaved image could not be assigned a WCS automatically.")
+
+    # Assign a possibly non-trivial origin and warn if individual image have different origins.
+    orig = im_list[0].origin()
+    img.setOrigin(orig)
+    for im in im_list[1:]:
+        if not im.origin()==orig:
+            import warnings
+            warnings.warn("Images in `im_list' have multiple values for origin. Assigning the \
+            origin of the first Image instance in 'im_list' to the interleaved image.")
+            break
+
     return img
 
 class LRU_Cache:
@@ -682,3 +970,16 @@ class LRU_Cache:
                     root[1] = link
             else:
                 raise ValueError("Invalid maxsize: {0:}".format(maxsize))
+
+
+# http://stackoverflow.com/questions/2891790/pretty-printing-of-numpy-array
+@contextmanager
+def printoptions(*args, **kwargs):
+    original = np.get_printoptions()
+    np.set_printoptions(*args, **kwargs)
+    # contextmanager exception handling is tricky.  Don't forget to wrap the yield:
+    # http://preshing.com/20110920/the-python-with-statement-by-example/
+    try:
+        yield
+    finally:
+        np.set_printoptions(**original)

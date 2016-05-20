@@ -604,9 +604,13 @@ def readFromFitsHeader(header):
     ymin = header.get("GS_YMIN", 1)
     origin = galsim.PositionI(xmin, ymin)
     wcs_name = header.get("GS_WCS", None)
-    if wcs_name:
+    if wcs_name is not None:
         wcs_type = eval('galsim.' + wcs_name)
         wcs = wcs_type._readHeader(header)
+    elif 'GS_SCALE' in header:
+        # Old versions of GalSim didn't write GS_WCS, but did write GS_SCALE, which implies that
+        # the wcs is just a PixelScale:
+        wcs = galsim.PixelScale(header['GS_SCALE'])
     elif 'CTYPE1' in header:
         try:
             wcs = galsim.FitsWCS(header=header, suppress_warning=True)
@@ -783,12 +787,12 @@ class EuclideanWCS(BaseWCS):
         y -= self.y0
         try:
             # First try to use the _u, _v function with the numpy arrays.
-            u = self._u(x.flatten(),y.flatten())
-            v = self._v(x.flatten(),y.flatten())
+            u = self._u(x.ravel(),y.ravel())
+            v = self._v(x.ravel(),y.ravel())
         except:
             # If that didn't work, we have to do it manually for each position. :(  (SLOW!)
-            u = numpy.array([ self._u(x1,y1) for x1,y1 in zip(x.flatten(),y.flatten()) ])
-            v = numpy.array([ self._v(x1,y1) for x1,y1 in zip(x.flatten(),y.flatten()) ])
+            u = numpy.array([ self._u(x1,y1) for x1,y1 in zip(x.ravel(),y.ravel()) ])
+            v = numpy.array([ self._v(x1,y1) for x1,y1 in zip(x.ravel(),y.ravel()) ])
         u = numpy.reshape(u, x.shape)
         v = numpy.reshape(v, x.shape)
         # Use the finite differences to estimate the derivatives.
@@ -961,10 +965,10 @@ class CelestialWCS(BaseWCS):
         y -= self.y0
         try:
             # First try to use the _radec function with the numpy arrays.
-            ra, dec = self._radec(x.flatten(),y.flatten())
+            ra, dec = self._radec(x.ravel(),y.ravel())
         except:
             # If that didn't work, we have to do it manually for each position. :(  (SLOW!)
-            rd = [ self._radec(x1,y1) for x1,y1 in zip(x.flatten(),y.flatten()) ]
+            rd = [ self._radec(x1,y1) for x1,y1 in zip(x.ravel(),y.ravel()) ]
             ra = numpy.array([ radec[0] for radec in rd ])
             dec = numpy.array([ radec[1] for radec in rd ])
         ra = numpy.reshape(ra, x.shape)
@@ -1056,7 +1060,6 @@ class PixelScale(LocalWCS):
     _opt_params = {}
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, scale):
         self._scale = scale
@@ -1157,7 +1160,6 @@ class ShearWCS(LocalWCS):
     _opt_params = {}
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, scale, shear):
         self._scale = scale
@@ -1293,7 +1295,6 @@ class JacobianWCS(LocalWCS):
     _opt_params = {}
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, dudx, dudy, dvdx, dvdy):
         self._dudx = dudx
@@ -1370,7 +1371,7 @@ class JacobianWCS(LocalWCS):
         a flip of (x,y) -> (y,x).
 
             ( dudx  dudy ) = scale/sqrt(1-g1^2-g2^2) ( 1+g1  g2  ) ( cos(theta)  -sin(theta) ) F
-            ( dvdx  dvdy )                           (  g2  1-g2 ) ( sin(theta)   cos(theta) )
+            ( dvdx  dvdy )                           (  g2  1-g1 ) ( sin(theta)   cos(theta) )
 
         where F is either the identity matrix, ( 1 0 ), or a flip matrix, ( 0 1 ).
                                                ( 0 1 )                    ( 1 0 )
@@ -1542,7 +1543,6 @@ class OffsetWCS(UniformWCS):
     _opt_params = { "origin" : galsim.PositionD, "world_origin": galsim.PositionD }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, scale, origin=None, world_origin=None):
         self._scale = scale
@@ -1634,7 +1634,6 @@ class OffsetShearWCS(UniformWCS):
     _opt_params = { "origin" : galsim.PositionD, "world_origin": galsim.PositionD }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, scale, shear, origin=None, world_origin=None):
         # The shear stuff is not too complicated, but enough so that it is worth
@@ -1739,7 +1738,6 @@ class AffineTransform(UniformWCS):
     _opt_params = { "origin" : galsim.PositionD, "world_origin": galsim.PositionD }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, dudx, dudy, dvdx, dvdy, origin=None, world_origin=None):
         # As with OffsetShearWCS, we store a JacobianWCS, rather than reimplement everything.
@@ -1822,7 +1820,7 @@ class AffineTransform(UniformWCS):
                                self.origin, self.world_origin)
 
     def __repr__(self):
-        return ("galsim.AffineTransform(%r, %r, %r, %r, %r, %r)")%(
+        return ("galsim.AffineTransform(%r, %r, %r, %r, origin=%r, world_origin=%r)")%(
                 self.dudx, self.dudy, self.dvdx, self.dvdy, self.origin, self.world_origin)
     def __hash__(self): return hash(repr(self))
 
@@ -2025,7 +2023,6 @@ class UVFunction(EuclideanWCS):
                     "origin" : galsim.PositionD, "world_origin": galsim.PositionD }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, ufunc, vfunc, xfunc=None, yfunc=None, origin=None, world_origin=None):
 
@@ -2229,7 +2226,6 @@ class RaDecFunction(CelestialWCS):
     _opt_params = { "origin" : galsim.PositionD }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, ra_func, dec_func=None, origin=None):
 

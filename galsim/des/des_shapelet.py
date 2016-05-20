@@ -24,6 +24,7 @@ stored in *_fitpsf.fits files.
 """
 
 import galsim
+import galsim.config
 
 class DES_Shapelet(object):
     """Class that handles DES files describing interpolated polar shapelet decompositions.
@@ -70,7 +71,6 @@ class DES_Shapelet(object):
     _opt_params = { 'dir' : str, 'file_type' : str }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, file_name, dir=None, file_type=None):
         if dir:
@@ -177,7 +177,14 @@ class DES_Shapelet(object):
 
         @returns the PSF as a galsim.Shapelet instance
         """
-        return galsim.Shapelet(self.sigma, self.psf_order, self.getB(image_pos), gsparams=gsparams)
+        psf = galsim.Shapelet(self.sigma, self.psf_order, self.getB(image_pos), gsparams=gsparams)
+
+        # The fitpsf files were built with respect to (u,v) = (ra,dec).  The GalSim convention is
+        # to use sky coordinates with u = -ra.  So we need to flip the profile across the v axis
+        # to take u -> -u.
+        psf = psf.transform(-1,0,0,1)
+
+        return psf
 
     def getB(self, pos):
         """Get the B vector as a numpy array at position pos
@@ -218,40 +225,28 @@ class DES_Shapelet(object):
             temp[i] = ((2.*i-1.)*x1*temp[i-1] - (i-1.)*temp[i-2]) / float(i)
         return temp
 
-# Now add this class to the config framework.
-import galsim.config
-
 # First we need to add the class itself as a valid input_type.
-galsim.config.process.valid_input_types['des_shapelet'] = ('galsim.des.DES_Shapelet',
-                                                           [], False, False, None, ['DES_Shapelet'])
+galsim.config.RegisterInputType('des_shapelet', galsim.config.InputLoader(DES_Shapelet))
 
 # Also make a builder to create the PSF object for a given position.
 # The builders require 4 args.
 # config is a dictionary that includes 'type' plus other items you might want to allow or require.
-# key is the key name one level up in the config structure.  Probably 'psf' in this case.
 # base is the top level config dictionary where some global variables are stored.
 # ignore is a list of key words that might be in the config dictionary that you should ignore.
-def BuildDES_Shapelet(config, key, base, ignore, gsparams, logger):
+def BuildDES_Shapelet(config, base, ignore, gsparams, logger):
     """@brief Build a RealGalaxy type GSObject from user input.
     """
-    opt = { 'flux' : float ,
-            'num' : int }
-    kwargs, safe = galsim.config.GetAllParams(config, key, base, opt=opt, ignore=ignore)
+    des_shapelet = galsim.config.GetInputObj('des_shapelet', config, base, 'DES_Shapelet')
 
-    if 'des_shapelet' not in base:
-        raise ValueError("No DES_Shapelet instance available for building type = DES_Shapelet")
+    opt = { 'flux' : float , 'num' : int, 'image_pos' : galsim.PositionD }
+    params, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
 
-    num = kwargs.get('num', 0)
-    if num < 0:
-        raise ValueError("Invalid num < 0 supplied for DES_Shapelet: num = %d"%num)
-    if num >= len(base['des_shapelet']):
-        raise ValueError("Invalid num supplied for DES_Shapelet (too large): num = %d"%num)
-
-    des_shapelet = base['des_shapelet'][num]
-
-    if 'image_pos' not in base:
+    if 'image_pos' in params:
+        image_pos = params['image_pos']
+    elif 'image_pos' in base:
+        image_pos = base['image_pos']
+    else:
         raise ValueError("DES_Shapelet requested, but no image_pos defined in base.")
-    image_pos = base['image_pos']
 
     # Convert gsparams from a dict to an actual GSParams object
     if gsparams: gsparams = galsim.GSParams(**gsparams)
@@ -264,14 +259,14 @@ def BuildDES_Shapelet(config, key, base, ignore, gsparams, logger):
         b = des_shapelet.getB(image_pos)
         sigma = des_shapelet.getSigma()
         order = des_shapelet.getOrder()
-        psf = galsim.Shapelet(sigma, order, b, gsparams=gsparams)
+        psf = galsim.Shapelet(sigma, order, b, gsparams=gsparams).transform(-1,0,0,1)
     else:
         message = 'Position '+str(image_pos)+' not in interpolation bounds: '
         message += str(des_shapelet.getBounds())
         raise galsim.config.gsobject.SkipThisObject(message)
 
-    if 'flux' in kwargs:
-        psf = psf.withFlux(kwargs['flux'])
+    if 'flux' in params:
+        psf = psf.withFlux(params['flux'])
 
     # The second item here is "safe", a boolean that declares whether the returned value is 
     # safe to save and use again for later objects.  In this case, we wouldn't want to do 
@@ -279,5 +274,5 @@ def BuildDES_Shapelet(config, key, base, ignore, gsparams, logger):
     return psf, False
 
 # Register this builder with the config framework:
-galsim.config.gsobject.valid_gsobject_types['DES_Shapelet'] = 'galsim.des.BuildDES_Shapelet'
+galsim.config.RegisterObjectType('DES_Shapelet', BuildDES_Shapelet, input_type='des_shapelet')
 

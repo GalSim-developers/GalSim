@@ -91,6 +91,12 @@ namespace galsim {
         return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).getImage();
     }
 
+    ConstImageView<double> SBInterpolatedImage::getPaddedImage() const
+    {
+        assert(dynamic_cast<const SBInterpolatedImageImpl*>(_pimpl.get()));
+        return static_cast<const SBInterpolatedImageImpl&>(*_pimpl).getPaddedImage();
+    }
+
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // SBInterpolatedImageImpl methods
 
@@ -108,8 +114,9 @@ namespace galsim {
         assert(_xInterp.get());
         assert(_kInterp.get());
 
-        _Ninitial = std::max(image.getXMax()-image.getXMin()+1,
-                             image.getYMax()-image.getYMin()+1);
+        _Ninitx = image.getXMax()-image.getXMin()+1;
+        _Ninity = image.getYMax()-image.getYMin()+1;
+        _Ninitial = std::max(_Ninitx, _Ninity);
         _init_bounds = image.getBounds();
         dbg<<"Ninitial = "<<_Ninitial<<std::endl;
         assert(pad_factor > 0.);
@@ -426,17 +433,17 @@ namespace galsim {
         }
     }
 
-    std::string SBInterpolatedImage::SBInterpolatedImageImpl::repr() const
+    std::string SBInterpolatedImage::SBInterpolatedImageImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBInterpolatedImage(";
-
         oss << "galsim._galsim.ConstImageViewD(array([";
+
         ConstImageView<double> im = getImage();
-        int N = _xtab->getN();
-        for (int y = 0; y<N; ++y) {
-            if (y > 0) oss <<",";
+        Bounds<int> _bds = im.getBounds();
+        for (int y = _bds.getYMin(); y<=_bds.getYMax(); ++y) {
+            if (y > _bds.getYMin()) oss <<",";
             BaseImage<double>::const_iterator it = im.rowBegin(y);
             oss << "[" << *it++;
             for (; it != im.rowEnd(y); ++it) oss << "," << *it;
@@ -453,11 +460,26 @@ namespace galsim {
         return oss.str();
     }
 
-    ConstImageView<double> SBInterpolatedImage::SBInterpolatedImageImpl::getImage() const
+    // In case anybody wants it, here's the internal padded image accessor.
+    ConstImageView<double> SBInterpolatedImage::SBInterpolatedImageImpl::getPaddedImage() const
     {
         int N = _xtab->getN();
+        int xmin = _init_bounds.getXMin()-(N-_Ninitx+1)/2;
+        int ymin = _init_bounds.getYMin()-(N-_Ninity+1)/2;
+        int xmax = xmin + N - 1;
+        int ymax = ymin + N - 1;
+        dbg << "_Ninitx: " << _Ninitx << std::endl;
+        dbg << "xmin: " << xmin << std::endl;
+        dbg << "xmax: " << xmax << std::endl;
         return ConstImageView<double>(_xtab->getArray(), boost::shared_ptr<double>(),
-                                      N, Bounds<int>(0,N-1,0,N-1));
+                                      N, Bounds<int>(xmin,xmax,ymin,ymax));
+    }
+
+    // The accessor for the original, unpadded image should be faster/smaller to serialize and
+    // move around.
+    ConstImageView<double> SBInterpolatedImage::SBInterpolatedImageImpl::getImage() const
+    {
+        return getPaddedImage()[_init_bounds];
     }
 
     void SBInterpolatedImage::SBInterpolatedImageImpl::getXRange(
@@ -566,7 +588,7 @@ namespace galsim {
         dbg<<"Done: flux = "<<flux<<", d1 = "<<d1<<std::endl;
         dbg<<"max_flux = "<<max_flux<<", current fluxTot = "<<fluxTot<<std::endl;
         // Should have added up to the total flux.
-        assert( std::abs(flux - fluxTot) < 1.e-3 * std::abs(fluxTot) );
+        assert( std::abs(flux - fluxTot) <= 1.e-3 * std::abs(fluxTot) );
 
         if (d1 == 0) {
             dbg<<"No smaller radius found.  Keep current value of stepk\n";
@@ -851,8 +873,9 @@ namespace galsim {
         dbg<<"kimage bounds = "<<realKImage.getBounds()<<std::endl;
         assert(_kInterp.get());
 
-        _Ninitial = std::max(realKImage.getXMax()-realKImage.getXMin()+1,
-                             realKImage.getYMax()-realKImage.getYMin()+1);
+        _Ninitx = realKImage.getXMax()-realKImage.getXMin()+1;
+        _Ninity = realKImage.getYMax()-realKImage.getYMin()+1;
+        _Ninitial = std::max(_Ninitx, _Ninity);
         dbg<<"_Ninitial = "<<_Ninitial<<std::endl;
         _Nk = goodFFTSize(int(_Ninitial));
         dbg<<"_Nk = "<<_Nk<<std::endl;
@@ -897,7 +920,7 @@ namespace galsim {
         dbg << "_Nk = " << _Nk << std::endl;
         // Original _Ninitial could have been smaller, but setting it equal to _Nk should be
         // safe nonetheless.
-        _Ninitial = _Nk;
+        _Ninitial = _Ninitx = _Ninity = _Nk;
         _ktab = boost::shared_ptr<KTable>(new KTable(_Nk, _dk));
         double *kptr = reinterpret_cast<double*>(_ktab->getArray());
         const double* ptr = data.getData();
@@ -958,7 +981,6 @@ namespace galsim {
         return Position<double>(_xcentroid, _ycentroid);
     }
 
-
     ConstImageView<double> SBInterpolatedKImage::SBInterpolatedKImageImpl::getKData() const
     {
         int N = _ktab->getN();
@@ -973,7 +995,7 @@ namespace galsim {
                                       Bounds<int>(0,2*N-1,0,N/2));
     }
 
-    std::string SBInterpolatedKImage::SBInterpolatedKImageImpl::repr() const
+    std::string SBInterpolatedKImage::SBInterpolatedKImageImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
@@ -981,7 +1003,10 @@ namespace galsim {
 
         oss << "galsim._galsim.ConstImageViewD(array([";
         ConstImageView<double> data = getKData();
-        for (int y = 0; y<_Nk; ++y) {
+        Bounds<int> _bds = data.getBounds();
+        int ymin = _bds.getYMin();
+        int ymax = _bds.getYMax();
+        for (int y = ymin; y<=ymax; ++y) {
             if (y > 0) oss <<",";
             BaseImage<double>::const_iterator it = data.rowBegin(y);
             oss << "[" << *it++;

@@ -33,7 +33,7 @@
 #
 # New features introduced in this demo:
 #
-# - image : retry_failures
+# - stamp : retry_failures
 # - image : nproc
 
 
@@ -90,13 +90,17 @@ image :
 
     pixel_scale : 0.28  # arcsec / pixel
 
-    draw_method : phot
-
     noise :
         sky_level : 1.0e4  # ADU / arcsec^2
 
     random_seed : 22345921
 
+
+# Define some image properties that are specific to the stamp generation phase.
+stamp :
+    draw_method : phot
+
+    # If the stamp generation fails for some reason, just try again this many times.
     retry_failures: 2
 
 
@@ -116,7 +120,6 @@ output :
 # The second version of this uses 4 processes
 
 image :
-    # If nproc <= 0, then this means to use nproc = ncpu.
     nproc : 4
 
 output :

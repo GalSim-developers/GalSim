@@ -95,7 +95,7 @@ class InterpolatedImage(GSObject):
                 image, x_interpolant=None, k_interpolant=None, normalization='flux', scale=None,
                 wcs=None, flux=None, pad_factor=4., noise_pad_size=0, noise_pad=0., use_cache=True,
                 pad_image=None, rng=None, calculate_stepk=True, calculate_maxk=True,
-                use_true_center=True, offset=None)
+                use_true_center=True, offset=None, hdu=None)
 
     Initializes `interpolated_image` as an InterpolatedImage instance.
 
@@ -117,7 +117,8 @@ class InterpolatedImage(GSObject):
 
     @param image            The Image from which to construct the object.
                             This may be either an Image instance or a string indicating a fits
-                            file from which to read the image.
+                            file from which to read the image.  In the latter case, the `hdu`
+                            kwarg can be used to specify a particular HDU in that file.
     @param x_interpolant    Either an Interpolant instance or a string indicating which real-space
                             interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
                             'cubic', 'quintic', or 'lanczosN' where N should be the integer order
@@ -132,6 +133,7 @@ class InterpolatedImage(GSObject):
                                   to be equal to the total flux.
                               "surface brightness" or "sb" means that the pixels sample
                                   the surface brightness distribution at each location.
+                            This is overridden if you specify an explicit flux value.
                             [default: "flux"]
     @param scale            If provided, use this as the pixel scale for the Image; this will
                             override the pixel scale stored by the provided Image, in any.
@@ -160,7 +162,8 @@ class InterpolatedImage(GSObject):
                                (c) as an Image of a noise field, which is used to calculate
                                    the desired noise power spectrum; or
                                (d) as a string which is interpreted as a filename containing an
-                                   example noise field with the proper noise power spectrum.
+                                   example noise field with the proper noise power spectrum (as an
+                                   Image in the first HDU).
                             It is important to keep in mind that the calculation of the correlation
                             function that is internally stored within a CorrelatedNoise object is a
                             non-negligible amount of overhead, so the recommended means of
@@ -183,7 +186,7 @@ class InterpolatedImage(GSObject):
                             can be specified in two ways:
                                (a) as an Image; or
                                (b) as a string which is interpreted as a filename containing an
-                                   image to use.
+                                   image to use (in the first HDU).
                             The `pad_image` scale or wcs is ignored.  It uses the same scale or
                             wcs for both the `image` and the `pad_image`.
                             The user should be careful to ensure that the image used for padding
@@ -221,6 +224,8 @@ class InterpolatedImage(GSObject):
                             center if `use_true_center=False`).  [default: None]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
+    @param hdu              When reading in an Image from a file, this parameter can be used to
+                            select a particular HDU in the file. [default: None]
 
     Methods
     -------
@@ -240,18 +245,19 @@ class InterpolatedImage(GSObject):
         'pad_image' : str ,
         'calculate_stepk' : bool ,
         'calculate_maxk' : bool ,
-        'use_true_center' : bool
+        'use_true_center' : bool ,
+        'hdu' : int
     }
     _single_params = []
     _takes_rng = True
-    _takes_logger = False
     _cache_noise_pad = {}
 
     def __init__(self, image, x_interpolant=None, k_interpolant=None, normalization='flux',
                  scale=None, wcs=None, flux=None, pad_factor=4., noise_pad_size=0, noise_pad=0.,
                  rng=None, pad_image=None, calculate_stepk=True, calculate_maxk=True,
                  use_cache=True, use_true_center=True, offset=None, gsparams=None, dx=None,
-                 _force_stepk=0., _force_maxk=0.):
+                 _force_stepk=0., _force_maxk=0., _serialize_stepk=None, _serialize_maxk=None,
+                 hdu=None):
 
         # Check for obsolete dx parameter
         if dx is not None and scale is None:
@@ -262,7 +268,7 @@ class InterpolatedImage(GSObject):
         # first try to read the image as a file.  If it's not either a string or a valid
         # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
         try:
-            image = galsim.fits.read(image)
+            image = galsim.fits.read(image, hdu=hdu)
         except:
             pass
 
@@ -420,6 +426,18 @@ class InterpolatedImage(GSObject):
             calculate_maxk = False
             _force_maxk *= self.max_scale
 
+        # Due to floating point rounding errors, for pickling it's necessary to store the exact
+        # _force_maxk and _force_stepk used to create the SBInterpolatedImage, as opposed to the
+        # values before being scaled by self.min_scale and self.max_scale.  So we do that via the
+        # _serialize_maxk and _serialize_stepk hidden kwargs, which should only get used during
+        # pickling.
+        if _serialize_stepk is not None:
+            calculate_stepk = False
+            _force_stepk = _serialize_stepk
+        if _serialize_maxk is not None:
+            calculate_maxk = False
+            _force_maxk = _serialize_maxk
+
         # Save these values for pickling
         self._pad_image = pad_image
         self._pad_factor = pad_factor
@@ -429,6 +447,12 @@ class InterpolatedImage(GSObject):
         sbii = galsim._galsim.SBInterpolatedImage(
                 pad_image.image, self.x_interpolant, self.k_interpolant, pad_factor,
                 _force_stepk, _force_maxk, gsparams)
+
+        # I think the only things that will mess up if getFlux() == 0 are the
+        # calculateStepK and calculateMaxK functions, and rescaling the flux to some value.
+        if (calculate_stepk or calculate_maxk or flux is not None) and sbii.getFlux() == 0.:
+            raise RuntimeError("This input image has zero total flux. "
+                               "It does not define a valid surface brightness profile.")
 
         if calculate_stepk:
             if calculate_stepk is True:
@@ -443,11 +467,19 @@ class InterpolatedImage(GSObject):
                 # If not a bool, then value is max_maxk
                 sbii.calculateMaxK(max_maxk=calculate_maxk)
 
+        # If the user specified a surface brightness normalization for the input Image, then
+        # need to rescale flux by the pixel area to get proper normalization.
+        if flux is None and normalization.lower() in ['surface brightness','sb']:
+            flux = sbii.getFlux() * local_wcs.pixelArea()
+
         # Save this intermediate profile
         self._sbii = sbii
         self._stepk = sbii.stepK() / self.min_scale
         self._maxk = sbii.maxK() / self.max_scale
         self._flux = flux
+
+        self._serialize_stepk = sbii.stepK()
+        self._serialize_maxk = sbii.maxK()
 
         prof = GSObject(sbii)
 
@@ -471,11 +503,6 @@ class InterpolatedImage(GSObject):
         # If the user specified a flux, then set to that flux value.
         if flux is not None:
             prof = prof.withFlux(float(flux))
-        # If the user specified a surface brightness normalization for the input Image, then
-        # need to rescale flux by the pixel area to get proper normalization.
-        elif normalization.lower() in ['surface brightness','sb']:
-            prof *= local_wcs.pixelArea()
-            self._flux = prof.flux
 
         # Now, in order for these to pickle correctly if they are the "original" object in a
         # Transform object, we need to hide the current transformation.  An easy way to do that
@@ -516,6 +543,28 @@ class InterpolatedImage(GSObject):
 
         return pad_image
 
+    def __eq__(self, other):
+        return (isinstance(other, galsim.InterpolatedImage) and
+                self._pad_image == other._pad_image and
+                self.x_interpolant == other.x_interpolant and
+                self.k_interpolant == other.k_interpolant and
+                self._pad_factor == other._pad_factor and
+                self._flux == other._flux and
+                self._offset == other._offset and
+                self._gsparams == other._gsparams and
+                self._stepk == other._stepk and
+                self._maxk == other._maxk)
+
+    def __hash__(self):
+        # Definitely want to cache this, since the size of the image could be large.
+        if not hasattr(self, '_hash'):
+            self._hash = hash(("galsim.InterpolatedImage", self.x_interpolant, self.k_interpolant,
+                               self._pad_factor, self._flux, self._offset, self._gsparams,
+                               self._stepk, self._maxk))
+            self._hash ^= hash(tuple(self._pad_image.array.ravel()))
+            self._hash ^= hash((self._pad_image.bounds, self._pad_image.wcs))
+        return self._hash
+
     def __repr__(self):
         return ('galsim.InterpolatedImage(%r, %r, %r, pad_factor=%r, flux=%r, offset=%r, '+
                 'use_true_center=False, gsparams=%r, _force_stepk=%r, _force_maxk=%r)')%(
@@ -543,7 +592,8 @@ class InterpolatedImage(GSObject):
                       x_interpolant=self.x_interpolant, k_interpolant=self.k_interpolant,
                       pad_factor=self._pad_factor, flux=self._flux,
                       offset=self._offset, use_true_center=False, gsparams=self._gsparams,
-                      _force_stepk=self._stepk, _force_maxk=self._maxk)
+                      _serialize_stepk=self._serialize_stepk,
+                      _serialize_maxk=self._serialize_maxk)
 
 
 class InterpolatedKImage(GSObject):
@@ -617,7 +667,6 @@ class InterpolatedKImage(GSObject):
     }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, real_kimage, imag_kimage, k_interpolant=None, stepk=None,
                  gsparams=None):
@@ -649,9 +698,9 @@ class InterpolatedKImage(GSObject):
                             real_kimage.ymin + (1 if shape[0]%2==0 else 0),
                             real_kimage.ymax)
         if not (np.allclose(real_kimage[bd].array,
-                            real_kimage[bd].array[::-1,::-1])
-                or np.allclose(imag_kimage[bd].array,
-                               -imag_kimage[bd].array[::-1,::-1])):
+                            real_kimage[bd].array[::-1,::-1]) and
+                np.allclose(imag_kimage[bd].array,
+                            -imag_kimage[bd].array[::-1,::-1])):
             raise ValueError("Real and Imag kimages must form a Hermitian complex matrix.")
 
         if stepk is None:
@@ -679,13 +728,32 @@ class InterpolatedKImage(GSObject):
             self._real_kimage.image, self._imag_kimage.image,
             self._real_kimage.scale, self._stepk, self.k_interpolant, gsparams))
 
-    def __repr__(self):
-        return ('galsim.InterpolatedKImage(%r, %r, %r, stepk=%r, gsparams=%r)')%(
-            self._real_kimage, self._imag_kimage, self.k_interpolant,
-            self._stepk, self._gsparams)
+    def __eq__(self, other):
+        return (isinstance(other, galsim.InterpolatedKImage) and
+                self._real_kimage == other._real_kimage and
+                self._imag_kimage == other._imag_kimage and
+                self.k_interpolant == other.k_interpolant and
+                self._stepk == other._stepk and
+                self._gsparams == other._gsparams)
 
-    def __str__(self): return 'galsim.InterpolatedKImage(real_kimage=%s)'%(
-            self._real_kimage)
+    def __hash__(self):
+        # Definitely want to cache this, since the real and image kimages could be large.
+        if not hasattr(self, '_hash'):
+            self._hash = hash(("galsim.InterpolatedKImage", self.k_interpolant, self._stepk,
+                               self._gsparams))
+            for img in [self._real_kimage, self._imag_kimage]:
+                self._hash ^= hash(tuple(img.array.ravel()))
+                self._hash ^= hash((img.bounds, img.wcs))
+        return self._hash
+
+    def __repr__(self):
+        return ('galsim.InterpolatedKImage(\n%r,\n%r,\n%r, stepk=%r, gsparams=%r)')%(
+                self._real_kimage, self._imag_kimage, self.k_interpolant,
+                self._stepk, self._gsparams)
+
+    def __str__(self):
+        return 'galsim.InterpolatedKImage(real_kimage=%s, imag_kimage=%s)'%(
+                self._real_kimage, self._imag_kimage)
 
     def __getstate__(self):
         # The SBInterpolatedKImage and the SBProfile both are picklable, but they are pretty

@@ -26,9 +26,9 @@ convolution with an FFT.  It makes images using 5 different kinds of PSF and 5 d
 kinds of galaxy.  Some of the parameters (flux, size and shape) are random variables, so 
 each of the 25 pairings is drawn 4 times with different realizations of the random numbers.
 The profiles are drawn twice: once with the FFT method, and once with photon shooting.
-The two images are drawn side by side so it is easy to visually compare the results.
-The 100 total profiles are written to a FITS data cube, which makes it easy to scroll
-through the images comparing the two drawing methods.
+The two images are drawn side by side into the same larger image so it is easy to 
+visually compare the results. The 100 total profiles are written to a FITS data cube, 
+which makes it easy to scroll through the images comparing the two drawing methods.
 
 
 New features introduced in this demo:
@@ -224,7 +224,7 @@ def main(argv):
                 t1 = time.time()
 
                 # Initialize the random number generator we will be using.
-                rng = galsim.UniformDeviate(random_seed+k)
+                rng = galsim.UniformDeviate(random_seed+k+1)
 
                 # Generate random variates:
                 flux = rng() * (gal_flux_max-gal_flux_min) + gal_flux_min
@@ -280,7 +280,7 @@ def main(argv):
 
                 # The next two lines are just to get the output from this demo script
                 # to match the output from the parsing of demo7.yaml.
-                rng = galsim.UniformDeviate(random_seed+k)
+                rng = galsim.UniformDeviate(random_seed+k+1)
                 rng(); rng(); rng(); rng();
 
                 # Repeat for photon shooting image.

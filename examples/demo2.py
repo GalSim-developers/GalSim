@@ -23,8 +23,9 @@ The second script in our tutorial about using GalSim in python scripts: examples
  
 This script is a bit more sophisticated, but still pretty basic.  We're still only making
 a single image, but now the galaxy has an exponential radial profile and is sheared.
-The PSF is a circular Moffat profile.  And the noise is Poisson using the flux from both
-the object and a background sky level to determine the variance in each pixel.
+The PSF is a circular Moffat profile.  The noise is drawn from a Poisson distribution
+using the flux from both the object and a background sky level to determine the 
+variance in each pixel.
 
 New features introduced in this demo:
 
@@ -76,7 +77,9 @@ def main(argv):
     logger.info('    - Poisson noise (sky level = %.1e).', sky_level)
 
     # Initialize the (pseudo-)random number generator that we will be using below.
-    rng = galsim.BaseDeviate(random_seed)
+    # For a technical reason that will be explained later (demo9.py), we add 1 to the 
+    # given random seed here.
+    rng = galsim.BaseDeviate(random_seed+1)
 
     # Define the galaxy profile.
     gal = galsim.Exponential(flux=gal_flux, scale_radius=gal_r0)

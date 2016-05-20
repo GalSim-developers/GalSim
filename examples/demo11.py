@@ -23,11 +23,11 @@ The eleventh script in our tutorial about using GalSim in python scripts: exampl
 
 This script uses a constant PSF from real data (an image read in from a bzipped FITS file, not a
 parametric model) and variable shear and magnification according to some cosmological model for
-which we have a tabulated power spectrum at specific k values only.  The 288 galaxies in the 0.1 x
+which we have a tabulated shear power spectrum at specific k values only.  The 288 galaxies in the 0.1 x
 0.1 degree field (representing a number density of 8/arcmin^2) are randomly located and
 permitted to overlap.  For the galaxies, we use a mix of real and parametric galaxies modeled off
 the COSMOS observations with the Hubble Space Telescope.  The real galaxies are similar to those
-used in demo10.  The parametric galaxies are based on parameter fits to the same observed galaxies.
+used in demo10.  The parametric galaxies are based on parametric fits to the same observed galaxies.
 The flux and size distribution are thus realistic for an I < 23.5 magnitude limited sample.
 
 New features introduced in this demo:
@@ -74,7 +74,7 @@ def main(argv):
         telescope. However, in order that the galaxy resolution not be too poor, we tell GalSim that
         the pixel scale for that PSF image is 0.2" rather than 0.396".  We are simultaneously lying
         about the intrinsic size of the PSF and about the pixel scale when we do this.
-      - The galxies come from COSMOSCatalog, which can produce either RealGalaxy profiles
+      - The galaxies come from COSMOSCatalog, which can produce either RealGalaxy profiles
         (like in demo10) and parametric fits to those profiles.  We choose 30% of the galaxies
         to use the images, and the other 60% to use the parametric fits
       - The real galaxy images include some initial correlated noise from the original HST
@@ -93,7 +93,7 @@ def main(argv):
     image_size_arcsec = image_size*pixel_scale # size of big image in each dimension (arcsec)
     noise_variance = 5.e4             # ADU^2  (Just use simple Gaussian noise here.)
     nobj = 288                        # number of galaxies in entire field
-                                      # (This corresponds to 2 galaxies / arcmin^2)
+                                      # (This corresponds to 8 galaxies / arcmin^2)
     grid_spacing = 90.0               # The spacing between the samples for the power spectrum 
                                       # realization (arcsec)
     tel_diam = 4                      # Let's figure out the flux for a 4 m class telescope
@@ -183,10 +183,10 @@ def main(argv):
     # switch to 0-based indexing, so the lower-left pixel will be called (0,0).
     full_image.setOrigin(0,0)
 
-    # As for demo10, we use random_seed+nobj for the random numbers required for the 
+    # As for demo10, we use random_seed for the random numbers required for the 
     # whole image.  In this case, both the power spectrum realization and the noise on the 
     # full image we apply later.
-    rng = galsim.BaseDeviate(random_seed+nobj)
+    rng = galsim.BaseDeviate(random_seed)
 
     # We want to make random positions within our image.  However, currently for shears from a power
     # spectrum we first have to get shears on a grid of positions, and then we can choose random
@@ -194,16 +194,8 @@ def main(argv):
     # image, with grid points spaced by 90 arcsec (hence interpolation only happens below 90"
     # scales, below the interesting scales on which we want the shear power spectrum to be
     # represented exactly).  The lensing engine wants positions in arcsec, so calculate that:
-
-    # Also, because of some technical details about how the config stuff handles the random
-    # number generator here, we need to duplicate the rng object if we want to have the 
-    # two output files match.  This means that technically, the same sequence of random numbers
-    # will be used in building the grid as will be used later to add noise.  But since they are
-    # used in such completely different ways, it is hard to imagine how this could lead to any
-    # kind of bias in the images.
     ps.buildGrid(grid_spacing = grid_spacing,
-                 ngrid = int(math.ceil(image_size_arcsec / grid_spacing)),
-                 rng = rng.duplicate())
+                 ngrid = int(math.ceil(image_size_arcsec / grid_spacing)), rng=rng)
     logger.info('Made gridded shears')
 
     # We keep track of how much noise is already in the image from the RealGalaxies.
@@ -238,7 +230,7 @@ def main(argv):
     for k in range(nobj):
         time1 = time.time()
         # The usual random number generator using a different seed for each galaxy.
-        ud = galsim.UniformDeviate(random_seed+k)
+        ud = galsim.UniformDeviate(random_seed+k+1)
 
         # Choose a random position in the image
         x = ud()*(image_size-1)

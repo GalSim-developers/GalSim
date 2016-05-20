@@ -197,8 +197,8 @@ class SED(object):
         @returns the photon density in units of photons/nm
         """
         if hasattr(wave, '__iter__'): # Only iterables respond to min(), max()
-            wmin = min(wave)
-            wmax = max(wave)
+            wmin = np.min(wave)
+            wmax = np.max(wave)
         else: # python scalar
             wmin = wave
             wmax = wave
@@ -237,7 +237,7 @@ class SED(object):
         if hasattr(other, '__call__'):
             spec = lambda w: self._rest_photons(w) * other(w * wave_factor)
         elif isinstance(self._spec, galsim.LookupTable):
-            # If other is not a function, then there is no loss of accuracy by applying the 
+            # If other is not a function, then there is no loss of accuracy by applying the
             # factor directly to the LookupTable, if that's what we are using.
             # Make sure to keep the same properties about the table, flux_type, wave_type.
             if self.wave_factor == 10.0:
@@ -264,7 +264,7 @@ class SED(object):
         if hasattr(other, '__call__'):
             spec = lambda w: self._rest_photons(w) / other(w * wave_factor)
         elif isinstance(self._spec, galsim.LookupTable):
-            # If other is not a function, then there is no loss of accuracy by applying the 
+            # If other is not a function, then there is no loss of accuracy by applying the
             # factor directly to the LookupTable, if that's what we are using.
             # Make sure to keep the same properties about the table, flux_type, wave_type.
             if self.wave_factor == 10.0:
@@ -429,17 +429,29 @@ class SED(object):
         current_flux = self.calculateFlux(bandpass)
         return -2.5 * np.log10(current_flux) + bandpass.zeropoint
 
-    def thin(self, rel_err=1.e-4, preserve_range=False):
+    def thin(self, rel_err=1.e-4, trim_zeros=True, preserve_range=True, fast_search=True):
         """ If the SED was initialized with a LookupTable or from a file (which internally creates a
         LookupTable), then remove tabulated values while keeping the integral over the set of
         tabulated values still accurate to `rel_err`.
 
         @param rel_err            The relative error allowed in the integral over the SED
                                   [default: 1.e-4]
+        @param trim_zeros         Remove redundant leading and trailing points where f=0?  (The last
+                                  leading point with f=0 and the first trailing point with f=0 will
+                                  be retained).  Note that if both trim_leading_zeros and
+                                  preserve_range are True, then the only the range of `x` *after*
+                                  zero trimming is preserved.  [default: True]
         @param preserve_range     Should the original range (`blue_limit` and `red_limit`) of the
                                   SED be preserved? (True) Or should the ends be trimmed to
                                   include only the region where the integral is significant? (False)
-                                  [default: False]
+                                  [default: True]
+        @param fast_search        If set to True, then the underlying algorithm will use a
+                                  relatively fast O(N) algorithm to select points to include in the
+                                  thinned approximation.  If set to False, then a slower O(N^2)
+                                  algorithm will be used.  We have found that the slower algorithm
+                                  tends to yield a thinned representation that retains fewer samples
+                                  while still meeting the relative error requirement.
+                                  [default: True]
 
         @returns the thinned SED.
         """
@@ -448,7 +460,9 @@ class SED(object):
             x = self.wave_list / wave_factor
             f = self._rest_photons(x)
             newx, newf = utilities.thin_tabulated_values(x, f, rel_err=rel_err,
-                                                         preserve_range=preserve_range)
+                                                         trim_zeros=trim_zeros,
+                                                         preserve_range=preserve_range,
+                                                         fast_search=fast_search)
             spec = galsim.LookupTable(newx, newf, interpolant='linear')
             blue_limit = np.min(newx) * wave_factor
             red_limit = np.max(newx) * wave_factor
@@ -567,6 +581,33 @@ class SED(object):
                 np.array_equal(self.wave_list,other.wave_list))
     def __ne__(self, other): return not self.__eq__(other)
 
+    def __hash__(self):
+        # Cache this in case self._orig_spec or self.wave_list is long.
+        if not hasattr(self, '_hash'):
+            self._hash = hash(("galsim.SED", self._orig_spec, self.wave_factor, self.flux_type,
+                               self.redshift, self.blue_limit, self.red_limit,
+                               tuple(self.wave_list)))
+        return self._hash
+
+    def __repr__(self):
+        wave_type = ''
+        flux_type = ''
+        if self.wave_factor == 10.0:
+            wave_type = ' wave_type="Angstroms",'
+        if self.flux_type != 'flambda':
+            flux_type = ' flux_type=%r,'%self.flux_type
+        outstr = ('galsim.SED(%r, redshift=%r,%s%s' +
+                  ' _wave_list=%r, _blue_limit=%r, _red_limit=%r)')%(
+                      self._orig_spec, self.redshift, wave_type, flux_type,
+                      self.wave_list, self.blue_limit, self.red_limit)
+        return outstr
+
+    def __str__(self):
+        orig_spec = repr(self._orig_spec)
+        if len(orig_spec) > 80:
+            orig_spec = str(self._orig_spec)
+        return 'galsim.SED(%s, redshift=%s)'%(orig_spec, self.redshift)
+
     def __getstate__(self):
         d = self.__dict__.copy()
         if not isinstance(d['_spec'], galsim.LookupTable):
@@ -580,25 +621,3 @@ class SED(object):
             self._spec = None
         # If _spec is already set, this is will just set _rest_photons
         self._initialize_spec()
-
-    def __repr__(self):
-        red = self.red_limit
-        blue = self.blue_limit
-        wave_type = ''
-        flux_type = ''
-        if self.wave_factor == 10.0:
-            wave_type = ' wave_type="Angstroms",'
-        if self.flux_type != 'flambda':
-            flux_type = ' flux_type=%r,'%self.flux_type
-        return ('galsim.SED(%r, redshift=%r,%s%s' +
-                ' _wave_list=array(%r), _blue_limit=%r, _red_limit=%r)')%(
-                    self._orig_spec, self.redshift, wave_type, flux_type,
-                    self.wave_list.tolist(), self.blue_limit, self.red_limit)
-
-    def __str__(self):
-        orig_spec = repr(self._orig_spec)
-        if len(orig_spec) > 80:
-            orig_spec = str(self._orig_spec)
-        return 'galsim.SED(%s, redshift=%s)'%(orig_spec, self.redshift)
-
-    def __hash__(self): return hash(repr(self))

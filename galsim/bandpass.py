@@ -93,7 +93,7 @@ class Bandpass(object):
         # `wave_list` is normally constructed (see `Bandpass.__mul__` below)
 
         self._orig_tp = throughput  # Save this for pickling.
-        self._tp = _tp              # This will normally become orig_tp turned into an actual 
+        self._tp = _tp              # This will normally become orig_tp turned into an actual
                                     # function (see _initialize_tp()), although in some cases,
                                     # it can be supplied directly as a constructor argument.
 
@@ -179,7 +179,7 @@ class Bandpass(object):
             except:
                 raise ValueError(
                     "Throughput function was unable to evaluate at wave = {0}.".format(test_wave))
- 
+
 
     def _initialize_tp(self):
         # Turn the input tp into a real function self.func.
@@ -195,7 +195,7 @@ class Bandpass(object):
                 # Evaluate the function somewhere to make sure it is valid before continuing on.
                 if self.red_limit is not None:
                     test_wave = self.red_limit * self.wave_factor
-                elif blue_limit is not None:
+                elif self.blue_limit is not None:
                     test_wave = self.blue_limit * self.wave_factor
                 else:
                     # If neither `blue_limit` nor `red_limit` is defined, then the Bandpass should
@@ -229,7 +229,7 @@ class Bandpass(object):
         if hasattr(other, '__call__'):
             tp = lambda w: self.func(w) * other(w)
         elif isinstance(self._tp, galsim.LookupTable):
-            # If other is not a function, then there is no loss of accuracy by applying the 
+            # If other is not a function, then there is no loss of accuracy by applying the
             # factor directly to the LookupTable, if that's what we are using.
             # Make sure to keep the same properties about the table, wave_type.
             if self.wave_factor == 10.0:
@@ -237,7 +237,7 @@ class Bandpass(object):
             x = self._tp.getArgs()
             f = [ val * other for val in self._tp.getVals() ]
             tp = galsim.LookupTable(x, f, x_log=self._tp.x_log, f_log=self._tp.f_log,
-                                      interpolant=self._tp.interpolant)
+                                    interpolant=self._tp.interpolant)
         else:
             tp = lambda w: self.func(w) * other
 
@@ -263,7 +263,7 @@ class Bandpass(object):
         if hasattr(other, '__call__'):
             tp = lambda w: self.func(w) / other(w)
         elif isinstance(self._tp, galsim.LookupTable):
-            # If other is not a function, then there is no loss of accuracy by applying the 
+            # If other is not a function, then there is no loss of accuracy by applying the
             # factor directly to the LookupTable, if that's what we are using.
             # Make sure to keep the same properties about the table, wave_type.
             if self.wave_factor == 10.0:
@@ -271,14 +271,14 @@ class Bandpass(object):
             x = self._tp.getArgs()
             f = [ val / other for val in self._tp.getVals() ]
             tp = galsim.LookupTable(x, f, x_log=self._tp.x_log, f_log=self._tp.f_log,
-                                      interpolant=self._tp.interpolant)
+                                    interpolant=self._tp.interpolant)
         else:
             tp = lambda w: self.func(w) / other
 
         return Bandpass(tp, blue_limit, red_limit, wave_type=wave_type, _wave_list=wave_list)
 
     def __truediv__(self, other):
-        return __div__(self, other)
+        return self.__div__(other)
 
     def copy(self):
         import copy
@@ -314,7 +314,7 @@ class Bandpass(object):
             return self.func(wave) if (wave >= self.blue_limit and wave <= self.red_limit) else 0.0
 
     @property
-    def effective_wavelength(self): 
+    def effective_wavelength(self):
         return self.calculateEffectiveWavelength()
 
     def calculateEffectiveWavelength(self, precise=False):
@@ -368,7 +368,6 @@ class Bandpass(object):
                                  +"telescope effective diameter or exposure time.")
             if zeropoint.upper()=='AB':
                 AB_source = 3631e-23 # 3631 Jy in units of erg/s/Hz/cm^2
-                c = 2.99792458e17 # speed of light in nm/s
                 sed = galsim.SED(lambda wave: AB_source, flux_type='fnu')
             elif zeropoint.upper()=='ST':
                 # Use HST STmags: http://www.stsci.edu/hst/acs/analysis/zeropoints
@@ -432,8 +431,8 @@ class Bandpass(object):
             tp = self.func(wave)
             if relative_throughput is not None:
                 w = (tp >= tp.max()*relative_throughput).nonzero()
-                blue_limit = max([min(wave[w]), blue_limit])
-                red_limit = min([max(wave[w]), red_limit])
+                blue_limit = max([np.min(wave[w]), blue_limit])
+                red_limit = min([np.max(wave[w]), red_limit])
             wave_list = wave_list[np.logical_and(wave_list >= blue_limit,
                                                  wave_list <= red_limit) ]
         elif relative_throughput is not None:
@@ -444,7 +443,7 @@ class Bandpass(object):
         return Bandpass(self._orig_tp, blue_limit, red_limit, self.wave_type,
                         _wave_list=wave_list, _tp=self._tp)
 
-    def thin(self, rel_err=1.e-4, preserve_range=False):
+    def thin(self, rel_err=1.e-4, trim_zeros=True, preserve_range=True, fast_search=True):
         """Thin out the internal wavelengths of a Bandpass that uses a LookupTable.
 
         If the bandpass was initialized with a LookupTable or from a file (which internally
@@ -459,10 +458,25 @@ class Bandpass(object):
 
         @param rel_err            The relative error allowed in the integral over the throughput
                                   function. [default: 1.e-4]
+        @param trim_zeros         Remove redundant leading and trailing points where f=0?  (The last
+                                  leading point with f=0 and the first trailing point with f=0 will
+                                  be retained).  Note that if both trim_leading_zeros and
+                                  preserve_range are True, then the only the range of `x` *after*
+                                  zero trimming is preserved.  [default: True]
         @param preserve_range     Should the original range (`blue_limit` and `red_limit`) of the
                                   Bandpass be preserved? (True) Or should the ends be trimmed to
                                   include only the region where the integral is significant? (False)
-                                  [default: False]
+                                  [default: True]
+        @param fast_search        If set to True, then the underlying algorithm will use a
+                                  relatively fast O(N) algorithm to select points to include in the
+                                  thinned approximation.  If set to False, then a slower O(N^2)
+                                  algorithm will be used.  We have found that the slower algorithm
+                                  tends to yield a thinned representation that retains fewer samples
+                                  while still meeting the relative error requirement, and may also
+                                  be somewhat more robust when computing SED fluxes through
+                                  Bandpasses when a significant fraction of the integrated flux
+                                  passes through low throughput bandpass light leaks.
+                                  [default: True]
 
         @returns the thinned Bandpass.
         """
@@ -470,7 +484,9 @@ class Bandpass(object):
             x = self.wave_list
             f = self(x)
             newx, newf = utilities.thin_tabulated_values(x, f, rel_err=rel_err,
-                                                         preserve_range=preserve_range)
+                                                         trim_zeros=trim_zeros,
+                                                         preserve_range=preserve_range,
+                                                         fast_search=fast_search)
             tp = galsim.LookupTable(newx, newf, interpolant='linear')
             blue_limit = np.min(newx)
             red_limit = np.max(newx)
@@ -482,26 +498,19 @@ class Bandpass(object):
     def __eq__(self, other):
         return (isinstance(other, Bandpass) and
                 self._orig_tp == other._orig_tp and
-                self.red_limit == other.red_limit and
                 self.blue_limit == other.blue_limit and
+                self.red_limit == other.red_limit and
                 self.wave_factor == other.wave_factor and
                 self.zeropoint == other.zeropoint and
                 np.array_equal(self.wave_list,other.wave_list))
     def __ne__(self, other): return not self.__eq__(other)
 
-    def __getstate__(self):
-        d = self.__dict__.copy()
-        if not isinstance(d['_tp'], galsim.LookupTable):
-            del d['_tp']
-        del d['func']
-        return d
-
-    def __setstate__(self, d):
-        self.__dict__ = d
-        if '_tp' not in d:
-            self._tp = None
-        # If _tp is already set, this is will just set func.
-        self._initialize_tp()
+    def __hash__(self):
+        # Cache this in case self._orig_tp or self.wave_list is long.
+        if not hasattr(self, '_hash'):
+            self._hash = hash(("galsim.Bandpass", self._orig_tp, self.blue_limit, self.red_limit,
+                               self.wave_factor, self.zeropoint, tuple(self.wave_list)))
+        return self._hash
 
     def __repr__(self):
         if self.wave_factor == 10.0:
@@ -519,5 +528,16 @@ class Bandpass(object):
             orig_tp = str(self._orig_tp)
         return 'galsim.Bandpass(%s)'%self._orig_tp
 
-    def __hash__(self): return hash(repr(self))
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        if not isinstance(d['_tp'], galsim.LookupTable):
+            del d['_tp']
+        del d['func']
+        return d
 
+    def __setstate__(self, d):
+        self.__dict__ = d
+        if '_tp' not in d:
+            self._tp = None
+        # If _tp is already set, this is will just set func.
+        self._initialize_tp()

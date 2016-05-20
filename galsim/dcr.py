@@ -23,8 +23,6 @@ apparent zenith angles of an object), as a function of zenith angle, wavelength,
 pressure, and water vapor content.
 """
 
-import numpy
-
 import galsim
 
 def air_refractive_index_minus_one(wave, pressure=69.328, temperature=293.15, H2O_pressure=1.067):

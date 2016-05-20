@@ -621,10 +621,10 @@ def test_realgalaxy():
     # I don't want to gratuitously copy the real_catalog catalog, so use the 
     # version in the examples directory.
     real_gal_dir = os.path.join('..','examples','data')
-    real_gal_cat = os.path.join(real_gal_dir,'real_galaxy_catalog_example.fits')
+    real_gal_cat = 'real_galaxy_catalog_example.fits'
     config = {
         'input' : { 'real_catalog' : 
-                        { 'image_dir' : real_gal_dir , 
+                        { 'dir' : real_gal_dir , 
                           'file_name' : real_gal_cat ,
                           'preload' : True } 
                   },
@@ -648,7 +648,7 @@ def test_realgalaxy():
     galsim.config.ProcessInput(config)
 
     real_cat = galsim.RealGalaxyCatalog(
-        image_dir=real_gal_dir, file_name=real_gal_cat, preload=True)
+        dir=real_gal_dir, file_name=real_gal_cat, preload=True)
 
     # For these profiles, we convolve by a gaussian to smooth out the profile.
     # This makes the comparison much faster without changing the validity of the test.
@@ -698,6 +698,8 @@ def test_interpolated_image():
 
     imgdir = 'SBProfile_comparison_images'
     file_name = os.path.join(imgdir,'gauss_smallshear.fits')
+    imgdir2 = 'fits_files'
+    file_name2 = os.path.join(imgdir2,'interpim_hdu_test.fits')
     config = {
         'gal1' : { 'type' : 'InterpolatedImage', 'image' : file_name },
         'gal2' : { 'type' : 'InterpolatedImage', 'image' : file_name,
@@ -716,7 +718,9 @@ def test_interpolated_image():
                  },
         'gal7' : { 'type' : 'InterpolatedImage', 'image' : file_name,
                    'pad_image' : 'fits_files/blankimg.fits' 
-                 }
+                 },
+        'galmulti' : { 'type' : 'InterpolatedImage', 'image' : file_name2,
+                       'hdu' : 2 }
     }
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234) # A second copy starting with the same seed.
@@ -751,6 +755,14 @@ def test_interpolated_image():
     gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
     gal7b = galsim.InterpolatedImage(im, pad_image = 'fits_files/blankimg.fits')
     gsobject_compare(gal7a, gal7b)
+
+    # Now test the reading from some particular HDU
+    galmulti = galsim.config.BuildGSObject(config, 'galmulti')[0]
+    im = galmulti.drawImage(scale=0.2, method='no_pixel')
+    test_g2 = im.FindAdaptiveMom().observed_shape.g2
+    np.testing.assert_almost_equal(
+        test_g2, 0.7, decimal=3,
+        err_msg='Did not get right shape image after reading InterpolatedImage from HDU')
 
     t2 = time.time()
     print 'time for %s = %.2f'%(funcname(),t2-t1)
@@ -1062,20 +1074,20 @@ def test_ring():
     t1 = time.time()
 
     config = {
-        'gal' : { 
+        'stamp' : {
             'type' : 'Ring' ,
             'num' : 2,
-            'first' : { 
-                'type' : 'Gaussian' ,
-                'sigma' : 2 , 
-                'ellip' : {
-                    'type' : 'E1E2',
-                    'e1' : { 'type' : 'List' ,
-                             'items' : [ 0.3, 0.2, 0.8 ],
-                             'index' : { 'type' : 'Sequence', 'repeat' : 2 } 
-                           },
-                    'e2' : 0.1
-                }
+        },
+        'gal' : {
+            'type' : 'Gaussian' ,
+            'sigma' : 2,
+            'ellip' : {
+                'type' : 'E1E2',
+                'e1' : { 'type' : 'List' ,
+                            'items' : [ 0.3, 0.2, 0.8 ],
+                            'index' : { 'type' : 'Sequence', 'repeat' : 2 }
+                        },
+                'e2' : 0.1
             }
         }
     }
@@ -1084,86 +1096,100 @@ def test_ring():
     e1_list = [ 0.3, -0.3, 0.2, -0.2, 0.8, -0.8 ]
     e2_list = [ 0.1, -0.1, 0.1, -0.1, 0.1, -0.1 ]
 
+    galsim.config.SetupConfigImageNum(config, 0, 0)
+    ignore = galsim.config.stamp_ignore
+    ring_builder = galsim.config.stamp_ring.RingBuilder()
     for k in range(6):
-        config['obj_num'] = k
-        gal1a = galsim.config.BuildGSObject(config, 'gal')[0]
+        galsim.config.SetupConfigObjNum(config, k)
+        ring_builder.setup(config['stamp'], config, None, None, ignore, None)
+        gal1a = ring_builder.buildProfile(config['stamp'], config, None, {}, None)
         gal1b = gauss.shear(e1=e1_list[k], e2=e2_list[k])
+        print 'gal1a = ',gal1a
+        print 'gal1b = ',gal1b
         gsobject_compare(gal1a, gal1b)
 
     config = {
-        'gal' : {
+        'stamp' : {
             'type' : 'Ring' ,
             'num' : 10,
-            'first' : { 'type' : 'Exponential', 'half_light_radius' : 2,
-                        'ellip' : galsim.Shear(e2=0.3) 
-                      },
-        }
+        },
+        'gal' : {
+            'type' : 'Exponential', 'half_light_radius' : 2,
+            'ellip' : galsim.Shear(e2=0.3)
+        },
     }
 
     disk = galsim.Exponential(half_light_radius=2).shear(e2=0.3)
 
+    galsim.config.SetupConfigImageNum(config, 0, 0)
     for k in range(25):
-        config['obj_num'] = k
-        gal2a = galsim.config.BuildGSObject(config, 'gal')[0]
+        galsim.config.SetupConfigObjNum(config, k)
+        ring_builder.setup(config['stamp'], config, None, None, ignore, None)
+        gal2a = ring_builder.buildProfile(config['stamp'], config, None, {}, None)
         gal2b = disk.rotate(theta = k * 18 * galsim.degrees)
         gsobject_compare(gal2a, gal2b)
 
     config = {
-        'gal' : {
+        'stamp' : {
             'type' : 'Ring' ,
             'num' : 5,
             'full_rotation' : 360. * galsim.degrees,
-            'first' : { 
-                'type' : 'Sum',
-                'items' : [
-                    { 'type' : 'Exponential', 'half_light_radius' : 2,
-                      'ellip' : galsim.Shear(e2=0.3) 
-                    },
-                    { 'type' : 'Sersic', 'n' : 3, 'half_light_radius' : 1.3, 
-                      'ellip' : galsim.Shear(e1=0.12,e2=-0.08) 
-                    } 
-                ]
-            },
             'index' : { 'type' : 'Sequence', 'repeat' : 4 }
-        }
+        },
+        'gal' : {
+            'type' : 'Sum',
+            'items' : [
+                { 'type' : 'Exponential', 'half_light_radius' : 2,
+                    'ellip' : galsim.Shear(e2=0.3)
+                },
+                { 'type' : 'Sersic', 'n' : 3, 'half_light_radius' : 1.3,
+                    'ellip' : galsim.Shear(e1=0.12,e2=-0.08)
+                }
+            ]
+        },
     }
 
     disk = galsim.Exponential(half_light_radius=2).shear(e2=0.3)
     bulge = galsim.Sersic(n=3, half_light_radius=1.3).shear(e1=0.12,e2=-0.08)
     sum = disk + bulge
 
+    galsim.config.SetupConfigImageNum(config, 0, 0)
     for k in range(25):
-        config['obj_num'] = k
+        galsim.config.SetupConfigObjNum(config, k)
         index = k // 4  # make sure we use integer division
-        gal3a = galsim.config.BuildGSObject(config, 'gal')[0]
+        ring_builder.setup(config['stamp'], config, None, None, ignore, None)
+        gal3a = ring_builder.buildProfile(config['stamp'], config, None, {}, None)
         gal3b = sum.rotate(theta = index * 72 * galsim.degrees)
         gsobject_compare(gal3a, gal3b)
 
     # Check that the ring items correctly inherit their gsparams from the top level
     config = {
-        'gal' : {
+        'stamp' : {
             'type' : 'Ring' ,
             'num' : 20,
             'full_rotation' : 360. * galsim.degrees,
-            'first' : { 
-                'type' : 'Sum',
-                'items' : [
-                    { 'type' : 'Exponential', 'half_light_radius' : 2,
-                      'ellip' : galsim.Shear(e2=0.3) 
-                    },
-                    { 'type' : 'Sersic', 'n' : 3, 'half_light_radius' : 1.3, 
-                      'ellip' : galsim.Shear(e1=0.12,e2=-0.08) 
-                    } 
-                ]
-            },
             'gsparams' : { 'maxk_threshold' : 1.e-2,
                            'folding_threshold' : 1.e-2,
                            'stepk_minimum_hlr' : 3 }
-        }
+        },
+        'gal' : {
+            'type' : 'Sum',
+            'items' : [
+                { 'type' : 'Exponential', 'half_light_radius' : 2,
+                    'ellip' : galsim.Shear(e2=0.3)
+                },
+                { 'type' : 'Sersic', 'n' : 3, 'half_light_radius' : 1.3,
+                    'ellip' : galsim.Shear(e1=0.12,e2=-0.08)
+                }
+            ]
+        },
     }
 
-    config['obj_num'] = 0
-    gal4a = galsim.config.BuildGSObject(config, 'gal')[0]
+    galsim.config.SetupConfigImageNum(config, 0, 0)
+    galsim.config.SetupConfigObjNum(config, 0)
+    ring_builder.setup(config['stamp'], config, None, None, ignore, None)
+    gal4a = ring_builder.buildProfile(config['stamp'], config, None, config['stamp']['gsparams'],
+                                      None)
     gsparams = galsim.GSParams(maxk_threshold=1.e-2, folding_threshold=1.e-2, stepk_minimum_hlr=3)
     disk = galsim.Exponential(half_light_radius=2, gsparams=gsparams).shear(e2=0.3)
     bulge = galsim.Sersic(n=3,half_light_radius=1.3, gsparams=gsparams).shear(e1=0.12,e2=-0.08)

@@ -459,7 +459,7 @@ namespace integ {
             nfeval++;
 #endif
             const int nmax = 2*gkp_x<T>(NGKPLEVELS-1).size()-1;
-            static std::vector<T> fv1(nmax), fv2(nmax);
+            std::vector<T> fv1(nmax), fv2(nmax);
 
             fv1.clear();
             fv2.clear();

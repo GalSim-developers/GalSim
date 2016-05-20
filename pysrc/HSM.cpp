@@ -95,6 +95,8 @@ struct PyHSMParams {
             "                  KSB method of PSF correction.  Warning: deviating from default\n"
             "                  value of 2 results in code running more slowly, and results have\n"
             "                  not been significantly tested.\n"
+            "convergence_threshold  Accuracy (in x0, y0, and sigma, each as a fraction of sigma)\n"
+            "                  when calculating adaptive moments.\n"
             "max_mom2_iter     Maximum number of iterations to use when calculating adaptive\n"
             "                  moments.  This should be sufficient in nearly all situations, with\n"
             "                  the possible exception being very flattened profiles.\n"
@@ -110,24 +112,34 @@ struct PyHSMParams {
             "                   exception.\n"
             "ksb_moments_max    Use moments up to ksb_moments_max order for KSB method of PSF\n"
             "                   correction.\n"
+            "ksb_sig_weight     The width of the weight function (in pixels) to use for the KSB\n"
+            "                   method.  Normally, this is derived from the measured moments of the\n"
+            "                   galaxy image; this keyword overrides this calculation.  Can be\n"
+            "                   combined with ksb_sig_factor.\n"
+            "ksb_sig_factor     Factor by which to multiply the weight function width for the KSB\n"
+            "                   method (default: 1.0).  Can be combined with ksb_sig_weight.\n"
             "failed_moments     Value to report for ellipticities and resolution factor if shape\n"
             "                   measurement fails.\n";
 
         bp::class_<HSMParams> pyHSMParams("HSMParams", doc, bp::no_init);
         pyHSMParams
             .def(bp::init<
-                 double, double, double, int, int, long, long, double, double, double, int, double>(
+                 double, double, double, int, int, double, long, long, double, double, double,
+                 int, double, double, double>(
                      (bp::arg("nsig_rg")=3.0,
                       bp::arg("nsig_rg2")=3.6,
                       bp::arg("max_moment_nsig2")=25.0,
                       bp::arg("regauss_too_small")=1,
                       bp::arg("adapt_order")=2,
+                      bp::arg("convergence_threshold")=1.e-6,
                       bp::arg("max_mom2_iter")=400,
                       bp::arg("num_iter_default")=-1,
                       bp::arg("bound_correct_wt")=0.25,
                       bp::arg("max_amoment")=8000.,
                       bp::arg("max_ashift")=15.,
                       bp::arg("ksb_moments_max")=4,
+                      bp::arg("ksb_sig_weight")=0.0,
+                      bp::arg("ksb_sig_factor")=1.0,
                       bp::arg("failed_moments")=-1000.))
             )
             .def(bp::init<const HSMParams&>())
@@ -136,12 +148,15 @@ struct PyHSMParams {
             .def_readonly("max_moment_nsig2",&HSMParams::max_moment_nsig2)
             .def_readonly("regauss_too_small",&HSMParams::regauss_too_small)
             .def_readonly("adapt_order",&HSMParams::adapt_order)
+            .def_readonly("convergence_threshold",&HSMParams::convergence_threshold)
             .def_readonly("max_mom2_iter",&HSMParams::max_mom2_iter)
             .def_readonly("num_iter_default",&HSMParams::num_iter_default)
             .def_readonly("bound_correct_wt",&HSMParams::bound_correct_wt)
             .def_readonly("max_amoment",&HSMParams::max_amoment)
             .def_readonly("max_ashift",&HSMParams::max_ashift)
             .def_readonly("ksb_moments_max",&HSMParams::ksb_moments_max)
+            .def_readonly("ksb_sig_weight",&HSMParams::ksb_sig_weight)
+            .def_readonly("ksb_sig_factor",&HSMParams::ksb_sig_factor)
             .def_readonly("failed_moments",&HSMParams::failed_moments)
             .enable_pickling()
             ;

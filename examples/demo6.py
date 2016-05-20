@@ -26,8 +26,9 @@ images distributed with GalSim only includes 100 galaxies, but you can download 
 larger set of images.  See https://github.com/GalSim-developers/GalSim/wiki for a link
 to the download page.
 
-The galaxy images include images of the effective PSF for the original observations, 
-so GalSim considers the galaxy profile to be the observed image deconvolved by that PSF.
+The galaxy images are already convolved with the effective PSF for the original 
+observations, so GalSim considers the galaxy profile to be the observed image deconvolved 
+by that PSF (also distributed with the galaxy data).
 In this case, we then randomly rotate the galaxies, apply a given gravitational shear as
 well as gravitational magnification, and then finally convolve by a double Gaussian PSF.
 The final image can of course have any pixel scale, not just that of the original images.
@@ -129,7 +130,7 @@ def main(argv):
         t1 = time.time()
 
         # Initialize the random number generator we will be using.
-        rng = galsim.UniformDeviate(random_seed+k)
+        rng = galsim.UniformDeviate(random_seed+k+1)
 
         gal = galsim.RealGalaxy(real_galaxy_catalog, index = k)
         logger.debug('   Read in training sample galaxy and PSF from file')

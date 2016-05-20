@@ -35,13 +35,10 @@ processing with them.  (e.g. Run your shape measurement code on the images from 
 
 New features introduced in this demo:
 
-- galsim.config.Process(config)
-- galsim.config.ProcessInput(config)
-- galsim.config.ProcessOutput(config)
-- galsim.config.BuildFits(file_name, config)
-- galsim.config.BuildMultiFits(file_name, nimages, config)
-- galsim.config.BuildDataCube(file_name, nimages, config)
-- galsim.config.BuildImage(config)
+- galsim.config.Process(config, logger)
+- galsim.config.ProcessInput(config, logger)
+- galsim.config.BuildFile(config, file_num, logger)
+- image = galsim.config.BuildImage(config, image_num, logger)
 - galsim.fits.read(file_name)
 """
 
@@ -144,28 +141,17 @@ def main(argv):
     # save the catalog (or whatever) in the config dict in the way that further processing
     # functions expect.  However, we don't have any input field, so we don't need it here.
     #
-    # To build the files, the Process function then calls one of the following:
+    # The Process function then calls the following function to build each file:
     #
-    #     galsim.config.BuildFits(file_name, config)               -- build a regular fits file
-    #     galsim.config.BuildMultiFits(file_name, nimages, config) -- build a multi-extension fits 
-    #                                                                 file
-    #     galsim.config.BuildDataCube(file_name, nimages, config)  -- build a fits data cube
+    #     galsim.config.BuildFile(config, file_num)
     #
     # Again, we'll forego that option here, so we can see how to use the config machinery
     # to produce images that we can use from within python.
     #
-    # Each of these functions call the following function to process the image field
-    # and actually build the images:
+    # This function then calls the following function to process the image field and actually
+    # build each image:
     #
-    #     galsim.config.BuildImage(config)
-    #
-    # This returns a tuple of potentially 4 images:
-    #
-    #     (image, psf_image, weight_image, badpix_image)
-    #
-    # The default is for the latter 3 to all be None, but you can have the function build those
-    # images as well by setting the optional kwargs: make_psf_image=True, make_weight_image=True,
-    # and make_badpix_image=True, respectively.
+    #     image = galsim.config.BuildImage(config, image_num)
     #
     # All of the above functions also have an optional kwarg, logger, which can take a 
     # logger object to output diagnostic information if desired.  We'll use that option here
@@ -176,14 +162,10 @@ def main(argv):
 
     t1 = time.time()
 
-    # Build the image
-    # Since BuildImage returns a tuple of 4 images (see above) even though the latter
-    # three are all returned as None, we still need to deal with the return values.
-    # You could take [0] of the return value to just take the first image.  
-    # You could also assign them all to an appropriate name and then not use them.
-    # Another cute way to do it is to use an underscore for names of returned values
-    # that you are planning to ignore:
-    image, _, _, _ = galsim.config.BuildImage(config, logger=logger)
+    # Build the image.
+    # In this case, there is only a single image, so image_num=0.  This is the default, so we
+    # can actually omit this parameter for brevity.
+    image = galsim.config.BuildImage(config, logger=logger)
     
     # At this point you could do something interesting with the image in memory.
     # After all, that was kind of the point of using BuildImage rather than the other higher
@@ -212,9 +194,15 @@ def main(argv):
     nproc = 4
     config['image']['nproc'] = nproc
 
-    # This time, let's just combine the two operations above and use the BuildFits function:
+    # This time, let's just combine the two operations above and use the BuildFile function.
+    # BuildFile uses config['output'] to determine the relevant information about how to
+    # build the files.  In this case, the only thing we need to specify is the file name.
     multi_file_name = os.path.join('output','bpd_multi.fits')
-    galsim.config.BuildFits(multi_file_name, config, logger=logger)
+    config['output'] = {
+        'file_name' : multi_file_name 
+    }
+    # Again, we are just building one file, so use the default value of file_num=0.
+    galsim.config.BuildFile(config, logger=logger)
 
     t3 = time.time()
 

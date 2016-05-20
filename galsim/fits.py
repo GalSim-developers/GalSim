@@ -425,6 +425,14 @@ def _check_hdu(hdu, pyfits_compress):
     """Check that an input `hdu` is valid
     """
     from galsim._pyfits import pyfits
+    # Check for fixable verify errors
+    try:
+        hdu.header
+        hdu.data
+    except pyfits.VerifyError:
+        hdu.verify('fix')
+
+    # Check that the specified compression is right for the given hdu type.
     if pyfits_compress:
         if not isinstance(hdu, pyfits.CompImageHDU):
             if isinstance(hdu, pyfits.BinTableHDU):
@@ -557,7 +565,8 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True
 
     The details of how the images are written to file depends on the arguments.
 
-    @param image_list   A Python list of Images.
+    @param image_list   A Python list of Images.  (For convenience, some items in this list
+                        may be HDUs already.  Any Images will be converted into pyfits HDUs.)
     @param file_name    The name of the file to write to.  [Either `file_name` or `hdu_list` is 
                         required.]
     @param dir          Optionally a directory name can be provided if `file_name` does not 
@@ -583,13 +592,19 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True
         hdu_list = pyfits.HDUList()
 
     for image in image_list:
-        hdu = _add_hdu(hdu_list, image.array, pyfits_compress)
-        if image.wcs:
-            image.wcs.writeToFitsHeader(hdu.header, image.bounds)
+        if isinstance(image, galsim.Image):
+            hdu = _add_hdu(hdu_list, image.array, pyfits_compress)
+            if image.wcs:
+                image.wcs.writeToFitsHeader(hdu.header, image.bounds)
+        else:
+            # Assume that image is really an HDU.  If not, this should give a reasonable error
+            # message.  (The base type of HDUs vary among versions of pyfits, so it's hard to
+            # check explicitly with an isinstance call.  For newer pyfits versions, it is
+            # pyfits.hdu.base.ExtensionHDU, but not in older versions.)
+            hdu_list.append(image)
 
     if file_name:
         _write_file(file_name, dir, hdu_list, clobber, file_compress, pyfits_compress)
-
 
 
 def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
@@ -771,7 +786,7 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
 
     @returns the image as an Image instance.
     """
-    
+
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
     if file_name and hdu_list is not None:
@@ -785,12 +800,12 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
     hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
 
     wcs, origin = galsim.wcs.readFromFitsHeader(hdu.header)
-    pixel = hdu.data.dtype.type
-    if pixel in galsim.Image.valid_dtypes:
+    dt = hdu.data.dtype.type
+    if dt in galsim.Image.valid_array_dtypes:
         data = hdu.data
     else:
         import warnings
-        warnings.warn("No C++ Image template instantiation for pixel type %s" % pixel)
+        warnings.warn("No C++ Image template instantiation for data type %s" % dt)
         warnings.warn("   Using numpy.float64 instead.")
         import numpy
         data = hdu.data.astype(numpy.float64)
@@ -930,12 +945,12 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
     hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
 
     wcs, origin = galsim.wcs.readFromFitsHeader(hdu.header)
-    pixel = hdu.data.dtype.type
-    if pixel in galsim.Image.valid_dtypes:
+    dt = hdu.data.dtype.type
+    if dt in galsim.Image.valid_array_dtypes:
         data = hdu.data
     else:
         import warnings
-        warnings.warn("No C++ Image template instantiation for pixel type %s" % pixel)
+        warnings.warn("No C++ Image template instantiation for data type %s" % dt)
         warnings.warn("   Using numpy.float64 instead.")
         import numpy
         data = hdu.data.astype(numpy.float64)
@@ -1096,7 +1111,6 @@ class FitsHeader(object):
     _opt_params = { 'dir' : str , 'hdu' : int , 'compression' : str , 'text_file' : bool }
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, header=None, file_name=None, dir=None, hdu_list=None, hdu=None,
                  compression='auto', text_file=False):

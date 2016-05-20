@@ -110,7 +110,7 @@ class ShapeData(object):
 
     - corrected_shape_err: shape measurement uncertainty sigma_gamma per component.  The estimate of
       the uncertainty will only be non-zero if an estimate of the sky variance was passed to
-      EstimateShearHSM().
+      EstimateShear().
 
     - correction_method: a string indicating the method of PSF correction (will be "None" if
       PSF-correction was not carried out).
@@ -264,11 +264,12 @@ _galsim.CppShapeData.__hash__ = lambda self: hash(repr(self))
 
 _galsim.HSMParams.__getinitargs__ = lambda self: (
         self.nsig_rg, self.nsig_rg2, self.max_moment_nsig2, self.regauss_too_small,
-        self.adapt_order, self.max_mom2_iter, self.num_iter_default, self.bound_correct_wt,
-        self.max_amoment, self.max_ashift, self.ksb_moments_max, self.failed_moments)
+        self.adapt_order, self.convergence_threshold, self.max_mom2_iter, self.num_iter_default,
+        self.bound_correct_wt, self.max_amoment, self.max_ashift,
+        self.ksb_moments_max, self.ksb_sig_weight, self.ksb_sig_factor, self.failed_moments)
 
 _galsim.HSMParams.__repr__ = lambda self: \
-        ('galsim.hsm.HSMParams(' + 11*'%r,' + '%r)')%self.__getinitargs__()
+        ('galsim.hsm.HSMParams(' + 14*'%r,' + '%r)')%self.__getinitargs__()
 
 _galsim.HSMParams.__eq__ = lambda self, other: repr(self) == repr(other)
 _galsim.HSMParams.__ne__ = lambda self, other: not self.__eq__(other)
@@ -324,6 +325,22 @@ def _convertMask(image, weight=None, badpix=None):
 
     # finally, return the Image for the weight map
     return mask.image.view()
+
+
+# A simpler helper function to make sure the images are not ImageS.  Convert to ImageI if they are.
+def _convertImage(image):
+    """Convert the given image to the correct format needed to pass to the C++ layer.
+
+    This is used by EstimateShear() and FindAdaptiveMom().
+    """
+    # if weight is an ImageS, then convert to ImageI.
+    import numpy
+    if image.dtype == numpy.int16:
+        image = galsim.ImageI(image)
+
+    # Return this as an ImageView
+    return image.image.view()
+
 
 def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
                   shear_est="REGAUSS", recompute_flux="FIT", guess_sig_gal=5.0,
@@ -424,8 +441,8 @@ def EstimateShear(gal_image, PSF_image, weight=None, badpix=None, sky_var=0.0,
     @returns a ShapeData object containing the results of shape measurement.
     """
     # prepare inputs to C++ routines: ImageView for galaxy, PSF, and weight map
-    gal_image_view = gal_image.image.view()
-    PSF_image_view = PSF_image.image.view()
+    gal_image_view = _convertImage(gal_image)
+    PSF_image_view = _convertImage(PSF_image)
     weight_view = _convertMask(gal_image, weight=weight, badpix=badpix)
 
     if guess_centroid is None:
@@ -534,7 +551,7 @@ def FindAdaptiveMom(object_image, weight=None, badpix=None, guess_sig=5.0, preci
     @returns a ShapeData object containing the results of moment measurement.
     """
     # prepare inputs to C++ routines: ImageView for the object being measured and the weight map.
-    object_image_view = object_image.image.view()
+    object_image_view = _convertImage(object_image)
     weight_view = _convertMask(object_image, weight=weight, badpix=badpix)
 
     if guess_centroid is None:

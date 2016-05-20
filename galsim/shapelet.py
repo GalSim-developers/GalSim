@@ -15,10 +15,12 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-"""@file shapelet.py 
+"""@file shapelet.py
 
 Shapelet is a GSObject that implements a shapelet decomposition of a profile.
 """
+
+import numpy as np
 
 import galsim
 from galsim import GSObject
@@ -31,13 +33,13 @@ class Shapelet(GSObject):
     This class describes an arbitrary profile in terms of a shapelet decomposition.  A shapelet
     decomposition is an eigenfunction decomposition of a 2-d function using the eigenfunctions
     of the 2-d quantum harmonic oscillator.  The functions are Laguerre polynomials multiplied
-    by a Gaussian.  See Bernstein & Jarvis, 2002 or Massey & Refregier, 2005 for more detailed 
-    information about this kind of decomposition.  For this class, we follow the notation of 
+    by a Gaussian.  See Bernstein & Jarvis, 2002 or Massey & Refregier, 2005 for more detailed
+    information about this kind of decomposition.  For this class, we follow the notation of
     Bernstein & Jarvis.
 
-    The decomposition is described by an overall scale length, `sigma`, and a vector of 
+    The decomposition is described by an overall scale length, `sigma`, and a vector of
     coefficients, `b`.  The `b` vector is indexed by two values, which can be either (p,q) or (N,m).
-    In terms of the quantum solution of the 2-d harmonic oscillator, p and q are the number of 
+    In terms of the quantum solution of the 2-d harmonic oscillator, p and q are the number of
     quanta with positive and negative angular momentum (respectively).  Then, N=p+q, m=p-q.
 
     The 2D image is given by (in polar coordinates):
@@ -49,14 +51,14 @@ class Shapelet(GSObject):
         psi_pq(r,theta) = (-)^q/sqrt(pi) sqrt(q!/p!) r^m exp(i m theta) exp(-r^2/2) L_q^(m)(r^2)
 
     and L_q^(m)(x) are generalized Laguerre polynomials.
-    
-    The coeffients b_pq are in general complex.  However, we require that the resulting 
+
+    The coeffients b_pq are in general complex.  However, we require that the resulting
     I(r,theta) be purely real, which implies that b_pq = b_qp* (where * means complex conjugate).
-    This further implies that b_pp (i.e. b_pq with p==q) is real. 
+    This further implies that b_pp (i.e. b_pq with p==q) is real.
 
     Initialization
     --------------
-    
+
     1. Make a blank Shapelet instance with all b_pq = 0.
 
         >>> shapelet = galsim.Shapelet(sigma, order)
@@ -71,7 +73,7 @@ class Shapelet(GSObject):
 
     [ b00  Re(b10)  Im(b10)  Re(b20)  Im(b20)  b11  Re(b30)  Im(b30)  Re(b21)  Im(b21) ... ]
 
-    i.e. we progressively increase N, and for each value of N, we start with m=N and go down to 
+    i.e. we progressively increase N, and for each value of N, we start with m=N and go down to
     m=0 or 1 as appropriate.  And since m=0 is intrinsically real, it only requires one spot
     in the list.
 
@@ -111,7 +113,6 @@ class Shapelet(GSObject):
     _opt_params = {}
     _single_params = []
     _takes_rng = False
-    _takes_logger = False
 
     def __init__(self, sigma, order, bvec=None, gsparams=None):
         # Make sure order and sigma are the right type:
@@ -125,8 +126,7 @@ class Shapelet(GSObject):
             bvec_size = ShapeletSize(order)
             if len(bvec) != bvec_size:
                 raise ValueError("bvec is the wrong size for the provided order")
-            import numpy
-            bvec = LVector(order,numpy.array(bvec))
+            bvec = LVector(order,np.array(bvec))
 
         GSObject.__init__(self, _galsim.SBShapelet(sigma, bvec, gsparams))
         self._gsparams = gsparams
@@ -152,7 +152,7 @@ class Shapelet(GSObject):
     def getNM(self,N,m):
         return self.SBProfile.getBVec().getPQ((N+m)/2,(N-m)/2)
 
-    # These act directly on the bvector, so they may be a bit more efficient than the 
+    # These act directly on the bvector, so they may be a bit more efficient than the
     # regular methods in GSObject
     def rotate(self, theta):
         if not isinstance(theta, galsim.Angle):
@@ -169,11 +169,22 @@ class Shapelet(GSObject):
         sigma = self.sigma * scale
         return Shapelet(sigma, self.order, self.bvec)
 
-    def __repr__(self): 
+    def __eq__(self, other):
+        return (isinstance(other, galsim.Shapelet) and
+                self.sigma == other.sigma and
+                self.order == other.order and
+                np.array_equal(self.bvec, other.bvec) and
+                self._gsparams == other._gsparams)
+
+    def __hash__(self):
+        return hash(("galsim.Shapelet", self.sigma, self.order, tuple(self.bvec),
+                     self._gsparams))
+
+    def __repr__(self):
         return 'galsim.Shapelet(sigma=%r, order=%r, bvec=%r, gsparams=%r)'%(
                 self.sigma, self.order, self.bvec, self._gsparams)
 
-    def __str__(self): 
+    def __str__(self):
         return 'galsim.Shapelet(sigma=%s, order=%s, bvec=%s)'%(self.sigma, self.order, self.bvec)
 
 _galsim.SBShapelet.__getinitargs__ = lambda self: (
@@ -213,7 +224,7 @@ def FitShapelet(sigma, order, image, center=None, normalization='flux', gsparams
     @param image        The Image for which to fit the shapelet decomposition
     @param center       The position in pixels to use for the center of the decomposition.
                         [default: image.bounds.trueCenter()]
-    @param normalization  The normalization to assume for the image. 
+    @param normalization  The normalization to assume for the image.
                         [default: "flux"]
     @param gsparams     An optional GSParams argument.  See the docstring for GSParams for
                         details. [default: None]
@@ -242,4 +253,3 @@ def FitShapelet(sigma, order, image, center=None, normalization='flux', gsparams
         bvec /= image.scale**2
 
     return Shapelet(sigma, order, bvec.array, gsparams)
-

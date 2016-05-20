@@ -122,6 +122,8 @@ namespace hsm {
      *                           KSB method of PSF correction.  Warning: deviating from default
      *                           value of 2 results in code running more slowly, and results have
      *                           not been significantly tested.
+     * @param convergence_threshold Accuracy (in x0, y0, and sigma as a fraction of sigma) when
+     *                           calculating adaptive moments.
      * @param max_mom2_iter      Maximum number of iterations to use when calculating adaptive
      *                           moments.  This should be sufficient in nearly all situations, with
      *                           the possible exception being very flattened profiles.
@@ -137,6 +139,12 @@ namespace hsm {
      *                           exception.
      * @param ksb_moments_max    Use moments up to ksb_moments_max order for KSB method of PSF
      *                           correction.
+     * @param ksb_sig_weight     The width of the weight function (in pixels) to use for the KSB
+     *                           method.  Normally, this is derived from the measured moments of the
+     *                           galaxy image; this keyword overrides this calculation.  Can be
+     *                           combined with ksb_sig_factor.
+     * @param ksb_sig_factor     Factor by which to multiply the weight function width for the KSB
+     *                           method (default: 1.0).  Can be combined with ksb_sig_weight.
      * @param failed_moments     Value to report for ellipticities and resolution factor if shape
      *                           measurement fails.
      */
@@ -145,24 +153,30 @@ namespace hsm {
                   double _max_moment_nsig2,
                   int _regauss_too_small,
                   int _adapt_order,
+                  double _convergence_threshold,
                   long _max_mom2_iter,
                   long _num_iter_default,
                   double _bound_correct_wt,
                   double _max_amoment,
                   double _max_ashift,
                   int _ksb_moments_max,
+                  double _ksb_sig_weight,
+                  double _ksb_sig_factor,
                   double _failed_moments) :
             nsig_rg(_nsig_rg),
             nsig_rg2(_nsig_rg2),
             max_moment_nsig2(_max_moment_nsig2),
             regauss_too_small(_regauss_too_small),
             adapt_order(_adapt_order),
+            convergence_threshold(_convergence_threshold),
             max_mom2_iter(_max_mom2_iter),
             num_iter_default(_num_iter_default),
             bound_correct_wt(_bound_correct_wt),
             max_amoment(_max_amoment),
             max_ashift(_max_ashift),
             ksb_moments_max(_ksb_moments_max),
+            ksb_sig_weight(_ksb_sig_weight),
+            ksb_sig_factor(_ksb_sig_factor),
             failed_moments(_failed_moments)
         {}
 
@@ -175,12 +189,15 @@ namespace hsm {
             max_moment_nsig2(25.0),
             regauss_too_small(1),
             adapt_order(2),
+            convergence_threshold(1.e-6),
             max_mom2_iter(400),
             num_iter_default(-1),
             bound_correct_wt(0.25),
             max_amoment(8000.),
             max_ashift(15.),
             ksb_moments_max(4),
+            ksb_sig_weight(0.0),
+            ksb_sig_factor(1.0),
             failed_moments(-1000.)
             {}
 
@@ -190,12 +207,15 @@ namespace hsm {
         double max_moment_nsig2;
         int regauss_too_small;
         int adapt_order;
+        double convergence_threshold;
         long max_mom2_iter;
         long num_iter_default;
         double bound_correct_wt;
         double max_amoment;
         double max_ashift;
         int ksb_moments_max;
+        double ksb_sig_weight;
+        double ksb_sig_factor;
         double failed_moments;
     };
 
@@ -476,15 +496,15 @@ namespace hsm {
      * @param[out] Mxy      The xy component of the moment matrix.
      * @param[out] Myy      The yy component of the moment matrix.
      * @param[out] rho4     The weighted radial fourth moment.
-     * @param[in] epsilon   The required level of accuracy.
+     * @param[in] convergence_threshold   The required level of accuracy.
      * @param[out] num_iter The number of iterations needed to converge.
      * @param[in] hsmparams Optional argument to specify parameters to be used for shape
      *                      measurement routines, as an HSMParams object.
      */
     void find_ellipmom_2(
         ConstImageView<double> data, double& A, double& x0, double& y0,
-        double& Mxx, double& Mxy, double& Myy, double& rho4, double epsilon, int& num_iter,
-        boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
+        double& Mxx, double& Mxy, double& Myy, double& rho4, double convergence_threshold,
+        int& num_iter, boost::shared_ptr<HSMParams> hsmparams = boost::shared_ptr<HSMParams>());
 
 }
 }

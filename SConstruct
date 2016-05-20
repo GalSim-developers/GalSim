@@ -100,6 +100,24 @@ opts.Add(BoolVariable('IMPORT_ENV',
 opts.Add('EXTRA_LIBS','Libraries to send to the linker','')
 opts.Add(BoolVariable('IMPORT_PREFIX',
          'Use PREFIX/include and PREFIX/lib in search paths', True))
+opts.Add(PathVariable('DYLD_LIBRARY_PATH',
+         'Set the DYLD_LIBRARY_PATH inside of SCons.  '+
+         'Particularly useful on El Capitan (and later), since Apple strips out '+
+         'DYLD_LIBRARY_PATH from the environment that SCons sees, so if you need it, '+
+         'this option enables SCons to set it back in for you by doing '+
+         '`scons DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH`.',
+         '', PathVariable.PathAccept))
+opts.Add(PathVariable('DYLD_FALLBACK_LIBRARY_PATH',
+         'Set the DYLD_FALLBACK_LIBRARY_PATH inside of SCons.  '+
+         'Particularly useful on El Capitan (and later), since Apple strips out '+
+         'DYLD_FALLBACK_LIBRARY_PATH from the environment that SCons sees, so if you need it, '+
+         'this option enables SCons to set it back in for you by doing '+
+         '`scons DYLD_FALLBACK_LIBRARY_PATH=$DYLD_FALLBACK_LIBRARY_PATH`.',
+         '', PathVariable.PathAccept))
+opts.Add(PathVariable('LD_LIBRARY_PATH',
+         'Set the LD_LIBRARY_PATH inside of SCons. '+
+         'cf. DYLD_LIBRARY_PATH for why this may be useful.',
+         '', PathVariable.PathAccept))
 
 opts.Add('NOSETESTS','Name of nosetests executable','')
 opts.Add(BoolVariable('CACHE_LIB','Cache the results of the library checks',True))
@@ -107,8 +125,8 @@ opts.Add(BoolVariable('WITH_PROF',
             'Use the compiler flag -pg to include profiling info for gprof', False))
 opts.Add(BoolVariable('MEM_TEST','Test for memory leaks', False))
 opts.Add(BoolVariable('TMV_DEBUG','Turn on extra debugging statements within TMV library',False))
-# None of the code uses openmp yet.  Probably make this default True if we start using it.
-opts.Add(BoolVariable('WITH_OPENMP','Look for openmp and use if found.', False))
+# None of the code uses openmp yet.  Re-enable this if we start using it.
+#opts.Add(BoolVariable('WITH_OPENMP','Look for openmp and use if found.', False))
 opts.Add(BoolVariable('USE_UNKNOWN_VARS',
             'Allow other parameters besides the ones listed here.',False))
 
@@ -206,14 +224,44 @@ def ErrorExit(*args, **kwargs):
                 cmd = conftest
             else:
                 cmd = env['PYTHON'] + " < " + conftest
-            p = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                 shell=True)
+            cmd = PrependLibraryPaths(cmd,env)
+            p = subprocess.Popen(['bash','-c',cmd], stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT, shell=False)
             conftest_out = p.stdout.readlines()
             out.write('Output of the command %s is:\n'%cmd)
             out.write(''.join(conftest_out) + '\n')
+
+            # For executables, it's often helpful to have a look at what libraries it's trying
+            # to load.
+            if os.access(conftest, os.X_OK):
+                if sys.platform.find('darwin') != -1:
+                    cmd = 'otool -L ' + conftest
+                else:
+                    cmd = 'ldd ' + conftest
+                p = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                     shell=True)
+                otool_out = p.stdout.readlines()
+                out.write('Output of the command %s is:\n'%cmd)
+                out.write(''.join(otool_out) + '\n')
     except:
         out.write("Error trying to get output of conftest executables.\n")
         out.write(sys.exc_info()[0])
+
+    # Give a helpful message if running El Capitan.
+    if sys.platform.find('darwin') != -1:
+        import platform
+        major, minor, rev = platform.mac_ver()[0].split('.')
+        print 'Mac version: ',major,minor
+        if int(major) > 10 or int(minor) >= 11:
+            print
+            print 'Starting with El Capitan (OSX 10.11), Apple instituted a new policy called'
+            print '"System Integrity Protection" (SIP) where they strip "dangerous" environment'
+            print 'variables from system calls (including SCons).  So if your system is using'
+            print 'DYLD_LIBRARY_PATH for run-time library resolution, then SCons cannot see it'
+            print 'so that may be why this is failing.  cf. Issues #721 and #725.'
+            print 'You should try executing:'
+            print
+            print '    scons DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH'
 
     print
     print 'Please fix the above error(s) and rerun scons.'
@@ -327,6 +375,8 @@ def BasicCCFlags(env):
             env.AppendUnique(LINKFLAGS=flag)
 
 
+# Note: I'm leaving this function here, in case we ever want to use OpenMP, but we
+# don't currently use any OpenMP features, so this function never gets called.
 def AddOpenMPFlag(env):
     """
     Make sure you do this after you have determined the version of
@@ -668,6 +718,11 @@ def AddExtraPaths(env):
         paths=paths.split(os.pathsep)
         AddPath(lib_paths, paths)
 
+    if env['IMPORT_PATHS'] and os.environ.has_key('DYLD_FALLBACK_LIBRARY_PATH'):
+        paths=os.environ['DYLD_FALLBACK_LIBRARY_PATH']
+        paths=paths.split(os.pathsep)
+        AddPath(lib_paths, paths)
+
     env.PrependENVPath('PATH', bin_paths)
     env.Prepend(LIBPATH= lib_paths)
     env.Prepend(CPPPATH= cpp_paths)
@@ -686,6 +741,51 @@ def ReadFileList(fname):
     files = [f.strip() for f in files]
     return files
 
+def PrependLibraryPaths(pname, env):
+    """Turn a system command, pname, into "DYLD_LIBRARY_PATH=blah "+pname
+
+    env is the relevant SCons environment.
+    """
+    for var in ['DYLD_LIBRARY_PATH', 'DYLD_FALLBACK_LIBRARY_PATH', 'LD_LIBRARY_PATH']:
+        if var in env and env[var] != '':
+            pre = '%s=%r'%(var,env[var])
+            pname = "%s %s"%(pre,pname)
+
+    return pname
+
+def AltTryRun(config, text, extension):
+    #ok, out = config.TryRun(text,'.cpp')
+    # The above line works on most systems, but on El Capitan, Apple decided to
+    # strip out the DYLD_LIBRARY_PATH from any system call.  So the above won't
+    # be able to find the right runtime libraries that are in their 
+    # DYLD_LIBRARY_PATH.  The next few lines are a copy of the SCons TryRun
+    # implementation, but then adding the DYLD_LIBRARY_PATH to the environment
+    # on the command line.
+    ok = config.TryLink(text, '.cpp')
+    if ok: 
+        prog = config.lastTarget 
+        try:
+            pname = prog.get_internal_path() 
+        except:
+            pname = prog.get_abspath()
+        try:
+            # I didn't track this down, but sometimes we TryRun (now AltTryRun)
+            # with config as a SConfBase, other times it is a CheckContext instance,
+            # so the SConfBase object is found as config.sconf.
+            # Just try this and if it fails, assume that config is already the sconf.
+            sconf = config.sconf
+        except:
+            sconf = config
+        output = sconf.confdir.File(os.path.basename(pname)+'.out') 
+        pname = PrependLibraryPaths(pname, sconf.env)
+        node = config.env.Command(output, prog, [ [ 'bash', '-c', pname, ">", "${TARGET}"] ]) 
+        ok = sconf.BuildNodes(node) 
+    if ok:
+        # For successful execution, also return the output contents
+        outputStr = output.get_contents()
+        return 1, outputStr.strip()
+    else:
+        return 0, ""
 
 def TryRunResult(config,text,name):
     # Check if a particular program (given as text) is compilable, runs, and returns the
@@ -695,9 +795,8 @@ def TryRunResult(config,text,name):
     save_spawn = config.sconf.env['SPAWN']
     config.sconf.env['SPAWN'] = config.sconf.pspawn_wrapper
 
-    # First use the normal TryRun command
-    ok, out = config.TryRun(text,'.cpp')
-
+    # This is the normal TryRun command that I am slightly modifying:
+    ok, out = AltTryRun(config,text,'.cpp')
     config.sconf.env['SPAWN'] = save_spawn
 
     # We have an arbitrary requirement that the executable output the answer 23.
@@ -865,7 +964,7 @@ def CheckBoost(config):
 #include "boost/version.hpp"
 int main() { std::cout<<BOOST_VERSION<<std::endl; return 0; }
 """
-    ok, boost_version = config.TryRun(boost_version_file,'.cpp')
+    ok, boost_version = AltTryRun(config,boost_version_file,'.cpp')
     boost_version = int(boost_version.strip())
     print 'Boost version is %d.%d.%d' % (
             boost_version / 100000, boost_version / 100 % 1000, boost_version % 100)
@@ -912,9 +1011,9 @@ int main()
     return 1
 
 
-def TryScript(config,text,executable):
+def TryScript(config,text,pname):
     # Check if a particular script (given as text) is runnable with the
-    # executable (given as executable).
+    # executable (given as pname).
     #
     # I couldn't find a way to do this using the existing SCons functions, so this
     # is basically taken from parts of the code for TryBuild and TryRun.
@@ -937,9 +1036,13 @@ def TryScript(config,text,executable):
 
     # Run the given executable with the source file we just built
     output = config.sconf.confdir.File(f + '.out')
-    node = config.env.Command(output, source, executable + " < $SOURCE > $TARGET 2>&1")
+    #node = config.env.Command(output, source, pname + " < $SOURCE >& $TARGET")
+    # Just like in AltTryRun, we need to add the DYLD_LIBRARY_PATH for El Capitan.
+    pname = PrependLibraryPaths(pname, config.sconf.env)
+    node = config.env.Command(output, source, 
+            [[ 'bash', '-c', pname, "<", "${SOURCE}", ">", "${TARGET}", "2>&1"]])
     ok = config.sconf.BuildNodes(node)
-
+ 
     config.sconf.env['SPAWN'] = save_spawn
 
     if ok:
@@ -1379,9 +1482,16 @@ except:
     config.Result(result)
 
     if not result:
+        print """
+WARNING: There seems to be a mismatch between this C++ compiler and the one
+         that was used to build either python or boost.python (or both).
+         This might be ok, but if you get a linking error in the subsequent 
+         build, it is possible  that you will need to rebuild boost with the
+         same compiler (and sometimes version) that you are using here.
+"""
         config.env['final_messages'].append("""
 WARNING: There seems to be a mismatch between this C++ compiler and the one
-         that was used to build python.
+         that was used to build either python or boost.python (or both).
          This should not affect normal usage of GalSim.  However, exceptions
          thrown in the C++ layer are not being correctly propagated to the
          python layer, so the error text for C++ run-time errors  will not
@@ -1504,7 +1614,7 @@ def DoCppChecks(config):
 int main()
 { std::cout<<tmv::TMV_Version()<<std::endl; return 0; }
 """
-    ok, tmv_version = config.TryRun(tmv_version_file,'.cpp')
+    ok, tmv_version = AltTryRun(config,tmv_version_file,'.cpp')
     print 'TMV version is '+tmv_version.strip()
 
     compiler = config.env['CXXTYPE']
@@ -1530,17 +1640,26 @@ int main()
         import platform
         import subprocess
         print 'Mac version is',platform.mac_ver()[0]
-        p = subprocess.Popen(['xcodebuild','-version'], stdout=subprocess.PIPE)
-        xcode_version = p.stdout.readlines()[0].split()[1]
-        print 'XCode version is',xcode_version
-        if (platform.mac_ver()[0] >= '10.7' and #xcode_version < '5.1' and
-            '-latlas' not in tmv_link and ('-lblas' in tmv_link or '-lcblas' in tmv_link)):
+        try:
+            p = subprocess.Popen(['xcodebuild','-version'], stdout=subprocess.PIPE)
+            xcode_version = p.stdout.readlines()[0].split()[1]
+            print 'XCode version is',xcode_version
+        except:
+            # Don't require the user to have xcode installed.
+            xcode_version = None
+            print 'Unable to determine XCode version'
+        major, minor, rev = platform.mac_ver()[0].split('.')
+        if ((int(major) > 10 or int(minor) >= 7) and '-latlas' not in tmv_link and
+                ('-lblas' in tmv_link or '-lcblas' in tmv_link)):
             print 'WARNING: The Apple BLAS library has been found not to be thread safe on'
             print '         Mac OS versions 10.7+, even across multiple processes (i.e. not'
             print '         just multiple threads in the same process.)  The symptom is that'
             print '         `scons tests` may hang when running nosetests using multiple'
             print '         processes.'
-            if xcode_version < '5.1':
+            if xcode_version is None:
+                # If we couldn't run xcodebuild, then don't give any more information about this.
+                pass
+            elif xcode_version < '5.1':
                 print '         This seems to have been partially fixed with XCode 5.1, so we'
                 print '         recommend upgrading to the latest XCode version.  However, even'
                 print '         with 5.1, some systems still seem to have problems.'
@@ -1626,7 +1745,8 @@ def DoConfig(env):
     BasicCCFlags(env)
 
     # Some extra flags depending on the options:
-    if env['WITH_OPENMP']:
+    #if env['WITH_OPENMP']:
+    if False:  # We don't use OpenMP anywhere, so don't bother with this.
         print 'Using OpenMP'
         AddOpenMPFlag(env)
     if not env['DEBUG']:
@@ -1735,7 +1855,6 @@ env['final_messages'] = []
 # Everything we are going to build so we can have the final message depend on these.
 env['all_builds'] = []
 
-
 if not GetOption('help'):
 
     # If there is a gs.error file, then this means the last run ended
@@ -1785,6 +1904,7 @@ if not GetOption('help'):
     env['_RunInstall'] = RunInstall
     env['_RunUninstall'] = RunUninstall
     env['_AddRPATH'] = AddRPATH
+    env['_PrependLibraryPaths'] = PrependLibraryPaths
 
     # Both bin and examples use this:
     env['BUILDERS']['ExecScript'] = Builder(action = BuildExecutableScript)

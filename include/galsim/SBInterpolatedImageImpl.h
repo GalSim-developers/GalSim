@@ -109,6 +109,7 @@ namespace galsim {
         boost::shared_ptr<Interpolant> getXInterp() const;
         boost::shared_ptr<Interpolant> getKInterp() const;
         ConstImageView<double> getImage() const;
+        ConstImageView<double> getPaddedImage() const;
 
         void calculateMaxK(double max_stepk) const;
         void calculateStepK(double max_maxk) const;
@@ -117,7 +118,7 @@ namespace galsim {
 
     private:
 
-        int _Ninitial;
+        int _Ninitial, _Ninitx, _Ninity;
         int _Nk;
         Bounds<int> _init_bounds;
         double _xcentroid;
@@ -161,7 +162,7 @@ namespace galsim {
         mutable double _negativeFlux;    ///< Sum of all negative pixels' flux
         mutable ProbabilityTree<Pixel> _pt; ///< Binary tree of pixels, for photon-shooting
 
-        std::string repr() const;
+        std::string serialize() const;
 
     private:
 
@@ -233,7 +234,7 @@ namespace galsim {
 
     protected:
 
-        int _Ninitial;
+        int _Ninitx, _Ninity, _Ninitial;
         int _Nk;
         mutable double _xcentroid;
         mutable double _ycentroid;
@@ -247,7 +248,7 @@ namespace galsim {
         double _dk; ///< Pitch of stored KTable
         mutable bool _cenIsSet;
 
-        std::string repr() const;
+        std::string serialize() const;
 
     private:
 
