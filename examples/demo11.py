@@ -23,11 +23,11 @@ The eleventh script in our tutorial about using GalSim in python scripts: exampl
 
 This script uses a constant PSF from real data (an image read in from a bzipped FITS file, not a
 parametric model) and variable shear and magnification according to some cosmological model for
-which we have a tabulated power spectrum at specific k values only.  The 288 galaxies in the 0.1 x
+which we have a tabulated shear power spectrum at specific k values only.  The 288 galaxies in the 0.1 x
 0.1 degree field (representing a number density of 8/arcmin^2) are randomly located and
 permitted to overlap.  For the galaxies, we use a mix of real and parametric galaxies modeled off
 the COSMOS observations with the Hubble Space Telescope.  The real galaxies are similar to those
-used in demo10.  The parametric galaxies are based on parameter fits to the same observed galaxies.
+used in demo10.  The parametric galaxies are based on parametric fits to the same observed galaxies.
 The flux and size distribution are thus realistic for an I < 23.5 magnitude limited sample.
 
 New features introduced in this demo:
@@ -93,7 +93,7 @@ def main(argv):
     image_size_arcsec = image_size*pixel_scale # size of big image in each dimension (arcsec)
     noise_variance = 5.e4             # ADU^2  (Just use simple Gaussian noise here.)
     nobj = 288                        # number of galaxies in entire field
-                                      # (This corresponds to 2 galaxies / arcmin^2)
+                                      # (This corresponds to 8 galaxies / arcmin^2)
     grid_spacing = 90.0               # The spacing between the samples for the power spectrum 
                                       # realization (arcsec)
     tel_diam = 4                      # Let's figure out the flux for a 4 m class telescope

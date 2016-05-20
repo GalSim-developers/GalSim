@@ -176,7 +176,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         param['flux'] = 1
 
     if 'gsparams' in param:
-        gsparams = UpdateGSParams(gsparams, param['gsparams'], config)
+        gsparams = UpdateGSParams(gsparams, param['gsparams'], base)
 
     # See if this type has a specialized build function:
     if type_name in valid_gsobject_types:

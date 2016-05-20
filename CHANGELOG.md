@@ -45,6 +45,8 @@ Bug Fixes
   `setup GalSim` (#724)
 - Added new default algorithm for thinning SEDs and Bandpasses to enable faster
   calculations while still meeting relative error constraints. (#739).
+- Fixed a bug in how DistDeviate handled probabilities that were nearly, but
+  not quite, flat (#741)
 
 
 Deprecated Features

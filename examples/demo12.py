@@ -27,7 +27,7 @@ level chromatic objects has not been written yet.
 This script introduces the chromatic objects module galsim.chromatic, which handles wavelength-
 dependent profiles.  Three uses of this module are demonstrated:
 
-1) A chromatic object representing a De Vaucouleurs galaxy with a early-type SED at redshift 0.8 is
+1) A chromatic object representing a De Vaucouleurs galaxy with an early-type SED at redshift 0.8 is
 created.  The galaxy is then drawn using the six LSST filter throughput curves to demonstrate that
 the galaxy is a g-band dropout.
 
