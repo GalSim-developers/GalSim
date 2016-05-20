@@ -4,6 +4,9 @@ Changes from v1.3 to v1.4
 API Changes
 -----------
 
+- Changed the galsim.Bandpass and galsim.SED classes so that formerly optional
+  keywords to indicate units (`wave_type` for the former, `wave_type` and
+ `flux_type` for the latter) are now required. (#745)
 - Changed the default shift and/or offset for the output.psf field in a config
   file to not do any shift or offset.  It had been the default to match what
   was applied to the galaxy (cf. demo5).  However, we thought that was probably
@@ -47,10 +50,12 @@ Bug Fixes
   calculations while still meeting relative error constraints. (#739).
 - Fixed a bug in how DistDeviate handled probabilities that were nearly, but
   not quite, flat (#741)
-
+- Fixed a bug in chromatic parametric galaxy models based on COSMOS galaxies.
+  (#745)
 
 Deprecated Features
 -------------------
+
 - Deprecated the gal.type=Ring option in the config files.  The preferred way
   to get a ring test is now with the new stamp.type=Ring.  See demo5 and demo10
   for examples of the new syntax. (#698)
@@ -58,6 +63,7 @@ Deprecated Features
 
 New Features
 ------------
+
 - Added OutputCatalog class, which can be used to keep track of and then output
   truth information.  cf. demos 9 and 10. (#301, #691)
 - Added methods calculateHLR, calculateMomentRadius, and calculateFWHM to both

@@ -50,7 +50,7 @@ def check_dep(f, *args, **kwargs):
 def test_dep_bandpass():
     """Test the deprecated methods in galsim/deprecated/bandpass.py.
     """
-    b = galsim.Bandpass(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]))
+    b = galsim.Bandpass(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]), 'nm')
     d = lambda w: w**2
 
     # fn / Bandpass
@@ -223,9 +223,9 @@ def test_dep_chromatic():
     """Test the deprecated methods in galsim/deprecated/chromatic.py
     """
     g = galsim.Gaussian(sigma=0.34)
-    sed = galsim.SED('wave**3')
+    sed = galsim.SED('wave**3', 'nm', 'flambda')
     obj = g * sed
-    band = galsim.Bandpass('1-((wave-700)/100)**2', blue_limit=600., red_limit=800.)
+    band = galsim.Bandpass('1-((wave-700)/100)**2', 'nm', blue_limit=600., red_limit=800.)
 
     im1 = check_dep(obj.draw, bandpass=band)
     im2 = obj.drawImage(band, method='no_pixel')
@@ -739,7 +739,7 @@ def test_dep_sed():
     """
     z = 0.4
     a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
-                   flux_type='fphotons', redshift=0.4)
+                   wave_type='nm', flux_type='fphotons', redshift=0.4)
     b = lambda w: w**2
 
     # function divided by SED

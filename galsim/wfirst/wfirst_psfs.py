@@ -312,7 +312,7 @@ def storePSFImages(PSF_dict, filename, bandpass_list=None, clobber=False):
 
         for bp_name in bandpass_list:
             bandpass = bandpass_dict[bp_name]
-            star_sed = galsim.SED(lambda x:1).withFlux(1, bandpass)
+            star_sed = galsim.SED(lambda x:1, 'nm', 'flambda').withFlux(1, bandpass)
             obj = galsim.Convolve(star*star_sed, PSF)
 
             im = obj.drawImage(bandpass, scale=0.5*galsim.wfirst.pixel_scale,
