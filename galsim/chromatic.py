@@ -113,7 +113,7 @@ class ChromaticObject(object):
         self.obj = obj
         if isinstance(obj, galsim.GSObject):
             self.separable = True
-            self.SED = galsim.SED('1')  # uniform flambda = 1
+            self.SED = galsim.SED('1', 'nm', 'flambda')  # uniform flambda = 1
             self.wave_list = np.array([], dtype=float)
         elif isinstance(obj, ChromaticObject):
             self.separable = obj.separable
@@ -344,7 +344,7 @@ class ChromaticObject(object):
         # merge self.wave_list into bandpass.wave_list if using a sampling integrator
         if isinstance(integrator, galsim.integ.SampleIntegrator):
             bandpass = galsim.Bandpass(galsim.LookupTable(wave_list, bandpass(wave_list),
-                                                          interpolant='linear'))
+                                                          interpolant='linear'), 'nm')
 
         add_to_image = kwargs.pop('add_to_image', False)
         integral = integrator(self.evaluateAtWavelength, bandpass, image, kwargs)
@@ -1702,7 +1702,7 @@ class ChromaticConvolution(ChromaticObject):
 
     The normal way to use this class is to use the Convolve() factory function:
 
-        >>> gal = galsim.Sersic(n, half_light_radius) * galsim.SED(sed_file)
+        >>> gal = galsim.Sersic(n, half_light_radius) * galsim.SED(sed_file, 'nm', 'flambda')
         >>> psf = galsim.ChromaticAtmosphere(...)
         >>> final = galsim.Convolve([gal, psf])
 
@@ -1797,7 +1797,7 @@ class ChromaticConvolution(ChromaticObject):
             wave_list = wave_list[wave_list <= bandpass.red_limit]
             effective_bandpass = galsim.Bandpass(
                 galsim.LookupTable(wave_list, bandpass(wave_list) * SED(wave_list),
-                                   interpolant='linear'))
+                                   interpolant='linear'), 'nm')
             # If there's only one inseparable profile, let it draw itself.
             if len(insep_profs) == 1:
                 effective_prof_image = insep_profs[0].drawImage(
@@ -1824,9 +1824,9 @@ class ChromaticConvolution(ChromaticObject):
 
     def _findSED(self):
         # pull out the non-trivial seds
-        sedlist = [ obj.SED for obj in self.objlist if obj.SED != galsim.SED('1') ]
+        sedlist = [ obj.SED for obj in self.objlist if obj.SED != galsim.SED('1','nm','flambda') ]
         if len(sedlist) == 0:
-            self.SED = galsim.SED('1')
+            self.SED = galsim.SED('1','nm','flambda')
         elif len(sedlist) == 1:
             self.SED = sedlist[0]
         else:
