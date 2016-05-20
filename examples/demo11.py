@@ -124,7 +124,7 @@ def main(argv):
     if True:
         # The catalog we distribute with the GalSim code only has 100 galaxies.
         # The galaxies will typically be reused several times here.
-        cat_file_name = 'real_galaxy_catalog_example.fits'
+        cat_file_name = 'real_galaxy_catalog_23.5_example.fits'
         dir = 'data'
         cosmos_cat = galsim.COSMOSCatalog(cat_file_name, dir=dir)
     else:

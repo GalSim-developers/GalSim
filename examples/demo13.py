@@ -94,7 +94,7 @@ def main(argv):
 
     logger.info('Reading from a parametric COSMOS catalog.')
     # Read in a galaxy catalog - just a random subsample of 100 galaxies for F814W<23.5 from COSMOS.
-    cat_file_name = 'real_galaxy_catalog_example_fits.fits'
+    cat_file_name = 'real_galaxy_catalog_23.5_example_fits.fits'
     dir = 'data'
     # Use the routine that can take COSMOS real or parametric galaxy information, and tell it we
     # want parametric galaxies that represent an I<23.5 sample.
