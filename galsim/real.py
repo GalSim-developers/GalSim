@@ -778,6 +778,10 @@ def _parse_files_dirs(file_name, image_dir, dir, noise_dir, sample):
     if sample is None:
         if file_name is None:
             use_sample = '25.2'
+        elif '25.2' in file_name:
+            use_sample = '25.2'
+        elif '23.5' in file_name:
+            use_sample = '23.5'
         else:
             use_sample = None
     else:
