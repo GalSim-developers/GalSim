@@ -34,7 +34,7 @@ To run this script, simply write:
 
 This first script is about as simple as it gets.  We draw an image of a single galaxy convolved 
 with a PSF and write it to disk.  We use a circular Gaussian profile for both the PSF and the 
-galaxy.  And we add a constant level of Gaussian noise to the image.
+galaxy, and add a constant level of Gaussian noise to the image.
 
 In each demo, we list the new features introduced in that demo file.  These will differ somewhat
 between the .py and .yaml (or .json) versions, since the two methods implement things in different 
