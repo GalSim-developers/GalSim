@@ -294,7 +294,7 @@ class LookupTable2D(object):
     combinations of x and y values.  For instance:
 
         >>> x = y = np.arange(5)
-        >>> z = x + y[:, np.newaxis]  # function is x + y, dimensions of z is (5, 5)
+        >>> z = x + y[:, np.newaxis]  # function is x + y, dimensions of z are (5, 5)
         >>> tab2d = galsim.LookupTable2D(x, y, z)
 
     To evaluate new function values with the lookup table, use the () operator:
