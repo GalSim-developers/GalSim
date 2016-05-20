@@ -537,11 +537,16 @@ class COSMOSCatalog(object):
                 flux_factor = 10.**(-0.4*1.5)
                 size_factor = 0.6
                 gal_list = [ gal.dilate(size_factor) * flux_factor for gal in gal_list ]
-            else:
+            elif self.use_sample == '25.2':
                 import warnings
                 warnings.warn(
                     'Ignoring `deep` argument, because the sample being used already '+
                     'corresponds to a flux limit of F814W<25.2')
+            else:
+                import warnings
+                warnings.warn(
+                    'Ignoring `deep` argument, because the sample being used does not '+
+                    'corresponds to a flux limit of F814W<23.5')
 
         # Store the orig_index as gal.index regardless of whether we have a RealGalaxy or not.
         # It gets set by _makeReal, but not by _makeParametric.
