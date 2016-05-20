@@ -31,7 +31,7 @@ namespace galsim {
     /**
      * @brief SBProfile adapter which computes the square root of its subject in k space.
      *
-     * @param[in] adaptee   SBProfile for which to effect a deconvolution by k space inversion.
+     * @param[in] adaptee   SBProfile to compute the Fourier-space square root of.
      * @param[in] gsparams  GSParams object storing constants that control the accuracy of
      *                      image operations and rendering, if different from the default.
      */

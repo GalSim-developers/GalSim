@@ -68,7 +68,7 @@ namespace galsim {
 
     std::complex<double> SBFourierSqrt::SBFourierSqrtImpl::kValue(const Position<double>& k) const
     {
-        return (k.x*k.x + k.y*k.y <= _maxksq) ? 1./_adaptee.kValue(k) : 0.;
+        return (k.x*k.x + k.y*k.y <= _maxksq) ? std::sqrt(_adaptee.kValue(k)) : 0.;
     }
 
     void SBFourierSqrt::SBFourierSqrtImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,

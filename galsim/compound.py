@@ -793,11 +793,11 @@ def FourierSqrt(obj, gsparams=None):
     elif isinstance(obj, galsim.GSObject):
         return FourierSqrtProfile(obj, gsparams=gsparams)
     else:
-        raise TypeError("Argument to Deconvolve must be either a GSObject or a ChromaticObject.")
+        raise TypeError("Argument to FourierSqrt must be either a GSObject or a ChromaticObject.")
 
 
 class FourierSqrtProfile(galsim.GSObject):
-    """A class for deconvolving a GSObject.
+    """A class for computing the Fourier-space sqrt of a GSObject.
 
     The FourierSqrtProfile class represents the Fourier-space square root of another profile.  Note that the
     FourierSqrtProfile class, or compound objects (Sum, Convolution) that include a FourierSqrtProfile as
