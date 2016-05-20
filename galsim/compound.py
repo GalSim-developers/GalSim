@@ -23,6 +23,7 @@ Convolution = convolution of multiple profiles
 Deconvolution = deconvolution by a given profile
 AutoConvolution = convolution of a profile by itself
 AutoCorrelation = convolution of a profile by its reflection
+FourierSqrt = Fourier-space square root of a profile
 """
 
 import galsim
@@ -772,3 +773,91 @@ _galsim.SBAutoCorrelate.__setstate__ = lambda self, state: 1
 _galsim.SBAutoCorrelate.__repr__ = lambda self: \
         'galsim._galsim.SBAutoCorrelate(%r, %r, %r)'%self.__getinitargs__()
 
+
+
+def FourierSqrt(obj, gsparams=None):
+    """A function for computing the Fourier-space square root of either a GSObject or ChromaticObject.
+
+    This function will inspect its input argument to decide if a FourierSqrtProfile object or a
+    ChromaticFourierSqrtProfile object is required to represent the operation applied to a surface
+    brightness profile.
+
+    @param obj              The object to compute the Fourier-space square root of.
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+    @returns a FourierSqrtProfile or ChromaticFourierSqrtProfile instance as appropriate.
+    """
+    if isinstance(obj, galsim.ChromaticObject):
+        return galsim.ChromaticFourierSqrt(obj, gsparams=gsparams)
+    elif isinstance(obj, galsim.GSObject):
+        return FourierSqrtProfile(obj, gsparams=gsparams)
+    else:
+        raise TypeError("Argument to FourierSqrt must be either a GSObject or a ChromaticObject.")
+
+
+class FourierSqrtProfile(galsim.GSObject):
+    """A class for computing the Fourier-space sqrt of a GSObject.
+
+    The FourierSqrtProfile class represents the Fourier-space square root of another profile.  Note that the
+    FourierSqrtProfile class, or compound objects (Sum, Convolution) that include a FourierSqrtProfile as
+    one of the components cannot be photon-shot using the 'phot' method of drawImage() method.
+
+    You may also specify a `gsparams` argument.  See the docstring for GSParams using
+    `help(galsim.GSParams)` for more information about this option.  Note: if `gsparams` is
+    unspecified (or None), then the FourierSqrtProfile instance inherits the same GSParams as the object
+    being operated on.
+
+    Initialization
+    --------------
+
+    The normal way to use this class is to use the FourierSqrt() factory function:
+
+        >>> b = galsim.FourierSqrt(a)
+
+    @param obj              The object to deconvolve.
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+    Methods
+    -------
+
+    There are no additional methods for FourierSqrtProfile beyond the usual GSObject methods.
+    """
+    def __init__(self, obj, gsparams=None):
+        if not isinstance(obj, galsim.GSObject):
+            raise TypeError("Argument to FourierSqrtProfile must be a GSObject.")
+
+        # Save the original object as an attribute, so it can be inspected later if necessary.
+        self._orig_obj = obj
+        self._gsparams = gsparams
+
+        sbp = galsim._galsim.SBFourierSqrt(obj.SBProfile, gsparams)
+        galsim.GSObject.__init__(self, sbp)
+        if hasattr(obj,'noise'):
+            import warnings
+            warnings.warn("Unable to propagate noise in galsim.FourierSqrtProfile")
+
+    @property
+    def orig_obj(self): return self._orig_obj
+
+    def __repr__(self):
+        return 'galsim.FourierSqrtProfile(%r, gsparams=%r)'%(self.orig_obj, self._gsparams)
+
+    def __str__(self):
+        return 'galsim.FourierSqrt(%s)'%self.orig_obj
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['SBProfile']
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self.__init__(self._orig_obj, self._gsparams)
+
+_galsim.SBFourierSqrt.__getinitargs__ = lambda self: (self.getObj(), self.getGSParams())
+_galsim.SBFourierSqrt.__getstate__ = lambda self: None
+_galsim.SBFourierSqrt.__setstate__ = lambda self, state: 1
+_galsim.SBFourierSqrt.__repr__ = lambda self: \
+        'galsim._galsim.SBFourierSqrt(%r, %r)'%self.__getinitargs__()
