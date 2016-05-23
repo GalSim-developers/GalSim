@@ -38,7 +38,7 @@ def test_roll2d_circularity():
     """Test both integer and float arrays are unchanged by full circular roll.
     """
     # Make heterogenous 2D array, integers first, test that a full roll gives the same as the inputs
-    int_image = np.random.random_integers(low=0, high=1, size=testshape)
+    int_image = np.random.randint(low=0, high=1+1, size=testshape)
     np.testing.assert_array_equal(int_image,
                                   galsim.utilities.roll2d(int_image, int_image.shape),
                                   err_msg='galsim.utilities.roll2D failed int array circularity')
@@ -54,7 +54,7 @@ def test_roll2d_fwdbck():
     """Test both integer and float arrays are unchanged by unit forward and backward roll.
     """
     # Make heterogenous 2D array, integers first, test that a +1, -1 roll gives the same as initial
-    int_image = np.random.random_integers(low=0, high=1, size=testshape)
+    int_image = np.random.randint(low=0, high=1+1, size=testshape)
     np.testing.assert_array_equal(int_image,
                                   galsim.utilities.roll2d(galsim.utilities.roll2d(int_image,
                                                                                   (+1, +1)),
@@ -74,7 +74,7 @@ def test_roll2d_join():
     """Test both integer and float arrays are equivalent if rolling +1/-1 or -/+(shape[i/j] - 1).
     """
     # Make heterogenous 2D array, integers first
-    int_image = np.random.random_integers(low=0, high=1, size=testshape)
+    int_image = np.random.randint(low=0, high=1+1, size=testshape)
     np.testing.assert_array_equal(galsim.utilities.roll2d(int_image, (+1, -1)),
                                   galsim.utilities.roll2d(int_image, (-(int_image.shape[0] - 1),
                                                                    +(int_image.shape[1] - 1))),
