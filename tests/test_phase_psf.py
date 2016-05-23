@@ -146,7 +146,7 @@ def test_frozen_flow():
     dx = x
     alt = x/1000   # -> 0.00005 km; silly example, but yields exact results...
 
-    screen = galsim.phase_psf.AtmosphericScreen(1.0, dx, alt, vx=vx, time_step=dt, rng=rng)
+    screen = galsim.AtmosphericScreen(1.0, dx, alt, vx=vx, time_step=dt, rng=rng)
     aper = galsim.Aperture(diam=1, _pupil_plane_size=20., _pupil_plane_scale=20./dx)
     wf0 = screen.wavefront(aper)
     screen.advance_by(t)
