@@ -160,14 +160,10 @@ def _GenerateFromEval(config, base, value_type):
         wcs = base['wcs']
     if 'rng' in base:
         rng = base['rng']
-    if 'file_num' in base:
-        file_num = base.get('file_num',0)
-    if 'image_num' in base:
-        image_num = base.get('image_num',0)
-    if 'obj_num' in base:
-        obj_num = base['obj_num']
-    if 'start_obj_num' in base:
-        start_obj_num = base.get('start_obj_num',0)
+    file_num = base.get('file_num',0)
+    image_num = base.get('image_num',0)
+    obj_num = base.get('obj_num',0)
+    start_obj_num = base.get('start_obj_num',0)
     try:
         val = eval(string)
         #print base['obj_num'],'Eval(%s) needed extra variables: val = %s'%(string,val)
