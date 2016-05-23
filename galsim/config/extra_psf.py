@@ -106,7 +106,7 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
 
         psf_im = DrawPSFStamp(psf,config,base,bounds,offset,draw_method,logger)
         if 'signal_to_noise' in config:
-            galsim.config.AddNoise(base,psf_im,0,logger)
+            galsim.config.AddNoise(base,psf_im,current_var=0,logger=logger)
         self.scratch[obj_num] = psf_im
 
     # The function to call at the end of building each image
