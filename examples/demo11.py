@@ -23,8 +23,8 @@ The eleventh script in our tutorial about using GalSim in python scripts: exampl
 
 This script uses a constant PSF from real data (an image read in from a bzipped FITS file, not a
 parametric model) and variable shear and magnification according to some cosmological model for
-which we have a tabulated shear power spectrum at specific k values only.  The 288 galaxies in the 0.1 x
-0.1 degree field (representing a number density of 8/arcmin^2) are randomly located and
+which we have a tabulated shear power spectrum at specific k values only.  The 288 galaxies in the
+0.1 x 0.1 degree field (representing a number density of 8/arcmin^2) are randomly located and
 permitted to overlap.  For the galaxies, we use a mix of real and parametric galaxies modeled off
 the COSMOS observations with the Hubble Space Telescope.  The real galaxies are similar to those
 used in demo10.  The parametric galaxies are based on parametric fits to the same observed galaxies.
