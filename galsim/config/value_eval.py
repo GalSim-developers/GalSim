@@ -144,6 +144,8 @@ def _GenerateFromEval(config, base, value_type):
         image_center = base['image_center']
     if 'image_origin' in base:
         image_origin = base['image_origin']
+    if 'image_bounds' in base:
+        image_bounds = base['image_bounds']
     if 'image_xsize' in base:
         image_xsize = base['image_xsize']
     if 'image_ysize' in base:
