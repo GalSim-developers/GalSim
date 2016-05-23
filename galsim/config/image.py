@@ -229,7 +229,7 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
 
     # Actually build the image now.  This is the main working part of this function.
     # It calls out to the appropriate build function for this image type.
-    image = builder.buildImage(cfg_image, config, image_num, obj_num, logger)
+    image, current_var = builder.buildImage(cfg_image, config, image_num, obj_num, logger)
 
     # Store the current image in the base-level config for reference
     config['current_image'] = image
@@ -255,7 +255,7 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
     # Do whatever processing is required for the extra output items.
     galsim.config.ProcessExtraOutputsForImage(config,logger)
 
-    builder.addNoise(image, cfg_image, config, image_num, obj_num, logger)
+    builder.addNoise(image, cfg_image, config, image_num, obj_num, current_var, logger)
 
     return image
 
@@ -417,14 +417,14 @@ class ImageBuilder(object):
         @param obj_num      The first object number in the image.
         @param logger       If given, a logger object to log progress.
 
-        @returns the final image
+        @returns the final image and the current noise variance in the image as a tuple
         """
         xsize = base['image_xsize']
         ysize = base['image_ysize']
 
         image, current_var = galsim.config.BuildStamp(
                 base, obj_num=obj_num, xsize=xsize, ysize=ysize, do_noise=True, logger=logger)
-        return image
+        return image, current_var
 
     def makeTasks(self, config, base, jobs, logger):
         """Turn a list of jobs into a list of tasks.
@@ -446,7 +446,7 @@ class ImageBuilder(object):
         """
         return galsim.config.MakeStampTasks(base, jobs, logger)
 
-    def addNoise(self, image, config, base, image_num, obj_num, logger):
+    def addNoise(self, image, config, base, image_num, obj_num, current_var, logger):
         """Add the final noise to the image.
 
         In the base class, this is a no op, since it directs the BuildStamp function to build
@@ -458,6 +458,7 @@ class ImageBuilder(object):
         @param base         The base configuration dict.
         @param image_num    The current image number.
         @param obj_num      The first object number in the image.
+        @param current_var  The current noise variance in each postage stamps.
         @param logger       If given, a logger object to log progress.
         """
         pass
