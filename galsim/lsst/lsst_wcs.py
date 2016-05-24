@@ -810,9 +810,9 @@ class LsstWCS(galsim.wcs.CelestialWCS):
         yPixList = []
         nameList = []
 
-        #dx and dy are set somewhat heuristically
-        #setting them eqal to 0.1(max-min) lead to errors
-        #on the order of 0.7 arcsec in the WCS
+        # dx and dy are set somewhat heuristically.
+        # Setting them eqal to 0.1*(max-min) lead to errors on the order of 0.7 arcsec in the WCS.
+        # Here we use 0.5*(max-min), which is good to ~1 mas.
 
         dx = 0.5*(xTanPixMax-xTanPixMin)
         dy = 0.5*(yTanPixMax-yTanPixMin)
