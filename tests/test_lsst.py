@@ -12,11 +12,15 @@ have_lsst_stack = True
 
 try:
     from galsim.lsst import LsstCamera, LsstWCS
-except ImportError, ee:
+except ImportError as ee:
+    if __name__ == '__main__':
+        raise
     # make sure that you are failing because the stack isn't there,
     # rather than because of some bug in lsst_wcs.py
     if "You cannot use the LSST module" in ee.message:
         have_lsst_stack = False
+    else:
+        raise
 
 if have_lsst_stack:
     try:
