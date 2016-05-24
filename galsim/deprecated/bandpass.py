@@ -39,7 +39,8 @@ def Bandpass_rdiv(self, other):
     else:
         tp = lambda w: other / self.func(w)
 
-    return galsim.Bandpass(tp, blue_limit, red_limit, _wave_list=wave_list)
+    return galsim.Bandpass(tp, 'nm', blue_limit, red_limit,
+                           _wave_list=wave_list)
 
 galsim.Bandpass.__rdiv__ = Bandpass_rdiv
 galsim.Bandpass.__rtruediv__ = Bandpass_rdiv
