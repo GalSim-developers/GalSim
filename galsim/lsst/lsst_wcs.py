@@ -76,11 +76,11 @@ def _nativeLonLatFromRaDec(ra, dec, raPointing, decPointing):
 
     v2 = np.dot(np.array([
                           [1.0, 0.0, 0.0],
-                          [0.0, ca, sa],
-                          [0.0, -1.0*sa, ca]
+                          [0.0,  ca,  sa],
+                          [0.0, -sa,  ca]
                           ]),
-                   np.dot(np.array([[cb, sb, 0.0],
-                                    [-sb, cb, 0.0],
+                   np.dot(np.array([[ cb,  sb, 0.0],
+                                    [-sb,  cb, 0.0],
                                     [0.0, 0.0, 1.0]
                                     ]), np.array([x,y,z])))
 
@@ -93,8 +93,8 @@ def _nativeLonLatFromRaDec(ra, dec, raPointing, decPointing):
     # control for _y=1.0, -1.0 but actually being stored as just outside
     # the bounds of -1.0<=_y<=1.0 because of floating point error
     if hasattr(_ra_raw, '__len__'):
-        _ra = np.array([rr if not np.isnan(rr) \
-                           else 0.5*np.pi*(1.0-np.sign(yy)) \
+        _ra = np.array([rr if not np.isnan(rr)
+                           else 0.5*np.pi*(1.0-np.sign(yy))
                            for rr, yy in zip(_ra_raw, _y)])
     else:
         if np.isnan(_ra_raw):
@@ -110,16 +110,16 @@ def _nativeLonLatFromRaDec(ra, dec, raPointing, decPointing):
     if type(_ra) is np.float64:
         if np.isnan(_ra):
             lonOut = 0.0
-        elif (np.abs(_x)>1.0e-9 and np.sign(_x)!=np.sign(v2[0])) \
-             or (np.abs(_y)>1.0e-9 and np.sign(_y)!=np.sign(v2[1])):
+        elif ( (np.abs(_x)>1.0e-9 and np.sign(_x)!=np.sign(v2[0])) or
+               (np.abs(_y)>1.0e-9 and np.sign(_y)!=np.sign(v2[1])) ):
             lonOut = 2.0*np.pi-_ra
         else:
             lonOut = _ra
     else:
-        _lonOut = [2.0*np.pi-rr if (np.abs(xx)>1.0e-9 and np.sign(xx)!=np.sign(v2_0)) \
-                                   or (np.abs(yy)>1.0e-9 and np.sign(yy)!=np.sign(v2_1)) \
-                                   else rr \
-                                   for rr, xx, yy, v2_0, v2_1 in zip(_ra, _x, _y, v2[0], v2[1])]
+        _lonOut = [2.0*np.pi-rr if ( (np.abs(xx)>1.0e-9 and np.sign(xx)!=np.sign(v2_0)) or
+                                     (np.abs(yy)>1.0e-9 and np.sign(yy)!=np.sign(v2_1)) )
+                                else rr
+                                for rr, xx, yy, v2_0, v2_1 in zip(_ra, _x, _y, v2[0], v2[1])]
 
         lonOut = np.array([0.0 if np.isnan(ll) else ll for ll in _lonOut])
 
@@ -697,9 +697,9 @@ class LsstWCS(galsim.wcs.CelestialWCS):
         (This is separate from __init__() so that it can be used in pickling)
         """
 
-        if self._camera is None or \
-          self._camera.pointing!=self._pointing or \
-          self._camera.rotation_angle!=self._rotation_angle:
+        if (self._camera is None or
+            self._camera.pointing!=self._pointing or
+            self._camera.rotation_angle!=self._rotation_angle):
 
             if self._camera is not None:
                # changing the text of this warning will necessitate a change in the
@@ -734,9 +734,8 @@ class LsstWCS(galsim.wcs.CelestialWCS):
         @returns (x,y)
         """
         camera_point_list = self._camera._get_afw_pupil_coord_list_from_float(ra, dec)
-        xx, yy = \
-        self._camera._pixel_coord_from_point_and_name(camera_point_list,
-                                                      [self._chip_name]*len(camera_point_list))
+        xx, yy = self._camera._pixel_coord_from_point_and_name(
+                    camera_point_list, [self._chip_name]*len(camera_point_list))
 
         if len(xx)==1:
             return xx[0], yy[0]
@@ -804,8 +803,7 @@ class LsstWCS(galsim.wcs.CelestialWCS):
         distortions imposed by the telescope.
         """
 
-        xTanPixMin, xTanPixMax, \
-        yTanPixMin, yTanPixMax = self._getTanPixelBounds()
+        xTanPixMin, xTanPixMax, yTanPixMin, yTanPixMax = self._getTanPixelBounds()
 
 
         xPixList = []
@@ -831,11 +829,11 @@ class LsstWCS(galsim.wcs.CelestialWCS):
         raPointing = self._camera._pointing.ra/galsim.radians
         decPointing = self._camera._pointing.dec/galsim.radians
 
-        camera_point_list = \
-        self._camera._get_afw_pupil_coord_list_from_float(raPointing, decPointing)
+        camera_point_list = self._camera._get_afw_pupil_coord_list_from_float(
+                raPointing, decPointing)
 
-        crPix1, crPix2 = \
-        self._camera._tan_pixel_coord_from_point_and_name(camera_point_list, [self._chip_name])
+        crPix1, crPix2 = self._camera._tan_pixel_coord_from_point_and_name(
+                camera_point_list, [self._chip_name])
 
         lonList, latList = _nativeLonLatFromRaDec(raList, decList, raPointing, decPointing)
 
@@ -899,10 +897,7 @@ class LsstWCS(galsim.wcs.CelestialWCS):
         return tanWcs
 
 
-    def getTanSipWcs(self,
-                     order=3,
-                     skyToleranceArcSec=0.001,
-                     pixelTolerance=0.01):
+    def getTanSipWcs(self, order=3, skyToleranceArcSec=0.001, pixelTolerance=0.01):
         """
         Take an afw Detector and approximate its pixel-to-(Ra,Dec) transformation
         with a TAN-SIP WCs.
@@ -931,11 +926,10 @@ class LsstWCS(galsim.wcs.CelestialWCS):
 
         distortedWcs = afwImageUtils.getDistortedWcs(mockExposure.getInfo())
 
-        tanSipWcs = \
-        measAstrom.approximateWcs(distortedWcs, bbox,
-                                  order=order,
-                                  skyTolerance=skyToleranceArcSec*afwGeom.arcseconds,
-                                  pixelTolerance=pixelTolerance)
+        tanSipWcs = measAstrom.approximateWcs(
+                distortedWcs, bbox, order=order,
+                skyTolerance=skyToleranceArcSec*afwGeom.arcseconds,
+                pixelTolerance=pixelTolerance)
 
         return tanSipWcs
 
@@ -980,10 +974,11 @@ class LsstWCS(galsim.wcs.CelestialWCS):
 
 
     def __repr__(self):
-        return "galsim.lsst.LsstWCS(galsim.CelestialCoord(%e*galsim.radians, %e*galsim.radians), " \
-               "%e*galsim.radians, '%s')" % (self._camera._pointing.ra/galsim.radians, \
-               self._camera._pointing.dec/galsim.radians, self._camera._rotation_angle/galsim.radians, \
-               self._chip_name)
+        return ("galsim.lsst.LsstWCS(galsim.CelestialCoord(%e*galsim.radians, %e*galsim.radians), "
+                "%e*galsim.radians, '%s')" % (self._camera._pointing.ra/galsim.radians,
+                                              self._camera._pointing.dec/galsim.radians,
+                                              self._camera._rotation_angle/galsim.radians,
+                                              self._chip_name))
 
 
     def __str__(self):
