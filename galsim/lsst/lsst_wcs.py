@@ -2,19 +2,20 @@ import numpy as np
 import warnings
 import galsim
 
-warnings.filterwarnings('ignore', 'Matplotlib is building the font cache ' +
-                                   'using fc-list. This may take a moment')
-
 try:
-    import lsst.pex.logging as pexLog
-    import lsst.daf.base as dafBase
-    import lsst.afw.geom as afwGeom
-    import lsst.afw.cameraGeom as cameraGeom
-    import lsst.afw.image as afwImage
-    import lsst.afw.image.utils as afwImageUtils
-    import lsst.meas.astrom as measAstrom
-    from lsst.afw.cameraGeom import PUPIL, PIXELS, TAN_PIXELS, FOCAL_PLANE
-    from lsst.obs.lsstSim import LsstSimMapper
+    with warnings.catch_warnings():
+        # At least one of these imports matplotlib at the top level, which on some systems
+        # emits warnings.  Ignore them.
+        warnings.filterwarnings("ignore",'.*Matplotlib.*')
+        import lsst.pex.logging as pexLog
+        import lsst.daf.base as dafBase
+        import lsst.afw.geom as afwGeom
+        import lsst.afw.cameraGeom as cameraGeom
+        import lsst.afw.image as afwImage
+        import lsst.afw.image.utils as afwImageUtils
+        import lsst.meas.astrom as measAstrom
+        from lsst.afw.cameraGeom import PUPIL, PIXELS, TAN_PIXELS, FOCAL_PLANE
+        from lsst.obs.lsstSim import LsstSimMapper
 except ImportError:
     raise ImportError("You cannot use the LSST module.\n"
                       "You either do not have the LSST stack installed,\n"
