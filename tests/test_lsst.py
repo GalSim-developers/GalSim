@@ -11,7 +11,7 @@ from galsim.celestial import CelestialCoord
 have_lsst_stack = True
 
 try:
-    from galsim.lsst import LsstCamera, LsstWCS, _nativeLonLatFromRaDec
+    from galsim.lsst import LsstCamera, LsstWCS
 except ImportError, ee:
     # make sure that you are failing because the stack isn't there,
     # rather than because of some bug in lsst_wcs.py
@@ -33,6 +33,7 @@ class NativeLonLatTest(unittest.TestCase):
         Test that nativeLonLatFromRaDec works by considering stars and pointings
         at intuitive locations
         """
+        from galsim.lsst.lsst_wcs import _nativeLonLatFromRaDec
 
         start = time.clock()
 
@@ -59,6 +60,7 @@ class NativeLonLatTest(unittest.TestCase):
         Test that nativeLongLatFromRaDec works by considering stars and pointings
         at non-intuitive locations.
         """
+        from galsim.lsst.lsst_wcs import _nativeLonLatFromRaDec
 
         start = time.clock()
 
@@ -133,6 +135,7 @@ class NativeLonLatTest(unittest.TestCase):
         by performing a bunch of tansformations passing in ra and dec as numpy arrays
         and then comparing them to results computed in an element-wise way)
         """
+        from galsim.lsst.lsst_wcs import _nativeLonLatFromRaDec
 
         start = time.clock()
 

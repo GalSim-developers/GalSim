@@ -16,4 +16,4 @@
 #    and/or other materials provided with the distribution.
 #
 
-from lsst_wcs import *
+from lsst_wcs import LsstWCS, LsstCamera
