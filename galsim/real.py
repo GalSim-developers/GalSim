@@ -353,7 +353,7 @@ class RealGalaxyCatalog(object):
        in some of the demo scripts (demo6, demo10, and demo11).  To use this catalog, you would
        initialize with
 
-           >>> rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog_example.fits',
+           >>> rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog_23.5_example.fits',
                                               dir='path/to/GalSim/examples/data')
 
     2. There are two larger catalogs based on HST observations of the COSMOS field with around

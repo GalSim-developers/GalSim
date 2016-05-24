@@ -23,7 +23,7 @@ PRO makestamps
 ;; is good enough for a start.
 
 ; define filenames etc.
-catfile = 'real_galaxy_catalog_example.fits'
+catfile = 'real_galaxy_catalog_23.5_example.fits'
 listfile = '/u/rmandelb/sdss_systematics/cosmos/imgs.var.in'
 outgalfile = 'real_galaxy_images.fits'
 outpsffile = 'real_galaxy_PSF_images.fits'
