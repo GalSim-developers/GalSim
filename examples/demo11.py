@@ -118,7 +118,7 @@ def main(argv):
  
     # Read in galaxy catalog
     # The COSMOSCatalog uses the same input file as we have been usign for RealGalaxyCatalogs
-    # along with a second file called real_galaxy_catalog_examples_fits.fits, which stores
+    # along with a second file called real_galaxy_catalog_23.5_examples_fits.fits, which stores
     # the information about the parameteric fits.  There is no need to specify the second file
     # name, since the name is derivable from the name of the main catalog.
     if True:

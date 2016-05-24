@@ -173,7 +173,7 @@ input :
     # the relative path from dir to wherever the images are located.
     real_catalog :
         dir : data
-        file_name : real_galaxy_catalog_example.fits
+        file_name : real_galaxy_catalog_23.5_example.fits
 
 
 # Define the name and format of the output file
