@@ -38,10 +38,10 @@ def test_cosmos_basic():
     # interesting.
 
     # Initialize a COSMOSCatalog with all defaults.
-    cat = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+    cat = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
                                dir=datapath)
     # Initialize one that doesn't exclude failures.  It should be >= the previous one in length.
-    cat2 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+    cat2 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
                                dir=datapath, exclusion_level='none')
     assert cat2.nobjects>=cat.nobjects
 
@@ -49,7 +49,7 @@ def test_cosmos_basic():
     try:
         # Can't find data (wrong directory).
         np.testing.assert_raises(IOError, galsim.COSMOSCatalog,
-                                 file_name='real_galaxy_catalog_example.fits')
+                                 file_name='real_galaxy_catalog_23.5_example.fits')
     except ImportError:
         print 'The assert_raises tests require nose'
 
@@ -77,7 +77,7 @@ def test_cosmos_basic():
                             "of 'galsim.GSObect'")
 
     # Check for parametric catalog
-    cat_param = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example_fits.fits',
+    cat_param = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example_fits.fits',
                                      dir=datapath, use_real=False)
 
     # Try making galaxies
@@ -104,9 +104,9 @@ def test_cosmos_fluxnorm():
     # fluxes should match very well.  These correspond to 1s exposures.
     test_ind = 54
     rand_seed = 12345
-    cat = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+    cat = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
                                dir=datapath, exclusion_level='none')
-    rgc = galsim.RealGalaxyCatalog(file_name='real_galaxy_catalog_example.fits',
+    rgc = galsim.RealGalaxyCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
                                    dir=datapath)
     final_psf = galsim.Airy(diam=1.2, lam=800.) # PSF twice as big as HST in F814W.
     gal1 = cat.makeGalaxy(test_ind, gal_type='real', rng=galsim.BaseDeviate(rand_seed))
