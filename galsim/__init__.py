@@ -113,10 +113,8 @@ from .correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise
 from .base import GSParams, GSObject, Gaussian, Moffat, Airy, Kolmogorov, Pixel, Box, TopHat
 from .base import Exponential, Sersic, DeVaucouleurs, Spergel
 from .real import RealGalaxy, RealGalaxyCatalog, simReal
-# from .optics import OpticalPSF
+from .phase_psf import Aperture, PhaseScreenList, PhaseScreenPSF, OpticalPSF
 from .phase_screens import AtmosphericScreen, Atmosphere, OpticalScreen
-from .phase_psf import Aperture, PhaseScreenList, PhaseScreenPSF
-from .phase_psf import OpticalPSF
 from .shapelet import Shapelet, ShapeletSize, FitShapelet
 from .interpolatedimage import Interpolant
 from .interpolatedimage import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
@@ -150,6 +148,7 @@ from . import detectors
 
 # Deprecation warning class
 from .deprecated import GalSimDeprecationWarning
+from .deprecated import optics as optics
 
 # Packages we intentionally keep separate.  E.g. requires galsim.fits.read(...)
 from . import fits

@@ -907,6 +907,132 @@ def test_dep_shear():
     np.testing.assert_almost_equal(s.beta / galsim.degrees, 52)
 
 
+
+@timer
+def test_dep_optics():
+    """Test the deprecated module galsim/deprecated/optics.py
+    """
+    testshape = (512, 512)  # shape of image arrays for all tests
+    decimal = 6     # Last decimal place used for checking equality of float arrays, see
+                    # np.testing.assert_array_almost_equal(), low since many are ImageF
+
+    decimal_dft = 3  # Last decimal place used for checking near equality of DFT product matrices to
+                     # continuous-result derived check values... note this is not as stringent as
+                     # decimal, because this is tough, because the DFT representation of a function is
+                     # not precisely equivalent to its continuous counterpart.
+
+    # def test_check_all_contiguous():
+    """Test all galsim.optics outputs are C-contiguous as required by the galsim.Image class.
+    """
+    # Check basic outputs from wavefront, psf and mtf (array contents won't matter, so we'll use
+    # a pure circular pupil)
+    test_obj, _ = check_dep(galsim.optics.wavefront, array_shape=testshape)
+    assert test_obj.flags.c_contiguous
+    test_obj, _ = check_dep(galsim.optics.psf, array_shape=testshape)
+    assert test_obj.flags.c_contiguous
+    assert check_dep(galsim.optics.otf, array_shape=testshape).flags.c_contiguous
+    assert check_dep(galsim.optics.mtf, array_shape=testshape).flags.c_contiguous
+    assert check_dep(galsim.optics.ptf, array_shape=testshape).flags.c_contiguous
+
+
+    # def test_simple_wavefront():
+    """Test the wavefront of a pure circular pupil against the known result.
+    """
+    kx, ky = galsim.utilities.kxky(testshape)
+    dx_test = 3.  # } choose some properly-sampled, yet non-unit / trival, input params
+    lod_test = 8. # }
+    kmax_test = 2. * np.pi * dx_test / lod_test  # corresponding INTERNAL kmax used in optics code
+    kmag = np.sqrt(kx**2 + ky**2) / kmax_test # Set up array of |k| in units of kmax_test
+    # Simple pupil wavefront should merely be unit ordinate tophat of radius kmax / 2:
+    in_pupil = kmag < .5
+    wf_true = np.zeros(kmag.shape)
+    wf_true[in_pupil] = 1.
+    # Compare
+    wf, _ = check_dep(galsim.optics.wavefront,
+                      array_shape=testshape, scale=dx_test, lam_over_diam=lod_test)
+    np.testing.assert_array_almost_equal(wf, wf_true, decimal=decimal)
+
+    # def test_simple_mtf():
+    """Test the MTF of a pure circular pupil against the known result.
+    """
+    kx, ky = galsim.utilities.kxky(testshape)
+    dx_test = 3.  # } choose some properly-sampled, yet non-unit / trival, input params
+    lod_test = 8. # }
+    kmax_test = 2. * np.pi * dx_test / lod_test  # corresponding INTERNAL kmax used in optics code
+    kmag = np.sqrt(kx**2 + ky**2) / kmax_test # Set up array of |k| in units of kmax_test
+    in_pupil = kmag < 1.
+    # Then use analytic formula for MTF of circ pupil (fun to derive)
+    mtf_true = np.zeros(kmag.shape)
+    mtf_true[in_pupil] = (np.arccos(kmag[in_pupil]) - kmag[in_pupil] *
+                          np.sqrt(1. - kmag[in_pupil]**2)) * 2. / np.pi
+    # Compare
+    mtf = check_dep(galsim.optics.mtf, array_shape=testshape, scale=dx_test, lam_over_diam=lod_test)
+    np.testing.assert_array_almost_equal(mtf, mtf_true, decimal=decimal_dft)
+
+    # def test_simple_ptf():
+    """Test the PTF of a pure circular pupil against the known result (zero).
+    """
+    ptf_true = np.zeros(testshape)
+    # Compare
+    ptf = check_dep(galsim.optics.ptf, array_shape=testshape)
+    # Test via median absolute deviation, since occasionally things around the edge of the OTF get
+    # hairy when dividing a small number by another small number
+    nmad_ptfdiff = np.median(np.abs(ptf - np.median(ptf_true)))
+    assert nmad_ptfdiff <= 10.**(-decimal)
+
+    # def test_consistency_psf_mtf():
+    """Test that the MTF of a pure circular pupil is |FT{PSF}|.
+    """
+    kx, ky = galsim.utilities.kxky(testshape)
+    dx_test = 3.  # } choose some properly-sampled, yet non-unit / trival, input params
+    lod_test = 8. # }
+    kmax_test = 2. * np.pi * dx_test / lod_test  # corresponding INTERNAL kmax used in optics code
+    psf, _ = check_dep(galsim.optics.psf,
+                       array_shape=testshape, scale=dx_test, lam_over_diam=lod_test)
+    psf *= dx_test**2 # put the PSF into flux units rather than SB for comparison
+    mtf_test = np.abs(np.fft.fft2(psf))
+    # Compare
+    mtf = check_dep(galsim.optics.mtf, array_shape=testshape, scale=dx_test, lam_over_diam=lod_test)
+    np.testing.assert_array_almost_equal(mtf, mtf_test, decimal=decimal_dft)
+
+    # def test_wavefront_image_view():
+    """Test that the ImageF.array view of the wavefront is consistent with the wavefront array.
+    """
+    array, _ = check_dep(galsim.optics.wavefront, array_shape=testshape)
+    (real, imag), _ = check_dep(galsim.optics.wavefront_image, array_shape=testshape)
+    np.testing.assert_array_almost_equal(array.real.astype(np.float32), real.array, decimal)
+    np.testing.assert_array_almost_equal(array.imag.astype(np.float32), imag.array, decimal)
+
+    # def test_psf_image_view():
+    """Test that the ImageF.array view of the PSF is consistent with the PSF array.
+    """
+    array, _ = check_dep(galsim.optics.psf, array_shape=testshape)
+    image = check_dep(galsim.optics.psf_image, array_shape=testshape)
+    np.testing.assert_array_almost_equal(array.astype(np.float32), image.array, decimal)
+
+    # def test_otf_image_view():
+    """Test that the ImageF.array view of the OTF is consistent with the OTF array.
+    """
+    array = check_dep(galsim.optics.otf, array_shape=testshape)
+    (real, imag) = check_dep(galsim.optics.otf_image, array_shape=testshape)
+    np.testing.assert_array_almost_equal(array.real.astype(np.float32), real.array, decimal)
+    np.testing.assert_array_almost_equal(array.imag.astype(np.float32), imag.array, decimal)
+
+    # def test_mtf_image_view():
+    """Test that the ImageF.array view of the MTF is consistent with the MTF array.
+    """
+    array = check_dep(galsim.optics.mtf, array_shape=testshape)
+    image = check_dep(galsim.optics.mtf_image, array_shape=testshape)
+    np.testing.assert_array_almost_equal(array.astype(np.float32), image.array)
+
+    # def test_ptf_image_view():
+    """Test that the ImageF.array view of the OTF is consistent with the OTF array.
+    """
+    array = check_dep(galsim.optics.ptf, array_shape=testshape)
+    image = check_dep(galsim.optics.ptf_image, array_shape=testshape)
+    np.testing.assert_array_almost_equal(array.astype(np.float32), image.array)
+
+
 if __name__ == "__main__":
     test_dep_bandpass()
     test_dep_base()
@@ -921,3 +1047,4 @@ if __name__ == "__main__":
     test_dep_sed()
     test_dep_shapelet()
     test_dep_shear()
+    test_dep_optics()

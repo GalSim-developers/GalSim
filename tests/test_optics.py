@@ -66,154 +66,6 @@ else:
     # only).
     pp_test_type = 'moments'
 
-# def test_check_all_contiguous():
-#     """Test all galsim.optics outputs are C-contiguous as required by the galsim.Image class.
-#     """
-#     import time
-#     t1 = time.time()
-#     # Check basic outputs from wavefront, psf and mtf (array contents won't matter, so we'll use
-#     # a pure circular pupil)
-#     test_obj, _ = galsim.optics.wavefront(array_shape=testshape)
-#     assert test_obj.flags.c_contiguous
-#     test_obj, _ = galsim.optics.psf(array_shape=testshape)
-#     assert test_obj.flags.c_contiguous
-#     assert galsim.optics.otf(array_shape=testshape).flags.c_contiguous
-#     assert galsim.optics.mtf(array_shape=testshape).flags.c_contiguous
-#     assert galsim.optics.ptf(array_shape=testshape).flags.c_contiguous
-#     t2 = time.time()
-#     print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-# def test_simple_wavefront():
-#     """Test the wavefront of a pure circular pupil against the known result.
-#     """
-#     import time
-#     t1 = time.time()
-#     kx, ky = galsim.utilities.kxky(testshape)
-#     dx_test = 3.  # } choose some properly-sampled, yet non-unit / trival, input params
-#     lod_test = 8. # }
-#     kmax_test = 2. * np.pi * dx_test / lod_test  # corresponding INTERNAL kmax used in optics code
-#     kmag = np.sqrt(kx**2 + ky**2) / kmax_test # Set up array of |k| in units of kmax_test
-#     # Simple pupil wavefront should merely be unit ordinate tophat of radius kmax / 2:
-#     in_pupil = kmag < .5
-#     wf_true = np.zeros(kmag.shape)
-#     wf_true[in_pupil] = 1.
-#     # Compare
-#     wf, _ = galsim.optics.wavefront(array_shape=testshape, scale=dx_test, lam_over_diam=lod_test)
-#     np.testing.assert_array_almost_equal(wf, wf_true, decimal=decimal)
-#     t2 = time.time()
-#     print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-# def test_simple_mtf():
-#     """Test the MTF of a pure circular pupil against the known result.
-#     """
-#     import time
-#     t1 = time.time()
-#     kx, ky = galsim.utilities.kxky(testshape)
-#     dx_test = 3.  # } choose some properly-sampled, yet non-unit / trival, input params
-#     lod_test = 8. # }
-#     kmax_test = 2. * np.pi * dx_test / lod_test  # corresponding INTERNAL kmax used in optics code
-#     kmag = np.sqrt(kx**2 + ky**2) / kmax_test # Set up array of |k| in units of kmax_test
-#     in_pupil = kmag < 1.
-#     # Then use analytic formula for MTF of circ pupil (fun to derive)
-#     mtf_true = np.zeros(kmag.shape)
-#     mtf_true[in_pupil] = (np.arccos(kmag[in_pupil]) - kmag[in_pupil] *
-#                           np.sqrt(1. - kmag[in_pupil]**2)) * 2. / np.pi
-#     # Compare
-#     mtf = galsim.optics.mtf(array_shape=testshape, scale=dx_test, lam_over_diam=lod_test)
-#     np.testing.assert_array_almost_equal(mtf, mtf_true, decimal=decimal_dft)
-#     t2 = time.time()
-#     print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-# def test_simple_ptf():
-#     """Test the PTF of a pure circular pupil against the known result (zero).
-#     """
-#     import time
-#     t1 = time.time()
-#     ptf_true = np.zeros(testshape)
-#     # Compare
-#     ptf = galsim.optics.ptf(array_shape=testshape)
-#     # Test via median absolute deviation, since occasionally things around the edge of the OTF get
-#     # hairy when dividing a small number by another small number
-#     nmad_ptfdiff = np.median(np.abs(ptf - np.median(ptf_true)))
-#     assert nmad_ptfdiff <= 10.**(-decimal)
-#     t2 = time.time()
-#     print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-# def test_consistency_psf_mtf():
-#     """Test that the MTF of a pure circular pupil is |FT{PSF}|.
-#     """
-#     import time
-#     t1 = time.time()
-#     kx, ky = galsim.utilities.kxky(testshape)
-#     dx_test = 3.  # } choose some properly-sampled, yet non-unit / trival, input params
-#     lod_test = 8. # }
-#     kmax_test = 2. * np.pi * dx_test / lod_test  # corresponding INTERNAL kmax used in optics code
-#     psf, _ = galsim.optics.psf(array_shape=testshape, scale=dx_test, lam_over_diam=lod_test)
-#     psf *= dx_test**2 # put the PSF into flux units rather than SB for comparison
-#     mtf_test = np.abs(np.fft.fft2(psf))
-#     # Compare
-#     mtf = galsim.optics.mtf(array_shape=testshape, scale=dx_test, lam_over_diam=lod_test)
-#     np.testing.assert_array_almost_equal(mtf, mtf_test, decimal=decimal_dft)
-#     t2 = time.time()
-#     print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-# def test_wavefront_image_view():
-#     """Test that the ImageF.array view of the wavefront is consistent with the wavefront array.
-#     """
-#     import time
-#     t1 = time.time()
-#     array, _ = galsim.optics.wavefront(array_shape=testshape)
-#     (real, imag), _ = galsim.optics.wavefront_image(array_shape=testshape)
-#     np.testing.assert_array_almost_equal(array.real.astype(np.float32), real.array, decimal)
-#     np.testing.assert_array_almost_equal(array.imag.astype(np.float32), imag.array, decimal)
-#     t2 = time.time()
-#     print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-# def test_psf_image_view():
-#     """Test that the ImageF.array view of the PSF is consistent with the PSF array.
-#     """
-#     import time
-#     t1 = time.time()
-#     array, _ = galsim.optics.psf(array_shape=testshape)
-#     image = galsim.optics.psf_image(array_shape=testshape)
-#     np.testing.assert_array_almost_equal(array.astype(np.float32), image.array, decimal)
-#     t2 = time.time()
-#     print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-# def test_otf_image_view():
-#     """Test that the ImageF.array view of the OTF is consistent with the OTF array.
-#     """
-#     import time
-#     t1 = time.time()
-#     array = galsim.optics.otf(array_shape=testshape)
-#     (real, imag) = galsim.optics.otf_image(array_shape=testshape)
-#     np.testing.assert_array_almost_equal(array.real.astype(np.float32), real.array, decimal)
-#     np.testing.assert_array_almost_equal(array.imag.astype(np.float32), imag.array, decimal)
-#     t2 = time.time()
-#     print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-# def test_mtf_image_view():
-#     """Test that the ImageF.array view of the MTF is consistent with the MTF array.
-#     """
-#     import time
-#     t1 = time.time()
-#     array = galsim.optics.mtf(array_shape=testshape)
-#     image = galsim.optics.mtf_image(array_shape=testshape)
-#     np.testing.assert_array_almost_equal(array.astype(np.float32), image.array)
-#     t2 = time.time()
-#     print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-# def test_ptf_image_view():
-#     """Test that the ImageF.array view of the OTF is consistent with the OTF array.
-#     """
-#     import time
-#     t1 = time.time()
-#     array = galsim.optics.ptf(array_shape=testshape)
-#     image = galsim.optics.ptf_image(array_shape=testshape)
-#     np.testing.assert_array_almost_equal(array.astype(np.float32), image.array)
-#     t2 = time.time()
-#     print 'time for %s = %.2f'%(funcname(),t2-t1)
-
 
 @timer
 def test_OpticalPSF_flux():
@@ -450,9 +302,6 @@ def test_OpticalPSF_aberrations_kwargs():
 def test_OpticalPSF_flux_scaling():
     """Test flux scaling for OpticalPSF.
     """
-    import time
-    t1 = time.time()
-
     # OpticalPSF test params (only a selection)
     test_flux = 1.8
     test_loD = 1.9
@@ -860,16 +709,6 @@ def test_ne():
 
 
 if __name__ == "__main__":
-    # test_check_all_contiguous()
-    # test_simple_wavefront()
-    # test_simple_mtf()
-    # test_simple_ptf()
-    # test_consistency_psf_mtf()
-    # test_wavefront_image_view()
-    # test_psf_image_view()
-    # test_otf_image_view()
-    # test_mtf_image_view()
-    # test_ptf_image_view()
     test_OpticalPSF_flux()
     test_OpticalPSF_vs_Airy()
     test_OpticalPSF_vs_Airy_with_obs()
