@@ -51,26 +51,15 @@ def _nativeLonLatFromRaDec(ra, dec, raPointing, decPointing):
 
     Calabretta and Greisen (2002), A&A 395, p. 1077
 
-    inputs
-    ------------
-    ra is the RA of the star being transformed in radians
-
-    dec is the Dec of the star being transformed in radians
-
-    raPointing is the RA at which the telescope is pointing
-    in radians
-
-    decPointing is the Dec at which the telescope is pointing
-    in radians
-
-    outputs
-    ------------
-    lonOut is the native longitude in radians
-
-    latOut is the native latitude in radians
-
     Note: while ra and dec can be numpy.arrays, raPointing and decPointing
     must be floats (you cannot transform for more than one pointing at once)
+
+    @param ra           The RA of the star being transformed in radians
+    @param dec          The Dec of the star being transformed in radians
+    @param raPointing   The RA at which the telescope is pointing in radians
+    @param decPointing  The Dec at which the telescope is pointing in radians
+
+    @returns a tuple (lon, lat), the longitude and latitude in radians.
     """
 
     x = -1.0*np.cos(dec)*np.sin(ra)
@@ -146,27 +135,23 @@ class LsstCamera(object):
     Note: Each chip on the camera has its own origin in pixel coordinates.  When you ask this
     class to transform RA, Dec into pixel coordinates, it will return you coordinate values as
     well as the name of the chip on which those coordinate values are valid.
+
+    The convention for rotation_angle is:
+
+            rotation_angle = 0 degrees means north is in the +x direction
+            (in pixel coordinates) and east is in the +y direction
+
+            rotation_angle = 90 degrees means north is +y and east is -x
+
+            rotation_angle = -90 degrees means north is -y and east is +x
+
+            rotation_angle = 180 degrees means north is -x and east is -y
+
+    @param origin           A CelestialCoord indicating the direction the telescope is pointing
+    @param rotation_angle   An angle indicating the orientation of the camera with
+                            respect to the sky.
     """
-
     def __init__(self, origin, rotation_angle):
-        """
-        inputs
-        ------------
-        origin is a CelestialCoord indicating the direction the telescope is pointing
-
-        rotation_angle is an angle indicating the orientation of the camera with
-        respect to the sky.  The convention for rotation_angle is:
-
-        rotation_angle = 0 degrees means north is in the +x direction (in pixel coordinates)
-                         and east is in the +y direction
-
-        rotation_angle = 90 degrees means north is +y and east is -x
-
-        rotation_angle = -90 degrees means north is -y and east is +x
-
-        rotation_angle = 180 degrees means north is -x and east is -y
-        """
-
         # this line prevents the camera mapper from printing harmless warnings to
         # stdout (which, as of 5 November 2015, happens every time you instantiate
         # the camera below)
@@ -206,16 +191,7 @@ class LsstCamera(object):
     def rotation_angle(self):
         """
         A galsim.Angle object characterizing the rotation of the camera with respect
-        to the sky.
-
-        rotation_angle = 0 degrees means north is in the +x direction (in pixel coordinates)
-                         and east is in the +y direction
-
-        rotation_angle = 90 degrees means north is +y and east is -x
-
-        rotation_angle = -90 degrees means north is -y and east is +x
-
-        rotation_angle = 180 degrees means north is -x and east is -y
+        to the sky.  See the docstring for LsstCamera for the meanings of this angle.
         """
         return self._rotation_angle
 
@@ -224,14 +200,10 @@ class LsstCamera(object):
         """
         Convert from RA, Dec into coordinates on the pupil
 
-        inputs
-        ------------
-        point is a CelestialCoord (or a list of CelestialCoords) indicating
-        the positions to be transformed
+        @param point    A CelestialCoord (or a list of CelestialCoords) indicating
+                        the positions to be transformed
 
-        outputs
-        ------------
-        The x and y coordinates on the pupil in radians
+        @return (x,y), the coordinates on the pupil in radians
         """
 
         if not hasattr(point, '__len__'):
@@ -248,15 +220,10 @@ class LsstCamera(object):
         """
         Convert from RA, Dec into coordinates on the pupil
 
-        inputs
-        ------------
-        ra is in radians.  Can be a list.
+        @param ra       The RA in radians.  Can be a list.
+        @param dec      The declination in radians.  Can be a list.
 
-        dec is in radians.  Can be a list.
-
-        outputs
-        ------------
-        The x and y coordinates on the pupil in radians
+        @returns (x,y), the coordinates on the pupil in radians
         """
 
         xx, yy = self._pointing.project_rad(ra, dec, projection='gnomonic')
@@ -270,16 +237,11 @@ class LsstCamera(object):
         """
         Convert pupil coordinates in radians to RA, Dec in radians
 
-        inputs
-        ------------
-        x is the x pupil coordinate in radians
+        @param x    The x pupil coordinate in radians
+        @param y    The y pupil coordinate in radians
 
-        y is the y pupil coordinate in radians
-
-        ouputs
-        ------------
-        RA and Dec in radians as lists of floats (or individual floats if only one
-        set of x, y was passed in)
+        @returns (ra, dec) in radians as lists of floats (or individual floats if only one
+                 set of x, y was passed in)
         """
 
         x_g = x*self._cos_rot + y*self._sin_rot
@@ -294,13 +256,10 @@ class LsstCamera(object):
 
     def _get_chip_name_from_afw_point_list(self, point_list):
         """
-        inputs
-        ------------
-        point_list is a list of afwGeom.Point2D objects corresponding to pupil coordinates (in radians)
+        @param point_list   A list of afwGeom.Point2D objects corresponding to pupil coordinates
+                            (in radians)
 
-        outputs
-        ------------
-        a list of chip names where those points fall
+        @returns a list of chip names where those points fall
         """
         det_list = self._camera.findDetectorsList(point_list, PUPIL)
 
@@ -326,15 +285,11 @@ class LsstCamera(object):
 
     def _get_afw_pupil_coord_list_from_point(self, point):
         """
-        inputs
-        -------------
-        point is a CelestialCoord (or a list of CelestialCoords) corresponding to RA, Dec
-        on the sky
+        @param point    A CelestialCoord (or a list of CelestialCoords) corresponding to RA, Dec
+                        on the sky
 
-        outputs
-        -------------
-        a list of afwGeom.Point2D objects correspdonding to pupil coordinates in radians
-        of point
+        @returns a list of afwGeom.Point2D objects correspdonding to pupil coordinates in radians
+                 of point
         """
 
         x_pupil, y_pupil = self.pupilCoordsFromPoint(point)
@@ -349,16 +304,11 @@ class LsstCamera(object):
 
     def _get_afw_pupil_coord_list_from_float(self, ra, dec):
         """
-        inputs
-        -------------
-        ra is in radians (can be a list)
+        @param ra       The RA in radians (can be a list)
+        @param dec      The declination in radians (can be a list)
 
-        dec is in radians (can be a list)
-
-        outputs
-        -------------
-        a list of afwGeom.Point2D objects correspdonding to pupil coordinates in radians
-        of point
+        @returns a list of afwGeom.Point2D objects correspdonding to pupil coordinates in radians
+                 of point
         """
 
         x_pupil, y_pupil = self.pupilCoordsFromFloat(ra, dec)
@@ -375,15 +325,11 @@ class LsstCamera(object):
         """
         Take a point on the sky and find the chip which sees it
 
-        inputs
-        ------------
-        point is a CelestialCoord (or a list of CelestialCoords) indicating
-        the positions to be transformed
+        @param point    A CelestialCoord (or a list of CelestialCoords) indicating
+                        the positions to be transformed
 
-        outputs
-        ------------
-        the name of the chip (or a list of the names of the chips) on which
-        those points fall
+        @returns the name of the chip (or a list of the names of the chips) on which
+                 those points fall
         """
 
         camera_point_list = self._get_afw_pupil_coord_list_from_point(point)
@@ -401,16 +347,11 @@ class LsstCamera(object):
         """
         Take a point on the sky and find the chip which sees it
 
-        inputs
-        ------------
-        ra is in radians (can be a list)
+        @param ra       The RA in radians (can be a list)
+        @param dec      The declintation in radians (can be a list)
 
-        dec is in radians (can be a list)
-
-        outputs
-        ------------
-        the name of the chip (or a list of the names of the chips) on which
-        those points fall
+        @returns the name of the chip (or a list of the names of the chips) on which
+                 those points fall
         """
 
         camera_point_list = self._get_afw_pupil_coord_list_from_float(ra, dec)
@@ -425,18 +366,11 @@ class LsstCamera(object):
 
     def _pixel_coord_from_point_and_name(self, point_list, name_list):
         """
-        inputs
-        ------------
-        point_list is a list of afwGeom.Point2D objects corresponding to pupil coordinates
-        (in radians)
+        @param point_list   A list of afwGeom.Point2D objects corresponding to pupil coordinates
+                            (in radians)
+        @param name_list    A list of chip names
 
-        name_list is a list of chip names
-
-        outputs
-        ------------
-        a list of x pixel coordinates
-
-        a list of y pixel coordinates
+        @return (x_list, y_list), lists of x and y pixel coordinates
 
         Note: these coordinates are only valid on the chips named in name_list
         """
@@ -462,18 +396,11 @@ class LsstCamera(object):
 
     def _tan_pixel_coord_from_point_and_name(self, point_list, name_list):
         """
-        inputs
-        ------------
-        point_list is a list of afwGeom.Point2D objects corresponding to pupil coordinates
-        (in radians)
+        @param point_list   A list of afwGeom.Point2D objects corresponding to pupil coordinates
+                            (in radians)
+        @param name_list    A list of chip names
 
-        name_list is a list of chip names
-
-        outputs
-        ------------
-        a list of x tan_pixel coordinates
-
-        a list of y tan_pixel coordinates
+        @returns (x_list, y_list), lists of x and y tan_pixel coordinates
 
         Note: these coordinates are only valid on the chips named in name_list
         """
@@ -505,18 +432,10 @@ class LsstCamera(object):
         returned coordinates will be numpy.NaN and the returned
         chip name will be None (not the string 'None'; an actual None).
 
-        inputs
-        ------------
-        point is a CelestialCoord (or a list of CelestialCoords) to be
-        transformed
+        @param point    A CelestialCoord (or a list of CelestialCoords) to be transformed
 
-        outputs
-        ------------
-        a list of x pixel coordinates
-
-        a list of y pixel coordinates
-
-        a list of the names of the chips on which x and y are reckoned
+        @returns (x_list, y_list, chip_names), the coordinates in radians and the names of the
+                 chips on which x and y are reckoned
         """
 
         camera_point_list = self._get_afw_pupil_coord_list_from_point(point)
@@ -537,19 +456,11 @@ class LsstCamera(object):
         returned coordinates will be numpy.NaN and the returned
         chip name will be None (not the string 'None'; an actual None).
 
-        inputs
-        ------------
-        ra is in radians (can be a list)
+        @param ra       The RA in radians (can be a list)
+        @param dec      The declination in radians (can be a list)
 
-        dec is in radians (can be a list)
-
-        outputs
-        ------------
-        a list of x pixel coordinates
-
-        a list of y pixel coordinates
-
-        a list of the names of the chips on which x and y are reckoned
+        @returns (x_list, y_list, chip_names), the coordinates in radians and the names of the
+                 chips on which x and y are reckoned
         """
 
         camera_point_list = self._get_afw_pupil_coord_list_from_float(ra, dec)
@@ -566,20 +477,11 @@ class LsstCamera(object):
         """
         Convert pixel coordinates on a specific chip into pupil coordinates (in radians)
 
-        inputs
-        ------------
-        x is the x pixel coordinate (it can be a list)
+        @param x            The x pixel coordinate (can be a list)
+        @param y            The y pixel coordinate (can be a list)
+        @param chip_name    The name of the chip on which x and y were measured (can be a list)
 
-        y is the y pixel coordinate (it can be a list)
-
-        chip_name is the name of the chip on which x and y were
-        measured (it can be a list)
-
-        outputs
-        ------------
-        a list of x pupil coordinates in radians
-
-        a list of y pupil coordinates in radians
+        @returns (x_list, y_list), the (x,y) coordinations in radians
         """
 
         if not hasattr(x, '__len__'):
@@ -624,20 +526,11 @@ class LsstCamera(object):
         """
         Convert tan_pixel coordinates on a specific chip into pupil coordinates (in radians)
 
-        inputs
-        ------------
-        x is the x tan_pixel coordinate (it can be a list)
+        @param x            The x tan_pixel coordinate (can be a list)
+        @param y            The y tan_pixel coordinate (can be a list)
+        @param chip_name    The name of the chip on which x and y were measured (can be a list)
 
-        y is the y tan_pixel coordinate (it can be a list)
-
-        chip_name is the name of the chip on which x and y were
-        measured (it can be a list)
-
-        outputs
-        ------------
-        a list of x pupil coordinates in radians
-
-        a list of y pupil coordinates in radians
+        @returns (x_list, y_list), the (x,y) pupil coordinates in radians
         """
 
         if not hasattr(x, '__len__'):
@@ -683,19 +576,11 @@ class LsstCamera(object):
         """
         Convert pixel coordinates into RA, Dec
 
-        inputs
-        ------------
-        x is the x pixel coordinate (can be a list)
+        @param x            The x pixel coordinate (can be a list)
+        @param y            The y pixel coordinate (can be a list)
+        @param chip_name    The name of the chip on which x and y are measured (can be a list)
 
-        y is the y pixel coordinate (can be a list)
-
-        chip_name is the name of the chip on which x and y are measured (can be a list)
-
-        outputs
-        ------------
-        ra is in radians
-
-        dec is in radians
+        @returns (ra, dec) in radians
         """
 
         x_pupil, y_pupil = self.pupilCoordsFromPixelCoords(x, y, chip_name)
@@ -706,19 +591,11 @@ class LsstCamera(object):
         """
         Convert tan_pixel coordinates into RA, Dec
 
-        inputs
-        ------------
-        x is the x tan_pixel coordinate (can be a list)
+        @param x            The x tan_pixel coordinate (can be a list)
+        @param y            The y tan_pixel coordinate (can be a list)
+        @param chip_name    The name of the chip on which x and y are measured (can be a list)
 
-        y is the y tan_pixel coordinate (can be a list)
-
-        chip_name is the name of the chip on which x and y are measured (can be a list)
-
-        outputs
-        ------------
-        ra is in radians
-
-        dec is in radians
+        @returns (ra, dec) in radians
         """
 
         x_pupil, y_pupil = self.pupilCoordsFromTanPixelCoords(x, y, chip_name)
@@ -737,17 +614,8 @@ class LsstWCS(galsim.wcs.CelestialWCS):
     will just exceed the chip bounds in that case (most chips have 4000 pixels in both
     the x and y directions; it is possible to get pixel coordinates like (5000, 6000), etc.).
     To find which chip an RA, Dec point lies on, use the methods in the LsstCamera class.
-    """
 
-    def __init__(self, pointing, rotation_angle, chip_name, camera=None):
-        """
-        inputs
-        ------------
-        pointing is a CelestialCoord indicating the point at which the telescope
-        is pointing
-
-        rotation_angle is an angle indicating the orientation of the camera with
-        respect to the sky.  The convention for rotation_angle is:
+    The convention for rotation_angle is:
 
             rotation_angle = 0 degrees means north is in the +x direction
             (in pixel coordinates) and east is in the +y direction
@@ -758,31 +626,31 @@ class LsstWCS(galsim.wcs.CelestialWCS):
 
             rotation_angle = 180 degrees means north is -x and east is -y
 
-        chip_name is a string indicating the name of the chip to which this WCS corresponds
+    Note: The origin attribute denotes the point on the sky at which the center of the entire
+          LSST field of view is pointing.  It does not (and often won't) have to fall on the chip
+          specified by chip_name
 
-            valid formats for chip_name are
+    @param pointing         A CelestialCoord indicating the point at which the telescope is
+                            pointing.
+    @param rotation_angle   An angle indicating the orientation of the camera with respect to the
+                            sky.  (See above for the conventions.)
+    @param chip_name        A string indicating the name of the chip to which this WCS corresponds.
+                            Valid formats for chip_name are
+                                R:i,j S:m,n
+                            where i,j,m,n are integers.  R denotes the raft (a 3x3 block of chips).
+                            S denotes the chip within the raft.  Chip names can be found using the
+                            chipNameFromFloat and chipNameFromPoint methods of the class LsstCamera.
+    @param camera           An optional instantiation of LsstCamera that you want to use for this
+                            WCS.  Before actually assigning camera to this WCS, LsstWCS will verify
+                            that camera was created with the pointing and rotation_angle that you
+                            say you want for this WCS.  If that is not true, LsstWCS will go ahead
+                            and create a new LsstCamera instantiation for this WCS.  This option
+                            exists in case you want to create multiple LsstWCSs using the same
+                            camera but do not want to incur the overhead of instantiating a camera
+                            for each WCS.
+    """
 
-            R:i,j S:m,n
-
-            where i,j,m,n are integers.  R denotes the raft (a 3x3 block of chips).
-            S denotes the chip within the raft.
-
-            chip_names can be found using the chipNameFromFloat and chipNameFromPoint
-            methods of the class LsstCamera
-
-            Note: origin denotes the point on the sky at which the center of the entire
-            LSST field of view is pointing.  It does not (and often won't) have to fall
-            on the chip specified by chip_name
-
-        camera (optional) is an instantiation of LsstCamera that you want to use for this
-        WCS.  Before actually assigning camera to this WCS, LsstWCS will verify that camera
-        was created with the pointing and rotation_angle that you say you want for this WCS.
-        If that is not true, LsstWCS will go ahead and create a new LsstCamera instantiation
-        for this WCS.  This option exists in case you want to create multiple LsstWCSs using
-        the same camera but do not want to incur the overhead of instantiating a camera for
-        each WCS.
-        """
-
+    def __init__(self, pointing, rotation_angle, chip_name, camera=None):
         self._pointing = pointing
         self._rotation_angle = rotation_angle
         self._chip_name = chip_name
@@ -860,17 +728,10 @@ class LsstWCS(galsim.wcs.CelestialWCS):
 
     def _xy(self, ra, dec):
         """
-        inputs
-        ------------
-        ra is in radians (can be a list)
+        @param ra       The RA in radians (can be a list)
+        @param dec      The declination in radians (can be a list)
 
-        dec is in radians (can be a list)
-
-        outputs
-        ------------
-        a list of x pixel coordinates on the chip specified for this WCS
-
-        a list of y pixel coordinates on the chip specified for this WCS
+        @returns (x,y)
         """
         camera_point_list = self._camera._get_afw_pupil_coord_list_from_float(ra, dec)
         xx, yy = \
@@ -885,17 +746,10 @@ class LsstWCS(galsim.wcs.CelestialWCS):
 
     def _radec(self, x, y):
         """
-        inputs
-        ------------
-        x is the x pixel coordinate on this chip (can be a list)
+        @param x    The x pixel coordinate on this chip (can be a list)
+        @param y    The y pixel coordinate on this chip (can be a list)
 
-        y is the y pixel coordinate on this chip (can be a list)
-
-        outputs
-        ------------
-        ra is in radians
-
-        dec is in radians
+        @returns (ra,dec) in radians
         """
 
         if hasattr(x, '__len__'):
@@ -1056,22 +910,15 @@ class LsstWCS(galsim.wcs.CelestialWCS):
         Definition of the TAN-SIP WCS can be found in Shupe and Hook (2008)
         http://fits.gsfc.nasa.gov/registry/sip/SIP_distortion_v1_0.pdf
 
-        inputs
-        ------------
-        order is the order of the SIP polynomials to be fit to the
-        optical distortions (default 3)
+        @param order                The order of the SIP polynomials to be fit to the
+                                    optical distortions [default: 3]
+        @param skyToleranceArcSec   The maximum allowed error in the fitted world coordinates (in
+                                    arcseconds).  [default: 0.001]
+        @param pixelTolerance       The maximum allowed error in the fitted pixel coordinates.
+                                    [default: 0.02]
 
-        skyToleranceArcSec is the maximum allowed error in the fitted
-        world coordinates (in arcseconds).  Default 0.001
-
-        pixelTolerance is the maximum allowed error in the fitted
-        pixel coordinates.  Default 0.02
-
-        outputs
-        ------------
-        tanSipWcs is an instantiation of lsst.afw.image's TanWcs class
-        representing the WCS of the detector with optical distortions parametrized
-        by the SIP polynomials.
+        @returns tanSipWcs, an instantiation of lsst.afw.image's TanWcs class representing the WCS
+                 of the detector with optical distortions parametrized by the SIP polynomials.
         """
 
         bbox = self._detector.getBBox()
