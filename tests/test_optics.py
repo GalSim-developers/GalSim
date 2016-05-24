@@ -130,12 +130,12 @@ def test_OpticalPSF_aberrations_struts():
     myImg = galsim.ImageD(imsize, imsize)
 
     # We don't bother running all of these for the regular unit tests, since it adds
-    # ~10s to the test run time on a fast-ish laptop.  So only run these when individually
+    # ~5s to the test run time on a fast-ish laptop.  So only run these when individually
     # running python test_optics.py.
     if __name__ == "__main__":
         # test defocus
         savedImg = galsim.fits.read(os.path.join(imgdir, "optics_defocus.fits"))
-        optics = galsim.OpticalPSF(lod, defocus=.5, obscuration=obscuration)
+        optics = galsim.OpticalPSF(lod, defocus=.5, obscuration=obscuration, oversampling=1)
         myImg = optics.drawImage(myImg, scale=0.2*lod, use_true_center=True, method='no_pixel')
 
         np.testing.assert_array_almost_equal(
@@ -144,7 +144,8 @@ def test_OpticalPSF_aberrations_struts():
 
         # test astig1
         savedImg = galsim.fits.read(os.path.join(imgdir, "optics_astig1.fits"))
-        optics = galsim.OpticalPSF(lod, defocus=.5, astig1=.5, obscuration=obscuration)
+        optics = galsim.OpticalPSF(lod, defocus=.5, astig1=.5, obscuration=obscuration,
+                                   oversampling=1)
         myImg = optics.drawImage(myImg, scale=0.2*lod, use_true_center=True, method='no_pixel')
         np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 6,
@@ -152,7 +153,8 @@ def test_OpticalPSF_aberrations_struts():
 
         # test astig2
         savedImg = galsim.fits.read(os.path.join(imgdir, "optics_astig2.fits"))
-        optics = galsim.OpticalPSF(lod, defocus=.5, astig2=.5, obscuration=obscuration)
+        optics = galsim.OpticalPSF(lod, defocus=.5, astig2=.5, obscuration=obscuration,
+                                   oversampling=1)
         myImg = optics.drawImage(myImg, scale=0.2*lod, use_true_center=True, method='no_pixel')
         np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 6,
@@ -160,7 +162,7 @@ def test_OpticalPSF_aberrations_struts():
 
         # test coma1
         savedImg = galsim.fits.read(os.path.join(imgdir, "optics_coma1.fits"))
-        optics = galsim.OpticalPSF(lod, coma1=.5, obscuration=obscuration)
+        optics = galsim.OpticalPSF(lod, coma1=.5, obscuration=obscuration, oversampling=1)
         myImg = optics.drawImage(myImg, scale=0.2*lod, use_true_center=True, method='no_pixel')
         np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 6,
@@ -168,7 +170,7 @@ def test_OpticalPSF_aberrations_struts():
 
         # test coma2
         savedImg = galsim.fits.read(os.path.join(imgdir, "optics_coma2.fits"))
-        optics = galsim.OpticalPSF(lod, coma2=.5, obscuration=obscuration)
+        optics = galsim.OpticalPSF(lod, coma2=.5, obscuration=obscuration, oversampling=1)
         myImg = optics.drawImage(myImg, scale=0.2*lod, use_true_center=True, method='no_pixel')
         np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 6,
@@ -176,7 +178,7 @@ def test_OpticalPSF_aberrations_struts():
 
         # test trefoil1
         savedImg = galsim.fits.read(os.path.join(imgdir, "optics_trefoil1.fits"))
-        optics = galsim.OpticalPSF(lod, trefoil1=.5, obscuration=obscuration)
+        optics = galsim.OpticalPSF(lod, trefoil1=.5, obscuration=obscuration, oversampling=1)
         myImg = optics.drawImage(myImg, scale=0.2*lod, use_true_center=True, method='no_pixel')
         np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 6,
@@ -184,7 +186,7 @@ def test_OpticalPSF_aberrations_struts():
 
         # test trefoil2
         savedImg = galsim.fits.read(os.path.join(imgdir, "optics_trefoil2.fits"))
-        optics = galsim.OpticalPSF(lod, trefoil2=.5, obscuration=obscuration)
+        optics = galsim.OpticalPSF(lod, trefoil2=.5, obscuration=obscuration, oversampling=1)
         myImg = optics.drawImage(myImg, scale=0.2*lod, use_true_center=True, method='no_pixel')
         np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 6,
@@ -192,7 +194,7 @@ def test_OpticalPSF_aberrations_struts():
 
         # test spherical
         savedImg = galsim.fits.read(os.path.join(imgdir, "optics_spher.fits"))
-        optics = galsim.OpticalPSF(lod, spher=.5, obscuration=obscuration)
+        optics = galsim.OpticalPSF(lod, spher=.5, obscuration=obscuration, oversampling=1)
         myImg = optics.drawImage(myImg, scale=0.2*lod, use_true_center=True, method='no_pixel')
         np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 6,
@@ -201,7 +203,8 @@ def test_OpticalPSF_aberrations_struts():
     # test all aberrations
     savedImg = galsim.fits.read(os.path.join(imgdir, "optics_all.fits"))
     optics = galsim.OpticalPSF(lod, defocus=.5, astig1=0.5, astig2=0.3, coma1=0.4, coma2=-0.3,
-                               trefoil1=-0.2, trefoil2=0.1, spher=-0.8, obscuration=obscuration)
+                               trefoil1=-0.2, trefoil2=0.1, spher=-0.8, obscuration=obscuration,
+                               oversampling=1)
     myImg = optics.drawImage(myImg, scale=0.2*lod, use_true_center=True, method='no_pixel')
     np.testing.assert_array_almost_equal(
         myImg.array, savedImg.array, 6,
@@ -213,7 +216,7 @@ def test_OpticalPSF_aberrations_struts():
     savedImg = galsim.fits.read(os.path.join(imgdir, "optics_struts.fits"))
     optics = galsim.OpticalPSF(
         lod, obscuration=obscuration, nstruts=5, strut_thick=0.04, strut_angle=8.*galsim.degrees,
-        astig2=0.04, coma1=-0.07, defocus=0.09)
+        astig2=0.04, coma1=-0.07, defocus=0.09, oversampling=1)
     try:
         np.testing.assert_raises(TypeError, galsim.OpticalPSF, lod, nstruts=5, strut_thick=0.01,
                                  strut_angle=8.) # wrong units
@@ -226,23 +229,17 @@ def test_OpticalPSF_aberrations_struts():
     # check anyway...)
     optics_2 = galsim.OpticalPSF(
         lod, obscuration=obscuration, nstruts=5, strut_thick=0.04, strut_angle=0.*galsim.degrees,
-        astig2=0.04, coma1=-0.07, defocus=0.09)
+        astig2=0.04, coma1=-0.07, defocus=0.09, oversampling=1)
     myImg = optics.drawImage(myImg, scale=0.2*lod, use_true_center=True, method='no_pixel')
-
-    # This test failed at precision=6 when switching to the new optics framework (for 0.04% of
-    # pixels).  However, upon investigation, it appears that the differences are due the
-    # illumination of 3 extra aperture pixels under the old framework compared to the new framework.
-    # When manually zeroing these pixels in the old framework and reproducing a PSF, the test
-    # passes.  So here, we simply degrade the precision to 5.
     np.testing.assert_array_almost_equal(
-        myImg.array, savedImg.array, 5,
+        myImg.array, savedImg.array, 6,
         err_msg="Optical PSF (with struts) disagrees with expected result")
 
     # make sure it doesn't completely explode when asked to return a PSF with non-circular pupil and
     # non-zero obscuration
     optics = galsim.OpticalPSF(
         lod, obscuration=obscuration, nstruts=5, strut_thick=0.04, strut_angle=8.*galsim.degrees,
-        astig2=0.04, coma1=-0.07, defocus=0.09, circular_pupil=False)
+        astig2=0.04, coma1=-0.07, defocus=0.09, circular_pupil=False, oversampling=1)
     do_pickle(optics, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
     do_pickle(optics)
 
