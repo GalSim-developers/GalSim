@@ -631,7 +631,6 @@ class StampBuilder(object):
         @returns the image
         """
         if xsize and ysize:
-            # If the size is set, we need to do something reasonable to return this size.
             im = galsim.ImageF(xsize, ysize)
             im.setZero()
             return im

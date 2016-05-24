@@ -404,8 +404,8 @@ class RealGalaxyCatalog(object):
     @param logger     An optional logger object to log progress. [default: None]
     """
     _req_params = {}
-    _opt_params = { 'file_name' : str, 'sample' : str, 'image_dir' : str , 'dir' : str,
-                    'preload' : bool, 'noise_dir' : str }
+    _opt_params = { 'file_name' : str, 'sample' : str, 'dir' : str,
+                    'preload' : bool }
     _single_params = []
     _takes_rng = False
 
