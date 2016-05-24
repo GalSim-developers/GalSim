@@ -36,7 +36,7 @@ are:
  - PSF-Matched: all input images are matched to a common PSF and then added
    with some weight.
 
- - Kaiser: uses a Fourer-space approach to combine images optimally.  The original
+ - Kaiser: uses a Fourier-space approach to combine images optimally.  The original
    paper that developed the algorithm by Nick Kaiser has not been published (even
    to the arxiv), but the same algorithm can be found in Zackay & Ofek 2015
    (http://adsabs.harvard.edu/abs/2015arXiv151206879Z).
