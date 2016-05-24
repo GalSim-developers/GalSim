@@ -39,6 +39,9 @@ warnings.filterwarnings('always', '.*LsstWCS*')
 __all__ = ["LsstCamera", "LsstWCS", "_nativeLonLatFromRaDec"]
 
 
+_afwCamera = LsstSimMapper().camera
+
+
 def _nativeLonLatFromRaDec(ra, dec, raPointing, decPointing):
     """
     Convert the RA and Dec of a star into `native' longitude and latitude.
@@ -157,7 +160,9 @@ class LsstCamera(object):
         # the camera below)
         pexLog.Log.getDefaultLog().setThresholdFor("CameraMapper", pexLog.Log.FATAL)
 
-        self._camera = LsstSimMapper().camera
+        global _afwCamera
+
+        self._camera = _afwCamera
 
         # _pixel_system_dict will be a dictionary of chip pixel coordinate systems
         # keyed to chip names
