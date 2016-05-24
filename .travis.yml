@@ -1,0 +1,22 @@
+language: python
+compiler:
+  - g++
+before_install:
+  - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
+  - sudo apt-get -qq update
+  - sudo apt-get install -y libboost-all-dev gfortran liblapack-dev libfftw3-dev python-dev python-numpy python-scipy python-nose
+  - pip install astropy pyyaml
+  - pushd $HOME
+#Only get TMV if not cached
+  - if ! test -d tmv-0.73; then wget https://github.com/rmjarvis/tmv/archive/v0.73.tar.gz && tar -xf v0.73.tar.gz ; else echo Using cached TMV; fi
+#But always install it to /usr/local
+  - cd tmv-0.73 && sudo scons install DEBUG=True FLAGS="-O0"
+  - popd
+cache:
+    pip: true
+    directories:
+    - $HOME/tmv-0.73
+
+install: scons
+script: scons tests
+
