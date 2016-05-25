@@ -249,35 +249,37 @@ namespace galsim {
     };
 
     /**
-     * @brief A class to represent an argument grid for a Table2D.
+     * @brief A class to represent an argument vector for a Table1D or Table2D.
      *
      * Basically a std::vector with a few extra bells and whistles to deal with potentially
      * equally-spaced arguments, upper and lower slop, and fast indexing.
      */
     template<class A>
-    class ArgGrid
+    class ArgVec
     {
     public:
-        ArgGrid(const A* args, int N);
+        ArgVec(const std::vector<A>& args) : vec(args) {setup();}
+        template<class InputIterator>
+        ArgVec(InputIterator first, InputIterator last) : vec(first, last) {setup();}
 
         int upperIndex(const A a) const;
 
         // pass through a few std::vector methods.
-        const A& front() const {return grid.front();}
-        const A& back() const {return grid.back();}
-        const A& operator[](int i) const {return grid[i];}
+        const A& front() const {return vec.front();}
+        const A& back() const {return vec.back();}
+        const A& operator[](int i) const {return vec[i];}
 
-        // A few convenient additional member variables.
-        A lower_slop, upper_slop;
-        bool equalSpaced;
-        A da;
-        mutable int lastIndex;
-
-        const std::vector<A>& getGrid() const { return grid; }
+        const std::vector<A>& getArgs() const { return vec; }
 
     private:
         typedef typename std::vector<A>::const_iterator citer;
-        std::vector<A> grid;
+        std::vector<A> vec;
+        // A few convenient additional member variables.
+        mutable A lower_slop, upper_slop;
+        mutable bool equalSpaced;
+        mutable A da;
+        mutable int lastIndex;
+        void setup() const;
     };
 
     /**
@@ -297,12 +299,12 @@ namespace galsim {
         enum interpolant { linear, floor, ceil, nearest };
 
         /// Table from xargs, yargs, vals
-        Table2D(const A* xargs, const A* yargs, const V* valarray, int Nx, int Ny, interpolant in);
+        Table2D(const A* _xargs, const A* _yargs, const V* _vals, int Nx, int Ny, interpolant in);
 
-        A xmin() const {return xgrid.front();}
-        A xmax() const {return xgrid.back();}
-        A ymin() const {return ygrid.front();}
-        A ymax() const {return ygrid.back();}
+        A xmin() const {return xargs.front();}
+        A xmax() const {return xargs.back();}
+        A ymin() const {return yargs.front();}
+        A ymax() const {return yargs.back();}
 
         /// interp, but exception if beyond bounds
         V lookup(const A x, const A y) const;
@@ -311,8 +313,8 @@ namespace galsim {
         void interpManyScatter(const A* xvec, const A* yvec, V* valvec, int N) const;
         void interpManyOuter(const A* xvec, const A* yvec, V* valvec, int Nx, int Ny) const;
 
-        const std::vector<A>& getXArgs() const { return xgrid.getGrid(); }
-        const std::vector<A>& getYArgs() const { return ygrid.getGrid(); }
+        const std::vector<A>& getXArgs() const { return xargs.getArgs(); }
+        const std::vector<A>& getYArgs() const { return yargs.getArgs(); }
         const std::vector<V>& getVals() const { return vals; }
         int getNx() const {return Nx;}
         int getNy() const {return Ny;}
@@ -321,8 +323,8 @@ namespace galsim {
     private:
         interpolant iType;
         const int Nx, Ny; // Array dimensions
-        const ArgGrid<A> xgrid;
-        const ArgGrid<A> ygrid;
+        const ArgVec<A> xargs;
+        const ArgVec<A> yargs;
 
         std::vector<V> vals;
 
@@ -332,6 +334,60 @@ namespace galsim {
         V floorInterpolate(const A x, const A y, int i, int j) const;
         V ceilInterpolate(const A x, const A y, int i, int j) const;
         V nearestInterpolate(const A x, const A y, int i, int j) const;
+    };
+
+
+    /**
+     * @brief A class to represent lookup tables for a function y = f(x).
+     *
+     * A is the type of the argument of the function.
+     * V is the type of the value of the function.
+     *
+     * Requirements for A,V:
+     *   A must have ordering operators (< > ==) and the normal arithmetic ops (+ - * /)
+     *   V must have + and *.
+     */
+    template<class V, class A>
+    class Table1D
+    {
+    public:
+        enum interpolant { linear, floor, ceil, nearest, spline };
+
+        /// Table from xargs, vals
+        Table1D(const A* xargs, const V* valarray, int N, interpolant in);
+        Table1D(const std::vector<A>& xargs, const std::vector<V>& valarray, interpolant in);
+
+        A xmin() const {return grid.front();}
+        A xmax() const {return grid.back();}
+
+        /// interp, but exception if beyond bounds
+        V lookup(const A x) const;
+
+        /// interp many values at once
+        void interpMany(const A* xvec, V* valvec, int N) const;
+
+        const std::vector<A>& getArgs() const { return grid.getArgs(); }
+        const std::vector<V>& getVals() const { return vals; }
+        int getN() const {return N;}
+        interpolant getInterp() const { return iType; }
+
+    private:
+        interpolant iType;
+        const int N; // Array dimensions
+        const ArgVec<A> grid;
+
+        std::vector<V> vals;
+        mutable std::vector<V> y2;
+
+        typedef V (Table1D<V,A>::*Table1DMemFn)(const A x, int i) const;
+        Table1DMemFn interpolate;
+        V linearInterpolate(const A x, int i) const;
+        V floorInterpolate(const A x, int i) const;
+        V ceilInterpolate(const A x, int i) const;
+        V nearestInterpolate(const A x, int i) const;
+        V splineInterpolate(const A x, int i) const;
+
+        void setupSpline() const;
     };
 }
 

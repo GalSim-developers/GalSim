@@ -359,70 +359,70 @@ namespace galsim {
     template class Table<double,double>;
 
 
-    // ArgGrid
+    // ArgVec
 
     template<class A>
-    ArgGrid<A>::ArgGrid(const A* args, int N)
+    void ArgVec<A>::setup() const
     {
-        grid.reserve(N);
-        for (int i=0; i<N; i++, args++) grid.push_back(*args);
+        int N = vec.size();
         const double tolerance = 0.01;
-        da = (grid.back() - grid.front()) / (N-1);
+        da = (vec.back() - vec.front()) / (N-1);
         if (da == 0.) throw TableError("First and last arguments are equal.");
         equalSpaced = true;
         for (int i=1; i<N; i++) {
-            if (std::abs((grid[i] - grid.front())/da - i) > tolerance) equalSpaced = false;
-            if (grid[i] <= grid[i-1])
-                throw TableError("Table2D arguments not strictly increasing.");
+            if (std::abs((vec[i] - vec.front())/da - i) > tolerance) equalSpaced = false;
+            if (vec[i] <= vec[i-1])
+                throw TableError("Table arguments not strictly increasing.");
         }
         lastIndex = 1;
-        lower_slop = (grid[1]-grid[0]) * 1.e-6;
-        upper_slop = (grid[N-1]-grid[N-2]) * 1.e-6;
+        lower_slop = (vec[1]-vec[0]) * 1.e-6;
+        upper_slop = (vec[N-1]-vec[N-2]) * 1.e-6;
     }
 
     // Look up an index.  Use STL binary search.
     template<class A>
-    int ArgGrid<A>::upperIndex(const A a) const {
-        if (a<grid.front()-lower_slop || a>grid.back()+upper_slop)
-            throw TableOutOfRange(a,grid.front(),grid.back());
+    int ArgVec<A>::upperIndex(const A a) const
+    {
+        if (a<vec.front()-lower_slop || a>vec.back()+upper_slop)
+            throw TableOutOfRange(a,vec.front(),vec.back());
         // check for slop
-        if (a < grid.front()) return 1;
-        if (a > grid.back()) return grid.size()-1;
+        if (a < vec.front()) return 1;
+        if (a > vec.back()) return vec.size()-1;
 
         if (equalSpaced) {
-            int i = int( std::ceil( (a-grid.front()) / da) );
-            if (i >= grid.size()) --i; // in case of rounding error
+            int i = int( std::ceil( (a-vec.front()) / da) );
+            if (i >= vec.size()) --i; // in case of rounding error
             if (i == 0) ++i;
             // check if we need to move ahead or back one step due to rounding errors
-            while (a > grid[i]) ++i;
-            while (a < grid[i-1]) --i;
+            while (a > vec[i]) ++i;
+            while (a < vec[i-1]) --i;
             return i;
         } else {
             xassert(lastIndex >= 1);
-            xassert(lastIndex < grid.size());
+            xassert(lastIndex < vec.size());
 
-            if ( a < grid[lastIndex-1] ) {
+            if ( a < vec[lastIndex-1] ) {
                 xassert(lastIndex-2 >= 0);
                 // Check to see if the previous one is it.
-                if (a >= grid[lastIndex-2]) return --lastIndex;
+                if (a >= vec[lastIndex-2]) return --lastIndex;
                 else {
                     // Look for the entry from 0..lastIndex-1:
-                    citer p = std::upper_bound(grid.begin(), grid.begin()+lastIndex-1, a);
-                    xassert(p != grid.begin());
-                    xassert(p != grid.begin()+lastIndex-1);
-                    lastIndex = p-grid.begin();
+                    citer p = std::upper_bound(vec.begin(), vec.begin()+lastIndex-1, a);
+                    xassert(p != vec.begin());
+                    xassert(p != vec.begin()+lastIndex-1);
+                    lastIndex = p-vec.begin();
                     return lastIndex;
                 }
-            } else if (a > grid[lastIndex]) {
-                xassert(lastIndex+1 < grid.size());
+            } else if (a > vec[lastIndex]) {
+                xassert(lastIndex+1 < vec.size());
                 // Check to see if the next one is it.
-                if (a <= grid[lastIndex+1]) return ++lastIndex;
+                if (a <= vec[lastIndex+1]) return ++lastIndex;
                 else {
                     // Look for the entry from lastIndex..end
-                    citer p = std::lower_bound(grid.begin()+lastIndex+1, grid.end(), a);
-                    xassert(p != grid.begin()+lastIndex+1);
-                    xassert(p != grid.end());
-                    lastIndex = p-grid.begin();
+                    citer p = std::lower_bound(vec.begin()+lastIndex+1, vec.end(), a);
+                    xassert(p != vec.begin()+lastIndex+1);
+                    xassert(p != vec.end());
+                    lastIndex = p-vec.begin();
                     return lastIndex;
                 }
             } else {
@@ -436,13 +436,14 @@ namespace galsim {
     // Table2D
 
     template<class V, class A>
-    Table2D<V,A>::Table2D(const A* xargs, const A* yargs, const V* valarray, int _Nx, int _Ny,
-        interpolant in) : iType(in), Nx(_Nx), Ny(_Ny), xgrid(xargs, Nx), ygrid(yargs, Ny)
+    Table2D<V,A>::Table2D(const A* _xargs, const A* _yargs, const V* _vals, int _Nx, int _Ny,
+        interpolant in) : iType(in), Nx(_Nx), Ny(_Ny),
+                          xargs(_xargs, _xargs+Nx), yargs(_yargs, _yargs+Ny)
     {
         // Allocate and fill vals
         vals.reserve(Nx*Ny);
-        for (int i=0; i<Nx*Ny; i++, valarray++)
-            vals.push_back(*valarray);
+        for (int i=0; i<Nx*Ny; i++, _vals++)
+            vals.push_back(*_vals);
 
         // Map specific interpolator to `interpolate`.
         switch (iType) {
@@ -467,8 +468,8 @@ namespace galsim {
     template<class V, class A>
     V Table2D<V,A>::lookup(const A x, const A y) const
     {
-        int i = xgrid.upperIndex(x);
-        int j = ygrid.upperIndex(y);
+        int i = xargs.upperIndex(x);
+        int j = yargs.upperIndex(y);
         return (this->*interpolate)(x, y, i, j);
     }
 
@@ -480,8 +481,8 @@ namespace galsim {
     {
         int i, j;
         for (int k=0; k<N; k++) {
-            i = xgrid.upperIndex(xvec[k]);
-            j = ygrid.upperIndex(yvec[k]);
+            i = xargs.upperIndex(xvec[k]);
+            j = yargs.upperIndex(yvec[k]);
             valvec[k] = (this->*interpolate)(xvec[k], yvec[k], i, j);
         }
     }
@@ -494,9 +495,9 @@ namespace galsim {
     {
         int i, j;
         for (int outj=0; outj<outNy; outj++) {
-            j = ygrid.upperIndex(yvec[outj]);
+            j = yargs.upperIndex(yvec[outj]);
             for (int outi=0; outi<outNx; outi++, valvec++) {
-                i = xgrid.upperIndex(xvec[outi]);
+                i = xargs.upperIndex(xvec[outi]);
                 *valvec = (this->*interpolate)(xvec[outi], yvec[outj], i, j);
             }
         }
@@ -505,9 +506,9 @@ namespace galsim {
     template<class V, class A>
     V Table2D<V,A>::linearInterpolate(const A x, const A y, int i, int j) const
     {
-        A ax = (xgrid[i] - x) / (xgrid[i] - xgrid[i-1]);
+        A ax = (xargs[i] - x) / (xargs[i] - xargs[i-1]);
         A bx = 1.0 - ax;
-        A ay = (ygrid[j] - y) / (ygrid[j] - ygrid[j-1]);
+        A ay = (yargs[j] - y) / (yargs[j] - yargs[j-1]);
         A by = 1.0 - ay;
         return (vals[(j-1)*Nx+i-1] * ax * ay
                 + vals[j*Nx+i-1] * ax * by
@@ -518,29 +519,218 @@ namespace galsim {
     template<class V, class A>
     V Table2D<V,A>::floorInterpolate(const A x, const A y, int i, int j) const
     {
-        // On entry, it is only guaranteed that xgrid[i-1] <= x <= xgrid[i] (and similarly y).
+        // On entry, it is only guaranteed that xargs[i-1] <= x <= xargs[i] (and similarly y).
         // Normally those ='s are ok, but for floor and ceil we make the extra
         // check to see if we should choose the opposite bound.
-        if (x == xgrid[i]) i++;
-        if (y == ygrid[j]) j++;
+        if (x == xargs[i]) i++;
+        if (y == yargs[j]) j++;
         return vals[(j-1)*Nx+i-1];
     }
 
     template<class V, class A>
     V Table2D<V,A>::ceilInterpolate(const A x, const A y, int i, int j) const
     {
-        if (x == xgrid[i-1]) i--;
-        if (y == ygrid[j-1]) j--;
+        if (x == xargs[i-1]) i--;
+        if (y == yargs[j-1]) j--;
         return vals[j*Nx+i];
     }
 
     template<class V, class A>
     V Table2D<V,A>::nearestInterpolate(const A x, const A y, int i, int j) const
     {
-        if ((x - xgrid[i-1]) < (xgrid[i] - x)) i--;
-        if ((y - ygrid[j-1]) < (ygrid[j] - y)) j--;
+        if ((x - xargs[i-1]) < (xargs[i] - x)) i--;
+        if ((y - yargs[j-1]) < (yargs[j] - y)) j--;
         return vals[j*Nx+i];
     }
 
     template class Table2D<double,double>;
+
+
+    // Table1D
+
+    template<class V, class A>
+    Table1D<V,A>::Table1D(const A* args, const V* valarray, int _N, interpolant in) :
+        iType(in), N(_N), grid(args, args+N)
+    {
+        // Allocate and fill vals
+        vals.reserve(N);
+        for (int i=0; i<N; i++, valarray++)
+            vals.push_back(*valarray);
+
+        // Map specific interpolator to `interpolate`.
+        switch (iType) {
+          case linear:
+               interpolate = &Table1D<V,A>::linearInterpolate;
+               break;
+          case floor:
+               interpolate = &Table1D<V,A>::floorInterpolate;
+               break;
+          case ceil:
+               interpolate = &Table1D<V,A>::ceilInterpolate;
+               break;
+          case nearest:
+               interpolate = &Table1D<V,A>::nearestInterpolate;
+               break;
+          case spline:
+               interpolate = &Table1D<V,A>::splineInterpolate;
+               setupSpline();
+               break;
+          default:
+               throw TableError("interpolation method not yet implemented");
+        }
+    }
+
+    template<class V, class A>
+    Table1D<V,A>::Table1D(const std::vector<A>& args, const std::vector<V>& valarray, interpolant in) :
+        iType(in), N(args.size()), grid(args)
+    {
+        // Copy valarray
+        vals = valarray;
+        // Map specific interpolator to `interpolate`.
+        switch (iType) {
+          case linear:
+               interpolate = &Table1D<V,A>::linearInterpolate;
+               break;
+          case floor:
+               interpolate = &Table1D<V,A>::floorInterpolate;
+               break;
+          case ceil:
+               interpolate = &Table1D<V,A>::ceilInterpolate;
+               break;
+          case nearest:
+               interpolate = &Table1D<V,A>::nearestInterpolate;
+               break;
+          case spline:
+               interpolate = &Table1D<V,A>::splineInterpolate;
+               setupSpline();
+               break;
+          default:
+               throw TableError("interpolation method not yet implemented");
+        }
+    }
+
+    //lookup and interpolate function value.
+    template<class V, class A>
+    V Table1D<V,A>::lookup(const A x) const
+    {
+        int i = grid.upperIndex(x);
+        return (this->*interpolate)(x, i);
+    }
+
+    //lookup and interpolate an array of function values.
+    template<class V, class A>
+    void Table1D<V,A>::interpMany(const A* xvec, V* valvec, int N) const
+    {
+        int i;
+        for (int k=0; k<N; k++) {
+            i = grid.upperIndex(xvec[k]);
+            valvec[k] = (this->*interpolate)(xvec[k], i);
+        }
+    }
+
+    template<class V, class A>
+    V Table1D<V,A>::linearInterpolate(const A x, int i) const
+    {
+        A ax = (grid[i] - x) / (grid[i] - grid[i-1]);
+        A bx = 1.0 - ax;
+        return vals[i]*bx + vals[i-1]*ax;
+    }
+
+    template<class V, class A>
+    V Table1D<V,A>::floorInterpolate(const A x, int i) const
+    {
+        // On entry, it is only guaranteed that grid[i-1] <= x <= grid[i].
+        // Normally those ='s are ok, but for floor and ceil we make the extra
+        // check to see if we should choose the opposite bound.
+        if (x == grid[i]) i++;
+        return vals[i-1];
+    }
+
+    template<class V, class A>
+    V Table1D<V,A>::ceilInterpolate(const A x, int i) const
+    {
+        if (x == grid[i-1]) i--;
+        return vals[i];
+    }
+
+    template<class V, class A>
+    V Table1D<V,A>::nearestInterpolate(const A x, int i) const
+    {
+        if ((x - grid[i-1]) < (grid[i] - x)) i--;
+        return vals[i];
+    }
+
+    template<class V, class A>
+    V Table1D<V,A>::splineInterpolate(const A x, int i) const
+    {
+#if 0
+        // Direct calculation saved for comparison:
+        A h = grid[i] - grid[i-1];
+        A aa = (grid[i] - x)/h;
+        A bb = 1. - aa;
+        return aa*vals[i-1] +bb*vals[i] +
+            ((aa*aa*aa-aa)*y2[i-1]+(bb*bb*bb-bb)*y2[i]) *
+            (h*h)/6.0;
+#else
+        // Factor out h factors, so only need 1 division by h.
+        // Also, use the fact that bb = h-aa to simplify the calculation.
+        A h = grid[i] - grid[i-1];
+        A aa = (grid[i] - x);
+        A bb = h-aa;
+        return ( aa*vals[i-1] + bb*vals[i] -
+                 (1./6.) * aa * bb * ( (aa+h)*y2[i-1] +
+                                       (bb+h)*y2[i]) ) / h;
+#endif
+    }
+
+    template<class V, class A>
+    void Table1D<V,A>::setupSpline() const
+    {
+        /**
+         * Calculate the 2nd derivatives of the natural cubic spline.
+         *
+         * Here we follow the broad procedure outlined in this technical note by Jim
+         * Armstrong, freely available online:
+         * http://www.algorithmist.net/spline.html
+         *
+         * The system we solve is equation [7].  In our adopted notation u_i are the diagonals
+         * of the matrix M, and h_i the off-diagonals.  y'' is z_i and the rhs = v_i.
+         *
+         * For table sizes larger than the fully trivial (2 or 3 elements), we use the
+         * symmetric tridiagonal matrix solution capabilities of MJ's TMV library.
+         */
+        // Set up the 2nd-derivative table for splines
+        int n = vals.size();
+        y2.resize(n);
+        // End points 2nd-derivatives zero for natural cubic spline
+        y2[0] = V(0);
+        y2[n-1] = V(0);
+        // For 3 points second derivative at i=1 is simple
+        if (n == 3){
+
+            y2[1] = 3.*((vals[2] - vals[1]) / (grid[2] - grid[1]) -
+                        (vals[1] - vals[0]) / (grid[1] - grid[0])) / (grid[2] - grid[0]);
+
+        } else {  // For 4 or more points we use the TMV symmetric tridiagonal matrix solver
+
+            tmv::SymBandMatrix<V> M(n-2, 1);
+            for (int i=1; i<=n-3; i++){
+                M(i, i-1) = grid[i+1] - grid[i];
+            }
+            tmv::Vector<V> rhs(n-2);
+            for (int i=1; i<=n-2; i++){
+                M(i-1, i-1) = 2. * (grid[i+1] - grid[i-1]);
+                rhs(i-1) = 6. * ( (vals[i+1] - vals[i]) / (grid[i+1] - grid[i]) -
+                                  (vals[i] - vals[i-1]) / (grid[i] - grid[i-1]) );
+            }
+            tmv::Vector<V> solution(n-2);
+            solution = rhs / M;   // solve the tridiagonal system of equations
+            for (int i=1; i<=n-2; i++){
+                y2[i] = solution[i-1];
+            }
+        }
+
+    }
+
+    template class Table1D<double,double>;
 }
