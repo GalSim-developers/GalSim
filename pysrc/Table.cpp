@@ -68,6 +68,7 @@ namespace {
             else if (interp == "spline") i = Table<double,double>::spline;
             else if (interp == "floor") i = Table<double,double>::floor;
             else if (interp == "ceil") i = Table<double,double>::ceil;
+            else if (interp == "nearest") i = Table<double,double>::nearest;
             else {
                 PyErr_SetString(PyExc_ValueError, "Invalid interpolant");
                 bp::throw_error_already_set();
@@ -104,6 +105,8 @@ namespace {
                      return std::string("floor");
                 case Table<double,double>::ceil:
                      return std::string("ceil");
+                case Table<double,double>::nearest:
+                     return std::string("nearest");
                 default:
                      PyErr_SetString(PyExc_ValueError, "Invalid interpolant");
                      bp::throw_error_already_set();

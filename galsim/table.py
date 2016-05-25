@@ -55,6 +55,7 @@ class LookupTable(object):
 
     - 'floor' takes the value from the previous argument in the table.
     - 'ceil' takes the value from the next argument in the table.
+    - 'nearest' takes the value from the nearest argument in the table.
     - 'linear' does linear interpolation between these two values.
     - 'spline' uses a cubic spline interpolation, so the interpolated values are smooth at
       each argument in the table.
@@ -75,7 +76,7 @@ class LookupTable(object):
                          [Either `x` and `f` or `file` is required.]
     @param file          A file from which to read the `(x,f)` pairs. [Either `x` and `f`, or `file`
                          is required]
-    @param interpolant   The interpolant to use, with the options being 'floor', 'ceil',
+    @param interpolant   The interpolant to use, with the options being 'floor', 'ceil', 'nearest',
                          'linear' and 'spline'. [default: 'spline']
     @param x_log         Set to True if you wish to interpolate using log(x) rather than x.  Note
                          that all inputs / outputs will still be x, it's just a question of how the
@@ -123,7 +124,7 @@ class LookupTable(object):
         if interpolant is None:
             interpolant = 'spline'
         else:
-            if interpolant not in ['spline', 'linear', 'ceil', 'floor']:
+            if interpolant not in ['spline', 'linear', 'ceil', 'floor', 'nearest']:
                 raise ValueError("Unknown interpolant: %s" % interpolant)
         self.interpolant = interpolant
 
@@ -321,13 +322,17 @@ class LookupTable2D(object):
     The default interpolation method is linear.  Other choices for the interpolant are:
       - 'floor'
       - 'ceil'
+      - 'nearest'
 
         >>> tab2d = galsim.LookupTable2D(x, y, z, interpolant='floor')
-        >>> tab2d(2.2, 3.3)
+        >>> tab2d(2.2, 3.7)
         5.0
         >>> tab2d = galsim.LookupTable2D(x, y, z, interpolant='ceil')
-        >>> tab2d(2.2, 3.3)
+        >>> tab2d(2.2, 3.7)
         7.0
+        >>> tab2d = galsim.LookupTable2D(x, y, z, interpolant='nearest')
+        >>> tab2d(2.2, 3.7)
+        6.0
 
     The `edge_mode` keyword describes how to handle extrapolation beyond the initial input range.
     Possibilities include:
@@ -364,7 +369,7 @@ class LookupTable2D(object):
     @param x              Strictly increasing array of `x` positions at which to create table.
     @param y              Strictly increasing array of `y` positions at which to create table.
     @param f              Ny by Nx input array of function values.
-    @param interpolant    Interpolant to use.  One of 'floor', 'ceil', or 'linear'.
+    @param interpolant    Interpolant to use.  One of 'floor', 'ceil', 'nearest', or 'linear'.
                           [Default: 'linear']
     @param edge_mode      Keyword controlling how extrapolation beyond the input range is handled.
                           See above for details.  [Default: 'raise']

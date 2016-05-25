@@ -111,7 +111,7 @@ namespace galsim {
     class Table
     {
     public:
-        enum interpolant { linear, spline, floor, ceil };
+        enum interpolant { linear, spline, floor, ceil, nearest };
 
         /// Construct empty table
         Table(interpolant i) : iType(i), isReady(false) {}
@@ -221,6 +221,8 @@ namespace galsim {
                                   const std::vector<V>& y2);
         static V ceilInterpolate(A a, int i, const std::vector<Entry>& v,
                                  const std::vector<V>& y2);
+        static V nearestInterpolate(A a, int i, const std::vector<Entry>& v,
+                                    const std::vector<V>& y2);
     };
 
     /**

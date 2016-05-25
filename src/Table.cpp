@@ -130,7 +130,8 @@ namespace galsim {
             throw TableError("input vector lengths don't match");
         if (iType == spline && vv.size() < 3)
             throw TableError("input vectors are too short to spline interpolate");
-        if (vv.size() < 2 &&  (iType == linear || iType == ceil || iType == floor))
+        if (vv.size() < 2 && (iType == linear || iType == ceil || iType == floor
+                              || iType == nearest))
             throw TableError("input vectors are too short for interpolation");
         typename std::vector<A>::const_iterator aptr=aa.begin();
         typename std::vector<V>::const_iterator vptr=vv.begin();
@@ -225,6 +226,14 @@ namespace galsim {
     }
 
     template<class V, class A>
+    V Table<V,A>::nearestInterpolate(
+        A a, int i, const std::vector<Entry>& v, const std::vector<V>& )
+    {
+        if ((a - v[i-1].arg) < (v[i].arg - a)) i--;
+        return v[i].val;
+    }
+
+    template<class V, class A>
     void Table<V,A>::read(std::istream& is)
     {
         std::string line;
@@ -285,6 +294,9 @@ namespace galsim {
                break;
           case ceil:
                interpolate = &Table<V,A>::ceilInterpolate;
+               break;
+          case nearest:
+               interpolate = &Table<V,A>::nearestInterpolate;
                break;
           default:
                throw TableError("interpolation method not yet implemented");

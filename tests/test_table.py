@@ -48,7 +48,7 @@ args2 = [ 0.7, 3.3, 14.1, 15.6, 29, 34.1, 42.5 ]  # Not evenly spaced
 vals2 = [ np.sin(x*np.pi/180) for x in args2 ]
 testargs2 = [ 1.1, 10.8, 12.3, 15.6, 25.6, 41.9 ] # < 0.7 or > 42.5 is invalid
 
-interps = [ 'linear', 'spline', 'floor', 'ceil' ]
+interps = [ 'linear', 'spline', 'floor', 'ceil', 'nearest' ]
 
 
 @timer
@@ -71,24 +71,25 @@ def test_table():
             DECIMAL,
             err_msg="Interpolated values do not match when input array shape changes")
 
-        # Do a full regression test based on a version of the code thought to be working.
-        ref1 = np.loadtxt(os.path.join(TESTDIR, 'table_test1_%s.txt'%interp))
-        np.testing.assert_array_almost_equal(ref1, testvals1, DECIMAL,
-                err_msg="Interpolated values from LookupTable do not match saved "+
-                "data for evenly-spaced args, with interpolant %s."%interp)
+        if interp != 'nearest':
+            # Do a full regression test based on a version of the code thought to be working.
+            ref1 = np.loadtxt(os.path.join(TESTDIR, 'table_test1_%s.txt'%interp))
+            np.testing.assert_array_almost_equal(ref1, testvals1, DECIMAL,
+                    err_msg="Interpolated values from LookupTable do not match saved "+
+                    "data for evenly-spaced args, with interpolant %s."%interp)
 
-        # Same thing, but now for args that are not evenly spaced.
-        # (The Table class uses a different algorithm when the arguments are evenly spaced
-        #  than when they are not.)
-        table2 = galsim.LookupTable(x=args2,f=vals2,interpolant=interp)
-        testvals2 = [ table2(x) for x in testargs2 ]
+            # Same thing, but now for args that are not evenly spaced.
+            # (The Table class uses a different algorithm when the arguments are evenly spaced
+            #  than when they are not.)
+            table2 = galsim.LookupTable(x=args2,f=vals2,interpolant=interp)
+            testvals2 = [ table2(x) for x in testargs2 ]
 
-        np.testing.assert_almost_equal(testvals2[3], vals2[3], DECIMAL,
-                err_msg="Interpolated value for exact arg entry does not match val entry")
-        ref2 = np.loadtxt(os.path.join(TESTDIR, 'table_test2_%s.txt'%interp))
-        np.testing.assert_array_almost_equal(ref2, testvals2, DECIMAL,
-                err_msg="Interpolated values from LookupTable do not match saved "+
-                "data for non-evenly-spaced args, with interpolant %s."%interp)
+            np.testing.assert_almost_equal(testvals2[3], vals2[3], DECIMAL,
+                    err_msg="Interpolated value for exact arg entry does not match val entry")
+            ref2 = np.loadtxt(os.path.join(TESTDIR, 'table_test2_%s.txt'%interp))
+            np.testing.assert_array_almost_equal(ref2, testvals2, DECIMAL,
+                    err_msg="Interpolated values from LookupTable do not match saved "+
+                    "data for non-evenly-spaced args, with interpolant %s."%interp)
 
         # Check that out of bounds arguments, or ones with some crazy shape, raise an exception:
         try:
