@@ -334,13 +334,15 @@ def test_table2d():
     np.testing.assert_array_almost_equal(tab2d(newx, newy), tab2d(newx+3*(x[-1]-x[0]), newy))
     np.testing.assert_array_almost_equal(tab2d(newx, newy), tab2d(newx, newy+13*(y[-1]-y[0])))
 
-    # Test floor/ceil interpolant
+    # Test floor/ceil/nearest interpolant
     x = y = np.arange(5)
     z = x + y[:, np.newaxis]
     tab2d = galsim.LookupTable2D(x, y, z, interpolant='ceil')
-    assert tab2d(2.5, 3.5) == 3+4, "Ceil interpolant failed."
+    assert tab2d(2.4, 3.6) == 3+4, "Ceil interpolant failed."
     tab2d = galsim.LookupTable2D(x, y, z, interpolant='floor')
-    assert tab2d(2.5, 3.5) == 2+3, "Floor interpolant failed."
+    assert tab2d(2.4, 3.6) == 2+3, "Floor interpolant failed."
+    tab2d = galsim.LookupTable2D(x, y, z, interpolant='nearest')
+    assert tab2d(2.4, 3.6) == 2+4, "Nearest interpolant failed."
 
 
 @timer

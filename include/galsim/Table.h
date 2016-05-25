@@ -292,7 +292,7 @@ namespace galsim {
     class Table2D
     {
     public:
-        enum interpolant { linear, floor, ceil };
+        enum interpolant { linear, floor, ceil, nearest };
 
         /// Table from xargs, yargs, vals
         Table2D(const A* xargs, const A* yargs, const V* valarray, int Nx, int Ny, interpolant in);
@@ -329,6 +329,7 @@ namespace galsim {
         V linearInterpolate(const A x, const A y, int i, int j) const;
         V floorInterpolate(const A x, const A y, int i, int j) const;
         V ceilInterpolate(const A x, const A y, int i, int j) const;
+        V nearestInterpolate(const A x, const A y, int i, int j) const;
     };
 }
 

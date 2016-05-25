@@ -164,6 +164,7 @@ namespace {
             if (interp == "linear") i = Table2D<double,double>::linear;
             else if (interp == "floor") i = Table2D<double,double>::floor;
             else if (interp == "ceil") i = Table2D<double,double>::ceil;
+            else if (interp == "nearest") i = Table2D<double,double>::nearest;
             else {
                 PyErr_SetString(PyExc_ValueError, "Invalid interpolant");
                 bp::throw_error_already_set();
@@ -240,14 +241,16 @@ namespace {
             Table2D<double,double>::interpolant i = table2d.getInterp();
             switch (i) {
                 case Table2D<double,double>::linear:
-                     return std::string("linear");
+                    return std::string("linear");
                 case Table2D<double,double>::floor:
-                     return std::string("floor");
+                    return std::string("floor");
                 case Table2D<double,double>::ceil:
-                     return std::string("ceil");
+                    return std::string("ceil");
+                case Table2D<double,double>::nearest:
+                    return std::string("nearest");
                 default:
-                     PyErr_SetString(PyExc_ValueError, "Invalid interpolant");
-                     bp::throw_error_already_set();
+                    PyErr_SetString(PyExc_ValueError, "Invalid interpolant");
+                    bp::throw_error_already_set();
             }
             // Shouldn't get here...
             return std::string("");

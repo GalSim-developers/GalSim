@@ -443,6 +443,9 @@ namespace galsim {
           case ceil:
                interpolate = &Table2D<V,A>::ceilInterpolate;
                break;
+          case nearest:
+               interpolate = &Table2D<V,A>::nearestInterpolate;
+               break;
           default:
                throw TableError("interpolation method not yet implemented");
         }
@@ -516,6 +519,14 @@ namespace galsim {
     {
         if (x == xgrid[i-1]) i--;
         if (y == ygrid[j-1]) j--;
+        return vals[j*Nx+i];
+    }
+
+    template<class V, class A>
+    V Table2D<V,A>::nearestInterpolate(const A x, const A y, int i, int j) const
+    {
+        if ((x - xgrid[i-1]) < (xgrid[i] - x)) i--;
+        if ((y - ygrid[j-1]) < (ygrid[j] - y)) j--;
         return vals[j*Nx+i];
     }
 
