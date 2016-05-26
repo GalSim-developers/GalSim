@@ -153,16 +153,16 @@ namespace {
 
     struct PyTable2D{
         static Table2D<double, double>* makeTable2D(
-            const bp::object& xs, const bp::object& ys, const bp::object& valarray,
+            const bp::object& x, const bp::object& y, const bp::object& f,
             const std::string& interp)
         {
-            const int Nx = GetNumpyArrayDim(valarray.ptr(), 1);
-            const int Ny = GetNumpyArrayDim(valarray.ptr(), 0);
-            assert(Nx == GetNumpyArrayDim(xs.ptr(), 0));
-            assert(Ny == GetNumpyArrayDim(ys.ptr(), 0));
-            const double* xargs = GetNumpyArrayData<double>(xs.ptr());
-            const double* yargs = GetNumpyArrayData<double>(ys.ptr());
-            const double* vals = GetNumpyArrayData<double>(valarray.ptr());
+            const int Nx = GetNumpyArrayDim(f.ptr(), 0);
+            const int Ny = GetNumpyArrayDim(f.ptr(), 1);
+            assert(Nx == GetNumpyArrayDim(x.ptr(), 0));
+            assert(Ny == GetNumpyArrayDim(y.ptr(), 0));
+            const double* xargs = GetNumpyArrayData<double>(x.ptr());
+            const double* yargs = GetNumpyArrayData<double>(y.ptr());
+            const double* vals = GetNumpyArrayData<double>(f.ptr());
             Table2D<double,double>::interpolant i = Table2D<double,double>::linear;
             if (interp == "linear") i = Table2D<double,double>::linear;
             else if (interp == "floor") i = Table2D<double,double>::floor;
@@ -195,48 +195,27 @@ namespace {
             double* valvec = GetNumpyArrayData<double>(vals.ptr());
             int Nx = GetNumpyArrayDim(x.ptr(), 0);
             int Ny = GetNumpyArrayDim(y.ptr(), 0);
-            int outNx = GetNumpyArrayDim(vals.ptr(), 1);
-            int outNy = GetNumpyArrayDim(vals.ptr(), 0);
-            assert(Nx == outNx);
-            assert(Ny == outNy);
+            assert(Nx == GetNumpyArrayDim(vals.ptr(), 0));
+            assert(Ny == GetNumpyArrayDim(vals.ptr(), 1));
             table2d.interpManyOuter(xvec, yvec, valvec, Nx, Ny);
         }
 
         static bp::object convertGetXArgs(const Table2D<double,double>& table2d)
         {
             const std::vector<double>& x = table2d.getXArgs();
-            bp::object numpy_array = MakeNumpyArray(
-                &x[0],
-                x.size(),
-                1,
-                true
-            );
-            return numpy_array;
+            return MakeNumpyArray(&x[0], x.size(), 1, true);
         }
 
         static bp::object convertGetYArgs(const Table2D<double,double>& table2d)
         {
             const std::vector<double>& y = table2d.getYArgs();
-            bp::object numpy_array = MakeNumpyArray(
-                &y[0],
-                y.size(),
-                1,
-                true
-            );
-            return numpy_array;
+            return MakeNumpyArray(&y[0], y.size(), 1, true);
         }
 
         static bp::object convertGetVals(const Table2D<double,double>& table2d)
         {
             const std::vector<double>& v = table2d.getVals();
-            bp::object numpy_array = MakeNumpyArray(
-                &v[0],
-                table2d.getNy(),
-                table2d.getNx(),
-                table2d.getNx(),
-                true
-            );
-            return numpy_array;
+            return MakeNumpyArray(&v[0], table2d.getNx(), table2d.getNy(), table2d.getNy(), true);
         }
 
         static std::string convertGetInterp(const Table2D<double,double>& table2d)
@@ -266,7 +245,7 @@ namespace {
                 .def("__init__",
                     bp::make_constructor(
                         &makeTable2D, bp::default_call_policies(),
-                        (bp::arg("xs"), bp::arg("ys"), bp::arg("valarray"), bp::arg("interp"))
+                        (bp::arg("x"), bp::arg("y"), bp::arg("f"), bp::arg("interp"))
                     )
                 )
                 .def("__call__", &Table2D<double,double>::lookup)

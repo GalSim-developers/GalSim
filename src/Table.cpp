@@ -319,13 +319,9 @@ namespace galsim {
     template<class V, class A>
     Table2D<V,A>::Table2D(const A* _xargs, const A* _yargs, const V* _vals, int _Nx, int _Ny,
         interpolant in) : iType(in), Nx(_Nx), Ny(_Ny),
-                          xargs(_xargs, _xargs+Nx), yargs(_yargs, _yargs+Ny)
+                          xargs(_xargs, _xargs+Nx), yargs(_yargs, _yargs+Ny),
+                          vals(_vals, _vals+Nx*Ny)
     {
-        // Allocate and fill vals
-        vals.reserve(Nx*Ny);
-        for (int i=0; i<Nx*Ny; i++, _vals++)
-            vals.push_back(*_vals);
-
         // Map specific interpolator to `interpolate`.
         switch (iType) {
           case linear:
@@ -375,10 +371,10 @@ namespace galsim {
                                        int outNx, int outNy) const
     {
         int i, j;
-        for (int outj=0; outj<outNy; outj++) {
-            j = yargs.upperIndex(yvec[outj]);
-            for (int outi=0; outi<outNx; outi++, valvec++) {
-                i = xargs.upperIndex(xvec[outi]);
+        for (int outi=0; outi<outNx; outi++) {
+            i = xargs.upperIndex(xvec[outi]);
+            for (int outj=0; outj<outNy; outj++, valvec++) {
+                j = yargs.upperIndex(yvec[outj]);
                 *valvec = (this->*interpolate)(xvec[outi], yvec[outj], i, j);
             }
         }
@@ -391,10 +387,11 @@ namespace galsim {
         A bx = 1.0 - ax;
         A ay = (yargs[j] - y) / (yargs[j] - yargs[j-1]);
         A by = 1.0 - ay;
-        return (vals[(j-1)*Nx+i-1] * ax * ay
-                + vals[j*Nx+i-1] * ax * by
-                + vals[(j-1)*Nx+i] * bx * ay
-                + vals[j*Nx+i] * bx * by);
+
+        return (vals[(i-1)*Ny+j-1] * ax * ay
+                + vals[i*Ny+j-1] * bx * ay
+                + vals[(i-1)*Ny+j] * ax * by
+                + vals[i*Ny+j] * bx * by);
     }
 
     template<class V, class A>
@@ -405,7 +402,7 @@ namespace galsim {
         // check to see if we should choose the opposite bound.
         if (x == xargs[i]) i++;
         if (y == yargs[j]) j++;
-        return vals[(j-1)*Nx+i-1];
+        return vals[(i-1)*Ny+j-1];
     }
 
     template<class V, class A>
@@ -413,7 +410,7 @@ namespace galsim {
     {
         if (x == xargs[i-1]) i--;
         if (y == yargs[j-1]) j--;
-        return vals[j*Nx+i];
+        return vals[i*Ny+j];
     }
 
     template<class V, class A>
@@ -421,7 +418,7 @@ namespace galsim {
     {
         if ((x - xargs[i-1]) < (xargs[i] - x)) i--;
         if ((y - yargs[j-1]) < (yargs[j] - y)) j--;
-        return vals[j*Nx+i];
+        return vals[i*Ny+j];
     }
 
     template class Table2D<double,double>;

@@ -253,7 +253,8 @@ def test_table2d():
 
     x = np.linspace(0.1, 3.3, 25)
     y = np.linspace(0.2, 10.4, 75)
-    z = f(*np.meshgrid(x, y))
+    yy, xx = np.meshgrid(y, x)  # Note the ordering of both input and output here!
+    z = f(xx, yy)
 
     tab2d = galsim.table.LookupTable2D(x, y, z)
     do_pickle(tab2d)
@@ -261,56 +262,46 @@ def test_table2d():
 
     newx = np.linspace(0.2, 3.1, 45)
     newy = np.linspace(0.3, 10.1, 85)
-    newxx, newyy = np.meshgrid(newx, newy)
+    newyy, newxx = np.meshgrid(newy, newx)
 
     # Compare different ways of evaluating Table2D
     ref = tab2d(newx, newy)
     np.testing.assert_array_almost_equal(ref, tab2d(newxx, newyy, scatter=True))
     np.testing.assert_array_almost_equal(ref, np.array([[tab2d(x0, y0)
-                                                         for x0 in newx]
-                                                        for y0 in newy]))
+                                                         for y0 in newy]
+                                                        for x0 in newx]))
     if has_scipy:
-        np.testing.assert_array_almost_equal(ref, interp2d(x, y, z)(newx, newy))
-
-    # import matplotlib.pyplot as plt
-    # plt.figure(0)
-    # plt.imshow(z)
-    # plt.figure(1)
-    # plt.imshow(sci2d(newx, newy))
-    # plt.figure(2)
-    # plt.imshow(tab2d(newxx, newyy, scatter=True))
-    # plt.figure(3)
-    # plt.imshow(tab2d(newx, newy))
-    # plt.figure(4)
-    # plt.imshow(np.array([[tab2d(x0, y0) for x0 in newx] for y0 in newy]))
-    # plt.show()
+        scitab2d = interp2d(x, y, np.transpose(z))
+        np.testing.assert_array_almost_equal(ref, np.transpose(scitab2d(newx, newy)))
 
     # Test non-equally-spaced table.
     x = np.delete(x, 10)
     y = np.delete(y, 10)
-    z = f(*np.meshgrid(x, y))
+    yy, xx = np.meshgrid(y, x)
+    z = f(xx, yy)
     tab2d = galsim.table.LookupTable2D(x, y, z)
     ref = tab2d(newx, newy)
     np.testing.assert_array_almost_equal(ref, tab2d(newxx, newyy, scatter=True))
     np.testing.assert_array_almost_equal(ref, np.array([[tab2d(x0, y0)
-                                                         for x0 in newx]
-                                                        for y0 in newy]))
+                                                         for y0 in newy]
+                                                        for x0 in newx]))
     if has_scipy:
-        np.testing.assert_array_almost_equal(ref, interp2d(x, y, z)(newx, newy))
+        scitab2d = interp2d(x, y, np.transpose(z))
+        np.testing.assert_array_almost_equal(ref, np.transpose(scitab2d(newx, newy)))
 
     # Try a simpler interpolation function.  We should be able to interpolate a (bi-)linear function
     # exactly with a linear interpolant.
     def f(x_, y_):
-        return x_ + y_[:, np.newaxis]
+        return 2*x_ + 3*y_
 
-    z = f(x, y)
+    z = f(xx, yy)
     tab2d = galsim.table.LookupTable2D(x, y, z)
 
-    np.testing.assert_array_almost_equal(f(newx, newy), tab2d(newx, newy))
-    np.testing.assert_array_almost_equal(f(newx, newy), tab2d(newxx, newyy, scatter=True))
-    np.testing.assert_array_almost_equal(f(newx, newy), np.array([[tab2d(x0, y0)
-                                                                   for x0 in newx]
-                                                                  for y0 in newy]))
+    np.testing.assert_array_almost_equal(f(newxx, newyy), tab2d(newx, newy))
+    np.testing.assert_array_almost_equal(f(newxx, newyy), tab2d(newxx, newyy, scatter=True))
+    np.testing.assert_array_almost_equal(f(newxx, newyy), np.array([[tab2d(x0, y0)
+                                                                   for y0 in newy]
+                                                                  for x0 in newx]))
 
     # Test edge exception
     try:

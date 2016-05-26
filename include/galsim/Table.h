@@ -194,7 +194,6 @@ namespace galsim {
             Table<double,double>(argvec,valvec,N,in) {}
         TableDD(const std::vector<double>& a, const std::vector<double>& v,
                 interpolant in=linear) : Table<double,double>(a,v,in) {}
-        // TableDD(std::istream& is, interpolant in) : Table<double,double>(is,in) {}
         //@}
 
         /// Virtual function from FluxDensity just calls Table version.
@@ -244,8 +243,7 @@ namespace galsim {
         const int Nx, Ny; // Array dimensions
         const ArgVec<A> xargs;
         const ArgVec<A> yargs;
-
-        std::vector<V> vals;
+        const std::vector<V> vals;
 
         typedef V (Table2D<V,A>::*Table2DMemFn)(const A x, const A y, int i, int j) const;
         Table2DMemFn interpolate;

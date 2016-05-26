@@ -303,8 +303,9 @@ class LookupTable2D(object):
     values, a list or array of `y` values, and a 2D array of function evaluations at all
     combinations of x and y values.  For instance:
 
-        >>> x = y = np.arange(5)
-        >>> z = x + y[:, np.newaxis]  # function is x + y, dimensions of z are (5, 5)
+        >>> x = np.arange(5)
+        >>> y = np.arange(8)
+        >>> z = x[:, np.newaxis] + y  # function is x + y, dimensions of z are (5, 8)
         >>> tab2d = galsim.LookupTable2D(x, y, z)
 
     To evaluate new function values with the lookup table, use the () operator:
@@ -314,12 +315,11 @@ class LookupTable2D(object):
 
     The () operator can also accept lists for the x and y arguments at which to evaluate the
     LookupTable2D.  In this case, the table is evaluated for all combinations of x and y values and
-    returned as a 2D array with dimensions (len(y), len(x)).
+    returned as a 2D array with dimensions (len(x), len(y)).
 
         >>> print tab2d([0, 1], [2, 3, 4])
-        [[ 2.  3.],
-         [ 3.  4.],
-         [ 4.  5.]]
+        [[ 2.  3.  4.],
+         [ 3.  4.  5.]]
 
     Finally, if you want to just evaluate the LookupTable2D at a list of x and y points but without
     evaluating all possible combinations of x and y values, then you can use the `scatter` keyword
@@ -350,9 +350,9 @@ class LookupTable2D(object):
     In order to use edge_mode='wrap', the first and last column of f, as well as the first and last
     row of f must match.  (This way we know what the period is in each dimension.)
 
-
-        >>> x = y = np.arange(5)
-        >>> z = x + y[:, np.newaxis]  # function is x + y, dimensions of z is (5, 5)
+        >>> x = np.arange(5)
+        >>> y = np.arange(8)
+        >>> z = x[:, np.newaxis] + y  # function is x + y, dimensions of z is (5, 8)
         >>> tab2d = galsim.LookupTable2D(x, y, z, edge_mode='raise')
         >>> tab2d(7, 7)
         ValueError: Extrapolating beyond input range.
@@ -370,32 +370,30 @@ class LookupTable2D(object):
         >>> tab2d = galsim.LookupTable2D(x, y, z, edge_mode='wrap')
         >>> tab2d(2., 2.)
         4.0
-        >>> tab2d(2.+5, 2.)  # The period is 5 in either direction.
+        >>> tab2d(2.+5, 2.)  # The period is 5 in the x direction
         4.0
-        >>> tab2d(2.+15, 2.+35)
+        >>> tab2d(2.+3*5, 2.+4*8)  # The period is 8 in the y direction
         4.0
 
     @param x              Strictly increasing array of `x` positions at which to create table.
     @param y              Strictly increasing array of `y` positions at which to create table.
-    @param f              Ny by Nx input array of function values.
+    @param f              Nx by Ny input array of function values.
     @param interpolant    Interpolant to use.  One of 'floor', 'ceil', 'nearest', or 'linear'.
                           [Default: 'linear']
     @param edge_mode      Keyword controlling how extrapolation beyond the input range is handled.
                           See above for details.  [Default: 'raise']
     """
-    def __init__(self, xs, ys, f=None, interpolant='linear', edge_mode=None):
-        if edge_mode is None:
-            edge_mode = 'raise'
+    def __init__(self, x, y, f, interpolant='linear', edge_mode='raise'):
         if edge_mode not in ['raise', 'wrap']:
             raise ValueError("Unknown edge_mode: {:0}".format(edge_mode))
 
-        self.xs = np.ascontiguousarray(xs, dtype=float)
-        self.ys = np.ascontiguousarray(ys, dtype=float)
+        self.x = np.ascontiguousarray(x, dtype=float)
+        self.y = np.ascontiguousarray(y, dtype=float)
         self.f = np.ascontiguousarray(f, dtype=float)
 
         fshape = self.f.shape
-        if fshape != (len(ys), len(xs)):
-            raise ValueError("Shape of `f` must be (len(`ys`), len(`xs`)).")
+        if fshape != (len(x), len(y)):
+            raise ValueError("Shape of `f` must be (len(`x`), len(`y`)).")
 
         self.interpolant = interpolant
         self.edge_mode = edge_mode
@@ -405,21 +403,21 @@ class LookupTable2D(object):
             if (not all(self.f[0] == self.f[-1]) or
                 not all(self.f[:, 0] == self.f[:, -1])):
                 raise ValueError("Cannot wrap `f` array with unequal first/last column/row.")
-            self.xperiod = self.xs[-1] - self.xs[0]
-            self.yperiod = self.ys[-1] - self.ys[0]
+            self.xperiod = self.x[-1] - self.x[0]
+            self.yperiod = self.y[-1] - self.y[0]
 
-        self.table = _galsim._LookupTable2D(self.xs, self.ys, self.f, self.interpolant)
+        self.table = _galsim._LookupTable2D(self.x, self.y, self.f, self.interpolant)
 
     def _inbounds(self, x, y):
         """Return whether or not *all* coords specified by x and y are in bounds of the original
         interpolated array."""
-        return (np.min(x) >= self.xs[0] and np.max(x) <= self.xs[-1] and
-                np.min(y) >= self.ys[0] and np.max(y) <= self.ys[-1])
+        return (np.min(x) >= self.x[0] and np.max(x) <= self.x[-1] and
+                np.min(y) >= self.y[0] and np.max(y) <= self.y[-1])
 
     def _wrap_args(self, x, y):
         """Wrap points back into the fundamental period."""
-        return ((x-self.xs[0]) % self.xperiod + self.xs[0],
-                (y-self.ys[0]) % self.yperiod + self.ys[0])
+        return ((x-self.x[0]) % self.xperiod + self.x[0],
+                (y-self.y[0]) % self.yperiod + self.y[0])
 
     def __call__(self, x, y, scatter=False):
         if self.edge_mode == 'raise':
@@ -444,7 +442,7 @@ class LookupTable2D(object):
                 self.table.interpManyScatter(x, y, f)
                 f = f.reshape(shape)
             else:  # outer
-                f = np.empty((len(y), len(x)), dtype=float)
+                f = np.empty((len(x), len(y)), dtype=float)
                 x = np.array(x, dtype=float)
                 y = np.array(y, dtype=float)
                 if self.edge_mode == 'wrap':
@@ -455,14 +453,14 @@ class LookupTable2D(object):
     def __str__(self):
         return ("galsim.LookupTable2D(x=[%s,...,%s], y=[%s,...,%s], "
                 "f=[[%s,...,%s],...,[%s,...,%s]], interpolant=%r, edge_mode=%r)"%(
-            self.xs[0], self.xs[-1], self.ys[0], self.ys[-1],
+            self.x[0], self.x[-1], self.y[0], self.y[-1],
             self.f[0,0], self.f[0,-1], self.f[-1,0], self.f[-1,-1],
             self.interpolant, self.edge_mode))
 
     def __repr__(self):
         return ("galsim.LookupTable2D(x=array(%r), y=array(%r), "
                 "f=array(%r), interpolant=%r, edge_mode=%r)"%(
-            self.xs.tolist(), self.ys.tolist(), self.f.tolist(), self.interpolant, self.edge_mode))
+            self.x.tolist(), self.y.tolist(), self.f.tolist(), self.interpolant, self.edge_mode))
 
     def __eq__(self, other):
         return (isinstance(other, LookupTable2D) and
@@ -483,12 +481,12 @@ def _LookupTable2D_eq(self, other):
             and self.getInterp() == other.getInterp())
 
 def _LookupTable2D_str(self):
-    xs = self.getXArgs()
-    ys = self.getYArgs()
-    v = self.getVals()
+    x = self.getXArgs()
+    y = self.getYArgs()
+    f = self.getVals()
     return ("galsim._galsim._LookupTable2D(x=[%s,...,%s], y=[%s,...,%s], "
             "f=[[%s,...,%s],...,[%s,...,%s]]), interpolant=%r"%(
-            xs[0], xs[-1], ys[0], ys[-1], v[0,0], v[0,-1], v[-1,0], v[-1,-1], self.getInterp()))
+            x[0], x[-1], y[0], y[-1], f[0,0], f[0,-1], f[-1,0], f[-1,-1], self.getInterp()))
 
 
 _galsim._LookupTable2D.__getinitargs__ = lambda self: \
