@@ -252,8 +252,8 @@ namespace {
                      )
                 )
                 .def(bp::init<const Table1D<double,double> &>(bp::args("other")))
-                .def("argMin", &Table1D<double,double>::xmin)
-                .def("argMax", &Table1D<double,double>::xmax)
+                .def("argMin", &Table1D<double,double>::argMin)
+                .def("argMax", &Table1D<double,double>::argMax)
 
                 // Use version that throws expection if out of bounds
                 .def("__call__", &Table1D<double,double>::lookup)

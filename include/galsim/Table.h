@@ -354,19 +354,19 @@ namespace galsim {
         enum interpolant { linear, floor, ceil, nearest, spline };
 
         /// Table from xargs, vals
-        Table1D(const A* xargs, const V* valarray, int N, interpolant in);
-        Table1D(const std::vector<A>& xargs, const std::vector<V>& valarray, interpolant in);
+        Table1D(const A* _args, const V* _vals, int N, interpolant in);
+        Table1D(const std::vector<A>& _args, const std::vector<V>& _vals, interpolant in);
 
-        A xmin() const {return grid.front();}
-        A xmax() const {return grid.back();}
+        A argMin() const {return args.front();}
+        A argMax() const {return args.back();}
 
         /// interp, but exception if beyond bounds
-        V lookup(const A x) const;
+        V lookup(const A a) const;
 
         /// interp many values at once
-        void interpMany(const A* xvec, V* valvec, int N) const;
+        void interpMany(const A* argvec, V* valvec, int N) const;
 
-        const std::vector<A>& getArgs() const { return grid.getArgs(); }
+        const std::vector<A>& getArgs() const { return args.getArgs(); }
         const std::vector<V>& getVals() const { return vals; }
         int getN() const {return N;}
         interpolant getInterp() const { return iType; }
@@ -374,18 +374,18 @@ namespace galsim {
     private:
         interpolant iType;
         const int N; // Array dimensions
-        const ArgVec<A> grid;
+        const ArgVec<A> args;
 
         std::vector<V> vals;
         mutable std::vector<V> y2;
 
         typedef V (Table1D<V,A>::*Table1DMemFn)(const A x, int i) const;
         Table1DMemFn interpolate;
-        V linearInterpolate(const A x, int i) const;
-        V floorInterpolate(const A x, int i) const;
-        V ceilInterpolate(const A x, int i) const;
-        V nearestInterpolate(const A x, int i) const;
-        V splineInterpolate(const A x, int i) const;
+        V linearInterpolate(const A a, int i) const;
+        V floorInterpolate(const A a, int i) const;
+        V ceilInterpolate(const A a, int i) const;
+        V nearestInterpolate(const A a, int i) const;
+        V splineInterpolate(const A a, int i) const;
 
         void setupSpline() const;
     };

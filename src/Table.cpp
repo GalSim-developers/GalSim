@@ -549,14 +549,9 @@ namespace galsim {
     // Table1D
 
     template<class V, class A>
-    Table1D<V,A>::Table1D(const A* args, const V* valarray, int _N, interpolant in) :
-        iType(in), N(_N), grid(args, args+N)
+    Table1D<V,A>::Table1D(const A* _args, const V* _vals, int _N, interpolant in) :
+        iType(in), N(_N), args(_args, _args+N), vals(_vals, _vals+N)
     {
-        // Allocate and fill vals
-        vals.reserve(N);
-        for (int i=0; i<N; i++, valarray++)
-            vals.push_back(*valarray);
-
         // Map specific interpolator to `interpolate`.
         switch (iType) {
           case linear:
@@ -581,11 +576,9 @@ namespace galsim {
     }
 
     template<class V, class A>
-    Table1D<V,A>::Table1D(const std::vector<A>& args, const std::vector<V>& valarray, interpolant in) :
-        iType(in), N(args.size()), grid(args)
+    Table1D<V,A>::Table1D(const std::vector<A>& _args, const std::vector<V>& _vals, interpolant in) :
+        iType(in), N(_args.size()), args(_args), vals(_vals)
     {
-        // Copy valarray
-        vals = valarray;
         // Map specific interpolator to `interpolate`.
         switch (iType) {
           case linear:
@@ -611,62 +604,62 @@ namespace galsim {
 
     //lookup and interpolate function value.
     template<class V, class A>
-    V Table1D<V,A>::lookup(const A x) const
+    V Table1D<V,A>::lookup(const A a) const
     {
-        int i = grid.upperIndex(x);
-        return (this->*interpolate)(x, i);
+        int i = args.upperIndex(a);
+        return (this->*interpolate)(a, i);
     }
 
     //lookup and interpolate an array of function values.
     template<class V, class A>
-    void Table1D<V,A>::interpMany(const A* xvec, V* valvec, int N) const
+    void Table1D<V,A>::interpMany(const A* argvec, V* valvec, int N) const
     {
         int i;
         for (int k=0; k<N; k++) {
-            i = grid.upperIndex(xvec[k]);
-            valvec[k] = (this->*interpolate)(xvec[k], i);
+            i = args.upperIndex(argvec[k]);
+            valvec[k] = (this->*interpolate)(argvec[k], i);
         }
     }
 
     template<class V, class A>
-    V Table1D<V,A>::linearInterpolate(const A x, int i) const
+    V Table1D<V,A>::linearInterpolate(const A a, int i) const
     {
-        A ax = (grid[i] - x) / (grid[i] - grid[i-1]);
+        A ax = (args[i] - a) / (args[i] - args[i-1]);
         A bx = 1.0 - ax;
         return vals[i]*bx + vals[i-1]*ax;
     }
 
     template<class V, class A>
-    V Table1D<V,A>::floorInterpolate(const A x, int i) const
+    V Table1D<V,A>::floorInterpolate(const A a, int i) const
     {
-        // On entry, it is only guaranteed that grid[i-1] <= x <= grid[i].
+        // On entry, it is only guaranteed that args[i-1] <= a <= args[i].
         // Normally those ='s are ok, but for floor and ceil we make the extra
         // check to see if we should choose the opposite bound.
-        if (x == grid[i]) i++;
+        if (a == args[i]) i++;
         return vals[i-1];
     }
 
     template<class V, class A>
-    V Table1D<V,A>::ceilInterpolate(const A x, int i) const
+    V Table1D<V,A>::ceilInterpolate(const A a, int i) const
     {
-        if (x == grid[i-1]) i--;
+        if (a == args[i-1]) i--;
         return vals[i];
     }
 
     template<class V, class A>
-    V Table1D<V,A>::nearestInterpolate(const A x, int i) const
+    V Table1D<V,A>::nearestInterpolate(const A a, int i) const
     {
-        if ((x - grid[i-1]) < (grid[i] - x)) i--;
+        if ((a - args[i-1]) < (args[i] - a)) i--;
         return vals[i];
     }
 
     template<class V, class A>
-    V Table1D<V,A>::splineInterpolate(const A x, int i) const
+    V Table1D<V,A>::splineInterpolate(const A a, int i) const
     {
 #if 0
         // Direct calculation saved for comparison:
-        A h = grid[i] - grid[i-1];
-        A aa = (grid[i] - x)/h;
+        A h = args[i] - args[i-1];
+        A aa = (args[i] - a)/h;
         A bb = 1. - aa;
         return aa*vals[i-1] +bb*vals[i] +
             ((aa*aa*aa-aa)*y2[i-1]+(bb*bb*bb-bb)*y2[i]) *
@@ -674,8 +667,8 @@ namespace galsim {
 #else
         // Factor out h factors, so only need 1 division by h.
         // Also, use the fact that bb = h-aa to simplify the calculation.
-        A h = grid[i] - grid[i-1];
-        A aa = (grid[i] - x);
+        A h = args[i] - args[i-1];
+        A aa = (args[i] - a);
         A bb = h-aa;
         return ( aa*vals[i-1] + bb*vals[i] -
                  (1./6.) * aa * bb * ( (aa+h)*y2[i-1] +
@@ -708,20 +701,20 @@ namespace galsim {
         // For 3 points second derivative at i=1 is simple
         if (n == 3){
 
-            y2[1] = 3.*((vals[2] - vals[1]) / (grid[2] - grid[1]) -
-                        (vals[1] - vals[0]) / (grid[1] - grid[0])) / (grid[2] - grid[0]);
+            y2[1] = 3.*((vals[2] - vals[1]) / (args[2] - args[1]) -
+                        (vals[1] - vals[0]) / (args[1] - args[0])) / (args[2] - args[0]);
 
         } else {  // For 4 or more points we use the TMV symmetric tridiagonal matrix solver
 
             tmv::SymBandMatrix<V> M(n-2, 1);
             for (int i=1; i<=n-3; i++){
-                M(i, i-1) = grid[i+1] - grid[i];
+                M(i, i-1) = args[i+1] - args[i];
             }
             tmv::Vector<V> rhs(n-2);
             for (int i=1; i<=n-2; i++){
-                M(i-1, i-1) = 2. * (grid[i+1] - grid[i-1]);
-                rhs(i-1) = 6. * ( (vals[i+1] - vals[i]) / (grid[i+1] - grid[i]) -
-                                  (vals[i] - vals[i-1]) / (grid[i] - grid[i-1]) );
+                M(i-1, i-1) = 2. * (args[i+1] - args[i-1]);
+                rhs(i-1) = 6. * ( (vals[i+1] - vals[i]) / (args[i+1] - args[i]) -
+                                  (vals[i] - vals[i-1]) / (args[i] - args[i-1]) );
             }
             tmv::Vector<V> solution(n-2);
             solution = rhs / M;   // solve the tridiagonal system of equations
