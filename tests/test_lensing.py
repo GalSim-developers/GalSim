@@ -685,7 +685,7 @@ def test_tabulated():
         np.testing.assert_raises(ValueError, galsim.LookupTable,
                                  0.01*np.arange(100.), p_arr)
         ## arrays too small
-        np.testing.assert_raises(RuntimeError, galsim.LookupTable,
+        np.testing.assert_raises(ValueError, galsim.LookupTable,
                                  (1.,2.), (1., 2.))
         ## try to make shears, but grid includes k values that were not part of the originally
         ## tabulated P(k) (for this test we make a stupidly limited k grid just to ensure that an

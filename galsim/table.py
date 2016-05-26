@@ -138,9 +138,18 @@ class LookupTable(object):
                 raise ValueError("Cannot interpolate in log(f) when table contains f<=0!")
             f = np.log(f)
 
+        # Sanity checks
+        if len(x) != len(f):
+            raise ValueError("Input array lengths don't match")
+        if interpolant == 'spline' and len(x) < 3:
+            raise ValueError("Input arrays too small to spline interpolate")
+        if interpolant in ['linear', 'ceil', 'floor', 'nearest'] and len(x) < 2:
+            raise ValueError("Input arrays too small to interpolate")
+
         # table is the thing the does the actual work.  It is a C++ Table object, wrapped
-        # as _LookupTable.
-        self.table = _galsim._LookupTable(x, f, interpolant)
+        # as _LookupTable.  Note x must be sorted.
+        s = np.argsort(x)
+        self.table = _galsim._LookupTable(x[s], f[s], interpolant)
 
         # Get the min/max x values, making sure to account properly for x_log.
         self._x_min = self.table.argMin()
