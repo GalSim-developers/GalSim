@@ -215,9 +215,8 @@ class AtmosphericScreen(object):
             u, v = aper.u[aper.illuminated], aper.v[aper.illuminated]
         else:
             u, v = aper.u, aper.v
-        u += self.origin[0] + 1000*self.altitude*theta_x.tan()
-        v += self.origin[1] + 1000*self.altitude*theta_y.tan()
-        return self.tab2d(u, v)
+        return self.tab2d(u + self.origin[0] + 1000*self.altitude*theta_x.tan(),
+                          v + self.origin[1] + 1000*self.altitude*theta_y.tan())
 
     def reset(self):
         """Reset phase screen back to time=0."""
@@ -619,9 +618,7 @@ class OpticalScreen(object):
         # ignore theta_x, theta_y
         if compact:
             r = aper.rho[aper.illuminated]
-            rsqr = np.abs(r)**2
-            return horner2d(rsqr, r, self.coef_array).real * self.lam_0
         else:
             r = aper.rho
-            rsqr = np.abs(r)**2
-            return horner2d(rsqr, r, self.coef_array).real * self.lam_0
+        rsqr = np.abs(r)**2
+        return horner2d(rsqr, r, self.coef_array).real * self.lam_0
