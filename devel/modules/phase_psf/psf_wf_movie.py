@@ -10,12 +10,15 @@ from astropy.utils.console import ProgressBar
 
 def make_movie(args):
     rng = galsim.BaseDeviate(args.seed)
+    u = galsim.UniformDeviate(rng)
     # GalSim Atmospheric PSF code
     spd = []
     dirn = []
     for i in xrange(args.nlayers):
-        spd.append(galsim.UniformDeviate(rng)()*5.0)
-        dirn.append(galsim.UniformDeviate(rng)()*360*galsim.degrees)
+        spd.append(u()*20.0)
+        dirn.append(u()*360*galsim.degrees)
+        print "Adding layer with wind: {:5.2f} {:5.2f}".format(spd[-1]*dirn[-1].cos(),
+                                                               spd[-1]*dirn[-1].sin())
 
     atm = galsim.Atmosphere(r0_500=args.r0_500, speed=spd, direction=dirn, rng=rng,
                             time_step=args.time_step, screen_size=args.screen_size,
@@ -115,8 +118,8 @@ if __name__ == '__main__':
                         help="Fried parameter at 500 nm in meters.  Default: 0.2")
     parser.add_argument("--nlayers", type=int, default=3,
                         help="Number of atmospheric layers.  Default: 3")
-    parser.add_argument("--lam", type=float, default=500.0,
-                        help="Wavelength in nanometers.  Default: 500.0")
+    parser.add_argument("--lam", type=float, default=700.0,
+                        help="Wavelength in nanometers.  Default: 700.0")
     parser.add_argument("--time_step", type=float, default=0.03,
                         help="Incremental time step for advancing phase screens and accumulating "
                              " instantaneous PSFs in seconds.  Default: 0.03")
