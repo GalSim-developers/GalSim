@@ -70,13 +70,14 @@ New Features
   GSObject and Image. (#308)
 - Added LookupTable2D to facilitate quick interpolation of two-dimensional
   tabular data. (#465)
-- Added AtmosphericPhaseScreen, OpticalPhaseScreen, and PhaseScreenList used
+- Added AtmosphericScreen, OpticalScreen, and PhaseScreenList used
   to generate PSFs via Fourier optics. (#549)
 - Added PhaseScreenPSF to transform PhaseScreens into GSObjects.  (#549)
 - Added Atmosphere function to conveniently assemble a multi-layer atmosphere
   PhaseScreenList. (#549)
 - Rewrote OpticalPSF to operate under the PhaseScreen framework to enable
   fully self-consistent optics+atmospheric PSFs. (#549)
+- OpticalPSF now able to handle Zernike polynomials up to arbitrary order.
 - Added a simple, linear model for persistence in the detectors that accepts a
   list of galsim.Image instances and a list of an equal number of floats. (#554)
 - Added BoundsI.numpyShape() to easily get the numpy shape that corresponds
