@@ -394,6 +394,12 @@ class LookupTable2D(object):
         self.y = np.ascontiguousarray(y, dtype=float)
         self.f = np.ascontiguousarray(f, dtype=float)
 
+        dx = np.diff(self.x)
+        dy = np.diff(self.y)
+
+        if not (all(dx > 0) and all(dy > 0)):
+            raise ValueError("x and y input grids are not strictly increasing.")
+
         fshape = self.f.shape
         if fshape != (len(x), len(y)):
             raise ValueError("Shape of `f` must be (len(`x`), len(`y`)).")
@@ -404,8 +410,6 @@ class LookupTable2D(object):
 
         if self.edge_mode == 'wrap':
             # Can wrap if x and y arrays are equally spaced ...
-            dx = np.diff(self.x)
-            dy = np.diff(self.y)
             if np.allclose(dx, dx[0]) and np.allclose(dy, dy[0]):
                 # Underlying Table2D requires us to extend x, y, and f.
                 self.x = np.append(self.x, self.x[-1]+dx[0])

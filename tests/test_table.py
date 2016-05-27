@@ -342,6 +342,20 @@ def test_table2d():
     tab2d = galsim.LookupTable2D(x, y, z, interpolant='nearest')
     assert tab2d(2.4, 3.6) == 2+4, "Nearest interpolant failed."
 
+    # Test that x,y arrays need to be strictly increasing.
+    try:
+        x[0] = x[1]
+        np.testing.assert_raises(ValueError, galsim.LookupTable2D, x, y, z)
+        x[0] = x[1]+1
+        np.testing.assert_raises(ValueError, galsim.LookupTable2D, x, y, z)
+        x[0] = x[1]-1
+        y[0] = y[1]
+        np.testing.assert_raises(ValueError, galsim.LookupTable2D, x, y, z)
+        y[0] = y[1]+1
+        np.testing.assert_raises(ValueError, galsim.LookupTable2D, x, y, z)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
 
 @timer
 def test_ne():
