@@ -265,8 +265,8 @@ def test_table2d():
     newyy, newxx = np.meshgrid(newy, newx)
 
     # Compare different ways of evaluating Table2D
-    ref = tab2d(newx, newy)
-    np.testing.assert_array_almost_equal(ref, tab2d(newxx, newyy, scatter=True))
+    ref = tab2d(newxx, newyy)
+    np.testing.assert_array_almost_equal(ref, tab2d(newx, newy, mesh=True))
     np.testing.assert_array_almost_equal(ref, np.array([[tab2d(x0, y0)
                                                          for y0 in newy]
                                                         for x0 in newx]))
@@ -280,8 +280,8 @@ def test_table2d():
     yy, xx = np.meshgrid(y, x)
     z = f(xx, yy)
     tab2d = galsim.table.LookupTable2D(x, y, z)
-    ref = tab2d(newx, newy)
-    np.testing.assert_array_almost_equal(ref, tab2d(newxx, newyy, scatter=True))
+    ref = tab2d(newxx, newyy)
+    np.testing.assert_array_almost_equal(ref, tab2d(newx, newy, mesh=True))
     np.testing.assert_array_almost_equal(ref, np.array([[tab2d(x0, y0)
                                                          for y0 in newy]
                                                         for x0 in newx]))
@@ -297,8 +297,8 @@ def test_table2d():
     z = f(xx, yy)
     tab2d = galsim.table.LookupTable2D(x, y, z)
 
-    np.testing.assert_array_almost_equal(f(newxx, newyy), tab2d(newx, newy))
-    np.testing.assert_array_almost_equal(f(newxx, newyy), tab2d(newxx, newyy, scatter=True))
+    np.testing.assert_array_almost_equal(f(newxx, newyy), tab2d(newxx, newyy))
+    np.testing.assert_array_almost_equal(f(newxx, newyy), tab2d(newx, newy, mesh=True))
     np.testing.assert_array_almost_equal(f(newxx, newyy), np.array([[tab2d(x0, y0)
                                                                    for y0 in newy]
                                                                   for x0 in newx]))
@@ -323,8 +323,8 @@ def test_table2d():
     z = np.pad(z,[(0,1), (0,1)], mode='wrap')
     tab2d = galsim.table.LookupTable2D(x, y, z, edge_mode='wrap')
 
-    np.testing.assert_array_almost_equal(tab2d(newx, newy), tab2d(newx+3*(x[-1]-x[0]), newy))
-    np.testing.assert_array_almost_equal(tab2d(newx, newy), tab2d(newx, newy+13*(y[-1]-y[0])))
+    np.testing.assert_array_almost_equal(tab2d(newxx, newyy), tab2d(newxx+3*(x[-1]-x[0]), newyy))
+    np.testing.assert_array_almost_equal(tab2d(newxx, newyy), tab2d(newxx, newyy+13*(y[-1]-y[0])))
 
     # Test floor/ceil/nearest interpolant
     x = y = np.arange(5)

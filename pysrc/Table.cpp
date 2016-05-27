@@ -175,20 +175,20 @@ namespace {
             return new Table2D<double,double>(xargs, yargs, vals, Nx, Ny, i);
         }
 
-        static void interpManyScatter(const Table2D<double,double>& table2d,
-                                      const bp::object& x, const bp::object& y,
-                                      const bp::object& vals)
+        static void interpMany(const Table2D<double,double>& table2d,
+                               const bp::object& x, const bp::object& y,
+                               const bp::object& vals)
         {
             const double* xvec = GetNumpyArrayData<double>(x.ptr());
             const double* yvec = GetNumpyArrayData<double>(y.ptr());
             double* valvec = GetNumpyArrayData<double>(vals.ptr());
             int N = GetNumpyArrayDim(x.ptr(), 0);
-            table2d.interpManyScatter(xvec, yvec, valvec, N);
+            table2d.interpMany(xvec, yvec, valvec, N);
         }
 
-        static void interpManyOuter(const Table2D<double,double>& table2d,
-                                    const bp::object& x, const bp::object& y,
-                                    const bp::object& vals)
+        static void interpManyMesh(const Table2D<double,double>& table2d,
+                                   const bp::object& x, const bp::object& y,
+                                   const bp::object& vals)
         {
             const double* xvec = GetNumpyArrayData<double>(x.ptr());
             const double* yvec = GetNumpyArrayData<double>(y.ptr());
@@ -197,7 +197,7 @@ namespace {
             int Ny = GetNumpyArrayDim(y.ptr(), 0);
             assert(Nx == GetNumpyArrayDim(vals.ptr(), 0));
             assert(Ny == GetNumpyArrayDim(vals.ptr(), 1));
-            table2d.interpManyOuter(xvec, yvec, valvec, Nx, Ny);
+            table2d.interpManyMesh(xvec, yvec, valvec, Nx, Ny);
         }
 
         static bp::object convertGetXArgs(const Table2D<double,double>& table2d)
@@ -249,8 +249,8 @@ namespace {
                     )
                 )
                 .def("__call__", &Table2D<double,double>::lookup)
-                .def("interpManyScatter", &interpManyScatter)
-                .def("interpManyOuter", &interpManyOuter)
+                .def("interpMany", &interpMany)
+                .def("interpManyMesh", &interpManyMesh)
                 .def("xmin", &Table2D<double,double>::xmin)
                 .def("xmax", &Table2D<double,double>::xmax)
                 .def("ymin", &Table2D<double,double>::ymin)

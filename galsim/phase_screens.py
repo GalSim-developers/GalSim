@@ -218,7 +218,7 @@ class AtmosphericScreen(object):
             u, v = aper.u, aper.v
         u += self.origin[0] + 1000*self.altitude*theta_x.tan()
         v += self.origin[1] + 1000*self.altitude*theta_y.tan()
-        return self.tab2d(u, v, scatter=True)
+        return self.tab2d(u, v)
 
     def reset(self):
         """Reset phase screen back to time=0."""

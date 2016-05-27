@@ -354,20 +354,20 @@ namespace galsim {
     //In this case, the length of xvec is assumed to be the same as the length of yvec, and
     //will also equal the length of the result array.
     template<class V, class A>
-    void Table2D<V,A>::interpManyScatter(const A* xvec, const A* yvec, V* valvec, int N) const
+    void Table2D<V,A>::interpMany(const A* xvec, const A* yvec, V* valvec, int N) const
     {
         int i, j;
-        for (int k=0; k<N; k++) {
+        for (int k=0; k<N; k++, valvec++) {
             i = xargs.upperIndex(xvec[k]);
             j = yargs.upperIndex(yvec[k]);
-            valvec[k] = (this->*interpolate)(xvec[k], yvec[k], i, j);
+            *valvec = (this->*interpolate)(xvec[k], yvec[k], i, j);
         }
     }
 
-    //lookup and interpolate along the outer product of an x-array and a y-array.
+    //lookup and interpolate along the mesh of an x-array and a y-array.
     //The result will be an array with length outNx * outNy.
     template<class V, class A>
-    void Table2D<V,A>::interpManyOuter(const A* xvec, const A* yvec, V* valvec,
+    void Table2D<V,A>::interpManyMesh(const A* xvec, const A* yvec, V* valvec,
                                        int outNx, int outNy) const
     {
         int i, j;

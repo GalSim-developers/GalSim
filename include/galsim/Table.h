@@ -228,8 +228,8 @@ namespace galsim {
         V lookup(const A x, const A y) const;
 
         /// interp many values at once
-        void interpManyScatter(const A* xvec, const A* yvec, V* valvec, int N) const;
-        void interpManyOuter(const A* xvec, const A* yvec, V* valvec, int Nx, int Ny) const;
+        void interpMany(const A* xvec, const A* yvec, V* valvec, int N) const;
+        void interpManyMesh(const A* xvec, const A* yvec, V* valvec, int Nx, int Ny) const;
 
         const std::vector<A>& getXArgs() const { return xargs.getArgs(); }
         const std::vector<A>& getYArgs() const { return yargs.getArgs(); }

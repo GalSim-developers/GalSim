@@ -313,20 +313,20 @@ class LookupTable2D(object):
         >>> print tab2d(2.2, 3.3)
         5.5
 
-    The () operator can also accept lists for the x and y arguments at which to evaluate the
-    LookupTable2D.  In this case, the table is evaluated for all combinations of x and y values and
-    returned as a 2D array with dimensions (len(x), len(y)).
-
-        >>> print tab2d([0, 1], [2, 3, 4])
-        [[ 2.  3.  4.],
-         [ 3.  4.  5.]]
-
-    Finally, if you want to just evaluate the LookupTable2D at a list of x and y points but without
-    evaluating all possible combinations of x and y values, then you can use the `scatter` keyword
-    with the () operator.
+    The () operator can also accept sequences (lists, tuples, numpy arrays, ...) for the x and y
+    arguments at which to evaluate the LookupTable2D.  The x and y sequences should have the same
+    length in this case, which will also be the length of the output sequence.
 
         >>> print tab2d([1, 2], [3, 4], scatter=True)
         [ 4.  6.]
+
+    If you know you want to evaluate all possible combinations of a sequence of x values and a
+    sequence of y values, then you can let LookupTable2D make the 2D mesh for you by adding
+    `mesh=True` as a keyword argument.  This can be somewhat faster than making the mesh yourself.
+
+        >>> print tab2d([0, 1], [2, 3, 4], mesh=True)
+        [[ 2.  3.  4.],
+         [ 3.  4.  5.]]
 
     The default interpolation method is linear.  Other choices for the interpolant are:
       - 'floor'
@@ -419,7 +419,7 @@ class LookupTable2D(object):
         return ((x-self.x[0]) % self.xperiod + self.x[0],
                 (y-self.y[0]) % self.yperiod + self.y[0])
 
-    def __call__(self, x, y, scatter=False):
+    def __call__(self, x, y, mesh=False):
         if self.edge_mode == 'raise':
             if not self._inbounds(x, y):
                 raise ValueError("Extrapolating beyond input range.")
@@ -430,7 +430,7 @@ class LookupTable2D(object):
                 x, y = self._wrap_args(x, y)
             return self.table(x, y)
         else:
-            if scatter:
+            if not mesh:
                 x = np.array(x, dtype=float)
                 y = np.array(y, dtype=float)
                 shape = x.shape
@@ -439,15 +439,15 @@ class LookupTable2D(object):
                 y = y.ravel()
                 if self.edge_mode == 'wrap':
                     x, y = self._wrap_args(x, y)
-                self.table.interpManyScatter(x, y, f)
+                self.table.interpMany(x, y, f)
                 f = f.reshape(shape)
-            else:  # outer
+            else:
                 f = np.empty((len(x), len(y)), dtype=float)
                 x = np.array(x, dtype=float)
                 y = np.array(y, dtype=float)
                 if self.edge_mode == 'wrap':
                     x, y = self._wrap_args(x, y)
-                self.table.interpManyOuter(x, y, f)
+                self.table.interpManyMesh(x, y, f)
             return f
 
     def __str__(self):
