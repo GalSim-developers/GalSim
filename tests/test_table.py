@@ -256,7 +256,7 @@ def test_table2d():
     yy, xx = np.meshgrid(y, x)  # Note the ordering of both input and output here!
     z = f(xx, yy)
 
-    tab2d = galsim.table.LookupTable2D(x, y, z)
+    tab2d = galsim.LookupTable2D(x, y, z)
     do_pickle(tab2d)
     do_pickle(tab2d.table)
 
@@ -278,7 +278,7 @@ def test_table2d():
     y = np.delete(y, 10)
     yy, xx = np.meshgrid(y, x)
     z = f(xx, yy)
-    tab2d = galsim.table.LookupTable2D(x, y, z)
+    tab2d = galsim.LookupTable2D(x, y, z)
     ref = tab2d(newxx, newyy)
     np.testing.assert_array_almost_equal(ref, np.array([[tab2d(x0, y0)
                                                          for y0 in newy]
@@ -293,7 +293,7 @@ def test_table2d():
         return 2*x_ + 3*y_
 
     z = f(xx, yy)
-    tab2d = galsim.table.LookupTable2D(x, y, z)
+    tab2d = galsim.LookupTable2D(x, y, z)
 
     np.testing.assert_array_almost_equal(f(newxx, newyy), tab2d(newxx, newyy))
     np.testing.assert_array_almost_equal(f(newxx, newyy), np.array([[tab2d(x0, y0)
@@ -309,7 +309,7 @@ def test_table2d():
     # Test edge wrapping
     # Chech that can't construct table with edge-wrapping if edges don't match
     try:
-        np.testing.assert_raises(ValueError, galsim.table.LookupTable,
+        np.testing.assert_raises(ValueError, galsim.LookupTable,
                                  (x, y, z), dict(edge_mode='wrap'))
     except ImportError:
         print 'The assert_warns tests require nose'
@@ -318,10 +318,19 @@ def test_table2d():
     x = np.append(x, x[-1] + (x[-1]-x[-2]))
     y = np.append(y, y[-1] + (y[-1]-y[-2]))
     z = np.pad(z,[(0,1), (0,1)], mode='wrap')
-    tab2d = galsim.table.LookupTable2D(x, y, z, edge_mode='wrap')
+    tab2d = galsim.LookupTable2D(x, y, z, edge_mode='wrap')
 
     np.testing.assert_array_almost_equal(tab2d(newxx, newyy), tab2d(newxx+3*(x[-1]-x[0]), newyy))
     np.testing.assert_array_almost_equal(tab2d(newxx, newyy), tab2d(newxx, newyy+13*(y[-1]-y[0])))
+
+    # Test edge_mode='constant'
+    tab2d = galsim.LookupTable2D(x, y, z, edge_mode='constant', constant=42)
+    assert type(tab2d(x[0]-1, y[0]-1)) == float
+    assert tab2d(x[0]-1, y[0]-1) == 42.0
+    # One in-bounds, one out-of-bounds
+    np.testing.assert_array_almost_equal(tab2d([x[0], x[0]-1], [y[0], y[0]-1]),
+                                         [tab2d(x[0], y[0]), 42.0])
+
 
     # Test floor/ceil/nearest interpolant
     x = y = np.arange(5)
