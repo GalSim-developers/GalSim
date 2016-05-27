@@ -164,8 +164,7 @@ class AtmosphericScreen(object):
         # "Boil" the atmsopheric screen if alpha not 1.
         if self.alpha != 1.0:
             self.screen = self.alpha*self.screen + np.sqrt(1.-self.alpha**2)*self._random_screen()
-            wrap_screen = np.pad(self.screen, [(0,1), (0,1)], mode='wrap')
-            self.tab2d = galsim.LookupTable2D(self._xs, self._ys, wrap_screen, edge_mode='wrap')
+            self.tab2d = galsim.LookupTable2D(self._xs, self._ys, self.screen, edge_mode='wrap')
 
     def advance_by(self, dt):
         """Advance phase screen by specified amount of time.
@@ -228,10 +227,10 @@ class AtmosphericScreen(object):
         # Only need to reset/create tab2d if not frozen or doesn't already exist
         if self.alpha != 1.0 or not hasattr(self, 'tab2d'):
             self.screen = self._random_screen()
-            wrap_screen = np.pad(self.screen, [(0,1), (0,1)], mode='wrap')
-            self._xs = np.linspace(-0.5*self.screen_size, 0.5*self.screen_size, self.npix+1)
+            self._xs = np.linspace(-0.5*self.screen_size, 0.5*self.screen_size, self.npix,
+                                   endpoint=False)
             self._ys = self._xs
-            self.tab2d = galsim.LookupTable2D(self._xs, self._ys, wrap_screen, edge_mode='wrap')
+            self.tab2d = galsim.LookupTable2D(self._xs, self._ys, self.screen, edge_mode='wrap')
 
 
 def _listify(arg):

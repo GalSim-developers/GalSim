@@ -307,7 +307,7 @@ def test_table2d():
         print 'The assert_raises tests require nose'
 
     # Test edge wrapping
-    # Chech that can't construct table with edge-wrapping if edges don't match
+    # Check that can't construct table with edge-wrapping if edges don't match
     try:
         np.testing.assert_raises(ValueError, galsim.LookupTable,
                                  (x, y, z), dict(edge_mode='wrap'))

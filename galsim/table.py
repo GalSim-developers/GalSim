@@ -340,8 +340,12 @@ class LookupTable2D(object):
       - 'raise': raise an exception.  (This is the default.)
       - 'constant': Return a constant specified by the `constant` keyword.
       - 'wrap': infinitely wrap the initial range in both directions.
-    In order to use edge_mode='wrap', the first and last column of f, as well as the first and last
-    row of f must match.  (This way we know what the period is in each dimension.)
+    In order for LookupTable2D to determine the wrapping period when edge_mode='wrap', either the
+    x and y grid points need to be equally spaced (in which case the x-period is inferred as
+    len(x)*(x[1]-x[0]) and similarly for y), or the first/last row/column of f must be identical,
+    in which case the x-period is inferred as x[-1] - x[0].  (If both conditions are satisfied
+    (equally-spaced x and y and identical first/last row/column of f, then the x-period is inferred
+    as len(x)*(x[1]-x[0])).
 
         >>> x = np.arange(5)
         >>> y = np.arange(8)
@@ -399,12 +403,20 @@ class LookupTable2D(object):
         self.constant = float(constant)
 
         if self.edge_mode == 'wrap':
-            # Can only wrap if the first column/row is the same as the last column/row.
-            if (not all(self.f[0] == self.f[-1]) or
-                not all(self.f[:, 0] == self.f[:, -1])):
-                raise ValueError("Cannot wrap `f` array with unequal first/last column/row.")
-            self.xperiod = self.x[-1] - self.x[0]
-            self.yperiod = self.y[-1] - self.y[0]
+            # Can wrap if x and y arrays are equally spaced ...
+            dx = np.diff(self.x)
+            dy = np.diff(self.y)
+            if np.allclose(dx, dx[0]) and np.allclose(dy, dy[0]):
+                # Underlying Table2D requires us to extend x, y, and f.
+                self.x = np.append(self.x, self.x[-1]+dx[0])
+                self.y = np.append(self.y, self.y[-1]+dy[0])
+                self.f = np.pad(self.f, [(0,1), (0,1)], mode='wrap')
+            if (all(self.f[0] == self.f[-1]) and all(self.f[:,0] == self.f[:,-1])):
+                self.xperiod = self.x[-1] - self.x[0]
+                self.yperiod = self.y[-1] - self.y[0]
+            else:
+                raise ValueError("Cannot use edge_mode='wrap' unless either x and y are equally "
+                                 "spaced or first/last row/column of f are identical.")
 
         self.table = _galsim._LookupTable2D(self.x, self.y, self.f, self.interpolant)
 
