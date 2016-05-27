@@ -86,6 +86,9 @@ The GalSim package also requires
   is kind of a gargantuan package.  But if you are willing to install that
   too, then you can use the galsim.AstropyWCS class.
   
+* Optional dependency: Pandas.  This has a very fast function for reading ASCII
+  tables.  If this is not available (e.g. when reading in Bandpass or SED
+  files) then we fall back to the (much) slower numpy loadtxt function.
 
 These should installed onto your Python system so that they can be imported by:
 
@@ -96,6 +99,7 @@ These should installed onto your Python system so that they can be imported by:
                                   plan to parse .yaml configuration files ]
     >>> import starlink.Ast     [ if planning to use PyAstWCS class ]
     >>> import astropy.wcs      [ if planning to use AstropyWCS class ]
+    >>> import pandas           [ for faster ASCII table input ]
 
 within Python.  You can test this by loading up the Python interpreter for the
 version of Python you will be using with the GalSim toolkit. This is usually
@@ -205,7 +209,7 @@ is often distributed as fftw3.  See Section 4 for some suggestions about
 installing this on your platform.
 
 
-iv) TMV (http://code.google.com/p/tmv-cpp/) (version >= 0.72 required)
+iv) TMV (https://github.com/rmjarvis/tmv/) (version >= 0.72 required)
 -----------------------------------------------------------------------
 
 GalSim uses the TMV library for its linear algebra routines. You should
@@ -340,6 +344,17 @@ Another common option is `CXX=<c++compiler>`. So, to compile with `icpc` rather
 than the default `g++`, type
 
     scons CXX=icpc
+
+On El Capitan, Apple instituted a new security measure wherein system calls
+lose some of the system environment variables, including DYLD_LIBRARY_PATH
+among others.  If your system is set up to use that environment variable to
+resolve library locations at runtime, then this will cause problems when SCons
+is trying to figure out if things are installed correctly.  To override this
+behavior, you can explicitly send this environment variable to SCons by writing
+
+    scons DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH
+
+and it will be able to re-set this value within the SCons processing.
 
 One nice feature of SCons is that once you have specified a parameter, it will
 save that value for future builds in the file `gs_scons.conf`, so once you have
@@ -649,6 +664,14 @@ The best success seems to be achieved in Mavericks by *explicitly* specifying
 `clang` and `clang++` as the compiler to GalSim and all its dependencies when
 building (as in the example above).
 
+iv) Docker
+----------
+
+Karen Ng has created a Docker file for containerizing GalSim.  See her repo:
+
+    https://github.com/karenyyng/GalSim_dockerfile
+
+for instructions about how to either use her image or create your own.
 
 5. More SCons options
 =====================

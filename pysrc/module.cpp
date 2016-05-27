@@ -54,6 +54,7 @@ namespace galsim {
     void pyExportRandom();
     void pyExportNoise();
     void pyExportTable();
+    void pyExportTable2D();
     void pyExportInterpolant();
     void pyExportCorrelationFunction();
     void pyExportCDModel();
@@ -101,5 +102,6 @@ BOOST_PYTHON_MODULE(_galsim) {
     galsim::hsm::pyExportHSM();
     galsim::integ::pyExportInteg();
     galsim::pyExportTable();
+    galsim::pyExportTable2D();
     galsim::bessel::pyExportBessel();
 }

@@ -32,7 +32,7 @@ except ImportError:
 ### Note: changes to either of the tests below might require regeneration of the catalog and image
 ### files that are saved here.  Modify with care!!!
 image_dir = './real_comparison_images'
-catalog_file = os.path.join(image_dir,'test_catalog.fits')
+catalog_file = 'test_catalog.fits'
 
 ind_fake = 1 # index of mock galaxy (Gaussian) in catalog
 fake_gal_fwhm = 0.7 # arcsec
@@ -75,13 +75,13 @@ def moments_to_ellip(mxx, myy, mxy):
     sig = (mxx*myy - mxy**2)**(0.25)
     return e1, e2, sig
 
+
+@timer
 def test_real_galaxy_ideal():
     """Test accuracy of various calculations with fake Gaussian RealGalaxy vs. ideal expectations"""
-    import time
-    t1 = time.time()
     # read in faked Gaussian RealGalaxy from file
-    rgc = galsim.RealGalaxyCatalog(catalog_file, image_dir)
-    rg = galsim.RealGalaxy(rgc, index = ind_fake)
+    rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
+    rg = galsim.RealGalaxy(rgc, index=ind_fake)
     # as a side note, make sure it behaves okay given a legit RNG and a bad RNG
     # or when trying to specify the galaxy too many ways
     rg_1 = galsim.RealGalaxy(rgc, index = ind_fake, rng = galsim.BaseDeviate(1234))
@@ -156,16 +156,16 @@ def test_real_galaxy_ideal():
                         sim_image.array, expected_image.array, decimal = 3,
                         err_msg = "Error in comparison of ideal Gaussian RealGalaxy calculations")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_real_galaxy_saved():
     """Test accuracy of various calculations with real RealGalaxy vs. stored SHERA result"""
-    import time
-    t1 = time.time()
     # read in real RealGalaxy from file
-    rgc = galsim.RealGalaxyCatalog(catalog_file, image_dir)
-    rg = galsim.RealGalaxy(rgc, index = ind_real)
+    #rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
+    # This is an alternate way to give the directory -- as part of the catalog file name.
+    full_catalog_file = os.path.join(image_dir,catalog_file)
+    rgc = galsim.RealGalaxyCatalog(full_catalog_file)
+    rg = galsim.RealGalaxy(rgc, index=ind_real)
 
     # read in expected result for some shear
     shera_image = galsim.fits.read(shera_file)
@@ -199,9 +199,25 @@ def test_real_galaxy_saved():
     do_pickle(rgc)
     do_pickle(rg)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+@timer
+def test_ne():
+    """ Check that inequality works as expected."""
+    rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
+    gsp = galsim.GSParams(folding_threshold=1.1e-3)
+
+    gals = [galsim.RealGalaxy(rgc, index=0),
+            galsim.RealGalaxy(rgc, index=1),
+            galsim.RealGalaxy(rgc, index=0, x_interpolant='Linear'),
+            galsim.RealGalaxy(rgc, index=0, k_interpolant='Linear'),
+            galsim.RealGalaxy(rgc, index=0, flux=1.1),
+            galsim.RealGalaxy(rgc, index=0, pad_factor=1.1),
+            galsim.RealGalaxy(rgc, index=0, noise_pad_size=5.0),
+            galsim.RealGalaxy(rgc, index=0, gsparams=gsp)]
+    all_obj_diff(gals)
+
 
 if __name__ == "__main__":
     test_real_galaxy_ideal()
     test_real_galaxy_saved()
+    test_ne()

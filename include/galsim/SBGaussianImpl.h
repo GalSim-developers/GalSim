@@ -35,7 +35,7 @@ namespace galsim {
         double xValue(const Position<double>& p) const;
         std::complex<double> kValue(const Position<double>& k) const;
 
-        bool isAxisymmetric() const { return true; } 
+        bool isAxisymmetric() const { return true; }
         bool hasHardEdges() const { return false; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
@@ -43,7 +43,7 @@ namespace galsim {
         double maxK() const;
         double stepK() const;
 
-        Position<double> centroid() const 
+        Position<double> centroid() const
         { return Position<double>(0., 0.); }
 
         double getFlux() const { return _flux; }
@@ -77,7 +77,7 @@ namespace galsim {
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 
-        std::string repr() const;
+        std::string serialize() const;
 
     private:
         double _flux; ///< Flux of the Surface Brightness Profile.
@@ -98,4 +98,3 @@ namespace galsim {
 }
 
 #endif
-

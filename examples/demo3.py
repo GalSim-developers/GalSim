@@ -21,13 +21,14 @@ Demo #3
 The third script in our tutorial about using GalSim in python scripts: examples/demo*.py.
 (This file is designed to be viewed in a window 100 characters wide.)
 
-This script is getting reasonably close to including all the principal features of an image
-from a ground-based telescope.  The galaxy is a bulge plus disk, where each component is 
-a sheared Sersic profile (with different Sersic indices).  The PSF has both atmospheric and 
-optical components.  The atmospheric component is a Kolmogorov turbulent spectrum.
-The optical component includes defocus, coma and astigmatism, as well as obscuration from
-a secondary mirror.  The noise model includes both a gain and read noise.  And finally,
-we include the effect of a slight telescope distortion.
+This script gets reasonably close to including all the principal features of an image
+from a ground-based telescope.  The galaxy is represented as the sum of a bulge and a disk, 
+where each component is represented by a sheared Sersic profile (with different Sersic 
+indices).  The PSF has both atmospheric and optical components.  The atmospheric 
+component is a Kolmogorov turbulent spectrum.  The optical component includes defocus, 
+coma and astigmatism, as well as obscuration from a secondary mirror.  The noise model
+includes both a gain and read noise.  And finally, we include the effect of a slight 
+telescope distortion.
 
 New features introduced in this demo:
 
@@ -101,8 +102,10 @@ def main(argv):
     wcs_g1 = -0.02         #
     wcs_g2 = 0.01          #
     sky_level = 2.5e4      # ADU / arcsec^2
-    gain = 1.7             # photons / ADU
-    read_noise = 0.3       # ADU / pixel
+    gain = 1.7             # e- / ADU
+                           # Note: here we assume 1 photon -> 1 e-, ignoring QE.  If you wanted,
+                           # you could include the QE factor as part of the gain.
+    read_noise = 0.3       # e- / pixel
 
     random_seed = 1314662
 
@@ -242,11 +245,11 @@ def main(argv):
     # gain, and read noise, so it can be a bit more realistic than the simpler GaussianNoise
     # or PoissonNoise that we used in demos 1 and 2.  
     # 
-    # The gain is in units of photons/ADU.  Technically, real CCDs quote the gain as e-/ADU.
-    # An ideal CCD has one electron per incident photon, but real CCDs have quantum efficiencies
-    # less than 1, so not every photon triggers an electron.  We are essentially folding
+    # The gain is in units of e-/ADU.  Technically, one should also account for quantum efficiency
+    # (QE) of the detector. An ideal CCD has one electron per incident photon, but real CCDs have
+    # QE less than 1, so not every photon triggers an electron.  We are essentially folding
     # the quantum efficiency (and filter transmission and anything else like that) into the gain.
-    # The read_noise value is given as ADU/pixel.  This is modeled as a pure Gaussian noise
+    # The read_noise value is given as e-/pixel.  This is modeled as a pure Gaussian noise
     # added to the image after applying the pure Poisson noise.
     image.addNoise(galsim.CCDNoise(rng, gain=gain, read_noise=read_noise))
 

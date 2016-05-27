@@ -30,7 +30,7 @@ template : cgc.yaml
 # Now we can change the things we need to change:
 
 # 1. Use real galaxies rather than parametric
-gal.first.gal_type : real
+gal.gal_type : real
 
 # 2. Whiten the noise from the HST images.
 image.noise.whiten : True

@@ -502,21 +502,20 @@ compute the relative contribution of each wavelength of a \texttt{ChromaticObjec
 \Bandpass\ instances may be initialized in several ways:
 \begin{itemize}
   \item[$\circ$] 
-  \texttt{galsim.Bandpass(filename, \dots)} 
+  \texttt{galsim.Bandpass(filename, wave\_type, \dots)} 
     \newline 
     where \texttt{filename} points to a
-    text file with two columns, the first for wavelength and the second for dimensionless throughput.
+    text file with two columns, the first for wavelength and the second for dimensionless
+    throughput.  \texttt{wave\_type} is used to tell GalSim whether the wavelengths in that file are
+    in units of nanometers or Angstroms.
   \item[$\circ$] 
-  \texttt{galsim.Bandpass(function, red\_limit, blue\_limit, \dots)}
+  \texttt{galsim.Bandpass(function, wave\_type, red\_limit, blue\_limit, \dots)}
     \newline 
     where \texttt{function} is a python function that accepts wavelength and returns
-    dimensionless throughput.  The keywords \texttt{red\_limit} and \texttt{blue\_limit} are required in 
+    dimensionless throughput, and \texttt{wave\_type} is as above. 
+    The keywords \texttt{red\_limit} and \texttt{blue\_limit} are required in 
     this case to specify the integration limits of the bandpass.
 \end{itemize}
-
-By default, the units for wavelength in the above functions/file are assumed to be nanometers.  If
-the keyword argument \texttt{wave\_type = 'Ang'} is supplied, then the wavelengths will instead be
-interpretted as Angstroms.
 
 For \texttt{Bandpass} instances initialized from a file, the following two methods can be used to
 reduce the number of samples used for integrations (and hence reduce the time it takes to draw
@@ -528,7 +527,7 @@ a \texttt{ChromaticObject}).
     Return a new bandpass truncated to only include wavelengths between \texttt{blue\_limit} and \
     texttt{red\_limit}.
   \item[$\circ$]
-  \texttt{bandpass.\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1bandpass_1_1_bandpass.html\#a20a7b1813506e7441e03ef097f0d5bf1}{thin}(rel\_err)}
+  \texttt{bandpass.\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1bandpass_1_1_bandpass.html\#a20a7b1813506e7441e03ef097f0d5bf1}{thin}(rel\_err,\dots)}
     \newline
    Return a thinner version of the bandpass by removing sample values (locations where
    $F(\lambda)$ is defined) while retaining the
@@ -544,23 +543,18 @@ Spectral energy distributions, respresented by the \SED\ class,
 may be constructed in several ways, similarly to bandpasses:
 \begin{itemize}
   \item[$\circ$] 
-  \texttt{galsim.SED(filename, \dots)} 
+  \texttt{galsim.SED(filename, wave\_type, flux\_type, \dots)} 
     \newline 
     where \texttt{filename} points to a
-    text file with two columns, the first for wavelength in nanometers and the second for flux
-    density.
+    text file with two columns, the first for wavelength in units given by \texttt{wave\_type} and the second for flux
+    density in units given by \texttt{flux\_type}.
   \item[$\circ$] 
-  \texttt{galsim.SED(function, \dots)} 
+  \texttt{galsim.SED(function, wave\_type, flux\_type, \dots)} 
     \newline 
     where \texttt{function} is a python
-    function that accepts wavelength in nanometers and returns flux density.
+    function that accepts wavelength in units given by \texttt{wave\_type} and returns flux density in units given by \texttt{flux\_type}.
 \end{itemize}
 
-The units for wavelength in the above constructions can be set to Angstroms by supplying the keyword
-argument \texttt{wave\_type = 'Ang'}.  The units for flux density in the above are assumed to be
-proportional to ergs/nm, but can be overridden to be proportional to ergs/Hz by setting
-\texttt{flux\_type = 'fnu'}, or overridden to be proportional to photons/nm by setting
-\texttt{flux\_type = 'fphotons'}.
 
 Important methods for \SED\ objects include:
 \begin{itemize}
@@ -631,7 +625,7 @@ The \href{http://galsim-developers.github.io/GalSim/classgalsim_1_1chromatic_1_1
 except that it requires a \texttt{Bandpass} object as its first
 argument.
 
-\texttt{>>> gband = galsim.Bandpass(lambda w:1.0, blue\_limit=410, red\_limit=550)} \newline
+\texttt{>>> gband = galsim.Bandpass(lambda w:1.0, wave\_type='nm', blue\_limit=410, red\_limit=550)} \newline
 \texttt{>>> image = chromatic\_obj.drawImage(gband)}
 
 GalSim comes with built-in support for ground-based PSFs affected by differential chromatic

@@ -4,6 +4,9 @@ Changes from v1.3 to v1.4
 API Changes
 -----------
 
+- Changed the galsim.Bandpass and galsim.SED classes so that formerly optional
+  keywords to indicate units (`wave_type` for the former, `wave_type` and
+ `flux_type` for the latter) are now required. (#745)
 - Changed the default shift and/or offset for the output.psf field in a config
   file to not do any shift or offset.  It had been the default to match what
   was applied to the galaxy (cf. demo5).  However, we thought that was probably
@@ -15,16 +18,47 @@ API Changes
 Bug Fixes
 ---------
 
-- Fixed a bug in some of the WCS classes if the RA/Dec axes in the FITS header
-  are reversed (which is allowed by the FITS standard). (#681)
+- Fixed bug in config that did not allow users to pass in a filename for
+  COSMOS (correlated) noise.  (#732)
+- Improved ability of galsim.fits.read to handle invalid but fixable FITS
+  headers. (#602)
+- Fixed bug in des module related to building meds file with wcs taken from
+  the input images. (#654)
 - Improved ability of ChromaticObjects to find fiducial achromatic profiles
   and wavelengths with non-zero flux. (#680)
+- Fixed a bug in some of the WCS classes if the RA/Dec axes in the FITS header
+  are reversed (which is allowed by the FITS standard). (#681)
 - Fixed a bug in the way Images are instantiated for certain combinations of
   ChromaticObjects and image-setup keyword arguments (#683)
 - Added ability to manipulate the width of the moment-measuring weight function
   for the KSB shear estimation method of the galsim.hsm package. (#686)
 - Fixed bug in the (undocumented) function COSMOSCatalog._makeSingleGalaxy,
   where the resulting object did not set the index attribute properly. (#694)
+- Fixed an error in the `CCDNoise.getVariance()` function, as well as some
+  errors in the documentation about the units of CCDNoise parameters. (#713)
+- Fixed a bug in drawKImage when non-default scale is given, but no images
+  are provided. (#720)
+- Fixed an assert failure in InterpolatedImage if the input image is
+  identically equal to zero. (#720)
+- Fixed a potential instability in drawing with deconvolution.  Now the fft of
+  the deconvolved image will not be made larger than 1/kvalue_accuracy. (#720)
+- Fixed a bug in how InterpolatedKImage checked for properly Hermitian input
+  images. (#723)
+- Updated ups table file so that setup command is `setup galsim` instead of
+  `setup GalSim` (#724)
+- Added new default algorithm for thinning SEDs and Bandpasses to enable faster
+  calculations while still meeting relative error constraints. (#739).
+- Fixed a bug in how DistDeviate handled probabilities that were nearly, but
+  not quite, flat (#741)
+- Fixed a bug in chromatic parametric galaxy models based on COSMOS galaxies.
+  (#745)
+
+Deprecated Features
+-------------------
+
+- Deprecated the gal.type=Ring option in the config files.  The preferred way
+  to get a ring test is now with the new stamp.type=Ring.  See demo5 and demo10
+  for examples of the new syntax. (#698)
 
 
 New Features
@@ -34,20 +68,40 @@ New Features
   truth information.  cf. demos 9 and 10. (#301, #691)
 - Added methods calculateHLR, calculateMomentRadius, and calculateFWHM to both
   GSObject and Image. (#308)
-- Added LookupTable2D to facility quick interpolation of two-dimensional
+- Added LookupTable2D to facilitate quick interpolation of two-dimensional
   tabular data. (#465)
-- Added PhaseScreen, PhaseScreenList, and PhaseScreenPSF objects to use Fourier
-  optics to create PSFs from phase screens.  Added Atmosphere to quickly
-  assemble a list of von Karman phase screens to realistically simulate an
-  atmospheric PSF. (#549)
+- Added AtmosphericPhaseScreen, OpticalPhaseScreen, and PhaseScreenList used
+  to generate PSFs via Fourier optics. (#549)
+- Added PhaseScreenPSF to transform PhaseScreens into GSObjects.  (#549)
+- Added Atmosphere function to conveniently assemble a multi-layer atmosphere
+  PhaseScreenList. (#549)
+- Rewrote OpticalPSF to operate under the PhaseScreen framework to enable
+  fully self-consistent optics+atmospheric PSFs. (#549)
+- Added a simple, linear model for persistence in the detectors that accepts a
+  list of galsim.Image instances and a list of an equal number of floats. (#554)
+- Added BoundsI.numpyShape() to easily get the numpy shape that corresponds
+  to a given bounds instance. (#654)
+- Have FITS files with unsigned integer data automatically convert that into
+  the corresponding signed integer data type for use in GalSim, rather than
+  converting to float64, which it had been doing. (#654)
+- Made COSMOSCatalog write an index parameter for both parameteric and real
+  galaxy types to indicate the index of the object in the full COSMOS catalog.
+  (#654, #694)
 - Added ability to specify lambda and r0 separately for Kolmogorov to have
   GalSim do the conversion from radians to the given scale unit. (#657)
+- Made it possible to initialize an InterpolatedImage from a user-specified
+  HDU in a FITS file with multiple extensions. (#660)
 - Changed `galsim.fits.writeMulti` to allow any of the "image"s to be
   already-built hdus, which are included as is. (#691)
 - Added optional `wcs` argument to `Image.resize()`. (#691)
 - Added `BaseDeviate.discard(n)` and `BaseDeviate.raw()`. (#691)
 - Added `sersic_prec` option to COSMOSCatalog.makeGalaxy(). (#691)
+- Made it possible to impose some cuts on galaxy image quality in the
+  COSMOSCatalog class. (#693)
 - Added `convergence_threshold` as a parameter of HSMParams. (#709)
+- Improved the readability of Image and BaseDeviate reprs. (#723)
+- Sped up some Bandpass and SED functionality (and LookupTable class in
+  general). (#735)
 
 
 Updates to galsim executable
@@ -81,3 +135,9 @@ New config features
   'gsparams', among other less commonly used parameters.  However, for
   backwards compatibility, they are all still allowed in the image field
   as well. (#691)
+- Added more example scripts to showcase how to use some of the new config
+  features to make fairly sophisticated simulations.  cf. examples/great3 and
+  examples/des. (#654, #691)
+- Added new stamp type=Ring to effect ring tests.  This replaces the old
+  gsobject type=Ring, which is now deprecated.  See demo5 and demo10 for
+  examples of the new preferred syntax. (#698)

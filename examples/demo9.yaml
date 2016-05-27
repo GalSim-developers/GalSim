@@ -25,7 +25,7 @@
 # applied to each galaxy is calculated for an NFW halo mass profile.  We simulate observations 
 # of galaxies around 20 different clusters -- 5 each of 4 different masses.  Each cluster
 # has its own file, organized into 4 directories (one for each mass).  For each cluster, we
-# draw 20 lensed galaxies at random positions on the image.  The PSF is appropriate for a 
+# draw 20 lensed galaxies located at random positions on the image.  The PSF is appropriate for a 
 # space-like simulation.  (Some of the numbers used are the values for HST.)  And we apply
 # a cubic telescope distortion for the WCS.  Finally, we also output a truth catalog for each
 # +output image that could be used for testing the accuracy of shape or flux measurements.
@@ -430,6 +430,12 @@ output :
             # i.e. There will be output columns named 'shear.g1', 'shear.g2', 'pos.x', 'pos.y'.
             shear : gal.shear
             pos : image.world_pos
+
+            # The world position is an explicit generated value in the config dict in this case,
+            # but image_pos and world_pos are always available values (like obj_num, file_num
+            # above), since GalSim will generate them itself if necessary.  Here, we output
+            # image_pos, which is generated from world_pos and the WCS.
+            image_pos : image_pos
 
             # Things in the input field don't change for each object, but they can 
             # still be placed in the truth catalog.  These columns will have all identical

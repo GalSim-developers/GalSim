@@ -229,7 +229,7 @@ Initialization
 Parameters:
 
 @param rng          A BaseDeviate instance to use for generating the random numbers.
-@param sky_level    The sky level in electrons per pixel that was originally in the input image, 
+@param sky_level    The sky level in electrons per pixel that was originally in the input image,
                     but which is taken to have already been subtracted off. [default: 0.]
 
 Methods
@@ -291,17 +291,31 @@ then you should not provide the sky level here as well.  The sky level here corr
 to a level is taken to be already subtracted from the image, but which was present
 for the Poisson noise.
 
+The units here are slightly confusing.  We try to match the most common way that each of
+these quantities is usually reported.  Note: ADU stands for Analog/Digital Units; they are the
+units of the numbers in the final image.  Some places use the term "counts" for this.
+
+- sky_level is normally measured from the image itself, so it is normally quoted in ADU/pixel.
+- gain is a property of the detector and is normally measured in the laboratory.  The units
+  are normally e-/ADU.  This is backwards what might be more intuitive, ADU/e-, but that's
+  how astronomers use the term gain, so we follow suit here.
+- read_noise is also a property of the detector and is usually quoted in e-/pixel.
+
+If you are manually applying the quantum efficiency of the detector (e-/photon), then this would
+normally be applied before the noise.  However, it is also fine to fold in the quantum efficiency
+into the gain to give units photons/ADU.  Either way is acceptable.  Just make sure you give
+the read noise in photons as well in this case.
+
 Initialization
 --------------
 
-    >>> ccd_noise = galsim.CCDNoise(rng, sky_level=0., gain=1., read_noise=0.)  
+    >>> ccd_noise = galsim.CCDNoise(rng, sky_level=0., gain=1., read_noise=0.)
 
 Parameters:
 
 @param rng          A BaseDeviate instance to use for generating the random numbers.
-@param sky_level    The sky level in electrons per pixel that was originally in the input
-                    image, but which is taken to have already been subtracted off.
-                    [default: 0.]
+@param sky_level    The sky level in ADU per pixel that was originally in the input image,
+                    but which is taken to have already been subtracted off. [default: 0.]
 @param gain         The gain for each pixel in electrons per ADU; setting `gain<=0` will shut off
                     the Poisson noise, and the Gaussian rms will take the value `read_noise` as
                     being in units of ADU rather than electrons. [default: 1.]

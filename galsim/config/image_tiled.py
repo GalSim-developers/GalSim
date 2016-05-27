@@ -177,6 +177,20 @@ class TiledImageBuilder(ImageBuilder):
                         base, full_image, stamps, current_vars, logger)
         return full_image
 
+    def makeTasks(self, config, base, jobs, logger):
+        """Turn a list of jobs into a list of tasks.
+
+        Here we just have one job per task.
+
+        @param config       The configuration dict for the image field.
+        @param base         The base configuration dict.
+        @param jobs         A list of jobs to split up into tasks.  Each job in the list is a
+                            dict of parameters that includes 'image_num' and 'obj_num'.
+        @param logger       If given, a logger object to log progress.
+
+        @returns a list of tasks
+        """
+        return [ [ (job, k) ] for k, job in enumerate(jobs) ]
 
     def addNoise(self, image, config, base, image_num, obj_num, logger):
         """Add the final noise to a Tiled image

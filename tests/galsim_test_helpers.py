@@ -217,14 +217,19 @@ def drawNoise(noise):
     im.addNoise(noise)
     return im.array.astype(np.float32).tolist()
 
-def do_pickle(obj1, func = lambda x : x):
+
+def do_pickle(obj1, func = lambda x : x, irreprable=False):
     """Check that the object is picklable.  Also that it has basic == and != functionality.
     """
+    from numbers import Integral, Real, Complex
     import cPickle, copy
     # In case the repr uses these:
-    from numpy import array, int16, int32, float32, float64
+    from numpy import array, int16, int32, float32, float64, ndarray
     try:
         import astropy.io.fits
+        from distutils.version import LooseVersion
+        if LooseVersion(astropy.__version__) < LooseVersion('1.0.6'):
+            irreprable = True
     except:
         import pyfits
     print 'Try pickling ',obj1
@@ -241,8 +246,10 @@ def do_pickle(obj1, func = lambda x : x):
     assert f1 == f2
 
     # Test the hash values are equal for two equivalent objects.
-    #print 'hash = ',hash(obj1),hash(obj2)
-    assert hash(obj1) == hash(obj2)
+    from collections import Hashable
+    if isinstance(obj1, Hashable):
+        # print 'hash = ',hash(obj1),hash(obj2)
+        assert hash(obj1) == hash(obj2)
 
     obj3 = copy.copy(obj1)
     assert obj3 is not obj1
@@ -258,20 +265,138 @@ def do_pickle(obj1, func = lambda x : x):
     if random: f1 = func(obj1)
     #print 'func(obj1) = ',repr(f1)
     #print 'func(obj4) = ',repr(f4)
-    assert f4 == f1  # But everythong should be idenical with deepcopy.
+    assert f4 == f1  # But everything should be identical with deepcopy.
 
     # Also test that the repr is an accurate representation of the object.
     # The gold standard is that eval(repr(obj)) == obj.  So check that here as well.
-    #print 'repr = ',repr(obj1)
-    obj5 = eval(repr(obj1))
-    #print 'obj5 = ',repr(obj5)
-    f5 = func(obj5)
-    if random: f1 = func(obj1)
-    #print 'func(obj1) = ',repr(f1)
-    #print 'func(obj5) = ',repr(f5)
-    assert f5 == f1
+    # A few objects we don't expect to work this way in GalSim, either because their repr strings
+    # are truncated or because they include floating point numbers with truncated precision.  For
+    # these, we just exit here.
+    if irreprable: return
+
+    try:
+        # It turns out that random deviates will still be successfully constructed even with a
+        # truncated repr string.  They will just be the 'wrong' random deviates.  So look for that
+        # here and just raise an exception to skip this test and get out of the try block.
+        if random:
+            raise TypeError
+        # A further complication is that the default numpy print options do not have sufficient
+        # precision for the eval string to exactly reproduce the original object.  So we temporarily
+        # bump up the numpy print precision.
+        with galsim.utilities.printoptions(precision=18):
+            #print 'repr = ',repr(obj1)
+            obj5 = eval(repr(obj1))
+    except:
+        pass
+    else:
+        #print 'obj5 = ',repr(obj5)
+        f5 = func(obj5)
+        if random: f1 = func(obj1)
+        #print 'func(obj1) = ',repr(f1)
+        #print 'func(obj5) = ',repr(f5)
+        assert f5 == f1, "func(obj1) = %r\nfunc(obj5) = %r"%(f1, f5)
+
+    # Try perturbing obj1 pickling arguments and verify that inequality results.
+    # Generally, only objects pickled with __getinitargs__, i.e. old-style classes, reveal
+    # anything about what construction attributes may be important to check for assessing equality.
+    # (Even in this case, it's possible that an argument supplied by __getinitargs__ isn't actually
+    # important for assessing equality, though this doesn't appear to be the case for GalSim so
+    # far.)  Our strategy below is to loop through all arguments returned by __getinitargs__ and
+    # attempt to perturb them a bit after inferring their type, and checking that the object
+    # constructed with the perturbed argument list then compares inequally to the original object.
+
+    # import sys
+    try:
+        args = obj1.__getinitargs__()
+    except:
+        pass
+    else:
+        classname = type(obj1).__name__
+        for i in range(len(args)):
+            # sys.stderr.write("Attempting arg {}\n".format(i))
+            newargs = list(args)
+            if isinstance(args[i], bool):
+                newargs[i] = not args[i]
+            elif isinstance(args[i], Integral):
+                newargs[i] = args[i] + 2
+            elif isinstance(args[i], Real):
+                newargs[i] = args[i] * 1.01 + 0.01
+            elif isinstance(args[i], Complex):
+                newargs[i] = args[i] * (1.01 + 0.01j) + (0.99 - 0.01j)
+            elif isinstance(args[i], ndarray):
+                newargs[i] = args[i] * 1.01 + 0.01
+            elif isinstance(args[i], galsim.GSParams):
+                newargs[i] = galsim.GSParams(folding_threshold=5.1e-3, maxk_threshold=1.1e-3)
+            elif args[i] is None:
+                continue
+            else:
+                # sys.stderr.write("Unknown type: {}\n".format(args[i]))
+                continue
+            with galsim.utilities.printoptions(precision=18, threshold=1e6):
+                try:
+                    obj6 = eval('galsim.' + classname + repr(tuple(newargs)))
+                except:
+                    try:
+                        obj6 = eval('galsim._galsim.' + classname + repr(tuple(newargs)))
+                    except:
+                        raise TypeError("{} not `eval`able!".format(
+                                classname + repr(tuple(newargs))))
+                else:
+                    assert obj1 != obj6
+                    # sys.stderr.write("SUCCESS\n")
+
+
+def all_obj_diff(objs):
+    """ Helper function that verifies that each element in `objs` is unique and, if hashable,
+    produces a unique hash."""
+
+    from collections import Counter, Hashable
+    # Check that all objects are unique.
+    # Would like to use `assert len(objs) == len(set(objs))` here, but this requires that the
+    # elements of objs are hashable (and that they have unique hashes!, which is what we're trying
+    # to test!.  So instead, we just loop over all combinations.
+    for i, obji in enumerate(objs):
+        # Could probably start the next loop at `i+1`, but we start at 0 for completeness
+        # (and to verify a != b implies b != a)
+        for j, objj in enumerate(objs):
+            if i == j:
+                continue
+            assert obji != objj, ("Found equivalent objects {} == {} at indices {} and {}"
+                                  .format(obji, objj, i, j))
+
+    # Now check that all hashes are unique (if the items are hashable).
+    if not isinstance(objs[0], Hashable):
+        return
+    hashes = [hash(obj) for obj in objs]
+    try:
+        assert len(hashes) == len(set(hashes))
+    except AssertionError:
+        for k, v in Counter(hashes).iteritems():
+            if v <= 1:
+                continue
+            print "Found multiple equivalent object hashes:"
+            for i, obj in enumerate(objs):
+                if hash(obj) == k:
+                    print i, repr(obj)
+        raise
 
 
 def funcname():
     import inspect
     return inspect.stack()[1][3]
+
+
+def timer(f):
+    import functools
+
+    @functools.wraps(f)
+    def f2(*args, **kwargs):
+        import time
+        import inspect
+        t0 = time.time()
+        result = f(*args, **kwargs)
+        t1 = time.time()
+        fname = inspect.stack()[1][4][0].split('(')[0].strip()
+        print 'time for %s = %.2f' % (fname, t1-t0)
+        return result
+    return f2

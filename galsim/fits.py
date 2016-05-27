@@ -425,6 +425,14 @@ def _check_hdu(hdu, pyfits_compress):
     """Check that an input `hdu` is valid
     """
     from galsim._pyfits import pyfits
+    # Check for fixable verify errors
+    try:
+        hdu.header
+        hdu.data
+    except pyfits.VerifyError:
+        hdu.verify('fix')
+
+    # Check that the specified compression is right for the given hdu type.
     if pyfits_compress:
         if not isinstance(hdu, pyfits.CompImageHDU):
             if isinstance(hdu, pyfits.BinTableHDU):

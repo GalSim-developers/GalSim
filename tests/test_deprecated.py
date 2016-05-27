@@ -41,18 +41,16 @@ def check_dep(f, *args, **kwargs):
     with warnings.catch_warnings(galsim.GalSimDeprecationWarning) as w:
         res = f(*args, **kwargs)
     #print 'w = ',w
-    assert len(w) == 1, "Calling %s did not raise a warning"%str(f)
-    print str(w[0].message)
+    assert len(w) >= 1, "Calling %s did not raise a warning"%str(f)
+    print [ str(wk.message) for wk in w ]
     return res
 
 
+@timer
 def test_dep_bandpass():
     """Test the deprecated methods in galsim/deprecated/bandpass.py.
     """
-    import time
-    t1 = time.time()
-
-    b = galsim.Bandpass(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]))
+    b = galsim.Bandpass(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]), 'nm')
     d = lambda w: w**2
 
     # fn / Bandpass
@@ -71,16 +69,11 @@ def test_dep_bandpass():
     np.testing.assert_array_almost_equal(f.wave_list, [1.1, 2.2, 3.0, 4.4, 5.5],
                                          err_msg="wrong wave_list in Bandpass.__rdiv__")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_dep_base():
     """Test the deprecated methods in galsim/deprecated/base.py
     """
-    import time
-    t1 = time.time()
-
     g = galsim.Gaussian(sigma=0.34)
 
     np.testing.assert_almost_equal(check_dep(g.nyquistDx), g.nyquistScale())
@@ -180,16 +173,11 @@ def test_dep_base():
     np.testing.assert_equal(gsp1.folding_threshold, gsp2.folding_threshold)
     np.testing.assert_equal(gsp1.folding_threshold, check_dep(getattr, gsp2, 'alias_threshold'))
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_dep_bounds():
     """Test the deprecated methods in galsim/deprecated/bounds.py
     """
-    import time
-    t1 = time.time()
-
     bi = galsim.BoundsI(123,345,234,567)
     bf = galsim.BoundsD(123.,345.,234.,567.)
 
@@ -229,20 +217,15 @@ def test_dep_bounds():
         np.testing.assert_almost_equal(b2.ymin, 199)
         np.testing.assert_almost_equal(b2.ymax, 503)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
- 
 
+@timer
 def test_dep_chromatic():
     """Test the deprecated methods in galsim/deprecated/chromatic.py
     """
-    import time
-    t1 = time.time()
-
     g = galsim.Gaussian(sigma=0.34)
-    sed = galsim.SED('wave**3')
+    sed = galsim.SED('wave**3', 'nm', 'flambda')
     obj = g * sed
-    band = galsim.Bandpass('1-((wave-700)/100)**2', blue_limit=600., red_limit=800.)
+    band = galsim.Bandpass('1-((wave-700)/100)**2', 'nm', blue_limit=600., red_limit=800.)
 
     im1 = check_dep(obj.draw, bandpass=band)
     im2 = obj.drawImage(band, method='no_pixel')
@@ -256,16 +239,11 @@ def test_dep_chromatic():
     np.testing.assert_equal(im1.bounds, im2.bounds)
     np.testing.assert_array_almost_equal(im1.array, im2.array)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
- 
 
+@timer
 def test_dep_correlatednoise():
     """Test the deprecated methods in galsim/deprecated/correlatednoise.py
     """
-    import time
-    t1 = time.time()
-
     rng = galsim.BaseDeviate(123)
     n1 = galsim.UncorrelatedNoise(variance=0.01, scale=1.3, rng=rng.duplicate())
     n2 = galsim.UncorrelatedNoise(variance=0.01, scale=1.3, rng=rng.duplicate())
@@ -346,15 +324,136 @@ def test_dep_correlatednoise():
     check_dep(n2.applyWhiteningTo,im2)
     np.testing.assert_array_almost_equal(im1.array, im2.array)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
+def test_dep_gsobject_ring():
+    """Test building a GSObject from a ring test:
+    """
+    config = {
+        'gal' : {
+            'type' : 'Ring' ,
+            'num' : 2,
+            'first' : {
+                'type' : 'Gaussian' ,
+                'sigma' : 2 ,
+                'ellip' : {
+                    'type' : 'E1E2',
+                    'e1' : { 'type' : 'List' ,
+                             'items' : [ 0.3, 0.2, 0.8 ],
+                             'index' : { 'type' : 'Sequence', 'repeat' : 2 }
+                           },
+                    'e2' : 0.1
+                }
+            }
+        }
+    }
+
+    gauss = galsim.Gaussian(sigma=2)
+    e1_list = [ 0.3, -0.3, 0.2, -0.2, 0.8, -0.8 ]
+    e2_list = [ 0.1, -0.1, 0.1, -0.1, 0.1, -0.1 ]
+
+    for k in range(6):
+        config['obj_num'] = k
+        gal1a = check_dep(galsim.config.BuildGSObject, config, 'gal')[0]
+        gal1b = gauss.shear(e1=e1_list[k], e2=e2_list[k])
+        gsobject_compare(gal1a, gal1b)
+
+    config = {
+        'gal' : {
+            'type' : 'Ring' ,
+            'num' : 10,
+            'first' : { 'type' : 'Exponential', 'half_light_radius' : 2,
+                        'ellip' : galsim.Shear(e2=0.3)
+                      },
+        }
+    }
+
+    disk = galsim.Exponential(half_light_radius=2).shear(e2=0.3)
+
+    for k in range(25):
+        config['obj_num'] = k
+        gal2a = check_dep(galsim.config.BuildGSObject, config, 'gal')[0]
+        gal2b = disk.rotate(theta = k * 18 * galsim.degrees)
+        gsobject_compare(gal2a, gal2b)
+
+    config = {
+        'gal' : {
+            'type' : 'Ring' ,
+            'num' : 5,
+            'full_rotation' : 360. * galsim.degrees,
+            'first' : {
+                'type' : 'Sum',
+                'items' : [
+                    { 'type' : 'Exponential', 'half_light_radius' : 2,
+                      'ellip' : galsim.Shear(e2=0.3)
+                    },
+                    { 'type' : 'Sersic', 'n' : 3, 'half_light_radius' : 1.3,
+                      'ellip' : galsim.Shear(e1=0.12,e2=-0.08)
+                    }
+                ]
+            },
+            'index' : { 'type' : 'Sequence', 'repeat' : 4 }
+        }
+    }
+
+    disk = galsim.Exponential(half_light_radius=2).shear(e2=0.3)
+    bulge = galsim.Sersic(n=3, half_light_radius=1.3).shear(e1=0.12,e2=-0.08)
+    sum = disk + bulge
+
+    for k in range(25):
+        config['obj_num'] = k
+        index = k // 4  # make sure we use integer division
+        gal3a = check_dep(galsim.config.BuildGSObject, config, 'gal')[0]
+        gal3b = sum.rotate(theta = index * 72 * galsim.degrees)
+        gsobject_compare(gal3a, gal3b)
+
+    # Check that the ring items correctly inherit their gsparams from the top level
+    config = {
+        'gal' : {
+            'type' : 'Ring' ,
+            'num' : 20,
+            'full_rotation' : 360. * galsim.degrees,
+            'first' : {
+                'type' : 'Sum',
+                'items' : [
+                    { 'type' : 'Exponential', 'half_light_radius' : 2,
+                      'ellip' : galsim.Shear(e2=0.3)
+                    },
+                    { 'type' : 'Sersic', 'n' : 3, 'half_light_radius' : 1.3,
+                      'ellip' : galsim.Shear(e1=0.12,e2=-0.08)
+                    }
+                ]
+            },
+            'gsparams' : { 'maxk_threshold' : 1.e-2,
+                           'folding_threshold' : 1.e-2,
+                           'stepk_minimum_hlr' : 3 }
+        }
+    }
+
+    config['obj_num'] = 0
+    gal4a = check_dep(galsim.config.BuildGSObject, config, 'gal')[0]
+    gsparams = galsim.GSParams(maxk_threshold=1.e-2, folding_threshold=1.e-2, stepk_minimum_hlr=3)
+    disk = galsim.Exponential(half_light_radius=2, gsparams=gsparams).shear(e2=0.3)
+    bulge = galsim.Sersic(n=3,half_light_radius=1.3, gsparams=gsparams).shear(e1=0.12,e2=-0.08)
+    gal4b = disk + bulge
+    gsobject_compare(gal4a, gal4b, conv=galsim.Gaussian(sigma=1))
+
+    try:
+        # Make sure they don't match when using the default GSParams
+        disk = galsim.Exponential(half_light_radius=2).shear(e2=0.3)
+        bulge = galsim.Sersic(n=3,half_light_radius=1.3).shear(e1=0.12,e2=-0.08)
+        gal4c = disk + bulge
+        np.testing.assert_raises(AssertionError,gsobject_compare, gal4a, gal4c,
+                                 conv=galsim.Gaussian(sigma=1))
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
+
+@timer
 def test_dep_image():
     """Test that the old obsolete syntax still works (for now)
     """
     # This is the old version of the test_Image_basic function from version 1.0
-    import time
-    t1 = time.time()
 
     ntypes = 4  # Note: Most tests below only run through the first 4 types.
                 # test_Image_basic tests all 6 types including the aliases.
@@ -365,10 +464,10 @@ def test_dep_image():
     nrow = 5
     test_shape = (ncol, nrow)  # shape of image arrays for all tests
     ref_array = np.array([
-        [11, 21, 31, 41, 51, 61, 71], 
-        [12, 22, 32, 42, 52, 62, 72], 
-        [13, 23, 33, 43, 53, 63, 73], 
-        [14, 24, 34, 44, 54, 64, 74], 
+        [11, 21, 31, 41, 51, 61, 71],
+        [12, 22, 32, 42, 52, 62, 72],
+        [13, 23, 33, 43, 53, 63, 73],
+        [14, 24, 34, 44, 54, 64, 74],
         [15, 25, 35, 45, 55, 65, 75] ]).astype(np.int16)
 
     check_dep(galsim.ImageViewS, ref_array.astype(np.int16))
@@ -387,7 +486,7 @@ def test_dep_image():
         # This next one is normally executed as im = galsim.Image[type]
         check_dep(galsim.image.MetaImage.__getitem__, galsim.Image, array_type)
 
-    # The rest of this is taken from an older version of the Image class test suite that 
+    # The rest of this is taken from an older version of the Image class test suite that
     # tests the old syntax.  Might as well keep it.
     import warnings
     with warnings.catch_warnings(galsim.GalSimDeprecationWarning):
@@ -466,16 +565,11 @@ def test_dep_image():
                     assert im2_view(x+dx,y+dy) == 10*x+y
                     assert im3_view(x+dx,y+dy) == 10*x+y
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_dep_noise():
     """Test the deprecated methods in galsim/deprecated/noise.py
     """
-    import time
-    t1 = time.time()
-
     rng = galsim.BaseDeviate(123)
     gn = galsim.GaussianNoise(rng=rng, sigma=0.3)
 
@@ -515,16 +609,11 @@ def test_dep_noise():
     np.testing.assert_almost_equal(cn.getGain(), 0.9)
     np.testing.assert_almost_equal(cn.getReadNoise(), 11)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_dep_random():
     """Test the deprecated methods in galsim/deprecated/random.py
     """
-    import time
-    t1 = time.time()
-
     rng = galsim.BaseDeviate(123)
 
     gd = galsim.GaussianDeviate(rng, mean=0.5, sigma=1.7)
@@ -593,19 +682,64 @@ def test_dep_random():
     np.testing.assert_almost_equal(cd.getN(), 9)
 
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+@timer
+def test_dep_scene():
+    """Test the deprecated exclude_bad and exclude_fail args to COSMOSCatalog
+    """
+    path, filename = os.path.split(__file__)
+    datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
+
+    # Initialize one that doesn't exclude failures.  It should be >= the previous one in length.
+    cat2 = check_dep(galsim.COSMOSCatalog,
+                     file_name='real_galaxy_catalog_example.fits',
+                     dir=datapath, exclude_fail=False, exclude_bad=False)
+    # Initialize a COSMOSCatalog with all defaults.
+    cat = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+                               dir=datapath)
+    assert cat2.nobjects>=cat.nobjects
+    # Equivalent to current exclusion_level='none'
+    cat3 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+                                dir=datapath, exclusion_level='none')
+    assert cat2.nobjects==cat3.nobjects
+
+    # Just exclude_bad=True
+    cat2 = check_dep(galsim.COSMOSCatalog,
+                     file_name='real_galaxy_catalog_example.fits',
+                     dir=datapath, exclude_fail=False)  # i.e. leave exclude_bad=True
+    assert cat2.nobjects>=cat.nobjects
+    # Equivalent to current exclusion_level='bad_stamp'
+    cat3 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+                                dir=datapath, exclusion_level='bad_stamp')
+    assert cat2.nobjects==cat3.nobjects
+
+    # Just exclude_fail=True
+    cat2 = check_dep(galsim.COSMOSCatalog,
+                     file_name='real_galaxy_catalog_example.fits',
+                     dir=datapath, exclude_bad=False)  # i.e. leave exclude_fail=True
+    assert cat2.nobjects>=cat.nobjects
+    # Equivalent to current exclusion_level='bad_fits'
+    cat3 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+                                dir=datapath, exclusion_level='bad_fits')
+    assert cat2.nobjects==cat3.nobjects
+
+    # Both=True
+    cat2 = check_dep(galsim.COSMOSCatalog,
+                     file_name='real_galaxy_catalog_example.fits',
+                     dir=datapath, exclude_fail=True, exclude_bad=True)
+    assert cat2.nobjects>=cat.nobjects
+    # Equivalent to current exclusion_level='marginal'
+    cat3 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+                                dir=datapath, exclusion_level='marginal')
+    assert cat2.nobjects==cat3.nobjects
 
 
+@timer
 def test_dep_sed():
     """Test the deprecated methods in galsim/deprecated/sed.py.
     """
-    import time
-    t1 = time.time()
-
     z = 0.4
     a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
-                   flux_type='fphotons', redshift=0.4)
+                   wave_type='nm', flux_type='fphotons', redshift=0.4)
     b = lambda w: w**2
 
     # function divided by SED
@@ -621,16 +755,11 @@ def test_dep_sed():
     np.testing.assert_almost_equal(d(x), x/a(x), 10,
                                    err_msg="Found wrong value in SED.__rdiv__")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_dep_shapelet():
     """Test the deprecated methods in galsim/deprecated/shapelet.py
     """
-    import time
-    t1 = time.time()
-
     np.testing.assert_almost_equal(check_dep(galsim.LVectorSize,12), galsim.ShapeletSize(12))
 
     # The next bit is from the old test_shapelet_adjustments() test
@@ -685,22 +814,22 @@ def test_dep_shapelet():
     shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
     check_dep(shapelet.setOrder,10)
     np.testing.assert_array_equal(
-        shapelet.getBVec()[0:28], bvec, 
+        shapelet.getBVec()[0:28], bvec,
         err_msg="Shapelet setOrder to larger doesn't preserve existing values.")
     np.testing.assert_array_equal(
         shapelet.getBVec()[28:66], np.zeros(66-28),
         err_msg="Shapelet setOrder to larger doesn't fill with zeros.")
     check_dep(shapelet.setOrder,6)
     np.testing.assert_array_equal(
-        shapelet.getBVec(), bvec, 
+        shapelet.getBVec(), bvec,
         err_msg="Shapelet setOrder back to original from larger doesn't preserve existing values.")
     check_dep(shapelet.setOrder,3)
     np.testing.assert_array_equal(
-        shapelet.getBVec()[0:10], bvec[0:10], 
+        shapelet.getBVec()[0:10], bvec[0:10],
         err_msg="Shapelet setOrder to smaller doesn't preserve existing values.")
     check_dep(shapelet.setOrder,6)
     np.testing.assert_array_equal(
-        shapelet.getBVec()[0:10], bvec[0:10], 
+        shapelet.getBVec()[0:10], bvec[0:10],
         err_msg="Shapelet setOrder back to original from smaller doesn't preserve existing values.")
     check_dep(shapelet.setOrder,6)
     np.testing.assert_array_equal(
@@ -747,16 +876,11 @@ def test_dep_shapelet():
     s2 = galsim.FitShapelet(sigma=sigma, order=10, image=im)
     np.testing.assert_array_almost_equal(s1.getBVec(), s2.getBVec())
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_dep_shear():
     """Test the deprecated methods in galsim/deprecated/shear.py
     """
-    import time
-    t1 = time.time()
-
     s = galsim.Shear(g1=0.17, g2=0.23)
 
     np.testing.assert_almost_equal(s.g1, 0.17)
@@ -782,8 +906,132 @@ def test_dep_shear():
     np.testing.assert_almost_equal(s.eta, 0.19)
     np.testing.assert_almost_equal(s.beta / galsim.degrees, 52)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
+@timer
+def test_dep_optics():
+    """Test the deprecated module galsim/deprecated/optics.py
+    """
+    testshape = (512, 512)  # shape of image arrays for all tests
+    decimal = 6     # Last decimal place used for checking equality of float arrays, see
+                    # np.testing.assert_array_almost_equal(), low since many are ImageF
+
+    decimal_dft = 3  # Last decimal place used for checking near equality of DFT product matrices to
+                     # continuous-result derived check values... note this is not as stringent as
+                     # decimal, because this is tough, because the DFT representation of a function is
+                     # not precisely equivalent to its continuous counterpart.
+
+    # def test_check_all_contiguous():
+    """Test all galsim.optics outputs are C-contiguous as required by the galsim.Image class.
+    """
+    # Check basic outputs from wavefront, psf and mtf (array contents won't matter, so we'll use
+    # a pure circular pupil)
+    test_obj, _ = check_dep(galsim.optics.wavefront, array_shape=testshape)
+    assert test_obj.flags.c_contiguous
+    test_obj, _ = check_dep(galsim.optics.psf, array_shape=testshape)
+    assert test_obj.flags.c_contiguous
+    assert check_dep(galsim.optics.otf, array_shape=testshape).flags.c_contiguous
+    assert check_dep(galsim.optics.mtf, array_shape=testshape).flags.c_contiguous
+    assert check_dep(galsim.optics.ptf, array_shape=testshape).flags.c_contiguous
+
+
+    # def test_simple_wavefront():
+    """Test the wavefront of a pure circular pupil against the known result.
+    """
+    kx, ky = galsim.utilities.kxky(testshape)
+    dx_test = 3.  # } choose some properly-sampled, yet non-unit / trival, input params
+    lod_test = 8. # }
+    kmax_test = 2. * np.pi * dx_test / lod_test  # corresponding INTERNAL kmax used in optics code
+    kmag = np.sqrt(kx**2 + ky**2) / kmax_test # Set up array of |k| in units of kmax_test
+    # Simple pupil wavefront should merely be unit ordinate tophat of radius kmax / 2:
+    in_pupil = kmag < .5
+    wf_true = np.zeros(kmag.shape)
+    wf_true[in_pupil] = 1.
+    # Compare
+    wf, _ = check_dep(galsim.optics.wavefront,
+                      array_shape=testshape, scale=dx_test, lam_over_diam=lod_test)
+    np.testing.assert_array_almost_equal(wf, wf_true, decimal=decimal)
+
+    # def test_simple_mtf():
+    """Test the MTF of a pure circular pupil against the known result.
+    """
+    kx, ky = galsim.utilities.kxky(testshape)
+    dx_test = 3.  # } choose some properly-sampled, yet non-unit / trival, input params
+    lod_test = 8. # }
+    kmax_test = 2. * np.pi * dx_test / lod_test  # corresponding INTERNAL kmax used in optics code
+    kmag = np.sqrt(kx**2 + ky**2) / kmax_test # Set up array of |k| in units of kmax_test
+    in_pupil = kmag < 1.
+    # Then use analytic formula for MTF of circ pupil (fun to derive)
+    mtf_true = np.zeros(kmag.shape)
+    mtf_true[in_pupil] = (np.arccos(kmag[in_pupil]) - kmag[in_pupil] *
+                          np.sqrt(1. - kmag[in_pupil]**2)) * 2. / np.pi
+    # Compare
+    mtf = check_dep(galsim.optics.mtf, array_shape=testshape, scale=dx_test, lam_over_diam=lod_test)
+    np.testing.assert_array_almost_equal(mtf, mtf_true, decimal=decimal_dft)
+
+    # def test_simple_ptf():
+    """Test the PTF of a pure circular pupil against the known result (zero).
+    """
+    ptf_true = np.zeros(testshape)
+    # Compare
+    ptf = check_dep(galsim.optics.ptf, array_shape=testshape)
+    # Test via median absolute deviation, since occasionally things around the edge of the OTF get
+    # hairy when dividing a small number by another small number
+    nmad_ptfdiff = np.median(np.abs(ptf - np.median(ptf_true)))
+    assert nmad_ptfdiff <= 10.**(-decimal)
+
+    # def test_consistency_psf_mtf():
+    """Test that the MTF of a pure circular pupil is |FT{PSF}|.
+    """
+    kx, ky = galsim.utilities.kxky(testshape)
+    dx_test = 3.  # } choose some properly-sampled, yet non-unit / trival, input params
+    lod_test = 8. # }
+    kmax_test = 2. * np.pi * dx_test / lod_test  # corresponding INTERNAL kmax used in optics code
+    psf, _ = check_dep(galsim.optics.psf,
+                       array_shape=testshape, scale=dx_test, lam_over_diam=lod_test)
+    psf *= dx_test**2 # put the PSF into flux units rather than SB for comparison
+    mtf_test = np.abs(np.fft.fft2(psf))
+    # Compare
+    mtf = check_dep(galsim.optics.mtf, array_shape=testshape, scale=dx_test, lam_over_diam=lod_test)
+    np.testing.assert_array_almost_equal(mtf, mtf_test, decimal=decimal_dft)
+
+    # def test_wavefront_image_view():
+    """Test that the ImageF.array view of the wavefront is consistent with the wavefront array.
+    """
+    array, _ = check_dep(galsim.optics.wavefront, array_shape=testshape)
+    (real, imag), _ = check_dep(galsim.optics.wavefront_image, array_shape=testshape)
+    np.testing.assert_array_almost_equal(array.real.astype(np.float32), real.array, decimal)
+    np.testing.assert_array_almost_equal(array.imag.astype(np.float32), imag.array, decimal)
+
+    # def test_psf_image_view():
+    """Test that the ImageF.array view of the PSF is consistent with the PSF array.
+    """
+    array, _ = check_dep(galsim.optics.psf, array_shape=testshape)
+    image = check_dep(galsim.optics.psf_image, array_shape=testshape)
+    np.testing.assert_array_almost_equal(array.astype(np.float32), image.array, decimal)
+
+    # def test_otf_image_view():
+    """Test that the ImageF.array view of the OTF is consistent with the OTF array.
+    """
+    array = check_dep(galsim.optics.otf, array_shape=testshape)
+    (real, imag) = check_dep(galsim.optics.otf_image, array_shape=testshape)
+    np.testing.assert_array_almost_equal(array.real.astype(np.float32), real.array, decimal)
+    np.testing.assert_array_almost_equal(array.imag.astype(np.float32), imag.array, decimal)
+
+    # def test_mtf_image_view():
+    """Test that the ImageF.array view of the MTF is consistent with the MTF array.
+    """
+    array = check_dep(galsim.optics.mtf, array_shape=testshape)
+    image = check_dep(galsim.optics.mtf_image, array_shape=testshape)
+    np.testing.assert_array_almost_equal(array.astype(np.float32), image.array)
+
+    # def test_ptf_image_view():
+    """Test that the ImageF.array view of the OTF is consistent with the OTF array.
+    """
+    array = check_dep(galsim.optics.ptf, array_shape=testshape)
+    image = check_dep(galsim.optics.ptf_image, array_shape=testshape)
+    np.testing.assert_array_almost_equal(array.astype(np.float32), image.array)
+
 
 if __name__ == "__main__":
     test_dep_bandpass()
@@ -791,9 +1039,12 @@ if __name__ == "__main__":
     test_dep_bounds()
     test_dep_chromatic()
     test_dep_correlatednoise()
+    test_dep_gsobject_ring()
     test_dep_image()
     test_dep_noise()
     test_dep_random()
+    test_dep_scene()
     test_dep_sed()
     test_dep_shapelet()
     test_dep_shear()
+    test_dep_optics()

@@ -122,6 +122,7 @@ namespace galsim {
         void calculateMaxK(double max_maxk=0.) const;
 
         ConstImageView<double> getImage() const;
+        ConstImageView<double> getPaddedImage() const;
 
     protected:
 

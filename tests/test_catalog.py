@@ -28,11 +28,10 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
+
+@timer
 def test_basic_catalog():
     """Test basic operations on Catalog."""
-    import time
-    t1 = time.time()
-
     # First the ASCII version
     cat = galsim.Catalog(dir='config_input', file_name='catalog.txt')
     np.testing.assert_equal(cat.ncols, 12)
@@ -55,14 +54,10 @@ def test_basic_catalog():
 
     do_pickle(cat)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_basic_dict():
     """Test basic operations on Dict."""
-    import time
-    t1 = time.time()
-
     # Pickle
     d = galsim.Dict(dir='config_input', file_name='dict.p')
     np.testing.assert_equal(len(d), 4)
@@ -99,16 +94,11 @@ def test_basic_dict():
     assert d == d2
     do_pickle(d)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_single_row():
     """Test that we can read catalogs with just one row (#394)
     """
-    import time
-    t1 = time.time()
-
     filename = "output/test394.txt"
     with open(filename, 'w') as f:
         f.write("3 4 5\n")
@@ -117,18 +107,13 @@ def test_single_row():
         cat.data, np.array([["3","4","5"]]),
         err_msg="galsim.Catalog.__init__ failed to read 1-row file")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_output_catalog():
     """Test basic operations on Catalog."""
-    import time
-    t1 = time.time()
-
     names = [ 'float1', 'float2', 'int1', 'int2', 'bool1', 'bool2',
               'str1', 'str2', 'str3', 'str4', 'angle', 'posi', 'posd', 'shear' ]
-    types = [ float, float, int, int, bool, bool, str, str, str, str, 
+    types = [ float, float, int, int, bool, bool, str, str, str, str,
               galsim.Angle, galsim.PositionI, galsim.PositionD, galsim.Shear ]
     out_cat = galsim.OutputCatalog(names, types)
 
@@ -196,9 +181,6 @@ def test_output_catalog():
     do_pickle(out_cat)
     out_cat2 = galsim.OutputCatalog(names, types)  # No data.
     do_pickle(out_cat2)
-
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 if __name__ == "__main__":

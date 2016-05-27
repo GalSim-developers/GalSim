@@ -9,7 +9,7 @@
 "#" : "larger set of images.  See https://github.com/GalSim-developers/GalSim/wiki for a link",
 "#" : "to the download page.",
 
-"#" : "The galaxy images include images of the effective PSF for the original observations, ",
+"#" : "The galaxy images include images of the effective PSF for the original observations,",
 "#" : "so GalSim considers the galaxy profile to be the observed image deconvolved by that PSF.",
 "#" : "In this case, we then randomly rotate the galaxies, apply a given gravitational shear as ",
 "#" : "well as gravitational magnification, and then finally convolve by a double Gaussian PSF.",

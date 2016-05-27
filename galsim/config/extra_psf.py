@@ -79,7 +79,12 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
         if 'shift' in config:
             # Special: output.psf.shift = 'galaxy' means use the galaxy shift.
             if config['shift'] == 'galaxy':
-                shift = galsim.config.GetCurrentValue('gal.shift',base, galsim.PositionD)
+                # This shift value might be in either stamp or gal.
+                if 'shift' in base['stamp']:
+                    shift = galsim.config.GetCurrentValue('stamp.shift',base, galsim.PositionD)
+                else:
+                    # This will raise an appropriate error if there is no gal.shift or stamp.shift.
+                    shift = galsim.config.GetCurrentValue('gal.shift',base, galsim.PositionD)
             else:
                 shift = galsim.config.ParseValue(config, 'shift', base, galsim.PositionD)[0]
             if logger:
@@ -90,12 +95,14 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
         offset = base['stamp_offset']
         # Check if we should apply any additional offset:
         if 'offset' in config:
-            # Special: output.psf.offset = 'galaxy' means use the same offset as in the galaxy image,
-            #          which note is actually in config.stamp, not config.gal.
+            # Special: output.psf.offset = 'galaxy' means use the same offset as in the galaxy
+            #          image, which is actually in config.stamp, not config.gal.
             if config['offset'] == 'galaxy':
                 offset += galsim.config.GetCurrentValue('stamp.offset',base, galsim.PositionD)
             else:
                 offset += galsim.config.ParseValue(config, 'offset', base, galsim.PositionD)[0]
+            if logger:
+                logger.debug('obj %d: psf offset: %s',base['obj_num'],str(offset))
 
         psf_im = DrawPSFStamp(psf,config,base,bounds,offset,draw_method,logger)
         if 'signal_to_noise' in config:
@@ -109,26 +116,18 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
         for obj_num in obj_nums:
             stamp = self.scratch[obj_num]
             b = stamp.bounds & image.getBounds()
+            if logger:
+                logger.debug('image %d: psf image at b = %s = %s & %s',
+                             base['image_num'],b,stamp.bounds,image.getBounds())
             if b.isDefined():
                 # This next line is equivalent to:
                 #    image[b] += stamp[b]
                 # except that this doesn't work through the proxy.  We can only call methods
                 # that don't start with _.  Hence using the more verbose form here.
                 image.setSubImage(b, image.subImage(b) + stamp[b])
+                if logger:
+                    logger.debug('obj %d: added psf image to main image',base['obj_num'])
         self.data[index] = image
-
-    # Write the image(s) to a file
-    def writeFile(self, file_name, config, base, logger):
-        galsim.fits.writeMulti(self.data, file_name)
-
-    # For the hdu, just return the first element
-    def writeHdu(self, config, base, logger):
-        n = len(self.data)
-        if n == 0:
-            raise RuntimeError("No psf images were created.")
-        elif n > 1:
-            raise RuntimeError("%d psf images were created, but expecting only 1."%n)
-        return self.data[0]
 
 
 # Register this as a valid extra output

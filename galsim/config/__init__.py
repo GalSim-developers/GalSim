@@ -48,7 +48,7 @@ from . import extra_truth
 from . import image_scattered
 from . import image_tiled
 
-from . import gsobject_ring
+from . import stamp_ring
 
 from . import value_random
 from . import value_eval

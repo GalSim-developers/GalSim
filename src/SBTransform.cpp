@@ -42,11 +42,11 @@ namespace galsim {
 
     SBTransform::~SBTransform() {}
 
-    std::string SBTransform::SBTransformImpl::repr() const
+    std::string SBTransform::SBTransformImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.SBTransform(" << getObj().repr() << ", ";
+        oss << "galsim._galsim.SBTransform(" << getObj().serialize() << ", ";
         double mA, mB, mC, mD;
         getJac(mA,mB,mC,mD);
         oss << mA<<", "<<mB<<", "<<mC<<", "<<mD<<", ";
@@ -154,8 +154,8 @@ namespace galsim {
         if (det==0.) throw SBError("Attempt to SBTransform with degenerate matrix");
         _absdet = std::abs(det);
         _invdet = 1./det;
-        _stillIsAxisymmetric = _adaptee.isAxisymmetric() 
-            && (_mB==-_mC) 
+        _stillIsAxisymmetric = _adaptee.isAxisymmetric()
+            && (_mB==-_mC)
             && (_mA==_mD)
             && (_cen.x==0.) && (_cen.y==0.); // Need pure rotation
 
@@ -246,7 +246,7 @@ namespace galsim {
             _adaptee.getYRange(ymin_1,ymax_1,ysplits0);
             // Note: This doesn't explicitly check for MOCK_INF values.
             // It shouldn't be a problem, since the integrator will still treat
-            // large values near MOCK_INF as infinity, but it just means that 
+            // large values near MOCK_INF as infinity, but it just means that
             // the following calculations might be wasted flops.
             Position<double> bl = fwd(Position<double>(xmin_1,ymin_1));
             Position<double> br = fwd(Position<double>(xmax_1,ymin_1));
@@ -393,7 +393,7 @@ namespace galsim {
             // Or equivalently:
             // (A^2+B^2) (y-y0)^2 - 2(AC+BD) (x-x0)(y-y0) + (C^2+D^2) (x-x0)^2 = R^2 (AD-BC)^2
             //
-            // Given a particular value for x, we solve the latter equation for the 
+            // Given a particular value for x, we solve the latter equation for the
             // corresponding range for y.
             // y^2 - 2 b y = c
             // -> y^2 - 2b y = c
@@ -419,10 +419,10 @@ namespace galsim {
             // This line is transformed onto the line:
             // (x',ymin) -> ( A x' + B ymin + x0 , C x' + D ymin + y0 )
             // x' = (x - x0 - B ymin) / A
-            // y = C x' + D ymin + y0 
+            // y = C x' + D ymin + y0
             //   = C (x - x0 - B ymin) / A + D ymin + y0
             // The top line is analagous for ymax instead of ymin.
-            // 
+            //
             // The left line is transformed as:
             // (xmin,y) -> ( A xmin + B y' + x0 , C xmin + D y' + y0 )
             // y' = (x - x0 - A xmin) / B
@@ -663,7 +663,7 @@ namespace galsim {
     void SBTransform::SBTransformImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
                                                   double kx0, double dkx, double dkxy,
                                                   double ky0, double dky, double dkyx) const
-    { 
+    {
         dbg<<"SBTransform fillKValue\n";
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
@@ -719,7 +719,7 @@ namespace galsim {
     }
 
     boost::shared_ptr<PhotonArray> SBTransform::SBTransformImpl::shoot(
-        int N, UniformDeviate u) const 
+        int N, UniformDeviate u) const
     {
         dbg<<"Distort shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;

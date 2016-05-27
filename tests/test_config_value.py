@@ -31,17 +31,15 @@ except ImportError:
     import galsim
 
 
+@timer
 def test_float_value():
     """Test various ways to generate a float value
     """
-    import time
-    t1 = time.time()
-
     config = {
         'input' : { 'catalog' : [
                         { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
                         { 'dir' : 'config_input', 'file_name' : 'catalog.fits' } ],
-                    'dict' : [ 
+                    'dict' : [
                         { 'dir' : 'config_input', 'file_name' : 'dict.p' },
                         { 'dir' : 'config_input', 'file_name' : 'dict.json' },
                         { 'dir' : 'config_input', 'file_name' : 'dict.yaml' } ] },
@@ -50,7 +48,7 @@ def test_float_value():
         'val2' : int(400),
         'str1' : '8.73',
         'str2' : '2.33e-9',
-        'str3' : '6.e-9', 
+        'str3' : '6.e-9',
         'cat1' : { 'type' : 'Catalog' , 'col' : 0 },
         'cat2' : { 'type' : 'Catalog' , 'col' : 1 },
         'cat3' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'float1' },
@@ -63,13 +61,13 @@ def test_float_value():
         'gauss4' : { 'type' : 'RandomGaussian', 'sigma' : 0.5, 'min' : 0, 'max' : 0.8 },
         'gauss5' : { 'type' : 'RandomGaussian',
                      'sigma' : 0.3, 'mean' : 0.5, 'min' : 0, 'max' : 0.5 },
-        'dist1' : { 'type' : 'RandomDistribution', 'function' : 'config_input/distribution.txt', 
+        'dist1' : { 'type' : 'RandomDistribution', 'function' : 'config_input/distribution.txt',
                     'interpolant' : 'linear' },
         'dist2' : { 'type' : 'RandomDistribution',
                     'x' : [ 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 ],
                     'f' : [ 0.1, 0.1, 0.1, 0.1, 0.2, 0.2, 0.2, 0.1, 0.1, 0.1, 0.1 ],
                     'interpolant' : 'linear' },
-        'dist3' : { 'type' : 'RandomDistribution', 'function' : 'x*x', 
+        'dist3' : { 'type' : 'RandomDistribution', 'function' : 'x*x',
                     'x_min' : 0., 'x_max' : 2.0 },
         'dev1' : { 'type' : 'RandomPoisson', 'mean' : 137 },
         'dev2' : { 'type' : 'RandomBinomial', 'N' : 17 },
@@ -179,11 +177,11 @@ def test_float_value():
         gauss5 = galsim.config.ParseValue(config,'gauss5',config, float)[0]
         gd = galsim.GaussianDeviate(rng,mean=0.5,sigma=0.3)
         gd_val = gd()
-        if gd_val > 0.5: 
+        if gd_val > 0.5:
             gd_val = 1-gd_val
         while gd_val < 0:
             gd_val = gd()
-            if gd_val > 0.5: 
+            if gd_val > 0.5:
                 gd_val = 1-gd_val
         np.testing.assert_almost_equal(gauss5, gd_val)
 
@@ -294,22 +292,16 @@ def test_float_value():
     sum1 = galsim.config.ParseValue(config,'sum1',config, float)[0]
     np.testing.assert_almost_equal(sum1, 72 + 2.33 + 23.17)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
-
+@timer
 def test_int_value():
     """Test various ways to generate an int value
     """
-    import time
-    t1 = time.time()
-
     config = {
         'input' : { 'catalog' : [
                         { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
                         { 'dir' : 'config_input', 'file_name' : 'catalog.fits' } ],
-                    'dict' : [ 
+                    'dict' : [
                         { 'dir' : 'config_input', 'file_name' : 'dict.p' },
                         { 'dir' : 'config_input', 'file_name' : 'dict.json' },
                         { 'dir' : 'config_input', 'file_name' : 'dict.yaml' } ] },
@@ -494,26 +486,20 @@ def test_int_value():
     else:
         dict.append(1)
     np.testing.assert_array_equal(dict, [ 17, -23, 1 ])
- 
+
     sum1 = galsim.config.ParseValue(config,'sum1', config, int)[0]
     np.testing.assert_almost_equal(sum1, 72 + 2 + 17)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
-
+@timer
 def test_bool_value():
     """Test various ways to generate a bool value
     """
-    import time
-    t1 = time.time()
-
     config = {
         'input' : { 'catalog' : [
                         { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
                         { 'dir' : 'config_input', 'file_name' : 'catalog.fits' } ],
-                    'dict' : [ 
+                    'dict' : [
                         { 'dir' : 'config_input', 'file_name' : 'dict.p' },
                         { 'dir' : 'config_input', 'file_name' : 'dict.json' },
                         { 'dir' : 'config_input', 'file_name' : 'dict.yaml' } ] },
@@ -650,23 +636,17 @@ def test_bool_value():
     else:
         dict.append(False)
     np.testing.assert_array_equal(dict, [ True, False, False ])
- 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
-
+@timer
 def test_str_value():
     """Test various ways to generate a str value
     """
-    import time
-    t1 = time.time()
-
     config = {
         'input' : { 'catalog' : [
                         { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
                         { 'dir' : 'config_input', 'file_name' : 'catalog.fits' } ],
-                    'dict' : [ 
+                    'dict' : [
                         { 'dir' : 'config_input', 'file_name' : 'dict.p' },
                         { 'dir' : 'config_input', 'file_name' : 'dict.json' },
                         { 'dir' : 'config_input', 'file_name' : 'dict.yaml' } ] },
@@ -691,7 +671,7 @@ def test_str_value():
                       { 'type' : 'Sequence' , 'nitems' : 3 } ] },
         'fs2' : { 'type' : 'FormattedStr',
                   'format' : '%%%d %i %x %o%i %lf=%g=%e %hi%u %r%s %%',
-                  'items' : [4, 5, 12, 9, 9, math.pi, math.pi, math.pi, 11, -11, 
+                  'items' : [4, 5, 12, 9, 9, math.pi, math.pi, math.pi, 11, -11,
                              'Goodbye cruel world.', ', said Pink.'] },
         'dict1' : { 'type' : 'Dict', 'key' : 's' },
         'dict2' : { 'type' : 'Dict', 'num' : 1, 'key' : 's' },
@@ -768,7 +748,7 @@ def test_str_value():
         np.testing.assert_equal(fs1, 'realgal_type%02d_dilation%d.fits'%(type,dil))
 
     fs2 = galsim.config.ParseValue(config,'fs2',config, str)[0]
-    np.testing.assert_equal(fs2, 
+    np.testing.assert_equal(fs2,
         "%4 5 c 119 3.141593=3.14159=3.141593e+00 11-11 'Goodbye cruel world.', said Pink. %")
 
     # Test values read from a Dict
@@ -780,17 +760,12 @@ def test_str_value():
     else:
         dict.append('Brian')
     np.testing.assert_array_equal(dict, [ 'Life', 'of', 'Brian' ])
- 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+@timer
 def test_angle_value():
     """Test various ways to generate an Angle value
     """
-    import time
-    t1 = time.time()
-
     config = {
         'input' : { 'catalog' : [
                         { 'dir' : 'config_input', 'file_name' : 'catalog.txt' },
@@ -806,13 +781,13 @@ def test_angle_value():
         'str6' : '21 hour',
         'str7' : '-240 arcmin',
         'str8' : '1800 arcsec',
-        'cat1' : { 'type' : 'Radians' , 
+        'cat1' : { 'type' : 'Radians' ,
                    'theta' : { 'type' : 'Catalog' , 'col' : 10 } },
-        'cat2' : { 'type' : 'Degrees' , 
+        'cat2' : { 'type' : 'Degrees' ,
                    'theta' : { 'type' : 'Catalog' , 'col' : 11 } },
-        'cat3' : { 'type' : 'Radians' , 
+        'cat3' : { 'type' : 'Radians' ,
                    'theta' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'angle1' } },
-        'cat4' : { 'type' : 'Degrees' , 
+        'cat4' : { 'type' : 'Degrees' ,
                    'theta' : { 'type' : 'Catalog' , 'num' : 1, 'col' : 'angle2' } },
         'ran1' : { 'type' : 'Random' },
         'seq1' : { 'type' : 'Rad', 'theta' : { 'type' : 'Sequence' } },
@@ -910,16 +885,11 @@ def test_angle_value():
     sum1 = galsim.config.ParseValue(config,'sum1', config, galsim.Angle)[0]
     np.testing.assert_almost_equal(sum1 / galsim.degrees, 72 + 2.33)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_shear_value():
     """Test various ways to generate a Shear value
     """
-    import time
-    t1 = time.time()
-
     config = {
         'val1' : galsim.Shear(g1=0.2, g2=0.3),
         'val2' : galsim.Shear(e1=0.1),
@@ -934,7 +904,7 @@ def test_shear_value():
                     'items' : [ galsim.Shear(g1 = 0.2, g2 = -0.3),
                                 galsim.Shear(g1 = -0.5, g2 = 0.2),
                                 galsim.Shear(g1 = 0.1, g2 = 0.0) ] },
-        'sum1' : { 'type' : 'Sum', 
+        'sum1' : { 'type' : 'Sum',
                   'items' : [ galsim.Shear(g1 = 0.2, g2 = -0.3),
                               galsim.Shear(g1 = -0.5, g2 = 0.2),
                               galsim.Shear(g1 = 0.1, g2 = 0.0) ] }
@@ -1009,25 +979,20 @@ def test_shear_value():
     np.testing.assert_almost_equal(sum1.getG1(), s.getG1())
     np.testing.assert_almost_equal(sum1.getG2(), s.getG2())
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_pos_value():
     """Test various ways to generate a Position value
     """
-    import time
-    t1 = time.time()
-
     config = {
         'val1' : galsim.PositionD(0.1,0.2),
         'xy1' : { 'type' : 'XY', 'x' : 1.3, 'y' : 2.4 },
         'ran1' : { 'type' : 'RandomCircle', 'radius' : 3 },
-        'list1' : { 'type' : 'List', 
+        'list1' : { 'type' : 'List',
                     'items' : [ galsim.PositionD(0.2, -0.3),
                                 galsim.PositionD(-0.5, 0.2),
                                 galsim.PositionD(0.1, 0.0) ] },
-        'sum1' : { 'type' : 'Sum', 
+        'sum1' : { 'type' : 'Sum',
                    'items' : [ galsim.PositionD(0.2, -0.3),
                                galsim.PositionD(-0.5, 0.2),
                                galsim.PositionD(0.1, 0.0) ] }
@@ -1080,9 +1045,6 @@ def test_pos_value():
     np.testing.assert_almost_equal(sum1.x, 0.2 - 0.5 + 0.1)
     np.testing.assert_almost_equal(sum1.y, -0.3 + 0.2 + 0.0)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
 
 if __name__ == "__main__":
     test_float_value()
@@ -1092,5 +1054,3 @@ if __name__ == "__main__":
     test_angle_value()
     test_shear_value()
     test_pos_value()
-
-

@@ -24,7 +24,6 @@ script devutils/external/make_table_testarrays.py
 """
 import os
 import numpy as np
-import pickle
 
 from galsim_test_helpers import *
 
@@ -49,14 +48,13 @@ args2 = [ 0.7, 3.3, 14.1, 15.6, 29, 34.1, 42.5 ]  # Not evenly spaced
 vals2 = [ np.sin(x*np.pi/180) for x in args2 ]
 testargs2 = [ 1.1, 10.8, 12.3, 15.6, 25.6, 41.9 ] # < 0.7 or > 42.5 is invalid
 
-interps = [ 'linear', 'spline', 'floor', 'ceil' ]
+interps = [ 'linear', 'spline', 'floor', 'ceil', 'nearest' ]
 
+
+@timer
 def test_table():
     """Test the spline tabulation of the k space Cubic interpolant.
     """
-    import time
-    t1 = time.time()
-
     for interp in interps:
         table1 = galsim.LookupTable(x=args1,f=vals1,interpolant=interp)
         testvals1 = [ table1(x) for x in testargs1 ]
@@ -73,24 +71,25 @@ def test_table():
             DECIMAL,
             err_msg="Interpolated values do not match when input array shape changes")
 
-        # Do a full regression test based on a version of the code thought to be working.
-        ref1 = np.loadtxt(os.path.join(TESTDIR, 'table_test1_%s.txt'%interp))
-        np.testing.assert_array_almost_equal(ref1, testvals1, DECIMAL,
-                err_msg="Interpolated values from LookupTable do not match saved "+
-                "data for evenly-spaced args, with interpolant %s."%interp)
+        if interp != 'nearest':
+            # Do a full regression test based on a version of the code thought to be working.
+            ref1 = np.loadtxt(os.path.join(TESTDIR, 'table_test1_%s.txt'%interp))
+            np.testing.assert_array_almost_equal(ref1, testvals1, DECIMAL,
+                    err_msg="Interpolated values from LookupTable do not match saved "+
+                    "data for evenly-spaced args, with interpolant %s."%interp)
 
-        # Same thing, but now for args that are not evenly spaced.
-        # (The Table class uses a different algorithm when the arguments are evenly spaced
-        #  than when they are not.)
-        table2 = galsim.LookupTable(x=args2,f=vals2,interpolant=interp)
-        testvals2 = [ table2(x) for x in testargs2 ]
+            # Same thing, but now for args that are not evenly spaced.
+            # (The Table class uses a different algorithm when the arguments are evenly spaced
+            #  than when they are not.)
+            table2 = galsim.LookupTable(x=args2,f=vals2,interpolant=interp)
+            testvals2 = [ table2(x) for x in testargs2 ]
 
-        np.testing.assert_almost_equal(testvals2[3], vals2[3], DECIMAL,
-                err_msg="Interpolated value for exact arg entry does not match val entry")
-        ref2 = np.loadtxt(os.path.join(TESTDIR, 'table_test2_%s.txt'%interp))
-        np.testing.assert_array_almost_equal(ref2, testvals2, DECIMAL,
-                err_msg="Interpolated values from LookupTable do not match saved "+
-                "data for non-evenly-spaced args, with interpolant %s."%interp)
+            np.testing.assert_almost_equal(testvals2[3], vals2[3], DECIMAL,
+                    err_msg="Interpolated value for exact arg entry does not match val entry")
+            ref2 = np.loadtxt(os.path.join(TESTDIR, 'table_test2_%s.txt'%interp))
+            np.testing.assert_array_almost_equal(ref2, testvals2, DECIMAL,
+                    err_msg="Interpolated values from LookupTable do not match saved "+
+                    "data for non-evenly-spaced args, with interpolant %s."%interp)
 
         # Check that out of bounds arguments, or ones with some crazy shape, raise an exception:
         try:
@@ -123,14 +122,9 @@ def test_table():
         do_pickle(table2)
 
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
+@timer
 def test_init():
     """Some simple tests of LookupTable initialization."""
-    import time
-    t1 = time.time()
-
     interp = 'linear'
     try:
         # Check for bad input: 1 column file, or specifying file and x, or just x, or bad
@@ -154,14 +148,10 @@ def test_init():
     # Check picklability
     do_pickle(tab_ps)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_log():
     """Some simple tests of interpolation using logs."""
-    import time
-    t1 = time.time()
-
     # Set up some test vectors that are strictly positive, and others that are negative.
     x = 0.01*np.arange(1000)+0.01
     y = 1.*x
@@ -226,13 +216,9 @@ def test_log():
     except ImportError:
         print 'The assert_raises tests require nose'
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_roundoff():
-    import time
-    t1 = time.time()
-
     table1 = galsim.LookupTable([1,2,3,4,5,6,7,8,9,10], [1,2,3,4,5,6,7,8,9,10])
     try:
         table1(1.0 - 1.e-7)
@@ -245,102 +231,124 @@ def test_roundoff():
     except ImportError:
         print 'The assert_raises tests require nose'
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_table2d():
-    import time
-    t1 = time.time()
-
-    # Should be able to interpolate quadratic function exactly with cubic interpolant
-    def f(x, y):
-        return (1.1142351 + 0.9863461*x + 1.4123753*y)**2
-
-    x0 = 0.5
-    y0 = 0.6
-    dx = 0.1
-    dy = 0.2
-    nx = 10  # xmax = 1.4
-    ny = 10  # ymax = 2.4
-    xrepeat = dx*nx  # 1.0
-    yrepeat = dy*ny  # 2.0
-
-    xs = np.arange(x0, x0+nx*dx, dx)
-    ys = np.arange(y0, y0+ny*dy, dy)
-    xs, ys = np.meshgrid(xs, ys)
-    fs = f(xs, ys)
-    tab2d = galsim.LookupTable2D(x0, y0, dx, dy, fs)
-
-    # Should always get the right result at the input grid points
-    for x, y in zip(xs.flat, ys.flat):
-        np.testing.assert_almost_equal(tab2d(x, y), f(x, y), decimal=12)
-
-    # Check with eval_grid
-    grid = tab2d.eval_grid(x0, x0+dx*(nx-1), nx, y0, y0+dy*(ny-1), ny, dtype=np.float64)
-    np.testing.assert_almost_equal(grid, fs, decimal=14)
-
-    # Cubic interpolant has 5x5 pixel support, so make sure test points are sufficiently far from
-    # the input grid border.
-    xtest = [0.72, 1.05, 1.19]
-    ytest = [1.01, 1.67, 2.07]
-    for x in xtest:
-        for y in ytest:
-            np.testing.assert_almost_equal(tab2d(x, y), f(x, y), decimal=13)
-            np.testing.assert_almost_equal(tab2d.at(x, y), tab2d(x, y), decimal=14)
-
-    # Next test the eval_grid method
-    xmin = 0.72
-    xmax = 1.19
-    nxtest = 17
-    ymin = 1.01
-    ymax = 2.07
-    nytest = 36
-    grid = tab2d.eval_grid(xmin, xmax, nxtest, ymin, ymax, nytest, dtype=np.float64)
-
-    xstest = np.linspace(xmin, xmax, nxtest)
-    ystest = np.linspace(ymin, ymax, nytest)
-    xstest, ystest = np.meshgrid(xstest, ystest)
-    grid2 = f(xstest, ystest)
-    np.testing.assert_array_almost_equal(grid, grid2, decimal=13)
-
-    # Check edge wrapping.
-    tab2d = galsim.LookupTable2D(x0, y0, dx, dy, fs, edge_mode='wrap')
-
-    for x in xtest:
-        for y in ytest:
-            # Non-edge-wrapped tests should still work
-            np.testing.assert_almost_equal(tab2d(x, y), f(x, y), decimal=13)
-            np.testing.assert_almost_equal(tab2d.at(x, y), tab2d(x, y), decimal=14)
-            # Also test adding multiple of the input period.
-            np.testing.assert_almost_equal(tab2d(x + nx*dx*3, y - ny*dy*5),
-                                           f(x, y), decimal=13)
-            np.testing.assert_almost_equal(tab2d.at(x + nx*dx*2, y + ny*dy*7),
-                                           tab2d(x, y), decimal=13)
-    # Check eval_grid with edge wrapping
-    grid3 = tab2d.eval_grid(xmin+3*xrepeat, xmax+3*xrepeat, nxtest,
-                            ymin-2*yrepeat, ymax-2*yrepeat, nytest, dtype=np.float64)
-    np.testing.assert_array_almost_equal(grid, grid3, decimal=13)
-
-    xmin = -0.5
-    xmax = 2.6
-    nxtest = 201
-    ymin = -1.01
-    ymax = 4.07
-    nytest = 201
-    grid = tab2d.eval_grid(xmin, xmax, nxtest, ymin, ymax, nytest, dtype=np.float64)
-
-    # Check edge warning
-    tab2d = galsim.LookupTable2D(x0, y0, dx, dy, fs, edge_mode='warn')
+    """Check LookupTable2D functionality.
+    """
+    has_scipy = False
     try:
-        np.testing.assert_warns(UserWarning, tab2d, 10, 10)
-        args = (xmin, xmax+10, nxtest, ymin, ymax-9, nytest)
-        np.testing.assert_warns(UserWarning, tab2d.eval_grid, *args)
+        import scipy
+        from distutils.version import LooseVersion
+        if LooseVersion(scipy.__version__) < LooseVersion('0.11'):
+            raise ImportError
+    except ImportError:
+        print "SciPy tests require SciPy version 0.11 or greater"
+    else:
+        from scipy.interpolate import interp2d
+        has_scipy = True
+
+    def f(x_, y_):
+        return np.sin(x_) * np.cos(y_) + x_
+
+    x = np.linspace(0.1, 3.3, 25)
+    y = np.linspace(0.2, 10.4, 75)
+    yy, xx = np.meshgrid(y, x)  # Note the ordering of both input and output here!
+    z = f(xx, yy)
+
+    tab2d = galsim.table.LookupTable2D(x, y, z)
+    do_pickle(tab2d)
+    do_pickle(tab2d.table)
+
+    newx = np.linspace(0.2, 3.1, 45)
+    newy = np.linspace(0.3, 10.1, 85)
+    newyy, newxx = np.meshgrid(newy, newx)
+
+    # Compare different ways of evaluating Table2D
+    ref = tab2d(newxx, newyy)
+    np.testing.assert_array_almost_equal(ref, np.array([[tab2d(x0, y0)
+                                                         for y0 in newy]
+                                                        for x0 in newx]))
+    if has_scipy:
+        scitab2d = interp2d(x, y, np.transpose(z))
+        np.testing.assert_array_almost_equal(ref, np.transpose(scitab2d(newx, newy)))
+
+    # Test non-equally-spaced table.
+    x = np.delete(x, 10)
+    y = np.delete(y, 10)
+    yy, xx = np.meshgrid(y, x)
+    z = f(xx, yy)
+    tab2d = galsim.table.LookupTable2D(x, y, z)
+    ref = tab2d(newxx, newyy)
+    np.testing.assert_array_almost_equal(ref, np.array([[tab2d(x0, y0)
+                                                         for y0 in newy]
+                                                        for x0 in newx]))
+    if has_scipy:
+        scitab2d = interp2d(x, y, np.transpose(z))
+        np.testing.assert_array_almost_equal(ref, np.transpose(scitab2d(newx, newy)))
+
+    # Try a simpler interpolation function.  We should be able to interpolate a (bi-)linear function
+    # exactly with a linear interpolant.
+    def f(x_, y_):
+        return 2*x_ + 3*y_
+
+    z = f(xx, yy)
+    tab2d = galsim.table.LookupTable2D(x, y, z)
+
+    np.testing.assert_array_almost_equal(f(newxx, newyy), tab2d(newxx, newyy))
+    np.testing.assert_array_almost_equal(f(newxx, newyy), np.array([[tab2d(x0, y0)
+                                                                   for y0 in newy]
+                                                                  for x0 in newx]))
+
+    # Test edge exception
+    try:
+        np.testing.assert_raises(ValueError, tab2d, 1e6, 1e6)
     except ImportError:
         print 'The assert_raises tests require nose'
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    # Test edge wrapping
+    # Chech that can't construct table with edge-wrapping if edges don't match
+    try:
+        np.testing.assert_raises(ValueError, galsim.table.LookupTable,
+                                 (x, y, z), dict(edge_mode='wrap'))
+    except ImportError:
+        print 'The assert_warns tests require nose'
+
+    # Extend edges and make vals match
+    x = np.append(x, x[-1] + (x[-1]-x[-2]))
+    y = np.append(y, y[-1] + (y[-1]-y[-2]))
+    z = np.pad(z,[(0,1), (0,1)], mode='wrap')
+    tab2d = galsim.table.LookupTable2D(x, y, z, edge_mode='wrap')
+
+    np.testing.assert_array_almost_equal(tab2d(newxx, newyy), tab2d(newxx+3*(x[-1]-x[0]), newyy))
+    np.testing.assert_array_almost_equal(tab2d(newxx, newyy), tab2d(newxx, newyy+13*(y[-1]-y[0])))
+
+    # Test floor/ceil/nearest interpolant
+    x = y = np.arange(5)
+    z = x + y[:, np.newaxis]
+    tab2d = galsim.LookupTable2D(x, y, z, interpolant='ceil')
+    assert tab2d(2.4, 3.6) == 3+4, "Ceil interpolant failed."
+    tab2d = galsim.LookupTable2D(x, y, z, interpolant='floor')
+    assert tab2d(2.4, 3.6) == 2+3, "Floor interpolant failed."
+    tab2d = galsim.LookupTable2D(x, y, z, interpolant='nearest')
+    assert tab2d(2.4, 3.6) == 2+4, "Nearest interpolant failed."
+
+
+@timer
+def test_ne():
+    """ Check that inequality works as expected."""
+    # These should all compare as unequal.
+    x = [1, 2, 3]
+    f = [4, 5, 6]
+    x2 = [1.1, 2.2, 3.3]
+    f2 = [4.4, 5.5, 6.6]
+    lts = [galsim.LookupTable(x, f),
+           galsim.LookupTable(x, f2),
+           galsim.LookupTable(x2, f),
+           galsim.LookupTable(x, f, interpolant='floor'),
+           galsim.LookupTable(x, f, x_log=True),
+           galsim.LookupTable(x, f, f_log=True)]
+    all_obj_diff(lts)
 
 
 if __name__ == "__main__":
@@ -349,3 +357,4 @@ if __name__ == "__main__":
     test_log()
     test_roundoff()
     test_table2d()
+    test_ne()

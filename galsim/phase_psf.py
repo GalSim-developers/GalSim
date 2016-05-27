@@ -25,40 +25,35 @@ where x, y are focal plane coordinates and u, v are pupil plane coordinates
 
 The main classes of note are:
 
+Aperture
+  Class to representing the illuminated region of pupil.
+
 AtmosphericScreen
   Class implementing phase(u, v, x, y, t) for von Karman type turbulence, with possibly evolving
   "non-frozen-flow" phases.
 
+OpticalScreen
+  Class implementing optical aberrations using Zernike polynomial expansions in the wavefront.
+
 PhaseScreenList
   Python sequence type to hold multiple phase screens, for instance to simulate turbulence at
-  different altitudes.  A key method is makePSF(), which will take the list of phase screens,
-  add them together linearly (Fraunhofer approximation), and evaluate the above diffraction
-  equation to yield a PhaseScreenPSF object.
+  different altitudes, or self-consistently model atmospheric and optical phase aberrations.  A key
+  method is makePSF(), which will take the list of phase screens, add them together linearly
+  (Fraunhofer approximation), and evaluate the above diffraction equation to yield a
+  PhaseScreenPSF object.
 
 PhaseScreenPSF
-  A GSObject holding the evaluated PSF.
+  A GSObject holding the evaluated PSF from a set of phase screens.
+
+OpticalPSF
+  A GSObject for optical PSFs with potentially complicated pupils and Zernike aberrations.
 
 Atmosphere
   Convenience function to quickly assemble multiple AtmosphericScreens into a PhaseScreenList.
-
-TelescopePSF
-    Interface to field-dependent Zernike mode amplitudes from a common abberated optics model.
-    It takes as input a dict specifying the parameters of the model for a telescope (see
-    `lsst_telescope_model` in this module).
-
-OpticsParameters
-    Hold all the figure error and body motion parameters for a component of the telescope optical
-    system. The `set_perturbation_params` method of `TelescopePSF` ingests an instance of
-    `OpticsParameters`.
-
-ZernikeCoefsBendingModes
-    Calculate wavefront Zernike coefficients for mirror bending modes.
-
-ZernikeCoefsBodyMotions
-    Calculate wavefront Zernike coefficients for optical element tilts and decenters.
 """
 
-import os
+from itertools import izip, chain
+
 import numpy as np
 import galsim
 import utilities
@@ -66,489 +61,429 @@ from galsim import GSObject
 
 
 class Aperture(object):
-    """ Class representing a telescope aperture as part of a larger pupil plane.
+    """ Class representing a telescope aperture embedded in a larger pupil plane array.
 
-        The constructed object has two key attributes:
-            `illuminated`  a boolean array indicating which positions in the pupil plane are exposed
-                           to the sky.
-            `rho`          array of unit-disc-scaled pupil coordinates for use by Zernike
-                           polynomials (as a complex number).
+    For many use cases, an Aperture object need not be specified directly, but will be
+    automatically created by GalSim internally.  For example, the OpticalPSF class constructor takes
+    arguments specifying the aperture geometry (see below), which it uses internally to create an
+    Aperture object used to turn phase aberrations into a PSF image.  Similarly, the PhaseScreenPSF
+    constructor (or equivalently, the PhaseScreenList.makePSF method) will automatically create an
+    appropriate Aperture if needed.  However, we both of these classes can also accept a previously-
+    created Aperture.
 
-        Each element of `rho` encodes the corresponding coordinate as (x, y) => x + 1j * y.
+    The pupil plane array is specified by its size, sampling interval, and pattern of illuminated
+    pixels.  The size of the array (in meters) is generally computed directly from the `diam`
+    argument supplied to the class constructor (modified by the optional `oversampling` keyword
+    argument).  The sampling interval or scale (also in meters) is determined either by the
+    scale needed to avoid folding for an obscured Airy profile at the wavelength specified
+    by `lam`, or, if present, by the scale needed to avoid folding for a provided `screen_list` at
+    wavelength `lam`.  In both cases, the sampling interval is then increased by a factor of
+    `pad_factor`. (Padding the size of the PSF is equivalent to sampling the pupil more finely.)
 
-        @param diam              Aperture diameter in meters.
-        @param npix              Number of pupil plane resolution elements.
-        @param pupil_plane_size  Size of the pupil plane in meters.  Note, this may be (in fact, it
-                                 usually *should* be) larger than the aperture diameter.
-                                 [default: 2.*diam]
-        @param circular_pupil    Adopt a circular pupil? [default: True].
-        @param obscuration       Fractional linear circular obscuration of pupil. [default: 0.]
-        @param nstruts           Number of radial support struts to add to the central obscuration.
-                                 [default: 0]
-        @param strut_thick       Thickness of support struts as a fraction of pupil diameter.
-                                 [default: 0.05]
-        @param strut_angle       Angle made between the vertical and the first strut in the CCW
-                                 direction; must be an Angle instance.
-                                 [default: 0. * galsim.degrees]
+    There are two ways to specify the geometry of the pupil plane, i.e., the obscuration disk size
+    and the areas that will be illuminated outside of it.  The first way is to use keywords that
+    specify the size of the obscuration, and the nature of the support struts holding up the
+    secondary mirror (or prime focus cage, etc.).  These are taken to be rectangular obscurations
+    extending from the outer edge of the pupil to the outer edge of the obscuration disk (or the
+    pupil center if `obscuration = 0.`).  You can specify how many struts there are (evenly spaced
+    in angle), how thick they are as a fraction of the pupil diameter, and what angle they start at
+    relative to the positive y direction.  If specifying the pupil plane geometrically, then a
+    wavelength `lam` is required to determine the appropriate sampling interval.
+
+    The second way to specify the pupil plane configuration is by passing in an image of it.  This
+    can be useful for example if the struts are not evenly spaced or are not radially directed, as
+    is assumed by the simple model for struts described above.  In this case, keywords related to
+    struts are ignored; moreover, the `obscuration` keyword is used to ensure that the images are
+    properly sampled (so it is still needed), but the keyword is then ignored when using the
+    supplied image of the pupil plane.  The `pupil_plane_im` that is passed in can be rotated during
+    internal calculations by specifying a `pupil_angle` keyword.  Also note that given how the
+    `obscuration` keyword is used, the obscuration in the supplied pupil plane image should indeed
+    be reasonably circular rather than having an arbitrary shape; however, minor deviations from a
+    perfect circle do not cause significant problems.  Note that when specifying a pupil from an
+    image, the wavelength `lam` keyword is ignored.
+
+    If you choose to pass in a pupil plane image, it must be a square array in which the image of
+    the pupil is centered.  The areas that are illuminated should have some value >0, and the other
+    areas should have a value of precisely zero.  Based on what the Aperture class thinks is the
+    required sampling to make a PSF image, the image that is passed in of the pupil plane might be
+    zero-padded during internal calculations.  If the pupil plane image has a scale associated with
+    it, that scale will be completely ignored; the scale is determined internally using basic
+    physical considerations.  Finally, to ensure accuracy of calculations using a pupil plane image,
+    we recommend sampling it as finely as possible.
+
+    @param diam             Aperture diameter in meters.
+    @param lam              Wavelength in nanometers.
+    @param circular_pupil   Adopt a circular pupil?  [default: True]
+    @param obscuration      Linear dimension of central obscuration as fraction of aperture linear
+                            dimension. [0., 1.).
+    @param nstruts          Number of radial support struts to add to the central obscuration.
+                            [default: 0]
+    @param strut_thick      Thickness of support struts as a fraction of aperture diameter.
+                            [default: 0.05]
+    @param strut_angle      Angle made between the vertical and the strut strating closest to it,
+                            defined to be positive in the counter-clockwise direction; must be an
+                            Angle instance. [default: 0. * galsim.degrees]
+    @param oversampling     Optional oversampling factor *in the image plane* for the PSF eventually
+                            constructed using this Aperture.  Setting `oversampling < 1` will
+                            produce aliasing in the PSF (not good).  Usually, `oversampling` should
+                            be somewhat larger than 1.  1.5 is usually a safe choice.
+                            [default: 1.5]
+    @param pad_factor       Additional multiple by which to extend the PSF image to avoid folding.
+                            [default: 1.5]
+    @param screen_list      An optional PhaseScreenList object.  If present, then get a good pupil
+                            sampling interval using this object.  [default: None]
+    @param max_size         Set a maximum size for the internal image for the PSF profile in arcsec.
+    @param pupil_plane_im   The GalSim.Image, NumPy array, or name of file containing the pupil
+                            plane image, to be used instead of generating one based on the
+                            obscuration and strut parameters.  Note that if the image is saved as
+                            unsigned integers, you will get a warning about conversion to floats,
+                            which is harmless. [default: None]
+    @param pupil_angle      If `pupil_plane_im` is not None, rotation angle for the pupil plane
+                            (positive in the counter-clockwise direction).  Must be an Angle
+                            instance. [default: 0. * galsim.degrees]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
     """
-    def __init__(self, diam, npix, pupil_plane_size=None, circular_pupil=True, obscuration=0.,
-                 nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees):
-        if obscuration >= 1.:
-            raise ValueError("Pupil fully obscured! obscuration = {1} (>= 1)".format(obscuration))
-        if pupil_plane_size is None:
-            pupil_plane_size = 2*diam
-        self.pupil_plane_size = float(pupil_plane_size)
-        self.npix = int(npix)
-        self.pupil_scale = self.pupil_plane_size/(self.npix-1)
+    def __init__(self, diam, lam=None, circular_pupil=True, obscuration=0.0,
+                 nstruts=0, strut_thick=0.05, strut_angle=0.0*galsim.degrees,
+                 oversampling=1.5, pad_factor=1.5, screen_list=None, max_size=None,
+                 pupil_plane_im=None, pupil_angle=0.0*galsim.degrees, gsparams=None,
+                 _pupil_plane_size=None, _pupil_plane_scale=None):
 
-        u = np.fft.fftshift(np.fft.fftfreq(self.npix, 1./pupil_plane_size))
-        u, v = np.meshgrid(u, u)
-        rsqr = u**2 + v**2
+        self.diam = diam  # Always need to explicitly specify an aperture diameter.
 
-        radius = 0.5*diam
+        # You can either set geometric properties, or use a pupil image, but not both, so check for
+        # that here.  One caveat is that we allow sanity checking the sampling of a pupil_image by
+        # comparing it to the sampling we would have used for an (obscured) Airy profile.  So it's
+        # okay to specify an obscuration with a pupil_plane_im, for example, but not struts.
+        is_default_geom = (circular_pupil == True and
+                           nstruts == 0 and
+                           strut_thick == 0.05 and
+                           strut_angle == 0.0*galsim.degrees)
+        if not is_default_geom and pupil_plane_im is not None:
+            raise ValueError("Can't specify both geometric parameters and pupil_plane_im.")
+
+        if pupil_plane_im is not None:  # Use image of pupil plane
+            # Note that there's a small ambiguity when specifying only pupil_plane_im and a diam.
+            # We need to infer the pupil plane size & scale, but we can only figure this out to the
+            # relative precision of 1 pixel in the pupil_plane_im.  To optionally get more precision
+            # (for unit tests), we use the _pupil_plane_scale keyword to increase this precision.
+            self._load_pupil_plane(pupil_plane_im, pupil_angle, obscuration=obscuration,
+                                   _pupil_plane_scale=_pupil_plane_scale)
+        else:  # Use geometric parameters.
+            self._gsparams = gsparams
+            if obscuration >= 1.:
+                raise ValueError("Pupil fully obscured! obscuration = {:0} (>= 1)"
+                                 .format(obscuration))
+            # When setting the pupil plane size and scale, defer to the private kwargs if available,
+            # otherwise, try to guess good values based on
+            # 1) Any screen list that was provided, or
+            # 2) An Airy function.
+
+            if _pupil_plane_size is None:
+                # Setting the pupil plane size is easy.  Just go for the Nyquist limit, adjusted by
+                # oversampling.
+                _pupil_plane_size = 2.0*diam*oversampling
+            self.pupil_plane_size = _pupil_plane_size
+
+            # Set npix, which will then be used to set pupil_plane_scale
+            if _pupil_plane_scale is None:
+                if screen_list is not None:
+                    screen_list = galsim.PhaseScreenList(screen_list)
+                    if lam is None:
+                        raise ValueError("Wavelength must be specified with `screen_list`.")
+                    stepk = screen_list.stepK(lam=lam, diam=diam, obscuration=obscuration,
+                                              gsparams=self._gsparams)
+                else:
+                    # For Airy, pupil_plane_scale is indep of wavelength, so just use 500.0
+                    if lam is None:
+                        lam = 500.0
+                    airy = galsim.Airy(diam=diam, lam=500.0, obscuration=obscuration,
+                                       gsparams=self._gsparams)
+                    stepk = airy.stepK()
+                scale = (stepk * 500.0*1.e-9 * (galsim.radians / galsim.arcsec) /
+                         (2 * np.pi * pad_factor))
+                if max_size is not None:
+                    max_size_scale = lam*1e-9 / (max_size * galsim.arcsec / galsim.radians)
+                    scale = max(max_size_scale, scale)
+                self.npix = galsim._galsim.goodFFTSize(int(np.ceil(self.pupil_plane_size/scale)))
+            else:
+                self.npix = int(np.ceil(self.pupil_plane_size/_pupil_plane_scale))
+            # Make sure pupil_plane_size is an integer multiple of pupil_plane_scale.
+            self.pupil_plane_scale = self.pupil_plane_size/self.npix
+
+            # With the array parameters set, we're ready to actually parametrically draw the pupil
+            # plane.
+            self._generate_pupil_plane(circular_pupil, obscuration,
+                                       nstruts, strut_thick, strut_angle)
+
+    def _generate_pupil_plane(self, circular_pupil=True, obscuration=0.,
+                              nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees):
+        # Save params for str/repr
+        self._circular_pupil = circular_pupil
+        self._obscuration = obscuration
+        self._nstruts = nstruts
+        self._strut_thick = strut_thick
+        self._strut_angle = strut_angle
+
+        radius = 0.5*self.diam
         if circular_pupil:
-            self.illuminated = (rsqr < radius**2)
+            self._illuminated = (self.rsqr < radius**2)
             if obscuration > 0.:
-                self.illuminated *= rsqr >= (radius*obscuration)**2
+                self._illuminated *= self.rsqr >= (radius*obscuration)**2
         else:
-            self.illuminated = (np.abs(u) < radius) & (np.abs(v) < radius)
+            self._illuminated = (np.abs(self.u) < radius) & (np.abs(self.v) < radius)
             if obscuration > 0.:
-                self.illuminated *= ((np.abs(u) >= radius*obscuration) *
-                                     (np.abs(v) >= radius*obscuration))
+                self._illuminated *= ((np.abs(self.u) >= radius*obscuration) *
+                                      (np.abs(self.v) >= radius*obscuration))
 
         if nstruts > 0:
             if not isinstance(strut_angle, galsim.Angle):
                 raise TypeError("Input kwarg strut_angle must be a galsim.Angle instance.")
             # Add the initial rotation if requested, converting to radians.
+            rot_u, rot_v = self.u, self.v
             if strut_angle.rad != 0.:
-                u, v = utilities.rotate_xy(u, v, -strut_angle)
-            rotang = 360. * galsim.degrees / float(nstruts)
+                rot_u, rot_v = utilities.rotate_xy(rot_u, rot_v, -strut_angle)
+            rotang = 360. * galsim.degrees / nstruts
             # Then loop through struts setting to zero the regions which lie under the strut
             for istrut in xrange(nstruts):
-                u, v = utilities.rotate_xy(u, v, -rotang)
-                self.illuminated *= ((np.abs(u) >= radius * strut_thick) + (v < 0.0))
+                rot_u, rot_v = utilities.rotate_xy(rot_u, rot_v, -rotang)
+                self._illuminated *= ((np.abs(rot_u) >= radius * strut_thick) + (rot_v < 0.0))
+
+    def _load_pupil_plane(self, pupil_plane_im, pupil_angle, obscuration=0.0,
+                          _pupil_plane_scale=None):
+        # Handle multiple types of input: NumPy array, galsim.Image, or string for filename with
+        # image.
+        if isinstance(pupil_plane_im, np.ndarray):
+            # Make it into an image.
+            pupil_plane_im = galsim.Image(pupil_plane_im)
+        elif isinstance(pupil_plane_im, galsim.Image):
+            # Make sure not to overwrite input image.
+            pupil_plane_im = pupil_plane_im.copy()
+        else:
+            # Read in image of pupil plane from file.
+            pupil_plane_im = galsim.fits.read(pupil_plane_im)
+
+        # Sanity checks
+        if pupil_plane_im.array.shape[0] != pupil_plane_im.array.shape[1]:
+            raise ValueError("We require square input pupil plane arrays!")
+        if pupil_plane_im.array.shape[0] % 2 == 1:
+            raise ValueError("Even-sized input arrays are required for the pupil plane!")
+
+        self.npix = pupil_plane_im.array.shape[0]
+        u = np.fft.fftshift(np.fft.fftfreq(self.npix))
+        u, v = np.meshgrid(u, u)
+        r = np.hypot(u, v)
+        rmax_illum = np.max(r*(pupil_plane_im.array > 0))
+        # Figure out the scale given the diam and illuminated pixels.
+        self.pupil_plane_size = self.diam / (2.0 * rmax_illum)
+        self.pupil_plane_scale = self.pupil_plane_size / self.npix
+        # We only know rmax_illum to the precision of 1 pixel or so; i.e. to the precision of
+        # 1./self.npix.  So if the _pupil_plane_scale is set, assume that's more accurate, but make
+        # sure it's consistent with what we just calculated.
+        if _pupil_plane_scale is not None:
+            assert abs(self.pupil_plane_scale/_pupil_plane_scale-1.0) < 2./(self.npix*rmax_illum)
+            self.pupil_plane_scale = _pupil_plane_scale
+            self.pupil_plane_size = self.npix * self.pupil_plane_scale
+
+        # At this point, we can compare the sampling derived from the diameter and the image to the
+        # sampling that would have been used for a reference Airy profile.
+        # Conveniently, the physical scale for sampling the aperture for an Airy does not depend on
+        # the wavelength!  So just use 500nm.
+        airy = galsim.Airy(lam=500.0, diam=self.diam, obscuration=obscuration)
+        stepk = airy.stepK()
+        scale = stepk * 500.0*1.e-9 * (galsim.radians / galsim.arcsec) / (2 * np.pi)
+        if scale < self.pupil_plane_scale:
+            import warnings
+            ratio = self.pupil_plane_scale / scale
+            warnings.warn("Input pupil plane image may not be sampled well enough!\n"
+                          "Consider increasing sampling by a factor %f, and/or check "
+                          "OpticalPSF outputs for signs of folding in real space."%ratio)
+
+        if pupil_angle.rad() == 0.:
+            self._illuminated = pupil_plane_im.array.astype(bool)
+        else:
+            # Rotate the pupil plane image as required based on the `pupil_angle`, being careful to
+            # ensure that the image is one of the allowed types.  We ignore the scale.
+            int_im = galsim.InterpolatedImage(galsim.Image(pupil_plane_im.array, scale=1.,
+                                                           dtype=np.float64),
+                                              x_interpolant='linear', calculate_stepk=False,
+                                              calculate_maxk=False)
+            int_im = int_im.rotate(pupil_angle)
+            new_im = galsim.ImageF(pupil_plane_im.array.shape[1], pupil_plane_im.array.shape[0])
+            new_im = int_im.drawImage(image=new_im, scale=1., method='no_pixel')
+            pp_arr = new_im.array
+            # Restore hard edges that might have been lost during the interpolation.  To do this, we
+            # check the maximum value of the entries.  Values after interpolation that are >half
+            # that maximum value are kept as nonzero (True), but those that are <half the maximum
+            # value are set to zero (False).
+            max_pp_val = np.max(pp_arr)
+            pp_arr[pp_arr < 0.5*max_pp_val] = 0.
+            self._illuminated = pp_arr.astype(bool)
+
+    # Used in Aperture.__str__ and OpticalPSF.__str__
+    def _geometry_str(self):
+        s = ""
+        if not self._circular_pupil:
+            s += ", circular_pupil=False"
+        if self._obscuration != 0.0:
+            s += ", obscuration=%s"%self._obscuration
+        if self._nstruts != 0:
+            s += ", nstruts=%s"%self._nstruts
+            if self._strut_thick != 0.05:
+                s += ", strut_thick=%s"%self._strut_thick
+            if self._strut_angle != 0*galsim.degrees:
+                s += ", strut_angle=%s"%self._strut_angle
+        return s
+
+    def __str__(self):
+        s = "galsim.Aperture(diam=%r"%self.diam
+        if hasattr(self, '_circular_pupil'):  # Pupil was created geometrically, so use that here.
+            s += self._geometry_str()
+        s += ", _pupil_plane_scale=%s"%self.pupil_plane_scale
+        s += ", _pupil_plane_size=%s"%self.pupil_plane_size
+        s += ")"
+        return s
+
+    # Used in Aperture.__repr__ and OpticalPSF.__repr__
+    def _geometry_repr(self):
+        s = ""
+        if not self._circular_pupil:
+            s += ", circular_pupil=False"
+        if self._obscuration != 0.0:
+            s += ", obscuration=%r"%self._obscuration
+        if self._nstruts != 0:
+            s += ", nstruts=%r"%self._nstruts
+            if self._strut_thick != 0.05:
+                s += ", strut_thick=%r"%self._strut_thick
+            if self._strut_angle != 0*galsim.degrees:
+                s += ", strut_angle=%r"%self._strut_angle
+        s += ", _pupil_plane_scale=%r"%self.pupil_plane_scale
+        s += ", _pupil_plane_size=%r"%self.pupil_plane_size
+        return s
+
+    def __repr__(self):
+        s = "galsim.Aperture(diam=%r"%self.diam
+        if hasattr(self, '_circular_pupil'):  # Pupil was created geometrically, so use that here.
+            s += self._geometry_repr()
+        else:  # Pupil was created from image, so use that instead.
+            s += ", pupil_plane_im=array(%r"%self.illuminated.tolist()+", dtype='float')"
+            s += ", _pupil_plane_scale=%r"%self.pupil_plane_scale
+        if hasattr(self, '_gsparams') and self._gsparams is not None:
+            s += ", gsparams=%r"%self._gsparams
+        s += ")"
+        return s
+
+    def __eq__(self, other):
+        return (isinstance(other, galsim.Aperture) and
+                self.diam == other.diam and
+                self.pupil_plane_scale == other.pupil_plane_scale and
+                np.array_equal(self.illuminated, other.illuminated))
+
+    def __hash__(self):
+        # Cache since self.illuminated may be large.
+        if not hasattr(self, '_hash'):
+            self._hash = hash(("galsim.Aperture", self.diam, self.pupil_plane_scale))
+            self._hash ^= hash(tuple(self.illuminated.ravel()))
+        return self._hash
+
+    # Properties show up nicely in the interactive terminal for
+    #     >>>help(Aperture)
+    # So we make a thin wrapper here.
+    @property
+    def illuminated(self):
+        """  A boolean array indicating which positions in the pupil plane are exposed to the sky.
+        """
+        return self._illuminated
 
     @property
     def rho(self):
-        """ Pupil plane coordinate array.
-
-        Each element encodes the coordinate, (normalized to a unit disk) as a complex number:
+        """ Unit-disk normalized pupil plane coordinate as a complex number:
         (x, y) => x + 1j * y.
-
-        Computed on demand and cached for reuse.
         """
-        if not hasattr(self, '_rho'):
-            u = np.fft.fftshift(np.fft.fftfreq(self.npix, 1./self.pupil_plane_size))
+        if not hasattr(self, '_rho') or self._rho is None:
+            u = np.fft.fftshift(np.fft.fftfreq(self.npix, self.diam/self.pupil_plane_size/2.0))
             u, v = np.meshgrid(u, u)
-            rsqr = u**2 + v**2
-            rsqrmax_illum = max(rsqr[self.illuminated > 0])
-            self._rho = (u + 1j * v) / np.sqrt(rsqrmax_illum)
+            self._rho = u + 1j * v
         return self._rho
 
+    @property
+    def u(self):
+        """Pupil horizontal coordinate array in meters."""
+        if not hasattr(self, '_u'):
+            u = np.fft.fftshift(np.fft.fftfreq(self.npix, 1./self.pupil_plane_size))
+            self._u, self._v = np.meshgrid(u, u)
+        return self._u
 
-class AtmosphericScreen(object):
-    """ An atmospheric phase screen that can drift in the wind and evolves ("boils") over time.  The
-    initial phases and fractional phase updates are drawn from a von Karman power spectrum, which is
-    defined by a Fried parameter that effectively sets the amplitude of the turbulence, and an outer
-    scale that sets the scale beyond which the turbulence power goes (smoothly) to zero.
+    @property
+    def v(self):
+        """Pupil vertical coordinate array in meters."""
+        if not hasattr(self, '_v'):
+            u = np.fft.fftshift(np.fft.fftfreq(self.npix, 1./self.pupil_plane_size))
+            self._u, self._v = np.meshgrid(u, u)
+        return self._v
 
-    @param screen_size   Physical extent of square phase screen in meters.  This should be large
-                         enough to accommodate the desired field-of-view of the telescope as well as
-                         the meta-pupil defined by the wind speed and exposure time.  Note that
-                         the screen will have periodic boundary conditions, so the code will run
-                         with a smaller sized screen, though this may introduce artifacts into PSFs
-                         or PSF correlations functions. Note that screen_size may be tweaked by the
-                         initializer to ensure screen_size is a multiple of screen_scale.
-    @param screen_scale  Physical pixel scale of phase screen in meters.  A fraction of the Fried
-                         parameter is usually sufficiently small, but users should test the effects
-                         of this parameter to ensure robust results. [Default: half of r0_500]
-    @param altitude      Altitude of phase screen in km.  This is with respect to the telescope, not
-                         sea-level.  [Default: 0.0]
-    @param time_step     Interval to use when advancing the screen in time in seconds.
-                         [Default: 0.03]
-    @param r0_500        Fried parameter setting the amplitude of turbulence; contributes to "size"
-                         of the resulting atmospheric PSF.  Specified at wavelength 500 nm, in units
-                         of meters.  [Default: 0.2]
-    @param L0            Outer scale in meters.  The turbulence power spectrum will smoothly
-                         approach a constant at scales larger than L0.  Set to `None` or `np.inf`
-                         for a power spectrum without an outer scale.  [Default: 25.0]
-    @param vx            x-component wind velocity in meters/second.  [Default: 0.]
-    @param vy            y-component wind velocity in meters/second.  [Default: 0.]
-    @param alpha         Square root of fraction of phase that is "remembered" between time_steps
-                         (i.e., alpha**2 is the fraction remembered). The fraction sqrt(1-alpha**2)
-                         is then the amount of turbulence freshly generated in each step.  Setting
-                         alpha=1.0 results in a frozen-flow atmosphere.  Note that computing PSFs
-                         from frozen-flow atmospheres may be significantly faster than computing
-                         PSFs with non-frozen-flow atmospheres.  [Default: 1.0]
-    @param rng           Random number generator as a galsim.BaseDeviate().  If None, then use the
-                         clock time or system entropy to seed a new generator.  [Default: None]
+    @property
+    def rsqr(self):
+        """Pupil radius squared array in meters squared."""
+        if not hasattr(self, '_rsqr'):
+            self._rsqr = self.u**2 + self.v**2
+        return self._rsqr
 
-    Relevant SPIE paper:
-    "Remembrance of phases past: An autoregressive method for generating realistic atmospheres in
-    simulations"
-    Srikar Srinath, Univ. of California, Santa Cruz;
-    Lisa A. Poyneer, Lawrence Livermore National Lab.;
-    Alexander R. Rudy, UCSC; S. Mark Ammons, LLNL
-    Published in Proceedings Volume 9148: Adaptive Optics Systems IV
-    September 2014
-    """
-    def __init__(self, screen_size, screen_scale=None, altitude=0.0, time_step=0.03,
-                 r0_500=0.2, L0=25.0, vx=0.0, vy=0.0, alpha=1.0, rng=None):
+    def __getstate__(self):
+        # Let unpickled object reconstruct cached values on-the-fly instead of including them in the
+        # pickle.
+        d = self.__dict__
+        for k in ['_rho', '_u', '_v', '_rsqr']:
+            d.pop(k, None)
+        return d
 
-        if screen_scale is None:
-            screen_scale = 0.5 * r0_500
-        self.npix = galsim._galsim.goodFFTSize(int(np.ceil(screen_size/screen_scale)))
-        self.screen_scale = screen_scale
-        self.screen_size = screen_size
-        self.altitude = altitude
-        self.time_step = time_step
-        self.r0_500 = r0_500
-        self.L0 = L0
-        self.vx = vx
-        self.vy = vy
-        self.alpha = alpha
-
-        if rng is None:
-            rng = galsim.BaseDeviate()
-        self.orig_rng = rng
-
-        self._init_psi()
-
-        self.reset()
-
-        # Free some RAM for frozen-flow screen
-        if self.alpha == 1.0:
-            del self.psi, self.screen
-
-    def __str__(self):
-        return "galsim.AtmosphericScreen(altitude=%s)" % self.altitude
-
-    def __repr__(self):
-        outstr = ("galsim.AtmosphericScreen(%r, %r, altitude=%r, time_step=%r, " +
-                  "r0_500=%r, L0=%r, vx=%r, vy=%r, alpha=%r, rng=%r)")
-        return outstr % (self.screen_size, self.screen_scale, self.altitude, self.time_step,
-                         self.r0_500, self.L0, self.vx, self.vy, self.alpha, self.rng)
-
-    def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            return False
-        sL0 = self.L0 if self.L0 is not None else np.inf
-        oL0 = other.L0 if other.L0 is not None else np.inf
-        return (self.screen_size == other.screen_size and
-                self.screen_scale == other.screen_scale and
-                self.altitude == other.altitude and
-                self.r0_500 == other.r0_500 and
-                sL0 == oL0 and
-                self.vx == other.vx and
-                self.vy == other.vy and
-                self.alpha == other.alpha and
-                self.rng == other.rng)
-
-    def __ne__(self, other):
-        return not self == other
-
-    # Note the magic number 0.00058 is actually ... wait for it ...
-    # (5 * (24/5 * gamma(6/5))**(5/6) * gamma(11/6)) / (6 * pi**(8/3) * gamma(1/6)) / (2 pi)**2
-    # It nearly impossible to figure this out from a single source, but it can be derived from a
-    # combination of Roddier (1981), Sasiela (1994), and Noll (1976).  (These atmosphere people
-    # sure like to work alone... )
-    kolmogorov_constant = np.sqrt(0.00058)
-
-    def _init_psi(self):
-        """Assemble 2D von Karman sqrt power spectrum.
-        """
-        fx = np.fft.fftfreq(self.npix, self.screen_scale)
-        fx, fy = np.meshgrid(fx, fx)
-
-        L0_inv = 1./self.L0 if self.L0 is not None else 0.0
-        old_settings = np.seterr(all='ignore')
-        self.psi = (1./self.screen_size*self.kolmogorov_constant*(self.r0_500**(-5.0/6.0)) *
-                    (fx*fx + fy*fy + L0_inv*L0_inv)**(-11.0/12.0) *
-                    self.npix * np.sqrt(np.sqrt(2.0)))
-        np.seterr(**old_settings)
-        self.psi *= 500.0  # Multiply by 500 here so we can divide by arbitrary lam later.
-        self.psi[0, 0] = 0.0
-
-    def _random_screen(self):
-        """Generate a random phase screen with power spectrum given by self.psi**2"""
-        gd = galsim.GaussianDeviate(self.rng)
-        noise = utilities.rand_arr(self.psi.shape, gd)
-        return np.fft.ifft2(np.fft.fft2(noise)*self.psi).real
-
-    def advance(self):
-        """Advance phase screen realization by self.time_step."""
-        # Moving the origin of the aperture in the opposite direction of the wind is equivalent to
-        # moving the screen with the wind.
-        self.origin -= (self.vx*self.time_step, self.vy*self.time_step)
-        # "Boil" the atmsopheric screen if alpha not 1.
-        if self.alpha != 1.0:
-            self.screen = self.alpha*self.screen + np.sqrt(1.-self.alpha**2)*self._random_screen()
-            self.tab2d = galsim.LookupTable2D(self._x0, self._y0, self._dx, self._dy, self.screen,
-                                              edge_mode='wrap')
-
-    def advance_by(self, dt):
-        """Advance phase screen by specified amount of time.
-
-        @param dt  Amount of time in seconds by which to update the screen.
-        @returns   The actual amount of time updated, which will differ from `dt` when `dt` is not a
-                   multiple of self.time_step.
-        """
-        if dt < 0:
-            raise ValueError("Cannot advance phase screen backwards in time.")
-        _nstep = int(np.round(dt/self.time_step))
-        if _nstep == 0:
-            _nstep = 1
-        for i in xrange(_nstep):
-            self.advance()
-        return _nstep*self.time_step  # return the time *actually* advanced
-
-    # Both types of atmospheric screens determine their pupil scales (essentially stepK()) from the
-    # Kolmogorov profile with matched Fried parameter r0.
-    def pupil_scale(self, lam, diam, scale_unit=galsim.arcsec):
-        """Compute a good pupil_scale in meters for this atmospheric layer.
+    # Some quick notes for Josh:
+    # - Relation between real-space grid with size theta and pitch dtheta (dimensions of angle)
+    #   and corresponding (fast) Fourier grid with size 2*maxK and pitch stepK (dimensions of
+    #   inverse angle):
+    #     stepK = 2*pi/theta
+    #     maxK = pi/dtheta
+    # - Relation between aperture of size L and pitch dL (dimensions of length, not angle!) and
+    #   (fast) Fourier grid:
+    #     dL = stepK * lambda / (2 * pi)
+    #     L = maxK * lambda / pi
+    # - Implies relation between aperture grid and real-space grid:
+    #     dL = lambda/theta
+    #     L = lambda/dtheta
+    def _stepK(self, lam, scale_unit=galsim.arcsec):
+        """Return the Fourier grid spacing for this aperture at given wavelength.
 
         @param lam         Wavelength in nanometers.
-        @param diam        Diameter of aperture in meters.
-        @param scale_unit  Sky coordinate units of output profile. [Default: galsim.arcsec]
-        @returns  Good pupil scale size in meters.
+        @param scale_unit  Inverse units in which to return result [default: galsim.arcsec]
+        @returns           Fourier grid spacing.
         """
-        obj = galsim.Kolmogorov(lam=lam, r0=self.r0_500 * (lam/500.0)**(6./5))
-        stepk = obj.stepK() * lam*1.e-9 * galsim.radians / scale_unit
-        return stepk / (2 * np.pi)
+        return 2*np.pi*self.pupil_plane_scale/(lam*1e-9) * scale_unit/galsim.radians
 
-    def wavefront(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
-        """ Compute wavefront due to phase screen.
-
-        Wavefront here indicates the distance by which the physical wavefront lags or leads the
-        ideal plane wave (pre-optics) or spherical wave (post-optics).
-
-        @param aper     `galsim.Aperture` over which to compute wavefront.
-        @param theta_x  x-component of field angle corresponding to center of output array.
-        @param theta_y  y-component of field angle corresponding to center of output array.
-        @returns        Wavefront lag or lead in nanometers over aperture.
-        """
-        scale = aper.pupil_scale
-        nx = aper.npix
-        xmin = self.origin[0] + 1000*self.altitude*theta_x.tan() - 0.5*scale*(nx-1)
-        xmax = xmin + scale*(nx-1)
-        ymin = self.origin[1] + 1000*self.altitude*theta_y.tan() - 0.5*scale*(nx-1)
-        ymax = ymin + scale*(nx-1)
-        return self.tab2d.eval_grid(xmin, xmax, nx, ymin, ymax, nx)
-
-    def reset(self):
-        """Reset phase screen back to time=0."""
-        self.rng = self.orig_rng.duplicate()
-        self.origin = np.array([0.0, 0.0])
-
-        # Only need to reset/create tab2d if not frozen or doesn't already exist
-        if self.alpha != 1.0 or not hasattr(self, 'tab2d'):
-            self.screen = self._random_screen()
-            self._x0 = self._y0 = -0.5*(self.npix-1)*self.screen_scale
-            self._dx = self._dy = self.screen_scale
-            self.tab2d = galsim.LookupTable2D(self._x0, self._y0, self._dx, self._dy, self.screen,
-                                              edge_mode='wrap')
-
-
-# Some utilities for working with Zernike polynomials
-# Combinations.  n choose r.
-def _nCr(n, r):
-    from math import factorial
-    return factorial(n) / (factorial(r)*factorial(n-r))
-
-
-# This function stolen from https://github.com/tvwerkhoven/libtim-py/blob/master/libtim/zern.py
-def _noll_to_zern(j):
-    """
-    Convert linear Noll index to tuple of Zernike indices.
-    j is the linear Noll coordinate, n is the radial Zernike index and m is the azimuthal Zernike
-    index.
-    @param [in] j Zernike mode Noll index
-    @return (n, m) tuple of Zernike indices
-    @see <https://oeis.org/A176988>.
-    """
-    if (j == 0):
-        raise ValueError("Noll indices start at 1, 0 is invalid.")
-
-    n = 0
-    j1 = j-1
-    while (j1 > n):
-        n += 1
-        j1 -= n
-
-    m = (-1)**j * ((n % 2) + 2 * int((j1+((n+1) % 2)) / 2.0))
-    return (n, m)
-
-
-def _zern_norm(n, m):
-    """Normalization coefficient for zernike (n, m).
-
-    Defined such that \int_{unit disc} Z(n1, m1) Z(n2, m2) dA = \pi if n1==n2 and m1==m2 else 0.0
-    """
-    if m == 0:
-        return np.sqrt(1./(n+1))
-    else:
-        return np.sqrt(1./(2.*n+2))
-
-
-def _zern_rho_coefs(n, m):
-    """Compute coefficients of radial part of Zernike (n, m).
-    """
-    kmax = (n-abs(m))/2
-    A = [0]*(n+1)
-    for k in xrange(kmax+1):
-        val = (-1)**k * _nCr(n-k, k) * _nCr(n-2*k, kmax-k) / _zern_norm(n, m)
-        A[n-2*k] = val
-    return A
-
-
-def _zern_coef_array(n, m, shape=None):
-    """Assemble coefficient array array for evaluating Zernike (n, m) as the real part of a
-    bivariate polynomial in abs(rho)^2 and rho, where rho is a complex array indicating position on
-    a unit disc.
-    """
-    if shape is None:
-        shape = ((n//2)+1, abs(m)+1)
-    out = np.zeros(shape, dtype=np.complex128)
-    coefs = np.array(_zern_rho_coefs(n, m), dtype=np.complex128)
-    if m < 0:
-        coefs *= -1j
-
-    for i, c in enumerate(coefs[abs(m)::2]):
-        out[i, abs(m)] = c
-    return out
-
-
-def horner(x, coef):
-    """Evaluate univariate polynomial using Horner's method.
-
-    I.e., take A + Bx + Cx^2 + Dx^3 and evaluate it as
-    A + x(B + x(C + x(D)))
-
-    @param x     Where to evaluate polynomial.
-    @param coef  Polynomial coefficients of increasing powers of x.
-    @returns     Polynomial evaluation.  Will take on the shape of x if x is an ndarray.
-    """
-    result = 0
-    for c in coef[::-1]:
-        result = result*x + c
-    return result
-
-
-def horner2d(x, y, coefs):
-    """Evaluate bivariate polynomial using nested Horner's method.
-
-    @param x      Where to evaluate polynomial (first covariate).  Must be same shape as y.
-    @param y      Where to evaluate polynomial (second covariate).  Must be same shape as x.
-    @param coefs  2D array-like of coefficients in increasing powers of x and y.
-                  The first axis corresponds to increasing the power of y, and the second to
-                  increasing the power of x.
-    @returns      Polynomial evaluation.  Will take on the shape of x and y if these are ndarrays.
-    """
-    result = 0
-    for coef in coefs[::-1]:
-        result = result*x + horner(y, coef)
-    return result
-
-
-class OpticalScreen(object):
-    """
-    @param aberrations   Zernike polynomial aberrations sequence in waves.
-    @param lam_0         Reference wavelength in nanometers at which Zernike aberrations are being
-                         specified.  [Default: 500]
-    """
-    def __init__(self, tip=0.0, tilt=0.0, defocus=0.0, astig1=0.0, astig2=0.0, coma1=0.0, coma2=0.0,
-                 trefoil1=0.0, trefoil2=0.0, spher=0.0, aberrations=None, lam_0=500.0):
-        if aberrations is None:
-            aberrations = np.zeros(12)
-            aberrations[2] = tip
-            aberrations[3] = tilt
-            aberrations[4] = defocus
-            aberrations[5] = astig1
-            aberrations[6] = astig2
-            aberrations[7] = coma1
-            aberrations[8] = coma2
-            aberrations[9] = trefoil1
-            aberrations[10] = trefoil2
-            aberrations[11] = spher
-        else:
-            # Make sure no individual aberrations were passed in, since they will be ignored.
-            if any([tip, tilt, defocus, astig1, astig2, coma1, coma2, trefoil1, trefoil2, spher]):
-                raise TypeError("Cannot pass in individual aberrations and array!")
-            # Aberrations were passed in, so check for right number of entries.
-            if len(aberrations) <= 2:
-                raise ValueError("Aberrations keyword must have length > 2")
-            # Check for non-zero value in first place.  Probably a mistake.
-            if aberrations[0] != 0.0:
-                import warnings
-                warnings.warn(
-                    "Detected non-zero value in aberrations[0] -- this value is ignored!")
-
-        self.aberrations = aberrations
-        self.lam_0 = lam_0
-
-        maxn = max(_noll_to_zern(j)[0] for j in range(1, len(self.aberrations)))
-        shape = (maxn//2+1, maxn+1)  # (max power of |rho|^2,  max power of rho)
-        self.coef_array = np.zeros(shape, dtype=np.complex128)
-
-        for j, ab in enumerate(self.aberrations):
-            if j == 0:
-                continue
-            self.coef_array += _zern_coef_array(*_noll_to_zern(j), shape=shape) * ab
-
-    # def __str__(self):
-    #     return "galsim.AtmosphericScreen(altitude=%s)" % self.altitude
-    #
-    # def __repr__(self):
-    #     outstr = ("galsim.AtmosphericScreen(%r, %r, altitude=%r, time_step=%r, " +
-    #               "r0_500=%r, L0=%r, vx=%r, vy=%r, alpha=%r, rng=%r)")
-    #     return outstr % (self.screen_size, self.screen_scale, self.altitude, self.time_step,
-    #                      self.r0_500, self.L0, self.vx, self.vy, self.alpha, self.rng)
-    #
-    # def __eq__(self, other):
-    #     sL0 = self.L0 if self.L0 is not None else np.inf
-    #     oL0 = other.L0 if other.L0 is not None else np.inf
-    #     return (self.screen_size == other.screen_size and
-    #             self.screen_scale == other.screen_scale and
-    #             self.altitude == other.altitude and
-    #             self.r0_500 == other.r0_500 and
-    #             sL0 == oL0 and
-    #             self.vx == other.vx and
-    #             self.vy == other.vy and
-    #             self.alpha == other.alpha and
-    #             self.rng == other.rng)
-    #
-    # def __ne__(self, other):
-    #     return not self == other
-
-    def pupil_scale(self, lam, diam, scale_unit=galsim.arcsec):
-        """Compute a good pupil_scale in meters for this phase screen.
+    def _maxK(self, lam, scale_unit=galsim.arcsec):
+        """Return the Fourier grid half-size for this aperture at given wavelength.
 
         @param lam         Wavelength in nanometers.
-        @param diam        Diameter of aperture in meters.
-        @param scale_unit  Sky coordinate units of output profile. [Default: galsim.arcsec]
-        @returns  Good pupil scale size in meters.
+        @param scale_unit  Inverse units in which to return result [default: galsim.arcsec]
+        @returns           Fourier grid half-size.
         """
-        obj = galsim.Airy(lam=lam, diam=diam)
-        stepk = obj.stepK() * lam*1.e-9 * galsim.radians / scale_unit
-        return stepk / (2 * np.pi)
+        return np.pi*self.pupil_plane_size/(lam*1e-9) * scale_unit/galsim.radians
 
-    def wavefront(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees):
-        """ Compute wavefront due to phase screen.
-
-        Wavefront here indicates the distance by which the physical wavefront lags or leads the
-        ideal plane wave (pre-optics) or spherical wave (post-optics).
-
-        @param aper     `galsim.Aperture` over which to compute wavefront.
-        @param theta_x  x-component of field angle corresponding to center of output array.
-        @param theta_y  y-component of field angle corresponding to center of output array.
-        @returns        Wavefront lag or lead in nanometers over aperture.
+    def _sky_scale(self, lam, scale_unit=galsim.arcsec):
+        """Return the image scale for this aperture at given wavelength.
+        @param lam         Wavelength in nanometers.
+        @param scale_unit  Units in which to return result [default: galsim.arcsec]
+        @returns           Image scale.
         """
-        # ignore theta_x, theta_y
-        r = aper.rho[aper.illuminated]
-        rsqr = np.abs(r)**2
-        wf = np.zeros(aper.illuminated.shape, dtype=np.float64)
-        wf[aper.illuminated] = horner2d(rsqr, r, self.coef_array).real
-        return wf * self.lam_0
+        return (lam*1e-9) / self.pupil_plane_size * galsim.radians/scale_unit
+
+    def _sky_size(self, lam, scale_unit=galsim.arcsec):
+        """Return the image size for this aperture at given wavelength.
+        @param lam         Wavelength in nanometers.
+        @param scale_unit  Units in which to return result [default: galsim.arcsec]
+        @returns           Image size.
+        """
+        return (lam*1e-9) / self.pupil_plane_scale * galsim.radians/scale_unit
 
 
 class PhaseScreenList(object):
@@ -594,6 +529,8 @@ class PhaseScreenList(object):
     @param layers  Sequence of phase screens.
     """
     def __init__(self, layers):
+        if isinstance(layers, galsim.PhaseScreenList):
+            self._layers = list(layers._layers)
         self._layers = list(layers)
         self._update_attrs()  # for now, just updating self.time_step
 
@@ -634,11 +571,11 @@ class PhaseScreenList(object):
         return "galsim.PhaseScreenList(%r)" % self._layers
 
     def __eq__(self, other):
-        return (len(self) == len(other) and
-                all(sl == ol for sl, ol in zip(self._layers, other._layers)))
+        return self._layers == other._layers
 
-    def __ne__(self, other):
-        return not self == other
+    def __ne__(self, other): return not self == other
+
+    __hash__ = None  # Mutable means not hashable.
 
     def _update_attrs(self):
         # Update object attributes for current set of layers.  Currently the only attribute is
@@ -701,78 +638,135 @@ class PhaseScreenList(object):
         """
         return np.sum(layer.wavefront(*args, **kwargs) for layer in self)
 
-    def makePSF(self, diam, **kwargs):
+    def makePSF(self, lam, **kwargs):
         """Compute one PSF or multiple PSFs from the current PhaseScreenList, depending on the type
-        of `theta_x` and `theta_y`.  If `theta_x` and `theta_y` are iterable, then return PSFs at
-        the implied field angles in a list.  If `theta_x` and `theta_y` are scalars, return a single
-        PSF at the specified field angle.
+        of (`theta_x`, `theta_y`) or `theta`.  If (`theta_x`, `theta_y`) or `theta` are iterable,
+        then return a list of PSFs at the specified field angles.  If `theta_x` and `theta_y` are
+        scalars or `theta` is a single tuple, then return a single PSF at the specified field angle.
 
-        Note that this method advances each PhaseScreen in the list, so consecutive calls with the
-        same arguments will generally return different PSFs.  Use PhaseScreenList.reset() to reset
-        the time to t=0.  See galsim.PhaseScreenPSF docstring for more details.
+        Note that this method advances each PhaseScreen in the PhaseScreenList, so consecutive calls
+        with the same arguments will generally return different PSFs.  Use PhaseScreenList.reset()
+        to reset the time to t=0.  See the galsim.PhaseScreenPSF docstring for more details.
 
-        @param diam             Diameter in meters of aperture used to compute PSF from phases.
-        @param lam              Wavelength in nanometers used to compute PSF.  [Default: 500]
-        @param exptime          Time in seconds overwhich to accumulate evolving instantaneous PSFs
-                                [Default: 0.0]
-        @param flux             Flux of output PSF [Default: 1.0]
-        @param theta_x          Iterable or scalar for x-component of field angle at which to
-                                evaluate phase screens and the resulting PSF(s).
-                                [Default: 0.0*galsim.arcmin]
-        @param theta_y          Iterable or scalar for y-component of field angle at which to
-                                evaluate phase screens and the resulting PSF(s).
-                                [Default: 0.0*galsim.arcmin]
-        @param scale_unit       Units to use for the sky coordinates of the output profile.
-                                [Default: galsim.arcsec]
-        @param obscuration      Linear dimension of central obscuration as fraction of pupil linear
-                                dimension, [0., 1.).  [Default: 0]
-        @param interpolant      Either an Interpolant instance or a string indicating which
-                                interpolant should be used.  Options are 'nearest', 'sinc',
-                                'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the
-                                integer order to use. [Default: galsim.Quintic()]
-        @param oversampling     Optional oversampling factor for the InterpolatedImage. Setting
-                                `oversampling < 1` will produce aliasing in the PSF (not good).
-                                Usually `oversampling` should be somewhat larger than 1.  1.5 is
-                                usually a safe choice.  [default: 1.5]
-        @param pad_factor       Additional multiple by which to zero-pad the PSF image to avoid
-                                folding compared to what would be employed for a simple Airy.  Note
-                                that `pad_factor` may need to be increased for stronger aberrations,
-                                i.e. when the equivalent Zernike coefficients become larger than
-                                order unity.  [default: 1.5]
-        @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
-                                details. [default: None]
+        @param lam               Wavelength in nanometers at which to compute PSF.
+        @param exptime           Time in seconds overwhich to accumulate evolving instantaneous PSF.
+                                 [Default: 0.0]
+        @param flux              Flux of output PSF [Default: 1.0]
+        @param theta_x           x-component of field angle at which to evaluate phase screens and
+                                 resulting PSF.  [Default: 0.0*galsim.arcmin]
+        @param theta_y           y-component of field angle at which to evaluate phase screens and
+                                 resulting PSF.  [Default: 0.0*galsim.arcmin]
+        @param theta             Alternative field angle specification.  Single tuple or iterable of
+                                 tuples (theta_x, theta_y).
+        @param scale_unit        Units to use for the sky coordinates of the output profile.
+                                 [Default: galsim.arcsec]
+        @param interpolant       Either an Interpolant instance or a string indicating which
+                                 interpolant should be used.  Options are 'nearest', 'sinc',
+                                 'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the
+                                 integer order to use. [default: galsim.Quintic()]
+        @param aper              Aperture to use to compute PSF(s).
+        @param gsparams          An optional GSParams argument.  See the docstring for GSParams for
+                                 details. [default: None]
+
+        The following are optional keywords to use to setup the aperture if `aper` is not provided.
+
+        @param diam              Diameter in meters of aperture used to compute PSF from phases.
+        @param circular_pupil    Adopt a circular pupil? [default: True].
+        @param obscuration       Fractional linear circular obscuration of pupil. [default: 0.]
+        @param nstruts           Number of radial support struts to add to the central obscuration.
+                                 [default: 0]
+        @param strut_thick       Thickness of support struts as a fraction of pupil diameter.
+                                 [default: 0.05]
+        @param strut_angle       Angle made between the vertical and the first strut in the CCW
+                                 direction; must be an Angle instance.
+                                 [default: 0. * galsim.degrees]
+        @param oversampling      Optional oversampling factor for the InterpolatedImage. Setting
+                                 `oversampling < 1` will produce aliasing in the PSF (not good).
+                                 Usually `oversampling` should be somewhat larger than 1.  1.5 is
+                                 usually a safe choice.  [default: 1.5]
+        @param pad_factor        Additional multiple by which to zero-pad the PSF image to avoid
+                                 folding compared to what would be employed for a simple Airy.  Note
+                                 that `pad_factor` may need to be increased for stronger
+                                 aberrations, i.e., when the equivalent Zernike coefficients become
+                                 larger than order unity.  [default: 1.5]
         """
-        theta_x = kwargs.get('theta_x', 0.0*galsim.arcmin)
-        theta_y = kwargs.get('theta_y', 0.0*galsim.arcmin)
-        if not hasattr(theta_x, '__iter__') and not hasattr(theta_y, '__iter__'):
-            return PhaseScreenPSF(self, diam, **kwargs)
-        else:
-            kwargs['_eval_now'] = False
-            PSFs = []
-            for theta_x, theta_y in zip(kwargs.pop('theta_x'), kwargs.pop('theta_y')):
-                PSFs.append(PhaseScreenPSF(self, diam, theta_x=theta_x, theta_y=theta_y, **kwargs))
+        # Assemble theta as an iterable over 2-tuples of Angles.
+        # 5 possible input kwargs cases for theta, theta_x, theta_y.
+        # 1) All undefined, in which case set to [(Angle(0), Angle(0))]
+        # 2) theta = tuple(Angle, Angle), in which case just need to listify
+        # 3) theta_x = Angle, theta_y = Angle, in which case need to listify and zip
+        # 4) theta_x/y = [Angle, Angle, ...], in which case need to zip
+        # 5) theta = [(Angle, Angle), (Angle, Angle), ...], in which case we're already done.
+        single = False
+        if 'theta' not in kwargs:  # Case 1, 3, or 4
+            theta_x = kwargs.pop('theta_x', 0.0*galsim.arcmin)
+            theta_y = kwargs.pop('theta_y', 0.0*galsim.arcmin)
+            if not hasattr(theta_x, '__iter__'):
+                single = True
+            else:
+                theta = izip(theta_x, theta_y)
+        else:  # Case 2 or 5
+            theta = kwargs.pop('theta')
+            # 2-tuples are iterable, so to check whether theta is indicating a single pointing, or a
+            # generator of pointings we need to look at the first item.  If the first item is
+            # iterable itself, then assume theta is an interable of 2-tuple field angles.  We then
+            # replace the consumed tuple at the beginning of the generator and go on.  If the first
+            # item is scalar, then assume that it's the x-component of a single field angle.
+            theta = iter(theta)
+            th0 = theta.next()
+            if hasattr(th0, '__iter__'):
+                theta = chain([th0], theta)
+            else:
+                theta_x, theta_y = th0, theta.next()
+                single = True
 
-            flux = kwargs.get('flux', 1.0)
-            gsparams = kwargs.get('gsparams', None)
-            _nstep = PSFs[0]._nstep
+        if single:
+            return PhaseScreenPSF(self, lam, theta_x=theta_x, theta_y=theta_y, **kwargs)
+        else:
             # For non-frozen-flow AtmosphericScreens, it can take much longer to update the
             # atmospheric layers than it does to create an instantaneous PSF, so we exchange the
             # order of the PSF and time loops so we're not recomputing screens needlessly when we go
             # from PSF1 to PSF2 and so on.  For frozen-flow AtmosphericScreens, there's not much
             # difference with either loop order, so we just always make the PSF loop the inner loop.
+            kwargs['_eval_now'] = False
+            PSFs = []
+            for theta_x, theta_y in theta:
+                PSFs.append(PhaseScreenPSF(self, lam, theta_x=theta_x, theta_y=theta_y, **kwargs))
+
+            flux = kwargs.get('flux', 1.0)
+            _nstep = PSFs[0]._nstep
             for i in xrange(_nstep):
                 for PSF in PSFs:
                     PSF._step()
                 self.advance()
 
+            suppress_warning = kwargs.pop('suppress_warning', False)
             for PSF in PSFs:
-                PSF._finalize(flux, gsparams)
+                PSF._finalize(flux, suppress_warning)
             return PSFs
 
     @property
     def r0_500_effective(self):
         """Effective r0_500 for set of screens in list that define an r0_500 attribute."""
         return sum(l.r0_500**(-5./3) for l in self if hasattr(l, 'r0_500'))**(-3./5)
+
+    def stepK(self, **kwargs):
+        """Return an appropriate stepK for this list of phase screens.
+
+        The required set of parameters depends on the types of the individual PhaseScreens in the
+        PhaseScreenList.  See the documentation for the individual PhaseScreen.pupil_plane_scale methods
+        for more details.
+
+        @returns  stepK.
+        """
+        # Generically, Galsim propagates stepK() for convolutions using
+        #   stepk = sum(s**-2 for s in stepks)**(-0.5)
+        # We're not actually doing convolution between screens here, though.  In fact, the right
+        # relation for Kolmogorov screens uses exponents -5./3 and -3./5:
+        #   stepk = sum(s**(-5./3) for s in stepks)**(-3./5)
+        # Since most of the layers in a PhaseScreenList are likely to be (nearly) Kolmogorov
+        # screens, we'll use that relation.
+        return sum(layer.stepK(**kwargs)**(-5./3) for layer in self)**(-3./5)
 
 
 class PhaseScreenPSF(GSObject):
@@ -802,48 +796,65 @@ class PhaseScreenPSF(GSObject):
         >>> psf3 = screen_list.makePSF(...)
         >>> assert psf1 == psf3
 
-    @param screen_list      PhaseScreenList object from which to create PSF.
-    @param diam             Diameter in meters of aperture used to compute PSF from phases.
-    @param lam              Wavelength in nanometers used to compute PSF.  [Default: 500]
-    @param exptime          Time in seconds overwhich to accumulate evolving instantaneous PSF.
-                            [Default: 0.0]
-    @param flux             Flux of output PSF [Default: 1.0]
-    @param theta_x          x-component of field angle at which to evaluate phase screens and
-                            resulting PSF.  [Default: 0.0*galsim.arcmin]
-    @param theta_y          y-component of field angle at which to evaluate phase screens and
-                            resulting PSF.  [Default: 0.0*galsim.arcmin]
-    @param scale_unit       Units to use for the sky coordinates of the output profile.
-                            [Default: galsim.arcsec]
-    @param obscuration      Linear dimension of central obscuration as fraction of pupil linear
-                            dimension, [0., 1.).  [Default: 0]
-    @param interpolant      Either an Interpolant instance or a string indicating which interpolant
-                            should be used.  Options are 'nearest', 'sinc', 'linear', 'cubic',
-                            'quintic', or 'lanczosN' where N should be the integer order to use.
-                            [default: galsim.Quintic()]
-    @param oversampling     Optional oversampling factor for the InterpolatedImage. Setting
-                            `oversampling < 1` will produce aliasing in the PSF (not good).
-                            Usually `oversampling` should be somewhat larger than 1.  1.5 is
-                            usually a safe choice.  [default: 1.5]
-    @param pad_factor       Additional multiple by which to zero-pad the PSF image to avoid
-                            folding compared to what would be employed for a simple Airy.  Note
-                            that `pad_factor` may need to be increased for stronger aberrations,
-                            i.e. when the equivalent Zernike coefficients become larger than
-                            order unity.  [default: 1.5]
-    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
-                            details. [default: None]
+    Computing a PSF from a phase screen also requires an Aperture be specified.  This can be done
+    either directly via the `aper` keyword, or by setting a number of keywords that will be passed
+    to the `Aperture.fromPhaseScreenList` constructor.  The `aper` keyword always takes precedence.
+
+    @param screen_list       PhaseScreenList object from which to create PSF.
+    @param lam               Wavelength in nanometers at which to compute PSF.
+    @param exptime           Time in seconds overwhich to accumulate evolving instantaneous PSF.
+                             [Default: 0.0]
+    @param flux              Flux of output PSF [Default: 1.0]
+    @param theta_x           x-component of field angle at which to evaluate phase screens and
+                             resulting PSF.  [Default: 0.0*galsim.arcmin]
+    @param theta_y           y-component of field angle at which to evaluate phase screens and
+                             resulting PSF.  [Default: 0.0*galsim.arcmin]
+    @param scale_unit        Units to use for the sky coordinates of the output profile.
+                             [Default: galsim.arcsec]
+    @param interpolant       Either an Interpolant instance or a string indicating which interpolant
+                             should be used.  Options are 'nearest', 'sinc', 'linear', 'cubic',
+                             'quintic', or 'lanczosN' where N should be the integer order to use.
+                             [default: galsim.Quintic()]
+    @param aper              Aperture to use to compute PSF(s).
+    @param gsparams          An optional GSParams argument.  See the docstring for GSParams for
+                             details. [default: None]
+
+    The following are optional keywords to use to setup the aperture if `aper` is not provided.
+
+    @param diam              Diameter in meters of aperture used to compute PSF from phases.
+    @param pupil_plane_scale Sampling resolution of the pupil plane in meters.  Either `pupil_plane_scale`
+                             or `npix` must be specified.
+    @param pupil_plane_size  Size of the pupil plane in meters.  Note, this may be (in fact, it
+                             usually *should* be) larger than the aperture diameter.
+                             [default: 2.*diam]
+    @param circular_pupil    Adopt a circular pupil? [default: True].
+    @param obscuration       Fractional linear circular obscuration of pupil. [default: 0.]
+    @param nstruts           Number of radial support struts to add to the central obscuration.
+                             [default: 0]
+    @param strut_thick       Thickness of support struts as a fraction of pupil diameter.
+                             [default: 0.05]
+    @param strut_angle       Angle made between the vertical and the first strut in the CCW
+                             direction; must be an Angle instance.  [default: 0. * galsim.degrees]
+    @param oversampling      Optional oversampling factor for the InterpolatedImage. Setting
+                             `oversampling < 1` will produce aliasing in the PSF (not good).
+                             Usually `oversampling` should be somewhat larger than 1.  1.5 is
+                             usually a safe choice.  [default: 1.5]
+    @param pad_factor        Additional multiple by which to zero-pad the PSF image to avoid
+                             folding compared to what would be employed for a simple Airy.  Note
+                             that `pad_factor` may need to be increased for stronger aberrations,
+                             i.e. when the equivalent Zernike coefficients become larger than
+                             order unity.  [default: 1.5]
     """
-    def __init__(self, screen_list, diam, lam=500., exptime=0.0, flux=1.0,
+    def __init__(self, screen_list, lam, exptime=0.0, flux=1.0,
                  theta_x=0.0*galsim.arcmin, theta_y=0.0*galsim.arcmin,
-                 scale_unit=galsim.arcsec, interpolant=None,
-                 obscuration=0.0,
-                 oversampling=1.5, pad_factor=1.5,
-                 _pupil_plane_size=None, _pupil_scale=None,
-                 gsparams=None, _eval_now=True, _bar=None):
+                 interpolant=None, aper=None, scale_unit=galsim.arcsec,
+                 gsparams=None, _eval_now=True, _bar=None, suppress_warning=False,
+                 _force_stepk=None, _force_maxk=None, **kwargs):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
         # progress bar during long calculations.
 
-        if obscuration is None:
-            obscuration = 0.0
+        if not isinstance(screen_list, PhaseScreenList):
+            screen_list = PhaseScreenList(screen_list)
         self.screen_list = screen_list
         self.lam = float(lam)
         self.exptime = float(exptime)
@@ -851,33 +862,18 @@ class PhaseScreenPSF(GSObject):
         self.theta_y = theta_y
         self.scale_unit = scale_unit
         self.interpolant = interpolant
-        self.diam = float(diam)
-        self.obscuration = float(obscuration)
-        self.pad_factor = float(pad_factor)
-        self.oversampling = float(oversampling)
+        self._gsparams = gsparams
+        self._serialize_stepk = _force_stepk
+        self._serialize_maxk = _force_maxk
 
-        if _pupil_scale is None:
-            # Generically, Galsim propagates stepK() for convolutions using
-            #   scale = sum(s**-2 for s in scales)**(-0.5)
-            # We're not actually doing convolution between screens here, though.  In fact, the right
-            # relation for Kolmogorov screens uses exponents -5./3 and -3./5:
-            #   scale = sum(s**(-5./3) for s in scales)**(-3./5)
-            # Since most of the layers in a PhaseScreenList are likely to be (nearly) Kolmogorov
-            # screens, we'll use that relation.
-            _pupil_scale = (sum(layer.pupil_scale(lam, diam)**(-5./3)
-                                for layer in screen_list))**(-3./5)
-            _pupil_scale /= self.pad_factor
-        self._pupil_scale = _pupil_scale
-        # Note _pupil_plane_size sets the size of the array defining the pupil, which will generally
-        # be somewhat larger than twice the diameter of the pupil itself.
-        if _pupil_plane_size is None:
-            _pupil_plane_size = 2 * self.diam * self.pad_factor
-        self._npix = galsim._galsim.goodFFTSize(int(np.ceil(_pupil_plane_size/self._pupil_scale)))
-        self._pupil_plane_size = self._npix * self._pupil_scale
-        self.scale = 1e-9*self.lam/self._pupil_plane_size * galsim.radians / self.scale_unit
+        if aper is None:
+            # Check here for diameter.
+            if 'diam' not in kwargs:
+                raise ValueError("Diameter required if aperture not specified directly.")
+            aper = Aperture(lam=lam, screen_list=screen_list, gsparams=gsparams, **kwargs)
 
-        self.aper = Aperture(self.diam, self._npix, pupil_plane_size=self._pupil_plane_size,
-                             obscuration=self.obscuration)
+        self.aper = aper
+        self.scale = aper._sky_scale(self.lam, self.scale_unit)
 
         self.img = np.zeros(self.aper.illuminated.shape, dtype=np.float64)
 
@@ -900,7 +896,7 @@ class PhaseScreenPSF(GSObject):
                 self.screen_list.advance()
                 if _bar is not None:
                     _bar.update()
-            self._finalize(flux, gsparams)
+            self._finalize(flux, suppress_warning)
 
     def __str__(self):
         return ("galsim.PhaseScreenPSF(%s, lam=%s, exptime=%s)" %
@@ -908,829 +904,379 @@ class PhaseScreenPSF(GSObject):
 
     def __repr__(self):
         outstr = ("galsim.PhaseScreenPSF(%r, lam=%r, exptime=%r, flux=%r, theta_x=%r, " +
-                  "theta_y=%r, scale_unit=%r, interpolant=%r, diam=%r, obscuration=%r, " +
-                  "oversampling=%r, pad_factor=%r, gsparam=%r)")
+                  "theta_y=%r, scale_unit=%r, interpolant=%r, gsparams=%r)")
         return outstr % (self.screen_list, self.lam, self.exptime, self.flux, self.theta_x,
-                         self.theta_y, self.scale_unit, self.interpolant, self.diam,
-                         self.obscuration, self.oversampling, self.pad_factor, self.gsparams)
+                         self.theta_y, self.scale_unit, self.interpolant, self.gsparams)
 
     def __eq__(self, other):
         # Even if two PSFs were generated with different sets of parameters, they will act
         # identically if their img and interpolant match.
         return (self.img == other.img and
-                self.interpolant == other.interpolant)
+                self.interpolant == other.interpolant and
+                self.gsparams == other.gsparams)
 
-    def __ne__(self, other):
-        return not self == other
+    def __hash__(self):
+        return hash(("galsim.PhaseScreenPSF", self.ii))
 
     def _step(self):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
         wf = self.screen_list.wavefront(self.aper, self.theta_x, self.theta_y)
-        expwf = self.aper.illuminated * np.exp(2j * np.pi * wf / self.lam)
-        ftexpwf = np.fft.fft2(np.fft.fftshift(expwf))
+        expwf = np.exp(2j * np.pi * wf / self.lam)
+        expwf_grid = np.zeros_like(self.aper.illuminated, dtype=np.complex128)
+        expwf_grid[self.aper.illuminated] = expwf
+        ftexpwf = np.fft.fft2(np.fft.fftshift(expwf_grid))
         self.img += np.abs(ftexpwf)**2
 
-    def _finalize(self, flux, gsparams):
+    def _finalize(self, flux, suppress_warning):
         """Take accumulated integrated PSF image and turn it into a proper GSObject."""
-        del self.aper  # don't need this any more, save some RAM
         self.img = np.fft.fftshift(self.img)
         self.img *= (flux / (self.img.sum() * self.scale**2))
         self.img = galsim.ImageD(self.img.astype(np.float64), scale=self.scale)
 
-        ii = galsim.InterpolatedImage(
-            self.img, x_interpolant=self.interpolant, calculate_stepk=True, calculate_maxk=True,
-            use_true_center=False, normalization='sb', gsparams=gsparams
-        )
-        GSObject.__init__(self, ii)
-
-
-def _listify(arg):
-    """Turn argument into a list if not already iterable."""
-    return [arg] if not hasattr(arg, '__iter__') else arg
-
-
-def _lod_to_dol(lod, N=None):
-    """ Generate dicts from dict of lists (with broadcasting).
-    Specifically, generate "scalar-valued" kwargs dictionaries from a kwarg dictionary with values
-    that are length-N lists, or possibly length-1 lists or scalars that should be broadcasted up to
-    length-N lists.
-    """
-    if N is None:
-        N = max(len(v) for v in lod.values() if hasattr(v, '__len__'))
-    # Loop through broadcast range
-    for i in xrange(N):
-        out = {}
-        for k, v in lod.iteritems():
-            try:
-                out[k] = v[i]
-            except IndexError:  # It's list-like, but too short.
-                if len(v) != 1:
-                    raise ValueError("Cannot broadcast kwargs of different non-length-1 lengths.")
-                out[k] = v[0]
-            except TypeError:  # Value is not list-like, so broadcast it in its entirety.
-                out[k] = v
-            except:
-                raise "Cannot broadcast kwarg {1}={2}".format(k, v)
-        yield out
-
-
-def Atmosphere(screen_size, rng=None, **kwargs):
-    """Create an atmosphere as a list of turbulent phase screens at different altitudes.  The
-    atmosphere model can then be used to simulate atmospheric PSFs.
-
-    Simulating an atmospheric PSF is typically accomplished by first representing the 3-dimensional
-    turbulence in the atmosphere as a series of discrete 2-dimensional phase screens.  These screens
-    may blow around in the wind, and may or may not also evolve in time.  This function allows one
-    to quickly assemble a list of atmospheric phase screens into a galsim.PhaseScreenList object,
-    which can then be used to evaluate PSFs through various columns of atmosphere at different field
-    angles.
-
-    The atmospheric screens currently available both produce turbulence that follows a von Karman
-    power spectrum.  Specifically, the phase power spectrum in each screen can be written
-
-    psi(nu) = 0.023 r0^(-5/3) (nu^2 + 1/L0^2)^(11/6)
-
-    where psi(nu) is the power spectral density at spatial frequency nu, r0 is the Fried parameter
-    (which has dimensions of length) and sets the amplitude of the turbulence, and L0 is the outer
-    scale (also dimensions of length) which effectively cuts off the power spectrum at large scales
-    (small nu).  Typical values for r0 are ~0.1 to 0.2 meters, which corresponds roughly to PSF
-    FWHMs of ~0.5 to 1.0 arcsec for optical wavelengths.  Note that r0 is a function of wavelength,
-    scaling like r0 ~ wavelength^(6/5).  To reduce confusion, the input parameter here is named
-    r0_500 and refers explicitly to the Fried parameter at a wavelength of 500 nm.  The outer scale
-    is typically in the 10s of meters and does not vary with wavelength.
-
-    To create multiple layers, simply specify keyword arguments as length-N lists instead of scalars
-    (works for all arguments except `time_step` and `rng`).  If, for any of these keyword arguments,
-    you want to use the same value for each layer, then you can just specify the argument as a
-    scalar and the function will automatically broadcast it into a list with length equal to the
-    longest found keyword argument list.  Note that it is an error to specify two keywords with
-    lists of different lengths (unless the of one of them is length is 1).
-
-    The one exception to the above is the keyword `r0_500`.  The effective Fried parameter for a set
-    of atmospheric layers is r0_500_effective = (sum(r**(-5./3) for r in r0_500s))**(-3./5).
-    Providing `r0_500` as a scalar or length-1 list will result in broadcasting such that the
-    effective Fried parameter for the whole set of layers equals the input argument.
-
-    As an example, the following code approximately creates the atmosphere used by Jee+Tyson(2011)
-    for their study of atmospheric PSFs for LSST.  Note this code takes about ~3-4 minutes to run on
-    a fast laptop, and will consume about (8192**2 pixels) * (8 bytes) * (6 screens) ~ 3 GB of
-    RAM in its final state, and more at intermediate states.
-
-        >>> altitude = [0, 2.58, 5.16, 7.73, 12.89, 15.46]  # km
-        >>> r0_500_effective = 0.16  # m
-        >>> weights = [0.652, 0.172, 0.055, 0.025, 0.074, 0.022]
-        >>> r0_500 = [r0_500_effective * w**(-3./5) for w in weights]
-        >>> speed = np.random.uniform(0, 20, size=6)  # m/s
-        >>> direction = [np.random.uniform(0, 360)*galsim.degrees for i in xrange(6)]
-        >>> npix = 8192
-        >>> screen_scale = 0.5 * r0_500_effective
-        >>> atm = galsim.Atmosphere(r0_500=r0_500, screen_size=screen_scale*npix, time_step=0.005,
-                                    altitude=altitude, L0=25.0, speed=speed,
-                                    direction=direction, screen_scale=screen_scale)
-
-    Once the atmosphere is constructed, a 15-sec exposure PSF (using an 8.4 meter aperture and
-    default settings) takes about 150 sec to generate on a fast laptop.
-
-        >>> psf = atm.makePSF(diam=8.4, exptime=15.0, obscuration=0.6)
-
-    Many factors will affect the timing of results, of course, including aperture diameter, gsparams
-    settings, pad_factor and oversampling options to makePSF, time_step and exposure time, frozen
-    vs. non-frozen atmospheric layers, and so on.
-
-    @param r0_500        Fried parameter setting the amplitude of turbulence; contributes to "size"
-                         of the resulting atmospheric PSF.  Specified at wavelength 500 nm, in units
-                         of meters.  [Default: 0.2]
-    @param screen_size   Physical extent of square phase screen in meters.  This should be large
-                         enough to accommodate the desired field-of-view of the telescope as well as
-                         the meta-pupil defined by the wind speed and exposure time.  Note that
-                         the screen will have periodic boundary conditions, so the code will run
-                         with a smaller sized screen, though this may introduce artifacts into PSFs
-                         or PSF correlations functions. Note that screen_size may be tweaked by the
-                         initializer to ensure screen_size is a multiple of screen_scale.
-    @param time_step     Interval to use when advancing the screen in time in seconds.
-                         [Default: 0.03]
-    @param altitude      Altitude of phase screen in km.  This is with respect to the telescope, not
-                         sea-level.  [Default: 0.0]
-    @param L0            Outer scale in meters.  The turbulence power spectrum will smoothly
-                         approach a constant at scales larger than L0.  Set to `None` or `np.inf`
-                         for a power spectrum without an outer scale.  [Default: 25.0]
-    @param speed         Wind speed in meters/second.  [Default: 0.0]
-    @param direction     Wind direction as galsim.Angle [Default: 0.0 * galsim.degrees]
-    @param alpha         Fraction of phase that is "remembered" between time_steps.  The fraction
-                         1-alpha is then the amount of turbulence freshly generated in each step.
-                         [Default: 1.0]
-    @param screen_scale  Physical pixel scale of phase screen in meters.  A fraction of the Fried
-                         parameter is usually sufficiently small, but users should test the effects
-                         of this parameter to ensure robust results.
-                         [Default: half of r0_500 for each screen]
-    @param rng           Random number generator as a galsim.BaseDeviate().  If None, then use the
-                         clock time or system entropy to seed a new generator.  [Default: None]
-    """
-    # Fill in screen_size here, since there isn't a default in AtmosphericScreen
-    kwargs['screen_size'] = _listify(screen_size)
-
-    # Set default r0_500 here, so that by default it gets broadcasted below such that the
-    # _total_ r0_500 from _all_ screens is 0.2 m.
-    if 'r0_500' not in kwargs:
-        kwargs['r0_500'] = [0.2]
-    kwargs['r0_500'] = _listify(kwargs['r0_500'])
-
-    # Turn speed, direction into vx, vy
-    if 'speed' in kwargs:
-        kwargs['speed'] = _listify(kwargs['speed'])
-        if 'direction' not in kwargs:
-            kwargs['direction'] = [0*galsim.degrees]*len(kwargs['speed'])
-        kwargs['vx'], kwargs['vy'] = zip(*[v*d.sincos()
-                                           for v, d in zip(kwargs['speed'],
-                                                           kwargs['direction'])])
-        del kwargs['speed']
-        del kwargs['direction']
-
-    # Determine broadcast size
-    nmax = max(len(v) for v in kwargs.values() if hasattr(v, '__len__'))
-
-    # Broadcast r0_500 here, since logical combination of indiv layers' r0s is complex:
-    if len(kwargs['r0_500']) == 1:
-        kwargs['r0_500'] = [nmax**(3./5) * kwargs['r0_500'][0]] * nmax
-
-    return PhaseScreenList(AtmosphericScreen(rng=rng, **kw) for kw in _lod_to_dol(kwargs, nmax))
-
-# --------------------------------------------------------------------------------------------------
-# Field-dependent optics PSF methods
-# --------------------------------------------------------------------------------------------------
-
-def parse_zemax_coefs_file(infile="data/lsst_aberration_coefs_rband_markedup.txt"):
-    """
-    Load a text file with the wavefront power-series expansion coefficients
-    output from Zemax (compatible versions...?).
-
-    FIXME: This version requires manually removing the header lines in the file first.
-    """
-    dt = np.dtype([('surf', float), ('W040', float), ('W131', float),
-        ('W222', float), ('W220', float), ('W311', float), ('W020', float),
-        ('W111', float), ('object', float)])
-    # dat = np.fromfile(infile, dtype=dt, sep=" ")
-    dat = np.loadtxt(infile)
-    W = np.core.records.array(dat, dtype=dt)[:, 0]
-    ### Convert defocus to 'medial defocus'
-    W['W220'] = W['W220'] + 0.5 * W['W222']
-    return W
-
-ksqrt2 = np.sqrt(2.)
-ksqrt3 = np.sqrt(3.)
-ksqrt5 = np.sqrt(5.)
-ksqrt6 = np.sqrt(6.)
-k_rad2arcsec = 180. * 60. * 60. / np.pi
-
-
-
-class TelescopePSF(object):
-    """
-    Model for the aberrated PSF of a telescope.
-
-    The model has 2 levels of 'parameters':
-
-        1. Fixed parameters describing the geometry of the optics such as mirror diameters,
-           locations, focal lengths, reference wavefront, and wavefront expansion coefficients.
-           [n_surfaces, {diam_i, a_i, c_i, W_{ref}, W_{klm,i}; i=1, ..., n_surfaces}]
-           These are specified by the `telescope_model` argument to __init__.
-        2. Perturbation parameters describing optical element tilts and decenters ('body motions')
-           and figure errors ('bending modes').
-           These are the parameters stored in `OpticsParameters` instances and passed to the
-           `set_perturbation_params` method.
-
-    Attributes
-    ----------
-    @param telescope_model dict The parameters for the telescope model
-    @param verbose bool Enable verbose output
-    @param npad int Padding factor for the pupil FFT (multiplies the number of grid points per
-                    dimension)
-
-    References
-    ----------
-    [1] K. Thompson, "Description of the third-order optical aberrations of near-circular pupil optical
-        systems without symmetry,"
-        J Opt Soc Am A Opt Image Sci Vis 22(7), 1389–1401, Optical Society of America (2005)
-        [doi:10.1364/JOSAA.22.001389].
-    [2] A. M. Manuel, J. H. Burge, and R. Tessieres, "Orthogonal Field-Dependent Aberrations for
-        Misaligned Optical Systems,"
-        presented at Frontiers in Optics, 2009, Washington, D.C., FThH3, OSA
-        [doi:10.1364/FIO.2009.FThH3].
-    [3] A. Manuel, "Field-Dependent Aberrations for Misaligned Reflective Optical Systems",
-        Ph.D. Thesis (2009).
-    [4] P. L. Schechter and R. S. Levinson, "Generic Misalignment Aberration Patterns in Wide-Field
-        Telescopes,"
-        Publications of the Astronomical Society of the Pacific 123, 812–832 (2011)
-        [doi:10.1086/661111].
-    [5] P. L. Schechter and R. S. Levinson, "Generic Misalignment Aberration Patterns and the Subspace
-        of Benign Misalignment,"
-        in arXiv astro-ph.IM (2012).
-    [6] R. Tessieres and J. H. Berge, "Alignment strategy for the LSST", Version 2, LSST Corporation
-    """
-    def __init__(self, telescope_model=lsst_telescope_model, verbose=False, npad=2):
-        self.telescope_model = telescope_model
-        self.verbose = verbose
-        self.npad = npad
-
-        self._init_telescope_parameters()
-        self._init_perturbations()
-
-        self.focus_W220 = 0.
-        self.focus_W040 = 0.
-
-    def _init_telescope_parameters(self):
-        self.n_surfs_bend_modes = len(self.telescope_model['coefs_bending_modes'])
-        self.n_surfs_body_motion = len(self.telescope_model['W_coefs']['W220'])
-
-    def pixel_scale_arcsec(self, wavelength=500.e-9):
-        """
-        Get the pixel size for computing GalSim PSFs via FFT.
-
-        Return the pixel size in arcseconds.
-
-        @param wavelength in meters
-        """
-        return (wavelength / (self.npad * self.telescope_model['telescope_diameter_meters']) *
-            k_rad2arcsec)
-
-    def _init_perturbations(self):
-        """
-        Instantiate objects describing the bending modes and body motion aberrations.
-        """
-        ### ----- Bending modes
-        self.bend = {k: ZernikeCoefsBendingModes(
-            a=self.telescope_model['coefs_bending_modes'][k]['a'],
-            c=self.telescope_model['coefs_bending_modes'][k]['c'])
-            for k in self.telescope_model['coefs_bending_modes'].keys()}
-        self.n_bend_modes = self.bend.values()[0].n_modes()
-        ### ----- Body motions
-        self.body = ZernikeCoeffsBodyMotions(self.telescope_model)
-        if self.verbose:
-            print "Reference body motion parameters (in waves):"
-            for i, key in enumerate(self.body.params_ref):
-                print "\t",key,":", self.body.params_ref[key]
-        return None
-
-    def set_perturbation_params(self, optics_params):
-        """
-        Set parameters describing the configuration of optics perturbations.
-
-        Take as input a list of perturbation parameters for each optical surface and update the
-        entire aberrated telescope model.
-
-        These parameters are, e.g., physical tilts and decenters of optical elements or
-        particular bending mode amplitudes on an optical surface.
-
-        @param optics_params    A dict of objects of class `OpticsParameters` for each optic.
-        """
-        ### Collect the bending modes coefficients into a single array for exit pupil predictions
-        self.surf_coefs = {k: optics_params[k].bending_modes()
-                           for i, k in enumerate(self.bend.keys())}
-
-        ### Tilts/decenters mapped to image plane displacements
-        self.misalignments = np.zeros((self.n_surfs_body_motion, 2), dtype=np.float64)
-        for i, key in enumerate(optics_params):
-            op = optics_params[key]
-            self.misalignments[self.telescope_model['zemax_coefs_rownums'][op.surface], :] = op.body_motions()
-
-        if self.verbose:
-            print "surf_coefs:", self.surf_coefs
-            print "misalignments:", self.misalignments
-        return None
-
-    def set_focus(self, defocus_mm=0.):
-        """
-        Defocus the entire image to model engineering diagnostics or curvature wavefront sensors.
-
-        @param defocus_mm   Longitudinal defocus in millimeters. [default: 0]
-        @param wavelength   Wavelength in meters. [default: 500e-9]
-        """
-        D = self.telescope_model['telescope_diameter_meters']
-        defocus_m = 1.e-3 * defocus_mm
-        R = D * self.telescope_model['f-ratio']
-        Rd = R + defocus_m
-        self.focus_W220 = (0.5 * (1./R - 1./Rd)) * (D/2) ** 2
-        self.focus_W040 = (0.125 * (1./R**3) * (2*R/Rd - (R/Rd)**3 - 1)) * (D/2) ** 2
-        return None
-
-    def zernike_coefs(self, h, wavelength):
-        """
-        Evaluate the exit pupil wavefront Zernike expansion coefficients at a
-        specific focal plane location h.
-
-        @param h            Focal plane 2D position normalized to the unit disk as an (x,y) tuple.
-        @param wavelength   Wavelength in meters.
-        """
-        if h[0] > 1. or h[1] > 1. or h[0] < -1. or h[1] < -1.:
-            import warnings
-            warnings.warn("h should be normalized to unit disk over the image plane.")
-
-        ### Match argument for galsim.optics.wavefront with indices in the Noll convention
-        ### See galsim.optics.wavefront for the description of the index labels for the zernike modes.
-        ### Index '0' is not used - it's a placeholder so we can number the
-        ### Zernike modes starting with '1'.
-        ### At '3rd order' in the wavefront expansion, we need the first 11 Zernike terms,
-        ### although the trefoil terms (Zernike index 9,10) are identically zero.
-        zernike_coefs = np.zeros(12, dtype=np.float64)
-
-        ### The aberration coefficients from the bending modes are just sums
-        ### over the coefficients calculated for each surface in the telescope
-        ### model.
-        zernike_coefs[2:12] = np.sum([self.bend[k].get_pupil_coefs(h, wavelength=wavelength,
-            surf_coefs=self.surf_coefs[k]) for k in self.bend.keys()], axis=0)
-        # print("bending mode zernike coefs:\n", zernike_coefs)
-
-        ### Body motion coefficients return values for modes 1-12
-        self.body.set_zernike_coef_params_from_displ(self.misalignments)
-        self.body.print_coefs(h)
-        body_coefs = self.body.get_pupil_coefs(h)
-
-        zernike_coefs[1:12] += body_coefs
-
-        ### Add the aberrations from a focus term
-        # print "focus W220, W040:", self.focus_W220, self.focus_W040
-        zernike_coefs[4] += (np.sqrt(3.)/2.) * (self.focus_W220 + self.focus_W040) / wavelength
-        zernike_coefs[11] += (np.sqrt(5.) / 6.) * self.focus_W040 / wavelength
-
-        return zernike_coefs
-
-
-# ---------------------------------------------------------
-# Level 2: Contributions to optics PSF
-#   - ZernikeCoefsBendingModes
-#   - ZernikeCoefsBodyMotions
-# ---------------------------------------------------------
-class OpticsParameters(object):
-    """
-    Parameters for perturbations of a mirror, including bending modes and body motions.
-
-    Initialize with random draws for each parameter by default unless `set_perts_to_zero`.
-    """
-    def __init__(self, surface="M1", wavelength=622.e-9, rng_seed=None, n_bend_modes=10,
-                 set_perts_to_zero=False):
-        self.surface = surface
-        self.wavelength = wavelength
-
-        self.n_bend_modes = n_bend_modes
-        self.n_body_motions = 2 ### Tilt and decenter
-
-        ### Tilt / decenter displacements.
-        ### The upper bound must be chosen carefully so that the aberrations
-        ### are not too large for the Fourier grid used to compute the PSF.
-        self.sigma_range = {
-            "min": 1.e-9,
-            "max": 4.85e-5, ### ~10 arcseconds
-            "scale": "log"
-            }
-
-        ### Bending mode ranges
-        self.zernike_coef_range = {
-            "min": 1.e-4 * wavelength,
-            "max": 2.e2 * wavelength,
-            "scale": "log"
-            }
-
-        if set_perts_to_zero:
-            self.u_surface = np.zeros(self.n_bend_modes, dtype=np.float64)
-            self.u_body = np.zeros(self.n_body_motions, dtype=np.float64)
-            ### Add some small values to avoid hitting the bottom of the allowed ranges
-            # self.u_surface += 1.e-3
-            # self.u_body += 1.e-3
+        if self._serialize_maxk is None:
+            self.ii = galsim.InterpolatedImage(
+                    self.img, x_interpolant=self.interpolant,
+                    calculate_stepk=True, calculate_maxk=True,
+                    use_true_center=False, normalization='sb', gsparams=self._gsparams)
+            self._serialize_stepk = self.ii._serialize_stepk
+            self._serialize_maxk = self.ii._serialize_maxk
         else:
-            np.random.seed(rng_seed)
-            self.u_surface = np.random.uniform(size=self.n_bend_modes)
-            self.u_body = np.random.uniform(size=2)  ## 2 lateral displacements
+            self.ii = galsim.InterpolatedImage(
+                    self.img, x_interpolant=self.interpolant,
+                    _serialize_stepk=self._serialize_stepk, _serialize_maxk=self._serialize_maxk,
+                    use_true_center=False, normalization='sb', gsparams=self._gsparams)
+
+
+        GSObject.__init__(self, self.ii)
+
+        if not suppress_warning:
+            specified_stepk = 2*np.pi/(self.img.array.shape[0]*self.scale)
+            observed_stepk = self.SBProfile.stepK()
+
+            if observed_stepk < specified_stepk:
+                import warnings
+                warnings.warn(
+                    "The calculated stepk (%g) for PhaseScreenPSF is smaller "%observed_stepk +
+                    "than what was used to build the wavefront (%g). "%specified_stepk +
+                    "This could lead to aliasing problems. " +
+                    "Increasing pad_factor is recommended.")
+
+    def __getstate__(self):
+        # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
+        # written as a string.  Better to pickle the image and remake the InterpolatedImage.
+        d = self.__dict__.copy()
+        del d['SBProfile']
+        del d['ii']
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self.ii =  galsim.InterpolatedImage(self.img, x_interpolant=self.interpolant,
+                                       use_true_center=False, normalization='sb',
+                                       _serialize_stepk=self._serialize_stepk,
+                                       _serialize_maxk=self._serialize_maxk,
+                                       gsparams=self._gsparams)
+        GSObject.__init__(self, self.ii)
+
+
+class OpticalPSF(GSObject):
+    """A class describing aberrated PSFs due to telescope optics.  Its underlying implementation
+    uses an InterpolatedImage to characterize the profile.
+
+    The diffraction effects are characterized by the diffraction angle, which is a function of the
+    ratio lambda / D, where lambda is the wavelength of the light and D is the diameter of the
+    telescope.  The natural units for this value is radians, which is not normally a convenient
+    unit to use for other GSObject dimensions.  Assuming that the other sky coordinates you are
+    using are all in arcsec (e.g. the pixel scale when you draw the image, the size of the galaxy,
+    etc.), then you should convert this to arcsec as well:
+
+        >>> lam = 700  # nm
+        >>> diam = 4.0    # meters
+        >>> lam_over_diam = (lam * 1.e-9) / diam  # radians
+        >>> lam_over_diam *= 206265  # Convert to arcsec
+        >>> psf = galsim.OpticalPSF(lam_over_diam, ...)
+
+    To make this process a bit simpler, we recommend instead providing the wavelength and diameter
+    separately using the parameters `lam` (in nm) and `diam` (in m).  GalSim will then convert this
+    to any of the normal kinds of angular units using the `scale_unit` parameter:
+
+        >>> psf = galsim.OpticalPSF(lam=lam, diam=diam, scale_unit=galsim.arcsec, ...)
+
+    When drawing images, the scale_unit should match the unit used for the pixel scale or the WCS.
+    e.g. in this case, a pixel scale of 0.2 arcsec/pixel would be specified as `pixel_scale=0.2`.
+
+    Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
+    to the Zernike polynomials in the Noll convention defined in
+    Noll, J. Opt. Soc. Am. 66, 207-211(1976).  For a brief summary of the polynomials, refer to
+    http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials.
+
+    There are two ways to specify the geometry of the pupil plane, i.e., the obscuration disk size
+    and the areas that will be illuminated outside of it.  The first way is to use keywords that
+    specify the size of the obscuration, and the nature of the support struts holding up the
+    secondary mirror (or prime focus cage, etc.).  These are taken to be rectangular obscurations
+    extending from the outer edge of the pupil to the outer edge of the obscuration disk (or the
+    pupil center if `obscuration = 0.`).  You can specify how many struts there are (evenly spaced
+    in angle), how thick they are as a fraction of the pupil diameter, and what angle they start at
+    relative to the positive y direction.
+
+    The second way to specify the pupil plane configuration is by passing in an image of it.  This
+    can be useful for example if the struts are not evenly spaced or are not radially directed, as
+    is assumed by the simple model for struts described above.  In this case, keywords related to
+    struts are ignored; moreover, the `obscuration` keyword is used to ensure that the images are
+    properly sampled (so it is still needed), but the keyword is then ignored when using the
+    supplied image of the pupil plane.  The `pupil_plane_im` that is passed in can be rotated during
+    internal calculations by specifying a `pupil_angle` keyword.  Also note that given how the
+    `obscuration` keyword is used, the obscuration in the supplied pupil plane image should indeed
+    be reasonably circular rather than having an arbitrary shape; however, minor deviations from a
+    perfect circle do not cause significant problems.
+
+    If you choose to pass in a pupil plane image, it must be a square array in which the image of
+    the pupil is centered.  The areas that are illuminated should have some value >0, and the other
+    areas should have a value of precisely zero.  Based on what the OpticalPSF class thinks is the
+    required sampling to make the PSF image, the image that is passed in of the pupil plane might be
+    zero-padded during internal calculations.  If the pupil plane image has a scale associated with
+    it, that scale will be completely ignored; the scale is determined internally using basic
+    physical considerations.  Finally, to ensure accuracy of calculations using a pupil plane image,
+    we recommend sampling it as finely as possible.
+
+    Initialization
+    --------------
+
+    As described above, either specify the lam/diam ratio directly in arbitrary units:
+
+        >>> optical_psf = galsim.OpticalPSF(lam_over_diam=lam_over_diam, defocus=0., astig1=0.,
+                                            astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0.,
+                                            spher=0., aberrations=None, circular_pupil=True,
+                                            obscuration=0., interpolant=None, oversampling=1.5,
+                                            pad_factor=1.5, max_size=None, nstruts=0,
+                                            strut_thick=0.05, strut_angle=0.*galsim.degrees,
+                                            pupil_plane_im=None, pupil_angle=0.*galsim.degrees)
+
+    or, use separate keywords for the telescope diameter and wavelength in meters and nanometers,
+    respectively:
+
+        >>> optical_psf = galsim.OpticalPSF(lam=lam, diam=diam, defocus=0., ...)
+
+    Either of these options initializes `optical_psf` as an OpticalPSF instance.
+
+    @param lam_over_diam    Lambda / telescope diameter in the physical units adopted for `scale`
+                            (user responsible for consistency).  Either `lam_over_diam`, or `lam`
+                            and `diam`, must be supplied.
+    @param lam              Lambda (wavelength) in units of nanometers.  Must be supplied with
+                            `diam`, and in this case, image scales (`scale`) should be specified in
+                            units of `scale_unit`.
+    @param diam             Telescope diameter in units of meters.  Must be supplied with
+                            `lam`, and in this case, image scales (`scale`) should be specified in
+                            units of `scale_unit`.
+    @param tip              Tip in units of incident light wavelength. [default: 0]
+    @param tilt             Tilt in units of incident light wavelength. [default: 0]
+    @param defocus          Defocus in units of incident light wavelength. [default: 0]
+    @param astig1           Astigmatism (like e2) in units of incident light wavelength.
+                            [default: 0]
+    @param astig2           Astigmatism (like e1) in units of incident light wavelength.
+                            [default: 0]
+    @param coma1            Coma along y in units of incident light wavelength. [default: 0]
+    @param coma2            Coma along x in units of incident light wavelength. [default: 0]
+    @param trefoil1         Trefoil (one of the arrows along y) in units of incident light
+                            wavelength. [default: 0]
+    @param trefoil2         Trefoil (one of the arrows along x) in units of incident light
+                            wavelength. [default: 0]
+    @param spher            Spherical aberration in units of incident light wavelength.
+                            [default: 0]
+    @param aberrations      Optional keyword, to pass in a list, tuple, or NumPy array of
+                            aberrations in units of incident light wavelength (ordered according to
+                            the Noll convention), rather than passing in individual values for each
+                            individual aberration.  Currently GalSim supports aberrations from
+                            defocus through third-order spherical (`spher`), which are aberrations
+                            4-11 in the Noll convention, and hence `aberrations` should be an
+                            object of length 12, with the 5th number (index 4) being the defocus,
+                            and so on through index 11 corresponding to `spher`.  Orders 1-3
+                            (piston, tip, and tilt), while not true optical aberrations, are
+                            permitted to be non-zero and will be treated appropriately, while the
+                            first number will be ignored. [default: None]
+    @param aper             Aperture object to use when creating PSF.  [default: None]
+    @param circular_pupil   Adopt a circular pupil?  [default: True]
+    @param obscuration      Linear dimension of central obscuration as fraction of pupil linear
+                            dimension, [0., 1.). This should be specified even if you are providing
+                            a `pupil_plane_im`, since we need an initial value of obscuration to use
+                            to figure out the necessary image sampling. [default: 0]
+    @param interpolant      Either an Interpolant instance or a string indicating which interpolant
+                            should be used.  Options are 'nearest', 'sinc', 'linear', 'cubic',
+                            'quintic', or 'lanczosN' where N should be the integer order to use.
+                            [default: galsim.Quintic()]
+    @param oversampling     Optional oversampling factor for the InterpolatedImage. Setting
+                            `oversampling < 1` will produce aliasing in the PSF (not good).
+                            Usually `oversampling` should be somewhat larger than 1.  1.5 is
+                            usually a safe choice.  [default: 1.5]
+    @param pad_factor       Additional multiple by which to zero-pad the PSF image to avoid folding
+                            compared to what would be employed for a simple Airy.  Note that
+                            `pad_factor` may need to be increased for stronger aberrations, i.e.
+                            those larger than order unity.  [default: 1.5]
+    @param suppress_warning If `pad_factor` is too small, the code will emit a warning telling you
+                            its best guess about how high you might want to raise it.  However,
+                            you can suppress this warning by using `suppress_warning=True`.
+                            [default: False]
+    @param max_size         Set a maximum size of the internal image for the optical PSF profile
+                            in arcsec.  Sometimes the code calculates a rather large image size
+                            to describe the optical PSF profile.  If you will eventually be
+                            drawing onto a smallish postage stamp, you might want to save some
+                            CPU time by setting `max_size` to be the size of your postage stamp.
+                            [default: None]
+    @param flux             Total flux of the profile. [default: 1.]
+    @param nstruts          Number of radial support struts to add to the central obscuration.
+                            [default: 0]
+    @param strut_thick      Thickness of support struts as a fraction of pupil diameter.
+                            [default: 0.05]
+    @param strut_angle      Angle made between the vertical and the strut starting closest to it,
+                            defined to be positive in the counter-clockwise direction; must be an
+                            Angle instance. [default: 0. * galsim.degrees]
+    @param pupil_plane_im   The GalSim.Image, NumPy array, or name of file containing the pupil
+                            plane image, to be used instead of generating one based on the
+                            obscuration and strut parameters.  Note that if the image is saved as
+                            unsigned integers, you will get a warning about conversion to floats,
+                            which is harmless. [default: None]
+    @param pupil_angle      If `pupil_plane_im` is not None, rotation angle for the pupil plane
+                            (positive in the counter-clockwise direction).  Must be an Angle
+                            instance. [default: 0. * galsim.degrees]
+    @param scale_unit       Units to use for the sky coordinates when calculating lam/diam if these
+                            are supplied separately.  Should be either a galsim.AngleUnit or a
+                            string that can be used to construct one (e.g., 'arcsec', 'radians',
+                            etc.).  [default: galsim.arcsec]
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+    Methods
+    -------
+
+    There are no additional methods for OpticalPSF beyond the usual GSObject methods.
+    """
+    _req_params = {}
+    _opt_params = {
+        "diam": float,
+        "defocus": float,
+        "astig1": float,
+        "astig2": float,
+        "coma1": float,
+        "coma2": float,
+        "trefoil1": float,
+        "trefoil2": float,
+        "spher": float,
+        "circular_pupil": bool,
+        "obscuration": float,
+        "oversampling": float,
+        "pad_factor": float,
+        "suppress_warning": bool,
+        "max_size": float,
+        "interpolant": str,
+        "flux": float,
+        "nstruts": int,
+        "strut_thick": float,
+        "strut_angle": galsim.Angle,
+        "pupil_plane_im": str,
+        "pupil_angle": galsim.Angle,
+        "scale_unit": str}
+    _single_params = [{"lam_over_diam": float, "lam": float}]
+    _takes_rng = False
+
+    def __init__(self, lam_over_diam=None, lam=None, diam=None, tip=0., tilt=0., defocus=0.,
+                 astig1=0., astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0.,
+                 aberrations=None, aper=None, circular_pupil=True, obscuration=0., interpolant=None,
+                 oversampling=1.5, pad_factor=1.5, flux=1., nstruts=0, strut_thick=0.05,
+                 strut_angle=0.*galsim.degrees, pupil_plane_im=None,
+                 pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None,
+                 suppress_warning=False, max_size=None,
+                 _pupil_plane_scale=None, _pupil_plane_size=None):
+        # Need to handle lam/diam vs. lam_over_diam here since lam by itself is needed for
+        # OpticalScreen.
+        if lam_over_diam is not None:
+            if lam is not None or diam is not None:
+                raise TypeError("If specifying lam_over_diam, then do not specify lam or diam")
+            lam = 500.  # Arbitrary
+            diam = lam*1.e-9 / lam_over_diam * galsim.radians / scale_unit
+        else:
+            if lam is None or diam is None:
+                raise TypeError("If not specifying lam_over_diam, then specify lam AND diam")
+
+        # Make the optical screen.
+        optics_screen = galsim.OpticalScreen(
+                defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2,
+                trefoil1=trefoil1, trefoil2=trefoil2, spher=spher, aberrations=aberrations,
+                lam_0=lam)
+        self._screens = galsim.PhaseScreenList([optics_screen])
+
+        # Make the aperture.
+        if aper is None:
+            aper = galsim.Aperture(
+                    diam, lam=lam, circular_pupil=circular_pupil, obscuration=obscuration,
+                    nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle,
+                    oversampling=oversampling, pad_factor=pad_factor, max_size=max_size,
+                    pupil_plane_im=pupil_plane_im, pupil_angle=pupil_angle,
+                    _pupil_plane_scale=_pupil_plane_scale, _pupil_plane_size=_pupil_plane_size,
+                    gsparams=gsparams)
+
+        # Save for pickling
+        self._lam = lam
+        self._flux = flux
+        self._interpolant = interpolant
+        self._scale_unit = scale_unit
+        self._gsparams = gsparams
+        self._suppress_warning = suppress_warning
+
+        # Finally, put together to make the PSF.
+        self._psf = galsim.PhaseScreenPSF(self._screens, lam=self._lam, flux=self._flux,
+                                          aper=aper, interpolant=self._interpolant,
+                                          scale_unit=self._scale_unit, gsparams=self._gsparams,
+                                          suppress_warning=self._suppress_warning)
+        GSObject.__init__(self, self._psf)
+
+
+    def __str__(self):
+        screen = self._psf.screen_list[0]
+        s = "galsim.OpticalPSF(lam=%s, diam=%s" % (screen.lam_0, self._psf.aper.diam)
+        if any(screen.aberrations):
+            s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
+        if hasattr(self._psf.aper, '_circular_pupil'):
+            s += self._psf.aper._geometry_str()
+        if self._psf.flux != 1.0:
+            s += ", flux=%s" % self._psf.flux
+        s += ")"
+        return s
 
     def __repr__(self):
-        return "<OpticsParameters> {}, wavelength: {} meters".format(
-            self.surface, self.wavelength)
+        screen = self._psf.screen_list[0]
+        s = "galsim.OpticalPSF(lam=%r, diam=%r" % (screen.lam_0, self._psf.aper.diam)
+        if any(screen.aberrations):
+            s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
+        if hasattr(self._psf.aper, '_circular_pupil'):
+            s += self._psf.aper._geometry_repr()
+        if self._flux != 1.0:
+            s += ", flux=%r" % self._flux
+        s += ")"
+        return s
 
-    def bending_modes(self):
-        return map_unit_to_log_interval(self.u_surface,
-            self.zernike_coef_range["min"],
-            self.zernike_coef_range["max"])
+    def __eq__(self, other):
+        # Should it be possible for an OpticalPSF to be equal to a PhaseScreenPSF?  It seems simpler
+        # to just vote no, so I'm doing that for now, though I'm certainly open to changing this.
+        return (isinstance(other, galsim.OpticalPSF) and
+                self._psf == other._psf)
 
-    def body_motions(self):
-        return map_unit_to_log_interval(self.u_body,
-            self.sigma_range["min"],
-            self.sigma_range["max"])
+    def __hash__(self):
+        return hash(("galsim.OpticalPSF", self._psf))
 
-    def get_bend_mode_amplitude(self, index):
-        """
-        Get the amplitude for a single bending mode.
-        """
-        return self.bending_modes()[index]
+    def __getstate__(self):
+        # The SBProfile is picklable, but it is pretty inefficient, due to the large images being
+        # written as a string.  Better to pickle the psf and remake the PhaseScreenPSF.
+        d = self.__dict__.copy()
+        d['aper'] = d['_psf'].aper
+        del d['SBProfile']
+        del d['_psf']
+        return d
 
-    def set_bend_mode_amplitude(self, index, value):
-        """
-        Set the value of a single bending mode amplitude.
-        """
-        ui = map_log_interval_to_unit(value,
-            self.zernike_coef_range["min"],
-            self.zernike_coef_range["max"])
-        self.u_surface[index] = ui
-        return None
-
-    def get_body_motion(self, index):
-        return self.body_motions()[index]
-
-    def set_body_motion(self, index, value):
-        ui = map_log_interval_to_unit(value,
-            self.sigma_range["min"],
-            self.sigma_range["max"])
-        self.u_body[index] = ui
-        return None
-
-def map_unit_to_log_interval(u, xmin, xmax):
-    delta = np.log(xmax) - np.log(xmin)
-    return xmin * np.exp(delta * u)
-
-def map_log_interval_to_unit(val, xmin, xmax):
-    return np.log(val / xmin) / (np.log(xmax) - np.log(xmin))
-
-
-class ZernikeCoefsBendingModes(object):
-    """
-    Field-dependent Zernike coefficients in the exit pupil induced by bending modes
-    (expanded in Zernike polynomials) on a mirror.
-
-    Ref. [6], Table I.3, I.4, Appendix A
-        See also Eqs (2.2) and (2.3)
-    """
-    def __init__(self, a=1.0, c=0.0):
-        self.a = a
-        self.c = c
-        self.n_modes_large = 5
-        self.n_modes_small = 5
-
-        self.mode_labels = ['Tilt X', 'Tilt Y', 'Defocus',
-                            'Astig 3 at 45 deg', 'Astig 3 at 0 deg',
-                            'Coma 3 at 90 deg', 'Coma 3 at 0 deg',
-                            'Trefoil 5 at 30 deg', 'Trefoil 5 at 0 deg',
-                            'Spherical aberration']
-    def n_modes(self):
-        return self.n_modes_large + self.n_modes_small
-
-    def get_pupil_coefs(self, h, surf_coefs=None, wavelength=500.e-9):
-        """
-        Get Zernike coefficients of the exit pupil wavefront expansion.
-
-        This is the primary interface method for this class.
-        The number of bending modes `n_bend_modes` is hard-coded to 10.
-
-        @param h            The 2D focal plane location normalized to the unit disk.
-        @param surf_coefs   An array of dimension `n_bend_modes` giving the bending
-                            modes Zernike coefficients on the optic surface.
-        @param wavelength   The wavelength in meters.
-        """
-        mode_map = self.mode_mapping_matrix(h)
-        # mode_map = np.eye((10, 10), dtype=np.float64)
-        if surf_coefs is None:
-            surf_coefs = self._draw_zernike_amplitudes(wavelength)
-        # print("surf_coefs:", surf_coefs)
-        return np.dot(mode_map.transpose(), surf_coefs)
-
-    def mode_mapping_matrix(self, h):
-        """
-        The transpose of this output maps Zernike modes on a mirror to Zernike modes in the
-        exit pupil for a field position h.
-
-        @param h 2-component list or array with x,y position in the image plane.
-               Coordinates should be normalized to the unit interval on the image plane.
-
-        Matrix entries are for Zernike modes Z2 - Z11.
-        0  Z2  Tilt X
-        1  Z3  Tilt Y
-        2  Z4  Defocus
-        3  Z5  Astigmatism 3 at 45 deg.
-        4  Z6  Astigmatism 3 at 0 deg.
-        5  Z7  Coma 3 at 90 deg.
-        6  Z8  Coma 3 at 0 deg.
-        7  Z9  Trefoil 5 at 30 deg.
-        8  Z10 Trefoil 5 at 0 deg.
-        9  Z11 Spherical aberration
-
-        References
-        ----------
-        Table I.3 of [6]
-        """
-        n = 10
-        mm = np.zeros((n, n), dtype=np.float64)
-        asq = self.a ** 2
-        acb = asq * self.a
-        csq = self.c ** 2
-        #
-        mm[0, 0] = self.a
-        #
-        mm[1, 1] = self.a
-        #
-        mm[2, 0] = 2. * ksqrt3 * self.a * self.c * h[0]
-        mm[2, 1] = 2. * ksqrt3 * self.a * self.c * h[1]
-        mm[2, 2] = asq
-        #
-        mm[3, 0] = ksqrt6 * self.a * self.c * h[1]
-        mm[3, 1] = ksqrt6 * self.a * self.c * h[0]
-        mm[3, 3] = asq
-        #
-        mm[4, 0] = ksqrt6 * self.a * self.c * h[0]
-        mm[4, 1] = -ksqrt6 * self.a * self.c * h[1]
-        mm[4, 4] = asq
-        #
-        mm[5, 0] = 6. * ksqrt2 * self.a * csq * h[0] * h[1]
-        ### FIXME: Why isn't this zero when c = 0?
-        mm[5, 1] = ksqrt2 * self.a * (9. * csq * h[1] ** 2 +
-            3. * csq * h[0] ** 2 + 2. * asq - 2)
-        mm[5, 2] = 2. * ksqrt6 * asq * self.c * h[1]
-        mm[5, 3] = 2. * ksqrt3 * asq * self.c * h[0]
-        mm[5, 4] = -2. * ksqrt3 * asq * self.c * h[1]
-        mm[5, 5] = acb
-        #
-        ### FIXME: Why isn't this zero when c = 0?
-        mm[6, 0] = ksqrt2 * self.a * (3. * csq * h[1] ** 2 +
-            9. * csq * h[0] ** 2 + 2. * asq - 2)
-        mm[6, 1] = 6. * ksqrt2 * csq * self.a * h[0] * h[1]
-        mm[6, 2] = 2. * ksqrt6 * asq * self.c * h[0]
-        mm[6, 3] = 2. * ksqrt3 * asq * self.c * h[1]
-        mm[6, 4] = 2. * ksqrt3 * asq * self.c * h[0]
-        mm[6, 6] = acb
-        #
-        mm[7, 0] = 6. * ksqrt2 * self.a * csq * h[0] * h[1]
-        mm[7, 1] = 3. * ksqrt2 * self.a * csq * (h[0] ** 2 - h[1] ** 2)
-        mm[7, 3] = 2. * ksqrt3 * asq * self.c * h[0]
-        mm[7, 4] = 2. * ksqrt3 * asq * self.c * h[1]
-        mm[7, 7] = acb
-        #
-        mm[8, 0] = 3. * ksqrt2 * self.a * csq * (h[0] ** 2 - h[1] ** 2)
-        mm[8, 1] = -6. * ksqrt2 * self.a * csq * h[0] * h[1]
-        mm[8, 3] = -2. * ksqrt3 * asq * self.c * h[1]
-        mm[8, 4] = 2. * ksqrt3 * asq * self.c * h[0]
-        mm[8, 8] = acb
-        #
-        mm[9, 0] = 2. * ksqrt5 * self.a * self.c * h[0] * (4. * asq +
-            6. * csq * h[0] ** 2 + 6. * csq * h[1] ** 2 - 3.)
-        mm[9, 1] = 2. * ksqrt5 * self.a * self.c * h[1] * (4. * asq +
-            6. * csq * h[0] ** 2 + 6. * csq * h[1] ** 2 - 3.)
-        mm[9, 2] = ksqrt3 * ksqrt5 * ((4*h[1]**2 + 4*h[0]**2)*csq +
-            asq - 1) * asq
-        mm[9, 3] = 4. * ksqrt6*ksqrt5 * asq * csq * h[0] * h[1]
-        mm[9, 4] = 2. * ksqrt6*ksqrt5 * asq * csq * (h[0]**2 - h[1]**2)
-        mm[9, 5] = 2. * ksqrt2*ksqrt5 * acb*self.c*h[1]
-        mm[9, 6] = 2. * ksqrt2*ksqrt5 * acb*self.c*h[0]
-        mm[9, 9] = asq * asq
-        return mm
-
-    def _draw_zernike_amplitudes(self, wavelength):
-        """
-        Draw random realizations of the Zernike mode amplitudes for the bending
-        modes on the mirror surface.
-
-        This method is mostly for testing and shouldn't be used in physical modeling given
-        the arbitrary ranges of the output coefficients.
-        """
-        print "Drawing new Zernike amplitudes for bending modes"
-        u1 = np.random.uniform(size=self.n_modes_large,
-            low=-2. * wavelength * 10., high=2. * wavelength * 10.)
-        u2 = np.random.uniform(size=self.n_modes_small,
-            low=-0.5 * wavelength * 10., high=0.5 * wavelength * 10.)
-        return np.concatenate((u1, u2))
-
-
-class ZernikeCoeffsBodyMotions(object):
-    """
-    Field-dependent coefficients for low-order Zernike expansion of the pupil wavefront
-    for a mis-aligned system.
-
-    @param telescope_model  Dictionary of telescope configuration parameters. See
-                            `lsst_telescope_model` in this module as an example.
-    """
-    def __init__(self, telescope_model=lsst_telescope_model):
-        self.telescope_model = telescope_model
-
-        self.W = self.telescope_model['W_coefs']
-
-        self.n_surfaces = len(self.telescope_model['W_coefs']['W220'])
-        self.sigma_aligned = np.zeros(shape=(self.n_surfaces, 2), dtype=np.float64)
-        ### self.params set here:
-        self.set_zernike_coef_params_from_displ(self.sigma_aligned)
-        self.params_ref = copy.copy(self.params)
-
-        # self.piston_ref = (self.piston((0,0)) - np.sqrt(3.)*self.defocus((0,0)) +
-            # np.sqrt(5.)*self.spherical_aberr((0,0)))
-        # print "piston ref:", self.piston_ref
-
-    def _V220(self, h):
-        return np.array([self.params['W220'][0] * (h[0] ** 2 + h[1] ** 2) -
-                2.*self.params['W220'][1][0] * h[0] -
-                2.*self.params['W220'][1][1] * h[1] +
-                self.params['W220'][2]])
-
-    def _V222(self, h):
-        x = 0.5 * self.params['W222'][0] * (h[0]*h[0] - h[1]*h[1])
-        y = self.params['W222'][0] * (h[1]*h[0] + h[0]*h[1])
-        #
-        x -= self.params['W222'][1][0] * h[0] - self.params['W222'][1][1] * h[1]
-        y -= self.params['W222'][1][0] * h[1] + self.params['W222'][1][1] * h[0]
-        #
-        x += 0.5 * self.params['W222'][3][0]
-        y += 0.5 * self.params['W222'][3][1]
-        return np.array([x,y])
-
-    def piston(self, h):
-        """
-        Coefficient C1 for the Zernike series in the Noll convention
-
-        This Zernike mode gets contributions from the Hopkins terms:
-            piston + defocus + astigmatism + spher. aber. + focus
-        """
-        V200 = 0. # Quadratic piston
-        V220 = self._V220(h)
-        V400 = 0. # Quartic piston
-        V222 = self._V222(h)
-        return (1. / 12.) * (12*V200 + 6*V220 + 12*V400 +
-                3*V222[0]**2 + 3*V222[1]**2 +
-                4*self.params['W040'][0] + 6*self.params['W020'][0])
-
-    def tip_tilt(self, _h):
-        """
-        Coefficients C2, C3 for the Zernike series in the Noll convention
-
-        This Zernike mode gets contributions from the Hopkins terms:
-            tilt + coma + distortion
-        """
-        h = np.array(_h)
-        hsq = h[0] ** 2 + h[1] ** 2
-        V111 = self.params['W111'][0] * h - self.params['W111'][1]
-        V131 = self.params['W131'][0] * h - self.params['W131'][1]
-        Bsq = self.params['W311'][3]
-        V311 = (self.params['W311'][0] * hsq * h -
-            2 * np.dot(h,self.params['W311'][1]) * h +
-            2 * self.params['W311'][2] * h -
-            hsq * self.params['W311'][1] +
-            np.array([Bsq[0]*h[0] + Bsq[1]*h[1], Bsq[1]*h[0]-Bsq[0]*h[1]]) -
-            self.params['W311'][4]
-            )
-        return (1./12.) * (3.*V111 + 2.*V131 + 3.*V311)
-
-    def defocus(self, h):
-        """
-        Coefficient C4 for the Zernike series in the Noll convention
-
-        See Table 3.4 of Ref. [3]
-        """
-        C4 = (self._V220(h) + self.params['W020'][0] + self.params['W040'][0])
-        V222 = self._V222(h)
-        C4 += V222[0] ** 2 + V222[1] ** 2
-        return C4 / (np.sqrt(3.)*4.)
-
-    def astigmatism(self, h):
-        """
-        Coefficients C5, C6 for the Zernike series in the Noll convention
-
-        See Table 3.4 of Ref. [3]
-        """
-        # C5 = 2. * self.params['W222'][0] * h[0] * h[1]
-        # C5 += self.params['W222'][1][0] * h[0]
-        # C5 += self.params['W222'][1][1] * h[1]
-        # C5 += self.params['W222'][3][0]
-        # #
-        # C6 = self.params['W222'][0] * (h[0] ** 2 - h[1] ** 2)
-        # C6 -= self.params['W222'][1][0] * h[1]
-        # C6 += self.params['W222'][1][1] * h[0]
-        # C6 += self.params['W222'][3][1]
-        # return np.array([C5, C6]) * np.sqrt(3./2.) / 6.
-        V222 = self._V222(h)
-        C5 = V222[1]
-        C6 = V222[0]
-        return np.array([C5, C6]) / np.sqrt(6.)
-
-    def coma(self, h):
-        """
-        Coefficients C7, C8 for the Zernike series in the Noll convention
-
-        See Table 3.4 of Ref. [3]
-        """
-        C7 = self.params['W131'][0] * h[1] - self.params['W131'][1][1]
-        #
-        C8 = self.params['W131'][0] * h[0] - self.params['W131'][1][0]
-        return np.array([C7, C8]) * np.sqrt(2)/12.
-
-    def trefoil(self, h):
-        """
-        Coefficient C9, C10 for the Zernike series in the Noll convention
-
-        See Table 3.6 of Ref. [3]
-        """
-        ### Trefoil is zero at 3rd order
-        C9 = 0.
-        C10 = 0.
-        return np.array([C9, C10])
-
-    def spherical_aberr(self, h=None):
-        """
-        Coefficient C11 for the Zernike series in the Noll convention
-
-        See Table 3.1 of Ref. [3]
-        """
-        return np.array([self.params['W040'][0]]) / (np.sqrt(5.) * 6.)
-
-    def print_coefs(self, h):
-        print "(C1)   Piston:           ", self.piston(h)
-        print "(C2,3) Tip / tilt:       ", self.tip_tilt(h)
-        print "(C4)   Defocus:          ", self.defocus(h)
-        print "(C5,6) Astigmatism:      ", self.astigmatism(h)
-        print "(C7,8) Coma:             ", self.coma(h)
-        print "(C11)  Spherical Aberr.: ", self.spherical_aberr()
-        return None
-
-    def get_pupil_coefs(self, h):
-        """
-        Compute coefficients with the reference design subtracted off.
-
-        This is the primary interface routine for this class.
-
-        Order of output terms:
-        piston
-        tip/tilt
-        defocus
-        astigmatism (2 terms)
-        coma (2 terms)
-        trefoil (2 terms)
-        spherical aberration
-        """
-        modes = ['piston', 'tip_tilt', 'defocus', 'astigmatism', 'coma',
-                 'trefoil', 'spherical_aberr']
-        # params = copy.copy(self.params)
-        # self.params = copy.copy(self.params_ref)
-        # coefs_ref = [self.__getattribute__(mode)(h) for mode in modes]
-        # self.params = params
-        coefs = [self.__getattribute__(mode)(h) for mode in modes]
-        # return np.concatenate([coefs[i] - coefs_ref[i] for i in xrange(len(modes))])
-        return np.concatenate(coefs)
-
-    def merit_function(self, h):
-        coefs = self.get_pupil_coefs(h)
-        return np.sqrt(np.sum([x ** 2 for x in coefs]))
-
-    def set_zernike_coef_params_from_displ(self, sigma):
-        """
-        Calculate Zernike expansion coefficients for the exit pupil wavefront
-        given displacemnts `sigma` for each optical element.
-
-        This calculates the A, B, C, ... vectors from Ref. [3], Table 3.3
-
-        @param sigma    Focal plane displacements in radians.
-                        Must have shape (self.n_surfaces, 2)
-        """
-        sigma_sq = np.diag(np.dot(sigma, sigma.transpose()))
-        self.params = {
-            lab: [np.sum(self.W[lab]), # W
-                  np.dot(self.W[lab], sigma), # A
-                  np.sum(self.W[lab] * sigma_sq), # B
-                  np.dot(self.W[lab],
-                         np.column_stack((sigma[:,0]**2 - sigma[:,1]**2,
-                                          2*sigma[:,0]*sigma[:,1]))), # B^2
-                  np.dot(self.W[lab] * sigma_sq, sigma) # C
-                  ]
-            for lab in ["W020", "W111", "W220", "W311", "W131", "W040", "W222"]
-        }
-        return None
+    def __setstate__(self, d):
+        self.__dict__ = d
+        aper = self.__dict__.pop('aper')
+        self._psf = galsim.PhaseScreenPSF(self._screens, lam=self._lam, flux=self._flux,
+                                          aper=aper, interpolant=self._interpolant,
+                                          scale_unit=self._scale_unit, gsparams=self._gsparams,
+                                          suppress_warning=self._suppress_warning)
+        GSObject.__init__(self, self._psf)
