@@ -266,7 +266,6 @@ def test_table2d():
 
     # Compare different ways of evaluating Table2D
     ref = tab2d(newxx, newyy)
-    np.testing.assert_array_almost_equal(ref, tab2d(newx, newy, mesh=True))
     np.testing.assert_array_almost_equal(ref, np.array([[tab2d(x0, y0)
                                                          for y0 in newy]
                                                         for x0 in newx]))
@@ -281,7 +280,6 @@ def test_table2d():
     z = f(xx, yy)
     tab2d = galsim.table.LookupTable2D(x, y, z)
     ref = tab2d(newxx, newyy)
-    np.testing.assert_array_almost_equal(ref, tab2d(newx, newy, mesh=True))
     np.testing.assert_array_almost_equal(ref, np.array([[tab2d(x0, y0)
                                                          for y0 in newy]
                                                         for x0 in newx]))
@@ -298,7 +296,6 @@ def test_table2d():
     tab2d = galsim.table.LookupTable2D(x, y, z)
 
     np.testing.assert_array_almost_equal(f(newxx, newyy), tab2d(newxx, newyy))
-    np.testing.assert_array_almost_equal(f(newxx, newyy), tab2d(newx, newy, mesh=True))
     np.testing.assert_array_almost_equal(f(newxx, newyy), np.array([[tab2d(x0, y0)
                                                                    for y0 in newy]
                                                                   for x0 in newx]))

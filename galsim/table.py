@@ -320,14 +320,6 @@ class LookupTable2D(object):
         >>> print tab2d([1, 2], [3, 4])
         [ 4.  6.]
 
-    If you know you want to evaluate all possible combinations of a sequence of x values and a
-    sequence of y values, then you can let LookupTable2D make the 2D mesh for you by adding
-    `mesh=True` as a keyword argument.  This can be somewhat faster than making the mesh yourself.
-
-        >>> print tab2d([0, 1], [2, 3, 4], mesh=True)
-        [[ 2.  3.  4.],
-         [ 3.  4.  5.]]
-
     The default interpolation method is linear.  Other choices for the interpolant are:
       - 'floor'
       - 'ceil'
@@ -419,7 +411,7 @@ class LookupTable2D(object):
         return ((x-self.x[0]) % self.xperiod + self.x[0],
                 (y-self.y[0]) % self.yperiod + self.y[0])
 
-    def __call__(self, x, y, mesh=False):
+    def __call__(self, x, y):
         if self.edge_mode == 'raise':
             if not self._inbounds(x, y):
                 raise ValueError("Extrapolating beyond input range.")
@@ -430,24 +422,16 @@ class LookupTable2D(object):
                 x, y = self._wrap_args(x, y)
             return self.table(x, y)
         else:
-            if not mesh:
-                x = np.array(x, dtype=float)
-                y = np.array(y, dtype=float)
-                shape = x.shape
-                f = np.empty_like(x.ravel(), dtype=float)
-                x = x.ravel()
-                y = y.ravel()
-                if self.edge_mode == 'wrap':
-                    x, y = self._wrap_args(x, y)
-                self.table.interpMany(x, y, f)
-                f = f.reshape(shape)
-            else:
-                f = np.empty((len(x), len(y)), dtype=float)
-                x = np.array(x, dtype=float)
-                y = np.array(y, dtype=float)
-                if self.edge_mode == 'wrap':
-                    x, y = self._wrap_args(x, y)
-                self.table.interpManyMesh(x, y, f)
+            x = np.array(x, dtype=float)
+            y = np.array(y, dtype=float)
+            shape = x.shape
+            f = np.empty_like(x.ravel(), dtype=float)
+            x = x.ravel()
+            y = y.ravel()
+            if self.edge_mode == 'wrap':
+                x, y = self._wrap_args(x, y)
+            self.table.interpMany(x, y, f)
+            f = f.reshape(shape)
             return f
 
     def __str__(self):
