@@ -177,7 +177,6 @@ As the project develops through further versions, and adds further
 capabilities to the software, more demo scripts may be added to `examples/`
 to illustrate what GalSim can do.
 
-
 Tagged versions
 ---------------
 
@@ -212,7 +211,7 @@ Currently, GalSim has the following capabilities:
 
 * Can generate PSFs from a variety of simple parametric models such as Moffat,
   Kolmogorov, and Airy, as well as an optical PSF model that includes Zernike
-  aberrations up to spherical, and an optional central obscuration and
+  aberrations to arbitrary order, and an optional central obscuration and
   struts.
 
 * Can simulate galaxies from a variety of simple parametric models as well as
@@ -220,6 +219,8 @@ Currently, GalSim has the following capabilities:
   images, see
 
       https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy%20Data
+
+* Can simulate atmospheric PSFs from realistic turbulent phase screens.
 
 * Can make the images either via i) Fourier transform, ii) real-space
   convolution (real-space being occasionally faster than Fourier), or
@@ -237,7 +238,7 @@ Currently, GalSim has the following capabilities:
 
 * Can add noise using a variety of noise models, including correlated noise.
 
-* Can whiten or apply N-fold symmetry to existing correlated noise that is 
+* Can whiten or apply N-fold symmetry to existing correlated noise that is
   already in an image.
 
 * Can read in input values from a catalog, a dictionary file (such as a JSON
@@ -268,9 +269,6 @@ Summary of planned future development
 
 We plan to add the following additional capabilities in future versions of
 GalSim:
-
-* PSFs from stochastic atmosphere models.
-  (cf. `devel/modules/atmos_factfinding.pdf`)
 
 * Simulating more sophisticated detector defects and image artifacts.
 
