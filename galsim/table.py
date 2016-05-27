@@ -317,7 +317,7 @@ class LookupTable2D(object):
     arguments at which to evaluate the LookupTable2D.  The x and y sequences should have the same
     length in this case, which will also be the length of the output sequence.
 
-        >>> print tab2d([1, 2], [3, 4], scatter=True)
+        >>> print tab2d([1, 2], [3, 4])
         [ 4.  6.]
 
     If you know you want to evaluate all possible combinations of a sequence of x values and a
