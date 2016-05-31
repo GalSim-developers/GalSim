@@ -153,6 +153,10 @@ class Aperture(object):
         self.diam = diam  # Always need to explicitly specify an aperture diameter.
         self._gsparams = gsparams
 
+        if obscuration >= 1.:
+            raise ValueError("Pupil fully obscured! obscuration = {:0} (>= 1)"
+                             .format(obscuration))
+
         # You can either set geometric properties, or use a pupil image, but not both, so check for
         # that here.  One caveat is that we allow sanity checking the sampling of a pupil_image by
         # comparing it to the sampling we would have used for an (obscured) Airy profile.  So it's
@@ -173,9 +177,6 @@ class Aperture(object):
                                    _pupil_plane_scale=_pupil_plane_scale,
                                    oversampling=oversampling, pad_factor=pad_factor)
         else:  # Use geometric parameters.
-            if obscuration >= 1.:
-                raise ValueError("Pupil fully obscured! obscuration = {:0} (>= 1)"
-                                 .format(obscuration))
             # When setting the pupil plane size and scale, defer to the private kwargs if available,
             # otherwise, try to guess good values based on
             # 1) Any screen list that was provided, or
@@ -261,6 +262,17 @@ class Aperture(object):
 
     def _load_pupil_plane(self, pupil_plane_im, pupil_angle, obscuration=0.0,
                           _pupil_plane_scale=None, oversampling=1.5, pad_factor=1.5):
+        """ Create an array of illuminated pixels with appropriate size and scale from an input
+        image of the pupil.  The basic strategy is:
+
+        1.  Read in array.
+        2.  Determine the scale.
+        3.  Pad the input array with zeros to meet the requested oversampling.
+        4.  Check that the pupil plane sampling interval is at least as small as what would have
+            effectively been used for an obscured Airy profile with given obscuration (and divided
+            by pad_factor).
+        5.  Optionally rotate pupil plane.
+        """
         # Handle multiple types of input: NumPy array, galsim.Image, or string for filename with
         # image.
         if isinstance(pupil_plane_im, np.ndarray):
