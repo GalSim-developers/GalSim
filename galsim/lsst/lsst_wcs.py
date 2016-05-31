@@ -29,8 +29,17 @@ except ImportError:
                       "for more details\n\n"
                       "------------\n"
                       "If you have installed the stack, run\n\n"
-                      "source $LSST_HOME/loadLSST.bash\n"
-                      "setup obs_lsstSim -t sims\n")
+                      "If you installed from source:\n"
+                      "\tsource $LSST_HOME/loadLSST.bash\n"
+                      "\tsetup obs_lsstSim -t sims\n\n"
+                      "If you installed the binary (conda) distribution:\n"
+                      "\tsource eups-setups.sh\n"
+                      "\tsetup obs_lsstSim\n\n"
+                      "These commands setup the LSST package management system EUPS "
+                      "and then tell EUPS to setup the package that contains the "
+                      "model of the LSST camera.  For an explanation of what EUPS "
+                      "is and how it works, see\n"
+                      "\thttps://developer.lsst.io/build-ci/eups_tutorial.html\n")
 
 
 warnings.filterwarnings('always', '.*LsstWCS*')
