@@ -29,6 +29,13 @@ if have_lsst_stack:
         have_lsst_stack = False
 
 
+if have_lsst_stack:
+    warnings.warn("Some installations of the LSST stack have trouble with "
+                  "multiprocessing nosetests.\n"
+                  "If `scons tests` freezes up, you may need to run "
+                  "`soncs tests -j1` instead.")
+
+
 @unittest.skipIf(not have_lsst_stack, "LSST stack not installed")
 class NativeLonLatTest(unittest.TestCase):
 
