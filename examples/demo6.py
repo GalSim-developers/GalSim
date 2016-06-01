@@ -76,7 +76,7 @@ def main(argv):
 
     # Define some parameters we'll use below.
 
-    cat_file_name = 'real_galaxy_catalog_example.fits'
+    cat_file_name = 'real_galaxy_catalog_23.5_example.fits'
     dir = 'data'
     # Make output directory if not already present.
     if not os.path.isdir('output'):

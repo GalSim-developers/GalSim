@@ -285,7 +285,7 @@ stamp :
 # Define the input files
 input :
     # The COSMOS catalog uses the same input file as we have been using for the real galaxy
-    # catalogs plus another file called real_galaxy_catalog_example_fits.fits, which stores
+    # catalogs plus another file called real_galaxy_catalog_23.5_example_fits.fits, which stores
     # the information about the parametric fits.  There is no need to specify the second file
     # name, since the name is derivable from the name of the main catalog.
     cosmos_catalog :
@@ -294,7 +294,7 @@ input :
         # However, if you've run galsim_download_cosmos, then you can leave these two items
         # out and it will automatically use the full COSMOS catalog with 56,000 galaxies in it.
         dir : "data"
-        file_name : real_galaxy_catalog_example.fits
+        file_name : real_galaxy_catalog_23.5_example.fits
 
         # If you only want to use the parametric fits, and not the real galaxy profiles,
         # then you may set use_real to False.  In this case the "real" parameter for the COSMOS

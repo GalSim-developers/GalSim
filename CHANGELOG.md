@@ -132,3 +132,9 @@ New config features
 - Added new stamp type=Ring to effect ring tests.  This replaces the old
   gsobject type=Ring, which is now deprecated.  See demo5 and demo10 for
   examples of the new preferred syntax. (#698)
+
+File name changes
+-----------------
+
+- Changed the names of the real galaxy catalog examples from *catalog_example*
+  to *catalog_23.5_example* (#740)
