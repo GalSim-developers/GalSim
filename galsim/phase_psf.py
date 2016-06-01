@@ -628,7 +628,7 @@ class PhaseScreenList(object):
         # else, layers is either empty or a tuple of PhaseScreens and so responds appropriately
         # to list() below.
         self._layers = list(layers)
-        self._update_attrs()  # for now, just updating self.time_step
+        self._update_attrs()
 
     def __len__(self):
         return len(self._layers)
@@ -674,9 +674,9 @@ class PhaseScreenList(object):
     __hash__ = None  # Mutable means not hashable.
 
     def _update_attrs(self):
-        # Update object attributes for current set of layers.  Currently the only attribute is
-        # self.time_step.
-        # Could have made self.time_step a @property instead of defining _update_attrs(), but then
+        # Update object attributes for current set of layers.  Currently the only attributes are
+        # self.time_step and self.rng.
+        # Could have made these each a @property instead of defining _update_attrs(), but then
         # failures would occur late rather than early, which makes debugging more difficult.
 
         # Each layer must have same value for time_step or no attr time_step.
@@ -687,6 +687,14 @@ class PhaseScreenList(object):
             self.time_step = time_step.pop()
         else:
             raise ValueError("Layer time steps must all be identical or None")
+
+        # If any of the wrapped PhaseScreens have an rng, then eval(repr(screen_list)) will run, but
+        # fail to round-trip to the original object.  So we search for that here and set/delete a
+        # dummy rng sentinel attribute so do_pickle() will know to skip the obj == eval(repr(obj))
+        # test.
+        self.__dict__.pop('rng', None)
+        if any(hasattr(l, 'rng') for l in self):
+            self.rng = None
 
     def advance(self):
         """Advance each phase screen in list by self.time_step."""
