@@ -433,7 +433,11 @@ class Aperture(object):
         if hasattr(self, '_circular_pupil'):  # Pupil was created geometrically, so use that here.
             s += self._geometry_repr()
         else:  # Pupil was created from image, so use that instead.
-            s += ", pupil_plane_im=array(%r"%self.illuminated.tolist()+", dtype='float')"
+            # It's slightly less annoying to see an enormous stream of zeros fly by than an enormous
+            # stream of Falses, so convert to int16.
+            tmp = self.illuminated.astype(np.int16).tolist()
+            s += ", pupil_plane_im=array(%r"%tmp+", dtype='int16')"
+            s += ", pupil_plane_scale=%r"%self.pupil_plane_scale
         if hasattr(self, '_gsparams') and self._gsparams is not None:
             s += ", gsparams=%r"%self._gsparams
         s += ")"
