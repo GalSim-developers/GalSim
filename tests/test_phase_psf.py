@@ -258,8 +258,8 @@ def test_ne():
     # Test galsim.Aperture __ne__
     objs = [galsim.Aperture(diam=1.0),
             galsim.Aperture(diam=1.1),
-            galsim.Aperture(diam=1.0, oversampling=1.0),
-            galsim.Aperture(diam=1.0, pad_factor=1.0),
+            galsim.Aperture(diam=1.0, oversampling=1.5),
+            galsim.Aperture(diam=1.0, pad_factor=1.5),
             galsim.Aperture(diam=1.0, circular_pupil=False),
             galsim.Aperture(diam=1.0, obscuration=0.3),
             galsim.Aperture(diam=1.0, nstruts=3),

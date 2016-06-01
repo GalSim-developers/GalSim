@@ -176,7 +176,7 @@ class Aperture(object):
     """
     def __init__(self, diam, lam=None, circular_pupil=True, obscuration=0.0,
                  nstruts=0, strut_thick=0.05, strut_angle=0.0*galsim.degrees,
-                 oversampling=1.5, pad_factor=1.5, screen_list=None, max_size=None,
+                 oversampling=1.0, pad_factor=1.0, screen_list=None, max_size=None,
                  pupil_plane_im=None, pupil_angle=0.0*galsim.degrees,
                  pupil_plane_scale=None, pupil_plane_size=None,
                  gsparams=None):
