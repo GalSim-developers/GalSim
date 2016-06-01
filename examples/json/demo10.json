@@ -88,7 +88,7 @@
 },
 
 "input" : {
-    "real_catalog" : { "dir" : "data", "file_name" : "real_galaxy_catalog_example.fits" },
+    "real_catalog" : { "dir" : "data", "file_name" : "real_galaxy_catalog_23.5_example.fits" },
 
     "power_spectrum" : { "e_power_function" : "k**1.8" }
 },

@@ -691,44 +691,44 @@ def test_dep_scene():
 
     # Initialize one that doesn't exclude failures.  It should be >= the previous one in length.
     cat2 = check_dep(galsim.COSMOSCatalog,
-                     file_name='real_galaxy_catalog_example.fits',
+                     file_name='real_galaxy_catalog_23.5_example.fits',
                      dir=datapath, exclude_fail=False, exclude_bad=False)
     # Initialize a COSMOSCatalog with all defaults.
-    cat = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+    cat = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
                                dir=datapath)
     assert cat2.nobjects>=cat.nobjects
     # Equivalent to current exclusion_level='none'
-    cat3 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+    cat3 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
                                 dir=datapath, exclusion_level='none')
     assert cat2.nobjects==cat3.nobjects
 
     # Just exclude_bad=True
     cat2 = check_dep(galsim.COSMOSCatalog,
-                     file_name='real_galaxy_catalog_example.fits',
+                     file_name='real_galaxy_catalog_23.5_example.fits',
                      dir=datapath, exclude_fail=False)  # i.e. leave exclude_bad=True
     assert cat2.nobjects>=cat.nobjects
     # Equivalent to current exclusion_level='bad_stamp'
-    cat3 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+    cat3 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
                                 dir=datapath, exclusion_level='bad_stamp')
     assert cat2.nobjects==cat3.nobjects
 
     # Just exclude_fail=True
     cat2 = check_dep(galsim.COSMOSCatalog,
-                     file_name='real_galaxy_catalog_example.fits',
+                     file_name='real_galaxy_catalog_23.5_example.fits',
                      dir=datapath, exclude_bad=False)  # i.e. leave exclude_fail=True
     assert cat2.nobjects>=cat.nobjects
     # Equivalent to current exclusion_level='bad_fits'
-    cat3 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+    cat3 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
                                 dir=datapath, exclusion_level='bad_fits')
     assert cat2.nobjects==cat3.nobjects
 
     # Both=True
     cat2 = check_dep(galsim.COSMOSCatalog,
-                     file_name='real_galaxy_catalog_example.fits',
+                     file_name='real_galaxy_catalog_23.5_example.fits',
                      dir=datapath, exclude_fail=True, exclude_bad=True)
     assert cat2.nobjects>=cat.nobjects
     # Equivalent to current exclusion_level='marginal'
-    cat3 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+    cat3 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
                                 dir=datapath, exclusion_level='marginal')
     assert cat2.nobjects==cat3.nobjects
 

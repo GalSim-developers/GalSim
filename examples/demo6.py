@@ -26,14 +26,13 @@ images distributed with GalSim only includes 100 galaxies, but you can download 
 larger set of images.  See https://github.com/GalSim-developers/GalSim/wiki for a link
 to the download page.
 
-The galaxy images are already convolved with the effective PSF for the original 
-observations, so GalSim considers the galaxy profile to be the observed image deconvolved 
-by that PSF (also distributed with the galaxy data).
-In this case, we then randomly rotate the galaxies, apply a given gravitational shear as
-well as gravitational magnification, and then finally convolve by a double Gaussian PSF.
-The final image can of course have any pixel scale, not just that of the original images.
-The output for this script is to a FITS "data cube".  With DS9, this can be viewed with a
-slider to quickly move through the different images.
+The galaxy images are already convolved with the effective PSF for the original observations,
+so GalSim considers the galaxy profile to be the observed image deconvolved by that PSF
+(also distributed with the galaxy data).  In this case, we then randomly rotate the galaxies,
+apply a given gravitational shear as well as gravitational magnification, and then finally
+convolve by a double Gaussian PSF.  The final image can of course have any pixel scale, not
+just that of the original images.  The output for this script is to a FITS "data cube".
+With DS9, this can be viewed with a slider to quickly move through the different images.
 
 
 New features introduced in this demo:
@@ -77,7 +76,7 @@ def main(argv):
 
     # Define some parameters we'll use below.
 
-    cat_file_name = 'real_galaxy_catalog_example.fits'
+    cat_file_name = 'real_galaxy_catalog_23.5_example.fits'
     dir = 'data'
     # Make output directory if not already present.
     if not os.path.isdir('output'):

@@ -353,7 +353,7 @@ class RealGalaxyCatalog(object):
        in some of the demo scripts (demo6, demo10, and demo11).  To use this catalog, you would
        initialize with
 
-           >>> rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog_example.fits',
+           >>> rgc = galsim.RealGalaxyCatalog('real_galaxy_catalog_23.5_example.fits',
                                               dir='path/to/GalSim/examples/data')
 
     2. There are two larger catalogs based on HST observations of the COSMOS field with around
@@ -404,8 +404,8 @@ class RealGalaxyCatalog(object):
     @param logger     An optional logger object to log progress. [default: None]
     """
     _req_params = {}
-    _opt_params = { 'file_name' : str, 'sample' : str, 'image_dir' : str , 'dir' : str,
-                    'preload' : bool, 'noise_dir' : str }
+    _opt_params = { 'file_name' : str, 'sample' : str, 'dir' : str,
+                    'preload' : bool }
     _single_params = []
     _takes_rng = False
 
@@ -778,6 +778,10 @@ def _parse_files_dirs(file_name, image_dir, dir, noise_dir, sample):
     if sample is None:
         if file_name is None:
             use_sample = '25.2'
+        elif '25.2' in file_name:
+            use_sample = '25.2'
+        elif '23.5' in file_name:
+            use_sample = '23.5'
         else:
             use_sample = None
     else:

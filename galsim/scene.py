@@ -135,9 +135,9 @@ class COSMOSCatalog(object):
                             "marginal": Apply the above cuts, plus ones that eliminate some more
                                         marginal cases.
                             [default: "marginal"]
-    @param min_hlr          Exclude galaxies whose fitted half-light-radius is smaller than this
+    @param min_hlr          Exclude galaxies whose fitted half-light radius is smaller than this
                             value (in arcsec).  [default: 0, meaning no limit]
-    @param max_hlr          Exclude galaxies whose fitted half-light-radius is larger than this
+    @param max_hlr          Exclude galaxies whose fitted half-light radius is larger than this
                             value (in arcsec).  [default: 0, meaning no limit]
     @param min_flux         Exclude galaxies whose fitted flux is smaller than this value.
                             [default: 0, meaning no limit]
@@ -152,8 +152,8 @@ class COSMOSCatalog(object):
     nobjects     The number of objects in the catalog
     """
     _req_params = {}
-    _opt_params = { 'file_name' : str, 'sample' : str, 'image_dir' : str , 'dir' : str,
-                    'preload' : bool, 'noise_dir' : str, 'use_real' : bool,
+    _opt_params = { 'file_name' : str, 'sample' : str, 'dir' : str,
+                    'preload' : bool, 'use_real' : bool,
                     'exclusion_level' : str, 'min_hlr' : float, 'max_hlr' : float,
                     'min_flux' : float, 'max_flux' : float
                   }
@@ -537,11 +537,16 @@ class COSMOSCatalog(object):
                 flux_factor = 10.**(-0.4*1.5)
                 size_factor = 0.6
                 gal_list = [ gal.dilate(size_factor) * flux_factor for gal in gal_list ]
-            else:
+            elif self.use_sample == '25.2':
                 import warnings
                 warnings.warn(
                     'Ignoring `deep` argument, because the sample being used already '+
                     'corresponds to a flux limit of F814W<25.2')
+            else:
+                import warnings
+                warnings.warn(
+                    'Ignoring `deep` argument, because the sample being used does not '+
+                    'corresponds to a flux limit of F814W<23.5')
 
         # Store the orig_index as gal.index regardless of whether we have a RealGalaxy or not.
         # It gets set by _makeReal, but not by _makeParametric.

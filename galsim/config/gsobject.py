@@ -135,14 +135,10 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     # There are a few more that are specific to which key we have.
     if key == 'gal':
         ignore += [ 'resolution', 'signal_to_noise', 'redshift', 're_from_res' ]
-        # If redshift is present, parse it here, since it might be needed by the Build functions.
-        # All we actually care about is setting the current_val, so don't assign to anything.
-        if 'redshift' in param:
-            galsim.config.ParseValue(param, 'redshift', base, float)
     elif key == 'psf':
         ignore += [ 'saved_re' ]
-    elif key != 'pix':
-        # As long as key isn't psf or pix, allow resolution.
+    else:
+        # As long as key isn't psf, allow resolution.
         # Ideally, we'd like to check that it's something within the gal hierarchy, but
         # I don't know an easy way to do that.
         ignore += [ 'resolution' , 're_from_res' ]
