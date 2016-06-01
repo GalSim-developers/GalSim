@@ -606,9 +606,23 @@ class PhaseScreenList(object):
 
     @param layers  Sequence of phase screens.
     """
-    def __init__(self, layers):
-        if isinstance(layers, galsim.PhaseScreenList):
-            self._layers = list(layers._layers)
+    def __init__(self, *layers):
+        if len(layers) == 1:
+            # First check if layers[0] is a PhaseScreenList, so we avoid nesting.
+            if isinstance(layers[0], galsim.PhaseScreenList):
+                layers = layers[0]._layers
+            else:
+                # Next, see if layers[0] is iterable.  E.g., to catch generator expressions.
+                try:
+                    layers = list(layers[0])
+                except:
+                    # If that fails, check if layers[0] is a bare PhaseScreen.  Should probably
+                    # make an ABC for this (use __subclasshook__?), but for now, just check
+                    # AtmosphericScreen and OpticalScreen.
+                    if isinstance(layers[0], (galsim.AtmosphericScreen, galsim.OpticalScreen)):
+                        layers = [layers[0]]
+        # else, layers is either empty or a tuple of PhaseScreens and so responds appropriately
+        # to list() below.
         self._layers = list(layers)
         self._update_attrs()  # for now, just updating self.time_step
 
@@ -1279,7 +1293,7 @@ class OpticalPSF(GSObject):
                 defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2,
                 trefoil1=trefoil1, trefoil2=trefoil2, spher=spher, aberrations=aberrations,
                 lam_0=lam)
-        self._screens = galsim.PhaseScreenList([optics_screen])
+        self._screens = galsim.PhaseScreenList(optics_screen)
 
         # Make the aperture.
         if aper is None:

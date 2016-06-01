@@ -93,7 +93,7 @@ def test_phase_screen_list():
     assert atm == atm2
 
     # Test building from empty PhaseScreenList
-    atm3 = galsim.PhaseScreenList([])
+    atm3 = galsim.PhaseScreenList()
     atm3.extend(atm2)
     assert atm == atm2
 
@@ -134,6 +134,16 @@ def test_phase_screen_list():
     assert atm[0] is not atm5[0]
     atm.advance()
     assert atm[0] != atm5[0]
+
+    # Constructor should accept both list and indiv layers as arguments.
+    atm6 = galsim.PhaseScreenList(atm[0])
+    atm7 = galsim.PhaseScreenList([atm[0]])
+    assert atm6 == atm7
+    atm6 = galsim.PhaseScreenList(atm[0], atm[1])
+    atm7 = galsim.PhaseScreenList([atm[0], atm[1]])
+    atm8 = galsim.PhaseScreenList(atm[0:2])  # Slice returns PhaseScreenList, so this works too.
+    assert atm6 == atm7
+    assert atm6 == atm8
 
     # Check some actual derived PSFs too, not just phase screens.  Use a small pupil_plane_size and
     # relatively large pupil_plane_scale to speed up the unit test.
@@ -270,8 +280,8 @@ def test_opt_indiv_aberrations():
     screen2 = galsim.OpticalScreen(aberrations=[0.0, 0.0, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,
                                                 1.0, 1.1])
 
-    psf1 = galsim.PhaseScreenList([screen1]).makePSF(diam=4.0, lam=500.0)
-    psf2 = galsim.PhaseScreenList([screen2]).makePSF(diam=4.0, lam=500.0)
+    psf1 = galsim.PhaseScreenList(screen1).makePSF(diam=4.0, lam=500.0)
+    psf2 = galsim.PhaseScreenList(screen2).makePSF(diam=4.0, lam=500.0)
 
     np.testing.assert_array_equal(
         psf1.img, psf2.img,
