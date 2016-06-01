@@ -36,14 +36,14 @@ pp_file = 'sample_pupil_rolled.fits'
 @timer
 def test_aperture():
     # Simple tests for constructing and pickling Apertures.
-    aper1 = galsim.Aperture(diam=1.0, lam=500.0)
+    aper1 = galsim.Aperture(diam=1.0)
     im = galsim.fits.read(os.path.join(imgdir, pp_file))
     aper2 = galsim.Aperture(diam=1.0, pupil_plane_im=im)
     do_pickle(aper1)
     do_pickle(aper2)
     # Automatically created Aperture should match one created via OpticalScreen
-    aper1 = galsim.Aperture(diam=1.0, lam=500.0)
-    aper2 = galsim.Aperture(diam=1.0, lam=500.0, screen_list=[galsim.OpticalScreen()])
+    aper1 = galsim.Aperture(diam=1.0)
+    aper2 = galsim.Aperture(diam=1.0, lam=500, screen_list=[galsim.OpticalScreen()])
     err_str = ("Aperture created implicitly using Airy does not match Aperture created using "
                "OpticalScreen.")
     assert aper1 == aper2, err_str
@@ -55,7 +55,7 @@ def test_phase_screen_list():
     rng = galsim.BaseDeviate(1234)
     rng2 = galsim.BaseDeviate(123)
 
-    aper = galsim.Aperture(diam=1.0, lam=500)
+    aper = galsim.Aperture(diam=1.0)
 
     ar1 = galsim.AtmosphericScreen(10, 1, alpha=0.997, L0=None, rng=rng)
     do_pickle(ar1)
@@ -65,6 +65,7 @@ def test_phase_screen_list():
     # Check that L0=np.inf and L0=None yield the same thing here too.
     ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.997, L0=np.inf, rng=rng)
     assert ar1 == ar2
+    # Create a couple new screens with different types/parameters
     ar2 = galsim.AtmosphericScreen(10, 1, alpha=0.995, rng=rng2)
     assert ar1 != ar2
     ar3 = galsim.OpticalScreen(aberrations=[0, 0, 0, 0, 0, 0, 0, 0, 0.1])
@@ -78,24 +79,35 @@ def test_phase_screen_list():
                             rng=rng)
     atm.append(ar3)
     do_pickle(atm)
+    do_pickle(atm, func=lambda x:x.wavefront(aper).sum())
 
     # testing append, extend, __getitem__, __setitem__, __delitem__, __eq__, __ne__
-    atm2 = galsim.PhaseScreenList(atm[:-1])
+    atm2 = galsim.PhaseScreenList(atm[:-1])  # Refers to first n-1 screens
     assert atm != atm2
+    # Append a different screen to the end of atm2
     atm2.append(ar2)
     assert atm != atm2
+    # Swap the last screen in atm2 for the one that should match atm.
     del atm2[-1]
     atm2.append(atm[-1])
     assert atm == atm2
 
+    # Test building from empty PhaseScreenList
     atm3 = galsim.PhaseScreenList([])
     atm3.extend(atm2)
-    atm3[1] = atm2[1]
     assert atm == atm2
 
+    # Test constructing from existing PhaseScreenList
     atm4 = galsim.PhaseScreenList(atm3)
     del atm4[-1]
+    assert atm != atm4
     atm4.append(atm[-1])
+    assert atm == atm4
+
+    # Test swap
+    atm4[0], atm4[1] = atm4[1], atm4[0]
+    assert atm != atm4
+    atm4[0], atm4[1] = atm4[1], atm4[0]
     assert atm == atm4
 
     wf = atm.wavefront(aper)
@@ -106,6 +118,22 @@ def test_phase_screen_list():
     np.testing.assert_array_equal(wf, wf2, "PhaseScreenLists are inconsistent")
     np.testing.assert_array_equal(wf, wf3, "PhaseScreenLists are inconsistent")
     np.testing.assert_array_equal(wf, wf4, "PhaseScreenLists are inconsistent")
+
+    # Check copy
+    import copy
+    # Shallow copy copies by reference.
+    atm5 = copy.copy(atm)
+    assert atm[0] == atm5[0]
+    assert atm[0] is atm5[0]
+    atm.advance()
+    assert atm[0] == atm5[0]
+    assert atm[0] is atm5[0]
+    # Deepcopy actually makes an indepedent object in memory.
+    atm5 = copy.deepcopy(atm)
+    assert atm[0] == atm5[0]
+    assert atm[0] is not atm5[0]
+    atm.advance()
+    assert atm[0] != atm5[0]
 
     # Check some actual derived PSFs too, not just phase screens.  Use a small pupil_plane_size and
     # relatively large pupil_plane_scale to speed up the unit test.
@@ -130,9 +158,9 @@ def test_phase_screen_list():
     atm4.reset()
     psf4 = atm4.makePSF(**kwargs)
 
-    np.testing.assert_array_equal(psf.img, psf2.img, "PhaseScreenPSFs are inconsistent")
-    np.testing.assert_array_equal(psf.img, psf3.img, "PhaseScreenPSFs are inconsistent")
-    np.testing.assert_array_equal(psf.img, psf4.img, "PhaseScreenPSFs are inconsistent")
+    np.testing.assert_array_equal(psf, psf2, "PhaseScreenPSFs are inconsistent")
+    np.testing.assert_array_equal(psf, psf3, "PhaseScreenPSFs are inconsistent")
+    np.testing.assert_array_equal(psf, psf4, "PhaseScreenPSFs are inconsistent")
 
 
 @timer

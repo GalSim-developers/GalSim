@@ -574,13 +574,26 @@ class PhaseScreenList(object):
 
         >>> more_screens = screens[0:2]
         >>> more_screens.advance()
-        >>> assert more_screens[0] == screens[0]
+        >>> assert more_screens[0] == screens[0]  # Both advanced
+        >>> assert more_screens[0] is screens[0]  # Because they're really the same screen!
 
-        >>> more_screens = galsim.PhaseScreenList(screens)
-        >>> screens.reset()
+        >>> more_screens = galsim.PhaseScreenList(screens)     # get a fresh copy
+        >>> screens.reset()                                    # reset to t=0
         >>> psf = screens.makePSF(exptime=exptime, ...)        # starts at t=0
-        >>> psf2 = more_screens.makePSF(exptime=exptime, ...)  # starts at t=exptime
+        >>> psf2 = more_screens.makePSF(exptime=exptime, ...)  # starts at t=exptime !
         >>> assert psf != psf2
+
+    If you really want an independent copy of a PhaseScreenList, you can get one with
+    copy.deepcopy():
+
+        >>> import copy
+        >>> screens.reset()
+        >>> even_more_screens = copy.deepcopy(screens)
+        >>> assert screens[0] == even_more_screens[0]          # Equal
+        >>> assert screens[0] is not even_more_screens[0]      # But not the same object.
+        >>> psf = screens.makePSF(exptime=exptime)             # Starts at t=0
+        >>> psf2 = even_more_screens.makePSF(exptime=exptime)  # Also starts at t=0
+        >>> assert psf == psf2
 
     Methods
     -------
