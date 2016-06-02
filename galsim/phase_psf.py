@@ -21,12 +21,12 @@ diffraction equation:
 
 PSF(x, y) = int( |FT(aperture(u, v) * exp(i * phase(u, v, x, y, t)))|^2, dt)
 
-where x, y are focal plane coordinates and u, v are pupil plane coordinates
+where x, y are focal plane coordinates and u, v are pupil plane coordinates.
 
 The main classes of note are:
 
 Aperture
-  Class to representing the illuminated region of pupil.
+  Class representing the illuminated region of pupil.
 
 AtmosphericScreen
   Class implementing phase(u, v, x, y, t) for von Karman type turbulence, with possibly evolving
