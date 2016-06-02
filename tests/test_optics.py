@@ -46,7 +46,13 @@ decimal_dft = 3  # Last decimal place used for checking near equality of DFT pro
 # images.  The best tests involve very high resolution images, but these are slow.  So, when running
 # test_optics.py directly, you will get the slow tests (~25 minutes for all of them).  When running
 # `scons tests`, you will get faster, less stringent tests.
+
+do_slow_tests = False
 if __name__ == "__main__":
+    do_slow_tests = True
+# do_slow_tests = False  # uncomment for easier debugging
+
+if do_slow_tests:
     pp_decimal = 5
     pp_file = 'sample_pupil_rolled_oversample.fits.gz'
     pp_oversampling = 4.
@@ -132,7 +138,7 @@ def test_OpticalPSF_aberrations_struts():
     # We don't bother running all of these for the regular unit tests, since it adds
     # ~5s to the test run time on a fast-ish laptop.  So only run these when individually
     # running python test_optics.py.
-    if __name__ == "__main__":
+    if do_slow_tests:
         # test defocus
         savedImg = galsim.fits.read(os.path.join(imgdir, "optics_defocus.fits"))
         optics = galsim.OpticalPSF(lod, defocus=.5, obscuration=obscuration, oversampling=1)
@@ -418,7 +424,7 @@ def test_OpticalPSF_pupil_plane():
             test_moments.moments_sigma, ref_moments.moments_sigma, decimal=pp_decimal,
             err_msg="Inconsistent OpticalPSF image for basic model after loading pupil plane.")
 
-    if __name__ == '__main__':
+    if do_slow_tests:
         do_pickle(test_psf, lambda x: x.drawImage(nx=20, ny=20, scale=0.07, method='no_pixel'))
         do_pickle(test_psf)
 
@@ -686,7 +692,7 @@ def test_ne():
             galsim.OpticalPSF(lam_over_diam=1.0, flux=2.0, gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, circular_pupil=False, gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, interpolant='Linear', gsparams=gsp1)]
-    if __name__ == "__main__":
+    if __name__ == do_slow_tests:
         objs += [galsim.OpticalPSF(lam_over_diam=1.0, pupil_plane_im=pupil_plane_im, gsparams=gsp1,
                                    suppress_warning=True),
                  galsim.OpticalPSF(lam_over_diam=1.0, pupil_plane_im=pupil_plane_im, gsparams=gsp1,

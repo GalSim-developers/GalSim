@@ -176,7 +176,7 @@ class Aperture(object):
     """
     def __init__(self, diam, lam=None, circular_pupil=True, obscuration=0.0,
                  nstruts=0, strut_thick=0.05, strut_angle=0.0*galsim.degrees,
-                 oversampling=1.0, pad_factor=1.0, screen_list=None, max_size=None,
+                 oversampling=1.0, pad_factor=1.0, screen_list=None,
                  pupil_plane_im=None, pupil_angle=0.0*galsim.degrees,
                  pupil_plane_scale=None, pupil_plane_size=None,
                  gsparams=None):
@@ -267,8 +267,10 @@ class Aperture(object):
                               pupil_plane_scale, pupil_plane_size):
         """ Create an array of illuminated pixels parameterically.
         """
-        self.npix = galsim._galsim.goodFFTSize(int(np.ceil(
-                pupil_plane_size/pupil_plane_scale)))
+        ratio = pupil_plane_size/pupil_plane_scale
+        # Fudge a little to prevent goodFFTSize() from turning 512.0001 into 768.
+        ratio *= (1.0 - 1.0/2**14)
+        self.npix = galsim._galsim.goodFFTSize(int(np.ceil(ratio)))
         self.pupil_plane_size = pupil_plane_size
         # Shrink scale such that size = scale * npix exactly.
         self.pupil_plane_scale = pupil_plane_size / self.npix
@@ -432,6 +434,8 @@ class Aperture(object):
         s = "galsim.Aperture(diam=%r"%self.diam
         if hasattr(self, '_circular_pupil'):  # Pupil was created geometrically, so use that here.
             s += self._geometry_repr()
+            s += ", pupil_plane_scale=%r"%self.pupil_plane_scale
+            s += ", pupil_plane_size=%r"%self.pupil_plane_size
         else:  # Pupil was created from image, so use that instead.
             # It's slightly less annoying to see an enormous stream of zeros fly by than an enormous
             # stream of Falses, so convert to int16.
@@ -1312,7 +1316,7 @@ class OpticalPSF(GSObject):
             aper = galsim.Aperture(
                     diam, lam=lam, circular_pupil=circular_pupil, obscuration=obscuration,
                     nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle,
-                    oversampling=oversampling, pad_factor=pad_factor, max_size=max_size,
+                    oversampling=oversampling, pad_factor=pad_factor,
                     pupil_plane_im=pupil_plane_im, pupil_angle=pupil_angle,
                     gsparams=gsparams)
 
@@ -1346,15 +1350,26 @@ class OpticalPSF(GSObject):
 
     def __repr__(self):
         screen = self._psf.screen_list[0]
-        s = "galsim.OpticalPSF(lam=%r, diam=%r" % (screen.lam_0, self._psf.aper.diam)
+        s = "galsim.OpticalPSF(lam=%r, diam=%r" % (self._lam, self._psf.aper.diam)
+        s += ", aper=%r"%self._psf.aper
         if any(screen.aberrations):
             s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
-        if hasattr(self._psf.aper, '_circular_pupil'):
-            s += self._psf.aper._geometry_repr()
+        # if hasattr(self._psf.aper, '_circular_pupil'):
+            # s += self._psf.aper._geometry_repr()
         if self._flux != 1.0:
             s += ", flux=%r" % self._flux
         s += ")"
         return s
+        # screen = self._psf.screen_list[0]
+        # s = "galsim.OpticalPSF(lam=%r, diam=%r" % (self._lam, self._psf.aper.diam)
+        # if any(screen.aberrations):
+        #     s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
+        # if hasattr(self._psf.aper, '_circular_pupil'):
+        #     s += self._psf.aper._geometry_repr()
+        # if self._flux != 1.0:
+        #     s += ", flux=%r" % self._flux
+        # s += ")"
+        # return s
 
     def __eq__(self, other):
         # Should it be possible for an OpticalPSF to be equal to a PhaseScreenPSF?  It seems simpler
