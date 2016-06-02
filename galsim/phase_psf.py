@@ -153,7 +153,7 @@ class Aperture(object):
                             [default: 0]
     @param strut_thick      Thickness of support struts as a fraction of aperture diameter.
                             [default: 0.05]
-    @param strut_angle      Angle made between the vertical and the strut strating closest to it,
+    @param strut_angle      Angle made between the vertical and the strut starting closest to it,
                             defined to be positive in the counter-clockwise direction; must be an
                             Angle instance. [default: 0. * galsim.degrees]
     @param oversampling     Optional oversampling factor *in the image plane* for the PSF eventually
