@@ -218,10 +218,10 @@ class Aperture(object):
         # infinite extent in real space, so it *always* aliases at some level, more so with an
         # obscuration than without.  The GSParams settings indicate how much aliasing we're
         # willing to tolerate, so it's required here.)  To pick a good sampling interval, we first
-        # check if a `screen_list` argument was supplied.  If so, we check it's .stepK() method,
+        # check if a `screen_list` argument was supplied.  If so, we check its .stepK() method,
         # which aggregates a good sampling interval from all of the wrapped PhaseScreens.  If
         # `screen_list` isn't supplied, then we fall back to creating an obscured Airy GSProfile and
-        # using it's .stepK().
+        # using its .stepK().
         if screen_list is not None:
             screen_list = galsim.PhaseScreenList(screen_list)
             if lam is None:
