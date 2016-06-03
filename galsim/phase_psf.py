@@ -21,12 +21,12 @@ diffraction equation:
 
 PSF(x, y) = int( |FT(aperture(u, v) * exp(i * phase(u, v, x, y, t)))|^2, dt)
 
-where x, y are focal plane coordinates and u, v are pupil plane coordinates
+where x, y are focal plane coordinates and u, v are pupil plane coordinates.
 
 The main classes of note are:
 
 Aperture
-  Class to representing the illuminated region of pupil.
+  Class representing the illuminated region of pupil.
 
 AtmosphericScreen
   Class implementing phase(u, v, x, y, t) for von Karman type turbulence, with possibly evolving
@@ -153,7 +153,7 @@ class Aperture(object):
                             [default: 0]
     @param strut_thick      Thickness of support struts as a fraction of aperture diameter.
                             [default: 0.05]
-    @param strut_angle      Angle made between the vertical and the strut strating closest to it,
+    @param strut_angle      Angle made between the vertical and the strut starting closest to it,
                             defined to be positive in the counter-clockwise direction; must be an
                             Angle instance. [default: 0. * galsim.degrees]
     @param oversampling     Optional oversampling factor *in the image plane* for the PSF eventually
@@ -218,10 +218,10 @@ class Aperture(object):
         # infinite extent in real space, so it *always* aliases at some level, more so with an
         # obscuration than without.  The GSParams settings indicate how much aliasing we're
         # willing to tolerate, so it's required here.)  To pick a good sampling interval, we first
-        # check if a `screen_list` argument was supplied.  If so, we check it's .stepK() method,
+        # check if a `screen_list` argument was supplied.  If so, we check its .stepK() method,
         # which aggregates a good sampling interval from all of the wrapped PhaseScreens.  If
         # `screen_list` isn't supplied, then we fall back to creating an obscured Airy GSProfile and
-        # using it's .stepK().
+        # using its .stepK().
         if screen_list is not None:
             screen_list = galsim.PhaseScreenList(screen_list)
             if lam is None:
@@ -881,8 +881,8 @@ class PhaseScreenPSF(GSObject):
     """A PSF surface brightness profile constructed by integrating over time the instantaneous PSF
     derived from a set of phase screens and an aperture.
 
-    There are at least three ways construct a PhaseScreenPSF given a PhaseScreenList.  The following
-    two statements are equivalent:
+    There are at least three ways to construct a PhaseScreenPSF given a PhaseScreenList.  The
+    following two statements are equivalent:
         >>> psf = screen_list.makePSF(...)
         >>> psf = PhaseScreenPSF(screen_list, ...)
 
@@ -1093,7 +1093,7 @@ class OpticalPSF(GSObject):
 
     The diffraction effects are characterized by the diffraction angle, which is a function of the
     ratio lambda / D, where lambda is the wavelength of the light and D is the diameter of the
-    telescope.  The natural units for this value is radians, which is not normally a convenient
+    telescope.  The natural unit for this value is radians, which is not normally a convenient
     unit to use for other GSObject dimensions.  Assuming that the other sky coordinates you are
     using are all in arcsec (e.g. the pixel scale when you draw the image, the size of the galaxy,
     etc.), then you should convert this to arcsec as well:
