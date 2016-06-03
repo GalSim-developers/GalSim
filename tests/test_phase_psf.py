@@ -284,9 +284,24 @@ def test_opt_indiv_aberrations():
     psf2 = galsim.PhaseScreenList(screen2).makePSF(diam=4.0, lam=500.0)
 
     np.testing.assert_array_equal(
-        psf1.img, psf2.img,
-        "Individually specified aberrations differs from aberrations specified as list.")
+            psf1.img, psf2.img,
+            "Individually specified aberrations differs from aberrations specified as list.")
 
+
+@timer
+def test_scale_unit():
+    aper = galsim.Aperture(diam=1.0)
+    rng = galsim.BaseDeviate(1234)
+    # Test frozen AtmosphericScreen first
+    atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, speed=0.1, alpha=1.0, rng=rng)
+    psf = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit=galsim.arcsec)
+    im1 = psf.drawImage(nx=32, ny=32, scale=0.1, method='no_pixel')
+    atm.reset()
+    psf2 = galsim.PhaseScreenPSF(atm, 500.0, aper=aper, scale_unit=galsim.arcmin)
+    im2 = psf2.drawImage(nx=32, ny=32, scale=0.1/60.0, method='no_pixel')
+    np.testing.assert_array_equal(
+            im1.array, im2.array,
+            'PhaseScreenPSF inconsistent use of scale_unit')
 
 @timer
 def test_ne():
@@ -374,3 +389,4 @@ if __name__ == "__main__":
     test_phase_psf_batch()
     test_opt_indiv_aberrations()
     test_ne()
+    test_scale_unit()

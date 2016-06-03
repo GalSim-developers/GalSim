@@ -980,6 +980,8 @@ class PhaseScreenPSF(GSObject):
         self.exptime = float(exptime)
         self.theta_x = theta_x
         self.theta_y = theta_y
+        if isinstance(scale_unit, basestring):
+            scale_unit = galsim.angle.get_angle_unit(scale_unit)
         self.scale_unit = scale_unit
         self.interpolant = interpolant
         self._gsparams = gsparams
@@ -1305,6 +1307,8 @@ class OpticalPSF(GSObject):
                  strut_angle=0.*galsim.degrees, pupil_plane_im=None,
                  pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None,
                  suppress_warning=False, max_size=None):
+        if isinstance(scale_unit, basestring):
+            scale_unit = galsim.angle.get_angle_unit(scale_unit)
         # Need to handle lam/diam vs. lam_over_diam here since lam by itself is needed for
         # OpticalScreen.
         if lam_over_diam is not None:
