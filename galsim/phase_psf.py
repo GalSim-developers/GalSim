@@ -881,8 +881,8 @@ class PhaseScreenPSF(GSObject):
     """A PSF surface brightness profile constructed by integrating over time the instantaneous PSF
     derived from a set of phase screens and an aperture.
 
-    There are at least three ways construct a PhaseScreenPSF given a PhaseScreenList.  The following
-    two statements are equivalent:
+    There are at least three ways to construct a PhaseScreenPSF given a PhaseScreenList.  The
+    following two statements are equivalent:
         >>> psf = screen_list.makePSF(...)
         >>> psf = PhaseScreenPSF(screen_list, ...)
 
