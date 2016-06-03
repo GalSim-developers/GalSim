@@ -200,15 +200,20 @@ class AtmosphericScreen(object):
 
     def wavefront(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees,
                   compact=True):
-        """ Compute wavefront due to phase screen.
+        """ Compute wavefront due to atmospheric phase screen.
 
         Wavefront here indicates the distance by which the physical wavefront lags or leads the
-        ideal plane wave (pre-optics) or spherical wave (post-optics).
+        ideal plane wave.
 
         @param aper     `galsim.Aperture` over which to compute wavefront.
-        @param theta_x  x-component of field angle corresponding to center of output array.
-        @param theta_y  y-component of field angle corresponding to center of output array.
-        @param compact  If true, then only return wavefront for illuminated pixels.
+        @param theta_x  x-component of field angle corresponding to center of output array, as a
+                        galsim.Angle instance.  [default: 0*galsim.degrees]
+        @param theta_y  y-component of field angle corresponding to center of output array, as a
+                        galsim.Angle instance.  [default: 0*galsim.degrees]
+        @param compact  If true, then only return wavefront for illuminated pixels in a
+                        single-dimensional array congruent with array[aper.illuminated].  Otherwise,
+                        return wavefront as a 2d array for the full Aperture pupil plane.
+                        [default: True]
         @returns        Wavefront lag or lead in nanometers over aperture.
         """
         if compact:
@@ -611,15 +616,20 @@ class OpticalScreen(object):
 
     def wavefront(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees,
                   compact=True):
-        """ Compute wavefront due to phase screen.
+        """ Compute wavefront due to optical phase screen.
 
         Wavefront here indicates the distance by which the physical wavefront lags or leads the
-        ideal plane wave (pre-optics) or spherical wave (post-optics).
+        ideal converging Gaussian reference spherical wave.
 
         @param aper     `galsim.Aperture` over which to compute wavefront.
-        @param theta_x  x-component of field angle corresponding to center of output array.
-        @param theta_y  y-component of field angle corresponding to center of output array.
-        @param compact  If true, then only return wavefront for illuminated pixels.
+        @param theta_x  x-component of field angle corresponding to center of output array, as a
+                        galsim.Angle instance.  [default: 0*galsim.degrees]
+        @param theta_y  y-component of field angle corresponding to center of output array, as a
+                        galsim.Angle instance.  [default: 0*galsim.degrees]
+        @param compact  If true, then only return wavefront for illuminated pixels in a
+                        single-dimensional array congruent with array[aper.illuminated].  Otherwise,
+                        return wavefront as a 2d array for the full Aperture pupil plane.
+                        [default: True]
         @returns        Wavefront lag or lead in nanometers over aperture.
         """
         # ignore theta_x, theta_y

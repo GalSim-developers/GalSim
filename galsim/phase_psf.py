@@ -764,18 +764,24 @@ class PhaseScreenList(object):
                 # Time indep phase screen
                 pass
 
-    def wavefront(self, *args, **kwargs):
-        """ Compute wavefront due to phase screen.
+    def wavefront(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees, compact=True):
+        """ Compute cumulative wavefront due to all phase screens in PhaseScreenList.
 
         Wavefront here indicates the distance by which the physical wavefront lags or leads the
         ideal plane wave (pre-optics) or spherical wave (post-optics).
 
         @param aper     `galsim.Aperture` over which to compute wavefront.
-        @param theta_x  x-component of field angle corresponding to center of output array.
-        @param theta_y  y-component of field angle corresponding to center of output array.
+        @param theta_x  x-component of field angle corresponding to center of output array, as a
+                        galsim.Angle instance.  [default: 0*galsim.degrees]
+        @param theta_y  y-component of field angle corresponding to center of output array, as a
+                        galsim.Angle instance.  [default: 0*galsim.degrees]
+        @param compact  If true, then only return wavefront for illuminated pixels in a
+                        single-dimensional array congruent with array[aper.illuminated].  Otherwise,
+                        return wavefront as a 2d array for the full Aperture pupil plane.
+                        [default: True]
         @returns        Wavefront lag or lead in nanometers over aperture.
         """
-        return np.sum(layer.wavefront(*args, **kwargs) for layer in self)
+        return np.sum(layer.wavefront(aper, theta_x, theta_y, compact) for layer in self)
 
     def makePSF(self, lam, **kwargs):
         """Compute one PSF or multiple PSFs from the current PhaseScreenList, depending on the type
