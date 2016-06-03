@@ -171,6 +171,18 @@ class Aperture(object):
     @param pupil_angle      If `pupil_plane_im` is not None, rotation angle for the pupil plane
                             (positive in the counter-clockwise direction).  Must be an Angle
                             instance. [default: 0. * galsim.degrees]
+    @param pupil_plane_scale   Sampling interval in meters to use for the pupil plane array.  In
+                               most cases, it's a good idea to leave this as None, in which case
+                               GalSim will attempt to find a good value automatically.  The
+                               exception is when specifying the pupil arrangement via an image, in
+                               which case this keyword can be used to indicate the sampling of that
+                               image.  See also `pad_factor` for adjusting the pupil sampling scale.
+                               [default: None]
+    @param pupil_plane_size    Size in meters to use for the pupil plane array.  In most cases, it's
+                               a good idea to leave this as None, in which case GalSim will attempt
+                               to find a good value automatically.  See also `oversampling` for
+                               adjusting the pupil size.  [default: None]
+
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
     """
