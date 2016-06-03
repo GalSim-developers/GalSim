@@ -798,9 +798,11 @@ class PhaseScreenList(object):
                                  [Default: 0.0]
         @param flux              Flux of output PSF [Default: 1.0]
         @param theta_x           x-component of field angle at which to evaluate phase screens and
-                                 resulting PSF.  [Default: 0.0*galsim.arcmin]
+                                 resulting PSF.  Either a single galsim.Angle, or an iterable of
+                                 galsim.Angles.  [Default: 0.0*galsim.arcmin]
         @param theta_y           y-component of field angle at which to evaluate phase screens and
-                                 resulting PSF.  [Default: 0.0*galsim.arcmin]
+                                 resulting PSF.  Either a single galsim.Angle, or an iterable of
+                                 galsim.Angles.  [Default: 0.0*galsim.arcmin]
         @param theta             Alternative field angle specification.  Single tuple or iterable of
                                  tuples (theta_x, theta_y).
         @param scale_unit        Units to use for the sky coordinates of the output profile.
@@ -854,7 +856,7 @@ class PhaseScreenList(object):
             theta = kwargs.pop('theta')
             # 2-tuples are iterable, so to check whether theta is indicating a single pointing, or a
             # generator of pointings we need to look at the first item.  If the first item is
-            # iterable itself, then assume theta is an interable of 2-tuple field angles.  We then
+            # iterable itself, then assume theta is an iterable of 2-tuple field angles.  We then
             # replace the consumed tuple at the beginning of the generator and go on.  If the first
             # item is scalar, then assume that it's the x-component of a single field angle.
             theta = iter(theta)
