@@ -150,10 +150,14 @@ def test_phase_screen_list():
     atm.advance_by(1.0)
     do_pickle(atm)
     atm.reset()
-    kwargs = dict(exptime=0.06, diam=4.0, lam=500.0,
-                  pupil_plane_size=6.0, pupil_plane_scale=6.0/256)
+    # Ignore warnings related to manually specifying pupil plane size and scale.
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        kwargs = dict(exptime=0.06, diam=4.0, lam=500.0,
+                      pupil_plane_size=6.0, pupil_plane_scale=8.0/256)
 
-    psf = atm.makePSF(**kwargs)
+        psf = atm.makePSF(**kwargs)
     do_pickle(psf)
     do_pickle(psf, func=lambda x:x.drawImage(nx=20, ny=20, scale=0.1))
 
@@ -185,7 +189,10 @@ def test_frozen_flow():
     alt = x/1000   # -> 0.00005 km; silly example, but yields exact results...
 
     screen = galsim.AtmosphericScreen(1.0, dx, alt, vx=vx, time_step=dt, rng=rng)
-    aper = galsim.Aperture(diam=1, pupil_plane_size=20., pupil_plane_scale=20./dx)
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        aper = galsim.Aperture(diam=1, pupil_plane_size=20., pupil_plane_scale=20./dx)
     wf0 = screen.wavefront(aper)
     screen.advance_by(t)
     wf1 = screen.wavefront(aper, theta_x=45*galsim.degrees)
@@ -239,7 +246,10 @@ def test_phase_psf_batch():
                   pupil_plane_size=6.0, pupil_plane_scale=6.0/192)
 
     t1 = time.time()
-    psfs = atm.makePSF(theta_x=theta_x, theta_y=theta_y, **kwargs)
+    import warnings
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        psfs = atm.makePSF(theta_x=theta_x, theta_y=theta_y, **kwargs)
     print 'time for {0} PSFs in batch: {1:.2f} s'.format(NPSFs, time.time() - t1)
 
     t2 = time.time()

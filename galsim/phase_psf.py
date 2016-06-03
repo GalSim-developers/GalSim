@@ -252,14 +252,33 @@ class Aperture(object):
         good_pupil_scale = (stepk * lam * 1.e-9 * (galsim.radians / galsim.arcsec)
                             / (2 * np.pi * pad_factor))
 
-        # Now that we have good candidate sizes and scales, we
+        # Now that we have good candidate sizes and scales, we load or generate the pupil plane
+        # array.
         if pupil_plane_im is not None:  # Use image of pupil plane
             self._load_pupil_plane(pupil_plane_im, pupil_angle, pupil_plane_scale,
                                    good_pupil_scale, good_pupil_size)
         else:  # Use geometric parameters.
-            if pupil_plane_scale is None:
+            if pupil_plane_scale is not None:
+                # Check input scale and warn if looks suspicious.
+                if pupil_plane_scale > good_pupil_scale:
+                    import warnings
+                    ratio = good_pupil_scale / pupil_plane_scale
+                    warnings.warn("Input pupil_plane_scale may be too large for good sampling.\n"
+                                  "Consider decreasing pupil_plane_scale by a factor %f, and/or "
+                                  "check PhaseScreenPSF outputs for signs of folding in real "
+                                  "space."%(1./ratio))
+            else:
                 pupil_plane_scale = good_pupil_scale
-            if pupil_plane_size is None:
+            if pupil_plane_size is not None:
+                # Check input size and warn if looks suspicious
+                if pupil_plane_size < good_pupil_size:
+                    import warnings
+                    ratio = good_pupil_size / pupil_plane_size
+                    warnings.warn("Input pupil_plane_size may be too small for good focal-plane"
+                                  "sampling.\n"
+                                  "Consider increasing pupil_plane_size by a factor %f, and/or "
+                                  "check PhaseScreenPSF outputs for signs of undersampling."%ratio)
+            else:
                 pupil_plane_size = good_pupil_size
             self._generate_pupil_plane(circular_pupil, obscuration,
                                        nstruts, strut_thick, strut_angle,
@@ -383,7 +402,7 @@ class Aperture(object):
             ratio = self.pupil_plane_scale / good_pupil_scale
             warnings.warn("Input pupil plane image may not be sampled well enough!\n"
                           "Consider increasing sampling by a factor %f, and/or check "
-                          "PhasePSF outputs for signs of folding in real space."%ratio)
+                          "PhaseScreenPSF outputs for signs of folding in real space."%ratio)
 
         if pupil_angle.rad() == 0.:
             self._illuminated = pp_arr.astype(bool)
