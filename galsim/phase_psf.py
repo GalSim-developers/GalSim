@@ -148,7 +148,7 @@ class Aperture(object):
     @param lam              Wavelength in nanometers.  [default: None]
     @param circular_pupil   Adopt a circular pupil?  [default: True]
     @param obscuration      Linear dimension of central obscuration as fraction of aperture linear
-                            dimension. [0., 1.).
+                            dimension. [0., 1.).  [default: 0.0]
     @param nstruts          Number of radial support struts to add to the central obscuration.
                             [default: 0]
     @param strut_thick      Thickness of support struts as a fraction of aperture diameter.
