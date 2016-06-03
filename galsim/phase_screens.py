@@ -389,9 +389,19 @@ def Atmosphere(screen_size, rng=None, **kwargs):
 
 # Some utilities for working with Zernike polynomials
 # Combinations.  n choose r.
+# See http://stackoverflow.com/questions/3025162/statistics-combinations-in-python
+# This is J. F. Sebastian's answer.
 def _nCr(n, r):
-    from math import factorial
-    return factorial(n) / (factorial(r)*factorial(n-r))
+    if 0 <= r <= n:
+        ntok = 1
+        rtok = 1
+        for t in xrange(1, min(r, n - r) + 1):
+            ntok *= n
+            rtok *= t
+            n -= 1
+        return ntok // rtok
+    else:
+        return 0
 
 
 # This function stolen from https://github.com/tvwerkhoven/libtim-py/blob/master/libtim/zern.py
@@ -412,7 +422,6 @@ def _noll_to_zern(j):
     while (j1 > n):
         n += 1
         j1 -= n
-
     m = (-1)**j * ((n % 2) + 2 * int((j1+((n+1) % 2)) / 2.0))
     return (n, m)
 
@@ -450,7 +459,6 @@ def _zern_coef_array(n, m, shape=None):
     coefs = np.array(_zern_rho_coefs(n, m), dtype=np.complex128)
     if m < 0:
         coefs *= -1j
-
     for i, c in enumerate(coefs[abs(m)::2]):
         out[i, abs(m)] = c
     return out
