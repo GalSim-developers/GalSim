@@ -1093,7 +1093,7 @@ class OpticalPSF(GSObject):
 
     The diffraction effects are characterized by the diffraction angle, which is a function of the
     ratio lambda / D, where lambda is the wavelength of the light and D is the diameter of the
-    telescope.  The natural units for this value is radians, which is not normally a convenient
+    telescope.  The natural unit for this value is radians, which is not normally a convenient
     unit to use for other GSObject dimensions.  Assuming that the other sky coordinates you are
     using are all in arcsec (e.g. the pixel scale when you draw the image, the size of the galaxy,
     etc.), then you should convert this to arcsec as well:
