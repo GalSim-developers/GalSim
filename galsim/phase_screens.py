@@ -531,7 +531,9 @@ class OpticalScreen(object):
     @param aberrations      Optional keyword, to pass in a list, tuple, or NumPy array of
                             aberrations in units of reference wavelength (ordered according to
                             the Noll convention), rather than passing in individual values for each
-                            individual aberration.
+                            individual aberration.  Note that aberrations[1] is piston (and not
+                            aberrations[0], which is unused.)  This list can be arbitrarily long to
+                            handle Zernike polynomial aberrations of arbitrary order.
     @param lam_0            Reference wavelength in nanometers at which Zernike aberrations are
                             being specified.  [Default: 500]
     """
