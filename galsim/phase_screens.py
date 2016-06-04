@@ -15,9 +15,10 @@ class AtmosphericScreen(object):
                          with a smaller sized screen, though this may introduce artifacts into PSFs
                          or PSF correlations functions. Note that screen_size may be tweaked by the
                          initializer to ensure screen_size is a multiple of screen_scale.
-    @param screen_scale  Physical pixel scale of phase screen in meters.  A fraction of the Fried
-                         parameter is usually sufficiently small, but users should test the effects
-                         of this parameter to ensure robust results. [Default: half of r0_500]
+    @param screen_scale  Physical pixel scale of phase screen in meters.  An order unity multiple of
+                         the Fried parameter is usually sufficiently small, but users should test
+                         the effects of varying this parameter to ensure robust results.
+                         [Default: r0_500]
     @param altitude      Altitude of phase screen in km.  This is with respect to the telescope, not
                          sea-level.  [Default: 0.0]
     @param time_step     Interval to use when advancing the screen in time in seconds.
@@ -296,8 +297,8 @@ def Atmosphere(screen_size, rng=None, **kwargs):
     (works for all arguments except `time_step` and `rng`).  If, for any of these keyword arguments,
     you want to use the same value for each layer, then you can just specify the argument as a
     scalar and the function will automatically broadcast it into a list with length equal to the
-    longest found keyword argument list.  Note that it is an error to specify two keywords with
-    lists of different lengths (unless the of one of them is length is 1).
+    longest found keyword argument list.  Note that it is an error to specify keywords with lists of
+    different lengths (unless only one of them has length > 1).
 
     The one exception to the above is the keyword `r0_500`.  The effective Fried parameter for a set
     of atmospheric layers is r0_500_effective = (sum(r**(-5./3) for r in r0_500s))**(-3./5).
@@ -316,19 +317,21 @@ def Atmosphere(screen_size, rng=None, **kwargs):
         >>> speed = np.random.uniform(0, 20, size=6)  # m/s
         >>> direction = [np.random.uniform(0, 360)*galsim.degrees for i in xrange(6)]
         >>> npix = 8192
-        >>> screen_scale = 0.5 * r0_500_effective
+        >>> screen_scale = r0_500_effective
         >>> atm = galsim.Atmosphere(r0_500=r0_500, screen_size=screen_scale*npix, time_step=0.005,
                                     altitude=altitude, L0=25.0, speed=speed,
                                     direction=direction, screen_scale=screen_scale)
 
-    Once the atmosphere is constructed, a 15-sec exposure PSF (using an 8.4 meter aperture and
-    default settings) takes about 3 hours (!) to generate on a fast laptop.
+    Once the atmosphere is constructed, a 15-sec exposure length monochromatic PSF at 700nm (using
+    an 8.4 meter aperture, 0.6 fractional obscuration and otherwise default settings) takes about
+    7 minutes to generate on a fast laptop.
 
-        >>> psf = atm.makePSF(diam=8.4, exptime=15.0, obscuration=0.6)
+        >>> psf = atm.makePSF(lam=700.0, exptime=15.0, diam=8.4, obscuration=0.6)
 
     Many factors will affect the timing of results, of course, including aperture diameter, gsparams
     settings, pad_factor and oversampling options to makePSF, time_step and exposure time, frozen
-    vs. non-frozen atmospheric layers, and so on.
+    vs. non-frozen atmospheric layers, and so on.  We recommend that users try varying these
+    settings to find a balance of speed and accuracy.
 
     @param r0_500        Fried parameter setting the amplitude of turbulence; contributes to "size"
                          of the resulting atmospheric PSF.  Specified at wavelength 500 nm, in units
