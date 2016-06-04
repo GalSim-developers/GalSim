@@ -6,7 +6,7 @@ class AtmosphericScreen(object):
     """ An atmospheric phase screen that can drift in the wind and evolves ("boils") over time.  The
     initial phases and fractional phase updates are drawn from a von Karman power spectrum, which is
     defined by a Fried parameter that effectively sets the amplitude of the turbulence, and an outer
-    scale that sets the scale beyond which the turbulence power goes (smoothly) to zero.
+    scale beyond which the turbulence power flattens.
 
     @param screen_size   Physical extent of square phase screen in meters.  This should be large
                          enough to accommodate the desired field-of-view of the telescope as well as
@@ -285,12 +285,12 @@ def Atmosphere(screen_size, rng=None, **kwargs):
 
     where psi(nu) is the power spectral density at spatial frequency nu, r0 is the Fried parameter
     (which has dimensions of length) and sets the amplitude of the turbulence, and L0 is the outer
-    scale (also dimensions of length) which effectively cuts off the power spectrum at large scales
-    (small nu).  Typical values for r0 are ~0.1 to 0.2 meters, which corresponds roughly to PSF
-    FWHMs of ~0.5 to 1.0 arcsec for optical wavelengths.  Note that r0 is a function of wavelength,
-    scaling like r0 ~ wavelength^(6/5).  To reduce confusion, the input parameter here is named
-    r0_500 and refers explicitly to the Fried parameter at a wavelength of 500 nm.  The outer scale
-    is typically in the 10s of meters and does not vary with wavelength.
+    scale (also dimensions of length) beyond which the power asymptotically flattens.  Typical
+    values for r0 are ~0.1 to 0.2 meters, which corresponds roughly to PSF FWHMs of ~0.5 to 1.0
+    arcsec for optical wavelengths.  Note that r0 is a function of wavelength, scaling like
+    r0 ~ wavelength^(6/5).  To reduce confusion, the input parameter here is named r0_500 and refers
+    explicitly to the Fried parameter at a wavelength of 500 nm.  The outer scale is typically in
+    the 10s of meters and does not vary with wavelength.
 
     To create multiple layers, simply specify keyword arguments as length-N lists instead of scalars
     (works for all arguments except `time_step` and `rng`).  If, for any of these keyword arguments,
