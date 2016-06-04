@@ -423,7 +423,7 @@ def _noll_to_zern(j):
     @see <https://oeis.org/A176988>.
     """
     if (j == 0):
-        raise ValueError("Noll indices start at 1, 0 is invalid.")
+        raise ValueError("Noll indices start at 1. 0 is invalid.")
 
     n = 0
     j1 = j-1
@@ -450,14 +450,20 @@ def _zern_rho_coefs(n, m):
     """
     kmax = (n-abs(m))/2
     A = [0]*(n+1)
-    for k in xrange(kmax+1):
-        val = (-1)**k * _nCr(n-k, k) * _nCr(n-2*k, kmax-k) / _zern_norm(n, m)
-        A[n-2*k] = val
+    val = _nCr(n,kmax) # The value for k = 0 in the equation below.
+    norm = _zern_norm(n,m)
+    for k in xrange(kmax):
+        # val = (-1)**k * _nCr(n-k, k) * _nCr(n-2*k, kmax-k) / _zern_norm(n, m)
+        # The above formula is faster as a recurrence relation:
+        A[n-2*k] = val / norm
+        # Don't use *= since the factor is not an integer, but the result is.
+        val = -val * (kmax-k)*(n-kmax-k) // ((n-k)*(k+1))
+    A[n-2*kmax] = val / norm
     return A
 
 
 def _zern_coef_array(n, m, shape=None):
-    """Assemble coefficient array array for evaluating Zernike (n, m) as the real part of a
+    """Assemble coefficient array for evaluating Zernike (n, m) as the real part of a
     bivariate polynomial in abs(rho)^2 and rho, where rho is a complex array indicating position on
     a unit disc.
     """
