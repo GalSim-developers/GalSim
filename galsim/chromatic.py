@@ -2158,6 +2158,47 @@ class ChromaticAutoCorrelation(ChromaticObject):
         return galsim.AutoCorrelate(self.obj.evaluateAtWavelength(wave), **self.kwargs)
 
 
+class ChromaticFourierSqrtProfile(ChromaticObject):
+    """A class for computing the Fourier-space square root of a ChromaticObject.
+
+    The ChromaticFourierSqrt class represents a wavelength-dependent Fourier-space square root of a profile.
+
+    You may also specify a gsparams argument.  See the docstring for GSParams using
+    help(galsim.GSParams) for more information about this option.  Note: if `gsparams` is
+    unspecified (or None), then the ChromaticFourierSqrtProfile instance inherits the same GSParams as
+    the object being operated on.
+
+    Initialization
+    --------------
+
+    @param obj              The object to compute the Fourier-space square root of.
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+    """
+    def __init__(self, obj, **kwargs):
+        self.obj = obj
+        self.kwargs = kwargs
+        self.separable = obj.separable
+        if self.separable:
+            self.SED = lambda w: 1./obj.SED(w)
+        self.wave_list = obj.wave_list
+
+    def __repr__(self):
+        return 'galsim.ChromaticFourierSqrtProfile(%r, %r)'%(self.obj, self.kwargs)
+
+    def __str__(self):
+        return 'galsim.ChromaticFourierSqrtProfile(%s)'%self.obj
+
+    def evaluateAtWavelength(self, wave):
+        """Evaluate this chromatic object at a particular wavelength `wave`.
+
+        @param wave  Wavelength in nanometers.
+
+        @returns the monochromatic object at the given wavelength.
+        """
+        return galsim.FourierSqrt(self.obj.evaluateAtWavelength(wave), **self.kwargs)
+
+
 class ChromaticOpticalPSF(ChromaticObject):
     """A subclass of ChromaticObject meant to represent chromatic optical PSFs.
 
