@@ -52,9 +52,7 @@ Bug Fixes
   not quite, flat (#741)
 - Fixed a bug in chromatic parametric galaxy models based on COSMOS galaxies.
   (#745)
-- Added the FourierSqrt operator to compute the Fourier-space square root of a
-  profile.  This is useful in implementing optimal coaddition algorithms; see
-  demo14.py (#748).
+
 
 Deprecated Features
 -------------------
@@ -96,6 +94,9 @@ New Features
 - Improved the readability of Image and BaseDeviate reprs. (#723)
 - Sped up some Bandpass and SED functionality (and LookupTable class in
   general). (#735)
+- Added the FourierSqrt operator to compute the Fourier-space square root of a
+  profile.  This is useful in implementing optimal coaddition algorithms; see
+  make_coadd.py in the examples directory (#748).
 
 
 Updates to galsim executable
