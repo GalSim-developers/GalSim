@@ -96,6 +96,7 @@ New Features
 - Improved the readability of Image and BaseDeviate reprs. (#723)
 - Sped up some Bandpass and SED functionality (and LookupTable class in
   general). (#735)
+- Added version information to the compiled C++ library. (#750)
 
 
 Updates to galsim executable
