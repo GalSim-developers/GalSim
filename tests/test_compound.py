@@ -696,6 +696,65 @@ def test_ne():
     all_obj_diff(gals)
 
 
+def test_fourier_sqrt():
+    """Test that the FourierSqrt operator is the inverse of auto-convolution.
+    """
+    import time
+    t1 = time.time()
+
+    dx = 0.4
+    myImg1 = galsim.ImageF(80,80, scale=dx)
+    myImg1.setCenter(0,0)
+    myImg2 = galsim.ImageF(80,80, scale=dx)
+    myImg2.setCenter(0,0)
+
+    # Test trivial case, where we could (but don't) analytically collapse the
+    # chain of SBProfiles by recognizing that FourierSqrt is the inverse of
+    # AutoConvolve.
+    psf = galsim.Moffat(beta=3.8, fwhm=1.3, flux=5)
+    psf.drawImage(myImg1, method='no_pixel')
+    sqrt1 = galsim.FourierSqrt(psf)
+    psf2 = galsim.AutoConvolve(sqrt1)
+    np.testing.assert_almost_equal(psf.stepK(), psf2.stepK())
+    psf2.drawImage(myImg2, method='no_pixel')
+    printval(myImg1, myImg2)
+    np.testing.assert_array_almost_equal(
+            myImg1.array, myImg2.array, 4,
+            err_msg="Moffat sqrt convolved with self disagrees with original")
+
+    # Test non-trivial case where we compare (in Fourier space) sqrt(a*a + b*b + 2*a*b) against (a + b)
+    a = galsim.Moffat(beta=3.8, fwhm=1.3, flux=5)
+    a.shift(dx=0.5, dy=-0.3)  # need nonzero centroid to test centroid()
+    b = galsim.Moffat(beta=2.5, fwhm=1.6, flux=3)
+    check = galsim.Sum([a, b])
+    sqrt = galsim.FourierSqrt(
+        galsim.Sum([
+            galsim.AutoConvolve(a),
+            galsim.AutoConvolve(b),
+            2*galsim.Convolve([a, b])
+        ])
+    )
+    np.testing.assert_almost_equal(check.stepK(), sqrt.stepK())
+    check.drawImage(myImg1, method='no_pixel')
+    sqrt.drawImage(myImg2, method='no_pixel')
+    np.testing.assert_almost_equal(check.centroid().x, sqrt.centroid().x)
+    np.testing.assert_almost_equal(check.centroid().y, sqrt.centroid().y)
+    np.testing.assert_almost_equal(check.getFlux(), sqrt.getFlux())
+    printval(myImg1, myImg2)
+    np.testing.assert_array_almost_equal(
+            myImg1.array, myImg2.array, 4,
+            err_msg="Fourier square root of expanded square disagrees with original")
+
+    # Check picklability
+    do_pickle(sqrt1.SBProfile, lambda x: (repr(x.getObj()), x.getGSParams()))
+    do_pickle(sqrt1, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(sqrt1)
+    do_pickle(sqrt1.SBProfile)
+
+    t2 = time.time()
+    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+
 if __name__ == "__main__":
     test_convolve()
     test_convolve_flux_scaling()
@@ -708,3 +767,4 @@ if __name__ == "__main__":
     test_autoconvolve()
     test_autocorrelate()
     test_ne()
+    test_fourier_sqrt()
