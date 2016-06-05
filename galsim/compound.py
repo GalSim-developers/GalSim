@@ -817,7 +817,13 @@ _galsim.SBAutoCorrelate.__repr__ = lambda self: \
 
 
 def FourierSqrt(obj, gsparams=None):
-    """A function for computing the Fourier-space square root of either a GSObject or ChromaticObject.
+    """A function for computing the Fourier-space square root of either a GSObject or
+    ChromaticObject.
+
+    The FourierSqrt function is principally used for doing an optimal coaddition algorithm
+    originally developed by Nick Kaiser (but unpublished) and also described by Zackay & Ofek 2015
+    (http://adsabs.harvard.edu/abs/2015arXiv151206879Z).  See the script make_coadd.py in the
+    GalSim/examples directory for an example of how it works.
 
     This function will inspect its input argument to decide if a FourierSqrtProfile object or a
     ChromaticFourierSqrtProfile object is required to represent the operation applied to a surface
@@ -840,14 +846,15 @@ def FourierSqrt(obj, gsparams=None):
 class FourierSqrtProfile(galsim.GSObject):
     """A class for computing the Fourier-space sqrt of a GSObject.
 
-    The FourierSqrtProfile class represents the Fourier-space square root of another profile.  Note that the
-    FourierSqrtProfile class, or compound objects (Sum, Convolution) that include a FourierSqrtProfile as
-    one of the components cannot be photon-shot using the 'phot' method of drawImage() method.
+    The FourierSqrtProfile class represents the Fourier-space square root of another profile.
+    Note that the FourierSqrtProfile class, or compound objects (Sum, Convolution) that include a
+    FourierSqrtProfile as one of the components cannot be photon-shot using the 'phot' method of
+    drawImage() method.
 
     You may also specify a `gsparams` argument.  See the docstring for GSParams using
     `help(galsim.GSParams)` for more information about this option.  Note: if `gsparams` is
-    unspecified (or None), then the FourierSqrtProfile instance inherits the same GSParams as the object
-    being operated on.
+    unspecified (or None), then the FourierSqrtProfile instance inherits the same GSParams as the
+    object being operated on.
 
     Initialization
     --------------

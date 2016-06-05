@@ -16,13 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 """
-Demo #14
-
-The fourteenth script in our tutorial about using Galsim in python scripts: examples/demo*.py.
-(This file is designed to be viewed in a window 100 characters wide.)
-
-This script currently doesn't have an equivalent demo*.yaml or demo*.json file.
-
 This script demonstrates the FourierSqrt operation by doing some toy-model simulations
 to compare different image coaddition algorithms.  Using observational parameters roughly
 appropriate for LSST, it computes the PSF size and 5-sigma point source magnitude limit
