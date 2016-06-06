@@ -216,18 +216,15 @@ class AtmosphericScreen(object):
         obj = galsim.Kolmogorov(lam=lam, r0_500=self.r0_500, gsparams=gsparams)
         return obj.stepK()
 
-    def wavefront(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees,
-                  compact=True):
+    def wavefront(self, aper, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin), compact=True):
         """ Compute wavefront due to atmospheric phase screen.
 
         Wavefront here indicates the distance by which the physical wavefront lags or leads the
         ideal plane wave.
 
         @param aper     `galsim.Aperture` over which to compute wavefront.
-        @param theta_x  x-component of field angle corresponding to center of output array, as a
-                        galsim.Angle instance.  [default: 0*galsim.degrees]
-        @param theta_y  y-component of field angle corresponding to center of output array, as a
-                        galsim.Angle instance.  [default: 0*galsim.degrees]
+        @param theta    Field angle of center of output array, as a 2-tuple of `galsim.Angle`s.
+                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
         @param compact  If true, then only return wavefront for illuminated pixels in a
                         single-dimensional array congruent with array[aper.illuminated].  Otherwise,
                         return wavefront as a 2d array for the full Aperture pupil plane.
@@ -238,8 +235,8 @@ class AtmosphericScreen(object):
             u, v = aper.u[aper.illuminated], aper.v[aper.illuminated]
         else:
             u, v = aper.u, aper.v
-        return self.tab2d(u + self.origin[0] + 1000*self.altitude*theta_x.tan(),
-                          v + self.origin[1] + 1000*self.altitude*theta_y.tan())
+        return self.tab2d(u + self.origin[0] + 1000*self.altitude*theta[0].tan(),
+                          v + self.origin[1] + 1000*self.altitude*theta[1].tan())
 
     def reset(self):
         """Reset phase screen back to time=0."""
@@ -642,25 +639,22 @@ class OpticalScreen(object):
         obj = galsim.Airy(lam=lam, diam=diam, obscuration=obscuration, gsparams=gsparams)
         return obj.stepK()
 
-    def wavefront(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees,
-                  compact=True):
+    def wavefront(self, aper, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin), compact=True):
         """ Compute wavefront due to optical phase screen.
 
         Wavefront here indicates the distance by which the physical wavefront lags or leads the
         ideal converging Gaussian reference spherical wave.
 
         @param aper     `galsim.Aperture` over which to compute wavefront.
-        @param theta_x  x-component of field angle corresponding to center of output array, as a
-                        galsim.Angle instance.  [default: 0*galsim.degrees]
-        @param theta_y  y-component of field angle corresponding to center of output array, as a
-                        galsim.Angle instance.  [default: 0*galsim.degrees]
+        @param theta    Field angle of center of output array, as a 2-tuple of `galsim.Angle`s.
+                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
         @param compact  If true, then only return wavefront for illuminated pixels in a
                         single-dimensional array congruent with array[aper.illuminated].  Otherwise,
                         return wavefront as a 2d array for the full Aperture pupil plane.
                         [default: True]
         @returns        Wavefront lag or lead in nanometers over aperture.
         """
-        # ignore theta_x, theta_y
+        # ignore theta
         if compact:
             r = aper.rho[aper.illuminated]
         else:
