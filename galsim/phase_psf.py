@@ -52,7 +52,7 @@ Atmosphere
   Convenience function to quickly assemble multiple AtmosphericScreens into a PhaseScreenList.
 """
 
-from itertools import izip, chain
+from itertools import chain
 
 import numpy as np
 import galsim
@@ -1402,22 +1402,10 @@ class OpticalPSF(GSObject):
         s += ", aper=%r"%self._psf.aper
         if any(screen.aberrations):
             s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
-        # if hasattr(self._psf.aper, '_circular_pupil'):
-            # s += self._psf.aper._geometry_repr()
         if self._flux != 1.0:
             s += ", flux=%r" % self._flux
         s += ")"
         return s
-        # screen = self._psf.screen_list[0]
-        # s = "galsim.OpticalPSF(lam=%r, diam=%r" % (self._lam, self._psf.aper.diam)
-        # if any(screen.aberrations):
-        #     s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
-        # if hasattr(self._psf.aper, '_circular_pupil'):
-        #     s += self._psf.aper._geometry_repr()
-        # if self._flux != 1.0:
-        #     s += ", flux=%r" % self._flux
-        # s += ")"
-        # return s
 
     def __eq__(self, other):
         # Should it be possible for an OpticalPSF to be equal to a PhaseScreenPSF?  It seems simpler

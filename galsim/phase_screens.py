@@ -252,36 +252,6 @@ class AtmosphericScreen(object):
             self.tab2d = galsim.LookupTable2D(self._xs, self._ys, self.screen, edge_mode='wrap')
 
 
-def _listify(arg):
-    """Turn argument into a list if not already iterable."""
-    return [arg] if not hasattr(arg, '__iter__') else arg
-
-
-def _lod_to_dol(lod, N=None):
-    """ Generate dicts from dict of lists (with broadcasting).
-    Specifically, generate "scalar-valued" kwargs dictionaries from a kwarg dictionary with values
-    that are length-N lists, or possibly length-1 lists or scalars that should be broadcasted up to
-    length-N lists.
-    """
-    if N is None:
-        N = max(len(v) for v in lod.values() if hasattr(v, '__len__'))
-    # Loop through broadcast range
-    for i in xrange(N):
-        out = {}
-        for k, v in lod.iteritems():
-            try:
-                out[k] = v[i]
-            except IndexError:  # It's list-like, but too short.
-                if len(v) != 1:
-                    raise ValueError("Cannot broadcast kwargs of different non-length-1 lengths.")
-                out[k] = v[0]
-            except TypeError:  # Value is not list-like, so broadcast it in its entirety.
-                out[k] = v
-            except:
-                raise "Cannot broadcast kwarg {1}={2}".format(k, v)
-        yield out
-
-
 def Atmosphere(screen_size, rng=None, **kwargs):
     """Create an atmosphere as a list of turbulent phase screens at different altitudes.  The
     atmosphere model can then be used to simulate atmospheric PSFs.
@@ -377,17 +347,17 @@ def Atmosphere(screen_size, rng=None, **kwargs):
                          clock time or system entropy to seed a new generator.  [default: None]
     """
     # Fill in screen_size here, since there isn't a default in AtmosphericScreen
-    kwargs['screen_size'] = _listify(screen_size)
+    kwargs['screen_size'] = utilities.listify(screen_size)
 
     # Set default r0_500 here, so that by default it gets broadcasted below such that the
     # _total_ r0_500 from _all_ screens is 0.2 m.
     if 'r0_500' not in kwargs:
         kwargs['r0_500'] = [0.2]
-    kwargs['r0_500'] = _listify(kwargs['r0_500'])
+    kwargs['r0_500'] = utilities.listify(kwargs['r0_500'])
 
     # Turn speed, direction into vx, vy
     if 'speed' in kwargs:
-        kwargs['speed'] = _listify(kwargs['speed'])
+        kwargs['speed'] = utilities.listify(kwargs['speed'])
         if 'direction' not in kwargs:
             kwargs['direction'] = [0*galsim.degrees]*len(kwargs['speed'])
         kwargs['vx'], kwargs['vy'] = zip(*[v*d.sincos()
@@ -406,7 +376,8 @@ def Atmosphere(screen_size, rng=None, **kwargs):
     if rng is None:
         rng = galsim.BaseDeviate()
     kwargs['rng'] = [galsim.BaseDeviate(rng.raw()) for i in xrange(nmax)]
-    return galsim.PhaseScreenList(AtmosphericScreen(**kw) for kw in _lod_to_dol(kwargs, nmax))
+    return galsim.PhaseScreenList(AtmosphericScreen(**kw)
+                                  for kw in utilities.lod_to_dol(kwargs, nmax))
 
 
 # Some utilities for working with Zernike polynomials
