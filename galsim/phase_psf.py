@@ -793,29 +793,31 @@ class PhaseScreenList(object):
 
         @param lam               Wavelength in nanometers at which to compute PSF.
         @param exptime           Time in seconds overwhich to accumulate evolving instantaneous PSF.
-                                 [Default: 0.0]
-        @param flux              Flux of output PSF [Default: 1.0]
+                                 [default: 0.0]
+        @param flux              Flux of output PSF.  [default: 1.0]
         @param theta_x           x-component of field angle at which to evaluate phase screens and
                                  resulting PSF.  Either a single galsim.Angle, or an iterable of
-                                 galsim.Angles.  [Default: 0.0*galsim.arcmin]
+                                 galsim.Angles.  [default: 0.0*galsim.arcmin]
         @param theta_y           y-component of field angle at which to evaluate phase screens and
                                  resulting PSF.  Either a single galsim.Angle, or an iterable of
-                                 galsim.Angles.  [Default: 0.0*galsim.arcmin]
+                                 galsim.Angles.  [default: 0.0*galsim.arcmin]
         @param theta             Alternative field angle specification.  Single tuple or iterable of
                                  tuples (theta_x, theta_y).
+                                 [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
         @param scale_unit        Units to use for the sky coordinates of the output profile.
-                                 [Default: galsim.arcsec]
+                                 [default: galsim.arcsec]
         @param interpolant       Either an Interpolant instance or a string indicating which
                                  interpolant should be used.  Options are 'nearest', 'sinc',
                                  'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the
                                  integer order to use. [default: galsim.Quintic()]
-        @param aper              Aperture to use to compute PSF(s).
+        @param aper              Aperture to use to compute PSF(s).  [default: None]
         @param gsparams          An optional GSParams argument.  See the docstring for GSParams for
-                                 details. [default: None]
+                                 details.  [default: None]
 
         The following are optional keywords to use to setup the aperture if `aper` is not provided.
 
         @param diam              Diameter in meters of aperture used to compute PSF from phases.
+                                 [default: None]
         @param circular_pupil    Adopt a circular pupil? [default: True].
         @param obscuration       Fractional linear circular obscuration of pupil. [default: 0.]
         @param nstruts           Number of radial support struts to add to the central obscuration.
@@ -828,12 +830,12 @@ class PhaseScreenList(object):
         @param oversampling      Optional oversampling factor for the InterpolatedImage. Setting
                                  `oversampling < 1` will produce aliasing in the PSF (not good).
                                  Usually `oversampling` should be somewhat larger than 1.  1.5 is
-                                 usually a safe choice.  [default: 1.5]
+                                 usually a safe choice.  [default: 1.0]
         @param pad_factor        Additional multiple by which to zero-pad the PSF image to avoid
                                  folding compared to what would be employed for a simple Airy.  Note
                                  that `pad_factor` may need to be increased for stronger
                                  aberrations, i.e., when the equivalent Zernike coefficients become
-                                 larger than order unity.  [default: 1.5]
+                                 larger than order unity.  [default: 1.0]
         """
         # Assemble theta as an iterable over 2-tuples of Angles.
         # 5 possible input kwargs cases for theta, theta_x, theta_y.
@@ -949,13 +951,13 @@ class PhaseScreenPSF(GSObject):
     @param lam               Wavelength in nanometers at which to compute PSF.
     @param exptime           Time in seconds overwhich to accumulate evolving instantaneous PSF.
                              [Default: 0.0]
-    @param flux              Flux of output PSF [Default: 1.0]
+    @param flux              Flux of output PSF [default: 1.0]
     @param theta_x           x-component of field angle at which to evaluate phase screens and
-                             resulting PSF.  [Default: 0.0*galsim.arcmin]
+                             resulting PSF.  [default: 0.0*galsim.arcmin]
     @param theta_y           y-component of field angle at which to evaluate phase screens and
-                             resulting PSF.  [Default: 0.0*galsim.arcmin]
+                             resulting PSF.  [default: 0.0*galsim.arcmin]
     @param scale_unit        Units to use for the sky coordinates of the output profile.
-                             [Default: galsim.arcsec]
+                             [default: galsim.arcsec]
     @param interpolant       Either an Interpolant instance or a string indicating which interpolant
                              should be used.  Options are 'nearest', 'sinc', 'linear', 'cubic',
                              'quintic', or 'lanczosN' where N should be the integer order to use.
@@ -983,12 +985,12 @@ class PhaseScreenPSF(GSObject):
     @param oversampling      Optional oversampling factor for the InterpolatedImage. Setting
                              `oversampling < 1` will produce aliasing in the PSF (not good).
                              Usually `oversampling` should be somewhat larger than 1.  1.5 is
-                             usually a safe choice.  [default: 1.5]
+                             usually a safe choice.  [default: 1.0]
     @param pad_factor        Additional multiple by which to zero-pad the PSF image to avoid
                              folding compared to what would be employed for a simple Airy.  Note
                              that `pad_factor` may need to be increased for stronger aberrations,
                              i.e. when the equivalent Zernike coefficients become larger than
-                             order unity.  [default: 1.5]
+                             order unity.  [default: 1.0]
     """
     def __init__(self, screen_list, lam, exptime=0.0, flux=1.0,
                  theta_x=0.0*galsim.arcmin, theta_y=0.0*galsim.arcmin,
