@@ -91,10 +91,10 @@ def test_CRG(args):
         inner_grid = gridspec.GridSpecFromSubplotSpec(1, args.Nim, outer_grid[0])
         for i, img in enumerate(in_imgs):
             ax = plt.Subplot(fig, inner_grid[i])
-            im = ax.imshow(img.array, extent=in_extent)
+            im = ax.imshow(img.array, extent=in_extent, cmap='viridis')
             ax.set_title("band[{}] input".format(i))
-            ax.set_xticks([])
-            ax.set_yticks([])
+            # ax.set_xticks([])
+            # ax.set_yticks([])
             fig.add_subplot(ax)
             plt.colorbar(im)
 
@@ -102,17 +102,17 @@ def test_CRG(args):
         # Output image, truth, and residual
         ax = plt.Subplot(fig, inner_grid[0])
         ax.set_title("True output")
-        im = ax.imshow(out_img.array, extent=out_extent)
-        ax.set_xticks([])
-        ax.set_yticks([])
+        im = ax.imshow(out_img.array, extent=out_extent, cmap='viridis')
+        # ax.set_xticks([])
+        # ax.set_yticks([])
         fig.add_subplot(ax)
         plt.colorbar(im)
 
         ax = plt.Subplot(fig, inner_grid[1])
         ax.set_title("Reconstructed output")
-        ax.set_xticks([])
-        ax.set_yticks([])
-        im = ax.imshow(crg_img.array, extent=out_extent)
+        # ax.set_xticks([])
+        # ax.set_yticks([])
+        im = ax.imshow(crg_img.array, extent=out_extent, cmap='viridis')
         fig.add_subplot(ax)
         plt.colorbar(im)
 
