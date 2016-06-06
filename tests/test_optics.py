@@ -550,17 +550,20 @@ def test_OpticalPSF_pupil_plane():
 
     # Supply the pupil plane at higher resolution, and make sure that the routine figures out the
     # sampling and gets the right image scale etc.
+    gsp = galsim.GSParams(maximum_fft_size=8192)
     rescale_fac = 0.77
     ref_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, nstruts=nstruts,
                                 strut_angle=strut_angle, oversampling=pp_oversampling,
-                                pad_factor=pp_pad_factor/rescale_fac)
+                                pad_factor=pp_pad_factor/rescale_fac,
+                                gsparams=gsp)
     # Make higher resolution pupil plane image via interpolation
     int_im = galsim.InterpolatedImage(galsim.Image(im, scale=im.scale, dtype=np.float32),
                                       calculate_maxk=False, calculate_stepk=False,
                                       x_interpolant='linear')
     new_im = int_im.drawImage(scale=rescale_fac*im.scale, method='no_pixel')
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
-                                 pupil_plane_im=new_im, oversampling=pp_oversampling)
+                                 pupil_plane_im=new_im, oversampling=pp_oversampling,
+                                 gsparams=gsp)
     im_ref_psf = ref_psf.drawImage(scale=scale)
     im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
     im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
@@ -596,7 +599,7 @@ def test_OpticalPSF_pupil_plane():
     big_im[im.bounds] = im
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
                                  pupil_plane_im=big_im, oversampling=pp_oversampling,
-                                 pad_factor=pp_pad_factor)
+                                 pad_factor=pp_pad_factor, gsparams=gsp)
     im_test_psf = galsim.ImageD(im_ref_psf.array.shape[0], im_ref_psf.array.shape[1])
     im_test_psf = test_psf.drawImage(image=im_test_psf, scale=scale)
     test_moments = im_test_psf.FindAdaptiveMom()
@@ -700,6 +703,19 @@ def test_ne():
     all_obj_diff(objs)
 
 
+@timer
+def test_OpticalPSF_pupil_plane_size():
+    """Reproduce Chris Davis's test failure in (#752), but using a smaller, faster array."""
+    im = galsim.Image(512, 512)
+    x = y = np.arange(512) - 256
+    y, x = np.meshgrid(y, x)
+    im.array[x**2+y**2 < 230**2] = 1.0
+    # The following still fails (uses deprecated optics framework):
+    # galsim.optics.OpticalPSF(aberrations=[0,0,0,0,0.5], diam=4.0, lam=700.0, pupil_plane_im=im)
+    # But using the new framework, should work.
+    galsim.OpticalPSF(aberrations=[0,0,0,0,0.5], diam=4.0, lam=700.0, pupil_plane_im=im)
+
+
 if __name__ == "__main__":
     test_OpticalPSF_flux()
     test_OpticalPSF_vs_Airy()
@@ -709,4 +725,5 @@ if __name__ == "__main__":
     test_OpticalPSF_flux_scaling()
     test_OpticalPSF_pupil_plane()
     test_OpticalPSF_lamdiam()
+    test_OpticalPSF_pupil_plane_size()
     test_ne()
