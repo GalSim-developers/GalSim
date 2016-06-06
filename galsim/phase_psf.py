@@ -111,8 +111,7 @@ class Aperture(object):
     Finally, when specifying the pupil geometrically, Aperture may choose to make a small adjustment
     to `pupil_plane_scale` in order to produce an array with a good size for FFTs.  If your
     application depends on knowing the size and scale used with the Fourier optics framework, you
-    can obtain these from the `Aperture.pupil_plane_size` and `Aperture.pupil_plane_scale`
-    attributes.
+    can obtain these from the `aper.pupil_plane_size` and `aper.pupil_plane_scale` attributes.
 
     Pupil image specification
     --------------------------
