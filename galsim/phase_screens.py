@@ -626,3 +626,33 @@ class OpticalScreen(object):
             r = aper.rho
             rsqr = np.abs(r)**2
             return horner2d(rsqr, r, self.coef_array).real * self.lam_0
+
+
+class OpticalScreenPerturbationModel(OpticalScreen):
+    """
+    Class to describe optical aberrations with a perturbation model common to all field locations.
+    """
+    def __init__(self, field_coord, perturbation_model=None):
+        if perturbation_model is None:
+            perturbation_model = ZeroPerturbationModel()
+        # Calculate the wavefront Zernike coefficients for the specified field position under the 
+        # specified telescope perturbation model.
+        aberrations = perturbation_model.get_aberrations(field_coord)
+        # Initialize the phase screen with the wavefront coefficients we have now computed for 
+        # this field position.
+        super(OpticalScreenPerturbationModel, self).__init__(aberrations=aberrations, lam_0=lam_0)
+
+
+class ZeroPerturbationModel(object):
+    """
+    A class to use as a default perturbation model that yields zero optics screen aberrations.
+    """
+    def __init__(self):
+        pass
+
+    def get_aberrations(fielc_coord=None):
+        """
+        Return a list of wavefront aberration Zernike coefficients for use in OpticalScreen
+        """
+        return np.zeros(12., dtype=float)
+
