@@ -35,27 +35,27 @@ class AtmosphericScreen(object):
     @param screen_scale  Physical pixel scale of phase screen in meters.  An order unity multiple of
                          the Fried parameter is usually sufficiently small, but users should test
                          the effects of varying this parameter to ensure robust results.
-                         [Default: r0_500]
+                         [default: r0_500]
     @param altitude      Altitude of phase screen in km.  This is with respect to the telescope, not
-                         sea-level.  [Default: 0.0]
+                         sea-level.  [default: 0.0]
     @param time_step     Interval to use when advancing the screen in time in seconds.
-                         [Default: 0.03]
+                         [default: 0.03]
     @param r0_500        Fried parameter setting the amplitude of turbulence; contributes to "size"
                          of the resulting atmospheric PSF.  Specified at wavelength 500 nm, in units
-                         of meters.  [Default: 0.2]
+                         of meters.  [default: 0.2]
     @param L0            Outer scale in meters.  The turbulence power spectrum will smoothly
                          approach a constant at scales larger than L0.  Set to `None` or `np.inf`
-                         for a power spectrum without an outer scale.  [Default: 25.0]
-    @param vx            x-component wind velocity in meters/second.  [Default: 0.]
-    @param vy            y-component wind velocity in meters/second.  [Default: 0.]
+                         for a power spectrum without an outer scale.  [default: 25.0]
+    @param vx            x-component wind velocity in meters/second.  [default: 0.]
+    @param vy            y-component wind velocity in meters/second.  [default: 0.]
     @param alpha         Square root of fraction of phase that is "remembered" between time_steps
                          (i.e., alpha**2 is the fraction remembered). The fraction sqrt(1-alpha**2)
                          is then the amount of turbulence freshly generated in each step.  Setting
                          alpha=1.0 results in a frozen-flow atmosphere.  Note that computing PSFs
                          from frozen-flow atmospheres may be significantly faster than computing
-                         PSFs with non-frozen-flow atmospheres.  [Default: 1.0]
+                         PSFs with non-frozen-flow atmospheres.  [default: 1.0]
     @param rng           Random number generator as a galsim.BaseDeviate().  If None, then use the
-                         clock time or system entropy to seed a new generator.  [Default: None]
+                         clock time or system entropy to seed a new generator.  [default: None]
 
     Relevant SPIE paper:
     "Remembrance of phases past: An autoregressive method for generating realistic atmospheres in
@@ -206,7 +206,7 @@ class AtmosphericScreen(object):
         """Return an appropriate stepk for this atmospheric layer.
 
         @param lam         Wavelength in nanometers.
-        @param scale_unit  Sky coordinate units of output profile. [Default: galsim.arcsec]
+        @param scale_unit  Sky coordinate units of output profile. [default: galsim.arcsec]
         @param gsparams    An optional GSParams argument.  See the docstring for GSParams for
                            details. [default: None]
         @returns  Good pupil scale size in meters.
@@ -352,7 +352,7 @@ def Atmosphere(screen_size, rng=None, **kwargs):
 
     @param r0_500        Fried parameter setting the amplitude of turbulence; contributes to "size"
                          of the resulting atmospheric PSF.  Specified at wavelength 500 nm, in units
-                         of meters.  [Default: 0.2]
+                         of meters.  [default: 0.2]
     @param screen_size   Physical extent of square phase screen in meters.  This should be large
                          enough to accommodate the desired field-of-view of the telescope as well as
                          the meta-pupil defined by the wind speed and exposure time.  Note that
@@ -361,23 +361,23 @@ def Atmosphere(screen_size, rng=None, **kwargs):
                          or PSF correlations functions. Note that screen_size may be tweaked by the
                          initializer to ensure screen_size is a multiple of screen_scale.
     @param time_step     Interval to use when advancing the screen in time in seconds.
-                         [Default: 0.03]
+                         [default: 0.03]
     @param altitude      Altitude of phase screen in km.  This is with respect to the telescope, not
-                         sea-level.  [Default: 0.0]
+                         sea-level.  [default: 0.0]
     @param L0            Outer scale in meters.  The turbulence power spectrum will smoothly
                          approach a constant at scales larger than L0.  Set to `None` or `np.inf`
-                         for a power spectrum without an outer scale.  [Default: 25.0]
-    @param speed         Wind speed in meters/second.  [Default: 0.0]
-    @param direction     Wind direction as galsim.Angle [Default: 0.0 * galsim.degrees]
+                         for a power spectrum without an outer scale.  [default: 25.0]
+    @param speed         Wind speed in meters/second.  [default: 0.0]
+    @param direction     Wind direction as galsim.Angle [default: 0.0 * galsim.degrees]
     @param alpha         Fraction of phase that is "remembered" between time_steps.  The fraction
                          1-alpha is then the amount of turbulence freshly generated in each step.
-                         [Default: 1.0]
+                         [default: 1.0]
     @param screen_scale  Physical pixel scale of phase screen in meters.  A fraction of the Fried
                          parameter is usually sufficiently small, but users should test the effects
                          of this parameter to ensure robust results.
-                         [Default: same as each screen's r0_500]
+                         [default: same as each screen's r0_500]
     @param rng           Random number generator as a galsim.BaseDeviate().  If None, then use the
-                         clock time or system entropy to seed a new generator.  [Default: None]
+                         clock time or system entropy to seed a new generator.  [default: None]
     """
     # Fill in screen_size here, since there isn't a default in AtmosphericScreen
     kwargs['screen_size'] = _listify(screen_size)
@@ -558,7 +558,7 @@ class OpticalScreen(object):
                             aberrations[0], which is unused.)  This list can be arbitrarily long to
                             handle Zernike polynomial aberrations of arbitrary order.
     @param lam_0            Reference wavelength in nanometers at which Zernike aberrations are
-                            being specified.  [Default: 500]
+                            being specified.  [default: 500]
     """
     def __init__(self, tip=0.0, tilt=0.0, defocus=0.0, astig1=0.0, astig2=0.0, coma1=0.0, coma2=0.0,
                  trefoil1=0.0, trefoil2=0.0, spher=0.0, aberrations=None, lam_0=500.0):
@@ -629,7 +629,7 @@ class OpticalScreen(object):
 
         @param lam         Wavelength in nanometers.
         @param diam        Aperture diameter in meters.
-        @param obscuration Fractional linear aperture obscuration. [Default: 0.0]
+        @param obscuration Fractional linear aperture obscuration. [default: 0.0]
         @param gsparams    An optional GSParams argument.  See the docstring for GSParams for
                            details. [default: None]
         @returns  stepK in inverse arcsec.
