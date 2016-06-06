@@ -121,18 +121,17 @@ class Aperture(object):
     is assumed by the simple model for struts described above.  In this case, an exception is raised
     if keywords related to struts are also given.  On the other hand, the `obscuration` keyword is
     still used to ensure that the PSF images are not aliased, though it is ignored during the actual
-    construction of the pupil plane illumination pattern.  The `pupil_plane_im` that is passed in
-    can be rotated during internal calculations by specifying a `pupil_angle` keyword.  Also note
-    that given how the `obscuration` keyword is used, the obscuration in the supplied pupil plane
-    image should indeed be reasonably circular rather than having an arbitrary shape; however, minor
-    deviations from a perfect circle do not cause significant problems.
+    construction of the pupil plane illumination pattern.  Note that for complicated pupil
+    configurations, it may be desireable to increase `pad_factor` for more fidelity at the expense
+    of slower running time.  Finally, the `pupil_plane_im` that is passed in can be rotated during
+    internal calculations by specifying a `pupil_angle` keyword.
 
     If you choose to pass in a pupil plane image, it must be a square array in which the image of
     the pupil is centered.  The areas that are illuminated should have some value >0, and the other
     areas should have a value of precisely zero.  Based on what the Aperture class determines is a
     good PSF sampling interval, the image of the pupil plane that is passed in might be zero-padded
     during internal calculations.  (The pupil plane array size and scale values can be accessed via
-    the `Aperture.pupil_plane_size` and `Aperture.pupil_plane_scale` attributes.) The pixel scale of
+    the `aper.pupil_plane_size` and `aper.pupil_plane_scale` attributes.) The pixel scale of
     the pupil plane can be specified in one of three ways.  In descending order of priority, these
     are:
       1.  The `pupil_plane_scale` keyword argument (units are meters).
@@ -944,7 +943,7 @@ class PhaseScreenPSF(GSObject):
 
     Computing a PSF from a phase screen also requires an Aperture be specified.  This can be done
     either directly via the `aper` keyword, or by setting a number of keywords that will be passed
-    to the `Aperture.fromPhaseScreenList` constructor.  The `aper` keyword always takes precedence.
+    to the `Aperture` constructor.  The `aper` keyword always takes precedence.
 
     @param screen_list       PhaseScreenList object from which to create PSF.
     @param lam               Wavelength in nanometers at which to compute PSF.
@@ -1172,11 +1171,10 @@ class OpticalPSF(GSObject):
     is assumed by the simple model for struts described above.  In this case, keywords related to
     struts are ignored; moreover, the `obscuration` keyword is used to ensure that the images are
     properly sampled (so it is still needed), but the keyword is then ignored when using the
-    supplied image of the pupil plane.  The `pupil_plane_im` that is passed in can be rotated during
-    internal calculations by specifying a `pupil_angle` keyword.  Also note that given how the
-    `obscuration` keyword is used, the obscuration in the supplied pupil plane image should indeed
-    be reasonably circular rather than having an arbitrary shape; however, minor deviations from a
-    perfect circle do not cause significant problems.
+    supplied image of the pupil plane.  Note that for complicated pupil configurations, it may be
+    desireable to increase `pad_factor` for more fidelity at the expense of slower running time.
+    The `pupil_plane_im` that is passed in can be rotated during internal calculations by specifying
+    a `pupil_angle` keyword.
 
     If you choose to pass in a pupil plane image, it must be a square array in which the image of
     the pupil is centered.  The areas that are illuminated should have some value >0, and the other
