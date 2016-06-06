@@ -319,7 +319,7 @@ def Atmosphere(screen_size, rng=None, **kwargs):
 
     The one exception to the above is the keyword `r0_500`.  The effective Fried parameter for a set
     of atmospheric layers is r0_500_effective = (sum(r**(-5./3) for r in r0_500s))**(-3./5).
-    Providing `r0_500` as a scalar or length-1 list will result in broadcasting such that the
+    Providing `r0_500` as a scalar or single-element list will result in broadcasting such that the
     effective Fried parameter for the whole set of layers equals the input argument.
 
     As an example, the following code approximately creates the atmosphere used by Jee+Tyson(2011)
@@ -348,7 +348,7 @@ def Atmosphere(screen_size, rng=None, **kwargs):
     Many factors will affect the timing of results, of course, including aperture diameter, gsparams
     settings, pad_factor and oversampling options to makePSF, time_step and exposure time, frozen
     vs. non-frozen atmospheric layers, and so on.  We recommend that users try varying these
-    settings to find a balance of speed and accuracy.
+    settings to find a balance of speed and fidelity.
 
     @param r0_500        Fried parameter setting the amplitude of turbulence; contributes to "size"
                          of the resulting atmospheric PSF.  Specified at wavelength 500 nm, in units
