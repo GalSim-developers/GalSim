@@ -28,6 +28,7 @@ version_h_text = """
 #define GALSIM_REVISION %d
 
 #include <string>
+#include <sstream>
 
 namespace galsim {
     // Compiled versions of the above #define values.

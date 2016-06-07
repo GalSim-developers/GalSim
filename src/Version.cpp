@@ -17,7 +17,6 @@
  *    and/or other materials provided with the distribution.
  */
 
-#include <sstream>
 #include "Version.h"
 
 namespace galsim {
