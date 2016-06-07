@@ -27,7 +27,7 @@ def CheckPyPrefix(target, source, env):
 
     # Get sys.path for the intended python version.
     python = env['PYTHON']
-    cmd = "%s -c \"import sys; print sys.path\""%python
+    cmd = "%s -c \"import sys; print(sys.path)\""%python
     p = subprocess.Popen([cmd],stdout=subprocess.PIPE,shell=True)
     sys_path = p.stdout.read().strip()
     sys_path = eval(sys_path)
