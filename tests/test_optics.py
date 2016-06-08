@@ -48,9 +48,10 @@ decimal_dft = 3  # Last decimal place used for checking near equality of DFT pro
 # `scons tests`, you will get faster, less stringent tests.
 
 do_slow_tests = False
-if __name__ == "__main__":
-    do_slow_tests = True
-# do_slow_tests = False  # uncomment for easier debugging
+#do_slow_tests = True   # uncomment out for more rigorous testing
+                        # Warning: some of them require a LOT of memory.
+#if __name__ == "__main__":
+    #do_slow_tests = True
 
 if do_slow_tests:
     pp_decimal = 5

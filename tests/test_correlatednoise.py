@@ -959,7 +959,8 @@ def test_convolve_cosmos():
         normalization='sb', scale=cosmos_scale, x_interpolant=interp)
     cimobj_padded = galsim.Convolve(imobj_padded, psf_shera)
 
-    if __name__ == "__main__":
+    if False:  # Switch this for more rigorous tests (takes a long time!)
+    #if __name__ != "__main__":
         # The convolve_cosmos test, which includes a lot of the correlated noise functionality is
         # fairly sensitive at 2dp, but takes ~200s on a mid-range laptop
         decimal_convolve_cosmos = 2
