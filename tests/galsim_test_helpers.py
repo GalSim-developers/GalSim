@@ -253,9 +253,12 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
 
     obj3 = copy.copy(obj1)
     assert obj3 is not obj1
-    random = hasattr(obj1, 'rng') or isinstance(obj1, galsim.BaseDeviate)
-    if not hasattr(obj1, 'rng'):  # Things with an rng attribute won't be identical on copy.
-        if random: f1 = func(obj1)  # But BaseDeviates will be ok.  Just need to remake f1.
+    random = hasattr(obj1, 'rng') or isinstance(obj1, galsim.BaseDeviate) or 'rng' in repr(obj1)
+    if not random:  # Things with an rng attribute won't be identical on copy.
+        f3 = func(obj3)
+        assert f3 == f1
+    elif isinstance(obj1, galsim.BaseDeviate):
+        f1 = func(obj1)  # But BaseDeviates will be ok.  Just need to remake f1.
         f3 = func(obj3)
         assert f3 == f1
 
@@ -289,6 +292,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     except:
         pass
     else:
+        #print 'obj1 = ',repr(obj1)
         #print 'obj5 = ',repr(obj5)
         f5 = func(obj5)
         if random: f1 = func(obj1)
