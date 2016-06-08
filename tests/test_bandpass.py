@@ -274,6 +274,7 @@ def test_ne():
 
 @timer
 def test_thin():
+    """Test that bandpass thinning works with the requested accuracy."""
     s = galsim.SED('1', wave_type='nm', flux_type='fphotons')
     bp = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), 'nm')
     flux = s.calculateFlux(bp)
@@ -298,6 +299,23 @@ def test_thin():
         print "realized error = ",(flux-thin_flux)/flux
         assert np.abs(thin_err) < err, "Thinned bandpass failed accuracy goal, w/ range shrinkage."
 
+@timer
+def test_zp():
+    """Check that the zero points are maintained in an appropriate way when thinning."""
+    # Make a bandpass and set an AB zeropoint.
+    bp = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), 'nm')
+    bp = bp.withZeropoint(zeropoint='AB', effective_diameter=6.4, exptime=15)
+    # Confirm that if we use the default thinning kwargs, then the zeropoint for the thinned
+    # bandpass is the same (exactly) as the original.
+    bp_t = bp.thin()
+    np.testing.assert_equal(bp.zeropoint, bp_t.zeropoint,
+                            "Zeropoint not preserved after thinning with defaults")
+
+    # Confirm that if we explicit set the kwarg to clear the zeropoint when thinning, then the new
+    # bandpass has no zeropoint.
+    bp_t = bp.thin(preserve_zp = False)
+    assert bp_t.zeropoint is None, \
+        "Zeropoint erroneously preserved after thinning with preserve_zp=False"
 
 if __name__ == "__main__":
     test_Bandpass_basic()
@@ -306,3 +324,4 @@ if __name__ == "__main__":
     test_Bandpass_wave_type()
     test_ne()
     test_thin()
+    test_zp()
