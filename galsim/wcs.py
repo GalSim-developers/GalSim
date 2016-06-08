@@ -545,7 +545,8 @@ class BaseWCS(object):
             # Store the items that are in self.header in the header if they weren't already put
             # there by the call to wcs._writeHeader() call.  (We don't want to overwrite the WCS.)
             for key in self.header.keys():
-                if key not in header.keys():
+                if (key not in header.keys() and key.strip() != '' and
+                    key.strip() != 'COMMENT' and key.strip() != 'HISTORY'):
                     header[key] = self.header[key]
 
     def makeSkyImage(self, image, sky_level):
