@@ -23,6 +23,7 @@ import warnings
 import os
 import time
 import galsim
+import sys
 from galsim_test_helpers import funcname
 from galsim.celestial import CelestialCoord
 
@@ -31,8 +32,8 @@ have_lsst_stack = True
 try:
     from galsim.lsst import LsstCamera, LsstWCS
 except ImportError as ee:
-    if __name__ == '__main__':
-        raise
+    #if __name__ == '__main__':
+        #raise
     # make sure that you are failing because the stack isn't there,
     # rather than because of some bug in lsst_wcs.py
     if "You cannot use the LSST module" in ee.message:
@@ -878,5 +879,7 @@ class LsstWcsTestCase(unittest.TestCase):
 
 
 if __name__ == "__main__":
-
-    unittest.main()
+    if have_lsst_stack:
+        unittest.main()
+    else:
+        print(ee.message)
