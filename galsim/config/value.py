@@ -17,6 +17,7 @@
 #
 from __future__ import print_function
 
+import sys
 import galsim
 
 # This file handles the parsing of values given in the config dict.  It includes the basic
@@ -408,7 +409,8 @@ def GetAllParams(config, base, req={}, opt={}, single=[], ignore=[]):
         safe = safe and safe1
         kwargs[key] = val
     # Just in case there are unicode strings.   python 2.6 doesn't like them in kwargs.
-    kwargs = dict([(k.encode('utf-8'), v) for k,v in kwargs.iteritems()])
+    if sys.version_info < (2,7):
+        kwargs = dict([(k.encode('utf-8'), v) for k,v in kwargs.items()])
     return kwargs, safe
 
 
