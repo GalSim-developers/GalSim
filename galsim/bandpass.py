@@ -443,7 +443,8 @@ class Bandpass(object):
         return Bandpass(self._orig_tp, self.wave_type, blue_limit, red_limit,
                         _wave_list=wave_list, _tp=self._tp)
 
-    def thin(self, rel_err=1.e-4, trim_zeros=True, preserve_range=True, fast_search=True):
+    def thin(self, rel_err=1.e-4, trim_zeros=True, preserve_range=True, fast_search=True,
+             preserve_zp=True):
         """Thin out the internal wavelengths of a Bandpass that uses a LookupTable.
 
         If the bandpass was initialized with a LookupTable or from a file (which internally
@@ -455,6 +456,13 @@ class Bandpass(object):
         process will usually help speed up integrations using this bandpass.  You should weigh
         the speed improvements against your fidelity requirements for your particular use
         case.
+
+        By default, this routine will preserve the zeropoint of the original bandpass by assigning
+        it to the new thinned bandpass.  The justification for this choice is that when using an AB
+        zeropoint, a typical optical bandpass, and the default thinning `rel_err` value, the
+        zeropoint for the new and thinned bandpasses changes by 10^-6.  However, if you are thinning
+        a lot, and/or want to do extremely precise tests, you can set `preserve_zp=False` and then
+        recalculate the zeropoint after thinning.
 
         @param rel_err            The relative error allowed in the integral over the throughput
                                   function. [default: 1.e-4]
@@ -477,6 +485,9 @@ class Bandpass(object):
                                   Bandpasses when a significant fraction of the integrated flux
                                   passes through low throughput bandpass light leaks.
                                   [default: True]
+        @param preserve_zp        If True, the new thinned Bandpass will be assigned the same
+                                  zeropoint as the original.  If False, the new thinned Bandpass
+                                  will have a zeropoint of None. [default: True]
 
         @returns the thinned Bandpass.
         """
@@ -491,7 +502,11 @@ class Bandpass(object):
             blue_limit = np.min(newx)
             red_limit = np.max(newx)
             wave_list = np.array(newx)
-            return Bandpass(tp, 'nm', blue_limit, red_limit, _wave_list=wave_list)
+            if preserve_zp:
+                return Bandpass(tp, 'nm', blue_limit, red_limit, _wave_list=wave_list,
+                                zeropoint=self.zeropoint)
+            else:
+                return Bandpass(tp, 'nm', blue_limit, red_limit, _wave_list=wave_list)
         else:
             return self
 
