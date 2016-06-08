@@ -470,7 +470,7 @@ class PowerSpectrum(object):
             grid_spacing *= scale_fac
 
         # The final grid spacing that will be in the computed images is grid_spacing/kmax_factor.
-        self.grid_spacing = grid_spacing/kmax_factor
+        self.grid_spacing = grid_spacing // kmax_factor
         self.center = center
 
         # We have to make an adjustment to the center value to account for how the xValue function
@@ -602,7 +602,7 @@ class PowerSpectrum(object):
             raise RuntimeError("BuildGrid has not been called yet.")
         ntot = 0
         # cf. PowerSpectrumRealizer._generate_power_array
-        temp = 2 * np.product( (self.ngrid_tot, self.ngrid_tot/2 +1 ) )
+        temp = 2 * np.product( (self.ngrid_tot, self.ngrid_tot//2 +1 ) )
         if self.e_power_function is not None:
             ntot += temp
         if self.b_power_function is not None:
@@ -1569,15 +1569,15 @@ class PowerSpectrumRealizer(object):
         self.pixel_size = float(pixel_size)
 
         # Setup some handy slices for indexing different parts of k space
-        self.ikx = slice(0,self.nx/2+1)       # positive kx values, including 0, nx/2
-        self.ikxp = slice(1,(self.nx+1)/2)    # limit to only values with a negative value
-        self.ikxn = slice(-1,self.nx/2,-1)    # negative kx values
+        self.ikx = slice(0,self.nx//2+1)       # positive kx values, including 0, nx/2
+        self.ikxp = slice(1,(self.nx+1)//2)    # limit to only values with a negative value
+        self.ikxn = slice(-1,self.nx//2,-1)    # negative kx values
 
         # We always call this with nx=ny, so behavior with nx != ny is not tested.
         # However, we make a basic attempt to enable such behavior in the future if needed.
-        self.iky = slice(0,self.ny/2+1)
-        self.ikyp = slice(1,(self.ny+1)/2)
-        self.ikyn = slice(-1,self.ny/2,-1)
+        self.iky = slice(0,self.ny//2+1)
+        self.ikyp = slice(1,(self.ny+1)//2)
+        self.ikyn = slice(-1,self.ny//2,-1)
 
         # Set up the scalar k grid. Generally, for a box size of L (in one dimension), the grid
         # spacing in k_x or k_y is Delta k=2pi/L
@@ -1683,16 +1683,16 @@ class PowerSpectrumRealizer(object):
         if self.ny % 2 == 0:
             # Note: this is a bit more complicated if you have to separately check whether
             # nx and/or ny are even.  I ignore this subtlety until we decide it is needed.
-            P_k[self.ikyn,self.nx/2] = np.conj(P_k[self.ikyp,self.nx/2])
-            P_k[self.ny/2,self.ikxn] = np.conj(P_k[self.ny/2,self.ikxp])
-            P_k[self.ny/2,0] = np.real(P_k[self.ny/2,0])
-            P_k[0,self.nx/2] = np.real(P_k[0,self.nx/2])
-            P_k[self.ny/2,self.nx/2] = np.real(P_k[self.ny/2,self.nx/2])
+            P_k[self.ikyn,self.nx//2] = np.conj(P_k[self.ikyp,self.nx//2])
+            P_k[self.ny//2,self.ikxn] = np.conj(P_k[self.ny//2,self.ikxp])
+            P_k[self.ny//2,0] = np.real(P_k[self.ny//2,0])
+            P_k[0,self.nx//2] = np.real(P_k[0,self.nx//2])
+            P_k[self.ny//2,self.nx//2] = np.real(P_k[self.ny//2,self.nx//2])
 
     def _generate_power_array(self, power_function):
         # Internal function to generate the result of a power function evaluated on a grid,
         # taking into account the symmetries.
-        power_array = np.empty((self.ny, self.nx/2+1))
+        power_array = np.empty((self.ny, self.nx//2+1))
 
         # Set up the scalar |k| grid using just the positive kx,ky
         k = np.sqrt(self.kx[self.iky,self.ikx]**2 + self.ky[self.iky,self.ikx]**2)

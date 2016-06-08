@@ -507,11 +507,11 @@ def test_integer_shift_fft():
     final.drawImage(img_shift,scale=1)
 
     sub_center = img_center.array[
-        (n_pix_y - delta_sub) / 2 : (n_pix_y + delta_sub) / 2,
-        (n_pix_x - delta_sub) / 2 : (n_pix_x + delta_sub) / 2]
+        (n_pix_y - delta_sub) // 2 : (n_pix_y + delta_sub) // 2,
+        (n_pix_x - delta_sub) // 2 : (n_pix_x + delta_sub) // 2]
     sub_shift = img_shift.array[
-        (n_pix_y - delta_sub) / 2  + int_shift_y : (n_pix_y + delta_sub) / 2  + int_shift_y,
-        (n_pix_x - delta_sub) / 2  + int_shift_x : (n_pix_x + delta_sub) / 2  + int_shift_x]
+        (n_pix_y - delta_sub) // 2  + int_shift_y : (n_pix_y + delta_sub) // 2  + int_shift_y,
+        (n_pix_x - delta_sub) // 2  + int_shift_x : (n_pix_x + delta_sub) // 2  + int_shift_x]
 
     np.testing.assert_array_almost_equal(
         sub_center, sub_shift, decimal=image_decimal_precise,
@@ -526,11 +526,11 @@ def test_integer_shift_fft():
     final.drawImage(img_shift,scale=1)
 
     sub_center = img_center.array[
-        (n_pix_y - delta_sub) / 2 : (n_pix_y + delta_sub) / 2,
-        (n_pix_x - delta_sub) / 2 : (n_pix_x + delta_sub) / 2]
+        (n_pix_y - delta_sub) // 2 : (n_pix_y + delta_sub) // 2,
+        (n_pix_x - delta_sub) // 2 : (n_pix_x + delta_sub) // 2]
     sub_shift = img_shift.array[
-        (n_pix_y - delta_sub) / 2  + int_shift_y : (n_pix_y + delta_sub) / 2  + int_shift_y,
-        (n_pix_x - delta_sub) / 2  + int_shift_x : (n_pix_x + delta_sub) / 2  + int_shift_x]
+        (n_pix_y - delta_sub) // 2  + int_shift_y : (n_pix_y + delta_sub) // 2  + int_shift_y,
+        (n_pix_x - delta_sub) // 2  + int_shift_x : (n_pix_x + delta_sub) // 2  + int_shift_x]
     np.testing.assert_array_almost_equal(
         sub_center, sub_shift,  decimal=image_decimal_precise,
         err_msg="Integer shift failed for FFT rendered Gaussian GSObject with only PSF shifted ")
@@ -560,11 +560,11 @@ def test_integer_shift_photon():
     final.drawImage(img_shift,scale=1,rng=test_deviate,n_photons=n_photons_low, method='phot')
 
     sub_center = img_center.array[
-        (n_pix_y - delta_sub) / 2 : (n_pix_y + delta_sub) / 2,
-        (n_pix_x - delta_sub) / 2 : (n_pix_x + delta_sub) / 2]
+        (n_pix_y - delta_sub) // 2 : (n_pix_y + delta_sub) // 2,
+        (n_pix_x - delta_sub) // 2 : (n_pix_x + delta_sub) // 2]
     sub_shift = img_shift.array[
-        (n_pix_y - delta_sub) / 2  + int_shift_y : (n_pix_y + delta_sub) / 2  + int_shift_y,
-        (n_pix_x - delta_sub) / 2  + int_shift_x : (n_pix_x + delta_sub) / 2  + int_shift_x]
+        (n_pix_y - delta_sub) // 2  + int_shift_y : (n_pix_y + delta_sub) // 2  + int_shift_y,
+        (n_pix_x - delta_sub) // 2  + int_shift_x : (n_pix_x + delta_sub) // 2  + int_shift_x]
 
 
     np.testing.assert_array_almost_equal(
@@ -581,11 +581,11 @@ def test_integer_shift_photon():
     final.drawImage(img_shift,scale=1,rng=test_deviate,n_photons=n_photons_low, method='phot')
 
     sub_center = img_center.array[
-        (n_pix_y - delta_sub) / 2 : (n_pix_y + delta_sub) / 2,
-        (n_pix_x - delta_sub) / 2 : (n_pix_x + delta_sub) / 2]
+        (n_pix_y - delta_sub) // 2 : (n_pix_y + delta_sub) // 2,
+        (n_pix_x - delta_sub) // 2 : (n_pix_x + delta_sub) // 2]
     sub_shift = img_shift.array[
-        (n_pix_y - delta_sub) / 2  + int_shift_y : (n_pix_y + delta_sub) / 2  + int_shift_y,
-        (n_pix_x - delta_sub) / 2  + int_shift_x : (n_pix_x + delta_sub) / 2  + int_shift_x]
+        (n_pix_y - delta_sub) // 2  + int_shift_y : (n_pix_y + delta_sub) // 2  + int_shift_y,
+        (n_pix_x - delta_sub) // 2  + int_shift_x : (n_pix_x + delta_sub) // 2  + int_shift_x]
     np.testing.assert_array_almost_equal(
         sub_center, sub_shift,  decimal=image_decimal_precise,
         err_msg="Integer shift failed for FFT rendered Gaussian GSObject with only PSF shifted ")

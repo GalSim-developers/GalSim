@@ -765,14 +765,14 @@ def test_kappa_gauss():
     k_testE, k_testB = galsim.lensing_ps.kappaKaiserSquires(g1, g2)
     # Then run tests based on the central region to avoid edge effects (known issue with KS
     # inversion)
-    icent = np.arange(ngrid / 2) + ngrid / 4
+    icent = np.arange(ngrid // 2) + ngrid // 4
     # Test that E-mode kappa matches
     np.testing.assert_array_almost_equal(
         k_testE[np.ix_(icent, icent)], k_ref[np.ix_(icent, icent)], decimal=2,
         err_msg="Reconstructed kappa does not match input to 2 decimal places.")
     # Test B-mode kappa is consistent with zero
     np.testing.assert_array_almost_equal(
-        k_testB[np.ix_(icent, icent)], np.zeros((ngrid / 2, ngrid / 2)), decimal=3,
+        k_testB[np.ix_(icent, icent)], np.zeros((ngrid // 2, ngrid // 2)), decimal=3,
         err_msg="Reconstructed B-mode kappa is non-zero at greater than 3 decimal places.")
     # Generate shears using the 45 degree rotation option
     g1r_big, g2r_big = shear_gaussian(
@@ -789,7 +789,7 @@ def test_kappa_gauss():
         "decimal places.")
     # Test E-mode kappa is consistent with zero for rotated shear field
     np.testing.assert_array_almost_equal(
-        kr_testE[np.ix_(icent, icent)], np.zeros((ngrid / 2, ngrid / 2)), decimal=3,
+        kr_testE[np.ix_(icent, icent)], np.zeros((ngrid // 2, ngrid // 2)), decimal=3,
         err_msg="Reconstructed kappaE is non-zero at greater than 3 decimal places for rotated "+
         "shear field.")
 

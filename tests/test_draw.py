@@ -983,8 +983,8 @@ def test_offset():
                         "im2(%d,%d) does not match xValue(%f,%f)"%(x,y,u,v))
 
         # Chcek the image's definition of the nominal center
-        nom_cenx = (nx+2)/2
-        nom_ceny = (ny+2)/2
+        nom_cenx = (nx+2)//2
+        nom_ceny = (ny+2)//2
         nominal_center = im.bounds.center()
         np.testing.assert_almost_equal(
                 nom_cenx, nominal_center.x, 6,

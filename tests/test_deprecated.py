@@ -857,8 +857,8 @@ def test_dep_shapelet():
     i = 0
     for n in range(order+1):
         for m in range(n,-1,-2):
-            p = (n+m)/2
-            q = (n-m)/2
+            p = (n+m)//2
+            q = (n-m)//2
             if m == 0:
                 check_dep(shapelet.setPQ,p,q,bvec[i])
                 i = i+1

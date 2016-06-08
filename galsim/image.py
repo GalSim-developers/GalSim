@@ -1053,7 +1053,11 @@ def Image_idiv(self, other):
         a = other
         dt = type(a)
     if dt == self.array.dtype:
-        self.array[:,:] /= a
+        # Try numpy's idiv, but if that doesn't work, coerce it into the existing dtype.
+        try:
+            self.array[:,:] /= a
+        except TypeError:
+            self.array[:,:] = (self.array / a).astype(self.array.dtype)
     else:
         self.array[:,:] = (self.array / a).astype(self.array.dtype)
     return self

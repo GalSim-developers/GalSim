@@ -465,7 +465,7 @@ def _zern_norm(n, m):
 def _zern_rho_coefs(n, m):
     """Compute coefficients of radial part of Zernike (n, m).
     """
-    kmax = (n-abs(m))/2
+    kmax = (n-abs(m))//2
     A = [0]*(n+1)
     val = _nCr(n,kmax) # The value for k = 0 in the equation below.
     norm = _zern_norm(n,m)

@@ -304,7 +304,7 @@ class Aperture(object):
         self.npix = galsim._galsim.goodFFTSize(int(np.ceil(ratio)))
         self.pupil_plane_size = pupil_plane_size
         # Shrink scale such that size = scale * npix exactly.
-        self.pupil_plane_scale = pupil_plane_size / self.npix
+        self.pupil_plane_scale = pupil_plane_size // self.npix
         # Save params for str/repr
         self._circular_pupil = circular_pupil
         self._obscuration = obscuration
@@ -391,7 +391,7 @@ class Aperture(object):
         if self.pupil_plane_size < good_pupil_size:
             new_npix = galsim._galsim.goodFFTSize(int(np.ceil(
                     good_pupil_size/self.pupil_plane_scale)))
-            pad_width = (new_npix-self.npix)/2
+            pad_width = (new_npix-self.npix)//2
             pp_arr = np.pad(pp_arr, [(pad_width, pad_width)]*2, mode='constant')
             self.npix = new_npix
             self.pupil_plane_size = self.pupil_plane_scale * self.npix

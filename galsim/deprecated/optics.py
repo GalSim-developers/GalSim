@@ -587,7 +587,7 @@ def _load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape
     kx = (kx) * pupil_plane_im.array.shape[0]/(2.*np.pi)
     ky = (ky) * pupil_plane_im.array.shape[1]/(2.*np.pi)
     tot_k = np.sqrt(kx**2 + ky**2)
-    tot_k = roll2d(tot_k, (tot_k.shape[0] / 2, tot_k.shape[1] / 2))
+    tot_k = roll2d(tot_k, (tot_k.shape[0] // 2, tot_k.shape[1] // 2))
     max_in_pupil = max(tot_k[pupil_plane_im.array>0])
 
     # Next, deal with any requested rotations.
@@ -614,7 +614,7 @@ def _load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape
     pp_arr = pp_arr.astype(bool)
     # Roll the pupil plane image so the center is in the corner, just like the outputs of
     # `generate_pupil_plane`.
-    pp_arr = roll2d(pp_arr, (pp_arr.shape[0] / 2, pp_arr.shape[1] / 2))
+    pp_arr = roll2d(pp_arr, (pp_arr.shape[0] // 2, pp_arr.shape[1] // 2))
 
     # Then set up the rho array appropriately. Given our estimate above for `max_in_pupil`, we can
     # get delta rho:
@@ -627,8 +627,8 @@ def _load_pupil_plane(pupil_plane_im, pupil_angle=0.*galsim.degrees, array_shape
     assert rho_x.shape == pp_arr.shape
     assert rho_y.shape == pp_arr.shape
     # Then roll it, consistent with the convention in `generate_pupil_plane`.
-    rho_x = roll2d(rho_x, (pp_arr.shape[0] / 2, pp_arr.shape[1] / 2))
-    rho_y = roll2d(rho_y, (pp_arr.shape[0] / 2, pp_arr.shape[1] / 2))
+    rho_x = roll2d(rho_x, (pp_arr.shape[0] // 2, pp_arr.shape[1] // 2))
+    rho_y = roll2d(rho_y, (pp_arr.shape[0] // 2, pp_arr.shape[1] // 2))
     rho = rho_x + 1j * rho_y
 
     if obscuration is not None and lam_over_diam is not None:
@@ -974,7 +974,7 @@ def psf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
     im = np.abs(ftwf)**2
 
     # The roll operation below restores the c_contiguous flag, so no need for a direct action
-    im = roll2d(im, (im.shape[0] / 2, im.shape[1] / 2))
+    im = roll2d(im, (im.shape[0] // 2, im.shape[1] // 2))
     im *= (flux / (im.sum() * scale**2))
 
     return im, effective_oversampling

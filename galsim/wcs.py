@@ -1922,7 +1922,7 @@ def _writeFuncToHeader(func, letter, header):
 
     # Fits header strings cannot be more than 68 characters long, so split it up.
     fits_len = 68
-    n = (len(s)-1)/fits_len + 1
+    n = (len(s)-1)//fits_len + 1
     s_array = [ s[i*fits_len:(i+1)*fits_len] for i in range(n) ]
 
     # The total number of string splits is stored in fits key GS_U_N.

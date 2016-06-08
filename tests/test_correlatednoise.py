@@ -465,7 +465,7 @@ def test_drawImage():
     # Calculate the power spectrum then correlated noise
     ps_array = (ft_array * ft_array.conj()).real
     cf_array = (np.fft.ifft2(ps_array)).real / float(np.product(np.shape(ft_array)))
-    cf_array = utilities.roll2d(cf_array, (cf_array.shape[0] / 2, cf_array.shape[1] / 2))
+    cf_array = utilities.roll2d(cf_array, (cf_array.shape[0] // 2, cf_array.shape[1] // 2))
     # Then use the CorrelatedNoise class for comparison (don't use periodicity correction for
     # comparison with naive results above)
     cn = galsim.CorrelatedNoise(uncorr_noise_small_odd, gd, correct_periodicity=False)
@@ -482,7 +482,7 @@ def test_drawImage():
     # Calculate the power spectrum then correlated noise
     ps_array = (ft_array * ft_array.conj()).real
     cf_array = (np.fft.ifft2(ps_array)).real / float(np.product(np.shape(ft_array)))
-    cf_array = utilities.roll2d(cf_array, (cf_array.shape[0] / 2, cf_array.shape[1] / 2))
+    cf_array = utilities.roll2d(cf_array, (cf_array.shape[0] // 2, cf_array.shape[1] // 2))
     # Then use the CorrelatedNoise class for comparison (as above don't correct for periodicity)
     cn = galsim.CorrelatedNoise(uncorr_noise_small, gd, correct_periodicity=False)
     testim1 = galsim.ImageD(smallim_size, smallim_size)

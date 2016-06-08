@@ -275,7 +275,7 @@ class GSObject(object):
 
     def __truediv__(self, other):
         """Equivalent to obj * (1/other)"""
-        return __div__(self, other)
+        return self.__div__(other)
 
     # Make a copy of an object
     def copy(self):
@@ -2064,7 +2064,7 @@ class Kolmogorov(GSObject):
             if isinstance(scale_unit, basestring):
                 scale_unit = galsim.angle.get_angle_unit(scale_unit)
             if r0 is None:
-                r0 = r0_500 * (lam/500)**1.2
+                r0 = r0_500 * (lam/500.)**1.2
             lam_over_r0 = (1.e-9*lam/r0)*(galsim.radians/scale_unit)
 
         GSObject.__init__(self, _galsim.SBKolmogorov(lam_over_r0, flux, gsparams))

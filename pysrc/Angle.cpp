@@ -35,13 +35,16 @@ namespace {
 struct PyAngleUnit {
 
     static void wrap() {
+        typedef double (*div_func)(AngleUnit, AngleUnit);
+
         bp::class_< AngleUnit > pyAngleUnit("AngleUnit", bp::no_init);
         pyAngleUnit
             .def(bp::init<double>(bp::arg("val")))
             .def(bp::self == bp::self)
             .def("getValue", &AngleUnit::getValue)
             .def(bp::other<double>() * bp::self)
-            .def(bp::self / bp::other<AngleUnit>())
+            .def("__div__", div_func(&operator/))
+            .def("__truediv__", div_func(&operator/))
             .enable_pickling()
             ;
     }
@@ -62,6 +65,9 @@ struct PyAngle {
     }
 
     static void wrap() {
+        typedef double (Angle::*div_func1)(AngleUnit) const;
+        typedef Angle (Angle::*div_func2)(double) const;
+
         bp::class_< Angle > pyAngle("Angle", bp::init<>());
         pyAngle
             .def(bp::init<double, AngleUnit>(bp::args("val","unit")))
@@ -72,10 +78,12 @@ struct PyAngle {
             .def("cos", &Angle::cos)
             .def("tan", &Angle::tan)
             .def("sincos", sincos)
-            .def(bp::self / bp::other<AngleUnit>())
+            .def("__div__", div_func1(&Angle::operator/))
+            .def("__truediv__", div_func1(&Angle::operator/))
             .def(bp::self * bp::other<double>())
             .def(bp::other<double>() * bp::self)
-            .def(bp::self / bp::other<double>())
+            .def("__div__", div_func2(&Angle::operator/))
+            .def("__truediv__", div_func2(&Angle::operator/))
             .def(bp::self + bp::self)
             .def(bp::self - bp::self)
             .def(bp::self == bp::self)
