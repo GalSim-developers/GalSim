@@ -22,7 +22,7 @@ Very simple implementation of a filter bandpass.  Used by galsim.chromatic.
 import numpy as np
 
 import galsim
-import utilities
+from . import utilities
 
 class Bandpass(object):
     """Simple bandpass object, which models the transmission fraction of incident light as a

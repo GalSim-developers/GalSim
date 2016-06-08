@@ -42,7 +42,7 @@ import os
 import numpy as np
 
 import galsim
-import utilities
+from . import utilities
 
 from . import _galsim
 from ._galsim import GSParams

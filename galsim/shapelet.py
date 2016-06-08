@@ -24,7 +24,7 @@ import numpy as np
 
 import galsim
 from galsim import GSObject
-import _galsim
+from . import _galsim
 from ._galsim import LVector, ShapeletSize
 
 class Shapelet(GSObject):

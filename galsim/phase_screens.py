@@ -17,7 +17,7 @@
 #
 import numpy as np
 import galsim
-import utilities
+from . import utilities
 
 class AtmosphericScreen(object):
     """ An atmospheric phase screen that can drift in the wind and evolves ("boils") over time.  The

@@ -56,7 +56,7 @@ from itertools import izip, chain
 
 import numpy as np
 import galsim
-import utilities
+from . import utilities
 from galsim import GSObject
 
 
