@@ -23,14 +23,15 @@ from contextlib import contextmanager
 import numpy as np
 import galsim
 
-def roll2d(image, (iroll, jroll)):
+def roll2d(image, shape):
     """Perform a 2D roll (circular shift) on a supplied 2D NumPy array, conveniently.
 
-    @param image            The NumPy array to be circular shifted.
-    @param (iroll, jroll)   The roll in the i and j dimensions, respectively.
+    @param image        The NumPy array to be circular shifted.
+    @param shape        (iroll, jroll) The roll in the i and j dimensions, respectively.
 
     @returns the rolled image.
     """
+    (iroll, jroll) = shape
     return np.roll(np.roll(image, jroll, axis=1), iroll, axis=0)
 
 def kxky(array_shape=(256, 256)):
