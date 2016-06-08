@@ -40,7 +40,7 @@
 #pragma GCC diagnostic ignored "-Warray-bounds"
 #endif
 
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
+#if defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8))
 #pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #endif
 
@@ -49,7 +49,6 @@
 #if __has_warning("-Wlogical-op-parentheses")
 #pragma GCC diagnostic ignored "-Wlogical-op-parentheses"
 #endif
-
 #endif
 
 #endif
