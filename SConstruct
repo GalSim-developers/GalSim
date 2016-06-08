@@ -1516,7 +1516,7 @@ BOOST_PYTHON_MODULE(check_bp) {
     if not result:
         ErrorExit('Unable to compile a file with #include "boost/python.hpp"')
 
-    if config.env['PYTHON_VERSION'] >= 3.0:
+    if config.env['PYTHON_VERSION'] >= '3.0':
         result = (
             CheckModuleLibs(config,[''],bp_source_file,'check_bp') or
             CheckModuleLibs(config,['boost_python3'],bp_source_file,'check_bp') or
