@@ -1768,18 +1768,18 @@ fits_wcs_types = [
                     # TAN projection, and also TPV, which is used by SCamp.  If it does work, it 
                     # is a good choice, since it is easily the fastest of any of these.
 
-    AstropyWCS,     # This requires `import astropy.wcs` to succeed.  So far, they only handle
-                    # the standard official WCS types.  So not TPV, for instance.  Also, it is
-                    # a little faster than PyAst, so we prefer PyAst when it is available.
-                    # (But only because of our fix in the _xy function to not use the astropy
-                    # version of all_world2pix function!)
-
     PyAstWCS,       # This requires `import starlink.Ast` to succeed.  This handles the largest
                     # number of WCS types of any of these.  In fact, it worked for every one
                     # we tried in our unit tests (which was not exhaustive).  This is a bit 
                     # slower than Astropy, but I think mostly due to their initial reading of 
                     # the fits header -- that seems to take a lot of time for some reason.
                     # Once it is loaded, the actual usage seems to be quite fast.
+
+    AstropyWCS,     # This requires `import astropy.wcs` to succeed.  So far, they only handle
+                    # the standard official WCS types.  So not TPV, for instance.  Also, it is
+                    # a little faster than PyAst, so we prefer PyAst when it is available.
+                    # (But only because of our fix in the _xy function to not use the astropy
+                    # version of all_world2pix function!)
 
     WcsToolsWCS,    # This requires the wcstool command line functions to be installed.
                     # It is very slow, so it should only be used as a last resort.
