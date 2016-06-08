@@ -52,7 +52,8 @@ Atmosphere
   Convenience function to quickly assemble multiple AtmosphericScreens into a PhaseScreenList.
 """
 
-from itertools import izip, chain
+from itertools import chain
+from builtins import range, zip
 
 import numpy as np
 import galsim
@@ -332,7 +333,7 @@ class Aperture(object):
                 rot_u, rot_v = utilities.rotate_xy(rot_u, rot_v, -strut_angle)
             rotang = 360. * galsim.degrees / nstruts
             # Then loop through struts setting to zero the regions which lie under the strut
-            for istrut in xrange(nstruts):
+            for istrut in range(nstruts):
                 rot_u, rot_v = utilities.rotate_xy(rot_u, rot_v, -rotang)
                 self._illuminated *= ((np.abs(rot_u) >= radius * strut_thick) + (rot_v < 0.0))
 
@@ -851,7 +852,7 @@ class PhaseScreenList(object):
             if not hasattr(theta_x, '__iter__'):
                 single = True
             else:
-                theta = izip(theta_x, theta_y)
+                theta = zip(theta_x, theta_y)
         else:  # Case 2 or 5
             theta = kwargs.pop('theta')
             # 2-tuples are iterable, so to check whether theta is indicating a single pointing, or a
@@ -882,7 +883,7 @@ class PhaseScreenList(object):
 
             flux = kwargs.get('flux', 1.0)
             _nstep = PSFs[0]._nstep
-            for i in xrange(_nstep):
+            for i in range(_nstep):
                 for PSF in PSFs:
                     PSF._step()
                 self.advance()
@@ -1040,7 +1041,7 @@ class PhaseScreenPSF(GSObject):
         # of the normal iterate over time loop.  So only do the time loop here and now if we're not
         # doing a makePSFs().
         if _eval_now:
-            for i in xrange(self._nstep):
+            for i in range(self._nstep):
                 self._step()
                 self.screen_list.advance()
                 if _bar is not None:

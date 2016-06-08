@@ -99,7 +99,7 @@ def _GenerateFromEval(config, base, value_type):
             exec(key_name + ' = value')
 
     # Bring the user-defined variables into scope.
-    for key in opt.keys():
+    for key in opt:
         exec(key[1:] + ' = params[key]')
         #print(key[1:],'=',eval(key[1:]))
 
@@ -110,7 +110,7 @@ def _GenerateFromEval(config, base, value_type):
             raise AttributeError("eval_variables must be a dict")
         opt = {}
         ignore = []
-        for key in base['eval_variables'].keys():
+        for key in base['eval_variables']:
             # Only add variables that appear in the string.
             if key[1:] in string:
                 opt[key] = _type_by_letter(key)
@@ -121,7 +121,7 @@ def _GenerateFromEval(config, base, value_type):
                                                    base, opt=opt, ignore=ignore)
         #print('params = ',params)
         safe = safe and safe1
-        for key in opt.keys():
+        for key in opt:
             exec(key[1:] + ' = params[key]')
             #print(key[1:],'=',eval(key[1:]))
 

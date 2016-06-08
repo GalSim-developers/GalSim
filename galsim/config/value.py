@@ -387,7 +387,7 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
     # Check that there aren't any extra keys in config aside from a few we expect:
     valid_keys += ignore
     valid_keys += standard_ignore
-    for key in config.keys():
+    for key in config:
         # Generators are allowed to use item names that start with _, which we ignore here.
         if key not in valid_keys and not key.startswith('_'):
             raise AttributeError("Unexpected attribute %s found"%(key))

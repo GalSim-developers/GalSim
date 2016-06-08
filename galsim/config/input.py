@@ -266,7 +266,7 @@ def SetupInputsForImage(config, logger):
     @param logger       If given, a logger object to log progress. [default: None]
     """
     if 'input' in config:
-        for key in valid_input_types.keys():
+        for key in valid_input_types:
             loader = valid_input_types[key]
             if key in config['input']:
                 fields = config['input'][key]

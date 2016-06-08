@@ -19,6 +19,8 @@
 Module containing general utilities for the GalSim software.
 """
 from contextlib import contextmanager
+from future.utils import iteritems
+from builtins import range
 
 import numpy as np
 import galsim
@@ -200,7 +202,7 @@ class AttributeDict(object):
         self.__dict__.update(other.__dict__)
 
     def _write(self, output, prefix=""):
-        for k, v in self.__dict__.iteritems():
+        for k, v in iteritems(self.__dict__):
             if isinstance(v, AttributeDict):
                 v._write(output, prefix="{0}{1}.".format(prefix, k))
             else:
@@ -313,7 +315,7 @@ def _exact_lin_approx_split(x, f):
     """Split a tabulated function into a two-part piecewise linear approximation by exactly
     minimizing \int abs(f(x) - approx(x)) dx.  Operates in O(N^2) time.
     """
-    errs = [_lin_approx_err(x, f, i) for i in xrange(1, len(x)-1)]
+    errs = [_lin_approx_err(x, f, i) for i in range(1, len(x)-1)]
     i = np.argmin(np.sum(errs, axis=1))
     return i+1, errs[i]
 
@@ -664,8 +666,8 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
                          +"be 'deinterleaved'")
 
     im_list, offsets = [], []
-    for i in xrange(n1):
-        for j in xrange(n2):
+    for i in range(n1):
+        for j in range(n2):
             # The tricky part - going from array indices to Image coordinates (x,y)
             # DX[i'] = -(i+0.5)/n+0.5 = -i/n + 0.5*(n-1)/n
             #    i  = -n DX[i'] + 0.5*(n-1)
@@ -823,7 +825,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     # The tricky part - going from (x,y) Image coordinates to array indices
     # DX[i'] = -(i+0.5)/n+0.5 = -i/n + 0.5*(n-1)/n
     #    i  = -n DX[i'] + 0.5*(n-1)
-    for k in xrange(len(offsets)):
+    for k in range(len(offsets)):
         dx, dy = offsets[k].x, offsets[k].y
 
         i = int(round((n1-1)*0.5-n1*dx))

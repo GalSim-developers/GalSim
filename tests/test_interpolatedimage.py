@@ -777,7 +777,7 @@ def test_Cubic_ref():
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
-    for i in xrange(len(KXVALS)):
+    for i in range(len(KXVALS)):
         posk = galsim.PositionD(KXVALS[i], KYVALS[i])
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array
@@ -802,7 +802,7 @@ def test_Quintic_ref():
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
-    for i in xrange(len(KXVALS)):
+    for i in range(len(KXVALS)):
         posk = galsim.PositionD(KXVALS[i], KYVALS[i])
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array
@@ -826,7 +826,7 @@ def test_Lanczos5_ref():
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
-    for i in xrange(len(KXVALS)):
+    for i in range(len(KXVALS)):
         posk = galsim.PositionD(KXVALS[i], KYVALS[i])
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array
@@ -850,7 +850,7 @@ def test_Lanczos7_ref():
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
-    for i in xrange(len(KXVALS)):
+    for i in range(len(KXVALS)):
         posk = galsim.PositionD(KXVALS[i], KYVALS[i])
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array

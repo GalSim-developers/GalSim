@@ -23,6 +23,7 @@ routines for handling multiple Images.
 """
 
 
+from future.utils import iteritems, iterkeys, itervalues
 import os
 import galsim
 
@@ -1258,21 +1259,21 @@ class FitsHeader(object):
         if pyfits_version < '3.1':
             return self.header.items()
         else:
-            return self.header.iteritems()
+            return iteritems(self.header)
 
     def iterkeys(self):
         from galsim._pyfits import pyfits_version
         if pyfits_version < '3.1':
             return self.header.keys()
         else:
-            return self.header.iterkeys()
+            return iterkeys(self.header)
 
     def itervalues(self):
         from galsim._pyfits import pyfits_version
         if pyfits_version < '3.1':
             return self.header.ascard.values()
         else:
-            return self.header.itervalues()
+            return itervalues(self.header)
 
     def keys(self):
         return self.header.keys()

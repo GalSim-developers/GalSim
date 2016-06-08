@@ -377,7 +377,7 @@ def all_obj_diff(objs):
     try:
         assert len(hashes) == len(set(hashes))
     except AssertionError:
-        for k, v in Counter(hashes).iteritems():
+        for k, v in Counter(hashes).items():
             if v <= 1:
                 continue
             print("Found multiple equivalent object hashes:")

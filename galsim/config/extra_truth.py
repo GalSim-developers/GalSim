@@ -54,7 +54,7 @@ class TruthBuilder(ExtraOutputBuilder):
         cols = config['columns']
         row = []
         types = []
-        for name in cols.keys():
+        for name in cols:
             key = cols[name]
             if isinstance(key, dict):
                 # Then the "key" is actually something to be parsed in the normal way.

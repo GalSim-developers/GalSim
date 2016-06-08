@@ -479,7 +479,7 @@ def test_dep_image():
     check_dep(galsim.ConstImageViewF, ref_array.astype(np.float32))
     check_dep(galsim.ConstImageViewD, ref_array.astype(np.float64))
 
-    for i in xrange(ntypes):
+    for i in range(ntypes):
         array_type = types[i]
         check_dep(galsim.ImageView[array_type], ref_array.astype(array_type))
         check_dep(galsim.ConstImageView[array_type], ref_array.astype(array_type))
@@ -492,7 +492,7 @@ def test_dep_image():
     with warnings.catch_warnings(galsim.GalSimDeprecationWarning):
         warnings.simplefilter("ignore")
 
-        for i in xrange(ntypes):
+        for i in range(ntypes):
             # Check basic constructor from ncol, nrow
             array_type = types[i]
             im1 = galsim.Image[array_type](ncol,nrow)

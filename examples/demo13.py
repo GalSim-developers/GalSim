@@ -169,7 +169,7 @@ def main(argv):
     mag_stamp = []
     n_rot_stamp = []
     flip_stamp = []
-    for i_gal in xrange(n_tot):
+    for i_gal in range(n_tot):
         x_stamp.append(pos_rng()*wfirst.n_pix)
         y_stamp.append(pos_rng()*wfirst.n_pix)
         # Note that we could use wcs.toWorld() to get the (RA, dec) for these (x, y) positions.  Or,
@@ -216,7 +216,7 @@ def main(argv):
 
     # Calculate the sky level for each filter, and draw the PSF and the galaxies through the
     # filters.
-    for filter_name, filter_ in filters.iteritems():
+    for filter_name, filter_ in filters.items():
         logger.info('Beginning work for {0}.'.format(filter_name))
 
         # Drawing PSF.  Note that the PSF object intrinsically has a flat SED, so if we convolve it
@@ -244,7 +244,7 @@ def main(argv):
         final_image = galsim.ImageF(wfirst.n_pix,wfirst.n_pix, wcs=wcs)
 
         # Draw the galaxies into the image.
-        for i_gal in xrange(n_use):
+        for i_gal in range(n_use):
             logger.info('Drawing image for the object at row %d in the input catalog'%i_gal)
 
             # We want to only draw the galaxy once (for speed), not over and over with different

@@ -25,6 +25,7 @@ Possible uses include galaxies with color gradients, automatically drawing a giv
 different filters, or implementing wavelength-dependent point spread functions.
 """
 
+from future.utils import iteritems
 import numpy as np
 import copy
 
@@ -475,7 +476,7 @@ class ChromaticObject(object):
         """Returns a copy of an object.  This preserves the original type of the object."""
         cls = self.__class__
         ret = cls.__new__(cls)
-        for k, v in self.__dict__.iteritems():
+        for k, v in iteritems(self.__dict__):
             if k == 'objlist':
                 # explicitly copy all individual items of objlist, not just the list itself
                 ret.__dict__[k] = [o.copy() for o in v]
@@ -1099,7 +1100,7 @@ class ChromaticAtmosphere(ChromaticObject):
 
         # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
         # Check that they're valid
-        for kw in kwargs.keys():
+        for kw in kwargs:
             if kw not in ['temperature', 'pressure', 'H2O_pressure']:
                 raise TypeError("Got unexpected keyword: {0}".format(kw))
         self.kw = kwargs

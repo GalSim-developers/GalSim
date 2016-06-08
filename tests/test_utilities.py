@@ -104,10 +104,10 @@ def test_kxky():
     kx, ky = galsim.utilities.kxky((4, 4))
     kxref = np.array([0., 0.25, -0.5, -0.25]) * 2. * np.pi
     kyref = np.array([0., 0.25, -0.5, -0.25]) * 2. * np.pi
-    for i in xrange(4):
+    for i in range(4):
         np.testing.assert_array_almost_equal(kx[i, :], kxref, decimal=decimal,
                                              err_msg='failed kx equivalence on row i = '+str(i))
-    for j in xrange(4):
+    for j in range(4):
         np.testing.assert_array_almost_equal(ky[:, j], kyref, decimal=decimal,
                                              err_msg='failed ky equivalence on row j = '+str(j))
 
@@ -120,10 +120,10 @@ def test_kxky_plusone():
     kx, ky = galsim.utilities.kxky((4 + 1, 4 + 1))
     kxref = np.array([0., 0.2, 0.4, -0.4, -0.2]) * 2. * np.pi
     kyref = np.array([0., 0.2, 0.4, -0.4, -0.2]) * 2. * np.pi
-    for i in xrange(4 + 1):
+    for i in range(4 + 1):
         np.testing.assert_array_almost_equal(kx[i, :], kxref, decimal=decimal,
                                              err_msg='failed kx equivalence on row i = '+str(i))
-    for j in xrange(4 + 1):
+    for j in range(4 + 1):
         np.testing.assert_array_almost_equal(ky[:, j], kyref, decimal=decimal,
                                              err_msg='failed ky equivalence on row j = '+str(j))
 
@@ -193,7 +193,7 @@ def test_deInterleaveImage():
 
     im_list0, offsets0 = galsim.utilities.deInterleaveImage(img0,2,conserve_flux=True)
 
-    for n in xrange(len(im_list0)):
+    for n in range(len(im_list0)):
         im = galsim.Image(16,16)
         g0.drawImage(image=im,offset=offsets0[n],scale=0.5,method='no_pixel')
         np.testing.assert_array_equal(im.array,im_list0[n].array,\
@@ -217,14 +217,14 @@ def test_deInterleaveImage():
     im_list1, offsets1 = galsim.utilities.deInterleaveImage(img1,(n1**2,1),conserve_flux=True)
     im_list2, offsets2 = galsim.utilities.deInterleaveImage(img2,[1,n2**2],conserve_flux=False)
 
-    for n in xrange(n1**2):
+    for n in range(n1**2):
         im, offset = im_list1[n], offsets1[n]
         img = g.drawImage(image=img,offset=offset,scale=0.5,method='no_pixel')
         np.testing.assert_array_equal(im.array,img.array,\
           err_msg='deInterleaveImage does not reduce the resolution correctly along the \
                    vertical direction')
 
-    for n in xrange(n2**2):
+    for n in range(n2**2):
         im, offset = im_list2[n], offsets2[n]
         g.drawImage(image=img,offset=offset,scale=0.5,method='no_pixel')
         np.testing.assert_array_equal(im.array*n2**2,img.array,\
@@ -241,8 +241,8 @@ def test_interleaveImages():
     im_list = []
     offset_list = []
     n = 2
-    for j in xrange(n):
-        for i in xrange(n):
+    for j in range(n):
+        for i in range(n):
             im = galsim.Image(16*n,16*n)
             offset = galsim.PositionD(-(i+0.5)/n+0.5,-(j+0.5)/n+0.5)
             offset_list.append(offset)
@@ -384,8 +384,8 @@ def test_interleaveImages():
     offset_list = []
 
     # Generating offsets in the order they would be returned by deInterleaveImage, for convenience
-    for i in xrange(n):
-        for j in xrange(n):
+    for i in range(n):
+        for j in range(n):
             im = galsim.Image(16*n,16*n)
             offset = galsim.PositionD(-(i+0.5)/n+0.5,-(j+0.5)/n+0.5)
             offset_list.append(offset)
@@ -396,7 +396,7 @@ def test_interleaveImages():
     img = galsim.utilities.interleaveImages(im_list,N=n,offsets=offset_list)
     im_list_1, offset_list_1 = galsim.utilities.deInterleaveImage(img, N=n)
 
-    for k in xrange(n**2):
+    for k in range(n**2):
         assert offset_list_1[k] == offset_list[k]
         np.testing.assert_array_equal(im_list_1[k].array, im_list[k].array)
         assert im_list_1[k].wcs == im_list[k].wcs
@@ -408,7 +408,7 @@ def test_interleaveImages():
     img = galsim.utilities.interleaveImages(im_list,N=n,offsets=offset_list,add_flux=False)
     im_list_2, offset_list_2 = galsim.utilities.deInterleaveImage(img,N=n,conserve_flux=True)
 
-    for k in xrange(n**2):
+    for k in range(n**2):
         assert offset_list_2[k] == offset_list[k]
         np.testing.assert_array_equal(im_list_2[k].array, im_list[k].array)
         assert im_list_2[k].wcs == im_list[k].wcs

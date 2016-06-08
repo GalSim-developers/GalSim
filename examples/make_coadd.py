@@ -208,7 +208,7 @@ class CoaddMetricCalculator(object):
         """
         psfs, variances, fwhm_factor = self.buildInputs(fwhms, depths)
         result = {}
-        for name, mocker in self.mockers.iteritems():
+        for name, mocker in self.mockers.items():
             mask = mocker.selectInputs(variances, fwhms)
             coadd_variance, coadd_psf = mocker.mockCoadd(variances[mask], fwhms[mask], psfs[mask])
             coadd_fwhm, coadd_depth = self.computeMetrics(coadd_psf, coadd_variance,
@@ -230,9 +230,9 @@ def compareCoadds(depth=24.7, depth_scatter=0.2, fwhm=0.7, fwhm_scatter=0.2,
     for name in calc.mockers:
         result["{}.fwhm".format(name)] = numpy.zeros(n_realizations, dtype=float)
         result["{}.depth".format(name)] = numpy.zeros(n_realizations, dtype=float)
-    for n in xrange(n_realizations):
+    for n in range(n_realizations):
         local, fwhm_factor = calc(fwhms[n], depths[n])
-        for k, v in local.iteritems():
+        for k, v in local.items():
             result[k][n] = local[k]
 
     plot_kwds = dict(bins=150, normed=True, linewidth=0, alpha=0.75)

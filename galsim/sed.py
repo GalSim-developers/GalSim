@@ -519,7 +519,7 @@ class SED(object):
                 "Need to specify zenith_angle and parallactic_angle in calculateDCRMomentShifts!")
         # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
         # Check that they're valid
-        for kw in kwargs.keys():
+        for kw in kwargs:
             if kw not in ['temperature', 'pressure', 'H2O_pressure']:
                 raise TypeError("Got unexpected keyword in calculateDCRMomentShifts: {0}".format(kw))
         # Now actually start calculating things.

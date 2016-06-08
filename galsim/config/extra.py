@@ -258,7 +258,7 @@ def AddExtraOutputHDUs(config, main_data, logger=None):
             else:
                 # If no hdu, then probably writing to file
                 continue
-            if hdu <= 0 or hdu in hdus.keys():
+            if hdu <= 0 or hdu in hdus:
                 raise ValueError("%s hdu = %d is invalid or a duplicate."%hdu)
 
             builder = config['extra_builder'][key]
@@ -271,7 +271,7 @@ def AddExtraOutputHDUs(config, main_data, logger=None):
 
         first = len(main_data)
         for h in range(first,len(hdus)+first):
-            if h not in hdus.keys():
+            if h not in hdus:
                 raise ValueError("Cannot skip hdus.  Not output found for hdu %d"%h)
         # Turn hdus into a list (in order)
         hdulist = [ hdus[k] for k in range(first,len(hdus)+first) ]

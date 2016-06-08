@@ -19,8 +19,8 @@
 Routines for controlling catalog input/output with GalSim. 
 """
 
+from future.utils import iteritems, iterkeys, itervalues
 import galsim
-
 
 class Catalog(object):
     """A class storing the data from an input catalog.
@@ -323,16 +323,16 @@ class Dict(object):
         return self.dict.values()
 
     def items(self):
-        return self.dict.iteritems()
+        return self.dict.items()
 
     def iterkeys(self):
-        return self.dict.iterkeys()
+        return iterkeys(self.dict)
 
     def itervalues(self):
-        return self.dict.itervalues()
+        return itervalues(self.dict)
 
     def iteritems(self):
-        return self.dict.iteritems()
+        return iteritems(self.dict)
 
     def __repr__(self):
         s = "galsim.Dict(file_name=%r, file_type=%r"%(self.file_name, self.file_type)

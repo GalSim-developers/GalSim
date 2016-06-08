@@ -1164,7 +1164,7 @@ Image.__ixor__ = Image_ixor
 Image.__ior__ = Image_ior
 
 # inject these as methods of ImageAlloc classes
-for Class in _galsim.ImageAlloc.itervalues():
+for Class in _galsim.ImageAlloc.values():
     Class.__setitem__ = Image_setitem
     Class.__getitem__ = Image_getitem
     Class.__add__ = Image_add
@@ -1191,7 +1191,7 @@ for Class in _galsim.ImageAlloc.itervalues():
     Class.__setstate__ = ImageAlloc_setstate
     Class.__hash__ = None
 
-for Class in _galsim.ImageView.itervalues():
+for Class in _galsim.ImageView.values():
     Class.__setitem__ = Image_setitem
     Class.__getitem__ = Image_getitem
     Class.__add__ = Image_add
@@ -1216,7 +1216,7 @@ for Class in _galsim.ImageView.itervalues():
     Class.__getinitargs__ = ImageView_getinitargs
     Class.__hash__ = None
 
-for Class in _galsim.ConstImageView.itervalues():
+for Class in _galsim.ConstImageView.values():
     Class.__getitem__ = Image_getitem
     Class.__add__ = Image_add
     Class.__radd__ = Image_add

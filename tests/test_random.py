@@ -1374,7 +1374,7 @@ def test_distLookupTable():
 def test_ccdnoise():
     """Test CCD Noise generator
     """
-    for i in xrange(4):
+    for i in range(4):
         prec = eval("precision"+typestrings[i])
         cResult = eval("cResult"+typestrings[i])
 
@@ -1666,7 +1666,7 @@ def test_permute():
     import copy
     my_list_copy = copy.deepcopy(my_list)
     n_list = len(my_list)
-    ind_list = list(range(n_list))
+    ind_list = range(n_list)
 
     # Permute both at the same time.
     galsim.random.permute(312, my_list, ind_list)

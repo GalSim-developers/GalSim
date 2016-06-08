@@ -241,8 +241,8 @@ def test_phase_psf_batch():
     exptime = 0.06
     rng = galsim.BaseDeviate(1234)
     atm = galsim.Atmosphere(screen_size=10.0, altitude=10.0, alpha=0.997, rng=rng)
-    theta_x = [i * galsim.arcsec for i in xrange(NPSFs)]
-    theta_y = [i * galsim.arcsec for i in xrange(NPSFs)]
+    theta_x = [i * galsim.arcsec for i in range(NPSFs)]
+    theta_y = [i * galsim.arcsec for i in range(NPSFs)]
 
     kwargs = dict(lam=500.0, exptime=exptime, diam=4.0,
                   pupil_plane_size=6.0, pupil_plane_scale=6.0/192)

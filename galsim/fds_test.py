@@ -79,9 +79,7 @@ def getOpenFiles(do_print=False):
     p.stdout.close()
     p.stderr.close()
 
-    procs = filter( 
-            lambda s: s and s[ 0 ] == 'f' and s[1: ].isdigit(),
-            procs.split( '\n' ) )
+    procs = [s for s in procs.split( '\n' ) if s and s[ 0 ] == 'f' and s[1: ].isdigit()]
     if do_print:
         print('procs = ',procs)
         print('nprocs = ',len(procs))

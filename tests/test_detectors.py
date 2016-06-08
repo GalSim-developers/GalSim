@@ -471,7 +471,7 @@ def test_Persistence_basic():
     dx = [0.0, 1.0, -4.0]
     dy = [-1.0, 0.0, 2.0]
     im_prev = []
-    for i in xrange(3):
+    for i in range(3):
         g = galsim.Gaussian(sigma=3.7,flux=1000.)
         im_prev += [g.drawImage(scale=0.25)]
         im_prev[i].shift(dx=dx[i],dy=dy[i])
@@ -516,7 +516,7 @@ def test_Persistence_basic():
     im1 = im.copy()
     im2 = im.copy()
     im1.applyPersistence(imgs=im_prev, coeffs=np.linspace(1,len(im_prev), len(im_prev)))
-    for i in xrange(len(im_prev)):
+    for i in range(len(im_prev)):
         im2 += (i+1)*im_prev[i]
     np.testing.assert_array_equal(im1.array, im2.array,
         err_msg="'applyPersistence' routine fails for multiple images with varying coefficients.")

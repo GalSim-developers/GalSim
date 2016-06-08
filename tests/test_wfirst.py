@@ -222,7 +222,7 @@ def test_wfirst_bandpass():
     AB_spec = lambda x: (3631e-23)*exp_time*(np.pi)*(100.**2)*\
               (galsim.wfirst.diameter**2)*(1-galsim.wfirst.obscuration**2)/4.
     AB_sed = galsim.SED(spec=AB_spec, wave_type='nm', flux_type='fnu')
-    for filter_name, filter_ in bp.iteritems():
+    for filter_name, filter_ in bp.items():
         mag = AB_sed.calculateMagnitude(bandpass=filter_)
         np.testing.assert_almost_equal(mag,0.0,decimal=6,
             err_msg="Zeropoint not set accurately enough for bandpass filter \
@@ -269,7 +269,7 @@ def test_wfirst_bandpass():
     # Only 10% accuracy required because did not use quite the same stellar template.  Fortunately,
     # bugs can easily lead to orders of magnitude errors, so this unit test is still pretty
     # non-trivial.
-    for filter_name, filter_ in bp.iteritems():
+    for filter_name, filter_ in bp.items():
         flux = sed.calculateFlux(filter_)
         count_rate = flux / galsim.wfirst.exptime
         np.testing.assert_allclose(

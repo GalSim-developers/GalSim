@@ -92,10 +92,10 @@ def compare_thin():
                    galsim.Bandpass(bp_file, wave_type='nm')) for bp_file in bp_files])
     redshifts = [0.0, 0.5, 1.0]
     rel_errs = [1.e-4, 1.e-3]
-    for SED_name, SED0 in SEDs.iteritems():
+    for SED_name, SED0 in SEDs.items():
         for redshift in redshifts:
             SED = SED0.atRedshift(redshift).withFluxDensity(0.01, 500.0)
-            for bandname, band in bands.iteritems():
+            for bandname, band in bands.items():
                 print('{0} SED at z={1} through {2} filter'.format(
                     SED_name, redshift, bandname))
                 dDCR = dDCR_moments(SED1, SED, band)
