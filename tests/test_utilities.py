@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import numpy as np
 import os
 import sys
@@ -301,7 +303,7 @@ def test_interleaveImages():
         N = (n,n)
         np.testing.assert_raises(ValueError,galsim.utilities.interleaveImages,im_list,N,offset_list)
     except ImportError:
-        print "The assert_raises tests require nose"
+        print("The assert_raises tests require nose")
 
     offset_list = []
     im_list = []
@@ -320,7 +322,7 @@ def test_interleaveImages():
         N = (n,n)
         np.testing.assert_raises(ValueError,galsim.utilities.interleaveImages,im_list,N,offset_list)
     except ImportError:
-        print "The assert_raises tests require nose"
+        print("The assert_raises tests require nose")
 
     # 2a) Increase resolution along one direction - square to rectangular images
     n = 2

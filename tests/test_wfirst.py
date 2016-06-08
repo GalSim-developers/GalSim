@@ -18,6 +18,7 @@
 """Unit tests for the WFIRST module (galsim.wfirst)
 """
 
+from __future__ import print_function
 import numpy as np
 
 from galsim_test_helpers import *
@@ -184,7 +185,7 @@ def test_wfirst_backgrounds():
                                                                  5.*galsim.degrees),
                                  date=datetime.date(2025,9,15))
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     # The routine should have some obvious symmetry, for example, ecliptic latitude above vs. below
     # plane and ecliptic longitude positive vs. negative (or vs. 360 degrees - original value).
@@ -491,7 +492,7 @@ def test_wfirst_psfs():
         np.testing.assert_raises(ValueError, galsim.wfirst.getPSF,
                                  SCAs=0)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 if __name__ == "__main__":

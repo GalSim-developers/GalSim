@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import os
 import sys
 import numpy as np
@@ -31,7 +33,6 @@ except ImportError:
 def check_dep(f, *args, **kwargs):
     """Check that some function raises a GalSimDeprecationWarning as a warning, but not an error.
     """
-    #print 'Check dep: ',f,args,kwargs
     import warnings
     # Cause all warnings to always be triggered.
     # Important in case we want to trigger the same one twice in the test suite.
@@ -40,9 +41,8 @@ def check_dep(f, *args, **kwargs):
     # Check that f() raises a warning, but not an error.
     with warnings.catch_warnings(galsim.GalSimDeprecationWarning) as w:
         res = f(*args, **kwargs)
-    #print 'w = ',w
     assert len(w) >= 1, "Calling %s did not raise a warning"%str(f)
-    print [ str(wk.message) for wk in w ]
+    print([ str(wk.message) for wk in w ])
     return res
 
 
@@ -446,7 +446,7 @@ def test_dep_gsobject_ring():
         np.testing.assert_raises(AssertionError,gsobject_compare, gal4a, gal4c,
                                  conv=galsim.Gaussian(sigma=1))
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer

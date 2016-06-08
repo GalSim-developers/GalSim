@@ -16,6 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
+from __future__ import print_function
+
 import galsim
 import math
 
@@ -132,7 +134,7 @@ def _GenerateFromPowerSpectrumShear(config, base, value_type):
                       "Using shear = 0.")
         shear = galsim.Shear(g1=0,g2=0)
 
-    #print base['obj_num'],'PS shear = ',shear
+    #print(base['obj_num'],'PS shear = ',shear)
     return shear, False
 
 def _GenerateFromPowerSpectrumMagnification(config, base, value_type):
@@ -161,7 +163,7 @@ def _GenerateFromPowerSpectrumMagnification(config, base, value_type):
             mu,max_mu))
         mu = max_mu
 
-    #print base['obj_num'],'PS mu = ',mu
+    #print(base['obj_num'],'PS mu = ',mu)
     return mu, False
 
 # Register these as valid value types

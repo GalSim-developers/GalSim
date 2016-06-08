@@ -19,6 +19,8 @@
 A program to download the COSMOS RealGalaxy catalog for use with GalSim.
 """
 
+from __future__ import print_function
+
 import os, sys, urllib2, tarfile, subprocess, shutil, json
 
 # Since this will be installed in the same directory as our galsim executable,
@@ -277,7 +279,7 @@ def download(url, target, unpack_dir, args, logger):
                         status = r"Downloading: %5d / %d MBytes  [%3.2f%%]" % (
                             file_size_dl/1024**2, file_size/1024**2, file_size_dl*100./file_size)
                         status = status + chr(8)*(len(status)+1)
-                        print status,
+                        print(status, end='')
                         sys.stdout.flush()
             logger.info("Download complete.")
         except IOError as e:

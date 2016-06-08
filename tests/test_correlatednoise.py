@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import time
 import numpy as np
 
@@ -178,17 +180,17 @@ def test_uncorrelated_noise_output():
     for wcs in wcs_list:
         scale = math.sqrt(wcs.pixelArea())
         im.wcs = wcs
-        print 'wcs = ',wcs
-        print 'scale = ',scale
+        print('wcs = ',wcs)
+        print('scale = ',scale)
 
         # First test with an UncorrelatedNoise object
         ucn = galsim.UncorrelatedNoise(rng=ud, variance=sigma**2, wcs=wcs)
         im.setZero()
         im.addNoise(ucn)
         im_var = im.array.var()
-        print 'im_mean = ',im.array.mean()
-        print 'im_std = ',im.array.std()
-        print 'im_var = ',im_var
+        print('im_mean = ',im.array.mean())
+        print('im_std = ',im.array.std())
+        print('im_var = ',im_var)
         np.testing.assert_array_almost_equal(
             im_var/sigma**2, 1.0, decimal=2,
             err_msg="Generated uncorrelated noise field (1) does not have expected variance")
@@ -200,9 +202,9 @@ def test_uncorrelated_noise_output():
         im.setZero()
         im.addNoise(cn)
         im_var = im.array.var()
-        print 'im_mean = ',im.array.mean()
-        print 'im_std = ',im.array.std()
-        print 'im_var = ',im_var
+        print('im_mean = ',im.array.mean())
+        print('im_std = ',im.array.std())
+        print('im_var = ',im_var)
         np.testing.assert_array_almost_equal(
             im_var/sigma**2, 1.0, decimal=2,
             err_msg="Generated uncorrelated noise field (2) does not have expected variance")
@@ -982,10 +984,10 @@ def test_convolve_cosmos():
                                          # zero convimage and write over it later!
     mnsq_list = [np.mean(convimage.array**2)]
     var_list = [convimage.array.var()]
-    print 'start set of {0} iterations to build up the correlation function'.format(
-            nsum_test_convolve_cosmos)
+    print('start set of {0} iterations to build up the correlation function'.format(
+            nsum_test_convolve_cosmos))
     for i in range(nsum_test_convolve_cosmos - 1):
-        print 'iteration ',i
+        print('iteration ',i)
         cosimage_padded.setZero()
         cosimage_padded.addNoise(cn)
         imobj_padded = galsim.InterpolatedImage(
@@ -1012,25 +1014,25 @@ def test_convolve_cosmos():
     conv_array = np.asarray(conv_list)
     mnsq_all = np.mean(conv_array**2)
     var_all = conv_array.var()
-    print "Mean square estimate from avg. of individual field mean squares = "+str(mnsq_individual)
-    print "Mean square estimate from all fields = "+str(mnsq_all)
-    print "Ratio of mean squares = %e" % (mnsq_individual / mnsq_all)
-    print "Variance estimate from avg. of individual field variances = "+str(var_individual)
-    print "Variance estimate from all fields = "+str(var_all)
-    print "Ratio of variances = %e" % (var_individual / var_all)
-    print "Zero lag CF from avg. of individual field CFs = "+str(testim.array[8, 8])
-    print "Zero lag CF in reference case = "+str(refim.array[8, 8])
-    print "Ratio of zero lag CFs = %e" % (testim.array[8, 8] / refim.array[8, 8])
-    print "Printing analysis of central 4x4 of CF:"
+    print("Mean square estimate from avg. of individual field mean squares = "+str(mnsq_individual))
+    print("Mean square estimate from all fields = "+str(mnsq_all))
+    print("Ratio of mean squares = %e" % (mnsq_individual / mnsq_all))
+    print("Variance estimate from avg. of individual field variances = "+str(var_individual))
+    print("Variance estimate from all fields = "+str(var_all))
+    print("Ratio of variances = %e" % (var_individual / var_all))
+    print("Zero lag CF from avg. of individual field CFs = "+str(testim.array[8, 8]))
+    print("Zero lag CF in reference case = "+str(refim.array[8, 8]))
+    print("Ratio of zero lag CFs = %e" % (testim.array[8, 8] / refim.array[8, 8]))
+    print("Printing analysis of central 4x4 of CF:")
     # Show ratios etc in central 4x4 where CF is definitely non-zero
-    print 'mean diff = ',np.mean(testim.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'var diff = ',np.var(testim.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'min diff = ',np.min(testim.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'max diff = ',np.max(testim.array[4:12, 4:12] - refim.array[4:12, 4:12])
-    print 'mean ratio = %e' % np.mean(testim.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'var ratio = ',np.var(testim.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'min ratio = %e' % np.min(testim.array[4:12, 4:12] / refim.array[4:12, 4:12])
-    print 'max ratio = %e' % np.max(testim.array[4:12, 4:12] / refim.array[4:12, 4:12])
+    print('mean diff = ',np.mean(testim.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('var diff = ',np.var(testim.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('min diff = ',np.min(testim.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('max diff = ',np.max(testim.array[4:12, 4:12] - refim.array[4:12, 4:12]))
+    print('mean ratio = %e' % np.mean(testim.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('var ratio = ',np.var(testim.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('min ratio = %e' % np.min(testim.array[4:12, 4:12] / refim.array[4:12, 4:12]))
+    print('max ratio = %e' % np.max(testim.array[4:12, 4:12] / refim.array[4:12, 4:12]))
 
     # Test (this is a crude regression test at best, for a much more precise test of this behaviour
     # see devel/external/test_cf/test_cf_convolution_detailed.py)
@@ -1057,7 +1059,7 @@ def test_uncorrelated_noise_tracking():
     # here, we just want to check the ability of GalSim to track what happens to `noise'
     # attributes.
     int_im.noise = orig_ucn
-    print 'int_im.noise = ',int_im.noise
+    print('int_im.noise = ',int_im.noise)
 
     # Manipulate the object in various non-trivial ways: shear, magnify, rotate, convolve
     test_shear = 0.15
@@ -1066,9 +1068,9 @@ def test_uncorrelated_noise_tracking():
     new_int_im = int_im.shear(g1=test_shear)
     new_int_im = new_int_im.magnify(test_mag)
     new_int_im = new_int_im.rotate(rot_ang*galsim.degrees)
-    print 'new_int_im.noise = ',new_int_im.noise
+    print('new_int_im.noise = ',new_int_im.noise)
     new_int_im = galsim.Convolve(new_int_im, orig_object)
-    print 'new_int_im.noise => ',new_int_im.noise
+    print('new_int_im.noise => ',new_int_im.noise)
     final_noise = new_int_im.noise
 
     # Now, make a correlated noise object directly based on a realization of the original
@@ -1145,7 +1147,7 @@ def test_cosmos_wcs():
         test_wcs_list = test_wcs_list[-1:]
 
     for k, test_wcs in enumerate(test_wcs_list):
-        print test_wcs
+        print(test_wcs)
         test_im = galsim.ImageD(3 * largeim_size, 3 * largeim_size, wcs=test_wcs)
 
         # This adds the noise respecting the different WCS functions in the two cases.
@@ -1162,7 +1164,7 @@ def test_cosmos_wcs():
             cf_orig = cn_orig._profile.xValue(pos)
             cf_test = cn_test._profile.xValue(pos)
             cf_raw = cn_raw._profile.xValue(pos)
-            print pos, cf_orig, cf_test, cf_raw
+            print(pos, cf_orig, cf_test, cf_raw)
             np.testing.assert_almost_equal(
                     cf_orig/var, cf_test/var, decimal=2,
                     err_msg='Drawing COSMOS noise on image with WCS did not ' +
@@ -1181,7 +1183,7 @@ def test_cosmos_wcs():
             cf_orig = cn_orig._profile.xValue(pos)
             cf_test = cn_test._profile.xValue(pos)
             cf_raw = cn_raw._profile.xValue(pos)
-            print pos, cf_orig, cf_test, cf_raw
+            print(pos, cf_orig, cf_test, cf_raw)
             np.testing.assert_almost_equal(
                     cf_orig/var, cf_raw/var, decimal=2,
                     err_msg='Drawing COSMOS noise on view with cosmos pixel scale did not '+

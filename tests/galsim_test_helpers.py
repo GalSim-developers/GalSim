@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import numpy as np
 import os
 import sys
@@ -49,19 +51,19 @@ def gsobject_compare(obj1, obj2, conv=None, decimal=10):
 
 
 def printval(image1, image2):
-    print "New, saved array sizes: ", np.shape(image1.array), np.shape(image2.array)
-    print "Sum of values: ", np.sum(image1.array), np.sum(image2.array)
-    print "Minimum image value: ", np.min(image1.array), np.min(image2.array)
-    print "Maximum image value: ", np.max(image1.array), np.max(image2.array)
-    print "Peak location: ", image1.array.argmax(), image2.array.argmax()
-    print "Moments Mx, My, Mxx, Myy, Mxy for new array: "
+    print("New, saved array sizes: ", np.shape(image1.array), np.shape(image2.array))
+    print("Sum of values: ", np.sum(image1.array), np.sum(image2.array))
+    print("Minimum image value: ", np.min(image1.array), np.min(image2.array))
+    print("Maximum image value: ", np.max(image1.array), np.max(image2.array))
+    print("Peak location: ", image1.array.argmax(), image2.array.argmax())
+    print("Moments Mx, My, Mxx, Myy, Mxy for new array: ")
     getmoments(image1)
-    print "Moments Mx, My, Mxx, Myy, Mxy for saved array: "
+    print("Moments Mx, My, Mxx, Myy, Mxy for saved array: ")
     getmoments(image2)
     #xcen = image2.array.shape[0]/2
     #ycen = image2.array.shape[1]/2
-    #print "new image.center = ",image1.array[xcen-3:xcen+4,ycen-3:ycen+4]
-    #print "saved image.center = ",image2.array[xcen-3:xcen+4,ycen-3:ycen+4]
+    #print("new image.center = ",image1.array[xcen-3:xcen+4,ycen-3:ycen+4])
+    #print("saved image.center = ",image2.array[xcen-3:xcen+4,ycen-3:ycen+4])
 
     if False:
         import matplotlib.pylab as plt
@@ -72,8 +74,8 @@ def printval(image1, image2):
         plt.show()
 
 def getmoments(image):
-    #print 'shape = ',image.array.shape
-    #print 'bounds = ',image.bounds
+    #print('shape = ',image.array.shape)
+    #print('bounds = ',image.bounds)
     a = image.array.astype(float) # Use float for better accuracy calculations.
                                   # This matters more for numpy version <= 1.7
     xgrid, ygrid = np.meshgrid(np.arange(image.array.shape[1]) + image.getXMin(),
@@ -84,8 +86,8 @@ def getmoments(image):
     myy = np.sum(((ygrid-my)**2) * a) / np.sum(a)
     mxy = np.sum((xgrid-mx) * (ygrid-my) * a) / np.sum(a)
 
-    print '      {0:<15.8g}  {1:<15.8g}  {2:<15.8g}  {3:<15.8g}  {4:<15.8g}'.format(
-            mx-image.getXMin(), my-image.getYMin(), mxx, myy, mxy)
+    print('      {0:<15.8g}  {1:<15.8g}  {2:<15.8g}  {3:<15.8g}  {4:<15.8g}'.format(
+            mx-image.getXMin(), my-image.getYMin(), mxx, myy, mxy))
     return mx, my, mxx, myy, mxy
 
 def convertToShear(e1,e2):
@@ -111,14 +113,14 @@ def do_shoot(prof, img, name):
 
     test_flux = 1.8
 
-    print 'Start do_shoot'
+    print('Start do_shoot')
     # Test photon shooting for a particular profile (given as prof).
     prof.drawImage(img)
     flux_max = img.array.max()
-    print 'prof.getFlux = ',prof.getFlux()
-    print 'flux_max = ',flux_max
+    print('prof.getFlux = ',prof.getFlux())
+    print('flux_max = ',flux_max)
     flux_tot = img.array.sum()
-    print 'flux_tot = ',flux_tot
+    print('flux_tot = ',flux_tot)
     if flux_max > 1.:
         # Since the number of photons required for a given accuracy level (in terms of
         # number of decimal places), we rescale the comparison by the flux of the
@@ -132,16 +134,16 @@ def do_shoot(prof, img, name):
     elif flux_max < 0.1:
         # If the max is very small, at least bring it up to 0.1, so we are testing something.
         scale = 0.1 / flux_max;
-        print 'scale = ',scale
+        print('scale = ',scale)
         prof *= scale
         img *= scale
         nphot = flux_max * flux_tot * scale * scale / photon_shoot_accuracy**2
     else:
         nphot = flux_max * flux_tot / photon_shoot_accuracy**2
-    print 'prof.getFlux => ',prof.getFlux()
-    print 'img.sum => ',img.array.sum()
-    print 'img.max => ',img.array.max()
-    print 'nphot = ',nphot
+    print('prof.getFlux => ',prof.getFlux())
+    print('img.sum => ',img.array.sum())
+    print('img.max => ',img.array.max())
+    print('nphot = ',nphot)
     img2 = img.copy()
 
     # Use a deterministic random number generator so we don't fail tests because of rare flukes
@@ -149,7 +151,7 @@ def do_shoot(prof, img, name):
     rng = galsim.UniformDeviate(12345)
 
     prof.drawImage(img2, n_photons=nphot, poisson_flux=False, rng=rng, method='phot')
-    print 'img2.sum => ',img2.array.sum()
+    print('img2.sum => ',img2.array.sum())
     #printval(img2,img)
     np.testing.assert_array_almost_equal(
             img2.array, img.array, photon_decimal_test,
@@ -167,18 +169,18 @@ def do_shoot(prof, img, name):
         img = galsim.ImageD(128,128, scale=dx)
     prof = prof.withFlux(test_flux)
     prof.drawImage(img)
-    print 'img.sum = ',img.array.sum(),'  cf. ',test_flux
+    print('img.sum = ',img.array.sum(),'  cf. ',test_flux)
     np.testing.assert_almost_equal(img.array.sum(), test_flux, 4,
             err_msg="Flux normalization for %s disagrees with expected result"%name)
 
     scale = test_flux / flux_tot # from above
     nphot *= scale * scale
-    print 'nphot -> ',nphot
+    print('nphot -> ',nphot)
     if 'InterpolatedImage' in name:
         nphot *= 10
-        print 'nphot -> ',nphot
+        print('nphot -> ',nphot)
     prof.drawImage(img, n_photons=nphot, poisson_flux=False, rng=rng, method='phot')
-    print 'img.sum = ',img.array.sum(),'  cf. ',test_flux
+    print('img.sum = ',img.array.sum(),'  cf. ',test_flux)
     np.testing.assert_almost_equal(img.array.sum(), test_flux, photon_decimal_test,
             err_msg="Photon shooting normalization for %s disagrees with expected result"%name)
 
@@ -232,23 +234,23 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
             irreprable = True
     except:
         import pyfits
-    print 'Try pickling ',obj1
+    print('Try pickling ',obj1)
 
-    #print 'pickled obj1 = ',cPickle.dumps(obj1)
+    #print('pickled obj1 = ',cPickle.dumps(obj1))
     obj2 = cPickle.loads(cPickle.dumps(obj1))
     assert obj2 is not obj1
-    #print 'obj1 = ',repr(obj1)
-    #print 'obj2 = ',repr(obj2)
+    #print('obj1 = ',repr(obj1))
+    #print('obj2 = ',repr(obj2))
     f1 = func(obj1)
     f2 = func(obj2)
-    #print 'func(obj1) = ',repr(f1)
-    #print 'func(obj2) = ',repr(f2)
+    #print('func(obj1) = ',repr(f1))
+    #print('func(obj2) = ',repr(f2))
     assert f1 == f2
 
     # Test the hash values are equal for two equivalent objects.
     from collections import Hashable
     if isinstance(obj1, Hashable):
-        # print 'hash = ',hash(obj1),hash(obj2)
+        #print('hash = ',hash(obj1),hash(obj2))
         assert hash(obj1) == hash(obj2)
 
     obj3 = copy.copy(obj1)
@@ -266,8 +268,8 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     assert obj4 is not obj1
     f4 = func(obj4)
     if random: f1 = func(obj1)
-    #print 'func(obj1) = ',repr(f1)
-    #print 'func(obj4) = ',repr(f4)
+    #print('func(obj1) = ',repr(f1))
+    #print('func(obj4) = ',repr(f4))
     assert f4 == f1  # But everything should be identical with deepcopy.
 
     # Also test that the repr is an accurate representation of the object.
@@ -287,17 +289,17 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
         # precision for the eval string to exactly reproduce the original object.  So we temporarily
         # bump up the numpy print precision.
         with galsim.utilities.printoptions(precision=18):
-            #print 'repr = ',repr(obj1)
+            #print('repr = ',repr(obj1))
             obj5 = eval(repr(obj1))
     except:
         pass
     else:
-        #print 'obj1 = ',repr(obj1)
-        #print 'obj5 = ',repr(obj5)
+        #print('obj1 = ',repr(obj1))
+        #print('obj5 = ',repr(obj5))
         f5 = func(obj5)
         if random: f1 = func(obj1)
-        #print 'func(obj1) = ',repr(f1)
-        #print 'func(obj5) = ',repr(f5)
+        #print('func(obj1) = ',repr(f1))
+        #print('func(obj5) = ',repr(f5))
         assert f5 == f1, "func(obj1) = %r\nfunc(obj5) = %r"%(f1, f5)
 
     # Try perturbing obj1 pickling arguments and verify that inequality results.
@@ -378,10 +380,10 @@ def all_obj_diff(objs):
         for k, v in Counter(hashes).iteritems():
             if v <= 1:
                 continue
-            print "Found multiple equivalent object hashes:"
+            print("Found multiple equivalent object hashes:")
             for i, obj in enumerate(objs):
                 if hash(obj) == k:
-                    print i, repr(obj)
+                    print(i, repr(obj))
         raise
 
 
@@ -401,6 +403,6 @@ def timer(f):
         result = f(*args, **kwargs)
         t1 = time.time()
         fname = inspect.stack()[1][4][0].split('(')[0].strip()
-        print 'time for %s = %.2f' % (fname, t1-t0)
+        print('time for %s = %.2f' % (fname, t1-t0))
         return result
     return f2

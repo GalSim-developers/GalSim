@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import numpy as np
 import os
 import sys
@@ -407,13 +409,13 @@ def test_rescale():
     gsp1 = galsim.GSParams(folding_threshold=1.e-3, maxk_threshold=5.e-4)
     sersic_acc = galsim.Sersic(n=3, flux=1, half_light_radius=1, gsparams=gsp1)
     myImg2 = sersic_acc.drawImage(scale=dx, use_true_center=False)
-    print myImg2.array.sum(), myImg2.added_flux
+    print(myImg2.array.sum(), myImg2.added_flux)
     np.testing.assert_almost_equal(myImg2.array.sum(), 1., 3,
             err_msg="Drawing with gsp1 results in wrong flux")
     np.testing.assert_almost_equal(myImg2.added_flux, 1., 3,
             err_msg="Drawing with gsp1 returned wrong added_flux")
     myImg2 = sersic_acc.drawImage(myImg2, add_to_image=True, use_true_center=False)
-    print myImg2.array.sum(), myImg2.added_flux
+    print(myImg2.array.sum(), myImg2.added_flux)
     np.testing.assert_almost_equal(myImg2.array.sum(), 2., 3,
             err_msg="Drawing with add_to_image=True results in wrong flux")
     np.testing.assert_almost_equal(myImg2.added_flux, 1., 3,
@@ -424,21 +426,21 @@ def test_rescale():
     gsp2 = galsim.GSParams(folding_threshold=1.e-5, maxk_threshold=1.e-5)
     gauss = galsim.Gaussian(flux=1.e5, sigma=2., gsparams=gsp2)
     myImg2 = gauss.drawImage(scale=dx, use_true_center=False)
-    print 'image size = ',myImg2.array.shape
-    print myImg2.array.sum(), myImg2.added_flux
+    print('image size = ',myImg2.array.shape)
+    print(myImg2.array.sum(), myImg2.added_flux)
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 1., 4,
             err_msg="Drawing Gaussian results in wrong flux")
     np.testing.assert_almost_equal(myImg2.added_flux/1.e5, 1., 4,
             err_msg="Drawing Gaussian returns wrong added_flux")
     myImg2 = gauss.drawImage(myImg2, add_to_image=True, use_true_center=False)
-    print myImg2.array.sum(), myImg2.added_flux
+    print(myImg2.array.sum(), myImg2.added_flux)
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 2., 4,
             err_msg="Drawing Gaussian with add_to_image=True results in wrong flux")
     np.testing.assert_almost_equal(myImg2.added_flux/1.e5, 1., 4,
             err_msg="Drawing Gaussian with add_to_image=True returns wrong added_flux")
     rng = galsim.BaseDeviate(12345)
     myImg2 = gauss.drawImage(myImg2, add_to_image=True, poisson_flux=False, rng=rng, method='phot')
-    print myImg2.array.sum(), myImg2.added_flux
+    print(myImg2.array.sum(), myImg2.added_flux)
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 3., 4,
             err_msg="Drawing Gaussian with method=phot, add_to_image=True, poisson_flux=False "+
                     "results in wrong flux")
@@ -446,7 +448,7 @@ def test_rescale():
             err_msg="Drawing Gaussian with method=phot, add_to_image=True, poisson_flux=False "+
                     "returned wrong added_flux")
     myImg2 = gauss.drawImage(myImg2, add_to_image=True, rng=rng, method='phot')
-    print myImg2.array.sum(), myImg2.added_flux
+    print(myImg2.array.sum(), myImg2.added_flux)
     np.testing.assert_almost_equal(myImg2.array.sum()/1.e5, 4., 1,
             err_msg="Drawing Gaussian with method=phot, add_to_image=True, poisson_flux=True "+
                     "results in wrong flux")
@@ -682,7 +684,7 @@ def test_flip():
     im = galsim.ImageD(16,16, scale=0.05)
 
     for prof in prof_list:
-        print 'prof = ',prof
+        print('prof = ',prof)
 
         # Make sure we hit all 4 fill functions.
         # image_x uses fillXValue with izero, jzero

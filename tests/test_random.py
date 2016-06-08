@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import numpy as np
 import os
 import sys
@@ -148,8 +150,8 @@ def test_uniform():
     var = np.var(vals)
     mu = 1./2.
     v = 1./12.
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from UniformDeviate')
     np.testing.assert_almost_equal(var, v, 1,
@@ -261,8 +263,8 @@ def test_gaussian():
     var = np.var(vals)
     mu = gMean
     v = gSigma**2
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from GaussianDeviate')
     np.testing.assert_almost_equal(var, v, 0,
@@ -362,8 +364,8 @@ def test_gaussian():
     big_im = galsim.Image(2048,2048,dtype=float)
     big_im.addNoise(gn)
     var = np.var(big_im.array)
-    print 'variance = ',var
-    print 'getVar = ',gn.getVariance()
+    print('variance = ',var)
+    print('getVar = ',gn.getVariance())
     np.testing.assert_almost_equal(
             var, gn.getVariance(), 1,
             err_msg='Realized variance for GaussianNoise did not match getVariance()')
@@ -474,8 +476,8 @@ def test_binomial():
     var = np.var(vals)
     mu = bN*bp
     v = bN*bp*(1.-bp)
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from BinomialDeviate')
     np.testing.assert_almost_equal(var, v, 1,
@@ -587,8 +589,8 @@ def test_poisson():
     var = np.var(vals)
     mu = pMean
     v = pMean
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from PoissonDeviate')
     np.testing.assert_almost_equal(var, v, 1,
@@ -687,8 +689,8 @@ def test_poisson():
     big_im = galsim.Image(2048,2048,dtype=float)
     big_im.addNoise(pn)
     var = np.var(big_im.array)
-    print 'variance = ',var
-    print 'getVar = ',pn.getVariance()
+    print('variance = ',var)
+    print('getVar = ',pn.getVariance())
     np.testing.assert_almost_equal(
             var, pn.getVariance(), 1,
             err_msg='Realized variance for PoissonNoise did not match getVariance()')
@@ -807,8 +809,8 @@ def test_weibull():
         gammaFactor2 = 0.886226925452758
     mu = wB * gammaFactor1
     v = wB**2 * gammaFactor2 - mu**2
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from WeibullDeviate')
     np.testing.assert_almost_equal(var, v, 1,
@@ -918,8 +920,8 @@ def test_gamma():
     var = np.var(vals)
     mu = gammaK*gammaTheta
     v = gammaK*gammaTheta**2
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from GammaDeviate')
     np.testing.assert_almost_equal(var, v, 0,
@@ -1029,8 +1031,8 @@ def test_chi2():
     var = np.var(vals)
     mu = chi2N
     v = 2.*chi2N
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from Chi2Deviate')
     np.testing.assert_almost_equal(var, v, 0,
@@ -1139,7 +1141,7 @@ def test_distfunction():
         foo = galsim.DistDeviate(10, galsim.LookupTable(test_vals, test_vals))
         np.testing.assert_raises(ValueError, foo.val, -1.)
     except ImportError:
-        print 'The assert_raises test requires nose'
+        print('The assert_raises test requires nose')
 
     d = galsim.DistDeviate(testseed, function=dfunction, x_min=dmin, x_max=dmax)
     d2 = d.duplicate()
@@ -1163,8 +1165,8 @@ def test_distfunction():
     var = np.var(vals)
     mu = 3./2.
     v = 3./20.
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from DistDeviate random numbers using function')
     np.testing.assert_almost_equal(var, v, 1,
@@ -1248,8 +1250,8 @@ def test_distfunction():
 
     # Test filling an image
     d.seed(testseed)
-    print 'd = ',d
-    print 'd._ud = ',d._ud
+    print('d = ',d)
+    print('d._ud = ',d._ud)
     testimage = galsim.ImageD(np.zeros((3, 1)))
     testimage.addNoise(galsim.DeviateNoise(d))
     np.testing.assert_array_almost_equal(
@@ -1278,7 +1280,7 @@ def test_distLookupTable():
             err_msg='DistDeviate and the LookupTable passed to it have different upper bounds')
 
     testResult = (d(), d(), d())
-    print 'testResult = ',testResult
+    print('testResult = ',testResult)
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(dLookupTableResult), precision,
             err_msg='Wrong DistDeviate random number sequence using LookupTable')
@@ -1297,8 +1299,8 @@ def test_distLookupTable():
     var = np.var(vals)
     mu = 2.
     v = 7./3.
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from DistDeviate random numbers using LookupTable')
     np.testing.assert_almost_equal(var, v, 1,
@@ -1442,8 +1444,8 @@ def test_ccdnoise():
     big_im = galsim.Image(2048,2048,dtype=float)
     big_im.addNoise(ccdnoise)
     var = np.var(big_im.array)
-    print 'variance = ',var
-    print 'getVar = ',ccdnoise.getVariance()
+    print('variance = ',var)
+    print('getVar = ',ccdnoise.getVariance())
     np.testing.assert_almost_equal(
             var, ccdnoise.getVariance(), 1,
             err_msg='Realized variance for CCDNoise did not match getVariance()')
@@ -1591,7 +1593,6 @@ def test_multiprocess():
     for seed in seeds:
         list = generate_list(seed)
         ref_lists[seed] = list
-        #print 'list for %d was calculated to be %s'%(seed, list)
 
     # Now do this with multiprocessing
     # Put the seeds in a queue
@@ -1608,7 +1609,6 @@ def test_multiprocess():
     for i in range(len(seeds)):
         list, proc, args = done_queue.get()
         seed = args[0]
-        #print 'list for %d was calculated by process %s to be %s'%(seed, proc, list)
         np.testing.assert_array_equal(
                 list, ref_lists[seed],
                 err_msg="Random numbers are different when using multiprocessing")

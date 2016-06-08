@@ -16,6 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
+from __future__ import print_function
+
 import galsim
 
 # This file adds input type fits_header and value type FitsHeader.
@@ -36,7 +38,7 @@ def _GenerateFromFitsHeader(config, base, value_type):
 
     val = header.get(key)
 
-    #print base['file_num'],'Header: key = %s, val = %s'%(key,val)
+    #print(base['file_num'],'Header: key = %s, val = %s'%(key,val))
     return val, safe
 
 # Register this as a valid value type

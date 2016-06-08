@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import os
 import numpy as np
 from galsim_test_helpers import *
@@ -125,7 +127,7 @@ def test_draw_add_commutativity():
     t2 = time.time()
     GS_image = final.drawImage(image=GS_image)
     t3 = time.time()
-    print 'GS_object.drawImage() took {0} seconds.'.format(t3-t2)
+    print('GS_object.drawImage() took {0} seconds.'.format(t3-t2))
     # plotme(GS_image)
 
     # As an aside, check for appropriate tests of 'integrator' argument.
@@ -135,7 +137,7 @@ def test_draw_add_commutativity():
         np.testing.assert_raises(TypeError, final.drawImage, bandpass, method='no_pixel',
                                  integrator=galsim.integ.midpt)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     #------------------------------------------------------------------------------
     # Use galsim.chromatic to generate chromaticity.  Internally, this module draws
@@ -183,7 +185,7 @@ def test_draw_add_commutativity():
     galsim.ChromaticObject.drawImage(chromatic_final, bandpass, image=chromatic_image,
                                      integrator=integrator)
     t5 = time.time()
-    print 'ChromaticObject.drawImage() took {0} seconds.'.format(t5-t4)
+    print('ChromaticObject.drawImage() took {0} seconds.'.format(t5-t4))
     # plotme(chromatic_image)
 
     peak1 = chromatic_image.array.max()
@@ -228,8 +230,8 @@ def test_ChromaticConvolution_InterpolatedImage():
     D_flux = D_image.array.sum()
 
     #compare
-    print 'Flux when integrating first, convolving second: {0}'.format(II_flux)
-    print 'Flux when convolving first, integrating second: {0}'.format(D_flux)
+    print('Flux when integrating first, convolving second: {0}'.format(II_flux))
+    print('Flux when convolving first, integrating second: {0}'.format(D_flux))
     printval(II_image, D_image)
     np.testing.assert_array_almost_equal(
         II_image.array, D_image.array, 5,
@@ -291,10 +293,10 @@ def test_chromatic_add():
     disk_image = disk_part.drawImage(bandpass, image=disk_image)
 
     piecewise_image = bulge_image + disk_image
-    print 'bulge image flux: {0}'.format(bulge_image.array.sum())
-    print 'disk image flux: {0}'.format(disk_image.array.sum())
-    print 'piecewise image flux: {0}'.format(piecewise_image.array.sum())
-    print 'bdimage flux: {0}'.format(image.array.sum())
+    print('bulge image flux: {0}'.format(bulge_image.array.sum()))
+    print('disk image flux: {0}'.format(disk_image.array.sum()))
+    print('piecewise image flux: {0}'.format(piecewise_image.array.sum()))
+    print('bdimage flux: {0}'.format(image.array.sum()))
     printval(image, piecewise_image)
     np.testing.assert_array_almost_equal(
             image.array, piecewise_image.array, 6,
@@ -361,11 +363,11 @@ def test_dcr_moments():
     centroid2 = final2.centroid(bandpass)
     dR_centroid = (centroid1 - centroid2).y
 
-    print 'image delta R:    {0}'.format(dR_image)
-    print 'analytic delta R: {0}'.format(dR_analytic)
-    print 'centroid delta R: {0}'.format(dR_centroid)
-    print 'image delta V:    {0}'.format(dV_image)
-    print 'analytic delta V: {0}'.format(dV_analytic)
+    print('image delta R:    {0}'.format(dR_image))
+    print('analytic delta R: {0}'.format(dR_analytic))
+    print('centroid delta R: {0}'.format(dR_centroid))
+    print('image delta V:    {0}'.format(dV_image))
+    print('analytic delta V: {0}'.format(dV_analytic))
     np.testing.assert_almost_equal(dR_image, dR_analytic, 5,
                                    err_msg="dRbar Shift from DCR doesn't match analytic formula")
     np.testing.assert_almost_equal(dR_analytic, dR_centroid, 10,
@@ -415,8 +417,8 @@ def test_chromatic_seeing_moments():
                                        err_msg="Moment Shift from chromatic seeing doesn't"+
                                                " match analytic formula")
 
-        print 'image delta(r^2) / r^2:    {0}'.format(dr2byr2_image)
-        print 'analytic delta(r^2) / r^2: {0}'.format(dr2byr2_analytic)
+        print('image delta(r^2) / r^2:    {0}'.format(dr2byr2_image))
+        print('analytic delta(r^2) / r^2: {0}'.format(dr2byr2_analytic))
 
 
 @timer
@@ -523,7 +525,7 @@ def test_chromatic_flux():
         np.testing.assert_raises(TypeError, final_int.drawImage, bandpass,
                                  integrator=galsim.integ.midpt)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     # Go back to no interpolation (this will effect the PSFs that are used below).
     PSF = PSF.original
@@ -715,7 +717,7 @@ def test_ChromaticObject_expand():
     bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 'nm', 500, 700)
     im1 = gal1.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mx, my, mxx, myy, mxy = getmoments(im1)
-    print 'simple growth = ',mxx/(sigma/pixel_scale)**2, 1.2**2
+    print('simple growth = ',mxx/(sigma/pixel_scale)**2, 1.2**2)
     np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, 1.2**2, decimal=4)
     np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, 1.2**2, decimal=4)
     np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
@@ -739,7 +741,7 @@ def test_ChromaticObject_expand():
     #     = sigma**2 * 1.243224162 (according to Maple)
     growth_factor = galsim.integ.int1d(lambda w: expansion(w)**4 * bp(w),500,700)
     growth_factor /= galsim.integ.int1d(lambda w: expansion(w)**2 * bp(w),500,700)
-    print 'growth factor = ',mxx/(sigma/pixel_scale)**2, growth_factor
+    print('growth factor = ',mxx/(sigma/pixel_scale)**2, growth_factor)
     np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, growth_factor, decimal=4)
     np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, growth_factor, decimal=4)
     np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
@@ -774,7 +776,7 @@ def test_ChromaticObject_expand():
     mx, my, mxx, myy, mxy = getmoments(im5)
     dilate_growth_factor = galsim.integ.int1d(lambda w: expansion(w)**2 * bp(w),500,700)
     dilate_growth_factor /= galsim.integ.int1d(lambda w: bp(w),500,700)
-    print 'dilate_growth factor = ',mxx/(sigma/pixel_scale)**2, dilate_growth_factor
+    print('dilate_growth factor = ',mxx/(sigma/pixel_scale)**2, dilate_growth_factor)
     np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, dilate_growth_factor, decimal=4)
     np.testing.assert_almost_equal(myy / (sigma/pixel_scale)**2, dilate_growth_factor, decimal=4)
     np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
@@ -815,11 +817,11 @@ def test_ChromaticObject_rotate():
     im0 = gal.drawImage(scale=pixel_scale, dtype=float, method='no_pixel')
     # Initial distortion should be (e1,0).
     mx, my, mxx, myy, mxy = getmoments(im0)
-    print 'e1 = ',(mxx-myy)/(mxx+myy)
-    print 'e2 = ',(2*mxy)/(mxx+myy)
-    print '(mxx+myy)/sigma^2 = ',(mxx+myy)/(sigma/pixel_scale)**2
-    print '2/(mxx+myy)/sigma^2 = ',2./((mxx+myy)/(sigma/pixel_scale)**2)
-    print 'sqrt(1-0.3**2) = ',np.sqrt(1.-0.3**2)
+    print('e1 = ',(mxx-myy)/(mxx+myy))
+    print('e2 = ',(2*mxy)/(mxx+myy))
+    print('(mxx+myy)/sigma^2 = ',(mxx+myy)/(sigma/pixel_scale)**2)
+    print('2/(mxx+myy)/sigma^2 = ',2./((mxx+myy)/(sigma/pixel_scale)**2))
+    print('sqrt(1-0.3**2) = ',np.sqrt(1.-0.3**2))
     fact = np.sqrt(1.-0.3**2)
     np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), 0.3, decimal=4)
     np.testing.assert_almost_equal((2*mxy)/(mxx+myy), 0.0, decimal=4)
@@ -833,7 +835,7 @@ def test_ChromaticObject_rotate():
     bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 'nm', 500, 700)
     im1 = gal1.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mx, my, mxx, myy, mxy = getmoments(im1)
-    print 'simple angle = ',(np.arctan2(2.*mxy,mxx-myy)/2.), 0.4
+    print('simple angle = ',(np.arctan2(2.*mxy,mxx-myy)/2.), 0.4)
     np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), 0.3*np.cos(2.*0.4), decimal=4)
     np.testing.assert_almost_equal((2*mxy)/(mxx+myy), 0.3*np.sin(2.*0.4), decimal=4)
     rot_e1 = 0.3*np.cos(2.*0.4)
@@ -859,9 +861,9 @@ def test_ChromaticObject_rotate():
     rot_mxy /= galsim.integ.int1d(lambda w: bp(w),500,700)
     rot_e1 = (rot_mxx-rot_myy)/(rot_mxx+rot_myy)
     rot_e2 = (2*rot_mxy)/(rot_mxx+rot_myy)
-    print 'rot e1 = ',(mxx-myy)/(mxx+myy), rot_e1
-    print 'rot e2 = ',(2*mxy)/(mxx+myy), rot_e2
-    print 'rot e = ',np.sqrt(rot_e1**2+rot_e2**2)
+    print('rot e1 = ',(mxx-myy)/(mxx+myy), rot_e1)
+    print('rot e2 = ',(2*mxy)/(mxx+myy), rot_e2)
+    print('rot e = ',np.sqrt(rot_e1**2+rot_e2**2))
     np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), rot_e1, decimal=4)
     np.testing.assert_almost_equal((2*mxy)/(mxx+myy), rot_e2, decimal=4)
     np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, (1+rot_e1)/fact, decimal=4)
@@ -915,9 +917,9 @@ def test_ChromaticObject_shear():
     im0 = gal.drawImage(scale=pixel_scale, dtype=float, method='no_pixel')
     # Initial distortion should be (0,0).
     mx, my, mxx, myy, mxy = getmoments(im0)
-    print 'mxx+myy = ',mxx+myy
-    print 'e1 = ',(mxx-myy)/(mxx+myy)
-    print 'e2 = ',(2*mxy)/(mxx+myy)
+    print('mxx+myy = ',mxx+myy)
+    print('e1 = ',(mxx-myy)/(mxx+myy))
+    print('e2 = ',(2*mxy)/(mxx+myy))
     np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), 0.0, decimal=4)
     np.testing.assert_almost_equal((2*mxy)/(mxx+myy), 0.0, decimal=4)
     np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, 1.0, decimal=4)
@@ -930,9 +932,9 @@ def test_ChromaticObject_shear():
     bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 'nm', 500, 700)
     im1 = gal1.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mx, my, mxx, myy, mxy = getmoments(im1)
-    print 'mxx+myy = ',mxx+myy
-    print 'simple e1 = ',(mxx-myy)/(mxx+myy)
-    print 'simple e2 = ',(2.*mxy)/(mxx+myy)
+    print('mxx+myy = ',mxx+myy)
+    print('simple e1 = ',(mxx-myy)/(mxx+myy))
+    print('simple e2 = ',(2.*mxy)/(mxx+myy))
     np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), 0.23, decimal=4)
     np.testing.assert_almost_equal((2*mxy)/(mxx+myy), 0.13, decimal=4)
     fact = np.sqrt(1. - 0.23**2 - 0.13**2)
@@ -956,9 +958,9 @@ def test_ChromaticObject_shear():
     sh_myy /= galsim.integ.int1d(lambda w: bp(w),500,700)
     sh_mxy = galsim.integ.int1d(lambda w: shear(w).e2/np.sqrt(1.-shear(w).e**2)*bp(w),500,700)
     sh_mxy /= galsim.integ.int1d(lambda w: bp(w),500,700)
-    print 'mxx+myy = ',mxx+myy
-    print 'shear e1 = ',(mxx-myy)/(mxx+myy), (sh_mxx-sh_myy)/(sh_mxx+sh_myy)
-    print 'shear e2 = ',(2*mxy)/(mxx+myy), (2*sh_mxy)/(sh_mxx+sh_myy)
+    print('mxx+myy = ',mxx+myy)
+    print('shear e1 = ',(mxx-myy)/(mxx+myy), (sh_mxx-sh_myy)/(sh_mxx+sh_myy))
+    print('shear e2 = ',(2*mxy)/(mxx+myy), (2*sh_mxy)/(sh_mxx+sh_myy))
     np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), (sh_mxx-sh_myy)/(sh_mxx+sh_myy), decimal=4)
     np.testing.assert_almost_equal((2*mxy)/(mxx+myy), (2*sh_mxy)/(sh_mxx+sh_myy), decimal=4)
     np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, sh_mxx, decimal=4)
@@ -1120,7 +1122,7 @@ def test_gsparam():
     try:
         np.testing.assert_raises(RuntimeError, gal.drawImage, bandpass)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     # Repeat, putting the gsparams argument in after the ChromaticObject constructor.
     gal = galsim.ChromaticObject(galsim.Gaussian(fwhm=1))
@@ -1129,7 +1131,7 @@ def test_gsparam():
     try:
         np.testing.assert_raises(RuntimeError, final.drawImage, bandpass)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     do_pickle(final)
 
@@ -1419,7 +1421,7 @@ def test_interpolated_ChromaticObject():
     try:
         np.testing.assert_raises(RuntimeError, obj_interp.drawImage, bandpass_z)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     # Make sure it behaves appropriately when asked to apply chromatic transformations after
     # interpolating: it should do the job properly after un-setting the interpolation.
@@ -1518,12 +1520,12 @@ def test_ChromaticOpticalPSF():
         im_r_ref = obj.drawImage(bandpass, scale=scale)
         im_r_ref.write(os.path.join(refdir, 'r_exact.fits'))
         t3 = time.time()
-        print "Time to draw ChromaticOpticalPSF: {}s".format(t3-t2)
+        print("Time to draw ChromaticOpticalPSF: {}s".format(t3-t2))
 
     t4 = time.time()
     psf = psf.interpolate(waves, oversample_fac=oversample_fac)
     t5 = time.time()
-    print "Time to initialize InterpolatedChromaticObject: {}s".format(t5-t4)
+    print("Time to initialize InterpolatedChromaticObject: {}s".format(t5-t4))
     obj = galsim.Convolve(star, psf)
 
     if __name__ == '__main__':
@@ -1535,7 +1537,7 @@ def test_ChromaticOpticalPSF():
     t6 = time.time()
     obj.drawImage(bandpass, image=im_r, scale=scale)
     t7 = time.time()
-    print "Time to draw InterpolatedChromaticObject: {}s".format(t7-t6)
+    print("Time to draw InterpolatedChromaticObject: {}s".format(t7-t6))
     printval(im_r, im_r_ref)
     np.testing.assert_almost_equal(
         im_r.array.sum()/im_r_ref.array.sum(), 1.0, decimal=3,

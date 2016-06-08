@@ -1311,15 +1311,12 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             return pv2
 
     def _radec(self, x, y):
-        #print '_radec: ',x,y
         import numpy
 
         # Start with (x,y) = the image position
         p1 = numpy.array( [ numpy.atleast_1d(x), numpy.atleast_1d(y) ] )
-        #print 'p1 = ',p1
 
         p1 -= self.crpix[:,numpy.newaxis]
-        #print 'p1 => ',p1
 
         if self.ab is not None:
             xx = p1[0]
@@ -1335,11 +1332,9 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             # See below for the explanation of this calculation
             temp = numpy.dot(self.ab, ypow)
             p1 += numpy.sum(xpow * temp, axis=1)
-            #print 'p1 => ',p1
 
         # This converts to (u,v) in the tangent plane
         p2 = numpy.dot(self.cd, p1)
-        #print 'p2 = ',p2
 
         if self.pv is not None:
             # Now we apply the distortion terms
@@ -1360,7 +1355,6 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             #     diag(AT . B) = sum_rows(A * B)
             temp = numpy.dot(self.pv, vpow)
             p2 = numpy.sum(upow * temp, axis=1)
-            #print "p2 => ",p2
 
         # Convert (u,v) from degrees to arcsec
         # Also, the FITS standard defines u,v backwards relative to our standard.
@@ -1368,11 +1362,9 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         factor = 1. * galsim.degrees / galsim.arcsec
         u = -p2[0] * factor
         v = p2[1] * factor
-        #print 'u,v = ',u,v
 
         # Finally convert from (u,v) to (ra, dec) using the appropriate projection.
         ra, dec = self.center.deproject_rad(u, v, projection=self.projection)
-        #print 'ra,dec = ',ra,dec
 
         try:
             len(x)
@@ -1387,18 +1379,14 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
     def _xy(self, ra, dec):
         import numpy, numpy.linalg
 
-        #print 'ra, dec = ',ra,dec
         u, v = self.center.project_rad(ra, dec, projection=self.projection)
-        #print 'u,v = ',u,v
 
         # Again, FITS has +u increasing to the east, not west.  Hence the - for u.
         factor = 1. * galsim.arcsec / galsim.degrees
         u *= -factor
         v *= factor
-        #print 'u,v => ',u,v
 
         p2 = numpy.array( [ u, v ] )
-        #print 'p2 = ',p2
 
         if self.pv is not None:
             # Let (s,t) be the current value of (u,v).  Then we want to find a new (u,v) such that
@@ -1447,10 +1435,8 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
                     v -= dp[1]
             if not err < TOL:
                 raise RuntimeError("Unable to solve for image_pos (max iter reached)")
-            #print 'p2 => ',p2
 
         p1 = numpy.dot(numpy.linalg.inv(self.cd), p2)
-        #print 'p1 = ',p1
 
         if self.ab is not None:
             x = p1[0]
@@ -1463,7 +1449,6 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
                 dp1 = numpy.sum(xpow * temp, axis=1)
                 x += dp1[0]
                 y += dp1[1]
-                #print 'x,y => ',x,y
 
             # We do this iteration even if we have AP and BP matrices, since the inverse
             # transformation is not always very accurate.
@@ -1474,7 +1459,6 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             MAX_ITER = 10
             TOL = 1.e-8 * galsim.arcsec / galsim.degrees
             prev_err = None
-            #print 'Start iteration at ',x,y
             for iter in range(MAX_ITER):
                 # Slightly easier here than in _radec function, since we don't have to worry
                 # about the possibility of doing many x,y at once.
@@ -1482,11 +1466,9 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
                 ypow = y ** numpy.arange(order+1)
 
                 diff = numpy.dot(numpy.dot(self.ab, ypow), xpow) + numpy.array([x,y]) - p1
-                #print 'diff = ',diff
 
                 # Check that things are improving...
                 err = numpy.max(numpy.abs(diff))
-                #print 'err = ',err
                 if prev_err:
                     if err > prev_err:
                         raise RuntimeError("Unable to solve for image_pos (not improving)")
@@ -1508,16 +1490,12 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
                     dp = numpy.linalg.solve(j1, diff)
                     x -= dp[0]
                     y -= dp[1]
-                    #print 'x,y -> ',x,y
             if not err < TOL:
                 raise RuntimeError("Unable to solve for image_pos (max iter reached)")
-            #print 'p1 => ',p1
 
         p1 += self.crpix
-        #print 'p1 => ',p1
 
         x, y = p1
-        #print 'x,y = ',x,y
         return x, y
 
     # Override the version in CelestialWCS, since we can do this more efficiently.
@@ -1849,7 +1827,6 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
                     wcs._tag += ', compression=%r'%compression
             return wcs
         except Exception as err:
-            #print 'caught ',err
             pass
     # Finally, this one is really the last resort, since it only reads in the linear part of the 
     # WCS.  It defaults to the equivalent of a pixel scale of 1.0 if even these are not present.

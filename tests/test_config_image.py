@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+from __future__ import print_function
 import numpy as np
 import os
 import sys
@@ -176,9 +177,9 @@ def test_ccdnoise():
     }
     image = galsim.config.BuildImage(config,logger=logger)
 
-    print 'config-built image: '
-    print 'mean = ',np.mean(image.array)
-    print 'var = ',np.var(image.array.astype(float))
+    print('config-built image: ')
+    print('mean = ',np.mean(image.array))
+    print('var = ',np.var(image.array.astype(float)))
     test_var = np.var(image.array.astype(float))
 
     # Build another image that should have equivalent noise properties.
@@ -189,9 +190,9 @@ def test_ccdnoise():
     image2.addNoise(noise)
     image2 -= sky
 
-    print 'manual sky:'
-    print 'mean = ',np.mean(image2.array)
-    print 'var = ',np.var(image2.array)
+    print('manual sky:')
+    print('mean = ',np.mean(image2.array))
+    print('var = ',np.var(image2.array))
     np.testing.assert_almost_equal(np.var(image2.array),test_var,
                                    err_msg="CCDNoise with manual sky failed variance test.")
 
@@ -203,17 +204,17 @@ def test_ccdnoise():
     noise = galsim.CCDNoise(rng=rng, sky_level=sky, gain=gain, read_noise=rn)
     image2.addNoise(noise)
 
-    print 'sky done by CCDNoise:'
-    print 'mean = ',np.mean(image2.array)
-    print 'var = ',np.var(image2.array)
+    print('sky done by CCDNoise:')
+    print('mean = ',np.mean(image2.array))
+    print('var = ',np.var(image2.array))
     np.testing.assert_almost_equal(np.var(image2.array),test_var,
                                    err_msg="CCDNoise using sky failed variance test.")
 
     # Check that the CCDNoiseBuilder calculates the same variance as CCDNoise
     var1 = noise.getVariance()
     var2 = galsim.config.noise.CCDNoiseBuilder().getNoiseVariance(config['image']['noise'],config)
-    print 'CCDNoise variance = ',var1
-    print 'CCDNoiseBuilder variance = ',var2
+    print('CCDNoise variance = ',var1)
+    print('CCDNoiseBuilder variance = ',var2)
     np.testing.assert_almost_equal(var1, var2,
                                    err_msg="CCDNoiseBuidler calculates the wrong variance")
 
@@ -229,9 +230,9 @@ def test_ccdnoise():
             config['image']['noise'], config, image2, rng,
             current_var = 1.e-20, draw_method='fft', logger=logger)
 
-    print 'Use CCDNoiseBuilder with negligible current_var'
-    print 'mean = ',np.mean(image2.array)
-    print 'var = ',np.var(image2.array)
+    print('Use CCDNoiseBuilder with negligible current_var')
+    print('mean = ',np.mean(image2.array))
+    print('var = ',np.var(image2.array))
     np.testing.assert_almost_equal(np.var(image2.array),test_var,
                                    err_msg="CCDNoise with current_var failed variance test.")
 
@@ -243,9 +244,9 @@ def test_ccdnoise():
             config['image']['noise'], config, image2, rng,
             current_var = (rn/gain)**2, draw_method='fft', logger=logger)
 
-    print 'Use CCDNoiseBuilder with current_var == read_noise'
-    print 'mean = ',np.mean(image2.array)
-    print 'var = ',np.var(image2.array)
+    print('Use CCDNoiseBuilder with current_var == read_noise')
+    print('mean = ',np.mean(image2.array))
+    print('var = ',np.var(image2.array))
     # So far we've done this to very high accuracy, since we've been using the same rng seed,
     # so the results should be identical, not just close.  However, hereon the values are just
     # close, since they are difference noise realizations.  So check to 1 decimal place.
@@ -260,9 +261,9 @@ def test_ccdnoise():
             config['image']['noise'], config, image2, rng,
             current_var = (0.5*rn/gain)**2, draw_method='fft', logger=logger)
 
-    print 'Use CCDNoiseBuilder with current_var < read_noise'
-    print 'mean = ',np.mean(image2.array)
-    print 'var = ',np.var(image2.array)
+    print('Use CCDNoiseBuilder with current_var < read_noise')
+    print('mean = ',np.mean(image2.array))
+    print('var = ',np.var(image2.array))
     np.testing.assert_almost_equal(np.var(image2.array),test_var, decimal=1,
                                    err_msg="CCDNoise w/ current_var < rn failed variance test.")
 
@@ -274,9 +275,9 @@ def test_ccdnoise():
             config['image']['noise'], config, image2, rng,
             current_var = (2.*rn/gain)**2, draw_method='fft', logger=logger)
 
-    print 'Use CCDNoiseBuilder with current_var > read_noise'
-    print 'mean = ',np.mean(image2.array)
-    print 'var = ',np.var(image2.array)
+    print('Use CCDNoiseBuilder with current_var > read_noise')
+    print('mean = ',np.mean(image2.array))
+    print('var = ',np.var(image2.array))
     np.testing.assert_almost_equal(np.var(image2.array),test_var, decimal=1,
                                    err_msg="CCDNoise w/ current_var > rn failed variance test.")
 

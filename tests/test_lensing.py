@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import numpy as np
 import math
 import os
@@ -220,9 +222,9 @@ def test_shear_variance():
     predicted_variance *= 2
     var1 = np.var(g1)
     var2 = np.var(g2)
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from flat power spectrum!"
 
@@ -244,9 +246,9 @@ def test_shear_variance():
     predicted_variance = (1./np.pi**2)*(0.25*np.pi*(klim**2) - kmin**2)
     var1 = np.var(g1)
     var2 = np.var(g2)
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from flat E-mode power spectrum!"
 
@@ -273,9 +275,9 @@ def test_shear_variance():
     predicted_variance *= 2
     var1 = np.var(g1)
     var2 = np.var(g2)
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from flat power spectrum with smaller grid_size"
 
@@ -293,9 +295,9 @@ def test_shear_variance():
     predicted_variance *= 2
     var1 = np.var(g1)
     var2 = np.var(g2)
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from flat power spectrum with smaller ngrid"
 
@@ -330,9 +332,9 @@ def test_shear_variance():
     var1 = np.var(g1)
     var2 = np.var(g2)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum"
 
@@ -352,9 +354,9 @@ def test_shear_variance():
     var1 = np.var(g1)
     var2 = np.var(g2)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum with smaller grid_size"
 
@@ -374,9 +376,9 @@ def test_shear_variance():
     var1 = np.var(g1)
     var2 = np.var(g2)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum with smaller ngrid"
 
@@ -400,9 +402,9 @@ def test_shear_variance():
     var1 = np.var(g1)
     var2 = np.var(g2)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum with kmax_factor=2"
     rng2.discard(test_ps.nRandCallsForBuildGrid())
@@ -425,9 +427,9 @@ def test_shear_variance():
     var1 = np.var(g1)
     var2 = np.var(g2)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum with kmin_factor=2"
     rng2.discard(test_ps.nRandCallsForBuildGrid())
@@ -458,9 +460,9 @@ def test_shear_variance():
     var1 = np.var(g1)
     var2 = np.var(g2)
     # Use the predicted variance from before
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance post-interpolation"
 

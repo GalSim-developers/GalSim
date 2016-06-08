@@ -18,6 +18,7 @@
 """Unit tests for integration routines at the Python layer.
 """
 
+from __future__ import print_function
 import numpy as np
 import warnings
 
@@ -38,19 +39,19 @@ def test_j0():
     """Test the bessel.j0 function"""
     x_list = [ 0, 1.01, 0.2, 3.3, 5.9, 77. ]
     vals1 = [ galsim.bessel.j0(x) for x in x_list ]
-    print 'x = ',x_list
-    print 'vals1 = ',vals1
+    print('x = ',x_list)
+    print('vals1 = ',vals1)
 
     try:
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore",category=RuntimeWarning)
             import scipy.special
         vals2 = [ scipy.special.j0(x) for x in x_list ]
-        print 'vals2 = ',vals2
+        print('vals2 = ',vals2)
         np.testing.assert_almost_equal(
             vals1, vals2, 8, "bessel.j0 disagrees with scipy.special.j0")
     except ImportError:
-        print 'Unable to import scipy.  Skipping scipy tests of j0.'
+        print('Unable to import scipy.  Skipping scipy tests of j0.')
 
     # These values are what scipy returns.  Check against these, so not require scipy.
     vals2 = [   1.0,
@@ -69,19 +70,19 @@ def test_j1():
     """Test the bessel.j1 function"""
     x_list = [ 0, 1.01, 0.2, 3.3, 5.9, 77. ]
     vals1 = [ galsim.bessel.j1(x) for x in x_list ]
-    print 'x = ',x_list
-    print 'vals1 = ',vals1
+    print('x = ',x_list)
+    print('vals1 = ',vals1)
 
     try:
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore",category=RuntimeWarning)
             import scipy.special
         vals2 = [ scipy.special.j1(x) for x in x_list ]
-        print 'vals2 = ',vals2
+        print('vals2 = ',vals2)
         np.testing.assert_almost_equal(
             vals1, vals2, 8, "bessel.j1 disagrees with scipy.special.j1")
     except ImportError:
-        print 'Unable to import scipy.  Skipping scipy tests of j1.'
+        print('Unable to import scipy.  Skipping scipy tests of j1.')
 
     # These values are what scipy returns.  Check against these, so not require scipy.
     vals2 = [   0.0,
@@ -101,19 +102,19 @@ def test_jn():
     n_list = [ 3, 4, 1, 0, 9, 7 ]
     x_list = [ 0, 1.01, 0.2, 3.3, 5.9, 77. ]
     vals1 = [ galsim.bessel.jn(n,x) for n,x in zip(n_list,x_list) ]
-    print 'x = ',x_list
-    print 'vals1 = ',vals1
+    print('x = ',x_list)
+    print('vals1 = ',vals1)
 
     try:
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore",category=RuntimeWarning)
             import scipy.special
         vals2 = [ scipy.special.jn(n,x) for n,x in zip(n_list,x_list) ]
-        print 'vals2 = ',vals2
+        print('vals2 = ',vals2)
         np.testing.assert_almost_equal(
             vals1, vals2, 8, "bessel.jn disagrees with scipy.special.jn")
     except ImportError:
-        print 'Unable to import scipy.  Skipping scipy tests of jn.'
+        print('Unable to import scipy.  Skipping scipy tests of jn.')
 
     # These values are what scipy returns.  Check against these, so not require scipy.
     vals2 = [   0.0,
@@ -133,19 +134,19 @@ def test_jv():
     v_list = [ 3.3, 4, 1.9, 0, 9.2, -7.1 ]
     x_list = [ 0, 1.01, 0.2, 3.3, 5.9, 77. ]
     vals1 = [ galsim.bessel.jv(v,x) for v,x in zip(v_list,x_list) ]
-    print 'x = ',x_list
-    print 'vals1 = ',vals1
+    print('x = ',x_list)
+    print('vals1 = ',vals1)
 
     try:
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore",category=RuntimeWarning)
             import scipy.special
         vals2 = [ scipy.special.jv(v,x) for v,x in zip(v_list,x_list) ]
-        print 'vals2 = ',vals2
+        print('vals2 = ',vals2)
         np.testing.assert_almost_equal(
             vals1, vals2, 8, "bessel.jv disagrees with scipy.special.jv")
     except ImportError:
-        print 'Unable to import scipy.  Skipping scipy tests of jv.'
+        print('Unable to import scipy.  Skipping scipy tests of jv.')
 
     # These values are what scipy returns.  Check against these, so not require scipy.
     vals2 = [   0.0,
@@ -165,19 +166,19 @@ def test_kn():
     n_list = [ 3, 4, 1, 0, 9, 7 ]
     x_list = [ 1, 2.01, 0.2, 3.3, 5.9, 7.7 ]
     vals1 = [ galsim.bessel.kn(n,x) for n,x in zip(n_list,x_list) ]
-    print 'x = ',x_list
-    print 'vals1 = ',vals1
+    print('x = ',x_list)
+    print('vals1 = ',vals1)
 
     try:
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore",category=RuntimeWarning)
             import scipy.special
         vals2 = [ scipy.special.kn(n,x) for n,x in zip(n_list,x_list) ]
-        print 'vals2 = ',vals2
+        print('vals2 = ',vals2)
         np.testing.assert_almost_equal(
             vals1, vals2, 8, "bessel.kn disagrees with scipy.special.kn")
     except ImportError:
-        print 'Unable to import scipy.  Skipping scipy tests of kn.'
+        print('Unable to import scipy.  Skipping scipy tests of kn.')
 
     # These values are what scipy returns.  Check against these, so not require scipy.
     vals2 = [   7.1012628247379448,
@@ -197,19 +198,19 @@ def test_kv():
     v_list = [ 3.3, 4, 1.9, 0, 9.2, -7.1 ]
     x_list = [ 1, 2.01, 0.2, 3.3, 5.9, 7.7 ]
     vals1 = [ galsim.bessel.kv(v,x) for v,x in zip(v_list,x_list) ]
-    print 'x = ',x_list
-    print 'vals1 = ',vals1
+    print('x = ',x_list)
+    print('vals1 = ',vals1)
 
     try:
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore",category=RuntimeWarning)
             import scipy.special
         vals2 = [ scipy.special.kv(v,x) for v,x in zip(v_list,x_list) ]
-        print 'vals2 = ',vals2
+        print('vals2 = ',vals2)
         np.testing.assert_almost_equal(
             vals1, vals2, 8, "bessel.kv disagrees with scipy.special.kv")
     except ImportError:
-        print 'Unable to import scipy.  Skipping scipy tests of kv.'
+        print('Unable to import scipy.  Skipping scipy tests of kv.')
 
     # These values are what scipy returns.  Check against these, so not require scipy.
     vals2 = [   11.898213399340918,
@@ -229,18 +230,18 @@ def test_j0_root():
     # Our version uses tabulated values up to 40, so a useful test of the extrapolation
     # requires this to have more than 40 items.
     vals1 = [ galsim.bessel.j0_root(s) for s in range(1,51) ]
-    print 'vals1 = ',vals1
+    print('vals1 = ',vals1)
 
     try:
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore",category=RuntimeWarning)
             import scipy.special
         vals2 = scipy.special.jn_zeros(0,50)
-        print 'vals2 = ',vals2
+        print('vals2 = ',vals2)
         np.testing.assert_almost_equal(
             vals1, vals2, 8, "bessel.j0_root disagrees with scipy.special.jn_zeros")
     except ImportError:
-        print 'Unable to import scipy.  Skipping scipy tests of j0_root.'
+        print('Unable to import scipy.  Skipping scipy tests of j0_root.')
 
     # These values are what scipy returns.  Check against these, so not require scipy.
     vals2 = [   2.40482556,    5.52007811,    8.65372791,   11.79153444,

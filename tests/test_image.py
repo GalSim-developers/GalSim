@@ -15,11 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-import os
-import sys
-import numpy as np
-
-from galsim_test_helpers import *
 
 """Unit tests for the Image class.
 
@@ -47,6 +42,13 @@ images deep, with the first image being the reference above and each subsequent 
 incremented by one.
 
 """
+
+from __future__ import print_function
+import os
+import sys
+import numpy as np
+
+from galsim_test_helpers import *
 
 try:
     import galsim
@@ -96,8 +98,8 @@ def test_Image_basic():
         # Check basic constructor from ncol, nrow
         array_type = types[i]
         np_array_type = np_types[i]
-        print 'array_type = ',array_type
-        print 'np_array_type = ',np_array_type
+        print('array_type = ',array_type)
+        print('np_array_type = ',np_array_type)
         im1 = galsim.Image(ncol,nrow,dtype=array_type)
         bounds = galsim.BoundsI(1,ncol,1,nrow)
 
@@ -175,7 +177,7 @@ def test_Image_basic():
             np.testing.assert_raises(RuntimeError,im1.view().setValue,ncol+1,nrow+1,1)
             np.testing.assert_raises(RuntimeError,im1.view().__call__,ncol+1,nrow+1)
         except ImportError:
-            print 'The assert_raises tests require nose'
+            print('The assert_raises tests require nose')
 
         # Check view of given data
         im3_view = galsim.Image(ref_array.astype(np_array_type))
@@ -1553,7 +1555,7 @@ def test_BoundsI_init_with_non_pure_ints():
                                  xmin=bound_arr_flt_nonint[0], xmax=bound_arr_flt_nonint[1],
                                  ymin=bound_arr_flt_nonint[2], ymax=bound_arr_flt_nonint[3])
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer

@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+from __future__ import print_function
+
 import galsim
 
 # This file handles the parsing for the special Eval type.
@@ -47,16 +49,16 @@ def _type_by_letter(key):
 def _GenerateFromEval(config, base, value_type):
     """@brief Evaluate a string as the provided type
     """
-    #print 'Start Eval'
+    #print('Start Eval')
     req = { 'str' : str }
     opt = {}
     ignore = galsim.config.standard_ignore  # in value.py
     for key in config.keys():
         if key not in (ignore + req.keys()):
             opt[key] = _type_by_letter(key)
-    #print 'opt = ',opt
-    #print 'base has ',base.keys()
-    #print 'config = ',config
+    #print('opt = ',opt)
+    #print('base has ',base.keys())
+    #print('config = ',config)
 
     if isinstance(config['str'], basestring):
         # The ParseValue function can get confused if the first character is an @, but the 
@@ -66,9 +68,9 @@ def _GenerateFromEval(config, base, value_type):
         params, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore+['str'])
     else:
         params, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt, ignore=ignore)
-        #print 'params = ',params
+        #print('params = ',params)
         string = params['str']
-    #print 'string = ',string
+    #print('string = ',string)
 
     # We allow the following modules to be used in the eval string:
     import math
@@ -80,17 +82,17 @@ def _GenerateFromEval(config, base, value_type):
         import re
         # Find @items using regex.  They can include alphanumeric chars plus '.'.
         keys = re.findall(r'@[\w\.]*', string)
-        #print '@keys = ',keys
+        #print('@keys = ',keys)
         # Remove duplicates
         keys = numpy.unique(keys).tolist()
-        #print 'unique @keys = ',keys
+        #print('unique @keys = ',keys)
         for key0 in keys:
             key = key0[1:] # Remove the @ sign.
             value = galsim.config.GetCurrentValue(key, base)
             # Give a probably unique name to this value
             key_name = "temp_variable_" + key.replace('.','_')
-            #print 'key_name = ',key_name
-            #print 'value = ',value
+            #print('key_name = ',key_name)
+            #print('value = ',value)
             # Replaces all occurrences of key0 with the key_name.
             string = string.replace(key0,key_name)
             # Finally, bring the key's variable name into scope.
@@ -99,11 +101,11 @@ def _GenerateFromEval(config, base, value_type):
     # Bring the user-defined variables into scope.
     for key in opt.keys():
         exec(key[1:] + ' = params[key]')
-        #print key[1:],'=',eval(key[1:])
+        #print(key[1:],'=',eval(key[1:]))
 
     # Also bring in any top level eval_variables that might be relevant.
     if 'eval_variables' in base:
-        #print 'found eval_variables = ',base['eval_variables']
+        #print('found eval_variables = ',base['eval_variables'])
         if not isinstance(base['eval_variables'],dict):
             raise AttributeError("eval_variables must be a dict")
         opt = {}
@@ -114,21 +116,21 @@ def _GenerateFromEval(config, base, value_type):
                 opt[key] = _type_by_letter(key)
             else:
                 ignore.append(key)
-        #print 'opt = ',opt
+        #print('opt = ',opt)
         params, safe1 = galsim.config.GetAllParams(base['eval_variables'],
                                                    base, opt=opt, ignore=ignore)
-        #print 'params = ',params
+        #print('params = ',params)
         safe = safe and safe1
         for key in opt.keys():
             exec(key[1:] + ' = params[key]')
-            #print key[1:],'=',eval(key[1:])
+            #print(key[1:],'=',eval(key[1:]))
 
     # Try evaluating the string as is.
     try:
         val = eval(string)
         if value_type is not None:
             val = value_type(val)
-        #print base['obj_num'],'Simple Eval(%s) = %s'%(string,val)
+        #print(base['obj_num'],'Simple Eval(%s) = %s'%(string,val))
         return val, safe
     except KeyboardInterrupt:
         raise
@@ -166,7 +168,7 @@ def _GenerateFromEval(config, base, value_type):
     start_obj_num = base.get('start_obj_num',0)
     try:
         val = eval(string)
-        #print base['obj_num'],'Eval(%s) needed extra variables: val = %s'%(string,val)
+        #print(base['obj_num'],'Eval(%s) needed extra variables: val = %s'%(string,val))
         if value_type is not None:
             val = value_type(val)
         return val, False

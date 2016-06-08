@@ -39,6 +39,7 @@ You can also keep track of the number of open files and pipes with:
     >>> print 'files, pipes = ',fds.openFiles()
 """
 
+from __future__ import print_function
 
 import __builtin__
 openfiles = set()
@@ -46,12 +47,12 @@ oldfile = __builtin__.file
 class newfile(oldfile):
     def __init__(self, *args):
         self.x = args[0]
-        print "### OPENING %s ###" % str(self.x)            
+        print("### OPENING %s ###" % str(self.x))
         oldfile.__init__(self, *args)
         openfiles.add(self)
 
     def close(self):
-        print "### CLOSING %s ###" % str(self.x)
+        print("### CLOSING %s ###" % str(self.x))
         oldfile.close(self)
         openfiles.remove(self)
 
@@ -72,7 +73,7 @@ def getOpenFiles(do_print=False):
     pid = os.getpid()
     # check_output is py2.7 only:
     #procs = subprocess.check_output( [ "lsof", '-w', '-Ff', "-p", str( pid ) ] )
-    p = subprocess.Popen(['lsof', '-w', '-Ff', '-p', str(pid)], 
+    p = subprocess.Popen(['lsof', '-w', '-Ff', '-p', str(pid)],
                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     procs = p.communicate()[0]
     p.stdout.close()
@@ -82,12 +83,12 @@ def getOpenFiles(do_print=False):
             lambda s: s and s[ 0 ] == 'f' and s[1: ].isdigit(),
             procs.split( '\n' ) )
     if do_print:
-        print 'procs = ',procs
-        print 'nprocs = ',len(procs)
+        print('procs = ',procs)
+        print('nprocs = ',len(procs))
     return len(openfiles), len(procs) - len(openfiles)
 
 def printOpenFiles():
-    print "### %d OPEN FILES: [%s]" % (len(openfiles), ", ".join(f.x for f in openfiles))
+    print("### %d OPEN FILES: [%s]" % (len(openfiles), ", ".join(f.x for f in openfiles)))
     nopen = getOpenFiles(do_print=True)
-    print "files, pipes = %d, %d"%nopen
+    print("files, pipes = %d, %d"%nopen)
 

@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import numpy as np
 import os
 import sys
@@ -61,7 +63,7 @@ decimal = 5
 
 #### some helper functions
 def all_shear_vals(test_shear, index, mult_val = 1.0):
-    print 'test_shear = ',repr(test_shear)
+    print('test_shear = ',repr(test_shear))
     # this function tests that all values of some Shear object are consistent with the tabulated
     # values, given the appropriate index against which to test, and properly accounting for the
     # fact that SBProfile sometimes has the angle in the range [pi, 2*pi)
@@ -190,7 +192,7 @@ def test_shear_initialization():
         np.testing.assert_raises(TypeError,galsim.Shear,beta=45.0,g=0.3)
         np.testing.assert_raises(TypeError,galsim.Shear,q=0.1,beta=0.)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer

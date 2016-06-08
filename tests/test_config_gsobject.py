@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+from __future__ import print_function
 import numpy as np
 import os
 import sys
@@ -135,7 +136,7 @@ def test_moffat():
         np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c,
                                  conv=galsim.Gaussian(sigma=0.01))
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -196,7 +197,7 @@ def test_airy():
         gal5c = galsim.Airy(lam_over_diam=45)
         np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -249,7 +250,7 @@ def test_kolmogorov():
         gal5c = galsim.Kolmogorov(lam_over_r0=1, flux=50)
         np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -376,7 +377,7 @@ def test_exponential():
         np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c,
                                  conv=galsim.Gaussian(sigma=1))
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -449,7 +450,7 @@ def test_sersic():
                                  conv=galsim.Gaussian(sigma=1))
 
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     gal7a = galsim.config.BuildGSObject(config, 'gal7')[0]
     gsparams = galsim.GSParams(realspace_relerr=1.e-2, realspace_abserr=1.e-4)
@@ -463,7 +464,7 @@ def test_sersic():
         gal7c = galsim.Sersic(n=3.2, half_light_radius=1.7, flux=50, trunc=4.3)
         np.testing.assert_raises(AssertionError,gsobject_compare, gal7a, gal7c, conv=conv)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -517,7 +518,7 @@ def test_devaucouleurs():
         np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c,
                                  conv=galsim.Gaussian(sigma=1))
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -813,7 +814,7 @@ def test_add():
         np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c,
                                  conv=galsim.Gaussian(sigma=1))
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -918,7 +919,7 @@ def test_convolve():
         gal5c = galsim.Convolve([gal5c_1, gal5c_2])
         np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -993,7 +994,7 @@ def test_list():
         np.testing.assert_raises(AssertionError,gsobject_compare, gal5a, gal5c,
                                  conv=galsim.Gaussian(sigma=1))
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -1031,8 +1032,8 @@ def test_ring():
         ring_builder.setup(config['stamp'], config, None, None, ignore, None)
         gal1a = ring_builder.buildProfile(config['stamp'], config, None, {}, None)
         gal1b = gauss.shear(e1=e1_list[k], e2=e2_list[k])
-        print 'gal1a = ',gal1a
-        print 'gal1b = ',gal1b
+        print('gal1a = ',gal1a)
+        print('gal1b = ',gal1b)
         gsobject_compare(gal1a, gal1b)
 
     config = {
@@ -1131,7 +1132,7 @@ def test_ring():
         np.testing.assert_raises(AssertionError,gsobject_compare, gal4a, gal4c,
                                  conv=galsim.Gaussian(sigma=1))
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 if __name__ == "__main__":

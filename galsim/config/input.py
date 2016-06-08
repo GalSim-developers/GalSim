@@ -16,6 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
+from __future__ import print_function
+
 import os
 import galsim
 import logging
@@ -446,7 +448,7 @@ def _GenerateFromCatalog(config, base, value_type):
     elif value_type is bool:
         val = galsim.config.value._GetBoolValue(input_cat.get(index, col))
 
-    #print base['file_num'],'Catalog: col = %s, index = %s, val = %s'%(col, index, val)
+    #print(base['file_num'],'Catalog: col = %s, index = %s, val = %s'%(col, index, val))
     return val, safe
 
 
@@ -462,7 +464,7 @@ def _GenerateFromDict(config, base, value_type):
 
     val = input_dict.get(key)
 
-    #print base['file_num'],'Dict: key = %s, val = %s'%(key,val)
+    #print(base['file_num'],'Dict: key = %s, val = %s'%(key,val))
     return val, safe
 
 # Register these as valid value types

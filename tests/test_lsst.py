@@ -16,7 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
-
+from __future__ import print_function
 import unittest
 import numpy as np
 import warnings

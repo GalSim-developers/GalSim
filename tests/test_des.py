@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+from __future__ import print_function
 import numpy
 import os
 import sys
@@ -119,10 +120,7 @@ def test_meds():
 
     # save objects to MEDS file
     filename_meds = 'output/test_meds.fits'
-    #print 'file_name = ',filename_meds
-    #print 'objlist = ',objlist
     galsim.des.WriteMEDS(objlist, filename_meds, clobber=True)
-    #print 'wrote MEDS file %s ' % filename_meds
 
     # Note that while there are no tests prior to this, the above still checks for
     # syntax errors in the meds creation software, so it's still worth running as part
@@ -132,19 +130,18 @@ def test_meds():
     try:
         import meds
     except ImportError:
-        print 'Failed to import meds.  Unable to do tests of meds file.'
+        print('Failed to import meds.  Unable to do tests of meds file.')
         return
     try:
         # Meds will import this, so check for this too.
         import fitsio
     except ImportError:
-        print 'Failed to import fitsio.  Unable to do tests of meds file.'
+        print('Failed to import fitsio.  Unable to do tests of meds file.')
         return
 
     # Run meds module's validate function
     meds.util.validate_meds(filename_meds)
 
-    #print 'reading %s' % filename_meds
     m = meds.MEDS(filename_meds)
 
     # Check the image_info extension:
@@ -152,7 +149,7 @@ def test_meds():
     info = m.get_image_info()
     for name, dt in ref_info:
         dt = numpy.dtype(dt)
-        print name, dt, info.dtype[name], dt.char, info.dtype[name].char
+        print(name, dt, info.dtype[name], dt.char, info.dtype[name].char)
         assert name in info.dtype.names, "column %s not present in image_info extension"%name
         assert dt.char == info.dtype[name].char, "column %s is the wrong type"%name
 
@@ -167,18 +164,17 @@ def test_meds():
         else:
             dt = tup[1:]
         dt = numpy.dtype(dt)
-        print name, dt, cat.dtype[name], dt.char, cat.dtype[name].char
+        print(name, dt, cat.dtype[name], dt.char, cat.dtype[name].char)
         assert name in cat.dtype.names, "column %s not present in object_data extension"%name
         assert dt.char == cat.dtype[name].char, "column %s is the wrong type"%name
 
     # Check that we have the right number of objects.
     n_obj = len(cat)
-    print 'number of objects is %d' % n_obj
+    print('number of objects is %d' % n_obj)
     numpy.testing.assert_equal(n_obj,n_obj_test,
                                err_msg="MEDS file has wrong number of objects")
 
     # loop over objects and exposures - test get_cutout
-    #print 'testing if loaded images are the same as original images'
     for iobj in range(n_obj):
 
         # check ID is correct
@@ -221,8 +217,6 @@ def test_meds():
             numpy.testing.assert_array_equal(wcs_array_meds, wcs_array_orig,
                                              err_msg="MEDS cutout has wrong wcs for object %d"%iobj)
 
-            #print 'test passed get_cutout obj=%d icut=%d' % (iobj, icut)
-
         # get the mosaic to compare with originals
         img = m.get_mosaic( iobj, type='image')
         wth = m.get_mosaic( iobj, type='weight')
@@ -247,7 +241,6 @@ def test_meds():
         numpy.testing.assert_array_equal(true_mosaic_psf, psf,
                                          err_msg="MEDS mosaic has wrong psf for object %d"%iobj)
 
-        #print 'test passed get_mosaic for obj=%d' % (iobj)
 
 
 @timer
@@ -317,12 +310,10 @@ def test_meds_config():
         import meds
         import fitsio
     except ImportError:
-        print 'Failed to import either meds or fitsio.  Unable to do tests of meds file.'
+        print('Failed to import either meds or fitsio.  Unable to do tests of meds file.')
         return
 
-    #print 'reading %s' % file_name
     m = meds.MEDS(file_name)
-    #print 'number of objects is %d' % m.size
     assert m.size == nobj
 
     # Test that the images made as meds mosaics match the ones written to the separate fits files.
@@ -372,7 +363,7 @@ def test_meds_config():
             center = galsim.PositionD( (box_size-1.)/2., (box_size-1.)/2. )
             cutout_row = cat['cutout_row'][iobj][icut]
             cutout_col = cat['cutout_col'][iobj][icut]
-            print 'nominal position = ',cutout_col, cutout_row
+            print('nominal position = ',cutout_col, cutout_row)
             numpy.testing.assert_almost_equal(cutout_col, center.x)
             numpy.testing.assert_almost_equal(cutout_row, center.y)
 
@@ -387,12 +378,10 @@ def test_meds_config():
             itot = numpy.sum(img)
             ix = numpy.sum(x*img)
             iy = numpy.sum(y*img)
-            #print 'I, Ix, Iy = ',itot,ix,iy
-            print 'centroid = ',ix/itot, iy/itot
+            print('centroid = ',ix/itot, iy/itot)
 
             offset = galsim.PositionD(-0.17, 0.23)
-            #print 'offset = ',offset
-            print 'center + offset = ',center + offset
+            print('center + offset = ',center + offset)
             numpy.testing.assert_almost_equal(ix/itot, (center+offset).x, decimal=2)
             numpy.testing.assert_almost_equal(iy/itot, (center+offset).y, decimal=2)
 
@@ -446,9 +435,9 @@ def test_nan_fits():
     fp = pyfits.open(file_name)
     try:
         data = fp[1].data
-        print 'Able to read FITS file with NAN.0 without any problem.'
+        print('Able to read FITS file with NAN.0 without any problem.')
     except:
-        print 'Running verify to fix the problematic FITS header.'
+        print('Running verify to fix the problematic FITS header.')
         with warnings.catch_warnings():
             warnings.filterwarnings("ignore",category=pyfits.verify.VerifyWarning)
             fp[1].verify('fix')
@@ -501,19 +490,14 @@ def test_psf():
         # Pick bright small objects as probable stars
         mask = (flags == 0) & (mag < 14) & (mag > 13) & (size > 2) & (size < 2.5)
         idx = numpy.argsort(size[mask])
-        #print 'sizes = ',size[mask][idx].tolist()
-        #print 'index = ',index[mask][idx].tolist()
-        #print 'mag = ',mag[mask][idx].tolist()
-        #print 'x = ',xvals[mask][idx].tolist()
-        #print 'y = ',yvals[mask][idx].tolist()
 
         # This choice of a star is fairly isolated from neighbors, isn't too near an edge or a tape
         # bump, and doesn't have any noticeable image artifacts in its vicinity.
         x = xvals[mask][idx][27]
         y = yvals[mask][idx][27]
-        print 'Using x,y = ',x,y
+        print('Using x,y = ',x,y)
         image_pos = galsim.PositionD(x,y)
-        print 'size, mag = ',size[mask][idx][27], mag[mask][idx][27]
+        print('size, mag = ',size[mask][idx][27], mag[mask][idx][27])
 
         data = galsim.fits.read(image_file, dir=example_data_dir)
         b = galsim.BoundsI(int(x)-15, int(x)+16, int(y)-15, int(y)+16)
@@ -521,16 +505,14 @@ def test_psf():
 
         header = galsim.fits.FitsHeader(image_file, dir=example_data_dir)
         sky_level = header['SKYBRITE']
-        #print 'sky_level = ',sky_level
         data_stamp -= sky_level
 
         raw_meas = data_stamp.FindAdaptiveMom()
-        print 'raw_meas = ',raw_meas
-        #print 'pixel scale = ',data_stamp.wcs.minLinearScale(image_pos=image_pos)
+        print('raw_meas = ',raw_meas)
         ref_size = raw_meas.moments_sigma
         ref_shape = raw_meas.observed_shape
-        print 'ref size: ',ref_size
-        print 'ref shape: ',ref_shape
+        print('ref size: ',ref_size)
+        print('ref shape: ',ref_shape)
 
     except IOError:
         x,y = 1195.64074707, 1276.63427734
@@ -542,17 +524,16 @@ def test_psf():
     # First the PSFEx model using the wcs_file to get the model is sky coordinates.
     psfex = galsim.des.DES_PSFEx(psfex_file, wcs_file, dir=data_dir)
     psf = psfex.getPSF(image_pos)
-    #print 'psfex psf = ',psf
 
     # Draw the postage stamp image
     # Note: the PSF already includes the pixel response, so draw with method 'no_pixel'.
     stamp = psf.drawImage(wcs=wcs.local(image_pos), bounds=b, method='no_pixel')
-    print 'wcs = ',wcs.local(image_pos)
+    print('wcs = ',wcs.local(image_pos))
     meas = stamp.FindAdaptiveMom()
-    print 'meas = ',meas
-    print 'pixel scale = ',stamp.wcs.minLinearScale(image_pos=image_pos)
-    print 'cf sizes: ',ref_size, meas.moments_sigma
-    print 'cf shapes: ',ref_shape, meas.observed_shape
+    print('meas = ',meas)
+    print('pixel scale = ',stamp.wcs.minLinearScale(image_pos=image_pos))
+    print('cf sizes: ',ref_size, meas.moments_sigma)
+    print('cf shapes: ',ref_shape, meas.observed_shape)
     # The agreement for a single star is not great of course, not even 2 decimals.
     # Divide by 2 to get agreement at 2 dp.
     numpy.testing.assert_almost_equal(meas.moments_sigma/2, ref_size/2, decimal=2,
@@ -565,7 +546,6 @@ def test_psf():
     # Repeat without the wcs_file argument, so the model is in chip coordinates.
     psfex = galsim.des.DES_PSFEx(psfex_file, dir=data_dir)
     psf = psfex.getPSF(image_pos)
-    #print 'psfex psf = ',psf
 
     # Draw the postage stamp image.  This time in image coords, so pixel_scale = 1.0.
     stamp = psf.drawImage(bounds=b, scale=1.0, method='no_pixel')
