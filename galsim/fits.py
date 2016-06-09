@@ -1217,6 +1217,15 @@ class FitsHeader(object):
             return len(self.header)
 
     def __setitem__(self, key, value):
+        # pyfits doesn't like getting bytes in python 3, so decode if appropriate
+        try:
+            key = str(key.decode())
+        except:
+            pass
+        try:
+            value = str(value.decode())
+        except:
+            pass
         from galsim._pyfits import pyfits_version
         self._tag = None
         if pyfits_version < '3.1':
