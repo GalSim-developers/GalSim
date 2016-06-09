@@ -320,7 +320,8 @@ def test_interleaveImages():
 
     try:
         N = (n,n)
-        np.testing.assert_raises(ValueError,galsim.utilities.interleaveImages,im_list,N,offset_list)
+        np.testing.assert_raises(ValueError, galsim.utilities.interleaveImages,
+                                 im_list, N, offset_list)
     except ImportError:
         print("The assert_raises tests require nose")
 
@@ -341,13 +342,15 @@ def test_interleaveImages():
         gal1.drawImage(im,offset=offset,method='no_pixel',scale=2.0)
         im_list.append(im)
 
-    img = galsim.utilities.interleaveImages(im_list,N=[1,n**2],offsets=offset_list,add_flux=False,suppress_warnings=True)
+    img = galsim.utilities.interleaveImages(im_list, N=[1,n**2], offsets=offset_list,
+                                            add_flux=False, suppress_warnings=True)
     im = galsim.Image(16,16*n*n)
     # The interleaved image has the total flux averaged out since `add_flux = False'
     gal = galsim.Gaussian(sigma=3.7*n,flux=100.)
     gal.drawImage(image=im,method='no_pixel',scale=2.0)
 
-    np.testing.assert_array_equal(im.array,img.array,err_msg="Sheared gaussian not interleaved correctly")
+    np.testing.assert_array_equal(im.array, img.array,
+                                  err_msg="Sheared gaussian not interleaved correctly")
     assert img.wcs == galsim.JacobianWCS(2.0,0.0,0.0,2./(n**2))
 
     # 2b) Increase resolution along one direction - rectangular to square images
@@ -367,19 +370,22 @@ def test_interleaveImages():
          gal2.drawImage(im,offset=offset,method='no_pixel',scale=3.0)
          im_list.append(im)
 
-    img = galsim.utilities.interleaveImages(im_list,N=np.array([n**2,1]),offsets=offset_list,suppress_warnings=True)
+    img = galsim.utilities.interleaveImages(im_list, N=np.array([n**2,1]), offsets=offset_list,
+                                            suppress_warnings=True)
     im = galsim.Image(16*n*n,16*n*n)
     gal = galsim.Gaussian(sigma=3.7,flux=100.*n*n)
     scale = im_list[0].scale
     gal.drawImage(image=im,scale=1.*scale/n,method='no_pixel')
 
-    np.testing.assert_array_equal(im.array,img.array,err_msg="Sheared gaussian not interleaved correctly")
+    np.testing.assert_array_equal(im.array, img.array,
+                                  err_msg="Sheared gaussian not interleaved correctly")
     assert img.wcs == galsim.JacobianWCS(1.*scale/n**2,0.0,0.0,scale)
 
     # 3) Check compatability with deInterleaveImage
     n = 3
     g = galsim.Gaussian(sigma=3.7,flux=100.)
-    gal = g.shear(g=0.2,beta=0.*galsim.degrees) # break symmetry to detect possible bugs in deInterleaveImage
+    # break symmetry to detect possible bugs in deInterleaveImage
+    gal = g.shear(g=0.2,beta=0.*galsim.degrees)
     im_list = []
     offset_list = []
 
