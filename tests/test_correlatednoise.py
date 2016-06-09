@@ -556,7 +556,7 @@ def test_output_generation_rotated():
     # TODO: It would be good to understand more about the detailed interpolant behaviour though...
     ud = galsim.UniformDeviate(rseed)
     # Get the correlated noise from an image of some y-correlated noise
-    xlargeim_size =long(np.ceil(1.41421356 * largeim_size))
+    xlargeim_size =int(np.ceil(1.41421356 * largeim_size))
     # need a very large image that will fit a large image within it, even if rotated
     ynoise_xlarge = make_ycorr_from_uncorr(setup_uncorrelated_noise(ud, xlargeim_size))
     # Subtract the mean
