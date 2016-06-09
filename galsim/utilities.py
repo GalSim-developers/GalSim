@@ -20,7 +20,7 @@ Module containing general utilities for the GalSim software.
 """
 from contextlib import contextmanager
 from future.utils import iteritems
-from builtins import range
+from builtins import range, object
 
 import numpy as np
 import galsim
@@ -208,7 +208,7 @@ class AttributeDict(object):
             else:
                 output.append("{0}{1} = {2}".format(prefix, k, repr(v)))
 
-    def __nonzero__(self):
+    def __bool__(self):
         return not not self.__dict__
 
     def __repr__(self):
