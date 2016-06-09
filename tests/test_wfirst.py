@@ -372,7 +372,7 @@ def test_wfirst_psfs():
 
     # First test: check that if we don't specify SCAs, then we get all the expected ones.
     wfirst_psfs = galsim.wfirst.getPSF(approximate_struts=True)
-    got_scas = np.array(wfirst_psfs.keys())
+    got_scas = np.array(list(wfirst_psfs.keys()))
     expected_scas = np.arange(1, galsim.wfirst.n_sca+1, 1)
     np.testing.assert_array_equal(
         got_scas, expected_scas,
@@ -382,7 +382,7 @@ def test_wfirst_psfs():
     expected_scas = [5, 7, 14]
     wfirst_psfs = galsim.wfirst.getPSF(SCAs=expected_scas,
                                        approximate_struts=True)
-    got_scas = wfirst_psfs.keys()
+    got_scas = list(wfirst_psfs.keys())
     # Have to sort it in numerical order for this comparison.
     got_scas.sort()
     got_scas = np.array(got_scas)
@@ -455,10 +455,10 @@ def test_wfirst_psfs():
         new_dict = galsim.wfirst.loadPSFImages(test_file)
         # Check that it contains the right list of bandpasses.
         np.testing.assert_array_equal(
-            new_dict.keys(), bp_list, err_msg='Wrong list of bandpasses in stored file')
+            list(new_dict.keys()), bp_list, err_msg='Wrong list of bandpasses in stored file')
         # Check that when we take the dict for that bandpass, we get the right list of SCAs.
         np.testing.assert_array_equal(
-            new_dict[bp_list[0]].keys(), wfirst_psfs_int.keys(),
+            list(new_dict[bp_list[0]].keys()), list(wfirst_psfs_int.keys()),
             err_msg='Wrong list of SCAs in stored file')
         # Now draw an image from the stored object.
         img_stored = new_dict[bp_list[0]][other_sca].drawImage(scale=1.3*galsim.wfirst.pixel_scale)
