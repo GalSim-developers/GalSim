@@ -22,7 +22,11 @@ A program to download the COSMOS RealGalaxy catalog for use with GalSim.
 from __future__ import print_function
 from builtins import input
 
-import os, sys, urllib2, tarfile, subprocess, shutil, json
+import os, sys, tarfile, subprocess, shutil, json
+try:
+    from urllib2 import urlopen
+except:
+    from urllib.request import urlopen
 
 # Since this will be installed in the same directory as our galsim executable,
 # we need to do the same trick about changing the path so it imports the real
@@ -168,7 +172,7 @@ def download(url, target, unpack_dir, args, logger):
     logger.info('Target location is:\n  %s\n',target)
 
     # See how large the file to be downloaded is.
-    u = urllib2.urlopen(url)
+    u = urlopen(url)
     meta = u.info()
     logger.debug("Meta information about url:\n%s",str(meta))
     file_size = int(meta.getheaders("Content-Length")[0])
