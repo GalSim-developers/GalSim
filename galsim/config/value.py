@@ -52,9 +52,9 @@ def ParseValue(config, key, base, value_type):
     #print('nums = ',base.get('file_num',0), base.get('image_num',0), base.get('obj_num',0))
 
     # Check for some special markup:
-    if isinstance(param, basestring) and param[0] == '$':
+    if isinstance(param, str) and param[0] == '$':
         param = { 'type' : 'Eval', 'str' : param[1:] }
-    if isinstance(param, basestring) and param[0] == '@':
+    if isinstance(param, str) and param[0] == '@':
         param = { 'type' : 'Current', 'key' : param[1:] }
 
     # Save these, so we can edit them based on parameters at this level in the tree to take 

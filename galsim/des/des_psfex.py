@@ -103,7 +103,7 @@ class DES_PSFEx(object):
     def __init__(self, file_name, image_file_name=None, wcs=None, dir=None):
 
         if dir:
-            if not isinstance(file_name, basestring):
+            if not isinstance(file_name, str):
                 raise ValueError("Cannot provide dir and an HDU instance")
             import os
             file_name = os.path.join(dir,file_name)
@@ -122,7 +122,7 @@ class DES_PSFEx(object):
 
     def read(self):
         from galsim._pyfits import pyfits
-        if isinstance(self.file_name, basestring):
+        if isinstance(self.file_name, str):
             hdu = pyfits.open(self.file_name)[1]
         else:
             hdu = self.file_name
