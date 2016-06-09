@@ -62,7 +62,7 @@ class TruthBuilder(ExtraOutputBuilder):
                 # only a limited subset of the parsing.  Usually enough for truth items, but
                 # not fully featured.
                 value = galsim.config.ParseValue(cols,name,base,None)[0]
-            elif not isinstance(key,basestring):
+            elif not isinstance(key,str):
                 # The item can just be a constant value.
                 value = key
             elif key[0] == '$':
