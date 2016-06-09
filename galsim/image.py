@@ -20,6 +20,7 @@ The Image class and some modifications to the docs for the C++ layer ImageAlloc 
 classes.
 """
 
+from future.utils import with_metaclass
 from . import _galsim
 import numpy
 import galsim
@@ -67,7 +68,7 @@ class MetaImage(type):
         }
         return Image_dict[t]
 
-class Image(object):
+class Image(with_metaclass(MetaImage, object)):
     """A class for storing image data along with the pixel scale or WCS information
 
     The Image class encapsulates all the relevant information about an image including a NumPy array
@@ -201,7 +202,6 @@ class Image(object):
     See their doc strings for more details.
 
     """
-    __metaclass__ = MetaImage
 
     cpp_valid_dtypes = _galsim.ImageView.keys()
     alias_dtypes = {
