@@ -165,8 +165,8 @@ def permute(rng, *args):
     for i in range(n-1,1,-1):
         j = int((i+1) * ud())
         if j == i+1: j = i  # I'm not sure if this is possible, but just in case...
-        for list in args:
-            list[i], list[j] = list[j], list[i]
+        for lst in args:
+            lst[i], lst[j] = lst[j], lst[i]
 
 
 class DistDeviate(_galsim.BaseDeviate):
