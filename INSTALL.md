@@ -62,6 +62,9 @@ The GalSim package also requires
   The latter is preferred, since this is now where all future development of 
   this package is happening.
 
+* The future module, which is used to ease compatibility between Python 2
+  and Python 3.
+
 * Optional dependency: the Python YAML parser and emitter module PyYAML
   (http://pyyaml.org/wiki/PyYAML)
   Note: PyYAML is in fact only required for full config file parsing
@@ -95,6 +98,7 @@ These should installed onto your Python system so that they can be imported by:
     >>> import numpy
     >>> import astropy.io.fits  [ Either this (preferred)... ]
     >>> import pyfits           [ ... or this.               ]
+    >>> import future
     >>> import yaml             [ if using the galsim executable or otherwise
                                   plan to parse .yaml configuration files ]
     >>> import starlink.Ast     [ if planning to use PyAstWCS class ]
@@ -116,6 +120,7 @@ and with root/admin privileges simply type
 
     easy_install numpy
     easy_install pyfits
+    easy_install future
     easy_install pyyaml
 
 at the prompt.  If not using an admin account, prefix the commands above with 
@@ -131,6 +136,7 @@ system.  Then
 
     pip install numpy
     pip install astropy
+    pip install future
     pip install pyyaml
     pip install starlink-pyast
     pip install scipy
@@ -557,7 +563,7 @@ then you cannot use the fink-installed GalSim.  However, the process above will
 have installed all the prerequisites.  So `fink uninstall galsim` will leave 
 you able to install GalSim using the master branch with:
 
-    scons TMV_DIR=/sw PYTHON=/sw/bin/python2.7
+    scons TMV_DIR=/sw PYTHON=/sw/bin/python2.7 BOOST_DIR=/sw/opt/boost-1_58
 
 from within the repository base directory.
 
@@ -573,11 +579,12 @@ NumPy, PyFITS, PyYAML and nose, for example using easy_install, with your
 chosen Python. 
 
 For the system Python, you can use fink for Boost, but you will want a 
-different package than the boost1.35.python27 that gets installed using
+different package than the boost1.58.python27 that gets installed using
 `fink install galsim` above:
 
-    fink install scons fftw3 tmv0 boost1.46.1.cmake
-    scons TMV_DIR=/sw
+    fink install scons fftw3 tmv0 boost1.58-systempython
+    pip install future
+    scons TMV_DIR=/sw BOOST_DIR=/sw/opt/boost-1_58
 
 For other Python versions, the fink-installed Boost usually will not work, so
 you can only use fink for SCons, FFTW and TMV.  So you will probably need to 
