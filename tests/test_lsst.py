@@ -37,7 +37,9 @@ except ImportError as ee:
         #raise
     # make sure that you are failing because the stack isn't there,
     # rather than because of some bug in lsst_wcs.py
-    if "You cannot use the LSST module" in ee.message:
+    if "You cannot use the LSST module" in str(ee):
+        global ee_message
+        ee_message = str(ee)
         have_lsst_stack = False
     else:
         raise
@@ -785,7 +787,7 @@ class LsstWcsTestCase(unittest.TestCase):
             wcs1 = LsstWCS(galsim.CelestialCoord(0.0*galsim.degrees, 0.0*galsim.degrees),
                            self.rotation, chip_name='R:0,1 S:1,1', camera=self.wcs.camera)
 
-        self.assertEqual(str(ww[0].message),
+        self.assertEqual(str(ww[0].args[0]),
                          "The camera you passed to LsstWCS does not have the same\n"
                          "pointing and rotation angle as you asked for for this WCS.\n"
                          "LsstWCS is creating a new camera with the pointing and\n"
@@ -796,7 +798,7 @@ class LsstWcsTestCase(unittest.TestCase):
             wcs1 = LsstWCS(self.pointing, 49.0*galsim.degrees,
                            chip_name='R:0,1 S:1,1', camera=self.wcs.camera)
 
-        self.assertEqual(str(ww[0].message),
+        self.assertEqual(str(ww[0].args[0]),
                          "The camera you passed to LsstWCS does not have the same\n"
                          "pointing and rotation angle as you asked for for this WCS.\n"
                          "LsstWCS is creating a new camera with the pointing and\n"
@@ -807,4 +809,4 @@ if __name__ == "__main__":
     if have_lsst_stack:
         unittest.main()
     else:
-        print(ee.message)
+        print(ee_message)
