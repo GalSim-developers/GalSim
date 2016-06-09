@@ -231,7 +231,7 @@ def main():
 
     # If requested, load the profiler
     if args.profile:
-        import cProfile, pstats, StringIO
+        import cProfile, pstats, io
         pr = cProfile.Profile()
         pr.enable()
 
@@ -276,7 +276,7 @@ def main():
     if args.profile:
         # cf. example code here: https://docs.python.org/2/library/profile.html
         pr.disable()
-        s = StringIO.StringIO()
+        s = io.StringIO()
         sortby = 'tottime'
         ps = pstats.Stats(pr, stream=s).sort_stats(sortby).reverse_order()
         ps.print_stats()

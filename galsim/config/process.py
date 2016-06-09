@@ -714,7 +714,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
         logger = LoggerWrapper(logger)
 
         if 'profile' in config and config['profile']:
-            import cProfile, pstats, StringIO
+            import cProfile, pstats, io
             pr = cProfile.Profile()
             pr.enable()
         else:
@@ -744,7 +744,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
             logger.debug('%s: Received STOP', proc)
         if pr:
             pr.disable()
-            s = StringIO.StringIO()
+            s = io.StringIO()
             sortby = 'tottime'
             ps = pstats.Stats(pr,stream=s).sort_stats(sortby).reverse_order()
             ps.print_stats()

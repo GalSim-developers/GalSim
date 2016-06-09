@@ -71,7 +71,7 @@ class _ReadFile:
     def gunzip_call(self, file):
         # cf. http://bugs.python.org/issue7471
         import subprocess
-        from cStringIO import StringIO
+        from io import StringIO
         from galsim._pyfits import pyfits
         # We use gunzip -c rather than zcat, since the latter is sometimes called gzcat
         # (with zcat being a symlink to uncompress instead).
@@ -121,7 +121,7 @@ class _ReadFile:
 
     def bunzip2_call(self, file):
         import subprocess
-        from cStringIO import StringIO
+        from io import StringIO
         from galsim._pyfits import pyfits
         p = subprocess.Popen(["bunzip2", "-c", file], stdout=subprocess.PIPE, close_fds=True)
         fin = StringIO(p.communicate()[0])
