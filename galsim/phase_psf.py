@@ -112,8 +112,7 @@ class Aperture(object):
     Finally, when specifying the pupil geometrically, Aperture may choose to make a small adjustment
     to `pupil_plane_scale` in order to produce an array with a good size for FFTs.  If your
     application depends on knowing the size and scale used with the Fourier optics framework, you
-    can obtain these from the `Aperture.pupil_plane_size` and `Aperture.pupil_plane_scale`
-    attributes.
+    can obtain these from the `aper.pupil_plane_size` and `aper.pupil_plane_scale` attributes.
 
     Pupil image specification
     --------------------------
@@ -123,18 +122,17 @@ class Aperture(object):
     is assumed by the simple model for struts described above.  In this case, an exception is raised
     if keywords related to struts are also given.  On the other hand, the `obscuration` keyword is
     still used to ensure that the PSF images are not aliased, though it is ignored during the actual
-    construction of the pupil plane illumination pattern.  The `pupil_plane_im` that is passed in
-    can be rotated during internal calculations by specifying a `pupil_angle` keyword.  Also note
-    that given how the `obscuration` keyword is used, the obscuration in the supplied pupil plane
-    image should indeed be reasonably circular rather than having an arbitrary shape; however, minor
-    deviations from a perfect circle do not cause significant problems.
+    construction of the pupil plane illumination pattern.  Note that for complicated pupil
+    configurations, it may be desireable to increase `pad_factor` for more fidelity at the expense
+    of slower running time.  Finally, the `pupil_plane_im` that is passed in can be rotated during
+    internal calculations by specifying a `pupil_angle` keyword.
 
     If you choose to pass in a pupil plane image, it must be a square array in which the image of
     the pupil is centered.  The areas that are illuminated should have some value >0, and the other
     areas should have a value of precisely zero.  Based on what the Aperture class determines is a
     good PSF sampling interval, the image of the pupil plane that is passed in might be zero-padded
     during internal calculations.  (The pupil plane array size and scale values can be accessed via
-    the `Aperture.pupil_plane_size` and `Aperture.pupil_plane_scale` attributes.) The pixel scale of
+    the `aper.pupil_plane_size` and `aper.pupil_plane_scale` attributes.) The pixel scale of
     the pupil plane can be specified in one of three ways.  In descending order of priority, these
     are:
       1.  The `pupil_plane_scale` keyword argument (units are meters).
@@ -765,111 +763,107 @@ class PhaseScreenList(object):
                 # Time indep phase screen
                 pass
 
-    def wavefront(self, aper, theta_x=0.0*galsim.degrees, theta_y=0.0*galsim.degrees, compact=True):
+    def wavefront(self, aper, theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin), compact=True):
         """ Compute cumulative wavefront due to all phase screens in PhaseScreenList.
 
         Wavefront here indicates the distance by which the physical wavefront lags or leads the
         ideal plane wave (pre-optics) or spherical wave (post-optics).
 
         @param aper     `galsim.Aperture` over which to compute wavefront.
-        @param theta_x  x-component of field angle corresponding to center of output array, as a
-                        galsim.Angle instance.  [default: 0*galsim.degrees]
-        @param theta_y  y-component of field angle corresponding to center of output array, as a
-                        galsim.Angle instance.  [default: 0*galsim.degrees]
+        @param theta    Field angle of center of output array, as a 2-tuple of `galsim.Angle`s.
+                        [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
         @param compact  If true, then only return wavefront for illuminated pixels in a
                         single-dimensional array congruent with array[aper.illuminated].  Otherwise,
                         return wavefront as a 2d array for the full Aperture pupil plane.
                         [default: True]
         @returns        Wavefront lag or lead in nanometers over aperture.
         """
-        return np.sum(layer.wavefront(aper, theta_x, theta_y, compact) for layer in self)
+        return np.sum(layer.wavefront(aper, theta, compact) for layer in self)
 
     def makePSF(self, lam, **kwargs):
         """Compute one PSF or multiple PSFs from the current PhaseScreenList, depending on the type
-        of (`theta_x`, `theta_y`) or `theta`.  If (`theta_x`, `theta_y`) or `theta` are iterable,
-        then return a list of PSFs at the specified field angles.  If `theta_x` and `theta_y` are
-        scalars or `theta` is a single tuple, then return a single PSF at the specified field angle.
+        of `theta`.  If `theta` is an iterable of 2-tuples, then return a list of PSFs at the
+        specified field angles.  If `theta` is a single 2-tuple, then return a single PSF at the
+        specified field angle.
 
         Note that this method advances each PhaseScreen in the PhaseScreenList, so consecutive calls
         with the same arguments will generally return different PSFs.  Use PhaseScreenList.reset()
         to reset the time to t=0.  See the galsim.PhaseScreenPSF docstring for more details.
 
-        @param lam               Wavelength in nanometers at which to compute PSF.
-        @param exptime           Time in seconds overwhich to accumulate evolving instantaneous PSF.
-                                 [Default: 0.0]
-        @param flux              Flux of output PSF [Default: 1.0]
-        @param theta_x           x-component of field angle at which to evaluate phase screens and
-                                 resulting PSF.  Either a single galsim.Angle, or an iterable of
-                                 galsim.Angles.  [Default: 0.0*galsim.arcmin]
-        @param theta_y           y-component of field angle at which to evaluate phase screens and
-                                 resulting PSF.  Either a single galsim.Angle, or an iterable of
-                                 galsim.Angles.  [Default: 0.0*galsim.arcmin]
-        @param theta             Alternative field angle specification.  Single tuple or iterable of
-                                 tuples (theta_x, theta_y).
-        @param scale_unit        Units to use for the sky coordinates of the output profile.
-                                 [Default: galsim.arcsec]
-        @param interpolant       Either an Interpolant instance or a string indicating which
-                                 interpolant should be used.  Options are 'nearest', 'sinc',
-                                 'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the
-                                 integer order to use. [default: galsim.Quintic()]
-        @param aper              Aperture to use to compute PSF(s).
-        @param gsparams          An optional GSParams argument.  See the docstring for GSParams for
-                                 details. [default: None]
+        @param lam                 Wavelength in nanometers at which to compute PSF.
+        @param exptime             Time in seconds overwhich to accumulate evolving instantaneous
+                                   PSF.  [default: 0.0]
+        @param flux                Flux of output PSF.  [default: 1.0]
+        @param theta               Field angle of PSF.  Single 2-tuple (theta_x, theta_y) or
+                                   iterable of 2-tuples.
+                                   [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
+        @param scale_unit          Units to use for the sky coordinates of the output profile.
+                                   [default: galsim.arcsec]
+        @param interpolant         Either an Interpolant instance or a string indicating which
+                                   interpolant should be used.  Options are 'nearest', 'sinc',
+                                   'linear', 'cubic', 'quintic', or 'lanczosN' where N should be the
+                                   integer order to use. [default: galsim.Quintic()]
+        @param aper                Aperture to use to compute PSF(s).  [default: None]
+        @param gsparams            An optional GSParams argument.  See the docstring for GSParams
+                                   for details.  [default: None]
 
         The following are optional keywords to use to setup the aperture if `aper` is not provided.
 
-        @param diam              Diameter in meters of aperture used to compute PSF from phases.
-        @param circular_pupil    Adopt a circular pupil? [default: True].
-        @param obscuration       Fractional linear circular obscuration of pupil. [default: 0.]
-        @param nstruts           Number of radial support struts to add to the central obscuration.
-                                 [default: 0]
-        @param strut_thick       Thickness of support struts as a fraction of pupil diameter.
-                                 [default: 0.05]
-        @param strut_angle       Angle made between the vertical and the first strut in the CCW
-                                 direction; must be an Angle instance.
-                                 [default: 0. * galsim.degrees]
-        @param oversampling      Optional oversampling factor for the InterpolatedImage. Setting
-                                 `oversampling < 1` will produce aliasing in the PSF (not good).
-                                 Usually `oversampling` should be somewhat larger than 1.  1.5 is
-                                 usually a safe choice.  [default: 1.5]
-        @param pad_factor        Additional multiple by which to zero-pad the PSF image to avoid
-                                 folding compared to what would be employed for a simple Airy.  Note
-                                 that `pad_factor` may need to be increased for stronger
-                                 aberrations, i.e., when the equivalent Zernike coefficients become
-                                 larger than order unity.  [default: 1.5]
+        @param diam                Aperture diameter in meters.
+        @param circular_pupil      Adopt a circular pupil?  [default: True]
+        @param obscuration         Linear dimension of central obscuration as fraction of aperture
+                                   linear dimension. [0., 1.).  [default: 0.0]
+        @param nstruts             Number of radial support struts to add to the central obscuration.
+                                   [default: 0]
+        @param strut_thick         Thickness of support struts as a fraction of aperture diameter.
+                                   [default: 0.05]
+        @param strut_angle         Angle made between the vertical and the strut starting closest to it,
+                                   defined to be positive in the counter-clockwise direction; must be an
+                                   Angle instance. [default: 0. * galsim.degrees]
+        @param oversampling        Optional oversampling factor *in the image plane* for the PSF
+                                   eventually constructed using this Aperture.  Setting
+                                   `oversampling < 1` will produce aliasing in the PSF (not good).
+                                   [default: 1.0]
+        @param pad_factor          Additional multiple by which to extend the PSF image to avoid
+                                   folding.  [default: 1.0]
+        @param pupil_plane_im      The GalSim.Image, NumPy array, or name of file containing the pupil
+                                   plane image, to be used instead of generating one based on the
+                                   obscuration and strut parameters.  Note that if the image is saved as
+                                   unsigned integers, you will get a warning about conversion to floats,
+                                   which is harmless. [default: None]
+        @param pupil_angle         If `pupil_plane_im` is not None, rotation angle for the pupil plane
+                                   (positive in the counter-clockwise direction).  Must be an Angle
+                                   instance. [default: 0. * galsim.degrees]
+        @param pupil_plane_scale   Sampling interval in meters to use for the pupil plane array.  In
+                                   most cases, it's a good idea to leave this as None, in which case
+                                   GalSim will attempt to find a good value automatically.  The
+                                   exception is when specifying the pupil arrangement via an image, in
+                                   which case this keyword can be used to indicate the sampling of that
+                                   image.  See also `pad_factor` for adjusting the pupil sampling scale.
+                                   [default: None]
+        @param pupil_plane_size    Size in meters to use for the pupil plane array.  In most cases, it's
+                                   a good idea to leave this as None, in which case GalSim will attempt
+                                   to find a good value automatically.  See also `oversampling` for
+                                   adjusting the pupil size.  [default: None]
         """
         # Assemble theta as an iterable over 2-tuples of Angles.
-        # 5 possible input kwargs cases for theta, theta_x, theta_y.
-        # 1) All undefined, in which case set to [(Angle(0), Angle(0))]
-        # 2) theta = tuple(Angle, Angle), in which case just need to listify
-        # 3) theta_x = Angle, theta_y = Angle, in which case need to listify and zip
-        # 4) theta_x/y = [Angle, Angle, ...], in which case need to zip
-        # 5) theta = [(Angle, Angle), (Angle, Angle), ...], in which case we're already done.
         single = False
-        if 'theta' not in kwargs:  # Case 1, 3, or 4
-            theta_x = kwargs.pop('theta_x', 0.0*galsim.arcmin)
-            theta_y = kwargs.pop('theta_y', 0.0*galsim.arcmin)
-            if not hasattr(theta_x, '__iter__'):
-                single = True
-            else:
-                theta = zip(theta_x, theta_y)
-        else:  # Case 2 or 5
-            theta = kwargs.pop('theta')
-            # 2-tuples are iterable, so to check whether theta is indicating a single pointing, or a
-            # generator of pointings we need to look at the first item.  If the first item is
-            # iterable itself, then assume theta is an iterable of 2-tuple field angles.  We then
-            # replace the consumed tuple at the beginning of the generator and go on.  If the first
-            # item is scalar, then assume that it's the x-component of a single field angle.
-            theta = iter(theta)
-            th0 = next(theta)
-            if hasattr(th0, '__iter__'):
-                theta = chain([th0], theta)
-            else:
-                theta_x, theta_y = th0, next(theta)
-                single = True
+        theta = kwargs.pop('theta', (0.0*galsim.arcmin, 0.0*galsim.arcmin))
+        # 2-tuples are iterable, so to check whether theta is indicating a single pointing, or a
+        # generator of pointings we need to look at the first item.  If the first item is
+        # iterable itself, then assume theta is an iterable of 2-tuple field angles.  We then
+        # replace the consumed tuple at the beginning of the generator and go on.  If the first
+        # item is scalar, then assume that it's the x-component of a single field angle.
+        theta = iter(theta)
+        th0 = next(theta)
+        if hasattr(th0, '__iter__'):
+            theta = chain([th0], theta)
+        else:
+            theta = [th0, next(theta)]
+            single = True
 
         if single:
-            return PhaseScreenPSF(self, lam, theta_x=theta_x, theta_y=theta_y, **kwargs)
+            return PhaseScreenPSF(self, lam, theta=theta, **kwargs)
         else:
             # For non-frozen-flow AtmosphericScreens, it can take much longer to update the
             # atmospheric layers than it does to create an instantaneous PSF, so we exchange the
@@ -878,8 +872,8 @@ class PhaseScreenList(object):
             # difference with either loop order, so we just always make the PSF loop the inner loop.
             kwargs['_eval_now'] = False
             PSFs = []
-            for theta_x, theta_y in theta:
-                PSFs.append(PhaseScreenPSF(self, lam, theta_x=theta_x, theta_y=theta_y, **kwargs))
+            for th in theta:
+                PSFs.append(PhaseScreenPSF(self, lam, theta=th, **kwargs))
 
             flux = kwargs.get('flux', 1.0)
             _nstep = PSFs[0]._nstep
@@ -907,7 +901,7 @@ class PhaseScreenList(object):
 
         @returns  stepK.
         """
-        # Generically, Galsim propagates stepK() for convolutions using
+        # Generically, GalSim propagates stepK() for convolutions using
         #   stepk = sum(s**-2 for s in stepks)**(-0.5)
         # We're not actually doing convolution between screens here, though.  In fact, the right
         # relation for Kolmogorov screens uses exponents -5./3 and -3./5:
@@ -930,7 +924,7 @@ class PhaseScreenPSF(GSObject):
     angles from the same PhaseScreenList over the same simulated time interval.  Depending on the
     details of PhaseScreenList and other arguments, this may be significantly faster than manually
     looping over makePSF().
-        >>> psfs = screen_list.makePSF(..., theta_x=[...], theta_y=[...])
+        >>> psfs = screen_list.makePSF(..., theta=[th0, th1, th2, ...])
 
     Note that constructing a PhaseScreenPSF advances each PhaseScreen in `screen_list`, so PSFs
     constructed consecutively with the same arguments will generally be different.  Use
@@ -946,55 +940,66 @@ class PhaseScreenPSF(GSObject):
 
     Computing a PSF from a phase screen also requires an Aperture be specified.  This can be done
     either directly via the `aper` keyword, or by setting a number of keywords that will be passed
-    to the `Aperture.fromPhaseScreenList` constructor.  The `aper` keyword always takes precedence.
+    to the `Aperture` constructor.  The `aper` keyword always takes precedence.
 
-    @param screen_list       PhaseScreenList object from which to create PSF.
-    @param lam               Wavelength in nanometers at which to compute PSF.
-    @param exptime           Time in seconds overwhich to accumulate evolving instantaneous PSF.
-                             [Default: 0.0]
-    @param flux              Flux of output PSF [Default: 1.0]
-    @param theta_x           x-component of field angle at which to evaluate phase screens and
-                             resulting PSF.  [Default: 0.0*galsim.arcmin]
-    @param theta_y           y-component of field angle at which to evaluate phase screens and
-                             resulting PSF.  [Default: 0.0*galsim.arcmin]
-    @param scale_unit        Units to use for the sky coordinates of the output profile.
-                             [Default: galsim.arcsec]
-    @param interpolant       Either an Interpolant instance or a string indicating which interpolant
-                             should be used.  Options are 'nearest', 'sinc', 'linear', 'cubic',
-                             'quintic', or 'lanczosN' where N should be the integer order to use.
-                             [default: galsim.Quintic()]
-    @param aper              Aperture to use to compute PSF(s).
-    @param gsparams          An optional GSParams argument.  See the docstring for GSParams for
-                             details. [default: None]
+    @param screen_list         PhaseScreenList object from which to create PSF.
+    @param lam                 Wavelength in nanometers at which to compute PSF.
+    @param exptime             Time in seconds overwhich to accumulate evolving instantaneous PSF.
+                               [default: 0.0]
+    @param flux                Flux of output PSF [default: 1.0]
+    @param theta               Field angle of PSF.  Single 2-tuple (theta_x, theta_y) or iterable
+                               of 2-tuples.  [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
+    @param scale_unit          Units to use for the sky coordinates of the output profile.
+                               [default: galsim.arcsec]
+    @param interpolant         Either an Interpolant instance or a string indicating which
+                               interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
+                               'cubic', 'quintic', or 'lanczosN' where N should be the integer order
+                               to use.  [default: galsim.Quintic()]
+    @param aper                Aperture to use to compute PSF(s).  [default: None]
+    @param gsparams            An optional GSParams argument.  See the docstring for GSParams for
+                               details. [default: None]
 
-    The following are optional keywords to use to setup the aperture if `aper` is not provided.
+    The following are optional keywords to use to setup the aperture if `aper` is not provided:
 
-    @param diam              Diameter in meters of aperture used to compute PSF from phases.
-    @param pupil_plane_scale Sampling resolution of the pupil plane in meters.  Either
-                             `pupil_plane_scale` or `npix` must be specified.
-    @param pupil_plane_size  Size of the pupil plane in meters.  Note, this may be (in fact, it
-                             usually *should* be) larger than the aperture diameter.
-                             [default: 2.*diam]
-    @param circular_pupil    Adopt a circular pupil? [default: True].
-    @param obscuration       Fractional linear circular obscuration of pupil. [default: 0.]
-    @param nstruts           Number of radial support struts to add to the central obscuration.
-                             [default: 0]
-    @param strut_thick       Thickness of support struts as a fraction of pupil diameter.
-                             [default: 0.05]
-    @param strut_angle       Angle made between the vertical and the first strut in the CCW
-                             direction; must be an Angle instance.  [default: 0. * galsim.degrees]
-    @param oversampling      Optional oversampling factor for the InterpolatedImage. Setting
-                             `oversampling < 1` will produce aliasing in the PSF (not good).
-                             Usually `oversampling` should be somewhat larger than 1.  1.5 is
-                             usually a safe choice.  [default: 1.5]
-    @param pad_factor        Additional multiple by which to zero-pad the PSF image to avoid
-                             folding compared to what would be employed for a simple Airy.  Note
-                             that `pad_factor` may need to be increased for stronger aberrations,
-                             i.e. when the equivalent Zernike coefficients become larger than
-                             order unity.  [default: 1.5]
+    @param diam                Aperture diameter in meters.
+    @param circular_pupil      Adopt a circular pupil?  [default: True]
+    @param obscuration         Linear dimension of central obscuration as fraction of aperture
+                               linear dimension. [0., 1.).  [default: 0.0]
+    @param nstruts             Number of radial support struts to add to the central obscuration.
+                               [default: 0]
+    @param strut_thick         Thickness of support struts as a fraction of aperture diameter.
+                               [default: 0.05]
+    @param strut_angle         Angle made between the vertical and the strut starting closest to it,
+                               defined to be positive in the counter-clockwise direction; must be an
+                               Angle instance. [default: 0. * galsim.degrees]
+    @param oversampling        Optional oversampling factor *in the image plane* for the PSF
+                               eventually constructed using this Aperture.  Setting
+                               `oversampling < 1` will produce aliasing in the PSF (not good).
+                               [default: 1.0]
+    @param pad_factor          Additional multiple by which to extend the PSF image to avoid
+                               folding.  [default: 1.0]
+    @param pupil_plane_im      The GalSim.Image, NumPy array, or name of file containing the pupil
+                               plane image, to be used instead of generating one based on the
+                               obscuration and strut parameters.  Note that if the image is saved as
+                               unsigned integers, you will get a warning about conversion to floats,
+                               which is harmless. [default: None]
+    @param pupil_angle         If `pupil_plane_im` is not None, rotation angle for the pupil plane
+                               (positive in the counter-clockwise direction).  Must be an Angle
+                               instance. [default: 0. * galsim.degrees]
+    @param pupil_plane_scale   Sampling interval in meters to use for the pupil plane array.  In
+                               most cases, it's a good idea to leave this as None, in which case
+                               GalSim will attempt to find a good value automatically.  The
+                               exception is when specifying the pupil arrangement via an image, in
+                               which case this keyword can be used to indicate the sampling of that
+                               image.  See also `pad_factor` for adjusting the pupil sampling scale.
+                               [default: None]
+    @param pupil_plane_size    Size in meters to use for the pupil plane array.  In most cases, it's
+                               a good idea to leave this as None, in which case GalSim will attempt
+                               to find a good value automatically.  See also `oversampling` for
+                               adjusting the pupil size.  [default: None]
     """
     def __init__(self, screen_list, lam, exptime=0.0, flux=1.0,
-                 theta_x=0.0*galsim.arcmin, theta_y=0.0*galsim.arcmin,
+                 theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin),
                  interpolant=None, aper=None, scale_unit=galsim.arcsec,
                  gsparams=None, _eval_now=True, _bar=None, suppress_warning=False,
                  _force_stepk=None, _force_maxk=None, **kwargs):
@@ -1006,8 +1011,9 @@ class PhaseScreenPSF(GSObject):
         self.screen_list = screen_list
         self.lam = float(lam)
         self.exptime = float(exptime)
-        self.theta_x = theta_x
-        self.theta_y = theta_y
+        if not isinstance(theta[0], galsim.Angle) or not isinstance(theta[1], galsim.Angle):
+            raise TypeError("theta must be 2-tuple of galsim.Angle's.")
+        self.theta = theta
         if isinstance(scale_unit, basestring):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         self.scale_unit = scale_unit
@@ -1053,10 +1059,10 @@ class PhaseScreenPSF(GSObject):
                 (self.screen_list, self.lam, self.exptime))
 
     def __repr__(self):
-        outstr = ("galsim.PhaseScreenPSF(%r, lam=%r, exptime=%r, flux=%r, theta_x=%r, " +
-                  "theta_y=%r, scale_unit=%r, interpolant=%r, gsparams=%r)")
-        return outstr % (self.screen_list, self.lam, self.exptime, self.flux, self.theta_x,
-                         self.theta_y, self.scale_unit, self.interpolant, self.gsparams)
+        outstr = ("galsim.PhaseScreenPSF(%r, lam=%r, exptime=%r, flux=%r, theta=%r, " +
+                  "scale_unit=%r, interpolant=%r, gsparams=%r)")
+        return outstr % (self.screen_list, self.lam, self.exptime, self.flux, self.theta,
+                         self.scale_unit, self.interpolant, self.gsparams)
 
     def __eq__(self, other):
         # Even if two PSFs were generated with different sets of parameters, they will act
@@ -1070,7 +1076,7 @@ class PhaseScreenPSF(GSObject):
 
     def _step(self):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
-        wf = self.screen_list.wavefront(self.aper, self.theta_x, self.theta_y)
+        wf = self.screen_list.wavefront(self.aper, self.theta)
         expwf = np.exp(2j * np.pi * wf / self.lam)
         expwf_grid = np.zeros_like(self.aper.illuminated, dtype=np.complex128)
         expwf_grid[self.aper.illuminated] = expwf
@@ -1174,11 +1180,10 @@ class OpticalPSF(GSObject):
     is assumed by the simple model for struts described above.  In this case, keywords related to
     struts are ignored; moreover, the `obscuration` keyword is used to ensure that the images are
     properly sampled (so it is still needed), but the keyword is then ignored when using the
-    supplied image of the pupil plane.  The `pupil_plane_im` that is passed in can be rotated during
-    internal calculations by specifying a `pupil_angle` keyword.  Also note that given how the
-    `obscuration` keyword is used, the obscuration in the supplied pupil plane image should indeed
-    be reasonably circular rather than having an arbitrary shape; however, minor deviations from a
-    perfect circle do not cause significant problems.
+    supplied image of the pupil plane.  Note that for complicated pupil configurations, it may be
+    desireable to increase `pad_factor` for more fidelity at the expense of slower running time.
+    The `pupil_plane_im` that is passed in can be rotated during internal calculations by specifying
+    a `pupil_angle` keyword.
 
     If you choose to pass in a pupil plane image, it must be a square array in which the image of
     the pupil is centered.  The areas that are illuminated should have some value >0, and the other
@@ -1398,22 +1403,10 @@ class OpticalPSF(GSObject):
         s += ", aper=%r"%self._psf.aper
         if any(screen.aberrations):
             s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
-        # if hasattr(self._psf.aper, '_circular_pupil'):
-            # s += self._psf.aper._geometry_repr()
         if self._flux != 1.0:
             s += ", flux=%r" % self._flux
         s += ")"
         return s
-        # screen = self._psf.screen_list[0]
-        # s = "galsim.OpticalPSF(lam=%r, diam=%r" % (self._lam, self._psf.aper.diam)
-        # if any(screen.aberrations):
-        #     s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
-        # if hasattr(self._psf.aper, '_circular_pupil'):
-        #     s += self._psf.aper._geometry_repr()
-        # if self._flux != 1.0:
-        #     s += ", flux=%r" % self._flux
-        # s += ")"
-        # return s
 
     def __eq__(self, other):
         # Should it be possible for an OpticalPSF to be equal to a PhaseScreenPSF?  It seems simpler

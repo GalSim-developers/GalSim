@@ -986,3 +986,34 @@ def printoptions(*args, **kwargs):
         yield
     finally:
         np.set_printoptions(**original)
+
+
+def listify(arg):
+    """Turn argument into a list if not already iterable."""
+    return [arg] if not hasattr(arg, '__iter__') else arg
+
+
+def lod_to_dol(lod, N=None):
+    """Generate dicts from dict of lists (with broadcasting).
+    Specifically, generate "scalar-valued" kwargs dictionaries from a kwarg dictionary with values
+    that are length-N lists, or possibly length-1 lists or scalars that should be broadcasted up to
+    length-N lists.
+    """
+    if N is None:
+        N = max(len(v) for v in lod.values() if hasattr(v, '__len__'))
+    # Loop through broadcast range
+    for i in range(N):
+        out = {}
+        for k, v in iteritems(lod):
+            try:
+                out[k] = v[i]
+            except IndexError:  # It's list-like, but too short.
+                if len(v) != 1:
+                    raise ValueError("Cannot broadcast kwargs of different non-length-1 lengths.")
+                out[k] = v[0]
+            except TypeError:  # Value is not list-like, so broadcast it in its entirety.
+                out[k] = v
+            except:
+                raise "Cannot broadcast kwarg {0}={1}".format(k, v)
+        yield out
+

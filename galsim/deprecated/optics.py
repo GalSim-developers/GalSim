@@ -251,7 +251,7 @@ class OpticalPSF(GSObject):
                  nstruts=0, strut_thick=0.05, strut_angle=0.*galsim.degrees, pupil_plane_im=None,
                  pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None):
 
-        depr("galsim.optics.OpticalPSF", 1.3, "galsim.OpticalPSF",
+        depr("galsim.optics.OpticalPSF", 1.4, "galsim.OpticalPSF",
              "We have reimplemented OpticalPSF under the more general PhaseScreenPSF framework.  "
              "The new version can be accessed either from galsim.OpticalPSF or "
              "galsim.phase_psf.OpticalPSF")
@@ -723,7 +723,7 @@ def wavefront(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
     @returns the wavefront for `kx, ky` locations corresponding to `kxky(array_shape)`.
     """
 
-    depr("wavefront", 1.3, '',
+    depr("wavefront", 1.4, '',
          "This functionality has been removed.  If you have a need for it, please raise an issue.")
 
     # Define the pupil coordinates and non-zero regions based on input kwargs.  These are either
@@ -840,7 +840,7 @@ def wavefront_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrati
                            defined to be positive in the counter-clockwise direction; must be an
                            Angle instance. [default: 0. * galsim.degrees]
     """
-    depr("wavefront_image", 1.3, '',
+    depr("wavefront_image", 1.4, '',
          "This functionality has been removed.  If you have a need for it, please raise an issue.")
 
     array, effective_oversampling = wavefront(
@@ -900,7 +900,7 @@ def psf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
                            (positive in the counter-clockwise direction).  Must be an Angle
                            instance. [default: 0. * galsim.degrees]
     """
-    depr("psf", 1.3, '',
+    depr("psf", 1.4, '',
          "This functionality has been removed.  If you have a need for it, please raise an issue.")
 
     wf, effective_oversampling = wavefront(
@@ -974,7 +974,7 @@ def psf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
                            instance. [default: 0. * galsim.degrees]
     @param oversampling    Effective level of oversampling requested.
     """
-    depr("psf_image", 1.3, '',
+    depr("psf_image", 1.4, '',
          "This functionality has been removed.  If you have a need for it, please raise an issue.")
 
     array, effective_oversampling = psf(
@@ -1033,7 +1033,7 @@ def otf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
                            defined to be positive in the counter-clockwise direction; must be an
                            Angle instance. [default: 0. * galsim.degrees]
     """
-    depr("otf", 1.3, '',
+    depr("otf", 1.4, '',
          "This functionality has been removed.  If you have a need for it, please raise an issue.")
 
     wf, _ = wavefront(
@@ -1081,7 +1081,7 @@ def otf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
                            defined to be positive in the counter-clockwise direction; must be an
                            Angle instance. [default: 0. * galsim.degrees]
     """
-    depr("otf_image", 1.3, '',
+    depr("otf_image", 1.4, '',
          "This functionality has been removed.  If you have a need for it, please raise an issue.")
 
     array = otf(
@@ -1132,7 +1132,7 @@ def mtf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
                            defined to be positive in the counter-clockwise direction; must be an
                            Angle instance. [default: 0. * galsim.degrees]
     """
-    depr("mtf", 1.3, '',
+    depr("mtf", 1.4, '',
          "This functionality has been removed.  If you have a need for it, please raise an issue.")
 
     return np.abs(otf(
@@ -1176,7 +1176,7 @@ def mtf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
                            defined to be positive in the counter-clockwise direction; must be an
                            Angle instance. [default: 0. * galsim.degrees]
     """
-    depr("mtf_image", 1.3, '',
+    depr("mtf_image", 1.4, '',
          "This functionality has been removed.  If you have a need for it, please raise an issue.")
 
     array = mtf(
@@ -1225,7 +1225,7 @@ def ptf(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=None,
                            defined to be positive in the counter-clockwise direction; must be an
                            Angle instance. [default: 0. * galsim.degrees]
     """
-    depr("ptf", 1.3, '',
+    depr("ptf", 1.4, '',
          "This functionality has been removed.  If you have a need for it, please raise an issue.")
 
     kx, ky = kxky(array_shape)
@@ -1278,7 +1278,7 @@ def ptf_image(array_shape=(256, 256), scale=1., lam_over_diam=2., aberrations=No
                            defined to be positive in the counter-clockwise direction; must be an
                            Angle instance. [default: 0. * galsim.degrees]
     """
-    depr("ptf_image", 1.3, '',
+    depr("ptf_image", 1.4, '',
          "This functionality has been removed.  If you have a need for it, please raise an issue.")
 
     array = ptf(

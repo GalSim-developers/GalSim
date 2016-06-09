@@ -150,7 +150,6 @@ from . import detectors
 
 # Deprecation warning class
 from .deprecated import GalSimDeprecationWarning
-from .deprecated import optics as optics
 
 # Packages we intentionally keep separate.  E.g. requires galsim.fits.read(...)
 from . import fits
