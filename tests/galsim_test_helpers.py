@@ -240,7 +240,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
         import pyfits
     print('Try pickling ',obj1)
 
-    #print('pickled obj1 = ',cPickle.dumps(obj1))
+    #print('pickled obj1 = ',pickle.dumps(obj1))
     obj2 = pickle.loads(pickle.dumps(obj1))
     assert obj2 is not obj1
     #print('obj1 = ',repr(obj1))
@@ -323,7 +323,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     else:
         classname = type(obj1).__name__
         for i in range(len(args)):
-            # sys.stderr.write("Attempting arg {}\n".format(i))
+            #print("Attempting arg {}\n".format(i))
             newargs = list(args)
             if isinstance(args[i], bool):
                 newargs[i] = not args[i]
@@ -340,7 +340,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
             elif args[i] is None:
                 continue
             else:
-                # sys.stderr.write("Unknown type: {}\n".format(args[i]))
+                #print("Unknown type: {}\n".format(args[i]))
                 continue
             with galsim.utilities.printoptions(precision=18, threshold=1e6):
                 try:
@@ -353,7 +353,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
                                 classname + repr(tuple(newargs))))
                 else:
                     assert obj1 != obj6
-                    # sys.stderr.write("SUCCESS\n")
+                    #print("SUCCESS\n")
 
 
 def all_obj_diff(objs):

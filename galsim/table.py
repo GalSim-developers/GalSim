@@ -285,7 +285,8 @@ def _LookupTable_eq(self, other):
             self.getInterp() == other.getInterp())
 
 def _LookupTable_hash(self):
-    return hash(("_galsim._LookupTable", self.getArgs(), self.getVals(), self.getInterp()))
+    return hash(("_galsim._LookupTable", tuple(self.getArgs()), tuple(self.getVals()),
+                 self.getInterp()))
 
 _galsim._LookupTable.__eq__ = _LookupTable_eq
 _galsim._LookupTable.__ne__ = lambda self, other: not self.__eq__(other)
@@ -532,7 +533,7 @@ _galsim._LookupTable2D.__eq__ = _LookupTable2D_eq
 _galsim._LookupTable2D.__hash__ = lambda self: \
         hash(("_galsim._LookupTable2D", tuple(self.getXArgs()), tuple(self.getYArgs()),
               tuple(np.array(self.getVals()).ravel()), self.getInterp()))
-_galsim._LookupTable2D.__repr__ = lambda self: \
-        "galsim._galsim._LookupTable2D(%r, %r, %r, %r)"%(
-        self.getXArgs(), self.getYArgs(), self.getVals(), self.getInterp())
 _galsim._LookupTable2D.__str__ = _LookupTable2D_str
+_galsim._LookupTable2D.__repr__ = lambda self: \
+        'galsim._galsim._LookupTable(array(%r), array(%r), array(%r), %r)'%(
+        self.getXArgs().tolist(), self.getYArgs().tolist(), self.getVals(), self.getInterp())

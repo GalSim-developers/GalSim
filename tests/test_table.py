@@ -122,6 +122,8 @@ def test_table():
         do_pickle(table2, lambda x: (x.getArgs(), x.getVals(), x.getInterp()))
         do_pickle(table1)
         do_pickle(table2)
+        do_pickle(table1.table)
+        do_pickle(table2.table)
 
 
 @timer

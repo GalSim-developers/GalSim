@@ -158,8 +158,10 @@ namespace {
         {
             const int Nx = GetNumpyArrayDim(f.ptr(), 0);
             const int Ny = GetNumpyArrayDim(f.ptr(), 1);
-            assert(Nx == GetNumpyArrayDim(x.ptr(), 0));
-            assert(Ny == GetNumpyArrayDim(y.ptr(), 0));
+            const int Nx2 = GetNumpyArrayDim(x.ptr(), 0);
+            const int Ny2 = GetNumpyArrayDim(y.ptr(), 0);
+            assert(Nx == Nx2);
+            assert(Ny == Ny2);
             const double* xargs = GetNumpyArrayData<double>(x.ptr());
             const double* yargs = GetNumpyArrayData<double>(y.ptr());
             const double* vals = GetNumpyArrayData<double>(f.ptr());
