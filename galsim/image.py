@@ -339,6 +339,10 @@ class Image(object):
                 raise TypeError("Cannot specify both array and image")
             if not isinstance(array, numpy.ndarray):
                 raise TypeError("array must be a numpy.ndarray instance")
+            # Easier than getting the memory management right in the C++ layer.
+            # If we were provided a numpy array, keep a pointer to it here so it lives
+            # as long as the self.image object.
+            self._array = array
             if make_const:
                 self.image = _galsim.ConstImageView[self.dtype](array, xmin, ymin)
             else:
@@ -370,6 +374,8 @@ class Image(object):
             self.image = _galsim.ImageAlloc[self.dtype]()
             if init_value is not None:
                 raise TypeError("Cannot specify init_value without setting an initial size")
+        if not hasattr(self,'_array'):
+            self._array = self.image.array
 
         # Construct the wcs attribute
         if scale is not None:
@@ -395,7 +401,7 @@ class Image(object):
     @property
     def bounds(self): return self.image.bounds
     @property
-    def array(self): return self.image.array
+    def array(self): return self._array
 
     # Allow scale to work as a PixelScale wcs.
     @property
@@ -452,6 +458,7 @@ class Image(object):
         except:
             # if the image wasn't an ImageAlloc, then above won't work.  So just make it one.
             self.image = _galsim.ImageAlloc[self.dtype](bounds)
+        self._array = self.image.array
         if wcs is not None:
             self.wcs = wcs
 

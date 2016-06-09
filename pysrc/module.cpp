@@ -33,8 +33,12 @@
 // This is the only one that doesn't have NO_IMPORT_ARRAY.
 #include "numpy/arrayobject.h"
 
-namespace galsim {
+static int doImportNumpy() {
+    import_array1(0);
+    return 0;
+}
 
+namespace galsim {
     void pyExportAngle();
     void pyExportBounds();
     void pyExportImage();
@@ -78,7 +82,7 @@ namespace galsim {
 } // namespace galsim
 
 BOOST_PYTHON_MODULE(_galsim) {
-    import_array(); // for numpy
+    doImportNumpy();
     galsim::pyExportAngle();
     galsim::pyExportBounds();
     galsim::pyExportImage();
