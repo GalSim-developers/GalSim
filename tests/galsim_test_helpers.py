@@ -224,7 +224,11 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     """Check that the object is picklable.  Also that it has basic == and != functionality.
     """
     from numbers import Integral, Real, Complex
-    import cPickle, copy
+    try:
+        import cPickle as pickle
+    except:
+        import pickle
+    import copy
     # In case the repr uses these:
     from numpy import array, int16, int32, float32, float64, ndarray
     try:
@@ -237,7 +241,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     print('Try pickling ',obj1)
 
     #print('pickled obj1 = ',cPickle.dumps(obj1))
-    obj2 = cPickle.loads(cPickle.dumps(obj1))
+    obj2 = pickle.loads(pickle.dumps(obj1))
     assert obj2 is not obj1
     #print('obj1 = ',repr(obj1))
     #print('obj2 = ',repr(obj2))

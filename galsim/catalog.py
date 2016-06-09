@@ -267,19 +267,23 @@ class Dict(object):
 
         self.key_split = key_split
 
-        with open(self.file_name) as f:
-
-            if file_type == 'PICKLE':
-                import cPickle
-                self.dict = cPickle.load(f)
-            elif file_type == 'YAML':
-                import yaml
+        if file_type == 'PICKLE':
+            try:
+                import cPickle as pickle
+            except:
+                import pickle
+            with open(self.file_name, 'rb') as f:
+                self.dict = pickle.load(f)
+        elif file_type == 'YAML':
+            import yaml
+            with open(self.file_name, 'r') as f:
                 self.dict = yaml.load(f)
-            elif file_type == 'JSON':
-                import json
+        elif file_type == 'JSON':
+            import json
+            with open(self.file_name, 'r') as f:
                 self.dict = json.load(f)
-            else:
-                raise ValueError("Invalid file_type %s"%file_type)
+        else:
+            raise ValueError("Invalid file_type %s"%file_type)
 
     def get(self, key, default=None):
         # Make a list of keys according to our key_split parameter
