@@ -1866,7 +1866,7 @@ class AffineTransform(UniformWCS):
 # Some helper functions for serializing arbitrary functions.  Used by both UVFunction and 
 # RaDecFunction.
 def _writeFuncToHeader(func, letter, header):
-    if isinstance(func, basestring):
+    if isinstance(func, str):
         # If we have the string version, then just write that
         s = func
         first_key = 'GS_'+letter+'_STR'
@@ -1979,7 +1979,7 @@ def _readFuncFromHeader(letter, header):
             else:
                 closure = []
                 for value in closure_items:
-                    if isinstance(value,basestring) and value.startswith('module_'):
+                    if isinstance(value,str) and value.startswith('module_'):
                         module_name = value[7:]
                         closure.append(_makecell(__import__(module_name)))
                     else:
@@ -2063,22 +2063,22 @@ class UVFunction(EuclideanWCS):
         import math  # In case needed by function evals
         import numpy
 
-        if isinstance(self._orig_ufunc, basestring):
+        if isinstance(self._orig_ufunc, str):
             self._ufunc = eval('lambda x,y : ' + self._orig_ufunc)
         else:
             self._ufunc = self._orig_ufunc
 
-        if isinstance(self._orig_vfunc, basestring):
+        if isinstance(self._orig_vfunc, str):
             self._vfunc = eval('lambda x,y : ' + self._orig_vfunc)
         else:
             self._vfunc = self._orig_vfunc
 
-        if isinstance(self._orig_xfunc, basestring):
+        if isinstance(self._orig_xfunc, str):
             self._xfunc = eval('lambda u,v : ' + self._orig_xfunc)
         else:
             self._xfunc = self._orig_xfunc
 
-        if isinstance(self._orig_yfunc, basestring):
+        if isinstance(self._orig_yfunc, str):
             self._yfunc = eval('lambda u,v : ' + self._orig_yfunc)
         else:
             self._yfunc = self._orig_yfunc
@@ -2259,16 +2259,16 @@ class RaDecFunction(CelestialWCS):
         import numpy
 
         if self._orig_dec_func is None:
-            if isinstance(self._orig_ra_func, basestring):
+            if isinstance(self._orig_ra_func, str):
                 self._radec_func = eval('lambda x,y : ' + self._orig_ra_func)
             else:
                 self._radec_func = self._orig_ra_func
         else:
-            if isinstance(self._orig_ra_func, basestring):
+            if isinstance(self._orig_ra_func, str):
                 ra_func = eval('lambda x,y : ' + self._orig_ra_func)
             else:
                 ra_func = self._orig_ra_func
-            if isinstance(self._orig_dec_func, basestring):
+            if isinstance(self._orig_dec_func, str):
                 dec_func = eval('lambda x,y : ' + self._orig_dec_func)
             else:
                 dec_func = self._orig_dec_func

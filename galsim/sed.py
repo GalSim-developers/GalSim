@@ -119,7 +119,7 @@ class SED(object):
 
         if self._spec is not None:
             pass
-        elif isinstance(self._orig_spec, basestring):
+        elif isinstance(self._orig_spec, str):
             import os
             if os.path.isfile(self._orig_spec):
                 self._spec = galsim.LookupTable(file=self._orig_spec, interpolant='linear')

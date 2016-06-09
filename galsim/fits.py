@@ -22,7 +22,6 @@ This file includes routines for reading and writing individual Images to/from FI
 routines for handling multiple Images.
 """
 
-
 from future.utils import iteritems, iterkeys, itervalues
 import os
 import galsim
@@ -478,7 +477,7 @@ def closeHDUList(hdu_list, fin):
     """If necessary, close the file handle that was opened to read in the `hdu_list`"""
     hdu_list.close()
     if fin: 
-        if isinstance(fin, basestring):
+        if isinstance(fin, str):
             # In this case, it is a file name that we need to delete.
             import os
             os.remove(fin)
@@ -1125,7 +1124,7 @@ class FitsHeader(object):
             raise TypeError("Cannot provide both file_name and hdu_list to FitsHeader")
 
         # Interpret a string header as though it were passed as file_name.
-        if isinstance(header, basestring):
+        if isinstance(header, str):
             file_name = header
             header = None
     

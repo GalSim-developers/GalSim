@@ -20,7 +20,6 @@ Addition of docstrings to the Random deviate classes at the Python layer and def
 DistDeviate class.
 """
 
-
 from . import _galsim
 from ._galsim import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviate
 from ._galsim import BinomialDeviate, Chi2Deviate, GammaDeviate, WeibullDeviate

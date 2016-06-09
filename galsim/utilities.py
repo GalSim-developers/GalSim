@@ -283,7 +283,7 @@ def _convertPositions(pos, units, func):
                     np.array(pos[1], dtype='float') ]
 
     # Check validity of units
-    if isinstance(units, basestring):
+    if isinstance(units, str):
         # if the string is invalid, this raises a reasonable error message.
         units = galsim.angle.get_angle_unit(units)
     if not isinstance(units, galsim.AngleUnit):

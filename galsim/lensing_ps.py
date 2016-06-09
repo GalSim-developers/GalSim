@@ -199,7 +199,7 @@ class PowerSpectrum(object):
         self._convert_power_function(self.b_power_function,'b_power_function')
 
         # Check validity of units
-        if isinstance(units, basestring):
+        if isinstance(units, str):
             # if the string is invalid, this raises a reasonable error message.
             units = galsim.angle.get_angle_unit(units)
         if not isinstance(units, galsim.AngleUnit):
@@ -459,7 +459,7 @@ class PowerSpectrum(object):
         # Automatically convert units to arcsec at the outset, then forget about it.  This is
         # because PowerSpectrum by default wants to work in arsec, and all power functions are
         # automatically converted to do so, so we'll also do that here.
-        if isinstance(units, basestring):
+        if isinstance(units, str):
             # if the string is invalid, this raises a reasonable error message.
             units = galsim.angle.get_angle_unit(units)
         if not isinstance(units, galsim.AngleUnit):
@@ -762,7 +762,7 @@ class PowerSpectrum(object):
         # Automatically convert units to arcsec at the outset, then forget about it.  This is
         # because PowerSpectrum by default wants to work in arsec, and all power functions are
         # automatically converted to do so, so we'll also do that here.
-        if isinstance(units, basestring):
+        if isinstance(units, str):
             # if the string is invalid, this raises a reasonable error message.
             units = galsim.angle.get_angle_unit(units)
         if not isinstance(units, galsim.AngleUnit):

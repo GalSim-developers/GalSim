@@ -1070,7 +1070,7 @@ class ChromaticAtmosphere(ChromaticObject):
         self.base_obj = base_obj
         self.base_wavelength = base_wavelength
 
-        if isinstance(scale_unit, basestring):
+        if isinstance(scale_unit, str):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         self.scale_unit = scale_unit
 
@@ -2250,7 +2250,7 @@ class ChromaticOpticalPSF(ChromaticObject):
     def __init__(self, lam, diam=None, lam_over_diam=None, aberrations=None,
                  scale_unit=galsim.arcsec, **kwargs):
         # First, take the basic info.
-        if isinstance(scale_unit, basestring):
+        if isinstance(scale_unit, str):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         self.scale_unit = scale_unit
 
@@ -2350,7 +2350,7 @@ class ChromaticAiry(ChromaticObject):
     def __init__(self, lam, diam=None, lam_over_diam=None, scale_unit=galsim.arcsec, **kwargs):
         # First, take the basic info.
         # We have to require either diam OR lam_over_diam:
-        if isinstance(scale_unit, basestring):
+        if isinstance(scale_unit, str):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         self.scale_unit = scale_unit
 
