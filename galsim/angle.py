@@ -21,6 +21,7 @@ A few adjustments to the Angle class at the Python layer.
 
 import galsim
 from ._galsim import Angle, AngleUnit, radians, degrees, hours, arcmin, arcsec
+from .utilities import set_func_doc
 
 AngleUnit.__doc__ = """A class for defining angular units in galsim.Angle objects.
 
@@ -322,7 +323,7 @@ def DMS_Angle(str):
     """
     return parse_dms(str) * galsim.degrees
 
-Angle.wrap.__func__.__doc__ = """Wrap Angle to lie in the range [-pi, pi) radians.
+set_func_doc(Angle.wrap, """Wrap Angle to lie in the range [-pi, pi) radians.
 
 Depending on the context, theta = 2pi radians and theta = 0 radians are the same thing.
 If you want your angles to be wrapped to [-pi, pi) radians, you can do this by calling
@@ -331,4 +332,4 @@ If you want your angles to be wrapped to [-pi, pi) radians, you can do this by c
 
 This could be appropriate before testing for the equality of two angles for example, or
 calculating the difference between them.
-"""
+""")

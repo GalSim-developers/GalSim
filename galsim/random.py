@@ -23,6 +23,7 @@ DistDeviate class.
 from . import _galsim
 from ._galsim import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviate
 from ._galsim import BinomialDeviate, Chi2Deviate, GammaDeviate, WeibullDeviate
+from .utilities import set_func_doc
 
 # BaseDeviate docstrings
 _galsim.BaseDeviate.__doc__ = """
@@ -85,23 +86,23 @@ There are a few methods that are common to all BaseDeviate classes, so we descri
                         series of values as the original.
 """
 
-_galsim.BaseDeviate.seed.__func__.__doc__ = """
+set_func_doc(_galsim.BaseDeviate.seed, """
 Seed the pseudo-random number generator with a given integer value.
 
 @param seed         An int value to be used to seed the random number generator.  Using 0
                     means to generate a seed from the system. [default: 0]
-"""
+""")
 
-_galsim.BaseDeviate.reset.__func__.__doc__ = """
+set_func_doc(_galsim.BaseDeviate.reset, """
 Reset the pseudo-random number generator, severing connections to any other deviates.
 Providing another BaseDeviate object as the seed connects this deviate with the other
 one, so they will both use the same underlying random number generator.
 
 @param seed         Something that can seed a BaseDeviate: a long int seed or another
                     BaseDeviate.  Using 0 means to generate a seed from the system. [default: 0]
-"""
+""")
 
-_galsim.BaseDeviate.duplicate.__func__.__doc__ = """
+set_func_doc(_galsim.BaseDeviate.duplicate, """
 Create a duplicate of the current Deviate object.  The subsequent series from each copy
 of the Deviate will produce identical values.
 
@@ -124,13 +125,13 @@ _______
     0.13129289541393518
     >>> u()
     0.13129289541393518
-"""
+""")
 
-_galsim.BaseDeviate.clearCache.__func__.__doc__ = """
+set_func_doc(_galsim.BaseDeviate.clearCache, """
 Clear the internal cache of the Deviate, if any.  This is currently only relevant for
 GaussianDeviate, since it generates two values at a time, saving the second one to use for the
 next output value.
-"""
+""")
 
 def _BaseDeviate_eq(self, other):
     return (type(self) == type(other) and
@@ -455,7 +456,7 @@ Successive calls to u() generate pseudo-random values distributed uniformly in t
     0.49095047544687986
 """
 
-_galsim.UniformDeviate.__call__.__func__.__doc__= "Draw a new random number from the distribution."
+set_func_doc(_galsim.UniformDeviate.__call__,"Draw a new random number from the distribution.")
 
 
 # GaussianDeviate docstrings
@@ -485,13 +486,13 @@ distribution with the provided `mean`, `sigma`.
     1.0218588970190354
 """
 
-_galsim.GaussianDeviate.__call__.__func__.__doc__ = """
+set_func_doc(_galsim.GaussianDeviate.__call__, """
 Draw a new random number from the distribution.
 
 Returns a Gaussian deviate with current `mean` and `sigma`.
-"""
-_galsim.GaussianDeviate.getMean.__func__.__doc__ = "Get current distribution `mean`."
-_galsim.GaussianDeviate.getSigma.__func__.__doc__ = "Get current distribution `sigma`."
+""")
+set_func_doc(_galsim.GaussianDeviate.getMean, "Get current distribution `mean`.")
+set_func_doc(_galsim.GaussianDeviate.getSigma, "Get current distribution `sigma`.")
 
 
 # BinomialDeviate docstrings
@@ -523,13 +524,13 @@ distribution with the provided `N`, `p`.
     3
 """
 
-_galsim.BinomialDeviate.__call__.__func__.__doc__ = """
+set_func_doc(_galsim.BinomialDeviate.__call__, """
 Draw a new random number from the distribution.
 
 Returns a Binomial deviate with current `N` and `p`.
-"""
-_galsim.BinomialDeviate.getN.__func__.__doc__ = "Get current distribution `N`."
-_galsim.BinomialDeviate.getP.__func__.__doc__ = "Get current distribution `p`."
+""")
+set_func_doc(_galsim.BinomialDeviate.getN, "Get current distribution `N`.")
+set_func_doc(_galsim.BinomialDeviate.getP, "Get current distribution `p`.")
 
 
 # PoissonDeviate docstrings
@@ -560,12 +561,12 @@ distribution with the specified `mean`.
     106
 """
 
-_galsim.PoissonDeviate.__call__.__func__.__doc__ = """
+set_func_doc(_galsim.PoissonDeviate.__call__, """
 Draw a new random number from the distribution.
 
 Returns a Poisson deviate with current `mean`.
-"""
-_galsim.PoissonDeviate.getMean.__func__.__doc__ = "Get current distribution `mean`."
+""")
+set_func_doc(_galsim.PoissonDeviate.getMean, "Get current distribution `mean`.")
 
 
 # WeibullDeviate docstrings
@@ -599,13 +600,13 @@ distribution with the specified shape and scale parameters `a` and `b`.
     2.957052966368049
 """
 
-_galsim.WeibullDeviate.__call__.__func__.__doc__ = """
+set_func_doc(_galsim.WeibullDeviate.__call__, """
 Draw a new random number from the distribution.
 
 Returns a Weibull-distributed deviate with current `a` and `b`.
-"""
-_galsim.WeibullDeviate.getA.__func__.__doc__ = "Get current distribution shape parameter `a`."
-_galsim.WeibullDeviate.getB.__func__.__doc__ = "Get current distribution shape parameter `b`."
+""")
+set_func_doc(_galsim.WeibullDeviate.getA, "Get current distribution shape parameter `a`.")
+set_func_doc(_galsim.WeibullDeviate.getB, "Get current distribution shape parameter `b`.")
 
 
 # GammaDeviate docstrings
@@ -636,13 +637,13 @@ distribution with the specified shape and scale parameters `k` and `theta`.
     1.3504199388358704
 """
 
-_galsim.GammaDeviate.__call__.__func__.__doc__ = """
+set_func_doc(_galsim.GammaDeviate.__call__, """
 Draw a new random number from the distribution.
 
 Returns a Gamma-distributed deviate with current k and theta.
-"""
-_galsim.GammaDeviate.getK.__func__.__doc__ = "Get current distribution shape parameter `k`."
-_galsim.GammaDeviate.getTheta.__func__.__doc__ = "Get current distribution shape parameter `theta`."
+""")
+set_func_doc(_galsim.GammaDeviate.getK, "Get current distribution shape parameter `k`.")
+set_func_doc(_galsim.GammaDeviate.getTheta, "Get current distribution shape parameter `theta`.")
 
 
 # Chi2Deviate docstrings
@@ -674,12 +675,12 @@ distribution with the specified degrees of freedom, `n`.
     6.644121724269535
 """
 
-_galsim.Chi2Deviate.__call__.__func__.__doc__ = """
+set_func_doc(_galsim.Chi2Deviate.__call__, """
 Draw a new random number from the distribution.
 
 Returns a Chi2-distributed deviate with current `n` degrees of freedom.
-"""
-_galsim.Chi2Deviate.getN.__func__.__doc__ = "Get current distribution `n` degrees of freedom."
+""")
+set_func_doc(_galsim.Chi2Deviate.getN, "Get current distribution `n` degrees of freedom.")
 
 
 # Some functions to enable pickling of deviates

@@ -1017,3 +1017,17 @@ def lod_to_dol(lod, N=None):
                 raise "Cannot broadcast kwarg {0}={1}".format(k, v)
         yield out
 
+def set_func_doc(func, doc):
+    """Dynamically set a docstring for a given function.
+
+    We use this in GalSim to add docstrings to some functions that are wrapped from C++.
+    It turns out this tends to be easier than writing the doc strings in the C++ layer.
+
+    @param func     The function to which a docstring is to be added.
+    @param doc      The doc string to add.
+    """
+    try:
+        # Python3
+        func.__doc__ = doc
+    except:
+        func.__func__.__doc__ = doc
