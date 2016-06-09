@@ -861,11 +861,11 @@ class PhaseScreenList(object):
             # replace the consumed tuple at the beginning of the generator and go on.  If the first
             # item is scalar, then assume that it's the x-component of a single field angle.
             theta = iter(theta)
-            th0 = theta.next()
+            th0 = next(theta)
             if hasattr(th0, '__iter__'):
                 theta = chain([th0], theta)
             else:
-                theta_x, theta_y = th0, theta.next()
+                theta_x, theta_y = th0, next(theta)
                 single = True
 
         if single:
