@@ -644,7 +644,6 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
 
     @returns a list of images and offsets to reconstruct the input image using 'interleaveImages'.
     """
-
     if isinstance(N,int):
         n1,n2 = N,N
     elif hasattr(N,'__iter__'):
@@ -652,8 +651,10 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
             n1,n2 = N
         else:
             raise TypeError("'N' has to be a list or a tuple of two integers")
-        if not (isinstance(n1,int) and  isinstance(n2,int)):
+        if not (n1 == int(n1) and n2 == int(n2)):
             raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
+        n1 = int(n1)
+        n2 = int(n2)
     else:
         raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
 
@@ -777,7 +778,6 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
 
     @returns the interleaved image
     """
-
     if isinstance(N,int):
         n1,n2 = N,N
     elif hasattr(N,'__iter__'):
@@ -785,8 +785,10 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
             n1,n2 = N
         else:
             raise TypeError("'N' has to be a list or a tuple of two integers")
-        if not (isinstance(n1,int) and  isinstance(n2,int)):
+        if not (n1 == int(n1) and n2 == int(n2)):
             raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
+        n1 = int(n1)
+        n2 = int(n2)
     else:
         raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
 
