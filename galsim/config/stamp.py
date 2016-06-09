@@ -371,7 +371,8 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 if reject:
                     if itry+1 < ntries:
                         if logger:
-                            logger.warn('Object %d: Rejecting this object and rebuilding',obj_num)
+                            logger.warning('Object %d: Rejecting this object and rebuilding',
+                                           obj_num)
                         builder.reset(config, logger)
                         continue
                     else:
@@ -485,7 +486,7 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
             raise AttributeError('n_photons is invalid with method != phot')
         if 'max_extra_noise' in config:
             if logger:
-                logger.warn(
+                logger.warning(
                     "Both 'max_extra_noise' and 'n_photons' are set in config dict, "+
                     "ignoring 'max_extra_noise'.")
         kwargs['n_photons'] = galsim.config.ParseValue(config, 'n_photons', base, int)[0]
@@ -741,7 +742,7 @@ class StampBuilder(object):
         """
         if scale_factor != 1.0:
             if method == 'phot':
-                logger.warn(
+                logger.warning(
                     "signal_to_noise calculation is not accurate for draw_method = phot")
             image *= scale_factor
             prof *= scale_factor
@@ -781,8 +782,8 @@ class StampBuilder(object):
             min_flux_frac = galsim.config.ParseValue(config, 'min_flux_frac', base, float)[0]
             if measured_flux < min_flux_frac * expected_flux:
                 if logger:
-                    logger.warn('Object %d: Measured flux = %f < %s * %f.',
-                                base['obj_num'], measured_flux, min_flux_frac, expected_flux)
+                    logger.warning('Object %d: Measured flux = %f < %s * %f.',
+                                   base['obj_num'], measured_flux, min_flux_frac, expected_flux)
                 reject = True
         if 'min_snr' in config or 'max_snr' in config:
             if not isinstance(prof, galsim.GSObject):
@@ -795,15 +796,15 @@ class StampBuilder(object):
                 min_snr = galsim.config.ParseValue(config, 'min_snr', base, float)[0]
                 if snr < min_snr:
                     if logger:
-                        logger.warn('Object %d: Measured snr = %f < %s.',
-                                    base['obj_num'], snr, min_snr)
+                        logger.warning('Object %d: Measured snr = %f < %s.',
+                                       base['obj_num'], snr, min_snr)
                     reject = True
             if 'max_snr' in config:
                 max_snr = galsim.config.ParseValue(config, 'max_snr', base, float)[0]
                 if snr > max_snr:
                     if logger:
-                        logger.warn('Object %d: Measured snr = %f > %s.',
-                                    base['obj_num'], snr, max_snr)
+                        logger.warning('Object %d: Measured snr = %f > %s.',
+                                       base['obj_num'], snr, max_snr)
                     reject = True
         return reject
 

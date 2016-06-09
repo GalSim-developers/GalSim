@@ -298,9 +298,9 @@ class LoggerWrapper(object):
         if self.logger and self.logger.isEnabledFor(logging.INFO):
             self.logger.info(*args, **kwargs)
 
-    def warn(self, *args, **kwargs):
+    def warning(self, *args, **kwargs):
         if self.logger and self.logger.isEnabledFor(logging.WARN):
-            self.logger.warn(*args, **kwargs)
+            self.logger.warning(*args, **kwargs)
 
     def error(self, *args, **kwargs):
         if self.logger and self.logger.isEnabledFor(logging.ERROR):
@@ -336,8 +336,8 @@ def UpdateNProc(nproc, ntot, config, logger=None):
             raise
         except:
             if logger:
-                logger.warn("nproc <= 0, but unable to determine number of cpus.")
-                logger.warn("Using single process")
+                logger.warning("nproc <= 0, but unable to determine number of cpus.")
+                logger.warning("Using single process")
             nproc = 1
  
     # Second, make sure we aren't already in a multiprocessing mode
@@ -645,9 +645,9 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None):
         start = nfiles * (job-1) // njobs
         end = nfiles * job // njobs
         if logger:
-            logger.warn('Splitting work into %d jobs.  Doing job %d',njobs,job)
-            logger.warn('Building %d out of %d total files: file_num = %d .. %d',
-                        end-start,nfiles,start,end-1)
+            logger.warning('Splitting work into %d jobs.  Doing job %d',njobs,job)
+            logger.warning('Building %d out of %d total files: file_num = %d .. %d',
+                           end-start,nfiles,start,end-1)
         nfiles = end-start
     else:
         start = 0
@@ -755,7 +755,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
 
     if nproc > 1:
         if logger:
-            logger.warn("Using %d processes for %s processing",nproc,item)
+            logger.warning("Using %d processes for %s processing",nproc,item)
 
         from multiprocessing import Process, Queue, current_process
         from multiprocessing.managers import BaseManager
