@@ -39,10 +39,11 @@ def check_dep(f, *args, **kwargs):
     warnings.simplefilter("always")
 
     # Check that f() raises a warning, but not an error.
-    with warnings.catch_warnings(galsim.GalSimDeprecationWarning) as w:
+    with warnings.catch_warnings(record=True) as w:
         res = f(*args, **kwargs)
     assert len(w) >= 1, "Calling %s did not raise a warning"%str(f)
     print([ str(wk.message) for wk in w ])
+    assert issubclass(w[0].category, galsim.GalSimDeprecationWarning)
     return res
 
 
@@ -489,7 +490,7 @@ def test_dep_image():
     # The rest of this is taken from an older version of the Image class test suite that
     # tests the old syntax.  Might as well keep it.
     import warnings
-    with warnings.catch_warnings(galsim.GalSimDeprecationWarning):
+    with warnings.catch_warnings():
         warnings.simplefilter("ignore")
 
         for i in range(ntypes):
