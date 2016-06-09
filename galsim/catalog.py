@@ -115,7 +115,10 @@ class Catalog(object):
         # Note: we leave the data as str, rather than convert to float, so that if
         # we have any str fields, they don't give an error here.  They'll only give an 
         # error if one tries to convert them to float at some point.
-        self.data = numpy.loadtxt(self.file_name, comments=comments, dtype=str)
+        self.data = numpy.loadtxt(self.file_name, comments=comments, dtype=bytes)
+        # Convert the bytes to str.  For Py2, this is a no op.
+        self.data = self.data.astype(str)
+
         # If only one row, then the shape comes in as one-d.
         if len(self.data.shape) == 1:
             self.data = self.data.reshape(1, -1)
@@ -495,7 +498,7 @@ class OutputCatalog(object):
                 new_cols.append( [ val.g1 for val in col ] )
                 new_cols.append( [ val.g2 for val in col ] )
             else:
-                col = [ str(s) for s in col ]
+                col = [ str(s).encode() for s in col ]
                 maxlen = numpy.max([ len(s) for s in col ])
                 dtypes.append( (name, str, maxlen) )
                 new_cols.append(col)
