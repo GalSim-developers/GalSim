@@ -140,7 +140,11 @@ def test_meds():
         return
 
     # Run meds module's validate function
-    meds.util.validate_meds(filename_meds)
+    try:
+        meds.util.validate_meds(filename_meds)
+    except AttributeError:
+        print('Seems to be the wrong meds package.  Unable to do tests of meds file.')
+        return
 
     m = meds.MEDS(filename_meds)
 
@@ -313,7 +317,12 @@ def test_meds_config():
         print('Failed to import either meds or fitsio.  Unable to do tests of meds file.')
         return
 
-    m = meds.MEDS(file_name)
+    try:
+        m = meds.MEDS(file_name)
+    except AttributeError:
+        print('Seems to be the wrong meds package.  Unable to do tests of meds file.')
+        return
+
     assert m.size == nobj
 
     # Test that the images made as meds mosaics match the ones written to the separate fits files.
