@@ -30,6 +30,7 @@ import numpy as np
 import copy
 
 import galsim
+from functools import reduce
 
 class ChromaticObject(object):
     """Base class for defining wavelength-dependent objects.
