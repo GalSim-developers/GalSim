@@ -41,9 +41,9 @@ You can also keep track of the number of open files and pipes with:
 
 from __future__ import print_function
 
-import __builtin__
+import builtins
 openfiles = set()
-oldfile = __builtin__.file
+oldfile = builtins.file
 class newfile(oldfile):
     def __init__(self, *args):
         self.x = args[0]
@@ -56,11 +56,11 @@ class newfile(oldfile):
         oldfile.close(self)
         openfiles.remove(self)
 
-oldopen = __builtin__.open
+oldopen = builtins.open
 def newopen(*args):
     return newfile(*args)
-__builtin__.file = newfile
-__builtin__.open = newopen
+builtins.file = newfile
+builtins.open = newopen
 
 def getOpenFiles(do_print=False):
     """Return the number of open files and pipes for current process
