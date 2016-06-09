@@ -20,6 +20,7 @@ Routines for controlling catalog input/output with GalSim.
 """
 
 from future.utils import iteritems, iterkeys, itervalues
+from builtins import zip
 import galsim
 
 class Catalog(object):
@@ -503,7 +504,7 @@ class OutputCatalog(object):
                 dtypes.append( (name, str, maxlen) )
                 new_cols.append(col)
 
-        data = numpy.array(zip(*new_cols), dtype=dtypes)
+        data = numpy.array(list(zip(*new_cols)), dtype=dtypes)
 
         sort_index = numpy.argsort(self.sort_keys)
         data = data[sort_index]

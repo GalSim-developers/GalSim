@@ -66,7 +66,7 @@ class RingBuilder(StampBuilder):
             config['full_rotation'] = math.pi * galsim.radians
 
         # Now go on and do the base class setup.
-        ignore = ignore + req.keys() + opt.keys()
+        ignore = ignore + list(req) + list(opt)
         return super(self.__class__, self).setup(config, base, xsize, ysize, ignore, logger)
 
     def buildProfile(self, config, base, psf, gsparams, logger):

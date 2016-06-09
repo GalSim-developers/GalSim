@@ -203,7 +203,7 @@ class Image(with_metaclass(MetaImage, object)):
 
     """
 
-    cpp_valid_dtypes = _galsim.ImageView.keys()
+    cpp_valid_dtypes = list(_galsim.ImageView)
     alias_dtypes = {
         int : numpy.int32,          # So that user gets what they would expect
         float : numpy.float64,      # if using dtype=int or float
@@ -213,14 +213,14 @@ class Image(with_metaclass(MetaImage, object)):
     #     int : numpy.zeros(1,dtype=int).dtype.type
     # If this becomes too confusing, we might need to add an ImageL class that uses int64.
     # Hard to imagine a use case where this would be required though...
-    valid_dtypes = cpp_valid_dtypes + alias_dtypes.keys()
+    valid_dtypes = cpp_valid_dtypes + list(alias_dtypes)
 
     unsigned_dtypes = {
         # We don't have unsigned image code, so just use signed int types.
         numpy.uint32 : numpy.int32,
         numpy.uint16 : numpy.int16,
     }
-    valid_array_dtypes = cpp_valid_dtypes + unsigned_dtypes.keys()
+    valid_array_dtypes = cpp_valid_dtypes + list(unsigned_dtypes)
 
     def __init__(self, *args, **kwargs):
         import numpy

@@ -218,7 +218,7 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
         else:
             logger.warn('Start file %d = %s', file_num, file_name)
 
-    ignore = output_ignore + galsim.config.valid_extra_outputs.keys()
+    ignore = output_ignore + list(galsim.config.valid_extra_outputs)
     data = builder.buildImages(output, config, file_num, image_num, obj_num, ignore, logger)
 
     if builder.canAddHdus():

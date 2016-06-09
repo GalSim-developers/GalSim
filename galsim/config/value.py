@@ -345,7 +345,7 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
     @returns a dict, get, with get[key] = value_type for all keys to get.
     """
     get = {}
-    valid_keys = req.keys() + opt.keys()
+    valid_keys = list(req) + list(opt)
     # Check required items:
     for (key, value_type) in req.items():
         if key in config:
@@ -365,7 +365,7 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
     for s in single: 
         if not s: # If no items in list, don't require one of them to be present.
             break
-        valid_keys += s.keys()
+        valid_keys += list(s)
         count = 0
         for (key, value_type) in s.items():
             if key in config:

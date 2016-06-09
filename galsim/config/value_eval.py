@@ -54,7 +54,7 @@ def _GenerateFromEval(config, base, value_type):
     opt = {}
     ignore = galsim.config.standard_ignore  # in value.py
     for key in config.keys():
-        if key not in (ignore + req.keys()):
+        if key not in (ignore + list(req)):
             opt[key] = _type_by_letter(key)
     #print('opt = ',opt)
     #print('base has ',base.keys())
