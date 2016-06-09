@@ -24,10 +24,9 @@
 // For 32-bit machines, g++ -O2 optimization in the TMV stuff below uses an optimization
 // that is technically isn't known to not overflow 32 bit integers.  In fact, it is totally
 // fine to use, but we need to remove a warning about it in this file for gcc >= 4.5
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 5)
+#if defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8))
 #pragma GCC diagnostic ignored "-Wstrict-overflow"
 #endif
-
 #endif
 
 
