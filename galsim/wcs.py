@@ -1882,28 +1882,37 @@ def _writeFuncToHeader(func, letter, header):
             import pickle
         import types, marshal, base64
         if type(func) == types.FunctionType:
-            code = marshal.dumps(func.func_code)
-            name = func.func_name
-            defaults = func.func_defaults
+            try:
+                # Python3
+                code = marshal.dumps(func.__code__)
+                name = func.__name__
+                defaults = func.__defaults__
+                closure = func.__closure__
+            except:
+                # Python2
+                code = marshal.dumps(func.func_code)
+                name = func.func_name
+                defaults = func.func_defaults
+                closure = func.func_closure
 
             # Functions may also have something called closure cells.  If there are any, we need
             # to include them as well.  Help for this part came from:
             # http://stackoverflow.com/questions/573569/
-            if func.func_closure:
+            if closure:
                 from types import ModuleType
-                closure = []
-                for c in func.func_closure:
+                closure_list = []
+                for c in closure:
                     if isinstance(c.cell_contents, ModuleType):
                         # Can't really pickle the modules.  e.g. math if they use math functions.
                         # The modules just need to be loaded on the other side.  But we still need 
                         # to make a cell for the module closure item, so just use its name and
                         # mark it as a module so we can recover it correctly.
-                        closure.append( 'module_'+c.cell_contents.__name__ )
+                        closure_list.append( 'module_'+c.cell_contents.__name__ )
                     else:
-                        closure.append( c.cell_contents )
+                        closure_list.append( c.cell_contents )
             else:
-                closure = None
-            all = (0,code,name,defaults,closure)
+                closure_list = None
+            all = (0,code,name,defaults,closure_list)
         else:
             # For things other than regular functions, we can try to pickle it directly, but
             # it might not work.  Let pickle raise the appropriate error if it fails.
