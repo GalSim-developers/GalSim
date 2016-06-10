@@ -120,6 +120,14 @@ inline T* GetNumpyArrayData(PyObject* array)
     return reinterpret_cast<T*>(PyArray_DATA(numpy_array));
 }
 
+#if (PY_VERSION_HEX < 0x02070000)
+template <typename T>
+inline void DestroyCObjectOwner(T* p)
+{
+    boost::shared_ptr<T>* owner = reinterpret_cast<boost::shared_ptr<T>*>(p);
+    delete owner;
+}
+#else
 template <typename T>
 inline void DestroyCapsule(PyObject* capsule)
 {
@@ -127,6 +135,7 @@ inline void DestroyCapsule(PyObject* capsule)
     boost::shared_ptr<T>* owner = reinterpret_cast<boost::shared_ptr<T>*>(p);
     delete owner;
 }
+#endif
 
 template <typename T>
 struct PythonDeleter {
@@ -145,7 +154,12 @@ static bp::object ManageNumpyArray(PyObject* array, boost::shared_ptr<T> owner)
     if (!pyDeleter) {
         // ..if not, we put a shared_ptr in an opaque Python object.
         boost::shared_ptr<T>* sp = new boost::shared_ptr<T>(owner);
+#if (PY_VERSION_HEX < 0x02070000)
+        PyObject* pyOwner = PyCapsule_New(sp, NULL, &DestroyCObjectOwner);
+#else
         PyObject* pyOwner = PyCapsule_New(sp, NULL, &DestroyCapsule<T>);
+#endif
+
 #ifdef NPY_OLD_API
         reinterpret_cast<PyArrayObject*>(array)->base = pyOwner;
 #else

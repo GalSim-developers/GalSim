@@ -5,6 +5,10 @@
      || ((PY_VERSION_HEX >= 0x03000000) \
       && (PY_VERSION_HEX <  0x03010000)) )
 
+#ifdef __INTEL_COMPILER
+#pragma warning (disable : 186)
+#endif
+
 #define __PyCapsule_GetField(capsule, field, default_value) \
     ( PyCapsule_CheckExact(capsule) \
         ? (((PyCObject *)capsule)->field) \
