@@ -57,8 +57,17 @@ if have_lsst_stack:
                   "If `scons tests` freezes up, you may need to run "
                   "`scons tests -j1` instead.")
 
+if sys.version < (2,7):
+    # skipIf requires Python 2.7, so for 2.6, just make a decorator that skips manually.
+    def skipIf(f, cond):
+        def f2(*args, **kwargs):
+            if cond: return
+            else: return f(*args, **kwargs)
+        return f2
+else:
+    skipIf = unittest.skipIf
 
-@unittest.skipIf(not have_lsst_stack, "LSST stack not installed")
+@skipIf(not have_lsst_stack, "LSST stack not installed")
 class NativeLonLatTest(unittest.TestCase):
 
     @timer
@@ -179,7 +188,7 @@ class NativeLonLatTest(unittest.TestCase):
                 self.assertAlmostEqual(lon, lonControl, 10)
 
 
-@unittest.skipIf(not have_lsst_stack, "LSST stack not installed")
+@skipIf(not have_lsst_stack, "LSST stack not installed")
 class LsstCameraTestClass(unittest.TestCase):
 
     @classmethod
@@ -506,7 +515,7 @@ class LsstCameraTestClass(unittest.TestCase):
         self.assertLess(y_e-y_0, -10.0)
 
 
-@unittest.skipIf(not have_lsst_stack, "LSST stack not installed")
+@skipIf(not have_lsst_stack, "LSST stack not installed")
 class LsstWcsTestCase(unittest.TestCase):
 
     @classmethod
