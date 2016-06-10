@@ -1136,6 +1136,25 @@ def CheckModuleLibs(config,try_libs,source_file,name,prepend=True):
     return result
 
 
+def GetPythonVersion(config):
+    # Get the version:
+    source_file5 = "import sys; print('%d.%d'%(sys.version_info[:2]))"
+    result, py_version = TryScript(config,source_file5,python)
+    # If that didn't work, try to get it from the file or directory names, since it is usually
+    # there:
+    if not result:
+        if '2.7' in py_inc or '2.7' in python:
+            py_version = '2.7'
+        elif '2.6' in py_inc or '2.6' in python:
+            py_version = '2.6'
+        elif '2.5' in py_inc or '2.5' in python:
+            py_version = '2.5'
+        elif '2.4' in py_inc or '2.4' in python:
+            py_version = '2.4'
+        else:
+            py_version = ''
+    return py_version
+
 def CheckPython(config):
     python_source_file = """
 #include "Python.h"
@@ -1197,6 +1216,9 @@ PyMODINIT_FUNC initcheck_python(void)
     # So the first attempt below with [''] for the libs will work.
     if CheckModuleLibs(config,[''],python_source_file,'check_python'):
         config.Result(1)
+        py_version = GetPythonVersion(config)
+        config.env['PYTHON_VERSION'] = py_version
+        print 'Building for python version '+py_version
         return 1
 
     # Other times (e.g. most Mac systems) we'll need to link the library.
@@ -1223,24 +1245,8 @@ PyMODINIT_FUNC initcheck_python(void)
 
     # If neither of those work, we're probably hosed, but try libpython.a and libpythonx.x.a
     # along with .so or .dylib versions of these, just in case.
+    py_version = GetPythonVersion(config)
     py_libfiles.append('libpython.a')
-
-    # Get the version:
-    source_file5 = "import sys; print('%d.%d'%(sys.version_info[:2]))"
-    result, py_version = TryScript(config,source_file5,python)
-    # If that didn't work, try to get it from the file or directory names, since it is usually
-    # there:
-    if not result:
-        if '2.7' in py_inc or '2.7' in python:
-            py_version = '2.7'
-        elif '2.6' in py_inc or '2.6' in python:
-            py_version = '2.6'
-        elif '2.5' in py_inc or '2.5' in python:
-            py_version = '2.5'
-        elif '2.4' in py_inc or '2.4' in python:
-            py_version = '2.4'
-        else:
-            py_version = ''
     py_libfiles.append('libpython'+py_version+'.a')
 
     # One of these might work as is, so try the list of options now:
