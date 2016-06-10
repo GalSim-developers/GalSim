@@ -57,7 +57,7 @@ if have_lsst_stack:
                   "If `scons tests` freezes up, you may need to run "
                   "`scons tests -j1` instead.")
 
-if sys.version < (2,7):
+if sys.version_info < (2,7):
     # skipIf requires Python 2.7, so for 2.6, just make a decorator that skips manually.
     def skipIf(f, cond):
         def f2(*args, **kwargs):
