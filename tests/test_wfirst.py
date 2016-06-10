@@ -429,19 +429,19 @@ def test_wfirst_psfs():
         err_msg='PSF at a given wavelength and chromatic one evaluated at that wavelength disagree.')
 
     # Make a very limited check that interpolation works: just 2 wavelengths, 1 SCA.
-    # Note that the limits below are the blue and red limits for the Y106 filter.
-    blue_limit = 900. # nm
-    red_limit = 1230. # nm
+    # use the blue and red limits for Y106:
+    bp = galsim.wfirst.getBandpasses()
+    blue_limit = bp['Y106'].blue_limit
+    red_limit = bp['Y106'].red_limit
     n_waves = 2
     other_sca = 12
     wfirst_psfs_int = galsim.wfirst.getPSF(SCAs=[use_sca, other_sca],
                                            approximate_struts=True, n_waves=n_waves,
                                            wavelength_limits=(blue_limit, red_limit))
     psf_int = wfirst_psfs_int[use_sca]
-    # Check that evaluation at the edge wavelength, which we used for previous test, is consistent
-    # with previous results.
+    # Check that evaluation at a single wavelength is consistent with previous results.
     im_int = im_achrom.copy()
-    obj_int = psf_int.evaluateAtWavelength(use_lam)
+    obj_int = psf_int.evaluateAtWavelength(blue_limit)
     im_int = obj_int.drawImage(image=im_int, scale=galsim.wfirst.pixel_scale)
     # These images should agree well, but not perfectly.  One of them comes from drawing an image
     # from an object directly, whereas the other comes from drawing an image of that object, making
