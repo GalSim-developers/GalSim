@@ -416,6 +416,9 @@ def test_nan_fits():
     """
     import warnings
     from galsim._pyfits import pyfits
+    # Older pyfits versions don't have this, so just skip this test then.
+    if not hasattr(pyfits, 'verify'): return
+
     # The problematic file:
     file_name = "des_data/DECam_00158414_01.fits.fz"
 
