@@ -1499,6 +1499,16 @@ def CheckPyFITS(config):
     config.Result(1)
     return 1
 
+def CheckFuture(config):
+    config.Message('Checking for future... ')
+
+    result, output = TryScript(config,"import future",python)
+    if not result:
+        ErrorExit("Unable to import future using the python executable:\n" + python)
+
+    config.Result(1)
+    return 1
+
 def CheckBoostPython(config):
     bp_source_file = """
 
@@ -1790,6 +1800,7 @@ def DoPyChecks(config):
     config.CheckPyTMV()
     config.CheckNumPy()
     config.CheckPyFITS()
+    config.CheckFuture()
     config.CheckBoostPython()
     config.CheckPythonExcept()
 
@@ -1878,6 +1889,7 @@ def DoConfig(env):
             'CheckPyTMV' : CheckPyTMV ,
             'CheckNumPy' : CheckNumPy ,
             'CheckPyFITS' : CheckPyFITS ,
+            'CheckFuture' : CheckFuture ,
             'CheckBoostPython' : CheckBoostPython ,
             'CheckPythonExcept' : CheckPythonExcept ,
             })
