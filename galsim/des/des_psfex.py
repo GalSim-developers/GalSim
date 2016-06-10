@@ -192,7 +192,7 @@ class DES_PSFEx(object):
         # The third axis is the direction of the polynomial interpolation.  So it should
         # be equal to (d+1)(d+2)/2.
         psf_axis3 = hdu.header['PSFAXIS3']
-        if psf_axis3 != ((pol_deg+1)*(pol_deg+2))/2:
+        if psf_axis3 != ((pol_deg+1)*(pol_deg+2))//2:
             raise IOError("PSFEx: POLDEG and PSFAXIS3 disagree")
 
         # This is the PSF "sample size".  Again, from Emmanuel:
