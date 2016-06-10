@@ -1520,12 +1520,12 @@ def test_ChromaticOpticalPSF():
         im_r_ref = obj.drawImage(bandpass, scale=scale)
         im_r_ref.write(os.path.join(refdir, 'r_exact.fits'))
         t3 = time.time()
-        print("Time to draw ChromaticOpticalPSF: {}s".format(t3-t2))
+        print("Time to draw ChromaticOpticalPSF: {0}s".format(t3-t2))
 
     t4 = time.time()
     psf = psf.interpolate(waves, oversample_fac=oversample_fac)
     t5 = time.time()
-    print("Time to initialize InterpolatedChromaticObject: {}s".format(t5-t4))
+    print("Time to initialize InterpolatedChromaticObject: {0}s".format(t5-t4))
     obj = galsim.Convolve(star, psf)
 
     if __name__ == '__main__':
@@ -1537,7 +1537,7 @@ def test_ChromaticOpticalPSF():
     t6 = time.time()
     obj.drawImage(bandpass, image=im_r, scale=scale)
     t7 = time.time()
-    print("Time to draw InterpolatedChromaticObject: {}s".format(t7-t6))
+    print("Time to draw InterpolatedChromaticObject: {0}s".format(t7-t6))
     printval(im_r, im_r_ref)
     np.testing.assert_almost_equal(
         im_r.array.sum()/im_r_ref.array.sum(), 1.0, decimal=3,

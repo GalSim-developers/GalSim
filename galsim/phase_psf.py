@@ -282,6 +282,7 @@ class Aperture(object):
             self._generate_pupil_plane(circular_pupil, obscuration,
                                        nstruts, strut_thick, strut_angle,
                                        pupil_plane_scale, pupil_plane_size)
+
         # Check FFT size
         if self._gsparams is not None:
             maximum_fft_size = self._gsparams.maximum_fft_size
@@ -778,7 +779,7 @@ class PhaseScreenList(object):
                         [default: True]
         @returns        Wavefront lag or lead in nanometers over aperture.
         """
-        return np.sum(layer.wavefront(aper, theta, compact) for layer in self)
+        return np.sum([layer.wavefront(aper, theta, compact) for layer in self],axis=0)
 
     def makePSF(self, lam, **kwargs):
         """Compute one PSF or multiple PSFs from the current PhaseScreenList, depending on the type
@@ -890,7 +891,7 @@ class PhaseScreenList(object):
     @property
     def r0_500_effective(self):
         """Effective r0_500 for set of screens in list that define an r0_500 attribute."""
-        return sum(l.r0_500**(-5./3) for l in self if hasattr(l, 'r0_500'))**(-3./5)
+        return np.sum([l.r0_500**(-5./3) for l in self if hasattr(l, 'r0_500')])**(-3./5)
 
     def stepK(self, **kwargs):
         """Return an appropriate stepK for this list of phase screens.
@@ -908,7 +909,7 @@ class PhaseScreenList(object):
         #   stepk = sum(s**(-5./3) for s in stepks)**(-3./5)
         # Since most of the layers in a PhaseScreenList are likely to be (nearly) Kolmogorov
         # screens, we'll use that relation.
-        return sum(layer.stepK(**kwargs)**(-5./3) for layer in self)**(-3./5)
+        return np.sum([layer.stepK(**kwargs)**(-5./3) for layer in self])**(-3./5)
 
 
 class PhaseScreenPSF(GSObject):
@@ -1078,7 +1079,7 @@ class PhaseScreenPSF(GSObject):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
         wf = self.screen_list.wavefront(self.aper, self.theta)
         expwf = np.exp(2j * np.pi * wf / self.lam)
-        expwf_grid = np.zeros_like(self.aper.illuminated, dtype=np.complex128)
+        expwf_grid = np.zeros_like(self.aper.illuminated).astype(np.complex128)
         expwf_grid[self.aper.illuminated] = expwf
         ftexpwf = np.fft.fft2(np.fft.fftshift(expwf_grid))
         self.img += np.abs(ftexpwf)**2
@@ -1101,7 +1102,6 @@ class PhaseScreenPSF(GSObject):
                     self.img, x_interpolant=self.interpolant,
                     _serialize_stepk=self._serialize_stepk, _serialize_maxk=self._serialize_maxk,
                     use_true_center=False, normalization='sb', gsparams=self._gsparams)
-
 
         GSObject.__init__(self, self.ii)
 

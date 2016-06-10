@@ -195,20 +195,20 @@ class LookupTable(object):
             if dimen > 2:
                 raise ValueError("Arrays with dimension larger than 2 not allowed!")
             elif dimen == 2:
-                f = np.empty_like(x.ravel(), dtype=float)
+                f = np.empty_like(x.ravel()).astype(float)
                 self.table.interpMany(x.astype(float).ravel(),f)
                 f = f.reshape(x.shape)
             else:
-                f = np.empty_like(x, dtype=float)
+                f = np.empty_like(x).astype(float)
                 self.table.interpMany(x.astype(float),f)
         # option 2: a tuple
         elif isinstance(x, tuple):
-            f = np.empty_like(x, dtype=float)
+            f = np.empty_like(x).astype(float)
             self.table.interpMany(np.array(x, dtype=float),f)
             f = tuple(f)
         # option 3: a list
         elif isinstance(x, list):
-            f = np.empty_like(x, dtype=float)
+            f = np.empty_like(x).astype(float)
             self.table.interpMany(np.array(x, dtype=float),f)
             f = list(f)
         # option 4: a single value
@@ -449,7 +449,7 @@ class LookupTable2D(object):
             shape = x.shape
             x = x.ravel()
             y = y.ravel()
-            f = np.empty_like(x, dtype=float)
+            f = np.empty_like(x).astype(float)
             self.table.interpMany(x, y, f)
             f = f.reshape(shape)
             return f
@@ -471,7 +471,7 @@ class LookupTable2D(object):
             shape = x.shape
             x = x.ravel()
             y = y.ravel()
-            f = np.empty_like(x, dtype=float)
+            f = np.empty_like(x).astype(float)
             f.fill(self.constant)
             good = ((x >= self.x[0]) & (x <= self.x[-1]) &
                     (y >= self.y[0]) & (y <= self.y[-1]))
