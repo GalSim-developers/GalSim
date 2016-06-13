@@ -16,12 +16,19 @@
 #    and/or other materials provided with the distribution.
 #
 
-import matplotlib.pyplot as plt
-import matplotlib.animation as anim
+import warnings
 import numpy as np
 import galsim
-from astropy.utils.console import ProgressBar
-import warnings
+
+try:
+    import matplotlib.pyplot as plt
+    import matplotlib.animation as anim
+except ImportError:
+    raise ImportError("This demo requires matplotlib!")
+try:
+    from astropy.utils.console import ProgressBar
+except ImportError:
+    raise ImportError("This demo requires astropy!")
 
 def simple_moments(img):
     """Compute unweighted 0th, 1st, and 2nd moments of image.  Return result as a dictionary.
@@ -45,47 +52,50 @@ def ellip(mom):
     return dict(rsqr=rsqr, e1=(mom['Ixx']-mom['Iyy'])/rsqr, e2=2*mom['Ixy']/rsqr)
 
 def make_movie(args):
-    """Function that actually makes the movie of the atmosphere, given command line arguments stored
-    in `args`.
+    """Actually make the movie of the atmosphere given command line arguments stored in `args`.
     """
 
-    # Use GalSim random number generators.
+    # Initiate some GalSim random number generators.
     rng = galsim.BaseDeviate(args.seed)
     u = galsim.UniformDeviate(rng)
 
-    # Interpolate atmospheric weights using Jee+Tyson (2011) values.
+    # The GalSim atmospheric simulation code describes turbulence in the 3D atmosphere as a series
+    # of 2D turbulent screens.  The galsim.Atmosphere() helper function is useful for constructing
+    # this screen list.
+
+    # First, we estimate a weight for each screen, so that the turbulence is dominated by the lower
+    # layers.  For this, we just interpolate the weights given by Jee&Tyson (2011) onto a set of
+    # uniformly-spaced layers between 0 and 15.46 km altitude.
     JT_alts = [0.0, 2.58, 5.16, 7.73, 12.89, 15.46]  # km
     JT_weights = [0.652, 0.172, 0.055, 0.025, 0.074, 0.022]  # weight
     JT_interp = galsim.LookupTable(JT_alts, JT_weights, interpolant='linear')
-    weights = JT_interp(15.46*np.arange(args.nlayers)/(args.nlayers-1))
-    weights /= sum(weights)
 
-    # GalSim Atmospheric PSF code.  We start by assembling a set of phase screens representing
-    # different layers of turbulence in the atmosphere.  In principle, each layer can have its own
-    # turbulence strength, boiling parameter, wind speed and direction, altitude, and even size and
-    # resolution (though note that the size of each screen is actually made infinite by "wrapping"
-    # the edges of the screen.)  The galsim.Atmosphere helper function is useful for constructing
-    # this list, and requires lists of parameters for the different layers.
+    alts = 15.46*np.arange(args.nlayers)/(args.nlayers-1)  # uniformly spaced altitudes in km.
+    weights = JT_interp(alts)  # interpolate the weights
+    weights /= sum(weights)  # and renormalize
+
+    # Each layer can have its own turbulence strength (roughly inversely proportional to the Fried
+    # parameter r0), wind speed, wind direction, altitude, and even size and scale (though note that
+    # the size of each screen is actually made infinite by "wrapping" the edges of the screen.)  The
+    # galsim.Atmosphere helper function is useful for constructing this list, and requires lists of
+    # parameters for the different layers.
 
     spd = []  # Wind speed in m/s
     dirn = [] # Wind direction in radians
-    alt = []  # Layer altitude in km
-    r0_500 = [] # Fried parameter in m.
+    r0_500 = [] # Fried parameter in m at a wavelength of 500 nm.
     for i in xrange(args.nlayers):
         spd.append(u()*20.0)  # Use a random speed between 0 and 20 m/s for each layer
-        dirn.append(u()*360*galsim.degrees)  # And an isotropically distributed direction.
-        alt.append(15.*i/(args.nlayers-1))  # And spread out the altitudes between 0 and 15 km.
+        dirn.append(u()*360*galsim.degrees)  # And an isotropically distributed wind direction.
         r0_500.append(args.r0_500*weights[i]**(-3./5))
         print ("Adding layer at altitude {:5.2f} km with velocity ({:5.2f}, {:5.2f}) m/s, "
                "and r0_500 {:5.3f} m."
-               .format(alt[-1], spd[-1]*dirn[-1].cos(), spd[-1]*dirn[-1].sin(), r0_500[-1]))
+               .format(alts[i], spd[i]*dirn[i].cos(), spd[i]*dirn[i].sin(), r0_500[i]))
 
-    # Additionally, we set the turbulence strength of the entire set of phase screens with `r0_500`
-    # the Fried parameter at a wavelength of 500 nm, the screen temporal evolution `time_step`,
-    # and the screen size and scale.
-    atm = galsim.Atmosphere(r0_500=r0_500, speed=spd, direction=dirn, altitude=alt, rng=rng,
+    # Additionally, we set the screen temporal evolution `time_step`, and the screen size and scale.
+    atm = galsim.Atmosphere(r0_500=r0_500, speed=spd, direction=dirn, altitude=alts, rng=rng,
                             time_step=args.time_step, screen_size=args.screen_size,
                             screen_scale=args.screen_scale)
+    # `atm` is now an instance of a galsim.PhaseScreenList object.
 
     # Place to store the cumulative PSF image if args.accumulate is set.
     psf_img_sum = galsim.ImageD(args.psf_nx, args.psf_nx, scale=args.psf_scale)
@@ -93,7 +103,9 @@ def make_movie(args):
     # Field angle (angle on the sky wrt the telescope boresight) at which to compute the PSF.
     theta = (args.x*galsim.arcmin, args.y*galsim.arcmin)
 
-    # Construct an Aperture object for computing the PSF.
+    # Construct an Aperture object for computing the PSF.  The Aperture object describes the
+    # illumination pattern of the telescope pupil, and chooses good sampling size and resolution
+    # for representing this pattern as an array.
     aper = galsim.Aperture(diam=args.diam, lam=args.lam, obscuration=args.obscuration,
                            nstruts=args.nstruts, strut_thick=args.strut_thick,
                            strut_angle=args.strut_angle*galsim.degrees,
@@ -109,22 +121,30 @@ def make_movie(args):
     # `set_XYZ` methods to update each successive frame.
     fig = plt.figure(facecolor='k', figsize=(11, 6))
 
+    # Axis for the PSF image on the left.
     psf_ax = fig.add_axes([0.08, 0.15, 0.35, 0.7])
+    psf_ax.set_xlabel("Arcsec")
+    psf_ax.set_ylabel("Arcsec")
     psf_im = psf_ax.imshow(np.ones((128, 128), dtype=np.float64), animated=True,
                            vmin=0.0, vmax=args.psf_vmax, cmap='hot',
                            extent=np.r_[-1, 1, -1, 1]*0.5*args.psf_nx*args.psf_scale)
 
+    # Axis for the wavefront image on the right.
     wf_ax = fig.add_axes([0.51, 0.15, 0.35, 0.7])
+    wf_ax.set_xlabel("Meters")
+    wf_ax.set_ylabel("Meters")
     wf_im = wf_ax.imshow(np.ones((128, 128), dtype=np.float64), animated=True,
                          vmin=-args.wf_vmax, vmax=args.wf_vmax, cmap='YlGnBu',
                          extent=np.r_[-1, 1, -1, 1]*0.5*aper.pupil_plane_size)
+    cbar_ax = fig.add_axes([0.88, 0.175, 0.03, 0.65])
+    cbar_ax.set_ylabel("Radians")
+    plt.colorbar(wf_im, cax=cbar_ax)
 
+    # Overlay an alpha-mask on the wavefront image showing which parts are actually illuminated.
     ilum = np.ma.masked_greater(aper.illuminated, 0.5)
     wf_ax.imshow(ilum, alpha=0.4, extent=np.r_[-1, 1, -1, 1]*0.5*aper.pupil_plane_size)
 
-    cbar_ax = fig.add_axes([0.88, 0.175, 0.03, 0.65])
-    plt.colorbar(wf_im, cax=cbar_ax)
-
+    # Color items white to show up on black background
     for ax in [psf_ax, wf_ax, cbar_ax]:
         for _, spine in ax.spines.iteritems():
             spine.set_color('w')
@@ -133,25 +153,27 @@ def make_movie(args):
         ax.yaxis.label.set_color('w')
         ax.tick_params(axis='both', colors='w')
 
-    psf_ax.set_xlabel("Arcsec")
-    psf_ax.set_ylabel("Arcsec")
-
-    wf_ax.set_xlabel("Meters")
-    wf_ax.set_ylabel("Meters")
-
-    cbar_ax.set_ylabel("Radians")
-
     etext = psf_ax.text(0.05, 0.92, '', transform=psf_ax.transAxes)
     etext.set_color('w')
 
     nstep = int(args.exptime / args.time_step)
+    # Use astropy ProgressBar to keep track of progress and show an estimate for time to completion.
     with ProgressBar(nstep) as bar:
         with writer.saving(fig, args.outfile, 100):
             for i in xrange(nstep):
-                # GalSim wavefront code
+                # The wavefront() method with `compact=False` returns a 2D array over the pupil
+                # plane described by `aper`.  Here, we just get the wavefront for visualization;
+                # this step is normally handled automatically by the PhasePSF code behind the
+                # scenes.
                 wf = atm.wavefront(aper, theta, compact=False) * 2*np.pi / args.lam  # radians
-                # GalSim PSF code
+                # To make an actual PSF GSObject, we use the makePSF() method, including arguments
+                # for the wavelength `lam`, the field angle `theta`, the aperture `aper`, and the
+                # exposure time `exptime`.  Here, since we're making a movie, we set the exptime
+                # equal to just a single timestep, though normally we'd want to set this to the
+                # full exposure time.
                 psf = atm.makePSF(lam=args.lam, theta=theta, aper=aper, exptime=args.time_step)
+                # `psf` is now just like an any other GSObject, ready to be convolved, drawn, or
+                # transformed.  Here, we just draw it into an image to add to our movie.
                 psf_img0 = psf.drawImage(nx=args.psf_nx, ny=args.psf_nx, scale=args.psf_scale)
 
                 if args.accumulate:
