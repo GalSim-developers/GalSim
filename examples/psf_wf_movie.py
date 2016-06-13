@@ -229,8 +229,8 @@ if __name__ == '__main__':
     parser.add_argument("--wf_vmax", type=float, default=50.0,
                         help="Matplotlib imshow vmax kwarg for wavefront image.  Sets value "
                              "that maxes out the colorbar range.  Default: 50.0")
-    parser.add_argument("--outfile", type=str, default="psf_wf_movie.mp4",
-                        help="Output filename.  Default: psf_wf_movie.mp4")
+    parser.add_argument("--outfile", type=str, default="output/psf_wf_movie.mp4",
+                        help="Output filename.  Default: output/psf_wf_movie.mp4")
 
     args = parser.parse_args()
     make_movie(args)
