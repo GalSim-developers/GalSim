@@ -210,6 +210,9 @@ class Aperture(object):
         if not is_default_geom and pupil_plane_im is not None:
             raise ValueError("Can't specify both geometric parameters and pupil_plane_im.")
 
+        if screen_list is not None and lam is None:
+            raise ValueError("Wavelength `lam` must be specified with `screen_list`.")
+
         # Although the user can set the pupil plane size and scale directly if desired, in most
         # cases it's nicer to have GalSim try to pick good values for these.
 
@@ -227,26 +230,20 @@ class Aperture(object):
         # important as they affect the amount of aliasing encountered.  (An Airy profile has an
         # infinite extent in real space, so it *always* aliases at some level, more so with an
         # obscuration than without.  The GSParams settings indicate how much aliasing we're
-        # willing to tolerate, so it's required here.)  To pick a good sampling interval, we first
-        # check if a `screen_list` argument was supplied.  If so, we check its .stepK() method,
-        # which aggregates a good sampling interval from all of the wrapped PhaseScreens.  If
-        # `screen_list` isn't supplied, then we fall back to creating an obscured Airy GSProfile and
-        # using its .stepK().
+        # willing to tolerate, so it's required here.)  To pick a good sampling interval, we start
+        # with the interval that would be used for an obscured Airy GSObject profile.  If the
+        # `screen_list` argument was supplied, then we also check its .stepK() method, which
+        # aggregates a good sampling interval from all of the wrapped PhaseScreens, and keep the
+        # smaller stepk.
+        if lam is None:
+            lam = 500.0
+        airy = galsim.Airy(diam=diam, lam=lam, obscuration=obscuration, gsparams=self._gsparams)
+        stepk = airy.stepK()
         if screen_list is not None:
             screen_list = galsim.PhaseScreenList(screen_list)
-            if lam is None:
-                raise ValueError("Wavelength `lam` must be specified with `screen_list`.")
-            stepk = screen_list.stepK(lam=lam, diam=diam, obscuration=obscuration,
-                                      gsparams=self._gsparams)
-        else:
-            # For Airy, pupil_plane_scale is independent of wavelength.  We could build an Airy with
-            # lam_over_diam=1.0 and then alter the `good_pupil_scale = ...` line below
-            # appropriately, but it's easier to just arbitrarily set `lam=500` if it wasn't set.
-            if lam is None:
-                lam = 500.0
-            airy = galsim.Airy(diam=diam, lam=lam, obscuration=obscuration,
-                               gsparams=self._gsparams)
-            stepk = airy.stepK()
+            stepk = min(stepk,
+                        screen_list.stepK(lam=lam, diam=diam, obscuration=obscuration,
+                                          gsparams=self._gsparams))
         good_pupil_scale = (stepk * lam * 1.e-9 * (galsim.radians / galsim.arcsec)
                             / (2 * np.pi * pad_factor))
 
