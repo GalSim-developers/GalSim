@@ -96,11 +96,13 @@ def make_movie(args):
     for i in xrange(args.nlayers):
         spd.append(u()*max_speed)  # Use a random speed between 0 and max_speed
         dirn.append(u()*360*galsim.degrees)  # And an isotropically distributed wind direction.
-        # The turbulence strength of each layer is specified by its Fried parameter r0_500.
-        # The relationship between this strength (really the refractive index structure function)
-        # and the Fried parameter is a bit tricky however, as the later scales like the former
-        # to the -3/5 power.  So we need to adjust our weights accordingly when splitting up our
-        # target "cumulative" Fried parameter into Fried parameters for individual layers.
+        # The turbulence strength of each layer is specified by through its Fried parameter r0_500,
+        # which can be thought of as the diameter of a telescope for which atmospheric turbulence
+        # and unaberrated diffraction contribute equally to image resolution (at a wavelength of
+        # 500nm).  The weights above are for the refractive index structure function (similar to a
+        # variance or covariance), however, so we need to use an appropriate scaling relation to
+        # distribute the input "net" Fried parameter into a Fried parameter for each layer.  For
+        # Kolmogorov turbulence, this is r0_500 ~ (structure function)**(-3/5):
         r0_500.append(args.r0_500*weights[i]**(-3./5))
         print ("Adding layer at altitude {:5.2f} km with velocity ({:5.2f}, {:5.2f}) m/s, "
                "and r0_500 {:5.3f} m."
