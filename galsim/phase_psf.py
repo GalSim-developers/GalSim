@@ -1338,8 +1338,9 @@ class OpticalPSF(GSObject):
         if max_size is not None:
             from .deprecated import depr
             depr('max_size', 1.4, '',
-                 "The max_size keyword has been removed.  If you have a need for it, "
-                 "please open an issue requesting the functionality.")
+                 "The max_size keyword has been removed.  In its place, the pad_factor keyword can"
+                 "be used to adjust the size of the internal InterpolatedImage.")
+
 
         if isinstance(scale_unit, basestring):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
