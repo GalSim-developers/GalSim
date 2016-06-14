@@ -150,14 +150,8 @@ def test_phase_screen_list():
     atm.advance_by(1.0)
     do_pickle(atm)
     atm.reset()
-    # Ignore warnings related to manually specifying pupil plane size and scale.
-    import warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        kwargs = dict(exptime=0.06, diam=4.0, lam=500.0,
-                      pupil_plane_size=6.0, pupil_plane_scale=8.0/256)
-
-        psf = atm.makePSF(**kwargs)
+    kwargs = dict(exptime=0.06, diam=1.0, lam=1000.0)
+    psf = atm.makePSF(**kwargs)
     do_pickle(psf)
     do_pickle(psf, func=lambda x:x.drawImage(nx=20, ny=20, scale=0.1))
 
@@ -241,14 +235,10 @@ def test_phase_psf_batch():
     atm = galsim.Atmosphere(screen_size=10.0, altitude=10.0, alpha=0.997, rng=rng)
     theta = [(i*galsim.arcsec, i*galsim.arcsec) for i in xrange(NPSFs)]
 
-    kwargs = dict(lam=500.0, exptime=exptime, diam=4.0,
-                  pupil_plane_size=6.0, pupil_plane_scale=6.0/192)
+    kwargs = dict(lam=1000.0, exptime=exptime, diam=1.0)
 
     t1 = time.time()
-    import warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        psfs = atm.makePSF(theta=theta, **kwargs)
+    psfs = atm.makePSF(theta=theta, **kwargs)
     print 'time for {0} PSFs in batch: {1:.2f} s'.format(NPSFs, time.time() - t1)
 
     t2 = time.time()
