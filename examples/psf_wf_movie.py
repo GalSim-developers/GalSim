@@ -21,10 +21,15 @@ import numpy as np
 import galsim
 
 try:
+    import matplotlib
     import matplotlib.pyplot as plt
     import matplotlib.animation as anim
 except ImportError:
     raise ImportError("This demo requires matplotlib!")
+from distutils.version import LooseVersion
+if LooseVersion(matplotlib.__version__) < LooseVersion('1.2'):
+    raise RuntimeError("This demo requires matplotlib version 1.2 or greater!")
+
 try:
     from astropy.utils.console import ProgressBar
 except ImportError:
@@ -123,9 +128,8 @@ def make_movie(args):
                            oversampling=args.oversampling)
 
     # Code to setup the Matplotlib animation.
-    FFMpegWriter = anim.writers['ffmpeg']
     metadata = dict(title='Wavefront Movie', artist='Matplotlib')
-    writer = FFMpegWriter(fps=15, bitrate=5000, metadata=metadata)
+    writer = anim.FFMpegWriter(fps=15, bitrate=5000, metadata=metadata)
 
     # For the animation code, we essentially draw a single figure first, and then use various
     # `set_XYZ` methods to update each successive frame.
