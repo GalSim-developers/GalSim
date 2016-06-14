@@ -286,23 +286,6 @@ def test_scale_unit():
 
 
 @timer
-def test_max_size():
-    aper = galsim.Aperture(diam=1.0)
-    rng = galsim.BaseDeviate(1234)
-    atm = galsim.Atmosphere(screen_size=4.0, rng=rng)
-    psf = galsim.PhaseScreenPSF(atm, 500.0, aper=aper)  # Makes an internal image ~10 arcsec wide
-    atm.reset()
-    psf_trunc = galsim.PhaseScreenPSF(atm, 500, aper=aper, max_size=5)  # Force to ~5 arcsec wide
-    # These should give the identical image if used to draw onto a patch smaller than 5 arcsec.
-    gal = galsim.Gaussian(fwhm=1.0)
-    im1 = galsim.Convolve(psf, gal).drawImage(nx=15, ny=15, scale=0.2)  # 3 arcsec wide image
-    im2 = galsim.Convolve(psf_trunc, gal).drawImage(nx=15, ny=15, scale=0.2)
-    printval(im1, im2)
-    # Fails at decimal=8, but 7 seems pretty good
-    np.testing.assert_array_almost_equal(im1.array, im2.array, 7)
-
-
-@timer
 def test_ne():
     import copy
     pupil_plane_im = galsim.fits.read(os.path.join(imgdir, pp_file))
@@ -388,5 +371,4 @@ if __name__ == "__main__":
     test_phase_psf_batch()
     test_opt_indiv_aberrations()
     test_scale_unit()
-    test_max_size()
     test_ne()
