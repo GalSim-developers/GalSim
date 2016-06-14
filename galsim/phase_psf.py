@@ -236,6 +236,9 @@ class Aperture(object):
         # aggregates a good sampling interval from all of the wrapped PhaseScreens, and keep the
         # smaller stepk.
         if lam is None:
+            # For Airy, pupil_plane_scale is independent of wavelength.  We could build an Airy with
+            # lam_over_diam=1.0 and then alter the `good_pupil_scale = ...` line below
+            # appropriately, but it's easier to just arbitrarily set `lam=500` if it wasn't set.
             lam = 500.0
         airy = galsim.Airy(diam=diam, lam=lam, obscuration=obscuration, gsparams=self._gsparams)
         stepk = airy.stepK()
