@@ -64,14 +64,18 @@ def make_movie(args):
     # this screen list.
 
     # First, we estimate a weight for each screen, so that the turbulence is dominated by the lower
-    # layers.  For this, we just interpolate the weights given by Jee&Tyson (2011) onto a set of
-    # uniformly-spaced layers between 0 and 15.46 km altitude.
-    JT_alts = [0.0, 2.58, 5.16, 7.73, 12.89, 15.46]  # km
-    JT_weights = [0.652, 0.172, 0.055, 0.025, 0.074, 0.022]  # weight
-    JT_interp = galsim.LookupTable(JT_alts, JT_weights, interpolant='linear')
+    # layers consistent with direct measurements.  The specific values we use are from SCIDAR
+    # measurements on Cerro Pachon as part of the 1998 Gemini site selection process
+    # (Ellerbroek 2002, JOSA Vol 19 No 9).
 
-    alts = 15.46*np.arange(args.nlayers)/(args.nlayers-1)  # uniformly spaced altitudes in km.
-    weights = JT_interp(alts)  # interpolate the weights
+    Ellerbroek_alts = [0.0, 2.58, 5.16, 7.73, 12.89, 15.46]  # km
+    Ellerbroek_weights = [0.652, 0.172, 0.055, 0.025, 0.074, 0.022]
+    Ellerbroek_interp = galsim.LookupTable(Ellerbroek_alts, Ellerbroek_weights,
+                                           interpolant='linear')
+
+    # Use given number of uniformly spaced altitudes
+    alts = np.max(Ellerbroek_alts)*np.arange(args.nlayers)/(args.nlayers-1)
+    weights = Ellerbroek_interp(alts)  # interpolate the weights
     weights /= sum(weights)  # and renormalize
 
     # Each layer can have its own turbulence strength (roughly inversely proportional to the Fried
@@ -80,12 +84,18 @@ def make_movie(args):
     # galsim.Atmosphere helper function is useful for constructing this list, and requires lists of
     # parameters for the different layers.
 
+    max_speed = 20  # Pick (an arbitrary) maximum wind speed in m/s.
     spd = []  # Wind speed in m/s
     dirn = [] # Wind direction in radians
     r0_500 = [] # Fried parameter in m at a wavelength of 500 nm.
     for i in xrange(args.nlayers):
-        spd.append(u()*20.0)  # Use a random speed between 0 and 20 m/s for each layer
+        spd.append(u()*max_speed)  # Use a random speed between 0 and max_speed
         dirn.append(u()*360*galsim.degrees)  # And an isotropically distributed wind direction.
+        # The turbulence strength of each layer is specified by its Fried parameter r0_500.
+        # The relationship between this strength (really the refractive index structure function)
+        # and the Fried parameter is a bit tricky however, as the later scales like the former
+        # to the -3/5 power.  So we need to adjust our weights accordingly when splitting up our
+        # target "cumulative" Fried parameter into Fried parameters for individual layers.
         r0_500.append(args.r0_500*weights[i]**(-3./5))
         print ("Adding layer at altitude {:5.2f} km with velocity ({:5.2f}, {:5.2f}) m/s, "
                "and r0_500 {:5.3f} m."
