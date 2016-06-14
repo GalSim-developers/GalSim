@@ -959,12 +959,6 @@ class PhaseScreenPSF(GSObject):
                                you its best guess about how high you might want to raise it.
                                However, you can suppress this warning by using
                                `suppress_warning=True`.  [default: False]
-    @param max_size            Set a maximum size of the internal image for the PSF profile in
-                               arcsec.  Sometimes the code calculates a rather large image size to
-                               describe the optical PSF profile.  If you will eventually be drawing
-                               onto a smallish postage stamp, you might want to save some CPU time
-                               by setting `max_size` to be the size of your postage stamp.
-                               [default: None]
     @param gsparams            An optional GSParams argument.  See the docstring for GSParams for
                                details. [default: None]
 
@@ -1009,7 +1003,7 @@ class PhaseScreenPSF(GSObject):
     """
     def __init__(self, screen_list, lam, exptime=0.0, flux=1.0, aper=None,
                  theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin), interpolant=None,
-                 scale_unit=galsim.arcsec, suppress_warning=False, max_size=None, gsparams=None,
+                 scale_unit=galsim.arcsec, suppress_warning=False, gsparams=None,
                  _eval_now=True, _bar=None, _force_stepk=None, _force_maxk=None, **kwargs):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
         # progress bar during long calculations.
@@ -1032,7 +1026,6 @@ class PhaseScreenPSF(GSObject):
         if isinstance(scale_unit, basestring):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         self.scale_unit = scale_unit
-        self.max_size = max_size
         self._gsparams = gsparams
         self._serialize_stepk = _force_stepk
         self._serialize_maxk = _force_maxk
@@ -1096,14 +1089,6 @@ class PhaseScreenPSF(GSObject):
         self.img = np.fft.fftshift(self.img)
         self.img *= (flux / (self.img.sum() * self.scale**2))
         self.img = galsim.ImageD(self.img.astype(np.float64), scale=self.scale)
-
-        if self.max_size is not None and self.max_size < self.img.scale*self.img.array.shape[0]:
-            center = self.img.center()
-            bds = galsim.BoundsI(center)
-            half_max_size = int(np.ceil(0.5*self.max_size/self.img.scale))
-            bds += center + galsim.PositionI(-half_max_size, -half_max_size)
-            bds += center + galsim.PositionI(half_max_size, half_max_size)
-            self.img = self.img[bds]
 
         if self._serialize_maxk is None:
             self.ii = galsim.InterpolatedImage(
@@ -1219,7 +1204,7 @@ class OpticalPSF(GSObject):
                                             astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0.,
                                             spher=0., aberrations=None, circular_pupil=True,
                                             obscuration=0., interpolant=None, oversampling=1.5,
-                                            pad_factor=1.5, max_size=None, nstruts=0,
+                                            pad_factor=1.5, nstruts=0,
                                             strut_thick=0.05, strut_angle=0.*galsim.degrees,
                                             pupil_plane_im=None, pupil_angle=0.*galsim.degrees)
 
@@ -1287,12 +1272,6 @@ class OpticalPSF(GSObject):
                             its best guess about how high you might want to raise it.  However,
                             you can suppress this warning by using `suppress_warning=True`.
                             [default: False]
-    @param max_size         Set a maximum size of the internal image for the optical PSF profile
-                            in arcsec.  Sometimes the code calculates a rather large image size
-                            to describe the optical PSF profile.  If you will eventually be
-                            drawing onto a smallish postage stamp, you might want to save some
-                            CPU time by setting `max_size` to be the size of your postage stamp.
-                            [default: None]
     @param flux             Total flux of the profile. [default: 1.]
     @param nstruts          Number of radial support struts to add to the central obscuration.
                             [default: 0]
@@ -1356,6 +1335,12 @@ class OpticalPSF(GSObject):
                  strut_angle=0.*galsim.degrees, pupil_plane_im=None,
                  pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None,
                  suppress_warning=False, max_size=None):
+        if max_size is not None:
+            from .deprecated import depr
+            depr('max_size', 1.4, '',
+                 "The max_size keyword has been removed.  If you have a need for it, "
+                 "please open an issue requesting the functionality.")
+
         if isinstance(scale_unit, basestring):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         # Need to handle lam/diam vs. lam_over_diam here since lam by itself is needed for

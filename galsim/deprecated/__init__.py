@@ -30,7 +30,7 @@ def depr(f, v, s1, s2=None):
 
     1. Normally, you would simply warn that a deprecated function has a new preferred syntax:
 
-            depr('applyShear', 1.1, 'obj = obj.shear(..)`)
+            depr('applyShear', 1.1, 'obj = obj.shear(..)')
 
     2. You can add extra information if you want to point out something about the new syntax:
 
