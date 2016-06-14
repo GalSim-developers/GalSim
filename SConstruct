@@ -203,12 +203,12 @@ def ErrorExit(*args, **kwargs):
 
     # Write out the current environment:
     out.write('The system environment is:\n')
-    for key in os.environ.keys():
+    for key in sorted(os.environ.keys()):
         out.write('   %s = %s\n'%(key,os.environ[key]))
     out.write('\n')
 
     out.write('The SCons environment is:\n')
-    for key in env.Dictionary().keys():
+    for key in sorted(env.Dictionary().keys()):
         out.write('   %s = %s\n'%(key,env[key]))
     out.write('\n')
 
