@@ -108,6 +108,7 @@ New Features
 - Added the FourierSqrt operator to compute the Fourier-space square root of a
   profile.  This is useful in implementing optimal coaddition algorithms; see
   make_coadd.py in the examples directory (#748).
+- Added version information to the compiled C++ library. (#750)
 
 
 Updates to galsim executable

@@ -27,3 +27,4 @@ RealSpaceConvolve.cpp
 Random.cpp
 CorrelatedNoise.cpp
 CDModel.cpp
+Version.cpp
