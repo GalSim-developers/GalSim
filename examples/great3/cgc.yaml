@@ -81,12 +81,18 @@ psf:
         trefoil2: { type: RandomGaussian, sigma: 0.07 }
         spher: { type: RandomGaussian, sigma: 0.07 }
 
-        # Sometimes the OpticalPSF wants to make a very large image of the PSF.  But if the
-        # PSF image is larger than the postage stamp onto which we will draw the object,
-        # the larger area is mostly wasted.  Setting max_size to the size of the postage stamp
-        # we will eventually draw onto helps avoid wasted calculations.
-        # This is in arcsec, so max_size = stamp_size * pixel_scale
-        max_size: "$@image.stamp_size * @image.pixel_scale"
+        # The original GREAT3 runs used a keyword max_size to improve the efficiency of OpticalPSF.
+        # However, we now believe that this keyword introduces additional aliasing and have
+        # deprecated its use in GalSim v1.4.  We have retained the original description in the
+        # doubly commented block below.
+
+        # # Sometimes the OpticalPSF wants to make a very large image of the PSF.  But if the
+        # # PSF image is larger than the postage stamp onto which we will draw the object,
+        # # the larger area is mostly wasted.  Setting max_size to the size of the postage stamp
+        # # we will eventually draw onto helps avoid wasted calculations.
+        # # This is in arcsec, so max_size = stamp_size * pixel_scale
+        # max_size: "$@image.stamp_size * @image.pixel_scale"
+
         suppress_warning: true
 
 gal:

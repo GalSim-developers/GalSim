@@ -210,6 +210,9 @@ class Aperture(object):
         if not is_default_geom and pupil_plane_im is not None:
             raise ValueError("Can't specify both geometric parameters and pupil_plane_im.")
 
+        if screen_list is not None and lam is None:
+            raise ValueError("Wavelength `lam` must be specified with `screen_list`.")
+
         # Although the user can set the pupil plane size and scale directly if desired, in most
         # cases it's nicer to have GalSim try to pick good values for these.
 
@@ -227,26 +230,23 @@ class Aperture(object):
         # important as they affect the amount of aliasing encountered.  (An Airy profile has an
         # infinite extent in real space, so it *always* aliases at some level, more so with an
         # obscuration than without.  The GSParams settings indicate how much aliasing we're
-        # willing to tolerate, so it's required here.)  To pick a good sampling interval, we first
-        # check if a `screen_list` argument was supplied.  If so, we check its .stepK() method,
-        # which aggregates a good sampling interval from all of the wrapped PhaseScreens.  If
-        # `screen_list` isn't supplied, then we fall back to creating an obscured Airy GSProfile and
-        # using its .stepK().
-        if screen_list is not None:
-            screen_list = galsim.PhaseScreenList(screen_list)
-            if lam is None:
-                raise ValueError("Wavelength `lam` must be specified with `screen_list`.")
-            stepk = screen_list.stepK(lam=lam, diam=diam, obscuration=obscuration,
-                                      gsparams=self._gsparams)
-        else:
+        # willing to tolerate, so it's required here.)  To pick a good sampling interval, we start
+        # with the interval that would be used for an obscured Airy GSObject profile.  If the
+        # `screen_list` argument was supplied, then we also check its .stepK() method, which
+        # aggregates a good sampling interval from all of the wrapped PhaseScreens, and keep the
+        # smaller stepk.
+        if lam is None:
             # For Airy, pupil_plane_scale is independent of wavelength.  We could build an Airy with
             # lam_over_diam=1.0 and then alter the `good_pupil_scale = ...` line below
             # appropriately, but it's easier to just arbitrarily set `lam=500` if it wasn't set.
-            if lam is None:
-                lam = 500.0
-            airy = galsim.Airy(diam=diam, lam=lam, obscuration=obscuration,
-                               gsparams=self._gsparams)
-            stepk = airy.stepK()
+            lam = 500.0
+        airy = galsim.Airy(diam=diam, lam=lam, obscuration=obscuration, gsparams=self._gsparams)
+        stepk = airy.stepK()
+        if screen_list is not None:
+            screen_list = galsim.PhaseScreenList(screen_list)
+            stepk = min(stepk,
+                        screen_list.stepK(lam=lam, diam=diam, obscuration=obscuration,
+                                          gsparams=self._gsparams))
         good_pupil_scale = (stepk * lam * 1.e-9 * (galsim.radians / galsim.arcsec)
                             / (2 * np.pi * pad_factor))
 
@@ -946,15 +946,19 @@ class PhaseScreenPSF(GSObject):
     @param exptime             Time in seconds overwhich to accumulate evolving instantaneous PSF.
                                [default: 0.0]
     @param flux                Flux of output PSF [default: 1.0]
+    @param aper                Aperture to use to compute PSF(s).  [default: None]
     @param theta               Field angle of PSF.  Single 2-tuple (theta_x, theta_y) or iterable
                                of 2-tuples.  [default: (0.0*galsim.arcmin, 0.0*galsim.arcmin)]
-    @param scale_unit          Units to use for the sky coordinates of the output profile.
-                               [default: galsim.arcsec]
     @param interpolant         Either an Interpolant instance or a string indicating which
                                interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
                                'cubic', 'quintic', or 'lanczosN' where N should be the integer order
                                to use.  [default: galsim.Quintic()]
-    @param aper                Aperture to use to compute PSF(s).  [default: None]
+    @param scale_unit          Units to use for the sky coordinates of the output profile.
+                               [default: galsim.arcsec]
+    @param suppress_warning    If `pad_factor` is too small, the code will emit a warning telling
+                               you its best guess about how high you might want to raise it.
+                               However, you can suppress this warning by using
+                               `suppress_warning=True`.  [default: False]
     @param gsparams            An optional GSParams argument.  See the docstring for GSParams for
                                details. [default: None]
 
@@ -997,11 +1001,10 @@ class PhaseScreenPSF(GSObject):
                                to find a good value automatically.  See also `oversampling` for
                                adjusting the pupil size.  [default: None]
     """
-    def __init__(self, screen_list, lam, exptime=0.0, flux=1.0,
-                 theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin),
-                 interpolant=None, aper=None, scale_unit=galsim.arcsec,
-                 gsparams=None, _eval_now=True, _bar=None, suppress_warning=False,
-                 _force_stepk=None, _force_maxk=None, **kwargs):
+    def __init__(self, screen_list, lam, exptime=0.0, flux=1.0, aper=None,
+                 theta=(0.0*galsim.arcmin, 0.0*galsim.arcmin), interpolant=None,
+                 scale_unit=galsim.arcsec, suppress_warning=False, gsparams=None,
+                 _eval_now=True, _bar=None, _force_stepk=None, _force_maxk=None, **kwargs):
         # Hidden `_bar` kwarg can be used with astropy.console.utils.ProgressBar to print out a
         # progress bar during long calculations.
 
@@ -1010,24 +1013,23 @@ class PhaseScreenPSF(GSObject):
         self.screen_list = screen_list
         self.lam = float(lam)
         self.exptime = float(exptime)
-        if not isinstance(theta[0], galsim.Angle) or not isinstance(theta[1], galsim.Angle):
-            raise TypeError("theta must be 2-tuple of galsim.Angle's.")
-        self.theta = theta
-        if isinstance(scale_unit, basestring):
-            scale_unit = galsim.angle.get_angle_unit(scale_unit)
-        self.scale_unit = scale_unit
-        self.interpolant = interpolant
-        self._gsparams = gsparams
-        self._serialize_stepk = _force_stepk
-        self._serialize_maxk = _force_maxk
-
         if aper is None:
             # Check here for diameter.
             if 'diam' not in kwargs:
                 raise ValueError("Diameter required if aperture not specified directly.")
             aper = Aperture(lam=lam, screen_list=screen_list, gsparams=gsparams, **kwargs)
-
         self.aper = aper
+        if not isinstance(theta[0], galsim.Angle) or not isinstance(theta[1], galsim.Angle):
+            raise TypeError("theta must be 2-tuple of galsim.Angle's.")
+        self.theta = theta
+        self.interpolant = interpolant
+        if isinstance(scale_unit, basestring):
+            scale_unit = galsim.angle.get_angle_unit(scale_unit)
+        self.scale_unit = scale_unit
+        self._gsparams = gsparams
+        self._serialize_stepk = _force_stepk
+        self._serialize_maxk = _force_maxk
+
         self.scale = aper._sky_scale(self.lam, self.scale_unit)
 
         self.img = np.zeros(self.aper.illuminated.shape, dtype=np.float64)
@@ -1202,7 +1204,7 @@ class OpticalPSF(GSObject):
                                             astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0.,
                                             spher=0., aberrations=None, circular_pupil=True,
                                             obscuration=0., interpolant=None, oversampling=1.5,
-                                            pad_factor=1.5, max_size=None, nstruts=0,
+                                            pad_factor=1.5, nstruts=0,
                                             strut_thick=0.05, strut_angle=0.*galsim.degrees,
                                             pupil_plane_im=None, pupil_angle=0.*galsim.degrees)
 
@@ -1270,12 +1272,6 @@ class OpticalPSF(GSObject):
                             its best guess about how high you might want to raise it.  However,
                             you can suppress this warning by using `suppress_warning=True`.
                             [default: False]
-    @param max_size         Set a maximum size of the internal image for the optical PSF profile
-                            in arcsec.  Sometimes the code calculates a rather large image size
-                            to describe the optical PSF profile.  If you will eventually be
-                            drawing onto a smallish postage stamp, you might want to save some
-                            CPU time by setting `max_size` to be the size of your postage stamp.
-                            [default: None]
     @param flux             Total flux of the profile. [default: 1.]
     @param nstruts          Number of radial support struts to add to the central obscuration.
                             [default: 0]
@@ -1339,6 +1335,13 @@ class OpticalPSF(GSObject):
                  strut_angle=0.*galsim.degrees, pupil_plane_im=None,
                  pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None,
                  suppress_warning=False, max_size=None):
+        if max_size is not None:
+            from .deprecated import depr
+            depr('max_size', 1.4, '',
+                 "The max_size keyword has been removed.  In its place, the pad_factor keyword can"
+                 "be used to adjust the size of the internal InterpolatedImage.")
+
+
         if isinstance(scale_unit, basestring):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         # Need to handle lam/diam vs. lam_over_diam here since lam by itself is needed for

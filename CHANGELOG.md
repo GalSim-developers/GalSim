@@ -108,6 +108,7 @@ New Features
   profile.  This is useful in implementing optimal coaddition algorithms; see
   make_coadd.py in the examples directory (#748).
 - Made Bandpass.thin() preserve the zeropoint by default. (#711)
+- Added version information to the compiled C++ library. (#750)
 
 
 Updates to galsim executable

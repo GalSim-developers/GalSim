@@ -173,6 +173,12 @@ config files that are parsed by the executable `bin/galsim`.  (There are no
 corresponding .yaml files for demo12 and demo13 yet, because some of the
 functionality cannot yet be carried out using config files.)
 
+Two other scripts in the `examples/` directory that may be of interest, but
+are not part of the GalSim tutorial series, are `make_coadd.py`, which
+demonstrates the use of the FourierSqrt transformation to optimally coadd
+images, and `psf_wf_movie.py`, which demonstrates the realistic atmospheric
+PSF code by making a movie of a time-variable PSF and wavefront.
+
 As the project develops through further versions, and adds further
 capabilities to the software, more demo scripts may be added to `examples/`
 to illustrate what GalSim can do.

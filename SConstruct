@@ -165,6 +165,14 @@ def ClearCache():
     if os.path.exists(".sconf_temp"):
         shutil.rmtree(".sconf_temp")
 
+def GetMacVersion():
+    print 'Mac version is',platform.mac_ver()[0]
+    ver = platform.mac_ver()[0].split('.')
+    if len(ver) >= 2:
+        return ver[:2]
+    else:
+        raise RuntimeError("Unable to parse Mac version")
+
 def ErrorExit(*args, **kwargs):
     """
     Whenever we get an error in the initial setup checking for the various
@@ -195,12 +203,12 @@ def ErrorExit(*args, **kwargs):
 
     # Write out the current environment:
     out.write('The system environment is:\n')
-    for key in os.environ.keys():
+    for key in sorted(os.environ.keys()):
         out.write('   %s = %s\n'%(key,os.environ[key]))
     out.write('\n')
 
     out.write('The SCons environment is:\n')
-    for key in env.Dictionary().keys():
+    for key in sorted(env.Dictionary().keys()):
         out.write('   %s = %s\n'%(key,env[key]))
     out.write('\n')
 
@@ -250,8 +258,7 @@ def ErrorExit(*args, **kwargs):
     # Give a helpful message if running El Capitan.
     if sys.platform.find('darwin') != -1:
         import platform
-        major, minor, rev = platform.mac_ver()[0].split('.')
-        print 'Mac version: ',major,minor
+        major, minor = GetMacVersion()
         if int(major) > 10 or int(minor) >= 11:
             print
             print 'Starting with El Capitan (OSX 10.11), Apple instituted a new policy called'
@@ -748,8 +755,10 @@ def PrependLibraryPaths(pname, env):
     """
     for var in ['DYLD_LIBRARY_PATH', 'DYLD_FALLBACK_LIBRARY_PATH', 'LD_LIBRARY_PATH']:
         if var in env and env[var] != '':
+            # %r adds quotes around env[var] and pname in case there are spaces in any of the
+            # directories involved.  Otherwise bash -c pname will choke.
             pre = '%s=%r'%(var,env[var])
-            pname = "%s %s"%(pre,pname)
+            pname = "%s %r"%(pre,pname)
 
     return pname
 
@@ -1639,7 +1648,7 @@ int main()
         # Update: Even after 5.1, it still seems to have problems for some systems.
         import platform
         import subprocess
-        print 'Mac version is',platform.mac_ver()[0]
+        major, minor = GetMacVersion()
         try:
             p = subprocess.Popen(['xcodebuild','-version'], stdout=subprocess.PIPE)
             xcode_version = p.stdout.readlines()[0].split()[1]
@@ -1648,7 +1657,6 @@ int main()
             # Don't require the user to have xcode installed.
             xcode_version = None
             print 'Unable to determine XCode version'
-        major, minor, rev = platform.mac_ver()[0].split('.')
         if ((int(major) > 10 or int(minor) >= 7) and '-latlas' not in tmv_link and
                 ('-lblas' in tmv_link or '-lcblas' in tmv_link)):
             print 'WARNING: The Apple BLAS library has been found not to be thread safe on'
