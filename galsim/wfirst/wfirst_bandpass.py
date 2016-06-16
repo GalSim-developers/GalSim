@@ -25,7 +25,7 @@ import galsim
 import numpy as np
 import os
 
-def getBandpasses(AB_zeropoint=True, exptime=None, default_thin_trunc=False, **kwargs):
+def getBandpasses(AB_zeropoint=True, exptime=None, default_thin_trunc=True, **kwargs):
     """Utility to get a dictionary containing the WFIRST bandpasses used for imaging.
 
     This routine reads in a file containing a list of wavelengths and throughput for all WFIRST
@@ -40,7 +40,9 @@ def getBandpasses(AB_zeropoint=True, exptime=None, default_thin_trunc=False, **k
     The bandpasses can be either truncated or thinned before setting the zero points, by passing in
     the keyword arguments that need to get propagated through to the Bandpass.thin() and/or
     Bandpass.truncate() routines.  Or, if the user wishes to thin and truncate using the defaults
-    for those two routines, they can use `default_thin_trunc=True`.
+    for those two routines, they can use `default_thin_trunc=True`.  This option is the default,
+    because the stored 'official' versions of the bandpasses cover a wide wavelength range.  So even
+    if thinning is not desired, truncation is recommended.
 
     By default, the routine will set an AB zeropoint using the WFIRST effective diameter and default
     exposure time.  Setting the zeropoint can be avoided by setting `AB_zeropoint=False`; changing
@@ -70,7 +72,7 @@ def getBandpasses(AB_zeropoint=True, exptime=None, default_thin_trunc=False, **k
     @param default_thin_trunc Use the default thinning and truncation options?  Users who wish to
                               use no thinning and truncation of bandpasses, or who want control over
                               the level of thinning and truncation, should have this be False.
-                              [default: False]
+                              [default: True]
     @params **kwargs          Other kwargs are passed to either `bandpass.thin()` or 
                               `bandpass.truncate()` as appropriate.
 

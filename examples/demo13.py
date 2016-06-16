@@ -88,9 +88,9 @@ def main(argv):
 
     # Read in the WFIRST filters, setting an AB zeropoint appropriate for this telescope given its
     # diameter and (since we didn't use any keyword arguments to modify this) using the typical
-    # exposure time for WFIRST images.  We also truncate the parts of the bandpasses that are near 0
-    # at the edges, and thin them by the default amount.
-    filters = wfirst.getBandpasses(AB_zeropoint=True, default_thin_trunc=True)
+    # exposure time for WFIRST images.  By default, this routine truncates the parts of the
+    # bandpasses that are near 0 at the edges, and thins them by the default amount.
+    filters = wfirst.getBandpasses(AB_zeropoint=True)
     logger.debug('Read in WFIRST imaging filters.')
 
     logger.info('Reading from a parametric COSMOS catalog.')
