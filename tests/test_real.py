@@ -75,10 +75,10 @@ def moments_to_ellip(mxx, myy, mxy):
     sig = (mxx*myy - mxy**2)**(0.25)
     return e1, e2, sig
 
+
+@timer
 def test_real_galaxy_ideal():
     """Test accuracy of various calculations with fake Gaussian RealGalaxy vs. ideal expectations"""
-    import time
-    t1 = time.time()
     # read in faked Gaussian RealGalaxy from file
     rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
     rg = galsim.RealGalaxy(rgc, index=ind_fake)
@@ -156,13 +156,10 @@ def test_real_galaxy_ideal():
                         sim_image.array, expected_image.array, decimal = 3,
                         err_msg = "Error in comparison of ideal Gaussian RealGalaxy calculations")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_real_galaxy_saved():
     """Test accuracy of various calculations with real RealGalaxy vs. stored SHERA result"""
-    import time
-    t1 = time.time()
     # read in real RealGalaxy from file
     #rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
     # This is an alternate way to give the directory -- as part of the catalog file name.
@@ -202,12 +199,10 @@ def test_real_galaxy_saved():
     do_pickle(rgc)
     do_pickle(rg)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_ne():
-    import time
-    t1 = time.time()
+    """ Check that inequality works as expected."""
     rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
     gsp = galsim.GSParams(folding_threshold=1.1e-3)
 
@@ -220,9 +215,6 @@ def test_ne():
             galsim.RealGalaxy(rgc, index=0, noise_pad_size=5.0),
             galsim.RealGalaxy(rgc, index=0, gsparams=gsp)]
     all_obj_diff(gals)
-
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 if __name__ == "__main__":

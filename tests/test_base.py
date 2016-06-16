@@ -66,11 +66,10 @@ default_params = galsim.GSParams(
         integration_abserr = 1.e-8)
 
 
+@timer
 def test_gaussian():
     """Test the generation of a specific Gaussian profile against a known result.
     """
-    import time
-    t1 = time.time()
     savedImg = galsim.fits.read(os.path.join(imgdir, "gauss_1.fits"))
     savedImg.setCenter(0,0)
     dx = 0.2
@@ -139,15 +138,11 @@ def test_gaussian():
     do_pickle(gauss)
     do_pickle(gauss.SBProfile)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_gaussian_properties():
     """Test some basic properties of the Gaussian profile.
     """
-    import time
-    t1 = time.time()
     gauss = galsim.Gaussian(flux=test_flux, sigma=test_sigma)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
@@ -163,15 +158,12 @@ def test_gaussian_properties():
         gauss = galsim.Gaussian(flux=inFlux, sigma=2.)
         outFlux = gauss.getFlux()
         np.testing.assert_almost_equal(outFlux, inFlux)
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+@timer
 def test_gaussian_radii():
     """Test initialization of Gaussian with different types of radius specification.
     """
-    import time
-    t1 = time.time()
     import math
     # Test constructor using half-light-radius:
     test_gal = galsim.Gaussian(flux = 1., half_light_radius = test_hlr)
@@ -303,16 +295,11 @@ def test_gaussian_radii():
     except ImportError:
         pass
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_gaussian_flux_scaling():
     """Test flux scaling for Gaussian.
     """
-    import time
-    t1 = time.time()
-
     # decimal point to go to for parameter value comparisons
     param_decimal = 12
 
@@ -357,15 +344,12 @@ def test_gaussian_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+@timer
 def test_exponential():
     """Test the generation of a specific exp profile against a known result.
     """
-    import time
-    t1 = time.time()
     re = 1.0
     # Note the factor below should really be 1.6783469900166605, but the value of 1.67839 is
     # retained here as it was used by SBParse to generate the original known result (this changed
@@ -411,15 +395,11 @@ def test_exponential():
     do_pickle(expon)
     do_pickle(expon.SBProfile)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_exponential_properties():
     """Test some basic properties of the Exponential profile.
     """
-    import time
-    t1 = time.time()
     expon = galsim.Exponential(flux=test_flux, scale_radius=test_scale[0])
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
@@ -435,15 +415,12 @@ def test_exponential_properties():
         expon = galsim.Exponential(flux=inFlux, scale_radius=1.8)
         outFlux = expon.getFlux()
         np.testing.assert_almost_equal(outFlux, inFlux)
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+@timer
 def test_exponential_radii():
     """Test initialization of Exponential with different types of radius specification.
     """
-    import time
-    t1 = time.time()
     import math
     # Test constructor using half-light-radius:
     test_gal = galsim.Exponential(flux = 1., half_light_radius = test_hlr)
@@ -489,16 +466,11 @@ def test_exponential_radii():
     except ImportError:
         pass
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_exponential_flux_scaling():
     """Test flux scaling for Exponential.
     """
-    import time
-    t1 = time.time()
-
     # decimal point to go to for parameter value comparisons
     param_decimal = 12
 
@@ -543,16 +515,12 @@ def test_exponential_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+@timer
 def test_sersic():
     """Test the generation of a specific Sersic profile against a known result.
     """
-    import time
-    t1 = time.time()
-
     # Test Sersic
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_3_1.fits"))
     dx = 0.2
@@ -594,7 +562,6 @@ def test_sersic():
     do_pickle(sersic, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(sersic)
     do_pickle(sersic.SBProfile)
-
 
     # Now repeat everything using a truncation.  (Above had no truncation.)
 
@@ -650,15 +617,11 @@ def test_sersic():
     sersic = galsim.Sersic(n=4, flux=test_flux, half_light_radius=1, trunc=1.45)
     do_kvalue(sersic,myImg, "Severely truncated n=4 Sersic")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_sersic_radii():
     """Test initialization of Sersic with different types of radius specification.
     """
-    import time
-    t1 = time.time()
     import math
     for n, scale in zip(test_sersic_n, test_scale) :
 
@@ -822,16 +785,11 @@ def test_sersic_radii():
         except ImportError:
             pass
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_sersic_flux_scaling():
     """Test flux scaling for Sersic.
     """
-    import time
-    t1 = time.time()
-
     # decimal point to go to for parameter value comparisons
     param_decimal = 12
 
@@ -888,10 +846,8 @@ def test_sersic_flux_scaling():
                 obj2.getFlux(), test_flux / 2., decimal=param_decimal,
                 err_msg="Flux param inconsistent after __div__ (result).")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_sersic_05():
     """Test the equivalence of Sersic with n=0.5 and Gaussian
     """
@@ -930,6 +886,7 @@ def test_sersic_05():
         np.testing.assert_almost_equal(sersic.kValue(pos), gauss.kValue(pos), decimal=5)
 
 
+@timer
 def test_sersic_1():
     """Test the equivalence of Sersic with n=1 and Exponential
     """
@@ -966,12 +923,11 @@ def test_sersic_1():
         np.testing.assert_almost_equal(sersic.kValue(pos), expon.kValue(pos), decimal=5)
 
 
+@timer
 def test_airy():
     """Test the generation of a specific Airy profile against a known result.
     """
-    import time
     import math
-    t1 = time.time()
     savedImg = galsim.fits.read(os.path.join(imgdir, "airy_.8_.1.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
@@ -1026,15 +982,11 @@ def test_airy():
     airy4 = galsim.Airy(lam=lam, diam=0.3, obscuration=0.1, flux=1.7)
     gsobject_compare(airy,airy4)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_airy_radii():
     """Test Airy half light radius and FWHM correctly set and match image.
     """
-    import time
-    t1 = time.time()
     import math
     # Test constructor using lam_over_diam: (only option for Airy)
     test_gal = galsim.Airy(lam_over_diam= 1./0.8, flux=1.)
@@ -1067,16 +1019,11 @@ def test_airy_radii():
     except ImportError:
         pass
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_airy_flux_scaling():
     """Test flux scaling for Airy.
     """
-    import time
-    t1 = time.time()
-
     # decimal point to go to for parameter value comparisons
     param_decimal = 12
     test_loD = 1.9
@@ -1123,15 +1070,12 @@ def test_airy_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+@timer
 def test_box():
     """Test the generation of a specific box profile against a known result.
     """
-    import time
-    t1 = time.time()
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_1.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     myImg.setCenter(0,0)
@@ -1206,15 +1150,11 @@ def test_box():
         do_pickle(conv, lambda x: x.xValue(0.123,-0.456))
         do_pickle(conv)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_tophat():
     """Test the generation of a specific tophat profile against a known result.
     """
-    import time
-    t1 = time.time()
     savedImg = galsim.fits.read(os.path.join(imgdir, "tophat_101.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=0.2)
     myImg.setCenter(0,0)
@@ -1289,15 +1229,11 @@ def test_tophat():
     conv = galsim.Convolve(tophat, galsim.Pixel(scale=scale), real_space=True)
     do_kvalue(conv,im, "Sheared TopHat convolved with pixel in real space")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_moffat():
     """Test the generation of a specific Moffat profile against a known result.
     """
-    import time
-    t1 = time.time()
     savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_2_5.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
@@ -1356,15 +1292,11 @@ def test_moffat():
         # Don't bother repeating the do_shoot tests, since they are rather slow, and the code
         # isn't different for the different beta values.
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_moffat_properties():
     """Test some basic properties of the Moffat profile.
     """
-    import time
-    t1 = time.time()
     # Code was formerly:
     # psf = galsim.Moffat(beta=2.0, truncationFWHM=2, flux=test_flux, half_light_radius=1)
     #
@@ -1404,15 +1336,11 @@ def test_moffat_properties():
         outFlux = psfFlux.getFlux()
         np.testing.assert_almost_equal(outFlux, inFlux)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_moffat_radii():
     """Test initialization of Moffat with different types of radius specification.
     """
-    import time
-    t1 = time.time()
     import math
 
     test_beta = 2.
@@ -1593,16 +1521,11 @@ def test_moffat_radii():
     except ImportError:
         pass
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_moffat_flux_scaling():
     """Test flux scaling for Moffat.
     """
-    import time
-    t1 = time.time()
-
     # decimal point to go to for parameter value comparisons
     param_decimal = 12
 
@@ -1656,16 +1579,12 @@ def test_moffat_flux_scaling():
                 obj2.getFlux(), test_flux / 2., decimal=param_decimal,
                 err_msg="Flux param inconsistent after __div__ (result).")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_kolmogorov():
     """Test the generation of a specific Kolmogorov profile against a known result.
     """
-    import time
     import math
-    t1 = time.time()
     dx = 0.2
     # This savedImg was created from the SBKolmogorov implementation in
     # commit c8efd74d1930157b1b1ffc0bfcfb5e1bf6fe3201
@@ -1727,16 +1646,11 @@ def test_kolmogorov():
     kolm5 = galsim.Kolmogorov(lam=lam, r0_500=r0_500, flux=test_flux)
     gsobject_compare(kolm,kolm5)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_kolmogorov_properties():
     """Test some basic properties of the Kolmogorov profile.
     """
-    import time
-    t1 = time.time()
-
     lor = 1.5
     psf = galsim.Kolmogorov(lam_over_r0=lor, flux=test_flux)
     # Check that we are centered on (0, 0)
@@ -1767,15 +1681,11 @@ def test_kolmogorov_properties():
         np.testing.assert_almost_equal(out_flux, test_flux, 3,
                                        err_msg="Flux of Kolmogorov (image array) is incorrect.")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_kolmogorov_radii():
     """Test initialization of Kolmogorov with different types of radius specification.
     """
-    import time
-    t1 = time.time()
     import math
     # Test constructor using lambda/r0
     lors = [1, 0.5, 2, 5]
@@ -1855,16 +1765,11 @@ def test_kolmogorov_radii():
     except ImportError:
         pass
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_kolmogorov_flux_scaling():
     """Test flux scaling for Kolmogorov.
     """
-    import time
-    t1 = time.time()
-
     # decimal point to go to for parameter value comparisons
     param_decimal = 12
     test_lor0 = 1.9
@@ -1910,16 +1815,12 @@ def test_kolmogorov_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+@timer
 def test_spergel():
     """Test the generation of a specific Spergel profile against a known result.
     """
-    import time
-    t1 = time.time()
-
     mathica_enclosed_fluxes = [3.06256e-2, 9.99995e-6, 6.06443e-10, 2.94117e-11, 6.25011e-12]
     mathica_enclosing_radii = [2.3973e-17, 1.00001e-5, 1.69047e-3, 5.83138e-3, 1.26492e-2]
 
@@ -1977,15 +1878,11 @@ def test_spergel():
         do_pickle(spergel)
         do_pickle(spergel.SBProfile)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_spergel_properties():
     """Test some basic properties of the Spergel profile.
     """
-    import time
-    t1 = time.time()
     spergel = galsim.Spergel(nu=0.0, flux=test_flux, scale_radius=1.0)
     # Check that we are centered on (0, 0)
     cen = galsim.PositionD(0, 0)
@@ -1997,15 +1894,12 @@ def test_spergel_properties():
         spergel = galsim.Spergel(nu=0.0, flux=inFlux, scale_radius=1.0)
         outFlux = spergel.getFlux()
         np.testing.assert_almost_equal(outFlux, inFlux)
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+@timer
 def test_spergel_radii():
     """Test initialization of Spergel with different types of radius specification.
     """
-    import time
-    t1 = time.time()
     import math
     for nu, scale in zip(test_spergel_nu, test_spergel_scale) :
 
@@ -2080,16 +1974,11 @@ def test_spergel_radii():
         except ImportError:
             pass
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_spergel_flux_scaling():
     """Test flux scaling for Spergel.
     """
-    import time
-    t1 = time.time()
-
     # decimal point to go to for parameter value comparisons
     param_decimal = 12
 
@@ -2137,16 +2026,11 @@ def test_spergel_flux_scaling():
             obj2.getFlux(), test_flux / 2., decimal=param_decimal,
             err_msg="Flux param inconsistent after __div__ (result).")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_spergel_05():
     """Test the equivalence of Spergel with nu=0.5 and Exponential
     """
-    import time
-    t1 = time.time()
-
     # cf test_exponential()
     re = 1.0
     r0 = re/1.67839
@@ -2179,10 +2063,8 @@ def test_spergel_05():
         np.testing.assert_almost_equal(spergel.xValue(pos), expon.xValue(pos), decimal=5)
         np.testing.assert_almost_equal(spergel.kValue(pos), expon.kValue(pos), decimal=5)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_ne():
     """Test base.py GSObjects for not-equals."""
     # Define some universal gsps

@@ -33,12 +33,12 @@ except ImportError:
 # So far, I only added two tests related to bugs that David Kirkby found in issues
 # #380 and #391.  But clearly more deserve to be added to our test suite.
 
+
+@timer
 def test_scattered():
     """Test aspects of building an Scattered image
     """
     import copy
-    import time
-    t1 = time.time()
 
     # Name some variables to make it easier to be sure they are the same value in the config dict
     # as when we build the image manually.
@@ -56,9 +56,9 @@ def test_scattered():
 
     # This part of the config will be the same for all tests
     base_config = {
-        'gal' : { 'type' : 'Gaussian', 
+        'gal' : { 'type' : 'Gaussian',
                   'sigma' : sigma,
-                  'flux' : flux 
+                  'flux' : flux
                 }
     }
 
@@ -98,7 +98,7 @@ def test_scattered():
             np.testing.assert_almost_equal(iyy / (sigma/scale)**2, 1, decimal=1)
 
 
-    # Check that stamp_xsize, stamp_ysize, image_pos use the object count, rather than the 
+    # Check that stamp_xsize, stamp_ysize, image_pos use the object count, rather than the
     # image count.
     config = copy.deepcopy(base_config)
     config['image'] = {
@@ -110,9 +110,9 @@ def test_scattered():
         'image_pos' : { 'type' : 'List',
                         'items' : [ galsim.PositionD(x1,y1),
                                     galsim.PositionD(x2,y2),
-                                    galsim.PositionD(x3,y3) ] 
+                                    galsim.PositionD(x3,y3) ]
                       },
-        'nobjects' : 3 
+        'nobjects' : 3
     }
 
     image = galsim.config.BuildImage(config)
@@ -123,7 +123,7 @@ def test_scattered():
 
     for (i,x,y) in [ (0,x1,y1), (1,x2,y2), (2,x3,y3) ]:
         stamp = galsim.ImageF(stamp_size+i,stamp_size+i, scale=scale)
-        if (stamp_size+i) % 2 == 0: 
+        if (stamp_size+i) % 2 == 0:
             x += 0.5
             y += 0.5
         ix = int(np.floor(x+0.5))
@@ -137,15 +137,12 @@ def test_scattered():
 
     np.testing.assert_almost_equal(image.array, image2.array)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_ccdnoise():
     """Test that the config layer CCD noise adds noise consistent with using a CCDNoise object.
     """
     import logging
-    import time
-    t1 = time.time()
 
     gain = 4
     sky = 50
@@ -283,15 +280,12 @@ def test_ccdnoise():
     np.testing.assert_almost_equal(np.var(image2.array),test_var, decimal=1,
                                    err_msg="CCDNoise w/ current_var > rn failed variance test.")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_cosmosnoise():
     """Test that the config layer COSMOS noise works with keywords.
     """
     import logging
-    import time
-    t1 = time.time()
 
     logger = None
 
@@ -334,9 +328,8 @@ def test_cosmosnoise():
         image.array, image2.array, rtol=1.e-5,
         err_msg='Config COSMOS noise does not reproduce results given kwargs')
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_njobs():
     """Test that splitting up jobs works correctly.
 
@@ -347,8 +340,6 @@ def test_njobs():
     However, Josh caught a very subtle bug when splitting up cgc.yaml in the examples/great3
     directory.  So this test explicitly checks for that.
     """
-    import time
-    t1 = time.time()
     # The bug was related to using a Current specification in the input field that accessed
     # a value that should have used the index_key = image_num, rather than the default when
     # processing the input field, being index_key = file_num.  Here is a fairly minimal
@@ -410,13 +401,9 @@ def test_njobs():
     np.testing.assert_equal(one01.array, two01.array,
                             err_msg="01 image was different for one job vs two jobs")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
 
 if __name__ == "__main__":
     test_scattered()
     test_ccdnoise()
     test_cosmosnoise()
     test_njobs()
-

@@ -60,11 +60,10 @@ delta_sub = 30
 image_decimal_precise = 15
 
 
+@timer
 def test_smallshear():
     """Test the application of a small shear to a Gaussian SBProfile against a known result.
     """
-    import time
-    t1 = time.time()
     e1 = 0.02
     e2 = 0.02
     myShear = galsim.Shear(e1=e1, e2=e2)
@@ -106,15 +105,11 @@ def test_smallshear():
     do_pickle(gauss)
     do_pickle(gauss.SBProfile)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_largeshear():
     """Test the application of a large shear to a Sersic SBProfile against a known result.
     """
-    import time
-    t1 = time.time()
     e1 = 0.0
     e2 = 0.5
 
@@ -164,16 +159,11 @@ def test_largeshear():
     do_pickle(gauss)
     do_pickle(gauss.SBProfile)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
-
+@timer
 def test_rotate():
     """Test the 45 degree rotation of a sheared Sersic profile against a known result.
     """
-    import time
-    t1 = time.time()
     myShear = galsim.Shear(e1=0.2, e2=0.0)
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_ellip_rotated.fits"))
     dx = 0.2
@@ -216,15 +206,11 @@ def test_rotate():
     do_pickle(gal)
     do_pickle(gal.SBProfile)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_mag():
     """Test the magnification (size x 1.5) of an exponential profile against a known result.
     """
-    import time
-    t1 = time.time()
     re = 1.0
     r0 = re/1.67839
     savedImg = galsim.fits.read(os.path.join(imgdir, "exp_mag.fits"))
@@ -291,14 +277,11 @@ def test_mag():
     do_pickle(gal)
     do_pickle(gal.SBProfile)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_lens():
     """Test the lensing (shear, magnification) of a Sersic profile carried out 2 ways.
     """
-    import time
-    t1 = time.time()
     re = 1.0
     n = 3.
     g1 = 0.12
@@ -316,15 +299,11 @@ def test_lens():
     np.testing.assert_array_almost_equal(im.array, im2.array, 5,
         err_msg="Lensing of Sersic profile done in two different ways gives different answer")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_shift():
     """Test the translation of a Box profile against a known result.
     """
-    import time
-    t1 = time.time()
     dx = 0.2
     savedImg = galsim.fits.read(os.path.join(imgdir, "box_shift.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
@@ -367,15 +346,11 @@ def test_shift():
     do_pickle(gauss)
     do_pickle(gauss.SBProfile)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_rescale():
     """Test the flux rescaling of a Sersic profile against a known result.
     """
-    import time
-    t1 = time.time()
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_doubleflux.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
@@ -512,15 +487,11 @@ def test_rescale():
     do_pickle(sersic2)
     do_pickle(sersic2.SBProfile)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_integer_shift_fft():
     """Test if shift works correctly for integer shifts using drawImage method.
     """
-    import time
-    t1 = time.time()
-
     gal = galsim.Gaussian(sigma=test_sigma)
     psf = galsim.Airy(lam_over_diam=test_hlr)
 
@@ -564,15 +535,11 @@ def test_integer_shift_fft():
         sub_center, sub_shift,  decimal=image_decimal_precise,
         err_msg="Integer shift failed for FFT rendered Gaussian GSObject with only PSF shifted ")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_integer_shift_photon():
     """Test if shift works correctly for integer shifts using method=phot.
     """
-    import time
-    t1 = time.time()
-
     n_photons_low = 10
     seed = 10
 
@@ -623,15 +590,11 @@ def test_integer_shift_photon():
         sub_center, sub_shift,  decimal=image_decimal_precise,
         err_msg="Integer shift failed for FFT rendered Gaussian GSObject with only PSF shifted ")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_flip():
     """Test several ways to flip a profile
     """
-    import time
-    t1 = time.time()
-
     # The Shapelet profile has the advantage of being fast and not circularly symmetric, so
     # it is a good test of the actual code for doing the flips (in SBTransform).
     # But since the bug Rachel reported in #645 was actually in SBInterpolatedImage
@@ -825,13 +788,10 @@ def test_flip():
         do_pickle(flip2)
         do_pickle(flip3)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_ne():
-    import time
-    t1 = time.time()
-
+    """ Check that inequality works as expected."""
     gal1 = galsim.Gaussian(fwhm=1)
     gal2 = galsim.Gaussian(fwhm=2)
     gsp = galsim.GSParams(maxk_threshold=1.1e-3, folding_threshold=5.1e-3)
@@ -853,9 +813,6 @@ def test_ne():
             galsim.Transform(gal1, flux_ratio=flux_ratio),
             galsim.Transform(gal1, gsparams=gsp)]
     all_obj_diff(objs)
-
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 if __name__ == "__main__":

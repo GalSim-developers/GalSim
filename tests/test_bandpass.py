@@ -30,12 +30,11 @@ except ImportError:
 path, filename = os.path.split(__file__)
 datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
 
+
+@timer
 def test_Bandpass_basic():
     """Basic tests of Bandpass functionality
     """
-    import time
-    t1 = time.time()
-
     try:
         # Cannot initialize bandpass without wave_type:
         np.testing.assert_raises(TypeError, galsim.Bandpass, throughput=lambda x:x)
@@ -121,15 +120,11 @@ def test_Bandpass_basic():
             do_pickle(b)
             do_pickle(b, lambda x: (x(390), x(470), x(490), x(510), x(560)) )
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_Bandpass_mul():
     """Check that Bandpasses multiply like I think they should...
     """
-    import time
-    t1 = time.time()
-
     a = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]), 'nm')
     b = galsim.Bandpass(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]), 'nm')
 
@@ -179,15 +174,11 @@ def test_Bandpass_mul():
                                          err_msg="wrong wave_list in Bandpass.__mul__")
     do_pickle(f)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_Bandpass_div():
     """Check that Bandpasses multiply like I think they should...
     """
-    import time
-    t1 = time.time()
-
     a = galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]), 'nm')
     b = galsim.Bandpass(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]), 'nm')
 
@@ -222,15 +213,11 @@ def test_Bandpass_div():
                                          err_msg="wrong wave_list in Bandpass.__div__")
     do_pickle(f)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_Bandpass_wave_type():
     """Check that `wave_type='ang'` works in Bandpass.__init__
     """
-    import time
-    t1 = time.time()
-
     a0 = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), wave_type='nm')
     a1 = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), wave_type='ang')
 
@@ -254,14 +241,10 @@ def test_Bandpass_wave_type():
     np.testing.assert_array_almost_equal(b0([1,2,3,4,5]), b1([1,2,3,4,5]), decimal=7,
                                err_msg="Bandpass.__call__ doesn't respect wave_type")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_ne():
-    import time
-    t1 = time.time()
-
+    """ Check that inequality works as expected."""
     tput = lambda x: x/1000
     lt = galsim.LookupTable([400, 550], [0.4, 0.55], interpolant='linear')
     sed = galsim.SED('3', 'nm', 'flambda')
@@ -288,14 +271,9 @@ def test_ne():
                            wave_type='nm').withZeropoint(sed, effective_diameter=1.0, exptime=1.0)]
     all_obj_diff(bps)
 
-    t2 = time.time()
-    print 'time for %s = %.2f' % (funcname(), t2-t1)
 
-
+@timer
 def test_thin():
-    import time
-    t1 = time.time()
-
     s = galsim.SED('1', wave_type='nm', flux_type='fphotons')
     bp = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), 'nm')
     flux = s.calculateFlux(bp)
@@ -319,9 +297,6 @@ def test_thin():
         print "num samples with preserve_range = False: ",len(thin_bp.wave_list)
         print "realized error = ",(flux-thin_flux)/flux
         assert np.abs(thin_err) < err, "Thinned bandpass failed accuracy goal, w/ range shrinkage."
-
-    t2 = time.time()
-    print 'time for %s = %.2f' % (funcname(), t2-t1)
 
 
 if __name__ == "__main__":

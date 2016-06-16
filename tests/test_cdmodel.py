@@ -29,17 +29,16 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
     from galsim.cdmodel import *
-    
+
 # Use a deterministic random number generator so we don't fail tests because of rare flukes in the
 # random numbers.
 rseed=12345
 
 
+@timer
 def test_simplegeometry():
     """Test charge deflection model for image with charges in only the central pixel(s).
     """
-    import time
-    t1 = time.time()
     size = 50
     center = 25
     shiftcoeff = 1.e-7
@@ -47,11 +46,11 @@ def test_simplegeometry():
     # note that this is fully degenerate with the gain, i.e. the flux level in the simulations
 
     level = 1.e5
-    
+
     # create otherwise empty image with central pixel at one
     i0 = galsim.Image(size,size, dtype=np.float64, init_value=0)
     i0.setValue(center,center,level)
-    
+
     # create otherwise empty image with three central pixels at one
     # central row
     ir = galsim.Image(size,size, dtype=np.float64, init_value=0)
@@ -67,7 +66,7 @@ def test_simplegeometry():
     # set up models, images
     cdr0   = PowerLawCD(2,shiftcoeff,0,0,0,0,0,0)
     i0cdr0 = cdr0.applyForward(i0)
-    
+
     cdt0   = PowerLawCD(2,0,shiftcoeff,0,0,0,0,0)
     i0cdt0 = cdt0.applyForward(i0)
     cdrx   = PowerLawCD(2,0,0,shiftcoeff,0,0,0,0)
@@ -76,27 +75,27 @@ def test_simplegeometry():
     # these should do something
     ircdtx = cdtx.applyForward(ir)
     itcdrx = cdrx.applyForward(it)
-    
+
     # these shouldn't do anything
     itcdtx = cdtx.applyForward(it)
     ircdrx = cdrx.applyForward(ir)
-    
+
     # R0, T0
     np.testing.assert_almost_equal(i0cdr0.at(center,center), level*(1.-level*shiftcoeff), 13-int(np.log10(level)),
                                    "Central pixel wrong in test_onepixel R0")
     np.testing.assert_almost_equal(i0cdt0.at(center,center), level*(1.-level*shiftcoeff), 13-int(np.log10(level)),
                                    "Central pixel wrong in test_onepixel T0")
-    
+
     np.testing.assert_almost_equal(i0cdr0.at(center+1,center), level*(level*shiftcoeff/2.), 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel R0")
     np.testing.assert_almost_equal(i0cdr0.at(center-1,center), level*(level*shiftcoeff/2.), 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel R0")
-    
+
     np.testing.assert_almost_equal(i0cdt0.at(center,center+1), level*(level*shiftcoeff/2.), 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel T0")
     np.testing.assert_almost_equal(i0cdt0.at(center,center-1), level*(level*shiftcoeff/2.), 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel T0")
-    
+
     # Tx
     np.testing.assert_almost_equal(ircdtx.at(center,center), level*(1.-2.*level*shiftcoeff), 13-int(np.log10(level)),
                                    "Central pixel wrong in test_onepixel TX")
@@ -104,21 +103,21 @@ def test_simplegeometry():
                                    "Off-center pixel wrong in test_onepixel TX")
     np.testing.assert_almost_equal(ircdtx.at(center+1,center), level*(1.-level*shiftcoeff), 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel TX")
-                                       
+
     np.testing.assert_almost_equal(ircdtx.at(center,center+1), level*level*shiftcoeff, 13-int(np.log10(level)),
                                    "Central pixel wrong in test_onepixel TX")
     np.testing.assert_almost_equal(ircdtx.at(center-1,center+1), level*level*shiftcoeff/2., 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel TX")
     np.testing.assert_almost_equal(ircdtx.at(center+1,center+1), level*level*shiftcoeff/2., 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel TX")
-                                   
+
     np.testing.assert_almost_equal(ircdtx.at(center,center-1), level*level*shiftcoeff, 13-int(np.log10(level)),
                                    "Central pixel wrong in test_onepixel TX")
     np.testing.assert_almost_equal(ircdtx.at(center-1,center-1), level*level*shiftcoeff/2., 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel TX")
     np.testing.assert_almost_equal(ircdtx.at(center+1,center-1), level*level*shiftcoeff/2., 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel TX")
-                                   
+
     # Rx
     np.testing.assert_almost_equal(itcdrx.at(center,center), level*(1.-2.*level*shiftcoeff), 13-int(np.log10(level)),
                                    "Central pixel wrong in test_onepixel RX")
@@ -126,27 +125,27 @@ def test_simplegeometry():
                                    "Off-center pixel wrong in test_onepixel RX")
     np.testing.assert_almost_equal(itcdrx.at(center,center+1), level*(1.-level*shiftcoeff), 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel RX")
-                                       
+
     np.testing.assert_almost_equal(itcdrx.at(center+1,center), level*level*shiftcoeff, 13-int(np.log10(level)),
                                    "Central pixel wrong in test_onepixel RX")
     np.testing.assert_almost_equal(itcdrx.at(center+1,center-1), level*level*shiftcoeff/2., 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel RX")
     np.testing.assert_almost_equal(itcdrx.at(center+1,center+1), level*level*shiftcoeff/2., 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel RX")
-                                   
+
     np.testing.assert_almost_equal(itcdrx.at(center-1,center), level*level*shiftcoeff, 13-int(np.log10(level)),
                                    "Central pixel wrong in test_onepixel RX")
     np.testing.assert_almost_equal(itcdrx.at(center-1,center-1), level*level*shiftcoeff/2., 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel RX")
     np.testing.assert_almost_equal(itcdrx.at(center-1,center+1), level*level*shiftcoeff/2., 13-int(np.log10(level)),
                                    "Off-center pixel wrong in test_onepixel RX")
-    
+
     # a model that should not change anything here
     u = galsim.UniformDeviate(rseed)
-    
+
     cdnull = PowerLawCD(2, 0, 0, shiftcoeff*u(), shiftcoeff*u(), shiftcoeff*u(), shiftcoeff*u(), 0)
     i0cdnull = cdnull.applyForward(i0)
-        
+
     # setting all pixels to 0 that we expect to be not 0...
     i0.setValue(center,center,0)
     i0cdnull.setValue(center,center,0)
@@ -156,13 +155,13 @@ def test_simplegeometry():
     i0cdt0.setValue(center,center,0)
     i0cdt0.setValue(center,center+1,0)
     i0cdt0.setValue(center,center-1,0)
-    
+
     ircdtx.subImage(galsim.BoundsI(center-1,center+1,center-1,center+1)).fill(0)
     itcdrx.subImage(galsim.BoundsI(center-1,center+1,center-1,center+1)).fill(0)
-    
+
     ircdrx.subImage(galsim.BoundsI(center-1,center+1,center,center)).fill(0)
     itcdtx.subImage(galsim.BoundsI(center,center,center-1,center+1)).fill(0)
-    
+
     # ... and comparing
     np.testing.assert_array_almost_equal(i0cdnull.array, i0.array, 10,
                                    "i0cdnull array is not 0 where it should be")
@@ -178,14 +177,12 @@ def test_simplegeometry():
                                    "itcdtx array is not 0 where it should be")
     np.testing.assert_array_almost_equal(itcdrx.array, i0.array, 10,
                                    "itcdrx array is not 0 where it should be")
-    t2 = time.time()
-    print 'time for %s = %.2f' % (funcname(), t2 - t1)
 
+
+@timer
 def test_fluxconservation():
     """Test flux conservation of charge deflection model for galaxy and flat image.
     """
-    import time
-    t1 = time.time()
     galflux = 3.e4
     galsigma = 3.
     noise = 10.
@@ -206,7 +203,7 @@ def test_fluxconservation():
         shiftcoeff/1.8, alpha)
     imagecd = cd.applyForward(image)
     flatcd  = cd.applyForward(flat)
-    
+
     # Then test
     np.testing.assert_almost_equal(
         image.array.sum(), imagecd.array.sum(), 13-int(np.log10(galflux)),
@@ -219,14 +216,11 @@ def test_fluxconservation():
     do_pickle(cd, lambda x: x.applyForward(image))
     do_pickle(cd)
 
-    t2 = time.time()
-    print 'time for %s = %.2f' % (funcname(), t2 - t1)
 
+@timer
 def test_forwardbackward():
     """Test invariance (to first order) under forward-backward transformation.
     """
-    import time
-    t1 = time.time()
     galflux = 3000.
     galsigma = 3.
     noise = 1.
@@ -237,8 +231,8 @@ def test_forwardbackward():
     gal = galsim.Gaussian(flux=galflux, sigma=galsigma)
     maxflux = gal.xValue(0,0)
     image = gal.drawImage(scale=1., dtype=np.float64)
-    
-    cimage = galsim.Image(image.getBounds(), dtype=np.float64) 
+
+    cimage = galsim.Image(image.getBounds(), dtype=np.float64)
     # used for normalization later, we expect residual to be of this order
     cimage.fill(1.e-3)
     cimage = cimage+image
@@ -246,28 +240,26 @@ def test_forwardbackward():
 
     # Define a consistent rng for repeatability
     urng = galsim.UniformDeviate(rseed)
-    image.addNoise(galsim.GaussianNoise(sigma=noise, rng=urng))  
+    image.addNoise(galsim.GaussianNoise(sigma=noise, rng=urng))
     cd = PowerLawCD(
         2, shiftcoeff * 0.0234, shiftcoeff * 0.05234, shiftcoeff * 0.01312, shiftcoeff * 0.00823,
         shiftcoeff * 0.07216, shiftcoeff * 0.01934, alpha)
-    
+
     imagecd = cd.applyForward(image)
     imagecddc = cd.applyBackward(imagecd)
 
     # residual after forward-backward should be of order a^2 q qmax^2
-    imageres = (imagecddc - image) / cimage    
+    imageres = (imagecddc - image) / cimage
     maxres = imageres.array.max()
     minres = imageres.array.min()
     assert maxres<10, ("maximum positive residual of forward-backward transformation is too large")
     assert minres>-10, ("maximum negative residual of forward-backward transformation is too large")
-    t2 = time.time()
-    print 'time for %s = %.2f' % (funcname(), t2 - t1)
 
+
+@timer
 def test_gainratio():
     """Test gain ratio functionality
     """
-    import time
-    t1 = time.time()
     galflux = 3000.
     galsigma = 3.
     noise = 1.
@@ -277,31 +269,29 @@ def test_gainratio():
 
     # image with fiducial gain
     gal    = galsim.Gaussian(flux=galflux, sigma=galsigma)
-    image  = gal.drawImage(scale=1.,dtype=np.float64)    
-    
+    image  = gal.drawImage(scale=1.,dtype=np.float64)
+
     # image with twice the gain, i.e. half the level
-    gal2   = galsim.Gaussian(flux=0.5*galflux, sigma=galsigma)    
-    image2 = gal2.drawImage(scale=1.,dtype=np.float64)   
-    
+    gal2   = galsim.Gaussian(flux=0.5*galflux, sigma=galsigma)
+    image2 = gal2.drawImage(scale=1.,dtype=np.float64)
+
     cd = PowerLawCD(2, shiftcoeff, 1.389*shiftcoeff, shiftcoeff/7.23, 2.*shiftcoeff/2.4323,
         shiftcoeff/1.8934, shiftcoeff/3.1, alpha)
-        
+
     image_cd  = cd.applyForward(image)
     image2_cd = cd.applyForward(image2,gain_ratio=2.)
-    
+
     imageres = (2.*image2_cd - image_cd)
     np.testing.assert_array_almost_equal(2.*image2_cd.array, image_cd.array, 13-int(np.log10(galflux)),
                                    "images with different gain not transformed equally")
-    t2 = time.time()
-    print 'time for %s = %.2f' % (funcname(), t2 - t1)
 
+
+@timer
 def test_exampleimage():
     """Test application of model compared to an independent implementation that was run on the
     example image.
     """
-    import time
-    t1 = time.time()
-    shiftcoeff = 1.e-7 
+    shiftcoeff = 1.e-7
 
     #n, r0, t0, rx, tx, r, t, alpha
     cd = PowerLawCD(
@@ -331,8 +321,6 @@ def test_exampleimage():
         # DG checked that the remaining differences appear to be numerical noise - BR agrees
         # that the difference images do not show coherent structure other than a border feature
         # which is expected
-    t2 = time.time()
-    print 'time for %s = %.2f' % (funcname(), t2 - t1)
 
 
 if __name__ == "__main__":

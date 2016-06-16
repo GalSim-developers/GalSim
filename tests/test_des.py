@@ -31,14 +31,12 @@ except ImportError:
     import galsim
 
 
+@timer
 def test_meds():
     """
     Create two objects, each with three exposures. Save them to a MEDS file.
     Load the MEDS file. Compare the created objects with the one read by MEDS.
     """
-    import time
-    t1 = time.time()
-
     # initialise empty MultiExposureObject list
     objlist = []
 
@@ -251,17 +249,12 @@ def test_meds():
 
         #print 'test passed get_mosaic for obj=%d' % (iobj)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_meds_config():
     """
     Create a meds file from a config and compare with a manual creation.
     """
-    import time
-    t1 = time.time()
-
     # Some parameters:
     if __name__ == '__main__':
         nobj = 5
@@ -416,9 +409,8 @@ def test_meds_config():
             # This should be also be 0.
             numpy.testing.assert_almost_equal(info['position_offset'], 0.)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_nan_fits():
     """Test reading in a FITS file that has NAN.0 entries in the header.
 
@@ -426,9 +418,6 @@ def test_nan_fits():
     """
     import warnings
     from galsim._pyfits import pyfits
-    import time
-    t1 = time.time()
-
     # The problematic file:
     file_name = "des_data/DECam_00158414_01.fits.fz"
 
@@ -482,15 +471,11 @@ def test_nan_fits():
     assert im.bounds == ref_bounds
     assert im.wcs == ref_wcs
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_psf():
     """Test the two kinds of PSF files we have in DES.
     """
-    import time
-    t1 = time.time()
-
     data_dir = 'des_data'
     psfex_file = "DECam_00154912_12_psfcat.psf"
     fitpsf_file = "DECam_00154912_12_fitpsf.fits"
@@ -607,16 +592,11 @@ def test_psf():
     numpy.testing.assert_almost_equal(meas.observed_shape.g2/2, ref_shape.g2/2, decimal=2,
                                       err_msg="Shapelet PSF shape.g2 doesn't match")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_psf_config():
     """Test building the two PSF types using the config layer.
     """
-    import time
-    t1 = time.time()
-
     data_dir = 'des_data'
     psfex_file = "DECam_00154912_12_psfcat.psf"
     fitpsf_file = "DECam_00154912_12_fitpsf.fits"
@@ -669,13 +649,9 @@ def test_psf_config():
     gsobject_compare(psf5a, psf5b)
 
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
 if __name__ == "__main__":
     test_meds()
     test_meds_config()
     test_nan_fits()
     test_psf()
     test_psf_config()
-

@@ -121,11 +121,11 @@ dLookupTableResult = (0.23721845680847731, 0.42913599265739233, 0.86176396813243
 # File with the same values
 dLookupTableFile = os.path.join('random_data','dLookupTable.dat')
 
+
+@timer
 def test_uniform():
     """Test uniform random number generator
     """
-    import time
-    t1 = time.time()
     u = galsim.UniformDeviate(testseed)
     u2 = u.duplicate()
     u3 = galsim.UniformDeviate(u.serialize())
@@ -235,14 +235,10 @@ def test_uniform():
     do_pickle(galsim.DeviateNoise(u))
 
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
+@timer
 def test_gaussian():
     """Test Gaussian random number generator
     """
-    import time
-    t1 = time.time()
     g = galsim.GaussianDeviate(testseed, mean=gMean, sigma=gSigma)
     g2 = g.duplicate()
     g3 = galsim.GaussianDeviate(g.serialize(), mean=gMean, sigma=gSigma)
@@ -451,14 +447,11 @@ def test_gaussian():
     do_pickle(gn)
     do_pickle(galsim.DeviateNoise(g))
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_binomial():
     """Test binomial random number generator
     """
-    import time
-    t1 = time.time()
     b = galsim.BinomialDeviate(testseed, N=bN, p=bp)
     b2 = b.duplicate()
     b3 = galsim.BinomialDeviate(b.serialize(), N=bN, p=bp)
@@ -567,14 +560,11 @@ def test_binomial():
     do_pickle(b)
     do_pickle(galsim.DeviateNoise(b))
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_poisson():
     """Test Poisson random number generator
     """
-    import time
-    t1 = time.time()
     p = galsim.PoissonDeviate(testseed, mean=pMean)
     p2 = p.duplicate()
     p3 = galsim.PoissonDeviate(p.serialize(), mean=pMean)
@@ -780,14 +770,11 @@ def test_poisson():
     do_pickle(pn)
     do_pickle(galsim.DeviateNoise(p))
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_weibull():
     """Test Weibull random number generator
     """
-    import time
-    t1 = time.time()
     w = galsim.WeibullDeviate(testseed, a=wA, b=wB)
     w2 = w.duplicate()
     w3 = galsim.WeibullDeviate(w.serialize(), a=wA, b=wB)
@@ -904,14 +891,11 @@ def test_weibull():
     do_pickle(w)
     do_pickle(galsim.DeviateNoise(w))
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_gamma():
     """Test Gamma random number generator
     """
-    import time
-    t1 = time.time()
     g = galsim.GammaDeviate(testseed, k=gammaK, theta=gammaTheta)
     g2 = g.duplicate()
     g3 = galsim.GammaDeviate(g.serialize(), k=gammaK, theta=gammaTheta)
@@ -1018,14 +1002,11 @@ def test_gamma():
     do_pickle(g)
     do_pickle(galsim.DeviateNoise(g))
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_chi2():
     """Test Chi^2 random number generator
     """
-    import time
-    t1 = time.time()
     c = galsim.Chi2Deviate(testseed, n=chi2N)
     c2 = c.duplicate()
     c3 = galsim.Chi2Deviate(c.serialize(), n=chi2N)
@@ -1132,15 +1113,11 @@ def test_chi2():
     do_pickle(c)
     do_pickle(galsim.DeviateNoise(c))
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_distfunction():
     """Test distribution-defined random number generator with a function
     """
-    import time
-    t1 = time.time()
-
     try:
         # Make sure it requires an input function in order to work.
         np.testing.assert_raises(TypeError, galsim.DistDeviate)
@@ -1285,15 +1262,11 @@ def test_distfunction():
     do_pickle(d)
     do_pickle(galsim.DeviateNoise(d))
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_distLookupTable():
     """Test distribution-defined random number generator with a LookupTable
     """
-    import time
-    t1 = time.time()
-
     d = galsim.DistDeviate(testseed, function=dLookupTable)
     d2 = d.duplicate()
     d3 = galsim.DistDeviate(d.serialize(), function=dLookupTable)
@@ -1394,14 +1367,11 @@ def test_distLookupTable():
     do_pickle(d)
     do_pickle(galsim.DeviateNoise(d))
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_ccdnoise():
     """Test CCD Noise generator
     """
-    import time
-    t1 = time.time()
     for i in xrange(4):
         prec = eval("precision"+typestrings[i])
         cResult = eval("cResult"+typestrings[i])
@@ -1575,17 +1545,12 @@ def test_ccdnoise():
     do_pickle(ccdnoise, drawNoise)
     do_pickle(ccdnoise)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_multiprocess():
     """Test that the same random numbers are generated in single-process and multi-process modes.
     """
     from multiprocessing import Process, Queue, current_process
-    import time
-    t1 = time.time()
-
     # Workaround for a bug in python 2.6.  We apply it always, just in case, but I think this
     # bit is unnecessary in python 2.7.  The bug is that sys.stdin can be double closed if
     # multiprocessing is used within something that already uses multiprocessing.
@@ -1652,15 +1617,11 @@ def test_multiprocess():
     for k in range(nproc):
         task_queue.put('STOP')
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_addnoisesnr():
     """Test that addNoiseSNR is behaving sensibly.
     """
-    import time
-    t1 = time.time()
-
     # Rather than reproducing the S/N calculation in addNoiseSNR(), we'll just check for
     # self-consistency of the behavior with / without flux preservation.
     # Begin by making some object that we draw into an Image.
@@ -1696,14 +1657,10 @@ def test_addnoisesnr():
             im2.array.max(), expect_max_val2, decimal=8,
             err_msg='addNoiseSNR with preserve_flux = True and False give inconsistent results')
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_permute():
     """Simple tests of the permute() function."""
-    import time
-    t1 = time.time()
-
     # Make a fake list, and another list consisting of indices.
     my_list = [3.7, 4.1, 1.9, 11.1, 378.3, 100.0]
     import copy
@@ -1718,10 +1675,8 @@ def test_permute():
     for ind in range(n_list):
         assert my_list_copy[ind_list[ind]] == my_list[ind]
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_ne():
     """ Check that inequality works as expected for corner cases where the reprs of two
     unequal BaseDeviates may be the same due to truncation.

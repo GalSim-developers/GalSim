@@ -32,11 +32,10 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
+
+@timer
 def test_j0():
     """Test the bessel.j0 function"""
-    import time
-    t1 = time.time()
-
     x_list = [ 0, 1.01, 0.2, 3.3, 5.9, 77. ]
     vals1 = [ galsim.bessel.j0(x) for x in x_list ]
     print 'x = ',x_list
@@ -54,7 +53,7 @@ def test_j0():
         print 'Unable to import scipy.  Skipping scipy tests of j0.'
 
     # These values are what scipy returns.  Check against these, so not require scipy.
-    vals2 = [   1.0, 
+    vals2 = [   1.0,
                 0.76078097763218844,
                 0.99002497223957631,
                 -0.34429626039888467,
@@ -64,14 +63,10 @@ def test_j0():
     np.testing.assert_almost_equal(
         vals1, vals2, 8, "bessel.j0 disagrees with reference values")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_j1():
     """Test the bessel.j1 function"""
-    import time
-    t1 = time.time()
-
     x_list = [ 0, 1.01, 0.2, 3.3, 5.9, 77. ]
     vals1 = [ galsim.bessel.j1(x) for x in x_list ]
     print 'x = ',x_list
@@ -99,15 +94,10 @@ def test_j1():
     np.testing.assert_almost_equal(
         vals1, vals2, 8, "bessel.j1 disagrees with reference values")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_jn():
     """Test the bessel.jn function"""
-    import time
-    t1 = time.time()
-
     n_list = [ 3, 4, 1, 0, 9, 7 ]
     x_list = [ 0, 1.01, 0.2, 3.3, 5.9, 77. ]
     vals1 = [ galsim.bessel.jn(n,x) for n,x in zip(n_list,x_list) ]
@@ -136,15 +126,10 @@ def test_jn():
     np.testing.assert_almost_equal(
         vals1, vals2, 8, "bessel.jn disagrees with reference values")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_jv():
     """Test the bessel.jv function"""
-    import time
-    t1 = time.time()
-
     v_list = [ 3.3, 4, 1.9, 0, 9.2, -7.1 ]
     x_list = [ 0, 1.01, 0.2, 3.3, 5.9, 77. ]
     vals1 = [ galsim.bessel.jv(v,x) for v,x in zip(v_list,x_list) ]
@@ -173,14 +158,10 @@ def test_jv():
     np.testing.assert_almost_equal(
         vals1, vals2, 8, "bessel.jv disagrees with reference values")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_kn():
     """Test the bessel.kn function"""
-    import time
-    t1 = time.time()
-
     n_list = [ 3, 4, 1, 0, 9, 7 ]
     x_list = [ 1, 2.01, 0.2, 3.3, 5.9, 7.7 ]
     vals1 = [ galsim.bessel.kn(n,x) for n,x in zip(n_list,x_list) ]
@@ -209,15 +190,10 @@ def test_kn():
     np.testing.assert_almost_equal(
         vals1, vals2, 8, "bessel.kn disagrees with reference values")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_kv():
     """Test the bessel.kv function"""
-    import time
-    t1 = time.time()
-
     v_list = [ 3.3, 4, 1.9, 0, 9.2, -7.1 ]
     x_list = [ 1, 2.01, 0.2, 3.3, 5.9, 7.7 ]
     vals1 = [ galsim.bessel.kv(v,x) for v,x in zip(v_list,x_list) ]
@@ -246,14 +222,10 @@ def test_kv():
     np.testing.assert_almost_equal(
         vals1, vals2, 8, "bessel.kv disagrees with reference values")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_j0_root():
     """Test the bessel.j0_root function"""
-    import time
-    t1 = time.time()
-
     # Our version uses tabulated values up to 40, so a useful test of the extrapolation
     # requires this to have more than 40 items.
     vals1 = [ galsim.bessel.j0_root(s) for s in range(1,51) ]
@@ -288,9 +260,6 @@ def test_j0_root():
     np.testing.assert_almost_equal(
         vals1, vals2, 8, "bessel.j0_root disagrees with reference values")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
 
 if __name__ == "__main__":
     test_j0()
@@ -300,4 +269,3 @@ if __name__ == "__main__":
     test_kn()
     test_kv()
     test_j0_root()
-

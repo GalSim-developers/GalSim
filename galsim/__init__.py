@@ -97,7 +97,7 @@ from .shear import Shear
 from .angle import Angle, AngleUnit, radians, hours, degrees, arcmin, arcsec, HMS_Angle, DMS_Angle
 from .catalog import Catalog, Dict, OutputCatalog
 from .scene import COSMOSCatalog
-from .table import LookupTable
+from .table import LookupTable, LookupTable2D
 
 # Image
 from .image import Image, ImageS, ImageI, ImageF, ImageD
@@ -113,7 +113,8 @@ from .correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise
 from .base import GSParams, GSObject, Gaussian, Moffat, Airy, Kolmogorov, Pixel, Box, TopHat
 from .base import Exponential, Sersic, DeVaucouleurs, Spergel
 from .real import RealGalaxy, RealGalaxyCatalog, simReal
-from .optics import OpticalPSF
+from .phase_psf import Aperture, PhaseScreenList, PhaseScreenPSF, OpticalPSF
+from .phase_screens import AtmosphericScreen, Atmosphere, OpticalScreen
 from .shapelet import Shapelet, ShapeletSize, FitShapelet
 from .interpolatedimage import Interpolant
 from .interpolatedimage import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
@@ -160,3 +161,4 @@ from . import hsm
 from . import dcr
 from . import meta_data
 from . import cdmodel
+from . import optics

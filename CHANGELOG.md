@@ -38,7 +38,7 @@ Bug Fixes
   errors in the documentation about the units of CCDNoise parameters. (#713)
 - Fixed a bug in drawKImage when non-default scale is given, but no images
   are provided. (#720)
-- Fixed an assert failure in InterpolatedImage if the input image is 
+- Fixed an assert failure in InterpolatedImage if the input image is
   identically equal to zero. (#720)
 - Fixed a potential instability in drawing with deconvolution.  Now the fft of
   the deconvolved image will not be made larger than 1/kvalue_accuracy. (#720)
@@ -69,6 +69,17 @@ New Features
   truth information.  cf. demos 9 and 10. (#301, #691)
 - Added methods calculateHLR, calculateMomentRadius, and calculateFWHM to both
   GSObject and Image. (#308)
+- Added LookupTable2D to facilitate quick interpolation of two-dimensional
+  tabular data. (#465)
+- Added AtmosphericScreen, OpticalScreen, and PhaseScreenList used
+  to generate PSFs via Fourier optics. (#549)
+- Added PhaseScreenPSF to transform PhaseScreens into GSObjects.  (#549)
+- Added Atmosphere function to conveniently assemble a multi-layer atmosphere
+  PhaseScreenList. (#549)
+- Rewrote OpticalPSF to operate under the PhaseScreen framework to enable
+  fully self-consistent optics+atmospheric PSFs. (#549)
+- OpticalPSF now able to handle Zernike polynomial aberrations up to arbitrary
+  order. (#549)
 - Added a simple, linear model for persistence in the detectors that accepts a
   list of galsim.Image instances and a list of an equal number of floats. (#554)
 - Added BoundsI.numpyShape() to easily get the numpy shape that corresponds

@@ -25,12 +25,11 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
+
+@timer
 def test_hlr():
     """Test the calculateHLR method.
     """
-    import time
-    t1 = time.time()
-
     # Compare the calculation for a simple Gaussian.
     g1 = galsim.Gaussian(sigma=5, flux=1.7)
 
@@ -41,7 +40,7 @@ def test_hlr():
     np.testing.assert_equal(g1.half_light_radius, g1.calculateHLR(),
                             err_msg="Gaussian.calculateHLR() returned wrong value.")
 
-    # Check for a convolution of two Gaussians.  Should be equivalent, but now will need to 
+    # Check for a convolution of two Gaussians.  Should be equivalent, but now will need to
     # do the calculation.
     g2 = galsim.Convolve(galsim.Gaussian(sigma=3, flux=1.3), galsim.Gaussian(sigma=4, flux=23))
     test_hlr = g2.calculateHLR()
@@ -76,9 +75,9 @@ def test_hlr():
     np.testing.assert_equal(e1.half_light_radius, e1.calculateHLR(),
                             err_msg="Exponential.calculateHLR() returned wrong value.")
 
-    # Check for a convolution with a delta function.  Should be equivalent, but now will need to 
+    # Check for a convolution with a delta function.  Should be equivalent, but now will need to
     # do the calculation.
-    e2 = galsim.Convolve(galsim.Exponential(scale_radius=5, flux=1.3), 
+    e2 = galsim.Convolve(galsim.Exponential(scale_radius=5, flux=1.3),
                          galsim.Gaussian(sigma=1.e-4, flux=23))
     test_hlr = e2.calculateHLR()
     print 'e2.calculateHLR = ',test_hlr
@@ -141,16 +140,11 @@ def test_hlr():
     np.testing.assert_almost_equal(test_hlr/e1.half_light_radius, 1.0, decimal=3,
                                    err_msg="non-square image.calculateHLR is not accurate.")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_sigma():
     """Test the calculateMomentRadius method.
     """
-    import time
-    t1 = time.time()
-
     # Compare the calculation for a simple Gaussian.
     g1 = galsim.Gaussian(sigma=5, flux=1.7)
 
@@ -170,7 +164,7 @@ def test_sigma():
             (g1.sigma, g1.sigma), g1.calculateMomentRadius(rtype='both'),
             err_msg="Gaussian.calculateMomentRadius(both) returned wrong value.")
 
-    # Check for a convolution of two Gaussians.  Should be equivalent, but now will need to 
+    # Check for a convolution of two Gaussians.  Should be equivalent, but now will need to
     # do the calculation.
     g2 = galsim.Convolve(galsim.Gaussian(sigma=3, flux=1.3), galsim.Gaussian(sigma=4, flux=23))
     test_sigma = g2.calculateMomentRadius()
@@ -188,7 +182,7 @@ def test_sigma():
     np.testing.assert_almost_equal(
             test_sigma/g1.sigma, 1.0, decimal=4,
             err_msg="Gaussian.calculateMomentRadius(scale=0.1) is not accurate.")
- 
+
     # In this case, the different calculations are eqivalent:
     np.testing.assert_almost_equal(
             test_sigma, g2.calculateMomentRadius(scale=0.1, rtype='trace'),
@@ -219,7 +213,7 @@ def test_sigma():
             sheared_sigma2/(g1.sigma*(1.-esq)**-0.25), 1.0, decimal=4,
             err_msg="sheared Gaussian.calculateMomentRadius(scale=0.1,trace) is not accurate.")
 
-   
+
     # Next, use an Exponential profile
     e1 = galsim.Exponential(scale_radius=5, flux=1.7)
 
@@ -281,16 +275,11 @@ def test_sigma():
             test_sigma/e1_sigma, 1.0, decimal=4,
             err_msg="non-square image.calculateMomentRadius is not accurate.")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_fwhm():
     """Test the calculateFWHM method.
     """
-    import time
-    t1 = time.time()
-
     # Compare the calculation for a simple Gaussian.
     g1 = galsim.Gaussian(sigma=5, flux=1.7)
 
@@ -300,7 +289,7 @@ def test_fwhm():
     np.testing.assert_equal(g1.fwhm, g1.calculateFWHM(),
                             err_msg="Gaussian.calculateFWHM() returned wrong value.")
 
-    # Check for a convolution of two Gaussians.  Should be equivalent, but now will need to 
+    # Check for a convolution of two Gaussians.  Should be equivalent, but now will need to
     # do the calculation.
     g2 = galsim.Convolve(galsim.Gaussian(sigma=3, flux=1.3), galsim.Gaussian(sigma=4, flux=23))
     test_fwhm = g2.calculateFWHM()
@@ -379,9 +368,6 @@ def test_fwhm():
     print 'ratio - 1 = ',test_fwhm/e1_fwhm-1
     np.testing.assert_almost_equal(test_fwhm/e1_fwhm, 1.0, decimal=6,
                                    err_msg="non-square image.calculateFWHM is not accurate.")
-
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 if __name__ == "__main__":

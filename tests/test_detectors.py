@@ -31,11 +31,10 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
+
+@timer
 def test_nonlinearity_basic():
     """Check for overall sensible behavior of the nonlinearity routine."""
-    import time
-    t1 = time.time()
-
     # Make an image with non-trivially interesting scale and bounds.
     g = galsim.Gaussian(sigma=3.7)
     im = g.drawImage(scale=0.25)
@@ -115,7 +114,7 @@ def test_nonlinearity_basic():
     im2 = im.copy()
     im1.applyNonlinearity(lambda x : x + 0.1*(x**2))
     im2.applyNonlinearity(lut)
-    
+
     assert im1.scale == im.scale
     assert im1.wcs == im.wcs
     assert im1.dtype == im.dtype
@@ -170,14 +169,10 @@ def test_nonlinearity_basic():
         # GalSim doesn't have SciPy dependence. So if SciPy is not installed, then this test is
         # skipped. The user is not alerted.
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_recipfail_basic():
     """Check for overall sensible behavior of the reciprocity failure routine."""
-    import time
-    t1 = time.time()
-
     # Make an image with non-trivially interesting scale and bounds.
     g = galsim.Gaussian(sigma=3.7)
     im = g.drawImage(scale=0.25)
@@ -265,14 +260,10 @@ def test_recipfail_basic():
         im_new.array,im.array*(1+alpha*np.log10(im.array/(exp_time*base_flux))),6,
         err_msg='Difference between power law and log behavior')
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(), t2-t1)
 
+@timer
 def test_quantize():
     """Check behavior of the image quantization routine."""
-    import time
-    t1 = time.time()
-
     # Choose a set of types.
     dtypes = [np.float64, np.float32]
     for dtype in dtypes:
@@ -308,13 +299,9 @@ def test_quantize():
         assert image_q.dtype == image.dtype
         assert image_q.bounds == image.bounds
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(), t2-t1)
 
+@timer
 def test_IPC_basic():
-    import time
-    t1 = time.time()
-
     # Make an image with non-trivially interesting scale.
     g = galsim.Gaussian(sigma=3.7)
     im = g.drawImage(scale=0.25)
@@ -470,13 +457,9 @@ def test_IPC_basic():
         # Skip without any warning if SciPy is not installed
         pass
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_Persistence_basic():
-    import time
-    t1 = time.time()
-
     # Make an image with non-trivially interesting scale and bounds.
     g = galsim.Gaussian(sigma=3.7,flux=1000.)
     im = g.drawImage(scale=0.25)
@@ -537,8 +520,6 @@ def test_Persistence_basic():
     np.testing.assert_array_equal(im1.array, im2.array,
         err_msg="'applyPersistence' routine fails for multiple images with varying coefficients.")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_nonlinearity_basic()

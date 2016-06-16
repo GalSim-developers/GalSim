@@ -22,7 +22,7 @@ import sys
 from galsim_test_helpers import *
 
 imgdir = os.path.join(".", "SBProfile_comparison_images") # Directory containing the reference
-                                                          # images. 
+                                                          # images.
 
 try:
     import galsim
@@ -35,12 +35,10 @@ except ImportError:
 from numpy import sin, cos, tan, arcsin, arccos, arctan, sqrt, pi
 
 
+@timer
 def test_angle():
     """Test basic construction and use of Angle and AngleUnit classes
     """
-    import time
-    t1 = time.time()
-
     # First Angle:
     theta1 = numpy.pi/4. * galsim.radians
     theta2 = 45 * galsim.degrees
@@ -58,7 +56,7 @@ def test_angle():
     theta6 = (45 + 360) * galsim.degrees
     assert abs(theta6.rad() - theta1.rad()) > 6.
     numpy.testing.assert_almost_equal(theta6.wrap().rad(), theta1.rad(), decimal=12)
-    
+
     theta7 = (45 - 360) * galsim.degrees
     assert abs(theta7.rad() - theta1.rad()) > 6.
     numpy.testing.assert_almost_equal(theta7.wrap().rad(), theta1.rad(), decimal=12)
@@ -94,15 +92,11 @@ def test_angle():
     do_pickle(theta7)
     do_pickle(theta8)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_celestialcoord_basic():
     """Basic tests of CelestialCoord construction. etc.
     """
-    import time
-    t1 = time.time()
-
     c1 = galsim.CelestialCoord(0. * galsim.radians, 0. * galsim.radians)
     numpy.testing.assert_almost_equal(c1.ra.rad(), 0., decimal=12)
     numpy.testing.assert_almost_equal(c1.dec.rad(), 0., decimal=12)
@@ -128,15 +122,10 @@ def test_celestialcoord_basic():
     do_pickle(c3)
     do_pickle(c4)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_celestialcoord_distance():
     """Test calculations of distances on the sphere."""
-    import time
-    t1 = time.time()
-
     # First, let's test some distances that are easy to figure out
     # without any spherical trig.
     eq1 = galsim.CelestialCoord(0. * galsim.radians, 0. * galsim.radians)  # point on the equator
@@ -160,25 +149,25 @@ def test_celestialcoord_distance():
     numpy.testing.assert_almost_equal(eq3.distanceTo(south_pole).rad(), pi/2.)
 
     # Some random point
-    c1 = galsim.CelestialCoord(0.234 * galsim.radians, 0.342 * galsim.radians)  
+    c1 = galsim.CelestialCoord(0.234 * galsim.radians, 0.342 * galsim.radians)
     # Same meridian
-    c2 = galsim.CelestialCoord(0.234 * galsim.radians, -1.093 * galsim.radians) 
+    c2 = galsim.CelestialCoord(0.234 * galsim.radians, -1.093 * galsim.radians)
     # Antipode
-    c3 = galsim.CelestialCoord((pi + 0.234) * galsim.radians, -0.342 * galsim.radians) 
+    c3 = galsim.CelestialCoord((pi + 0.234) * galsim.radians, -0.342 * galsim.radians)
     # Different point on opposide meridian
-    c4 = galsim.CelestialCoord((pi + 0.234) * galsim.radians, 0.832 * galsim.radians) 
+    c4 = galsim.CelestialCoord((pi + 0.234) * galsim.radians, 0.832 * galsim.radians)
 
     numpy.testing.assert_almost_equal(c1.distanceTo(c1).rad(), 0.)
     numpy.testing.assert_almost_equal(c1.distanceTo(c2).rad(), 1.435)
     numpy.testing.assert_almost_equal(c1.distanceTo(c3).rad(), pi)
     numpy.testing.assert_almost_equal(c1.distanceTo(c4).rad(), pi-1.174)
 
-    # Now some that require spherical trig calculations. 
+    # Now some that require spherical trig calculations.
     # Importantly, this uses the more straightforward spherical trig formula, the cosine rule.
     # The CelestialCoord class uses a different formula that is more stable for very small
     # distances, which are typical in the correlation function calculation.
     # Some other random point:
-    c5 = galsim.CelestialCoord(1.832 * galsim.radians, -0.723 * galsim.radians)  
+    c5 = galsim.CelestialCoord(1.832 * galsim.radians, -0.723 * galsim.radians)
     # The standard formula is:
     # cos(d) = sin(dec1) sin(dec2) + cos(dec1) cos(dec2) cos(delta ra)
     d = arccos(sin(0.342) * sin(-0.723) + cos(0.342) * cos(-0.723) * cos(1.832 - 0.234))
@@ -201,14 +190,10 @@ def test_celestialcoord_distance():
     numpy.testing.assert_almost_equal(c1.distanceTo(c7).rad()/1.9e-9, 1.0)
     numpy.testing.assert_almost_equal(c1.distanceTo(c8).rad()/true_d, 1.0)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_celestialcoord_angleBetween():
     """Test calculations of angles between positions on the sphere."""
-    import time
-    t1 = time.time()
-
     # Again, let's start with some answers we can get by inspection.
     eq1 = galsim.CelestialCoord(0. * galsim.radians, 0. * galsim.radians)  # point on the equator
     eq2 = galsim.CelestialCoord(1. * galsim.radians, 0. * galsim.radians)  # 1 radian along equator
@@ -262,7 +247,7 @@ def test_celestialcoord_angleBetween():
     numpy.testing.assert_almost_equal(cos(C), -cos(A)*cos(B) + sin(A)*sin(B)*cos(c))
     numpy.testing.assert_almost_equal(cos(A), -cos(B)*cos(C) + sin(B)*sin(C)*cos(a))
     numpy.testing.assert_almost_equal(cos(B), -cos(C)*cos(A) + sin(C)*sin(A)*cos(b))
-    
+
     # Spherical excess:
     numpy.testing.assert_almost_equal(cA.area(cB,cC), E)
     numpy.testing.assert_almost_equal(cA.area(cC,cB), E)
@@ -273,21 +258,15 @@ def test_celestialcoord_angleBetween():
 
     # L'Huilier's formula for spherical excess:
     numpy.testing.assert_almost_equal(tan(E/4)**2, tan(s/2)*tan((s-a)/2)*tan((s-b)/2)*tan((s-c)/2))
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_projection():
     """Test calculations of various projections."""
-    import time
-    t1 = time.time()
-
     # Test that a small triangle has the correct properties for each kind of projection
     center = galsim.CelestialCoord(0.234 * galsim.radians, 0.342 * galsim.radians)
     cA = galsim.CelestialCoord(-0.193 * galsim.radians, 0.882 * galsim.radians)
-    cB = galsim.CelestialCoord((-0.193 + 1.7e-6) * galsim.radians, 
+    cB = galsim.CelestialCoord((-0.193 + 1.7e-6) * galsim.radians,
                                (0.882 + 1.2e-6) * galsim.radians)
     cC = galsim.CelestialCoord((-0.193 - 2.4e-6) * galsim.radians,
                                (0.882 + 3.1e-6) * galsim.radians)
@@ -326,7 +305,7 @@ def test_projection():
     numpy.testing.assert_almost_equal(cA.dec.rad(), cA2.dec.rad())
     cA3 = center.deproject_rad(pA.x, pA.y, projection='lambert')
     numpy.testing.assert_array_almost_equal( [cA.ra.rad(), cA.dec.rad()], cA3 )
- 
+
     # The angles are not preserved
     a = sqrt( (pB.x-pC.x)**2 + (pB.y-pC.y)**2 )
     b = sqrt( (pC.x-pA.x)**2 + (pC.y-pA.y)**2 )
@@ -338,7 +317,7 @@ def test_projection():
     print 'lambert cosA = ',cosA,cos(A)
     print 'lambert cosB = ',cosB,cos(B)
     print 'lambert cosC = ',cosC,cos(C)
- 
+
     # The deproject jacobian should tell us how the area changes
     dudx, dudy, dvdx, dvdy = center.deproject_jac(pA.x, pA.y, projection='lambert')
     jac_area = abs(dudx*dvdy - dudy*dvdx)
@@ -368,7 +347,7 @@ def test_projection():
     numpy.testing.assert_almost_equal(cosA,cos(A), decimal=5)
     numpy.testing.assert_almost_equal(cosB,cos(B), decimal=5)
     numpy.testing.assert_almost_equal(cosC,cos(C), decimal=5)
-    
+
     # Check that project_rad does the same thing
     pA2 = center.project_rad(cA.ra.rad(), cA.dec.rad(), projection='stereographic')
     numpy.testing.assert_array_almost_equal(pA.x, pA2[0])
@@ -385,7 +364,7 @@ def test_projection():
     area = 0.5 * abs( (pB.x-pA.x)*(pC.y-pA.y) - (pC.x-pA.x)*(pB.y-pA.y) )
     area *= (galsim.arcsec / galsim.radians)**2
     print 'stereographic area = ',area,E
- 
+
     # The deproject jacobian should tell us how the area changes
     dudx, dudy, dvdx, dvdy = center.deproject_jac(pA.x, pA.y, projection='stereographic')
     jac_area = abs(dudx*dvdy - dudy*dvdx)
@@ -424,7 +403,7 @@ def test_projection():
     print 'gnomonic cosA = ',cosA,cos(A)
     print 'gnomonic cosB = ',cosB,cos(B)
     print 'gnomonic cosC = ',cosC,cos(C)
- 
+
     # The area is not preserved
     area = 0.5 * abs( (pB.x-pA.x)*(pC.y-pA.y) - (pC.x-pA.x)*(pB.y-pA.y) )
     area *= (galsim.arcsec / galsim.radians)**2
@@ -477,7 +456,7 @@ def test_projection():
     print 'postel cosA = ',cosA,cos(A)
     print 'postel cosB = ',cosB,cos(B)
     print 'postel cosC = ',cosC,cos(C)
- 
+
     # The area is not preserved
     area = 0.5 * abs( (pB.x-pA.x)*(pC.y-pA.y) - (pC.x-pA.x)*(pB.y-pA.y) )
     area *= (galsim.arcsec / galsim.radians)**2
@@ -487,18 +466,11 @@ def test_projection():
     dudx, dudy, dvdx, dvdy = center.deproject_jac(pA.x, pA.y, projection='postel')
     jac_area = abs(dudx*dvdy - dudy*dvdx)
     numpy.testing.assert_almost_equal(jac_area, E/area, decimal=5)
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
+@timer
 def test_precess():
     """Test precession between epochs."""
-    import time
-    t1 = time.time()
-
     # I don't have much of a test here.  The formulae are what they are.
     # But it should at least be the case that a precession trip that ends up
     # back at the original epoch should leave the coord unchanged.
@@ -510,7 +482,7 @@ def test_precess():
     numpy.testing.assert_almost_equal(c3.ra.rad(), orig.ra.rad())
     numpy.testing.assert_almost_equal(c3.dec.rad(), orig.dec.rad())
 
-    # I found a website that does precession calculations, so check that we are 
+    # I found a website that does precession calculations, so check that we are
     # consistent with them.
     # http://www.bbastrodesigns.com/coordErrors.html
     dra_1950 = -(2. + 39.07/60.)/60. * galsim.hours / galsim.radians
@@ -526,17 +498,11 @@ def test_precess():
     print 'delta from precess: ',(c2.ra-orig.ra),(c2.dec-orig.dec)
     numpy.testing.assert_almost_equal(dra_1900, c2.ra.rad()-orig.ra.rad(), decimal=5)
     numpy.testing.assert_almost_equal(ddec_1900, c2.dec.rad()-orig.dec.rad(), decimal=5)
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_galactic():
     """Test the conversion from equatorial to galactic coordinates."""
-    import time
-    t1 = time.time()
-
     # According to wikipedia: http://en.wikipedia.org/wiki/Galactic_coordinate_system
     # the galactic center is located at 17h:45.6m, -28.94d
     center = galsim.CelestialCoord( (17.+45.6/60.) * galsim.hours, -28.94 * galsim.degrees)
@@ -563,14 +529,11 @@ def test_galactic():
     el,b = anticenter.galactic()
     numpy.testing.assert_almost_equal(el.rad(), pi, decimal=3)
     numpy.testing.assert_almost_equal(b.rad(), 0., decimal=3)
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+@timer
 def test_ecliptic():
     """Test the conversion from equatorial to ecliptic coordinates."""
-    import time
-    t1 = time.time()
-
     # Use locations of ecliptic poles from http://en.wikipedia.org/wiki/Ecliptic_pole
     north_pole = galsim.CelestialCoord(
         galsim.HMS_Angle('18:00:00.00'),
@@ -648,12 +611,6 @@ def test_ecliptic():
     numpy.testing.assert_almost_equal(autumnal_equinox.dec.rad(), autumnal_equinox_2.dec.rad(),
                                       decimal=6)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
-
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == '__main__':
     test_angle()

@@ -19,9 +19,12 @@ import time
 import numpy as np
 import galsim
 
+from galsim_test_helpers import *
+
 VAR_NDECIMAL=4
 CHECKNOISE_NDECIMAL=2
 
+@timer
 def test_metacal_tracking():
     """Test that the noise tracking works for the metacal use case involving deconvolution and
     reconvolution by almost the same PSF.
@@ -29,9 +32,7 @@ def test_metacal_tracking():
     This test is similar to the above test_uncorrelated_noise_tracking, except the modifications
     are based on what is done for the metacal procedure.
     """
-    t1 = time.time()
     import math
-
     def check_noise(noise_image, noise, msg):
         # A helper function to check that the current noise in the image is properly described
         # by the given CorrelatedNoise object
@@ -392,9 +393,6 @@ def test_metacal_tracking():
         check_symm_noise(final_image2, 'using alternate reverse shear does not work')
         print 'Time for alternate reverse shear method = ',t4-t3
 
-
-    t2 = time.time()
-    print 'total time for tests = %.2f'%(t2-t1)
 
 if __name__ == "__main__":
     test_metacal_tracking()
