@@ -239,7 +239,8 @@ def test_wfirst_bandpass():
     # Jeff used the C-K template with solar metallicity, T=9550K, surface gravity logg=3.95.  I
     # downloaded a grid of templates and just used the nearest one, which has solar metallicity,
     # T=9500K, surface gravity logg=4.0.
-    sed_data = pyfits.getdata(os.path.join('wfirst_files','ckp00_9500.fits'))
+    with pyfits.open(os.path.join('wfirst_files','ckp00_9500.fits')) as fits:
+        sed_data = fits[1].data
     lam = sed_data.WAVELENGTH.astype(np.float64)
     t = sed_data.g40.astype(np.float64)
     sed_tab = galsim.LookupTable(x=lam, f=t, interpolant='linear')

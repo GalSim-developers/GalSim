@@ -134,7 +134,8 @@ class Catalog(object):
         """Read in an input catalog from a FITS file.
         """
         from galsim._pyfits import pyfits, pyfits_version
-        raw_data = pyfits.getdata(self.file_name, hdu)
+        with pyfits.open(self.file_name) as fits:
+            raw_data = fits[hdu].data
         if pyfits_version > '3.0':
             self.names = raw_data.columns.names
         else:

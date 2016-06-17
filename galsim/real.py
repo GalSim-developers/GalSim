@@ -421,7 +421,8 @@ class RealGalaxyCatalog(object):
         self.file_name, self.image_dir, self.noise_dir, _ = \
             _parse_files_dirs(file_name, image_dir, dir, noise_dir, sample)
 
-        self.cat = pyfits.getdata(self.file_name)
+        with pyfits.open(self.file_name) as fits:
+            self.cat = fits[1].data
         self.nobjects = len(self.cat) # number of objects in the catalog
         if _nobjects_only: return  # Exit early if that's all we needed.
         ident = self.cat.field('ident') # ID for object in the training sample
@@ -623,7 +624,8 @@ class RealGalaxyCatalog(object):
                 else:
                     import numpy
                     from galsim._pyfits import pyfits
-                    array = pyfits.getdata(self.noise_file_name[i])
+                    with pyfits.open(self.noise_file_name[i]) as fits:
+                        array = fits[0].data
                     im = galsim.Image(numpy.ascontiguousarray(array.astype(numpy.float64)),
                                       scale=self.pixel_scale[i])
                     self.saved_noise_im[self.noise_file_name[i]] = im

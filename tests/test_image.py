@@ -237,7 +237,8 @@ def test_Image_FITS_IO():
         # Read the reference image to from an externally-generated fits file
         test_file = os.path.join(datadir, "test"+tchar[i]+".fits")
         # Check pyfits read for sanity
-        test_array = pyfits.getdata(test_file)
+        with pyfits.open(test_file) as fits:
+            test_array = fits[0].data
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_array,
                 err_msg="PyFITS failing to read reference image.")
 
@@ -263,7 +264,8 @@ def test_Image_FITS_IO():
         ref_image.write(test_file)
 
         # Check pyfits read for sanity
-        test_array = pyfits.getdata(test_file)
+        with pyfits.open(test_file) as fits:
+            test_array = fits[0].data
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_array,
                 err_msg="Image"+tchar[i]+" write failed.")
 
@@ -389,7 +391,8 @@ def test_Image_MultiFITS_IO():
 
         test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+".fits")
         # Check pyfits read for sanity
-        test_array = pyfits.getdata(test_multi_file)
+        with pyfits.open(test_multi_file) as fits:
+            test_array = fits[0].data
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_array,
                 err_msg="PyFITS failing to read multi file.")
 
@@ -424,7 +427,8 @@ def test_Image_MultiFITS_IO():
         galsim.fits.writeMulti(image_list,test_multi_file)
 
         # Check pyfits read for sanity
-        test_array = pyfits.getdata(test_multi_file)
+        with pyfits.open(test_multi_file) as fits:
+            test_array = fits[0].data
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_array,
                 err_msg="PyFITS failing to read multi file.")
 
@@ -606,7 +610,8 @@ def test_Image_CubeFITS_IO():
         #
         test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+".fits")
         # Check pyfits read for sanity
-        test_array = pyfits.getdata(test_cube_file)
+        with pyfits.open(test_cube_file) as fits:
+            test_array = fits[0].data
         for k in range(nimages):
             np.testing.assert_array_equal((ref_array+k).astype(types[i]), test_array[k,:,:],
                     err_msg="PyFITS failing to read cube file.")
@@ -642,7 +647,8 @@ def test_Image_CubeFITS_IO():
         galsim.fits.writeCube(image_list,test_cube_file)
 
         # Check pyfits read for sanity
-        test_array = pyfits.getdata(test_cube_file)
+        with pyfits.open(test_cube_file) as fits:
+            test_array = fits[0].data
         assert test_array.dtype.type == types[i], "%s != %s" % (test_array.dtype.type, types[i])
         for k in range(nimages):
             np.testing.assert_array_equal((ref_array+k).astype(types[i]), test_array[k,:,:],

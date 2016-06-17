@@ -444,21 +444,22 @@ def test_nan_fits():
             None, None])
 
     # First just read the file directly, not using galsim.fits.read
-    fp = pyfits.open(file_name)
-    try:
-        data = fp[1].data
-        print('Able to read FITS file with NAN.0 without any problem.')
-    except:
-        print('Running verify to fix the problematic FITS header.')
-        with warnings.catch_warnings():
-            warnings.filterwarnings("ignore",category=pyfits.verify.VerifyWarning)
-            fp[1].verify('fix')
-        # This should work now.
-        data = fp[1].data
+    with pyfits.open(file_name) as fp:
+        try:
+            data = fp[1].data
+            print('Able to read FITS file with NAN.0 without any problem.')
+        except:
+            print('Running verify to fix the problematic FITS header.')
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore",category=pyfits.verify.VerifyWarning)
+                fp[1].verify('fix')
+            # This should work now.
+            data = fp[1].data
+        header = fp[1].header
+
     assert data.shape == ref_bounds.numpyShape()
 
     # Check a direct read of the header with GSFitsWCS
-    header = fp[1].header
     wcs = galsim.GSFitsWCS(header=header)
     assert wcs == ref_wcs
 
