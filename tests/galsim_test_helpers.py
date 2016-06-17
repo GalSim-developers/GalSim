@@ -323,7 +323,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     else:
         classname = type(obj1).__name__
         for i in range(len(args)):
-            #print("Attempting arg {}\n".format(i))
+            #print("Attempting arg {0}\n".format(i))
             newargs = list(args)
             if isinstance(args[i], bool):
                 newargs[i] = not args[i]
@@ -340,7 +340,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
             elif args[i] is None:
                 continue
             else:
-                #print("Unknown type: {}\n".format(args[i]))
+                #print("Unknown type: {0}\n".format(args[i]))
                 continue
             with galsim.utilities.printoptions(precision=18, threshold=1e6):
                 try:
@@ -349,7 +349,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
                     try:
                         obj6 = eval('galsim._galsim.' + classname + repr(tuple(newargs)))
                     except:
-                        raise TypeError("{} not `eval`able!".format(
+                        raise TypeError("{0} not `eval`able!".format(
                                 classname + repr(tuple(newargs))))
                 else:
                     assert obj1 != obj6
@@ -371,7 +371,7 @@ def all_obj_diff(objs):
         for j, objj in enumerate(objs):
             if i == j:
                 continue
-            assert obji != objj, ("Found equivalent objects {} == {} at indices {} and {}"
+            assert obji != objj, ("Found equivalent objects {0} == {1} at indices {2} and {3}"
                                   .format(obji, objj, i, j))
 
     # Now check that all hashes are unique (if the items are hashable).

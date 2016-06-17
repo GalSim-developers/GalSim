@@ -402,7 +402,7 @@ def test_OpticalPSF_pupil_plane():
         im = galsim.fits.read(os.path.join(imgdir, pp_file))
     else:
         import warnings
-        warnings.warn("Could not find file {}, so generating it from scratch.  This should only "
+        warnings.warn("Could not find file {0}, so generating it from scratch.  This should only "
                       "happen if you intentionally deleted the file in order to regenerate it!"
                       .format(pp_file))
         im = galsim.Image(ref_psf._psf.aper.illuminated.astype(float))

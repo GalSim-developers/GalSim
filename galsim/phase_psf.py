@@ -289,7 +289,7 @@ class Aperture(object):
         else:
             maximum_fft_size = galsim.GSParams().maximum_fft_size
         if self.npix > maximum_fft_size:
-            raise RuntimeError("Created pupil plane array that is too large, {} "
+            raise RuntimeError("Created pupil plane array that is too large, {0} "
                                "If you can handle the large FFT, you may update "
                                "gsparams.maximum_fft_size".format(self.npix))
 
