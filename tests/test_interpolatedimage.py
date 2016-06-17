@@ -198,7 +198,7 @@ def test_exceptions():
     try:
         # What if it receives as input something that is not an Image? Give it a GSObject to check.
         g = galsim.Gaussian(sigma=1.)
-        np.testing.assert_raises(ValueError, galsim.InterpolatedImage, g)
+        np.testing.assert_raises((ValueError, AttributeError), galsim.InterpolatedImage, g)
         # What if Image does not have a scale set, but scale keyword is not specified?
         im = galsim.ImageF(5, 5)
         np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im)
@@ -1070,7 +1070,7 @@ def test_multihdu_readin():
 
     # Check for exception with invalid HDU.
     try:
-        np.testing.assert_raises(ValueError, galsim.InterpolatedImage, infile, hdu=37)
+        np.testing.assert_raises((OSError, IOError), galsim.InterpolatedImage, infile, hdu=37)
     except ImportError:
         print('The assert_raises tests require nose')
 
