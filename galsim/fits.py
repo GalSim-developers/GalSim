@@ -791,26 +791,28 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
     if file_name:
         hdu_list, fin = _read_file(file_name, dir, file_compress)
 
-    hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
+    try:
+        hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
 
-    wcs, origin = galsim.wcs.readFromFitsHeader(hdu.header)
-    dt = hdu.data.dtype.type
-    if dt in galsim.Image.valid_array_dtypes:
-        data = hdu.data
-    else:
-        import warnings
-        warnings.warn("No C++ Image template instantiation for data type %s" % dt)
-        warnings.warn("   Using numpy.float64 instead.")
-        import numpy
-        data = hdu.data.astype(numpy.float64)
+        wcs, origin = galsim.wcs.readFromFitsHeader(hdu.header)
+        dt = hdu.data.dtype.type
+        if dt in galsim.Image.valid_array_dtypes:
+            data = hdu.data
+        else:
+            import warnings
+            warnings.warn("No C++ Image template instantiation for data type %s" % dt)
+            warnings.warn("   Using numpy.float64 instead.")
+            import numpy
+            data = hdu.data.astype(numpy.float64)
 
-    image = galsim.Image(array=data)
-    image.setOrigin(origin)
-    image.wcs = wcs
+        image = galsim.Image(array=data)
+        image.setOrigin(origin)
+        image.wcs = wcs
 
-    # If we opened a file, don't forget to close it.
-    if file_name:
-        closeHDUList(hdu_list, fin)
+    finally:
+        # If we opened a file, don't forget to close it.
+        if file_name:
+            closeHDUList(hdu_list, fin)
 
     return image
 
@@ -867,21 +869,23 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
     elif not isinstance(hdu_list, pyfits.HDUList):
         raise TypeError("In readMulti, hdu_list is not an HDUList")
 
-    image_list = []
-    if pyfits_compress:
-        first = 1
-        if len(hdu_list) <= 1:
-            raise IOError('Expecting at least one extension HDU in galsim.read')
-    else:
-        first = 0
-        if len(hdu_list) < 1:
-            raise IOError('Expecting at least one HDU in galsim.readMulti')
-    for hdu in range(first,len(hdu_list)):
-        image_list.append(read(hdu_list=hdu_list, hdu=hdu, compression=pyfits_compress))
+    try:
+        image_list = []
+        if pyfits_compress:
+            first = 1
+            if len(hdu_list) <= 1:
+                raise IOError('Expecting at least one extension HDU in galsim.read')
+        else:
+            first = 0
+            if len(hdu_list) < 1:
+                raise IOError('Expecting at least one HDU in galsim.readMulti')
+        for hdu in range(first,len(hdu_list)):
+            image_list.append(read(hdu_list=hdu_list, hdu=hdu, compression=pyfits_compress))
 
-    # If we opened a file, don't forget to close it.
-    if file_name:
-        closeHDUList(hdu_list, fin)
+    finally:
+        # If we opened a file, don't forget to close it.
+        if file_name:
+            closeHDUList(hdu_list, fin)
 
     return image_list
 
@@ -938,28 +942,30 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
 
     hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
 
-    wcs, origin = galsim.wcs.readFromFitsHeader(hdu.header)
-    dt = hdu.data.dtype.type
-    if dt in galsim.Image.valid_array_dtypes:
-        data = hdu.data
-    else:
-        import warnings
-        warnings.warn("No C++ Image template instantiation for data type %s" % dt)
-        warnings.warn("   Using numpy.float64 instead.")
-        import numpy
-        data = hdu.data.astype(numpy.float64)
+    try:
+        wcs, origin = galsim.wcs.readFromFitsHeader(hdu.header)
+        dt = hdu.data.dtype.type
+        if dt in galsim.Image.valid_array_dtypes:
+            data = hdu.data
+        else:
+            import warnings
+            warnings.warn("No C++ Image template instantiation for data type %s" % dt)
+            warnings.warn("   Using numpy.float64 instead.")
+            import numpy
+            data = hdu.data.astype(numpy.float64)
 
-    nimages = hdu.data.shape[0]
-    image_list = []
-    for k in range(nimages):
-        image = galsim.Image(array=hdu.data[k,:,:])
-        image.setOrigin(origin)
-        image.wcs = wcs
-        image_list.append(image)
+        nimages = hdu.data.shape[0]
+        image_list = []
+        for k in range(nimages):
+            image = galsim.Image(array=hdu.data[k,:,:])
+            image.setOrigin(origin)
+            image.wcs = wcs
+            image_list.append(image)
 
-    # If we opened a file, don't forget to close it.
-    if file_name:
-        closeHDUList(hdu_list, fin)
+    finally:
+        # If we opened a file, don't forget to close it.
+        if file_name:
+            closeHDUList(hdu_list, fin)
 
     return image_list
 
