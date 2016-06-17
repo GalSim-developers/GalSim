@@ -19,18 +19,7 @@
 
 //#define DEBUGLOGGING
 
-// clang doesn't like some of the code in boost files included by gamma.hpp.
-#ifdef __clang__
-#if __has_warning("-Wlogical-op-parentheses")
-#pragma GCC diagnostic ignored "-Wlogical-op-parentheses"
-#endif
-#endif
-
-#ifndef __INTEL_COMPILER
-#if defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8))
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
-#endif
+#include "galsim/IgnoreWarnings.h"
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include <boost/math/special_functions/gamma.hpp>
