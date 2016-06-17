@@ -1152,16 +1152,11 @@ def GetPythonVersion(config):
     # If that didn't work, try to get it from the file or directory names, since it is usually
     # there:
     if not result:
-        if '2.7' in py_inc or '2.7' in python:
-            py_version = '2.7'
-        elif '2.6' in py_inc or '2.6' in python:
-            py_version = '2.6'
-        elif '2.5' in py_inc or '2.5' in python:
-            py_version = '2.5'
-        elif '2.4' in py_inc or '2.4' in python:
-            py_version = '2.4'
-        else:
-            py_version = ''
+        py_version = ''
+        for v in ['2.7', '2,6', '3.4', # supported versions first
+                  '2.5', '2,4', '3,5', '3.3', '3.2', '3.1', 3.0]:
+            if v in py_inc or v in python:
+                py_version = v
     return py_version
 
 def CheckPython(config):
