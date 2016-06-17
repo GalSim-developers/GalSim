@@ -126,6 +126,7 @@ def time_gzip():
         print('   time for gzip_tmp = %.2f'%(t3-t2))
         print('   time for gzip_call = %.2f'%(t4-t3))
         print('   time for gzip_call2 = %.2f'%(t5-t4))
+        hdu_list.close()
 
     default_order = [ f.__name__ for f in galsim.fits._write_file.gz_methods ]
     print('The current default order for gzip write is ',default_order)
@@ -197,6 +198,7 @@ def time_bzip2():
         print('   time for bz2_tmp = %.2f'%(t3-t2))
         print('   time for bzip2_call = %.2f'%(t4-t3))
         print('   time for bzip2_call2 = %.2f'%(t5-t4))
+        hdu_list.close()
 
     default_order = [ f.__name__ for f in galsim.fits._write_file.bz2_methods ]
     print('The current default order for bzip2 write is ',default_order)
