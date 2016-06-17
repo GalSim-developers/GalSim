@@ -76,7 +76,7 @@ class _ReadFile:
         # (with zcat being a symlink to uncompress instead).
         p = subprocess.Popen(["gunzip", "-c", file], stdout=subprocess.PIPE, close_fds=True)
         fin = StringIO(p.communicate()[0])
-        assert p.returncode == 0 
+        assert p.returncode == 0
         hdu_list = pyfits.open(fin, 'readonly')
         return hdu_list, fin
 
@@ -124,7 +124,7 @@ class _ReadFile:
         from galsim._pyfits import pyfits
         p = subprocess.Popen(["bunzip2", "-c", file], stdout=subprocess.PIPE, close_fds=True)
         fin = StringIO(p.communicate()[0])
-        assert p.returncode == 0 
+        assert p.returncode == 0
         hdu_list = pyfits.open(fin, 'readonly')
         return hdu_list, fin
 
@@ -233,16 +233,15 @@ class _WriteFile:
             hdu_list.writeto(root)
             p = subprocess.Popen(["gzip", "-S", ext, "-f", root], close_fds=True)
             p.communicate()
-        assert p.returncode == 0 
+        assert p.returncode == 0
 
     def gzip_call(self, hdu_list, file):
         import subprocess
-        fout = open(file, 'wb')
-        p = subprocess.Popen(["gzip", "-"], stdin=subprocess.PIPE, stdout=fout, close_fds=True)
-        hdu_list.writeto(p.stdin)
-        p.communicate()
-        assert p.returncode == 0 
-        fout.close()
+        with open(file, 'wb') as fout:
+            p = subprocess.Popen(["gzip", "-"], stdin=subprocess.PIPE, stdout=fout, close_fds=True)
+            hdu_list.writeto(p.stdin)
+            p.communicate()
+            assert p.returncode == 0
  
     def gzip_in_mem(self, hdu_list, file):
         import gzip
@@ -254,9 +253,8 @@ class _WriteFile:
         data = buf.getvalue()
         # There is a compresslevel option (for both gzip and bz2), but we just use the 
         # default.
-        fout = gzip.open(file, 'wb')
-        fout.write(data)
-        fout.close()
+        with gzip.open(file, 'wb') as fout:
+            fout.write(data)
 
     def gzip_tmp(self, hdu_list, file):
         import gzip
@@ -270,9 +268,8 @@ class _WriteFile:
         with open(tmp,"r") as buf:
             data = buf.read()
         os.remove(tmp)
-        fout = gzip.open(file, 'wb')
-        fout.write(data)
-        fout.close()
+        with gzip.open(file, 'wb') as fout:
+            fout.write(data)
 
     def bzip2_call2(self, hdu_list, file):
         root, ext = os.path.splitext(file)
@@ -290,16 +287,15 @@ class _WriteFile:
             hdu_list.writeto(root)
             p = subprocess.Popen(["gzip", root], close_fds=True)
             p.communicate()
-        assert p.returncode == 0 
+        assert p.returncode == 0
 
     def bzip2_call(self, hdu_list, file):
         import subprocess
-        fout = open(file, 'wb')
-        p = subprocess.Popen(["bzip2"], stdin=subprocess.PIPE, stdout=fout, close_fds=True)
-        hdu_list.writeto(p.stdin)
-        p.communicate()
-        assert p.returncode == 0 
-        fout.close()
+        with open(file, 'wb') as fout:
+            p = subprocess.Popen(["bzip2"], stdin=subprocess.PIPE, stdout=fout, close_fds=True)
+            hdu_list.writeto(p.stdin)
+            p.communicate()
+            assert p.returncode == 0
  
     def bz2_in_mem(self, hdu_list, file):
         import bz2
@@ -307,9 +303,8 @@ class _WriteFile:
         buf = io.BytesIO()
         hdu_list.writeto(buf)
         data = buf.getvalue()
-        fout = bz2.BZ2File(file, 'wb')
-        fout.write(data)
-        fout.close()
+        with bz2.BZ2File(file, 'wb') as fout:
+            fout.write(data)
 
     def bz2_tmp(self, hdu_list, file):
         import bz2
@@ -320,9 +315,8 @@ class _WriteFile:
         with open(tmp,"r") as buf:
             data = buf.read()
         os.remove(tmp)
-        fout = bz2.BZ2File(file, 'wb')
-        fout.write(data)
-        fout.close()
+        with bz2.BZ2File(file, 'wb') as fout:
+            fout.write(data)
 
     def __init__(self):
         # For each compression type, we try them in rough order of efficiency and keep track of 
