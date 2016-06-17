@@ -1517,7 +1517,11 @@ def CheckBoostPython(config):
     bp_source_file = """
 
 #ifndef __INTEL_COMPILER
-#if defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8))
+#ifdef __clang__
+#if __has_warning("-Wunused-local-typedefs")
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#endif
+#elif defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
 #pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #endif
 #endif
@@ -1559,13 +1563,18 @@ BOOST_PYTHON_MODULE(check_bp) {
 def CheckPythonExcept(config):
     cpp_source_file = """
 #ifndef __INTEL_COMPILER
-#if defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8))
+#ifdef __clang__
+#if __has_warning("-Wunused-local-typedefs")
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#endif
+#elif defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
 #pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #endif
 #endif
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
 #include <stdexcept>
+
 
 void run_throw() { throw std::runtime_error("test error handling"); }
 
