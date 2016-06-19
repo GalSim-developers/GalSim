@@ -1774,6 +1774,21 @@ def test_copy():
     im6.setValue(3,8,17.)
     assert im(3,8) == 17.
 
+    # With dtype different from the original, then should actually copy.
+    im7 = galsim.Image(im, dtype=float)
+    assert im7.wcs == im.wcs
+    assert im7.bounds == im.bounds
+    np.testing.assert_array_equal(im7.array, im.array)
+    im7.setValue(3,8,11.)
+    assert im(3,8) != 11.
+
+    im8 = galsim.Image(im, wcs=wcs, dtype=float)
+    assert im8.wcs == im.wcs            # This is the same wcs now.
+    assert im8.bounds == im.bounds
+    np.testing.assert_array_equal(im8.array, im.array)
+    im8.setValue(3,8,11.)
+    assert im(3,8) != 11.
+
 
 if __name__ == "__main__":
     test_Image_basic()
