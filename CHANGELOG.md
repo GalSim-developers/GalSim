@@ -52,6 +52,8 @@ Bug Fixes
   not quite, flat (#741)
 - Fixed a bug in chromatic parametric galaxy models based on COSMOS galaxies.
   (#745)
+- Fixed a bug in the Image copy constructor where the wcs was not copied if
+  the `image` parameter is a galsim.Image. (#762)
 
 
 Deprecated Features
