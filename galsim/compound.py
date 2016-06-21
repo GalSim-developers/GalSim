@@ -302,15 +302,6 @@ class Convolution(galsim.GSObject):
             raise TypeError(
                 "Convolution constructor got unexpected keyword argument(s): %s"%kwargs.keys())
 
-        if len(args) == 1 and gsparams is None:
-            # No need to make an SBConvolve in this case.  Can early exit.
-            galsim.GSObject.__init__(self, args[0])
-            if hasattr(args[0],'noise'):
-                self.noise = args[0].noise
-            self._real_space = real_space
-            self._obj_list = args
-            return
-
         # Check whether to perform real space convolution...
         # Start by checking if all objects have a hard edge.
         hard_edge = True

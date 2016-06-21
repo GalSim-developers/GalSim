@@ -766,45 +766,45 @@ def test_sum_transform():
     or convolve only has one element.
     """
     gal0 = galsim.Exponential(scale_radius=0.34, flux=105.).shear(g1=-0.56,g2=0.15)
-    gal1 = galsim.Sum(gal0)
-    gal2 = gal1.dilate(1)
 
-    sgal1 = eval(str(gal1))
-    rgal1 = eval(repr(gal1))
-    sgal2 = eval(str(gal2))
-    rgal2 = eval(repr(gal2))
+    for gal1 in [ galsim.Sum(gal0), galsim.Convolve(gal0) ]:
+        gal2 = gal1.dilate(1)
 
-    print 'gal1 = ',repr(gal1)
-    print 'sgal1 = ',repr(sgal1)
-    print 'rgal1 = ',repr(rgal1)
+        sgal1 = eval(str(gal1))
+        rgal1 = eval(repr(gal1))
+        sgal2 = eval(str(gal2))
+        rgal2 = eval(repr(gal2))
 
-    print 'gal2 = ',repr(gal2)
-    print 'sgal2 = ',repr(sgal2)
-    print 'rgal2 = ',repr(rgal2)
+        print 'gal1 = ',repr(gal1)
+        print 'sgal1 = ',repr(sgal1)
+        print 'rgal1 = ',repr(rgal1)
 
-    gal1_im = gal1.drawImage(nx=64, ny=64, scale=0.2)
-    sgal1_im = sgal1.drawImage(nx=64, ny=64, scale=0.2)
-    rgal1_im = rgal1.drawImage(nx=64, ny=64, scale=0.2)
+        print 'gal2 = ',repr(gal2)
+        print 'sgal2 = ',repr(sgal2)
+        print 'rgal2 = ',repr(rgal2)
 
-    gal2_im = gal2.drawImage(nx=64, ny=64, scale=0.2)
-    sgal2_im = sgal2.drawImage(nx=64, ny=64, scale=0.2)
-    rgal2_im = rgal2.drawImage(nx=64, ny=64, scale=0.2)
+        gal1_im = gal1.drawImage(nx=64, ny=64, scale=0.2)
+        sgal1_im = sgal1.drawImage(nx=64, ny=64, scale=0.2)
+        rgal1_im = rgal1.drawImage(nx=64, ny=64, scale=0.2)
 
-    # Check that the objects are equivalent, even if they may be written differently.
-    np.testing.assert_almost_equal(gal1_im.array, sgal1_im.array, decimal=8)
-    np.testing.assert_almost_equal(gal1_im.array, rgal1_im.array, decimal=8)
+        gal2_im = gal2.drawImage(nx=64, ny=64, scale=0.2)
+        sgal2_im = sgal2.drawImage(nx=64, ny=64, scale=0.2)
+        rgal2_im = rgal2.drawImage(nx=64, ny=64, scale=0.2)
 
-    # These two used to fail.
-    np.testing.assert_almost_equal(gal2_im.array, sgal2_im.array, decimal=8)
-    np.testing.assert_almost_equal(gal2_im.array, rgal2_im.array, decimal=8)
+        # Check that the objects are equivalent, even if they may be written differently.
+        np.testing.assert_almost_equal(gal1_im.array, sgal1_im.array, decimal=8)
+        np.testing.assert_almost_equal(gal1_im.array, rgal1_im.array, decimal=8)
 
-    do_pickle(gal0)
-    do_pickle(gal1)
-    do_pickle(gal2)  # And this.
+        # These two used to fail.
+        np.testing.assert_almost_equal(gal2_im.array, sgal2_im.array, decimal=8)
+        np.testing.assert_almost_equal(gal2_im.array, rgal2_im.array, decimal=8)
+
+        do_pickle(gal0)
+        do_pickle(gal1)
+        do_pickle(gal2)  # And this.
 
 
 if __name__ == "__main__":
-    test_sum_transform()
     test_convolve()
     test_convolve_flux_scaling()
     test_shearconvolve()
