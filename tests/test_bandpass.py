@@ -301,21 +301,33 @@ def test_thin():
 
 @timer
 def test_zp():
-    """Check that the zero points are maintained in an appropriate way when thinning."""
+    """Check that the zero points are maintained in an appropriate way when thinning, truncating."""
     # Make a bandpass and set an AB zeropoint.
     bp = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), 'nm')
     bp = bp.withZeropoint(zeropoint='AB', effective_diameter=6.4, exptime=15)
     # Confirm that if we use the default thinning kwargs, then the zeropoint for the thinned
     # bandpass is the same (exactly) as the original.
-    bp_t = bp.thin()
-    np.testing.assert_equal(bp.zeropoint, bp_t.zeropoint,
+    bp_th = bp.thin()
+    np.testing.assert_equal(bp.zeropoint, bp_th.zeropoint,
                             "Zeropoint not preserved after thinning with defaults")
+    bp_tr = bp.truncate(relative_throughput=1.e-4)
+    np.testing.assert_equal(bp.zeropoint, bp_tr.zeropoint,
+                            "Zeropoint not preserved after truncating with defaults")
 
-    # Confirm that if we explicit set the kwarg to clear the zeropoint when thinning, then the new
-    # bandpass has no zeropoint.
-    bp_t = bp.thin(preserve_zp = False)
-    assert bp_t.zeropoint is None, \
+    # Confirm that if we explicit set the kwarg to clear the zeropoint when thinning or truncating,
+    # or if we truncate using blue_limit or red_limit, then the new bandpass has no zeropoint
+    bp_th = bp.thin(preserve_zp = False)
+    assert bp_th.zeropoint is None, \
         "Zeropoint erroneously preserved after thinning with preserve_zp=False"
+    bp_tr = bp.truncate(preserve_zp = False)
+    assert bp_tr.zeropoint is None, \
+        "Zeropoint erroneously preserved after truncating with preserve_zp=False"
+    bp_tr = bp.truncate(red_limit = 600.)
+    assert bp_tr.zeropoint is None, \
+        "Zeropoint erroneously preserved after truncating with explicit red_limit"
+    bp_tr = bp.truncate(blue_limit = 500.)
+    assert bp_tr.zeropoint is None, \
+        "Zeropoint erroneously preserved after truncating with explicit blue_limit"
 
 if __name__ == "__main__":
     test_Bandpass_basic()
