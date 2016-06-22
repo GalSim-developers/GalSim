@@ -52,6 +52,9 @@ Bug Fixes
   not quite, flat (#741)
 - Fixed a bug in chromatic parametric galaxy models based on COSMOS galaxies.
   (#745)
+- Fixed a bug in the Sum and Convolution constructors when they are only
+  adding or convolving a single element that could lead to erroneous str and
+  reprs for the resulting object if it was then transformed. (#763)
 
 
 Deprecated Features
