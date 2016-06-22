@@ -19,6 +19,7 @@
 import numpy as np
 import os
 import sys
+import logging
 
 from galsim_test_helpers import *
 
@@ -370,7 +371,7 @@ def test_njobs():
             'cosmos_catalog' : {
                 'min_hlr' : '@psf.items.1.sigma',
                 'dir' : os.path.join('..','examples','data'),
-                'file_name' : 'real_galaxy_catalog_example.fits',
+                'file_name' : 'real_galaxy_catalog_23.5_example.fits',
             },
         },
         'output' : {
@@ -383,12 +384,14 @@ def test_njobs():
             },
         },
     }
-    galsim.config.Process(config)
+    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
+    logger = logging.getLogger()
+    galsim.config.Process(config, logger=logger)
 
     # Repeat with 2 jobs
     config['output']['file_name']['root'] = 'test_two_jobs_'
-    galsim.config.Process(config, njobs=2, job=1)
-    galsim.config.Process(config, njobs=2, job=2)
+    galsim.config.Process(config, njobs=2, job=1, logger=logger)
+    galsim.config.Process(config, njobs=2, job=2, logger=logger)
 
     # Check that the images are equal:
     one00 = galsim.fits.read('test_one_job_00.fits', dir='output')

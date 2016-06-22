@@ -150,6 +150,7 @@ New config features
   gsobject type=Ring, which is now deprecated.  See demo5 and demo10 for
   examples of the new preferred syntax. (#698)
 
+
 File name changes
 -----------------
 
