@@ -422,8 +422,10 @@ class Bandpass(object):
         same zeropoint as the original.  This default behavior is called 'auto'.  The user can also
         give boolean True or False values.
 
-        @param blue_limit           Truncate blue side of bandpass here. [default: None]
-        @param red_limit            Truncate red side of bandpass here. [default: None]
+        @param blue_limit           Truncate blue side of bandpass at this wavelength in nm.
+                                    [default: None]
+        @param red_limit            Truncate red side of bandpass at this wavelength in nm.
+                                    [default: None]
         @param relative_throughput  Truncate leading or trailing wavelengths that are below
                                     this relative throughput level.  (See above for details.)
                                     Either `blue_limit` and/or `red_limit` should be supplied, or
