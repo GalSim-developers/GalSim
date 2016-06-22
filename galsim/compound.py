@@ -137,25 +137,19 @@ class Sum(galsim.GSObject):
         # Save the list as an attribute, so it can be inspected later if necessary.
         self._obj_list = args
 
-        if len(args) == 1 and gsparams is None:
-            # No need to make an SBAdd in this case.
-            galsim.GSObject.__init__(self, args[0])
-            if hasattr(args[0],'noise'):
-                self.noise = args[0].noise
-        else:
-            # If any of the objects have a noise attribute, then we propagate the sum of the
-            # noises (they add like variances) to the final sum.
-            noise = None
-            for obj in args:
-                if hasattr(obj,'noise'):
-                    if noise is None:
-                        noise = obj.noise
-                    else:
-                        noise += obj.noise
-            SBList = [obj.SBProfile for obj in args]
-            galsim.GSObject.__init__(self, galsim._galsim.SBAdd(SBList, gsparams))
-            if noise is not None:
-                self.noise = noise
+        # If any of the objects have a noise attribute, then we propagate the sum of the
+        # noises (they add like variances) to the final sum.
+        noise = None
+        for obj in args:
+            if hasattr(obj,'noise'):
+                if noise is None:
+                    noise = obj.noise
+                else:
+                    noise += obj.noise
+        SBList = [obj.SBProfile for obj in args]
+        galsim.GSObject.__init__(self, galsim._galsim.SBAdd(SBList, gsparams))
+        if noise is not None:
+            self.noise = noise
 
     @property
     def obj_list(self): return self._obj_list
@@ -307,15 +301,6 @@ class Convolution(galsim.GSObject):
         if kwargs:
             raise TypeError(
                 "Convolution constructor got unexpected keyword argument(s): %s"%kwargs.keys())
-
-        if len(args) == 1 and gsparams is None:
-            # No need to make an SBConvolve in this case.  Can early exit.
-            galsim.GSObject.__init__(self, args[0])
-            if hasattr(args[0],'noise'):
-                self.noise = args[0].noise
-            self._real_space = real_space
-            self._obj_list = args
-            return
 
         # Check whether to perform real space convolution...
         # Start by checking if all objects have a hard edge.

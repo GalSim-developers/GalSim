@@ -54,6 +54,9 @@ Bug Fixes
   (#745)
 - Fixed a bug in the Image copy constructor where the wcs was not copied if
   the `image` parameter is a galsim.Image. (#762)
+- Fixed a bug in the Sum and Convolution constructors when they are only
+  adding or convolving a single element that could lead to erroneous str and
+  reprs for the resulting object if it was then transformed. (#763)
 
 
 Deprecated Features
