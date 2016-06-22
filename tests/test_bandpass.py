@@ -329,6 +329,21 @@ def test_zp():
     assert bp_tr.zeropoint is None, \
         "Zeropoint erroneously preserved after truncating with explicit blue_limit"
 
+@timer
+def test_truncate_inputs():
+    """Test that bandpass truncation respects certain sanity constraints on the inputs."""
+    try:
+        # Don't allow truncation via two different methods.
+        bp = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), 'nm')
+        np.testing.assert_raises(ValueError, bp.truncate, relative_throughput=1.e-4, blue_limit=500.)
+
+        # If blue_limit or red_limit is supplied, don't allow values that are outside the original
+        # wavelength range.
+        np.testing.assert_raises(ValueError, bp.truncate, blue_limit=0.9*bp.blue_limit)
+        np.testing.assert_raises(ValueError, bp.truncate, red_limit=1.1*bp.red_limit)
+    except ImportError:
+        print 'The assert_raises tests require nose'
+
 if __name__ == "__main__":
     test_Bandpass_basic()
     test_Bandpass_mul()
@@ -337,3 +352,4 @@ if __name__ == "__main__":
     test_ne()
     test_thin()
     test_zp()
+    test_truncate_inputs()

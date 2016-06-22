@@ -426,6 +426,10 @@ class Bandpass(object):
         @param red_limit            Truncate red side of bandpass here. [default: None]
         @param relative_throughput  Truncate leading or trailing wavelengths that are below
                                     this relative throughput level.  (See above for details.)
+                                    Either `blue_limit` and/or `red_limit` should be supplied, or
+                                    `relative_throughput` should be supplied -- but
+                                    `relative_throughput` should not be combined with one of the
+                                    limits.
                                     [default: None]
         @param preserve_zp          If True, the new truncated Bandpass will be assigned the same
                                     zeropoint as the original.  If False, the new truncated Bandpass
@@ -437,6 +441,11 @@ class Bandpass(object):
 
         @returns the truncated Bandpass.
         """
+        # Enforce the choice of a single mode of truncation.
+        if relative_throughput is not None:
+            if blue_limit is not None or red_limit is not None:
+                raise ValueError("Truncate using relative_throughput or red/blue_limit, not both!")
+
         if preserve_zp == 'auto':
             if relative_throughput is not None: preserve_zp = True
             else: preserve_zp = False
@@ -446,8 +455,17 @@ class Bandpass(object):
 
         if blue_limit is None:
             blue_limit = self.blue_limit
+        else:
+            if blue_limit < self.blue_limit:
+                raise ValueError("Supplied blue_limit (%f) is bluer than the original (%f)!"%
+                                 (blue_limit, self.blue_limit))
         if red_limit is None:
             red_limit = self.red_limit
+        else:
+            if red_limit > self.red_limit:
+                raise ValueError("Supplied red_limit (%f) is redder than the original (%f)!"%
+                                 (red_limit, self.red_limit))
+
         wave_list = self.wave_list
         if len(self.wave_list) > 0:
             wave = np.array(self.wave_list)
