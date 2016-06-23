@@ -777,13 +777,13 @@ def test_sum_transform():
         sgal2 = eval(str(gal2))
         rgal2 = eval(repr(gal2))
 
-        print 'gal1 = ',repr(gal1)
-        print 'sgal1 = ',repr(sgal1)
-        print 'rgal1 = ',repr(rgal1)
+        print('gal1 = ',repr(gal1))
+        print('sgal1 = ',repr(sgal1))
+        print('rgal1 = ',repr(rgal1))
 
-        print 'gal2 = ',repr(gal2)
-        print 'sgal2 = ',repr(sgal2)
-        print 'rgal2 = ',repr(rgal2)
+        print('gal2 = ',repr(gal2))
+        print('sgal2 = ',repr(sgal2))
+        print('rgal2 = ',repr(rgal2))
 
         gal1_im = gal1.drawImage(nx=64, ny=64, scale=0.2)
         sgal1_im = sgal1.drawImage(nx=64, ny=64, scale=0.2)
