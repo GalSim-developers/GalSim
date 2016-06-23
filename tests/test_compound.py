@@ -756,6 +756,55 @@ def test_fourier_sqrt():
     t2 = time.time()
     print('time for %s = %.2f'%(funcname(),t2-t1))
 
+def test_sum_transform():
+    """This test addresses a bug found by Ismael Serrano, #763, wherein some attributes 
+    got messed up for a Transform(Sum(Transform())) object.
+
+    The bug was that we didn't bother to make a new SBProfile for a Sum (or Convolve) of
+    a single object.  But if that was an SBTransform, then the next Transform operation
+    combined the two Transforms, which messed up the repr.
+    
+    The fix is to always make an SBAdd or SBConvolve object even if the list of things to add
+    or convolve only has one element.
+    """
+    gal0 = galsim.Exponential(scale_radius=0.34, flux=105.).shear(g1=-0.56,g2=0.15)
+
+    for gal1 in [ galsim.Sum(gal0), galsim.Convolve(gal0) ]:
+        gal2 = gal1.dilate(1)
+
+        sgal1 = eval(str(gal1))
+        rgal1 = eval(repr(gal1))
+        sgal2 = eval(str(gal2))
+        rgal2 = eval(repr(gal2))
+
+        print 'gal1 = ',repr(gal1)
+        print 'sgal1 = ',repr(sgal1)
+        print 'rgal1 = ',repr(rgal1)
+
+        print 'gal2 = ',repr(gal2)
+        print 'sgal2 = ',repr(sgal2)
+        print 'rgal2 = ',repr(rgal2)
+
+        gal1_im = gal1.drawImage(nx=64, ny=64, scale=0.2)
+        sgal1_im = sgal1.drawImage(nx=64, ny=64, scale=0.2)
+        rgal1_im = rgal1.drawImage(nx=64, ny=64, scale=0.2)
+
+        gal2_im = gal2.drawImage(nx=64, ny=64, scale=0.2)
+        sgal2_im = sgal2.drawImage(nx=64, ny=64, scale=0.2)
+        rgal2_im = rgal2.drawImage(nx=64, ny=64, scale=0.2)
+
+        # Check that the objects are equivalent, even if they may be written differently.
+        np.testing.assert_almost_equal(gal1_im.array, sgal1_im.array, decimal=8)
+        np.testing.assert_almost_equal(gal1_im.array, rgal1_im.array, decimal=8)
+
+        # These two used to fail.
+        np.testing.assert_almost_equal(gal2_im.array, sgal2_im.array, decimal=8)
+        np.testing.assert_almost_equal(gal2_im.array, rgal2_im.array, decimal=8)
+
+        do_pickle(gal0)
+        do_pickle(gal1)
+        do_pickle(gal2)  # And this.
+
 
 if __name__ == "__main__":
     test_convolve()
@@ -770,3 +819,4 @@ if __name__ == "__main__":
     test_autocorrelate()
     test_ne()
     test_fourier_sqrt()
+    test_sum_transform()

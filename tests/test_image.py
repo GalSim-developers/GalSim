@@ -1730,6 +1730,74 @@ def test_ne():
     all_obj_diff(objs)
 
 
+@timer
+def test_copy():
+    """Test different ways to copy an Image.
+    """
+    wcs=galsim.AffineTransform(0.23,0.01,-0.02,0.22, galsim.PositionI(13,13))
+    im = galsim.Image(25,25, wcs=wcs)
+    gn = galsim.GaussianNoise(sigma=1.7)
+    im.addNoise(gn)
+
+    assert im.wcs == galsim.AffineTransform(0.23,0.01,-0.02,0.22, galsim.PositionI(13,13))
+    assert im.bounds == galsim.BoundsI(1,25,1,25)
+
+    # Simplest way to copy is copy()
+    im2 = im.copy()
+    assert im2.wcs == im.wcs
+    assert im2.bounds == im.bounds
+    np.testing.assert_array_equal(im2.array, im.array)
+
+    # Make sure it actually copied the array, not just made a view of it.
+    im2.setValue(3,8,11.)
+    assert im(3,8) != 11.
+
+    # Can also use constructor to "copy", although this doesn't copy the numpy array.
+    im3 = galsim.Image(im)
+    assert im3.wcs == im.wcs
+    assert im3.bounds == im.bounds
+    np.testing.assert_array_equal(im3.array, im.array)
+    im3.setValue(3,8,11.)
+    assert im(3,8) == 11.   # im value changes when im3 value changes.
+
+    # Constructor can change the wcs, but keep the array.
+    im4 = galsim.Image(im, scale=0.6)
+    assert im4.wcs != im.wcs            # wcs is not equal this time.
+    assert im4.bounds == im.bounds
+    np.testing.assert_array_equal(im4.array, im.array)
+    im4.setValue(3,8,13.)
+    assert im(3,8) == 13.
+
+    im5 = galsim.Image(im, wcs=galsim.PixelScale(1.4))
+    assert im5.wcs != im.wcs            # wcs is not equal this time.
+    assert im5.bounds == im.bounds
+    np.testing.assert_array_equal(im5.array, im.array)
+    im5.setValue(3,8,15.)
+    assert im(3,8) == 15.
+
+    im6 = galsim.Image(im, wcs=wcs)
+    assert im6.wcs == im.wcs            # This is the same wcs now.
+    assert im6.bounds == im.bounds
+    np.testing.assert_array_equal(im6.array, im.array)
+    im6.setValue(3,8,17.)
+    assert im(3,8) == 17.
+
+    # With dtype different from the original, then should actually copy.
+    im7 = galsim.Image(im, dtype=float)
+    assert im7.wcs == im.wcs
+    assert im7.bounds == im.bounds
+    np.testing.assert_array_equal(im7.array, im.array)
+    im7.setValue(3,8,11.)
+    assert im(3,8) != 11.
+
+    im8 = galsim.Image(im, wcs=wcs, dtype=float)
+    assert im8.wcs == im.wcs            # This is the same wcs now.
+    assert im8.bounds == im.bounds
+    np.testing.assert_array_equal(im8.array, im.array)
+    im8.setValue(3,8,11.)
+    assert im(3,8) != 11.
+
+
 if __name__ == "__main__":
     test_Image_basic()
     test_Image_FITS_IO()
@@ -1762,3 +1830,4 @@ if __name__ == "__main__":
     test_Image_view()
     test_Image_writeheader()
     test_ne()
+    test_copy()

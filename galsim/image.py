@@ -351,6 +351,8 @@ class Image(with_metaclass(MetaImage, object)):
                 raise TypeError("Cannot specify init_value with array")
         elif image is not None:
             if isinstance(image, Image):
+                if wcs is None and scale is None:
+                    wcs = image.wcs
                 image = image.image
             self.image = None
             for im_dtype in Image.cpp_valid_dtypes:
