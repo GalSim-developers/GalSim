@@ -1160,6 +1160,7 @@ def GetPythonVersion(config):
                 break
     return py_version
 
+
 def CheckPython(config):
     python_source_file = """
 #include "Python.h"
