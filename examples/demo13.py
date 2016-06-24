@@ -232,7 +232,7 @@ def main(argv):
         point = galsim.Gaussian(sigma=1.e-8, flux=1.)
         # Use a flat SED here, but could use something else.  A stellar SED for instance.  
         # Or a typical galaxy SED.  Depending on your purpose for drawing the PSF.
-        star_sed = galsim.SED(lambda x:1).withFlux(1.,filter_)  # Give it unit flux in this filter.
+        star_sed = galsim.SED(lambda x:1, 'nm', 'flambda').withFlux(1.,filter_)  # Give it unit flux in this filter.
         star = galsim.Convolve(point*star_sed, PSF)
         img_psf = galsim.ImageF(64,64)
         star.drawImage(bandpass=filter_, image=img_psf, scale=wfirst.pixel_scale)
