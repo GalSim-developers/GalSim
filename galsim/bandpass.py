@@ -399,7 +399,7 @@ class Bandpass(object):
         return Bandpass(self._orig_tp, self.wave_type, self.blue_limit, self.red_limit,
                         new_zeropoint, self.wave_list, self._tp)
 
-    def truncate(self, blue_limit=None, red_limit=None, relative_throughput=None):
+    def truncate(self, blue_limit=None, red_limit=None, relative_throughput=None, preserve_zp='auto'):
         """Return a bandpass with its wavelength range truncated.
 
         This function truncate the range of the bandpass either explicitly (with `blue_limit` or
@@ -413,18 +413,61 @@ class Bandpass(object):
         This function does not remove any intermediate wavelength ranges, but see thin() for
         a method that can thin out the intermediate values.
 
-        @param blue_limit       Truncate blue side of bandpass here. [default: None]
-        @param red_limit        Truncate red side of bandpass here. [default: None]
+        When truncating a bandpass that already has an assigned zeropoint, there are several
+        possibilities for what should happen to the new (returned) bandpass by default.  If red
+        and/or blue limits are given, then the new bandpass will have no assigned zeropoint because
+        it is difficult to predict what should happen if the bandpass is being arbitrarily
+        truncated.  If `relative_throughput` is given, often corresponding to low-level truncation
+        that results in little change in observed quantities, then the new bandpass is assigned the
+        same zeropoint as the original.  This default behavior is called 'auto'.  The user can also
+        give boolean True or False values.
+
+        @param blue_limit           Truncate blue side of bandpass at this wavelength in nm.
+                                    [default: None]
+        @param red_limit            Truncate red side of bandpass at this wavelength in nm.
+                                    [default: None]
         @param relative_throughput  Truncate leading or trailing wavelengths that are below
-                                this relative throughput level.  (See above for details.)
-                                [default: None]
+                                    this relative throughput level.  (See above for details.)
+                                    Either `blue_limit` and/or `red_limit` should be supplied, or
+                                    `relative_throughput` should be supplied -- but
+                                    `relative_throughput` should not be combined with one of the
+                                    limits.
+                                    [default: None]
+        @param preserve_zp          If True, the new truncated Bandpass will be assigned the same
+                                    zeropoint as the original.  If False, the new truncated Bandpass
+                                    will have a zeropoint of None. If 'auto', the new truncated
+                                    Bandpass will have the same zeropoint as the original when
+                                    truncating using `relative_throughput`, but will have a
+                                    zeropoint of None when truncating using 'blue_limit' and/or
+                                   'red_limit'.  [default: 'auto']
 
         @returns the truncated Bandpass.
         """
+        # Enforce the choice of a single mode of truncation.
+        if relative_throughput is not None:
+            if blue_limit is not None or red_limit is not None:
+                raise ValueError("Truncate using relative_throughput or red/blue_limit, not both!")
+
+        if preserve_zp == 'auto':
+            if relative_throughput is not None: preserve_zp = True
+            else: preserve_zp = False
+        # Check for weird input
+        if preserve_zp is not True and preserve_zp is not False:
+            raise ValueError("Unrecognized input for preserve_zp: %s"%preserve_zp)
+
         if blue_limit is None:
             blue_limit = self.blue_limit
+        else:
+            if blue_limit < self.blue_limit:
+                raise ValueError("Supplied blue_limit (%f) is bluer than the original (%f)!"%
+                                 (blue_limit, self.blue_limit))
         if red_limit is None:
             red_limit = self.red_limit
+        else:
+            if red_limit > self.red_limit:
+                raise ValueError("Supplied red_limit (%f) is redder than the original (%f)!"%
+                                 (red_limit, self.red_limit))
+
         wave_list = self.wave_list
         if len(self.wave_list) > 0:
             wave = np.array(self.wave_list)
@@ -440,10 +483,15 @@ class Bandpass(object):
                 "Can only truncate with relative_throughput argument if throughput is "
                 + "a LookupTable")
 
-        return Bandpass(self._orig_tp, self.wave_type, blue_limit, red_limit,
-                        _wave_list=wave_list, _tp=self._tp)
+        if preserve_zp:
+            return Bandpass(self._orig_tp, self.wave_type, blue_limit, red_limit,
+                            _wave_list=wave_list, _tp=self._tp, zeropoint=self.zeropoint)
+        else:
+            return Bandpass(self._orig_tp, self.wave_type, blue_limit, red_limit,
+                            _wave_list=wave_list, _tp=self._tp)
 
-    def thin(self, rel_err=1.e-4, trim_zeros=True, preserve_range=True, fast_search=True):
+    def thin(self, rel_err=1.e-4, trim_zeros=True, preserve_range=True, fast_search=True,
+             preserve_zp=True):
         """Thin out the internal wavelengths of a Bandpass that uses a LookupTable.
 
         If the bandpass was initialized with a LookupTable or from a file (which internally
@@ -455,6 +503,13 @@ class Bandpass(object):
         process will usually help speed up integrations using this bandpass.  You should weigh
         the speed improvements against your fidelity requirements for your particular use
         case.
+
+        By default, this routine will preserve the zeropoint of the original bandpass by assigning
+        it to the new thinned bandpass.  The justification for this choice is that when using an AB
+        zeropoint, a typical optical bandpass, and the default thinning `rel_err` value, the
+        zeropoint for the new and thinned bandpasses changes by 10^-6.  However, if you are thinning
+        a lot, and/or want to do extremely precise tests, you can set `preserve_zp=False` and then
+        recalculate the zeropoint after thinning.
 
         @param rel_err            The relative error allowed in the integral over the throughput
                                   function. [default: 1.e-4]
@@ -477,6 +532,9 @@ class Bandpass(object):
                                   Bandpasses when a significant fraction of the integrated flux
                                   passes through low throughput bandpass light leaks.
                                   [default: True]
+        @param preserve_zp        If True, the new thinned Bandpass will be assigned the same
+                                  zeropoint as the original.  If False, the new thinned Bandpass
+                                  will have a zeropoint of None. [default: True]
 
         @returns the thinned Bandpass.
         """
@@ -491,7 +549,11 @@ class Bandpass(object):
             blue_limit = np.min(newx)
             red_limit = np.max(newx)
             wave_list = np.array(newx)
-            return Bandpass(tp, 'nm', blue_limit, red_limit, _wave_list=wave_list)
+            if preserve_zp:
+                return Bandpass(tp, 'nm', blue_limit, red_limit, _wave_list=wave_list,
+                                zeropoint=self.zeropoint)
+            else:
+                return Bandpass(tp, 'nm', blue_limit, red_limit, _wave_list=wave_list)
         else:
             return self
 
