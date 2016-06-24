@@ -344,7 +344,7 @@ def test_truncate_inputs():
         np.testing.assert_raises(ValueError, bp.truncate, blue_limit=0.9*bp.blue_limit)
         np.testing.assert_raises(ValueError, bp.truncate, red_limit=1.1*bp.red_limit)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 if __name__ == "__main__":
     test_Bandpass_basic()
