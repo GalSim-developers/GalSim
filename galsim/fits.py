@@ -1211,7 +1211,7 @@ class FitsHeader(object):
         return self.header[key]
 
     def __iter__(self):
-        return self.header.__iter__
+        return self.header.__iter__()
 
     def __setitem__(self, key, value):
         # pyfits doesn't like getting bytes in python 3, so decode if appropriate
