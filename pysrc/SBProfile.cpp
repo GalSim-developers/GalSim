@@ -79,6 +79,9 @@ namespace galsim {
                 .def(bp::self == bp::other<GSParams>())
                 .enable_pickling()
                 ;
+#if BOOST_VERSION >= 106000 && BOOST_VERSION < 106100
+            bp::register_ptr_to_python< boost::shared_ptr<GSParams> >();
+#endif
         }
     };
 
