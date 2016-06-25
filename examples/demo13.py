@@ -83,7 +83,7 @@ def main(argv):
     rng = galsim.BaseDeviate(random_seed)
 
     # Generate a Poisson noise model.
-    poisson_noise = galsim.PoissonNoise(rng) 
+    poisson_noise = galsim.PoissonNoise(rng)
     logger.info('Poisson noise model created.')
 
     # Read in the WFIRST filters, setting an AB zeropoint appropriate for this telescope given its
@@ -230,7 +230,7 @@ def main(argv):
         out_filename = os.path.join(outpath, 'demo13_PSF_{0}.fits'.format(filter_name))
         # Approximate a point source.
         point = galsim.Gaussian(sigma=1.e-8, flux=1.)
-        # Use a flat SED here, but could use something else.  A stellar SED for instance.  
+        # Use a flat SED here, but could use something else.  A stellar SED for instance.
         # Or a typical galaxy SED.  Depending on your purpose for drawing the PSF.
         star_sed = galsim.SED(lambda x:1, 'nm', 'flambda').withFlux(1.,filter_)  # Give it unit flux in this filter.
         star = galsim.Convolve(point*star_sed, PSF)
@@ -260,7 +260,7 @@ def main(argv):
             gal_list[i_gal].drawImage(filter_, image=stamp)
 
             # Have to find where to place it:
-            for i_gal_use in range(i_gal*n_tot/n_use, (i_gal+1)*n_tot/n_use):
+            for i_gal_use in range(i_gal*n_tot//n_use, (i_gal+1)*n_tot//n_use):
                 # Account for the fractional part of the position:
                 ix = int(math.floor(x_stamp[i_gal_use]+0.5))
                 iy = int(math.floor(y_stamp[i_gal_use]+0.5))
@@ -269,7 +269,7 @@ def main(argv):
 
                 # Create a nominal bound for the postage stamp given the integer part of the
                 # position.
-                stamp_bounds = galsim.BoundsI(ix-0.5*stamp_size, ix+0.5*stamp_size-1, 
+                stamp_bounds = galsim.BoundsI(ix-0.5*stamp_size, ix+0.5*stamp_size-1,
                                               iy-0.5*stamp_size, iy+0.5*stamp_size-1)
 
                 # Find the overlapping bounds between the large image and the individual postage
@@ -319,7 +319,7 @@ def main(argv):
         # This image is in units of e-/pix.  Finally we add the expected thermal backgrounds in this
         # band.  These are provided in e-/pix/s, so we have to multiply by the exposure time.
         sky_image += wfirst.thermal_backgrounds[filter_name]*wfirst.exptime
-        # Adding sky level to the image.  
+        # Adding sky level to the image.
         final_image += sky_image
 
         # Now that all sources of signal (from astronomical objects and background) have been added
@@ -378,10 +378,10 @@ def main(argv):
 
         # NOTE: Sky level and dark current might appear like a constant background that can be
         # simply subtracted. However, these contribute to the shot noise and matter for the
-        # non-linear effects that follow. Hence, these must be included at this stage of the 
+        # non-linear effects that follow. Hence, these must be included at this stage of the
         # image generation process. We subtract these backgrounds in the end.
 
-        # 3) Applying a quadratic non-linearity: 
+        # 3) Applying a quadratic non-linearity:
         # In order to convert the units from electrons to ADU, we must use the gain factor. The gain
         # has a weak dependency on the charge present in each pixel. This dependency is accounted
         # for by changing the pixel values (in electrons) and applying a constant nominal gain
