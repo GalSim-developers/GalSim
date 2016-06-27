@@ -326,7 +326,7 @@ def findSCA(wcs_dict, world_pos, include_border=False):
     bounds_list = [ galsim.BoundsI(x1,x2,y1,y2) for x1,x2,y1,y2 in zip(xmin,xmax,ymin,ymax) ]
 
     sca = None
-    for i_sca in wcs_dict.keys():
+    for i_sca in wcs_dict:
         wcs = wcs_dict[i_sca]
         image_pos = wcs.toImage(world_pos)
         if bounds_list[i_sca-1].includes(int(image_pos.x), int(image_pos.y)):

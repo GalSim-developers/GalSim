@@ -100,10 +100,10 @@ class DES_Shapelet(object):
         lines = fin.readlines()
         temp = lines[0].split()
         self.psf_order = int(temp[0])
-        self.psf_size = (self.psf_order+1) * (self.psf_order+2) / 2
+        self.psf_size = (self.psf_order+1) * (self.psf_order+2) // 2
         self.sigma = float(temp[1])
         self.fit_order = int(temp[2])
-        self.fit_size = (self.fit_order+1) * (self.fit_order+2) / 2
+        self.fit_size = (self.fit_order+1) * (self.fit_order+2) // 2
         self.npca = int(temp[3])
 
         temp = lines[1].split()
@@ -136,13 +136,14 @@ class DES_Shapelet(object):
         """Read in a DES_Shapelet stored using the the FITS-file version.
         """
         from galsim._pyfits import pyfits
-        cat = pyfits.getdata(self.file_name,1)
+        with pyfits.open(self.file_name) as fits:
+            cat = fits[1].data
         # These fields each only contain one element, hence the [0]'s.
         self.psf_order = cat.field('psf_order')[0]
-        self.psf_size = (self.psf_order+1) * (self.psf_order+2) / 2
+        self.psf_size = (self.psf_order+1) * (self.psf_order+2) // 2
         self.sigma = cat.field('sigma')[0]
         self.fit_order = cat.field('fit_order')[0]
-        self.fit_size = (self.fit_order+1) * (self.fit_order+2) / 2
+        self.fit_size = (self.fit_order+1) * (self.fit_order+2) // 2
         self.npca = cat.field('npca')[0]
 
         self.bounds = galsim.BoundsD(

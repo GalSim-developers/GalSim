@@ -19,8 +19,9 @@
 Routines for controlling catalog input/output with GalSim. 
 """
 
+from future.utils import iteritems, iterkeys, itervalues
+from builtins import zip
 import galsim
-
 
 class Catalog(object):
     """A class storing the data from an input catalog.
@@ -115,7 +116,10 @@ class Catalog(object):
         # Note: we leave the data as str, rather than convert to float, so that if
         # we have any str fields, they don't give an error here.  They'll only give an 
         # error if one tries to convert them to float at some point.
-        self.data = numpy.loadtxt(self.file_name, comments=comments, dtype=str)
+        self.data = numpy.loadtxt(self.file_name, comments=comments, dtype=bytes)
+        # Convert the bytes to str.  For Py2, this is a no op.
+        self.data = self.data.astype(str)
+
         # If only one row, then the shape comes in as one-d.
         if len(self.data.shape) == 1:
             self.data = self.data.reshape(1, -1)
@@ -130,7 +134,8 @@ class Catalog(object):
         """Read in an input catalog from a FITS file.
         """
         from galsim._pyfits import pyfits, pyfits_version
-        raw_data = pyfits.getdata(self.file_name, hdu)
+        with pyfits.open(self.file_name) as fits:
+            raw_data = fits[hdu].data
         if pyfits_version > '3.0':
             self.names = raw_data.columns.names
         else:
@@ -267,19 +272,23 @@ class Dict(object):
 
         self.key_split = key_split
 
-        with open(self.file_name) as f:
-
-            if file_type == 'PICKLE':
-                import cPickle
-                self.dict = cPickle.load(f)
-            elif file_type == 'YAML':
-                import yaml
+        if file_type == 'PICKLE':
+            try:
+                import cPickle as pickle
+            except:
+                import pickle
+            with open(self.file_name, 'rb') as f:
+                self.dict = pickle.load(f)
+        elif file_type == 'YAML':
+            import yaml
+            with open(self.file_name, 'r') as f:
                 self.dict = yaml.load(f)
-            elif file_type == 'JSON':
-                import json
+        elif file_type == 'JSON':
+            import json
+            with open(self.file_name, 'r') as f:
                 self.dict = json.load(f)
-            else:
-                raise ValueError("Invalid file_type %s"%file_type)
+        else:
+            raise ValueError("Invalid file_type %s"%file_type)
 
     def get(self, key, default=None):
         # Make a list of keys according to our key_split parameter
@@ -323,16 +332,16 @@ class Dict(object):
         return self.dict.values()
 
     def items(self):
-        return self.dict.iteritems()
+        return self.dict.items()
 
     def iterkeys(self):
-        return self.dict.iterkeys()
+        return iterkeys(self.dict)
 
     def itervalues(self):
-        return self.dict.itervalues()
+        return itervalues(self.dict)
 
     def iteritems(self):
-        return self.dict.iteritems()
+        return iteritems(self.dict)
 
     def __repr__(self):
         s = "galsim.Dict(file_name=%r, file_type=%r"%(self.file_name, self.file_type)
@@ -491,12 +500,12 @@ class OutputCatalog(object):
                 new_cols.append( [ val.g1 for val in col ] )
                 new_cols.append( [ val.g2 for val in col ] )
             else:
-                col = [ str(s) for s in col ]
+                col = [ str(s).encode() for s in col ]
                 maxlen = numpy.max([ len(s) for s in col ])
                 dtypes.append( (name, str, maxlen) )
                 new_cols.append(col)
 
-        data = numpy.array(zip(*new_cols), dtype=dtypes)
+        data = numpy.array(list(zip(*new_cols)), dtype=dtypes)
 
         sort_index = numpy.argsort(self.sort_keys)
         data = data[sort_index]

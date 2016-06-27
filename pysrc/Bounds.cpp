@@ -17,11 +17,7 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef __INTEL_COMPILER
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
-#endif
+#include "galsim/IgnoreWarnings.h"
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
@@ -43,7 +39,8 @@ struct PyPosition {
             .def_readonly("x", &Position<T>::x)
             .def_readonly("y", &Position<T>::y)
             .def(bp::self * bp::other<T>())
-            .def(bp::self / bp::other<T>())
+            .def("__div__", &Position<T>::operator/)
+            .def("__truediv__", &Position<T>::operator/)
             .def(bp::other<T>() * bp::self)
             .def(-bp::self)
             .def(bp::self + bp::self)

@@ -93,7 +93,7 @@ def make_movie(args):
     spd = []  # Wind speed in m/s
     dirn = [] # Wind direction in radians
     r0_500 = [] # Fried parameter in m at a wavelength of 500 nm.
-    for i in xrange(args.nlayers):
+    for i in range(args.nlayers):
         spd.append(u()*max_speed)  # Use a random speed between 0 and max_speed
         dirn.append(u()*360*galsim.degrees)  # And an isotropically distributed wind direction.
         # The turbulence strength of each layer is specified by through its Fried parameter r0_500,
@@ -162,7 +162,7 @@ def make_movie(args):
 
     # Color items white to show up on black background
     for ax in [psf_ax, wf_ax, cbar_ax]:
-        for _, spine in ax.spines.iteritems():
+        for _, spine in ax.spines.items():
             spine.set_color('w')
         ax.title.set_color('w')
         ax.xaxis.label.set_color('w')
@@ -176,7 +176,7 @@ def make_movie(args):
     # Use astropy ProgressBar to keep track of progress and show an estimate for time to completion.
     with ProgressBar(nstep) as bar:
         with writer.saving(fig, args.outfile, 100):
-            for i in xrange(nstep):
+            for i in range(nstep):
                 # The wavefront() method with `compact=False` returns a 2D array over the pupil
                 # plane described by `aper`.  Here, we just get the wavefront for visualization;
                 # this step is normally handled automatically by the PhasePSF code behind the
@@ -207,7 +207,7 @@ def make_movie(args):
                 psf_im.set_array(psf_img.array)
                 etext.set_text("$e_1$={:6.3f}, $e_2$={:6.3f}, $r^2$={:6.3f}".format(
                         e['e1'], e['e2'], e['rsqr']))
-                with warnings.catch_warnings(FutureWarning):
+                with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     writer.grab_frame(facecolor=fig.get_facecolor())
                 bar.update()

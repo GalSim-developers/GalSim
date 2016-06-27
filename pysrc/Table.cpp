@@ -17,11 +17,7 @@
  *    and/or other materials provided with the distribution.
  */
 
-#ifndef __INTEL_COMPILER
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
-#endif
+#include "galsim/IgnoreWarnings.h"
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include <boost/python.hpp> // header that includes Python.h always needs to come first
@@ -158,8 +154,10 @@ namespace {
         {
             const int Nx = GetNumpyArrayDim(f.ptr(), 0);
             const int Ny = GetNumpyArrayDim(f.ptr(), 1);
-            assert(Nx == GetNumpyArrayDim(x.ptr(), 0));
-            assert(Ny == GetNumpyArrayDim(y.ptr(), 0));
+            const int Nx2 = GetNumpyArrayDim(x.ptr(), 0);
+            const int Ny2 = GetNumpyArrayDim(y.ptr(), 0);
+            assert(Nx == Nx2);
+            assert(Ny == Ny2);
             const double* xargs = GetNumpyArrayData<double>(x.ptr());
             const double* yargs = GetNumpyArrayData<double>(y.ptr());
             const double* vals = GetNumpyArrayData<double>(f.ptr());

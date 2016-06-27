@@ -195,20 +195,20 @@ class LookupTable(object):
             if dimen > 2:
                 raise ValueError("Arrays with dimension larger than 2 not allowed!")
             elif dimen == 2:
-                f = np.empty_like(x.ravel(), dtype=float)
+                f = np.empty_like(x.ravel()).astype(float)
                 self.table.interpMany(x.astype(float).ravel(),f)
                 f = f.reshape(x.shape)
             else:
-                f = np.empty_like(x, dtype=float)
+                f = np.empty_like(x).astype(float)
                 self.table.interpMany(x.astype(float),f)
         # option 2: a tuple
         elif isinstance(x, tuple):
-            f = np.empty_like(x, dtype=float)
+            f = np.empty_like(x).astype(float)
             self.table.interpMany(np.array(x, dtype=float),f)
             f = tuple(f)
         # option 3: a list
         elif isinstance(x, list):
-            f = np.empty_like(x, dtype=float)
+            f = np.empty_like(x).astype(float)
             self.table.interpMany(np.array(x, dtype=float),f)
             f = list(f)
         # option 4: a single value
@@ -285,7 +285,8 @@ def _LookupTable_eq(self, other):
             self.getInterp() == other.getInterp())
 
 def _LookupTable_hash(self):
-    return hash(("_galsim._LookupTable", self.getArgs(), self.getVals(), self.getInterp()))
+    return hash(("_galsim._LookupTable", tuple(self.getArgs()), tuple(self.getVals()),
+                 self.getInterp()))
 
 _galsim._LookupTable.__eq__ = _LookupTable_eq
 _galsim._LookupTable.__ne__ = lambda self, other: not self.__eq__(other)
@@ -448,7 +449,7 @@ class LookupTable2D(object):
             shape = x.shape
             x = x.ravel()
             y = y.ravel()
-            f = np.empty_like(x, dtype=float)
+            f = np.empty_like(x).astype(float)
             self.table.interpMany(x, y, f)
             f = f.reshape(shape)
             return f
@@ -470,7 +471,7 @@ class LookupTable2D(object):
             shape = x.shape
             x = x.ravel()
             y = y.ravel()
-            f = np.empty_like(x, dtype=float)
+            f = np.empty_like(x).astype(float)
             f.fill(self.constant)
             good = ((x >= self.x[0]) & (x <= self.x[-1]) &
                     (y >= self.y[0]) & (y <= self.y[-1]))
@@ -532,7 +533,7 @@ _galsim._LookupTable2D.__eq__ = _LookupTable2D_eq
 _galsim._LookupTable2D.__hash__ = lambda self: \
         hash(("_galsim._LookupTable2D", tuple(self.getXArgs()), tuple(self.getYArgs()),
               tuple(np.array(self.getVals()).ravel()), self.getInterp()))
-_galsim._LookupTable2D.__repr__ = lambda self: \
-        "galsim._galsim._LookupTable2D(%r, %r, %r, %r)"%(
-        self.getXArgs(), self.getYArgs(), self.getVals(), self.getInterp())
 _galsim._LookupTable2D.__str__ = _LookupTable2D_str
+_galsim._LookupTable2D.__repr__ = lambda self: \
+        'galsim._galsim._LookupTable(array(%r), array(%r), array(%r), %r)'%(
+        self.getXArgs().tolist(), self.getYArgs().tolist(), self.getVals(), self.getInterp())

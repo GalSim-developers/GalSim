@@ -229,11 +229,11 @@ n_pix = 4088
 jitter_rms = 0.014
 charge_diffusion = 0.1
 
-from wfirst_bandpass import getBandpasses
-from wfirst_backgrounds import getSkyLevel
-from wfirst_psfs import getPSF, storePSFImages, loadPSFImages
-from wfirst_wcs import getWCS, findSCA, allowedPos, bestPA
-from wfirst_detectors import applyNonlinearity, addReciprocityFailure, applyIPC, applyPersistence, allDetectorEffects
+from .wfirst_bandpass import getBandpasses
+from .wfirst_backgrounds import getSkyLevel
+from .wfirst_psfs import getPSF, storePSFImages, loadPSFImages
+from .wfirst_wcs import getWCS, findSCA, allowedPos, bestPA
+from .wfirst_detectors import applyNonlinearity, addReciprocityFailure, applyIPC, applyPersistence, allDetectorEffects
 
 def NLfunc(x):
     return x + nonlinearity_beta*(x**2)

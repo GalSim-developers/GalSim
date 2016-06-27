@@ -22,6 +22,8 @@ Compares interpolated values a LookupTable that were created using a previous ve
 the code (commit: e267f058351899f1f820adf4d6ab409d5b2605d5), using the
 script devutils/external/make_table_testarrays.py
 """
+
+from __future__ import print_function
 import os
 import numpy as np
 
@@ -99,7 +101,7 @@ def test_table():
             np.testing.assert_raises(RuntimeError,table2,args2[-1]+0.01)
             np.testing.assert_raises(ValueError,table1,np.zeros((3,3,3))+args1[0])
         except ImportError:
-            print 'The assert_raises tests require nose'
+            print('The assert_raises tests require nose')
 
         # These shouldn't raise any exception:
         table1(args1[0]+0.01)
@@ -120,6 +122,8 @@ def test_table():
         do_pickle(table2, lambda x: (x.getArgs(), x.getVals(), x.getInterp()))
         do_pickle(table1)
         do_pickle(table2)
+        do_pickle(table1.table)
+        do_pickle(table2.table)
 
 
 @timer
@@ -140,7 +144,7 @@ def test_init():
                                  file='../examples/data/cosmo-fid.zmed1.00_smoothed.out',
                                  interpolant='foo')
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
     # Also make sure nothing bad happens when we try to read in a stored power spectrum and assume
     # we can use the default interpolant (spline).
     tab_ps = galsim.LookupTable(file='../examples/data/cosmo-fid.zmed1.00_smoothed.out')
@@ -170,7 +174,7 @@ def test_log():
         result_2 = tab_2(test_val)
         result_3 = tab_3(test_val)
         result_4 = tab_4(test_val)
-        print result_1, result_2, result_3, result_4
+        print(result_1, result_2, result_3, result_4)
         np.testing.assert_almost_equal(
             result_2, result_1, decimal=3,
             err_msg='Disagreement when interpolating in log(f) and log(x)')
@@ -214,7 +218,7 @@ def test_log():
         np.testing.assert_raises(ValueError, galsim.LookupTable, x=x_neg, f=y_neg, x_log=True,
                                  f_log=True)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -229,7 +233,7 @@ def test_roundoff():
         np.testing.assert_raises(RuntimeError, table1, 1.0-1.e5)
         np.testing.assert_raises(RuntimeError, table1, 10.0+1.e5)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -243,7 +247,7 @@ def test_table2d():
         if LooseVersion(scipy.__version__) < LooseVersion('0.11'):
             raise ImportError
     except ImportError:
-        print "SciPy tests require SciPy version 0.11 or greater"
+        print("SciPy tests require SciPy version 0.11 or greater")
     else:
         from scipy.interpolate import interp2d
         has_scipy = True
@@ -304,7 +308,7 @@ def test_table2d():
     try:
         np.testing.assert_raises(ValueError, tab2d, 1e6, 1e6)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     # Test edge wrapping
     # Check that can't construct table with edge-wrapping if edges don't match
@@ -312,7 +316,7 @@ def test_table2d():
         np.testing.assert_raises(ValueError, galsim.LookupTable,
                                  (x, y, z), dict(edge_mode='wrap'))
     except ImportError:
-        print 'The assert_warns tests require nose'
+        print('The assert_warns tests require nose')
 
     # Extend edges and make vals match
     x = np.append(x, x[-1] + (x[-1]-x[-2]))
@@ -354,7 +358,7 @@ def test_table2d():
         y[0] = y[1]+1
         np.testing.assert_raises(ValueError, galsim.LookupTable2D, x, y, z)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer

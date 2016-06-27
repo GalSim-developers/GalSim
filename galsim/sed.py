@@ -22,7 +22,7 @@ Simple spectral energy distribution class.  Used by galsim/chromatic.py
 import numpy as np
 
 import galsim
-import utilities
+from . import utilities
 
 class SED(object):
     """Simple SED object to represent the spectral energy distributions of stars and galaxies.
@@ -119,7 +119,7 @@ class SED(object):
 
         if self._spec is not None:
             pass
-        elif isinstance(self._orig_spec, basestring):
+        elif isinstance(self._orig_spec, str):
             import os
             if os.path.isfile(self._orig_spec):
                 self._spec = galsim.LookupTable(file=self._orig_spec, interpolant='linear')
@@ -519,7 +519,7 @@ class SED(object):
                 "Need to specify zenith_angle and parallactic_angle in calculateDCRMomentShifts!")
         # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
         # Check that they're valid
-        for kw in kwargs.keys():
+        for kw in kwargs:
             if kw not in ['temperature', 'pressure', 'H2O_pressure']:
                 raise TypeError("Got unexpected keyword in calculateDCRMomentShifts: {0}".format(kw))
         # Now actually start calculating things.

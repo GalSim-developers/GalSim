@@ -22,6 +22,7 @@ contain.  The base class BaseCDModel provides the general functionality for a pi
 deflection of the kind described by Antilogus et al (2014), and derived classes may invoke
 additional symmetries or a simple prescription for setting the many free parameters of such a model.
 """
+from builtins import int
 import numpy as np
 import galsim
 
@@ -204,8 +205,8 @@ class PowerLawCD(BaseCDModel):
         @param t      power-law amplitude for contribution to deflection along y from further away
         @param alpha  power-law exponent for deflection from further away
         """
-        if not isinstance(n, (int, long)):
-            raise ValueError("Input separation n must be an int or long")
+        if not isinstance(n, int):
+            raise ValueError("Input separation n must be an int")
         # First define x and y coordinates in a square grid of ints of shape (2n + 1) * (2n + 1)
         x, y = np.meshgrid(np.arange(2 * n + 1) - n, np.arange(2 * n + 1) - n)
 

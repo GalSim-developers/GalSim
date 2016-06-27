@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import os
 import sys
 import numpy as np
@@ -31,18 +33,17 @@ except ImportError:
 def check_dep(f, *args, **kwargs):
     """Check that some function raises a GalSimDeprecationWarning as a warning, but not an error.
     """
-    #print 'Check dep: ',f,args,kwargs
     import warnings
     # Cause all warnings to always be triggered.
     # Important in case we want to trigger the same one twice in the test suite.
     warnings.simplefilter("always")
 
     # Check that f() raises a warning, but not an error.
-    with warnings.catch_warnings(galsim.GalSimDeprecationWarning) as w:
+    with warnings.catch_warnings(record=True) as w:
         res = f(*args, **kwargs)
-    #print 'w = ',w
     assert len(w) >= 1, "Calling %s did not raise a warning"%str(f)
-    print [ str(wk.message) for wk in w ]
+    print([ str(wk.message) for wk in w ])
+    assert issubclass(w[0].category, galsim.GalSimDeprecationWarning)
     return res
 
 
@@ -446,7 +447,7 @@ def test_dep_gsobject_ring():
         np.testing.assert_raises(AssertionError,gsobject_compare, gal4a, gal4c,
                                  conv=galsim.Gaussian(sigma=1))
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -479,7 +480,7 @@ def test_dep_image():
     check_dep(galsim.ConstImageViewF, ref_array.astype(np.float32))
     check_dep(galsim.ConstImageViewD, ref_array.astype(np.float64))
 
-    for i in xrange(ntypes):
+    for i in range(ntypes):
         array_type = types[i]
         check_dep(galsim.ImageView[array_type], ref_array.astype(array_type))
         check_dep(galsim.ConstImageView[array_type], ref_array.astype(array_type))
@@ -489,10 +490,10 @@ def test_dep_image():
     # The rest of this is taken from an older version of the Image class test suite that
     # tests the old syntax.  Might as well keep it.
     import warnings
-    with warnings.catch_warnings(galsim.GalSimDeprecationWarning):
+    with warnings.catch_warnings():
         warnings.simplefilter("ignore")
 
-        for i in xrange(ntypes):
+        for i in range(ntypes):
             # Check basic constructor from ncol, nrow
             array_type = types[i]
             im1 = galsim.Image[array_type](ncol,nrow)
@@ -857,8 +858,8 @@ def test_dep_shapelet():
     i = 0
     for n in range(order+1):
         for m in range(n,-1,-2):
-            p = (n+m)/2
-            q = (n-m)/2
+            p = (n+m)//2
+            q = (n-m)//2
             if m == 0:
                 check_dep(shapelet.setPQ,p,q,bvec[i])
                 i = i+1

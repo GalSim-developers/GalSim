@@ -544,8 +544,9 @@ class BaseWCS(object):
         if hasattr(self, 'header'):
             # Store the items that are in self.header in the header if they weren't already put
             # there by the call to wcs._writeHeader() call.  (We don't want to overwrite the WCS.)
-            for key in self.header.keys():
-                if key not in header.keys():
+            for key in self.header:
+                if (key not in header and key.strip() != '' and
+                    key.strip() != 'COMMENT' and key.strip() != 'HISTORY'):
                     header[key] = self.header[key]
 
     def makeSkyImage(self, image, sky_level):
@@ -1865,7 +1866,7 @@ class AffineTransform(UniformWCS):
 # Some helper functions for serializing arbitrary functions.  Used by both UVFunction and 
 # RaDecFunction.
 def _writeFuncToHeader(func, letter, header):
-    if isinstance(func, basestring):
+    if isinstance(func, str):
         # If we have the string version, then just write that
         s = func
         first_key = 'GS_'+letter+'_STR'
@@ -1875,30 +1876,43 @@ def _writeFuncToHeader(func, letter, header):
         # I got the starting point for this code from:
         #     http://stackoverflow.com/questions/1253528/
         # In particular, marshal can serialize arbitrary code. (!)
-        import types, cPickle, marshal, base64
+        try:
+            import cPickle as pickle
+        except:
+            import pickle
+        import types, marshal, base64
         if type(func) == types.FunctionType:
-            code = marshal.dumps(func.func_code)
-            name = func.func_name
-            defaults = func.func_defaults
+            try:
+                # Python3
+                code = marshal.dumps(func.__code__)
+                name = func.__name__
+                defaults = func.__defaults__
+                closure = func.__closure__
+            except:
+                # Python2
+                code = marshal.dumps(func.func_code)
+                name = func.func_name
+                defaults = func.func_defaults
+                closure = func.func_closure
 
             # Functions may also have something called closure cells.  If there are any, we need
             # to include them as well.  Help for this part came from:
             # http://stackoverflow.com/questions/573569/
-            if func.func_closure:
+            if closure:
                 from types import ModuleType
-                closure = []
-                for c in func.func_closure:
+                closure_list = []
+                for c in closure:
                     if isinstance(c.cell_contents, ModuleType):
                         # Can't really pickle the modules.  e.g. math if they use math functions.
                         # The modules just need to be loaded on the other side.  But we still need 
                         # to make a cell for the module closure item, so just use its name and
                         # mark it as a module so we can recover it correctly.
-                        closure.append( 'module_'+c.cell_contents.__name__ )
+                        closure_list.append( 'module_'+c.cell_contents.__name__ )
                     else:
-                        closure.append( c.cell_contents )
+                        closure_list.append( c.cell_contents )
             else:
-                closure = None
-            all = (0,code,name,defaults,closure)
+                closure_list = None
+            all = (0,code,name,defaults,closure_list)
         else:
             # For things other than regular functions, we can try to pickle it directly, but
             # it might not work.  Let pickle raise the appropriate error if it fails.
@@ -1909,7 +1923,7 @@ def _writeFuncToHeader(func, letter, header):
             all = (1,func)
 
         # Now we can use pickle to serialize the full thing.
-        s = cPickle.dumps(all)
+        s = pickle.dumps(all)
 
         # Fits can't handle arbitrary strings.  Shrink to a base-64 alphabet that is printable.
         # (This is like UUencoding for those of you who remember that...)
@@ -1921,7 +1935,7 @@ def _writeFuncToHeader(func, letter, header):
 
     # Fits header strings cannot be more than 68 characters long, so split it up.
     fits_len = 68
-    n = (len(s)-1)/fits_len + 1
+    n = (len(s)-1)//fits_len + 1
     s_array = [ s[i*fits_len:(i+1)*fits_len] for i in range(n) ]
 
     # The total number of string splits is stored in fits key GS_U_N.
@@ -1937,11 +1951,15 @@ def _makecell(value):
     # This is a little trick to make a closure cell.
     # We make a function that has the given value in closure, then then get the 
     # first (only) closure item, which will be the closure cell we need.
-    return (lambda : value).func_closure[0]
+    return (lambda : value).__closure__[0]
 
 def _readFuncFromHeader(letter, header):
     # This undoes the process of _writeFuncToHeader.  See the comments in that code for details.
-    import types, cPickle, marshal, base64, types
+    try:
+        import cPickle as pickle
+    except:
+        import pickle
+    import types, marshal, base64, types
     if 'GS_'+letter+'_STR' in header:
         # Read in a regular string
         n = header["GS_" + letter + "_N"]
@@ -1960,7 +1978,7 @@ def _readFuncFromHeader(letter, header):
             else: key = 'GS_%s%04d'%(letter,i)
             s += header[key]
         s = base64.b64decode(s)
-        all = cPickle.loads(s)
+        all = pickle.loads(s)
         type_code = all[0]
         if type_code == 0:
             code_str, name, defaults, closure_items = all[1:]
@@ -1970,7 +1988,7 @@ def _readFuncFromHeader(letter, header):
             else:
                 closure = []
                 for value in closure_items:
-                    if isinstance(value,basestring) and value.startswith('module_'):
+                    if isinstance(value,str) and value.startswith('module_'):
                         module_name = value[7:]
                         closure.append(_makecell(__import__(module_name)))
                     else:
@@ -2054,22 +2072,22 @@ class UVFunction(EuclideanWCS):
         import math  # In case needed by function evals
         import numpy
 
-        if isinstance(self._orig_ufunc, basestring):
+        if isinstance(self._orig_ufunc, str):
             self._ufunc = eval('lambda x,y : ' + self._orig_ufunc)
         else:
             self._ufunc = self._orig_ufunc
 
-        if isinstance(self._orig_vfunc, basestring):
+        if isinstance(self._orig_vfunc, str):
             self._vfunc = eval('lambda x,y : ' + self._orig_vfunc)
         else:
             self._vfunc = self._orig_vfunc
 
-        if isinstance(self._orig_xfunc, basestring):
+        if isinstance(self._orig_xfunc, str):
             self._xfunc = eval('lambda u,v : ' + self._orig_xfunc)
         else:
             self._xfunc = self._orig_xfunc
 
-        if isinstance(self._orig_yfunc, basestring):
+        if isinstance(self._orig_yfunc, str):
             self._yfunc = eval('lambda u,v : ' + self._orig_yfunc)
         else:
             self._yfunc = self._orig_yfunc
@@ -2250,16 +2268,16 @@ class RaDecFunction(CelestialWCS):
         import numpy
 
         if self._orig_dec_func is None:
-            if isinstance(self._orig_ra_func, basestring):
+            if isinstance(self._orig_ra_func, str):
                 self._radec_func = eval('lambda x,y : ' + self._orig_ra_func)
             else:
                 self._radec_func = self._orig_ra_func
         else:
-            if isinstance(self._orig_ra_func, basestring):
+            if isinstance(self._orig_ra_func, str):
                 ra_func = eval('lambda x,y : ' + self._orig_ra_func)
             else:
                 ra_func = self._orig_ra_func
-            if isinstance(self._orig_dec_func, basestring):
+            if isinstance(self._orig_dec_func, str):
                 dec_func = eval('lambda x,y : ' + self._orig_dec_func)
             else:
                 dec_func = self._orig_dec_func

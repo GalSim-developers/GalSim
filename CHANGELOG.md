@@ -15,6 +15,14 @@ API Changes
   output.psf.offset = "galaxy". (#691)
 
 
+Dependency Changes
+------------------
+
+- Added future module as a dependency.  This is a trivial one to install, so
+  it should not be any hardship.  You can use either `pip install future` or
+  `easy_install future`. (#534)
+
+
 Bug Fixes
 ---------
 
@@ -75,6 +83,8 @@ New Features
   GSObject and Image. (#308)
 - Added LookupTable2D to facilitate quick interpolation of two-dimensional
   tabular data. (#465)
+- Added support for Python 3.  Specifically, we tested with Python 3.4, but we
+  expect that it should work for Python versions >= 3.3. (#534)
 - Added AtmosphericScreen, OpticalScreen, and PhaseScreenList used
   to generate PSFs via Fourier optics. (#549)
 - Added PhaseScreenPSF to transform PhaseScreens into GSObjects.  (#549)

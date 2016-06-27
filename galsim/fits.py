@@ -22,7 +22,7 @@ This file includes routines for reading and writing individual Images to/from FI
 routines for handling multiple Images.
 """
 
-
+from future.utils import iteritems, iterkeys, itervalues
 import os
 import galsim
 
@@ -70,13 +70,13 @@ class _ReadFile:
     def gunzip_call(self, file):
         # cf. http://bugs.python.org/issue7471
         import subprocess
-        from cStringIO import StringIO
+        from io import StringIO
         from galsim._pyfits import pyfits
         # We use gunzip -c rather than zcat, since the latter is sometimes called gzcat
         # (with zcat being a symlink to uncompress instead).
         p = subprocess.Popen(["gunzip", "-c", file], stdout=subprocess.PIPE, close_fds=True)
         fin = StringIO(p.communicate()[0])
-        assert p.returncode == 0 
+        assert p.returncode == 0
         hdu_list = pyfits.open(fin, 'readonly')
         return hdu_list, fin
 
@@ -120,11 +120,11 @@ class _ReadFile:
 
     def bunzip2_call(self, file):
         import subprocess
-        from cStringIO import StringIO
+        from io import StringIO
         from galsim._pyfits import pyfits
         p = subprocess.Popen(["bunzip2", "-c", file], stdout=subprocess.PIPE, close_fds=True)
         fin = StringIO(p.communicate()[0])
-        assert p.returncode == 0 
+        assert p.returncode == 0
         hdu_list = pyfits.open(fin, 'readonly')
         return hdu_list, fin
 
@@ -233,16 +233,15 @@ class _WriteFile:
             hdu_list.writeto(root)
             p = subprocess.Popen(["gzip", "-S", ext, "-f", root], close_fds=True)
             p.communicate()
-        assert p.returncode == 0 
+        assert p.returncode == 0
 
     def gzip_call(self, hdu_list, file):
         import subprocess
-        fout = open(file, 'wb')
-        p = subprocess.Popen(["gzip", "-"], stdin=subprocess.PIPE, stdout=fout, close_fds=True)
-        hdu_list.writeto(p.stdin)
-        p.communicate()
-        assert p.returncode == 0 
-        fout.close()
+        with open(file, 'wb') as fout:
+            p = subprocess.Popen(["gzip", "-"], stdin=subprocess.PIPE, stdout=fout, close_fds=True)
+            hdu_list.writeto(p.stdin)
+            p.communicate()
+            assert p.returncode == 0
  
     def gzip_in_mem(self, hdu_list, file):
         import gzip
@@ -254,9 +253,8 @@ class _WriteFile:
         data = buf.getvalue()
         # There is a compresslevel option (for both gzip and bz2), but we just use the 
         # default.
-        fout = gzip.open(file, 'wb')
-        fout.write(data)
-        fout.close()
+        with gzip.open(file, 'wb') as fout:
+            fout.write(data)
 
     def gzip_tmp(self, hdu_list, file):
         import gzip
@@ -270,9 +268,8 @@ class _WriteFile:
         with open(tmp,"r") as buf:
             data = buf.read()
         os.remove(tmp)
-        fout = gzip.open(file, 'wb')
-        fout.write(data)
-        fout.close()
+        with gzip.open(file, 'wb') as fout:
+            fout.write(data)
 
     def bzip2_call2(self, hdu_list, file):
         root, ext = os.path.splitext(file)
@@ -290,16 +287,15 @@ class _WriteFile:
             hdu_list.writeto(root)
             p = subprocess.Popen(["gzip", root], close_fds=True)
             p.communicate()
-        assert p.returncode == 0 
+        assert p.returncode == 0
 
     def bzip2_call(self, hdu_list, file):
         import subprocess
-        fout = open(file, 'wb')
-        p = subprocess.Popen(["bzip2"], stdin=subprocess.PIPE, stdout=fout, close_fds=True)
-        hdu_list.writeto(p.stdin)
-        p.communicate()
-        assert p.returncode == 0 
-        fout.close()
+        with open(file, 'wb') as fout:
+            p = subprocess.Popen(["bzip2"], stdin=subprocess.PIPE, stdout=fout, close_fds=True)
+            hdu_list.writeto(p.stdin)
+            p.communicate()
+            assert p.returncode == 0
  
     def bz2_in_mem(self, hdu_list, file):
         import bz2
@@ -307,9 +303,8 @@ class _WriteFile:
         buf = io.BytesIO()
         hdu_list.writeto(buf)
         data = buf.getvalue()
-        fout = bz2.BZ2File(file, 'wb')
-        fout.write(data)
-        fout.close()
+        with bz2.BZ2File(file, 'wb') as fout:
+            fout.write(data)
 
     def bz2_tmp(self, hdu_list, file):
         import bz2
@@ -320,9 +315,8 @@ class _WriteFile:
         with open(tmp,"r") as buf:
             data = buf.read()
         os.remove(tmp)
-        fout = bz2.BZ2File(file, 'wb')
-        fout.write(data)
-        fout.close()
+        with bz2.BZ2File(file, 'wb') as fout:
+            fout.write(data)
 
     def __init__(self):
         # For each compression type, we try them in rough order of efficiency and keep track of 
@@ -477,7 +471,7 @@ def closeHDUList(hdu_list, fin):
     """If necessary, close the file handle that was opened to read in the `hdu_list`"""
     hdu_list.close()
     if fin: 
-        if isinstance(fin, basestring):
+        if isinstance(fin, str):
             # In this case, it is a file name that we need to delete.
             import os
             os.remove(fin)
@@ -797,26 +791,28 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
     if file_name:
         hdu_list, fin = _read_file(file_name, dir, file_compress)
 
-    hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
+    try:
+        hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
 
-    wcs, origin = galsim.wcs.readFromFitsHeader(hdu.header)
-    dt = hdu.data.dtype.type
-    if dt in galsim.Image.valid_array_dtypes:
-        data = hdu.data
-    else:
-        import warnings
-        warnings.warn("No C++ Image template instantiation for data type %s" % dt)
-        warnings.warn("   Using numpy.float64 instead.")
-        import numpy
-        data = hdu.data.astype(numpy.float64)
+        wcs, origin = galsim.wcs.readFromFitsHeader(hdu.header)
+        dt = hdu.data.dtype.type
+        if dt in galsim.Image.valid_array_dtypes:
+            data = hdu.data
+        else:
+            import warnings
+            warnings.warn("No C++ Image template instantiation for data type %s" % dt)
+            warnings.warn("   Using numpy.float64 instead.")
+            import numpy
+            data = hdu.data.astype(numpy.float64)
 
-    image = galsim.Image(array=data)
-    image.setOrigin(origin)
-    image.wcs = wcs
+        image = galsim.Image(array=data)
+        image.setOrigin(origin)
+        image.wcs = wcs
 
-    # If we opened a file, don't forget to close it.
-    if file_name:
-        closeHDUList(hdu_list, fin)
+    finally:
+        # If we opened a file, don't forget to close it.
+        if file_name:
+            closeHDUList(hdu_list, fin)
 
     return image
 
@@ -873,21 +869,23 @@ def readMulti(file_name=None, dir=None, hdu_list=None, compression='auto'):
     elif not isinstance(hdu_list, pyfits.HDUList):
         raise TypeError("In readMulti, hdu_list is not an HDUList")
 
-    image_list = []
-    if pyfits_compress:
-        first = 1
-        if len(hdu_list) <= 1:
-            raise IOError('Expecting at least one extension HDU in galsim.read')
-    else:
-        first = 0
-        if len(hdu_list) < 1:
-            raise IOError('Expecting at least one HDU in galsim.readMulti')
-    for hdu in range(first,len(hdu_list)):
-        image_list.append(read(hdu_list=hdu_list, hdu=hdu, compression=pyfits_compress))
+    try:
+        image_list = []
+        if pyfits_compress:
+            first = 1
+            if len(hdu_list) <= 1:
+                raise IOError('Expecting at least one extension HDU in galsim.read')
+        else:
+            first = 0
+            if len(hdu_list) < 1:
+                raise IOError('Expecting at least one HDU in galsim.readMulti')
+        for hdu in range(first,len(hdu_list)):
+            image_list.append(read(hdu_list=hdu_list, hdu=hdu, compression=pyfits_compress))
 
-    # If we opened a file, don't forget to close it.
-    if file_name:
-        closeHDUList(hdu_list, fin)
+    finally:
+        # If we opened a file, don't forget to close it.
+        if file_name:
+            closeHDUList(hdu_list, fin)
 
     return image_list
 
@@ -944,28 +942,30 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
 
     hdu = _get_hdu(hdu_list, hdu, pyfits_compress)
 
-    wcs, origin = galsim.wcs.readFromFitsHeader(hdu.header)
-    dt = hdu.data.dtype.type
-    if dt in galsim.Image.valid_array_dtypes:
-        data = hdu.data
-    else:
-        import warnings
-        warnings.warn("No C++ Image template instantiation for data type %s" % dt)
-        warnings.warn("   Using numpy.float64 instead.")
-        import numpy
-        data = hdu.data.astype(numpy.float64)
+    try:
+        wcs, origin = galsim.wcs.readFromFitsHeader(hdu.header)
+        dt = hdu.data.dtype.type
+        if dt in galsim.Image.valid_array_dtypes:
+            data = hdu.data
+        else:
+            import warnings
+            warnings.warn("No C++ Image template instantiation for data type %s" % dt)
+            warnings.warn("   Using numpy.float64 instead.")
+            import numpy
+            data = hdu.data.astype(numpy.float64)
 
-    nimages = hdu.data.shape[0]
-    image_list = []
-    for k in range(nimages):
-        image = galsim.Image(array=hdu.data[k,:,:])
-        image.setOrigin(origin)
-        image.wcs = wcs
-        image_list.append(image)
+        nimages = hdu.data.shape[0]
+        image_list = []
+        for k in range(nimages):
+            image = galsim.Image(array=hdu.data[k,:,:])
+            image.setOrigin(origin)
+            image.wcs = wcs
+            image_list.append(image)
 
-    # If we opened a file, don't forget to close it.
-    if file_name:
-        closeHDUList(hdu_list, fin)
+    finally:
+        # If we opened a file, don't forget to close it.
+        if file_name:
+            closeHDUList(hdu_list, fin)
 
     return image_list
 
@@ -1124,7 +1124,7 @@ class FitsHeader(object):
             raise TypeError("Cannot provide both file_name and hdu_list to FitsHeader")
 
         # Interpret a string header as though it were passed as file_name.
-        if isinstance(header, basestring):
+        if isinstance(header, str):
             file_name = header
             header = None
     
@@ -1186,10 +1186,14 @@ class FitsHeader(object):
                     for k,v in header:
                         self.append(k,v,useblanks=False)
 
-    # The rest of the functions are typical non-mutating functions for a dict, for which we just
-    # pass the request along to self.header.
+    # The rest of the functions are typical non-mutating functions for a dict, for which we
+    # generally just pass the request along to self.header.
     def __len__(self):
-        return len(self.header)
+        from galsim._pyfits import pyfits_version
+        if pyfits_version < '3.1':
+            return len(self.header.ascard)
+        else:
+            return len(self.header)
 
     def __contains__(self, key):
         return key in self.header
@@ -1207,16 +1211,18 @@ class FitsHeader(object):
         return self.header[key]
 
     def __iter__(self):
-        return self.header.__iter__
-
-    def __len__(self):
-        from galsim._pyfits import pyfits_version
-        if pyfits_version < '3.1':
-            return len(self.header.ascard)
-        else:
-            return len(self.header)
+        return self.header.__iter__()
 
     def __setitem__(self, key, value):
+        # pyfits doesn't like getting bytes in python 3, so decode if appropriate
+        try:
+            key = str(key.decode())
+        except:
+            pass
+        try:
+            value = str(value.decode())
+        except:
+            pass
         from galsim._pyfits import pyfits_version
         self._tag = None
         if pyfits_version < '3.1':
@@ -1258,21 +1264,21 @@ class FitsHeader(object):
         if pyfits_version < '3.1':
             return self.header.items()
         else:
-            return self.header.iteritems()
+            return iteritems(self.header)
 
     def iterkeys(self):
         from galsim._pyfits import pyfits_version
         if pyfits_version < '3.1':
             return self.header.keys()
         else:
-            return self.header.iterkeys()
+            return iterkeys(self.header)
 
     def itervalues(self):
         from galsim._pyfits import pyfits_version
         if pyfits_version < '3.1':
             return self.header.ascard.values()
         else:
-            return self.header.itervalues()
+            return itervalues(self.header)
 
     def keys(self):
         return self.header.keys()
@@ -1330,7 +1336,8 @@ class FitsHeader(object):
             return "galsim.FitsHeader(%s)"%self._tag
 
     def __eq__(self, other):
-        return isinstance(other,FitsHeader) and self.header.items() == other.header.items()
+        return (isinstance(other,FitsHeader) and
+                list(self.header.items()) == list(other.header.items()))
 
     def __ne__(self, other): return not self.__eq__(other)
 

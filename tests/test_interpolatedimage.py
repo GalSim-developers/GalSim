@@ -15,14 +15,16 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+"""Unit tests for the InterpolatedImage class.
+"""
+
+from __future__ import print_function
 import numpy as np
 import os
 import sys
 
 from galsim_test_helpers import *
-
-"""Unit tests for the InterpolatedImage class.
-"""
 
 path, filename = os.path.split(__file__) # Get the path to this file for use below...
 try:
@@ -196,7 +198,7 @@ def test_exceptions():
     try:
         # What if it receives as input something that is not an Image? Give it a GSObject to check.
         g = galsim.Gaussian(sigma=1.)
-        np.testing.assert_raises(ValueError, galsim.InterpolatedImage, g)
+        np.testing.assert_raises((ValueError, AttributeError), galsim.InterpolatedImage, g)
         # What if Image does not have a scale set, but scale keyword is not specified?
         im = galsim.ImageF(5, 5)
         np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im)
@@ -219,7 +221,7 @@ def test_exceptions():
         im = galsim.ImageI(5, 5)
         np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -519,7 +521,7 @@ def test_uncorr_padding():
     try:
         np.testing.assert_raises(ValueError,galsim.InterpolatedImage,orig_img,noise_pad=-1.)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -549,7 +551,6 @@ def test_pad_image():
 
     # Use a few different kinds of shapes for that padding.
     for (pad_nx, pad_ny) in [ (160,160), (179,191), (256,256), (305, 307) ]:
-        #print 'pad size = ',pad_nx, pad_ny
 
         # make the pad_image
         pad_img = galsim.ImageF(pad_nx, pad_ny, scale=1.)
@@ -669,7 +670,7 @@ def test_corr_padding():
     try:
         np.testing.assert_raises(ValueError,galsim.InterpolatedImage,orig_img,noise_pad=-1.)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
     # also, check that whether we give it a string, image, or cn, it gives the same noise field
     # (given the same random seed)
     infile = 'fits_files/blankimg.fits'
@@ -734,7 +735,7 @@ def test_realspace_conv():
         # time to run (before failing), so it's probably not a good idea to use it for
         # real-space convolution anyway.
 
-        print 'interp = ',interp
+        print('interp = ',interp)
 
         gal = galsim.InterpolatedImage(gal_im, x_interpolant=interp)
 
@@ -776,14 +777,14 @@ def test_Cubic_ref():
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
-    for i in xrange(len(KXVALS)):
+    for i in range(len(KXVALS)):
         posk = galsim.PositionD(KXVALS[i], KYVALS[i])
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array
     refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKCubic_test.txt"))
-    print 'ref = ',refKvals
-    print 'test = ',testKvals
-    print 'kValue(0) = ',testobj.kValue(galsim.PositionD(0.,0.))
+    print('ref = ',refKvals)
+    print('test = ',testKvals)
+    print('kValue(0) = ',testobj.kValue(galsim.PositionD(0.,0.)))
     np.testing.assert_array_almost_equal(
             refKvals/testKvals, 1., 5,
             err_msg="kValues do not match reference values for Cubic interpolant.")
@@ -801,13 +802,13 @@ def test_Quintic_ref():
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
-    for i in xrange(len(KXVALS)):
+    for i in range(len(KXVALS)):
         posk = galsim.PositionD(KXVALS[i], KYVALS[i])
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array
     refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKQuintic_test.txt"))
-    print 'ref = ',refKvals
-    print 'test = ',testKvals
+    print('ref = ',refKvals)
+    print('test = ',testKvals)
     np.testing.assert_array_almost_equal(
             refKvals/testKvals, 1., 5,
             err_msg="kValues do not match reference values for Quintic interpolant.")
@@ -825,13 +826,13 @@ def test_Lanczos5_ref():
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
-    for i in xrange(len(KXVALS)):
+    for i in range(len(KXVALS)):
         posk = galsim.PositionD(KXVALS[i], KYVALS[i])
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array
     refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKLanczos5_test.txt"))
-    print 'ref = ',refKvals
-    print 'test = ',testKvals
+    print('ref = ',refKvals)
+    print('test = ',testKvals)
     np.testing.assert_array_almost_equal(
             refKvals/testKvals, 1., 5,
             err_msg="kValues do not match reference values for Lanczos-5 interpolant.")
@@ -849,13 +850,13 @@ def test_Lanczos7_ref():
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
-    for i in xrange(len(KXVALS)):
+    for i in range(len(KXVALS)):
         posk = galsim.PositionD(KXVALS[i], KYVALS[i])
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array
     refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKLanczos7_test.txt"))
-    print 'ref = ',refKvals
-    print 'test = ',testKvals
+    print('ref = ',refKvals)
+    print('test = ',testKvals)
     np.testing.assert_array_almost_equal(
             refKvals/testKvals, 1., 5,
             err_msg="kValues do not match reference values for Lanczos-7 interpolant.")
@@ -887,10 +888,10 @@ def test_conserve_dc():
     im2 = galsim.ImageF(im2_size, im2_size, scale=scale2)
 
     for interp in ['linear', 'cubic', 'quintic']:
-        print 'Testing interpolant ',interp
+        print('Testing interpolant ',interp)
         obj = galsim.InterpolatedImage(im1, x_interpolant=interp, normalization='sb')
         obj.drawImage(im2, method='sb')
-        print 'The maximum error is ',numpy.max(abs(im2.array-init_val))
+        print('The maximum error is ',numpy.max(abs(im2.array-init_val)))
         numpy.testing.assert_array_almost_equal(
                 im2.array,init_val,5,
                 '%s did not preserve a flat input flux using xvals.'%interp)
@@ -899,7 +900,7 @@ def test_conserve_dc():
         delta = galsim.Gaussian(sigma=1.e-8)
         obj2 = galsim.Convolve([obj,delta])
         obj2.drawImage(im2, method='sb')
-        print 'The maximum error is ',numpy.max(abs(im2.array-init_val))
+        print('The maximum error is ',numpy.max(abs(im2.array-init_val)))
         numpy.testing.assert_array_almost_equal(
                 im2.array,init_val,5,
                 '%s did not preserve a flat input flux using uvals.'%interp)
@@ -911,11 +912,11 @@ def test_conserve_dc():
 
 
     for n in [3,4,5,6,7,8]:  # n=8 tests the generic formulae, since not specialized.
-        print 'Testing Lanczos interpolant with n = ',n
+        print('Testing Lanczos interpolant with n = ',n)
         lan = galsim.Lanczos(n, conserve_dc=True)
         obj = galsim.InterpolatedImage(im1, x_interpolant=lan, normalization='sb')
         obj.drawImage(im2, method='sb')
-        print 'The maximum error is ',numpy.max(abs(im2.array-init_val))
+        print('The maximum error is ',numpy.max(abs(im2.array-init_val)))
         numpy.testing.assert_array_almost_equal(
                 im2.array,init_val,5,
                 'Lanczos %d did not preserve a flat input flux using xvals.'%n)
@@ -924,7 +925,7 @@ def test_conserve_dc():
         delta = galsim.Gaussian(sigma=1.e-8)
         obj2 = galsim.Convolve([obj,delta])
         obj2.drawImage(im2, method='sb')
-        print 'The maximum error is ',numpy.max(abs(im2.array-init_val))
+        print('The maximum error is ',numpy.max(abs(im2.array-init_val)))
         numpy.testing.assert_array_almost_equal(
                 im2.array,init_val,5,
                 'Lanczos %d did not preserve a flat input flux using uvals.'%n)
@@ -1069,9 +1070,9 @@ def test_multihdu_readin():
 
     # Check for exception with invalid HDU.
     try:
-        np.testing.assert_raises(ValueError, galsim.InterpolatedImage, infile, hdu=37)
+        np.testing.assert_raises((OSError, IOError), galsim.InterpolatedImage, infile, hdu=37)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer

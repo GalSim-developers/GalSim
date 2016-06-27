@@ -22,6 +22,7 @@ and python image integrators for use in galsim.chromatic
 
 from . import _galsim
 import numpy as np
+from functools import reduce
 
 def int1d(func, min, max, rel_err=1.e-6, abs_err=1.e-12):
     """Integrate a 1-dimensional function from min to max.

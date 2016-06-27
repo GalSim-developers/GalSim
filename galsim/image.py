@@ -20,6 +20,7 @@ The Image class and some modifications to the docs for the C++ layer ImageAlloc 
 classes.
 """
 
+from future.utils import with_metaclass
 from . import _galsim
 import numpy
 import galsim
@@ -67,7 +68,7 @@ class MetaImage(type):
         }
         return Image_dict[t]
 
-class Image(object):
+class Image(with_metaclass(MetaImage, object)):
     """A class for storing image data along with the pixel scale or WCS information
 
     The Image class encapsulates all the relevant information about an image including a NumPy array
@@ -201,9 +202,8 @@ class Image(object):
     See their doc strings for more details.
 
     """
-    __metaclass__ = MetaImage
 
-    cpp_valid_dtypes = _galsim.ImageView.keys()
+    cpp_valid_dtypes = list(_galsim.ImageView)
     alias_dtypes = {
         int : numpy.int32,          # So that user gets what they would expect
         float : numpy.float64,      # if using dtype=int or float
@@ -213,14 +213,14 @@ class Image(object):
     #     int : numpy.zeros(1,dtype=int).dtype.type
     # If this becomes too confusing, we might need to add an ImageL class that uses int64.
     # Hard to imagine a use case where this would be required though...
-    valid_dtypes = cpp_valid_dtypes + alias_dtypes.keys()
+    valid_dtypes = cpp_valid_dtypes + list(alias_dtypes)
 
     unsigned_dtypes = {
         # We don't have unsigned image code, so just use signed int types.
         numpy.uint32 : numpy.int32,
         numpy.uint16 : numpy.int16,
     }
-    valid_array_dtypes = cpp_valid_dtypes + unsigned_dtypes.keys()
+    valid_array_dtypes = cpp_valid_dtypes + list(unsigned_dtypes)
 
     def __init__(self, *args, **kwargs):
         import numpy
@@ -339,6 +339,10 @@ class Image(object):
                 raise TypeError("Cannot specify both array and image")
             if not isinstance(array, numpy.ndarray):
                 raise TypeError("array must be a numpy.ndarray instance")
+            # Easier than getting the memory management right in the C++ layer.
+            # If we were provided a numpy array, keep a pointer to it here so it lives
+            # as long as the self.image object.
+            self._array = array
             if make_const:
                 self.image = _galsim.ConstImageView[self.dtype](array, xmin, ymin)
             else:
@@ -372,6 +376,8 @@ class Image(object):
             self.image = _galsim.ImageAlloc[self.dtype]()
             if init_value is not None:
                 raise TypeError("Cannot specify init_value without setting an initial size")
+        if not hasattr(self,'_array'):
+            self._array = self.image.array
 
         # Construct the wcs attribute
         if scale is not None:
@@ -397,7 +403,7 @@ class Image(object):
     @property
     def bounds(self): return self.image.bounds
     @property
-    def array(self): return self.image.array
+    def array(self): return self._array
 
     # Allow scale to work as a PixelScale wcs.
     @property
@@ -454,6 +460,7 @@ class Image(object):
         except:
             # if the image wasn't an ImageAlloc, then above won't work.  So just make it one.
             self.image = _galsim.ImageAlloc[self.dtype](bounds)
+        self._array = self.image.array
         if wcs is not None:
             self.wcs = wcs
 
@@ -1055,7 +1062,11 @@ def Image_idiv(self, other):
         a = other
         dt = type(a)
     if dt == self.array.dtype:
-        self.array[:,:] /= a
+        # Try numpy's idiv, but if that doesn't work, coerce it into the existing dtype.
+        try:
+            self.array[:,:] /= a
+        except TypeError:
+            self.array[:,:] = (self.array / a).astype(self.array.dtype)
     else:
         self.array[:,:] = (self.array / a).astype(self.array.dtype)
     return self
@@ -1162,7 +1173,7 @@ Image.__ixor__ = Image_ixor
 Image.__ior__ = Image_ior
 
 # inject these as methods of ImageAlloc classes
-for Class in _galsim.ImageAlloc.itervalues():
+for Class in _galsim.ImageAlloc.values():
     Class.__setitem__ = Image_setitem
     Class.__getitem__ = Image_getitem
     Class.__add__ = Image_add
@@ -1189,7 +1200,7 @@ for Class in _galsim.ImageAlloc.itervalues():
     Class.__setstate__ = ImageAlloc_setstate
     Class.__hash__ = None
 
-for Class in _galsim.ImageView.itervalues():
+for Class in _galsim.ImageView.values():
     Class.__setitem__ = Image_setitem
     Class.__getitem__ = Image_getitem
     Class.__add__ = Image_add
@@ -1214,7 +1225,7 @@ for Class in _galsim.ImageView.itervalues():
     Class.__getinitargs__ = ImageView_getinitargs
     Class.__hash__ = None
 
-for Class in _galsim.ConstImageView.itervalues():
+for Class in _galsim.ConstImageView.values():
     Class.__getitem__ = Image_getitem
     Class.__add__ = Image_add
     Class.__radd__ = Image_add

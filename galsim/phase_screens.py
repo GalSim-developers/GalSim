@@ -15,9 +15,13 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from builtins import range, zip
+from future.utils import iteritems
+
 import numpy as np
 import galsim
-import utilities
+from . import utilities
 
 class AtmosphericScreen(object):
     """ An atmospheric phase screen that can drift in the wind and evolves ("boils") over time.  The
@@ -196,7 +200,7 @@ class AtmosphericScreen(object):
         _nstep = int(np.round(dt/self.time_step))
         if _nstep == 0:
             _nstep = 1
-        for i in xrange(_nstep):
+        for i in range(_nstep):
             self.advance()
         return _nstep*self.time_step  # return the time *actually* advanced
 
@@ -361,8 +365,8 @@ def Atmosphere(screen_size, rng=None, **kwargs):
         if 'direction' not in kwargs:
             kwargs['direction'] = [0*galsim.degrees]*len(kwargs['speed'])
         kwargs['vx'], kwargs['vy'] = zip(*[v*d.sincos()
-                                           for v, d in zip(kwargs['speed'],
-                                                           kwargs['direction'])])
+                                         for v, d in zip(kwargs['speed'],
+                                                         kwargs['direction'])])
         del kwargs['speed']
         del kwargs['direction']
 
@@ -375,7 +379,7 @@ def Atmosphere(screen_size, rng=None, **kwargs):
 
     if rng is None:
         rng = galsim.BaseDeviate()
-    kwargs['rng'] = [galsim.BaseDeviate(rng.raw()) for i in xrange(nmax)]
+    kwargs['rng'] = [galsim.BaseDeviate(rng.raw()) for i in range(nmax)]
     return galsim.PhaseScreenList(AtmosphericScreen(**kw)
                                   for kw in utilities.lod_to_dol(kwargs, nmax))
 
@@ -388,7 +392,7 @@ def _nCr(n, r):
     if 0 <= r <= n:
         ntok = 1
         rtok = 1
-        for t in xrange(1, min(r, n - r) + 1):
+        for t in range(1, min(r, n - r) + 1):
             ntok *= n
             rtok *= t
             n -= 1
@@ -433,11 +437,11 @@ def _zern_norm(n, m):
 def _zern_rho_coefs(n, m):
     """Compute coefficients of radial part of Zernike (n, m).
     """
-    kmax = (n-abs(m))/2
+    kmax = (n-abs(m)) // 2
     A = [0]*(n+1)
     val = _nCr(n,kmax) # The value for k = 0 in the equation below.
     norm = _zern_norm(n,m)
-    for k in xrange(kmax):
+    for k in range(kmax):
         # val = (-1)**k * _nCr(n-k, k) * _nCr(n-2*k, kmax-k) / _zern_norm(n, m)
         # The above formula is faster as a recurrence relation:
         A[n-2*k] = val / norm

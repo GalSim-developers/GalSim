@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import numpy as np
 import math
 import os
@@ -220,9 +222,9 @@ def test_shear_variance():
     predicted_variance *= 2
     var1 = np.var(g1)
     var2 = np.var(g2)
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from flat power spectrum!"
 
@@ -244,9 +246,9 @@ def test_shear_variance():
     predicted_variance = (1./np.pi**2)*(0.25*np.pi*(klim**2) - kmin**2)
     var1 = np.var(g1)
     var2 = np.var(g2)
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from flat E-mode power spectrum!"
 
@@ -273,9 +275,9 @@ def test_shear_variance():
     predicted_variance *= 2
     var1 = np.var(g1)
     var2 = np.var(g2)
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from flat power spectrum with smaller grid_size"
 
@@ -293,9 +295,9 @@ def test_shear_variance():
     predicted_variance *= 2
     var1 = np.var(g1)
     var2 = np.var(g2)
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from flat power spectrum with smaller ngrid"
 
@@ -330,9 +332,9 @@ def test_shear_variance():
     var1 = np.var(g1)
     var2 = np.var(g2)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum"
 
@@ -352,9 +354,9 @@ def test_shear_variance():
     var1 = np.var(g1)
     var2 = np.var(g2)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum with smaller grid_size"
 
@@ -374,9 +376,9 @@ def test_shear_variance():
     var1 = np.var(g1)
     var2 = np.var(g2)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum with smaller ngrid"
 
@@ -400,9 +402,9 @@ def test_shear_variance():
     var1 = np.var(g1)
     var2 = np.var(g2)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum with kmax_factor=2"
     rng2.discard(test_ps.nRandCallsForBuildGrid())
@@ -425,9 +427,9 @@ def test_shear_variance():
     var1 = np.var(g1)
     var2 = np.var(g2)
     predicted_variance = (erfmax**2 - erfmin**2) / (2.*np.pi*(s**2))
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance from Gaussian power spectrum with kmin_factor=2"
     rng2.discard(test_ps.nRandCallsForBuildGrid())
@@ -458,9 +460,9 @@ def test_shear_variance():
     var1 = np.var(g1)
     var2 = np.var(g2)
     # Use the predicted variance from before
-    print 'predicted variance = ',predicted_variance
-    print 'actual variance = ',var1+var2
-    print 'fractional diff = ',((var1+var2)/predicted_variance-1)
+    print('predicted variance = ',predicted_variance)
+    print('actual variance = ',var1+var2)
+    print('fractional diff = ',((var1+var2)/predicted_variance-1))
     assert np.abs((var1+var2) - predicted_variance) < tolerance_var * predicted_variance, \
             "Incorrect shear variance post-interpolation"
 
@@ -765,14 +767,14 @@ def test_kappa_gauss():
     k_testE, k_testB = galsim.lensing_ps.kappaKaiserSquires(g1, g2)
     # Then run tests based on the central region to avoid edge effects (known issue with KS
     # inversion)
-    icent = np.arange(ngrid / 2) + ngrid / 4
+    icent = np.arange(ngrid // 2) + ngrid // 4
     # Test that E-mode kappa matches
     np.testing.assert_array_almost_equal(
         k_testE[np.ix_(icent, icent)], k_ref[np.ix_(icent, icent)], decimal=2,
         err_msg="Reconstructed kappa does not match input to 2 decimal places.")
     # Test B-mode kappa is consistent with zero
     np.testing.assert_array_almost_equal(
-        k_testB[np.ix_(icent, icent)], np.zeros((ngrid / 2, ngrid / 2)), decimal=3,
+        k_testB[np.ix_(icent, icent)], np.zeros((ngrid // 2, ngrid // 2)), decimal=3,
         err_msg="Reconstructed B-mode kappa is non-zero at greater than 3 decimal places.")
     # Generate shears using the 45 degree rotation option
     g1r_big, g2r_big = shear_gaussian(
@@ -789,7 +791,7 @@ def test_kappa_gauss():
         "decimal places.")
     # Test E-mode kappa is consistent with zero for rotated shear field
     np.testing.assert_array_almost_equal(
-        kr_testE[np.ix_(icent, icent)], np.zeros((ngrid / 2, ngrid / 2)), decimal=3,
+        kr_testE[np.ix_(icent, icent)], np.zeros((ngrid // 2, ngrid // 2)), decimal=3,
         err_msg="Reconstructed kappaE is non-zero at greater than 3 decimal places for rotated "+
         "shear field.")
 

@@ -208,13 +208,13 @@ class CoaddMetricCalculator(object):
         """
         psfs, variances, fwhm_factor = self.buildInputs(fwhms, depths)
         result = {}
-        for name, mocker in self.mockers.iteritems():
+        for name, mocker in self.mockers.items():
             mask = mocker.selectInputs(variances, fwhms)
             coadd_variance, coadd_psf = mocker.mockCoadd(variances[mask], fwhms[mask], psfs[mask])
             coadd_fwhm, coadd_depth = self.computeMetrics(coadd_psf, coadd_variance,
                                                           fwhm_factor)
-            result["{}.fwhm".format(name)] = coadd_fwhm
-            result["{}.depth".format(name)] = coadd_depth
+            result["{0}.fwhm".format(name)] = coadd_fwhm
+            result["{0}.depth".format(name)] = coadd_depth
         return result, fwhm_factor
 
 
@@ -228,11 +228,11 @@ def compareCoadds(depth=24.7, depth_scatter=0.2, fwhm=0.7, fwhm_scatter=0.2,
     calc = CoaddMetricCalculator(included_fraction=included_fraction)
     result = {}
     for name in calc.mockers:
-        result["{}.fwhm".format(name)] = numpy.zeros(n_realizations, dtype=float)
-        result["{}.depth".format(name)] = numpy.zeros(n_realizations, dtype=float)
-    for n in xrange(n_realizations):
+        result["{0}.fwhm".format(name)] = numpy.zeros(n_realizations, dtype=float)
+        result["{0}.depth".format(name)] = numpy.zeros(n_realizations, dtype=float)
+    for n in range(n_realizations):
         local, fwhm_factor = calc(fwhms[n], depths[n])
-        for k, v in local.iteritems():
+        for k, v in local.items():
             result[k][n] = local[k]
 
     plot_kwds = dict(bins=150, normed=True, linewidth=0, alpha=0.75)
@@ -240,14 +240,14 @@ def compareCoadds(depth=24.7, depth_scatter=0.2, fwhm=0.7, fwhm_scatter=0.2,
     fig = matplotlib.pyplot.figure(figsize=(8,10))
     ax1 = fig.add_subplot(2, 1, 1)
     for name in calc.mockers:
-        ax1.hist(result["{}.depth".format(name)], label=name, range=(24.0, 28.0), **plot_kwds)
+        ax1.hist(result["{0}.depth".format(name)], label=name, range=(24.0, 28.0), **plot_kwds)
     ax1.hist(depths.ravel(), label="input exposures", range=(24.0, 28.0), **plot_kwds)
     ax1.set_xlabel("5-sigma magnitude limit")
     ax1.set_xlim(24.0, 28.0)
 
     ax2 = fig.add_subplot(2, 1, 2)
     for name in calc.mockers:
-        ax2.hist(result["{}.fwhm".format(name)], label=name, range=(0.5, 1.2), **plot_kwds)
+        ax2.hist(result["{0}.fwhm".format(name)], label=name, range=(0.5, 1.2), **plot_kwds)
     ax2.hist(fwhms.ravel(), label="input exposures", range=(0.5, 1.2), **plot_kwds)
     ax2.set_xlabel("PSF Effective FWHM")
     ax2.set_xlim(0.5, 1.2)

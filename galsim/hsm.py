@@ -58,7 +58,7 @@ with default values, using help(galsim.hsm.HSMParams).
 
 from . import _galsim
 import galsim
-from _galsim import HSMParams
+from ._galsim import HSMParams
 
 
 class ShapeData(object):

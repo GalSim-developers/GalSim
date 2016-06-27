@@ -19,7 +19,14 @@
 A program to download the COSMOS RealGalaxy catalog for use with GalSim.
 """
 
-import os, sys, urllib2, tarfile, subprocess, shutil, json
+from __future__ import print_function
+from builtins import input
+
+import os, sys, tarfile, subprocess, shutil, json
+try:
+    from urllib2 import urlopen
+except:
+    from urllib.request import urlopen
 
 # Since this will be installed in the same directory as our galsim executable,
 # we need to do the same trick about changing the path so it imports the real
@@ -124,7 +131,7 @@ def parse_args():
 
 # Based on recipe 577058: http://code.activestate.com/recipes/577058/
 def query_yes_no(question, default="yes"):
-    """Ask a yes/no question via raw_input() and return their answer.
+    """Ask a yes/no question via input() and return their answer.
 
     "question" is a string that is presented to the user.
     "default" is the presumed answer if the user just hits <Enter>.
@@ -146,7 +153,7 @@ def query_yes_no(question, default="yes"):
 
     while 1:
         sys.stdout.write(question + prompt)
-        choice = raw_input().lower()
+        choice = input().lower()
         if default is not None and choice == '':
             return default
         elif choice in valid.keys():
@@ -165,7 +172,7 @@ def download(url, target, unpack_dir, args, logger):
     logger.info('Target location is:\n  %s\n',target)
 
     # See how large the file to be downloaded is.
-    u = urllib2.urlopen(url)
+    u = urlopen(url)
     meta = u.info()
     logger.debug("Meta information about url:\n%s",str(meta))
     file_size = int(meta.getheaders("Content-Length")[0])
@@ -277,7 +284,7 @@ def download(url, target, unpack_dir, args, logger):
                         status = r"Downloading: %5d / %d MBytes  [%3.2f%%]" % (
                             file_size_dl/1024**2, file_size/1024**2, file_size_dl*100./file_size)
                         status = status + chr(8)*(len(status)+1)
-                        print status,
+                        print(status, end='')
                         sys.stdout.flush()
             logger.info("Download complete.")
         except IOError as e:

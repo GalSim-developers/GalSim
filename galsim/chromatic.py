@@ -25,10 +25,12 @@ Possible uses include galaxies with color gradients, automatically drawing a giv
 different filters, or implementing wavelength-dependent point spread functions.
 """
 
+from future.utils import iteritems
 import numpy as np
 import copy
 
 import galsim
+from functools import reduce
 
 class ChromaticObject(object):
     """Base class for defining wavelength-dependent objects.
@@ -475,7 +477,7 @@ class ChromaticObject(object):
         """Returns a copy of an object.  This preserves the original type of the object."""
         cls = self.__class__
         ret = cls.__new__(cls)
-        for k, v in self.__dict__.iteritems():
+        for k, v in iteritems(self.__dict__):
             if k == 'objlist':
                 # explicitly copy all individual items of objlist, not just the list itself
                 ret.__dict__[k] = [o.copy() for o in v]
@@ -1068,7 +1070,7 @@ class ChromaticAtmosphere(ChromaticObject):
         self.base_obj = base_obj
         self.base_wavelength = base_wavelength
 
-        if isinstance(scale_unit, basestring):
+        if isinstance(scale_unit, str):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         self.scale_unit = scale_unit
 
@@ -1099,7 +1101,7 @@ class ChromaticAtmosphere(ChromaticObject):
 
         # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
         # Check that they're valid
-        for kw in kwargs.keys():
+        for kw in kwargs:
             if kw not in ['temperature', 'pressure', 'H2O_pressure']:
                 raise TypeError("Got unexpected keyword: {0}".format(kw))
         self.kw = kwargs
@@ -2248,7 +2250,7 @@ class ChromaticOpticalPSF(ChromaticObject):
     def __init__(self, lam, diam=None, lam_over_diam=None, aberrations=None,
                  scale_unit=galsim.arcsec, **kwargs):
         # First, take the basic info.
-        if isinstance(scale_unit, basestring):
+        if isinstance(scale_unit, str):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         self.scale_unit = scale_unit
 
@@ -2348,7 +2350,7 @@ class ChromaticAiry(ChromaticObject):
     def __init__(self, lam, diam=None, lam_over_diam=None, scale_unit=galsim.arcsec, **kwargs):
         # First, take the basic info.
         # We have to require either diam OR lam_over_diam:
-        if isinstance(scale_unit, basestring):
+        if isinstance(scale_unit, str):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         self.scale_unit = scale_unit
 

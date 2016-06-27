@@ -18,6 +18,7 @@
 """Unit tests for integration routines at the Python layer.
 """
 
+from __future__ import print_function
 import numpy as np
 
 from galsim_test_helpers import *
@@ -197,7 +198,7 @@ def test_invroot_infinite_limits():
             RuntimeError,
             galsim.integ.int1d, test_func, 0., 1., test_rel_err, test_abs_err)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer

@@ -39,6 +39,8 @@ would probably want to draw these with no noise on individual postage stamps or 
 that.
 """
 
+from __future__ import print_function
+
 import galsim
 import os
 import sys
@@ -61,7 +63,7 @@ def main(argv):
     for var in argv:
         if var.startswith('first='): first_chip = int(var[6:])
         if var.startswith('last='): last_chip = int(var[5:])
-    print 'Processing chips %d .. %d'%(first_chip, last_chip)
+    print('Processing chips %d .. %d'%(first_chip, last_chip))
 
     out_dir = 'output'
 
@@ -83,7 +85,7 @@ def main(argv):
         os.mkdir(out_dir)
 
     for chipnum in range(first_chip,last_chip+1):
-        print 'Start chip ',chipnum
+        print('Start chip ',chipnum)
 
         # Setup the file names
         image_file = '%s_%02d.fits.fz'%(root,chipnum)
@@ -114,7 +116,7 @@ def main(argv):
         fitpsf = galsim.des.DES_Shapelet(fitpsf_file, dir=data_dir)
 
         nobj = cat.nobjects
-        print 'Catalog has ',nobj,' objects'
+        print('Catalog has ',nobj,' objects')
 
         for k in range(nobj):
             sys.stdout.write('.')
@@ -182,7 +184,7 @@ def main(argv):
             else:
                 pass
                 #print '...not in fitpsf.bounds'
-        print
+        print()
 
         # Add background level
         psfex_image += sky_level
@@ -202,9 +204,9 @@ def main(argv):
         # Now write the images to disk.
         psfex_image.write(psfex_image_file, dir=out_dir)
         fitpsf_image.write(fitpsf_image_file, dir=out_dir)
-        print 'Wrote images to %s and %s'%(
+        print('Wrote images to %s and %s'%(
                 os.path.join(out_dir,psfex_image_file),
-                os.path.join(out_dir,fitpsf_image_file))
+                os.path.join(out_dir,fitpsf_image_file)))
 
         # Increment the random seed by the number of objects in the file
         random_seed += nobj

@@ -139,7 +139,7 @@ def main(argv):
 
     # draw profile through LSST filters
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.1)
-    for filter_name, filter_ in filters.iteritems():
+    for filter_name, filter_ in filters.items():
         img = galsim.ImageF(64, 64, scale=pixel_scale)
         final.drawImage(filter_, image=img)
         img.addNoise(gaussian_noise)
@@ -180,7 +180,7 @@ def main(argv):
 
     # draw profile through LSST filters
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.02)
-    for filter_name, filter_ in filters.iteritems():
+    for filter_name, filter_ in filters.items():
         img = galsim.ImageF(64, 64, scale=pixel_scale)
         bdfinal.drawImage(filter_, image=img)
         img.addNoise(gaussian_noise)
@@ -254,7 +254,7 @@ def main(argv):
 
     # Draw profile through LSST filters
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.03)
-    for filter_name, filter_ in filters.iteritems():
+    for filter_name, filter_ in filters.items():
         img = galsim.ImageF(64, 64, scale=pixel_scale)
         final.drawImage(filter_, image=img)
         img.addNoise(gaussian_noise)

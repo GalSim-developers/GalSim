@@ -81,7 +81,7 @@ damages of any kind.
 # http://stackoverflow.com/questions/458550/standard-way-to-embed-version-into-python-package
 # We don't use setup.py, so it's not so important to do it this way, but if we ever switch...
 # And it does make it a bit easier to get the version number in SCons too.
-from _version import __version__, __version_info__
+from ._version import __version__, __version_info__
 
 
 # Define the current code version, in addition to the hidden attribute, to be consistent with
@@ -121,14 +121,14 @@ from .interpolatedimage import Nearest, Linear, Cubic, Quintic, Lanczos, SincInt
 from .interpolatedimage import InterpolatedImage, InterpolatedKImage
 from .compound import Add, Sum, Convolve, Convolution, Deconvolve, Deconvolution
 from .compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
-from compound import FourierSqrt, FourierSqrtProfile
+from .compound import FourierSqrt, FourierSqrtProfile
 from .transform import Transform, Transformation
 
 # Chromatic
 from .chromatic import ChromaticObject, ChromaticAtmosphere, Chromatic, ChromaticSum
 from .chromatic import ChromaticConvolution, ChromaticDeconvolution, ChromaticAutoConvolution
 from .chromatic import ChromaticAutoCorrelation, ChromaticTransformation
-from chromatic import ChromaticFourierSqrtProfile
+from .chromatic import ChromaticFourierSqrtProfile
 from .chromatic import ChromaticOpticalPSF, ChromaticAiry, InterpolatedChromaticObject
 from .sed import SED
 from .bandpass import Bandpass

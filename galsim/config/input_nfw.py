@@ -16,6 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
+from __future__ import print_function
+
 import galsim
 
 # This file adds input type nfw_halo and value types NFWHaloShear and NFWHaloMagnification.
@@ -54,7 +56,7 @@ def _GenerateFromNFWHaloShear(config, base, value_type):
                       "Using shear = 0.")
         shear = galsim.Shear(g1=0,g2=0)
 
-    #print base['obj_num'],'NFW shear = ',shear
+    #print(base['obj_num'],'NFW shear = ',shear)
     return shear, False
 
 
@@ -86,7 +88,7 @@ def _GenerateFromNFWHaloMagnification(config, base, value_type):
         warnings.warn("Warning: NFWHalo mu = %f means strong lensing!  Using mu=%f"%(mu,max_mu))
         mu = max_mu
 
-    #print base['obj_num'],'NFW mu = ',mu
+    #print(base['obj_num'],'NFW mu = ',mu)
     return mu, False
 
 

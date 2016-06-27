@@ -8,7 +8,7 @@ before_install:
   - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
   - sudo apt-get -qq update
   - sudo apt-get install -y libboost-all-dev gfortran liblapack-dev libfftw3-dev python-dev python-numpy python-scipy python-nose
-  - pip install astropy pyyaml future
+  - pip install astropy==1.1.1 pyyaml future
   - pushd $HOME
 #Only get TMV if not cached
   - if ! test -d tmv-0.73 || ! test -f tmv-0.73/Sconstruct; then wget https://github.com/rmjarvis/tmv/archive/v0.73.tar.gz && tar -xf v0.73.tar.gz ; else echo Using cached TMV; fi

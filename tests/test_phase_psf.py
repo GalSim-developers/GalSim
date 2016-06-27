@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import os
 import numpy as np
 from galsim_test_helpers import *
@@ -233,20 +235,20 @@ def test_phase_psf_batch():
     exptime = 0.06
     rng = galsim.BaseDeviate(1234)
     atm = galsim.Atmosphere(screen_size=10.0, altitude=10.0, alpha=0.997, rng=rng)
-    theta = [(i*galsim.arcsec, i*galsim.arcsec) for i in xrange(NPSFs)]
+    theta = [(i*galsim.arcsec, i*galsim.arcsec) for i in range(NPSFs)]
 
     kwargs = dict(lam=1000.0, exptime=exptime, diam=1.0)
 
     t1 = time.time()
     psfs = atm.makePSF(theta=theta, **kwargs)
-    print 'time for {0} PSFs in batch: {1:.2f} s'.format(NPSFs, time.time() - t1)
+    print('time for {0} PSFs in batch: {1:.2f} s'.format(NPSFs, time.time() - t1))
 
     t2 = time.time()
     more_psfs = []
     for th in theta:
         atm.reset()
         more_psfs.append(atm.makePSF(theta=th, **kwargs))
-    print 'time for {0} PSFs in serial: {1:.2f} s'.format(NPSFs, time.time() - t2)
+    print('time for {0} PSFs in serial: {1:.2f} s'.format(NPSFs, time.time() - t2))
 
     for psf1, psf2 in zip(psfs, more_psfs):
         np.testing.assert_array_equal(
