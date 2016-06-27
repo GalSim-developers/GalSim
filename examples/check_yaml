@@ -59,6 +59,11 @@ time $bin/galsim -v2 demo10.yaml || exit
 time $python demo11.py || exit
 time $bin/galsim -v2 demo11.yaml || exit
 
+# These don't have yaml versions, but at least make sure they run to completion properly.
+time $python demo12.py || exit
+
+time $python demo13.py || exit
+
 echo 'Checking diffs: (No output means success)'
 
 # demo1:

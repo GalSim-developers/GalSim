@@ -1186,10 +1186,14 @@ class FitsHeader(object):
                     for k,v in header:
                         self.append(k,v,useblanks=False)
 
-    # The rest of the functions are typical non-mutating functions for a dict, for which we just
-    # pass the request along to self.header.
+    # The rest of the functions are typical non-mutating functions for a dict, for which we
+    # generally just pass the request along to self.header.
     def __len__(self):
-        return len(self.header)
+        from galsim._pyfits import pyfits_version
+        if pyfits_version < '3.1':
+            return len(self.header.ascard)
+        else:
+            return len(self.header)
 
     def __contains__(self, key):
         return key in self.header
@@ -1207,14 +1211,7 @@ class FitsHeader(object):
         return self.header[key]
 
     def __iter__(self):
-        return self.header.__iter__
-
-    def __len__(self):
-        from galsim._pyfits import pyfits_version
-        if pyfits_version < '3.1':
-            return len(self.header.ascard)
-        else:
-            return len(self.header)
+        return self.header.__iter__()
 
     def __setitem__(self, key, value):
         # pyfits doesn't like getting bytes in python 3, so decode if appropriate
