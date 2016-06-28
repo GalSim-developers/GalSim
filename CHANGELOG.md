@@ -65,6 +65,7 @@ Bug Fixes
 - Fixed a bug in the Sum and Convolution constructors when they are only
   adding or convolving a single element that could lead to erroneous str and
   reprs for the resulting object if it was then transformed. (#763)
+- Fixed a bug related to boost-v1.60 python shared_ptr registration. (#764)
 
 Deprecated Features
 -------------------
@@ -122,7 +123,7 @@ New Features
 - Added the FourierSqrt operator to compute the Fourier-space square root of a
   profile.  This is useful in implementing optimal coaddition algorithms; see
   make_coadd.py in the examples directory (#748).
-- Made Bandpass.thin() and Bandpass.truncate() preserve the zeropoint by 
+- Made Bandpass.thin() and Bandpass.truncate() preserve the zeropoint by
   default. (#711)
 - Added version information to the compiled C++ library. (#750)
 
