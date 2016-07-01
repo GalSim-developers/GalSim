@@ -63,14 +63,13 @@ The GalSim package also requires
   The latter is preferred, since this is now where all future development of
   this package is happening.
 
-* The future module, which is used to ease compatibility between Python 2
+* the future module, which is used to ease compatibility between Python 2
   and Python 3.
 
-* Optional dependency: the Python YAML parser and emitter module PyYAML
-  (http://pyyaml.org/wiki/PyYAML)
-  Note: PyYAML is in fact only required for full config file parsing
-  functionality, and can be omitted if users are happy to use JSON-style
-  config parsing or prefer to write python scripts directly.
+* the PyYAML package for parsing YAML files (http://pyyaml.org/wiki/PyYAML)
+  Note: PyYAML is only technically required if you are using the `galsim`
+  executable for parsing YAML config files.  Users who will only use GalSim
+  in Python (or use only JSON config files) may skip this dependency.
 
 * Optional dependency: PyAst WCS package.  This is a really nice front end
   for the Starlink AST astrometry code.  It seems to support pretty much
@@ -100,8 +99,7 @@ These should installed onto your Python system so that they can be imported by:
     >>> import astropy.io.fits  [ Either this (preferred)... ]
     >>> import pyfits           [ ... or this.               ]
     >>> import future
-    >>> import yaml             [ if using the galsim executable or otherwise
-                                  plan to parse .yaml configuration files ]
+    >>> import yaml
     >>> import starlink.Ast     [ if planning to use PyAstWCS class ]
     >>> import astropy.wcs      [ if planning to use AstropyWCS class ]
     >>> import pandas           [ for faster ASCII table input ]

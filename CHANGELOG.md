@@ -21,6 +21,9 @@ Dependency Changes
 - Added future module as a dependency.  This is a trivial one to install, so
   it should not be any hardship.  You can use either `pip install future` or
   `easy_install future`. (#534)
+- Changed PyYAML to a nominal dependency, even though it is still not
+  technically required if you do not plan to use the `galsim` executable
+  (or only plan to use JSON config files).  (#768)
 
 
 Bug Fixes
