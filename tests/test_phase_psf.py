@@ -87,10 +87,17 @@ def test_structure_function():
     im = galsim.Image(phase, scale=screen_scale)
     D_sim = galsim.utilities.structure_function(im)
 
+    print("r   D_kolm   D_sim")
     for r in [0.5, 2.0, 5.0]:  # Only check values far from the screen size and scale.
         # We're only attempting to verify that we haven't missed a factor of 2 or pi or
         # something like that here, so set the rtol below to be *very* forgiving.  Since the
         # structure function varies quite quickly as r**(5./3), this is still a useful test.
+        # For the parameters above (including the random seed), D_kolm(r) and D_sim(r) are actually
+        # consistent at about the 15% level in the test below.  It's difficult to predict how
+        # consistent they *should* be though, since the simulated structure function estimate is
+        # sensitive to resolution and edge effects, as well as the particular realization of the
+        # field.
+        print(r, D_kolm(r), D_sim(r))
         np.testing.assert_allclose(D_kolm(r), D_sim(r), rtol=0.5,
                                    err_msg="Simulated structure function not close to prediction.")
 
