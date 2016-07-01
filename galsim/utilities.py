@@ -1051,6 +1051,9 @@ def structure_function(image):
     """
     array = image.array
     nx, ny = array.shape
+    scale = image.scale
+    if scale is None:
+        scale = 1.0
 
     # The structure function can be derived from the correlation function B(r) as:
     # D(r) = 2 * [B(0) - B(r)]
@@ -1061,8 +1064,8 @@ def structure_function(image):
     assert (corr[0, 0] / np.var(array) - 1.0) < 1e-6
     corr = np.fft.ifftshift(corr)
 
-    x = image.scale * (np.arange(nx) - nx//2)
-    y = image.scale * (np.arange(ny) - ny//2)
+    x = scale * (np.arange(nx) - nx//2)
+    y = scale * (np.arange(ny) - ny//2)
     tab = galsim.LookupTable2D(x, y, corr)
     thetas = np.arange(0., 2*np.pi, 100)  # Average over these angles.
 
