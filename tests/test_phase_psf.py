@@ -61,7 +61,7 @@ def test_atm_screen_size():
     # AtmosphericScreen will preserve screen_scale, but will adjust screen_size as necessary to get
     # a good FFT size.
     assert atm.screen_scale == screen_scale
-    assert atm.screen_size != screen_size
+    assert screen_size < atm.screen_size < 1.5*screen_size
     np.testing.assert_equal(atm.screen_size, atm.npix * atm.screen_scale,
                             "Inconsistent atmospheric screen size and scale.")
 
