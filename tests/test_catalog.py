@@ -85,16 +85,24 @@ def test_basic_dict():
     do_pickle(d)
 
     # YAML
-    d = galsim.Dict(dir='config_input', file_name='dict.yaml')
-    np.testing.assert_equal(len(d), 5)
-    np.testing.assert_equal(d.file_type, 'YAML')
-    np.testing.assert_equal(d['i'], 1)
-    np.testing.assert_equal(d.get('s'), 'Brian')
-    np.testing.assert_equal(d.get('s2', 'Grail'), 'Grail')  # Not in dict.  Use default.
-    np.testing.assert_almost_equal(d.get('f', 999.), 0.1) # In dict.  Ignore default.
-    d2 = galsim.Dict(dir='config_input', file_name='dict.yaml', file_type='yaml')
-    assert d == d2
-    do_pickle(d)
+    try:
+        import yaml
+    except ImportError as e:
+        # Raise a warning so this message shows up when doing nosetests (or scons tests).
+        import warnings
+        warnings.warn("Unable to import yaml.  Skipping yaml tests")
+        print("Caught ",e)
+    else:
+        d = galsim.Dict(dir='config_input', file_name='dict.yaml')
+        np.testing.assert_equal(len(d), 5)
+        np.testing.assert_equal(d.file_type, 'YAML')
+        np.testing.assert_equal(d['i'], 1)
+        np.testing.assert_equal(d.get('s'), 'Brian')
+        np.testing.assert_equal(d.get('s2', 'Grail'), 'Grail')  # Not in dict.  Use default.
+        np.testing.assert_almost_equal(d.get('f', 999.), 0.1) # In dict.  Ignore default.
+        d2 = galsim.Dict(dir='config_input', file_name='dict.yaml', file_type='yaml')
+        assert d == d2
+        do_pickle(d)
 
 
 @timer
