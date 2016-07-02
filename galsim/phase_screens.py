@@ -17,7 +17,6 @@
 #
 
 from builtins import range, zip
-from future.utils import iteritems
 
 import numpy as np
 import galsim
@@ -32,10 +31,10 @@ class AtmosphericScreen(object):
     @param screen_size   Physical extent of square phase screen in meters.  This should be large
                          enough to accommodate the desired field-of-view of the telescope as well as
                          the meta-pupil defined by the wind speed and exposure time.  Note that
-                         the screen will have periodic boundary conditions, so the code will run
-                         with a smaller sized screen, though this may introduce artifacts into PSFs
-                         or PSF correlations functions. Note that screen_size may be tweaked by the
-                         initializer to ensure screen_size is a multiple of screen_scale.
+                         the screen will have periodic boundary conditions, so while the code will
+                         still run with a small screen, this may introduce artifacts into PSFs or
+                         PSF correlations functions.  Also note that screen_size may be tweaked by
+                         the initializer to ensure `screen_size` is a multiple of `screen_scale`.
     @param screen_scale  Physical pixel scale of phase screen in meters.  An order unity multiple of
                          the Fried parameter is usually sufficiently small, but users should test
                          the effects of varying this parameter to ensure robust results.
@@ -79,7 +78,7 @@ class AtmosphericScreen(object):
             screen_scale = r0_500
         self.npix = galsim._galsim.goodFFTSize(int(np.ceil(screen_size/screen_scale)))
         self.screen_scale = screen_scale
-        self.screen_size = screen_size
+        self.screen_size = screen_scale * self.npix
         self.altitude = altitude
         self.time_step = time_step
         self.r0_500 = r0_500

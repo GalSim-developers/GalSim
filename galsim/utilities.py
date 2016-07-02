@@ -1033,3 +1033,40 @@ def set_func_doc(func, doc):
         func.__doc__ = doc
     except:
         func.__func__.__doc__ = doc
+
+
+def structure_function(image):
+    """Estimate the angularly-averaged structure function of a 2D random field.
+
+    The angularly-averaged structure function D(r) of the 2D field phi is defined as:
+
+    D(|r|) = <|phi(x) - phi(x+r)|^2>
+
+    where the x and r on the RHS are 2D vectors, but the |r| on the LHS is just a scalar length.
+
+    @param image  Image containing random field realization.  The `.scale` attribute here *is* used
+                  in the calculation.  If it's `None`, then the code will use 1.0 for the scale.
+    @returns      A python callable mapping a separation length r to the estimate of the structure
+                  function D(r).
+    """
+    array = image.array
+    nx, ny = array.shape
+    scale = image.scale
+    if scale is None:
+        scale = 1.0
+
+    # The structure function can be derived from the correlation function B(r) as:
+    # D(r) = 2 * [B(0) - B(r)]
+
+    corr = np.fft.ifft2(np.abs(np.fft.fft2(np.fft.fftshift(array)))**2).real / (nx * ny)
+    # Check that the zero-lag correlation function is equal to the variance before doing the
+    # ifftshift.
+    assert (corr[0, 0] / np.var(array) - 1.0) < 1e-6
+    corr = np.fft.ifftshift(corr)
+
+    x = scale * (np.arange(nx) - nx//2)
+    y = scale * (np.arange(ny) - ny//2)
+    tab = galsim.LookupTable2D(x, y, corr)
+    thetas = np.arange(0., 2*np.pi, 100)  # Average over these angles.
+
+    return lambda r: 2*(tab(0.0, 0.0) - np.mean(tab(r*np.cos(thetas), r*np.sin(thetas))))

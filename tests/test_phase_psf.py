@@ -37,6 +37,7 @@ pp_file = 'sample_pupil_rolled.fits'
 
 @timer
 def test_aperture():
+    """Test various ways to construct Apertures."""
     # Simple tests for constructing and pickling Apertures.
     aper1 = galsim.Aperture(diam=1.0)
     im = galsim.fits.read(os.path.join(imgdir, pp_file))
@@ -52,8 +53,58 @@ def test_aperture():
 
 
 @timer
+def test_atm_screen_size():
+    """Test for consistent AtmosphericScreen size and scale."""
+    screen_size = 10.0
+    screen_scale = 0.1
+    atm = galsim.AtmosphericScreen(screen_size=screen_size, screen_scale=screen_scale)
+    # AtmosphericScreen will preserve screen_scale, but will adjust screen_size as necessary to get
+    # a good FFT size.
+    assert atm.screen_scale == screen_scale
+    assert screen_size < atm.screen_size < 1.5*screen_size
+    np.testing.assert_equal(atm.screen_size, atm.npix * atm.screen_scale,
+                            "Inconsistent atmospheric screen size and scale.")
+
+
+@timer
+def test_structure_function():
+    """Test that AtmosphericScreen generates approximately the right structure function for infinite
+    outer scale.
+    """
+    rng = galsim.BaseDeviate(4815162342)
+    r0_500 = 0.2
+    L0 = None
+    screen_scale = 0.05
+    screen_size = 100.0
+
+    # Theoretical pure Kolmogorov structure function (at 500 nm!):
+    D_kolm = lambda r: 6.8839 * (r/r0_500)**(5./3)
+
+    atm = galsim.AtmosphericScreen(screen_size=screen_size, screen_scale=screen_scale,
+                                   r0_500=r0_500, L0=L0, rng=rng)
+    phase = atm.tab2d.table.getVals()[:-1, :-1].copy()
+    phase *= 2 * np.pi / 500.0  # nm -> radians
+    im = galsim.Image(phase, scale=screen_scale)
+    D_sim = galsim.utilities.structure_function(im)
+
+    print("r   D_kolm   D_sim")
+    for r in [0.5, 2.0, 5.0]:  # Only check values far from the screen size and scale.
+        # We're only attempting to verify that we haven't missed a factor of 2 or pi or
+        # something like that here, so set the rtol below to be *very* forgiving.  Since the
+        # structure function varies quite quickly as r**(5./3), this is still a useful test.
+        # For the parameters above (including the random seed), D_kolm(r) and D_sim(r) are actually
+        # consistent at about the 15% level in the test below.  It's difficult to predict how
+        # consistent they *should* be though, since the simulated structure function estimate is
+        # sensitive to resolution and edge effects, as well as the particular realization of the
+        # field.
+        print(r, D_kolm(r), D_sim(r))
+        np.testing.assert_allclose(D_kolm(r), D_sim(r), rtol=0.5,
+                                   err_msg="Simulated structure function not close to prediction.")
+
+
+@timer
 def test_phase_screen_list():
-    # Check list-like behaviors of PhaseScreenList
+    """Test list-like behaviors of PhaseScreenList."""
     rng = galsim.BaseDeviate(1234)
     rng2 = galsim.BaseDeviate(123)
 
@@ -175,7 +226,7 @@ def test_phase_screen_list():
 
 @timer
 def test_frozen_flow():
-    # Check frozen flow: phase(x=0, t=0) == phase(x=v*t, t=t)
+    """Test that frozen flow screen really is frozen, i.e., phase(x=0, t=0) == phase(x=v*t, t=t)."""
     rng = galsim.BaseDeviate(1234)
     vx = 1.0  # m/s
     dt = 0.01  # s
@@ -198,6 +249,7 @@ def test_frozen_flow():
 
 @timer
 def test_phase_psf_reset():
+    """Test that phase screen reset() method correctly resets the screen to t=0."""
     rng = galsim.BaseDeviate(1234)
     # Test frozen AtmosphericScreen first
     atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, speed=0.1, alpha=1.0, rng=rng)
@@ -213,7 +265,7 @@ def test_phase_psf_reset():
     wf3 = atm.wavefront(aper)
     np.testing.assert_array_equal(wf1, wf3, "Phase screen didn't reset")
 
-    # Now check with boilin, but no wind.
+    # Now check with boiling, but no wind.
     atm = galsim.Atmosphere(screen_size=30.0, altitude=10.0, alpha=0.997, rng=rng)
     wf1 = atm.wavefront(aper)
     atm.advance()
@@ -229,7 +281,7 @@ def test_phase_psf_reset():
 
 @timer
 def test_phase_psf_batch():
-    # Check that PSFs generated serially match those generated in batch.
+    """Test that PSFs generated serially match those generated in batch."""
     import time
     NPSFs = 10
     exptime = 0.06
@@ -258,6 +310,7 @@ def test_phase_psf_batch():
 
 @timer
 def test_opt_indiv_aberrations():
+    """Test that aberrations specified by name match those specified in `aberrations` list."""
     screen1 = galsim.OpticalScreen(tip=0.2, tilt=0.3, defocus=0.4, astig1=0.5, astig2=0.6,
                                    coma1=0.7, coma2=0.8, trefoil1=0.9, trefoil2=1.0, spher=1.1)
     screen2 = galsim.OpticalScreen(aberrations=[0.0, 0.0, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,
@@ -273,6 +326,7 @@ def test_opt_indiv_aberrations():
 
 @timer
 def test_scale_unit():
+    """Test that `scale_unit` keyword correctly sets the units for PhaseScreenPSF."""
     aper = galsim.Aperture(diam=1.0)
     rng = galsim.BaseDeviate(1234)
     # Test frozen AtmosphericScreen first
@@ -289,6 +343,7 @@ def test_scale_unit():
 
 @timer
 def test_ne():
+    """Test Apertures, PhaseScreens, PhaseScreenLists, and PhaseScreenPSFs for not-equals."""
     import copy
     pupil_plane_im = galsim.fits.read(os.path.join(imgdir, pp_file))
 
@@ -367,6 +422,8 @@ def test_ne():
 
 if __name__ == "__main__":
     test_aperture()
+    test_atm_screen_size()
+    test_structure_function()
     test_phase_screen_list()
     test_frozen_flow()
     test_phase_psf_reset()
