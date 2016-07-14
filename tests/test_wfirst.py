@@ -438,7 +438,7 @@ def test_wfirst_psfs():
     # in 2 pixels!).
     diff_im = 0.5*(im_int.array-im_achrom.array)
     np.testing.assert_array_almost_equal(
-        diff_im, np.zeros_like(diff_im), decimal=3, 
+        diff_im, np.zeros_like(diff_im), decimal=3,
         err_msg='PSF at a given wavelength and interpolated chromatic one evaluated at that '
         'wavelength disagree.')
 
@@ -491,7 +491,8 @@ def test_wfirst_psfs():
             { 'approximate_struts':True, 'high_accuracy':False },  # This is a repeat of the above
             { 'approximate_struts':True, 'high_accuracy':True },   # These three are all new.
             { 'approximate_struts':False, 'high_accuracy':False },
-            { 'approximate_struts':False, 'high_accuracy':True } ]:
+            { 'approximate_struts':False, 'high_accuracy':True,
+              'gsparams':galsim.GSParams(maximum_fft_size=8192) } ]:
 
             psf = galsim.wfirst.getPSF(SCAs=use_sca, **kwargs)[use_sca]
             psf_achrom = galsim.wfirst.getPSF(SCAs=use_sca, wavelength=use_lam, **kwargs)[use_sca]
