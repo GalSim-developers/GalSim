@@ -1289,6 +1289,17 @@ class OpticalPSF(GSObject):
     @param pupil_angle      If `pupil_plane_im` is not None, rotation angle for the pupil plane
                             (positive in the counter-clockwise direction).  Must be an Angle
                             instance. [default: 0. * galsim.degrees]
+    @param pupil_plane_scale Sampling interval in meters to use for the pupil plane array.  In
+                            most cases, it's a good idea to leave this as None, in which case
+                            GalSim will attempt to find a good value automatically.  The
+                            exception is when specifying the pupil arrangement via an image, in
+                            which case this keyword can be used to indicate the sampling of that
+                            image.  See also `pad_factor` for adjusting the pupil sampling scale.
+                            [default: None]
+    @param pupil_plane_size Size in meters to use for the pupil plane array.  In most cases, it's
+                            a good idea to leave this as None, in which case GalSim will attempt
+                            to find a good value automatically.  See also `oversampling` for
+                            adjusting the pupil size.  [default: None]
     @param scale_unit       Units to use for the sky coordinates when calculating lam/diam if these
                             are supplied separately.  Should be either a galsim.AngleUnit or a
                             string that can be used to construct one (e.g., 'arcsec', 'radians',
@@ -1325,6 +1336,8 @@ class OpticalPSF(GSObject):
         "strut_angle": galsim.Angle,
         "pupil_plane_im": str,
         "pupil_angle": galsim.Angle,
+        "pupil_plane_scale": float,
+        "pupil_plane_size": float,
         "scale_unit": str}
     _single_params = [{"lam_over_diam": float, "lam": float}]
     _takes_rng = False
@@ -1334,6 +1347,7 @@ class OpticalPSF(GSObject):
                  aberrations=None, aper=None, circular_pupil=True, obscuration=0., interpolant=None,
                  oversampling=1.5, pad_factor=1.5, flux=1., nstruts=0, strut_thick=0.05,
                  strut_angle=0.*galsim.degrees, pupil_plane_im=None,
+                 pupil_plane_scale=None, pupil_plane_size=None,
                  pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None,
                  suppress_warning=False, max_size=None):
         if max_size is not None:
@@ -1370,6 +1384,7 @@ class OpticalPSF(GSObject):
                     nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle,
                     oversampling=oversampling, pad_factor=pad_factor,
                     pupil_plane_im=pupil_plane_im, pupil_angle=pupil_angle,
+                    pupil_plane_scale=pupil_plane_scale, pupil_plane_size=pupil_plane_size,
                     gsparams=gsparams)
 
         # Save for pickling
