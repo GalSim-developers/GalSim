@@ -162,12 +162,14 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
             new_bounds = old_bounds.withBorder((old_bounds.xmax+1-old_bounds.xmin)/2)
             pupil_plane_im = galsim.Image(bounds=new_bounds)
             pupil_plane_im[old_bounds] = tmp_pupil_plane_im
+            pupil_plane_scale = galsim.wfirst.pupil_plane_scale
     else:
         if approximate_struts:
             oversampling = 1.5
         else:
             oversampling = 1.2
             pupil_plane_im = galsim.wfirst.pupil_plane_file
+            pupil_plane_scale = galsim.wfirst.pupil_plane_scale
 
     if wavelength is None:
         if n_waves is not None:
@@ -224,6 +226,7 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                     diam=galsim.wfirst.diameter, aberrations=use_aberrations,
                     obscuration=galsim.wfirst.obscuration,
                     pupil_plane_im=pupil_plane_im,
+                    pupil_plane_scale=pupil_plane_scale,
                     oversampling=oversampling, pad_factor=2.)
             if n_waves is not None:
                 PSF = PSF.interpolate(waves=np.linspace(blue_limit, red_limit, n_waves),
@@ -240,6 +243,7 @@ def getPSF(SCAs=None, approximate_struts=False, n_waves=None, extra_aberrations=
                                         aberrations=tmp_aberrations,
                                         obscuration=galsim.wfirst.obscuration,
                                         pupil_plane_im=pupil_plane_im,
+                                        pupil_plane_scale=pupil_plane_scale,
                                         oversampling=oversampling, pad_factor=2.)
 
         PSF_dict[SCA]=PSF

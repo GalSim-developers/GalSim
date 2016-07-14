@@ -93,6 +93,8 @@ Currently, the module includes the following numbers:
                        routine, users will not need to supply this filename, since the routine
                        already knows about it.
 
+    pupil_plane_scale - The pixel scale in meters per pixel for the image in pupil_plane_file.
+
     stray_light_fraction - The fraction of the sky background that is allowed to contribute as stray
                            light.  Currently this is required to be <10% of the background due to
                            zodiacal light, so its value is set to 0.1 (assuming a worst-case).  This
@@ -213,9 +215,15 @@ thermal_backgrounds = {'J129': 0.06,
                        'Z087': 0.06,
                        'H158': 0.08,
                        'W149': 0.06}
+
 pupil_plane_file = os.path.join(galsim.meta_data.share_dir,
                                 "WFIRST-AFTA_Pupil_Mask_C5_20141010_PLT.fits.gz")
+# The pupil plane image has non-zero values with a diameter of 1696 pixels.  The WFirst mirror
+# is 2.4 meters.  So the scale is 2.4 / 1696 = 0.00141509 meters/pixel.
+pupil_plane_scale = 2.4 / 1696.
+
 stray_light_fraction = 0.1
+
 # IPC kernel is unnormalized at first.  We will normalize it.
 ipc_kernel = numpy.array([ [0.001269938, 0.015399776, 0.001199862], \
                            [0.013800177, 1.0, 0.015600367], \
