@@ -69,6 +69,8 @@ Bug Fixes
   adding or convolving a single element that could lead to erroneous str and
   reprs for the resulting object if it was then transformed. (#763)
 - Fixed a bug related to boost-v1.60 python shared_ptr registration. (#764)
+- Made the error message when trying to read a non-existent *.fits.gz or
+  *.fits.bz2 file more helpful. (#773)
 
 Deprecated Features
 -------------------
