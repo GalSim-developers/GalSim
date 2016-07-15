@@ -26,11 +26,14 @@ import galsim
 
 from .extra import ExtraOutputBuilder
 class WeightBuilder(ExtraOutputBuilder):
-    """This builds a bad pixel mask image to go along with each regular data image.
+    """This builds a weight map image to go along with each regular data image.
 
-    There's not much here currently, since GalSim doesn't yet have any image artifacts that
-    would be appropriate to do something with here.  So this is mostly just a placeholder for
-    when we eventually add defects, saturation, etc.
+    The weight is the inverse variance of the noise in the image.
+
+    There is a option called 'include_obj_var' that governs whether the weight should include the
+    Poisson variance of the signal.  In real data, you don't know the true signal, and estimating
+    the Poisson noise from the realized image can lead to biases.  As such, different applications
+    may or may not want this included.
     """
 
     # The function to call at the end of building each stamp
