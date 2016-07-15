@@ -22,6 +22,9 @@
 modules:
     - great3_reject
 
+    # Custom module (cf. noise_free.py in this directory) that enables the output.noise_free item.
+    - noise_free
+
 psf:
     type: Convolve
 
@@ -269,6 +272,13 @@ output:
     # This lets you rerun the code if there were I/O issues and it will just write the
     # missing files.  (Potentially ones that have been deleted because they were corrupted.)
     noclobber: true
+
+    # This wasn't part of the Great3 processing, but it can be useful for developing shear
+    # algorithms to have access to a noise-free version of the image.  This uses a custom
+    # "extra output" item, which we name "noise_free".  The output image will be written to
+    # a separate hdu in the output file with a noise-free version of the main image.
+    noise_free:
+        hdu: 1  # hdu 0 is the main image.
 
     # Output truth catalogs with some of the generated values
     truth:
