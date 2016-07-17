@@ -151,7 +151,7 @@ New config features
   custom image types, object types, value types, etc. and register them with
   the config parser.  The code with the new type definitions should be given
   as a module for the code to import using the new 'modules' top-level
-  config field. (#691)
+  config field. (#691, #774)
 - Added the 'template' option to read another config file and use either the
   whole file as a template or just a given field from the file. (#691)
 - Made '$' and '@' shorthand for 'Eval' and 'Current' types respectively in
