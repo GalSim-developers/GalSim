@@ -37,6 +37,13 @@ nfiles=1
 time $python draw_psf.py last=$nfiles || exit
 time $bin/galsim draw_psf.yaml output.nfiles=$nfiles || exit
 
+# These don't have any check, but at least make sure they run to completion.
+time $bin/galsim blend.yaml || exit
+time $bin/galsim blendset.yaml || exit
+
+# One file here takes a long time.  Only test 100 galaxies here.
+time $bin/galsim meds.yaml output.nfiles=$nfiles output.nobjects=100 || exit
+
 echo 'Checking diffs:'
 
 for chip_num in {1..$nfiles} 
@@ -47,5 +54,4 @@ do
     file_name=${root}_fitpsf_image.fits
     ../check_diff output/$file_name output_yaml/$file_name
 done
-
 
