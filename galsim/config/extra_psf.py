@@ -18,7 +18,7 @@
 
 import galsim
 import math
-import numpy
+import numpy as np
 import logging
 
 # The psf extra output type builds an Image of the PSF at the same locations as the galaxies.
@@ -53,7 +53,7 @@ def DrawPSFStamp(psf, config, base, bounds, offset, method, logger):
 
         sn_target = galsim.config.ParseValue(config, 'signal_to_noise', base, float)[0]
 
-        sn_meas = math.sqrt( numpy.sum(im.array**2) / noise_var )
+        sn_meas = math.sqrt( np.sum(im.array**2) / noise_var )
         flux = sn_target / sn_meas
         im *= flux
 

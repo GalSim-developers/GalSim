@@ -25,6 +25,7 @@ from . import _galsim
 from ._galsim import BaseNoise, GaussianNoise, PoissonNoise, CCDNoise
 from ._galsim import DeviateNoise, VarGaussianNoise
 from .utilities import set_func_doc
+import numpy as np
 
 def addNoise(self, noise):
     # This will be inserted into the Image class as a method.  So self = image.
@@ -70,16 +71,15 @@ def addNoiseSNR(self, noise, snr, preserve_flux=False):
 
     @returns the variance of the noise that was applied to the image.
     """
-    import numpy
     noise_var = noise.getVariance()
-    sumsq = numpy.sum(self.array**2)
+    sumsq = np.sum(self.array**2)
     if preserve_flux:
         new_noise_var = sumsq/snr/snr
         noise = noise.withVariance(new_noise_var)
         self.addNoise(noise)
         return new_noise_var
     else:
-        sn_meas = numpy.sqrt( sumsq/noise_var )
+        sn_meas = np.sqrt( sumsq/noise_var )
         flux = snr/sn_meas
         self *= flux
         self.addNoise(noise)
