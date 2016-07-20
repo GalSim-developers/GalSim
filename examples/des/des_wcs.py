@@ -22,6 +22,15 @@ import os
 # This class works, but it's pretty slow.  I'm leaving it here as an example of a relatively
 # straightforward wcs builder.  But the better class that uses an input field is below.
 
+BAD_CCDS=[2,31,61]
+def get_random_chipnum(ud):
+    while True:
+        chipnum = int(ud() * 62) + 1
+        if chipnum not in BAD_CCDS and chipnum <= 62:
+            break
+
+    return chipnum
+
 class DES_SlowLocalWCSBuilder(galsim.config.WCSBuilder):
 
     def buildWCS(self, config, base):
@@ -49,8 +58,7 @@ class DES_SlowLocalWCSBuilder(galsim.config.WCSBuilder):
         if 'chipnum' in params:
             chipnum = params['chipnum']
         else:
-            chipnum = int(ud() * 62) + 1
-            if chipnum == 63: chipnum = 62  # Just in case.
+            chipnum=get_random_chipnum(ud)
 
         ext = params.get('ext','.fits.fz')
 
@@ -106,9 +114,11 @@ class DES_FullFieldWCS(object):
         # Read all the wcs objects indexed by their chipnum
         self.all_wcs = {}
         for chipnum in range(1,63):
-            file_name = os.path.join(dir, "%s_%02d%s"%(root,chipnum,ext))
-            wcs = galsim.FitsWCS(file_name)
-            self.all_wcs[chipnum] = wcs
+            # skip bad ccds
+            if chipnum not in BAD_CCDS:
+                file_name = os.path.join(dir, "%s_%02d%s"%(root,chipnum,ext))
+                wcs = galsim.FitsWCS(file_name)
+                self.all_wcs[chipnum] = wcs
 
     def get_chip_wcs(self, chipnum):
         """Return the wcs to use for a given chipnum
@@ -143,8 +153,7 @@ class DES_LocalWCSBuilder(galsim.config.WCSBuilder):
         if 'chipnum' in params:
             chipnum = params['chipnum']
         else:
-            chipnum = int(ud() * 62) + 1
-            if chipnum == 63: chipnum = 62  # Just in case.
+            chipnum=get_random_chipnum(ud)
 
         full_wcs = des_wcs.get_chip_wcs(chipnum)
 
