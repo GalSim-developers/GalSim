@@ -95,6 +95,10 @@ def ParseValue(config, key, base, value_type):
         elif value_type is galsim.PositionD:
             # For PositionD, we allow a string of x,y
             val = _GetPositionValue(param)
+        elif value_type is list:
+            if not isinstance(param,list):
+                raise AttributeError("parameter %s in config is not a list."%key)
+            val = param
         elif value_type is None:
             # If no value_type is given, just return whatever we have in the dict and hope
             # for the best.
@@ -689,18 +693,11 @@ def _GenerateFromNumberedFile(config, base, value_type):
 def _GenerateFromFormattedStr(config, base, value_type):
     """@brief Create a string from a format string
     """
-    req = { 'format' : str }
+    req = { 'format' : str, 'items' : list }
     # Ignore items for now, we'll deal with it differently.
-    ignore = [ 'items' ]
-    params, safe = GetAllParams(config, base, req=req, ignore=ignore)
+    params, safe = GetAllParams(config, base, req=req)
     format = params['format']
-
-    # Check that items is present and is a list.
-    if 'items' not in config:
-        raise AttributeError("Attribute items is required for type = FormattedStr")
-    items = config['items']
-    if not isinstance(items,list):
-        raise AttributeError("items for type=NumberedFile is not a list.")
+    items = params['items']
 
     # Figure out what types we are expecting for the list elements:
     tokens = format.split('%')
