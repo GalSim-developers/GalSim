@@ -49,6 +49,7 @@ def _GenerateFromEval(config, base, value_type):
     # We allow the following modules to be used in the eval string:
     import math
     import numpy
+    import numpy as np  # Both np.* and numpy.* are allowed.
     import os
 
     # These will be the variables to use for evaluating the eval statement.
@@ -86,7 +87,7 @@ def _GenerateFromEval(config, base, value_type):
         keys = re.findall(r'@[\w\.]*', string)
         #print('@keys = ',keys)
         # Remove duplicates
-        keys = numpy.unique(keys).tolist()
+        keys = np.unique(keys).tolist()
         #print('unique @keys = ',keys)
         for key0 in keys:
             key = key0[1:] # Remove the @ sign.

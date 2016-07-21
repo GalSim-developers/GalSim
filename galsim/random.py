@@ -24,6 +24,7 @@ from . import _galsim
 from ._galsim import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviate
 from ._galsim import BinomialDeviate, Chi2Deviate, GammaDeviate, WeibullDeviate
 from .utilities import set_func_doc
+import numpy as np
 
 # BaseDeviate docstrings
 _galsim.BaseDeviate.__doc__ = """
@@ -254,8 +255,6 @@ class DistDeviate(_galsim.BaseDeviate):
             from galsim.deprecated import depr
             depr('lseed', 1.1, 'seed')
             seed = lseed
-
-        import numpy
         import galsim
 
         # Special internal "private" constructor option that doesn't do any initialization.
@@ -319,50 +318,50 @@ class DistDeviate(_galsim.BaseDeviate):
                                     'regular python callable function')
 
         # Compute the cumulative distribution function
-        xarray = x_min+(1.*x_max-x_min)/(npoints-1)*numpy.array(range(npoints),float)
+        xarray = x_min+(1.*x_max-x_min)/(npoints-1)*np.array(range(npoints),float)
         # cdf is the cumulative distribution function--just easier to type!
         dcdf = [galsim.integ.int1d(function, xarray[i], xarray[i+1]) for i in range(npoints - 1)]
         cdf = [sum(dcdf[0:i]) for i in range(npoints)]
         # Quietly renormalize the probability if it wasn't already normalized
         totalprobability = cdf[-1]
-        cdf = numpy.array(cdf)/totalprobability
+        cdf = np.array(cdf)/totalprobability
         # Recompute delta CDF in case of floating-point differences in near-flat probabilities
-        dcdf = numpy.diff(cdf)
+        dcdf = np.diff(cdf)
         # Check that the probability is nonnegative
-        if not numpy.all(dcdf >= 0):
+        if not np.all(dcdf >= 0):
             raise ValueError('Negative probability passed to DistDeviate: %s'%function)
         # Now get rid of points with dcdf == 0
-        elif not numpy.all(dcdf > 0.):
+        elif not np.all(dcdf > 0.):
             # Remove consecutive dx=0 points, except endpoints
-            zeroindex = numpy.where(dcdf==0)[0]
+            zeroindex = np.where(dcdf==0)[0]
             # numpy.where returns a tuple containing 1 array, which tends to be annoying for
             # indexing, so the [0] returns the actual array of interest (indices of dcdf==0).
             # Now, we want to remove consecutive dcdf=0 points, leaving the lower end.
             # Zeroindex contains the indices of all the dcdf=0 points, so we look for ones that are
             # only 1 apart; this tells us the *lower* of the two points, but we want to remove the
             # *upper*, so we add 1 to the resultant array.
-            dindex = numpy.where(numpy.diff(zeroindex)==1)[0]+1
+            dindex = np.where(np.diff(zeroindex)==1)[0]+1
             # So dindex contains the indices of the elements of array zeroindex, which tells us the
             # indices that we might want to delete from cdf and xarray, so we delete
             # zeroindex[dindex].
-            cdf = numpy.delete(cdf,zeroindex[dindex])
-            xarray = numpy.delete(xarray,zeroindex[dindex])
-            dcdf = numpy.diff(cdf)
+            cdf = np.delete(cdf,zeroindex[dindex])
+            xarray = np.delete(xarray,zeroindex[dindex])
+            dcdf = np.diff(cdf)
             # Tweak the edges of dx=0 regions so function is always increasing
-            for index in numpy.where(dcdf == 0)[0][::-1]:  # reverse in case we need to delete
+            for index in np.where(dcdf == 0)[0][::-1]:  # reverse in case we need to delete
                 if index+2 < len(cdf):
                     # get epsilon, the smallest element where 1+eps>1
-                    eps = numpy.finfo(cdf[index+1].dtype).eps
+                    eps = np.finfo(cdf[index+1].dtype).eps
                     if cdf[index+2]-cdf[index+1] > eps:
                         cdf[index+1] += eps
                     else:
-                        cdf = numpy.delete(cdf, index+1)
-                        xarray = numpy.delete(xarray, index+1)
+                        cdf = np.delete(cdf, index+1)
+                        xarray = np.delete(xarray, index+1)
                 else:
                     cdf = cdf[:-1]
                     xarray = xarray[:-1]
-            dcdf = numpy.diff(cdf)
-            if not (numpy.all(dcdf>0)):
+            dcdf = np.diff(cdf)
+            if not (np.all(dcdf>0)):
                 raise RuntimeError(
                     'Cumulative probability in DistDeviate is too flat for program to fix')
 

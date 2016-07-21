@@ -29,6 +29,7 @@ See documentation here:
 
 import galsim
 import galsim.config
+import numpy as np
 
 class DES_PSFEx(object):
     """Class that handles DES files describing interpolated principal component images
@@ -277,13 +278,12 @@ class DES_PSFEx(object):
     def getPSFArray(self, image_pos):
         """Returns the PSF image as a numpy array at position image_pos in image coordinates.
         """
-        import numpy
         xto = self._define_xto( (image_pos.x - self.x_zero) / self.x_scale )
         yto = self._define_xto( (image_pos.y - self.y_zero) / self.y_scale )
         order = self.fit_order
-        P = numpy.array([ xto[nx] * yto[ny] for ny in range(order+1) for nx in range(order+1-ny) ])
+        P = np.array([ xto[nx] * yto[ny] for ny in range(order+1) for nx in range(order+1-ny) ])
         assert len(P) == self.fit_size
-        ar = numpy.tensordot(P,self.basis,(0,0)).astype(numpy.float32)
+        ar = np.tensordot(P,self.basis,(0,0)).astype(np.float32)
         # Note: This is equivalent to:
         #   ar = self.basis[0].astype(numpy.float32)
         #   for n in range(1,self.fit_order+1):
@@ -295,8 +295,7 @@ class DES_PSFEx(object):
         return ar
 
     def _define_xto(self, x):
-        import numpy
-        xto = numpy.empty(self.fit_order+1)
+        xto = np.empty(self.fit_order+1)
         xto[0] = 1
         for i in range(1,self.fit_order+1):
             xto[i] = x*xto[i-1]

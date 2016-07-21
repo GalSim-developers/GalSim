@@ -47,6 +47,7 @@ classes share.  The doc strings for the individual classes explain the features 
 each one.
 """
 
+import numpy as np
 import galsim
 
 class BaseWCS(object):
@@ -751,9 +752,8 @@ class EuclideanWCS(BaseWCS):
         dx = 1
         dy = 1
 
-        import numpy
-        xlist = numpy.array([ x0+dx, x0-dx, x0,    x0    ])
-        ylist = numpy.array([ y0,    y0,    y0+dy, y0-dy ])
+        xlist = np.array([ x0+dx, x0-dx, x0,    x0    ])
+        ylist = np.array([ y0,    y0,    y0+dy, y0-dy ])
         try :
             # Try using numpy arrays first, since it should be faster if it works.
             u = self._u(xlist,ylist)
@@ -778,12 +778,11 @@ class EuclideanWCS(BaseWCS):
     # option is still pretty slow, so it's much better to have the _u and _v work with 
     # numpy arrays!
     def _makeSkyImage(self, image, sky_level):
-        import numpy
         b = image.bounds
         nx = b.xmax-b.xmin+1 + 2  # +2 more than in image to get row/col off each edge.
         ny = b.ymax-b.ymin+1 + 2
-        x,y = numpy.meshgrid( numpy.linspace(b.xmin-1,b.xmax+1,nx),
-                              numpy.linspace(b.ymin-1,b.ymax+1,ny) )
+        x,y = np.meshgrid( np.linspace(b.xmin-1,b.xmax+1,nx),
+                           np.linspace(b.ymin-1,b.ymax+1,ny) )
         x -= self.x0
         y -= self.y0
         try:
@@ -792,17 +791,17 @@ class EuclideanWCS(BaseWCS):
             v = self._v(x.ravel(),y.ravel())
         except:
             # If that didn't work, we have to do it manually for each position. :(  (SLOW!)
-            u = numpy.array([ self._u(x1,y1) for x1,y1 in zip(x.ravel(),y.ravel()) ])
-            v = numpy.array([ self._v(x1,y1) for x1,y1 in zip(x.ravel(),y.ravel()) ])
-        u = numpy.reshape(u, x.shape)
-        v = numpy.reshape(v, x.shape)
+            u = np.array([ self._u(x1,y1) for x1,y1 in zip(x.ravel(),y.ravel()) ])
+            v = np.array([ self._v(x1,y1) for x1,y1 in zip(x.ravel(),y.ravel()) ])
+        u = np.reshape(u, x.shape)
+        v = np.reshape(v, x.shape)
         # Use the finite differences to estimate the derivatives.
         dudx = 0.5 * (u[1:ny-1,2:nx] - u[1:ny-1,0:nx-2])
         dudy = 0.5 * (u[2:ny,1:nx-1] - u[0:ny-2,1:nx-1])
         dvdx = 0.5 * (v[1:ny-1,2:nx] - v[1:ny-1,0:nx-2])
         dvdy = 0.5 * (v[2:ny,1:nx-1] - v[0:ny-2,1:nx-1])
 
-        area = numpy.abs(dudx * dvdy - dvdx * dudy)
+        area = np.abs(dudx * dvdy - dvdx * dudy)
         image.image.array[:,:] = area * sky_level
 
     # Each class should define the __eq__ function.  Then __ne__ is obvious.
@@ -927,9 +926,8 @@ class CelestialWCS(BaseWCS):
         dx = 1
         dy = 1
 
-        import numpy
-        xlist = numpy.array([ x0, x0+dx, x0-dx, x0,    x0    ])
-        ylist = numpy.array([ y0, y0,    y0,    y0+dy, y0-dy ])
+        xlist = np.array([ x0, x0+dx, x0-dx, x0,    x0    ])
+        ylist = np.array([ y0, y0,    y0,    y0+dy, y0-dy ])
         try :
             # Try using numpy arrays first, since it should be faster if it works.
             ra, dec = self._radec(xlist,ylist)
@@ -943,7 +941,7 @@ class CelestialWCS(BaseWCS):
         # i.e. The u,v plane is the tangent plane as seen from Earth with +v pointing
         # north, and +u pointing west.
         # That means the du values are the negative of dra.
-        cosdec = numpy.cos(dec[0])
+        cosdec = np.cos(dec[0])
         dudx = -0.5 * (ra[1] - ra[2]) / dx * cosdec
         dudy = -0.5 * (ra[3] - ra[4]) / dy * cosdec
         dvdx = 0.5 * (dec[1] - dec[2]) / dx
@@ -956,12 +954,11 @@ class CelestialWCS(BaseWCS):
     # This is similar to the version for EuclideanWCS, but uses dra, ddec.
     # Again, it is much faster if the _radec function works with numpy arrays.
     def _makeSkyImage(self, image, sky_level):
-        import numpy
         b = image.bounds
         nx = b.xmax-b.xmin+1 + 2  # +2 more than in image to get row/col off each edge.
         ny = b.ymax-b.ymin+1 + 2
-        x,y = numpy.meshgrid( numpy.linspace(b.xmin-1,b.xmax+1,nx),
-                              numpy.linspace(b.ymin-1,b.ymax+1,ny) )
+        x,y = np.meshgrid( np.linspace(b.xmin-1,b.xmax+1,nx),
+                           np.linspace(b.ymin-1,b.ymax+1,ny) )
         x -= self.x0
         y -= self.y0
         try:
@@ -970,19 +967,19 @@ class CelestialWCS(BaseWCS):
         except:
             # If that didn't work, we have to do it manually for each position. :(  (SLOW!)
             rd = [ self._radec(x1,y1) for x1,y1 in zip(x.ravel(),y.ravel()) ]
-            ra = numpy.array([ radec[0] for radec in rd ])
-            dec = numpy.array([ radec[1] for radec in rd ])
-        ra = numpy.reshape(ra, x.shape)
-        dec = numpy.reshape(dec, x.shape)
+            ra = np.array([ radec[0] for radec in rd ])
+            dec = np.array([ radec[1] for radec in rd ])
+        ra = np.reshape(ra, x.shape)
+        dec = np.reshape(dec, x.shape)
 
         # Use the finite differences to estimate the derivatives.
-        cosdec = numpy.cos(dec[1:ny-1,1:nx-1])
+        cosdec = np.cos(dec[1:ny-1,1:nx-1])
         dudx = -0.5 * (ra[1:ny-1,2:nx] - ra[1:ny-1,0:nx-2]) * cosdec
         dudy = -0.5 * (ra[2:ny,1:nx-1] - ra[0:ny-2,1:nx-1]) * cosdec
         dvdx = 0.5 * (dec[1:ny-1,2:nx] - dec[1:ny-1,0:nx-2])
         dvdy = 0.5 * (dec[2:ny,1:nx-1] - dec[0:ny-2,1:nx-1])
 
-        area = numpy.abs(dudx * dvdy - dvdx * dudy)
+        area = np.abs(dudx * dvdy - dvdx * dudy)
         factor = galsim.radians / galsim.arcsec
         image.image.array[:,:] = area * sky_level * factor**2
 
@@ -1355,9 +1352,8 @@ class JacobianWCS(LocalWCS):
                 numpy.array( [[ dudx, dudy ],
                               [ dvdx, dvdy ]] )
         """
-        import numpy
-        return numpy.array( [[ self._dudx, self._dudy ],
-                             [ self._dvdx, self._dvdy ]] )
+        return np.array( [[ self._dudx, self._dudy ],
+                          [ self._dvdx, self._dvdy ]] )
 
     def getDecomposition(self):
         """Get the equivalent expansion, shear, rotation and possible flip corresponding to 
@@ -2107,13 +2103,9 @@ class UVFunction(EuclideanWCS):
     def world_origin(self): return self._world_origin
 
     def _u(self, x, y):
-        import math
-        import numpy
         return self._ufunc(x,y)
 
     def _v(self, x, y):
-        import math
-        import numpy
         return self._vfunc(x,y)
 
     def _x(self, u, v):
@@ -2121,8 +2113,6 @@ class UVFunction(EuclideanWCS):
             raise NotImplementedError(
                 "World -> Image direction not implemented for this UVFunction")
         else:
-            import math
-            import numpy
             return self._xfunc(u,v)
 
     def _y(self, u, v):
@@ -2130,8 +2120,6 @@ class UVFunction(EuclideanWCS):
             raise NotImplementedError(
                 "World -> Image direction not implemented for this UVFunction")
         else:
-            import math
-            import numpy
             return self._yfunc(u,v)
 
     def _newOrigin(self, origin, world_origin):
@@ -2290,8 +2278,6 @@ class RaDecFunction(CelestialWCS):
     def origin(self): return self._origin
 
     def _radec(self, x, y):
-        import math
-        import numpy
         return self._radec_func(x,y)
 
     def _xy(self, ra, dec):
