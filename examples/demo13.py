@@ -74,6 +74,10 @@ def main(argv):
     datapath = os.path.abspath(os.path.join(path, "data/"))
     outpath = os.path.abspath(os.path.join(path, "output/"))
 
+    # Make output directory if not already present.
+    if not os.path.isdir(outpath):
+        os.mkdir(outpath)
+
     # In non-script code, use getLogger(__name__) at module scope instead.
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
     logger = logging.getLogger("demo13")
