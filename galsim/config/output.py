@@ -398,7 +398,9 @@ class OutputBuilder(object):
         # Prepend a dir to the beginning of the filename if requested.
         if 'dir' in config:
             dir = galsim.config.ParseValue(config, 'dir', base, str)[0]
-            if dir and not os.path.isdir(dir): os.makedirs(dir)
+            if dir:
+                _makedirs_check(dir)
+
             file_name = os.path.join(dir,file_name)
 
         return file_name
@@ -470,4 +472,33 @@ def RegisterOutputType(output_type, builder):
 
 # The base class is also the builder for type = Fits.
 RegisterOutputType('Fits', OutputBuilder())
+
+
+_ERR_FILE_EXISTS=17
+def _makedirs_check(dir):
+    """
+    try to make the directory, watching for a race condition
+
+    In particular check if the OS reported that the directory already exists
+    when running makedirs, which can happen if another process creates it
+    before this one can
+    """
+
+    exists = os.path.exists(dir)
+
+    if not exists:
+        try:
+            os.makedirs(dir)
+        except OSError as err:
+            # check if the file now exists, which can happen if some other
+            # process created the directory between the os.path.exists call
+            # above and the time of the makedirs attempt.  This is OK
+            if err.errno != _ERR_FILE_EXISTS:
+                raise err
+
+    elif exists and not os.path.isdir(dir):
+        raise IOError("tried to make directory '%s' "
+                      "but a non-directory file of that "
+                      "name already exists" % dir)
+
 
