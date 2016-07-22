@@ -456,7 +456,8 @@ def main(argv):
 
         # Since many people are used to viewing background-subtracted images, we provide a
         # version with the background subtracted (also rounding that to an int).
-        tot_sky_image = (sky_image.quantize() + round(dark_current))/wfirst.gain
+        sky_image.quantize()
+        tot_sky_image = (sky_image + round(dark_current))/wfirst.gain
         tot_sky_image.quantize()
         final_image -= tot_sky_image
 
