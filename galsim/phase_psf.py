@@ -1191,23 +1191,24 @@ class OpticalPSF(GSObject):
     the pupil is centered.  The areas that are illuminated should have some value >0, and the other
     areas should have a value of precisely zero.  Based on what the OpticalPSF class thinks is the
     required sampling to make the PSF image, the image that is passed in of the pupil plane might be
-    zero-padded during internal calculations.  If the pupil plane image has a scale associated with
-    it, that scale will be completely ignored; the scale is determined internally using basic
-    physical considerations.  Finally, to ensure accuracy of calculations using a pupil plane image,
-    we recommend sampling it as finely as possible.
+    zero-padded during internal calculations.  The pixel scale of the pupil plane can be specified
+    in one of three ways.  In descending order of priority, these are:
+      1.  The `pupil_plane_scale` keyword argument (units are meters).
+      2.  The `pupil_plane_im.scale` attribute (units are meters).
+      3.  If (1) and (2) are both None, then the scale will be inferred by assuming that the
+          illuminated pixel farthest from the image center is at a physical distance of self.diam/2.
+    Note that if the scale is specified by either (1) or (2) above (which always includes specifying
+    the pupil_plane_im as a filename, since the default scale then will be 1.0), then the
+    lam_over_diam keyword must not be used, but rather the lam and diam keywords are required
+    separately.  Finally, to ensure accuracy of calculations using a pupil plane image, we recommend
+    sampling it as finely as possible.
 
     Initialization
     --------------
 
     As described above, either specify the lam/diam ratio directly in arbitrary units:
 
-        >>> optical_psf = galsim.OpticalPSF(lam_over_diam=lam_over_diam, defocus=0., astig1=0.,
-                                            astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0.,
-                                            spher=0., aberrations=None, circular_pupil=True,
-                                            obscuration=0., interpolant=None, oversampling=1.5,
-                                            pad_factor=1.5, nstruts=0,
-                                            strut_thick=0.05, strut_angle=0.*galsim.degrees,
-                                            pupil_plane_im=None, pupil_angle=0.*galsim.degrees)
+        >>> optical_psf = galsim.OpticalPSF(lam_over_diam=lam_over_diam, defocus=0., ...)
 
     or, use separate keywords for the telescope diameter and wavelength in meters and nanometers,
     respectively:
@@ -1364,6 +1365,21 @@ class OpticalPSF(GSObject):
         if lam_over_diam is not None:
             if lam is not None or diam is not None:
                 raise TypeError("If specifying lam_over_diam, then do not specify lam or diam")
+            # For combination of lam_over_diam and pupil_plane_im with a specified scale, it's
+            # tricky to determine the actual diameter of the pupil needed by Aperture.  So for now,
+            # we just disallow this combination.  Please feel free to raise an issue at
+            # https://github.com/GalSim-developers/GalSim/issues if you need this functionality.
+            if pupil_plane_im is not None:
+                if isinstance(pupil_plane_im, str):  # Filename, therefore specific scale exists.
+                    raise TypeError("If specifying lam_over_diam, then do not "
+                                    "specify pupil_plane_im as a filename.")
+                elif (isinstance(pupil_plane_im, galsim.Image)
+                      and pupil_plane_im.scale is not None):
+                    raise TypeError("If specifying lam_over_diam, then do not specify "
+                                    "pupil_plane_im with definite scale attribute.")
+                elif pupil_plane_scale is not None:
+                    raise TypeError("If specifying lam_over_diam, then do not specify "
+                                    "pupil_plane_scale.")
             lam = 500.  # Arbitrary
             diam = lam*1.e-9 / lam_over_diam * galsim.radians / scale_unit
         else:
