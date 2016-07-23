@@ -56,6 +56,8 @@ class TruthBuilder(ExtraOutputBuilder):
         types = []
         for name in cols:
             key = cols[name]
+            # Handle the possibility of unicode.  In particular, this happens with JSON files.
+            if str(key) == key: key = str(key)
             if isinstance(key, dict):
                 # Then the "key" is actually something to be parsed in the normal way.
                 # Caveat: We don't know the value_type here, so we give None.  This allows
