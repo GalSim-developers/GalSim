@@ -166,7 +166,7 @@ image:
         type : DES_Local  # Defined in des_wcs.py in this directory.
 
         # We could specify a chipnum here if we wanted.  The default is to pick a random chipnum
-        # from 1-62
+        # from 1-62, excluding the bad chips specified in input.des_Wcs.
 
         # This also optionally takes image_pos, but we'll use the default here, which is to pick
         # a random location on the chip.
@@ -244,6 +244,11 @@ input:
         dir : des_data
         root : "DECam_00154912"
         ext : ".fits.fz"  # This is the default, but might as well be explicit here.
+
+        # Some of the chips on DES images are unusable, so we exclude them from use by this
+        # class.  The default is to exclude chips 2, 31, 61, but this particular exposure was
+        # taken during SV, when only chip 61 was bad, so we only exclude that one here.
+        bad_ccds : [ 61 ]
 
 output:
     type: MEDS

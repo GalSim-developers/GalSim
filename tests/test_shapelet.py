@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import numpy as np
 import os
 import sys
@@ -87,7 +89,7 @@ def test_shapelet_drawImage():
                     if n >= 3:
                         bvec[k-3] = 0.31/n**4.2    # N,m = n,3  real part
                         bvec[k-2] = -0.18/n**3.9       # N,m = n,3  imag part
-            print 'shapelet vector = ',bvec
+            print('shapelet vector = ',bvec)
             shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
 
             # Test normalization  (This is normally part of do_shoot.  When we eventually
@@ -96,7 +98,7 @@ def test_shapelet_drawImage():
             shapelet = shapelet.withFlux(test_flux)
             shapelet.drawImage(im)
             flux = im.array.sum()
-            print 'im.sum = ',flux,'  cf. ',test_flux
+            print('im.sum = ',flux,'  cf. ',test_flux)
             np.testing.assert_almost_equal(flux / test_flux, 1., 4,
                     err_msg="Flux normalization for Shapelet disagrees with expected result")
 
@@ -113,7 +115,7 @@ def test_shapelet_drawImage():
             mx = (x*im.array).sum() / flux
             my = (y*im.array).sum() / flux
             conv = galsim.Convolve([shapelet, galsim.Pixel(scale)])
-            print 'centroid = ',mx,my,' cf. ',conv.centroid()
+            print('centroid = ',mx,my,' cf. ',conv.centroid())
             np.testing.assert_almost_equal(mx, shapelet.centroid().x, 3,
                     err_msg="Measured centroid (x) for Shapelet disagrees with expected result")
             np.testing.assert_almost_equal(my, shapelet.centroid().y, 3,
@@ -171,15 +173,15 @@ def test_shapelet_fit():
 
         sigma = 1.2  # Match half-light-radius as a decent first approximation.
         shapelet = galsim.FitShapelet(sigma, 10, im1, normalization=norm)
-        print 'fitted shapelet coefficients = ',shapelet.bvec
+        print('fitted shapelet coefficients = ',shapelet.bvec)
 
         # Check flux
-        print 'flux = ',shapelet.getFlux(),'  cf. ',flux
+        print('flux = ',shapelet.getFlux(),'  cf. ',flux)
         np.testing.assert_almost_equal(shapelet.getFlux() / flux, 1., 1,
                 err_msg="Fitted shapelet has the wrong flux")
 
         # Test centroid
-        print 'centroid = ',shapelet.centroid(),'  cf. ',conv.centroid()
+        print('centroid = ',shapelet.centroid(),'  cf. ',conv.centroid())
         np.testing.assert_almost_equal(shapelet.centroid().x, conv.centroid().x, 2,
                 err_msg="Fitted shapelet has the wrong centroid (x)")
         np.testing.assert_almost_equal(shapelet.centroid().y, conv.centroid().y, 2,
@@ -189,8 +191,8 @@ def test_shapelet_fit():
         im2 = im1.copy()
         shapelet.drawImage(im2, method=method)
         # Check that images are close to the same:
-        print 'norm(diff) = ',np.sum((im1.array-im2.array)**2)
-        print 'norm(im) = ',np.sum(im1.array**2)
+        print('norm(diff) = ',np.sum((im1.array-im2.array)**2))
+        print('norm(im) = ',np.sum(im1.array**2))
         assert np.sum((im1.array-im2.array)**2) < 1.e-3 * np.sum(im1.array**2)
 
         # Remeasure -- should now be very close to the same.

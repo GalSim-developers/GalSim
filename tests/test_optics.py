@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import numpy as np
 import os
 import sys
@@ -48,9 +50,10 @@ decimal_dft = 3  # Last decimal place used for checking near equality of DFT pro
 # `scons tests`, you will get faster, less stringent tests.
 
 do_slow_tests = False
-if __name__ == "__main__":
-    do_slow_tests = True
-# do_slow_tests = False  # uncomment for easier debugging
+#do_slow_tests = True   # uncomment out for more rigorous testing
+                        # Warning: some of them require a LOT of memory.
+#if __name__ == "__main__":
+    #do_slow_tests = True
 
 if do_slow_tests:
     pp_decimal = 5
@@ -227,7 +230,7 @@ def test_OpticalPSF_aberrations_struts():
         np.testing.assert_raises(TypeError, galsim.OpticalPSF, lod, nstruts=5, strut_thick=0.01,
                                  strut_angle=8.) # wrong units
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
     do_pickle(optics, lambda x: x.drawImage(nx=20, ny=20, scale=1.7, method='no_pixel'))
     do_pickle(optics)
 
@@ -298,7 +301,7 @@ def test_OpticalPSF_aberrations_kwargs():
         np.testing.assert_raises(TypeError,galsim.OpticalPSF,lod,aberrations=np.zeros(8),
                                  defocus=-0.12)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -399,7 +402,7 @@ def test_OpticalPSF_pupil_plane():
         im = galsim.fits.read(os.path.join(imgdir, pp_file))
     else:
         import warnings
-        warnings.warn("Could not find file {}, so generating it from scratch.  This should only "
+        warnings.warn("Could not find file {0}, so generating it from scratch.  This should only "
                       "happen if you intentionally deleted the file in order to regenerate it!"
                       .format(pp_file))
         im = galsim.Image(ref_psf._psf.aper.illuminated.astype(float))
@@ -663,7 +666,7 @@ def test_OpticalPSF_lamdiam():
         np.testing.assert_raises(TypeError, galsim.OpticalPSF, lam_over_diam=1., diam=1.)
         np.testing.assert_raises(TypeError, galsim.OpticalPSF, lam_over_diam=1., lam=1.)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer

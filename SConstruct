@@ -1085,7 +1085,7 @@ def TryModule(config,text,name,pyscript=""):
 
     # Finally try to import and run the module in python:
     if pyscript == "":
-        pyscript = "import sys\nsys.path.append('%s')\nimport %s\nprint %s.run()"%(dir,name,name)
+        pyscript = "import sys\nsys.path.append('%s')\nimport %s\nprint(%s.run())"%(dir,name,name)
     else:
         pyscript = "import sys\nsys.path.append('%s')\n"%dir + pyscript
     ok, out = TryScript(config,pyscript,python)
@@ -1145,6 +1145,22 @@ def CheckModuleLibs(config,try_libs,source_file,name,prepend=True):
     return result
 
 
+def GetPythonVersion(config):
+    # Get the version:
+    source_file5 = "import sys; print('%d.%d'%(sys.version_info[:2]))"
+    result, py_version = TryScript(config,source_file5,python)
+    # If that didn't work, try to get it from the file or directory names, since it is usually
+    # there:
+    if not result:
+        py_version = ''
+        for v in ['2.7', '2,6', '3.4', # supported versions first
+                  '2.5', '2,4', '3,5', '3.3', '3.2', '3.1', '3.0']:
+            if v in py_inc or v in python:
+                py_version = v
+                break
+    return py_version
+
+
 def CheckPython(config):
     python_source_file = """
 #include "Python.h"
@@ -1157,13 +1173,41 @@ static PyMethodDef Methods[] = {
     {NULL, NULL, 0, NULL}
 };
 
+// cf. https://docs.python.org/3/howto/cporting.html#module-initialization-and-state
+
+#if PY_MAJOR_VERSION >= 3
+
+static struct PyModuleDef moduledef = {
+    PyModuleDef_HEAD_INIT,
+    "check_python",
+    NULL,
+    -1,
+    Methods,
+    NULL,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC PyInit_check_python(void)
+
+#else
+
 PyMODINIT_FUNC initcheck_python(void)
-{ Py_InitModule("check_python", Methods); }
+
+#endif
+{
+#if PY_MAJOR_VERSION >= 3
+    return PyModule_Create(&moduledef);
+#else
+    Py_InitModule("check_python", Methods);
+#endif
+}
 """
     config.Message('Checking if we can build against Python... ')
 
     # First check the python include directory -- see if we can compile the module.
-    source_file2 = "import distutils.sysconfig; print distutils.sysconfig.get_python_inc()"
+    source_file2 = "import distutils.sysconfig; print(distutils.sysconfig.get_python_inc())"
     result, py_inc = TryScript(config,source_file2,python)
     if not result:
         ErrorExit('Unable to get python include path python executable:\n%s'%python)
@@ -1178,6 +1222,9 @@ PyMODINIT_FUNC initcheck_python(void)
     # So the first attempt below with [''] for the libs will work.
     if CheckModuleLibs(config,[''],python_source_file,'check_python'):
         config.Result(1)
+        py_version = GetPythonVersion(config)
+        config.env['PYTHON_VERSION'] = py_version
+        print 'Building for python version '+py_version
         return 1
 
     # Other times (e.g. most Mac systems) we'll need to link the library.
@@ -1188,7 +1235,7 @@ PyMODINIT_FUNC initcheck_python(void)
     py_libdirs = []
 
     # Usually, it is the file called LDLIBRARY in the config vars:
-    source_file3 = "import distutils.sysconfig; print distutils.sysconfig.get_config_var('LDLIBRARY')"
+    source_file3 = "import distutils.sysconfig; print(distutils.sysconfig.get_config_var('LDLIBRARY'))"
     result, py_libfile = TryScript(config,source_file3,python)
     py_libfile1 = py_libfile
     if result:
@@ -1197,31 +1244,15 @@ PyMODINIT_FUNC initcheck_python(void)
     # Sometimes, it is called LIBRARY (e.g. for EPD, LDLIBRARY is a file called Python, which
     # is where the LIBRARY file links to, but that doesn't work for the way with link to the
     # library.  So we need LIBRARY instead.)
-    source_file4 = "import distutils.sysconfig; print distutils.sysconfig.get_config_var('LIBRARY')"
+    source_file4 = "import distutils.sysconfig; print(distutils.sysconfig.get_config_var('LIBRARY'))"
     result, py_libfile = TryScript(config,source_file4,python)
     if result:
         py_libfiles.append(py_libfile)
 
     # If neither of those work, we're probably hosed, but try libpython.a and libpythonx.x.a
     # along with .so or .dylib versions of these, just in case.
+    py_version = GetPythonVersion(config)
     py_libfiles.append('libpython.a')
-
-    # Get the version:
-    source_file5 = "import sys; print '%d.%d'%(sys.version_info[:2])"
-    result, py_version = TryScript(config,source_file5,python)
-    # If that didn't work, try to get it from the file or directory names, since it is usually
-    # there:
-    if not result:
-        if '2.7' in py_inc or '2.7' in python:
-            py_version = '2.7'
-        elif '2.6' in py_inc or '2.6' in python:
-            py_version = '2.6'
-        elif '2.5' in py_inc or '2.5' in python:
-            py_version = '2.5'
-        elif '2.4' in py_inc or '2.4' in python:
-            py_version = '2.4'
-        else:
-            py_version = ''
     py_libfiles.append('libpython'+py_version+'.a')
 
     # One of these might work as is, so try the list of options now:
@@ -1232,6 +1263,7 @@ PyMODINIT_FUNC initcheck_python(void)
 
         result = CheckModuleLibs(config,py_lib,python_source_file,'check_python')
         if result:
+            config.env['PYTHON_VERSION'] = py_version
             config.Result(1)
             print 'Building for python version '+py_version
             return 1
@@ -1250,22 +1282,22 @@ PyMODINIT_FUNC initcheck_python(void)
     py_libdirs = []
 
     # There are a number of paths reported by distutils.  We'll try a few of them:
-    source_file6 = "import distutils.sysconfig; print distutils.sysconfig.get_config_var('LIBDIR')"
+    source_file6 = "import distutils.sysconfig; print(distutils.sysconfig.get_config_var('LIBDIR'))"
     result, py_libdir = TryScript(config,source_file6,python)
     py_libdir1 = py_libdir
     if result:
         py_libdirs.append(py_libdir)
         py_libdirs.append(os.path.join(py_libdir,'config'))
         py_libdirs.append(os.path.join(py_libdir,'python'+py_version,'config'))
-    source_file7 = "import distutils.sysconfig; print distutils.sysconfig.get_config_var('LIBDEST')"
+    source_file7 = "import distutils.sysconfig; print(distutils.sysconfig.get_config_var('LIBDEST'))"
     result, py_libdir = TryScript(config,source_file7,python)
     if result and py_libdir not in py_libdirs: 
         py_libdirs.append(py_libdir)
-    source_file8 = "import distutils.sysconfig; print distutils.sysconfig.get_config_var('LIBP')"
+    source_file8 = "import distutils.sysconfig; print(distutils.sysconfig.get_config_var('LIBP'))"
     result, py_libdir = TryScript(config,source_file8,python)
     if result and py_libdir not in py_libdirs: 
         py_libdirs.append(py_libdir)
-    source_file8 = "import distutils.sysconfig; print distutils.sysconfig.get_config_var('LIBPL')"
+    source_file8 = "import distutils.sysconfig; print(distutils.sysconfig.get_config_var('LIBPL'))"
     result, py_libdir = TryScript(config,source_file8,python)
     if result and py_libdir not in py_libdirs: 
         py_libdirs.append(py_libdir)
@@ -1288,6 +1320,7 @@ PyMODINIT_FUNC initcheck_python(void)
                 if py_lib.startswith('lib'):
                     py_lib = py_lib[3:]
                 if CheckModuleLibs(config,py_lib,python_source_file,'check_python'):
+                    config.env['PYTHON_VERSION'] = py_version
                     config.Result(1)
                     print 'Building for python version '+py_version
                     print 'Python libdir = ',py_libdir
@@ -1327,8 +1360,34 @@ static PyMethodDef Methods[] = {
     {NULL, NULL, 0, NULL}
 };
 
+#if PY_MAJOR_VERSION >= 3
+
+static struct PyModuleDef moduledef = {
+    PyModuleDef_HEAD_INIT,
+    "check_tmv",
+    NULL,
+    -1,
+    Methods,
+    NULL,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC PyInit_check_tmv(void)
+
+#else
+
 PyMODINIT_FUNC initcheck_tmv(void)
-{ Py_InitModule("check_tmv", Methods); }
+
+#endif
+{
+#if PY_MAJOR_VERSION >= 3
+    return PyModule_Create(&moduledef);
+#else
+    Py_InitModule("check_tmv", Methods);
+#endif
+}
 """
     config.Message('Checking if we can build module using TMV... ')
 
@@ -1361,8 +1420,9 @@ def CheckNumPy(config):
 #include "Python.h"
 #include "numpy/arrayobject.h"
 
-static void doImport() {
-    import_array();
+static int doImport() {
+    import_array1(0);
+    return 0;
 }
 
 static PyObject* run(PyObject* self, PyObject* args)
@@ -1385,12 +1445,38 @@ static PyMethodDef Methods[] = {
     {NULL, NULL, 0, NULL}
 };
 
+#if PY_MAJOR_VERSION >= 3
+
+static struct PyModuleDef moduledef = {
+    PyModuleDef_HEAD_INIT,
+    "check_numpy",
+    NULL,
+    -1,
+    Methods,
+    NULL,
+    NULL,
+    NULL,
+    NULL
+};
+
+PyMODINIT_FUNC PyInit_check_numpy(void)
+
+#else
+
 PyMODINIT_FUNC initcheck_numpy(void)
-{ Py_InitModule("check_numpy", Methods); }
+
+#endif
+{
+#if PY_MAJOR_VERSION >= 3
+    return PyModule_Create(&moduledef);
+#else
+    Py_InitModule("check_numpy", Methods);
+#endif
+}
 """
     config.Message('Checking if we can build against NumPy... ')
 
-    result, numpy_inc = TryScript(config,"import numpy; print numpy.get_include()",python)
+    result, numpy_inc = TryScript(config,"import numpy; print(numpy.get_include())",python)
     if not result:
         ErrorExit("Unable to import numpy using the python executable:\n%s"%python)
     config.env.AppendUnique(CPPPATH=numpy_inc)
@@ -1419,11 +1505,25 @@ def CheckPyFITS(config):
     config.Result(1)
     return 1
 
+def CheckFuture(config):
+    config.Message('Checking for future... ')
+
+    result, output = TryScript(config,"import future",python)
+    if not result:
+        ErrorExit("Unable to import future using the python executable:\n" + python)
+
+    config.Result(1)
+    return 1
+
 def CheckBoostPython(config):
     bp_source_file = """
 
 #ifndef __INTEL_COMPILER
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
+#ifdef __clang__
+#if __has_warning("-Wunused-local-typedefs")
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#endif
+#elif defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
 #pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #endif
 #endif
@@ -1442,10 +1542,16 @@ BOOST_PYTHON_MODULE(check_bp) {
     if not result:
         ErrorExit('Unable to compile a file with #include "boost/python.hpp"')
 
-    result = (
-        CheckModuleLibs(config,[''],bp_source_file,'check_bp') or
-        CheckModuleLibs(config,['boost_python'],bp_source_file,'check_bp') or
-        CheckModuleLibs(config,['boost_python-mt'],bp_source_file,'check_bp') )
+    if config.env['PYTHON_VERSION'] >= '3.0':
+        result = (
+            CheckModuleLibs(config,[''],bp_source_file,'check_bp') or
+            CheckModuleLibs(config,['boost_python3'],bp_source_file,'check_bp') or
+            CheckModuleLibs(config,['boost_python3-mt'],bp_source_file,'check_bp') )
+    else:
+        result = (
+            CheckModuleLibs(config,[''],bp_source_file,'check_bp') or
+            CheckModuleLibs(config,['boost_python'],bp_source_file,'check_bp') or
+            CheckModuleLibs(config,['boost_python-mt'],bp_source_file,'check_bp') )
     if not result:
         ErrorExit('Unable to build a python loadable module with Boost.Python')
 
@@ -1459,13 +1565,18 @@ BOOST_PYTHON_MODULE(check_bp) {
 def CheckPythonExcept(config):
     cpp_source_file = """
 #ifndef __INTEL_COMPILER
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
+#ifdef __clang__
+#if __has_warning("-Wunused-local-typedefs")
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#endif
+#elif defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
 #pragma GCC diagnostic ignored "-Wunused-local-typedefs"
 #endif
 #endif
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
 #include <stdexcept>
+
 
 void run_throw() { throw std::runtime_error("test error handling"); }
 
@@ -1477,14 +1588,14 @@ BOOST_PYTHON_MODULE(test_throw) {
 import test_throw
 try:
     test_throw.run()
-    print 0
-except RuntimeError, e:
+    print(0)
+except RuntimeError as e:
     if str(e) == 'test error handling':
-        print 23
+        print(23)
     else:
-        print 0
+        print(0)
 except:
-    print 0
+    print(0)
 """
     config.Message('Checking if C++ exceptions are propagated up to python... ')
     result = TryModule(config,cpp_source_file,"test_throw",py_source_file)
@@ -1703,6 +1814,7 @@ def DoPyChecks(config):
     config.CheckPyTMV()
     config.CheckNumPy()
     config.CheckPyFITS()
+    config.CheckFuture()
     config.CheckBoostPython()
     config.CheckPythonExcept()
 
@@ -1791,6 +1903,7 @@ def DoConfig(env):
             'CheckPyTMV' : CheckPyTMV ,
             'CheckNumPy' : CheckNumPy ,
             'CheckPyFITS' : CheckPyFITS ,
+            'CheckFuture' : CheckFuture ,
             'CheckBoostPython' : CheckBoostPython ,
             'CheckPythonExcept' : CheckPythonExcept ,
             })
@@ -1891,7 +2004,7 @@ if not GetOption('help'):
         if sys.platform.startswith('linux') and env['PREFIX'] != '':
             # On linux, we try to match the behavior of distutils
             cmd = "%s -c \"import distutils.sysconfig; "%(python)
-            cmd += "print distutils.sysconfig.get_python_lib(prefix='%s')\""%(env['PREFIX'])
+            cmd += "print(distutils.sysconfig.get_python_lib(prefix='%s'))\""%(env['PREFIX'])
             p = subprocess.Popen([cmd],stdout=subprocess.PIPE,shell=True)
             env['PYPREFIX'] = p.stdout.read().strip()
             print 'Using PYPREFIX generated from PREFIX = ',env['PYPREFIX']
@@ -1899,7 +2012,7 @@ if not GetOption('help'):
             # On Macs, the regular python lib is usually writable, so it works fine for
             # installing the python modules.
             cmd = "%s -c \"import distutils.sysconfig; "%(python)
-            cmd += "print distutils.sysconfig.get_python_lib()\""
+            cmd += "print(distutils.sysconfig.get_python_lib())\""
             p = subprocess.Popen([cmd],stdout=subprocess.PIPE,shell=True)
             env['PYPREFIX'] = p.stdout.read().strip()
             print 'Using default PYPREFIX = ',env['PYPREFIX']

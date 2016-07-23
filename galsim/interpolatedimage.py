@@ -265,16 +265,11 @@ class InterpolatedImage(GSObject):
             depr('dx', 1.1, 'scale')
             scale = dx
 
-        # first try to read the image as a file.  If it's not either a string or a valid
-        # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
-        try:
+        # If the "image" is not actually an image, try to read the image as a file.
+        if not isinstance(image, galsim.Image):
             image = galsim.fits.read(image, hdu=hdu)
-        except:
-            pass
 
         # make sure image is really an image and has a float type
-        if not isinstance(image, galsim.Image):
-            raise ValueError("Supplied image is not an Image instance")
         if image.dtype != np.float32 and image.dtype != np.float64:
             raise ValueError("Supplied image does not have dtype of float32 or float64!")
 

@@ -18,7 +18,7 @@
 
 import galsim
 import logging
-import numpy
+import numpy as np
 
 # This file handles the building of postage stamps to place onto a larger image.
 # There is only one type of stamp currently, called Basic, which builds a galaxy from
@@ -316,7 +316,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 psf = galsim.config.BuildGSObject(config, 'psf', gsparams=gsparams,
                                                   logger=logger)[0]
                 prof = builder.buildProfile(stamp, config, psf, gsparams, logger)
-            except galsim.config.gsobject.SkipThisObject, e:
+            except galsim.config.gsobject.SkipThisObject as e:
                 if logger:
                     logger.debug('obj %d: Caught SkipThisObject: e = %s',obj_num,e.msg)
                 if logger:
@@ -371,7 +371,8 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 if reject:
                     if itry+1 < ntries:
                         if logger:
-                            logger.warn('Object %d: Rejecting this object and rebuilding',obj_num)
+                            logger.warning('Object %d: Rejecting this object and rebuilding',
+                                           obj_num)
                         builder.reset(config, logger)
                         continue
                     else:
@@ -485,7 +486,7 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
             raise AttributeError('n_photons is invalid with method != phot')
         if 'max_extra_noise' in config:
             if logger:
-                logger.warn(
+                logger.warning(
                     "Both 'max_extra_noise' and 'n_photons' are set in config dict, "+
                     "ignoring 'max_extra_noise'.")
         kwargs['n_photons'] = galsim.config.ParseValue(config, 'n_photons', base, int)[0]
@@ -692,7 +693,6 @@ class StampBuilder(object):
         if (('gal' in base and 'signal_to_noise' in base['gal']) or
             ('gal' not in base and 'psf' in base and 'signal_to_noise' in base['psf'])):
             import math
-            import numpy
             if 'gal' in base: root_key = 'gal'
             else: root_key = 'psf'
 
@@ -718,7 +718,7 @@ class StampBuilder(object):
             # Then a few things cancel and we find that
             # S/N = sqrt( sum I(x,y)^2 / var )
 
-            sn_meas = math.sqrt( numpy.sum(image.array**2) / noise_var )
+            sn_meas = math.sqrt( np.sum(image.array**2) / noise_var )
             # Now we rescale the flux to get our desired S/N
             scale_factor = sn_target / sn_meas
             return scale_factor
@@ -741,7 +741,7 @@ class StampBuilder(object):
         """
         if scale_factor != 1.0:
             if method == 'phot':
-                logger.warn(
+                logger.warning(
                     "signal_to_noise calculation is not accurate for draw_method = phot")
             image *= scale_factor
             prof *= scale_factor
@@ -777,33 +777,33 @@ class StampBuilder(object):
                 raise ValueError("Cannot apply min_flux_frac for stamp types that do not use "+
                                 "a single GSObject profile.")
             expected_flux = prof.flux
-            measured_flux = numpy.sum(image.array)
+            measured_flux = np.sum(image.array)
             min_flux_frac = galsim.config.ParseValue(config, 'min_flux_frac', base, float)[0]
             if measured_flux < min_flux_frac * expected_flux:
                 if logger:
-                    logger.warn('Object %d: Measured flux = %f < %s * %f.',
-                                base['obj_num'], measured_flux, min_flux_frac, expected_flux)
+                    logger.warning('Object %d: Measured flux = %f < %s * %f.',
+                                   base['obj_num'], measured_flux, min_flux_frac, expected_flux)
                 reject = True
         if 'min_snr' in config or 'max_snr' in config:
             if not isinstance(prof, galsim.GSObject):
                 raise ValueError("Cannot apply min_snr for stamp types that do not use "+
                                 "a single GSObject profile.")
             var = galsim.config.CalculateNoiseVar(base)
-            sumsq = numpy.sum(image.array**2)
-            snr = numpy.sqrt(sumsq / var)
+            sumsq = np.sum(image.array**2)
+            snr = np.sqrt(sumsq / var)
             if 'min_snr' in config:
                 min_snr = galsim.config.ParseValue(config, 'min_snr', base, float)[0]
                 if snr < min_snr:
                     if logger:
-                        logger.warn('Object %d: Measured snr = %f < %s.',
-                                    base['obj_num'], snr, min_snr)
+                        logger.warning('Object %d: Measured snr = %f < %s.',
+                                       base['obj_num'], snr, min_snr)
                     reject = True
             if 'max_snr' in config:
                 max_snr = galsim.config.ParseValue(config, 'max_snr', base, float)[0]
                 if snr > max_snr:
                     if logger:
-                        logger.warn('Object %d: Measured snr = %f > %s.',
-                                    base['obj_num'], snr, max_snr)
+                        logger.warning('Object %d: Measured snr = %f > %s.',
+                                       base['obj_num'], snr, max_snr)
                     reject = True
         return reject
 

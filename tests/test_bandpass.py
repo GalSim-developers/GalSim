@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import os
 import numpy as np
 from galsim_test_helpers import *
@@ -39,7 +41,7 @@ def test_Bandpass_basic():
         # Cannot initialize bandpass without wave_type:
         np.testing.assert_raises(TypeError, galsim.Bandpass, throughput=lambda x:x)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     # All of these should be equivalent
     b_list = [
@@ -83,7 +85,7 @@ def test_Bandpass_basic():
     ]
 
     for k,b in enumerate(b_list):
-        print k,' b = ',b
+        print(k,' b = ',b)
         if k not in [k1-1, len(b_list)-2, len(b_list)-1]:
             np.testing.assert_almost_equal(b.blue_limit, 400, decimal=12)
             np.testing.assert_almost_equal(b.red_limit, 550, decimal=12)
@@ -102,13 +104,13 @@ def test_Bandpass_basic():
         # Default calculation isn't very accurate for widely spaced wavelengths like this
         # example.  Only accurate to 1 digit!
         lam_eff = b.effective_wavelength
-        print 'lam_eff = ',lam_eff
+        print('lam_eff = ',lam_eff)
         true_lam_eff = (9100./19)  # analytic answer
         np.testing.assert_almost_equal(lam_eff / true_lam_eff, 1.0, 1)
 
         # Can get a more precise calculation with the following: (much more precise in this case)
         lam_eff = b.calculateEffectiveWavelength(precise=True)
-        print 'precise lam_eff = ',lam_eff
+        print('precise lam_eff = ',lam_eff)
         np.testing.assert_almost_equal(lam_eff, true_lam_eff, 12)
 
         # After which, the simple attribute syntax keeps the improved precision
@@ -278,25 +280,25 @@ def test_thin():
     s = galsim.SED('1', wave_type='nm', flux_type='fphotons')
     bp = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), 'nm')
     flux = s.calculateFlux(bp)
-    print "Original number of bandpass samples = ",len(bp.wave_list)
+    print("Original number of bandpass samples = ",len(bp.wave_list))
     for err in [1.e-2, 1.e-3, 1.e-4, 1.e-5]:
-        print "Test err = ",err
+        print("Test err = ",err)
         thin_bp = bp.thin(rel_err=err, preserve_range=True, fast_search=False)
         thin_flux = s.calculateFlux(thin_bp)
         thin_err = (flux-thin_flux)/flux
-        print "num samples with preserve_range = True, fast_search = False: ",len(thin_bp.wave_list)
-        print "realized error = ",(flux-thin_flux)/flux
+        print("num samples with preserve_range = True, fast_search = False: ",len(thin_bp.wave_list))
+        print("realized error = ",(flux-thin_flux)/flux)
         thin_bp = bp.thin(rel_err=err, preserve_range=True)
         thin_flux = s.calculateFlux(thin_bp)
         thin_err = (flux-thin_flux)/flux
-        print "num samples with preserve_range = True: ",len(thin_bp.wave_list)
-        print "realized error = ",(flux-thin_flux)/flux
+        print("num samples with preserve_range = True: ",len(thin_bp.wave_list))
+        print("realized error = ",(flux-thin_flux)/flux)
         assert np.abs(thin_err) < err, "Thinned bandpass failed accuracy goal, preserving range."
         thin_bp = bp.thin(rel_err=err, preserve_range=False)
         thin_flux = s.calculateFlux(thin_bp)
         thin_err = (flux-thin_flux)/flux
-        print "num samples with preserve_range = False: ",len(thin_bp.wave_list)
-        print "realized error = ",(flux-thin_flux)/flux
+        print("num samples with preserve_range = False: ",len(thin_bp.wave_list))
+        print("realized error = ",(flux-thin_flux)/flux)
         assert np.abs(thin_err) < err, "Thinned bandpass failed accuracy goal, w/ range shrinkage."
 
 @timer
@@ -342,7 +344,7 @@ def test_truncate_inputs():
         np.testing.assert_raises(ValueError, bp.truncate, blue_limit=0.9*bp.blue_limit)
         np.testing.assert_raises(ValueError, bp.truncate, red_limit=1.1*bp.red_limit)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 if __name__ == "__main__":
     test_Bandpass_basic()

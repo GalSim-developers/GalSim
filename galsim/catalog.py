@@ -19,8 +19,10 @@
 Routines for controlling catalog input/output with GalSim. 
 """
 
+from future.utils import iteritems, iterkeys, itervalues
+from builtins import zip
 import galsim
-
+import numpy as np
 
 class Catalog(object):
     """A class storing the data from an input catalog.
@@ -110,12 +112,14 @@ class Catalog(object):
                     self.nobjects = sum(1 for line in f if not line.startswith(comments))
             return
 
-        import numpy
         # Read in the data using the numpy convenience function
         # Note: we leave the data as str, rather than convert to float, so that if
         # we have any str fields, they don't give an error here.  They'll only give an 
         # error if one tries to convert them to float at some point.
-        self.data = numpy.loadtxt(self.file_name, comments=comments, dtype=str)
+        self.data = np.loadtxt(self.file_name, comments=comments, dtype=bytes)
+        # Convert the bytes to str.  For Py2, this is a no op.
+        self.data = self.data.astype(str)
+
         # If only one row, then the shape comes in as one-d.
         if len(self.data.shape) == 1:
             self.data = self.data.reshape(1, -1)
@@ -130,7 +134,8 @@ class Catalog(object):
         """Read in an input catalog from a FITS file.
         """
         from galsim._pyfits import pyfits, pyfits_version
-        raw_data = pyfits.getdata(self.file_name, hdu)
+        with pyfits.open(self.file_name) as fits:
+            raw_data = fits[hdu].data
         if pyfits_version > '3.0':
             self.names = raw_data.columns.names
         else:
@@ -267,19 +272,23 @@ class Dict(object):
 
         self.key_split = key_split
 
-        with open(self.file_name) as f:
-
-            if file_type == 'PICKLE':
-                import cPickle
-                self.dict = cPickle.load(f)
-            elif file_type == 'YAML':
-                import yaml
+        if file_type == 'PICKLE':
+            try:
+                import cPickle as pickle
+            except:
+                import pickle
+            with open(self.file_name, 'rb') as f:
+                self.dict = pickle.load(f)
+        elif file_type == 'YAML':
+            import yaml
+            with open(self.file_name, 'r') as f:
                 self.dict = yaml.load(f)
-            elif file_type == 'JSON':
-                import json
+        elif file_type == 'JSON':
+            import json
+            with open(self.file_name, 'r') as f:
                 self.dict = json.load(f)
-            else:
-                raise ValueError("Invalid file_type %s"%file_type)
+        else:
+            raise ValueError("Invalid file_type %s"%file_type)
 
     def get(self, key, default=None):
         # Make a list of keys according to our key_split parameter
@@ -323,16 +332,16 @@ class Dict(object):
         return self.dict.values()
 
     def items(self):
-        return self.dict.iteritems()
+        return self.dict.items()
 
     def iterkeys(self):
-        return self.dict.iterkeys()
+        return iterkeys(self.dict)
 
     def itervalues(self):
-        return self.dict.itervalues()
+        return itervalues(self.dict)
 
     def iteritems(self):
-        return self.dict.iteritems()
+        return iteritems(self.dict)
 
     def __repr__(self):
         s = "galsim.Dict(file_name=%r, file_type=%r"%(self.file_name, self.file_type)
@@ -457,19 +466,17 @@ class OutputCatalog(object):
     def makeData(self):
         """Returns a numpy array of the data as it should be written to an output file.
         """
-        import numpy
-
         cols = zip(*self.rows)
 
         dtypes = []
         new_cols = []
         for col, name, t in zip(cols, self.names, self.types):
             name = str(name)  # numpy will barf if the name is a unicode string
-            dt = numpy.dtype(t) # just used to categorize the type into int, float, str
-            if dt.kind in numpy.typecodes['AllInteger']:
+            dt = np.dtype(t) # just used to categorize the type into int, float, str
+            if dt.kind in np.typecodes['AllInteger']:
                 dtypes.append( (name, int) )
                 new_cols.append(col)
-            elif dt.kind in numpy.typecodes['AllFloat']:
+            elif dt.kind in np.typecodes['AllFloat']:
                 dtypes.append( (name, float) )
                 new_cols.append(col)
             elif t == galsim.Angle:
@@ -491,14 +498,14 @@ class OutputCatalog(object):
                 new_cols.append( [ val.g1 for val in col ] )
                 new_cols.append( [ val.g2 for val in col ] )
             else:
-                col = [ str(s) for s in col ]
-                maxlen = numpy.max([ len(s) for s in col ])
+                col = [ str(s).encode() for s in col ]
+                maxlen = np.max([ len(s) for s in col ])
                 dtypes.append( (name, str, maxlen) )
                 new_cols.append(col)
 
-        data = numpy.array(zip(*new_cols), dtype=dtypes)
+        data = np.array(list(zip(*new_cols)), dtype=dtypes)
 
-        sort_index = numpy.argsort(self.sort_keys)
+        sort_index = np.argsort(self.sort_keys)
         data = data[sort_index]
 
         return data
@@ -509,8 +516,6 @@ class OutputCatalog(object):
         @param file_name    The name of the file to write to.
         @param prec         Output precision for floats. [default: 8]
         """
-        import numpy
-
         data = self.makeData()
 
         width = prec+8
@@ -522,20 +527,20 @@ class OutputCatalog(object):
         fmt = []
         for name in data.dtype.names:
             dt = data.dtype[name]
-            if dt.kind in numpy.typecodes['AllInteger']:
+            if dt.kind in np.typecodes['AllInteger']:
                 fmt.append('%%%dd'%(width))
-            elif dt.kind in numpy.typecodes['AllFloat']:
+            elif dt.kind in np.typecodes['AllFloat']:
                 fmt.append('%%%d.%de'%(width,prec))
             else:
                 fmt.append('%%%ds'%(width))
 
         try:
-            numpy.savetxt(file_name, data, fmt=fmt, header=header)
+            np.savetxt(file_name, data, fmt=fmt, header=header)
         except (AttributeError, TypeError):
             # header was added with version 1.7, so do it by hand if not available.
             with open(file_name, 'w') as fid:
                 fid.write('#' + header + '\n')
-                numpy.savetxt(fid, data, fmt=fmt)
+                np.savetxt(fid, data, fmt=fmt)
 
     def writeFits(self, file_name):
         """Write catalog to a FITS file.
@@ -553,7 +558,6 @@ class OutputCatalog(object):
         # Note to developers: Because of problems with pickling in older pyfits versions, this
         # code is duplicated in galsim/config/extra_truth.py, BuildTruthHDU.  If you change
         # this function, you should update BuildTruthHDU as well.
-        import numpy
         from galsim._pyfits import pyfits
 
         data = self.makeData()
@@ -561,9 +565,9 @@ class OutputCatalog(object):
         cols = []
         for name in data.dtype.names:
             dt = data.dtype[name]
-            if dt.kind in numpy.typecodes['AllInteger']:
+            if dt.kind in np.typecodes['AllInteger']:
                 cols.append(pyfits.Column(name=name, format='J', array=data[name]))
-            elif dt.kind in numpy.typecodes['AllFloat']:
+            elif dt.kind in np.typecodes['AllFloat']:
                 cols.append(pyfits.Column(name=name, format='D', array=data[name]))
             else:
                 cols.append(pyfits.Column(name=name, format='%dA'%dt.itemsize, array=data[name]))

@@ -15,6 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-from des_shapelet import *
-from des_psfex import *
-from des_meds import *
+from .des_shapelet import *
+from .des_psfex import *
+from .des_meds import *

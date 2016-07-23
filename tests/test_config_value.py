@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 
+from __future__ import print_function
 import numpy as np
 import os
 import sys
@@ -95,7 +96,7 @@ def test_float_value():
     test_yaml = True
     try:
         galsim.config.ProcessInput(config)
-    except:
+    except ImportError:
         # We don't require PyYAML as a dependency, so if this fails, just remove the YAML dict.
         del config['input']['dict'][2]
         galsim.config.ProcessInput(config)
@@ -342,7 +343,7 @@ def test_int_value():
     test_yaml = True
     try:
         galsim.config.ProcessInput(config)
-    except:
+    except ImportError:
         # We don't require PyYAML as a dependency, so if this fails, just remove the YAML dict.
         del config['input']['dict'][2]
         galsim.config.ProcessInput(config)
@@ -533,7 +534,7 @@ def test_bool_value():
     test_yaml = True
     try:
         galsim.config.ProcessInput(config)
-    except:
+    except ImportError:
         # We don't require PyYAML as a dependency, so if this fails, just remove the YAML dict.
         del config['input']['dict'][2]
         galsim.config.ProcessInput(config)
@@ -681,7 +682,7 @@ def test_str_value():
     test_yaml = True
     try:
         galsim.config.ProcessInput(config)
-    except:
+    except ImportError:
         # We don't require PyYAML as a dependency, so if this fails, just remove the YAML dict.
         del config['input']['dict'][2]
         galsim.config.ProcessInput(config)

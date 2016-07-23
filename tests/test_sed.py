@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import os
 import numpy as np
 from galsim_test_helpers import *
@@ -100,7 +102,7 @@ def test_SED_basic():
     ]
 
     for k,s in enumerate(s_list):
-        print k,' s = ',s
+        print(k,' s = ',s)
         np.testing.assert_almost_equal(s(400)*h*c/400, 200, decimal=10)
         np.testing.assert_almost_equal(s(900)*h*c/900, 200, decimal=10)
         waves = np.arange(700,800,10)
@@ -148,7 +150,7 @@ def test_SED_add():
         d = b.atRedshift(0.1)
         np.testing.assert_raises(ValueError, b.__add__, d)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -183,7 +185,7 @@ def test_SED_sub():
         d = b.atRedshift(0.1)
         np.testing.assert_raises(ValueError, b.__sub__, d)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -312,7 +314,7 @@ def test_SED_init():
                                  flux_type='bar')
         np.testing.assert_raises(TypeError, galsim.SED, spec=lambda w:1.0)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
     # These should succeed.
     galsim.SED(spec='wave', wave_type='nm', flux_type='flambda')
     galsim.SED(spec='wave/wave', wave_type='nm', flux_type='flambda')
@@ -326,7 +328,7 @@ def test_SED_init():
         np.testing.assert_raises(ValueError, sed, 0.5)
         np.testing.assert_raises(ValueError, sed, 12.0)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 @timer
@@ -529,25 +531,25 @@ def test_thin():
     s = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang', flux_type='flambda')
     bp = galsim.Bandpass('1', 'nm', blue_limit=s.blue_limit, red_limit=s.red_limit)
     flux = s.calculateFlux(bp)
-    print "Original number of SED samples = ",len(s.wave_list)
+    print("Original number of SED samples = ",len(s.wave_list))
     for err in [1.e-2, 1.e-3, 1.e-4, 1.e-5]:
-        print "Test err = ",err
+        print("Test err = ",err)
         thin_s = s.thin(rel_err=err, preserve_range=True, fast_search=False)
         thin_flux = thin_s.calculateFlux(bp)
         thin_err = (flux-thin_flux)/flux
-        print "num samples with preserve_range = True, fast_search = False: ",len(thin_s.wave_list)
-        print "realized error = ",(flux-thin_flux)/flux
+        print("num samples with preserve_range = True, fast_search = False: ",len(thin_s.wave_list))
+        print("realized error = ",(flux-thin_flux)/flux)
         thin_s = s.thin(rel_err=err, preserve_range=True)
         thin_flux = thin_s.calculateFlux(bp)
         thin_err = (flux-thin_flux)/flux
-        print "num samples with preserve_range = True: ",len(thin_s.wave_list)
-        print "realized error = ",(flux-thin_flux)/flux
+        print("num samples with preserve_range = True: ",len(thin_s.wave_list))
+        print("realized error = ",(flux-thin_flux)/flux)
         assert np.abs(thin_err) < err, "Thinned SED failed accuracy goal, preserving range."
         thin_s = s.thin(rel_err=err, preserve_range=False)
         thin_flux = thin_s.calculateFlux(bp)
         thin_err = (flux-thin_flux)/flux
-        print "num samples with preserve_range = False: ",len(thin_s.wave_list)
-        print "realized error = ",(flux-thin_flux)/flux
+        print("num samples with preserve_range = False: ",len(thin_s.wave_list))
+        print("realized error = ",(flux-thin_flux)/flux)
         assert np.abs(thin_err) < err, "Thinned SED failed accuracy goal, w/ range shrinkage."
 
 

@@ -18,6 +18,7 @@
 """Unit tests for the WFIRST module (galsim.wfirst)
 """
 
+from __future__ import print_function
 import numpy as np
 
 from galsim_test_helpers import *
@@ -184,7 +185,7 @@ def test_wfirst_backgrounds():
                                                                  5.*galsim.degrees),
                                  date=datetime.date(2025,9,15))
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     # The routine should have some obvious symmetry, for example, ecliptic latitude above vs. below
     # plane and ecliptic longitude positive vs. negative (or vs. 360 degrees - original value).
@@ -221,7 +222,7 @@ def test_wfirst_bandpass():
     AB_spec = lambda x: (3631e-23)*exp_time*(np.pi)*(100.**2)*\
               (galsim.wfirst.diameter**2)*(1-galsim.wfirst.obscuration**2)/4.
     AB_sed = galsim.SED(spec=AB_spec, wave_type='nm', flux_type='fnu')
-    for filter_name, filter_ in bp.iteritems():
+    for filter_name, filter_ in bp.items():
         mag = AB_sed.calculateMagnitude(bandpass=filter_)
         np.testing.assert_almost_equal(mag,0.0,decimal=6,
             err_msg="Zeropoint not set accurately enough for bandpass filter \
@@ -238,7 +239,8 @@ def test_wfirst_bandpass():
     # Jeff used the C-K template with solar metallicity, T=9550K, surface gravity logg=3.95.  I
     # downloaded a grid of templates and just used the nearest one, which has solar metallicity,
     # T=9500K, surface gravity logg=4.0.
-    sed_data = pyfits.getdata(os.path.join('wfirst_files','ckp00_9500.fits'))
+    with pyfits.open(os.path.join('wfirst_files','ckp00_9500.fits')) as fits:
+        sed_data = fits[1].data
     lam = sed_data.WAVELENGTH.astype(np.float64)
     t = sed_data.g40.astype(np.float64)
     sed_tab = galsim.LookupTable(x=lam, f=t, interpolant='linear')
@@ -268,7 +270,7 @@ def test_wfirst_bandpass():
     # Only 10% accuracy required because did not use quite the same stellar template.  Fortunately,
     # bugs can easily lead to orders of magnitude errors, so this unit test is still pretty
     # non-trivial.
-    for filter_name, filter_ in bp.iteritems():
+    for filter_name, filter_ in bp.items():
         flux = sed.calculateFlux(filter_)
         count_rate = flux / galsim.wfirst.exptime
         np.testing.assert_allclose(
@@ -371,7 +373,7 @@ def test_wfirst_psfs():
 
     # First test: check that if we don't specify SCAs, then we get all the expected ones.
     wfirst_psfs = galsim.wfirst.getPSF(approximate_struts=True)
-    got_scas = np.array(wfirst_psfs.keys())
+    got_scas = np.array(list(wfirst_psfs.keys()))
     expected_scas = np.arange(1, galsim.wfirst.n_sca+1, 1)
     np.testing.assert_array_equal(
         got_scas, expected_scas,
@@ -381,7 +383,7 @@ def test_wfirst_psfs():
     expected_scas = [5, 7, 14]
     wfirst_psfs = galsim.wfirst.getPSF(SCAs=expected_scas,
                                        approximate_struts=True)
-    got_scas = wfirst_psfs.keys()
+    got_scas = list(wfirst_psfs.keys())
     # Have to sort it in numerical order for this comparison.
     got_scas.sort()
     got_scas = np.array(got_scas)
@@ -456,10 +458,10 @@ def test_wfirst_psfs():
         new_dict = galsim.wfirst.loadPSFImages(test_file)
         # Check that it contains the right list of bandpasses.
         np.testing.assert_array_equal(
-            new_dict.keys(), bp_list, err_msg='Wrong list of bandpasses in stored file')
+            list(new_dict.keys()), bp_list, err_msg='Wrong list of bandpasses in stored file')
         # Check that when we take the dict for that bandpass, we get the right list of SCAs.
         np.testing.assert_array_equal(
-            new_dict[bp_list[0]].keys(), wfirst_psfs_int.keys(),
+            list(new_dict[bp_list[0]].keys()), list(wfirst_psfs_int.keys()),
             err_msg='Wrong list of SCAs in stored file')
         # Now draw an image from the stored object.
         img_stored = new_dict[bp_list[0]][other_sca].drawImage(scale=1.3*galsim.wfirst.pixel_scale)
@@ -493,7 +495,7 @@ def test_wfirst_psfs():
         np.testing.assert_raises(ValueError, galsim.wfirst.getPSF,
                                  SCAs=0)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
 if __name__ == "__main__":

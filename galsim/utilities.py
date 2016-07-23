@@ -19,18 +19,21 @@
 Module containing general utilities for the GalSim software.
 """
 from contextlib import contextmanager
+from future.utils import iteritems
+from builtins import range, object
 
 import numpy as np
 import galsim
 
-def roll2d(image, (iroll, jroll)):
+def roll2d(image, shape):
     """Perform a 2D roll (circular shift) on a supplied 2D NumPy array, conveniently.
 
-    @param image            The NumPy array to be circular shifted.
-    @param (iroll, jroll)   The roll in the i and j dimensions, respectively.
+    @param image        The NumPy array to be circular shifted.
+    @param shape        (iroll, jroll) The roll in the i and j dimensions, respectively.
 
     @returns the rolled image.
     """
+    (iroll, jroll) = shape
     return np.roll(np.roll(image, jroll, axis=1), iroll, axis=0)
 
 def kxky(array_shape=(256, 256)):
@@ -199,13 +202,13 @@ class AttributeDict(object):
         self.__dict__.update(other.__dict__)
 
     def _write(self, output, prefix=""):
-        for k, v in self.__dict__.iteritems():
+        for k, v in iteritems(self.__dict__):
             if isinstance(v, AttributeDict):
                 v._write(output, prefix="{0}{1}.".format(prefix, k))
             else:
                 output.append("{0}{1} = {2}".format(prefix, k, repr(v)))
 
-    def __nonzero__(self):
+    def __bool__(self):
         return not not self.__dict__
 
     def __repr__(self):
@@ -280,7 +283,7 @@ def _convertPositions(pos, units, func):
                     np.array(pos[1], dtype='float') ]
 
     # Check validity of units
-    if isinstance(units, basestring):
+    if isinstance(units, str):
         # if the string is invalid, this raises a reasonable error message.
         units = galsim.angle.get_angle_unit(units)
     if not isinstance(units, galsim.AngleUnit):
@@ -312,7 +315,7 @@ def _exact_lin_approx_split(x, f):
     """Split a tabulated function into a two-part piecewise linear approximation by exactly
     minimizing \int abs(f(x) - approx(x)) dx.  Operates in O(N^2) time.
     """
-    errs = [_lin_approx_err(x, f, i) for i in xrange(1, len(x)-1)]
+    errs = [_lin_approx_err(x, f, i) for i in range(1, len(x)-1)]
     i = np.argmin(np.sum(errs, axis=1))
     return i+1, errs[i]
 
@@ -641,7 +644,6 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
 
     @returns a list of images and offsets to reconstruct the input image using 'interleaveImages'.
     """
-
     if isinstance(N,int):
         n1,n2 = N,N
     elif hasattr(N,'__iter__'):
@@ -649,8 +651,10 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
             n1,n2 = N
         else:
             raise TypeError("'N' has to be a list or a tuple of two integers")
-        if not (isinstance(n1,int) and  isinstance(n2,int)):
+        if not (n1 == int(n1) and n2 == int(n2)):
             raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
+        n1 = int(n1)
+        n2 = int(n2)
     else:
         raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
 
@@ -663,8 +667,8 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
                          +"be 'deinterleaved'")
 
     im_list, offsets = [], []
-    for i in xrange(n1):
-        for j in xrange(n2):
+    for i in range(n1):
+        for j in range(n2):
             # The tricky part - going from array indices to Image coordinates (x,y)
             # DX[i'] = -(i+0.5)/n+0.5 = -i/n + 0.5*(n-1)/n
             #    i  = -n DX[i'] + 0.5*(n-1)
@@ -774,7 +778,6 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
 
     @returns the interleaved image
     """
-
     if isinstance(N,int):
         n1,n2 = N,N
     elif hasattr(N,'__iter__'):
@@ -782,8 +785,10 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
             n1,n2 = N
         else:
             raise TypeError("'N' has to be a list or a tuple of two integers")
-        if not (isinstance(n1,int) and  isinstance(n2,int)):
+        if not (n1 == int(n1) and n2 == int(n2)):
             raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
+        n1 = int(n1)
+        n2 = int(n2)
     else:
         raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
 
@@ -822,7 +827,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     # The tricky part - going from (x,y) Image coordinates to array indices
     # DX[i'] = -(i+0.5)/n+0.5 = -i/n + 0.5*(n-1)/n
     #    i  = -n DX[i'] + 0.5*(n-1)
-    for k in xrange(len(offsets)):
+    for k in range(len(offsets)):
         dx, dy = offsets[k].x, offsets[k].y
 
         i = int(round((n1-1)*0.5-n1*dx))
@@ -999,9 +1004,9 @@ def lod_to_dol(lod, N=None):
     if N is None:
         N = max(len(v) for v in lod.values() if hasattr(v, '__len__'))
     # Loop through broadcast range
-    for i in xrange(N):
+    for i in range(N):
         out = {}
-        for k, v in lod.iteritems():
+        for k, v in iteritems(lod):
             try:
                 out[k] = v[i]
             except IndexError:  # It's list-like, but too short.
@@ -1013,3 +1018,55 @@ def lod_to_dol(lod, N=None):
             except:
                 raise "Cannot broadcast kwarg {0}={1}".format(k, v)
         yield out
+
+def set_func_doc(func, doc):
+    """Dynamically set a docstring for a given function.
+
+    We use this in GalSim to add docstrings to some functions that are wrapped from C++.
+    It turns out this tends to be easier than writing the doc strings in the C++ layer.
+
+    @param func     The function to which a docstring is to be added.
+    @param doc      The doc string to add.
+    """
+    try:
+        # Python3
+        func.__doc__ = doc
+    except:
+        func.__func__.__doc__ = doc
+
+
+def structure_function(image):
+    """Estimate the angularly-averaged structure function of a 2D random field.
+
+    The angularly-averaged structure function D(r) of the 2D field phi is defined as:
+
+    D(|r|) = <|phi(x) - phi(x+r)|^2>
+
+    where the x and r on the RHS are 2D vectors, but the |r| on the LHS is just a scalar length.
+
+    @param image  Image containing random field realization.  The `.scale` attribute here *is* used
+                  in the calculation.  If it's `None`, then the code will use 1.0 for the scale.
+    @returns      A python callable mapping a separation length r to the estimate of the structure
+                  function D(r).
+    """
+    array = image.array
+    nx, ny = array.shape
+    scale = image.scale
+    if scale is None:
+        scale = 1.0
+
+    # The structure function can be derived from the correlation function B(r) as:
+    # D(r) = 2 * [B(0) - B(r)]
+
+    corr = np.fft.ifft2(np.abs(np.fft.fft2(np.fft.fftshift(array)))**2).real / (nx * ny)
+    # Check that the zero-lag correlation function is equal to the variance before doing the
+    # ifftshift.
+    assert (corr[0, 0] / np.var(array) - 1.0) < 1e-6
+    corr = np.fft.ifftshift(corr)
+
+    x = scale * (np.arange(nx) - nx//2)
+    y = scale * (np.arange(ny) - ny//2)
+    tab = galsim.LookupTable2D(x, y, corr)
+    thetas = np.arange(0., 2*np.pi, 100)  # Average over these angles.
+
+    return lambda r: 2*(tab(0.0, 0.0) - np.mean(tab(r*np.cos(thetas), r*np.sin(thetas))))

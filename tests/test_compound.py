@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import numpy as np
 import os
 import sys
@@ -752,7 +754,7 @@ def test_fourier_sqrt():
     do_pickle(sqrt1.SBProfile)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_sum_transform():
     """This test addresses a bug found by Ismael Serrano, #763, wherein some attributes 
@@ -775,13 +777,13 @@ def test_sum_transform():
         sgal2 = eval(str(gal2))
         rgal2 = eval(repr(gal2))
 
-        print 'gal1 = ',repr(gal1)
-        print 'sgal1 = ',repr(sgal1)
-        print 'rgal1 = ',repr(rgal1)
+        print('gal1 = ',repr(gal1))
+        print('sgal1 = ',repr(sgal1))
+        print('rgal1 = ',repr(rgal1))
 
-        print 'gal2 = ',repr(gal2)
-        print 'sgal2 = ',repr(sgal2)
-        print 'rgal2 = ',repr(rgal2)
+        print('gal2 = ',repr(gal2))
+        print('sgal2 = ',repr(sgal2))
+        print('rgal2 = ',repr(rgal2))
 
         gal1_im = gal1.drawImage(nx=64, ny=64, scale=0.2)
         sgal1_im = sgal1.drawImage(nx=64, ny=64, scale=0.2)

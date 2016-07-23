@@ -195,7 +195,7 @@ usage.
 """
 import os
 import galsim
-import numpy
+import numpy as np
 
 gain = 1.0
 pixel_scale = 0.11
@@ -217,23 +217,23 @@ pupil_plane_file = os.path.join(galsim.meta_data.share_dir,
                                 "WFIRST-AFTA_Pupil_Mask_C5_20141010_PLT.fits.gz")
 stray_light_fraction = 0.1
 # IPC kernel is unnormalized at first.  We will normalize it.
-ipc_kernel = numpy.array([ [0.001269938, 0.015399776, 0.001199862], \
-                           [0.013800177, 1.0, 0.015600367], \
-                           [0.001270391, 0.016129619, 0.001200137] ])
-ipc_kernel /= numpy.sum(ipc_kernel)
+ipc_kernel = np.array([ [0.001269938, 0.015399776, 0.001199862], \
+                        [0.013800177, 1.0, 0.015600367], \
+                        [0.001270391, 0.016129619, 0.001200137] ])
+ipc_kernel /= np.sum(ipc_kernel)
 ipc_kernel = galsim.Image(ipc_kernel)
-persistence_coefficients = numpy.array([0.2246,0.0225,0.0085,0.0043,0.0025,0.0016,0.0011,0.0008])/100.
+persistence_coefficients = np.array([0.2246,0.0225,0.0085,0.0043,0.0025,0.0016,0.0011,0.0008])/100.
 n_sca = 18
 n_pix_tot = 4096 
 n_pix = 4088
 jitter_rms = 0.014
 charge_diffusion = 0.1
 
-from wfirst_bandpass import getBandpasses
-from wfirst_backgrounds import getSkyLevel
-from wfirst_psfs import getPSF, storePSFImages, loadPSFImages
-from wfirst_wcs import getWCS, findSCA, allowedPos, bestPA
-from wfirst_detectors import applyNonlinearity, addReciprocityFailure, applyIPC, applyPersistence, allDetectorEffects
+from .wfirst_bandpass import getBandpasses
+from .wfirst_backgrounds import getSkyLevel
+from .wfirst_psfs import getPSF, storePSFImages, loadPSFImages
+from .wfirst_wcs import getWCS, findSCA, allowedPos, bestPA
+from .wfirst_detectors import applyNonlinearity, addReciprocityFailure, applyIPC, applyPersistence, allDetectorEffects
 
 def NLfunc(x):
     return x + nonlinearity_beta*(x**2)
@@ -243,7 +243,7 @@ def _parse_SCAs(SCAs):
     # convenient format.  It is used in wfirst_wcs.py and wfirst_psfs.py.
     #
     # Check which SCAs are to be done.  Default is all (and they are 1-indexed).
-    all_SCAs = numpy.arange(1, n_sca + 1, 1)
+    all_SCAs = np.arange(1, n_sca + 1, 1)
     # Later we will use the list of selected SCAs to decide which ones we're actually going to do
     # the calculations for.  For now, just check for invalid numbers.
     if SCAs is not None:

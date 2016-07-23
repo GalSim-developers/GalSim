@@ -15,6 +15,17 @@ API Changes
   output.psf.offset = "galaxy". (#691)
 
 
+Dependency Changes
+------------------
+
+- Added future module as a dependency.  This is a trivial one to install, so
+  it should not be any hardship.  You can use either `pip install future` or
+  `easy_install future`. (#534)
+- Changed PyYAML to a nominal dependency, even though it is still not
+  technically required if you do not plan to use the `galsim` executable
+  (or only plan to use JSON config files).  (#768)
+
+
 Bug Fixes
 ---------
 
@@ -57,6 +68,9 @@ Bug Fixes
 - Fixed a bug in the Sum and Convolution constructors when they are only
   adding or convolving a single element that could lead to erroneous str and
   reprs for the resulting object if it was then transformed. (#763)
+- Fixed a bug related to boost-v1.60 python shared_ptr registration. (#764)
+- Made the error message when trying to read a non-existent *.fits.gz or
+  *.fits.bz2 file more helpful. (#773)
 
 Deprecated Features
 -------------------
@@ -75,6 +89,8 @@ New Features
   GSObject and Image. (#308)
 - Added LookupTable2D to facilitate quick interpolation of two-dimensional
   tabular data. (#465)
+- Added support for Python 3.  Specifically, we tested with Python 3.4, but we
+  expect that it should work for Python versions >= 3.3. (#534)
 - Added AtmosphericScreen, OpticalScreen, and PhaseScreenList used
   to generate PSFs via Fourier optics. (#549)
 - Added PhaseScreenPSF to transform PhaseScreens into GSObjects.  (#549)
@@ -112,7 +128,7 @@ New Features
 - Added the FourierSqrt operator to compute the Fourier-space square root of a
   profile.  This is useful in implementing optimal coaddition algorithms; see
   make_coadd.py in the examples directory (#748).
-- Made Bandpass.thin() and Bandpass.truncate() preserve the zeropoint by 
+- Made Bandpass.thin() and Bandpass.truncate() preserve the zeropoint by
   default. (#711)
 - Added version information to the compiled C++ library. (#750)
 
@@ -135,7 +151,7 @@ New config features
   custom image types, object types, value types, etc. and register them with
   the config parser.  The code with the new type definitions should be given
   as a module for the code to import using the new 'modules' top-level
-  config field. (#691)
+  config field. (#691, #774)
 - Added the 'template' option to read another config file and use either the
   whole file as a template or just a given field from the file. (#691)
 - Made '$' and '@' shorthand for 'Eval' and 'Current' types respectively in

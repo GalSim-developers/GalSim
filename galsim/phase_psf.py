@@ -53,10 +53,11 @@ Atmosphere
 """
 
 from itertools import chain
+from builtins import range, zip
 
 import numpy as np
 import galsim
-import utilities
+from . import utilities
 from galsim import GSObject
 
 
@@ -281,13 +282,14 @@ class Aperture(object):
             self._generate_pupil_plane(circular_pupil, obscuration,
                                        nstruts, strut_thick, strut_angle,
                                        pupil_plane_scale, pupil_plane_size)
+
         # Check FFT size
         if self._gsparams is not None:
             maximum_fft_size = self._gsparams.maximum_fft_size
         else:
             maximum_fft_size = galsim.GSParams().maximum_fft_size
         if self.npix > maximum_fft_size:
-            raise RuntimeError("Created pupil plane array that is too large, {} "
+            raise RuntimeError("Created pupil plane array that is too large, {0} "
                                "If you can handle the large FFT, you may update "
                                "gsparams.maximum_fft_size".format(self.npix))
 
@@ -302,7 +304,7 @@ class Aperture(object):
         self.npix = galsim._galsim.goodFFTSize(int(np.ceil(ratio)))
         self.pupil_plane_size = pupil_plane_size
         # Shrink scale such that size = scale * npix exactly.
-        self.pupil_plane_scale = pupil_plane_size / self.npix
+        self.pupil_plane_scale = pupil_plane_size // self.npix
         # Save params for str/repr
         self._circular_pupil = circular_pupil
         self._obscuration = obscuration
@@ -330,7 +332,7 @@ class Aperture(object):
                 rot_u, rot_v = utilities.rotate_xy(rot_u, rot_v, -strut_angle)
             rotang = 360. * galsim.degrees / nstruts
             # Then loop through struts setting to zero the regions which lie under the strut
-            for istrut in xrange(nstruts):
+            for istrut in range(nstruts):
                 rot_u, rot_v = utilities.rotate_xy(rot_u, rot_v, -rotang)
                 self._illuminated *= ((np.abs(rot_u) >= radius * strut_thick) + (rot_v < 0.0))
 
@@ -389,7 +391,7 @@ class Aperture(object):
         if self.pupil_plane_size < good_pupil_size:
             new_npix = galsim._galsim.goodFFTSize(int(np.ceil(
                     good_pupil_size/self.pupil_plane_scale)))
-            pad_width = (new_npix-self.npix)/2
+            pad_width = (new_npix-self.npix)//2
             pp_arr = np.pad(pp_arr, [(pad_width, pad_width)]*2, mode='constant')
             self.npix = new_npix
             self.pupil_plane_size = self.pupil_plane_scale * self.npix
@@ -777,7 +779,7 @@ class PhaseScreenList(object):
                         [default: True]
         @returns        Wavefront lag or lead in nanometers over aperture.
         """
-        return np.sum(layer.wavefront(aper, theta, compact) for layer in self)
+        return np.sum([layer.wavefront(aper, theta, compact) for layer in self],axis=0)
 
     def makePSF(self, lam, **kwargs):
         """Compute one PSF or multiple PSFs from the current PhaseScreenList, depending on the type
@@ -854,11 +856,11 @@ class PhaseScreenList(object):
         # replace the consumed tuple at the beginning of the generator and go on.  If the first
         # item is scalar, then assume that it's the x-component of a single field angle.
         theta = iter(theta)
-        th0 = theta.next()
+        th0 = next(theta)
         if hasattr(th0, '__iter__'):
             theta = chain([th0], theta)
         else:
-            theta = [th0, theta.next()]
+            theta = [th0, next(theta)]
             single = True
 
         if single:
@@ -876,7 +878,7 @@ class PhaseScreenList(object):
 
             flux = kwargs.get('flux', 1.0)
             _nstep = PSFs[0]._nstep
-            for i in xrange(_nstep):
+            for i in range(_nstep):
                 for PSF in PSFs:
                     PSF._step()
                 self.advance()
@@ -889,7 +891,7 @@ class PhaseScreenList(object):
     @property
     def r0_500_effective(self):
         """Effective r0_500 for set of screens in list that define an r0_500 attribute."""
-        return sum(l.r0_500**(-5./3) for l in self if hasattr(l, 'r0_500'))**(-3./5)
+        return np.sum([l.r0_500**(-5./3) for l in self if hasattr(l, 'r0_500')])**(-3./5)
 
     def stepK(self, **kwargs):
         """Return an appropriate stepK for this list of phase screens.
@@ -907,7 +909,7 @@ class PhaseScreenList(object):
         #   stepk = sum(s**(-5./3) for s in stepks)**(-3./5)
         # Since most of the layers in a PhaseScreenList are likely to be (nearly) Kolmogorov
         # screens, we'll use that relation.
-        return sum(layer.stepK(**kwargs)**(-5./3) for layer in self)**(-3./5)
+        return np.sum([layer.stepK(**kwargs)**(-5./3) for layer in self])**(-3./5)
 
 
 class PhaseScreenPSF(GSObject):
@@ -1023,7 +1025,7 @@ class PhaseScreenPSF(GSObject):
             raise TypeError("theta must be 2-tuple of galsim.Angle's.")
         self.theta = theta
         self.interpolant = interpolant
-        if isinstance(scale_unit, basestring):
+        if isinstance(scale_unit, str):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         self.scale_unit = scale_unit
         self._gsparams = gsparams
@@ -1048,7 +1050,7 @@ class PhaseScreenPSF(GSObject):
         # of the normal iterate over time loop.  So only do the time loop here and now if we're not
         # doing a makePSFs().
         if _eval_now:
-            for i in xrange(self._nstep):
+            for i in range(self._nstep):
                 self._step()
                 self.screen_list.advance()
                 if _bar is not None:
@@ -1079,7 +1081,7 @@ class PhaseScreenPSF(GSObject):
         """Compute the current instantaneous PSF and add it to the developing integrated PSF."""
         wf = self.screen_list.wavefront(self.aper, self.theta)
         expwf = np.exp(2j * np.pi * wf / self.lam)
-        expwf_grid = np.zeros_like(self.aper.illuminated, dtype=np.complex128)
+        expwf_grid = np.zeros_like(self.aper.illuminated).astype(np.complex128)
         expwf_grid[self.aper.illuminated] = expwf
         ftexpwf = np.fft.fft2(np.fft.fftshift(expwf_grid))
         self.img += np.abs(ftexpwf)**2
@@ -1102,7 +1104,6 @@ class PhaseScreenPSF(GSObject):
                     self.img, x_interpolant=self.interpolant,
                     _serialize_stepk=self._serialize_stepk, _serialize_maxk=self._serialize_maxk,
                     use_true_center=False, normalization='sb', gsparams=self._gsparams)
-
 
         GSObject.__init__(self, self.ii)
 
@@ -1342,7 +1343,7 @@ class OpticalPSF(GSObject):
                  "be used to adjust the size of the internal InterpolatedImage.")
 
 
-        if isinstance(scale_unit, basestring):
+        if isinstance(scale_unit, str):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         # Need to handle lam/diam vs. lam_over_diam here since lam by itself is needed for
         # OpticalScreen.

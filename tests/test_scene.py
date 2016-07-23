@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import os
 import numpy as np
 from galsim_test_helpers import *
@@ -51,7 +53,7 @@ def test_cosmos_basic():
         np.testing.assert_raises(IOError, galsim.COSMOSCatalog,
                                  file_name='real_galaxy_catalog_23.5_example.fits')
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     # Try making galaxies
     gal_real = cat2.makeGalaxy(index=0,gal_type='real',chromatic=False)

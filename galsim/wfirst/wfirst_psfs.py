@@ -303,7 +303,7 @@ def storePSFImages(PSF_dict, filename, bandpass_list=None, clobber=False):
     im_list = []
     bp_name_list = []
     SCA_index_list = []
-    for SCA in PSF_dict.keys():
+    for SCA in PSF_dict:
         PSF = PSF_dict[SCA]
         if not isinstance(PSF, galsim.ChromaticOpticalPSF) and \
                 not isinstance(PSF, galsim.InterpolatedChromaticObject):

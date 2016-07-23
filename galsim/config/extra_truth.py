@@ -46,15 +46,15 @@ class TruthBuilder(ExtraOutputBuilder):
             # arbitrary order.
             # (This was the simplest difference I could find between dict and OrderedDict that
             #  seemed relevant.)
-            logger.warn('The config dict is not an OrderedDict.  The columns in the output truth '+
-                        'catalog will be in arbitrary order.')
+            logger.warning('The config dict is not an OrderedDict.  The columns in the output '
+                           'truth catalog will be in arbitrary order.')
 
     # The function to call at the end of building each stamp
     def processStamp(self, obj_num, config, base, logger):
         cols = config['columns']
         row = []
         types = []
-        for name in cols.keys():
+        for name in cols:
             key = cols[name]
             if isinstance(key, dict):
                 # Then the "key" is actually something to be parsed in the normal way.
@@ -62,7 +62,7 @@ class TruthBuilder(ExtraOutputBuilder):
                 # only a limited subset of the parsing.  Usually enough for truth items, but
                 # not fully featured.
                 value = galsim.config.ParseValue(cols,name,base,None)[0]
-            elif not isinstance(key,basestring):
+            elif not isinstance(key,str):
                 # The item can just be a constant value.
                 value = key
             elif key[0] == '$':

@@ -22,7 +22,7 @@ Very simple implementation of a filter bandpass.  Used by galsim.chromatic.
 import numpy as np
 
 import galsim
-import utilities
+from . import utilities
 
 class Bandpass(object):
     """Simple bandpass object, which models the transmission fraction of incident light as a
@@ -187,7 +187,7 @@ class Bandpass(object):
 
         if self._tp is not None:
             pass
-        elif isinstance(self._orig_tp, basestring):
+        elif isinstance(self._orig_tp, str):
             import os
             if os.path.isfile(self._orig_tp):
                 self._tp = galsim.LookupTable(file=self._orig_tp, interpolant='linear')
@@ -362,7 +362,7 @@ class Bandpass(object):
                                     zeropoint is 'AB', 'Vega', or 'ST'].
         @returns new Bandpass with zeropoint set.
         """
-        if isinstance(zeropoint, basestring):
+        if isinstance(zeropoint, str):
             if effective_diameter is None or exptime is None:
                 raise ValueError("Cannot calculate Zeropoint from string {0} without "
                                  +"telescope effective diameter or exposure time.")

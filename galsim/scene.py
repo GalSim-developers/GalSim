@@ -206,12 +206,13 @@ class COSMOSCatalog(object):
             # Note: don't just use k = -5 in case it actually ends with .fits.fz
             k = self.real_cat.file_name.find('.fits') 
             param_file_name = self.real_cat.file_name[:k] + '_fits' + self.real_cat.file_name[k:]
-            self.param_cat = pyfits.getdata(param_file_name)
-
+            with pyfits.open(param_file_name) as fits:
+                self.param_cat = fits[1].data
         else:
             try:
                 # Read in data.
-                self.param_cat = pyfits.getdata(full_file_name)
+                with pyfits.open(full_file_name) as fits:
+                    self.param_cat = fits[1].data
                 # Check if this was the right file.  It should have a 'fit_status' column.
                 self.param_cat['fit_status']
             except KeyError:
@@ -219,7 +220,8 @@ class COSMOSCatalog(object):
                 # so try adding _fits to it as above.
                 k = full_file_name.find('.fits')
                 param_file_name = full_file_name[:k] + '_fits' + full_file_name[k:]
-                self.param_cat = pyfits.getdata(param_file_name)
+                with pyfits.open(param_file_name) as fits:
+                    self.param_cat = fits[1].data
 
         # Check for the old-style parameter catalog
         if 'fit_dvc_btt' not in self.param_cat.dtype.names:
@@ -255,12 +257,14 @@ class COSMOSCatalog(object):
                 # catalog name:
                 selection_file_name = full_file_name[:k] + '_selection' + full_file_name[k:]
                 try:
-                    self.selection_cat = pyfits.getdata(selection_file_name)
+                    with pyfits.open(selection_file_name) as fits:
+                        self.selection_cat = fits[1].data
                 except IOError:
                     # There's one more option: full_file_name might be the parametric fit file, so
                     # we have to strip off the _fits.fits (instead of just the .fits)
                     selection_file_name = full_file_name[:k-5] + '_selection' + full_file_name[k:]
-                    self.selection_cat = pyfits.getdata(selection_file_name)
+                    with pyfits.open(selection_file_name) as fits:
+                        self.selection_cat = fits[1].data
 
 
                 # At this point we've read in the catalog one way or another (otherwise we would

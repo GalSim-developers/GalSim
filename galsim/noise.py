@@ -24,6 +24,8 @@ import galsim
 from . import _galsim
 from ._galsim import BaseNoise, GaussianNoise, PoissonNoise, CCDNoise
 from ._galsim import DeviateNoise, VarGaussianNoise
+from .utilities import set_func_doc
+import numpy as np
 
 def addNoise(self, noise):
     # This will be inserted into the Image class as a method.  So self = image.
@@ -41,13 +43,13 @@ def addNoiseSNR(self, noise, snr, preserve_flux=False):
     noise level fixed, or the flux can be preserved and the noise variance changed.  This is set
     using the parameter `preserve_flux`.
 
-    The definition of SNR is equivalent to the one used by Great08.  Taking a weighted integral 
+    The definition of SNR is equivalent to the one used by Great08.  Taking a weighted integral
     of the flux:
         S = sum W(x,y) I(x,y) / sum W(x,y)
         N^2 = Var(S) = sum W(x,y)^2 Var(I(x,y)) / (sum W(x,y))^2
     and assuming that Var(I(x,y)) is constant
         Var(I(x,y)) = noise_var
-    We then assume that we are using a matched filter for W, so W(x,y) = I(x,y).  Then a few things 
+    We then assume that we are using a matched filter for W, so W(x,y) = I(x,y).  Then a few things
     cancel and we find that
         snr = S/N = sqrt( sum I(x,y)^2 / noise_var )
     and therefore, for a given I(x,y) and snr,
@@ -55,7 +57,7 @@ def addNoiseSNR(self, noise, snr, preserve_flux=False):
 
     Note that for noise models such as Poisson and CCDNoise, the constant Var(I(x,y)) assumption
     is only approximate, since the flux of the object adds to the Poisson noise in those pixels.
-    Thus, the real S/N on the final image will be slightly lower than the target `snr` value, 
+    Thus, the real S/N on the final image will be slightly lower than the target `snr` value,
     and this effect will be larger for brighter objects.
 
     Also, this function relies on noise.getVariance() to determine how much variance the
@@ -69,16 +71,15 @@ def addNoiseSNR(self, noise, snr, preserve_flux=False):
 
     @returns the variance of the noise that was applied to the image.
     """
-    import numpy
     noise_var = noise.getVariance()
-    sumsq = numpy.sum(self.array**2)
+    sumsq = np.sum(self.array**2)
     if preserve_flux:
         new_noise_var = sumsq/snr/snr
         noise = noise.withVariance(new_noise_var)
         self.addNoise(noise)
         return new_noise_var
     else:
-        sn_meas = numpy.sqrt( sumsq/noise_var )
+        sn_meas = np.sqrt( sumsq/noise_var )
         flux = snr/sn_meas
         self *= flux
         self.addNoise(noise)
@@ -90,11 +91,11 @@ galsim.Image.addNoiseSNR = addNoiseSNR
 # Then add docstrings for C++ layer Noise classes
 
 # BaseNoise methods used by derived classes
-_galsim.BaseNoise.getRNG.__func__.__doc__ = """
+set_func_doc(_galsim.BaseNoise.getRNG, """
 Get the BaseDeviate used to generate random numbers for the current noise model.
-"""
+""")
 
-_galsim.BaseNoise.getVariance.__func__.__doc__ = "Get variance in current noise model."
+set_func_doc(_galsim.BaseNoise.getVariance, "Get variance in current noise model.")
 
 def Noise_withVariance(self, variance):
     """Return a new noise object (of the same type as the current one) with the specified variance.
@@ -112,7 +113,7 @@ def Noise_withScaledVariance(self, variance_ratio):
 
     This is equivalent to noise * variance_ratio.
 
-    @param variance_ratio   The factor by which to scale the variance of the correlation 
+    @param variance_ratio   The factor by which to scale the variance of the correlation
                             function profile.
 
     @returns a new Noise object whose variance has been scaled by the given amount.
@@ -128,7 +129,7 @@ _galsim.BaseNoise.withScaledVariance = Noise_withScaledVariance
 def Noise_mul(self, variance_ratio):
     """Multiply the variance of the noise by `variance_ratio`.
 
-    @param variance_ratio   The factor by which to scale the variance of the correlation 
+    @param variance_ratio   The factor by which to scale the variance of the correlation
                             function profile.
 
     @returns a new Noise object whose variance has been scaled by the given amount.
@@ -184,7 +185,7 @@ def GaussianNoise_applyTo(self, image):
 
         >>> gaussian_noise.applyTo(image)
 
-    On output the Image instance `image` will have been given additional Gaussian noise according 
+    On output the Image instance `image` will have been given additional Gaussian noise according
     to the given GaussianNoise instance.
 
     Note: The syntax `image.addNoise(gaussian_noise)` is preferred.
@@ -192,7 +193,7 @@ def GaussianNoise_applyTo(self, image):
     self.applyToView(image.image.view())
 _galsim.GaussianNoise.applyTo = GaussianNoise_applyTo
 
-_galsim.GaussianNoise.getSigma.__func__.__doc__ = "Get `sigma` in current noise model."
+set_func_doc(_galsim.GaussianNoise.getSigma, "Get `sigma` in current noise model.")
 
 def GaussianNoise_copy(self, rng=None):
     """Returns a copy of the Gaussian noise model.
@@ -253,7 +254,7 @@ def PoissonNoise_applyTo(self, image):
 
         >>> galsim.PoissonNoise.applyTo(image)
 
-    On output the Image instance `image` will have been given additional Poisson noise according 
+    On output the Image instance `image` will have been given additional Poisson noise according
     to the given PoissonNoise instance.
 
     Note: the syntax `image.addNoise(poisson_noise)` is preferred.
@@ -261,7 +262,7 @@ def PoissonNoise_applyTo(self, image):
     self.applyToView(image.image.view())
 _galsim.PoissonNoise.applyTo = PoissonNoise_applyTo
 
-_galsim.PoissonNoise.getSkyLevel.__func__.__doc__ = "Get sky level in current noise model."
+set_func_doc(_galsim.PoissonNoise.getSkyLevel, "Get sky level in current noise model.")
 
 def PoissonNoise_copy(self, rng=None):
     """Returns a copy of the Poisson noise model.
@@ -353,9 +354,9 @@ def CCDNoise_applyTo(self, image):
     self.applyToView(image.image.view())
 _galsim.CCDNoise.applyTo = CCDNoise_applyTo
 
-_galsim.CCDNoise.getSkyLevel.__func__.__doc__ = "Get sky level in current noise model."
-_galsim.CCDNoise.getGain.__func__.__doc__ = "Get gain in current noise model."
-_galsim.CCDNoise.getReadNoise.__func__.__doc__ = "Get read noise in current noise model."
+set_func_doc(_galsim.CCDNoise.getSkyLevel, "Get sky level in current noise model.")
+set_func_doc(_galsim.CCDNoise.getGain, "Get gain in current noise model.")
+set_func_doc(_galsim.CCDNoise.getReadNoise, "Get read noise in current noise model.")
 
 def CCDNoise_copy(self, rng=None):
     """Returns a copy of the CCD noise model.
@@ -375,7 +376,7 @@ _galsim.CCDNoise.copy = CCDNoise_copy
 _galsim.DeviateNoise.__doc__ = """
 Class implementing noise with an arbitrary BaseDeviate object.
 
-The DeviateNoise class provides a way to treat an arbitrary deviate as the noise model for 
+The DeviateNoise class provides a way to treat an arbitrary deviate as the noise model for
 each pixel in an image.
 
 Initialization
@@ -407,7 +408,7 @@ def DeviateNoise_applyTo(self, image):
 
         >>> dev_noise.applyTo(image)
 
-    On output the Image instance `image` will have been given additional noise according to 
+    On output the Image instance `image` will have been given additional noise according to
     the given DeviateNoise instance.
 
     To add deviates to every element of an image, the syntax `image.addNoise()` is preferred.
@@ -430,7 +431,7 @@ def DeviateNoise_copy(self, rng=None):
 _galsim.DeviateNoise.copy = DeviateNoise_copy
 
 # VariableGaussianNoise is a thin wrapper of the C++ VarGaussianNoise
-# This way the python layer can have the argument be a galsim.Image object, 
+# This way the python layer can have the argument be a galsim.Image object,
 # but the C++ version can take a C++ BaseImage object.
 
 class VariableGaussianNoise(_galsim.BaseNoise):
@@ -439,13 +440,13 @@ class VariableGaussianNoise(_galsim.BaseNoise):
 
     Initialization
     --------------
-    
+
         >>> variable_noise = galsim.VariableGaussianNoise(rng, var_image)
 
     Parameters:
 
     @param rng          A BaseDeviate instance to use for generating the random numbers.
-    @param var_image    The variance of the noise to apply to each pixel.  This image must be the 
+    @param var_image    The variance of the noise to apply to each pixel.  This image must be the
                         same shape as the image for which you eventually call addNoise().
 
     Methods
@@ -517,7 +518,7 @@ class VariableGaussianNoise(_galsim.BaseNoise):
         raise RuntimeError("Changing the variance is not allowed for VariableGaussianNoise")
 
     def withScaledVariance(self, variance):
-        # This one isn't undefined like withVariance, but it's inefficient.  Better to 
+        # This one isn't undefined like withVariance, but it's inefficient.  Better to
         # scale the values in the image before constructing VariableGaussianNoise.
         raise RuntimeError("Changing the variance is not allowed for VariableGaussianNoise")
 
@@ -553,7 +554,7 @@ _galsim.DeviateNoise.__repr__ = \
         lambda self: 'galsim.DeviateNoise(dev=%r)'%(self.rng)
 _galsim.VarGaussianNoise.__repr__ = \
         lambda self: 'galsim.VarGaussianNoise(rng=%r, var_image%r)'%(self.rng, self.var_image)
-        
+
 _galsim.GaussianNoise.__str__ = \
         lambda self: 'galsim.GaussianNoise(sigma=%s)'%(self.sigma)
 _galsim.PoissonNoise.__str__ = \
