@@ -69,6 +69,8 @@ Bug Fixes
   adding or convolving a single element that could lead to erroneous str and
   reprs for the resulting object if it was then transformed. (#763)
 - Fixed a bug related to boost-v1.60 python shared_ptr registration. (#764)
+- Made the error message when trying to read a non-existent *.fits.gz or
+  *.fits.bz2 file more helpful. (#773)
 
 Deprecated Features
 -------------------
@@ -149,7 +151,7 @@ New config features
   custom image types, object types, value types, etc. and register them with
   the config parser.  The code with the new type definitions should be given
   as a module for the code to import using the new 'modules' top-level
-  config field. (#691)
+  config field. (#691, #774)
 - Added the 'template' option to read another config file and use either the
   whole file as a template or just a given field from the file. (#691)
 - Made '$' and '@' shorthand for 'Eval' and 'Current' types respectively in

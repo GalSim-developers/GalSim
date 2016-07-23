@@ -18,6 +18,7 @@
 
 import galsim
 import logging
+import numpy as np
 
 # This file handles the building of an image by parsing config['image'].
 # This file includes the basic functionality, but it calls out to helper functions
@@ -306,7 +307,6 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
         if logger:
             logger.debug('image %d: maximum noise varance in any stamp is %f',
                          config['image_num'], max_current_var)
-        import numpy
         # Then there was whitening applied in the individual stamps.
         # But there could be a different variance in each postage stamp, so the first
         # thing we need to do is bring everything up to a common level.
@@ -317,7 +317,7 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
             if b.isDefined(): noise_image[b] += current_vars[k]
         # Update this, since overlapping postage stamps may have led to a larger
         # value in some pixels.
-        max_current_var = numpy.max(noise_image.array)
+        max_current_var = np.max(noise_image.array)
         if logger:
             logger.debug('image %d: maximum noise varance in any pixel is %f',
                          config['image_num'], max_current_var)

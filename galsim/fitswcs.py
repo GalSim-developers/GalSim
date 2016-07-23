@@ -23,6 +23,7 @@ trying to read.
 
 import galsim
 import warnings
+import numpy as np
 
 #########################################################################################
 #
@@ -203,9 +204,8 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
                         header[key1], header[key2] = header[key2], header[key1]
 
     def _radec(self, x, y):
-        import numpy
-        x1 = numpy.atleast_1d(x)
-        y1 = numpy.atleast_1d(y)
+        x1 = np.atleast_1d(x)
+        y1 = np.atleast_1d(y)
 
         try:
             # Old versions fail with an AttributeError about astropy.wcs.Wcsprm.lattype
@@ -234,10 +234,9 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
         return ra, dec
 
     def _xy(self, ra, dec):
-        import numpy
         import astropy
         factor = galsim.radians / galsim.degrees
-        rd = numpy.atleast_2d([ra, dec]) * factor
+        rd = np.atleast_2d([ra, dec]) * factor
         # Here we have to work around another astropy.wcs bug.  The way they use scipy's
         # Broyden's method doesn't work.  So I implement a fix here.
         if astropy.__version__ >= '1.0.1':
@@ -254,7 +253,6 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             # to make it work correctly.
             import astropy.wcs
             import scipy.optimize
-            import numpy
 
             origin = 1
             tolerance = 1.e-6
@@ -271,8 +269,8 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             # from all_pix2world have a different wrapping around 360.  We fmod dec too even
             # though it won't do anything, since that's how the numpy array fmod2 has to work.
             func = lambda pix: (
-                    (numpy.fmod(self._wcs.all_pix2world(numpy.atleast_2d(pix),origin) - 
-                                rd + 180,360) - 180).ravel() )
+                    (np.fmod(self._wcs.all_pix2world(np.atleast_2d(pix),origin) -
+                             rd + 180,360) - 180).ravel() )
 
             # This is the main bit that the astropy function is missing.
             # The scipy.optimize.broyden1 function can't handle starting at exactly the right
@@ -287,7 +285,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             # starting at exactly the right value, it is hugely more efficient to give it an
             # estimate of alpha, since it is not typically near unity in this case, so it is much
             # faster to start with something closer to the right value.
-            alpha = numpy.mean(numpy.abs(self._wcs.wcs.get_cdelt()))
+            alpha = np.mean(np.abs(self._wcs.wcs.get_cdelt()))
 
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
@@ -297,7 +295,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
         try:
             # If the inputs were numpy arrays, return the same
             len(ra)
-            x, y = numpy.array(xy).transpose()
+            x, y = np.array(xy).transpose()
         except:
             # Otherwise, return scalars
             if len(xy) == 1:
@@ -521,11 +519,10 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
             header['CTYPE2'] = header['CTYPE2'].replace('TAN','TPV')
 
     def _radec(self, x, y):
-        import numpy
         # Need this to look like 
         #    [ [ x1, x2, x3... ], [ y1, y2, y3... ] ] 
         # if input is either scalar x,y or two arrays.
-        xy = numpy.array([numpy.atleast_1d(x), numpy.atleast_1d(y)])
+        xy = np.array([np.atleast_1d(x), np.atleast_1d(y)])
 
         ra, dec = self._wcsinfo.tran( xy )
         # PyAst returns ra, dec in radians, so we're good.
@@ -541,8 +538,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
         return ra, dec
 
     def _xy(self, ra, dec):
-        import numpy
-        rd = numpy.array([numpy.atleast_1d(ra), numpy.atleast_1d(dec)])
+        rd = np.array([np.atleast_1d(ra), np.atleast_1d(dec)])
 
         x, y = self._wcsinfo.tran( rd, False )
 
@@ -706,11 +702,10 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
     def origin(self): return self._origin
 
     def _radec(self, x, y):
-        import numpy
         # Need this to look like 
         #    [ x1, y1, x2, y2, ... ] 
         # if input is either scalar x,y or two arrays.
-        xy = numpy.array([x, y]).transpose().ravel()
+        xy = np.array([x, y]).transpose().ravel()
         
         # The OS cannot handle arbitrarily long command lines, so we may need to split up
         # the list into smaller chunks.
@@ -779,7 +774,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
         try:
             len(x)
             # If the inputs were numpy arrays, return the same
-            return numpy.array(ra)*factor, numpy.array(dec)*factor
+            return np.array(ra)*factor, np.array(dec)*factor
         except:
             # Otherwise return scalars
             assert len(ra) == 1
@@ -788,8 +783,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
 
     def _xy(self, ra, dec):
         import subprocess
-        import numpy
-        rd = numpy.array([ra, dec]).transpose().ravel()
+        rd = np.array([ra, dec]).transpose().ravel()
         rd *= galsim.radians / galsim.degrees
         for digits in range(10,5,-1):
             rd_strs = [ str(z) for z in rd ]
@@ -822,7 +816,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS):
         try:
             len(ra)
             # If the inputs were numpy arrays, return the same
-            return numpy.array(x), numpy.array(y)
+            return np.array(x), np.array(y)
         except:
             # Otherwise return scalars
             assert len(x) == 1
@@ -1056,10 +1050,9 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             cd11, cd21 = cd21, cd11
             cd12, cd22 = cd22, cd12
 
-        import numpy
-        self.crpix = numpy.array( [ crpix1, crpix2 ] )
-        self.cd = numpy.array( [ [ cd11, cd12 ], 
-                                 [ cd21, cd22 ] ] )
+        self.crpix = np.array( [ crpix1, crpix2 ] )
+        self.cd = np.array( [ [ cd11, cd12 ],
+                              [ cd21, cd22 ] ] )
 
         self.center = galsim.CelestialCoord(crval1 * ra_units, crval2 * dec_units)
 
@@ -1112,31 +1105,29 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         if 'PV1_12' in header:
             raise NotImplementedError("We don't implement past 3rd order terms for TPV")
 
-        import numpy
         # Another strange thing is that the two matrices are defined in the opposite order
         # with respect to their element ordering.  And remember that we skipped k=3 in the
         # original reading, so indices 3..9 here were originally called PVi_4..10
-        self.pv = numpy.array( [ [ [ pv1[0], pv1[2], pv1[5], pv1[9] ],
-                                   [ pv1[1], pv1[4], pv1[8],   0.   ],
-                                   [ pv1[3], pv1[7],   0.  ,   0.   ],
-                                   [ pv1[6],   0.  ,   0.  ,   0.   ] ],
-                                 [ [ pv2[0], pv2[1], pv2[3], pv2[6] ],
-                                   [ pv2[2], pv2[4], pv2[7],   0.   ],
-                                   [ pv2[5], pv2[8],   0.  ,   0.   ],
-                                   [ pv2[9],   0.  ,   0.  ,   0.   ] ] ] )
+        self.pv = np.array( [ [ [ pv1[0], pv1[2], pv1[5], pv1[9] ],
+                                [ pv1[1], pv1[4], pv1[8],   0.   ],
+                                [ pv1[3], pv1[7],   0.  ,   0.   ],
+                                [ pv1[6],   0.  ,   0.  ,   0.   ] ],
+                              [ [ pv2[0], pv2[1], pv2[3], pv2[6] ],
+                                [ pv2[2], pv2[4], pv2[7],   0.   ],
+                                [ pv2[5], pv2[8],   0.  ,   0.   ],
+                                [ pv2[9],   0.  ,   0.  ,   0.   ] ] ] )
 
     def _read_sip(self, header):
-        import numpy
         a_order = int(header['A_ORDER'])
         b_order = int(header['B_ORDER'])
         order = max(a_order,b_order)  # Use the same order for both
         a = [ float(header.get('A_'+str(i)+'_'+str(j),0.)) 
                 for i in range(order+1) for j in range(order+1) ]
-        a = numpy.array(a).reshape((order+1,order+1))
+        a = np.array(a).reshape((order+1,order+1))
         b = [ float(header.get('B_'+str(i)+'_'+str(j),0.)) 
                 for i in range(order+1) for j in range(order+1) ]
-        b = numpy.array(b).reshape((order+1,order+1))
-        self.ab = numpy.array([a, b])
+        b = np.array(b).reshape((order+1,order+1))
+        self.ab = np.array([a, b])
 
         # The reverse transformation is not required to be there.
         if 'AP_ORDER' in header:
@@ -1145,11 +1136,11 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             order = max(ap_order,bp_order)  # Use the same order for both
             ap = [ float(header.get('AP_'+str(i)+'_'+str(j),0.)) 
                     for i in range(order+1) for j in range(order+1) ]
-            ap = numpy.array(ap).reshape((order+1,order+1))
+            ap = np.array(ap).reshape((order+1,order+1))
             bp = [ float(header.get('BP_'+str(i)+'_'+str(j),0.)) 
                     for i in range(order+1) for j in range(order+1) ]
-            bp = numpy.array(bp).reshape((order+1,order+1))
-            self.abp = numpy.array([ap, bp])
+            bp = np.array(bp).reshape((order+1,order+1))
+            self.abp = np.array([ap, bp])
 
     def _read_tnx(self, header):
 
@@ -1204,8 +1195,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         pv2[0,1] += 1.
 
         # Finally, store these as our pv 3-d array.
-        import numpy
-        self.pv = numpy.array([pv1, pv2])
+        self.pv = np.array([pv1, pv2])
 
         # We've now converted this to TPV, so call it that when we output to a fits header.
         self.wcs_type = 'TPV'
@@ -1246,11 +1236,10 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             raise RuntimeError("Wrong number of items found in WAT data")
 
         # Put these into our matrix formulation.
-        import numpy
-        pv = numpy.array( [ [ pv1[0], pv1[4], pv1[7], pv1[9] ],
-                            [ pv1[1], pv1[5], pv1[8],   0.   ],
-                            [ pv1[2], pv1[6],   0.  ,   0.   ],
-                            [ pv1[3],   0.  ,   0.  ,   0.   ] ] )
+        pv = np.array( [ [ pv1[0], pv1[4], pv1[7], pv1[9] ],
+                         [ pv1[1], pv1[5], pv1[8],   0.   ],
+                         [ pv1[2], pv1[6],   0.  ,   0.   ],
+                         [ pv1[3],   0.  ,   0.  ,   0.   ] ] )
 
         # Convert from Legendre or Chebyshev polynomials into regular polynomials.
         if code < 3:
@@ -1277,8 +1266,8 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             b = 2./(xmax-xmin)
             c = -(ymax+ymin)/(ymax-ymin)
             d = 2./(ymax-ymin)
-            xm = numpy.zeros((4,4))
-            ym = numpy.zeros((4,4))
+            xm = np.zeros((4,4))
+            ym = np.zeros((4,4))
             xm[0,0] = 1.
             xm[1,0] = a
             xm[1,1] = b
@@ -1307,34 +1296,33 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
                     ym[m] = ((2.*m-1.) * c * ym[m-1] - (m-1.) * ym[m-2]) / m
                     ym[m,1:] += ((2.*m-1.) * d * ym[m-1,:-1]) / m
 
-            pv2 = numpy.dot(xm.T , numpy.dot(pv, ym))
+            pv2 = np.dot(xm.T , np.dot(pv, ym))
             return pv2
 
     def _radec(self, x, y):
-        import numpy
 
         # Start with (x,y) = the image position
-        p1 = numpy.array( [ numpy.atleast_1d(x), numpy.atleast_1d(y) ] )
+        p1 = np.array( [ np.atleast_1d(x), np.atleast_1d(y) ] )
 
-        p1 -= self.crpix[:,numpy.newaxis]
+        p1 -= self.crpix[:,np.newaxis]
 
         if self.ab is not None:
             xx = p1[0]
             yy = p1[1]
-            ones = numpy.ones(xx.shape)
+            ones = np.ones(xx.shape)
             order = len(self.ab[0])-1
-            xpow = numpy.array([ ones for i in range(order+1) ])
+            xpow = np.array([ ones for i in range(order+1) ])
             xpow[1] = xx
             for i in range(2,order+1): xpow[i] = xpow[i-1] * xx
-            ypow = numpy.array([ ones for i in range(order+1) ])
+            ypow = np.array([ ones for i in range(order+1) ])
             ypow[1] = yy
             for i in range(2,order+1): ypow[i] = ypow[i-1] * yy
             # See below for the explanation of this calculation
-            temp = numpy.dot(self.ab, ypow)
-            p1 += numpy.sum(xpow * temp, axis=1)
+            temp = np.dot(self.ab, ypow)
+            p1 += np.sum(xpow * temp, axis=1)
 
         # This converts to (u,v) in the tangent plane
-        p2 = numpy.dot(self.cd, p1)
+        p2 = np.dot(self.cd, p1)
 
         if self.pv is not None:
             # Now we apply the distortion terms
@@ -1342,9 +1330,9 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             v = p2[1]
             usq = u*u
             vsq = v*v
-            ones = numpy.ones(u.shape)
-            upow = numpy.array([ ones, u, usq, usq*u ])
-            vpow = numpy.array([ ones, v, vsq, vsq*v ])
+            ones = np.ones(u.shape)
+            upow = np.array([ ones, u, usq, usq*u ])
+            vpow = np.array([ ones, v, vsq, vsq*v ])
             # If we only have one input position, then p2 is 
             #     p2[0] = upowT . pv[0] . vpow
             #     p2[1] = upowT . pv[1] . vpow
@@ -1353,8 +1341,8 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             # The values we want are the diagonal of the matrix you would get from the 
             # above formulae.  So we use the fact that 
             #     diag(AT . B) = sum_rows(A * B)
-            temp = numpy.dot(self.pv, vpow)
-            p2 = numpy.sum(upow * temp, axis=1)
+            temp = np.dot(self.pv, vpow)
+            p2 = np.sum(upow * temp, axis=1)
 
         # Convert (u,v) from degrees to arcsec
         # Also, the FITS standard defines u,v backwards relative to our standard.
@@ -1377,7 +1365,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             return ra[0], dec[0]
  
     def _xy(self, ra, dec):
-        import numpy, numpy.linalg
+        import numpy.linalg
 
         u, v = self.center.project_rad(ra, dec, projection=self.projection)
 
@@ -1386,7 +1374,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         u *= -factor
         v *= factor
 
-        p2 = numpy.array( [ u, v ] )
+        p2 = np.array( [ u, v ] )
 
         if self.pv is not None:
             # Let (s,t) be the current value of (u,v).  Then we want to find a new (u,v) such that
@@ -1408,13 +1396,13 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             for iter in range(MAX_ITER):
                 usq = u*u
                 vsq = v*v
-                upow = numpy.array([ 1., u, usq, usq*u ])
-                vpow = numpy.array([ 1., v, vsq, vsq*v ])
+                upow = np.array([ 1., u, usq, usq*u ])
+                vpow = np.array([ 1., v, vsq, vsq*v ])
 
-                diff = numpy.dot(numpy.dot(self.pv, vpow), upow) - p2
+                diff = np.dot(np.dot(self.pv, vpow), upow) - p2
 
                 # Check that things are improving...
-                err = numpy.max(numpy.abs(diff))
+                err = np.max(np.abs(diff))
                 if prev_err:
                     if err > prev_err:
                         raise RuntimeError("Unable to solve for image_pos (not improving)")
@@ -1423,30 +1411,30 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
                 # If we are below tolerance, break out of the loop
                 if err < TOL: 
                     # Update p2 to the new value.
-                    p2 = numpy.array( [ u, v ] )
+                    p2 = np.array( [ u, v ] )
                     break
                 else:
-                    dupow = numpy.array([ 0., 1., 2.*u, 3.*usq ])
-                    dvpow = numpy.array([ 0., 1., 2.*v, 3.*vsq ])
-                    j1 = numpy.transpose([ numpy.dot(numpy.dot(self.pv, vpow), dupow) ,
-                                           numpy.dot(numpy.dot(self.pv, dvpow), upow) ])
+                    dupow = np.array([ 0., 1., 2.*u, 3.*usq ])
+                    dvpow = np.array([ 0., 1., 2.*v, 3.*vsq ])
+                    j1 = np.transpose([ np.dot(np.dot(self.pv, vpow), dupow) ,
+                                        np.dot(np.dot(self.pv, dvpow), upow) ])
                     dp = numpy.linalg.solve(j1, diff)
                     u -= dp[0]
                     v -= dp[1]
             if not err < TOL:
                 raise RuntimeError("Unable to solve for image_pos (max iter reached)")
 
-        p1 = numpy.dot(numpy.linalg.inv(self.cd), p2)
+        p1 = np.dot(numpy.linalg.inv(self.cd), p2)
 
         if self.ab is not None:
             x = p1[0]
             y = p1[1]
             order = len(self.ab[0])-1
             if self.abp is not None:
-                xpow = x ** numpy.arange(order+1)
-                ypow = y ** numpy.arange(order+1)
-                temp = numpy.dot(self.abp, ypow)
-                dp1 = numpy.sum(xpow * temp, axis=1)
+                xpow = x ** np.arange(order+1)
+                ypow = y ** np.arange(order+1)
+                temp = np.dot(self.abp, ypow)
+                dp1 = np.sum(xpow * temp, axis=1)
                 x += dp1[0]
                 y += dp1[1]
 
@@ -1462,13 +1450,13 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             for iter in range(MAX_ITER):
                 # Slightly easier here than in _radec function, since we don't have to worry
                 # about the possibility of doing many x,y at once.
-                xpow = x ** numpy.arange(order+1)
-                ypow = y ** numpy.arange(order+1)
+                xpow = x ** np.arange(order+1)
+                ypow = y ** np.arange(order+1)
 
-                diff = numpy.dot(numpy.dot(self.ab, ypow), xpow) + numpy.array([x,y]) - p1
+                diff = np.dot(np.dot(self.ab, ypow), xpow) + np.array([x,y]) - p1
 
                 # Check that things are improving...
-                err = numpy.max(numpy.abs(diff))
+                err = np.max(np.abs(diff))
                 if prev_err:
                     if err > prev_err:
                         raise RuntimeError("Unable to solve for image_pos (not improving)")
@@ -1477,16 +1465,16 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
                 # If we are below tolerance, break out of the loop
                 if err < TOL: 
                     # Update p2 to the new value.
-                    p1 = numpy.array( [ x, y ] )
+                    p1 = np.array( [ x, y ] )
                     break
                 else:
-                    dxpow = numpy.zeros(order+1)
-                    dypow = numpy.zeros(order+1)
-                    dxpow[1:] = (numpy.arange(order)+1.) * xpow[:-1]
-                    dypow[1:] = (numpy.arange(order)+1.) * ypow[:-1]
-                    j1 = numpy.transpose([ numpy.dot(numpy.dot(self.ab, ypow), dxpow) ,
-                                           numpy.dot(numpy.dot(self.ab, dypow), xpow) ])
-                    j1 += numpy.diag([1,1])
+                    dxpow = np.zeros(order+1)
+                    dypow = np.zeros(order+1)
+                    dxpow[1:] = (np.arange(order)+1.) * xpow[:-1]
+                    dypow[1:] = (np.arange(order)+1.) * ypow[:-1]
+                    j1 = np.transpose([ np.dot(np.dot(self.ab, ypow), dxpow) ,
+                                        np.dot(np.dot(self.ab, dypow), xpow) ])
+                    j1 += np.diag([1,1])
                     dp = numpy.linalg.solve(j1, diff)
                     x -= dp[0]
                     y -= dp[1]
@@ -1518,11 +1506,10 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         # We also need to keep track of the position along the way, so we have to repeat many
         # of the steps in _radec.
 
-        import numpy
-        p1 = numpy.array( [ image_pos.x, image_pos.y ] )
+        p1 = np.array( [ image_pos.x, image_pos.y ] )
 
         # Start with unit jacobian
-        jac = numpy.diag([1,1])
+        jac = np.diag([1,1])
 
         # No effect on the jacobian from this step.
         p1 -= self.crpix
@@ -1531,22 +1518,22 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             x = p1[0]
             y = p1[1]
             order = len(self.ab[0])-1
-            xpow = x ** numpy.arange(order+1)
-            ypow = y ** numpy.arange(order+1)
-            p1 += numpy.dot(numpy.dot(self.ab, ypow), xpow)
+            xpow = x ** np.arange(order+1)
+            ypow = y ** np.arange(order+1)
+            p1 += np.dot(np.dot(self.ab, ypow), xpow)
 
-            dxpow = numpy.zeros(order+1)
-            dypow = numpy.zeros(order+1)
-            dxpow[1:] = (numpy.arange(order)+1.) * xpow[:-1]
-            dypow[1:] = (numpy.arange(order)+1.) * ypow[:-1]
-            j1 = numpy.transpose([ numpy.dot(numpy.dot(self.ab, ypow), dxpow) ,
-                                   numpy.dot(numpy.dot(self.ab, dypow), xpow) ])
-            j1 += numpy.diag([1,1])
-            jac = numpy.dot(j1,jac)
+            dxpow = np.zeros(order+1)
+            dypow = np.zeros(order+1)
+            dxpow[1:] = (np.arange(order)+1.) * xpow[:-1]
+            dypow[1:] = (np.arange(order)+1.) * ypow[:-1]
+            j1 = np.transpose([ np.dot(np.dot(self.ab, ypow), dxpow) ,
+                                np.dot(np.dot(self.ab, dypow), xpow) ])
+            j1 += np.diag([1,1])
+            jac = np.dot(j1,jac)
 
         # The jacobian here is just the cd matrix.
-        p2 = numpy.dot(self.cd, p1)
-        jac = numpy.dot(self.cd, jac)
+        p2 = np.dot(self.cd, p1)
+        jac = np.dot(self.cd, jac)
         
         if self.pv is not None:
             # Now we apply the distortion terms
@@ -1555,31 +1542,31 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             usq = u*u
             vsq = v*v
 
-            upow = numpy.array([ 1., u, usq, usq*u ])
-            vpow = numpy.array([ 1., v, vsq, vsq*v ])
+            upow = np.array([ 1., u, usq, usq*u ])
+            vpow = np.array([ 1., v, vsq, vsq*v ])
 
-            p2 = numpy.dot(numpy.dot(self.pv, vpow), upow)
+            p2 = np.dot(np.dot(self.pv, vpow), upow)
 
             # The columns of the jacobian for this step are the same function with dupow 
             # or dvpow.
-            dupow = numpy.array([ 0., 1., 2.*u, 3.*usq ])
-            dvpow = numpy.array([ 0., 1., 2.*v, 3.*vsq ])
-            j1 = numpy.transpose([ numpy.dot(numpy.dot(self.pv, vpow), dupow) ,
-                                   numpy.dot(numpy.dot(self.pv, dvpow), upow) ])
-            jac = numpy.dot(j1,jac)
+            dupow = np.array([ 0., 1., 2.*u, 3.*usq ])
+            dvpow = np.array([ 0., 1., 2.*v, 3.*vsq ])
+            j1 = np.transpose([ np.dot(np.dot(self.pv, vpow), dupow) ,
+                                np.dot(np.dot(self.pv, dvpow), upow) ])
+            jac = np.dot(j1,jac)
 
         unit_convert = [ -1 * galsim.degrees / galsim.arcsec, 1 * galsim.degrees / galsim.arcsec ]
         p2 *= unit_convert
         # Subtle point: Don't use jac *= ..., because jac might currently be self.cd, and 
         #               that would change self.cd!
-        jac = jac * numpy.transpose( [ unit_convert ] )
+        jac = jac * np.transpose( [ unit_convert ] )
 
         # Finally convert from (u,v) to (ra, dec).  We have a special function that computes
         # the jacobian of this step in the CelestialCoord class.
         drdu, drdv, dddu, dddv = self.center.deproject_jac(p2[0], p2[1], projection=self.projection)
-        j2 = numpy.array([ [ drdu, drdv ],
-                           [ dddu, dddv ] ])
-        jac = numpy.dot(j2,jac)
+        j2 = np.array([ [ drdu, drdv ],
+                        [ dddu, dddv ] ])
+        jac = np.dot(j2,jac)
 
         return galsim.JacobianWCS(jac[0,0], jac[0,1], jac[1,0], jac[1,1])
 
@@ -1649,20 +1636,18 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         return copy.copy(self)
 
     def __eq__(self, other):
-        import numpy
         return ( isinstance(other, GSFitsWCS) and
                  self.wcs_type == other.wcs_type and
-                 numpy.array_equal(self.crpix,other.crpix) and
-                 numpy.array_equal(self.cd,other.cd) and
-                 numpy.array_equal(self.cd,other.cd) and
+                 np.array_equal(self.crpix,other.crpix) and
+                 np.array_equal(self.cd,other.cd) and
+                 np.array_equal(self.cd,other.cd) and
                  self.center == other.center and
-                 numpy.array_equal(self.pv,other.pv) and
-                 numpy.array_equal(self.ab,other.ab) and
-                 numpy.array_equal(self.abp,other.abp) 
+                 np.array_equal(self.pv,other.pv) and
+                 np.array_equal(self.ab,other.ab) and
+                 np.array_equal(self.abp,other.abp)
                )
 
     def __repr__(self):
-        import numpy
         if self.pv is None:
             pv_repr = repr(self.pv)
         else:
@@ -1706,7 +1691,7 @@ def TanWCS(affine, world_origin, units=galsim.arcsec):
 
     @returns a GSFitsWCS describing this WCS.
     """
-    import numpy, numpy.linalg
+    import numpy.linalg
     # These will raise the appropriate errors if affine is not the right type.
     dudx = affine.dudx * units / galsim.degrees
     dudy = affine.dudy * units / galsim.degrees
@@ -1715,8 +1700,8 @@ def TanWCS(affine, world_origin, units=galsim.arcsec):
     origin = affine.origin
     # The - signs are because the Fits standard is in terms of +u going east, rather than west
     # as we have defined.  So just switch the sign in the CD matrix.
-    cd = numpy.array( [ [ -dudx, -dudy ], [ dvdx, dvdy ] ] )
-    crpix = numpy.array( [ origin.x, origin.y ] )
+    cd = np.array( [ [ -dudx, -dudy ], [ dvdx, dvdy ] ] )
+    crpix = np.array( [ origin.x, origin.y ] )
 
     if affine.world_origin is not None:
         # Then we need to absorb this back into crpix, since GSFits is expecting crpix to 
@@ -1725,9 +1710,9 @@ def TanWCS(affine, world_origin, units=galsim.arcsec):
         # (0,0) = CD * (x0',y0') - CD * (x0,y0) + (u0,v0)
         # CD (x0',y0') = CD (x0,y0) - (u0,v0)
         # (x0',y0') = (x0,y0) - CD^-1 (u0,v0)
-        uv = numpy.array( [ affine.world_origin.x * units / galsim.degrees,
-                            affine.world_origin.y * units / galsim.degrees ] )
-        crpix -= numpy.dot(numpy.linalg.inv(cd) , uv)
+        uv = np.array( [ affine.world_origin.x * units / galsim.degrees,
+                         affine.world_origin.y * units / galsim.degrees ] )
+        crpix -= np.dot(np.linalg.inv(cd) , uv)
 
     # Invoke the private constructor of GSFits using the _data kwarg.
     data = ('TAN', crpix, cd, world_origin, None, None, None)

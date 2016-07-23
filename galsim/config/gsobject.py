@@ -72,8 +72,6 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         param = config[key]
     except KeyError:
         return None, True
-    if logger:
-        logger.debug('obj %d: param = %s',base['obj_num'],param)
 
     # Save these, so we can edit them based on parameters at this level in the tree to take
     # effect on all lower branches, and then we can reset it back to this at the end.
@@ -177,8 +175,6 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     # See if this type has a specialized build function:
     if type_name in valid_gsobject_types:
         build_func = valid_gsobject_types[type_name]
-        if logger:
-            logger.debug('obj %d: build_func = %s',base['obj_num'],build_func)
         gsobject, safe = build_func(param, base, ignore, gsparams, logger)
     # Next, we check if this name is in the galsim dictionary.
     elif type_name in galsim.__dict__:
@@ -246,7 +242,6 @@ def _BuildSimple(config, base, ignore, gsparams, logger):
         init_func = eval(type_name)
     if logger:
         logger.debug('obj %d: BuildSimple for type = %s',base['obj_num'],type_name)
-        logger.debug('obj %d: init_func = %s',base['obj_num'],init_func)
 
     kwargs, safe = galsim.config.GetAllParams(config, base,
                                               req = init_func._req_params,

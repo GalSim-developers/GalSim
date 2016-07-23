@@ -194,6 +194,10 @@ class _ReadFile:
                 hdu_list = pyfits.open(file, 'readonly')
             return hdu_list, None
         elif file_compress == 'gzip':
+            # Before trying all the gzip options, first make sure the file exists and is readable.
+            # The easiest way to do this is to try to open it.  Just let the open command return
+            # its normal error message if the file doesn't exist or cannot be opened.
+            with open(file) as fid: pass
             while self.gz_index < len(self.gz_methods):
                 try:
                     return self.gz(file)
@@ -202,6 +206,7 @@ class _ReadFile:
                     self.gz = self.gz_methods[self.gz_index]
             raise RuntimeError("None of the options for gunzipping were successful.")
         elif file_compress == 'bzip2':
+            with open(file) as fid: pass
             while self.bz2_index < len(self.bz2_methods):
                 try:
                     return self.bz2(file)
