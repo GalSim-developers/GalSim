@@ -438,7 +438,7 @@ def test_wfirst_psfs():
     # in 2 pixels!).
     diff_im = 0.5*(im_int.array-im_achrom.array)
     np.testing.assert_array_almost_equal(
-        diff_im, np.zeros_like(diff_im), decimal=3, 
+        diff_im, np.zeros_like(diff_im), decimal=3,
         err_msg='PSF at a given wavelength and interpolated chromatic one evaluated at that '
         'wavelength disagree.')
 
@@ -483,6 +483,33 @@ def test_wfirst_psfs():
 
         # Delete test files when done.
         os.remove(test_file)
+
+    # Test the construction of PSFs with high_accuracy and/or not approximate_struts
+    # But only if we're runnign from the command line.
+    if __name__ == '__main__':
+        for kwargs in [
+            { 'approximate_struts':True, 'high_accuracy':False },  # This is a repeat of the above
+            { 'approximate_struts':True, 'high_accuracy':True },   # These three are all new.
+            { 'approximate_struts':False, 'high_accuracy':False },
+            # This last test works, but it takes ~10 min to run.  So even in the slow tests,
+            # this is a bit too extreme.
+            #{ 'approximate_struts':False, 'high_accuracy':True,
+            #  'gsparams':galsim.GSParams(maximum_fft_size=8192) }
+            ]:
+
+            psf = galsim.wfirst.getPSF(SCAs=use_sca, **kwargs)[use_sca]
+            psf_achrom = galsim.wfirst.getPSF(SCAs=use_sca, wavelength=use_lam, **kwargs)[use_sca]
+            psf_chrom = psf.evaluateAtWavelength(use_lam)
+            im_achrom = psf_achrom.drawImage(scale=galsim.wfirst.pixel_scale)
+            im_chrom = psf_chrom.drawImage(image=im_achrom.copy())
+            im_achrom.write('im_achrom.fits')
+            im_chrom.write('im_chrom.fits')
+            print("chrom, achrom fluxes = ", im_chrom.array.sum(), im_achrom.array.sum())
+            im_chrom *= im_achrom.array.sum()/im_chrom.array.sum()
+            print("max diff = ",np.max(np.abs(im_chrom.array - im_achrom.array)))
+            np.testing.assert_array_almost_equal(
+                im_chrom.array, im_achrom.array, decimal=8,
+                err_msg='getPSF with %s has discrepency for chrom/achrom'%kwargs)
 
     # Check for exceptions if we:
     # (1) Include optional aberrations in an unacceptable form.

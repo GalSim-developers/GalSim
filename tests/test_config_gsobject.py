@@ -278,9 +278,9 @@ def test_opticalpsf():
                    'magnify' : 1.03, 'shear' : galsim.Shear(g1=0.03, g2=-0.05),
                    'shift' : { 'type' : 'XY', 'x' : 0.7, 'y' : -1.2 }
                  },
-        'gal5' : { 'type': 'OpticalPSF' , 'lam_over_diam' : 0.12, 'flux' : 1.8,
+        'gal5' : { 'type': 'OpticalPSF' , 'lam' : 900, 'diam' : 2.4, 'flux' : 1.8,
                    'defocus' : 0.1, 'obscuration' : 0.18,
-                   'pupil_plane_im' : \
+                   'pupil_plane_im' :
                        os.path.join(".","Optics_comparison_images","sample_pupil_rolled.fits"),
                    'pupil_angle' : 27.*galsim.degrees },
         'gal6' : {'type' : 'OpticalPSF' , 'lam' : 874.0, 'diam' : 7.4, 'flux' : 70.,
@@ -316,7 +316,7 @@ def test_opticalpsf():
 
     gal5a = galsim.config.BuildGSObject(config, 'gal5')[0]
     gal5b = galsim.OpticalPSF(
-        lam_over_diam=0.12, flux=1.8, defocus=0.1, obscuration=0.18,
+        lam=900, diam=2.4, flux=1.8, defocus=0.1, obscuration=0.18,
         pupil_plane_im=os.path.join(".","Optics_comparison_images","sample_pupil_rolled.fits"),
         pupil_angle=27.*galsim.degrees)
     gsobject_compare(gal5a, gal5b)
