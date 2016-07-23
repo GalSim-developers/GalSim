@@ -491,8 +491,11 @@ def test_wfirst_psfs():
             { 'approximate_struts':True, 'high_accuracy':False },  # This is a repeat of the above
             { 'approximate_struts':True, 'high_accuracy':True },   # These three are all new.
             { 'approximate_struts':False, 'high_accuracy':False },
-            { 'approximate_struts':False, 'high_accuracy':True,
-              'gsparams':galsim.GSParams(maximum_fft_size=8192) } ]:
+            # This last test works, but it takes ~10 min to run.  So even in the slow tests,
+            # this is a bit too extreme.
+            #{ 'approximate_struts':False, 'high_accuracy':True,
+            #  'gsparams':galsim.GSParams(maximum_fft_size=8192) }
+            ]:
 
             psf = galsim.wfirst.getPSF(SCAs=use_sca, **kwargs)[use_sca]
             psf_achrom = galsim.wfirst.getPSF(SCAs=use_sca, wavelength=use_lam, **kwargs)[use_sca]
