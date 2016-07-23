@@ -109,6 +109,9 @@ def ReadJson(config_file):
         except TypeError:
             # for python2.6, json doesn't come with the object_pairs_hook, so 
             # try using simplejson, and if that doesn't work, just use a regular dict.
+            # Also, it seems that if the above line raises an exception, the file handle
+            # is not left at the beginning, so seek back to 0.
+            f.seek(0)
             try:
                 import simplejson
                 config = simplejson.load(f, object_pairs_hook=OrderedDict)
