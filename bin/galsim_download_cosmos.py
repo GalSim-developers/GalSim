@@ -200,7 +200,8 @@ def download(url, target, unpack_dir, args, logger):
                 if yn == 'no':
                     do_download = False
         else:
-            logger.warn("Target file already exists, but it seems to be incomplete or corrupt.")
+            logger.warn("Target file already exists, but it seems to be either incomplete, "
+                        "corrupt, or obsolete")
             if args.quiet:
                 logger.warn("Size of existing file = %d MBytes.  Re-downloading.",
                             existing_file_size/1024**2)
