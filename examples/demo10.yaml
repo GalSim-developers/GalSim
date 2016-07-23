@@ -33,7 +33,7 @@
 #
 # New features introduced in this demo:
 #
-# - obj type : Ring (..., full_rotation)
+# - stamp type : Ring (..., full_rotation)
 # - obj type : RealGalaxy (..., id)
 # - type : Eval using world_pos variable, user-defined variables and math functions
 # - type : Current
