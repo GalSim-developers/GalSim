@@ -232,7 +232,8 @@ class COSMOSCatalog(object):
             import warnings
             warnings.warn(
                 'You seem to have an old version of the COSMOS parameter file. '+
-                'Please run `galsim_download_cosmos` to re-download the COSMOS catalog.')
+                'Please run `galsim_download_cosmos -s %s` '%self.use_sample+
+                'to re-download the COSMOS catalog.')
 
         # NB. The pyfits FITS_Rec class has a bug where it makes a copy of the full
         # record array in each record (e.g. in getParametricRecord) and then doesn't
@@ -301,7 +302,8 @@ class COSMOSCatalog(object):
                 warnings.warn(
                     'File with GalSim selection criteria not found! '+
                     'Not all of the requested exclusions will be performed. '+
-                    'Run the program galsim_download_cosmos to get the necessary selection file.')
+                    'Run the program `galsim_download_cosmos -s %s` '%self.use_sample+
+                    'to get the necessary selection file.')
 
             # Finally, impose a cut that the total flux in the postage stamp should be positive,
             # which excludes a tiny number of galaxies (of order 10 in each sample) with some sky
@@ -316,8 +318,8 @@ class COSMOSCatalog(object):
                         'This version of the COSMOS catalog does not have info about total flux in '+
                         'the galaxy postage stamps.  Exclusion of negative-flux stamps in advance '+
                         'cannot be done. '+
-                        'Run the program galsim_download_cosmos to get the updated catalog with this '+
-                        'information precomputed.')
+                        'Run the program `galsim_download_cosmos -s %s` '%self.use_sample+
+                        'to get the updated catalog with this information precomputed.')
 
         if exclusion_level in ['bad_fits', 'marginal']:
             # This 'exclusion_level' involves eliminating failed parametric fits (bad fit status
@@ -366,8 +368,8 @@ class COSMOSCatalog(object):
                 import warnings
                 warnings.warn(
                     'You seem to have an old version of the COSMOS parameter file. '+
-                    'Please run `galsim_download_cosmos` to re-download the COSMOS catalog ' +
-                    'to get faster and more accurate selection.')
+                    'Please run `galsim_download_cosmos -s %s` '%self.use_sample+
+                    'to re-download the COSMOS catalog to get faster and more accurate selection.')
 
                 sparams = self.param_cat['sersicfit']
                 hlr_pix = sparams[:,1]
@@ -526,7 +528,8 @@ class COSMOSCatalog(object):
                 import warnings
                 warnings.warn(
                     'You seem to have an old version of the COSMOS parameter file. '+
-                    'Please run `galsim_download_cosmos` to re-download the COSMOS catalog ' +
+                    'Please run `galsim_download_cosmos -s %s` '%self.use_sample+
+                    'to re-download the COSMOS catalog '+
                     'and take advantage of pre-computation of many quantities..')
 
             gal_list = self._makeParametric(indices, chromatic, sersic_prec, gsparams)
