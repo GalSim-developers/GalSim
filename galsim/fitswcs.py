@@ -123,6 +123,14 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             hdu, hdu_list, fin = galsim.fits.readFile(file_name, dir, hdu, compression)
             header = hdu.header
 
+        # At least as late as version 1.1.2, astropy thinks it knows how to parse ZPX files,
+        # but can at least sometimes seg fault when it tries to parse the header.  Check for
+        # that explicitly here and raise an exception before getting to _load_from_header
+        # Note: I think this is fixed in 1.2, but I'm not 100% sure.
+        if (astropy.__version__ < '1.2' and header is not None and
+            'CTYPE1' in header and 'ZPX' in header['CTYPE1'].upper()):
+            raise RuntimeError("AstropyWCS cannot (always) parse ZPX files")
+
         # Load the wcs from the header.
         if header is not None:
             if self._tag is None: 
