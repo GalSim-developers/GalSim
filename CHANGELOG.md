@@ -89,8 +89,8 @@ New Features
   GSObject and Image. (#308)
 - Added LookupTable2D to facilitate quick interpolation of two-dimensional
   tabular data. (#465)
-- Added support for Python 3.  Specifically, we tested with Python 3.4, but we
-  expect that it should work for Python versions >= 3.3. (#534)
+- Added support for Python 3.  Specifically, we tested with Python 3.4 and 3.5,
+  but we expect that it should work for Python versions >= 3.3. (#534)
 - Added AtmosphericScreen, OpticalScreen, and PhaseScreenList used
   to generate PSFs via Fourier optics. (#549)
 - Added PhaseScreenPSF to transform PhaseScreens into GSObjects.  (#549)
