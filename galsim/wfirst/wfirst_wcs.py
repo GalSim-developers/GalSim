@@ -304,6 +304,7 @@ def findSCA(wcs_dict, world_pos, include_border=False):
     close enough that in a small dither sequence it might appear on the SCA at some point.  Use of
     `include_border` switches between these scenarios.
 
+    @param wcs_dict         The dict of WCS's output from galsim.wfirst.getWCS().
     @param world_pos        A galsim.CelestialCoord indicating the sky position of interest.
     @param include_border   If True, then include the half-border around SCA to cover the gap
                             between each sensor. [default: False]
