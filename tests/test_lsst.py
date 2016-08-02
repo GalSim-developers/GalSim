@@ -374,7 +374,7 @@ class LsstCameraTestClass(unittest.TestCase):
         chip_name_possibilities = ('R:0,1 S:1,1', 'R:0,3 S:0,2', 'R:4,2 S:2,2', 'R:3,4 S:0,2')
 
         chip_name_list = [chip_name_possibilities[ii]
-                          for ii in rng.random_integers(0,3,n_samples)]
+                          for ii in rng.randint(0,3,n_samples)]
 
         x_pix_list, y_pix_list = \
         self.camera._pixel_coord_from_point_and_name(camera_point_list, chip_name_list)
