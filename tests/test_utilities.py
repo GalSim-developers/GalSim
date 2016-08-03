@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import numpy as np
 import os
 import sys
@@ -32,13 +34,13 @@ testshape = (512, 512)  # shape of image arrays for all tests
 decimal = 6     # Last decimal place used for checking equality of float arrays, see
                 # np.testing.assert_array_almost_equal(), low since many are ImageF
 
+
+@timer
 def test_roll2d_circularity():
     """Test both integer and float arrays are unchanged by full circular roll.
     """
-    import time
-    t1 = time.time()
     # Make heterogenous 2D array, integers first, test that a full roll gives the same as the inputs
-    int_image = np.random.random_integers(low=0, high=1, size=testshape)
+    int_image = np.random.randint(low=0, high=1+1, size=testshape)
     np.testing.assert_array_equal(int_image,
                                   galsim.utilities.roll2d(int_image, int_image.shape),
                                   err_msg='galsim.utilities.roll2D failed int array circularity')
@@ -47,16 +49,14 @@ def test_roll2d_circularity():
     np.testing.assert_array_equal(flt_image,
                                   galsim.utilities.roll2d(flt_image, flt_image.shape),
                                   err_msg='galsim.utilities.roll2D failed flt array circularity')
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+@timer
 def test_roll2d_fwdbck():
     """Test both integer and float arrays are unchanged by unit forward and backward roll.
     """
-    import time
-    t1 = time.time()
     # Make heterogenous 2D array, integers first, test that a +1, -1 roll gives the same as initial
-    int_image = np.random.random_integers(low=0, high=1, size=testshape)
+    int_image = np.random.randint(low=0, high=1+1, size=testshape)
     np.testing.assert_array_equal(int_image,
                                   galsim.utilities.roll2d(galsim.utilities.roll2d(int_image,
                                                                                   (+1, +1)),
@@ -69,16 +69,14 @@ def test_roll2d_fwdbck():
                                                                                   (+1, +1)),
                                                           (-1, -1)),
                                   err_msg='galsim.utilities.roll2D failed flt array fwd/back test')
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+@timer
 def test_roll2d_join():
     """Test both integer and float arrays are equivalent if rolling +1/-1 or -/+(shape[i/j] - 1).
     """
-    import time
-    t1 = time.time()
     # Make heterogenous 2D array, integers first
-    int_image = np.random.random_integers(low=0, high=1, size=testshape)
+    int_image = np.random.randint(low=0, high=1+1, size=testshape)
     np.testing.assert_array_equal(galsim.utilities.roll2d(int_image, (+1, -1)),
                                   galsim.utilities.roll2d(int_image, (-(int_image.shape[0] - 1),
                                                                    +(int_image.shape[1] - 1))),
@@ -97,49 +95,43 @@ def test_roll2d_join():
                                   galsim.utilities.roll2d(flt_image, (+(flt_image.shape[0] - 1),
                                                                    -(flt_image.shape[1] - 1))),
                                   err_msg='galsim.utilities.roll2D failed flt array -/+ join test')
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+@timer
 def test_kxky():
     """Test that the basic properties of kx and ky are right.
     """
-    import time
-    t1 = time.time()
     kx, ky = galsim.utilities.kxky((4, 4))
     kxref = np.array([0., 0.25, -0.5, -0.25]) * 2. * np.pi
     kyref = np.array([0., 0.25, -0.5, -0.25]) * 2. * np.pi
-    for i in xrange(4):
+    for i in range(4):
         np.testing.assert_array_almost_equal(kx[i, :], kxref, decimal=decimal,
                                              err_msg='failed kx equivalence on row i = '+str(i))
-    for j in xrange(4):
+    for j in range(4):
         np.testing.assert_array_almost_equal(ky[:, j], kyref, decimal=decimal,
                                              err_msg='failed ky equivalence on row j = '+str(j))
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+@timer
 def test_kxky_plusone():
     """Test that the basic properties of kx and ky are right...
     But increment testshape used in test_kxky by one to test both odd and even cases.
     """
-    import time
-    t1 = time.time()
     kx, ky = galsim.utilities.kxky((4 + 1, 4 + 1))
     kxref = np.array([0., 0.2, 0.4, -0.4, -0.2]) * 2. * np.pi
     kyref = np.array([0., 0.2, 0.4, -0.4, -0.2]) * 2. * np.pi
-    for i in xrange(4 + 1):
+    for i in range(4 + 1):
         np.testing.assert_array_almost_equal(kx[i, :], kxref, decimal=decimal,
                                              err_msg='failed kx equivalence on row i = '+str(i))
-    for j in xrange(4 + 1):
+    for j in range(4 + 1):
         np.testing.assert_array_almost_equal(ky[:, j], kyref, decimal=decimal,
                                              err_msg='failed ky equivalence on row j = '+str(j))
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+@timer
 def test_check_all_contiguous():
     """Test all galsim.optics outputs are C-contiguous as required by the galsim.Image class.
     """
-    import time
-    t1 = time.time()
     #Check that roll2d outputs contiguous arrays whatever the input
     imcstyle = np.random.random(size=testshape)
     rolltest = galsim.utilities.roll2d(imcstyle, (+1, -1))
@@ -151,13 +143,10 @@ def test_check_all_contiguous():
     kx, ky = galsim.utilities.kxky(testshape)
     assert kx.flags.c_contiguous
     assert ky.flags.c_contiguous
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+@timer
 def test_deInterleaveImage():
-    import time
-    t1 = time.time()
-
     np.random.seed(84) # for generating the same random instances
 
     # 1) Check compatability with interleaveImages
@@ -204,7 +193,7 @@ def test_deInterleaveImage():
 
     im_list0, offsets0 = galsim.utilities.deInterleaveImage(img0,2,conserve_flux=True)
 
-    for n in xrange(len(im_list0)):
+    for n in range(len(im_list0)):
         im = galsim.Image(16,16)
         g0.drawImage(image=im,offset=offsets0[n],scale=0.5,method='no_pixel')
         np.testing.assert_array_equal(im.array,im_list0[n].array,\
@@ -228,36 +217,32 @@ def test_deInterleaveImage():
     im_list1, offsets1 = galsim.utilities.deInterleaveImage(img1,(n1**2,1),conserve_flux=True)
     im_list2, offsets2 = galsim.utilities.deInterleaveImage(img2,[1,n2**2],conserve_flux=False)
 
-    for n in xrange(n1**2):
+    for n in range(n1**2):
         im, offset = im_list1[n], offsets1[n]
         img = g.drawImage(image=img,offset=offset,scale=0.5,method='no_pixel')
         np.testing.assert_array_equal(im.array,img.array,\
           err_msg='deInterleaveImage does not reduce the resolution correctly along the \
                    vertical direction')
 
-    for n in xrange(n2**2):
+    for n in range(n2**2):
         im, offset = im_list2[n], offsets2[n]
         g.drawImage(image=img,offset=offset,scale=0.5,method='no_pixel')
         np.testing.assert_array_equal(im.array*n2**2,img.array,\
           err_msg='deInterleaveImage does not reduce the resolution correctly along the \
                    horizontal direction')
         # im is scaled to account for flux not being conserved
-    
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)      
 
+
+@timer
 def test_interleaveImages():
-    import time
-    t1 = time.time()
-
     # 1a) With galsim Gaussian
     g = galsim.Gaussian(sigma=3.7,flux=1000.)
     gal = galsim.Convolve([g,galsim.Pixel(1.0)])
     im_list = []
     offset_list = []
     n = 2
-    for j in xrange(n):
-        for i in xrange(n):
+    for j in range(n):
+        for i in range(n):
             im = galsim.Image(16*n,16*n)
             offset = galsim.PositionD(-(i+0.5)/n+0.5,-(j+0.5)/n+0.5)
             offset_list.append(offset)
@@ -318,7 +303,7 @@ def test_interleaveImages():
         N = (n,n)
         np.testing.assert_raises(ValueError,galsim.utilities.interleaveImages,im_list,N,offset_list)
     except ImportError:
-        print "The assert_raises tests require nose"
+        print("The assert_raises tests require nose")
 
     offset_list = []
     im_list = []
@@ -335,9 +320,10 @@ def test_interleaveImages():
 
     try:
         N = (n,n)
-        np.testing.assert_raises(ValueError,galsim.utilities.interleaveImages,im_list,N,offset_list)
+        np.testing.assert_raises(ValueError, galsim.utilities.interleaveImages,
+                                 im_list, N, offset_list)
     except ImportError:
-        print "The assert_raises tests require nose"
+        print("The assert_raises tests require nose")
 
     # 2a) Increase resolution along one direction - square to rectangular images
     n = 2
@@ -345,7 +331,7 @@ def test_interleaveImages():
     gal1 = g.shear(g=1.*(n**2-1)/(n**2+1),beta=0.0*galsim.radians)
     im_list = []
     offset_list = []
-  
+
     # Generating offsets in a natural way
     DY = np.arange(0.0,1.0,1.0/(n*n))
     DY -= DY.mean()
@@ -356,13 +342,15 @@ def test_interleaveImages():
         gal1.drawImage(im,offset=offset,method='no_pixel',scale=2.0)
         im_list.append(im)
 
-    img = galsim.utilities.interleaveImages(im_list,N=[1,n**2],offsets=offset_list,add_flux=False,suppress_warnings=True)
+    img = galsim.utilities.interleaveImages(im_list, N=[1,n**2], offsets=offset_list,
+                                            add_flux=False, suppress_warnings=True)
     im = galsim.Image(16,16*n*n)
     # The interleaved image has the total flux averaged out since `add_flux = False'
     gal = galsim.Gaussian(sigma=3.7*n,flux=100.)
     gal.drawImage(image=im,method='no_pixel',scale=2.0)
 
-    np.testing.assert_array_equal(im.array,img.array,err_msg="Sheared gaussian not interleaved correctly")
+    np.testing.assert_array_equal(im.array, img.array,
+                                  err_msg="Sheared gaussian not interleaved correctly")
     assert img.wcs == galsim.JacobianWCS(2.0,0.0,0.0,2./(n**2))
 
     # 2b) Increase resolution along one direction - rectangular to square images
@@ -382,25 +370,28 @@ def test_interleaveImages():
          gal2.drawImage(im,offset=offset,method='no_pixel',scale=3.0)
          im_list.append(im)
 
-    img = galsim.utilities.interleaveImages(im_list,N=np.array([n**2,1]),offsets=offset_list,suppress_warnings=True)
+    img = galsim.utilities.interleaveImages(im_list, N=np.array([n**2,1]), offsets=offset_list,
+                                            suppress_warnings=True)
     im = galsim.Image(16*n*n,16*n*n)
     gal = galsim.Gaussian(sigma=3.7,flux=100.*n*n)
     scale = im_list[0].scale
     gal.drawImage(image=im,scale=1.*scale/n,method='no_pixel')
 
-    np.testing.assert_array_equal(im.array,img.array,err_msg="Sheared gaussian not interleaved correctly")
+    np.testing.assert_array_equal(im.array, img.array,
+                                  err_msg="Sheared gaussian not interleaved correctly")
     assert img.wcs == galsim.JacobianWCS(1.*scale/n**2,0.0,0.0,scale)
 
     # 3) Check compatability with deInterleaveImage
     n = 3
     g = galsim.Gaussian(sigma=3.7,flux=100.)
-    gal = g.shear(g=0.2,beta=0.*galsim.degrees) # break symmetry to detect possible bugs in deInterleaveImage
+    # break symmetry to detect possible bugs in deInterleaveImage
+    gal = g.shear(g=0.2,beta=0.*galsim.degrees)
     im_list = []
     offset_list = []
 
     # Generating offsets in the order they would be returned by deInterleaveImage, for convenience
-    for i in xrange(n):
-        for j in xrange(n):
+    for i in range(n):
+        for j in range(n):
             im = galsim.Image(16*n,16*n)
             offset = galsim.PositionD(-(i+0.5)/n+0.5,-(j+0.5)/n+0.5)
             offset_list.append(offset)
@@ -411,7 +402,7 @@ def test_interleaveImages():
     img = galsim.utilities.interleaveImages(im_list,N=n,offsets=offset_list)
     im_list_1, offset_list_1 = galsim.utilities.deInterleaveImage(img, N=n)
 
-    for k in xrange(n**2):
+    for k in range(n**2):
         assert offset_list_1[k] == offset_list[k]
         np.testing.assert_array_equal(im_list_1[k].array, im_list[k].array)
         assert im_list_1[k].wcs == im_list[k].wcs
@@ -423,14 +414,13 @@ def test_interleaveImages():
     img = galsim.utilities.interleaveImages(im_list,N=n,offsets=offset_list,add_flux=False)
     im_list_2, offset_list_2 = galsim.utilities.deInterleaveImage(img,N=n,conserve_flux=True)
 
-    for k in xrange(n**2):
+    for k in range(n**2):
         assert offset_list_2[k] == offset_list[k]
         np.testing.assert_array_equal(im_list_2[k].array, im_list[k].array)
         assert im_list_2[k].wcs == im_list[k].wcs
-    
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+
+@timer
 def test_python_LRU_Cache():
     f = lambda x: x+1
     size = 10

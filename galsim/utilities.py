@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,18 +19,21 @@
 Module containing general utilities for the GalSim software.
 """
 from contextlib import contextmanager
+from future.utils import iteritems
+from builtins import range, object
 
 import numpy as np
 import galsim
 
-def roll2d(image, (iroll, jroll)):
+def roll2d(image, shape):
     """Perform a 2D roll (circular shift) on a supplied 2D NumPy array, conveniently.
 
-    @param image            The NumPy array to be circular shifted.
-    @param (iroll, jroll)   The roll in the i and j dimensions, respectively.
+    @param image        The NumPy array to be circular shifted.
+    @param shape        (iroll, jroll) The roll in the i and j dimensions, respectively.
 
     @returns the rolled image.
     """
+    (iroll, jroll) = shape
     return np.roll(np.roll(image, jroll, axis=1), iroll, axis=0)
 
 def kxky(array_shape=(256, 256)):
@@ -199,13 +202,13 @@ class AttributeDict(object):
         self.__dict__.update(other.__dict__)
 
     def _write(self, output, prefix=""):
-        for k, v in self.__dict__.iteritems():
+        for k, v in iteritems(self.__dict__):
             if isinstance(v, AttributeDict):
                 v._write(output, prefix="{0}{1}.".format(prefix, k))
             else:
                 output.append("{0}{1} = {2}".format(prefix, k, repr(v)))
 
-    def __nonzero__(self):
+    def __bool__(self):
         return not not self.__dict__
 
     def __repr__(self):
@@ -280,7 +283,7 @@ def _convertPositions(pos, units, func):
                     np.array(pos[1], dtype='float') ]
 
     # Check validity of units
-    if isinstance(units, basestring):
+    if isinstance(units, str):
         # if the string is invalid, this raises a reasonable error message.
         units = galsim.angle.get_angle_unit(units)
     if not isinstance(units, galsim.AngleUnit):
@@ -296,7 +299,168 @@ def _convertPositions(pos, units, func):
 
     return pos
 
-def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
+def _lin_approx_err(x, f, i):
+    """Error as \int abs(f(x) - approx(x)) when using ith data point to make piecewise linear
+    approximation."""
+    xleft, xright = x[:i+1], x[i:]
+    fleft, fright = f[:i+1], f[i:]
+    xi, fi = x[i], f[i]
+    mleft = (fi-f[0])/(xi-x[0])
+    mright = (f[-1]-fi)/(x[-1]-xi)
+    f2left = f[0]+mleft*(xleft-x[0])
+    f2right = fi+mright*(xright-xi)
+    return np.trapz(np.abs(fleft-f2left), xleft), np.trapz(np.abs(fright-f2right), xright)
+
+def _exact_lin_approx_split(x, f):
+    """Split a tabulated function into a two-part piecewise linear approximation by exactly
+    minimizing \int abs(f(x) - approx(x)) dx.  Operates in O(N^2) time.
+    """
+    errs = [_lin_approx_err(x, f, i) for i in range(1, len(x)-1)]
+    i = np.argmin(np.sum(errs, axis=1))
+    return i+1, errs[i]
+
+def _lin_approx_split(x, f):
+    """Split a tabulated function into a two-part piecewise linear approximation by approximately
+    minimizing \int abs(f(x) - approx(x)) dx.  Chooses the split point by exactly minimizing
+    \int (f(x) - approx(x))^2 dx in O(N) time.
+    """
+    dx = x[2:] - x[:-2]
+    # Error contribution on the left.
+    ff0 = f[1:-1]-f[0]  # Only need to search between j=1..(N-1)
+    xx0 = x[1:-1]-x[0]
+    mleft = ff0/xx0  # slope
+    errleft = (np.cumsum(dx*ff0**2)
+               - 2*mleft*np.cumsum(dx*ff0*xx0)
+               + mleft**2*np.cumsum(dx*xx0**2))
+    # Error contribution on the right.
+    dx = dx[::-1]  # Reversed so that np.cumsum effectively works right-to-left.
+    ffN = f[-2:0:-1]-f[-1]
+    xxN = x[-2:0:-1]-x[-1]
+    mright = ffN/xxN
+    errright = (np.cumsum(dx*ffN**2)
+                - 2*mright*np.cumsum(dx*ffN*xxN)
+                + mright**2*np.cumsum(dx*xxN**2))
+    errright = errright[::-1]
+
+    # Get absolute error for the found point.
+    i = np.argmin(errleft+errright)
+    return i+1, _lin_approx_err(x, f, i+1)
+
+def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=True,
+                          fast_search=True):
+    """
+    Remove items from a set of tabulated f(x) values so that the error in the integral is still
+    accurate to a given relative accuracy.
+
+    The input `x,f` values can be lists, NumPy arrays, or really anything that can be converted
+    to a NumPy array.  The new lists will be output as numpy arrays.
+
+    @param x                The `x` values in the f(x) tabulation.
+    @param f                The `f` values in the f(x) tabulation.
+    @param rel_err          The maximum relative error to allow in the integral from the removal.
+                            [default: 1.e-4]
+    @param trim_zeros       Remove redundant leading and trailing points where f=0?  (The last
+                            leading point with f=0 and the first trailing point with f=0 will be
+                            retained).  Note that if both trim_leading_zeros and preserve_range are
+                            True, then the only the range of `x` *after* zero trimming is preserved.
+                            [default: True]
+    @param preserve_range   Should the original range of `x` be preserved? (True) Or should the ends
+                            be trimmed to include only the region where the integral is
+                            significant? (False)  [default: True]
+    @param fast_search      If set to True, then the underlying algorithm will use a relatively fast
+                            O(N) algorithm to select points to include in the thinned approximation.
+                            If set to False, then a slower O(N^2) algorithm will be used.  We have
+                            found that the slower algorithm tends to yield a thinned representation
+                            that retains fewer samples while still meeting the relative error
+                            requirement.  [default: True]
+
+    @returns a tuple of lists `(x_new, y_new)` with the thinned tabulation.
+    """
+    from heapq import heappush, heappop
+
+    split_fn = _lin_approx_split if fast_search else _exact_lin_approx_split
+
+    x = np.array(x)
+    f = np.array(f)
+
+    # Check for valid inputs
+    if len(x) != len(f):
+        raise ValueError("len(x) != len(f)")
+    if rel_err <= 0 or rel_err >= 1:
+        raise ValueError("rel_err must be between 0 and 1")
+    if not (np.diff(x) >= 0).all():
+        raise ValueError("input x is not sorted.")
+
+    # Check for trivial noop.
+    if len(x) <= 2:
+        # Nothing to do
+        return x,f
+
+    if trim_zeros:
+        first = max(f.nonzero()[0][0]-1, 0)  # -1 to keep one non-redundant zero.
+        last = min(f.nonzero()[0][-1]+1, len(x)-1)  # +1 to keep one non-redundant zero.
+        x, f = x[first:last+1], f[first:last+1]
+
+    total_integ = np.trapz(abs(f), x)
+    if total_integ == 0:
+        return np.array([ x[0], x[-1] ]), np.array([ f[0], f[-1] ])
+    thresh = total_integ * rel_err
+
+    x_range = x[-1] - x[0]
+    if not preserve_range:
+        # Remove values from the front that integrate to less than thresh.
+        err_integ1 = 0.5 * (abs(f[0]) + abs(f[1])) * (x[1] - x[0])
+        k0 = 0
+        while k0 < len(x)-2 and err_integ1 < thresh * (x[k0+1]-x[0]) / x_range:
+            k0 = k0+1
+            err_integ1 += 0.5 * (abs(f[k0]) + abs(f[k0+1])) * (x[k0+1] - x[k0])
+        # Now the integral from 0 to k0+1 (inclusive) is a bit too large.
+        # That means k0 is the largest value we can use that will work as the starting value.
+
+        # Remove values from the back that integrate to less than thresh.
+        k1 = len(x)-1
+        err_integ2 = 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
+        while k1 > k0 and err_integ2 < thresh * (x[-1]-x[k1-1]) / x_range:
+            k1 = k1-1
+            err_integ2 += 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
+        # Now the integral from k1-1 to len(x)-1 (inclusive) is a bit too large.
+        # That means k1 is the smallest value we can use that will work as the ending value.
+
+        # Subtract the error so far from thresh
+        thresh -= np.trapz(abs(f[:k0]),x[:k0]) + np.trapz(abs(f[k1:]),x[k1:])
+
+        x = x[k0:k1+1]  # +1 since end of range is given as one-past-the-end.
+        f = f[k0:k1+1]
+
+        # And update x_range for the new values
+        x_range = x[-1] - x[0]
+
+    # Check again for noop after trimming endpoints.
+    if len(x) <= 2:
+        return x,f
+
+    # Thin interior points.  Start with no interior points and then greedily add them back in one at
+    # a time until relative error goal is met.
+    # Use a heap to track:
+    heap = [(-2*thresh,  # -err; initialize large enough to trigger while loop below.
+             0,          # first index of interval
+             len(x)-1)]  # last index of interval
+    while (-sum(h[0] for h in heap) > thresh):
+        _, left, right = heappop(heap)
+        i, (errleft, errright) = split_fn(x[left:right+1], f[left:right+1])
+        heappush(heap, (-errleft, left, i+left))
+        heappush(heap, (-errright, i+left, right))
+    splitpoints = sorted([0]+[h[2] for h in heap])
+    return x[splitpoints], f[splitpoints]
+
+
+# In Issue #739, Josh wrote the above algorithm as a replacement for the one here.
+# It had been buggy, not actually hitting its target relative accuracy, so on the same issue,
+# Mike fixed this algorithm to at least work correctly.  However, we recommend using the above
+# algorithm, since it keeps fewer sample locations for a given rel_err than the old algorithm.
+# On the other hand, the old algorithm can be quite a bit faster, being O(N), not O(N^2), so
+# we retain the old algorithm here in case we want to re-enable it for certain applications.
+def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
     """
     Remove items from a set of tabulated f(x) values so that the error in the integral is still
     accurate to a given relative accuracy.
@@ -335,28 +499,35 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
     if total_integ == 0:
         return np.array([ x[0], x[-1] ]), np.array([ f[0], f[-1] ])
     thresh = rel_err * total_integ
+    x_range = x[-1] - x[0]
 
     if not preserve_range:
         # Remove values from the front that integrate to less than thresh.
-        integ = 0.5 * (abs(f[0]) + abs(f[1])) * (x[1] - x[0])
+        err_integ1 = 0.5 * (abs(f[0]) + abs(f[1])) * (x[1] - x[0])
         k0 = 0
-        while k0 < len(x)-2 and integ < thresh:
+        while k0 < len(x)-2 and err_integ1 < thresh * (x[k0+1]-x[0]) / x_range:
             k0 = k0+1
-            integ += 0.5 * (abs(f[k0]) + abs(f[k0+1])) * (x[k0+1] - x[k0])
+            err_integ1 += 0.5 * (abs(f[k0]) + abs(f[k0+1])) * (x[k0+1] - x[k0])
         # Now the integral from 0 to k0+1 (inclusive) is a bit too large.
-        # That means k0 is the largest value we can use that will work as the staring value.
+        # That means k0 is the largest value we can use that will work as the starting value.
 
         # Remove values from the back that integrate to less than thresh.
         k1 = len(x)-1
-        integ = 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
-        while k1 > k0 and integ < thresh:
+        err_integ2 = 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
+        while k1 > k0 and err_integ2 < thresh * (x[-1]-x[k1-1]) / x_range:
             k1 = k1-1
-            integ += 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
+            err_integ2 += 0.5 * (abs(f[k1-1]) + abs(f[k1])) * (x[k1] - x[k1-1])
         # Now the integral from k1-1 to len(x)-1 (inclusive) is a bit too large.
         # That means k1 is the smallest value we can use that will work as the ending value.
 
+        # Subtract the error so far from thresh
+        thresh -= np.trapz(abs(f[:k0]),x[:k0]) + np.trapz(abs(f[k1:]),x[k1:])
+
         x = x[k0:k1+1]  # +1 since end of range is given as one-past-the-end.
         f = f[k0:k1+1]
+
+        # And update x_range for the new values
+        x_range = x[-1] - x[0]
 
     # Start a new list with just the first item so far
     newx = [ x[0] ]
@@ -369,23 +540,30 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
         # with a linear approxmation based on the points at k0 and k1+1.
         lin_f = f[k0] + (f[k1+1]-f[k0])/(x[k1+1]-x[k0]) * (x[k0:k1+2] - x[k0])
         # Integrate | f(x) - lin_f(x) | from k0 to k1+1, inclusive.
-        integ = np.trapz(abs(f[k0:k1+2] - lin_f), x[k0:k1+2])
-        # If the integral of the difference is < thresh, we can skip this item.
-        if integ < thresh:
+        err_integ = np.trapz(np.abs(f[k0:k1+2] - lin_f), x[k0:k1+2])
+        # If the integral of the difference is < thresh * (dx/x_range), we can skip this item.
+        if abs(err_integ) < thresh * (x[k1+1]-x[k0]) / x_range:
             # OK to skip item k1
             k1 = k1 + 1
         else:
-            # Have to include this one.
-            newx.append(x[k1])
-            newf.append(f[k1])
-            k0 = k1
-            k1 = k1 + 1
+            # Also ok to keep if its own relative error is less than rel_err
+            true_integ = np.trapz(f[k0:k1+2], x[k0:k1+2])
+            if abs(err_integ) < rel_err * abs(true_integ):
+                # OK to skip item k1
+                k1 = k1 + 1
+            else:
+                # Have to include this one.
+                newx.append(x[k1])
+                newf.append(f[k1])
+                k0 = k1
+                k1 = k1 + 1
 
     # Always include the last item
     newx.append(x[-1])
     newf.append(f[-1])
 
     return newx, newf
+
 
 def _gammafn(x):
     """
@@ -466,7 +644,6 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
 
     @returns a list of images and offsets to reconstruct the input image using 'interleaveImages'.
     """
-
     if isinstance(N,int):
         n1,n2 = N,N
     elif hasattr(N,'__iter__'):
@@ -474,8 +651,10 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
             n1,n2 = N
         else:
             raise TypeError("'N' has to be a list or a tuple of two integers")
-        if not (isinstance(n1,int) and  isinstance(n2,int)):
+        if not (n1 == int(n1) and n2 == int(n2)):
             raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
+        n1 = int(n1)
+        n2 = int(n2)
     else:
         raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
 
@@ -488,8 +667,8 @@ def deInterleaveImage(image, N, conserve_flux=False,suppress_warnings=False):
                          +"be 'deinterleaved'")
 
     im_list, offsets = [], []
-    for i in xrange(n1):
-        for j in xrange(n2):
+    for i in range(n1):
+        for j in range(n2):
             # The tricky part - going from array indices to Image coordinates (x,y)
             # DX[i'] = -(i+0.5)/n+0.5 = -i/n + 0.5*(n-1)/n
             #    i  = -n DX[i'] + 0.5*(n-1)
@@ -599,7 +778,6 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
 
     @returns the interleaved image
     """
-
     if isinstance(N,int):
         n1,n2 = N,N
     elif hasattr(N,'__iter__'):
@@ -607,8 +785,10 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
             n1,n2 = N
         else:
             raise TypeError("'N' has to be a list or a tuple of two integers")
-        if not (isinstance(n1,int) and  isinstance(n2,int)):
+        if not (n1 == int(n1) and n2 == int(n2)):
             raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
+        n1 = int(n1)
+        n2 = int(n2)
     else:
         raise TypeError("'N' has to be of type int or a list or a tuple of two integers")
 
@@ -647,7 +827,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     # The tricky part - going from (x,y) Image coordinates to array indices
     # DX[i'] = -(i+0.5)/n+0.5 = -i/n + 0.5*(n-1)/n
     #    i  = -n DX[i'] + 0.5*(n-1)
-    for k in xrange(len(offsets)):
+    for k in range(len(offsets)):
         dx, dy = offsets[k].x, offsets[k].y
 
         i = int(round((n1-1)*0.5-n1*dx))
@@ -802,5 +982,91 @@ class LRU_Cache:
 def printoptions(*args, **kwargs):
     original = np.get_printoptions()
     np.set_printoptions(*args, **kwargs)
-    yield
-    np.set_printoptions(**original)
+    # contextmanager exception handling is tricky.  Don't forget to wrap the yield:
+    # http://preshing.com/20110920/the-python-with-statement-by-example/
+    try:
+        yield
+    finally:
+        np.set_printoptions(**original)
+
+
+def listify(arg):
+    """Turn argument into a list if not already iterable."""
+    return [arg] if not hasattr(arg, '__iter__') else arg
+
+
+def lod_to_dol(lod, N=None):
+    """Generate dicts from dict of lists (with broadcasting).
+    Specifically, generate "scalar-valued" kwargs dictionaries from a kwarg dictionary with values
+    that are length-N lists, or possibly length-1 lists or scalars that should be broadcasted up to
+    length-N lists.
+    """
+    if N is None:
+        N = max(len(v) for v in lod.values() if hasattr(v, '__len__'))
+    # Loop through broadcast range
+    for i in range(N):
+        out = {}
+        for k, v in iteritems(lod):
+            try:
+                out[k] = v[i]
+            except IndexError:  # It's list-like, but too short.
+                if len(v) != 1:
+                    raise ValueError("Cannot broadcast kwargs of different non-length-1 lengths.")
+                out[k] = v[0]
+            except TypeError:  # Value is not list-like, so broadcast it in its entirety.
+                out[k] = v
+            except:
+                raise "Cannot broadcast kwarg {0}={1}".format(k, v)
+        yield out
+
+def set_func_doc(func, doc):
+    """Dynamically set a docstring for a given function.
+
+    We use this in GalSim to add docstrings to some functions that are wrapped from C++.
+    It turns out this tends to be easier than writing the doc strings in the C++ layer.
+
+    @param func     The function to which a docstring is to be added.
+    @param doc      The doc string to add.
+    """
+    try:
+        # Python3
+        func.__doc__ = doc
+    except:
+        func.__func__.__doc__ = doc
+
+
+def structure_function(image):
+    """Estimate the angularly-averaged structure function of a 2D random field.
+
+    The angularly-averaged structure function D(r) of the 2D field phi is defined as:
+
+    D(|r|) = <|phi(x) - phi(x+r)|^2>
+
+    where the x and r on the RHS are 2D vectors, but the |r| on the LHS is just a scalar length.
+
+    @param image  Image containing random field realization.  The `.scale` attribute here *is* used
+                  in the calculation.  If it's `None`, then the code will use 1.0 for the scale.
+    @returns      A python callable mapping a separation length r to the estimate of the structure
+                  function D(r).
+    """
+    array = image.array
+    nx, ny = array.shape
+    scale = image.scale
+    if scale is None:
+        scale = 1.0
+
+    # The structure function can be derived from the correlation function B(r) as:
+    # D(r) = 2 * [B(0) - B(r)]
+
+    corr = np.fft.ifft2(np.abs(np.fft.fft2(np.fft.fftshift(array)))**2).real / (nx * ny)
+    # Check that the zero-lag correlation function is equal to the variance before doing the
+    # ifftshift.
+    assert (corr[0, 0] / np.var(array) - 1.0) < 1e-6
+    corr = np.fft.ifftshift(corr)
+
+    x = scale * (np.arange(nx) - nx//2)
+    y = scale * (np.arange(ny) - ny//2)
+    tab = galsim.LookupTable2D(x, y, corr)
+    thetas = np.arange(0., 2*np.pi, 100)  # Average over these angles.
+
+    return lambda r: 2*(tab(0.0, 0.0) - np.mean(tab(r*np.cos(thetas), r*np.sin(thetas))))

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -113,7 +113,7 @@ def BuildFiles(nfiles, config, file_num=0, logger=None):
         if t != 0 and logger:
             if proc is None: s0 = ''
             else: s0 = '%s: '%proc
-            logger.warn(s0 + 'File %d = %s: time = %f sec', file_num, file_name, t)
+            logger.warning(s0 + 'File %d = %s: time = %f sec', file_num, file_name, t)
 
     def except_func(logger, proc, k, e, tr):
         if logger:
@@ -146,9 +146,9 @@ def BuildFiles(nfiles, config, file_num=0, logger=None):
     else:
         if logger:
             if nfiles_written > 1 and nproc != 1:
-                logger.warn('Total time for %d files with %d processes = %f sec',
-                            nfiles_written,nproc,t2-t1)
-            logger.warn('Done building files')
+                logger.warning('Total time for %d files with %d processes = %f sec',
+                               nfiles_written,nproc,t2-t1)
+            logger.warning('Done building files')
 
 
 output_ignore = [ 'file_name', 'dir', 'nfiles', 'nproc', 'skip', 'noclobber', 'retry_io' ]
@@ -200,15 +200,15 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
     # Check if we ought to skip this file
     if 'skip' in output and galsim.config.ParseValue(output, 'skip', config, bool)[0]:
         if logger:
-            logger.warn('Skipping file %d = %s because output.skip = True',file_num,file_name)
+            logger.warning('Skipping file %d = %s because output.skip = True',file_num,file_name)
         t2 = time.time()
         return file_name, 0
     if ('noclobber' in output
         and galsim.config.ParseValue(output, 'noclobber', config, bool)[0]
         and os.path.isfile(file_name)):
         if logger:
-            logger.warn('Skipping file %d = %s because output.noclobber = True' +
-                        ' and file exists',file_num,file_name)
+            logger.warning('Skipping file %d = %s because output.noclobber = True' +
+                           ' and file exists',file_num,file_name)
         t2 = time.time()
         return file_name, 0
 
@@ -216,9 +216,9 @@ def BuildFile(config, file_num=0, image_num=0, obj_num=0, logger=None):
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug('file %d: file_name = %s',file_num,file_name)
         else:
-            logger.warn('Start file %d = %s', file_num, file_name)
+            logger.warning('Start file %d = %s', file_num, file_name)
 
-    ignore = output_ignore + galsim.config.valid_extra_outputs.keys()
+    ignore = output_ignore + list(galsim.config.valid_extra_outputs)
     data = builder.buildImages(output, config, file_num, image_num, obj_num, ignore, logger)
 
     if builder.canAddHdus():
@@ -348,9 +348,9 @@ def RetryIO(func, args, ntries, file_name, logger):
                 raise
             else:
                 if logger:
-                    logger.warn('File %s: Caught IOError: %s',file_name,str(e))
-                    logger.warn('This is try %d/%d, so sleep for %d sec and try again.',
-                                itry+1,ntries,itry+1)
+                    logger.warning('File %s: Caught IOError: %s',file_name,str(e))
+                    logger.warning('This is try %d/%d, so sleep for %d sec and try again.',
+                                   itry+1,ntries,itry+1)
                 import time
                 time.sleep(itry+1)
                 continue
@@ -398,7 +398,9 @@ class OutputBuilder(object):
         # Prepend a dir to the beginning of the filename if requested.
         if 'dir' in config:
             dir = galsim.config.ParseValue(config, 'dir', base, str)[0]
-            if dir and not os.path.isdir(dir): os.makedirs(dir)
+            if dir:
+                _makedirs_check(dir)
+
             file_name = os.path.join(dir,file_name)
 
         return file_name
@@ -470,4 +472,33 @@ def RegisterOutputType(output_type, builder):
 
 # The base class is also the builder for type = Fits.
 RegisterOutputType('Fits', OutputBuilder())
+
+
+_ERR_FILE_EXISTS=17
+def _makedirs_check(dir):
+    """
+    try to make the directory, watching for a race condition
+
+    In particular check if the OS reported that the directory already exists
+    when running makedirs, which can happen if another process creates it
+    before this one can
+    """
+
+    exists = os.path.exists(dir)
+
+    if not exists:
+        try:
+            os.makedirs(dir)
+        except OSError as err:
+            # check if the file now exists, which can happen if some other
+            # process created the directory between the os.path.exists call
+            # above and the time of the makedirs attempt.  This is OK
+            if err.errno != _ERR_FILE_EXISTS:
+                raise err
+
+    elif exists and not os.path.isdir(dir):
+        raise IOError("tried to make directory '%s' "
+                      "but a non-directory file of that "
+                      "name already exists" % dir)
+
 

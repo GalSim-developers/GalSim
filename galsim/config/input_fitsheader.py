@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 
 import galsim
 
@@ -36,7 +38,7 @@ def _GenerateFromFitsHeader(config, base, value_type):
 
     val = header.get(key)
 
-    #print base['file_num'],'Header: key = %s, val = %s'%(key,val)
+    #print(base['file_num'],'Header: key = %s, val = %s'%(key,val))
     return val, safe
 
 # Register this as a valid value type

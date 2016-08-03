@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,7 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
-import numpy
 import galsim
 
 # The badpix extra output type is currently just a placeholder for when we eventually add

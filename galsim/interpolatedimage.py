@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -265,16 +265,11 @@ class InterpolatedImage(GSObject):
             depr('dx', 1.1, 'scale')
             scale = dx
 
-        # first try to read the image as a file.  If it's not either a string or a valid
-        # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
-        try:
+        # If the "image" is not actually an image, try to read the image as a file.
+        if not isinstance(image, galsim.Image):
             image = galsim.fits.read(image, hdu=hdu)
-        except:
-            pass
 
         # make sure image is really an image and has a float type
-        if not isinstance(image, galsim.Image):
-            raise ValueError("Supplied image is not an Image instance")
         if image.dtype != np.float32 and image.dtype != np.float64:
             raise ValueError("Supplied image does not have dtype of float32 or float64!")
 
@@ -447,6 +442,12 @@ class InterpolatedImage(GSObject):
         sbii = galsim._galsim.SBInterpolatedImage(
                 pad_image.image, self.x_interpolant, self.k_interpolant, pad_factor,
                 _force_stepk, _force_maxk, gsparams)
+
+        # I think the only things that will mess up if getFlux() == 0 are the
+        # calculateStepK and calculateMaxK functions, and rescaling the flux to some value.
+        if (calculate_stepk or calculate_maxk or flux is not None) and sbii.getFlux() == 0.:
+            raise RuntimeError("This input image has zero total flux. "
+                               "It does not define a valid surface brightness profile.")
 
         if calculate_stepk:
             if calculate_stepk is True:

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -109,6 +109,9 @@ def ReadJson(config_file):
         except TypeError:
             # for python2.6, json doesn't come with the object_pairs_hook, so 
             # try using simplejson, and if that doesn't work, just use a regular dict.
+            # Also, it seems that if the above line raises an exception, the file handle
+            # is not left at the beginning, so seek back to 0.
+            f.seek(0)
             try:
                 import simplejson
                 config = simplejson.load(f, object_pairs_hook=OrderedDict)
@@ -298,9 +301,9 @@ class LoggerWrapper(object):
         if self.logger and self.logger.isEnabledFor(logging.INFO):
             self.logger.info(*args, **kwargs)
 
-    def warn(self, *args, **kwargs):
+    def warning(self, *args, **kwargs):
         if self.logger and self.logger.isEnabledFor(logging.WARN):
-            self.logger.warn(*args, **kwargs)
+            self.logger.warning(*args, **kwargs)
 
     def error(self, *args, **kwargs):
         if self.logger and self.logger.isEnabledFor(logging.ERROR):
@@ -336,8 +339,8 @@ def UpdateNProc(nproc, ntot, config, logger=None):
             raise
         except:
             if logger:
-                logger.warn("nproc <= 0, but unable to determine number of cpus.")
-                logger.warn("Using single process")
+                logger.warning("nproc <= 0, but unable to determine number of cpus.")
+                logger.warning("Using single process")
             nproc = 1
  
     # Second, make sure we aren't already in a multiprocessing mode
@@ -645,9 +648,9 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None):
         start = nfiles * (job-1) // njobs
         end = nfiles * job // njobs
         if logger:
-            logger.warn('Splitting work into %d jobs.  Doing job %d',njobs,job)
-            logger.warn('Building %d out of %d total files: file_num = %d .. %d',
-                        end-start,nfiles,start,end-1)
+            logger.warning('Splitting work into %d jobs.  Doing job %d',njobs,job)
+            logger.warning('Building %d out of %d total files: file_num = %d .. %d',
+                           end-start,nfiles,start,end-1)
         nfiles = end-start
     else:
         start = 0
@@ -714,7 +717,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
         logger = LoggerWrapper(logger)
 
         if 'profile' in config and config['profile']:
-            import cProfile, pstats, StringIO
+            import cProfile, pstats, io
             pr = cProfile.Profile()
             pr.enable()
         else:
@@ -744,7 +747,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
             logger.debug('%s: Received STOP', proc)
         if pr:
             pr.disable()
-            s = StringIO.StringIO()
+            s = io.StringIO()
             sortby = 'tottime'
             ps = pstats.Stats(pr,stream=s).sort_stats(sortby).reverse_order()
             ps.print_stats()
@@ -755,7 +758,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
 
     if nproc > 1:
         if logger:
-            logger.warn("Using %d processes for %s processing",nproc,item)
+            logger.warning("Using %d processes for %s processing",nproc,item)
 
         from multiprocessing import Process, Queue, current_process
         from multiprocessing.managers import BaseManager

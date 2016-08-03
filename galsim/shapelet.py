@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -24,7 +24,7 @@ import numpy as np
 
 import galsim
 from galsim import GSObject
-import _galsim
+from . import _galsim
 from ._galsim import LVector, ShapeletSize
 
 class Shapelet(GSObject):
@@ -150,7 +150,7 @@ class Shapelet(GSObject):
     def getPQ(self,p,q):
         return self.SBProfile.getBVec().getPQ(p,q)
     def getNM(self,N,m):
-        return self.SBProfile.getBVec().getPQ((N+m)/2,(N-m)/2)
+        return self.SBProfile.getBVec().getPQ((N+m)//2,(N-m)//2)
 
     # These act directly on the bvector, so they may be a bit more efficient than the
     # regular methods in GSObject

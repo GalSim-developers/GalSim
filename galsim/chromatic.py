@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -25,10 +25,12 @@ Possible uses include galaxies with color gradients, automatically drawing a giv
 different filters, or implementing wavelength-dependent point spread functions.
 """
 
+from future.utils import iteritems
 import numpy as np
 import copy
 
 import galsim
+from functools import reduce
 
 class ChromaticObject(object):
     """Base class for defining wavelength-dependent objects.
@@ -111,7 +113,7 @@ class ChromaticObject(object):
         self.obj = obj
         if isinstance(obj, galsim.GSObject):
             self.separable = True
-            self.SED = galsim.SED('1')  # uniform flambda = 1
+            self.SED = galsim.SED('1', 'nm', 'flambda')  # uniform flambda = 1
             self.wave_list = np.array([], dtype=float)
         elif isinstance(obj, ChromaticObject):
             self.separable = obj.separable
@@ -344,7 +346,7 @@ class ChromaticObject(object):
         # merge self.wave_list into bandpass.wave_list if using a sampling integrator
         if isinstance(integrator, galsim.integ.SampleIntegrator):
             bandpass = galsim.Bandpass(galsim.LookupTable(wave_list, bandpass(wave_list),
-                                                          interpolant='linear'))
+                                                          interpolant='linear'), 'nm')
 
         add_to_image = kwargs.pop('add_to_image', False)
         integral = integrator(self.evaluateAtWavelength, bandpass, image, kwargs)
@@ -570,7 +572,7 @@ class ChromaticObject(object):
         """Returns a copy of an object.  This preserves the original type of the object."""
         cls = self.__class__
         ret = cls.__new__(cls)
-        for k, v in self.__dict__.iteritems():
+        for k, v in iteritems(self.__dict__):
             if k == 'objlist':
                 # explicitly copy all individual items of objlist, not just the list itself
                 ret.__dict__[k] = [o.copy() for o in v]
@@ -1019,6 +1021,11 @@ class InterpolatedChromaticObject(ChromaticObject):
         # determine combination of self.wave_list and bandpass.wave_list
         wave_list = self._getCombinedWaveList(bandpass)
 
+        if np.min(wave_list) < np.min(self.waves) or np.max(wave_list) > np.max(self.waves):
+            raise RuntimeError("Requested wavelength %.1f is outside the allowed range:"
+                               " %.1f to %.1f nm"%(np.min(wave_list), np.min(self.waves),
+                                                   np.max(self.waves)))
+
         # The integration is carried out using the following two basic principles:
         # (1) We use linear interpolation between the stored images to get an image at a given
         #     wavelength.
@@ -1161,7 +1168,7 @@ class ChromaticAtmosphere(ChromaticObject):
         self.base_obj = base_obj
         self.base_wavelength = base_wavelength
 
-        if isinstance(scale_unit, basestring):
+        if isinstance(scale_unit, str):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         self.scale_unit = scale_unit
 
@@ -1192,7 +1199,7 @@ class ChromaticAtmosphere(ChromaticObject):
 
         # Any remaining kwargs will get forwarded to galsim.dcr.get_refraction
         # Check that they're valid
-        for kw in kwargs.keys():
+        for kw in kwargs:
             if kw not in ['temperature', 'pressure', 'H2O_pressure']:
                 raise TypeError("Got unexpected keyword: {0}".format(kw))
         self.kw = kwargs
@@ -1807,7 +1814,7 @@ class ChromaticConvolution(ChromaticObject):
 
     The normal way to use this class is to use the Convolve() factory function:
 
-        >>> gal = galsim.Sersic(n, half_light_radius) * galsim.SED(sed_file)
+        >>> gal = galsim.Sersic(n, half_light_radius) * galsim.SED(sed_file, 'nm', 'flambda')
         >>> psf = galsim.ChromaticAtmosphere(...)
         >>> final = galsim.Convolve([gal, psf])
 
@@ -1902,7 +1909,7 @@ class ChromaticConvolution(ChromaticObject):
             wave_list = wave_list[wave_list <= bandpass.red_limit]
             effective_bandpass = galsim.Bandpass(
                 galsim.LookupTable(wave_list, bandpass(wave_list) * SED(wave_list),
-                                   interpolant='linear'))
+                                   interpolant='linear'), 'nm')
             # If there's only one inseparable profile, let it draw itself.
             if len(insep_profs) == 1:
                 effective_prof_image = insep_profs[0].drawImage(
@@ -1929,9 +1936,9 @@ class ChromaticConvolution(ChromaticObject):
 
     def _findSED(self):
         # pull out the non-trivial seds
-        sedlist = [ obj.SED for obj in self.objlist if obj.SED != galsim.SED('1') ]
+        sedlist = [ obj.SED for obj in self.objlist if obj.SED != galsim.SED('1','nm','flambda') ]
         if len(sedlist) == 0:
-            self.SED = galsim.SED('1')
+            self.SED = galsim.SED('1','nm','flambda')
         elif len(sedlist) == 1:
             self.SED = sedlist[0]
         else:
@@ -2288,6 +2295,47 @@ class ChromaticAutoCorrelation(ChromaticObject):
         return galsim.AutoCorrelate(self.obj.evaluateAtWavelength(wave), **self.kwargs)
 
 
+class ChromaticFourierSqrtProfile(ChromaticObject):
+    """A class for computing the Fourier-space square root of a ChromaticObject.
+
+    The ChromaticFourierSqrt class represents a wavelength-dependent Fourier-space square root of a profile.
+
+    You may also specify a gsparams argument.  See the docstring for GSParams using
+    help(galsim.GSParams) for more information about this option.  Note: if `gsparams` is
+    unspecified (or None), then the ChromaticFourierSqrtProfile instance inherits the same GSParams as
+    the object being operated on.
+
+    Initialization
+    --------------
+
+    @param obj              The object to compute the Fourier-space square root of.
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+    """
+    def __init__(self, obj, **kwargs):
+        self.obj = obj
+        self.kwargs = kwargs
+        self.separable = obj.separable
+        if self.separable:
+            self.SED = lambda w: 1./obj.SED(w)
+        self.wave_list = obj.wave_list
+
+    def __repr__(self):
+        return 'galsim.ChromaticFourierSqrtProfile(%r, %r)'%(self.obj, self.kwargs)
+
+    def __str__(self):
+        return 'galsim.ChromaticFourierSqrtProfile(%s)'%self.obj
+
+    def evaluateAtWavelength(self, wave):
+        """Evaluate this chromatic object at a particular wavelength `wave`.
+
+        @param wave  Wavelength in nanometers.
+
+        @returns the monochromatic object at the given wavelength.
+        """
+        return galsim.FourierSqrt(self.obj.evaluateAtWavelength(wave), **self.kwargs)
+
+
 class ChromaticOpticalPSF(ChromaticObject):
     """A subclass of ChromaticObject meant to represent chromatic optical PSFs.
 
@@ -2337,7 +2385,7 @@ class ChromaticOpticalPSF(ChromaticObject):
     def __init__(self, lam, diam=None, lam_over_diam=None, aberrations=None,
                  scale_unit=galsim.arcsec, **kwargs):
         # First, take the basic info.
-        if isinstance(scale_unit, basestring):
+        if isinstance(scale_unit, str):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         self.scale_unit = scale_unit
 
@@ -2347,8 +2395,10 @@ class ChromaticOpticalPSF(ChromaticObject):
             raise TypeError("Need to specify telescope diameter OR wavelength/diam ratio")
         if diam is not None:
             self.lam_over_diam = (1.e-9*lam/diam)*galsim.radians/self.scale_unit
+            self.diam = diam
         else:
             self.lam_over_diam = lam_over_diam
+            self.diam = (lam*1e-9/lam_over_diam)*galsim.radians/self.scale_unit
         self.lam = lam
 
         if aberrations is not None:
@@ -2405,9 +2455,9 @@ class ChromaticOpticalPSF(ChromaticObject):
         # wavelength.  Likewise, the aberrations were in units of wavelength for the fiducial
         # wavelength, so we have to convert to units of waves for *this* wavelength.
         ret = galsim.OpticalPSF(
-            lam_over_diam=self.lam_over_diam*(wave/self.lam),
-            aberrations=self.aberrations*(self.lam/wave), scale_unit=self.scale_unit,
-            **self.kwargs)
+                lam=wave, diam=self.diam,
+                aberrations=self.aberrations*(self.lam/wave), scale_unit=self.scale_unit,
+                **self.kwargs)
         return ret
 
 class ChromaticAiry(ChromaticObject):
@@ -2437,7 +2487,7 @@ class ChromaticAiry(ChromaticObject):
     def __init__(self, lam, diam=None, lam_over_diam=None, scale_unit=galsim.arcsec, **kwargs):
         # First, take the basic info.
         # We have to require either diam OR lam_over_diam:
-        if isinstance(scale_unit, basestring):
+        if isinstance(scale_unit, str):
             scale_unit = galsim.angle.get_angle_unit(scale_unit)
         self.scale_unit = scale_unit
 

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,13 +16,11 @@
  *    this list of conditions, and the disclaimer given in the documentation
  *    and/or other materials provided with the distribution.
  */
+
+#include "galsim/IgnoreWarnings.h"
+
 #define BOOST_PYTHON_MAX_ARITY 20  // We have a function with 17 params here...
                                    // c.f. www.boost.org/libs/python/doc/v2/configuration.html
-#ifndef __INTEL_COMPILER
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
-#endif
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
@@ -81,6 +79,12 @@ namespace galsim {
                 .def(bp::self == bp::other<GSParams>())
                 .enable_pickling()
                 ;
+// Work around for "no to_python (by-value) converter found for C++ type: boost::shared_ptr<>"
+// boost::python bug that seems to only exist for boost version 1.60.
+// (GalSim Issue #764, https://github.com/GalSim-developers/GalSim/pull/767).
+#if BOOST_VERSION >= 106000 && BOOST_VERSION < 106100
+            bp::register_ptr_to_python< boost::shared_ptr<GSParams> >();
+#endif
         }
     };
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import numpy as np
 import os
 import sys
@@ -121,11 +123,11 @@ dLookupTableResult = (0.23721845680847731, 0.42913599265739233, 0.86176396813243
 # File with the same values
 dLookupTableFile = os.path.join('random_data','dLookupTable.dat')
 
+
+@timer
 def test_uniform():
     """Test uniform random number generator
     """
-    import time
-    t1 = time.time()
     u = galsim.UniformDeviate(testseed)
     u2 = u.duplicate()
     u3 = galsim.UniformDeviate(u.serialize())
@@ -148,8 +150,8 @@ def test_uniform():
     var = np.var(vals)
     mu = 1./2.
     v = 1./12.
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from UniformDeviate')
     np.testing.assert_almost_equal(var, v, 1,
@@ -235,14 +237,10 @@ def test_uniform():
     do_pickle(galsim.DeviateNoise(u))
 
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
+@timer
 def test_gaussian():
     """Test Gaussian random number generator
     """
-    import time
-    t1 = time.time()
     g = galsim.GaussianDeviate(testseed, mean=gMean, sigma=gSigma)
     g2 = g.duplicate()
     g3 = galsim.GaussianDeviate(g.serialize(), mean=gMean, sigma=gSigma)
@@ -265,8 +263,8 @@ def test_gaussian():
     var = np.var(vals)
     mu = gMean
     v = gSigma**2
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from GaussianDeviate')
     np.testing.assert_almost_equal(var, v, 0,
@@ -366,8 +364,8 @@ def test_gaussian():
     big_im = galsim.Image(2048,2048,dtype=float)
     big_im.addNoise(gn)
     var = np.var(big_im.array)
-    print 'variance = ',var
-    print 'getVar = ',gn.getVariance()
+    print('variance = ',var)
+    print('getVar = ',gn.getVariance())
     np.testing.assert_almost_equal(
             var, gn.getVariance(), 1,
             err_msg='Realized variance for GaussianNoise did not match getVariance()')
@@ -451,14 +449,11 @@ def test_gaussian():
     do_pickle(gn)
     do_pickle(galsim.DeviateNoise(g))
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_binomial():
     """Test binomial random number generator
     """
-    import time
-    t1 = time.time()
     b = galsim.BinomialDeviate(testseed, N=bN, p=bp)
     b2 = b.duplicate()
     b3 = galsim.BinomialDeviate(b.serialize(), N=bN, p=bp)
@@ -481,8 +476,8 @@ def test_binomial():
     var = np.var(vals)
     mu = bN*bp
     v = bN*bp*(1.-bp)
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from BinomialDeviate')
     np.testing.assert_almost_equal(var, v, 1,
@@ -567,14 +562,11 @@ def test_binomial():
     do_pickle(b)
     do_pickle(galsim.DeviateNoise(b))
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_poisson():
     """Test Poisson random number generator
     """
-    import time
-    t1 = time.time()
     p = galsim.PoissonDeviate(testseed, mean=pMean)
     p2 = p.duplicate()
     p3 = galsim.PoissonDeviate(p.serialize(), mean=pMean)
@@ -597,8 +589,8 @@ def test_poisson():
     var = np.var(vals)
     mu = pMean
     v = pMean
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from PoissonDeviate')
     np.testing.assert_almost_equal(var, v, 1,
@@ -697,8 +689,8 @@ def test_poisson():
     big_im = galsim.Image(2048,2048,dtype=float)
     big_im.addNoise(pn)
     var = np.var(big_im.array)
-    print 'variance = ',var
-    print 'getVar = ',pn.getVariance()
+    print('variance = ',var)
+    print('getVar = ',pn.getVariance())
     np.testing.assert_almost_equal(
             var, pn.getVariance(), 1,
             err_msg='Realized variance for PoissonNoise did not match getVariance()')
@@ -780,14 +772,11 @@ def test_poisson():
     do_pickle(pn)
     do_pickle(galsim.DeviateNoise(p))
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_weibull():
     """Test Weibull random number generator
     """
-    import time
-    t1 = time.time()
     w = galsim.WeibullDeviate(testseed, a=wA, b=wB)
     w2 = w.duplicate()
     w3 = galsim.WeibullDeviate(w.serialize(), a=wA, b=wB)
@@ -820,8 +809,8 @@ def test_weibull():
         gammaFactor2 = 0.886226925452758
     mu = wB * gammaFactor1
     v = wB**2 * gammaFactor2 - mu**2
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from WeibullDeviate')
     np.testing.assert_almost_equal(var, v, 1,
@@ -904,14 +893,11 @@ def test_weibull():
     do_pickle(w)
     do_pickle(galsim.DeviateNoise(w))
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_gamma():
     """Test Gamma random number generator
     """
-    import time
-    t1 = time.time()
     g = galsim.GammaDeviate(testseed, k=gammaK, theta=gammaTheta)
     g2 = g.duplicate()
     g3 = galsim.GammaDeviate(g.serialize(), k=gammaK, theta=gammaTheta)
@@ -934,8 +920,8 @@ def test_gamma():
     var = np.var(vals)
     mu = gammaK*gammaTheta
     v = gammaK*gammaTheta**2
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from GammaDeviate')
     np.testing.assert_almost_equal(var, v, 0,
@@ -1018,14 +1004,11 @@ def test_gamma():
     do_pickle(g)
     do_pickle(galsim.DeviateNoise(g))
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_chi2():
     """Test Chi^2 random number generator
     """
-    import time
-    t1 = time.time()
     c = galsim.Chi2Deviate(testseed, n=chi2N)
     c2 = c.duplicate()
     c3 = galsim.Chi2Deviate(c.serialize(), n=chi2N)
@@ -1048,8 +1031,8 @@ def test_chi2():
     var = np.var(vals)
     mu = chi2N
     v = 2.*chi2N
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from Chi2Deviate')
     np.testing.assert_almost_equal(var, v, 0,
@@ -1132,15 +1115,11 @@ def test_chi2():
     do_pickle(c)
     do_pickle(galsim.DeviateNoise(c))
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_distfunction():
     """Test distribution-defined random number generator with a function
     """
-    import time
-    t1 = time.time()
-
     try:
         # Make sure it requires an input function in order to work.
         np.testing.assert_raises(TypeError, galsim.DistDeviate)
@@ -1162,7 +1141,7 @@ def test_distfunction():
         foo = galsim.DistDeviate(10, galsim.LookupTable(test_vals, test_vals))
         np.testing.assert_raises(ValueError, foo.val, -1.)
     except ImportError:
-        print 'The assert_raises test requires nose'
+        print('The assert_raises test requires nose')
 
     d = galsim.DistDeviate(testseed, function=dfunction, x_min=dmin, x_max=dmax)
     d2 = d.duplicate()
@@ -1186,8 +1165,8 @@ def test_distfunction():
     var = np.var(vals)
     mu = 3./2.
     v = 3./20.
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from DistDeviate random numbers using function')
     np.testing.assert_almost_equal(var, v, 1,
@@ -1271,8 +1250,8 @@ def test_distfunction():
 
     # Test filling an image
     d.seed(testseed)
-    print 'd = ',d
-    print 'd._ud = ',d._ud
+    print('d = ',d)
+    print('d._ud = ',d._ud)
     testimage = galsim.ImageD(np.zeros((3, 1)))
     testimage.addNoise(galsim.DeviateNoise(d))
     np.testing.assert_array_almost_equal(
@@ -1285,15 +1264,11 @@ def test_distfunction():
     do_pickle(d)
     do_pickle(galsim.DeviateNoise(d))
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_distLookupTable():
     """Test distribution-defined random number generator with a LookupTable
     """
-    import time
-    t1 = time.time()
-
     d = galsim.DistDeviate(testseed, function=dLookupTable)
     d2 = d.duplicate()
     d3 = galsim.DistDeviate(d.serialize(), function=dLookupTable)
@@ -1305,7 +1280,7 @@ def test_distLookupTable():
             err_msg='DistDeviate and the LookupTable passed to it have different upper bounds')
 
     testResult = (d(), d(), d())
-    print 'testResult = ',testResult
+    print('testResult = ',testResult)
     np.testing.assert_array_almost_equal(
             np.array(testResult), np.array(dLookupTableResult), precision,
             err_msg='Wrong DistDeviate random number sequence using LookupTable')
@@ -1324,8 +1299,8 @@ def test_distLookupTable():
     var = np.var(vals)
     mu = 2.
     v = 7./3.
-    print 'mean = ',mean,'  true mean = ',mu
-    print 'var = ',var,'   true var = ',v
+    print('mean = ',mean,'  true mean = ',mu)
+    print('var = ',var,'   true var = ',v)
     np.testing.assert_almost_equal(mean, mu, 1,
             err_msg='Wrong mean from DistDeviate random numbers using LookupTable')
     np.testing.assert_almost_equal(var, v, 1,
@@ -1353,6 +1328,33 @@ def test_distLookupTable():
             err_msg='Wrong DistDeviate random number sequence for LookupTable with default '
             'interpolant')
 
+    # Test a case with nearly flat probabilities
+    # x and p arrays with and without a small (epsilon) step
+    dx_eps = np.arange(6)
+    dp1_eps = np.zeros(dx_eps.shape)
+    dp2_eps = np.zeros(dx_eps.shape)
+    eps = np.finfo(dp1_eps[0].dtype).eps
+    dp1_eps[0] = 0.5
+    dp2_eps[0] = 0.5
+    dp1_eps[-1] = 0.5
+    dp2_eps[-2] = eps
+    dp2_eps[-1] = 0.5-eps
+    dLookupTableEps1 = galsim.LookupTable(x=dx_eps, f=dp1_eps, interpolant='linear')
+    dLookupTableEps2 = galsim.LookupTable(x=dx_eps, f=dp2_eps, interpolant='linear')
+    d1 = galsim.DistDeviate(testseed, function=dLookupTableEps1, npoints=len(dx_eps))
+    d2 = galsim.DistDeviate(testseed, function=dLookupTableEps2, npoints=len(dx_eps))
+    # If these were successfully created everything is probably fine, but check they create the same
+    # internal LookupTable
+    np.testing.assert_array_almost_equal(
+            d1._inverseprobabilitytable.getArgs(), d2._inverseprobabilitytable.getArgs(), precision,
+            err_msg='DistDeviate with near-flat probabilities incorrectly created '
+                    'a monotonic version of the CDF')
+    np.testing.assert_array_almost_equal(
+            d1._inverseprobabilitytable.getVals(), d2._inverseprobabilitytable.getVals(), precision,
+            err_msg='DistDeviate with near-flat probabilities incorrectly created '
+                    'a monotonic version of the CDF')
+            
+
     # Test filling an image
     d.seed(testseed)
     testimage = galsim.ImageD(np.zeros((3, 1)))
@@ -1367,15 +1369,12 @@ def test_distLookupTable():
     do_pickle(d)
     do_pickle(galsim.DeviateNoise(d))
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_ccdnoise():
     """Test CCD Noise generator
     """
-    import time
-    t1 = time.time()
-    for i in xrange(4):
+    for i in range(4):
         prec = eval("precision"+typestrings[i])
         cResult = eval("cResult"+typestrings[i])
 
@@ -1445,8 +1444,8 @@ def test_ccdnoise():
     big_im = galsim.Image(2048,2048,dtype=float)
     big_im.addNoise(ccdnoise)
     var = np.var(big_im.array)
-    print 'variance = ',var
-    print 'getVar = ',ccdnoise.getVariance()
+    print('variance = ',var)
+    print('getVar = ',ccdnoise.getVariance())
     np.testing.assert_almost_equal(
             var, ccdnoise.getVariance(), 1,
             err_msg='Realized variance for CCDNoise did not match getVariance()')
@@ -1548,24 +1547,19 @@ def test_ccdnoise():
     do_pickle(ccdnoise, drawNoise)
     do_pickle(ccdnoise)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_multiprocess():
     """Test that the same random numbers are generated in single-process and multi-process modes.
     """
     from multiprocessing import Process, Queue, current_process
-    import time
-    t1 = time.time()
-
-    # Workaround for a bug in python 2.6.  We apply it always, just in case, but I think this
-    # bit is unnecessary in python 2.7.  The bug is that sys.stdin can be double closed if
+    # Workaround for a bug in python 2.6. The bug is that sys.stdin can be double closed if
     # multiprocessing is used within something that already uses multiprocessing.
     # Specifically, if we are using nosetests with multiple processes.
     # See http://bugs.python.org/issue5313 for more info.
-    sys.stdin.close()
-    sys.stdin = open(os.devnull)
+    if sys.version_info < (2,7):
+        sys.stdin.close()
+        sys.stdin = open(os.devnull)
 
     def generate_list(seed):
         """Given a particular seed value, generate a list of random numbers.
@@ -1599,7 +1593,6 @@ def test_multiprocess():
     for seed in seeds:
         list = generate_list(seed)
         ref_lists[seed] = list
-        #print 'list for %d was calculated to be %s'%(seed, list)
 
     # Now do this with multiprocessing
     # Put the seeds in a queue
@@ -1616,7 +1609,6 @@ def test_multiprocess():
     for i in range(len(seeds)):
         list, proc, args = done_queue.get()
         seed = args[0]
-        #print 'list for %d was calculated by process %s to be %s'%(seed, proc, list)
         np.testing.assert_array_equal(
                 list, ref_lists[seed],
                 err_msg="Random numbers are different when using multiprocessing")
@@ -1625,15 +1617,11 @@ def test_multiprocess():
     for k in range(nproc):
         task_queue.put('STOP')
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_addnoisesnr():
     """Test that addNoiseSNR is behaving sensibly.
     """
-    import time
-    t1 = time.time()
-
     # Rather than reproducing the S/N calculation in addNoiseSNR(), we'll just check for
     # self-consistency of the behavior with / without flux preservation.
     # Begin by making some object that we draw into an Image.
@@ -1669,14 +1657,10 @@ def test_addnoisesnr():
             im2.array.max(), expect_max_val2, decimal=8,
             err_msg='addNoiseSNR with preserve_flux = True and False give inconsistent results')
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_permute():
     """Simple tests of the permute() function."""
-    import time
-    t1 = time.time()
-
     # Make a fake list, and another list consisting of indices.
     my_list = [3.7, 4.1, 1.9, 11.1, 378.3, 100.0]
     import copy
@@ -1691,10 +1675,8 @@ def test_permute():
     for ind in range(n_list):
         assert my_list_copy[ind_list[ind]] == my_list[ind]
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_ne():
     """ Check that inequality works as expected for corner cases where the reprs of two
     unequal BaseDeviates may be the same due to truncation.

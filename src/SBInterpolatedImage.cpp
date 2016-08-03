@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -588,7 +588,7 @@ namespace galsim {
         dbg<<"Done: flux = "<<flux<<", d1 = "<<d1<<std::endl;
         dbg<<"max_flux = "<<max_flux<<", current fluxTot = "<<fluxTot<<std::endl;
         // Should have added up to the total flux.
-        assert( std::abs(flux - fluxTot) < 1.e-3 * std::abs(fluxTot) );
+        assert( std::abs(flux - fluxTot) <= 1.e-3 * std::abs(fluxTot) );
 
         if (d1 == 0) {
             dbg<<"No smaller radius found.  Keep current value of stepk\n";

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -103,7 +103,7 @@ def main(argv):
     logger.info('Starting demo script 10')
  
     # Read in galaxy catalog
-    cat_file_name = 'real_galaxy_catalog_example.fits'
+    cat_file_name = 'real_galaxy_catalog_23.5_example.fits'
     dir = 'data'
     real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, dir=dir)
     logger.info('Read in %d real galaxies from catalog', real_galaxy_catalog.nobjects)

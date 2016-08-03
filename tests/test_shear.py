@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import numpy as np
 import os
 import sys
@@ -61,7 +63,7 @@ decimal = 5
 
 #### some helper functions
 def all_shear_vals(test_shear, index, mult_val = 1.0):
-    print 'test_shear = ',repr(test_shear)
+    print('test_shear = ',repr(test_shear))
     # this function tests that all values of some Shear object are consistent with the tabulated
     # values, given the appropriate index against which to test, and properly accounting for the
     # fact that SBProfile sometimes has the angle in the range [pi, 2*pi)
@@ -99,10 +101,10 @@ def add_distortions(d1, d2, d1app, d2app):
     d2tot = (d2 + d2app + d1app/dapp_sq*(1.0 - np.sqrt(1.0-dapp_sq))*(d1*d2app - d2*d1app))/denom
     return d1tot, d2tot
 
+
+@timer
 def test_shear_initialization():
     """Test that Shears can be initialized in a variety of ways and get the expected results."""
-    import time
-    t1 = time.time()
     # first make an empty Shear and make sure that it has zeros in the right places
     s = galsim.Shear()
     vec = [s.g, s.g1, s.g2, s.e, s.e1, s.e2, s.eta, s.esq]
@@ -190,16 +192,12 @@ def test_shear_initialization():
         np.testing.assert_raises(TypeError,galsim.Shear,beta=45.0,g=0.3)
         np.testing.assert_raises(TypeError,galsim.Shear,q=0.1,beta=0.)
     except ImportError:
-        print 'The assert_raises tests require nose'
-
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+        print('The assert_raises tests require nose')
 
 
+@timer
 def test_shear_methods():
     """Test that the most commonly-used methods of the Shear class give the expected results."""
-    import time
-    t1 = time.time()
     for ind in range(n_shear):
         s = galsim.Shear(e1=e1[ind], e2=e2[ind])
         # check negation
@@ -240,15 +238,11 @@ def test_shear_methods():
     # note: we don't have to check all the getWhatever methods because they were implicitly checked
     # in test_shear_initialization, where we checked the values directly
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_shear_matrix():
     """Test that the shear matrix is calculated correctly.
     """
-    import time
-    t1 = time.time()
-
     for ind in range(n_shear):
         s1 = galsim.Shear(g1=g1[ind], g2=g2[ind])
 
@@ -271,9 +265,6 @@ def test_shear_matrix():
                           [  np.sin(theta.rad()),  np.cos(theta.rad()) ]])
             np.testing.assert_array_almost_equal(m3.dot(r), m1.dot(m2), decimal=12,
                                                  err_msg="rotationWith returned wrong angle")
-
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
 if __name__ == "__main__":

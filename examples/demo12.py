@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -27,7 +27,7 @@ level chromatic objects has not been written yet.
 This script introduces the chromatic objects module galsim.chromatic, which handles wavelength-
 dependent profiles.  Three uses of this module are demonstrated:
 
-1) A chromatic object representing a De Vaucouleurs galaxy with a early-type SED at redshift 0.8 is
+1) A chromatic object representing a De Vaucouleurs galaxy with an early-type SED at redshift 0.8 is
 created.  The galaxy is then drawn using the six LSST filter throughput curves to demonstrate that
 the galaxy is a g-band dropout.
 
@@ -42,9 +42,9 @@ For all cases, suggested parameters for viewing in ds9 are also included.
 
 New features introduced in this demo:
 
-- SED = galsim.SED(wave, flambda)
+- SED = galsim.SED(wave, flambda, wave_type, flux_type)
 - SED2 = SED.atRedshift(redshift)
-- bandpass = galsim.Bandpass(filename)
+- bandpass = galsim.Bandpass(filename, wave_type)
 - bandpass2 = bandpass.truncate(relative_throughput)
 - bandpass3 = bandpass2.thin(rel_err)
 - gal = galsim.Chromatic(GSObject, SED)
@@ -56,8 +56,6 @@ New features introduced in this demo:
 
 import sys
 import os
-import math
-import numpy
 import logging
 import galsim
 
@@ -79,14 +77,13 @@ def main(argv):
     SED_names = ['CWW_E_ext', 'CWW_Sbc_ext', 'CWW_Scd_ext', 'CWW_Im_ext']
     SEDs = {}
     for SED_name in SED_names:
-        SED_filename = os.path.join(datapath, '{0}.sed'.format(SED_name))
+        SED_filename = os.path.join(galsim.meta_data.share_dir, '{0}.sed'.format(SED_name))
         # Here we create some galsim.SED objects to hold star or galaxy spectra.  The most
         # convenient way to create realistic spectra is to read them in from a two-column ASCII
         # file, where the first column is wavelength and the second column is flux. Wavelengths in
-        # the example SED files are in Angstroms, flux in flambda.  The default wavelength type for
-        # galsim.SED is nanometers, however, so we need to override by specifying
-        # `wave_type = 'Ang'`.
-        SED = galsim.SED(SED_filename, wave_type='Ang')
+        # the example SED files are in Angstroms, flux in flambda.  We use a set of files that are
+        # distributed with GalSim in the share/ directory.
+        SED = galsim.SED(SED_filename, wave_type='Ang', flux_type='flambda')
         # The normalization of SEDs affects how many photons are eventually drawn into an image.
         # One way to control this normalization is to specify the flux density in photons per nm
         # at a particular wavelength.  For example, here we normalize such that the photon density
@@ -103,14 +100,14 @@ def main(argv):
         # through.  These include the entire imaging system throughput including the atmosphere,
         # reflective and refractive optics, filters, and the CCD quantum efficiency.  These are
         # also conveniently read in from two-column ASCII files where the first column is
-        # wavelength and the second column is dimensionless flux. The example filter files have
-        # units of nanometers and dimensionless throughput, which is exactly what galsim.Bandpass
-        # expects, so we just specify the filename.
-        filters[filter_name] = galsim.Bandpass(filter_filename)
+        # wavelength and the second column is dimensionless throughput. The example filter files
+        # units of nanometers for the wavelength type, so we specify that using the required
+        # `wave_type` argument.
+        filters[filter_name] = galsim.Bandpass(filter_filename, wave_type='nm')
         # For speed, we can thin out the wavelength sampling of the filter a bit.
         # In the following line, `rel_err` specifies the relative error when integrating over just
         # the filter (however, this is not necessarily the relative error when integrating over the
-        # filter times an SED)
+        # filter times an SED).
         filters[filter_name] = filters[filter_name].thin(rel_err=1e-4)
     logger.debug('Read in filters')
 
@@ -142,7 +139,7 @@ def main(argv):
 
     # draw profile through LSST filters
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.1)
-    for filter_name, filter_ in filters.iteritems():
+    for filter_name, filter_ in filters.items():
         img = galsim.ImageF(64, 64, scale=pixel_scale)
         final.drawImage(filter_, image=img)
         img.addNoise(gaussian_noise)
@@ -183,7 +180,7 @@ def main(argv):
 
     # draw profile through LSST filters
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.02)
-    for filter_name, filter_ in filters.iteritems():
+    for filter_name, filter_ in filters.items():
         img = galsim.ImageF(64, 64, scale=pixel_scale)
         bdfinal.drawImage(filter_, image=img)
         img.addNoise(gaussian_noise)
@@ -257,7 +254,7 @@ def main(argv):
 
     # Draw profile through LSST filters
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.03)
-    for filter_name, filter_ in filters.iteritems():
+    for filter_name, filter_ in filters.items():
         img = galsim.ImageF(64, 64, scale=pixel_scale)
         final.drawImage(filter_, image=img)
         img.addNoise(gaussian_noise)

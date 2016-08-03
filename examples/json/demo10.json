@@ -39,22 +39,12 @@
     }
 },
 
-"gal" : {
+"stamp" : {
     "type" : "Ring",
     "num" : 20,
-    "first" : {
-        "type" : "RealGalaxy",
-        "id" : {
-            "type" : "List",
-            "items" : [ 106416, 106731, 108402, 116045, 116448 ],
-            "index" : {
-                "type" : "Sequence",
-                "repeat" : { "type" : "Current", "key" : "gal.num" }
-            }
-        }
-    },
-    "dilation" : 3,
+
     "full_rotation" : "360 deg",
+    "dilation" : 3,
 
     "shear" : { "type" : "PowerSpectrumShear" },
 
@@ -66,6 +56,18 @@
             "fpixel_scale" : { "type" : "Current", "key" : "image.pixel_scale" }
         },
         "theta" : { "type" : "Random" }
+    }
+},
+
+"gal" : {
+    "type" : "RealGalaxy",
+    "id" : {
+        "type" : "List",
+        "items" : [ 106416, 106731, 108402, 116045, 116448 ],
+        "index" : {
+            "type" : "Sequence",
+            "repeat" : { "type" : "Current", "key" : "stamp.num" }
+        }
     },
 
     "signal_to_noise" : 100
@@ -88,7 +90,7 @@
 },
 
 "input" : {
-    "real_catalog" : { "dir" : "data", "file_name" : "real_galaxy_catalog_example.fits" },
+    "real_catalog" : { "dir" : "data", "file_name" : "real_galaxy_catalog_23.5_example.fits" },
 
     "power_spectrum" : { "e_power_function" : "k**1.8" }
 },
@@ -128,40 +130,40 @@
             },
 
             "psf_fwhm" : "psf.fwhm",
-            "cosmos_id" : "gal.first.id",
+            "cosmos_id" : "gal.id",
             "cosmos_index" : {
                 "type" : "Eval",
                 "str" : "orig_gal.index",
-                "xorig_gal" : { "type" : "Current", "key" : "gal.first" }
+                "xorig_gal" : { "type" : "Current", "key" : "gal" }
             },
 
             "theta" : {
                 "type" : "Eval",
                 "str" : "index * 360. / num",
-                "iindex" : { "type" : "Current", "key" : "gal.index" },
-                "inum" : { "type" : "Current", "key" : "gal.num" }
+                "iindex" : { "type" : "Current", "key" : "stamp.index" },
+                "inum" : { "type" : "Current", "key" : "stamp.num" }
             },
 
             "g1" : {
                 "type" : "Eval",
                 "str" : "shear.g1",
-                "gshear" : { "type" : "Current", "key" : "gal.shear" }
+                "gshear" : { "type" : "Current", "key" : "stamp.shear" }
             },
             "g2" : {
                 "type" : "Eval",
                 "str" : "shear.g2",
-                "gshear" : { "type" : "Current", "key" : "gal.shear" }
+                "gshear" : { "type" : "Current", "key" : "stamp.shear" }
             },
 
             "shift_x" : {
                 "type" : "Eval",
                 "str" : "shift.x",
-                "pshift" : { "type" : "Current", "key" : "gal.shift" }
+                "pshift" : { "type" : "Current", "key" : "stamp.shift" }
             },
             "shift_y" : {
                 "type" : "Eval",
                 "str" : "shift.y",
-                "pshift" : { "type" : "Current", "key" : "gal.shift" }
+                "pshift" : { "type" : "Current", "key" : "stamp.shift" }
             }
         }
     }

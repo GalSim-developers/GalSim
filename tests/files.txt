@@ -1,2 +1,3 @@
 test_Image.cpp
 test_integ.cpp
+test_version.cpp

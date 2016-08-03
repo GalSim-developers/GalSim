@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,11 +19,7 @@
 
 //#define DEBUGLOGGING
 
-#ifndef __INTEL_COMPILER
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
-#endif
+#include "galsim/IgnoreWarnings.h"
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include <boost/math/special_functions/bessel.hpp>

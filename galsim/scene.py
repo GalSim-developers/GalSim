@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -135,9 +135,9 @@ class COSMOSCatalog(object):
                             "marginal": Apply the above cuts, plus ones that eliminate some more
                                         marginal cases.
                             [default: "marginal"]
-    @param min_hlr          Exclude galaxies whose fitted half-light-radius is smaller than this
+    @param min_hlr          Exclude galaxies whose fitted half-light radius is smaller than this
                             value (in arcsec).  [default: 0, meaning no limit]
-    @param max_hlr          Exclude galaxies whose fitted half-light-radius is larger than this
+    @param max_hlr          Exclude galaxies whose fitted half-light radius is larger than this
                             value (in arcsec).  [default: 0, meaning no limit]
     @param min_flux         Exclude galaxies whose fitted flux is smaller than this value.
                             [default: 0, meaning no limit]
@@ -152,8 +152,8 @@ class COSMOSCatalog(object):
     nobjects     The number of objects in the catalog
     """
     _req_params = {}
-    _opt_params = { 'file_name' : str, 'sample' : str, 'image_dir' : str , 'dir' : str,
-                    'preload' : bool, 'noise_dir' : str, 'use_real' : bool,
+    _opt_params = { 'file_name' : str, 'sample' : str, 'dir' : str,
+                    'preload' : bool, 'use_real' : bool,
                     'exclusion_level' : str, 'min_hlr' : float, 'max_hlr' : float,
                     'min_flux' : float, 'max_flux' : float
                   }
@@ -206,12 +206,13 @@ class COSMOSCatalog(object):
             # Note: don't just use k = -5 in case it actually ends with .fits.fz
             k = self.real_cat.file_name.find('.fits') 
             param_file_name = self.real_cat.file_name[:k] + '_fits' + self.real_cat.file_name[k:]
-            self.param_cat = pyfits.getdata(param_file_name)
-
+            with pyfits.open(param_file_name) as fits:
+                self.param_cat = fits[1].data
         else:
             try:
                 # Read in data.
-                self.param_cat = pyfits.getdata(full_file_name)
+                with pyfits.open(full_file_name) as fits:
+                    self.param_cat = fits[1].data
                 # Check if this was the right file.  It should have a 'fit_status' column.
                 self.param_cat['fit_status']
             except KeyError:
@@ -219,7 +220,8 @@ class COSMOSCatalog(object):
                 # so try adding _fits to it as above.
                 k = full_file_name.find('.fits')
                 param_file_name = full_file_name[:k] + '_fits' + full_file_name[k:]
-                self.param_cat = pyfits.getdata(param_file_name)
+                with pyfits.open(param_file_name) as fits:
+                    self.param_cat = fits[1].data
 
         # Check for the old-style parameter catalog
         if 'fit_dvc_btt' not in self.param_cat.dtype.names:
@@ -230,7 +232,8 @@ class COSMOSCatalog(object):
             import warnings
             warnings.warn(
                 'You seem to have an old version of the COSMOS parameter file. '+
-                'Please run `galsim_download_cosmos` to re-download the COSMOS catalog.')
+                'Please run `galsim_download_cosmos -s %s` '%self.use_sample+
+                'to re-download the COSMOS catalog.')
 
         # NB. The pyfits FITS_Rec class has a bug where it makes a copy of the full
         # record array in each record (e.g. in getParametricRecord) and then doesn't
@@ -255,12 +258,14 @@ class COSMOSCatalog(object):
                 # catalog name:
                 selection_file_name = full_file_name[:k] + '_selection' + full_file_name[k:]
                 try:
-                    self.selection_cat = pyfits.getdata(selection_file_name)
+                    with pyfits.open(selection_file_name) as fits:
+                        self.selection_cat = fits[1].data
                 except IOError:
                     # There's one more option: full_file_name might be the parametric fit file, so
                     # we have to strip off the _fits.fits (instead of just the .fits)
                     selection_file_name = full_file_name[:k-5] + '_selection' + full_file_name[k:]
-                    self.selection_cat = pyfits.getdata(selection_file_name)
+                    with pyfits.open(selection_file_name) as fits:
+                        self.selection_cat = fits[1].data
 
 
                 # At this point we've read in the catalog one way or another (otherwise we would
@@ -297,7 +302,8 @@ class COSMOSCatalog(object):
                 warnings.warn(
                     'File with GalSim selection criteria not found! '+
                     'Not all of the requested exclusions will be performed. '+
-                    'Run the program galsim_download_cosmos to get the necessary selection file.')
+                    'Run the program `galsim_download_cosmos -s %s` '%self.use_sample+
+                    'to get the necessary selection file.')
 
             # Finally, impose a cut that the total flux in the postage stamp should be positive,
             # which excludes a tiny number of galaxies (of order 10 in each sample) with some sky
@@ -312,8 +318,8 @@ class COSMOSCatalog(object):
                         'This version of the COSMOS catalog does not have info about total flux in '+
                         'the galaxy postage stamps.  Exclusion of negative-flux stamps in advance '+
                         'cannot be done. '+
-                        'Run the program galsim_download_cosmos to get the updated catalog with this '+
-                        'information precomputed.')
+                        'Run the program `galsim_download_cosmos -s %s` '%self.use_sample+
+                        'to get the updated catalog with this information precomputed.')
 
         if exclusion_level in ['bad_fits', 'marginal']:
             # This 'exclusion_level' involves eliminating failed parametric fits (bad fit status
@@ -362,8 +368,8 @@ class COSMOSCatalog(object):
                 import warnings
                 warnings.warn(
                     'You seem to have an old version of the COSMOS parameter file. '+
-                    'Please run `galsim_download_cosmos` to re-download the COSMOS catalog ' +
-                    'to get faster and more accurate selection.')
+                    'Please run `galsim_download_cosmos -s %s` '%self.use_sample+
+                    'to re-download the COSMOS catalog to get faster and more accurate selection.')
 
                 sparams = self.param_cat['sersicfit']
                 hlr_pix = sparams[:,1]
@@ -522,7 +528,8 @@ class COSMOSCatalog(object):
                 import warnings
                 warnings.warn(
                     'You seem to have an old version of the COSMOS parameter file. '+
-                    'Please run `galsim_download_cosmos` to re-download the COSMOS catalog ' +
+                    'Please run `galsim_download_cosmos -s %s` '%self.use_sample+
+                    'to re-download the COSMOS catalog '+
                     'and take advantage of pre-computation of many quantities..')
 
             gal_list = self._makeParametric(indices, chromatic, sersic_prec, gsparams)
@@ -537,11 +544,16 @@ class COSMOSCatalog(object):
                 flux_factor = 10.**(-0.4*1.5)
                 size_factor = 0.6
                 gal_list = [ gal.dilate(size_factor) * flux_factor for gal in gal_list ]
-            else:
+            elif self.use_sample == '25.2':
                 import warnings
                 warnings.warn(
                     'Ignoring `deep` argument, because the sample being used already '+
                     'corresponds to a flux limit of F814W<25.2')
+            else:
+                import warnings
+                warnings.warn(
+                    'Ignoring `deep` argument, because the sample being used does not '+
+                    'corresponds to a flux limit of F814W<23.5')
 
         # Store the orig_index as gal.index regardless of whether we have a RealGalaxy or not.
         # It gets set by _makeReal, but not by _makeParametric.
@@ -549,6 +561,7 @@ class COSMOSCatalog(object):
         # So just put it in here at the end to be sure.
         for gal, idx in zip(gal_list, indices):
             gal.index = self.orig_index[idx]
+            if hasattr(gal, 'original'): gal.original.index = self.orig_index[idx]
 
         if hasattr(index, '__iter__'):
             return gal_list
@@ -579,14 +592,19 @@ class COSMOSCatalog(object):
                 # This means that when drawing chromatic parametric galaxies, the outputs will be
                 # properly normalized in terms of counts.
 
-                # Read in some SEDs.
+                # Read in some SEDs.  We are using some fairly truncated and thinned ones, because
+                # in any case the SED assignment here is somewhat arbitrary and should not be taken
+                # too seriously.
                 self._sed = [
                     # bulge
-                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_E_ext.sed')),
+                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_E_ext_more.sed'),
+                               wave_type='Ang', flux_type='flambda'),
                     # disk
-                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_Scd_ext.sed')),
+                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_Scd_ext_more.sed'),
+                               wave_type='Ang', flux_type='flambda'),
                     # intermediate
-                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_Sbc_ext.sed'))]
+                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_Sbc_ext_more.sed'),
+                               wave_type='Ang', flux_type='flambda')]
 
         gal_list = []
         for index in indices:
@@ -842,10 +860,14 @@ class COSMOSCatalog(object):
                     'Ignoring `deep` argument, because the sample being used already '+
                     'corresponds to a flux limit of F814W<25.2')
 
-        # Store the orig_index as gal.index, since the above RealGalaxy initialization
-        # just sets it as 0.  Plus, it isn't set at all if we make a parametric galaxy.
-        # And if we are doing the deep scaling, then it gets messed up by that
+        # Store the orig_index as gal.index, since the above RealGalaxy initialization just sets it
+        # as 0.  Plus, it isn't set at all if we make a parametric galaxy.  And if we are doing the
+        # deep scaling, then it gets messed up by that.  If we have done some transformations, and
+        # are also doing later transformation, it will take the `original` attribute that is already
+        # there.  So having `index` doesn't help, and we also need `original.index`.
         gal.index = cosmos_catalog.getOrigIndex(index)
+        if hasattr(gal, 'original'):
+            gal.original.index = cosmos_catalog.getOrigIndex(index)
 
         return gal
 

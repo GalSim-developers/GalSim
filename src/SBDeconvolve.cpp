@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -47,13 +47,16 @@ namespace galsim {
     }
 
     SBDeconvolve::SBDeconvolveImpl::SBDeconvolveImpl(const SBProfile& adaptee,
-                                                     const GSParamsPtr& gsparams) :
-        SBProfileImpl(gsparams ? gsparams : GetImpl(adaptee)->gsparams),
+                                                     const GSParamsPtr& _gsparams) :
+        SBProfileImpl(_gsparams ? _gsparams : GetImpl(adaptee)->gsparams),
         _adaptee(adaptee)
     {
         double maxk = maxK();
         _maxksq = maxk*maxk;
-        dbg<<"SBDeconvolve constructor: _maxksq = "<<_maxksq<<std::endl;
+        double flux = GetImpl(_adaptee)->getFlux();
+        _min_acc_kval = flux * gsparams->kvalue_accuracy;
+        dbg<<"SBDeconvolve constructor: _maxksq = "<<_maxksq;
+        dbg<<", _min_acc_kval = "<<_min_acc_kval<<std::endl;
     }
 
     // xValue() not implemented for SBDeconvolve.
@@ -62,7 +65,17 @@ namespace galsim {
 
     std::complex<double> SBDeconvolve::SBDeconvolveImpl::kValue(const Position<double>& k) const
     {
-        return (k.x*k.x + k.y*k.y <= _maxksq) ? 1./_adaptee.kValue(k) : 0.;
+        double ksq = k.x*k.x + k.y*k.y;
+        if (ksq > _maxksq) {
+            return 0.;
+        } else {
+            std::complex<double> kval = _adaptee.kValue(k);
+            double abs_kval = std::abs(kval);
+            if (abs_kval < _min_acc_kval)
+                return 1./_min_acc_kval;
+            else
+                return 1./kval;
+        }
     }
 
     void SBDeconvolve::SBDeconvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
@@ -83,8 +96,17 @@ namespace galsim {
         for (int j=0;j<n;++j,ky0+=dky) {
             double kx = kx0;
             double kysq = ky0*ky0;
-            for (int i=0;i<m;++i,kx+=dkx,++valit)
-                *valit = (kx*kx+kysq <= _maxksq) ? 1./(*valit) : 0.;
+            for (int i=0;i<m;++i,kx+=dkx,++valit) {
+                double ksq = kx*kx + kysq;
+                if (ksq > _maxksq) *valit = 0.;
+                else {
+                    double abs_kval = std::abs(*valit);
+                    if (abs_kval < _min_acc_kval)
+                        *valit = 1./_min_acc_kval;
+                    else
+                        *valit = 1./(*valit);
+                }
+            }
         }
     }
 
@@ -106,8 +128,17 @@ namespace galsim {
         for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
             double kx = kx0;
             double ky = ky0;
-            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx,++valit)
-                *valit = (kx*kx+ky*ky <= _maxksq) ? 1./(*valit) : 0.;
+            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx,++valit) {
+                double ksq = kx*kx + ky*ky;
+                if (ksq > _maxksq) *valit = 0.;
+                else {
+                    double abs_kval = std::abs(*valit);
+                    if (abs_kval < _min_acc_kval)
+                        *valit = 1./_min_acc_kval;
+                    else
+                        *valit = 1./(*valit);
+                }
+            }
         }
     }
 

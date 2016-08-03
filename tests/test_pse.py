@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import os
 import numpy as np
 import time
@@ -42,11 +44,11 @@ grid_spacing = 0.1 # degrees
 ps_file = os.path.join(datapath, 'cosmo-fid.zmed1.00.out')
 rand_seed = 2718
 
+
+@timer
 def test_PSE_basic():
     """Basic test of power spectrum estimation.
     """
-    t1 = time.time()
-
     # Begin by setting up the PowerSpectrum and generating shears.
     my_tab = galsim.LookupTable(file=ps_file)
     my_ps = galsim.PowerSpectrum(my_tab, units=galsim.radians)
@@ -109,9 +111,6 @@ def test_PSE_basic():
     np.testing.assert_array_almost_equal(
         (P_eb3[1:]/P_e_theory[1:])/(2*zero_tolerance), 0., decimal=0,
         err_msg='PSE found EB cross-power')
-
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_PSE_basic()

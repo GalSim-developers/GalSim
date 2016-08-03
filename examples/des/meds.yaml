@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -41,7 +41,7 @@
 modules:
     # The GalSim config processor will import each of these at the start of processing this
     # file, so it provides a way to have custom types for anything (values, objects, inputs,
-    # output files, etc.).  In this case, three of these are in the current directory, so if
+    # output files, etc.).  In this case, two of these are in the current directory, so if
     # you run `galsim meds.yaml` in this directory, it will find them.  But they can be anywhere
     # in your PYTHONPATH.
 
@@ -96,7 +96,7 @@ psf:
         strut_thick: 0.05  # In units of pupil diameter.
         strut_angle: 10 degrees
 
-        # According to Aaron Roodma, for DES the appropriate rms values are
+        # According to Aaron Roodman, for DES the appropriate rms values are
         # [ 0.13, 0.13, 0.14, 0.06, 0.06, 0.05, 0.06, 0.03 ]
         defocus: { type: RandomGaussian, sigma: 0.13 }
         astig1: { type: RandomGaussian, sigma: 0.13 }
@@ -107,14 +107,20 @@ psf:
         trefoil2: { type: RandomGaussian, sigma: 0.06 }
         spher: { type: RandomGaussian, sigma: 0.03 }
 
-        # Sometimes the OpticalPSF wants to make a very large image of the PSF.  But if the
-        # PSF image is larger than the postage stamp onto which we will draw the object,
-        # the larger area is mostly wasted.  Setting max_size to the size of the postage stamp
-        # we will eventually draw onto helps avoid wasted calculations.
-        # This is in arcsec, so max_size = stamp_size * pixel_scale
-        # We're using a non-square wcs, so there isn't a well-defined pixel scale.  Use
-        # the maxLinearScale to get the maximum "pixel scale" for the parallelogram.
-        max_size: "$@image.size * wcs.maxLinearScale()"
+        # The original GREAT3 runs used a keyword max_size to improve the efficiency of OpticalPSF.
+        # However, we now believe that this keyword introduces additional aliasing and have
+        # deprecated its use in GalSim v1.4.  We have retained the original description in the
+        # doubly commented block below.
+
+        # # Sometimes the OpticalPSF wants to make a very large image of the PSF.  But if the
+        # # PSF image is larger than the postage stamp onto which we will draw the object,
+        # # the larger area is mostly wasted.  Setting max_size to the size of the postage stamp
+        # # we will eventually draw onto helps avoid wasted calculations.
+        # # This is in arcsec, so max_size = stamp_size * pixel_scale
+        # # We're using a non-square wcs, so there isn't a well-defined pixel scale.  Use
+        # # the maxLinearScale to get the maximum "pixel scale" for the parallelogram.
+        # max_size: "$@image.size * wcs.maxLinearScale()"
+
         suppress_warning: true
 
 gal:
@@ -160,7 +166,7 @@ image:
         type : DES_Local  # Defined in des_wcs.py in this directory.
 
         # We could specify a chipnum here if we wanted.  The default is to pick a random chipnum
-        # from 1-62
+        # from 1-62, excluding the bad chips specified in input.des_Wcs.
 
         # This also optionally takes image_pos, but we'll use the default here, which is to pick
         # a random location on the chip.
@@ -238,6 +244,11 @@ input:
         dir : des_data
         root : "DECam_00154912"
         ext : ".fits.fz"  # This is the default, but might as well be explicit here.
+
+        # Some of the chips on DES images are unusable, so we exclude them from use by this
+        # class.  The default is to exclude chips 2, 31, 61, but this particular exposure was
+        # taken during SV, when only chip 61 was bad, so we only exclude that one here.
+        bad_ccds : [ 61 ]
 
 output:
     type: MEDS

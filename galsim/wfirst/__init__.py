@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -93,6 +93,8 @@ Currently, the module includes the following numbers:
                        routine, users will not need to supply this filename, since the routine
                        already knows about it.
 
+    pupil_plane_scale - The pixel scale in meters per pixel for the image in pupil_plane_file.
+
     stray_light_fraction - The fraction of the sky background that is allowed to contribute as stray
                            light.  Currently this is required to be <10% of the background due to
                            zodiacal light, so its value is set to 0.1 (assuming a worst-case).  This
@@ -100,6 +102,9 @@ Currently, the module includes the following numbers:
 
     ipc_kernel - The 3x3 kernel to be used in simulations of interpixel capacitance (IPC), using
                  galsim.wfirst.applyIPC().
+
+    persistence_coefficients - The retention fraction of the previous eight exposures in a simple,
+                               linear model for persistence.
 
     n_sca - The number of SCAs in the focal plane.
 
@@ -138,6 +143,9 @@ This module also contains the following routines:
                               the level expected for WFIRST.
 
     applyIPC() - A routine to incorporate the effects of interpixel capacitance in WFIRST images.
+
+    applyPersistence() - A routine to incorporate the effects of persistence - the residual images
+                         from earlier exposures after resetting.
 
     allDetectorEffects() - A routine to add all sources of noise and all (implemented) detector
                            effects to an image containing astronomical objects plus background.  In
@@ -189,7 +197,7 @@ usage.
 """
 import os
 import galsim
-import numpy
+import numpy as np
 
 gain = 1.0
 pixel_scale = 0.11
@@ -207,26 +215,33 @@ thermal_backgrounds = {'J129': 0.06,
                        'Z087': 0.06,
                        'H158': 0.08,
                        'W149': 0.06}
+
 pupil_plane_file = os.path.join(galsim.meta_data.share_dir,
                                 "WFIRST-AFTA_Pupil_Mask_C5_20141010_PLT.fits.gz")
+# The pupil plane image has non-zero values with a diameter of 1696 pixels.  The WFirst mirror
+# is 2.4 meters.  So the scale is 2.4 / 1696 = 0.00141509 meters/pixel.
+pupil_plane_scale = 2.4 / 1696.
+
 stray_light_fraction = 0.1
+
 # IPC kernel is unnormalized at first.  We will normalize it.
-ipc_kernel = numpy.array([ [0.001269938, 0.015399776, 0.001199862], \
-                           [0.013800177, 1.0, 0.015600367], \
-                           [0.001270391, 0.016129619, 0.001200137] ])
-ipc_kernel /= numpy.sum(ipc_kernel)
+ipc_kernel = np.array([ [0.001269938, 0.015399776, 0.001199862], \
+                        [0.013800177, 1.0, 0.015600367], \
+                        [0.001270391, 0.016129619, 0.001200137] ])
+ipc_kernel /= np.sum(ipc_kernel)
 ipc_kernel = galsim.Image(ipc_kernel)
+persistence_coefficients = np.array([0.2246,0.0225,0.0085,0.0043,0.0025,0.0016,0.0011,0.0008])/100.
 n_sca = 18
 n_pix_tot = 4096 
 n_pix = 4088
 jitter_rms = 0.014
 charge_diffusion = 0.1
 
-from wfirst_bandpass import getBandpasses
-from wfirst_backgrounds import getSkyLevel
-from wfirst_psfs import getPSF, storePSFImages, loadPSFImages
-from wfirst_wcs import getWCS, findSCA, allowedPos, bestPA
-from wfirst_detectors import applyNonlinearity, addReciprocityFailure, applyIPC, allDetectorEffects
+from .wfirst_bandpass import getBandpasses
+from .wfirst_backgrounds import getSkyLevel
+from .wfirst_psfs import getPSF, storePSFImages, loadPSFImages
+from .wfirst_wcs import getWCS, findSCA, allowedPos, bestPA
+from .wfirst_detectors import applyNonlinearity, addReciprocityFailure, applyIPC, applyPersistence, allDetectorEffects
 
 def NLfunc(x):
     return x + nonlinearity_beta*(x**2)
@@ -236,7 +251,7 @@ def _parse_SCAs(SCAs):
     # convenient format.  It is used in wfirst_wcs.py and wfirst_psfs.py.
     #
     # Check which SCAs are to be done.  Default is all (and they are 1-indexed).
-    all_SCAs = numpy.arange(1, n_sca + 1, 1)
+    all_SCAs = np.arange(1, n_sca + 1, 1)
     # Later we will use the list of selected SCAs to decide which ones we're actually going to do
     # the calculations for.  For now, just check for invalid numbers.
     if SCAs is not None:

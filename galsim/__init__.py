@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -53,7 +53,7 @@ Use the galsim tag to flag it as a question about GalSim.
 
 
 
-Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 https://github.com/GalSim-developers
 
 Redistribution and use in source and binary forms, with or without
@@ -81,7 +81,7 @@ damages of any kind.
 # http://stackoverflow.com/questions/458550/standard-way-to-embed-version-into-python-package
 # We don't use setup.py, so it's not so important to do it this way, but if we ever switch...
 # And it does make it a bit easier to get the version number in SCons too.
-from _version import __version__, __version_info__
+from ._version import __version__, __version_info__
 
 
 # Define the current code version, in addition to the hidden attribute, to be consistent with
@@ -97,7 +97,7 @@ from .shear import Shear
 from .angle import Angle, AngleUnit, radians, hours, degrees, arcmin, arcsec, HMS_Angle, DMS_Angle
 from .catalog import Catalog, Dict, OutputCatalog
 from .scene import COSMOSCatalog
-from .table import LookupTable
+from .table import LookupTable, LookupTable2D
 
 # Image
 from .image import Image, ImageS, ImageI, ImageF, ImageD
@@ -113,19 +113,22 @@ from .correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise,
 from .base import GSParams, GSObject, Gaussian, Moffat, Airy, Kolmogorov, Pixel, Box, TopHat
 from .base import Exponential, Sersic, DeVaucouleurs, Spergel
 from .real import RealGalaxy, RealGalaxyCatalog, simReal, ChromaticRealGalaxy
-from .optics import OpticalPSF
+from .phase_psf import Aperture, PhaseScreenList, PhaseScreenPSF, OpticalPSF
+from .phase_screens import AtmosphericScreen, Atmosphere, OpticalScreen
 from .shapelet import Shapelet, ShapeletSize, FitShapelet
 from .interpolatedimage import Interpolant
 from .interpolatedimage import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
 from .interpolatedimage import InterpolatedImage, InterpolatedKImage
 from .compound import Add, Sum, Convolve, Convolution, Deconvolve, Deconvolution
 from .compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
+from .compound import FourierSqrt, FourierSqrtProfile
 from .transform import Transform, Transformation
 
 # Chromatic
 from .chromatic import ChromaticObject, ChromaticAtmosphere, Chromatic, ChromaticSum
 from .chromatic import ChromaticConvolution, ChromaticDeconvolution, ChromaticAutoConvolution
 from .chromatic import ChromaticAutoCorrelation, ChromaticTransformation
+from .chromatic import ChromaticFourierSqrtProfile
 from .chromatic import ChromaticOpticalPSF, ChromaticAiry, InterpolatedChromaticObject
 from .sed import SED
 from .bandpass import Bandpass
@@ -158,3 +161,4 @@ from . import hsm
 from . import dcr
 from . import meta_data
 from . import cdmodel
+from . import optics

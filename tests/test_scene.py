@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import os
 import numpy as np
 from galsim_test_helpers import *
@@ -30,18 +32,18 @@ except ImportError:
 path, filename = os.path.split(__file__)
 datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
 
+
+@timer
 def test_cosmos_basic():
     """Check some basic functionality of the COSMOSCatalog class."""
-    import time
-    t1 = time.time()
     # Note, there's not much here yet.   Could try to think of other tests that are more
     # interesting.
 
     # Initialize a COSMOSCatalog with all defaults.
-    cat = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+    cat = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
                                dir=datapath)
     # Initialize one that doesn't exclude failures.  It should be >= the previous one in length.
-    cat2 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+    cat2 = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
                                dir=datapath, exclusion_level='none')
     assert cat2.nobjects>=cat.nobjects
 
@@ -49,9 +51,9 @@ def test_cosmos_basic():
     try:
         # Can't find data (wrong directory).
         np.testing.assert_raises(IOError, galsim.COSMOSCatalog,
-                                 file_name='real_galaxy_catalog_example.fits')
+                                 file_name='real_galaxy_catalog_23.5_example.fits')
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     # Try making galaxies
     gal_real = cat2.makeGalaxy(index=0,gal_type='real',chromatic=False)
@@ -77,7 +79,7 @@ def test_cosmos_basic():
                             "of 'galsim.GSObect'")
 
     # Check for parametric catalog
-    cat_param = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example_fits.fits',
+    cat_param = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example_fits.fits',
                                      dir=datapath, use_real=False)
 
     # Try making galaxies
@@ -92,21 +94,17 @@ def test_cosmos_basic():
             raise TypeError("COSMOS Catalog makeGalaxy routine does not return a list of instances "
                             "of 'galsim.GSObject when loaded from a fits file.")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_cosmos_fluxnorm():
     """Check for flux normalization properties of COSMOSCatalog class."""
-    import time
-    t1 = time.time()
-
     # Check that if we make a RealGalaxy catalog, and a COSMOSCatalog, and draw the real object, the
     # fluxes should match very well.  These correspond to 1s exposures.
     test_ind = 54
     rand_seed = 12345
-    cat = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_example.fits',
+    cat = galsim.COSMOSCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
                                dir=datapath, exclusion_level='none')
-    rgc = galsim.RealGalaxyCatalog(file_name='real_galaxy_catalog_example.fits',
+    rgc = galsim.RealGalaxyCatalog(file_name='real_galaxy_catalog_23.5_example.fits',
                                    dir=datapath)
     final_psf = galsim.Airy(diam=1.2, lam=800.) # PSF twice as big as HST in F814W.
     gal1 = cat.makeGalaxy(test_ind, gal_type='real', rng=galsim.BaseDeviate(rand_seed))
@@ -119,8 +117,8 @@ def test_cosmos_fluxnorm():
     # Then check that if we draw a parametric representation that is achromatic, that the flux
     # matches reasonably well (won't be exact because model isn't perfect).
     gal1_param = cat.makeGalaxy(test_ind, gal_type='parametric', chromatic=False)
-    gal1_param = galsim.Convolve(gal1_param, final_psf)
-    im1_param = gal1_param.drawImage(scale=0.05)
+    gal1_param_final = galsim.Convolve(gal1_param, final_psf)
+    im1_param = gal1_param_final.drawImage(scale=0.05)
 
     # Then check the same for a chromatic parametric representation that is drawn into the same
     # band.
@@ -135,8 +133,13 @@ def test_cosmos_fluxnorm():
     np.testing.assert_allclose(ref_val, test_val, rtol=0.1,
                                err_msg='Flux normalization problem in COSMOS galaxies')
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    # Finally, check that the original COSMOS info is stored properly after transformations, for
+    # both Sersic galaxies (like galaxy 0 in the catalog) and the one that is gal1_param above.
+    gal0_param = cat.makeGalaxy(0, gal_type='parametric', chromatic=False)
+    assert hasattr(gal0_param.shear(g1=0.05).original, 'index'), \
+        'Sersic galaxy does not retain index information after transformation'
+    assert hasattr(gal1_param.shear(g1=0.05).original, 'index'), \
+        'Bulge+disk galaxy does not retain index information after transformation'
 
 
 if __name__ == "__main__":

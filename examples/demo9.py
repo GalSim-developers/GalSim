@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -25,7 +25,7 @@ This script simulates cluster lensing or galaxy-galaxy lensing.  The gravitation
 applied to each galaxy is calculated for an NFW halo mass profile.  We simulate observations 
 of galaxies around 20 different clusters -- 5 each of 4 different masses.  Each cluster
 has its own file, organized into 4 directories (one for each mass).  For each cluster, we
-draw 20 lensed galaxies at random positions of the image.  The PSF is appropriate for a
+draw 20 lensed galaxies located at random positions in the image.  The PSF is appropriate for a
 space-like simulation.  (Some of the numbers used are the values for HST.)  And we apply
 a cubic telescope distortion for the WCS.  Finally, we also output a truth catalog for each
 output image that could be used for testing the accuracy of shape or flux measurements.
@@ -241,11 +241,11 @@ def main(argv):
         # columns.
         names = [ 'object_id', 'halo_id',
                   'flux', 'size', 'eta1', 'eta2', 'mu', 'redshift', 
-                  'shear.g1', 'shear.g2', 'pos.x', 'pos.y', 
+                  'shear.g1', 'shear.g2', 'pos.x', 'pos.y', 'image_pos.x', 'image_pos.y',
                   'halo_mass', 'halo_conc', 'halo_redshift' ]
         types = [ int, int,
                   float, float, float, float, float, float,
-                  float, float, float, float,
+                  float, float, float, float, float, float,
                   float, float, float ]
         truth_cat = galsim.OutputCatalog(names, types)
 
@@ -398,6 +398,7 @@ def main(argv):
             row = ( (first_obj_id + k), halo_id, 
                     flux, hlr, eta1, eta2, nfw_mu, nfw_z_source,
                     total_shear.g1, total_shear.g2, pos.x, pos.y,
+                    image_pos.x, image_pos.y,
                     mass, nfw_conc, nfw_z_halo )
             truth_cat.addRow(row)
 

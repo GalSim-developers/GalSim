@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,7 +19,11 @@
 #ifndef NumpyHelper_H
 #define NumpyHelper_H
 
-#include "boost/python.hpp" // header that includes Python.h always needs to come first
+#include <iostream>
+#include "Python.h"
+#include "capsulethunk.h" // cf. https://docs.python.org/3/howto/cporting.html#cobject-replaced-with-capsule
+
+#include "boost/python.hpp"
 
 #ifdef __INTEL_COMPILER
 #pragma warning (disable : 47)
@@ -72,7 +76,7 @@ inline int GetNumpyArrayTypeCode(PyObject* array)
 
 // return the NumPy type for a C++ class (e.g. float -> numpy.float32)
 template <typename T>
-inline bp::object GetNumPyType() 
+inline bp::object GetNumPyType()
 {
     bp::handle<> h(reinterpret_cast<PyObject*>(PyArray_DescrFromType(NumPyTraits<T>::getCode())));
     return bp::object(h).attr("type");
@@ -116,19 +120,55 @@ inline T* GetNumpyArrayData(PyObject* array)
     return reinterpret_cast<T*>(PyArray_DATA(numpy_array));
 }
 
+#if (PY_VERSION_HEX < 0x02070000)
 template <typename T>
-inline void DestroyCObjectOwner(T* p) 
+inline void DestroyCObjectOwner(T* p)
 {
     boost::shared_ptr<T>* owner = reinterpret_cast<boost::shared_ptr<T>*>(p);
     delete owner;
 }
+#else
+template <typename T>
+inline void DestroyCapsule(PyObject* capsule)
+{
+    void* p = PyCapsule_GetPointer(capsule, NULL);
+    boost::shared_ptr<T>* owner = reinterpret_cast<boost::shared_ptr<T>*>(p);
+    delete owner;
+}
+#endif
 
 template <typename T>
 struct PythonDeleter {
     void operator()(T* p) { owner.reset(); }
-    explicit PythonDeleter(PyObject* o) : owner(bp::borrowed(o)) {}
+    explicit PythonDeleter(PyObject* p) : owner(bp::borrowed(p)) {}
     bp::handle<> owner;
 };
+
+template <typename T>
+static bp::object ManageNumpyArray(PyObject* array, boost::shared_ptr<T> owner)
+{
+    // --- Manage ownership ---
+    PythonDeleter<T>* pyDeleter = boost::get_deleter<PythonDeleter<T> >(owner);
+    // If memory was originally allocated by Python, we don't need to do anything here.
+    // Just let the python Image class keep a pointer to the original numpy array.
+    if (!pyDeleter) {
+        // ..if not, we put a shared_ptr in an opaque Python object.
+        boost::shared_ptr<T>* sp = new boost::shared_ptr<T>(owner);
+#if (PY_VERSION_HEX < 0x02070000)
+        PyObject* pyOwner = PyCapsule_New(sp, NULL, &DestroyCObjectOwner);
+#else
+        PyObject* pyOwner = PyCapsule_New(sp, NULL, &DestroyCapsule<T>);
+#endif
+
+#ifdef NPY_OLD_API
+        reinterpret_cast<PyArrayObject*>(array)->base = pyOwner;
+#else
+        PyArray_SetBaseObject(reinterpret_cast<PyArrayObject*>(array),pyOwner);
+#endif
+    }
+
+    return bp::object(bp::handle<>(array));
+}
 
 template <typename T>
 static bp::object MakeNumpyArray(
@@ -140,29 +180,11 @@ static bp::object MakeNumpyArray(
     if (!isConst) flags |= NPY_ARRAY_WRITEABLE;
     npy_intp shape[2] = { n1, n2 };
     npy_intp strides[2] = { stride* int(sizeof(T)), int(sizeof(T)) };
-    PyObject* result = PyArray_New(
+    PyObject* array = PyArray_New(
         &PyArray_Type, 2, shape, NumPyTraits<T>::getCode(), strides,
         const_cast<T*>(data), sizeof(T), flags, NULL);
 
-    // --- Manage ownership ---
-    PythonDeleter<T>* pyDeleter = boost::get_deleter<PythonDeleter<T> >(owner);
-    bp::handle<> pyOwner;
-    if (pyDeleter) {
-        // If memory was original allocated by Python, we use that Python object as the owner...
-        pyOwner = pyDeleter->owner;
-    } else {
-        // ..if not, we put a shared_ptr in an opaque Python object.
-        pyOwner = bp::handle<>(
-            PyCObject_FromVoidPtr(new boost::shared_ptr<T>(owner), &DestroyCObjectOwner)
-        );
-    }
-#ifdef NPY_OLD_API
-    reinterpret_cast<PyArrayObject*>(result)->base = pyOwner.release();
-#else
-    PyArray_SetBaseObject(reinterpret_cast<PyArrayObject*>(result),pyOwner.release());
-#endif
-
-    return bp::object(bp::handle<>(result));
+    return ManageNumpyArray(array, owner);
 }
 
 template <typename T>
@@ -175,29 +197,11 @@ static bp::object MakeNumpyArray(
     if (!isConst) flags |= NPY_ARRAY_WRITEABLE;
     npy_intp shape[1] = { n1 };
     npy_intp strides[1] = { stride* int(sizeof(T)) };
-    PyObject* result = PyArray_New(
+    PyObject* array = PyArray_New(
         &PyArray_Type, 1, shape, NumPyTraits<T>::getCode(), strides,
         const_cast<T*>(data), sizeof(T), flags, NULL);
 
-    // --- Manage ownership ---
-    PythonDeleter<T>* pyDeleter = boost::get_deleter<PythonDeleter<T> >(owner);
-    bp::handle<> pyOwner;
-    if (pyDeleter) {
-        // If memory was original allocated by Python, we use that Python object as the owner...
-        pyOwner = pyDeleter->owner;
-    } else {
-        // ..if not, we put a shared_ptr in an opaque Python object.
-        pyOwner = bp::handle<>(
-            PyCObject_FromVoidPtr(new boost::shared_ptr<T>(owner), &DestroyCObjectOwner)
-        );
-    }
-#ifdef NPY_OLD_API
-    reinterpret_cast<PyArrayObject*>(result)->base = pyOwner.release();
-#else
-    PyArray_SetBaseObject(reinterpret_cast<PyArrayObject*>(result),pyOwner.release());
-#endif
-
-    return bp::object(bp::handle<>(result));
+    return ManageNumpyArray(array, owner);
 }
 
 // Check the type of the numpy array, input as array.
@@ -259,21 +263,17 @@ static void CheckNumpyArray(const bp::object& array, int ndim, bool isConst,
     stride = GetNumpyArrayStride<T>(array.ptr(), 0);
     data = GetNumpyArrayData<T>(array.ptr());
     PyObject* pyOwner = GetNumpyArrayBase(array.ptr());
-    if (pyOwner) {
-        if (PyArray_Check(pyOwner) && GetNumpyArrayTypeCode(pyOwner) == requiredType) {
-            // Not really important, but we try to use the full array for 
-            // the owner pointer if this is a subarray, just to be consistent
-            // with how it works for subimages.
-            // The deleter is really all that matters.
-            owner = boost::shared_ptr<T>(GetNumpyArrayData<T>(pyOwner),
-                                         PythonDeleter<T>(pyOwner));
-        } else {
-            owner = boost::shared_ptr<T>(GetNumpyArrayData<T>(array.ptr()),
-                                         PythonDeleter<T>(pyOwner));
-        }
+    if (pyOwner == NULL) pyOwner = array.ptr();
+    if (PyArray_Check(pyOwner) && GetNumpyArrayTypeCode(pyOwner) == requiredType) {
+        // Not really important, but we try to use the full array for
+        // the owner pointer if this is a subarray, just to be consistent
+        // with how it works for subimages.
+        // The deleter is really all that matters.
+        owner = boost::shared_ptr<T>(GetNumpyArrayData<T>(pyOwner),
+                                     PythonDeleter<T>(pyOwner));
     } else {
         owner = boost::shared_ptr<T>(GetNumpyArrayData<T>(array.ptr()),
-                                     PythonDeleter<T>(array.ptr()));
+                                     PythonDeleter<T>(pyOwner));
     }
 }
 

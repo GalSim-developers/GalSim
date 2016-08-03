@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -38,11 +38,10 @@ Image is acceptable.
 """
 
 import os
-
 import numpy as np
 
 import galsim
-import utilities
+from . import utilities
 
 from . import _galsim
 from ._galsim import GSParams
@@ -225,7 +224,7 @@ class GSObject(object):
     @property
     def separable(self): return True
     @property
-    def SED(self): return galsim.SED('1')
+    def SED(self): return galsim.SED('1', 'nm', 'flambda')
     @property
     def wave_list(self): return np.array([], dtype=float)
 
@@ -275,7 +274,7 @@ class GSObject(object):
 
     def __truediv__(self, other):
         """Equivalent to obj * (1/other)"""
-        return __div__(self, other)
+        return self.__div__(other)
 
     # Make a copy of an object
     def copy(self):
@@ -1433,8 +1432,12 @@ class GSObject(object):
             dk = float(scale)
         if re is not None and re.bounds.isDefined():
             dx = 2.*np.pi/( np.max(re.array.shape) * dk )
-        else:
+        elif scale is None or scale <= 0:
             dx = self.nyquistScale()
+        else:
+            # Then dk = scale, which implies that we need to have dx smaller than nyquistScale
+            # by a factor of (dk/stepk)
+            dx = self.nyquistScale() * dk / self.stepK()
 
         # If the profile needs to be constructed from scratch, the _setup_image function will
         # do that, but only if the profile is in image coordinates for the real space image.
@@ -1850,7 +1853,7 @@ class Airy(GSObject):
             if lam is None or diam is None:
                 raise TypeError("If not specifying lam_over_diam, then specify lam AND diam")
             # In this case we're going to use scale_unit, so parse it in case of string input:
-            if isinstance(scale_unit, basestring):
+            if isinstance(scale_unit, str):
                 scale_unit = galsim.angle.get_angle_unit(scale_unit)
             lam_over_diam = (1.e-9*lam/diam)*(galsim.radians/scale_unit)
 
@@ -2057,10 +2060,10 @@ class Kolmogorov(GSObject):
                         "One of lam_over_r0, fwhm, half_light_radius, or lam (with r0 or "+
                         "r0_500) must be specified for Kolmogorov")
             # In this case we're going to use scale_unit, so parse it in case of string input:
-            if isinstance(scale_unit, basestring):
+            if isinstance(scale_unit, str):
                 scale_unit = galsim.angle.get_angle_unit(scale_unit)
             if r0 is None:
-                r0 = r0_500 * (lam/500)**1.2
+                r0 = r0_500 * (lam/500.)**1.2
             lam_over_r0 = (1.e-9*lam/r0)*(galsim.radians/scale_unit)
 
         GSObject.__init__(self, _galsim.SBKolmogorov(lam_over_r0, flux, gsparams))

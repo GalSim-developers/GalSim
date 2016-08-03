@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -104,7 +104,7 @@ class TiledImageBuilder(ImageBuilder):
         @param obj_num      The first object number in the image.
         @param logger       If given, a logger object to log progress.
 
-        @returns the final image
+        @returns the final image and the current noise variance in the image as a tuple
         """
         full_xsize = base['image_xsize']
         full_ysize = base['image_ysize']
@@ -170,12 +170,11 @@ class TiledImageBuilder(ImageBuilder):
 
         # Bring the noise in the image so far up to a flat noise variance
         # Save the resulting noise variance as self.current_var.
-        self.current_var = 0
+        current_var = 0
         if not self.do_noise_in_stamps:
-            if 'noise' in config:
-                self.current_var = galsim.config.FlattenNoiseVariance(
-                        base, full_image, stamps, current_vars, logger)
-        return full_image
+            current_var = galsim.config.FlattenNoiseVariance(
+                    base, full_image, stamps, current_vars, logger)
+        return full_image, current_var
 
     def makeTasks(self, config, base, jobs, logger):
         """Turn a list of jobs into a list of tasks.
@@ -192,7 +191,7 @@ class TiledImageBuilder(ImageBuilder):
         """
         return [ [ (job, k) ] for k, job in enumerate(jobs) ]
 
-    def addNoise(self, image, config, base, image_num, obj_num, logger):
+    def addNoise(self, image, config, base, image_num, obj_num, current_var, logger):
         """Add the final noise to a Tiled image
 
         @param image        The image onto which to add the noise.
@@ -200,14 +199,14 @@ class TiledImageBuilder(ImageBuilder):
         @param base         The base configuration dict.
         @param image_num    The current image number.
         @param obj_num      The first object number in the image.
+        @param current_var  The current noise variance in each postage stamps.
         @param logger       If given, a logger object to log progress.
         """
         # If didn't do noise above in the stamps, then need to do it here.
         if not self.do_noise_in_stamps:
             # Apply the sky and noise to the full image
             galsim.config.AddSky(config,image)
-            if 'noise' in config:
-                galsim.config.AddNoise(base,image,self.current_var,logger)
+            galsim.config.AddNoise(base,image,current_var,logger)
 
     def getNObj(self, config, base, image_num):
         """Get the number of objects that will be built for this image.

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,12 +15,6 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
-import os
-import sys
-import numpy as np
-import math
-
-from galsim_test_helpers import *
 
 """Unit tests for the PSF correction and shear estimation routines.
 
@@ -29,6 +23,14 @@ known; and tests that use real galaxies in SDSS for which results were tabulated
 before it was integrated into GalSim (so we can make sure we are not breaking anything as we modify
 the code).
 """
+
+from __future__ import print_function
+import os
+import sys
+import numpy as np
+import math
+
+from galsim_test_helpers import *
 
 try:
     import galsim
@@ -111,10 +113,10 @@ def equal_hsmshapedata(res1, res2):
     if res1.resolution_factor != res2.resolution_factor: return False
     return True
 
+
+@timer
 def test_moments_basic():
     """Test that we can properly recover adaptive moments for Gaussians."""
-    import time
-    t1 = time.time()
     first_test=True
     for sig in gaussian_sig_values:
         for g1 in shear_values:
@@ -167,13 +169,9 @@ def test_moments_basic():
                         decimal = decimal_shape)
 
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
+@timer
 def test_shearest_basic():
     """Test that we can recover shears for Gaussian galaxies and PSFs."""
-    import time
-    t1 = time.time()
     for sig in gaussian_sig_values:
         for g1 in shear_values:
             for g2 in shear_values:
@@ -198,13 +196,10 @@ def test_shearest_basic():
                                                distortion_2, err_msg = "- incorrect e2",
                                                decimal = decimal_shape)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_shearest_precomputed():
     """Test that we can recover shears the same as before the code was put into GalSim."""
-    import time
-    t1 = time.time()
     # loop over real galaxies
     for index in range(len(file_indices)):
         # define input filenames
@@ -228,7 +223,7 @@ def test_shearest_precomputed():
                 guess_centroid = galsim.PositionD(x_centroid[index], y_centroid[index]))
 
             # compare results with precomputed
-            print result.meas_type, correction_methods[method_index]
+            print(result.meas_type, correction_methods[method_index])
             if result.meas_type == 'e':
                 np.testing.assert_almost_equal(
                     result.corrected_e1, e1_expected[index][method_index], decimal = decimal_shape)
@@ -262,13 +257,10 @@ def test_shearest_precomputed():
                 err_msg = "PSF e2 from FindAdaptiveMom vs. EstimateShear disagree")
             first = False
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_masks():
     """Test that moments and shear estimation routines respond appropriately to masks."""
-    import time
-    t1 = time.time()
     # set up some toy galaxy and PSF
     my_sigma = 1.0
     my_pixscale = 0.1
@@ -451,14 +443,11 @@ def test_masks():
     check_equal(resm_maskedge,ress_maskedge,resm_maskedge1,ress_maskedge1,
                 "when masking with badpix and weight map")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_shearest_shape():
     """Test that shear estimation is insensitive to shape of input images."""
     # this test can help reveal bugs having to do with x / y indexing issues
-    import time
-    t1 = time.time()
     # just do test for one particular gaussian
     g1 = shear_values[1]
     g2 = shear_values[2]
@@ -476,7 +465,7 @@ def test_shearest_shape():
 
     imsize = [128, 256]
     for method_index in range(len(correction_methods)):
-        print correction_methods[method_index]
+        print(correction_methods[method_index])
 
         save_e1 = -100.
         save_e2 = -100.
@@ -484,7 +473,6 @@ def test_shearest_shape():
             for gal_y_imsize in imsize:
                 for psf_x_imsize in imsize:
                     for psf_y_imsize in imsize:
-                        #print gal_x_imsize, gal_y_imsize, psf_x_imsize, psf_y_imsize
                         final_image = galsim.ImageF(gal_x_imsize, gal_y_imsize)
                         epsf_image = galsim.ImageF(psf_x_imsize, psf_y_imsize)
 
@@ -498,25 +486,19 @@ def test_shearest_shape():
 
                         tot_e = np.sqrt(save_e1**2 + save_e2**2)
                         if tot_e < 99.:
-                            #print "Testing!"
                             np.testing.assert_almost_equal(e1, save_e1,
                                 err_msg = "- incorrect e1",
                                 decimal = decimal_shape)
                             np.testing.assert_almost_equal(e2, save_e2,
                                 err_msg = "- incorrect e2",
                                 decimal = decimal_shape)
-                        #print save_e1, save_e2, e1, e2
                         save_e1 = e1
                         save_e2 = e2
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_hsmparams():
     """Test the ability to set/change parameters that define how moments/shape estimation are done."""
-    import time
-    t1 = time.time()
-
     # First make some profile, and make sure that we get the same answers when we specify default
     # hsmparams or don't specify hsmparams at all.
     default_hsmparams = galsim.hsm.HSMParams(nsig_rg=3.0,
@@ -576,16 +558,13 @@ def test_hsmparams():
         np.testing.assert_raises(RuntimeError, galsim.hsm.EstimateShear, tot_gal_image,
                                  tot_psf_image, hsmparams=new_params_size)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_hsmparams_nodefault():
     """Test that when non-default hsmparams are used, the results change."""
     import time
-    t1 = time.time()
-
     # First make some profile
     bulge = galsim.DeVaucouleurs(half_light_radius = 0.3)
     disk = galsim.Exponential(half_light_radius = 0.5)
@@ -643,38 +622,29 @@ def test_hsmparams_nodefault():
             guess_centroid=galsim.PositionD(47., tot_gal_image.trueCenter().y),
             hsmparams=galsim.hsm.HSMParams(max_ashift=0.1))
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
+@timer
 def test_shapedata():
     """Check for basic issues with initialization of ShapeData objects."""
-    import time
-    t1 = time.time()
-
     x = 1.
     try:
         # Cannot initialize with messed up arguments.
         np.testing.assert_raises(TypeError, galsim.hsm.ShapeData, x, x)
         np.testing.assert_raises(TypeError, galsim.hsm.ShapeData, x)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     # Check that if initialized when empty, the resulting object has certain properties.
     foo = galsim.hsm.ShapeData()
     if foo.observed_shape != galsim.Shear() or foo.moments_n_iter != 0 or foo.meas_type != "None":
         raise AssertionError("Default ShapeData object was not as expected!")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_strict():
     """Check that using strict=True results in the behavior we expect."""
-    import time
-    t1 = time.time()
-
     # Set up an image for which moments measurement should fail spectacularly.
     scale = 2.7
     size = 11
@@ -692,7 +662,7 @@ def test_strict():
     try:
         np.testing.assert_raises(RuntimeError, galsim.hsm.FindAdaptiveMom, im)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
     try:
         res2 = im.FindAdaptiveMom()
     except RuntimeError as err:
@@ -706,21 +676,17 @@ def test_strict():
     try:
         np.testing.assert_raises(RuntimeError, galsim.hsm.EstimateShear, im, im)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
     try:
         res2 = galsim.hsm.EstimateShear(im, im)
     except RuntimeError as err:
         if str(err) != res.error_message:
             raise AssertionError("Error messages do not match when running identical tests!")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_bounds_centroid():
     """Check that the input bounds are respected, and centroid coordinates make sense."""
-    import time
-    t1 = time.time()
-
     # Make a simple object drawn into image with non-trivial bounds (even-sized).
     b = galsim.BoundsI(37, 326, 47, 336)
     test_scale = 0.15
@@ -766,7 +732,7 @@ def test_bounds_centroid():
     try:
         np.testing.assert_raises(RuntimeError, galsim.hsm.FindAdaptiveMom, sub_im)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     # ... and that it passes if we hand in a good centroid guess.  Note that this test is a bit less
     # stringent than some of the previous ones, because our subimage cut off a decent part of the
@@ -780,14 +746,10 @@ def test_bounds_centroid():
         mom.moments_centroid.y, im.trueCenter().y, decimal=7,
         err_msg='Moments y centroid differs from true center of asymmetric subimage')
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_ksb_sig():
     """Check that modification of KSB weight function width works."""
-    import time
-    t1 = time.time()
-
     gal = galsim.Gaussian(fwhm=1.0).shear(e1=0.2, e2=0.1)
     psf = galsim.Gaussian(fwhm=0.7)
     gal_img = galsim.Convolve(gal, psf).drawImage(nx=32, ny=32, scale=0.2)
@@ -821,8 +783,6 @@ def test_ksb_sig():
     np.testing.assert_array_less(result_wide.corrected_g1, result_narrow.corrected_g1,
                                  "Galaxy ellipticity gradient not captured by ksb_sig_factor.")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_moments_basic()

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import numpy as np
 import os
 import sys
@@ -53,12 +55,10 @@ test_sigma = 1.8
 test_scale = 1.8
 
 
+@timer
 def test_convolve():
     """Test the convolution of a Moffat and a Box SBProfile against a known result.
     """
-    import time
-    t1 = time.time()
-
     dx = 0.2
     # Using an exact Maple calculation for the comparison.  Only accurate to 4 decimal places.
     savedImg = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
@@ -115,15 +115,11 @@ def test_convolve():
         warnings.simplefilter("ignore")
         do_shoot(conv,myImg,"Moffat * Pixel")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_convolve_flux_scaling():
     """Test flux scaling for Convolve.
     """
-    import time
-    t1 = time.time()
-
     # decimal point to go to for parameter value comparisons
     param_decimal = 12
 
@@ -178,17 +174,12 @@ def test_convolve_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
-
+@timer
 def test_shearconvolve():
     """Test the convolution of a sheared Gaussian and a Box SBProfile against a known result.
     """
-    import time
-    t1 = time.time()
-
     e1 = 0.04
     e2 = 0.0
     myShear = galsim.Shear(e1=e1, e2=e2)
@@ -232,16 +223,11 @@ def test_shearconvolve():
         warnings.simplefilter("ignore")
         do_shoot(conv,myImg,"sheared Gaussian * Pixel")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_realspace_convolve():
     """Test the real-space convolution of a Moffat and a Box SBProfile against a known result.
     """
-    import time
-    t1 = time.time()
-
     dx = 0.2
     # Note: Using an image created from Maple "exact" calculations.
     saved_img = galsim.fits.read(os.path.join(imgdir, "moffat_pixel.fits"))
@@ -305,19 +291,14 @@ def test_realspace_convolve():
     do_pickle(conv)
     do_pickle(conv.SBProfile)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_realspace_distorted_convolve():
     """
     The same as above, but both the Moffat and the Box are sheared, rotated and shifted
     to stress test the code that deals with this for real-space convolutions that wouldn't
     be tested otherwise.
     """
-    import time
-    t1 = time.time()
-
     dx = 0.2
     saved_img = galsim.fits.read(os.path.join(imgdir, "moffat_pixel_distorted.fits"))
     img = galsim.ImageF(saved_img.bounds, scale=dx)
@@ -367,16 +348,12 @@ def test_realspace_distorted_convolve():
             img.array, saved_img.array, 5,
             err_msg="Using Convolve([pixel,psf]) (distorted) disagrees with expected result")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_realspace_shearconvolve():
     """Test the real-space convolution of a sheared Gaussian and a Box SBProfile against a
        known result.
     """
-    import time
-    t1 = time.time()
-
     e1 = 0.04
     e2 = 0.0
     myShear = galsim.Shear(e1=e1, e2=e2)
@@ -423,16 +400,11 @@ def test_realspace_shearconvolve():
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([pixel,psf]) disagrees with expected result")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_add():
     """Test the addition of two rescaled Gaussian profiles against a known double Gaussian result.
     """
-    import time
-    t1 = time.time()
-
     savedImg = galsim.fits.read(os.path.join(imgdir, "double_gaussian.fits"))
     dx = 0.2
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
@@ -509,15 +481,11 @@ def test_add():
     do_pickle(sum)
     do_pickle(sum.SBProfile)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_add_flux_scaling():
     """Test flux scaling for Add.
     """
-    import time
-    t1 = time.time()
-
     # decimal point to go to for parameter value comparisons
     param_decimal = 12
 
@@ -567,16 +535,12 @@ def test_add_flux_scaling():
     np.testing.assert_almost_equal(
         obj2.getFlux(), test_flux / 2., decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (result).")
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 
+@timer
 def test_autoconvolve():
     """Test that auto-convolution works the same as convolution with itself.
     """
-    import time
-    t1 = time.time()
-
     dx = 0.4
     myImg1 = galsim.ImageF(80,80, scale=dx)
     myImg1.setCenter(0,0)
@@ -649,18 +613,13 @@ def test_autoconvolve():
     do_pickle(conv2)
     do_pickle(conv2.SBProfile)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_autocorrelate():
     """Test that auto-correlation works the same as convolution with the mirror image of itself.
 
     (See the Signal processing Section of http://en.wikipedia.org/wiki/Autocorrelation)
     """
-    import time
-    t1 = time.time()
-
     dx = 0.7
     myImg1 = galsim.ImageF(80,80, scale=dx)
     myImg1.setCenter(0,0)
@@ -692,14 +651,10 @@ def test_autocorrelate():
     do_pickle(corr)
     do_pickle(corr.SBProfile)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_ne():
-    import time
-    t1 = time.time()
-
+    """ Check that inequality works as expected."""
     gsp = galsim.GSParams(maxk_threshold=1.1e-3, folding_threshold=5.1e-3)
     gal1 = galsim.Gaussian(fwhm=1)
     gal2 = galsim.Gaussian(fwhm=2)
@@ -742,8 +697,113 @@ def test_ne():
             galsim.AutoCorrelation(gal1, gsparams=gsp)]
     all_obj_diff(gals)
 
+
+def test_fourier_sqrt():
+    """Test that the FourierSqrt operator is the inverse of auto-convolution.
+    """
+    import time
+    t1 = time.time()
+
+    dx = 0.4
+    myImg1 = galsim.ImageF(80,80, scale=dx)
+    myImg1.setCenter(0,0)
+    myImg2 = galsim.ImageF(80,80, scale=dx)
+    myImg2.setCenter(0,0)
+
+    # Test trivial case, where we could (but don't) analytically collapse the
+    # chain of SBProfiles by recognizing that FourierSqrt is the inverse of
+    # AutoConvolve.
+    psf = galsim.Moffat(beta=3.8, fwhm=1.3, flux=5)
+    psf.drawImage(myImg1, method='no_pixel')
+    sqrt1 = galsim.FourierSqrt(psf)
+    psf2 = galsim.AutoConvolve(sqrt1)
+    np.testing.assert_almost_equal(psf.stepK(), psf2.stepK())
+    psf2.drawImage(myImg2, method='no_pixel')
+    printval(myImg1, myImg2)
+    np.testing.assert_array_almost_equal(
+            myImg1.array, myImg2.array, 4,
+            err_msg="Moffat sqrt convolved with self disagrees with original")
+
+    # Test non-trivial case where we compare (in Fourier space) sqrt(a*a + b*b + 2*a*b) against (a + b)
+    a = galsim.Moffat(beta=3.8, fwhm=1.3, flux=5)
+    a.shift(dx=0.5, dy=-0.3)  # need nonzero centroid to test centroid()
+    b = galsim.Moffat(beta=2.5, fwhm=1.6, flux=3)
+    check = galsim.Sum([a, b])
+    sqrt = galsim.FourierSqrt(
+        galsim.Sum([
+            galsim.AutoConvolve(a),
+            galsim.AutoConvolve(b),
+            2*galsim.Convolve([a, b])
+        ])
+    )
+    np.testing.assert_almost_equal(check.stepK(), sqrt.stepK())
+    check.drawImage(myImg1, method='no_pixel')
+    sqrt.drawImage(myImg2, method='no_pixel')
+    np.testing.assert_almost_equal(check.centroid().x, sqrt.centroid().x)
+    np.testing.assert_almost_equal(check.centroid().y, sqrt.centroid().y)
+    np.testing.assert_almost_equal(check.getFlux(), sqrt.getFlux())
+    printval(myImg1, myImg2)
+    np.testing.assert_array_almost_equal(
+            myImg1.array, myImg2.array, 4,
+            err_msg="Fourier square root of expanded square disagrees with original")
+
+    # Check picklability
+    do_pickle(sqrt1.SBProfile, lambda x: (repr(x.getObj()), x.getGSParams()))
+    do_pickle(sqrt1, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(sqrt1)
+    do_pickle(sqrt1.SBProfile)
+
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
+
+def test_sum_transform():
+    """This test addresses a bug found by Ismael Serrano, #763, wherein some attributes 
+    got messed up for a Transform(Sum(Transform())) object.
+
+    The bug was that we didn't bother to make a new SBProfile for a Sum (or Convolve) of
+    a single object.  But if that was an SBTransform, then the next Transform operation
+    combined the two Transforms, which messed up the repr.
+    
+    The fix is to always make an SBAdd or SBConvolve object even if the list of things to add
+    or convolve only has one element.
+    """
+    gal0 = galsim.Exponential(scale_radius=0.34, flux=105.).shear(g1=-0.56,g2=0.15)
+
+    for gal1 in [ galsim.Sum(gal0), galsim.Convolve(gal0) ]:
+        gal2 = gal1.dilate(1)
+
+        sgal1 = eval(str(gal1))
+        rgal1 = eval(repr(gal1))
+        sgal2 = eval(str(gal2))
+        rgal2 = eval(repr(gal2))
+
+        print('gal1 = ',repr(gal1))
+        print('sgal1 = ',repr(sgal1))
+        print('rgal1 = ',repr(rgal1))
+
+        print('gal2 = ',repr(gal2))
+        print('sgal2 = ',repr(sgal2))
+        print('rgal2 = ',repr(rgal2))
+
+        gal1_im = gal1.drawImage(nx=64, ny=64, scale=0.2)
+        sgal1_im = sgal1.drawImage(nx=64, ny=64, scale=0.2)
+        rgal1_im = rgal1.drawImage(nx=64, ny=64, scale=0.2)
+
+        gal2_im = gal2.drawImage(nx=64, ny=64, scale=0.2)
+        sgal2_im = sgal2.drawImage(nx=64, ny=64, scale=0.2)
+        rgal2_im = rgal2.drawImage(nx=64, ny=64, scale=0.2)
+
+        # Check that the objects are equivalent, even if they may be written differently.
+        np.testing.assert_almost_equal(gal1_im.array, sgal1_im.array, decimal=8)
+        np.testing.assert_almost_equal(gal1_im.array, rgal1_im.array, decimal=8)
+
+        # These two used to fail.
+        np.testing.assert_almost_equal(gal2_im.array, sgal2_im.array, decimal=8)
+        np.testing.assert_almost_equal(gal2_im.array, rgal2_im.array, decimal=8)
+
+        do_pickle(gal0)
+        do_pickle(gal1)
+        do_pickle(gal2)  # And this.
 
 
 if __name__ == "__main__":
@@ -758,3 +818,5 @@ if __name__ == "__main__":
     test_autoconvolve()
     test_autocorrelate()
     test_ne()
+    test_fourier_sqrt()
+    test_sum_transform()

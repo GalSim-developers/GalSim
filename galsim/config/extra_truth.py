@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -40,34 +40,40 @@ class TruthBuilder(ExtraOutputBuilder):
         super(self.__class__,self).initialize(data,scratch,config,base,logger)
 
         # Warn if the config dict isn't an OrderedDict.
-        if logger and not hasattr(config, '__reversed__'):
+        if logger and not hasattr(config, '__reversed__') and not hasattr(self,'warned'):
             # If config doesn't have a __reversed__ attribute, then it's not an OrderedDict.
             # Probably it's just a regular dict.  So warn the user that the columns are in
             # arbitrary order.
             # (This was the simplest difference I could find between dict and OrderedDict that
             #  seemed relevant.)
-            logger.warn('The config dict is not an OrderedDict.  The columns in the output truth '+
-                        'catalog will be in arbitrary order.')
+            logger.warning('The config dict is not an OrderedDict.  The columns in the output '
+                           'truth catalog will be in arbitrary order.')
+            self.warned = True
 
     # The function to call at the end of building each stamp
     def processStamp(self, obj_num, config, base, logger):
         cols = config['columns']
         row = []
         types = []
-        for name in cols.keys():
+        for name in cols:
             key = cols[name]
+            # Handle the possibility of unicode.  In particular, this happens with JSON files.
+            if str(key) == key: key = str(key)
             if isinstance(key, dict):
                 # Then the "key" is actually something to be parsed in the normal way.
                 # Caveat: We don't know the value_type here, so we give None.  This allows
                 # only a limited subset of the parsing.  Usually enough for truth items, but
                 # not fully featured.
                 value = galsim.config.ParseValue(cols,name,base,None)[0]
-            elif not isinstance(key,basestring):
+            elif not isinstance(key,str):
                 # The item can just be a constant value.
                 value = key
             elif key[0] == '$':
                 # This can also be handled by ParseValue
                 value = galsim.config.ParseValue(cols,name,base,None)[0]
+            elif key[0] == '@':
+                # Pop off an initial @ if there is one.
+                value = galsim.config.GetCurrentValue(key[1:], base)
             else:
                 value = galsim.config.GetCurrentValue(key, base)
             row.append(value)

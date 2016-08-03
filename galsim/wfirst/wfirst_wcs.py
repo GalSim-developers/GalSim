@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -304,6 +304,7 @@ def findSCA(wcs_dict, world_pos, include_border=False):
     close enough that in a small dither sequence it might appear on the SCA at some point.  Use of
     `include_border` switches between these scenarios.
 
+    @param wcs_dict         The dict of WCS's output from galsim.wfirst.getWCS().
     @param world_pos        A galsim.CelestialCoord indicating the sky position of interest.
     @param include_border   If True, then include the half-border around SCA to cover the gap
                             between each sensor. [default: False]
@@ -326,7 +327,7 @@ def findSCA(wcs_dict, world_pos, include_border=False):
     bounds_list = [ galsim.BoundsI(x1,x2,y1,y2) for x1,x2,y1,y2 in zip(xmin,xmax,ymin,ymax) ]
 
     sca = None
-    for i_sca in wcs_dict.keys():
+    for i_sca in wcs_dict:
         wcs = wcs_dict[i_sca]
         image_pos = wcs.toImage(world_pos)
         if bounds_list[i_sca-1].includes(int(image_pos.x), int(image_pos.y)):

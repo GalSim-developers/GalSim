@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,11 +16,8 @@
  *    this list of conditions, and the disclaimer given in the documentation
  *    and/or other materials provided with the distribution.
  */
-#ifndef __INTEL_COMPILER
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
-#endif
+
+#include "galsim/IgnoreWarnings.h"
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
@@ -92,7 +89,8 @@ namespace galsim {
                 .def("getPQ", &GetPQ, bp::args("p","q"))
                 .def("setPQ", &SetPQ, bp::args("p","q","re","im"))
                 .def(bp::self * bp::other<double>())
-                .def(bp::self / bp::other<double>())
+                .def("__div__", &LVector::operator/)
+                .def("__truediv__", &LVector::operator/)
                 .def(bp::self + bp::other<LVector>())
                 .def(bp::self - bp::other<LVector>())
                 .def("dot", &LVector::dot, bp::args("other"))

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -20,10 +20,11 @@ Addition of docstrings to the Random deviate classes at the Python layer and def
 DistDeviate class.
 """
 
-
 from . import _galsim
 from ._galsim import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviate
 from ._galsim import BinomialDeviate, Chi2Deviate, GammaDeviate, WeibullDeviate
+from .utilities import set_func_doc
+import numpy as np
 
 # BaseDeviate docstrings
 _galsim.BaseDeviate.__doc__ = """
@@ -86,23 +87,23 @@ There are a few methods that are common to all BaseDeviate classes, so we descri
                         series of values as the original.
 """
 
-_galsim.BaseDeviate.seed.__func__.__doc__ = """
+set_func_doc(_galsim.BaseDeviate.seed, """
 Seed the pseudo-random number generator with a given integer value.
 
 @param seed         An int value to be used to seed the random number generator.  Using 0
                     means to generate a seed from the system. [default: 0]
-"""
+""")
 
-_galsim.BaseDeviate.reset.__func__.__doc__ = """
+set_func_doc(_galsim.BaseDeviate.reset, """
 Reset the pseudo-random number generator, severing connections to any other deviates.
 Providing another BaseDeviate object as the seed connects this deviate with the other
 one, so they will both use the same underlying random number generator.
 
 @param seed         Something that can seed a BaseDeviate: a long int seed or another
                     BaseDeviate.  Using 0 means to generate a seed from the system. [default: 0]
-"""
+""")
 
-_galsim.BaseDeviate.duplicate.__func__.__doc__ = """
+set_func_doc(_galsim.BaseDeviate.duplicate, """
 Create a duplicate of the current Deviate object.  The subsequent series from each copy
 of the Deviate will produce identical values.
 
@@ -125,13 +126,13 @@ _______
     0.13129289541393518
     >>> u()
     0.13129289541393518
-"""
+""")
 
-_galsim.BaseDeviate.clearCache.__func__.__doc__ = """
+set_func_doc(_galsim.BaseDeviate.clearCache, """
 Clear the internal cache of the Deviate, if any.  This is currently only relevant for
 GaussianDeviate, since it generates two values at a time, saving the second one to use for the
 next output value.
-"""
+""")
 
 def _BaseDeviate_eq(self, other):
     return (type(self) == type(other) and
@@ -165,8 +166,8 @@ def permute(rng, *args):
     for i in range(n-1,1,-1):
         j = int((i+1) * ud())
         if j == i+1: j = i  # I'm not sure if this is possible, but just in case...
-        for list in args:
-            list[i], list[j] = list[j], list[i]
+        for lst in args:
+            lst[i], lst[j] = lst[j], lst[i]
 
 
 class DistDeviate(_galsim.BaseDeviate):
@@ -254,8 +255,6 @@ class DistDeviate(_galsim.BaseDeviate):
             from galsim.deprecated import depr
             depr('lseed', 1.1, 'seed')
             seed = lseed
-
-        import numpy
         import galsim
 
         # Special internal "private" constructor option that doesn't do any initialization.
@@ -319,43 +318,50 @@ class DistDeviate(_galsim.BaseDeviate):
                                     'regular python callable function')
 
         # Compute the cumulative distribution function
-        xarray = x_min+(1.*x_max-x_min)/(npoints-1)*numpy.array(range(npoints),float)
+        xarray = x_min+(1.*x_max-x_min)/(npoints-1)*np.array(range(npoints),float)
         # cdf is the cumulative distribution function--just easier to type!
         dcdf = [galsim.integ.int1d(function, xarray[i], xarray[i+1]) for i in range(npoints - 1)]
         cdf = [sum(dcdf[0:i]) for i in range(npoints)]
         # Quietly renormalize the probability if it wasn't already normalized
         totalprobability = cdf[-1]
-        cdf = numpy.array(cdf)/totalprobability
-        dcdf = numpy.array(dcdf)/totalprobability
+        cdf = np.array(cdf)/totalprobability
+        # Recompute delta CDF in case of floating-point differences in near-flat probabilities
+        dcdf = np.diff(cdf)
         # Check that the probability is nonnegative
-        if not numpy.all(dcdf >= 0):
+        if not np.all(dcdf >= 0):
             raise ValueError('Negative probability passed to DistDeviate: %s'%function)
         # Now get rid of points with dcdf == 0
-        elif not numpy.all(dcdf > 0.):
+        elif not np.all(dcdf > 0.):
             # Remove consecutive dx=0 points, except endpoints
-            zeroindex = numpy.where(dcdf==0)[0]
+            zeroindex = np.where(dcdf==0)[0]
             # numpy.where returns a tuple containing 1 array, which tends to be annoying for
             # indexing, so the [0] returns the actual array of interest (indices of dcdf==0).
             # Now, we want to remove consecutive dcdf=0 points, leaving the lower end.
             # Zeroindex contains the indices of all the dcdf=0 points, so we look for ones that are
             # only 1 apart; this tells us the *lower* of the two points, but we want to remove the
             # *upper*, so we add 1 to the resultant array.
-            dindex = numpy.where(numpy.diff(zeroindex)==1)[0]+1
+            dindex = np.where(np.diff(zeroindex)==1)[0]+1
             # So dindex contains the indices of the elements of array zeroindex, which tells us the
             # indices that we might want to delete from cdf and xarray, so we delete
             # zeroindex[dindex].
-            cdf = numpy.delete(cdf,zeroindex[dindex])
-            xarray = numpy.delete(xarray,zeroindex[dindex])
-            dcdf = numpy.diff(cdf)
+            cdf = np.delete(cdf,zeroindex[dindex])
+            xarray = np.delete(xarray,zeroindex[dindex])
+            dcdf = np.diff(cdf)
             # Tweak the edges of dx=0 regions so function is always increasing
-            for index in numpy.where(dcdf == 0)[0]:
-                if index+1 < len(cdf):
-                    cdf[index+1] += 2.23E-16
+            for index in np.where(dcdf == 0)[0][::-1]:  # reverse in case we need to delete
+                if index+2 < len(cdf):
+                    # get epsilon, the smallest element where 1+eps>1
+                    eps = np.finfo(cdf[index+1].dtype).eps
+                    if cdf[index+2]-cdf[index+1] > eps:
+                        cdf[index+1] += eps
+                    else:
+                        cdf = np.delete(cdf, index+1)
+                        xarray = np.delete(xarray, index+1)
                 else:
                     cdf = cdf[:-1]
                     xarray = xarray[:-1]
-            dcdf = numpy.diff(cdf)
-            if not (numpy.all(dcdf>0)):
+            dcdf = np.diff(cdf)
+            if not (np.all(dcdf>0)):
                 raise RuntimeError(
                     'Cumulative probability in DistDeviate is too flat for program to fix')
 
@@ -449,7 +455,7 @@ Successive calls to u() generate pseudo-random values distributed uniformly in t
     0.49095047544687986
 """
 
-_galsim.UniformDeviate.__call__.__func__.__doc__= "Draw a new random number from the distribution."
+set_func_doc(_galsim.UniformDeviate.__call__,"Draw a new random number from the distribution.")
 
 
 # GaussianDeviate docstrings
@@ -479,13 +485,13 @@ distribution with the provided `mean`, `sigma`.
     1.0218588970190354
 """
 
-_galsim.GaussianDeviate.__call__.__func__.__doc__ = """
+set_func_doc(_galsim.GaussianDeviate.__call__, """
 Draw a new random number from the distribution.
 
 Returns a Gaussian deviate with current `mean` and `sigma`.
-"""
-_galsim.GaussianDeviate.getMean.__func__.__doc__ = "Get current distribution `mean`."
-_galsim.GaussianDeviate.getSigma.__func__.__doc__ = "Get current distribution `sigma`."
+""")
+set_func_doc(_galsim.GaussianDeviate.getMean, "Get current distribution `mean`.")
+set_func_doc(_galsim.GaussianDeviate.getSigma, "Get current distribution `sigma`.")
 
 
 # BinomialDeviate docstrings
@@ -517,13 +523,13 @@ distribution with the provided `N`, `p`.
     3
 """
 
-_galsim.BinomialDeviate.__call__.__func__.__doc__ = """
+set_func_doc(_galsim.BinomialDeviate.__call__, """
 Draw a new random number from the distribution.
 
 Returns a Binomial deviate with current `N` and `p`.
-"""
-_galsim.BinomialDeviate.getN.__func__.__doc__ = "Get current distribution `N`."
-_galsim.BinomialDeviate.getP.__func__.__doc__ = "Get current distribution `p`."
+""")
+set_func_doc(_galsim.BinomialDeviate.getN, "Get current distribution `N`.")
+set_func_doc(_galsim.BinomialDeviate.getP, "Get current distribution `p`.")
 
 
 # PoissonDeviate docstrings
@@ -554,12 +560,12 @@ distribution with the specified `mean`.
     106
 """
 
-_galsim.PoissonDeviate.__call__.__func__.__doc__ = """
+set_func_doc(_galsim.PoissonDeviate.__call__, """
 Draw a new random number from the distribution.
 
 Returns a Poisson deviate with current `mean`.
-"""
-_galsim.PoissonDeviate.getMean.__func__.__doc__ = "Get current distribution `mean`."
+""")
+set_func_doc(_galsim.PoissonDeviate.getMean, "Get current distribution `mean`.")
 
 
 # WeibullDeviate docstrings
@@ -593,13 +599,13 @@ distribution with the specified shape and scale parameters `a` and `b`.
     2.957052966368049
 """
 
-_galsim.WeibullDeviate.__call__.__func__.__doc__ = """
+set_func_doc(_galsim.WeibullDeviate.__call__, """
 Draw a new random number from the distribution.
 
 Returns a Weibull-distributed deviate with current `a` and `b`.
-"""
-_galsim.WeibullDeviate.getA.__func__.__doc__ = "Get current distribution shape parameter `a`."
-_galsim.WeibullDeviate.getB.__func__.__doc__ = "Get current distribution shape parameter `b`."
+""")
+set_func_doc(_galsim.WeibullDeviate.getA, "Get current distribution shape parameter `a`.")
+set_func_doc(_galsim.WeibullDeviate.getB, "Get current distribution shape parameter `b`.")
 
 
 # GammaDeviate docstrings
@@ -630,13 +636,13 @@ distribution with the specified shape and scale parameters `k` and `theta`.
     1.3504199388358704
 """
 
-_galsim.GammaDeviate.__call__.__func__.__doc__ = """
+set_func_doc(_galsim.GammaDeviate.__call__, """
 Draw a new random number from the distribution.
 
 Returns a Gamma-distributed deviate with current k and theta.
-"""
-_galsim.GammaDeviate.getK.__func__.__doc__ = "Get current distribution shape parameter `k`."
-_galsim.GammaDeviate.getTheta.__func__.__doc__ = "Get current distribution shape parameter `theta`."
+""")
+set_func_doc(_galsim.GammaDeviate.getK, "Get current distribution shape parameter `k`.")
+set_func_doc(_galsim.GammaDeviate.getTheta, "Get current distribution shape parameter `theta`.")
 
 
 # Chi2Deviate docstrings
@@ -668,12 +674,12 @@ distribution with the specified degrees of freedom, `n`.
     6.644121724269535
 """
 
-_galsim.Chi2Deviate.__call__.__func__.__doc__ = """
+set_func_doc(_galsim.Chi2Deviate.__call__, """
 Draw a new random number from the distribution.
 
 Returns a Chi2-distributed deviate with current `n` degrees of freedom.
-"""
-_galsim.Chi2Deviate.getN.__func__.__doc__ = "Get current distribution `n` degrees of freedom."
+""")
+set_func_doc(_galsim.Chi2Deviate.getN, "Get current distribution `n` degrees of freedom.")
 
 
 # Some functions to enable pickling of deviates

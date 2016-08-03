@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -18,7 +18,7 @@
 
 import galsim
 import math
-import numpy
+import numpy as np
 import logging
 
 # The psf extra output type builds an Image of the PSF at the same locations as the galaxies.
@@ -53,7 +53,7 @@ def DrawPSFStamp(psf, config, base, bounds, offset, method, logger):
 
         sn_target = galsim.config.ParseValue(config, 'signal_to_noise', base, float)[0]
 
-        sn_meas = math.sqrt( numpy.sum(im.array**2) / noise_var )
+        sn_meas = math.sqrt( np.sum(im.array**2) / noise_var )
         flux = sn_target / sn_meas
         im *= flux
 
@@ -106,7 +106,7 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
 
         psf_im = DrawPSFStamp(psf,config,base,bounds,offset,draw_method,logger)
         if 'signal_to_noise' in config:
-            galsim.config.AddNoise(base,psf_im,0,logger)
+            galsim.config.AddNoise(base,psf_im,current_var=0,logger=logger)
         self.scratch[obj_num] = psf_im
 
     # The function to call at the end of building each image
