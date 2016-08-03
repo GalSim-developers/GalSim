@@ -189,11 +189,11 @@ class RealGalaxy(GSObject):
                 logger.debug('RealGalaxy %d: Start RealGalaxy constructor.',use_index)
 
             # Read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors.
-            self.gal_image = real_galaxy_catalog.getGal(use_index)
+            self.gal_image = real_galaxy_catalog.getGalImage(use_index)
             if logger:
                 logger.debug('RealGalaxy %d: Got gal_image',use_index)
 
-            self.psf_image = real_galaxy_catalog.getPSF(use_index)
+            self.psf_image = real_galaxy_catalog.getPSFImage(use_index)
             if logger:
                 logger.debug('RealGalaxy %d: Got psf_image',use_index)
 
@@ -402,7 +402,7 @@ class RealGalaxyCatalog(object):
                       the I/O time is in the constructor.  If `preload=False`, there is
                       approximately the same total I/O time (assuming you eventually use most of
                       the image files referenced in the catalog), but it is spread over the
-                      various calls to getGal() and getPSF().  [default: False]
+                      various calls to getGalImage() and getPSFImage().  [default: False]
     @param logger     An optional logger object to log progress. [default: None]
     """
     _req_params = {}
@@ -519,7 +519,6 @@ class RealGalaxyCatalog(object):
         a big speedup if memory isn't an issue.  Especially if many (or all) of the images are
         stored in the same file as different HDUs.
         """
-        from multiprocessing import Lock
         from galsim._pyfits import pyfits
         if self.logger:
             self.logger.debug('RealGalaxyCatalog: start preload')
@@ -539,7 +538,6 @@ class RealGalaxyCatalog(object):
                 self.loaded_files[file_name] = pyfits.open(file_name,memmap=False)
 
     def _getFile(self, file_name):
-        from multiprocessing import Lock
         from galsim._pyfits import pyfits
         if file_name in self.loaded_files:
             if self.logger:
@@ -560,14 +558,15 @@ class RealGalaxyCatalog(object):
             self.loaded_lock.release()
         return f
 
-    def getGal(self, i):
+    def getGalImage(self, i):
         """Returns the galaxy at index `i` as an Image object.
         """
         if self.logger:
-            self.logger.debug('RealGalaxyCatalog %d: Start getGal',i)
+            self.logger.debug('RealGalaxyCatalog %d: Start getGalImage',i)
         if i >= len(self.gal_file_name):
             raise IndexError(
-                'index %d given to getGal is out of range (0..%d)'%(i,len(self.gal_file_name)-1))
+                'index %d given to getGalImage is out of range (0..%d)'
+                % (i,len(self.gal_file_name)-1))
         f = self._getFile(self.gal_file_name[i])
         # For some reason the more elegant `with gal_lock:` syntax isn't working for me.
         # It gives an EOFError.  But doing an explicit acquire and release seems to work fine.
@@ -579,20 +578,29 @@ class RealGalaxyCatalog(object):
         return im
 
 
-    def getPSF(self, i):
+    def getPSFImage(self, i):
         """Returns the PSF at index `i` as an Image object.
         """
         if self.logger:
-            self.logger.debug('RealGalaxyCatalog %d: Start getPSF',i)
+            self.logger.debug('RealGalaxyCatalog %d: Start getPSFImage',i)
         if i >= len(self.psf_file_name):
             raise IndexError(
-                'index %d given to getPSF is out of range (0..%d)'%(i,len(self.psf_file_name)-1))
+                'index %d given to getPSFImage is out of range (0..%d)'
+                % (i,len(self.psf_file_name)-1))
         f = self._getFile(self.psf_file_name[i])
         self.psf_lock.acquire()
         array = f[self.psf_hdu[i]].data
         self.psf_lock.release()
         return galsim.Image(np.ascontiguousarray(array.astype(np.float64)),
                             scale=self.pixel_scale[i])
+
+    def getPSF(self, i, x_interpolant=None, k_interpolant=None, gsparams=None):
+        """Returns the PSF at index `i` as a GSObject.
+        """
+        psf_image = self.getPSFImage(i)
+        return galsim.InterpolatedImage(psf_image,
+                                        x_interpolant=x_interpolant, k_interpolant=k_interpolant,
+                                        flux=1.0, gsparams=gsparams)
 
     def getNoiseProperties(self, i):
         """Returns the components needed to make the noise correlation function at index `i`.

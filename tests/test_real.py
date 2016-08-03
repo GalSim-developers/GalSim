@@ -97,7 +97,7 @@ def test_real_galaxy_ideal():
     except ImportError:
         print('The assert_raises tests require nose')
 
-    do_pickle(rgc, lambda x: [ x.getGal(ind_fake), x.getPSF(ind_fake),
+    do_pickle(rgc, lambda x: [ x.getGalImage(ind_fake), x.getPSFImage(ind_fake),
                                x.getNoiseProperties(ind_fake) ])
     do_pickle(rgc, lambda x: drawNoise(x.getNoise(ind_fake,rng=galsim.BaseDeviate(123))))
     do_pickle(rgc)
@@ -193,7 +193,7 @@ def test_real_galaxy_saved():
                                    err_msg = "Error in comparison with SHERA result: sigma")
 
     # Check picklability
-    do_pickle(rgc, lambda x: [ x.getGal(ind_real), x.getPSF(ind_real),
+    do_pickle(rgc, lambda x: [ x.getGalImage(ind_real), x.getPSFImage(ind_real),
                                x.getNoiseProperties(ind_real) ])
     do_pickle(rgc, lambda x: drawNoise(x.getNoise(ind_real,rng=galsim.BaseDeviate(123))))
     do_pickle(rg, lambda x: galsim.Convolve([x,galsim.Gaussian(sigma=1.7)]).drawImage(
