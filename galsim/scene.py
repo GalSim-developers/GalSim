@@ -587,8 +587,8 @@ class COSMOSCatalog(object):
                 # exposure, we use this zeropoint directly.
                 zp = 25.94
                 self._bandpass = galsim.Bandpass(
-                    os.path.join(galsim.meta_data.share_dir, 'wfc_F814W.dat.gz'),
-                    wave_type='ang').thin().withZeropoint(zp)
+                    os.path.join(galsim.meta_data.share_dir, 'bandpasses/ACS_wfc_F814W.dat'),
+                    wave_type='ang').withZeropoint(zp)
                 # This means that when drawing chromatic parametric galaxies, the outputs will be
                 # properly normalized in terms of counts.
 
@@ -597,13 +597,13 @@ class COSMOSCatalog(object):
                 # too seriously.
                 self._sed = [
                     # bulge
-                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_E_ext_more.sed'),
+                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'SEDs/CWW_E_ext_more.sed'),
                                wave_type='Ang', flux_type='flambda'),
                     # disk
-                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_Scd_ext_more.sed'),
+                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'SEDs/CWW_Scd_ext_more.sed'),
                                wave_type='Ang', flux_type='flambda'),
                     # intermediate
-                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'CWW_Sbc_ext_more.sed'),
+                    galsim.SED(os.path.join(galsim.meta_data.share_dir,'SEDs/CWW_Sbc_ext_more.sed'),
                                wave_type='Ang', flux_type='flambda')]
 
         gal_list = []
