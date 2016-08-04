@@ -16,7 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 """@file getACSBandpass.py
-Grab HST ACS bandpasses from the web, and then thin with rel_err = 1.e-5.  Note that the outputs of
+Grab HST ACS bandpasses from the web, and then thin with rel_err = 1.e-3.  Note that the outputs of
 this script, which are the files GALSIM_DIR/examples/data/ACS*.dat, are already included in the
 repository.  This script just lets users know where these files came from and how they were altered.
 """
@@ -27,26 +27,33 @@ import numpy as np
 import os
 
 urldir = 'http://www.stsci.edu/hst/acs/analysis/throughputs/tables/'
-for band in ['wfc_F435W', 'wfc_F606W', 'wfc_F775W', 'wfc_F814W', 'wfc_F850LP']:
+for band in ['wfc_F435W', 'wfc_F475W', 'wfc_F555W', 'wfc_F606W',
+             'wfc_F625W', 'wfc_F775W', 'wfc_F814W', 'wfc_F850LP']:
     urlfile = urldir + band + '.dat'
     base = os.path.basename(urlfile).replace('wfc_', 'ACS_wfc_')
     file_ = urllib2.urlopen(urlfile)
     x,f = np.loadtxt(file_, unpack=True)
+    # For some reason, the F814W filter has repeated wavelengths in the file from STSci.  We
+    # clip these out manually here.
+    keep = np.concatenate([x[1:] - x[:-1] != 0.0, [True]])
+    x = x[keep]
+    f = f[keep]
     x /= 10.0 #Ang -> nm
-    x1,f1 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-5)
-    x2,f2 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-4)
-    x3,f3 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-3)
+    x1,f1 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-5, fast_search=False)
+    x2,f2 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-4, fast_search=False)
+    x3,f3 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-3, fast_search=False)
     print "{0} raw size = {1}".format(base,len(x))
     print "    thinned sizes = {0}, {1}, {2}".format(len(x1),len(x2),len(x3))
 
     with open(base, 'w') as out:
         out.write(
 """# ACS {0} total throughput
-# File taken from http://www.stsci.edu/hst/acs/analysis/throughputs/
+# File taken from {1}
 #
-# Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-5
+#  Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
+#  with fast_search=False.
 #
 # Wavelength(nm)  Throughput(0-1)
-""".format(band))
-        for i in range(len(x1)):
-            out.write(" {0:>10.2f}    {1:>10.5f}\n".format(x1[i], f1[i]))
+""".format(band, urlfile))
+        for i in range(len(x3)):
+            out.write(" {0:>10.2f}    {1:>10.5f}\n".format(x3[i], f3[i]))

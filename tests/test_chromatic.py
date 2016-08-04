@@ -20,14 +20,14 @@ from __future__ import print_function
 import os
 import numpy as np
 from galsim_test_helpers import *
-path, filename = os.path.split(__file__)
-bppath = os.path.abspath(os.path.join(path, "../examples/data/"))
-sedpath = os.path.abspath(os.path.join(path, "../share/"))
 try:
     import galsim
 except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
+
+bppath = os.path.join(galsim.meta_data.share_dir, "bandpasses")
+sedpath = os.path.join(galsim.meta_data.share_dir, "SEDs")
 
 # from pylab import *
 # def plotme(image):

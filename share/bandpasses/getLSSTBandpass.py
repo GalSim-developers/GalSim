@@ -26,13 +26,10 @@ import urllib2
 import numpy as np
 import os
 
-urldir = 'https://dev.lsstcorp.org/trac/export/29728/sims/throughputs/tags/1.2/baseline/'
+urldir='https://raw.githubusercontent.com/lsst/throughputs/2016.02.29/baseline/'
 for band in 'ugrizy':
     urlfile = urldir + 'total_{0}.dat'.format(band)
     base = os.path.basename(urlfile).replace('total_', 'LSST_')
-    if band == 'y':
-        urlfile = urldir + 'total_y4.dat'
-        base = 'LSST_y.dat'
     file_ = urllib2.urlopen(urlfile)
     x,f = np.loadtxt(file_, unpack=True)
     x1,f1 = galsim.utilities.thin_tabulated_values(x,f,rel_err=1.e-5, fast_search=False)
@@ -44,12 +41,12 @@ for band in 'ugrizy':
     with open(base, 'w') as out:
         out.write(
 """# LSST {0}-band total throughput at airmass 1.2
-# File taken from https://dev.lsstcorp.org/cgit/LSST/sims/throughputs.git/snapshot/throughputs-1.2.tar.gz
+# File taken from {1}
 #
 #  Thinned by galsim.utilities.thin_tabulated_values to a relative error of 1.e-3
 #  with fast_search=False.
 #
 # Wavelength(nm)  Throughput(0-1)
-""".format(band))
+""".format(band, urlfile))
         for i in range(len(x3)):
             out.write(" {0:>10.2f}    {1:>10.5f}\n".format(x3[i], f3[i]))
