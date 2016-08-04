@@ -58,15 +58,15 @@ shear_g1 = 0.01
 shear_g2 = 0.02
 
 # load a filter
-bandpass = (galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm')
-            .truncate(relative_throughput=1e-3)
-            .thin(rel_err=1e-3))
-bandpass_g = (galsim.Bandpass(os.path.join(bppath, 'LSST_g.dat'), 'nm')
-              .truncate(relative_throughput=1e-3)
-              .thin(rel_err=1e-3))
-bandpass_z = (galsim.Bandpass(os.path.join(bppath, 'LSST_z.dat'), 'nm')
-              .truncate(relative_throughput=1e-3)
-              .thin(rel_err=1e-3))
+bandpass = (galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm'))
+            # .truncate(relative_throughput=1e-3)
+            # .thin(rel_err=1e-3))
+bandpass_g = (galsim.Bandpass(os.path.join(bppath, 'LSST_g.dat'), 'nm'))
+            #   .truncate(relative_throughput=1e-3)
+            #   .thin(rel_err=1e-3))
+bandpass_z = (galsim.Bandpass(os.path.join(bppath, 'LSST_z.dat'), 'nm'))
+            #   .truncate(relative_throughput=1e-3)
+            #   .thin(rel_err=1e-3))
 
 # load some spectra
 bulge_SED = (galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang',
@@ -233,8 +233,10 @@ def test_ChromaticConvolution_InterpolatedImage():
     print('Flux when integrating first, convolving second: {0}'.format(II_flux))
     print('Flux when convolving first, integrating second: {0}'.format(D_flux))
     printval(II_image, D_image)
+    # This used to work with decimal=5, but is apparently sensitive to the particular details of the
+    # bandpass thinning used.  decimal=4 is still good though.
     np.testing.assert_array_almost_equal(
-        II_image.array, D_image.array, 5,
+        II_image.array, D_image.array, 4,
         err_msg="ChromaticConvolution draw not equivalent to regular draw")
 
     # Check flux scaling
@@ -1539,12 +1541,12 @@ def test_ChromaticOpticalPSF():
     t7 = time.time()
     print("Time to draw InterpolatedChromaticObject: {0}s".format(t7-t6))
     printval(im_r, im_r_ref)
-    np.testing.assert_almost_equal(
-        im_r.array.sum()/im_r_ref.array.sum(), 1.0, decimal=3,
-        err_msg='Interpolated ChromaticOpticalPSF total flux disagrees with reference in r band')
-    np.testing.assert_almost_equal(
-        im_r.array.max()/im_r_ref.array.max(), 1.0, decimal=3,
-        err_msg='Interpolated ChromaticOpticalPSF peak flux disagrees with reference in r band')
+    # Check that arrays agree to within 1e-4 of integrated flux
+    np.testing.assert_allclose(im_r.array, im_r_ref.array, atol=1e-4*im_r_ref.array.sum())
+    # Check sums to 1e-3 of sum
+    np.testing.assert_allclose(im_r.array.sum(), im_r_ref.array.sum(), atol=1e-3*im_r.array.sum())
+    # Check peak to 1e-3 of peak
+    np.testing.assert_allclose(im_r.array.max(), im_r_ref.array.max(), atol=1e-3*im_r.array.max())
 
     im_r_ref /= im_r_ref.array.max()
     im_r /= im_r.array.max()
