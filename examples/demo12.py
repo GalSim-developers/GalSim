@@ -64,6 +64,7 @@ def main(argv):
     path, filename = os.path.split(__file__)
     datapath = os.path.abspath(os.path.join(path, "data/"))
     outpath = os.path.abspath(os.path.join(path, "output/"))
+    datapath = galsim.meta_data.share_dir
 
     # In non-script code, use getLogger(__name__) at module scope instead.
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
@@ -77,7 +78,7 @@ def main(argv):
     SED_names = ['CWW_E_ext', 'CWW_Sbc_ext', 'CWW_Scd_ext', 'CWW_Im_ext']
     SEDs = {}
     for SED_name in SED_names:
-        SED_filename = os.path.join(galsim.meta_data.share_dir, '{0}.sed'.format(SED_name))
+        SED_filename = os.path.join(datapath, 'SEDs/{0}.sed'.format(SED_name))
         # Here we create some galsim.SED objects to hold star or galaxy spectra.  The most
         # convenient way to create realistic spectra is to read them in from a two-column ASCII
         # file, where the first column is wavelength and the second column is flux. Wavelengths in
@@ -95,7 +96,7 @@ def main(argv):
     filter_names = 'ugrizy'
     filters = {}
     for filter_name in filter_names:
-        filter_filename = os.path.join(datapath, 'LSST_{0}.dat'.format(filter_name))
+        filter_filename = os.path.join(datapath, 'bandpasses/LSST_{0}.dat'.format(filter_name))
         # Here we create some galsim.Bandpass objects to represent the filters we're observing
         # through.  These include the entire imaging system throughput including the atmosphere,
         # reflective and refractive optics, filters, and the CCD quantum efficiency.  These are
