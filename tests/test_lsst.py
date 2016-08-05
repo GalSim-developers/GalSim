@@ -800,11 +800,7 @@ class LsstWcsTestCase(unittest.TestCase):
                            "pointing and rotation angle as you asked for for this WCS.\n" \
                            "LsstWCS is creating a new camera with the pointing and\n" \
                            "rotation angle you specified in the constructor for LsstWCS."
-
-        if hasattr(ww[0], 'args'):
-            self.assertEqual(str(ww[0].args[0]), expected_message)
-        else:
-            self.assertEqual(str(ww[0].message), expected_message)
+        self.assertEqual(str(ww[0].message), expected_message)
 
         with warnings.catch_warnings(record=True) as ww:
             wcs1 = LsstWCS(self.pointing, 49.0*galsim.degrees,
@@ -814,11 +810,7 @@ class LsstWcsTestCase(unittest.TestCase):
                            "pointing and rotation angle as you asked for for this WCS.\n" \
                            "LsstWCS is creating a new camera with the pointing and\n" \
                            "rotation angle you specified in the constructor for LsstWCS."
-
-        if hasattr(ww[0], 'args'):
-            self.assertEqual(str(ww[0].args[0]), expected_message)
-        else:
-            self.assertEqual(str(ww[0].message), expected_message)
+        self.assertEqual(str(ww[0].message), expected_message)
 
 
 if __name__ == "__main__":
