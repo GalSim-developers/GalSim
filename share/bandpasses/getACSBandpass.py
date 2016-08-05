@@ -27,8 +27,7 @@ import numpy as np
 import os
 
 urldir = 'http://www.stsci.edu/hst/acs/analysis/throughputs/tables/'
-for band in ['wfc_F435W', 'wfc_F475W', 'wfc_F555W', 'wfc_F606W',
-             'wfc_F625W', 'wfc_F775W', 'wfc_F814W', 'wfc_F850LP']:
+for band in ['wfc_F435W', 'wfc_F606W', 'wfc_F775W', 'wfc_F814W', 'wfc_F850LP']:
     urlfile = urldir + band + '.dat'
     base = os.path.basename(urlfile).replace('wfc_', 'ACS_wfc_')
     file_ = urllib2.urlopen(urlfile)
