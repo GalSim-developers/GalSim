@@ -62,8 +62,12 @@ import galsim
 def main(argv):
     # Where to find and output data
     path, filename = os.path.split(__file__)
-    datapath = os.path.abspath(os.path.join(path, "data/"))
     outpath = os.path.abspath(os.path.join(path, "output/"))
+
+    # Make output directory if not already present.
+    if not os.path.isdir(outpath):
+        os.mkdir(outpath)
+
     datapath = galsim.meta_data.share_dir
 
     # In non-script code, use getLogger(__name__) at module scope instead.
