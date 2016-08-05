@@ -123,7 +123,7 @@ def test_cosmos_fluxnorm():
     # Then check the same for a chromatic parametric representation that is drawn into the same
     # band.
     bp_file = os.path.join(galsim.meta_data.share_dir, 'bandpasses/ACS_wfc_F814W.dat')
-    bandpass = galsim.Bandpass(bp_file, wave_type='ang').withZeropoint(25.94)#34.19)
+    bandpass = galsim.Bandpass(bp_file, wave_type='nm').withZeropoint(25.94)#34.19)
     gal1_chrom = cat.makeGalaxy(test_ind, gal_type='parametric', chromatic=True)
     gal1_chrom = galsim.Convolve(gal1_chrom, final_psf)
     im1_chrom = gal1_chrom.drawImage(bandpass, scale=0.05)

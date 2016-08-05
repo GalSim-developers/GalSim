@@ -588,7 +588,7 @@ class COSMOSCatalog(object):
                 zp = 25.94
                 self._bandpass = galsim.Bandpass(
                     os.path.join(galsim.meta_data.share_dir, 'bandpasses/ACS_wfc_F814W.dat'),
-                    wave_type='ang').withZeropoint(zp)
+                    wave_type='nm').withZeropoint(zp)
                 # This means that when drawing chromatic parametric galaxies, the outputs will be
                 # properly normalized in terms of counts.
 

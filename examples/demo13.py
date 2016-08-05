@@ -71,7 +71,6 @@ diff_mode = False
 def main(argv):
     # Where to find and output data.
     path, filename = os.path.split(__file__)
-    datapath = os.path.abspath(os.path.join(path, "data/"))
     outpath = os.path.abspath(os.path.join(path, "output/"))
 
     # Make output directory if not already present.
