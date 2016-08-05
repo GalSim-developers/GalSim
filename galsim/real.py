@@ -578,9 +578,9 @@ class RealGalaxyCatalog(object):
                'F160W': ('WFC3_ir_F160W.dat', 25.9463)
         }
         try:
-            bp = bps[self.band[0]]
+            bp = bps[self.band[0].upper()]
         except KeyError:
-            raise ValueError("Unknown bandpass {0}".format(self.band))
+            raise ValueError("Unknown bandpass {0}".format(self.band[0]))
         fn = os.path.join(galsim.meta_data.share_dir, "bandpasses", bp[0])
         return galsim.Bandpass(fn, wave_type='nm', zeropoint=bp[1])
 
