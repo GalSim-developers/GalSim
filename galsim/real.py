@@ -558,6 +558,33 @@ class RealGalaxyCatalog(object):
             self.loaded_lock.release()
         return f
 
+    def getBandpass(self):
+        """Returns a Bandpass object for the catalog.
+        """
+        # Currently, have bandpasses available for HST COSMOS, AEGIS, and CANDELS.
+        # ACS zeropoints (AB magnitudes) from
+        # http://www.stsci.edu/hst/acs/analysis/zeropoints/old_page/localZeropoints#tablestart
+        # WFC3 zeropoints (AB magnitudes) from
+        # http://www.stsci.edu/hst/wfc3/phot_zp_lbn
+        bps = {'F275W': ('WFC3_uvis_F275W.dat', 24.1305),
+               'F336W': ('WFC3_uvis_F336W.dat', 24.6682),
+               'F435W': ('ACS_wfc_F435W.dat', 25.65777),
+               'F606W': ('ACS_wfc_F606W.dat', 26.49113),
+               'F775W': ('ACS_wfc_F775W.dat', 25.66504),
+               'F814W': ('ACS_wfc_F814W.dat', 25.94333),
+               'F850LP': ('ACS_wfc_F850LP.dat', 24.84245),
+               'F105W': ('WFC3_ir_F105W.dat', 26.2687),
+               'F125W': ('WFC3_ir_F125W.dat', 26.2303),
+               'F160W': ('WFC3_ir_F160W.dat', 25.9463)
+        }
+        try:
+            bp = bps[self.band[0]]
+        except KeyError:
+            raise ValueError("Unknown bandpass {0}".format(self.band))
+        fn = os.path.join(galsim.meta_data.share_dir, "bandpasses", bp[0])
+        return galsim.Bandpass(fn, wave_type='nm', zeropoint=bp[1])
+
+
     def getGalImage(self, i):
         """Returns the galaxy at index `i` as an Image object.
         """

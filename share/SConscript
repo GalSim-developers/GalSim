@@ -15,7 +15,11 @@ sed_files = ['SEDs/'+f for f in ['vega.txt',
                                  'CWW_Scd_ext_more.sed', 'CWW_Im_ext_more.sed',
                                 ]]
 bp_files = ['bandpasses/ACS_wfc_'+bp+'.dat'
-            for bp in ['F435W', 'F475W', 'F555W','F606W', 'F625W', 'F775W', 'F814W', 'F850LP']]
+            for bp in ['F435W','F606W', 'F775W', 'F814W', 'F850LP']]
+bp_files += ['bandpasses/WFC3_ir_'+bp+'.dat'
+             for bp in ['F105W', 'F125W', 'F160W']]
+bp_files += ['bandpasses/WFC3_uvis_'+bp+'.dat'
+             for bp in ['F275W', 'F336W']]
 bp_files += ['bandpasses/LSST_'+f+'.dat' for f in 'ugrizy']
 bp_files += ['bandpasses/getACSBandpass.py', 'bandpasses/getLSSTBandpass.py',
              'bandpasses/plot_thin.py']
