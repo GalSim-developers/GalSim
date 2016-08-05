@@ -1018,9 +1018,8 @@ class ChromaticRealGalaxy(ChromaticSum):
         PSF_eff_kimgs = np.empty((Nim, NSED, nk, nk), dtype=np.complex128)
         for i, (img, band, PSF) in enumerate(zip(imgs, bands, PSFs)):
             for j, sed in enumerate(SEDs):
-                # assume that PSF does not already include pixel, so convolve it in.
-                conv = galsim.Convolve(PSF, galsim.Pixel(img.scale)) * sed
-                re, im = conv.drawKImage(band, nx=nk, ny=nk, scale=stepk)
+                # assume that PSF already includes pixel, so don't convolve one in again.
+                re, im = (PSF * sed).drawKImage(band, nx=nk, ny=nk, scale=stepk)
                 PSF_eff_kimgs[i, j] = re.array + 1j * im.array
 
         # Get Fourier-space representations of input imgs.
