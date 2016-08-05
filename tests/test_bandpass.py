@@ -29,8 +29,7 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
-path, filename = os.path.split(__file__)
-datapath = os.path.abspath(os.path.join(path, "../examples/data/"))
+datapath = os.path.join(galsim.meta_data.share_dir, "bandpasses")
 
 
 @timer
@@ -327,7 +326,7 @@ def test_zp():
     bp_tr = bp.truncate(red_limit = 600.)
     assert bp_tr.zeropoint is None, \
         "Zeropoint erroneously preserved after truncating with explicit red_limit"
-    bp_tr = bp.truncate(blue_limit = 500.)
+    bp_tr = bp.truncate(blue_limit = 550.)
     assert bp_tr.zeropoint is None, \
         "Zeropoint erroneously preserved after truncating with explicit blue_limit"
 
