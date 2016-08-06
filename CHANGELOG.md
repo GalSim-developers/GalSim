@@ -71,6 +71,9 @@ Bug Fixes
 - Fixed a bug related to boost-v1.60 python shared_ptr registration. (#764)
 - Made the error message when trying to read a non-existent *.fits.gz or
   *.fits.bz2 file more helpful. (#773)
+- Changed an assert in the HSM module to an exception, since it can actually
+  happen in rare (i.e. exceptional) circumstances. (#784)
+
 
 Deprecated Features
 -------------------
