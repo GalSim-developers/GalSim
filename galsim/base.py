@@ -1387,7 +1387,7 @@ class GSObject(object):
         # Check for obsolete dk parameter
         if dk is not None and scale is None:
             from .deprecated import depr
-            depr('dx', 1.1, 'scale')
+            depr('dk', 1.1, 'scale')
             scale = dk
 
         # Make sure the type of gain is correct and has a valid value:
