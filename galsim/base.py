@@ -1338,8 +1338,8 @@ class GSObject(object):
 
         return image
 
-    def drawKImage(self, re=None, im=None, nx=None, ny=None, bounds=None, scale=None, dtype=None,
-                   gain=1., wmult=1., add_to_image=False, dk=None):
+    def drawKImage(self, re=None, im=None, nx=None, ny=None, bounds=None, scale=None, wcs=None,
+                   dtype=None, gain=1., wmult=1., add_to_image=False, dk=None):
         """Draws the k-space Image (both real and imaginary parts) of the object, with bounds
         optionally set by input Image instances.
 
@@ -1403,23 +1403,20 @@ class GSObject(object):
             raise ValueError("Invalid wmult <= 0.")
 
         # Check for scale if using nx, ny, or bounds
-        if (scale is None and
+        if (scale is None and wcs is None and
             (nx is not None or ny is not None or bounds is not None)):
-            raise ValueError("Must provide scale if providing nx,ny or bounds")
+            raise ValueError("Must provide wcs or scale if providing nx, ny, or bounds")
 
-        # Check that the images are consistent, and possibly get the scale from them.
+        # Check that the images are consistent, and possibly get the wcs/scale from them.
         if re is None:
             if im is not None:
                 raise ValueError("re is None, but im is not None")
         else:
             if im is None:
                 raise ValueError("im is None, but re is not None")
-            if scale is None:
-                # This check will raise a TypeError if re.wcs or im.wcs is not a PixelScale
-                if re.scale != im.scale:
-                    raise ValueError("re and im do not have the same input scale")
-                # Grab the scale to use from the image.
-                scale = re.scale
+            if wcs is None and scale is None:
+                if re.wcs != im.wcs:
+                    raise ValueError("re and im do not have the same input wcs")
             if re.bounds.isDefined() or im.bounds.isDefined():
                 if re.bounds != im.bounds:
                     raise ValueError("re and im do not have the same defined bounds")
