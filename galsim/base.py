@@ -816,7 +816,7 @@ class GSObject(object):
 
 
     # Make sure the image is defined with the right size and wcs for drawImage()
-    def _setup_image(self, image, nx, ny, bounds, wmult, add_to_image, dtype):
+    def _setup_image(self, image, nx, ny, bounds, wmult, add_to_image, dtype, N=None):
         # Check validity of nx,ny,bounds:
         if image is not None:
             if bounds is not None:
@@ -841,7 +841,8 @@ class GSObject(object):
                     raise ValueError("Must set either both or neither of nx, ny")
                 image = galsim.Image(nx, ny, dtype=dtype)
             else:
-                N = self.SBProfile.getGoodImageSize(1.0, wmult)
+                if N is None:
+                    N = self.SBProfile.getGoodImageSize(1.0, wmult)
                 image = galsim.Image(N, N, dtype=dtype)
 
         # Resize the given image if necessary
@@ -849,7 +850,8 @@ class GSObject(object):
             # Can't add to image if need to resize
             if add_to_image:
                 raise ValueError("Cannot add_to_image if image bounds are not defined")
-            N = self.SBProfile.getGoodImageSize(1.0, wmult)
+            if N is None:
+                N = self.SBProfile.getGoodImageSize(1.0, wmult)
             bounds = galsim.BoundsI(1,N,1,N)
             image.resize(bounds)
             image.setZero()
@@ -1421,36 +1423,29 @@ class GSObject(object):
                 if re.bounds != im.bounds:
                     raise ValueError("re and im do not have the same defined bounds")
 
-        # The input scale (via scale or re.scale) is really a dk value, so call it that for
-        # clarity here, since we also need the real-space pixel scale, which we will call dx.
-        if scale is None or scale <= 0:
-            dk = self.stepK()
-        else:
-            dk = float(scale)
-        if re is not None and re.bounds.isDefined():
-            dx = 2.*np.pi/( np.max(re.array.shape) * dk )
-        elif scale is None or scale <= 0:
-            dx = self.nyquistScale()
-        else:
-            # Then dk = scale, which implies that we need to have dx smaller than nyquistScale
-            # by a factor of (dk/stepk)
-            dx = self.nyquistScale() * dk / self.stepK()
+        # Determine wcs, but use stepK() as default instead of nyquistScale().
+        wcs = self._determine_wcs(scale, wcs, re, default_wcs=galsim.PixelScale(self.stepK()))
 
-        # If the profile needs to be constructed from scratch, the _setup_image function will
-        # do that, but only if the profile is in image coordinates for the real space image.
-        # So make that profile.
-        real_prof = galsim.PixelScale(dx).toImage(self)
-        re = real_prof._setup_image(re, nx, ny, bounds, wmult, add_to_image, dtype)
-        im = real_prof._setup_image(im, nx, ny, bounds, wmult, add_to_image, dtype)
+        # For a simple PixelScale Fourier-domain WCS, Mike had previously figured out how to
+        # transform self into another profile that could be directly used with _setup_image to setup
+        # the re and im images.  I (Josh) had trouble figuring out how to generalize this to more
+        # complicated Fourier WCSes though, so here we just compute a good image size here directly
+        # and feed that to _setup_image as an optional arg.
+        Nd = wmult * 2 * self.maxK() / wcs.minLinearScale()
+        N = int(np.ceil(Nd * 1.-1e-12))
+        if N % 2 == 1:
+            N += 1
+        re = self._setup_image(re, nx, ny, bounds, wmult, add_to_image, dtype, N)
+        im = self._setup_image(im, nx, ny, bounds, wmult, add_to_image, dtype, N)
 
-        # Set the wcs of the images to use the dk scale size
-        re.scale = dk
-        im.scale = dk
+        # Set the wcs of the images to use the Fourier-domain wcs.
+        re.wcs = wcs
+        im.wcs = wcs
 
         # Now, for drawing the k-space image, we need the profile to be in the image coordinates
         # that correspond to having unit-sized pixels in k space. The conversion to image
-        # coordinates in this case is to apply the inverse dk pixel scale.
-        prof = galsim.PixelScale(1./dk).toImage(self)
+        # coordinates in this case is to apply the inverse wcs.
+        prof = wcs.inverse().toImage(self)
 
         # Making views of the images lets us change the centers without messing up the originals.
         review = re.view()
