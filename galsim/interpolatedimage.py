@@ -682,13 +682,6 @@ class InterpolatedKImage(GSObject):
         else:
             wcs = galsim.PixelScale(1.0)
 
-        # # Make sure any `wcs`s are `PixelScale`s.
-        # if ((real_kimage.wcs is not None
-        #      and not real_kimage.wcs.isPixelScale())
-        #     or (imag_kimage.wcs is not None
-        #         and not imag_kimage.wcs.isPixelScale())):
-        #     raise ValueError("Real and Imag kimage wcs's must be PixelScale's or None.")
-
         # Check for Hermitian symmetry properties of real_kimage and imag_kimage
         shape = real_kimage.array.shape
         # If image is even-sized, ignore first row/column since in this case not every pixel has
@@ -735,9 +728,6 @@ class InterpolatedKImage(GSObject):
         prof = galsim._galsim.SBAdd([prof.SBProfile])
 
         GSObject.__init__(self, prof)
-
-        # Should transform to implement WCS.  Do I need the transpose Jacobian here too?
-        # (compare drawKImage)
 
     def __eq__(self, other):
         return (isinstance(other, galsim.InterpolatedKImage) and
