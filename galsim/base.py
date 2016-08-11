@@ -37,11 +37,9 @@ between the scale radii used to specify the size of the GSObject and between the
 Image is acceptable.
 """
 
-import os
 import numpy as np
 
 import galsim
-from . import utilities
 
 from . import _galsim
 from ._galsim import GSParams
@@ -1426,12 +1424,18 @@ class GSObject(object):
         # Determine wcs, but use stepK() as default instead of nyquistScale().
         wcs = self._determine_wcs(scale, wcs, re, default_wcs=galsim.PixelScale(self.stepK()))
 
+        # Only accept uniformWCSes.
+        if not wcs.isUniform():
+            raise ValueError("Uniform WCS required by drawKImage")
+
+        local_wcs = wcs.local()
+
         # For a simple PixelScale Fourier-domain WCS, Mike had previously figured out how to
         # transform self into another profile that could be directly used with _setup_image to setup
         # the re and im images.  I (Josh) had trouble figuring out how to generalize this to more
-        # complicated Fourier WCSes though, so here we just compute a good image size here directly
-        # and feed that to _setup_image as an optional arg.
-        Nd = wmult * 2 * self.maxK() / wcs.minLinearScale()
+        # complicated Fourier WCSes though, so here we just compute a good image size directly and
+        # feed that to _setup_image as an optional arg.
+        Nd = wmult * 2 * self.maxK() / local_wcs.minLinearScale()
         N = int(np.ceil(Nd * 1.-1e-12))
         if N % 2 == 1:
             N += 1
@@ -1443,9 +1447,12 @@ class GSObject(object):
         im.wcs = wcs
 
         # Now, for drawing the k-space image, we need the profile to be in the image coordinates
-        # that correspond to having unit-sized pixels in k space. The conversion to image
-        # coordinates in this case is to apply the inverse wcs.
-        prof = wcs.inverse().toImage(self)
+        # that correspond to having unit-sized pixels in k space.  This is apparently somewhat
+        # complicated, but empirically I've determined that a JacobianWCS with transposed
+        # and inverted transformation matrix works.
+        inv_wcs = local_wcs.inverse().jacobian()
+        transform_wcs = galsim.JacobianWCS(inv_wcs.dudx, inv_wcs.dvdx, inv_wcs.dudy, inv_wcs.dvdy)
+        prof = transform_wcs.toImage(self)
 
         # Making views of the images lets us change the centers without messing up the originals.
         review = re.view()

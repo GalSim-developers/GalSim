@@ -987,6 +987,33 @@ def test_offset():
                 "obj.drawImage(im, offset=%f,%f) different from use_true_center=False")
 
 
+@timer
+def test_drawK_wcs():
+    """Check that non-trivial wcs works with drawKImage."""
+    # Make some arbitrary complicated object.
+    obj1 = galsim.Spergel(nu=0.0, half_light_radius=1.2)*0.3
+    obj1 = obj1.shear(e1=0.2, e2=0.3).shift(0.3, 0.4)
+    obj2 = galsim.Spergel(nu=0.5, half_light_radius=1.5)*0.6
+    obj2 = obj2.shear(e1=0.1, e2=-0.3)
+    obj = obj1+obj2
+
+    # Use a complicated parallelogram WCS.
+    wcs = galsim.JacobianWCS(0.3, 0.1, -0.05, 0.35)
+    re, im = obj.drawKImage(wcs=wcs)
+    cen = re.center()
+    nx, ny = re.array.shape
+
+    # And compare the drawKImage result with calling kValue() directly.
+    ud = galsim.UniformDeviate(112358)
+    for i in range(10):
+        x = int(ud()*nx)
+        y = int(ud()*ny)
+        xy = galsim.PositionD(x-cen.x+1.0, y-cen.y+1.0)
+        uv = wcs.toWorld(xy)
+        np.testing.assert_almost_equal(re.array[y, x], obj.kValue(uv).real)
+        np.testing.assert_almost_equal(im.array[y, x], obj.kValue(uv).imag)
+
+
 if __name__ == "__main__":
     test_drawImage()
     test_draw_methods()
@@ -994,3 +1021,4 @@ if __name__ == "__main__":
     test_drawKImage_Gaussian()
     test_drawKImage_Exponential_Moffat()
     test_offset()
+    test_drawK_wcs()
