@@ -674,15 +674,20 @@ class InterpolatedKImage(GSObject):
             raise ValueError("Supplied image does not have dtype of float32 or float64!")
         if real_kimage.bounds != imag_kimage.bounds:
             raise ValueError("Real and Imag kimages must have same bounds.")
-        if real_kimage.scale != imag_kimage.scale:
-            raise ValueError("Real and Imag kimages must have same scale.")
+        if real_kimage.wcs != imag_kimage.wcs:
+            raise ValueError("Real and Imag kimages must have same wcs.")
 
-        # Make sure any `wcs`s are `PixelScale`s.
-        if ((real_kimage.wcs is not None
-             and not real_kimage.wcs.isPixelScale())
-            or (imag_kimage.wcs is not None
-                and not imag_kimage.wcs.isPixelScale())):
-            raise ValueError("Real and Imag kimage wcs's must be PixelScale's or None.")
+        if hasattr(real_kimage, 'wcs'):
+            wcs = real_kimage.wcs
+        else:
+            wcs = galsim.PixelScale(1.0)
+
+        # # Make sure any `wcs`s are `PixelScale`s.
+        # if ((real_kimage.wcs is not None
+        #      and not real_kimage.wcs.isPixelScale())
+        #     or (imag_kimage.wcs is not None
+        #         and not imag_kimage.wcs.isPixelScale())):
+        #     raise ValueError("Real and Imag kimage wcs's must be PixelScale's or None.")
 
         # Check for Hermitian symmetry properties of real_kimage and imag_kimage
         shape = real_kimage.array.shape
@@ -719,9 +724,17 @@ class InterpolatedKImage(GSObject):
         else:
             self.k_interpolant = galsim.utilities.convert_interpolant(k_interpolant)
 
-        GSObject.__init__(self, galsim._galsim.SBInterpolatedKImage(
-            self._real_kimage.image, self._imag_kimage.image,
-            self._real_kimage.scale, self._stepk, self.k_interpolant, gsparams))
+        sbiki = galsim._galsim.SBInterpolatedKImage(
+                self._real_kimage.image, self._imag_kimage.image,
+                1.0, self._stepk/wcs.scale, self.k_interpolant, gsparams)
+
+        prof = wcs.local().inverse().toWorld(GSObject(sbiki))
+        prof = galsim._galsim.SBAdd([prof.SBProfile])
+
+        GSObject.__init__(self, prof)
+
+        # Should transform to implement WCS.  Do I need the transpose Jacobian here too?
+        # (compare drawKImage)
 
     def __eq__(self, other):
         return (isinstance(other, galsim.InterpolatedKImage) and
@@ -762,9 +775,8 @@ class InterpolatedKImage(GSObject):
 
     def __setstate__(self, d):
         self.__dict__ = d
-        self.SBProfile = galsim._galsim.SBInterpolatedKImage(
-            self._real_kimage.image, self._imag_kimage.image,
-            self._real_kimage.scale, self._stepk, self.k_interpolant, self._gsparams)
+        self.__init__(self._real_kimage, self._imag_kimage, self.k_interpolant,
+                      stepk=self._stepk, gsparams=self._gsparams)
 
 _galsim.SBInterpolatedImage.__getinitargs__ = lambda self: (
         self.getImage(), self.getXInterp(), self.getKInterp(), 1.0,
@@ -785,7 +797,7 @@ _galsim.SBInterpolatedKImage.__getinitargs__ = _SBIKI_getinitargs
 _galsim.SBInterpolatedKImage.__getstate__ = lambda self: None
 _galsim.SBInterpolatedKImage.__setstate__ = lambda self, state: 1
 _galsim.SBInterpolatedKImage.__repr__ = lambda self: (
-    'galsim._galsim.SBInterpolatedKImage(%r, %r, %r, %r, %r, %r, %r, %r, %r, )'
+    'galsim._galsim.SBInterpolatedKImage(%r, %r, %r, %r, %r, %r, %r, %r, %r)'
     %self.__getinitargs__())
 
 _galsim.Interpolant.__getinitargs__ = lambda self: (self.makeStr(), self.getTol())

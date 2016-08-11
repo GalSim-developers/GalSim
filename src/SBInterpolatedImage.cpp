@@ -1009,16 +1009,21 @@ namespace galsim {
         for (int y = ymin; y<=ymax; ++y) {
             if (y > 0) oss <<",";
             BaseImage<double>::const_iterator it = data.rowBegin(y);
-            oss << "[" << *it++;
-            for (; it != data.rowEnd(y); ++it) oss << "," << *it;
+            oss << "[" << (*it++ + 0.0);  //annoying "+ 0.0", but needed to convert -0 to 0.
+            for (; it != data.rowEnd(y); ++it) oss << "," << (*it + 0.0);
             oss << "]";
         }
         oss<<"],dtype=float)), ";
 
         oss << _ktab->getDk() << ", " << stepK() << ", ";
+        oss << maxK() << ", ";
         boost::shared_ptr<Interpolant> kinterp = getKInterp();
-        oss << "galsim.Interpolant('"<<kinterp->makeStr()<<"', "<<kinterp->getTolerance()<<"), "
-            << "galsim.GSParams("<<*gsparams<<"))";
+        oss << "galsim.Interpolant('"<<kinterp->makeStr()<<"', "<<kinterp->getTolerance()<<"), ";
+        if (_cenIsSet)
+            oss << _xcentroid << ", " << _ycentroid << ", True, ";
+        else
+            oss << 0.0 << ", " << 0.0 << ", False, ";
+        oss << "galsim.GSParams("<<*gsparams<<"))";
         return oss.str();
     }
 
