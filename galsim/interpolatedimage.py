@@ -704,13 +704,14 @@ class InterpolatedKImage(GSObject):
             raise ValueError("Real and Imag kimages must form a Hermitian complex matrix.")
 
         if stepk is None:
-            stepk = real_kimage.scale
+            stepk = wcs.minLinearScale()
         else:
-            if stepk < real_kimage.scale:
+            if stepk < wcs.minLinearScale():
                 import warnings
                 warnings.warn(
-                    "Provided stepk is smaller than kimage.scale; overriding with kimage.scale.")
-                stepk = real_kimage.scale
+                    "Provided stepk is smaller than kimage.scale; "
+                    "overriding with wcs.minLinearScale.")
+                stepk = wcs.minLinearScale()
 
         self._real_kimage = real_kimage
         self._imag_kimage = imag_kimage
@@ -726,9 +727,11 @@ class InterpolatedKImage(GSObject):
 
         sbiki = galsim._galsim.SBInterpolatedKImage(
                 self._real_kimage.image, self._imag_kimage.image,
-                1.0, self._stepk/wcs.scale, self.k_interpolant, gsparams)
+                1.0, self._stepk/wcs.minLinearScale(), self.k_interpolant, gsparams)
 
-        prof = wcs.local().inverse().toWorld(GSObject(sbiki))
+        inv_wcs = wcs.local().inverse().jacobian()
+        transform_wcs = galsim.JacobianWCS(inv_wcs.dudx, inv_wcs.dvdx, inv_wcs.dudy, inv_wcs.dvdy)
+        prof = transform_wcs.toWorld(GSObject(sbiki))
         prof = galsim._galsim.SBAdd([prof.SBProfile])
 
         GSObject.__init__(self, prof)
