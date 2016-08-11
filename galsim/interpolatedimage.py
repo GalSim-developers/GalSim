@@ -727,7 +727,7 @@ class InterpolatedKImage(GSObject):
 
         sbiki = galsim._galsim.SBInterpolatedKImage(
                 self._real_kimage.image, self._imag_kimage.image,
-                1.0, self._stepk/wcs.minLinearScale(), self.k_interpolant, gsparams)
+                self._stepk/wcs.minLinearScale(), self.k_interpolant, gsparams)
 
         inv_wcs = wcs.local().inverse().jacobian()
         transform_wcs = galsim.JacobianWCS(inv_wcs.dudx, inv_wcs.dvdx, inv_wcs.dudy, inv_wcs.dvdy)
@@ -791,16 +791,16 @@ _galsim.SBInterpolatedImage.__repr__ = lambda self: \
 
 def _SBIKI_getinitargs(self):
     if self._cenIsSet():
-        return (self._getKData(), self.dK(), self.stepK(), self.maxK(), self.getKInterp(),
+        return (self._getKData(), self.stepK(), self.maxK(), self.getKInterp(),
                 self.centroid().x, self.centroid().y, True, self.getGSParams())
     else:
-        return (self._getKData(), self.dK(), self.stepK(), self.maxK(), self.getKInterp(),
+        return (self._getKData(), self.stepK(), self.maxK(), self.getKInterp(),
                 0.0, 0.0, False, self.getGSParams())
 _galsim.SBInterpolatedKImage.__getinitargs__ = _SBIKI_getinitargs
 _galsim.SBInterpolatedKImage.__getstate__ = lambda self: None
 _galsim.SBInterpolatedKImage.__setstate__ = lambda self, state: 1
 _galsim.SBInterpolatedKImage.__repr__ = lambda self: (
-    'galsim._galsim.SBInterpolatedKImage(%r, %r, %r, %r, %r, %r, %r, %r, %r)'
+    'galsim._galsim.SBInterpolatedKImage(%r, %r, %r, %r, %r, %r, %r, %r)'
     %self.__getinitargs__())
 
 _galsim.Interpolant.__getinitargs__ = lambda self: (self.makeStr(), self.getTol())

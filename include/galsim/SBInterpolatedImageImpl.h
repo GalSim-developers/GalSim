@@ -180,14 +180,14 @@ namespace galsim {
         SBInterpolatedKImageImpl(
             const BaseImage<T>& realKImage,
             const BaseImage<T>& imagKImage,
-            double dk, double stepk,
+            double stepk,
             boost::shared_ptr<Interpolant2d> kInterp,
             const GSParamsPtr& gsparams);
 
         // Alternative constructor used for serialization
         SBInterpolatedKImageImpl(
             const BaseImage<double>& data,
-            double dk, double stepk, double maxk,
+            double stepk, double maxk,
             boost::shared_ptr<Interpolant2d> kInterp,
             double xcen, double ycen, bool cenIsSet,
             const GSParamsPtr& gsparams);
@@ -229,7 +229,6 @@ namespace galsim {
         // Additional subclass methods
 
         ConstImageView<double> getKData() const;
-        double dK() const {return _dk;}
         bool cenIsSet() const {return _cenIsSet;}
 
     protected:
@@ -245,7 +244,6 @@ namespace galsim {
         double _maxk; ///< Stored value of maxK
         double _flux;
 
-        double _dk; ///< Pitch of stored KTable
         mutable bool _cenIsSet;
 
         std::string serialize() const;

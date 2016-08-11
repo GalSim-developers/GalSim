@@ -142,7 +142,6 @@ namespace galsim {
          *
          * @param[in] realKImage  Real part of input Fourier-space Image (ImageF or ImageD).
          * @param[in] imagKImage  Imaginary part of input Fourier-space Image (ImageF or ImageD).
-         * @param[in] dk          Pitch of Fourier-space image.
          * @param[in] stepk       If > 0, force stepk to this value.
          * @param[in] kInterp     Interpolation scheme to adopt in k-space
          * @param[in] gsparams    GSParams object storing constants that control the accuracy of
@@ -152,7 +151,7 @@ namespace galsim {
         SBInterpolatedKImage(
             const BaseImage<T>& realKImage,
             const BaseImage<T>& imagKImage,
-            double dk, double stepk,
+            double stepk,
             boost::shared_ptr<Interpolant> kInterp,
             const GSParamsPtr& gsparams);
 
@@ -161,7 +160,7 @@ namespace galsim {
         SBInterpolatedKImage(
             const BaseImage<T>& realKImage,
             const BaseImage<T>& imagKImage,
-            double dk, double stepk,
+            double stepk,
             boost::shared_ptr<Interpolant2d> kInterp,
             const GSParamsPtr& gsparams);
 
@@ -169,7 +168,7 @@ namespace galsim {
         // Note this is *not* a template since getKData only returns doubles.
         SBInterpolatedKImage(
             const BaseImage<double>& data,
-            double dk, double stepk, double maxk,
+            double stepk, double maxk,
             boost::shared_ptr<Interpolant> kInterp,
             double xcen, double ycen, bool cenIsSet,
             const GSParamsPtr& gsparams);
@@ -183,7 +182,6 @@ namespace galsim {
         boost::shared_ptr<Interpolant> getKInterp() const;
 
         ConstImageView<double> getKData() const;
-        double dK() const;
         bool cenIsSet() const;
 
     protected:
