@@ -1631,3 +1631,15 @@ class CovarianceSpectrum(object):
         iki = galsim.InterpolatedKImage(re, re*0)  # imag part should be zero
         iki *= wcs.pixelArea()**2  # determined this empirically
         return galsim.correlatednoise._BaseCorrelatedNoise(rng, iki, wcs)
+
+    def __eq__(self, other):
+        return (isinstance(other, galsim.CovarianceSpectrum) and
+                self.SEDs == other.SEDs and
+                self.Sigma == other.Sigma)
+    def __ne__(self, other): return not self.__eq__(other)
+
+    def __hash__(self, other):
+        return hash(("galsim.CovarianceSpectrum", tuple(self.SEDs), frozenset(self.Sigma.items())))
+
+    def __repr__(self):
+        return "galsim.CovarianceSpectrum(%r, %r)" % (self.Sigma, self.SEDs)
