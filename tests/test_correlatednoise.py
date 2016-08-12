@@ -1195,6 +1195,30 @@ def test_cosmos_wcs():
         do_pickle(cn_test)
 
 
+@timer
+def test_covariance_spectrum():
+    """Just do some pickling tests of CovarianceSpectrum."""
+    bd = galsim.BaseDeviate(rseed)
+    Sigma = {}
+    for i in range(2):
+        for j in range(2):
+            if i > j: continue
+            Sigma[(i, j)] = galsim.CorrelatedNoise(setup_uncorrelated_noise(bd, 48))
+    SEDs = [galsim.SED('1', 'nm', 'fphotons'), galsim.SED('wave', 'nm', 'fphotons')]
+    covspec = galsim.CovarianceSpectrum(Sigma, SEDs)
+
+    do_pickle(covspec)
+
+    wcs = galsim.PixelScale(0.1)
+    psf = galsim.Gaussian(fwhm=1)
+    bp = galsim.Bandpass('1', 'nm', blue_limit=500.0, red_limit=600.0)
+    do_pickle(covspec, lambda x: x.toNoise(bp, psf, wcs, rng=bd))
+
+    covspec = covspec.transform(1.1, 0.2, 0.1, 0.9)
+    do_pickle(covspec)
+    do_pickle(covspec, lambda x: x.toNoise(bp, psf, wcs, rng=bd))
+
+
 if __name__ == "__main__":
     test_uncorrelated_noise_zero_lag()
     test_uncorrelated_noise_nonzero_lag()
@@ -1216,3 +1240,4 @@ if __name__ == "__main__":
     test_uncorrelated_noise_tracking()
     test_variance_changes()
     test_cosmos_wcs()
+    test_covariance_spectrum()

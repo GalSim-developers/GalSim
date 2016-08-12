@@ -1638,7 +1638,7 @@ class CovarianceSpectrum(object):
                 self.Sigma == other.Sigma)
     def __ne__(self, other): return not self.__eq__(other)
 
-    def __hash__(self, other):
+    def __hash__(self):
         return hash(("galsim.CovarianceSpectrum", tuple(self.SEDs), frozenset(self.Sigma.items())))
 
     def __repr__(self):
