@@ -439,7 +439,8 @@ class ChromaticObject(object):
         # merge self.wave_list into bandpass.wave_list if using a sampling integrator
         if isinstance(integrator, galsim.integ.SampleIntegrator):
             bandpass = galsim.Bandpass(galsim.LookupTable(wave_list, bandpass(wave_list),
-                                                          interpolant='linear'))
+                                                          interpolant='linear'),
+                                       wave_type='nm')
 
         add_to_image = kwargs.pop('add_to_image', False)
         reint, imint = integrator(self.evaluateAtWavelength, bandpass, re, kwargs, doK=True)

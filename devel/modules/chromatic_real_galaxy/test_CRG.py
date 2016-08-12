@@ -4,7 +4,7 @@ import time
 
 
 def test_CRG(args):
-    """Predict a Euclid-like image given HST-like images of a galaxy with color gradients."""
+    """Predict an LSST or Euclid image given HST images of a galaxy with color gradients."""
     t0 = time.time()
 
     print "Constructing chromatic PSFs"
@@ -14,12 +14,12 @@ def test_CRG(args):
                                              zenith_angle=0*galsim.degrees,
                                              parallactic_angle=0.0*galsim.degrees)
     else:
-        out_PSF = galsim.ChromaticAiry(lam=700, diam=1.2)
+        out_PSF = galsim.ChromaticAiry(lam=700, diam=1.2)  # Euclid-like
 
     print "Constructing filters and SEDs"
     waves = np.arange(550.0, 900.1, 10.0)
-    visband = galsim.Bandpass(galsim.LookupTable(waves, np.ones_like(waves), interpolant='linear'))
-    split_points = np.linspace(550.0, 900.1, args.Nim+1, endpoint=True)
+    visband = galsim.Bandpass(galsim.LookupTable(waves, np.ones_like(waves), interpolant='linear'), wave_type='nm')
+    split_points = np.linspace(550.0, 900.0, args.Nim+1, endpoint=True)
     bands = [visband.truncate(blue_limit=blim, red_limit=rlim)
              for blim, rlim in zip(split_points[:-1], split_points[1:])]
     outband = visband.truncate(blue_limit=args.out_blim, red_limit=args.out_rlim)
@@ -27,7 +27,7 @@ def test_CRG(args):
     maxk = max([out_PSF.evaluateAtWavelength(waves[0]).maxK(),
                 out_PSF.evaluateAtWavelength(waves[-1]).maxK()])
 
-    SEDs = [galsim.SED(galsim.LookupTable(waves, waves**i, interpolant='linear'),
+    SEDs = [galsim.SED(galsim.LookupTable(waves, waves**i, interpolant='linear'), wave_type='nm',
                        flux_type='fphotons').withFlux(1.0, visband)
             for i in xrange(args.NSED)]
 
@@ -53,7 +53,9 @@ def test_CRG(args):
     out_prof = galsim.Convolve(gal, out_PSF)
 
     print "Drawing input images"
-    in_imgs = [in_prof.drawImage(band, nx=args.in_Nx, ny=args.in_Nx, scale=args.in_scale)
+    in_Nx = args.in_Nx
+    in_Ny = args.in_Ny if args.in_Ny is not None else in_Nx
+    in_imgs = [in_prof.drawImage(band, nx=in_Nx, ny=in_Ny, scale=args.in_scale)
                for band in bands]
     [img.addNoiseSNR(xi, args.SNR, preserve_flux=True) for xi, img in zip(in_xis, in_imgs)]
 
@@ -62,7 +64,8 @@ def test_CRG(args):
 
     # Now "deconvolve" the chromatic HST PSF while asserting the correct SEDs.
     print "Constructing ChromaticRealGalaxy"
-    crg = galsim.ChromaticRealGalaxy((in_imgs, bands, SEDs, in_xis, in_PSF), maxk=maxk)
+    crg = galsim.ChromaticRealGalaxy(_imgs=in_imgs, _bands=bands, SEDs=SEDs, _xis=in_xis,
+        _PSFs=in_PSF, maxk=maxk)
     # crg should be effectively the same thing as gal now.  Let's test.
 
     crg_prof = galsim.Convolve(crg, out_PSF)
@@ -75,10 +78,10 @@ def test_CRG(args):
     if args.plot:
         import matplotlib.pyplot as plt
         import matplotlib.gridspec as gridspec
-        in_extent = [-args.in_Nx*args.in_scale/2,
-                     args.in_Nx*args.in_scale/2,
-                     -args.in_Nx*args.in_scale/2,
-                     args.in_Nx*args.in_scale/2]
+        in_extent = [-in_Nx*args.in_scale/2,
+                     in_Nx*args.in_scale/2,
+                     -in_Ny*args.in_scale/2,
+                     in_Ny*args.in_scale/2]
         out_extent = [-args.out_Nx*args.out_scale/2,
                       args.out_Nx*args.out_scale/2,
                       -args.out_Nx*args.out_scale/2,
@@ -137,11 +140,12 @@ if __name__ == '__main__':
     parser.add_argument('--Nim', type=int, default=2, help="[Default: 2]")
     parser.add_argument('--NSED', type=int, default=2, help="[Default: 2]")
     parser.add_argument('--in_Nx', type=int, default=128, help="[Default: 128]")
+    parser.add_argument('--in_Ny', type=int, default=None, help="[Default: same as in_Nx]")
     parser.add_argument('--in_scale', type=float, default=0.03, help="[Default: 0.03]")
     parser.add_argument('--out_scale', type=float, default=0.1, help="[Default: 0.1]")
     parser.add_argument('--out_Nx', type=int, default=30, help="[Default: 30]")
     parser.add_argument('--out_blim', type=float, default=550.0, help="[Default: 550.0]")
-    parser.add_argument('--out_rlim', type=float, default=900.1, help="[Default: 900.1]")
+    parser.add_argument('--out_rlim', type=float, default=900.0, help="[Default: 900.0]")
     parser.add_argument('--seed', type=int, default=1, help="[Default: 1]")
     parser.add_argument('--iimult', type=int, default=1, help="[Default: 1]")
     parser.add_argument('--SNR', type=float, default=100.0, help="[Default: 100]")

@@ -15,8 +15,9 @@ def test_CRG_noise(args):
 
     print "Constructing filters and SEDs"
     waves = np.arange(550.0, 900.1, 10.0)
-    visband = galsim.Bandpass(galsim.LookupTable(waves, np.ones_like(waves), interpolant='linear'))
-    split_points = np.linspace(550.0, 900.1, args.Nim+1, endpoint=True)
+    visband = galsim.Bandpass(galsim.LookupTable(waves, np.ones_like(waves), interpolant='linear'),
+                              wave_type='nm')
+    split_points = np.linspace(550.0, 900.0, args.Nim+1, endpoint=True)
     bands = [visband.truncate(blue_limit=blim, red_limit=rlim)
              for blim, rlim in zip(split_points[:-1], split_points[1:])]
 
@@ -24,7 +25,7 @@ def test_CRG_noise(args):
                 out_PSF.evaluateAtWavelength(waves[-1]).maxK()])
 
     SEDs = [galsim.SED(galsim.LookupTable(waves, waves**i, interpolant='linear'),
-                       flux_type='fphotons').withFlux(1.0, visband)
+                       flux_type='fphotons', wave_type='nm').withFlux(1.0, visband)
             for i in xrange(args.NSED)]
 
     print "Constructing input noise correlation functions"
@@ -48,7 +49,8 @@ def test_CRG_noise(args):
     crgs = []
     with ProgressBar(len(img_sets)) as bar:
         for imgs in img_sets:
-            crgs.append(galsim.ChromaticRealGalaxy((imgs, bands, SEDs, in_xis, in_PSF), maxk=maxk))
+            crgs.append(galsim.ChromaticRealGalaxy(_imgs=imgs, _bands=bands, SEDs=SEDs,
+                                                   _xis=in_xis, _PSFs=in_PSF, maxk=maxk))
             bar.update()
 
     print "Convolving by output PSF"
