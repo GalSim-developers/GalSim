@@ -59,14 +59,8 @@ shear_g2 = 0.02
 
 # load a filter
 bandpass = (galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm'))
-            # .truncate(relative_throughput=1e-3)
-            # .thin(rel_err=1e-3))
 bandpass_g = (galsim.Bandpass(os.path.join(bppath, 'LSST_g.dat'), 'nm'))
-            #   .truncate(relative_throughput=1e-3)
-            #   .thin(rel_err=1e-3))
 bandpass_z = (galsim.Bandpass(os.path.join(bppath, 'LSST_z.dat'), 'nm'))
-            #   .truncate(relative_throughput=1e-3)
-            #   .thin(rel_err=1e-3))
 
 # load some spectra
 bulge_SED = (galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang',
