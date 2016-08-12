@@ -210,7 +210,7 @@ reciprocity_alpha = 0.0065
 read_noise = 10.0
 n_dithers = 6
 thermal_backgrounds = {'J129': 0.06,
-                       'F184': 1.18, 
+                       'F184': 1.18,
                        'Y106': 0.06,
                        'Z087': 0.06,
                        'H158': 0.08,
@@ -219,8 +219,8 @@ thermal_backgrounds = {'J129': 0.06,
 pupil_plane_file = os.path.join(galsim.meta_data.share_dir,
                                 "WFIRST-AFTA_Pupil_Mask_C5_20141010_PLT.fits.gz")
 # The pupil plane image has non-zero values with a diameter of 1696 pixels.  The WFirst mirror
-# is 2.4 meters.  So the scale is 2.4 / 1696 = 0.00141509 meters/pixel.
-pupil_plane_scale = 2.4 / 1696.
+# is 2.36 meters.  So the scale is 2.36 / 1696 = 0.00139151 meters/pixel.
+pupil_plane_scale = diameter / 1696.
 
 stray_light_fraction = 0.1
 
@@ -232,7 +232,7 @@ ipc_kernel /= np.sum(ipc_kernel)
 ipc_kernel = galsim.Image(ipc_kernel)
 persistence_coefficients = np.array([0.2246,0.0225,0.0085,0.0043,0.0025,0.0016,0.0011,0.0008])/100.
 n_sca = 18
-n_pix_tot = 4096 
+n_pix_tot = 4096
 n_pix = 4088
 jitter_rms = 0.014
 charge_diffusion = 0.1
