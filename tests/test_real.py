@@ -230,7 +230,7 @@ def test_pickle_crg():
     do_pickle(crg, lambda x: x.drawImage(f606w_cat.getBandpass()))
 
 if __name__ == "__main__":
-    # test_real_galaxy_ideal()
-    # test_real_galaxy_saved()
+    test_real_galaxy_ideal()
+    test_real_galaxy_saved()
     test_pickle_crg()
-    # test_ne()
+    test_ne()
