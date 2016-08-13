@@ -219,7 +219,18 @@ def test_ne():
     all_obj_diff(gals)
 
 
+@timer
+def test_pickle_crg():
+    """Just do some pickling tests of ChromaticRealGalaxy."""
+    f606w_cat = galsim.RealGalaxyCatalog('AEGIS_F606w_catalog.fits', dir=image_dir)
+    f814w_cat = galsim.RealGalaxyCatalog('AEGIS_F814w_catalog.fits', dir=image_dir)
+    crg = galsim.ChromaticRealGalaxy([f606w_cat, f814w_cat], index=0)
+
+    do_pickle(crg)
+    do_pickle(crg, lambda x: x.drawImage(f606w_cat.getBandpass()))
+
 if __name__ == "__main__":
-    test_real_galaxy_ideal()
-    test_real_galaxy_saved()
-    test_ne()
+    # test_real_galaxy_ideal()
+    # test_real_galaxy_saved()
+    test_pickle_crg()
+    # test_ne()

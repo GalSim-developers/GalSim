@@ -900,14 +900,12 @@ class ChromaticRealGalaxy(ChromaticSum):
         if rng is None:
             self.rng = galsim.BaseDeviate()
         elif not isinstance(rng, galsim.BaseDeviate):
-            raise TypeError("The rng provided to RealGalaxy constructor is not a BaseDeviate")
+            raise TypeError("The rng provided to ChromaticRealGalaxy constructor "
+                            "is not a BaseDeviate")
         else:
             self.rng = rng
         self._rng = self.rng.duplicate()  # This is only needed if we want to make sure eval(repr)
                                           # results in the same object.
-
-        if SEDs is None:
-            raise ValueError("No SEDs specified!")
 
         if _imgs is not None:
             # Special (undocumented) way to build a ChromaticRealGalaxy without needing the crg
@@ -920,7 +918,7 @@ class ChromaticRealGalaxy(ChromaticSum):
             if logger:
                 logger.debug('ChromaticRealGalaxy %d: Start ChromaticRealGalaxy constructor.',
                              use_index)
-            self.catalog_file = None
+            self.catalog_files = None
         else:
             if real_galaxy_catalogs is None:
                 raise ValueError("No RealGalaxyCatalog(s) specified!")
@@ -941,6 +939,7 @@ class ChromaticRealGalaxy(ChromaticSum):
             if logger:
                 logger.debug('ChromaticRealGalaxy %d: Start ChromaticRealGalaxy constructor.',
                              use_index)
+            self.index = use_index
 
             # Read in the galaxy, PSF images; for now, rely on pyfits to make I/O errors.
             imgs = [rgc.getGalImage(use_index) for rgc in real_galaxy_catalogs]
@@ -966,7 +965,22 @@ class ChromaticRealGalaxy(ChromaticSum):
                 logger.debug('ChromaticRealGalaxy %d: Got noise_image',use_index)
             self.catalog_files = [rgc.getFileName() for rgc in real_galaxy_catalogs]
 
-        NSED = len(SEDs)
+        if SEDs is None:
+            # Use polynomial SEDs by default; up to the number of bands provided.
+            waves = []
+            for bp in bands:
+                waves = np.union1d(waves, bp.wave_list)
+            self.SEDs = []
+            for i in range(len(bands)):
+                self.SEDs.append(galsim.SED(galsim.LookupTable(waves, waves**i), 'nm', 'fphotons')
+                                 .withFlux(1.0, bands[0]))
+        else:
+            self.SEDs = SEDs
+
+        self._k_interpolant = k_interpolant
+        self._gsparams = gsparams
+
+        NSED = len(self.SEDs)
         Nim = len(imgs)
         assert Nim == len(bands)
         assert Nim == len(xis)
@@ -1010,15 +1024,15 @@ class ChromaticRealGalaxy(ChromaticSum):
         # PixelScale.
         x_stepk = np.min([2*np.pi/(img.scale*img.array.shape[1]) for img in imgs])
         y_stepk = np.min([2*np.pi/(img.scale*img.array.shape[0]) for img in imgs])
-        nkx = 2*int(np.ceil(maxk/x_stepk))
-        nky = 2*int(np.ceil(maxk/y_stepk))
+        nkx = 2*int(np.floor(maxk/x_stepk))
+        nky = 2*int(np.floor(maxk/y_stepk))
 
         wcs = galsim.JacobianWCS(x_stepk, 0.0, 0.0, y_stepk)
 
         # Create Fourier-space kimages of effective PSFs
         PSF_eff_kimgs = np.empty((Nim, NSED, nky, nkx), dtype=np.complex128)
         for i, (img, band, PSF) in enumerate(zip(imgs, bands, PSFs)):
-            for j, sed in enumerate(SEDs):
+            for j, sed in enumerate(self.SEDs):
                 # assume that PSF already includes pixel, so don't convolve one in again.
                 re, im = (PSF * sed).drawKImage(band, nx=nkx, ny=nky, wcs=wcs)
                 PSF_eff_kimgs[i, j] = re.array + 1j * im.array
@@ -1101,7 +1115,7 @@ class ChromaticRealGalaxy(ChromaticSum):
 
         # Set up objlist as required of ChromaticSum subclass.
         objlist = []
-        for i, sed in enumerate(SEDs):
+        for i, sed in enumerate(self.SEDs):
             re = galsim.Image(np.ascontiguousarray(coef[i].real), wcs=wcs)
             im = galsim.Image(np.ascontiguousarray(coef[i].imag), wcs=wcs)
             objlist.append(sed * galsim.InterpolatedKImage(re, im))
@@ -1117,6 +1131,20 @@ class ChromaticRealGalaxy(ChromaticSum):
                        imgs[0].array.shape[0] * imgs[0].array.shape[1] * imgs[0].scale**2)
                 Sigma_dict[(i, j)] = obj
 
-        self.covspec = galsim.CovarianceSpectrum(Sigma_dict, SEDs)
+        self.covspec = galsim.CovarianceSpectrum(Sigma_dict, self.SEDs)
 
         super(ChromaticRealGalaxy, self).__init__(objlist)
+
+    def __eq__(self, other):
+        return (isinstance(other, galsim.ChromaticRealGalaxy) and
+                self.catalog_files == other.catalog_files and
+                self.index == other.index and
+                self.SEDs == other.SEDs and
+                self._k_interpolant == other._k_interpolant and
+                self._rng == other._rng and
+                self._gsparams == other._gsparams)
+    def __ne__(self, other): return not self.__eq__(other)
+
+    def __hash__(self):
+        return hash(("galsim.ChromaticRealGalaxy", tuple(self.catalog_files), self.index,
+                     tuple(self.SEDs), self._k_interpolant, self._rng.serialize(), self._gsparams))
