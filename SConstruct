@@ -753,12 +753,13 @@ def PrependLibraryPaths(pname, env):
 
     env is the relevant SCons environment.
     """
+    pname = repr(pname)  # add quotes around it in case there are spaces, etc.
     for var in ['DYLD_LIBRARY_PATH', 'DYLD_FALLBACK_LIBRARY_PATH', 'LD_LIBRARY_PATH']:
         if var in env and env[var] != '':
             # %r adds quotes around env[var] and pname in case there are spaces in any of the
             # directories involved.  Otherwise bash -c pname will choke.
             pre = '%s=%r'%(var,env[var])
-            pname = "%s %r"%(pre,pname)
+            pname = "%s %s"%(pre,pname)
 
     return pname
 
