@@ -645,12 +645,11 @@ then switch to the system gcc version (either 4.0 or 4.2) with
 
 and compile GalSim with the system gcc.
 
-c) Homebrew (http://mxcl.github.com/homebrew/) -- another package manager for
-Max OSX.  Currently GalSim is available on homebrew, so it (plus dependencies)
+c) Homebrew (http://brew.sh/) -- another package manager for
+Mac OS X.  Currently GalSim is available on homebrew, so it (plus dependencies)
 should be installable via
 
-    brew tap camphogg/science
-    brew install gal-sim
+    brew install homebrew/science/galsim
 
 
 iii) Mac OSX 10.9 (Mavericks)
