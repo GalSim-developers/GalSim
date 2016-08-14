@@ -180,3 +180,13 @@ File name changes
 
 - Changed the names of the real galaxy catalog examples from *catalog_example*
   to *catalog_23.5_example* (#740)
+
+
+Changes from v1.4.0 to v1.4.1
+=============================
+
+Bug fix
+-------
+
+- Fixed an installation error when using both DYLD_LIBRARY_PATH and 
+  DYLD_FALLBACK_LIBRARY_PATH.
