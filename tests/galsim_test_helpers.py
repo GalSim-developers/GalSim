@@ -290,13 +290,14 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
         if random:
             raise TypeError
         # A further complication is that the default numpy print options do not have sufficient
-        # precision for the eval string to exactly reproduce the original object.  So we temporarily
-        # bump up the numpy print precision.
-        with galsim.utilities.printoptions(precision=18):
+        # precision or large enough threshold before truncation for the eval string to exactly
+        # reproduce the original object.  So we temporarily bump up the numpy print precision
+        # and threshold.
+        with galsim.utilities.printoptions(precision=18, threshold=1e4):
             #print('repr = ',repr(obj1))
             obj5 = eval(repr(obj1))
     except:
-        pass
+        print('Skipping obj == eval(repr(obj)) test.')
     else:
         #print('obj1 = ',repr(obj1))
         #print('obj5 = ',repr(obj5))

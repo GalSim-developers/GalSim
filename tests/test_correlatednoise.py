@@ -1203,7 +1203,7 @@ def test_covariance_spectrum():
     for i in range(2):
         for j in range(2):
             if i > j: continue
-            Sigma[(i, j)] = galsim.CorrelatedNoise(setup_uncorrelated_noise(bd, 48))
+            Sigma[(i, j)] = galsim.Gaussian(fwhm=1)  # anything with a drawKImage will do...
     SEDs = [galsim.SED('1', 'nm', 'fphotons'), galsim.SED('wave', 'nm', 'fphotons')]
     covspec = galsim.CovarianceSpectrum(Sigma, SEDs)
 
