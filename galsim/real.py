@@ -1148,3 +1148,11 @@ class ChromaticRealGalaxy(ChromaticSum):
     def __hash__(self):
         return hash(("galsim.ChromaticRealGalaxy", tuple(self.catalog_files), self.index,
                      tuple(self.SEDs), self._k_interpolant, self._rng.serialize(), self._gsparams))
+
+    def __str__(self):
+        return "galsim.RealChromaticGalaxy(%r, index=%r)"%(self.catalog_files, self.index)
+
+    def __repr__(self):
+        return ("galsim.RealChromaticGalaxy(%r, SEDs=%r, index=%r, rng=%r, k_interpolant=%r, "
+                "gsparams=%r)"%(self.catalog_files, self.SEDs, self.index, self._rng,
+                                self._k_interpolant, self._gsparams))
