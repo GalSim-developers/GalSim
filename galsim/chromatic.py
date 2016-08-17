@@ -549,6 +549,38 @@ class ChromaticObject(object):
                                                      bandpass.red_limit)
             return galsim.PositionD(xcentroid, ycentroid)
 
+    def getFlux(self, bandpass):
+        """ Calculate flux through `bandpass`.  Note that this includes both contributions from an
+        object's SED and any wrapped GSObjects' flux attributes.
+
+        @param bandpass  The bandpass through which the observation is made.
+
+        @returns the flux of the integrated surface brightness profile.
+        """
+        if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
+            w = np.union1d(bandpass.wave_list, self.wave_list)
+            w = w[(w <= bandpass.red_limit) & (w >= bandpass.blue_limit)]
+            fluxes = [self.evaluateAtWavelength(y).getFlux() for y in w]
+            bp = bandpass(w)
+            return np.trapz(bp * fluxes, w)
+        else:
+            flux_integrand = lambda w: self.evaluateAtWavelength(w).getFlux() * bandpass(w)
+            return galsim.integ.int1d(flux_integrand, bandpass.blue_limit, bandpass.red_limit)
+
+    def withFlux(self, target_flux, bandpass):
+        """ Return a new ChromaticObject with flux through the Bandpass `bandpass` set to
+        `target_flux`. Note that unlike SED.withFlux() this normalization is *absolute* and not
+        relative to the `flux` attribute of the chromaticized GSObject.
+
+        @param target_flux  The desired *relative* flux normalization of the SED.
+        @param bandpass     A Bandpass object defining a filter bandpass.
+
+        @returns the new ChromaticObject.
+        """
+        current_flux = self.getFlux(bandpass)
+        norm = target_flux/current_flux
+        return self * norm
+
     # Add together `ChromaticObject`s and/or `GSObject`s
     def __add__(self, other):
         return galsim.ChromaticSum([self, other])

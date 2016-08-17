@@ -579,6 +579,18 @@ def test_chromatic_flux():
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
                                    "using ChromaticObject.withScaledFlux(flux_ratio)")
 
+    # Finally, try using ChromaticObject.withFlux() and .getFlux().
+    target_flux = 12.2
+    final = final.withFlux(target_flux, bandpass)
+    final.drawImage(bandpass, image=image)
+    np.testing.assert_almost_equal(image.array.sum()/target_flux, 1.0, 4,
+                                   err_msg="Drawn ChromaticObject flux doesn't match " +
+                                   "using ChromaticObject.withFlux().")
+    np.testing.assert_almost_equal(image.array.sum()/final.getFlux(bandpass), 1.0, 4,
+                                   err_msg="ChromaticObject.getFlux() doesn't match image drawn " +
+                                   "using ChromaticObject.withFlux().")
+
+
 
 @timer
 def test_double_ChromaticSum():
