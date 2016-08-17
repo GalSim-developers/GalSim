@@ -311,10 +311,6 @@ class SED(object):
         # Subtract two SEDs, with the same caveats as adding two SEDs.
         return self.__add__(-1.0 * other)
 
-    def copy(self):
-        import copy
-        return copy.deepcopy(self)
-
     def withFluxDensity(self, target_flux_density, wavelength):
         """ Return a new SED with flux density set to `target_flux_density` at wavelength
         `wavelength`.  Note that this normalization is *relative* to the `flux` attribute of the

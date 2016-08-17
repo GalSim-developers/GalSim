@@ -280,10 +280,6 @@ class Bandpass(object):
     def __truediv__(self, other):
         return self.__div__(other)
 
-    def copy(self):
-        import copy
-        return copy.deepcopy(self)
-
     def __call__(self, wave):
         """ Return dimensionless throughput of bandpass at given wavelength in nanometers.
 

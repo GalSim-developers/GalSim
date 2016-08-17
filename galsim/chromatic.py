@@ -472,19 +472,6 @@ class ChromaticObject(object):
     def __truediv__(self, other):
         return self.__div__(other)
 
-    # Make a new copy of a `ChromaticObject`.
-    def copy(self):
-        """Returns a copy of an object.  This preserves the original type of the object."""
-        cls = self.__class__
-        ret = cls.__new__(cls)
-        for k, v in iteritems(self.__dict__):
-            if k == 'objlist':
-                # explicitly copy all individual items of objlist, not just the list itself
-                ret.__dict__[k] = [o.copy() for o in v]
-            else:
-                ret.__dict__[k] = copy.copy(v)
-        return ret
-
     # Following functions work to apply affine transformations to a ChromaticObject.
     #
     def expand(self, scale):
@@ -1594,7 +1581,7 @@ class ChromaticSum(ChromaticObject):
             if all([obj.SED == SED1 for obj in args[1:]]):
                 self.separable = True
                 self.SED = SED1
-                self.objlist = [o.copy() for o in args]
+                self.objlist = list(args)
         # if not all the same SED, try to identify groups of summands with the same SED.
         if not self.separable:
             # Dictionary of: SED -> List of objs with that SED.
@@ -1609,12 +1596,12 @@ class ChromaticSum(ChromaticObject):
                     SED_dict[obj.SED].append(obj)
                 # otherwise, just add to self.objlist
                 else:
-                    self.objlist.append(obj.copy())
+                    self.objlist.append(obj)
             # go back and populate self.objlist with separable items, grouping objs with the
             # same SED.
             for v in SED_dict.values():
                 if len(v) == 1:
-                    self.objlist.append(v[0].copy())
+                    self.objlist.append(v[0])
                 else:
                     self.objlist.append(ChromaticSum(v))
         # finish up by constructing self.wave_list
@@ -1750,9 +1737,9 @@ class ChromaticConvolution(ChromaticObject):
         self.objlist = []
         for obj in args:
             if isinstance(obj, ChromaticConvolution):
-                self.objlist.extend([o.copy() for o in obj.objlist])
+                self.objlist.extend(obj.objlist)
             else:
-                self.objlist.append(obj.copy())
+                self.objlist.append(obj)
         if all([obj.separable for obj in self.objlist]):
             self.separable = True
             self._findSED()
@@ -1906,7 +1893,7 @@ class ChromaticConvolution(ChromaticObject):
             return ChromaticObject.drawImage(self, bandpass, image=image, **kwargs)
 
         # Only make temporary changes to objlist...
-        objlist = [o.copy() for o in self.objlist]
+        objlist = list(self.objlist)
 
         # Now split up any `ChromaticSum`s:
         # This is the tricky part.  Some notation first:
@@ -2032,7 +2019,7 @@ class ChromaticDeconvolution(ChromaticObject):
                             details. [default: None]
     """
     def __init__(self, obj, **kwargs):
-        self.obj = obj.copy()
+        self.obj = obj
         self.kwargs = kwargs
         self.separable = obj.separable
         if self.separable:
@@ -2080,7 +2067,7 @@ class ChromaticAutoConvolution(ChromaticObject):
                             details. [default: None]
     """
     def __init__(self, obj, **kwargs):
-        self.obj = obj.copy()
+        self.obj = obj
         self.kwargs = kwargs
         self.separable = obj.separable
         if self.separable:
@@ -2129,7 +2116,7 @@ class ChromaticAutoCorrelation(ChromaticObject):
                             details. [default: None]
     """
     def __init__(self, obj, **kwargs):
-        self.obj = obj.copy()
+        self.obj = obj
         self.kwargs = kwargs
         self.separable = obj.separable
         if self.separable:

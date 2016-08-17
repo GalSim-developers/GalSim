@@ -1730,8 +1730,8 @@ def test_ne():
             galsim.InterpolatedChromaticObject(cgal2, np.arange(500, 700, 50)),
             galsim.InterpolatedChromaticObject(cgal1, np.arange(500, 700, 25)),
             galsim.InterpolatedChromaticObject(cgal1, np.arange(500, 700, 50), oversample_fac=1.1),
-            cgal1.copy().interpolate(np.arange(500, 700, 10)),
-            cgal1.copy().interpolate(np.arange(500, 700, 10), oversample_fac=1.2)]
+            cgal1.interpolate(np.arange(500, 700, 10)),
+            cgal1.interpolate(np.arange(500, 700, 10), oversample_fac=1.2)]
     all_obj_diff(gals)
 
     # ChromaticAtmosphere.  Params include base_obj, base_wavelength, scale_unit, alpha,
