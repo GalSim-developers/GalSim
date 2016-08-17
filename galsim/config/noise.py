@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -184,7 +184,7 @@ def GetSky(config, base):
             return sky_level * wcs.pixelArea(base['image_pos'])
         else:
             # This calculation is non-trivial, so store this in case we need it again.
-            tag = (base['file_num'], base['image_num'])
+            tag = (id(base), base['file_num'], base['image_num'])
             if config.get('current_sky_tag',None) == tag:
                 return config['current_sky']
             else:
@@ -526,18 +526,17 @@ class COSMOSNoiseBuilder(NoiseBuilder):
 
     def getCOSMOSNoise(self, config, base, rng=None):
         # Save the constructed CorrelatedNoise object, since we might need it again.
-        tag = (base['file_num'], base['image_num'])
+        tag = (id(base), base['file_num'], base['image_num'])
         if self.current_cn_tag == tag:
             return self.current_cn
         else:
-            req = { 'file_name' : str }
-            opt = { 'cosmos_scale' : float, 'variance' : float }
+            opt = { 'file_name' : str, 'cosmos_scale' : float, 'variance' : float }
 
-            kwargs = galsim.config.GetAllParams(config, base, req=req, opt=opt,
+            kwargs = galsim.config.GetAllParams(config, base, opt=opt,
                                                 ignore=noise_ignore)[0]
             if rng is None:
                 rng = base['rng']
-            cn = galsim.correlatednoise.getCOSMOSNoise(rng, **kwargs)
+            cn = galsim.correlatednoise.getCOSMOSNoise(rng=rng, **kwargs)
             self.current_cn = cn
             self.current_cn_tag = tag
             return cn
@@ -571,14 +570,25 @@ class COSMOSNoiseBuilder(NoiseBuilder):
         return cn.getVariance()
 
 
-def RegisterNoiseType(noise_type, builder):
+def RegisterNoiseType(noise_type, builder, input_type=None):
     """Register a noise type for use by the config apparatus.
 
     @param noise_type       The name of the type in config['image']['noise']
     @param builder          A builder object to use for building the noise.  It should be an
                             instance of a subclass of NoiseBuilder.
+    @param input_type       If the builder utilises an input object, give the key name of the
+                            input type here.  (If it uses more than one, this may be a list.)
+                            [default: None]
     """
     valid_noise_types[noise_type] = builder
+    if input_type is not None:
+        from .input import RegisterInputConnectedType
+        if isinstance(input_type, list):
+            for key in input_type:
+                RegisterInputConnectedType(key, noise_type)
+        else:
+            RegisterInputConnectedType(input_type, noise_type)
+
 
 RegisterNoiseType('Gaussian', GaussianNoiseBuilder())
 RegisterNoiseType('Poisson', PoissonNoiseBuilder())

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -22,8 +22,6 @@ This file defines functions that return the refraction angle (the angle between 
 apparent zenith angles of an object), as a function of zenith angle, wavelength, temperature,
 pressure, and water vapor content.
 """
-
-import numpy
 
 import galsim
 

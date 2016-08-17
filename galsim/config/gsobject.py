@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -72,8 +72,6 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         param = config[key]
     except KeyError:
         return None, True
-    if logger:
-        logger.debug('obj %d: param = %s',base['obj_num'],param)
 
     # Save these, so we can edit them based on parameters at this level in the tree to take
     # effect on all lower branches, and then we can reset it back to this at the end.
@@ -135,14 +133,10 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
     # There are a few more that are specific to which key we have.
     if key == 'gal':
         ignore += [ 'resolution', 'signal_to_noise', 'redshift', 're_from_res' ]
-        # If redshift is present, parse it here, since it might be needed by the Build functions.
-        # All we actually care about is setting the current_val, so don't assign to anything.
-        if 'redshift' in param:
-            galsim.config.ParseValue(param, 'redshift', base, float)
     elif key == 'psf':
         ignore += [ 'saved_re' ]
-    elif key != 'pix':
-        # As long as key isn't psf or pix, allow resolution.
+    else:
+        # As long as key isn't psf, allow resolution.
         # Ideally, we'd like to check that it's something within the gal hierarchy, but
         # I don't know an easy way to do that.
         ignore += [ 'resolution' , 're_from_res' ]
@@ -176,13 +170,11 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         param['flux'] = 1
 
     if 'gsparams' in param:
-        gsparams = UpdateGSParams(gsparams, param['gsparams'], config)
+        gsparams = UpdateGSParams(gsparams, param['gsparams'], base)
 
     # See if this type has a specialized build function:
     if type_name in valid_gsobject_types:
         build_func = valid_gsobject_types[type_name]
-        if logger:
-            logger.debug('obj %d: build_func = %s',base['obj_num'],build_func)
         gsobject, safe = build_func(param, base, ignore, gsparams, logger)
     # Next, we check if this name is in the galsim dictionary.
     elif type_name in galsim.__dict__:
@@ -250,7 +242,6 @@ def _BuildSimple(config, base, ignore, gsparams, logger):
         init_func = eval(type_name)
     if logger:
         logger.debug('obj %d: BuildSimple for type = %s',base['obj_num'],type_name)
-        logger.debug('obj %d: init_func = %s',base['obj_num'],init_func)
 
     kwargs, safe = galsim.config.GetAllParams(config, base,
                                               req = init_func._req_params,
@@ -516,7 +507,7 @@ def _GetMinimumBlock(config, base):
         return 1
 
 
-def RegisterObjectType(type_name, build_func, _is_block=False):
+def RegisterObjectType(type_name, build_func, input_type=None, _is_block=False):
     """Register an object type for use by the config apparatus.
 
     A few notes about the signature of the build functions:
@@ -540,6 +531,9 @@ def RegisterObjectType(type_name, build_func, _is_block=False):
     @param build_func       A function to build a GSObject from the config information.
                             The call signature is
                                 obj, safe = Build(config, base, ignore, gsparams, logger)
+    @param input_type       If the type utilises an input object, give the key name of the input
+                            type here.  (If it uses more than one, this may be a list.)
+                            [default: None]
     """
     # Note: the _is_block parameter is an undocumented feature only needed to support the
     # now-deprecated type=Ring.  Once that feature is fully removed, we can remove the _is_block
@@ -547,6 +541,13 @@ def RegisterObjectType(type_name, build_func, _is_block=False):
     valid_gsobject_types[type_name] = build_func
     if _is_block:
         block_gsobject_types.append(type_name)
+    if input_type is not None:
+        from .input import RegisterInputConnectedType
+        if isinstance(input_type, list):
+            for key in input_type:
+                RegisterInputConnectedType(key, type_name)
+        else:
+            RegisterInputConnectedType(input_type, type_name)
 
 RegisterObjectType('None', _BuildNone)
 RegisterObjectType('Add', _BuildAdd)

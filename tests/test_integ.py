@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -18,6 +18,7 @@
 """Unit tests for integration routines at the Python layer.
 """
 
+from __future__ import print_function
 import numpy as np
 
 from galsim_test_helpers import *
@@ -34,17 +35,16 @@ except ImportError:
 test_sigma = 7.                   # test value of Gaussian sigma for integral tests
 test_rel_err = 1.e-7              # the relative accuracy at which to test
 test_abs_err = 1.e-13             # the absolute accuracy at which to test
-test_mock_inf = 2.e10             # number large enough to get interpreted as infinity by 
+test_mock_inf = 2.e10             # number large enough to get interpreted as infinity by
                                   # integration routines
 test_decimal = 7
 
+
+@timer
 def test_gaussian_finite_limits():
     """Test the integration of a 1D zero-mean Gaussian across intervals of [-1, 1], [0, 20]
     and [-50, -40].
     """
-    import time
-    t1 = time.time()
-
     # Define our test function
     def test_func(x): return np.exp(-.5 * x**2 / test_sigma**2)
 
@@ -56,7 +56,7 @@ def test_gaussian_finite_limits():
         err_msg="Gaussian integral failed across interval [-1, 1].")
 
     test_integral = galsim.integ.int1d(test_func, 0., 20., test_rel_err, test_abs_err)
-    true_result = 8.73569586966967345835 
+    true_result = 8.73569586966967345835
     np.testing.assert_almost_equal(
         test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="Gaussian integral failed across interval [0, 20].")
@@ -67,16 +67,12 @@ def test_gaussian_finite_limits():
         test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="Gaussian integral failed across interval [-50, -40].")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_gaussian_infinite_limits():
     """Test the integration of a 1D zero-mean Gaussian across intervals of [0, inf], [-inf, 5.4]
     and [-inf, inf].
     """
-    import time
-    t1 = time.time()
-
     # Define our test function
     def test_func(x): return np.exp(-.5 * x**2 / test_sigma**2)
 
@@ -100,16 +96,12 @@ def test_gaussian_infinite_limits():
         test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="Gaussian integral failed across interval [-inf, inf].")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_sinxsqexpabsx_finite_limits():
-    """Test the integration of a slightly tricky oscillating sin(x^2) * exp(-|x|) function across 
+    """Test the integration of a slightly tricky oscillating sin(x^2) * exp(-|x|) function across
     finite intervals [-1, 1], [0, 20], [-15, 14].
     """
-    import time
-    t1 = time.time()
-
     # Define our test function
     def test_func(x): return np.sin(x**2) * np.exp(-np.abs(x))
 
@@ -121,7 +113,7 @@ def test_sinxsqexpabsx_finite_limits():
         err_msg="Sin(x^2) * exp(-|x|) integral failed across interval [-1, 1].")
 
     test_integral = galsim.integ.int1d(test_func, 0., 20., test_rel_err, test_abs_err)
-    true_result = 0.27051358019041255485 
+    true_result = 0.27051358019041255485
     np.testing.assert_almost_equal(
         test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="Sin(x^2) * exp(-|x|) integral failed across interval [0, 20].")
@@ -132,16 +124,12 @@ def test_sinxsqexpabsx_finite_limits():
         (test_integral - true_result) / true_result, 0., decimal=test_decimal, verbose=True,
         err_msg="Sin(x^2) * exp(-|x|) integral failed across interval [-15, -14].")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_sinxsqexpabsx_infinite_limits():
-    """Test the integration of a slightly tricky oscillating sin(x^2) * exp(-|x|) function across 
+    """Test the integration of a slightly tricky oscillating sin(x^2) * exp(-|x|) function across
     infinite intervals [0, inf], [-inf, 5.4], [-inf, inf].
     """
-    import time
-    t1 = time.time()
-
     # Define our test function
     def test_func(x): return np.sin(x**2) * np.exp(-np.abs(x))
 
@@ -160,20 +148,16 @@ def test_sinxsqexpabsx_infinite_limits():
 
     test_integral = galsim.integ.int1d(
         test_func, -test_mock_inf, test_mock_inf, test_rel_err, test_abs_err)
-    true_result = 0.54102716032442828852 
+    true_result = 0.54102716032442828852
     np.testing.assert_almost_equal(
         test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="Sin(x^2) * exp(-|x|) integral failed across interval [-inf, inf].")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_invroot_finite_limits():
     """Test the integration of |x|^(-1/2) across intervals [0,1], [0,300] (integrable pole at x=0).
     """
-    import time
-    t1 = time.time()
-
     # Define our test function
     def test_func(x): return 1. / np.sqrt(np.abs(x))
     test_integral = galsim.integ.int1d(test_func, 0, 1., test_rel_err, test_abs_err)
@@ -189,16 +173,12 @@ def test_invroot_finite_limits():
         test_integral, true_result, decimal=test_decimal, verbose=True,
         err_msg="|x|^(-1/2) integral failed across interval [0, 300].")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_invroot_infinite_limits():
     """Test the integration of |x|^(-2) across intervals [1,2], [1,inf].
     Also check that [0,1] raises an exception.
     """
-    import time
-    t1 = time.time()
-
     # Define our test function
     def test_func(x): return x**-2
     test_integral = galsim.integ.int1d(test_func, 1., 2., test_rel_err, test_abs_err)
@@ -218,17 +198,13 @@ def test_invroot_infinite_limits():
             RuntimeError,
             galsim.integ.int1d, test_func, 0., 1., test_rel_err, test_abs_err)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_midpoint_basic():
     """Test the basic functionality of the midpt() method.
     """
-    import time
-    t1 = time.time()
-
     # This shouldn't be super accurate, but just make sure it's not really broken.
     x = 0.01*np.arange(1000)
     f = x**2
@@ -237,9 +213,6 @@ def test_midpoint_basic():
     np.testing.assert_almost_equal(
         result/expected_val, 1.0, decimal=2, verbose=True,
         err_msg='Simple test of midpt() method failed for f(x)=x^2 from 0 to 10')
-
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
 if __name__ == "__main__":
     test_gaussian_finite_limits()

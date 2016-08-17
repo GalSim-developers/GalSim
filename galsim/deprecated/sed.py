@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -28,8 +28,8 @@ def SED_rdiv(self, other):
         spec = lambda w: other(w * wave_factor) /  self._rest_photons(w)
     else:
         spec = lambda w: other / self._rest_photons(w)
-    return galsim.SED(spec, flux_type='fphotons', redshift=self.redshift,
-                      _wave_list=self.wave_list,
+    return galsim.SED(spec, wave_type='nm', flux_type='fphotons',
+                      redshift=self.redshift, _wave_list=self.wave_list,
                       _blue_limit=self.blue_limit, _red_limit=self.red_limit)
 
 galsim.SED.__rdiv__ = SED_rdiv

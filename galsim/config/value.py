@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,6 +15,9 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+from __future__ import print_function
+
+import sys
 import galsim
 
 # This file handles the parsing of values given in the config dict.  It includes the basic
@@ -44,14 +47,14 @@ def ParseValue(config, key, base, value_type):
     @returns the tuple (value, safe).
     """
     param = config[key]
-    #print 'ParseValue for key = ',key,', value_type = ',str(value_type)
-    #print 'param = ',param
-    #print 'nums = ',base.get('file_num',0), base.get('image_num',0), base.get('obj_num',0)
+    #print('ParseValue for key = ',key,', value_type = ',str(value_type))
+    #print('param = ',param)
+    #print('nums = ',base.get('file_num',0), base.get('image_num',0), base.get('obj_num',0))
 
     # Check for some special markup:
-    if isinstance(param, basestring) and param[0] == '$':
+    if isinstance(param, str) and param[0] == '$':
         param = { 'type' : 'Eval', 'str' : param[1:] }
-    if isinstance(param, basestring) and param[0] == '@':
+    if isinstance(param, str) and param[0] == '@':
         param = { 'type' : 'Current', 'key' : param[1:] }
 
     # Save these, so we can edit them based on parameters at this level in the tree to take 
@@ -64,7 +67,7 @@ def ParseValue(config, key, base, value_type):
         is_seq = param['type'] == 'Sequence'
         # Note: this call will also set base['index_key'] and base['rng'] to the right values
         index, index_key = _get_index(param, base, is_seq)
-        #print 'index, index_key = ',index,index_key
+        #print('index, index_key = ',index,index_key)
 
         if index is None:
             # This is probably something artificial where we aren't keeping track of indices.
@@ -79,7 +82,7 @@ def ParseValue(config, key, base, value_type):
 
     # First see if we can assign by param by a direct constant value
     if value_type is not None and isinstance(param, value_type):
-        #print key,' = ',param
+        #print(key,' = ',param)
         val,safe = param, True
     elif not isinstance(param, dict):
         if value_type is galsim.Angle:
@@ -92,6 +95,10 @@ def ParseValue(config, key, base, value_type):
         elif value_type is galsim.PositionD:
             # For PositionD, we allow a string of x,y
             val = _GetPositionValue(param)
+        elif value_type is list:
+            if not isinstance(param,list):
+                raise AttributeError("parameter %s in config is not a list."%key)
+            val = param
         elif value_type is None:
             # If no value_type is given, just return whatever we have in the dict and hope
             # for the best.
@@ -103,24 +110,26 @@ def ParseValue(config, key, base, value_type):
             val = value_type(param)
         # Save the converted type for next time.
         config[key] = val
-        #print key,' = ',val
+        #print(key,' = ',val)
         safe = True
     elif 'type' not in param:
         raise AttributeError(
             "%s.type attribute required in config for non-constant parameter %s."%(key,key))
     elif 'current_val' in param and param['current_index']//repeat == index//repeat:
-        if value_type is not None and param['current_value_type'] != value_type:
+        if (value_type is not None and param['current_value_type'] is not None and
+                param['current_value_type'] != value_type):
             raise ValueError(
-                "Attempt to parse %s multiple times with different value types"%key)
-        #print index,'Using current value of ',key,' = ',param['current_val']
+                "Attempt to parse %s multiple times with different value types:"%key +
+                " %s and %s"%(value_type, param['current_value_type']))
+        #print(index,'Using current value of ',key,' = ',param['current_val'])
         val,safe = param['current_val'], param['current_safe']
     else:
         # Otherwise, we need to generate the value according to its type
         # (See valid_value_types defined at the top of the file.)
 
         type_name = param['type']
-        #print 'type = ',type_name
-        #print param['type'], value_type
+        #print('type = ',type_name)
+        #print(param['type'], value_type)
 
         # First check if the value_type is valid.
         if type_name not in valid_value_types:
@@ -135,9 +144,9 @@ def ParseValue(config, key, base, value_type):
                 "Invalid value_type = %s specified for parameter %s with type = %s."%(
                     value_type, key, type_name))
 
-        #print 'generate_func = ',generate_func
+        #print('generate_func = ',generate_func)
         val_safe = generate_func(param, base, value_type)
-        #print 'returned val, safe = ',val_safe
+        #print('returned val, safe = ',val_safe)
         if isinstance(val_safe, tuple):
             val, safe = val_safe
         else:
@@ -157,7 +166,7 @@ def ParseValue(config, key, base, value_type):
         param['current_value_type'] = value_type
         param['current_index'] = index
         param['current_index_key'] = index_key
-        #print key,' = ',val
+        #print(key,' = ',val)
 
     # Reset these values in case they were changed.
     if orig_index_key is not None:
@@ -179,7 +188,7 @@ def GetCurrentValue(key, config, value_type=None, base=None, return_safe=False):
 
     @returns the current value (or value, safe if return_safe = True)
     """
-    #print 'GetCurrent %s.  value_type = %s'%(key,value_type)
+    #print('GetCurrent %s.  value_type = %s'%(key,value_type))
     if base is None:
         base = config
 
@@ -203,13 +212,13 @@ def GetCurrentValue(key, config, value_type=None, base=None, return_safe=False):
             raise
         except:
             chain.insert(2,0)
-    #print 'chain = ',chain
+    #print('chain = ',chain)
 
     use_index_key = None
 
     while len(chain):
         k = chain.pop(0)
-        #print 'k = ',k
+        #print('k = ',k)
 
         # Try to convert to an integer:
         try: k = int(k)
@@ -217,49 +226,59 @@ def GetCurrentValue(key, config, value_type=None, base=None, return_safe=False):
 
         if chain: 
             # If there are more keys, just set d to the next in the chain.
-            d = d[k]
+            try:
+                d = d[k]
+            except (TypeError, KeyError):
+                # TypeError for the case where d is a float or Position2D, so d[k] is invalid.
+                # KeyError for the case where d is a dict, but k is not a valid key.
+                raise ValueError("Invalid key in GetCurrentValue = %s"%key)
 
             # One subtlety here.  Normally the normal tree traversal will keep track of the index
             # key so that all lower levels inherit an index_key specification at a higher level.
             # This can circumvent that, so we need to do it here as well.  The easiest way to
             # handle it is to watch for an index_key specification along our chain, and if there
             # is one, set that in the final dict.
-            if 'index_key' in d:
+            if isinstance(d,dict) and 'index_key' in d:
                 use_index_key = d['index_key']
-                #print 'Set use_index_key = ',use_index_key
+                #print('Set use_index_key = ',use_index_key)
         else:
+            try:
+                dk = d[k]
+            except (TypeError, KeyError):
+                raise ValueError("Invalid key in GetCurrentValue = %s"%key)
+
             if not isinstance(d[k], dict):
                 if value_type is None:
                     # If we are not given the value_type, and it's not a dict, then the
                     # item is probably just some value already.
-                    #print 'Not dict, no value_type.  Assume %s is ok.'%d[k]
+                    #print('Not dict, no value_type.  Assume %s is ok.'%d[k])
                     val = d[k]
                     safe = True
                 else:
                     # This will work fine to evaluate the current value, but will also
                     # compute it if necessary
-                    #print 'Not dict. Parse value normally'
+                    #print('Not dict. Parse value normally')
                     val, safe = ParseValue(d, k, base, value_type)
             else:
                 if use_index_key is not None and 'index_key' not in d[k]:
-                    #print 'Set d[k] index_key to ',use_index_key
+                    #print('Set d[k] index_key to ',use_index_key)
                     d[k]['index_key'] = use_index_key
                 if value_type is None and 'current_val' in d[k]:
                     # If there is already a current_val, use it.
-                    #print 'Dict with current_val.  Use it: ',d[k]['current_val']
+                    #print('Dict with current_val.  Use it: ',d[k]['current_val'])
                     val = d[k]['current_val']
                     safe = d[k]['current_safe']
                 else:
                     # Otherwise, parse the value for this key
-                    #print 'Parse value normally'
+                    #print('Parse value normally')
                     val, safe = ParseValue(d, k, base, value_type)
-            #print base.get('obj_num',''),'Current key = %s, value = %s'%(key,val)
+            #print(base.get('obj_num',''),'Current key = %s, value = %s'%(key,val))
             if return_safe:
                 return val, safe
             else:
                 return val
 
-    raise ValueError("Invalid key = %s"%key)
+    raise ValueError("Invalid key in GetCurrentValue = %s"%key)
 
 
 def SetDefaultIndex(config, num):
@@ -330,13 +349,16 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
     @returns a dict, get, with get[key] = value_type for all keys to get.
     """
     get = {}
-    valid_keys = req.keys() + opt.keys()
+    valid_keys = list(req) + list(opt)
     # Check required items:
     for (key, value_type) in req.items():
         if key in config:
             get[key] = value_type
         else:
-            raise AttributeError("Attribute %s is required for type = %s"%(key,config['type']))
+            if 'type' in config:
+                raise AttributeError("Attribute %s is required for type = %s"%(key,config['type']))
+            else:
+                raise AttributeError("Attribute %s is required"%key)
 
     # Check optional items:
     for (key, value_type) in opt.items():
@@ -347,24 +369,30 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
     for s in single: 
         if not s: # If no items in list, don't require one of them to be present.
             break
-        valid_keys += s.keys()
+        valid_keys += list(s)
         count = 0
         for (key, value_type) in s.items():
             if key in config:
                 count += 1
                 if count > 1:
-                    raise AttributeError(
-                        "Only one of the attributes %s is allowed for type = %s"%(
-                            s.keys(),config['type']))
+                    if 'type' in config:
+                        raise AttributeError(
+                            "Only one of the attributes %s is allowed for type = %s"%(
+                                s.keys(),config['type']))
+                    else:
+                        raise AttributeError("Only one of the attributes %s is allowed"%s.keys())
                 get[key] = value_type
         if count == 0:
-            raise AttributeError(
-                "One of the attributes %s is required for type = %s"%(s.keys(),config['type']))
+            if 'type' in config:
+                raise AttributeError(
+                    "One of the attributes %s is required for type = %s"%(s.keys(),config['type']))
+            else:
+                raise AttributeError("One of the attributes %s is required"%s.keys())
 
     # Check that there aren't any extra keys in config aside from a few we expect:
     valid_keys += ignore
     valid_keys += standard_ignore
-    for key in config.keys():
+    for key in config:
         # Generators are allowed to use item names that start with _, which we ignore here.
         if key not in valid_keys and not key.startswith('_'):
             raise AttributeError("Unexpected attribute %s found"%(key))
@@ -385,7 +413,8 @@ def GetAllParams(config, base, req={}, opt={}, single=[], ignore=[]):
         safe = safe and safe1
         kwargs[key] = val
     # Just in case there are unicode strings.   python 2.6 doesn't like them in kwargs.
-    kwargs = dict([(k.encode('utf-8'), v) for k,v in kwargs.iteritems()])
+    if sys.version_info < (2,7):
+        kwargs = dict([(k.encode('utf-8'), v) for k,v in kwargs.items()])
     return kwargs, safe
 
 
@@ -501,7 +530,7 @@ def _GenerateFromG1G2(config, base, value_type):
     """
     req = { 'g1' : float, 'g2' : float }
     kwargs, safe = GetAllParams(config, base, req=req)
-    #print base['obj_num'],'Generate from G1G2: kwargs = ',kwargs
+    #print(base['obj_num'],'Generate from G1G2: kwargs = ',kwargs)
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromE1E2(config, base, value_type):
@@ -509,7 +538,7 @@ def _GenerateFromE1E2(config, base, value_type):
     """
     req = { 'e1' : float, 'e2' : float }
     kwargs, safe = GetAllParams(config, base, req=req)
-    #print base['obj_num'],'Generate from E1E2: kwargs = ',kwargs
+    #print(base['obj_num'],'Generate from E1E2: kwargs = ',kwargs)
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromEta1Eta2(config, base, value_type):
@@ -517,7 +546,7 @@ def _GenerateFromEta1Eta2(config, base, value_type):
     """
     req = { 'eta1' : float, 'eta2' : float }
     kwargs, safe = GetAllParams(config, base, req=req)
-    #print base['obj_num'],'Generate from Eta1Eta2: kwargs = ',kwargs
+    #print(base['obj_num'],'Generate from Eta1Eta2: kwargs = ',kwargs)
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromGBeta(config, base, value_type):
@@ -525,7 +554,7 @@ def _GenerateFromGBeta(config, base, value_type):
     """
     req = { 'g' : float, 'beta' : galsim.Angle }
     kwargs, safe = GetAllParams(config, base, req=req)
-    #print base['obj_num'],'Generate from GBeta: kwargs = ',kwargs
+    #print(base['obj_num'],'Generate from GBeta: kwargs = ',kwargs)
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromEBeta(config, base, value_type):
@@ -533,7 +562,7 @@ def _GenerateFromEBeta(config, base, value_type):
     """
     req = { 'e' : float, 'beta' : galsim.Angle }
     kwargs, safe = GetAllParams(config, base, req=req)
-    #print base['obj_num'],'Generate from EBeta: kwargs = ',kwargs
+    #print(base['obj_num'],'Generate from EBeta: kwargs = ',kwargs)
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromEtaBeta(config, base, value_type):
@@ -541,7 +570,7 @@ def _GenerateFromEtaBeta(config, base, value_type):
     """
     req = { 'eta' : float, 'beta' : galsim.Angle }
     kwargs, safe = GetAllParams(config, base, req=req)
-    #print base['obj_num'],'Generate from EtaBeta: kwargs = ',kwargs
+    #print(base['obj_num'],'Generate from EtaBeta: kwargs = ',kwargs)
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromQBeta(config, base, value_type):
@@ -549,7 +578,7 @@ def _GenerateFromQBeta(config, base, value_type):
     """
     req = { 'q' : float, 'beta' : galsim.Angle }
     kwargs, safe = GetAllParams(config, base, req=req)
-    #print base['obj_num'],'Generate from QBeta: kwargs = ',kwargs
+    #print(base['obj_num'],'Generate from QBeta: kwargs = ',kwargs)
     return galsim.Shear(**kwargs), safe
 
 def _GenerateFromXY(config, base, value_type):
@@ -557,7 +586,7 @@ def _GenerateFromXY(config, base, value_type):
     """
     req = { 'x' : float, 'y' : float }
     kwargs, safe = GetAllParams(config, base, req=req)
-    #print base['obj_num'],'Generate from XY: kwargs = ',kwargs
+    #print(base['obj_num'],'Generate from XY: kwargs = ',kwargs)
     return galsim.PositionD(**kwargs), safe
 
 def _GenerateFromRTheta(config, base, value_type):
@@ -568,7 +597,7 @@ def _GenerateFromRTheta(config, base, value_type):
     r = kwargs['r']
     theta = kwargs['theta']
     import math
-    #print base['obj_num'],'Generate from RTheta: kwargs = ',kwargs
+    #print(base['obj_num'],'Generate from RTheta: kwargs = ',kwargs)
     return galsim.PositionD(r*math.cos(theta.rad()), r*math.sin(theta.rad())), safe
 
 def _GenerateFromRad(config, base, value_type):
@@ -576,7 +605,7 @@ def _GenerateFromRad(config, base, value_type):
     """
     req = { 'theta' : float }
     kwargs, safe = GetAllParams(config, base, req=req)
-    #print base['obj_num'],'Generate from Rad: kwargs = ',kwargs
+    #print(base['obj_num'],'Generate from Rad: kwargs = ',kwargs)
     return kwargs['theta'] * galsim.radians, safe
 
 def _GenerateFromDeg(config, base, value_type):
@@ -584,7 +613,7 @@ def _GenerateFromDeg(config, base, value_type):
     """
     req = { 'theta' : float }
     kwargs, safe = GetAllParams(config, base, req=req)
-    #print base['obj_num'],'Generate from Deg: kwargs = ',kwargs
+    #print(base['obj_num'],'Generate from Deg: kwargs = ',kwargs)
     return kwargs['theta'] * galsim.degrees, safe
 
 def _GenerateFromSequence(config, base, value_type):
@@ -637,7 +666,7 @@ def _GenerateFromSequence(config, base, value_type):
         index = index % nitems
 
     value = first + index*step
-    #print base[index_key],'Sequence index = %s + %d*%s = %s'%(first,index,step,value)
+    #print(base[index_key],'Sequence index = %s + %d*%s = %s'%(first,index,step,value))
     return value, False
 
 
@@ -658,24 +687,17 @@ def _GenerateFromNumberedFile(config, base, value_type):
     if 'ext' in kwargs:
         template += kwargs['ext']
     s = eval("'%s'%%%d"%(template,kwargs['num']))
-    #print base['obj_num'],'NumberedFile = ',s
+    #print(base['obj_num'],'NumberedFile = ',s)
     return s, safe
 
 def _GenerateFromFormattedStr(config, base, value_type):
     """@brief Create a string from a format string
     """
-    req = { 'format' : str }
+    req = { 'format' : str, 'items' : list }
     # Ignore items for now, we'll deal with it differently.
-    ignore = [ 'items' ]
-    params, safe = GetAllParams(config, base, req=req, ignore=ignore)
+    params, safe = GetAllParams(config, base, req=req)
     format = params['format']
-
-    # Check that items is present and is a list.
-    if 'items' not in config:
-        raise AttributeError("Attribute items is required for type = FormattedStr")
-    items = config['items']
-    if not isinstance(items,list):
-        raise AttributeError("items for type=NumberedFile is not a list.")
+    items = params['items']
 
     # Figure out what types we are expecting for the list elements:
     tokens = format.split('%')
@@ -713,7 +735,7 @@ def _GenerateFromFormattedStr(config, base, value_type):
         vals.append(val)
 
     final_str = format%tuple(vals)
-    #print base['obj_num'],'FormattedStr = ',final_str
+    #print(base['obj_num'],'FormattedStr = ',final_str)
     return final_str, safe
 
 
@@ -736,7 +758,7 @@ def _GenerateFromList(config, base, value_type):
         raise AttributeError("index %d out of bounds for type=List"%index)
     val, safe1 = ParseValue(items, index, base, value_type)
     safe = safe and safe1
-    #print base['obj_num'],'List index = %d, val = %s'%(index,val)
+    #print(base['obj_num'],'List index = %d, val = %s'%(index,val))
     return val, safe
  
 def _GenerateFromSum(config, base, value_type):
@@ -771,7 +793,7 @@ def _GenerateFromCurrent(config, base, value_type):
         raise ValueError("Invalid key = %s given for type=Current"%key)
 
 
-def RegisterValueType(type_name, gen_func, valid_types):
+def RegisterValueType(type_name, gen_func, valid_types, input_type=None):
     """Register a value type for use by the config apparatus.
 
     A few notes about the signature of the generating function:
@@ -798,8 +820,18 @@ def RegisterValueType(type_name, gen_func, valid_types):
                             The call signature is
                                 value, safe = Generate(config, base, value_type)
     @param valid_types      A list of types for which this type name is valid.
+    @param input_type       If the generator utilises an input object, give the key name of the
+                            input type here.  (If it uses more than one, this may be a list.)
+                            [default: None]
     """
     valid_value_types[type_name] = (gen_func, tuple(valid_types))
+    if input_type is not None:
+        from .input import RegisterInputConnectedType
+        if isinstance(input_type, list):
+            for key in input_type:
+                RegisterInputConnectedType(key, type_name)
+        else:
+            RegisterInputConnectedType(input_type, type_name)
 
 
 RegisterValueType('List', _GenerateFromList, 

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,9 +16,11 @@
 #    and/or other materials provided with the distribution.
 #
 
+from __future__ import print_function
 import numpy as np
 import os
 import sys
+import logging
 
 from galsim_test_helpers import *
 
@@ -33,12 +35,12 @@ except ImportError:
 # So far, I only added two tests related to bugs that David Kirkby found in issues
 # #380 and #391.  But clearly more deserve to be added to our test suite.
 
+
+@timer
 def test_scattered():
     """Test aspects of building an Scattered image
     """
     import copy
-    import time
-    t1 = time.time()
 
     # Name some variables to make it easier to be sure they are the same value in the config dict
     # as when we build the image manually.
@@ -56,9 +58,9 @@ def test_scattered():
 
     # This part of the config will be the same for all tests
     base_config = {
-        'gal' : { 'type' : 'Gaussian', 
+        'gal' : { 'type' : 'Gaussian',
                   'sigma' : sigma,
-                  'flux' : flux 
+                  'flux' : flux
                 }
     }
 
@@ -98,7 +100,7 @@ def test_scattered():
             np.testing.assert_almost_equal(iyy / (sigma/scale)**2, 1, decimal=1)
 
 
-    # Check that stamp_xsize, stamp_ysize, image_pos use the object count, rather than the 
+    # Check that stamp_xsize, stamp_ysize, image_pos use the object count, rather than the
     # image count.
     config = copy.deepcopy(base_config)
     config['image'] = {
@@ -110,9 +112,9 @@ def test_scattered():
         'image_pos' : { 'type' : 'List',
                         'items' : [ galsim.PositionD(x1,y1),
                                     galsim.PositionD(x2,y2),
-                                    galsim.PositionD(x3,y3) ] 
+                                    galsim.PositionD(x3,y3) ]
                       },
-        'nobjects' : 3 
+        'nobjects' : 3
     }
 
     image = galsim.config.BuildImage(config)
@@ -123,7 +125,7 @@ def test_scattered():
 
     for (i,x,y) in [ (0,x1,y1), (1,x2,y2), (2,x3,y3) ]:
         stamp = galsim.ImageF(stamp_size+i,stamp_size+i, scale=scale)
-        if (stamp_size+i) % 2 == 0: 
+        if (stamp_size+i) % 2 == 0:
             x += 0.5
             y += 0.5
         ix = int(np.floor(x+0.5))
@@ -137,15 +139,12 @@ def test_scattered():
 
     np.testing.assert_almost_equal(image.array, image2.array)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_ccdnoise():
     """Test that the config layer CCD noise adds noise consistent with using a CCDNoise object.
     """
     import logging
-    import time
-    t1 = time.time()
 
     gain = 4
     sky = 50
@@ -179,9 +178,9 @@ def test_ccdnoise():
     }
     image = galsim.config.BuildImage(config,logger=logger)
 
-    print 'config-built image: '
-    print 'mean = ',np.mean(image.array)
-    print 'var = ',np.var(image.array.astype(float))
+    print('config-built image: ')
+    print('mean = ',np.mean(image.array))
+    print('var = ',np.var(image.array.astype(float)))
     test_var = np.var(image.array.astype(float))
 
     # Build another image that should have equivalent noise properties.
@@ -192,9 +191,9 @@ def test_ccdnoise():
     image2.addNoise(noise)
     image2 -= sky
 
-    print 'manual sky:'
-    print 'mean = ',np.mean(image2.array)
-    print 'var = ',np.var(image2.array)
+    print('manual sky:')
+    print('mean = ',np.mean(image2.array))
+    print('var = ',np.var(image2.array))
     np.testing.assert_almost_equal(np.var(image2.array),test_var,
                                    err_msg="CCDNoise with manual sky failed variance test.")
 
@@ -206,17 +205,17 @@ def test_ccdnoise():
     noise = galsim.CCDNoise(rng=rng, sky_level=sky, gain=gain, read_noise=rn)
     image2.addNoise(noise)
 
-    print 'sky done by CCDNoise:'
-    print 'mean = ',np.mean(image2.array)
-    print 'var = ',np.var(image2.array)
+    print('sky done by CCDNoise:')
+    print('mean = ',np.mean(image2.array))
+    print('var = ',np.var(image2.array))
     np.testing.assert_almost_equal(np.var(image2.array),test_var,
                                    err_msg="CCDNoise using sky failed variance test.")
 
     # Check that the CCDNoiseBuilder calculates the same variance as CCDNoise
     var1 = noise.getVariance()
     var2 = galsim.config.noise.CCDNoiseBuilder().getNoiseVariance(config['image']['noise'],config)
-    print 'CCDNoise variance = ',var1
-    print 'CCDNoiseBuilder variance = ',var2
+    print('CCDNoise variance = ',var1)
+    print('CCDNoiseBuilder variance = ',var2)
     np.testing.assert_almost_equal(var1, var2,
                                    err_msg="CCDNoiseBuidler calculates the wrong variance")
 
@@ -232,9 +231,9 @@ def test_ccdnoise():
             config['image']['noise'], config, image2, rng,
             current_var = 1.e-20, draw_method='fft', logger=logger)
 
-    print 'Use CCDNoiseBuilder with negligible current_var'
-    print 'mean = ',np.mean(image2.array)
-    print 'var = ',np.var(image2.array)
+    print('Use CCDNoiseBuilder with negligible current_var')
+    print('mean = ',np.mean(image2.array))
+    print('var = ',np.var(image2.array))
     np.testing.assert_almost_equal(np.var(image2.array),test_var,
                                    err_msg="CCDNoise with current_var failed variance test.")
 
@@ -246,9 +245,9 @@ def test_ccdnoise():
             config['image']['noise'], config, image2, rng,
             current_var = (rn/gain)**2, draw_method='fft', logger=logger)
 
-    print 'Use CCDNoiseBuilder with current_var == read_noise'
-    print 'mean = ',np.mean(image2.array)
-    print 'var = ',np.var(image2.array)
+    print('Use CCDNoiseBuilder with current_var == read_noise')
+    print('mean = ',np.mean(image2.array))
+    print('var = ',np.var(image2.array))
     # So far we've done this to very high accuracy, since we've been using the same rng seed,
     # so the results should be identical, not just close.  However, hereon the values are just
     # close, since they are difference noise realizations.  So check to 1 decimal place.
@@ -263,9 +262,9 @@ def test_ccdnoise():
             config['image']['noise'], config, image2, rng,
             current_var = (0.5*rn/gain)**2, draw_method='fft', logger=logger)
 
-    print 'Use CCDNoiseBuilder with current_var < read_noise'
-    print 'mean = ',np.mean(image2.array)
-    print 'var = ',np.var(image2.array)
+    print('Use CCDNoiseBuilder with current_var < read_noise')
+    print('mean = ',np.mean(image2.array))
+    print('var = ',np.var(image2.array))
     np.testing.assert_almost_equal(np.var(image2.array),test_var, decimal=1,
                                    err_msg="CCDNoise w/ current_var < rn failed variance test.")
 
@@ -277,15 +276,62 @@ def test_ccdnoise():
             config['image']['noise'], config, image2, rng,
             current_var = (2.*rn/gain)**2, draw_method='fft', logger=logger)
 
-    print 'Use CCDNoiseBuilder with current_var > read_noise'
-    print 'mean = ',np.mean(image2.array)
-    print 'var = ',np.var(image2.array)
+    print('Use CCDNoiseBuilder with current_var > read_noise')
+    print('mean = ',np.mean(image2.array))
+    print('var = ',np.var(image2.array))
     np.testing.assert_almost_equal(np.var(image2.array),test_var, decimal=1,
                                    err_msg="CCDNoise w/ current_var > rn failed variance test.")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
+def test_cosmosnoise():
+    """Test that the config layer COSMOS noise works with keywords.
+    """
+    import logging
+
+    logger = None
+
+    pix_scale = 0.03
+    random_seed = 123
+
+    # First make the image using COSMOSNoise without kwargs.
+    config = {}
+    # Either gal or psf is required, so just give it a Gaussian with 0 flux.
+    config['gal'] = {
+        'type' : 'Gaussian',
+        'sigma' : 0.1,
+        'flux' : 0
+    }
+    config['image'] = {
+        'type' : 'Single',
+        'pixel_scale' : pix_scale,
+        'random_seed' : 123 # Note: this means the seed for the noise will really be 124
+                            # since it is applied at the stamp level, so uses seed + obj_num
+    }
+    config['image']['noise'] = {
+        'type' : 'COSMOS'
+    }
+    image = galsim.config.BuildImage(config,logger=logger)
+
+    # Then make using kwargs explicitly, to make sure they are getting passed through properly.
+    config2 = {}
+    # Either gal or psf is required, so just give it a Gaussian with 0 flux.
+    config2['gal'] = config['gal']
+    config2['image'] = config['image']
+    config2['image']['noise'] = {
+        'type' : 'COSMOS',
+        'file_name' : os.path.join(galsim.meta_data.share_dir,'acs_I_unrot_sci_20_cf.fits'),
+        'cosmos_scale' : pix_scale
+    }
+    image2 = galsim.config.BuildImage(config2,logger=logger)
+
+    # We used the same RNG and noise file / properties, so should get the same exact noise field.
+    np.testing.assert_allclose(
+        image.array, image2.array, rtol=1.e-5,
+        err_msg='Config COSMOS noise does not reproduce results given kwargs')
+
+
+@timer
 def test_njobs():
     """Test that splitting up jobs works correctly.
 
@@ -296,8 +342,6 @@ def test_njobs():
     However, Josh caught a very subtle bug when splitting up cgc.yaml in the examples/great3
     directory.  So this test explicitly checks for that.
     """
-    import time
-    t1 = time.time()
     # The bug was related to using a Current specification in the input field that accessed
     # a value that should have used the index_key = image_num, rather than the default when
     # processing the input field, being index_key = file_num.  Here is a fairly minimal
@@ -328,7 +372,7 @@ def test_njobs():
             'cosmos_catalog' : {
                 'min_hlr' : '@psf.items.1.sigma',
                 'dir' : os.path.join('..','examples','data'),
-                'file_name' : 'real_galaxy_catalog_example.fits',
+                'file_name' : 'real_galaxy_catalog_23.5_example.fits',
             },
         },
         'output' : {
@@ -341,12 +385,14 @@ def test_njobs():
             },
         },
     }
-    galsim.config.Process(config)
+    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
+    logger = logging.getLogger()
+    galsim.config.Process(config, logger=logger)
 
     # Repeat with 2 jobs
     config['output']['file_name']['root'] = 'test_two_jobs_'
-    galsim.config.Process(config, njobs=2, job=1)
-    galsim.config.Process(config, njobs=2, job=2)
+    galsim.config.Process(config, njobs=2, job=1, logger=logger)
+    galsim.config.Process(config, njobs=2, job=2, logger=logger)
 
     # Check that the images are equal:
     one00 = galsim.fits.read('test_one_job_00.fits', dir='output')
@@ -359,12 +405,9 @@ def test_njobs():
     np.testing.assert_equal(one01.array, two01.array,
                             err_msg="01 image was different for one job vs two jobs")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
-
 
 if __name__ == "__main__":
     test_scattered()
     test_ccdnoise()
+    test_cosmosnoise()
     test_njobs()
-

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -34,7 +34,7 @@ namespace galsim {
         SBProfile(new SBAddImpl(slist,gsparams)) {}
 
     SBAdd::SBAdd(const SBAdd& rhs) : SBProfile(rhs) {}
-    
+
     SBAdd::~SBAdd() {}
 
     std::list<SBProfile> SBAdd::getObjs() const
@@ -43,13 +43,13 @@ namespace galsim {
         return static_cast<const SBAddImpl&>(*_pimpl).getObjs();
     }
 
-    std::string SBAdd::SBAddImpl::repr() const 
+    std::string SBAdd::SBAddImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss << "galsim._galsim.SBAdd([";
-        ConstIter sptr = _plist.begin(); 
-        oss << sptr->repr();
-        for (++sptr; sptr!=_plist.end(); ++sptr) oss << ", " << sptr->repr();
+        ConstIter sptr = _plist.begin();
+        oss << sptr->serialize();
+        for (++sptr; sptr!=_plist.end(); ++sptr) oss << ", " << sptr->serialize();
         oss << "], galsim.GSParams("<<*gsparams<<"))";
         return oss.str();
     }
@@ -77,7 +77,7 @@ namespace galsim {
         }
     }
 
-    void SBAdd::SBAddImpl::initialize() 
+    void SBAdd::SBAddImpl::initialize()
     {
         _sumflux = _sumfx = _sumfy = 0.;
         _maxMaxK = _minStepK = 0.;
@@ -91,9 +91,9 @@ namespace galsim {
             _sumflux += it->getFlux();
             _sumfx += it->getFlux() * it->centroid().x;
             _sumfy += it->getFlux() * it->centroid().y;
-            if ( it->maxK() > _maxMaxK) 
+            if ( it->maxK() > _maxMaxK)
                 _maxMaxK = it->maxK();
-            if ( _minStepK<=0. || (it->stepK() < _minStepK) ) 
+            if ( _minStepK<=0. || (it->stepK() < _minStepK) )
                 _minStepK = it->stepK();
             _allAxisymmetric = _allAxisymmetric && it->isAxisymmetric();
             _anyHardEdges = _anyHardEdges || it->hasHardEdges();
@@ -103,7 +103,7 @@ namespace galsim {
         dbg<<"Net maxK, stepK = "<<_maxMaxK<<" , "<<_minStepK<<std::endl;
     }
 
-    double SBAdd::SBAddImpl::xValue(const Position<double>& p) const 
+    double SBAdd::SBAddImpl::xValue(const Position<double>& p) const
     {
         ConstIter pptr = _plist.begin();
         assert(pptr != _plist.end());
@@ -111,9 +111,9 @@ namespace galsim {
         for (++pptr; pptr != _plist.end(); ++pptr)
             xv += pptr->xValue(p);
         return xv;
-    } 
+    }
 
-    std::complex<double> SBAdd::SBAddImpl::kValue(const Position<double>& k) const 
+    std::complex<double> SBAdd::SBAddImpl::kValue(const Position<double>& k) const
     {
         ConstIter pptr = _plist.begin();
         assert(pptr != _plist.end());
@@ -121,7 +121,7 @@ namespace galsim {
         for (++pptr; pptr != _plist.end(); ++pptr)
             kv += pptr->kValue(k);
         return kv;
-    } 
+    }
 
     void SBAdd::SBAddImpl::fillXValue(tmv::MatrixView<double> val,
                                       double x0, double dx, int izero,
@@ -199,25 +199,25 @@ namespace galsim {
         }
     }
 
-    double SBAdd::SBAddImpl::getPositiveFlux() const 
+    double SBAdd::SBAddImpl::getPositiveFlux() const
     {
         double result = 0.;
         for (ConstIter pptr = _plist.begin(); pptr != _plist.end(); ++pptr) {
-            result += pptr->getPositiveFlux();  
+            result += pptr->getPositiveFlux();
         }
         return result;
     }
 
-    double SBAdd::SBAddImpl::getNegativeFlux() const 
+    double SBAdd::SBAddImpl::getNegativeFlux() const
     {
         double result = 0.;
         for (ConstIter pptr = _plist.begin(); pptr != _plist.end(); ++pptr) {
-            result += pptr->getNegativeFlux();  
+            result += pptr->getNegativeFlux();
         }
         return result;
     }
 
-    boost::shared_ptr<PhotonArray> SBAdd::SBAddImpl::shoot(int N, UniformDeviate u) const 
+    boost::shared_ptr<PhotonArray> SBAdd::SBAddImpl::shoot(int N, UniformDeviate u) const
     {
         dbg<<"Add shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = "<<getFlux()<<std::endl;
@@ -247,7 +247,7 @@ namespace galsim {
             if (thisN > 0) {
                 boost::shared_ptr<PhotonArray> thisPA = pptr->shoot(thisN, u);
                 // Now rescale the photon fluxes so that they are each nominally fluxPerPhoton
-                // whereas the shoot() routine would have made them each nominally 
+                // whereas the shoot() routine would have made them each nominally
                 // thisAbsoluteFlux/thisN
                 thisPA->scaleFlux(fluxPerPhoton*thisN/thisAbsoluteFlux);
                 result->append(*thisPA);
@@ -257,12 +257,12 @@ namespace galsim {
             if (remainingN <=0) break;
             if (remainingAbsoluteFlux <= 0.) break;
         }
-        
+
         dbg<<"Add Realized flux = "<<result->getTotalFlux()<<std::endl;
 
         // This process produces correlated photons, so mark the resulting array as such.
         if (_plist.size() > 1) result->setCorrelated();
-        
+
         return result;
     }
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -28,6 +28,8 @@ See documentation here:
 """
 
 import galsim
+import galsim.config
+import numpy as np
 
 class DES_PSFEx(object):
     """Class that handles DES files describing interpolated principal component images
@@ -46,7 +48,7 @@ class DES_PSFEx(object):
     object profiles in world coordinates.  However, PSFEx does not consider the WCS of the 
     image when building its bases.  The bases are built in image coordinates.  So there are 
     two options to get GalSim to handle this difference.
-    
+
     1. Ignore the WCS of the original image.  In this case, the *.psf files have all the
        information you need:
 
@@ -94,19 +96,20 @@ class DES_PSFEx(object):
                            directory.) (Default `dir = None`).  Cannot pass an HDU with this option.
     """
     # For config, image_file_name is required, since that always works in world coordinates.
-    _req_params = { 'file_name' : str , 'image_file_name' : str }
-    _opt_params = { 'dir' : str }
+    _req_params = { 'file_name' : str }
+    _opt_params = { 'dir' : str, 'image_file_name' : str }
     _single_params = []
     _takes_rng = False
 
     def __init__(self, file_name, image_file_name=None, wcs=None, dir=None):
 
         if dir:
-            if not isinstance(file_name, basestring):
+            if not isinstance(file_name, str):
                 raise ValueError("Cannot provide dir and an HDU instance")
             import os
             file_name = os.path.join(dir,file_name)
-            image_file_name = os.path.join(dir,image_file_name)
+            if image_file_name is not None:
+                image_file_name = os.path.join(dir,image_file_name)
         self.file_name = file_name
         if image_file_name:
             if wcs is not None:
@@ -120,25 +123,21 @@ class DES_PSFEx(object):
 
     def read(self):
         from galsim._pyfits import pyfits
-        if isinstance(self.file_name, basestring):
-            hdu = pyfits.open(self.file_name)[1]
+        if isinstance(self.file_name, str):
+            hdu_list = pyfits.open(self.file_name)
+            hdu = hdu_list[1]
         else:
             hdu = self.file_name
+            hdu_list = None
         # Number of parameters used for the interpolation.  We require this to be 2.
         pol_naxis = hdu.header['POLNAXIS']
-        if pol_naxis != 2:
-            raise IOError("PSFEx: Expected POLNAXIS == 2, got %d"%pol_naxis)
 
         # These are the names of the two axes.  Should be X_IMAGE, Y_IMAGE.
         # If they aren't, then the way we use the interpolation will be wrong.
         # Well, really they can also be XWIN_IMAGE, etc.  So just check that it 
         # starts with X and ends with IMAGE.
         pol_name1 = hdu.header['POLNAME1']
-        if not (pol_name1.startswith('X') and pol_name1.endswith('IMAGE')):
-            raise IOError("PSFEx: Expected POLNAME1 == X*_IMAGE, got %s"%pol_name1)
         pol_name2 = hdu.header['POLNAME2']
-        if not (pol_name2.startswith('Y') and pol_name2.endswith('IMAGE')):
-            raise IOError("PSFEx: Expected POLNAME2 == Y*_IMAGE, got %s"%pol_name2)
 
         # Zero points and scale.  Interpolation is in terms of (x-x0)/xscale, (y-y0)/yscale
         pol_zero1 = hdu.header['POLZERO1']
@@ -162,16 +161,10 @@ class DES_PSFEx(object):
         # For now, we require this to be 1, since I didn't have any files with POLNGRP != 1 to 
         # test on.
         pol_ngrp = hdu.header['POLNGRP']
-        if pol_ngrp != 1:
-            raise IOError("PSFEx: Current implementation requires POLNGRP == 1, got %d"%pol_ngrp)
 
         # Which group each item is in.  We require group 1.
         pol_group1 = hdu.header['POLGRP1']
-        if pol_group1 != 1:
-            raise IOError("PSFEx: Expected POLGRP1 == 1, got %s"%pol_group1)
         pol_group2 = hdu.header['POLGRP2']
-        if pol_group2 != 1:
-            raise IOError("PSFEx: Expected POLGRP2 == 1, got %s"%pol_group2)
 
         # The degree of the polynomial.  E.g. POLDEG1 = 2 means the values will be:
         #     1, x, x^2, y, xy, y^2
@@ -180,8 +173,6 @@ class DES_PSFEx(object):
 
         # The number of axes in the basis object.  We require this to be 3.
         psf_naxis = hdu.header['PSFNAXIS']
-        if psf_naxis != 3:
-            raise IOError("PSFEx: Expected PSFNAXIS == 3, got %d"%psfnaxis)
 
         # The first two axes are the image size of the PSF postage stamp.
         psf_axis1 = hdu.header['PSFAXIS1']
@@ -190,8 +181,6 @@ class DES_PSFEx(object):
         # The third axis is the direction of the polynomial interpolation.  So it should
         # be equal to (d+1)(d+2)/2.
         psf_axis3 = hdu.header['PSFAXIS3']
-        if psf_axis3 != ((pol_deg+1)*(pol_deg+2))/2:
-            raise IOError("PSFEx: POLDEG and PSFAXIS3 disagree")
 
         # This is the PSF "sample size".  Again, from Emmanuel:
         #
@@ -208,7 +197,28 @@ class DES_PSFEx(object):
         # Note: older pyfits versions don't get the shape right.
         # For newer pyfits versions the reshape command should be a no op.
         basis = hdu.data.field('PSF_MASK')[0].reshape(psf_axis3,psf_axis2,psf_axis1)
-        # Make sure this turned out right.
+
+        # Make sure to close the hdu before we might raise exceptions.
+        if hdu_list:
+            hdu_list.close()
+
+        # Check for valid values of all these things.
+        if pol_naxis != 2:
+            raise IOError("PSFEx: Expected POLNAXIS == 2, got %d"%pol_naxis)
+        if not (pol_name1.startswith('X') and pol_name1.endswith('IMAGE')):
+            raise IOError("PSFEx: Expected POLNAME1 == X*_IMAGE, got %s"%pol_name1)
+        if not (pol_name2.startswith('Y') and pol_name2.endswith('IMAGE')):
+            raise IOError("PSFEx: Expected POLNAME2 == Y*_IMAGE, got %s"%pol_name2)
+        if pol_ngrp != 1:
+            raise IOError("PSFEx: Current implementation requires POLNGRP == 1, got %d"%pol_ngrp)
+        if pol_group1 != 1:
+            raise IOError("PSFEx: Expected POLGRP1 == 1, got %s"%pol_group1)
+        if pol_group2 != 1:
+            raise IOError("PSFEx: Expected POLGRP2 == 1, got %s"%pol_group2)
+        if psf_naxis != 3:
+            raise IOError("PSFEx: Expected PSFNAXIS == 3, got %d"%psfnaxis)
+        if psf_axis3 != ((pol_deg+1)*(pol_deg+2))//2:
+            raise IOError("PSFEx: POLDEG and PSFAXIS3 disagree")
         if basis.shape[0] != psf_axis3:
             raise IOError("PSFEx: PSFAXIS3 disagrees with actual basis size")
         if basis.shape[1] != psf_axis2:
@@ -268,13 +278,12 @@ class DES_PSFEx(object):
     def getPSFArray(self, image_pos):
         """Returns the PSF image as a numpy array at position image_pos in image coordinates.
         """
-        import numpy
         xto = self._define_xto( (image_pos.x - self.x_zero) / self.x_scale )
         yto = self._define_xto( (image_pos.y - self.y_zero) / self.y_scale )
         order = self.fit_order
-        P = numpy.array([ xto[nx] * yto[ny] for ny in range(order+1) for nx in range(order+1-ny) ])
+        P = np.array([ xto[nx] * yto[ny] for ny in range(order+1) for nx in range(order+1-ny) ])
         assert len(P) == self.fit_size
-        ar = numpy.tensordot(P,self.basis,(0,0)).astype(numpy.float32)
+        ar = np.tensordot(P,self.basis,(0,0)).astype(np.float32)
         # Note: This is equivalent to:
         #   ar = self.basis[0].astype(numpy.float32)
         #   for n in range(1,self.fit_order+1):
@@ -286,19 +295,42 @@ class DES_PSFEx(object):
         return ar
 
     def _define_xto(self, x):
-        import numpy
-        xto = numpy.empty(self.fit_order+1)
+        xto = np.empty(self.fit_order+1)
         xto[0] = 1
         for i in range(1,self.fit_order+1):
             xto[i] = x*xto[i-1]
         return xto
 
-# Now add this class to the config framework.
-import galsim.config
+
+class PSFExLoader(galsim.config.InputLoader):
+    # Allow the user to not provide the image file.  In this case, we'll grab the wcs from the
+    # config dict.
+    def getKwargs(self, config, base, logger):
+        req = { 'file_name' : str }
+        opt = { 'dir' : str, 'image_file_name' : str }
+        kwargs, safe = galsim.config.GetAllParams(config, base, req=req, opt=opt)
+
+        if 'image_file_name' not in kwargs:
+            if 'wcs' in base:
+                wcs = base['wcs']
+                if wcs.isLocal():
+                    # Then the wcs is already fine.
+                    pass
+                elif 'image_pos' in base:
+                    image_pos = base['image_pos']
+                    wcs = wcs.local(image_pos)
+                    safe = False
+                else:
+                    raise RuntimeError("No image_pos found in config, but wcs is not local.")
+                kwargs['wcs'] = wcs
+            else:
+                # Then we aren't doing normal config processing, so just use pixel scale = 1.
+                kwargs['wcs'] = galsim.PixelScale(1.)
+
+        return kwargs, safe
 
 # First we need to add the class itself as a valid input_type.
-galsim.config.RegisterInputType('des_psfex',
-                                galsim.config.InputLoader(DES_PSFEx, ['DES_PSFEx']))
+galsim.config.RegisterInputType('des_psfex', PSFExLoader(DES_PSFEx))
 
 # Also make a builder to create the PSF object for a given position.
 # The builders require 4 args.
@@ -310,12 +342,15 @@ def BuildDES_PSFEx(config, base, ignore, gsparams, logger):
     """
     des_psfex = galsim.config.GetInputObj('des_psfex', config, base, 'DES_PSFEx')
 
-    opt = { 'flux' : float , 'num' : int }
-    kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
+    opt = { 'flux' : float , 'num' : int, 'image_pos' : galsim.PositionD }
+    params, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
 
-    if 'image_pos' not in base:
+    if 'image_pos' in params:
+        image_pos = params['image_pos']
+    elif 'image_pos' in base:
+        image_pos = base['image_pos']
+    else:
         raise ValueError("DES_PSFEx requested, but no image_pos defined in base.")
-    image_pos = base['image_pos']
 
     # Convert gsparams from a dict to an actual GSParams object
     if gsparams: gsparams = galsim.GSParams(**gsparams)
@@ -332,8 +367,8 @@ def BuildDES_PSFEx(config, base, ignore, gsparams, logger):
                                    x_interpolant=galsim.Lanczos(3), gsparams=gsparams)
     psf = des_psfex.getLocalWCS(image_pos).toWorld(psf)
 
-    if 'flux' in kwargs:
-        psf = psf.withFlux(kwargs['flux'])
+    if 'flux' in params:
+        psf = psf.withFlux(params['flux'])
 
     # The second item here is "safe", a boolean that declares whether the returned value is 
     # safe to save and use again for later objects.  In this case, we wouldn't want to do 
@@ -341,5 +376,5 @@ def BuildDES_PSFEx(config, base, ignore, gsparams, logger):
     return psf, False
 
 # Register this builder with the config framework:
-galsim.config.RegisterObjectType('DES_PSFEx', BuildDES_PSFEx)
+galsim.config.RegisterObjectType('DES_PSFEx', BuildDES_PSFEx, input_type='des_psfex')
 

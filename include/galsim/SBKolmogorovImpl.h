@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -30,10 +30,10 @@ namespace galsim {
      * @brief A class that caches the photon shooting objects and real-space
      *        lookup table, so they don't have to be set up again each time.
      */
-    class KolmogorovInfo 
+    class KolmogorovInfo
     {
     public:
-        /** 
+        /**
          * @brief Constructor
          */
         KolmogorovInfo(const GSParamsPtr& gsparams);
@@ -41,7 +41,7 @@ namespace galsim {
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~KolmogorovInfo() {}
 
-        /** 
+        /**
          * @brief Returns the real space value of the Kolmogorov function,
          * normalized to unit flux (see private attributes).
          * @param[in] r should be given in units of lam_over_r0  (i.e. r_true*r0)
@@ -53,7 +53,7 @@ namespace galsim {
 
         /**
          * @brief Returns the k-space value of the Kolmogorov function.
-         * @param[in] ksq_over_pisq should be given in units of lam_over_r0  
+         * @param[in] ksq_over_pisq should be given in units of lam_over_r0
          * (i.e. k_true^2 / (pi^2 * r0^2))
          *
          * This is used to calculate the real kValue, but it comes back unnormalized.
@@ -80,16 +80,16 @@ namespace galsim {
         KolmogorovInfo(const KolmogorovInfo& rhs); ///< Hides the copy constructor.
         void operator=(const KolmogorovInfo& rhs); ///<Hide assignment operator.
 
-        double _stepk; ///< Sampling in k space necessary to avoid folding 
+        double _stepk; ///< Sampling in k space necessary to avoid folding
         double _maxk; ///< Maximum k value to use
 
         TableDD _radial;  ///< Lookup table for Fourier transform of MTF.
 
         ///< Class that can sample radial distribution
-        boost::shared_ptr<OneDimensionalDeviate> _sampler; 
+        boost::shared_ptr<OneDimensionalDeviate> _sampler;
     };
 
-    class SBKolmogorov::SBKolmogorovImpl : public SBProfileImpl 
+    class SBKolmogorov::SBKolmogorovImpl : public SBProfileImpl
     {
     public:
         SBKolmogorovImpl(double lam_over_r0, double flux, const GSParamsPtr& gsparams);
@@ -99,7 +99,7 @@ namespace galsim {
         double xValue(const Position<double>& p) const;
         std::complex<double> kValue(const Position<double>& k) const;
 
-        bool isAxisymmetric() const { return true; } 
+        bool isAxisymmetric() const { return true; }
         bool hasHardEdges() const { return false; }
         bool isAnalyticX() const { return true; }
         bool isAnalyticK() const { return true; }
@@ -107,7 +107,7 @@ namespace galsim {
         double maxK() const;
         double stepK() const;
 
-        Position<double> centroid() const 
+        Position<double> centroid() const
         { return Position<double>(0., 0.); }
 
         double getFlux() const { return _flux; }
@@ -136,10 +136,10 @@ namespace galsim {
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 
-        std::string repr() const;
+        std::string serialize() const;
 
     private:
-        
+
         double _lam_over_r0; ///< lambda / r0
         double _k0; ///< Derived value so MTF is exp(-(k/k0)^5/3)
         double _k0sq;
@@ -161,4 +161,3 @@ namespace galsim {
 }
 
 #endif
-

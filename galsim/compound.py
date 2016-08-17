@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -23,6 +23,7 @@ Convolution = convolution of multiple profiles
 Deconvolution = deconvolution by a given profile
 AutoConvolution = convolution of a profile by itself
 AutoCorrelation = convolution of a profile by its reflection
+FourierSqrt = Fourier-space square root of a profile
 """
 
 import galsim
@@ -34,7 +35,7 @@ def Add(*args, **kwargs):
     This function will inspect its input arguments to decide if a Sum object or a
     ChromaticSum object is required to represent the sum of surface brightness profiles.
 
-    Typically, you do not need to call Add() explicitly.  Normally, you would just use the + 
+    Typically, you do not need to call Add() explicitly.  Normally, you would just use the +
     operator, which returns a Sum:
 
         >>> bulge = galsim.Sersic(n=3, half_light_radius=0.8)
@@ -136,28 +137,30 @@ class Sum(galsim.GSObject):
         # Save the list as an attribute, so it can be inspected later if necessary.
         self._obj_list = args
 
-        if len(args) == 1 and gsparams is None:
-            # No need to make an SBAdd in this case.
-            galsim.GSObject.__init__(self, args[0])
-            if hasattr(args[0],'noise'):
-                self.noise = args[0].noise
-        else:
-            # If any of the objects have a noise attribute, then we propagate the sum of the
-            # noises (they add like variances) to the final sum.
-            noise = None
-            for obj in args:
-                if hasattr(obj,'noise'):
-                    if noise is None:
-                        noise = obj.noise
-                    else:
-                        noise += obj.noise
-            SBList = [obj.SBProfile for obj in args]
-            galsim.GSObject.__init__(self, galsim._galsim.SBAdd(SBList, gsparams))
-            if noise is not None:
-                self.noise = noise
+        # If any of the objects have a noise attribute, then we propagate the sum of the
+        # noises (they add like variances) to the final sum.
+        noise = None
+        for obj in args:
+            if hasattr(obj,'noise'):
+                if noise is None:
+                    noise = obj.noise
+                else:
+                    noise += obj.noise
+        SBList = [obj.SBProfile for obj in args]
+        galsim.GSObject.__init__(self, galsim._galsim.SBAdd(SBList, gsparams))
+        if noise is not None:
+            self.noise = noise
 
     @property
     def obj_list(self): return self._obj_list
+
+    def __eq__(self, other):
+        return (isinstance(other, galsim.Sum) and
+                self._obj_list == other._obj_list and
+                self._gsparams == other._gsparams)
+
+    def __hash__(self):
+        return hash(("galsim.Sum", tuple(self._obj_list), self._gsparams))
 
     def __repr__(self):
         return 'galsim.Sum(%r, gsparams=%r)'%(self.obj_list, self._gsparams)
@@ -260,7 +263,7 @@ class Convolution(galsim.GSObject):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
-    Note: if `gsparams` is unspecified (or None), then the Convolution instance inherits the same 
+    Note: if `gsparams` is unspecified (or None), then the Convolution instance inherits the same
     GSParams as the first item in the list.  Also, note that parameters related to the Fourier-
     space calculations must be set when initializing the individual GSObjects that go into the Sum,
     NOT when creating the Sum (at which point the accuracy and threshold parameters will simply be
@@ -298,15 +301,6 @@ class Convolution(galsim.GSObject):
         if kwargs:
             raise TypeError(
                 "Convolution constructor got unexpected keyword argument(s): %s"%kwargs.keys())
-
-        if len(args) == 1 and gsparams is None:
-            # No need to make an SBConvolve in this case.  Can early exit.
-            galsim.GSObject.__init__(self, args[0])
-            if hasattr(args[0],'noise'):
-                self.noise = args[0].noise
-            self._real_space = real_space
-            self._obj_list = args
-            return
 
         # Check whether to perform real space convolution...
         # Start by checking if all objects have a hard edge.
@@ -361,7 +355,6 @@ class Convolution(galsim.GSObject):
         # If one of the objects has a noise attribute, then we convolve it by the others.
         # More than one is not allowed.
         noise = None
-        noise_convolve = []
         for obj in args:
             if hasattr(obj,'noise'):
                 if noise is not None:
@@ -373,9 +366,9 @@ class Convolution(galsim.GSObject):
                 noise = obj.noise
                 others = [ obj2 for obj2 in args if obj2 is not obj ]
                 assert len(others) > 0
-                if len(others) == 1: 
+                if len(others) == 1:
                     noise = noise.convolvedWith(others[0])
-                else: 
+                else:
                     noise = noise.convolvedWith(galsim.Convolve(others))
 
         # Save the construction parameters (as they are at this point) as attributes so they
@@ -394,6 +387,15 @@ class Convolution(galsim.GSObject):
     def obj_list(self): return self._obj_list
     @property
     def real_space(self): return self._real_space
+
+    def __eq__(self, other):
+        return (isinstance(other, galsim.Convolution) and
+                self._obj_list == other._obj_list and
+                self.real_space == other.real_space and
+                self._gsparams == other._gsparams)
+
+    def __hash__(self):
+        return hash(("galsim.Convolution", tuple(self._obj_list), self._real_space, self._gsparams))
 
     def __repr__(self):
         return 'galsim.Convolution(%r, real_space=%r, gsparams=%r)'%(
@@ -491,6 +493,14 @@ class Deconvolution(galsim.GSObject):
 
     @property
     def orig_obj(self): return self._orig_obj
+
+    def __eq__(self, other):
+        return (isinstance(other, galsim.Deconvolution) and
+                self._orig_obj == other._orig_obj and
+                self._gsparams == other._gsparams)
+
+    def __hash__(self):
+        return hash(("galsim.Deconvolution", self._orig_obj, self._gsparams))
 
     def __repr__(self):
         return 'galsim.Deconvolution(%r, gsparams=%r)'%(self.orig_obj, self._gsparams)
@@ -611,6 +621,15 @@ class AutoConvolution(galsim.GSObject):
     def orig_obj(self): return self._orig_obj
     @property
     def real_space(self): return self._real_space
+
+    def __eq__(self, other):
+        return (isinstance(other, galsim.AutoConvolution) and
+                self.orig_obj == other.orig_obj and
+                self.real_space == other.real_space and
+                self._gsparams == other._gsparams)
+
+    def __hash__(self):
+        return hash(("galsim.AutoConvolution", self.orig_obj, self.real_space, self._gsparams))
 
     def __repr__(self):
         return 'galsim.AutoConvolution(%r, real_space=%r, gsparams=%r)'%(
@@ -743,6 +762,15 @@ class AutoCorrelation(galsim.GSObject):
     @property
     def real_space(self): return self._real_space
 
+    def __eq__(self, other):
+        return (isinstance(other, galsim.AutoCorrelation) and
+                self.orig_obj == other.orig_obj and
+                self.real_space == other.real_space and
+                self._gsparams == other._gsparams)
+
+    def __hash__(self):
+        return hash(("galsim.AutoCorrelation", self.orig_obj, self.real_space, self._gsparams))
+
     def __repr__(self):
         return 'galsim.AutoCorrelation(%r, real_space=%r, gsparams=%r)'%(
                 self.orig_obj, self.real_space, self._gsparams)
@@ -772,3 +800,105 @@ _galsim.SBAutoCorrelate.__setstate__ = lambda self, state: 1
 _galsim.SBAutoCorrelate.__repr__ = lambda self: \
         'galsim._galsim.SBAutoCorrelate(%r, %r, %r)'%self.__getinitargs__()
 
+
+def FourierSqrt(obj, gsparams=None):
+    """A function for computing the Fourier-space square root of either a GSObject or
+    ChromaticObject.
+
+    The FourierSqrt function is principally used for doing an optimal coaddition algorithm
+    originally developed by Nick Kaiser (but unpublished) and also described by Zackay & Ofek 2015
+    (http://adsabs.harvard.edu/abs/2015arXiv151206879Z).  See the script make_coadd.py in the
+    GalSim/examples directory for an example of how it works.
+
+    This function will inspect its input argument to decide if a FourierSqrtProfile object or a
+    ChromaticFourierSqrtProfile object is required to represent the operation applied to a surface
+    brightness profile.
+
+    @param obj              The object to compute the Fourier-space square root of.
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+    @returns a FourierSqrtProfile or ChromaticFourierSqrtProfile instance as appropriate.
+    """
+    if isinstance(obj, galsim.ChromaticObject):
+        return galsim.ChromaticFourierSqrt(obj, gsparams=gsparams)
+    elif isinstance(obj, galsim.GSObject):
+        return FourierSqrtProfile(obj, gsparams=gsparams)
+    else:
+        raise TypeError("Argument to FourierSqrt must be either a GSObject or a ChromaticObject.")
+
+
+class FourierSqrtProfile(galsim.GSObject):
+    """A class for computing the Fourier-space sqrt of a GSObject.
+
+    The FourierSqrtProfile class represents the Fourier-space square root of another profile.
+    Note that the FourierSqrtProfile class, or compound objects (Sum, Convolution) that include a
+    FourierSqrtProfile as one of the components cannot be photon-shot using the 'phot' method of
+    drawImage() method.
+
+    You may also specify a `gsparams` argument.  See the docstring for GSParams using
+    `help(galsim.GSParams)` for more information about this option.  Note: if `gsparams` is
+    unspecified (or None), then the FourierSqrtProfile instance inherits the same GSParams as the
+    object being operated on.
+
+    Initialization
+    --------------
+
+    The normal way to use this class is to use the FourierSqrt() factory function:
+
+        >>> b = galsim.FourierSqrt(a)
+
+    @param obj              The object to compute Fourier-space square root of.
+    @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
+                            details. [default: None]
+
+    Methods
+    -------
+
+    There are no additional methods for FourierSqrtProfile beyond the usual GSObject methods.
+    """
+    def __init__(self, obj, gsparams=None):
+        if not isinstance(obj, galsim.GSObject):
+            raise TypeError("Argument to FourierSqrtProfile must be a GSObject.")
+
+        # Save the original object as an attribute, so it can be inspected later if necessary.
+        self._orig_obj = obj
+        self._gsparams = gsparams
+
+        sbp = galsim._galsim.SBFourierSqrt(obj.SBProfile, gsparams)
+        galsim.GSObject.__init__(self, sbp)
+        if hasattr(obj,'noise'):
+            import warnings
+            warnings.warn("Unable to propagate noise in galsim.FourierSqrtProfile")
+
+    @property
+    def orig_obj(self): return self._orig_obj
+
+    def __eq__(self, other):
+        return (isinstance(other, galsim.FourierSqrtProfile) and
+                self._orig_obj == other._orig_obj and
+                self._gsparams == other._gsparams)
+
+    def __hash__(self):
+        return hash(("galsim.FourierSqrtProfile", self._orig_obj, self._gsparams))
+
+    def __repr__(self):
+        return 'galsim.FourierSqrtProfile(%r, gsparams=%r)'%(self.orig_obj, self._gsparams)
+
+    def __str__(self):
+        return 'galsim.FourierSqrt(%s)'%self.orig_obj
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        del d['SBProfile']
+        return d
+
+    def __setstate__(self, d):
+        self.__dict__ = d
+        self.__init__(self._orig_obj, self._gsparams)
+
+_galsim.SBFourierSqrt.__getinitargs__ = lambda self: (self.getObj(), self.getGSParams())
+_galsim.SBFourierSqrt.__getstate__ = lambda self: None
+_galsim.SBFourierSqrt.__setstate__ = lambda self, state: 1
+_galsim.SBFourierSqrt.__repr__ = lambda self: \
+        'galsim._galsim.SBFourierSqrt(%r, %r)'%self.__getinitargs__()

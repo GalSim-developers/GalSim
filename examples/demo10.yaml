@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -33,7 +33,7 @@
 #
 # New features introduced in this demo:
 #
-# - obj type : Ring (..., full_rotation)
+# - stamp type : Ring (..., full_rotation)
 # - obj type : RealGalaxy (..., id)
 # - type : Eval using world_pos variable, user-defined variables and math functions
 # - type : Current
@@ -193,7 +193,7 @@ input :
     # In this case, we need to define where the real galaxy input catalog is.
     real_catalog :
         dir : data
-        file_name : real_galaxy_catalog_example.fits
+        file_name : real_galaxy_catalog_23.5_example.fits
 
     # We also initialize the power spectrum here.
     # There are two possible attributes for a power_spectrum: e_power_function and 

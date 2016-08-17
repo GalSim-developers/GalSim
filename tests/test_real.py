@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import numpy as np
 import os
 import sys
@@ -75,10 +77,10 @@ def moments_to_ellip(mxx, myy, mxy):
     sig = (mxx*myy - mxy**2)**(0.25)
     return e1, e2, sig
 
+
+@timer
 def test_real_galaxy_ideal():
     """Test accuracy of various calculations with fake Gaussian RealGalaxy vs. ideal expectations"""
-    import time
-    t1 = time.time()
     # read in faked Gaussian RealGalaxy from file
     rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
     rg = galsim.RealGalaxy(rgc, index=ind_fake)
@@ -93,7 +95,7 @@ def test_real_galaxy_ideal():
         np.testing.assert_raises(AttributeError, galsim.RealGalaxy, rgc, id=0, random=True)
         np.testing.assert_raises(AttributeError, galsim.RealGalaxy, rgc)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
     do_pickle(rgc, lambda x: [ x.getGal(ind_fake), x.getPSF(ind_fake),
                                x.getNoiseProperties(ind_fake) ])
@@ -123,7 +125,7 @@ def test_real_galaxy_ideal():
         for tpf in targ_PSF_fwhm:
             for tps1 in targ_PSF_shear1:
                 for tps2 in targ_PSF_shear2:
-                    print 'tps,tpf,tps1,tps2 = ',tps,tpf,tps1,tps2
+                    print('tps,tpf,tps1,tps2 = ',tps,tpf,tps1,tps2)
                     # make target PSF
                     targ_PSF = galsim.Gaussian(fwhm = tpf).shear(g1=tps1, g2=tps2)
                     # simulate image
@@ -156,13 +158,10 @@ def test_real_galaxy_ideal():
                         sim_image.array, expected_image.array, decimal = 3,
                         err_msg = "Error in comparison of ideal Gaussian RealGalaxy calculations")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_real_galaxy_saved():
     """Test accuracy of various calculations with real RealGalaxy vs. stored SHERA result"""
-    import time
-    t1 = time.time()
     # read in real RealGalaxy from file
     #rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
     # This is an alternate way to give the directory -- as part of the catalog file name.
@@ -202,9 +201,25 @@ def test_real_galaxy_saved():
     do_pickle(rgc)
     do_pickle(rg)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+@timer
+def test_ne():
+    """ Check that inequality works as expected."""
+    rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
+    gsp = galsim.GSParams(folding_threshold=1.1e-3)
+
+    gals = [galsim.RealGalaxy(rgc, index=0),
+            galsim.RealGalaxy(rgc, index=1),
+            galsim.RealGalaxy(rgc, index=0, x_interpolant='Linear'),
+            galsim.RealGalaxy(rgc, index=0, k_interpolant='Linear'),
+            galsim.RealGalaxy(rgc, index=0, flux=1.1),
+            galsim.RealGalaxy(rgc, index=0, pad_factor=1.1),
+            galsim.RealGalaxy(rgc, index=0, noise_pad_size=5.0),
+            galsim.RealGalaxy(rgc, index=0, gsparams=gsp)]
+    all_obj_diff(gals)
+
 
 if __name__ == "__main__":
     test_real_galaxy_ideal()
     test_real_galaxy_saved()
+    test_ne()

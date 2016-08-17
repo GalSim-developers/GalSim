@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -31,21 +31,7 @@
  * Wraps Boost.Random classes in a way that lets us swap Boost RNG's without affecting client code.
  */
 
-// icpc pretends to be GNUC, since it thinks it's compliant, but it's not.
-// It doesn't understand "pragma GCC"
-#ifndef __INTEL_COMPILER
-
-// There are some uninitialized values in boost.random stuff, which aren't a problem but
-// sometimes confuse the compiler sufficiently that it emits a warning.
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 2)
-#pragma GCC diagnostic ignored "-Wuninitialized"
-#endif
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
-
-#endif
-
+#include "galsim/IgnoreWarnings.h"
 
 // Variable defined to use a private copy of Boost.Random, modified
 // to avoid any reference to Boost.Random elements that might be on

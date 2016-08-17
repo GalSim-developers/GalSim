@@ -10,6 +10,7 @@ import glob
 Import('env')
 ReadFileList = env['_ReadFileList']
 AddRPATH = env['_AddRPATH']
+PrependLibraryPaths = env['_PrependLibraryPaths']
 
 libs=['galsim']
 
@@ -40,6 +41,8 @@ def run_tests(target, source, env):
     if env['NOSETESTS']:
         print 'Using nosetests from: ',env['NOSETESTS']
         cmd = env['NOSETESTS']
+        # Account for SIP on El Capitan
+        cmd = PrependLibraryPaths(cmd,env)
         if env['NOSETESTSVERSION'] >= '1.1' and env.GetOption('num_jobs') > 1:
             cmd += ' --processes=%d --process-timeout=60'%(env.GetOption('num_jobs'))
             print 'nosetests is version %s... running tests in parallel with %d jobs'%(
@@ -58,7 +61,7 @@ def run_tests(target, source, env):
         log.write('Nosetests version is: ' + env['NOSETESTSVERSION'] + '\n')
         log.write('Nosetests command is:\n' + cmd + '\n')
         py_proc = subprocess.Popen(
-            cmd.split(),
+            ['bash', '-c', cmd],
             cwd='tests',
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
@@ -103,6 +106,8 @@ def run_tests(target, source, env):
                 print '         e.g. To use 4 jobs, write "scons -j4 tests".'
         else:
             print 'Nosetests finished successfully.'
+        if ret != 0:
+            env.Exit(ret)
     else:
         print
         print 'WARNING: Could not find nosetests in path.'
@@ -112,15 +117,17 @@ def run_tests(target, source, env):
         print '             cd tests '
         print '             run_all_tests '
         print '         If this doesn\'t end with an error, then the tests all passed.'
-        
+
     # Always run cpp tests
     if True:
         print '\nStarting cpp tests...'
+        cmd = str(source[0])
+        cmd = PrependLibraryPaths(cmd,env)
         cpp_proc = subprocess.Popen(
-            str(source[0]),
+            ['bash', '-c', cmd],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
-            shell=True)
+            shell=False)
         
         while cpp_proc.poll() == None:
             buf = os.read(cpp_proc.stdout.fileno(),1)
@@ -139,6 +146,8 @@ def run_tests(target, source, env):
             print 'test_main returned error code ',ret
         else:
             print 'test_main finished successfully.'
+        if ret != 0:
+            env.Exit(ret)
     print
 
 test_builder = Builder( action = run_tests )

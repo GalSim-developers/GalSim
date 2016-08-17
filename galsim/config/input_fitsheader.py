@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,13 +16,15 @@
 #    and/or other materials provided with the distribution.
 #
 
+from __future__ import print_function
+
 import galsim
 
 # This file adds input type fits_header and value type FitsHeader.
 
 # The FitsHeader doesn't need anything special other than registration as a valid input type.
 from .input import RegisterInputType, InputLoader
-RegisterInputType('fits_header', InputLoader(galsim.FitsHeader,['FitsHeader'], file_scope=True))
+RegisterInputType('fits_header', InputLoader(galsim.FitsHeader, file_scope=True))
 
 def _GenerateFromFitsHeader(config, base, value_type):
     """@brief Return a value read from a FITS header
@@ -36,9 +38,10 @@ def _GenerateFromFitsHeader(config, base, value_type):
 
     val = header.get(key)
 
-    #print base['file_num'],'Header: key = %s, val = %s'%(key,val)
+    #print(base['file_num'],'Header: key = %s, val = %s'%(key,val))
     return val, safe
 
 # Register this as a valid value type
 from .value import RegisterValueType
-RegisterValueType('FitsHeader', _GenerateFromFitsHeader, [ float, int, bool, str ])
+RegisterValueType('FitsHeader', _GenerateFromFitsHeader, [ float, int, bool, str ],
+                  input_type='fits_header')

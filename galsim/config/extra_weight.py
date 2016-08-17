@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -26,11 +26,14 @@ import galsim
 
 from .extra import ExtraOutputBuilder
 class WeightBuilder(ExtraOutputBuilder):
-    """This builds a bad pixel mask image to go along with each regular data image.
+    """This builds a weight map image to go along with each regular data image.
 
-    There's not much here currently, since GalSim doesn't yet have any image artifacts that
-    would be appropriate to do something with here.  So this is mostly just a placeholder for
-    when we eventually add defects, saturation, etc.
+    The weight is the inverse variance of the noise in the image.
+
+    There is a option called 'include_obj_var' that governs whether the weight should include the
+    Poisson variance of the signal.  In real data, you don't know the true signal, and estimating
+    the Poisson noise from the realized image can lead to biases.  As such, different applications
+    may or may not want this included.
     """
 
     # The function to call at the end of building each stamp
@@ -81,19 +84,6 @@ class WeightBuilder(ExtraOutputBuilder):
         # zero weight.
         image.invertSelf()
         self.data[index] = image
-
-    # Write the image(s) to a file
-    def writeFile(self, file_name, config, base, logger):
-        galsim.fits.writeMulti(self.data, file_name)
-
-    # For the hdu, just return the first element
-    def writeHdu(self, config, base, logger):
-        n = len(self.data)
-        if n == 0:
-            raise RuntimeError("No weight images were created.")
-        elif n > 1:
-            raise RuntimeError("%d weight images were created, but expecting only 1."%n)
-        return self.data[0]
 
 
 # Register this as a valid extra output

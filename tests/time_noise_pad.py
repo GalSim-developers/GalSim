@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,14 +15,16 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+"""Unit tests for the InterpolatedImage class.
+"""
+
+from __future__ import print_function
 import numpy as np
 import os
 import sys
 
 n_iter = 50
-
-"""Unit tests for the InterpolatedImage class.
-"""
 
 try:
     import galsim
@@ -67,7 +69,7 @@ def test_corr_padding_cf():
                                           noise_pad = cf)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_corr_padding_im():
@@ -101,7 +103,7 @@ def test_corr_padding_im():
                                           noise_pad = im)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 
 def test_corr_padding_imgfile():
@@ -134,7 +136,7 @@ def test_corr_padding_imgfile():
                                           noise_pad = imgfile)
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_corr_nopadding():
     import time
@@ -161,7 +163,7 @@ def test_corr_nopadding():
         int_im = galsim.InterpolatedImage(orig_img, rng = galsim.GaussianDeviate(orig_seed))
 
     t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+    print('time for %s = %.2f'%(funcname(),t2-t1))
 
 if __name__ == "__main__":
     test_corr_padding_cf()

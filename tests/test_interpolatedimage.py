@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,14 +15,16 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+"""Unit tests for the InterpolatedImage class.
+"""
+
+from __future__ import print_function
 import numpy as np
 import os
 import sys
 
 from galsim_test_helpers import *
-
-"""Unit tests for the InterpolatedImage class.
-"""
 
 path, filename = os.path.split(__file__) # Get the path to this file for use below...
 try:
@@ -54,12 +56,11 @@ scale = 0.4
 # The reference image was drawn with the old convention, which is now use_true_center=False
 final.drawImage(image=ref_image, scale=scale, method='sb', use_true_center=False)
 
+
+@timer
 def test_roundtrip():
     """Test round trip from Image to InterpolatedImage back to Image.
     """
-    import time
-    t1 = time.time()
-
     # for each type, try to make an InterpolatedImage, and check that when we draw an image from
     # that InterpolatedImage that it is the same as the original
     ftypes = [np.float32, np.float64]
@@ -97,8 +98,9 @@ def test_roundtrip():
         do_kvalue(interp,test_im,"InterpolatedImage")
 
         # Check picklability
-        do_pickle(interp._sbii, lambda x: (galsim.Image(x.getImage()), x.stepK(), x.maxK()))
-        do_pickle(interp.SBProfile, lambda x: repr(x))
+        do_pickle(interp._sbii, lambda x: (galsim.Image(x.getImage()), x.stepK(), x.maxK()),
+                  irreprable=True)
+        do_pickle(interp.SBProfile, lambda x: repr(x), irreprable=True)
         do_pickle(interp, lambda x: x.drawImage(method='no_pixel'))
         do_pickle(interp)
         do_pickle(interp.SBProfile)
@@ -132,16 +134,11 @@ def test_roundtrip():
     do_pickle(galsim.Interpolant('lanczos7'), test_func)
     do_pickle(galsim.Interpolant('lanczos9F'), test_func)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_fluxnorm():
     """Test that InterpolatedImage class responds properly to instructions about flux normalization.
     """
-    import time
-    t1 = time.time()
-
     # define values
     # Note that im_lin_scale should be even, since the auto-sized drawImage() command always
     # produces an even-sized image.  If the even/odd-ness doesn't match then the interpolant will
@@ -193,20 +190,15 @@ def test_fluxnorm():
     do_pickle(interp_flux, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(interp_flux)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_exceptions():
     """Test failure modes for InterpolatedImage class.
     """
-    import time
-    t1 = time.time()
-
     try:
         # What if it receives as input something that is not an Image? Give it a GSObject to check.
         g = galsim.Gaussian(sigma=1.)
-        np.testing.assert_raises(ValueError, galsim.InterpolatedImage, g)
+        np.testing.assert_raises((ValueError, AttributeError), galsim.InterpolatedImage, g)
         # What if Image does not have a scale set, but scale keyword is not specified?
         im = galsim.ImageF(5, 5)
         np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im)
@@ -229,17 +221,12 @@ def test_exceptions():
         im = galsim.ImageI(5, 5)
         np.testing.assert_raises(ValueError, galsim.InterpolatedImage, im)
     except ImportError:
-        print 'The assert_raises tests require nose'
-
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+        print('The assert_raises tests require nose')
 
 
+@timer
 def test_operations_simple():
     """Simple test of operations on InterpolatedImage: shear, magnification, rotation, shifting."""
-    import time
-    t1 = time.time()
-
     # Make some nontrivial image that can be described in terms of sums and convolutions of
     # GSObjects.  We want this to be somewhat hard to describe, but should be at least
     # critically-sampled, so put in an Airy PSF.
@@ -405,16 +392,12 @@ def test_operations_simple():
         do_pickle(test_int_im, lambda x: x.drawImage(nx=5, ny=5, scale=0.1, method='no_pixel'))
         do_pickle(test_int_im)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_operations():
     """Test of operations on complicated InterpolatedImage: shear, magnification, rotation,
     shifting.
     """
-    import time
-    t1 = time.time()
     test_decimal = 3
 
     # Make some nontrivial image
@@ -466,15 +449,10 @@ def test_operations():
     do_pickle(new_int_im, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(new_int_im)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_uncorr_padding():
     """Test for uncorrelated noise padding of InterpolatedImage."""
-    import time
-    t1 = time.time()
-
     # Set up some defaults: use weird image sizes / shapes and noise variances.
     decimal_precise=5
     decimal_coarse=2
@@ -543,17 +521,12 @@ def test_uncorr_padding():
     try:
         np.testing.assert_raises(ValueError,galsim.InterpolatedImage,orig_img,noise_pad=-1.)
     except ImportError:
-        print 'The assert_raises tests require nose'
-
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+        print('The assert_raises tests require nose')
 
 
+@timer
 def test_pad_image():
     """Test padding an InterpolatedImage with a pad_image."""
-    import time
-    t1 = time.time()
-
     decimal=2  # all are coarse, since there are slight changes from odd/even centering issues.
     noise_sigma = 1.73
     noise_var = noise_sigma**2
@@ -578,7 +551,6 @@ def test_pad_image():
 
     # Use a few different kinds of shapes for that padding.
     for (pad_nx, pad_ny) in [ (160,160), (179,191), (256,256), (305, 307) ]:
-        #print 'pad size = ',pad_nx, pad_ny
 
         # make the pad_image
         pad_img = galsim.ImageF(pad_nx, pad_ny, scale=1.)
@@ -625,15 +597,10 @@ def test_pad_image():
                 do_pickle(int_im, lambda x: x.drawImage(nx=200, ny=200, scale=1, method='no_pixel'))
                 do_pickle(int_im)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_corr_padding():
     """Test for correlated noise padding of InterpolatedImage."""
-    import time
-    t1 = time.time()
-
     # Set up some defaults for tests.
     decimal_precise=4
     decimal_coarse=2
@@ -703,7 +670,7 @@ def test_corr_padding():
     try:
         np.testing.assert_raises(ValueError,galsim.InterpolatedImage,orig_img,noise_pad=-1.)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
     # also, check that whether we give it a string, image, or cn, it gives the same noise field
     # (given the same random seed)
     infile = 'fits_files/blankimg.fits'
@@ -725,16 +692,11 @@ def test_corr_padding():
         do_pickle(int_im2)
         do_pickle(int_im3)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_realspace_conv():
     """Test that real-space convolution of an InterpolatedImage matches the FFT result
     """
-    import time
-    t1 = time.time()
-
     # Note: It is not usually a good idea to use real-space convolution with an InterpolatedImage.
     # It will almost always be much slower than the FFT convolution.  So it's probably only
     # a good idea if the image is very small and/or you absolutely need to avoid the ringing
@@ -773,7 +735,7 @@ def test_realspace_conv():
         # time to run (before failing), so it's probably not a good idea to use it for
         # real-space convolution anyway.
 
-        print 'interp = ',interp
+        print('interp = ',interp)
 
         gal = galsim.InterpolatedImage(gal_im, x_interpolant=interp)
 
@@ -805,29 +767,24 @@ def test_realspace_conv():
         do_pickle(c1)
         do_pickle(c3)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_Cubic_ref():
     """Test use of Cubic interpolant against some reference values
     """
-    import time
-    t1 = time.time()
-
     interp = galsim.Cubic(tol=1.e-4)
     testobj = galsim.InterpolatedImage(ref_image, x_interpolant=interp, scale=scale,
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
-    for i in xrange(len(KXVALS)):
+    for i in range(len(KXVALS)):
         posk = galsim.PositionD(KXVALS[i], KYVALS[i])
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array
     refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKCubic_test.txt"))
-    print 'ref = ',refKvals
-    print 'test = ',testKvals
-    print 'kValue(0) = ',testobj.kValue(galsim.PositionD(0.,0.))
+    print('ref = ',refKvals)
+    print('test = ',testKvals)
+    print('kValue(0) = ',testobj.kValue(galsim.PositionD(0.,0.)))
     np.testing.assert_array_almost_equal(
             refKvals/testKvals, 1., 5,
             err_msg="kValues do not match reference values for Cubic interpolant.")
@@ -835,28 +792,23 @@ def test_Cubic_ref():
     do_pickle(testobj, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(testobj)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_Quintic_ref():
     """Test use of Quintic interpolant against some reference values
     """
-    import time
-    t1 = time.time()
-
     interp = galsim.Quintic(tol=1.e-4)
     testobj = galsim.InterpolatedImage(ref_image, x_interpolant=interp, scale=scale,
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
-    for i in xrange(len(KXVALS)):
+    for i in range(len(KXVALS)):
         posk = galsim.PositionD(KXVALS[i], KYVALS[i])
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array
     refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKQuintic_test.txt"))
-    print 'ref = ',refKvals
-    print 'test = ',testKvals
+    print('ref = ',refKvals)
+    print('test = ',testKvals)
     np.testing.assert_array_almost_equal(
             refKvals/testKvals, 1., 5,
             err_msg="kValues do not match reference values for Quintic interpolant.")
@@ -864,28 +816,23 @@ def test_Quintic_ref():
     do_pickle(testobj, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(testobj)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_Lanczos5_ref():
     """Test use of Lanczos5 interpolant against some reference values
     """
-    import time
-    t1 = time.time()
-
     interp = galsim.Lanczos(5, conserve_dc=False, tol=1.e-4)
     testobj = galsim.InterpolatedImage(ref_image, x_interpolant=interp, scale=scale,
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
-    for i in xrange(len(KXVALS)):
+    for i in range(len(KXVALS)):
         posk = galsim.PositionD(KXVALS[i], KYVALS[i])
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array
     refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKLanczos5_test.txt"))
-    print 'ref = ',refKvals
-    print 'test = ',testKvals
+    print('ref = ',refKvals)
+    print('test = ',testKvals)
     np.testing.assert_array_almost_equal(
             refKvals/testKvals, 1., 5,
             err_msg="kValues do not match reference values for Lanczos-5 interpolant.")
@@ -893,28 +840,23 @@ def test_Lanczos5_ref():
     do_pickle(testobj, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(testobj)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_Lanczos7_ref():
     """Test use of Lanczos7 interpolant against some reference values
     """
-    import time
-    t1 = time.time()
-
     interp = galsim.Lanczos(7, conserve_dc=False, tol=1.e-4)
     testobj = galsim.InterpolatedImage(ref_image, x_interpolant=interp, scale=scale,
                                        normalization='sb')
     testKvals = np.zeros(len(KXVALS))
     # Make test kValues
-    for i in xrange(len(KXVALS)):
+    for i in range(len(KXVALS)):
         posk = galsim.PositionD(KXVALS[i], KYVALS[i])
         testKvals[i] = np.abs(testobj.kValue(posk))
     # Compare with saved array
     refKvals = np.loadtxt(os.path.join(TESTDIR, "absfKLanczos7_test.txt"))
-    print 'ref = ',refKvals
-    print 'test = ',testKvals
+    print('ref = ',refKvals)
+    print('test = ',testKvals)
     np.testing.assert_array_almost_equal(
             refKvals/testKvals, 1., 5,
             err_msg="kValues do not match reference values for Lanczos-7 interpolant.")
@@ -922,18 +864,14 @@ def test_Lanczos7_ref():
     do_pickle(testobj, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(testobj)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_conserve_dc():
     """Test that the conserve_dc option for Lanczos does so.
     Note: the idea of conserving flux is a bit of a misnomer.  No interpolant does so
     precisely in general.  What we are really testing is that a flat background input
     image has a relatively flat output image.
     """
-    import time
-    t1 = time.time()
     import numpy
 
     im1_size = 40
@@ -950,10 +888,10 @@ def test_conserve_dc():
     im2 = galsim.ImageF(im2_size, im2_size, scale=scale2)
 
     for interp in ['linear', 'cubic', 'quintic']:
-        print 'Testing interpolant ',interp
+        print('Testing interpolant ',interp)
         obj = galsim.InterpolatedImage(im1, x_interpolant=interp, normalization='sb')
         obj.drawImage(im2, method='sb')
-        print 'The maximum error is ',numpy.max(abs(im2.array-init_val))
+        print('The maximum error is ',numpy.max(abs(im2.array-init_val)))
         numpy.testing.assert_array_almost_equal(
                 im2.array,init_val,5,
                 '%s did not preserve a flat input flux using xvals.'%interp)
@@ -962,7 +900,7 @@ def test_conserve_dc():
         delta = galsim.Gaussian(sigma=1.e-8)
         obj2 = galsim.Convolve([obj,delta])
         obj2.drawImage(im2, method='sb')
-        print 'The maximum error is ',numpy.max(abs(im2.array-init_val))
+        print('The maximum error is ',numpy.max(abs(im2.array-init_val)))
         numpy.testing.assert_array_almost_equal(
                 im2.array,init_val,5,
                 '%s did not preserve a flat input flux using uvals.'%interp)
@@ -974,11 +912,11 @@ def test_conserve_dc():
 
 
     for n in [3,4,5,6,7,8]:  # n=8 tests the generic formulae, since not specialized.
-        print 'Testing Lanczos interpolant with n = ',n
+        print('Testing Lanczos interpolant with n = ',n)
         lan = galsim.Lanczos(n, conserve_dc=True)
         obj = galsim.InterpolatedImage(im1, x_interpolant=lan, normalization='sb')
         obj.drawImage(im2, method='sb')
-        print 'The maximum error is ',numpy.max(abs(im2.array-init_val))
+        print('The maximum error is ',numpy.max(abs(im2.array-init_val)))
         numpy.testing.assert_array_almost_equal(
                 im2.array,init_val,5,
                 'Lanczos %d did not preserve a flat input flux using xvals.'%n)
@@ -987,7 +925,7 @@ def test_conserve_dc():
         delta = galsim.Gaussian(sigma=1.e-8)
         obj2 = galsim.Convolve([obj,delta])
         obj2.drawImage(im2, method='sb')
-        print 'The maximum error is ',numpy.max(abs(im2.array-init_val))
+        print('The maximum error is ',numpy.max(abs(im2.array-init_val)))
         numpy.testing.assert_array_almost_equal(
                 im2.array,init_val,5,
                 'Lanczos %d did not preserve a flat input flux using uvals.'%n)
@@ -997,14 +935,11 @@ def test_conserve_dc():
         do_pickle(obj)
         do_pickle(obj2)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_stepk_maxk():
     """Test options to specify (or not) stepk and maxk.
     """
-    import time
-    t1 = time.time()
     import numpy
 
     scale = 0.18
@@ -1033,12 +968,9 @@ def test_stepk_maxk():
     do_pickle(int_im)
     do_pickle(new_int_im)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-def test_kround_trip():
-    import time
-    t1 = time.time()
+@timer
+def test_kroundtrip():
     a = final
     real_a, imag_a = a.drawKImage()
     b = galsim.InterpolatedKImage(real_a, imag_a)
@@ -1116,15 +1048,11 @@ def test_kround_trip():
     np.testing.assert_array_almost_equal(a_conv_c_img.array, b_conv_c_img.array, 5,
                                          "Convolution of InterpolatedKImage drawn incorrectly.")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_multihdu_readin():
     """Test the ability to read in from a file with multiple FITS extensions.
     """
-    import time
-    t1 = time.time()
-
     # Check that when we read in from the different HDUs using the keyword, we get the expected set
     # of shear values after drawing.  The file was created using
     # fits_files/make_interpim_hdu_test.py, so if that script gets changed, the test has to change
@@ -1142,12 +1070,93 @@ def test_multihdu_readin():
 
     # Check for exception with invalid HDU.
     try:
-        np.testing.assert_raises(ValueError, galsim.InterpolatedImage, infile, hdu=37)
+        np.testing.assert_raises((OSError, IOError), galsim.InterpolatedImage, infile, hdu=37)
     except ImportError:
-        print 'The assert_raises tests require nose'
+        print('The assert_raises tests require nose')
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
+
+@timer
+def test_ne():
+    """ Check that inequality works as expected for corner cases where the reprs of two
+    unequal InterpolatedImages or InterpolatedKImages may be the same due to truncation.
+    """
+    obj1 = galsim.InterpolatedImage(ref_image, calculate_maxk=False, calculate_stepk=False)
+
+    # Copy ref_image and perturb it slightly in the middle, away from where the InterpolatedImage
+    # repr string will report.
+    perturb_image = ref_image.copy()
+    perturb_image.array[64, 64] *= 1000
+    obj2 = galsim.InterpolatedImage(perturb_image, calculate_maxk=False, calculate_stepk=False)
+
+    # These tests won't always work if astropy < 1.0.6 has been imported, so look for that.
+    import sys
+    if 'astropy' in sys.modules:
+        import astropy  # Just b/c someone imported it, doesn't mean we can see it yet.
+        from distutils.version import LooseVersion
+        if LooseVersion(astropy.__version__) < LooseVersion('1.0.6'):
+            return
+
+    with galsim.utilities.printoptions(threshold=128*128):
+        assert repr(obj1) != repr(obj2), "Reprs unexpectedly agree: %r"%obj1
+
+    with galsim.utilities.printoptions(threshold=1000):
+        assert repr(obj1) == repr(obj2), "Reprs disagree: repr(obj1)=%r\nrepr(obj2)=%r"%(
+                obj1, obj2)
+
+    assert obj1 != obj2
+
+    # Now repeat for InterpolatedKImage
+    re, im = obj1.drawKImage(nx=128, ny=128, scale=1)
+    obj3 = galsim.InterpolatedKImage(re, im)
+    perturb_re = re.copy()
+    perturb_im = im.copy()
+    x = np.arange(128)
+    x, y = np.meshgrid(x, x)
+    w = ((perturb_re.array**2 - perturb_im.array**2 > 1e-10) &
+         (50 < x) & (x < (128-50)) &
+         (50 < y) & (y < (128-50)))
+    perturb_re.array[w] *= 2
+    perturb_im.array[w] *= 2
+
+    obj4 = galsim.InterpolatedKImage(perturb_re, perturb_im)
+
+    with galsim.utilities.printoptions(threshold=128*128):
+        assert repr(obj3) != repr(obj4)
+
+    with galsim.utilities.printoptions(threshold=1000):
+        assert repr(obj3) == repr(obj4)
+
+    assert obj3 != obj4
+
+    # And now do the same types of tests as in test_base.py and test_chromatic.py to make sure that
+    # slightly different objects compare and hash appropriately.
+    gsp = galsim.GSParams(maxk_threshold=1.1e-3, folding_threshold=5.1e-3)
+    gals = [galsim.InterpolatedImage(ref_image),
+            galsim.InterpolatedImage(ref_image, calculate_maxk=False),
+            galsim.InterpolatedImage(ref_image, calculate_stepk=False),
+            galsim.InterpolatedImage(ref_image, flux=1.1),
+            galsim.InterpolatedImage(ref_image, offset=(0.0, 1.1)),
+            galsim.InterpolatedImage(ref_image, x_interpolant='Linear'),
+            galsim.InterpolatedImage(ref_image, k_interpolant='Linear'),
+            galsim.InterpolatedImage(ref_image, pad_factor=1.),
+            galsim.InterpolatedImage(ref_image, normalization='sb'),
+            galsim.InterpolatedImage(ref_image, noise_pad_size=100, noise_pad=0.1),
+            galsim.InterpolatedImage(ref_image, noise_pad_size=100, noise_pad=0.2),
+            galsim.InterpolatedImage(ref_image, noise_pad_size=100, noise_pad=0.2),
+            galsim.InterpolatedImage(ref_image, _force_stepk=1.0),
+            galsim.InterpolatedImage(ref_image, _force_maxk=1.0),
+            galsim.InterpolatedImage(ref_image, scale=0.2),
+            galsim.InterpolatedImage(ref_image, use_true_center=False),
+            galsim.InterpolatedImage(ref_image, gsparams=gsp)]
+    all_obj_diff(gals)
+
+    # And repeat for InterpolatedKImage
+    gals = [galsim.InterpolatedKImage(re, im),
+            galsim.InterpolatedKImage(re, im, k_interpolant='Linear'),
+            galsim.InterpolatedKImage(re, im, stepk=1.1),
+            galsim.InterpolatedKImage(re, im, gsparams=gsp)]
+    all_obj_diff(gals)
+
 
 if __name__ == "__main__":
     test_roundtrip()
@@ -1165,5 +1174,6 @@ if __name__ == "__main__":
     test_Lanczos7_ref()
     test_conserve_dc()
     test_stepk_maxk()
-    test_kround_trip()
+    test_kroundtrip()
     test_multihdu_readin()
+    test_ne()

@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -39,18 +39,18 @@ namespace galsim {
     SBShapelet::~SBShapelet() {}
 
     const LVector& SBShapelet::getBVec() const
-    { 
+    {
         assert(dynamic_cast<const SBShapeletImpl*>(_pimpl.get()));
-        return static_cast<const SBShapeletImpl&>(*_pimpl).getBVec(); 
+        return static_cast<const SBShapeletImpl&>(*_pimpl).getBVec();
     }
 
-    double SBShapelet::getSigma() const 
+    double SBShapelet::getSigma() const
     {
         assert(dynamic_cast<const SBShapeletImpl*>(_pimpl.get()));
         return static_cast<const SBShapeletImpl&>(*_pimpl).getSigma();
     }
 
-    std::string SBShapelet::SBShapeletImpl::repr() const 
+    std::string SBShapelet::SBShapeletImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);
@@ -64,10 +64,10 @@ namespace galsim {
         SBProfileImpl(gsparams),
         _sigma(sigma), _bvec(bvec.copy()) {}
 
-    double SBShapelet::SBShapeletImpl::maxK() const 
+    double SBShapelet::SBShapeletImpl::maxK() const
     {
         // Start with value for plain old Gaussian:
-        double maxk = sqrt(-2.*std::log(this->gsparams->maxk_threshold))/_sigma; 
+        double maxk = sqrt(-2.*std::log(this->gsparams->maxk_threshold))/_sigma;
         // Grow as sqrt of (order+1)
         // Note: this is an approximation.  The right value would require looking at
         // the actual coefficients and doing something smart with them.
@@ -75,7 +75,7 @@ namespace galsim {
         return maxk;
     }
 
-    double SBShapelet::SBShapeletImpl::stepK() const 
+    double SBShapelet::SBShapeletImpl::stepK() const
     {
         // Start with value for plain old Gaussian:
         double R = std::max(4., sqrt(-2.*std::log(this->gsparams->folding_threshold)));
@@ -84,7 +84,7 @@ namespace galsim {
         return M_PI / (R*_sigma);
     }
 
-    double SBShapelet::SBShapeletImpl::xValue(const Position<double>& p) const 
+    double SBShapelet::SBShapeletImpl::xValue(const Position<double>& p) const
     {
         LVector psi(_bvec.getOrder());
         psi.fillBasis(p.x/_sigma, p.y/_sigma, _sigma);
@@ -92,7 +92,7 @@ namespace galsim {
         return xval;
     }
 
-    std::complex<double> SBShapelet::SBShapeletImpl::kValue(const Position<double>& k) const 
+    std::complex<double> SBShapelet::SBShapeletImpl::kValue(const Position<double>& k) const
     {
         int N=_bvec.getOrder();
         LVector psi(N);
@@ -105,25 +105,25 @@ namespace galsim {
             int j = pq.rIndex();
             double x = _bvec[j]*psi[j] + (pq.isReal() ? 0 : _bvec[j+1]*psi[j+1]);
             switch (pq.N() % 4) {
-              case 0: 
+              case 0:
                    rr += x;
                    break;
-              case 1: 
+              case 1:
                    ii -= x;
                    break;
-              case 2: 
+              case 2:
                    rr -= x;
                    break;
-              case 3: 
+              case 3:
                    ii += x;
                    break;
             }
-        }  
+        }
         // difference in Fourier convention with FFTW ???
         return std::complex<double>(2.*M_PI*rr, 2.*M_PI*ii);
     }
 
-    double SBShapelet::SBShapeletImpl::getFlux() const 
+    double SBShapelet::SBShapeletImpl::getFlux() const
     {
         double flux=0.;
         for (PQIndex pp(0,0); !pp.pastOrder(_bvec.getOrder()); pp.incN())
@@ -131,7 +131,7 @@ namespace galsim {
         return flux;
     }
 
-    Position<double> SBShapelet::SBShapeletImpl::centroid() const 
+    Position<double> SBShapelet::SBShapeletImpl::centroid() const
     {
         std::complex<double> cen(0.);
         double n = 1.;
@@ -291,7 +291,7 @@ namespace galsim {
     void ShapeletFitImage(double sigma, LVector& bvec, const BaseImage<T>& image,
                           double image_scale, const Position<double>& center)
     {
-        // TODO: It would be nice to be able to fit this with an arbitrary WCS to fit in 
+        // TODO: It would be nice to be able to fit this with an arbitrary WCS to fit in
         //       sky coordinates.  For now, just use the image_scale.
         dbg<<"Start ShapeletFitImage:\n";
         xdbg<<"sigma = "<<sigma<<std::endl;
@@ -342,4 +342,3 @@ namespace galsim {
         double sigma, LVector& bvec, const BaseImage<int16_t>& image, double image_scale,
         const Position<double>& center);
 }
-

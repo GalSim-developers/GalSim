@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -23,8 +23,9 @@ The second script in our tutorial about using GalSim in python scripts: examples
  
 This script is a bit more sophisticated, but still pretty basic.  We're still only making
 a single image, but now the galaxy has an exponential radial profile and is sheared.
-The PSF is a circular Moffat profile.  And the noise is Poisson using the flux from both
-the object and a background sky level to determine the variance in each pixel.
+The PSF is a circular Moffat profile.  The noise is drawn from a Poisson distribution
+using the flux from both the object and a background sky level to determine the 
+variance in each pixel.
 
 New features introduced in this demo:
 

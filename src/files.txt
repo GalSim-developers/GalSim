@@ -19,6 +19,7 @@ SBConvolve.cpp
 SBTransform.cpp
 SBInterpolatedImage.cpp
 SBDeconvolve.cpp
+SBFourierSqrt.cpp
 SBKolmogorov.cpp
 SBSpergel.cpp
 Table.cpp
@@ -26,5 +27,6 @@ RealSpaceConvolve.cpp
 Random.cpp
 CorrelatedNoise.cpp
 CDModel.cpp
+Version.cpp
 polygon.cpp
 silicon.cpp

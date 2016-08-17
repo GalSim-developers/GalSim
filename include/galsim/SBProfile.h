@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,8 +19,8 @@
 
 #ifndef GalSim_SBProfile_H
 #define GalSim_SBProfile_H
-/** 
- * @file SBProfile.h @brief Contains a class definition for two-dimensional Surface Brightness 
+/**
+ * @file SBProfile.h @brief Contains a class definition for two-dimensional Surface Brightness
  * Profiles.
  *
  * The SBProfiles include common star, galaxy, and PSF shapes.
@@ -34,7 +34,7 @@
 #include <algorithm>
 #include <complex>
 
-// Some versions of boost don't have the right guard to avoid C++-11 extensions. 
+// Some versions of boost don't have the right guard to avoid C++-11 extensions.
 // This #define helps avoid warnings on clang, and it doesn't hurt elsewhere.
 #define BOOST_NO_CXX11_SMART_PTR
 #include <boost/shared_ptr.hpp>
@@ -54,7 +54,7 @@ namespace galsim {
     //! @cond
 
     /// @brief Exception class thrown by SBProfiles.
-    class SBError : public std::runtime_error 
+    class SBError : public std::runtime_error
     {
     public:
         SBError(const std::string& m) : std::runtime_error("SB Error: " + m) {}
@@ -64,7 +64,7 @@ namespace galsim {
 
     class SBTransform;
 
-    /** 
+    /**
      * @brief A base class representing all of the 2D surface brightness profiles that we know how
      * to draw.
      *
@@ -82,32 +82,32 @@ namespace galsim {
      *
      * Every SBProfile knows how to draw an Image<float> of itself in real and k space.  Each also
      * knows what is needed to prevent aliasing or truncation of itself when drawn.  The classes
-     * model the surface brightness of the object, so the xValue routine returns the value of the 
+     * model the surface brightness of the object, so the xValue routine returns the value of the
      * surface brightness at a given point.  Usually we define this as flux/arcsec^2.
      *
-     * However, when drawing an SBProfile, any distance measures used to define the SBProfile will 
-     * be taken to be in units of pixels.  Thus the image, which is nominally a **surface 
+     * However, when drawing an SBProfile, any distance measures used to define the SBProfile will
+     * be taken to be in units of pixels.  Thus the image, which is nominally a **surface
      * brightness** image is also a **flux** image.  The flux in each pixel is the flux/pixel^2.
      * The python layer takes care of the typical case of defining an SBProfile in terms of arcsec,
      * then converting the image to pixels (scaling the size and flux appropriately), so that the
-     * draw command here has the correct flux.  
+     * draw command here has the correct flux.
      *
-     * This isn't an abstract base class.  An SBProfile is a concrete object which internally has 
+     * This isn't an abstract base class.  An SBProfile is a concrete object which internally has
      * a pointer to the implementation details (which _is_ an abstract base class).  Furthermore,
      * all SBProfiles are immutable objects.  Any changes are made through modifiers that return a
-     * new object.  (e.g. setFlux, shear, shift, etc.)  This means that we can safely make 
+     * new object.  (e.g. setFlux, shear, shift, etc.)  This means that we can safely make
      * SBProfiles use shallow copies, since that will never be confusing, which in turn means that
      * SBProfiles can be safely returned by value, used in containers (e.g. list<SBProfile>), etc.
      *
-     * The only constructor for SBProfile is the copy constructor.  All SBProfiles need to be 
+     * The only constructor for SBProfile is the copy constructor.  All SBProfiles need to be
      * created as one of the derived types that have real constructors.
      *
-     * Well, technically, there is also a default constructor to make it easier to use containers 
-     * of SBProfiles.  However, it is an error to use an SBProfile that has been default 
-     * constructed for any purpose. 
+     * Well, technically, there is also a default constructor to make it easier to use containers
+     * of SBProfiles.  However, it is an error to use an SBProfile that has been default
+     * constructed for any purpose.
      *
      * The assignment operator does a shallow copy, replacing the current contents of the SBProfile
-     * with that of the rhs profile.  
+     * with that of the rhs profile.
      *
      */
     class SBProfile
@@ -141,11 +141,11 @@ namespace galsim {
         /// Get the GSParams object for this SBProfile
         const boost::shared_ptr<GSParams> getGSParams() const;
 
-        /** 
+        /**
          * @brief Return value of SBProfile at a chosen 2D position in real space.
          *
-         * Assume all are real-valued.  xValue() may not be implemented for derived classes 
-         * (SBConvolve) that require an FFT to determine real-space values.  In this case, an 
+         * Assume all are real-valued.  xValue() may not be implemented for derived classes
+         * (SBConvolve) that require an FFT to determine real-space values.  In this case, an
          * SBError will be thrown.
          *
          * @param[in] p 2D position in real space.
@@ -165,7 +165,7 @@ namespace galsim {
          *
          *  These values are used when a real-space convolution is requested to define
          *  the appropriate range of integration.
-         *  The implementation here is +- infinity for both x and y.  
+         *  The implementation here is +- infinity for both x and y.
          *  Derived classes may override this if they a have different range.
          */
         void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const;
@@ -210,7 +210,7 @@ namespace galsim {
          */
         bool hasHardEdges() const;
 
-        /** 
+        /**
          * @brief Check whether the SBProfile is analytic in the real domain.
          *
          *
@@ -222,8 +222,8 @@ namespace galsim {
 
         /**
          * @brief Check whether the SBProfile is analytic in the Fourier domain.
-         * 
-         * An SBProfile is "analytic" in the k domain if values can be determined immediately at any 
+         *
+         * An SBProfile is "analytic" in the k domain if values can be determined immediately at any
          * position through formula or a stored table (no DFT); this makes certain calculations
          * more efficient.
          */
@@ -310,7 +310,7 @@ namespace galsim {
         /**
          * @brief Return expectation value of flux in positive photons when shoot() is called
          *
-         * Returns expectation value of flux returned in positive-valued photons when 
+         * Returns expectation value of flux returned in positive-valued photons when
          * [shoot()](@ref shoot)
          * is called for this object.  Default implementation is to return getFlux(), if it is
          * positive, or 0 otherwise, which will be
@@ -325,17 +325,17 @@ namespace galsim {
         double getPositiveFlux() const;
 
         /**
-         * @brief Return expectation value of absolute value of flux in negative photons from 
+         * @brief Return expectation value of absolute value of flux in negative photons from
          * shoot()
          *
          * Returns expectation value of (absolute value of) flux returned in negative-valued photons
-         * when shoot() is called for this object.  
+         * when shoot() is called for this object.
          * Default implementation is to return getFlux() if it is negative, 0 otherwise,
          * which will be the case when the SBProfile is constructed entirely from elements that
          * have the same sign.
          *
          * It should be generally true that `getPositiveFlux() - getNegativeFlux()` returns the
-         * same thing as `getFlux()`.  Small difference may accrue from finite numerical accuracy 
+         * same thing as `getFlux()`.  Small difference may accrue from finite numerical accuracy
          * in cases involving lookup tables, etc.
          *
          * @returns Expected absolute value of negative-photon flux.
@@ -357,9 +357,9 @@ namespace galsim {
          * It is important to remember that the `Image` produced by `drawShoot` represents the
          * `SBProfile` _as convolved with the square Image pixel._ So do not expect an exact match,
          * even in the limit of large photon number, between the outputs of `draw` and `drawShoot`.
-         * You should convolve the `SBProfile` with an `SBBox(1,1)` in order to match what 
-         * will be produced by `drawShoot` onto an image.  (The 1 here represents 1 pixel, which 
-         * is the implicit units being used here.  The python layer drawShoot takes care of the 
+         * You should convolve the `SBProfile` with an `SBBox(1,1)` in order to match what
+         * will be produced by `drawShoot` onto an image.  (The 1 here represents 1 pixel, which
+         * is the implicit units being used here.  The python layer drawShoot takes care of the
          * conversion from arcsec to pixels.)
          *
          * @param[in,out]  image (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
@@ -373,22 +373,22 @@ namespace galsim {
          *            However, some profiles need more than this because some of the shot
          *            photons are negative (usually due to interpolants).
          * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
-         * @param[in] gain  Number of photons per ADU. 
+         * @param[in] gain  Number of photons per ADU.
          * @param[in] max_extra_noise If provided, the allowed extra noise in each pixel.
-         *            This is only relevant if N=0, so the number of photons is being 
-         *            automatically calculated.  In that case, if the image noise is 
+         *            This is only relevant if N=0, so the number of photons is being
+         *            automatically calculated.  In that case, if the image noise is
          *            dominated by the sky background, you can get away with using fewer
          *            shot photons than the full N = flux.  Essentially each shot photon
          *            can have a flux > 1.  Then extra poisson noise is added after the fact.
-         *            The max_extra_noise parameter specifies how much extra noise per pixel is 
+         *            The max_extra_noise parameter specifies how much extra noise per pixel is
          *            allowed because of this approximation.  A typical value for this would be
-         *            max_extra_noise = sky_level / 100 where sky_level is the flux per pixel 
+         *            max_extra_noise = sky_level / 100 where sky_level is the flux per pixel
          *            due to the sky.  Note that this uses a "variance" definition of noise,
          *            not a "sigma" definition.
-         * @param[in] poisson_flux Whether to allow total object flux scaling to vary according to 
-         *                         Poisson statistics for `N` samples 
+         * @param[in] poisson_flux Whether to allow total object flux scaling to vary according to
+         *                         Poisson statistics for `N` samples
          * @param[in] add_to_image Whether to add flux to the existing image rather than draw
-         *                         an image from scratch.  
+         *                         an image from scratch.
          * @returns The total flux of photons the landed inside the image bounds.
          *
          * Note: N is input as a double so that very large values of N don't have to
@@ -401,7 +401,7 @@ namespace galsim {
             double max_extra_noise, bool poisson_flux, bool add_to_image, Silicon* silicon=NULL) const;
 
 
-        /** 
+        /**
          * @brief Draw the SBProfile in real space returning the summed flux.
          *
          * The image will be drawn on the provided ImageView, although for an FFT draw method,
@@ -419,10 +419,10 @@ namespace galsim {
          * @returns summed flux.
          */
         template <typename T>
-        double draw(ImageView<T> image, double gain, double wmult) const; 
+        double draw(ImageView<T> image, double gain, double wmult) const;
 
-        /** 
-         * @brief Draw an image of the SBProfile in real space forcing the use of real methods 
+        /**
+         * @brief Draw an image of the SBProfile in real space forcing the use of real methods
          * where we have a formula for x values.
          * For SBProfiles without an analytic real-space representation, an exception will be
          * thrown.
@@ -436,13 +436,13 @@ namespace galsim {
          * @returns summed flux.
          */
         template <typename T>
-        double plainDraw(ImageView<T> image, double gain) const; 
+        double plainDraw(ImageView<T> image, double gain) const;
 
-        /** 
+        /**
          * @brief Draw an image of the SBProfile in real space forcing the use of Fourier transform
          * from k space.
          *
-         * The image will be drawn on the provided ImageView, although the k-image may be 
+         * The image will be drawn on the provided ImageView, although the k-image may be
          * calculated internally on a larger grid to avoid folding.  The FFT image will also
          * be scaled up to either a power of 2 or 3 x a power of 2, whichever fits.
          *
@@ -456,65 +456,21 @@ namespace galsim {
          * @returns summed flux.
          */
         template <typename T>
-        double fourierDraw(ImageView<T> image, double gain, double wmult) const; 
-
-        /** 
-         * @brief Draw an image of the SBProfile in k space.
-         *
-         * For drawing in k space: routines are analagous to real space, except 2 images are 
-         * needed since the SBProfile is complex. The images are normalized such that I(0,0) is the 
-         * total flux.
-         *
-         * If the input images are Image's and have null dimension, square 
-         * images will be drawn which are big enough to avoid "folding."  If drawing is done using 
-         * FFT, they will be scaled up to a power of 2, or 3x2^n, whicher fits.
-         * If input image has finite dimensions then these will be used, although in an FFT the 
-         * image may be calculated internally on a larger grid to avoid folding in real space.
-         * Note that if you give an input image, its origin may be redefined by the time it comes 
-         * back.
-         *
-         * @param[in,out]    re image of real argument of SBProfile in k space
-         *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in,out]    im image of imaginary argument of SBProfile in k space
-         *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in] gain   Number of photons per ADU.
-         * @param[in] wmult  If desired, a scaling to make intermediate images larger than normal.
-         */
-        template <typename T>
-        void drawK(ImageView<T> re, ImageView<T> im, double gain, double wmult) const; 
-
-        /** 
-         * @brief Draw an image of the SBProfile in k space forcing the use of k space methods 
-         * where we have a formula for k values.
-         *
-         * For drawing in k space: routines are analagous to real space, except 2 images are 
-         * needed since the SBProfile is complex.  If the input images are Image's and have
-         * null dimension, square images will be drawn which are big enough to 
-         * avoid "folding."
-         * Note that if you give an input image, its origin may be redefined by the time it comes 
-         * back.
-         *
-         * @param[in,out]    re image of real argument of SBProfile in k space
-         *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in,out]    im image of imaginary argument of SBProfile in k space
-         *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in] gain   Number of photons per ADU.
-         */
-        template <typename T>
-        void plainDrawK(ImageView<T> re, ImageView<T> im, double gain) const; 
+        double fourierDraw(ImageView<T> image, double gain, double wmult) const;
 
         /**
-         * @brief Draw an image of the SBProfile in k space forcing the use of Fourier transform 
-         * from real space.
+         * @brief Draw an image of the SBProfile in k space.
          *
-         * For drawing in k space: routines are analagous to real space, except 2 images are 
-         * needed since the SBProfile is complex.
-         * If the input images are Image's and have null dimension, square 
-         * images will be drawn which are big enough to avoid "folding."  Drawing is done using FFT,
-         * and the images will be scaled up to a power of 2, or 3x2^n, whicher fits.
-         * If input image has finite dimensions then these will be used, although in an FFT the 
+         * For drawing in k space: routines are analagous to real space, except 2 images are
+         * needed since the SBProfile is complex. The images are normalized such that I(0,0) is the
+         * total flux.
+         *
+         * If the input images are Image's and have null dimension, square
+         * images will be drawn which are big enough to avoid "folding."  If drawing is done using
+         * FFT, they will be scaled up to a power of 2, or 3x2^n, whicher fits.
+         * If input image has finite dimensions then these will be used, although in an FFT the
          * image may be calculated internally on a larger grid to avoid folding in real space.
-         * Note that if you give an input image, its origin may be redefined by the time it comes 
+         * Note that if you give an input image, its origin may be redefined by the time it comes
          * back.
          *
          * @param[in,out]    re image of real argument of SBProfile in k space
@@ -525,10 +481,56 @@ namespace galsim {
          * @param[in] wmult  If desired, a scaling to make intermediate images larger than normal.
          */
         template <typename T>
-        void fourierDrawK(ImageView<T> re, ImageView<T> im, double gain, double wmult) const; 
+        void drawK(ImageView<T> re, ImageView<T> im, double gain, double wmult) const;
+
+        /**
+         * @brief Draw an image of the SBProfile in k space forcing the use of k space methods
+         * where we have a formula for k values.
+         *
+         * For drawing in k space: routines are analagous to real space, except 2 images are
+         * needed since the SBProfile is complex.  If the input images are Image's and have
+         * null dimension, square images will be drawn which are big enough to
+         * avoid "folding."
+         * Note that if you give an input image, its origin may be redefined by the time it comes
+         * back.
+         *
+         * @param[in,out]    re image of real argument of SBProfile in k space
+         *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in,out]    im image of imaginary argument of SBProfile in k space
+         *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in] gain   Number of photons per ADU.
+         */
+        template <typename T>
+        void plainDrawK(ImageView<T> re, ImageView<T> im, double gain) const;
+
+        /**
+         * @brief Draw an image of the SBProfile in k space forcing the use of Fourier transform
+         * from real space.
+         *
+         * For drawing in k space: routines are analagous to real space, except 2 images are
+         * needed since the SBProfile is complex.
+         * If the input images are Image's and have null dimension, square
+         * images will be drawn which are big enough to avoid "folding."  Drawing is done using FFT,
+         * and the images will be scaled up to a power of 2, or 3x2^n, whicher fits.
+         * If input image has finite dimensions then these will be used, although in an FFT the
+         * image may be calculated internally on a larger grid to avoid folding in real space.
+         * Note that if you give an input image, its origin may be redefined by the time it comes
+         * back.
+         *
+         * @param[in,out]    re image of real argument of SBProfile in k space
+         *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in,out]    im image of imaginary argument of SBProfile in k space
+         *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in] gain   Number of photons per ADU.
+         * @param[in] wmult  If desired, a scaling to make intermediate images larger than normal.
+         */
+        template <typename T>
+        void fourierDrawK(ImageView<T> re, ImageView<T> im, double gain, double wmult) const;
 
         /// @brief Return a string that can act as the repr in python
         std::string repr() const;
+        /// @brief Return a string that can act as the pickle serialization string in python
+        std::string serialize() const;
 
     protected:
 
@@ -546,4 +548,3 @@ namespace galsim {
 }
 
 #endif
-

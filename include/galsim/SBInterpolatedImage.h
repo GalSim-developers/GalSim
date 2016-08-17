@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -122,6 +122,7 @@ namespace galsim {
         void calculateMaxK(double max_maxk=0.) const;
 
         ConstImageView<double> getImage() const;
+        ConstImageView<double> getPaddedImage() const;
 
     protected:
 

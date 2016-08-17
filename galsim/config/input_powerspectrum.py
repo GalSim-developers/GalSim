@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,6 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
+from __future__ import print_function
+
 import galsim
 import math
 
@@ -29,9 +31,6 @@ import math
 
 from .input import InputLoader
 class PowerSpectrumLoader(InputLoader):
-    def __init__(self):
-        types = ['PowerSpectrumShear', 'PowerSpectrumMagnification']
-        super(self.__class__, self).__init__(galsim.PowerSpectrum, types)
 
     def getKwargs(self, config, base, logger):
         """Parse the config dict and return the kwargs needed to build the PowerSpectrum object.
@@ -105,7 +104,7 @@ class PowerSpectrumLoader(InputLoader):
 
 # Register this as a valid input type
 from .input import RegisterInputType
-RegisterInputType('power_spectrum', PowerSpectrumLoader())
+RegisterInputType('power_spectrum', PowerSpectrumLoader(galsim.PowerSpectrum))
 
 
 # There are two value types associated with this: PowerSpectrumShear and
@@ -135,7 +134,7 @@ def _GenerateFromPowerSpectrumShear(config, base, value_type):
                       "Using shear = 0.")
         shear = galsim.Shear(g1=0,g2=0)
 
-    #print base['obj_num'],'PS shear = ',shear
+    #print(base['obj_num'],'PS shear = ',shear)
     return shear, False
 
 def _GenerateFromPowerSpectrumMagnification(config, base, value_type):
@@ -164,10 +163,12 @@ def _GenerateFromPowerSpectrumMagnification(config, base, value_type):
             mu,max_mu))
         mu = max_mu
 
-    #print base['obj_num'],'PS mu = ',mu
+    #print(base['obj_num'],'PS mu = ',mu)
     return mu, False
 
 # Register these as valid value types
 from .value import RegisterValueType
-RegisterValueType('PowerSpectrumShear', _GenerateFromPowerSpectrumShear, [ galsim.Shear ])
-RegisterValueType('PowerSpectrumMagnification', _GenerateFromPowerSpectrumMagnification, [ float ])
+RegisterValueType('PowerSpectrumShear', _GenerateFromPowerSpectrumShear, [ galsim.Shear ],
+                  input_type='power_spectrum')
+RegisterValueType('PowerSpectrumMagnification', _GenerateFromPowerSpectrumMagnification, [ float ],
+                  input_type='power_spectrum')

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -39,7 +39,8 @@ def Bandpass_rdiv(self, other):
     else:
         tp = lambda w: other / self.func(w)
 
-    return galsim.Bandpass(tp, blue_limit, red_limit, _wave_list=wave_list)
+    return galsim.Bandpass(tp, 'nm', blue_limit, red_limit,
+                           _wave_list=wave_list)
 
 galsim.Bandpass.__rdiv__ = Bandpass_rdiv
 galsim.Bandpass.__rtruediv__ = Bandpass_rdiv

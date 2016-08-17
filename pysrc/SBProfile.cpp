@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,13 +16,11 @@
  *    this list of conditions, and the disclaimer given in the documentation
  *    and/or other materials provided with the distribution.
  */
+
+#include "galsim/IgnoreWarnings.h"
+
 #define BOOST_PYTHON_MAX_ARITY 20  // We have a function with 17 params here...
                                    // c.f. www.boost.org/libs/python/doc/v2/configuration.html
-#ifndef __INTEL_COMPILER
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
-#endif
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include "boost/python.hpp"
@@ -44,7 +42,7 @@ namespace galsim {
                 .def(bp::init<
                     int, int, double, double, double, double, double, double, double, double,
                     double, double, double, double, int, double>((
-                        bp::arg("minimum_fft_size")=128, 
+                        bp::arg("minimum_fft_size")=128,
                         bp::arg("maximum_fft_size")=4096,
                         bp::arg("folding_threshold")=5.e-3,
                         bp::arg("stepk_minimum_hlr")=5.,
@@ -81,11 +79,17 @@ namespace galsim {
                 .def(bp::self == bp::other<GSParams>())
                 .enable_pickling()
                 ;
+// Work around for "no to_python (by-value) converter found for C++ type: boost::shared_ptr<>"
+// boost::python bug that seems to only exist for boost version 1.60.
+// (GalSim Issue #764, https://github.com/GalSim-developers/GalSim/pull/767).
+#if BOOST_VERSION >= 106000 && BOOST_VERSION < 106100
+            bp::register_ptr_to_python< boost::shared_ptr<GSParams> >();
+#endif
         }
     };
 
 
-    struct PySBProfile 
+    struct PySBProfile
     {
 
         template <typename U, typename W>
@@ -95,7 +99,7 @@ namespace galsim {
             // We also don't need to make 'W' a template parameter in this case,
             // but it's easier to do that than write out the full class_ type.
             wrapper
-                .def("drawShoot", 
+                .def("drawShoot",
                      (double (SBProfile::*)(ImageView<U>, double, UniformDeviate,
                                             double, double, bool, bool, Silicon*)
                       const)&SBProfile::drawShoot,
@@ -109,12 +113,12 @@ namespace galsim {
                      "according to Poisson statistics for N samples.\n"
                      "\n"
                      "Returns total flux of photons that landed inside image bounds.")
-                .def("draw", 
+                .def("draw",
                      (double (SBProfile::*)(ImageView<U>, double, double) const)&SBProfile::draw,
                      (bp::arg("image"), bp::arg("gain")=1., bp::arg("wmult")=1.),
                      "Draw in-place and return the summed flux.")
-                .def("drawK", 
-                     (void (SBProfile::*)(ImageView<U>, ImageView<U>, 
+                .def("drawK",
+                     (void (SBProfile::*)(ImageView<U>, ImageView<U>,
                                           double, double) const)&SBProfile::drawK,
                      (bp::arg("re"), bp::arg("im"), bp::arg("gain")=1., bp::arg("wmult")=1.),
                      "Draw k-space image (real and imaginary components).")
@@ -122,7 +126,7 @@ namespace galsim {
         }
 
         static void wrap() {
-            static char const * doc = 
+            static char const * doc =
                 "\n"
                 "SBProfile is an abstract base class representing all of the 2d surface\n"
                 "brightness that we know how to draw.  Every SBProfile knows how to\n"
@@ -192,6 +196,7 @@ namespace galsim {
                 .def("transform", &SBProfile::transform, bp::args("dudx", "dudy", "dvdx", "dvdy"))
                 .def("shoot", &SBProfile::shoot, bp::args("n", "u"))
                 .def("__repr__", &SBProfile::repr)
+                .def("serialize", &SBProfile::serialize)
                 .enable_pickling()
                 ;
             wrapTemplates<float>(pySBProfile);
@@ -201,7 +206,7 @@ namespace galsim {
     };
 
 
-    void pyExportSBProfile() 
+    void pyExportSBProfile()
     {
         PySBProfile::wrap();
         PyGSParams::wrap();

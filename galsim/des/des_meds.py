@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -17,16 +17,18 @@
 #
 """@file des_meds.py  Module for generating DES Multi-Epoch Data Structures (MEDS) in GalSim.
 
-This module defines the MultiExposureObject class for representing multiple exposure data for a 
-single object.  The write_meds() function can be used to write a list of MultiExposureObject
+This module defines the MultiExposureObject class for representing multiple exposure data for a
+single object.  The WriteMEDS function can be used to write a list of MultiExposureObject
 instances to a single MEDS file.
 
-Importing this module also adds these data structures to the config framework, so that MEDS file 
+Importing this module also adds these data structures to the config framework, so that MEDS file
 output can subsequently be simulated directly using a config file.
 """
 
-import numpy
+import numpy as np
 import galsim
+import galsim.config
+import sys
 
 # these image stamp sizes are available in MEDS format
 BOX_SIZES = [32,48,64,96,128,192,256]
@@ -49,174 +51,162 @@ class MultiExposureObject(object):
     Initialization
     --------------
 
-    @param images       List of images of the object (GalSim Images).
-    @param weights      List of weight maps (GalSim Images). [default: None]
-    @param badpix       List of bad pixel masks (GalSim Images). [default: None]
-    @param segs         List of segmentation maps (GalSim Images). [default: None]
-    @param wcs          List of WCS transformations (GalSim AffineTransforms). [default: None]
+    @param images       List of images of the object.
+    @param weight       List of weight images. [default: None]
+    @param badpix       List of bad pixel masks. [default: None]
+    @param seg          List of segmentation maps. [default: None]
+    @param psf          List of psf images. [default: None]
+    @param wcs          List of WCS transformations. [default: None]
     @param id           Galaxy id. [default: 0]
 
     Attributes
     ----------
-
-    self.images         List of images of the object (GalSim Images).
-    self.weights        List of weight maps (GalSim Images).
-    self.segs           List of segmentation masks (GalSim Images).
-    self.wcs            List of WCS transformations (GalSim AffineTransforms).
+    self.images         List of images of the object.
+    self.weight         List of weight maps.
+    self.seg            List of segmentation maps.
+    self.psf            List of psf images.
+    self.wcs            List of WCS transformations.
     self.n_cutouts      Number of exposures.
     self.box_size       Size of each exposure image.
-
-    Module level variables
-    ----------------------
-
-    Images, weights and segs have to be square numpy arrays with size in
-    BOX_SIZES = [32,48,64,96,128,196,256].
-    Number of exposures for all lists (images,weights,segs,wcs) have to be the same and smaller 
-    than MAX_NCUTOUTS (default 11).
     """
 
-    def __init__(self, images, weights=None, badpix=None, segs=None, wcs=None, id=0):
+    def __init__(self, images, weight=None, badpix=None, seg=None, psf=None, wcs=None, id=0):
 
-        # assign the ID
-        self.id = id
-
-        # check if images is a list
+        # Check that images is valid
         if not isinstance(images,list):
             raise TypeError('images should be a list')
-
-        # get number of cutouts from image list
-        self.images = images
-        # get box size from the first image
-        self.box_size = self.images[0].array.shape[0]
-        self.n_cutouts = len(self.images)
-
-        # see if there are cutouts
-        if self.n_cutouts < 1:
+        if len(images) == 0:
             raise ValueError('no cutouts in this object')
 
-        # check if the box size is correct
-        if self.box_size not in BOX_SIZES:
-            # raise ValueError('box size should be in  [32,48,64,96,128,196,256], is %d' % box_size)
-            raise ValueError( 'box size should be in '+str(BOX_SIZES)+', is '+str(self.box_size) )
+        # Check that the box sizes are valid
+        for i in range(len(images)):
+            s = images[i].array.shape
+            if s[0] != s[1]:
+                raise ValueError('Array shape %s is invalid.  Must be square'%(str(s)))
+            if s[0] not in BOX_SIZES:
+                raise ValueError('Array shape %s is invalid.  Size must be in %s'%(
+                        str(box_size),str(BOX_SIZES)))
+            if i > 0 and s != images[0].array.shape:
+                raise ValueError('Images must all be the same shape')
 
-        # check if weights, segs and wcs were supplied. If not, create sensible values.
-        if weights != None:
-            self.weights = weights
+        # The others are optional, but if given, make sure they are ok.
+        for lst, name, isim in [ (weight, 'weight', True), (badpix, 'badpix', True),
+                                 (seg, 'seg', True), (psf, 'psf', False), (wcs, 'wcs', False) ]:
+            if lst is not None:
+                if not isinstance(lst,list):
+                    raise TypeError('%s should be a list'%name)
+                if len(lst) != len(images):
+                    raise ValueError('%s is the wrong length'%name)
+                if isim:
+                    for i in range(len(images)):
+                        im1 = lst[i]
+                        im2 = images[i]
+                        if (im1.array.shape != im2.array.shape):
+                            raise ValueError("%s[%d] has the wrong shape."%(name, i))
+
+        # The PSF images don't have to be the same shape as the main images.
+        # But make sure all psf images are square and the same shape
+        if psf is not None:
+            s = psf[i].array.shape
+            if s[0] != s[1]:
+                raise ValueError('PSF array shape %s is invalid.  Must be square'%(str(s)))
+            if s[0] not in BOX_SIZES:
+                raise ValueError('PSF array shape %s is invalid.  Size must be in %s'%(
+                        str(box_size),str(BOX_SIZES)))
+            if i > 0 and s != psf[0].array.shape:
+                raise ValueError('PSF images must all be the same shape')
+
+        # Check that wcs are Uniform and convert them to AffineTransforms in case they aren't.
+        if wcs is not None:
+            for i in range(len(wcs)):
+                if not isinstance(wcs[i], galsim.wcs.UniformWCS):
+                    raise TypeError('wcs list should contain UniformWCS objects')
+                elif not isinstance(wcs[i], galsim.AffineTransform):
+                    wcs[i] = wcs[i].affine()
+
+        self.id = id
+        self.images = [ im.view() for im in images ]
+        # Convert to 0-based images as preferred by meds.
+        for im in self.images:
+            # Note: making the list of views above means this won't change the originals.
+            im.setOrigin(0,0)
+        self.box_size = self.images[0].array.shape[0]
+        self.n_cutouts = len(self.images)
+        if psf is not None:
+            self.psf_box_size = self.images[0].array.shape[0]
         else:
-            self.weights = [galsim.Image(self.box_size, self.box_size, init_value=1)]*self.n_cutouts
+            self.psf_box_size = 0
 
-        # check segmaps
-        if segs != None:
-            self.segs = segs
-            # I think eventually, the meds files will have some more sophisticated pixel map
-            # where the segmentation info and bad pixel info are separately coded.
-            # However, for now, we just set to 0 any bad pixels.
-            # (Not that GalSim has any mechanism yet for generating bad pixels, so this is
-            # usually a null op, but it's in place for when there is something to do.)
-            if badpix != None:
-                if len(self.segs) != len(badpix):
-                    raise ValueError("segs and badpix are different lengths")
-                for i in range(len(self.segs)):
-                    if (self.segs[i].array.shape != badpix[i].array.shape):
-                        raise ValueError("segs[%d] and badpix[%d] have different shapes."%(i,i))
-                    self.segs[i].array[:,:] &= (badpix[i].array == 0)
-        elif badpix != None:
-            self.segs = badpix
-            # Flip the sense of the bits 0 -> 1, other -> 0
-            # Again, this might need to become more sophisticated at some point...
-            for i in range(len(self.segs)):
-                self.segs[i].array[:,:] = (badpix[i].array == 0)
+        # If weight is not provided, create something sensible.
+        if weight is not None:
+            self.weight = weight
         else:
-            self.segs = [galsim.ImageI(self.box_size, self.box_size, init_value=1)]*self.n_cutouts
+            self.weight = [galsim.Image(self.box_size, self.box_size, init_value=1)]*self.n_cutouts
 
-        # check wcs
-        if wcs != None:
+        # If badpix is provided, combine it into the weight image.
+        if badpix is not None:
+            for i in range(len(badpix)):
+                mask = [badpix[i] != 0]
+                self.weight[i][mask] = 0.
+
+        # If seg is not provided, use all 1's.
+        if seg is not None:
+            self.seg = seg
+        else:
+            self.seg = [galsim.ImageI(self.box_size, self.box_size, init_value=1)]*self.n_cutouts
+
+        # If wcs is not provided, get it from the images.
+        if wcs is not None:
             self.wcs = wcs
         else:
-            # Get the wcs from the images.  Probably just the pixel scale.
-            self.wcs = [ im.wcs.jacobian().setOrigin(im.trueCenter()) for im in self.images ]
+            self.wcs = [ im.wcs.affine(image_pos=im.trueCenter()) for im in self.images ]
 
-         # check if weights,segs,jacks are lists
-        if not isinstance(self.weights,list):
-            raise TypeError('weights should be a list')
-        if not isinstance(self.segs,list):
-            raise TypeError('segs should be a list')
-        if not isinstance(self.wcs,list):
-            raise TypeError('wcs should be a list')
+        # psf is not required, so leave it as None if not provided.
+        self.psf = psf
 
 
-        # loop through the images and check if they are of the same size
-        for extname in ('images','weights','segs'):
-
-            # get the class field
-            ext = eval('self.' + extname )
-
-            # loop through exposures
-            for icutout,cutout in enumerate(ext):
-
-                # get the sizes of array
-                nx=cutout.array.shape[0]
-                ny=cutout.array.shape[1]
-
-                # x and y size should be the same
-                if nx != ny:
-                    raise ValueError('%s should be square and is %d x %d' % (extname,nx,ny))
-
-                # check if box size is correct
-                if nx != self.box_size:
-                    raise ValueError('%s object %d has size %d and should be %d' % 
-                            ( extname,icutout,nx,self.box_size ) )
-
-        # see if the number of Jacobians is right
-        if len(self.wcs) != self.n_cutouts:
-            raise ValueError('number of Jacobians is %d is not equal to number of cutouts %d'%
-                    ( len(self.wcs),self.n_cutouts ) )
-
-        # check each Jacobian
-        for jac in self.wcs:
-            # should ba an AffineTransform instance
-            if not isinstance(jac, galsim.AffineTransform):
-                raise TypeError('wcs list should contain AffineTransform objects')
-            
-
-def write_meds(obj_list, file_name, clobber=True):
+def WriteMEDS(obj_list, file_name, clobber=True):
     """
-    @brief Writes the galaxy, weights, segmaps images to a MEDS file.
+    Writes a MEDS file from a list of MultiExposureObjects.
 
     Arguments:
     ----------
     @param obj_list:     List of MultiExposureObjects
     @param file_name:    Name of meds file to be written
-    @param clobber       Setting `clobber=True` when `file_name` is given will silently overwrite 
+    @param clobber       Setting `clobber=True` when `file_name` is given will silently overwrite
                          existing files. (Default `clobber = True`.)
     """
 
-    import numpy
-    import sys
     from galsim._pyfits import pyfits
 
     # initialise the catalog
     cat = {}
-    cat['ncutout'] = []
-    cat['box_size'] = []
-    cat['start_row'] = []
     cat['id'] = []
+    cat['box_size'] = []
+    cat['ra'] = []
+    cat['dec'] = []
+    cat['ncutout'] = []
+    cat['start_row'] = []
     cat['dudrow'] = []
     cat['dudcol'] = []
     cat['dvdrow'] = []
     cat['dvdcol'] = []
     cat['row0'] = []
     cat['col0'] = []
+    cat['psf_box_size'] = []
+    cat['psf_start_row'] = []
 
     # initialise the image vectors
     vec = {}
     vec['image'] = []
     vec['seg'] = []
     vec['weight'] = []
+    vec['psf'] = []
 
     # initialise the image vector index
     n_vec = 0
-    
+    psf_n_vec = 0
+
     # get number of objects
     n_obj = len(obj_list)
 
@@ -224,43 +214,53 @@ def write_meds(obj_list, file_name, clobber=True):
     for obj in obj_list:
 
         # initialise the start indices for each image
-        start_rows = numpy.ones(MAX_NCUTOUTS)*EMPTY_START_INDEX
-        dudrow = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC_diag 
-        dudcol = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC_offdiag
-        dvdrow = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC_offdiag
-        dvdcol = numpy.ones(MAX_NCUTOUTS)*EMPTY_JAC_diag
-        row0   = numpy.ones(MAX_NCUTOUTS)*EMPTY_SHIFT
-        col0   = numpy.ones(MAX_NCUTOUTS)*EMPTY_SHIFT
+        start_rows = np.ones(MAX_NCUTOUTS)*EMPTY_START_INDEX
+        psf_start_rows = np.ones(MAX_NCUTOUTS)*EMPTY_START_INDEX
+        dudrow = np.ones(MAX_NCUTOUTS)*EMPTY_JAC_diag
+        dudcol = np.ones(MAX_NCUTOUTS)*EMPTY_JAC_offdiag
+        dvdrow = np.ones(MAX_NCUTOUTS)*EMPTY_JAC_offdiag
+        dvdcol = np.ones(MAX_NCUTOUTS)*EMPTY_JAC_diag
+        row0   = np.ones(MAX_NCUTOUTS)*EMPTY_SHIFT
+        col0   = np.ones(MAX_NCUTOUTS)*EMPTY_SHIFT
 
         # get the number of cutouts (exposures)
         n_cutout = obj.n_cutouts
-        
+
         # append the catalog for this object
-        cat['ncutout'].append(n_cutout)
-        cat['box_size'].append(obj.box_size)
         cat['id'].append(obj.id)
+        cat['box_size'].append(obj.box_size)
+        # TODO: If the config defines a world position, get the right ra, dec here.
+        cat['ra'].append(0.)
+        cat['dec'].append(0.)
+        cat['ncutout'].append(n_cutout)
+        cat['psf_box_size'].append(obj.psf_box_size)
 
         # loop over cutouts
         for i in range(n_cutout):
 
             # assign the start row to the end of image vector
             start_rows[i] = n_vec
+            psf_start_rows[i] = psf_n_vec
             # update n_vec to point to the end of image vector
-            n_vec += len(obj.images[i].array.flatten()) 
+            n_vec += len(obj.images[i].array.flatten())
+            if obj.psf is not None:
+                psf_n_vec += len(obj.psf[i].array.flatten())
 
             # append the image vectors
             vec['image'].append(obj.images[i].array.flatten())
-            vec['seg'].append(obj.segs[i].array.flatten())
-            vec['weight'].append(obj.weights[i].array.flatten())
-
+            vec['seg'].append(obj.seg[i].array.flatten())
+            vec['weight'].append(obj.weight[i].array.flatten())
+            vec['psf'].append(obj.psf[i].array.flatten())
 
             # append the Jacobian
-            dudrow[i] = obj.wcs[i].dudx
-            dudcol[i] = obj.wcs[i].dudy
-            dvdrow[i] = obj.wcs[i].dvdx
-            dvdcol[i] = obj.wcs[i].dvdy
-            row0[i]   = obj.wcs[i].origin.x
-            col0[i]   = obj.wcs[i].origin.y
+            # col == x
+            # row == y
+            dudcol[i] = obj.wcs[i].dudx
+            dudrow[i] = obj.wcs[i].dudy
+            dvdcol[i] = obj.wcs[i].dvdx
+            dvdrow[i] = obj.wcs[i].dvdy
+            col0[i]   = obj.wcs[i].origin.x
+            row0[i]   = obj.wcs[i].origin.y
 
             # check if we are running out of memory
             if sys.getsizeof(vec) > MAX_MEMORY:
@@ -270,6 +270,7 @@ def write_meds(obj_list, file_name, clobber=True):
 
         # update the start rows fields in the catalog
         cat['start_row'].append(start_rows)
+        cat['psf_start_row'].append(psf_start_rows)
 
         # add lists of Jacobians
         cat['dudrow'].append(dudrow)
@@ -280,76 +281,122 @@ def write_meds(obj_list, file_name, clobber=True):
         cat['col0'].append(col0)
 
     # concatenate list to one big vector
-    vec['image'] = numpy.concatenate(vec['image'])
-    vec['seg'] = numpy.concatenate(vec['seg'])
-    vec['weight'] = numpy.concatenate(vec['weight'])
+    vec['image'] = np.concatenate(vec['image'])
+    vec['seg'] = np.concatenate(vec['seg'])
+    vec['weight'] = np.concatenate(vec['weight'])
+    vec['psf'] = np.concatenate(vec['psf'])
 
     # get the primary HDU
     primary = pyfits.PrimaryHDU()
 
     # second hdu is the object_data
+    # cf. https://github.com/esheldon/meds/wiki/MEDS-Format
     cols = []
-    cols.append( pyfits.Column(name='ncutout', format='i4', array=cat['ncutout'] ) )
-    cols.append( pyfits.Column(name='id', format='i4', array=cat['id'] ) )
-    cols.append( pyfits.Column(name='box_size', format='i4', array=cat['box_size'] ) )
-    cols.append( pyfits.Column(name='file_id', format='i4', array=[1]*n_obj) )
-    cols.append( pyfits.Column(name='start_row', format='%di4' % MAX_NCUTOUTS,
-                               array=numpy.array(cat['start_row'])) )
-    cols.append( pyfits.Column(name='orig_row', format='f8', array=[1]*n_obj) )
-    cols.append( pyfits.Column(name='orig_col', format='f8', array=[1]*n_obj) )
-    cols.append( pyfits.Column(name='orig_start_row', format='i4', array=[1]*n_obj) )
-    cols.append( pyfits.Column(name='orig_start_col', format='i4', array=[1]*n_obj) )
-    cols.append( pyfits.Column(name='dudrow', format='%df8'% MAX_NCUTOUTS,
-                               array=numpy.array(cat['dudrow']) ) )
-    cols.append( pyfits.Column(name='dudcol', format='%df8'% MAX_NCUTOUTS,
-                               array=numpy.array(cat['dudcol']) ) )
-    cols.append( pyfits.Column(name='dvdrow', format='%df8'% MAX_NCUTOUTS,
-                               array=numpy.array(cat['dvdrow']) ) )
-    cols.append( pyfits.Column(name='dvdcol', format='%df8'% MAX_NCUTOUTS,
-                               array=numpy.array(cat['dvdcol']) ) )
-    cols.append( pyfits.Column(name='cutout_row', format='%df8'% MAX_NCUTOUTS,
-                               array=numpy.array(cat['row0']) ) )
-    cols.append( pyfits.Column(name='cutout_col', format='%df8'% MAX_NCUTOUTS,
-                               array=numpy.array(cat['col0']) ) )
+    cols.append( pyfits.Column(name='id',             format='K', array=cat['id']       ) )
+    cols.append( pyfits.Column(name='number',         format='K', array=cat['id']       ) )
+    cols.append( pyfits.Column(name='ra',             format='D', array=cat['ra']       ) )
+    cols.append( pyfits.Column(name='dec',            format='D', array=cat['dec']      ) )
+    cols.append( pyfits.Column(name='box_size',       format='K', array=cat['box_size'] ) )
+    cols.append( pyfits.Column(name='ncutout',        format='K', array=cat['ncutout']  ) )
+    cols.append( pyfits.Column(name='file_id',        format='%dK' % MAX_NCUTOUTS,
+                               array=[1]*n_obj) )
+    cols.append( pyfits.Column(name='start_row',      format='%dK' % MAX_NCUTOUTS,
+                               array=np.array(cat['start_row'])) )
+    cols.append( pyfits.Column(name='orig_row',       format='%dD' % MAX_NCUTOUTS,
+                               array=[[0]*MAX_NCUTOUTS]*n_obj     ) )
+    cols.append( pyfits.Column(name='orig_col',       format='%dD' % MAX_NCUTOUTS,
+                               array=[[0]*MAX_NCUTOUTS]*n_obj     ) )
+    cols.append( pyfits.Column(name='orig_start_row', format='%dK' % MAX_NCUTOUTS,
+                               array=[[0]*MAX_NCUTOUTS]*n_obj     ) )
+    cols.append( pyfits.Column(name='orig_start_col', format='%dK' % MAX_NCUTOUTS,
+                               array=[[0]*MAX_NCUTOUTS]*n_obj     ) )
+    cols.append( pyfits.Column(name='cutout_row',     format='%dD' % MAX_NCUTOUTS,
+                               array=np.array(cat['row0'])     ) )
+    cols.append( pyfits.Column(name='cutout_col',     format='%dD' % MAX_NCUTOUTS,
+                               array=np.array(cat['col0'])     ) )
+    cols.append( pyfits.Column(name='dudrow',         format='%dD' % MAX_NCUTOUTS,
+                               array=np.array(cat['dudrow'])   ) )
+    cols.append( pyfits.Column(name='dudcol',         format='%dD' % MAX_NCUTOUTS,
+                               array=np.array(cat['dudcol'])   ) )
+    cols.append( pyfits.Column(name='dvdrow',         format='%dD' % MAX_NCUTOUTS,
+                               array=np.array(cat['dvdrow'])   ) )
+    cols.append( pyfits.Column(name='dvdcol',         format='%dD' % MAX_NCUTOUTS,
+                               array=np.array(cat['dvdcol'])   ) )
+    cols.append( pyfits.Column(name='psf_box_size',   format='K', array=cat['psf_box_size'] ) )
+    cols.append( pyfits.Column(name='psf_start_row',  format='%dK' % MAX_NCUTOUTS,
+                               array=np.array(cat['psf_start_row'])) )
 
 
-    object_data = pyfits.new_table(pyfits.ColDefs(cols))
-    object_data.update_ext_name('object_data')
+    # Depending on the version of pyfits, one of these should work:
+    try:
+        object_data = pyfits.BinTableHDU.from_columns(cols)
+        object_data.name = 'object_data'
+    except:
+        object_data = pyfits.new_table(pyfits.ColDefs(cols))
+        object_data.update_ext_name('object_data')
 
     # third hdu is image_info
     cols = []
-    cols.append( pyfits.Column(name='image_path', format='A256',   array=['generated_by_galsim'] ) )
-    cols.append( pyfits.Column(name='sky_path',   format='A256',   array=['generated_by_galsim'] ) )
-    cols.append( pyfits.Column(name='seg_path',   format='A256',   array=['generated_by_galsim'] ) )
-    image_info = pyfits.new_table(pyfits.ColDefs(cols))
-    image_info.update_ext_name('image_info')
+    cols.append( pyfits.Column(name='image_path',  format='A256',   array=['generated_by_galsim'] ))
+    cols.append( pyfits.Column(name='image_ext',   format='I',      array=[0]                     ))
+    cols.append( pyfits.Column(name='weight_path', format='A256',   array=['generated_by_galsim'] ))
+    cols.append( pyfits.Column(name='weight_ext',  format='I',      array=[0]                     ))
+    cols.append( pyfits.Column(name='seg_path',    format='A256',   array=['generated_by_galsim'] ))
+    cols.append( pyfits.Column(name='seg_ext',     format='I',      array=[0]                     ))
+    cols.append( pyfits.Column(name='bmask_path',  format='A256',   array=['generated_by_galsim'] ))
+    cols.append( pyfits.Column(name='bmask_ext',   format='I',      array=[0]                     ))
+    cols.append( pyfits.Column(name='bkg_path',    format='A256',   array=['generated_by_galsim'] ))
+    cols.append( pyfits.Column(name='bkg_ext',     format='I',      array=[0]                     ))
+    cols.append( pyfits.Column(name='image_id',    format='K',      array=[-1]                    ))
+    cols.append( pyfits.Column(name='image_flags', format='K',      array=[-1]                    ))
+    cols.append( pyfits.Column(name='magzp',       format='E',      array=[30.]                   ))
+    cols.append( pyfits.Column(name='scale',       format='E',      array=[1.]                    ))
+    # TODO: Not sure if this is right!
+    cols.append( pyfits.Column(name='position_offset', format='D',  array=[0.]                    ))
+    try:
+        image_info = pyfits.BinTableHDU.from_columns(cols)
+        image_info.name = 'image_info'
+    except:
+        image_info = pyfits.new_table(pyfits.ColDefs(cols))
+        image_info.update_ext_name('image_info')
 
     # fourth hdu is metadata
+    # default values?
     cols = []
+    cols.append( pyfits.Column(name='magzp_ref',     format='E',    array=[30.]                   ))
+    cols.append( pyfits.Column(name='DESDATA',       format='A256', array=['generated_by_galsim'] ))
     cols.append( pyfits.Column(name='cat_file',      format='A256', array=['generated_by_galsim'] ))
+    cols.append( pyfits.Column(name='coadd_image_id',format='A256', array=['generated_by_galsim'] ))
     cols.append( pyfits.Column(name='coadd_file',    format='A256', array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='coadd_hdu',     format='A1',   array=['x']                   ))
-    cols.append( pyfits.Column(name='coadd_seg_hdu', format='A1',   array=['x']                   ))
+    cols.append( pyfits.Column(name='coadd_hdu',     format='K',    array=[9999]                  ))
+    cols.append( pyfits.Column(name='coadd_seg_hdu', format='K',    array=[9999]                  ))
     cols.append( pyfits.Column(name='coadd_srclist', format='A256', array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='coadd_wt_hdu',  format='A1',   array=['x']                   ))
+    cols.append( pyfits.Column(name='coadd_wt_hdu',  format='K',    array=[9999]                  ))
     cols.append( pyfits.Column(name='coaddcat_file', format='A256', array=['generated_by_galsim'] ))
     cols.append( pyfits.Column(name='coaddseg_file', format='A256', array=['generated_by_galsim'] ))
     cols.append( pyfits.Column(name='cutout_file',   format='A256', array=['generated_by_galsim'] ))
-    cols.append( pyfits.Column(name='max_boxsize',   format='A3',   array=['x']                   ))
+    cols.append( pyfits.Column(name='max_boxsize',   format='A3',   array=['-1']                  ))
     cols.append( pyfits.Column(name='medsconf',      format='A3',   array=['x']                   ))
-    cols.append( pyfits.Column(name='min_boxsize',   format='A2',   array=['x']                   ))
-    cols.append( pyfits.Column(name='se_badpix_hdu', format='A1',   array=['x']                   ))
-    cols.append( pyfits.Column(name='se_hdu',        format='A1',   array=['x']                   ))
-    cols.append( pyfits.Column(name='se_wt_hdu',     format='A1',   array=['x']                   ))
-    cols.append( pyfits.Column(name='seg_hdu',       format='A1',   array=['x']                   ))
-    cols.append( pyfits.Column(name='sky_hdu',       format='A1',   array=['x']                   ))
-    metadata = pyfits.new_table(pyfits.ColDefs(cols))
-    metadata.update_ext_name('metadata')
+    cols.append( pyfits.Column(name='min_boxsize',   format='A2',   array=['-1']                  ))
+    cols.append( pyfits.Column(name='se_badpix_hdu', format='K',    array=[9999]                  ))
+    cols.append( pyfits.Column(name='se_hdu',        format='K',    array=[9999]                  ))
+    cols.append( pyfits.Column(name='se_wt_hdu',     format='K',    array=[9999]                  ))
+    cols.append( pyfits.Column(name='seg_hdu',       format='K',    array=[9999]                  ))
+    cols.append( pyfits.Column(name='psf_hdu',       format='K',    array=[9999]                  ))
+    cols.append( pyfits.Column(name='sky_hdu',       format='K',    array=[9999]                  ))
+    cols.append( pyfits.Column(name='fake_coadd_seg',format='K',    array=[9999]                  ))
+    try:
+        metadata = pyfits.BinTableHDU.from_columns(cols)
+        metadata.name = 'metadata'
+    except:
+        metadata = pyfits.new_table(pyfits.ColDefs(cols))
+        metadata.update_ext_name('metadata')
 
     # rest of HDUs are image vectors
     image_cutouts   = pyfits.ImageHDU( vec['image'] , name='image_cutouts'  )
     weight_cutouts  = pyfits.ImageHDU( vec['weight'], name='weight_cutouts' )
     seg_cutouts     = pyfits.ImageHDU( vec['seg']   , name='seg_cutouts'    )
+    psf_cutouts     = pyfits.ImageHDU( vec['psf']   , name='psf'            )
 
     # write all
     hdu_list = pyfits.HDUList([
@@ -357,84 +404,94 @@ def write_meds(obj_list, file_name, clobber=True):
         object_data,
         image_info,
         metadata,
-        image_cutouts, 
+        image_cutouts,
         weight_cutouts,
-        seg_cutouts
+        seg_cutouts,
+        psf_cutouts
     ])
     hdu_list.writeto(file_name,clobber=clobber)
 
 
-def build_meds(config, file_num, image_num, obj_num, nproc, ignore, logger):
-    """
-    Build a meds file as specified in config.
+# Make the class that will 
+class MEDSBuilder(galsim.config.OutputBuilder):
 
-    @param config           A configuration dict.
-    @param file_num         The current file_num.
-    @param image_num        The current image_num.
-    @param obj_num          The current obj_num.
-    @param nproc            How many processes to use.
-    @param ignore           A list of parameters that are allowed to be in config['output']
-                            that we can ignore here.
-    @param logger           If given, a logger object to log progress.
+    def buildImages(self, config, base, file_num, image_num, obj_num, ignore, logger):
+        """
+        Build a meds file as specified in config.
 
-    @returns obj_list
-    """
-    import time
-    t1 = time.time()
+        @param config           The configuration dict for the output field.
+        @param base             The base configuration dict.
+        @param file_num         The current file_num.
+        @param image_num        The current image_num.
+        @param obj_num          The current obj_num.
+        @param ignore           A list of parameters that are allowed to be in config that we can
+                                ignore here.
+        @param logger           If given, a logger object to log progress.
 
-    if 'image' in config and 'type' in config['image']:
-        image_type = config['image']['type']
-        if image_type != 'Single':
-            raise AttibuteError("MEDS files are not compatible with image type %s."%image_type)
+        @returns obj_list
+        """
+        import time
+        t1 = time.time()
 
-    req = { 'nobjects' : int , 'nstamps_per_object' : int }
-    params = galsim.config.GetAllParams(config['output'],'output',config,ignore=ignore,req=req)[0]
+        if 'image' in base and 'type' in base['image']:
+            image_type = base['image']['type']
+            if image_type != 'Single':
+                raise AttibuteError("MEDS files are not compatible with image type %s."%image_type)
 
-    nobjects = params['nobjects']
-    nstamps_per_object = params['nstamps_per_object']
-    ntot = nobjects * nstamps_per_object
+        req = { 'nobjects' : int , 'nstamps_per_object' : int }
+        params = galsim.config.GetAllParams(config,base,ignore=ignore,req=req)[0]
 
-    main_images = galsim.config.BuildImages(ntot, config, image_num, obj_num, logger=logger)
+        nobjects = params['nobjects']
+        nstamps_per_object = params['nstamps_per_object']
+        ntot = nobjects * nstamps_per_object
 
-    weight_images = galsim.config.GetFinalExtraOutput('weight', config, logger)
-    badpix_images = galsim.config.GetFinalExtraOutput('badpix', config, logger)
+        main_images = galsim.config.BuildImages(ntot, base, image_num=image_num,  obj_num=obj_num,
+                                                logger=logger)
 
-    obj_list = []
-    for i in range(nobjects):
-        k1 = i*nstamps_per_object
-        k2 = (i+1)*nstamps_per_object
-        obj = MultiExposureObject(images = main_images[k1:k2], 
-                                  weights = weight_images[k1:k2],
-                                  badpix = badpix_images[k1:k2])
-        obj_list.append(obj)
+        weight_images = galsim.config.GetFinalExtraOutput('weight', base, logger)
+        if 'badpix' in config:
+            badpix_images = galsim.config.GetFinalExtraOutput('badpix', base, logger)
+        else:
+            badpix_images = None
+        psf_images = galsim.config.GetFinalExtraOutput('psf', base, logger)
 
-    return obj_list
+        obj_list = []
+        for i in range(nobjects):
+            k1 = i*nstamps_per_object
+            k2 = (i+1)*nstamps_per_object
+            if badpix_images is not None:
+                bpk = badpix_images[k1:k2]
+            else:
+                bpk = None
+            obj = MultiExposureObject(images = main_images[k1:k2],
+                                      weight = weight_images[k1:k2],
+                                      badpix = bpk,
+                                      psf = psf_images[k1:k2],
+                                      id = obj_num + i)
+            obj_list.append(obj)
 
-def nobj_meds(config, file_num):
-    # This gets called before starting work on the file, so we can use this opportunity
-    # to make sure that badpix and weight processing are turned on.
-    # We just add these as empty dicts, so there is no hdu or file_name parameter, which
-    # means they won't actually output anything, but the images will be built, so we can use
-    # them in build_meds above.
-    if 'badpix' not in config['output']:
-        config['output']['badpix'] = {}
-    if 'weight' not in config['output']:
-        config['output']['weight'] = {}
+        return obj_list
 
-    output = config['output']
-    nobjects = galsim.config.ParseValue(output,'nobjects',config,int)[0]
-    nstamps_per_object = galsim.config.ParseValue(output,'nstamps_per_object',config,int)[0]
+    def writeFile(self, data, file_name):
+        WriteMEDS(data, file_name)
 
-    ntot = nobjects * nstamps_per_object
-    return ntot
+    def getNImages(self, config, base, file_num):
+        # This gets called before starting work on the file, so we can use this opportunity
+        # to make sure that weight and psf processing are turned on.
+        # We just add these as empty dicts, so there is no hdu or file_name parameter, which
+        # means they won't actually output anything, but the images will be built, so we can use
+        # them in BuildMEDS above.
+        if 'weight' not in config:
+            config['weight'] = {}
+        if 'psf' not in config:
+            config['psf'] = {}
 
-# Now add this to the config framework.
-import galsim.config
+        nobjects = galsim.config.ParseValue(config,'nobjects',base,int)[0]
+        nstamps_per_object = galsim.config.ParseValue(config,'nstamps_per_object',base,int)[0]
+
+        ntot = nobjects * nstamps_per_object
+        return ntot
 
 # Make this a valid output type:
-galsim.config.RegisterOutputType('des_meds',
-    build_func = build_meds,
-    write_func = write_meds,
-    nimages_func = nobj_meds)
-
+galsim.config.RegisterOutputType('MEDS', MEDSBuilder())
 

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -24,6 +24,8 @@ stored in *_fitpsf.fits files.
 """
 
 import galsim
+import galsim.config
+import numpy as np
 
 class DES_Shapelet(object):
     """Class that handles DES files describing interpolated polar shapelet decompositions.
@@ -94,15 +96,14 @@ class DES_Shapelet(object):
     def read_ascii(self):
         """Read in a DES_Shapelet stored using the the ASCII-file version.
         """
-        import numpy
         fin = open(self.file_name, 'r')
         lines = fin.readlines()
         temp = lines[0].split()
         self.psf_order = int(temp[0])
-        self.psf_size = (self.psf_order+1) * (self.psf_order+2) / 2
+        self.psf_size = (self.psf_order+1) * (self.psf_order+2) // 2
         self.sigma = float(temp[1])
         self.fit_order = int(temp[2])
-        self.fit_size = (self.fit_order+1) * (self.fit_order+2) / 2
+        self.fit_size = (self.fit_order+1) * (self.fit_order+2) // 2
         self.npca = int(temp[3])
 
         temp = lines[1].split()
@@ -112,13 +113,13 @@ class DES_Shapelet(object):
 
         temp = lines[2].split()
         assert int(temp[0]) == self.psf_size
-        self.ave_psf = numpy.array(temp[2:self.psf_size+2]).astype(float)
+        self.ave_psf = np.array(temp[2:self.psf_size+2]).astype(float)
         assert self.ave_psf.shape == (self.psf_size,)
 
         temp = lines[3].split()
         assert int(temp[0]) == self.npca
         assert int(temp[1]) == self.psf_size
-        self.rot_matrix = numpy.array(
+        self.rot_matrix = np.array(
             [ lines[4+k].split()[1:self.psf_size+1] for k in range(self.npca) ]
             ).astype(float)
         assert self.rot_matrix.shape == (self.npca, self.psf_size)
@@ -126,7 +127,7 @@ class DES_Shapelet(object):
         temp = lines[5+self.npca].split()
         assert int(temp[0]) == self.fit_size
         assert int(temp[1]) == self.npca
-        self.interp_matrix = numpy.array(
+        self.interp_matrix = np.array(
             [ lines[6+self.npca+k].split()[1:self.npca+1] for k in range(self.fit_size) ]
             ).astype(float)
         assert self.interp_matrix.shape == (self.fit_size, self.npca)
@@ -135,13 +136,14 @@ class DES_Shapelet(object):
         """Read in a DES_Shapelet stored using the the FITS-file version.
         """
         from galsim._pyfits import pyfits
-        cat = pyfits.getdata(self.file_name,1)
+        with pyfits.open(self.file_name) as fits:
+            cat = fits[1].data
         # These fields each only contain one element, hence the [0]'s.
         self.psf_order = cat.field('psf_order')[0]
-        self.psf_size = (self.psf_order+1) * (self.psf_order+2) / 2
+        self.psf_size = (self.psf_order+1) * (self.psf_order+2) // 2
         self.sigma = cat.field('sigma')[0]
         self.fit_order = cat.field('fit_order')[0]
-        self.fit_size = (self.fit_order+1) * (self.fit_order+2) / 2
+        self.fit_size = (self.fit_order+1) * (self.fit_order+2) // 2
         self.npca = cat.field('npca')[0]
 
         self.bounds = galsim.BoundsD(
@@ -176,7 +178,14 @@ class DES_Shapelet(object):
 
         @returns the PSF as a galsim.Shapelet instance
         """
-        return galsim.Shapelet(self.sigma, self.psf_order, self.getB(image_pos), gsparams=gsparams)
+        psf = galsim.Shapelet(self.sigma, self.psf_order, self.getB(image_pos), gsparams=gsparams)
+
+        # The fitpsf files were built with respect to (u,v) = (ra,dec).  The GalSim convention is
+        # to use sky coordinates with u = -ra.  So we need to flip the profile across the v axis
+        # to take u -> -u.
+        psf = psf.transform(-1,0,0,1)
+
+        return psf
 
     def getB(self, pos):
         """Get the B vector as a numpy array at position pos
@@ -184,11 +193,10 @@ class DES_Shapelet(object):
         if not self.bounds.includes(pos):
             raise IndexError("position in DES_Shapelet.getPSF is out of bounds")
 
-        import numpy
         Px = self._definePxy(pos.x,self.bounds.xmin,self.bounds.xmax)
         Py = self._definePxy(pos.y,self.bounds.ymin,self.bounds.ymax)
         order = self.fit_order
-        P = numpy.array([ Px[n-q] * Py[q] for n in range(order+1) for q in range(n+1) ])
+        P = np.array([ Px[n-q] * Py[q] for n in range(order+1) for q in range(n+1) ])
         assert len(P) == self.fit_size
 
         # Note: This is equivalent to:
@@ -200,16 +208,15 @@ class DES_Shapelet(object):
         #             P[k] = Px[n-q] * Py[q]
         #             k = k+1
 
-        b1 = numpy.dot(P,self.interp_matrix)
-        b = numpy.dot(b1,self.rot_matrix)
+        b1 = np.dot(P,self.interp_matrix)
+        b = np.dot(b1,self.rot_matrix)
         assert len(b) == self.psf_size
         b += self.ave_psf
         return b
 
     def _definePxy(self, x, min, max):
-        import numpy
         x1 = (2.*x-min-max)/(max-min)
-        temp = numpy.empty(self.fit_order+1)
+        temp = np.empty(self.fit_order+1)
         temp[0] = 1
         if self.fit_order > 0:
             temp[1] = x1
@@ -217,12 +224,8 @@ class DES_Shapelet(object):
             temp[i] = ((2.*i-1.)*x1*temp[i-1] - (i-1.)*temp[i-2]) / float(i)
         return temp
 
-# Now add this class to the config framework.
-import galsim.config
-
 # First we need to add the class itself as a valid input_type.
-galsim.config.RegisterInputType('des_shapelet',
-                                galsim.config.InputLoader(DES_Shapelet, ['DES_Shapelet']))
+galsim.config.RegisterInputType('des_shapelet', galsim.config.InputLoader(DES_Shapelet))
 
 # Also make a builder to create the PSF object for a given position.
 # The builders require 4 args.
@@ -234,12 +237,15 @@ def BuildDES_Shapelet(config, base, ignore, gsparams, logger):
     """
     des_shapelet = galsim.config.GetInputObj('des_shapelet', config, base, 'DES_Shapelet')
 
-    opt = { 'flux' : float , 'num' : int }
-    kwargs, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
+    opt = { 'flux' : float , 'num' : int, 'image_pos' : galsim.PositionD }
+    params, safe = galsim.config.GetAllParams(config, base, opt=opt, ignore=ignore)
 
-    if 'image_pos' not in base:
+    if 'image_pos' in params:
+        image_pos = params['image_pos']
+    elif 'image_pos' in base:
+        image_pos = base['image_pos']
+    else:
         raise ValueError("DES_Shapelet requested, but no image_pos defined in base.")
-    image_pos = base['image_pos']
 
     # Convert gsparams from a dict to an actual GSParams object
     if gsparams: gsparams = galsim.GSParams(**gsparams)
@@ -252,14 +258,14 @@ def BuildDES_Shapelet(config, base, ignore, gsparams, logger):
         b = des_shapelet.getB(image_pos)
         sigma = des_shapelet.getSigma()
         order = des_shapelet.getOrder()
-        psf = galsim.Shapelet(sigma, order, b, gsparams=gsparams)
+        psf = galsim.Shapelet(sigma, order, b, gsparams=gsparams).transform(-1,0,0,1)
     else:
         message = 'Position '+str(image_pos)+' not in interpolation bounds: '
         message += str(des_shapelet.getBounds())
         raise galsim.config.gsobject.SkipThisObject(message)
 
-    if 'flux' in kwargs:
-        psf = psf.withFlux(kwargs['flux'])
+    if 'flux' in params:
+        psf = psf.withFlux(params['flux'])
 
     # The second item here is "safe", a boolean that declares whether the returned value is 
     # safe to save and use again for later objects.  In this case, we wouldn't want to do 
@@ -267,5 +273,5 @@ def BuildDES_Shapelet(config, base, ignore, gsparams, logger):
     return psf, False
 
 # Register this builder with the config framework:
-galsim.config.RegisterObjectType('DES_Shapelet', BuildDES_Shapelet)
+galsim.config.RegisterObjectType('DES_Shapelet', BuildDES_Shapelet, input_type='des_shapelet')
 

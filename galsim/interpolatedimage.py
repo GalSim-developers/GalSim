@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -256,7 +256,8 @@ class InterpolatedImage(GSObject):
                  scale=None, wcs=None, flux=None, pad_factor=4., noise_pad_size=0, noise_pad=0.,
                  rng=None, pad_image=None, calculate_stepk=True, calculate_maxk=True,
                  use_cache=True, use_true_center=True, offset=None, gsparams=None, dx=None,
-                 _force_stepk=0., _force_maxk=0., hdu=None):
+                 _force_stepk=0., _force_maxk=0., _serialize_stepk=None, _serialize_maxk=None,
+                 hdu=None):
 
         # Check for obsolete dx parameter
         if dx is not None and scale is None:
@@ -264,16 +265,11 @@ class InterpolatedImage(GSObject):
             depr('dx', 1.1, 'scale')
             scale = dx
 
-        # first try to read the image as a file.  If it's not either a string or a valid
-        # pyfits hdu or hdulist, then an exception will be raised, which we ignore and move on.
-        try:
+        # If the "image" is not actually an image, try to read the image as a file.
+        if not isinstance(image, galsim.Image):
             image = galsim.fits.read(image, hdu=hdu)
-        except:
-            pass
 
         # make sure image is really an image and has a float type
-        if not isinstance(image, galsim.Image):
-            raise ValueError("Supplied image is not an Image instance")
         if image.dtype != np.float32 and image.dtype != np.float64:
             raise ValueError("Supplied image does not have dtype of float32 or float64!")
 
@@ -425,6 +421,18 @@ class InterpolatedImage(GSObject):
             calculate_maxk = False
             _force_maxk *= self.max_scale
 
+        # Due to floating point rounding errors, for pickling it's necessary to store the exact
+        # _force_maxk and _force_stepk used to create the SBInterpolatedImage, as opposed to the
+        # values before being scaled by self.min_scale and self.max_scale.  So we do that via the
+        # _serialize_maxk and _serialize_stepk hidden kwargs, which should only get used during
+        # pickling.
+        if _serialize_stepk is not None:
+            calculate_stepk = False
+            _force_stepk = _serialize_stepk
+        if _serialize_maxk is not None:
+            calculate_maxk = False
+            _force_maxk = _serialize_maxk
+
         # Save these values for pickling
         self._pad_image = pad_image
         self._pad_factor = pad_factor
@@ -434,6 +442,12 @@ class InterpolatedImage(GSObject):
         sbii = galsim._galsim.SBInterpolatedImage(
                 pad_image.image, self.x_interpolant, self.k_interpolant, pad_factor,
                 _force_stepk, _force_maxk, gsparams)
+
+        # I think the only things that will mess up if getFlux() == 0 are the
+        # calculateStepK and calculateMaxK functions, and rescaling the flux to some value.
+        if (calculate_stepk or calculate_maxk or flux is not None) and sbii.getFlux() == 0.:
+            raise RuntimeError("This input image has zero total flux. "
+                               "It does not define a valid surface brightness profile.")
 
         if calculate_stepk:
             if calculate_stepk is True:
@@ -458,6 +472,9 @@ class InterpolatedImage(GSObject):
         self._stepk = sbii.stepK() / self.min_scale
         self._maxk = sbii.maxK() / self.max_scale
         self._flux = flux
+
+        self._serialize_stepk = sbii.stepK()
+        self._serialize_maxk = sbii.maxK()
 
         prof = GSObject(sbii)
 
@@ -521,6 +538,28 @@ class InterpolatedImage(GSObject):
 
         return pad_image
 
+    def __eq__(self, other):
+        return (isinstance(other, galsim.InterpolatedImage) and
+                self._pad_image == other._pad_image and
+                self.x_interpolant == other.x_interpolant and
+                self.k_interpolant == other.k_interpolant and
+                self._pad_factor == other._pad_factor and
+                self._flux == other._flux and
+                self._offset == other._offset and
+                self._gsparams == other._gsparams and
+                self._stepk == other._stepk and
+                self._maxk == other._maxk)
+
+    def __hash__(self):
+        # Definitely want to cache this, since the size of the image could be large.
+        if not hasattr(self, '_hash'):
+            self._hash = hash(("galsim.InterpolatedImage", self.x_interpolant, self.k_interpolant,
+                               self._pad_factor, self._flux, self._offset, self._gsparams,
+                               self._stepk, self._maxk))
+            self._hash ^= hash(tuple(self._pad_image.array.ravel()))
+            self._hash ^= hash((self._pad_image.bounds, self._pad_image.wcs))
+        return self._hash
+
     def __repr__(self):
         return ('galsim.InterpolatedImage(%r, %r, %r, pad_factor=%r, flux=%r, offset=%r, '+
                 'use_true_center=False, gsparams=%r, _force_stepk=%r, _force_maxk=%r)')%(
@@ -548,7 +587,8 @@ class InterpolatedImage(GSObject):
                       x_interpolant=self.x_interpolant, k_interpolant=self.k_interpolant,
                       pad_factor=self._pad_factor, flux=self._flux,
                       offset=self._offset, use_true_center=False, gsparams=self._gsparams,
-                      _force_stepk=self._stepk, _force_maxk=self._maxk)
+                      _serialize_stepk=self._serialize_stepk,
+                      _serialize_maxk=self._serialize_maxk)
 
 
 class InterpolatedKImage(GSObject):
@@ -653,9 +693,9 @@ class InterpolatedKImage(GSObject):
                             real_kimage.ymin + (1 if shape[0]%2==0 else 0),
                             real_kimage.ymax)
         if not (np.allclose(real_kimage[bd].array,
-                            real_kimage[bd].array[::-1,::-1])
-                or np.allclose(imag_kimage[bd].array,
-                               -imag_kimage[bd].array[::-1,::-1])):
+                            real_kimage[bd].array[::-1,::-1]) and
+                np.allclose(imag_kimage[bd].array,
+                            -imag_kimage[bd].array[::-1,::-1])):
             raise ValueError("Real and Imag kimages must form a Hermitian complex matrix.")
 
         if stepk is None:
@@ -683,13 +723,32 @@ class InterpolatedKImage(GSObject):
             self._real_kimage.image, self._imag_kimage.image,
             self._real_kimage.scale, self._stepk, self.k_interpolant, gsparams))
 
-    def __repr__(self):
-        return ('galsim.InterpolatedKImage(%r, %r, %r, stepk=%r, gsparams=%r)')%(
-            self._real_kimage, self._imag_kimage, self.k_interpolant,
-            self._stepk, self._gsparams)
+    def __eq__(self, other):
+        return (isinstance(other, galsim.InterpolatedKImage) and
+                self._real_kimage == other._real_kimage and
+                self._imag_kimage == other._imag_kimage and
+                self.k_interpolant == other.k_interpolant and
+                self._stepk == other._stepk and
+                self._gsparams == other._gsparams)
 
-    def __str__(self): return 'galsim.InterpolatedKImage(real_kimage=%s)'%(
-            self._real_kimage)
+    def __hash__(self):
+        # Definitely want to cache this, since the real and image kimages could be large.
+        if not hasattr(self, '_hash'):
+            self._hash = hash(("galsim.InterpolatedKImage", self.k_interpolant, self._stepk,
+                               self._gsparams))
+            for img in [self._real_kimage, self._imag_kimage]:
+                self._hash ^= hash(tuple(img.array.ravel()))
+                self._hash ^= hash((img.bounds, img.wcs))
+        return self._hash
+
+    def __repr__(self):
+        return ('galsim.InterpolatedKImage(\n%r,\n%r,\n%r, stepk=%r, gsparams=%r)')%(
+                self._real_kimage, self._imag_kimage, self.k_interpolant,
+                self._stepk, self._gsparams)
+
+    def __str__(self):
+        return 'galsim.InterpolatedKImage(real_kimage=%s, imag_kimage=%s)'%(
+                self._real_kimage, self._imag_kimage)
 
     def __getstate__(self):
         # The SBInterpolatedKImage and the SBProfile both are picklable, but they are pretty

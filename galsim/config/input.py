@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,6 +16,8 @@
 #    and/or other materials provided with the distribution.
 #
 
+from __future__ import print_function
+
 import os
 import galsim
 import logging
@@ -32,6 +34,10 @@ import logging
 # that load the input object's class as well some other information we need to know to how to
 # process the input object correctly.
 valid_input_types = {}
+
+# We also keep track of the connected value or gsobject types.
+# These are registered by the value or gsobject types that use each input object.
+connected_types = {}
 
 
 def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_only=False):
@@ -152,16 +158,21 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                         kwargs, safe = loader.getKwargs(field, config, logger)
                     except KeyboardInterrupt:
                         raise
-                    except:
-                        # If we get an exception here, then probably not safe.
-                        # e.g. it might need an rng that we haven't made yet.
-                        # So if we are doing the safe_only run, just consider this one unsafe
-                        # and move on.
+                    except Exception as e:
+                        # If an exception was raised here, and we are doing the safe_only run,
+                        # then it probably needed an rng that we don't have yet.  So really, that
+                        # just implies that this input object isn't safe to keep around anyway.
+                        # So in this case, we just continue on.  If it was not a safe_only run,
+                        # the exception is reraised.
                         if safe_only:
+                            if logger:
+                                logger.debug('file %d: Skip %s %d, since caught exception: %s',
+                                             file_num,key,i,e)
                             input_objs[i] = None
                             input_objs_safe[i] = None
                             continue
-                        raise
+                        else:
+                            raise
 
                     if safe_only and not safe:
                         if logger:
@@ -192,7 +203,7 @@ def ProcessInput(config, file_num=0, logger=None, file_scope_only=False, safe_on
                     # Invalidate any currently cached values that use this kind of input object:
                     # TODO: This isn't quite correct if there are multiple versions of this input
                     #       item.  e.g. you might want to invalidate dict0, but not dict1.
-                    for value_type in loader.types:
+                    for value_type in connected_types[key]:
                         galsim.config.RemoveCurrent(config, type=value_type)
                         if logger:
                             logger.debug('file %d: Cleared current_vals for items with type %s',
@@ -255,7 +266,7 @@ def SetupInputsForImage(config, logger):
     @param logger       If given, a logger object to log progress. [default: None]
     """
     if 'input' in config:
-        for key in valid_input_types.keys():
+        for key in valid_input_types:
             loader = valid_input_types[key]
             if key in config['input']:
                 fields = config['input'][key]
@@ -307,9 +318,6 @@ class InputLoader(object):
 
         init_func   The class or function that will be used to build the input object.
 
-        types       A list of value or object types that use this input type.  These items will
-                    have their "current" values invalidated when the input object changes.
-
         has_nobj    Whether the object can be used to automatically determine the number of
                     objects to build for a given file or image.  For example, a galsim.Catalog has
                     a specific number of rows in it.  In many cases, you will just want to run
@@ -329,9 +337,8 @@ class InputLoader(object):
                     dict input object. Thus, dict is our canonical example of an input type for
                     which this parameter should be True.
     """
-    def __init__(self, init_func, types, has_nobj=False, file_scope=False):
+    def __init__(self, init_func, has_nobj=False, file_scope=False):
         self.init_func = init_func
-        self.types = types
         self.has_nobj = has_nobj
         self.file_scope = file_scope
 
@@ -388,13 +395,26 @@ def RegisterInputType(input_type, loader):
     @param input_type       The name of the type in config['input']
     @param loader           A loader object to use for loading in the input object.
                             It should be an instance of InputLoader or a subclass thereof.
+
     """
     valid_input_types[input_type] = loader
+    if input_type not in connected_types:
+        connected_types[input_type] = set()
+
+def RegisterInputConnectedType(input_type, type_name):
+    """Register that some gsobject or value type is connected to a given input type.
+
+    @param input_type       The name of the type in config['input']
+    @param type_name        The name of the type that uses this input object.
+    """
+    if input_type not in connected_types:
+        connected_types[input_type] = set()
+    connected_types[input_type].add(type_name)
 
 # We define in this file two simple input types: catalog and dict, which read in a Catalog
 # or Dict from a file and then can use that to generate values.
-RegisterInputType('catalog', InputLoader(galsim.Catalog, ['Catalog'], has_nobj=True))
-RegisterInputType('dict', InputLoader(galsim.Dict, ['Dict'], file_scope=True))
+RegisterInputType('catalog', InputLoader(galsim.Catalog, has_nobj=True))
+RegisterInputType('dict', InputLoader(galsim.Dict, file_scope=True))
 
 
 
@@ -428,7 +448,7 @@ def _GenerateFromCatalog(config, base, value_type):
     elif value_type is bool:
         val = galsim.config.value._GetBoolValue(input_cat.get(index, col))
 
-    #print base['file_num'],'Catalog: col = %s, index = %s, val = %s'%(col, index, val)
+    #print(base['file_num'],'Catalog: col = %s, index = %s, val = %s'%(col, index, val))
     return val, safe
 
 
@@ -444,10 +464,10 @@ def _GenerateFromDict(config, base, value_type):
 
     val = input_dict.get(key)
 
-    #print base['file_num'],'Dict: key = %s, val = %s'%(key,val)
+    #print(base['file_num'],'Dict: key = %s, val = %s'%(key,val))
     return val, safe
 
 # Register these as valid value types
 from .value import RegisterValueType
-RegisterValueType('Catalog', _GenerateFromCatalog, [ float, int, bool, str ])
-RegisterValueType('Dict', _GenerateFromDict, [ float, int, bool, str ])
+RegisterValueType('Catalog', _GenerateFromCatalog, [ float, int, bool, str ], input_type='catalog')
+RegisterValueType('Dict', _GenerateFromDict, [ float, int, bool, str ], input_type='dict')

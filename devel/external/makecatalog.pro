@@ -1,4 +1,4 @@
-; Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+; Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 ; https://github.com/GalSim-developers
 ;
 ; This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -22,7 +22,7 @@ PRO makecatalog
 
 ; define input catalog, output file
 incatw = '/u/rmandelb/svn/simimage/release/catalogs/shera_sdss_catalog_v1.fits'
-outcat = './real_galaxy_catalog_example.fits'
+outcat = './real_galaxy_catalog_23.5_example.fits'
 galaxy_img_file = 'real_galaxy_images.fits'
 psf_img_file = 'real_galaxy_PSF_images.fits'
 nuse = 100

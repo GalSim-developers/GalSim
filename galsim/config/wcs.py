@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -66,11 +66,26 @@ class WCSBuilder(object):
     """A base class for building WCS objects.
 
     The base class defines the call signatures of the methods that any derived class should follow.
-    It also includes the implementation for WCS classes that can use the _req_params stuff.
+    """
+    def buildWCS(self, config, base):
+        """Build the WCS based on the specifications in the config dict.
 
-    The base class initializer takes an init_func, which is the class or function to call to
-    build the WCS.  For the kwargs, it calls getKwargs, which does the normal parsing of the
-    req_params and related class attributes.
+        Note: Sub-classes must override this function with a real implementation.
+
+        @param config           The configuration dict for the wcs type.
+        @param base             The base configuration dict.
+
+        @returns the constructed WCS object.
+        """
+        raise NotImplemented("The %s class has not overridden buildWCS"%self.__class__)
+
+
+class SimpleWCSBuilder(WCSBuilder):
+    """A class for building simple WCS objects.
+
+    The initializer takes an init_func, which is the class or function to call to build the WCS.
+    For the kwargs, it calls getKwargs, which does the normal parsing of the req_params and
+    related class attributes.
     """
     def __init__(self, init_func):
         self.init_func = init_func
@@ -89,7 +104,7 @@ class WCSBuilder(object):
         See any of the classes in wcs.py for examples of classes that set these attributes.
 
         @param build_func       The class or function from which to get the
-        @param config           The configuration dict for the output type.
+        @param config           The configuration dict for the wcs type.
         @param base             The base configuration dict.
 
         @returns kwargs
@@ -117,9 +132,7 @@ class WCSBuilder(object):
     def buildWCS(self, config, base):
         """Build the WCS based on the specifications in the config dict.
 
-        Note: This is really the only method that a derived class is required to define.
-
-        @param config           The configuration dict for the output type.
+        @param config           The configuration dict for the wcs type.
         @param base             The base configuration dict.
 
         @returns the constructed WCS object.
@@ -128,7 +141,7 @@ class WCSBuilder(object):
         return self.init_func(**kwargs)
 
 
-class OriginWCSBuilder(WCSBuilder):
+class OriginWCSBuilder(SimpleWCSBuilder):
     """A specialization for WCS classes that use a different type depending on whether there
     is an origin or world_origin parameter in the config dict.
     """
@@ -140,7 +153,7 @@ class OriginWCSBuilder(WCSBuilder):
         """Build the WCS based on the specifications in the config dict, using the appropriate
         type depending on whether an origin is provided.
 
-        @param config           The configuration dict for the output type.
+        @param config           The configuration dict for the wcs type.
         @param base             The base configuration dict.
 
         @returns the constructed WCS object.
@@ -164,7 +177,7 @@ class TanWCSBuilder(WCSBuilder):
     def buildWCS(self, config, base):
         """Build the TanWCS based on the specifications in the config dict.
 
-        @param config           The configuration dict for the output type.
+        @param config           The configuration dict for the wcs type.
         @param base             The base configuration dict.
 
         @returns the constructed WCS object.
@@ -190,21 +203,32 @@ class TanWCSBuilder(WCSBuilder):
         return galsim.TanWCS(affine=affine, world_origin=world_origin, units=units)
 
 
-def RegisterWCSType(wcs_type, builder):
+def RegisterWCSType(wcs_type, builder, input_type=None):
     """Register a wcs type for use by the config apparatus.
 
     @param wcs_type         The name of the type in config['image']['wcs']
     @param builder          A builder object to use for building the WCS object.  It should
-                            be an instance of WCSBuilder or a subclass thereof.
+                            be an instance of a subclass of WCSBuilder.
+    @param input_type       If the WCS builder utilises an input object, give the key name of the
+                            input type here.  (If it uses more than one, this may be a list.)
+                            [default: None]
     """
     valid_wcs_types[wcs_type] = builder
+    if input_type is not None:
+        from .input import RegisterInputConnectedType
+        if isinstance(input_type, list):
+            for key in input_type:
+                RegisterInputConnectedType(key, wcs_type)
+        else:
+            RegisterInputConnectedType(input_type, wcs_type)
+
 
 RegisterWCSType('PixelScale', OriginWCSBuilder(galsim.PixelScale, galsim.OffsetWCS))
 RegisterWCSType('Shear', OriginWCSBuilder(galsim.ShearWCS, galsim.OffsetShearWCS))
 RegisterWCSType('Jacobian', OriginWCSBuilder(galsim.JacobianWCS, galsim.AffineTransform))
 RegisterWCSType('Affine', OriginWCSBuilder(galsim.JacobianWCS, galsim.AffineTransform))
-RegisterWCSType('UVFunction', WCSBuilder(galsim.UVFunction))
-RegisterWCSType('RaDecFunction', WCSBuilder(galsim.RaDecFunction))
-RegisterWCSType('Fits', WCSBuilder(galsim.FitsWCS))
+RegisterWCSType('UVFunction', SimpleWCSBuilder(galsim.UVFunction))
+RegisterWCSType('RaDecFunction', SimpleWCSBuilder(galsim.RaDecFunction))
+RegisterWCSType('Fits', SimpleWCSBuilder(galsim.FitsWCS))
 RegisterWCSType('Tan', TanWCSBuilder())
 

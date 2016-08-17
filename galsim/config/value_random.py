@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+from __future__ import print_function
+
 import galsim
 
 # This file adds extra value types involving random deviates: Random, RandomGaussian,
@@ -34,12 +36,12 @@ def _GenerateFromRandom(config, base, value_type):
         import math
         galsim.config.CheckAllParams(config)
         val = ud() * 2 * math.pi * galsim.radians
-        #print base['obj_num'],'Random angle = ',val
+        #print(base['obj_num'],'Random angle = ',val)
         return val, False
     elif value_type is bool:
         galsim.config.CheckAllParams(config)
         val = ud() < 0.5
-        #print base['obj_num'],'Random bool = ',val
+        #print(base['obj_num'],'Random bool = ',val)
         return val, False
     else:
         ignore = [ 'default' ]
@@ -57,7 +59,7 @@ def _GenerateFromRandom(config, base, value_type):
         else:
             val = ud() * (max-min) + min
 
-        #print base['obj_num'],'Random = ',val
+        #print(base['obj_num'],'Random = ',val)
         return val, False
 
 
@@ -121,7 +123,7 @@ def _GenerateFromRandomGaussian(config, base, value_type):
         val = gd()
         if 'mean' in kwargs: val += kwargs['mean']
 
-    #print base['obj_num'],'RandomGaussian: ',val
+    #print(base['obj_num'],'RandomGaussian: ',val)
     return val, False
 
 def _GenerateFromRandomPoisson(config, base, value_type):
@@ -139,7 +141,7 @@ def _GenerateFromRandomPoisson(config, base, value_type):
     dev = galsim.PoissonDeviate(rng,mean=mean)
     val = dev()
 
-    #print base['obj_num'],'RandomPoisson: ',val
+    #print(base['obj_num'],'RandomPoisson: ',val)
     return val, False
 
 def _GenerateFromRandomBinomial(config, base, value_type):
@@ -167,7 +169,7 @@ def _GenerateFromRandomBinomial(config, base, value_type):
     dev = galsim.BinomialDeviate(rng,N=N,p=p)
     val = dev()
 
-    #print base['obj_num'],'RandomBinomial: ',val
+    #print(base['obj_num'],'RandomBinomial: ',val)
     return val, False
 
 
@@ -186,7 +188,7 @@ def _GenerateFromRandomWeibull(config, base, value_type):
     dev = galsim.WeibullDeviate(rng,a=a,b=b)
     val = dev()
 
-    #print base['obj_num'],'RandomWeibull: ',val
+    #print(base['obj_num'],'RandomWeibull: ',val)
     return val, False
 
 
@@ -205,7 +207,7 @@ def _GenerateFromRandomGamma(config, base, value_type):
     dev = galsim.GammaDeviate(rng,k=k,theta=theta)
     val = dev()
 
-    #print base['obj_num'],'RandomGamma: ',val
+    #print(base['obj_num'],'RandomGamma: ',val)
     return val, False
 
 
@@ -224,7 +226,7 @@ def _GenerateFromRandomChi2(config, base, value_type):
     dev = galsim.Chi2Deviate(rng,n=n)
     val = dev()
 
-    #print base['obj_num'],'RandomChi2: ',val
+    #print(base['obj_num'],'RandomChi2: ',val)
     return val, False
 
 def _GenerateFromRandomDistribution(config, base, value_type):
@@ -273,7 +275,7 @@ def _GenerateFromRandomDistribution(config, base, value_type):
     distdev.reset(rng)
 
     val = distdev()
-    #print base['obj_num'],'distdev = ',val
+    #print(base['obj_num'],'distdev = ',val)
     return val, False
 
 
@@ -307,7 +309,7 @@ def _GenerateFromRandomCircle(config, base, value_type):
     if 'center' in kwargs:
         pos += kwargs['center']
 
-    #print base['obj_num'],'RandomCircle: ',pos
+    #print(base['obj_num'],'RandomCircle: ',pos)
     return pos, False
 
 # Register these as valid value types

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -23,11 +23,11 @@ The eleventh script in our tutorial about using GalSim in python scripts: exampl
 
 This script uses a constant PSF from real data (an image read in from a bzipped FITS file, not a
 parametric model) and variable shear and magnification according to some cosmological model for
-which we have a tabulated power spectrum at specific k values only.  The 288 galaxies in the 0.1 x
-0.1 degree field (representing a number density of 8/arcmin^2) are randomly located and
+which we have a tabulated shear power spectrum at specific k values only.  The 288 galaxies in the
+0.11 x 0.11 degree field (representing a number density of 6/arcmin^2) are randomly located and
 permitted to overlap.  For the galaxies, we use a mix of real and parametric galaxies modeled off
 the COSMOS observations with the Hubble Space Telescope.  The real galaxies are similar to those
-used in demo10.  The parametric galaxies are based on parameter fits to the same observed galaxies.
+used in demo10.  The parametric galaxies are based on parametric fits to the same observed galaxies.
 The flux and size distribution are thus realistic for an I < 23.5 magnitude limited sample.
 
 New features introduced in this demo:
@@ -65,8 +65,8 @@ import galsim
 def main(argv):
     """
     Make images using constant PSF and variable shear:
-      - The main image is 6 x 6 arcmin
-      - Pixel scale is 0.2 arcsec, hence the image is 1800 x 1800 pixels.
+      - The main image is 2048 x 2048 pixels.
+      - Pixel scale is 0.2 arcsec/pixel, hence the image is about 0.11 degrees on a side.
       - Applied shear is from a cosmological power spectrum read in from file.
       - The PSF is a real one from SDSS, and corresponds to a convolution of atmospheric PSF,
         optical PSF, and pixel response, which has been sampled at pixel centers.  We used a PSF
@@ -88,12 +88,11 @@ def main(argv):
     # Normally these would be read in from some parameter file.
 
     pixel_scale = 0.2                 # arcsec/pixel
-    image_size = 0.1 * galsim.degrees # size of full image in each dimension
-    image_size = int((image_size / galsim.arcsec) / pixel_scale) # convert to pixels
+    image_size = 2048                 # size of image in pixels
     image_size_arcsec = image_size*pixel_scale # size of big image in each dimension (arcsec)
     noise_variance = 5.e4             # ADU^2  (Just use simple Gaussian noise here.)
     nobj = 288                        # number of galaxies in entire field
-                                      # (This corresponds to 2 galaxies / arcmin^2)
+                                      # (This corresponds to 8 galaxies / arcmin^2)
     grid_spacing = 90.0               # The spacing between the samples for the power spectrum 
                                       # realization (arcsec)
     tel_diam = 4                      # Let's figure out the flux for a 4 m class telescope
@@ -118,13 +117,13 @@ def main(argv):
  
     # Read in galaxy catalog
     # The COSMOSCatalog uses the same input file as we have been usign for RealGalaxyCatalogs
-    # along with a second file called real_galaxy_catalog_examples_fits.fits, which stores
+    # along with a second file called real_galaxy_catalog_23.5_examples_fits.fits, which stores
     # the information about the parameteric fits.  There is no need to specify the second file
     # name, since the name is derivable from the name of the main catalog.
     if True:
         # The catalog we distribute with the GalSim code only has 100 galaxies.
         # The galaxies will typically be reused several times here.
-        cat_file_name = 'real_galaxy_catalog_example.fits'
+        cat_file_name = 'real_galaxy_catalog_23.5_example.fits'
         dir = 'data'
         cosmos_cat = galsim.COSMOSCatalog(cat_file_name, dir=dir)
     else:
@@ -400,7 +399,7 @@ def main(argv):
         dec_str = world_pos.dec.dms()
         logger.info('Pixel (%4d, %4d) is at RA %sh %sm %ss, DEC %sd %sm %ss',x,y,
                     ra_str[0:3], ra_str[3:5], ra_str[5:], dec_str[0:3], dec_str[3:5], dec_str[5:])
-    logger.info('ds9 reports these pixels as (1,1), (1,3600), etc. with the same RA, Dec.')
+    logger.info('ds9 reports these pixels as (1,1), (1,2048), etc. with the same RA, Dec.')
 
 
 if __name__ == "__main__":

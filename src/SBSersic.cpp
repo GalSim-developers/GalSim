@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,18 +19,7 @@
 
 //#define DEBUGLOGGING
 
-// clang doesn't like some of the code in boost files included by gamma.hpp.
-#ifdef __clang__
-#if __has_warning("-Wlogical-op-parentheses")
-#pragma GCC diagnostic ignored "-Wlogical-op-parentheses"
-#endif
-#endif
-
-#ifndef __INTEL_COMPILER
-#if defined(__GNUC__) && __GNUC__ >= 4 && (__GNUC__ >= 5 || __GNUC_MINOR__ >= 8)
-#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
-#endif
-#endif
+#include "galsim/IgnoreWarnings.h"
 
 #define BOOST_NO_CXX11_SMART_PTR
 #include <boost/math/special_functions/gamma.hpp>
@@ -83,7 +72,8 @@ namespace galsim {
         return static_cast<const SBSersicImpl&>(*_pimpl).getTrunc();
     }
 
-    std::string SBSersic::SBSersicImpl::repr() const 
+    // NB.  This function is virtually wrapped by repr() in SBProfile.cpp
+    std::string SBSersic::SBSersicImpl::serialize() const
     {
         std::ostringstream oss(" ");
         // NB. The choice of digits10 + 4 is because the normal general output
@@ -91,7 +81,7 @@ namespace galsim {
         // to scientific for smaller numbers.  So those first 4 digits in 0.0001 don't
         // count for the number of required digits, which is nominally given by digits10.
         // cf. http://stackoverflow.com/questions/4738768/printing-double-without-losing-precision
-        // Unfortunately, there doesn't seem to be an easy equivalent of python's %r for 
+        // Unfortunately, there doesn't seem to be an easy equivalent of python's %r for
         // printing the repr of a double that always works and doesn't print more digits than
         // it needs.  This is the reason why we reimplement the __repr__ methods in python
         // for all the SB classes except SBProfile.  Only the last one can't be done properly

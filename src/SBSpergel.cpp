@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -25,16 +25,6 @@
 #include <boost/math/special_functions/gamma.hpp>
 #include "Solve.h"
 #include "bessel/Roots.h"
-
-// Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by
-// drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit
-// circle and rejecting corner photons.
-// The relative speed of the two methods was tested as part of issue #163, and the results
-// are collated in devutils/external/time_photon_shooting.
-// The conclusion was that using sin/cos was faster for icpc, but not g++ or clang++.
-#ifdef _INTEL_COMPILER
-#define USE_COS_SIN
-#endif
 
 #ifdef DEBUGLOGGING
 #include <fstream>
@@ -71,7 +61,7 @@ namespace galsim {
         return static_cast<const SBSpergelImpl&>(*_pimpl).getHalfLightRadius();
     }
 
-    std::string SBSpergel::SBSpergelImpl::repr() const 
+    std::string SBSpergel::SBSpergelImpl::serialize() const
     {
         std::ostringstream oss(" ");
         oss.precision(std::numeric_limits<double>::digits10 + 4);

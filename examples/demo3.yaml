@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,13 +21,14 @@
 # The third YAML configuration file in our tutorial about using Galsim config files
 # (This file is designed to be viewed in a window 100 characters wide.)
 #
-# This script is getting reasonably close to including all the principal features of an image
-# from a ground-based telescope.  The galaxy is a bulge plus disk, where each component is 
-# a sheared Sersic profile (with different Sersic indices).  The PSF has both atmospheric and 
-# optical components.  The atmospheric component is a Kolmogorov turbulent spectrum.
-# The optical component includes defocus, coma and astigmatism, as well as obscuration from
-# a secondary mirror.  The noise model includes both a gain and read noise.  And finally,
-# we include the effect of a slight telescope distortion.
+# This script gets reasonably close to including all the principal features of an image
+# from a ground-based telescope.  The galaxy is represented as the sum of a bulge and a disk,
+# where each component is represented by a sheared Sersic profile (with different Sersic 
+# indices).  The PSF has both atmospheric and optical components.  The atmospheric 
+# component is a Kolmogorov turbulent spectrum. The optical component includes defocus, 
+# coma and astigmatism, as well as obscuration from a secondary mirror.  The noise model 
+# includes both a gain and read noise.  And finally, we include the effect of a slight 
+# telescope distortion.
 #
 # New features introduced in this demo:
 #

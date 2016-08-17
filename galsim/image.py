@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -20,8 +20,9 @@ The Image class and some modifications to the docs for the C++ layer ImageAlloc 
 classes.
 """
 
+from future.utils import with_metaclass
 from . import _galsim
-import numpy
+import numpy as np
 import galsim
 
 # Sometimes (on 32-bit systems) there are two numpy.int32 types.  This can lead to some confusion
@@ -30,19 +31,19 @@ import galsim
 # what numpy decides an int16 + int32 is.  The first one is usually the one that's already in the
 # ImageAlloc dict, but we assign both versions just to be sure.
 
-_galsim.ImageAlloc[numpy.int32] = _galsim.ImageAllocI
-_galsim.ImageView[numpy.int32] = _galsim.ImageViewI
-_galsim.ConstImageView[numpy.int32] = _galsim.ConstImageViewI
+_galsim.ImageAlloc[np.int32] = _galsim.ImageAllocI
+_galsim.ImageView[np.int32] = _galsim.ImageViewI
+_galsim.ConstImageView[np.int32] = _galsim.ConstImageViewI
 
-alt_int32 = ( numpy.array([0]).astype(numpy.int32) + 1).dtype.type
+alt_int32 = ( np.array([0]).astype(np.int32) + 1).dtype.type
 _galsim.ImageAlloc[alt_int32] = _galsim.ImageAllocI
 _galsim.ImageView[alt_int32] = _galsim.ImageViewI
 _galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
 
 # On some systems, the above doesn't work, but this next one does.  I'll leave both active,
 # just in case there are systems where this doesn't work but the above does.
-alt_int32 = ( numpy.array([0]).astype(numpy.int16) +
-              numpy.array([0]).astype(numpy.int32) ).dtype.type
+alt_int32 = ( np.array([0]).astype(np.int16) +
+              np.array([0]).astype(np.int32) ).dtype.type
 _galsim.ImageAlloc[alt_int32] = _galsim.ImageAllocI
 _galsim.ImageView[alt_int32] = _galsim.ImageViewI
 _galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
@@ -60,14 +61,14 @@ class MetaImage(type):
         from galsim.deprecated import depr
         depr('Image[type]', 1.1, 'Image(..., dtype=type)')
         Image_dict = {
-            numpy.int16 : ImageS,
-            numpy.int32 : ImageI,
-            numpy.float32 : ImageF,
-            numpy.float64 : ImageD
+            np.int16 : ImageS,
+            np.int32 : ImageI,
+            np.float32 : ImageF,
+            np.float64 : ImageD
         }
         return Image_dict[t]
 
-class Image(object):
+class Image(with_metaclass(MetaImage, object)):
     """A class for storing image data along with the pixel scale or WCS information
 
     The Image class encapsulates all the relevant information about an image including a NumPy array
@@ -201,23 +202,27 @@ class Image(object):
     See their doc strings for more details.
 
     """
-    __metaclass__ = MetaImage
 
-    cpp_valid_dtypes = _galsim.ImageView.keys()
+    cpp_valid_dtypes = list(_galsim.ImageView)
     alias_dtypes = {
-        int : numpy.int32,          # So that user gets what they would expect
-        float : numpy.float64,      # if using dtype=int or float
+        int : np.int32,          # So that user gets what they would expect
+        float : np.float64,      # if using dtype=int or float
     }
     # Note: Numpy uses int64 for int on 64 bit machines.  We don't implement int64 at all,
     # so we cannot quite match up to the numpy convention for dtype=int.  e.g. via
     #     int : numpy.zeros(1,dtype=int).dtype.type
     # If this becomes too confusing, we might need to add an ImageL class that uses int64.
     # Hard to imagine a use case where this would be required though...
-    valid_dtypes = cpp_valid_dtypes + alias_dtypes.keys()
+    valid_dtypes = cpp_valid_dtypes + list(alias_dtypes)
+
+    unsigned_dtypes = {
+        # We don't have unsigned image code, so just use signed int types.
+        np.uint32 : np.int32,
+        np.uint16 : np.int16,
+    }
+    valid_array_dtypes = cpp_valid_dtypes + list(unsigned_dtypes)
 
     def __init__(self, *args, **kwargs):
-        import numpy
-
         # Parse the args, kwargs
         ncol = None
         nrow = None
@@ -230,7 +235,7 @@ class Image(object):
             ncol = args[0]
             nrow = args[1]
         elif len(args) == 1:
-            if isinstance(args[0], numpy.ndarray):
+            if isinstance(args[0], np.ndarray):
                 array = args[0]
                 xmin = kwargs.pop('xmin',1)
                 ymin = kwargs.pop('ymin',1)
@@ -277,6 +282,8 @@ class Image(object):
             raise ValueError("dtype must be one of "+str(Image.valid_dtypes)+
                              ".  Instead got "+str(dtype))
         if array is not None:
+            if array.dtype.type in Image.unsigned_dtypes and dtype is None:
+                dtype = Image.unsigned_dtypes[array.dtype.type]
             if array.dtype.type not in Image.cpp_valid_dtypes and dtype is None:
                 raise ValueError("array's dtype.type must be one of "+str(Image.cpp_valid_dtypes)+
                                  ".  Instead got "+str(array.dtype.type)+".  Or can set "+
@@ -295,7 +302,7 @@ class Image(object):
         elif image is not None:
             self.dtype = image.array.dtype.type
         else:
-            self.dtype = numpy.float32
+            self.dtype = np.float32
 
         # Construct the image attribute
         if (ncol is not None or nrow is not None):
@@ -328,8 +335,12 @@ class Image(object):
         elif array is not None:
             if image is not None:
                 raise TypeError("Cannot specify both array and image")
-            if not isinstance(array, numpy.ndarray):
+            if not isinstance(array, np.ndarray):
                 raise TypeError("array must be a numpy.ndarray instance")
+            # Easier than getting the memory management right in the C++ layer.
+            # If we were provided a numpy array, keep a pointer to it here so it lives
+            # as long as the self.image object.
+            self._array = array
             if make_const:
                 self.image = _galsim.ConstImageView[self.dtype](array, xmin, ymin)
             else:
@@ -338,6 +349,8 @@ class Image(object):
                 raise TypeError("Cannot specify init_value with array")
         elif image is not None:
             if isinstance(image, Image):
+                if wcs is None and scale is None:
+                    wcs = image.wcs
                 image = image.image
             self.image = None
             for im_dtype in Image.cpp_valid_dtypes:
@@ -361,6 +374,8 @@ class Image(object):
             self.image = _galsim.ImageAlloc[self.dtype]()
             if init_value is not None:
                 raise TypeError("Cannot specify init_value without setting an initial size")
+        if not hasattr(self,'_array'):
+            self._array = self.image.array
 
         # Construct the wcs attribute
         if scale is not None:
@@ -373,8 +388,8 @@ class Image(object):
             self.wcs = wcs
 
     def __repr__(self):
-        return 'galsim.Image(bounds=%r, array=array(%r, dtype=%s), wcs=%r)'%(
-                self.bounds, self.array.tolist(), self.array.dtype, self.wcs)
+        return 'galsim.Image(bounds=%r, array=\n%r, wcs=%r)'%(
+                self.bounds, self.array, self.wcs)
 
     def __str__(self):
         if self.wcs is not None and self.wcs.isPixelScale():
@@ -382,13 +397,11 @@ class Image(object):
         else:
             return 'galsim.Image(bounds=%s, wcs=%s)'%(self.bounds, self.wcs)
 
-    def __hash__(self): return hash(repr(self))
-
     # bounds and array are really properties which pass the request to the image
     @property
     def bounds(self): return self.image.bounds
     @property
-    def array(self): return self.image.array
+    def array(self): return self._array
 
     # Allow scale to work as a PixelScale wcs.
     @property
@@ -445,6 +458,7 @@ class Image(object):
         except:
             # if the image wasn't an ImageAlloc, then above won't work.  So just make it one.
             self.image = _galsim.ImageAlloc[self.dtype](bounds)
+        self._array = self.image.array
         if wcs is not None:
             self.wcs = wcs
 
@@ -739,7 +753,7 @@ class Image(object):
 
         If the image has a wcs other than a PixelScale, an AttributeError will be raised.
 
-        @param center       The position in pixels to use for the center, r=0. 
+        @param center       The position in pixels to use for the center, r=0.
                             [default: self.trueCenter()]
         @param flux         The total flux.  [default: sum(self.array)]
         @param flux_frac    The fraction of light to be enclosed by the returned radius.
@@ -751,22 +765,22 @@ class Image(object):
             center = self.trueCenter()
 
         if flux is None:
-            flux = numpy.sum(self.array)
+            flux = np.sum(self.array)
 
         # Use radii at centers of pixels as approximation to the radial integral
-        x,y = numpy.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
+        x,y = np.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
         x = x - center.x + self.bounds.xmin
         y = y - center.y + self.bounds.ymin
         rsq = x*x + y*y
 
         # Sort by radius
-        indx = numpy.argsort(rsq.flatten())
-        rsqf = rsq.flatten()[indx]
-        data = self.array.flatten()[indx]
-        cumflux = numpy.cumsum(data)
+        indx = np.argsort(rsq.ravel())
+        rsqf = rsq.ravel()[indx]
+        data = self.array.ravel()[indx]
+        cumflux = np.cumsum(data)
 
         # Find the first value with cumflux > 0.5 * flux
-        k = numpy.argmax(cumflux > flux_frac * flux)
+        k = np.argmax(cumflux > flux_frac * flux)
         flux_k = cumflux[k] / flux  # normalize to unit total flux
 
         # Interpolate (linearly) between this and the previous value.
@@ -780,7 +794,7 @@ class Image(object):
             hlrsq = (rsqf[k-1] * (fk-f) + rsqf[k] * (f-fkm1)) / (fk-fkm1)
 
         # This has all been done in pixels.  So normalize according to the pixel scale.
-        hlr = numpy.sqrt(hlrsq) * self.scale
+        hlr = np.sqrt(hlrsq) * self.scale
 
         return hlr
 
@@ -794,7 +808,7 @@ class Image(object):
 
         If the image has a wcs other than a PixelScale, an AttributeError will be raised.
 
-        @param center       The position in pixels to use for the center, r=0. 
+        @param center       The position in pixels to use for the center, r=0.
                             [default: self.trueCenter()]
         @param flux         The total flux.  [default: sum(self.array)]
         @param rtype        There are three options for this parameter:
@@ -803,7 +817,7 @@ class Image(object):
                             - 'both' means return both: (sqrt(T/2), det(Q)^1/4)
                             [default: 'det']
 
-        @returns an estimate of the radius in physical units defined by the pixel scale 
+        @returns an estimate of the radius in physical units defined by the pixel scale
                  (or both estimates if rtype == 'both').
         """
         if rtype not in ['trace', 'det', 'both']:
@@ -813,26 +827,26 @@ class Image(object):
             center = self.trueCenter()
 
         if flux is None:
-            flux = numpy.sum(self.array)
+            flux = np.sum(self.array)
 
         # Use radii at centers of pixels as approximation to the radial integral
-        x,y = numpy.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
+        x,y = np.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
         x = x - center.x + self.bounds.xmin
         y = y - center.y + self.bounds.ymin
 
         if rtype in ['trace', 'both']:
             # Calculate trace measure:
             rsq = x*x + y*y
-            Irr = numpy.sum(rsq * self.array) / flux
+            Irr = np.sum(rsq * self.array) / flux
 
             # This has all been done in pixels.  So normalize according to the pixel scale.
             sigma_trace = (Irr/2.)**0.5 * self.scale
 
         if rtype in ['det', 'both']:
             # Calculate det measure:
-            Ixx = numpy.sum(x*x * self.array) / flux
-            Iyy = numpy.sum(y*y * self.array) / flux
-            Ixy = numpy.sum(x*y * self.array) / flux
+            Ixx = np.sum(x*x * self.array) / flux
+            Iyy = np.sum(y*y * self.array) / flux
+            Ixy = np.sum(x*y * self.array) / flux
 
             # This has all been done in pixels.  So normalize according to the pixel scale.
             sigma_det = (Ixx*Iyy-Ixy**2)**0.25 * self.scale
@@ -855,7 +869,7 @@ class Image(object):
 
         If the image has a wcs other than a PixelScale, an AttributeError will be raised.
 
-        @param center       The position in pixels to use for the center, r=0. 
+        @param center       The position in pixels to use for the center, r=0.
                             [default: self.trueCenter()]
         @param Imax         The maximum surface brightness.  [default: max(self.array)]
                             Note: If Imax is provided, and the maximum pixel value is larger than
@@ -868,22 +882,22 @@ class Image(object):
             center = self.trueCenter()
 
         # If the full image has a larger maximum, use that.
-        Imax2 = numpy.max(self.array)
+        Imax2 = np.max(self.array)
         if Imax2 > Imax: Imax = Imax2
 
         # Use radii at centers of pixels.
-        x,y = numpy.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
+        x,y = np.meshgrid(range(self.array.shape[1]), range(self.array.shape[0]))
         x = x - center.x + self.bounds.xmin
         y = y - center.y + self.bounds.ymin
         rsq = x*x + y*y
 
         # Sort by radius
-        indx = numpy.argsort(rsq.flatten())
-        rsqf = rsq.flatten()[indx]
-        data = self.array.flatten()[indx]
+        indx = np.argsort(rsq.ravel())
+        rsqf = rsq.ravel()[indx]
+        data = self.array.ravel()[indx]
 
         # Find the first value with I < 0.5 * Imax
-        k = numpy.argmax(data < 0.5 * Imax)
+        k = np.argmax(data < 0.5 * Imax)
         Ik = data[k] / Imax
 
         # Interpolate (linearly) between this and the previous value.
@@ -894,42 +908,51 @@ class Image(object):
             rsqhm = (rsqf[k-1] * (Ik-0.5) + rsqf[k] * (0.5-Ikm1)) / (Ik-Ikm1)
 
         # This has all been done in pixels.  So normalize according to the pixel scale.
-        fwhm = 2. * numpy.sqrt(rsqhm) * self.scale
+        fwhm = 2. * np.sqrt(rsqhm) * self.scale
 
         return fwhm
 
-
     def __eq__(self, other):
+        # Note that numpy.array_equal can return True if the dtypes of the two arrays involved are
+        # different, as long as the contents of the two arrays are logically the same.  For example:
+        #
+        # >>> double_array = np.arange(1024).reshape(32, 32)*np.pi
+        # >>> int_array = np.arange(1024).reshape(32, 32)
+        # >>> assert galsim.ImageD(int_array) == galsim.ImageF(int_array) # passes
+        # >>> assert galsim.ImageD(double_array) == galsim.ImageF(double_array) # fails
+
         return ( isinstance(other, Image) and
                  self.bounds == other.bounds and
                  self.wcs == other.wcs and
-                 numpy.array_equal(self.array,other.array) )
+                 np.array_equal(self.array,other.array) )
     def __ne__(self, other): return not self.__eq__(other)
+
+    __hash__ = None
 
 
 # These are essentially aliases for the regular Image with the correct dtype
 def ImageS(*args, **kwargs):
     """Alias for galsim.Image(..., dtype=numpy.int16)
     """
-    kwargs['dtype'] = numpy.int16
+    kwargs['dtype'] = np.int16
     return Image(*args, **kwargs)
 
 def ImageI(*args, **kwargs):
     """Alias for galsim.Image(..., dtype=numpy.int32)
     """
-    kwargs['dtype'] = numpy.int32
+    kwargs['dtype'] = np.int32
     return Image(*args, **kwargs)
 
 def ImageF(*args, **kwargs):
     """Alias for galsim.Image(..., dtype=numpy.float32)
     """
-    kwargs['dtype'] = numpy.float32
+    kwargs['dtype'] = np.float32
     return Image(*args, **kwargs)
 
 def ImageD(*args, **kwargs):
     """Alias for galsim.Image(..., dtype=numpy.float64)
     """
-    kwargs['dtype'] = numpy.float64
+    kwargs['dtype'] = np.float64
     return Image(*args, **kwargs)
 
 
@@ -1037,7 +1060,11 @@ def Image_idiv(self, other):
         a = other
         dt = type(a)
     if dt == self.array.dtype:
-        self.array[:,:] /= a
+        # Try numpy's idiv, but if that doesn't work, coerce it into the existing dtype.
+        try:
+            self.array[:,:] /= a
+        except TypeError:
+            self.array[:,:] = (self.array / a).astype(self.array.dtype)
     else:
         self.array[:,:] = (self.array / a).astype(self.array.dtype)
     return self
@@ -1117,9 +1144,6 @@ def ImageAlloc_setstate(self, args):
     self.__class__ = _galsim.ImageView[self_type]
     self.__init__(*args)
 
-def ImageHash(self):
-    return hash(repr(self))
-
 # inject the arithmetic operators as methods of the Image class:
 Image.__add__ = Image_add
 Image.__radd__ = Image_add
@@ -1147,7 +1171,7 @@ Image.__ixor__ = Image_ixor
 Image.__ior__ = Image_ior
 
 # inject these as methods of ImageAlloc classes
-for Class in _galsim.ImageAlloc.itervalues():
+for Class in _galsim.ImageAlloc.values():
     Class.__setitem__ = Image_setitem
     Class.__getitem__ = Image_getitem
     Class.__add__ = Image_add
@@ -1172,9 +1196,9 @@ for Class in _galsim.ImageAlloc.itervalues():
     Class.__getstate_manages_dict__ = 1
     Class.__getstate__ = ImageAlloc_getstate
     Class.__setstate__ = ImageAlloc_setstate
-    Class.__hash__ = ImageHash
+    Class.__hash__ = None
 
-for Class in _galsim.ImageView.itervalues():
+for Class in _galsim.ImageView.values():
     Class.__setitem__ = Image_setitem
     Class.__getitem__ = Image_getitem
     Class.__add__ = Image_add
@@ -1197,9 +1221,9 @@ for Class in _galsim.ImageView.itervalues():
     Class.__neg__ = Image_neg
     Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs
-    Class.__hash__ = ImageHash
+    Class.__hash__ = None
 
-for Class in _galsim.ConstImageView.itervalues():
+for Class in _galsim.ConstImageView.values():
     Class.__getitem__ = Image_getitem
     Class.__add__ = Image_add
     Class.__radd__ = Image_add
@@ -1215,9 +1239,9 @@ for Class in _galsim.ConstImageView.itervalues():
     Class.__neg__ = Image_neg
     Class.copy = Image_copy
     Class.__getinitargs__ = ImageView_getinitargs
-    Class.__hash__ = ImageHash
+    Class.__hash__ = None
 
-for int_type in [ numpy.int16, numpy.int32 ]:
+for int_type in [ np.int16, np.int32 ]:
     for Class in [ _galsim.ImageAlloc[int_type], _galsim.ImageView[int_type],
                    _galsim.ConstImageView[int_type] ]:
         Class.__and__ = Image_and
@@ -1234,32 +1258,25 @@ galsim._galsim.ImageAllocS.__repr__ = lambda self: 'galsim._galsim.ImageAllocS(%
         self.bounds, self.array)
 galsim._galsim.ImageAllocI.__repr__ = lambda self: 'galsim._galsim.ImageAllocI(%r,%r)'%(
         self.bounds, self.array)
-galsim._galsim.ImageAllocF.__repr__ = \
-        lambda self: 'galsim._galsim.ImageAllocF(%r,array(%r, dtype=%s))'%(
-            self.bounds, self.array.tolist(), self.array.dtype)
-galsim._galsim.ImageAllocD.__repr__ = \
-        lambda self: 'galsim._galsim.ImageAllocD(%r,array(%r, dtype=%s))'%(
-            self.bounds, self.array.tolist(), self.array.dtype)
+galsim._galsim.ImageAllocF.__repr__ = lambda self: 'galsim._galsim.ImageAllocF(%r,%r)'%(
+        self.bounds, self.array)
+galsim._galsim.ImageAllocD.__repr__ = lambda self: 'galsim._galsim.ImageAllocD(%r,%r)'%(
+        self.bounds, self.array)
 
 galsim._galsim.ImageViewS.__repr__ = lambda self: 'galsim._galsim.ImageViewS(%r,%r,%r)'%(
-        self.array, self.xmin, self.xmax)
+        self.array, self.xmin, self.ymin)
 galsim._galsim.ImageViewI.__repr__ = lambda self: 'galsim._galsim.ImageViewI(%r,%r,%r)'%(
-        self.array, self.xmin, self.xmax)
-galsim._galsim.ImageViewF.__repr__ = \
-        lambda self: 'galsim._galsim.ImageViewF(array(%r, dtype=%s),%r,%r)'%(
-            self.array.tolist(), self.array.dtype, self.xmin, self.xmax)
-galsim._galsim.ImageViewD.__repr__ = \
-        lambda self: 'galsim._galsim.ImageViewD(array(%r, dtype=%s),%r,%r)'%(
-            self.array.tolist(), self.array.dtype, self.xmin, self.xmax)
+        self.array, self.xmin, self.ymin)
+galsim._galsim.ImageViewF.__repr__ = lambda self: 'galsim._galsim.ImageViewF(%r,%r,%r)'%(
+        self.array, self.xmin, self.ymin)
+galsim._galsim.ImageViewD.__repr__ = lambda self: 'galsim._galsim.ImageViewD(%r,%r,%r)'%(
+        self.array, self.xmin, self.ymin)
 
 galsim._galsim.ConstImageViewS.__repr__ = lambda self: 'galsim._galsim.ConstImageViewS(%r,%r,%r)'%(
-        self.array, self.xmin, self.xmax)
+        self.array, self.xmin, self.ymin)
 galsim._galsim.ConstImageViewI.__repr__ = lambda self: 'galsim._galsim.ConstImageViewI(%r,%r,%r)'%(
-        self.array, self.xmin, self.xmax)
-galsim._galsim.ConstImageViewF.__repr__ = \
-        lambda self: 'galsim._galsim.ConstImageViewF(array(%r, dtype=%s),%r,%r)'%(
-            self.array.tolist(), self.array.dtype, self.xmin, self.xmax)
-galsim._galsim.ConstImageViewD.__repr__ = \
-        lambda self: 'galsim._galsim.ConstImageViewD(array(%r, dtype=%s),%r,%r)'%(
-            self.array.tolist(), self.array.dtype, self.xmin, self.xmax)
-
+        self.array, self.xmin, self.ymin)
+galsim._galsim.ConstImageViewF.__repr__ = lambda self: 'galsim._galsim.ConstImageViewF(%r,%r,%r)'%(
+        self.array, self.xmin, self.ymin)
+galsim._galsim.ConstImageViewD.__repr__ = lambda self: 'galsim._galsim.ConstImageViewD(%r,%r,%r)'%(
+        self.array, self.xmin, self.ymin)

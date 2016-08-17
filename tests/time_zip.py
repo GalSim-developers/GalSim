@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,14 +15,16 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+"""Time the different ways to zip and unzip and image
+"""
+
+from __future__ import print_function
 import numpy as np
 import os
 import sys
 from galsim_test_helpers import *
 from galsim import pyfits
-
-"""Time the different ways to zip and unzip and image
-"""
 
 n_iter = 20
 
@@ -79,7 +81,7 @@ def time_gzip():
             # Only report error the first time.
             if n_iter == 1:
                 import traceback
-                print 'gzip_in_mem failed with exception:'
+                print('gzip_in_mem failed with exception:')
                 traceback.print_exc()
         t2 = time.time()
 
@@ -91,7 +93,7 @@ def time_gzip():
         except:
             if n_iter == 1:
                 import traceback
-                print 'gzip_tmp failed with exception:'
+                print('gzip_tmp failed with exception:')
                 traceback.print_exc()
         t3 = time.time()
 
@@ -103,7 +105,7 @@ def time_gzip():
         except:
             if n_iter == 1:
                 import traceback
-                print 'gzip_call failed with exception:'
+                print('gzip_call failed with exception:')
                 traceback.print_exc()
         t4 = time.time()
 
@@ -115,19 +117,20 @@ def time_gzip():
         except:
             if n_iter == 1:
                 import traceback
-                print 'gzip_call2 failed with exception:'
+                print('gzip_call2 failed with exception:')
                 traceback.print_exc()
         t5 = time.time()
 
-        print 'Times for %d iterations of writing to %s (%d x %d): '%(n_iter, gzfile, size, size)
-        print '   time for gzip_in_mem = %.2f'%(t2-t1)
-        print '   time for gzip_tmp = %.2f'%(t3-t2)
-        print '   time for gzip_call = %.2f'%(t4-t3)
-        print '   time for gzip_call2 = %.2f'%(t5-t4)
+        print('Times for %d iterations of writing to %s (%d x %d): '%(n_iter, gzfile, size, size))
+        print('   time for gzip_in_mem = %.2f'%(t2-t1))
+        print('   time for gzip_tmp = %.2f'%(t3-t2))
+        print('   time for gzip_call = %.2f'%(t4-t3))
+        print('   time for gzip_call2 = %.2f'%(t5-t4))
+        hdu_list.close()
 
     default_order = [ f.__name__ for f in galsim.fits._write_file.gz_methods ]
-    print 'The current default order for gzip write is ',default_order
-    print
+    print('The current default order for gzip write is ',default_order)
+    print()
 
 def time_bzip2():
     """Time different functions for bzip2"""
@@ -150,7 +153,7 @@ def time_bzip2():
         except:
             if n_iter == 1:
                 import traceback
-                print 'bz2_in_mem failed with exception:'
+                print('bz2_in_mem failed with exception:')
                 traceback.print_exc()
         t2 = time.time()
 
@@ -162,7 +165,7 @@ def time_bzip2():
         except:
             if n_iter == 1:
                 import traceback
-                print 'bz2_tmp failed with exception:'
+                print('bz2_tmp failed with exception:')
                 traceback.print_exc()
         t3 = time.time()
 
@@ -174,7 +177,7 @@ def time_bzip2():
         except:
             if n_iter == 1:
                 import traceback
-                print 'bzip2_call failed with exception:'
+                print('bzip2_call failed with exception:')
                 traceback.print_exc()
         t4 = time.time()
 
@@ -186,19 +189,20 @@ def time_bzip2():
         except:
             if n_iter == 1:
                 import traceback
-                print 'bzip2_call2 failed with exception:'
+                print('bzip2_call2 failed with exception:')
                 traceback.print_exc()
         t5 = time.time()
 
-        print 'Times for %d iterations of writing to %s (%d x %d): '%(n_iter, bz2file, size, size)
-        print '   time for bz2_in_mem = %.2f'%(t2-t1)
-        print '   time for bz2_tmp = %.2f'%(t3-t2)
-        print '   time for bzip2_call = %.2f'%(t4-t3)
-        print '   time for bzip2_call2 = %.2f'%(t5-t4)
+        print('Times for %d iterations of writing to %s (%d x %d): '%(n_iter, bz2file, size, size))
+        print('   time for bz2_in_mem = %.2f'%(t2-t1))
+        print('   time for bz2_tmp = %.2f'%(t3-t2))
+        print('   time for bzip2_call = %.2f'%(t4-t3))
+        print('   time for bzip2_call2 = %.2f'%(t5-t4))
+        hdu_list.close()
 
     default_order = [ f.__name__ for f in galsim.fits._write_file.bz2_methods ]
-    print 'The current default order for bzip2 write is ',default_order
-    print
+    print('The current default order for bzip2 write is ',default_order)
+    print()
 
 def time_gunzip():
     """Time different functions for gunzip"""
@@ -220,7 +224,7 @@ def time_gunzip():
         except:
             if n_iter == 1:
                 import traceback
-                print 'gzip_in_mem failed with exception:'
+                print('gzip_in_mem failed with exception:')
                 traceback.print_exc()
         t2 = time.time()
 
@@ -233,7 +237,7 @@ def time_gunzip():
         except:
             if n_iter == 1:
                 import traceback
-                print 'gzip_tmp failed with exception:'
+                print('gzip_tmp failed with exception:')
                 traceback.print_exc()
         t3 = time.time()
 
@@ -246,7 +250,7 @@ def time_gunzip():
         except:
             if n_iter == 1:
                 import traceback
-                print 'gunzip_call failed with exception:'
+                print('gunzip_call failed with exception:')
                 traceback.print_exc()
         t4 = time.time()
 
@@ -258,19 +262,19 @@ def time_gunzip():
         except:
             if n_iter == 1:
                 import traceback
-                print 'pyfits_open failed with exception:'
+                print('pyfits_open failed with exception:')
                 traceback.print_exc()
         t5 = time.time()
 
-        print 'Times for %d iterations of reading %s (%d x %d): '%(n_iter, gzfile, size, size)
-        print '   time for gzip_in_mem = %.2f'%(t2-t1)
-        print '   time for gzip_tmp = %.2f'%(t3-t2)
-        print '   time for gunzip_call = %.2f'%(t4-t3)
-        print '   time for pyfits_open = %.2f'%(t5-t4)
+        print('Times for %d iterations of reading %s (%d x %d): '%(n_iter, gzfile, size, size))
+        print('   time for gzip_in_mem = %.2f'%(t2-t1))
+        print('   time for gzip_tmp = %.2f'%(t3-t2))
+        print('   time for gunzip_call = %.2f'%(t4-t3))
+        print('   time for pyfits_open = %.2f'%(t5-t4))
 
     default_order = [ f.__name__ for f in galsim.fits._read_file.gz_methods ]
-    print 'The current default order for gzip read is ',default_order
-    print
+    print('The current default order for gzip read is ',default_order)
+    print()
 
 
 def time_bunzip2():
@@ -293,7 +297,7 @@ def time_bunzip2():
         except:
             if n_iter == 1:
                 import traceback
-                print 'bz2_in_mem failed with exception:'
+                print('bz2_in_mem failed with exception:')
                 traceback.print_exc()
         t2 = time.time()
 
@@ -306,7 +310,7 @@ def time_bunzip2():
         except:
             if n_iter == 1:
                 import traceback
-                print 'bz2_tmp failed with exception:'
+                print('bz2_tmp failed with exception:')
                 traceback.print_exc()
         t3 = time.time()
 
@@ -319,18 +323,18 @@ def time_bunzip2():
         except:
             if n_iter == 1:
                 import traceback
-                print 'bunzip_call failed with exception:'
+                print('bunzip_call failed with exception:')
                 traceback.print_exc()
         t4 = time.time()
 
-        print 'Times for %d iterations of reading %s (%d x %d): '%(n_iter, bz2file, size, size)
-        print '   time for bz2_in_mem = %.2f'%(t2-t1)
-        print '   time for bz2_tmp = %.2f'%(t3-t2)
-        print '   time for bunzip2_call = %.2f'%(t4-t3)
+        print('Times for %d iterations of reading %s (%d x %d): '%(n_iter, bz2file, size, size))
+        print('   time for bz2_in_mem = %.2f'%(t2-t1))
+        print('   time for bz2_tmp = %.2f'%(t3-t2))
+        print('   time for bunzip2_call = %.2f'%(t4-t3))
 
     default_order = [ f.__name__ for f in galsim.fits._read_file.bz2_methods ]
-    print 'The current default order for bzip2 read is ',default_order
-    print
+    print('The current default order for bzip2 read is ',default_order)
+    print()
 
 if __name__ == "__main__":
     time_gzip()

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -18,7 +18,7 @@
 
 import galsim
 import math
-import numpy
+import numpy as np
 import logging
 
 # The psf extra output type builds an Image of the PSF at the same locations as the galaxies.
@@ -53,7 +53,7 @@ def DrawPSFStamp(psf, config, base, bounds, offset, method, logger):
 
         sn_target = galsim.config.ParseValue(config, 'signal_to_noise', base, float)[0]
 
-        sn_meas = math.sqrt( numpy.sum(im.array**2) / noise_var )
+        sn_meas = math.sqrt( np.sum(im.array**2) / noise_var )
         flux = sn_target / sn_meas
         im *= flux
 
@@ -101,10 +101,12 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
                 offset += galsim.config.GetCurrentValue('stamp.offset',base, galsim.PositionD)
             else:
                 offset += galsim.config.ParseValue(config, 'offset', base, galsim.PositionD)[0]
+            if logger:
+                logger.debug('obj %d: psf offset: %s',base['obj_num'],str(offset))
 
         psf_im = DrawPSFStamp(psf,config,base,bounds,offset,draw_method,logger)
         if 'signal_to_noise' in config:
-            galsim.config.AddNoise(base,psf_im,0,logger)
+            galsim.config.AddNoise(base,psf_im,current_var=0,logger=logger)
         self.scratch[obj_num] = psf_im
 
     # The function to call at the end of building each image
@@ -114,26 +116,18 @@ class ExtraPSFBuilder(ExtraOutputBuilder):
         for obj_num in obj_nums:
             stamp = self.scratch[obj_num]
             b = stamp.bounds & image.getBounds()
+            if logger:
+                logger.debug('image %d: psf image at b = %s = %s & %s',
+                             base['image_num'],b,stamp.bounds,image.getBounds())
             if b.isDefined():
                 # This next line is equivalent to:
                 #    image[b] += stamp[b]
                 # except that this doesn't work through the proxy.  We can only call methods
                 # that don't start with _.  Hence using the more verbose form here.
                 image.setSubImage(b, image.subImage(b) + stamp[b])
+                if logger:
+                    logger.debug('obj %d: added psf image to main image',base['obj_num'])
         self.data[index] = image
-
-    # Write the image(s) to a file
-    def writeFile(self, file_name, config, base, logger):
-        galsim.fits.writeMulti(self.data, file_name)
-
-    # For the hdu, just return the first element
-    def writeHdu(self, config, base, logger):
-        n = len(self.data)
-        if n == 0:
-            raise RuntimeError("No psf images were created.")
-        elif n > 1:
-            raise RuntimeError("%d psf images were created, but expecting only 1."%n)
-        return self.data[0]
 
 
 # Register this as a valid extra output

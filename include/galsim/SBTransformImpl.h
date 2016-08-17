@@ -1,5 +1,5 @@
 /* -*- c++ -*-
- * Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+ * Copyright (c) 2012-2016 by the GalSim developers team on GitHub
  * https://github.com/GalSim-developers
  *
  * This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -56,9 +56,9 @@ namespace galsim {
 
         double getFlux() const { return _adaptee.getFlux()*_absdet; }
 
-        double getPositiveFlux() const 
+        double getPositiveFlux() const
         { return _adaptee.getPositiveFlux()*_absdet; }
-        double getNegativeFlux() const 
+        double getNegativeFlux() const
         { return _adaptee.getNegativeFlux()*_absdet; }
 
         /**
@@ -93,7 +93,7 @@ namespace galsim {
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 
-        std::string repr() const;
+        std::string serialize() const;
 
     private:
         SBProfile _adaptee; ///< SBProfile being adapted/transformed
@@ -118,21 +118,21 @@ namespace galsim {
 
         void initialize();
 
-        /** 
+        /**
          * @brief Forward coordinate transform with `M` matrix.
          *
          * @param[in] p input position.
          * @returns transformed position.
          */
-        Position<double> fwd(const Position<double>& p) const 
+        Position<double> fwd(const Position<double>& p) const
         { return _fwd(_mA,_mB,_mC,_mD,p.x,p.y,_invdet); }
 
         /// @brief Forward coordinate transform with transpose of `M` matrix.
-        Position<double> fwdT(const Position<double>& p) const 
+        Position<double> fwdT(const Position<double>& p) const
         { return _fwd(_mA,_mC,_mB,_mD,p.x,p.y,_invdet); }
 
         /// @brief Inverse coordinate transform with `M` matrix.
-        Position<double> inv(const Position<double>& p) const 
+        Position<double> inv(const Position<double>& p) const
         { return _inv(_mA,_mB,_mC,_mD,p.x,p.y,_invdet); }
 
         /// @brief Returns the k value (no phase).
@@ -177,4 +177,3 @@ namespace galsim {
 }
 
 #endif
-

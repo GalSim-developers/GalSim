@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -831,7 +831,7 @@ class _BaseCorrelatedNoise(object):
             do_expansion = True
         # Then roll the PS by half its size in the leading dimension, centering it in that dimension
         # (we will construct the expanded array to be centred in the other dimension)
-        ps_rolled = galsim.utilities.roll2d(ps, (ps.shape[0] / 2, 0))
+        ps_rolled = galsim.utilities.roll2d(ps, (ps.shape[0] // 2, 0))
         # Then create and fill an expanded-size tmp_arr with this PS
         if not do_expansion:
             tmp_arr = np.zeros((ps_rolled.shape[0], 2 * ps_rolled.shape[1] - 1)) # Both dims now odd
@@ -846,7 +846,7 @@ class _BaseCorrelatedNoise(object):
             tmp_arr[:-1, ps_rolled.shape[1]-1:] = ps_rolled
             tmp_arr[1:, :ps_rolled.shape[1]-1] = ps_rolled[:, 1:][::-1, ::-1]
             # Then one tiny element breaks the symmetry of the above, so fix this
-            tmp_arr[-1, tmp_arr.shape[1] / 2] = tmp_arr[0, tmp_arr.shape[1] / 2]
+            tmp_arr[-1, tmp_arr.shape[1] // 2] = tmp_arr[0, tmp_arr.shape[1] // 2]
 
         # Also initialize the array in which to build up the symmetrized PS.
         final_arr = tmp_arr.copy()
@@ -865,11 +865,11 @@ class _BaseCorrelatedNoise(object):
 
         # Now simply take the halfcomplex, compact stored part that we are interested in,
         # remembering that the kx=ky=0 element is still in the centre
-        final_arr = final_arr[:, final_arr.shape[1]/2:]
+        final_arr = final_arr[:, final_arr.shape[1]//2:]
         # If we extended the array to be odd-sized along y, we have to go back to an even subarray
         if do_expansion: final_arr = final_arr[:-1, :]
         # Finally roll back the leading dimension
-        final_arr = galsim.utilities.roll2d(final_arr, (-(final_arr.shape[0] / 2), 0))
+        final_arr = galsim.utilities.roll2d(final_arr, (-(final_arr.shape[0] // 2), 0))
         # final_arr now contains the halfcomplex compact format PS of the maximum of the set of PS
         # images rotated by 2pi/order, which (a) should be symmetric at the required order and
         # (b) be the minimal array that is symmetric at that order and >= the original PS.  So we do
@@ -896,7 +896,7 @@ def _generate_noise_from_rootps(rng, shape, rootps):
     @returns a NumPy array (contiguous) of the requested shape, filled with the noise field.
     """
     # Sanity check on requested shape versus that of rootps
-    if len(shape) != 2 or (shape[0], shape[1]/2+1) != rootps.shape:
+    if len(shape) != 2 or (shape[0], shape[1]//2+1) != rootps.shape:
         raise ValueError("Requested shape does not match that of the supplied rootps")
     #  Quickest to create Gaussian rng each time needed, so do that here...
     gd = galsim.GaussianDeviate(
@@ -905,26 +905,26 @@ def _generate_noise_from_rootps(rng, shape, rootps):
                                                       # needed because of the asymmetry in the
                                                       # 1/N^2 division in the NumPy FFT/iFFT
     # Fill a couple of arrays with this noise
-    gvec_real = galsim.utilities.rand_arr((shape[0], shape[1]/2+1), gd)
-    gvec_imag = galsim.utilities.rand_arr((shape[0], shape[1]/2+1), gd)
+    gvec_real = galsim.utilities.rand_arr((shape[0], shape[1]//2+1), gd)
+    gvec_imag = galsim.utilities.rand_arr((shape[0], shape[1]//2+1), gd)
     # Prepare a complex vector upon which to impose Hermitian symmetry
     gvec = gvec_real + 1J * gvec_imag
     # Now impose requirements of Hermitian symmetry on random Gaussian halfcomplex array, and ensure
     # self-conjugate elements (e.g. [0, 0]) are purely real and multiplied by sqrt(2) to compensate
     # for lost variance, see https://github.com/GalSim-developers/GalSim/issues/563
     # First do the bits necessary for both odd and even shapes:
-    gvec[-1:shape[0]/2:-1, 0] = np.conj(gvec[1:(shape[0]+1)/2, 0])
+    gvec[-1:shape[0]//2:-1, 0] = np.conj(gvec[1:(shape[0]+1)//2, 0])
     rt2 = np.sqrt(2.)
     gvec[0, 0] = rt2 * gvec[0, 0].real
     # Then make the changes necessary for even sized arrays
     if shape[1] % 2 == 0: # x dimension even
-        gvec[-1:shape[0]/2:-1, shape[1]/2] = np.conj(gvec[1:(shape[0]+1)/2, shape[1]/2])
-        gvec[0, shape[1]/2] = rt2 * gvec[0, shape[1]/2].real
+        gvec[-1:shape[0]//2:-1, shape[1]//2] = np.conj(gvec[1:(shape[0]+1)//2, shape[1]//2])
+        gvec[0, shape[1]//2] = rt2 * gvec[0, shape[1]//2].real
     if shape[0] % 2 == 0: # y dimension even
-        gvec[shape[0]/2, 0] = rt2 * gvec[shape[0]/2, 0].real
+        gvec[shape[0]//2, 0] = rt2 * gvec[shape[0]//2, 0].real
         # Both dimensions even
         if shape[1] % 2 == 0:
-            gvec[shape[0]/2, shape[1]/2] = rt2 * gvec[shape[0]/2, shape[1]/2].real
+            gvec[shape[0]//2, shape[1]//2] = rt2 * gvec[shape[0]//2, shape[1]//2].real
     # Finally generate and return noise using the irfft
     return np.fft.irfft2(gvec * rootps, s=shape)
 
@@ -1153,7 +1153,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
 
         # Roll CF array to put the centre in image centre.  Remember that numpy stores data [y,x]
         cf_array_prelim = utilities.roll2d(
-            cf_array_prelim, (cf_array_prelim.shape[0] / 2, cf_array_prelim.shape[1] / 2))
+            cf_array_prelim, (cf_array_prelim.shape[0] // 2, cf_array_prelim.shape[1] // 2))
 
         # The underlying C++ object is expecting the CF to be represented by an odd-dimensioned
         # array with the central pixel denoting the zero-distance correlation (variance), even
@@ -1164,8 +1164,8 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
         # Determine the largest dimension of the input image, and use it to generate an empty CF
         # array for final output, padding by one to make odd if necessary:
         cf_array = np.zeros((
-            1 + 2 * (cf_array_prelim.shape[0] / 2),
-            1 + 2 * (cf_array_prelim.shape[1] / 2))) # using integer division
+            1 + 2 * (cf_array_prelim.shape[0] // 2),
+            1 + 2 * (cf_array_prelim.shape[1] // 2))) # using integer division
 
         # Then put the data from the prelim CF into this array
         cf_array[0:cf_array_prelim.shape[0], 0:cf_array_prelim.shape[1]] = cf_array_prelim

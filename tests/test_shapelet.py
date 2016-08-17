@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -15,6 +15,8 @@
 #    this list of conditions, and the disclaimer given in the documentation
 #    and/or other materials provided with the distribution.
 #
+
+from __future__ import print_function
 import numpy as np
 import os
 import sys
@@ -22,7 +24,7 @@ import sys
 from galsim_test_helpers import *
 
 imgdir = os.path.join(".", "SBProfile_comparison_images") # Directory containing the reference
-                                                          # images. 
+                                                          # images.
 
 try:
     import galsim
@@ -33,12 +35,10 @@ except ImportError:
 
 # define a series of tests
 
+@timer
 def test_shapelet_gaussian():
     """Test that the simplest Shapelet profile is equivalent to a Gaussian
     """
-    import time
-    t1 = time.time()
-
     ftypes = [np.float32, np.float64]
     scale = 0.2
     test_flux = 23.
@@ -60,16 +60,11 @@ def test_shapelet_gaussian():
                     err_msg="Shapelet with (only) b00=1 disagrees with Gaussian result"
                     "for flux=%f, sigma=%f, order=%d"%(test_flux,sigma,order))
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_shapelet_drawImage():
     """Test some measured properties of a drawn shapelet against the supposed true values
     """
-    import time
-    t1 = time.time()
-
     ftypes = [np.float32, np.float64]
     scale = 0.2
     test_flux = 23.
@@ -94,25 +89,25 @@ def test_shapelet_drawImage():
                     if n >= 3:
                         bvec[k-3] = 0.31/n**4.2    # N,m = n,3  real part
                         bvec[k-2] = -0.18/n**3.9       # N,m = n,3  imag part
-            print 'shapelet vector = ',bvec
+            print('shapelet vector = ',bvec)
             shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
 
-            # Test normalization  (This is normally part of do_shoot.  When we eventually 
-            # implement photon shooting, we should go back to the normal do_shoot call, 
+            # Test normalization  (This is normally part of do_shoot.  When we eventually
+            # implement photon shooting, we should go back to the normal do_shoot call,
             # and remove this section.)
             shapelet = shapelet.withFlux(test_flux)
             shapelet.drawImage(im)
             flux = im.array.sum()
-            print 'im.sum = ',flux,'  cf. ',test_flux
+            print('im.sum = ',flux,'  cf. ',test_flux)
             np.testing.assert_almost_equal(flux / test_flux, 1., 4,
                     err_msg="Flux normalization for Shapelet disagrees with expected result")
 
             # Test centroid
             # Note: this only works if the image has odd sizes.  If they are even, then
-            # setCenter doesn't actually set the center to the true center of the image 
+            # setCenter doesn't actually set the center to the true center of the image
             # (since it falls between pixels).
             im.setCenter(0,0)
-            x,y = np.meshgrid(np.arange(im.array.shape[0]).astype(float) + im.getXMin(), 
+            x,y = np.meshgrid(np.arange(im.array.shape[0]).astype(float) + im.getXMin(),
                               np.arange(im.array.shape[1]).astype(float) + im.getYMin())
             x *= scale
             y *= scale
@@ -120,22 +115,17 @@ def test_shapelet_drawImage():
             mx = (x*im.array).sum() / flux
             my = (y*im.array).sum() / flux
             conv = galsim.Convolve([shapelet, galsim.Pixel(scale)])
-            print 'centroid = ',mx,my,' cf. ',conv.centroid()
+            print('centroid = ',mx,my,' cf. ',conv.centroid())
             np.testing.assert_almost_equal(mx, shapelet.centroid().x, 3,
                     err_msg="Measured centroid (x) for Shapelet disagrees with expected result")
             np.testing.assert_almost_equal(my, shapelet.centroid().y, 3,
                     err_msg="Measured centroid (y) for Shapelet disagrees with expected result")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
-
+@timer
 def test_shapelet_properties():
     """Test some specific numbers for a particular Shapelet profile.
     """
-    import time
-    t1 = time.time()
-
     # A semi-random particular vector of coefficients.
     sigma = 1.8
     order = 4
@@ -166,15 +156,11 @@ def test_shapelet_properties():
     # Check picklability
     do_pickle(shapelet)
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_shapelet_fit():
     """Test fitting a Shapelet decomposition of an image
     """
-    import time
-    t1 = time.time()
-
     for method, norm in [('no_pixel','f'), ('sb','sb')]:
         # We fit a shapelet approximation of a distorted Moffat profile:
         flux = 20
@@ -187,15 +173,15 @@ def test_shapelet_fit():
 
         sigma = 1.2  # Match half-light-radius as a decent first approximation.
         shapelet = galsim.FitShapelet(sigma, 10, im1, normalization=norm)
-        print 'fitted shapelet coefficients = ',shapelet.bvec
+        print('fitted shapelet coefficients = ',shapelet.bvec)
 
         # Check flux
-        print 'flux = ',shapelet.getFlux(),'  cf. ',flux
+        print('flux = ',shapelet.getFlux(),'  cf. ',flux)
         np.testing.assert_almost_equal(shapelet.getFlux() / flux, 1., 1,
                 err_msg="Fitted shapelet has the wrong flux")
 
         # Test centroid
-        print 'centroid = ',shapelet.centroid(),'  cf. ',conv.centroid()
+        print('centroid = ',shapelet.centroid(),'  cf. ',conv.centroid())
         np.testing.assert_almost_equal(shapelet.centroid().x, conv.centroid().x, 2,
                 err_msg="Fitted shapelet has the wrong centroid (x)")
         np.testing.assert_almost_equal(shapelet.centroid().y, conv.centroid().y, 2,
@@ -205,8 +191,8 @@ def test_shapelet_fit():
         im2 = im1.copy()
         shapelet.drawImage(im2, method=method)
         # Check that images are close to the same:
-        print 'norm(diff) = ',np.sum((im1.array-im2.array)**2)
-        print 'norm(im) = ',np.sum(im1.array**2)
+        print('norm(diff) = ',np.sum((im1.array-im2.array)**2))
+        print('norm(im) = ',np.sum(im1.array**2))
         assert np.sum((im1.array-im2.array)**2) < 1.e-3 * np.sum(im1.array**2)
 
         # Remeasure -- should now be very close to the same.
@@ -218,15 +204,11 @@ def test_shapelet_fit():
         np.testing.assert_almost_equal(shapelet.bvec, shapelet2.bvec, 6,
                 err_msg="Second fitted shapelet coefficients do not match original")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
 def test_shapelet_adjustments():
     """Test that adjusting the Shapelet profile in various ways does the right thing
     """
-    import time
-    t1 = time.time()
-
     ftypes = [np.float32, np.float64]
 
     nx = 128
@@ -294,9 +276,17 @@ def test_shapelet_adjustments():
         im.array, ref_im.array, 6,
         err_msg="Shapelet lens disagrees with GSObject lens")
 
-    t2 = time.time()
-    print 'time for %s = %.2f'%(funcname(),t2-t1)
 
+@timer
+def test_ne():
+    """ Check that inequality works as expected."""
+    gsp = galsim.GSParams(maxk_threshold=5.1e-3, folding_threshold=1.1e-3)
+    objs = [galsim.Shapelet(1., 2),
+            galsim.Shapelet(1., 3),
+            galsim.Shapelet(2., 2),
+            galsim.Shapelet(1., 2, bvec=[1, 0, 0, 0.2, 0.3, -0.1]),
+            galsim.Shapelet(1., 2, gsparams=gsp)]
+    all_obj_diff(objs)
 
 
 if __name__ == "__main__":
@@ -305,3 +295,4 @@ if __name__ == "__main__":
     test_shapelet_properties()
     test_shapelet_fit()
     test_shapelet_adjustments()
+    test_ne()

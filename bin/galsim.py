@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -19,6 +19,8 @@
 The main driver program for making images of galaxies whose parameters are specified
 in a configuration file.
 """
+
+from __future__ import print_function
 
 import sys
 import os
@@ -112,12 +114,12 @@ def parse_args():
 
         if args.config_file == None:
             if args.version:
-                print version_str
+                print(version_str)
             else:
                 parser.print_help()
             sys.exit()
         elif args.version:
-            print version_str
+            print(version_str)
 
     except ImportError:
         # Use optparse instead
@@ -165,7 +167,7 @@ def parse_args():
         # Store the positional arguments in the args object as well:
         if len(posargs) == 0:
             if args.version:
-                print version_str
+                print(version_str)
             else:
                 parser.print_help()
             sys.exit()
@@ -173,7 +175,7 @@ def parse_args():
             args.config_file = posargs[0]
             args.variables = posargs[1:]
             if args.version:
-                print version_str
+                print(version_str)
 
     # Return the args
     return args
@@ -229,7 +231,7 @@ def main():
 
     # If requested, load the profiler
     if args.profile:
-        import cProfile, pstats, StringIO
+        import cProfile, pstats, io
         pr = cProfile.Profile()
         pr.enable()
 
@@ -274,7 +276,7 @@ def main():
     if args.profile:
         # cf. example code here: https://docs.python.org/2/library/profile.html
         pr.disable()
-        s = StringIO.StringIO()
+        s = io.StringIO()
         sortby = 'tottime'
         ps = pstats.Stats(pr, stream=s).sort_stats(sortby).reverse_order()
         ps.print_stats()

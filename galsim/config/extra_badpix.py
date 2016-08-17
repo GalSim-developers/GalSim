@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -16,7 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
-import numpy
 import galsim
 
 # The badpix extra output type is currently just a placeholder for when we eventually add
@@ -59,19 +58,6 @@ class BadPixBuilder(ExtraOutputBuilder):
             # Again, nothing here yet.
             pass
         self.data[index] = image
-
-    # Write the image(s) to a file
-    def writeFile(self, file_name, config, base, logger):
-        galsim.fits.writeMulti(self.data, file_name)
-
-    # For the hdu, just return the first element
-    def writeHdu(self, config, base, logger):
-        n = len(self.data)
-        if n == 0:
-            raise RuntimeError("No badpix images were created.")
-        elif n > 1:
-            raise RuntimeError("%d badpix images were created, but expecting only 1."%n)
-        return self.data[0]
 
 
 # Register this as a valid extra output

@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -21,7 +21,7 @@ failure, interpixel capacitance, etc.
 """
 
 import galsim
-import numpy
+import numpy as np
 import sys
 
 def applyNonlinearity(self, NLfunc, *args):
@@ -64,14 +64,14 @@ def applyNonlinearity(self, NLfunc, *args):
     with `beta1` = 1.e-7 and `beta2` = 1.e-10.
 
     @param NLfunc    The function that maps the input image pixel values to the output image pixel
-                     values. 
+                     values.
     @param *args     Any subsequent arguments are passed along to the NLfunc function.
 
     """
 
     # Extract out the array from Image since not all functions can act directly on Images
     result = NLfunc(self.array,*args)
-    if not isinstance(result, numpy.ndarray):
+    if not isinstance(result, np.ndarray):
         raise ValueError("NLfunc does not return a NumPy array.")
     if self.array.shape != result.shape:
         raise ValueError("NLfunc does not return a NumPy array of the same shape as input!")
@@ -138,12 +138,12 @@ def addReciprocityFailure(self, exp_time, alpha, base_flux):
     if not (isinstance(base_flux, float) or isinstance(base_flux,int)) or base_flux < 0.:
         raise ValueError("Invalid value of base_flux, must be float or int >= 0")
 
-    if numpy.any(self.array<0):
+    if np.any(self.array<0):
         import warnings
         warnings.warn("One or more pixel values are negative and will be set as 'nan'.")
 
     p0 = exp_time*base_flux
-    a = alpha/numpy.log(10)
+    a = alpha/np.log(10)
     self.applyNonlinearity(lambda x,x0,a: (x**(a+1))/(x0**a), p0, a)
 
 def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_nonnegativity=True,
@@ -166,7 +166,7 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
 
     The argument 'edge_treatment' specifies how the edges of the image should be treated, which
     could be in one of the three ways:
-    
+
     1. 'extend': The kernel is convolved with the zero-padded image, leading to a larger
         intermediate image. The central portion of this image is returned.  [default]
     2. 'crop': The kernel is convolved with the image, with the kernel inside the image completely.
@@ -214,7 +214,7 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
 
     # Check and enforce correct normalization for the kernel
     if kernel_normalization is True:
-        if abs(ipc_kernel.sum() - 1.0) > 10.*numpy.finfo(ipc_kernel.dtype.type).eps:
+        if abs(ipc_kernel.sum() - 1.0) > 10.*np.finfo(ipc_kernel.dtype.type).eps:
             import warnings
             warnings.warn("The entries in the IPC kernel did not sum to 1. Scaling the kernel to "\
                 +"ensure correct normalization.")
@@ -226,11 +226,11 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
         pad_array = self.array
     elif edge_treatment=='extend':
         # Copy the array of the Image instance and pad with zeros
-        pad_array = numpy.zeros((self.array.shape[0]+2,self.array.shape[1]+2))
+        pad_array = np.zeros((self.array.shape[0]+2,self.array.shape[1]+2))
         pad_array[1:-1,1:-1] = self.array
     elif edge_treatment=='wrap':
         # Copy the array of the Image instance and pad with zeros initially
-        pad_array = numpy.zeros((self.array.shape[0]+2,self.array.shape[1]+2))
+        pad_array = np.zeros((self.array.shape[0]+2,self.array.shape[1]+2))
         pad_array[1:-1,1:-1] = self.array
         # and wrap around the edges
         pad_array[0,:] = pad_array[-2,:]
@@ -275,6 +275,59 @@ def applyIPC(self, IPC_kernel, edge_treatment='extend', fill_value=None, kernel_
     else:
         self.array[:,:] = out_array
 
+def applyPersistence(self,imgs,coeffs):
+    """
+    Applies the effects of persistence to the Image instance.
+
+    Persistence refers to the retention of a small fraction of the signal after resetting the
+    imager pixel elements. The persistence signal of a previous exposure is left in the pixel even
+    after several detector resets. This effect is most likely due to charge traps in the material.
+    Laboratory tests on the WFIRST CMOS detectors show that if exposures and readouts are taken in
+    a fixed cadence, the persistence signal can be given as a linear combination of prior pixel
+    values that can be added to the current image.
+
+    This routine takes in a list of Image instances and adds them to Image weighted by the values
+    passed on to 'coeffs'. The pixel values of the Image instances in the list must correspond to
+    the electron counts before the readout. This routine does NOT keep track of realistic dither
+    patterns. During the image simulation process, the user has to queue a list of previous Image
+    instances (imgs) outside the routine by inserting the latest image in the beginning of the list
+    and deleting the oldest image. The values in 'coeffs' tell how much of each Image is to be
+    added. This usually remains constant in the image generation process.
+
+    Calling
+    -------
+
+        >>> img.applyPersistence(imgs=img_list, coeffs=coeffs_list)
+
+    @ param imgs        A list of previous Image instances that still persist.
+    @ param coeffs      A list of floats that specifies the retention factors for the corresponding
+                        Image instances listed in 'imgs'.
+
+    @ returns None
+    """
+
+    if not hasattr(imgs,'__iter__') or not hasattr(coeffs,'__iter__'):
+        raise TypeError("Type mismatch between 'imgs' and 'coeffs' in 'applyPersistence' routine. "
+                        "'imgs' must be a list of Image instances and 'coeffs' must be a list of "
+                        "floats of the same length.")
+
+    if not len(imgs)==len(coeffs):
+        raise TypeError("The length of 'imgs' and 'coeffs' must be the same, if passed as a "
+                        "list")
+        # If this error is not raised, then the images are added as long as one of the list is
+        # exhausted.
+
+    for img,coeff in zip(imgs,coeffs):
+        if not isinstance(img,galsim.Image):
+            raise ValueError("In 'applyPersistence', the objects in 'imgs' must be "
+                             "galsim.Image instances")
+
+        if not isinstance(coeff,float):
+            raise ValueError("In 'applyPersistence', the objects in 'coeffs' must be "
+                             "of type float")
+
+        self += coeff*img
+
 def quantize(self):
     """
     Rounds the pixel values in an image to integer values, while preserving the type of the data.
@@ -295,9 +348,11 @@ def quantize(self):
         int_image = galsim.Image(image, dtype=int)
 
     """
-    self.applyNonlinearity(numpy.round)
+    self.applyNonlinearity(np.round)
+
 
 galsim.Image.applyNonlinearity = applyNonlinearity
 galsim.Image.addReciprocityFailure = addReciprocityFailure
 galsim.Image.applyIPC = applyIPC
+galsim.Image.applyPersistence = applyPersistence
 galsim.Image.quantize = quantize

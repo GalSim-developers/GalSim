@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 by the GalSim developers team on GitHub
+# Copyright (c) 2012-2016 by the GalSim developers team on GitHub
 # https://github.com/GalSim-developers
 #
 # This file is part of GalSim: The modular galaxy image simulation toolkit.
@@ -18,6 +18,7 @@
 
 import galsim
 import logging
+import numpy as np
 
 # This file handles the building of an image by parsing config['image'].
 # This file includes the basic functionality, but it calls out to helper functions
@@ -120,6 +121,9 @@ def SetupConfigImageNum(config, image_num, obj_num):
     image = config['image']
     if not isinstance(image, dict):
         raise AttributeError("config.image is not a dict.")
+
+    if 'file_num' not in config:
+        config['file_num'] = 0
 
     if 'type' not in image:
         image['type'] = 'Single'
@@ -226,10 +230,19 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
 
     # Actually build the image now.  This is the main working part of this function.
     # It calls out to the appropriate build function for this image type.
-    image = builder.buildImage(cfg_image, config, image_num, obj_num, logger)
+    image, current_var = builder.buildImage(cfg_image, config, image_num, obj_num, logger)
 
     # Store the current image in the base-level config for reference
     config['current_image'] = image
+
+    # Just in case these changed from their initial values, make sure they are correct now:
+    config['image_origin'] = image.origin()
+    config['image_center'] = image.trueCenter()
+    config['image_bounds'] = image.bounds
+    if logger:
+        logger.debug('image %d: image_origin => %s',image_num,config['image_origin'])
+        logger.debug('image %d: image_center => %s',image_num,config['image_center'])
+        logger.debug('image %d: image_bounds => %s',image_num,config['image_bounds'])
 
     # Mark that we are no longer doing a single galaxy by deleting image_pos from config top
     # level, so it cannot be used for things like wcs.pixelArea(image_pos).
@@ -243,7 +256,7 @@ def BuildImage(config, image_num=0, obj_num=0, logger=None):
     # Do whatever processing is required for the extra output items.
     galsim.config.ProcessExtraOutputsForImage(config,logger)
 
-    builder.addNoise(image, cfg_image, config, image_num, obj_num, logger)
+    builder.addNoise(image, cfg_image, config, image_num, obj_num, current_var, logger)
 
     return image
 
@@ -294,7 +307,6 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
         if logger:
             logger.debug('image %d: maximum noise varance in any stamp is %f',
                          config['image_num'], max_current_var)
-        import numpy
         # Then there was whitening applied in the individual stamps.
         # But there could be a different variance in each postage stamp, so the first
         # thing we need to do is bring everything up to a common level.
@@ -305,7 +317,7 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
             if b.isDefined(): noise_image[b] += current_vars[k]
         # Update this, since overlapping postage stamps may have led to a larger
         # value in some pixels.
-        max_current_var = numpy.max(noise_image.array)
+        max_current_var = np.max(noise_image.array)
         if logger:
             logger.debug('image %d: maximum noise varance in any pixel is %f',
                          config['image_num'], max_current_var)
@@ -405,15 +417,14 @@ class ImageBuilder(object):
         @param obj_num      The first object number in the image.
         @param logger       If given, a logger object to log progress.
 
-        @returns the final image
+        @returns the final image and the current noise variance in the image as a tuple
         """
         xsize = base['image_xsize']
         ysize = base['image_ysize']
 
         image, current_var = galsim.config.BuildStamp(
                 base, obj_num=obj_num, xsize=xsize, ysize=ysize, do_noise=True, logger=logger)
-
-        return image
+        return image, current_var
 
     def makeTasks(self, config, base, jobs, logger):
         """Turn a list of jobs into a list of tasks.
@@ -435,7 +446,7 @@ class ImageBuilder(object):
         """
         return galsim.config.MakeStampTasks(base, jobs, logger)
 
-    def addNoise(self, image, config, base, image_num, obj_num, logger):
+    def addNoise(self, image, config, base, image_num, obj_num, current_var, logger):
         """Add the final noise to the image.
 
         In the base class, this is a no op, since it directs the BuildStamp function to build
@@ -447,6 +458,7 @@ class ImageBuilder(object):
         @param base         The base configuration dict.
         @param image_num    The current image number.
         @param obj_num      The first object number in the image.
+        @param current_var  The current noise variance in each postage stamps.
         @param logger       If given, a logger object to log progress.
         """
         pass
