@@ -869,19 +869,71 @@ def _parse_files_dirs(file_name, image_dir, dir, noise_dir, sample):
 
 
 class ChromaticRealGalaxy(ChromaticSum):
-    """A class describing real galaxies, including chromatic gradients, from some training dataset.
-    Its underlying implementation solves for a sum of chromatic profiles which are separable into
-    spatial and spectral factors, essentially making a kind of constrained chromatic deconvolution.
+    """A class describing real galaxies over multiple wavelengths, using some multi-band training
+    dataset.  The underlying implementation models multi-band images of individual galaxies
+    as chromatic PSF convolutions (and integrations over wavelength) with a sum of profiles
+    separable into spatial and spectral components.  The spectral components are specified by the
+    user, and the spatial components are determined one Fourier mode at a time by the class.  This
+    decomposition can be thought of as a constrained chromatic deconvolution of the multi-band
+    images by the associated PSFs, similar in spirit to RealGalaxy.
+
+    This class uses catalogs describing galaxies in some training data (for more details, see the
+    RealGalaxyCatalog documentation) to read in data about realistic galaxies that can be used for
+    simulations based on those galaxies.  Also included in the class is additional information that
+    might be needed to make or interpret the simulations, e.g., the noise properties of the training
+    data.
+
+    Because ChromaticRealGalaxy involves an InterpolatedKImage, `method = 'phot'` is unavailable for
+    the drawImage() function.
 
     Initialization
     --------------
-    TODO
 
+        >>> crg = galsim.ChromaticRealGalaxy(real_galaxy_catalogs, SEDs=None, index=None, id=None,
+        ...                                  random=False, rng=None, k_interpolant=None, maxk=None,
+        ...                                  flux=None, gsparams=None)
+
+    This initializes `crg` by solving for the spatial components corresponding to each asserted SED,
+    and combining these into a `ChromaticSum` object.  Note that there are multiple keywords for
+    choosing a galaxy; exactly one must be set.  In the future we may add more such options, e.g.,
+    to choose at random but accounting for the non-constant weight factors (probabilities for
+    objects to make it into the training sample).
+
+    TODO: Figure out how to manipulate flux!
+
+    Note that ChromaticRealGalaxy objects use arcsec for the units of their linear dimension.  If
+    you are using a different unit for other things (the PSF, WCS, etc.), then you should dilate the
+    resulting object with `gal.dilate(galsim.arcsec / scale_unit)`.
+
+    @param real_galaxy_catalogs  A list of `RealGalaxyCatalog` objects from which to create
+                            `RealChromaticGalaxy`s.  Each catalog should represent the same set of
+                            galaxies, and in the same order, just imaged through different filters.
+                            Note that the number of catalogs must be equal to or larger than the
+                            number of SEDs.
+    @param SEDs             The list of `SED`s to use when representing real galaxies as sums of
+                            separable profiles.  The number of SEDs must be equal to or smaller than
+                            the number of catalogs.  [default: len(real_galaxy_catalogs) SEDs
+                            polynomial in wavelength.]
+    @param index            Index of the desired galaxy in the catalog. [One of `index`, `id`, or
+                            `random` is required.]
+    @param id               Object ID for the desired galaxy in the catalog. [One of `index`, `id`,
+                            or `random` is required.]
+    @param random           If True, then just select a completely random galaxy from the catalog.
+                            [One of `index`, `id`, or `random` is required.]
+    @param rng              A random number generator to use for selecting a random galaxy (may be
+                            any kind of BaseDeviate or None) and to use in generating any noise
+                            field when padding.  This user-input random number generator takes
+                            precedence over any stored within a user-input CorrelatedNoise instance
+                            (see `noise_pad` parameter below).  [default: None]
     @param k_interpolant    Either an Interpolant instance or a string indicating which k-space
                             interpolant should be used.  Options are 'nearest', 'sinc', 'linear',
                             'cubic', 'quintic', or 'lanczosN' where N should be the integer order
                             to use.  We strongly recommend leaving this parameter at its default
                             value; see text above for details.  [default: galsim.Quintic()]
+    @param maxk             Optional maxk argument.  If you know you will be convolving the
+                            resulting `ChromaticRealGalaxy` with a "fat" PSF in a subsequent step,
+                            then it can be more efficient to limit the range of Fourier modes used
+                            when solving for the sum of separable profiles below.  [default: None]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
     @param logger           A logger object for output of progress statements if the user wants
