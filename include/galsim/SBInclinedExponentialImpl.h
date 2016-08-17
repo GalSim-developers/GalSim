@@ -32,7 +32,7 @@ namespace galsim {
     {
     public:
         /// @brief Constructor
-    	InclinedExponentialInfo(double h_tani_over_r, double trunc, const GSParamsPtr& gsparams);
+    	InclinedExponentialInfo(double h_tani_over_r, const GSParamsPtr& gsparams);
 
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~InclinedExponentialInfo() {}
@@ -85,47 +85,38 @@ namespace galsim {
 
         // Input variables:
         double _h_tani_over_r;
-        double _trunc;   ///< Truncation radius `trunc` in units of the scale radius.
         const GSParamsPtr _gsparams; ///< The GSParams object.
 
         // Some derived values calculated in the constructor:
-        double _trunc_sq;  ///< trunc^2
-        bool _truncated;   ///< True if this Sersic profile is truncated.
         double _ksq_max;   ///< If ksq < _kq_min, then use faster taylor approximation for kvalue
         double _ksq_min;   ///< If ksq > _kq_max, then use kvalue = 0
 
         // Parameters calculated when they are first needed, and then stored:
         mutable double _maxk;    ///< Value of k beyond which aliasing can be neglected.
         mutable double _stepk;   ///< Sampling in k space necessary to avoid folding.
-        mutable double _flux;    ///< Flux relative to the untruncated profile.
 
         // Parameters for the inverse Fourier transform
+        /* NYI
         mutable Table2D<double,double> _ift;  ///< Lookup table for inverse Fourier transform.
-
-        /* TODO: Figure out if we need any of these
-			// Parameters for the Hankel transform:
-			mutable Table<double,double> _ft;  ///< Lookup table for Fourier transform.
-			mutable double _kderiv2; ///< Quadratic dependence of F near k=0.
-			mutable double _kderiv4; ///< Quartic dependence of F near k=0.
-			mutable double _ksq_min; ///< Minimum ksq to use lookup table.
-			mutable double _ksq_max; ///< Maximum ksq to use lookup table.
-			mutable double _highk_a; ///< Coefficient of 1/k^2 in high-k asymptote
-			mutable double _highk_b; ///< Coefficient of 1/k^3 in high-k asymptote
         */
 
         // Classes used for photon shooting
+        /* NYI
         mutable boost::shared_ptr<FluxDensity> _radial;
         mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
+        */
 
         // Helper functions used internally:
+        /* NYI
         void buildIFT() const;
+        */
     };
 
     class SBInclinedExponential::SBInclinedExponentialImpl : public SBProfileImpl
     {
     public:
     	SBInclinedExponentialImpl(double i, double scale_radius, double scale_height, double flux,
-                 double trunc, bool flux_untruncated, const GSParamsPtr& gsparams);
+                 const GSParamsPtr& gsparams);
 
         ~SBInclinedExponentialImpl() {}
 
@@ -138,29 +129,27 @@ namespace galsim {
         void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const
         {
             splits.push_back(0.);
-            if (!_truncated) { xmin = -integ::MOCK_INF; xmax = integ::MOCK_INF; }
-            else { xmin = -_trunc; xmax = _trunc; }
+            xmin = -integ::MOCK_INF;
+            xmax = integ::MOCK_INF;
         }
 
         void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const
         {
             splits.push_back(0.);
-            if (!_truncated) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
-            else { ymin = -_trunc; ymax = _trunc; }
+            ymin = -integ::MOCK_INF;
+            ymax = integ::MOCK_INF;
         }
 
         void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const
         {
-            if (!_truncated) { ymin = -integ::MOCK_INF; ymax = integ::MOCK_INF; }
-            else if (std::abs(x) >= _trunc) { ymin = 0; ymax = 0; }
-            else { ymax = sqrt(_trunc_sq - x*x);  ymin = -ymax; }
-
-            if (std::abs(x/_r0) < 1.e-2) splits.push_back(0.); // Note: _re changed to _r0 here. TODO: Figure out if this is okay
+            splits.push_back(0.);
+            ymin = -integ::MOCK_INF;
+            ymax = integ::MOCK_INF;
         }
 
         bool isAxisymmetric() const { return false; }
-        bool hasHardEdges() const { return _truncated; }
-        bool isAnalyticX() const { return true; }  // 2d lookup table
+        bool hasHardEdges() const { return false; }
+        bool isAnalyticX() const { return false; }  // Will be in future version though
         bool isAnalyticK() const { return true; }
 
         Position<double> centroid() const
@@ -169,7 +158,7 @@ namespace galsim {
         /// @brief Returns the true flux (may be different from the specified flux)
         double getFlux() const { return _flux; }
 
-        /// @brief Sersic photon shooting done by rescaling photons from appropriate `SersicInfo`
+        /// @brief photon shooting done by rescaling photons from appropriate `InclinedExponentialInfo`
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         /// @brief Returns the inclination angle i in radians
@@ -178,16 +167,16 @@ namespace galsim {
         double getScaleRadius() const { return _r0; }
         /// @brief Returns the scale radius
         double getScaleHeight() const { return _h0; }
-        /// @brief Returns the truncation radius
-        double getTrunc() const { return _trunc; }
 
         // Overrides for better efficiency
+        /* NYI
         void fillXValue(tmv::MatrixView<double> val,
                         double x0, double dx, int izero,
                         double y0, double dy, int jzero) const;
         void fillXValue(tmv::MatrixView<double> val,
                         double x0, double dx, double dxy,
                         double y0, double dy, double dyx) const;
+        */
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
                         double kx0, double dkx, int izero,
                         double ky0, double dky, int jzero) const;
@@ -202,17 +191,16 @@ namespace galsim {
         double _flux;    ///< Actual flux (may differ from that specified at the constructor).
         double _r0;      ///< Scale radius specified at the constructor.
         double _h0;      ///< Scale height specified at the constructor.
-        double _trunc;   ///< The truncation radius (if any)
-        bool _truncated; ///< True if this Sersic profile is truncated.
 
+        /* NYI
         double _xnorm;     ///< Normalization of xValue relative to what SersicInfo returns.
         double _shootnorm; ///< Normalization for photon shooting.
+        */
 
         double _inv_r0;
         double _h_tani_over_r;
-        double _cosi;
-        double _inv_cosi;
-        double _trunc_sq;
+        double _r0_cosi;
+        double _inv_r0_cosi;
 
         boost::shared_ptr<InclinedExponentialInfo> _info; ///< Points to info structure for this n,trunc
 
@@ -220,7 +208,7 @@ namespace galsim {
         SBInclinedExponentialImpl(const SBInclinedExponentialImpl& rhs);
         void operator=(const SBInclinedExponentialImpl& rhs);
 
-        static LRUCache<boost::tuple< double, double, GSParamsPtr >, InclinedExponentialInfo> cache;
+        static LRUCache<boost::tuple< double, GSParamsPtr >, InclinedExponentialInfo> cache;
 
     };
 }

@@ -31,7 +31,7 @@ namespace galsim {
 
         // Constrain range of allowed cached values (h_sini_over_r)
         const double minimum_h_tani_over_r = 0.;
-        const double minimum_h_tani_over_r = 1000.; // Somewhat arbitrary cut-off - corresponds to within 0.1 degrees of edge-on
+        const double maximum_h_tani_over_r = 1000.; // Somewhat arbitrary cut-off - corresponds to within 0.1 degrees of edge-on
 
         // How many profiles to save in the cache
         const int max_inclined_exponential_cache = 100;
@@ -54,17 +54,12 @@ namespace galsim {
          * @param[in] scale_radius      Scale radius of the exponential disk.
          * @param[in] scale_height      Scale height of the exponential disk.
          * @param[in] flux              Flux.
-         * @param[in] trunc             Outer truncation radius in same physical units as size;
-         *                              `trunc = 0.` for no truncation.
-         * @param[in] flux_untruncated  If `true`, sets the flux to the untruncated version of the
-         *                              Sersic profile with the same index `n`.  Ignored if
-         *                              `trunc = 0.`.
          * @param[in] gsparams          GSParams object storing constants that control the accuracy
          *                              of image operations and rendering, if different from the
          *                              default.
          */
     	SBInclinedExponential(double i, double scale_radius, double scale_height, double flux,
-                 double trunc, bool flux_untruncated, const GSParamsPtr& gsparams);
+                 const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.
     	SBInclinedExponential(const SBInclinedExponential& rhs);
