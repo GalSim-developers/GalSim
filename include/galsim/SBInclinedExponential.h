@@ -29,9 +29,9 @@ namespace galsim {
 
     namespace sbp {
 
-        // Constrain range of allowed inclination angles in radians.
-        const double minimum_exponential_inclination_rad = 0.;
-        const double minimum_exponential_inclination_rad = M_PI/2.;
+        // Constrain range of allowed cached values (h_sini_over_r)
+        const double minimum_h_tani_over_r = 0.;
+        const double minimum_h_tani_over_r = 1000.; // Somewhat arbitrary cut-off - corresponds to within 0.1 degrees of edge-on
 
         // How many profiles to save in the cache
         const int max_inclined_exponential_cache = 100;

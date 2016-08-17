@@ -23,6 +23,7 @@
 #include "SBProfileImpl.h"
 #include "SBInclinedExponential.h"
 #include "LRUCache.h"
+#include "Table.h"
 
 namespace galsim {
 
@@ -31,7 +32,7 @@ namespace galsim {
     {
     public:
         /// @brief Constructor
-    	InclinedExponentialInfo(double i, double trunc, const GSParamsPtr& gsparams);
+    	InclinedExponentialInfo(double h_tani_over_r, double trunc, const GSParamsPtr& gsparams);
 
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~InclinedExponentialInfo() {}
@@ -40,7 +41,7 @@ namespace galsim {
          * @brief Returns the unnormalized real space value of the Inclined Exponential function.
          *
          * The input 'rx' should be r/r_scale in the direction perpendicular to the minor axis,
-         * and the input 'ry' value should be r/r_scale in the direction parallel to the minor axis
+         * and the input 'ry' value should be r/h_tani in the direction parallel to the minor axis
          */
         double xValue(double rx, double ry) const;
 
@@ -48,7 +49,7 @@ namespace galsim {
          * @brief Returns the unnormalized value of the fourier transform.
          *
          * The input 'kx' should be k*r_scale in the direction perpendicular to the minor axis,
-         * and the input 'ky' value should be k*r_scale in the direction parallel to the minor axis
+         * and the input 'ky' value should be k*h_tani in the direction parallel to the minor axis
          */
         double kValue(double kx, double ky) const;
 
@@ -83,21 +84,23 @@ namespace galsim {
         void operator=(const InclinedExponentialInfo& rhs); ///<Hide assignment operator.
 
         // Input variables:
-        double _i;       ///< Inclination angle in radians
+        double _h_tani_over_r;
         double _trunc;   ///< Truncation radius `trunc` in units of the scale radius.
         const GSParamsPtr _gsparams; ///< The GSParams object.
 
         // Some derived values calculated in the constructor:
-        double _h_sini_over_r;
-        double _cosi;
-        double _inv_cosi;
         double _trunc_sq;  ///< trunc^2
         bool _truncated;   ///< True if this Sersic profile is truncated.
+        double _ksq_max;   ///< If ksq < _kq_min, then use faster taylor approximation for kvalue
+        double _ksq_min;   ///< If ksq > _kq_max, then use kvalue = 0
 
         // Parameters calculated when they are first needed, and then stored:
         mutable double _maxk;    ///< Value of k beyond which aliasing can be neglected.
         mutable double _stepk;   ///< Sampling in k space necessary to avoid folding.
         mutable double _flux;    ///< Flux relative to the untruncated profile.
+
+        // Parameters for the inverse Fourier transform
+        mutable Table2D<double,double> _ift;  ///< Lookup table for inverse Fourier transform.
 
         /* TODO: Figure out if we need any of these
 			// Parameters for the Hankel transform:
@@ -115,8 +118,7 @@ namespace galsim {
         mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
 
         // Helper functions used internally:
-        void buildFT() const; // TODO: Do we need this?
-        double calculateMissingFluxRadius(double missing_flux_frac) const;
+        void buildIFT() const;
     };
 
     class SBInclinedExponential::SBInclinedExponentialImpl : public SBProfileImpl
@@ -206,7 +208,8 @@ namespace galsim {
         double _xnorm;     ///< Normalization of xValue relative to what SersicInfo returns.
         double _shootnorm; ///< Normalization for photon shooting.
 
-        double _h_sini_over_r;
+        double _inv_r0;
+        double _h_tani_over_r;
         double _cosi;
         double _inv_cosi;
         double _trunc_sq;
