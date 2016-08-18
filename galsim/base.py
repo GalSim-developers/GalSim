@@ -2910,7 +2910,7 @@ class InclinedExponential(GSObject):
     In this implementation, the profile is inclined along the y-axis. This means that it will likely
     need to be rotated in most circumstances.
     
-    At present, this profile is not enable for photon-shooting.
+    At present, this profile is not enabled for photon-shooting.
     
     Initialization
     --------------
