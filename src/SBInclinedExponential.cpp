@@ -85,8 +85,8 @@ namespace galsim {
         return oss.str();
     }
 
-    LRUCache< boost::tuple<double, double, GSParamsPtr >, InclinedExponentialInfo >
-        SBInclinedExponential::SBInclinedExponentialImpl::cache(sbp::max_sersic_cache);
+    LRUCache< boost::tuple<double, GSParamsPtr >, InclinedExponentialInfo >
+        SBInclinedExponential::SBInclinedExponentialImpl::cache(sbp::max_inclined_exponential_cache);
 
     SBInclinedExponential::SBInclinedExponentialImpl::SBInclinedExponentialImpl(double i, double scale_radius, double scale_height, double flux,
             const GSParamsPtr& gsparams) :
@@ -100,7 +100,7 @@ namespace galsim {
 		_r0_cosi(_r0*std::cos(i)),
 		_inv_r0_cosi(1./(scale_radius*std::cos(i))),
         // Start with untruncated InclinedExponentialInfo regardless of value of trunc
-        _info(cache.get(boost::make_tuple(_h_tani_over_r, 0., this->gsparams.duplicate())))
+        _info(cache.get(boost::make_tuple(_h_tani_over_r, this->gsparams.duplicate())))
     {
         dbg<<"Start SBInclinedExponential constructor:\n";
         dbg<<"i = "<<_i<<std::endl;

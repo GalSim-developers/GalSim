@@ -32,29 +32,9 @@ namespace galsim {
     struct PySBInclinedExponential
     {
 
-        static SBInclinedExponential* construct(
-        	const bp::object & i,
-			const bp::object & scale_radius,
-			const bp::object & scale_height,
-            double flux,
-            boost::shared_ptr<GSParams> gsparams)
-        {
-            return new SBInclinedExponential(i, scale_radius, scale_height, flux, gsparams);
-        }
-
         static void wrap()
         {
             bp::class_<SBInclinedExponential,bp::bases<SBProfile> >("SBInclinedExponential", bp::no_init)
-                .def("__init__",
-                     bp::make_constructor(
-                         &construct, bp::default_call_policies(),
-                         (bp::arg("i"),
-                          bp::arg("scale_radius")=bp::object(),
-                          bp::arg("scale_height")=bp::object(),
-                          bp::arg("flux")=1.,
-                          bp::arg("gsparams")=bp::object())
-                     )
-                )
                 .def(bp::init<const SBInclinedExponential &>())
                 .def("getI", &SBInclinedExponential::getI)
                 .def("getScaleRadius", &SBInclinedExponential::getScaleRadius)
