@@ -84,7 +84,7 @@ namespace galsim {
         void operator=(const InclinedExponentialInfo& rhs); ///<Hide assignment operator.
 
         // Input variables:
-        double _h_tani_over_r;
+        double _half_pi_r_over_h_tani;
         const GSParamsPtr _gsparams; ///< The GSParams object.
 
         // Some derived values calculated in the constructor:
@@ -142,9 +142,10 @@ namespace galsim {
 
         void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const
         {
-            splits.push_back(0.);
             ymin = -integ::MOCK_INF;
             ymax = integ::MOCK_INF;
+            if(x<1e-2)
+            	splits.push_back(0.);
         }
 
         bool isAxisymmetric() const { return false; }
@@ -202,7 +203,7 @@ namespace galsim {
         double _r0_cosi;
         double _inv_r0_cosi;
 
-        boost::shared_ptr<InclinedExponentialInfo> _info; ///< Points to info structure for this n,trunc
+        boost::shared_ptr<InclinedExponentialInfo> _info; ///< Points to info structure for this h_tani_over_r
 
         // Copy constructor and op= are undefined.
         SBInclinedExponentialImpl(const SBInclinedExponentialImpl& rhs);

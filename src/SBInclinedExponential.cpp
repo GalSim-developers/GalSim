@@ -86,7 +86,7 @@ namespace galsim {
         // any subclass.  But possibly with ugly extra digits.
         oss.precision(std::numeric_limits<double>::digits10 + 4);
         oss << "galsim._galsim.SBInclinedExponential("<<getI()<<", "<<getScaleRadius()<<", "<<getScaleHeight();
-        oss <<", "<<getFlux()<<", "<<getTrunc()<<", False";
+        oss <<", "<<getFlux()<<", False";
         oss << ", galsim.GSParams("<<*gsparams<<"))";
         return oss.str();
     }
@@ -200,7 +200,7 @@ namespace galsim {
     double SBInclinedExponential::SBInclinedExponentialImpl::stepK() const { return _info->stepK() * _inv_r0; }
 
     InclinedExponentialInfo::InclinedExponentialInfo(double h_tani_over_r, const GSParamsPtr& gsparams) :
-        _h_tani_over_r(h_tani_over_r), _gsparams(gsparams),
+		_half_pi_r_over_h_tani(0.5*M_PI/h_tani_over_r), _gsparams(gsparams),
         _maxk(0.), _stepk(0.)
     {
         dbg<<"Start InclinedExponentialInfo constructor for h_tani_over_r = "<<h_tani_over_r<<std::endl;
@@ -303,10 +303,12 @@ namespace galsim {
         else if (ksq < _ksq_min)
         {
         	// Use Taylor expansion to speed up calculation
-        	res_conv = 1. - 0.411233516712*ky*(1. + 0.2878634617*ky);
+        	double scaled_ky = _half_pi_r_over_h_tani*ky;
+        	double scaled_ky_squared = scaled_ky*scaled_ky;
+        	res_conv = (0.5*M_PI)*(1. - 0.16666666667*scaled_ky_squared*(1. - 0.116666666667*scaled_ky_squared));
         } else
         {
-        	res_conv = M_PI*ky / (2. * std::sinh(0.5*M_PI*ky));
+        	res_conv = (0.5*M_PI)*ky / std::sinh(_half_pi_r_over_h_tani*ky);
         }
 
         double res = res_base*res_conv;
