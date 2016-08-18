@@ -2932,7 +2932,7 @@ class InclinedExponential(GSObject):
     _opt_params = { "flux" : float }
     _takes_rng = False
 
-    def __init__(self, i, scale_height, scale_height,
+    def __init__(self, i, scale_radius, scale_height,
                  flux=1., gsparams=None):
         GSObject.__init__(self, _galsim.SBInclinedExponential(i, scale_radius, scale_height, flux,
                                                               gsparams))

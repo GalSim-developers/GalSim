@@ -319,24 +319,15 @@ namespace galsim {
     }
     */
 
-    /* NYI
+    // NYI, but needs to be defined
     boost::shared_ptr<PhotonArray> InclinedExponentialInfo::shoot(int N, UniformDeviate ud) const
     {
-    	assert(false);
+    	throw std::logic_error("Photon shooting NYI for InclinedExponential profile.");
     }
-    */
 
-    /* NYI
+    // NYI, but needs to be defined
     boost::shared_ptr<PhotonArray> SBInclinedExponential::SBInclinedExponentialImpl::shoot(int N, UniformDeviate ud) const
     {
-        dbg<<"Sersic shoot: N = "<<N<<std::endl;
-        dbg<<"Target flux = "<<getFlux()<<std::endl;
-        // Get photons from the InclinedExponentialInfo structure, rescale flux and size for this instance
-        boost::shared_ptr<PhotonArray> result = _info->shoot(N,ud);
-        result->scaleFlux(_shootnorm);
-        result->scaleXY(_r0);
-        dbg<<"Sersic Realized flux = "<<result->getTotalFlux()<<std::endl;
-        return result;
+    	throw std::logic_error("Photon shooting NYI for InclinedExponential profile.");
     }
-    */
 }
