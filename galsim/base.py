@@ -2907,6 +2907,9 @@ class InclinedExponential(GSObject):
     R_s is the scale radius of the disk, h_s is the scale height of the disk, and I_0 is the central
     surface brightness of the face-on disk.
     
+    In this implementation, the profile is inclined along the y-axis. This means that it will likely
+    need to be rotated in most circumstances.
+    
     At present, this profile is not enable for photon-shooting.
     
     Initialization
