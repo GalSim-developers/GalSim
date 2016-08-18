@@ -22,6 +22,7 @@ SBDeconvolve.cpp
 SBFourierSqrt.cpp
 SBKolmogorov.cpp
 SBSpergel.cpp
+SBInclinedExponential.cpp
 Table.cpp
 RealSpaceConvolve.cpp
 Random.cpp
