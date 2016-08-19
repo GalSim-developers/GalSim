@@ -225,7 +225,10 @@ class Bandpass(object):
         wave_list = self.wave_list
         wave_type = 'nm'
 
-        if isinstance(other, (Bandpass, galsim.SED)):
+        if isinstance(other, galsim.SED):
+            raise TypeError("Cannot multiply SED by Bandpass.")
+
+        if isinstance(other, Bandpass):
             if len(other.wave_list) > 0:
                 wave_list = np.union1d(wave_list, other.wave_list)
             blue_limit = max([self.blue_limit, other.blue_limit])
@@ -259,6 +262,9 @@ class Bandpass(object):
         red_limit = self.red_limit
         wave_list = self.wave_list
         wave_type = 'nm'
+
+        if isinstance(other, galsim.SED):
+            raise TypeError("Cannot divide Bandpass by SED.")
 
         if isinstance(other, Bandpass):
             if len(other.wave_list) > 0:
