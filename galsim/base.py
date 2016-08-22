@@ -2971,17 +2971,17 @@ class InclinedExponential(GSObject):
 
     def __eq__(self, other):
         return ((isinstance(other, galsim.InclinedExponential) and
-                 self.i == other.i and
-                 self.scale_radius == other.scale_radius and
-                 self.scale_height == other.scale_height and
-                 self.flux == other.flux and
-                 self._gsparams == other._gsparams)
+                 (self.i == other.i) and
+                 (self.scale_radius == other.scale_radius) and
+                 (self.scale_height == other.scale_height) and
+                 (self.flux == other.flux) and
+                 (self._gsparams == other._gsparams))
                 or
                 (isinstance(other, galsim.Exponential) and
-                  self.i == 0 and
-                  self.scale_radius == other.scale_radius and
-                  self.flux == other.flux and
-                  self._gsparams == other._gsparams))
+                  (self.i == 0) and
+                  (self.scale_radius == other.scale_radius) and
+                  (self.flux == other.flux) and
+                  (self._gsparams == other._gsparams)))
 
     def __hash__(self):
         return hash(("galsim.InclinedExponential", self.i, self.scale_radius, self.scale_height, self.flux,
@@ -3000,7 +3000,7 @@ class InclinedExponential(GSObject):
         return s
 
 _galsim.SBInclinedExponential.__getinitargs__ = lambda self: (
-        self.getI(), self.getScaleRadius(), self.getScaleRadius(), self.getFlux(), self.getGSParams())
+        self.getI(), self.getScaleRadius(), self.getScaleHeight(), self.getFlux(), self.getGSParams())
 _galsim.SBInclinedExponential.__getstate__ = lambda self: None
 _galsim.SBInclinedExponential.__setstate__ = lambda self, state: 1
 _galsim.SBInclinedExponential.__repr__ = lambda self: \

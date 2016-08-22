@@ -83,22 +83,20 @@ def test_inclined_exponential():
                                              err_msg = "Error in comparison of inclined exponential profile to samples.",
                                              verbose=True)
 
-# @timer
-# def test_ne():
-#     """ Check that equality/inequality works as expected."""
-#     rgc = galsim.RealGalaxyCatalog(catalog_file, dir=image_dir)
-#     gsp = galsim.GSParams(folding_threshold=1.1e-3)
-# 
-#     gals = [galsim.RealGalaxy(rgc, index=0),
-#             galsim.RealGalaxy(rgc, index=1),
-#             galsim.RealGalaxy(rgc, index=0, x_interpolant='Linear'),
-#             galsim.RealGalaxy(rgc, index=0, k_interpolant='Linear'),
-#             galsim.RealGalaxy(rgc, index=0, flux=1.1),
-#             galsim.RealGalaxy(rgc, index=0, pad_factor=1.1),
-#             galsim.RealGalaxy(rgc, index=0, noise_pad_size=5.0),
-#             galsim.RealGalaxy(rgc, index=0, gsparams=gsp)]
-#     all_obj_diff(gals)
+@timer
+def test_ne():
+    """ Check that equality/inequality works as expected."""
+    gsp = galsim.GSParams(folding_threshold=1.1e-3)
+ 
+    gals = [galsim.InclinedExponential(0.1*galsim.radians, 3.0, 0.3),
+            galsim.InclinedExponential(0.1*galsim.radians, 3.0, 0.4),
+            galsim.InclinedExponential(0.2*galsim.radians, 3.0, 0.3),
+            galsim.InclinedExponential(0.1*galsim.radians, 3.1, 0.3),
+            galsim.InclinedExponential(0.1*galsim.radians, 3.0, 0.3, flux=0.5),
+            galsim.InclinedExponential(0.1*galsim.radians, 3.0, 0.3, gsparams=gsp)]
+    all_obj_diff(gals)
 
 
 if __name__ == "__main__":
     test_inclined_exponential()
+    test_ne()

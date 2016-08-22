@@ -45,7 +45,7 @@ namespace galsim {
                 .def(bp::init<const SBInclinedExponential &>())
                 .def("getI", &SBInclinedExponential::getI)
                 .def("getScaleRadius", &SBInclinedExponential::getScaleRadius)
-                .def("getScaleHeight", &SBInclinedExponential::getScaleRadius)
+                .def("getScaleHeight", &SBInclinedExponential::getScaleHeight)
                 .enable_pickling()
                 ;
         }
