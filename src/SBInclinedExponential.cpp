@@ -17,7 +17,7 @@
  *    and/or other materials provided with the distribution.
  */
 
-//#define DEBUGLOGGING
+#define DEBUGLOGGING
 
 #include "galsim/IgnoreWarnings.h"
 
@@ -30,9 +30,9 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-//std::ostream* dbgout = &std::cout;
-//int verbose_level = 1;
+std::ostream* dbgout = new std::ofstream("debug.out");
+// std::ostream* dbgout = &std::cout;
+int verbose_level = 3;
 #endif
 
 namespace galsim {
@@ -96,7 +96,7 @@ namespace galsim {
 		_h0(scale_height),
 		_flux(flux),
 		_inv_r0(1./_r0),
-		_h_tani_over_r(scale_height*std::sin(i)/scale_radius),
+		_h_tani_over_r(scale_height*std::tan(i)/scale_radius),
 		_r0_cosi(_r0*std::cos(i)),
 		_inv_r0_cosi(1./(scale_radius*std::cos(i))),
         // Start with untruncated InclinedExponentialInfo regardless of value of trunc
@@ -107,6 +107,9 @@ namespace galsim {
         dbg<<"scale radius = "<<_r0<<std::endl;
         dbg<<"scale height = "<<_h0<<std::endl;
         dbg<<"flux = "<<_flux<<std::endl;
+
+        xdbg<<"_h_tani_over_r = "<<_h_tani_over_r<<std::endl;
+        xdbg<<"_r0_cosi = "<<_r0_cosi<<std::endl;
 
         /* Shooting NYI
         _shootnorm = _flux * _info->getXNorm(); // For shooting, we don't need the 1/r0^2 factor.
@@ -154,6 +157,8 @@ namespace galsim {
                 double kx = kx0;
                 It valit = val.col(j).begin();
                 for (int i=0;i<m;++i,kx+=dkx) {
+                	double new_val = _flux * _info->kValue(kx,ky0);
+                	xxdbg << "kx = " << kx << "\tky = " << ky0 << "\tval = " << new_val << std::endl;
                     *valit++ = _flux * _info->kValue(kx,ky0);
                 }
             }
@@ -194,7 +199,9 @@ namespace galsim {
     double SBInclinedExponential::SBInclinedExponentialImpl::stepK() const { return _info->stepK() * _inv_r0; }
 
     InclinedExponentialInfo::InclinedExponentialInfo(double h_tani_over_r, const GSParamsPtr& gsparams) :
-		_half_pi_r_over_h_tani(0.5*M_PI/h_tani_over_r), _gsparams(gsparams),
+		_h_tani_over_r(h_tani_over_r),
+		_half_pi_h_tani_over_r(0.5*M_PI*h_tani_over_r),
+		_gsparams(gsparams),
         _maxk(0.), _stepk(0.)
     {
         dbg<<"Start InclinedExponentialInfo constructor for h_tani_over_r = "<<h_tani_over_r<<std::endl;
@@ -272,7 +279,8 @@ namespace galsim {
     {
     	// Calculate the base value for an exponential profile
 
-        double ksq = kx*kx + ky*ky;
+    	double kysq = ky*ky;
+        double ksq = kx*kx + kysq;
         double res_base;
         if (ksq > _ksq_max)
         {
@@ -290,19 +298,16 @@ namespace galsim {
 
         // Calculate the convolution factor
         double res_conv;
-        if (ksq > _ksq_max)
-        {
-        	res_conv = 0;
-        }
-        else if (ksq < _ksq_min)
+        if (kysq < _ksq_min)
         {
         	// Use Taylor expansion to speed up calculation
-        	double scaled_ky = _half_pi_r_over_h_tani*ky;
+        	double scaled_ky = _half_pi_h_tani_over_r*ky;
         	double scaled_ky_squared = scaled_ky*scaled_ky;
-        	res_conv = (0.5*M_PI)*(1. - 0.16666666667*scaled_ky_squared*(1. - 0.116666666667*scaled_ky_squared));
-        } else
+        	res_conv = (1. - 0.16666666667*scaled_ky_squared*(1. - 0.116666666667*scaled_ky_squared));
+        }
+        else
         {
-        	res_conv = (0.5*M_PI)*ky / std::sinh(_half_pi_r_over_h_tani*ky);
+        	res_conv = _half_pi_h_tani_over_r*ky / std::sinh(_half_pi_h_tani_over_r*ky);
         }
 
         double res = res_base*res_conv;

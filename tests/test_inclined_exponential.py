@@ -35,12 +35,13 @@ except ImportError:
 image_dir = './inclined_exponential_images'
 
 # Values here are strings, so the filenames will be sure to work (without truncating zeros)
-image_inc_angles = ("0.1", "0.78", "1.5707", "1.5707")
-image_scale_radii = ("2.0", "2.0", "3.0", "3.0")
-image_scale_heights = ("1.0", "0.5", "0.3", "0.5")
-image_pos_angles = ("-0.2", "-0.2", "0.4", "0.0")
+image_inc_angles = ("1.3", "0.2", "0.01", "0.1", "0.78")
+image_scale_radii = ("3.0", "3.0", "3.0", "2.0", "2.0")
+image_scale_heights = ("0.5", "0.5", "0.5", "1.0", "0.5")
+image_pos_angles = ("0.0", "0.0", "0.0", "-0.2", "-0.2")
 image_nx = 64
 image_ny = 64
+oversampling = 1.0
 
 @timer
 def test_inclined_exponential():
@@ -48,34 +49,37 @@ def test_inclined_exponential():
     
     for inc_angle, scale_radius, scale_height, pos_angle in zip(image_inc_angles,image_scale_radii,
                                                                 image_scale_heights,image_pos_angles):
-        image_filename = "galaxy_"+inc_angle+"_"+scale_radius+"_"+scale_height+"_"+pos_angle
+        image_filename = "galaxy_"+inc_angle+"_"+scale_radius+"_"+scale_height+"_"+pos_angle+".fits"
         image = galsim.fits.read(image_filename, image_dir)
         
         # Get float values for the details
         inc_angle=float(inc_angle)
-        scale_radius=float(scale_radius)
-        scale_height=float(scale_height)
+        scale_radius=float(scale_radius)/oversampling
+        scale_height=float(scale_height)/oversampling
         pos_angle=float(pos_angle)
         
         # Now make a test image
-        test_profile = galsim.InclinedExponential(inc_angle*galsim.radians,scale_radius,scale_height)
+        test_profile = galsim.InclinedExponential(inc_angle*galsim.radians,scale_radius,scale_height,
+                                                  gsparams=galsim.GSParams(maximum_fft_size=5000))
         
         # Rotate it by the position angle
         test_profile = test_profile.rotate(pos_angle*galsim.radians)
         
         # Draw it onto an image
-        test_image = galsim.Image(image_nx,image_nx)
-        test_profile.drawImage(test_image)
+        test_image = galsim.Image(image_nx,image_ny,scale=1.0)
+        test_profile.drawImage(test_image,offset=(0.5,0.5)) # Offset to match Lance's
         
-        # Compare to the example - there should be a known offset due to the fact that Lance's are
-        # truncated, but the cores should be the same
+        # Compare to the example - Due to the different fourier transforms used, some offset is expected,
+        # so we just compare in the core to two decimal places
         
         image_core = image.array[image_ny//2-2:image_ny//2+3, image_nx//2-2:image_nx//2+3]
         test_image_core = test_image.array[image_ny//2-2:image_ny//2+3, image_nx//2-2:image_nx//2+3]
         
         ratio_core = image_core / test_image_core
         
-        np.testing.assert_array_almost_equal(ratio_core, np.mean(ratio_core)*np.ones_like(ratio_core), decimal = 3,
+        # galsim.fits.write(test_image,"test_"+image_filename,image_dir)
+        
+        np.testing.assert_array_almost_equal(ratio_core, np.mean(ratio_core)*np.ones_like(ratio_core), decimal = 2,
                                              err_msg = "Error in comparison of inclined exponential profile to samples.",
                                              verbose=True)
 

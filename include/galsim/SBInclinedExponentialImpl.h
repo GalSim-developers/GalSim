@@ -84,7 +84,8 @@ namespace galsim {
         void operator=(const InclinedExponentialInfo& rhs); ///<Hide assignment operator.
 
         // Input variables:
-        double _half_pi_r_over_h_tani;
+        double _h_tani_over_r;
+        double _half_pi_h_tani_over_r;
         const GSParamsPtr _gsparams; ///< The GSParams object.
 
         // Some derived values calculated in the constructor:
