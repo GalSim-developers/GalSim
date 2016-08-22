@@ -2915,7 +2915,7 @@ class InclinedExponential(GSObject):
     Initialization
     --------------
 
-    @param i                The inclination angle, i, in radians (TODO: Is there a way to ensure this?)
+    @param i                The inclination angle, i, in radians
     @param scale_radius     The scale radius of the exponential disk.  Typically given in arcsec.
     @param scale_height     The scale height of the exponential disk.  Typically given in arcsec.
     @param flux             The flux (in photons) of the profile. [default: 1]
@@ -2937,7 +2937,13 @@ class InclinedExponential(GSObject):
 
     def __init__(self, i, scale_radius, scale_height,
                  flux=1., gsparams=None):
-        GSObject.__init__(self, _galsim.SBInclinedExponential(i, scale_radius, scale_height, flux,
+        
+        if not isinstance(i, galsim.Angle):
+            raise TypeError("Input i should be an Angle")
+        
+        i_rad = i.rad()
+        
+        GSObject.__init__(self, _galsim.SBInclinedExponential(i_rad, scale_radius, scale_height, flux,
                                                               gsparams))
         self._gsparams = gsparams
 
