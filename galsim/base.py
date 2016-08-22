@@ -954,9 +954,9 @@ class GSObject(object):
         return wcs
 
     def drawImage(self, image=None, nx=None, ny=None, bounds=None, scale=None, wcs=None, dtype=None,
-                  method='auto', gain=1., wmult=1., add_to_image=False, use_true_center=True,
-                  offset=None, n_photons=0., rng=None, max_extra_noise=0., poisson_flux=None,
-                  setup_only=False, dx=None):
+                  method='auto', area=1., exptime=1., gain=1., wmult=1., add_to_image=False,
+                  use_true_center=True, offset=None, n_photons=0., rng=None, max_extra_noise=0.,
+                  poisson_flux=None, setup_only=False, dx=None):
         """Draws an Image of the object.
 
         The drawImage() method is used to draw an Image of the current object using one of several
@@ -1053,27 +1053,29 @@ class GSObject(object):
                         it could be useful if you want to view the surface brightness profile of an
                         object directly, without including the pixel integration.
 
+        To convert from flux (photons/cm^2/s) into image values of analog-to-digital units (ADU), we
+        use optional keywords `area` indicating the telescope collecting area in cm^2, `exptime`
+        indicating the exposure time in s, and `gain` which converts between photons and ADU.
         Normally, the flux of the object should be equal to the sum of all the pixel values in the
-        image, less some small amount of flux that may fall off the edge of the image (assuming you
-        don't use `method='sb'`).  However, you may optionally set a `gain` value, which converts
-        between photons and ADU (so-called analog-to-digital units), the units of the pixel values
-        in real images.  Normally, the gain of a CCD is in electrons/ADU, but in GalSim, we fold
-        the quantum efficiency into the gain as well, so the units are photons/ADU.  The flux of
-        the object is then taken to be in photons, and the `gain` converts this to ADU.
+        image divided by (exptime * area * gain), less some small amount of flux that may fall off
+        the  edge of the image (assuming you don't use `method='sb'`).  Note that normally, the gain
+        of a CCD is in electrons/ADU, but in GalSim, we fold the quantum efficiency into the gain as
+        well, so the units are photons/ADU.
 
         The 'phot' method has a few extra parameters that adjust how it functions.  The total
         number of photons to shoot is normally calculated from the object's flux.  This flux is
-        taken to be given in photons, so for most simple profiles, this will equal the number of
-        photons shot.  (See the discussion in Rowe et al, 2014, for why this might be modified for
-        InterpolatedImage and related profiles.)  However, you can manually set a different number
-        of photons with `n_photons`.  You can also set `max_extra_noise` to tell drawImage() to use
-        fewer photons than normal (and so is faster) such that no more than that much extra noise
-        is added to any pixel.  This is particularly useful if you will be subsequently adding sky
-        noise, and you can thus tolerate more noise than the normal number of photons would give
-        you, since using fewer photons is of course faster.  Finally, the default behavior is to
-        have the total flux vary as a Poisson random variate, which is normally appropriate with
-        photon shooting.  But you can turn this off with `poisson_flux=False`.  It also defaults to
-        False if you set an explicit value for `n_photons`.
+        taken to be given in photons/cm^2/s, so for most simple profiles, this times area * exptime
+        will equal the number of photons shot.  (See the discussion in Rowe et al, 2014, for why
+        this might be modified for InterpolatedImage and related profiles.)  However, you can
+        manually set a different number of photons with `n_photons`.  You can also set
+        `max_extra_noise` to tell drawImage() to use fewer photons than normal (and so is faster)
+        such that no more than that much extra noise is added to any pixel.  This is particularly
+        useful if you will be subsequently adding sky noise, and you can thus tolerate more noise
+        than the normal number of photons would give you, since using fewer photons is of course
+        faster.  Finally, the default behavior is to have the total flux vary as a Poisson random
+        variate, which is normally appropriate with photon shooting.  But you can turn this off with
+        `poisson_flux=False`.  It also defaults to False if you set an explicit value for
+        `n_photons`.
 
         The object will by default be drawn with its nominal center at the center location of the
         image.  There is thus a qualitative difference in the appearance of the rendered profile
@@ -1131,6 +1133,8 @@ class GSObject(object):
                             numpy.float32]
         @param method       Which method to use for rendering the image.  See discussion above
                             for the various options and what they do. [default: 'auto']
+        @param area         Collecting area of telescope in cm^2.  [default: 1.]
+        @param exptime      Exposure time in s.  [default: 1.]
         @param gain         The number of photons per ADU ("analog to digital units", the units of
                             the numbers output from a CCD).  [default: 1]
         @param wmult        A multiplicative factor by which to enlarge (in each direction) the
@@ -1204,13 +1208,22 @@ class GSObject(object):
         if image is not None and not isinstance(image, galsim.Image):
             raise ValueError("image is not an Image instance")
 
-        # Make sure the type of gain is correct and has a valid value:
+        # Make sure the types of (gain, area, exptime, wmult) are correct and have valid values:
         if type(gain) != float:
             gain = float(gain)
         if gain <= 0.:
             raise ValueError("Invalid gain <= 0.")
 
-        # Make sure the type of wmult is correct and has a valid value
+        if type(area) != float:
+            area = float(area)
+        if area <= 0.:
+            raise ValueError("Invalid area <= 0.")
+
+        if type(exptime) != float:
+            exptime = float(exptime)
+        if exptime <= 0.:
+            raise ValueError("Invalid exptime <= 0.")
+
         if type(wmult) != float:
             wmult = float(wmult)
         if wmult <= 0:
@@ -1245,11 +1258,11 @@ class GSObject(object):
                 raise TypeError("The rng provided is not a BaseDeviate")
 
             # Check that either n_photons is set to something or flux is set to something
-            if n_photons == 0. and self.getFlux() == 1.:
+            if n_photons == 0. and self.getFlux() == 1. and area == 1. and exptime == 1.:
                 import warnings
-                msg = "Warning: drawImage for object with flux == 1, but n_photons == 0.\n"
-                msg += "This will only shoot a single photon (since flux = 1)."
-                warnings.warn(msg)
+                warnings.warn(
+                        "Warning: drawImage for object with flux == 1, area == 1, and "
+                        "exptime == 1, but n_photons == 0.  This will only shoot a single photon.")
         else:
             if n_photons != 0.:
                 raise ValueError("n_photons is only relevant for method='phot'")
@@ -1316,15 +1329,19 @@ class GSObject(object):
         if method == 'sb':
             gain *= local_wcs.pixelArea()
 
+        # Account for area and exptime.
+        gain *= area * exptime
+
         # Making a view of the image lets us change the center without messing up the original.
         imview = image.view()
         imview.setCenter(0,0)
 
         if method == 'phot':
             try:
-                image.added_flux = prof.SBProfile.drawShoot(
+                added_photons = prof.SBProfile.drawShoot(
                     imview.image, n_photons, uniform_deviate, gain, max_extra_noise,
                     poisson_flux, add_to_image)
+                image.added_flux = added_photons / area / exptime
             except RuntimeError:
                 # Give some extra explanation as a warning, then raise the original exception
                 # so the traceback shows as much detail as possible.
@@ -1334,7 +1351,8 @@ class GSObject(object):
                     "Deconvolve or is a compound including one or more Deconvolve objects.")
                 raise
         else:
-            image.added_flux = prof.SBProfile.draw(imview.image, gain, wmult)
+            added_photons = prof.SBProfile.draw(imview.image, gain, wmult)
+            image.added_flux = added_photons / area / exptime
 
         return image
 
@@ -1526,7 +1544,7 @@ class Gaussian(GSObject):
                             [One of `sigma`, `fwhm`, or `half_light_radius` is required.]
     @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
                             [One of `sigma`, `fwhm`, or `half_light_radius` is required.]
-    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param flux             The flux (in photons/cm^2/s) of the profile. [default: 1]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
@@ -1660,7 +1678,7 @@ class Moffat(GSObject):
     @param trunc            An optional truncation radius at which the profile is made to drop to
                             zero, in the same units as the size parameter.
                             [default: 0, indicating no truncation]
-    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param flux             The flux (in photons/cm^2/s) of the profile. [default: 1]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
@@ -1803,7 +1821,7 @@ class Airy(GSObject):
                             units of `scale_unit`.
     @param obscuration      The linear dimension of a central obscuration as a fraction of the
                             pupil dimension.  [default: 0]
-    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param flux             The flux (in photons/cm^2/s) of the profile. [default: 1]
     @param scale_unit       Units to use for the sky coordinates when calculating lam/diam if these
                             are supplied separately.  Note that the results of calling methods like
                             getFWHM() will be returned in units of `scale_unit` as well.  Should be
@@ -2001,7 +2019,7 @@ class Kolmogorov(GSObject):
     @param r0_500           The Fried parameter in units of meters at 500 nm.  The Fried parameter
                             at the given wavelength, `lam`, will be computed using the standard
                             ralation r0 = r0_500 * (lam/500)**1.2.
-    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param flux             The flux (in photons/cm^2/s) of the profile. [default: 1]
     @param scale_unit       Units to use for the sky coordinates when calculating lam/r0 if these
                             are supplied separately.  Note that the results of calling methods like
                             getFWHM() will be returned in units of `scale_unit` as well.  Should be
@@ -2130,8 +2148,8 @@ class Pixel(GSObject):
     --------------
 
     @param scale            The linear scale size of the pixel.  Typically given in arcsec.
-    @param flux             The flux (in photons) of the profile.  This should almost certainly
-                            be left at the default value of 1. [default: 1]
+    @param flux             The flux (in photons/cm^2/s) of the profile.  This should almost
+                            certainly be left at the default value of 1. [default: 1]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
@@ -2190,7 +2208,7 @@ class Box(GSObject):
 
     @param width            The width of the Box.
     @param height           The height of the Box.
-    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param flux             The flux (in photons/cm^2/s) of the profile. [default: 1]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
@@ -2266,7 +2284,7 @@ class TopHat(GSObject):
     --------------
 
     @param radius           The radius of the TopHat, where the surface brightness drops to 0.
-    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param flux             The flux (in photons/cm^2/s) of the profile. [default: 1]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
@@ -2366,7 +2384,7 @@ class Sersic(GSObject):
                             [One of `scale_radius` or `half_light_radius` is required.]
     @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
                             [One of `scale_radius` or `half_light_radius` is required.]
-    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param flux             The flux (in photons/cm^2/s) of the profile. [default: 1]
     @param trunc            An optional truncation radius at which the profile is made to drop to
                             zero, in the same units as the size parameter.
                             [default: 0, indicating no truncation]
@@ -2582,7 +2600,7 @@ class Exponential(GSObject):
                             [One of `scale_radius` or `half_light_radius` is required.]
     @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
                             [One of `scale_radius` or `half_light_radius` is required.]
-    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param flux             The flux (in photons/cm^2/s) of the profile. [default: 1]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
@@ -2683,7 +2701,7 @@ class DeVaucouleurs(GSObject):
                             [One of `scale_radius` or `half_light_radius` is required.]
     @param half_light_radius  The half-light radius of the profile.  Typically given in arcsec.
                             [One of `scale_radius` or `half_light_radius` is required.]
-    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param flux             The flux (in photons/cm^2/s) of the profile. [default: 1]
     @param trunc            An optional truncation radius at which the profile is made to drop to
                             zero, in the same units as the size parameter.
                             [default: 0, indicating no truncation]
@@ -2819,7 +2837,7 @@ class Spergel(GSObject):
                             [One of `scale_radius` or `half_light_radius` is required.]
     @param scale_radius     The scale radius of the profile.  Typically given in arcsec.
                             [One of `scale_radius` or `half_light_radius` is required.]
-    @param flux             The flux (in photons) of the profile. [default: 1]
+    @param flux             The flux (in photons/cm^2/s) of the profile. [default: 1]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
 
