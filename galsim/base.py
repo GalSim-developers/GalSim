@@ -1330,7 +1330,7 @@ class GSObject(object):
             gain *= local_wcs.pixelArea()
 
         # Account for area and exptime.
-        gain *= area * exptime
+        prof *= area * exptime
 
         # Making a view of the image lets us change the center without messing up the original.
         imview = image.view()
