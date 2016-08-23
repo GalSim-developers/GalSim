@@ -2915,7 +2915,7 @@ class InclinedExponential(GSObject):
     Initialization
     --------------
 
-    @param i                The inclination angle, i, in radians
+    @param i                The inclination angle, i
     @param scale_radius     The scale radius of the exponential disk.  Typically given in arcsec.
     @param scale_height     The scale height of the exponential disk.  Typically given in arcsec.
     @param flux             The flux (in photons) of the profile. [default: 1]

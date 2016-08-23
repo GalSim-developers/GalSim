@@ -285,7 +285,7 @@ namespace galsim {
     /* NYI
     double InclinedExponentialInfo::getXNorm() const
     {
-    	return 1.; // TODO: Check this
+    	return 1.;
     }
     */
 

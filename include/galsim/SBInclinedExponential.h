@@ -39,9 +39,15 @@ namespace galsim {
     }
 
     /**
-     * @brief Inclined Exponential surface brightness profile.
+     * @brief Inclined exponential surface brightness profile.
      *
-     * TODO: Fill in
+     * Surface brightness profile based on the distribution I(R,z) propto sech^2(z/Hs)*exp(-R/Rs), where
+     * Hs is the scale height of the disk, Rs is the scale radius, z is the distance along the minor
+     * axis, and R is the distance perpendicular to it. This profile is determined by four parameters:
+     * The inclination angle, the scale radius, the scale height, and the flux.
+     *
+     * Note that the position angle is always zero. A profile with a different position angle can be
+     * obtained through the rotate() method of the corresponding Python class.
      */
     class SBInclinedExponential : public SBProfile
     {
