@@ -91,7 +91,6 @@ namespace galsim {
     SBInclinedExponential::SBInclinedExponentialImpl::SBInclinedExponentialImpl(double i, double scale_radius, double scale_height, double flux,
             const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
-        _i(i),
 		_r0(scale_radius),
 		_h0(scale_height),
 		_flux(flux),
@@ -99,7 +98,7 @@ namespace galsim {
 		_h_tani_over_r(scale_height*std::tan(i)/scale_radius),
 		_r0_cosi(_r0*std::cos(i)),
 		_inv_r0_cosi(1./(scale_radius*std::cos(i))),
-        // Start with untruncated InclinedExponentialInfo regardless of value of trunc
+        // Start with InclinedExponentialInfo regardless of value of trunc
         _info(cache.get(boost::make_tuple(_h_tani_over_r, this->gsparams.duplicate())))
     {
         dbg<<"Start SBInclinedExponential constructor:\n";
@@ -107,6 +106,44 @@ namespace galsim {
         dbg<<"scale radius = "<<_r0<<std::endl;
         dbg<<"scale height = "<<_h0<<std::endl;
         dbg<<"flux = "<<_flux<<std::endl;
+
+        // Ensure i is positive and in the range 0 <= i <= M_PI/2
+
+        // Work with positive values first
+        if(i<0) i = -i;
+
+        // Get into the proper range
+        if(i>M_PI/2.)
+        {
+        	i -= int(i/(2*M_PI))*2*M_PI;
+        	if(i<0) i = -i; // Since we might have gone below zero again
+        }
+
+        // Check if i is within allowed limits, and institute special handling if it isn't
+        if(i>sbp::maximum_i)
+        {
+        	// Perfectly edge-on isn't analytic, so we truncate at the maximum value
+        	_i = sbp::minimum_i;
+        }
+        else if(i<sbp::minimum_i)
+		{
+        	// Perfectly face-on is simply an exponential profile, so we can treat it as such
+        	// to save time
+        	_i = 0.;
+        	_h_tani_over_r = 0.;
+    		_r0_cosi = _r0;
+    		_inv_r0_cosi = _inv_r0;
+		}
+        else
+        {
+        	// Normal setup here
+        	_i = i;
+        	_h_tani_over_r = scale_height*std::tan(i)/scale_radius;
+    		_r0_cosi = _r0*std::cos(i);
+    		_inv_r0_cosi = 1./(scale_radius*std::cos(i));
+        }
+
+		_info = boost::shared_ptr<InclinedExponentialInfo>(cache.get(boost::make_tuple(_h_tani_over_r, this->gsparams.duplicate())));
 
         xdbg<<"_h_tani_over_r = "<<_h_tani_over_r<<std::endl;
         xdbg<<"_r0_cosi = "<<_r0_cosi<<std::endl;
@@ -180,10 +217,10 @@ namespace galsim {
 
         kx0 *= _r0;
         dkx *= _r0;
-        dkxy *= _r0; // TODO: Think this is right, but will have to test
+        dkxy *= _r0;
         ky0 *= _r0_cosi;
         dky *= _r0_cosi;
-        dkyx *= _r0_cosi; // TODO:  Think this is right, but will have to test
+        dkyx *= _r0_cosi;
 
         It valit = val.linearView().begin();
         for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
@@ -206,8 +243,7 @@ namespace galsim {
     {
         dbg<<"Start InclinedExponentialInfo constructor for h_tani_over_r = "<<h_tani_over_r<<std::endl;
 
-        if (h_tani_over_r < sbp::minimum_h_tani_over_r || h_tani_over_r > sbp::maximum_h_tani_over_r)
-            throw SBError("Requested h_tani_over_r out of range");
+        assert(h_tani_over_r >= 0); // Should only ever have non-negative
 
         // For large k, we clip the result of kValue to 0.
         // We do this when the correct answer is less than kvalue_accuracy.
@@ -235,7 +271,7 @@ namespace galsim {
         _stepk = M_PI / R;
         dbg<<"stepk = "<<_stepk<<std::endl;
 
-        _maxk = std::sqrt(_ksq_max); // TODO: Figure out if this is correct
+        _maxk = std::sqrt(_ksq_max);
     }
 
     double InclinedExponentialInfo::stepK() const
@@ -298,7 +334,14 @@ namespace galsim {
 
         // Calculate the convolution factor
         double res_conv;
-        if (kysq < _ksq_min)
+
+        // Check for the face-on case
+        if (_half_pi_h_tani_over_r==0)
+        {
+        	res_conv = 1.;
+        }
+        // Check if it's small enough that we can save time with the Taylor expansion
+        else if (kysq < _ksq_min)
         {
         	// Use Taylor expansion to speed up calculation
         	double scaled_ky = _half_pi_h_tani_over_r*ky;

@@ -35,10 +35,10 @@ except ImportError:
 image_dir = './inclined_exponential_images'
 
 # Values here are strings, so the filenames will be sure to work (without truncating zeros)
-image_inc_angles = ("1.3", "0.2", "0.01", "0.1", "0.78")
-image_scale_radii = ("3.0", "3.0", "3.0", "2.0", "2.0")
-image_scale_heights = ("0.5", "0.5", "0.5", "1.0", "0.5")
-image_pos_angles = ("0.0", "0.0", "0.0", "-0.2", "-0.2")
+image_inc_angles = ("0.0", "1.3", "0.2", "0.01", "0.1", "0.78")
+image_scale_radii = ("3.0", "3.0", "3.0", "3.0", "2.0", "2.0")
+image_scale_heights = ("0.3", "0.5", "0.5", "0.5", "1.0", "0.5")
+image_pos_angles = ("0.0", "0.0", "0.0", "0.0", "-0.2", "-0.2")
 image_nx = 64
 image_ny = 64
 oversampling = 1.0
