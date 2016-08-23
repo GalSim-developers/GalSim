@@ -17,7 +17,7 @@
  *    and/or other materials provided with the distribution.
  */
 
-#define DEBUGLOGGING
+//#define DEBUGLOGGING
 
 #include "galsim/IgnoreWarnings.h"
 
