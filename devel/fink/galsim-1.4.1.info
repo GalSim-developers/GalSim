@@ -1,0 +1,56 @@
+Package: galsim
+Version: 1.4.1
+Revision: 1
+Description: Galaxy Image Simulator
+HomePage: https://github.com/GalSim-developers/GalSim
+License: BSD
+Maintainer: Mike Jarvis <mikejarvis17@gmail.com>
+
+BuildDepends: <<
+    boost1.55-python27,
+    fink (>= 0.28),
+    fftw3,
+    scons,
+    tmv0
+<<
+
+Depends: <<
+    boost1.55-python27-shlibs,
+    fftw3-shlibs,
+    numpy-py27,
+    astropy-py27,
+    python27,
+    tmv0-shlibs,
+    yaml-py27,
+    future-py27 
+<<
+
+Source: https://github.com/GalSim-developers/GalSim/archive/v%v.tar.gz 
+SourceRename: GalSim-%v.tar.gz
+Source-MD5: 3153448dab4815b4960799e701f6d70d
+GCC: 4.0
+NoSetMAKEFLAGS: true
+UseMaxBuildJobs: true
+
+CompileScript: <<
+
+    # Note: The above two parameters should mean that the MAKEFILES 
+    # environment variable only has '-jN'.  This has the same meaning for 
+    # scons, but scons doesn't use MAKEFLAGS, so put it here explicitly.
+    scons PYTHON=%p/bin/python2.7 PREFIX=%i FINAL_PREFIX=%p PYPREFIX=%i/lib/python2.7/site-packages IMPORT_PREFIX=false TMV_DIR=%p BOOST_DIR=%p/opt/boost-1_55 $MAKEFLAGS
+<<
+
+InstallScript: <<
+
+    # Use -j1 to prevent Scons script from automatically detecting and using 
+    # the number of cpus 
+    scons install -j1
+
+    # We delete the unversioned symlink since we don't actually want any other packages
+    # linking this file, so this helps to discourage that.
+    rm %i/lib/libgalsim.dylib
+
+<<
+
+DocFiles: README.md CHANGELOG.md HISTORY.md LICENSE doc/GalSim_Quick_Reference.pdf
+Shlibs: !%p/lib/libgalsim.1.4.dylib 

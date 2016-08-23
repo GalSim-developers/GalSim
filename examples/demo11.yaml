@@ -80,8 +80,8 @@ eval_variables :
     fexp_time : &exp_time 300
 
     # image_size = size in pixels
-    # 0.1 degrees * 3600 arcsec/deg / 0.2 arcsec/pixel
-    fimage_size : &image_size 1800 
+    # size in degrees = 2048 pixels * 0.2 arcsec/pixel / 3600 arcsec/deg = 0.114 deg
+    fimage_size : &image_size 2048
 
     # nobjects = number of objects per image
     # corresponds to 8 gal / arcmin^2

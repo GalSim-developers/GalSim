@@ -46,7 +46,7 @@
 
 "image" : {
     "type" : "Scattered",
-    "size" : 1800,
+    "size" : 2048,
     "nobjects" : 288,
     "index_convention" : 0,
 

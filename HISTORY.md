@@ -1,8 +1,104 @@
 Below is a summary of the major changes with each new tagged version of GalSim.
-Each version also includes various other minor changes and bug fixes, which are 
-not listed here for brevity.  See the CHANGLELOG.md files associated with each 
-version for a more complete list.  Issue numbers related to each change are 
+Each version also includes various other minor changes and bug fixes, which are
+not listed here for brevity.  See the CHANGLELOG.md files associated with each
+version for a more complete list.  Issue numbers related to each change are
 given in parentheses.
+
+v1.4
+====
+
+API Changes
+-----------
+
+- Changed the galsim.Bandpass and galsim.SED classes to require formerly
+  optional keywords `wave_type` and `flux_type`. (#745)
+
+
+Dependency Changes
+------------------
+
+- Added future module as a dependency. (#534)
+- Changed PyYAML to a non-optional dependency. (#768)
+
+
+Bug Fixes
+---------
+
+- Improved ability of galsim.fits.read to handle invalid FITS headers. (#602)
+- Fixed bug in des module, building meds file with wcs from input images. (#654)
+- Fixed a bug in the way Images are instantiated for certain combinations of
+  ChromaticObjects and image-setup keyword arguments (#683)
+- Added ability to manipulate the width of the moment-measuring weight function
+  for the KSB shear estimation method of the galsim.hsm package. (#686)
+- Fixed an error in the `CCDNoise.getVariance()` function. (#713)
+- Fixed an assert failure in InterpolatedImage if image is all zeros. (#720)
+- Updated ups table file so that setup command is `setup galsim`. (#724)
+- Improved algorithm for thinning SEDs and Bandpasses. (#739)
+- Fixed a bug in how DistDeviate handles nearly flat pdfs. (#741)
+- Fixed a bug in chromatic parametric COSMOS galaxy models. (#745)
+- Fixed a bug in the Sum and Convolution constructors when list has only a
+  single element. (#763)
+- Fixed a bug related to boost-v1.60 python shared_ptr registration. (#764)
+- Changed an assert in the HSM module to an exception. (#784)
+
+
+Deprecated Features
+-------------------
+
+- Deprecated the gal.type=Ring option in the config files. (#698)
+
+
+New Features
+------------
+
+- Added OutputCatalog class. (#301, #691)
+- Added methods calculateHLR, calculateMomentRadius, and calculateFWHM. (#308)
+- Added LookupTable2D. (#465)
+- Added support for Python 3. (#534)
+- Added AtmosphericScreen, OpticalScreen, and PhaseScreenList. (#549)
+- Added PhaseScreenPSF. (#549)
+- Added Atmosphere function. (#549)
+- Rewrote OpticalPSF using new PhaseScreen framework. (#549)
+- Extended OpticalPSF to handle arbitrary Zernike order. (#549)
+- Added a simple, linear model for persistence. (#554)
+- Added BoundsI.numpyShape(). (#654)
+- Enabled FITS files with unsigned integer to read as ImageI or ImageS. (#654)
+- Made COSMOSCatalog write an index parameter. (#654, #694)
+- Added ability to specify lambda and r0 separately for Kolmogorov. (#657)
+- Enabled initializing an InterpolatedImage from a user-specified HDU. (#660)
+- Changed `galsim.fits.writeMulti` to allow hdus in "image" list. (#691)
+- Added `wcs` argument to `Image.resize()`. (#691)
+- Added `BaseDeviate.discard(n)` and `BaseDeviate.raw()`. (#691)
+- Added `sersic_prec` option to COSMOSCatalog.makeGalaxy(). (#691)
+- Enabled image quality cuts in the COSMOSCatalog class. (#693)
+- Added `convergence_threshold` in HSMParams. (#709)
+- Improved the readability of Image and BaseDeviate reprs. (#723)
+- Sped up Bandpass, SED, and LookupTable classes. (#735)
+- Added the FourierSqrt operator. (#748)
+- Made Bandpass.thin() and truncate() preserve the zeropoint. (#711)
+- Added version information to the compiled C++ library. (#750)
+
+
+Updates to galsim executable
+----------------------------
+
+- Dropped default verbosity from 2 to 1. (#691)
+- Added galsim -n njobs -j jobnum to split run into multiple jobs. (#691)
+- Added galsim -p to perform profiling on the run. (#691)
+
+
+New config features
+-------------------
+
+- Added ability to write truth catalogs using output.truth field. (#301, #691)
+- Improved the extensibility of the config parsing. (#691, #774)
+- Added the 'template' option. (#691)
+- Made '$' and '@' shorthand for Eval and Current. (#691)
+- Allowed gsobjects to be referenced from Current types. (#691)
+- Added x,f specification for a RandomDistribution. (#691)
+- Added a new 'stamp' top level field. (#691)
+- Added new stamp type=Ring to effect ring tests. (#698)
+
 
 v1.3
 ====
@@ -224,7 +320,7 @@ v1.0.1
 * Fixed some bugs in the config machinery when files have varying numbers
   of objects. (#487)
 * Support astropy.io.fits in lieu of stand-alone pyfits module. (#488)
-* Fixed a bug in config where 'safe' objects were not being correctly 
+* Fixed a bug in config where 'safe' objects were not being correctly
   invalidated when a new input item should have invalidated them.
 * Fixed a bug in the drawing of a Pixel all by itself. (#497)
 
@@ -261,7 +357,7 @@ New features
 
 Updates to config options
 -------------------------
-  
+
 * Added RealGalaxyOriginal galaxy type. (#389)
 * Added whiten option for RealGalaxy objects. (#430)
 * Added `Current` type. (#430)
@@ -300,7 +396,7 @@ Updates to config
 -----------------
 
 * Added index_convention option. (#380)
-* Changed the name of the center item for the Scattered image type to 
+* Changed the name of the center item for the Scattered image type to
   image_pos, and added a new sky_pos item. (#380)
 
 Bug fixes
@@ -320,7 +416,7 @@ v0.4
 
 * Added ability to pad images for InterpolatedImage or RealGalaxy with either
   correlated or uncorrelated noise. (#238)
-* Added python-level LookupTable class which wraps the existing C++ Table 
+* Added python-level LookupTable class which wraps the existing C++ Table
   class. (#305)
 * Lensing engine updates: (#305)
   - Added the option of drawing shears from a tabulated P(k)
@@ -329,25 +425,25 @@ v0.4
 * Added a DistDeviate class. (#306)
 * Added galsim.correlatednoise.get_COSMOS_CorrFunc(...). (#345)
 * Added im.addNoiseSNR(). (#349)
-* Made a new Noise hierarchy for CCDNoise (no longer a BaseDeviate), 
+* Made a new Noise hierarchy for CCDNoise (no longer a BaseDeviate),
   GaussianNoise, PoissonNoise, DeviateNoise. (#349)
 
 
 v0.3
 ====
 
-* Fixed several bugs in the Sersic class that had been causing ringing. 
+* Fixed several bugs in the Sersic class that had been causing ringing.
   (#319, #330)
 * Added support for reading and writing compressed fits files. (#299)
-* Added InterpolatedImage class to wrap existing C++ level SBInterpolatedImage. 
+* Added InterpolatedImage class to wrap existing C++ level SBInterpolatedImage.
   (#333)
-* Added a new class structure for representing 2D correlation functions, used 
+* Added a new class structure for representing 2D correlation functions, used
   to describe correlated noise in images. (#297).
 * Add FormattedStr option for string values in config files. (#315)
 * Added obj.drawK() to the python layer. (#319)
 * Fixed several sources of memory leaks. (#327)
 * Updated the moments and PSF correction code to use the Image class and TMV;
-  to handle weight and bad pixel maps for the input Images; and to run ~2-3 
+  to handle weight and bad pixel maps for the input Images; and to run ~2-3
   times faster. (#331, #332)
 * Fixed bug in config RandomCircle when using inner_radius option.
 
@@ -355,13 +451,13 @@ v0.3
 v0.2
 ====
 
-* Significant revamping and commenting of demos, including both python and 
+* Significant revamping and commenting of demos, including both python and
   config versions (#243, #285, #289).
 * Added python-level int1d function to wrap C++-level integrator, which
   allowed us to remove our dependency on scipy. (#288)
-* Significant expansion in config functionality, using YAML/JSON format 
+* Significant expansion in config functionality, using YAML/JSON format
   config files (#291, #295).
-* Fixed some bugs in Image handling (including bugs related to duplicate 
+* Fixed some bugs in Image handling (including bugs related to duplicate
   numpy.int32 types), and made Image handling generally more robust (#293, #294).
 * Fixed bug in wrapping of angles (now not automatic -- use wrap() explicitly).
 
