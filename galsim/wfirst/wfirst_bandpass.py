@@ -84,12 +84,6 @@ def getBandpasses(AB_zeropoint=True, exptime=None, default_thin_trunc=True, **kw
     data = np.genfromtxt(datafile, names=True)
     wave = 1000.*data['Wave']
 
-    if AB_zeropoint:
-        # Note that withZeropoint wants an effective diameter in cm, not m.  Also, the effective
-        # diameter has to take into account the central obscuration, so d_eff = d sqrt(1 -
-        # obs^2).
-        d_eff = 100. * galsim.wfirst.diameter * np.sqrt(1.-galsim.wfirst.obscuration**2)
-
     # Read in and manipulate the sky background info.
     sky_file = os.path.join(galsim.meta_data.share_dir, "wfirst_sky_backgrounds.txt")
     sky_data = np.loadtxt(sky_file).transpose()
@@ -136,9 +130,7 @@ def getBandpasses(AB_zeropoint=True, exptime=None, default_thin_trunc=True, **kw
 
         # Set the zeropoint if requested by the user:
         if AB_zeropoint:
-            if exptime is None:
-                exptime = galsim.wfirst.exptime
-            bp = bp.withZeropoint('AB', effective_diameter=d_eff, exptime=exptime)
+            bp = bp.withZeropoint('AB')
 
         # Store the sky level information as an attribute.
         bp._ecliptic_lat = ecliptic_lat

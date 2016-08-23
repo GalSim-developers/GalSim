@@ -215,8 +215,7 @@ def test_wfirst_bandpass():
     from galsim._pyfits import pyfits
 
     # Obtain the bandpasses with AB_zeropoint set
-    exp_time = 200. # non WFIRST exposure time
-    bp = galsim.wfirst.getBandpasses(AB_zeropoint=True, exptime=exp_time)
+    bp = galsim.wfirst.getBandpasses(AB_zeropoint=True)
 
     # Check if the zeropoints have been set correctly
     AB_spec = lambda x: (3631e-23)
@@ -272,8 +271,8 @@ def test_wfirst_bandpass():
     # bugs can easily lead to orders of magnitude errors, so this unit test is still pretty
     # non-trivial.
     for filter_name, filter_ in bp.items():
-        flux = sed.calculateFlux(filter_)
-        count_rate = flux / galsim.wfirst.exptime
+        flux = sed.calculateFlux(filter_)  # photons / cm^2 / s
+        count_rate = flux * galsim.wfirst.collecting_area  # photons / s
         print(count_rate, reference[filter_name])
         np.testing.assert_allclose(
             count_rate, reference[filter_name], rtol=0.15,

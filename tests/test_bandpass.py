@@ -258,19 +258,11 @@ def test_ne():
            galsim.Bandpass(throughput=lt, wave_type='nm'),
            galsim.Bandpass(throughput=lt, wave_type='A'),
            galsim.Bandpass(throughput=lt, wave_type='nm', zeropoint=10.0),
-           galsim.Bandpass(throughput=lt,
-                           wave_type='nm').withZeropoint('AB', effective_diameter=1.0, exptime=1.0),
-           galsim.Bandpass(throughput=lt,
-                           wave_type='nm').withZeropoint('AB', effective_diameter=1.0, exptime=2.0),
-           galsim.Bandpass(throughput=lt,
-                           wave_type='nm').withZeropoint('AB', effective_diameter=2.0, exptime=1.0),
-           galsim.Bandpass(throughput=lt,
-                           wave_type='nm').withZeropoint('ST', effective_diameter=1.0, exptime=1.0),
-           galsim.Bandpass(throughput=lt,
-                           wave_type='nm').withZeropoint('Vega', effective_diameter=1.0,
-                                                        exptime=1.0),
-           galsim.Bandpass(throughput=lt,
-                           wave_type='nm').withZeropoint(sed, effective_diameter=1.0, exptime=1.0)]
+           galsim.Bandpass(throughput=lt, wave_type='nm').withZeropoint('AB'),
+           galsim.Bandpass(throughput=lt, wave_type='nm').withZeropoint('ST'),
+           galsim.Bandpass(throughput=lt, wave_type='nm').withZeropoint('Vega'),
+           galsim.Bandpass(throughput=lt, wave_type='nm').withZeropoint(100.0),
+           galsim.Bandpass(throughput=lt, wave_type='nm').withZeropoint(sed)]
     all_obj_diff(bps)
 
 
@@ -306,7 +298,7 @@ def test_zp():
     """Check that the zero points are maintained in an appropriate way when thinning, truncating."""
     # Make a bandpass and set an AB zeropoint.
     bp = galsim.Bandpass(os.path.join(datapath, 'LSST_r.dat'), 'nm')
-    bp = bp.withZeropoint(zeropoint='AB', effective_diameter=6.4, exptime=15)
+    bp = bp.withZeropoint(zeropoint='AB')
     # Confirm that if we use the default thinning kwargs, then the zeropoint for the thinned
     # bandpass is the same (exactly) as the original.
     bp_th = bp.thin()

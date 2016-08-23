@@ -383,7 +383,7 @@ def test_SED_calculateMagnitude():
                                        (sed*100).calculateMagnitude(bandpass)+5.0)
         # Try setting AB zeropoint
         bandpass = (galsim.Bandpass(galsim.LookupTable([1,2,3,4,5], [1,2,3,4,5]), 'nm')
-                    .withZeropoint('AB', effective_diameter=640.0, exptime=15.0))
+                    .withZeropoint('AB'))
         np.testing.assert_almost_equal(sed.calculateMagnitude(bandpass),
                                        (sed*100).calculateMagnitude(bandpass)+5.0)
 
@@ -411,9 +411,9 @@ def test_SED_calculateMagnitude():
     for conversion, filter_name in zip(ugrizy_vega_ab_conversions, filter_names):
         filter_filename = os.path.join(bppath, 'LSST_{0}.dat'.format(filter_name))
         AB_bandpass = (galsim.Bandpass(filter_filename, 'nm')
-                       .withZeropoint('AB', effective_diameter=640, exptime=15))
+                       .withZeropoint('AB'))
         vega_bandpass = (galsim.Bandpass(filter_filename, 'nm')
-                         .withZeropoint('vega', effective_diameter=640, exptime=15))
+                         .withZeropoint('vega'))
         AB_mag = sed.calculateMagnitude(AB_bandpass)
         vega_mag = sed.calculateMagnitude(vega_bandpass)
         assert (abs((AB_mag - vega_mag) - conversion) < 0.1)
