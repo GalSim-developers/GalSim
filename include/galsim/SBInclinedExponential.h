@@ -64,11 +64,11 @@ namespace galsim {
          *                              of image operations and rendering, if different from the
          *                              default.
          */
-    	SBInclinedExponential(double i, double scale_radius, double scale_height, double flux,
+        SBInclinedExponential(double i, double scale_radius, double scale_height, double flux,
                  const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.
-    	SBInclinedExponential(const SBInclinedExponential& rhs);
+        SBInclinedExponential(const SBInclinedExponential& rhs);
 
         /// @brief Destructor.
         ~SBInclinedExponential();

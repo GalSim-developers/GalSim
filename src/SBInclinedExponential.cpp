@@ -91,13 +91,13 @@ namespace galsim {
     SBInclinedExponential::SBInclinedExponentialImpl::SBInclinedExponentialImpl(double i, double scale_radius, double scale_height, double flux,
             const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
-		_r0(scale_radius),
-		_h0(scale_height),
-		_flux(flux),
-		_inv_r0(1./_r0),
-		_h_tani_over_r(scale_height*std::tan(i)/scale_radius),
-		_r0_cosi(_r0*std::cos(i)),
-		_inv_r0_cosi(1./(scale_radius*std::cos(i))),
+        _r0(scale_radius),
+        _h0(scale_height),
+        _flux(flux),
+        _inv_r0(1./_r0),
+        _h_tani_over_r(scale_height*std::tan(i)/scale_radius),
+        _r0_cosi(_r0*std::cos(i)),
+        _inv_r0_cosi(1./(scale_radius*std::cos(i))),
         // Start with InclinedExponentialInfo regardless of value of trunc
         _info(cache.get(boost::make_tuple(_h_tani_over_r, this->gsparams.duplicate())))
     {
@@ -115,35 +115,35 @@ namespace galsim {
         // Get into the proper range
         if(i>M_PI/2.)
         {
-        	i -= int(i/(2*M_PI))*2*M_PI;
-        	if(i<0) i = -i; // Since we might have gone below zero again
+            i -= int(i/(2*M_PI))*2*M_PI;
+            if(i<0) i = -i; // Since we might have gone below zero again
         }
 
         // Check if i is within allowed limits, and institute special handling if it isn't
         if(i>sbp::maximum_i)
         {
-        	// Perfectly edge-on isn't analytic, so we truncate at the maximum value
-        	_i = sbp::minimum_i;
+            // Perfectly edge-on isn't analytic, so we truncate at the maximum value
+            _i = sbp::minimum_i;
         }
         else if(i<sbp::minimum_i)
-		{
-        	// Perfectly face-on is simply an exponential profile, so we can treat it as such
-        	// to save time
-        	_i = 0.;
-        	_h_tani_over_r = 0.;
-    		_r0_cosi = _r0;
-    		_inv_r0_cosi = _inv_r0;
-		}
+        {
+            // Perfectly face-on is simply an exponential profile, so we can treat it as such
+            // to save time
+            _i = 0.;
+            _h_tani_over_r = 0.;
+            _r0_cosi = _r0;
+            _inv_r0_cosi = _inv_r0;
+        }
         else
         {
-        	// Normal setup here
-        	_i = i;
-        	_h_tani_over_r = scale_height*std::tan(i)/scale_radius;
-    		_r0_cosi = _r0*std::cos(i);
-    		_inv_r0_cosi = 1./(scale_radius*std::cos(i));
+            // Normal setup here
+            _i = i;
+            _h_tani_over_r = scale_height*std::tan(i)/scale_radius;
+            _r0_cosi = _r0*std::cos(i);
+            _inv_r0_cosi = 1./(scale_radius*std::cos(i));
         }
 
-		_info = boost::shared_ptr<InclinedExponentialInfo>(cache.get(boost::make_tuple(_h_tani_over_r, this->gsparams.duplicate())));
+        _info = boost::shared_ptr<InclinedExponentialInfo>(cache.get(boost::make_tuple(_h_tani_over_r, this->gsparams.duplicate())));
 
         xdbg<<"_h_tani_over_r = "<<_h_tani_over_r<<std::endl;
         xdbg<<"_r0_cosi = "<<_r0_cosi<<std::endl;
@@ -157,14 +157,14 @@ namespace galsim {
 
     double SBInclinedExponential::SBInclinedExponentialImpl::xValue(const Position<double>& p) const
     {
-    	throw std::logic_error("Real-space expression. of SBInclinedExponential NYI.");
+        throw std::logic_error("Real-space expression. of SBInclinedExponential NYI.");
         return 0;
     }
 
     std::complex<double> SBInclinedExponential::SBInclinedExponentialImpl::kValue(const Position<double>& k) const
     {
-    	double kx = k.x*_r0;
-    	double ky = k.y*_r0_cosi;
+        double kx = k.x*_r0;
+        double ky = k.y*_r0_cosi;
         return _flux * _info->kValue(kx,ky);
     }
 
@@ -194,8 +194,8 @@ namespace galsim {
                 double kx = kx0;
                 It valit = val.col(j).begin();
                 for (int i=0;i<m;++i,kx+=dkx) {
-                	double new_val = _flux * _info->kValue(kx,ky0);
-                	xxdbg << "kx = " << kx << "\tky = " << ky0 << "\tval = " << new_val << std::endl;
+                    double new_val = _flux * _info->kValue(kx,ky0);
+                    xxdbg << "kx = " << kx << "\tky = " << ky0 << "\tval = " << new_val << std::endl;
                     *valit++ = _flux * _info->kValue(kx,ky0);
                 }
             }
@@ -236,9 +236,9 @@ namespace galsim {
     double SBInclinedExponential::SBInclinedExponentialImpl::stepK() const { return _info->stepK() * _inv_r0; }
 
     InclinedExponentialInfo::InclinedExponentialInfo(double h_tani_over_r, const GSParamsPtr& gsparams) :
-		_h_tani_over_r(h_tani_over_r),
-		_half_pi_h_tani_over_r(0.5*M_PI*h_tani_over_r),
-		_gsparams(gsparams),
+        _h_tani_over_r(h_tani_over_r),
+        _half_pi_h_tani_over_r(0.5*M_PI*h_tani_over_r),
+        _gsparams(gsparams),
         _maxk(0.), _stepk(0.)
     {
         dbg<<"Start InclinedExponentialInfo constructor for h_tani_over_r = "<<h_tani_over_r<<std::endl;
@@ -285,7 +285,7 @@ namespace galsim {
     /* NYI
     double InclinedExponentialInfo::getXNorm() const
     {
-    	return 1.;
+        return 1.;
     }
     */
 
@@ -298,33 +298,33 @@ namespace galsim {
         double theta;
         if(rx==0)
         {
-        	theta = 0;
+            theta = 0;
         }
         else
         {
-        	theta = std::atan(std::abs(ry/rx));
+            theta = std::atan(std::abs(ry/rx));
         }
 
-		double lr=0.5*std::log(rsq); // Lookup table is logarithmic
-		return rsq*_ift(lr,theta);
+        double lr=0.5*std::log(rsq); // Lookup table is logarithmic
+        return rsq*_ift(lr,theta);
 
     }
     */
 
     double InclinedExponentialInfo::kValue(double kx, double ky) const
     {
-    	// Calculate the base value for an exponential profile
+        // Calculate the base value for an exponential profile
 
-    	double kysq = ky*ky;
+        double kysq = ky*ky;
         double ksq = kx*kx + kysq;
         double res_base;
         if (ksq > _ksq_max)
         {
-        	res_base = 0.;
+            res_base = 0.;
         }
         else if (ksq < _ksq_min)
         {
-        	res_base = (1. - 1.5*ksq*(1. - 1.25*ksq));
+            res_base = (1. - 1.5*ksq*(1. - 1.25*ksq));
         }
         else
         {
@@ -338,19 +338,19 @@ namespace galsim {
         // Check for the face-on case
         if (_half_pi_h_tani_over_r==0)
         {
-        	res_conv = 1.;
+            res_conv = 1.;
         }
         // Check if it's small enough that we can save time with the Taylor expansion
         else if (kysq < _ksq_min)
         {
-        	// Use Taylor expansion to speed up calculation
-        	double scaled_ky = _half_pi_h_tani_over_r*ky;
-        	double scaled_ky_squared = scaled_ky*scaled_ky;
-        	res_conv = (1. - 0.16666666667*scaled_ky_squared*(1. - 0.116666666667*scaled_ky_squared));
+            // Use Taylor expansion to speed up calculation
+            double scaled_ky = _half_pi_h_tani_over_r*ky;
+            double scaled_ky_squared = scaled_ky*scaled_ky;
+            res_conv = (1. - 0.16666666667*scaled_ky_squared*(1. - 0.116666666667*scaled_ky_squared));
         }
         else
         {
-        	res_conv = _half_pi_h_tani_over_r*ky / std::sinh(_half_pi_h_tani_over_r*ky);
+            res_conv = _half_pi_h_tani_over_r*ky / std::sinh(_half_pi_h_tani_over_r*ky);
         }
 
         double res = res_base*res_conv;
@@ -363,19 +363,19 @@ namespace galsim {
     void InclinedExponentialInfo::buildIFT() const
     {
         // To make the table, we'll have to fill in k values in an array, then perform an inverse transform
-    	assert(false);
+        assert(false);
     }
     */
 
     // NYI, but needs to be defined
     boost::shared_ptr<PhotonArray> InclinedExponentialInfo::shoot(int N, UniformDeviate ud) const
     {
-    	throw std::logic_error("Photon shooting NYI for InclinedExponential profile.");
+        throw std::logic_error("Photon shooting NYI for InclinedExponential profile.");
     }
 
     // NYI, but needs to be defined
     boost::shared_ptr<PhotonArray> SBInclinedExponential::SBInclinedExponentialImpl::shoot(int N, UniformDeviate ud) const
     {
-    	throw std::logic_error("Photon shooting NYI for InclinedExponential profile.");
+        throw std::logic_error("Photon shooting NYI for InclinedExponential profile.");
     }
 }

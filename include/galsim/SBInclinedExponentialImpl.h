@@ -32,7 +32,7 @@ namespace galsim {
     {
     public:
         /// @brief Constructor
-    	InclinedExponentialInfo(double h_tani_over_r, const GSParamsPtr& gsparams);
+        InclinedExponentialInfo(double h_tani_over_r, const GSParamsPtr& gsparams);
 
         /// @brief Destructor: deletes photon-shooting classes if necessary
         ~InclinedExponentialInfo() {}
@@ -116,7 +116,7 @@ namespace galsim {
     class SBInclinedExponential::SBInclinedExponentialImpl : public SBProfileImpl
     {
     public:
-    	SBInclinedExponentialImpl(double i, double scale_radius, double scale_height, double flux,
+        SBInclinedExponentialImpl(double i, double scale_radius, double scale_height, double flux,
                  const GSParamsPtr& gsparams);
 
         ~SBInclinedExponentialImpl() {}
@@ -146,7 +146,7 @@ namespace galsim {
             ymin = -integ::MOCK_INF;
             ymax = integ::MOCK_INF;
             if(x<1e-2)
-            	splits.push_back(0.);
+                splits.push_back(0.);
         }
 
         bool isAxisymmetric() const { return false; }
