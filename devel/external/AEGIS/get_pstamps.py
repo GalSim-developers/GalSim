@@ -1,27 +1,60 @@
+"""Makes postage stamps of galaxy, PSF and segmentation _comb_seg_map
+
+Crietrion for making postage stamps:
+In ALL filters: 
+* Is NOT a star
+* Is NOT in any masked region
+* Is NOT detected in other segments
+* SNR >0
+In ONE filter (The last filter in the input list)
+* magnitude<= 25.2
+
+Rectangular postage stamps are made for each selected galaxy. Size of pstamps
+determined using eqn 2,3 Hausler 2007. XSIZE & YSIZE are individually 
+computed for each band and the highest values are picked as dimensions of the 
+postage stamps in both bands.
+
+PSF pstmp size 20*20
+
+PSF:
+The focus of image is set to Mode of focus while varying number of stars
+
+
+Output:
+postage stamps of galaxy, PSF and segmentation _comb_seg_map, file with 
+NUMBER of objects with postage stamps
+"""
 import galsim
 import os
 import numpy as np
 import functions as fn
-import run_segment3 as rs
+import get_objects as go
 import subprocess
 import pyfits
-from astropy.table import Table
+from astropy.table import Table, Column
+from scipy import stats
 
-### rectangular postage stamps
 
-def run(params):
+def run(params, focus):
+    # Remove existing postage stamp images, or creates new folder
     out_dir = params.out_path + params.seg_id+ '/'
-
-    if os.path.isdir(out_dir + 'postage_stamps') is False:
+    if os.path.isdir(out_dir + 'postage_stamps') is True:
+            subprocess.call(["rm", '-r', out_dir + 'postage_stamps'])
             subprocess.call(["mkdir", out_dir + 'postage_stamps'])
+    else:
+        subprocess.call(["mkdir", out_dir + 'postage_stamps'])
     catalogs = []
     tt_files =[]
     #Open main catalog in all filters
-    for filter in params.filters:
-        cat_name = out_dir + '/' + filter + "_clean.cat"
+    for filt in params.filters:
+        cat_name = out_dir + '/' + filt + "_clean.cat"
         catalog = Table.read(cat_name, format="ascii.basic")
+        #make new column to indicate if postamp is created for that object
+        col= Column(np.zeros(len(catalog)),name='IS_PSTAMP',dtype='int',
+                    description = 'created postage stamp' )
+        catalog.add_column(col)
         catalogs.append(catalog)
-        tt_file = params.tt_file_path + "/" + filter + "/{}_stars.txt".format(filter)
+        tt_file = params.tt_file_path + "/" + filt + "/{}_stars.txt".format(filt)
         tt_files.append(np.loadtxt(tt_file))
     # Get indices of galaxies higher than cut off SNR and not masked. 
     # ALso get their size in differnt filters  
@@ -32,8 +65,15 @@ def run(params):
         x_sizes = []
         y_sizes = []
         pos=[]
-        for f,filter in enumerate(params.filters):
-            if (catalogs[f]['IS_STAR'][i] == 0) and (catalogs[f]['IN_MASK'][i] == 0) and (catalogs[f]['SNR'][i] >= 4.5):
+        # Select objects that satisfy criterion
+        for f,filt in enumerate(params.filters):
+            cond1 = (catalogs[f]['IS_STAR'][i] == 0)
+            cond2 = (catalogs[f]['IN_MASK'][i] == 0)
+            cond3 = (catalogs[f]['SNR'][i] >= 0)
+            cond4 = (catalogs[f]['MULTI_DET'][i] == 0)
+            #Placing magnitude cut on only last filter
+            cond5 = (catalogs[-1]['MAG_AUTO'][i] <= 25.2)
+            if  cond1 and cond2 and cond3 and cond4 and cond5:
                 t = (catalogs[f]['THETA_IMAGE'][int(i)])*np.pi/180.
                 e = catalogs[f]['ELLIPTICITY'][int(i)]
                 A = 2.5*(catalogs[f]['A_IMAGE'][int(i)])*(catalogs[f]['KRON_RADIUS'][int(i)])
@@ -43,6 +83,7 @@ def run(params):
                 y_sizes.append(y_size)            
             else:
                 break
+            # get coordinates of nearest star in tt_starfeild
             tt_pos = fn.get_closest_tt(x0,y0,tt_files[f])
             if tt_pos:
                 pos.append(tt_pos)
@@ -54,72 +95,61 @@ def run(params):
                 idx[2].append(y_sizes)
                 idx[3].append(pos)
     obj_ids = np.array(idx[0], dtype=int)
+    # save list with NUMBER of all objects with pstamps
     np.savetxt(out_dir+'objects_with_p_stamps.txt', obj_ids, fmt="%i")
-    #import ipdb; ipdb.set_trace()
+    #save catalogs 
+    for f,filt in enumerate(params.filters):        
+        # column to save focus
+        col= Column(np.ones(len(catalog))*focus[filt], name='FOCUS',
+                    dtype='int', description = 'Focus of image')
+        catalogs[f].add_column(col)
+        catalogs[f]['IS_PSTAMP'][obj_ids] = 1
+        cat_name = out_dir + '/' + filt + "_full.cat"
+        catalogs[f].write(cat_name, format="ascii.basic")
     #Get postage stamp image of the galaxy in all filters. 
     #Postage stamp size is set by the largest filter image  
     for num, i in enumerate(idx[0]):
         print "Saving postage stamp with object id:",i
         gal_images=[]
         psf_images=[]
-        ## Add info that you want in header !!!!!!!!!!!!!!!!!!!!!!!!!!!
         info={}
         x0 = catalogs[0]['X_IMAGE'][int(i)]
         y0 = catalogs[0]['Y_IMAGE'][int(i)]
         x_stamp_size = max(idx[1][num])
         y_stamp_size = max(idx[2][num])
         stamp_size =[int(y_stamp_size), int(x_stamp_size)]
+        psf_stamp_size=[20,20]
         print "Stamp size of image:", stamp_size
         #import ipdb; ipdb.set_trace()
         gal_header = pyfits.Header()
         psf_header = pyfits.Header()
-        temp = rs.GalaxyCatalog(None)
+        temp = go.GalaxyCatalog(None)
         header_params = temp.output_params
         #import ipdb; ipdb.set_trace()
-        for f, filter in enumerate(params.filters):
+        for f, filt in enumerate(params.filters):
             tt_pos = idx[3][num][f]
-            gal_file_name = out_dir + 'postage_stamps/' + filter + '_' + params.seg_id + '_' + str(i)+'_image.fits'
-            psf_file_name = out_dir + 'postage_stamps/' + filter + '_' + params.seg_id + '_' + str(i)+'_psf.fits'
-            seg_file_name = out_dir + 'postage_stamps/' + filter + '_' + params.seg_id + '_' + str(i)+'_seg.fits'
-
-            ####  Get focus   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-            a = np.loadtxt(out_dir+filter+'_focus_with_num_stars.txt')
-            focus = a[-1][1]
-            print "Focus is ", focus
-            gal_name = params.data_files[filter]
-            gal_image = fn.get_subImage_pyfits(x0,y0, stamp_size, gal_name, None, None, save_img=False)
-            #gal_images.append(galsim.Image(gal_image))
-            #gal_images.append(gal_image)
-            
-            psf_name = params.tt_file_path + filter+'/'+ params.tt_file_name[focus]
-            psf_image = fn.get_subImage_pyfits(tt_pos[0],tt_pos[1], stamp_size, psf_name, None, None, save_img=False)
-            #psf_images.append(galsim.Image(psf_image))
-            #psf_images.append(psf_image)
-
-            seg_name = out_dir + filter +'_comb_seg_map.fits'
-            seg_image = fn.get_subImage_pyfits(x0,y0, stamp_size, seg_name, None, None, save_img=False)
-            
-
+            gal_file_name = out_dir + 'postage_stamps/' + filt + '_' + params.seg_id + '_' + str(i)+'_image.fits'
+            psf_file_name = out_dir + 'postage_stamps/' + filt + '_' + params.seg_id + '_' + str(i)+'_psf.fits'
+            seg_file_name = out_dir + 'postage_stamps/' + filt + '_' + params.seg_id + '_' + str(i)+'_seg.fits'
+            gal_name = params.data_files[filt]
+            gal_image = fn.get_subImage_pyfits(x0,y0, stamp_size, gal_name,
+                                               None, None, save_img=False) 
+            psf_name = params.tt_file_path + filt +'/'+ params.tt_file_name[focus[filt]]
+            psf_image = fn.get_subImage_pyfits(tt_pos[0],tt_pos[1], psf_stamp_size,
+                                               psf_name, None, None, save_img=False)
+            seg_name = out_dir + filt +'_comb_seg_map.fits'
+            seg_image = fn.get_subImage_pyfits(x0,y0, stamp_size, seg_name,
+                                               None, None, save_img=False)
             for header_param in header_params:
-                gal_header[header_param] = catalogs[f][header_param][i]
+                try:
+                    gal_header[header_param] = catalogs[f][header_param][i]
+                except:
+                    gal_header[header_param] = 9999.99
+                    
             psf_header['X'] = tt_pos[0]
             psf_header['Y'] = tt_pos[1]
-            psf_header['width'] = stamp_size[0]
-            psf_header['height'] = stamp_size[1]
-            if os.path.isfile(gal_file_name) is True:
-                subprocess.call(["rm", gal_file_name])
-                subprocess.call(["rm", psf_file_name])
-                subprocess.call(["rm", seg_file_name])
-            pyfits.writeto(gal_file_name,gal_image,gal_header)
-            pyfits.writeto(psf_file_name,psf_image,psf_header)
-            pyfits.writeto(seg_file_name,seg_image)
-
-        #images = gal_images + psf_images
-        #print len(images)
-        #file_name = out_dir + 'postage_stamps/'+str(i) + '_postage_stamp.fits'
-        #pyfits.writeto(file_name,images)
-
-
-
-        
-        
+            psf_header['width'] = psf_stamp_size[0]
+            psf_header['height'] = psf_stamp_size[1]
+            pyfits.writeto(gal_file_name,gal_image,gal_header, clobber=True)
+            pyfits.writeto(psf_file_name,psf_image,psf_header, clobber=True)
+            pyfits.writeto(seg_file_name,seg_image, clobber=True)

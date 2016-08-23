@@ -84,15 +84,6 @@ def renumber_table(catalog):
     catalog.add_column(col)
     return catalog
 
-def mask_it(catalog):
-    """Make mask =1 if inside diffraction spike or boundary"""   
-    for i in range(catalog.nrows):
-        catalog['IN_MASK'][i] = 1
-        if (catalog['IN_BOUNDARY'][i] == 1) and \
-           (catalog['IN_DIFF_MASK'][i] == 0):
-           catalog['IN_MASK'][i] = 0
-    return catalog
-
 def mask_it_table(catalog):
     """Make mask =1 if inside diffraction spike or boundary or fake"""  
     val = np.ones(len(catalog))
@@ -127,7 +118,6 @@ def select_good_stars_table(catalog, nstars=25):
 
 def get_subImage(x0,y0, L, image,
                  out_dir, out_name, save_img=False):
-
     f = pyfits.open(image)
     image_data = f[0].data
     f.close()
@@ -145,6 +135,7 @@ def get_subImage(x0,y0, L, image,
             subprocess.call(["mkdir", out_dir])
             sub.write(out_dir+out_name+".fits")
     return sub
+
 def get_subImage_pyfits(x0,y0, L, image,
                  out_dir, out_name, save_img=False):
     """Height and width of postage stamp different"""
@@ -218,12 +209,15 @@ def inpoly(px,py,x,y):
     return crossings % 2
 
 
-def set_col_any(arr, buff, set_to):
+def set_col_any(arr, val, buff, set_to):
     """Set the column value to set_to that are within buff of any non zero value in arr"""
     s = arr.shape
     for i in range(s[1]):
         temp = arr[:,i]
-        q, = np.where(temp!=0)
+        if val:
+            q, = np.where(temp==val)
+        else:
+            q, = np.where(temp!=0)
         d = np.array([range(j-buff,j+buff+1) for j in q])
         d = d.reshape(1,d.size)[0]
         d = d[np.where((d>=0) &(d<s[0]))]
@@ -232,11 +226,11 @@ def set_col_any(arr, buff, set_to):
         arr[:,i]=temp
     return arr
 
-def seg_expand(seg, val=0, buff=20, set_to=-1):
+def seg_expand(seg,  buff, val=None, set_to=-1):
     """Expand the seg map by buffering buff pixels around pixel val """
     arr = np.array(seg).copy()
-    temp1 = set_col_any(arr, buff, set_to)
-    temp2 = set_col_any(arr.T, buff, set_to).T
+    temp1 = set_col_any(arr, val, buff, set_to)
+    temp2 = set_col_any(arr.T,val,  buff, set_to).T
     new_seg = np.minimum(temp1, temp2)
     return arr
 

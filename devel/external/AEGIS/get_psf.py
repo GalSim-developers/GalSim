@@ -1,73 +1,77 @@
-# modified get_psf.py. 
-""" Run this after best stars are picked for all segments and filters.
-Manually inspect all strs to be picked for focus estimation
-stars saved at output/seg_id/stars
-write the id of bad stars in file bad_stars3.txt
-Get focus
+""" Program Number: 3
+Computes the focal length of the telescope for a given image, and uses that to
+estimate the PSF. Postage stamps of select galaxies and their PSF are also drawn.(called
+in get_pstamps.py)
 
+Requirements: A catalog with sextractor output for the given tile(segment), List
+of stars in the segemnt to be used for psf measuremnt, image of region, tt_starfeilds
+which contain psf drawn at difernt focus distance, at various points on the chip
+(size of tt_starfeild, must be same as input image),segmentation map of the
+region. If upon visual inspection, some stars were found to be unsuitable for
+psf measuremnt, then their seg id and number must be written in bad_stars.txt
 
-mdified fom main.py
+PSF estimation:
+The optimal focus and corresponding tt_starfeild in picked in get_pstamps. Here
+we compute the focus for a given image while varying number of strs used to 
+measure focus. The focus is given by the minimum of the cost function. The focus 
+is is computed for different number of stars in the feild. The stars used for 
+measuring focus are sorted in decreasing SNR. The mode of focus values for different
+number of stars used in focus measurement is set as the focus value for the given
+segmenty.   
 
+Cost Function:
+The magnitude of diffrence in ellipticities of stars and its corresponing tiny 
+tim image. 
+
+Output:
+File with focus while varying nuumber of stars. 
  """
 import subprocess
 import galsim
 import numpy as np
 import functions as fn
 import matplotlib.pyplot as plt
-import get_postage_stamps6 as gps
+import get_pstamps as gps
+from astropy.table import Table, Column
+from scipy import stats
 
 class Main_param:
     """Class containg parameters to pass to run analysis on each segment file."""
     def __init__(self,args, bad_stars):
         self.file_name = args.file_name.replace('seg_id', args.seg_id)
-        self.wht_name = args.wht_name.replace('seg_id', args.seg_id)
         self.seg_id = args.seg_id
         self.filters = args.filter_names
         self.out_path = args.out_path
         self.tt_file_path = args.tt_file_path       
         self.focus = args.focus
-        self.star_galaxy_weights = args.star_galaxy_weights
         self.bad_stars = bad_stars
         if args.file_path[-1] != '/':
             self.file_path = args.file_path+'/'
         else:
             self.file_path = args.file_path
-        if args.wht_path[-1] != '/':
-            self.wht_path = args.wht_path+'/'
-        else:
-            self.wht_path = args.wht_path
-        self.spike_params = {}
-        self.data_files, self.wht_files = {}, {}
+        self.data_files = {}
         for i in range(len(self.filters)):
             filter1 = self.filters[i]
             self.data_files[filter1] = self.file_path + filter1 + '/' + self.file_name.replace('filter', filter1)
-            self.wht_files[filter1] = self.wht_path + filter1 + '/' + self.wht_name.replace('filter',filter1)
-            self.spike_params[filter1] = args.filter_spike_params[i] 
         self.tt_file_name = {}
         for focus in self.focus:
             self.tt_file_name[focus] = args.tt_file_name.replace('focus', 'f'+str(focus)) 
-        
-
 
 def get_bad_stars(args):
+    """Returns list of stars that should be removed from list of stars 
+    for PSF estimation"""
     bad_stars ={}
     b_s = np.loadtxt(args.bad_stars_file, dtype='S16')
     s = b_s.shape
-    #if s[0] != len(args.seg_ids)*len(args.filter_names):
-    #    raise AttributeError('Every segment and filter must have 1 entry each in bad_stars')
     for i in range(0,s[0],2):
         bad_stars[b_s[i][0]]={}
         bad_stars[b_s[i][0]][b_s[i][1]] = b_s[i][2:]
         bad_stars[b_s[i][0]][b_s[i+1][1]] = b_s[i+1][2:]
-    #print bad_stars
     return bad_stars
 
 def get_good_stars(params, filter, out_dir):
-    # Get only index of selected stars
-    #print np.loadtxt(out_dir + filter+'_matched_stars.txt')
+    """Removes bad strs from from list of stars for PSF estimation"""
     stars = (np.loadtxt(out_dir + filter+'_matched_stars.txt'))[0]
-    #print stars
-    #print params.bad_stars[filter]
     idx=[]
     for b_s in params.bad_stars[filter]:
         if b_s != 'None':
@@ -75,14 +79,17 @@ def get_good_stars(params, filter, out_dir):
             idx.append(q[0])     
     return np.delete(range(len(stars)),idx, axis=0)
 
-
 def get_moments(params, good_stars,
                 filter, out_dir):
+    """Computes moments of good_stars, and moments for of tt_starfeilds at
+    differnt Focus
+    """
     print "Computing Moments"
     print filter, params.seg_id
     stars1 = np.loadtxt(out_dir + filter+'_matched_stars.txt').T
     moments = [[],[]]
-    hsm_params =galsim.hsm.HSMParams(max_mom2_iter = 1000000)
+    hsm_params =galsim.hsm.HSMParams(max_mom2_iter = 1000000000)
+    fin_stars=[]
     for num,i in enumerate(good_stars):
         print "Getting moments of star ", int(stars1[i][0])
         x_s = stars1[i][1]
@@ -91,18 +98,30 @@ def get_moments(params, good_stars,
         x_t = stars1[i][4]
         y_t = stars1[i][5]
         star_file = params.data_files[filter]
-        im_s = fn.get_subImage(x_s, y_s, int(r)*6, star_file,
+        im_s = fn.get_subImage(x_s, y_s, int(r)*8, star_file,
                             out_dir, None, save_img=False)
-        moments[0].append(galsim.hsm.FindAdaptiveMom(im_s, hsmparams=hsm_params))
-        moments[1].append({})
-        for i, focus in enumerate(params.focus):
+        star_result = galsim.hsm.FindAdaptiveMom(im_s, hsmparams=hsm_params, strict=False)
+        if star_result.error_message != "":
+            print "Moments measurement failed for star{0}".format(i)
+            continue
+        tt_result = {}
+        check = False
+        for j, focus in enumerate(params.focus):
+            print "Computing moments for focus ", focus
             tt_file = params.tt_file_path + filter+'/'+ params.tt_file_name[focus]
-            im_t = fn.get_subImage(x_t, y_t, int(r)*6, tt_file,
-                                out_dir, None, save_img=False)          
-            moments[1][num][focus] = galsim.hsm.FindAdaptiveMom(im_t, hsmparams=hsm_params)
-    return moments
-
-
+            im_t = fn.get_subImage(x_t, y_t, int(r)*8, tt_file,
+                                out_dir, None, save_img=False)   
+            result = galsim.hsm.FindAdaptiveMom(im_t, hsmparams=hsm_params, strict=False)
+            if result.error_message != "" :
+                check  = True
+                print "Moments measurement failed for tt star{0} at focus{1}".format(i,focus)
+                break      
+            tt_result[focus] = result
+        if check == False:
+            fin_stars.append(i)
+            moments[0].append(star_result)
+            moments[1].append(tt_result)
+    return moments, fin_stars
 
 def calc_cost_fn(params, moments):
     print "Calculating cost function"
@@ -119,6 +138,7 @@ def calc_cost_fn(params, moments):
 
 
 def calc_cost_fn_num(params, moments, num):
+    """Compute cost function from moments of star num-all"""
     print "Calculating cost function"
     cost_fn = np.zeros([len(params.focus),2])
     for i, focus in enumerate(params.focus):
@@ -131,68 +151,24 @@ def calc_cost_fn_num(params, moments, num):
         cost_fn[i][0] = focus
     return cost_fn
 
-def plot_star_model(params, focus, good_stars, 
-                    out_dir, filter):
-    star_dir = out_dir + filter +"good_stars"
-    stars1 = np.loadtxt(out_dir + filter+'_matched_stars.txt')
-    moments = [[],[]]
-    for num,i in enumerate(good_stars):
-        x_s = stars1[i][1]
-        y_s = stars1[i][2]
-        r = stars1[i][3]
-        x_t = stars1[i][4]
-        y_t = stars1[i][5]
-        star_file = params.data_files[filter]
-        tt_file = params.tt_file_path + filter+'/'+ params.tt_file_name[focus]
-        im_t = fn.get_subImage(x_t, y_t, int(r)*6, tt_file,
-                                out_dir, None, save_img=False)  
-        im_s = fn.get_subImage(x_s, y_s, int(r)*6, star_file,
-                            out_dir, None, save_img=False)
-        plt.figure(figsize=[30,20])
-        plt.subplot(3,3,1)
-        plt.imshow(im_s.array)
-        plt.colorbar()
-        plt.tile('Star')
-        plt.subplot(3,3,1)
-        plt.imshow(im_t.array)
-        plt.colorbar()
-        plt.tile('Model')
-        plt.subplot(3,3,1)
-        plt.imshow(im_s.array-im_t.array)
-        plt.colorbar()
-        plt.tile('Star-Model')        
-        try:
-            plt.savefig(star_dir+ '/'+ str(star_id)+'.png', bbox_inches='tight')
-        except:
-            subprocess.call(["mkdir", star_dir])
-            plt.savefig(star_dir+ '/'+ str(star_id)+'.png', bbox_inches='tight')
-
-def get_focus(params):
-    """Return focus value (minimum of cost fn) for each filter """
-    out_dir = params.out_path+ '/' + params.seg_id+ '/'
-    focus = {}
-    for filter in params.filters:
-        good_stars = get_good_stars(params, filter, out_dir)
-        np.savetxt( out_dir + filter+'_good_stars.txt', good_stars)
-        moments = get_moments(params, good_stars, filter, out_dir)
-        cost_fn = calc_cost_fn(params, moments)
-        focus[filter] =  cost_fn.T[0][np.argmin(cost_fn.T[1])]
-        np.savetxt(out_dir + filter +'_cost_fn.txt', cost_fn)
-        print " Focus for seg:{0} in filter :{1} is {2}".format(params.seg_id, filter, focus[filter])
-    return focus
-
-
-
-def plot_focus_num_stars(params):
+def get_focus_num_stars(params):
+    """Computes focus of image, while varying number of stars used to compute 
+    Focus. Minimum of 3 strs are always used in measuring focus. The focus
+    for diffrent numbers is saved to file. Cost function for focus measurmnts
+    with all strs is also saved. stars picked go in decraesing SNR.i.e 3 stars 
+    with highest SNR are always included in measurments.  
+    """
     out_dir = params.out_path+ '/' + params.seg_id+ '/'
     for filter in params.filters:
         print "Running focus with different star number for filter:", filter
         good_stars = get_good_stars(params, filter, out_dir)
-        print "Number of good stars:", len(good_stars) 
-        moments = get_moments(params, good_stars, filter, out_dir)
-        focus =  np.zeros([len(good_stars)-5,2])
-        for i,num in enumerate(range(5,len(good_stars))):               
-            N = len(good_stars) - num - 1
+        print "Number of good stars:", len(good_stars)
+        # compute moments for all stars 
+        moments, final_stars = get_moments(params, good_stars, filter, out_dir)
+        focus =  np.zeros([len(final_stars)-3,2])
+        # compute focus from 3 - all stars
+        for i,num in enumerate(range(3,len(final_stars))):               
+            N = len(final_stars) - num - 1
             print "multi num stars ", N
             cost_fn = calc_cost_fn_num(params, moments, N) 
             focus[i][0] = num
@@ -200,39 +176,23 @@ def plot_focus_num_stars(params):
         np.savetxt(out_dir + filter+"_cost_fn.txt", cost_fn)
         np.savetxt(out_dir + filter+"_focus_with_num_stars.txt", focus)
         print focus.T
-        #print focus.shape
-        #print type(focus.T[0][1])
-        #print type(focus.T[1][1])
-        #plt.figure(figsize=[10,10])
-        #plt.scatter(focus.T[0], focus.T[1])
-        #plt.xlabel('Number of stars')
-        #plt.ylabel('Focus')
-        #plt.title('Variation of focus with number of stars used ({0})'.format(filter))
-        #plt.savefig(filter+'_focus_num_stars1.png')
-
-
-
-
-
-
-
 
 def get_psf(args):
+    """Gets list of stars, if any, to be omitted from PSF estimation"""
     bad_stars = get_bad_stars(args)
     params = Main_param(args, bad_stars[args.seg_id])
-    plot_focus_num_stars(params)
-    focus = get_focus(params)
-    #print "Getting postage stamps"
-    gps.run(params)
+    # Computes focus for diffrent number of stars
+    get_focus_num_stars(params)
+    out_dir = params.out_path+ '/' + params.seg_id+ '/'
+    focus={}
+    for f,filt in enumerate(params.filters):
+        a = np.loadtxt(out_dir+filt+'_focus_with_num_stars.txt')
+        focus[filt] = int(stats.mode(a.T[1]).mode[0])
+        print "Focus for {0} is {1} ".format(filt, focus[filt])
+    # save postage stamps
+    print "Getting postage stamps"
+    gps.run(params, focus)
             
-
-            
-
-
-
-            #rs.run_segment(params)
-
-
 
 if __name__ == '__main__':
     import subprocess
@@ -240,41 +200,33 @@ if __name__ == '__main__':
     import numpy as np
     from argparse import ArgumentParser
     parser = ArgumentParser()
-    parser.add_argument('--n_filters', type=int, default=2,
-                        help="number of image filters [Default: 2]")
+    parser.add_argument('--seg_id', default='1g',
+                        help="Segment id of image to run [Default:1g]")
     parser.add_argument('--filter_names', default= ['f606w','f814w'],
                         help="names of filters [Default: ['f606w','f814w']]")
-    parser.add_argument('--filter_spike_params', 
-                        default= [(0.0350087,64.0863,40.0,2.614), (0.0367020,77.7674,40.0,2.180)],
-                        help="Prams of diffraction spikes on filters. These have to in the same order as filter_names [Default: [(0.0350087,64.0863,40.0,2.614), (0.0367020,77.7674,40.0,2.180)]]")
-    parser.add_argument('--star_galaxy_weights', 
-                        default= (19.0, -9.8, 0.9, -26.9),
-                        help="(x_div, y_div, slope, intercept)")
-    parser.add_argument('--bad_stars_file', default= '/nfs/slac/g/ki/ki19/deuce/AEGIS/output/bad_stars6.txt',
-                        help="Path of file containing bad stars[Default:'/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip] ")
+    parser.add_argument('--bad_stars_file', default= 'bad_stars.txt',
+                        help="File containing index of strs that should not be  \
+                        used in PSF estimation [Default:'bad_stars.txt'] ")
     parser.add_argument('--file_path', default= '/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip/',
-                        help="Path of directory containing images[Default:'/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip] ")
-    parser.add_argument('--wht_path', default= '/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip',
-                        help="Path of directory containing weight files[Default:'/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip] ")
-    parser.add_argument('--out_path', default= '/nfs/slac/g/ki/ki19/deuce/AEGIS/output/',
-                        help="Path to where you want the output store [Default: /nfs/slac/g/ki/ki19/deuce/AEGIS/output] ")
+                        help="Path of directory containing input images \
+                        [Default:'/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip] ")
     parser.add_argument('--file_name', default='EGS_10134_seg_id_acs_wfc_filter_30mas_unrot_drz.fits',
-                        help="File name of image with 'seg_id' in place in place of actual segment id [Default:'EGS_10134_seg_id_acs_wfc_f606w_30mas_unrot_drz.fits']")
-    parser.add_argument('--wht_name', default='EGS_10134_seg_id_acs_wfc_filter_30mas_unrot_wht.fits',
-                        help="Background file name of image with 'seg_id' in place in place of actual segment id [Default:'EGS_10134_seg_id_acs_wfc_f606w_30mas_unrot_wht.fits']")  
-    parser.add_argument('--seg_id', default='1a',
-                        help="List containing Segment ids to run [Default:'1a']")
-    parser.add_argument('--tt_file_path', default='/nfs/slac/g/ki/ki19/deuce/AEGIS/tt_starfield/',
-                        help="Path of directory contating modelled TT fileds [Default:'/nfs/slac/g/ki/ki19/deuce/AEGIS/tt_starfield/'] ")
+                        help="File name of measurement image with 'seg_id' & \
+                        'filter' in place of image segment id and filter  \
+                        [Default:'EGS_10134_seg_id_acs_wfc_f606w_30mas_unrot_drz.fits']")
+    parser.add_argument('--out_path', default= '/nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_full/',
+                        help="Path to where you want the output stored \
+                        [Default: /nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_full]")
+    parser.add_argument('--tt_file_path', 
+                        default='/nfs/slac/g/ki/ki19/deuce/AEGIS/tt_starfield/',
+                        help="Path of directory contating modelled TT fileds \
+                        [Default:'/nfs/slac/g/ki/ki19/deuce/AEGIS/tt_starfield/']")
     parser.add_argument('--tt_file_name', default= 'TinyTim_focus.fits',
-                        help="Name of TT_field file [Default:TinyTim_focus.fits]")
-    parser.add_argument('--focus', default= [-10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5],
+                        help="TT_field file name  with 'focus' in place of actual focus \
+                        [Default:TinyTim_focus.fits]")
+    parser.add_argument('--focus',
+                        default= [-10, -9, -8, -7, -6, -5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5],
                         help="List containg focus positions that have TT_fields")
-
-    parser.add_argument('--run_all', help='Enter yes to run all files')
     args = parser.parse_args()
-
     get_psf(args)
-        
-# to do
-# make list of all ids
+
