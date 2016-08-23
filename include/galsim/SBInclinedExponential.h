@@ -30,8 +30,7 @@ namespace galsim {
     namespace sbp {
 
         // Constrain range of allowed inclination angles
-        const double minimum_i = 0.001;
-        const double maximum_i = M_PI/2. - minimum_i;
+        const double maximum_i = M_PI/2. - 0.001;
 
         // How many profiles to save in the cache
         const int max_inclined_exponential_cache = 100;

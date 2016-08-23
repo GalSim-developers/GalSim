@@ -123,16 +123,7 @@ namespace galsim {
         if(i>sbp::maximum_i)
         {
             // Perfectly edge-on isn't analytic, so we truncate at the maximum value
-            _i = sbp::minimum_i;
-        }
-        else if(i<sbp::minimum_i)
-        {
-            // Perfectly face-on is simply an exponential profile, so we can treat it as such
-            // to save time
-            _i = 0.;
-            _h_tani_over_r = 0.;
-            _r0_cosi = _r0;
-            _inv_r0_cosi = _inv_r0;
+            _i = sbp::maximum_i;
         }
         else
         {
@@ -335,17 +326,12 @@ namespace galsim {
         // Calculate the convolution factor
         double res_conv;
 
-        // Check for the face-on case
-        if (_half_pi_h_tani_over_r==0)
-        {
-            res_conv = 1.;
-        }
-        // Check if it's small enough that we can save time with the Taylor expansion
-        else if (kysq < _ksq_min)
+        double scaled_ky = _half_pi_h_tani_over_r*ky;
+        double scaled_ky_squared = scaled_ky*scaled_ky;
+
+        if (scaled_ky_squared < _ksq_min)
         {
             // Use Taylor expansion to speed up calculation
-            double scaled_ky = _half_pi_h_tani_over_r*ky;
-            double scaled_ky_squared = scaled_ky*scaled_ky;
             res_conv = (1. - 0.16666666667*scaled_ky_squared*(1. - 0.116666666667*scaled_ky_squared));
         }
         else
