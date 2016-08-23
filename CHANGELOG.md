@@ -24,7 +24,7 @@ Deprecated Features
 New Features
 ------------
 
-
+* Added new light distribution 'InclinedExponential'
 
 New config features
 -------------------
