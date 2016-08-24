@@ -22,7 +22,7 @@ computed from sextractor needs is modified by parameter scale factr --sf.
 The detected objects are then classified into stars and galaxies depending on
 their position in the MAG_AUTO Vs MU_MAX plot. The seperation line is set 
 by star_galaxy_params. Objects that lie on image edge are masked. Region around
-saturated stars are masked: masked region set by filter_spike_params.Regions 
+saturated stars are masked: masked region set by diff_spike_params.Regions 
 that were manually observed to have artefacts (eg.ghosts) and are to be masked 
 are input as manual_mask_file. final catalog is renumbered begining from 0.
 Bright and faint seg maps are combined to form a single segmentation map.
@@ -85,7 +85,7 @@ class Main_param:
             filter1 = self.filters[i]
             self.data_files[filter1] = self.file_path + filter1 + '/' + self.file_name.replace('filter', filter1)
             self.wht_files[filter1] = self.wht_path + filter1 + '/' + self.wht_name.replace('filter',filter1)
-            self.spike_params[filter1] = args.filter_spike_params[i] 
+            self.spike_params[filter1] = args.diff_spike_params[i] 
             self.zero_point_mag[filter1] = args.zero_point_mag[i]
             self.star_galaxy_params[filter1] = args.star_galaxy_params[i]
             self.gain[filter1] = args.gain[i]
@@ -634,7 +634,7 @@ if __name__ == '__main__':
     parser.add_argument('--buffer', default=10,
                         help="Number of pixels used as buffer around bright \
                         objects in Hot-cold detection method.[Default:15(pixels)]")
-    parser.add_argument('--filter_spike_params', 
+    parser.add_argument('--diff_spike_params', 
                         default= [(0.0350087,64.0863,40.0,2.614),
                                   (0.0367020,77.7674,40.0,2.180)],
                         help="Params of diffraction spikes in each filter. \
