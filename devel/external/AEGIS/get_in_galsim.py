@@ -115,6 +115,10 @@ def get_images(args, index_table,
         psf_name = path + psf_name
         im_hdul.writeto(im_name, clobber=True)
         psf_hdul.writeto(psf_name, clobber=True)
+    cat_name = 'index_' + args.cat_name.replace('filter', 'all')
+    index_table.sort('ORDER')
+    index_table.write(args.main_path + cat_name, format='fits',
+                      overwrite=True)
     return index_table
   
 def main_table():
@@ -153,12 +157,9 @@ def fits_table():
 def get_main_catalog(args, index_table):
     """Make catlog containing info about all galaxies in final catalog.
     Columns are identical to cosmos real galaxy catalog"""
-    cat_name = 'index_' + args.cat_name.replace('filter', 'all')
-    path = args.main_path + args.out_dir 
-    index_table[index_table['ORDER']].write(path + cat_name, format='fits',
-                                            overwrite=True)
     print 'Saving index catalog at', cat_name
     print "Creating main catalog" 
+    print index_table[0]
     all_seg_ids = np.loadtxt(args.seg_list_file, delimiter=" ",dtype='S2')
     for f, filt in enumerate(args.filter_names):
     	final_table = main_table()
@@ -190,11 +191,13 @@ def get_main_catalog(args, index_table):
             complete_table = vstack([complete_table,temp])
         path = args.main_path + args.out_dir 
         cat_name = args.cat_name.replace('filter', args.file_filter_name[f])
-        final_table[index_table['ORDER']].write(path + cat_name, format='fits',
+        index_table.sort('ORDER')
+        ord_indx = [np.where(i_t==final_table['IDENT'])[0][0] for i_t in index_table['IDENT']]
+        final_table[ord_indx].write(path + cat_name, format='fits',
                                                 overwrite=True)
         print "Savings fits file at ", path + cat_name
         cat_name = 'complete_' + args.cat_name.replace('filter', args.file_filter_name[f])
-        complete_table[index_table['ORDER']].write(args.main_path + cat_name, format='fits',
+        complete_table[ord_indx].write(args.main_path + cat_name, format='fits',
                                                    overwrite=True)
 def get_selection_catalog(args, index_table):
     """Make catlog containing info about all galaxies in final catalog.
@@ -213,8 +216,10 @@ def get_selection_catalog(args, index_table):
             temp.add_column(col)
             final_table = vstack([final_table,temp], join_type='inner')
         path = args.main_path + args.out_dir 
+        index_table.sort('ORDER')
+        ord_indx = [np.where(i_t==final_table['IDENT'])[0][0] for i_t in index_table['IDENT']]        
         file_name = args.selec_file_name.replace('filter', args.file_filter_name[f])
-        final_table[index_table['ORDER']].write(path + file_name, format='fits',
+        final_table[ord_indx].write(path + file_name, format='fits',
                                                 overwrite=True)
         print "Savings fits file at ", path + file_name
 
@@ -237,9 +242,11 @@ def get_fits_catalog(args, index_table):
             temp.add_column(col)
             final_table = vstack([final_table,temp], join_type='inner')
         path = args.main_path + args.out_dir 
+        index_table.sort('ORDER')
+        ord_indx = [np.where(i_t==final_table['IDENT'])[0][0] for i_t in index_table['IDENT']]
         file_name = args.fits_file_name.replace('filter', args.file_filter_name[f])
         print "Savings fits file at ", path + file_name
-        final_table[index_table['ORDER']].write(path + file_name, format='fits',
+        final_table[ord_indx].write(path + file_name, format='fits',
                                                 overwrite=True)
 def get_in_galsim(args):
     if os.path.isdir(args.main_path + args.out_dir) is False:
