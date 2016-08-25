@@ -159,8 +159,8 @@ namespace galsim {
         /// @brief photon shooting done by rescaling photons from appropriate `InclinedExponentialInfo`
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
-        /// @brief Returns the inclination angle i in radians
-        double getI() const { return _inclination; }
+        /// @brief Returns the inclination angle in radians
+        double getInclination() const { return _inclination; }
         /// @brief Returns the scale radius
         double getScaleRadius() const { return _r0; }
         /// @brief Returns the scale radius
