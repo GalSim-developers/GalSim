@@ -81,9 +81,6 @@ namespace galsim {
         /// @brief Returns the scale height r0 of the disk profile
         double getScaleHeight() const;
 
-        /// @brief Returns the truncation radius
-        double getTrunc() const;
-
     protected:
 
         class SBInclinedExponentialImpl;
