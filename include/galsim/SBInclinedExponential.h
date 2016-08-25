@@ -29,8 +29,8 @@ namespace galsim {
 
     namespace sbp {
 
-        // Constrain range of allowed inclination angles
-        const double maximum_i = M_PI/2. - 0.001;
+        // Constrain range of allowed cos(inclination) to prevent division by zero
+        const double minimum_cosi = 0.001;
 
         // How many profiles to save in the cache
         const int max_inclined_exponential_cache = 100;
@@ -55,7 +55,7 @@ namespace galsim {
         /**
          * @brief Constructor.
          *
-         * @param[in] i                 Inclination angle i in radians, where 0 = face-on, pi/2 = edge-on
+         * @param[in] inclination       Inclination angle, where 0 = face-on, pi/2 = edge-on
          * @param[in] scale_radius      Scale radius of the exponential disk.
          * @param[in] scale_height      Scale height of the exponential disk.
          * @param[in] flux              Flux.
@@ -63,7 +63,7 @@ namespace galsim {
          *                              of image operations and rendering, if different from the
          *                              default.
          */
-        SBInclinedExponential(double i, double scale_radius, double scale_height, double flux,
+        SBInclinedExponential(double inclination, double scale_radius, double scale_height, double flux,
                  const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.
@@ -72,8 +72,8 @@ namespace galsim {
         /// @brief Destructor.
         ~SBInclinedExponential();
 
-        /// @brief Returns the inclination angle 'i' of the profile in radians
-        double getI() const;
+        /// @brief Returns the inclination angle of the profile in radians
+        double getInclination() const;
 
         /// @brief Returns the scale radius r0 of the disk profile
         double getScaleRadius() const;
