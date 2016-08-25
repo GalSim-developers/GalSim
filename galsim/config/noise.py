@@ -555,7 +555,7 @@ class COSMOSNoiseBuilder(NoiseBuilder):
             if var < current_var:
                 raise RuntimeError(
                     "Whitening already added more noise than the requested COSMOS noise.")
-            cn -= galsim.UncorrelatedNoise(rng, im.wcs, current_var)
+            cn -= galsim.UncorrelatedNoise(current_var, rng=rng, wcs=im.wcs)
 
         # Add the noise to the image
         im.addNoise(cn)
