@@ -116,7 +116,7 @@ namespace galsim {
     class SBInclinedExponential::SBInclinedExponentialImpl : public SBProfileImpl
     {
     public:
-        SBInclinedExponentialImpl(double i, double scale_radius, double scale_height, double flux,
+        SBInclinedExponentialImpl(double inclination, double scale_radius, double scale_height, double flux,
                  const GSParamsPtr& gsparams);
 
         ~SBInclinedExponentialImpl() {}
@@ -129,14 +129,12 @@ namespace galsim {
 
         void getXRange(double& xmin, double& xmax, std::vector<double>& splits) const
         {
-            splits.push_back(0.);
             xmin = -integ::MOCK_INF;
             xmax = integ::MOCK_INF;
         }
 
         void getYRange(double& ymin, double& ymax, std::vector<double>& splits) const
         {
-            splits.push_back(0.);
             ymin = -integ::MOCK_INF;
             ymax = integ::MOCK_INF;
         }
@@ -145,13 +143,11 @@ namespace galsim {
         {
             ymin = -integ::MOCK_INF;
             ymax = integ::MOCK_INF;
-            if(x<1e-2)
-                splits.push_back(0.);
         }
 
         bool isAxisymmetric() const { return false; }
         bool hasHardEdges() const { return false; }
-        bool isAnalyticX() const { return false; }  // Will be in future version though
+        bool isAnalyticX() const { return false; }  // May be in future version though
         bool isAnalyticK() const { return true; }
 
         Position<double> centroid() const
@@ -164,7 +160,7 @@ namespace galsim {
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
         /// @brief Returns the inclination angle i in radians
-        double getI() const { return _i; }
+        double getI() const { return _inclination; }
         /// @brief Returns the scale radius
         double getScaleRadius() const { return _r0; }
         /// @brief Returns the scale radius
@@ -189,10 +185,10 @@ namespace galsim {
         std::string serialize() const;
 
     private:
-        double _i;       ///< Inclination angle 'i' in radians
-        double _flux;    ///< Actual flux (may differ from that specified at the constructor).
-        double _r0;      ///< Scale radius specified at the constructor.
-        double _h0;      ///< Scale height specified at the constructor.
+        double _inclination; ///< Inclination angle 'i' in radians
+        double _flux;        ///< Actual flux (may differ from that specified at the constructor).
+        double _r0;          ///< Scale radius specified at the constructor.
+        double _h0;          ///< Scale height specified at the constructor.
 
         /* NYI
         double _xnorm;     ///< Normalization of xValue relative to what SersicInfo returns.
