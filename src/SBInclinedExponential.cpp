@@ -88,51 +88,39 @@ namespace galsim {
     LRUCache< boost::tuple<double, GSParamsPtr >, InclinedExponentialInfo >
         SBInclinedExponential::SBInclinedExponentialImpl::cache(sbp::max_inclined_exponential_cache);
 
-    SBInclinedExponential::SBInclinedExponentialImpl::SBInclinedExponentialImpl(double i, double scale_radius, double scale_height, double flux,
-            const GSParamsPtr& gsparams) :
+    SBInclinedExponential::SBInclinedExponentialImpl::SBInclinedExponentialImpl(double inclination, double scale_radius,
+            double scale_height, double flux, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
+        _inclination(inclination),
         _r0(scale_radius),
         _h0(scale_height),
         _flux(flux),
         _inv_r0(1./_r0),
-        _h_tani_over_r(scale_height*std::tan(i)/scale_radius),
-        _r0_cosi(_r0*std::cos(i)),
-        _inv_r0_cosi(1./(scale_radius*std::cos(i))),
-        // Start with InclinedExponentialInfo regardless of value of trunc
         _info(cache.get(boost::make_tuple(_h_tani_over_r, this->gsparams.duplicate())))
     {
         dbg<<"Start SBInclinedExponential constructor:\n";
-        dbg<<"i = "<<_i<<std::endl;
+        dbg<<"inclination = "<<_inclination<<std::endl;
         dbg<<"scale radius = "<<_r0<<std::endl;
         dbg<<"scale height = "<<_h0<<std::endl;
         dbg<<"flux = "<<_flux<<std::endl;
 
-        // Ensure i is positive and in the range 0 <= i <= M_PI/2
-
-        // Work with positive values first
-        if(i<0) i = -i;
-
-        // Get into the proper range
-        if(i>M_PI/2.)
+        // Check if cos(inclination) is within allowed limits, and institute special handling if it isn't
+        
+        double cosi = std::abs(std::cos(_inclination));
+        
+        if(cosi<sbp::minimum_cosi)
         {
-            i -= int(i/(2*M_PI))*2*M_PI;
-            if(i<0) i = -i; // Since we might have gone below zero again
+            // Perfectly edge-on isn't analytic, so we truncate at the minimum cos(inclination) value
+            cosi = sbp::minimum_cosi;
         }
-
-        // Check if i is within allowed limits, and institute special handling if it isn't
-        if(i>sbp::maximum_i)
-        {
-            // Perfectly edge-on isn't analytic, so we truncate at the maximum value
-            _i = sbp::maximum_i;
-        }
-        else
-        {
-            // Normal setup here
-            _i = i;
-            _h_tani_over_r = scale_height*std::tan(i)/scale_radius;
-            _r0_cosi = _r0*std::cos(i);
-            _inv_r0_cosi = 1./(scale_radius*std::cos(i));
-        }
+        
+        // Now set up, using this value of cosi
+        
+        _r0_cosi = _r0*cosi;
+        _inv_r0_cosi = 1./_r0_cosi;
+        
+        _h_tani_over_r = scale_height*std::abs(std::sin(inclination))*_inv_r0_cosi; // A tiny bit more accurate than using tan of
+            // the truncated value
 
         _info = boost::shared_ptr<InclinedExponentialInfo>(cache.get(boost::make_tuple(_h_tani_over_r, this->gsparams.duplicate())));
 
@@ -148,7 +136,7 @@ namespace galsim {
 
     double SBInclinedExponential::SBInclinedExponentialImpl::xValue(const Position<double>& p) const
     {
-        throw std::logic_error("Real-space expression. of SBInclinedExponential NYI.");
+        throw std::runtime_error("Real-space expression of SBInclinedExponential NYI.");
         return 0;
     }
 
@@ -311,7 +299,7 @@ namespace galsim {
         double res_base;
         if (ksq > _ksq_max)
         {
-            res_base = 0.;
+            return 0.;
         }
         else if (ksq < _ksq_min)
         {
@@ -356,12 +344,12 @@ namespace galsim {
     // NYI, but needs to be defined
     boost::shared_ptr<PhotonArray> InclinedExponentialInfo::shoot(int N, UniformDeviate ud) const
     {
-        throw std::logic_error("Photon shooting NYI for InclinedExponential profile.");
+        throw std::runtime_error("Photon shooting NYI for InclinedExponential profile.");
     }
 
     // NYI, but needs to be defined
     boost::shared_ptr<PhotonArray> SBInclinedExponential::SBInclinedExponentialImpl::shoot(int N, UniformDeviate ud) const
     {
-        throw std::logic_error("Photon shooting NYI for InclinedExponential profile.");
+        throw std::runtime_error("Photon shooting NYI for InclinedExponential profile.");
     }
 }
