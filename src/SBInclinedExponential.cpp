@@ -45,10 +45,10 @@ namespace galsim {
 
     SBInclinedExponential::~SBInclinedExponential() {}
 
-    double SBInclinedExponential::getI() const
+    double SBInclinedExponential::getInclination() const
     {
         assert(dynamic_cast<const SBInclinedExponentialImpl*>(_pimpl.get()));
-        return static_cast<const SBInclinedExponentialImpl&>(*_pimpl).getI();
+        return static_cast<const SBInclinedExponentialImpl&>(*_pimpl).getInclination();
     }
 
     double SBInclinedExponential::getScaleRadius() const
@@ -79,7 +79,7 @@ namespace galsim {
         // in python, so it will use the C++ virtual function to get the right thing for
         // any subclass.  But possibly with ugly extra digits.
         oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.SBInclinedExponential("<<getI()<<", "<<getScaleRadius()<<", "<<getScaleHeight();
+        oss << "galsim._galsim.SBInclinedExponential("<<getInclination()<<", "<<getScaleRadius()<<", "<<getScaleHeight();
         oss <<", "<<getFlux()<<", False";
         oss << ", galsim.GSParams("<<*gsparams<<"))";
         return oss.str();
