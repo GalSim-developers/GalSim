@@ -1071,17 +1071,27 @@ def structure_function(image):
 
     return lambda r: 2*(tab(0.0, 0.0) - np.mean(tab(r*np.cos(thetas), r*np.sin(thetas))))
 
-def combine_wave_list(objlist):
+def combine_wave_list(*args):
     """Combine wave_list attributes of all objects in objlist while respecting blue_limit and
     red_limit attributes.  Should work with SEDs, Bandpasses, and ChromaticObjects.
 
     @param objlist  List of SED, Bandpass, or ChromaticObject objects.
     @returns        wave_list, blue_limit, red_limit
     """
+    if len(args) == 1:
+        if isinstance(args[0],
+                      (galsim.SED, galsim.Bandpass, galsim.ChromaticObject, galsim.GSObject)):
+            args = [args[0]]
+        elif isinstance(args[0], (list, tuple)):
+            args = args[0]
+        else:
+            raise TypeError("Single input argument must be a SED, Bandpass, GSObject, "
+                            " ChromaticObject or a (possibly mixed) list of them.")
+
     blue_limit = 0.0
     red_limit = np.inf
     wave_list = np.array([], dtype=float)
-    for obj in objlist:
+    for obj in args:
         if hasattr(obj, 'blue_limit') and obj.blue_limit is not None:
             blue_limit = np.max([blue_limit, obj.blue_limit])
         if hasattr(obj, 'red_limit') and obj.red_limit is not None:
