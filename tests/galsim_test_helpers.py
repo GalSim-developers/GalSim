@@ -396,6 +396,52 @@ def all_obj_diff(objs):
         raise e
 
 
+def check_chromatic_invariant(obj, bps=None, waves=None):
+    """ Helper function to check that ChromaticObjects satisfy intended invariants.
+    """
+    if bps is None:
+        # load a filter
+        bppath = os.path.abspath(os.path.join(path, "../examples/data/"))
+        bandpass = (galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm')
+                    .truncate(relative_throughput=1e-3)
+                    .thin(rel_err=1e-3))
+        bps = [bandpass]
+
+    if waves is None:
+        waves = [500.]
+
+    if obj.SED is not None:
+        for bp in bps:
+            np.testing.assert_almost_equal(obj.SED.calculateFlux(bp), obj.calculateFlux(bp),
+                                           7)
+            np.testing.assert_allclose(
+                    obj.calculateFlux(bp), obj.drawImage(bp).array.sum(), rtol=1e-2)
+        for wave in waves:
+            np.testing.assert_allclose(
+                    obj.evaluateAtWavelength(wave).drawImage().array.sum(),
+                    obj.SED(wave),
+                    rtol=1e-2)
+    else:
+        for wave in waves:
+            desired = obj._norm(wave) if hasattr(obj._norm, '__call__') else obj._norm
+            # Since InterpolatedChromaticObject.evaluateAtWavelength involves actually drawing an
+            # image, which implies flux can be lost off of the edges of the image, we don't expect
+            # it's accuracy to be nearly as good as for other objects.
+            decimal = 2 if obj.interpolated else 7
+            np.testing.assert_almost_equal(obj.evaluateAtWavelength(wave).getFlux(), desired,
+                                           decimal)
+            # Don't bother trying to draw a deconvolution.
+            if isinstance(obj, galsim.ChromaticDeconvolution):
+                continue
+            np.testing.assert_allclose(
+                    obj.evaluateAtWavelength(wave).drawImage().array.sum(),
+                    desired,
+                    rtol=1e-2)
+    assert isinstance(obj.wave_list, np.ndarray)
+    assert isinstance(obj.separable, bool)
+    assert isinstance(obj.interpolated, bool)
+
+
 def funcname():
     import inspect
     return inspect.stack()[1][3]
