@@ -1244,7 +1244,11 @@ def test_interpolated_ChromaticObject():
             # First, take the basic info.
             self.sigma = sigma
             self.separable = False
+            self.interpolated = False
             self.wave_list = np.array([], dtype=float)
+
+        def deinterpolate(self):
+            return self
 
         def evaluateAtWavelength(self, wave):
             this_sigma = self.sigma * (wave / 500.)
