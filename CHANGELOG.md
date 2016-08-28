@@ -190,3 +190,12 @@ Bug fix
 
 - Fixed an installation error when using both DYLD_LIBRARY_PATH and 
   DYLD_FALLBACK_LIBRARY_PATH.
+
+Changes from v1.4.1 to v1.4.2
+=============================
+
+Bug fix
+-------
+
+- Fixed bug when whitening noise in images based on COSMOS training datasets using 
+  the config functionality, and other minor config bug. (#792)
