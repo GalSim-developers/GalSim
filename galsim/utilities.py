@@ -1070,3 +1070,22 @@ def structure_function(image):
     thetas = np.arange(0., 2*np.pi, 100)  # Average over these angles.
 
     return lambda r: 2*(tab(0.0, 0.0) - np.mean(tab(r*np.cos(thetas), r*np.sin(thetas))))
+
+def combine_wave_list(objlist):
+    """Combine wave_list attributes of all objects in objlist while respecting blue_limit and
+    red_limit attributes.  Should work with SEDs, Bandpasses, and ChromaticObjects.
+
+    @param objlist  List of SED, Bandpass, or ChromaticObject objects.
+    @returns        wave_list, blue_limit, red_limit
+    """
+    blue_limit = 0.0
+    red_limit = np.inf
+    wave_list = np.array([], dtype=float)
+    for obj in objlist:
+        if hasattr(obj, 'blue_limit') and obj.blue_limit is not None:
+            blue_limit = np.max([blue_limit, obj.blue_limit])
+        if hasattr(obj, 'red_limit') and obj.red_limit is not None:
+            red_limit = np.min([red_limit, obj.red_limit])
+        wave_list = np.union1d(wave_list, obj.wave_list)
+    wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
+    return wave_list, blue_limit, red_limit

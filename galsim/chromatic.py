@@ -317,7 +317,7 @@ class ChromaticObject(object):
         _remove_setup_kwargs(kwargs)
 
         # determine combined self.wave_list and bandpass.wave_list
-        wave_list = self._getCombinedWaveList(bandpass)
+        wave_list, _, _ = galsim.utilities.combine_wave_list([self, bandpass])
 
         if self.separable:
             multiplier = ChromaticObject._multiplier_cache(self.SED, bandpass, tuple(wave_list))
@@ -365,13 +365,6 @@ class ChromaticObject(object):
             image.setZero()
         image += integral
         return image
-
-    def _getCombinedWaveList(self, bandpass):
-        wave_list = bandpass.wave_list
-        wave_list = np.union1d(wave_list, self.wave_list)
-        wave_list = wave_list[wave_list <= bandpass.red_limit]
-        wave_list = wave_list[wave_list >= bandpass.blue_limit]
-        return wave_list
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength.
@@ -424,8 +417,7 @@ class ChromaticObject(object):
         # if either the Bandpass or self maintain a wave_list, evaluate integrand only at
         # those wavelengths.
         if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
-            w = np.union1d(bandpass.wave_list, self.wave_list)
-            w = w[(w <= bandpass.red_limit) & (w >= bandpass.blue_limit)]
+            w, _, _ = galsim.utilities.combine_wave_list([self, bandpass])
             objs = [self.evaluateAtWavelength(y) for y in w]
             fluxes = [o.getFlux() for o in objs]
             centroids = [o.centroid() for o in objs]
@@ -911,7 +903,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         _remove_setup_kwargs(kwargs)
 
         # determine combination of self.wave_list and bandpass.wave_list
-        wave_list = self._getCombinedWaveList(bandpass)
+        wave_list, _, _ = galsim.utilities.combine_wave_list([self, bandpass])
 
         if np.min(wave_list) < np.min(self.waves) or np.max(wave_list) > np.max(self.waves):
             raise RuntimeError("Requested wavelength %.1f is outside the allowed range:"
@@ -1605,9 +1597,7 @@ class ChromaticSum(ChromaticObject):
                 else:
                     self.objlist.append(ChromaticSum(v))
         # finish up by constructing self.wave_list
-        self.wave_list = np.array([], dtype=float)
-        for obj in self.objlist:
-            self.wave_list = np.union1d(self.wave_list, obj.wave_list)
+        self.wave_list, _, _ = galsim.utilities.combine_wave_list(self.objlist)
 
     def __eq__(self, other):
         return (isinstance(other, galsim.ChromaticSum) and
@@ -1764,16 +1754,14 @@ class ChromaticConvolution(ChromaticObject):
                 "interpolation-related optimization.  Will use full profile evaluation.")
 
         # Assemble wave_lists
-        self.wave_list = np.array([], dtype=float)
-        for obj in self.objlist:
-            self.wave_list = np.union1d(self.wave_list, obj.wave_list)
+        self.wave_list, _, _ = galsim.utilities.combine_wave_list(self.objlist)
 
     @staticmethod
-    def _get_effective_prof(sep_SED, insep_profs, bandpass,
-                            iimult, wave_list, wmult, integrator,
+    def _get_effective_prof(sep_SEDs, insep_profs, bandpass,
+                            iimult, wmult, integrator,
                             gsparams):
             # Collapse inseparable profiles into one effective profile
-            SED = lambda w: reduce(lambda x,y:x*y, [s(w) for s in sep_SED], 1)
+            SED = lambda w: reduce(lambda x,y:x*y, [s(w) for s in sep_SEDs], 1)
             insep_obj = galsim.Convolve(insep_profs, gsparams=gsparams)
             # Find scale at which to draw effective profile
             _, prof0 = insep_obj._fiducial_profile(bandpass)
@@ -1781,9 +1769,7 @@ class ChromaticConvolution(ChromaticObject):
             if iimult is not None:
                 iiscale /= iimult
             # Create the effective bandpass.
-            wave_list = np.union1d(wave_list, bandpass.wave_list)
-            wave_list = wave_list[wave_list >= bandpass.blue_limit]
-            wave_list = wave_list[wave_list <= bandpass.red_limit]
+            wave_list, _, _ = galsim.utilities.combine_wave_list([bandpass] + list(sep_SEDs))
             effective_bandpass = galsim.Bandpass(
                 galsim.LookupTable(wave_list, bandpass(wave_list) * SED(wave_list),
                                    interpolant='linear'), 'nm')
@@ -1969,8 +1955,7 @@ class ChromaticConvolution(ChromaticObject):
         # the spectral parts of the separable profiles.
         sep_profs = []
         insep_profs = []
-        sep_SED = []
-        wave_list = np.array([], dtype=float)
+        sep_SEDs = []
         for obj in objlist:
             if obj.separable:
                 if isinstance(obj, galsim.GSObject):
@@ -1978,8 +1963,7 @@ class ChromaticConvolution(ChromaticObject):
                 else:
                     wave0, prof0 = obj._fiducial_profile(bandpass)
                     sep_profs.append(prof0 / obj.SED(wave0)) # more g(x,y)'s
-                    sep_SED.append(obj.SED) # The h(lambda)'s (see above)
-                    wave_list = np.union1d(wave_list, obj.wave_list)
+                    sep_SEDs.append(obj.SED) # The h(lambda)'s (see above)
             else:
                 insep_profs.append(obj) # The f(x,y,lambda)'s (see above)
         # insep_profs should never be empty, since separable cases were farmed out to
@@ -1988,7 +1972,7 @@ class ChromaticConvolution(ChromaticObject):
         wmult = kwargs.get('wmult', 1)
         # Collapse inseparable profiles into one effective profile
         effective_prof = ChromaticConvolution._effective_prof_cache(
-            tuple(sep_SED), tuple(insep_profs), bandpass, iimult, tuple(wave_list),
+            tuple(sep_SEDs), tuple(insep_profs), bandpass, iimult,
             wmult, integrator, self.gsparams)
 
         # append effective profile to separable profiles (which should all be GSObjects)

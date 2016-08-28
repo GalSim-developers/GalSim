@@ -249,11 +249,7 @@ class SED(object):
 
         # Product of SED and Bandpass is (filtered) SED.  The `redshift` attribute is retained.
         if isinstance(other, galsim.Bandpass):
-            wave_list = np.union1d(self.wave_list, other.wave_list)
-            blue_limit = np.max([self.blue_limit if self.blue_limit is not None else 0.0,
-                                 other.blue_limit])
-            red_limit = np.min([self.red_limit if self.red_limit is not None else np.inf,
-                                 other.red_limit])
+            wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list([self, other])
             spec = lambda w: self._rest_photons(w) * other(w * (1.0 + self.redshift))
             return SED(spec, 'nm', 'fphotons', redshift=self.redshift,
                        blue_limit=blue_limit, red_limit=red_limit, _wave_list=wave_list)
@@ -329,11 +325,8 @@ class SED(object):
         if self.redshift != other.redshift:
             raise ValueError("Can only add SEDs with same redshift.")
 
-        blue_limit, red_limit = self._wavelength_intersection(other)
         spec = lambda w: self._rest_photons(w) + other._rest_photons(w)
-        wave_list = np.union1d(self.wave_list, other.wave_list)
-        wave_list = wave_list[wave_list <= red_limit]
-        wave_list = wave_list[wave_list >= blue_limit]
+        wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list([self, other])
 
         return SED(spec, wave_type='nm', flux_type='fphotons',
                    redshift=self.redshift, _wave_list=wave_list,
@@ -434,8 +427,7 @@ class SED(object):
             # return galsim.integ.int1d(self._rest_photons, blue_limit, red_limit)
         else: # do flux through bandpass
             if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
-                x = np.union1d(bandpass.wave_list, self.wave_list)
-                x = x[(x <= bandpass.red_limit) & (x >= bandpass.blue_limit)]
+                x, _, _ = galsim.utilities.combine_wave_list([self, bandpass])
                 return np.trapz(bandpass(x) * self(x), x)
             else:
                 return galsim.integ.int1d(lambda w: bandpass(w)*self(w),
@@ -554,8 +546,7 @@ class SED(object):
         # Now actually start calculating things.
         flux = self.calculateFlux(bandpass)
         if len(bandpass.wave_list) > 0:
-            x = np.union1d(bandpass.wave_list, self.wave_list)
-            x = x[(x <= bandpass.red_limit) & (x >= bandpass.blue_limit)]
+            x, _, _ = galsim.utilities.combine_wave_list([self, bandpass])
             R = galsim.dcr.get_refraction(x, zenith_angle, **kwargs)
             photons = self(x)
             throughput = bandpass(x)
@@ -590,8 +581,7 @@ class SED(object):
         """
         flux = self.calculateFlux(bandpass)
         if len(bandpass.wave_list) > 0:
-            x = np.union1d(bandpass.wave_list, self.wave_list)
-            x = x[(x <= bandpass.red_limit) & (x >= bandpass.blue_limit)]
+            x, _, _ = galsim.utilities.combine_wave_list([self, bandpass])
             photons = self(x)
             throughput = bandpass(x)
             return np.trapz(photons * throughput * (x/base_wavelength)**(2*alpha), x) / flux

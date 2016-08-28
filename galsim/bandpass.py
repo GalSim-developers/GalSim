@@ -220,20 +220,13 @@ class Bandpass(object):
         # 3.  Callable: return a Bandpass
         # 4.  Scalar: return a Bandpass
 
-        wave_list = self.wave_list
-        blue_limit = self.blue_limit
-        red_limit = self.red_limit
-
         # Delegate SED * Bandpass to SED.__mul__:
         if isinstance(other, galsim.SED):
             return other.__mul__(self)
 
         # Bandpass * Bandpass -> Bandpass
         if isinstance(other, Bandpass):
-            wave_list = np.union1d(wave_list, other.wave_list)
-            blue_limit = np.max([blue_limit, other.blue_limit])
-            red_limit = np.min([red_limit, other.red_limit])
-            wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
+            wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list([self, other])
             tp = lambda w: self(w) * other(w)
             return Bandpass(tp, 'nm', blue_limit=blue_limit, red_limit=red_limit, zeropoint=None,
                             _wave_list=wave_list)
@@ -255,28 +248,31 @@ class Bandpass(object):
         else:
             tp = lambda w: self.func(w) * other
 
-        return Bandpass(tp, wave_type, blue_limit, red_limit, _wave_list=wave_list)
+        return Bandpass(tp, wave_type, self.blue_limit, self.red_limit, _wave_list=self.wave_list)
 
     def __rmul__(self, other):
         return self*other
 
     # Doesn't check for divide by zero, so be careful.
     def __div__(self, other):
-        blue_limit = self.blue_limit
-        red_limit = self.red_limit
-        wave_list = self.wave_list
-        wave_type = 'nm'
+        # Watch out for 4 types of `other`:
+        # 1.  SED: prohibit.
+        # 2.  Bandpass: return a Bandpass, but carefully propagate blue/red limit and wave_list.
+        # 3.  Callable: return a Bandpass
+        # 4.  Scalar: return a Bandpass
 
         if isinstance(other, galsim.SED):
             raise TypeError("Cannot divide Bandpass by SED.")
 
+        # Bandpass / Bandpass -> Bandpass
         if isinstance(other, Bandpass):
-            if len(other.wave_list) > 0:
-                wave_list = np.union1d(wave_list, other.wave_list)
-            blue_limit = max([self.blue_limit, other.blue_limit])
-            red_limit = min([self.red_limit, other.red_limit])
-            wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
+            wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list([self, other])
+            tp = lambda w: self(w) / other(w)
+            return Bandpass(tp, 'nm', blue_limit=blue_limit, red_limit=red_limit, zeropoint=None,
+                            _wave_list=wave_list)
 
+        # Quotient of Bandpass with generic callable or scalar is a rescaled Bandpass.
+        wave_type = 'nm'
         if hasattr(other, '__call__'):
             tp = lambda w: self.func(w) / other(w)
         elif isinstance(self._tp, galsim.LookupTable):
@@ -293,7 +289,7 @@ class Bandpass(object):
             tp = lambda w: self.func(w) / other
 
         # Note that attributes .zeropoint gets reset by __div__
-        return Bandpass(tp, wave_type, blue_limit, red_limit, _wave_list=wave_list)
+        return Bandpass(tp, wave_type, self.blue_limit, self.red_limit, _wave_list=self.wave_list)
 
     def __truediv__(self, other):
         return self.__div__(other)
