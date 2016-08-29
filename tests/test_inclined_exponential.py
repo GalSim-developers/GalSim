@@ -22,6 +22,7 @@ import os
 import sys
 
 from galsim_test_helpers import *
+from IPython.core.magics.execution import Timer
 
 try:
     import galsim
@@ -83,6 +84,53 @@ def test_regression():
         np.testing.assert_array_almost_equal(ratio_core, np.mean(ratio_core)*np.ones_like(ratio_core), decimal = 2,
                                              err_msg = "Error in comparison of inclined exponential profile to samples.",
                                              verbose=True)
+        
+@timer
+def test_exponential():
+    """ Test that it looks identical to an exponential when inclination is zero. """
+    
+    scale_radius = 3.0
+    
+    # Set up the profiles
+    inc_exp_profile = galsim.InclinedExponential(0*galsim.radians,scale_radius=scale_radius,scale_height=scale_radius/10.)
+    exp_profile = galsim.Exponential(scale_radius=scale_radius)
+    
+    # Draw images for both
+    inc_exp_image = galsim.Image(image_nx,image_ny,scale=1.0)
+    exp_image = galsim.Image(image_nx,image_ny,scale=1.0)
+    
+    inc_exp_profile.drawImage(inc_exp_image)
+    exp_profile.drawImage(exp_image)
+    
+    # Check that they're the same
+    np.testing.assert_array_almost_equal(inc_exp_image.array, exp_image.array, decimal=4)
+    
+@timer
+def test_edge_on():
+    """ Test that an edge-on profile looks similar to an almost-edge-on profile, and doesn't crash. """
+    
+    scale_radius = 3.0
+    
+    inclinations = (np.arccos(0.01),np.pi/2,2*np.pi-np.arccos(0.01))
+    
+    images = []
+    
+    for inclination in inclinations:
+        # Set up the profile
+        prof = galsim.InclinedExponential(inclination*galsim.radians,scale_radius=scale_radius,scale_height=scale_radius/10.,
+                                          gsparams=galsim.GSParams(maximum_fft_size=20000))
+        
+        # Draw an image of it
+        image = galsim.Image(image_nx,image_ny,scale=1.0)
+        prof.drawImage(image)
+        
+        # Add it to the list of images
+        images.append(image.array)
+        
+    # Check they're all almost the same
+    np.testing.assert_array_almost_equal(images[1], images[0], decimal=4)
+    np.testing.assert_array_almost_equal(images[1], images[2], decimal=4)
+    
 
 @timer
 def test_sanity():
@@ -191,6 +239,8 @@ def test_ne():
 
 if __name__ == "__main__":
     test_regression()
+    test_exponential()
+    test_edge_on()
     test_sanity()
     test_k_limits()
     test_ne()

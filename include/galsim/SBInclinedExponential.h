@@ -31,7 +31,7 @@ namespace galsim {
     namespace sbp {
 
         // Constrain range of allowed cos(inclination) to prevent division by zero
-        const double minimum_cosi = 0.001;
+        const double minimum_cosi = 0.01;
 
         // How many profiles to save in the cache
         const int max_inclined_exponential_cache = 100;
