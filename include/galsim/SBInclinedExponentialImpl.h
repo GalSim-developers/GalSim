@@ -22,80 +22,8 @@
 
 #include "SBProfileImpl.h"
 #include "SBInclinedExponential.h"
-#include "LRUCache.h"
-#include "Table.h"
 
 namespace galsim {
-
-    /// @brief A private class that caches the needed parameters for each inclined exponential angle 'i'
-    class InclinedExponentialInfo
-    {
-    public:
-        /// @brief Constructor
-        InclinedExponentialInfo(double h_tani_over_r, const GSParamsPtr& gsparams);
-
-        /// @brief Destructor: deletes photon-shooting classes if necessary
-        ~InclinedExponentialInfo() {}
-
-        /**
-         * @brief Returns the unnormalized real space value of the Inclined Exponential function.
-         *
-         * The input 'rx' should be r/r_scale in the direction perpendicular to the minor axis,
-         * and the input 'ry' value should be r/h_tani in the direction parallel to the minor axis
-         */
-        double xValue(double rx, double ry) const;
-
-        /**
-         * @brief Returns the unnormalized value of the fourier transform.
-         *
-         * The input 'kx' should be k*r_scale in the direction perpendicular to the minor axis,
-         * and the input 'ky' value should be k*h_tani in the direction parallel to the minor axis
-         */
-        double kValue(double kx, double ky) const;
-
-        double maxK() const;
-        double stepK() const;
-
-        /// @brief The fractional flux relative to the untruncated profile.
-        double getFluxFraction() const;
-
-        /**
-         * @brief The factor by which to multiply the returned value from xValue.
-         *
-         * Since the returned value needs to be multiplied by flux/r0^2 anyway, we also let
-         * the caller of xValue multiply by the normalization, which we calculate for them here.
-         */
-        double getXNorm() const;
-
-        /**
-         * @brief Shoot photons through unit-size, unnormalized profile
-         * Inclined profiles are sampled with a numerical method, using class
-         * `UniformDeviate`.
-         *
-         * @param[in] N  Total number of photons to produce.
-         * @param[in] ud UniformDeviate that will be used to draw photons from distribution.
-         * @returns PhotonArray containing all the photons' info.
-         */
-        boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
-
-    private:
-
-        InclinedExponentialInfo(const InclinedExponentialInfo& rhs); ///< Hide the copy constructor.
-        void operator=(const InclinedExponentialInfo& rhs); ///<Hide assignment operator.
-
-        // Input variables:
-        double _h_tani_over_r;
-        double _half_pi_h_tani_over_r;
-        const GSParamsPtr _gsparams; ///< The GSParams object.
-
-        // Some derived values calculated in the constructor:
-        double _ksq_max;   ///< If ksq < _kq_min, then use faster taylor approximation for kvalue
-        double _ksq_min;   ///< If ksq > _kq_max, then use kvalue = 0
-
-        // Parameters calculated when they are first needed, and then stored:
-        mutable double _maxk;    ///< Value of k beyond which aliasing can be neglected.
-        mutable double _stepk;   ///< Sampling in k space necessary to avoid folding.
-    };
 
     class SBInclinedExponential::SBInclinedExponentialImpl : public SBProfileImpl
     {
@@ -168,16 +96,22 @@ namespace galsim {
 
         double _inv_r0;
         double _h_tani_over_r;
+        double _half_pi_h_tani_over_r;
         double _r0_cosi;
         double _inv_r0_cosi;
 
-        boost::shared_ptr<InclinedExponentialInfo> _info; ///< Points to info structure for this h_tani_over_r
+        // Some derived values calculated in the constructor:
+        double _ksq_max;   ///< If ksq < _kq_min, then use faster taylor approximation for kvalue
+        double _ksq_min;   ///< If ksq > _kq_max, then use kvalue = 0
+        double _maxk;    ///< Value of k beyond which aliasing can be neglected.
+        double _stepk;   ///< Sampling in k space necessary to avoid folding.
 
         // Copy constructor and op= are undefined.
         SBInclinedExponentialImpl(const SBInclinedExponentialImpl& rhs);
         void operator=(const SBInclinedExponentialImpl& rhs);
 
-        static LRUCache<boost::tuple< double, GSParamsPtr >, InclinedExponentialInfo> cache;
+        // Helper function to get k values
+        double kValueHelper(double kx, double ky) const;
 
     };
 }

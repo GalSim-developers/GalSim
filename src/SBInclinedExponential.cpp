@@ -85,9 +85,6 @@ namespace galsim {
         return oss.str();
     }
 
-    LRUCache< boost::tuple<double, GSParamsPtr >, InclinedExponentialInfo >
-        SBInclinedExponential::SBInclinedExponentialImpl::cache(sbp::max_inclined_exponential_cache);
-
     SBInclinedExponential::SBInclinedExponentialImpl::SBInclinedExponentialImpl(Angle inclination, double scale_radius,
             double scale_height, double flux, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
@@ -95,8 +92,7 @@ namespace galsim {
         _r0(scale_radius),
         _h0(scale_height),
         _flux(flux),
-        _inv_r0(1./_r0),
-        _info(cache.get(boost::make_tuple(_h_tani_over_r, this->gsparams.duplicate())))
+        _inv_r0(1./_r0)
     {
         dbg<<"Start SBInclinedExponential constructor:\n";
         dbg<<"inclination = "<<_inclination<<std::endl;
@@ -122,10 +118,38 @@ namespace galsim {
         _h_tani_over_r = scale_height*std::abs(inclination.sin())*_inv_r0_cosi; // A tiny bit more accurate than using tan of
                                                                                 // the truncated value
 
-        _info = boost::shared_ptr<InclinedExponentialInfo>(cache.get(boost::make_tuple(_h_tani_over_r, this->gsparams.duplicate())));
+        _half_pi_h_tani_over_r = 0.5*M_PI*_h_tani_over_r;
 
         xdbg<<"_h_tani_over_r = "<<_h_tani_over_r<<std::endl;
         xdbg<<"_r0_cosi = "<<_r0_cosi<<std::endl;
+
+        // For large k, we clip the result of kValue to 0.
+        // We do this when the correct answer is less than kvalue_accuracy.
+        // (1+k^2 r0^2)^-1.5 = kvalue_accuracy
+        _ksq_max = (std::pow(this->gsparams->kvalue_accuracy,-1./1.5)-1.);
+
+        // For small k, we can use up to quartic in the taylor expansion to avoid the sqrt.
+        // This is acceptable when the next term is less than kvalue_accuracy.
+        // 35/16 (k^2 r0^2)^3 = kvalue_accuracy
+        _ksq_min = std::pow(this->gsparams->kvalue_accuracy * 16./35., 1./3.);
+
+        // Calculate stepk (assuming that this is similar enough to an exponential disk):
+        // int( exp(-r) r, r=0..R) = (1 - exp(-R) - Rexp(-R))
+        // Fraction excluded is thus (1+R) exp(-R)
+        // A fast solution to (1+R)exp(-R) = x:
+        // log(1+R) - R = log(x)
+        // R = log(1+R) - log(x)
+        double logx = std::log(this->gsparams->folding_threshold);
+        double R = -logx;
+        for (int i=0; i<3; i++) R = std::log(1.+R) - logx;
+        // Make sure it is at least 5 hlr
+        // half-light radius = 1.6783469900166605 * r0
+        const double hlr = 1.6783469900166605;
+        R = std::max(R,this->gsparams->stepk_minimum_hlr*hlr);
+        _stepk = M_PI / R;
+        dbg<<"stepk = "<<_stepk<<std::endl;
+
+        _maxk = std::sqrt(_ksq_max);
     }
 
     double SBInclinedExponential::SBInclinedExponentialImpl::xValue(const Position<double>& p) const
@@ -138,7 +162,7 @@ namespace galsim {
     {
         double kx = k.x*_r0;
         double ky = k.y*_r0_cosi;
-        return _flux * _info->kValue(kx,ky);
+        return _flux * kValueHelper(kx,ky);
     }
 
     void SBInclinedExponential::SBInclinedExponentialImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
@@ -167,9 +191,9 @@ namespace galsim {
                 double kx = kx0;
                 It valit = val.col(j).begin();
                 for (int i=0;i<m;++i,kx+=dkx) {
-                    double new_val = _flux * _info->kValue(kx,ky0);
+                    double new_val = _flux * kValueHelper(kx,ky0);
                     xxdbg << "kx = " << kx << "\tky = " << ky0 << "\tval = " << new_val << std::endl;
-                    *valit++ = _flux * _info->kValue(kx,ky0);
+                    *valit++ = new_val;
                 }
             }
         }
@@ -200,62 +224,15 @@ namespace galsim {
             double kx = kx0;
             double ky = ky0;
             for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx) {
-                *valit++ = _flux * _info->kValue(kx,ky);
+                *valit++ = _flux * kValueHelper(kx,ky);
             }
         }
     }
 
-    double SBInclinedExponential::SBInclinedExponentialImpl::maxK() const { return _info->maxK() * _inv_r0; }
-    double SBInclinedExponential::SBInclinedExponentialImpl::stepK() const { return _info->stepK() * _inv_r0; }
+    double SBInclinedExponential::SBInclinedExponentialImpl::maxK() const { return _maxk * _inv_r0; }
+    double SBInclinedExponential::SBInclinedExponentialImpl::stepK() const { return _stepk * _inv_r0; }
 
-    InclinedExponentialInfo::InclinedExponentialInfo(double h_tani_over_r, const GSParamsPtr& gsparams) :
-        _h_tani_over_r(h_tani_over_r),
-        _half_pi_h_tani_over_r(0.5*M_PI*h_tani_over_r),
-        _gsparams(gsparams),
-        _maxk(0.), _stepk(0.)
-    {
-        dbg<<"Start InclinedExponentialInfo constructor for h_tani_over_r = "<<h_tani_over_r<<std::endl;
-
-        assert(h_tani_over_r >= 0); // Should only ever have non-negative
-
-        // For large k, we clip the result of kValue to 0.
-        // We do this when the correct answer is less than kvalue_accuracy.
-        // (1+k^2 r0^2)^-1.5 = kvalue_accuracy
-        _ksq_max = (std::pow(gsparams->kvalue_accuracy,-1./1.5)-1.);
-
-        // For small k, we can use up to quartic in the taylor expansion to avoid the sqrt.
-        // This is acceptable when the next term is less than kvalue_accuracy.
-        // 35/16 (k^2 r0^2)^3 = kvalue_accuracy
-        _ksq_min = std::pow(gsparams->kvalue_accuracy * 16./35., 1./3.);
-
-        // Calculate stepk (assuming that this is similar enough to an exponential disk):
-        // int( exp(-r) r, r=0..R) = (1 - exp(-R) - Rexp(-R))
-        // Fraction excluded is thus (1+R) exp(-R)
-        // A fast solution to (1+R)exp(-R) = x:
-        // log(1+R) - R = log(x)
-        // R = log(1+R) - log(x)
-        double logx = std::log(gsparams->folding_threshold);
-        double R = -logx;
-        for (int i=0; i<3; i++) R = std::log(1.+R) - logx;
-        // Make sure it is at least 5 hlr
-        // half-light radius = 1.6783469900166605 * r0
-        const double hlr = 1.6783469900166605;
-        R = std::max(R,gsparams->stepk_minimum_hlr*hlr);
-        _stepk = M_PI / R;
-        dbg<<"stepk = "<<_stepk<<std::endl;
-
-        _maxk = std::sqrt(_ksq_max);
-    }
-
-    double InclinedExponentialInfo::stepK() const
-    { return _stepk; }
-
-    double InclinedExponentialInfo::maxK() const
-    {
-        return _maxk;
-    }
-
-    double InclinedExponentialInfo::kValue(double kx, double ky) const
+    double SBInclinedExponential::SBInclinedExponentialImpl::kValueHelper(double kx, double ky) const
     {
         // Calculate the base value for an exponential profile
 
@@ -295,12 +272,6 @@ namespace galsim {
         double res = res_base*res_conv;
 
         return res;
-    }
-
-    // NYI, but needs to be defined
-    boost::shared_ptr<PhotonArray> InclinedExponentialInfo::shoot(int N, UniformDeviate ud) const
-    {
-        throw std::runtime_error("Photon shooting NYI for InclinedExponential profile.");
     }
 
     // NYI, but needs to be defined
