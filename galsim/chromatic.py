@@ -737,16 +737,7 @@ class ChromaticObject(object):
             raise TypeError("Got unexpected keyword arguments: %s",kwargs.keys())
 
         if offset is None:
-            if hasattr(dx, '__call__'):
-                if hasattr(dy, '__call__'):
-                    offset = lambda w: np.asarray( (dx(w), dy(w)) )
-                else:
-                    offset = lambda w: np.asarray( (dx(w), dy) )
-            else:
-                if hasattr(dy, '__call__'):
-                    offset = lambda w: np.asarray( (dx, dy(w)) )
-                else:
-                    offset = np.asarray( (dx, dy) )
+            offset = galsim.utilities.fn_of_scalar_or_callable(lambda x,y:(x,y))(dx, dy)
 
         return galsim.Transform(self, offset=offset)
 
@@ -1321,46 +1312,22 @@ class ChromaticTransformation(ChromaticObject):
 
         elif isinstance(obj, ChromaticTransformation):
             self.original = obj.original
-            if hasattr(jac, '__call__'):
-                if hasattr(obj._jac, '__call__'):
-                    self._jac = lambda w: jac(w).dot(obj._jac(w))
-                else:
-                    self._jac = lambda w: jac(w).dot(obj._jac)
-                if hasattr(offset, '__call__'):
-                    if hasattr(obj._offset, '__call__'):
-                        self._offset = lambda w: jac(w).dot(obj._offset(w)) + offset(w)
-                    else:
-                        self._offset = lambda w: jac(w).dot(obj._offset) + offset(w)
-                else:
-                    if hasattr(obj._offset, '__call__'):
-                        self._offset = lambda w: jac(w).dot(obj._offset(w)) + offset
-                    else:
-                        self._offset = lambda w: jac(w).dot(obj._offset) + offset
-            else:
-                if hasattr(obj._jac, '__call__'):
-                    self._jac = lambda w: jac.dot(obj._jac(w))
-                else:
-                    self._jac = jac.dot(obj._jac)
-                if hasattr(offset, '__call__'):
-                    if hasattr(obj._offset, '__call__'):
-                        self._offset = lambda w: jac.dot(obj._offset(w)) + offset(w)
-                    else:
-                        self._offset = lambda w: jac.dot(obj._offset) + offset(w)
-                else:
-                    if hasattr(obj._offset, '__call__'):
-                        self._offset = lambda w: jac.dot(obj._offset(w)) + offset
-                    else:
-                        self._offset = jac.dot(obj._offset) + offset
-            if hasattr(flux_ratio, '__call__'):
-                if hasattr(obj._flux_ratio, '__call__'):
-                    self._flux_ratio = lambda w: obj._flux_ratio(w) * flux_ratio(w)
-                else:
-                    self._flux_ratio = lambda w: obj._flux_ratio * flux_ratio(w)
-            else:
-                if hasattr(obj._flux_ratio, '__call__'):
-                    self._flux_ratio = lambda w: obj._flux_ratio(w) * flux_ratio
-                else:
-                    self._flux_ratio = obj._flux_ratio * flux_ratio
+
+            @galsim.utilities.fn_of_scalar_or_callable
+            def new_jac(jac1, jac2):
+                return jac2.dot(jac1)
+
+            @galsim.utilities.fn_of_scalar_or_callable
+            def new_offset(jac2, off1, off2):
+                return jac2.dot(off1) + off2
+
+            @galsim.utilities.fn_of_scalar_or_callable
+            def new_flux_ratio(flx1, flx2):
+                return flx1 * flx2
+
+            self._jac = new_jac(obj._jac, jac)
+            self._offset = new_offset(jac, obj._offset, offset)
+            self._flux_ratio = new_flux_ratio(obj._flux_ratio, flux_ratio)
 
         else:
             self.original = obj
