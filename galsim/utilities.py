@@ -1100,9 +1100,9 @@ def combine_wave_list(*args):
     wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
     return wave_list, blue_limit, red_limit
 
-def fn_of_scalar_or_callable(f):
+def functionize(f):
     """ Decorate a function `f` which accepts scalar positional or keyword arguments, to accept
-    arguments that can be either scalars or functions.  If the arguments include univariate
+    arguments that can be either scalars or _functions_.  If the arguments include univariate
     (N-variate) functions, then the output will be a univariate (N-variate) function.  While it's
     okay to mix scalar and N-variate function arguments, it is an error to mix N-variate and
     M-variate function arguments.
@@ -1111,7 +1111,7 @@ def fn_of_scalar_or_callable(f):
 
     >>> def f(x, y):      # Function of two scalars.
     ...     return x + y
-    >>> decorated = fn_of_scalar_or_callable(f)   # Function of two scalars, functions, or a mix.
+    >>> decorated = functionize(f)   # Function of two scalars, functions, or a mix.
     >>> result = f(2, 3)  # 5
     >>> result = f(2, lambda u: u)  # Generates a TypeError
     >>> result = decorated(2, 3)  # Scalar args returns a scalar

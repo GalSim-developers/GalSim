@@ -737,7 +737,7 @@ class ChromaticObject(object):
             raise TypeError("Got unexpected keyword arguments: %s",kwargs.keys())
 
         if offset is None:
-            offset = galsim.utilities.fn_of_scalar_or_callable(lambda x,y:(x,y))(dx, dy)
+            offset = galsim.utilities.functionize(lambda x,y:(x,y))(dx, dy)
 
         return galsim.Transform(self, offset=offset)
 
@@ -1313,15 +1313,15 @@ class ChromaticTransformation(ChromaticObject):
         elif isinstance(obj, ChromaticTransformation):
             self.original = obj.original
 
-            @galsim.utilities.fn_of_scalar_or_callable
+            @galsim.utilities.functionize
             def new_jac(jac1, jac2):
                 return jac2.dot(jac1)
 
-            @galsim.utilities.fn_of_scalar_or_callable
+            @galsim.utilities.functionize
             def new_offset(jac2, off1, off2):
                 return jac2.dot(off1) + off2
 
-            @galsim.utilities.fn_of_scalar_or_callable
+            @galsim.utilities.functionize
             def new_flux_ratio(flx1, flx2):
                 return flx1 * flx2
 
