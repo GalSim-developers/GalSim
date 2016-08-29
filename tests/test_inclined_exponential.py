@@ -105,6 +105,9 @@ def test_sanity():
         test_profile = galsim.InclinedExponential(inc_angle*galsim.radians,scale_radius,scale_height,flux,
                                                   gsparams=galsim.GSParams(maximum_fft_size=5000))
         
+        # Rotate it by the position angle
+        test_profile = test_profile.rotate(pos_angle*galsim.radians)
+        
         # Check that the k value for (0,0) is the flux
         np.testing.assert_almost_equal(test_profile.kValue(kx=0.,ky=0.),flux)
         
@@ -118,7 +121,59 @@ def test_sanity():
         centroid = test_profile.centroid()
         np.testing.assert_equal(centroid.x, 0.)
         np.testing.assert_equal(centroid.y, 0.)
+        
+@timer
+def test_k_limits():
+    """ Check that the maxk and stepk give reasonable results for a few different profiles. """
     
+    for inc_angle, scale_radius, scale_height in zip(image_inc_angles,image_scale_radii,
+                                                     image_scale_heights):
+        # Get float values for the details
+        inc_angle=float(inc_angle)
+        scale_radius=float(scale_radius)/oversampling
+        scale_height=float(scale_height)/oversampling
+        
+        gsparams = galsim.GSParams(maximum_fft_size=5000)
+    
+        # Now make a test image
+        test_profile = galsim.InclinedExponential(inc_angle*galsim.radians,scale_radius,scale_height,
+                                                  gsparams=gsparams)
+        
+        # Check that the k value at maxK() is below maxk_threshold in both the x and y dimensions
+        kx = test_profile.maxK()
+        ky = test_profile.maxK()
+        
+        kx_value=test_profile.kValue(kx=kx,ky=0.)
+        np.testing.assert_(np.abs(kx_value)<gsparams.maxk_threshold)
+        
+        ky_value=test_profile.kValue(kx=0.,ky=ky)
+        np.testing.assert_(np.abs(ky_value)<gsparams.maxk_threshold)
+        
+        # Check that less than folding_threshold fraction of light falls outside r = pi/stepK()
+        rmax = np.pi/test_profile.stepK()
+        
+        test_image = galsim.Image(int(10*rmax),int(10*rmax),scale=1.0)
+        test_profile.drawImage(test_image)
+        
+        image_center = test_image.center()
+        
+        # Get an array of indices within the limits
+        image_shape = np.shape(test_image.array)
+        x, y = np.indices(image_shape, dtype=float)
+        
+        x -= image_center.x
+        y -= image_center.y
+        
+        r = np.sqrt(np.square(x)+np.square(y))
+        
+        good = r<rmax
+        
+        # Get flux within the limits
+        contained_flux = np.ravel(test_image.array)[np.ravel(good)].sum()
+        
+        # Check that we're not missing too much flux
+        total_flux = 1.
+        np.testing.assert_((total_flux-contained_flux)/(total_flux)<gsparams.folding_threshold)
 
 @timer
 def test_ne():
@@ -137,4 +192,5 @@ def test_ne():
 if __name__ == "__main__":
     test_regression()
     test_sanity()
+    test_k_limits()
     test_ne()
