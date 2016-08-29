@@ -35,6 +35,7 @@ except ImportError:
 image_dir = './inclined_exponential_images'
 
 # Values here are strings, so the filenames will be sure to work (without truncating zeros)
+fluxes = ("1.0", "10.0", "0.1", "1.0", "1.0", "1.0")
 image_inc_angles = ("0.0", "1.3", "0.2", "0.01", "0.1", "0.78")
 image_scale_radii = ("3.0", "3.0", "3.0", "3.0", "2.0", "2.0")
 image_scale_heights = ("0.3", "0.5", "0.5", "0.5", "1.0", "0.5")
@@ -44,7 +45,7 @@ image_ny = 64
 oversampling = 1.0
 
 @timer
-def test_inclined_exponential():
+def test_regression():
     """Test that the inclined exponential profile matches the results from Lance Miller's code."""
     
     for inc_angle, scale_radius, scale_height, pos_angle in zip(image_inc_angles,image_scale_radii,
@@ -84,6 +85,42 @@ def test_inclined_exponential():
                                              verbose=True)
 
 @timer
+def test_sanity():
+    """ Performs various sanity checks on a set of InclinedExponential profiles. """
+    
+    for flux, inc_angle, scale_radius, scale_height, pos_angle in zip(fluxes,
+                                                                      image_inc_angles,
+                                                                      image_scale_radii,
+                                                                      image_scale_heights,
+                                                                      image_pos_angles):
+        
+        # Get float values for the details
+        flux = float(flux)
+        inc_angle=float(inc_angle)
+        scale_radius=float(scale_radius)/oversampling
+        scale_height=float(scale_height)/oversampling
+        pos_angle=float(pos_angle)
+        
+        # Now make a test image
+        test_profile = galsim.InclinedExponential(inc_angle*galsim.radians,scale_radius,scale_height,flux,
+                                                  gsparams=galsim.GSParams(maximum_fft_size=5000))
+        
+        # Check that the k value for (0,0) is the flux
+        np.testing.assert_almost_equal(test_profile.kValue(kx=0.,ky=0.),flux)
+        
+        # Check that the drawn flux for a large image is indeed the flux
+        test_image = galsim.Image(5*image_nx,5*image_ny,scale=1.0)
+        test_profile.drawImage(test_image)
+        test_flux = test_image.array.sum()
+        np.testing.assert_almost_equal(test_flux,flux,decimal=3)
+        
+        # Check that the centroid is (0,0)
+        centroid = test_profile.centroid()
+        np.testing.assert_equal(centroid.x, 0.)
+        np.testing.assert_equal(centroid.y, 0.)
+    
+
+@timer
 def test_ne():
     """ Check that equality/inequality works as expected."""
     gsp = galsim.GSParams(folding_threshold=1.1e-3)
@@ -98,5 +135,6 @@ def test_ne():
 
 
 if __name__ == "__main__":
-    test_inclined_exponential()
+    test_regression()
+    test_sanity()
     test_ne()
