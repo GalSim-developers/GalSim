@@ -134,7 +134,10 @@ namespace galsim {
         // 35/16 (k^2 r0^2)^3 = kvalue_accuracy
         _ksq_min = std::pow(this->gsparams->kvalue_accuracy * 16./35., 1./3.)/cosi;
 
-        // Calculate stepk, based on a conservative comparison to an exponential disk:
+        // Calculate stepk, based on a conservative comparison to an exponential disk. The
+        // half-light radius of this will be smaller, so if we use an exponential's hlr, it
+        // will be at least large enough.
+
         // int( exp(-r) r, r=0..R) = (1 - exp(-R) - Rexp(-R))
         // Fraction excluded is thus (1+R) exp(-R)
         // A fast solution to (1+R)exp(-R) = x:
@@ -143,10 +146,10 @@ namespace galsim {
         double logx = std::log(this->gsparams->folding_threshold);
         double R = -logx;
         for (int i=0; i<3; i++) R = std::log(1.+R) - logx;
-        // Make sure it is at least 5 hlr
+        // Make sure it is at least 5 hlr of corresponding exponential
         // half-light radius = 1.6783469900166605 * r0
-        const double hlr = 1.6783469900166605;
-        R = std::max(R,this->gsparams->stepk_minimum_hlr*hlr);
+        const double exp_hlr = 1.6783469900166605;
+        R = std::max(R,this->gsparams->stepk_minimum_hlr*exp_hlr);
         _stepk = M_PI / R;
         dbg<<"stepk = "<<_stepk<<std::endl;
 
