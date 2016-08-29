@@ -35,7 +35,7 @@ namespace galsim {
         static void wrap()
         {
             bp::class_<SBInclinedExponential,bp::bases<SBProfile> >("SBInclinedExponential", bp::no_init)
-                .def(bp::init<double,double,double,double,boost::shared_ptr<GSParams> >(
+                .def(bp::init<Angle,double,double,double,boost::shared_ptr<GSParams> >(
                         (bp::arg("inclination")=bp::object(),
                          bp::arg("scale_radius")=bp::object(),
                          bp::arg("scale_height")=bp::object(),

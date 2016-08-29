@@ -37,15 +37,15 @@ int verbose_level = 3;
 
 namespace galsim {
 
-    SBInclinedExponential::SBInclinedExponential(double i, double scale_radius, double scale_height, double flux,
+    SBInclinedExponential::SBInclinedExponential(Angle inclination, double scale_radius, double scale_height, double flux,
             const GSParamsPtr& gsparams) :
-        SBProfile(new SBInclinedExponentialImpl(i, scale_radius, scale_height, flux, gsparams)) {}
+        SBProfile(new SBInclinedExponentialImpl(inclination, scale_radius, scale_height, flux, gsparams)) {}
 
     SBInclinedExponential::SBInclinedExponential(const SBInclinedExponential& rhs) : SBProfile(rhs) {}
 
     SBInclinedExponential::~SBInclinedExponential() {}
 
-    double SBInclinedExponential::getInclination() const
+    Angle SBInclinedExponential::getInclination() const
     {
         assert(dynamic_cast<const SBInclinedExponentialImpl*>(_pimpl.get()));
         return static_cast<const SBInclinedExponentialImpl&>(*_pimpl).getInclination();
@@ -88,7 +88,7 @@ namespace galsim {
     LRUCache< boost::tuple<double, GSParamsPtr >, InclinedExponentialInfo >
         SBInclinedExponential::SBInclinedExponentialImpl::cache(sbp::max_inclined_exponential_cache);
 
-    SBInclinedExponential::SBInclinedExponentialImpl::SBInclinedExponentialImpl(double inclination, double scale_radius,
+    SBInclinedExponential::SBInclinedExponentialImpl::SBInclinedExponentialImpl(Angle inclination, double scale_radius,
             double scale_height, double flux, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
         _inclination(inclination),
@@ -105,22 +105,22 @@ namespace galsim {
         dbg<<"flux = "<<_flux<<std::endl;
 
         // Check if cos(inclination) is within allowed limits, and institute special handling if it isn't
-        
-        double cosi = std::abs(std::cos(_inclination));
-        
+
+        double cosi = std::abs(_inclination.cos());
+
         if(cosi<sbp::minimum_cosi)
         {
             // Perfectly edge-on isn't analytic, so we truncate at the minimum cos(inclination) value
             cosi = sbp::minimum_cosi;
         }
-        
+
         // Now set up, using this value of cosi
-        
+
         _r0_cosi = _r0*cosi;
         _inv_r0_cosi = 1./_r0_cosi;
-        
-        _h_tani_over_r = scale_height*std::abs(std::sin(inclination))*_inv_r0_cosi; // A tiny bit more accurate than using tan of
-            // the truncated value
+
+        _h_tani_over_r = scale_height*std::abs(inclination.sin())*_inv_r0_cosi; // A tiny bit more accurate than using tan of
+                                                                                // the truncated value
 
         _info = boost::shared_ptr<InclinedExponentialInfo>(cache.get(boost::make_tuple(_h_tani_over_r, this->gsparams.duplicate())));
 

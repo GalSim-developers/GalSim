@@ -69,12 +69,11 @@ class InclinedExponential(GSObject):
     def __init__(self, inclination, scale_radius, scale_height,
                  flux=1., gsparams=None):
 
+        # Explicitly check for angle type, so we can give more informative error if eg. a float is passed
         if not isinstance(inclination, galsim.Angle):
             raise TypeError("Input inclination should be an Angle")
 
-        i_rad = inclination.rad()
-
-        GSObject.__init__(self, _galsim.SBInclinedExponential(i_rad, scale_radius, scale_height, flux,
+        GSObject.__init__(self, _galsim.SBInclinedExponential(inclination, scale_radius, scale_height, flux,
                                                               gsparams))
         self._gsparams = gsparams
 

@@ -23,6 +23,7 @@
  * @file SBInclinedExponential.h @brief SBProfile that implements an inclined exponential profile.
  */
 
+#include "Angle.h"
 #include "SBProfile.h"
 
 namespace galsim {
@@ -63,7 +64,7 @@ namespace galsim {
          *                              of image operations and rendering, if different from the
          *                              default.
          */
-        SBInclinedExponential(double inclination, double scale_radius, double scale_height, double flux,
+        SBInclinedExponential(Angle inclination, double scale_radius, double scale_height, double flux,
                  const GSParamsPtr& gsparams);
 
         /// @brief Copy constructor.
@@ -73,7 +74,7 @@ namespace galsim {
         ~SBInclinedExponential();
 
         /// @brief Returns the inclination angle of the profile in radians
-        double getInclination() const;
+        Angle getInclination() const;
 
         /// @brief Returns the scale radius r0 of the disk profile
         double getScaleRadius() const;
