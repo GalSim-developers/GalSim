@@ -126,12 +126,6 @@ namespace galsim {
 
         xdbg<<"_h_tani_over_r = "<<_h_tani_over_r<<std::endl;
         xdbg<<"_r0_cosi = "<<_r0_cosi<<std::endl;
-
-        /* Shooting NYI
-        _shootnorm = _flux * _info->getXNorm(); // For shooting, we don't need the 1/r0^2 factor.
-        _xnorm = _shootnorm * _inv_r0 * _inv_r0 ;
-        dbg<<"norms = "<<_xnorm<<", "<<_shootnorm<<std::endl;
-        */
     }
 
     double SBInclinedExponential::SBInclinedExponentialImpl::xValue(const Position<double>& p) const
@@ -261,35 +255,6 @@ namespace galsim {
         return _maxk;
     }
 
-    /* NYI
-    double InclinedExponentialInfo::getXNorm() const
-    {
-        return 1.;
-    }
-    */
-
-    /* NYI
-    double InclinedExponentialInfo::xValue(double rx, double ry) const
-    {
-        if (_ift.getNx() == 0) buildIFT();
-
-        double rsq = rx*rx + ry*ry;
-        double theta;
-        if(rx==0)
-        {
-            theta = 0;
-        }
-        else
-        {
-            theta = std::atan(std::abs(ry/rx));
-        }
-
-        double lr=0.5*std::log(rsq); // Lookup table is logarithmic
-        return rsq*_ift(lr,theta);
-
-    }
-    */
-
     double InclinedExponentialInfo::kValue(double kx, double ky) const
     {
         // Calculate the base value for an exponential profile
@@ -331,15 +296,6 @@ namespace galsim {
 
         return res;
     }
-
-
-    /* NYI
-    void InclinedExponentialInfo::buildIFT() const
-    {
-        // To make the table, we'll have to fill in k values in an array, then perform an inverse transform
-        assert(false);
-    }
-    */
 
     // NYI, but needs to be defined
     boost::shared_ptr<PhotonArray> InclinedExponentialInfo::shoot(int N, UniformDeviate ud) const

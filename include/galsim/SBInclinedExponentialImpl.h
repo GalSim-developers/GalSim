@@ -95,22 +95,6 @@ namespace galsim {
         // Parameters calculated when they are first needed, and then stored:
         mutable double _maxk;    ///< Value of k beyond which aliasing can be neglected.
         mutable double _stepk;   ///< Sampling in k space necessary to avoid folding.
-
-        // Parameters for the inverse Fourier transform
-        /* NYI
-        mutable Table2D<double,double> _ift;  ///< Lookup table for inverse Fourier transform.
-        */
-
-        // Classes used for photon shooting
-        /* NYI
-        mutable boost::shared_ptr<FluxDensity> _radial;
-        mutable boost::shared_ptr<OneDimensionalDeviate> _sampler;
-        */
-
-        // Helper functions used internally:
-        /* NYI
-        void buildIFT() const;
-        */
     };
 
     class SBInclinedExponential::SBInclinedExponentialImpl : public SBProfileImpl
@@ -167,14 +151,6 @@ namespace galsim {
         double getScaleHeight() const { return _h0; }
 
         // Overrides for better efficiency
-        /* NYI
-        void fillXValue(tmv::MatrixView<double> val,
-                        double x0, double dx, int izero,
-                        double y0, double dy, int jzero) const;
-        void fillXValue(tmv::MatrixView<double> val,
-                        double x0, double dx, double dxy,
-                        double y0, double dy, double dyx) const;
-        */
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
                         double kx0, double dkx, int izero,
                         double ky0, double dky, int jzero) const;
@@ -189,11 +165,6 @@ namespace galsim {
         double _flux;        ///< Actual flux (may differ from that specified at the constructor).
         double _r0;          ///< Scale radius specified at the constructor.
         double _h0;          ///< Scale height specified at the constructor.
-
-        /* NYI
-        double _xnorm;     ///< Normalization of xValue relative to what SersicInfo returns.
-        double _shootnorm; ///< Normalization for photon shooting.
-        */
 
         double _inv_r0;
         double _h_tani_over_r;
