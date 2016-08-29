@@ -266,7 +266,7 @@ namespace galsim {
         }
         else
         {
-            res_conv = _half_pi_h_tani_over_r*ky / std::sinh(_half_pi_h_tani_over_r*ky);
+            res_conv = scaled_ky / std::sinh(scaled_ky);
         }
 
         double res = res_base*res_conv;
