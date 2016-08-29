@@ -125,15 +125,16 @@ namespace galsim {
 
         // For large k, we clip the result of kValue to 0.
         // We do this when the correct answer is less than kvalue_accuracy.
-        // (1+k^2 r0^2)^-1.5 = kvalue_accuracy
-        _ksq_max = (std::pow(this->gsparams->kvalue_accuracy,-1./1.5)-1.);
+        // (1+k^2 r0^2 cos^2(i))^-1.5 = kvalue_accuracy
+        // The convolution factor is generally a small effect, so we don't include it here
+        _ksq_max = (std::pow(this->gsparams->kvalue_accuracy,-1./1.5) - 1.)/cosi;
 
         // For small k, we can use up to quartic in the taylor expansion to avoid the sqrt.
         // This is acceptable when the next term is less than kvalue_accuracy.
         // 35/16 (k^2 r0^2)^3 = kvalue_accuracy
-        _ksq_min = std::pow(this->gsparams->kvalue_accuracy * 16./35., 1./3.);
+        _ksq_min = std::pow(this->gsparams->kvalue_accuracy * 16./35., 1./3.)/cosi;
 
-        // Calculate stepk (assuming that this is similar enough to an exponential disk):
+        // Calculate stepk, based on a conservative comparison to an exponential disk:
         // int( exp(-r) r, r=0..R) = (1 - exp(-R) - Rexp(-R))
         // Fraction excluded is thus (1+R) exp(-R)
         // A fast solution to (1+R)exp(-R) = x:
