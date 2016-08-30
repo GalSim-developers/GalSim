@@ -185,14 +185,14 @@ def GetSky(config, base):
         else:
             # This calculation is non-trivial, so store this in case we need it again.
             tag = (id(base), base['file_num'], base['image_num'])
-            if config.get('current_sky_tag',None) == tag:
-                return config['current_sky']
+            if config.get('_current_sky_tag',None) == tag:
+                return config['_current_sky']
             else:
                 bounds = base['current_image'].bounds
                 sky = galsim.Image(bounds, wcs=wcs)
                 wcs.makeSkyImage(sky, sky_level)
-                config['current_sky_tag'] = tag
-                config['current_sky'] = sky
+                config['_current_sky_tag'] = tag
+                config['_current_sky'] = sky
                 return sky
     elif 'sky_level_pixel' in config:
         sky_level_pixel = galsim.config.ParseValue(config,'sky_level_pixel',base,float)[0]
