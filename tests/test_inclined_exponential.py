@@ -42,7 +42,6 @@ image_scale_heights = ("0.3", "0.5", "0.5", "0.5", "1.0", "0.5")
 image_pos_angles = ("0.0", "0.0", "0.0", "0.0", "-0.2", "-0.2")
 image_nx = 64
 image_ny = 64
-oversampling = 1.0
 
 @timer
 def test_regression():
@@ -55,8 +54,8 @@ def test_regression():
         
         # Get float values for the details
         inc_angle=float(inc_angle)
-        scale_radius=float(scale_radius)/oversampling
-        scale_height=float(scale_height)/oversampling
+        scale_radius=float(scale_radius)
+        scale_height=float(scale_height)
         pos_angle=float(pos_angle)
         
         # Now make a test image
@@ -127,8 +126,8 @@ def test_edge_on():
         images.append(image.array)
         
     # Check they're all almost the same
-    np.testing.assert_array_almost_equal(images[1], images[0], decimal=4)
-    np.testing.assert_array_almost_equal(images[1], images[2], decimal=4)
+    np.testing.assert_array_almost_equal(images[1], images[0], decimal=2)
+    np.testing.assert_array_almost_equal(images[1], images[2], decimal=2)
     
 
 @timer
@@ -144,8 +143,8 @@ def test_sanity():
         # Get float values for the details
         flux = float(flux)
         inc_angle=float(inc_angle)
-        scale_radius=float(scale_radius)/oversampling
-        scale_height=float(scale_height)/oversampling
+        scale_radius=float(scale_radius)
+        scale_height=float(scale_height)
         pos_angle=float(pos_angle)
         
         # Now make a test image
@@ -177,8 +176,8 @@ def test_k_limits():
                                                      image_scale_heights):
         # Get float values for the details
         inc_angle=float(inc_angle)
-        scale_radius=float(scale_radius)/oversampling
-        scale_height=float(scale_height)/oversampling
+        scale_radius=float(scale_radius)
+        scale_height=float(scale_height)
         
         gsparams = galsim.GSParams(maximum_fft_size=5000)
     
@@ -191,10 +190,14 @@ def test_k_limits():
         ky = test_profile.maxK()
         
         kx_value=test_profile.kValue(kx=kx,ky=0.)
-        np.testing.assert_(np.abs(kx_value)<gsparams.maxk_threshold)
+        np.testing.assert_(np.abs(kx_value)<gsparams.maxk_threshold,
+                           msg="kx_value is not below maxk_threshold: " + str(kx_value) + " >= "
+                            + str(gsparams.maxk_threshold))
         
         ky_value=test_profile.kValue(kx=0.,ky=ky)
-        np.testing.assert_(np.abs(ky_value)<gsparams.maxk_threshold)
+        np.testing.assert_(np.abs(ky_value)<gsparams.maxk_threshold,
+                           msg="ky_value is not below maxk_threshold: " + str(ky_value) + " >= "
+                            + str(gsparams.maxk_threshold))
         
         # Check that less than folding_threshold fraction of light falls outside r = pi/stepK()
         rmax = np.pi/test_profile.stepK()
@@ -220,7 +223,10 @@ def test_k_limits():
         
         # Check that we're not missing too much flux
         total_flux = 1.
-        np.testing.assert_((total_flux-contained_flux)/(total_flux)<gsparams.folding_threshold)
+        np.testing.assert_((total_flux-contained_flux)/(total_flux)<gsparams.folding_threshold,
+                           msg="Too much flux lost due to folding.\nTotal flux = " +
+                           str(total_flux) + "\nContained flux = " + str(contained_flux) + 
+                           "\nLost = " + str((total_flux-contained_flux)/(total_flux)))
 
 @timer
 def test_ne():

@@ -110,6 +110,8 @@ namespace galsim {
             cosi = sbp::minimum_cosi;
         }
 
+        double cosi_squared = cosi*cosi;
+
         // Now set up, using this value of cosi
 
         _r0_cosi = _r0*cosi;
@@ -127,12 +129,12 @@ namespace galsim {
         // We do this when the correct answer is less than kvalue_accuracy.
         // (1+k^2 r0^2 cos^2(i))^-1.5 = kvalue_accuracy
         // The convolution factor is generally a small effect, so we don't include it here
-        _ksq_max = (std::pow(this->gsparams->kvalue_accuracy,-1./1.5) - 1.)/cosi;
+        _ksq_max = (std::pow(this->gsparams->kvalue_accuracy,-1./1.5) - 1.)/cosi_squared;
 
         // For small k, we can use up to quartic in the taylor expansion to avoid the sqrt.
         // This is acceptable when the next term is less than kvalue_accuracy.
         // 35/16 (k^2 r0^2)^3 = kvalue_accuracy
-        _ksq_min = std::pow(this->gsparams->kvalue_accuracy * 16./35., 1./3.)/cosi;
+        _ksq_min = std::pow(this->gsparams->kvalue_accuracy * 16./35., 1./3.)/cosi_squared;
 
         // Calculate stepk, based on a conservative comparison to an exponential disk. The
         // half-light radius of this will be smaller, so if we use an exponential's hlr, it
@@ -153,7 +155,7 @@ namespace galsim {
         _stepk = M_PI / R;
         dbg<<"stepk = "<<_stepk<<std::endl;
 
-        _maxk = std::sqrt(_ksq_max);
+        _maxk = std::pow(this->gsparams->maxk_threshold, -1./3.)/cosi;
     }
 
     double SBInclinedExponential::SBInclinedExponentialImpl::xValue(const Position<double>& p) const
