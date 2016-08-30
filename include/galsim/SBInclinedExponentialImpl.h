@@ -95,10 +95,8 @@ namespace galsim {
         double _h0;          ///< Scale height specified at the constructor.
 
         double _inv_r0;
-        double _h_tani_over_r;
-        double _half_pi_h_tani_over_r;
-        double _r0_cosi;
-        double _inv_r0_cosi;
+        double _half_pi_h_sini_over_r;
+        double _cosi;
 
         // Some derived values calculated in the constructor:
         double _ksq_max;   ///< If ksq < _kq_min, then use faster taylor approximation for kvalue
@@ -113,6 +111,17 @@ namespace galsim {
         // Helper function to get k values
         double kValueHelper(double kx, double ky) const;
 
+        // Helper functor to solve for the proper _maxk
+        class SBInclinedExponentialMaxKFunctor
+	    {
+	    public:
+	    	SBInclinedExponentialMaxKFunctor(const SBInclinedExponential::SBInclinedExponentialImpl * pimpl);
+	    	double operator() (double k) const;
+	    private:
+	    	const SBInclinedExponential::SBInclinedExponentialImpl * _pimpl;
+	    };
+
+        friend class SBInclinedExponentialMaxKFunctor;
     };
 }
 

@@ -30,9 +30,9 @@
 
 #ifdef DEBUGLOGGING
 #include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
-// std::ostream* dbgout = &std::cout;
-int verbose_level = 3;
+// std::ostream* dbgout = new std::ofstream("debug.out");
+std::ostream* dbgout = &std::cout;
+int verbose_level = 2;
 #endif
 
 namespace galsim {
@@ -100,30 +100,16 @@ namespace galsim {
         dbg<<"scale height = "<<_h0<<std::endl;
         dbg<<"flux = "<<_flux<<std::endl;
 
-        // Check if cos(inclination) is within allowed limits, and institute special handling if it isn't
-
-        double cosi = std::abs(_inclination.cos());
-
-        if(cosi<sbp::minimum_cosi)
-        {
-            // Perfectly edge-on isn't analytic, so we truncate at the minimum cos(inclination) value
-            cosi = sbp::minimum_cosi;
-        }
-
-        double cosi_squared = cosi*cosi;
-
         // Now set up, using this value of cosi
 
-        _r0_cosi = _r0*cosi;
-        _inv_r0_cosi = 1./_r0_cosi;
+        _half_pi_h_sini_over_r = 0.5*M_PI*scale_height*std::abs(inclination.sin())*_inv_r0;
 
-        _h_tani_over_r = scale_height*std::abs(inclination.sin())*_inv_r0_cosi; // A tiny bit more accurate than using tan of
-                                                                                // the truncated value
+        _cosi = std::abs(inclination.cos());
 
-        _half_pi_h_tani_over_r = 0.5*M_PI*_h_tani_over_r;
+        double cosi_squared = _cosi*_cosi;
 
-        xdbg<<"_h_tani_over_r = "<<_h_tani_over_r<<std::endl;
-        xdbg<<"_r0_cosi = "<<_r0_cosi<<std::endl;
+        xdbg<<"_half_pi_h_sini_over_r = "<<_half_pi_h_sini_over_r<<std::endl;
+        xdbg<<"_cosi = "<<_cosi<<std::endl;
 
         // For large k, we clip the result of kValue to 0.
         // We do this when the correct answer is less than kvalue_accuracy.
@@ -134,7 +120,7 @@ namespace galsim {
         // For small k, we can use up to quartic in the taylor expansion to avoid the sqrt.
         // This is acceptable when the next term is less than kvalue_accuracy.
         // 35/16 (k^2 r0^2)^3 = kvalue_accuracy
-        _ksq_min = std::pow(this->gsparams->kvalue_accuracy * 16./35., 1./3.)/cosi_squared;
+        _ksq_min = std::pow(this->gsparams->kvalue_accuracy * 16./35., 1./3.);
 
         // Calculate stepk, based on a conservative comparison to an exponential disk. The
         // half-light radius of this will be smaller, so if we use an exponential's hlr, it
@@ -155,7 +141,44 @@ namespace galsim {
         _stepk = M_PI / R;
         dbg<<"stepk = "<<_stepk<<std::endl;
 
-        _maxk = std::pow(this->gsparams->maxk_threshold, -1./3.)/cosi;
+        // Solve for the proper _maxk
+
+        double maxk_min = std::pow(this->gsparams->maxk_threshold, -1./3.);
+
+        // Check for face-on case, which doesn't need the solver
+        if(_cosi==1)
+        {
+        	_maxk = maxk_min;
+        }
+        else // Use the solver
+        {
+        	// Bracket it appropriately, starting with guesses based on the 1/cosi scaling
+			double maxk_max;
+			// Check bounds on _cosi to make sure initial guess range isn't too big or small
+			if(_cosi>0.01)
+			{
+				if(_cosi<0.96)
+					maxk_max = maxk_min/_cosi;
+				else
+					maxk_max = 1.05*maxk_min;
+			}
+			else
+			{
+				maxk_max = 100*maxk_min;
+			}
+
+			xdbg << "maxk_threshold = " << this->gsparams->maxk_threshold << std::endl;
+			xdbg << "F(" << maxk_min << ") = " << kValueHelper(0.,maxk_min) << std::endl;
+			xdbg << "F(" << maxk_max << ") = " << kValueHelper(0.,maxk_max) << std::endl;
+
+			SBInclinedExponentialMaxKFunctor func(this);
+			Solve<SBInclinedExponentialMaxKFunctor> solver(func, maxk_min, maxk_max);
+			solver.bracket();
+
+			// Get the _maxk from the solver here. We add back on the tolerance to the result to
+			// ensure that the k-value will be below the threshold.
+			_maxk = solver.root() + solver.getXTolerance();
+        }
     }
 
     double SBInclinedExponential::SBInclinedExponentialImpl::xValue(const Position<double>& p) const
@@ -167,7 +190,7 @@ namespace galsim {
     std::complex<double> SBInclinedExponential::SBInclinedExponentialImpl::kValue(const Position<double>& k) const
     {
         double kx = k.x*_r0;
-        double ky = k.y*_r0_cosi;
+        double ky = k.y*_r0;
         return _flux * kValueHelper(kx,ky);
     }
 
@@ -190,8 +213,8 @@ namespace galsim {
 
             kx0 *= _r0;
             dkx *= _r0;
-            ky0 *= _r0_cosi;
-            dky *= _r0_cosi;
+            ky0 *= _r0;
+            dky *= _r0;
 
             for (int j=0;j<n;++j,ky0+=dky) {
                 double kx = kx0;
@@ -221,9 +244,9 @@ namespace galsim {
         kx0 *= _r0;
         dkx *= _r0;
         dkxy *= _r0;
-        ky0 *= _r0_cosi;
-        dky *= _r0_cosi;
-        dkyx *= _r0_cosi;
+        ky0 *= _r0;
+        dky *= _r0;
+        dkyx *= _r0;
 
         It valit = val.linearView().begin();
         for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
@@ -242,8 +265,10 @@ namespace galsim {
     {
         // Calculate the base value for an exponential profile
 
-        double kysq = ky*ky;
-        double ksq = kx*kx + kysq;
+    	double ky_cosi = ky*_cosi;
+
+        double ky_cosi_sq = ky_cosi*ky_cosi;
+        double ksq = kx*kx + ky_cosi_sq;
         double res_base;
         if (ksq > _ksq_max)
         {
@@ -252,28 +277,35 @@ namespace galsim {
         else if (ksq < _ksq_min)
         {
             res_base = (1. - 1.5*ksq*(1. - 1.25*ksq));
+
+            xxdbg << "res_base (upper limit) = " << res_base << std::endl;
         }
         else
         {
             double temp = 1. + ksq;
             res_base =  1./(temp*sqrt(temp));
+
+            xxdbg << "res_base (normal) = " << res_base << std::endl;
         }
 
         // Calculate the convolution factor
         double res_conv;
 
-        double scaled_ky = _half_pi_h_tani_over_r*ky;
+        double scaled_ky = _half_pi_h_sini_over_r*ky;
         double scaled_ky_squared = scaled_ky*scaled_ky;
 
         if (scaled_ky_squared < _ksq_min)
         {
             // Use Taylor expansion to speed up calculation
             res_conv = (1. - 0.16666666667*scaled_ky_squared*(1. - 0.116666666667*scaled_ky_squared));
+            xxdbg << "res_conv (lower limit) = " << res_conv << std::endl;
         }
         else
         {
             res_conv = scaled_ky / std::sinh(scaled_ky);
+            xxdbg << "res_conv (normal) = " << res_conv << std::endl;
         }
+
 
         double res = res_base*res_conv;
 
@@ -285,4 +317,16 @@ namespace galsim {
     {
         throw std::runtime_error("Photon shooting NYI for InclinedExponential profile.");
     }
+
+    SBInclinedExponential::SBInclinedExponentialImpl::SBInclinedExponentialMaxKFunctor::SBInclinedExponentialMaxKFunctor(
+    		const SBInclinedExponential::SBInclinedExponentialImpl * pimpl) : _pimpl(pimpl) {}
+
+    double SBInclinedExponential::SBInclinedExponentialImpl::SBInclinedExponentialMaxKFunctor::operator()(double k) const
+    {
+    	assert(_pimpl);
+    	double k_value = std::max(_pimpl->kValueHelper(0.,k),_pimpl->kValueHelper(k,0.));
+    	return k_value - _pimpl->gsparams->maxk_threshold;
+    }
+
+
 }
