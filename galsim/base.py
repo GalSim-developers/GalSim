@@ -37,11 +37,9 @@ between the scale radii used to specify the size of the GSObject and between the
 Image is acceptable.
 """
 
-import os
 import numpy as np
 
 import galsim
-from . import utilities
 
 from . import _galsim
 from ._galsim import GSParams
@@ -227,8 +225,11 @@ class GSObject(object):
     def interpolated(self): return False
     @property
     def deinterpolated(self): return self
+    def _deinterpolate(self): return self
     @property
-    def SED(self): return galsim.SED('1', 'nm', 'flambda')
+    def SED(self): return None
+    @property
+    def _norm(self): return 1.0
     @property
     def wave_list(self): return np.array([], dtype=float)
 
