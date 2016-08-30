@@ -1862,7 +1862,6 @@ class ChromaticConvolution(ChromaticObject):
                 iiscale /= iimult
 
             # Prevent infinite loop by using ChromaticObject.drawImage() on a ChromaticConvolution.
-
             if isinstance(insep_obj, ChromaticConvolution):
                 effective_prof_image = ChromaticObject.drawImage(
                         insep_obj, bandpass, wmult=wmult, scale=iiscale,
@@ -2022,51 +2021,40 @@ class ChromaticConvolution(ChromaticObject):
         image = prof0.drawImage(image=image, setup_only=True, **kwargs)
         _remove_setup_kwargs(kwargs)
 
-        # Sort these atomic objects into separable and inseparable lists, and collect
-        # the spectral parts of the separable profiles.
+        # Separate convolutants into a Convolution of inseparable profiles multiplied by the
+        # wavelength-dependent normalization of separable profiles, and the achromatic part of
+        # separable profiles.
         sep_profs = []
-        insep_profs = []
-        sep_SEDs = []
-        sep_norms = []
-        wave_list = np.array([], dtype=float)
+        insep_obj = None
+
+        insep_obj = galsim.Convolve([obj for obj in self.objlist if not obj.separable],
+                                    gsparams=self.gsparams)
+        # Don't wrap in Convolution if not needed.  Single item can draw itself better than
+        # Convolution can.
+        if len(insep_obj.objlist) == 1:
+            insep_obj = insep_obj.objlist[0]
+
         for obj in self.objlist:
-            if obj.separable:
-                if isinstance(obj, galsim.GSObject):
-                    _norm = obj._norm
-                    sep_profs.append(obj) # The g(x,y)'s (see above)
-                    sep_norms.append(_norm)
-                else:
-                    wave0, prof0 = obj._fiducial_profile(bandpass)
-                    wave_list = np.union1d(wave_list, obj.wave_list)
-                    if obj.SED is not None:
-                        sep_profs.append(prof0 / obj.SED(wave0)) # more g(x,y)'s
-                        sep_SEDs.append(obj.SED) # The h(lambda)'s (see above)
-                    else:
-                        _norm = obj._norm(wave0) if hasattr(obj._norm, '__call__') else obj._norm
-                        sep_profs.append(prof0 / _norm)
-                        sep_norms.append(obj._norm)
+            if not obj.separable:
+                continue
+            if isinstance(obj, galsim.GSObject):
+                _norm = obj._norm
+                sep_profs.append(obj)
+                insep_obj *= _norm
             else:
-                insep_profs.append(obj) # The f(x,y,lambda)'s (see above)
+                wave0, prof0 = obj._fiducial_profile(bandpass)
+                if obj.SED is not None:
+                    sep_profs.append(prof0 / obj.SED(wave0))
+                    insep_obj *= obj.SED
+                else:
+                    _norm = obj._norm(wave0) if hasattr(obj._norm, '__call__') else obj._norm
+                    sep_profs.append(prof0 / _norm)
+                    insep_obj *= obj._norm
         # insep_profs should never be empty, since separable cases were farmed out to
         # ChromaticObject.drawImage() above.
 
-        if len(sep_SEDs) == 0:
-            sep_SED = None
-        elif len(sep_SEDs) == 1:
-            sep_SED = sep_SEDs[0]
-        else:
-            raise RuntimeError("Encountered convolution of more than one SEDed ChromaticObject.")
-
         wmult = kwargs.get('wmult', 1)
         # Collapse inseparable profiles and chromatic normalizations into one effective profile
-        if len(insep_profs) > 1:
-            insep_obj = galsim.Convolve(insep_profs, gsparams=self.gsparams)
-        else:
-            insep_obj = insep_profs[0]
-        if sep_SED is not None:
-            insep_obj *= sep_SED
-        for _norm in sep_norms:
-            insep_obj *= _norm
         # Note that at this point, insep_obj.SED should *not* be None.
 
         effective_prof = ChromaticConvolution._effective_prof_cache(
