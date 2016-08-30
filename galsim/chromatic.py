@@ -192,7 +192,7 @@ class ChromaticObject(object):
     def __str__(self):
         return 'galsim.ChromaticObject(%s)'%self.obj
 
-    def interpolate(self, waves, oversample_fac=1.):
+    def interpolate(self, waves, **kwargs):
         """
         This method is used as a pre-processing step that can expedite image rendering using objects
         that have to be built up as sums of GSObjects with different parameters at each wavelength,
@@ -259,11 +259,16 @@ class ChromaticObject(object):
                                 whichever wavelength has the highest Nyquist frequency.
                                 `oversample_fac`>1 results in higher accuracy but costlier
                                 pre-computations (more memory and time). [default: 1]
+        @param use_exact_SED    If true, then rescale the interpolated image for a given wavelength by
+                                the ratio of the exact SED at that wavelength to the linearly
+                                interpolated SED at that wavelength.  Thus, the flux of the interpolated
+                                object should be correct, at the possible expense of other features.
+                                [default: True]
 
         @returns the version of the Chromatic object that uses interpolation
                  (This will be an InterpolatedChromaticObject instance.)
         """
-        return InterpolatedChromaticObject(self, waves, oversample_fac)
+        return InterpolatedChromaticObject(self, waves, **kwargs)
 
     @property
     def deinterpolated(self):
@@ -792,8 +797,17 @@ class InterpolatedChromaticObject(ChromaticObject):
                             whichever wavelength has the highest Nyquist frequency.
                             `oversample_fac`>1 results in higher accuracy but costlier
                             pre-computations (more memory and time). [default: 1]
+    @param use_exact_SED    If true, then rescale the interpolated image for a given wavelength by
+                            the ratio of the exact SED at that wavelength to the linearly
+                            interpolated SED at that wavelength.  Thus, the flux of the interpolated
+                            object should be correct, at the possible expense of other features.
+                            [default: True]
     """
-    def __init__(self, original, waves, oversample_fac=1.0):
+    def __init__(self, original, waves, oversample_fac=1.0, use_exact_SED=True):
+
+        self.waves = np.sort(np.array(waves))
+        self.oversample = oversample_fac
+        self.use_exact_SED = use_exact_SED
 
         self.separable = original.separable
         self.interpolated = True
@@ -803,8 +817,6 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         # Don't interpolate an interpolation.  Go back to the original.
         self.original = original.deinterpolated
-        self.waves = np.sort(np.array(waves))
-        self.oversample = oversample_fac
 
         # Make the objects between which we are going to interpolate.  Note that these do not have
         # to be saved for later, unlike the images.
@@ -829,6 +841,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         # `no_pixel` is used (we want the object on its own, without a pixel response).
         self.ims = [ obj.drawImage(scale=scale, nx=im_size, ny=im_size, method='no_pixel')
                      for obj in objs ]
+        self.fluxes = [ obj.getFlux() for obj in objs ]
 
     def _deinterpolate(self):
         return self.original
@@ -837,16 +850,19 @@ class InterpolatedChromaticObject(ChromaticObject):
         return (isinstance(other, galsim.InterpolatedChromaticObject) and
                 self.original == other.original and
                 np.array_equal(self.waves, other.waves) and
-                self.oversample == other.oversample)
+                self.oversample == other.oversample and
+                self.use_exact_SED == other.use_exact_SED)
 
     def __hash__(self):
         return hash(("galsim.InterpolatedChromaticObject", self.original, tuple(self.waves),
-                     self.oversample))
+                     self.oversample, self.use_exact_SED))
 
     def __repr__(self):
         s = 'galsim.InterpolatedChromaticObject(%r,%r'%(self.original, self.waves)
         if self.oversample != 1.0:
             s += ', oversample_fac=%r'%self.oversample
+        if not self.use_exact_SED:
+            s += ', use_exact_SED=False'
         s += ')'
         return s
 
@@ -876,6 +892,17 @@ class InterpolatedChromaticObject(ChromaticObject):
         im = _linearInterp(self.ims, frac, lower_idx)
         stepk = _linearInterp(self.stepK_vals, frac, lower_idx)
         maxk = _linearInterp(self.maxK_vals, frac, lower_idx)
+
+        # Rescale to use the exact flux or normalization if requested.
+        if self.use_exact_SED:
+            if self.SED is not None:
+                interp_flux = _linearInterp(self.fluxes, frac, lower_idx)
+                exact_flux = self.SED(wave)
+                im *= exact_flux/interp_flux
+            elif self._norm is not None:
+                exact_norm = self._norm(wave) if hasattr(self._norm, '__call__') else self._norm
+                interp_norm = _linearInterp(self.fluxes, frac, lower_idx)
+                im *= exact_norm/interp_norm
 
         return im, stepk, maxk
 
@@ -951,6 +978,19 @@ class InterpolatedChromaticObject(ChromaticObject):
             # Store the weight factors for the two stored images that can contribute at this
             # wavelength.  Must include the dwave that is part of doing the integral.
             b = bandpass(w) * dw[idx]
+
+            # Rescale to use the exact flux or normalization if requested.
+            if self.use_exact_SED:
+                if self.SED is not None:
+                    interp_flux = _linearInterp(self.fluxes, frac, lower_idx)
+                    exact_flux = self.SED(w)
+                    b *= exact_flux/interp_flux
+                # Probably this method only gets called if self.SED is not None, but for
+                # completeness we include the following lines.
+                elif self._norm is not None:
+                    exact_norm = self._norm(w) if hasattr(self._norm, '__call__') else self._norm
+                    interp_norm = _linearInterp(self.fluxes, frac, lower_idx)
+                    b *= exact_norm/interp_norm
 
             if (idx > 0 and idx < len(wave_list)-1) or integrator == 'midpoint':
                 weight_fac[lower_idx] += (1.0-frac)*b
