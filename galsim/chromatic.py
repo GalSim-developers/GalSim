@@ -1286,8 +1286,7 @@ class ChromaticTransformation(ChromaticObject):
         if not hasattr(offset,'__call__'):
             offset = np.asarray(offset)
 
-        self.chromatic = (hasattr(jac,'__call__') or hasattr(offset,'__call__') or
-                          hasattr(flux_ratio,'__call__'))
+        self.chromatic = hasattr(jac,'__call__') or hasattr(offset,'__call__')
         # Technically, if the only chromatic transformation is a flux_ratio, and the original object
         # is separable, then the transformation is still separable (for instance, galsim.Chromatic),
         # but we'll ignore that here.
@@ -1726,7 +1725,7 @@ class ChromaticSum(ChromaticObject):
                 bandpass, image=image, add_to_image=add_to_image, **kwargs)
         _remove_setup_kwargs(kwargs)
         for obj in self.objlist[1:]:
-            image = obj.drawImage(      bandpass, image=image, add_to_image=True, **kwargs)
+            image = obj.drawImage(bandpass, image=image, add_to_image=True, **kwargs)
         return image
 
     def withScaledFlux(self, flux_ratio):
@@ -1836,7 +1835,7 @@ class ChromaticConvolution(ChromaticObject):
         n_interp = 0
         for obj in self.objlist:
             if not obj.separable and not isinstance(obj, galsim.ChromaticSum): n_nonsep += 1
-            if isinstance(obj, InterpolatedChromaticObject): n_interp += 1
+            if obj.interpolated: n_interp += 1
         if n_nonsep>1 and n_interp>0:
             import warnings
             warnings.warn(
@@ -1861,7 +1860,8 @@ class ChromaticConvolution(ChromaticObject):
             if iimult is not None:
                 iiscale /= iimult
 
-            # Prevent infinite loop by using ChromaticObject.drawImage() on a ChromaticConvolution.
+            # Prevent infinite recursive loop by using ChromaticObject.drawImage() on a
+            # ChromaticConvolution.
             if isinstance(insep_obj, ChromaticConvolution):
                 effective_prof_image = ChromaticObject.drawImage(
                         insep_obj, bandpass, wmult=wmult, scale=iiscale,
@@ -1991,7 +1991,7 @@ class ChromaticConvolution(ChromaticObject):
                 # say obj.objlist = [A,B,C], where obj is a ChromaticSum object
                 # Assemble temporary list of convolutants excluding the ChromaticSum in question.
                 tmplist = list(self.objlist)
-                del tmplist[i] # remove ChromaticSum object from objlist
+                del tmplist[i]  # remove ChromaticSum object from objlist
                 tmplist.append(obj.objlist[0])  # Append first summand, i.e., A, to convolutants
                 # now draw this image
                 tmpobj = ChromaticConvolution(tmplist)
@@ -2024,16 +2024,16 @@ class ChromaticConvolution(ChromaticObject):
         # Separate convolutants into a Convolution of inseparable profiles multiplied by the
         # wavelength-dependent normalization of separable profiles, and the achromatic part of
         # separable profiles.
-        sep_profs = []
-        insep_obj = None
-
         insep_obj = galsim.Convolve([obj for obj in self.objlist if not obj.separable],
                                     gsparams=self.gsparams)
+        # Note that insep_obj should always exist, since purely separable ChromaticConvolutions were
+        # already handled above.
         # Don't wrap in Convolution if not needed.  Single item can draw itself better than
         # Convolution can.
         if len(insep_obj.objlist) == 1:
             insep_obj = insep_obj.objlist[0]
 
+        sep_profs = []
         for obj in self.objlist:
             if not obj.separable:
                 continue
@@ -2050,13 +2050,11 @@ class ChromaticConvolution(ChromaticObject):
                     _norm = obj._norm(wave0) if hasattr(obj._norm, '__call__') else obj._norm
                     sep_profs.append(prof0 / _norm)
                     insep_obj *= obj._norm
-        # insep_profs should never be empty, since separable cases were farmed out to
-        # ChromaticObject.drawImage() above.
 
         wmult = kwargs.get('wmult', 1)
+
         # Collapse inseparable profiles and chromatic normalizations into one effective profile
         # Note that at this point, insep_obj.SED should *not* be None.
-
         effective_prof = ChromaticConvolution._effective_prof_cache(
                 insep_obj, bandpass, iimult, wmult,
                 integrator, self.gsparams)
