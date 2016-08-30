@@ -29,6 +29,7 @@ import numpy as np
 
 import galsim
 
+
 class ChromaticObject(object):
     """Base class for defining wavelength-dependent objects.
 
@@ -917,7 +918,8 @@ class InterpolatedChromaticObject(ChromaticObject):
         im, stepk, maxk = self._imageAtWavelength(wave)
         return galsim.InterpolatedImage(im, _force_stepk=stepk, _force_maxk=maxk)
 
-    def _get_interp_image(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
+    def _get_interp_image(self, bandpass, image=None, integrator='trapezoidal',
+                          _flux_ratio=None, **kwargs):
         """Draw method adapted to work for ChromaticImage instances for which interpolation between
         stored images is being used.  Users should not call this routine directly, and should
         instead interact with the `drawImage` method.
@@ -927,6 +929,13 @@ class InterpolatedChromaticObject(ChromaticObject):
                 raise TypeError("Integrator should be a string indicating trapezoidal"
                                 " or midpoint rule for integration")
             raise TypeError("Unknown integrator: %s"%integrator)
+
+        if _flux_ratio is None:
+            _flux_ratio = lambda w: 1.0
+        if not hasattr(_flux_ratio, '__call__'):
+            # Can't do _flux_ratio = lambda w: _flux_ratio, need a temporary variable.
+            tmp = _flux_ratio
+            _flux_ratio = lambda w: tmp
 
         # setup output image (semi-arbitrarily using the bandpass effective wavelength).
         # Note: we cannot just use self._imageAtWavelength, because that routine returns an image
@@ -938,7 +947,10 @@ class InterpolatedChromaticObject(ChromaticObject):
         _remove_setup_kwargs(kwargs)
 
         # determine combination of self.wave_list and bandpass.wave_list
-        wave_list, _, _ = galsim.utilities.combine_wave_list([self, bandpass])
+        wave_objs = [self, bandpass]
+        if isinstance(_flux_ratio, galsim.SED):
+            wave_objs += [_flux_ratio]
+        wave_list, _, _ = galsim.utilities.combine_wave_list(wave_objs)
 
         if np.min(wave_list) < np.min(self.waves):
             raise RuntimeError("Requested wavelength %.1f is outside the allowed range:"
@@ -977,7 +989,7 @@ class InterpolatedChromaticObject(ChromaticObject):
             lower_idx, frac = _findWave(self.waves, w)
             # Store the weight factors for the two stored images that can contribute at this
             # wavelength.  Must include the dwave that is part of doing the integral.
-            b = bandpass(w) * dw[idx]
+            b = bandpass(w) * dw[idx] * _flux_ratio(w)
 
             # Rescale to use the exact flux or normalization if requested.
             if self.use_exact_SED:
@@ -1555,13 +1567,14 @@ class ChromaticTransformation(ChromaticObject):
             raise ValueError("Can only draw ChromaticObjects with SEDs.")
 
         if isinstance(self.original, InterpolatedChromaticObject):
+            # Pass self._flux_ratio, which *could* depend on wavelength, to _get_interp_image,
+            # where it will be used to reweight the stored images.
             int_im = self.original._get_interp_image(bandpass, image=image, integrator=integrator,
-                                                     **kwargs)
-            # Get the transformations at bandpass.red_limit (they are achromatic so it doesn't
+                                                     _flux_ratio=self._flux_ratio, **kwargs)
+            # Get shape transformations at bandpass.red_limit (they are achromatic so it doesn't
             # matter where you get them).
-            jac, offset, flux_ratio = self._getTransformations(bandpass.red_limit)
-            int_im = galsim.Transform(int_im, jac=jac, offset=offset, flux_ratio=flux_ratio,
-                                      gsparams=self.gsparams)
+            jac, offset, _ = self._getTransformations(bandpass.red_limit)
+            int_im = galsim.Transform(int_im, jac=jac, offset=offset, gsparams=self.gsparams)
             image = int_im.drawImage(image=image, **kwargs)
             return image
         else:
