@@ -22,7 +22,6 @@ import os
 import sys
 
 from galsim_test_helpers import *
-from IPython.core.magics.execution import Timer
 
 try:
     import galsim
