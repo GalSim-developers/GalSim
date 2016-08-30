@@ -59,8 +59,7 @@ def test_regression():
         pos_angle=float(pos_angle)
         
         # Now make a test image
-        test_profile = galsim.InclinedExponential(inc_angle*galsim.radians,scale_radius,scale_height,
-                                                  gsparams=galsim.GSParams(maximum_fft_size=5000))
+        test_profile = galsim.InclinedExponential(inc_angle*galsim.radians,scale_radius,scale_height)
         
         # Rotate it by the position angle
         test_profile = test_profile.rotate(pos_angle*galsim.radians)
@@ -115,8 +114,7 @@ def test_edge_on():
     
     for inclination in inclinations:
         # Set up the profile
-        prof = galsim.InclinedExponential(inclination*galsim.radians,scale_radius=scale_radius,scale_height=scale_radius/10.,
-                                          gsparams=galsim.GSParams(maximum_fft_size=20000))
+        prof = galsim.InclinedExponential(inclination*galsim.radians,scale_radius=scale_radius,scale_height=scale_radius/10.)
         
         # Draw an image of it
         image = galsim.Image(image_nx,image_ny,scale=1.0)
@@ -148,8 +146,7 @@ def test_sanity():
         pos_angle=float(pos_angle)
         
         # Now make a test image
-        test_profile = galsim.InclinedExponential(inc_angle*galsim.radians,scale_radius,scale_height,flux,
-                                                  gsparams=galsim.GSParams(maximum_fft_size=5000))
+        test_profile = galsim.InclinedExponential(inc_angle*galsim.radians,scale_radius,scale_height,flux)
         
         # Rotate it by the position angle
         test_profile = test_profile.rotate(pos_angle*galsim.radians)
@@ -179,11 +176,10 @@ def test_k_limits():
         scale_radius=float(scale_radius)
         scale_height=float(scale_height)
         
-        gsparams = galsim.GSParams(maximum_fft_size=5000)
+        gsparams = galsim.GSParams()
     
         # Now make a test image
-        test_profile = galsim.InclinedExponential(inc_angle*galsim.radians,scale_radius,scale_height,
-                                                  gsparams=gsparams)
+        test_profile = galsim.InclinedExponential(inc_angle*galsim.radians,scale_radius,scale_height)
         
         # Check that the k value at maxK() is below maxk_threshold in both the x and y dimensions
         kx = test_profile.maxK()
