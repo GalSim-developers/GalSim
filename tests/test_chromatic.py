@@ -1711,6 +1711,93 @@ def test_chromatic_image_setup():
 
 
 @timer
+def test_chromatic_invariant():
+    # Test atomic and non-transformed objects first.
+
+    # GSObject
+    gsobj = galsim.Kolmogorov(fwhm=0.6)
+    check_chromatic_invariant(gsobj)
+
+    # ChromaticAtmosphere
+    chrom_atm = galsim.ChromaticAtmosphere(gsobj, 500.0, zenith_angle=20.0 * galsim.degrees)
+    check_chromatic_invariant(chrom_atm)
+
+    # Chromatic
+    chrom = gsobj * bulge_SED
+    check_chromatic_invariant(chrom)
+
+    # ChromaticOpticalPSF
+    chrom_opt = galsim.ChromaticOpticalPSF(lam=500.0, diam=2.0, tip=2.0, tilt=3.0, defocus=0.2)
+    check_chromatic_invariant(chrom_opt)
+
+    # ChromaticAiry
+    chrom_airy = galsim.ChromaticAiry(lam=500.0, diam=3.0)
+    check_chromatic_invariant(chrom_airy)
+
+    # Now start testing compound objects...
+    # ChromaticSum
+    chrom_sum_noSED = chrom_airy + chrom_opt
+    check_chromatic_invariant(chrom_sum_noSED)
+
+    chrom_sum_SED = chrom + chrom  # also separable
+    check_chromatic_invariant(chrom_sum_SED)
+    assert chrom_sum_SED.separable
+
+    gsobj2 = galsim.Kolmogorov(fwhm=0.7)
+    chrom2 = gsobj2 * disk_SED
+    chrom_sum_SED2 = chrom + chrom2
+    check_chromatic_invariant(chrom_sum_SED2)
+    assert not chrom_sum_SED2.separable
+
+    # ChromaticConvolution
+    conv1 = galsim.Convolve(chrom, chrom_airy)  # SEDed
+    check_chromatic_invariant(conv1)
+
+    conv2 = galsim.Convolve(chrom_airy, chrom_opt)  # Non-SEDed
+    check_chromatic_invariant(conv2)
+
+    # ChromaticDeconvolution
+    deconv = galsim.Deconvolve(chrom_airy)
+    check_chromatic_invariant(deconv)
+
+    # ChromaticAutoConvolution
+    autoconv1 = galsim.AutoConvolve(chrom_airy)
+    check_chromatic_invariant(autoconv1)
+    autoconv2 = galsim.AutoConvolve(chrom_airy * (lambda w: (w/500.0)**0.1))
+    check_chromatic_invariant(autoconv2)
+
+    # ChromaticAutoCorrelation
+    autocorr1 = galsim.AutoCorrelate(chrom_airy)
+    check_chromatic_invariant(autocorr1)
+    autocorr2 = galsim.AutoCorrelate(chrom_airy * (lambda w: (w/500.0)**0.1))
+    check_chromatic_invariant(autocorr2)
+
+    # ChromaticFourierSqrt
+    four1 = galsim.ChromaticFourierSqrtProfile(chrom_airy)
+    check_chromatic_invariant(four1)
+    four2 = galsim.ChromaticFourierSqrtProfile(chrom_airy * (lambda w: (w/500.0)**0.1))
+    check_chromatic_invariant(four2)
+
+    # And a few transforms too...
+    # ChromaticTransformation
+    sheared_chrom = chrom.shear(g1=0.1)
+    check_chromatic_invariant(sheared_chrom)
+
+    scaled_chrom = 2 * chrom
+    check_chromatic_invariant(scaled_chrom)
+
+    complex_scaled_chrom = chrom * (lambda w: (w/500.0)**0.1)
+    check_chromatic_invariant(complex_scaled_chrom)
+
+    chrom_added_SED = chrom_airy * bulge_SED
+    check_chromatic_invariant(chrom_added_SED)
+
+    # ChromaticInterpolatedObject
+    chrom_interp = chrom_airy.interpolate(waves=[400.0, 500.0, 600.0])
+    check_chromatic_invariant(chrom_interp)
+
+
+@timer
 def test_ne():
     """Test chromatic.py objects for not-equals."""
     # Define some universal objects.
@@ -1882,9 +1969,10 @@ if __name__ == "__main__":
     # test_gsparam()
     # test_separable_ChromaticSum()
     # test_centroid()
-    test_interpolated_ChromaticObject()
+    # test_interpolated_ChromaticObject()
     # test_ChromaticOpticalPSF()
     # test_ChromaticAiry()
     # test_chromatic_fiducial_wavelength()
     # test_chromatic_image_setup()
+    test_chromatic_invariant()
     # test_ne()
