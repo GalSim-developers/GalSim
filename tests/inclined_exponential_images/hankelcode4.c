@@ -1,6 +1,7 @@
 // testbed code for fast generation of galaxy model surface brightness distributions
 //
 // Lance Miller June/July/August 2016
+// Bryan Gillis August 2016
 
 // library dependencies:
 //     cfitsio
