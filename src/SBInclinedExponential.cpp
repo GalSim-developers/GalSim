@@ -93,8 +93,9 @@ namespace galsim {
         _h0(scale_height),
         _flux(flux),
         _inv_r0(1./scale_radius),
-		_half_pi_h_sini_over_r(0.5*M_PI*scale_height*std::abs(inclination.sin())/scale_radius),
-		_cosi(std::abs(inclination.cos()))
+        _half_pi_h_sini_over_r(0.5*M_PI*scale_height*std::abs(inclination.sin())/scale_radius),
+        _cosi(std::abs(inclination.cos())),
+        _ksq_max(integ::MOCK_INF) // Start with infinite _ksq_max so we can use kValueHelper to get a better value
     {
         dbg<<"Start SBInclinedExponential constructor:\n";
         dbg<<"inclination = "<<_inclination<<std::endl;
@@ -135,9 +136,6 @@ namespace galsim {
         // This is a bit conservative, note, assuming kx = 0
         _ksq_min = std::pow(this->gsparams->kvalue_accuracy / (35./16. + 31./15120.*_half_pi_h_sini_over_r), 1./3.);
 
-        // Start with infinite _ksq_max so we can use kValueHelper to get a better value
-        _ksq_max = integ::MOCK_INF;
-
         // Solve for the proper _maxk and _ksq_max
 
         double maxk_min = std::pow(this->gsparams->maxk_threshold, -1./3.);
@@ -146,64 +144,64 @@ namespace galsim {
         // Check for face-on case, which doesn't need the solver
         if(_cosi==1)
         {
-        	_maxk = maxk_min;
-        	_ksq_max = clipk_min*clipk_min;
+            _maxk = maxk_min;
+            _ksq_max = clipk_min*clipk_min;
         }
         else // Use the solver
         {
-        	// Bracket it appropriately, starting with guesses based on the 1/cosi scaling
-			double maxk_max, clipk_max;
-			// Check bounds on _cosi to make sure initial guess range isn't too big or small
-			if(_cosi>0.01)
-			{
-				if(_cosi<0.96)
-				{
-					maxk_max = maxk_min/_cosi;
-					clipk_max = clipk_min/_cosi;
-				}
-				else
-				{
-					maxk_max = 1.05*maxk_min;
-					clipk_max = 1.05*clipk_min;
-				}
-			}
-			else
-			{
-				maxk_max = 100*maxk_min;
-				clipk_max = 100*clipk_min;
-			}
+            // Bracket it appropriately, starting with guesses based on the 1/cosi scaling
+            double maxk_max, clipk_max;
+            // Check bounds on _cosi to make sure initial guess range isn't too big or small
+            if(_cosi>0.01)
+            {
+                if(_cosi<0.96)
+                {
+                    maxk_max = maxk_min/_cosi;
+                    clipk_max = clipk_min/_cosi;
+                }
+                else
+                {
+                    maxk_max = 1.05*maxk_min;
+                    clipk_max = 1.05*clipk_min;
+                }
+            }
+            else
+            {
+                maxk_max = 100*maxk_min;
+                clipk_max = 100*clipk_min;
+            }
 
-			xdbg << "maxk_threshold = " << this->gsparams->maxk_threshold << std::endl;
-			xdbg << "F(" << maxk_min << ") = " << kValueHelper(0.,maxk_min) << std::endl;
-			xdbg << "F(" << maxk_max << ") = " << kValueHelper(0.,maxk_max) << std::endl;
+            xdbg << "maxk_threshold = " << this->gsparams->maxk_threshold << std::endl;
+            xdbg << "F(" << maxk_min << ") = " << kValueHelper(0.,maxk_min) << std::endl;
+            xdbg << "F(" << maxk_max << ") = " << kValueHelper(0.,maxk_max) << std::endl;
 
-			SBInclinedExponentialKValueFunctor maxk_func(this,this->gsparams->maxk_threshold);
-			Solve<SBInclinedExponentialKValueFunctor> maxk_solver(maxk_func, maxk_min, maxk_max);
-			maxk_solver.setMethod(Brent);
-			maxk_solver.bracket();
+            SBInclinedExponentialKValueFunctor maxk_func(this,this->gsparams->maxk_threshold);
+            Solve<SBInclinedExponentialKValueFunctor> maxk_solver(maxk_func, maxk_min, maxk_max);
+            maxk_solver.setMethod(Brent);
+            maxk_solver.bracket();
 
-			// Get the _maxk from the solver here. We add back on the tolerance to the result to
-			// ensure that the k-value will be below the threshold.
-			_maxk = maxk_solver.root() + maxk_solver.getXTolerance();
+            // Get the _maxk from the solver here. We add back on the tolerance to the result to
+            // ensure that the k-value will be below the threshold.
+            _maxk = maxk_solver.root() + maxk_solver.getXTolerance();
 
-			xdbg << "_maxk = " << _maxk << std::endl;
-			xdbg << "F(" << _maxk << ") = " << kValueHelper(0.,_maxk) << std::endl;
+            xdbg << "_maxk = " << _maxk << std::endl;
+            xdbg << "F(" << _maxk << ") = " << kValueHelper(0.,_maxk) << std::endl;
 
-			xdbg << "kvalue_accuracy = " << this->gsparams->kvalue_accuracy << std::endl;
-			xdbg << "F(" << clipk_min << ") = " << kValueHelper(0.,clipk_min) << std::endl;
-			xdbg << "F(" << clipk_max << ") = " << kValueHelper(0.,clipk_max) << std::endl;
+            xdbg << "kvalue_accuracy = " << this->gsparams->kvalue_accuracy << std::endl;
+            xdbg << "F(" << clipk_min << ") = " << kValueHelper(0.,clipk_min) << std::endl;
+            xdbg << "F(" << clipk_max << ") = " << kValueHelper(0.,clipk_max) << std::endl;
 
-			SBInclinedExponentialKValueFunctor clipk_func(this,this->gsparams->kvalue_accuracy);
-			Solve<SBInclinedExponentialKValueFunctor> clipk_solver(clipk_func, maxk_min, maxk_max);
-			clipk_solver.bracket();
+            SBInclinedExponentialKValueFunctor clipk_func(this,this->gsparams->kvalue_accuracy);
+            Solve<SBInclinedExponentialKValueFunctor> clipk_solver(clipk_func, maxk_min, maxk_max);
+            clipk_solver.bracket();
 
-			// Get the clipk from the solver here. We add back on the tolerance to the result to
-			// ensure that the k-value will be below the threshold.
-			double clipk = clipk_solver.root() + clipk_solver.getXTolerance();
-			_ksq_max = clipk*clipk;
+            // Get the clipk from the solver here. We add back on the tolerance to the result to
+            // ensure that the k-value will be below the threshold.
+            double clipk = clipk_solver.root() + clipk_solver.getXTolerance();
+            _ksq_max = clipk*clipk;
 
-			xdbg << "clipk = " << clipk << std::endl;
-			xdbg << "F(" << clipk << ") = " << kValueHelper(0.,clipk) << std::endl;
+            xdbg << "clipk = " << clipk << std::endl;
+            xdbg << "F(" << clipk << ") = " << kValueHelper(0.,clipk) << std::endl;
         }
     }
 
@@ -291,7 +289,7 @@ namespace galsim {
     {
         // Calculate the base value for an exponential profile
 
-    	double ky_cosi = ky*_cosi;
+        double ky_cosi = ky*_cosi;
 
         double ky_cosi_sq = ky_cosi*ky_cosi;
         double ksq = kx*kx + ky_cosi_sq;
@@ -345,14 +343,14 @@ namespace galsim {
     }
 
     SBInclinedExponential::SBInclinedExponentialImpl::SBInclinedExponentialKValueFunctor::SBInclinedExponentialKValueFunctor(
-    		const SBInclinedExponential::SBInclinedExponentialImpl * p_owner, double target_k_value) :
-    				_p_owner(p_owner), _target_k_value(target_k_value) {}
+            const SBInclinedExponential::SBInclinedExponentialImpl * p_owner, double target_k_value) :
+                    _p_owner(p_owner), _target_k_value(target_k_value) {}
 
     double SBInclinedExponential::SBInclinedExponentialImpl::SBInclinedExponentialKValueFunctor::operator()(double k) const
     {
-    	assert(_p_owner);
-    	double k_value = std::max(_p_owner->kValueHelper(0.,k),_p_owner->kValueHelper(k,0.));
-    	return k_value - _target_k_value;
+        assert(_p_owner);
+        double k_value = std::max(_p_owner->kValueHelper(0.,k),_p_owner->kValueHelper(k,0.));
+        return k_value - _target_k_value;
     }
 
 
