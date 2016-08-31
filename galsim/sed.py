@@ -131,7 +131,10 @@ class SED(object):
                 # a valid spectrum specification.
                 # Are there any other types of errors we should trap here?
                 try:
-                    self._spec = eval('lambda wave : ' + self._orig_spec)
+                    gdict = globals().copy()
+                    exec('import numpy', gdict)
+                    exec('import math', gdict)
+                    self._spec = eval('lambda wave : ' + self._orig_spec, gdict)
                     self._spec(700)
                 except ArithmeticError:
                     pass
