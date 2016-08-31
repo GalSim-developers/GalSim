@@ -79,35 +79,33 @@ class ChromaticObject(object):
     The drawKImage() method is not yet implemented.
     """
 
-    # In general, `ChromaticObject` and subclasses should provide the following interface:
-    # 1) Define an `evaluateAtWavelength` method, which returns a GSObject representing the
-    #    profile at a particular wavelength.
-    # 2) Define a `withScaledFlux` method, which scales the flux at all wavelengths by a fixed
-    #    multiplier.
-    # 3) Potentially define their own `__repr__` and `__str__` methods.  Note that the default
-    #    assumes that `.obj` is the only attribute of significance, but this isn't always
-    #    appropriate, (e.g. ChromaticSum, ChromaticConvolution).
-    # 4) Initialize a `separable` attribute.  This marks whether (`separable = True`) or not
-    #    (`separable = False`) the given chromatic profile can be factored into a spatial profile
-    #    and a spectral profile.  Separable profiles can be drawn quickly by evaluating at a single
-    #    wavelength and adjusting the flux via a (fast) 1D integral over the spectral component.
-    #    Inseparable profiles, on the other hand, need to be evaluated at multiple wavelengths
-    #    in order to draw (slow).
-    # 5) Separable objects must initialize an `SED` attribute, which is a callable object (often a
-    #    `galsim.SED` instance) that returns the _relative_ flux of the profile at a given
-    #    wavelength. (The _absolute_ flux is controlled by both the `SED` and the `.flux` attribute
-    #    of the underlying chromaticized GSObject(s).  See `galsim.Chromatic` docstring for details
-    #    concerning normalization.)
-    # 6) Initialize a `wave_list` attribute, which specifies wavelengths at which the profile (or
-    #    the SED in the case of separable profiles) will be evaluated when drawing a
-    #    ChromaticObject.  The type of `wave_list` should be a numpy array, and may be empty, in
-    #    which case either the Bandpass object being drawn against, or the integrator being used
-    #    will determine at which wavelengths to evaluate.
-
-    # Additionally, instances of `ChromaticObject` and subclasses will usually have either an `obj`
-    # attribute representing a manipulated `GSObject` or `ChromaticObject`, or an `objlist`
-    # attribute in the case of compound classes like `ChromaticSum` and `ChromaticConvolution`.
-
+    # ChromaticObjects should adhere to the following invariants:
+    # - Objects should define the attributes:
+    #   * .SED, ._norm, .separable, .wave_list, .interpolated
+    # - Exactly one of the attributes .SED and ._norm should be None.
+    #   * If ._norm is not None, then:
+    #     - ._norm should be one of:
+    #       * a callable function of wavelength, returning a float normalization
+    #       * a scalar float normalization
+    #     - obj.evaluateAtWavelength(lam).drawImage().array.sum() == obj._norm(lam)  (callable)
+    #     - obj.evaluateAtWavelength(lam).drawImage().array.sum() == obj._norm  (scalar)
+    #     - obj.evaluateAtWavelength(lam).drawImage().array.sum() ==
+    #       obj.evaluateAtWavelength(lam).getFlux()  # Like all GSObjects
+    #     - obj.drawImage(bandpass) raises a ValueError
+    #     - Note that ._norm is essentially unitless in this case, and the units of the GSObject
+    #       returned by evaluateAtWavelength are 1/arcsec^2 (or 1/scale_unit^2 if not using arcsec
+    #       as the implicit angle units).
+    #   * If .SED is not None, then:
+    #     - .SED should be a galsim.SED instance
+    #     - obj.SED.calculateFlux(bandpass) == obj.calculateFlux(bandpass) ==
+    #       obj.drawImage(bandpass).array.sum()
+    #     - obj.evaluateAtWavelength(lam).drawImage().array.sum() == obj.SED(lam)
+    # - .separable is a boolean indicating whether or not the profile can be factored into a
+    #   spatial part and a spectral part.
+    # - .wave_list is a numpy array indicating wavelengths of particular interest, for instance, the
+    #   wavelengths at which SED is explicitly defined via a LookupTable.  These are the wavelengths
+    #   that will be used (in addition to those in bandpass.wave_list) when drawing an image of the
+    #   chromatic profile.
 
     def __init__(self, obj):
         self.separable = obj.separable
