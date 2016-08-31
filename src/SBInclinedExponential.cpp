@@ -133,9 +133,9 @@ namespace galsim {
         // For small k, we can use up to quartic in the taylor expansion of both terms
         // in the calculation.
         // This is acceptable when the next term is less than kvalue_accuracy.
-        // (35/16 + 31/15120 h*sin(i)/r) * (k^2*r^2)^3 = kvalue_accuracy
+        // (35/16 + 31/15120 pi/2*h*sin(i)/r) * (k^2*r^2)^3 = kvalue_accuracy
         // This is a bit conservative, note, assuming kx = 0
-        _ksq_min = std::pow(this->gsparams->kvalue_accuracy / (35./16. + 31./15120.*_h_sini_over_r), 1./3.);
+        _ksq_min = std::pow(this->gsparams->kvalue_accuracy / (35./16. + 31./15120.*_half_pi_h_sini_over_r), 1./3.);
 
         // Start with infinite _ksq_max so we can use kValueHelper to get a better value
         _ksq_max = integ::MOCK_INF;
