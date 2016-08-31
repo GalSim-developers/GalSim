@@ -92,7 +92,9 @@ namespace galsim {
         _r0(scale_radius),
         _h0(scale_height),
         _flux(flux),
-        _inv_r0(1./_r0)
+        _inv_r0(1./scale_radius),
+		_half_pi_h_sini_over_r(0.5*M_PI*scale_height*std::abs(inclination.sin())/scale_radius),
+		_cosi(std::abs(inclination.cos()))
     {
         dbg<<"Start SBInclinedExponential constructor:\n";
         dbg<<"inclination = "<<_inclination<<std::endl;
@@ -101,10 +103,6 @@ namespace galsim {
         dbg<<"flux = "<<_flux<<std::endl;
 
         // Now set up, using this value of cosi
-
-        _half_pi_h_sini_over_r = 0.5*M_PI*scale_height*std::abs(inclination.sin())*_inv_r0;
-
-        _cosi = std::abs(inclination.cos());
 
         double cosi_squared = _cosi*_cosi;
 
