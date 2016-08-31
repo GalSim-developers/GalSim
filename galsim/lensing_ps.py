@@ -664,8 +664,11 @@ class PowerSpectrum(object):
                 # Detect at least _some_ forms of malformed string input.  Note that this
                 # test assumes that the eval string completion is defined for k=1.0.
                 try:
+                    gdict = globals().copy()
+                    exec('import numpy', gdict)
+                    exec('import math', gdict)
                     origpf = pf
-                    pf = eval('lambda k : ' + pf)
+                    pf = eval('lambda k : ' + pf, gdict)
                     pf(1.0)
                 except:
                     raise ValueError(

@@ -2065,26 +2065,27 @@ class UVFunction(EuclideanWCS):
             self._world_origin = world_origin
 
     def _initialize_funcs(self):
-        import math  # In case needed by function evals
-        import numpy
+        gdict = globals().copy()
+        exec('import numpy', gdict) # In case needed by function evals
+        exec('import math', gdict)
 
         if isinstance(self._orig_ufunc, str):
-            self._ufunc = eval('lambda x,y : ' + self._orig_ufunc)
+            self._ufunc = eval('lambda x,y : ' + self._orig_ufunc, gdict)
         else:
             self._ufunc = self._orig_ufunc
 
         if isinstance(self._orig_vfunc, str):
-            self._vfunc = eval('lambda x,y : ' + self._orig_vfunc)
+            self._vfunc = eval('lambda x,y : ' + self._orig_vfunc, gdict)
         else:
             self._vfunc = self._orig_vfunc
 
         if isinstance(self._orig_xfunc, str):
-            self._xfunc = eval('lambda u,v : ' + self._orig_xfunc)
+            self._xfunc = eval('lambda u,v : ' + self._orig_xfunc, gdict)
         else:
             self._xfunc = self._orig_xfunc
 
         if isinstance(self._orig_yfunc, str):
-            self._yfunc = eval('lambda u,v : ' + self._orig_yfunc)
+            self._yfunc = eval('lambda u,v : ' + self._orig_yfunc, gdict)
         else:
             self._yfunc = self._orig_yfunc
 
@@ -2252,21 +2253,22 @@ class RaDecFunction(CelestialWCS):
             self._origin = origin
 
     def _initialize_funcs(self):
-        import math  # In case needed by function evals
-        import numpy
+        gdict = globals().copy()
+        exec('import numpy', gdict) # In case needed by function evals
+        exec('import math', gdict)
 
         if self._orig_dec_func is None:
             if isinstance(self._orig_ra_func, str):
-                self._radec_func = eval('lambda x,y : ' + self._orig_ra_func)
+                self._radec_func = eval('lambda x,y : ' + self._orig_ra_func, gdict)
             else:
                 self._radec_func = self._orig_ra_func
         else:
             if isinstance(self._orig_ra_func, str):
-                ra_func = eval('lambda x,y : ' + self._orig_ra_func)
+                ra_func = eval('lambda x,y : ' + self._orig_ra_func, gdict)
             else:
                 ra_func = self._orig_ra_func
             if isinstance(self._orig_dec_func, str):
-                dec_func = eval('lambda x,y : ' + self._orig_dec_func)
+                dec_func = eval('lambda x,y : ' + self._orig_dec_func, gdict)
             else:
                 dec_func = self._orig_dec_func
             self._radec_func = lambda x,y : (ra_func(x,y), dec_func(x,y))

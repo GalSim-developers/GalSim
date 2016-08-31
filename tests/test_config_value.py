@@ -1046,8 +1046,60 @@ def test_pos_value():
     np.testing.assert_almost_equal(sum1.x, 0.2 - 0.5 + 0.1)
     np.testing.assert_almost_equal(sum1.y, -0.3 + 0.2 + 0.0)
 
+@timer
+def test_eval():
+    """Test various ways that we evaluate a string as a function or value
+    """
+
+    # From Issue #776:
+    config = {
+        'shear' : {
+            'type': 'GBeta',
+            'g': {
+                'type': 'RandomDistribution',
+                'function': "(1-x**2)**2 * np.exp( -0.5 * x**2 / 0.2**2 )",
+                'x_min': 0.0,
+                'x_max': 1.0,
+            },
+            'beta': {
+                'type': 'Random'
+            }
+        }
+    }
+
+    rng = galsim.UniformDeviate(1234)
+    config['rng'] = galsim.UniformDeviate(1234)
+
+    dd = galsim.DistDeviate(rng, function=lambda x: (1-x**2)**2 * np.exp(-0.5*x**2/0.2**2),
+                            x_min=0., x_max=1.)
+    for k in range(6):
+        config['obj_num'] = k
+        shear1 = galsim.config.ParseValue(config,'shear',config, galsim.Shear)[0]
+        shear2 = galsim.Shear(beta=rng()*360.*galsim.degrees, g=dd()) # order matters here.
+        np.testing.assert_almost_equal(shear1.g1, shear2.g1)
+        np.testing.assert_almost_equal(shear1.g2, shear2.g2)
+
+    # Should also work using numpy or math instead of np
+    config['shear']['g']['function'] = "(1-x**2)**2 * numpy.exp( -0.5 * x**2 / 0.2**2 )"
+    for k in range(6):
+        config['obj_num'] = k
+        shear1 = galsim.config.ParseValue(config,'shear',config, galsim.Shear)[0]
+        shear2 = galsim.Shear(beta=rng()*360.*galsim.degrees, g=dd()) # order matters here.
+        np.testing.assert_almost_equal(shear1.g1, shear2.g1)
+        np.testing.assert_almost_equal(shear1.g2, shear2.g2)
+
+    config['shear']['g']['function'] = "(1-x**2)**2 * math.exp( -0.5 * x**2 / 0.2**2 )"
+    for k in range(6):
+        config['obj_num'] = k
+        shear1 = galsim.config.ParseValue(config,'shear',config, galsim.Shear)[0]
+        shear2 = galsim.Shear(beta=rng()*360.*galsim.degrees, g=dd()) # order matters here.
+        np.testing.assert_almost_equal(shear1.g1, shear2.g1)
+        np.testing.assert_almost_equal(shear1.g2, shear2.g2)
+
+
 
 if __name__ == "__main__":
+    test_eval()
     test_float_value()
     test_int_value()
     test_bool_value()

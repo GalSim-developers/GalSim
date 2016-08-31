@@ -202,7 +202,10 @@ class Bandpass(object):
                     # be able to be evaluated at any wavelength, so check.
                     test_wave = 700
                 try:
-                    self._tp = eval('lambda wave : ' + self._orig_tp)
+                    gdict = globals().copy()
+                    exec('import numpy', gdict)
+                    exec('import math', gdict)
+                    self._tp = eval('lambda wave : ' + self._orig_tp, gdict)
                     self._tp(test_wave)
                 except:
                     raise ValueError(
