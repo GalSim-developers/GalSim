@@ -1356,10 +1356,23 @@ class ChromaticTransformation(ChromaticObject):
                 self._norm = None
             else:  # non-SED times non-SED, so set ._norm
                 self.SED = None
-                @galsim.utilities.functionize
-                def normprod(norm1, norm2):
-                    return norm1 * norm2
-                self._norm = normprod(obj._norm, flux_ratio)
+                self._norm = _fn_prod(obj._norm, flux_ratio)
+
+        # Need to account for non-unit determinant jacobian in normalization.
+        if hasattr(jac, '__call__'):
+            @np.vectorize
+            def detjac(w):
+                return np.linalg.det(np.asarray(jac(w)).reshape(2,2))
+            if self.SED is not None:
+                self.SED *= detjac
+            else:
+                self._norm = _fn_prod(self._norm, detjac)
+        else:
+            detjac = np.linalg.det(np.asarray(jac).reshape(2,2))
+            if self.SED is not None:
+                self.SED *= detjac
+            else:
+                self._norm = _fn_prod(self._norm, detjac)
 
         if obj.interpolated and self.chromatic:
             import warnings
@@ -1380,13 +1393,9 @@ class ChromaticTransformation(ChromaticObject):
             def new_offset(jac2, off1, off2):
                 return jac2.dot(off1) + off2
 
-            @galsim.utilities.functionize
-            def new_flux_ratio(flx1, flx2):
-                return flx1 * flx2
-
             self._jac = new_jac(obj._jac, jac)
             self._offset = new_offset(jac, obj._offset, offset)
-            self._flux_ratio = new_flux_ratio(obj._flux_ratio, flux_ratio)
+            self._flux_ratio = _fn_prod(obj._flux_ratio, flux_ratio)
 
         else:
             self.original = obj
@@ -1858,10 +1867,7 @@ class ChromaticConvolution(ChromaticObject):
                 else:
                     raise ValueError("Cannot convolve multiple SED'd ChromaticObjects.")
             else: # obj.SED is None, so ._norm should not be
-                @galsim.utilities.functionize
-                def fn_prod(x, y):
-                    return x * y
-                self._norm = fn_prod(self._norm, obj._norm)
+                self._norm = _fn_prod(self._norm, obj._norm)
         # Finally, fold _norm into SED.
         if self.SED is not None:
             self.SED *= self._norm
@@ -2611,3 +2617,7 @@ def _remove_setup_kwargs(kwargs):
     kwargs.pop('nx', None)
     kwargs.pop('ny', None)
     kwargs.pop('bounds', None)
+
+@galsim.utilities.functionize
+def _fn_prod(obj1, obj2):
+    return obj1 * obj2
