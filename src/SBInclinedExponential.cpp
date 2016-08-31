@@ -17,7 +17,7 @@
  *    and/or other materials provided with the distribution.
  */
 
-//#define DEBUGLOGGING
+// #define DEBUGLOGGING
 
 #include "galsim/IgnoreWarnings.h"
 
@@ -111,17 +111,6 @@ namespace galsim {
         xdbg<<"_half_pi_h_sini_over_r = "<<_half_pi_h_sini_over_r<<std::endl;
         xdbg<<"_cosi = "<<_cosi<<std::endl;
 
-        // For large k, we clip the result of kValue to 0.
-        // We do this when the correct answer is less than kvalue_accuracy.
-        // (1+k^2 r0^2 cos^2(i))^-1.5 = kvalue_accuracy
-        // The convolution factor is generally a small effect, so we don't include it here
-        _ksq_max = (std::pow(this->gsparams->kvalue_accuracy,-1./1.5) - 1.)/cosi_squared;
-
-        // For small k, we can use up to quartic in the taylor expansion to avoid the sqrt.
-        // This is acceptable when the next term is less than kvalue_accuracy.
-        // 35/16 (k^2 r0^2)^3 = kvalue_accuracy
-        _ksq_min = std::pow(this->gsparams->kvalue_accuracy * 16./35., 1./3.);
-
         // Calculate stepk, based on a conservative comparison to an exponential disk. The
         // half-light radius of this will be smaller, so if we use an exponential's hlr, it
         // will be at least large enough.
@@ -141,43 +130,80 @@ namespace galsim {
         _stepk = M_PI / R;
         dbg<<"stepk = "<<_stepk<<std::endl;
 
-        // Solve for the proper _maxk
+        // For small k, we can use up to quartic in the taylor expansion to avoid the sqrt.
+        // This is acceptable when the next term is less than kvalue_accuracy.
+        // 35/16 (k^2 r0^2)^3 = kvalue_accuracy
+        _ksq_min = std::pow(this->gsparams->kvalue_accuracy * 16./35., 1./3.);
+
+        // Start with infinite _ksq_max so we can use kValueHelper to get a better value
+        _ksq_max = integ::MOCK_INF;
+
+        // Solve for the proper _maxk and _ksq_max
 
         double maxk_min = std::pow(this->gsparams->maxk_threshold, -1./3.);
+        double clipk_min = std::pow(this->gsparams->kvalue_accuracy, -1./3.);
 
         // Check for face-on case, which doesn't need the solver
         if(_cosi==1)
         {
         	_maxk = maxk_min;
+        	_ksq_max = clipk_min*clipk_min;
         }
         else // Use the solver
         {
         	// Bracket it appropriately, starting with guesses based on the 1/cosi scaling
-			double maxk_max;
+			double maxk_max, clipk_max;
 			// Check bounds on _cosi to make sure initial guess range isn't too big or small
 			if(_cosi>0.01)
 			{
 				if(_cosi<0.96)
+				{
 					maxk_max = maxk_min/_cosi;
+					clipk_max = clipk_min/_cosi;
+				}
 				else
+				{
 					maxk_max = 1.05*maxk_min;
+					clipk_max = 1.05*clipk_min;
+				}
 			}
 			else
 			{
 				maxk_max = 100*maxk_min;
+				clipk_max = 100*clipk_min;
 			}
 
 			xdbg << "maxk_threshold = " << this->gsparams->maxk_threshold << std::endl;
 			xdbg << "F(" << maxk_min << ") = " << kValueHelper(0.,maxk_min) << std::endl;
 			xdbg << "F(" << maxk_max << ") = " << kValueHelper(0.,maxk_max) << std::endl;
 
-			SBInclinedExponentialMaxKFunctor func(this);
-			Solve<SBInclinedExponentialMaxKFunctor> solver(func, maxk_min, maxk_max);
-			solver.bracket();
+			SBInclinedExponentialKValueFunctor maxk_func(this,this->gsparams->maxk_threshold);
+			Solve<SBInclinedExponentialKValueFunctor> maxk_solver(maxk_func, maxk_min, maxk_max);
+			maxk_solver.setMethod(Brent);
+			maxk_solver.bracket();
 
 			// Get the _maxk from the solver here. We add back on the tolerance to the result to
 			// ensure that the k-value will be below the threshold.
-			_maxk = solver.root() + solver.getXTolerance();
+			_maxk = maxk_solver.root() + maxk_solver.getXTolerance();
+
+			xdbg << "_maxk = " << _maxk << std::endl;
+			xdbg << "F(" << _maxk << ") = " << kValueHelper(0.,_maxk) << std::endl;
+
+			xdbg << "kvalue_accuracy = " << this->gsparams->kvalue_accuracy << std::endl;
+			xdbg << "F(" << clipk_min << ") = " << kValueHelper(0.,clipk_min) << std::endl;
+			xdbg << "F(" << clipk_max << ") = " << kValueHelper(0.,clipk_max) << std::endl;
+
+			SBInclinedExponentialKValueFunctor clipk_func(this,this->gsparams->kvalue_accuracy);
+			Solve<SBInclinedExponentialKValueFunctor> clipk_solver(clipk_func, maxk_min, maxk_max);
+			clipk_solver.bracket();
+
+			// Get the clipk from the solver here. We add back on the tolerance to the result to
+			// ensure that the k-value will be below the threshold.
+			double clipk = clipk_solver.root() + clipk_solver.getXTolerance();
+			_ksq_max = clipk*clipk;
+
+			xdbg << "clipk = " << clipk << std::endl;
+			xdbg << "F(" << clipk << ") = " << kValueHelper(0.,clipk) << std::endl;
         }
     }
 
@@ -318,14 +344,15 @@ namespace galsim {
         throw std::runtime_error("Photon shooting NYI for InclinedExponential profile.");
     }
 
-    SBInclinedExponential::SBInclinedExponentialImpl::SBInclinedExponentialMaxKFunctor::SBInclinedExponentialMaxKFunctor(
-    		const SBInclinedExponential::SBInclinedExponentialImpl * pimpl) : _pimpl(pimpl) {}
+    SBInclinedExponential::SBInclinedExponentialImpl::SBInclinedExponentialKValueFunctor::SBInclinedExponentialKValueFunctor(
+    		const SBInclinedExponential::SBInclinedExponentialImpl * p_owner, double target_k_value) :
+    				_p_owner(p_owner), _target_k_value(target_k_value) {}
 
-    double SBInclinedExponential::SBInclinedExponentialImpl::SBInclinedExponentialMaxKFunctor::operator()(double k) const
+    double SBInclinedExponential::SBInclinedExponentialImpl::SBInclinedExponentialKValueFunctor::operator()(double k) const
     {
-    	assert(_pimpl);
-    	double k_value = std::max(_pimpl->kValueHelper(0.,k),_pimpl->kValueHelper(k,0.));
-    	return k_value - _pimpl->gsparams->maxk_threshold;
+    	assert(_p_owner);
+    	double k_value = std::max(_p_owner->kValueHelper(0.,k),_p_owner->kValueHelper(k,0.));
+    	return k_value - _target_k_value;
     }
 
 
