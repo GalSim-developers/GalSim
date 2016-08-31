@@ -330,6 +330,46 @@ def test_cosmosnoise():
         image.array, image2.array, rtol=1.e-5,
         err_msg='Config COSMOS noise does not reproduce results given kwargs')
 
+    # Use a RealGalaxy with whitening to make sure that it properly handles any current_var
+    # in the image already.
+    # Detects bug Rachel found in issue #792
+    config['gal'] = {
+        'type' : 'RealGalaxy',
+        'index' : 79,
+        # Use a small flux to make sure that whitening doesn't add more noise than we will
+        # request from the COSMOS noise.  (flux = 0.1 is too high.)
+        'flux' : 0.01
+    }
+    real_gal_dir = os.path.join('..','examples','data')
+    real_gal_cat = 'real_galaxy_catalog_23.5_example.fits'
+    config['input'] = {
+        'real_catalog' : {
+            'dir' : real_gal_dir ,
+            'file_name' : real_gal_cat
+        }
+    }
+    config['image']['noise']['whiten'] = True
+    galsim.config.ProcessInput(config)
+    image3 = galsim.config.BuildImage(config, logger=logger)
+
+    # Build the same image by hand to make sure it matches what config drew.
+    rng = galsim.BaseDeviate(124)
+    rgc = galsim.RealGalaxyCatalog(os.path.join(real_gal_dir, real_gal_cat))
+    gal = galsim.RealGalaxy(rgc, index=79, flux=0.01, rng=rng)
+    image4 = gal.drawImage(image=image3.copy())
+    current_var = gal.noise.whitenImage(image4)
+    noise = galsim.correlatednoise.getCOSMOSNoise(
+            rng=rng,
+            file_name=os.path.join(galsim.meta_data.share_dir,'acs_I_unrot_sci_20_cf.fits'),
+            cosmos_scale=pix_scale)
+    noise -= galsim.UncorrelatedNoise(current_var, rng=rng, wcs=image4.wcs)
+    image4.addNoise(noise)
+    image3.write('image3.fits')
+    image4.write('image4.fits')
+    np.testing.assert_equal(
+        image3.array, image4.array,
+        err_msg='Config COSMOS noise with whiting does not reproduce manually drawn image')
+
 
 @timer
 def test_njobs():

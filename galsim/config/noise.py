@@ -185,14 +185,14 @@ def GetSky(config, base):
         else:
             # This calculation is non-trivial, so store this in case we need it again.
             tag = (id(base), base['file_num'], base['image_num'])
-            if config.get('current_sky_tag',None) == tag:
-                return config['current_sky']
+            if config.get('_current_sky_tag',None) == tag:
+                return config['_current_sky']
             else:
                 bounds = base['current_image'].bounds
                 sky = galsim.Image(bounds, wcs=wcs)
                 wcs.makeSkyImage(sky, sky_level)
-                config['current_sky_tag'] = tag
-                config['current_sky'] = sky
+                config['_current_sky_tag'] = tag
+                config['_current_sky'] = sky
                 return sky
     elif 'sky_level_pixel' in config:
         sky_level_pixel = galsim.config.ParseValue(config,'sky_level_pixel',base,float)[0]
@@ -555,7 +555,7 @@ class COSMOSNoiseBuilder(NoiseBuilder):
             if var < current_var:
                 raise RuntimeError(
                     "Whitening already added more noise than the requested COSMOS noise.")
-            cn -= galsim.UncorrelatedNoise(rng, im.wcs, current_var)
+            cn -= galsim.UncorrelatedNoise(current_var, rng=rng, wcs=im.wcs)
 
         # Add the noise to the image
         im.addNoise(cn)

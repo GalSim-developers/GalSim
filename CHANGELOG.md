@@ -14,7 +14,8 @@ Dependency Changes
 Bug Fixes
 ---------
 
-
+- Fixed bug when whitening noise in images based on COSMOS training datasets using the config
+  functionality. (#792)
 
 Deprecated Features
 -------------------
