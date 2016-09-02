@@ -1264,7 +1264,6 @@ def test_eval():
 
 
 if __name__ == "__main__":
-    test_eval()
     test_float_value()
     test_int_value()
     test_bool_value()
@@ -1272,3 +1271,4 @@ if __name__ == "__main__":
     test_angle_value()
     test_shear_value()
     test_pos_value()
+    test_eval()
