@@ -1050,10 +1050,40 @@ def test_pos_value():
 def test_eval():
     """Test various ways that we evaluate a string as a function or value
     """
-
-    # From Issue #776:
     config = {
+        # The basic calculation
+        'eval1' : { 'type' : 'Eval', 'str' : 'np.exp(-0.5 * 1.8**2)' },
+        # Different ways to get variables
+        'eval2' : { 'type' : 'Eval', 'str' : 'np.exp(-0.5 * x**2)', 'fx' : 1.8 },
+        'eval3' : { 'type' : 'Eval', 'str' : 'np.exp(-0.5 * y**2)' },
+        'eval_variables' : { 'fy' : 1.8 },
+        # Shorthand notation with $
+        'eval4' : '$np.exp(-0.5 * y**2)',
+        # math and numpy should also work
+        'eval5' : '$numpy.exp(-0.5 * y**2)',
+        'eval6' : '$math.exp(-0.5 * y**2)',
+        # Use variables that are automatically defined
+        'eval7' : '$np.exp(-0.5 * image_pos.x**2)',
+        'eval8' : '$np.exp(-0.5 * world_pos.y**2)',
+        'eval9' : '$np.exp(-0.5 * pixel_scale**2)',
+        'eval10' : '$np.exp(-0.5 * (image_xsize / 100.)**2)',
+        'eval11' : '$np.exp(-0.5 * (image_ysize / 200.)**2)',
+        'eval12' : '$np.exp(-0.5 * (stamp_xsize / 20.)**2)',
+        'eval13' : '$np.exp(-0.5 * (stamp_ysize / 20.)**2)',
+        'eval14' : '$np.exp(-0.5 * (image_bounds.xmax / 100.)**2)',
+
+        # These would be set by config in real runs, but just add them here for the tests.
+        'image_pos' : galsim.PositionD(1.8,13),
+        'world_pos' : galsim.PositionD(7.2,1.8),
+        'pixel_scale' : 1.8,
+        'image_xsize' : 180,
+        'image_ysize' : 360,
+        'stamp_xsize' : 36,
+        'stamp_ysize' : 36,
+        'image_bounds' : galsim.BoundsI(1,180,1,360),
+
         'shear' : {
+            # From Issue #776:
             'type': 'GBeta',
             'g': {
                 'type': 'RandomDistribution',
@@ -1066,6 +1096,11 @@ def test_eval():
             }
         }
     }
+
+    true_val = np.exp(-0.5 * 1.8**2)
+    for i in range(1,15):
+        test_val = galsim.config.ParseValue(config, 'eval%d'%i, config, float)[0]
+        np.testing.assert_almost_equal(test_val, true_val)
 
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234)
