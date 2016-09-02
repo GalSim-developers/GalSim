@@ -1071,6 +1071,8 @@ def test_eval():
         'eval12' : '$np.exp(-0.5 * (stamp_xsize / 20.)**2)',
         'eval13' : '$np.exp(-0.5 * (stamp_ysize / 20.)**2)',
         'eval14' : '$np.exp(-0.5 * (image_bounds.xmax / 100.)**2)',
+        'eval15' : '$np.exp(-0.5 * ((image_center.y-0.5) / 100.)**2)',
+        'eval16' : '$np.exp(-0.5 * wcs.scale**2)',
 
         # These would be set by config in real runs, but just add them here for the tests.
         'image_pos' : galsim.PositionD(1.8,13),
@@ -1081,9 +1083,11 @@ def test_eval():
         'stamp_xsize' : 36,
         'stamp_ysize' : 36,
         'image_bounds' : galsim.BoundsI(1,180,1,360),
+        'image_center' : galsim.PositionD(90.5, 180.5),
+        'wcs' : galsim.PixelScale(1.8),
 
+        # Taken directly from Issue #776:
         'shear' : {
-            # From Issue #776:
             'type': 'GBeta',
             'g': {
                 'type': 'RandomDistribution',
@@ -1094,14 +1098,47 @@ def test_eval():
             'beta': {
                 'type': 'Random'
             }
-        }
+        },
+
+        # PowerSpectrum evaluates e_power_function and b_power_function, so check those.
+        'input' : {
+            'power_spectrum' :  [
+                {
+                    'e_power_function' : 'np.exp(-k**0.2)',
+                    'b_power_function' : 'np.exp(-k**1.2)',
+                    'grid_spacing' : 10
+                },
+                {
+                    'e_power_function' : 'numpy.exp(-k**0.2)',
+                    'b_power_function' : 'numpy.exp(-k**1.2)',
+                    'grid_spacing' : 10
+                },
+                # math doesn't work for acting on k, since it is a numpy array, but
+                # we can check that math.sqrt works.
+                {
+                    'e_power_function' : 'np.exp(-k ** math.sqrt(0.04))',
+                    'b_power_function' : 'np.exp(-k ** math.log(math.exp(1.2)))',
+                    'grid_spacing' : 10
+                },
+            ]
+        },
+        'ps_shear' : { 'type' : 'PowerSpectrumShear' },
+        'ps_mu' : { 'type' : 'PowerSpectrumMagnification' },
+        'ps_shear1' : { 'type' : 'PowerSpectrumShear', 'num' : 1 },
+        'ps_mu1' : { 'type' : 'PowerSpectrumMagnification', 'num' : 1 },
+        'ps_shear2' : { 'type' : 'PowerSpectrumShear', 'num' : 2 },
+        'ps_mu2' : { 'type' : 'PowerSpectrumMagnification', 'num' : 2 },
+
     }
 
-    true_val = np.exp(-0.5 * 1.8**2)
-    for i in range(1,15):
+    # Test the eval items
+    true_val = np.exp(-0.5 * 1.8**2)  # All of these should equal this value.
+    for i in range(1,17):
         test_val = galsim.config.ParseValue(config, 'eval%d'%i, config, float)[0]
+        print('i = ',i, 'val = ',test_val,true_val)
         np.testing.assert_almost_equal(test_val, true_val)
 
+    # Test the evaluation in RandomDistribution
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234)
 
@@ -1111,6 +1148,7 @@ def test_eval():
         config['obj_num'] = k
         shear1 = galsim.config.ParseValue(config,'shear',config, galsim.Shear)[0]
         shear2 = galsim.Shear(beta=rng()*360.*galsim.degrees, g=dd()) # order matters here.
+        print('k = ',k,'shear1 = ',shear1,'shear2 = ',shear2)
         np.testing.assert_almost_equal(shear1.g1, shear2.g1)
         np.testing.assert_almost_equal(shear1.g2, shear2.g2)
 
@@ -1120,6 +1158,7 @@ def test_eval():
         config['obj_num'] = k
         shear1 = galsim.config.ParseValue(config,'shear',config, galsim.Shear)[0]
         shear2 = galsim.Shear(beta=rng()*360.*galsim.degrees, g=dd()) # order matters here.
+        print('k = ',k,'shear1 = ',shear1,'shear2 = ',shear2)
         np.testing.assert_almost_equal(shear1.g1, shear2.g1)
         np.testing.assert_almost_equal(shear1.g2, shear2.g2)
 
@@ -1128,8 +1167,54 @@ def test_eval():
         config['obj_num'] = k
         shear1 = galsim.config.ParseValue(config,'shear',config, galsim.Shear)[0]
         shear2 = galsim.Shear(beta=rng()*360.*galsim.degrees, g=dd()) # order matters here.
+        print('k = ',k,'shear1 = ',shear1,'shear2 = ',shear2)
         np.testing.assert_almost_equal(shear1.g1, shear2.g1)
         np.testing.assert_almost_equal(shear1.g2, shear2.g2)
+
+    # Test PowerSpectrum
+    galsim.config.ProcessInput(config)
+    galsim.config.SetupInputsForImage(config, None)
+    ps = galsim.PowerSpectrum(e_power_function = lambda k: np.exp(-k**0.2),
+                              b_power_function = lambda k: np.exp(-k**1.2))
+    # ngrid is calculated from the image size by config, which was setup above.
+    grid_spacing = 10.
+    ngrid = int(math.ceil(config['image_ysize'] * config['pixel_scale'] / grid_spacing))
+    center = config['wcs'].toWorld(config['image_center'])
+    ps.buildGrid(grid_spacing=10, ngrid=ngrid, center=center, rng=rng)
+    g1,g2,mu = ps.getLensing(pos = config['world_pos'])
+    ps_shear = galsim.config.ParseValue(config, 'ps_shear', config, galsim.Shear)[0]
+    ps_mu = galsim.config.ParseValue(config, 'ps_mu', config, float)[0]
+    print('num = 0')
+    print(g1,g2,mu)
+    print(ps_shear,ps_mu)
+    np.testing.assert_almost_equal(ps_shear.g1, g1)
+    np.testing.assert_almost_equal(ps_shear.g2, g2)
+    np.testing.assert_almost_equal(ps_mu, mu)
+
+    # Check use of numpy in the evaluated string
+    ps.buildGrid(grid_spacing=10, ngrid=ngrid, center=center, rng=rng)
+    g1,g2,mu = ps.getLensing(pos = config['world_pos'])
+    ps_shear = galsim.config.ParseValue(config, 'ps_shear1', config, galsim.Shear)[0]
+    ps_mu = galsim.config.ParseValue(config, 'ps_mu1', config, float)[0]
+    print('num = 1')
+    print(g1,g2,mu)
+    print(ps_shear,ps_mu)
+    np.testing.assert_almost_equal(ps_shear.g1, g1)
+    np.testing.assert_almost_equal(ps_shear.g2, g2)
+    np.testing.assert_almost_equal(ps_mu, mu)
+
+    # Check use of math in the evaluated string
+    ps.buildGrid(grid_spacing=10, ngrid=ngrid, center=center, rng=rng)
+    g1,g2,mu = ps.getLensing(pos = config['world_pos'])
+    ps_shear = galsim.config.ParseValue(config, 'ps_shear2', config, galsim.Shear)[0]
+    ps_mu = galsim.config.ParseValue(config, 'ps_mu2', config, float)[0]
+    print('num = 2')
+    print(g1,g2,mu)
+    print(ps_shear,ps_mu)
+    np.testing.assert_almost_equal(ps_shear.g1, g1)
+    np.testing.assert_almost_equal(ps_shear.g2, g2)
+    np.testing.assert_almost_equal(ps_mu, mu)
+
 
 
 
