@@ -1085,53 +1085,8 @@ def test_eval():
         'image_bounds' : galsim.BoundsI(1,180,1,360),
         'image_center' : galsim.PositionD(90.5, 180.5),
         'wcs' : galsim.PixelScale(1.8),
-
-        # Taken directly from Issue #776:
-        'shear' : {
-            'type': 'GBeta',
-            'g': {
-                'type': 'RandomDistribution',
-                'function': "(1-x**2)**2 * np.exp( -0.5 * x**2 / 0.2**2 )",
-                'x_min': 0.0,
-                'x_max': 1.0,
-            },
-            'beta': {
-                'type': 'Random'
-            }
-        },
-
-        # PowerSpectrum evaluates e_power_function and b_power_function, so check those.
-        'input' : {
-            'power_spectrum' :  [
-                {
-                    'e_power_function' : 'np.exp(-k**0.2)',
-                    'b_power_function' : 'np.exp(-k**1.2)',
-                    'grid_spacing' : 10
-                },
-                {
-                    'e_power_function' : 'numpy.exp(-k**0.2)',
-                    'b_power_function' : 'numpy.exp(-k**1.2)',
-                    'grid_spacing' : 10
-                },
-                # math doesn't work for acting on k, since it is a numpy array, but
-                # we can check that math.sqrt works.
-                {
-                    'e_power_function' : 'np.exp(-k ** math.sqrt(0.04))',
-                    'b_power_function' : 'np.exp(-k ** math.log(math.exp(1.2)))',
-                    'grid_spacing' : 10
-                },
-            ]
-        },
-        'ps_shear' : { 'type' : 'PowerSpectrumShear' },
-        'ps_mu' : { 'type' : 'PowerSpectrumMagnification' },
-        'ps_shear1' : { 'type' : 'PowerSpectrumShear', 'num' : 1 },
-        'ps_mu1' : { 'type' : 'PowerSpectrumMagnification', 'num' : 1 },
-        'ps_shear2' : { 'type' : 'PowerSpectrumShear', 'num' : 2 },
-        'ps_mu2' : { 'type' : 'PowerSpectrumMagnification', 'num' : 2 },
-
     }
 
-    # Test the eval items
     true_val = np.exp(-0.5 * 1.8**2)  # All of these should equal this value.
     for i in range(1,17):
         test_val = galsim.config.ParseValue(config, 'eval%d'%i, config, float)[0]
@@ -1139,6 +1094,20 @@ def test_eval():
         np.testing.assert_almost_equal(test_val, true_val)
 
     # Test the evaluation in RandomDistribution
+    # Example config taken directly from Issue #776:
+    config['shear'] = {
+        'type': 'GBeta',
+        'g': {
+            'type': 'RandomDistribution',
+            'function': "(1-x**2)**2 * np.exp( -0.5 * x**2 / 0.2**2 )",
+            'x_min': 0.0,
+            'x_max': 1.0,
+        },
+        'beta': {
+            'type': 'Random'
+        }
+    }
+
     rng = galsim.UniformDeviate(1234)
     config['rng'] = galsim.UniformDeviate(1234)
 
@@ -1171,7 +1140,35 @@ def test_eval():
         np.testing.assert_almost_equal(shear1.g1, shear2.g1)
         np.testing.assert_almost_equal(shear1.g2, shear2.g2)
 
-    # Test PowerSpectrum
+    # PowerSpectrum evaluates e_power_function and b_power_function, so check those.
+    config['input'] = {
+        'power_spectrum' :  [
+            {
+                'e_power_function' : 'np.exp(-k**0.2)',
+                'b_power_function' : 'np.exp(-k**1.2)',
+                'grid_spacing' : 10
+            },
+            {
+                'e_power_function' : 'numpy.exp(-k**0.2)',
+                'b_power_function' : 'numpy.exp(-k**1.2)',
+                'grid_spacing' : 10
+            },
+            # math doesn't work for acting on k, since it is a numpy array, but
+            # we can check that math.sqrt works.
+            {
+                'e_power_function' : 'np.exp(-k ** math.sqrt(0.04))',
+                'b_power_function' : 'np.exp(-k ** math.log(math.exp(1.2)))',
+                'grid_spacing' : 10
+            },
+        ]
+    }
+    config['ps_shear'] = { 'type' : 'PowerSpectrumShear' }
+    config['ps_mu'] = { 'type' : 'PowerSpectrumMagnification' }
+    config['ps_shear1'] = { 'type' : 'PowerSpectrumShear', 'num' : 1 }
+    config['ps_mu1'] = { 'type' : 'PowerSpectrumMagnification', 'num' : 1 }
+    config['ps_shear2'] = { 'type' : 'PowerSpectrumShear', 'num' : 2 }
+    config['ps_mu2'] = { 'type' : 'PowerSpectrumMagnification', 'num' : 2 }
+
     galsim.config.ProcessInput(config)
     galsim.config.SetupInputsForImage(config, None)
     ps = galsim.PowerSpectrum(e_power_function = lambda k: np.exp(-k**0.2),
@@ -1215,7 +1212,55 @@ def test_eval():
     np.testing.assert_almost_equal(ps_shear.g2, g2)
     np.testing.assert_almost_equal(ps_mu, mu)
 
+    # Check WCS types that take user input
+    # First, test UVFunction
+    config['image'] = {
+        'wcs' : {
+            'type' : 'UVFunction',
+            'ufunc' : '0.05 * numpy.exp(1. + x/100.)',
+            'vfunc' : '0.05 * np.exp(1. + y/100.)',
+            'xfunc' : '100. * (np.log(u*20.) - 1.)',
+            'yfunc' : '100. * (np.log(v*20.) - math.sqrt(1.))',
+            'origin' : 'center',
+        },
+    }
 
+    wcs1 = galsim.UVFunction(
+            ufunc = lambda x,y: 0.05 * np.exp(1. + x/100.),
+            vfunc = lambda x,y: 0.05 * np.exp(1. + y/100.),
+            xfunc = lambda u,v: 100. * (np.log(u*20.) - 1.),
+            yfunc = lambda u,v: 100. * (np.log(v*20.) - 1.),
+            origin = config['image_center'])
+    wcs2 = galsim.config.BuildWCS(config)
+    print('wcs1 = ',wcs1)
+    print('wcs2 = ',wcs2)
+    p = galsim.PositionD(23,12)
+    print(wcs1.toWorld(p), wcs2.toWorld(p))
+    np.testing.assert_almost_equal(wcs1.toWorld(p).x, wcs2.toWorld(p).x)
+    np.testing.assert_almost_equal(wcs1.toWorld(p).y, wcs2.toWorld(p).y)
+    print(wcs1.toImage(p), wcs2.toImage(p))
+    np.testing.assert_almost_equal(wcs1.toImage(p).x, wcs2.toImage(p).x)
+    np.testing.assert_almost_equal(wcs1.toImage(p).y, wcs2.toImage(p).y)
+
+    # Next, test RaDecFunction
+    config['image']['wcs'] = {
+        'type' : 'RaDecFunction',
+        'ra_func' : '0.05 * numpy.exp(1. + x/100.) * galsim.hours / galsim.radians',
+        'dec_func' : '0.05 * np.exp(math.sqrt(1.) + y/100.) * galsim.degrees / galsim.radians',
+        'origin' : 'center',
+    }
+
+    wcs1 = galsim.RaDecFunction(
+            ra_func = lambda x,y: 0.05 * np.exp(1. + x/100.) * galsim.hours / galsim.radians,
+            dec_func = lambda x,y: 0.05 * np.exp(1. + y/100.) * galsim.degrees / galsim.radians,
+            origin = config['image_center'])
+    wcs2 = galsim.config.BuildWCS(config)
+    print('wcs1 = ',wcs1)
+    print('wcs2 = ',wcs2)
+    p = galsim.PositionD(23,12)
+    print(wcs1.toWorld(p), wcs2.toWorld(p))
+    np.testing.assert_almost_equal(wcs1.toWorld(p).ra.rad(), wcs2.toWorld(p).ra.rad())
+    np.testing.assert_almost_equal(wcs1.toWorld(p).dec.rad(), wcs2.toWorld(p).dec.rad())
 
 
 if __name__ == "__main__":
