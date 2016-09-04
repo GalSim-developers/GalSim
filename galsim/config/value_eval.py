@@ -46,15 +46,16 @@ def _type_by_letter(key):
 def _GenerateFromEval(config, base, value_type):
     """@brief Evaluate a string as the provided type
     """
+    from future.utils import exec_
     # These will be the variables to use for evaluating the eval statement.
     # Start with the current locals and globals, and add extra items to them.
     ldict = locals().copy()
     gdict = globals().copy()
     # We allow the following modules to be used in the eval string:
-    exec('import math', gdict)
-    exec('import numpy', gdict)
-    exec('import numpy as np', gdict)
-    exec('import os', gdict)
+    exec_('import math', gdict)
+    exec_('import numpy', gdict)
+    exec_('import numpy as np', gdict)
+    exec_('import os', gdict)
 
     #print('Start Eval')
     req = { 'str' : str }

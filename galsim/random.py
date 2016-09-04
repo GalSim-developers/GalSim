@@ -288,13 +288,8 @@ class DistDeviate(_galsim.BaseDeviate):
                 x_min = function.x_min
                 x_max = function.x_max
             else:
-                # Allow any of these in the function string.
-                gdict = globals().copy()
-                exec('import numpy', gdict)
-                exec('import math', gdict)
-
                 try:
-                    function = eval('lambda x: ' + function, gdict)
+                    function = galsim.utilities.math_eval('lambda x : ' + function)
                     if x_min is not None: # is not None in case x_min=0.
                         function(x_min)
                     else:
@@ -306,7 +301,7 @@ class DistDeviate(_galsim.BaseDeviate):
                         "String function must either be a valid filename or something that "+
                         "can eval to a function of x.\n"+
                         "Input provided: {0}\n".format(input_function)+
-                        "Caught error: {0}\n".format(e))
+                        "Caught error: {0}".format(e))
         else:
             # Check that the function is actually a function
             if not (isinstance(function, galsim.LookupTable) or hasattr(function,'__call__')):
