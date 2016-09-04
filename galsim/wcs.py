@@ -2065,27 +2065,23 @@ class UVFunction(EuclideanWCS):
             self._world_origin = world_origin
 
     def _initialize_funcs(self):
-        gdict = globals().copy()
-        exec('import numpy', gdict) # In case needed by function evals
-        exec('import math', gdict)
-
         if isinstance(self._orig_ufunc, str):
-            self._ufunc = eval('lambda x,y : ' + self._orig_ufunc, gdict)
+            self._ufunc = galsim.utilities.math_eval('lambda x,y : ' + self._orig_ufunc)
         else:
             self._ufunc = self._orig_ufunc
 
         if isinstance(self._orig_vfunc, str):
-            self._vfunc = eval('lambda x,y : ' + self._orig_vfunc, gdict)
+            self._vfunc = galsim.utilities.math_eval('lambda x,y : ' + self._orig_vfunc)
         else:
             self._vfunc = self._orig_vfunc
 
         if isinstance(self._orig_xfunc, str):
-            self._xfunc = eval('lambda u,v : ' + self._orig_xfunc, gdict)
+            self._xfunc = galsim.utilities.math_eval('lambda u,v : ' + self._orig_xfunc)
         else:
             self._xfunc = self._orig_xfunc
 
         if isinstance(self._orig_yfunc, str):
-            self._yfunc = eval('lambda u,v : ' + self._orig_yfunc, gdict)
+            self._yfunc = galsim.utilities.math_eval('lambda u,v : ' + self._orig_yfunc)
         else:
             self._yfunc = self._orig_yfunc
 
@@ -2253,22 +2249,18 @@ class RaDecFunction(CelestialWCS):
             self._origin = origin
 
     def _initialize_funcs(self):
-        gdict = globals().copy()
-        exec('import numpy', gdict) # In case needed by function evals
-        exec('import math', gdict)
-
         if self._orig_dec_func is None:
             if isinstance(self._orig_ra_func, str):
-                self._radec_func = eval('lambda x,y : ' + self._orig_ra_func, gdict)
+                self._radec_func = galsim.utilities.math_eval('lambda x,y : ' + self._orig_ra_func)
             else:
                 self._radec_func = self._orig_ra_func
         else:
             if isinstance(self._orig_ra_func, str):
-                ra_func = eval('lambda x,y : ' + self._orig_ra_func, gdict)
+                ra_func = galsim.utilities.math_eval('lambda x,y : ' + self._orig_ra_func)
             else:
                 ra_func = self._orig_ra_func
             if isinstance(self._orig_dec_func, str):
-                dec_func = eval('lambda x,y : ' + self._orig_dec_func, gdict)
+                dec_func = galsim.utilities.math_eval('lambda x,y : ' + self._orig_dec_func)
             else:
                 dec_func = self._orig_dec_func
             self._radec_func = lambda x,y : (ra_func(x,y), dec_func(x,y))

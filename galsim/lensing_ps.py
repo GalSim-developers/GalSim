@@ -664,16 +664,14 @@ class PowerSpectrum(object):
                 # Detect at least _some_ forms of malformed string input.  Note that this
                 # test assumes that the eval string completion is defined for k=1.0.
                 try:
-                    gdict = globals().copy()
-                    exec('import numpy', gdict)
-                    exec('import math', gdict)
-                    origpf = pf
-                    pf = eval('lambda k : ' + pf, gdict)
+                    pf = galsim.utilities.math_eval('lambda k : ' + pf)
                     pf(1.0)
-                except:
+                except Exception as e:
                     raise ValueError(
                         "String power_spectrum must either be a valid filename or something that "+
-                        "can eval to a function of k. Input provided: {0}".format(origpf))
+                        "can eval to a function of k.\n"+
+                        "Input provided: {0}\n".format(origpf)+
+                        "Caught error: {0}".format(e))
 
 
         # Check that the function is sane.
