@@ -29,14 +29,15 @@ class InclinedExponential(GSObject):
     """A class describing an inclined exponential profile.
 
     The Inclined Exponential surface brightness profile is characterized by three properties: its
-    inclination angle 'i' (where 0 = face-on and pi/2 = edge-on), its scale radius, and its scale
-    height. The 3D light distribution function is:
+    inclination angle (where 0 degrees = face-on and 90 degrees = edge-on), its scale radius, and
+    its scale height. The 3D light distribution function is:
 
     I(R,z) = I_0 / (2h_s) * sech^2 (z/h_s) * exp(-R/R_s)
 
     where z is the distance along the minor axis, R is the radial distance from the minor axis,
     R_s is the scale radius of the disk, h_s is the scale height of the disk, and I_0 is the central
-    surface brightness of the face-on disk.
+    surface brightness of the face-on disk. The 2D light distribution function is then determined
+    from the scale height and radius here, along with the inclination angle.
 
     In this implementation, the profile is inclined along the y-axis. This means that it will likely
     need to be rotated in most circumstances.
@@ -46,9 +47,14 @@ class InclinedExponential(GSObject):
     Initialization
     --------------
 
-    @param inclination      The inclination angle, i
+    @param inclination      The inclination angle, which must be a galsim.Angle instance
     @param scale_radius     The scale radius of the exponential disk.  Typically given in arcsec.
+                            This can be compared to the 'scale_radius' parameter of the
+                            galsim.Exponential class, and in the face-on case, the same same scale
+                            radius will result in the same 2D light distribution as with that
+                            class.
     @param scale_height     The scale height of the exponential disk.  Typically given in arcsec.
+                            [default: 0.1*scale_radius]
     @param flux             The flux (in photons) of the profile. [default: 1]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
@@ -62,12 +68,15 @@ class InclinedExponential(GSObject):
         >>> r0 = inclined_exponential_obj.getScaleRadius()
         >>> h0 = inclined_exponential_obj.getScaleHeight()
     """
-    _req_params = { "inclination" : float, "scale_radius" : float, "scale_height" : float }
-    _opt_params = { "flux" : float }
+    _req_params = { "inclination" : float, "scale_radius" : float }
+    _opt_params = { "scale_height" : float, "flux" : float }
     _takes_rng = False
 
-    def __init__(self, inclination, scale_radius, scale_height,
+    def __init__(self, inclination, scale_radius, scale_height=None,
                  flux=1., gsparams=None):
+        
+        if scale_height is None:
+            scale_height = 0.1*scale_radius
 
         # Explicitly check for angle type, so we can give more informative error if eg. a float is passed
         if not isinstance(inclination, galsim.Angle):
@@ -78,7 +87,7 @@ class InclinedExponential(GSObject):
         self._gsparams = gsparams
 
     def getInclination(self):
-        """Return the inclination angle for this profile in radians.
+        """Return the inclination angle for this profile as a galsim.Angle instance.
         """
         return self.SBProfile.getInclination()
 
@@ -88,7 +97,7 @@ class InclinedExponential(GSObject):
         return self.SBProfile.getScaleRadius()
 
     def getScaleHeight(self):
-        """Return the scale radius for this Sersic profile.
+        """Return the scale height for this Sersic profile.
         """
         return self.SBProfile.getScaleHeight()
 
@@ -112,12 +121,12 @@ class InclinedExponential(GSObject):
                      self._gsparams))
 
     def __repr__(self):
-        return 'galsim.InclinedExponential(i=%r, scale_radius=%r, scale_height=%r, flux=%r, gsparams=%r)' % (
+        return 'galsim.InclinedExponential(inclination=%r, scale_radius=%r, scale_height=%r, flux=%r, gsparams=%r)' % (
             self.inclination, self.scale_radius, self.scale_height, self.flux, self._gsparams)
 
     def __str__(self):
-        s = 'galsim.InclinedExponential(i=%s, scale_radius=%s, scale_height=%s' % (self.inclination, self.scale_radius,
-                                                                                 self.scale_height)
+        s = 'galsim.InclinedExponential(inclination=%s, scale_radius=%s, scale_height=%s' % (
+                self.inclination, self.scale_radius, self.scale_height)
         if self.flux != 1.0:
             s += ', flux=%s' % self.flux
         s += ')'
