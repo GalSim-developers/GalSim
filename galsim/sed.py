@@ -131,15 +131,17 @@ class SED(object):
                 # a valid spectrum specification.
                 # Are there any other types of errors we should trap here?
                 try:
-                    self._spec = eval('lambda wave : ' + self._orig_spec)
+                    self._spec = galsim.utilities.math_eval('lambda wave : ' + self._orig_spec)
                     self._spec(700)
                 except ArithmeticError:
                     pass
-                except:
+                except Exception as e:
                     raise ValueError(
                         "String spec must either be a valid filename or something that "+
-                        "can eval to a function of wave. Input provided: {0}".format(
-                            self._orig_spec))
+                        "can eval to a function of wave.\n" +
+                        "Input provided: {0}\n".format(self._orig_spec) +
+                        "Caught error: {0}".format(e))
+
         else:
             self._spec = self._orig_spec
 
