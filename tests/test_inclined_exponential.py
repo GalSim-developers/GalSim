@@ -246,6 +246,7 @@ def test_pickle():
     """ Check that we can pickle it. """
     
     do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians,scale_radius=3.0,scale_height=0.3))
+    do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians,scale_radius=3.0))
     do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians,scale_radius=3.0,scale_height=0.3,
                                          flux=10.0))
     do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians,scale_radius=3.0,scale_height=0.3,
