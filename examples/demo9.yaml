@@ -37,7 +37,6 @@
 # - float type : NFWHaloMagnification (redshift)
 # - float type : RandomDistribution(function, x_min, x_max)
 # - input : nfw_halo (mass, conc, redshift)
-# - shear type : Eta1Eta2 (eta1, eta2)
 # - shear type : Sum (items)
 # - image type : Scattered (size, nobjects)
 # - wcs type : UVFunction (ufunc, vfunc, xfunc, yfunc, origin)

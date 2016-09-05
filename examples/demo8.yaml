@@ -34,6 +34,7 @@
 # New features introduced in this demo:
 #
 # - stamp : retry_failures
+# - shear type : Eta1Eta2 (eta1, eta2)
 # - image : nproc
 
 
@@ -50,22 +51,13 @@ psf :
 gal :
     type : Sum
     items : 
-        -
-            type : Sersic
-            n : 3.6
-            half_light_radius : { type : Random , min : 0.3 , max : 0.9 }
-            flux : { type : Random , min : 0.1 , max : 0.5 }
-            ellip :
-                type : EBeta
-                e : { type : Random , min : 0.0 , max : 0.3 }
-                beta : { type : Random }
-        -
+        -   # The disk component
             type : Sersic
             n : 1.5
+            # Remember, the flux here is the fractional flux.  The total flux is given
+            # below for the sum of the two components.
+            flux : { type : Random , min : 0.5 , max : 0.9 }
             half_light_radius : { type : Random , min : 0.5 , max : 1.5 }
-            # Special: if the last item in a Sum doesn't have a flux specified,
-            # then it is given whatever is needed to bring the total to 1.
-            # This is especially useful when other components have a random value.
             ellip :
                 type : E1E2
                 e1 : { type : RandomGaussian , sigma : 0.4 }
@@ -76,6 +68,23 @@ gal :
                 # will fail the stamp generation process.  We set retry_failures = 2 below to 
                 # indicate that the object generation stage should just try again (up to 2 
                 # times) whenever a failure is encountered.
+
+        -   # The bulge component
+            type : Sersic
+            n : 3.6
+            # Special: if the last item in a Sum doesn't have a flux specified,
+            # then it is given whatever is needed to bring the total to 1.
+            # This is especially useful when other components have a random value.
+            half_light_radius : { type : Random , min : 0.3 , max : 0.9 }
+            ellip :
+                # An alternative to the above solution for |e| > 1 is to use conformal shear,
+                # usually designated as eta.  The eta definition of shear is |eta| = ln(a/b),
+                # where a and b are (as usual) the semi-major and semi-minor axes.
+                # This definition has the advantage that it is well defined for all values from
+                # 0 to infinity, so we don't need to worry about getting |e| > 1.
+                type : Eta1Eta2
+                eta1 : { type : RandomGaussian , sigma : 0.3 }
+                eta2 : { type : RandomGaussian , sigma : 0.3 }
 
     flux : { type : Random , min : 1.0e4 , max : 1.0e5 }
     
