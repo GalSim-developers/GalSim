@@ -232,9 +232,11 @@ def test_ne():
     gsp = galsim.GSParams(folding_threshold=1.1e-3)
  
     gals = [galsim.InclinedExponential(0.1*galsim.radians, 3.0, 0.3),
-            galsim.InclinedExponential(0.1*galsim.radians, 3.0, 0.4),
+            galsim.InclinedExponential(0.1*galsim.degrees, 3.0, 0.3),
+            galsim.InclinedExponential(0.1*galsim.radians, 3.0, 3.0),
             galsim.InclinedExponential(0.2*galsim.radians, 3.0, 0.3),
             galsim.InclinedExponential(0.1*galsim.radians, 3.1, 0.3),
+            galsim.InclinedExponential(0.1*galsim.radians, 3.1),
             galsim.InclinedExponential(0.1*galsim.radians, 3.0, 0.3, flux=0.5),
             galsim.InclinedExponential(0.1*galsim.radians, 3.0, 0.3, gsparams=gsp)]
     all_obj_diff(gals)
