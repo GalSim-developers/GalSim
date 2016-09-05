@@ -90,9 +90,9 @@ namespace galsim {
 
     private:
         Angle _inclination; ///< Inclination angle
-        double _flux;        ///< Actual flux (may differ from that specified at the constructor).
         double _r0;          ///< Scale radius specified at the constructor.
         double _h0;          ///< Scale height specified at the constructor.
+        double _flux;        ///< Actual flux (may differ from that specified at the constructor).
 
         double _inv_r0;
         double _half_pi_h_sini_over_r;
