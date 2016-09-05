@@ -71,7 +71,7 @@ namespace galsim {
         /// @brief photon shooting done by rescaling photons from appropriate `InclinedExponentialInfo`
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
-        /// @brief Returns the inclination angle in radians
+        /// @brief Returns the inclination angle as an Angle instance
         Angle getInclination() const { return _inclination; }
         /// @brief Returns the scale radius
         double getScaleRadius() const { return _r0; }
@@ -89,7 +89,7 @@ namespace galsim {
         std::string serialize() const;
 
     private:
-        Angle _inclination; ///< Inclination angle in radians
+        Angle _inclination; ///< Inclination angle
         double _flux;        ///< Actual flux (may differ from that specified at the constructor).
         double _r0;          ///< Scale radius specified at the constructor.
         double _h0;          ///< Scale height specified at the constructor.
