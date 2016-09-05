@@ -37,11 +37,16 @@ int verbose_level = 2;
 
 namespace galsim {
 
-    SBInclinedExponential::SBInclinedExponential(Angle inclination, double scale_radius, double scale_height, double flux,
-            const GSParamsPtr& gsparams) :
-        SBProfile(new SBInclinedExponentialImpl(inclination, scale_radius, scale_height, flux, gsparams)) {}
+    SBInclinedExponential::SBInclinedExponential(
+            Angle inclination, double scale_radius, double scale_height,
+            double flux, const GSParamsPtr& gsparams) :
+        SBProfile(new SBInclinedExponentialImpl(
+                inclination, scale_radius, scale_height, flux, gsparams))
+    {}
 
-    SBInclinedExponential::SBInclinedExponential(const SBInclinedExponential& rhs) : SBProfile(rhs) {}
+    SBInclinedExponential::SBInclinedExponential(const SBInclinedExponential& rhs) :
+        SBProfile(rhs)
+    {}
 
     SBInclinedExponential::~SBInclinedExponential() {}
 
@@ -79,13 +84,15 @@ namespace galsim {
         // in python, so it will use the C++ virtual function to get the right thing for
         // any subclass.  But possibly with ugly extra digits.
         oss.precision(std::numeric_limits<double>::digits10 + 4);
-        oss << "galsim._galsim.SBInclinedExponential("<<getInclination()<<", "<<getScaleRadius()<<", "<<getScaleHeight();
-        oss <<", "<<getFlux()<<", False";
+        oss << "galsim._galsim.SBInclinedExponential("<<getInclination();
+        oss << ", "<<getScaleRadius()<<", "<<getScaleHeight();
+        oss << ", "<<getFlux()<<", False";
         oss << ", galsim.GSParams("<<*gsparams<<"))";
         return oss.str();
     }
 
-    SBInclinedExponential::SBInclinedExponentialImpl::SBInclinedExponentialImpl(Angle inclination, double scale_radius,
+    SBInclinedExponential::SBInclinedExponentialImpl::SBInclinedExponentialImpl(
+            Angle inclination, double scale_radius,
             double scale_height, double flux, const GSParamsPtr& gsparams) :
         SBProfileImpl(gsparams),
         _inclination(inclination),
@@ -95,7 +102,8 @@ namespace galsim {
         _inv_r0(1./scale_radius),
         _half_pi_h_sini_over_r(0.5*M_PI*scale_height*std::abs(inclination.sin())/scale_radius),
         _cosi(std::abs(inclination.cos())),
-        _ksq_max(integ::MOCK_INF) // Start with infinite _ksq_max so we can use kValueHelper to get a better value
+        _ksq_max(integ::MOCK_INF) // Start with infinite _ksq_max so we can use kValueHelper to
+                                  // get a better value
     {
         dbg<<"Start SBInclinedExponential constructor:\n";
         dbg<<"inclination = "<<_inclination<<std::endl;
@@ -134,7 +142,8 @@ namespace galsim {
         // This is acceptable when the next term is less than kvalue_accuracy.
         // (35/16 + 31/15120 pi/2*h*sin(i)/r) * (k^2*r^2)^3 = kvalue_accuracy
         // This is a bit conservative, note, assuming kx = 0
-        _ksq_min = std::pow(this->gsparams->kvalue_accuracy / (35./16. + 31./15120.*_half_pi_h_sini_over_r), 1./3.);
+        _ksq_min = std::pow(this->gsparams->kvalue_accuracy /
+                            (35./16. + 31./15120.*_half_pi_h_sini_over_r), 1./3.);
 
         // Solve for the proper _maxk and _ksq_max
 
@@ -215,20 +224,23 @@ namespace galsim {
 
     double SBInclinedExponential::SBInclinedExponentialImpl::xValue(const Position<double>& p) const
     {
-        throw std::runtime_error("Real-space expression of SBInclinedExponential is not yet implemented.");
+        throw std::runtime_error(
+            "Real-space expression of SBInclinedExponential is not yet implemented.");
         return 0;
     }
 
-    std::complex<double> SBInclinedExponential::SBInclinedExponentialImpl::kValue(const Position<double>& k) const
+    std::complex<double> SBInclinedExponential::SBInclinedExponentialImpl::kValue(
+        const Position<double>& k) const
     {
         double kx = k.x*_r0;
         double ky = k.y*_r0;
         return _flux * kValueHelper(kx,ky);
     }
 
-    void SBInclinedExponential::SBInclinedExponentialImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                            double kx0, double dkx, int izero,
-                                            double ky0, double dky, int jzero) const
+    void SBInclinedExponential::SBInclinedExponentialImpl::fillKValue(
+        tmv::MatrixView<std::complex<double> > val,
+        double kx0, double dkx, int izero,
+        double ky0, double dky, int jzero) const
     {
         dbg<<"SBInclinedExponential fillKValue\n";
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
@@ -253,16 +265,18 @@ namespace galsim {
                 It valit = val.col(j).begin();
                 for (int i=0;i<m;++i,kx+=dkx) {
                     double new_val = _flux * kValueHelper(kx,ky0);
-                    xxdbg << "kx = " << kx << "\tky = " << ky0 << "\tval = " << new_val << std::endl;
+                    xxdbg << "kx = " << kx << "\tky = " << ky0;
+                    xxdbg << "\tval = " << new_val << std::endl;
                     *valit++ = new_val;
                 }
             }
         }
     }
 
-    void SBInclinedExponential::SBInclinedExponentialImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                            double kx0, double dkx, double dkxy,
-                                            double ky0, double dky, double dkyx) const
+    void SBInclinedExponential::SBInclinedExponentialImpl::fillKValue(
+        tmv::MatrixView<std::complex<double> > val,
+        double kx0, double dkx, double dkxy,
+        double ky0, double dky, double dkyx) const
     {
         dbg<<"SBInclinedExponential fillKValue\n";
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
@@ -290,10 +304,13 @@ namespace galsim {
         }
     }
 
-    double SBInclinedExponential::SBInclinedExponentialImpl::maxK() const { return _maxk * _inv_r0; }
-    double SBInclinedExponential::SBInclinedExponentialImpl::stepK() const { return _stepk * _inv_r0; }
+    double SBInclinedExponential::SBInclinedExponentialImpl::maxK() const
+    { return _maxk * _inv_r0; }
+    double SBInclinedExponential::SBInclinedExponentialImpl::stepK() const
+    { return _stepk * _inv_r0; }
 
-    double SBInclinedExponential::SBInclinedExponentialImpl::kValueHelper(double kx, double ky) const
+    double SBInclinedExponential::SBInclinedExponentialImpl::kValueHelper(
+        double kx, double ky) const
     {
         // Calculate the base value for an exponential profile
 
@@ -329,7 +346,8 @@ namespace galsim {
         if (scaled_ky_squared < _ksq_min)
         {
             // Use Taylor expansion to speed up calculation
-            res_conv = (1. - 0.16666666667*scaled_ky_squared*(1. - 0.116666666667*scaled_ky_squared));
+            res_conv = (1. - 0.16666666667*scaled_ky_squared *
+                          (1. - 0.116666666667*scaled_ky_squared));
             xxdbg << "res_conv (lower limit) = " << res_conv << std::endl;
         }
         else
@@ -345,16 +363,22 @@ namespace galsim {
     }
 
     // Not yet implemented, but needs to be defined
-    boost::shared_ptr<PhotonArray> SBInclinedExponential::SBInclinedExponentialImpl::shoot(int N, UniformDeviate ud) const
+    boost::shared_ptr<PhotonArray> SBInclinedExponential::SBInclinedExponentialImpl::shoot(
+        int N, UniformDeviate ud) const
     {
-        throw std::runtime_error("Photon shooting not yet implemented for SBInclinedExponential profile.");
+        throw std::runtime_error(
+            "Photon shooting not yet implemented for SBInclinedExponential profile.");
     }
 
-    SBInclinedExponential::SBInclinedExponentialImpl::SBInclinedExponentialKValueFunctor::SBInclinedExponentialKValueFunctor(
-            const SBInclinedExponential::SBInclinedExponentialImpl * p_owner, double target_k_value) :
-                    _p_owner(p_owner), _target_k_value(target_k_value) {}
+    SBInclinedExponential::SBInclinedExponentialImpl::
+        SBInclinedExponentialKValueFunctor::SBInclinedExponentialKValueFunctor(
+            const SBInclinedExponential::SBInclinedExponentialImpl * p_owner,
+            double target_k_value) :
+        _p_owner(p_owner), _target_k_value(target_k_value)
+    {}
 
-    double SBInclinedExponential::SBInclinedExponentialImpl::SBInclinedExponentialKValueFunctor::operator()(double k) const
+    double SBInclinedExponential::SBInclinedExponentialImpl::
+        SBInclinedExponentialKValueFunctor::operator()(double k) const
     {
         assert(_p_owner);
         double k_value = std::max(_p_owner->kValueHelper(0.,k),_p_owner->kValueHelper(k,0.));
