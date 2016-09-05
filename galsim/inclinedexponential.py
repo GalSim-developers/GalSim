@@ -54,7 +54,9 @@ class InclinedExponential(GSObject):
                             radius will result in the same 2D light distribution as with that
                             class.
     @param scale_height     The scale height of the exponential disk.  Typically given in arcsec.
-                            [default: 0.1*scale_radius]
+                            [default: None]
+    @param scale_h_over_r   In lieu of the scale height, you may also specify the ratio of the
+                            scale height to the scale radius. [default: 0.1]
     @param flux             The flux (in photons) of the profile. [default: 1]
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
@@ -68,15 +70,15 @@ class InclinedExponential(GSObject):
         >>> r0 = inclined_exponential_obj.getScaleRadius()
         >>> h0 = inclined_exponential_obj.getScaleHeight()
     """
-    _req_params = { "inclination" : float, "scale_radius" : float }
-    _opt_params = { "scale_height" : float, "flux" : float }
+    _req_params = { "inclination" : galsim.Angle, "scale_radius" : float }
+    _opt_params = { "scale_height" : float, "scale_h_over_r" : float, "flux" : float }
     _takes_rng = False
 
-    def __init__(self, inclination, scale_radius, scale_height=None,
+    def __init__(self, inclination, scale_radius, scale_height=None, scale_h_over_r=0.1,
                  flux=1., gsparams=None):
         
         if scale_height is None:
-            scale_height = 0.1*scale_radius
+            scale_height = scale_h_over_r * scale_radius
 
         # Explicitly check for angle type, so we can give more informative error if eg. a float is
         # passed
