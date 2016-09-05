@@ -49,8 +49,11 @@ def test_regression():
        Reference images are provided in the ./inclined_exponential_images directory, as well as
        the code ('hankelcode.c') used to generate them."""
     
-    for inc_angle, scale_radius, scale_height, pos_angle in zip(image_inc_angles,image_scale_radii,
-                                                                image_scale_heights,image_pos_angles):
+    for inc_angle, scale_radius, scale_height, pos_angle in zip(image_inc_angles,
+                                                                image_scale_radii,
+                                                                image_scale_heights,
+                                                                image_pos_angles):
+
         image_filename = "galaxy_"+inc_angle+"_"+scale_radius+"_"+scale_height+"_"+pos_angle+".fits"
         image = galsim.fits.read(image_filename, image_dir)
         
@@ -61,7 +64,8 @@ def test_regression():
         pos_angle=float(pos_angle)
         
         # Now make a test image
-        test_profile = galsim.InclinedExponential(inc_angle*galsim.radians,scale_radius,scale_height)
+        test_profile = galsim.InclinedExponential(inc_angle*galsim.radians, scale_radius,
+                                                  scale_height)
         
         # Rotate it by the position angle
         test_profile = test_profile.rotate(pos_angle*galsim.radians)
@@ -70,8 +74,8 @@ def test_regression():
         test_image = galsim.Image(image_nx,image_ny,scale=1.0)
         test_profile.drawImage(test_image,offset=(0.5,0.5)) # Offset to match Lance's
         
-        # Compare to the example - Due to the different fourier transforms used, some offset is expected,
-        # so we just compare in the core to two decimal places
+        # Compare to the example - Due to the different fourier transforms used, some offset is
+        # expected, so we just compare in the core to two decimal places
         
         image_core = image.array[image_ny//2-2:image_ny//2+3, image_nx//2-2:image_nx//2+3]
         test_image_core = test_image.array[image_ny//2-2:image_ny//2+3, image_nx//2-2:image_nx//2+3]
@@ -80,9 +84,11 @@ def test_regression():
         
         # galsim.fits.write(test_image,"test_"+image_filename,image_dir)
         
-        np.testing.assert_array_almost_equal(ratio_core, np.mean(ratio_core)*np.ones_like(ratio_core), decimal = 2,
-                                             err_msg = "Error in comparison of inclined exponential profile to samples.",
-                                             verbose=True)
+        np.testing.assert_array_almost_equal(
+                ratio_core, np.mean(ratio_core)*np.ones_like(ratio_core),
+                decimal = 2,
+                err_msg = "Error in comparison of inclined exponential profile to samples.",
+                verbose=True)
         
 @timer
 def test_exponential():
@@ -91,7 +97,8 @@ def test_exponential():
     scale_radius = 3.0
     
     # Set up the profiles
-    inc_exp_profile = galsim.InclinedExponential(0*galsim.radians,scale_radius=scale_radius,scale_height=scale_radius/10.)
+    inc_exp_profile = galsim.InclinedExponential(0*galsim.radians, scale_radius=scale_radius,
+                                                 scale_height=scale_radius/10.)
     exp_profile = galsim.Exponential(scale_radius=scale_radius)
     
     # Draw images for both
@@ -116,8 +123,9 @@ def test_edge_on():
     
     for inclination in inclinations:
         # Set up the profile
-        prof = galsim.InclinedExponential(inclination*galsim.radians,scale_radius=scale_radius,scale_height=scale_radius/10.)
-        
+        prof = galsim.InclinedExponential(inclination*galsim.radians, scale_radius=scale_radius,
+                                          scale_h_over_r=0.1)
+
         # Draw an image of it
         image = galsim.Image(image_nx,image_ny,scale=1.0)
         prof.drawImage(image)
@@ -148,7 +156,8 @@ def test_sanity():
         pos_angle=float(pos_angle)
         
         # Now make a test image
-        test_profile = galsim.InclinedExponential(inc_angle*galsim.radians,scale_radius,scale_height,flux)
+        test_profile = galsim.InclinedExponential(inc_angle*galsim.radians, scale_radius,
+                                                  scale_height, flux=flux)
         
         # Rotate it by the position angle
         test_profile = test_profile.rotate(pos_angle*galsim.radians)
@@ -181,7 +190,8 @@ def test_k_limits():
         gsparams = galsim.GSParams()
     
         # Now make a test image
-        test_profile = galsim.InclinedExponential(inc_angle*galsim.radians,scale_radius,scale_height)
+        test_profile = galsim.InclinedExponential(inc_angle*galsim.radians, scale_radius,
+                                                  scale_height)
         
         # Check that the k value at maxK() is below maxk_threshold in both the x and y dimensions
         kx = test_profile.maxK()
@@ -227,12 +237,31 @@ def test_k_limits():
                            "\nLost = " + str((total_flux-contained_flux)/(total_flux)))
 
 @timer
-def test_ne():
+def test_eq_ne():
     """ Check that equality/inequality works as expected."""
     gsp = galsim.GSParams(folding_threshold=1.1e-3)
+
+    # First test that some different initializations that should be equivalent:
+    gals = [galsim.InclinedExponential(0.1*galsim.radians, 3.0),
+            galsim.InclinedExponential(0.1*galsim.radians, 3.0, 0.3),  # default h/r = 0.1
+            galsim.InclinedExponential(0.1*galsim.radians, 3.0, scale_height=0.3),
+            galsim.InclinedExponential(0.1*galsim.radians, 3.0, scale_h_over_r=0.1),
+            galsim.InclinedExponential(0.1*galsim.radians, 3.0, flux=1.0),  # default flux=1
+            galsim.InclinedExponential(-0.1*galsim.radians, 3.0),  # negative i is equivalent
+            galsim.InclinedExponential((np.pi--0.1)*galsim.radians, 3.0),  # also pi-theta
+            galsim.InclinedExponential(18./np.pi*galsim.degrees, 3.0),
+            galsim.InclinedExponential(inclination=0.1*galsim.radians, scale_radius=3.0,
+                                       scale_height=0.3, flux=1.0),
+            galsim.InclinedExponential(flux=1.0, scale_radius=3.0,
+                                       scale_height=0.3, inclination=0.1*galsim.radians)]
+
+    for gal in gals[1:]:
+        print(gal)
+        gsobject_compare(gal, gals[0])
  
     gals = [galsim.InclinedExponential(0.1*galsim.radians, 3.0, 0.3),
             galsim.InclinedExponential(0.1*galsim.degrees, 3.0, 0.3),
+            galsim.InclinedExponential(0.1*galsim.degrees, 3.0, scale_h_over_r=0.2),
             galsim.InclinedExponential(0.1*galsim.radians, 3.0, 3.0),
             galsim.InclinedExponential(0.2*galsim.radians, 3.0, 0.3),
             galsim.InclinedExponential(0.1*galsim.radians, 3.1, 0.3),
@@ -260,5 +289,5 @@ if __name__ == "__main__":
     test_edge_on()
     test_sanity()
     test_k_limits()
-    test_ne()
+    test_eq_ne()
     test_pickle()
