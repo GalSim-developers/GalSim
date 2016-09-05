@@ -63,7 +63,7 @@ namespace galsim {
         /// @brief Destructor.
         ~SBInclinedExponential();
 
-        /// @brief Returns the inclination angle of the profile in radians
+        /// @brief Returns the inclination angle of the profile as an Angle instance
         Angle getInclination() const;
 
         /// @brief Returns the scale radius r0 of the disk profile
