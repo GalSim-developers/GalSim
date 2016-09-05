@@ -81,7 +81,7 @@ def main(argv):
     config['gal'] = {
         "type" : "Sum",
         "items" : [
-           {
+            {
                 "type" : "Sersic",
                 "n" : 1.5,
                 "flux" : { "type" : "Random" , "min" : 0.5 , "max" : 0.9 },
