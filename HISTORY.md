@@ -4,13 +4,6 @@ not listed here for brevity.  See the CHANGLELOG.md files associated with each
 version for a more complete list.  Issue numbers related to each change are
 given in parentheses.
 
-v1.5
-====
-
-New Features
-------------
-
-- Added new light distribution 'InclinedExponential' (#782)
 
 v1.4
 ====
