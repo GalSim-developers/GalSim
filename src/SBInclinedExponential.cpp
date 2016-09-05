@@ -215,7 +215,7 @@ namespace galsim {
 
     double SBInclinedExponential::SBInclinedExponentialImpl::xValue(const Position<double>& p) const
     {
-        throw std::runtime_error("Real-space expression of SBInclinedExponential NYI.");
+        throw std::runtime_error("Real-space expression of SBInclinedExponential is not yet implemented.");
         return 0;
     }
 
@@ -344,10 +344,10 @@ namespace galsim {
         return res;
     }
 
-    // NYI, but needs to be defined
+    // Not yet implemented, but needs to be defined
     boost::shared_ptr<PhotonArray> SBInclinedExponential::SBInclinedExponentialImpl::shoot(int N, UniformDeviate ud) const
     {
-        throw std::runtime_error("Photon shooting NYI for InclinedExponential profile.");
+        throw std::runtime_error("Photon shooting not yet implemented for SBInclinedExponential profile.");
     }
 
     SBInclinedExponential::SBInclinedExponentialImpl::SBInclinedExponentialKValueFunctor::SBInclinedExponentialKValueFunctor(
