@@ -28,7 +28,7 @@ New Features
 - Added ability to use `numpy`, `np`, or `math` in all places where we evaluate
   user input, including DistDeviate (aka RandomDistribution in config files),
   PowerSpectrum, UVFunction, RaDecFunction, Bandpass, and SED.  Some of these
-  had allowed `np.` for numpy command, but incosistently, so now they should
+  had allowed `np.` for numpy commands, but inconsistently, so now they should
   all reliably work with any of these three module names. (#776)
 
 
