@@ -45,7 +45,9 @@ image_ny = 64
 
 @timer
 def test_regression():
-    """Test that the inclined exponential profile matches the results from Lance Miller's code."""
+    """Test that the inclined exponential profile matches the results from Lance Miller's code.
+       Reference images are provided in the ./inclined_exponential_images directory, as well as
+       the code ('hankelcode.c') used to generate them."""
     
     for inc_angle, scale_radius, scale_height, pos_angle in zip(image_inc_angles,image_scale_radii,
                                                                 image_scale_heights,image_pos_angles):
