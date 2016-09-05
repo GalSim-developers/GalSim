@@ -38,7 +38,7 @@ New features introduced in this demo:
 - nfw = galsim.NFWHalo(mass, conc, z, omega_m, omega_lam)
 - g1,g2 = nfw.getShear(pos, z)
 - mag = nfw.getMagnification(pos, z)
-- distdev = galsim.DistDeviate(rng, function, x_min, x_max)
+- dist = galsim.DistDeviate(rng, function, x_min, x_max)
 - pos = bounds.trueCenter()
 - wcs = galsim.UVFunction(ufunc, vfunc, xfunc, yfunc, origin)
 - wcs.toWorld(profile, image_pos)
@@ -102,9 +102,10 @@ def main(argv):
     psf_trefoil1 = -0.02
     psf_trefoil2 = 0.04
 
-    gal_eta_rms = 0.3      # eta is defined as ln(a/b)
-    gal_hlr_min = 0.1      # arcsec
-    gal_hlr_max = 0.3      # arcsec
+    gal_r_min = 0.05       # arcsec
+    gal_r_max = 0.20       # arcsec
+    gal_h_over_r_min = 0.1 #
+    gal_h_over_r_max = 0.2 #
     gal_flux_min = 1.e4    # ADU
     gal_flux_max = 1.e6    # ADU
 
@@ -240,12 +241,14 @@ def main(argv):
         # For now, we just make an empty OutputCatalog object with the names and types of the
         # columns.
         names = [ 'object_id', 'halo_id',
-                  'flux', 'size', 'eta1', 'eta2', 'mu', 'redshift', 
-                  'shear.g1', 'shear.g2', 'pos.x', 'pos.y', 'image_pos.x', 'image_pos.y',
+                  'flux', 'radius', 'h_over_r', 'inclination.rad', 'theta.rad',
+                  'mu', 'redshift', 'shear.g1', 'shear.g2',
+                  'pos.x', 'pos.y', 'image_pos.x', 'image_pos.y',
                   'halo_mass', 'halo_conc', 'halo_redshift' ]
         types = [ int, int,
-                  float, float, float, float, float, float,
-                  float, float, float, float, float, float,
+                  float, float, float, float, float,
+                  float, float, float, float,
+                  float, float, float, float,
                   float, float, float ]
         truth_cat = galsim.OutputCatalog(names, types)
 
@@ -316,21 +319,49 @@ def main(argv):
             # probability distribution.  This distribution can be defined either as a functional
             # form as we do here, or as tabulated lists of x and p values, from which the 
             # function is interpolated.
-            distdev = galsim.DistDeviate(ud,
-                                         function = lambda x:x**-1.5,
-                                         x_min = gal_flux_min,
-                                         x_max = gal_flux_max)
-            flux = distdev()
+            flux_dist = galsim.DistDeviate(ud, function = lambda x:x**-1.5,
+                                           x_min = gal_flux_min,
+                                           x_max = gal_flux_max)
+            flux = flux_dist()
 
-            # Determine the random values for the galaxy:
-            hlr = ud() * (gal_hlr_max-gal_hlr_min) + gal_hlr_min
-            gd = galsim.GaussianDeviate(ud, sigma = gal_eta_rms)
-            eta1 = gd()  # Unlike g or e, large values of eta are valid, so no need to cutoff.
-            eta2 = gd()
+            # We introduce here another surface brightness profile, called InclinedExponential.
+            # It represents a typical 3D galaxy disk profile inclined at an arbitrary angle
+            # relative to face on.
+            #
+            #     inclinatin =  0 degrees corresponds to a face-on disk, which is equivalent to
+            #                             the regular Exponential profile.
+            #     inclinatin = 90 degrees corresponds to an edge-on disk.
+            #
+            # A random orientation corresponds to the inclination angle taking the probability
+            # distribution:
+            #
+            #     P(inc) = 0.5 sin(inc)
+            #
+            # so we again use a DistDeviate to generate these values.
+            inc_dist = galsim.DistDeviate(ud, function = lambda x: 0.5 * math.sin(x),
+                                          x_min=0, x_max=math.pi)
+            inclination = inc_dist() * galsim.radians
+
+            # The parameters scale_radius and scale_height give the scale distances in the
+            # 3D distribution:
+            #
+            #     I(R,z) = I_0 / (2 scale_height) * sech^2(z/scale_height) * exp(-r/scale_radius)
+            #
+            # These values can be given separately if desired.  However, it is often easier to
+            # give the ratio scale_h_over_r as an independent value, since the radius and height
+            # values are correlated, while h/r is approximately independent of h or r.
+            h_over_r = ud() * (gal_h_over_r_max-gal_h_over_r_min) + gal_h_over_r_min
+
+            radius = ud() * (gal_r_max-gal_r_min) + gal_r_min
+
+            # The inclination is around the x-axis, so we want to rotate the galaxy by a
+            # random angle.
+            theta = ud() * math.pi * 2. * galsim.radians
 
             # Make the galaxy profile with these values:
-            gal = galsim.Exponential(half_light_radius=hlr, flux=flux)
-            gal = gal.shear(eta1=eta1, eta2=eta2)
+            gal = galsim.InclinedExponential(scale_radius=radius, scale_h_over_r=h_over_r,
+                                             inclination=inclination, flux=flux)
+            gal = gal.rotate(theta)
 
             # Now apply the appropriate lensing effects for this position from 
             # the NFW halo mass.
@@ -396,9 +427,9 @@ def main(argv):
 
             # Add the truth information for this object to the truth catalog
             row = ( (first_obj_id + k), halo_id, 
-                    flux, hlr, eta1, eta2, nfw_mu, nfw_z_source,
-                    total_shear.g1, total_shear.g2, pos.x, pos.y,
-                    image_pos.x, image_pos.y,
+                    flux, radius, h_over_r, inclination.rad(), theta.rad(),
+                    nfw_mu, nfw_z_source, total_shear.g1, total_shear.g2,
+                    pos.x, pos.y, image_pos.x, image_pos.y,
                     mass, nfw_conc, nfw_z_halo )
             truth_cat.addRow(row)
 

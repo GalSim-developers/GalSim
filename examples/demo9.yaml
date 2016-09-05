@@ -33,6 +33,8 @@
 # New features introduced in this demo:
 #
 # - obj type : OpticalPSF (lam, diam, ..., trefoil1, trefoil2, nstruts, strut_thick, strut_angle)
+# - obj type : InclinedExponential (scale_radius, scale_h_over_r, inclination)
+# - angle type : Radians
 # - shear type : NFWHaloShear (redshift)
 # - float type : NFWHaloMagnification (redshift)
 # - float type : RandomDistribution(function, x_min, x_max)
@@ -86,9 +88,22 @@ gal :
     # rather than gal.shift as we used in demo4 and demo5.  The gal.shift field should be 
     # reserved for shifts of a few pixels or less, nor for setting the position of the
     # object in a large image.
-    
-    type : Exponential
-    half_light_radius : { type : Random , min : 0.1 , max : 0.3 }
+
+    # We introduce here another surface brightness profile, called InclidedExponential.
+    # It represents a typical 3D galaxy disk profile inclined at an arbitrary angle relative
+    # to face on.
+    #     inclination = 0 degrees corresponds to a face-on disk, which is equivalent to the
+    #                             regular Exponential profile.
+    #     inclination = 90 degrees corresponds to an edge-on disk.
+
+    type : InclinedExponential
+    scale_radius : { type : Random , min : 0.05 , max : 0.2 }
+
+    # You can specify either a scale_height value or the ratio height/radius using scale_h_over_r.
+    # The latter is probably the more typically useful value to specify, especially when the
+    # radius is a random variate.
+    scale_h_over_r : { type : Random , min : 0.1 , max : 0.2 }
+
     flux :
         # We draw the flux from a power law distribution with values from 1.e4 to 1.e6.
         # You can use any arbitrary function here, along with a min and max value,
@@ -100,14 +115,25 @@ gal :
         x_min : 1.0e4
         x_max : 1.0e6
 
-    ellip :
-        # The eta definition of shear is |eta| = ln(a/b) where a and b are (as usual)
-        # the semi-major and semi-minor axes.  This definition has the advantage that 
-        # it is well defined for all values from 0 to infinity, so we don't need to
-        # cut it off to avoid |e| > 1.
-        type : Eta1Eta2
-        eta1 : { type : RandomGaussian , sigma : 0.3 }
-        eta2 : { type : RandomGaussian , sigma : 0.3 }
+    inclination :
+        # The inclination is defined such that 0 corresponds to face on and 90 degrees
+        # corresponds to edge on.  The appropriate probability distribution that matches
+        # an isotropic distribution of orientations in the sky is P(theta) = 0.5 sin(theta).
+        type : Radians
+        theta :
+            type : RandomDistribution
+            # We are allowed to use math or numpy functions (either as e.g. numpy.sin or np.sin)
+            # in the definition of the function for a RandomDistribution.  This is true in
+            # general for places in GalSim where a string is evaluated...
+            function : "0.5 * math.sin(x)"
+            x_min : 0
+            # ... such as the Eval type.
+            x_max : { type : Eval, str : "math.pi" }
+
+    rotation:
+        # The InclidedExponential always inclines the galaxy around the x-axis.  We want it to
+        # be inclined around a random axis, so we rotate the galaxy by a random angle.
+        type : Random
 
     magnification :
         # For this demo, we use a model of an NFW halo for our magnification and shear.
@@ -418,9 +444,15 @@ output :
             # Most items will typically be given by their location in the config dict.
             # e.g. gal.flux accesses the calculated value of the galaxy flux.
             flux : gal.flux
-            size : gal.half_light_radius
-            eta1 : gal.ellip.eta1
-            eta2 : gal.ellip.eta2
+            radius : gal.scale_radius
+            h_over_r : gal.scale_h_over_r
+
+            # Angle values will be stored in radians and their name will have .rad appended to it
+            # to make it clear what the value means.  i.e. the columns in the output file for
+            # these two items will be inclination.rad and theta.rad.
+            inclination : gal.inclination
+            theta : gal.rotation
+
             mu : gal.magnification
             redshift : gal.redshift
 
