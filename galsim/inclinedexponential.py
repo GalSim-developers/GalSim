@@ -95,14 +95,19 @@ class InclinedExponential(GSObject):
         return self.SBProfile.getInclination()
 
     def getScaleRadius(self):
-        """Return the scale radius for this Sersic profile.
+        """Return the scale radius for this profile.
         """
         return self.SBProfile.getScaleRadius()
 
     def getScaleHeight(self):
-        """Return the scale height for this Sersic profile.
+        """Return the scale height for this profile.
         """
         return self.SBProfile.getScaleHeight()
+    
+    def getScaleHOverR(self):
+        """Return the scale height over scale radius for this profile.
+        """
+        return self.SBProfile.getScaleHeight()/self.SBProfile.getScaleRadius()
 
     @property
     def inclination(self): return self.getInclination()
@@ -110,6 +115,8 @@ class InclinedExponential(GSObject):
     def scale_radius(self): return self.getScaleRadius()
     @property
     def scale_height(self): return self.getScaleHeight()
+    @property
+    def scale_h_over_r(self): return self.getScaleHOverR()
 
     def __eq__(self, other):
         return ((isinstance(other, galsim.InclinedExponential) and
