@@ -68,6 +68,12 @@ namespace galsim {
         return static_cast<const SBInclinedExponentialImpl&>(*_pimpl).getScaleHeight();
     }
 
+    double SBInclinedExponential::getScaleHOverR() const
+    {
+        assert(dynamic_cast<const SBInclinedExponentialImpl*>(_pimpl.get()));
+        return static_cast<const SBInclinedExponentialImpl&>(*_pimpl).getScaleHOverR();
+    }
+
     // NB.  This function is virtually wrapped by repr() in SBProfile.cpp
     std::string SBInclinedExponential::SBInclinedExponentialImpl::serialize() const
     {
@@ -100,6 +106,7 @@ namespace galsim {
         _h0(scale_height),
         _flux(flux),
         _inv_r0(1./scale_radius),
+        _h0_over_r0(scale_height/scale_radius),
         _half_pi_h_sini_over_r(0.5*M_PI*scale_height*std::abs(inclination.sin())/scale_radius),
         _cosi(std::abs(inclination.cos())),
         _ksq_max(integ::MOCK_INF) // Start with infinite _ksq_max so we can use kValueHelper to

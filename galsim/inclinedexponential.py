@@ -107,7 +107,7 @@ class InclinedExponential(GSObject):
     def getScaleHOverR(self):
         """Return the scale height over scale radius for this profile.
         """
-        return self.SBProfile.getScaleHeight()/self.SBProfile.getScaleRadius()
+        return self.SBProfile.getScaleHOverR()
 
     @property
     def inclination(self): return self.getInclination()

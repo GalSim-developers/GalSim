@@ -75,8 +75,10 @@ namespace galsim {
         Angle getInclination() const { return _inclination; }
         /// @brief Returns the scale radius
         double getScaleRadius() const { return _r0; }
-        /// @brief Returns the scale radius
+        /// @brief Returns the scale height
         double getScaleHeight() const { return _h0; }
+        /// @brief Returns the scale height over scale radius
+        double getScaleHOverR() const { return _h0_over_r0; }
 
         // Overrides for better efficiency
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
@@ -95,6 +97,7 @@ namespace galsim {
         double _flux;        ///< Actual flux (may differ from that specified at the constructor).
 
         double _inv_r0;
+        double _h0_over_r0;
         double _half_pi_h_sini_over_r;
         double _cosi;
 
