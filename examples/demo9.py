@@ -328,9 +328,9 @@ def main(argv):
             # It represents a typical 3D galaxy disk profile inclined at an arbitrary angle
             # relative to face on.
             #
-            #     inclinatin =  0 degrees corresponds to a face-on disk, which is equivalent to
+            #     inclination =  0 degrees corresponds to a face-on disk, which is equivalent to
             #                             the regular Exponential profile.
-            #     inclinatin = 90 degrees corresponds to an edge-on disk.
+            #     inclination = 90 degrees corresponds to an edge-on disk.
             #
             # A random orientation corresponds to the inclination angle taking the probability
             # distribution:
