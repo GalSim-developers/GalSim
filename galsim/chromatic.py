@@ -108,6 +108,10 @@ class ChromaticObject(object):
     #   chromatic profile.
 
     def __init__(self, obj):
+        from .deprecated import depr
+        depr('__init__', 1.5, '',
+             "Please apply wavelength-dependent transformations directly to GSObjects "
+             "instead of passing through ChromaticObject().")
         self.separable = obj.separable
         self.interpolated = obj.interpolated
         self.wave_list = obj.wave_list
@@ -1267,6 +1271,11 @@ class Chromatic(ChromaticObject):
                     in nanometers should work.
     """
     def __init__(self, gsobj, SED):
+        from .deprecated import depr
+        depr("Chromatic", 1.5, '',
+             "Construct products of GSObjects and SEDs through multiplication: "
+             "`chrom_obj = gsobj * sed.`")
+
         flux = gsobj.getFlux()
         self.SED = SED * flux
         self._norm = None
