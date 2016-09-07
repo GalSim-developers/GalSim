@@ -1194,7 +1194,7 @@ def test_separable_ChromaticSum():
         raise AssertionError("failed to identify inseparable ChromaticSum")
     # check that its objlist contains a separable Chromatic and a separable ChromaticSum
     types = dict((o.__class__, o) for o in gal.objlist)
-    if galsim.Chromatic not in types or galsim.ChromaticSum not in types:
+    if galsim.ChromaticTransformation not in types or galsim.ChromaticSum not in types:
         raise AssertionError("failed to process list of objects with repeated SED")
 
     # check that drawing the profile works as expected

@@ -1393,7 +1393,11 @@ class ChromaticTransformation(ChromaticObject):
 
             self._jac = new_jac(obj._jac, jac)
             self._offset = new_offset(jac, obj._offset, offset)
-            self._flux_ratio = _fn_prod(obj._flux_ratio, flux_ratio)
+            # if obj._flux_ratio is an SED, then just make a new SED.
+            if isinstance(obj._flux_ratio, galsim.SED):
+                self._flux_ratio = obj._flux_ratio * flux_ratio
+            else:
+                self._flux_ratio = _fn_prod(obj._flux_ratio, flux_ratio)
 
         else:
             self.original = obj
