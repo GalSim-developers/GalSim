@@ -1160,3 +1160,23 @@ def functionize(f):
                 return f(*new_args, **new_kwargs)
             return fff
     return ff
+
+def math_eval(str, other_modules=()):
+    """Evaluate a string that may include numpy, np, or math commands.
+
+    @param str              The string to evaluate
+    @param other_modules    Other modules in addition to numpy, np, math to import as well.
+                            Should be given as a list of strings.  [default: None]
+
+    @returns Whatever the string evaluates to.
+    """
+    # Python 2 and 3 have a different syntax for exec with globals() dict.
+    # The exec_ function lets us use the Python 3 syntax even in Python 2.
+    from future.utils import exec_
+    gdict = globals().copy()
+    exec_('import numpy', gdict)
+    exec_('import numpy as np', gdict)
+    exec_('import math', gdict)
+    for m in other_modules:
+        exec_('import ' + m, gdict)
+    return eval(str, gdict)

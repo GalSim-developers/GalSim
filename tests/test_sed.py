@@ -49,6 +49,9 @@ def test_SED_basic():
         galsim.SED(spec='200', flux_type='flambda', wave_type='nanometers'),
         galsim.SED('200', wave_type='nanometers', flux_type='flambda'),
         galsim.SED('200', 'nm', 'flambda'),
+        galsim.SED('np.sqrt(4.e4)', 'nm', 'flambda'),
+        galsim.SED('numpy.sqrt(4.e4)', 'nm', 'flambda'),
+        galsim.SED('math.sqrt(4.e4)', 'nm', 'flambda'),
         # 200 erg/nm / 10 A/nm = 20 erg/A
         galsim.SED(spec='20', flux_type='flambda', wave_type='Angstroms'),
         # 200 erg/nm / (hc/w erg/photon) = 200 w/hc photons/nm
