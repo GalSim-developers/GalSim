@@ -68,12 +68,6 @@ namespace galsim {
         return static_cast<const SBInclinedExponentialImpl&>(*_pimpl).getScaleHeight();
     }
 
-    double SBInclinedExponential::getScaleHOverR() const
-    {
-        assert(dynamic_cast<const SBInclinedExponentialImpl*>(_pimpl.get()));
-        return static_cast<const SBInclinedExponentialImpl&>(*_pimpl).getScaleHOverR();
-    }
-
     // NB.  This function is virtually wrapped by repr() in SBProfile.cpp
     std::string SBInclinedExponential::SBInclinedExponentialImpl::serialize() const
     {
