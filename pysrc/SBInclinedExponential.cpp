@@ -46,7 +46,6 @@ namespace galsim {
                 .def("getInclination", &SBInclinedExponential::getInclination)
                 .def("getScaleRadius", &SBInclinedExponential::getScaleRadius)
                 .def("getScaleHeight", &SBInclinedExponential::getScaleHeight)
-                .def("getScaleHOverR", &SBInclinedExponential::getScaleHOverR)
                 .enable_pickling()
                 ;
         }

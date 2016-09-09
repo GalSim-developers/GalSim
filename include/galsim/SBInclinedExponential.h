@@ -72,9 +72,6 @@ namespace galsim {
         /// @brief Returns the scale height h0 of the disk profile
         double getScaleHeight() const;
 
-        /// @brief Returns the scale height over scale radius h0/r0 of the disk profile
-        double getScaleHOverR() const;
-
     protected:
 
         class SBInclinedExponentialImpl;
