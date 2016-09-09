@@ -159,6 +159,12 @@ def test_sanity():
         test_profile = galsim.InclinedExponential(inc_angle*galsim.radians, scale_radius,
                                                   scale_height, flux=flux)
         
+        # Check that h/r is properly given by the method and property for it
+        np.testing.assert_almost_equal(test_profile.scale_height/test_profile.scale_radius,
+                                       test_profile.scale_h_over_r)
+        np.testing.assert_almost_equal(test_profile.getScaleHeight()/test_profile.getScaleRadius(),
+                                       test_profile.getScaleHOverR())
+        
         # Rotate it by the position angle
         test_profile = test_profile.rotate(pos_angle*galsim.radians)
         
@@ -175,6 +181,7 @@ def test_sanity():
         centroid = test_profile.centroid()
         np.testing.assert_equal(centroid.x, 0.)
         np.testing.assert_equal(centroid.y, 0.)
+        
         
 @timer
 def test_k_limits():
