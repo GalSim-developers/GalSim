@@ -33,18 +33,58 @@ import galsim
 class ChromaticObject(object):
     """Base class for defining wavelength-dependent objects.
 
-    This class primarily serves as the base class for chromatic subclasses, including Chromatic,
-    ChromaticSum, and ChromaticConvolution.  See the docstrings for these classes for more details.
+    This class primarily serves as the base class for chromatic subclasses.  See the docstrings for
+    subclasses for more details.
 
     Initialization
     --------------
 
-    A ChromaticObject can also be instantiated directly from an existing GSObject.
-    In this case, the newly created ChromaticObject will act nearly the same way the original
-    GSObject works, except that it has access to the ChromaticObject methods described below;
-    especially expand(), dilate() and shift().
+    A ChromaticObject can be instantiated from an existing GSObject by applying a
+    wavelength-dependent transformation.  E.g.,
 
-    @param gsobj  The GSObject to be chromaticized.
+    >>> gsobj = galsim.Gaussian(fwhm=1)
+    >>> chrom_obj = gsobj.dilate(lambda wave: 1.01**wave)
+
+    Another way to instantiate a ChromaticObject from a GSObject is to multiply by an SED.  This can
+    be useful to consistently generate the same galaxy observed through different filters, or, with
+    ChromaticSum, to construct multi-component galaxies, each component with a different SED.  For
+    example, a bulge+disk galaxy could be constructed:
+
+    >>> bulge_SED = user_function_to_get_bulge_spectrum()
+    >>> disk_SED = user_function_to_get_disk_spectrum()
+    >>> bulge_mono = galsim.DeVaucouleurs(half_light_radius=1.0)
+    >>> disk_mono = galsim.Exponential(half_light_radius=2.0)
+    >>> bulge = bulge_mono * bulge_SED
+    >>> disk = disk_mono * disk_SED
+    >>> gal = bulge + disk
+
+    The SEDs above describe the flux in photons/nm/cm^2/s of an object, possibly normalized with
+    either the sed.withFlux(bandpass) or sed.withMagnitude(bandpass) methods (see the docstrings in
+    the SED class for details about these and other normalization options).  Note that the `flux`
+    attribute of the multiplied GSObject is accounted for in the newly constructed ChromaticObject's
+    normalization.  I.e., the following are equivalent:
+
+    >>> chrom_obj = (sed * 3.0) * gsobj
+    >>> chrom_obj2 = sed * (gsobj * 3.0)
+
+    Subclasses that instantiate a ChromaticObject directly also exist, such as ChromaticAtmosphere.
+    Even in this case, however, the underlying implementation always eventually wraps a GSObject.
+
+    ChromaticObjects can generally be sorted into two distinct types: those with a non-trivial .SED
+    attribute, and those for which .SED=None.  The former can conceptually be thought of as having
+    dimensions of [photons/wavelength-interval/area/time/solid-angle] (usually this is appropriate
+    for representing stars or galaxies), while the latter have dimensions of [1/solid-angle] (this
+    is more appropriate for representing a wavelength-dependent PSF).  These two classes of
+    ChromaticObjects have different restrictions associated with them.  For example, only
+    ChromaticObjects with a defined SED can be drawn using chrom_obj.drawImage(bandpass, ...).  Only
+    ChromaticObjects of the same type can be added together, and at most one ChromaticObject with an
+    SED can be part of a ChromaticConvolution.
+
+    Multiplying a ChromaticObject with .SED = None by an SED produces a new ChromaticObject with its
+    SED attribute appropriately set (though note that the new object's SED may not be equal to the
+    SED being multiplied by since the original ChromaticObject may not have unit normalization.)
+
+    Note that
 
     Methods
     -------
@@ -65,12 +105,6 @@ class ChromaticObject(object):
 
     There is no withFlux() method, since this is in general undefined for a chromatic object.
     See the SED class for how to set a chromatic flux density function.
-
-    The transformation methods: transform(), expand(), dilate(), magnify(), shear(), rotate(),
-    lens(), and shift() can now accept functions of wavelength as arguments, as opposed to the
-    constants that GSObjects are limited to.  These methods can be used to effect a variety of
-    physical chromatic effects, such as differential chromatic refraction, chromatic seeing, and
-    diffraction-limited wavelength-dependence.
 
     The drawImage() method draws the object as observed through a particular bandpass, so the
     function parameters are somewhat different.  See the docstring for ChromaticObject.drawImage()
@@ -106,6 +140,8 @@ class ChromaticObject(object):
     #   wavelengths at which SED is explicitly defined via a LookupTable.  These are the wavelengths
     #   that will be used (in addition to those in bandpass.wave_list) when drawing an image of the
     #   chromatic profile.
+    # - .interpolated is a boolean indicating whether any part of the object hierarchy includes an
+    #   InterpolatedChromaticObject.
 
     def __init__(self, obj):
         from .deprecated import depr
@@ -405,11 +441,11 @@ class ChromaticObject(object):
 
     def __mul__(self, flux_ratio):
         """Scale the flux of the object by the given flux ratio, which may be an SED, a float, or
-        a univariate callable function (of wavelength) that returns a float.
+        a univariate callable function (of wavelength in nanometers) that returns a float.
 
         The normalization of ChromaticObjects is tracked through either the .SED attribute or the
-        ._norm attribute, depending on whether the ChromaticObject units are
-        photons/nm/cm^2/s/arcsec^2 or 1/arcsec^2, respectively.
+        ._norm attribute, depending on whether the ChromaticObject dimensions are
+        [photons/wavelength-interval/area/time/solid-angle] or [1/solid-angle], respectively.
 
         If flux_ratio is an SED, then self.SED must be None (essentially because you can't multiply
         two SEDs together and dimensionally get an SED as a result).  The returned object will have
@@ -1227,48 +1263,14 @@ class ChromaticAtmosphere(ChromaticObject):
 class Chromatic(ChromaticObject):
     """Construct chromatic versions of galsim GSObjects.
 
-    This class attaches an SED to a galsim GSObject.  This is useful to consistently generate
-    the same galaxy observed through different filters, or, with the ChromaticSum class, to
-    construct multi-component galaxies, each with a different SED. For example, a bulge+disk galaxy
-    could be constructed:
-
-        >>> bulge_SED = user_function_to_get_bulge_spectrum()
-        >>> disk_SED = user_function_to_get_disk_spectrum()
-        >>> bulge_mono = galsim.DeVaucouleurs(half_light_radius=1.0)
-        >>> disk_mono = galsim.Exponential(half_light_radius=2.0)
-        >>> bulge = galsim.Chromatic(bulge_mono, bulge_SED)
-        >>> disk = galsim.Chromatic(disk_mono, disk_SED)
-        >>> gal = bulge + disk
-
-    Some syntactic sugar available for creating Chromatic instances is simply to multiply
-    a GSObject instance by an SED instance.  Thus the last three lines above are equivalent to:
-
-        >>> gal = bulge_mono * bulge_SED + disk_mono * disk_SED
-
-    The SED is usually specified as a galsim.SED object, though any callable that returns
-    spectral density in photons/nanometer as a function of wavelength in nanometers should work.
-
-    Typically, the SED describes the flux in photons per nanometer of an object with a particular
-    magnitude, possibly normalized with either the method sed.withFlux() or sed.withMagnitude()
-    (see the docstrings in the SED class for details about these and other normalization options).
-    Then the `flux` attribute of the GSObject should just be the _relative_ flux scaling of the
-    current object compared to that normalization.  This implies (at least) two possible
-    conventions.
-    1. You can normalize the SED to have unit flux with `sed = sed.withFlux(1.0, bandpass)`. Then
-    the `flux` of each GSObject would be the actual flux in photons when observed in the given
-    bandpass.
-    2. You can leave the object flux as 1 (the default for most types when you construct them) and
-    set the flux in the SED with `sed = sed.withFlux(flux, bandpass)`.  Then if the object had
-    `flux` attribute different from 1, it would just refer to the factor by which that particular
-    object is brighter than the value given in the normalization command.
+    This class was deprecated in GalSim v1.5.  Please see the ChromaticObject docstring for
+    information on instantiating ChromaticObjects.
 
     Initialization
     --------------
 
     @param gsobj    A GSObject instance to be chromaticized.
-    @param SED      Typically an SED object, though any callable that returns
-                    spectral density in photons/nanometer as a function of wavelength
-                    in nanometers should work.
+    @param SED      An SED object.
     """
     def __init__(self, gsobj, SED):
         from .deprecated import depr

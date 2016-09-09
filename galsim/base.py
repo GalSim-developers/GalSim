@@ -260,8 +260,6 @@ class GSObject(object):
 
         You can also multiply by an SED, which will create a ChromaticObject where the SED
         acts like a wavelength-dependent `flux_ratio`.
-
-        obj * sed is equivalent to galsim.Chromatic(obj, sed)
         """
         return self.withScaledFlux(other)
 
@@ -581,7 +579,8 @@ class GSObject(object):
 
         It creates a new object that has the same profile as the original, but with the
         surface brightness at every location rescaled such that the total flux will be
-        the given value.
+        the given value.  Note that if `flux` is an `SED`, the return value will be a
+        `ChromaticObject` with specified SED.
 
         @param flux     The new flux for the object.
 
@@ -597,7 +596,8 @@ class GSObject(object):
         getFlux().  Indeed, withFlux() is implemented in terms of this one and getFlux().
 
         It creates a new object that has the same profile as the original, but with the
-        surface brightness at every location scaled by the given amount.
+        surface brightness at every location scaled by the given amount.  If `flux_ratio` is an SED,
+        then the returned object is a `ChromaticObject` with an SED multiplied by obj.getFlux().
 
         An equivalent, and usually simpler, way to effect this scaling is
 
@@ -630,6 +630,10 @@ class GSObject(object):
         See magnify() for a version that applies a scale factor to the area while preserving surface
         brightness.
 
+        If `scale` is callable, it will be interpretted as a function of wavelength in nanometers.
+        The return value will then be a `ChromaticObject` with the given wavelength-dependent
+        scaling.
+
         @param scale    The factor by which to scale the linear dimension of the object.
 
         @returns the expanded object.
@@ -659,6 +663,10 @@ class GSObject(object):
         See expand() and magnify() for versions that preserve surface brightness, and thus
         changes the flux.
 
+        If `scale` is callable, it will be interpretted as a function of wavelength in nanometers.
+        The return value will then be a `ChromaticObject` with the given wavelength-dependent
+        scaling.
+
         @param scale    The linear rescaling factor to apply.
 
         @returns the dilated object.
@@ -681,6 +689,10 @@ class GSObject(object):
         See expand() for a version that applies a linear scale factor while preserving surface
         brightness.
 
+        If `mu` is callable, it will be interpretted as a function of wavelength in nanometers.
+        The return value will then be a `ChromaticObject` with the given wavelength-dependent
+        magnification.
+
         @param mu   The lensing magnification to apply.
 
         @returns the magnified object.
@@ -702,6 +714,10 @@ class GSObject(object):
         The shear() method precisely preserves the area.  To include a lensing distortion with
         the appropriate change in area, either use shear() with magnify(), or use lens(), which
         combines both operations.
+
+        If the input to this method is a single callable object, or a callable `shear=` keyword
+        argument, it will be interpretted as a function of wavelength in nanometers.  The return
+        value will then be a `ChromaticObject` with the given wavelength-dependent shear.
 
         @param shear    The Shear to be applied. Or, as described above, you may instead supply
                         parameters do construct a shear directly.  eg. `obj.shear(g1=g1,g2=g2)`.
@@ -744,6 +760,10 @@ class GSObject(object):
         halo.  The magnification determines the rescaling factor for the object area and flux,
         preserving surface brightness.
 
+        If any of `g1`, `g2`, or `mu` are callable, they will be interpretted as a function of
+        wavelength in nanometers.  The return value will then be a `ChromaticObject` with the given
+        wavelength-dependent lensing.
+
         @param g1       First component of lensing (reduced) shear to apply to the object.
         @param g2       Second component of lensing (reduced) shear to apply to the object.
         @param mu       Lensing magnification to apply to the object.  This is the factor by which
@@ -765,6 +785,10 @@ class GSObject(object):
 
     def rotate(self, theta):
         """Rotate this object by an Angle `theta`.
+
+        If `theta` is a callable object, it will be interpretted as function of wavelength in
+        nanometers.  The return value will then be a `ChromaticObject` with the given
+        wavelength-dependent rotation.
 
         @param theta    Rotation angle (Angle object, +ve anticlockwise).
 
@@ -810,6 +834,10 @@ class GSObject(object):
 
             >>> prof *= 1./abs(dudx*dvdy - dudy*dvdx)
 
+        If any of `dudx`, `dudy`, `dvdx`, or `dvdy` are callable objects, then they will be
+        interpretted as functions of wavelength in nanometers.  The return value will then be a
+        ChromaticObject with given wavelength-dependent transformation.
+
         @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dvdx     dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
@@ -840,7 +868,7 @@ class GSObject(object):
     def shift(self, *args, **kwargs):
         """Create a version of the current object shifted by some amount in real space.
 
-        After this call, the caller's type will be a GSObject.
+        After this call, the caller's type will be a GSObject or ChromaticObject.
         This means that if the caller was a derived type that had extra methods beyond
         those defined in GSObject (e.g. getSigma() for a Gaussian), then these methods
         are no longer available.
@@ -862,6 +890,10 @@ class GSObject(object):
         Note: if you want to shift the object by a set number (or fraction) of pixels in the
         drawn image, you probably want to use the `offset` parameter of `drawImage` rather than
         this method.
+
+        If any of the input parameters are callable objects, they will be interpretted as functions
+        of wavelength in nanometers.  The return value will then be a ChromaticObject with given
+        wavelength-dependent shift.
 
         @param dx       Horizontal shift to apply.
         @param dy       Vertical shift to apply.
@@ -1163,7 +1195,7 @@ class GSObject(object):
         indicating the exposure time in s, and `gain` which converts between photons and ADU.
         Normally, the flux of the object should be equal to the sum of all the pixel values in the
         image divided by (exptime * area * gain), less some small amount of flux that may fall off
-        the  edge of the image (assuming you don't use `method='sb'`).  Note that normally, the gain
+        the edge of the image (assuming you don't use `method='sb'`).  Note that normally, the gain
         of a CCD is in electrons/ADU, but in GalSim, we fold the quantum efficiency into the gain as
         well, so the units are photons/ADU.
 

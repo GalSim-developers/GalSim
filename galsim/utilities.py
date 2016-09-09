@@ -1132,7 +1132,7 @@ def functionize(f):
 
     Note that you can also use python's decorator syntax:
 
-    >>> @decorate_scal_or_univar
+    >>> @functionize
     >>> def f(x, y):
     ...     return x + y
 

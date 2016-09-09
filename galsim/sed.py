@@ -65,8 +65,8 @@ class SED(object):
 
     The argument `flux_type` specifies the type of spectral density and must be one of:
     1. 'flambda':  `spec` units are erg/nm/cm^2/s or erg/Angstrom/cm^2/s (according to wave_type)
-    2. 'fnu':      `spec` is proportional to erg/Hz/cm^2/s
-    3. 'fphotons': `spec` is proportional to photons/nm/cm^2/s or photons/Angstrom/cm^2/s
+    2. 'fnu':      `spec` units are erg/Hz/cm^2/s
+    3. 'fphotons': `spec` units are photons/nm/cm^2/s or photons/Angstrom/cm^2/s
                    (according to wave_type)
 
     Note that the `wave_type` and `flux_type` parameters do not propagate into other methods of
@@ -245,9 +245,9 @@ class SED(object):
         if isinstance(other, galsim.SED):
             raise TypeError("Cannot multiply two SEDs.")
 
-        # Product of SED and achromatic GSObject is a `Chromatic`.
+        # Product of SED and achromatic GSObject is a `ChromaticTransformation`.
         if isinstance(other, galsim.GSObject):
-            return galsim.Chromatic(other, self)
+            return galsim.Transform(other, flux_ratio=self)
 
         # Product of SED and Bandpass is (filtered) SED.  The `redshift` attribute is retained.
         if isinstance(other, galsim.Bandpass):

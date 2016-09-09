@@ -42,7 +42,8 @@ class Bandpass(object):
     Outside of the wavelength interval between `blue_limit` and `red_limit`, the throughput is
     returned as zero, regardless of the `throughput` input parameter.
 
-    Bandpasses may be multiplied by other Bandpasses, functions, or scalars.
+    Bandpasses may be multiplied by other Bandpasses, functions, scalars, or SEDs.  The product of a
+    Bandpass with an SED is a new SED.
 
     The Bandpass effective wavelength is stored in the python property `effective_wavelength`. We
     use throughput-weighted average wavelength (which is independent of any SED) as our definition
@@ -290,7 +291,7 @@ class Bandpass(object):
         else:
             tp = lambda w: self.func(w) / other
 
-        # Note that attributes .zeropoint gets reset by __div__
+        # Note that .zeropoint attribute gets reset by __div__
         return Bandpass(tp, wave_type, self.blue_limit, self.red_limit, _wave_list=self.wave_list)
 
     def __truediv__(self, other):
