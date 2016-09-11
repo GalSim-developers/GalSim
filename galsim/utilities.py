@@ -1156,7 +1156,7 @@ def functionize(f):
                 new_kwargs = dict([(k, v)
                                    if not hasattr(v, '__call__')
                                    else (k, v(*inner_args, **inner_kwargs))
-                                   for k, v in kwargs.iteritems()])
+                                   for k, v in iteritems(kwargs)])
                 return f(*new_args, **new_kwargs)
             return fff
     return ff

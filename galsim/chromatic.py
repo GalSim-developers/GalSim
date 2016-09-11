@@ -1339,7 +1339,7 @@ class ChromaticTransformation(ChromaticObject):
     @param gsparams         An optional GSParams argument.  See the docstring for GSParams for
                             details. [default: None]
     """
-    def __init__(self, obj, jac=np.identity(2), offset=(0,0), flux_ratio=1., gsparams=None):
+    def __init__(self, obj, jac=np.identity(2), offset=(0.,0.), flux_ratio=1., gsparams=None):
         if isinstance(offset, galsim.PositionD) or isinstance(offset, galsim.PositionI):
             offset = (offset.x, offset.y)
         if not hasattr(jac,'__call__'):
@@ -1688,7 +1688,7 @@ class ChromaticSum(ChromaticObject):
         # ChromaticSum is separable.
         self.separable = (len(self.objlist) == 0 and len(norm_dict) == 1)
         if self.separable:
-            the_one_norm = norm_dict.keys()[0]  # Could be either an SED or a _norm function.
+            the_one_norm = list(norm_dict)[0]  # Could be either an SED or a _norm function.
             self.objlist = norm_dict[the_one_norm]
             if isSEDed:
                 # Since we know that the chromatic objects' SEDs already include all relevant
