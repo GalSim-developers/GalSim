@@ -42,7 +42,9 @@ cache:
     - $HOME/tmv-0.73
 
 install:
-    - pip install astropy==1.1.1 pyyaml future coveralls starlink-pyast
+    # Note: matplotlib is only required because starlink has an `import matplotlib` in their
+    # code, despite that not being a dependency.
+    - pip install astropy==1.1.1 pyyaml future coveralls starlink-pyast matplotlib
     - scons PREFIX=$HOME
     - scons install
 
