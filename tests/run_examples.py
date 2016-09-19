@@ -57,6 +57,23 @@ def in_examples(f):
 
 @timer
 @in_examples
+def test_demo1():
+    """Check that demo1 runs properly.
+    """
+    import demo1
+    import check_diff
+    print('Running demo1.py')
+    demo1.main([])
+    logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
+    logger = logging.getLogger('galsim')
+    config = galsim.config.ReadConfig('demo1.yaml', logger=logger)[0]
+    print('Running demo1.yaml')
+    galsim.config.Process(config, logger=logger)
+    # There is no assert at the end of this one, since they are not expected to be identical
+    # due to the lack of a specified seed.  This just checks for syntax errors.
+
+@timer
+@in_examples
 def test_demo2():
     """Check that demo2 makes the same image using demo2.py and demo2.yaml.
     """
@@ -70,7 +87,6 @@ def test_demo2():
     print('Running demo2.yaml')
     galsim.config.Process(config, logger=logger)
     assert check_diff.same('output/demo2.fits', 'output_yaml/demo2.fits')
-
 
 @timer
 @in_examples
@@ -246,11 +262,34 @@ def test_demo11():
     assert check_diff.same('output/tabulated_power_spectrum.fits.fz',
                            'output_yaml/tabulated_power_spectrum.fits.fz')
 
+@timer
+@in_examples
+def test_demo12():
+    """Check that demo12 runs properly.
+    """
+    import demo12
+    import check_diff
+    print('Running demo12.py')
+    demo12.main([])
+    # There is no demo12.yaml yet, so all this does is check for syntax errors in demo12.py.
+
+@timer
+@in_examples
+def test_demo13():
+    """Check that demo13 runs properly.
+    """
+    import demo13
+    import check_diff
+    print('Running demo13.py')
+    demo13.main([])
+    # There is no demo13.yaml yet, so all this does is check for syntax errors in demo13.py.
+
 
 if __name__ == "__main__":
     shutil.rmtree('../examples/output')
     shutil.rmtree('../examples/output_yaml')
     shutil.rmtree('../examples/output_json')
+    test_demo1()
     test_demo2()
     test_demo3()
     test_demo4()
@@ -261,3 +300,5 @@ if __name__ == "__main__":
     test_demo9()
     test_demo10()
     test_demo11()
+    test_demo12()
+    test_demo13()
