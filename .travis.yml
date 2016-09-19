@@ -13,10 +13,17 @@ before_install:
     - sudo apt-get -qq update
     - sudo apt-get install -y libboost-all-dev gfortran liblapack-dev libfftw3-dev python-dev python-numpy python-scipy python-nose
 
-    # To get coverage of the WCSToolsWCS class:
-    - sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe"
-    - sudo apt-get -qq update
-    - sudo apt-get install -y wcstools
+    # To get coverage of the WcsToolsWCS class:
+    #- sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe"
+    #- sudo apt-get -qq update
+    #- sudo apt-get install -y wcstools
+    # Hm. This didn't work, and I can't figure out why.  I get the following error:
+    #     Reading package lists... Done
+    #     Building dependency tree       
+    #     Reading state information... Done
+    #     E: Unable to locate package wcstools
+    # Perhaps someone with more familiarity with apt-get can figure this out, but for now, we'll
+    # live with lack of coverage of WcsToolsWCS.
 
     # Only get TMV if not cached
     - pushd $HOME
