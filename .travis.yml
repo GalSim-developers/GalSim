@@ -14,6 +14,7 @@ before_install:
     - sudo apt-get install -y libboost-all-dev gfortran liblapack-dev libfftw3-dev python-dev python-numpy python-scipy python-nose
 
     # To get coverage of the WCSToolsWCS class:
+    - sudo add-apt-repository universe
     - sudo apt-get install -y wcstools
 
     # Only get TMV if not cached
