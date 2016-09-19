@@ -1,0 +1,32 @@
+[run]
+branch = True
+
+omit =
+    # Tests here require the DM stack, so don't include them in travis coverage tests.
+    *lsst/*
+
+    # These are mostly still tested, but we don't really care if the tests are complete.
+    *deprecated/*
+
+# Without this, coverage misses anything that is only run in multiprocessing mode.
+concurrency = multiprocessing
+
+[report]
+# Regexes for lines to exclude from consideration
+exclude_lines =
+    # If you put this in a comment, you can manually exclude code from being covered.
+    pragma: no cover
+
+    # Don't complain about missing debug-only code:
+    def __repr__
+    if self\.debug
+
+    # Don't complain if tests don't hit defensive assertion code:
+    raise AssertionError
+    raise NotImplementedError
+
+    # Don't complain if non-runnable code isn't run:
+    if False:
+    if 0:
+    if __name__ == .__main__.:
+

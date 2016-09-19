@@ -39,6 +39,10 @@ script:
     - "nosetests run_examples.py --with-coverage --cover-package=galsim --with-doctest"
 
 after_success:
+    # The multiprocessing stages don't get properly incorporated into the .coverage file unless
+    # we do this command.
+    - coverage combine
+
     # If we start doing multiple python versions here, then only report coveralls for one of them.
     # Otherwise the reported results get weird.
     - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then coveralls; fi
