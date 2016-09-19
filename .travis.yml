@@ -12,12 +12,18 @@ before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
     - sudo apt-get -qq update
     - sudo apt-get install -y libboost-all-dev gfortran liblapack-dev libfftw3-dev python-dev python-numpy python-scipy python-nose
+
+    # To get coverage of the WCSToolsWCS class:
+    - sudo apt-get install -y wcstools
+
+    # Only get TMV if not cached
     - pushd $HOME
-    #Only get TMV if not cached
     - if ! test -d tmv-0.73 || ! test -f tmv-0.73/Sconstruct; then wget https://github.com/rmjarvis/tmv/archive/v0.73.tar.gz && tar -xf v0.73.tar.gz ; else echo Using cached TMV; fi
-    #But always install it to /usr/local
+    # But always install it to /usr/local
     - cd tmv-0.73 && sudo scons install DEBUG=True FLAGS="-O0"
     - popd
+
+    # Add ~/bin and ~/lib to the appropriate paths where scons install will put things.
     - export PATH=$HOME/bin:$PATH
     - export LD_LIBRARY_PATH=$HOME/lib:$LD_LIBRARY_PATH
 
@@ -27,7 +33,7 @@ cache:
     - $HOME/tmv-0.73
 
 install:
-    - pip install astropy==1.1.1 pyyaml future coveralls
+    - pip install astropy==1.1.1 pyyaml future coveralls starlink-pyast
     - scons PREFIX=$HOME
     - scons install
 
