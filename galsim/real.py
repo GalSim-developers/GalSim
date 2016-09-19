@@ -766,7 +766,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     return image
 
 def _parse_files_dirs(file_name, image_dir, dir, noise_dir, sample):
-    if image_dir is not None or noise_dir is not None:
+    if image_dir is not None or noise_dir is not None:  # pragma : no cover
         from .deprecated import depr
         if image_dir is not None:
             depr('image_dir', 1.4, 'dir')

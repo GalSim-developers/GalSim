@@ -251,7 +251,7 @@ class DistDeviate(_galsim.BaseDeviate):
         # lseed is an obsolete synonym for seed
         # I think this was the only place that the name lseed was actually used in the docs.
         # so we keep it for now for backwards compatibility.
-        if lseed is not None:
+        if lseed is not None: # pragma : no cover
             from galsim.deprecated import depr
             depr('lseed', 1.1, 'seed')
             seed = lseed

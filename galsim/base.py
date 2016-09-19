@@ -1195,7 +1195,7 @@ class GSObject(object):
         @returns the drawn Image.
         """
         # Check for obsolete dx parameter
-        if dx is not None and scale is None:
+        if dx is not None and scale is None: # pragma : no cover
             from .deprecated import depr
             depr('dx', 1.1, 'scale')
             scale = dx
@@ -1385,7 +1385,7 @@ class GSObject(object):
         @returns the tuple of Image instances, `(re, im)` (created if necessary)
         """
         # Check for obsolete dk parameter
-        if dk is not None and scale is None:
+        if dk is not None and scale is None: # pragma : no cover
             from .deprecated import depr
             depr('dx', 1.1, 'scale')
             scale = dk
