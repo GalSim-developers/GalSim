@@ -1,4 +1,9 @@
 @mainpage
+[![Build Status](https://travis-ci.org/GalSim-developers/GalSim.svg?branch=master)](https://travis-ci.org/GalSim-developers/GalSim)
+[![Coverage Status](https://coveralls.io/repos/github/GalSim-developers/GalSim/badge.svg?branch=releases%2F1.4)](https://coveralls.io/github/GalSim-developers/GalSim?branch=master)
+[![Paper](https://img.shields.io/badge/astro--ph.IM-1407.7676-B31B1B.svg)](https://arxiv.org/abs/1407.7676)
+[![Paper](https://img.shields.io/badge/ADS-Rowe%20et%20al%2C%202015-B31B1B.svg)
+(http://adsabs.harvard.edu/abs/2015A%26C....10..121R)
 
 GalSim: The modular galaxy image simulation toolkit
 ===================================================
