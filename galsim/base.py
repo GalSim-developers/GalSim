@@ -1245,7 +1245,7 @@ class GSObject(object):
                 raise TypeError("The rng provided is not a BaseDeviate")
 
             # Check that either n_photons is set to something or flux is set to something
-            if n_photons == 0. and self.getFlux() == 1.:
+            if n_photons == 0. and self.getFlux() == 1.: # pragma : no cover
                 import warnings
                 msg = "Warning: drawImage for object with flux == 1, but n_photons == 0.\n"
                 msg += "This will only shoot a single photon (since flux = 1)."
