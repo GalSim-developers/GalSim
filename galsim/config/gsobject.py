@@ -181,7 +181,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         if issubclass(galsim.__dict__[type_name], galsim.GSObject):
             gsobject, safe = _BuildSimple(param, base, ignore, gsparams, logger)
         else:
-            TypeError("Input config type = %s is not a GSObject."%type_name)
+            raise TypeError("Input config type = %s is not a GSObject."%type_name)
     # Otherwise, it's not a valid type.
     else:
         raise NotImplementedError("Unrecognised config type = %s"%type_name)

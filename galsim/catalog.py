@@ -275,7 +275,7 @@ class Dict(object):
         if file_type == 'PICKLE':
             try:
                 import cPickle as pickle
-            except:
+            except ImportError:
                 import pickle
             with open(self.file_name, 'rb') as f:
                 self.dict = pickle.load(f)

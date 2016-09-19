@@ -261,7 +261,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
     stamp = config['stamp']
     stamp_type = stamp['type']
     if stamp_type not in valid_stamp_types:
-        raise AttributeErro("Invalid stamp.type=%s."%stamp_type)
+        raise AttributeError("Invalid stamp.type=%s."%stamp_type)
     builder = valid_stamp_types[stamp_type]
 
     # Add 1 to the seed here so the first object has a different rng than the file or image.

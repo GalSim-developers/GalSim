@@ -358,9 +358,10 @@ def UpdateNProc(nproc, ntot, config, logger=None):
                 logger.debug("ncpu = %d.",nproc)
         except KeyboardInterrupt:
             raise
-        except:
+        except Exception as e:
             if logger:
                 logger.warning("nproc <= 0, but unable to determine number of cpus.")
+                logger.warning("Caught error: %s",e)
                 logger.warning("Using single process")
             nproc = 1
 
