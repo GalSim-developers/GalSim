@@ -168,7 +168,7 @@ class COSMOSCatalog(object):
             raise ValueError("Cannot specify both the sample and file_name!")
 
         # Check for deprecated exclude_bad or exclude_fail args.
-        if exclude_bad is not None or exclude_fail is not None: # pragma : no cover
+        if exclude_bad is not None or exclude_fail is not None: # pragma: no cover
             from .deprecated import depr
             if exclude_bad is not None:
                 depr('exclude_bad', 1.4, 'exclusion_level')

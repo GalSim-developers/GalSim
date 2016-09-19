@@ -179,7 +179,7 @@ class SimpleGenerator:
     def __init__(self, obj): self._obj = obj
     def __call__(self): return self._obj
 
-class AttributeDict(object): # pragma : no cover
+class AttributeDict(object): # pragma: no cover
     """Dictionary class that allows for easy initialization and refs to key values via attributes.
 
     NOTE: Modified a little from Jim's bot.git AttributeDict class so that tab completion now works
@@ -460,7 +460,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=T
 # algorithm, since it keeps fewer sample locations for a given rel_err than the old algorithm.
 # On the other hand, the old algorithm can be quite a bit faster, being O(N), not O(N^2), so
 # we retain the old algorithm here in case we want to re-enable it for certain applications.
-def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False): # pragma : no cover
+def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False): # pragma: no cover
     """
     Remove items from a set of tabulated f(x) values so that the error in the integral is still
     accurate to a given relative accuracy.
@@ -565,7 +565,7 @@ def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False): # prag
     return newx, newf
 
 
-def _gammafn(x):  # pragma : no cover
+def _gammafn(x):  # pragma: no cover
     """
     This code is not currently used, but in case we need a gamma function at some point, it will be
     here in the utilities module.

@@ -201,7 +201,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
         if astropy.__version__ < '1.0.1':
             ctype1 = header.get('CTYPE1', 'RA---')
             ctype2 = header.get('CTYPE2', 'DEC--')
-            if ctype1.startswith('DEC--') and ctype2.startswith('RA---'):
+            if ctype1.startswith('DEC--') and ctype2.startswith('RA---'): # pragma: no cover
                 for key1, key2 in [ ('CTYPE1', 'CTYPE2'),
                                     ('CRVAL1', 'CRVAL2'),
                                     ('CDELT1', 'CDELT2'),
@@ -257,7 +257,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 xy = self._wcs.all_world2pix(rd, 1, ra_dec_order=True)[0]
-        else:
+        else: # pragma: no cover
             # This section is basically a copy of astropy.wcs's _all_world2pix function, but
             # simplified a bit to remove some features we don't need, and with corrections
             # to make it work correctly.
@@ -652,7 +652,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
 
 # I can't figure out how to get wcstools installed in the travis environment (cf. .travis.yml).
 # So until that gets resolved, we omit this class from the coverage report.
-class WcsToolsWCS(galsim.wcs.CelestialWCS): # pragma : no cover
+class WcsToolsWCS(galsim.wcs.CelestialWCS): # pragma: no cover
     """This WCS uses wcstools executables to perform the appropriate WCS transformations
     for a given FITS file.  It requires wcstools command line functions to be installed.
 

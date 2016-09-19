@@ -1195,7 +1195,7 @@ class GSObject(object):
         @returns the drawn Image.
         """
         # Check for obsolete dx parameter
-        if dx is not None and scale is None: # pragma : no cover
+        if dx is not None and scale is None: # pragma: no cover
             from .deprecated import depr
             depr('dx', 1.1, 'scale')
             scale = dx
@@ -1245,7 +1245,7 @@ class GSObject(object):
                 raise TypeError("The rng provided is not a BaseDeviate")
 
             # Check that either n_photons is set to something or flux is set to something
-            if n_photons == 0. and self.getFlux() == 1.: # pragma : no cover
+            if n_photons == 0. and self.getFlux() == 1.: # pragma: no cover
                 import warnings
                 msg = "Warning: drawImage for object with flux == 1, but n_photons == 0.\n"
                 msg += "This will only shoot a single photon (since flux = 1)."
@@ -1385,7 +1385,7 @@ class GSObject(object):
         @returns the tuple of Image instances, `(re, im)` (created if necessary)
         """
         # Check for obsolete dk parameter
-        if dk is not None and scale is None: # pragma : no cover
+        if dk is not None and scale is None: # pragma: no cover
             from .deprecated import depr
             depr('dx', 1.1, 'scale')
             scale = dk
