@@ -650,7 +650,9 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
             galsim.fits.closeHDUList(hdu_list, fin)
 
 
-class WcsToolsWCS(galsim.wcs.CelestialWCS):
+# I can't figure out how to get wcstools installed in the travis environment (cf. .travis.yml).
+# So until that gets resolved, we omit this class from the coverage report.
+class WcsToolsWCS(galsim.wcs.CelestialWCS): # pragma : no cover
     """This WCS uses wcstools executables to perform the appropriate WCS transformations
     for a given FITS file.  It requires wcstools command line functions to be installed.
 
