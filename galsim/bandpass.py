@@ -218,7 +218,7 @@ class Bandpass(object):
 
     def __mul__(self, other):
         # Watch out for 4 types of `other`:
-        # 1.  SED: delgate to SED.__mul__(bandpass)
+        # 1.  SED: delegate to SED.__mul__(bandpass)
         # 2.  Bandpass: return a Bandpass, but carefully propagate blue/red limit and wave_list.
         # 3.  Callable: return a Bandpass
         # 4.  Scalar: return a Bandpass
