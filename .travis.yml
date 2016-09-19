@@ -18,6 +18,8 @@ before_install:
     #But always install it to /usr/local
     - cd tmv-0.73 && sudo scons install DEBUG=True FLAGS="-O0"
     - popd
+    - export PATH=$HOME/bin:$PATH
+    - export LD_LIBRARY_PATH=$HOME/lib:$LD_LIBRARY_PATH
 
 cache:
     pip: true
@@ -26,7 +28,7 @@ cache:
 
 install:
     - pip install astropy==1.1.1 pyyaml future
-    - scons
+    - scons PREFIX=$HOME
     - scons install
 
 script:
