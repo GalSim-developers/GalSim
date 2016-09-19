@@ -1519,8 +1519,9 @@ def test_astropywcs():
             warnings.filterwarnings("ignore",category=RuntimeWarning)
             import astropy.wcs
             import scipy  # AstropyWCS constructor will do this, so check now.
-    except ImportError:
+    except ImportError as e:
         print('Unable to import astropy.wcs.  Skipping AstropyWCS tests.')
+        print('Caught ',e)
         return
 
     # These all work, but it is quite slow, so only test one of them for the regular unit tests.
