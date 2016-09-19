@@ -38,6 +38,14 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
+def remove_dir(dir_name):
+    """Remove a directory in ../examples
+    """
+    test_dir = os.path.dirname(__file__)
+    full_dir_name = os.path.join(test_dir, '../examples', dir_name)
+    if os.path.exists(full_dir_name):
+        shutil.rmtree(full_dir_name)
+
 def in_examples(f):
     """A decorator that lets the code run as though it were run in the examples directory.
     """
@@ -286,9 +294,9 @@ def test_demo13():
 
 
 if __name__ == "__main__":
-    shutil.rmtree('../examples/output')
-    shutil.rmtree('../examples/output_yaml')
-    shutil.rmtree('../examples/output_json')
+    remove_dir('output')
+    remove_dir('output_yaml')
+    remove_dir('output_json')
     test_demo1()
     test_demo2()
     test_demo3()
