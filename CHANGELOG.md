@@ -4,6 +4,7 @@ Changes from v1.4 to v1.5
 API Changes
 -----------
 
+- Simplified the return value of galsim.config.ReadConfig. (#580)
 
 
 Dependency Changes
