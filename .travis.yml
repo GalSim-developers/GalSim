@@ -27,7 +27,7 @@ cache:
     - $HOME/tmv-0.73
 
 install:
-    - pip install astropy==1.1.1 pyyaml future
+    - pip install astropy==1.1.1 pyyaml future coveralls
     - scons PREFIX=$HOME
     - scons install
 
