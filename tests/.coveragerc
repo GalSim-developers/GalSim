@@ -1,6 +1,8 @@
 [run]
 branch = True
 
+include = *galsim/*
+
 omit =
     # Tests here require the DM stack, so don't include them in travis coverage tests.
     *lsst/*
@@ -37,4 +39,3 @@ exclude_lines =
     if __name__ == .__main__.:
     except KeyboardInterrupt:
 
-show_missing = True
