@@ -40,7 +40,7 @@ def run_tests(target, source, env):
     # We only run nosetests if we found nosetests in the path.
     if env['NOSETESTS']:
         print 'Using nosetests from: ',env['NOSETESTS']
-        cmd = env['NOSETESTS']
+        cmd = env['NOSETESTS'] + ' test*.py'
         # Account for SIP on El Capitan
         cmd = PrependLibraryPaths(cmd,env)
         if env['NOSETESTSVERSION'] >= '1.1' and env.GetOption('num_jobs') > 1:
