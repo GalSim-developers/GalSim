@@ -74,6 +74,25 @@ def main(argv):
     datapath = os.path.abspath(os.path.join(path, "data/"))
     outpath = os.path.abspath(os.path.join(path, "output/"))
 
+    # Just use a few galaxies, to save time.  Note that we are going to put 4000 galaxy images into
+    # our big image, so if we have n_use=10, each galaxy will appear 400 times.  Users who want a
+    # more interesting image with greater variation in the galaxy population can change `n_use` to
+    # something larger (but it should be <=100, the number of galaxies in this small example
+    # catalog).  With 4000 galaxies in a 4k x 4k image with the WFIRST pixel scale, the effective
+    # galaxy number density is 74/arcmin^2.  This is not the number density that is expected for a
+    # sample that is so bright (I<23.5) but it makes the image more visually interesting.  One could
+    # think of it as what you'd get if you added up several images at once, making the images for a
+    # sample that is much deeper have the same S/N as that for an I<23.5 sample in a single image.
+    n_use = 10
+    n_tot = 4000
+
+    # quick and dirty command line parsing.
+    for var in argv:
+        if var.startswith('data='): datapath = var[5:]
+        if var.startswith('out='): outpath = var[4:]
+        if var.startswith('nuse='): n_use = int(var[5:])
+        if var.startswith('ntot='): n_tot = int(var[5:])
+
     # Make output directory if not already present.
     if not os.path.isdir(outpath):
         os.mkdir(outpath)
@@ -105,17 +124,6 @@ def main(argv):
     # want parametric galaxies that represent an I<23.5 sample.
     cat = galsim.COSMOSCatalog(cat_file_name, dir=dir, use_real=False)
     logger.info('Read in %d galaxies from catalog'%cat.nobjects)
-    # Just use a few galaxies, to save time.  Note that we are going to put 4000 galaxy images into
-    # our big image, so if we have n_use=10, each galaxy will appear 400 times.  Users who want a
-    # more interesting image with greater variation in the galaxy population can change `n_use` to
-    # something larger (but it should be <=100, the number of galaxies in this small example
-    # catalog).  With 4000 galaxies in a 4k x 4k image with the WFIRST pixel scale, the effective
-    # galaxy number density is 74/arcmin^2.  This is not the number density that is expected for a
-    # sample that is so bright (I<23.5) but it makes the image more visually interesting.  One could
-    # think of it as what you'd get if you added up several images at once, making the images for a
-    # sample that is much deeper have the same S/N as that for an I<23.5 sample in a single image.
-    n_use = 10
-    n_tot = 4000
 
     # Here we carry out the initial steps that are necessary to get a fully chromatic PSF.  We use
     # the getPSF() routine in the WFIRST module, which knows all about the telescope parameters

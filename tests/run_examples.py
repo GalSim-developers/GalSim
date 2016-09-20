@@ -289,7 +289,7 @@ def test_demo13():
     import demo13
     import check_diff
     print('Running demo13.py')
-    demo13.main([])
+    demo13.main(['nuse=3','ntot=100'])
     # There is no demo13.yaml yet, so all this does is check for syntax errors in demo13.py.
 
 @timer
