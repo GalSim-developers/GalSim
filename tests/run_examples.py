@@ -322,16 +322,18 @@ def test_des():
         assert check_diff.same('output/DECam_00154912_01_fitpsf_image.fits',
                                'output_yaml/DECam_00154912_01_fitpsf_image.fits')
 
-        config = galsim.config.ReadConfig('blend.yaml', logger=logger)[0]
-        galsim.config.Process(config, logger=logger)
-        config = galsim.config.ReadConfig('blendset.yaml', logger=logger)[0]
-        galsim.config.Process(config, logger=logger)
         config = galsim.config.ReadConfig('meds.yaml', logger=logger)[0]
         config['output']['nfiles'] = 1
         config['output']['nobjects'] = 100
         config['gal']['items'][0]['gal_type'] = 'parametric'
         config['input']['cosmos_catalog']['file_name'] = '../data/real_galaxy_catalog_23.5_example.fits'
         del config['input']['cosmos_catalog']['sample']
+        galsim.config.Process(config, logger=logger)
+        input_cosmos = config['input']['cosmos_catalog'] # Save example COSMOS catalog spec.
+        config = galsim.config.ReadConfig('blend.yaml', logger=logger)[0]
+        galsim.config.Process(config, logger=logger)
+        config = galsim.config.ReadConfig('blendset.yaml', logger=logger)[0]
+        config['input']['cosmos_catalog'] = input_cosmos
         galsim.config.Process(config, logger=logger)
 
     finally:
