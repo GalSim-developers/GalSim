@@ -269,7 +269,7 @@ class DES_PSFEx(object):
         # This brings if from image coordinates to world coordinates.
         if self.wcs:
             psf = self.wcs.toWorld(psf, image_pos=image_pos)
-        elif pixel_scale:
+        elif pixel_scale:  # pragma: no cover
             depr('pixel_scale',1.1,'wcs=PixelScale(pixel_scale) in the constructor for DES_PSFEx')
             psf = galsim.PixelScale(pixel_scale).toWorld(psf)
 
