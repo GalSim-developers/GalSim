@@ -317,7 +317,7 @@ class LoggerWrapper(object):
             self.logger.info(*args, **kwargs)
 
     def warning(self, *args, **kwargs):
-        if self.logger and self.logger.isEnabledFor(logging.WARN):
+        if self.logger and self.logger.isEnabledFor(logging.WARNING):
             self.logger.warning(*args, **kwargs)
 
     def error(self, *args, **kwargs):
