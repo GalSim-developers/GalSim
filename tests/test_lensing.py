@@ -103,13 +103,23 @@ def test_nfwhalo():
     kappa = halo.getConvergence((pos_x, pos_y), z_s)
     gamma1, gamma2 = halo.getShear((pos_x, pos_y), z_s, reduced=False)
     g1, g2 = halo.getShear((pos_x, pos_y), z_s, reduced=True)
+    mu = halo.getMagnification((pos_x, pos_y), z_s)
+    alt_g1, alt_g2, alt_mu = halo.getLensing((pos_x, pos_y), z_s)
 
     # check internal correctness:
     # g1 = gamma1/(1-kappa), and g2 = 0
-    np.testing.assert_array_equal(g1, gamma1/(1-np.array(kappa)),
+    np.testing.assert_array_equal(g1, gamma1/(1-kappa),
                                   err_msg="Computation of reduced shear g incorrect.")
     np.testing.assert_array_equal(g2, np.zeros_like(g2),
                                   err_msg="Computation of reduced shear g2 incorrect.")
+    np.testing.assert_array_equal(mu, 1./( (1-kappa)**2 - gamma1**2 - gamma2**2 ),
+                                  err_msg="Computation of magnification mu incorrect.")
+    np.testing.assert_array_equal(alt_g1, g1,
+                                  err_msg="getLensing returned wrong g1")
+    np.testing.assert_array_equal(alt_g2, g2,
+                                  err_msg="getLensing returned wrong g2")
+    np.testing.assert_array_equal(alt_mu, mu,
+                                  err_msg="getLensing returned wrong mu")
 
     do_pickle(halo)
 
