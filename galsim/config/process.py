@@ -67,14 +67,11 @@ def ReadYaml(config_file):
     (usually small) modifications to the base dict for each job.  See demo6.yaml, demo8.yaml and
     demo9.yaml in the GalSim/examples directory for example usage.
 
-    On output, base_config is the dict for the first document if there are multiple documents.
-    Then all_config is a list of all the other documents that should be joined with base_dict
-    for each job to be processed.  If there is only one document defined, base_dict will be
-    empty, and all_config will be a list of one dict, which is the one to use.
+    The return value will be a list of dicts, one dict for each job to be done.
 
     @param config_file      The name of the configuration file to read.
 
-    @returns (base_config, all_config)
+    @returns list of config dicts
     """
     import yaml
 
@@ -117,12 +114,11 @@ def ReadJson(config_file):
     """Read in a JSON configuration file and return the corresponding dicts.
 
     A JSON file only defines a single dict.  However to be parallel to the functionality of
-    ReadYaml, the output is base_config, all_config, where base_config is an empty dict,
-    and all_config is a list with a single item, which is the dict defined by the JSON file.
+    ReadYaml, the output is a list with a single item, which is the dict defined by the JSON file.
 
     @param config_file      The name of the configuration file to read.
 
-    @returns (base_config, all_config)
+    @returns [config_dict]
     """
     import json
 
@@ -563,8 +559,8 @@ def ProcessTemplate(config, logger=None):
         else:
             config_file = template_string
             field = None
-        base, all_config = ReadConfig(config_file, logger=logger)
-        if base != {} or len(all_config) != 1:
+        all_config = ReadConfig(config_file, logger=logger)
+        if len(all_config) != 1:
             raise RuntimeError("Template config file %s is not allowed to have multiple documents.",
                                config_file)
         # Copy over the template config into this one.
