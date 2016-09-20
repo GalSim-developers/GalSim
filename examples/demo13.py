@@ -86,12 +86,16 @@ def main(argv):
     n_use = 10
     n_tot = 4000
 
+    # Default is to use all filters.  Specify e.g. 'YJH' to only do Y106, J129, and H158.
+    use_filters = None
+
     # quick and dirty command line parsing.
     for var in argv:
         if var.startswith('data='): datapath = var[5:]
         if var.startswith('out='): outpath = var[4:]
         if var.startswith('nuse='): n_use = int(var[5:])
         if var.startswith('ntot='): n_tot = int(var[5:])
+        if var.startswith('filters='): use_filters = var[8:].upper()
 
     # Make output directory if not already present.
     if not os.path.isdir(outpath):
@@ -229,6 +233,10 @@ def main(argv):
     # Calculate the sky level for each filter, and draw the PSF and the galaxies through the
     # filters.
     for filter_name, filter_ in filters.items():
+        if use_filters is not None and filter_name[0] not in use_filters:
+            logger.info('Skipping filter {0}.'.format(filter_name))
+            continue
+
         logger.info('Beginning work for {0}.'.format(filter_name))
 
         # Drawing PSF.  Note that the PSF object intrinsically has a flat SED, so if we convolve it
