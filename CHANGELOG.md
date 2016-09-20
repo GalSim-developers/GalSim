@@ -15,6 +15,7 @@ Dependency Changes
 Bug Fixes
 ---------
 
+- Fixed an error in the magnification calculated by NFWHalo.getLensing(). (#580)
 - Fixed bug when whitening noise in images based on COSMOS training datasets
   using the config functionality. (#792)
 
