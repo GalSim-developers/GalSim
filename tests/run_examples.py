@@ -335,6 +335,30 @@ def test_des():
     finally:
         os.chdir(original_dir)
 
+@timer
+@in_examples
+def test_great3():
+    """Check that the great3 config files run properly.
+    """
+    import check_diff
+    original_dir = os.getcwd()
+    try:
+        os.chdir('great3')
+        new_dir = os.getcwd()
+        if new_dir not in sys.path:
+            sys.path.append(new_dir)
+        logging.basicConfig(format="%(message)s", level=logging.WARNING, stream=sys.stdout)
+        logger = logging.getLogger('galsim')
+        new_params = { 'output.nfiles' : 1, 'output.noclobber' : False, 'image.nx_tiles' : 1 }
+        for file_name in ['cgc.yaml', 'cgc_psf.yaml', 'cgc_faint.yaml',
+                          'rgc.yaml', 'rgc_psf.yaml']:
+            configs = galsim.config.ReadConfig(file_name, logger=logger)
+            print('Running ',file_name)
+            for config in configs:
+                galsim.config.Process(config, logger=logger, new_params=new_params)
+    finally:
+        os.chdir(original_dir)
+
 
 if __name__ == "__main__":
     remove_dir('output')
@@ -354,3 +378,4 @@ if __name__ == "__main__":
     test_demo12()
     test_demo13()
     test_des()
+    test_great3()
