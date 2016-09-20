@@ -821,7 +821,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                 # k is the index for the job that failed
                 if except_func is not None:
                     except_func(logger, proc, k, res, t)
-                if except_abort:
+                if except_abort or isinstance(res,KeyboardInterrupt):
                     for j in range(nproc):
                         p_list[j].terminate()
                     raise res
@@ -868,7 +868,8 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
                     tr = traceback.format_exc()
                     if except_func is not None:
                         except_func(logger, None, k, e, tr)
-                    if except_abort: raise
+                    if except_abort or isinstance(e,KeyboardInterrupt):
+                        raise
 
     # If there are any failures, then there will still be some Nones in the results list.
     # Remove them.
