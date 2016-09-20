@@ -328,8 +328,10 @@ def test_des():
         galsim.config.Process(config, logger=logger)
         config = galsim.config.ReadConfig('meds.yaml', logger=logger)[0]
         config['output']['nfiles'] = 1
-        config['output']['nobjects'] = 1000
+        config['output']['nobjects'] = 100
         config['gal']['items'][0]['gal_type'] = 'parametric'
+        config['input']['cosmos_catalog']['file_name'] = '../data/real_galaxy_catalog_23.5_example.fits'
+        del config['input']['cosmos_catalog']['sample']
         galsim.config.Process(config, logger=logger)
 
     finally:
@@ -349,11 +351,21 @@ def test_great3():
             sys.path.append(new_dir)
         logging.basicConfig(format="%(message)s", level=logging.WARNING, stream=sys.stdout)
         logger = logging.getLogger('galsim')
-        new_params = { 'output.nfiles' : 1, 'output.noclobber' : False, 'image.nx_tiles' : 1 }
-        for file_name in ['cgc.yaml', 'cgc_psf.yaml', 'cgc_faint.yaml',
+        # Some changes to speed up the run, since we mostly just want to check that all the
+        # template and reject features work properly, which doesn't require many galaxies.
+        p1 = { 'output.nfiles' : 1, 'output.noclobber' : False,
+               'image.nx_tiles' : 1, 'image.ny_tiles' : 20 }
+        p2 = p1.copy()
+        p2['input.cosmos_catalog.file_name'] = '../data/real_galaxy_catalog_23.5_example.fits'
+        p2['input.cosmos_catalog.sample']  = ''
+        for file_name in ['cgc.yaml', 'cgc_psf.yaml',
                           'rgc.yaml', 'rgc_psf.yaml']:
             configs = galsim.config.ReadConfig(file_name, logger=logger)
             print('Running ',file_name)
+            if 'psf' in file_name:
+                new_params = p1
+            else:
+                new_params = p2
             for config in configs:
                 galsim.config.Process(config, logger=logger, new_params=new_params)
     finally:
