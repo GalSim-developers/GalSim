@@ -198,10 +198,10 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
         # Older versions of astropy had trouble with files where the axes were swapped.
         # So fix them if necessary.  I know >= 1.0.1 works.  0.2.4 and 0.3.1 both fail.
         import astropy
-        if astropy.__version__ < '1.0.1':
+        if astropy.__version__ < '1.0.1':  # pragma: no cover
             ctype1 = header.get('CTYPE1', 'RA---')
             ctype2 = header.get('CTYPE2', 'DEC--')
-            if ctype1.startswith('DEC--') and ctype2.startswith('RA---'): # pragma: no cover
+            if ctype1.startswith('DEC--') and ctype2.startswith('RA---'):
                 for key1, key2 in [ ('CTYPE1', 'CTYPE2'),
                                     ('CRVAL1', 'CRVAL2'),
                                     ('CDELT1', 'CDELT2'),
@@ -222,7 +222,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
             # cf. https://github.com/astropy/astropy/pull/1463
             # This has been fixed for a while now, but leave in this workaround for old versions.
             ra, dec = self._wcs.all_pix2world(x1, y1, 1, ra_dec_order=True)
-        except AttributeError:
+        except AttributeError:  # pragma: no cover
             # If that failed, then we should be on version < 1.0.1, and the header should have
             # been fixed above by _fix_header.  So this should work correctly.
             ra, dec = self._wcs.all_pix2world(x1, y1, 1)

@@ -46,12 +46,12 @@ exclude_lines =
     if __name__ == .__main__.:
 
     # Don't complain about exceptional circumstances not under control of the test suite
-    except KeyboardInterrupt:
-    except IOError:
-    except OSError:
+    except KeyboardInterrupt
+    except IOError
+    except OSError
 
     # Or code for special cases of older versions of things.
-    except ImportError:
+    except ImportError
     if .*pyfits_version
 
     # These are usually for dealing with bad user input, so skip them too.
