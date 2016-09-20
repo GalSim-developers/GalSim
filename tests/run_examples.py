@@ -292,6 +292,49 @@ def test_demo13():
     demo13.main([])
     # There is no demo13.yaml yet, so all this does is check for syntax errors in demo13.py.
 
+@timer
+@in_examples
+def test_des():
+    """Check that draw_psf makes the same image using draw_psf.py and draw_psf.yaml.
+
+    Also run a few of the config files in the des directory to make sure they at least
+    run to completion without errors.
+    """
+    import check_diff
+    original_dir = os.getcwd()
+    try:
+        os.chdir('des')
+        new_dir = os.getcwd()
+        if new_dir not in sys.path:
+            sys.path.append(new_dir)
+        import draw_psf
+        print('Running draw_psf.py')
+        draw_psf.main(['last=1'])
+        logging.basicConfig(format="%(message)s", level=logging.WARNING, stream=sys.stdout)
+        logger = logging.getLogger('galsim')
+        configs = galsim.config.ReadConfig('draw_psf.yaml', logger=logger)
+        print('Running draw_psf.yaml')
+        for config in configs:
+            config['output']['nfiles'] = 1
+            galsim.config.Process(config, logger=logger)
+        assert check_diff.same('output/DECam_00154912_01_psfex_image.fits',
+                               'output_yaml/DECam_00154912_01_psfex_image.fits')
+        assert check_diff.same('output/DECam_00154912_01_fitpsf_image.fits',
+                               'output_yaml/DECam_00154912_01_fitpsf_image.fits')
+
+        config = galsim.config.ReadConfig('blend.yaml', logger=logger)[0]
+        galsim.config.Process(config, logger=logger)
+        config = galsim.config.ReadConfig('blendset.yaml', logger=logger)[0]
+        galsim.config.Process(config, logger=logger)
+        config = galsim.config.ReadConfig('meds.yaml', logger=logger)[0]
+        config['output']['nfiles'] = 1
+        config['output']['nobjects'] = 1000
+        config['gal']['items'][0]['gal_type'] = 'parametric'
+        galsim.config.Process(config, logger=logger)
+
+    finally:
+        os.chdir(original_dir)
+
 
 if __name__ == "__main__":
     remove_dir('output')
@@ -310,3 +353,4 @@ if __name__ == "__main__":
     test_demo11()
     test_demo12()
     test_demo13()
+    test_des()
