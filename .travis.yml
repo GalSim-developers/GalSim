@@ -36,10 +36,14 @@ before_install:
     - export PATH=$HOME/bin:$PATH
     - export LD_LIBRARY_PATH=$HOME/lib:$LD_LIBRARY_PATH
 
+    # Get the des data needed for the check_des test.
+    - if ! test -d examples/des/des_data || ! test -f examples/des/des_data/DECam_00154912_01.fits.fz; then wget http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz && tar xfz des_data.tar.gz -C examples/des; fi
+
 cache:
     pip: true
     directories:
     - $HOME/tmv-0.73
+    - examples/des/des_data
 
 install:
     # Note: matplotlib is only required because starlink has an `import matplotlib` in their
