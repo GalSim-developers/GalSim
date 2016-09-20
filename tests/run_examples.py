@@ -328,12 +328,14 @@ def test_des():
         config['gal']['items'][0]['gal_type'] = 'parametric'
         config['input']['cosmos_catalog']['file_name'] = '../data/real_galaxy_catalog_23.5_example.fits'
         del config['input']['cosmos_catalog']['sample']
+        config['input']['des_wcs']['bad_ccds'] = range(2,63)  # All but CCD 1
         galsim.config.Process(config, logger=logger)
         input_cosmos = config['input']['cosmos_catalog'] # Save example COSMOS catalog spec.
         config = galsim.config.ReadConfig('blend.yaml', logger=logger)[0]
         galsim.config.Process(config, logger=logger)
         config = galsim.config.ReadConfig('blendset.yaml', logger=logger)[0]
         config['input']['cosmos_catalog'] = input_cosmos
+        config['input']['des_psfex']['file_name']['num'] = 1
         galsim.config.Process(config, logger=logger)
 
     finally:
