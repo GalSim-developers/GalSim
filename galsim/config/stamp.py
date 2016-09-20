@@ -92,7 +92,7 @@ def BuildStamps(nobjects, config, obj_num=0,
             else: s0 = '%s: '%proc
             obj_num = jobs[k]['obj_num']
             logger.error(s0 + 'Exception caught when building stamp %d', obj_num)
-            #logger.error('%s',tr)
+            logger.warning('%s',tr)
             logger.error('Aborting the rest of this image')
 
     # Convert to the tasks structure we need for MultiProcess.
