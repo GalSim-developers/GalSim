@@ -34,6 +34,7 @@ exclude_lines =
     raise IndexError
     raise IOError
     raise KeyError
+    raise MemoryError
 
     # Don't complain about not hitting warning code
     if suppress_warnings is False:

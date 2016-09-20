@@ -1325,7 +1325,7 @@ class GSObject(object):
                 image.added_flux = prof.SBProfile.drawShoot(
                     imview.image, n_photons, uniform_deviate, gain, max_extra_noise,
                     poisson_flux, add_to_image)
-            except RuntimeError:
+            except RuntimeError:  # pragma: no cover
                 # Give some extra explanation as a warning, then raise the original exception
                 # so the traceback shows as much detail as possible.
                 import warnings

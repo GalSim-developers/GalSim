@@ -577,7 +577,7 @@ class OutputCatalog(object):
         # Depending on the version of pyfits, one of these should work:
         try:
             tbhdu = pyfits.BinTableHDU.from_columns(cols)
-        except:
+        except:  # pragma: no cover
             tbhdu = pyfits.new_table(cols)
         return tbhdu
 

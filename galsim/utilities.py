@@ -872,7 +872,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     orig = im_list[0].origin()
     img.setOrigin(orig)
     for im in im_list[1:]:
-        if not im.origin()==orig:
+        if not im.origin()==orig:  # pragma: no cover
             import warnings
             warnings.warn("Images in `im_list' have multiple values for origin. Assigning the \
             origin of the first Image instance in 'im_list' to the interleaved image.")
@@ -1015,7 +1015,7 @@ def lod_to_dol(lod, N=None):
                 out[k] = v[0]
             except TypeError:  # Value is not list-like, so broadcast it in its entirety.
                 out[k] = v
-            except:
+            except Exception:
                 raise "Cannot broadcast kwarg {0}={1}".format(k, v)
         yield out
 

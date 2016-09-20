@@ -259,7 +259,7 @@ class Aperture(object):
         else:  # Use geometric parameters.
             if pupil_plane_scale is not None:
                 # Check input scale and warn if looks suspicious.
-                if pupil_plane_scale > good_pupil_scale:
+                if pupil_plane_scale > good_pupil_scale:  # pragma: no cover
                     import warnings
                     ratio = good_pupil_scale / pupil_plane_scale
                     warnings.warn("Input pupil_plane_scale may be too large for good sampling.\n"
@@ -270,7 +270,7 @@ class Aperture(object):
                 pupil_plane_scale = good_pupil_scale
             if pupil_plane_size is not None:
                 # Check input size and warn if looks suspicious
-                if pupil_plane_size < good_pupil_size:
+                if pupil_plane_size < good_pupil_size:  # pragma: no cover
                     import warnings
                     ratio = good_pupil_size / pupil_plane_size
                     warnings.warn("Input pupil_plane_size may be too small for good focal-plane"
@@ -397,7 +397,7 @@ class Aperture(object):
             self.pupil_plane_size = self.pupil_plane_scale * self.npix
 
         # Check sampling interval and warn if it's not good enough.
-        if self.pupil_plane_scale > good_pupil_scale:
+        if self.pupil_plane_scale > good_pupil_scale:  # pragma: no cover
             import warnings
             ratio = self.pupil_plane_scale / good_pupil_scale
             warnings.warn("Input pupil plane image may not be sampled well enough!\n"
@@ -675,7 +675,7 @@ class PhaseScreenList(object):
             return cls(self._layers[index])
         elif isinstance(index, numbers.Integral):
             return self._layers[index]
-        else:
+        else:  # pragma: no cover
             msg = "{cls.__name__} indices must be integers"
             raise TypeError(msg.format(cls=cls))
 

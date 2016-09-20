@@ -331,7 +331,7 @@ def WriteMEDS(obj_list, file_name, clobber=True):
     try:
         object_data = pyfits.BinTableHDU.from_columns(cols)
         object_data.name = 'object_data'
-    except:
+    except:  # pragma: no cover
         object_data = pyfits.new_table(pyfits.ColDefs(cols))
         object_data.update_ext_name('object_data')
 
@@ -356,7 +356,7 @@ def WriteMEDS(obj_list, file_name, clobber=True):
     try:
         image_info = pyfits.BinTableHDU.from_columns(cols)
         image_info.name = 'image_info'
-    except:
+    except:  # pragma: no cover
         image_info = pyfits.new_table(pyfits.ColDefs(cols))
         image_info.update_ext_name('image_info')
 
@@ -388,7 +388,7 @@ def WriteMEDS(obj_list, file_name, clobber=True):
     try:
         metadata = pyfits.BinTableHDU.from_columns(cols)
         metadata.name = 'metadata'
-    except:
+    except:  # pragma: no cover
         metadata = pyfits.new_table(pyfits.ColDefs(cols))
         metadata.update_ext_name('metadata')
 
