@@ -35,6 +35,7 @@ before_install:
     # Add ~/bin and ~/lib to the appropriate paths where scons install will put things.
     - export PATH=$HOME/bin:$PATH
     - export LD_LIBRARY_PATH=$HOME/lib:$LD_LIBRARY_PATH
+    - export PYTHONPATH=$HOME/lib/python$TRAVIS_PYTHON_VERSION/site-packages/:$PYTHONPATH
 
     # Get the des data needed for the check_des test.
     - if ! test -d examples/des/des_data || ! test -f examples/des/des_data/DECam_00154912_01.fits.fz; then wget http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz && tar xfz des_data.tar.gz -C $HOME; fi
