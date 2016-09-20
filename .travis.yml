@@ -55,7 +55,7 @@ install:
     - scons PREFIX=$HOME
     - scons install
     # Download COSMOS catalog if not downloaded yet.
-    - galsim_download_cosmos
+    - galsim_download_cosmos -q -v1
 
 script:
     - cd tests
