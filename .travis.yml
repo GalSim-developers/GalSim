@@ -17,8 +17,6 @@ before_install:
     - ls -l $HOME
     - ls -l $HOME/tmv-0.73
     - ls -l $HOME/des_data
-    - ls -l $HOME/share
-    - ls -l $HOME/share/galsim
 
     # To get coverage of the WcsToolsWCS class:
     #- sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe"
