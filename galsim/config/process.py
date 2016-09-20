@@ -130,7 +130,7 @@ def ReadJson(config_file):
         try:
             # cf. http://stackoverflow.com/questions/6921699/can-i-get-json-to-load-into-an-ordereddict-in-python
             config = json.load(f, object_pairs_hook=OrderedDict)
-        except TypeError:
+        except TypeError:  # pragma: no cover
             # for python2.6, json doesn't come with the object_pairs_hook, so
             # try using simplejson, and if that doesn't work, just use a regular dict.
             # Also, it seems that if the above line raises an exception, the file handle
@@ -821,7 +821,7 @@ def MultiProcess(nproc, config, job_func, tasks, item, logger=None,
         results = [ None for k in range(njobs) ]
         for kk in range(njobs):
             res, k, t, proc = results_queue.get()
-            if isinstance(res,Exception):
+            if isinstance(res,Exception):  # pragma: no cover
                 # res is really the exception, e
                 # t is really the traceback
                 # k is the index for the job that failed

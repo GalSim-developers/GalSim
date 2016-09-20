@@ -87,7 +87,7 @@ def BuildStamps(nobjects, config, obj_num=0,
             logger.info(s0 + 'Stamp %d: size = %d x %d, time = %f sec', obj_num, xs, ys, t)
 
     def except_func(logger, proc, k, e, tr):
-        if logger:
+        if logger: # pragma: no cover
             if proc is None: s0 = ''
             else: s0 = '%s: '%proc
             obj_num = jobs[k]['obj_num']
@@ -103,7 +103,7 @@ def BuildStamps(nobjects, config, obj_num=0,
                                          done_func = done_func,
                                          except_func = except_func)
 
-    if not results:
+    if not results:  # pragma: no cover
         images, current_vars = [], []
         if logger:
             logger.error('No images were built.  All were either skipped or had errors.')

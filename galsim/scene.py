@@ -215,7 +215,7 @@ class COSMOSCatalog(object):
                     self.param_cat = fits[1].data
                 # Check if this was the right file.  It should have a 'fit_status' column.
                 self.param_cat['fit_status']
-            except KeyError:
+            except KeyError:  # pragma: no cover
                 # But if that doesn't work, then the name might be the name of the real catalog,
                 # so try adding _fits to it as above.
                 k = full_file_name.find('.fits')
@@ -224,7 +224,7 @@ class COSMOSCatalog(object):
                     self.param_cat = fits[1].data
 
         # Check for the old-style parameter catalog
-        if 'fit_dvc_btt' not in self.param_cat.dtype.names:
+        if 'fit_dvc_btt' not in self.param_cat.dtype.names:  # pragma: no cover
             # This will fail if they try to make a parametric galaxy.
             # Don't raise an exception here, since they might not care about that.
             # But give them some guidance about the error they will get if they
@@ -344,7 +344,7 @@ class COSMOSCatalog(object):
 
             # Some fit parameters can indicate a likely sky subtraction error: very high sersic n
             # AND abnormally large half-light radius (>1 arcsec).
-            if 'hlr' not in self.param_cat.dtype.names:
+            if 'hlr' not in self.param_cat.dtype.names:  # pragma: no cover
                 # This is the circularized HLR in arcsec, which we have to compute from the stored
                 # parametric fits.
                 hlr = cosmos_pix_scale * self.param_cat['sersicfit'][:,1] * \
@@ -361,7 +361,7 @@ class COSMOSCatalog(object):
                 mask &= ( np.abs(self.selection_cat['dmag']) < 0.8)
 
         if min_hlr > 0. or max_hlr > 0. or min_flux > 0. or max_flux > 0.:
-            if 'hlr' not in self.param_cat.dtype.names:
+            if 'hlr' not in self.param_cat.dtype.names:  # pragma: no cover
                 # Check if they have a new version of the selection catalog that has precomputed
                 # fluxes etc.  If not, do the calculations, which include some approximations in
                 # getting the flux.
@@ -524,7 +524,7 @@ class COSMOSCatalog(object):
             # whether we're using the old or new catalog (the latter of which has a lot of
             # precomputations done).  Just in case, let's check here, though it does seem like a bit
             # of overkill to emit this warning each time.
-            if 'hlr' not in self.param_cat.dtype.names:
+            if 'hlr' not in self.param_cat.dtype.names:  # pragma: no cover
                 import warnings
                 warnings.warn(
                     'You seem to have an old version of the COSMOS parameter file. '+
@@ -639,7 +639,7 @@ class COSMOSCatalog(object):
         # the last 8 are for the bulge, with n=4.
         bparams = record['bulgefit']
         sparams = record['sersicfit']
-        if 'hlr' not in record:
+        if 'hlr' not in record:  # pragma: no cover
             # This code is here for backwards compatibility; if they have an old version of the
             # catalog, then we have to do all calculations.
             #
@@ -688,7 +688,7 @@ class COSMOSCatalog(object):
             bulge_beta = bparams[15]*galsim.radians
             disk_q = bparams[3]
             disk_beta = bparams[7]*galsim.radians
-            if 'hlr' not in record:
+            if 'hlr' not in record:  # pragma: no cover
                 # If we're supposed to use the 2-component fits, get all the parameters.
                 # We have to convert from the stored half-light radius along the major axis, to an
                 # azimuthally averaged one (multiplying by sqrt(bulge_q)).  We also have to convert
@@ -755,7 +755,7 @@ class COSMOSCatalog(object):
             gal_q = sparams[3]
             gal_beta = sparams[7]*galsim.radians
 
-            if 'hlr' not in record:
+            if 'hlr' not in record:  # pragma: no cover
                 gal_hlr = cosmos_pix_scale*np.sqrt(gal_q)*sparams[1]
                 # Below is the calculation of the full Sersic n-dependent quantity that goes into
                 # the conversion from surface brightness to flux, which here we're calling
