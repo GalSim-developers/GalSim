@@ -81,3 +81,7 @@ after_success:
     # Otherwise the reported results get weird.
     - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then coveralls; fi
 
+before_cache: 
+    - rm -rf $HOME/.cache/pip/log
+    - rm -rf $HOME/.cache/pip/http
+
