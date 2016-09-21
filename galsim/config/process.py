@@ -493,6 +493,8 @@ def ParseExtendedKey(config, key):
         k = chain.pop(0)
         try: k = int(k)
         except ValueError: pass
+        if k not in d:
+            raise ValueError("Unable to parse extended key %s.  Field %s is invalid."%(key,k))
         d = d[k]
     return d, chain[0]
 
