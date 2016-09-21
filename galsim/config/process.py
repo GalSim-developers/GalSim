@@ -642,6 +642,14 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None):
         import pprint
         logger.debug("Final config dict to be processed: \n%s", pprint.pformat(config))
 
+    # Warn about any unexpected fields.
+    expected = [ 'psf', 'gal', 'stamp', 'image', 'input', 'output',
+                      'eval_variables', 'root' ]
+    unexpected = [ k for k in config if k not in expected ]
+    if len(unexpected) > 0 and logger:
+        logger.warning("Warning: config dict contains the following unexpected fields: %s."%unexpected)
+        logger.warning("         These fields are not (directly) processed by the config processing.")
+
     # Make config['output'] exist if it doesn't yet.
     if 'output' not in config:
         config['output'] = {}
