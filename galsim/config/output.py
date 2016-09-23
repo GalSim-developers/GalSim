@@ -116,7 +116,7 @@ def BuildFiles(nfiles, config, file_num=0, logger=None):
             logger.warning(s0 + 'File %d = %s: time = %f sec', file_num, file_name, t)
 
     def except_func(logger, proc, k, e, tr):
-        if logger:
+        if logger:  # pragma: no cover
             file_num, file_name = info[k]
             if proc is None: s0 = ''
             else: s0 = '%s: '%proc
@@ -134,13 +134,13 @@ def BuildFiles(nfiles, config, file_num=0, logger=None):
                                          except_abort = False)
     t2 = time.time()
 
-    if not results:
+    if not results:  # pragma: no cover
         nfiles_written = 0
     else:
         fnames, times = zip(*results)
         nfiles_written = sum([ t!=0 for t in times])
 
-    if nfiles_written == 0:
+    if nfiles_written == 0:  # pragma: no cover
         if logger:
             logger.error('No files were written.  All were either skipped or had errors.')
     else:

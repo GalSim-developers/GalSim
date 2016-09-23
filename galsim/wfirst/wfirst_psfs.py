@@ -368,7 +368,7 @@ def loadPSFImages(filename):
     try:
         # In python3, convert from bytes to str
         bp_list = [ str(bp.decode()) for bp in bp_list ]
-    except:
+    except:  # pragma: no cover
         pass
     SCA_list = list(metadata_hdu.data.SCA)
     galsim.fits.closeHDUList(hdu_list, fin)

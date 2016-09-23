@@ -57,6 +57,7 @@ def run_tests(target, source, env):
             print '    scons tests -j1'
         else:
             print 'nosetests is version %s'%env['NOSETESTSVERSION']
+        cmd += ' test*.py'
         print '\nStarting python tests...'
         log.write('Nosetests version is: ' + env['NOSETESTSVERSION'] + '\n')
         log.write('Nosetests command is:\n' + cmd + '\n')

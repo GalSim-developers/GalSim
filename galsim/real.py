@@ -546,7 +546,7 @@ class RealGalaxyCatalog(object):
         else:
             self.loaded_lock.acquire()
             # Check again in case two processes both hit the else at the same time.
-            if file_name in self.loaded_files:
+            if file_name in self.loaded_files: # pragma: no cover
                 if self.logger:
                     self.logger.debug('RealGalaxyCatalog: File %s is already open',file_name)
                 f = self.loaded_files[file_name]
@@ -766,7 +766,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     return image
 
 def _parse_files_dirs(file_name, image_dir, dir, noise_dir, sample):
-    if image_dir is not None or noise_dir is not None:
+    if image_dir is not None or noise_dir is not None:  # pragma: no cover
         from .deprecated import depr
         if image_dir is not None:
             depr('image_dir', 1.4, 'dir')

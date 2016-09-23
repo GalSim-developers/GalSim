@@ -442,9 +442,10 @@ def test_wfirst_psfs():
         err_msg='PSF at a given wavelength and interpolated chromatic one evaluated at that '
         'wavelength disagree.')
 
-    # Below are some more expensive tests that will run only when running test_wfirst.py directly,
-    # but not when doing "scons tests"
-    if __name__ == "__main__":
+    # This is a little slow, but we do want to run this as part of normal unit testing
+    # to cover the storePSFImage and loadPSFImages functions.
+    if True:
+    #if __name__ == '__main__':
         # Check that if we store and reload, what we get back is consistent with what we put in.
         test_file = 'tmp_store.fits'
         # Make sure we clear out any old versions
@@ -485,7 +486,7 @@ def test_wfirst_psfs():
         os.remove(test_file)
 
     # Test the construction of PSFs with high_accuracy and/or not approximate_struts
-    # But only if we're runnign from the command line.
+    # But only if we're running from the command line.
     if __name__ == '__main__':
         for kwargs in [
             { 'approximate_struts':True, 'high_accuracy':False },  # This is a repeat of the above

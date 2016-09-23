@@ -1,25 +1,87 @@
 branches:
-  only:
-    - master
+    only:
+        - master
+
 language: python
+python:
+    - 2.7
+
 compiler:
-  - g++
+    - g++
 before_install:
-  - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
-  - sudo apt-get -qq update
-  - sudo apt-get install -y libboost-all-dev gfortran liblapack-dev libfftw3-dev python-dev python-numpy python-scipy python-nose
-  - pip install astropy==1.1.1 pyyaml future
-  - pushd $HOME
-#Only get TMV if not cached
-  - if ! test -d tmv-0.73 || ! test -f tmv-0.73/Sconstruct; then wget https://github.com/rmjarvis/tmv/archive/v0.73.tar.gz && tar -xf v0.73.tar.gz ; else echo Using cached TMV; fi
-#But always install it to /usr/local
-  - cd tmv-0.73 && sudo scons install DEBUG=True FLAGS="-O0"
-  - popd
+    - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
+    - sudo apt-get -qq update
+    - sudo apt-get install -y libboost-all-dev gfortran liblapack-dev libfftw3-dev python-dev python-numpy python-scipy python-nose
+
+    # List current contents of directories that should be being cached.
+    - ls -l $HOME
+    - ls -l $HOME/tmv-0.73
+    - ls -l $HOME/des_data
+
+    # To get coverage of the WcsToolsWCS class:
+    #- sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe"
+    #- sudo apt-get -qq update
+    #- sudo apt-get install -y wcstools
+    # Hm. This didn't work, and I can't figure out why.  I get the following error:
+    #     Reading package lists... Done
+    #     Building dependency tree
+    #     Reading state information... Done
+    #     E: Unable to locate package wcstools
+    # Perhaps someone with more familiarity with apt-get can figure this out, but for now, we'll
+    # live with lack of coverage of WcsToolsWCS.
+
+    # Only get TMV if not cached
+    - pushd $HOME
+    - if ! test -d tmv-0.73 || ! test -f tmv-0.73/SConstruct; then wget https://github.com/rmjarvis/tmv/archive/v0.73.tar.gz && tar -xf v0.73.tar.gz ; else echo Using cached TMV; fi
+    # But always install it to /usr/local
+    - cd tmv-0.73 && sudo scons install
+    - popd
+
+    # Add ~/bin and ~/lib to the appropriate paths where scons install will put things.
+    - export PATH=$HOME/bin:$PATH
+    - export LD_LIBRARY_PATH=$HOME/lib:$LD_LIBRARY_PATH
+    - export PYTHONPATH=$HOME/lib/python$TRAVIS_PYTHON_VERSION/site-packages/:$PYTHONPATH
+
+    # Get the des data needed for the check_des test.
+    - if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz && tar xfz des_data.tar.gz -C $HOME --wildcards *_01*; fi
+    - ln -s $HOME/des_data examples/des/
+
 cache:
     pip: true
     directories:
     - $HOME/tmv-0.73
+    - $HOME/des_data
 
-install: scons
-script: scons tests
+install:
+    # Note: matplotlib is only required because starlink has an `import matplotlib` in their
+    # code, despite that not being a dependency.
+    - pip install astropy==1.1.1 pyyaml future coveralls starlink-pyast matplotlib scipy
+    - scons PREFIX=$HOME
+    - scons install
+
+script:
+    - cd tests
+    # Use this rather than scons tests, so we can get the coverage options.
+    - "nosetests test*.py --with-coverage --cover-package=galsim --with-doctest --cover-erase"
+    # Without cover-erase, this will append to the .coverage file
+    - "nosetests run_examples.py --with-coverage --cover-package=galsim --with-doctest"
+
+    # Again list current contents of directories that should be being cached.
+    - ls -l $HOME
+    - ls -l $HOME/tmv-0.73
+    - ls -l $HOME/des_data
+
+
+after_success:
+    # The multiprocessing stages don't get properly incorporated into the .coverage file unless
+    # we do this command.  (Some of the .coverage.* files are in the ../examples directory.)
+    - coverage combine . ../examples
+
+    # If we start doing multiple python versions here, then only report coveralls for one of them.
+    # Otherwise the reported results get weird.
+    - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then coveralls; fi
+
+before_cache: 
+    - rm -rf $HOME/.cache/pip/log
+    - rm -rf $HOME/.cache/pip/http
 

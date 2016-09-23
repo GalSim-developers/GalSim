@@ -4,6 +4,7 @@ Changes from v1.4 to v1.5
 API Changes
 -----------
 
+- Simplified the return value of galsim.config.ReadConfig. (#580)
 
 
 Dependency Changes
@@ -14,6 +15,7 @@ Dependency Changes
 Bug Fixes
 ---------
 
+- Fixed an error in the magnification calculated by NFWHalo.getLensing(). (#580)
 - Fixed bug when whitening noise in images based on COSMOS training datasets
   using the config functionality. (#792)
 
