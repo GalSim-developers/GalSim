@@ -19,8 +19,9 @@
 from __future__ import print_function
 import os
 import numpy as np
-from galsim_test_helpers import *
+from galsim_test_helpers import timer, do_pickle, all_obj_diff
 import sys
+from astropy import units as u
 
 try:
     import galsim
@@ -105,7 +106,7 @@ def test_SED_basic():
     ]
 
     for k,s in enumerate(s_list):
-        print(k,' s = ',s)
+        print(k,' s = ', s)
         np.testing.assert_almost_equal(s(400)*h*c/400, 200, decimal=10)
         np.testing.assert_almost_equal(s(900)*h*c/900, 200, decimal=10)
         waves = np.arange(700,800,10)
@@ -316,6 +317,8 @@ def test_SED_init():
         np.testing.assert_raises(TypeError, galsim.SED, spec=lambda w:1.0,
                                  flux_type='bar')
         np.testing.assert_raises(TypeError, galsim.SED, spec=lambda w:1.0)
+        np.testing.assert_raises(ValueError, galsim.SED, spec='wave',
+                                 wave_type=u.Hz, flux_type='2')
     except ImportError:
         print('The assert_raises tests require nose')
     # These should succeed.
@@ -323,6 +326,11 @@ def test_SED_init():
     galsim.SED(spec='wave/wave', wave_type='nm', flux_type='flambda')
     galsim.SED(spec=lambda w:1.0, wave_type='nm', flux_type='flambda')
     galsim.SED(spec='1./(wave-700)', wave_type='nm', flux_type='flambda')
+    galsim.SED(spec='wave', wave_type=u.nm, flux_type='flambda')
+    galsim.SED(spec='wave', wave_type=u.Hz, flux_type='flambda')
+    galsim.SED(spec='wave', wave_type=u.Hz, flux_type=u.erg/(u.s * u.nm * u.m**2))
+    galsim.SED(spec='wave', wave_type=u.Hz, flux_type=u.erg/(u.s * u.Hz * u.m**2))
+    galsim.SED(spec='wave', wave_type=u.Hz, flux_type='1')
 
     # Also check for invalid calls
     foo = np.arange(10.)+1.
@@ -332,6 +340,30 @@ def test_SED_init():
         np.testing.assert_raises(ValueError, sed, 12.0)
     except ImportError:
         print('The assert_raises tests require nose')
+
+    # But check a few valid calls too.
+    sed(1.5)
+    sed(1.5 * u.nm)
+    sed((1.5*u.nm).to(u.Hz, u.spectral()))  # Frequency
+    sed((1.5*u.nm).to(u.erg, u.spectral()))  # Wavelength as an energy
+    sed((1.5*u.nm).to(u.m**-1, u.spectral()))  # Wavenumber in 1/m
+    sed((1.5*u.nm).to(u.radian / u.m, u.spectral()))  # Wavenumber in rad/m
+
+    # And check the redshift kwarg.
+    foo = np.arange(10.)+1.
+    sed = galsim.SED(galsim.LookupTable(foo,foo), wave_type='nm', flux_type='flambda', redshift=1.0)
+    try: # outside good range of 2->20 should raise ValueError
+        np.testing.assert_raises(ValueError, sed, 1.5)
+        np.testing.assert_raises(ValueError, sed, 24.0)
+    except ImportError:
+        print('The assert_raises tests require nose')
+
+    sed(3.5)
+    sed(3.5 * u.nm)
+    sed((3.5*u.nm).to(u.Hz, u.spectral()))  # Frequency
+    sed((3.5*u.nm).to(u.erg, u.spectral()))  # Wavelength as an energy
+    sed((3.5*u.nm).to(u.m**-1, u.spectral()))  # Wavenumber in 1/m
+    sed((3.5*u.nm).to(u.radian / u.m, u.spectral()))  # Wavenumber in rad/m
 
 
 @timer
@@ -475,7 +507,6 @@ def test_SED_calculateSeeingMomentRatio():
 @timer
 def test_fnu_vs_flambda():
     c = 2.99792458e17  # speed of light in nm/s
-    h = 6.62606957e-27 # Planck's constant in erg seconds
     k = 1.3806488e-16  # Boltzmann's constant ergs per Kelvin
     nm_in_cm = 1e7
     # read these straight from Wikipedia
