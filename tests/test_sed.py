@@ -341,7 +341,9 @@ def test_SED_init():
     except ImportError:
         print('The assert_raises tests require nose')
 
-    # But check a few valid calls too.
+    # Check a few valid calls for when fast=False
+    sed = galsim.SED(galsim.LookupTable(foo,foo), wave_type='nm', flux_type='flambda',
+                     fast=False)
     sed(1.5)
     sed(1.5 * u.nm)
     sed((1.5*u.nm).to(u.Hz, u.spectral()))  # Frequency
@@ -351,7 +353,8 @@ def test_SED_init():
 
     # And check the redshift kwarg.
     foo = np.arange(10.)+1.
-    sed = galsim.SED(galsim.LookupTable(foo,foo), wave_type='nm', flux_type='flambda', redshift=1.0)
+    sed = galsim.SED(galsim.LookupTable(foo,foo), wave_type='nm', flux_type='flambda', redshift=1.0,
+                     fast=False)
     try: # outside good range of 2->20 should raise ValueError
         np.testing.assert_raises(ValueError, sed, 1.5)
         np.testing.assert_raises(ValueError, sed, 24.0)
@@ -562,7 +565,8 @@ def test_ne():
 
 @timer
 def test_thin():
-    s = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang', flux_type='flambda')
+    s = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang', flux_type='flambda',
+                   fast=False)
     bp = galsim.Bandpass('1', 'nm', blue_limit=s.blue_limit, red_limit=s.red_limit)
     flux = s.calculateFlux(bp)
     print("Original number of SED samples = ",len(s.wave_list))
