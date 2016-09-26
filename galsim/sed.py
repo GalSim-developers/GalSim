@@ -179,14 +179,17 @@ class SED(object):
             if isinstance(self._spec, galsim.LookupTable):
                 # Make a new table with "fast" units.
                 wavenm = (self._spec.getArgs() * self.wave_type).to(u.nm, u.spectral())
-                spec = ((self._spec.getVals() * self.flux_type)
-                        .to(u.astrophys.photon/(u.s*u.cm**2*u.nm),
-                            u.spectral_density(wavenm))).value
+                if self.spectral_density:
+                    spec = ((self._spec.getVals() * self.flux_type)
+                            .to(u.astrophys.photon/(u.s*u.cm**2*u.nm),
+                                u.spectral_density(wavenm))).value
+                else:
+                    spec = self._spec.getVals()
                 wave = wavenm.value
                 self._spec = galsim.LookupTable(wave, spec, interpolant='linear')
             else:
                 # Here, self._spec accepts wave_type and returns flux_type
-                # We need a fn that accepts nm and returns photon/s/cm2/nm
+                # We need a fn that accepts nm and returns either 1 or ph/s/cm**2/nm as appropriate.
                 closure_spec = self._spec
                 closure_wave_type = self.wave_type
                 closure_flux_type = self.flux_type
@@ -194,12 +197,18 @@ class SED(object):
                     wnm = w * u.nm
                     wave_native_units = wnm.to(closure_wave_type, u.spectral()).value
                     flux_native_units = closure_spec(wave_native_units)
-                    return ((flux_native_units*closure_flux_type)
-                            .to(u.astrophys.photon/(u.s*u.cm**2*u.nm),
-                                u.spectral_density(w*u.nm))).value
+                    if self.spectral_density:
+                        return ((flux_native_units*closure_flux_type)
+                                .to(u.astrophys.photon/(u.s*u.cm**2*u.nm),
+                                    u.spectral_density(w*u.nm))).value
+                    else:
+                        return flux_native_units
                 self._spec = fastspec
             self.wave_type = u.nm
-            self.flux_type = u.astrophys.photon/(u.s*u.cm**2*u.nm)
+            if self.spectral_density:
+                self.flux_type = u.astrophys.photon/(u.s*u.cm**2*u.nm)
+            else:
+                self.flux_type = u.dimensionless_unscaled
 
     @property
     def spectral_density(self):
@@ -304,9 +313,11 @@ class SED(object):
             rest_wave = wave * u.nm / (1.0 + self.redshift)
 
         rest_wave_native_units = rest_wave.to(self.wave_type, u.spectral()).value
-        spec_native_units = self._spec(rest_wave_native_units) * self.flux_type
-        out = spec_native_units.to(u.astrophys.photon/(u.s * u.nm * u.cm**2),
-                                   u.spectral_density(rest_wave)).value
+        out = self._spec(rest_wave_native_units)
+        if self.spectral_density:
+            out = out * self.flux_type
+            out = out.to(u.astrophys.photon/(u.s * u.nm * u.cm**2),
+                         u.spectral_density(rest_wave)).value
         if isinstance(wave, tuple):
             return tuple(out)
         elif isinstance(wave, list):
@@ -438,6 +449,8 @@ class SED(object):
 
         @returns the new normalized SED.
         """
+        if self.dimensionless:
+            raise TypeError("Cannot set flux density of dimensionless SED.")
         if isinstance(wavelength, u.Quantity):
             wavelength_nm = wavelength.to(u.nm, u.spectral())
         current_flux_density = self(wavelength)
@@ -518,6 +531,8 @@ class SED(object):
 
         @returns the flux through the bandpass.
         """
+        if self.dimensionless:
+            raise TypeError("Cannot calculate flux of dimensionless SED.")
         if bandpass is None: # do bolometric flux
             if self.blue_limit is None:
                 blue_limit = 0.0
@@ -551,6 +566,8 @@ class SED(object):
 
         @returns the bandpass magnitude.
         """
+        if self.dimensionless:
+            raise TypeError("Cannot calculate magnitude of dimensionless SED.")
         if bandpass.zeropoint is None:
             raise RuntimeError("Cannot do this calculation for a bandpass without an assigned"
                                " zeropoint")
@@ -620,6 +637,8 @@ class SED(object):
         @returns a tuple.  The first element is the vector of DCR first moment shifts, and the
                  second element is the 2x2 matrix of DCR second (central) moment shifts.
         """
+        if self.dimensionless:
+            raise TypeError("Cannot calculate DCR shifts of dimensionless SED.")
         if 'zenith_angle' in kwargs:
             zenith_angle = kwargs.pop('zenith_angle')
             parallactic_angle = kwargs.pop('parallactic_angle', 0.0*galsim.degrees)
@@ -681,6 +700,8 @@ class SED(object):
                                     PSF size.  [default: 500]
         @returns the ratio of the PSF second moments to the second moments of the reference PSF.
         """
+        if self.dimensionless:
+            raise TypeError("Cannot calculate seeing moment ratio of dimensionless SED.")
         flux = self.calculateFlux(bandpass)
         if len(bandpass.wave_list) > 0:
             x, _, _ = galsim.utilities.combine_wave_list([self, bandpass])
