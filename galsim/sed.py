@@ -173,43 +173,6 @@ class SED(object):
         else:
             self._spec = self._orig_spec
 
-        if self.fast:
-            self._orig_wave_type = self.wave_type  # For pickling
-            self._orig_flux_type = self.flux_type
-            if isinstance(self._spec, galsim.LookupTable):
-                # Make a new table with "fast" units.
-                wavenm = (self._spec.getArgs() * self.wave_type).to(u.nm, u.spectral())
-                if self.spectral_density:
-                    spec = ((self._spec.getVals() * self.flux_type)
-                            .to(u.astrophys.photon/(u.s*u.cm**2*u.nm),
-                                u.spectral_density(wavenm))).value
-                else:
-                    spec = self._spec.getVals()
-                wave = wavenm.value
-                self._spec = galsim.LookupTable(wave, spec, interpolant='linear')
-            else:
-                # Here, self._spec accepts wave_type and returns flux_type
-                # We need a fn that accepts nm and returns either 1 or ph/s/cm**2/nm as appropriate.
-                closure_spec = self._spec
-                closure_wave_type = self.wave_type
-                closure_flux_type = self.flux_type
-                def fastspec(w):
-                    wnm = w * u.nm
-                    wave_native_units = wnm.to(closure_wave_type, u.spectral()).value
-                    flux_native_units = closure_spec(wave_native_units)
-                    if self.spectral_density:
-                        return ((flux_native_units*closure_flux_type)
-                                .to(u.astrophys.photon/(u.s*u.cm**2*u.nm),
-                                    u.spectral_density(w*u.nm))).value
-                    else:
-                        return flux_native_units
-                self._spec = fastspec
-            self.wave_type = u.nm
-            if self.spectral_density:
-                self.flux_type = u.astrophys.photon/(u.s*u.cm**2*u.nm)
-            else:
-                self.flux_type = u.dimensionless_unscaled
-
     @property
     def spectral_density(self):
         """Boolean indicating if SED has units compatible with a spectral density.
@@ -247,20 +210,33 @@ class SED(object):
 
         return blue_limit, red_limit
 
-    def _call_fast(self, wave):
-        """ Return flux in photons / sec / cm^2 / nm.
+    def _rest_nm_to_photons(self, wave):
+        wave_native_quantity = (wave * u.nm).to(self.wave_type, u.spectral())
+        wave_native_value = wave_native_quantity.value
+        flux_native_quantity = self._spec(wave_native_value) * self.flux_type
+        return (flux_native_quantity
+                .to(u.astrophys.photon/(u.s*u.cm**2*u.nm),
+                    u.spectral_density(wave_native_quantity))
+                .value)
 
-        Assumes that self._spec has already been transformed to accept correct wavelength units and
-        yield correct flux units.
+    def _obs_nm_to_photons(self, wave):
+        return self._rest_nm_to_photons(wave / (1.0 + self.redshift))
 
-        @param wave  Wavelength in nanometers.
-        @returns     Flux.
-        """
+    def _rest_nm_to_dimensionless(self, wave):
+        wave_native_value = (wave * u.nm).to(self.wave_type, u.spectral()).value
+        return self._spec(wave_native_value)
+
+    # Does it every actually make sense for an SED with a redshift to be dimensionless?
+    def _obs_nm_to_dimensionless(self, wave):
+        return self._rest_nm_to_dimensionless(wave / (1.0 + self.redshift))
+
+    def _check_bounds(self, wave):
         if hasattr(wave, '__iter__'):
             wmin = np.min(wave)
             wmax = np.max(wave)
         else:
             wmin = wmax = wave
+
         extrapolation_slop = 1.e-6 # allow a small amount of extrapolation
         if self.blue_limit is not None:
             if wmin < self.blue_limit - extrapolation_slop:
@@ -270,12 +246,43 @@ class SED(object):
             if wmax > self.red_limit + extrapolation_slop:
                 raise ValueError("Requested wavelength ({0}) is redder than red_limit ({1})"
                                  .format(wmax, self.red_limit))
+
+    def _call_fast(self, wave):
+        """ Return flux in photons / sec / cm^2 / nm.
+
+        Assumes that self._spec has already been transformed to accept correct wavelength units and
+        yield correct flux units.
+
+        @param wave  Wavelength in nanometers.
+        @returns     Flux.
+        """
+        self._check_bounds(wave)
+
+        # Create a fast version of self._spec by constructing a LookupTable on self.wave_list
+        if not hasattr(self, '_fast_spec'):
+            if (self.wave_type == u.nm
+                and self.flux_type == (u.astrophys.photon / (u.s * u.cm**2 * u.nm))):
+                    self._fast_spec = self._spec
+            else:
+                if len(self.wave_list) == 0:
+                    if self.spectral_density:
+                        self._fast_spec = self._rest_nm_to_photons
+                    else:
+                        self._fast_spec = self._rest_nm_to_dimensionless
+                else:
+                    x = self.wave_list / (1.0 + self.redshift)
+                    if self.spectral_density:
+                        f = self._rest_nm_to_photons(x)
+                    else:
+                        f = self._rest_nm_to_dimensionless(x)
+                    self._fast_spec = galsim.LookupTable(x, f, interpolant='linear')
+
         if isinstance(wave, tuple):
-            return tuple(self._spec(np.array(wave) / (1.0 + self.redshift)))
+            return tuple(self._fast_spec(np.array(wave) / (1.0 + self.redshift)))
         elif isinstance(wave, list):
-            return list(self._spec(np.array(wave) / (1.0 + self.redshift)))
+            return list(self._fast_spec(np.array(wave) / (1.0 + self.redshift)))
         else:  # ndarray or scalar
-            return self._spec(wave / (1.0 + self.redshift))
+            return self._fast_spec(wave / (1.0 + self.redshift))
 
     def _call_slow(self, wave):
         """ Return flux in photons / sec / cm^2 / nm.
@@ -286,44 +293,33 @@ class SED(object):
         @param wave  Wavelength.  If not a Quantity, then assumed units are nanometers.
         @returns     Flux.
         """
+        wave_in = wave
+        # Convert wave to nanometers if needed.
         if isinstance(wave, u.Quantity):
-            wave_nm = wave.to(u.nm, u.spectral()).value
-            wmin = np.min(wave_nm)
-            wmax = np.max(wave_nm)
-        else:
-            if hasattr(wave, '__iter__'): # Only iterables respond to min(), max()
-                wmin = np.min(wave)
-                wmax = np.max(wave)
-            else: # python scalar
-                wmin = wave
-                wmax = wave
-        extrapolation_slop = 1.e-6 # allow a small amount of extrapolation
-        if self.blue_limit is not None:
-            if wmin < self.blue_limit - extrapolation_slop:
-                raise ValueError("Requested wavelength ({0}) is bluer than blue_limit ({1})"
-                                 .format(wmin, self.blue_limit))
-        if self.red_limit is not None:
-            if wmax > self.red_limit + extrapolation_slop:
-                raise ValueError("Requested wavelength ({0}) is redder than red_limit ({1})"
-                                 .format(wmax, self.red_limit))
-        # Figure out rest-frame wavelength array for query to self._spec
-        if isinstance(wave, u.Quantity):
-            rest_wave = wave / (1.0 + self.redshift)
-        else:  # Works for np.ndarray, list, tuple, scalar
-            rest_wave = wave * u.nm / (1.0 + self.redshift)
+            wave = wave.to(u.nm, u.spectral()).value
 
-        rest_wave_native_units = rest_wave.to(self.wave_type, u.spectral()).value
-        out = self._spec(rest_wave_native_units)
+        self._check_bounds(wave)
+
+        # Figure out rest-frame wave_type wavelength array for query to self._spec.
+        rest_wave = wave / (1.0 + self.redshift)
+        rest_wave_quantity = rest_wave * u.nm
+        rest_wave_native = rest_wave_quantity.to(self.wave_type, u.spectral()).value
+
+        out = self._spec(rest_wave_native)
+
+        # Manipulate output units
         if self.spectral_density:
             out = out * self.flux_type
-            out = out.to(u.astrophys.photon/(u.s * u.nm * u.cm**2),
-                         u.spectral_density(rest_wave)).value
-        if isinstance(wave, tuple):
+            out = out.to(u.astrophys.photon/(u.s*u.cm**2*u.nm),
+                         u.spectral_density(rest_wave_quantity)).value
+
+        # Return same format as received (except Quantity -> ndarray)
+        if isinstance(wave_in, tuple):
             return tuple(out)
-        elif isinstance(wave, list):
+        elif isinstance(wave_in, list):
             return list(out)
         else:
-            return out  # Works for np.ndarray, Quantity, and scalar
+            return out # Works for np.ndarray, Quantity, or scalar.
 
     def __call__(self, wave):
         """ Return photon flux density at wavelength `wave`.
@@ -524,10 +520,6 @@ class SED(object):
             red_limit *= wave_factor
         wave_type = self.wave_type
         flux_type = self.flux_type
-        if hasattr(self, '_orig_wave_type'):
-            wave_type = self._orig_wave_type
-        if hasattr(self, '_orig_flux_type'):
-            flux_type = self._orig_flux_type
 
         return SED(self._orig_spec, wave_type, flux_type, redshift,
                    _wave_list=wave_list, _blue_limit=blue_limit, _red_limit=red_limit)
@@ -727,7 +719,7 @@ class SED(object):
                                       bandpass.blue_limit, bandpass.red_limit) / flux
 
     def __eq__(self, other):
-        if not (isinstance(other, SED) and
+        return (isinstance(other, SED) and
                 self._orig_spec == other._orig_spec and
                 self.fast == other.fast and
                 self.wave_type == other.wave_type and
@@ -735,23 +727,7 @@ class SED(object):
                 self.redshift == other.redshift and
                 self.red_limit == other.red_limit and
                 self.blue_limit == other.blue_limit and
-                np.array_equal(self.wave_list,other.wave_list)):
-            return False
-        if hasattr(self, '_orig_wave_type'):
-            if not hasattr(other, '_orig_wave_type'):
-                return False
-            if self._orig_wave_type != other._orig_wave_type:
-                return False
-        elif hasattr(other, '_orig_wave_type'):
-            return False
-        if hasattr(self, '_orig_flux_type'):
-            if not hasattr(other, '_orig_flux_type'):
-                return False
-            if self._orig_flux_type != other._orig_flux_type:
-                return False
-        elif hasattr(other, '_orig_flux_type'):
-            return False
-        return True
+                np.array_equal(self.wave_list,other.wave_list))
 
     def __ne__(self, other): return not self.__eq__(other)
 
@@ -761,8 +737,6 @@ class SED(object):
             self._hash = hash(("galsim.SED", self._orig_spec, self.wave_type, self.flux_type,
                                self.redshift, self.fast, self.blue_limit, self.red_limit,
                                tuple(self.wave_list)))
-            if hasattr(self, '_orig_wave_type'):
-                self._hash ^= hash((self._orig_wave_type, self._orig_flux_type))
         return self._hash
 
     def __repr__(self):
@@ -782,11 +756,11 @@ class SED(object):
         d = self.__dict__.copy()
         if not isinstance(d['_spec'], galsim.LookupTable):
             del d['_spec']
+        if '_fast_spec' in d:
+            del d['_fast_spec']
         return d
 
     def __setstate__(self, d):
         self.__dict__ = d
         if '_spec' not in d:
-            self.wave_type = self._orig_wave_type
-            self.flux_type = self._orig_flux_type
             self._initialize_spec()

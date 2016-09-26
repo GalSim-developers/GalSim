@@ -301,10 +301,10 @@ def test_SED_roundoff_guard():
         b = a.atRedshift(z)
         w1 = b.wave_list[0]
         w2 = b.wave_list[-1]
-        np.testing.assert_almost_equal(a(w1/(1.0+z)), b(w1), 10,
-                                        err_msg="error using wave_list limits in redshifted SED")
-        np.testing.assert_almost_equal(a(w2/(1.0+z)), b(w2), 10,
-                                        err_msg="error using wave_list limits in redshifted SED")
+        np.testing.assert_allclose(a(w1/(1.0+z)), b(w1), rtol=1e-10,
+                                   err_msg="error using wave_list limits in redshifted SED")
+        np.testing.assert_allclose(a(w2/(1.0+z)), b(w2), rtol=1e-10,
+                                   err_msg="error using wave_list limits in redshifted SED")
 
 
 @timer
@@ -607,10 +607,10 @@ def test_thin():
 
 
 if __name__ == "__main__":
-    # test_SED_basic()
+    test_SED_basic()
     # test_SED_add()
     # test_SED_sub()
-    test_SED_mul()
+    # test_SED_mul()
     # test_SED_div()
     # test_SED_atRedshift()
     # test_SED_roundoff_guard()
