@@ -330,7 +330,9 @@ def test_SED_init():
     galsim.SED(spec='wave', wave_type=u.Hz, flux_type='flambda')
     galsim.SED(spec='wave', wave_type=u.Hz, flux_type=u.erg/(u.s * u.nm * u.m**2))
     galsim.SED(spec='wave', wave_type=u.Hz, flux_type=u.erg/(u.s * u.Hz * u.m**2))
+    galsim.SED(spec='wave', wave_type=u.Hz, flux_type=u.astrophys.photon/(u.s * u.Hz * u.m**2))
     galsim.SED(spec='wave', wave_type=u.Hz, flux_type='1')
+    galsim.SED(spec='wave', wave_type=u.Hz, flux_type=u.dimensionless_unscaled)
 
     # Also check for invalid calls
     foo = np.arange(10.)+1.
@@ -338,6 +340,8 @@ def test_SED_init():
     try:
         np.testing.assert_raises(ValueError, sed, 0.5)
         np.testing.assert_raises(ValueError, sed, 12.0)
+        np.testing.assert_raises(TypeError, galsim.SED, '1', 'nm', u.erg/u.s)
+        np.testing.assert_raises(ValueError, galsim.SED, '1', 'nm', '2')
     except ImportError:
         print('The assert_raises tests require nose')
 

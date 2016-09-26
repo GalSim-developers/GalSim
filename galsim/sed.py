@@ -112,10 +112,12 @@ class SED(object):
             elif flux_type.lower() == 'fnu':
                 flux_type = u.erg / (u.s * u.Hz * u.cm**2)
             elif flux_type.lower() == '1':
-                flux_type = 1.0  # dimensionless
+                flux_type = u.dimensionless_unscaled
             else:
                 raise ValueError("Unknown flux_type '{0}'".format(flux_type))
         self.flux_type = flux_type
+        if not (self.dimensionless or self.spectral_density):
+            raise TypeError("Flux_type must be equivalent to a spectral density or dimensionless.")
 
         self.redshift = redshift
         self.fast = fast
@@ -198,6 +200,26 @@ class SED(object):
                 self._spec = fastspec
             self.wave_type = u.nm
             self.flux_type = u.astrophys.photon/(u.s*u.cm**2*u.nm)
+
+    @property
+    def spectral_density(self):
+        """Boolean indicating if SED has units compatible with a spectral density.
+        """
+        try:
+            (1*self.flux_type).to(u.erg/u.s/u.cm**2/u.nm, u.spectral_density(1*u.nm))
+        except u.UnitConversionError:
+            return False
+        return True
+
+    @property
+    def dimensionless(self):
+        """Boolean indicating if SED is dimensionless.
+        """
+        try:
+            (1*self.flux_type).to(u.dimensionless_unscaled)
+        except u.UnitConversionError:
+            return False
+        return True
 
     def _wavelength_intersection(self, other):
         blue_limit = self.blue_limit
