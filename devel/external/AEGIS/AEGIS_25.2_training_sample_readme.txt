@@ -1,0 +1,109 @@
+This README file describes the AEGIS F814W<25.2 training sample, which is a
+randomly ordered sample of galaxies in the AEGIS field with AB magnitude<25.2, in F606W(V) and F814W(I) bands.
+
+NOTE: The columns in the catalog are those expected by galsim.RealGalaxyCatalog.
+However, some parts of that analysis, i.e parametric fits, were not performed.
+Hence those values were manually set and do not have physical meaning.
+
+(1) The catalogs themselves are in AEGIS_galaxy_catalog_[VI]_25.2.fits (where
+[VI] indicates either V or I).  These files can be used to initialize a
+galsim.RealGalaxyCatalog or galsim.COSMOSCatalog instance, and contain a FITS
+tables that could also be  read in directly using, e.g., python or IDL.  The
+fields that are included for each galaxy are:
+
+IDENT: AEGIS object identifier. This value is internally derived.  Therefore
+do not rely on this IDENT for cross-matching between other AEGIS catalogs.
+
+RA, DEC: Right ascension and declination (J2000, degrees).  While this is not
+needed for image simulation, it is necessary for proper cross-matching with
+other catalogs.
+
+MAG: magnitude (MAG_AUTO calculated from sextractor).
+
+BAND: Passband for the observed image (F814W/F606W).
+
+WEIGHT: A weight factor to use to account for the fact that larger galaxies are
+preferentially excluded from this catalog due to the proximity to CCD edges.
+(Currently all weights are set to 1.0).
+
+GAL_FILENAME: Name of the file containing the galaxy image.  This is just a
+filename, not including a full path.
+
+PSF_FILENAME: Name of the file containing the PSF image for this galaxy.
+This is just a filename, not including a full path.
+
+GAL_HDU: HDU containing the image of this galaxy in the file called GAL_FILENAME.
+
+PSF_HDU: HDU containing the image of the PSF for this galaxy in the file called PSF_FILENAME.
+
+PIXEL_SCALE: pixel scale for the galaxy and PSF images in arcsec (0.03 for all bands).
+
+NOISE_MEAN: mean value of the pixels in the image that do not contain the galaxy.
+
+NOISE_VARIANCE: variance of the pixel values for pixels in the image that do not contain the galaxy.
+
+
+(2) The files containing galaxy and PSF images are
+AEGIS_galaxy_images_[VI]_25.2_n?.fits and AEGIS_galaxy_PSF_images_[VI]_25.2_n?.fits. The number that goes in place of the "?" ranges from 0 to 29.
+
+
+(3) *Parametric fits have not been performed and the values in the table were manually set.*
+A catalog containing information about the fits to the galaxies in
+AEGIS_galaxy_catalog_[VI]_25.2.fits, using the fitting code from Lackner &
+Gunn (2012, MNRAS, 421, 2277) as described in the GREAT3 challenge handbook.
+The catalog of fit information is AEGIS_galaxy_catalog_I(V)_25.2_fits.fits
+(a FITS table), and the entries are in the same order as in
+AEGIS_galaxy_catalog_I(V)_25.2.fits.  The instructions below tell how to use
+the entries in this file to construct galaxy images; however, if you use the
+COSMOSCatalog class, GalSim will take care of these details for you.  The file
+contains the following fields:
+
+IDENT: AEGIS identifier.
+
+MAG_AUTO: magnitude (MAG_AUTO computed by SExtractor).
+
+FLUX_RADIUS: half-light radius for the PSF-convolved object (same as flux_radius from the AEGIS catalog), in units of pixels.
+
+ZPHOT: Photometric redshift from the DEEP2 galaxy redshift catalog Data Realase 4 (Newman et al.
+    2003).
+
+SERSICFIT: Not used.
+
+BULGEFIT: Not used.
+
+FIT_STATUS: Not used.
+
+FIT_MAD_S: Not used.
+
+FIT_MAD_B: Not used.
+
+FIT_DVC_BTT: Not used.
+
+USE_BULGEFIT: Not used.
+
+VIABLE_SERSIC: Not used.
+
+HLR: Not used.
+
+FLUX: Not used.
+
+
+(4) Files (AEGIS_galaxy_catalog_[VI]_25.2_selection.fits) with some selection
+flags that the GalSim COSMOSCatalog class may use to impose selection criteria
+on the quality of the postage stamps and/or fits.
+
+IDENT: AEGIS identifier.
+
+dmag: not used
+
+sn_ellip_gauss: SNR of the galaxy measured with an elliptical gaussian filter.
+
+min_mask_dist_pixels: Distance from the center of postage stamp tp the nearest masked pixel.
+
+average_mask_adjacent_pixel_count: Average pixel value of the 3*3 pixel region around the nearest masked pixel, before masking.
+
+peak_image_pixel_count: Highest pixel value of central object in postage stamp.
+
+
+(5) Files acs_[VI]_unrot_sci_20_cf.fits containing information that GalSim
+needs to understand the noise fields in the postage stamps.
