@@ -226,6 +226,17 @@ def test_SED_mul():
                                        err_msg="Found wrong value in SED.__mul__")
         do_pickle(d)
 
+    sed1 = galsim.SED('1', 'nm', 'fphotons', redshift=1)
+    sed2 = galsim.SED('2', 'nm', 'fphotons', redshift=2)
+    sed3 = galsim.SED('3', 'nm', '1')
+    sed4 = galsim.SED('4', 'nm', '1')
+    try:
+        np.testing.assert_raises(TypeError, sed1.__mul__,  sed2)
+    except ImportError:
+        print('The assert_raises tests require nose')
+    np.testing.assert_almost_equal((sed1*sed3)(100), 3.0, 10, "Found wrong value in SED.__mul__")
+    np.testing.assert_almost_equal((sed2*sed4)(10), 8.0, 10, "Found wrong value in SED.__mul__")
+    np.testing.assert_almost_equal((sed3*sed4)(30), 12.0, 10, "Found wrong value in SED.__mul__")
 
 @timer
 def test_SED_div():
@@ -596,19 +607,19 @@ def test_thin():
 
 
 if __name__ == "__main__":
-    test_SED_basic()
-    test_SED_add()
-    test_SED_sub()
+    # test_SED_basic()
+    # test_SED_add()
+    # test_SED_sub()
     test_SED_mul()
-    test_SED_div()
-    test_SED_atRedshift()
-    test_SED_roundoff_guard()
-    test_SED_init()
-    test_SED_withFlux()
-    test_SED_withFluxDensity()
-    test_SED_calculateMagnitude()
-    test_SED_calculateDCRMomentShifts()
-    test_SED_calculateSeeingMomentRatio()
-    test_fnu_vs_flambda()
-    test_ne()
-    test_thin()
+    # test_SED_div()
+    # test_SED_atRedshift()
+    # test_SED_roundoff_guard()
+    # test_SED_init()
+    # test_SED_withFlux()
+    # test_SED_withFluxDensity()
+    # test_SED_calculateMagnitude()
+    # test_SED_calculateDCRMomentShifts()
+    # test_SED_calculateSeeingMomentRatio()
+    # test_fnu_vs_flambda()
+    # test_ne()
+    # test_thin()

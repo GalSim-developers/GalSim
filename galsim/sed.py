@@ -343,15 +343,27 @@ class SED(object):
 
     def __mul__(self, other):
         # Watch out for 5 types of `other`:
-        # 1.  SED: prohibit this as dimensional nonsense.
+        # 1.  SED: Check that not both spectral densities.
         # 2.  GSObject: return a ChromaticObject().
         # 3.  Bandpass: return an SED, but carefully propagate blue/red limit and wave_list.
         # 4.  Callable: return an SED
         # 5.  Scalar: return an SED
 
-        # Dimensional nonsense.
+        # Only dimensionally consistent if one or both args are dimensionless.
         if isinstance(other, galsim.SED):
-            raise TypeError("Cannot multiply two SEDs.")
+            if self.spectral_density and other.spectral_density:
+                raise TypeError("Cannot multiply two spectral densities together.")
+            if self.spectral_density:
+                redshift = self.redshift
+            elif other.spectral_density:
+                redshift = other.redshift
+            else:
+                redshift = 0.0
+            fast = self.fast and other.fast
+            wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list(self, other)
+            spec = lambda w: self(w*(1.0+self.redshift)) * other(w * (1.0 + other.redshift))
+            return SED(spec, 'nm', 'fphotons', redshift=redshift, fast=fast,
+                       _blue_limit=blue_limit, _red_limit=red_limit, _wave_list=wave_list)
 
         # Product of SED and achromatic GSObject is a `ChromaticTransformation`.
         if isinstance(other, galsim.GSObject):
