@@ -90,10 +90,11 @@ class DES_Shapelet(object):
 
         if file_type == 'FITS':
             self.read_fits()
-        else:
+        else:  # pragma: no cover
             self.read_ascii()
 
-    def read_ascii(self):
+    # We haven't used these for a long time, so this is at best of historical interest...
+    def read_ascii(self):  # pragma: no cover
         """Read in a DES_Shapelet stored using the the ASCII-file version.
         """
         fin = open(self.file_name, 'r')

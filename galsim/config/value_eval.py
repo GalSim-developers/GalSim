@@ -18,6 +18,7 @@
 from __future__ import print_function
 
 import galsim
+import numpy as np
 
 # This file handles the parsing for the special Eval type.
 

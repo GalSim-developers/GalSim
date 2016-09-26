@@ -364,8 +364,6 @@ def test_cosmosnoise():
             cosmos_scale=pix_scale)
     noise -= galsim.UncorrelatedNoise(current_var, rng=rng, wcs=image4.wcs)
     image4.addNoise(noise)
-    image3.write('image3.fits')
-    image4.write('image4.fits')
     np.testing.assert_equal(
         image3.array, image4.array,
         err_msg='Config COSMOS noise with whiting does not reproduce manually drawn image')

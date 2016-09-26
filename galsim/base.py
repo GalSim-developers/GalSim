@@ -1336,7 +1336,7 @@ class GSObject(object):
         @returns the drawn Image.
         """
         # Check for obsolete dx parameter
-        if dx is not None and scale is None:
+        if dx is not None and scale is None: # pragma: no cover
             from .deprecated import depr
             depr('dx', 1.1, 'scale')
             scale = dx
@@ -1395,7 +1395,8 @@ class GSObject(object):
                 raise TypeError("The rng provided is not a BaseDeviate")
 
             # Check that either n_photons is set to something or flux is set to something
-            if n_photons == 0. and self.getFlux() == 1. and area == 1. and exptime == 1.:
+            if (n_photons == 0. and self.getFlux() == 1.
+                and area == 1. and exptime == 1.): # pragma: no cover
                 import warnings
                 warnings.warn(
                         "Warning: drawImage for object with flux == 1, area == 1, and "
@@ -1479,7 +1480,7 @@ class GSObject(object):
                     imview.image, n_photons, uniform_deviate, gain, max_extra_noise,
                     poisson_flux, add_to_image)
                 image.added_flux = added_photons / area / exptime
-            except RuntimeError:
+            except RuntimeError:  # pragma: no cover
                 # Give some extra explanation as a warning, then raise the original exception
                 # so the traceback shows as much detail as possible.
                 import warnings
@@ -1540,7 +1541,7 @@ class GSObject(object):
         @returns the tuple of Image instances, `(re, im)` (created if necessary)
         """
         # Check for obsolete dk parameter
-        if dk is not None and scale is None:
+        if dk is not None and scale is None: # pragma: no cover
             from .deprecated import depr
             depr('dx', 1.1, 'scale')
             scale = dk

@@ -275,7 +275,7 @@ class Dict(object):
         if file_type == 'PICKLE':
             try:
                 import cPickle as pickle
-            except:
+            except ImportError:
                 import pickle
             with open(self.file_name, 'rb') as f:
                 self.dict = pickle.load(f)
@@ -536,7 +536,7 @@ class OutputCatalog(object):
 
         try:
             np.savetxt(file_name, data, fmt=fmt, header=header)
-        except (AttributeError, TypeError):
+        except (AttributeError, TypeError):  # pragma: no cover
             # header was added with version 1.7, so do it by hand if not available.
             with open(file_name, 'w') as fid:
                 fid.write('#' + header + '\n')
@@ -577,7 +577,7 @@ class OutputCatalog(object):
         # Depending on the version of pyfits, one of these should work:
         try:
             tbhdu = pyfits.BinTableHDU.from_columns(cols)
-        except:
+        except:  # pragma: no cover
             tbhdu = pyfits.new_table(cols)
         return tbhdu
 

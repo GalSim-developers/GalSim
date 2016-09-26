@@ -177,9 +177,10 @@ class Bandpass(object):
         for test_wave in test_waves:
             try:
                 self._tp(test_wave)
-            except:
+            except Exception as e:
                 raise ValueError(
-                    "Throughput function was unable to evaluate at wave = {0}.".format(test_wave))
+                    "Throughput function was unable to evaluate at wave = {0}.".format(test_wave) +
+                    "Caught error: {0}".format(e))
 
 
     def _initialize_tp(self):

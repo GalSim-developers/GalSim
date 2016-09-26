@@ -1908,7 +1908,7 @@ class ChromaticConvolution(ChromaticObject):
         for obj in self.objlist:
             if not obj.separable and not isinstance(obj, galsim.ChromaticSum): n_nonsep += 1
             if obj.interpolated: n_interp += 1
-        if n_nonsep>1 and n_interp>0:
+        if n_nonsep>1 and n_interp>0: # pragma: no cover
             import warnings
             warnings.warn(
                 "Image rendering for this convolution cannot take advantage of " +
