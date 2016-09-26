@@ -24,10 +24,9 @@ def SED_rdiv(self, other):
             "We removed this function because we don't know of any clear use case. "+
             "If you have one, please open an issue, and we can add this function back.")
     if hasattr(other, '__call__'):
-        wave_factor = 1.0 + self.redshift
-        spec = lambda w: other(w * wave_factor) /  self._rest_photons(w)
+        spec = lambda w: other(w * (1.0 + self.redshift)) /  self(w * (1.0 + self.redshift))
     else:
-        spec = lambda w: other / self._rest_photons(w)
+        spec = lambda w: other / self(w * (1.0 + self.redshift))
     return galsim.SED(spec, wave_type='nm', flux_type='fphotons',
                       redshift=self.redshift, _wave_list=self.wave_list,
                       _blue_limit=self.blue_limit, _red_limit=self.red_limit)
