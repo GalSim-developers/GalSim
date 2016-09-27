@@ -296,15 +296,12 @@ def test_cosmosnoise():
 
     # First make the image using COSMOSNoise without kwargs.
     config = {}
-    # Either gal or psf is required, so just give it a Gaussian with 0 flux.
-    config['gal'] = {
-        'type' : 'Gaussian',
-        'sigma' : 0.1,
-        'flux' : 0
-    }
+    # Either gal or psf is required, but it can be type = None, which means don't draw anything.
+    config['gal'] = { 'type' : 'None' }
     config['image'] = {
         'type' : 'Single',
         'pixel_scale' : pix_scale,
+        'size' : 64,
         'random_seed' : 123 # Note: this means the seed for the noise will really be 124
                             # since it is applied at the stamp level, so uses seed + obj_num
     }

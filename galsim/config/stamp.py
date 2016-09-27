@@ -329,6 +329,10 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                 #       Reject means we retry this object using the same obj_num.
                 #       This has implications for the total number of objects as well as
                 #       things like ring tests that rely on objects being made in pairs.
+                #
+                #       Skip is also different from prof = None.
+                #       If prof is None, then the user indicated that no object should be
+                #       drawn on this stamp, but that a noise image is still desired.
 
             im = builder.makeStamp(stamp, config, xsize, ysize, logger)
 
@@ -614,8 +618,11 @@ class StampBuilder(object):
         else:
             if gal:
                 return gal
+            elif 'gal' in base or 'psf' in base:
+                return None
             else:
-                raise AttributeError("At least one of gal or psf must be specified in config.")
+                raise AttributeError("At least one of gal or psf must be specified in config. " +
+                                     "If you really don't want any object, use gal type = None.")
 
     def makeStamp(self, config, base, xsize, ysize, logger):
         """Make the initial empty postage stamp image, if possible.
@@ -651,7 +658,10 @@ class StampBuilder(object):
 
         @returns the resulting image
         """
-        return DrawBasic(prof,image,method,offset,config,base,logger)
+        if prof is None:
+            return image
+        else:
+            return DrawBasic(prof,image,method,offset,config,base,logger)
 
     def whiten(self, prof, image, config, base, logger):
         """If appropriate, whiten the resulting image according to the requested noise profile
@@ -667,7 +677,7 @@ class StampBuilder(object):
         """
         # If the object has a noise attribute, then check if we need to do anything with it.
         current_var = 0.  # Default if not overwritten
-        if hasattr(prof,'noise'):
+        if prof is not None and hasattr(prof,'noise'):
             if 'image' in base and 'noise' in base['image']:
                 noise = base['image']['noise']
                 if 'whiten' in noise:
@@ -759,6 +769,10 @@ class StampBuilder(object):
 
         @returns whether to reject this object
         """
+        # Early exit if no profile
+        if prof is None:
+            return False
+
         # Check that we aren't on a second or later item in a Ring.
         # This check can be removed once we do not need to support the deprecated gsobject
         # type=Ring.
@@ -829,15 +843,16 @@ class StampBuilder(object):
         @param config       The configuration dict for the stamp field.
         @param base         The base configuration dict.
         @param image        The current image.
-        @param skip         Are we skipping this image? (Usually means to add sky, but not noise.)
+        @param skip         Are we skipping this image? (Usually this is irrelevant, since we
+                            need sky and noise regardless, but user-defined classes might choose
+                            to do something different if skipping this object.)
         @param current_var  The current noise variance present in the image already.
         @param logger       If given, a logger object to log progress.
 
         @returns the new values of image, current_var
         """
         galsim.config.AddSky(base,image)
-        if not skip:
-            current_var = galsim.config.AddNoise(base,image,current_var,logger)
+        current_var = galsim.config.AddNoise(base,image,current_var,logger)
         return image, current_var
 
     def makeTasks(self, config, base, jobs, logger):
