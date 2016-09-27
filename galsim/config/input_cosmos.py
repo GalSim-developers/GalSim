@@ -21,13 +21,26 @@ import galsim
 
 # The COSMOSCatalog doesn't need anything special other than registration as a valid input type.
 # However, we do make a custom Loader so that we can add a logger line with some information about
-# the number of objects in the catalog that passed the initial cuts.
+# the number of objects in the catalog that passed the initial cuts and other basic catalog info.
 from .input import RegisterInputType, InputLoader
 class COSMOSLoader(InputLoader):
     def setupImage(self, cosmos_cat, config, base, logger):
         if logger:
-            logger.info("file %d: COSMOS catalog has %d total objects; %d passed initial cuts.",
-                        base['file_num'], cosmos_cat.getNTot(), cosmos_cat.getNObjects())
+            if 'input' in base:
+                if 'cosmos_catalog' in base['input']:
+                    out_str = ''
+                    if 'sample' in base['input']['cosmos_catalog'][0]:
+                        out_str += '\n  sample = %s'%base['input']['cosmos_catalog'][0]['sample']
+                    if 'dir' in base['input']['cosmos_catalog'][0]:
+                        out_str += '\n  dir = %s'%base['input']['cosmos_catalog'][0]['dir']
+                    if out_str != '':
+                        logger.warning('Using user-specified COSMOSCatalog: %s',out_str)
+            logger.warning("file %d: COSMOS catalog has %d total objects; %d passed initial cuts.",
+                           base['file_num'], cosmos_cat.getNTot(), cosmos_cat.getNObjects())
+            if base['gal']['gal_type']=='parametric':
+                logger.warning("Using parametric galaxies.")
+            else:
+                logger.warning("Using real galaxies.")
 
 RegisterInputType('cosmos_catalog', COSMOSLoader(galsim.COSMOSCatalog))
 
