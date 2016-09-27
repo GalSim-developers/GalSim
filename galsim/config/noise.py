@@ -222,7 +222,7 @@ class NoiseBuilder(object):
         @param draw_method      The method that was used to draw the objects on the image.
         @param logger           If given, a logger object to log progress.
         """
-        raise NotImplemented("The %s class has not overridden addNoise"%self.__class__)
+        raise NotImplementedError("The %s class has not overridden addNoise"%self.__class__)
 
     def getNoiseVariance(self, config, base):
         """Read the noise parameters from the config dict and return the variance.
@@ -232,7 +232,7 @@ class NoiseBuilder(object):
 
         @returns the variance of the noise model
         """
-        raise NotImplemented("The %s class has not overridden addNoise"%self.__class__)
+        raise NotImplementedError("The %s class has not overridden addNoise"%self.__class__)
 
     def addNoiseVariance(self, config, base, im, include_obj_var, logger):
         """Read the noise parameters from the config dict and add the appropriate noise variance

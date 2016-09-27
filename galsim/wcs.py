@@ -616,7 +616,7 @@ def readFromFitsHeader(header):
     elif 'CTYPE1' in header:
         try:
             wcs = galsim.FitsWCS(header=header, suppress_warning=True)
-        except:
+        except:  # pragma: no cover
             # This shouldn't ever happen, but just in case...
             wcs = galsim.PixelScale(1.)
     else:
@@ -1874,18 +1874,18 @@ def _writeFuncToHeader(func, letter, header):
         # In particular, marshal can serialize arbitrary code. (!)
         try:
             import cPickle as pickle
-        except:
+        except ImportError:
             import pickle
         import types, marshal, base64
         if type(func) == types.FunctionType:
             try:
-                # Python3
+                # Python3 and usually Python2
                 code = marshal.dumps(func.__code__)
                 name = func.__name__
                 defaults = func.__defaults__
                 closure = func.__closure__
-            except:
-                # Python2
+            except:  # pragma: no cover
+                # Older Python2 syntax, just in case.
                 code = marshal.dumps(func.func_code)
                 name = func.func_name
                 defaults = func.func_defaults
@@ -1953,7 +1953,7 @@ def _readFuncFromHeader(letter, header):
     # This undoes the process of _writeFuncToHeader.  See the comments in that code for details.
     try:
         import cPickle as pickle
-    except:
+    except ImportError:
         import pickle
     import types, marshal, base64, types
     if 'GS_'+letter+'_STR' in header:

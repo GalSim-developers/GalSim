@@ -87,12 +87,12 @@ def BuildStamps(nobjects, config, obj_num=0,
             logger.info(s0 + 'Stamp %d: size = %d x %d, time = %f sec', obj_num, xs, ys, t)
 
     def except_func(logger, proc, k, e, tr):
-        if logger:
+        if logger: # pragma: no cover
             if proc is None: s0 = ''
             else: s0 = '%s: '%proc
             obj_num = jobs[k]['obj_num']
             logger.error(s0 + 'Exception caught when building stamp %d', obj_num)
-            #logger.error('%s',tr)
+            logger.warning('%s',tr)
             logger.error('Aborting the rest of this image')
 
     # Convert to the tasks structure we need for MultiProcess.
@@ -103,7 +103,7 @@ def BuildStamps(nobjects, config, obj_num=0,
                                          done_func = done_func,
                                          except_func = except_func)
 
-    if not results:
+    if not results:  # pragma: no cover
         images, current_vars = [], []
         if logger:
             logger.error('No images were built.  All were either skipped or had errors.')
@@ -261,7 +261,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
     stamp = config['stamp']
     stamp_type = stamp['type']
     if stamp_type not in valid_stamp_types:
-        raise AttributeErro("Invalid stamp.type=%s."%stamp_type)
+        raise AttributeError("Invalid stamp.type=%s."%stamp_type)
     builder = valid_stamp_types[stamp_type]
 
     # Add 1 to the seed here so the first object has a different rng than the file or image.

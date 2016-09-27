@@ -1519,8 +1519,9 @@ def test_astropywcs():
             warnings.filterwarnings("ignore",category=RuntimeWarning)
             import astropy.wcs
             import scipy  # AstropyWCS constructor will do this, so check now.
-    except ImportError:
+    except ImportError as e:
         print('Unable to import astropy.wcs.  Skipping AstropyWCS tests.')
+        print('Caught ',e)
         return
 
     # These all work, but it is quite slow, so only test one of them for the regular unit tests.
@@ -1628,12 +1629,9 @@ def test_gsfitswcs():
     """Test the GSFitsWCS class
     """
     # These are all relatively fast (total time for all 7 and the TanWCS stuff below is about
-    # 1.6 seconds), but longer than my arbitrary 1 second goal for any unit test, so only do the
-    # three most important ones as part of the regular test suite runs.
-    if __name__ == "__main__":
-        test_tags = [ 'TAN', 'STG', 'ZEA', 'ARC', 'TPV', 'TAN-PV', 'TAN-FLIP', 'TNX', 'SIP' ]
-    else:
-        test_tags = [ 'TAN', 'TPV', 'SIP' ]
+    # 1.6 seconds), and (relatively) full unit test coverage requires all of them, so we always
+    # do these despite violating my usual upper limit of 1 second per unit test.
+    test_tags = [ 'TAN', 'STG', 'ZEA', 'ARC', 'TPV', 'TAN-PV', 'TAN-FLIP', 'TNX', 'SIP' ]
 
     dir = 'fits_files'
 

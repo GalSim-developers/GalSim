@@ -22,12 +22,16 @@
 import sys
 import subprocess
 
-cmd = "diff -q %s %s"%(tuple(sys.argv[1:]))
-p = subprocess.Popen([cmd],stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
-diff_output = p.stdout.read()
+def same(file_name1, file_name2):
 
-if len(diff_output) > 0:
-    print diff_output.strip()
+    cmd = "diff -q %s %s"%(file_name1, file_name2)
+    p = subprocess.Popen([cmd],stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+    diff_output = p.stdout.read()
+    if len(diff_output) > 0:
+        print diff_output.strip()
+    return (len(diff_output) == 0)
+
+def report(file_name1, file_name2):
 
     try:
         try:
@@ -36,14 +40,14 @@ if len(diff_output) > 0:
             import pyfits
     except ImportError, e:
         # Then /usr/bin/env python doesn't have pyfits installed.  Oh well.
-        sys.exit()
+        return
 
     try:
-        f1 = pyfits.open(sys.argv[1])
-        f2 = pyfits.open(sys.argv[2])
+        f1 = pyfits.open(file_name1)
+        f2 = pyfits.open(file_name2)
     except IOError, e:
         # Then at least one of the files doesn't exist, which diff will have already reported.
-        sys.exit()
+        return
 
     for hdu in range(len(f1)):
         d0 = f1[hdu].data
@@ -67,3 +71,8 @@ if len(diff_output) > 0:
             print '    HDU %d shows differences in %d pixels'%(hdu, (d0!=d1).sum())
             print '    The maximum absolute difference is %e.'%(abs(d0-d1).max())
             print '    The maximum relative difference is %e.'%(abs((d0-d1)/(d0+1.e-10)).max())
+
+
+if __name__ == "__main__":
+    if not same(*sys.argv[1:]):
+        report(*sys.argv[1:])

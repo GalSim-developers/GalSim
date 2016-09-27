@@ -181,7 +181,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         if issubclass(galsim.__dict__[type_name], galsim.GSObject):
             gsobject, safe = _BuildSimple(param, base, ignore, gsparams, logger)
         else:
-            TypeError("Input config type = %s is not a GSObject."%type_name)
+            raise TypeError("Input config type = %s is not a GSObject."%type_name)
     # Otherwise, it's not a valid type.
     else:
         raise NotImplementedError("Unrecognised config type = %s"%type_name)
@@ -243,11 +243,12 @@ def _BuildSimple(config, base, ignore, gsparams, logger):
     if logger:
         logger.debug('obj %d: BuildSimple for type = %s',base['obj_num'],type_name)
 
+    req = init_func._req_params if hasattr(init_func,'_req_params') else {}
+    opt = init_func._opt_params if hasattr(init_func,'_opt_params') else {}
+    single = init_func._single_params if hasattr(init_func,'_single_params') else []
     kwargs, safe = galsim.config.GetAllParams(config, base,
-                                              req = init_func._req_params,
-                                              opt = init_func._opt_params,
-                                              single = init_func._single_params,
-                                              ignore = ignore)
+                                              req=req, opt=opt, single=single,
+                                              ignore=ignore)
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
     if init_func._takes_rng:
