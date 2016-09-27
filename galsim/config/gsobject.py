@@ -499,7 +499,7 @@ def _GetMinimumBlock(config, base):
     """
     if isinstance(config, dict) and 'type' in config:
         type_name = config['type']
-        if type_name in block_gsobject_types:
+        if type_name in block_gsobject_types: # pragma: no cover
             num = galsim.config.ParseValue(config, 'num', base, int)[0]
             return num
         else:
@@ -540,7 +540,7 @@ def RegisterObjectType(type_name, build_func, input_type=None, _is_block=False):
     # now-deprecated type=Ring.  Once that feature is fully removed, we can remove the _is_block
     # parameter here.
     valid_gsobject_types[type_name] = build_func
-    if _is_block:
+    if _is_block: # pragma: no cover
         block_gsobject_types.append(type_name)
     if input_type is not None:
         from .input import RegisterInputConnectedType
