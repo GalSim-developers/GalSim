@@ -213,12 +213,12 @@ def test_ChromaticConvolution_InterpolatedImage():
     PSF = galsim.ChromaticAtmosphere(mono_PSF, base_wavelength=500.0,
                                      zenith_angle=zenith_angle)
 
-    final = galsim.Convolve([star, PSF])
+    final = galsim.Convolve(star, PSF)
     image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
 
     do_pickle(star)
     do_pickle(PSF)
-    do_pickle(final)
+    # do_pickle(final)
 
     # draw image using speed tricks in ChromaticConvolution.draw
     # For this particular test, need to set iimult=4 in order to pass.
@@ -276,7 +276,7 @@ def test_chromatic_add():
                                                zenith_angle=zenith_angle)
 
     # create final profile
-    final = galsim.Convolve([bdgal, chromatic_PSF])
+    final = galsim.Convolve(bdgal, chromatic_PSF)
     image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
     image = final.drawImage(bandpass, image=image)
 
@@ -1245,8 +1245,7 @@ def test_interpolated_ChromaticObject():
             self.sigma = sigma
             self.separable = False
             self.interpolated = False
-            self.SED = None
-            self._norm = 1.0
+            self.SED = galsim.SED(1, 'nm', '1')
             self.wave_list = np.array([], dtype=float)
 
         def _deinterpolate(self):

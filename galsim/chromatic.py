@@ -115,25 +115,12 @@ class ChromaticObject(object):
 
     # ChromaticObjects should adhere to the following invariants:
     # - Objects should define the attributes:
-    #   * .SED, ._norm, .separable, .wave_list, .interpolated
-    # - Exactly one of the attributes .SED and ._norm should be None.
-    #   * If ._norm is not None, then:
-    #     - ._norm should be one of:
-    #       * a callable function of wavelength, returning a float normalization
-    #       * a scalar float normalization
-    #     - obj.evaluateAtWavelength(lam).drawImage().array.sum() == obj._norm(lam)  (callable)
-    #     - obj.evaluateAtWavelength(lam).drawImage().array.sum() == obj._norm  (scalar)
-    #     - obj.evaluateAtWavelength(lam).drawImage().array.sum() ==
-    #       obj.evaluateAtWavelength(lam).getFlux()  # Like all GSObjects
-    #     - obj.drawImage(bandpass) raises a ValueError
-    #     - Note that ._norm is essentially unitless in this case, and the units of the GSObject
-    #       returned by evaluateAtWavelength are 1/arcsec^2 (or 1/scale_unit^2 if not using arcsec
-    #       as the implicit angle units).
-    #   * If .SED is not None, then:
-    #     - .SED should be a galsim.SED instance
-    #     - obj.SED.calculateFlux(bandpass) == obj.calculateFlux(bandpass) ==
-    #       obj.drawImage(bandpass).array.sum()
-    #     - obj.evaluateAtWavelength(lam).drawImage().array.sum() == obj.SED(lam)
+    #   * .SED, .separable, .wave_list, .interpolated
+    # - obj.evaluateAtWavelength(lam).drawImage().array.sum() == obj.SED(lam)
+    #   == obj.evaluateAtWavelength(lam).getFlux()
+    # - if SED.spectral:
+    #       obj.SED.calculateFlux(bandpass) == obj.calculateFlux(bandpass)
+    #       == obj.drawImage(bandpass).array.sum()
     # - .separable is a boolean indicating whether or not the profile can be factored into a
     #   spatial part and a spectral part.
     # - .wave_list is a numpy array indicating wavelengths of particular interest, for instance, the
@@ -152,24 +139,11 @@ class ChromaticObject(object):
         self.interpolated = obj.interpolated
         self.wave_list = obj.wave_list
         if isinstance(obj, galsim.GSObject):
-            # The following might be contraversial, but I'm (JM) declaring that the most common use
-            # case for calling the galsim.ChromaticObject constructor on a GSObject is for setting
-            # up a wavelength dependent PSF by chromatically transforming said GSObject.  In that
-            # case, we want self.SED to be None.  The exception is if the GSObject has non-unit
-            # flux, which doesn't make sense for a PSF.  In that case, we initialize self.SED to the
-            # appropriate constant (in fphotons) flux.
-            if obj.flux == 1.0:
-                self.SED = None
-                self.obj = obj
-                self._norm = 1.0
-            else:
-                self.SED = galsim.SED(str(obj.flux), 'nm', 'fphotons')
-                self.obj = obj/obj.flux
-                self._norm = None
+            self.obj = obj
+            self.SED = obj.flux * obj.SED
         elif isinstance(obj, ChromaticObject):
             self.obj = obj
             self.SED = obj.SED
-            self._norm = obj._norm
         else:
             raise TypeError("Can only directly instantiate ChromaticObject with a GSObject "
                             "or ChromaticObject argument.")
@@ -368,9 +342,8 @@ class ChromaticObject(object):
 
         @returns the drawn Image.
         """
-        # When drawing, we must be an SED'd object.  So check that here.
-        if self.SED is None:
-            raise ValueError("Can only draw ChromaticObjects with SEDs.")
+        if self.SED.dimensionless:
+            raise ValueError("Can only draw ChromaticObjects with dimensionful SEDs.")
 
         # setup output image using fiducial profile
         wave0, prof0 = self._fiducial_profile(bandpass)
@@ -378,7 +351,7 @@ class ChromaticObject(object):
         _remove_setup_kwargs(kwargs)
 
         # determine combined self.wave_list and bandpass.wave_list
-        wave_list, _, _ = galsim.utilities.combine_wave_list([self, bandpass])
+        wave_list, _, _ = galsim.utilities.combine_wave_list(self, bandpass)
 
         if self.separable:
             multiplier = ChromaticObject._multiplier_cache(self.SED, bandpass, tuple(wave_list))
@@ -486,8 +459,8 @@ class ChromaticObject(object):
         # if either the Bandpass or self maintain a wave_list, evaluate integrand only at
         # those wavelengths.
         if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
-            w, _, _ = galsim.utilities.combine_wave_list([self, bandpass])
-            objs = [self.evaluateAtWavelength(y) for y in w]
+            w, _, _ = galsim.utilities.combine_wave_list(self, bandpass)
+            objs = [self.evaluateAtWavelength(ww) for ww in w]
             fluxes = [o.getFlux() for o in objs]
             centroids = [o.centroid() for o in objs]
             xcentroids = np.array([c.x for c in centroids])
@@ -515,17 +488,17 @@ class ChromaticObject(object):
             return galsim.PositionD(xcentroid, ycentroid)
 
     def calculateFlux(self, bandpass):
-        if self.SED is None:
-            raise ValueError("Cannot calculate flux of ChromaticObject with .SED = None.")
+        if self.SED.dimensionless:
+            raise ValueError("Cannot calculate flux of ChromaticObject with dimensionless SED.")
         return self.SED.calculateFlux(bandpass)
 
     # Add together `ChromaticObject`s and/or `GSObject`s
     def __add__(self, other):
-        return galsim.ChromaticSum([self, other])
+        return galsim.ChromaticSum(self, other)
 
     # Subtract `ChromaticObject`s and/or `GSObject`s
     def __sub__(self, other):
-        return galsim.ChromaticSum([self, (-1. * other)])
+        return galsim.ChromaticSum(self, -other)
 
     # Make op* and op*= work to adjust the flux of the object
     def __rmul__(self, other):
@@ -537,6 +510,9 @@ class ChromaticObject(object):
 
     def __truediv__(self, other):
         return self.__div__(other)
+
+    def __neg__(self):
+        return -1. * self
 
     # Following functions work to apply affine transformations to a ChromaticObject.
     #
@@ -851,7 +827,6 @@ class InterpolatedChromaticObject(ChromaticObject):
         self.separable = original.separable
         self.interpolated = True
         self.SED = original.SED
-        self._norm = original._norm
         self.wave_list = original.wave_list
 
         # Don't interpolate an interpolation.  Go back to the original.
@@ -934,14 +909,9 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         # Rescale to use the exact flux or normalization if requested.
         if self.use_exact_SED:
-            if self.SED is not None:
-                interp_flux = _linearInterp(self.fluxes, frac, lower_idx)
-                exact_flux = self.SED(wave)
-                im *= exact_flux/interp_flux
-            elif self._norm is not None:
-                exact_norm = self._norm(wave) if hasattr(self._norm, '__call__') else self._norm
-                interp_norm = _linearInterp(self.fluxes, frac, lower_idx)
-                im *= exact_norm/interp_norm
+            interp_norm = _linearInterp(self.fluxes, frac, lower_idx)
+            exact_norm = self.SED(wave)
+            im *= exact_norm/interp_norm
 
         return im, stepk, maxk
 
@@ -1031,16 +1001,9 @@ class InterpolatedChromaticObject(ChromaticObject):
 
             # Rescale to use the exact flux or normalization if requested.
             if self.use_exact_SED:
-                if self.SED is not None:
-                    interp_flux = _linearInterp(self.fluxes, frac, lower_idx)
-                    exact_flux = self.SED(w)
-                    b *= exact_flux/interp_flux
-                # Probably this method only gets called if self.SED is not None, but for
-                # completeness we include the following lines.
-                elif self._norm is not None:
-                    exact_norm = self._norm(w) if hasattr(self._norm, '__call__') else self._norm
-                    interp_norm = _linearInterp(self.fluxes, frac, lower_idx)
-                    b *= exact_norm/interp_norm
+                interp_norm = _linearInterp(self.fluxes, frac, lower_idx)
+                exact_norm = self.SED(w)
+                b *= exact_norm/interp_norm
 
             if (idx > 0 and idx < len(wave_list)-1) or integrator == 'midpoint':
                 weight_fac[lower_idx] += (1.0-frac)*b
@@ -1080,9 +1043,8 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         @returns the drawn Image.
         """
-        # When drawing, we must be an SED'd object.  So check that here.
-        if self.SED is None:
-            raise ValueError("Can only draw ChromaticObjects with SEDs.")
+        if self.SED.dimensionless:
+            raise ValueError("Can only draw ChromaticObjects with dimensionful SEDs.")
 
         int_im = self._get_interp_image(bandpass, image=image, integrator=integrator, **kwargs)
         image = int_im.drawImage(image=image, **kwargs)
@@ -1150,8 +1112,7 @@ class ChromaticAtmosphere(ChromaticObject):
 
         self.separable = False
         self.interpolated = False
-        self.SED = None
-        self._norm = 1.0
+        self.SED = galsim.SED('1', 'nm', '1')
         self.wave_list = np.array([], dtype=float)
 
         self.base_obj = base_obj
@@ -1280,7 +1241,6 @@ class Chromatic(ChromaticObject):
 
         flux = gsobj.getFlux()
         self.SED = SED * flux
-        self._norm = None
         self.obj = gsobj / flux
         self.wave_list = SED.wave_list
         # Chromaticized GSObjects are separable into spatial (x,y) and spectral (lambda) factors.
@@ -1352,36 +1312,19 @@ class ChromaticTransformation(ChromaticObject):
         # is separable, then the transformation is still separable (for instance, galsim.Chromatic),
         # but we'll ignore that here.
         self.separable = obj.separable and not self.chromatic
+        if not hasattr(flux_ratio, '__call__'):
+            flux_ratio = galsim.SED(flux_ratio, 'nm', '1')
 
-        if isinstance(flux_ratio, galsim.SED):
-            if obj.SED is not None:
-                raise ValueError("Cannot attach more than one SED to ChromaticObject.")
-            else:
-                self.SED = obj._norm * flux_ratio
-                self._norm = None
-        else:  # either scalar or generic callable
-            if obj.SED is not None:
-                self.SED = obj.SED * flux_ratio
-                self._norm = None
-            else:  # non-SED times non-SED, so set ._norm
-                self.SED = None
-                self._norm = _fn_prod(obj._norm, flux_ratio)
+        self.SED = obj.SED * flux_ratio
 
         # Need to account for non-unit determinant jacobian in normalization.
         if hasattr(jac, '__call__'):
             @np.vectorize
             def detjac(w):
                 return np.linalg.det(np.asarray(jac(w)).reshape(2,2))
-            if self.SED is not None:
-                self.SED *= detjac
-            else:
-                self._norm = _fn_prod(self._norm, detjac)
         else:
             detjac = np.linalg.det(np.asarray(jac).reshape(2,2))
-            if self.SED is not None:
-                self.SED *= detjac
-            else:
-                self._norm = _fn_prod(self._norm, detjac)
+        self.SED *= detjac
 
         if obj.interpolated and self.chromatic:
             import warnings
@@ -1404,39 +1347,29 @@ class ChromaticTransformation(ChromaticObject):
 
             self._jac = new_jac(obj._jac, jac)
             self._offset = new_offset(jac, obj._offset, offset)
-            # if obj._flux_ratio is an SED, then just make a new SED.
-            if isinstance(obj._flux_ratio, galsim.SED):
-                self._flux_ratio = obj._flux_ratio * flux_ratio
-            else:
-                self._flux_ratio = _fn_prod(obj._flux_ratio, flux_ratio)
-
+            self._flux_ratio = obj._flux_ratio * flux_ratio
         else:
             self.original = obj
             self._jac = jac
             self._offset = offset
             self._flux_ratio = flux_ratio
 
-        if self.SED is not None:
-            self.wave_list, _, _ = galsim.utilities.combine_wave_list(self.original, self.SED)
-        else:
-            self.wave_list = self.original.wave_list
+        self.wave_list, _, _ = galsim.utilities.combine_wave_list(self.original, self.SED)
 
         if gsparams is None:
-            if hasattr(self.original, 'gsparams'):
-                self.gsparams = self.original.gsparams
-            else:
-                self.gsparams = None
+            self.gsparams = self.original.gsparams if hasattr(self.original, 'gsparams') else None
         else:
             self.gsparams = gsparams
 
-    # There's really no good way to check that two callables are equal, except if they literally
-    # point to the same object.  So we'll just check for that for _jac, _offset, and _flux_ratio.
     def __eq__(self, other):
         if not (isinstance(other, galsim.ChromaticTransformation) and
                 self.original == other.original and
-                self.gsparams == other.gsparams):
+                self.gsparams == other.gsparams and
+                self._flux_ratio == other._flux_ratio):
             return False
-        for attr in ['_jac', '_offset', '_flux_ratio']:
+        # There's really no good way to check that two callables are equal, except if they literally
+        # point to the same object.  So we'll just check for that for _jac and _offset.
+        for attr in ['_jac', '_offset']:
             selfattr = getattr(self, attr)
             otherattr = getattr(other, attr)
             # For this attr, either both need to be chromatic or neither.
@@ -1447,7 +1380,7 @@ class ChromaticTransformation(ChromaticObject):
             if hasattr(selfattr, '__call__'):
                 if selfattr != otherattr:
                     return False
-            else: # Otherwise, check that attr arrays (or _flux_ratio float) are equal.
+            else: # Otherwise, check that attr arrays are equal.
                 if not np.array_equal(selfattr, otherattr):
                     return False
         return True
@@ -1513,10 +1446,7 @@ class ChromaticTransformation(ChromaticObject):
             s += '.shift(%s)'%self._offset
         elif np.array_equal(self._offset,(0,0)):
             s += '.shift(%s,%s)'%(self._offset[0],self._offset[1])
-        if hasattr(self._flux_ratio, '__call__'):
-            s += '.withScaledFlux(%s)'%self._flux_ratio
-        elif self._flux_ratio != 1.:
-            s += '.withScaledFlux(%s)'%self._flux_ratio
+        s += '.withScaledFlux(%s)'%self._flux_ratio
         return s
 
     def _getTransformations(self, wave):
@@ -1529,10 +1459,7 @@ class ChromaticTransformation(ChromaticObject):
         else:
             offset = self._offset
         offset = galsim.PositionD(*offset)
-        if hasattr(self._flux_ratio, '__call__'):
-            flux_ratio = self._flux_ratio(wave)
-        else:
-            flux_ratio = self._flux_ratio
+        flux_ratio = self._flux_ratio(wave)
         return jac, offset, flux_ratio
 
     def _deinterpolate(self):
@@ -1584,9 +1511,8 @@ class ChromaticTransformation(ChromaticObject):
 
         @returns the drawn Image.
         """
-        # When drawing, we must be an SED'd object.  So check that here.
-        if self.SED is None:
-            raise ValueError("Can only draw ChromaticObjects with SEDs.")
+        if self.SED.dimensionless:
+            raise ValueError("Can only draw ChromaticObjects with dimensionful SEDs.")
 
         if isinstance(self.original, InterpolatedChromaticObject):
             # Pass self._flux_ratio, which *could* depend on wavelength, to _get_interp_image,
@@ -1655,83 +1581,51 @@ class ChromaticSum(ChromaticObject):
         self.interpolated = any(arg.interpolated for arg in args)
 
         # We can only add ChromaticObjects together if they're either all SED'd or all non-SED'd
-        isSEDed = any(a.SED is not None for a in args)
-        isNormed = any(a._norm is not None for a in args)
-        if isSEDed and isNormed:
-            raise ValueError("Can only add ChromaticObjects with all SEDs None or no SEDs None.")
+        dimensionless = all(a.SED.dimensionless for a in args)
+        spectral = all(a.SED.spectral for a in args)
+        if not (dimensionless or spectral):
+            raise ValueError("Cannot add dimensionless and spectral ChromaticObjects.")
 
         # Sort arguments into inseparable objects and groups of separable objects.  Note that
-        # separable groups are only identified if the constituent objects have the *same* SED (or
-        # *same* _norm) even though a proportional SED is mathematically sufficient for
-        # separability.  It's basically impossible to identify if two SEDs are proportional (or even
-        # equal) unless they point to the same memory, so we just accept this limitation.
+        # separable groups are only identified if the constituent objects have the *same* SED even
+        # though a proportional SED is mathematically sufficient for separability.  It's basically
+        # impossible to identify if two SEDs are proportional (or even equal) unless they point to
+        # the same memory, so we just accept this limitation.
 
         # Each input summand will either end up in norm_dict if it's separable, or in self.objlist
-        # if it's inseparable.  Note that the keys to norm_dict can either be all SEDs or all
-        # _norms, but will never be mixed.
-        norm_dict = {}
+        # if it's inseparable.
+        SED_dict = {}
         self.objlist = []
         for obj in args:
             if obj.separable:
-                if isSEDed:
-                    if obj.SED not in norm_dict:
-                        norm_dict[obj.SED] = []
-                    norm_dict[obj.SED].append(obj)
-                else:
-                    if obj._norm not in norm_dict:
-                        norm_dict[obj._norm] = []
-                    norm_dict[obj._norm].append(obj)
+                if obj.SED not in SED_dict:
+                    SED_dict[obj.SED] = []
+                SED_dict[obj.SED].append(obj)
             else:
                 self.objlist.append(obj)
 
-        # If everything ended up in a single norm_dict entry (and self.objlist is empty) then this
+        # If everything ended up in a single SED_dict entry (and self.objlist is empty) then this
         # ChromaticSum is separable.
-        self.separable = (len(self.objlist) == 0 and len(norm_dict) == 1)
+        self.separable = (len(self.objlist) == 0 and len(SED_dict) == 1)
         if self.separable:
-            the_one_norm = list(norm_dict)[0]  # Could be either an SED or a _norm function.
-            self.objlist = norm_dict[the_one_norm]
-            if isSEDed:
-                # Since we know that the chromatic objects' SEDs already include all relevant
-                # normalizations, we can just multiply the_one_norm by the number of objects.
-                self.SED = the_one_norm * len(norm_dict[the_one_norm])
-                self._norm = None
-            else:
-                self.SED = None
-                # Prefer scalar self._norm if possible.
-                if hasattr(the_one_norm, '__call__'):
-                    self._norm = lambda w: the_one_norm(w) * len(norm_dict[the_one_norm])
-                else:
-                    self._norm = the_one_norm * len(norm_dict[the_one_norm])
+            the_one_SED = list(SED_dict)[0]
+            self.objlist = SED_dict[the_one_SED]
+            # Since we know that the chromatic objects' SEDs already include all relevant
+            # normalizations, we can just multiply the_one_SED by the number of objects.
+            self.SED = the_one_SED * len(SED_dict[the_one_SED])
         else:
             # Sum is not separable, put partial sums might be.  Search for them.
-            for v in norm_dict.values():
+            for v in SED_dict.values():
                 if len(v) == 1:
                     self.objlist.append(v[0])
                 else:
                     self.objlist.append(ChromaticSum(v))
             # and assemble self normalization:
-            if isSEDed:
-                self._norm = None
-                self.SED = self.objlist[0].SED
-                for obj in self.objlist[1:]:
-                    self.SED += obj.SED
-            else:
-                self.SED = None
-                # Maintain scalar type if possible.
-                if any(hasattr(obj._norm, '__call__') for obj in self.objlist):
-                    self._norm = lambda w: 0.0
-                    for obj in self.objlist:
-                        if hasattr(obj._norm, '__call__'):
-                            self._norm = lambda w: self._norm(w) + obj._norm(w)
-                        else:
-                            self._norm = lambda w: self._norm(w) + obj._norm
-                else:
-                    self._norm = sum(obj._norm for obj in self.objlist)
+            self.SED = self.objlist[0].SED
+            for obj in self.objlist[1:]:
+                self.SED += obj.SED
 
-        # finish up by constructing self.wave_list
-        self.wave_list = np.array([], dtype=float)
-        for obj in self.objlist:
-            self.wave_list = np.union1d(self.wave_list, obj.wave_list)
+        self.wave_list, _, _ = galsim.utilities.combine_wave_list(self.objlist)
 
     def _deinterpolate(self):
         if self.interpolated:
@@ -1790,9 +1684,8 @@ class ChromaticSum(ChromaticObject):
 
         @returns the drawn Image.
         """
-        # When drawing, we must be an SED'd object.  So check that here.
-        if self.SED is None:
-            raise ValueError("Can only draw ChromaticObjects with SEDs.")
+        if self.SED.dimensionless:
+            raise ValueError("Can only draw ChromaticObjects with dimensionful SEDs.")
 
         add_to_image = kwargs.pop('add_to_image', False)
         # Use given add_to_image for the first one, then add_to_image=False for the rest.
@@ -1871,20 +1764,9 @@ class ChromaticConvolution(ChromaticObject):
 
         # Accumulate convolutant .SED, and ._norm attributes.  Also make sure at most one
         # convolutant has a non-None .SED attribute.
-        self.SED = None
-        self._norm = 1.0
-        for obj in args:
-            if obj.SED is not None:
-                if self.SED is None:
-                    self.SED = obj.SED
-                else:
-                    raise ValueError("Cannot convolve multiple SED'd ChromaticObjects.")
-            else: # obj.SED is None, so ._norm should not be
-                self._norm = _fn_prod(self._norm, obj._norm)
-        # Finally, fold _norm into SED.
-        if self.SED is not None:
-            self.SED *= self._norm
-            self._norm = None
+        self.SED = args[0].SED
+        for obj in args[1:]:
+            self.SED *= obj.SED
 
         self.objlist = []
         # Unfold convolution of convolution.
@@ -2011,9 +1893,8 @@ class ChromaticConvolution(ChromaticObject):
 
         @returns the drawn Image.
         """
-        # When drawing, we must be an SED'd object.  So check that here.
-        if self.SED is None:
-            raise ValueError("Can only draw ChromaticObjects with SEDs.")
+        if self.SED.dimensionless:
+            raise ValueError("Can only draw ChromaticObjects with dimensionful SEDs.")
 
         # `ChromaticObject.drawImage()` can just as efficiently handle separable cases.
         if self.separable:
@@ -2110,18 +1991,11 @@ class ChromaticConvolution(ChromaticObject):
             if not obj.separable:
                 continue
             if isinstance(obj, galsim.GSObject):
-                _norm = obj._norm
                 sep_profs.append(obj)
-                insep_obj *= _norm
             else:
                 wave0, prof0 = obj._fiducial_profile(bandpass)
-                if obj.SED is not None:
-                    sep_profs.append(prof0 / obj.SED(wave0))
-                    insep_obj *= obj.SED
-                else:
-                    _norm = obj._norm(wave0) if hasattr(obj._norm, '__call__') else obj._norm
-                    sep_profs.append(prof0 / _norm)
-                    insep_obj *= obj._norm
+                sep_profs.append(prof0 / obj.SED(wave0))
+                insep_obj *= obj.SED
 
         wmult = kwargs.get('wmult', 1)
 
@@ -2159,18 +2033,14 @@ class ChromaticDeconvolution(ChromaticObject):
                             details. [default: None]
     """
     def __init__(self, obj, **kwargs):
-        if obj.SED is not None:
-            raise ValueError("Cannot deconvolve by ChromaticObject with SED.")
+        if not obj.SED.dimensionless:
+            raise ValueError("Cannot deconvolve by dimensionful ChromaticObject.")
         self.obj = obj
         self.kwargs = kwargs
         self.separable = obj.separable
         self.interpolated = obj.interpolated
-        self.SED = None
+        self.SED = galsim.SED(lambda w: 1./obj.SED(w), 'nm', '1')
         self.wave_list = obj.wave_list
-        if hasattr(obj._norm, '__call__'):
-            self._norm = lambda w: 1./obj._norm(w)
-        else:
-            self._norm = 1./obj._norm
 
     def _deinterpolate(self):
         if self.interpolated:
@@ -2219,18 +2089,14 @@ class ChromaticAutoConvolution(ChromaticObject):
                             details. [default: None]
     """
     def __init__(self, obj, **kwargs):
-        if obj.SED is not None:
-            raise ValueError("Cannot autoconvolve ChromaticObject with SED.")
+        if not obj.SED.dimensionless:
+            raise ValueError("Cannot autoconvolve dimensionful ChromaticObject.")
         self.obj = obj
         self.kwargs = kwargs
         self.separable = obj.separable
         self.interpolated = obj.interpolated
-        self.SED = None
+        self.SED = obj.SED * obj.SED
         self.wave_list = obj.wave_list
-        if hasattr(obj._norm, '__call__'):
-            self._norm = lambda w: obj._norm(w)**2
-        else:
-            self._norm = obj._norm**2
 
     def _deinterpolate(self):
         if self.interpolated:
@@ -2280,18 +2146,14 @@ class ChromaticAutoCorrelation(ChromaticObject):
                             details. [default: None]
     """
     def __init__(self, obj, **kwargs):
-        if obj.SED is not None:
-            raise ValueError("Cannot autocorrelate ChromaticObject with SED.")
+        if not obj.SED.dimensionless:
+            raise ValueError("Cannot autocorrelate dimensionful ChromaticObject.")
         self.obj = obj
         self.kwargs = kwargs
         self.separable = obj.separable
         self.interpolated = obj.interpolated
-        self.SED = None
+        self.SED = obj.SED * obj.SED
         self.wave_list = obj.wave_list
-        if hasattr(obj._norm, '__call__'):
-            self._norm = lambda w: obj._norm(w)**2
-        else:
-            self._norm = obj._norm**2
 
     def _deinterpolate(self):
         if self.interpolated:
@@ -2342,18 +2204,14 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
     """
     def __init__(self, obj, **kwargs):
         import math
-        if obj.SED is not None:
-            raise ValueError("Cannot take fourier sqrt of ChromaticObject with SED.")
+        if not obj.SED.dimensionless:
+            raise ValueError("Cannot take Fourier sqrt of dimensionful ChromaticObject.")
         self.obj = obj
         self.kwargs = kwargs
         self.separable = obj.separable
         self.interpolated = obj.interpolated
-        self.SED = None
+        self.SED = galsim.SED(lambda w:math.sqrt(obj.SED(w)), 'nm', '1')
         self.wave_list = obj.wave_list
-        if hasattr(obj._norm, '__call__'):
-            self._norm = lambda w: math.sqrt(obj._norm(w))
-        else:
-            self._norm = math.sqrt(obj._norm)
 
     def _deinterpolate(self):
         if self.interpolated:
@@ -2459,8 +2317,7 @@ class ChromaticOpticalPSF(ChromaticObject):
         # Define the necessary attributes for this ChromaticObject.
         self.separable = False
         self.interpolated = False
-        self.SED = None
-        self._norm = 1.0
+        self.SED = galsim.SED('1', 'nm', '1')
         self.wave_list = np.array([], dtype=float)
 
     def _deinterpolate(self):
@@ -2553,8 +2410,7 @@ class ChromaticAiry(ChromaticObject):
         # Define the necessary attributes for this ChromaticObject.
         self.separable = False
         self.interpolated = False
-        self.SED = None
-        self._norm = 1.0
+        self.SED = galsim.SED('1', 'nm', '1')
         self.wave_list = np.array([], dtype=float)
 
     def _deinterpolate(self):
@@ -2630,7 +2486,3 @@ def _remove_setup_kwargs(kwargs):
     kwargs.pop('nx', None)
     kwargs.pop('ny', None)
     kwargs.pop('bounds', None)
-
-@galsim.utilities.functionize
-def _fn_prod(obj1, obj2):
-    return obj1 * obj2

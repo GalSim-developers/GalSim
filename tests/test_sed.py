@@ -226,6 +226,16 @@ def test_SED_mul():
                                        err_msg="Found wrong value in SED.__mul__")
         do_pickle(d)
 
+        # SED multiplied by dimensionless, constant SED
+        e = galsim.SED(2.0, 'nm', '1')
+        f = a*e
+        np.testing.assert_almost_equal(f(x), a(x) * e(x), 10,
+                                       err_msg="Found wrong value in SED.__mul__")
+        f = e*a
+        np.testing.assert_almost_equal(f(x), e(x) * a(x), 10,
+                                       err_msg="Found wrong value in SED.__mul__")
+
+
     sed1 = galsim.SED('1', 'nm', 'fphotons', redshift=1)
     sed2 = galsim.SED('2', 'nm', 'fphotons', redshift=2)
     sed3 = galsim.SED('3', 'nm', '1')
@@ -330,6 +340,7 @@ def test_SED_init():
         np.testing.assert_raises(TypeError, galsim.SED, spec=lambda w:1.0)
         np.testing.assert_raises(ValueError, galsim.SED, spec='wave',
                                  wave_type=u.Hz, flux_type='2')
+        np.testing.assert_raises(ValueError, galsim.SED, 1.0, 'nm', 'fphotons')
     except ImportError:
         print('The assert_raises tests require nose')
     # These should succeed.
@@ -607,10 +618,10 @@ def test_thin():
 
 
 if __name__ == "__main__":
-    test_SED_basic()
+    # test_SED_basic()
     # test_SED_add()
     # test_SED_sub()
-    # test_SED_mul()
+    test_SED_mul()
     # test_SED_div()
     # test_SED_atRedshift()
     # test_SED_roundoff_guard()

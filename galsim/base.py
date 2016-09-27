@@ -227,9 +227,7 @@ class GSObject(object):
     def deinterpolated(self): return self
     def _deinterpolate(self): return self
     @property
-    def SED(self): return None
-    @property
-    def _norm(self): return 1.0
+    def SED(self): return galsim.SED(1, 'nm', '1')
     @property
     def wave_list(self): return np.array([], dtype=float)
 
