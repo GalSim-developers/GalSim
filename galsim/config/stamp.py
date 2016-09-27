@@ -188,6 +188,10 @@ def SetupConfigStampSize(config, xsize, ysize, image_pos, world_pos):
     @param world_pos        The position of the stamp in world coordinates. [may be None]
     """
 
+    # Make sure we have a valid wcs in case image-level processing was skipped.
+    if 'wcs' not in config:
+        config['wcs'] = galsim.config.BuildWCS(config)
+
     if xsize: config['stamp_xsize'] = xsize
     if ysize: config['stamp_ysize'] = ysize
     if image_pos is not None and world_pos is None:
@@ -362,7 +366,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
             elif stamp_center:
                 im.setCenter(stamp_center)
             else:
-                im.setOrigin(config['image_origin'])
+                im.setOrigin(config.get('image_origin',galsim.PositionI(1,1)))
 
             # Store the current stamp in the base-level config for reference
             config['current_stamp'] = im

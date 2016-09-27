@@ -298,29 +298,31 @@ def test_cosmosnoise():
     config = {}
     # Either gal or psf is required, but it can be type = None, which means don't draw anything.
     config['gal'] = { 'type' : 'None' }
+    config['stamp'] = {
+        'type' : 'Basic',
+        'size' : 64
+    }
     config['image'] = {
-        'type' : 'Single',
         'pixel_scale' : pix_scale,
-        'size' : 64,
         'random_seed' : 123 # Note: this means the seed for the noise will really be 124
                             # since it is applied at the stamp level, so uses seed + obj_num
     }
     config['image']['noise'] = {
         'type' : 'COSMOS'
     }
-    image = galsim.config.BuildImage(config,logger=logger)
+    image = galsim.config.BuildStamp(config,logger=logger)[0]
 
-    # Then make using kwargs explicitly, to make sure they are getting passed through properly.
+    # Then make it using explicit kwargs to make sure they are getting passed through properly.
     config2 = {}
-    # Either gal or psf is required, so just give it a Gaussian with 0 flux.
     config2['gal'] = config['gal']
+    config2['stamp'] = config['stamp']
     config2['image'] = config['image']
     config2['image']['noise'] = {
         'type' : 'COSMOS',
         'file_name' : os.path.join(galsim.meta_data.share_dir,'acs_I_unrot_sci_20_cf.fits'),
         'cosmos_scale' : pix_scale
     }
-    image2 = galsim.config.BuildImage(config2,logger=logger)
+    image2 = galsim.config.BuildStamp(config2,logger=logger)[0]
 
     # We used the same RNG and noise file / properties, so should get the same exact noise field.
     np.testing.assert_allclose(
@@ -347,23 +349,30 @@ def test_cosmosnoise():
     }
     config['image']['noise']['whiten'] = True
     galsim.config.ProcessInput(config)
-    image3 = galsim.config.BuildImage(config, logger=logger)
+    image3, current_var3 = galsim.config.BuildStamp(config, logger=logger)
+    print('From BuildStamp, current_var = ',current_var3)
 
     # Build the same image by hand to make sure it matches what config drew.
     rng = galsim.BaseDeviate(124)
     rgc = galsim.RealGalaxyCatalog(os.path.join(real_gal_dir, real_gal_cat))
     gal = galsim.RealGalaxy(rgc, index=79, flux=0.01, rng=rng)
     image4 = gal.drawImage(image=image3.copy())
-    current_var = gal.noise.whitenImage(image4)
+    current_var4 = gal.noise.whitenImage(image4)
+    print('After whitening, current_var = ',current_var4)
     noise = galsim.correlatednoise.getCOSMOSNoise(
             rng=rng,
             file_name=os.path.join(galsim.meta_data.share_dir,'acs_I_unrot_sci_20_cf.fits'),
             cosmos_scale=pix_scale)
-    noise -= galsim.UncorrelatedNoise(current_var, rng=rng, wcs=image4.wcs)
+    print('Full noise variance = ',noise.getVariance())
+    np.testing.assert_equal(
+        current_var3, noise.getVariance(),
+        err_msg='Config COSMOS noise with whitening does not return the correct current_var')
+    noise -= galsim.UncorrelatedNoise(current_var4, rng=rng, wcs=image4.wcs)
+    print('After subtract current_var, noise variance = ',noise.getVariance())
     image4.addNoise(noise)
     np.testing.assert_equal(
         image3.array, image4.array,
-        err_msg='Config COSMOS noise with whiting does not reproduce manually drawn image')
+        err_msg='Config COSMOS noise with whitening does not reproduce manually drawn image')
 
 
 @timer
