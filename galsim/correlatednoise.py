@@ -110,16 +110,16 @@ class _BaseCorrelatedNoise(object):
     # Make "+" work in the intuitive sense (variances being additive, correlation functions add as
     # you would expect)
     def __add__(self, other):
-        if self.wcs != other.wcs:
+        if not galsim.wcs.compatible_wcs(self.wcs, other.wcs):
             import warnings
-            warnings.warn("Adding two CorrelatedNoise objects with different WCS functions.\n"+
+            warnings.warn("Adding two CorrelatedNoise objects with incompatible WCS functions.\n"+
                           "The result will have the WCS of the first object.")
         return _BaseCorrelatedNoise(self.rng, self._profile + other._profile, self.wcs)
 
     def __sub__(self, other):
-        if self.wcs != other.wcs:
+        if not galsim.wcs.compatible_wcs(self.wcs, other.wcs):
             import warnings
-            warnings.warn("Subtracting two CorrelatedNoise objects with different WCS functions.\n"+
+            warnings.warn("Subtracting two CorrelatedNoise objects with incompatible WCS functions.\n"+
                           "The result will have the WCS of the first object.")
         return _BaseCorrelatedNoise(self.rng, self._profile - other._profile, self.wcs)
 

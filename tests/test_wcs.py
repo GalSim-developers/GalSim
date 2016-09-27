@@ -1757,6 +1757,44 @@ def test_scamp():
 
     do_ref(wcs, ref_list, 'Scamp FitsWCS')
 
+@timer
+def test_compateq():
+    """Test that WCS equality vs. compatibility work as physically expected.
+    """
+    # First check that compatible_wcs works properly for two WCS that are actually equal
+    assert galsim.wcs.compatible_wcs(galsim.PixelScale(0.23), galsim.PixelScale(0.23))
+    # Now for a simple offset: check they are compatible but not equal
+    assert galsim.wcs.compatible_wcs(
+        galsim.PixelScale(0.23), galsim.OffsetWCS(0.23, galsim.PositionD(12,34)))
+    assert galsim.PixelScale(0.23) != galsim.OffsetWCS(0.23, galsim.PositionD(12,34))
+    # Further examples of compatible but != below.
+    assert galsim.wcs.compatible_wcs(
+        galsim.JacobianWCS(0.2,0.01,-0.02,0.23),
+        galsim.AffineTransform(0.2,0.01,-0.02,0.23,
+                               galsim.PositionD(12,34),
+                               galsim.PositionD(45,54))
+        )
+    assert galsim.JacobianWCS(0.2,0.01,-0.02,0.23) != \
+        galsim.AffineTransform(0.2,0.01,-0.02,0.23, galsim.PositionD(12,34), galsim.PositionD(45,54))
+    assert galsim.wcs.compatible_wcs(
+        galsim.PixelScale(0.23),
+        galsim.AffineTransform(0.23,0.0,0.0,0.23,
+                               galsim.PositionD(12,34),
+                               galsim.PositionD(45,54))
+        )
+    assert galsim.PixelScale(0.23) != \
+        galsim.AffineTransform(0.23,0.0,0.0,0.23, galsim.PositionD(12,34), galsim.PositionD(45,54))
+
+    # Finally, some that are truly incompatible.
+    assert not galsim.wcs.compatible_wcs(galsim.PixelScale(0.23), galsim.PixelScale(0.27))
+    assert not galsim.wcs.compatible_wcs(
+        galsim.PixelScale(0.23), galsim.JacobianWCS(0.23,0.01,-0.02,0.27))
+    assert not galsim.wcs.compatible_wcs(
+        galsim.JacobianWCS(0.2,-0.01,0.02,0.23),
+        galsim.AffineTransform(0.2,0.01,-0.02,0.23,
+                               galsim.PositionD(12,34),
+                               galsim.PositionD(45,54))
+        )
 
 if __name__ == "__main__":
     test_pixelscale()
@@ -1770,3 +1808,4 @@ if __name__ == "__main__":
     test_gsfitswcs()
     test_fitswcs()
     test_scamp()
+    test_compateq()
