@@ -114,7 +114,7 @@ class SED(object):
             if flux_type.lower() == 'flambda':
                 flux_type = u.erg / (u.s * self.wave_type * u.cm**2)
             elif flux_type.lower() == 'fphotons':
-                flux_type = _photons
+                flux_type = u.astrophys.photon/(u.s * u.cm**2 * self.wave_type)
             elif flux_type.lower() == 'fnu':
                 flux_type = u.erg / (u.s * u.Hz * u.cm**2)
             elif flux_type.lower() == '1':
