@@ -183,21 +183,25 @@ class SED(object):
     def spectral(self):
         """Boolean indicating if SED has units compatible with a spectral density.
         """
-        try:
-            (1*self.flux_type).to(u.erg/u.s/u.cm**2/u.nm, u.spectral_density(1*u.nm))
-        except u.UnitConversionError:
-            return False
-        return True
+        if not hasattr(self, '_spectral'):
+            try:
+                (1*self.flux_type).to(u.erg/u.s/u.cm**2/u.nm, u.spectral_density(1*u.nm))
+                self._spectral = True
+            except u.UnitConversionError:
+                self._spectral = False
+        return self._spectral
 
     @property
     def dimensionless(self):
         """Boolean indicating if SED is dimensionless.
         """
-        try:
-            (1*self.flux_type).to(u.dimensionless_unscaled)
-        except u.UnitConversionError:
-            return False
-        return True
+        if not hasattr(self, '_dimensionless'):
+            try:
+                (1*self.flux_type).to(u.dimensionless_unscaled)
+                self._dimensionless = True
+            except u.UnitConversionError:
+                self._dimensionless = False
+        return self._dimensionless
 
     def _wavelength_intersection(self, other):
         blue_limit = self.blue_limit
