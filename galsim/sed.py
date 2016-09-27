@@ -25,6 +25,8 @@ from astropy import units as u
 import galsim
 from . import utilities
 
+_photons = u.astrophys.photon/(u.s * u.cm**2 * u.nm)
+
 class SED(object):
     """Simple SED object to represent the spectral energy distributions of stars and galaxies.
 
@@ -108,7 +110,7 @@ class SED(object):
             if flux_type.lower() == 'flambda':
                 flux_type = u.erg / (u.s * self.wave_type * u.cm**2)
             elif flux_type.lower() == 'fphotons':
-                flux_type = u.astrophys.photon / (u.s * self.wave_type * u.cm**2)
+                flux_type = _photons
             elif flux_type.lower() == 'fnu':
                 flux_type = u.erg / (u.s * u.Hz * u.cm**2)
             elif flux_type.lower() == '1':
@@ -184,11 +186,8 @@ class SED(object):
         """Boolean indicating if SED has units compatible with a spectral density.
         """
         if not hasattr(self, '_spectral'):
-            try:
-                (1*self.flux_type).to(u.erg/u.s/u.cm**2/u.nm, u.spectral_density(1*u.nm))
-                self._spectral = True
-            except u.UnitConversionError:
-                self._spectral = False
+            self._spectral = self.flux_type.is_equivalent(
+                    _photons, u.spectral_density(1*u.nm))
         return self._spectral
 
     @property
@@ -196,11 +195,7 @@ class SED(object):
         """Boolean indicating if SED is dimensionless.
         """
         if not hasattr(self, '_dimensionless'):
-            try:
-                (1*self.flux_type).to(u.dimensionless_unscaled)
-                self._dimensionless = True
-            except u.UnitConversionError:
-                self._dimensionless = False
+            self._dimensionless = self.flux_type.is_equivalent(u.dimensionless_unscaled)
         return self._dimensionless
 
     def _wavelength_intersection(self, other):
@@ -225,8 +220,7 @@ class SED(object):
         wave_native_value = wave_native_quantity.value
         flux_native_quantity = self._spec(wave_native_value) * self.flux_type
         return (flux_native_quantity
-                .to(u.astrophys.photon/(u.s*u.cm**2*u.nm),
-                    u.spectral_density(wave_native_quantity))
+                .to(_photons, u.spectral_density(wave_native_quantity))
                 .value)
 
     def _obs_nm_to_photons(self, wave):
@@ -271,7 +265,7 @@ class SED(object):
         # Create a fast version of self._spec by constructing a LookupTable on self.wave_list
         if not hasattr(self, '_fast_spec'):
             if (self.wave_type == u.nm
-                and self.flux_type == (u.astrophys.photon / (u.s * u.cm**2 * u.nm))):
+                and self.flux_type == _photons):
                     self._fast_spec = self._spec
             else:
                 if len(self.wave_list) == 0:
@@ -320,8 +314,7 @@ class SED(object):
         # Manipulate output units
         if self.spectral:
             out = out * self.flux_type
-            out = out.to(u.astrophys.photon/(u.s*u.cm**2*u.nm),
-                         u.spectral_density(rest_wave_quantity)).value
+            out = out.to(_photons, u.spectral_density(rest_wave_quantity)).value
 
         # Return same format as received (except Quantity -> ndarray)
         if isinstance(wave_in, tuple):
@@ -503,8 +496,7 @@ class SED(object):
         current_flux_density = self(wavelength)
         if isinstance(target_flux_density, u.Quantity):
             target_flux_density = target_flux_density.to(
-                    u.astrophys.photons/(u.s * u.cm**2 * u.nm),
-                    u.spectral_density(wavelength_nm * u.nm)).value
+                    _photons, u.spectral_density(wavelength_nm * u.nm)).value
         factor = target_flux_density / current_flux_density
         return self * factor
 
