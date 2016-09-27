@@ -20,12 +20,12 @@ Simple spectral energy distribution class.  Used by galsim/chromatic.py
 """
 
 import numpy as np
-from astropy import units as u
+from astropy import units
 
 import galsim
 from . import utilities
 
-_photons = u.astrophys.photon/(u.s * u.cm**2 * u.nm)
+_photons = units.astrophys.photon/(units.s * units.cm**2 * units.nm)
 
 class SED(object):
     """Simple SED object to represent the spectral energy distributions of stars and galaxies.
@@ -103,22 +103,22 @@ class SED(object):
 
         if isinstance(wave_type, str):
             if wave_type.lower() in ['nm', 'nanometer', 'nanometers']:
-                wave_type = u.nm
+                wave_type = units.nm
             elif wave_type.lower() in ['a', 'ang', 'angstrom', 'angstroms']:
-                wave_type = u.AA
+                wave_type = units.AA
             else:
                 raise ValueError("Unknown wave_type '{0}'".format(wave_type))
         self.wave_type = wave_type
 
         if isinstance(flux_type, str):
             if flux_type.lower() == 'flambda':
-                flux_type = u.erg / (u.s * self.wave_type * u.cm**2)
+                flux_type = units.erg / (units.s * self.wave_type * units.cm**2)
             elif flux_type.lower() == 'fphotons':
-                flux_type = u.astrophys.photon/(u.s * u.cm**2 * self.wave_type)
+                flux_type = units.astrophys.photon/(units.s * units.cm**2 * self.wave_type)
             elif flux_type.lower() == 'fnu':
-                flux_type = u.erg / (u.s * u.Hz * u.cm**2)
+                flux_type = units.erg / (units.s * units.Hz * units.cm**2)
             elif flux_type.lower() == '1':
-                flux_type = u.dimensionless_unscaled
+                flux_type = units.dimensionless_unscaled
             else:
                 raise ValueError("Unknown flux_type '{0}'".format(flux_type))
         self.flux_type = flux_type
@@ -139,7 +139,8 @@ class SED(object):
             return
 
         if isinstance(self._spec, galsim.LookupTable):
-            self.wave_list = (self._spec.getArgs() * self.wave_type).to(u.nm, u.spectral()).value
+            self.wave_list = ((self._spec.getArgs() * self.wave_type)
+                              .to(units.nm, units.spectral()).value)
             self.wave_list *= (1.0 + self.redshift)
             self.blue_limit = np.min(self.wave_list)
             self.red_limit = np.max(self.wave_list)
@@ -191,7 +192,7 @@ class SED(object):
         """
         if self._spectral is None:
             self._spectral = self.flux_type.is_equivalent(
-                    _photons, u.spectral_density(1*u.nm))
+                    _photons, units.spectral_density(1*units.nm))
         return self._spectral
 
     @property
@@ -199,7 +200,7 @@ class SED(object):
         """Boolean indicating if SED is dimensionless.
         """
         if self._dimensionless is None:
-            self._dimensionless = self.flux_type.is_equivalent(u.dimensionless_unscaled)
+            self._dimensionless = self.flux_type.is_equivalent(units.dimensionless_unscaled)
         return self._dimensionless
 
     def _wavelength_intersection(self, other):
@@ -220,18 +221,18 @@ class SED(object):
         return blue_limit, red_limit
 
     def _rest_nm_to_photons(self, wave):
-        wave_native_quantity = (wave * u.nm).to(self.wave_type, u.spectral())
+        wave_native_quantity = (wave * units.nm).to(self.wave_type, units.spectral())
         wave_native_value = wave_native_quantity.value
         flux_native_quantity = self._spec(wave_native_value) * self.flux_type
         return (flux_native_quantity
-                .to(_photons, u.spectral_density(wave_native_quantity))
+                .to(_photons, units.spectral_density(wave_native_quantity))
                 .value)
 
     def _obs_nm_to_photons(self, wave):
         return self._rest_nm_to_photons(wave / (1.0 + self.redshift))
 
     def _rest_nm_to_dimensionless(self, wave):
-        wave_native_value = (wave * u.nm).to(self.wave_type, u.spectral()).value
+        wave_native_value = (wave * units.nm).to(self.wave_type, units.spectral()).value
         return self._spec(wave_native_value)
 
     # Does it every actually make sense for an SED with a redshift to be dimensionless?
@@ -268,7 +269,7 @@ class SED(object):
 
         # Create a fast version of self._spec by constructing a LookupTable on self.wave_list
         if not hasattr(self, '_fast_spec'):
-            if (self.wave_type == u.nm
+            if (self.wave_type == units.nm
                 and self.flux_type == _photons):
                     self._fast_spec = self._spec
             else:
@@ -303,22 +304,22 @@ class SED(object):
         """
         wave_in = wave
         # Convert wave to nanometers if needed.
-        if isinstance(wave, u.Quantity):
-            wave = wave.to(u.nm, u.spectral()).value
+        if isinstance(wave, units.Quantity):
+            wave = wave.to(units.nm, units.spectral()).value
 
         self._check_bounds(wave)
 
         # Figure out rest-frame wave_type wavelength array for query to self._spec.
         rest_wave = wave / (1.0 + self.redshift)
-        rest_wave_quantity = rest_wave * u.nm
-        rest_wave_native = rest_wave_quantity.to(self.wave_type, u.spectral()).value
+        rest_wave_quantity = rest_wave * units.nm
+        rest_wave_native = rest_wave_quantity.to(self.wave_type, units.spectral()).value
 
         out = self._spec(rest_wave_native)
 
         # Manipulate output units
         if self.spectral:
             out = out * self.flux_type
-            out = out.to(_photons, u.spectral_density(rest_wave_quantity)).value
+            out = out.to(_photons, units.spectral_density(rest_wave_quantity)).value
 
         # Return same format as received (except Quantity -> ndarray)
         if isinstance(wave_in, tuple):
@@ -507,12 +508,12 @@ class SED(object):
         """
         if self.dimensionless:
             raise TypeError("Cannot set flux density of dimensionless SED.")
-        if isinstance(wavelength, u.Quantity):
-            wavelength_nm = wavelength.to(u.nm, u.spectral())
+        if isinstance(wavelength, units.Quantity):
+            wavelength_nm = wavelength.to(units.nm, units.spectral())
         current_flux_density = self(wavelength)
-        if isinstance(target_flux_density, u.Quantity):
+        if isinstance(target_flux_density, units.Quantity):
             target_flux_density = target_flux_density.to(
-                    _photons, u.spectral_density(wavelength_nm * u.nm)).value
+                    _photons, units.spectral_density(wavelength_nm * units.nm)).value
         factor = target_flux_density / current_flux_density
         return self * factor
 
@@ -652,8 +653,8 @@ class SED(object):
         @returns the thinned SED.
         """
         if len(self.wave_list) > 0:
-            rest_wave_nm = self.wave_list / (1.0 + self.redshift) * u.nm
-            rest_wave_native_units = rest_wave_nm.to(self.wave_type, u.spectral()).value
+            rest_wave_nm = self.wave_list / (1.0 + self.redshift) * units.nm
+            rest_wave_native_units = rest_wave_nm.to(self.wave_type, units.spectral()).value
             spec_native_units = self._spec(rest_wave_native_units)
 
             # Note that this is thinning in native units, not nm and photons/nm.
@@ -714,7 +715,8 @@ class SED(object):
         # Check that they're valid
         for kw in kwargs:
             if kw not in ['temperature', 'pressure', 'H2O_pressure']:
-                raise TypeError("Got unexpected keyword in calculateDCRMomentShifts: {0}".format(kw))
+                raise (TypeError("Got unexpected keyword in calculateDCRMomentShifts: {0}"
+                                 .format(kw)))
         # Now actually start calculating things.
         flux = self.calculateFlux(bandpass)
         if len(bandpass.wave_list) > 0:

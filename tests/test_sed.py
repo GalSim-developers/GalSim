@@ -21,7 +21,7 @@ import os
 import numpy as np
 from galsim_test_helpers import timer, do_pickle, all_obj_diff
 import sys
-from astropy import units as u
+from astropy import units
 
 try:
     import galsim
@@ -339,7 +339,7 @@ def test_SED_init():
                                  flux_type='bar')
         np.testing.assert_raises(TypeError, galsim.SED, spec=lambda w:1.0)
         np.testing.assert_raises(ValueError, galsim.SED, spec='wave',
-                                 wave_type=u.Hz, flux_type='2')
+                                 wave_type=units.Hz, flux_type='2')
         np.testing.assert_raises(ValueError, galsim.SED, 1.0, 'nm', 'fphotons')
     except ImportError:
         print('The assert_raises tests require nose')
@@ -348,13 +348,14 @@ def test_SED_init():
     galsim.SED(spec='wave/wave', wave_type='nm', flux_type='flambda')
     galsim.SED(spec=lambda w:1.0, wave_type='nm', flux_type='flambda')
     galsim.SED(spec='1./(wave-700)', wave_type='nm', flux_type='flambda')
-    galsim.SED(spec='wave', wave_type=u.nm, flux_type='flambda')
-    galsim.SED(spec='wave', wave_type=u.Hz, flux_type='flambda')
-    galsim.SED(spec='wave', wave_type=u.Hz, flux_type=u.erg/(u.s * u.nm * u.m**2))
-    galsim.SED(spec='wave', wave_type=u.Hz, flux_type=u.erg/(u.s * u.Hz * u.m**2))
-    galsim.SED(spec='wave', wave_type=u.Hz, flux_type=u.astrophys.photon/(u.s * u.Hz * u.m**2))
-    galsim.SED(spec='wave', wave_type=u.Hz, flux_type='1')
-    galsim.SED(spec='wave', wave_type=u.Hz, flux_type=u.dimensionless_unscaled)
+    galsim.SED(spec='wave', wave_type=units.nm, flux_type='flambda')
+    galsim.SED(spec='wave', wave_type=units.Hz, flux_type='flambda')
+    galsim.SED(spec='wave', wave_type=units.Hz, flux_type=units.erg/(units.s*units.nm*units.m**2))
+    galsim.SED(spec='wave', wave_type=units.Hz, flux_type=units.erg/(units.s*units.Hz*units.m**2))
+    galsim.SED(spec='wave', wave_type=units.Hz,
+               flux_type=units.astrophys.photon/(units.s * units.Hz * units.m**2))
+    galsim.SED(spec='wave', wave_type=units.Hz, flux_type='1')
+    galsim.SED(spec='wave', wave_type=units.Hz, flux_type=units.dimensionless_unscaled)
 
     # Also check for invalid calls
     foo = np.arange(10.)+1.
@@ -362,7 +363,7 @@ def test_SED_init():
     try:
         np.testing.assert_raises(ValueError, sed, 0.5)
         np.testing.assert_raises(ValueError, sed, 12.0)
-        np.testing.assert_raises(TypeError, galsim.SED, '1', 'nm', u.erg/u.s)
+        np.testing.assert_raises(TypeError, galsim.SED, '1', 'nm', units.erg/units.s)
         np.testing.assert_raises(ValueError, galsim.SED, '1', 'nm', '2')
     except ImportError:
         print('The assert_raises tests require nose')
@@ -371,11 +372,11 @@ def test_SED_init():
     sed = galsim.SED(galsim.LookupTable(foo,foo), wave_type='nm', flux_type='flambda',
                      fast=False)
     sed(1.5)
-    sed(1.5 * u.nm)
-    sed((1.5*u.nm).to(u.Hz, u.spectral()))  # Frequency
-    sed((1.5*u.nm).to(u.erg, u.spectral()))  # Wavelength as an energy
-    sed((1.5*u.nm).to(u.m**-1, u.spectral()))  # Wavenumber in 1/m
-    sed((1.5*u.nm).to(u.radian / u.m, u.spectral()))  # Wavenumber in rad/m
+    sed(1.5*units.nm)
+    sed((1.5*units.nm).to(units.Hz, units.spectral()))  # Frequency
+    sed((1.5*units.nm).to(units.erg, units.spectral()))  # Wavelength as an energy
+    sed((1.5*units.nm).to(units.m**-1, units.spectral()))  # Wavenumber in 1/m
+    sed((1.5*units.nm).to(units.radian / units.m, units.spectral()))  # Wavenumber in rad/m
 
     # And check the redshift kwarg.
     foo = np.arange(10.)+1.
@@ -388,11 +389,11 @@ def test_SED_init():
         print('The assert_raises tests require nose')
 
     sed(3.5)
-    sed(3.5 * u.nm)
-    sed((3.5*u.nm).to(u.Hz, u.spectral()))  # Frequency
-    sed((3.5*u.nm).to(u.erg, u.spectral()))  # Wavelength as an energy
-    sed((3.5*u.nm).to(u.m**-1, u.spectral()))  # Wavenumber in 1/m
-    sed((3.5*u.nm).to(u.radian / u.m, u.spectral()))  # Wavenumber in rad/m
+    sed(3.5*units.nm)
+    sed((3.5*units.nm).to(units.Hz, units.spectral()))  # Frequency
+    sed((3.5*units.nm).to(units.erg, units.spectral()))  # Wavelength as an energy
+    sed((3.5*units.nm).to(units.m**-1, units.spectral()))  # Wavenumber in 1/m
+    sed((3.5*units.nm).to(units.radian / units.m, units.spectral()))  # Wavenumber in rad/m
 
 
 @timer
