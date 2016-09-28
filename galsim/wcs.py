@@ -2322,7 +2322,7 @@ class RaDecFunction(CelestialWCS):
         self.__dict__ = d
         self._initialize_funcs()
 
-def compatible_wcs(wcs1, wcs2):
+def compatible(wcs1, wcs2):
     """
     A utility to check the compatibility of two WCS.  In particular, if two WCS are consistent with
     each other modulo a shifted origin, we consider them to be compatible, even though they are not

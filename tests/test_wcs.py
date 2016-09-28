@@ -1759,14 +1759,14 @@ def test_scamp():
 def test_compateq():
     """Test that WCS equality vs. compatibility work as physically expected.
     """
-    # First check that compatible_wcs works properly for two WCS that are actually equal
-    assert galsim.wcs.compatible_wcs(galsim.PixelScale(0.23), galsim.PixelScale(0.23))
+    # First check that compatible works properly for two WCS that are actually equal
+    assert galsim.wcs.compatible(galsim.PixelScale(0.23), galsim.PixelScale(0.23))
     # Now for a simple offset: check they are compatible but not equal
-    assert galsim.wcs.compatible_wcs(
+    assert galsim.wcs.compatible(
         galsim.PixelScale(0.23), galsim.OffsetWCS(0.23, galsim.PositionD(12,34)))
     assert galsim.PixelScale(0.23) != galsim.OffsetWCS(0.23, galsim.PositionD(12,34))
     # Further examples of compatible but != below.
-    assert galsim.wcs.compatible_wcs(
+    assert galsim.wcs.compatible(
         galsim.JacobianWCS(0.2,0.01,-0.02,0.23),
         galsim.AffineTransform(0.2,0.01,-0.02,0.23,
                                galsim.PositionD(12,34),
@@ -1774,7 +1774,7 @@ def test_compateq():
         )
     assert galsim.JacobianWCS(0.2,0.01,-0.02,0.23) != \
         galsim.AffineTransform(0.2,0.01,-0.02,0.23, galsim.PositionD(12,34), galsim.PositionD(45,54))
-    assert galsim.wcs.compatible_wcs(
+    assert galsim.wcs.compatible(
         galsim.PixelScale(0.23),
         galsim.AffineTransform(0.23,0.0,0.0,0.23,
                                galsim.PositionD(12,34),
@@ -1784,10 +1784,10 @@ def test_compateq():
         galsim.AffineTransform(0.23,0.0,0.0,0.23, galsim.PositionD(12,34), galsim.PositionD(45,54))
 
     # Finally, some that are truly incompatible.
-    assert not galsim.wcs.compatible_wcs(galsim.PixelScale(0.23), galsim.PixelScale(0.27))
-    assert not galsim.wcs.compatible_wcs(
+    assert not galsim.wcs.compatible(galsim.PixelScale(0.23), galsim.PixelScale(0.27))
+    assert not galsim.wcs.compatible(
         galsim.PixelScale(0.23), galsim.JacobianWCS(0.23,0.01,-0.02,0.27))
-    assert not galsim.wcs.compatible_wcs(
+    assert not galsim.wcs.compatible(
         galsim.JacobianWCS(0.2,-0.01,0.02,0.23),
         galsim.AffineTransform(0.2,0.01,-0.02,0.23,
                                galsim.PositionD(12,34),
@@ -1812,18 +1812,18 @@ def test_compateq():
     affine = galsim.AffineTransform(0.2,0.01,-0.02,0.23,
                                     galsim.PositionD(12,34),
                                     galsim.PositionD(45,54))
-    assert galsim.wcs.compatible_wcs(uv1,uv2)
-    assert galsim.wcs.compatible_wcs(uv2,uv1)
-    assert not galsim.wcs.compatible_wcs(uv1,uv3)
-    assert not galsim.wcs.compatible_wcs(uv2,uv3)
-    assert not galsim.wcs.compatible_wcs(uv3,uv1)
-    assert not galsim.wcs.compatible_wcs(uv3,uv2)
-    assert not galsim.wcs.compatible_wcs(uv1,affine)
-    assert not galsim.wcs.compatible_wcs(uv2,affine)
-    assert not galsim.wcs.compatible_wcs(uv3,affine)
-    assert not galsim.wcs.compatible_wcs(affine,uv1)
-    assert not galsim.wcs.compatible_wcs(affine,uv2)
-    assert not galsim.wcs.compatible_wcs(affine,uv3)
+    assert galsim.wcs.compatible(uv1,uv2)
+    assert galsim.wcs.compatible(uv2,uv1)
+    assert not galsim.wcs.compatible(uv1,uv3)
+    assert not galsim.wcs.compatible(uv2,uv3)
+    assert not galsim.wcs.compatible(uv3,uv1)
+    assert not galsim.wcs.compatible(uv3,uv2)
+    assert not galsim.wcs.compatible(uv1,affine)
+    assert not galsim.wcs.compatible(uv2,affine)
+    assert not galsim.wcs.compatible(uv3,affine)
+    assert not galsim.wcs.compatible(affine,uv1)
+    assert not galsim.wcs.compatible(affine,uv2)
+    assert not galsim.wcs.compatible(affine,uv3)
 
 if __name__ == "__main__":
     test_pixelscale()
