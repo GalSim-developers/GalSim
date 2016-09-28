@@ -315,7 +315,11 @@ def test_cosmosnoise():
     # Then make it using explicit kwargs to make sure they are getting passed through properly.
     config2 = {}
     config2['gal'] = config['gal']
-    config2['stamp'] = config['stamp']
+    config2['stamp'] = {
+        'type' : 'Basic',
+        'xsize' : 64,  # Same thing, but cover the xsize, ysize options
+        'ysize' : 64
+    }
     config2['image'] = config['image']
     config2['image']['noise'] = {
         'type' : 'COSMOS',
