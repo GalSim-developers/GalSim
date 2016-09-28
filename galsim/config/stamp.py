@@ -383,7 +383,7 @@ def BuildStamp(config, obj_num=0, xsize=0, ysize=0, do_noise=True, logger=None):
                                            obj_num)
                         builder.reset(config, logger)
                         continue
-                    else:
+                    else: # pragma: no cover
                         if logger:
                             logger.error(
                                 'Object %d: Too many rejections for this object. Aborting.',
@@ -492,7 +492,7 @@ def DrawBasic(prof, image, method, offset, config, base, logger, **kwargs):
     if 'n_photons' in config and 'n_photons' not in kwargs:
         if method != 'phot':
             raise AttributeError('n_photons is invalid with method != phot')
-        if 'max_extra_noise' in config:
+        if 'max_extra_noise' in config:  # pragma: no cover
             if logger:
                 logger.warning(
                     "Both 'max_extra_noise' and 'n_photons' are set in config dict, "+
@@ -754,7 +754,7 @@ class StampBuilder(object):
         @returns image, prof  (after being properly scaled)
         """
         if scale_factor != 1.0:
-            if method == 'phot':
+            if method == 'phot': # pragma: no cover
                 logger.warning(
                     "signal_to_noise calculation is not accurate for draw_method = phot")
             image *= scale_factor
@@ -780,7 +780,7 @@ class StampBuilder(object):
         # Check that we aren't on a second or later item in a Ring.
         # This check can be removed once we do not need to support the deprecated gsobject
         # type=Ring.
-        if 'gal' in base:
+        if 'gal' in base:  # pragma: no cover
             block_size = galsim.config.gsobject._GetMinimumBlock(base['gal'], base)
             if base['obj_num'] % block_size != 0:
                 # Don't reject, since the first item passed.
