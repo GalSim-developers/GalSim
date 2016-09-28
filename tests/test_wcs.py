@@ -1794,6 +1794,37 @@ def test_compateq():
                                galsim.PositionD(45,54))
         )
 
+    # Non-uniform WCSs are considered compatible if their jacobians are everywhere the same.
+    # It (obviously) doesn't actually check this -- it relies on the functional part being
+    # the same, and maybe just resetting the origin(s).
+    uv1 = galsim.UVFunction('0.2*x + 0.01*x*y - 0.03*y**2',
+                            '0.2*y - 0.01*x*y + 0.04*x**2',
+                            origin=galsim.PositionD(12,34),
+                            world_origin=galsim.PositionD(45,54))
+    uv2 = galsim.UVFunction('0.2*x + 0.01*x*y - 0.03*y**2',
+                            '0.2*y - 0.01*x*y + 0.04*x**2',
+                            origin=galsim.PositionD(23,56),
+                            world_origin=galsim.PositionD(11,22))
+    uv3 = galsim.UVFunction('0.2*x - 0.01*x*y + 0.03*y**2',
+                            '0.2*y + 0.01*x*y - 0.04*x**2',
+                            origin=galsim.PositionD(23,56),
+                            world_origin=galsim.PositionD(11,22))
+    affine = galsim.AffineTransform(0.2,0.01,-0.02,0.23,
+                                    galsim.PositionD(12,34),
+                                    galsim.PositionD(45,54))
+    assert galsim.wcs.compatible_wcs(uv1,uv2)
+    assert galsim.wcs.compatible_wcs(uv2,uv1)
+    assert not galsim.wcs.compatible_wcs(uv1,uv3)
+    assert not galsim.wcs.compatible_wcs(uv2,uv3)
+    assert not galsim.wcs.compatible_wcs(uv3,uv1)
+    assert not galsim.wcs.compatible_wcs(uv3,uv2)
+    assert not galsim.wcs.compatible_wcs(uv1,affine)
+    assert not galsim.wcs.compatible_wcs(uv2,affine)
+    assert not galsim.wcs.compatible_wcs(uv3,affine)
+    assert not galsim.wcs.compatible_wcs(affine,uv1)
+    assert not galsim.wcs.compatible_wcs(affine,uv2)
+    assert not galsim.wcs.compatible_wcs(affine,uv3)
+
 if __name__ == "__main__":
     test_pixelscale()
     test_shearwcs()
