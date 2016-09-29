@@ -16,7 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 """@file sed.py
-Simple spectral energy distribution class.  Used by galsim/chromatic.py
+Spectral energy distribution class.  Used by galsim/chromatic.py
 """
 
 import numpy as np
@@ -25,27 +25,40 @@ from astropy import units
 import galsim
 from . import utilities
 
+# Return flux_type for SED.__call__()
 _photons = units.astrophys.photon/(units.s * units.cm**2 * units.nm)
 
 class SED(object):
-    """Simple SED object to represent the spectral energy distributions of stars and galaxies.
+    """Object to represent the spectral energy distributions of stars and galaxies.
 
-    SEDs are callable, returning the flux density in photons/nm/cm^2/s as a function of wavelength.
-    By default, the above wavelength used by __call__ is nanometers, but it's possible to use other
-    units via the astropy.units module.  The return value *always* has units photons/nm/cm^2/s,
-    however (just as a np.ndarray, though, never as an astropy.units.Quantity).
+    SEDs are callable, usually returning the flux density in photons/nm/cm^2/s as a function of
+    wavelength, though SEDs are also used by GalSim to track dimensionless wavelength-dependent
+    normalizations, and may thus also return dimensionless values.  By default, the above wavelength
+    used by __call__ is nanometers, but it's possible to use other units via the astropy.units
+    module (at least, if the SED keyword argument `fast=False`, see below).  For instance,
+
+    >>> sed = galsim.SED(...)
+    >>> from astropy import units as u
+    >>> assert sed(500) == sed(5000 * u.AA)
+
+    Note that the return value *always* has units photons/nm/cm^2/s.  The python type of the return
+    value depends on the type of the input wavelength(s).  A scalar input wavelength yields a scalar
+    flux density, a tuple yields a tuple, a list yields a list, and a numpy.ndarray yields a
+    numpy.ndarray.  A scalar astropy.units.Quantity yields a python scalar, and a vector
+    astropy.units.Quantity yields a numpy.ndarray.
 
     SEDs are immutable; all transformative SED methods return *new* SEDs, and leave their
     originating SEDs unaltered.
 
     SEDs have `blue_limit` and `red_limit` attributes, which may be set to `None` in the case that
     the SED is defined by a python function or lambda `eval` string.  SEDs are considered undefined
-    outside of this range, and __call__ will raise an exception if a flux density is requested
-    outside of this range.  Note that `blue_limit` and `red_limit` are always in nanometers and in
-    the observed frame when `redshift != 0`.
+    outside of this range, and __call__ will raise an exception if a flux density or normalization
+    is requested outside of this range.  Note that `blue_limit` and `red_limit` are always in
+    nanometers and in the observed frame when `redshift != 0`.
 
     SEDs may be multiplied by scalars or scalar functions of wavelength.  In particular, an SED
-    multiplied by a `Bandpass` will yield the appropriately filtered SED.
+    multiplied by a `Bandpass` will yield the appropriately filtered SED.  Two SEDs may be
+    multiplied together if at least one of them represents a dimensionless normalization.
 
     SEDs may be added together if they are at the same redshift.  The resulting SED will only be
     defined on the wavelength region where both of the operand SEDs are defined. `blue_limit` and
@@ -55,34 +68,36 @@ class SED(object):
     1. a regular python function (or an object that acts like a function)
     2. a LookupTable
     3. a file from which a LookupTable can be read in
-    4. a string which can be evaluated into a function of `wave`
-       via eval('lambda wave : '+spec)
-       e.g. spec = '0.8 + 0.2 * (wave-800)'
+    4. a string which can be evaluated into a function of `wave` via eval('lambda wave : '+spec),
+       e.g., spec = '0.8 + 0.2 * (wave-800)'
+    5. a python scalar (only possible for dimensionless SEDs)
 
     The argument of `spec` should be the wavelength in units specified by `wave_type`, which should
-    be an instance of `astropy.units.Unit` of equivalency class `spectral`.  Note that `spectral`
-    includes not only units with dimensions of length, but also frequency, energy, or wavenumber.
-    For backwards compatibility, `wave_type` can also be any of 'nm', 'nanometer', 'nanometers',
-    'A', 'Ang', 'Angstrom', or 'Angstroms'.
+    be an instance of `astropy.units.Unit` of equivalency class `astropy.units.spectral`, or one of
+    the case-insensitive aliases 'nm', 'nanometer', 'nanometers', 'A', 'Ang', 'Angstrom', or
+    'Angstroms'.  Note that `astropy.units.spectral` includes not only units with dimensions of
+    length, but also frequency, energy, or wavenumber.
 
     The return value of `spec` should be a spectral density with units specified by `flux_type`,
-    which should be an instance of `astropy.units.Unit` of equivalency class `spectral_density`.
-    The `spectral_density` class includes dimensions [energy/time/area/unit-wavelength],
-    [energy/time/area/unit-frequency], [photons/time/area/unit-wavelength], and so on.  For
-    backwards compatibility, `flux_type` can also be one of:
-       1. 'flambda':  erg/wave_type/cm^2/s, where wave_type is as above.
-       2. 'fnu':      erg/Hz/cm^2/s
-       3. 'fphotons': photons/wave_type/cm^2/s, where wave_type is as above.
+    which should be an instance of `astropy.units.Unit` of equivalency class
+    `astropy.units.spectral_density`, or one of the case-insensitive aliases:
+        1. 'flambda':  erg/wave_type/cm^2/s, where wave_type is as above.
+        2. 'fnu':      erg/Hz/cm^2/s
+        3. 'fphotons': photons/wave_type/cm^2/s, where wave_type is as above.
+        4. '1':        dimensionless
+    Note that the `astropy.units.spectral_density` class includes units with dimensions of
+    [energy/time/area/unit-wavelength], [energy/time/area/unit-frequency],
+    [photons/time/area/unit-wavelength], and so on.
 
-    Astropy.units.Quantity objects may also be used in calls to __call__ and withFluxDensity, though
-    normal ndarrays or scalars are also allowed.
-
-    Finally, the `fast` keyword option changes when unit conversions occur.  If `fast=True`, the
-    default, then unit conversions occur at initialization, which can lead to faster subsequent
-    operations.  The speed savings is probably only significant if `spec` is given as a LookupTable.
-    The cost, however, is a loss of accuracy due to the fact that, for example, a piecewise linear
-    function of wavelength will no longer be piecewise linear when converted to a function of
-    frequency.
+    Finally, the optional `fast` keyword option is used to specify when unit and dimension changes
+    are executed, particularly for SEDs specified by a LookupTable.  If `fast=True`, the default,
+    then the input units/dimensions may be converted to an internal working unit before
+    interpolation in wavelength is performed.  Alternatively, `fast=False` implies that
+    interpolation should take place in the native units of the input `spec`, and subsequently flux
+    density converted to photons/cm^2/s/nm afterwards.  Generally, the former option is faster, but
+    may be less accurate since interpolation and dimensionality conversion do not commute.  One
+    consequence of using `fast=True` is that __call__ can not accept `astropy.units.Quantity`s in
+    this case.
 
     @param spec          Function defining the z=0 spectrum at each wavelength.  See above for
                          valid options for this parameter.
@@ -96,7 +111,7 @@ class SED(object):
                  _blue_limit=None, _red_limit=None, _wave_list=None,
                  _spectral=None, _dimensionless=None):
 
-        self._orig_spec = spec  # Save these for pickling
+        self._orig_spec = spec  # Save this for pickling
         # If these are known at construction time, use them.
         self._spectral = _spectral
         self._dimensionless = _dimensionless
@@ -128,7 +143,7 @@ class SED(object):
         self.redshift = redshift
         self.fast = fast
         # Convert string input into a real function (possibly a LookupTable)
-        self.const = False
+        self._const = False
         self._initialize_spec()
 
         # Finish re-evaluating __init__() here.
@@ -150,7 +165,7 @@ class SED(object):
             self.wave_list = np.array([], dtype=float)
 
     def _initialize_spec(self):
-        # Turn the input spec into a real function self._rest_photons
+        # Turn the input _orig_spec into a real function _spec.
         # The function cannot be pickled, so will need to do this in getstate as well as init.
 
         if hasattr(self, '_spec'):
@@ -158,7 +173,7 @@ class SED(object):
         if isinstance(self._orig_spec, (int, float)):
             if not self.dimensionless:
                 raise ValueError("Attempt to set dimensionful SED using float or integer.")
-            self.const = True
+            self._const = True
             self._spec = lambda w: float(self._orig_spec)
         elif isinstance(self._orig_spec, str):
             import os
@@ -185,6 +200,13 @@ class SED(object):
 
         else:
             self._spec = self._orig_spec
+
+    @property
+    def const(self):
+        """Boolean indicating that the SED is a constant dimensionless wavelength-dependent
+        normalization.
+        """
+        return self._const
 
     @property
     def spectral(self):
@@ -257,13 +279,13 @@ class SED(object):
                                  .format(wmax, self.red_limit))
 
     def _call_fast(self, wave):
-        """ Return flux in photons / sec / cm^2 / nm.
+        """ Return either flux in photons / sec / cm^2 / nm, or dimensionless normalization.
 
         Assumes that self._spec has already been transformed to accept correct wavelength units and
         yield correct flux units.
 
         @param wave  Wavelength in nanometers.
-        @returns     Flux.
+        @returns     Flux or normalization.
         """
         self._check_bounds(wave)
 
@@ -294,7 +316,7 @@ class SED(object):
             return self._fast_spec(wave / (1.0 + self.redshift))
 
     def _call_slow(self, wave):
-        """ Return flux in photons / sec / cm^2 / nm.
+        """ Return flux in photons / sec / cm^2 / nm or dimensionless normalization.
 
         Uses self._spec that has not been pre-transformed for desired units, instead does all unit
         conversions inside this method.
@@ -330,15 +352,16 @@ class SED(object):
             return out # Works for np.ndarray, Quantity, or scalar.
 
     def __call__(self, wave):
-        """ Return photon flux density at wavelength `wave`.
+        """ Return photon flux density or dimensionless normalization at wavelength `wave`.
 
         Note that outside of the wavelength range defined by the `blue_limit` and `red_limit`
         attributes, the SED is considered undefined, and this method will raise an exception if a
-        flux density at a wavelength outside the defined range is requested.
+        wavelength outside the defined range is passed as an argument.
 
         @param wave     Wavelength in nanometers at which to evaluate the SED.
 
-        @returns the photon flux density in units of photons/nm/cm^2/s.
+        @returns photon flux density in units of photons/nm/cm^2/s if self.spectral, or
+                 dimensionless normalization if self.dimensionless.
         """
         if self.fast:
             return self._call_fast(wave)
@@ -361,9 +384,9 @@ class SED(object):
                 raise TypeError("Cannot multiply two spectral densities together.")
 
             if other.const:
-                return self.__mul__(other._spec(1.0))
+                return self.__mul__(other._spec(42.0))  # const, so can eval anywhere.
             elif self.const:
-                return other.__mul__(self._spec(1.0))
+                return other.__mul__(self._spec(42.0))
 
             if self.spectral:
                 redshift = self.redshift
@@ -375,7 +398,7 @@ class SED(object):
             fast = self.fast and other.fast
 
             wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list(self, other)
-            spec = lambda w: self(w*(1.0+self.redshift)) * other(w * (1.0 + other.redshift))
+            spec = lambda w: self(w*(1.0+self.redshift)) * other(w*(1.0+other.redshift))
             _spectral = self.spectral or other.spectral
             _dimensionless = not _spectral
             return SED(spec, 'nm', 'fphotons', redshift=redshift, fast=fast,
@@ -390,21 +413,21 @@ class SED(object):
         if isinstance(other, galsim.Bandpass):
             if self.const:
                 # make a new scaled Bandpass, and use that to initialize a new SED.
-                new_bp = other * self._spec(1.0)
+                new_bp = other * self._spec(42.0) # const, so can eval anywhere
                 return SED(new_bp.func, 'nm', '1', redshift=self.redshift,
                            _blue_limit=new_bp.blue_limit, _red_limit=new_bp.red_limit,
                            _wave_list=new_bp._wave_list, _spectral=self._spectral,
                            _dimensionless=self._dimensionless)
             else:
                 wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list(self, other)
-                spec = lambda w: self(w*(1.0+self.redshift)) * other(w * (1.0 + self.redshift))
+                spec = lambda w: self(w*(1.0+self.redshift)) * other(w*(1.0+self.redshift))
                 return SED(spec, 'nm', 'fphotons', redshift=self.redshift,
                            _blue_limit=blue_limit, _red_limit=red_limit, _wave_list=wave_list,
                            _spectral=self._spectral, _dimensionless=self._dimensionless)
 
         # Product of SED with generic callable is also a (filtered) SED, with retained `redshift`.
         if hasattr(other, '__call__'):
-            spec = lambda w: self(w * (1.0 + self.redshift)) * other(w * (1.0 + self.redshift))
+            spec = lambda w: self(w*(1.0+self.redshift)) * other(w*(1.0+self.redshift))
             flux_type = 'fphotons' if self.spectral else '1'
             return SED(spec, 'nm', flux_type, redshift=self.redshift,
                        _blue_limit=self.blue_limit, _red_limit=self.red_limit,
@@ -421,13 +444,13 @@ class SED(object):
                 spec = galsim.LookupTable(x, f, x_log=self._spec.x_log, f_log=self._spec.f_log,
                                           interpolant=self._spec.interpolant)
             elif self.const:
-                spec = self._spec(1.0) * other
+                spec = self._spec(42.0) * other
                 wave_type = 'nm'
                 flux_type = '1'
             else:
                 wave_type = 'nm'
                 flux_type = 'fphotons' if self.spectral else '1'
-                spec = lambda w: self(w * (1.0 + self.redshift)) * other
+                spec = lambda w: self(w*(1.0+self.redshift)) * other
             return SED(spec, wave_type, flux_type, redshift=self.redshift,
                        _blue_limit=self.blue_limit, _red_limit=self.red_limit,
                        _wave_list=self.wave_list,
@@ -482,9 +505,9 @@ class SED(object):
             _spectral = True
             _dimensionless = False
         else:
-            raise TypeError("Cannot add SEDs with different dimensions.")
+            raise TypeError("Cannot add SEDs with incompatible dimensions.")
 
-        spec = lambda w: self(w*(1.0+self.redshift)) + other(w*(1.0 + self.redshift))
+        spec = lambda w: self(w*(1.0+self.redshift)) + other(w*(1.0+self.redshift))
         wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list([self, other])
 
         return SED(spec, wave_type='nm', flux_type=flux_type,
@@ -498,10 +521,9 @@ class SED(object):
 
     def withFluxDensity(self, target_flux_density, wavelength):
         """ Return a new SED with flux density set to `target_flux_density` at wavelength
-        `wavelength`.  Note that this normalization is *relative* to the `flux` attribute of the
-        chromaticized GSObject.
+        `wavelength`.
 
-        @param target_flux_density  The target *relative* normalization in photons/nm/cm^2/s.
+        @param target_flux_density  The target normalization in photons/nm/cm^2/s.
         @param wavelength           The wavelength, in nm, at which the flux density will be set.
 
         @returns the new normalized SED.
@@ -513,7 +535,7 @@ class SED(object):
         current_flux_density = self(wavelength)
         if isinstance(target_flux_density, units.Quantity):
             target_flux_density = target_flux_density.to(
-                    _photons, units.spectral_density(wavelength_nm * units.nm)).value
+                    _photons, units.spectral_density(wavelength_nm)).value
         factor = target_flux_density / current_flux_density
         return self * factor
 
@@ -536,10 +558,9 @@ class SED(object):
         `Bandpass.withZeropoint()`.  When the returned SED is multiplied by a GSObject with
         flux=1, the resulting ChromaticObject will have magnitude `target_magnitude` when drawn
         through `bandpass`.  Note that the total normalization depends both on the SED and the
-        GSObject.  See the galsim.Chromatic docstring for more details on normalization
-        conventions.
+        GSObject.
 
-        @param target_magnitude  The desired *relative* magnitude of the SED.
+        @param target_magnitude  The desired magnitude of the SED.
         @param bandpass          A Bandpass object defining a filter bandpass.
 
         @returns the new normalized SED.
@@ -566,10 +587,8 @@ class SED(object):
             blue_limit *= wave_factor
         if red_limit is not None:
             red_limit *= wave_factor
-        wave_type = self.wave_type
-        flux_type = self.flux_type
 
-        return SED(self._orig_spec, wave_type, flux_type, redshift,
+        return SED(self._orig_spec, self.wave_type, self.flux_type, redshift,
                    _wave_list=wave_list, _blue_limit=blue_limit, _red_limit=red_limit)
 
     def calculateFlux(self, bandpass):
@@ -600,7 +619,7 @@ class SED(object):
                 return galsim.integ.int1d(self, blue_limit, red_limit)
         else: # do flux through bandpass
             if len(bandpass.wave_list) > 0 or len(self.wave_list) > 0:
-                x, _, _ = galsim.utilities.combine_wave_list([self, bandpass])
+                x, _, _ = galsim.utilities.combine_wave_list(self, bandpass)
                 return np.trapz(bandpass(x) * self(x), x)
             else:
                 return galsim.integ.int1d(lambda w: bandpass(w)*self(w),
