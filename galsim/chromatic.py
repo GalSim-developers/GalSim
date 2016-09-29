@@ -79,18 +79,16 @@ class ChromaticObject(object):
     ChromaticObjects can generally be sorted into two distinct types: those that represent galaxies
     or stars and have dimensions of [photons/wavelength-interval/area/time/solid-angle], and those
     that represent other types of wavelength dependence besides flux, like chromatic PSFs (these
-    have dimensions of [1/solid-angle]).  The former category of ChromaticObjects will have an SED
-    attribute that itself has its `spectral` attribute set to True, while the latter category of
-    ChromaticObjects will have an SED with its `dimensionless` attribute set to True.  These two
-    classes of ChromaticObjects have different restrictions associated with them.  For example, only
-    ChromaticObjects with a spectral SED can be drawn using chrom_obj.drawImage(bandpass, ...).
-    Only ChromaticObjects of the same type can be added together, and at most one ChromaticObject
-    with a spectral SED can be part of a ChromaticConvolution.
+    have dimensions of [1/solid-angle]).  The former category of ChromaticObjects will have their
+    `.spectral` attribute set to True, while the latter category of ChromaticObjects will have their
+    `.dimensionless` attribute set to True.  These two classes of ChromaticObjects have different
+    restrictions associated with them.  For example, only spectral ChromaticObjects can be drawn
+    using chrom_obj.drawImage(bandpass, ...), only ChromaticObjects of the same type can be added
+    together, and at most one spectral ChromaticObject can be part of a ChromaticConvolution.
 
-    Multiplying a ChromaticObject with a dimensionless SED by a spectral SED produces a new
-    ChromaticObject with a spectral SED (though note that the new object's SED may not be equal to
-    the SED being multiplied by since the original ChromaticObject may not have had unit
-    normalization.)
+    Multiplying a dimensionless ChromaticObject a spectral SED produces a spectral ChromaticObject
+    (though note that the new object's SED may not be equal to the SED being multiplied by since the
+    original ChromaticObject may not have had unit normalization.)
 
     Methods
     -------
@@ -120,11 +118,11 @@ class ChromaticObject(object):
     """
 
     # ChromaticObjects should adhere to the following invariants:
-    # - Objects should define the attributes:
-    #   * .SED, .separable, .wave_list, .interpolated
+    # - Objects should define the attributes/properties:
+    #   * .SED, .separable, .wave_list, .interpolated, .spectral, .dimensionless
     # - obj.evaluateAtWavelength(lam).drawImage().array.sum() == obj.SED(lam)
     #   == obj.evaluateAtWavelength(lam).getFlux()
-    # - if SED.spectral:
+    # - if obj.spectral:
     #       obj.SED.calculateFlux(bandpass) == obj.calculateFlux(bandpass)
     #       == obj.drawImage(bandpass).array.sum()
     # - .separable is a boolean indicating whether or not the profile can be factored into a
@@ -135,6 +133,8 @@ class ChromaticObject(object):
     #   image of the chromatic profile.
     # - .interpolated is a boolean indicating whether any part of the object hierarchy includes an
     #   InterpolatedChromaticObject.
+    # - .spectral indicates obj.SED.spectral
+    # - .dimensionless indicates obj.SED.dimensionless
 
     def __init__(self, obj):
         from .deprecated import depr
@@ -292,6 +292,16 @@ class ChromaticObject(object):
         return InterpolatedChromaticObject(self, waves, **kwargs)
 
     @property
+    def spectral(self):
+        """Boolean indicating if ChromaticObject has units compatible with a spectral density."""
+        return self.SED.spectral
+
+    @property
+    def dimensionless(self):
+        """Boolean indicating if ChromaticObject is dimensionless."""
+        return self.SED.dimensionless
+
+    @property
     def deinterpolated(self):
         """Version of object with any interpolation from InterpolatedChromaticObject reverted.
         """
@@ -430,10 +440,9 @@ class ChromaticObject(object):
 
         If flux_ratio is a spectral SED (i.e., an SED with .spectral=True), then self.SED must be
         dimensionless for dimensional consistency.  The returned object will have a spectral SED
-        attribute.
-
-        If flux_ratio is a dimensionless SED, float, or univariate callable function, then the
-        returned object will either a spectral or dimensionless SED to match the SED of self.
+        attribute.  On the other hand, if flux_ratio is a dimensionless SED, float, or univariate
+        callable function, then the returned object will have .spectral and .dimensionless
+        matching self.spectral and self.dimensionless.
 
         @param flux_ratio   The factor by which to scale the normalization of the object.
                             `flux_ratio` may be a float, univariate callable function, in which case
@@ -1537,7 +1546,7 @@ class ChromaticTransformation(ChromaticObject):
 
 class ChromaticSum(ChromaticObject):
     """Add ChromaticObjects and/or GSObjects together.  If a GSObject is part of a sum, then its
-    SED is assumed to be flat with spectral density of 1 photon per nanometer.
+    SED is assumed to be flat with spectral density of 1 photon/s/cm**2/nm.
 
     This is the type returned from `galsim.Add(objects)` if any of the objects are a
     ChromaticObject.
@@ -1587,8 +1596,8 @@ class ChromaticSum(ChromaticObject):
         self.interpolated = any(arg.interpolated for arg in args)
 
         # We can only add ChromaticObjects together if they're either all SED'd or all non-SED'd
-        dimensionless = all(a.SED.dimensionless for a in args)
-        spectral = all(a.SED.spectral for a in args)
+        dimensionless = all(a.dimensionless for a in args)
+        spectral = all(a.spectral for a in args)
         if not (dimensionless or spectral):
             raise ValueError("Cannot add dimensionless and spectral ChromaticObjects.")
 

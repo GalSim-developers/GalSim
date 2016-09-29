@@ -210,8 +210,7 @@ class SED(object):
 
     @property
     def spectral(self):
-        """Boolean indicating if SED has units compatible with a spectral density.
-        """
+        """Boolean indicating if SED has units compatible with a spectral density."""
         if self._spectral is None:
             self._spectral = self.flux_type.is_equivalent(
                     _photons, units.spectral_density(1*units.nm))
@@ -219,8 +218,7 @@ class SED(object):
 
     @property
     def dimensionless(self):
-        """Boolean indicating if SED is dimensionless.
-        """
+        """Boolean indicating if SED is dimensionless."""
         if self._dimensionless is None:
             self._dimensionless = self.flux_type.is_equivalent(units.dimensionless_unscaled)
         return self._dimensionless
