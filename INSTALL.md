@@ -97,6 +97,9 @@ The GalSim package also requires
   tables.  If this is not available (e.g. when reading in Bandpass or SED
   files) then we fall back to the (much) slower numpy loadtxt function.
 
+* Optional dependency: dill.  Some GalSim objects that fail to pickle under
+  the python pickle or cPickle modules, are picklable under dill.
+
 These should installed onto your Python system so that they can be imported by:
 
     >>> import numpy

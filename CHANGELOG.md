@@ -20,6 +20,7 @@ API Changes
 Dependency Changes
 ------------------
 - `astropy` is now required for chromatic functionality. (#789)
+- `dill` added to INSTALL.md as optional dependency. (#789)
 
 
 Bug Fixes

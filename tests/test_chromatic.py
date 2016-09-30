@@ -218,7 +218,7 @@ def test_ChromaticConvolution_InterpolatedImage():
 
     do_pickle(star)
     do_pickle(PSF)
-    # do_pickle(final)
+    do_pickle(final)
 
     # draw image using speed tricks in ChromaticConvolution.draw
     # For this particular test, need to set iimult=4 in order to pass.
@@ -282,9 +282,9 @@ def test_chromatic_add():
 
     do_pickle(bulge)
     do_pickle(disk)
-    # do_pickle(bdgal)
+    do_pickle(bdgal)
     do_pickle(chromatic_PSF)
-    # do_pickle(final)
+    do_pickle(final)
 
     bulge_image = galsim.ImageD(stamp_size, stamp_size, scale=pixel_scale)
     bulge_part = galsim.Convolve([bulge, chromatic_PSF])
@@ -1198,7 +1198,7 @@ def test_separable_ChromaticSum():
     final = galsim.Convolve(gal, psf)
     final.drawImage(bandpass, image=img1)
 
-    # do_pickle(final)
+    do_pickle(final)
 
     component3 = galsim.Convolve(gal3*disk_SED, psf)
     component3.drawImage(bandpass, image=img2, add_to_image=True)
@@ -1536,9 +1536,9 @@ def test_ChromaticOpticalPSF():
     print("Time to initialize InterpolatedChromaticObject: {0}s".format(t5-t4))
     obj = galsim.Convolve(star, psf)
 
-    # if __name__ == '__main__':
-    #     # This is slow, but it worth testing the pickling of InterpolatedChromaticObjects.
-    #     do_pickle(psf)
+    if __name__ == '__main__':
+        # This is slow, but it worth testing the pickling of InterpolatedChromaticObjects.
+        do_pickle(psf)
 
     im_r_ref = galsim.fits.read(os.path.join(refdir, 'r_exact.fits'))
     im_r = im_r_ref.copy()
