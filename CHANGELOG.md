@@ -19,7 +19,7 @@ API Changes
 
 Dependency Changes
 ------------------
-- `astropy` is now a required dependency instead of an optional one. (#789)
+- `astropy` is now required for chromatic functionality. (#789)
 
 
 Bug Fixes
