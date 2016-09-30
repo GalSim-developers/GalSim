@@ -628,7 +628,7 @@ class GSObject(object):
         See magnify() for a version that applies a scale factor to the area while preserving surface
         brightness.
 
-        If `scale` is callable, it will be interpretted as a function of wavelength in nanometers.
+        If `scale` is callable, it will be interpreted as a function of wavelength in nanometers.
         The return value will then be a `ChromaticObject` with the given wavelength-dependent
         scaling.
 
@@ -661,7 +661,7 @@ class GSObject(object):
         See expand() and magnify() for versions that preserve surface brightness, and thus
         changes the flux.
 
-        If `scale` is callable, it will be interpretted as a function of wavelength in nanometers.
+        If `scale` is callable, it will be interpreted as a function of wavelength in nanometers.
         The return value will then be a `ChromaticObject` with the given wavelength-dependent
         scaling.
 
@@ -687,7 +687,7 @@ class GSObject(object):
         See expand() for a version that applies a linear scale factor while preserving surface
         brightness.
 
-        If `mu` is callable, it will be interpretted as a function of wavelength in nanometers.
+        If `mu` is callable, it will be interpreted as a function of wavelength in nanometers.
         The return value will then be a `ChromaticObject` with the given wavelength-dependent
         magnification.
 
@@ -714,7 +714,7 @@ class GSObject(object):
         combines both operations.
 
         If the input to this method is a single callable object, or a callable `shear=` keyword
-        argument, it will be interpretted as a function of wavelength in nanometers.  The return
+        argument, it will be interpreted as a function of wavelength in nanometers.  The return
         value will then be a `ChromaticObject` with the given wavelength-dependent shear.
 
         @param shear    The Shear to be applied. Or, as described above, you may instead supply
@@ -758,7 +758,7 @@ class GSObject(object):
         halo.  The magnification determines the rescaling factor for the object area and flux,
         preserving surface brightness.
 
-        If any of `g1`, `g2`, or `mu` are callable, they will be interpretted as a function of
+        If any of `g1`, `g2`, or `mu` are callable, they will be interpreted as a function of
         wavelength in nanometers.  The return value will then be a `ChromaticObject` with the given
         wavelength-dependent lensing.
 
@@ -784,7 +784,7 @@ class GSObject(object):
     def rotate(self, theta):
         """Rotate this object by an Angle `theta`.
 
-        If `theta` is a callable object, it will be interpretted as function of wavelength in
+        If `theta` is a callable object, it will be interpreted as function of wavelength in
         nanometers.  The return value will then be a `ChromaticObject` with the given
         wavelength-dependent rotation.
 
@@ -794,7 +794,7 @@ class GSObject(object):
         """
         if hasattr(theta, '__call__'):
             if not isinstance(theta(700.0), galsim.Angle):
-                raise TypeError("Input theta function should return Angle.")
+                raise TypeError("Input theta function should return an Angle.")
             def buildRMatrix(w):
                 sth, cth = theta(w).sincos()
                 R = np.array([[cth, -sth],
@@ -833,8 +833,8 @@ class GSObject(object):
             >>> prof *= 1./abs(dudx*dvdy - dudy*dvdx)
 
         If any of `dudx`, `dudy`, `dvdx`, or `dvdy` are callable objects, then they will be
-        interpretted as functions of wavelength in nanometers.  The return value will then be a
-        ChromaticObject with given wavelength-dependent transformation.
+        interpreted as functions of wavelength in nanometers.  The return value will then be a
+        ChromaticObject with the given wavelength-dependent transformation.
 
         @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
@@ -889,16 +889,16 @@ class GSObject(object):
         drawn image, you probably want to use the `offset` parameter of `drawImage` rather than
         this method.
 
-        If any of the input parameters are callable objects, they will be interpretted as functions
-        of wavelength in nanometers.  The return value will then be a ChromaticObject with given
-        wavelength-dependent shift.
+        If any of the input parameters are callable objects, they will be interpreted as functions
+        of wavelength in nanometers.  The return value will then be a ChromaticObject with the
+        given wavelength-dependent shift.
 
         @param dx       Horizontal shift to apply.
         @param dy       Vertical shift to apply.
 
         @returns the shifted object.
         """
-        # This follows along the galsim.utilities.pos_args function, but has some
+        # This follows along the galsim.utilities.parse_pos_args function, but has some
         # extra bits to account for the possibility of dx,dy being functions.
         # First unpack args/kwargs
         if len(args) == 0:
@@ -1200,7 +1200,7 @@ class GSObject(object):
         The 'phot' method has a few extra parameters that adjust how it functions.  The total
         number of photons to shoot is normally calculated from the object's flux.  This flux is
         taken to be given in photons/cm^2/s, so for most simple profiles, this times area * exptime
-        will equal the number of photons shot.  (See the discussion in Rowe et al, 2014, for why
+        will equal the number of photons shot.  (See the discussion in Rowe et al, 2015, for why
         this might be modified for InterpolatedImage and related profiles.)  However, you can
         manually set a different number of photons with `n_photons`.  You can also set
         `max_extra_noise` to tell drawImage() to use fewer photons than normal (and so is faster)
