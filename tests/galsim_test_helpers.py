@@ -225,12 +225,9 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     """
     from numbers import Integral, Real, Complex
     try:
-        import dill as pickle
+        import cPickle as pickle
     except:
-        try:
-            import cPickle as pickle
-        except:
-            import pickle
+        import pickle
     import copy
     # In case the repr uses these:
     from numpy import array, int16, int32, float32, float64, ndarray

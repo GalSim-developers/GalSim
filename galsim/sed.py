@@ -505,8 +505,23 @@ class SED(object):
         else:
             raise TypeError("Cannot add SEDs with incompatible dimensions.")
 
-        spec = lambda w: self(w*(1.0+self.redshift)) + other(w*(1.0+self.redshift))
-        wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list([self, other])
+        wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list(self, other)
+
+        # If both SEDs are `fast`, and both `_fast_spec`s are LookupTables, then make a new
+        # LookupTable instead and preserve picklability.
+        # First need to make sure self._fast_spec and other._fast_spec are initialized.  Can do this
+        # by evaluating them at a good wavelength.  blue_limit should work.
+        self(blue_limit)
+        other(blue_limit)
+        if (self.fast
+                and other.fast
+                and isinstance(self._fast_spec, galsim.LookupTable)
+                and isinstance(other._fast_spec, galsim.LookupTable)):
+            x = wave_list / (1.0 + self.redshift)
+            f = self._fast_spec(x) + other._fast_spec(x)
+            spec = galsim.LookupTable(x, f, interpolant='linear')
+        else:
+            spec = lambda w: self(w*(1.0+self.redshift)) + other(w*(1.0+self.redshift))
 
         return SED(spec, wave_type='nm', flux_type=flux_type,
                    redshift=self.redshift, _wave_list=wave_list,
