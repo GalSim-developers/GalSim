@@ -516,7 +516,13 @@ class SED(object):
         if (self.fast
                 and other.fast
                 and isinstance(self._fast_spec, galsim.LookupTable)
-                and isinstance(other._fast_spec, galsim.LookupTable)):
+                and isinstance(other._fast_spec, galsim.LookupTable)
+                and self._fast_spec.x_log == False
+                and other._fast_spec.x_log == False
+                and self._fast_spec.f_log == False
+                and other._fast_spec.f_log == False
+                and self._fast_spec.interpolant == 'linear'
+                and other._fast_spec.interpolant == 'linear'):
             x = wave_list / (1.0 + self.redshift)
             f = self._fast_spec(x) + other._fast_spec(x)
             spec = galsim.LookupTable(x, f, interpolant='linear')
