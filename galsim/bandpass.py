@@ -76,6 +76,13 @@ class Bandpass(object):
     Note that the `wave_type` parameter does not propagate into other methods of `Bandpass`.
     For instance, Bandpass.__call__ assumes its input argument is in nanometers.
 
+    Finally, a Bandpass may have zeropoint attribute, which is a float used to convert flux
+    (in photons/s/cm^2) to magnitudes:
+        mag = -2.5*log10(flux) + zeropoint
+    You can either set the zeropoint at initialization, or via the `withZeropoint` method.  Note
+    that the zeropoint attribute does not propagate if you get a new Bandpass by multiplying or
+    dividing an old Bandpass.
+
     @param throughput   Function defining the throughput at each wavelength.  See above for
                         valid options for this parameter.
     @param wave_type    The units to use for the wavelength argument of the `throughput`
@@ -85,7 +92,7 @@ class Bandpass(object):
     @param red_limit    Hard cut off of bandpass on the red side. [default: None, but required
                         if throughput is not a LookupTable or file.  See above.]
     @param zeropoint    Set the zero-point for this Bandpass.  Here, this can only be a float
-                        value.  See the method `withZeroPoint` for other options for how to
+                        value.  See the method `withZeropoint` for other options for how to
                         set this using a particular spectrum (AB, Vega, etc.) [default: None]
     """
     def __init__(self, throughput, wave_type, blue_limit=None, red_limit=None,
@@ -292,7 +299,6 @@ class Bandpass(object):
         else:
             tp = lambda w: self.func(w) / other
 
-        # Note that .zeropoint attribute gets reset by __div__
         return Bandpass(tp, wave_type, self.blue_limit, self.red_limit, _wave_list=self.wave_list)
 
     def __truediv__(self, other):
@@ -355,6 +361,11 @@ class Bandpass(object):
 
     def withZeropoint(self, zeropoint):
         """ Assign a zeropoint to this Bandpass.
+
+        A bandpass zeropoint is a float used to convert flux (in photons/s/cm^2) to magnitudes:
+            mag = -2.5*log10(flux) + zeropoint
+        Note that the zeropoint attribute does not propagate if you get a new Bandpass by
+        multiplying or dividing an old Bandpass.
 
         The `zeropoint` argument can take a variety of possible forms:
         1. a number, which will be the zeropoint
