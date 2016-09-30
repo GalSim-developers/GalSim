@@ -319,7 +319,8 @@ class SED(object):
         Uses self._spec that has not been pre-transformed for desired units, instead does all unit
         conversions inside this method.
 
-        @param wave  Wavelength.  If not a Quantity, then assumed units are nanometers.
+        @param wave  Wavelength.  If not an astropy.units.Quantity, then assumed units are
+                     nanometers.
         @returns     Flux.
         """
         wave_in = wave
