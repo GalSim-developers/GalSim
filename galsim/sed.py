@@ -257,7 +257,7 @@ class SED(object):
         wave_native_value = (wave * units.nm).to(self.wave_type, units.spectral()).value
         return self._spec(wave_native_value)
 
-    # Does it every actually make sense for an SED with a redshift to be dimensionless?
+    # Does it ever actually make sense for an SED with a redshift to be dimensionless?
     def _obs_nm_to_dimensionless(self, wave):
         return self._rest_nm_to_dimensionless(wave / (1.0 + self.redshift))
 
