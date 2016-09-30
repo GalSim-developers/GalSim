@@ -1223,9 +1223,9 @@ class GSObject(object):
         even-sized image.  You can also arbitrarily offset the profile from the image center with
         the `offset` parameter to handle any sub-pixel dithering you want.
 
-        On return, the image will have an attribute `added_flux`, which will be set to be the total
-        flux added to the image.  This may be useful as a sanity check that you have provided a
-        large enough image to catch most of the flux.  For example:
+        On return, the image will have an attribute `added_flux`, which will be set to the total
+        flux added to the image.  This may be useful as a sanity check that you have provided a large
+        enough image to catch most of the flux.  For example:
 
             >>> obj.drawImage(image)
             >>> assert image.added_flux > 0.99 * obj.getFlux()
@@ -1233,6 +1233,33 @@ class GSObject(object):
         The appropriate threshold will depend on your particular application, including what kind
         of profile the object has, how big your image is relative to the size of your object,
         whether you are keeping `poisson_flux=True`, etc.
+
+        Also, recall that the relationship between flux (in photons/cm^2/s) and the pixel values
+        depends on `exptime`, `area`, `gain`, and `method`!  For example:
+
+            >>> obj = galsim.Gaussian(fwhm=1)
+            >>> obj.flux
+            1.0
+            >>> im = obj.drawImage()
+            >>> im.added_flux
+            0.9999630988657515
+            >>> im.array.sum()
+            0.99996305
+            >>> im = obj.drawImage(exptime=10, area=10)
+            >>> im.added_flux
+            0.9999630988657525
+            >>> im.array.sum()
+            99.996315
+            >>> im = obj.drawImage(exptime=10, area=10, method='sb', scale=0.5, nx=10, ny=10)
+            >>> im.added_flux
+            0.9999973790505298
+            >>> im.array.sum()
+            399.9989
+            >>> im = obj.drawImage(exptime=10, area=10, gain=2)
+            >>> im.added_flux
+            0.9999630988657525
+            >>> im.array.sum()
+            49.998158
 
         Given the periodicity implicit in the use of FFTs, there can occasionally be artifacts due
         to wrapping at the edges, particularly for objects that are quite extended (e.g., due to
