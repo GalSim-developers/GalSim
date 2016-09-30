@@ -144,8 +144,11 @@ def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
         for arg in args[1:]:
             other_vals.append(arg)
             others.pop(0)
-    elif len(args) == 1:
-        raise TypeError("Cannot parse argument "+str(args[0])+" as a position")
+    elif len(args) == 1:  # pragma: no cover
+        if integer:
+            raise TypeError("Cannot parse argument "+str(args[0])+" as a PositionI")
+        else:
+            raise TypeError("Cannot parse argument "+str(args[0])+" as a PositionD")
     elif len(args) <= 2 + len(others):
         x = args[0]
         y = args[1]

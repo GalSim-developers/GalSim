@@ -493,9 +493,10 @@ def ParseExtendedKey(config, key):
         k = chain.pop(0)
         try: k = int(k)
         except ValueError: pass
-        if k not in d:
+        try:
+            d = d[k]
+        except IndexError:
             raise ValueError("Unable to parse extended key %s.  Field %s is invalid."%(key,k))
-        d = d[k]
     return d, chain[0]
 
 def GetFromConfig(config, key):
@@ -644,7 +645,7 @@ def Process(config, logger=None, njobs=1, job=1, new_params=None):
 
     # Warn about any unexpected fields.
     expected = [ 'psf', 'gal', 'stamp', 'image', 'input', 'output',
-                      'eval_variables', 'root' ]
+                 'eval_variables', 'root', 'modules' ]
     unexpected = [ k for k in config if k not in expected ]
     if len(unexpected) > 0 and logger:
         logger.warning("Warning: config dict contains the following unexpected fields: %s."%unexpected)

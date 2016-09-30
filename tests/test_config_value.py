@@ -1055,8 +1055,8 @@ def test_eval():
         'eval1' : { 'type' : 'Eval', 'str' : 'np.exp(-0.5 * 1.8**2)' },
         # Different ways to get variables
         'eval2' : { 'type' : 'Eval', 'str' : 'np.exp(-0.5 * x**2)', 'fx' : 1.8 },
-        'eval3' : { 'type' : 'Eval', 'str' : 'np.exp(-0.5 * y**2)' },
-        'eval_variables' : { 'fy' : 1.8 },
+        'eval3' : { 'type' : 'Eval', 'str' : 'np.exp(-y**2 / two) if maybe else 0.' },
+        'eval_variables' : { 'fy' : 1.8, 'bmaybe' : True, 'itwo' : 2 },
         # Shorthand notation with $
         'eval4' : '$np.exp(-0.5 * y**2)',
         # math and numpy should also work
@@ -1073,6 +1073,9 @@ def test_eval():
         'eval14' : '$np.exp(-0.5 * (image_bounds.xmax / 100.)**2)',
         'eval15' : '$np.exp(-0.5 * ((image_center.y-0.5) / 100.)**2)',
         'eval16' : '$np.exp(-0.5 * wcs.scale**2)',
+        # Shorthand notation with @
+        'psf' : { 'type' : 'Gaussian', 'sigma' : 1.8 },
+        'eval17' : '$np.exp(-@psf.sigma**2 / @eval_variables.itwo)',
 
         # These would be set by config in real runs, but just add them here for the tests.
         'image_pos' : galsim.PositionD(1.8,13),

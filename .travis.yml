@@ -75,7 +75,7 @@ script:
 after_success:
     # The multiprocessing stages don't get properly incorporated into the .coverage file unless
     # we do this command.  (Some of the .coverage.* files are in the ../examples directory.)
-    - coverage combine . ../examples
+    - coverage combine . ../examples ../examples/great3 ../examples/des
 
     # If we start doing multiple python versions here, then only report coveralls for one of them.
     # Otherwise the reported results get weird.
