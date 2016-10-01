@@ -46,9 +46,9 @@ class ChromaticObject(object):
     >>> gsobj = galsim.Gaussian(fwhm=1)
     >>> chrom_obj = gsobj.dilate(lambda wave: 1.01**wave)
 
-    In this and similar cases, the univariate object passed to the transformation method (`dilate`
-    above) is a python callable that accepts wavelength in nanometers and returns whatever type the
-    transformation method normally accepts (so an int or float above).
+    In this and similar cases, the argument should be a python callable that accepts wavelength in
+    nanometers and returns whatever type the transformation method normally accepts (so an int or
+    float above).
 
     Another way to instantiate a ChromaticObject from a GSObject is to multiply by an SED.  This can
     be useful to consistently generate the same galaxy observed through different filters, or, with
