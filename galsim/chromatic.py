@@ -66,8 +66,12 @@ class ChromaticObject(object):
     The SEDs above describe the flux density in photons/nm/cm^2/s of an object, possibly normalized
     with either the sed.withFlux(bandpass) or sed.withMagnitude(bandpass) methods (see the
     docstrings in the SED class for details about these and other normalization options).  Note that
-    the `flux` attribute of the multiplied GSObject is accounted for in the newly constructed
-    ChromaticObject's normalization.  I.e., the following are equivalent:
+    for dimensional consistency, in this case, the `flux` attribute of the multiplied GSObject is
+    interpreted as being dimensionless instead of in its normal units of [photons/s/cm^2].  The
+    photons/s/cm^2 units are (optionally) carried by the SED instead, or even left out entirely if
+    the SED is dimensionless itself (see discusison on ChromaticObject dimensions below).  The
+    GSObject  `flux` attribute *does* still  contribute to the ChromaticObject normalization,
+    though.  For example, the following are equivalent:
 
     >>> chrom_obj = (sed * 3.0) * gsobj
     >>> chrom_obj2 = sed * (gsobj * 3.0)
