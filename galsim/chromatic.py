@@ -229,9 +229,9 @@ class ChromaticObject(object):
         whereas those that involve making GSObjects with wavelength-dependent keywords or
         transformations do benefit from it.  Note that the interpolation scheme is simple linear
         interpolation in wavelength, and no extrapolation beyond the originally-provided range of
-        wavelengths is permitted.  However, if the `use_exact_SED` keyword is set to True, then the
-        exact SED will be used to set the flux at each wavelength instead of just the linear
-        interpolation which may yield more accurate profiles (or at least more accurate fluxes).
+        wavelengths is permitted.  However, the overall flux at each wavelength will use the exact
+        SED at that wavelength to give more accurate final flux values.  You can disable this
+        feature by setting `use_exact_SED = False`.
 
         The speedup involved in using interpolation depends in part on the bandpass used for
         rendering (since that determines how many full profile evaluations are involved in rendering
