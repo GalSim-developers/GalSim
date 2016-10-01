@@ -319,6 +319,14 @@ def test_chromatic_add():
         flux2, 2.*flux, 5,
         err_msg="ChromaticSum * 2 resulted in wrong flux.")
 
+    # also check that a - b  ==  a + (-b)
+    c = bulge_part - disk_part
+    d = bulge_part + (-disk_part)
+    assert c == d
+
+    cimage = c.drawImage(bandpass, nx=stamp_size, ny=stamp_size, scale=pixel_scale)
+    dimage = d.drawImage(bandpass, cimage.copy())
+    np.testing.assert_equal(cimage, dimage, "chromatic a-b != a+(-b)")
 
 @timer
 def test_dcr_moments():

@@ -274,6 +274,9 @@ class GSObject(object):
         """Equivalent to obj * (1/other)"""
         return self.__div__(other)
 
+    def __neg__(self):
+        return -1. * self
+
     # Make a copy of an object
     def copy(self):
         """Returns a copy of an object.
