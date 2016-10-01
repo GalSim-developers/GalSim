@@ -1188,14 +1188,20 @@ class GSObject(object):
                         it could be useful if you want to view the surface brightness profile of an
                         object directly, without including the pixel integration.
 
-        To convert from flux (photons/cm^2/s) into image values of analog-to-digital units (ADU), we
-        use optional keywords `area` indicating the telescope collecting area in cm^2, `exptime`
-        indicating the exposure time in s, and `gain` which converts between photons and ADU.
         Normally, the flux of the object should be equal to the sum of all the pixel values in the
-        image divided by (exptime * area * gain), less some small amount of flux that may fall off
-        the edge of the image (assuming you don't use `method='sb'`).  Note that normally, the gain
-        of a CCD is in electrons/ADU, but in GalSim, we fold the quantum efficiency into the gain as
-        well, so the units are photons/ADU.
+        image, less some small amount of flux that may fall off the edge of the image (assuming you
+        don't use `method='sb'`).  However, you may optionally set a `gain` value, which converts
+        between photons and ADU (so-called analog-to-digital units), the units of the pixel values
+        in real images.  Normally, the gain of a CCD is in electrons/ADU, but in GalSim, we fold the
+        quantum efficiency into the gain as well, so the units are photons/ADU.
+
+        Another caveat is that, technically, flux is really in units of photons/cm^2/s, not photons.
+        So if you want, you can keep track of this properly and provide an `area` and `exposure`
+        time here. This detail is more important with chromatic objects where the SED is typically
+        given in erg/cm^2/s/nm, so the exposure time and area are important details. With achromatic
+        objects however, it is often more convenient to ignore these details and just consider the
+        flux to be the total number of photons for this exposure, in which case, you would leave the
+        area and exptime parameters at their default value of 1.
 
         The 'phot' method has a few extra parameters that adjust how it functions.  The total
         number of photons to shoot is normally calculated from the object's flux.  This flux is
@@ -1234,8 +1240,9 @@ class GSObject(object):
         of profile the object has, how big your image is relative to the size of your object,
         whether you are keeping `poisson_flux=True`, etc.
 
-        Also, recall that the relationship between flux (in photons/cm^2/s) and the pixel values
-        depends on `exptime`, `area`, `gain`, and `method`!  For example:
+        The following code snippet illustrates how `gain`, `exptime`, `area`, and `method` can all
+        influence the relationship between the `flux` attribute of a `GSObject` and both the pixel
+        values and `.added_flux` attribute of an `Image` drawn with `drawImage()`:
 
             >>> obj = galsim.Gaussian(fwhm=1)
             >>> obj.flux
