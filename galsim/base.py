@@ -225,7 +225,6 @@ class GSObject(object):
     def interpolated(self): return False
     @property
     def deinterpolated(self): return self
-    def _deinterpolate(self): return self
     @property
     def SED(self): return galsim.SED(self.flux, 'nm', '1')
     @property

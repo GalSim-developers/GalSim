@@ -132,7 +132,7 @@ class ChromaticObject(object):
 
     # ChromaticObjects should adhere to the following invariants:
     # - Objects should define the attributes/properties:
-    #   * .SED, .separable, .wave_list, .interpolated, .spectral, .dimensionless
+    #   * .SED, .separable, .wave_list, .interpolated, .deinterpolated, .spectral, .dimensionless
     # - obj.evaluateAtWavelength(lam).drawImage().array.sum() == obj.SED(lam)
     #   == obj.evaluateAtWavelength(lam).getFlux()
     # - if obj.spectral:
@@ -154,6 +154,7 @@ class ChromaticObject(object):
         self.interpolated = obj.interpolated
         self.wave_list = obj.wave_list
         self.obj = obj
+        self.deinterpolated = obj.deinterpolated
         if isinstance(obj, galsim.GSObject):
             self.SED = galsim.SED(obj.flux, 'nm', '1')
         elif isinstance(obj, ChromaticObject):
@@ -309,15 +310,6 @@ class ChromaticObject(object):
     def dimensionless(self):
         """Boolean indicating if ChromaticObject is dimensionless."""
         return self.SED.dimensionless
-
-    @property
-    def deinterpolated(self):
-        """Version of object with any interpolation from InterpolatedChromaticObject reverted.
-        """
-        return self._deinterpolate()
-
-    def _deinterpolate(self):
-        return self.obj._deinterpolate()
 
     def drawImage(self, bandpass, image=None, integrator='trapezoidal', **kwargs):
         """Base implementation for drawing an image of a ChromaticObject.
@@ -815,7 +807,7 @@ class InterpolatedChromaticObject(ChromaticObject):
     """A ChromaticObject that uses interpolation of predrawn images to speed up subsequent
     rendering.
 
-    This class wraps another ChromaticObject, which is stored in the attribute `original`.
+    This class wraps another ChromaticObject, which is stored in the attribute `deinterpolated`.
     Any ChromaticObject can be used, although the interpolation procedure is most effective
     for non-separable objects, which can sometimes be very slow to render.
 
@@ -855,11 +847,11 @@ class InterpolatedChromaticObject(ChromaticObject):
         self.wave_list = original.wave_list
 
         # Don't interpolate an interpolation.  Go back to the original.
-        self.original = original.deinterpolated
+        self.deinterpolated = original.deinterpolated
 
         # Make the objects between which we are going to interpolate.  Note that these do not have
         # to be saved for later, unlike the images.
-        objs = [ original.evaluateAtWavelength(wave) for wave in self.waves ]
+        objs = [ self.deinterpolated.evaluateAtWavelength(wave) for wave in self.waves ]
 
         # Find the Nyquist scale for each, and to be safe, choose the minimum value to use for the
         # array of images that is being stored.
@@ -882,22 +874,19 @@ class InterpolatedChromaticObject(ChromaticObject):
                      for obj in objs ]
         self.fluxes = [ obj.getFlux() for obj in objs ]
 
-    def _deinterpolate(self):
-        return self.original
-
     def __eq__(self, other):
         return (isinstance(other, galsim.InterpolatedChromaticObject) and
-                self.original == other.original and
+                self.deinterpolated == other.deinterpolated and
                 np.array_equal(self.waves, other.waves) and
                 self.oversample == other.oversample and
                 self.use_exact_SED == other.use_exact_SED)
 
     def __hash__(self):
-        return hash(("galsim.InterpolatedChromaticObject", self.original, tuple(self.waves),
+        return hash(("galsim.InterpolatedChromaticObject", self.deinterpolated, tuple(self.waves),
                      self.oversample, self.use_exact_SED))
 
     def __repr__(self):
-        s = 'galsim.InterpolatedChromaticObject(%r,%r'%(self.original, self.waves)
+        s = 'galsim.InterpolatedChromaticObject(%r,%r'%(self.deinterpolated, self.waves)
         if self.oversample != 1.0:
             s += ', oversample_fac=%r'%self.oversample
         if not self.use_exact_SED:
@@ -906,7 +895,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         return s
 
     def __str__(self):
-        return 'galsim.InterpolatedChromaticObject(%s,%s)'%(self.original, self.waves)
+        return 'galsim.InterpolatedChromaticObject(%s,%s)'%(self.deinterpolated, self.waves)
 
     def _imageAtWavelength(self, wave):
         """
@@ -1136,6 +1125,7 @@ class ChromaticAtmosphere(ChromaticObject):
 
         self.separable = False
         self.interpolated = False
+        self.deinterpolated = self
         self.SED = galsim.SED(base_obj.flux, 'nm', '1')
         self.wave_list = np.array([], dtype=float)
 
@@ -1180,9 +1170,6 @@ class ChromaticAtmosphere(ChromaticObject):
 
         self.base_refraction = galsim.dcr.get_refraction(self.base_wavelength, self.zenith_angle,
                                                          **kwargs)
-
-    def _deinterpolate(self):
-        return self
 
     def __eq__(self, other):
         return (isinstance(other, galsim.ChromaticAtmosphere) and
@@ -1270,9 +1257,7 @@ class Chromatic(ChromaticObject):
         # Chromaticized GSObjects are separable into spatial (x,y) and spectral (lambda) factors.
         self.separable = True
         self.interpolated = False
-
-    def _deinterpolate(self):
-        return self
+        self.deinterpolated = self
 
     def __eq__(self, other):
         return (isinstance(other, galsim.Chromatic) and
@@ -1385,6 +1370,16 @@ class ChromaticTransformation(ChromaticObject):
         else:
             self.gsparams = gsparams
 
+        if self.interpolated:
+            self.deinterpolated = galsim.ChromaticTransformation(
+                    self.original.deinterpolated,
+                    jac = self._jac,
+                    offset = self._offset,
+                    flux_ratio = self._flux_ratio,
+                    gsparams = self.gsparams)
+        else:
+            self.deinterpolated = self
+
     def __eq__(self, other):
         if not (isinstance(other, galsim.ChromaticTransformation) and
                 self.original == other.original and
@@ -1485,17 +1480,6 @@ class ChromaticTransformation(ChromaticObject):
         offset = galsim.PositionD(*offset)
         flux_ratio = self._flux_ratio(wave)
         return jac, offset, flux_ratio
-
-    def _deinterpolate(self):
-        if self.interpolated:
-            return galsim.ChromaticTransformation(
-                    self.original.deinterpolated,
-                    jac = self._jac,
-                    offset = self._offset,
-                    flux_ratio = self._flux_ratio,
-                    gsparams = self.gsparams)
-        else:
-            return self
 
     def evaluateAtWavelength(self, wave):
         """Evaluate this chromatic object at a particular wavelength.
@@ -1603,6 +1587,11 @@ class ChromaticSum(ChromaticObject):
         # else args is already the list of objects
 
         self.interpolated = any(arg.interpolated for arg in args)
+        if self.interpolated:
+            self.deinterpolated = galsim.ChromaticSum([arg.deinterpolated for arg in args],
+                                                      gsparams = self.gsparams)
+        else:
+            self.deinterpolated = self
 
         # We can only add ChromaticObjects together if they're either all SED'd or all non-SED'd
         dimensionless = all(a.dimensionless for a in args)
@@ -1650,13 +1639,6 @@ class ChromaticSum(ChromaticObject):
                 self.SED += obj.SED
 
         self.wave_list, _, _ = galsim.utilities.combine_wave_list(self.objlist)
-
-    def _deinterpolate(self):
-        if self.interpolated:
-            return galsim.ChromaticSum([obj.deinterpolated for obj in self.objlist],
-                                       gsparams=self.gsparams)
-        else:
-            return self
 
     def __eq__(self, other):
         return (isinstance(other, galsim.ChromaticSum) and
@@ -1801,6 +1783,11 @@ class ChromaticConvolution(ChromaticObject):
 
         self.separable = all(obj.separable for obj in self.objlist)
         self.interpolated = any(obj.interpolated for obj in self.objlist)
+        if self.interpolated:
+            self.deinterpolated = ChromaticConvolution([obj.deinterpolated for obj in self.objlist],
+                                                       gsparams=self.gsparams)
+        else:
+            self.deinterpolated = self
 
         # Check quickly whether we are convolving two non-separable things that aren't
         # ChromaticSums, >1 of which uses interpolation.  If so, emit a warning that the
@@ -1821,13 +1808,6 @@ class ChromaticConvolution(ChromaticObject):
 
         # Assemble wave_lists
         self.wave_list, _, _ = galsim.utilities.combine_wave_list(self.objlist)
-
-    def _deinterpolate(self):
-        if self.interpolated:
-            return ChromaticConvolution([obj.deinterpolated for obj in self.objlist],
-                                        gsparams=self.gsparams)
-        else:
-            return self
 
     @staticmethod
     def _get_effective_prof(insep_obj, bandpass, iimult, wmult, integrator, gsparams):
@@ -2062,14 +2042,12 @@ class ChromaticDeconvolution(ChromaticObject):
         self.kwargs = kwargs
         self.separable = obj.separable
         self.interpolated = obj.interpolated
+        if self.interpolated:
+            self.deinterpolated = ChromaticDeconvolution(self.obj.deinterpolated, **self.kwargs)
+        else:
+            self.deinterpolated = self
         self.SED = galsim.SED(lambda w: 1./obj.SED(w), 'nm', '1')
         self.wave_list = obj.wave_list
-
-    def _deinterpolate(self):
-        if self.interpolated:
-            return ChromaticDeconvolution(self.obj.deinterpolated, **self.kwargs)
-        else:
-            return self
 
     def __eq__(self, other):
         return (isinstance(other, galsim.ChromaticDeconvolution) and
@@ -2118,14 +2096,12 @@ class ChromaticAutoConvolution(ChromaticObject):
         self.kwargs = kwargs
         self.separable = obj.separable
         self.interpolated = obj.interpolated
+        if self.interpolated:
+            self.deinterpolated = ChromaticAutoConvolution(self.obj.deinterpolated, **self.kwargs)
+        else:
+            self.deinterpolated = self
         self.SED = obj.SED * obj.SED
         self.wave_list = obj.wave_list
-
-    def _deinterpolate(self):
-        if self.interpolated:
-            return ChromaticAutoConvolution(self.obj.deinterpolated, **self.kwargs)
-        else:
-            return self
 
     def __eq__(self, other):
         return (isinstance(other, galsim.ChromaticAutoConvolution) and
@@ -2175,14 +2151,12 @@ class ChromaticAutoCorrelation(ChromaticObject):
         self.kwargs = kwargs
         self.separable = obj.separable
         self.interpolated = obj.interpolated
+        if self.interpolated:
+            self.deinterpolated = ChromaticAutoCorrelation(self.obj.deinterpolated, **self.kwargs)
+        else:
+            self.deinterpolated = self
         self.SED = obj.SED * obj.SED
         self.wave_list = obj.wave_list
-
-    def _deinterpolate(self):
-        if self.interpolated:
-            return ChromaticAutoCorrelation(self.obj.deinterpolated, **self.kwargs)
-        else:
-            return self
 
     def __eq__(self, other):
         return (isinstance(other, galsim.ChromaticAutoCorrelation) and
@@ -2233,14 +2207,13 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
         self.kwargs = kwargs
         self.separable = obj.separable
         self.interpolated = obj.interpolated
+        if self.interpolated:
+            self.deinterpolated = ChromaticFourierSqrtProfile(
+                    self.obj.deinterpolated, **self.kwargs)
+        else:
+            self.deinterpolated = self
         self.SED = galsim.SED(lambda w:math.sqrt(obj.SED(w)), 'nm', '1')
         self.wave_list = obj.wave_list
-
-    def _deinterpolate(self):
-        if self.interpolated:
-            return ChromaticFourierSqrtProfile(self.obj.deinterpolated, **self.kwargs)
-        else:
-            return self
 
     def __repr__(self):
         return 'galsim.ChromaticFourierSqrtProfile(%r, %r)'%(self.obj, self.kwargs)
@@ -2340,11 +2313,9 @@ class ChromaticOpticalPSF(ChromaticObject):
         # Define the necessary attributes for this ChromaticObject.
         self.separable = False
         self.interpolated = False
+        self.deinterpolated = self
         self.SED = galsim.SED(1, 'nm', '1')
         self.wave_list = np.array([], dtype=float)
-
-    def _deinterpolate(self):
-        return self
 
     def __eq__(self, other):
         return (isinstance(other, galsim.ChromaticOpticalPSF) and
@@ -2433,11 +2404,9 @@ class ChromaticAiry(ChromaticObject):
         # Define the necessary attributes for this ChromaticObject.
         self.separable = False
         self.interpolated = False
+        self.deinterpolated = self
         self.SED = galsim.SED(1, 'nm', '1')
         self.wave_list = np.array([], dtype=float)
-
-    def _deinterpolate(self):
-        return self
 
     def __eq__(self, other):
         return (isinstance(other, galsim.ChromaticAiry) and

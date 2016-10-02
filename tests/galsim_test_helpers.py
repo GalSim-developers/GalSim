@@ -413,6 +413,7 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
     assert isinstance(obj.wave_list, np.ndarray)
     assert isinstance(obj.separable, bool)
     assert isinstance(obj.interpolated, bool)
+    assert isinstance(obj.deinterpolated, (galsim.ChromaticObject, galsim.GSObject))
 
     for wave in waves:
         desired = obj.SED(wave)

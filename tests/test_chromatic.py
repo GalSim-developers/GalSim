@@ -533,7 +533,7 @@ def test_chromatic_flux():
         print('The assert_raises tests require nose')
 
     # Go back to no interpolation (this will effect the PSFs that are used below).
-    PSF = PSF.original
+    PSF = PSF.deinterpolated
 
     # Try adjusting flux to something else.
     target_flux = 2.63
@@ -1258,11 +1258,9 @@ def test_interpolated_ChromaticObject():
             self.sigma = sigma
             self.separable = False
             self.interpolated = False
+            self.deinterpolated = self
             self.SED = galsim.SED(1, 'nm', '1')
             self.wave_list = np.array([], dtype=float)
-
-        def _deinterpolate(self):
-            return self
 
         def evaluateAtWavelength(self, wave):
             this_sigma = self.sigma * (wave / 500.)
@@ -1322,7 +1320,7 @@ def test_interpolated_ChromaticObject():
         err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated (midpoint)')
 
     # Check that we can turn interpolation off and on at will.
-    other_psf = interp_psf.original
+    other_psf = interp_psf.deinterpolated
     other_obj = galsim.Convolve(star, other_psf)
     im_other = im_exact.copy()
     im_other = other_obj.drawImage(bandpass, image=im_other, scale=scale)
