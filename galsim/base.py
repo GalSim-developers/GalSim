@@ -599,16 +599,29 @@ class GSObject(object):
         It creates a new object that has the same profile as the original, but with the
         surface brightness at every location scaled by the given amount.  If `flux_ratio` is an SED,
         then the returned object is a `ChromaticObject` with an SED multiplied by obj.getFlux().
+        Note that in this case the `.flux` attribute of the GSObject being scaled gets interpreted
+        as being dimensionless, instead of having its normal units of [photons/s/cm^2].  The
+        photons/s/cm^2 units are (optionally) carried by the SED instead, or even left out entirely
+        if the SED is dimensionless itself (see discussion in the ChromaticObject docstring).  The
+        GSObject `flux` attribute *does* still contribute to the ChromaticObject normalization,
+        though.  For example, the following are equivalent:
+
+            >>> chrom_obj = gsobj.withScaledFlux(sed * 3.0)
+            >>> chrom_obj2 = (gsobj * 3.0).withScaledFlux(sed)
 
         An equivalent, and usually simpler, way to effect this scaling is
 
-            obj = obj * flux_ratio
+            >>> obj = obj * flux_ratio
 
         @param flux_ratio   The ratio by which to rescale the flux of the object when creating a new
                             one.
 
         @returns the object with the new flux.
         """
+        # Prohibit non-SED callable flux_ratio here as most likely an error.
+        if hasattr(flux_ratio, '__call__') and not isinstance(flux_ratio, galsim.SED):
+            raise TypeError('callable flux_ratio must be an SED.')
+
         new_obj = galsim.Transform(self, flux_ratio=flux_ratio)
 
         if not isinstance(new_obj, galsim.ChromaticObject) and hasattr(self, 'noise'):
@@ -631,27 +644,13 @@ class GSObject(object):
         See magnify() for a version that applies a scale factor to the area while preserving surface
         brightness.
 
-        If `scale` is callable, it will be interpreted as a function of wavelength in nanometers.
-        The return value will then be a `ChromaticObject` with the given wavelength-dependent
-        scaling.
-
         @param scale    The factor by which to scale the linear dimension of the object.
 
         @returns the expanded object.
         """
-        if hasattr(scale, '__call__'):
-            def buildScaleJac(w):
-                s = scale(w)
-                return np.diag([s,s])
-            jac = buildScaleJac
-            if hasattr(self, 'noise'):
-                import warnings
-                warnings.warn("Cannot propagate noise through chromatic transformation.")
-        else:
-            jac = np.diag([scale, scale])
-        new_obj = galsim.Transform(self, jac=jac)
+        new_obj = galsim.Transform(self, jac=[scale, 0., 0., scale])
 
-        if not isinstance(new_obj, galsim.ChromaticObject) and hasattr(self, 'noise'):
+        if hasattr(self, 'noise'):
             new_obj.noise = self.noise.expand(scale)
         return new_obj
 
@@ -664,18 +663,11 @@ class GSObject(object):
         See expand() and magnify() for versions that preserve surface brightness, and thus
         changes the flux.
 
-        If `scale` is callable, it will be interpreted as a function of wavelength in nanometers.
-        The return value will then be a `ChromaticObject` with the given wavelength-dependent
-        scaling.
-
         @param scale    The linear rescaling factor to apply.
 
         @returns the dilated object.
         """
-        if hasattr(scale, '__call__'):
-            return self.expand(scale).withScaledFlux(lambda w: 1./scale(w)**2)
-        else:
-            return self.expand(scale).withScaledFlux(1./scale**2)  # conserve flux
+        return self.expand(scale) * (1./scale**2)  # conserve flux
 
     def magnify(self, mu):
         """Create a version of the current object with a lensing magnification applied to it,
@@ -690,19 +682,12 @@ class GSObject(object):
         See expand() for a version that applies a linear scale factor while preserving surface
         brightness.
 
-        If `mu` is callable, it will be interpreted as a function of wavelength in nanometers.
-        The return value will then be a `ChromaticObject` with the given wavelength-dependent
-        magnification.
-
         @param mu   The lensing magnification to apply.
 
         @returns the magnified object.
         """
         import math
-        if hasattr(mu, '__call__'):
-            return self.expand(lambda w: math.sqrt(mu(w)))
-        else:
-            return self.expand(math.sqrt(mu))
+        return self.expand(math.sqrt(mu))
 
     def shear(self, *args, **kwargs):
         """Create a version of the current object with an area-preserving shear applied to it.
@@ -716,10 +701,6 @@ class GSObject(object):
         the appropriate change in area, either use shear() with magnify(), or use lens(), which
         combines both operations.
 
-        If the input to this method is a single callable object, or a callable `shear=` keyword
-        argument, it will be interpreted as a function of wavelength in nanometers.  The return
-        value will then be a `ChromaticObject` with the given wavelength-dependent shear.
-
         @param shear    The Shear to be applied. Or, as described above, you may instead supply
                         parameters do construct a shear directly.  eg. `obj.shear(g1=g1,g2=g2)`.
 
@@ -727,26 +708,17 @@ class GSObject(object):
         """
         if len(args) == 1:
             if kwargs:
-                raise TypeError("Gave both unnamed and named arguments!")
-            if not hasattr(args[0], '__call__') and not isinstance(args[0], galsim.Shear):
-                raise TypeError("Unnamed argument is not a Shear or function returning Shear!")
+                raise TypeError("Error, gave both unnamed and named arguments to GSObject.shear!")
+            if not isinstance(args[0], galsim.Shear):
+                raise TypeError("Error, unnamed argument to GSObject.shear is not a Shear!")
             shear = args[0]
         elif len(args) > 1:
-            raise TypeError("Too many unnamed arguments!")
-        elif 'shear' in kwargs:
-            # Need to break this out specially in case it is a function of wavelength
-            shear = kwargs.pop('shear')
-            if kwargs:
-                raise TypeError("Too many kwargs provided!")
+            raise TypeError("Error, too many unnamed arguments to GSObject.shear!")
         else:
             shear = galsim.Shear(**kwargs)
-        if hasattr(shear, '__call__'):
-            jac = lambda w: shear(w).getMatrix()
-        else:
-            jac = shear.getMatrix()
-        new_obj = galsim.Transform(self, jac=jac)
+        new_obj = galsim.Transform(self, jac=shear.getMatrix().ravel().tolist())
 
-        if not isinstance(new_obj, galsim.ChromaticObject) and hasattr(self, 'noise'):
+        if hasattr(self, 'noise'):
             new_obj.noise = self.noise.shear(shear)
         return new_obj
 
@@ -761,10 +733,6 @@ class GSObject(object):
         halo.  The magnification determines the rescaling factor for the object area and flux,
         preserving surface brightness.
 
-        If any of `g1`, `g2`, or `mu` are callable, they will be interpreted as a function of
-        wavelength in nanometers.  The return value will then be a `ChromaticObject` with the given
-        wavelength-dependent lensing.
-
         @param g1       First component of lensing (reduced) shear to apply to the object.
         @param g2       Second component of lensing (reduced) shear to apply to the object.
         @param mu       Lensing magnification to apply to the object.  This is the factor by which
@@ -773,46 +741,21 @@ class GSObject(object):
 
         @returns the lensed object.
         """
-        if any(hasattr(g, '__call__') for g in [g1,g2]):
-            _g1 = g1
-            _g2 = g2
-            if not hasattr(g1, '__call__'): _g1 = lambda w: g1
-            if not hasattr(g2, '__call__'): _g2 = lambda w: g2
-            S = lambda w: galsim.Shear(g1=_g1(w), g2=_g2(w))
-            sheared = self.shear(S)
-        else:
-            sheared = self.shear(g1=g1,g2=g2)
-        return sheared.magnify(mu)
+        return self.shear(g1=g1, g2=g2).magnify(mu)
 
     def rotate(self, theta):
         """Rotate this object by an Angle `theta`.
-
-        If `theta` is a callable object, it will be interpreted as function of wavelength in
-        nanometers.  The return value will then be a `ChromaticObject` with the given
-        wavelength-dependent rotation.
 
         @param theta    Rotation angle (Angle object, +ve anticlockwise).
 
         @returns the rotated object.
         """
-        if hasattr(theta, '__call__'):
-            if not isinstance(theta(700.0), galsim.Angle):
-                raise TypeError("Input theta function should return an Angle.")
-            def buildRMatrix(w):
-                sth, cth = theta(w).sincos()
-                R = np.array([[cth, -sth],
-                              [sth,  cth]], dtype=float)
-                return R
-            jac = buildRMatrix
-        else:
-            if not isinstance(theta, galsim.Angle):
-                raise TypeError("Input theta should be an Angle")
-            sth, cth = theta.sincos()
-            jac = np.array([[cth, -sth],
-                            [sth,  cth]], dtype=float)
-        new_obj = galsim.Transform(self, jac=jac)
+        if not isinstance(theta, galsim.Angle):
+            raise TypeError("Input theta should be an Angle")
+        s, c = theta.sincos()
+        new_obj = galsim.Transform(self, jac=[c, -s, s, c])
 
-        if not isinstance(new_obj, galsim.ChromaticObject) and hasattr(self, 'noise'):
+        if hasattr(self, 'noise'):
             new_obj.noise = self.noise.rotate(theta)
         return new_obj
 
@@ -835,10 +778,6 @@ class GSObject(object):
 
             >>> prof *= 1./abs(dudx*dvdy - dudy*dvdx)
 
-        If any of `dudx`, `dudy`, `dvdx`, or `dvdy` are callable objects, then they will be
-        interpreted as functions of wavelength in nanometers.  The return value will then be a
-        ChromaticObject with the given wavelength-dependent transformation.
-
         @param dudx     du/dx, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dudy     du/dy, where (x,y) are the current coords, and (u,v) are the new coords.
         @param dvdx     dv/dx, where (x,y) are the current coords, and (u,v) are the new coords.
@@ -846,30 +785,15 @@ class GSObject(object):
 
         @returns the transformed object
         """
-        if any(hasattr(dd, '__call__') for dd in [dudx, dudy, dvdx, dvdy]):
-            _dudx = dudx
-            _dudy = dudy
-            _dvdx = dvdx
-            _dvdy = dvdy
-            if not hasattr(dudx, '__call__'): _dudx = lambda w: dudx
-            if not hasattr(dudy, '__call__'): _dudy = lambda w: dudy
-            if not hasattr(dvdx, '__call__'): _dvdx = lambda w: dvdx
-            if not hasattr(dvdy, '__call__'): _dvdy = lambda w: dvdy
-            jac = lambda w: np.array([[_dudx(w), _dudy(w)],
-                                      [_dvdx(w), _dvdy(w)]], dtype=float)
-        else:
-            jac = np.array([[dudx, dudy],
-                            [dvdx, dvdy]], dtype=float)
-        new_obj = galsim.Transform(self, jac=jac)
-
-        if not isinstance(new_obj, galsim.ChromaticObject) and hasattr(self, 'noise'):
+        new_obj = galsim.Transform(self, jac=[dudx, dudy, dvdx, dvdy])
+        if hasattr(self, 'noise'):
             new_obj.noise = self.noise.transform(dudx,dudy,dvdx,dvdy)
         return new_obj
 
     def shift(self, *args, **kwargs):
         """Create a version of the current object shifted by some amount in real space.
 
-        After this call, the caller's type will be a GSObject or ChromaticObject.
+        After this call, the caller's type will be a GSObject.
         This means that if the caller was a derived type that had extra methods beyond
         those defined in GSObject (e.g. getSigma() for a Gaussian), then these methods
         are no longer available.
@@ -892,63 +816,15 @@ class GSObject(object):
         drawn image, you probably want to use the `offset` parameter of `drawImage` rather than
         this method.
 
-        If any of the input parameters are callable objects, they will be interpreted as functions
-        of wavelength in nanometers.  The return value will then be a ChromaticObject with the
-        given wavelength-dependent shift.
-
         @param dx       Horizontal shift to apply.
         @param dy       Vertical shift to apply.
 
         @returns the shifted object.
         """
-        # This follows along the galsim.utilities.parse_pos_args function, but has some
-        # extra bits to account for the possibility of dx,dy being functions.
-        # First unpack args/kwargs
-        if len(args) == 0:
-            # Then dx,dy need to be kwargs
-            # If not, then python will raise an appropriate error.
-            dx = kwargs.pop('dx')
-            dy = kwargs.pop('dy')
-            offset = None
-        elif len(args) == 1:
-            if hasattr(args[0], '__call__'):
-                try:
-                    args[0](700.).x
-                    # If the function returns a Position, recast it as a function returning
-                    # a numpy array.
-                    def offset_func(w):
-                        d = args[0](w)
-                        return np.asarray( (d.x, d.y) )
-                    offset = offset_func
-                except:
-                    # Then it's a function returning a tuple or list or array.
-                    # Just make sure it is actually an array to make our life easier later.
-                    offset = lambda w: np.asarray(args[0](w))
-            elif isinstance(args[0], galsim.PositionD) or isinstance(args[0], galsim.PositionI):
-                offset = args[0]
-            else:
-                # Let python raise the appropriate exception if this isn't valid.
-                offset = galsim.PositionD(*args[0])
-        elif len(args) == 2:
-            dx = args[0]
-            dy = args[1]
-            offset = None
-        else:
-            raise TypeError("Too many arguments supplied!")
-        if kwargs:
-            raise TypeError("Got unexpected keyword arguments: %s",kwargs.keys())
-
-        if offset is None:
-            if not any(hasattr(dd, '__call__') for dd in [dx, dy]):
-                offset = galsim.PositionD(dx, dy)
-            else:
-                offset = galsim.utilities.functionize(lambda x,y:(x,y))(dx, dy)
-
-        # offset should be a PositionD/I if transformation is achromatic, or a function returning
-        # a ndarray if transformation *is* chromatic.
+        offset = galsim.utilities.parse_pos_args(args, kwargs, 'dx', 'dy')
         new_obj = galsim.Transform(self, offset=offset)
 
-        if not isinstance(new_obj, galsim.ChromaticObject) and hasattr(self,'noise'):
+        if hasattr(self,'noise'):
             new_obj.noise = self.noise
         return new_obj
 

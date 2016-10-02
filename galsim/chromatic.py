@@ -40,28 +40,37 @@ class ChromaticObject(object):
     Initialization
     --------------
 
-    A ChromaticObject can be instantiated from an existing GSObject by applying a
-    wavelength-dependent transformation.  E.g.,
+    A ChromaticObject can be instantiated directly from an existing GSObject.  In this case, the
+    newly created ChromaticObject will act in nearly the same way as the original GSObject works,
+    except that it has access to the ChromaticObject transformation methods described below (e.g.,
+    expand(), dilate(), shift(), withFlux(), ...)  These can all take functions as arguments to
+    describe wavelength-dependent transformations.  E.g.,
 
-    >>> gsobj = galsim.Gaussian(fwhm=1)
-    >>> chrom_obj = gsobj.dilate(lambda wave: 1.01**wave)
+        >>> gsobj = galsim.Gaussian(fwhm=1)
+        >>> chrom_obj = galsim.ChromaticObject(gsobj).dilate(lambda wave: 1.01**wave)
 
-    In this and similar cases, the argument should be a python callable that accepts wavelength in
-    nanometers and returns whatever type the transformation method normally accepts (so an int or
-    float above).
+    In this and similar cases, the argument to the transformation method should be a python callable
+    that accepts wavelength in nanometers and returns whatever type the transformation method
+    normally accepts (so an int or float above).
+
+    One caveat to creating ChromaticObjects directly from GSObjects like this is that even though
+    the source GSObject instance has flux units in photons/s/cm^2, then newly formed ChromaticObject
+    will be interpreted as dimensionless, i.e., it will have a dimensionless SED.  See below for
+    more discussion about the dimensions of ChromaticObjects.
+
 
     Another way to instantiate a ChromaticObject from a GSObject is to multiply by an SED.  This can
     be useful to consistently generate the same galaxy observed through different filters, or, with
     ChromaticSum, to construct multi-component galaxies, each component with a different SED.  For
     example, a bulge+disk galaxy could be constructed:
 
-    >>> bulge_SED = user_function_to_get_bulge_spectrum()
-    >>> disk_SED = user_function_to_get_disk_spectrum()
-    >>> bulge_mono = galsim.DeVaucouleurs(half_light_radius=1.0)
-    >>> disk_mono = galsim.Exponential(half_light_radius=2.0)
-    >>> bulge = bulge_mono * bulge_SED
-    >>> disk = disk_mono * disk_SED
-    >>> gal = bulge + disk
+        >>> bulge_SED = user_function_to_get_bulge_spectrum()
+        >>> disk_SED = user_function_to_get_disk_spectrum()
+        >>> bulge_mono = galsim.DeVaucouleurs(half_light_radius=1.0)
+        >>> disk_mono = galsim.Exponential(half_light_radius=2.0)
+        >>> bulge = bulge_mono * bulge_SED
+        >>> disk = disk_mono * disk_SED
+        >>> gal = bulge + disk
 
     The SEDs above describe the flux density in photons/nm/cm^2/s of an object, possibly normalized
     with either the sed.withFlux(bandpass) or sed.withMagnitude(bandpass) methods (see the
@@ -69,12 +78,12 @@ class ChromaticObject(object):
     for dimensional consistency, in this case, the `flux` attribute of the multiplied GSObject is
     interpreted as being dimensionless instead of in its normal units of [photons/s/cm^2].  The
     photons/s/cm^2 units are (optionally) carried by the SED instead, or even left out entirely if
-    the SED is dimensionless itself (see discusison on ChromaticObject dimensions below).  The
-    GSObject  `flux` attribute *does* still  contribute to the ChromaticObject normalization,
+    the SED is dimensionless itself (see discussion on ChromaticObject dimensions below).  The
+    GSObject `flux` attribute *does* still contribute to the ChromaticObject normalization,
     though.  For example, the following are equivalent:
 
-    >>> chrom_obj = (sed * 3.0) * gsobj
-    >>> chrom_obj2 = sed * (gsobj * 3.0)
+        >>> chrom_obj = (sed * 3.0) * gsobj
+        >>> chrom_obj2 = sed * (gsobj * 3.0)
 
     Subclasses that instantiate a ChromaticObject directly also exist, such as ChromaticAtmosphere.
     Even in this case, however, the underlying implementation always eventually wraps one or more
@@ -141,10 +150,6 @@ class ChromaticObject(object):
     # - .dimensionless indicates obj.SED.dimensionless
 
     def __init__(self, obj):
-        from .deprecated import depr
-        depr('__init__', 1.5, '',
-             "Please apply wavelength-dependent transformations directly to GSObjects "
-             "instead of passing through ChromaticObject().")
         self.separable = obj.separable
         self.interpolated = obj.interpolated
         self.wave_list = obj.wave_list

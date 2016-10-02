@@ -343,7 +343,7 @@ def test_dcr_moments():
     shift_fn = lambda w:(0, ((galsim.dcr.get_refraction(w, zenith_angle) - R500)
                              * (galsim.radians / galsim.arcsec)))
     mono_PSF = galsim.Moffat(beta=PSF_beta, half_light_radius=PSF_hlr)
-    PSF = mono_PSF.shift(shift_fn)
+    PSF = galsim.ChromaticObject(mono_PSF).shift(shift_fn)
 
     final1 = galsim.Convolve([star1, PSF])
     final2 = galsim.Convolve([star2, PSF])
@@ -400,7 +400,7 @@ def test_chromatic_seeing_moments():
     for index in indices:
 
         mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
-        PSF = mono_PSF.dilate(lambda w:(w/500.0)**index)
+        PSF = galsim.ChromaticObject(mono_PSF).dilate(lambda w:(w/500.0)**index)
 
         final1 = galsim.Convolve([star1, PSF])
         final2 = galsim.Convolve([star2, PSF])
@@ -444,7 +444,7 @@ def test_monochromatic_filter():
     dilate_fn = lambda wave: (wave/500.0)**(-0.2)
     mono_PSF = galsim.Gaussian(half_light_radius=PSF_hlr)
     mono_PSF = mono_PSF.shear(e1=PSF_e1, e2=PSF_e2)
-    chromatic_PSF = mono_PSF.dilate(dilate_fn).shift(shift_fn)
+    chromatic_PSF = galsim.ChromaticObject(mono_PSF).dilate(dilate_fn).shift(shift_fn)
 
     chromatic_final = galsim.Convolve([chromatic_gal, chromatic_PSF])
 
@@ -710,6 +710,7 @@ def test_ChromaticObject_expand():
     pixel_scale = 0.3
     sigma = 1.7
     gal = galsim.Gaussian(sigma=sigma, flux=132)
+    cgal = galsim.ChromaticObject(gal) * galsim.SED('1', 'nm', 'fphotons')
     im0 = gal.drawImage(scale=pixel_scale, dtype=float, method='no_pixel')
     # Initial mxx,myy should be sigma**2 in units of arcsec^2, so (sigma/pixel_scale)**2 in pix.
     mx, my, mxx, myy, mxy = getmoments(im0)
@@ -719,7 +720,7 @@ def test_ChromaticObject_expand():
 
     # First a very simple case with no actual wavelength dependence, but using the
     # functional syntax.
-    gal1 = gal.expand(lambda w: 1.2) * galsim.SED('1', 'nm', 'fphotons')
+    gal1 = cgal.expand(lambda w: 1.2)
     # Use a simple bandpass so we can do the integral below analytically
     bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 'nm', 500, 700)
     im1 = gal1.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
@@ -731,7 +732,7 @@ def test_ChromaticObject_expand():
 
     # Use an expansion that varies quadratically within the range 500-700
     expansion = lambda w: 1.2 + 0.11*(w-600)/100 - 0.36*(w-600)**2/100**2
-    gal2 = gal.expand(expansion) * galsim.SED('1', 'nm', 'fphotons')
+    gal2 = cgal.expand(expansion)
     im2 = gal2.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     # The test here relies on linearity to swap the order of the integrals.
     # The getmoments test is essentially int(dxdy x^2 int(dlambda I(x,y,lam) F(lam)))
@@ -754,7 +755,7 @@ def test_ChromaticObject_expand():
     np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
 
     # Repeat using transform rather than expand
-    gal3 = gal.transform(expansion, 0.0, 0.0, expansion) * galsim.SED('1', 'nm', 'fphotons')
+    gal3 = cgal.transform(expansion, 0.0, 0.0, expansion)
     im3 = gal3.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mx, my, mxx, myy, mxy = getmoments(im3)
     np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, growth_factor, decimal=4)
@@ -762,7 +763,7 @@ def test_ChromaticObject_expand():
     np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
 
     # Repeat using magnify
-    gal4 = gal.magnify(lambda w: expansion(w)**2) * galsim.SED('1', 'nm', 'fphotons')
+    gal4 = cgal.magnify(lambda w: expansion(w)**2)
     im4 = gal4.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mx, my, mxx, myy, mxy = getmoments(im4)
     np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, growth_factor, decimal=4)
@@ -770,7 +771,7 @@ def test_ChromaticObject_expand():
     np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
 
     # Repeat using lens
-    gal5 = gal.lens(0., 0., lambda w: expansion(w)**2) * galsim.SED('1', 'nm', 'fphotons')
+    gal5 = cgal.lens(0., 0., lambda w: expansion(w)**2)
     im5 = gal5.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mx, my, mxx, myy, mxy = getmoments(im5)
     np.testing.assert_almost_equal(mxx / (sigma/pixel_scale)**2, growth_factor, decimal=4)
@@ -778,7 +779,7 @@ def test_ChromaticObject_expand():
     np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, 0, decimal=4)
 
     # Dilate isn't quite the same, since it doesn't have the extra flux factor:
-    gal5 = gal.dilate(expansion) * galsim.SED('1', 'nm', 'fphotons')
+    gal5 = cgal.dilate(expansion)
     im5 = gal5.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mx, my, mxx, myy, mxy = getmoments(im5)
     dilate_growth_factor = galsim.integ.int1d(lambda w: expansion(w)**2 * bp(w),500,700)
@@ -803,8 +804,9 @@ def test_ChromaticObject_rotate():
     a.drawImage(bandpass, image=im1, method='no_pixel')
     b.drawImage(bandpass, image=im2, method='no_pixel')
     printval(im1, im2)
-    np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
-                                         "ChromaticObject.rotate not equal to Chromatic.rotate")
+    np.testing.assert_array_almost_equal(
+            im1.array, im2.array, 5,
+            "ChromaticObject.rotate not equal to ChromaticTransformation.rotate")
 
     do_pickle(a)
     do_pickle(b)
@@ -821,6 +823,7 @@ def test_ChromaticObject_rotate():
     pixel_scale = 0.3
     sigma = 1.7
     gal = galsim.Gaussian(sigma=sigma, flux=132).shear(e1=0.3)
+    cgal = galsim.ChromaticObject(gal) * galsim.SED('1', 'nm', 'fphotons')
     im0 = gal.drawImage(scale=pixel_scale, dtype=float, method='no_pixel')
     # Initial distortion should be (e1,0).
     mx, my, mxx, myy, mxy = getmoments(im0)
@@ -838,7 +841,7 @@ def test_ChromaticObject_rotate():
 
     # First a very simple case with no actual wavelength dependence, but using the
     # functional syntax.
-    gal1 = gal.rotate(lambda w: 0.4 * galsim.radians) * galsim.SED('1', 'nm', 'fphotons')
+    gal1 = cgal.rotate(lambda w: 0.4 * galsim.radians)
     bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 'nm', 500, 700)
     im1 = gal1.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mx, my, mxx, myy, mxy = getmoments(im1)
@@ -853,7 +856,7 @@ def test_ChromaticObject_rotate():
 
     # Use a rotation that varies quadratically within the range 500-700
     rotation = lambda w: (0.4 + 0.11*(w-600)/100 - 0.36*(w-600)**2/100**2) * galsim.radians
-    gal2 = gal.rotate(rotation) * galsim.SED('1', 'nm', 'fphotons')
+    gal2 = cgal.rotate(rotation)
     im2 = gal2.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mx, my, mxx, myy, mxy = getmoments(im2)
     # The analytic integrals:
@@ -878,11 +881,11 @@ def test_ChromaticObject_rotate():
     np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, rot_e2/fact, decimal=4)
 
     # Repeat using transform rather than rotate
-    gal3 = gal.transform(
+    gal3 = cgal.transform(
                 lambda w: np.cos(rotation(w).rad()),
                 lambda w: -np.sin(rotation(w).rad()),
                 lambda w: np.sin(rotation(w).rad()),
-                lambda w: np.cos(rotation(w).rad()) ) * galsim.SED('1', 'nm', 'fphotons')
+                lambda w: np.cos(rotation(w).rad()) )
     im3 = gal3.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mx, my, mxx, myy, mxy = getmoments(im3)
     np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), rot_e1, decimal=4)
@@ -903,8 +906,9 @@ def test_ChromaticObject_shear():
     a.drawImage(bandpass, image=im1, method='no_pixel')
     b.drawImage(bandpass, image=im2, method='no_pixel')
     printval(im1, im2)
-    np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
-                                         "ChromaticObject.shear not equal to Chromatic.shear")
+    np.testing.assert_array_almost_equal(
+            im1.array, im2.array, 5,
+            "ChromaticObject.shear not equal to ChromaticTransformation.shear")
 
     do_pickle(a)
     do_pickle(b)
@@ -921,6 +925,7 @@ def test_ChromaticObject_shear():
     pixel_scale = 0.3
     sigma = 1.7
     gal = galsim.Gaussian(sigma=sigma, flux=132)
+    cgal = galsim.ChromaticObject(gal) * galsim.SED('1', 'nm', 'fphotons')
     im0 = gal.drawImage(scale=pixel_scale, dtype=float, method='no_pixel')
     # Initial distortion should be (0,0).
     mx, my, mxx, myy, mxy = getmoments(im0)
@@ -935,7 +940,7 @@ def test_ChromaticObject_shear():
 
     # First a very simple case with no actual wavelength dependence, but using the
     # functional syntax.
-    gal1 = gal.shear(lambda w: galsim.Shear(e1=0.23, e2=0.13)) * galsim.SED('1', 'nm', 'fphotons')
+    gal1 = cgal.shear(lambda w: galsim.Shear(e1=0.23, e2=0.13))
     bp = galsim.Bandpass(lambda w: 1. - 0.12*(w-600)**2/100**2, 'nm', 500, 700)
     im1 = gal1.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mx, my, mxx, myy, mxy = getmoments(im1)
@@ -952,7 +957,7 @@ def test_ChromaticObject_shear():
     # Use a shear that varies quadratically within the range 500-700
     shear = lambda w: galsim.Shear(e1=0.23 + 0.11*(w-600)/100 - 0.36*(w-600)**2/100**2,
                                    e2=0.13 + 0.19*(w-600)/100 - 0.09*(w-600)**2/100**2)
-    gal2 = gal.shear(shear) * galsim.SED('1', 'nm', 'fphotons')
+    gal2 = cgal.shear(shear)
     im2 = gal2.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mx, my, mxx, myy, mxy = getmoments(im2)
     # The analytic integrals:
@@ -975,11 +980,11 @@ def test_ChromaticObject_shear():
     np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, sh_mxy, decimal=4)
 
     # Repeat using transform rather than shear
-    gal3 = gal.transform(
+    gal3 = cgal.transform(
                 lambda w: (1.+shear(w).g1)/np.sqrt(1.-shear(w).g**2),
                 lambda w: shear(w).g2/np.sqrt(1.-shear(w).g**2),
                 lambda w: shear(w).g2/np.sqrt(1.-shear(w).g**2),
-                lambda w: (1.-shear(w).g1)/np.sqrt(1.-shear(w).g**2) ) * galsim.SED('1', 'nm', 'fphotons')
+                lambda w: (1.-shear(w).g1)/np.sqrt(1.-shear(w).g**2) )
     im3 = gal3.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mx, my, mxx, myy, mxy = getmoments(im3)
     np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), (sh_mxx-sh_myy)/(sh_mxx+sh_myy), decimal=4)
@@ -989,8 +994,7 @@ def test_ChromaticObject_shear():
     np.testing.assert_almost_equal(mxy / (sigma/pixel_scale)**2, sh_mxy, decimal=4)
 
     # Repeat using lens
-    gal4 = gal.lens(lambda w: shear(w).g1, lambda w: shear(w).g2, 1.)
-    gal4 *= galsim.SED('1', 'nm', 'fphotons')
+    gal4 = cgal.lens(lambda w: shear(w).g1, lambda w: shear(w).g2, 1.)
     im4 = gal4.drawImage(bp, scale=pixel_scale, dtype=float, method='no_pixel')
     mx, my, mxx, myy, mxy = getmoments(im4)
     np.testing.assert_almost_equal((mxx-myy)/(mxx+myy), (sh_mxx-sh_myy)/(sh_mxx+sh_myy), decimal=4)
@@ -1011,8 +1015,9 @@ def test_ChromaticObject_shift():
     a.drawImage(bandpass, image=im1, method='no_pixel')
     b.drawImage(bandpass, image=im2, method='no_pixel')
     printval(im1, im2)
-    np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
-                                         "ChromaticObject.shift not equal to Chromatic.shift")
+    np.testing.assert_array_almost_equal(
+            im1.array, im2.array, 5,
+            "ChromaticObject.shift not equal to ChromaticTransformation.shift")
 
     do_pickle(a)
     do_pickle(b)
@@ -1825,8 +1830,8 @@ def test_ne():
     gsp = galsim.GSParams(maxk_threshold=1.1e-3, folding_threshold=5.1e-3)
     gal1 = galsim.Gaussian(fwhm=1.0)
     gal2 = galsim.Gaussian(fwhm=1.1)
-    cgal1 = gal1.dilate(lambda w:1)
-    cgal2 = gal2.dilate(lambda w:1)
+    cgal1 = galsim.ChromaticObject(gal1).dilate(lambda w:1)
+    cgal2 = galsim.ChromaticObject(gal2).dilate(lambda w:1)
 
     # ChromaticObject.  Only param is the GSObject to chromaticize.
     # The following should test unequal:

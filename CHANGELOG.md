@@ -33,8 +33,6 @@ Bug Fixes
 Deprecated Features
 -------------------
 
-- `ChromaticObject.__init__()`.  `ChromaticObject` is now purely abstract.
-  (#789)
 - `Chromatic`.  Class functionality subsumed by `ChromaticTransformation`.
   (#789)
 
