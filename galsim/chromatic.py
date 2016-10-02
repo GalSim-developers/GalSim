@@ -1136,7 +1136,7 @@ class ChromaticAtmosphere(ChromaticObject):
 
         self.separable = False
         self.interpolated = False
-        self.SED = galsim.SED(1, 'nm', '1')
+        self.SED = galsim.SED(base_obj.flux, 'nm', '1')
         self.wave_list = np.array([], dtype=float)
 
         self.base_obj = base_obj
@@ -2340,7 +2340,7 @@ class ChromaticOpticalPSF(ChromaticObject):
         # Define the necessary attributes for this ChromaticObject.
         self.separable = False
         self.interpolated = False
-        self.SED = galsim.SED('1', 'nm', '1')
+        self.SED = galsim.SED(1, 'nm', '1')
         self.wave_list = np.array([], dtype=float)
 
     def _deinterpolate(self):
@@ -2433,7 +2433,7 @@ class ChromaticAiry(ChromaticObject):
         # Define the necessary attributes for this ChromaticObject.
         self.separable = False
         self.interpolated = False
-        self.SED = galsim.SED('1', 'nm', '1')
+        self.SED = galsim.SED(1, 'nm', '1')
         self.wave_list = np.array([], dtype=float)
 
     def _deinterpolate(self):

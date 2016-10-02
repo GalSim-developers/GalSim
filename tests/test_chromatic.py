@@ -1727,8 +1727,20 @@ def test_chromatic_invariant():
     # Test atomic and non-transformed objects first.
 
     # GSObject
-    gsobj = galsim.Kolmogorov(fwhm=0.6)
+    gsobj = galsim.Kolmogorov(fwhm=0.6, flux=2.0)
     check_chromatic_invariant(gsobj)
+
+    # ChromaticObject
+    check_chromatic_invariant(galsim.ChromaticObject(gsobj))
+    chrom1 = galsim.ChromaticObject(gsobj) * bulge_SED
+    chrom2 = gsobj * bulge_SED
+    chrom3 = galsim.ChromaticObject(gsobj * bulge_SED)
+
+    check_chromatic_invariant(chrom1)
+    check_chromatic_invariant(chrom2)
+    check_chromatic_invariant(chrom3)
+    # also check that these end up with the same SED
+    assert chrom1.SED == chrom2.SED == chrom3.SED
 
     # ChromaticAtmosphere
     chrom_atm = galsim.ChromaticAtmosphere(gsobj, 500.0, zenith_angle=20.0 * galsim.degrees)
