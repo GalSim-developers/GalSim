@@ -386,10 +386,6 @@ def test_SED_init():
                      fast=False)
     sed(1.5)
     sed(1.5*units.nm)
-    sed((1.5*units.nm).to(units.Hz, units.spectral()))  # Frequency
-    sed((1.5*units.nm).to(units.erg, units.spectral()))  # Wavelength as an energy
-    sed((1.5*units.nm).to(units.m**-1, units.spectral()))  # Wavenumber in 1/m
-    sed((1.5*units.nm).to(units.radian / units.m, units.spectral()))  # Wavenumber in rad/m
 
     # And check the redshift kwarg.
     foo = np.arange(10.)+1.
@@ -403,10 +399,6 @@ def test_SED_init():
 
     sed(3.5)
     sed(3.5*units.nm)
-    sed((3.5*units.nm).to(units.Hz, units.spectral()))  # Frequency
-    sed((3.5*units.nm).to(units.erg, units.spectral()))  # Wavelength as an energy
-    sed((3.5*units.nm).to(units.m**-1, units.spectral()))  # Wavenumber in 1/m
-    sed((3.5*units.nm).to(units.radian / units.m, units.spectral()))  # Wavenumber in rad/m
 
 
 @timer
