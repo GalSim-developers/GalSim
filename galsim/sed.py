@@ -45,11 +45,11 @@ class SED(object):
     SEDs are immutable; all transformative SED methods return *new* SEDs, and leave their
     originating SEDs unaltered.
 
-    SEDs have `blue_limit` and `red_limit` attributes, which may be set to `None` in the case that
-    the SED is defined by a python function or lambda `eval` string.  SEDs are considered undefined
-    outside of this range, and __call__ will raise an exception if a flux density or normalization
-    is requested outside of this range.  Note that `blue_limit` and `red_limit` are always in
-    nanometers and in the observed frame when `redshift != 0`.
+    SEDs have `blue_limit` and `red_limit` attributes, which indicate the range over which the SED
+    is defined.  (`None` means there is no limit in the blue or red direction respectively.)  An
+    exception will be raised if the flux density or normalization is requested outside of this
+    range.  Note that `blue_limit` and `red_limit` are always in nanometers and in the observed
+    frame when `redshift != 0`.
 
     SEDs may be multiplied by scalars or scalar functions of wavelength.  In particular, an SED
     multiplied by a `Bandpass` will yield the appropriately filtered SED.  Two SEDs may be
