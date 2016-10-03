@@ -1740,6 +1740,18 @@ def test_chromatic_invariant():
     # also check that these end up with the same SED
     assert chrom1.SED == chrom2.SED == chrom3.SED
 
+    # And that they make the same image through a given bandpass
+    bp = galsim.Bandpass('0.8 + wave/800*0.1', 'nm', blue_limit=700, red_limit=900)
+    img = galsim.ImageF(64, 64, scale=0.2)
+    img1 = chrom1.drawImage(bp, img)
+    img2 = chrom2.drawImage(bp, img)
+    img3 = chrom3.drawImage(bp, img)
+    print('im1.sum = ',img1.array.sum())
+    print('im2.sum = ',img2.array.sum())
+    print('im3.sum = ',img3.array.sum())
+    np.testing.assert_almost_equal(img1.array, img2.array, decimal=5)
+    np.testing.assert_almost_equal(img1.array, img3.array, decimal=5)
+
     # ChromaticAtmosphere
     chrom_atm = galsim.ChromaticAtmosphere(gsobj, 500.0, zenith_angle=20.0 * galsim.degrees)
     check_chromatic_invariant(chrom_atm)
