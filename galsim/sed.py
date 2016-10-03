@@ -37,11 +37,10 @@ class SED(object):
     >>> from astropy import units as u
     >>> assert sed(500) == sed(5000 * u.AA)
 
-    Note that the return value *always* has units photons/nm/cm^2/s.  The python type of the return
-    value depends on the type of the input wavelength(s).  A scalar input wavelength yields a scalar
-    flux density, a tuple yields a tuple, a list yields a list, and a numpy.ndarray yields a
-    numpy.ndarray.  A scalar astropy.units.Quantity yields a python scalar, and a vector
-    astropy.units.Quantity yields a numpy.ndarray.
+    The python type of the return value depends on the type of the input wavelength(s).  A scalar
+    input wavelength yields a scalar flux density, a tuple yields a tuple, a list yields a list, and
+    a numpy.ndarray yields a numpy.ndarray.  A scalar astropy.units.Quantity yields a python scalar,
+    and a vector astropy.units.Quantity yields a numpy.ndarray.
 
     SEDs are immutable; all transformative SED methods return *new* SEDs, and leave their
     originating SEDs unaltered.
