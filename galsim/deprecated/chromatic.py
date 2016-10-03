@@ -37,7 +37,7 @@ def ChromaticObject_copy(self):
     """Returns a copy of an object.  This preserves the original type of the object."""
     import copy
 
-    depr('copy', 1.5, "ChromaticObjects are immutable, so there's no need for copy.")
+    depr('copy', 1.5, "", "ChromaticObjects are immutable, so there's no need for copy.")
     cls = self.__class__
     ret = cls.__new__(cls)
     for k, v in iteritems(self.__dict__):

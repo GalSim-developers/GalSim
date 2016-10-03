@@ -32,7 +32,7 @@ def SED_rdiv(self, other):
                       _blue_limit=self.blue_limit, _red_limit=self.red_limit)
 
 def SED_copy(self):
-    depr('copy', 1.5, "SEDs are immutable, so there's no need for copy.")
+    depr('copy', 1.5, "", "SEDs are immutable, so there's no need for copy.")
     import copy
     return copy.deepcopy(self)
 

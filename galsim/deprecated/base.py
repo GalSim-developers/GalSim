@@ -193,7 +193,7 @@ def GSObject_copy(self):
     these to be precisely identical, then copy.deepcopy will make an exact duplicate, which
     will have identical noise realizations for that kind of application.
     """
-    depr('copy', 1.5, "GSObjects are immutable, so there's no need for copy.")
+    depr('copy', 1.5, "", "GSObjects are immutable, so there's no need for copy.")
     import copy
     return copy.copy(self)
 
