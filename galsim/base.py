@@ -228,6 +228,10 @@ class GSObject(object):
     @property
     def SED(self): return galsim.SED(self.flux, 'nm', '1')
     @property
+    def spectral(self): return False
+    @property
+    def dimensionless(self): return True
+    @property
     def wave_list(self): return np.array([], dtype=float)
 
     # Also need this method to duck-type as a ChromaticObject

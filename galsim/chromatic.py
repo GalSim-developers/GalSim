@@ -1717,7 +1717,10 @@ class ChromaticConvolution(ChromaticObject):
         if kwargs:
             raise TypeError("Got unexpected keyword argument(s): %s"%kwargs.keys())
 
-        # Accumulate convolutant .SEDs.
+        # Accumulate convolutant .SEDs.  Check if more than one is spectral.
+        nspectral = sum(arg.spectral for arg in args)
+        if nspectral > 1:
+            raise ValueError("Cannot convolve more than one spectral ChromaticObject.")
         self.SED = args[0].SED
         for obj in args[1:]:
             self.SED *= obj.SED

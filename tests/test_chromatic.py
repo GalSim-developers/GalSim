@@ -1738,6 +1738,27 @@ def test_chromatic_image_setup():
 
 
 @timer
+def test_convolution_of_spectral():
+    """Test that convolution of >1 spectral ChromaticObjects raises a ValueError."""
+    cgal1 = galsim.Gaussian(fwhm=1) * bulge_SED              # spectral
+    cgal2 = galsim.Gaussian(fwhm=2)                          # dimensionless
+    cgal3 = galsim.ChromaticObject(galsim.Gaussian(fwhm=3))  # dimensionless
+
+    # These should be okay
+    galsim.Convolve(cgal1, cgal2)
+    galsim.Convolve(cgal1, cgal3)
+    galsim.Convolve(cgal1, cgal2, cgal3)
+
+    # This should raise a ValueError
+    try:
+        np.testing.assert_raises(ValueError, galsim.Convolve, cgal1, cgal1)
+        np.testing.assert_raises(ValueError, galsim.Convolve, cgal1, cgal1, cgal1)
+        np.testing.assert_raises(ValueError, galsim.Convolve, cgal1, cgal1, cgal2, cgal3)
+    except ImportError:
+        print('The assert_raises tests require nose')
+
+
+@timer
 def test_chromatic_invariant():
     # Test atomic and non-transformed objects first.
 
@@ -2014,30 +2035,31 @@ def test_ne():
 
 
 if __name__ == "__main__":
-    # test_draw_add_commutativity()
-    # test_ChromaticConvolution_InterpolatedImage()
-    # test_chromatic_add()
-    # test_dcr_moments()
-    # test_chromatic_seeing_moments()
-    # test_monochromatic_filter()
-    # test_chromatic_flux()
-    # test_double_ChromaticSum()
-    # test_ChromaticConvolution_of_ChromaticConvolution()
-    # test_ChromaticAutoConvolution()
-    # test_ChromaticAutoCorrelation()
-    # test_ChromaticObject_expand()
-    # test_ChromaticObject_rotate()
-    # test_ChromaticObject_shear()
-    # test_ChromaticObject_shift()
-    # test_ChromaticObject_compound_affine_transformation()
-    # test_analytic_integrator()
-    # test_gsparam()
+    test_draw_add_commutativity()
+    test_ChromaticConvolution_InterpolatedImage()
+    test_chromatic_add()
+    test_dcr_moments()
+    test_chromatic_seeing_moments()
+    test_monochromatic_filter()
+    test_chromatic_flux()
+    test_double_ChromaticSum()
+    test_ChromaticConvolution_of_ChromaticConvolution()
+    test_ChromaticAutoConvolution()
+    test_ChromaticAutoCorrelation()
+    test_ChromaticObject_expand()
+    test_ChromaticObject_rotate()
+    test_ChromaticObject_shear()
+    test_ChromaticObject_shift()
+    test_ChromaticObject_compound_affine_transformation()
+    test_analytic_integrator()
+    test_gsparam()
     test_separable_ChromaticSum()
-    # test_centroid()
-    # test_interpolated_ChromaticObject()
-    # test_ChromaticOpticalPSF()
-    # test_ChromaticAiry()
-    # test_chromatic_fiducial_wavelength()
-    # test_chromatic_image_setup()
-    # test_chromatic_invariant()
-    # test_ne()
+    test_centroid()
+    test_interpolated_ChromaticObject()
+    test_ChromaticOpticalPSF()
+    test_ChromaticAiry()
+    test_chromatic_fiducial_wavelength()
+    test_chromatic_image_setup()
+    test_convolution_of_spectral()
+    test_chromatic_invariant()
+    test_ne()
