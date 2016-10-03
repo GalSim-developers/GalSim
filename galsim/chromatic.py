@@ -1763,24 +1763,24 @@ class ChromaticConvolution(ChromaticObject):
 
     @staticmethod
     def _get_effective_prof(insep_obj, bandpass, iimult, wmult, integrator, gsparams):
-            # Find scale at which to draw effective profile
-            _, prof0 = insep_obj._fiducial_profile(bandpass)
-            iiscale = prof0.nyquistScale()
-            if iimult is not None:
-                iiscale /= iimult
+        # Find scale at which to draw effective profile
+        _, prof0 = insep_obj._fiducial_profile(bandpass)
+        iiscale = prof0.nyquistScale()
+        if iimult is not None:
+            iiscale /= iimult
 
-            # Prevent infinite recursive loop by using ChromaticObject.drawImage() on a
-            # ChromaticConvolution.
-            if isinstance(insep_obj, ChromaticConvolution):
-                effective_prof_image = ChromaticObject.drawImage(
-                        insep_obj, bandpass, wmult=wmult, scale=iiscale,
-                        integrator=integrator, method='no_pixel')
-            else:
-                effective_prof_image = insep_obj.drawImage(
-                        bandpass, wmult=wmult, scale=iiscale, integrator=integrator,
-                        method='no_pixel')
+        # Prevent infinite recursive loop by using ChromaticObject.drawImage() on a
+        # ChromaticConvolution.
+        if isinstance(insep_obj, ChromaticConvolution):
+            effective_prof_image = ChromaticObject.drawImage(
+                    insep_obj, bandpass, wmult=wmult, scale=iiscale,
+                    integrator=integrator, method='no_pixel')
+        else:
+            effective_prof_image = insep_obj.drawImage(
+                    bandpass, wmult=wmult, scale=iiscale, integrator=integrator,
+                    method='no_pixel')
 
-            return galsim.InterpolatedImage(effective_prof_image, gsparams=gsparams)
+        return galsim.InterpolatedImage(effective_prof_image, gsparams=gsparams)
 
     @staticmethod
     def resize_effective_prof_cache(maxsize):
