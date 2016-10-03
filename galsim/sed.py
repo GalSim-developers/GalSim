@@ -545,7 +545,8 @@ class SED(object):
 
     def withFluxDensity(self, target_flux_density, wavelength):
         """ Return a new SED with flux density set to `target_flux_density` at wavelength
-        `wavelength`.
+        `wavelength`.  See ChromaticObject docstring for information about how SED normalization
+        affects ChromaticObject normalization.
 
         @param target_flux_density  The target normalization in photons/nm/cm^2/s.
         @param wavelength           The wavelength, in nm, at which the flux density will be set.
@@ -567,10 +568,11 @@ class SED(object):
         return self * factor
 
     def withFlux(self, target_flux, bandpass):
-        """ Return a new SED with flux through the Bandpass `bandpass` set to `target_flux`.  Note
-        that this normalization is *relative* to the `flux` attribute of the chromaticized GSObject.
+        """ Return a new SED with flux through the Bandpass `bandpass` set to `target_flux`.  See
+        ChromaticObject docstring for information about how SED normalization affects
+        ChromaticObject normalization.
 
-        @param target_flux  The desired *relative* flux normalization of the SED.
+        @param target_flux  The desired flux normalization of the SED.
         @param bandpass     A Bandpass object defining a filter bandpass.
 
         @returns the new normalized SED.
@@ -582,10 +584,8 @@ class SED(object):
     def withMagnitude(self, target_magnitude, bandpass):
         """ Return a new SED with magnitude through `bandpass` set to `target_magnitude`.  Note
         that this requires `bandpass` to have been assigned a zeropoint using
-        `Bandpass.withZeropoint()`.  When the returned SED is multiplied by a GSObject with
-        flux=1, the resulting ChromaticObject will have magnitude `target_magnitude` when drawn
-        through `bandpass`.  Note that the total normalization depends both on the SED and the
-        GSObject.
+        `Bandpass.withZeropoint()`.  See ChromaticObject docstring for information about how SED
+        normalization affects ChromaticObject normalization.
 
         @param target_magnitude  The desired magnitude of the SED.
         @param bandpass          A Bandpass object defining a filter bandpass.
