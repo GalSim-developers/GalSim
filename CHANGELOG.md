@@ -30,10 +30,14 @@ Bug Fixes
 - Fixed bug when whitening noise in images based on COSMOS training datasets
   using the config functionality. (#792)
 
+
 Deprecated Features
 -------------------
 
 - `Chromatic`.  Class functionality subsumed by `ChromaticTransformation`.
+  (#789)
+- `.copy()` methods for immutable classes, including `GSObject`,
+  `ChromaticObject`, `SED`, and `Bandpass` have been deprecated as unnecessary.
   (#789)
 
 
