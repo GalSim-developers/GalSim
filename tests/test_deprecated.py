@@ -54,6 +54,8 @@ def test_dep_bandpass():
     b = galsim.Bandpass(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]), 'nm')
     d = lambda w: w**2
 
+    check_dep(b.copy)
+
     # fn / Bandpass
     #e = d/b
     e = check_dep(b.__rdiv__, d)
@@ -76,6 +78,8 @@ def test_dep_base():
     """Test the deprecated methods in galsim/deprecated/base.py
     """
     g = galsim.Gaussian(sigma=0.34)
+
+    check_dep(g.copy)
 
     np.testing.assert_almost_equal(check_dep(g.nyquistDx), g.nyquistScale())
 
@@ -226,6 +230,7 @@ def test_dep_chromatic():
     g = galsim.Gaussian(sigma=0.34)
     sed = galsim.SED('wave**3', 'nm', 'flambda')
     obj = g * sed
+    check_dep(obj.copy)
     band = galsim.Bandpass('1-((wave-700)/100)**2', 'nm', blue_limit=600., red_limit=800.)
 
     im1 = check_dep(obj.draw, bandpass=band)
@@ -742,6 +747,8 @@ def test_dep_sed():
     a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
                    wave_type='nm', flux_type='fphotons', redshift=0.4)
     b = lambda w: w**2
+
+    check_dep(a.copy)
 
     # function divided by SED
     #c = b/a

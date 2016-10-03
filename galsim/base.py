@@ -280,19 +280,6 @@ class GSObject(object):
     def __neg__(self):
         return -1. * self
 
-    # Make a copy of an object
-    def copy(self):
-        """Returns a copy of an object.
-
-        NB. This is a shallow copy, which is normally fine.  However, if the object has a noise
-        attribute, then the copy will use the same rng, so calls to things like noise.whitenImage
-        from the two copies would produce different realizations of the noise.  If you want
-        these to be precisely identical, then copy.deepcopy will make an exact duplicate, which
-        will have identical noise realizations for that kind of application.
-        """
-        import copy
-        return copy.copy(self)
-
     # Now define direct access to all SBProfile methods via calls to self.SBProfile.method_name()
     #
     def maxK(self):
