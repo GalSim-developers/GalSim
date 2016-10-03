@@ -172,7 +172,7 @@ class SED(object):
             return
         if isinstance(self._orig_spec, (int, float)):
             if not self.dimensionless:
-                raise ValueError("Attempt to set dimensionful SED using float or integer.")
+                raise ValueError("Attempt to set spectral SED using float or integer.")
             self._const = True
             self._spec = lambda w: float(self._orig_spec)
         elif isinstance(self._orig_spec, str):

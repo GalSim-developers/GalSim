@@ -362,7 +362,7 @@ class ChromaticObject(object):
         @returns the drawn Image.
         """
         if self.SED.dimensionless:
-            raise ValueError("Can only draw ChromaticObjects with dimensionful SEDs.")
+            raise ValueError("Can only draw ChromaticObjects with spectral SEDs.")
 
         # setup output image using fiducial profile
         wave0, prof0 = self._fiducial_profile(bandpass)
@@ -1058,7 +1058,7 @@ class InterpolatedChromaticObject(ChromaticObject):
         @returns the drawn Image.
         """
         if self.SED.dimensionless:
-            raise ValueError("Can only draw ChromaticObjects with dimensionful SEDs.")
+            raise ValueError("Can only draw ChromaticObjects with spectral SEDs.")
 
         int_im = self._get_interp_image(bandpass, image=image, integrator=integrator, **kwargs)
         image = int_im.drawImage(image=image, **kwargs)
@@ -1469,7 +1469,7 @@ class ChromaticTransformation(ChromaticObject):
         @returns the drawn Image.
         """
         if self.SED.dimensionless:
-            raise ValueError("Can only draw ChromaticObjects with dimensionful SEDs.")
+            raise ValueError("Can only draw ChromaticObjects with spectral SEDs.")
 
         if isinstance(self.original, InterpolatedChromaticObject):
             # Pass self._flux_ratio, which *could* depend on wavelength, to _get_interp_image,
@@ -1640,7 +1640,7 @@ class ChromaticSum(ChromaticObject):
         @returns the drawn Image.
         """
         if self.SED.dimensionless:
-            raise ValueError("Can only draw ChromaticObjects with dimensionful SEDs.")
+            raise ValueError("Can only draw ChromaticObjects with spectral SEDs.")
 
         add_to_image = kwargs.pop('add_to_image', False)
         # Use given add_to_image for the first one, then add_to_image=False for the rest.
@@ -1846,7 +1846,7 @@ class ChromaticConvolution(ChromaticObject):
         @returns the drawn Image.
         """
         if self.SED.dimensionless:
-            raise ValueError("Can only draw ChromaticObjects with dimensionful SEDs.")
+            raise ValueError("Can only draw ChromaticObjects with spectral SEDs.")
 
         # `ChromaticObject.drawImage()` can just as efficiently handle separable cases.
         if self.separable:
@@ -1986,7 +1986,7 @@ class ChromaticDeconvolution(ChromaticObject):
     """
     def __init__(self, obj, **kwargs):
         if not obj.SED.dimensionless:
-            raise ValueError("Cannot deconvolve by dimensionful ChromaticObject.")
+            raise ValueError("Cannot deconvolve by spectral ChromaticObject.")
         self.obj = obj
         self.kwargs = kwargs
         self.separable = obj.separable
@@ -2040,7 +2040,7 @@ class ChromaticAutoConvolution(ChromaticObject):
     """
     def __init__(self, obj, **kwargs):
         if not obj.SED.dimensionless:
-            raise ValueError("Cannot autoconvolve dimensionful ChromaticObject.")
+            raise ValueError("Cannot autoconvolve spectral ChromaticObject.")
         self.obj = obj
         self.kwargs = kwargs
         self.separable = obj.separable
@@ -2095,7 +2095,7 @@ class ChromaticAutoCorrelation(ChromaticObject):
     """
     def __init__(self, obj, **kwargs):
         if not obj.SED.dimensionless:
-            raise ValueError("Cannot autocorrelate dimensionful ChromaticObject.")
+            raise ValueError("Cannot autocorrelate spectral ChromaticObject.")
         self.obj = obj
         self.kwargs = kwargs
         self.separable = obj.separable
@@ -2151,7 +2151,7 @@ class ChromaticFourierSqrtProfile(ChromaticObject):
     def __init__(self, obj, **kwargs):
         import math
         if not obj.SED.dimensionless:
-            raise ValueError("Cannot take Fourier sqrt of dimensionful ChromaticObject.")
+            raise ValueError("Cannot take Fourier sqrt of spectral ChromaticObject.")
         self.obj = obj
         self.kwargs = kwargs
         self.separable = obj.separable
