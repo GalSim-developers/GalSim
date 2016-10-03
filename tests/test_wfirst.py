@@ -248,12 +248,7 @@ def test_wfirst_bandpass():
     # gfile =  '/Users/rmandelb/Downloads/g.dat'
     bp_dat = np.loadtxt(os.path.join('wfirst_files','g.dat')).transpose()
     bp_tab = galsim.LookupTable(x=bp_dat[0,:], f=bp_dat[1,:], interpolant='linear')
-    bp_ref = galsim.Bandpass(bp_tab, wave_type='A')
-    # Set an AB zeropoint.  Note that while we could enter the SDSS exposure time and collecting
-    # area here, they aren't actually needed since we're going to set the magnitude (which is
-    # independent of these) below.  If we were setting the _flux_, then the area and exptime would
-    # be important to include.
-    bp_ref = bp_ref.withZeropoint('AB')
+    bp_ref = galsim.Bandpass(bp_tab, wave_type='A').withZeropoint('AB')
     # Now get a new SED that has magnitude -0.093 in this filter, since that's the normalization
     # that Jeff imposed for his tests.
     sed = sed.withMagnitude(-0.093, bp_ref)
