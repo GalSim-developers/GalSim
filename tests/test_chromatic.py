@@ -588,6 +588,42 @@ def test_chromatic_flux():
                                    err_msg="Drawn ChromaticConvolve flux doesn't match " +
                                    "using ChromaticObject.withScaledFlux(flux_ratio)")
 
+    # Test ChromaticObject.withFlux
+    star5 = star.withFlux(1.0, bandpass)
+    final = galsim.Convolve([star5, PSF])
+    final.drawImage(bandpass, image=image)
+    np.testing.assert_almost_equal(image.array.sum(), 1.0, 4,
+                                   err_msg="Drawn ChromaticConvolve flux doesn't match "
+                                   "using ChromaticObject.withFlux(1.0)")
+
+    # Test withMagnitude.  The zeropoint is the magnitude at which the object produces
+    # 1 photon/sec/cm^2 in the given filter.  So drawing with mag == zeropoint should yield a flux
+    # of 1.0
+    bandpass2 = bandpass.withZeropoint(25.0)
+    star6 = star.withMagnitude(25.0, bandpass2)
+    final = galsim.Convolve([star6, PSF])
+    final.drawImage(bandpass2, image=image)
+    np.testing.assert_almost_equal(image.array.sum(), 1.0, 4,
+                                   err_msg="Drawn ChromaticConvolve flux doesn't match "
+                                   "using ChromaticObject.withMagnitude(0.0)")
+
+    # Some very simple tests of withFluxDensity.
+    star7 = star.withFluxDensity(5.0, 500)
+    final = galsim.Convolve([star7, PSF])
+    final.evaluateAtWavelength(500).drawImage(image=image)
+    np.testing.assert_almost_equal(image.array.sum(), 5.0, 4,
+                                   err_msg="Drawn ChromaticConvolve flux density doesn't match "
+                                   "using ChromaticObject.withFluxDensity(5.0, 500)")
+    np.testing.assert_almost_equal(5.0, final.SED(500), 7,
+                                   err_msg="ChromaticObject.SED(500) doesn't match "
+                                   "withFluxDensity.")
+    from astropy import units
+    star8 = star.withFluxDensity(5.0, 5000*units.AA)
+    assert star7 == star8
+    star9 = star.withFluxDensity(0.5*units.astrophys.photon/(units.s*units.cm**2*units.AA), 500)
+    assert star7 == star9
+
+
 
 @timer
 def test_double_ChromaticSum():
@@ -2035,31 +2071,31 @@ def test_ne():
 
 
 if __name__ == "__main__":
-    test_draw_add_commutativity()
-    test_ChromaticConvolution_InterpolatedImage()
-    test_chromatic_add()
-    test_dcr_moments()
-    test_chromatic_seeing_moments()
-    test_monochromatic_filter()
+    # test_draw_add_commutativity()
+    # test_ChromaticConvolution_InterpolatedImage()
+    # test_chromatic_add()
+    # test_dcr_moments()
+    # test_chromatic_seeing_moments()
+    # test_monochromatic_filter()
     test_chromatic_flux()
-    test_double_ChromaticSum()
-    test_ChromaticConvolution_of_ChromaticConvolution()
-    test_ChromaticAutoConvolution()
-    test_ChromaticAutoCorrelation()
-    test_ChromaticObject_expand()
-    test_ChromaticObject_rotate()
-    test_ChromaticObject_shear()
-    test_ChromaticObject_shift()
-    test_ChromaticObject_compound_affine_transformation()
-    test_analytic_integrator()
-    test_gsparam()
-    test_separable_ChromaticSum()
-    test_centroid()
-    test_interpolated_ChromaticObject()
-    test_ChromaticOpticalPSF()
-    test_ChromaticAiry()
-    test_chromatic_fiducial_wavelength()
-    test_chromatic_image_setup()
-    test_convolution_of_spectral()
-    test_chromatic_invariant()
-    test_ne()
+    # test_double_ChromaticSum()
+    # test_ChromaticConvolution_of_ChromaticConvolution()
+    # test_ChromaticAutoConvolution()
+    # test_ChromaticAutoCorrelation()
+    # test_ChromaticObject_expand()
+    # test_ChromaticObject_rotate()
+    # test_ChromaticObject_shear()
+    # test_ChromaticObject_shift()
+    # test_ChromaticObject_compound_affine_transformation()
+    # test_analytic_integrator()
+    # test_gsparam()
+    # test_separable_ChromaticSum()
+    # test_centroid()
+    # test_interpolated_ChromaticObject()
+    # test_ChromaticOpticalPSF()
+    # test_ChromaticAiry()
+    # test_chromatic_fiducial_wavelength()
+    # test_chromatic_image_setup()
+    # test_convolution_of_spectral()
+    # test_chromatic_invariant()
+    # test_ne()

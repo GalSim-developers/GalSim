@@ -428,14 +428,20 @@ def test_SED_withFlux():
 def test_SED_withFluxDensity():
     """ Check that setting the flux density works.
     """
+
+    a0 = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang',
+                    flux_type='flambda')
     for z in [0, 0.2, 0.4]:
-        a = galsim.SED(os.path.join(sedpath, 'CWW_E_ext.sed'), wave_type='ang',
-                       flux_type='flambda')
-        if z != 0:
-            a = a.atRedshift(z)
+        a = a0.atRedshift(z)
         a = a.withFluxDensity(1.0, 500)
-        np.testing.assert_array_almost_equal(a(500), 1.0, 5,
-                                             "Setting SED flux density failed.")
+        np.testing.assert_array_almost_equal(
+                a(500), 1.0, 5, "Setting SED flux density failed.")
+        a = a.withFluxDensity(2.0, 5000*units.AA)
+        np.testing.assert_array_almost_equal(
+                a(500), 2.0, 5, "Setting SED flux density failed.")
+        a = a.withFluxDensity(0.3*units.astrophys.photon/(units.s*units.cm**2*units.AA), 500)
+        np.testing.assert_array_almost_equal(
+                a(500), 3.0, 5, "Setting SED flux density failed.")
 
 
 @timer

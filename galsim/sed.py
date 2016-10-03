@@ -560,7 +560,10 @@ class SED(object):
             raise TypeError("Cannot set flux density of dimensionless SED.")
         if isinstance(wavelength, units.Quantity):
             wavelength_nm = wavelength.to(units.nm, units.spectral())
-        current_flux_density = self(wavelength)
+            current_flux_density = self(wavelength_nm.value)
+        else:
+            wavelength_nm = wavelength * units.nm
+            current_flux_density = self(wavelength)
         if isinstance(target_flux_density, units.Quantity):
             target_flux_density = target_flux_density.to(
                     _photons, units.spectral_density(wavelength_nm)).value

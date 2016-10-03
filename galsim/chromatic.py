@@ -466,6 +466,62 @@ class ChromaticObject(object):
         """
         return galsim.Transform(self, flux_ratio=flux_ratio)
 
+    def withFlux(self, target_flux, bandpass):
+        """ Return a new ChromaticObject with flux through the Bandpass `bandpass` set to
+        `target_flux`.
+
+        @param target_flux  The desired flux normalization of the ChromaticObject.
+        @param bandpass     A Bandpass object defining a filter bandpass.
+
+        @returns the new normalized ChromaticObject.
+        """
+        current_flux = self.calculateFlux(bandpass)
+        norm = target_flux/current_flux
+        return self * norm
+
+    def withMagnitude(self, target_magnitude, bandpass):
+        """ Return a new ChromaticObject with magnitude through `bandpass` set to
+        `target_magnitude`.  Note that this requires `bandpass` to have been assigned a zeropoint
+        using `Bandpass.withZeropoint()`.
+
+        @param target_magnitude  The desired magnitude of the ChromaticObject.
+        @param bandpass          A Bandpass object defining a filter bandpass.
+
+        @returns the new normalized ChromaticObject.
+        """
+        if bandpass.zeropoint is None:
+            raise RuntimeError("Cannot call ChromaticObject.withMagnitude on this bandpass, because"
+                               " it does not have a zeropoint.  See Bandpass.withZeropoint()")
+        current_magnitude = self.calculateMagnitude(bandpass)
+        norm = 10**(-0.4*(target_magnitude - current_magnitude))
+        return self * norm
+
+    def withFluxDensity(self, target_flux_density, wavelength):
+        """ Return a new ChromaticObject with flux density set to `target_flux_density` at
+        wavelength `wavelength`.
+
+        @param target_flux_density  The target normalization in photons/nm/cm^2/s.
+        @param wavelength           The wavelength, in nm, at which the flux density will be set.
+
+        @returns the new normalized SED.
+        """
+        from astropy import units
+        _photons = units.astrophys.photon/(units.s * units.cm**2 * units.nm)
+
+        if self.dimensionless:
+            raise TypeError("Cannot set flux density of dimensionless ChromaticObject.")
+        if isinstance(wavelength, units.Quantity):
+            wavelength_nm = wavelength.to(units.nm, units.spectral())
+            current_flux_density = self.SED(wavelength_nm.value)
+        else:
+            wavelength_nm = wavelength * units.nm
+            current_flux_density = self.SED(wavelength)
+        if isinstance(target_flux_density, units.Quantity):
+            target_flux_density = target_flux_density.to(
+                    _photons, units.spectral_density(wavelength_nm)).value
+        factor = target_flux_density / current_flux_density
+        return self * factor
+
     def centroid(self, bandpass):
         """ Determine the centroid of the wavelength-integrated surface brightness profile.
 
@@ -505,9 +561,35 @@ class ChromaticObject(object):
             return galsim.PositionD(xcentroid, ycentroid)
 
     def calculateFlux(self, bandpass):
+        """ Return the flux (photons/cm^2/s) of the ChromaticObject through the bandpass.
+
+        @param bandpass   A Bandpass object representing a filter, or None to compute the bolometric
+                          flux.  For the bolometric flux the integration limits will be set to
+                          (0, infinity) unless overridden by non-`None` SED attributes `blue_limit`
+                          or `red_limit`.  Note that SEDs defined using `LookupTable`s automatically
+                          have `blue_limit` and `red_limit` set.
+
+        @returns the flux through the bandpass.
+        """
         if self.SED.dimensionless:
-            raise ValueError("Cannot calculate flux of ChromaticObject with dimensionless SED.")
+            raise ValueError("Cannot calculate flux of dimensionless ChromaticObject.")
         return self.SED.calculateFlux(bandpass)
+
+    def calculateMagnitude(self, bandpass):
+        """ Return the ChromaticObject magnitude through a Bandpass `bandpass`.  Note that this
+        requires `bandpass` to have been assigned a zeropoint using `Bandpass.withZeropoint()`.
+
+        @param bandpass   A Bandpass object representing a filter, or None to compute the
+                          bolometric magnitude.  For the bolometric magnitude the integration
+                          limits will be set to (0, infinity) unless overridden by non-`None` SED
+                          attributes `blue_limit` or `red_limit`.  Note that SEDs defined using
+                          `LookupTable`s automatically have `blue_limit` and `red_limit` set.
+
+        @returns the bandpass magnitude.
+        """
+        if self.SED.dimensionless:
+            raise ValueError("Cannot calculate magnitude of dimensionless ChromaticObject.")
+        return self.SED.calculateMagnitude(bandpass)
 
     # Add together `ChromaticObject`s and/or `GSObject`s
     def __add__(self, other):
