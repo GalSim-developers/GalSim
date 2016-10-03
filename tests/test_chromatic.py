@@ -1756,7 +1756,7 @@ def test_chromatic_invariant():
     chrom_atm = galsim.ChromaticAtmosphere(gsobj, 500.0, zenith_angle=20.0 * galsim.degrees)
     check_chromatic_invariant(chrom_atm)
 
-    # Chromatic
+    # ChromaticTransformation formed from __mul__
     chrom = gsobj * bulge_SED
     check_chromatic_invariant(chrom)
 

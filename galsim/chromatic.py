@@ -1232,57 +1232,6 @@ class ChromaticAtmosphere(ChromaticObject):
         return self.build_obj().evaluateAtWavelength(wave)
 
 
-class Chromatic(ChromaticObject):
-    """Construct chromatic versions of galsim GSObjects.
-
-    This class was deprecated in GalSim v1.5.  Please see the ChromaticObject docstring for
-    information on instantiating ChromaticObjects.
-
-    Initialization
-    --------------
-
-    @param gsobj    A GSObject instance to be chromaticized.
-    @param SED      An SED object.
-    """
-    def __init__(self, gsobj, SED):
-        from .deprecated import depr
-        depr("Chromatic", 1.5, '',
-             "Construct products of GSObjects and SEDs through multiplication: "
-             "`chrom_obj = gsobj * sed.`")
-
-        flux = gsobj.getFlux()
-        self.SED = SED * flux
-        self.obj = gsobj / flux
-        self.wave_list = SED.wave_list
-        # Chromaticized GSObjects are separable into spatial (x,y) and spectral (lambda) factors.
-        self.separable = True
-        self.interpolated = False
-        self.deinterpolated = self
-
-    def __eq__(self, other):
-        return (isinstance(other, galsim.Chromatic) and
-                self.obj == other.obj and
-                self.SED == other.SED)
-
-    def __hash__(self):
-        return hash(("galsim.Chromatic", self.obj, self.SED))
-
-    def __repr__(self):
-        return 'galsim.Chromatic(%r,%r)'%(self.obj, self.SED)
-
-    def __str__(self):
-        return 'galsim.Chromatic(%s,%s)'%(self.obj, self.SED)
-
-    def evaluateAtWavelength(self, wave):
-        """Evaluate this chromatic object at a particular wavelength.
-
-        @param wave  Wavelength in nanometers.
-
-        @returns the monochromatic object at the given wavelength.
-        """
-        return self.SED(wave) * self.obj
-
-
 class ChromaticTransformation(ChromaticObject):
     """A class for modeling a wavelength-dependent affine transformation of a ChromaticObject
     instance.

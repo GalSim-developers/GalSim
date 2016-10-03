@@ -126,7 +126,7 @@ from .compound import FourierSqrt, FourierSqrtProfile
 from .transform import Transform, Transformation
 
 # Chromatic
-from .chromatic import ChromaticObject, ChromaticAtmosphere, Chromatic, ChromaticSum
+from .chromatic import ChromaticObject, ChromaticAtmosphere, ChromaticSum
 from .chromatic import ChromaticConvolution, ChromaticDeconvolution, ChromaticAutoConvolution
 from .chromatic import ChromaticAutoCorrelation, ChromaticTransformation
 from .chromatic import ChromaticFourierSqrtProfile
