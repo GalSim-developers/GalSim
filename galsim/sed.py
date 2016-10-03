@@ -33,9 +33,9 @@ class SED(object):
     used by __call__ is nanometers, but it's possible to use other units via the astropy.units
     module (at least, if the SED keyword argument `fast=False`, see below).  For instance,
 
-    >>> sed = galsim.SED(...)
-    >>> from astropy import units as u
-    >>> assert sed(500) == sed(5000 * u.AA)
+        >>> sed = galsim.SED(...)
+        >>> from astropy import units as u
+        >>> assert sed(500) == sed(5000 * u.AA)  # 500 nm == 5000 Angstroms
 
     The python type of the return value depends on the type of the input wavelength(s).  A scalar
     input wavelength yields a scalar flux density, a tuple yields a tuple, a list yields a list, and
@@ -96,9 +96,10 @@ class SED(object):
 
     @param spec          Function defining the z=0 spectrum at each wavelength.  See above for
                          valid options for this parameter.
-    @param wave_type     String specifying units for wavelength input to `spec`.
-    @param flux_type     String specifying what type of spectral density `spec` represents.  See
-                         above for valid options for this parameter.
+    @param wave_type     String or astropy.unit specifying units for wavelength input to `spec`.
+    @param flux_type     String or astropy.unit specifying what type of spectral density or
+                         dimensionless normalization `spec` represents.  See above for valid options
+                         for this parameter.
     @param redshift      Optionally shift the spectrum to the given redshift. [default: 0]
     @param fast          Convert units on initialization instead of on __call__. [default: True]
     """
