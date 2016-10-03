@@ -1154,72 +1154,89 @@ def test_separable_ChromaticSum():
     """ Test ChromaticSum separable profile grouping.
     """
     psf = galsim.Gaussian(fwhm=1)
-    gal1 = galsim.Gaussian(fwhm=1)
-    gal2 = galsim.Gaussian(fwhm=1.1)
-    gal3 = galsim.Gaussian(fwhm=1.2)
+    mono_gal1 = galsim.Gaussian(fwhm=1)
+    mono_gal2 = galsim.Gaussian(fwhm=1.1)
+    mono_gal3 = galsim.Gaussian(fwhm=1.2)
 
-    # check that 2 summands with same SED make a separable sum.
-    gal = gal1 * bulge_SED + gal2 * bulge_SED
+    # 1) check that 2 summands with same SED make a separable sum.
+    cgal1 = mono_gal1 * bulge_SED + mono_gal2 * bulge_SED
     img1 = galsim.ImageD(32, 32, scale=0.2)
-    if not gal.separable:
+    if not cgal1.separable:
         raise AssertionError("failed to identify separable ChromaticSum")
 
     # check that drawing the profile works as expected
-    final = galsim.Convolve(gal, psf)
-    final.drawImage(bandpass, image=img1)
+    final1 = galsim.Convolve(cgal1, psf)
+    final1.drawImage(bandpass, image=img1)
 
-    img2 = galsim.ImageD(32, 32, scale=0.2)
-    component1 = galsim.Convolve(gal1*bulge_SED, psf)
-    component1.drawImage(bandpass, image=img2)
-    component2 = galsim.Convolve(gal2*bulge_SED, psf)
-    component2.drawImage(bandpass, image=img2, add_to_image=True)
+    img1b = img1.copy()
+    component1 = galsim.Convolve(mono_gal1*bulge_SED, psf)
+    component1.drawImage(bandpass, image=img1b)
+    component2 = galsim.Convolve(mono_gal2*bulge_SED, psf)
+    component2.drawImage(bandpass, image=img1b, add_to_image=True)
 
-    np.testing.assert_array_almost_equal(img1.array, img2.array, 5,
+    np.testing.assert_array_almost_equal(img1.array, img1b.array, 5,
                                          "separable ChromaticSum not correctly drawn")
+    do_pickle(final1)
 
-    do_pickle(final)
-
-    # Check flux scaling
-    img3 = galsim.ImageD(32, 32, scale=0.2)
-    flux = img1.array.sum()
-    img3 = (final * 2).drawImage(bandpass, image=img3)
-    flux2 = img3.array.sum()
+    # 2) Check flux scaling
+    img2 = img1.copy()
+    flux1 = img1.array.sum()
+    (final1 * 2).drawImage(bandpass, image=img2)
+    flux2 = img2.array.sum()
     np.testing.assert_array_almost_equal(
-        flux2, 2.*flux, 5,
+        flux2, 2.*flux1, 5,
         err_msg="ChromaticConvolution containing separable ChromaticSum * 2 resulted in wrong flux.")
 
-    final2 = galsim.Convolve(gal * 2, psf)
-    img3 = final2.drawImage(bandpass, image=img3)
-    flux2 = img3.array.sum()
+    final2 = galsim.Convolve(cgal1 * 2, psf)
+    img2b = img1.copy()
+    final2.drawImage(bandpass, image=img2b)
+    flux2b = img2b.array.sum()
     np.testing.assert_array_almost_equal(
-        flux2, 2.*flux, 5,
+        flux2b, 2.*flux1, 5,
         err_msg="separable ChromaticSum * 2 resulted in wrong flux.")
 
     do_pickle(final2)
 
-    # check that 3 summands, 2 with the same SED, 1 with a different SED, make an
+    # 3) check that 3 summands, 2 with the same SED, 1 with a different SED, make an
     # inseparable sum.
-    gal = galsim.Add(gal1 * bulge_SED, gal2 * bulge_SED, gal3 * disk_SED)
-    if gal.separable:
+    cgal3 = galsim.Add(mono_gal1 * bulge_SED, mono_gal2 * bulge_SED, mono_gal3 * disk_SED)
+    if cgal3.separable:
         raise AssertionError("failed to identify inseparable ChromaticSum")
     # check that its objlist contains a separable Chromatic and a separable ChromaticSum
-    types = dict((o.__class__, o) for o in gal.objlist)
+    types = dict((o.__class__, o) for o in cgal3.objlist)
     if galsim.ChromaticTransformation not in types or galsim.ChromaticSum not in types:
         raise AssertionError("failed to process list of objects with repeated SED")
 
     # check that drawing the profile works as expected
-    final = galsim.Convolve(gal, psf)
-    final.drawImage(bandpass, image=img1)
+    final3 = galsim.Convolve(cgal3, psf)
+    img3 = img1.copy()
+    final3.drawImage(bandpass, image=img3)
 
-    do_pickle(final)
+    do_pickle(final3)
 
-    component3 = galsim.Convolve(gal3*disk_SED, psf)
-    component3.drawImage(bandpass, image=img2, add_to_image=True)
 
-    np.testing.assert_array_almost_equal(img1.array, img2.array, 5,
+    component3 = galsim.Convolve(mono_gal3*disk_SED, psf)
+    img3b = img1.copy()
+    component1.drawImage(bandpass, image=img3b)
+    component2.drawImage(bandpass, image=img3b, add_to_image=True)
+    component3.drawImage(bandpass, image=img3b, add_to_image=True)
+
+    np.testing.assert_array_almost_equal(img3.array, img3b.array, 5,
                                          "inseparable ChromaticSum not correctly drawn")
 
     do_pickle(component3)
+
+    # 4) What about if we wrap mono_gal1 and mono_gal2 in a ChromaticObject?
+    cgal4 = (galsim.ChromaticObject(mono_gal1) * bulge_SED
+             + galsim.ChromaticObject(mono_gal2) * bulge_SED)
+    img4 = img1.copy()
+    if not cgal4.separable:
+        raise AssertionError("failed to identify separable ChromaticSum")
+
+    final4 = galsim.Convolve(cgal4, psf)
+    final4.drawImage(bandpass, image=img4)
+    np.testing.assert_array_almost_equal(img1.array, img4.array, 5,
+                                         "separable ChromaticSum not correctly drawn")
 
 
 @timer
@@ -1997,30 +2014,30 @@ def test_ne():
 
 
 if __name__ == "__main__":
-    test_draw_add_commutativity()
-    test_ChromaticConvolution_InterpolatedImage()
-    test_chromatic_add()
-    test_dcr_moments()
-    test_chromatic_seeing_moments()
-    test_monochromatic_filter()
-    test_chromatic_flux()
-    test_double_ChromaticSum()
-    test_ChromaticConvolution_of_ChromaticConvolution()
-    test_ChromaticAutoConvolution()
-    test_ChromaticAutoCorrelation()
-    test_ChromaticObject_expand()
-    test_ChromaticObject_rotate()
-    test_ChromaticObject_shear()
-    test_ChromaticObject_shift()
-    test_ChromaticObject_compound_affine_transformation()
-    test_analytic_integrator()
-    test_gsparam()
+    # test_draw_add_commutativity()
+    # test_ChromaticConvolution_InterpolatedImage()
+    # test_chromatic_add()
+    # test_dcr_moments()
+    # test_chromatic_seeing_moments()
+    # test_monochromatic_filter()
+    # test_chromatic_flux()
+    # test_double_ChromaticSum()
+    # test_ChromaticConvolution_of_ChromaticConvolution()
+    # test_ChromaticAutoConvolution()
+    # test_ChromaticAutoCorrelation()
+    # test_ChromaticObject_expand()
+    # test_ChromaticObject_rotate()
+    # test_ChromaticObject_shear()
+    # test_ChromaticObject_shift()
+    # test_ChromaticObject_compound_affine_transformation()
+    # test_analytic_integrator()
+    # test_gsparam()
     test_separable_ChromaticSum()
-    test_centroid()
-    test_interpolated_ChromaticObject()
-    test_ChromaticOpticalPSF()
-    test_ChromaticAiry()
-    test_chromatic_fiducial_wavelength()
-    test_chromatic_image_setup()
-    test_chromatic_invariant()
-    test_ne()
+    # test_centroid()
+    # test_interpolated_ChromaticObject()
+    # test_ChromaticOpticalPSF()
+    # test_ChromaticAiry()
+    # test_chromatic_fiducial_wavelength()
+    # test_chromatic_image_setup()
+    # test_chromatic_invariant()
+    # test_ne()
