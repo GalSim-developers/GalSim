@@ -433,9 +433,12 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
 
     if obj.SED.spectral:
         for bp in bps:
-            np.testing.assert_almost_equal(obj.SED.calculateFlux(bp), obj.calculateFlux(bp), 7)
+            calc_flux = obj.calculateFlux(bp)
+            np.testing.assert_equal(obj.SED.calculateFlux(bp), calc_flux)
+            np.testing.assert_allclose(calc_flux, obj.drawImage(bp).array.sum(), rtol=1e-2)
+            # Also try manipulating exptime and area.
             np.testing.assert_allclose(
-                    obj.calculateFlux(bp), obj.drawImage(bp).array.sum(), rtol=1e-2)
+                    calc_flux * 10, obj.drawImage(bp, exptime=5, area=2).array.sum(), rtol=1e-2)
 
 def funcname():
     import inspect
