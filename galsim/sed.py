@@ -103,14 +103,10 @@ class SED(object):
     @param fast          Convert units on initialization instead of on __call__. [default: True]
     """
     def __init__(self, spec, wave_type, flux_type, redshift=0., fast=True,
-                 _blue_limit=None, _red_limit=None, _wave_list=None,
-                 _spectral=None, _dimensionless=None):
+                 _blue_limit=None, _red_limit=None, _wave_list=None, _spectral=None):
         from astropy import units
 
         self._orig_spec = spec  # Save this for pickling
-        # If these are known at construction time, use them.
-        self._spectral = _spectral
-        self._dimensionless = _dimensionless
 
         if isinstance(wave_type, str):
             if wave_type.lower() in ['nm', 'nanometer', 'nanometers']:
@@ -124,17 +120,28 @@ class SED(object):
         if isinstance(flux_type, str):
             if flux_type.lower() == 'flambda':
                 flux_type = units.erg / (units.s * self.wave_type * units.cm**2)
+                _spectral = True
             elif flux_type.lower() == 'fphotons':
                 flux_type = units.astrophys.photon/(units.s * units.cm**2 * self.wave_type)
+                _spectral = True
             elif flux_type.lower() == 'fnu':
                 flux_type = units.erg / (units.s * units.Hz * units.cm**2)
+                _spectral = True
             elif flux_type.lower() == '1':
                 flux_type = units.dimensionless_unscaled
+                _spectral = False
             else:
                 raise ValueError("Unknown flux_type '{0}'".format(flux_type))
         self.flux_type = flux_type
-        if not (self.dimensionless or self.spectral):
+        if _spectral is None:
+            _spectral = self.check_spectral()
+            dimensionless = self.check_dimensionless()
+        else:
+            dimensionless = not _spectral
+
+        if not (dimensionless or _spectral):
             raise TypeError("Flux_type must be equivalent to a spectral density or dimensionless.")
+        self.spectral = _spectral
 
         self.redshift = redshift
         self.fast = fast
@@ -197,31 +204,23 @@ class SED(object):
         else:
             self._spec = self._orig_spec
 
-    @property
-    def const(self):
-        """Boolean indicating that the SED is a constant dimensionless wavelength-dependent
-        normalization.
-        """
-        return self._const
-
-    @property
-    def spectral(self):
-        """Boolean indicating if SED has units compatible with a spectral density."""
+    def check_spectral(self):
+        """Return boolean indicating if SED has units compatible with a spectral density."""
         from astropy import units
         _photons = units.astrophys.photon/(units.s * units.cm**2 * units.nm)
 
-        if self._spectral is None:
-            self._spectral = self.flux_type.is_equivalent(
-                    _photons, units.spectral_density(1*units.nm))
-        return self._spectral
+        return self.flux_type.is_equivalent(_photons, units.spectral_density(1*units.nm))
+
+    def check_dimensionless(self):
+        """Return boolean indicating if SED is dimensionless."""
+        from astropy import units
+
+        return self.flux_type.is_equivalent(units.dimensionless_unscaled)
+
 
     @property
-    def dimensionless(self):
-        """Boolean indicating if SED is dimensionless."""
-        from astropy import units
-        if self._dimensionless is None:
-            self._dimensionless = self.flux_type.is_equivalent(units.dimensionless_unscaled)
-        return self._dimensionless
+    def dimensionless(self):  # for convenience
+        return not self.spectral
 
     def _wavelength_intersection(self, other):
         blue_limit = self.blue_limit
@@ -385,16 +384,16 @@ class SED(object):
         # 4.  Callable: return an SED
         # 5.  Scalar: return an SED
         #
-        # Additionally, check for shortcuts when self.const
+        # Additionally, check for shortcuts when self._const
 
         # Product of two SEDs
         if isinstance(other, galsim.SED):
             if self.spectral and other.spectral:
                 raise TypeError("Cannot multiply two spectral densities together.")
 
-            if other.const:
+            if other._const:
                 return self.__mul__(other._spec(42.0))  # const, so can eval anywhere.
-            elif self.const:
+            elif self._const:
                 return other.__mul__(self._spec(42.0))
 
             if self.spectral:
@@ -409,10 +408,9 @@ class SED(object):
             wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list(self, other)
             spec = lambda w: self(w*(1.0+self.redshift)) * other(w*(1.0+other.redshift))
             _spectral = self.spectral or other.spectral
-            _dimensionless = not _spectral
             return SED(spec, 'nm', 'fphotons', redshift=redshift, fast=fast,
                        _blue_limit=blue_limit, _red_limit=red_limit, _wave_list=wave_list,
-                       _spectral=_spectral, _dimensionless=_dimensionless)
+                       _spectral=_spectral)
 
         # Product of SED and achromatic GSObject is a `ChromaticTransformation`.
         if isinstance(other, galsim.GSObject):
@@ -420,19 +418,18 @@ class SED(object):
 
         # Product of SED and Bandpass is (filtered) SED.  The `redshift` attribute is retained.
         if isinstance(other, galsim.Bandpass):
-            if self.const:
+            if self._const:
                 # make a new scaled Bandpass, and use that to initialize a new SED.
                 new_bp = other * self._spec(42.0) # const, so can eval anywhere
                 return SED(new_bp.func, 'nm', '1', redshift=self.redshift,
                            _blue_limit=new_bp.blue_limit, _red_limit=new_bp.red_limit,
-                           _wave_list=new_bp._wave_list, _spectral=self._spectral,
-                           _dimensionless=self._dimensionless)
+                           _wave_list=new_bp._wave_list, _spectral=self.spectral)
             else:
                 wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list(self, other)
                 spec = lambda w: self(w*(1.0+self.redshift)) * other(w*(1.0+self.redshift))
                 return SED(spec, 'nm', 'fphotons', redshift=self.redshift,
                            _blue_limit=blue_limit, _red_limit=red_limit, _wave_list=wave_list,
-                           _spectral=self._spectral, _dimensionless=self._dimensionless)
+                           _spectral=self.spectral)
 
         # Product of SED with generic callable is also a (filtered) SED, with retained `redshift`.
         if hasattr(other, '__call__'):
@@ -441,7 +438,7 @@ class SED(object):
             return SED(spec, 'nm', flux_type, redshift=self.redshift,
                        _blue_limit=self.blue_limit, _red_limit=self.red_limit,
                        _wave_list=self.wave_list,
-                       _spectral=self._spectral, _dimensionless=self._dimensionless)
+                       _spectral=self.spectral)
 
         if isinstance(other, (int, float)):
             # If other is a scalar and self._spec a LookupTable, then remake that LookupTable.
@@ -452,7 +449,7 @@ class SED(object):
                 f = [ val * other for val in self._spec.getVals() ]
                 spec = galsim.LookupTable(x, f, x_log=self._spec.x_log, f_log=self._spec.f_log,
                                           interpolant=self._spec.interpolant)
-            elif self.const:
+            elif self._const:
                 spec = self._spec(42.0) * other
                 wave_type = 'nm'
                 flux_type = '1'
@@ -463,7 +460,7 @@ class SED(object):
             return SED(spec, wave_type, flux_type, redshift=self.redshift,
                        _blue_limit=self.blue_limit, _red_limit=self.red_limit,
                        _wave_list=self.wave_list,
-                       _spectral=self._spectral, _dimensionless=self._dimensionless)
+                       _spectral=self.spectral)
 
     def __rmul__(self, other):
         return self*other
@@ -508,11 +505,9 @@ class SED(object):
         if self.dimensionless and other.dimensionless:
             flux_type = '1'
             _spectral = False
-            _dimensionless = True
         elif self.spectral and other.spectral:
             flux_type = 'fphotons'
             _spectral = True
-            _dimensionless = False
         else:
             raise TypeError("Cannot add SEDs with incompatible dimensions.")
 
@@ -543,7 +538,7 @@ class SED(object):
         return SED(spec, wave_type='nm', flux_type=flux_type,
                    redshift=self.redshift, _wave_list=wave_list,
                    _blue_limit=blue_limit, _red_limit=red_limit,
-                   _spectral=_spectral, _dimensionless=_dimensionless)
+                   _spectral=_spectral)
 
     def __sub__(self, other):
         # Subtract two SEDs, with the same caveats as adding two SEDs.
