@@ -406,7 +406,7 @@ class SED(object):
             fast = self.fast and other.fast
 
             wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list(self, other)
-            spec = lambda w: self(w*(1.0+self.redshift)) * other(w*(1.0+other.redshift))
+            spec = lambda w: self(w*(1.0+redshift)) * other(w*(1.0+redshift))
             _spectral = self.spectral or other.spectral
             return SED(spec, 'nm', 'fphotons', redshift=redshift, fast=fast,
                        _blue_limit=blue_limit, _red_limit=red_limit, _wave_list=wave_list,
@@ -466,10 +466,9 @@ class SED(object):
         return self*other
 
     def __div__(self, other):
-        # Prohibit division of two SEDs as dimensionally inconsistent.
-        # I suppose we _could_ return a python function here, but certainly not another SED.
-        if isinstance(other, galsim.SED):
-            raise TypeError("Cannot divide two SEDs.")
+        # Enable division by scalars or dimensionless callables (including dimensionless SEDs.)
+        if isinstance(other, galsim.SED) and other.spectral:
+            raise TypeError("Cannot divide by spectral SED.")
         if hasattr(other, '__call__'):
             spec = lambda w: self(w * (1.0 + self.redshift)) / other(w * (1.0 + self.redshift))
         elif isinstance(self._spec, galsim.LookupTable):

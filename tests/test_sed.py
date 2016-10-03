@@ -196,11 +196,10 @@ def test_SED_sub():
 def test_SED_mul():
     """Check that SEDs multiply like I think they should...
     """
+    a0 = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
+                   wave_type='nm', flux_type='fphotons')
     for z in [0, 0.2, 0.4]:
-        a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
-                       wave_type='nm', flux_type='fphotons')
-        if z != 0:
-            a = a.atRedshift(z)
+        a = a0.atRedshift(z)
 
         # SED multiplied by function
         b = lambda w: w**2
@@ -235,6 +234,15 @@ def test_SED_mul():
         np.testing.assert_almost_equal(f(x), e(x) * a(x), 10,
                                        err_msg="Found wrong value in SED.__mul__")
 
+        # SED multiplied by dimensionless, non-constant SED
+        g = galsim.SED('wave', 'nm', '1')
+        h = a*g
+        np.testing.assert_almost_equal(h(x), a(x) * g(x), 10,
+                                       err_msg="Found wrong value in SED.__mul__")
+        h2 = g*a
+        np.testing.assert_almost_equal(h2(x), g(x) * a(x), 10,
+                                       err_msg="Found wrong value in SED.__mul__")
+
 
     sed1 = galsim.SED('1', 'nm', 'fphotons', redshift=1)
     sed2 = galsim.SED('2', 'nm', 'fphotons', redshift=2)
@@ -252,11 +260,10 @@ def test_SED_mul():
 def test_SED_div():
     """Check that SEDs divide like I think they should...
     """
+    a0 = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
+                    wave_type='nm', flux_type='fphotons')
     for z in [0, 0.2, 0.4]:
-        a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
-                       wave_type='nm', flux_type='fphotons')
-        if z != 0:
-            a = a.atRedshift(z)
+        a = a0.atRedshift(z)
 
         # SED divided by function
         b = lambda w: w**2
@@ -276,6 +283,12 @@ def test_SED_div():
         np.testing.assert_almost_equal(d(x), a(x)/4.2/2, 10,
                                        err_msg="Found wrong value in SED.__div__")
         do_pickle(d)
+
+        # SED divided by dimensionless SED
+        e = galsim.SED('wave', 'nm', '1')
+        d /= e
+        np.testing.assert_almost_equal(d(x), a(x)/4.2/2/e(x), 10,
+                                       err_msg="Found wrong value in SED.__div__")
 
 
 @timer
