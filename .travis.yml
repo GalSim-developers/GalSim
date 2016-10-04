@@ -75,8 +75,13 @@ script:
 after_success:
     # The multiprocessing stages don't get properly incorporated into the .coverage file unless
     # we do this command.  (Some of the .coverage.* files are in the ../examples directory.)
+    - ls -l
     - coverage combine . ../examples ../examples/great3 ../examples/des
+    - ls -l
     - coverage xml
+    - ls -l
+    - mv coverage.xml ..
+    - ls -l ..
 
     # If we start doing multiple python versions here, then only send the report for one of them.
     # Otherwise the reported results get weird.
