@@ -19,9 +19,10 @@ coverage:
         threshold: 1%
         branches: null
 
-    changes:
-      default:
-        branches: null
+    changes: false
+      # I don't understand these, so turning it off...
+      #default:
+        #branches: null
 
   ignore: null
 
