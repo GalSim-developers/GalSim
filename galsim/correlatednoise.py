@@ -140,7 +140,7 @@ class _BaseCorrelatedNoise(object):
         """
         if rng is None:
             rng = self.rng
-        return _BaseCorrelatedNoise(rng, self._profile.copy(), self.wcs)
+        return _BaseCorrelatedNoise(rng, self._profile, self.wcs)
 
     def __repr__(self):
         return "galsim.correlatednoise._BaseCorrelatedNoise(%r,%r,%r)"%(

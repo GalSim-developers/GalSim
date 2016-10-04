@@ -45,7 +45,7 @@ test_flux = 1.8
 test_spergel_nu = [-0.85, -0.5, 0.0, 0.85, 4.0]
 test_spergel_scale = [20.0, 1.0, 1.0, 0.5, 0.5]
 
-if __name__ == "__main__":
+if __name__ != "__main__":
     # If doing a nosetests run, we don't actually need to do all 4 sersic n values.
     # Two should be enough to notice if there is a problem, and the full list will be tested
     # when running python test_base.py to try to diagnose the problem.
@@ -249,13 +249,7 @@ def test_gaussian_radii():
     # Note: I test all the modifiers here.  For the rest of the profile types, I'll
     # just confirm that it is true of shear.  I don't think that has any chance
     # of missing anything.
-    test_gal_copy = test_gal.copy()
-    print('fwhm = ',test_gal_copy.getFWHM())
-    print('hlr = ',test_gal_copy.getHalfLightRadius())
-    print('sigma = ',test_gal_copy.getSigma())
-    # They still work after copy
-    test_gal_flux1 = test_gal_copy * 3.
-    # But not after rescaling the flux.
+    test_gal_flux1 = test_gal * 3.
     try:
         np.testing.assert_raises(AttributeError, getattr, test_gal_flux1, "getFWHM")
         np.testing.assert_raises(AttributeError, getattr, test_gal_flux1, "getHalfLightRadius")
@@ -318,7 +312,7 @@ def test_gaussian_flux_scaling():
         err_msg="Flux param inconsistent after __idiv__.")
     obj = galsim.Gaussian(sigma=test_sigma, flux=test_flux)
     obj2 = obj * 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __rmul__ (original).")
@@ -328,7 +322,7 @@ def test_gaussian_flux_scaling():
         err_msg="Flux param inconsistent after __rmul__ (result).")
     obj = galsim.Gaussian(sigma=test_sigma, flux=test_flux)
     obj2 = 2. * obj
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (original).")
@@ -338,7 +332,7 @@ def test_gaussian_flux_scaling():
         err_msg="Flux param inconsistent after __mul__ (result).")
     obj = galsim.Gaussian(sigma=test_sigma, flux=test_flux)
     obj2 = obj / 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (original).")
@@ -458,9 +452,6 @@ def test_exponential_radii():
             err_msg="Error in half light radius for Exponential initialized with scale_radius.")
 
     # Check that the getters don't work after modifying the original.
-    test_gal_copy = test_gal.copy()
-    print('hlr = ',test_gal_copy.getHalfLightRadius())
-    print('scale = ',test_gal_copy.getScaleRadius())
     test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
     try:
         np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
@@ -489,7 +480,7 @@ def test_exponential_flux_scaling():
         err_msg="Flux param inconsistent after __idiv__.")
     obj = galsim.Exponential(scale_radius=test_scale[0], flux=test_flux)
     obj2 = obj * 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __rmul__ (original).")
@@ -499,7 +490,7 @@ def test_exponential_flux_scaling():
         err_msg="Flux param inconsistent after __rmul__ (result).")
     obj = galsim.Exponential(scale_radius=test_scale[0], flux=test_flux)
     obj2 = 2. * obj
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (original).")
@@ -509,7 +500,7 @@ def test_exponential_flux_scaling():
         err_msg="Flux param inconsistent after __mul__ (result).")
     obj = galsim.Exponential(scale_radius=test_scale[0], flux=test_flux)
     obj2 = obj / 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (original).")
@@ -771,12 +762,6 @@ def test_sersic_radii():
                     err_msg="Error in HLR for scale_radius constructed %s"%label)
 
         # Check that the getters don't work after modifying the original.
-        test_gal_copy = test_gal1.copy()
-        # They still work after copy()
-        if n != -4:
-            print('n = ',test_gal_copy.getN())
-        print('hlr = ',test_gal_copy.getHalfLightRadius())
-        print('sr = ',test_gal_copy.getScaleRadius())
         test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
         # But not after shear() (or others, but this is a sufficient test here)
         try:
@@ -808,21 +793,6 @@ def test_sersic_flux_scaling():
             else:
                 init_obj = galsim.Sersic(test_n, half_light_radius=test_hlr, flux=test_flux,
                                     trunc=test_trunc)
-
-            # Test in place *= and /=
-            obj = init_obj.copy()
-            obj *= 2.
-            np.testing.assert_almost_equal(
-                obj.getFlux(), test_flux * 2., decimal=param_decimal,
-                err_msg="Flux param inconsistent after __imul__.")
-            np.testing.assert_almost_equal(
-                init_obj.getFlux(), test_flux, decimal=param_decimal,
-                err_msg="obj.copy() didn't produce a separate copy.")
-            obj = init_obj.copy()
-            obj /= 2.
-            np.testing.assert_almost_equal(
-                obj.getFlux(), test_flux / 2., decimal=param_decimal,
-                err_msg="Flux param inconsistent after __idiv__.")
 
             obj2 = init_obj * 2.
             np.testing.assert_almost_equal(
@@ -1009,10 +979,6 @@ def test_airy_radii():
             err_msg="Error in getFWHM() for Airy.")
 
     # Check that the getters don't work after modifying the original.
-    test_gal_copy = test_gal.copy()
-    print('fwhm = ',test_gal_copy.getFWHM())
-    print('hlr = ',test_gal_copy.getHalfLightRadius())
-    print('lod = ',test_gal_copy.getLamOverD())
     test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
     try:
         np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM");
@@ -1044,7 +1010,7 @@ def test_airy_flux_scaling():
         err_msg="Flux param inconsistent after __idiv__.")
     obj = galsim.Airy(lam_over_diam=test_loD, flux=test_flux, obscuration=test_obscuration)
     obj2 = obj * 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __rmul__ (original).")
@@ -1054,7 +1020,7 @@ def test_airy_flux_scaling():
         err_msg="Flux param inconsistent after __rmul__ (result).")
     obj = galsim.Airy(lam_over_diam=test_loD, flux=test_flux, obscuration=test_obscuration)
     obj2 = 2. * obj
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (original).")
@@ -1064,7 +1030,7 @@ def test_airy_flux_scaling():
         err_msg="Flux param inconsistent after __mul__ (result).")
     obj = galsim.Airy(lam_over_diam=test_loD, flux=test_flux, obscuration=test_obscuration)
     obj2 = obj / 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (original).")
@@ -1509,11 +1475,6 @@ def test_moffat_radii():
             err_msg="Error in scale radius for truncated Moffat initialized with scale radius")
 
     # Check that the getters don't work after modifying the original.
-    test_gal_copy = test_gal.copy()
-    print('beta = ',test_gal_copy.getBeta())
-    print('fwhm = ',test_gal_copy.getFWHM())
-    print('hlr = ',test_gal_copy.getHalfLightRadius())
-    print('scale = ',test_gal_copy.getScaleRadius())
     test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
     try:
         np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getBeta");
@@ -1550,7 +1511,7 @@ def test_moffat_flux_scaling():
             obj = galsim.Moffat(scale_radius=test_scale[0], beta=test_beta, trunc=test_trunc,
                                 flux=test_flux)
             obj2 = obj * 2.
-            # First test that original obj is unharmed... (also tests that .copy() is working)
+            # First test that original obj is unharmed...
             np.testing.assert_almost_equal(
                 obj.getFlux(), test_flux, decimal=param_decimal,
                 err_msg="Flux param inconsistent after __rmul__ (original).")
@@ -1561,7 +1522,7 @@ def test_moffat_flux_scaling():
             obj = galsim.Moffat(scale_radius=test_scale[0], beta=test_beta, trunc=test_trunc,
                                 flux=test_flux)
             obj2 = 2. * obj
-            # First test that original obj is unharmed... (also tests that .copy() is working)
+            # First test that original obj is unharmed...
             np.testing.assert_almost_equal(
                 obj.getFlux(), test_flux, decimal=param_decimal,
                 err_msg="Flux param inconsistent after __mul__ (original).")
@@ -1572,7 +1533,7 @@ def test_moffat_flux_scaling():
             obj = galsim.Moffat(scale_radius=test_scale[0], beta=test_beta, trunc=test_trunc,
                                 flux=test_flux)
             obj2 = obj / 2.
-            # First test that original obj is unharmed... (also tests that .copy() is working)
+            # First test that original obj is unharmed...
             np.testing.assert_almost_equal(
                 obj.getFlux(), test_flux, decimal=param_decimal,
                 err_msg="Flux param inconsistent after __div__ (original).")
@@ -1755,10 +1716,6 @@ def test_kolmogorov_radii():
             err_msg="Error in half light radius for Gaussian initialized with FWHM.")
 
     # Check that the getters don't work after modifying the original.
-    test_gal_copy = test_gal.copy()
-    print('fwhm = ',test_gal_copy.getFWHM())
-    print('hlr = ',test_gal_copy.getHalfLightRadius())
-    print('lor = ',test_gal_copy.getLamOverR0())
     test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
     try:
         np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getFWHM");
@@ -1789,7 +1746,7 @@ def test_kolmogorov_flux_scaling():
         err_msg="Flux param inconsistent after __idiv__.")
     obj = galsim.Kolmogorov(lam_over_r0=test_lor0, flux=test_flux)
     obj2 = obj * 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __rmul__ (original).")
@@ -1799,7 +1756,7 @@ def test_kolmogorov_flux_scaling():
         err_msg="Flux param inconsistent after __rmul__ (result).")
     obj = galsim.Kolmogorov(lam_over_r0=test_lor0, flux=test_flux)
     obj2 = 2. * obj
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (original).")
@@ -1809,7 +1766,7 @@ def test_kolmogorov_flux_scaling():
         err_msg="Flux param inconsistent after __mul__ (result).")
     obj = galsim.Kolmogorov(lam_over_r0=test_lor0, flux=test_flux)
     obj2 = obj / 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (original).")
@@ -1962,13 +1919,7 @@ def test_spergel_radii():
                     err_msg="Error in HLR for scale_radius constructed Spergel")
 
         # Check that the getters don't work after modifying the original.
-        test_gal_copy = test_gal.copy()
-        # They still work after copy()
-        print('nu = ',test_gal_copy.getNu())
-        print('hlr = ',test_gal_copy.getHalfLightRadius())
-        print('sr = ',test_gal_copy.getScaleRadius())
         test_gal_shear = test_gal.shear(g1=0.3, g2=0.1)
-        # But not after shear() (or others, but this is a sufficient test here)
         try:
             np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getNu")
             np.testing.assert_raises(AttributeError, getattr, test_gal_shear, "getHalfLightRadius")
@@ -1988,21 +1939,6 @@ def test_spergel_flux_scaling():
     for test_nu in test_spergel_nu:
         # init with hlr and flux only (should be ok given last tests)
         init_obj = galsim.Spergel(test_nu, half_light_radius=test_hlr, flux=test_flux)
-
-        # Test in place *= and /=
-        obj = init_obj.copy()
-        obj *= 2.
-        np.testing.assert_almost_equal(
-            obj.getFlux(), test_flux * 2., decimal=param_decimal,
-            err_msg="Flux param inconsistent after __imul__.")
-        np.testing.assert_almost_equal(
-            init_obj.getFlux(), test_flux, decimal=param_decimal,
-            err_msg="obj.copy() didn't produce a separate copy.")
-        obj = init_obj.copy()
-        obj /= 2.
-        np.testing.assert_almost_equal(
-            obj.getFlux(), test_flux / 2., decimal=param_decimal,
-            err_msg="Flux param inconsistent after __idiv__.")
 
         obj2 = init_obj * 2.
         np.testing.assert_almost_equal(

@@ -142,7 +142,7 @@ def test_convolve_flux_scaling():
         [galsim.Gaussian(sigma=test_sigma, flux=np.sqrt(test_flux)),
          galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=np.sqrt(test_flux))])
     obj2 = obj * 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __rmul__ (original).")
@@ -154,7 +154,7 @@ def test_convolve_flux_scaling():
         [galsim.Gaussian(sigma=test_sigma, flux=np.sqrt(test_flux)),
          galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=np.sqrt(test_flux))])
     obj2 = 2. * obj
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (original).")
@@ -166,7 +166,7 @@ def test_convolve_flux_scaling():
         [galsim.Gaussian(sigma=test_sigma, flux=np.sqrt(test_flux)),
          galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=np.sqrt(test_flux))])
     obj2 = obj / 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (original).")
@@ -440,7 +440,7 @@ def test_add():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject gauss1 + gauss2 disagrees with expected result")
-    sum = gauss1.copy()
+    sum = gauss1
     sum += gauss2
     sum.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
@@ -521,7 +521,7 @@ def test_add_flux_scaling():
     obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
                       galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
     obj2 = obj * 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __rmul__ (original).")
@@ -532,7 +532,7 @@ def test_add_flux_scaling():
     obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
                       galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
     obj2 = 2. * obj
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (original).")
@@ -543,7 +543,7 @@ def test_add_flux_scaling():
     obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
                       galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
     obj2 = obj / 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (original).")

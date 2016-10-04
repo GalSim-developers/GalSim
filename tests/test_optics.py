@@ -340,7 +340,7 @@ def test_OpticalPSF_flux_scaling():
         lam_over_diam=test_loD, oversampling=test_oversampling, pad_factor=test_pad_factor,
         defocus=test_defocus, astig1=test_astig1, astig2=test_astig2, flux=test_flux)
     obj2 = obj * 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __rmul__ (original).")
@@ -352,7 +352,7 @@ def test_OpticalPSF_flux_scaling():
         lam_over_diam=test_loD, oversampling=test_oversampling, pad_factor=test_pad_factor,
         defocus=test_defocus, astig1=test_astig1, astig2=test_astig2, flux=test_flux)
     obj2 = 2. * obj
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (original).")
@@ -364,7 +364,7 @@ def test_OpticalPSF_flux_scaling():
         lam_over_diam=test_loD, oversampling=test_oversampling, pad_factor=test_pad_factor,
         defocus=test_defocus, astig1=test_astig1, astig2=test_astig2, flux=test_flux)
     obj2 = obj / 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (original).")
