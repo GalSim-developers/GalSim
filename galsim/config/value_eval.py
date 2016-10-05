@@ -18,6 +18,7 @@
 from __future__ import print_function
 
 import galsim
+import numpy as np
 
 # This file handles the parsing for the special Eval type.
 
@@ -46,15 +47,16 @@ def _type_by_letter(key):
 def _GenerateFromEval(config, base, value_type):
     """@brief Evaluate a string as the provided type
     """
-    # We allow the following modules to be used in the eval string:
-    import math
-    import numpy
-    import os
-
+    from future.utils import exec_
     # These will be the variables to use for evaluating the eval statement.
     # Start with the current locals and globals, and add extra items to them.
     ldict = locals().copy()
     gdict = globals().copy()
+    # We allow the following modules to be used in the eval string:
+    exec_('import math', gdict)
+    exec_('import numpy', gdict)
+    exec_('import numpy as np', gdict)
+    exec_('import os', gdict)
 
     #print('Start Eval')
     req = { 'str' : str }
@@ -86,7 +88,7 @@ def _GenerateFromEval(config, base, value_type):
         keys = re.findall(r'@[\w\.]*', string)
         #print('@keys = ',keys)
         # Remove duplicates
-        keys = numpy.unique(keys).tolist()
+        keys = np.unique(keys).tolist()
         #print('unique @keys = ',keys)
         for key0 in keys:
             key = key0[1:] # Remove the @ sign.

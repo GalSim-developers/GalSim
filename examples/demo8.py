@@ -83,23 +83,23 @@ def main(argv):
         "items" : [
             {
                 "type" : "Sersic",
-                "n" : 3.6,
-                "half_light_radius" : { "type" : "Random" , "min" : 0.3 , "max" : 0.9 },
-                "flux" : { "type" : "Random" , "min" : 0.1 , "max" : 0.5 },
-                "ellip" : {
-                    "type" : "EBeta",
-                    "e" : { "type" : "Random" , "min" : 0.0 , "max" : 0.3 },
-                    "beta" : { "type" : "Random" }
-                }
-            },
-            {
-                "type" : "Sersic",
                 "n" : 1.5,
+                "flux" : { "type" : "Random" , "min" : 0.5 , "max" : 0.9 },
                 "half_light_radius" : { "type" : "Random" , "min" : 0.5 , "max" : 1.5 },
                 "ellip" : {
                     "type" : "E1E2",
                     "e1" : { "type" : "RandomGaussian" , "sigma" : 0.4 },
                     "e2" : { "type" : "RandomGaussian" , "sigma" : 0.4 }
+                }
+            },
+            {
+                "type" : "Sersic",
+                "n" : 3.6,
+                "half_light_radius" : { "type" : "Random" , "min" : 0.3 , "max" : 0.9 },
+                "ellip" : {
+                    "type" : "Eta1Eta2",
+                    "eta1" : { "type" : "RandomGaussian" , "sigma" : 0.3 },
+                    "eta2" : { "type" : "RandomGaussian" , "sigma" : 0.3 }
                 }
             }
         ],

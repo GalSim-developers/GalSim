@@ -259,7 +259,7 @@ class Aperture(object):
         else:  # Use geometric parameters.
             if pupil_plane_scale is not None:
                 # Check input scale and warn if looks suspicious.
-                if pupil_plane_scale > good_pupil_scale:
+                if pupil_plane_scale > good_pupil_scale:  # pragma: no cover
                     import warnings
                     ratio = good_pupil_scale / pupil_plane_scale
                     warnings.warn("Input pupil_plane_scale may be too large for good sampling.\n"
@@ -270,7 +270,7 @@ class Aperture(object):
                 pupil_plane_scale = good_pupil_scale
             if pupil_plane_size is not None:
                 # Check input size and warn if looks suspicious
-                if pupil_plane_size < good_pupil_size:
+                if pupil_plane_size < good_pupil_size:  # pragma: no cover
                     import warnings
                     ratio = good_pupil_size / pupil_plane_size
                     warnings.warn("Input pupil_plane_size may be too small for good focal-plane"
@@ -304,7 +304,7 @@ class Aperture(object):
         self.npix = galsim._galsim.goodFFTSize(int(np.ceil(ratio)))
         self.pupil_plane_size = pupil_plane_size
         # Shrink scale such that size = scale * npix exactly.
-        self.pupil_plane_scale = pupil_plane_size // self.npix
+        self.pupil_plane_scale = pupil_plane_size / self.npix
         # Save params for str/repr
         self._circular_pupil = circular_pupil
         self._obscuration = obscuration
@@ -397,7 +397,7 @@ class Aperture(object):
             self.pupil_plane_size = self.pupil_plane_scale * self.npix
 
         # Check sampling interval and warn if it's not good enough.
-        if self.pupil_plane_scale > good_pupil_scale:
+        if self.pupil_plane_scale > good_pupil_scale:  # pragma: no cover
             import warnings
             ratio = self.pupil_plane_scale / good_pupil_scale
             warnings.warn("Input pupil plane image may not be sampled well enough!\n"
@@ -675,7 +675,7 @@ class PhaseScreenList(object):
             return cls(self._layers[index])
         elif isinstance(index, numbers.Integral):
             return self._layers[index]
-        else:
+        else:  # pragma: no cover
             msg = "{cls.__name__} indices must be integers"
             raise TypeError(msg.format(cls=cls))
 
@@ -1191,23 +1191,24 @@ class OpticalPSF(GSObject):
     the pupil is centered.  The areas that are illuminated should have some value >0, and the other
     areas should have a value of precisely zero.  Based on what the OpticalPSF class thinks is the
     required sampling to make the PSF image, the image that is passed in of the pupil plane might be
-    zero-padded during internal calculations.  If the pupil plane image has a scale associated with
-    it, that scale will be completely ignored; the scale is determined internally using basic
-    physical considerations.  Finally, to ensure accuracy of calculations using a pupil plane image,
-    we recommend sampling it as finely as possible.
+    zero-padded during internal calculations.  The pixel scale of the pupil plane can be specified
+    in one of three ways.  In descending order of priority, these are:
+      1.  The `pupil_plane_scale` keyword argument (units are meters).
+      2.  The `pupil_plane_im.scale` attribute (units are meters).
+      3.  If (1) and (2) are both None, then the scale will be inferred by assuming that the
+          illuminated pixel farthest from the image center is at a physical distance of self.diam/2.
+    Note that if the scale is specified by either (1) or (2) above (which always includes specifying
+    the pupil_plane_im as a filename, since the default scale then will be 1.0), then the
+    lam_over_diam keyword must not be used, but rather the lam and diam keywords are required
+    separately.  Finally, to ensure accuracy of calculations using a pupil plane image, we recommend
+    sampling it as finely as possible.
 
     Initialization
     --------------
 
     As described above, either specify the lam/diam ratio directly in arbitrary units:
 
-        >>> optical_psf = galsim.OpticalPSF(lam_over_diam=lam_over_diam, defocus=0., astig1=0.,
-                                            astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0.,
-                                            spher=0., aberrations=None, circular_pupil=True,
-                                            obscuration=0., interpolant=None, oversampling=1.5,
-                                            pad_factor=1.5, nstruts=0,
-                                            strut_thick=0.05, strut_angle=0.*galsim.degrees,
-                                            pupil_plane_im=None, pupil_angle=0.*galsim.degrees)
+        >>> optical_psf = galsim.OpticalPSF(lam_over_diam=lam_over_diam, defocus=0., ...)
 
     or, use separate keywords for the telescope diameter and wavelength in meters and nanometers,
     respectively:
@@ -1289,6 +1290,17 @@ class OpticalPSF(GSObject):
     @param pupil_angle      If `pupil_plane_im` is not None, rotation angle for the pupil plane
                             (positive in the counter-clockwise direction).  Must be an Angle
                             instance. [default: 0. * galsim.degrees]
+    @param pupil_plane_scale Sampling interval in meters to use for the pupil plane array.  In
+                            most cases, it's a good idea to leave this as None, in which case
+                            GalSim will attempt to find a good value automatically.  The
+                            exception is when specifying the pupil arrangement via an image, in
+                            which case this keyword can be used to indicate the sampling of that
+                            image.  See also `pad_factor` for adjusting the pupil sampling scale.
+                            [default: None]
+    @param pupil_plane_size Size in meters to use for the pupil plane array.  In most cases, it's
+                            a good idea to leave this as None, in which case GalSim will attempt
+                            to find a good value automatically.  See also `oversampling` for
+                            adjusting the pupil size.  [default: None]
     @param scale_unit       Units to use for the sky coordinates when calculating lam/diam if these
                             are supplied separately.  Should be either a galsim.AngleUnit or a
                             string that can be used to construct one (e.g., 'arcsec', 'radians',
@@ -1325,6 +1337,8 @@ class OpticalPSF(GSObject):
         "strut_angle": galsim.Angle,
         "pupil_plane_im": str,
         "pupil_angle": galsim.Angle,
+        "pupil_plane_scale": float,
+        "pupil_plane_size": float,
         "scale_unit": str}
     _single_params = [{"lam_over_diam": float, "lam": float}]
     _takes_rng = False
@@ -1334,9 +1348,10 @@ class OpticalPSF(GSObject):
                  aberrations=None, aper=None, circular_pupil=True, obscuration=0., interpolant=None,
                  oversampling=1.5, pad_factor=1.5, flux=1., nstruts=0, strut_thick=0.05,
                  strut_angle=0.*galsim.degrees, pupil_plane_im=None,
+                 pupil_plane_scale=None, pupil_plane_size=None,
                  pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None,
                  suppress_warning=False, max_size=None):
-        if max_size is not None:
+        if max_size is not None: # pragma: no cover
             from .deprecated import depr
             depr('max_size', 1.4, '',
                  "The max_size keyword has been removed.  In its place, the pad_factor keyword can"
@@ -1350,6 +1365,21 @@ class OpticalPSF(GSObject):
         if lam_over_diam is not None:
             if lam is not None or diam is not None:
                 raise TypeError("If specifying lam_over_diam, then do not specify lam or diam")
+            # For combination of lam_over_diam and pupil_plane_im with a specified scale, it's
+            # tricky to determine the actual diameter of the pupil needed by Aperture.  So for now,
+            # we just disallow this combination.  Please feel free to raise an issue at
+            # https://github.com/GalSim-developers/GalSim/issues if you need this functionality.
+            if pupil_plane_im is not None:
+                if isinstance(pupil_plane_im, str):  # Filename, therefore specific scale exists.
+                    raise TypeError("If specifying lam_over_diam, then do not "
+                                    "specify pupil_plane_im as a filename.")
+                elif (isinstance(pupil_plane_im, galsim.Image)
+                      and pupil_plane_im.scale is not None):
+                    raise TypeError("If specifying lam_over_diam, then do not specify "
+                                    "pupil_plane_im with definite scale attribute.")
+                elif pupil_plane_scale is not None:
+                    raise TypeError("If specifying lam_over_diam, then do not specify "
+                                    "pupil_plane_scale.")
             lam = 500.  # Arbitrary
             diam = lam*1.e-9 / lam_over_diam * galsim.radians / scale_unit
         else:
@@ -1370,6 +1400,7 @@ class OpticalPSF(GSObject):
                     nstruts=nstruts, strut_thick=strut_thick, strut_angle=strut_angle,
                     oversampling=oversampling, pad_factor=pad_factor,
                     pupil_plane_im=pupil_plane_im, pupil_angle=pupil_angle,
+                    pupil_plane_scale=pupil_plane_scale, pupil_plane_size=pupil_plane_size,
                     gsparams=gsparams)
 
         # Save for pickling

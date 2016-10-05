@@ -53,6 +53,16 @@ def main(argv):
 
     data_dir = 'des_data'
 
+    if not os.path.exists(data_dir):
+        print('You will need to download some DES data to use this script.')
+        print('Run the following commands from the directory GalSim/examples/des:')
+        print()
+        print('    wget http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz')
+        print('    tar xfz des_data.tar.gz')
+        print()
+        print('Then try running this script again.  It should work now.')
+        sys.exit()
+
     # Set which chips to run on
     first_chip = 1
     last_chip = 62

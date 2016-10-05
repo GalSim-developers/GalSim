@@ -1,17 +1,21 @@
 Process for updating fink with a new version:
 
-- Download the tagged tarball from GitHub.
-- Get the md5sum value for it.
-- Update the galsim.info file with the new URL and new Source-MD5 value.
+- Make a new galsim-M.m.info file (copied from the previous one).
   (I keep these named by version number, but fink likes them as just galsim.info.)
+- Update the Version and ShLibs.
+- Add any new dependencies (or remove obsolete ones) if appropriate.
+- Download the tagged tarball from GitHub.
+- Get the md5sum value for it and update the Source-MD5 value.
 - Make sure the SourceRename value matches the directory name in the tarball.
-- Update /sw/fink/dists/local/main/finkinfo/galsim.info link to point to new info file.
+- export PYTHONPATH='/sw/lib/python2.7/site-packages/'
+- cd /sw/fink/dists/local/main/finkinfo/
+- ln -s ~/GalSim/devel/fink/galsim-M.m.info galsim.info
 - fink validate galsim.info
 - fink -m --build-as-nobody rebuild galsim
-- dpkg -c /sw/fink/debs/galsim_[...].deb
+- dpkg -c /sw/fink/debs/galsim_[...].deb  (Check that it seems to have everything and not more.)
 - fink validate /sw/fink/debs/galsim_[...].deb
 - fink install galsim
-- Check that otool -L /sw/lib/libgalsim[...].dylib has the right version number and directory.
+- otool -L /sw/lib/libgalsim[...].dylib  (Check the version number and directory.)
 = otool -L /sw/lib/python2.7/site-packages/galsim/_galsim.so
 - Make sure check_yaml works if you set python to /sw/bin/python2.7 and bin to /sw/bin
 - In tests directory run /sw/bin/nosetests2.7

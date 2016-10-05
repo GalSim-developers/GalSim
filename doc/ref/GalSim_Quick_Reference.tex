@@ -127,7 +127,9 @@ be something like the following:
 
 There are many examples of this workflow in the directory {\tt
  examples/}, showing most of the GalSim library in action, in
-the scripts named \texttt{demo1.py} -- \texttt{demo13.py}.  This
+the scripts named \texttt{demo1.py} -- \texttt{demo13.py}. An online
+\href{https://github.com/GalSim-developers/GalSim/wiki/Tutorials}{tutorial guide} outlines the
+capabilities that are demonstrated in the demos.   This
 document provides a brief, reference description of the GalSim classes
 and methods which can be used in these workflows.
 
@@ -242,6 +244,12 @@ parameters available for use (e.g.\ total \texttt{flux}) along with default valu
     with index \texttt{n=1}.  Requires one of the
     following \texttt{\emph{size}} parameters: \texttt{scale\_radius} or \texttt{half\_light\_radius}.
 \item[$\circ$]
+  \texttt{galsim.}\texttt{InclinedExponential}\texttt{(inclination, scale\_radius, scale\_height=0.1*scale\_radius, flux=1.)}
+    \newline
+    An Inclined Exponential galaxy disc profile. Requires the
+    following parameters: \texttt{inclination} and \texttt{scale\_radius}.
+    \texttt{scale\_height} can optionally provided; if not, it will default to 0.1*\texttt{scale\_radius}.
+\item[$\circ$]
   \texttt{galsim.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_de_vaucouleurs.html}{\texttt{DeVaucouleurs}}\texttt{(half\_light\_radius, flux=1.)}
     \newline
     A De Vaucouleurs galaxy bulge profile, a S\'{e}rsic
@@ -256,16 +264,18 @@ parameters available for use (e.g.\ total \texttt{flux}) along with default valu
     \newline
     A galaxy model taken from an image of a real galaxy and includes
     a correction for the original PSF.   Use of this class requires the
-    download of external data, stored and input as the
+    download of external data.  \texttt{RealGalaxy} objects can be directly instantiated based on a catalog that
+    is input via the
     \texttt{real\_galaxy\_catalog} parameter (an instance of the
     \href{http://galsim-developers.github.com/GalSim/classgalsim_1_1real_1_1_real_galaxy_catalog.html}{\texttt{RealGalaxyCatalog}}
-    class), for full functionality.
+    class), or using the \texttt{galsim.\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1scene_1_1_c_o_s_m_o_s_catalog.html}{COSMOSCatalog}} class.
 
-    An example catalog of 100 real galaxies is in the repository itself; a set of $\sim$26\,000 real
-    galaxy images, with original PSFs, can be downloaded from the
+    An example catalog of 100 real galaxies is in the repository itself; a set of real
+    galaxy images, with original PSFs, can be downloaded following instructions on the 
     \emph{RealGalaxy Data Download Page} on the
-    \href{https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy\%20Data}{GalSim Wiki}. For information
-    about other optional parameters, see the documentation for this object.
+    \href{https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy\%20Data}{GalSim Wiki}, or
+    using an executable \texttt{galsim\_download\_cosmos} that is distributed with GalSim. For information
+    about  optional parameters, see the documentation for this object.
 \item[$\circ$]
   \texttt{galsim.}\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1compound_1_1_sum.html}{\texttt{Sum}}\texttt{( [list of objects] )}
     \newline
@@ -496,7 +506,7 @@ instance are:
           brightness at each location.
       \end{itemize}
     \item \texttt{add\_to\_image} (default = \texttt{False}) \newline
-      Whether to add flux to a (must be supplied) \texttt{image} rather than clear out
+      Whether to add flux to a supplied \texttt{image} rather than clear out
       anything in the image before drawing.
   \end{itemize}
   If \texttt{method = 'phot'}, there are a number of additional optional parameters. Important
@@ -573,16 +583,18 @@ reduce the number of samples used for integrations (and hence reduce the time it
 a \texttt{ChromaticObject}).
 \begin{itemize}
   \item[$\circ$]
-  \texttt{bandpass.\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1bandpass_1_1_bandpass.html\#a230865a1e29ed8a95ea4b2c7d66a08a1}{truncate}(blue\_limit, red\_limit, \dots)}
+  \texttt{bandpass.\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1bandpass_1_1_bandpass.html\#a230865a1e29ed8a95ea4b2c7d66a08a1}{truncate}(blue\_limit,
+    red\_limit, relative\_throughput, \dots)}
     \newline
-    Return a new bandpass truncated to only include wavelengths between \texttt{blue\_limit} and \
-    texttt{red\_limit}.
+    Return a new bandpass truncated to only include wavelengths between \texttt{blue\_limit} and 
+    \texttt{red\_limit}, or truncated based on the supplied \texttt{relative\_throughput} level.
   \item[$\circ$]
   \texttt{bandpass.\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1bandpass_1_1_bandpass.html\#a20a7b1813506e7441e03ef097f0d5bf1}{thin}(rel\_err,\dots)}
     \newline
    Return a thinner version of the bandpass by removing sample values (locations where
    $F(\lambda)$ is defined) while retaining the
-   accuracy of the integral over the bandpass to the stated relative error \texttt{rel\_err}.
+   accuracy of the integral over the bandpass to the stated relative error \texttt{rel\_err}.  Other
+   aspects of the behavior of this routine are set via additional keyword arguments.
 \end{itemize}
 
 Finally, note that \texttt{Bandpass} instances may be multiplied

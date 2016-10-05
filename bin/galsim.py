@@ -25,7 +25,6 @@ from __future__ import print_function
 import sys
 import os
 import logging
-import copy
 import pprint
 
 # The only wrinkle about letting this executable be called galsim is that we want to
@@ -37,29 +36,6 @@ sys.path = sys.path[1:]
 import galsim
 # Now put it back in case anyone else relies on this feature.
 sys.path = [temp] + sys.path
-
-def MergeConfig(config1, config2, logger=None):
-    """
-    Merge config2 into config1 such that it has all the information from either config1 or 
-    config2 including places where both input dicts have some of a field defined.
-    e.g. config1 has image.pixel_scale, and config2 has image.noise.
-            Then the returned dict will have both.
-    For real conflicts (the same value in both cases), config1's value takes precedence
-    """
-    for (key, value) in config2.items():
-        if not key in config1:
-            # If this key isn't in config1 yet, just add it
-            config1[key] = copy.deepcopy(value)
-        elif isinstance(value,dict) and isinstance(config1[key],dict):
-            # If they both have a key, first check if the values are dicts
-            # If they are, just recurse this process and merge those dicts.
-            MergeConfig(config1[key],value)
-        else:
-            # Otherwise config1 takes precedence
-            if logger:
-                logger.info("Not merging key %s from the base config, since the later "
-                            "one takes precedence",key)
-            pass
 
 def parse_args():
     """Handle the command line arguments using either argparse (if available) or optparse.
@@ -243,18 +219,14 @@ def main():
     logger = logging.getLogger('galsim')
 
     logger.warn('Using config file %s', args.config_file)
-    base_config, all_config = galsim.config.ReadConfig(args.config_file, args.file_type, logger)
+    all_config = galsim.config.ReadConfig(args.config_file, args.file_type, logger)
     logger.debug('Successfully read in config file.')
-
-    # Set the root value in base_config
-    if 'root' not in base_config:
-        base_config['root'] = os.path.splitext(args.config_file)[0]
 
     # Process each config document
     for config in all_config:
 
-        # Merge the base_config information into this config file.
-        MergeConfig(config,base_config)
+        if 'root' not in config:
+            config['root'] = os.path.splitext(args.config_file)[0]
 
         # Parse the command-line variables:
         new_params = ParseVariables(args.variables, logger)

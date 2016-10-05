@@ -16,7 +16,6 @@
 #    and/or other materials provided with the distribution.
 #
 
-import numpy
 import galsim
 
 # The badpix extra output type is currently just a placeholder for when we eventually add

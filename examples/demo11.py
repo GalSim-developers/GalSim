@@ -24,7 +24,7 @@ The eleventh script in our tutorial about using GalSim in python scripts: exampl
 This script uses a constant PSF from real data (an image read in from a bzipped FITS file, not a
 parametric model) and variable shear and magnification according to some cosmological model for
 which we have a tabulated shear power spectrum at specific k values only.  The 288 galaxies in the
-0.1 x 0.1 degree field (representing a number density of 8/arcmin^2) are randomly located and
+0.11 x 0.11 degree field (representing a number density of 6/arcmin^2) are randomly located and
 permitted to overlap.  For the galaxies, we use a mix of real and parametric galaxies modeled off
 the COSMOS observations with the Hubble Space Telescope.  The real galaxies are similar to those
 used in demo10.  The parametric galaxies are based on parametric fits to the same observed galaxies.
@@ -65,8 +65,8 @@ import galsim
 def main(argv):
     """
     Make images using constant PSF and variable shear:
-      - The main image is 6 x 6 arcmin
-      - Pixel scale is 0.2 arcsec, hence the image is 1800 x 1800 pixels.
+      - The main image is 2048 x 2048 pixels.
+      - Pixel scale is 0.2 arcsec/pixel, hence the image is about 0.11 degrees on a side.
       - Applied shear is from a cosmological power spectrum read in from file.
       - The PSF is a real one from SDSS, and corresponds to a convolution of atmospheric PSF,
         optical PSF, and pixel response, which has been sampled at pixel centers.  We used a PSF
@@ -88,8 +88,7 @@ def main(argv):
     # Normally these would be read in from some parameter file.
 
     pixel_scale = 0.2                 # arcsec/pixel
-    image_size = 0.1 * galsim.degrees # size of full image in each dimension
-    image_size = int((image_size / galsim.arcsec) / pixel_scale) # convert to pixels
+    image_size = 2048                 # size of image in pixels
     image_size_arcsec = image_size*pixel_scale # size of big image in each dimension (arcsec)
     noise_variance = 5.e4             # ADU^2  (Just use simple Gaussian noise here.)
     nobj = 288                        # number of galaxies in entire field
@@ -400,7 +399,7 @@ def main(argv):
         dec_str = world_pos.dec.dms()
         logger.info('Pixel (%4d, %4d) is at RA %sh %sm %ss, DEC %sd %sm %ss',x,y,
                     ra_str[0:3], ra_str[3:5], ra_str[5:], dec_str[0:3], dec_str[3:5], dec_str[5:])
-    logger.info('ds9 reports these pixels as (1,1), (1,3600), etc. with the same RA, Dec.')
+    logger.info('ds9 reports these pixels as (1,1), (1,2048), etc. with the same RA, Dec.')
 
 
 if __name__ == "__main__":

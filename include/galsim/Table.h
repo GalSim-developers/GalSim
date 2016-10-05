@@ -93,7 +93,7 @@ namespace galsim {
         const A& back() const {return vec.back();}
         const A& operator[](int i) const {return vec[i];}
         typename std::vector<A>::iterator insert(typename std::vector<A>::iterator it, const A a);
-        int size() const {return vec.size();}
+        size_t size() const {return vec.size();}
 
         const std::vector<A>& getArgs() const { return vec; }
 

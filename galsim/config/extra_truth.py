@@ -40,7 +40,7 @@ class TruthBuilder(ExtraOutputBuilder):
         super(self.__class__,self).initialize(data,scratch,config,base,logger)
 
         # Warn if the config dict isn't an OrderedDict.
-        if logger and not hasattr(config, '__reversed__'):
+        if logger and not hasattr(config, '__reversed__') and not hasattr(self,'warned'): # pragma: no cover
             # If config doesn't have a __reversed__ attribute, then it's not an OrderedDict.
             # Probably it's just a regular dict.  So warn the user that the columns are in
             # arbitrary order.
@@ -48,6 +48,7 @@ class TruthBuilder(ExtraOutputBuilder):
             #  seemed relevant.)
             logger.warning('The config dict is not an OrderedDict.  The columns in the output '
                            'truth catalog will be in arbitrary order.')
+            self.warned = True
 
     # The function to call at the end of building each stamp
     def processStamp(self, obj_num, config, base, logger):
@@ -56,6 +57,8 @@ class TruthBuilder(ExtraOutputBuilder):
         types = []
         for name in cols:
             key = cols[name]
+            # Handle the possibility of unicode.  In particular, this happens with JSON files.
+            if str(key) == key: key = str(key)
             if isinstance(key, dict):
                 # Then the "key" is actually something to be parsed in the normal way.
                 # Caveat: We don't know the value_type here, so we give None.  This allows
@@ -77,7 +80,7 @@ class TruthBuilder(ExtraOutputBuilder):
             types.append(type(value))
         if 'types' not in self.scratch:
             self.scratch['types'] = types
-        elif self.scratch['types'] != types:
+        elif self.scratch['types'] != types: # pragma: no cover
             if logger:
                 logger.error("Type mismatch found when building truth catalog at object %d",
                     base['obj_num'])

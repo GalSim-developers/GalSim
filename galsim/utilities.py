@@ -144,8 +144,11 @@ def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
         for arg in args[1:]:
             other_vals.append(arg)
             others.pop(0)
-    elif len(args) == 1:
-        raise TypeError("Cannot parse argument "+str(args[0])+" as a position")
+    elif len(args) == 1:  # pragma: no cover
+        if integer:
+            raise TypeError("Cannot parse argument "+str(args[0])+" as a PositionI")
+        else:
+            raise TypeError("Cannot parse argument "+str(args[0])+" as a PositionD")
     elif len(args) <= 2 + len(others):
         x = args[0]
         y = args[1]
@@ -179,7 +182,7 @@ class SimpleGenerator:
     def __init__(self, obj): self._obj = obj
     def __call__(self): return self._obj
 
-class AttributeDict(object):
+class AttributeDict(object): # pragma: no cover
     """Dictionary class that allows for easy initialization and refs to key values via attributes.
 
     NOTE: Modified a little from Jim's bot.git AttributeDict class so that tab completion now works
@@ -460,7 +463,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=T
 # algorithm, since it keeps fewer sample locations for a given rel_err than the old algorithm.
 # On the other hand, the old algorithm can be quite a bit faster, being O(N), not O(N^2), so
 # we retain the old algorithm here in case we want to re-enable it for certain applications.
-def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
+def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False): # pragma: no cover
     """
     Remove items from a set of tabulated f(x) values so that the error in the integral is still
     accurate to a given relative accuracy.
@@ -565,7 +568,7 @@ def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
     return newx, newf
 
 
-def _gammafn(x):
+def _gammafn(x):  # pragma: no cover
     """
     This code is not currently used, but in case we need a gamma function at some point, it will be
     here in the utilities module.
@@ -872,7 +875,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     orig = im_list[0].origin()
     img.setOrigin(orig)
     for im in im_list[1:]:
-        if not im.origin()==orig:
+        if not im.origin()==orig:  # pragma: no cover
             import warnings
             warnings.warn("Images in `im_list' have multiple values for origin. Assigning the \
             origin of the first Image instance in 'im_list' to the interleaved image.")
@@ -1015,7 +1018,7 @@ def lod_to_dol(lod, N=None):
                 out[k] = v[0]
             except TypeError:  # Value is not list-like, so broadcast it in its entirety.
                 out[k] = v
-            except:
+            except Exception:
                 raise "Cannot broadcast kwarg {0}={1}".format(k, v)
         yield out
 
@@ -1070,3 +1073,24 @@ def structure_function(image):
     thetas = np.arange(0., 2*np.pi, 100)  # Average over these angles.
 
     return lambda r: 2*(tab(0.0, 0.0) - np.mean(tab(r*np.cos(thetas), r*np.sin(thetas))))
+
+def math_eval(str, other_modules=()):
+    """Evaluate a string that may include numpy, np, or math commands.
+
+    @param str              The string to evaluate
+    @param other_modules    Other modules in addition to numpy, np, math to import as well.
+                            Should be given as a list of strings.  [default: None]
+
+    @returns Whatever the string evaluates to.
+    """
+    # Python 2 and 3 have a different syntax for exec with globals() dict.
+    # The exec_ function lets us use the Python 3 syntax even in Python 2.
+    from future.utils import exec_
+    gdict = globals().copy()
+    exec_('import numpy', gdict)
+    exec_('import numpy as np', gdict)
+    exec_('import math', gdict)
+    for m in other_modules:
+        exec_('import ' + m, gdict)
+    return eval(str, gdict)
+

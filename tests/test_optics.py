@@ -407,8 +407,17 @@ def test_OpticalPSF_pupil_plane():
                       .format(pp_file))
         im = galsim.Image(ref_psf._psf.aper.illuminated.astype(float))
         im.scale = ref_psf._psf.aper.pupil_plane_scale
+        print('pupil_plane image has scale = ',pp_scale)
         im.write(os.path.join(imgdir, pp_file))
+    pp_scale = im.scale
+    print('pupil_plane image has scale = ',pp_scale)
 
+    # For most of the tests, we remove this scale, since for achromatic tests, you don't really
+    # need it, and it is invalid to give lam_over_diam (rather than lam, diam separately) when
+    # there is a specific scale for the pupil plane image.  But see the last test below where
+    # we do use lam, diam separately with the input image.
+    im.scale = None
+    # This implies that the lam_over_diam value
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
                                  oversampling=pp_oversampling, pupil_plane_im=im,
                                  pad_factor=pp_pad_factor)
@@ -560,10 +569,11 @@ def test_OpticalPSF_pupil_plane():
                                 pad_factor=pp_pad_factor/rescale_fac,
                                 gsparams=gsp)
     # Make higher resolution pupil plane image via interpolation
-    int_im = galsim.InterpolatedImage(galsim.Image(im, scale=im.scale, dtype=np.float32),
+    int_im = galsim.InterpolatedImage(galsim.Image(im, scale=1.0, dtype=np.float32),
                                       calculate_maxk=False, calculate_stepk=False,
                                       x_interpolant='linear')
-    new_im = int_im.drawImage(scale=rescale_fac*im.scale, method='no_pixel')
+    new_im = int_im.drawImage(scale=rescale_fac, method='no_pixel')
+    new_im.scale = None  # Let OpticalPSF figure out the scale automatically.
     test_psf = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration,
                                  pupil_plane_im=new_im, oversampling=pp_oversampling,
                                  gsparams=gsp)
@@ -619,14 +629,19 @@ def test_OpticalPSF_pupil_plane():
     test_psf_2 = galsim.OpticalPSF(lam_over_diam, obscuration=obscuration, pupil_plane_im=im.array,
                                    oversampling=pp_oversampling, pad_factor=pp_pad_factor)
     im_test_psf_2 = test_psf_2.drawImage(scale=scale)
-    test_psf_3 = galsim.OpticalPSF(
-        lam_over_diam, obscuration=obscuration, oversampling=pp_oversampling,
-        pupil_plane_im=os.path.join(imgdir, pp_file),
-        pad_factor=pp_pad_factor)
-    im_test_psf_3 = test_psf_3.drawImage(scale=scale)
     np.testing.assert_almost_equal(
         im_test_psf.array, im_test_psf_2.array, decimal=pp_decimal,
         err_msg="Inconsistent OpticalPSF image from Image vs. array.")
+
+    # The following had used lam_over_diam, but that is now invalid because the fits file
+    # has a specific pixel scale.  So we need to provide lam and diam separately so that the
+    # units are consistent.
+    diam = 500.e-9 / lam_over_diam * galsim.radians / galsim.arcsec
+    test_psf_3 = galsim.OpticalPSF(
+        lam=500, diam=diam, obscuration=obscuration, oversampling=pp_oversampling,
+        pupil_plane_im=os.path.join(imgdir, pp_file),
+        pad_factor=pp_pad_factor)
+    im_test_psf_3 = test_psf_3.drawImage(scale=scale)
     np.testing.assert_almost_equal(
         im_test_psf.array, im_test_psf_3.array, decimal=pp_decimal,
         err_msg="Inconsistent OpticalPSF image from Image vs. file read-in.")

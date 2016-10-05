@@ -94,7 +94,9 @@ class _ReadFile:
         # done with hdu_list.
         return hdu_list, fin
 
-    def pyfits_open(self, file):
+    # Note: the above gzip_in_mem function succeeds on travis, so the rest don't get run.
+    # Omit them from the coverage test.
+    def pyfits_open(self, file):  # pragma: no cover
         from galsim._pyfits import pyfits
         # This usually works, although pyfits internally may (depending on the version)
         # use a temporary file, which is why we prefer the above in-memory code if it works.
@@ -102,7 +104,7 @@ class _ReadFile:
         hdu_list = pyfits.open(file, 'readonly')
         return hdu_list, None
 
-    def gzip_tmp(self, file):
+    def gzip_tmp(self, file):  # pragma: no cover
         import gzip
         from galsim._pyfits import pyfits
         # Finally, just in case, if everything else failed, here is an implementation that 
@@ -140,7 +142,7 @@ class _ReadFile:
         hdu = hdu_list[0]
         return hdu_list, fin
 
-    def bz2_tmp(self, file):
+    def bz2_tmp(self, file):  # pragma: no cover
         import bz2
         from galsim._pyfits import pyfits
         fin = bz2.BZ2File(file, 'rb')
@@ -194,6 +196,10 @@ class _ReadFile:
                 hdu_list = pyfits.open(file, 'readonly')
             return hdu_list, None
         elif file_compress == 'gzip':
+            # Before trying all the gzip options, first make sure the file exists and is readable.
+            # The easiest way to do this is to try to open it.  Just let the open command return
+            # its normal error message if the file doesn't exist or cannot be opened.
+            with open(file) as fid: pass
             while self.gz_index < len(self.gz_methods):
                 try:
                     return self.gz(file)
@@ -202,6 +208,7 @@ class _ReadFile:
                     self.gz = self.gz_methods[self.gz_index]
             raise RuntimeError("None of the options for gunzipping were successful.")
         elif file_compress == 'bzip2':
+            with open(file) as fid: pass
             while self.bz2_index < len(self.bz2_methods):
                 try:
                     return self.bz2(file)
@@ -217,7 +224,7 @@ _read_file = _ReadFile()
 class _WriteFile:
 
     # There are several methods available for each of gzip and bzip2.  Each is its own function.
-    def gzip_call2(self, hdu_list, file):
+    def gzip_call2(self, hdu_list, file):  # pragma: no cover
         root, ext = os.path.splitext(file)
         import subprocess
         if os.path.isfile(root):
@@ -243,7 +250,7 @@ class _WriteFile:
             p.communicate()
             assert p.returncode == 0
  
-    def gzip_in_mem(self, hdu_list, file):
+    def gzip_in_mem(self, hdu_list, file):  # pragma: no cover
         import gzip
         import io
         # The compression routines work better if we first write to an internal buffer
@@ -256,7 +263,7 @@ class _WriteFile:
         with gzip.open(file, 'wb') as fout:
             fout.write(data)
 
-    def gzip_tmp(self, hdu_list, file):
+    def gzip_tmp(self, hdu_list, file):  # pragma: no cover
         import gzip
         # However, pyfits versions before 2.3 do not support writing to a buffer, so the
         # above code will fail.  We need to use a temporary in that case.
@@ -271,7 +278,7 @@ class _WriteFile:
         with gzip.open(file, 'wb') as fout:
             fout.write(data)
 
-    def bzip2_call2(self, hdu_list, file):
+    def bzip2_call2(self, hdu_list, file):  # pragma: no cover
         root, ext = os.path.splitext(file)
         import subprocess
         if os.path.isfile(root) or ext != '.bz2':
@@ -297,7 +304,7 @@ class _WriteFile:
             p.communicate()
             assert p.returncode == 0
  
-    def bz2_in_mem(self, hdu_list, file):
+    def bz2_in_mem(self, hdu_list, file):  # pragma: no cover
         import bz2
         import io
         buf = io.BytesIO()
@@ -306,7 +313,7 @@ class _WriteFile:
         with bz2.BZ2File(file, 'wb') as fout:
             fout.write(data)
 
-    def bz2_tmp(self, hdu_list, file):
+    def bz2_tmp(self, hdu_list, file):  # pragma: no cover
         import bz2
         tmp = file + '.tmp'
         while os.path.isfile(tmp):
@@ -355,7 +362,7 @@ class _WriteFile:
             while self.gz_index < len(self.gz_methods):
                 try:
                     return self.gz(hdu_list, file)
-                except:
+                except Exception:
                     self.gz_index += 1
                     self.gz = self.gz_methods[self.gz_index]
             raise RuntimeError("None of the options for gunzipping were successful.")
@@ -363,7 +370,7 @@ class _WriteFile:
             while self.bz2_index < len(self.bz2_methods):
                 try:
                     return self.bz2(hdu_list, file)
-                except:
+                except Exception:
                     self.bz2_index += 1
                     self.bz2 = self.bz2_methods[self.bz2_index]
             raise RuntimeError("None of the options for bunzipping were successful.")
@@ -428,7 +435,7 @@ def _check_hdu(hdu, pyfits_compress):
 
     # Check that the specified compression is right for the given hdu type.
     if pyfits_compress:
-        if not isinstance(hdu, pyfits.CompImageHDU):
+        if not isinstance(hdu, pyfits.CompImageHDU):  # pragma: no cover
             if isinstance(hdu, pyfits.BinTableHDU):
                 raise IOError('Expecting a CompImageHDU, but got a BinTableHDU\n' +
                     'Probably your pyfits installation does not have the pyfitsComp module '+

@@ -176,9 +176,10 @@ class Bandpass(object):
         for test_wave in test_waves:
             try:
                 self._tp(test_wave)
-            except:
+            except Exception as e:
                 raise ValueError(
-                    "Throughput function was unable to evaluate at wave = {0}.".format(test_wave))
+                    "Throughput function was unable to evaluate at wave = {0}.".format(test_wave) +
+                    "Caught error: {0}".format(e))
 
 
     def _initialize_tp(self):
@@ -202,12 +203,14 @@ class Bandpass(object):
                     # be able to be evaluated at any wavelength, so check.
                     test_wave = 700
                 try:
-                    self._tp = eval('lambda wave : ' + self._orig_tp)
+                    self._tp = galsim.utilities.math_eval('lambda wave : ' + self._orig_tp)
                     self._tp(test_wave)
-                except:
+                except Exception as e:
                     raise ValueError(
                         "String throughput must either be a valid filename or something that "+
-                        "can eval to a function of wave. Input provided: {0}".format(self._orig_tp))
+                        "can eval to a function of wave.\n" +
+                        "Input provided: {0}\n".format(self._orig_tp) +
+                        "Caught error: {0}".format(e))
         else:
             self._tp = self._orig_tp
 

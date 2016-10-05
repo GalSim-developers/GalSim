@@ -95,6 +95,10 @@ def ParseValue(config, key, base, value_type):
         elif value_type is galsim.PositionD:
             # For PositionD, we allow a string of x,y
             val = _GetPositionValue(param)
+        elif value_type is list:
+            if not isinstance(param,list):
+                raise AttributeError("parameter %s in config is not a list."%key)
+            val = param
         elif value_type is None:
             # If no value_type is given, just return whatever we have in the dict and hope
             # for the best.
@@ -145,7 +149,7 @@ def ParseValue(config, key, base, value_type):
         #print('returned val, safe = ',val_safe)
         if isinstance(val_safe, tuple):
             val, safe = val_safe
-        else:
+        else:  # pragma: no cover
             # If a user-defined type forgot to return safe, just assume safe = False
             # It's an easy mistake to make and the TypeError that gets emitted isn't
             # terribly informative about what the error is.
@@ -224,7 +228,7 @@ def GetCurrentValue(key, config, value_type=None, base=None, return_safe=False):
             # If there are more keys, just set d to the next in the chain.
             try:
                 d = d[k]
-            except (TypeError, KeyError):
+            except (TypeError, KeyError):  # pragma: no cover
                 # TypeError for the case where d is a float or Position2D, so d[k] is invalid.
                 # KeyError for the case where d is a dict, but k is not a valid key.
                 raise ValueError("Invalid key in GetCurrentValue = %s"%key)
@@ -240,7 +244,7 @@ def GetCurrentValue(key, config, value_type=None, base=None, return_safe=False):
         else:
             try:
                 dk = d[k]
-            except (TypeError, KeyError):
+            except (TypeError, KeyError):  # pragma: no cover
                 raise ValueError("Invalid key in GetCurrentValue = %s"%key)
 
             if not isinstance(d[k], dict):
@@ -350,7 +354,7 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
     for (key, value_type) in req.items():
         if key in config:
             get[key] = value_type
-        else:
+        else:  # pragma: no cover
             if 'type' in config:
                 raise AttributeError("Attribute %s is required for type = %s"%(key,config['type']))
             else:
@@ -370,7 +374,7 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
         for (key, value_type) in s.items():
             if key in config:
                 count += 1
-                if count > 1:
+                if count > 1:  # pragma: no cover
                     if 'type' in config:
                         raise AttributeError(
                             "Only one of the attributes %s is allowed for type = %s"%(
@@ -378,7 +382,7 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
                     else:
                         raise AttributeError("Only one of the attributes %s is allowed"%s.keys())
                 get[key] = value_type
-        if count == 0:
+        if count == 0:  # pragma: no cover
             if 'type' in config:
                 raise AttributeError(
                     "One of the attributes %s is required for type = %s"%(s.keys(),config['type']))
@@ -467,7 +471,7 @@ def _GetAngleValue(param):
     except KeyboardInterrupt:
         raise
     except Exception as e:
-        raise AttributeError("Unable to parse %s as an Angle."%param)
+        raise AttributeError("Unable to parse %s as an Angle.  Caught %s"%(param,e))
 
 
 def _GetPositionValue(param):
@@ -485,8 +489,8 @@ def _GetPositionValue(param):
             y = float(y.strip())
         except KeyboardInterrupt:
             raise
-        except:
-            raise AttributeError("Unable to parse %s as a PositionD."%param)
+        except Exception as e:
+            raise AttributeError("Unable to parse %s as a PositionD.  Caught %s"%(param,e))
     return galsim.PositionD(x,y)
 
 
@@ -504,16 +508,16 @@ def _GetBoolValue(param):
                 return val
             except KeyboardInterrupt:
                 raise
-            except:
-                raise AttributeError("Unable to parse %s as a bool."%param)
+            except Exception as e:
+                raise AttributeError("Unable to parse %s as a bool.  Caught %s"%(param,e))
     else:
         try:
             val = bool(param)
             return val
         except KeyboardInterrupt:
             raise
-        except:
-            raise AttributeError("Unable to parse %s as a bool."%param)
+        except Exception as e:
+            raise AttributeError("Unable to parse %s as a bool.  Caught %s"%(param,e))
 
 
 
@@ -689,18 +693,11 @@ def _GenerateFromNumberedFile(config, base, value_type):
 def _GenerateFromFormattedStr(config, base, value_type):
     """@brief Create a string from a format string
     """
-    req = { 'format' : str }
+    req = { 'format' : str, 'items' : list }
     # Ignore items for now, we'll deal with it differently.
-    ignore = [ 'items' ]
-    params, safe = GetAllParams(config, base, req=req, ignore=ignore)
+    params, safe = GetAllParams(config, base, req=req)
     format = params['format']
-
-    # Check that items is present and is a list.
-    if 'items' not in config:
-        raise AttributeError("Attribute items is required for type = FormattedStr")
-    items = config['items']
-    if not isinstance(items,list):
-        raise AttributeError("items for type=NumberedFile is not a list.")
+    items = params['items']
 
     # Figure out what types we are expecting for the list elements:
     tokens = format.split('%')
