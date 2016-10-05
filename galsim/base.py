@@ -43,6 +43,8 @@ Image is acceptable.
 import numpy as np
 
 import galsim
+from . import _galsim
+from .gsobject import GSObject
 
 class Gaussian(GSObject):
     """A class describing a 2D Gaussian surface brightness profile.
