@@ -177,7 +177,7 @@ class GSObject(object):
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
           File "galsim/base.py", line 1236, in drawImage
-            image.added_flux = prof.SBProfile.draw(imview.image, gain, wmult)
+            image.added_flux = prof.SBProfile.draw(imview.image, wmult)
         RuntimeError: SB Error: fourierDraw() requires an FFT that is too large, 6144
         If you can handle the large FFT, you may update gsparams.maximum_fft_size.
         >>> big_fft_params = galsim.GSParams(maximum_fft_size=10240)
@@ -386,7 +386,7 @@ class GSObject(object):
         # Draw the image.  Note: need a method that integrates over pixels to get flux right.
         # The offset is to make all the rsq values different to help the precision a bit.
         offset = galsim.PositionD(0.2, 0.33)
-        im = self.drawImage(nx=size, ny=size, scale=scale, offset=offset)
+        im = self.drawImage(nx=size, ny=size, scale=scale, offset=offset, dtype=float)
 
         center = im.trueCenter() + offset + centroid/scale
         return im.calculateHLR(center=center, flux=self.flux, flux_frac=flux_frac)
@@ -459,7 +459,7 @@ class GSObject(object):
             centroid = self.centroid()
 
         # Draw the image.  Note: need a method that integrates over pixels to get flux right.
-        im = self.drawImage(nx=size, ny=size, scale=scale)
+        im = self.drawImage(nx=size, ny=size, scale=scale, dtype=float)
 
         center = im.trueCenter() + centroid/scale
         return im.calculateMomentRadius(center=center, flux=self.flux, rtype=rtype)
@@ -501,7 +501,7 @@ class GSObject(object):
         # The offset is to make all the rsq values different to help the precision a bit.
         offset = galsim.PositionD(0.2, 0.33)
 
-        im = self.drawImage(nx=size, ny=size, scale=scale, offset=offset, method='sb')
+        im = self.drawImage(nx=size, ny=size, scale=scale, offset=offset, method='sb', dtype=float)
 
         # Get the maximum value, assuming the maximum is at the centroid.
         if self.isAnalyticX():
@@ -1365,12 +1365,12 @@ class GSObject(object):
             image.added_flux = 0.
             return image
 
-        # For surface brightness normalization, scale gain by the pixel area.
+        # Account for gain, area and exptime.
+        flux_scale = area * exptime / gain
+        # For surface brightness normalization, also scale by the pixel area.
         if method == 'sb':
-            gain *= local_wcs.pixelArea()
-
-        # Account for area and exptime.
-        prof *= area * exptime
+            flux_scale /= local_wcs.pixelArea()
+        prof *= flux_scale
 
         # Making a view of the image lets us change the center without messing up the original.
         imview = image.view()
@@ -1379,9 +1379,8 @@ class GSObject(object):
         if method == 'phot':
             try:
                 added_photons = prof.SBProfile.drawShoot(
-                    imview.image, n_photons, uniform_deviate, gain, max_extra_noise,
+                    imview.image, n_photons, uniform_deviate, max_extra_noise,
                     poisson_flux, add_to_image)
-                image.added_flux = added_photons / area / exptime
             except RuntimeError:  # pragma: no cover
                 # Give some extra explanation as a warning, then raise the original exception
                 # so the traceback shows as much detail as possible.
@@ -1391,8 +1390,9 @@ class GSObject(object):
                     "Deconvolve or is a compound including one or more Deconvolve objects.")
                 raise
         else:
-            added_photons = prof.SBProfile.draw(imview.image, gain, wmult)
-            image.added_flux = added_photons / area / exptime
+            added_photons = prof.SBProfile.draw(imview.image, wmult)
+
+        image.added_flux = added_photons / flux_scale
 
         return image
 
@@ -1519,7 +1519,11 @@ class GSObject(object):
         imview = im.view()
         imview.setCenter(0,0)
 
-        prof.SBProfile.drawK(review.image, imview.image, gain, wmult)
+        prof.SBProfile.drawK(review.image, imview.image, wmult)
+
+        if gain != 1.:
+            re /= gain
+            im /= gain
 
         return re,im
 

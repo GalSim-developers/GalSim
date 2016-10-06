@@ -101,10 +101,10 @@ namespace galsim {
             wrapper
                 .def("drawShoot",
                      (double (SBProfile::*)(ImageView<U>, double, UniformDeviate,
-                                            double, double, bool, bool)
+                                            double, bool, bool)
                       const)&SBProfile::drawShoot,
                      (bp::arg("image"), bp::arg("N")=0., bp::arg("ud"),
-                      bp::arg("gain")=1., bp::arg("max_extra_noise")=0.,
+                      bp::arg("max_extra_noise")=0.,
                       bp::arg("poisson_flux")=true, bp::arg("add_to_image")=false),
                      "Draw object into existing image using photon shooting.\n"
                      "\n"
@@ -113,13 +113,13 @@ namespace galsim {
                      "\n"
                      "Returns total flux of photons that landed inside image bounds.")
                 .def("draw",
-                     (double (SBProfile::*)(ImageView<U>, double, double) const)&SBProfile::draw,
-                     (bp::arg("image"), bp::arg("gain")=1., bp::arg("wmult")=1.),
+                     (double (SBProfile::*)(ImageView<U>, double) const)&SBProfile::draw,
+                     (bp::arg("image"), bp::arg("wmult")=1.),
                      "Draw in-place and return the summed flux.")
                 .def("drawK",
                      (void (SBProfile::*)(ImageView<U>, ImageView<U>,
-                                          double, double) const)&SBProfile::drawK,
-                     (bp::arg("re"), bp::arg("im"), bp::arg("gain")=1., bp::arg("wmult")=1.),
+                                          double) const)&SBProfile::drawK,
+                     (bp::arg("re"), bp::arg("im"), bp::arg("wmult")=1.),
                      "Draw k-space image (real and imaginary components).")
                 ;
         }

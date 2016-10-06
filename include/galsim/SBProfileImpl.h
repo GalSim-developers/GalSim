@@ -100,7 +100,7 @@ namespace galsim {
         // Utility for drawing into Image data structures.
         // returns flux integral
         template <typename T>
-        double fillXImage(ImageView<T>& image, double gain) const;
+        double fillXImage(ImageView<T>& image) const;
 
         // Utility for drawing a k grid into FFT data structures
         void fillKGrid(KTable& kt) const;
