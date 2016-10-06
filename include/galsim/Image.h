@@ -575,8 +575,8 @@ namespace galsim {
      *  pixel values or the ancillary information (like bounds) for a const ImageAlloc,
      *  while you can change things about a non-const ImageAlloc.
      *
-     *  ImageAlloc templates for int16_t, int32_t, float, and double are explicitly instantiated 
-     *  in Image.cpp.
+     *  ImageAlloc templates for uint16_t, uint32_t, int16_t, int32_t, float, and double are 
+     *  explicitly instantiated in Image.cpp.
      */
     template <typename T>
     class ImageAlloc : public BaseImage<T> 
