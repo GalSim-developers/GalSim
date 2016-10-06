@@ -1770,7 +1770,7 @@ class ChromaticConvolution(ChromaticObject):
         for obj in self.objlist:
             if not obj.separable and not isinstance(obj, galsim.ChromaticSum): n_nonsep += 1
             if isinstance(obj, InterpolatedChromaticObject): n_interp += 1
-        if n_nonsep>1 and n_interp>0:
+        if n_nonsep>1 and n_interp>0: # pragma: no cover
             import warnings
             warnings.warn(
                 "Image rendering for this convolution cannot take advantage of " +
@@ -2260,8 +2260,10 @@ class ChromaticOpticalPSF(ChromaticObject):
             raise TypeError("Need to specify telescope diameter OR wavelength/diam ratio")
         if diam is not None:
             self.lam_over_diam = (1.e-9*lam/diam)*galsim.radians/self.scale_unit
+            self.diam = diam
         else:
             self.lam_over_diam = lam_over_diam
+            self.diam = (lam*1e-9/lam_over_diam)*galsim.radians/self.scale_unit
         self.lam = lam
 
         if aberrations is not None:
@@ -2318,9 +2320,9 @@ class ChromaticOpticalPSF(ChromaticObject):
         # wavelength.  Likewise, the aberrations were in units of wavelength for the fiducial
         # wavelength, so we have to convert to units of waves for *this* wavelength.
         ret = galsim.OpticalPSF(
-            lam_over_diam=self.lam_over_diam*(wave/self.lam),
-            aberrations=self.aberrations*(self.lam/wave), scale_unit=self.scale_unit,
-            **self.kwargs)
+                lam=wave, diam=self.diam,
+                aberrations=self.aberrations*(self.lam/wave), scale_unit=self.scale_unit,
+                **self.kwargs)
         return ret
 
 class ChromaticAiry(ChromaticObject):

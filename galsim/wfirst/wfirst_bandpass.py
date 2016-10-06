@@ -73,7 +73,7 @@ def getBandpasses(AB_zeropoint=True, exptime=None, default_thin_trunc=True, **kw
                               use no thinning and truncation of bandpasses, or who want control over
                               the level of thinning and truncation, should have this be False.
                               [default: True]
-    @params **kwargs          Other kwargs are passed to either `bandpass.thin()` or 
+    @param **kwargs          Other kwargs are passed to either `bandpass.thin()` or 
                               `bandpass.truncate()` as appropriate.
 
     @returns A dictionary containing bandpasses for all WFIRST imaging filters.

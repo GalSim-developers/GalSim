@@ -24,14 +24,14 @@ Table of Contents:
 Please note: Mac users who want to use fink can skip down to Section 5.ii and
 use that to satisfy all dependencies before installing.
 
-i) Python (2.6, 2.7, or 3.4 series), with some additional modules installed
----------------------------------------------------------------------------
+i) Python (2.6, 2.7, 3.4, or 3.5 series), with some additional modules installed
+--------------------------------------------------------------------------------
 
 The interface to the GalSim code is via the Python package `galsim`, and its
 associated modules. Therefore you must have Python installed on your system.
 Python is free, and available from a number of sources online (see below).
-Currently GalSim supports Python versions 2.6, 2.7, and 3.4.  It is likely
-that other Python 3.x versions are compatible, but 3.4 is the only one
+Currently GalSim supports Python versions 2.6, 2.7, 3.4, and 3.5.  It is likely
+that other Python 3.x versions are compatible, but these two are the only ones
 actively tested.
 
 Many systems have a version of Python pre-installed. To check whether you

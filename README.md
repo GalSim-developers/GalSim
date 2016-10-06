@@ -1,4 +1,8 @@
-@mainpage
+[//]: # ( @mainpage )
+[![Build Status](https://travis-ci.org/GalSim-developers/GalSim.svg?branch=master)](https://travis-ci.org/GalSim-developers/GalSim)
+[![Coverage Status](https://coveralls.io/repos/github/GalSim-developers/GalSim/badge.svg?branch=master)](https://coveralls.io/github/GalSim-developers/GalSim?branch=master)
+[![Paper](https://img.shields.io/badge/astro--ph.IM-1407.7676-B31B1B.svg)](https://arxiv.org/abs/1407.7676)
+[![Paper](https://img.shields.io/badge/ADS-Rowe%20et%20al%2C%202015-blue.svg)](http://adsabs.harvard.edu/abs/2015A%26C....10..121R)
 
 GalSim: The modular galaxy image simulation toolkit
 ===================================================
@@ -24,10 +28,10 @@ development.  For details of algorithms and code validation, please see
 Distribution
 ------------
 
-The current released version of GalSim is version 1.3.  To get the code, you
+The current released version of GalSim is version 1.4.  To get the code, you
 can grab the tarball (or zip file) from
 
-    https://github.com/GalSim-developers/GalSim/releases/tag/v1.3.0
+    https://github.com/GalSim-developers/GalSim/releases/tag/v1.4.0
 
 Also, feel free to fork the repository:
 
@@ -41,7 +45,7 @@ Or clone the repository with either of the following:
 although after doing so, if you are not a developer, you should probably
 checkout the latest release tag, rather than use the master branch:
 
-    git checkout v1.3.0
+    git checkout v1.4.0
 
 The code is also distributed via Fink, Macports, and Homebrew for Mac users.
 See INSTALL.md for more information.
@@ -198,7 +202,7 @@ at one time or another.
 The version of the code at any given snapshot can be downloaded from our
 GitHub webpage, or checked out from the repository using the tag name, e.g.:
 
-    git checkout v1.3.0
+    git checkout v1.4.0
 
 This will then update your directory tree to the snapshot of the code at the
 milestone requested.  (You will also get a message about being in a "detached"

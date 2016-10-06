@@ -63,7 +63,7 @@ namespace galsim {
 
         if (equalSpaced) {
             int i = int( std::ceil( (a-vec.front()) / da) );
-            if (i >= vec.size()) --i; // in case of rounding error
+            if (i >= int(vec.size())) --i; // in case of rounding error
             if (i == 0) ++i;
             // check if we need to move ahead or back one step due to rounding errors
             while (a > vec[i]) ++i;

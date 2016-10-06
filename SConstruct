@@ -753,12 +753,13 @@ def PrependLibraryPaths(pname, env):
 
     env is the relevant SCons environment.
     """
+    pname = repr(pname)  # add quotes around it in case there are spaces, etc.
     for var in ['DYLD_LIBRARY_PATH', 'DYLD_FALLBACK_LIBRARY_PATH', 'LD_LIBRARY_PATH']:
         if var in env and env[var] != '':
             # %r adds quotes around env[var] and pname in case there are spaces in any of the
             # directories involved.  Otherwise bash -c pname will choke.
             pre = '%s=%r'%(var,env[var])
-            pname = "%s %r"%(pre,pname)
+            pname = "%s %s"%(pre,pname)
 
     return pname
 
@@ -1153,8 +1154,8 @@ def GetPythonVersion(config):
     # there:
     if not result:
         py_version = ''
-        for v in ['2.7', '2,6', '3.4', # supported versions first
-                  '2.5', '2,4', '3,5', '3.3', '3.2', '3.1', '3.0']:
+        for v in ['2.7', '2,6', '3.4', '3.5', # supported versions first
+                  '2.5', '2,4', '3.3', '3.2', '3.1', '3.0']: # these are mostly to give accurate logging and error messages
             if v in py_inc or v in python:
                 py_version = v
                 break
@@ -1542,16 +1543,23 @@ BOOST_PYTHON_MODULE(check_bp) {
     if not result:
         ErrorExit('Unable to compile a file with #include "boost/python.hpp"')
 
+    py_version = config.env['PYTHON_VERSION']
+    # For ubuntu Python 3.  cf. #790.
+    # Also https://bugs.launchpad.net/ubuntu/+source/boost1.53/+bug/1231609
+    pyxx = 'boost_python-py%s%s'%tuple(py_version.split('.'))
+
     if config.env['PYTHON_VERSION'] >= '3.0':
         result = (
             CheckModuleLibs(config,[''],bp_source_file,'check_bp') or
             CheckModuleLibs(config,['boost_python3'],bp_source_file,'check_bp') or
-            CheckModuleLibs(config,['boost_python3-mt'],bp_source_file,'check_bp') )
+            CheckModuleLibs(config,['boost_python3-mt'],bp_source_file,'check_bp') or
+            CheckModuleLibs(config,[pyxx],bp_source_file,'check_bp') )
     else:
         result = (
             CheckModuleLibs(config,[''],bp_source_file,'check_bp') or
             CheckModuleLibs(config,['boost_python'],bp_source_file,'check_bp') or
-            CheckModuleLibs(config,['boost_python-mt'],bp_source_file,'check_bp') )
+            CheckModuleLibs(config,['boost_python-mt'],bp_source_file,'check_bp') or
+            CheckModuleLibs(config,[pyxx],bp_source_file,'check_bp') )
     if not result:
         ErrorExit('Unable to build a python loadable module with Boost.Python')
 

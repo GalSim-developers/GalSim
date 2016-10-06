@@ -77,7 +77,7 @@ class WCSBuilder(object):
 
         @returns the constructed WCS object.
         """
-        raise NotImplemented("The %s class has not overridden buildWCS"%self.__class__)
+        raise NotImplementedError("The %s class has not overridden buildWCS"%self.__class__)
 
 
 class SimpleWCSBuilder(WCSBuilder):

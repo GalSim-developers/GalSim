@@ -374,7 +374,7 @@ class LsstCameraTestClass(unittest.TestCase):
         chip_name_possibilities = ('R:0,1 S:1,1', 'R:0,3 S:0,2', 'R:4,2 S:2,2', 'R:3,4 S:0,2')
 
         chip_name_list = [chip_name_possibilities[ii]
-                          for ii in rng.random_integers(0,3,n_samples)]
+                          for ii in rng.randint(0,4,n_samples)]
 
         x_pix_list, y_pix_list = \
         self.camera._pixel_coord_from_point_and_name(camera_point_list, chip_name_list)
@@ -796,22 +796,21 @@ class LsstWcsTestCase(unittest.TestCase):
             wcs1 = LsstWCS(galsim.CelestialCoord(0.0*galsim.degrees, 0.0*galsim.degrees),
                            self.rotation, chip_name='R:0,1 S:1,1', camera=self.wcs.camera)
 
-        self.assertEqual(str(ww[0].args[0]),
-                         "The camera you passed to LsstWCS does not have the same\n"
-                         "pointing and rotation angle as you asked for for this WCS.\n"
-                         "LsstWCS is creating a new camera with the pointing and\n"
-                         "rotation angle you specified in the constructor for LsstWCS.")
-
+        expected_message = "The camera you passed to LsstWCS does not have the same\n" \
+                           "pointing and rotation angle as you asked for for this WCS.\n" \
+                           "LsstWCS is creating a new camera with the pointing and\n" \
+                           "rotation angle you specified in the constructor for LsstWCS."
+        self.assertEqual(str(ww[0].message), expected_message)
 
         with warnings.catch_warnings(record=True) as ww:
             wcs1 = LsstWCS(self.pointing, 49.0*galsim.degrees,
                            chip_name='R:0,1 S:1,1', camera=self.wcs.camera)
 
-        self.assertEqual(str(ww[0].args[0]),
-                         "The camera you passed to LsstWCS does not have the same\n"
-                         "pointing and rotation angle as you asked for for this WCS.\n"
-                         "LsstWCS is creating a new camera with the pointing and\n"
-                         "rotation angle you specified in the constructor for LsstWCS.")
+        expected_message = "The camera you passed to LsstWCS does not have the same\n" \
+                           "pointing and rotation angle as you asked for for this WCS.\n" \
+                           "LsstWCS is creating a new camera with the pointing and\n" \
+                           "rotation angle you specified in the constructor for LsstWCS."
+        self.assertEqual(str(ww[0].message), expected_message)
 
 
 if __name__ == "__main__":

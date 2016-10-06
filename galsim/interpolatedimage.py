@@ -260,7 +260,7 @@ class InterpolatedImage(GSObject):
                  hdu=None):
 
         # Check for obsolete dx parameter
-        if dx is not None and scale is None:
+        if dx is not None and scale is None: # pragma: no cover
             from galsim.deprecated import depr
             depr('dx', 1.1, 'scale')
             scale = dx

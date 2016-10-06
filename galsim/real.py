@@ -38,6 +38,7 @@ some lower-resolution telescope.
 import galsim
 from galsim import GSObject
 import os
+import numpy as np
 
 class RealGalaxy(GSObject):
     """A class describing real galaxies from some training dataset.  Its underlying implementation
@@ -146,7 +147,6 @@ class RealGalaxy(GSObject):
                  rng=None, x_interpolant=None, k_interpolant=None, flux=None, flux_rescale=None,
                  pad_factor=4, noise_pad_size=0, gsparams=None, logger=None):
 
-        import numpy as np
 
         if rng is None:
             self.rng = galsim.BaseDeviate()
@@ -517,12 +517,11 @@ class RealGalaxyCatalog(object):
         a big speedup if memory isn't an issue.  Especially if many (or all) of the images are
         stored in the same file as different HDUs.
         """
-        import numpy
         from multiprocessing import Lock
         from galsim._pyfits import pyfits
         if self.logger:
             self.logger.debug('RealGalaxyCatalog: start preload')
-        for file_name in numpy.concatenate((self.gal_file_name , self.psf_file_name)):
+        for file_name in np.concatenate((self.gal_file_name , self.psf_file_name)):
             # numpy sometimes add a space at the end of the string that is not present in
             # the original file.  Stupid.  But this next line removes it.
             file_name = file_name.strip()
@@ -547,7 +546,7 @@ class RealGalaxyCatalog(object):
         else:
             self.loaded_lock.acquire()
             # Check again in case two processes both hit the else at the same time.
-            if file_name in self.loaded_files:
+            if file_name in self.loaded_files: # pragma: no cover
                 if self.logger:
                     self.logger.debug('RealGalaxyCatalog: File %s is already open',file_name)
                 f = self.loaded_files[file_name]
@@ -562,7 +561,6 @@ class RealGalaxyCatalog(object):
     def getGal(self, i):
         """Returns the galaxy at index `i` as an Image object.
         """
-        import numpy
         if self.logger:
             self.logger.debug('RealGalaxyCatalog %d: Start getGal',i)
         if i >= len(self.gal_file_name):
@@ -574,7 +572,7 @@ class RealGalaxyCatalog(object):
         self.gal_lock.acquire()
         array = f[self.gal_hdu[i]].data
         self.gal_lock.release()
-        im = galsim.Image(numpy.ascontiguousarray(array.astype(numpy.float64)),
+        im = galsim.Image(np.ascontiguousarray(array.astype(np.float64)),
                           scale=self.pixel_scale[i])
         return im
 
@@ -582,7 +580,6 @@ class RealGalaxyCatalog(object):
     def getPSF(self, i):
         """Returns the PSF at index `i` as an Image object.
         """
-        import numpy
         if self.logger:
             self.logger.debug('RealGalaxyCatalog %d: Start getPSF',i)
         if i >= len(self.psf_file_name):
@@ -592,7 +589,7 @@ class RealGalaxyCatalog(object):
         self.psf_lock.acquire()
         array = f[self.psf_hdu[i]].data
         self.psf_lock.release()
-        return galsim.Image(numpy.ascontiguousarray(array.astype(numpy.float64)),
+        return galsim.Image(np.ascontiguousarray(array.astype(np.float64)),
                             scale=self.pixel_scale[i])
 
     def getNoiseProperties(self, i):
@@ -622,11 +619,10 @@ class RealGalaxyCatalog(object):
                     if self.logger:
                         self.logger.debug('RealGalaxyCatalog %d: Got saved noise im',i)
                 else:
-                    import numpy
                     from galsim._pyfits import pyfits
                     with pyfits.open(self.noise_file_name[i]) as fits:
                         array = fits[0].data
-                    im = galsim.Image(numpy.ascontiguousarray(array.astype(numpy.float64)),
+                    im = galsim.Image(np.ascontiguousarray(array.astype(np.float64)),
                                       scale=self.pixel_scale[i])
                     self.saved_noise_im[self.noise_file_name[i]] = im
                     if self.logger:
@@ -770,7 +766,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     return image
 
 def _parse_files_dirs(file_name, image_dir, dir, noise_dir, sample):
-    if image_dir is not None or noise_dir is not None:
+    if image_dir is not None or noise_dir is not None:  # pragma: no cover
         from .deprecated import depr
         if image_dir is not None:
             depr('image_dir', 1.4, 'dir')

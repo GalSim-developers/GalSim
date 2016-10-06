@@ -25,6 +25,7 @@ stored in *_fitpsf.fits files.
 
 import galsim
 import galsim.config
+import numpy as np
 
 class DES_Shapelet(object):
     """Class that handles DES files describing interpolated polar shapelet decompositions.
@@ -89,13 +90,13 @@ class DES_Shapelet(object):
 
         if file_type == 'FITS':
             self.read_fits()
-        else:
+        else:  # pragma: no cover
             self.read_ascii()
 
-    def read_ascii(self):
+    # We haven't used these for a long time, so this is at best of historical interest...
+    def read_ascii(self):  # pragma: no cover
         """Read in a DES_Shapelet stored using the the ASCII-file version.
         """
-        import numpy
         fin = open(self.file_name, 'r')
         lines = fin.readlines()
         temp = lines[0].split()
@@ -113,13 +114,13 @@ class DES_Shapelet(object):
 
         temp = lines[2].split()
         assert int(temp[0]) == self.psf_size
-        self.ave_psf = numpy.array(temp[2:self.psf_size+2]).astype(float)
+        self.ave_psf = np.array(temp[2:self.psf_size+2]).astype(float)
         assert self.ave_psf.shape == (self.psf_size,)
 
         temp = lines[3].split()
         assert int(temp[0]) == self.npca
         assert int(temp[1]) == self.psf_size
-        self.rot_matrix = numpy.array(
+        self.rot_matrix = np.array(
             [ lines[4+k].split()[1:self.psf_size+1] for k in range(self.npca) ]
             ).astype(float)
         assert self.rot_matrix.shape == (self.npca, self.psf_size)
@@ -127,7 +128,7 @@ class DES_Shapelet(object):
         temp = lines[5+self.npca].split()
         assert int(temp[0]) == self.fit_size
         assert int(temp[1]) == self.npca
-        self.interp_matrix = numpy.array(
+        self.interp_matrix = np.array(
             [ lines[6+self.npca+k].split()[1:self.npca+1] for k in range(self.fit_size) ]
             ).astype(float)
         assert self.interp_matrix.shape == (self.fit_size, self.npca)
@@ -193,11 +194,10 @@ class DES_Shapelet(object):
         if not self.bounds.includes(pos):
             raise IndexError("position in DES_Shapelet.getPSF is out of bounds")
 
-        import numpy
         Px = self._definePxy(pos.x,self.bounds.xmin,self.bounds.xmax)
         Py = self._definePxy(pos.y,self.bounds.ymin,self.bounds.ymax)
         order = self.fit_order
-        P = numpy.array([ Px[n-q] * Py[q] for n in range(order+1) for q in range(n+1) ])
+        P = np.array([ Px[n-q] * Py[q] for n in range(order+1) for q in range(n+1) ])
         assert len(P) == self.fit_size
 
         # Note: This is equivalent to:
@@ -209,16 +209,15 @@ class DES_Shapelet(object):
         #             P[k] = Px[n-q] * Py[q]
         #             k = k+1
 
-        b1 = numpy.dot(P,self.interp_matrix)
-        b = numpy.dot(b1,self.rot_matrix)
+        b1 = np.dot(P,self.interp_matrix)
+        b = np.dot(b1,self.rot_matrix)
         assert len(b) == self.psf_size
         b += self.ave_psf
         return b
 
     def _definePxy(self, x, min, max):
-        import numpy
         x1 = (2.*x-min-max)/(max-min)
-        temp = numpy.empty(self.fit_order+1)
+        temp = np.empty(self.fit_order+1)
         temp[0] = 1
         if self.fit_order > 0:
             temp[1] = x1

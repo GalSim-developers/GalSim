@@ -18,6 +18,7 @@
 
 import galsim
 import logging
+import numpy as np
 
 # This file handles the building of an image by parsing config['image'].
 # This file includes the basic functionality, but it calls out to helper functions
@@ -75,12 +76,12 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
             logger.info(s0 + 'Image %d: size = %d x %d, time = %f sec', image_num, xs, ys, t)
 
     def except_func(logger, proc, k, e, tr):
-        if logger:
+        if logger: # pragma: no cover
             if proc is None: s0 = ''
             else: s0 = '%s: '%proc
             image_num = jobs[k]['image_num']
             logger.error(s0 + 'Exception caught when building image %d', image_num)
-            #logger.error('%s',tr)
+            logger.warning('%s',tr)
             logger.error('Aborting the rest of this file')
 
     # Convert to the tasks structure we need for MultiProcess
@@ -306,7 +307,6 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
         if logger:
             logger.debug('image %d: maximum noise varance in any stamp is %f',
                          config['image_num'], max_current_var)
-        import numpy
         # Then there was whitening applied in the individual stamps.
         # But there could be a different variance in each postage stamp, so the first
         # thing we need to do is bring everything up to a common level.
@@ -317,7 +317,7 @@ def FlattenNoiseVariance(config, full_image, stamps, current_vars, logger):
             if b.isDefined(): noise_image[b] += current_vars[k]
         # Update this, since overlapping postage stamps may have led to a larger
         # value in some pixels.
-        max_current_var = numpy.max(noise_image.array)
+        max_current_var = np.max(noise_image.array)
         if logger:
             logger.debug('image %d: maximum noise varance in any pixel is %f',
                          config['image_num'], max_current_var)
