@@ -81,7 +81,7 @@ namespace galsim {
         { applyToView(data); }
         void doApplyTo(ImageView<int16_t>& data)
         { applyToView(data); }
-        void doApplyTo(ImageView<uint16_t>& data)
+        void doApplyTo(ImageView<uint32_t>& data)
         { applyToView(data); }
         void doApplyTo(ImageView<uint16_t>& data)
         { applyToView(data); }
