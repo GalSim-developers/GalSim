@@ -61,6 +61,8 @@ class MetaImage(type):
         from galsim.deprecated import depr
         depr('Image[type]', 1.1, 'Image(..., dtype=type)')
         Image_dict = {
+            np.uint16 : ImageUS,
+            np.uint32 : ImageUI,
             np.int16 : ImageS,
             np.int32 : ImageI,
             np.float32 : ImageF,
@@ -91,9 +93,10 @@ class Image(with_metaclass(MetaImage, object)):
     numpy array directly via the `array` attribute, you will need to be careful about this
     difference.
 
-    There are 4 data types that the Image can use for the data values.  These are `numpy.int16`,
-    `numpy.int32`, `numpy.float32`, and `numpy.float64`.  If you are constructing a new Image from
-    scratch, the default is `numpy.float32`, but you can specify one of the other data types.
+    There are 6 data types that the Image can use for the data values.  These are `numpy.uint16`,
+    `numpy.uint16`, `numpy.int16`, `numpy.int32`, `numpy.float32`, and `numpy.float64`.  
+    If you are constructing a new Image from scratch, the default is `numpy.float32`, but you 
+    can specify one of the other data types.
 
     Initialization
     --------------
@@ -214,13 +217,7 @@ class Image(with_metaclass(MetaImage, object)):
     # If this becomes too confusing, we might need to add an ImageL class that uses int64.
     # Hard to imagine a use case where this would be required though...
     valid_dtypes = cpp_valid_dtypes + list(alias_dtypes)
-
-    unsigned_dtypes = {
-        # We don't have unsigned image code, so just use signed int types.
-        np.uint32 : np.int32,
-        np.uint16 : np.int16,
-    }
-    valid_array_dtypes = cpp_valid_dtypes + list(unsigned_dtypes)
+    valid_array_dtypes = cpp_valid_dtypes
 
     def __init__(self, *args, **kwargs):
         # Parse the args, kwargs
@@ -317,7 +314,7 @@ class Image(with_metaclass(MetaImage, object)):
             try:
                 ncol = int(ncol)
                 nrow = int(nrow)
-            except Exception:
+            except:
                 raise TypeError("Cannot parse ncol, nrow as integers")
             self.image = _galsim.ImageAlloc[self.dtype](ncol, nrow)
             if init_value is not None:
@@ -932,6 +929,18 @@ class Image(with_metaclass(MetaImage, object)):
 
 # These are essentially aliases for the regular Image with the correct dtype
 def ImageS(*args, **kwargs):
+    """Alias for galsim.Image(..., dtype=numpy.uint16)
+    """
+    kwargs['dtype'] = np.uint16
+    return Image(*args, **kwargs)
+
+def ImageI(*args, **kwargs):
+    """Alias for galsim.Image(..., dtype=numpy.uint32)
+    """
+    kwargs['dtype'] = np.uint32
+    return Image(*args, **kwargs)
+    
+def ImageS(*args, **kwargs):
     """Alias for galsim.Image(..., dtype=numpy.int16)
     """
     kwargs['dtype'] = np.int16
@@ -1241,7 +1250,7 @@ for Class in _galsim.ConstImageView.values():
     Class.__getinitargs__ = ImageView_getinitargs
     Class.__hash__ = None
 
-for int_type in [ np.int16, np.int32 ]:
+for int_type in [ np.int16, np.int32 , np.int16, np.int32]:
     for Class in [ _galsim.ImageAlloc[int_type], _galsim.ImageView[int_type],
                    _galsim.ConstImageView[int_type] ]:
         Class.__and__ = Image_and
