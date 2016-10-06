@@ -219,6 +219,8 @@ struct PyImage {
         wrapImageAllocTemplates<double>(pyImageAlloc);
         wrapImageAllocTemplates<int16_t>(pyImageAlloc);
         wrapImageAllocTemplates<int32_t>(pyImageAlloc);
+        wrapImageAllocTemplates<uint16_t>(pyImageAlloc);
+        wrapImageAllocTemplates<uint32_t>(pyImageAlloc);
 
         return pyImageAlloc;
     }
@@ -261,6 +263,8 @@ struct PyImage {
         wrapImageViewTemplates<double>(pyImageView);
         wrapImageViewTemplates<int16_t>(pyImageView);
         wrapImageViewTemplates<int32_t>(pyImageView);
+        wrapImageViewTemplates<uint16_t>(pyImageView);
+        wrapImageViewTemplates<uint32_t>(pyImageView);
 
         return pyImageView;
     }
@@ -300,6 +304,8 @@ struct PyImage {
 void pyExportImage() {
     bp::dict pyImageAllocDict;  // dict that lets us say "Image[numpy.float32]", etc.
 
+    pyImageAllocDict[GetNumPyType<uint16_t>()] = PyImage<uint16_t>::wrapImageAlloc("US");
+    pyImageAllocDict[GetNumPyType<uint32_t>()] = PyImage<uint32_t>::wrapImageAlloc("UI");
     pyImageAllocDict[GetNumPyType<int16_t>()] = PyImage<int16_t>::wrapImageAlloc("S");
     pyImageAllocDict[GetNumPyType<int32_t>()] = PyImage<int32_t>::wrapImageAlloc("I");
     pyImageAllocDict[GetNumPyType<float>()] = PyImage<float>::wrapImageAlloc("F");
@@ -307,6 +313,8 @@ void pyExportImage() {
 
     bp::dict pyConstImageViewDict; 
 
+    pyConstImageViewDict[GetNumPyType<uint16_t>()] = PyImage<uint16_t>::wrapConstImageView("US");
+    pyConstImageViewDict[GetNumPyType<uint32_t>()] = PyImage<uint32_t>::wrapConstImageView("UI");
     pyConstImageViewDict[GetNumPyType<int16_t>()] = PyImage<int16_t>::wrapConstImageView("S");
     pyConstImageViewDict[GetNumPyType<int32_t>()] = PyImage<int32_t>::wrapConstImageView("I");
     pyConstImageViewDict[GetNumPyType<float>()] = PyImage<float>::wrapConstImageView("F");
@@ -314,6 +322,8 @@ void pyExportImage() {
 
     bp::dict pyImageViewDict;
 
+    pyImageViewDict[GetNumPyType<uint16_t>()] = PyImage<uint16_t>::wrapImageView("US");
+    pyImageViewDict[GetNumPyType<uint32_t>()] = PyImage<uint32_t>::wrapImageView("UI");
     pyImageViewDict[GetNumPyType<int16_t>()] = PyImage<int16_t>::wrapImageView("S");
     pyImageViewDict[GetNumPyType<int32_t>()] = PyImage<int32_t>::wrapImageView("I");
     pyImageViewDict[GetNumPyType<float>()] = PyImage<float>::wrapImageView("F");
