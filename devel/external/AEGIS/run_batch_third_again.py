@@ -8,7 +8,7 @@ def run_clean_pstamps():
     for fl in glob.glob('outfile/out_3_seg_*'):
         os.remove(fl)
     file_name ='/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip/seg_ids.txt'
-    main_path='/nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_full2/'
+    main_path='/nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_full/'
     run_again=[]
     all_seg_ids = np.loadtxt(file_name, delimiter=" ",dtype='S2')
     for i, seg_id in enumerate(all_seg_ids):
