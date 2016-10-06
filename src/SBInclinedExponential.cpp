@@ -17,6 +17,9 @@
  *    and/or other materials provided with the distribution.
  */
 
+// See https://www.dropbox.com/s/z6h14bgd199czsi/Inclined_Exponential.pdf?dl=0
+// for a write-up of much of the math involved in this file.
+
 // #define DEBUGLOGGING
 
 #include "galsim/IgnoreWarnings.h"
