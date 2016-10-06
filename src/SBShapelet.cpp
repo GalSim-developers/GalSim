@@ -341,4 +341,10 @@ namespace galsim {
     template void ShapeletFitImage(
         double sigma, LVector& bvec, const BaseImage<int16_t>& image, double image_scale,
         const Position<double>& center);
+    template void ShapeletFitImage(
+        double sigma, LVector& bvec, const BaseImage<uint32_t>& image, double image_scale,
+        const Position<double>& center);
+    template void ShapeletFitImage(
+        double sigma, LVector& bvec, const BaseImage<uint16_t>& image, double image_scale,
+        const Position<double>& center);
 }
