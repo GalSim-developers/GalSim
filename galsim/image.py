@@ -926,13 +926,13 @@ class Image(with_metaclass(MetaImage, object)):
 
 
 # These are essentially aliases for the regular Image with the correct dtype
-def ImageS(*args, **kwargs):
+def ImageUS(*args, **kwargs):
     """Alias for galsim.Image(..., dtype=numpy.uint16)
     """
     kwargs['dtype'] = np.uint16
     return Image(*args, **kwargs)
 
-def ImageI(*args, **kwargs):
+def ImageUI(*args, **kwargs):
     """Alias for galsim.Image(..., dtype=numpy.uint32)
     """
     kwargs['dtype'] = np.uint32
@@ -1248,7 +1248,7 @@ for Class in _galsim.ConstImageView.values():
     Class.__getinitargs__ = ImageView_getinitargs
     Class.__hash__ = None
 
-for int_type in [ np.int16, np.int32 , np.int16, np.int32]:
+for int_type in [ np.int16, np.int32 , np.uint16, np.uint32]:
     for Class in [ _galsim.ImageAlloc[int_type], _galsim.ImageView[int_type],
                    _galsim.ConstImageView[int_type] ]:
         Class.__and__ = Image_and
@@ -1261,6 +1261,10 @@ for int_type in [ np.int16, np.int32 , np.int16, np.int32]:
 
 del Class    # cleanup public namespace
 
+galsim._galsim.ImageAllocUS.__repr__ = lambda self: 'galsim._galsim.ImageAllocUS(%r,%r)'%(
+        self.bounds, self.array)
+galsim._galsim.ImageAllocUI.__repr__ = lambda self: 'galsim._galsim.ImageAllocUI(%r,%r)'%(
+        self.bounds, self.array)
 galsim._galsim.ImageAllocS.__repr__ = lambda self: 'galsim._galsim.ImageAllocS(%r,%r)'%(
         self.bounds, self.array)
 galsim._galsim.ImageAllocI.__repr__ = lambda self: 'galsim._galsim.ImageAllocI(%r,%r)'%(
@@ -1270,6 +1274,10 @@ galsim._galsim.ImageAllocF.__repr__ = lambda self: 'galsim._galsim.ImageAllocF(%
 galsim._galsim.ImageAllocD.__repr__ = lambda self: 'galsim._galsim.ImageAllocD(%r,%r)'%(
         self.bounds, self.array)
 
+galsim._galsim.ImageViewUS.__repr__ = lambda self: 'galsim._galsim.ImageViewUS(%r,%r,%r)'%(
+        self.array, self.xmin, self.ymin)
+galsim._galsim.ImageViewUI.__repr__ = lambda self: 'galsim._galsim.ImageViewUI(%r,%r,%r)'%(
+        self.array, self.xmin, self.ymin)
 galsim._galsim.ImageViewS.__repr__ = lambda self: 'galsim._galsim.ImageViewS(%r,%r,%r)'%(
         self.array, self.xmin, self.ymin)
 galsim._galsim.ImageViewI.__repr__ = lambda self: 'galsim._galsim.ImageViewI(%r,%r,%r)'%(
@@ -1279,6 +1287,10 @@ galsim._galsim.ImageViewF.__repr__ = lambda self: 'galsim._galsim.ImageViewF(%r,
 galsim._galsim.ImageViewD.__repr__ = lambda self: 'galsim._galsim.ImageViewD(%r,%r,%r)'%(
         self.array, self.xmin, self.ymin)
 
+galsim._galsim.ConstImageViewUS.__repr__ = lambda self: 'galsim._galsim.ConstImageViewUS(%r,%r,%r)'%(
+        self.array, self.xmin, self.ymin)
+galsim._galsim.ConstImageViewUI.__repr__ = lambda self: 'galsim._galsim.ConstImageViewUI(%r,%r,%r)'%(
+        self.array, self.xmin, self.ymin)
 galsim._galsim.ConstImageViewS.__repr__ = lambda self: 'galsim._galsim.ConstImageViewS(%r,%r,%r)'%(
         self.array, self.xmin, self.ymin)
 galsim._galsim.ConstImageViewI.__repr__ = lambda self: 'galsim._galsim.ConstImageViewI(%r,%r,%r)'%(
