@@ -324,14 +324,24 @@ namespace galsim {
     struct ResultType<int32_t,double> { typedef double type; };
     template <>
     struct ResultType<int16_t,double> { typedef double type; };
+    template <>
+    struct ResultType<uint32_t,double> { typedef double type; };
+    template <>
+    struct ResultType<uint16_t,double> { typedef double type; };
 
     template <>
     struct ResultType<int32_t,float> { typedef float type; };
     template <>
     struct ResultType<int16_t,float> { typedef float type; };
+    template <>
+    struct ResultType<uint32_t,float> { typedef float type; };
+    template <>
+    struct ResultType<uint16_t,float> { typedef float type; };
 
     template <>
     struct ResultType<int16_t,int32_t> { typedef int32_t type; };
+    template <>
+    struct ResultType<uint16_t,uint32_t> { typedef uint32_t type; };
 
     //
     // Image + Scalar
