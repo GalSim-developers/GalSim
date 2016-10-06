@@ -134,12 +134,12 @@ def get_blank_reg(x_r, y_r, noise_file):
     s = bl_dat.shape
     print "x_r", x_r, 's', s
     x0_min = np.random.randint(s[0]-x_r)
-
     y0_min = np.random.randint(s[1]-y_r)
     x0_max = x0_min + x_r +1
     y0_max = y0_min + y_r +1
     empty = bl_dat[x0_min:x0_max, y0_min:y0_max]
-    return empty
+    bl_mean, bl_std = get_stats(bl_dat ,str='Blank region from file')
+    return empty, bl_std
 
 def change_others(arr, to_change,
                   noise_file, b_std):
@@ -154,12 +154,11 @@ def change_others(arr, to_change,
     xr0 = xmax-xmin
     yr0 = ymax-ymin 
     # get noise pixels in a rectangle of size comparable to that which needs replaced  
-    bl_dat = get_blank_reg(xr0, yr0, noise_file)
+    bl_dat, bl_std = get_blank_reg(xr0, yr0, noise_file)
     # Change coords of pixels to change to satrt with (0,0)
     bl_change = np.array([to_change.T[0]-xmin, to_change.T[1]-ymin]).T
     # get noise pixel with same coordinates as to change pixels
     bl_pixels = [bl_dat[bl_change[i,0], bl_change[i,1]] for i in range(len(bl_change))]
-    bl_mean, bl_std = get_stats(np.array(bl_pixels), str='Blank Region')
     bl_dat = bl_dat/bl_std*b_std    
     ### change pixels of oth in arr to blank value
     for p in range(len(to_change)):
