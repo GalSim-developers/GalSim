@@ -279,8 +279,6 @@ class Image(with_metaclass(MetaImage, object)):
             raise ValueError("dtype must be one of "+str(Image.valid_dtypes)+
                              ".  Instead got "+str(dtype))
         if array is not None:
-            if array.dtype.type in Image.unsigned_dtypes and dtype is None:
-                dtype = Image.unsigned_dtypes[array.dtype.type]
             if array.dtype.type not in Image.cpp_valid_dtypes and dtype is None:
                 raise ValueError("array's dtype.type must be one of "+str(Image.cpp_valid_dtypes)+
                                  ".  Instead got "+str(array.dtype.type)+".  Or can set "+
