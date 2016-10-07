@@ -47,16 +47,17 @@ class ChromaticObject(object):
     describe wavelength-dependent transformations.  E.g.,
 
         >>> gsobj = galsim.Gaussian(fwhm=1)
-        >>> chrom_obj = galsim.ChromaticObject(gsobj).dilate(lambda wave: 1.01**wave)
+        >>> chrom_obj = galsim.ChromaticObject(gsobj).dilate(lambda wave: (wave/500.)**(-0.2))
 
     In this and similar cases, the argument to the transformation method should be a python callable
     that accepts wavelength in nanometers and returns whatever type the transformation method
     normally accepts (so an int or float above).
 
     One caveat to creating ChromaticObjects directly from GSObjects like this is that even though
-    the source GSObject instance has flux units in photons/s/cm^2, then newly formed ChromaticObject
-    will be interpreted as dimensionless, i.e., it will have a dimensionless SED.  See below for
-    more discussion about the dimensions of ChromaticObjects.
+    the source GSObject instance has flux units in photons/s/cm^2, the newly formed ChromaticObject
+    will be interpreted as dimensionless, i.e., it will have a dimensionless SED (and have its
+    .dimensionless attribute set to True).  See below for more discussion about the dimensions of
+    ChromaticObjects.
 
 
     Another way to instantiate a ChromaticObject from a GSObject is to multiply by an SED.  This can
@@ -89,6 +90,9 @@ class ChromaticObject(object):
     Even in this case, however, the underlying implementation always eventually wraps one or more
     GSObjects.
 
+    Dimensions
+    --------------------------
+
     ChromaticObjects can generally be sorted into two distinct types: those that represent galaxies
     or stars and have dimensions of [photons/wavelength-interval/area/time/solid-angle], and those
     that represent other types of wavelength dependence besides flux, like chromatic PSFs (these
@@ -120,8 +124,8 @@ class ChromaticObject(object):
     you would need to evaluate the profile at a particular wavelength and access what you want
     from that.
 
-    There is no withFlux() method, since this is in general undefined for a chromatic object.
-    See the SED class for how to set a chromatic flux density function.
+    The withFlux(), withFluxDensity, and withMagnitude() methods will return a new chromatic object
+    with the appropriate spatially integrated flux, flux density, or magnitude.
 
     The drawImage() method draws the object as observed through a particular bandpass, so the
     arguments are somewhat different.  See the docstring for ChromaticObject.drawImage() for more
