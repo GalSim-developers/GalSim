@@ -758,8 +758,7 @@ def test_realspace_conv():
         c4 = galsim.Convolve([gal,psf], real_space=False)
 
         im3 = c3.drawImage(scale=target_scale, nx=target_size, ny=target_size, method='no_pixel')
-        im4 = c4.drawImage(scale=target_scale, nx=target_size, ny=target_size, wmult=5,
-                           method='no_pixel')
+        im4 = c4.drawImage(scale=target_scale, nx=target_size, ny=target_size, method='no_pixel')
         np.testing.assert_array_almost_equal(im1.array, im3.array, 2)
         # Note: only 2 d.p. since the interpolated image version of the psf is really a different
         # profile from the original.  Especially for the lower order interpolants.  So we don't
