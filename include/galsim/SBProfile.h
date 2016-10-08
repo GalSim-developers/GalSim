@@ -387,8 +387,6 @@ namespace galsim {
          *            not a "sigma" definition.
          * @param[in] poisson_flux Whether to allow total object flux scaling to vary according to
          *                         Poisson statistics for `N` samples
-         * @param[in] add_to_image Whether to add flux to the existing image rather than draw
-         *                         an image from scratch.
          * @returns The total flux of photons the landed inside the image bounds.
          *
          * Note: N is input as a double so that very large values of N don't have to
@@ -398,7 +396,7 @@ namespace galsim {
         template <typename T>
         double drawShoot(
             ImageView<T> image, double N, UniformDeviate ud,
-            double max_extra_noise, bool poisson_flux, bool add_to_image) const;
+            double max_extra_noise, bool poisson_flux) const;
 
 
         /**

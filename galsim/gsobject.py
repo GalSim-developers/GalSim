@@ -1385,7 +1385,7 @@ class GSObject(object):
             try:
                 added_photons = prof.SBProfile.drawShoot(
                     imview.image, n_photons, uniform_deviate, max_extra_noise,
-                    poisson_flux, add_to_image)
+                    poisson_flux)
             except RuntimeError:  # pragma: no cover
                 # Give some extra explanation as a warning, then raise the original exception
                 # so the traceback shows as much detail as possible.

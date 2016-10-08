@@ -698,8 +698,8 @@ namespace galsim {
 
     template <class T>
     double SBProfile::drawShoot(
-        ImageView<T> img, double N, UniformDeviate u, double max_extra_noise,
-        bool poisson_flux, bool add_to_image) const
+        ImageView<T> img, double Ntot, UniformDeviate u, double max_extra_noise,
+        bool poisson_flux) const
     {
         // If N = 0, this routine will try to end up with an image with the number of real
         // photons = flux that has the corresponding Poisson noise. For profiles that are
@@ -749,19 +749,13 @@ namespace galsim {
         // So setting N^2 = Imax + nu, we get
         //
         // Ntot = flux / (1-2eta)^2 / (1 + nu/Imax)
-        //
-        // One wrinkle about this calculation is that we don't know Imax a priori.
-        // So we start with a plausible number of photons to get going.  Then we keep adding
-        // more photons until we either hit N = flux / (1-2eta)^2 or the extra noise in the
-        // brightest pixel is < nu
-        //
-        // We also make the assumption that the pixel to look at for Imax is at the centroid.
+        // g = (1 - 2eta) * (1 + nu/Imax)
         //
         // Returns the total flux placed inside the image bounds by photon shooting.
         //
 
         dbg<<"Start drawShoot.\n";
-        dbg<<"N = "<<N<<std::endl;
+        dbg<<"Ntot = "<<Ntot<<std::endl;
         dbg<<"max_extra_noise = "<<max_extra_noise<<std::endl;
         dbg<<"poisson = "<<poisson_flux<<std::endl;
 
@@ -779,8 +773,7 @@ namespace galsim {
         dbg<<"mod_flux = "<<mod_flux<<std::endl;
 
         // Use this for the factor by which to scale photon arrays.
-        // Also need to scale flux by gain = photons/ADU so we add ADU to the image.
-        double flux_scaling = eta_factor;
+        double g = eta_factor;
 
         // If requested, let the target flux value vary as a Poisson deviate
         if (poisson_flux) {
@@ -788,14 +781,14 @@ namespace galsim {
             // already gives us some variation in the flux value from the variance
             // of how many are positive and how many are negative.
             // The number of negative photons varies as a binomial distribution.
-            // <F-> = eta * N * flux_scaling
-            // <F+> = (1-eta) * N * flux_scaling
-            // <F+ - F-> = (1-2eta) * N * flux_scaling = flux
-            // Var(F-) = eta * (1-eta) * N * flux_scaling^2
-            // F+ = N * flux_scaling - F- is not an independent variable, so
-            // Var(F+ - F-) = Var(N*flux_scaling - 2*F-)
+            // <F-> = eta * Ntot * g
+            // <F+> = (1-eta) * Ntot * g
+            // <F+ - F-> = (1-2eta) * Ntot * g = flux
+            // Var(F-) = eta * (1-eta) * Ntot * g^2
+            // F+ = Ntot * g - F- is not an independent variable, so
+            // Var(F+ - F-) = Var(Ntot*g - 2*F-)
             //              = 4 * Var(F-)
-            //              = 4 * eta * (1-eta) * N * flux_scaling^2
+            //              = 4 * eta * (1-eta) * Ntot * g^2
             //              = 4 * eta * (1-eta) * flux
             // We want the variance to be equal to flux, so we need an extra:
             // delta Var = (1 - 4*eta + 4*eta^2) * flux
@@ -805,25 +798,27 @@ namespace galsim {
             double pd_val = pd() - mean + flux;
             dbg<<"Poisson flux = "<<pd_val<<", c.f. flux = "<<flux<<std::endl;
             double ratio = pd_val / flux;
-            flux_scaling *= ratio;
+            g *= ratio;
             mod_flux *= ratio;
-            dbg<<"flux_scaling => "<<flux_scaling<<std::endl;
+            dbg<<"g => "<<g<<std::endl;
             dbg<<"mod_flux => "<<mod_flux<<std::endl;
         }
 
-        if (N == 0.) N = mod_flux;
-        double origN = N;
+        if (Ntot == 0.) {
+            Ntot = mod_flux;
+            if (max_extra_noise > 0.) {
+                double gfactor = 1. + max_extra_noise / maxSB();
+                Ntot /= gfactor;
+                g *= gfactor;
+            }
+        }
 
-        // If not adding to the current image, zero it out:
-        if (!add_to_image) img.setZero();
+        // Make Ntot an integer.
+        int iNtot = int(Ntot + 0.5);
+        g *= Ntot / iNtot;
 
         // (The image should already be centered by the python layer.)
         dbg<<"On input, image has central value = "<<img(0,0)<<std::endl;
-
-        // Store the PhotonArrays to be added here rather than add them as we go,
-        // since we might need to rescale them all before adding.
-        // We only use this if max_extra_noise > 0 and add_to_image = true.
-        std::vector<boost::shared_ptr<PhotonArray> > arrays;
 
         // total flux falling inside image bounds, this will be returned on exit.
         double added_flux = 0.;
@@ -833,129 +828,30 @@ namespace galsim {
         double negative_flux = 0.;
 #endif
 
-        // If we're automatically figuring out N based on max_extra_noise, start with 100 photons
-        // Otherwise we'll do a maximum of maxN at a time until we go through all N.
-        int thisN = max_extra_noise > 0. ? 100 : maxN;
-        Position<double> cen = centroid();
-        Bounds<double> b(cen);
-        b.addBorder(0.5);
-        dbg<<"Bounds for Imax = "<<b<<std::endl;
-        T raw_Imax = 0.;
-        int Imax_count = 0;
-        while (true) {
-            // We break out of the loop when either N drops to 0 (if max_extra_noise = 0) or
-            // we find that the max pixel has an excess noise level < max_extra_noise
+        // Nleft is the number of photons remaining to shoot.
+        for(int Nleft = iNtot; Nleft > 0;) {
 
-            if (thisN > maxN) thisN = maxN;
-            // NB: don't need floor, since rhs is positive, so floor is superfluous.
-            if (thisN > N) thisN = int(N+0.5);
+            int thisN = (Nleft > maxN) ? maxN : Nleft;
 
             xdbg<<"shoot "<<thisN<<std::endl;
             assert(_pimpl.get());
             boost::shared_ptr<PhotonArray> pa = _pimpl->shoot(thisN, u);
             xdbg<<"pa.flux = "<<pa->getTotalFlux()<<std::endl;
-            xdbg<<"scale flux by "<<(flux_scaling*thisN/origN)<<std::endl;
-            pa->scaleFlux(flux_scaling * thisN / origN);
+            xdbg<<"scale flux by "<<(g*thisN/Ntot)<<std::endl;
+            pa->scaleFlux(g * thisN / Ntot);
             xdbg<<"pa.flux => "<<pa->getTotalFlux()<<std::endl;
 
-            if (add_to_image && max_extra_noise > 0.) {
-                // Then we might need to rescale these, so store it and deal with it later.
-                arrays.push_back(pa);
-            } else {
-                // Otherwise, we can go ahead and apply it here.
-                added_flux += pa->addTo(img);
+            added_flux += pa->addTo(img);
 #ifdef DEBUGLOGGING
-                realized_flux += pa->getTotalFlux();
-                for(int i=0; i<pa->size(); ++i) {
-                    double f = pa->getFlux(i);
-                    if (f >= 0.) positive_flux += f;
-                    else negative_flux += -f;
-                }
+            realized_flux += pa->getTotalFlux();
+            for(int i=0; i<pa->size(); ++i) {
+                double f = pa->getFlux(i);
+                if (f >= 0.) positive_flux += f;
+                else negative_flux += -f;
+            }
 #endif
-            }
-
-            N -= thisN;
-            xdbg<<"N -> "<<N<<std::endl;
-
-            // This is always a reason to break out.
-            if (N < 1.) break;
-
-            if (max_extra_noise > 0.) {
-                xdbg<<"Check the noise level\n";
-                // First need to find what the current Imax is.
-                // (Only need to update based on the latest pa.)
-
-                for(int i=0; i<pa->size(); ++i) {
-                    if (b.includes(pa->getX(i),pa->getY(i))) {
-                        ++Imax_count;
-                        raw_Imax += pa->getFlux(i);
-                    }
-                }
-                xdbg<<"Imax_count = "<<Imax_count<<std::endl;
-                xdbg<<"raw_Imax = "<<raw_Imax<<std::endl;
-
-                // Make sure we've got at least 25 photons for our Imax estimate and that
-                // the Imax value is positive.
-                // Otherwise keep the same initial value of thisN = 100 and try again.
-                if (Imax_count < 25 || raw_Imax < 0.) continue;
-
-                double Imax = raw_Imax * origN / (origN-N);
-                xdbg<<"Imax = "<<Imax<<std::endl;
-                // Estimate a good value of Ntot based on what we know now
-                // Ntot = flux / [ (1-2eta)^2 * (1 + nu/Imax) ]
-                double Ntot = mod_flux / (1. + max_extra_noise / Imax);
-                xdbg<<"Calculated Ntot = "<<Ntot<<std::endl;
-                // So far we've done (origN-N)
-                // Set thisN to do the rest on the next pass.
-                Ntot -= (origN-N);
-                if (Ntot > maxN) thisN = maxN; // Make sure we don't overflow thisN.
-                else thisN = int(Ntot);
-                xdbg<<"Next value of thisN = "<<thisN<<std::endl;
-                // If we've already done enough, break out of the loop.
-                if (thisN <= 0) break;
-            }
-        }
-
-        if (N > 0.1) {
-            // If we didn't shoot all the original number of photons, then our flux isn't right.
-            // Need to rescale the arrays by factor of origN / (origN-N)
-            dbg<<"Flux scalings were set according to origN = "<<origN<<std::endl;
-            dbg<<"But only shot N = "<<origN-N<<std::endl;
-            double factor = origN / (origN-N);
-            dbg<<"Rescale by factor = "<<factor<<std::endl;
-
-            if (arrays.size() > 0) {
-                // If using arrays, rescale the flux in each
-                for (size_t k=0; k<arrays.size(); ++k) arrays[k]->scaleFlux(factor);
-            } else {
-                // Otherwise, rescale the image itself
-                assert(!add_to_image);
-                img *= T(factor);
-                // Also fix the added_flux value
-                added_flux *= factor;
-#ifdef DEBUGLOGGING
-                realized_flux *= factor;
-                positive_flux *= factor;
-                negative_flux *= factor;
-#endif
-            }
-        }
-
-        if (arrays.size() > 0) {
-            // Now we can go ahead and add all the arrays to the image:
-            assert(added_flux == 0.);
-            for (size_t k=0; k<arrays.size(); ++k) {
-                PhotonArray* pa = arrays[k].get();
-                added_flux += pa->addTo(img);
-#ifdef DEBUGLOGGING
-                realized_flux += pa->getTotalFlux();
-                for(int i=0; i<pa->size(); ++i) {
-                    double f = pa->getFlux(i);
-                    if (f >= 0.) positive_flux += f;
-                    else negative_flux += -f;
-                }
-#endif
-            }
+            Nleft -= thisN;
+            xdbg<<"N -> "<<Nleft<<std::endl;
         }
 
 #ifdef DEBUGLOGGING
@@ -978,10 +874,10 @@ namespace galsim {
 
     template double SBProfile::drawShoot(
         ImageView<float> image, double N, UniformDeviate ud,
-        double max_extra_noise, bool poisson_flux, bool add_to_image) const;
+        double max_extra_noise, bool poisson_flux) const;
     template double SBProfile::drawShoot(
         ImageView<double> image, double N, UniformDeviate ud,
-        double max_extra_noise, bool poisson_flux, bool add_to_image) const;
+        double max_extra_noise, bool poisson_flux) const;
 
     template double SBProfile::draw(ImageView<float> img, double wmult) const;
     template double SBProfile::draw(ImageView<double> img, double wmult) const;
