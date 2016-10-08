@@ -331,6 +331,24 @@ class GSObject(object):
         """
         return self.SBProfile.getFlux()
 
+    def maxSB(self):
+        """Returns an estimate of the maximum surface brightness of the object.
+
+        Some profiles will return the exact peak SB, typically equal to the value of
+        obj.xValue(obj.centroid()).  However, not all profiles (e.g. Convolution) know how
+        calculate this value without just drawing the image and checking what the maximum value is.
+        Clearly, this would be inefficient, so in these cases, some kind of estimate is returned,
+        which will generally be conservative on the high side.
+
+        This routine is mainly used by the photon shooting process, where an overestimate of
+        the maximum surface brightness is acceptable.
+
+        Note, for negative-flux profiles, this will return the absolute value of the most negative
+        surface brightness.  Technically, it is an estimate of the maximum deviation from zero,
+        rather than the maximum value.  For most profiles, these are the same thing.
+        """
+        return self.SBProfile.maxSB()
+
     def getGSParams(self):
         """Returns the GSParams for the object.
         """
@@ -1100,8 +1118,8 @@ class GSObject(object):
         the `offset` parameter to handle any sub-pixel dithering you want.
 
         On return, the image will have an attribute `added_flux`, which will be set to the total
-        flux added to the image.  This may be useful as a sanity check that you have provided a large
-        enough image to catch most of the flux.  For example:
+        flux added to the image.  This may be useful as a sanity check that you have provided a
+        large enough image to catch most of the flux.  For example:
 
             >>> obj.drawImage(image)
             >>> assert image.added_flux > 0.99 * obj.getFlux()

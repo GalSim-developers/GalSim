@@ -204,6 +204,28 @@ namespace galsim {
         return static_cast<const InterpolantXY&>(*_kInterp).get1d();
     }
 
+    double SBInterpolatedImage::SBInterpolatedImageImpl::maxSB() const
+    {
+        // Find the pixel with the largest (absolute) value.
+        double maxsb = 0.;
+
+        Bounds<int> b = _init_bounds;
+        int xStart = -((b.getXMax()-b.getXMin()+1)/2);
+        int y = -((b.getYMax()-b.getYMin()+1)/2);
+
+        for (int iy = b.getYMin(); iy<= b.getYMax(); ++iy, ++y) {
+            int x = xStart;
+            double yy = y;
+            for (int ix = b.getXMin(); ix<= b.getXMax(); ++ix, ++x) {
+                double sb = _xtab->xval(x,y);
+                if (std::abs(sb) > maxsb) maxsb = std::abs(sb);
+            }
+        }
+        // Since xtab stores surface brightness (not flux), this is directly the value we want.
+        // i.e. no need to account for any pixel scale factor.
+        return maxsb;
+    }
+
     double SBInterpolatedImage::SBInterpolatedImageImpl::xValue(const Position<double>& p) const
     { return _xtab->interpolate(p.x, p.y, *_xInterp); }
 
@@ -946,7 +968,17 @@ namespace galsim {
         return _ktab->interpolate(k.x, k.y, *_kInterp);
     }
 
-    Position<double> SBInterpolatedKImage::SBInterpolatedKImageImpl::centroid() const {
+    double SBInterpolatedKImage::SBInterpolatedKImageImpl::maxSB() const
+    {
+        // No easy way to even estimate this value, so just raise an exception.
+        // Shouldn't be a problem, since this is really only used for photon shooting
+        // and we can't photon shoot InterpolatedKImages anyway.
+        throw std::runtime_error("InterpolatedKImage does not implement maxSB()");
+        return 0.;
+    }
+
+    Position<double> SBInterpolatedKImage::SBInterpolatedKImageImpl::centroid() const
+    {
         double flux = getFlux();
         if (flux == 0.) throw std::runtime_error("Flux == 0.  Centroid is undefined.");
         if (!_cenIsSet) {

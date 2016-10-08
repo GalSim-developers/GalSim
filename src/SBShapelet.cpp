@@ -131,6 +131,12 @@ namespace galsim {
         return flux;
     }
 
+    double SBShapelet::SBShapeletImpl::maxSB() const
+    {
+        // Usually b0 dominates the flux, so just take the maximum SB for that Gaussian.
+        return std::abs(_bvec[0]) / (2. * M_PI * _sigma * _sigma);
+    }
+
     Position<double> SBShapelet::SBShapeletImpl::centroid() const
     {
         std::complex<double> cen(0.);

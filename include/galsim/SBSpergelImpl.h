@@ -149,6 +149,7 @@ namespace galsim {
         { return Position<double>(0., 0.); }
 
         double getFlux() const { return _flux; }
+        double maxSB() const { return std::abs(_xnorm) * _info->xValue(0.); }
 
         /// @brief Spergel photon shooting done by rescaling photons from appropriate `SpergelInfo`
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;

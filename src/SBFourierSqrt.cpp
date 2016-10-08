@@ -127,6 +127,15 @@ namespace galsim {
         return std::sqrt(_adaptee.getFlux());
     }
 
+    double SBFourierSqrt::SBFourierSqrtImpl::maxSB() const
+    {
+        // In this case, we want the autoconvolution of this object to get back to the
+        // maxSB value of the adaptee.
+        // flux * maxSB / 2 = maxSB_adaptee
+        // maxSB = 2 * maxSB_adaptee / flux
+        return 2. * _adaptee.maxSB() / std::abs(getFlux());
+    }
+
     boost::shared_ptr<PhotonArray> SBFourierSqrt::SBFourierSqrtImpl::shoot(
         int N, UniformDeviate u) const
     {

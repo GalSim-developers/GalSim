@@ -80,6 +80,7 @@ namespace galsim {
         virtual bool isAnalyticK() const =0;
         virtual Position<double> centroid() const = 0;
         virtual double getFlux() const =0;
+        virtual double maxSB() const =0;
         virtual boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const=0;
 
         // Functions with default implementations:

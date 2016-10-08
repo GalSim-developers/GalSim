@@ -161,6 +161,12 @@ namespace galsim {
         return _pimpl->getFlux();
     }
 
+    double SBProfile::maxSB() const
+    {
+        assert(_pimpl.get());
+        return _pimpl->maxSB();
+    }
+
     boost::shared_ptr<PhotonArray> SBProfile::shoot(int N, UniformDeviate ud) const
     {
         assert(_pimpl.get());

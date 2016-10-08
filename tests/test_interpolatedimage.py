@@ -156,7 +156,7 @@ def test_fluxnorm():
     # Check that if we make an InterpolatedImage with flux normalization, it keeps that flux
     interp = galsim.InterpolatedImage(im) # note, flux normalization is the default
     np.testing.assert_almost_equal(total_flux, interp.getFlux(), decimal=9,
-                            err_msg='Did not keep flux normalization')
+                                   err_msg='Did not keep flux normalization')
     # Check that this is preserved when drawing
     im2 = interp.drawImage(scale = im_scale, method='no_pixel')
     np.testing.assert_almost_equal(total_flux, im2.array.sum(), decimal=9,
@@ -175,6 +175,10 @@ def test_fluxnorm():
     im4 = interp_sb.drawImage(scale = im_scale, method='sb')
     np.testing.assert_almost_equal(total_flux/im4.array.sum(), 1.0, decimal=6,
                                    err_msg='Failed roundtrip for sb normalization')
+    np.testing.assert_almost_equal(
+            im4.array.max(), interp_sb.maxSB(), 5,
+            err_msg="InterpolatedImage maxSB did not match maximum pixel value")
+
     do_pickle(interp_sb, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(interp_sb)
 

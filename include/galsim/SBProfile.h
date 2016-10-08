@@ -233,6 +233,9 @@ namespace galsim {
         /// @brief Get the total flux of the SBProfile.
         double getFlux() const;
 
+        /// @brief Get an estimate of the maximum surface brightness.
+        double maxSB() const;
+
         // ****Methods implemented in base class****
 
         // Transformations (all are special cases of affine transformations via SBTransform):

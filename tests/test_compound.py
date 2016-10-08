@@ -110,6 +110,14 @@ def test_convolve():
                 err_msg="Using GSObject Convolve([psf,pixel]) with GSParams() disagrees with"
                 "expected result")
 
+    cen = galsim.PositionD(0,0)
+    np.testing.assert_equal(conv.centroid(), cen)
+    np.testing.assert_almost_equal(conv.getFlux(), psf.flux * pixel.flux)
+    np.testing.assert_almost_equal(conv.flux, psf.flux * pixel.flux)
+    # Not almost_equal.  Convolutions don't give a very good estimate. 
+    # They are almost always too high, which is actually ok for how we use maxSB for phot shooting.
+    np.testing.assert_array_less(conv.xValue(cen), conv.maxSB())
+
     # Test photon shooting.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -419,6 +427,12 @@ def test_add():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Add(gauss1,gauss2) disagrees with expected result")
 
+    cen = galsim.PositionD(0,0)
+    np.testing.assert_equal(sum.centroid(), cen)
+    np.testing.assert_almost_equal(sum.getFlux(), gauss1.flux + gauss2.flux)
+    np.testing.assert_almost_equal(sum.flux, gauss1.flux + gauss2.flux)
+    np.testing.assert_almost_equal(sum.xValue(cen), sum.maxSB())
+
     # Check with default_params
     sum = galsim.Add(gauss1,gauss2,gsparams=default_params)
     sum.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
@@ -605,6 +619,12 @@ def test_autoconvolve():
             myImg1.array, myImg2.array, 4,
             err_msg="Using AutoCorrelate with GSParams() disagrees with expected result")
 
+    cen = galsim.PositionD(0,0)
+    np.testing.assert_equal(conv2.centroid(), cen)
+    np.testing.assert_almost_equal(conv2.getFlux(), psf.flux**2)
+    np.testing.assert_almost_equal(conv2.flux, psf.flux**2)
+    np.testing.assert_array_less(conv2.xValue(cen), conv2.maxSB())
+
     # Test photon shooting.
     do_shoot(conv2,myImg2,"AutoConvolve(Moffat)")
 
@@ -622,6 +642,12 @@ def test_autoconvolve():
             myImg1.array, myImg2.array, 4,
             err_msg="Asymmetric sum of Gaussians convolved with self disagrees with "+
             "AutoConvolve result")
+
+    cen = 2. * add.centroid()
+    np.testing.assert_equal(corr.centroid(), cen)
+    np.testing.assert_almost_equal(corr.getFlux(), add.flux**2)
+    np.testing.assert_almost_equal(corr.flux, add.flux**2)
+    np.testing.assert_array_less(corr.xValue(cen), corr.maxSB())
 
     # Check picklability
     do_pickle(conv2.SBProfile, lambda x: (repr(x.getObj()), x.isRealSpace(), x.getGSParams()))
@@ -758,6 +784,11 @@ def test_fourier_sqrt():
     np.testing.assert_almost_equal(check.centroid().x, sqrt.centroid().x)
     np.testing.assert_almost_equal(check.centroid().y, sqrt.centroid().y)
     np.testing.assert_almost_equal(check.getFlux(), sqrt.getFlux())
+    np.testing.assert_almost_equal(check.xValue(check.centroid()), check.maxSB())
+    print('check.maxSB = ',check.maxSB())
+    print('sqrt.maxSB = ',sqrt.maxSB())
+    # This isn't super accurate...
+    np.testing.assert_allclose(check.maxSB(), sqrt.maxSB(), rtol=0.1)
     printval(myImg1, myImg2)
     np.testing.assert_array_almost_equal(
             myImg1.array, myImg2.array, 4,

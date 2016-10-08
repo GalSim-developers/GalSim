@@ -51,6 +51,28 @@ namespace galsim {
         return static_cast<const SBConvolveImpl&>(*_pimpl).isRealSpace();
     }
 
+    double SBConvolve::SBConvolveImpl::maxSB() const
+    {
+        // This one is probably the least accurate of all the estimates of maxSB.
+        // The calculation is based on the exact value for Gaussians.
+        //     maxSB = flux / 2pi sigma^2
+        // When convolving multiple Gaussians together, the sigma^2 values add:
+        //     sigma_final^2 = Sum_i sigma_i^2
+        // from which we can calculate
+        //     maxSB = flux_final / 2pi sigma_final^2
+        // or
+        //     maxSB = flux_final / Sum_i (flux_i / maxSB_i)
+        //
+        // For non-Gaussians, this procedure will tend to produce an over-estimate of the
+        // true maximum SB.  Non-Gaussian profiles tend to have peakier parts which get smoothed
+        // more than the Gaussian does.  So this is likely to be too high, which is acceptable.
+        ConstIter sptr = _plist.begin();
+        double twopisigmasq = sptr->getFlux() / sptr->maxSB();
+        for (++sptr; sptr!=_plist.end(); ++sptr) 
+            twopisigmasq += std::abs(sptr->getFlux()) / sptr->maxSB();
+        return _fluxProduct / twopisigmasq;
+    }
+
     std::string SBConvolve::SBConvolveImpl::serialize() const
     {
         std::ostringstream oss(" ");
@@ -292,6 +314,12 @@ namespace galsim {
         return static_cast<const SBAutoConvolveImpl&>(*_pimpl).isRealSpace();
     }
 
+    double SBAutoConvolve::SBAutoConvolveImpl::maxSB() const
+    {
+        // f^2 / (f/sb + f/sb) = f*sb/2
+        return _adaptee.getFlux() * _adaptee.maxSB() / 2.;
+    }
+
     std::string SBAutoConvolve::SBAutoConvolveImpl::serialize() const
     {
         std::ostringstream oss(" ");
@@ -379,6 +407,11 @@ namespace galsim {
     {
         assert(dynamic_cast<const SBAutoCorrelateImpl*>(_pimpl.get()));
         return static_cast<const SBAutoCorrelateImpl&>(*_pimpl).isRealSpace();
+    }
+
+    double SBAutoCorrelate::SBAutoCorrelateImpl::maxSB() const
+    {
+        return _adaptee.getFlux() * _adaptee.maxSB() / 2.;
     }
 
     std::string SBAutoCorrelate::SBAutoCorrelateImpl::serialize() const

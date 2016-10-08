@@ -67,6 +67,7 @@ namespace galsim {
 
         /// @brief Returns the true flux (may be different from the specified flux)
         double getFlux() const { return _flux; }
+        double maxSB() const;
 
         /// @brief photon shooting is not implemented yet.
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;

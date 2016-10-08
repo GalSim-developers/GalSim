@@ -87,6 +87,9 @@ def test_gaussian():
     np.testing.assert_almost_equal(
             myImg.array.sum() *dx**2, myImg.added_flux, 5,
             err_msg="Gaussian profile GSObject::draw returned wrong added_flux")
+    np.testing.assert_almost_equal(
+            myImg.array.max(), gauss.maxSB(), 5,
+            err_msg="Gaussian profile maxSB did not match maximum pixel value")
 
     # Check a non-square image
     print(myImg.bounds)
@@ -152,9 +155,12 @@ def test_gaussian_properties():
     # Check Fourier properties
     np.testing.assert_almost_equal(gauss.maxK(), 3.7169221888498383 / test_sigma)
     np.testing.assert_almost_equal(gauss.stepK(), 0.533644625664 / test_sigma)
-    np.testing.assert_equal(gauss.kValue(cen), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(gauss.kValue(cen), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(gauss.getFlux(), test_flux)
+    np.testing.assert_almost_equal(gauss.flux, test_flux)
     import math
     np.testing.assert_almost_equal(gauss.xValue(cen), 1./(2.*math.pi) * test_flux / test_sigma**2)
+    np.testing.assert_almost_equal(gauss.xValue(cen), gauss.maxSB())
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
         gauss = galsim.Gaussian(flux=inFlux, sigma=2.)
@@ -363,6 +369,9 @@ def test_exponential():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Exponential disagrees with expected result")
+    np.testing.assert_almost_equal(
+            myImg.array.max(), expon.maxSB(), 5,
+            err_msg="Exponential profile maxSB did not match maximum pixel value")
 
     # Check with default_params
     expon = galsim.Exponential(flux=1., scale_radius=r0, gsparams=default_params)
@@ -403,9 +412,12 @@ def test_exponential_properties():
     # Check Fourier properties
     np.testing.assert_almost_equal(expon.maxK(), 10 / test_scale[0])
     np.testing.assert_almost_equal(expon.stepK(), 0.37436747851 / test_scale[0])
-    np.testing.assert_equal(expon.kValue(cen), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(expon.kValue(cen), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(expon.getFlux(), test_flux)
+    np.testing.assert_almost_equal(expon.flux, test_flux)
     import math
     np.testing.assert_almost_equal(expon.xValue(cen), 1./(2.*math.pi)*test_flux/test_scale[0]**2)
+    np.testing.assert_almost_equal(expon.xValue(cen), expon.maxSB())
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
         expon = galsim.Exponential(flux=inFlux, scale_radius=1.8)
@@ -525,6 +537,9 @@ def test_sersic():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Sersic disagrees with expected result")
+    np.testing.assert_almost_equal(
+            myImg.array.max(), sersic.maxSB(), 5,
+            err_msg="Sersic profile maxSB did not match maximum pixel value")
 
     # Check with default_params
     sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1, gsparams=default_params)
@@ -568,9 +583,18 @@ def test_sersic():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using truncated GSObject Sersic disagrees with expected result")
+    np.testing.assert_almost_equal(
+            myImg.array.max(), sersic.maxSB(), 5,
+            err_msg="Truncated Sersic profile maxSB did not match maximum pixel value")
 
     # Use non-unity values.
-    sersic = galsim.Sersic(n=3, flux=1.7, half_light_radius=2.3, trunc=5.9)
+    sersic = galsim.Sersic(n=3, flux=test_flux, half_light_radius=2.3, trunc=5.9)
+    cen = galsim.PositionD(0, 0)
+    np.testing.assert_equal(sersic.centroid(), cen)
+    np.testing.assert_almost_equal(sersic.kValue(cen), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(sersic.getFlux(), test_flux)
+    np.testing.assert_almost_equal(sersic.flux, test_flux)
+    np.testing.assert_almost_equal(sersic.xValue(cen), sersic.maxSB())
 
     # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
@@ -838,6 +862,9 @@ def test_sersic_05():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using Sersic with n=0.5 disagrees with expected result for Gaussian")
+    np.testing.assert_almost_equal(
+            myImg.array.max(), sersic.maxSB(), 5,
+            err_msg="Sersic profile with n=0.5 maxSB did not match maximum pixel value")
 
     do_kvalue(sersic,myImg,"n=0.5 Sersic")
 
@@ -845,10 +872,13 @@ def test_sersic_05():
     sersic = galsim.Sersic(n=0.5, flux=test_flux, half_light_radius=test_sigma * hlr_sigma)
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(sersic.centroid(), cen)
-    np.testing.assert_equal(sersic.kValue(cen), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(sersic.kValue(cen), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(sersic.getFlux(), test_flux)
+    np.testing.assert_almost_equal(sersic.flux, test_flux)
     import math
     np.testing.assert_almost_equal(sersic.xValue(cen), 1./(2.*math.pi) * test_flux / test_sigma**2,
                                    decimal=5)
+    np.testing.assert_almost_equal(sersic.xValue(cen), sersic.maxSB())
 
     # Also test some random values other than the center:
     gauss = galsim.Gaussian(flux=test_flux, sigma=test_sigma)
@@ -875,6 +905,9 @@ def test_sersic_1():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using Sersic n=1 disagrees with expected result for Exponential")
+    np.testing.assert_almost_equal(
+            myImg.array.max(), sersic.maxSB(), 5,
+            err_msg="Sersic profile with n=1 maxSB did not match maximum pixel value")
 
     do_kvalue(sersic,myImg,"n=1 Sersic")
 
@@ -882,10 +915,13 @@ def test_sersic_1():
     sersic = galsim.Sersic(n=1, flux=test_flux, half_light_radius=test_scale[0] * hlr_r0)
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(sersic.centroid(), cen)
-    np.testing.assert_equal(sersic.kValue(cen), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(sersic.kValue(cen), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(sersic.getFlux(), test_flux)
+    np.testing.assert_almost_equal(sersic.flux, test_flux)
     import math
     np.testing.assert_almost_equal(sersic.xValue(cen), 1./(2.*math.pi)*test_flux/test_scale[0]**2,
                                    decimal=5)
+    np.testing.assert_almost_equal(sersic.xValue(cen), sersic.maxSB())
 
     # Also test some random values other than the center:
     expon = galsim.Exponential(flux=test_flux, scale_radius=test_scale[0])
@@ -910,6 +946,9 @@ def test_airy():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Airy disagrees with expected result")
+    np.testing.assert_almost_equal(
+            myImg.array.max(), airy.maxSB(), 5,
+            err_msg="Airy profile maxSB did not match maximum pixel value")
 
     # Check with default_params
     airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=1, gsparams=default_params)
@@ -922,6 +961,18 @@ def test_airy():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Airy with GSParams() disagrees with expected result")
+    np.testing.assert_almost_equal(
+            myImg.array.max(), airy.maxSB(), 5,
+            err_msg="Airy profile with obscuration maxSB did not match maximum pixel value")
+
+    # Check some properties
+    airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.1, flux=test_flux)
+    cen = galsim.PositionD(0, 0)
+    np.testing.assert_equal(airy.centroid(), cen)
+    np.testing.assert_almost_equal(airy.kValue(cen), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(airy.getFlux(), test_flux)
+    np.testing.assert_almost_equal(airy.flux, test_flux)
+    np.testing.assert_almost_equal(airy.xValue(cen), airy.maxSB())
 
     # Test photon shooting.
     airy = galsim.Airy(lam_over_diam=1./0.8, obscuration=0.0, flux=test_flux)
@@ -1053,6 +1104,9 @@ def test_box():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Pixel disagrees with expected result")
+    np.testing.assert_almost_equal(
+            myImg.array.max(), pixel.maxSB(), 5,
+            err_msg="Pixel profile maxSB did not match maximum pixel value")
 
     # Check with default_params
     pixel = galsim.Pixel(scale=1, flux=1, gsparams=default_params)
@@ -1095,7 +1149,17 @@ def test_box():
             # These are slow because they require a pretty huge fft.
             # So only do them if running as main.
             do_kvalue(box,im,"Box with width,height = %f,%f"%(width,height))
-
+            box.drawImage(myImg, method="sb", use_true_center=False)
+            np.testing.assert_almost_equal(
+                    myImg.array.max(), box.maxSB(), 5,
+                    err_msg="Box profile maxSB did not match maximum pixel value")
+        cen = galsim.PositionD(0, 0)
+        np.testing.assert_equal(box.centroid(), cen)
+        np.testing.assert_almost_equal(box.kValue(cen), (1+0j) * test_flux)
+        np.testing.assert_almost_equal(box.getFlux(), test_flux)
+        np.testing.assert_almost_equal(box.flux, test_flux)
+        np.testing.assert_almost_equal(box.xValue(cen), box.maxSB())
+ 
     # Check picklability
     do_pickle(box.SBProfile, lambda x: (x.getWidth(), x.getHeight(), x.getFlux(), x.getGSParams()))
     do_pickle(box, lambda x: x.drawImage(method='no_pixel'))
@@ -1110,6 +1174,12 @@ def test_box():
         do_kvalue(box,im, "Sheared Box")
         do_pickle(box, lambda x: x.drawImage(method='no_pixel'))
         do_pickle(box)
+    cen = galsim.PositionD(0, 0)
+    np.testing.assert_equal(box.centroid(), cen)
+    np.testing.assert_almost_equal(box.kValue(cen), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(box.getFlux(), test_flux)
+    np.testing.assert_almost_equal(box.flux, test_flux)
+    np.testing.assert_almost_equal(box.xValue(cen), box.maxSB())
 
     # This is also a profile that may be convolved using real space convolution, so test that.
     if __name__ == '__main__':
@@ -1137,6 +1207,9 @@ def test_tophat():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject TopHat disagrees with expected result")
+    np.testing.assert_almost_equal(
+            myImg.array.max(), tophat.maxSB(), 5,
+            err_msg="TopHat profile maxSB did not match maximum pixel value")
 
     # Check with default_params
     tophat = galsim.TopHat(radius=1.01, flux=1, gsparams=default_params)
@@ -1174,6 +1247,14 @@ def test_tophat():
         conv = galsim.Convolve(tophat, galsim.Pixel(scale=scale), real_space=True)
         do_kvalue(conv,im, "Sheared TopHat convolved with pixel in real space")
 
+        cen = galsim.PositionD(0, 0)
+        np.testing.assert_equal(tophat.centroid(), cen)
+        np.testing.assert_almost_equal(tophat.kValue(cen), (1+0j) * test_flux)
+        np.testing.assert_almost_equal(tophat.getFlux(), test_flux)
+        np.testing.assert_almost_equal(tophat.flux, test_flux)
+        np.testing.assert_almost_equal(tophat.xValue(cen), tophat.maxSB())
+
+
     # Check picklability
     do_pickle(tophat.SBProfile, lambda x: (x.getRadius(), x.getFlux(), x.getGSParams()))
     do_pickle(tophat, lambda x: x.drawImage(method='no_pixel'))
@@ -1188,6 +1269,12 @@ def test_tophat():
     tophat = tophat.shear(galsim.Shear(g1=0.15, g2=-0.33))
     do_shoot(tophat,im, "Sheared TopHat")
     do_kvalue(tophat,im, "Sheared TopHat")
+    cen = galsim.PositionD(0, 0)
+    np.testing.assert_equal(tophat.centroid(), cen)
+    np.testing.assert_almost_equal(tophat.kValue(cen), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(tophat.getFlux(), test_flux)
+    np.testing.assert_almost_equal(tophat.flux, test_flux)
+    np.testing.assert_almost_equal(tophat.xValue(cen), tophat.maxSB())
 
     # Check picklability
     do_pickle(tophat, lambda x: x.drawImage(method='no_pixel'))
@@ -1220,6 +1307,9 @@ def test_moffat():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Moffat disagrees with expected result")
+    np.testing.assert_almost_equal(
+            myImg.array.max(), moffat.maxSB(), 5,
+            err_msg="Moffat profile maxSB did not match maximum pixel value")
 
     # Check with default_params
     moffat = galsim.Moffat(beta=2, half_light_radius=1, trunc=5*fwhm_backwards_compatible, flux=1,
@@ -1259,6 +1349,12 @@ def test_moffat():
         do_kvalue(moffat,myImg,"Untruncated Moffat with beta=%f"%beta)
         # Don't bother repeating the do_shoot tests, since they are rather slow, and the code
         # isn't different for the different beta values.
+        cen = galsim.PositionD(0, 0)
+        np.testing.assert_equal(moffat.centroid(), cen)
+        np.testing.assert_almost_equal(moffat.kValue(cen), (1+0j) * test_flux)
+        np.testing.assert_almost_equal(moffat.getFlux(), test_flux)
+        np.testing.assert_almost_equal(moffat.flux, test_flux)
+        np.testing.assert_almost_equal(moffat.xValue(cen), moffat.maxSB())
 
 
 @timer
@@ -1285,6 +1381,10 @@ def test_moffat_properties():
     np.testing.assert_almost_equal(psf.getHalfLightRadius(), 1.0)
     np.testing.assert_almost_equal(psf.getFWHM(), fwhm_backwards_compatible)
     np.testing.assert_almost_equal(psf.xValue(cen), 0.50654651638242509)
+    np.testing.assert_almost_equal(psf.kValue(cen), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(psf.getFlux(), test_flux)
+    np.testing.assert_almost_equal(psf.flux, test_flux)
+    np.testing.assert_almost_equal(psf.xValue(cen), psf.maxSB())
 
     # Now create the same profile using the half_light_radius:
     psf = galsim.Moffat(beta=2.0, half_light_radius=1.,
@@ -1296,6 +1396,10 @@ def test_moffat_properties():
     np.testing.assert_almost_equal(psf.getHalfLightRadius(), 1.0)
     np.testing.assert_almost_equal(psf.getFWHM(), fwhm_backwards_compatible)
     np.testing.assert_almost_equal(psf.xValue(cen), 0.50654651638242509)
+    np.testing.assert_almost_equal(psf.kValue(cen), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(psf.getFlux(), test_flux)
+    np.testing.assert_almost_equal(psf.flux, test_flux)
+    np.testing.assert_almost_equal(psf.xValue(cen), psf.maxSB())
 
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
@@ -1565,6 +1669,9 @@ def test_kolmogorov():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Kolmogorov disagrees with expected result")
+    np.testing.assert_almost_equal(
+            myImg.array.max(), kolm.maxSB(), 5,
+            err_msg="Kolmogorov profile maxSB did not match maximum pixel value")
 
     # Check with default_params
     kolm = galsim.Kolmogorov(lam_over_r0=1.5, flux=test_flux, gsparams=default_params)
@@ -1627,6 +1734,10 @@ def test_kolmogorov_properties():
     np.testing.assert_almost_equal(psf.getHalfLightRadius(), lor * 0.554811)
     np.testing.assert_almost_equal(psf.getFWHM(), lor * 0.975865)
     np.testing.assert_almost_equal(psf.xValue(cen), 0.6283160485127478)
+    np.testing.assert_almost_equal(psf.kValue(cen), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(psf.getFlux(), test_flux)
+    np.testing.assert_almost_equal(psf.flux, test_flux)
+    np.testing.assert_almost_equal(psf.xValue(cen), psf.maxSB())
 
     # Check input flux vs output flux
     lors = [1, 0.5, 2, 5]
@@ -1806,6 +1917,9 @@ def test_spergel():
         np.testing.assert_almost_equal(
             myImg.array.sum()*dx**2, myImg.added_flux, 5,
             err_msg="Spergel profile GSObject::draw returned wrong added_flux")
+        np.testing.assert_almost_equal(
+                myImg.array.max(), spergel.maxSB(), 5,
+                err_msg="Spergel profile maxSB did not match maximum pixel value")
 
         # Only nu >= -0.3 give reasonably sized FFTs,
         # and small nu method='phot' is super slow.
@@ -1847,12 +1961,18 @@ def test_spergel_properties():
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(spergel.centroid(), cen)
     # # Check Fourier properties
-    np.testing.assert_equal(spergel.kValue(cen), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(spergel.kValue(cen), (1+0j) * test_flux)
+    maxk = spergel.maxK()
+    np.testing.assert_array_less(spergel.kValue(maxk,0)/test_flux, galsim.GSParams().maxk_threshold)
+    np.testing.assert_almost_equal(spergel.getFlux(), test_flux)
+    np.testing.assert_almost_equal(spergel.flux, test_flux)
+    np.testing.assert_almost_equal(spergel.xValue(cen), spergel.maxSB())
     # Check input flux vs output flux
     for inFlux in np.logspace(-2, 2, 10):
         spergel = galsim.Spergel(nu=0.0, flux=inFlux, scale_radius=1.0)
         outFlux = spergel.getFlux()
         np.testing.assert_almost_equal(outFlux, inFlux)
+        np.testing.assert_almost_equal(spergel.xValue(cen), spergel.maxSB())
 
 
 @timer
@@ -1982,6 +2102,9 @@ def test_spergel_05():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using Spergel nu=0.5 disagrees with expected result for Exponential")
+    np.testing.assert_almost_equal(
+            myImg.array.max(), spergel.maxSB(), 5,
+            err_msg="Spergel profile nu=0.5 maxSB did not match maximum pixel value")
 
     do_kvalue(spergel,myImg,"nu=0.5 Spergel")
 
@@ -1989,10 +2112,13 @@ def test_spergel_05():
     spergel = galsim.Spergel(nu=0.5, flux=test_flux, half_light_radius=test_scale[0] * hlr_r0)
     cen = galsim.PositionD(0, 0)
     np.testing.assert_equal(spergel.centroid(), cen)
-    np.testing.assert_equal(spergel.kValue(cen), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(spergel.kValue(cen), (1+0j) * test_flux)
+    np.testing.assert_almost_equal(spergel.getFlux(), test_flux)
+    np.testing.assert_almost_equal(spergel.flux, test_flux)
     import math
     np.testing.assert_almost_equal(spergel.xValue(cen), 1./(2.*math.pi)*test_flux/test_scale[0]**2,
                                    decimal=5)
+    np.testing.assert_almost_equal(spergel.xValue(cen), spergel.maxSB())
 
     # Also test some random values other than the center:
     expon = galsim.Exponential(flux=test_flux, scale_radius=test_scale[0])

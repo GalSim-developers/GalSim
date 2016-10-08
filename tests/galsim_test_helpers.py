@@ -172,6 +172,8 @@ def do_shoot(prof, img, name):
     print('img.sum = ',img.array.sum(),'  cf. ',test_flux)
     np.testing.assert_almost_equal(img.array.sum(), test_flux, 4,
             err_msg="Flux normalization for %s disagrees with expected result"%name)
+    # maxSB is not always very accurate, but it should be an overestimate if wrong.
+    assert img.array.max() <= prof.maxSB()*dx**2 * 1.4, "maxSB for %s is too small."%name
 
     scale = test_flux / flux_tot # from above
     nphot *= scale * scale
@@ -183,6 +185,10 @@ def do_shoot(prof, img, name):
     print('img.sum = ',img.array.sum(),'  cf. ',test_flux)
     np.testing.assert_almost_equal(img.array.sum(), test_flux, photon_decimal_test,
             err_msg="Photon shooting normalization for %s disagrees with expected result"%name)
+    print('img.max = ',img.array.max(),'  cf. ',prof.maxSB()*dx**2)
+    print('ratio = ',img.array.max() / (prof.maxSB()*dx**2))
+    assert img.array.max() <= prof.maxSB()*dx**2 * 1.4, \
+            "Photon shooting for %s produced too high max pixel."%name
 
 
 def do_kvalue(prof, im1, name):

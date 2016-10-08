@@ -58,7 +58,13 @@ def test_shapelet_gaussian():
             np.testing.assert_array_almost_equal(
                     im1.array, im2.array, 5,
                     err_msg="Shapelet with (only) b00=1 disagrees with Gaussian result"
-                    "for flux=%f, sigma=%f, order=%d"%(test_flux,sigma,order))
+                            "for flux=%f, sigma=%f, order=%d"%(test_flux,sigma,order))
+            np.testing.assert_almost_equal(
+                    gauss.maxSB(), shapelet.maxSB(), 5,
+                    err_msg="Shapelet maxSB did not match Gaussian maxSB")
+            np.testing.assert_almost_equal(
+                    gauss.getFlux(), shapelet.getFlux(), 5,
+                    err_msg="Shapelet getFlux did not match Gaussian getFlux")
 
 
 @timer
@@ -101,6 +107,9 @@ def test_shapelet_drawImage():
             print('im.sum = ',flux,'  cf. ',test_flux)
             np.testing.assert_almost_equal(flux / test_flux, 1., 4,
                     err_msg="Flux normalization for Shapelet disagrees with expected result")
+            np.testing.assert_allclose(
+                    im.array.max(), shapelet.maxSB() * im.scale**2, rtol=0.1,
+                    err_msg="Shapelet maxSB did not match maximum pixel")
 
             # Test centroid
             # Note: this only works if the image has odd sizes.  If they are even, then
@@ -140,6 +149,11 @@ def test_shapelet_properties():
     # Check flux
     flux = bvec[0] + bvec[5] + bvec[14]
     np.testing.assert_almost_equal(shapelet.getFlux(), flux, 10)
+    # The maxSB is not very accurate for Shapelet, but in this case it is still ok (matching
+    # xValue(0,0), which isn't actually the maximum) to 2 digits.
+    np.testing.assert_almost_equal(
+            shapelet.xValue(0,0), shapelet.maxSB(), 2,
+            err_msg="Shapelet maxSB did not match maximum pixel value")
     # Check centroid
     cen = galsim.PositionD(bvec[1],-bvec[2]) + np.sqrt(2.) * galsim.PositionD(bvec[8],-bvec[9])
     cen *= 2. * sigma / flux

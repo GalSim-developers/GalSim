@@ -52,6 +52,7 @@ namespace galsim {
         { return Position<double>(0., 0.); }
 
         double getFlux() const { return _flux; }
+        double maxSB() const { return _norm; }
 
         double getWidth() const { return _width; }
         double getHeight() const { return _height; }
@@ -125,6 +126,7 @@ namespace galsim {
         { return Position<double>(0., 0.); }
 
         double getFlux() const { return _flux; }
+        double maxSB() const { return _norm; }
 
         double getRadius() const { return _r0; }
 

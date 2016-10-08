@@ -43,6 +43,14 @@ namespace galsim {
         return static_cast<const SBAddImpl&>(*_pimpl).getObjs();
     }
 
+    double SBAdd::SBAddImpl::maxSB() const
+    {
+        ConstIter sptr = _plist.begin();
+        double maxsb = sptr->maxSB();
+        for (++sptr; sptr!=_plist.end(); ++sptr) maxsb += sptr->maxSB();
+        return maxsb;
+    }
+
     std::string SBAdd::SBAddImpl::serialize() const
     {
         std::ostringstream oss(" ");

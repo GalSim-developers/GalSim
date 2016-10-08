@@ -50,6 +50,7 @@ namespace galsim {
 
         Position<double> centroid() const;
         double getFlux() const;
+        double maxSB() const;
 
         // shoot also not implemented.
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const;

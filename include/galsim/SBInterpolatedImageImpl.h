@@ -70,6 +70,7 @@ namespace galsim {
         bool isAnalyticK() const { return true; }
         Position<double> centroid() const;
         double getFlux() const { return _flux; }
+        double maxSB() const;
 
         /**
          *
@@ -221,6 +222,7 @@ namespace galsim {
         bool isAnalyticK() const { return true; }
         Position<double> centroid() const;
         double getFlux() const { return _flux; }
+        double maxSB() const;
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const
         { throw SBError("SBInterpolatedKImage::shoot() is not implemented"); }
 
