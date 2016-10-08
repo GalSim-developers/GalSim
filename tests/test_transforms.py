@@ -669,6 +669,8 @@ def test_flip():
             galsim.Convolve([ galsim.RealGalaxy(rgc, index=1, flux=1.7),  # "Fake" RealGalaxy
                               galsim.Gaussian(sigma=0.08) ]),             # (cf. test_real.py)
             galsim.Spergel(nu=-0.19, half_light_radius=0.17, flux=1.7),
+            galsim.Spergel(nu=0., half_light_radius=0.17, flux=1.7),
+            galsim.Spergel(nu=0.8, half_light_radius=0.17, flux=1.7),
             galsim.Sersic(n=2.3, half_light_radius=0.17, flux=1.7),
             galsim.Sersic(n=2.3, half_light_radius=0.17, flux=1.7, trunc=0.82),
             # The shifts here caught a bug in how SBTransform handled the recentering.

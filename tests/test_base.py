@@ -1235,7 +1235,7 @@ def test_tophat():
     # The choices of radius here are fairly specific.  If the edge of the circle comes too close
     # to the center of one of the pixels, then the test will fail, since the Fourier draw method
     # will blur the edge a bit and give some flux to that pixel.
-    for radius in [ 1.2, 0.83, 2.11 ]:
+    for radius in [ 1.2, 0.93, 2.11 ]:
         print('radius = ',radius)
         tophat = galsim.TopHat(radius=radius, flux=test_flux)
         print('im.bounds = ',im.bounds)

@@ -449,6 +449,11 @@ namespace galsim {
             // There will be aliasing.  Construct a KTable out to maxK() and
             // then wrap it
             int Nk = int(std::ceil(maxK()/dk)) * 2;
+            dbg<<"Initial Nk = "<<Nk<<std::endl;
+            // Round up to the next multiple of NFT.  Otherwise, the wrapping will start/stop
+            // somewhere in the middle of the image, which can lead to subtle artifacts like
+            // losing symmetry that should be present in the final image.
+            Nk = ((Nk-1)/NFT + 1) * NFT;
             dbg<<"Use Nk = "<<Nk<<std::endl;
             if (Nk > _pimpl->gsparams->maximum_fft_size)
                 FormatAndThrow<SBError>() <<

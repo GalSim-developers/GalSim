@@ -122,17 +122,24 @@ namespace galsim {
 
     boost::shared_ptr<KTable> KTable::wrap(int Nout) const 
     {
+        // MJ: I found that when using this routing with N not being a multiple of Nout, that
+        //     the output image could lose some symmetries.  e.g. the test_flip tests in
+        //     test_transform.py could fail when wrapping was involved.  Now the fourierDraw
+        //     routing in SBProfile.cpp enforces that N = k Nout, and things seem to be
+        //     working fine.  But beware that there may be a subtle bug, probably in the
+        //     handling of the N/2 column or row, when the wrap starts and ends somewhere in
+        //     the middle of the output grid.
         if (Nout < 0) FormatAndThrow<FFTError>() << "KTable::wrap invalid Nout= " << Nout;
         // Make it even:
         Nout = 2*((Nout+1)/2);
         int Nouto2 = Nout>>1;
         boost::shared_ptr<KTable> out(new KTable(Nout, _dk, std::complex<double>(0.,0.)));
-        for (int iyin=-_No2; iyin<_No2; ++iyin) {
+        for (int iyin=-_No2; iyin<=_No2; ++iyin) {
             int iyout = iyin;
             while (iyout < -Nouto2) iyout += Nout;
             while (iyout >= Nouto2) iyout -= Nout;
             int ixin = 0;
-            while (ixin < _No2) {
+            while (ixin <= _No2) {
                 // number of points to accumulate without conjugation:
                 // Do points that do *not* need to be conjugated:
                 int nx = std::min(_No2-ixin+1, Nouto2+1);
@@ -144,7 +151,7 @@ namespace galsim {
                     ++outptr;
                 }
                 ixin += Nouto2;
-                if (ixin >= _No2) break;
+                if (ixin > _No2) break;
                 // Now do any points that *do* need conjugation
                 // such that output storage locations go backwards
                 inptr = _array.get() + index(ixin,iyin);
