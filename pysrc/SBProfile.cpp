@@ -117,9 +117,8 @@ namespace galsim {
                      (bp::arg("image"), bp::arg("wmult")=1.),
                      "Draw in-place and return the summed flux.")
                 .def("drawK",
-                     (void (SBProfile::*)(ImageView<U>, ImageView<U>,
-                                          double) const)&SBProfile::drawK,
-                     (bp::arg("re"), bp::arg("im"), bp::arg("wmult")=1.),
+                     (void (SBProfile::*)(ImageView<U>, ImageView<U>) const)&SBProfile::drawK,
+                     (bp::arg("re"), bp::arg("im")),
                      "Draw k-space image (real and imaginary components).")
                 ;
         }
@@ -155,9 +154,6 @@ namespace galsim {
                 "\n"
                 "Note that in an FFT the image may be calculated internally on a\n"
                 "larger grid than the provided image to avoid folding.\n"
-                "Specifying wmult > 1 will draw an image that is wmult times larger than the\n"
-                "default choice, i.e. it will have finer sampling in k space and have less\n"
-                "folding.\n"
                 ;
 
             bp::class_<SBProfile> pySBProfile("SBProfile", doc, bp::no_init);

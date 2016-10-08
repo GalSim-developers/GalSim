@@ -496,18 +496,9 @@ namespace galsim {
     }
 
     template <typename T>
-    void SBProfile::drawK(ImageView<T> Re, ImageView<T> Im, double wmult) const
+    void SBProfile::drawK(ImageView<T> Re, ImageView<T> Im) const
     {
-        if (isAnalyticK())
-            plainDrawK(Re, Im);   // calculate in k space
-        else
-            fourierDrawK(Re, Im, wmult); // calculate via FT from real space
-    }
-
-    template <typename T>
-    void SBProfile::plainDrawK(ImageView<T> Re, ImageView<T> Im) const
-    {
-        dbg<<"Start plainDrawK: \n";
+        dbg<<"Start drawK: \n";
         // Make sure input images match or are both null
         assert(Re.getBounds() == Im.getBounds());
 
@@ -531,75 +522,6 @@ namespace galsim {
         tmv::MatrixView<T> mIm(Im.getData(),m,n,1,Im.getStride(),tmv::NonConj);
         addMatrix(mRe,val.realPart());
         addMatrix(mIm,val.imagPart());
-    }
-
-    // Build K domain by transform from X domain.  This is likely
-    // to be a rare event but what the heck.  Enforce no "aliasing"
-    // by oversampling and extending x domain if needed.  Force
-    // power of 2 for transform
-    //
-    // Note: There are no unit tests of this, since all profiles have isAnalyticK() == true.
-    //       So drawK never sends anything this way.
-    template <typename T>
-    void SBProfile::fourierDrawK(ImageView<T> Re, ImageView<T> Im, double wmult) const
-    {
-        dbg<<"Start fourierDrawK: \n";
-        // Make sure input images match or are both null
-        assert(Re.getBounds() == Im.getBounds());
-
-        // Do we need to oversample in k to avoid folding from real space?
-        // Note a little room for numerical slop before triggering oversampling:
-        int oversamp = int( std::ceil(1./stepK() - 0.0001));
-
-        // Now decide how big the FT must be to avoid folding
-        double kRange = 2*maxK()*wmult;
-        // Some slop to keep from getting extra pixels due to roundoff errors in calculations.
-        int Nnofold = int(std::ceil(oversamp*kRange -0.0001));
-        dbg<<"Nnofold = "<<Nnofold<<std::endl;
-
-        // And if there is a target image size, we must make something big enough to cover
-        // the target image size:
-        int xSize, ySize;
-        xSize = Re.getXMax()-Re.getXMin()+1;
-        ySize = Re.getYMax()-Re.getYMin()+1;
-        if (xSize * oversamp > Nnofold) Nnofold = xSize*oversamp;
-        if (ySize * oversamp > Nnofold) Nnofold = ySize*oversamp;
-        kRange = Nnofold / oversamp;
-
-        // Round up to a power of 2 to get required FFT size
-        // Round up to a good size for making FFTs:
-        int NFT = goodFFTSize(Nnofold);
-        NFT = std::max(NFT,_pimpl->gsparams->minimum_fft_size);
-        dbg << " After adjustments: Nnofold " << Nnofold << " NFT " << NFT << std::endl;
-        if (NFT > _pimpl->gsparams->maximum_fft_size)
-            FormatAndThrow<SBError>() <<
-                "fourierDrawK() requires an FFT that is too large, " << NFT;
-
-        double dx = 2.*M_PI*oversamp/NFT;
-        XTable xt(NFT,dx);
-        assert(_pimpl.get());
-        _pimpl->fillXGrid(xt);
-        boost::shared_ptr<KTable> ktmp = xt.transform();
-
-        int Nkt = ktmp->getN();
-        Bounds<int> kb(-Nkt/2, Nkt/2-1, -Nkt/2, Nkt/2-1);
-        if (Re.getYMin() < kb.getYMin()
-            || Re.getYMax()*oversamp > kb.getYMax()
-            || Re.getXMin()*oversamp < kb.getXMin()
-            || Re.getXMax()*oversamp > kb.getXMax()) {
-            dbg << "Bounds error!! oversamp is " << oversamp
-                << " target image bounds " << Re.getBounds()
-                << " and FFT range " << kb << std::endl;
-            throw SBError("fourierDrawK() FT bounds do not cover target image");
-        }
-
-        for (int y = Re.getYMin(); y <= Re.getYMax(); y++) {
-            for (int x = Re.getXMin(); x <= Re.getXMax(); x++) {
-                std::complex<double> c = ktmp->kval(x*oversamp,y*oversamp);
-                Re(x,y) = c.real();
-                Im(x,y) = c.imag();
-            }
-        }
     }
 
     void SBProfile::SBProfileImpl::fillXGrid(XTable& xt) const
@@ -1070,15 +992,7 @@ namespace galsim {
     template double SBProfile::fourierDraw(ImageView<float> I, double wmult) const;
     template double SBProfile::fourierDraw(ImageView<double> I, double wmult) const;
 
-    template void SBProfile::drawK(ImageView<float> Re, ImageView<float> Im, double wmult) const;
-    template void SBProfile::drawK(ImageView<double> Re, ImageView<double> Im, double wmult) const;
-
-    template void SBProfile::plainDrawK(ImageView<float> Re, ImageView<float> Im) const;
-    template void SBProfile::plainDrawK(ImageView<double> Re, ImageView<double> Im) const;
-
-    template void SBProfile::fourierDrawK(
-        ImageView<float> Re, ImageView<float> Im, double wmult) const;
-    template void SBProfile::fourierDrawK(
-        ImageView<double> Re, ImageView<double> Im, double wmult) const;
+    template void SBProfile::drawK(ImageView<float> Re, ImageView<float> Im) const;
+    template void SBProfile::drawK(ImageView<double> Re, ImageView<double> Im) const;
 
 }

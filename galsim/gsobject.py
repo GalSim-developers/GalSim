@@ -1523,7 +1523,7 @@ class GSObject(object):
         imview = im.view()
         imview.setCenter(0,0)
 
-        prof.SBProfile.drawK(review.image, imview.image, wmult)
+        prof.SBProfile.drawK(review.image, imview.image)
 
         if gain != 1.:
             re /= gain
