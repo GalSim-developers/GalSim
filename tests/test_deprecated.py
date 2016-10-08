@@ -22,6 +22,7 @@ import sys
 import numpy as np
 
 from galsim_test_helpers import *
+from test_draw import CalculateScale
 
 try:
     import galsim
@@ -1103,6 +1104,71 @@ def test_dep_optics():
     image = check_dep(galsim.optics.ptf_image, array_shape=testshape)
     np.testing.assert_array_almost_equal(array.astype(np.float32), image.array)
 
+@timer
+def test_dep_wmult():
+    """Test drawImage with wmult parameter.
+
+    (A subset of the test_drawImage function in test_draw.py.)
+    """
+    test_flux = 1.8
+    obj = galsim.Exponential(flux=test_flux, scale_radius=2)
+    im1 = obj.drawImage(method='no_pixel')
+    obj2 = galsim.Convolve([ obj, galsim.Pixel(im1.scale) ])
+    nyq_scale = obj2.nyquistScale()
+    scale = 0.51   # Just something different from 1 or dx_nyq
+    im3 = galsim.ImageD(56,56)
+    im5 = galsim.ImageD()
+    obj.drawImage(im5)
+
+    # Test if we provide wmult.  It should:
+    #   - create a new image that is wmult times larger in each direction.
+    #   - return the new image
+    #   - set the scale to obj2.nyquistScale()
+    im6 = check_dep(obj.drawImage, wmult=4.)
+    np.testing.assert_almost_equal(im6.scale, nyq_scale, 9,
+                                   "obj.drawImage(wmult) produced image with wrong scale")
+    # Can assert accuracy to 4 decimal places now, since we're capturing much more
+    # of the flux on the image.
+    np.testing.assert_almost_equal(im6.array.astype(float).sum(), test_flux, 4,
+                                   "obj.drawImage(wmult) produced image with wrong flux")
+    np.testing.assert_almost_equal(CalculateScale(im6), 2, 2,
+                                   "Measured wrong scale after obj.drawImage(wmult)")
+    assert im6.bounds == galsim.BoundsI(1,220,1,220),(
+            "obj.drawImage(wmult) produced image with wrong bounds")
+
+    # Test if we provide an image argument and wmult.  It should:
+    #   - write to the existing image
+    #   - also return that image
+    #   - set the scale to obj2.nyquistScale()
+    #   - zero out any existing data
+    #   - the calculation of the convolution should be slightly more accurate than for im3
+    im3.setZero()
+    im5.setZero()
+    check_dep(obj.drawImage, im3, wmult=4.)
+    obj.drawImage(im5)
+    np.testing.assert_almost_equal(im3.scale, nyq_scale, 9,
+                                   "obj.drawImage(im3) produced image with wrong scale")
+    np.testing.assert_almost_equal(im3.array.sum(), test_flux, 2,
+                                   "obj.drawImage(im3,wmult) produced image with wrong flux")
+    np.testing.assert_almost_equal(CalculateScale(im3), 2, 1,
+                                   "Measured wrong scale after obj.drawImage(im3,wmult)")
+    assert ((im3.array-im5.array)**2).sum() > 0, (
+            "obj.drawImage(im3,wmult) produced the same image as without wmult")
+
+    # Test with dx and wmult.  It should:
+    #   - create a new image using that dx for the scale
+    #   - set the size a factor of wmult times larger in each direction.
+    #   - return the new image
+    im8 = check_dep(obj.drawImage, scale=scale, wmult=4.)
+    np.testing.assert_almost_equal(im8.scale, scale, 9,
+                                   "obj.drawImage(dx,wmult) produced image with wrong scale")
+    np.testing.assert_almost_equal(im8.array.astype(float).sum(), test_flux, 4,
+                                   "obj.drawImage(dx,wmult) produced image with wrong flux")
+    np.testing.assert_almost_equal(CalculateScale(im8), 2, 2,
+                                   "Measured wrong scale after obj.drawImage(dx,wmult)")
+    assert im8.bounds == galsim.BoundsI(1,270,1,270),(
+            "obj.drawImage(dx,wmult) produced image with wrong bounds")
+
 
 if __name__ == "__main__":
     test_dep_bandpass()
@@ -1119,3 +1185,4 @@ if __name__ == "__main__":
     test_dep_shapelet()
     test_dep_shear()
     test_dep_optics()
+    test_dep_wmult()

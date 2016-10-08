@@ -177,7 +177,7 @@ class GSObject(object):
         Traceback (most recent call last):
           File "<stdin>", line 1, in <module>
           File "galsim/base.py", line 1236, in drawImage
-            image.added_flux = prof.SBProfile.draw(imview.image, wmult)
+            image.added_flux = prof.SBProfile.draw(imview.image)
         RuntimeError: SB Error: fourierDraw() requires an FFT that is too large, 6144
         If you can handle the large FFT, you may update gsparams.maximum_fft_size.
         >>> big_fft_params = galsim.GSParams(maximum_fft_size=10240)
@@ -977,9 +977,9 @@ class GSObject(object):
         return wcs
 
     def drawImage(self, image=None, nx=None, ny=None, bounds=None, scale=None, wcs=None, dtype=None,
-                  method='auto', area=1., exptime=1., gain=1., wmult=1., add_to_image=False,
+                  method='auto', area=1., exptime=1., gain=1., add_to_image=False,
                   use_true_center=True, offset=None, n_photons=0., rng=None, max_extra_noise=0.,
-                  poisson_flux=None, setup_only=False, dx=None):
+                  poisson_flux=None, setup_only=False, dx=None, wmult=None):
         """Draws an Image of the object.
 
         The drawImage() method is used to draw an Image of the current object using one of several
@@ -1158,11 +1158,9 @@ class GSObject(object):
 
         Given the periodicity implicit in the use of FFTs, there can occasionally be artifacts due
         to wrapping at the edges, particularly for objects that are quite extended (e.g., due to
-        the nature of the radial profile).  Use of the keyword parameter `wmult > 1` can be used to
-        reduce the size of these artifacts (by making larger FFT images), at the expense of the
-        calculations taking longer and using more memory.  Alternatively, the objects that go into
-        the image can be created with a `gsparams` keyword that has a lower-than-default value for
-        `folding_threshold`; see `help(galsim.GSParams)` for more information.
+        the nature of the radial profile). See `help(galsim.GSParams)` for parameters that you can
+        use to reduce the level of these artificats, in particular `folding_threshold` may be
+        helpful if you see such artifacts in your images.
 
         @param image        If provided, this will be the image on which to draw the profile.
                             If `image` is None, then an automatically-sized Image will be created.
@@ -1194,20 +1192,6 @@ class GSObject(object):
         @param exptime      Exposure time in s.  [default: 1.]
         @param gain         The number of photons per ADU ("analog to digital units", the units of
                             the numbers output from a CCD).  [default: 1]
-        @param wmult        A multiplicative factor by which to enlarge (in each direction) the
-                            default automatically calculated FFT grid size used for any
-                            intermediate calculations in Fourier space.  The size of the
-                            intermediate images is normally automatically chosen to reach some
-                            preset accuracy targets [cf. GSParams]; however, if you see strange
-                            artifacts in the image, you might try using `wmult > 1`.  This will
-                            take longer of course, but it will produce more accurate images, since
-                            they will have less "folding" in Fourier space. If the image size is
-                            not specified, then the output real-space image will be enlarged by
-                            a factor of `wmult`.  If the image size is specified by the user,
-                            rather than automatically-sized, use of `wmult>1` will still affect the
-                            size of the images used for the Fourier-space calculations and hence
-                            can reduce image artifacts, even though the image that is returned will
-                            be the requested size. [default: 1]
         @param add_to_image Whether to add flux to the existing image rather than clear out
                             anything in the image before drawing.
                             Note: This requires that `image` be provided and that it have defined
@@ -1255,17 +1239,25 @@ class GSObject(object):
 
         @returns the drawn Image.
         """
-        # Check for obsolete dx parameter
+        # Check for obsolete parameters
         if dx is not None and scale is None: # pragma: no cover
             from .deprecated import depr
             depr('dx', 1.1, 'scale')
             scale = dx
+        if wmult is not None: # pragma: no cover
+            from .deprecated import depr
+            depr('wmult', 1.5, 'GSParams(folding_threshold)',
+                 'The old wmult parameter should not generally be required to get accurate FFT-'
+                 'rendered images.  If you need larger FFT grids to prevent aliasing, you should '
+                 'now use a gsparams object with a folding_threshold lower than the default 0.005.')
+        else:
+            wmult = 1.
 
         # Check that image is sane
         if image is not None and not isinstance(image, galsim.Image):
             raise ValueError("image is not an Image instance")
 
-        # Make sure the types of (gain, area, exptime, wmult) are correct and have valid values:
+        # Make sure the types of (gain, area, exptime) are correct and have valid values:
         if type(gain) != float:
             gain = float(gain)
         if gain <= 0.:
@@ -1280,11 +1272,6 @@ class GSObject(object):
             exptime = float(exptime)
         if exptime <= 0.:
             raise ValueError("Invalid exptime <= 0.")
-
-        if type(wmult) != float:
-            wmult = float(wmult)
-        if wmult <= 0:
-            raise ValueError("Invalid wmult <= 0.")
 
         if method not in ['auto', 'fft', 'real_space', 'phot', 'no_pixel', 'sb']:
             raise ValueError("Invalid method name = %s"%method)
@@ -1415,7 +1402,7 @@ class GSObject(object):
         return image
 
     def drawKImage(self, re=None, im=None, nx=None, ny=None, bounds=None, scale=None, dtype=None,
-                   gain=1., wmult=1., add_to_image=False, dk=None):
+                   gain=1., add_to_image=False, dk=None, wmult=None):
         """Draws the k-space Image (both real and imaginary parts) of the object, with bounds
         optionally set by input Image instances.
 
@@ -1450,9 +1437,6 @@ class GSObject(object):
                             use numpy.float32]
         @param gain         The number of photons per ADU ("analog to digital units", the units of
                             the numbers output from a CCD).  [default: 1.]
-        @param wmult        A multiplicative factor by which to enlarge (in each direction) the
-                            size of the image, if you are having drawKImage() automatically
-                            construct the images for you.  [default: 1]
         @param add_to_image Whether to add to the existing images rather than clear out
                             anything in the image before drawing.
                             Note: This requires that `re` and `im` be provided and that they have
@@ -1460,23 +1444,25 @@ class GSObject(object):
 
         @returns the tuple of Image instances, `(re, im)` (created if necessary)
         """
-        # Check for obsolete dk parameter
+        # Check for obsolete parameters
         if dk is not None and scale is None: # pragma: no cover
             from .deprecated import depr
             depr('dx', 1.1, 'scale')
             scale = dk
+        if wmult is not None: # pragma: no cover
+            from .deprecated import depr
+            depr('wmult', 1.5, 'GSParams(folding_threshold)',
+                 'The old wmult parameter should not generally be required to get accurate FFT-'
+                 'rendered images.  If you need larger FFT grids to prevent aliasing, you should '
+                 'now use a gsparams object with a folding_threshold lower than the default 0.005.')
+        else:
+            wmult = 1.
 
         # Make sure the type of gain is correct and has a valid value:
         if type(gain) != float:
             gain = float(gain)
         if gain <= 0.:
             raise ValueError("Invalid gain <= 0.")
-
-        # Make sure the type of wmult is correct and has a valid value
-        if type(wmult) != float:
-            wmult = float(wmult)
-        if wmult <= 0:
-            raise ValueError("Invalid wmult <= 0.")
 
         # Check for scale if using nx, ny, or bounds
         if (scale is None and

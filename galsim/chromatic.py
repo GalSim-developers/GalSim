@@ -1844,7 +1844,7 @@ class ChromaticConvolution(ChromaticObject):
         self.wave_list, _, _ = galsim.utilities.combine_wave_list(self.objlist)
 
     @staticmethod
-    def _get_effective_prof(insep_obj, bandpass, iimult, wmult, integrator, gsparams):
+    def _get_effective_prof(insep_obj, bandpass, iimult, integrator, gsparams, wmult):
         # Find scale at which to draw effective profile
         _, prof0 = insep_obj._fiducial_profile(bandpass)
         iiscale = prof0.nyquistScale()
@@ -1855,12 +1855,12 @@ class ChromaticConvolution(ChromaticObject):
         # ChromaticConvolution.
         if isinstance(insep_obj, ChromaticConvolution):
             effective_prof_image = ChromaticObject.drawImage(
-                    insep_obj, bandpass, wmult=wmult, scale=iiscale,
-                    integrator=integrator, method='no_pixel')
+                    insep_obj, bandpass, scale=iiscale,
+                    integrator=integrator, method='no_pixel', wmult=wmult)
         else:
             effective_prof_image = insep_obj.drawImage(
-                    bandpass, wmult=wmult, scale=iiscale, integrator=integrator,
-                    method='no_pixel')
+                    bandpass, scale=iiscale, integrator=integrator,
+                    method='no_pixel', wmult=wmult)
 
         return galsim.InterpolatedImage(effective_prof_image, gsparams=gsparams)
 
@@ -2034,13 +2034,13 @@ class ChromaticConvolution(ChromaticObject):
                 sep_profs.append(prof0 / obj.SED(wave0))
                 insep_obj *= obj.SED
 
-        wmult = kwargs.get('wmult', 1)
+        wmult = kwargs.get('wmult', None)
 
         # Collapse inseparable profiles and chromatic normalizations into one effective profile
         # Note that at this point, insep_obj.SED should *not* be None.
         effective_prof = ChromaticConvolution._effective_prof_cache(
-                insep_obj, bandpass, iimult, wmult,
-                integrator, self.gsparams)
+                insep_obj, bandpass, iimult,
+                integrator, self.gsparams, wmult)
 
         # append effective profile to separable profiles (which should all be GSObjects)
         sep_profs.append(effective_prof)
