@@ -1294,6 +1294,17 @@ class GSObject(object):
             (nx is not None or ny is not None or bounds is not None)):
             raise ValueError("Must provide scale if providing nx,ny or bounds")
 
+        # Some parameters are only relevant for method == 'phot'
+        if method != 'phot':
+            if n_photons != 0.:
+                raise ValueError("n_photons is only relevant for method='phot'")
+            if rng is not None:
+                raise ValueError("rng is only relevant for method='phot'")
+            if max_extra_noise != 0.:
+                raise ValueError("max_extra_noise is only relevant for method='phot'")
+            if poisson_flux is not None:
+                raise ValueError("poisson_flux is only relevant for method='phot'")
+
         # Figure out what wcs we are going to use.
         wcs = self._determine_wcs(scale, wcs, image)
 
@@ -1305,28 +1316,6 @@ class GSObject(object):
 
         # Convert the profile in world coordinates to the profile in image coordinates:
         prof = local_wcs.toImage(self)
-
-        # If necessary, convolve by the pixel
-        if method in ['auto', 'fft', 'real_space']:
-            if method == 'auto':
-                real_space = None
-            elif method == 'fft':
-                real_space = False
-            else:
-                real_space = True
-            prof = galsim.Convolve(prof, galsim.Pixel(scale = 1.0), real_space=real_space)
-
-        # Apply the offset, and possibly fix the centering for even-sized images
-        shape = prof._get_shape(image, nx, ny, bounds)
-        prof = prof._fix_center(shape, offset, use_true_center, reverse=False)
-
-        # Make sure image is setup correctly
-        image = prof._setup_image(image, nx, ny, bounds, wmult, add_to_image, dtype)
-        image.wcs = wcs
-
-        if setup_only:
-            image.added_flux = 0.
-            return image
 
         # Account for area and exptime.
         flux_scale = area * exptime
@@ -1340,6 +1329,38 @@ class GSObject(object):
 
         prof *= flux_scale
 
+        # If necessary, convolve by the pixel
+        if method in ['auto', 'fft', 'real_space']:
+            if method == 'auto':
+                real_space = None
+            elif method == 'fft':
+                real_space = False
+            else:
+                real_space = True
+            prof = galsim.Convolve(prof, galsim.Pixel(scale=1.0), real_space=real_space)
+            # Switch auto method to the actual drawing method we need to use.
+            if method == 'auto':
+                if prof.real_space: method = 'real_space'
+                else: method = 'fft'
+        elif method in ['sb', 'no_pixel']:
+            # Also switch method for the non-convolution methods
+            if prof.isAnalyticX():
+                method = 'real_space'
+            else:
+                method = 'fft'
+
+        # Apply the offset, and possibly fix the centering for even-sized images
+        shape = prof._get_shape(image, nx, ny, bounds)
+        prof = prof._fix_center(shape, offset, use_true_center, reverse=False)
+
+        # Make sure image is setup correctly
+        image = prof._setup_image(image, nx, ny, bounds, wmult, add_to_image, dtype)
+        image.wcs = wcs
+
+        if setup_only:
+            image.added_flux = 0.
+            return image
+
         # Making a view of the image lets us change the center without messing up the original.
         imview = image.view()
         imview.setCenter(0,0)
@@ -1348,17 +1369,13 @@ class GSObject(object):
         if method == 'phot':
             added_photons = prof.drawPhot(imview, n_photons, rng, max_extra_noise, poisson_flux,
                                           gain)
+        elif method == 'fft':
+            assert not prof.isAnalyticX()
+            added_photons = prof.SBProfile.fourierDraw(imview.image, wmult)
         else:
-            # Some parameters are only relevant for method == 'phot'
-            if n_photons != 0.:
-                raise ValueError("n_photons is only relevant for method='phot'")
-            if rng is not None:
-                raise ValueError("rng is only relevant for method='phot'")
-            if max_extra_noise != 0.:
-                raise ValueError("max_extra_noise is only relevant for method='phot'")
-            if poisson_flux is not None:
-                raise ValueError("poisson_flux is only relevant for method='phot'")
-            added_photons = prof.SBProfile.draw(imview.image, wmult)
+            assert method == 'real_space'
+            assert prof.isAnalyticX()
+            added_photons = prof.SBProfile.plainDraw(imview.image)
 
         image.added_flux = added_photons / flux_scale
 

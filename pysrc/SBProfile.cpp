@@ -99,8 +99,12 @@ namespace galsim {
             // We also don't need to make 'W' a template parameter in this case,
             // but it's easier to do that than write out the full class_ type.
             wrapper
-                .def("draw",
-                     (double (SBProfile::*)(ImageView<U>, double) const)&SBProfile::draw,
+                .def("plainDraw",
+                     (double (SBProfile::*)(ImageView<U>) const)&SBProfile::plainDraw,
+                     (bp::arg("image")),
+                     "Draw in-place and return the summed flux.")
+                .def("fourierDraw",
+                     (double (SBProfile::*)(ImageView<U>, double) const)&SBProfile::fourierDraw,
                      (bp::arg("image"), bp::arg("wmult")=1.),
                      "Draw in-place and return the summed flux.")
                 .def("drawK",
