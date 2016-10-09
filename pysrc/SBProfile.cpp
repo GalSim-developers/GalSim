@@ -184,6 +184,8 @@ namespace galsim {
                      "without DFT.")
                 .def("centroid", &SBProfile::centroid)
                 .def("getFlux", &SBProfile::getFlux)
+                .def("getPositiveFlux", &SBProfile::getPositiveFlux)
+                .def("getNegativeFlux", &SBProfile::getNegativeFlux)
                 .def("maxSB", &SBProfile::maxSB)
                 .def("scaleFlux", &SBProfile::scaleFlux, bp::args("fluxRatio"))
                 .def("rotate", &SBProfile::rotate, bp::args("theta"))

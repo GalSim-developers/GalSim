@@ -1276,54 +1276,12 @@ class GSObject(object):
         if method not in ['auto', 'fft', 'real_space', 'phot', 'no_pixel', 'sb']:
             raise ValueError("Invalid method name = %s"%method)
 
-        # Some checks that are only relevant for method == 'phot'
-        if method == 'phot':
-            # Make sure the type of n_photons is correct and has a valid value:
-            if type(n_photons) != float:
-                n_photons = float(n_photons)
-            if n_photons < 0.:
-                raise ValueError("Invalid n_photons < 0.")
-
-            if poisson_flux is None:
-                if n_photons == 0.: poisson_flux = True
-                else: poisson_flux = False
-
-            # Make sure the type of max_extra_noise is correct and has a valid value:
-            if type(max_extra_noise) != float:
-                max_extra_noise = float(max_extra_noise)
-
-            # Setup the uniform_deviate if not provided one.
-            if rng is None:
-                uniform_deviate = galsim.UniformDeviate()
-            elif isinstance(rng,galsim.BaseDeviate):
-                # If it's a BaseDeviate, we can convert to UniformDeviate
-                uniform_deviate = galsim.UniformDeviate(rng)
-            else:
-                raise TypeError("The rng provided is not a BaseDeviate")
-
-            # Check that either n_photons is set to something or flux is set to something
-            if (n_photons == 0. and self.getFlux() == 1.
-                and area == 1. and exptime == 1.): # pragma: no cover
-                import warnings
-                warnings.warn(
-                        "Warning: drawImage for object with flux == 1, area == 1, and "
-                        "exptime == 1, but n_photons == 0.  This will only shoot a single photon.")
-        else:
-            if n_photons != 0.:
-                raise ValueError("n_photons is only relevant for method='phot'")
-            if rng is not None:
-                raise ValueError("rng is only relevant for method='phot'")
-            if max_extra_noise != 0.:
-                raise ValueError("max_extra_noise is only relevant for method='phot'")
-            if poisson_flux is not None:
-                raise ValueError("poisson_flux is only relevant for method='phot'")
-
         # Check that the user isn't convolving by a Pixel already.  This is almost always an error.
         if method == 'auto' and isinstance(self, galsim.Convolution):
             if any([ isinstance(obj, galsim.Pixel) for obj in self.obj_list ]):
                 import warnings
                 warnings.warn(
-                    "You called drawImage with no `method` parameter "
+                    "You called drawImage with `method='auto'` "
                     "for an object that includes convolution by a Pixel.  "
                     "This is probably an error.  Normally, you should let GalSim "
                     "handle the Pixel convolution for you.  If you want to handle the Pixel "
@@ -1385,38 +1343,295 @@ class GSObject(object):
         # Making a view of the image lets us change the center without messing up the original.
         imview = image.view()
         imview.setCenter(0,0)
+        imview.wcs = galsim.PixelScale(1.0)
 
         if method == 'phot':
-            try:
-                # Temporary hack to fix gain calculation for now.
-                if gain == 1. or add_to_image == False:
-                    added_photons = prof.SBProfile.drawShoot(
-                        imview.image, n_photons, uniform_deviate, max_extra_noise,
-                        poisson_flux)
-                    if gain != 1:
-                        imview /= gain
-                else:
-                    tempim = imview.copy()
-                    tempim.setZero()
-                    added_photons = prof.SBProfile.drawShoot(
-                        tempim.image, n_photons, uniform_deviate, max_extra_noise,
-                        poisson_flux)
-                    tempim /= gain
-                    imview += tempim
-            except RuntimeError:  # pragma: no cover
-                # Give some extra explanation as a warning, then raise the original exception
-                # so the traceback shows as much detail as possible.
-                import warnings
-                warnings.warn(
-                    "Unable to draw this GSObject with method='phot'.  Perhaps it is a "+
-                    "Deconvolve or is a compound including one or more Deconvolve objects.")
-                raise
+            added_photons = prof.drawPhot(imview, n_photons, rng, max_extra_noise, poisson_flux,
+                                          gain)
         else:
+            # Some parameters are only relevant for method == 'phot'
+            if n_photons != 0.:
+                raise ValueError("n_photons is only relevant for method='phot'")
+            if rng is not None:
+                raise ValueError("rng is only relevant for method='phot'")
+            if max_extra_noise != 0.:
+                raise ValueError("max_extra_noise is only relevant for method='phot'")
+            if poisson_flux is not None:
+                raise ValueError("poisson_flux is only relevant for method='phot'")
             added_photons = prof.SBProfile.draw(imview.image, wmult)
 
         image.added_flux = added_photons / flux_scale
 
         return image
+
+    def _calculate_nphotons(self, n_photons, poisson_flux, max_extra_noise, rng):
+        """Calculate how many photons to shoot and what flux_ratio (called g) each one should
+        have in order to produce an image with the right S/N and total flux.
+
+        This routine is normally called by drawPhot.
+
+        @returns n_photons, g
+        """
+        # For profiles that are positive definite, then N = flux. Easy.
+        #
+        # However, some profiles shoot some of their photons with negative flux. This means that
+        # we need a few more photons to get the right S/N = sqrt(flux). Take eta to be the
+        # fraction of shot photons that have negative flux.
+        #
+        # S^2 = (N+ - N-)^2 = (N+ + N- - 2N-)^2 = (Ntot - 2N-)^2 = Ntot^2(1 - 2 eta)^2
+        # N^2 = Var(S) = (N+ + N-) = Ntot
+        #
+        # So flux = (S/N)^2 = Ntot (1-2eta)^2
+        # Ntot = flux / (1-2eta)^2
+        #
+        # However, if each photon has a flux of 1, then S = (1-2eta) Ntot = flux / (1-2eta).
+        # So in fact, each photon needs to carry a flux of g = 1-2eta to get the right
+        # total flux.
+        #
+        # That's all the easy case. The trickier case is when we are sky-background dominated.
+        # Then we can usually get away with fewer shot photons than the above.  In particular,
+        # if the noise from the photon shooting is much less than the sky noise, then we can
+        # use fewer shot photons and essentially have each photon have a flux > 1. This is ok
+        # as long as the additional noise due to this approximation is "much less than" the
+        # noise we'll be adding to the image for the sky noise.
+        #
+        # Let's still have Ntot photons, but now each with a flux of g. And let's look at the
+        # noise we get in the brightest pixel that has a nominal total flux of Imax.
+        #
+        # The number of photons hitting this pixel will be Imax/flux * Ntot.
+        # The variance of this number is the same thing (Poisson counting).
+        # So the noise in that pixel is:
+        #
+        # N^2 = Imax/flux * Ntot * g^2
+        #
+        # And the signal in that pixel will be:
+        #
+        # S = Imax/flux * (N+ - N-) * g which has to equal Imax, so
+        # g = flux / Ntot(1-2eta)
+        # N^2 = Imax/Ntot * flux / (1-2eta)^2
+        #
+        # As expected, we see that lowering Ntot will increase the noise in that (and every
+        # other) pixel.
+        # The input max_extra_noise parameter is the maximum value of spurious noise we want
+        # to allow.
+        #
+        # So setting N^2 = Imax + nu, we get
+        #
+        # Ntot = flux / (1-2eta)^2 / (1 + nu/Imax)
+        # g = (1 - 2eta) * (1 + nu/Imax)
+        #
+        # Returns the total flux placed inside the image bounds by photon shooting.
+        #
+
+        flux = self.SBProfile.getFlux()
+        #print("flux = ",flux)
+        posflux = self.SBProfile.getPositiveFlux()
+        negflux = self.SBProfile.getNegativeFlux()
+        eta = negflux / (posflux + negflux)
+        #print("N+ = ",posflux,", N- = ",negflux," -> eta = ",eta)
+        eta_factor = 1.-2.*eta  # This is also the amount to scale each photon.
+        mod_flux = flux/(eta_factor*eta_factor)
+        #print("mod_flux = ",mod_flux)
+
+        # Use this for the factor by which to scale photon arrays.
+        g = eta_factor
+
+        # If requested, let the target flux value vary as a Poisson deviate
+        if poisson_flux:
+            # If we have both positive and negative photons, then the mix of these
+            # already gives us some variation in the flux value from the variance
+            # of how many are positive and how many are negative.
+            # The number of negative photons varies as a binomial distribution.
+            # <F-> = eta * Ntot * g
+            # <F+> = (1-eta) * Ntot * g
+            # <F+ - F-> = (1-2eta) * Ntot * g = flux
+            # Var(F-) = eta * (1-eta) * Ntot * g^2
+            # F+ = Ntot * g - F- is not an independent variable, so
+            # Var(F+ - F-) = Var(Ntot*g - 2*F-)
+            #              = 4 * Var(F-)
+            #              = 4 * eta * (1-eta) * Ntot * g^2
+            #              = 4 * eta * (1-eta) * flux
+            # We want the variance to be equal to flux, so we need an extra:
+            # delta Var = (1 - 4*eta + 4*eta^2) * flux
+            #           = (1-2eta)^2 * flux
+            mean = eta_factor*eta_factor * flux
+            #print("rng = ",rng.raw())
+            pd = galsim.PoissonDeviate(rng, mean)
+            #print("pd = ",pd())
+            pd_val = pd() - mean + flux
+            #print("Poisson flux = ",pd_val,", c.f. flux = ",flux)
+            ratio = pd_val / flux
+            g *= ratio;
+            mod_flux *= ratio;
+            #print("g => ",g)
+            #print("mod_flux => ",mod_flux)
+
+        if n_photons == 0.:
+            n_photons = mod_flux;
+            if max_extra_noise > 0.:
+                gfactor = 1. + max_extra_noise / self.SBProfile.maxSB()
+                n_photons /= gfactor;
+                g *= gfactor;
+
+        # Make n_photons an integer.
+        iN = int(n_photons + 0.5);
+
+        if iN <= 0:
+            import warnings
+            warnings.warn("Automatic n_photons calculation did not end up with positive N. " +
+                          "(n_photons = %s)  No photons will be shot. "%n_photons +
+                          "prof = %s  "%self +
+                          "flux = %s  "%self.flux +
+                          "poisson_flux = %s  "%poisson_flux +
+                          "max_extra_noise = %s  "%max_extra_noise +
+                          "g = %s  "%g)
+
+
+            return 0, 1.
+
+        #g *= n_photons / iN;
+        return iN, g
+
+
+    def drawPhot(self, image, n_photons=0, rng=None, max_extra_noise=None, poisson_flux=False,
+                 gain=1.0):
+        """
+        Draw this profile into an Image by shooting photons.
+
+        This is usually called from the `drawImage` function, rather than called directly by the
+        user.  In particular, the input image must be already set up with defined bounds with
+        the center set to (0,0).  It also must have a pixel scale of 1.0.  The profile being
+        drawn should have already been converted to image coordinates via
+
+            >>> image_profile = original_wcs.toImage(original_profile)
+
+        The image is not cleared out before drawing.  So this profile will be added to anything
+        already on the input image.  This corresponds to `add_to_image=True` in the `drawImage`
+        options.  If you don't want to add to the existing image, just call `image.setZero()`
+        before calling `drawPhot`.
+
+        Note that the image produced by `drawPhot` represents the profile integrated over the
+        area of each pixel.  This is equivalent to convolving the profile by a square `Pixel`
+        profile and sampling the value at the center of each pixel.
+
+        @param image        The Image onto which to place the flux. [required]  Note: The shot
+                            photons will be added to any flux already on the image, so this
+                            corresponds to the add_to_image=True option in drawImage.
+        @param n_photons    If provided, the number of photons to use for photon shooting.
+                            If not provided (i.e. `n_photons = 0`), use as many photons as
+                            necessary to result in an image with the correct Poisson shot
+                            noise for the object's flux.  For positive definite profiles, this
+                            is equivalent to `n_photons = flux`.  However, some profiles need
+                            more than this because some of the shot photons are negative
+                            (usually due to interpolants).  [default: 0]
+        @param rng          If provided, a random number generator to use for photon shooting,
+                            which may be any kind of BaseDeviate object.  If `rng` is None, one
+                            will be automatically created, using the time as a seed.
+                            [default: None]
+        @param max_extra_noise  If provided, the allowed extra noise in each pixel when photon
+                            shooting.  This is only relevant if `n_photons=0`, so the number of
+                            photons is being automatically calculated.  In that case, if the image
+                            noise is dominated by the sky background, then you can get away with
+                            using fewer shot photons than the full `n_photons = flux`.  Essentially
+                            each shot photon can have a `flux > 1`, which increases the noise in
+                            each pixel.  The `max_extra_noise` parameter specifies how much extra
+                            noise per pixel is allowed because of this approximation.  A typical
+                            value for this might be `max_extra_noise = sky_level / 100` where
+                            `sky_level` is the flux per pixel due to the sky.  Note that this uses
+                            a "variance" definition of noise, not a "sigma" definition.
+                            [default: 0.]
+        @param poisson_flux Whether to allow total object flux scaling to vary according to
+                            Poisson statistics for `n_photons` samples when photon shooting.
+                            [default: True, unless `n_photons` is given, in which case the default
+                            is False]
+        @param gain         The number of photons per ADU ("analog to digital units", the units of
+                            the numbers output from a CCD).  [default: 1.]
+
+        @returns The total flux of photons that landed inside the image bounds.
+        """
+        #print("Start drawPhot.")
+        #print("n_photons = ",n_photons)
+        #print("max_extra_noise = ",max_extra_noise)
+        #print("poisson = ",poisson_flux)
+
+        # Make sure the type of n_photons is correct and has a valid value:
+        if type(n_photons) != float:
+            n_photons = float(n_photons)
+        if n_photons < 0.:
+            raise ValueError("Invalid n_photons < 0.")
+
+        if poisson_flux is None:
+            if n_photons == 0.: poisson_flux = True
+            else: poisson_flux = False
+
+        # Make sure the type of max_extra_noise is correct and has a valid value:
+        if type(max_extra_noise) != float:
+            max_extra_noise = float(max_extra_noise)
+
+        # Check that either n_photons is set to something or flux is set to something
+        if (n_photons == 0. and self.getFlux() == 1.
+            and area == 1. and exptime == 1.): # pragma: no cover
+            import warnings
+            warnings.warn(
+                    "Warning: drawImage for object with flux == 1, area == 1, and "
+                    "exptime == 1, but n_photons == 0.  This will only shoot a single photon.")
+
+        # Setup the rng if not provided one.
+        if rng is None:
+            ud = galsim.UniformDeviate()
+        elif isinstance(rng, galsim.BaseDeviate):
+            ud = galsim.UniformDeviate(rng)
+        else:
+            raise TypeError("The rng provided is not a BaseDeviate")
+
+        # Make sure the image is set up to have unit pixel scale and centered at 0,0.
+        #print('image = ',image)
+        #print('wcs = ',image.wcs)
+        #print('center = ',image.center())
+        if image.wcs != galsim.PixelScale(1.0):
+            raise ValueError("drawPhot requires an image with scale=1.0")
+        if image.center() != galsim.PositionI(0,0):
+            raise ValueError("drawPhot requires an image centered at 0,0")
+
+        Ntot, g = self._calculate_nphotons(n_photons, poisson_flux, max_extra_noise, ud)
+        #print('Ntot, g = ',Ntot,g)
+
+        if gain != 1.:
+            g /= gain
+
+        # total flux falling inside image bounds, this will be returned on exit.
+        added_flux = 0.
+
+        # Don't do more than this at a time to keep the  memory usage reasonable.
+        maxN = 100000
+
+        # Nleft is the number of photons remaining to shoot.
+        Nleft = Ntot
+        while Nleft > 0:
+            # Shoot at most maxN at a time
+            thisN = min(maxN, Nleft)
+            #print('Shooting ',thisN)
+
+            try:
+                phot_array = self.SBProfile.shoot(thisN, ud);
+            except RuntimeError:  # pragma: no cover
+                # Give some extra explanation as a warning, then raise the original exception
+                # so the traceback shows as much detail as possible.
+                import warnings
+                warnings.warn(
+                    "Unable to draw this GSObject with photon shooting.  Perhaps it is a "+
+                    "Deconvolve or is a compound including one or more Deconvolve objects.")
+                raise
+
+            phot_array.scaleFlux(g * thisN / Ntot);
+
+            added_flux += phot_array.addTo(image.image)
+            Nleft -= thisN;
+
+        #print("Added flux (falling within image bounds) = ",added_flux)
+
+        return added_flux;
+
 
     def drawKImage(self, re=None, im=None, nx=None, ny=None, bounds=None, scale=None, dtype=None,
                    gain=1., add_to_image=False, dk=None, wmult=None):
