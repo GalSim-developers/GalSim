@@ -1370,11 +1370,16 @@ class GSObject(object):
             image.added_flux = 0.
             return image
 
-        # Account for gain, area and exptime.
-        flux_scale = area * exptime / gain
+        # Account for area and exptime.
+        flux_scale = area * exptime
         # For surface brightness normalization, also scale by the pixel area.
         if method == 'sb':
             flux_scale /= local_wcs.pixelArea()
+        # Only do the gain here if not photon shooting, since need the number of photons to
+        # reflect that actual photons, not ADU.
+        if gain != 1 and method != 'phot':
+            flux_scale /= gain
+
         prof *= flux_scale
 
         # Making a view of the image lets us change the center without messing up the original.
@@ -1383,9 +1388,21 @@ class GSObject(object):
 
         if method == 'phot':
             try:
-                added_photons = prof.SBProfile.drawShoot(
-                    imview.image, n_photons, uniform_deviate, max_extra_noise,
-                    poisson_flux)
+                # Temporary hack to fix gain calculation for now.
+                if gain == 1. or add_to_image == False:
+                    added_photons = prof.SBProfile.drawShoot(
+                        imview.image, n_photons, uniform_deviate, max_extra_noise,
+                        poisson_flux)
+                    if gain != 1:
+                        imview /= gain
+                else:
+                    tempim = imview.copy()
+                    tempim.setZero()
+                    added_photons = prof.SBProfile.drawShoot(
+                        tempim.image, n_photons, uniform_deviate, max_extra_noise,
+                        poisson_flux)
+                    tempim /= gain
+                    imview += tempim
             except RuntimeError:  # pragma: no cover
                 # Give some extra explanation as a warning, then raise the original exception
                 # so the traceback shows as much detail as possible.

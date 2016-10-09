@@ -944,11 +944,12 @@ def test_drawImage_area_exptime():
     exptime = 2
     area = 1.4
 
-    obj = galsim.Exponential(flux=test_flux, scale_radius=2)
+    # We will be photon shooting, so use largish flux.
+    obj = galsim.Exponential(flux=1776., scale_radius=2)
 
     im1 = obj.drawImage(nx=24, ny=24, scale=0.3)
     im2 = obj.drawImage(image=im1.copy(), exptime=exptime, area=area)
-    np.testing.assert_array_almost_equal(im1.array, im2.array/exptime/area, 8,
+    np.testing.assert_array_almost_equal(im1.array, im2.array/exptime/area, 5,
             "obj.drawImage() did not respect area and exptime kwargs.")
 
     # Now check with drawShoot().  Scaling the gain should just scale the image proportionally.
@@ -958,12 +959,12 @@ def test_drawImage_area_exptime():
     rng = galsim.BaseDeviate(1234)
     im1 = obj.drawImage(nx=24, ny=24, scale=0.3, method='phot', rng=rng.duplicate())
     im2 = obj.drawImage(image=im1.copy(), method='phot', rng=rng.duplicate())
-    np.testing.assert_array_almost_equal(im1.array, im2.array, 8,
+    np.testing.assert_array_almost_equal(im1.array, im2.array, 5,
             "obj.drawImage(method='phot', rng=rng.duplicate()) did not produce image "
             "deterministically.")
     im3 = obj.drawImage(image=im1.copy(), method='phot', rng=rng.duplicate(), gain=2)
-    np.testing.assert_array_almost_equal(im1.array, im3.array/2, 8,
-            "obj.drawImage(method='phot', rng=rng.duplicate()) did not produce image "
+    np.testing.assert_array_almost_equal(im1.array, im3.array*2, 5,
+            "obj.drawImage(method='phot', rng=rng.duplicate(), gain=2) did not produce image "
             "deterministically.")
 
     im4 = obj.drawImage(image=im1.copy(), method='phot', rng=rng.duplicate(),
