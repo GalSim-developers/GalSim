@@ -341,25 +341,6 @@ namespace galsim {
         double getNegativeFlux() const;
 
         /**
-         * @brief Draw the SBProfile in real space returning the summed flux.
-         *
-         * The image will be drawn on the provided ImageView, although for an FFT draw method,
-         * the k-image may be calculated internally on a larger grid to avoid folding.
-         * The default draw() routines decide internally whether image can be drawn directly
-         * in real space or needs to be done via FFT from k space.
-         *
-         * The image is not cleared out before drawing.  So this profile will be added to anything
-         * already on the input image.
-         *
-         * @param[in,out]    image (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in] wmult  If desired, a scaling to make intermediate images larger than normal.
-         *
-         * @returns summed flux.
-         */
-        template <typename T>
-        double draw(ImageView<T> image, double wmult) const;
-
-        /**
          * @brief Draw an image of the SBProfile in real space forcing the use of real methods
          * where we have a formula for x values.
          * For SBProfiles without an analytic real-space representation, an exception will be

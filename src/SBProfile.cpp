@@ -216,17 +216,6 @@ namespace galsim {
     // Common methods of Base Class "SBProfile"
     //
 
-    // Basic draw command calls either plainDraw or fourierDraw
-    template <typename T>
-    double SBProfile::draw(ImageView<T> img, double wmult) const
-    {
-        dbg<<"Start draw ImageView"<<std::endl;
-        if (isAnalyticX())
-            return plainDraw(img);
-        else
-            return fourierDraw(img, wmult);
-    }
-
     int SBProfile::getGoodImageSize(double dx, double wmult) const
     {
         dbg<<"Start getGoodImageSize\n";
@@ -699,9 +688,6 @@ namespace galsim {
     // instantiate template functions for expected image types
     template double SBProfile::SBProfileImpl::fillXImage(ImageView<float>& img) const;
     template double SBProfile::SBProfileImpl::fillXImage(ImageView<double>& img) const;
-
-    template double SBProfile::draw(ImageView<float> img, double wmult) const;
-    template double SBProfile::draw(ImageView<double> img, double wmult) const;
 
     template double SBProfile::plainDraw(ImageView<float> I) const;
     template double SBProfile::plainDraw(ImageView<double> I) const;
