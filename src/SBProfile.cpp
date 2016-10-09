@@ -238,15 +238,6 @@ namespace galsim {
         return N;
     }
 
-    // First is a simple case wherein we have a formula for x values:
-    template <typename T>
-    double SBProfile::plainDraw(ImageView<T> I) const
-    {
-        dbg<<"Start plainDraw"<<std::endl;
-        assert(_pimpl.get());
-        return _pimpl->fillXImage(I);
-    }
-
     // The derived classes pretty much all override these functions, since there are
     // almost always (at least minor) efficiency gains from doing so.  But we have
     // them here in case someone doesn't want to bother for a new class.
@@ -349,33 +340,26 @@ namespace galsim {
     { m1 += m2; }
 
     template <typename T>
-    double SBProfile::SBProfileImpl::fillXImage(ImageView<T>& I) const
+    double SBProfile::plainDraw(ImageView<T> I) const
     {
-        xdbg<<"Start fillXImage"<<std::endl;
+        assert(_pimpl.get());
+        xdbg<<"Start plainDraw"<<std::endl;
 
-        const int m = I.getXMax()-I.getXMin()+1;
-        const int n = I.getYMax()-I.getYMin()+1;
-        xdbg<<"m,n = "<<m<<','<<n<<std::endl;
-        tmv::Vector<double> x(m);
         const int xmin = I.getXMin();
-        for (int i=0;i<m;++i) x.ref(i) = (xmin+i);
-        xdbg<<"xmin = "<<xmin<<std::endl;
-        xdbg<<"x = "<<x<<std::endl;
-
-        tmv::Vector<double> y(n);
         const int ymin = I.getYMin();
-        xdbg<<"ymin = "<<ymin<<std::endl;
-        for (int i=0;i<n;++i) y.ref(i) = (ymin+i);
-        xdbg<<"y = "<<y<<std::endl;
+        const int xmax = I.getXMax();
+        const int ymax = I.getYMax();
+        const int m = xmax - xmin + 1;
+        const int n = ymax - ymin + 1;
+        xdbg<<"bounds = "<<xmin<<','<<xmax<<','<<ymin<<','<<ymax<<std::endl;
+        xdbg<<"m,n = "<<m<<','<<n<<std::endl;
 
         tmv::Matrix<double> val(m,n);
-#ifdef DEBUGLOGGING
-        val.setAllTo(999.);
-#endif
+
         assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
         xdbg<<"Call fillXValue with "<<xmin<<','<<1.<<','<<-xmin<<
             ','<<ymin<<','<<1.<<','<<-ymin<<std::endl;
-        fillXValue(val.view(),xmin,1.,-xmin,ymin,1.,-ymin);
+        _pimpl->fillXValue(val.view(),xmin,1.,-xmin,ymin,1.,-ymin);
 
         tmv::MatrixView<T> mI(I.getData(),m,n,1,I.getStride(),tmv::NonConj);
         //mI += val;
@@ -686,9 +670,6 @@ namespace galsim {
     }
 
     // instantiate template functions for expected image types
-    template double SBProfile::SBProfileImpl::fillXImage(ImageView<float>& img) const;
-    template double SBProfile::SBProfileImpl::fillXImage(ImageView<double>& img) const;
-
     template double SBProfile::plainDraw(ImageView<float> I) const;
     template double SBProfile::plainDraw(ImageView<double> I) const;
 
