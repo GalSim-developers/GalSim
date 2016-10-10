@@ -216,15 +216,13 @@ namespace galsim {
     // Common methods of Base Class "SBProfile"
     //
 
-    int SBProfile::getGoodImageSize(double dx, double wmult) const
+    int SBProfile::getGoodImageSize(double dx) const
     {
         dbg<<"Start getGoodImageSize\n";
 
         // Find a good size based on dx and stepK
         double Nd = 2.*M_PI/(dx*stepK());
         dbg<<"Nd = "<<Nd<<std::endl;
-        Nd *= wmult; // make even bigger if desired
-        dbg<<"Nd => "<<Nd<<std::endl;
 
         // Make it an integer
         // Some slop to keep from getting extra pixels due to roundoff errors in calculations.
@@ -382,7 +380,7 @@ namespace galsim {
         dbg<<"  image bounds = "<<I.getBounds()<<std::endl;
         dbg<<"  wmult = "<<wmult<<std::endl;
 
-        int Nnofold = getGoodImageSize(1.,wmult);
+        int Nnofold = getGoodImageSize(1./wmult);
         dbg<<"Nnofold = "<<Nnofold<<std::endl;
 
         // We must make something big enough to cover the target image size:

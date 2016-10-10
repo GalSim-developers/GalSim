@@ -839,7 +839,7 @@ class GSObject(object):
 
 
     # Make sure the image is defined with the right size and wcs for drawImage()
-    def _setup_image(self, image, nx, ny, bounds, wmult, add_to_image, dtype):
+    def _setup_image(self, image, nx, ny, bounds, add_to_image, dtype, wmult):
         # Check validity of nx,ny,bounds:
         if image is not None:
             if bounds is not None:
@@ -864,7 +864,7 @@ class GSObject(object):
                     raise ValueError("Must set either both or neither of nx, ny")
                 image = galsim.Image(nx, ny, dtype=dtype)
             else:
-                N = self.SBProfile.getGoodImageSize(1.0, wmult)
+                N = self.SBProfile.getGoodImageSize(1.0 if wmult is None else 1.0/wmult)
                 image = galsim.Image(N, N, dtype=dtype)
 
         # Resize the given image if necessary
@@ -872,7 +872,7 @@ class GSObject(object):
             # Can't add to image if need to resize
             if add_to_image:
                 raise ValueError("Cannot add_to_image if image bounds are not defined")
-            N = self.SBProfile.getGoodImageSize(1.0, wmult)
+            N = self.SBProfile.getGoodImageSize(1.0 if wmult is None else 1.0/wmult)
             bounds = galsim.BoundsI(1,N,1,N)
             image.resize(bounds)
             image.setZero()
@@ -1250,8 +1250,6 @@ class GSObject(object):
                  'The old wmult parameter should not generally be required to get accurate FFT-'
                  'rendered images.  If you need larger FFT grids to prevent aliasing, you should '
                  'now use a gsparams object with a folding_threshold lower than the default 0.005.')
-        else:
-            wmult = 1.
 
         # Check that image is sane
         if image is not None and not isinstance(image, galsim.Image):
@@ -1354,7 +1352,7 @@ class GSObject(object):
         prof = prof._fix_center(shape, offset, use_true_center, reverse=False)
 
         # Make sure image is setup correctly
-        image = prof._setup_image(image, nx, ny, bounds, wmult, add_to_image, dtype)
+        image = prof._setup_image(image, nx, ny, bounds, add_to_image, dtype, wmult)
         image.wcs = wcs
 
         if setup_only:
@@ -1704,8 +1702,6 @@ class GSObject(object):
                  'The old wmult parameter should not generally be required to get accurate FFT-'
                  'rendered images.  If you need larger FFT grids to prevent aliasing, you should '
                  'now use a gsparams object with a folding_threshold lower than the default 0.005.')
-        else:
-            wmult = 1.
 
         # Make sure the type of gain is correct and has a valid value:
         if type(gain) != float:
@@ -1754,8 +1750,8 @@ class GSObject(object):
         # do that, but only if the profile is in image coordinates for the real space image.
         # So make that profile.
         real_prof = galsim.PixelScale(dx).toImage(self)
-        re = real_prof._setup_image(re, nx, ny, bounds, wmult, add_to_image, dtype)
-        im = real_prof._setup_image(im, nx, ny, bounds, wmult, add_to_image, dtype)
+        re = real_prof._setup_image(re, nx, ny, bounds, add_to_image, dtype, wmult)
+        im = real_prof._setup_image(im, nx, ny, bounds, add_to_image, dtype, wmult)
 
         # Set the wcs of the images to use the dk scale size
         re.scale = dk

@@ -186,14 +186,13 @@ namespace galsim {
          * @brief Determine a good size for a drawn image based on dx and stepK()
          *
          * @param[in] dx      The pixel scale of the image
-         * @param[in] wmult   If desired, a scaling to make the image larger than normal.
          *
          * @returns the recommended image size.
          *
-         * The basic formula is 2pi * wmult / (dx * stepK()).
+         * The basic formula is 2pi / (dx * stepK()).
          * But then we round up to the next even integer value.
          */
-        int getGoodImageSize(double dx, double wmult) const;
+        int getGoodImageSize(double dx) const;
 
         /**
          * @brief Check whether the SBProfile is known to have rotational symmetry about x=y=0
