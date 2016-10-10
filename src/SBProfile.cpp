@@ -495,24 +495,6 @@ namespace galsim {
         addMatrix(mIm,val.imagPart());
     }
 
-    void SBProfile::SBProfileImpl::fillXGrid(XTable& xt) const
-    {
-        xdbg<<"Start fillXGrid"<<std::endl;
-
-        int N = xt.getN();
-        double dx = xt.getDx();
-        xt.clearCache();
-
-        tmv::Matrix<double> val(N,N);
-#ifdef DEBUGLOGGING
-        val.setAllTo(999.);
-#endif
-        fillXValue(val.view(),-(N/2)*dx,dx,N/2,-(N/2)*dx,dx,N/2);
-
-        tmv::MatrixView<double> mxt(xt.getArray(),N,N,1,N,tmv::NonConj);
-        mxt = val;
-    }
-
     void SBProfile::SBProfileImpl::fillKGrid(KTable& kt) const
     {
         dbg<<"Start fillKGrid\n";
