@@ -79,6 +79,12 @@ namespace galsim {
         double getFluxScaling() const { return _fluxScaling; }
 
         // Overrides for better efficiency
+        void fillXImage(ImageView<double> im,
+                        double x0, double dx, int izero,
+                        double y0, double dy, int jzero) const;
+        void fillXImage(ImageView<double> im,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
         void fillXValue(tmv::MatrixView<double> val,
                         double x0, double dx, int izero,
                         double y0, double dy, int jzero) const;

@@ -516,6 +516,96 @@ namespace galsim {
         const Position<double>& k, const Position<double>& cen)
     { return adaptee.kValue(fwdTk) * std::polar(absdet , -k.x*cen.x-k.y*cen.y); }
 
+    void SBTransform::SBTransformImpl::fillXImage(ImageView<double> im,
+                                                  double x0, double dx, int izero,
+                                                  double y0, double dy, int jzero) const
+    {
+        dbg<<"SBTransform fillXImage\n";
+        dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
+        dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
+        dbg<<"A,B,C,D = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
+        dbg<<"cen = "<<_cen<<", zerocen = "<<_zeroCen<<std::endl;
+        dbg<<"absdet = "<<_absdet<<", invdet = "<<_invdet<<std::endl;
+        dbg<<"fluxScaling = "<<_fluxScaling<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+
+        // Subtract cen
+        if (!_zeroCen) {
+            x0 -= _cen.x;
+            y0 -= _cen.y;
+            // Check if the new center falls on an integer index.
+            // 0 = x0 + iz * dx
+            // 0 = y0 + jz * dy
+            xdbg<<"x0,y0 = "<<x0<<','<<y0<<std::endl;
+            int iz = int(-x0/dx+0.5);
+            int jz = int(-y0/dy+0.5);
+            xdbg<<"iz,jz = "<<iz<<','<<jz<<std::endl;
+            xdbg<<"near zero at "<<(x0+iz*dx)<<"  "<<(y0+jz*dy)<<std::endl;
+
+            if (std::abs(x0 + iz*dx) < 1.e-10 && iz > 0 && iz < m) izero = iz;
+            else izero = 0;
+            if (std::abs(y0 + jz*dy) < 1.e-10 && jz > 0 && jz < n) jzero = jz;
+            else jzero = 0;
+        }
+
+        // Apply inv to x,y
+        if (_mB == 0. && _mC == 0.) {
+            double xscal = _invdet * _mD;
+            double yscal = _invdet * _mA;
+            x0 *= xscal;
+            dx *= xscal;
+            y0 *= yscal;
+            dy *= yscal;
+
+            GetImpl(_adaptee)->fillXImage(im,x0,dx,izero,y0,dy,jzero);
+        } else {
+            Position<double> inv0 = inv(Position<double>(x0,y0));
+            Position<double> inv1 = inv(Position<double>(dx,0.));
+            Position<double> inv2 = inv(Position<double>(0.,dy));
+            xdbg<<"inv0 = "<<inv0<<std::endl;
+            xdbg<<"inv1 = "<<inv1<<std::endl;
+            xdbg<<"inv2 = "<<inv2<<std::endl;
+
+            GetImpl(_adaptee)->fillXImage(im,inv0.x,inv1.x,inv2.x,inv0.y,inv2.y,inv1.y);
+        }
+
+        // Apply flux scaling
+        im *= _fluxScaling;
+    }
+
+    void SBTransform::SBTransformImpl::fillXImage(ImageView<double> im,
+                                                  double x0, double dx, double dxy,
+                                                  double y0, double dy, double dyx) const
+    {
+        dbg<<"SBTransform fillXImage\n";
+        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
+        dbg<<"A,B,C,D = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
+        dbg<<"cen = "<<_cen<<", zerocen = "<<_zeroCen<<std::endl;
+        dbg<<"absdet = "<<_absdet<<", invdet = "<<_invdet<<std::endl;
+        dbg<<"fluxScaling = "<<_fluxScaling<<std::endl;
+
+        // Subtract cen
+        if (!_zeroCen) {
+            x0 -= _cen.x;
+            y0 -= _cen.y;
+        }
+
+        // Apply inv to x,y
+        Position<double> inv0 = inv(Position<double>(x0,y0));
+        Position<double> inv1 = inv(Position<double>(dx,dyx));
+        Position<double> inv2 = inv(Position<double>(dxy,dy));
+        xdbg<<"inv0 = "<<inv0<<std::endl;
+        xdbg<<"inv1 = "<<inv1<<std::endl;
+        xdbg<<"inv2 = "<<inv2<<std::endl;
+
+        GetImpl(_adaptee)->fillXImage(im,inv0.x,inv1.x,inv2.x,inv0.y,inv2.y,inv1.y);
+
+        // Apply flux scaling
+        im *= _fluxScaling;
+    }
+
     void SBTransform::SBTransformImpl::fillXValue(tmv::MatrixView<double> val,
                                                   double x0, double dx, int izero,
                                                   double y0, double dy, int jzero) const
@@ -567,6 +657,38 @@ namespace galsim {
 
             GetImpl(_adaptee)->fillXValue(val,inv0.x,inv1.x,inv2.x,inv0.y,inv2.y,inv1.y);
         }
+
+        // Apply flux scaling
+        val *= _fluxScaling;
+    }
+
+    void SBTransform::SBTransformImpl::fillXValue(tmv::MatrixView<double> val,
+                                                  double x0, double dx, double dxy,
+                                                  double y0, double dy, double dyx) const
+    {
+        dbg<<"SBTransform fillXValue\n";
+        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
+        dbg<<"A,B,C,D = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
+        dbg<<"cen = "<<_cen<<", zerocen = "<<_zeroCen<<std::endl;
+        dbg<<"absdet = "<<_absdet<<", invdet = "<<_invdet<<std::endl;
+        dbg<<"fluxScaling = "<<_fluxScaling<<std::endl;
+
+        // Subtract cen
+        if (!_zeroCen) {
+            x0 -= _cen.x;
+            y0 -= _cen.y;
+        }
+
+        // Apply inv to x,y
+        Position<double> inv0 = inv(Position<double>(x0,y0));
+        Position<double> inv1 = inv(Position<double>(dx,dyx));
+        Position<double> inv2 = inv(Position<double>(dxy,dy));
+        xdbg<<"inv0 = "<<inv0<<std::endl;
+        xdbg<<"inv1 = "<<inv1<<std::endl;
+        xdbg<<"inv2 = "<<inv2<<std::endl;
+
+        GetImpl(_adaptee)->fillXValue(val,inv0.x,inv1.x,inv2.x,inv0.y,inv2.y,inv1.y);
 
         // Apply flux scaling
         val *= _fluxScaling;
@@ -626,38 +748,6 @@ namespace galsim {
             val = DiagMatrixViewOf(kx_phase) * val;
             val = val * DiagMatrixViewOf(ky_phase);
         }
-    }
-
-    void SBTransform::SBTransformImpl::fillXValue(tmv::MatrixView<double> val,
-                                                  double x0, double dx, double dxy,
-                                                  double y0, double dy, double dyx) const
-    {
-        dbg<<"SBTransform fillXValue\n";
-        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
-        dbg<<"A,B,C,D = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
-        dbg<<"cen = "<<_cen<<", zerocen = "<<_zeroCen<<std::endl;
-        dbg<<"absdet = "<<_absdet<<", invdet = "<<_invdet<<std::endl;
-        dbg<<"fluxScaling = "<<_fluxScaling<<std::endl;
-
-        // Subtract cen
-        if (!_zeroCen) {
-            x0 -= _cen.x;
-            y0 -= _cen.y;
-        }
-
-        // Apply inv to x,y
-        Position<double> inv0 = inv(Position<double>(x0,y0));
-        Position<double> inv1 = inv(Position<double>(dx,dyx));
-        Position<double> inv2 = inv(Position<double>(dxy,dy));
-        xdbg<<"inv0 = "<<inv0<<std::endl;
-        xdbg<<"inv1 = "<<inv1<<std::endl;
-        xdbg<<"inv2 = "<<inv2<<std::endl;
-
-        GetImpl(_adaptee)->fillXValue(val,inv0.x,inv1.x,inv2.x,inv0.y,inv2.y,inv1.y);
-
-        // Apply flux scaling
-        val *= _fluxScaling;
     }
 
     void SBTransform::SBTransformImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,

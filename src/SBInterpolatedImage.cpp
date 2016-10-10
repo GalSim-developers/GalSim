@@ -248,6 +248,39 @@ namespace galsim {
         dbg<<"ktab size = "<<_ktab->getN()<<", scale = "<<_ktab->getDk()<<std::endl;
     }
 
+    void SBInterpolatedImage::SBInterpolatedImageImpl::fillXImage(
+        ImageView<double> im,
+        double x0, double dx, int izero,
+        double y0, double dy, int jzero) const
+    {
+        dbg<<"SBInterpolatedImage fillXImage\n";
+        dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
+        dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        double* ptr = im.getData();
+
+        if (dynamic_cast<const InterpolantXY*> (_xInterp.get())) {
+            // If the interpolant is separable, the XTable interpolation routine
+            // will go faster if we make y iteration the inner loop.
+            const int stride = im.getStride();
+            const int skip = 1 - n*stride;
+            for (int i=0; i<m; ++i,x0+=dx,ptr+=skip) {
+                double y = y0;
+                for (int j=0; j<n; ++j,y+=dy,ptr+=stride)
+                    *ptr = _xtab->interpolate(x0, y, *_xInterp);
+            }
+        } else {
+            // Otherwise, just do the values in storage order
+            const int skip = im.getNSkip();
+            for (int j=0; j<n; ++j,y0+=dy,ptr+=skip) {
+                double x = x0;
+                for (int i=0; i<m; ++i,x+=dx)
+                    *ptr++ = _xtab->interpolate(x, y0, *_xInterp);
+            }
+        }
+    }
+
     void SBInterpolatedImage::SBInterpolatedImageImpl::fillXValue(
         tmv::MatrixView<double> val,
         double x0, double dx, int izero,

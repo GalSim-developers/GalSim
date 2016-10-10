@@ -188,6 +188,118 @@ namespace galsim {
         return _flux * _info->kValue(ksq);
     }
 
+    void SBSersic::SBSersicImpl::fillXImage(ImageView<double> im,
+                                            double x0, double dx, int izero,
+                                            double y0, double dy, int jzero) const
+    {
+        dbg<<"SBSersic fillXImage\n";
+        dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
+        dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
+        //if (izero != 0 || jzero != 0) {
+        if (false) {
+            xdbg<<"Use Quadrant\n";
+            //fillXImageQuadrant(val,x0,dx,izero,y0,dy,jzero);
+            // Sersics tend to be super peaky at the center, so if we are including
+            // (0,0) in the image, then it is helpful to do (0,0) explicitly rather
+            // than treating it as 0 ~= x0 + n*dx, which has rounding errors and doesn't
+            // quite come out to 0, and high-n Sersics vary a lot between r = 0 and 1.e-16!
+            // By a lot, I mean ~0.5%, which is enough to care about.
+            //if (izero != 0 && jzero != 0)
+                // NB: _info->xValue(0) = 1
+                //val(izero, jzero) = _xnorm;
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            const int m = im.getNCol();
+            const int n = im.getNRow();
+            double* ptr = im.getData();
+            const int skip = im.getNSkip();
+
+            x0 *= _inv_r0;
+            dx *= _inv_r0;
+            y0 *= _inv_r0;
+            dy *= _inv_r0;
+
+            for (int j=0; j<n; ++j,y0+=dy,ptr+=skip) {
+                double x = x0;
+                double ysq = y0*y0;
+                for (int i=0; i<m; ++i,x+=dx)
+                    *ptr++ = _xnorm * _info->xValue(x*x + ysq);
+            }
+            if (izero != 0 && jzero != 0) {
+                // NB: _info->xValue(0) = 1
+                ptr = im.getData() + jzero*im.getStride() + izero;
+                *ptr = _xnorm;
+            }
+        }
+    }
+
+    void SBSersic::SBSersicImpl::fillXImage(ImageView<double> im,
+                                            double x0, double dx, double dxy,
+                                            double y0, double dy, double dyx) const
+    {
+        dbg<<"SBSersic fillXImage\n";
+        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        double* ptr = im.getData();
+        const int skip = im.getNSkip();
+
+        x0 *= _inv_r0;
+        dx *= _inv_r0;
+        dxy *= _inv_r0;
+        y0 *= _inv_r0;
+        dy *= _inv_r0;
+        dyx *= _inv_r0;
+
+        double x00 = x0; // Preserve the originals for below.
+        double y00 = y0;
+        for (int j=0; j<n; ++j,x0+=dxy,y0+=dy,ptr+=skip) {
+            double x = x0;
+            double y = y0;
+            for (int i=0; i<m; ++i,x+=dx,y+=dyx)
+                *ptr++ = _xnorm * _info->xValue(x*x + y*y);
+        }
+
+        // Check if one of these points is really (0,0) in disguise and fix it up
+        // with a call to xValue(0.0), rather than using xValue(epsilon != 0), which
+        // for Sersics can be rather wrong due to their super steep central peak.
+        // 0 = x0 + dx i + dxy j
+        // 0 = y0 + dyx i + dy j
+        // ( i ) = ( dx  dxy )^-1 ( -x0 )
+        // ( j )   ( dyx  dy )    ( -y0 )
+        //       = 1/(dx dy - dxy dyx) (  dy  -dxy ) ( -x0 )
+        //                             ( -dyx  dx  ) ( -y0 )
+        double det = dx * dy - dxy * dyx;
+        double i0 = (-dy * x00 + dxy * y00) / det;
+        double j0 = (dyx * x00 - dx * y00) / det;
+        dbg<<"i0, j0 = "<<i0<<','<<j0<<std::endl;
+        dbg<<"x0 + dx i + dxy j = "<<x00+dx*i0+dxy*j0<<std::endl;
+        dbg<<"y0 + dyx i + dy j = "<<y00+dyx*i0+dy*j0<<std::endl;
+        int inti0 = int(floor(i0+0.5));
+        int intj0 = int(floor(j0+0.5));
+
+        if ( std::abs(i0 - inti0) < 1.e-12 && std::abs(j0 - intj0) < 1.e-12 &&
+             inti0 >= 0 && inti0 < m && intj0 >= 0 && intj0 < n)  {
+            ptr = im.getData() + intj0*im.getStride() + inti0;
+            dbg<<"Fixing central value from "<<*ptr;
+            // NB: _info->xValue(0) = 1
+            *ptr = _xnorm;
+            dbg<<" to "<<*ptr<<std::endl;
+#ifdef DEBUGLOGGING
+            double x = x00;
+            double y = y00;
+            for (int j=0;j<intj0;++j) { x += dxy; y += dy; }
+            for (int i=0;i<inti0;++i) { x += dx; y += dyx; }
+            double rsq = x*x+y*y;
+            dbg<<"Note: the original rsq value for this pixel had been "<<rsq<<std::endl;
+            dbg<<"xValue(rsq) = "<<_info->xValue(rsq)<<std::endl;
+            dbg<<"xValue(0) = "<<_info->xValue(0.)<<std::endl;
+#endif
+        }
+
+    }
+
     void SBSersic::SBSersicImpl::fillXValue(tmv::MatrixView<double> val,
                                             double x0, double dx, int izero,
                                             double y0, double dy, int jzero) const
@@ -225,40 +337,6 @@ namespace galsim {
                 for (int i=0;i<m;++i,x+=dx) {
                     double rsq = x*x + ysq;
                     *valit++ = _xnorm * _info->xValue(rsq);
-                }
-            }
-        }
-    }
-
-    void SBSersic::SBSersicImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                            double kx0, double dkx, int izero,
-                                            double ky0, double dky, int jzero) const
-    {
-        dbg<<"SBSersic fillKValue\n";
-        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
-        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
-        if (izero != 0 || jzero != 0) {
-            xdbg<<"Use Quadrant\n";
-            fillKValueQuadrant(val,kx0,dkx,izero,ky0,dky,jzero);
-        } else {
-            xdbg<<"Non-Quadrant\n";
-            assert(val.stepi() == 1);
-            const int m = val.colsize();
-            const int n = val.rowsize();
-            typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
-
-            kx0 *= _r0;
-            dkx *= _r0;
-            ky0 *= _r0;
-            dky *= _r0;
-
-            for (int j=0;j<n;++j,ky0+=dky) {
-                double kx = kx0;
-                double kysq = ky0*ky0;
-                It valit = val.col(j).begin();
-                for (int i=0;i<m;++i,kx+=dkx) {
-                    double ksq = kx*kx + kysq;
-                    *valit++ = _flux * _info->kValue(ksq);
                 }
             }
         }
@@ -332,6 +410,40 @@ namespace galsim {
 #endif
         }
 
+    }
+
+    void SBSersic::SBSersicImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+                                            double kx0, double dkx, int izero,
+                                            double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBSersic fillKValue\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillKValueQuadrant(val,kx0,dkx,izero,ky0,dky,jzero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            assert(val.stepi() == 1);
+            const int m = val.colsize();
+            const int n = val.rowsize();
+            typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+
+            kx0 *= _r0;
+            dkx *= _r0;
+            ky0 *= _r0;
+            dky *= _r0;
+
+            for (int j=0;j<n;++j,ky0+=dky) {
+                double kx = kx0;
+                double kysq = ky0*ky0;
+                It valit = val.col(j).begin();
+                for (int i=0;i<m;++i,kx+=dkx) {
+                    double ksq = kx*kx + kysq;
+                    *valit++ = _flux * _info->kValue(ksq);
+                }
+            }
+        }
     }
 
     void SBSersic::SBSersicImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,

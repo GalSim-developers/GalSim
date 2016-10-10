@@ -45,6 +45,10 @@ namespace galsim {
         double xValue(const Position<double>& p) const;
         std::complex<double> kValue(const Position<double>& p) const;
 
+        // Only the izero, jzero one can be improved, so override that one.
+        void fillXImage(ImageView<double> im,
+                        double x0, double dx, int izero,
+                        double y0, double dy, int jzero) const;
         void fillXValue(tmv::MatrixView<double> val,
                         double x0, double dx, int izero,
                         double y0, double dy, int jzero) const;

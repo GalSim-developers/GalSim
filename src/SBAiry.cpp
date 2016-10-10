@@ -145,6 +145,64 @@ namespace galsim {
         return _knorm * _info->kValue(ksq_over_pisq);
     }
 
+    void SBAiry::SBAiryImpl::fillXImage(ImageView<double> im,
+                                        double x0, double dx, int izero,
+                                        double y0, double dy, int jzero) const
+    {
+        dbg<<"SBAiry fillXImage\n";
+        dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
+        dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
+        if (false) {
+            xdbg<<"Use Quadrant\n";
+            //fillXImageQuadrant(val,x0,dx,izero,y0,dy,jzero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            const int m = im.getNCol();
+            const int n = im.getNRow();
+            double* ptr = im.getData();
+            const int skip = im.getNSkip();
+
+            x0 *= _D;
+            dx *= _D;
+            y0 *= _D;
+            dy *= _D;
+
+            for (int j=0; j<n; ++j,y0+=dy,ptr+=skip) {
+                double x = x0;
+                double ysq = y0*y0;
+                for (int i=0;i<m;++i,x+=dx)
+                    *ptr++ = _xnorm * _info->xValue(sqrt(x*x + ysq));
+            }
+        }
+    }
+
+    void SBAiry::SBAiryImpl::fillXImage(ImageView<double> im,
+                                        double x0, double dx, double dxy,
+                                        double y0, double dy, double dyx) const
+    {
+        dbg<<"SBAiry fillXImage\n";
+        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        double* ptr = im.getData();
+        const int skip = im.getNSkip();
+
+        x0 *= _D;
+        dx *= _D;
+        dxy *= _D;
+        y0 *= _D;
+        dy *= _D;
+        dyx *= _D;
+
+        for (int j=0; j<n; ++j,x0+=dxy,y0+=dy,ptr+=skip) {
+            double x = x0;
+            double y = y0;
+            for (int i=0; i<m; ++i,x+=dx,y+=dyx)
+                *ptr++ = _xnorm * _info->xValue(sqrt(x*x + y*y));
+        }
+    }
+
     void SBAiry::SBAiryImpl::fillXValue(tmv::MatrixView<double> val,
                                         double x0, double dx, int izero,
                                         double y0, double dy, int jzero) const
@@ -177,6 +235,35 @@ namespace galsim {
         }
     }
 
+    void SBAiry::SBAiryImpl::fillXValue(tmv::MatrixView<double> val,
+                                        double x0, double dx, double dxy,
+                                        double y0, double dy, double dyx) const
+    {
+        dbg<<"SBAiry fillXValue\n";
+        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
+        assert(val.stepi() == 1);
+        assert(val.canLinearize());
+        const int m = val.colsize();
+        const int n = val.rowsize();
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+
+        x0 *= _D;
+        dx *= _D;
+        dxy *= _D;
+        y0 *= _D;
+        dy *= _D;
+        dyx *= _D;
+
+        It valit = val.linearView().begin();
+        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+            double x = x0;
+            double y = y0;
+            for (int i=0;i<m;++i,x+=dx,y+=dyx)
+                *valit++ = _xnorm * _info->xValue(sqrt(x*x + y*y));
+        }
+    }
+
     void SBAiry::SBAiryImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
                                         double kx0, double dkx, int izero,
                                         double ky0, double dky, int jzero) const
@@ -206,35 +293,6 @@ namespace galsim {
                 for (int i=0;i<m;++i,kx+=dkx)
                     *valit++ = _knorm * _info->kValue(kx*kx + kysq);
             }
-        }
-    }
-
-    void SBAiry::SBAiryImpl::fillXValue(tmv::MatrixView<double> val,
-                                        double x0, double dx, double dxy,
-                                        double y0, double dy, double dyx) const
-    {
-        dbg<<"SBAiry fillXValue\n";
-        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
-        assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
-
-        x0 *= _D;
-        dx *= _D;
-        dxy *= _D;
-        y0 *= _D;
-        dy *= _D;
-        dyx *= _D;
-
-        It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
-            double x = x0;
-            double y = y0;
-            for (int i=0;i<m;++i,x+=dx,y+=dyx)
-                *valit++ = _xnorm * _info->xValue(sqrt(x*x + y*y));
         }
     }
 

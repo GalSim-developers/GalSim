@@ -245,14 +245,12 @@ namespace galsim {
         dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-
         double* ptr = im.getData();
         int skip = im.getNSkip();
-        double y = y0;
-        for (int j=0; j<n; ++j,y+=dy,ptr+=skip) {
+        for (int j=0; j<n; ++j,y0+=dy,ptr+=skip) {
             double x = x0;
             for (int i=0; i<m; ++i,x+=dx)
-                *ptr++ += xValue(Position<double>(x,y));
+                *ptr++ = xValue(Position<double>(x,y0));
         }
     }
 
@@ -265,14 +263,13 @@ namespace galsim {
         dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
         const int m = im.getNCol();
         const int n = im.getNRow();
-
         double* ptr = im.getData();
         int skip = im.getNSkip();
         for (int j=0; j<n; ++j,x0+=dxy,y0+=dy,ptr+=skip) {
             double x = x0;
             double y = y0;
             for (int i=0; i<m; ++i,x+=dx,y+=dyx)
-                *ptr++ += xValue(Position<double>(x,y));
+                *ptr++ = xValue(Position<double>(x,y));
         }
     }
 
@@ -380,16 +377,8 @@ namespace galsim {
     template <typename T>
     double SBProfile::plainDraw(ImageView<T> I) const
     {
-        dbg<<"Start generic plainDraw"<<std::endl;
-        ImageAlloc<double> Id(I.getBounds(), 0.);
-        double total_flux = plainDraw(Id.view());
-        I += Id;
-        return total_flux;
-    }
+        dbg<<"Start plainDraw"<<std::endl;
 
-    template <>
-    double SBProfile::plainDraw(ImageView<double> I) const
-    {
         assert(_pimpl.get());
         dbg<<"Start double plainDraw"<<std::endl;
 
@@ -402,14 +391,11 @@ namespace galsim {
         assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
         xdbg<<"Call fillXValue with "<<xmin<<','<<1.<<','<<-xmin<<
             ','<<ymin<<','<<1.<<','<<-ymin<<std::endl;
+        ImageAlloc<double> Id(I.getBounds(), 0.);
+        _pimpl->fillXImage(Id, xmin, 1., -xmin, ymin, 1., -ymin);
 
-        double init_flux = I.sumElements();
-        dbg<<"init_flux = "<<init_flux<<std::endl;
-        _pimpl->fillXImage(I, xmin, 1., -xmin, ymin, 1., -ymin);
-        double final_flux = I.sumElements();
-        dbg<<"final_flux = "<<final_flux<<std::endl;
-        double total_flux = final_flux - init_flux;
-        dbg<<"total_flux = "<<total_flux<<std::endl;
+        double total_flux = Id.sumElements();
+        I += Id;
         return total_flux;
     }
 
