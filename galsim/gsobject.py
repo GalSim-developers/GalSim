@@ -1336,16 +1336,6 @@ class GSObject(object):
             else:
                 real_space = True
             prof = galsim.Convolve(prof, galsim.Pixel(scale=1.0), real_space=real_space)
-            # Switch auto method to the actual drawing method we need to use.
-            if method == 'auto':
-                if prof.real_space: method = 'real_space'
-                else: method = 'fft'
-        elif method in ['sb', 'no_pixel']:
-            # Also switch method for the non-convolution methods
-            if prof.isAnalyticX():
-                method = 'real_space'
-            else:
-                method = 'fft'
 
         # Apply the offset, and possibly fix the centering for even-sized images
         shape = prof._get_shape(image, nx, ny, bounds)
@@ -1367,17 +1357,84 @@ class GSObject(object):
         if method == 'phot':
             added_photons = prof.drawPhot(imview, n_photons, rng, max_extra_noise, poisson_flux,
                                           gain)
-        elif method == 'fft':
-            assert not prof.isAnalyticX()
-            added_photons = prof.SBProfile.fourierDraw(imview.image, wmult)
+        elif prof.isAnalyticX():
+            added_photons = prof.drawReal(imview)
         else:
-            assert method == 'real_space'
-            assert prof.isAnalyticX()
-            added_photons = prof.SBProfile.plainDraw(imview.image)
+            added_photons = prof.drawFFT(imview, wmult)
 
         image.added_flux = added_photons / flux_scale
 
         return image
+
+    def drawReal(self, image):
+        """
+        Draw this profile into an Image by direct evaluation at the location of each pixel.
+
+        This is usually called from the `drawImage` function, rather than called directly by the
+        user.  In particular, the input image must be already set up with defined bounds with
+        the center set to (0,0).  It also must have a pixel scale of 1.0.  The profile being
+        drawn should have already been converted to image coordinates via
+
+            >>> image_profile = original_wcs.toImage(original_profile)
+
+        The image is not cleared out before drawing.  So this profile will be added to anything
+        already on the input image.  This corresponds to `add_to_image=True` in the `drawImage`
+        options.  If you don't want to add to the existing image, just call `image.setZero()`
+        before calling `drawReal`.
+
+        Note that the image produced by `drawReal` represents the profile sampled at the center
+        of each pixel and then multiplied by the pixel area.  That is, the profile is NOT
+        integrated over the area of the pixel.  If you want to render a profile integrated over
+        the pixel, you can convolve with a Pixel first and draw that.
+
+        @param image        The Image onto which to place the flux. [required]
+                            Note: The flux will be added to any flux already on the image,
+                            so this corresponds to the add_to_image=True option in drawImage.
+
+        @returns The total flux drawin inside the image bounds.
+        """
+        return self.SBProfile.plainDraw(image.image)
+
+    def drawFFT(self, image, wmult=None):
+        """
+        Draw this profile into an Image by direct evaluation at the location of each pixel.
+
+        This is usually called from the `drawImage` function, rather than called directly by the
+        user.  In particular, the input image must be already set up with defined bounds with
+        the center set to (0,0).  It also must have a pixel scale of 1.0.  The profile being
+        drawn should have already been converted to image coordinates via
+
+            >>> image_profile = original_wcs.toImage(original_profile)
+
+        The image is not cleared out before drawing.  So this profile will be added to anything
+        already on the input image.  This corresponds to `add_to_image=True` in the `drawImage`
+        options.  If you don't want to add to the existing image, just call `image.setZero()`
+        before calling `drawFFT`.
+
+        Note that the image produced by `drawFFT` represents the profile sampled at the center
+        of each pixel and then multiplied by the pixel area.  That is, the profile is NOT
+        integrated over the area of the pixel.  If you want to render a profile integrated over
+        the pixel, you can convolve with a Pixel first and draw that.
+
+        @param image        The Image onto which to place the flux. [required]
+                            Note: The flux will be added to any flux already on the image,
+                            so this corresponds to the add_to_image=True option in drawImage.
+
+        @returns The total flux drawin inside the image bounds.
+        """
+        if wmult is not None: # pragma: no cover
+            from .deprecated import depr
+            depr('wmult', 1.5, 'GSParams(folding_threshold)',
+                 'The old wmult parameter should not generally be required to get accurate FFT-'
+                 'rendered images.  If you need larger FFT grids to prevent aliasing, you should '
+                 'now use a gsparams object with a folding_threshold lower than the default 0.005.')
+            if type(wmult) != float:
+                wmult = float(wmult)
+        else:
+            wmult = 1.
+
+        return self.SBProfile.fourierDraw(image.image, wmult)
+
 
     def _calculate_nphotons(self, n_photons, poisson_flux, max_extra_noise, rng):
         """Calculate how many photons to shoot and what flux_ratio (called g) each one should
@@ -1529,9 +1586,9 @@ class GSObject(object):
         area of each pixel.  This is equivalent to convolving the profile by a square `Pixel`
         profile and sampling the value at the center of each pixel.
 
-        @param image        The Image onto which to place the flux. [required]  Note: The shot
-                            photons will be added to any flux already on the image, so this
-                            corresponds to the add_to_image=True option in drawImage.
+        @param image        The Image onto which to place the flux. [required]
+                            Note: The shot photons will be added to any flux already on the image,
+                            so this corresponds to the add_to_image=True option in drawImage.
         @param n_photons    If provided, the number of photons to use for photon shooting.
                             If not provided (i.e. `n_photons = 0`), use as many photons as
                             necessary to result in an image with the correct Poisson shot
