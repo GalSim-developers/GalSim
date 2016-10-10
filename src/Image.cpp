@@ -18,6 +18,7 @@
  */
 
 #include <sstream>
+#include <numeric>
 
 #include "Image.h"
 #include "ImageArith.h"
@@ -82,7 +83,7 @@ public:
 
 template <typename T>
 BaseImage<T>::BaseImage(const Bounds<int>& b) :
-    AssignableToImage<T>(b), _owner(), _data(0), _nElements(0), _stride(0)
+    AssignableToImage<T>(b), _owner(), _data(0), _nElements(0), _stride(0), _ncol(0), _nrow(0)
 {
     if (this->_bounds.isDefined()) allocateMem();
     // Else _data is left as 0, stride = 0.
@@ -94,7 +95,8 @@ void BaseImage<T>::allocateMem()
     // Note: this version always does the memory (re-)allocation. 
     // So the various functions that call this should do their (different) checks 
     // for whether this is necessary.
-    _stride = this->_bounds.getXMax() - this->_bounds.getXMin() + 1;
+    _stride = _ncol = this->_bounds.getXMax() - this->_bounds.getXMin() + 1;
+    _nrow = this->_bounds.getYMax() - this->_bounds.getYMin() + 1;
 
     _nElements = _stride * (this->_bounds.getYMax() - this->_bounds.getYMin() + 1);
     if (_stride <= 0 || _nElements <= 0) {
@@ -107,6 +109,20 @@ void BaseImage<T>::allocateMem()
     // than the required "delete []".
     _owner.reset(new T[_nElements], ArrayDeleter<T>());
     _data = _owner.get();
+}
+
+template <typename T>
+T BaseImage<T>::sumElements() const
+{
+    T sum = 0.;
+    if (_data) {
+        const T* ptr = _data;
+        const int skip = getNSkip();
+        for (int j=0; j<_nrow; j++, ptr+=skip)
+            for (int i=0; i<_ncol; i++)
+                sum += *ptr++;
+    }
+    return sum;
 }
 
 template <typename T>
@@ -149,13 +165,16 @@ void ImageAlloc<T>::resize(const Bounds<int>& new_bounds)
         this->_data = 0;
         this->_nElements = 0;
         this->_stride = 0;
+        this->_ncol = 0;
+        this->_nrow = 0;
     } else if (this->_bounds.isDefined() &&
                new_bounds.area() <= this->_nElements && 
                this->_owner.unique()) {
         // Then safe to keep existing memory allocation.
         // Just redefine the bounds and stride.
         this->_bounds = new_bounds;
-        this->_stride = new_bounds.getXMax() - new_bounds.getXMin() + 1;
+        this->_stride = this->_ncol = new_bounds.getXMax() - new_bounds.getXMin() + 1;
+        this->_nrow = new_bounds.getYMax() - new_bounds.getYMin() + 1;
     } else {
         // Then we want to do the reallocation.
         this->_bounds = new_bounds;
