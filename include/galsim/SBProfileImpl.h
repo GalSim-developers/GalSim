@@ -59,6 +59,12 @@ namespace galsim {
         //
         // If these aren't overridden, then the regular xValue or kValue will be called for each
         // position.
+        virtual void fillXImage(ImageView<double> im,
+                                double x0, double dx, int izero,
+                                double y0, double dy, int jzero) const;
+        virtual void fillXImage(ImageView<double> im,
+                                double x0, double dx, double dxy,
+                                double y0, double dy, double dyx) const;
         virtual void fillXValue(tmv::MatrixView<double> val,
                                 double x0, double dx, int izero,
                                 double y0, double dy, int jzero) const;

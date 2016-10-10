@@ -236,6 +236,46 @@ namespace galsim {
         return N;
     }
 
+    void SBProfile::SBProfileImpl::fillXImage(ImageView<double> im,
+                                              double x0, double dx, int izero,
+                                              double y0, double dy, int jzero) const
+    {
+        dbg<<"SBProfile fillXImage\n";
+        dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
+        dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+
+        double* ptr = im.getData();
+        int skip = im.getNSkip();
+        double y = y0;
+        for (int j=0; j<n; ++j,y+=dy,ptr+=skip) {
+            double x = x0;
+            for (int i=0; i<m; ++i,x+=dx)
+                *ptr++ += xValue(Position<double>(x,y));
+        }
+    }
+
+    void SBProfile::SBProfileImpl::fillXImage(ImageView<double> im,
+                                              double x0, double dx, double dxy,
+                                              double y0, double dy, double dyx) const
+    {
+        dbg<<"SBProfile fillXImage\n";
+        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+
+        double* ptr = im.getData();
+        int skip = im.getNSkip();
+        for (int j=0; j<n; ++j,x0+=dxy,y0+=dy,ptr+=skip) {
+            double x = x0;
+            double y = y0;
+            for (int i=0; i<m; ++i,x+=dx,y+=dyx)
+                *ptr++ += xValue(Position<double>(x,y));
+        }
+    }
+
     // The derived classes pretty much all override these functions, since there are
     // almost always (at least minor) efficiency gains from doing so.  But we have
     // them here in case someone doesn't want to bother for a new class.
@@ -340,30 +380,37 @@ namespace galsim {
     template <typename T>
     double SBProfile::plainDraw(ImageView<T> I) const
     {
+        dbg<<"Start generic plainDraw"<<std::endl;
+        ImageAlloc<double> Id(I.getBounds(), 0.);
+        double total_flux = plainDraw(Id.view());
+        I += Id;
+        return total_flux;
+    }
+
+    template <>
+    double SBProfile::plainDraw(ImageView<double> I) const
+    {
         assert(_pimpl.get());
-        xdbg<<"Start plainDraw"<<std::endl;
+        dbg<<"Start double plainDraw"<<std::endl;
 
         const int xmin = I.getXMin();
         const int ymin = I.getYMin();
-        const int xmax = I.getXMax();
-        const int ymax = I.getYMax();
-        const int m = xmax - xmin + 1;
-        const int n = ymax - ymin + 1;
-        xdbg<<"bounds = "<<xmin<<','<<xmax<<','<<ymin<<','<<ymax<<std::endl;
+        const int m = I.getNCol();
+        const int n = I.getNRow();
         xdbg<<"m,n = "<<m<<','<<n<<std::endl;
-
-        tmv::Matrix<double> val(m,n);
 
         assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
         xdbg<<"Call fillXValue with "<<xmin<<','<<1.<<','<<-xmin<<
             ','<<ymin<<','<<1.<<','<<-ymin<<std::endl;
-        _pimpl->fillXValue(val.view(),xmin,1.,-xmin,ymin,1.,-ymin);
 
-        tmv::MatrixView<T> mI(I.getData(),m,n,1,I.getStride(),tmv::NonConj);
-        //mI += val;
-        addMatrix(mI,val);
-        double totalflux = val.sumElements();
-        return totalflux;
+        double init_flux = I.sumElements();
+        dbg<<"init_flux = "<<init_flux<<std::endl;
+        _pimpl->fillXImage(I, xmin, 1., -xmin, ymin, 1., -ymin);
+        double final_flux = I.sumElements();
+        dbg<<"final_flux = "<<final_flux<<std::endl;
+        double total_flux = final_flux - init_flux;
+        dbg<<"total_flux = "<<total_flux<<std::endl;
+        return total_flux;
     }
 
     // Now the more complex case: real space via FT from k space.
