@@ -37,7 +37,7 @@ some lower-resolution telescope.
 
 import galsim
 from galsim import GSObject
-from chromatic import ChromaticSum
+from .chromatic import ChromaticSum
 import os
 import numpy as np
 
@@ -546,7 +546,7 @@ class RealGalaxyCatalog(object):
         else:
             self.loaded_lock.acquire()
             # Check again in case two processes both hit the else at the same time.
-            if file_name in self.loaded_files:
+            if file_name in self.loaded_files: # pragma: no cover
                 if self.logger:
                     self.logger.debug('RealGalaxyCatalog: File %s is already open',file_name)
                 f = self.loaded_files[file_name]
@@ -803,7 +803,7 @@ def simReal(real_galaxy, target_PSF, target_pixel_scale, g1=0.0, g2=0.0, rotatio
     return image
 
 def _parse_files_dirs(file_name, image_dir, dir, noise_dir, sample):
-    if image_dir is not None or noise_dir is not None:
+    if image_dir is not None or noise_dir is not None:  # pragma: no cover
         from .deprecated import depr
         if image_dir is not None:
             depr('image_dir', 1.4, 'dir')
@@ -1024,8 +1024,10 @@ class ChromaticRealGalaxy(ChromaticSum):
                 waves = np.union1d(waves, bp.wave_list)
             self.SEDs = []
             for i in range(len(bands)):
-                self.SEDs.append(galsim.SED(galsim.LookupTable(waves, waves**i), 'nm', 'fphotons')
-                                 .withFlux(1.0, bands[0]))
+                self.SEDs.append(
+                        galsim.SED(galsim.LookupTable(waves, waves**i, interpolant='linear'),
+                                   'nm', 'fphotons')
+                        .withFlux(1.0, bands[0]))
         else:
             self.SEDs = SEDs
 
@@ -1138,9 +1140,9 @@ class ChromaticRealGalaxy(ChromaticSum):
         coef = np.zeros((NSED, nky, nkx), dtype=np.complex128)
         # Solve the weighted linear least squares problem for each Fourier mode.  This is
         # effectively a constrained chromatic deconvolution.  Take advantage of symmetries.
-        for ix in xrange(nkx/2+1):
-            for iy in xrange(nky):
-                if (ix == 0 or ix == nkx/2) and iy > nky/2:
+        for ix in range(nkx//2+1):
+            for iy in range(nky):
+                if (ix == 0 or ix == nkx//2) and iy > nky//2:
                     break # already filled in the rest of this column
                 w = np.diag(1.0/pks[:, iy, ix])
                 root_w = np.sqrt(w)
@@ -1173,8 +1175,8 @@ class ChromaticRealGalaxy(ChromaticSum):
             objlist.append(sed * galsim.InterpolatedKImage(re, im))
 
         Sigma_dict = {}
-        for i in xrange(NSED):
-            for j in xrange(i, NSED):
+        for i in range(NSED):
+            for j in range(i, NSED):
                 rearray = Sigma[i, j].real
                 imarray = Sigma[i, j].imag
                 re = galsim.ImageD(np.ascontiguousarray(rearray), wcs=wcs)
@@ -1185,7 +1187,7 @@ class ChromaticRealGalaxy(ChromaticSum):
 
         self.covspec = galsim.CovarianceSpectrum(Sigma_dict, self.SEDs)
 
-        super(ChromaticRealGalaxy, self).__init__(objlist)
+        ChromaticSum.__init__(self, objlist)
 
     def __eq__(self, other):
         return (isinstance(other, galsim.ChromaticRealGalaxy) and

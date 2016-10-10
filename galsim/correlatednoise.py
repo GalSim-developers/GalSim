@@ -23,6 +23,7 @@ import numpy as np
 import galsim
 from . import base
 from . import utilities
+from future.utils import iteritems
 
 def whitenNoise(self, noise):
     # This will be inserted into the Image class as a method.  So self = image.
@@ -110,16 +111,16 @@ class _BaseCorrelatedNoise(object):
     # Make "+" work in the intuitive sense (variances being additive, correlation functions add as
     # you would expect)
     def __add__(self, other):
-        if self.wcs != other.wcs:
+        if not galsim.wcs.compatible(self.wcs, other.wcs):
             import warnings
-            warnings.warn("Adding two CorrelatedNoise objects with different WCS functions.\n"+
+            warnings.warn("Adding two CorrelatedNoise objects with incompatible WCS functions.\n"+
                           "The result will have the WCS of the first object.")
         return _BaseCorrelatedNoise(self.rng, self._profile + other._profile, self.wcs)
 
     def __sub__(self, other):
-        if self.wcs != other.wcs:
+        if not galsim.wcs.compatible(self.wcs, other.wcs):
             import warnings
-            warnings.warn("Subtracting two CorrelatedNoise objects with different WCS functions.\n"+
+            warnings.warn("Subtracting two CorrelatedNoise objects with incompatible WCS functions.\n"+
                           "The result will have the WCS of the first object.")
         return _BaseCorrelatedNoise(self.rng, self._profile - other._profile, self.wcs)
 
@@ -140,7 +141,7 @@ class _BaseCorrelatedNoise(object):
         """
         if rng is None:
             rng = self.rng
-        return _BaseCorrelatedNoise(rng, self._profile.copy(), self.wcs)
+        return _BaseCorrelatedNoise(rng, self._profile, self.wcs)
 
     def __repr__(self):
         return "galsim.correlatednoise._BaseCorrelatedNoise(%r,%r,%r)"%(
@@ -656,7 +657,7 @@ class _BaseCorrelatedNoise(object):
         @returns an Image of the correlation function.
         """
         # Check for obsolete dx parameter
-        if dx is not None and scale is None:
+        if dx is not None and scale is None: # pragma: no cover
             from galsim.deprecated import depr
             depr('dx', 1.1, 'scale')
             scale = dx
@@ -1161,7 +1162,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     def __init__(self, image, rng=None, scale=None, wcs=None, x_interpolant=None,
         correct_periodicity=True, subtract_mean=False, gsparams=None, dx=None):
         # Check for obsolete dx parameter
-        if dx is not None and scale==0.:
+        if dx is not None and scale==0.: # pragma: no cover
             from galsim.deprecated import depr
             depr('dx', 1.1, 'scale')
             scale = dx
@@ -1399,7 +1400,7 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
     The FITS file `out.fits` should then contain an image of randomly-generated, COSMOS-like noise.
     """
     # Check for obsolete dx_cosmos parameter
-    if dx_cosmos is not None and cosmos_scale==0.03:
+    if dx_cosmos is not None and cosmos_scale==0.03: # pragma: no cover
         from galsim.deprecated import depr
         depr('dx_cosmos', 1.1, 'cosmos_scale')
         cosmos_scale = dx_cosmos
@@ -1550,49 +1551,49 @@ class CovarianceSpectrum(object):
 
     def expand(self, scale):
         Sigma = {}
-        for k, v in self.Sigma.iteritems():
+        for k, v in iteritems(self.Sigma):
             Sigma[k] = v.expand(scale)
         return CovarianceSpectrum(Sigma, self.SEDs)
 
     def dilate(self, scale):
         Sigma = {}
-        for k, v in self.Sigma.iteritems():
+        for k, v in iteritems(self.Sigma):
             Sigma[k] = v.dilate(scale) / scale**4
         return CovarianceSpectrum(Sigma, self.SEDs)
 
     def magnify(self, scale):
         Sigma = {}
-        for k, v in self.Sigma.iteritems():
+        for k, v in iteritems(self.Sigma):
             Sigma[k] = v.magnify(scale)
         return CovarianceSpectrum(Sigma, self.SEDs)
 
     def lens(self, g1, g2, mu):
         Sigma = {}
-        for k, v in self.Sigma.iteritems():
+        for k, v in iteritems(self.Sigma):
             Sigma[k] = v.lens(g1, g2, mu)
         return CovarianceSpectrum(Sigma, self.SEDs)
 
     def rotate(self, theta):
         Sigma = {}
-        for k, v in self.Sigma.iteritems():
+        for k, v in iteritems(self.Sigma):
             Sigma[k] = v.rotate(theta)
         return CovarianceSpectrum(Sigma, self.SEDs)
 
     def shear(self, *args, **kwargs):
         Sigma = {}
-        for k, v in self.Sigma.iteritems():
+        for k, v in iteritems(self.Sigma):
             Sigma[k] = v.shear(*args, **kwargs)
         return CovarianceSpectrum(Sigma, self.SEDs)
 
     def transform(self, dudx, dudy, dvdx, dvdy):
         Sigma = {}
-        for k, v in self.Sigma.iteritems():
+        for k, v in iteritems(self.Sigma):
             Sigma[k] = v.transform(dudx, dudy, dvdx, dvdy)
         return CovarianceSpectrum(Sigma, self.SEDs)
 
     def withScaledVariance(self, variance_ratio):
         Sigma = {}
-        for k, v in self.Sigma.iteritems():
+        for k, v in iteritems(self.Sigma):
             Sigma[k] = v * variance_ratio
         return CovarianceSpectrum(Sigma, self.SEDs)
 
@@ -1621,8 +1622,8 @@ class CovarianceSpectrum(object):
             re, im = conv.drawKImage(bandpass, nx=nk, ny=nk, scale=stepk)
             PSF_eff_kimgs[i] = re.array + 1j * im.array
         pkout = np.zeros((nk, nk), dtype=np.float64)
-        for i in xrange(NSED):
-            for j in xrange(i, NSED):
+        for i in range(NSED):
+            for j in range(i, NSED):
                 re, im = self.Sigma[(i, j)].drawKImage(nx=nk, ny=nk, scale=stepk)
                 s = re.array + 1j * im.array
                 pkout += (np.conj(PSF_eff_kimgs[i]) * s * PSF_eff_kimgs[j] *

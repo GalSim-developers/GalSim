@@ -110,12 +110,15 @@ from .noise import DeviateNoise, VariableGaussianNoise
 from .correlatednoise import CorrelatedNoise, getCOSMOSNoise, UncorrelatedNoise, CovarianceSpectrum
 
 # GSObject
-from .base import GSParams, GSObject, Gaussian, Moffat, Airy, Kolmogorov, Pixel, Box, TopHat
+from .gsobject import GSObject
+from .gsparams import GSParams
+from .base import Gaussian, Moffat, Airy, Kolmogorov, Pixel, Box, TopHat
 from .base import Exponential, Sersic, DeVaucouleurs, Spergel
 from .real import RealGalaxy, RealGalaxyCatalog, simReal, ChromaticRealGalaxy
 from .phase_psf import Aperture, PhaseScreenList, PhaseScreenPSF, OpticalPSF
 from .phase_screens import AtmosphericScreen, Atmosphere, OpticalScreen
 from .shapelet import Shapelet, ShapeletSize, FitShapelet
+from .inclinedexponential import InclinedExponential
 from .interpolatedimage import Interpolant
 from .interpolatedimage import Nearest, Linear, Cubic, Quintic, Lanczos, SincInterpolant, Delta
 from .interpolatedimage import InterpolatedImage, InterpolatedKImage
@@ -125,7 +128,7 @@ from .compound import FourierSqrt, FourierSqrtProfile
 from .transform import Transform, Transformation
 
 # Chromatic
-from .chromatic import ChromaticObject, ChromaticAtmosphere, Chromatic, ChromaticSum
+from .chromatic import ChromaticObject, ChromaticAtmosphere, ChromaticSum
 from .chromatic import ChromaticConvolution, ChromaticDeconvolution, ChromaticAutoConvolution
 from .chromatic import ChromaticAutoCorrelation, ChromaticTransformation
 from .chromatic import ChromaticFourierSqrtProfile

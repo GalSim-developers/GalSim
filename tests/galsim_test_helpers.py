@@ -21,10 +21,10 @@ import numpy as np
 import os
 import sys
 
+path, filename = os.path.split(__file__)
 try:
     import galsim
 except ImportError:
-    path, filename = os.path.split(__file__)
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
@@ -396,6 +396,50 @@ def all_obj_diff(objs):
                     print(i, repr(obj))
         raise e
 
+
+def check_chromatic_invariant(obj, bps=None, waves=None):
+    """ Helper function to check that ChromaticObjects satisfy intended invariants.
+    """
+    if bps is None:
+        # load a filter
+        bppath = os.path.join(galsim.meta_data.share_dir, 'bandpasses')
+        bandpass = (galsim.Bandpass(os.path.join(bppath, 'LSST_r.dat'), 'nm')
+                    .truncate(relative_throughput=1e-3)
+                    .thin(rel_err=1e-3))
+        bps = [bandpass]
+
+    if waves is None:
+        waves = [500.]
+
+    assert isinstance(obj.wave_list, np.ndarray)
+    assert isinstance(obj.separable, bool)
+    assert isinstance(obj.interpolated, bool)
+    assert isinstance(obj.deinterpolated, (galsim.ChromaticObject, galsim.GSObject))
+
+    for wave in waves:
+        desired = obj.SED(wave)
+        # Since InterpolatedChromaticObject.evaluateAtWavelength involves actually drawing an
+        # image, which implies flux can be lost off of the edges of the image, we don't expect
+        # it's accuracy to be nearly as good as for other objects.
+        decimal = 2 if obj.interpolated else 7
+        np.testing.assert_almost_equal(obj.evaluateAtWavelength(wave).getFlux(), desired,
+                                       decimal)
+        # Don't bother trying to draw a deconvolution.
+        if isinstance(obj, galsim.ChromaticDeconvolution):
+            continue
+        np.testing.assert_allclose(
+                obj.evaluateAtWavelength(wave).drawImage().array.sum(),
+                desired,
+                rtol=1e-2)
+
+    if obj.SED.spectral:
+        for bp in bps:
+            calc_flux = obj.calculateFlux(bp)
+            np.testing.assert_equal(obj.SED.calculateFlux(bp), calc_flux)
+            np.testing.assert_allclose(calc_flux, obj.drawImage(bp).array.sum(), rtol=1e-2)
+            # Also try manipulating exptime and area.
+            np.testing.assert_allclose(
+                    calc_flux * 10, obj.drawImage(bp, exptime=5, area=2).array.sum(), rtol=1e-2)
 
 def funcname():
     import inspect

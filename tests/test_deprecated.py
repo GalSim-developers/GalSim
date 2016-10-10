@@ -30,6 +30,20 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
+test_hlr = 1.8
+test_fwhm = 1.8
+test_sersic_n = [1.5, 2.5, 4, -4]  # -4 means use explicit DeVauc rather than n=4
+test_scale = [1.8, 0.05, 0.002, 0.002]
+test_spergel_nu = [-0.85, -0.5, 0.0, 0.85, 4.0]
+test_spergel_scale = [20.0, 1.0, 1.0, 0.5, 0.5]
+if __name__ == "__main__":
+    # If doing a nosetests run, we don't actually need to do all 4 sersic n values.
+    # Two should be enough to notice if there is a problem, and the full list will be tested
+    # when running python test_base.py to try to diagnose the problem.
+    test_sersic_n = [1.5, -4]
+    test_scale = [1.8, 0.002]
+
+
 def check_dep(f, *args, **kwargs):
     """Check that some function raises a GalSimDeprecationWarning as a warning, but not an error.
     """
@@ -53,6 +67,8 @@ def test_dep_bandpass():
     """
     b = galsim.Bandpass(galsim.LookupTable([1.1,2.2,3.0,4.4,5.5], [1.11,2.22,3.33,4.44,5.55]), 'nm')
     d = lambda w: w**2
+
+    check_dep(b.copy)
 
     # fn / Bandpass
     #e = d/b
@@ -174,6 +190,57 @@ def test_dep_base():
     np.testing.assert_equal(gsp1.folding_threshold, gsp2.folding_threshold)
     np.testing.assert_equal(gsp1.folding_threshold, check_dep(getattr, gsp2, 'alias_threshold'))
 
+    test_gal = galsim.Gaussian(flux = 1., half_light_radius = test_hlr)
+    test_gal_copy = check_dep(test_gal.copy)
+    print('fwhm = ',test_gal_copy.getFWHM())
+    print('hlr = ',test_gal_copy.getHalfLightRadius())
+    print('sigma = ',test_gal_copy.getSigma())
+
+    test_gal = galsim.Exponential(flux = 1., scale_radius = test_scale[0])
+    test_gal_copy = check_dep(test_gal.copy)
+    print('hlr = ',test_gal_copy.getHalfLightRadius())
+    print('scale = ',test_gal_copy.getScaleRadius())
+
+    for n, scale in zip(test_sersic_n, test_scale) :
+        if n == -4:
+            test_gal1 = galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=1.)
+        else:
+            test_gal1 = galsim.Sersic(n=n, half_light_radius=test_hlr, flux=1.)
+        test_gal_copy = check_dep(test_gal1.copy)
+        if n != -4:
+            print('n = ',test_gal_copy.getN())
+        print('hlr = ',test_gal_copy.getHalfLightRadius())
+        print('sr = ',test_gal_copy.getScaleRadius())
+
+    test_gal = galsim.Airy(lam_over_diam= 1./0.8, flux=1.)
+    test_gal_copy = check_dep(test_gal.copy)
+    print('fwhm = ',test_gal_copy.getFWHM())
+    print('hlr = ',test_gal_copy.getHalfLightRadius())
+    print('lod = ',test_gal_copy.getLamOverD())
+
+    test_beta = 2.
+    test_gal = galsim.Moffat(flux=1, beta=test_beta, trunc=2.*test_fwhm,
+                             fwhm = test_fwhm)
+    test_gal_copy = check_dep(test_gal.copy)
+    print('beta = ',test_gal_copy.getBeta())
+    print('fwhm = ',test_gal_copy.getFWHM())
+    print('hlr = ',test_gal_copy.getHalfLightRadius())
+    print('scale = ',test_gal_copy.getScaleRadius())
+
+
+    test_gal = galsim.Kolmogorov(flux=1., fwhm = test_fwhm)
+    test_gal_copy = check_dep(test_gal.copy)
+    print('fwhm = ',test_gal_copy.getFWHM())
+    print('hlr = ',test_gal_copy.getHalfLightRadius())
+    print('lor = ',test_gal_copy.getLamOverR0())
+
+
+    for nu, scale in zip(test_spergel_nu, test_spergel_scale) :
+        test_gal = galsim.Spergel(nu=nu, half_light_radius=test_hlr, flux=1.)
+        test_gal_copy = check_dep(test_gal.copy)
+        print('nu = ',test_gal_copy.getNu())
+        print('hlr = ',test_gal_copy.getHalfLightRadius())
+        print('sr = ',test_gal_copy.getScaleRadius())
 
 @timer
 def test_dep_bounds():
@@ -226,6 +293,7 @@ def test_dep_chromatic():
     g = galsim.Gaussian(sigma=0.34)
     sed = galsim.SED('wave**3', 'nm', 'flambda')
     obj = g * sed
+    check_dep(obj.copy)
     band = galsim.Bandpass('1-((wave-700)/100)**2', 'nm', blue_limit=600., red_limit=800.)
 
     im1 = check_dep(obj.draw, bandpass=band)
@@ -742,6 +810,8 @@ def test_dep_sed():
     a = galsim.SED(galsim.LookupTable([1,2,3,4,5], [1.1,2.2,3.3,4.4,5.5]),
                    wave_type='nm', flux_type='fphotons', redshift=0.4)
     b = lambda w: w**2
+
+    check_dep(a.copy)
 
     # function divided by SED
     #c = b/a

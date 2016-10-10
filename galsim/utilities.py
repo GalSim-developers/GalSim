@@ -144,8 +144,11 @@ def parse_pos_args(args, kwargs, name1, name2, integer=False, others=[]):
         for arg in args[1:]:
             other_vals.append(arg)
             others.pop(0)
-    elif len(args) == 1:
-        raise TypeError("Cannot parse argument "+str(args[0])+" as a position")
+    elif len(args) == 1:  # pragma: no cover
+        if integer:
+            raise TypeError("Cannot parse argument "+str(args[0])+" as a PositionI")
+        else:
+            raise TypeError("Cannot parse argument "+str(args[0])+" as a PositionD")
     elif len(args) <= 2 + len(others):
         x = args[0]
         y = args[1]
@@ -179,7 +182,7 @@ class SimpleGenerator:
     def __init__(self, obj): self._obj = obj
     def __call__(self): return self._obj
 
-class AttributeDict(object):
+class AttributeDict(object): # pragma: no cover
     """Dictionary class that allows for easy initialization and refs to key values via attributes.
 
     NOTE: Modified a little from Jim's bot.git AttributeDict class so that tab completion now works
@@ -460,7 +463,7 @@ def thin_tabulated_values(x, f, rel_err=1.e-4, trim_zeros=True, preserve_range=T
 # algorithm, since it keeps fewer sample locations for a given rel_err than the old algorithm.
 # On the other hand, the old algorithm can be quite a bit faster, being O(N), not O(N^2), so
 # we retain the old algorithm here in case we want to re-enable it for certain applications.
-def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
+def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False): # pragma: no cover
     """
     Remove items from a set of tabulated f(x) values so that the error in the integral is still
     accurate to a given relative accuracy.
@@ -565,7 +568,7 @@ def old_thin_tabulated_values(x, f, rel_err=1.e-4, preserve_range=False):
     return newx, newf
 
 
-def _gammafn(x):
+def _gammafn(x):  # pragma: no cover
     """
     This code is not currently used, but in case we need a gamma function at some point, it will be
     here in the utilities module.
@@ -872,7 +875,7 @@ def interleaveImages(im_list, N, offsets, add_flux=True, suppress_warnings=False
     orig = im_list[0].origin()
     img.setOrigin(orig)
     for im in im_list[1:]:
-        if not im.origin()==orig:
+        if not im.origin()==orig:  # pragma: no cover
             import warnings
             warnings.warn("Images in `im_list' have multiple values for origin. Assigning the \
             origin of the first Image instance in 'im_list' to the interleaved image.")
@@ -1015,7 +1018,7 @@ def lod_to_dol(lod, N=None):
                 out[k] = v[0]
             except TypeError:  # Value is not list-like, so broadcast it in its entirety.
                 out[k] = v
-            except:
+            except Exception:
                 raise "Cannot broadcast kwarg {0}={1}".format(k, v)
         yield out
 
@@ -1070,3 +1073,113 @@ def structure_function(image):
     thetas = np.arange(0., 2*np.pi, 100)  # Average over these angles.
 
     return lambda r: 2*(tab(0.0, 0.0) - np.mean(tab(r*np.cos(thetas), r*np.sin(thetas))))
+
+def combine_wave_list(*args):
+    """Combine wave_list attributes of all objects in objlist while respecting blue_limit and
+    red_limit attributes.  Should work with SEDs, Bandpasses, and ChromaticObjects.
+
+    @param objlist  List of SED, Bandpass, or ChromaticObject objects.
+    @returns        wave_list, blue_limit, red_limit
+    """
+    if len(args) == 1:
+        if isinstance(args[0],
+                      (galsim.SED, galsim.Bandpass, galsim.ChromaticObject, galsim.GSObject)):
+            args = [args[0]]
+        elif isinstance(args[0], (list, tuple)):
+            args = args[0]
+        else:
+            raise TypeError("Single input argument must be a SED, Bandpass, GSObject, "
+                            " ChromaticObject or a (possibly mixed) list of them.")
+
+    blue_limit = 0.0
+    red_limit = np.inf
+    wave_list = np.array([], dtype=float)
+    for obj in args:
+        if hasattr(obj, 'blue_limit') and obj.blue_limit is not None:
+            blue_limit = np.max([blue_limit, obj.blue_limit])
+        if hasattr(obj, 'red_limit') and obj.red_limit is not None:
+            red_limit = np.min([red_limit, obj.red_limit])
+        wave_list = np.union1d(wave_list, obj.wave_list)
+    wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
+    return wave_list, blue_limit, red_limit
+
+def functionize(f):
+    """ Decorate a function `f` which accepts scalar positional or keyword arguments, to accept
+    arguments that can be either scalars or _functions_.  If the arguments include univariate
+    (N-variate) functions, then the output will be a univariate (N-variate) function.  While it's
+    okay to mix scalar and N-variate function arguments, it is an error to mix N-variate and
+    M-variate function arguments.
+
+    As an example:
+
+    >>> def f(x, y):      # Function of two scalars.
+    ...     return x + y
+    >>> decorated = functionize(f)   # Function of two scalars, functions, or a mix.
+    >>> result = f(2, 3)  # 5
+    >>> result = f(2, lambda u: u)  # Generates a TypeError
+    >>> result = decorated(2, 3)  # Scalar args returns a scalar
+    >>> result = decorated(2, lambda u: u)  # Univariate argument leads to a univariate output.
+    >>> print(result(5))  # 7
+    >>> result = decorated(2, lambda u,v: u*v)  # Bivariate argument leads to a bivariate output.
+    >>> print(result(5, 7))  # 2 + (5*7) = 37
+
+    We can use arguments that accept keyword arguments too:
+
+    >>> def f2(u, v=None):
+    ...    if v is None:
+    ...        v = 6.0
+    ...    return u / v
+    >>> result = decorated(2, f2)
+    >>> print(result(12))  # 2 + (12./6) = 4.0
+    >>> print(result(12, v=4))  # 2 + (12/4) = 5
+
+    Note that you can also use python's decorator syntax:
+
+    >>> @functionize
+    >>> def f(x, y):
+    ...     return x + y
+
+    @param f  The function to be decorated.
+    @returns  The decorated function.
+
+    """
+    import functools
+
+    @functools.wraps(f)
+    def ff(*args, **kwargs):
+        # First check if any of the arguments are callable...
+        if not any(hasattr(arg, '__call__') for arg in args+tuple(kwargs.values())):
+            return f(*args, **kwargs)  # ... if not, then keep output type a scalar ...
+        else:
+            def fff(*inner_args, **inner_kwargs): # ...else the output type is a function: `fff`.
+                new_args = [arg
+                            if not hasattr(arg, '__call__')
+                            else arg(*inner_args, **inner_kwargs)
+                            for arg in args]
+                new_kwargs = dict([(k, v)
+                                   if not hasattr(v, '__call__')
+                                   else (k, v(*inner_args, **inner_kwargs))
+                                   for k, v in iteritems(kwargs)])
+                return f(*new_args, **new_kwargs)
+            return fff
+    return ff
+
+def math_eval(str, other_modules=()):
+    """Evaluate a string that may include numpy, np, or math commands.
+
+    @param str              The string to evaluate
+    @param other_modules    Other modules in addition to numpy, np, math to import as well.
+                            Should be given as a list of strings.  [default: None]
+
+    @returns Whatever the string evaluates to.
+    """
+    # Python 2 and 3 have a different syntax for exec with globals() dict.
+    # The exec_ function lets us use the Python 3 syntax even in Python 2.
+    from future.utils import exec_
+    gdict = globals().copy()
+    exec_('import numpy', gdict)
+    exec_('import numpy as np', gdict)
+    exec_('import math', gdict)
+    for m in other_modules:
+        exec_('import ' + m, gdict)
+    return eval(str, gdict)

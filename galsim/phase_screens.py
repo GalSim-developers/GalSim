@@ -302,7 +302,7 @@ def Atmosphere(screen_size, rng=None, **kwargs):
         >>> weights = [0.652, 0.172, 0.055, 0.025, 0.074, 0.022]
         >>> r0_500 = [r0_500_effective * w**(-3./5) for w in weights]
         >>> speed = np.random.uniform(0, 20, size=6)  # m/s
-        >>> direction = [np.random.uniform(0, 360)*galsim.degrees for i in xrange(6)]
+        >>> direction = [np.random.uniform(0, 360)*galsim.degrees for i in range(6)]
         >>> npix = 8192
         >>> screen_scale = r0_500_effective
         >>> atm = galsim.Atmosphere(r0_500=r0_500, screen_size=screen_scale*npix, time_step=0.005,

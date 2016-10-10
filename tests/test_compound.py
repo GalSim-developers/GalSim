@@ -142,7 +142,7 @@ def test_convolve_flux_scaling():
         [galsim.Gaussian(sigma=test_sigma, flux=np.sqrt(test_flux)),
          galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=np.sqrt(test_flux))])
     obj2 = obj * 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __rmul__ (original).")
@@ -154,7 +154,7 @@ def test_convolve_flux_scaling():
         [galsim.Gaussian(sigma=test_sigma, flux=np.sqrt(test_flux)),
          galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=np.sqrt(test_flux))])
     obj2 = 2. * obj
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (original).")
@@ -166,7 +166,7 @@ def test_convolve_flux_scaling():
         [galsim.Gaussian(sigma=test_sigma, flux=np.sqrt(test_flux)),
          galsim.DeVaucouleurs(half_light_radius=test_hlr, flux=np.sqrt(test_flux))])
     obj2 = obj / 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (original).")
@@ -440,7 +440,7 @@ def test_add():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject gauss1 + gauss2 disagrees with expected result")
-    sum = gauss1.copy()
+    sum = gauss1
     sum += gauss2
     sum.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
@@ -483,6 +483,22 @@ def test_add():
 
 
 @timer
+def test_sub_neg():
+    """Test that a - b is the same as a + (-b)."""
+    a = galsim.Gaussian(fwhm=1)
+    b = galsim.Kolmogorov(fwhm=1)
+
+    c = a - b
+    d = a + (-b)
+
+    assert c == d
+
+    im1 = c.drawImage()
+    im2 = d.drawImage(im1.copy())
+
+    np.testing.assert_equal(im1.array, im2.array)
+
+@timer
 def test_add_flux_scaling():
     """Test flux scaling for Add.
     """
@@ -505,7 +521,7 @@ def test_add_flux_scaling():
     obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
                       galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
     obj2 = obj * 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __rmul__ (original).")
@@ -516,7 +532,7 @@ def test_add_flux_scaling():
     obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
                       galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
     obj2 = 2. * obj
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __mul__ (original).")
@@ -527,7 +543,7 @@ def test_add_flux_scaling():
     obj = galsim.Add([galsim.Gaussian(sigma=test_sigma, flux=test_flux * .5),
                       galsim.Exponential(scale_radius=test_scale, flux=test_flux * .5)])
     obj2 = obj / 2.
-    # First test that original obj is unharmed... (also tests that .copy() is working)
+    # First test that original obj is unharmed...
     np.testing.assert_almost_equal(
         obj.getFlux(), test_flux, decimal=param_decimal,
         err_msg="Flux param inconsistent after __div__ (original).")
@@ -757,13 +773,13 @@ def test_fourier_sqrt():
     print('time for %s = %.2f'%(funcname(),t2-t1))
 
 def test_sum_transform():
-    """This test addresses a bug found by Ismael Serrano, #763, wherein some attributes 
+    """This test addresses a bug found by Ismael Serrano, #763, wherein some attributes
     got messed up for a Transform(Sum(Transform())) object.
 
     The bug was that we didn't bother to make a new SBProfile for a Sum (or Convolve) of
     a single object.  But if that was an SBTransform, then the next Transform operation
     combined the two Transforms, which messed up the repr.
-    
+
     The fix is to always make an SBAdd or SBConvolve object even if the list of things to add
     or convolve only has one element.
     """
@@ -814,6 +830,7 @@ if __name__ == "__main__":
     test_realspace_distorted_convolve()
     test_realspace_shearconvolve()
     test_add()
+    test_sub_neg()
     test_add_flux_scaling()
     test_autoconvolve()
     test_autocorrelate()

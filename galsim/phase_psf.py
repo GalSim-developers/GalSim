@@ -259,7 +259,7 @@ class Aperture(object):
         else:  # Use geometric parameters.
             if pupil_plane_scale is not None:
                 # Check input scale and warn if looks suspicious.
-                if pupil_plane_scale > good_pupil_scale:
+                if pupil_plane_scale > good_pupil_scale:  # pragma: no cover
                     import warnings
                     ratio = good_pupil_scale / pupil_plane_scale
                     warnings.warn("Input pupil_plane_scale may be too large for good sampling.\n"
@@ -270,7 +270,7 @@ class Aperture(object):
                 pupil_plane_scale = good_pupil_scale
             if pupil_plane_size is not None:
                 # Check input size and warn if looks suspicious
-                if pupil_plane_size < good_pupil_size:
+                if pupil_plane_size < good_pupil_size:  # pragma: no cover
                     import warnings
                     ratio = good_pupil_size / pupil_plane_size
                     warnings.warn("Input pupil_plane_size may be too small for good focal-plane"
@@ -397,7 +397,7 @@ class Aperture(object):
             self.pupil_plane_size = self.pupil_plane_scale * self.npix
 
         # Check sampling interval and warn if it's not good enough.
-        if self.pupil_plane_scale > good_pupil_scale:
+        if self.pupil_plane_scale > good_pupil_scale:  # pragma: no cover
             import warnings
             ratio = self.pupil_plane_scale / good_pupil_scale
             warnings.warn("Input pupil plane image may not be sampled well enough!\n"
@@ -675,7 +675,7 @@ class PhaseScreenList(object):
             return cls(self._layers[index])
         elif isinstance(index, numbers.Integral):
             return self._layers[index]
-        else:
+        else:  # pragma: no cover
             msg = "{cls.__name__} indices must be integers"
             raise TypeError(msg.format(cls=cls))
 
@@ -1242,16 +1242,11 @@ class OpticalPSF(GSObject):
     @param spher            Spherical aberration in units of incident light wavelength.
                             [default: 0]
     @param aberrations      Optional keyword, to pass in a list, tuple, or NumPy array of
-                            aberrations in units of incident light wavelength (ordered according to
+                            aberrations in units of reference wavelength (ordered according to
                             the Noll convention), rather than passing in individual values for each
-                            individual aberration.  Currently GalSim supports aberrations from
-                            defocus through third-order spherical (`spher`), which are aberrations
-                            4-11 in the Noll convention, and hence `aberrations` should be an
-                            object of length 12, with the 5th number (index 4) being the defocus,
-                            and so on through index 11 corresponding to `spher`.  Orders 1-3
-                            (piston, tip, and tilt), while not true optical aberrations, are
-                            permitted to be non-zero and will be treated appropriately, while the
-                            first number will be ignored. [default: None]
+                            individual aberration.  Note that aberrations[1] is piston (and not
+                            aberrations[0], which is unused.)  This list can be arbitrarily long to
+                            handle Zernike polynomial aberrations of arbitrary order.
     @param aper             Aperture object to use when creating PSF.  [default: None]
     @param circular_pupil   Adopt a circular pupil?  [default: True]
     @param obscuration      Linear dimension of central obscuration as fraction of pupil linear
@@ -1351,7 +1346,7 @@ class OpticalPSF(GSObject):
                  pupil_plane_scale=None, pupil_plane_size=None,
                  pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None,
                  suppress_warning=False, max_size=None):
-        if max_size is not None:
+        if max_size is not None: # pragma: no cover
             from .deprecated import depr
             depr('max_size', 1.4, '',
                  "The max_size keyword has been removed.  In its place, the pad_factor keyword can"

@@ -1519,8 +1519,9 @@ def test_astropywcs():
             warnings.filterwarnings("ignore",category=RuntimeWarning)
             import astropy.wcs
             import scipy  # AstropyWCS constructor will do this, so check now.
-    except ImportError:
+    except ImportError as e:
         print('Unable to import astropy.wcs.  Skipping AstropyWCS tests.')
+        print('Caught ',e)
         return
 
     # These all work, but it is quite slow, so only test one of them for the regular unit tests.
@@ -1628,12 +1629,9 @@ def test_gsfitswcs():
     """Test the GSFitsWCS class
     """
     # These are all relatively fast (total time for all 7 and the TanWCS stuff below is about
-    # 1.6 seconds), but longer than my arbitrary 1 second goal for any unit test, so only do the
-    # three most important ones as part of the regular test suite runs.
-    if __name__ == "__main__":
-        test_tags = [ 'TAN', 'STG', 'ZEA', 'ARC', 'TPV', 'TAN-PV', 'TAN-FLIP', 'TNX', 'SIP' ]
-    else:
-        test_tags = [ 'TAN', 'TPV', 'SIP' ]
+    # 1.6 seconds), and (relatively) full unit test coverage requires all of them, so we always
+    # do these despite violating my usual upper limit of 1 second per unit test.
+    test_tags = [ 'TAN', 'STG', 'ZEA', 'ARC', 'TPV', 'TAN-PV', 'TAN-FLIP', 'TNX', 'SIP' ]
 
     dir = 'fits_files'
 
@@ -1757,6 +1755,75 @@ def test_scamp():
 
     do_ref(wcs, ref_list, 'Scamp FitsWCS')
 
+@timer
+def test_compateq():
+    """Test that WCS equality vs. compatibility work as physically expected.
+    """
+    # First check that compatible works properly for two WCS that are actually equal
+    assert galsim.wcs.compatible(galsim.PixelScale(0.23), galsim.PixelScale(0.23))
+    # Now for a simple offset: check they are compatible but not equal
+    assert galsim.wcs.compatible(
+        galsim.PixelScale(0.23), galsim.OffsetWCS(0.23, galsim.PositionD(12,34)))
+    assert galsim.PixelScale(0.23) != galsim.OffsetWCS(0.23, galsim.PositionD(12,34))
+    # Further examples of compatible but != below.
+    assert galsim.wcs.compatible(
+        galsim.JacobianWCS(0.2,0.01,-0.02,0.23),
+        galsim.AffineTransform(0.2,0.01,-0.02,0.23,
+                               galsim.PositionD(12,34),
+                               galsim.PositionD(45,54))
+        )
+    assert galsim.JacobianWCS(0.2,0.01,-0.02,0.23) != \
+        galsim.AffineTransform(0.2,0.01,-0.02,0.23, galsim.PositionD(12,34), galsim.PositionD(45,54))
+    assert galsim.wcs.compatible(
+        galsim.PixelScale(0.23),
+        galsim.AffineTransform(0.23,0.0,0.0,0.23,
+                               galsim.PositionD(12,34),
+                               galsim.PositionD(45,54))
+        )
+    assert galsim.PixelScale(0.23) != \
+        galsim.AffineTransform(0.23,0.0,0.0,0.23, galsim.PositionD(12,34), galsim.PositionD(45,54))
+
+    # Finally, some that are truly incompatible.
+    assert not galsim.wcs.compatible(galsim.PixelScale(0.23), galsim.PixelScale(0.27))
+    assert not galsim.wcs.compatible(
+        galsim.PixelScale(0.23), galsim.JacobianWCS(0.23,0.01,-0.02,0.27))
+    assert not galsim.wcs.compatible(
+        galsim.JacobianWCS(0.2,-0.01,0.02,0.23),
+        galsim.AffineTransform(0.2,0.01,-0.02,0.23,
+                               galsim.PositionD(12,34),
+                               galsim.PositionD(45,54))
+        )
+
+    # Non-uniform WCSs are considered compatible if their jacobians are everywhere the same.
+    # It (obviously) doesn't actually check this -- it relies on the functional part being
+    # the same, and maybe just resetting the origin(s).
+    uv1 = galsim.UVFunction('0.2*x + 0.01*x*y - 0.03*y**2',
+                            '0.2*y - 0.01*x*y + 0.04*x**2',
+                            origin=galsim.PositionD(12,34),
+                            world_origin=galsim.PositionD(45,54))
+    uv2 = galsim.UVFunction('0.2*x + 0.01*x*y - 0.03*y**2',
+                            '0.2*y - 0.01*x*y + 0.04*x**2',
+                            origin=galsim.PositionD(23,56),
+                            world_origin=galsim.PositionD(11,22))
+    uv3 = galsim.UVFunction('0.2*x - 0.01*x*y + 0.03*y**2',
+                            '0.2*y + 0.01*x*y - 0.04*x**2',
+                            origin=galsim.PositionD(23,56),
+                            world_origin=galsim.PositionD(11,22))
+    affine = galsim.AffineTransform(0.2,0.01,-0.02,0.23,
+                                    galsim.PositionD(12,34),
+                                    galsim.PositionD(45,54))
+    assert galsim.wcs.compatible(uv1,uv2)
+    assert galsim.wcs.compatible(uv2,uv1)
+    assert not galsim.wcs.compatible(uv1,uv3)
+    assert not galsim.wcs.compatible(uv2,uv3)
+    assert not galsim.wcs.compatible(uv3,uv1)
+    assert not galsim.wcs.compatible(uv3,uv2)
+    assert not galsim.wcs.compatible(uv1,affine)
+    assert not galsim.wcs.compatible(uv2,affine)
+    assert not galsim.wcs.compatible(uv3,affine)
+    assert not galsim.wcs.compatible(affine,uv1)
+    assert not galsim.wcs.compatible(affine,uv2)
+    assert not galsim.wcs.compatible(affine,uv3)
 
 if __name__ == "__main__":
     test_pixelscale()
@@ -1770,3 +1837,4 @@ if __name__ == "__main__":
     test_gsfitswcs()
     test_fitswcs()
     test_scamp()
+    test_compateq()

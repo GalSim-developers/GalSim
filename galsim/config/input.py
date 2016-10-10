@@ -272,6 +272,8 @@ def SetupInputsForImage(config, logger):
                 fields = config['input'][key]
                 if not isinstance(fields, list):
                     fields = [ fields ]
+                if 'input_objs' not in config:
+                    raise RuntimeError("ProcessInput needs to be called before building image")
                 input_objs = config['input_objs'][key]
 
                 for i in range(len(fields)):
@@ -291,7 +293,7 @@ def GetInputObj(input_type, config, base, param_name):
     @param param_name   The type of value that we are trying to construct (only used for
                         error messages).
     """
-    if input_type not in base['input_objs']:
+    if 'input_objs' not in base or input_type not in base['input_objs']:
         raise ValueError("No input %s available for type = %s"%(input_type,param_name))
 
     if 'num' in config:
