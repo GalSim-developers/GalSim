@@ -574,11 +574,15 @@ def test_sersic():
     # Now repeat everything using a truncation.  (Above had no truncation.)
 
     # Test Truncated Sersic
+    # Don't use an integer truncation, since we don't want the truncation line to pass directly
+    # through the center of a pixel where numerical rounding differences may decide whether the
+    # value is zero or not.
+    # This regression test compares to an image built using the code base at 82259f0
     savedImg = galsim.fits.read(os.path.join(imgdir, "sersic_3_1_10.fits"))
     myImg = galsim.ImageF(savedImg.bounds, scale=dx)
     myImg.setCenter(0,0)
 
-    sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1, trunc=10)
+    sersic = galsim.Sersic(n=3, flux=1, half_light_radius=1, trunc=9.99)
     sersic.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
