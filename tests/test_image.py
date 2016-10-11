@@ -1829,6 +1829,218 @@ def test_copy():
     im8.setValue(3,8,11.)
     assert im(3,8) != 11.
 
+@timer
+def test_complex_image():
+    """Additional tests that are relevant for complex Image types
+    """
+
+    # Some complex modifications to tests in test_Image_basic
+    im1 = galsim.Image(ncol, nrow, dtype=complex)
+    im1_view = im1.view()
+    im1_cview = im1.view(make_const=True)
+    im2 = galsim.ImageC(ncol, nrow)
+    im2_view = im2.view()
+    im2_cview = im2.view(make_const=True)
+
+    # Check various ways to set and get values
+    for y in range(1,nrow):
+        for x in range(1,ncol):
+            im1.setValue(x,y, 100 + 10*x + y + 13j*x + 23j*y)
+            im2_view.setValue(x,y, 100 + 10*x + y + 13j*x + 23j*y)
+
+    for y in range(1,nrow):
+        for x in range(1,ncol):
+            value = 100 + 10*x + y + 13j*x + 23j*y
+            assert im1(x,y) == value
+            assert im1.view()(x,y) == value
+            assert im1.view(make_const=True)(x,y) == value
+            assert im2(x,y) == value
+            assert im2_view(x,y) == value
+            assert im2_cview(x,y) == value
+            value2 = 10*x + y + 20j*x + 2j*y
+            im1.setValue(x,y, value2)
+            im2_view.setValue(x,y, value2)
+            assert im1(x,y) == value2
+            assert im1.view()(x,y) == value2
+            assert im1.view(make_const=True)(x,y) == value2
+            assert im2(x,y) == value2
+            assert im2_view(x,y) == value2
+            assert im2_cview(x,y) == value2
+
+    # Check view of given data
+    im3_view = galsim.Image((1+2j)*ref_array.astype(complex))
+    for y in range(1,nrow):
+        for x in range(1,ncol):
+            assert im3_view(x,y) == 10*x + y + 20j*x + 2j*y
+
+    # Check picklability
+    do_pickle(im1)
+    do_pickle(im1_view)
+    do_pickle(im2)
+    do_pickle(im2_view)
+    do_pickle(im3_view)
+
+@timer
+def test_complex_image_arith():
+    """Additional arithmetic tests that are relevant for complex Image types
+    """
+    image1 = galsim.ImageD(ref_array)
+
+    # Binary ImageD op complex scalar
+    image2 = image1 + (2+5j)
+    np.testing.assert_array_equal(image2.array, ref_array + (2+5j),
+            err_msg="ImageD + complex is not correct")
+    image2 = image1 - (2+5j)
+    np.testing.assert_array_equal(image2.array, ref_array - (2+5j),
+            err_msg="ImageD - complex is not correct")
+    image2 = image1 * (2+5j)
+    np.testing.assert_array_equal(image2.array, ref_array * (2+5j),
+            err_msg="ImageD * complex is not correct")
+    image2 = image1 / (2+5j)
+    np.testing.assert_array_equal(image2.array, ref_array / (2+5j),
+            err_msg="ImageD / complex is not correct")
+
+    # Binary complex scalar op ImageD
+    image2 = (2+5j) + image1
+    np.testing.assert_array_equal(image2.array, ref_array + (2+5j),
+            err_msg="complex + ImageD is not correct")
+    image2 = (2+5j) - image1
+    np.testing.assert_array_equal(image2.array, -ref_array + (2+5j),
+            err_msg="complex - ImageD is not correct")
+    image2 = (2+5j) * image1
+    np.testing.assert_array_equal(image2.array, ref_array * (2+5j),
+            err_msg="complex * ImageD is not correct")
+    image2 = (2+5j) / image1
+    np.testing.assert_array_equal(image2.array, (2+5j) / ref_array.astype(float),
+            err_msg="complex / ImageD is not correct")
+
+    image2 = image1 * (3+1j)
+
+    # Binary ImageC op complex scalar
+    image3 = image2 + (2+5j)
+    np.testing.assert_array_equal(image3.array, (3+1j)*ref_array + (2+5j),
+            err_msg="ImageC + complex is not correct")
+    image3 = image2 - (2+5j)
+    np.testing.assert_array_equal(image3.array, (3+1j)*ref_array - (2+5j),
+            err_msg="ImageC - complex is not correct")
+    image3 = image2 * (2+5j)
+    np.testing.assert_array_equal(image3.array, (3+1j)*ref_array * (2+5j),
+            err_msg="ImageC * complex is not correct")
+    image3 = image2 / (2+5j)
+    np.testing.assert_array_equal(image3.array, (3+1j)*ref_array / (2+5j),
+            err_msg="ImageC / complex is not correct")
+
+    # Binary complex scalar op ImageC
+    image3 = (2+5j) + image2
+    np.testing.assert_array_equal(image3.array, (3+1j)*ref_array + (2+5j),
+            err_msg="complex + ImageC is not correct")
+    image3 = (2+5j) - image2
+    np.testing.assert_array_equal(image3.array, (-3-1j)*ref_array + (2+5j),
+            err_msg="complex - ImageC is not correct")
+    image3 = (2+5j) * image2
+    np.testing.assert_array_equal(image3.array, (3+1j)*ref_array * (2+5j),
+            err_msg="complex * ImageC is not correct")
+    image3 = (2+5j) / image2
+    np.testing.assert_array_equal(image3.array, (2+5j) / ((3+1j)*ref_array),
+            err_msg="complex / ImageC is not correct")
+
+    # Binary ImageD op ImageC
+    image3 = image1 + image2
+    np.testing.assert_array_equal(image3.array, (4+1j)*ref_array,
+            err_msg="ImageD + ImageC is not correct")
+    image3 = image1 - image2
+    np.testing.assert_array_equal(image3.array, (-2-1j)*ref_array,
+            err_msg="ImageD - ImageC is not correct")
+    image3 = image1 * image2
+    np.testing.assert_array_equal(image3.array, (3+1j)*ref_array**2,
+            err_msg="ImageD * ImageC is not correct")
+    image3 = image1 / image2
+    np.testing.assert_almost_equal(image3.array, 1./(3+1j), decimal=12,
+            err_msg="ImageD / ImageC is not correct")
+
+    # Binary ImageC op ImageD
+    image3 = image2 + image1
+    np.testing.assert_array_equal(image3.array, (4+1j)*ref_array,
+            err_msg="ImageD + ImageC is not correct")
+    image3 = image2 - image1
+    np.testing.assert_array_equal(image3.array, (2+1j)*ref_array,
+            err_msg="ImageD - ImageC is not correct")
+    image3 = image2 * image1
+    np.testing.assert_array_equal(image3.array, (3+1j)*ref_array**2,
+            err_msg="ImageD * ImageC is not correct")
+    image3 = image2 / image1
+    np.testing.assert_almost_equal(image3.array, (3+1j), decimal=12,
+            err_msg="ImageD / ImageC is not correct")
+
+    # Binary ImageC op ImageC
+    image3 = (4-3j) * image1
+    image4 = image2 + image3
+    np.testing.assert_array_equal(image4.array, (7-2j)*ref_array,
+            err_msg="ImageC + ImageC is not correct")
+    image4 = image2 - image3
+    np.testing.assert_array_equal(image4.array, (-1+4j)*ref_array,
+            err_msg="ImageC - ImageC is not correct")
+    image4 = image2 * image3
+    np.testing.assert_array_equal(image4.array, (15-5j)*ref_array**2,
+            err_msg="ImageC * ImageC is not correct")
+    image4 = image2 / image3
+    np.testing.assert_almost_equal(image4.array, (9+13j)/25., decimal=12,
+            err_msg="ImageC / ImageC is not correct")
+
+    # In place ImageC op complex scalar
+    image4 = image2.copy()
+    image4 += (2+5j)
+    np.testing.assert_array_equal(image4.array, (3+1j)*ref_array + (2+5j),
+            err_msg="ImageC + complex is not correct")
+    image4 = image2.copy()
+    image4 -= (2+5j)
+    np.testing.assert_array_equal(image4.array, (3+1j)*ref_array - (2+5j),
+            err_msg="ImageC - complex is not correct")
+    image4 = image2.copy()
+    image4 *= (2+5j)
+    np.testing.assert_array_equal(image4.array, (3+1j)*ref_array * (2+5j),
+            err_msg="ImageC * complex is not correct")
+    image4 = image2.copy()
+    image4 /= (2+5j)
+    np.testing.assert_array_equal(image4.array, (3+1j)*ref_array / (2+5j),
+            err_msg="ImageC / complex is not correct")
+
+    # In place ImageC op ImageD
+    image4 = image2.copy()
+    image4 += image1
+    np.testing.assert_array_equal(image4.array, (4+1j)*ref_array,
+            err_msg="ImageD + ImageC is not correct")
+    image4 = image2.copy()
+    image4 -= image1
+    np.testing.assert_array_equal(image4.array, (2+1j)*ref_array,
+            err_msg="ImageD - ImageC is not correct")
+    image4 = image2.copy()
+    image4 *= image1
+    np.testing.assert_array_equal(image4.array, (3+1j)*ref_array**2,
+            err_msg="ImageD * ImageC is not correct")
+    image4 = image2.copy()
+    image4 /= image1
+    np.testing.assert_almost_equal(image4.array, (3+1j), decimal=12,
+            err_msg="ImageD / ImageC is not correct")
+
+    # In place ImageC op ImageC
+    image4 = image2.copy()
+    image4 += image3
+    np.testing.assert_array_equal(image4.array, (7-2j)*ref_array,
+            err_msg="ImageC + ImageC is not correct")
+    image4 = image2.copy()
+    image4 -= image3
+    np.testing.assert_array_equal(image4.array, (-1+4j)*ref_array,
+            err_msg="ImageC - ImageC is not correct")
+    image4 = image2.copy()
+    image4 *= image3
+    np.testing.assert_array_equal(image4.array, (15-5j)*ref_array**2,
+            err_msg="ImageC * ImageC is not correct")
+    image4 = image2.copy()
+    image4 /= image3
+    np.testing.assert_almost_equal(image4.array, (9+13j)/25., decimal=12,
+            err_msg="ImageC / ImageC is not correct")
+
 
 if __name__ == "__main__":
     test_Image_basic()
@@ -1863,3 +2075,5 @@ if __name__ == "__main__":
     test_Image_writeheader()
     test_ne()
     test_copy()
+    test_complex_image()
+    test_complex_image_arith()

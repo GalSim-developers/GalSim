@@ -1190,7 +1190,7 @@ Image.__mul__ = Image_mul
 Image.__rmul__ = Image_mul
 Image.__imul__ = Image_imul
 Image.__div__ = Image_div
-Image.__rdiv__ = Image_div
+Image.__rdiv__ = Image_rdiv
 Image.__truediv__ = Image_div
 Image.__rtruediv__ = Image_rdiv
 Image.__idiv__ = Image_idiv
@@ -1219,7 +1219,7 @@ for Class in _galsim.ImageAlloc.values():
     Class.__rmul__ = Image_mul
     Class.__imul__ = Image_imul
     Class.__div__ = Image_div
-    Class.__rdiv__ = Image_div
+    Class.__rdiv__ = Image_rdiv
     Class.__truediv__ = Image_div
     Class.__rtruediv__ = Image_rdiv
     Class.__idiv__ = Image_idiv
