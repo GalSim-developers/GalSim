@@ -136,10 +136,9 @@ namespace galsim {
         dbg<<"SBGaussian fillXImage\n";
         dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
         dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
-        //if (izero != 0 || jzero != 0) {
-        if (false) {
+        if (izero != 0 || jzero != 0) {
             xdbg<<"Use Quadrant\n";
-            //fillXImageQuadrant(val,x0,dx,izero,y0,dy,jzero);
+            fillXImageQuadrant(im,x0,dx,izero,y0,dy,jzero);
         } else {
             xdbg<<"Non-Quadrant\n";
             const int m = im.getNCol();

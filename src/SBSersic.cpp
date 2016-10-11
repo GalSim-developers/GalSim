@@ -195,18 +195,27 @@ namespace galsim {
         dbg<<"SBSersic fillXImage\n";
         dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
         dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
-        //if (izero != 0 || jzero != 0) {
-        if (false) {
+        if (izero != 0 || jzero != 0) {
             xdbg<<"Use Quadrant\n";
-            //fillXImageQuadrant(val,x0,dx,izero,y0,dy,jzero);
+            fillXImageQuadrant(im,x0,dx,izero,y0,dy,jzero);
+
+#if 0
+            // Note: This bit isn't necessary anymore, because I changed how the quadrant is
+            // filled, so it always does 0,0 first, which means it is already exact.  But leave
+            // this code snippet here in case we make any changes that would necessitate
+            // bringing it back.
+
             // Sersics tend to be super peaky at the center, so if we are including
             // (0,0) in the image, then it is helpful to do (0,0) explicitly rather
             // than treating it as 0 ~= x0 + n*dx, which has rounding errors and doesn't
             // quite come out to 0, and high-n Sersics vary a lot between r = 0 and 1.e-16!
             // By a lot, I mean ~0.5%, which is enough to care about.
-            //if (izero != 0 && jzero != 0)
+            if (izero != 0 && jzero != 0) {
                 // NB: _info->xValue(0) = 1
-                //val(izero, jzero) = _xnorm;
+                double* ptr = im.getData() + jzero*im.getStride() + izero;
+                *ptr = _xnorm;
+            }
+#endif
         } else {
             xdbg<<"Non-Quadrant\n";
             const int m = im.getNCol();
@@ -224,11 +233,6 @@ namespace galsim {
                 double ysq = y0*y0;
                 for (int i=0; i<m; ++i,x+=dx)
                     *ptr++ = _xnorm * _info->xValue(x*x + ysq);
-            }
-            if (izero != 0 && jzero != 0) {
-                // NB: _info->xValue(0) = 1
-                ptr = im.getData() + jzero*im.getStride() + izero;
-                *ptr = _xnorm;
             }
         }
     }

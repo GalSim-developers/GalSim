@@ -577,9 +577,91 @@ namespace galsim {
     }
 
     // The type of T (real or complex) determines whether the call-back is to
-    // fillXValue or fillKValue.
+    // fillXImage or fillKImage.
     template <typename T>
     struct QuadrantHelper
+    {
+        template <class Prof>
+        static void fill(const Prof& prof, ImageView<T> q,
+                         double x0, double dx, double y0, double dy)
+        { prof.fillXImage(q,x0,dx,0,y0,dy,0); }
+    };
+
+#if 0
+    template <typename T>
+    struct QuadrantHelper<std::complex<T> >
+    {
+        template <class Prof>
+        static void fill(const Prof& prof, ImageView<std::complex<T> > q,
+                         double kx0, double dkx, double ky0, double dky)
+        { prof.fillKImage(q,kx0,dkx,0,ky0,dky,0); }
+    };
+#endif
+
+    // The code is basically the same for X or K.
+    template <class Prof, typename T>
+    static void FillQuadrant(const Prof& prof, ImageView<T> im,
+                             double x0, double dx, int m1, double y0, double dy, int n1)
+    {
+        dbg<<"Start FillQuadrant\n";
+        dbg<<x0<<" "<<dx<<" "<<m1<<"   "<<y0<<" "<<dy<<" "<<n1<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        const int stride = im.getStride();
+        T* ptr = im.getData();
+        int skip = im.getNSkip();
+
+        // m1 is the number of columns left of x==0
+        // m2 is the number of columns right of x==0
+        // n1 is the number of columns below of y==0
+        // n2 is the number of columns above of y==0
+        // m = m1 + m2 + 1
+        // n = n1 + n2 + 1
+        const int m2 = m - m1 - 1;
+        const int n2 = n - n1 - 1;
+
+        // Make a smaller single-quadrant image and fill that the normal way.
+        ImageAlloc<T> q(std::max(m1,m2)+1, std::max(n1,n2)+1,0.);
+        QuadrantHelper<T>::fill(prof, q.view(), m1==0?x0:0., dx, n1==0?y0:0., dy);
+
+        // Use those values to fill the original image.
+        T* qptr = q.getData() + n1*q.getStride() + m1;
+        int qskip = -q.getStride() + (m1-m2-1);
+        for (int j=0; j<n1; ++j,ptr+=skip,qptr+=qskip) {
+            for (int i=0; i<m1; ++i) *ptr++ = *qptr--;
+            for (int i=0; i<=m2; ++i) *ptr++ = *qptr++;
+        }
+        assert(qptr == q.getData() + m1);
+        qskip = q.getStride() + (m1-m2-1);
+        for (int j=0; j<=n2; ++j,ptr+=skip,qptr+=qskip) {
+            for (int i=0; i<m1; ++i) *ptr++ = *qptr--;
+            for (int i=0; i<=m2; ++i) *ptr++ = *qptr++;
+        }
+        xdbg<<"Done copying quadrants"<<std::endl;
+    }
+    void SBProfile::SBProfileImpl::fillXImageQuadrant(ImageView<double> im,
+                                                      double x0, double dx, int nx1,
+                                                      double y0, double dy, int ny1) const
+    {
+        // Guard against infinite loop.
+        assert(nx1 != 0 || ny1 != 0);
+        FillQuadrant(*this,im,x0,dx,nx1,y0,dy,ny1);
+    }
+#if 0
+    void SBProfile::SBProfileImpl::fillKValueQuadrant(ImageView<std::complex<double> > im,
+                                                      double kx0, double dkx, int nkx1,
+                                                      double ky0, double dky, int nky1) const
+    {
+        // Guard against infinite loop.
+        assert(nkx1 != 0 || nky1 != 0);
+        FillQuadrant(*this,val,kx0,dkx,nkx1,ky0,dky,nky1);
+    }
+#endif
+
+    // The type of T (real or complex) determines whether the call-back is to
+    // fillXValue or fillKValue.
+    template <typename T>
+    struct OldQuadrantHelper
     {
         template <class Prof>
         static void fill(const Prof& prof, tmv::MatrixView<T> q,
@@ -588,7 +670,7 @@ namespace galsim {
     };
 
     template <typename T>
-    struct QuadrantHelper<std::complex<T> >
+    struct OldQuadrantHelper<std::complex<T> >
     {
         typedef std::complex<T> CT;
         template <class Prof>
@@ -622,7 +704,7 @@ namespace galsim {
                 // Upper right is the big quadrant
                 xdbg<<"Use Upper right (nx2,ny2)"<<std::endl;
                 q.reset(new tmv::MatrixView<T>(val.subMatrix(nx1,nx,ny1,ny)));
-                QuadrantHelper<T>::fill(prof,*q,nx1==0?x0:0.,dx,ny1==0?y0:0.,dy);
+                OldQuadrantHelper<T>::fill(prof,*q,nx1==0?x0:0.,dx,ny1==0?y0:0.,dy);
                 ur_done = true;
                 // Also do the rest of the ix=0 row and iy=0 col
                 val.row(nx1,0,ny1).reverse() = q->row(0,1,ny1+1);
@@ -631,7 +713,7 @@ namespace galsim {
                 // Lower right is the big quadrant
                 xdbg<<"Use Lower right (nx2,ny1)"<<std::endl;
                 q.reset(new tmv::MatrixView<T>(val.subMatrix(nx1,nx,ny1,-1,1,-1)));
-                QuadrantHelper<T>::fill(prof,val.subMatrix(nx1,nx,0,ny1+1),nx1==0?x0:0.,dx,y0,dy);
+                OldQuadrantHelper<T>::fill(prof,val.subMatrix(nx1,nx,0,ny1+1),nx1==0?x0:0.,dx,y0,dy);
                 lr_done = true;
                 val.row(nx1,ny1+1,ny) = q->row(0,1,ny2+1);
                 val.col(ny1,0,nx1).reverse() = q->row(0,1,nx1+1);
@@ -641,7 +723,7 @@ namespace galsim {
                 // Upper left is the big quadrant
                 xdbg<<"Use Upper left (nx1,ny2)"<<std::endl;
                 q.reset(new tmv::MatrixView<T>(val.subMatrix(nx1,-1,ny1,ny,-1,1)));
-                QuadrantHelper<T>::fill(prof,val.subMatrix(0,nx1+1,ny1,ny),x0,dx,ny1==0?y0:0.,dy);
+                OldQuadrantHelper<T>::fill(prof,val.subMatrix(0,nx1+1,ny1,ny),x0,dx,ny1==0?y0:0.,dy);
                 ul_done = true;
                 val.row(nx1,0,ny1).reverse() = q->row(0,1,ny1+1);
                 val.col(ny1,nx1+1,nx) = q->col(0,1,nx2+1);
@@ -649,7 +731,7 @@ namespace galsim {
                 // Lower left is the big quadrant
                 xdbg<<"Use Lower left (nx1,ny1)"<<std::endl;
                 q.reset(new tmv::MatrixView<T>(val.subMatrix(nx1,-1,ny1,-1,-1,-1)));
-                QuadrantHelper<T>::fill(prof,val.subMatrix(0,nx1+1,0,ny1+1),x0,dx,y0,dy);
+                OldQuadrantHelper<T>::fill(prof,val.subMatrix(0,nx1+1,0,ny1+1),x0,dx,y0,dy);
                 ll_done = true;
                 val.row(nx1,ny1+1,ny) = q->row(0,1,ny2+1);
                 val.col(ny1,nx1+1,nx) = q->col(0,1,nx2+1);

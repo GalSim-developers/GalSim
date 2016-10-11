@@ -104,11 +104,6 @@ namespace galsim {
 
         virtual double getNegativeFlux() const { return getFlux()>0. ? 0. : -getFlux(); }
 
-        // Utility for drawing into Image data structures.
-        // returns flux integral
-        template <typename T>
-        double fillXImage(ImageView<T>& image) const;
-
         // Utility for drawing a k grid into FFT data structures
         void fillKGrid(KTable& kt) const;
 
@@ -126,6 +121,12 @@ namespace galsim {
         // Only one quadrant has its values computed.  Then these values are copied to the other
         // 3 quadrants.  The input values izero, jzero are the index of x=0, y=0.
         // At least one of these needs to be != 0.
+        void fillXImageQuadrant(ImageView<double> im,
+                                double x0, double dx, int m1,
+                                double y0, double dy, int n1) const;
+        void fillKImageQuadrant(ImageView<std::complex<double> > im,
+                                double kx0, double dkx, int m1,
+                                double ky0, double dky, int n1) const;
         void fillXValueQuadrant(tmv::MatrixView<double> val,
                                 double x0, double dx, int nx1,
                                 double y0, double dy, int ny1) const;
