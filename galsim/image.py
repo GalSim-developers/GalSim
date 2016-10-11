@@ -985,9 +985,14 @@ def check_image_consistency(im1, im2):
             raise ValueError("Image shapes are inconsistent")
 
 def Image_add(self, other):
-    result = self.copy()
-    result += other
-    return result
+    check_image_consistency(self, other)
+    try:
+        a = other.array
+        dt = a.dtype
+    except AttributeError:
+        a = other
+        dt = type(a)
+    return Image(array=self.array+a, bounds=self.bounds, wcs=self.wcs)
 
 def Image_iadd(self, other):
     check_image_consistency(self, other)
@@ -1004,15 +1009,24 @@ def Image_iadd(self, other):
     return self
 
 def Image_sub(self, other):
-    result = self.copy()
-    result -= other
-    return result
+    check_image_consistency(self, other)
+    try:
+        a = other.array
+        dt = a.dtype
+    except AttributeError:
+        a = other
+        dt = type(a)
+    return Image(array=self.array-a, bounds=self.bounds, wcs=self.wcs)
 
 def Image_rsub(self, other):
-    result = self.copy()
-    result *= -1
-    result += other
-    return result
+    check_image_consistency(self, other)
+    try:
+        a = other.array
+        dt = a.dtype
+    except AttributeError:
+        a = other
+        dt = type(a)
+    return Image(array=a-self.array, bounds=self.bounds, wcs=self.wcs)
 
 def Image_isub(self, other):
     check_image_consistency(self, other)
@@ -1029,9 +1043,14 @@ def Image_isub(self, other):
     return self
 
 def Image_mul(self, other):
-    result = self.copy()
-    result *= other
-    return result
+    check_image_consistency(self, other)
+    try:
+        a = other.array
+        dt = a.dtype
+    except AttributeError:
+        a = other
+        dt = type(a)
+    return Image(array=self.array*a, bounds=self.bounds, wcs=self.wcs)
 
 def Image_imul(self, other):
     check_image_consistency(self, other)
@@ -1048,15 +1067,24 @@ def Image_imul(self, other):
     return self
 
 def Image_div(self, other):
-    result = self.copy()
-    result /= other
-    return result
+    check_image_consistency(self, other)
+    try:
+        a = other.array
+        dt = a.dtype
+    except AttributeError:
+        a = other
+        dt = type(a)
+    return Image(array=self.array/a, bounds=self.bounds, wcs=self.wcs)
 
 def Image_rdiv(self, other):
-    result = self.copy()
-    result.invertSelf()
-    result *= other
-    return result
+    check_image_consistency(self, other)
+    try:
+        a = other.array
+        dt = a.dtype
+    except AttributeError:
+        a = other
+        dt = type(a)
+    return Image(array=a/self.array, bounds=self.bounds, wcs=self.wcs)
 
 def Image_idiv(self, other):
     check_image_consistency(self, other)
