@@ -209,7 +209,7 @@ static bp::object MakeNumpyArray(
 // Check the type of the numpy array, input as array.
 // - It should be the same type as required for data (T).
 // - It should have dimensions dim
-// - It should be writeable if isConst=true
+// - It should be writeable if isConst=false
 // - It should have unit stride on the rows if ndim == 2
 // Also sets data, owner, stride to the appropriate values before returning.
 template <typename T>

@@ -1757,6 +1757,7 @@ def test_ne():
 
     objs = [galsim.ImageD(array1),
             galsim.ImageD(array2),
+            galsim.ImageD(array2, make_const=True),
             galsim.ImageD(array1, wcs=galsim.PixelScale(0.2)),
             galsim.ImageD(array1, xmin=2)]
     all_obj_diff(objs)

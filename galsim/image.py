@@ -341,9 +341,10 @@ class Image(with_metaclass(MetaImage, object)):
             # Easier than getting the memory management right in the C++ layer.
             # If we were provided a numpy array, keep a pointer to it here so it lives
             # as long as the self.image object.
-            self._array = array
-            if make_const:
+            self._array = array.view()
+            if make_const or not array.flags.writeable:
                 self.image = _galsim.ConstImageView[self.dtype](array, xmin, ymin)
+                self._array.flags.writeable = False
             else:
                 self.image = _galsim.ImageView[self.dtype](array, xmin, ymin)
             if init_value is not None:
@@ -389,8 +390,11 @@ class Image(with_metaclass(MetaImage, object)):
             self.wcs = wcs
 
     def __repr__(self):
-        return 'galsim.Image(bounds=%r, array=\n%r, wcs=%r)'%(
-                self.bounds, self.array, self.wcs)
+        s = 'galsim.Image(bounds=%r, array=\n%r, wcs=%r'%(self.bounds, self.array, self.wcs)
+        if self.isconst:
+            s += ', make_const=True'
+        s += ')'
+        return s
 
     def __str__(self):
         if self.wcs is not None and self.wcs.isPixelScale():
@@ -398,11 +402,24 @@ class Image(with_metaclass(MetaImage, object)):
         else:
             return 'galsim.Image(bounds=%s, wcs=%s)'%(self.bounds, self.wcs)
 
+    # Pickling almost works out of the box, but numpy arrays lose their non-writeable flag
+    # when pickled, so make sure to set it to preserve const Images.
+    def __getstate__(self):
+        return self.__dict__, self.isconst
+
+    def __setstate__(self, args):
+        d, isconst = args
+        self.__dict__ = d
+        if isconst:
+            self._array.flags.writeable = False
+
     # bounds and array are really properties which pass the request to the image
     @property
     def bounds(self): return self.image.bounds
     @property
     def array(self): return self._array
+    @property
+    def isconst(self): return self._array.flags.writeable == False
 
     # Allow scale to work as a PixelScale wcs.
     @property
@@ -922,12 +939,15 @@ class Image(with_metaclass(MetaImage, object)):
         # >>> assert galsim.ImageD(int_array) == galsim.ImageF(int_array) # passes
         # >>> assert galsim.ImageD(double_array) == galsim.ImageF(double_array) # fails
 
-        return ( isinstance(other, Image) and
-                 self.bounds == other.bounds and
-                 self.wcs == other.wcs and
-                 np.array_equal(self.array,other.array) )
+        return (isinstance(other, Image) and
+                self.bounds == other.bounds and
+                self.wcs == other.wcs and
+                np.array_equal(self.array,other.array) and
+                self.isconst == other.isconst)
+
     def __ne__(self, other): return not self.__eq__(other)
 
+    # Not immutable object.  So shouldn't be used as a hash.
     __hash__ = None
 
 
@@ -1170,7 +1190,7 @@ def Image_copy(self):
 def ImageView_getinitargs(self):
     return self.array, self.xmin, self.ymin
 
-# An image is really pickled as an ImageView
+# An ImageAlloc is really pickled as an ImageView
 def ImageAlloc_getstate(self):
     return self.array, self.xmin, self.ymin
 
