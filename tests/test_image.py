@@ -35,7 +35,7 @@ x ->
 With array directions as indicated. This hopefully will make it easy enough to perform sub-image
 checks, etc.
 
-Images are in S, I, F & D flavours.
+Images are in S, I, F, D, and C flavours.
 
 There are also four FITS cubes, and four FITS multi-extension files for testing.  Each is 12
 images deep, with the first image being the reference above and each subsequent being the same
@@ -60,12 +60,13 @@ except ImportError:
 from galsim._pyfits import pyfits
 
 # Setup info for tests, not likely to change
-ntypes = 4  # Note: Most tests below only run through the first 4 types.
-            # test_Image_basic tests all 6 types including the aliases.
-types = [np.int16, np.int32, np.float32, np.float64, int, float]
-simple_types = [int, int, float, float, int, float]
-np_types = [np.int16, np.int32, np.float32, np.float64, np.int32, np.float64]
-tchar = ['S', 'I', 'F', 'D', 'I', 'D']
+ntypes = 5  # Note: Most tests below only run through the first 5 types.
+            # test_Image_basic tests all 7 types including the aliases.
+types = [np.int16, np.int32, np.float32, np.float64, np.complex128, int, float, complex]
+simple_types = [int, int, float, float, complex, int, float, complex]
+np_types = [np.int16, np.int32, np.float32, np.float64, np.complex128,
+            np.int32, np.float64, np.complex128]
+tchar = ['S', 'I', 'F', 'D', 'C', 'I', 'D', 'C']
 
 ncol = 7
 nrow = 5
@@ -92,7 +93,7 @@ datadir = os.path.join(".", "Image_comparison_images")
 def test_Image_basic():
     """Test that all supported types perform basic Image operations correctly
     """
-    # Do all 6 types here, rather than just the 4 real types.  i.e. Test the aliases.
+    # Do all 8 types here, rather than just the 5 numpy types.  i.e. Test the aliases.
     for i in range(len(types)):
 
         # Check basic constructor from ncol, nrow
@@ -229,6 +230,12 @@ def test_Image_FITS_IO():
     """
     for i in range(ntypes):
         array_type = types[i]
+
+        if tchar[i] == 'C':
+            continue
+            ref_image = galsim.Image(ref_array.astype(array_type))
+            test_file = os.path.join(datadir, "test"+tchar[i]+".fits")
+            ref_image.write(test_file)
 
         #
         # Test input from a single external FITS image
@@ -384,6 +391,15 @@ def test_Image_MultiFITS_IO():
     """
     for i in range(ntypes):
         array_type = types[i]
+
+        if tchar[i] == 'C':
+            continue
+            ref_image = galsim.Image(ref_array.astype(array_type))
+            image_list = []
+            for k in range(nimages):
+                image_list.append(ref_image + k)
+            test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+".fits")
+            galsim.fits.writeMulti(image_list,test_multi_file)
 
         #
         # Test input from an external multi-extension fits file
@@ -604,6 +620,15 @@ def test_Image_CubeFITS_IO():
     """
     for i in range(ntypes):
         array_type = types[i]
+
+        if tchar[i] == 'C':
+            continue
+            ref_image = galsim.Image(ref_array.astype(array_type))
+            image_list = []
+            for k in range(nimages):
+                image_list.append(ref_image + k)
+            test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+".fits")
+            galsim.fits.writeCube(image_list,test_cube_file)
 
         #
         # Test input from an external fits data cube
@@ -919,13 +944,18 @@ def test_Image_binary_multiply():
 def test_Image_binary_divide():
     """Test that all four types of supported Images divide correctly.
     """
+    # Note: tests here are not precisely equal, since division can have rounding errors for
+    # some elements.  In particular when dividing by complex, where there is a bit more to the
+    # generic calculation (even though the imaginary parts are zero here).
+    # So check that they are *almost* equal to 12 digits of precision.
     for i in range(ntypes):
         # First try using the dictionary-type Image init
         # Note that I am using refarray + 1 to avoid divide-by-zero.
         image1 = galsim.Image((ref_array + 1).astype(types[i]))
         image2 = galsim.Image((3 * (ref_array + 1)**2).astype(types[i]))
         image3 = image2 / image1
-        np.testing.assert_array_equal((3 * (ref_array + 1)).astype(types[i]), image3.array,
+        np.testing.assert_almost_equal((3 * (ref_array + 1)).astype(types[i]), image3.array,
+                decimal=12,
                 err_msg="Binary divide in Image class (dictionary call) does"
                 +" not match reference for dtype = "+str(types[i]))
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
@@ -933,7 +963,8 @@ def test_Image_binary_divide():
         image1 = image_init_func((ref_array + 1).astype(types[i]))
         image2 = image_init_func((3 * (ref_array + 1)**2).astype(types[i]))
         image3 = image2 / image1
-        np.testing.assert_array_equal((3 * (ref_array + 1)).astype(types[i]), image3.array,
+        np.testing.assert_almost_equal((3 * (ref_array + 1)).astype(types[i]), image3.array,
+                decimal=12,
                 err_msg="Binary divide in Image class does not match reference for dtype = "
                 +str(types[i]))
         for j in range(ntypes):
@@ -942,8 +973,9 @@ def test_Image_binary_divide():
             image2 = image2_init_func((3 * (ref_array+1)**2).astype(types[j]))
             image3 = image2 / image1
             type3 = image3.array.dtype.type
-            np.testing.assert_array_equal((3*(ref_array+1)).astype(type3), image3.array,
-                    err_msg="Inplace add in Image class does not match reference for dtypes = "
+            np.testing.assert_almost_equal((3*(ref_array+1)).astype(type3), image3.array,
+                    decimal=12,
+                    err_msg="Inplace divide in Image class does not match reference for dtypes = "
                     +str(types[i])+" and "+str(types[j]))
 
 

@@ -265,7 +265,7 @@ template <typename T>
 class ReturnInverse
 {
 public: 
-    double operator()(const T val) const { return val==T(0) ? 0. : 1./double(val); }
+    T operator()(const T val) const { return val==T(0) ? T(0.) : T(1./val); }
 };
 
 template <typename T>
@@ -303,18 +303,22 @@ template class BaseImage<double>;
 template class BaseImage<float>;
 template class BaseImage<int32_t>;
 template class BaseImage<int16_t>;
+template class BaseImage<std::complex<double> >;
 template class ImageAlloc<double>;
 template class ImageAlloc<float>;
 template class ImageAlloc<int32_t>;
 template class ImageAlloc<int16_t>;
+template class ImageAlloc<std::complex<double> >;
 template class ImageView<double>;
 template class ImageView<float>;
 template class ImageView<int32_t>;
 template class ImageView<int16_t>;
+template class ImageView<std::complex<double> >;
 template class ConstImageView<double>;
 template class ConstImageView<float>;
 template class ConstImageView<int32_t>;
 template class ConstImageView<int16_t>;
+template class ConstImageView<std::complex<double> >;
 
 } // namespace galsim
 

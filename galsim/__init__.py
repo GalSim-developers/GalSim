@@ -100,7 +100,7 @@ from .scene import COSMOSCatalog
 from .table import LookupTable, LookupTable2D
 
 # Image
-from .image import Image, ImageS, ImageI, ImageF, ImageD
+from .image import Image, ImageS, ImageI, ImageF, ImageD, ImageC
 
 # Noise
 from .random import BaseDeviate, UniformDeviate, GaussianDeviate, PoissonDeviate, DistDeviate

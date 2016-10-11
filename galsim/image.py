@@ -206,7 +206,8 @@ class Image(with_metaclass(MetaImage, object)):
     cpp_valid_dtypes = list(_galsim.ImageView)
     alias_dtypes = {
         int : np.int32,          # So that user gets what they would expect
-        float : np.float64,      # if using dtype=int or float
+        float : np.float64,      # if using dtype=int or float or complex
+        complex : np.complex128,
     }
     # Note: Numpy uses int64 for int on 64 bit machines.  We don't implement int64 at all,
     # so we cannot quite match up to the numpy convention for dtype=int.  e.g. via
@@ -953,6 +954,12 @@ def ImageD(*args, **kwargs):
     """Alias for galsim.Image(..., dtype=numpy.float64)
     """
     kwargs['dtype'] = np.float64
+    return Image(*args, **kwargs)
+
+def ImageC(*args, **kwargs):
+    """Alias for galsim.Image(..., dtype=numpy.complex128)
+    """
+    kwargs['dtype'] = np.complex128
     return Image(*args, **kwargs)
 
 
