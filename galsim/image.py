@@ -257,8 +257,16 @@ class Image(with_metaclass(MetaImage, object)):
                         raise ValueError("Shape of array is inconsistent with provided bounds")
                     if b.ymax-b.ymin+1 != array.shape[0]:
                         raise ValueError("Shape of array is inconsistent with provided bounds")
-                    xmin = b.xmin
-                    ymin = b.ymin
+                    if b.isDefined():
+                        xmin = b.xmin
+                        ymin = b.ymin
+                    else:
+                        # Indication that array is formally undefined, even though provided.
+                        if 'dtype' not in kwargs:
+                            kwargs['dtype'] = array.dtype.type
+                        array = None
+                        xmin = None
+                        ymin = None
             elif 'bounds' in kwargs:
                 bounds = kwargs.pop('bounds')
             elif 'image' in kwargs:
@@ -566,6 +574,9 @@ class Image(with_metaclass(MetaImage, object)):
                 raise TypeError("wcs parameters must be a galsim.BaseWCS instance")
         else:
             wcs = self.wcs
+
+        if not self.bounds.isDefined():
+            return galsim.Image(wcs=wcs, dtype=self.dtype)
 
         if make_const:
             ret = Image(image=_galsim.ConstImageView[self.dtype](self.image.view()), wcs=wcs)
@@ -974,7 +985,7 @@ class Image(with_metaclass(MetaImage, object)):
         return (isinstance(other, Image) and
                 self.bounds == other.bounds and
                 self.wcs == other.wcs and
-                np.array_equal(self.array,other.array) and
+                (not self.bounds.isDefined() or np.array_equal(self.array,other.array)) and
                 self.isconst == other.isconst)
 
     def __ne__(self, other): return not self.__eq__(other)
@@ -1222,14 +1233,20 @@ def Image_copy(self):
 def ImageView_getinitargs(self):
     return self.array, self.xmin, self.ymin
 
-# An ImageAlloc is really pickled as an ImageView
+# An ImageAlloc is really pickled as an ImageView (unless bounds are not defined)
 def ImageAlloc_getstate(self):
-    return self.array, self.xmin, self.ymin
+    if self.bounds.isDefined():
+        return (self.array, self.xmin, self.ymin)
+    else:
+        return ()
 
 def ImageAlloc_setstate(self, args):
-    self_type = args[0].dtype.type
-    self.__class__ = _galsim.ImageView[self_type]
-    self.__init__(*args)
+    if len(args) == 0:
+        self.__init__()
+    else:
+        self_type = args[0].dtype.type
+        self.__class__ = _galsim.ImageView[self_type]
+        self.__init__(*args)
 
 # inject the arithmetic operators as methods of the Image class:
 Image.__add__ = Image_add

@@ -276,6 +276,28 @@ def test_Image_basic():
     do_pickle(galsim.BoundsI(2,3,7,8))
     do_pickle(galsim.BoundsD(2.1, 4.3, 6.5, 9.1))
 
+@timer
+def test_undefined_image():
+    """Test an image with undefined bounds
+    """
+    for i in range(len(types)):
+        im = galsim.Image(dtype=types[i])
+        assert not im.bounds.isDefined()
+        assert im.array.shape == (1,1)
+        print('im = ',repr(im))
+        print('b = ',repr(im.bounds))
+        assert im == im
+        try:
+            np.testing.assert_raises(RuntimeError,im.setValue,0,0,1)
+            np.testing.assert_raises(RuntimeError,im.__call__,0,0)
+            np.testing.assert_raises(RuntimeError,im.view().setValue,0,0,1)
+            np.testing.assert_raises(RuntimeError,im.view().__call__,0,0)
+        except ImportError:
+            pass
+        do_pickle(im.bounds)
+        do_pickle(im)
+        do_pickle(im.view())
+        do_pickle(im.view(make_const=True))
 
 @timer
 def test_Image_FITS_IO():
@@ -2168,6 +2190,7 @@ def test_complex_image_arith():
 
 if __name__ == "__main__":
     test_Image_basic()
+    test_undefined_image()
     test_Image_FITS_IO()
     test_Image_MultiFITS_IO()
     test_Image_CubeFITS_IO()
