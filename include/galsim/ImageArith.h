@@ -65,16 +65,20 @@ namespace galsim {
      *  @brief Call a unary function on each pixel value
      */
     template <typename T, typename Op>
-    Op for_each_pixel(const ImageView<T>& image, Op f)
+    Op for_each_pixel(const BaseImage<T>& image, Op f)
     {
-        // Note: all of these functions have this guard to make sure we don't
-        // try to access the memory if the image is in an undefined state.
-        if (image.getData()) {
-            if (image.isContiguous()) {
-                f = std::for_each(image.rowBegin(image.getYMin()), image.rowEnd(image.getYMax()), f);
+        const T* ptr = image.getData();
+        if (ptr) {
+            const int skip = image.getNSkip();
+            const int step = image.getStep();
+            const int nrow = image.getNRow();
+            const int ncol = image.getNCol();
+            if (step == 1) {
+                for (int j=0; j<nrow; j++, ptr+=skip)
+                    for (int i=0; i<ncol; i++) f(*ptr++);
             } else {
-                for (int i = image.getYMin(); i <= image.getYMax(); i++)
-                    f = std::for_each(image.rowBegin(i), image.rowEnd(i), f);
+                for (int j=0; j<nrow; j++, ptr+=skip)
+                    for (int i=0; i<ncol; i++, ptr+=step) f(*ptr);
             }
         }
         return f;
@@ -86,40 +90,48 @@ namespace galsim {
     template <typename T, typename Op>
     Op transform_pixel(const ImageView<T>& image, Op f)
     {
-        if (image.getData()) {
-            typedef typename ImageView<T>::iterator Iter;
-            if (image.isContiguous()) {
-                const Iter ee = image.rowEnd(image.getYMax());
-                for (Iter it = image.rowBegin(image.getYMin()); it != ee; ++it)
-                    *it = T(f(*it));
+        T* ptr = image.getData();
+        if (ptr) {
+            const int skip = image.getNSkip();
+            const int step = image.getStep();
+            const int nrow = image.getNRow();
+            const int ncol = image.getNCol();
+            if (step == 1) {
+                for (int j=0; j<nrow; j++, ptr+=skip)
+                    for (int i=0; i<ncol; i++, ++ptr) *ptr = f(*ptr);
             } else {
-                for (int y = image.getYMin(); y <= image.getYMax(); ++y) {
-                    const Iter ee = image.rowEnd(y);
-                    for (Iter it = image.rowBegin(y); it != ee; ++it)
-                        *it = T(f(*it));
-                }
+                for (int j=0; j<nrow; j++, ptr+=skip)
+                    for (int i=0; i<ncol; i++, ptr+=step) *ptr = f(*ptr);
             }
         }
         return f;
     }
 
-    // Assign function of 2 images to 1st
+    /**
+     *  @brief Assign function of 2 images to 1st
+     */
     template <typename T1, typename T2, typename Op>
     Op transform_pixel(const ImageView<T1>& image1, const BaseImage<T2>& image2, Op f)
     {
-        if (image1.getData()) {
-            typedef typename ImageView<T1>::iterator Iter1;
-            typedef typename BaseImage<T2>::const_iterator Iter2;
+        T1* ptr1 = image1.getData();
+        if (ptr1) {
 
             if (!image1.getBounds().isSameShapeAs(image2.getBounds()))
                 throw ImageError("transform_pixel image bounds are not same shape");
 
-            int y2 = image2.getYMin();
-            for (int y = image1.getYMin(); y <= image1.getYMax(); ++y, ++y2) {
-                Iter2 it2 = image2.rowBegin(y2);
-                const Iter1 ee = image1.rowEnd(y);
-                for (Iter1 it1 = image1.rowBegin(y); it1 != ee; ++it1, ++it2)
-                    *it1 = f(*it1,*it2);
+            const int skip1 = image1.getNSkip();
+            const int step1 = image1.getStep();
+            const int nrow = image1.getNRow();
+            const int ncol = image1.getNCol();
+            const T2* ptr2 = image2.getData();
+            const int skip2 = image2.getNSkip();
+            const int step2 = image2.getStep();
+            if (step1 == 1 && step2 == 1) {
+                for (int j=0; j<nrow; j++, ptr1+=skip1, ptr2+=skip2)
+                    for (int i=0; i<ncol; i++, ++ptr1, ++ptr2) *ptr1 = f(*ptr1,*ptr2);
+            } else {
+                for (int j=0; j<nrow; j++, ptr1+=skip1, ptr2+=skip2)
+                    for (int i=0; i<ncol; i++, ptr1+=step1, ptr2+=step2) *ptr1 = f(*ptr1,*ptr2);
             }
         }
         return f;

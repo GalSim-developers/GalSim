@@ -145,6 +145,7 @@ namespace galsim {
             const int n = im.getNRow();
             double* ptr = im.getData();
             const int skip = im.getNSkip();
+            assert(im.getStep() == 1);
 
             x0 *= _inv_sigma;
             dx *= _inv_sigma;
@@ -186,6 +187,7 @@ namespace galsim {
         const int n = im.getNRow();
         double* ptr = im.getData();
         const int skip = im.getNSkip();
+        assert(im.getStep() == 1);
 
         x0 *= _inv_sigma;
         dx *= _inv_sigma;

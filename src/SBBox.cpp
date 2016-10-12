@@ -103,6 +103,7 @@ namespace galsim {
         const int n = im.getNRow();
         double* ptr = im.getData();
         int skip = im.getNSkip();
+        assert(im.getStep() == 1);
 
         x0 /= dx;
         double wo2 = _wo2 / std::abs(dx);
@@ -142,6 +143,7 @@ namespace galsim {
         const int n = im.getNRow();
         double* ptr = im.getData();
         const int skip = im.getNSkip();
+        assert(im.getStep() == 1);
 
         for (int j=0;j<n;++j,x0+=dxy,y0+=dy,ptr+=skip) {
             double x = x0;

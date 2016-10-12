@@ -247,6 +247,7 @@ namespace galsim {
         const int n = im.getNRow();
         double* ptr = im.getData();
         int skip = im.getNSkip();
+        assert(im.getStep() == 1);
         for (int j=0; j<n; ++j,y0+=dy,ptr+=skip) {
             double x = x0;
             for (int i=0; i<m; ++i,x+=dx)
@@ -265,6 +266,7 @@ namespace galsim {
         const int n = im.getNRow();
         double* ptr = im.getData();
         int skip = im.getNSkip();
+        assert(im.getStep() == 1);
         for (int j=0; j<n; ++j,x0+=dxy,y0+=dy,ptr+=skip) {
             double x = x0;
             double y = y0;
@@ -610,6 +612,7 @@ namespace galsim {
         const int stride = im.getStride();
         T* ptr = im.getData();
         int skip = im.getNSkip();
+        assert(im.getStep() == 1);
 
         // m1 is the number of columns left of x==0
         // m2 is the number of columns right of x==0
@@ -627,6 +630,7 @@ namespace galsim {
         // Use those values to fill the original image.
         T* qptr = q.getData() + n1*q.getStride() + m1;
         int qskip = -q.getStride() + (m1-m2-1);
+        assert(q.getStep() == 1);
         for (int j=0; j<n1; ++j,ptr+=skip,qptr+=qskip) {
             for (int i=0; i<m1; ++i) *ptr++ = *qptr--;
             for (int i=0; i<=m2; ++i) *ptr++ = *qptr++;
