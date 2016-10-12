@@ -183,11 +183,8 @@ namespace galsim {
 
         template <typename T>
         SBInterpolatedKImageImpl(
-            const BaseImage<T>& realKImage,
-            const BaseImage<T>& imagKImage,
-            double dk, double stepk,
-            boost::shared_ptr<Interpolant2d> kInterp,
-            const GSParamsPtr& gsparams);
+            const BaseImage<T>& kimage, double dk, double stepk,
+            boost::shared_ptr<Interpolant2d> kInterp, const GSParamsPtr& gsparams);
 
         // Alternative constructor used for serialization
         SBInterpolatedKImageImpl(

@@ -1469,7 +1469,7 @@ def test_dep_kroundtrip():
     final = g1 + g2 + g3
     a = final
     real_a, imag_a = check_dep_tuple2(a.drawKImage())
-    b = galsim.InterpolatedKImage(real_a, imag_a)
+    b = check_dep(galsim.InterpolatedKImage, real_a, imag_a)
 
     # Check picklability
     do_pickle(b)
@@ -1503,7 +1503,7 @@ def test_dep_kroundtrip():
         shape = real_a.array.shape
         real_a, imag_a = check_dep_tuple2(a.drawKImage(nx=shape[1]+dx, ny=shape[0]+dy,
                                           scale=real_a.scale))
-        b = galsim.InterpolatedKImage(real_a, imag_a)
+        b = check_dep(galsim.InterpolatedKImage, real_a, imag_a)
 
         np.testing.assert_almost_equal(a.getFlux(), b.getFlux(), 6) #Fails at 7th decimal
         img_b = b.drawImage(img_a.copy())
@@ -1521,21 +1521,21 @@ def test_dep_kroundtrip():
 
     # Does the stepk parameter do anything?
     a = final
-    b = galsim.InterpolatedKImage(*check_dep_tuple2(a.drawKImage()))
-    c = galsim.InterpolatedKImage(*check_dep_tuple2(a.drawKImage()), stepk=2*b.stepK())
+    b = check_dep(galsim.InterpolatedKImage, *check_dep_tuple2(a.drawKImage()))
+    c = check_dep(galsim.InterpolatedKImage, *check_dep_tuple2(a.drawKImage()), stepk=2*b.stepK())
     np.testing.assert_almost_equal(2*b.stepK(), c.stepK())
     np.testing.assert_almost_equal(b.maxK(), c.maxK())
 
     # Test centroid
     for dx, dy in zip(KXVALS, KYVALS):
         a = final.shift(dx, dy)
-        b = galsim.InterpolatedKImage(*check_dep_tuple2(a.drawKImage()))
+        b = check_dep(galsim.InterpolatedKImage, *check_dep_tuple2(a.drawKImage()))
         np.testing.assert_almost_equal(a.centroid().x, b.centroid().x, 4) #Fails at 5th decimal
         np.testing.assert_almost_equal(a.centroid().y, b.centroid().y, 4)
 
     # Test convolution with another object.
     a = final
-    b = galsim.InterpolatedKImage(*check_dep_tuple2(a.drawKImage()))
+    b = check_dep(galsim.InterpolatedKImage, *check_dep_tuple2(a.drawKImage()))
     c = galsim.Kolmogorov(fwhm=0.8).shear(e1=0.01, e2=0.02).shift(0.01, 0.02)
     a_conv_c = galsim.Convolve(a, c)
     b_conv_c = galsim.Convolve(b, c)
