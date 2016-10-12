@@ -364,18 +364,6 @@ namespace galsim {
         }
     }
 
-    // Note: Once we have TMV 0.90, this won't be necessary, since arithmetic between different
-    // types will be allowed.
-    template <typename T>
-    void addMatrix(tmv::MatrixView<T> m1, const tmv::ConstMatrixView<double>& m2)
-    {
-        tmv::Matrix<T> m2T = m2;
-        m1 += m2T;
-    }
-
-    void addMatrix(tmv::MatrixView<double> m1, const tmv::ConstMatrixView<double>& m2)
-    { m1 += m2; }
-
     template <typename T>
     double SBProfile::plainDraw(ImageView<T> I) const
     {
@@ -502,20 +490,18 @@ namespace galsim {
     }
 
     template <typename T>
-    void SBProfile::drawK(ImageView<T> Re, ImageView<T> Im) const
+    void SBProfile::drawK(ImageView<std::complex<T> > image) const
     {
+        typedef std::complex<T> CT;
         dbg<<"Start drawK: \n";
-        // Make sure input images match or are both null
-        assert(Re.getBounds() == Im.getBounds());
-
-        const int m = (Re.getXMax()-Re.getXMin()+1);
-        const int n = (Re.getYMax()-Re.getYMin()+1);
-        const int xmin = Re.getXMin();
-        const int ymin = Re.getYMin();
+        const int m = (image.getXMax()-image.getXMin()+1);
+        const int n = (image.getYMax()-image.getYMin()+1);
+        const int xmin = image.getXMin();
+        const int ymin = image.getYMin();
         dbg<<"m,n = "<<m<<','<<n<<std::endl;
         dbg<<"xmin,ymin = "<<xmin<<','<<ymin<<std::endl;
 
-        tmv::Matrix<std::complex<double> > val(m,n);
+        tmv::Matrix<CT> val(m,n);
 #ifdef DEBUGLOGGING
         val.setAllTo(999.);
 #endif
@@ -524,10 +510,8 @@ namespace galsim {
         _pimpl->fillKValue(val.view(),xmin,1.,-xmin,ymin,1.,-ymin);
         dbg<<"F(k=0) = "<<val(-xmin,-ymin)<<std::endl;
 
-        tmv::MatrixView<T> mRe(Re.getData(),m,n,1,Re.getStride(),tmv::NonConj);
-        tmv::MatrixView<T> mIm(Im.getData(),m,n,1,Im.getStride(),tmv::NonConj);
-        addMatrix(mRe,val.realPart());
-        addMatrix(mIm,val.imagPart());
+        tmv::MatrixView<CT> mim(image.getData(),m,n,1,image.getStride(),tmv::NonConj);
+        mim += val;
     }
 
     void SBProfile::SBProfileImpl::fillKGrid(KTable& kt) const
@@ -775,7 +759,6 @@ namespace galsim {
     template double SBProfile::fourierDraw(ImageView<float> I, double wmult) const;
     template double SBProfile::fourierDraw(ImageView<double> I, double wmult) const;
 
-    template void SBProfile::drawK(ImageView<float> Re, ImageView<float> Im) const;
-    template void SBProfile::drawK(ImageView<double> Re, ImageView<double> Im) const;
+    template void SBProfile::drawK(ImageView<std::complex<double> > image) const;
 
 }

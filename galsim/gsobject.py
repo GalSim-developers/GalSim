@@ -134,7 +134,7 @@ class GSObject(object):
     See the docstrings for these methods for more details.
 
         >>> image = obj.drawImage(...)
-        >>> kimage_r, kimage_i = obj.drawKImage(...)
+        >>> kimage = obj.drawKImage(...)
 
     Attributes
     ----------
@@ -846,8 +846,8 @@ class GSObject(object):
                 raise ValueError("Cannot provide bounds if image is provided")
             if nx is not None or ny is not None:
                 raise ValueError("Cannot provide nx,ny if image is provided")
-            if dtype is not None:
-                raise ValueError("Cannot specify dtype if image is provided")
+            if dtype is not None and image.array.dtype != dtype:
+                raise ValueError("Cannot specify dtype != image.array.dtype if image is provided")
 
         # Make image if necessary
         if image is None:
@@ -1705,12 +1705,12 @@ class GSObject(object):
         return added_flux;
 
 
-    def drawKImage(self, re=None, im=None, nx=None, ny=None, bounds=None, scale=None, dtype=None,
-                   gain=1., add_to_image=False, dk=None, wmult=None):
-        """Draws the k-space Image (both real and imaginary parts) of the object, with bounds
-        optionally set by input Image instances.
+    def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None, gain=1.,
+                   add_to_image=False, dk=None, wmult=None, re=None, im=None, dtype=None):
+        """Draws the k-space (complex) Image of the object, with bounds optionally set by input
+        Image instance.
 
-        Normalization is always such that re(0,0) = flux.  Unlike the real-space drawImage()
+        Normalization is always such that image(0,0) = flux.  Unlike the real-space drawImage()
         function, the (0,0) point will always be one of the actual pixel values.  For even-sized
         images, it will be 1/2 pixel above and to the right of the true center of the image.
 
@@ -1721,33 +1721,38 @@ class GSObject(object):
         Also, there is no convolution by a pixel.  This is just a direct image of the Fourier
         transform of the surface brightness profile.
 
-        @param re           If provided, this will be the real part of the k-space image.
-                            If `re` and `im` are None, then automatically-sized images will be
-                            created.  If they are given, but their bounds are undefined, then they
+        @param image        If provided, this will be the ImageC onto which to draw the k-space
+                            image.  If `image` is None, then an automatically-sized image will be
+                            created.  If is is given, but its bounds are undefined, then it
                             will be resized appropriately based on the profile's size.
                             [default: None]
-        @param im           If provided, this will be the imaginary part of the k-space image.
-                            A provided `im` must match the size and scale of `re`.
-                            If `im` is None, then `re` must also be None. [default: None]
+        @param nx           If provided and `image` is None, use to set the x-direction size of the
+                            image.  Must be accompanied by `ny`.
+        @param ny           If provided and `image` is None, use to set the y-direction size of the
+                            image.  Must be accompanied by `nx`.
+        @param bounds       If provided and `image` is None, use to set the bounds of the image.
         @param scale        If provided, use this as the pixel scale, dk, for the images.
-                            If `scale` is None and `re` and `im` are given, then take the provided
+                            If `scale` is None and `image` is given, then take the provided
                             images' pixel scale (which must be equal).
-                            If `scale` is None and `re` and `im` are None, then use the Nyquist
-                            scale.
-                            If `scale <= 0` (regardless of `re`, `im`), then use the Nyquist scale.
+                            If `scale` is None and `image` is None, then use the Nyquist scale.
+                            If `scale <= 0` (regardless of `image`), then use the Nyquist scale.
                             [default: None]
-        @param dtype        The data type to use for automatically constructed images.  Only
-                            valid if `re` and `im` are None. [default: None, which means to
-                            use numpy.float32]
         @param gain         The number of photons per ADU ("analog to digital units", the units of
                             the numbers output from a CCD).  [default: 1.]
         @param add_to_image Whether to add to the existing images rather than clear out
                             anything in the image before drawing.
-                            Note: This requires that `re` and `im` be provided and that they have
-                            defined bounds. [default: False]
+                            Note: This requires that `image` be provided and that it has defined
+                            bounds. [default: False]
 
-        @returns the tuple of Image instances, `(re, im)` (created if necessary)
+        @returns an ImageC instance (created if necessary)
         """
+        if isinstance(image,galsim.Image) and isinstance(nx,galsim.Image):
+            # If the user calls drawK(re,im), then give the proper deprecation below.
+            re = image
+            im = nx
+            image = None
+            nx = None
+
         # Check for obsolete parameters
         if dk is not None and scale is None: # pragma: no cover
             from .deprecated import depr
@@ -1759,6 +1764,19 @@ class GSObject(object):
                  'The old wmult parameter should not generally be required to get accurate FFT-'
                  'rendered images.  If you need larger FFT grids to prevent aliasing, you should '
                  'now use a gsparams object with a folding_threshold lower than the default 0.005.')
+        if re is not None or im is not None: # pragma: no cover
+            from .deprecated import depr
+            depr('re,im', 1.5, 'image as a single complex ImageC',
+                 'Warning: the input re, im images are being changed to have their arrays be '
+                 'the real and imag parts of the output ImageC object.')
+            if re is None or im is None:
+                raise ValueError("Only one of re or im was provided.")
+            if image is not None:
+                raise ValueError("re and im were provided along with image")
+            image = re + 1j * im
+        if dtype is not None: # pragma: no cover
+            from .deprecated import depr
+            depr('dtype', 1.5, '', 'dtype of returned image will always be numpy.complex128')
 
         # Make sure the type of gain is correct and has a valid value:
         if type(gain) != float:
@@ -1771,31 +1789,24 @@ class GSObject(object):
             (nx is not None or ny is not None or bounds is not None)):
             raise ValueError("Must provide scale if providing nx,ny or bounds")
 
-        # Check that the images are consistent, and possibly get the scale from them.
-        if re is None:
-            if im is not None:
-                raise ValueError("re is None, but im is not None")
-        else:
-            if im is None:
-                raise ValueError("im is None, but re is not None")
-            if scale is None:
-                # This check will raise a TypeError if re.wcs or im.wcs is not a PixelScale
-                if re.scale != im.scale:
-                    raise ValueError("re and im do not have the same input scale")
-                # Grab the scale to use from the image.
-                scale = re.scale
-            if re.bounds.isDefined() or im.bounds.isDefined():
-                if re.bounds != im.bounds:
-                    raise ValueError("re and im do not have the same defined bounds")
+        # Make sure provided image is an ImageC
+        if image is not None and image.array.dtype != np.complex128:
+            raise ValueError("Provided image must be an ImageC (aka Image(..., dtype=complex))")
 
-        # The input scale (via scale or re.scale) is really a dk value, so call it that for
+        # Possibly get the scale from image.
+        if image is not None and scale is None:
+            # Grab the scale to use from the image.
+            # This will raise a TypeError if image.wcs is not a PixelScale
+            scale = image.scale
+
+        # The input scale (via scale or image.scale) is really a dk value, so call it that for
         # clarity here, since we also need the real-space pixel scale, which we will call dx.
         if scale is None or scale <= 0:
             dk = self.stepK()
         else:
             dk = float(scale)
-        if re is not None and re.bounds.isDefined():
-            dx = 2.*np.pi/( np.max(re.array.shape) * dk )
+        if image is not None and image.bounds.isDefined():
+            dx = 2.*np.pi/( np.max(image.array.shape) * dk )
         elif scale is None or scale <= 0:
             dx = self.nyquistScale()
         else:
@@ -1807,12 +1818,25 @@ class GSObject(object):
         # do that, but only if the profile is in image coordinates for the real space image.
         # So make that profile.
         real_prof = galsim.PixelScale(dx).toImage(self)
-        re = real_prof._setup_image(re, nx, ny, bounds, add_to_image, dtype, wmult)
-        im = real_prof._setup_image(im, nx, ny, bounds, add_to_image, dtype, wmult)
+        if image is None: dtype = np.complex128
+        image = real_prof._setup_image(image, nx, ny, bounds, add_to_image, np.complex128, wmult)
 
         # Set the wcs of the images to use the dk scale size
-        re.scale = dk
-        im.scale = dk
+        image.scale = dk
+
+        if re is not None or im is not None: # pragma: no cover
+            # Make sure the input re and im images get all the right attributes to match
+            # This is a hack that won't get all use cases right, but probably most of them.
+            # the output image.
+            re._array = image._array.real
+            im._array = image._array.imag
+            b = image.bounds
+            re.image = _galsim.ImageView[np.float64](re._array, b.xmin, b.ymin)
+            im.image = _galsim.ImageView[np.float64](im._array, b.xmin, b.ymin)
+            re.scale = image.scale
+            im.scale = image.scale
+            re.setOrigin(image.origin())
+            im.setOrigin(image.origin())
 
         # Now, for drawing the k-space image, we need the profile to be in the image coordinates
         # that correspond to having unit-sized pixels in k space. The conversion to image
@@ -1820,18 +1844,15 @@ class GSObject(object):
         prof = galsim.PixelScale(1./dk).toImage(self)
 
         # Making views of the images lets us change the centers without messing up the originals.
-        review = re.view()
-        review.setCenter(0,0)
-        imview = im.view()
+        imview = image.view()
         imview.setCenter(0,0)
 
-        prof.SBProfile.drawK(review.image, imview.image)
+        prof.SBProfile.drawK(imview.image)
 
         if gain != 1.:
-            re /= gain
-            im /= gain
+            image /= gain
 
-        return re,im
+        return image
 
     def __eq__(self, other):
         return (type(self) == type(other) and

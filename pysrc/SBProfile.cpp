@@ -107,10 +107,6 @@ namespace galsim {
                      (double (SBProfile::*)(ImageView<U>, double) const)&SBProfile::fourierDraw,
                      (bp::arg("image"), bp::arg("wmult")=1.),
                      "Draw in-place and return the summed flux.")
-                .def("drawK",
-                     (void (SBProfile::*)(ImageView<U>, ImageView<U>) const)&SBProfile::drawK,
-                     (bp::arg("re"), bp::arg("im")),
-                     "Draw k-space image (real and imaginary components).")
                 ;
         }
 
@@ -190,6 +186,10 @@ namespace galsim {
                 ;
             wrapTemplates<float>(pySBProfile);
             wrapTemplates<double>(pySBProfile);
+            pySBProfile.def(
+                "drawK",
+                (void (SBProfile::*)(ImageView<std::complex<double> >) const)&SBProfile::drawK,
+                (bp::arg("image")), "Draw k-space image.");
         }
 
     };

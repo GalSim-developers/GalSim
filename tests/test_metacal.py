@@ -128,8 +128,8 @@ def test_metacal_tracking():
         small_kval = 1.e-2    # Find the k where the given psf hits this kvalue
         smaller_kval = 3.e-3  # Target PSF will have this kvalue at the same k
 
-        kim_r, kim_i = psf.drawKImage(scale=dk)
-        karr_r = kim_r.array
+        kim = psf.drawKImage(scale=dk)
+        karr_r = kim.real.array
         # Find the smallest r where the kval < small_kval
         nk = karr_r.shape[0]
         kx, ky = np.meshgrid(np.arange(-nk/2,nk/2), np.arange(-nk/2,nk/2))

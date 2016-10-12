@@ -428,6 +428,8 @@ class Image(with_metaclass(MetaImage, object)):
     def array(self): return self._array
     @property
     def isconst(self): return self._array.flags.writeable == False
+    @property
+    def iscomplex(self): return self._array.dtype.kind == 'c'
 
     # Allow scale to work as a PixelScale wcs.
     @property
@@ -539,6 +541,17 @@ class Image(with_metaclass(MetaImage, object)):
         """Set a portion of the full image to the values in another image
         """
         self.setSubImage(bounds,rhs)
+
+    def __iter__(self):
+        if self.iscomplex:
+            # To enable the syntax re, im = obj.drawKImage(...), we let ImageC be iterable,
+            # but give a deprecation warning if people use it.
+            from galsim.deprecated import depr
+            depr('re, im = imagec', 1.5, 're = imagec.real; im = imagec.imag')
+            yield self.real
+            yield self.imag
+        else:
+            raise TypeError("'Image' object is not iterable")
 
     def copyFrom(self, rhs):
         """Copy the contents of another image

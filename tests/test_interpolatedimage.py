@@ -975,8 +975,8 @@ def test_stepk_maxk():
 @timer
 def test_kroundtrip():
     a = final
-    real_a, imag_a = a.drawKImage()
-    b = galsim.InterpolatedKImage(real_a, imag_a)
+    kim_a = a.drawKImage()
+    b = galsim.InterpolatedKImage(kim_a.real, kim_a.imag)
 
     # Check picklability
     do_pickle(b)
@@ -991,12 +991,9 @@ def test_kroundtrip():
 
     np.testing.assert_almost_equal(a.getFlux(), b.getFlux(), 6) #Fails at 7th decimal
 
-    real_b, imag_b = b.drawKImage(real_a.copy(), imag_a.copy())
+    kim_b = b.drawKImage(kim_a.copy())
     # Fails at 4th decimal
-    np.testing.assert_array_almost_equal(real_a.array, real_b.array, 3,
-                                         "InterpolatedKImage kimage drawn incorrectly.")
-    # Fails at 4th decimal
-    np.testing.assert_array_almost_equal(imag_a.array, imag_b.array, 3,
+    np.testing.assert_array_almost_equal(kim_a.array, kim_b.array, 3,
                                          "InterpolatedKImage kimage drawn incorrectly.")
 
     img_a = a.drawImage()
@@ -1007,9 +1004,9 @@ def test_kroundtrip():
 
     # Try some (slightly larger maxk) non-even kimages:
     for dx, dy in zip((2,3,3), (3,2,3)):
-        shape = real_a.array.shape
-        real_a, imag_a = a.drawKImage(nx=shape[1]+dx, ny=shape[0]+dy, scale=real_a.scale)
-        b = galsim.InterpolatedKImage(real_a, imag_a)
+        shape = kim_a.array.shape
+        kim_a = a.drawKImage(nx=shape[1]+dx, ny=shape[0]+dy, scale=kim_a.scale)
+        b = galsim.InterpolatedKImage(kim_a.real, kim_a.imag)
 
         np.testing.assert_almost_equal(a.getFlux(), b.getFlux(), 6) #Fails at 7th decimal
         img_b = b.drawImage(img_a.copy())
@@ -1027,21 +1024,24 @@ def test_kroundtrip():
 
     # Does the stepk parameter do anything?
     a = final
-    b = galsim.InterpolatedKImage(*a.drawKImage())
-    c = galsim.InterpolatedKImage(*a.drawKImage(), stepk=2*b.stepK())
+    kim_a = a.drawKImage()
+    b = galsim.InterpolatedKImage(kim_a.real, kim_a.imag)
+    c = galsim.InterpolatedKImage(kim_a.real, kim_a.imag, stepk=2*b.stepK())
     np.testing.assert_almost_equal(2*b.stepK(), c.stepK())
     np.testing.assert_almost_equal(b.maxK(), c.maxK())
 
     # Test centroid
     for dx, dy in zip(KXVALS, KYVALS):
         a = final.shift(dx, dy)
-        b = galsim.InterpolatedKImage(*a.drawKImage())
+        kim_a = a.drawKImage()
+        b = galsim.InterpolatedKImage(kim_a.real, kim_a.imag)
         np.testing.assert_almost_equal(a.centroid().x, b.centroid().x, 4) #Fails at 5th decimal
         np.testing.assert_almost_equal(a.centroid().y, b.centroid().y, 4)
 
     # Test convolution with another object.
     a = final
-    b = galsim.InterpolatedKImage(*a.drawKImage())
+    kim_a = a.drawKImage()
+    b = galsim.InterpolatedKImage(kim_a.real, kim_a.imag)
     c = galsim.Kolmogorov(fwhm=0.8).shear(e1=0.01, e2=0.02).shift(0.01, 0.02)
     a_conv_c = galsim.Convolve(a, c)
     b_conv_c = galsim.Convolve(b, c)
@@ -1109,19 +1109,17 @@ def test_ne():
     assert obj1 != obj2
 
     # Now repeat for InterpolatedKImage
-    re, im = obj1.drawKImage(nx=128, ny=128, scale=1)
-    obj3 = galsim.InterpolatedKImage(re, im)
-    perturb_re = re.copy()
-    perturb_im = im.copy()
+    kim = obj1.drawKImage(nx=128, ny=128, scale=1)
+    obj3 = galsim.InterpolatedKImage(kim.real, kim.imag)
+    perturb = kim.copy()
     x = np.arange(128)
     x, y = np.meshgrid(x, x)
-    w = ((perturb_re.array**2 - perturb_im.array**2 > 1e-10) &
+    w = ((perturb.real.array**2 - perturb.imag.array**2 > 1e-10) &
          (50 < x) & (x < (128-50)) &
          (50 < y) & (y < (128-50)))
-    perturb_re.array[w] *= 2
-    perturb_im.array[w] *= 2
+    perturb.array[w] *= 2
 
-    obj4 = galsim.InterpolatedKImage(perturb_re, perturb_im)
+    obj4 = galsim.InterpolatedKImage(perturb.real, perturb.imag)
 
     with galsim.utilities.printoptions(threshold=128*128):
         assert repr(obj3) != repr(obj4)
@@ -1154,10 +1152,10 @@ def test_ne():
     all_obj_diff(gals)
 
     # And repeat for InterpolatedKImage
-    gals = [galsim.InterpolatedKImage(re, im),
-            galsim.InterpolatedKImage(re, im, k_interpolant='Linear'),
-            galsim.InterpolatedKImage(re, im, stepk=1.1),
-            galsim.InterpolatedKImage(re, im, gsparams=gsp)]
+    gals = [galsim.InterpolatedKImage(kim.real, kim.imag),
+            galsim.InterpolatedKImage(kim.real, kim.imag, k_interpolant='Linear'),
+            galsim.InterpolatedKImage(kim.real, kim.imag, stepk=1.1),
+            galsim.InterpolatedKImage(kim.real, kim.imag, gsparams=gsp)]
     all_obj_diff(gals)
 
 

@@ -377,25 +377,13 @@ namespace galsim {
         /**
          * @brief Draw an image of the SBProfile in k space.
          *
-         * For drawing in k space: routines are analagous to real space, except 2 images are
-         * needed since the SBProfile is complex. The images are normalized such that I(0,0) is the
-         * total flux.
+         * For drawing in k space: routines are analagous to real space, except the image is
+         * complex. The image is normalized such that I(0,0) is the total flux.
          *
-         * If the input images are Image's and have null dimension, square
-         * images will be drawn which are big enough to avoid "folding."  If drawing is done using
-         * FFT, they will be scaled up to a power of 2, or 3x2^n, whicher fits.
-         * If input image has finite dimensions then these will be used, although in an FFT the
-         * image may be calculated internally on a larger grid to avoid folding in real space.
-         * Note that if you give an input image, its origin may be redefined by the time it comes
-         * back.
-         *
-         * @param[in,out]    re image of real argument of SBProfile in k space
-         *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in,out]    im image of imaginary argument of SBProfile in k space
-         *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in,out]    image in k space (must be an ImageViewC)
          */
         template <typename T>
-        void drawK(ImageView<T> re, ImageView<T> im) const;
+        void drawK(ImageView<std::complex<T> > image) const;
 
         /// @brief Return a string that can act as the repr in python
         std::string repr() const;
