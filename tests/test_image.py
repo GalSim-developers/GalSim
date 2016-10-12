@@ -144,6 +144,21 @@ def test_Image_basic():
         assert im2_cview.bounds == bounds
         assert im2_cview.array.dtype.type == np_array_type
 
+        assert im1.real.bounds == bounds
+        assert im1.imag.bounds == bounds
+        assert im2.real.bounds == bounds
+        assert im2.imag.bounds == bounds
+        assert im2_view.real.bounds == bounds
+        assert im2_view.imag.bounds == bounds
+        assert im2_cview.real.bounds == bounds
+        assert im2_cview.imag.bounds == bounds
+        if tchar[i] == 'C':
+            assert im1.real.array.dtype.type == np.float64
+            assert im1.imag.array.dtype.type == np.float64
+        else:
+            assert im1.real.array.dtype.type == np_array_type
+            assert im1.imag.array.dtype.type == np_array_type
+
         # Check various ways to set and get values
         for y in range(1,nrow+1):
             for x in range(1,ncol+1):
@@ -170,8 +185,21 @@ def test_Image_basic():
                 assert im2_view(x,y) == value2
                 assert im2_cview(x,y) == value2
 
-        # Setting or getting the value outside the bounds should throw an exception.
+                assert im1.real(x,y) == value2
+                assert im1.view().real(x,y) == value2
+                assert im1.view(make_const=True).real(x,y) == value2.real
+                assert im2.real(x,y) == value2.real
+                assert im2_view.real(x,y) == value2.real
+                assert im2_cview.real(x,y) == value2.real
+                assert im1.imag(x,y) == 0
+                assert im1.view().imag(x,y) == 0
+                assert im1.view(make_const=True).imag(x,y) == 0
+                assert im2.imag(x,y) == 0
+                assert im2_view.imag(x,y) == 0
+                assert im2_cview.imag(x,y) == 0
+
         try:
+            # Setting or getting the value outside the bounds should throw an exception.
             np.testing.assert_raises(RuntimeError,im1.setValue,0,0,1)
             np.testing.assert_raises(RuntimeError,im1.__call__,0,0)
             np.testing.assert_raises(RuntimeError,im1.view().setValue,0,0,1)
@@ -191,6 +219,14 @@ def test_Image_basic():
             np.testing.assert_raises(RuntimeError,im1.__call__,ncol+1,nrow+1)
             np.testing.assert_raises(RuntimeError,im1.view().setValue,ncol+1,nrow+1,1)
             np.testing.assert_raises(RuntimeError,im1.view().__call__,ncol+1,nrow+1)
+
+            # Also, setting values in some thing that should be const
+            np.testing.assert_raises(ValueError,im1.view(make_const=True).setValue,1,1,1)
+            np.testing.assert_raises(ValueError,im1.view(make_const=True).real.setValue,1,1,1)
+            np.testing.assert_raises(ValueError,im1.view(make_const=True).imag.setValue,1,1,1)
+            if tchar[i] != 'C':
+                np.testing.assert_raises(ValueError,im1.imag.setValue,1,1,1)
+
         except ImportError:
             print('The assert_raises tests require nose')
 
@@ -1923,6 +1959,33 @@ def test_complex_image():
             assert im2(x,y) == value2
             assert im2_view(x,y) == value2
             assert im2_cview(x,y) == value2
+
+            assert im1.real(x,y) == value2.real
+            assert im1.view().real(x,y) == value2.real
+            assert im1.view(make_const=True).real(x,y) == value2.real
+            assert im2.real(x,y) == value2.real
+            assert im2_view.real(x,y) == value2.real
+            assert im2_cview.real(x,y) == value2.real
+            assert im1.imag(x,y) == value2.imag
+            assert im1.view().imag(x,y) == value2.imag
+            assert im1.view(make_const=True).imag(x,y) == value2.imag
+            assert im2.imag(x,y) == value2.imag
+            assert im2_view.imag(x,y) == value2.imag
+            assert im2_cview.imag(x,y) == value2.imag
+
+            rvalue3 = 12*x + y
+            ivalue3 = x + 21*y
+            value3 = rvalue3 + 1j * ivalue3
+            im1.real.setValue(x,y, rvalue3)
+            im1.imag.setValue(x,y, ivalue3)
+            im2_view.real.setValue(x,y, rvalue3)
+            im2_view.imag.setValue(x,y, ivalue3)
+            assert im1(x,y) == value3
+            assert im1.view()(x,y) == value3
+            assert im1.view(make_const=True)(x,y) == value3
+            assert im2(x,y) == value3
+            assert im2_view(x,y) == value3
+            assert im2_cview(x,y) == value3
 
     # Check view of given data
     im3_view = galsim.Image((1+2j)*ref_array.astype(complex))

@@ -454,6 +454,24 @@ class Image(with_metaclass(MetaImage, object)):
     def getYMax(self): return self.image.getYMax()
     def getBounds(self): return self.image.getBounds()
 
+    # real, imag for everything, even real images.
+    @property
+    def real(self):
+        """Return the real part of an image.
+
+        This works for real or complex.  For real images, it acts the same as view().
+        """
+        return Image(array=self.array.real, bounds=self.bounds, wcs=self.wcs)
+
+    @property
+    def imag(self):
+        """Return the imaginary part of an image.
+
+        This works for real or complex.  For real images, the returned array is read-only and
+        all elements are 0.
+        """
+        return Image(array=self.array.imag, bounds=self.bounds, wcs=self.wcs)
+
     def copy(self):
         return Image(image=self.image.copy(), wcs=self.wcs)
 
@@ -469,6 +487,8 @@ class Image(with_metaclass(MetaImage, object)):
         @param wcs      If provided, also update the wcs to the given value. [default: None,
                         which means keep the existing wcs]
         """
+        if self.isconst:
+            raise ValueError("Cannot modify an immutable Image")
         if not isinstance(bounds, galsim.BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
         try:
@@ -498,6 +518,8 @@ class Image(with_metaclass(MetaImage, object)):
 
         This is equivalent to self[bounds] = rhs
         """
+        if self.isconst:
+            raise ValueError("Cannot modify the values of an immutable Image")
         self.subImage(bounds).image.copyFrom(rhs.image)
 
     def __getitem__(self, bounds):
@@ -513,6 +535,8 @@ class Image(with_metaclass(MetaImage, object)):
     def copyFrom(self, rhs):
         """Copy the contents of another image
         """
+        if self.isconst:
+            raise ValueError("Cannot modify the values of an immutable Image")
         self.image.copyFrom(rhs.image)
 
     def view(self, scale=None, wcs=None, origin=None, center=None, make_const=False):
@@ -743,6 +767,8 @@ class Image(with_metaclass(MetaImage, object)):
         The arguments here may be either (x, y, value) or (pos, value) where pos is a PositionI.
         Or you can provide x, y, value as named kwargs.
         """
+        if self.isconst:
+            raise ValueError("Cannot modify the values of an immutable Image")
         pos, value = galsim.utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True,
                                                      others=['value'])
         self.image.setValue(pos.x, pos.y, value)
@@ -750,16 +776,22 @@ class Image(with_metaclass(MetaImage, object)):
     def fill(self, value):
         """Set all pixel values to the given `value`
         """
+        if self.isconst:
+            raise ValueError("Cannot modify the values of an immutable Image")
         self.image.fill(value)
 
     def setZero(self):
         """Set all pixel values to zero.
         """
+        if self.isconst:
+            raise ValueError("Cannot modify the values of an immutable Image")
         self.image.setZero()
 
     def invertSelf(self):
         """Set all pixel values to their inverse: x -> 1/x.
         """
+        if self.isconst:
+            raise ValueError("Cannot modify the values of an immutable Image")
         self.image.invertSelf()
 
     def calculateHLR(self, center=None, flux=None, flux_frac=0.5):
