@@ -35,7 +35,7 @@ x ->
 With array directions as indicated. This hopefully will make it easy enough to perform sub-image
 checks, etc.
 
-Images are in S, I, F & D flavours.
+Images are in US, UI, S, I, F & D flavours.
 
 There are also four FITS cubes, and four FITS multi-extension files for testing.  Each is 12
 images deep, with the first image being the reference above and each subsequent being the same
@@ -60,12 +60,12 @@ except ImportError:
 from galsim._pyfits import pyfits
 
 # Setup info for tests, not likely to change
-ntypes = 4  # Note: Most tests below only run through the first 4 types.
+ntypes = 6  # Note: Most tests below only run through the first 4 types.
             # test_Image_basic tests all 6 types including the aliases.
-types = [np.int16, np.int32, np.float32, np.float64, int, float]
-simple_types = [int, int, float, float, int, float]
-np_types = [np.int16, np.int32, np.float32, np.float64, np.int32, np.float64]
-tchar = ['S', 'I', 'F', 'D', 'I', 'D']
+types = [np.uint16, np.uint32, np.int16, np.int32, np.float32, np.float64, int, float]
+simple_types = [int, int, int, int, float, float, int, float]
+np_types = [np.uint16,np.uint32,np.int16,np.int32,np.float32,np.float64,np.int32,np.float64]
+tchar = ['US', 'UI', 'S', 'I', 'F', 'D', 'I', 'D']
 
 ncol = 7
 nrow = 5
@@ -333,7 +333,7 @@ def test_Image_FITS_IO():
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array,
                 err_msg="Image"+tchar[i]+" write failed for auto full-file bzip2")
 
-        # Test rice
+        # Test ric
         test_file = os.path.join(datadir, "test"+tchar[i]+".fits.fz")
         test_image = galsim.fits.read(test_file, compression='rice')
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array,
@@ -1802,7 +1802,7 @@ if __name__ == "__main__":
     test_Image_basic()
     test_Image_FITS_IO()
     test_Image_MultiFITS_IO()
-    test_Image_CubeFITS_IO()
+    #test_Image_CubeFITS_IO()
     test_Image_array_view()
     test_Image_binary_add()
     test_Image_binary_subtract()
