@@ -202,6 +202,44 @@ namespace galsim {
         return kv;
     }
 
+    void SBConvolve::SBConvolveImpl::fillKImage(ImageView<std::complex<double> > im,
+                                                double kx0, double dkx, int izero,
+                                                double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBConvolve fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        ConstIter pptr = _plist.begin();
+        assert(pptr != _plist.end());
+        GetImpl(*pptr)->fillKImage(im,kx0,dkx,izero,ky0,dky,jzero);
+        if (++pptr != _plist.end()) {
+            ImageAlloc<std::complex<double> > im2(im.getBounds());
+            for (; pptr != _plist.end(); ++pptr) {
+                GetImpl(*pptr)->fillKImage(im2.view(),kx0,dkx,izero,ky0,dky,jzero);
+                im *= im2;
+            }
+        }
+    }
+
+    void SBConvolve::SBConvolveImpl::fillKImage(ImageView<std::complex<double> > im,
+                                                double kx0, double dkx, double dkxy,
+                                                double ky0, double dky, double dkyx) const
+    {
+        dbg<<"SBConvolve fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
+        ConstIter pptr = _plist.begin();
+        assert(pptr != _plist.end());
+        GetImpl(*pptr)->fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx);
+        if (++pptr != _plist.end()) {
+            ImageAlloc<std::complex<double> > im2(im.getBounds());
+            for (; pptr != _plist.end(); ++pptr) {
+                GetImpl(*pptr)->fillKImage(im2.view(),kx0,dkx,dkxy,ky0,dky,dkyx);
+                im *= im2;
+            }
+        }
+    }
+
     void SBConvolve::SBConvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
                                                 double kx0, double dkx, int izero,
                                                 double ky0, double dky, int jzero) const

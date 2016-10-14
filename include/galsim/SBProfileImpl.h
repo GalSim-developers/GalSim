@@ -65,6 +65,13 @@ namespace galsim {
         virtual void fillXImage(ImageView<double> im,
                                 double x0, double dx, double dxy,
                                 double y0, double dy, double dyx) const;
+        virtual void fillKImage(ImageView<std::complex<double> > im,
+                                double kx0, double dkx, int izero,
+                                double ky0, double dky, int jzero) const;
+        virtual void fillKImage(ImageView<std::complex<double> > im,
+                                double kx0, double dkx, double dkxy,
+                                double ky0, double dky, double dkyx) const;
+
         virtual void fillXValue(tmv::MatrixView<double> val,
                                 double x0, double dx, int izero,
                                 double y0, double dy, int jzero) const;

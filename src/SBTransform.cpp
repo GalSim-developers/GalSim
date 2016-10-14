@@ -606,6 +606,129 @@ namespace galsim {
         im *= _fluxScaling;
     }
 
+    void SBTransform::SBTransformImpl::fillKImage(ImageView<std::complex<double> > im,
+                                                  double kx0, double dkx, int izero,
+                                                  double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBTransform fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        dbg<<"A,B,C,D = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
+        dbg<<"cen = "<<_cen<<", zerocen = "<<_zeroCen<<std::endl;
+        dbg<<"absdet = "<<_absdet<<", invdet = "<<_invdet<<std::endl;
+        dbg<<"fluxScaling = "<<_fluxScaling<<std::endl;
+
+        // Apply fwdT to kx,ky
+        if (_mB == 0. && _mC == 0.) {
+            double fwdT_kx0 = _mA * kx0;
+            double fwdT_dkx = _mA * dkx;
+            double fwdT_ky0 = _mD * ky0;
+            double fwdT_dky = _mD * dky;
+
+            GetImpl(_adaptee)->fillKImage(im,fwdT_kx0,fwdT_dkx,izero,fwdT_ky0,fwdT_dky,jzero);
+        } else {
+            Position<double> fwdT0 = fwdT(Position<double>(kx0,ky0));
+            Position<double> fwdT1 = fwdT(Position<double>(dkx,0.));
+            Position<double> fwdT2 = fwdT(Position<double>(0.,dky));
+            xdbg<<"fwdT0 = "<<fwdT0<<std::endl;
+            xdbg<<"fwdT1 = "<<fwdT1<<std::endl;
+            xdbg<<"fwdT2 = "<<fwdT2<<std::endl;
+
+            GetImpl(_adaptee)->fillKImage(im,fwdT0.x,fwdT1.x,fwdT2.x,fwdT0.y,fwdT2.y,fwdT1.y);
+        }
+
+        // Apply phases
+        if (_zeroCen) {
+            xdbg<<"zeroCen\n";
+            im *= _absdet;
+        } else {
+            xdbg<<"!zeroCen\n";
+            // Make phase terms = |det| exp(-i(kx*cenx + ky*ceny))
+            // In this case, the terms are separable, so only need to make kx and ky phases
+            // separately.
+            const int m = im.getNCol();
+            const int n = im.getNRow();
+            std::complex<double>* ptr = im.getData();
+            int skip = im.getNSkip();
+            assert(im.getStep() == 1);
+
+            std::vector<std::complex<double> > phase_kx(m);
+            std::vector<std::complex<double> > phase_ky(n);
+            typedef std::vector<std::complex<double> >::iterator It;
+            It kxit = phase_kx.begin();
+            It kyit = phase_ky.begin();
+            for (int i=0; i<m; ++i,kx0+=dkx) *kxit++ = std::polar(_absdet, -kx0*_cen.x);
+            // Only use _absdet on one of them!
+            for (int j=0; j<n; ++j,ky0+=dky) *kyit++ = std::polar(1., -ky0*_cen.y);
+
+            kyit = phase_ky.begin();
+            for (int j=0; j<n; ++j,ptr+=skip,++kyit) {
+                kxit = phase_kx.begin();
+                for (int i=0; i<m; ++i)
+                    *ptr++ *= *kxit++ * *kyit;
+            }
+        }
+    }
+
+    void SBTransform::SBTransformImpl::fillKImage(ImageView<std::complex<double> > im,
+                                                  double kx0, double dkx, double dkxy,
+                                                  double ky0, double dky, double dkyx) const
+    {
+        dbg<<"SBTransform fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
+        dbg<<"A,B,C,D = "<<_mA<<','<<_mB<<','<<_mC<<','<<_mD<<std::endl;
+        dbg<<"cen = "<<_cen<<", zerocen = "<<_zeroCen<<std::endl;
+        dbg<<"absdet = "<<_absdet<<", invdet = "<<_invdet<<std::endl;
+        dbg<<"fluxScaling = "<<_fluxScaling<<std::endl;
+
+        // Apply fwdT to kx,ky
+        // Original (x,y):
+        //     kx = kx0 + i dkx + j dkxy
+        //     ky = ky0 + i dkyx + j dky
+        // (kx',ky') = fwdT(kx,ky)
+        //     kx' = A kx + C ky
+        //         = (A kx0 + C ky0) + i (A dkx + C dkyx) + j (A dkxy + C dky)
+        //     ky' = B kx + D ky
+        //         = (B kx0 + D ky0) + i (B dkx + D dkyx) + j (B dkxy + D dky)
+        //
+        Position<double> fwdT0 = fwdT(Position<double>(kx0,ky0));
+        Position<double> fwdT1 = fwdT(Position<double>(dkx,dkyx));
+        Position<double> fwdT2 = fwdT(Position<double>(dkxy,dky));
+        xdbg<<"fwdT0 = "<<fwdT0<<std::endl;
+        xdbg<<"fwdT1 = "<<fwdT1<<std::endl;
+        xdbg<<"fwdT2 = "<<fwdT2<<std::endl;
+
+        GetImpl(_adaptee)->fillKImage(im,fwdT0.x,fwdT1.x,fwdT2.x,fwdT0.y,fwdT2.y,fwdT1.y);
+
+        // Apply phase terms = |det| exp(-i(kx*cenx + ky*ceny))
+        if (_zeroCen) {
+            xdbg<<"zeroCen\n";
+            im *= _absdet;
+        } else {
+            xdbg<<"!zeroCen\n";
+            const int m = im.getNCol();
+            const int n = im.getNRow();
+            std::complex<double>* ptr = im.getData();
+            int skip = im.getNSkip();
+            assert(im.getStep() == 1);
+
+            kx0 *= _cen.x;
+            dkx *= _cen.x;
+            dkxy *= _cen.x;
+            ky0 *= _cen.y;
+            dky *= _cen.y;
+            dkyx *= _cen.y;
+
+            for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky,ptr+=skip) {
+                double kx = kx0;
+                double ky = ky0;
+                for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx)
+                    *ptr++ *= std::polar(_absdet, -kx-ky);
+            }
+        }
+    }
+
     void SBTransform::SBTransformImpl::fillXValue(tmv::MatrixView<double> val,
                                                   double x0, double dx, int izero,
                                                   double y0, double dy, int jzero) const

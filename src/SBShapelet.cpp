@@ -169,9 +169,9 @@ namespace galsim {
         dy /= _sigma;
 
         tmv::Matrix<double> mx(m,n);
-        for (int i=0;i<m;++i,x0+=dx) mx.row(i).setAllTo(x0);
+        for (int i=0; i<m; ++i,x0+=dx) mx.row(i).setAllTo(x0);
         tmv::Matrix<double> my(m,n);
-        for (int j=0;j<n;++j,y0+=dy) my.col(j).setAllTo(y0);
+        for (int j=0; j<n; ++j,y0+=dy) my.col(j).setAllTo(y0);
 
         tmv::Matrix<double> val(m,n);
         fillXValue(val.view(),mx,my);
@@ -179,7 +179,7 @@ namespace galsim {
         typedef tmv::VIt<double,1,tmv::NonConj> It;
         It valit = val.linearView().begin();
         for (int j=0; j<n; ++j,ptr+=skip) {
-            for (int i=0;i<m;++i)
+            for (int i=0; i<m; ++i)
                 *ptr++ = *valit++;
         }
     }
@@ -209,10 +209,10 @@ namespace galsim {
         typedef tmv::VIt<double,1,tmv::NonConj> It;
         It xit = mx.linearView().begin();
         It yit = my.linearView().begin();
-        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+        for (int j=0; j<n; ++j,x0+=dxy,y0+=dy) {
             double x = x0;
             double y = y0;
-            for (int i=0;i<m;++i,x+=dx,y+=dyx) { *xit++ = x; *yit++ = y; }
+            for (int i=0; i<m; ++i,x+=dx,y+=dyx) { *xit++ = x; *yit++ = y; }
         }
 
         tmv::Matrix<double> val(m,n);
@@ -220,7 +220,83 @@ namespace galsim {
 
         It valit = val.linearView().begin();
         for (int j=0; j<n; ++j,ptr+=skip) {
-            for (int i=0;i<m;++i)
+            for (int i=0; i<m; ++i)
+                *ptr++ = *valit++;
+        }
+    }
+
+    void SBShapelet::SBShapeletImpl::fillKImage(ImageView<std::complex<double> > im,
+                                                double kx0, double dkx, int izero,
+                                                double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBShapelet fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+
+        kx0 *= _sigma;
+        dkx *= _sigma;
+        ky0 *= _sigma;
+        dky *= _sigma;
+
+        tmv::Matrix<double> mkx(m,n);
+        for (int i=0; i<m; ++i,kx0+=dkx) mkx.row(i).setAllTo(kx0);
+        tmv::Matrix<double> mky(m,n);
+        for (int j=0; j<n; ++j,ky0+=dky) mky.col(j).setAllTo(ky0);
+
+        tmv::Matrix<std::complex<double> > val(m,n);
+        fillKValue(val.view(),mkx,mky);
+
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
+        CIt valit = val.linearView().begin();
+        for (int j=0; j<n; ++j,ptr+=skip) {
+            for (int i=0; i<m; ++i)
+                *ptr++ = *valit++;
+        }
+     }
+
+    void SBShapelet::SBShapeletImpl::fillKImage(ImageView<std::complex<double> > im,
+                                                double kx0, double dkx, double dkxy,
+                                                double ky0, double dky, double dkyx) const
+    {
+        dbg<<"SBShapelet fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+
+        kx0 *= _sigma;
+        dkx *= _sigma;
+        dkxy *= _sigma;
+        ky0 *= _sigma;
+        dky *= _sigma;
+        dkyx *= _sigma;
+
+        tmv::Matrix<double> mkx(m,n);
+        tmv::Matrix<double> mky(m,n);
+        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        It kxit = mkx.linearView().begin();
+        It kyit = mky.linearView().begin();
+        for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky) {
+            double kx = kx0;
+            double ky = ky0;
+            for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx) { *kxit++ = kx; *kyit++ = ky; }
+        }
+
+        tmv::Matrix<std::complex<double> > val(m,n);
+        fillKValue(val.view(),mkx,mky);
+
+        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CIt;
+        CIt valit = val.linearView().begin();
+        for (int j=0; j<n; ++j,ptr+=skip) {
+            for (int i=0; i<m; ++i)
                 *ptr++ = *valit++;
         }
     }

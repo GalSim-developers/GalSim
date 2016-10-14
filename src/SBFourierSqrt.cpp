@@ -71,6 +71,55 @@ namespace galsim {
         return (k.x*k.x + k.y*k.y <= _maxksq) ? std::sqrt(_adaptee.kValue(k)) : 0.;
     }
 
+    void SBFourierSqrt::SBFourierSqrtImpl::fillKImage(ImageView<std::complex<double> > im,
+                                                      double kx0, double dkx, int izero,
+                                                      double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBFourierSqrt fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        GetImpl(_adaptee)->fillKImage(im,kx0,dkx,izero,ky0,dky,jzero);
+
+        // Now sqrt the values
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+
+        for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
+            double kx = kx0;
+            double kysq = ky0*ky0;
+            for (int i=0; i<m; ++i,kx+=dkx,++ptr)
+                *ptr = (kx*kx+kysq <= _maxksq) ? std::sqrt(*ptr) : 0.;
+        }
+    }
+
+    void SBFourierSqrt::SBFourierSqrtImpl::fillKImage(ImageView<std::complex<double> > im,
+                                                      double kx0, double dkx, double dkxy,
+                                                      double ky0, double dky, double dkyx) const
+    {
+        dbg<<"SBFourierSqrt fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
+        GetImpl(_adaptee)->fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx);
+
+        // Now sqrt the values
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+
+        for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
+            double kx = kx0;
+            double ky = ky0;
+            for (int i=0; i<m; ++i,kx+=dkx,++ptr)
+                *ptr = (kx*kx+ky*ky <= _maxksq) ? std::sqrt(*ptr) : 0.;
+        }
+    }
+
+
     void SBFourierSqrt::SBFourierSqrtImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
                                                       double kx0, double dkx, int izero,
                                                       double ky0, double dky, int jzero) const

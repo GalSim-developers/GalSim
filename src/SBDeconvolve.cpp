@@ -78,6 +78,72 @@ namespace galsim {
         }
     }
 
+    void SBDeconvolve::SBDeconvolveImpl::fillKImage(ImageView<std::complex<double> > im,
+                                                    double kx0, double dkx, int izero,
+                                                    double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBDeconvolve fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        GetImpl(_adaptee)->fillKImage(im,kx0,dkx,izero,ky0,dky,jzero);
+
+        // Now invert the values, but be careful about not amplifying noise too much.
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+
+        for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
+            double kx = kx0;
+            double kysq = ky0*ky0;
+            for (int i=0; i<m; ++i,kx+=dkx,++ptr) {
+                double ksq = kx*kx + kysq;
+                if (ksq > _maxksq) *ptr = 0.;
+                else {
+                    double abs_kval = std::abs(*ptr);
+                    if (abs_kval < _min_acc_kval)
+                        *ptr = 1./_min_acc_kval;
+                    else
+                        *ptr = 1./(*ptr);
+                }
+            }
+        }
+    }
+
+    void SBDeconvolve::SBDeconvolveImpl::fillKImage(ImageView<std::complex<double> > im,
+                                                    double kx0, double dkx, double dkxy,
+                                                    double ky0, double dky, double dkyx) const
+    {
+        dbg<<"SBDeconvolve fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
+        GetImpl(_adaptee)->fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx);
+
+        // Now invert the values, but be careful about not amplifying noise too much.
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+
+        for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
+            double kx = kx0;
+            double ky = ky0;
+            for (int i=0; i<m; ++i,kx+=dkx,++ptr) {
+                double ksq = kx*kx + ky*ky;
+                if (ksq > _maxksq) *ptr = 0.;
+                else {
+                    double abs_kval = std::abs(*ptr);
+                    if (abs_kval < _min_acc_kval)
+                        *ptr = 1./_min_acc_kval;
+                    else
+                        *ptr = 1./(*ptr);
+                }
+            }
+        }
+    }
+
     void SBDeconvolve::SBDeconvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
                                                     double kx0, double dkx, int izero,
                                                     double ky0, double dky, int jzero) const

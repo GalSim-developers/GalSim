@@ -253,6 +253,67 @@ namespace galsim {
         return _flux * kValueHelper(kx,ky);
     }
 
+    void SBInclinedExponential::SBInclinedExponentialImpl::fillKImage(
+        ImageView<std::complex<double> > im,
+        double kx0, double dkx, int izero,
+        double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBInclinedExponential fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillKImageQuadrant(im,kx0,dkx,izero,ky0,dky,jzero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            const int m = im.getNCol();
+            const int n = im.getNRow();
+            std::complex<double>* ptr = im.getData();
+            int skip = im.getNSkip();
+            assert(im.getStep() == 1);
+
+            kx0 *= _r0;
+            dkx *= _r0;
+            ky0 *= _r0;
+            dky *= _r0;
+
+            for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
+                double kx = kx0;
+                for (int i=0; i<m; ++i,kx+=dkx)
+                    *ptr++ = _flux * kValueHelper(kx,ky0);
+            }
+        }
+    }
+
+    void SBInclinedExponential::SBInclinedExponentialImpl::fillKImage(
+        ImageView<std::complex<double> > im,
+        double kx0, double dkx, double dkxy,
+        double ky0, double dky, double dkyx) const
+    {
+        dbg<<"SBInclinedExponential fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+
+        kx0 *= _r0;
+        dkx *= _r0;
+        dkxy *= _r0;
+        ky0 *= _r0;
+        dky *= _r0;
+        dkyx *= _r0;
+
+        for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky,ptr+=skip) {
+            double kx = kx0;
+            double ky = ky0;
+            for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx)
+                *ptr++ = _flux * kValueHelper(kx,ky);
+        }
+    }
+
     void SBInclinedExponential::SBInclinedExponentialImpl::fillKValue(
         tmv::MatrixView<std::complex<double> > val,
         double kx0, double dkx, int izero,

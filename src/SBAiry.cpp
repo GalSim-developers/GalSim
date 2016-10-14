@@ -205,6 +205,66 @@ namespace galsim {
         }
     }
 
+    void SBAiry::SBAiryImpl::fillKImage(ImageView<std::complex<double> > im,
+                                        double kx0, double dkx, int izero,
+                                        double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBAiry fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillKImageQuadrant(im,kx0,dkx,izero,ky0,dky,jzero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            const int m = im.getNCol();
+            const int n = im.getNRow();
+            std::complex<double>* ptr = im.getData();
+            int skip = im.getNSkip();
+            assert(im.getStep() == 1);
+
+            kx0 *= _inv_D_pi;
+            dkx *= _inv_D_pi;
+            ky0 *= _inv_D_pi;
+            dky *= _inv_D_pi;
+
+            for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
+                double kx = kx0;
+                double kysq = ky0*ky0;
+                for (int i=0; i<m; ++i,kx+=dkx)
+                    *ptr++ = _knorm * _info->kValue(kx*kx + kysq);
+            }
+        }
+    }
+
+    void SBAiry::SBAiryImpl::fillKImage(ImageView<std::complex<double> > im,
+                                        double kx0, double dkx, double dkxy,
+                                        double ky0, double dky, double dkyx) const
+    {
+        dbg<<"SBAiry fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+
+        kx0 *= _inv_D_pi;
+        dkx *= _inv_D_pi;
+        dkxy *= _inv_D_pi;
+        ky0 *= _inv_D_pi;
+        dky *= _inv_D_pi;
+        dkyx *= _inv_D_pi;
+
+        for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky,ptr+=skip) {
+            double kx = kx0;
+            double ky = ky0;
+            for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx)
+                *ptr++ = _knorm * _info->kValue(kx*kx + ky*ky);
+        }
+    }
+
     void SBAiry::SBAiryImpl::fillXValue(tmv::MatrixView<double> val,
                                         double x0, double dx, int izero,
                                         double y0, double dy, int jzero) const

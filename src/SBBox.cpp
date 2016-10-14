@@ -160,6 +160,80 @@ namespace galsim {
         }
     }
 
+    void SBBox::SBBoxImpl::fillKImage(ImageView<std::complex<double> > im,
+                                      double kx0, double dkx, int izero,
+                                      double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBBox fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillKImageQuadrant(im,kx0,dkx,izero,ky0,dky,jzero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            const int m = im.getNCol();
+            const int n = im.getNRow();
+            std::complex<double>* ptr = im.getData();
+            int skip = im.getNSkip();
+            assert(im.getStep() == 1);
+
+            kx0 *= _wo2pi;
+            dkx *= _wo2pi;
+            ky0 *= _ho2pi;
+            dky *= _ho2pi;
+
+            // The Box profile in Fourier space is separable:
+            //    val(x,y) = _flux * sinc(x * _width/2pi) * sinc(y * _height/2pi)
+            std::vector<double> sinc_kx(m);
+            std::vector<double> sinc_ky(n);
+            typedef std::vector<double>::iterator It;
+            It kxit = sinc_kx.begin();
+            for (int i=0; i<m; ++i,kx0+=dkx) *kxit++ = sinc(kx0);
+
+            if ((kx0 == ky0) && (dkx == dky) && (m==n)) {
+                sinc_ky = sinc_kx;
+            } else {
+                It kyit = sinc_ky.begin();
+                for (int j=0; j<n; ++j,ky0+=dky) *kyit++ = sinc(ky0);
+            }
+
+            for (int j=0; j<n; ++j,ptr+=skip) {
+                for (int i=0; i<m; ++i)
+                    *ptr++ = _flux * sinc_kx[i] * sinc_ky[j];
+            }
+        }
+    }
+
+    void SBBox::SBBoxImpl::fillKImage(ImageView<std::complex<double> > im,
+                                                double kx0, double dkx, double dkxy,
+                                                double ky0, double dky, double dkyx) const
+    {
+        dbg<<"SBBox fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+
+        kx0 *= _wo2pi;
+        dkx *= _wo2pi;
+        dkxy *= _wo2pi;
+        ky0 *= _ho2pi;
+        dky *= _ho2pi;
+        dkyx *= _ho2pi;
+
+        for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky,ptr+=skip) {
+            double kx = kx0;
+            double ky = ky0;
+            for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx) {
+                *ptr++ = _flux * sinc(kx) * sinc(ky);
+            }
+        }
+    }
+
     void SBBox::SBBoxImpl::fillXValue(tmv::MatrixView<double> val,
                                       double x0, double dx, int izero,
                                       double y0, double dy, int jzero) const
@@ -467,6 +541,131 @@ namespace galsim {
         } else {
             double kr0 = sqrt(kr0sq);
             return 2.*_flux * j1(kr0)/kr0;
+        }
+    }
+
+    void SBTopHat::SBTopHatImpl::fillXImage(ImageView<double> im,
+                                            double x0, double dx, int izero,
+                                            double y0, double dy, int jzero) const
+    {
+        dbg<<"SBTopHat fillXImage\n";
+        dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
+        dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        double* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+
+        // The columns to consider have -r0 <= y < r0
+        // given that y = y0 + j dy
+        double absdx = std::abs(dx);
+        double absdy = std::abs(dy);
+        int j1 = std::max(0, int(std::ceil(-_r0/absdy - y0/dy)));
+        int j2 = std::min(n, int(std::ceil(_r0/absdy - y0/dy)));
+        y0 += j1 * dy;
+        ptr += j1*im.getStride();
+
+        for (int j=j1; j<j2; ++j,y0+=dy,ptr+=skip) {
+            double ysq = y0*y0;
+            double xmax = std::sqrt(_r0sq - ysq);
+            // Set to _norm all pixels with -xmax <= x < xmax
+            // given that x = x0 + i dx.
+            int i1 = std::max(0, int(std::ceil(-xmax/absdx - x0/dx)));
+            int i2 = std::min(m, int(std::ceil(xmax/absdx - x0/dx)));
+            int i=0;
+            for (; i<i1; ++i) ++ptr;
+            for (; i<i2; ++i) *ptr++ = _norm;
+            for (; i<m; ++i) ++ptr;
+        }
+    }
+
+    void SBTopHat::SBTopHatImpl::fillXImage(ImageView<double> im,
+                                            double x0, double dx, double dxy,
+                                            double y0, double dy, double dyx) const
+    {
+        dbg<<"SBTopHat fillXImage\n";
+        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
+        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        double* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+
+        for (int j=0; j<n; ++j,x0+=dxy,y0+=dy,ptr+=skip) {
+            double x = x0;
+            double y = y0;
+            int i=0;
+            // Use the fact that any slice through the circle has only one segment that is non-zero.
+            // So start with zeroes until in the circle, then _norm, then more zeroes.
+            // Note: this could be sped up somewhat using the same kind of calculation we did
+            // for the non-sheared fillXImage (the one with izero, jzero), but I didn't
+            // bother.  This is probably plenty fast enough for as often as the function is
+            // called (i.e. almost never!)
+            for (;i<m && (x*x+y*y > _r0sq); ++i,x+=dx,y+=dyx) ++ptr;
+            for (;i<m && (x*x+y*y < _r0sq); ++i,x+=dx,y+=dyx) *ptr++ = _norm;
+            for (;i<m; ++i,x+=dx,y+=dyx) ++ptr;
+        }
+    }
+
+    void SBTopHat::SBTopHatImpl::fillKImage(ImageView<std::complex<double> > im,
+                                            double kx0, double dkx, int izero,
+                                            double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBTopHat fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillKImageQuadrant(im,kx0,dkx,izero,ky0,dky,jzero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            const int m = im.getNCol();
+            const int n = im.getNRow();
+            std::complex<double>* ptr = im.getData();
+            int skip = im.getNSkip();
+            assert(im.getStep() == 1);
+
+            kx0 *= _r0;
+            dkx *= _r0;
+            ky0 *= _r0;
+            dky *= _r0;
+
+            for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
+                double kx = kx0;
+                double kysq = ky0*ky0;
+                for (int i=0; i<m; ++i,kx+=dkx)
+                    *ptr++ = kValue2(kx*kx + kysq);
+            }
+        }
+    }
+
+    void SBTopHat::SBTopHatImpl::fillKImage(ImageView<std::complex<double> > im,
+                                            double kx0, double dkx, double dkxy,
+                                            double ky0, double dky, double dkyx) const
+    {
+        dbg<<"SBTopHat fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+
+        kx0 *= _r0;
+        dkx *= _r0;
+        dkxy *= _r0;
+        ky0 *= _r0;
+        dky *= _r0;
+        dkyx *= _r0;
+
+        for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky) {
+            double kx = kx0;
+            double ky = ky0;
+            for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx)
+                *ptr++ = kValue2(kx*kx + ky*ky);
         }
     }
 

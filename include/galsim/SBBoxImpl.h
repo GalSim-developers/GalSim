@@ -66,13 +66,19 @@ namespace galsim {
         void fillXImage(ImageView<double> im,
                         double x0, double dx, double dxy,
                         double y0, double dy, double dyx) const;
+        void fillKImage(ImageView<std::complex<double> > im,
+                        double kx0, double dkx, int izero,
+                        double ky0, double dky, int jzero) const;
+        void fillKImage(ImageView<std::complex<double> > im,
+                        double kx0, double dkx, double dkxy,
+                        double ky0, double dky, double dkyx) const;
+
         void fillXValue(tmv::MatrixView<double> val,
                         double x0, double dx, int izero,
                         double y0, double dy, int jzero) const;
         void fillXValue(tmv::MatrixView<double> val,
                         double x0, double dx, double dxy,
                         double y0, double dy, double dyx) const;
-        // Overrides for better efficiency
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
                         double kx0, double dkx, int izero,
                         double ky0, double dky, int jzero) const;
@@ -137,15 +143,26 @@ namespace galsim {
 
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const;
 
-        // Override both for efficiency and to put in fractional edge values which
-        // don't happen with normal calls to xValue.
+        // Overrides for better efficiency
+        void fillXImage(ImageView<double> im,
+                        double x0, double dx, int izero,
+                        double y0, double dy, int jzero) const;
+        void fillXImage(ImageView<double> im,
+                        double x0, double dx, double dxy,
+                        double y0, double dy, double dyx) const;
+        void fillKImage(ImageView<std::complex<double> > im,
+                        double kx0, double dkx, int izero,
+                        double ky0, double dky, int jzero) const;
+        void fillKImage(ImageView<std::complex<double> > im,
+                        double kx0, double dkx, double dkxy,
+                        double ky0, double dky, double dkyx) const;
+
         void fillXValue(tmv::MatrixView<double> val,
                         double x0, double dx, int izero,
                         double y0, double dy, int jzero) const;
         void fillXValue(tmv::MatrixView<double> val,
                         double x0, double dx, double dxy,
                         double y0, double dy, double dyx) const;
-        // Overrides for better efficiency
         void fillKValue(tmv::MatrixView<std::complex<double> > val,
                         double kx0, double dkx, int izero,
                         double ky0, double dky, int jzero) const;

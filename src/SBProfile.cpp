@@ -236,6 +236,9 @@ namespace galsim {
         return N;
     }
 
+    // Most derived classes override these functions, since there are usually (at least minor)
+    // efficiency gains from doing so.  But in some cases, these straightforward impleentations
+    // are perfectly fine.
     void SBProfile::SBProfileImpl::fillXImage(ImageView<double> im,
                                               double x0, double dx, int izero,
                                               double y0, double dy, int jzero) const
@@ -275,9 +278,45 @@ namespace galsim {
         }
     }
 
-    // The derived classes pretty much all override these functions, since there are
-    // almost always (at least minor) efficiency gains from doing so.  But we have
-    // them here in case someone doesn't want to bother for a new class.
+    void SBProfile::SBProfileImpl::fillKImage(ImageView<std::complex<double> > im,
+                                              double kx0, double dkx, int izero,
+                                              double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBProfile fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+        for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
+            double kx = kx0;
+            for (int i=0; i<m; ++i,kx+=dkx)
+                *ptr++ = kValue(Position<double>(kx,ky0));
+        }
+    }
+
+    void SBProfile::SBProfileImpl::fillKImage(ImageView<std::complex<double> > im,
+                                              double kx0, double dkx, double dkxy,
+                                              double ky0, double dky, double dkyx) const
+    {
+        dbg<<"SBProfile fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+        for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky,ptr+=skip) {
+            double kx = kx0;
+            double ky = ky0;
+            for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx)
+                *ptr++ = kValue(Position<double>(kx,ky));
+        }
+    }
+
     void SBProfile::SBProfileImpl::fillXValue(tmv::MatrixView<double> val,
                                               double x0, double dx, int izero,
                                               double y0, double dy, int jzero) const
@@ -492,26 +531,19 @@ namespace galsim {
     template <typename T>
     void SBProfile::drawK(ImageView<std::complex<T> > image) const
     {
-        typedef std::complex<T> CT;
         dbg<<"Start drawK: \n";
-        const int m = (image.getXMax()-image.getXMin()+1);
-        const int n = (image.getYMax()-image.getYMin()+1);
+        typedef std::complex<T> CT;
+        assert(_pimpl.get());
+
+        const int m = image.getNCol();
+        const int n = image.getNRow();
         const int xmin = image.getXMin();
         const int ymin = image.getYMin();
-        dbg<<"m,n = "<<m<<','<<n<<std::endl;
-        dbg<<"xmin,ymin = "<<xmin<<','<<ymin<<std::endl;
 
-        tmv::Matrix<CT> val(m,n);
-#ifdef DEBUGLOGGING
-        val.setAllTo(999.);
-#endif
-        // Calculate all the kValues at once, since this is often faster than many calls to kValue.
         assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
-        _pimpl->fillKValue(val.view(),xmin,1.,-xmin,ymin,1.,-ymin);
-        dbg<<"F(k=0) = "<<val(-xmin,-ymin)<<std::endl;
-
-        tmv::MatrixView<CT> mim(image.getData(),m,n,1,image.getStride(),tmv::NonConj);
-        mim += val;
+        ImageAlloc<std::complex<double> > im2(image.getBounds(), 0.);
+        _pimpl->fillKImage(im2, xmin, 1., -xmin, ymin, 1., -ymin);
+        image += im2;
     }
 
     void SBProfile::SBProfileImpl::fillKGrid(KTable& kt) const
@@ -573,7 +605,6 @@ namespace galsim {
         { prof.fillXImage(q,x0,dx,0,y0,dy,0); }
     };
 
-#if 0
     template <typename T>
     struct QuadrantHelper<std::complex<T> >
     {
@@ -582,7 +613,6 @@ namespace galsim {
                          double kx0, double dkx, double ky0, double dky)
         { prof.fillKImage(q,kx0,dkx,0,ky0,dky,0); }
     };
-#endif
 
     // The code is basically the same for X or K.
     template <class Prof, typename T>
@@ -635,16 +665,14 @@ namespace galsim {
         assert(nx1 != 0 || ny1 != 0);
         FillQuadrant(*this,im,x0,dx,nx1,y0,dy,ny1);
     }
-#if 0
-    void SBProfile::SBProfileImpl::fillKValueQuadrant(ImageView<std::complex<double> > im,
+    void SBProfile::SBProfileImpl::fillKImageQuadrant(ImageView<std::complex<double> > im,
                                                       double kx0, double dkx, int nkx1,
                                                       double ky0, double dky, int nky1) const
     {
         // Guard against infinite loop.
         assert(nkx1 != 0 || nky1 != 0);
-        FillQuadrant(*this,val,kx0,dkx,nkx1,ky0,dky,nky1);
+        FillQuadrant(*this,im,kx0,dkx,nkx1,ky0,dky,nky1);
     }
-#endif
 
     // The type of T (real or complex) determines whether the call-back is to
     // fillXValue or fillKValue.

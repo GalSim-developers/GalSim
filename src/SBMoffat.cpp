@@ -433,6 +433,66 @@ namespace galsim {
         }
     }
 
+    void SBMoffat::SBMoffatImpl::fillKImage(ImageView<std::complex<double> > im,
+                                                double kx0, double dkx, int izero,
+                                                double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBMoffat fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillKImageQuadrant(im,kx0,dkx,izero,ky0,dky,jzero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            const int m = im.getNCol();
+            const int n = im.getNRow();
+            std::complex<double>* ptr = im.getData();
+            int skip = im.getNSkip();
+            assert(im.getStep() == 1);
+
+            kx0 *= _rD;
+            dkx *= _rD;
+            ky0 *= _rD;
+            dky *= _rD;
+
+            for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
+                double kx = kx0;
+                double kysq = ky0*ky0;
+                for (int i=0;i<m;++i,kx+=dkx)
+                    *ptr++ = _knorm * (this->*_kV)(kx*kx + kysq);
+            }
+        }
+    }
+
+    void SBMoffat::SBMoffatImpl::fillKImage(ImageView<std::complex<double> > im,
+                                            double kx0, double dkx, double dkxy,
+                                            double ky0, double dky, double dkyx) const
+    {
+        dbg<<"SBMoffat fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+
+        kx0 *= _rD;
+        dkx *= _rD;
+        dkxy *= _rD;
+        ky0 *= _rD;
+        dky *= _rD;
+        dkyx *= _rD;
+
+        for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky,ptr+=skip) {
+            double kx = kx0;
+            double ky = ky0;
+            for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx)
+                *ptr++ = _knorm * (this->*_kV)(kx*kx + ky*ky);
+        }
+    }
+
     void SBMoffat::SBMoffatImpl::fillXValue(tmv::MatrixView<double> val,
                                             double x0, double dx, int izero,
                                             double y0, double dy, int jzero) const
