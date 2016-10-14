@@ -300,6 +300,8 @@ namespace galsim {
 
         kx0 += i1*dkx;
         ky0 += j1*dky;
+        ptr += i1 + j1*im.getStride();
+        xdbg<<"i1,i2,j1,j2 = "<<i1<<','<<i2<<','<<j1<<','<<j2<<"  kx0,ky0 = "<<kx0<<','<<ky0<<std::endl;
 
         // For the rest of the range, calculate ux, uy values
         std::vector<double> ux(i2-i1);
