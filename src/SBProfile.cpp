@@ -404,27 +404,21 @@ namespace galsim {
     }
 
     template <typename T>
-    double SBProfile::plainDraw(ImageView<T> I) const
+    double SBProfile::plainDraw(ImageView<T> image) const
     {
         dbg<<"Start plainDraw"<<std::endl;
-
         assert(_pimpl.get());
-        dbg<<"Start double plainDraw"<<std::endl;
-
-        const int xmin = I.getXMin();
-        const int ymin = I.getYMin();
-        const int m = I.getNCol();
-        const int n = I.getNRow();
-        xdbg<<"m,n = "<<m<<','<<n<<std::endl;
+        const int xmin = image.getXMin();
+        const int ymin = image.getYMin();
+        const int m = image.getNCol();
+        const int n = image.getNRow();
 
         assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
-        xdbg<<"Call fillXValue with "<<xmin<<','<<1.<<','<<-xmin<<
-            ','<<ymin<<','<<1.<<','<<-ymin<<std::endl;
-        ImageAlloc<double> Id(I.getBounds(), 0.);
-        _pimpl->fillXImage(Id, xmin, 1., -xmin, ymin, 1., -ymin);
+        ImageAlloc<double> im2(image.getBounds(), 0.);
+        _pimpl->fillXImage(im2, xmin, 1., -xmin, ymin, 1., -ymin);
 
-        double total_flux = Id.sumElements();
-        I += Id;
+        double total_flux = im2.sumElements();
+        image += im2;
         return total_flux;
     }
 
