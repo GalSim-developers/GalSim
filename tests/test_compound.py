@@ -645,8 +645,8 @@ def test_autoconvolve():
     add = galsim.Add(obj1, obj2)
     conv = galsim.Convolve([add, add])
     conv.drawImage(myImg1, method='no_pixel')
-    corr = galsim.AutoConvolve(add)
-    corr.drawImage(myImg2, method='no_pixel')
+    autoconv = galsim.AutoConvolve(add)
+    autoconv.drawImage(myImg2, method='no_pixel')
     printval(myImg1, myImg2)
     np.testing.assert_array_almost_equal(
             myImg1.array, myImg2.array, 4,
@@ -654,10 +654,12 @@ def test_autoconvolve():
             "AutoConvolve result")
 
     cen = 2. * add.centroid()
-    np.testing.assert_equal(corr.centroid(), cen)
-    np.testing.assert_almost_equal(corr.getFlux(), add.flux**2)
-    np.testing.assert_almost_equal(corr.flux, add.flux**2)
-    np.testing.assert_array_less(corr.xValue(cen), corr.maxSB())
+    np.testing.assert_equal(autoconv.centroid(), cen)
+    np.testing.assert_almost_equal(autoconv.getFlux(), add.flux**2)
+    np.testing.assert_almost_equal(autoconv.flux, add.flux**2)
+    np.testing.assert_array_less(autoconv.xValue(cen), autoconv.maxSB())
+
+    check_basic(autoconv, "AutoConvolve(asym)")
 
     # Check picklability
     do_pickle(conv2.SBProfile, lambda x: (repr(x.getObj()), x.isRealSpace(), x.getGSParams()))

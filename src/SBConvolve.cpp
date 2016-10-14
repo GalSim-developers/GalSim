@@ -371,6 +371,32 @@ namespace galsim {
     double SBAutoConvolve::SBAutoConvolveImpl::xValue(const Position<double>& pos) const
     { return RealSpaceConvolve(_adaptee,_adaptee,pos,getFlux(),this->gsparams); }
 
+    template <typename T>
+    struct Square
+    { T operator()(T x) { return x*x; } };
+
+    void SBAutoConvolve::SBAutoConvolveImpl::fillKImage(ImageView<std::complex<double> > im,
+                                                        double kx0, double dkx, int izero,
+                                                        double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBAutoConvolve fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        GetImpl(_adaptee)->fillKImage(im,kx0,dkx,izero,ky0,dky,jzero);
+        transform_pixel(im, Square<std::complex<double> >());
+    }
+
+    void SBAutoConvolve::SBAutoConvolveImpl::fillKImage(ImageView<std::complex<double> > im,
+                                                        double kx0, double dkx, double dkxy,
+                                                        double ky0, double dky, double dkyx) const
+    {
+        dbg<<"SBAutoConvolve fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
+        GetImpl(_adaptee)->fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx);
+        transform_pixel(im, Square<std::complex<double> >());
+    }
+
     void SBAutoConvolve::SBAutoConvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
                                                         double kx0, double dkx, int izero,
                                                         double ky0, double dky, int jzero) const
@@ -467,6 +493,32 @@ namespace galsim {
     {
         SBProfile temp = _adaptee.rotate(180. * degrees);
         return RealSpaceConvolve(_adaptee,temp,pos,getFlux(),this->gsparams);
+    }
+
+    template <typename T>
+    struct AbsSquare
+    { T operator()(T x) { return std::norm(x); } };
+
+    void SBAutoCorrelate::SBAutoCorrelateImpl::fillKImage(ImageView<std::complex<double> > im,
+                                                          double kx0, double dkx, int izero,
+                                                          double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBAutoCorrelate fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        GetImpl(_adaptee)->fillKImage(im,kx0,dkx,izero,ky0,dky,jzero);
+        transform_pixel(im, AbsSquare<std::complex<double> >());
+    }
+
+    void SBAutoCorrelate::SBAutoCorrelateImpl::fillKImage(ImageView<std::complex<double> > im,
+                                                          double kx0, double dkx, double dkxy,
+                                                          double ky0, double dky, double dkyx) const
+    {
+        dbg<<"SBAutoCorrelate fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
+        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
+        GetImpl(_adaptee)->fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx);
+        transform_pixel(im, AbsSquare<std::complex<double> >());
     }
 
     void SBAutoCorrelate::SBAutoCorrelateImpl::fillKValue(
