@@ -20,6 +20,8 @@
 #ifndef GalSim_ImageArith_H
 #define GalSim_ImageArith_H
 
+#include <complex>
+
 namespace galsim {
 
     // All code between the @cond and @endcond is excluded from Doxygen documentation
@@ -160,6 +162,9 @@ namespace galsim {
     template <>
     struct ResultType<int16_t,int32_t> { typedef int32_t type; };
 
+    // For convenience below...
+#define CT std::complex<T>
+
     //
     // Image + Scalar
     //
@@ -183,6 +188,7 @@ namespace galsim {
     // this only valid for T2 = POD types like int16_t, int32_t, float, double.
     // So if we do want to allow mixed types for these, we'd probably have to
     // specifically overload each one by hand.
+    // Update: we do allow arithmetic between complex images and their corresponding real scalar.
     template <typename T>
     inline SumIX<T,T> operator+(const BaseImage<T>& im, T x)
     { return SumIX<T,T>(im,x); }
@@ -197,6 +203,22 @@ namespace galsim {
 
     template <typename T>
     inline ImageAlloc<T>& operator+=(ImageAlloc<T>& im, const T& x)
+    { im.view() += x; return im; }
+
+    template <typename T>
+    inline SumIX<CT,T> operator+(const BaseImage<CT>& im, T x)
+    { return SumIX<CT,T>(im,x); }
+
+    template <typename T>
+    inline SumIX<CT,T> operator+(T x, const BaseImage<CT>& im)
+    { return SumIX<CT,T>(im,x); }
+
+    template <typename T>
+    inline const ImageView<CT>& operator+=(const ImageView<CT>& im, T x)
+    { transform_pixel(im, bind2nd(std::plus<CT>(),x)); return im; }
+
+    template <typename T>
+    inline ImageAlloc<CT>& operator+=(ImageAlloc<CT>& im, const T& x)
     { im.view() += x; return im; }
 
 
@@ -214,6 +236,18 @@ namespace galsim {
 
     template <typename T>
     inline ImageAlloc<T>& operator-=(ImageAlloc<T>& im, const T& x)
+    { im.view() -= x; return im; }
+
+    template <typename T>
+    inline SumIX<CT,T> operator-(const BaseImage<CT>& im, T x)
+    { return SumIX<CT,T>(im,-x); }
+
+    template <typename T>
+    inline const ImageView<CT>& operator-=(const ImageView<CT>& im, T x)
+    { im += T(-x); return im; }
+
+    template <typename T>
+    inline ImageAlloc<CT>& operator-=(ImageAlloc<CT>& im, const T& x)
     { im.view() -= x; return im; }
 
 
@@ -250,6 +284,22 @@ namespace galsim {
     inline ImageAlloc<T>& operator*=(ImageAlloc<T>& im, const T& x)
     { im.view() *= x; return im; }
 
+    template <typename T>
+    inline ProdIX<CT,T> operator*(const BaseImage<CT>& im, T x)
+    { return ProdIX<CT,T>(im,x); }
+
+    template <typename T>
+    inline ProdIX<CT,T> operator*(T x, const BaseImage<CT>& im)
+    { return ProdIX<CT,T>(im,x); }
+
+    template <typename T>
+    inline const ImageView<CT>& operator*=(const ImageView<CT>& im, T x)
+    { transform_pixel(im, bind2nd(std::multiplies<CT>(),x)); return im; }
+
+    template <typename T>
+    inline ImageAlloc<CT>& operator*=(ImageAlloc<CT>& im, const T& x)
+    { im.view() *= x; return im; }
+
     //
     // Image / Scalar
     //
@@ -272,16 +322,26 @@ namespace galsim {
     { return QuotIX<T,T>(im,x); }
 
     template <typename T>
-    inline QuotIX<T,T> operator/(T x, const BaseImage<T>& im)
-    { return QuotIX<T,T>(im,x); }
-
-    template <typename T>
     inline const ImageView<T>& operator/=(const ImageView<T>& im, T x)
     { transform_pixel(im, bind2nd(std::divides<T>(),x)); return im; }
 
     template <typename T>
     inline ImageAlloc<T>& operator/=(ImageAlloc<T>& im, const T& x)
     { im.view() /= x; return im; }
+
+    template <typename T>
+    inline QuotIX<CT,T> operator/(const BaseImage<CT>& im, T x)
+    { return QuotIX<CT,T>(im,x); }
+
+    template <typename T>
+    inline const ImageView<CT>& operator/=(const ImageView<CT>& im, T x)
+    { transform_pixel(im, bind2nd(std::divides<T>(),x)); return im; }
+
+    template <typename T>
+    inline ImageAlloc<CT>& operator/=(ImageAlloc<CT>& im, const T& x)
+    { im.view() /= x; return im; }
+
+#undef CT
 
     //
     // Image + Image
