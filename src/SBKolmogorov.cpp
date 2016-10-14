@@ -22,12 +22,6 @@
 #include "SBKolmogorov.h"
 #include "SBKolmogorovImpl.h"
 
-#ifdef DEBUGLOGGING
-#include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 2;
-#endif
-
 // Uncomment this to do the calculation that solves for the conversion between lam_over_r0
 // and fwhm and hlr.
 // (Solved values are put into Kolmogorov class in galsim/base.py = 0.975865, 0.554811)

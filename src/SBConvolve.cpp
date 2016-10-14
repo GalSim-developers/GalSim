@@ -23,12 +23,6 @@
 #include "SBConvolveImpl.h"
 #include "SBTransform.h"
 
-#ifdef DEBUGLOGGING
-#include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 2;
-#endif
-
 namespace galsim {
 
     SBConvolve::SBConvolve(const std::list<SBProfile>& slist, bool real_space,

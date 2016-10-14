@@ -41,12 +41,6 @@
 #define USE_COS_SIN
 #endif
 
-#ifdef DEBUGLOGGING
-#include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 2;
-#endif
-
 namespace galsim {
 
     SBMoffat::SBMoffat(double beta, double size, RadiusType rType, double trunc, double flux,

@@ -22,12 +22,6 @@
 #include "SBFourierSqrt.h"
 #include "SBFourierSqrtImpl.h"
 
-#ifdef DEBUGLOGGING
-#include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 2;
-#endif
-
 namespace galsim {
 
     SBFourierSqrt::SBFourierSqrt(const SBProfile& adaptee,

@@ -31,12 +31,6 @@
 #include "xmmintrin.h"
 #endif
 
-#ifdef DEBUGLOGGING
-#include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 0;
-#endif
-
 namespace galsim {
 
     // A helper function that will return the smallest 2^n or 3x2^n value that is

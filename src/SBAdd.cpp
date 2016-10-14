@@ -22,12 +22,6 @@
 #include "SBAdd.h"
 #include "SBAddImpl.h"
 
-#ifdef DEBUGLOGGING
-#include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 2;
-#endif
-
 namespace galsim {
 
     SBAdd::SBAdd(const std::list<SBProfile>& slist, const GSParamsPtr& gsparams) :

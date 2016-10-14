@@ -30,12 +30,6 @@
 #include "SBAiry.h"
 #include "SBAiryImpl.h"
 
-#ifdef DEBUGLOGGING
-#include <fstream>
-std::ostream* dbgout = new std::ofstream("debug.out");
-int verbose_level = 2;
-#endif
-
 namespace galsim {
 
     // Specialize the NewValue function used by LRUCache:
