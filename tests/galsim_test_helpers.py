@@ -99,6 +99,92 @@ def convertToShear(e1,e2):
     g2 = e2 * (g/e)
     return (g1,g2)
 
+def check_basic_x(prof, name, approx_maxsb=False, scale=None):
+    """Test drawImage using sb method.
+    """
+    #print('  nyquistScale, stepk, maxk = ', prof.nyquistScale(), prof.stepK(), prof.maxK())
+    image = prof.drawImage(method='sb', scale=scale, use_true_center=False)
+    image.setCenter(0,0)
+    dx = image.scale
+    #print('  image scale,bounds = ',dx,image.bounds)
+    if scale is None:
+        assert image.scale == prof.nyquistScale()
+    print('  flux: ',prof.flux, image.array.sum()*dx**2, image.added_flux)
+    np.testing.assert_allclose(
+            image.array.sum() * dx**2, image.added_flux, 1.e-5,
+            err_msg="%s profile drawImage(method='sb') returned wrong added_flux"%name)
+    np.testing.assert_allclose(
+            image.added_flux, prof.flux, rtol=0.1,  # Not expected to be all that close, since sb.
+            err_msg="%s profile flux not close to sum of pixel values"%name)
+    print('  maxsb: ',prof.maxSB(), image.array.max())
+    #print('  image = ',image[galsim.BoundsI(-2,2,-2,2)].array)
+    if approx_maxsb:
+        np.testing.assert_array_less(
+                image.array.max(), prof.maxSB() * 1.4,
+                err_msg="%s profile maxSB smaller than maximum pixel value"%name)
+    else:
+        np.testing.assert_allclose(
+                image.array.max(), prof.maxSB(), rtol=1.e-5,
+                err_msg="%s profile maxSB did not match maximum pixel value"%name)
+    for i,j in ( (2,3), (-4,1), (0,-5), (-3,-3) ):
+        x = i*dx
+        y = j*dx
+        print('  x: i,j = ',i,j,image(i,j),prof.xValue(x,y))
+        np.testing.assert_allclose(
+                image(i,j), prof.xValue(x,y), rtol=1.e-5,
+                err_msg="%s profile sb image does not match xValue at %d,%d"%(name,i,j))
+
+def check_basic_k(prof, name):
+    """Check drawKImage
+    """
+    print('  nyquistScale, stepk, maxk = ', prof.nyquistScale(), prof.stepK(), prof.maxK())
+    if prof.maxK()/prof.stepK() > 2000.:
+        # Don't try to draw huge images!
+        kimage = prof.drawKImage(nx=2000,ny=2000)
+    else:
+        kimage = prof.drawKImage()
+    kimage.setCenter(0,0)
+    dk = kimage.scale
+    print('  kimage scale,bounds = ',dk,kimage.bounds)
+    assert kimage.scale == prof.stepK()
+    print('  k flux: ',prof.flux, prof.kValue(0,0), kimage(0,0))
+    np.testing.assert_allclose(
+            prof.kValue(0,0), prof.flux, rtol=1.e-10,
+            err_msg="%s profile kValue(0,0) did not match flux"%name)
+    np.testing.assert_allclose(
+            kimage(0,0), prof.flux, rtol=1.e-10,
+            err_msg="%s profile kimage(0,0) did not match flux"%name)
+    for i,j in ( (2,3), (-4,1), (0,-5), (-3,-3) ):
+        kx = i*dk
+        ky = j*dk
+        print('  k: i,j = ',i,j,kimage(i,j),prof.kValue(kx,ky))
+        np.testing.assert_allclose(
+                kimage(i,j), prof.kValue(kx,ky), rtol=1.e-5,
+                err_msg="%s profile kimage does not match kValue at %d,%d"%(name,i,j))
+
+def check_basic(prof, name, approx_maxsb=False, scale=None, do_x=True, do_k=True):
+    """Do some basic sanity checks that should work for all profiles.
+    """
+    print('Testing',name)
+    if do_x and prof.isAnalyticX():
+        check_basic_x(prof, name, approx_maxsb, scale)
+    if do_k and prof.isAnalyticK():
+        check_basic_k(prof, name)
+
+    # Repeat for a rotated version of the profile.
+    # The rotated version is mathematically the same for most profiles (all axisymmetric ones),
+    # but it forces the draw codes to pass through different functions.  Specifically, it uses
+    # the versions of fillXImage with dxy and dyx rather than icenter and jcenter, so this call
+    # serves an important function for code coverage.
+    prof = prof.rotate(17*galsim.degrees)
+    name = "Rotated " + name
+    print('Testing',name)
+    if do_x and prof.isAnalyticX():
+        check_basic_x(prof, name, approx_maxsb, scale)
+    if do_k and prof.isAnalyticK():
+        check_basic_k(prof, name)
+
+
 def do_shoot(prof, img, name):
     # For photon shooting, we calculate the number of photons to use based on the target
     # accuracy we are shooting for.  (Pun intended.)

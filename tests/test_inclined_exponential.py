@@ -67,6 +67,8 @@ def test_regression():
         test_profile = galsim.InclinedExponential(inc_angle*galsim.radians, scale_radius,
                                                   scale_height)
 
+        check_basic(test_profile, "InclinedExponential")
+
         # Rotate it by the position angle
         test_profile = test_profile.rotate(pos_angle*galsim.radians)
 
@@ -114,6 +116,8 @@ def test_exponential():
     # The face-on version should get the maxSB value exactly right.
     np.testing.assert_array_almost_equal(inc_exp_profile.maxSB(), exp_profile.maxSB())
 
+    check_basic(inc_exp_profile, "Face-on InclinedExponential")
+
 
 @timer
 def test_edge_on():
@@ -130,6 +134,8 @@ def test_edge_on():
         # Set up the profile
         prof = galsim.InclinedExponential(inclination*galsim.radians, scale_radius=scale_radius,
                                           scale_h_over_r=0.1)
+
+        check_basic(prof, "Edge-on InclinedExponential")
 
         # Draw an image of it
         image = galsim.Image(image_nx,image_ny,scale=1.0)
@@ -172,6 +178,8 @@ def test_sanity():
         # Now make a test image
         test_profile = galsim.InclinedExponential(inc_angle*galsim.radians, scale_radius,
                                                   scale_height, flux=flux)
+
+        check_basic(test_profile, "InclinedExponential")
 
         # Check that h/r is properly given by the method and property for it
         np.testing.assert_almost_equal(test_profile.scale_height/test_profile.scale_radius,

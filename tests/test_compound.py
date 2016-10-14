@@ -118,6 +118,8 @@ def test_convolve():
     # They are almost always too high, which is actually ok for how we use maxSB for phot shooting.
     np.testing.assert_array_less(conv.xValue(cen), conv.maxSB())
 
+    check_basic(conv, "Moffat * Pixel")
+
     # Test photon shooting.
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -225,6 +227,8 @@ def test_shearconvolve():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Convolve(psf,pixel) disagrees with expected result")
 
+    check_basic(conv, "sheared Gaussian * Pixel")
+
     # Test photon shooting.
     import warnings
     with warnings.catch_warnings():
@@ -290,8 +294,10 @@ def test_realspace_convolve():
             img.array, saved_img.array, 5,
             err_msg="Using GSObject Convolve([pixel,psf]) disagrees with expected result")
 
+    check_basic(conv, "Truncated Moffat*Box", approx_maxsb=True)
+
     # Test kvalues
-    do_kvalue(conv,img,"Truncated Moffat convolved with Box")
+    do_kvalue(conv,img,"Truncated Moffat*Box")
 
     # Check picklability
     do_pickle(conv.SBProfile, lambda x: (repr(x.getObjs()), x.isRealSpace(), x.getGSParams()))
@@ -420,80 +426,82 @@ def test_add():
 
     gauss1 = galsim.Gaussian(flux=0.75, sigma=1)
     gauss2 = galsim.Gaussian(flux=0.25, sigma=3)
-    sum = galsim.Add(gauss1,gauss2)
-    sum.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
+    sum_gauss = galsim.Add(gauss1,gauss2)
+    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Add(gauss1,gauss2) disagrees with expected result")
 
     cen = galsim.PositionD(0,0)
-    np.testing.assert_equal(sum.centroid(), cen)
-    np.testing.assert_almost_equal(sum.getFlux(), gauss1.flux + gauss2.flux)
-    np.testing.assert_almost_equal(sum.flux, gauss1.flux + gauss2.flux)
-    np.testing.assert_almost_equal(sum.xValue(cen), sum.maxSB())
+    np.testing.assert_equal(sum_gauss.centroid(), cen)
+    np.testing.assert_almost_equal(sum_gauss.getFlux(), gauss1.flux + gauss2.flux)
+    np.testing.assert_almost_equal(sum_gauss.flux, gauss1.flux + gauss2.flux)
+    np.testing.assert_almost_equal(sum_gauss.xValue(cen), sum_gauss.maxSB())
 
     # Check with default_params
-    sum = galsim.Add(gauss1,gauss2,gsparams=default_params)
-    sum.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
+    sum_gauss = galsim.Add(gauss1,gauss2,gsparams=default_params)
+    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Add(gauss1,gauss2) with default_params disagrees with "
             "expected result")
-    sum = galsim.Add(gauss1,gauss2,gsparams=galsim.GSParams())
-    sum.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
+    sum_gauss = galsim.Add(gauss1,gauss2,gsparams=galsim.GSParams())
+    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Add(gauss1,gauss2) with GSParams() disagrees with "
             "expected result")
 
     # Other ways to do the sum:
-    sum = gauss1 + gauss2
-    sum.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
+    sum_gauss = gauss1 + gauss2
+    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject gauss1 + gauss2 disagrees with expected result")
-    sum = gauss1
-    sum += gauss2
-    sum.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
+    sum_gauss = gauss1
+    sum_gauss += gauss2
+    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject sum = gauss1; sum += gauss2 disagrees with expected result")
-    sum = galsim.Add([gauss1,gauss2])
-    sum.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
+    sum_gauss = galsim.Add([gauss1,gauss2])
+    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject Add([gauss1,gauss2]) disagrees with expected result")
     gauss1 = galsim.Gaussian(flux=1, sigma=1)
     gauss2 = galsim.Gaussian(flux=1, sigma=3)
-    sum = 0.75 * gauss1 + 0.25 * gauss2
-    sum.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
+    sum_gauss = 0.75 * gauss1 + 0.25 * gauss2
+    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject 0.75 * gauss1 + 0.25 * gauss2 disagrees with expected result")
-    sum = 0.75 * gauss1
-    sum += 0.25 * gauss2
-    sum.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
+    sum_gauss = 0.75 * gauss1
+    sum_gauss += 0.25 * gauss2
+    sum_gauss.drawImage(myImg,scale=dx, method="sb", use_true_center=False)
     printval(myImg, savedImg)
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject sum += 0.25 * gauss2 disagrees with expected result")
 
+    check_basic(sum_gauss, "sum of 2 Gaussians")
+
     # Test photon shooting.
-    do_shoot(sum,myImg,"sum of 2 Gaussians")
+    do_shoot(sum_gauss,myImg,"sum of 2 Gaussians")
 
     # Test kvalues
-    do_kvalue(sum,myImg,"sum of 2 Gaussians")
+    do_kvalue(sum_gauss,myImg,"sum of 2 Gaussians")
 
     # Check picklability
-    do_pickle(sum.SBProfile, lambda x: (repr(x.getObjs()), x.getGSParams()))
-    do_pickle(sum, lambda x: x.drawImage(method='sb'))
-    do_pickle(sum)
-    do_pickle(sum.SBProfile)
+    do_pickle(sum_gauss.SBProfile, lambda x: (repr(x.getObjs()), x.getGSParams()))
+    do_pickle(sum_gauss, lambda x: x.drawImage(method='sb'))
+    do_pickle(sum_gauss)
+    do_pickle(sum_gauss.SBProfile)
 
 
 @timer
@@ -625,6 +633,8 @@ def test_autoconvolve():
     np.testing.assert_almost_equal(conv2.flux, psf.flux**2)
     np.testing.assert_array_less(conv2.xValue(cen), conv2.maxSB())
 
+    check_basic(conv, "AutoConvolve(Moffat)")
+
     # Test photon shooting.
     do_shoot(conv2,myImg2,"AutoConvolve(Moffat)")
 
@@ -683,6 +693,8 @@ def test_autocorrelate():
             myImg1.array, myImg2.array, 4,
             err_msg="Asymmetric sum of Gaussians convolved with mirror of self disagrees with "+
             "AutoCorrelate result")
+
+    check_basic(conv, "AutoCorrelate")
 
     # Test photon shooting.
     do_shoot(corr,myImg2,"AutoCorrelate")

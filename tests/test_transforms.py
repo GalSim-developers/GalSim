@@ -98,6 +98,8 @@ def test_smallshear():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject shear with GSParams() disagrees with expected result")
 
+    check_basic(gauss, "sheared Gaussian")
+
     # Test photon shooting.
     do_shoot(gauss,myImg,"sheared Gaussian")
 
@@ -149,9 +151,11 @@ def test_largeshear():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject shear with GSParams() disagrees with expected result")
 
-    # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
     devauc2 = galsim.Convolve(devauc, galsim.Gaussian(sigma=0.3))
+    check_basic(devauc2, "sheared DeVauc")
+
+    # Test photon shooting.
     do_shoot(devauc2,myImg,"sheared DeVauc")
 
     # Test kvalues.
@@ -203,9 +207,11 @@ def test_rotate():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject rotate with GSParams() disagrees with expected result")
 
-    # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
     gal2 = galsim.Convolve(gal, galsim.Gaussian(sigma=0.3))
+    check_basic(gal2, "rotated sheared Sersic")
+
+    # Test photon shooting.
     do_shoot(gal2,myImg,"rotated sheared Sersic")
 
     # Test kvalues
@@ -283,9 +289,11 @@ def test_mag():
             myImg.array.max(), gal.maxSB(), 5,
             err_msg="lensed profile maxSB did not match maximum pixel value")
 
-    # Test photon shooting.
     gal = galsim.Exponential(flux=1, scale_radius=r0)
     gal = gal.magnify(1.5**2) # area rescaling factor
+    check_basic(gal, "dilated Exponential")
+
+    # Test photon shooting.
     do_shoot(gal,myImg,"dilated Exponential")
 
     # Test kvalues
@@ -352,6 +360,8 @@ def test_shift():
     np.testing.assert_array_almost_equal(
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject shift with GSParams() disagrees with expected result")
+
+    check_basic(pixel, "shifted Box")
 
     # Test photon shooting.
     do_shoot(pixel,myImg,"shifted Box")
@@ -500,9 +510,11 @@ def test_rescale():
     np.testing.assert_almost_equal(myImg2.array.sum(), 0.5, 3,
             err_msg="Drawing with gain=4. results in wrong flux")
 
-    # Test photon shooting.
     # Convolve with a small gaussian to smooth out the central peak.
     sersic_smooth = galsim.Convolve(sersic2, galsim.Gaussian(sigma=0.3))
+    check_basic(sersic_smooth, "scaled Sersic")
+
+    # Test photon shooting.
     do_shoot(sersic_smooth,myImg,"scaled Sersic")
 
     # Test kvalues

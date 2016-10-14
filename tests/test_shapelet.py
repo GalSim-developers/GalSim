@@ -98,6 +98,8 @@ def test_shapelet_drawImage():
             print('shapelet vector = ',bvec)
             shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
 
+            check_basic(shapelet, "Shapelet", approx_maxsb=True)
+
             # Test normalization  (This is normally part of do_shoot.  When we eventually
             # implement photon shooting, we should go back to the normal do_shoot call,
             # and remove this section.)
@@ -145,6 +147,8 @@ def test_shapelet_properties():
             -0.09, 0.07, -0.11, -0.08, 0.11]   # n = 4
 
     shapelet = galsim.Shapelet(sigma=sigma, order=order, bvec=bvec)
+
+    check_basic(shapelet, "Shapelet", approx_maxsb=True)
 
     # Check flux
     flux = bvec[0] + bvec[5] + bvec[14]

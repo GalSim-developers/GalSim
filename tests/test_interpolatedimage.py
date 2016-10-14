@@ -91,6 +91,9 @@ def test_roundtrip():
         # the 10^-5 level.
         # Anyway, Quintic seems to be accurate enough.
         # And this is now the default, so no need to do anything special here.
+
+        check_basic(interp, "InterpolatedImage", approx_maxsb=True)
+
         do_shoot(interp,image_out,"InterpolatedImage")
 
         # Test kvalues
