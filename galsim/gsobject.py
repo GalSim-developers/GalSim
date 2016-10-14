@@ -1287,11 +1287,6 @@ class GSObject(object):
                     "for your profile to include the Pixel and also have GalSim convolve by "
                     "an _additional_ Pixel, you can suppress this warning by using method=fft.")
 
-        # Check for scale if using nx, ny, or bounds
-        if (scale is None and wcs is None and
-            (nx is not None or ny is not None or bounds is not None)):
-            raise ValueError("Must provide scale if providing nx,ny or bounds")
-
         # Some parameters are only relevant for method == 'phot'
         if method != 'phot':
             if n_photons != 0.:
@@ -1783,11 +1778,6 @@ class GSObject(object):
             gain = float(gain)
         if gain <= 0.:
             raise ValueError("Invalid gain <= 0.")
-
-        # Check for scale if using nx, ny, or bounds
-        if (scale is None and
-            (nx is not None or ny is not None or bounds is not None)):
-            raise ValueError("Must provide scale if providing nx,ny or bounds")
 
         # Make sure provided image is an ImageC
         if image is not None and image.array.dtype != np.complex128:
