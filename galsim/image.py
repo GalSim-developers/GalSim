@@ -180,11 +180,20 @@ class Image(with_metaclass(MetaImage, object)):
 
     The `array` attribute is a NumPy array of the Image's pixels.  The individual elements in the
     array attribute are accessed as `image.array[y,x]`, matching the standard NumPy convention,
-    while the Image class's own accessor uses `(x,y)`.  That is, the following are equivalent:
+    while the Image class's own accessor uses either `(x,y)` or `[x,y]`.
+
+    That is, the following are equivalent:
 
         >>> ixy = image(x,y)
+        >>> ixy = image[x,y]
         >>> ixy = image.array[y,x]
+        >>> ixy = image.getValue(x,y)
 
+    Similarly, for setting individual pixel values, the following are equivalent:
+
+        >>> image[x,y] = new_ixy
+        >>> image.array[y,x] = new_ixy
+        >>> image.setValue(x,y,new_ixy)
 
     Methods
     -------
@@ -194,7 +203,7 @@ class Image(with_metaclass(MetaImage, object)):
         shift       Shift the origin of the image by (dx,dy).
         setCenter   Set a new position for the center of the image.
         setOrigin   Set a new position for the origin (x,y) = (0,0) of the image.
-        im(x,y)     Get the value of a single pixel.
+        getValue    Get the value of a single pixel.
         setValue    Set the value of a single pixel.
         addValue    Add to the value of a single pixel.
         resize      Resize the image to have a new bounds.
@@ -561,15 +570,50 @@ class Image(with_metaclass(MetaImage, object)):
             raise ValueError("Cannot modify the values of an immutable Image")
         self.subImage(bounds).image.copyFrom(rhs.image)
 
-    def __getitem__(self, bounds):
-        """Return a view of a portion of the full image
-        """
-        return self.subImage(bounds)
+    def __getitem__(self, *args):
+        """Return either a subimage or a single pixel value.
 
-    def __setitem__(self, bounds, rhs):
-        """Set a portion of the full image to the values in another image
+        For example,
+            >>> subimage = im[galsim.BoundsI(3,7,3,7)]
+            >>> value = im[galsim.PositionI(5,5)]
+            >>> value = im[5,5]
         """
-        self.setSubImage(bounds,rhs)
+        if len(args) == 1:
+            if isinstance(args[0], galsim.BoundsI):
+                return self.subImage(*args)
+            elif isinstance(args[0], galsim.PositionI):
+                return self(*args)
+            elif isinstance(args[0], tuple):
+                return self.getValue(*args[0])
+            else:
+                raise TypeError("image[index] only accepts BoundsI or PositionI for the index")
+        elif len(args) == 2:
+            return self(*args)
+        else:
+            raise TypeError("image[..] requires either 1 or 2 args")
+
+    def __setitem__(self, *args):
+        """Set either a subimage or a single pixel to new values.
+
+        For example,
+
+            >>> im[galsim.BoundsI(3,7,3,7)] = im2
+            >>> im[galsim.PositionI(5,5)] = 17.
+            >>> im[5,5] = 17.
+        """
+        if len(args) == 2:
+            if isinstance(args[0], galsim.BoundsI):
+                self.setSubImage(*args)
+            elif isinstance(args[0], galsim.PositionI):
+                self.setValue(*args)
+            elif isinstance(args[0], tuple):
+                self.setValue(*args)
+            else:
+                raise TypeError("image[index] only accepts BoundsI or PositionI for the index")
+        elif len(args) == 3:
+            return self.setValue(*args)
+        else:
+            raise TypeError("image[..] requires either 1 or 2 args")
 
     def __iter__(self):
         if self.iscomplex:
@@ -807,7 +851,7 @@ class Image(with_metaclass(MetaImage, object)):
         pos = galsim.utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True)
         return self.image(pos.x, pos.y)
 
-    def at(self, x, y):
+    def getValue(self, x, y):
         """This method is a synonym for im(x,y).  It is a bit faster than im(x,y), since GalSim
         does not have to parse the different options available for __call__.  (i.e. im(x,y) or
         im(pos) or im(x=x,y=y))
@@ -819,6 +863,8 @@ class Image(with_metaclass(MetaImage, object)):
 
         The arguments here may be either (x, y, value) or (pos, value) where pos is a PositionI.
         Or you can provide x, y, value as named kwargs.
+
+        This is equivalent to self[x,y] += rhs
         """
         if self.isconst:
             raise ValueError("Cannot modify the values of an immutable Image")
@@ -831,6 +877,8 @@ class Image(with_metaclass(MetaImage, object)):
 
         The arguments here may be either (x, y, value) or (pos, value) where pos is a PositionI.
         Or you can provide x, y, value as named kwargs.
+
+        This is equivalent to self[x,y] = rhs
         """
         if self.isconst:
             raise ValueError("Cannot modify the values of an immutable Image")

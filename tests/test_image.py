@@ -187,9 +187,11 @@ def test_Image_basic():
             for x in range(1,ncol+1):
                 value = 100 + 10*x + y
                 assert im1(x,y) == value
+                assert im1(galsim.PositionI(x,y)) == value
                 assert im1a(x+3,y+6) == value
                 assert im1b(x-1,y-1) == value
                 assert im1.view()(x,y) == value
+                assert im1.view()(galsim.PositionI(x,y)) == value
                 assert im1.view(make_const=True)(x,y) == value
                 assert im2(x,y) == value
                 assert im2_view(x,y) == value
@@ -203,14 +205,14 @@ def test_Image_basic():
                     assert im2_conj(x,y) == value
 
                 value2 = 53 + 12*x - 19*y
-                im1.setValue(x,y, value2)
-                im2_view.setValue(x,y, value2)
-                assert im1(x,y) == value2
-                assert im1.view()(x,y) == value2
-                assert im1.view(make_const=True)(x,y) == value2
-                assert im2(x,y) == value2
-                assert im2_view(x,y) == value2
-                assert im2_cview(x,y) == value2
+                im1[x,y] = value2
+                im2_view[galsim.PositionI(x,y)] = value2
+                assert im1.getValue(x,y) == value2
+                assert im1.view().getValue(x,y) == value2
+                assert im1.view(make_const=True).getValue(x,y) == value2
+                assert im2.getValue(x,y) == value2
+                assert im2_view.getValue(x,y) == value2
+                assert im2_cview.getValue(x,y) == value2
 
                 assert im1.real(x,y) == value2
                 assert im1.view().real(x,y) == value2
@@ -227,20 +229,24 @@ def test_Image_basic():
 
                 value3 = 10*x + y
                 im1.addValue(x,y, value3-value2)
-                im2_view.addValue(x,y, value3-value2)
-                assert im1(x,y) == value3
-                assert im1.view()(x,y) == value3
-                assert im1.view(make_const=True)(x,y) == value3
-                assert im2(x,y) == value3
-                assert im2_view(x,y) == value3
-                assert im2_cview(x,y) == value3
+                im2_view[x,y] += value3-value2
+                assert im1[galsim.PositionI(x,y)] == value3
+                assert im1.view()[x,y] == value3
+                assert im1.view(make_const=True)[galsim.PositionI(x,y)] == value3
+                assert im2[x,y] == value3
+                assert im2_view[galsim.PositionI(x,y)] == value3
+                assert im2_cview[x,y] == value3
 
         try:
             # Setting or getting the value outside the bounds should throw an exception.
             np.testing.assert_raises(RuntimeError,im1.setValue,0,0,1)
             np.testing.assert_raises(RuntimeError,im1.__call__,0,0)
+            np.testing.assert_raises(RuntimeError,im1.__getitem__,0,0)
+            np.testing.assert_raises(RuntimeError,im1.__setitem__,0,0,1)
             np.testing.assert_raises(RuntimeError,im1.view().setValue,0,0,1)
             np.testing.assert_raises(RuntimeError,im1.view().__call__,0,0)
+            np.testing.assert_raises(RuntimeError,im1.view().__getitem__,0,0)
+            np.testing.assert_raises(RuntimeError,im1.view().__setitem__,0,0,1)
 
             np.testing.assert_raises(RuntimeError,im1.setValue,ncol+1,0,1)
             np.testing.assert_raises(RuntimeError,im1.__call__,ncol+1,0)
@@ -263,6 +269,12 @@ def test_Image_basic():
             np.testing.assert_raises(ValueError,im1.view(make_const=True).imag.setValue,1,1,1)
             if tchar[i] != 'C':
                 np.testing.assert_raises(ValueError,im1.imag.setValue,1,1,1)
+
+            # Finally check for the wrong number of arguments in get/setitem
+            np.testing.assert_raises(TypeError,im1.__getitem__,1)
+            np.testing.assert_raises(TypeError,im1.__setitem__,1,1)
+            np.testing.assert_raises(TypeError,im1.__getitem__,1,2,3)
+            np.testing.assert_raises(TypeError,im1.__setitem__,1,2,3,4)
 
         except ImportError:
             print('The assert_raises tests require nose')

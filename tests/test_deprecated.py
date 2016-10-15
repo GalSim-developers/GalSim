@@ -550,82 +550,78 @@ def test_dep_image():
 
     # The rest of this is taken from an older version of the Image class test suite that
     # tests the old syntax.  Might as well keep it.
-    import warnings
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
+    for i in range(ntypes):
+        # Check basic constructor from ncol, nrow
+        array_type = types[i]
+        im1 = check_dep(galsim.image.MetaImage.__getitem__, galsim.Image, array_type)(ncol,nrow)
+        bounds = galsim.BoundsI(1,ncol,1,nrow)
 
-        for i in range(ntypes):
-            # Check basic constructor from ncol, nrow
-            array_type = types[i]
-            im1 = galsim.Image[array_type](ncol,nrow)
-            bounds = galsim.BoundsI(1,ncol,1,nrow)
+        assert im1.getXMin() == 1
+        assert im1.getXMax() == ncol
+        assert im1.getYMin() == 1
+        assert im1.getYMax() == nrow
+        assert im1.getBounds() == bounds
+        assert im1.bounds == bounds
 
-            assert im1.getXMin() == 1
-            assert im1.getXMax() == ncol
-            assert im1.getYMin() == 1
-            assert im1.getYMax() == nrow
-            assert im1.getBounds() == bounds
-            assert im1.bounds == bounds
+        # Check basic constructor from ncol, nrow
+        # Also test alternate name of image type: ImageD, ImageF, etc.
+        image_type = eval("galsim.Image"+tchar[i]) # Use handy eval() mimics use of ImageSIFD
+        im2 = image_type(bounds)
+        im2_view = im2.view()
 
-            # Check basic constructor from ncol, nrow
-            # Also test alternate name of image type: ImageD, ImageF, etc.
-            image_type = eval("galsim.Image"+tchar[i]) # Use handy eval() mimics use of ImageSIFD
-            im2 = image_type(bounds)
-            im2_view = im2.view()
+        assert im2_view.getXMin() == 1
+        assert im2_view.getXMax() == ncol
+        assert im2_view.getYMin() == 1
+        assert im2_view.getYMax() == nrow
+        assert im2_view.bounds == bounds
 
-            assert im2_view.getXMin() == 1
-            assert im2_view.getXMax() == ncol
-            assert im2_view.getYMin() == 1
-            assert im2_view.getYMax() == nrow
-            assert im2_view.bounds == bounds
+        # Check various ways to set and get values
+        for y in range(1,nrow):
+            for x in range(1,ncol):
+                im1.setValue(x,y, 100 + 10*x + y)
+                im2_view.setValue(x,y, 100 + 10*x + y)
 
-            # Check various ways to set and get values
-            for y in range(1,nrow):
-                for x in range(1,ncol):
-                    im1.setValue(x,y, 100 + 10*x + y)
-                    im2_view.setValue(x,y, 100 + 10*x + y)
+        for y in range(1,nrow):
+            for x in range(1,ncol):
+                assert check_dep(im1.at,x,y) == 100+10*x+y
+                assert check_dep(im1.view().at,x,y) == 100+10*x+y
+                assert check_dep(im2.at,x,y) == 100+10*x+y
+                assert check_dep(im2_view.at,x,y) == 100+10*x+y
+                im1.setValue(x,y, 10*x + y)
+                im2_view.setValue(x,y, 10*x + y)
+                assert im1(x,y) == 10*x+y
+                assert im1.view()(x,y) == 10*x+y
+                assert im2(x,y) == 10*x+y
+                assert im2_view(x,y) == 10*x+y
 
-            for y in range(1,nrow):
-                for x in range(1,ncol):
-                    assert im1.at(x,y) == 100+10*x+y
-                    assert im1.view().at(x,y) == 100+10*x+y
-                    assert im2.at(x,y) == 100+10*x+y
-                    assert im2_view.at(x,y) == 100+10*x+y
-                    im1.setValue(x,y, 10*x + y)
-                    im2_view.setValue(x,y, 10*x + y)
-                    assert im1(x,y) == 10*x+y
-                    assert im1.view()(x,y) == 10*x+y
-                    assert im2(x,y) == 10*x+y
-                    assert im2_view(x,y) == 10*x+y
+        # Check view of given data
+        im3_view = check_dep(galsim.ImageView[array_type], ref_array.astype(array_type))
+        for y in range(1,nrow):
+            for x in range(1,ncol):
+                assert im3_view(x,y) == 10*x+y
 
-            # Check view of given data
-            im3_view = galsim.ImageView[array_type](ref_array.astype(array_type))
-            for y in range(1,nrow):
-                for x in range(1,ncol):
-                    assert im3_view(x,y) == 10*x+y
+        # Check shift ops
+        im1_view = im1.view() # View with old bounds
+        dx = 31
+        dy = 16
+        im1.shift(dx,dy)
+        im2_view.setOrigin( 1+dx , 1+dy )
+        im3_view.setCenter( (ncol+1)/2+dx , (nrow+1)/2+dy )
+        shifted_bounds = galsim.BoundsI(1+dx, ncol+dx, 1+dy, nrow+dy)
 
-            # Check shift ops
-            im1_view = im1.view() # View with old bounds
-            dx = 31
-            dy = 16
-            im1.shift(dx,dy)
-            im2_view.setOrigin( 1+dx , 1+dy )
-            im3_view.setCenter( (ncol+1)/2+dx , (nrow+1)/2+dy )
-            shifted_bounds = galsim.BoundsI(1+dx, ncol+dx, 1+dy, nrow+dy)
-
-            assert im1.bounds == shifted_bounds
-            assert im2_view.bounds == shifted_bounds
-            assert im3_view.bounds == shifted_bounds
-            # Others shouldn't have changed
-            assert im1_view.bounds == bounds
-            assert im2.bounds == bounds
-            for y in range(1,nrow):
-                for x in range(1,ncol):
-                    assert im1(x+dx,y+dy) == 10*x+y
-                    assert im1_view(x,y) == 10*x+y
-                    assert im2(x,y) == 10*x+y
-                    assert im2_view(x+dx,y+dy) == 10*x+y
-                    assert im3_view(x+dx,y+dy) == 10*x+y
+        assert im1.bounds == shifted_bounds
+        assert im2_view.bounds == shifted_bounds
+        assert im3_view.bounds == shifted_bounds
+        # Others shouldn't have changed
+        assert im1_view.bounds == bounds
+        assert im2.bounds == bounds
+        for y in range(1,nrow):
+            for x in range(1,ncol):
+                assert im1(x+dx,y+dy) == 10*x+y
+                assert im1_view(x,y) == 10*x+y
+                assert im2(x,y) == 10*x+y
+                assert im2_view(x+dx,y+dy) == 10*x+y
+                assert im3_view(x+dx,y+dy) == 10*x+y
 
 
 @timer
