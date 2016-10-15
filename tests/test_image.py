@@ -202,7 +202,7 @@ def test_Image_basic():
                 else:
                     assert im2_conj(x,y) == value
 
-                value2 = 10*x + y
+                value2 = 53 + 12*x - 19*y
                 im1.setValue(x,y, value2)
                 im2_view.setValue(x,y, value2)
                 assert im1(x,y) == value2
@@ -224,6 +224,16 @@ def test_Image_basic():
                 assert im2.imag(x,y) == 0
                 assert im2_view.imag(x,y) == 0
                 assert im2_cview.imag(x,y) == 0
+
+                value3 = 10*x + y
+                im1.addValue(x,y, value3-value2)
+                im2_view.addValue(x,y, value3-value2)
+                assert im1(x,y) == value3
+                assert im1.view()(x,y) == value3
+                assert im1.view(make_const=True)(x,y) == value3
+                assert im2(x,y) == value3
+                assert im2_view(x,y) == value3
+                assert im2_cview(x,y) == value3
 
         try:
             # Setting or getting the value outside the bounds should throw an exception.
@@ -266,11 +276,12 @@ def test_Image_basic():
         im7_view = galsim.Image(ref_array.astype(np_array_type), xmin=0, ymin=0)
         for y in range(1,nrow+1):
             for x in range(1,ncol+1):
-                assert im3_view(x,y) == 10*x+y
-                assert im4_view(x,y) == 10*x+y
-                assert im5_view(x,y) == 10*x+y
-                assert im6_view(x+3,y+6) == 10*x+y
-                assert im7_view(x-1,y-1) == 10*x+y
+                value3 = 10*x+y
+                assert im3_view(x,y) == value3
+                assert im4_view(x,y) == value3
+                assert im5_view(x,y) == value3
+                assert im6_view(x+3,y+6) == value3
+                assert im7_view(x-1,y-1) == value3
 
         # Check shift ops
         im1_view = im1.view() # View with old bounds
@@ -289,11 +300,12 @@ def test_Image_basic():
         assert im2.bounds == bounds
         for y in range(1,nrow+1):
             for x in range(1,ncol+1):
-                assert im1(x+dx,y+dy) == 10*x+y
-                assert im1_view(x,y) == 10*x+y
-                assert im2(x,y) == 10*x+y
-                assert im2_view(x+dx,y+dy) == 10*x+y
-                assert im3_view(x+dx,y+dy) == 10*x+y
+                value3 = 10*x+y
+                assert im1(x+dx,y+dy) == value3
+                assert im1_view(x,y) == value3
+                assert im2(x,y) == value3
+                assert im2_view(x+dx,y+dy) == value3
+                assert im3_view(x+dx,y+dy) == value3
 
         # Check picklability
         do_pickle(im1)

@@ -196,6 +196,7 @@ class Image(with_metaclass(MetaImage, object)):
         setOrigin   Set a new position for the origin (x,y) = (0,0) of the image.
         im(x,y)     Get the value of a single pixel.
         setValue    Set the value of a single pixel.
+        addValue    Add to the value of a single pixel.
         resize      Resize the image to have a new bounds.
         fill        Fill the image with the same value in all pixels.
         setZero     Fill the image with zeros.
@@ -824,6 +825,18 @@ class Image(with_metaclass(MetaImage, object)):
         pos, value = galsim.utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True,
                                                      others=['value'])
         self.image.setValue(pos.x, pos.y, value)
+
+    def addValue(self, *args, **kwargs):
+        """Add some amount to the pixel value at given (x,y) position
+
+        The arguments here may be either (x, y, value) or (pos, value) where pos is a PositionI.
+        Or you can provide x, y, value as named kwargs.
+        """
+        if self.isconst:
+            raise ValueError("Cannot modify the values of an immutable Image")
+        pos, value = galsim.utilities.parse_pos_args(args, kwargs, 'x', 'y', integer=True,
+                                                     others=['value'])
+        self.image.setValue(pos.x, pos.y, value + self.image(pos.x,pos.y))
 
     def fill(self, value):
         """Set all pixel values to the given `value`
