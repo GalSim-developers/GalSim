@@ -126,9 +126,10 @@ def test_Image_basic():
         # Check basic constructor from ncol, nrow
         # Also test alternate name of image type: ImageD, ImageF, etc.
         image_type = eval("galsim.Image"+tchar[i]) # Use handy eval() mimics use of ImageSIFD
-        im2 = image_type(bounds)
+        im2 = image_type(bounds, init_value=23)
         im2_view = im2.view()
         im2_cview = im2.view(make_const=True)
+        im2_conj = im2.conjugate()
 
         assert im2_view.getXMin() == 1
         assert im2_view.getXMax() == ncol
@@ -174,6 +175,13 @@ def test_Image_basic():
                 assert im2(x,y) == value
                 assert im2_view(x,y) == value
                 assert im2_cview(x,y) == value
+                assert im1.conjugate()(x,y) == value
+                if tchar[i] == 'C':
+                    # complex conjugate is not a view into the original.
+                    assert im2_conj(x,y) == 23
+                    assert im2.conjugate()(x,y) == value
+                else:
+                    assert im2_conj(x,y) == value
 
                 value2 = 10*x + y
                 im1.setValue(x,y, value2)
@@ -1952,9 +1960,10 @@ def test_complex_image():
     im1 = galsim.Image(ncol, nrow, dtype=complex)
     im1_view = im1.view()
     im1_cview = im1.view(make_const=True)
-    im2 = galsim.ImageC(ncol, nrow)
+    im2 = galsim.ImageC(ncol, nrow, init_value=23)
     im2_view = im2.view()
     im2_cview = im2.view(make_const=True)
+    im2_conj = im2.conjugate()
 
     # Check various ways to set and get values
     for y in range(1,nrow+1):
@@ -1971,6 +1980,11 @@ def test_complex_image():
             assert im2(x,y) == value
             assert im2_view(x,y) == value
             assert im2_cview(x,y) == value
+            assert im1.conjugate()(x,y) == np.conjugate(value)
+
+            # complex conjugate is not a view into the original.
+            assert im2_conj(x,y) == 23
+            assert im2.conjugate()(x,y) == np.conjugate(value)
 
             value2 = 10*x + y + 20j*x + 2j*y
             im1.setValue(x,y, value2)
@@ -1994,6 +2008,8 @@ def test_complex_image():
             assert im2.imag(x,y) == value2.imag
             assert im2_view.imag(x,y) == value2.imag
             assert im2_cview.imag(x,y) == value2.imag
+            assert im1.conjugate()(x,y) == np.conjugate(value2)
+            assert im2.conjugate()(x,y) == np.conjugate(value2)
 
             rvalue3 = 12*x + y
             ivalue3 = x + 21*y
@@ -2008,6 +2024,8 @@ def test_complex_image():
             assert im2(x,y) == value3
             assert im2_view(x,y) == value3
             assert im2_cview(x,y) == value3
+            assert im1.conjugate()(x,y) == np.conjugate(value3)
+            assert im2.conjugate()(x,y) == np.conjugate(value3)
 
     # Check view of given data
     im3_view = galsim.Image((1+2j)*ref_array.astype(complex))

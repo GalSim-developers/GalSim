@@ -469,6 +469,8 @@ class Image(with_metaclass(MetaImage, object)):
     def real(self):
         """Return the real part of an image.
 
+        This is a property, not a function.  So im.real, not im.real().
+
         This works for real or complex.  For real images, it acts the same as view().
         """
         return Image(array=self.array.real, bounds=self.bounds, wcs=self.wcs)
@@ -477,10 +479,22 @@ class Image(with_metaclass(MetaImage, object)):
     def imag(self):
         """Return the imaginary part of an image.
 
+        This is a property, not a function.  So im.imag, not im.imag().
+
         This works for real or complex.  For real images, the returned array is read-only and
         all elements are 0.
         """
         return Image(array=self.array.imag, bounds=self.bounds, wcs=self.wcs)
+
+    def conjugate(self):
+        """Return the complex conjugate of an image.
+
+        This works for real or complex.  For real images, it acts the same as view().
+
+        Note that for complex images, this is not a conjugate view into the original image.
+        So changing the original image does not change the conjugate (or vice versa).
+        """
+        return Image(array=self.array.conjugate(), bounds=self.bounds, wcs=self.wcs)
 
     def copy(self):
         return Image(image=self.image.copy(), wcs=self.wcs)
