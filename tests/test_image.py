@@ -2254,6 +2254,60 @@ def test_complex_image_arith():
     np.testing.assert_almost_equal(image4.array, (9+13j)/25., decimal=12,
             err_msg="ImageC / ImageC is not correct")
 
+@timer
+def test_wrap():
+    """Test the image.wrap() function.
+    """
+    # Start with a fairly simple test where the image is 4 copies of the same data:
+    im_orig = galsim.Image([[ 11., 12., 13., 14., 11., 12., 13., 14. ],
+                            [ 21., 22., 23., 24., 21., 22., 23., 24. ],
+                            [ 31., 32., 33., 34., 31., 32., 33., 34. ],
+                            [ 41., 42., 43., 44., 41., 42., 43., 44. ],
+                            [ 11., 12., 13., 14., 11., 12., 13., 14. ],
+                            [ 21., 22., 23., 24., 21., 22., 23., 24. ],
+                            [ 31., 32., 33., 34., 31., 32., 33., 34. ],
+                            [ 41., 42., 43., 44., 41., 42., 43., 44. ]])
+    im = im_orig.copy()
+    b = galsim.BoundsI(1,4,1,4)
+    im_quad = im_orig[b]
+    im_wrap = im.wrap(b)
+    np.testing.assert_almost_equal(im_wrap.array, 4.*im_quad.array, 12,
+                                   "image.wrap() into first quadrant did not match expectation")
+
+    # The same thing should work no matter where the lower left corner is:
+    for xmin, ymin in ( (1,5), (5,1), (5,5), (2,3), (4,1) ):
+        b = galsim.BoundsI(xmin, xmin+3, ymin, ymin+3)
+        im_quad = im_orig[b]
+        im = im_orig.copy()
+        im_wrap = im.wrap(b)
+        np.testing.assert_almost_equal(im_wrap.array, 4.*im_quad.array, 12,
+                                       "image.wrap(%s) did not match expectation"%b)
+        np.testing.assert_array_equal(im_wrap.array, im[b].array,
+                                      "image.wrap(%s) did not return the right subimage")
+        im[b].fill(0)
+        np.testing.assert_array_equal(im_wrap.array, im[b].array,
+                                      "image.wrap(%s) did not return a view of the original")
+
+    # Now test where the subimage is not a simple fraction of the original, and all the
+    # sizes are different.
+    im = galsim.ImageD(17, 23, xmin=0, ymin=0)
+    b = galsim.BoundsI(7,9,11,18)
+    im_test = galsim.ImageD(b, init_value=0)
+    for i in range(17):
+        for j in range(23):
+            val = np.exp(i/7.3) + (j/12.9)**3  # Something randomly complicated...
+            im.setValue(i,j,val)
+            # Find the location in the sub-image for this point.
+            ii = (i-b.xmin) % (b.xmax-b.xmin+1) + b.xmin
+            jj = (j-b.ymin) % (b.ymax-b.ymin+1) + b.ymin
+            im_test.addValue(ii,jj,val)
+    im_wrap = im.wrap(b)
+    np.testing.assert_almost_equal(im_wrap.array, im_test.array, 12,
+                                   "image.wrap(%s) did not match expectation"%b)
+    np.testing.assert_array_equal(im_wrap.array, im[b].array,
+                                  "image.wrap(%s) did not return the right subimage")
+    np.testing.assert_equal(im_wrap.bounds, im[b].bounds,
+                            "image.wrap(%s) does not have the correct bounds")
 
 if __name__ == "__main__":
     test_Image_basic()
@@ -2291,3 +2345,4 @@ if __name__ == "__main__":
     test_copy()
     test_complex_image()
     test_complex_image_arith()
+    test_wrap()

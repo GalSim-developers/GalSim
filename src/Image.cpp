@@ -17,6 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
+//#define DEBUGLOGGING
+
 #include <sstream>
 #include <numeric>
 
@@ -252,6 +254,82 @@ ImageView<T> ImageView<T>::subImage(const Bounds<int>& bounds)
         + (bounds.getYMin() - this->_bounds.getYMin()) * this->_stride
         + (bounds.getXMin() - this->_bounds.getXMin()) * this->_step;
     return ImageView<T>(newdata,this->_owner,this->_step,this->_stride,bounds);
+}
+
+template <typename T>
+ImageView<T> ImageView<T>::wrap(const Bounds<int>& b)
+{
+    dbg<<"Start ImageView::wrap: b = "<<b<<std::endl;
+
+    const int i1 = b.getXMin()-this->_bounds.getXMin();
+    const int i2 = b.getXMax()-this->_bounds.getXMin()+1;  // +1 for "1 past the end"
+    const int j1 = b.getYMin()-this->_bounds.getYMin();
+    const int j2 = b.getYMax()-this->_bounds.getYMin()+1;
+    xdbg<<"i1,i2,j1,j2 = "<<i1<<','<<i2<<','<<j1<<','<<j2<<std::endl;
+    const int mwrap = i2-i1;
+    const int nwrap = j2-j1;
+    const int skip = this->getNSkip();
+    const int step = this->getStep();
+    const int stride = this->getStride();
+    const int m = this->getNCol();
+    const int n = this->getNRow();
+    T* ptr = this->getData();
+
+    // First wrap the rows into the range [j1,j2).
+    // Row 0 maps onto j2 - (j2 % nwrap)
+    int jj = j2 - (j2 % nwrap);
+    T* ptrwrap = ptr + jj * stride;
+    for (int j=0; j<n; ++j, ++jj, ptr+=skip, ptrwrap+=skip) {
+        // Loop jj and ptrwrap back if necessary.
+        if (jj == j2) {
+            jj = j1;
+            ptrwrap -= nwrap * stride;
+        }
+        // When we get here, we can just skip to j2 and keep going.
+        if (j == j1) {
+            assert(jj == j1);
+            assert(ptr == ptrwrap);
+            j = j2;
+            ptr += nwrap * stride;
+            if (j2 == n) break;
+        }
+        xdbg<<"Wrap row "<<j<<" onto row = "<<jj<<std::endl;
+        xdbg<<"ptrs = "<<ptr-this->getData()<<"  "<<ptrwrap-this->getData()<<std::endl;
+        // Add contents of row j to row jj
+        if (step == 1)
+            for(int i=0; i<m; ++i) *ptrwrap++ += *ptr++;
+        else
+            for(int i=0; i<m; ++i,ptr+=step,ptrwrap+=step) *ptrwrap += *ptr;
+    }
+
+    // Next wrap rows [j1,j2) into the columns [i1,i2).
+    ptr = getData() + j1*stride;
+    for (int j=j1; j<j2; ++j, ptr+=skip) {
+        int ii = i2 - (i2 % mwrap);
+        ptrwrap = ptr + ii*step;
+        xdbg<<"Wrap row "<<j<<" into columns ["<<i1<<','<<i2<<")\n";
+        xdbg<<"ptrs = "<<ptr-this->getData()<<"  "<<ptrwrap-this->getData()<<std::endl;
+        for (int i=0; i<m; ++i, ++ii, ptr+=step, ptrwrap+=step) {
+            // Loop ii and ptrwrap back if necessary.
+            if (ii == i2) {
+                ii = i1;
+                ptrwrap -= mwrap * step;
+            }
+            // When we get here, we can just skip to i2 and keep going.
+            if (i == i1) {
+                assert(ii == i1);
+                assert(ptr == ptrwrap);
+                i = i2;
+                ptr += mwrap * step;
+                if (i2 == m) break;
+            }
+            xxdbg<<i<<" "<<ii<<" "<<ptr-this->getData()<<" "<<ptrwrap-this->getData()<<std::endl;
+            // Add contents of pixel i to pixel ii
+            *ptrwrap += *ptr;
+        }
+    }
+
+    return subImage(b);
 }
 
 namespace {

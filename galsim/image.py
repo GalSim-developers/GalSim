@@ -200,6 +200,7 @@ class Image(with_metaclass(MetaImage, object)):
 
         view        Return a view of the image, possibly giving it a new scale or wcs.
         subImage    Return a view of a portion of the full image.
+        wrap        Wrap the values in a image onto a given subimage and return the subimage.
         shift       Shift the origin of the image by (dx,dy).
         setCenter   Set a new position for the center of the image.
         setOrigin   Set a new position for the origin (x,y) = (0,0) of the image.
@@ -615,6 +616,27 @@ class Image(with_metaclass(MetaImage, object)):
         else:
             raise TypeError("image[..] requires either 1 or 2 args")
 
+    def wrap(self, bounds):
+        """Wrap the values in a image onto a given subimage and return the subimage.
+
+        This would typically be used on a k-space image where you initiall draw a larger image
+        than you want for the FFT and then wrap it onto a smaller subset.  This will cause
+        aliasing of course, but this is often preferable to just using the smaller image
+        without wrapping.
+
+        Note that this routine modifies the original image (and not just the subimage onto which
+        it is wrapped), so if you want to keep the original pristine, you should call
+        `wrapped_image = image.copy().wrap(bounds)`.
+
+        @param bounds   The bounds of the subimage onto which to wrap the full image
+
+        @returns the subimage, image[bounds], after doing the wrapping.
+        """
+        if not isinstance(bounds, galsim.BoundsI):
+            raise TypeError("bounds must be a galsim.BoundsI instance")
+        subimage = self.image.wrap(bounds)
+        return Image(image=subimage, wcs=self.wcs)
+
     def __iter__(self):
         if self.iscomplex:
             # To enable the syntax re, im = obj.drawKImage(...), we let ImageC be iterable,
@@ -864,7 +886,7 @@ class Image(with_metaclass(MetaImage, object)):
         The arguments here may be either (x, y, value) or (pos, value) where pos is a PositionI.
         Or you can provide x, y, value as named kwargs.
 
-        This is equivalent to self[x,y] += rhs
+        This is equivalent to self[x,y] = rhs
         """
         if self.isconst:
             raise ValueError("Cannot modify the values of an immutable Image")
@@ -878,7 +900,7 @@ class Image(with_metaclass(MetaImage, object)):
         The arguments here may be either (x, y, value) or (pos, value) where pos is a PositionI.
         Or you can provide x, y, value as named kwargs.
 
-        This is equivalent to self[x,y] = rhs
+        This is equivalent to self[x,y] += rhs
         """
         if self.isconst:
             raise ValueError("Cannot modify the values of an immutable Image")

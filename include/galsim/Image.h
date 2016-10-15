@@ -497,6 +497,13 @@ namespace galsim {
         ImageView<T> subImage(const Bounds<int>& bounds);
 
         /**
+         *  @brief Wrap the full image onto a subset of the image and return that subset.
+         *
+         *  This is used to alias the data of a k-space image before doing the FFT to real space.
+         */
+        ImageView<T> wrap(const Bounds<int>& bounds);
+
+        /**
          *  @brief im[bounds] is another syntax for making a sub-image
          */
         ImageView<T> operator[](const Bounds<int>& bounds)
@@ -720,6 +727,14 @@ namespace galsim {
         ConstImageView<T> subImage(const Bounds<int>& bounds) const
         { return view().subImage(bounds); }
         //@}
+
+        /**
+         *  @brief Wrap the full image onto a subset of the image and return that subset.
+         *
+         *  This is used to alias the data of a k-space image before doing the FFT to real space.
+         */
+        ImageView<T> wrap(const Bounds<int>& bounds)
+        { return view().wrap(bounds); }
 
         //@{
         /**
