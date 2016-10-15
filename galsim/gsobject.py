@@ -1751,7 +1751,7 @@ class GSObject(object):
         # Check for obsolete parameters
         if dk is not None and scale is None: # pragma: no cover
             from .deprecated import depr
-            depr('dx', 1.1, 'scale')
+            depr('dk', 1.1, 'scale')
             scale = dk
         if wmult is not None: # pragma: no cover
             from .deprecated import depr
