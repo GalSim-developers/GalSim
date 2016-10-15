@@ -56,19 +56,6 @@ namespace galsim {
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 
-        void fillXValue(tmv::MatrixView<double> val,
-                        double x0, double dx, int izero,
-                        double y0, double dy, int jzero) const;
-        void fillXValue(tmv::MatrixView<double> val,
-                        double x0, double dx, double dxy,
-                        double y0, double dy, double dyx) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
-                        double kx0, double dkx, int izero,
-                        double ky0, double dky, int jzero) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
-                        double kx0, double dkx, double dkxy,
-                        double ky0, double dky, double dkyx) const;
-
         double maxK() const { return _maxk; }
         double stepK() const { return _stepk; }
         bool isAxisymmetric() const { return false; }
@@ -209,12 +196,6 @@ namespace galsim {
         double xValue(const Position<double>& p) const
         { throw SBError("SBInterpolatedKImage::xValue() is not implemented"); }
         std::complex<double> kValue(const Position<double>& p) const;
-        // void fillKValue(tmv::MatrixView<std::complex<double> > val,
-        //                 double kx0, double dkx, int izero,
-        //                 double ky0, double dky, int jzero) const;
-        // void fillKValue(tmv::MatrixView<std::complex<double> > val,
-        //                 double kx0, double dkx, double dkxy,
-        //                 double ky0, double dky, double dkyx) const;
 
         boost::shared_ptr<Interpolant> getKInterp() const;
 

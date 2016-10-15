@@ -72,19 +72,6 @@ namespace galsim {
                                 double kx0, double dkx, double dkxy,
                                 double ky0, double dky, double dkyx) const;
 
-        virtual void fillXValue(tmv::MatrixView<double> val,
-                                double x0, double dx, int izero,
-                                double y0, double dy, int jzero) const;
-        virtual void fillXValue(tmv::MatrixView<double> val,
-                                double x0, double dx, double dxy,
-                                double y0, double dy, double dyx) const;
-        virtual void fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                double kx0, double dkx, int izero,
-                                double ky0, double dky, int jzero) const;
-        virtual void fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                double kx0, double dkx, double dkxy,
-                                double ky0, double dky, double dkyx) const;
-
         virtual double maxK() const =0;
         virtual double stepK() const =0;
         virtual bool isAxisymmetric() const =0;
@@ -134,12 +121,6 @@ namespace galsim {
         void fillKImageQuadrant(ImageView<std::complex<double> > im,
                                 double kx0, double dkx, int m1,
                                 double ky0, double dky, int n1) const;
-        void fillXValueQuadrant(tmv::MatrixView<double> val,
-                                double x0, double dx, int nx1,
-                                double y0, double dy, int ny1) const;
-        void fillKValueQuadrant(tmv::MatrixView<std::complex<double> > val,
-                                double kx0, double dkx, int nkx1,
-                                double ky0, double dky, int nky1) const;
 
     private:
         // Copy constructor and op= are undefined.

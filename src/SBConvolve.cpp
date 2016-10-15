@@ -234,44 +234,6 @@ namespace galsim {
         }
     }
 
-    void SBConvolve::SBConvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                                double kx0, double dkx, int izero,
-                                                double ky0, double dky, int jzero) const
-    {
-        dbg<<"SBConvolve fillKValue\n";
-        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
-        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
-        ConstIter pptr = _plist.begin();
-        assert(pptr != _plist.end());
-        GetImpl(*pptr)->fillKValue(val,kx0,dkx,izero,ky0,dky,jzero);
-        if (++pptr != _plist.end()) {
-            tmv::Matrix<std::complex<double> > val2(val.colsize(),val.rowsize());
-            for (; pptr != _plist.end(); ++pptr) {
-                GetImpl(*pptr)->fillKValue(val2.view(),kx0,dkx,izero,ky0,dky,jzero);
-                val = ElemProd(val,val2);
-            }
-        }
-    }
-
-    void SBConvolve::SBConvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                                double kx0, double dkx, double dkxy,
-                                                double ky0, double dky, double dkyx) const
-    {
-        dbg<<"SBConvolve fillKValue\n";
-        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
-        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
-        ConstIter pptr = _plist.begin();
-        assert(pptr != _plist.end());
-        GetImpl(*pptr)->fillKValue(val,kx0,dkx,dkxy,ky0,dky,dkyx);
-        if (++pptr != _plist.end()) {
-            tmv::Matrix<std::complex<double> > val2(val.colsize(),val.rowsize());
-            for (; pptr != _plist.end(); ++pptr) {
-                GetImpl(*pptr)->fillKValue(val2.view(),kx0,dkx,dkxy,ky0,dky,dkyx);
-                val = ElemProd(val,val2);
-            }
-        }
-    }
-
     double SBConvolve::SBConvolveImpl::getPositiveFlux() const
     {
         if (_plist.empty()) return 0.;
@@ -397,28 +359,6 @@ namespace galsim {
         transform_pixel(im, Square<std::complex<double> >());
     }
 
-    void SBAutoConvolve::SBAutoConvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                                        double kx0, double dkx, int izero,
-                                                        double ky0, double dky, int jzero) const
-    {
-        dbg<<"SBAutoConvolve fillKValue\n";
-        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
-        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
-        GetImpl(_adaptee)->fillKValue(val,kx0,dkx,izero,ky0,dky,jzero);
-        val = ElemProd(val,val);
-    }
-
-    void SBAutoConvolve::SBAutoConvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                                        double kx0, double dkx, double dkxy,
-                                                        double ky0, double dky, double dkyx) const
-    {
-        dbg<<"SBAutoConvolve fillKValue\n";
-        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
-        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
-        GetImpl(_adaptee)->fillKValue(val,kx0,dkx,dkxy,ky0,dky,dkyx);
-        val = ElemProd(val,val);
-    }
-
     double SBAutoConvolve::SBAutoConvolveImpl::getPositiveFlux() const
     {
         double p = _adaptee.getPositiveFlux();
@@ -519,30 +459,6 @@ namespace galsim {
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         GetImpl(_adaptee)->fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx);
         transform_pixel(im, AbsSquare<std::complex<double> >());
-    }
-
-    void SBAutoCorrelate::SBAutoCorrelateImpl::fillKValue(
-        tmv::MatrixView<std::complex<double> > val,
-        double kx0, double dkx, int izero,
-        double ky0, double dky, int jzero) const
-    {
-        dbg<<"SBAutoCorrelate fillKValue\n";
-        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
-        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
-        GetImpl(_adaptee)->fillKValue(val,kx0,dkx,izero,ky0,dky,jzero);
-        val = ElemProd(val,val.conjugate());
-    }
-
-    void SBAutoCorrelate::SBAutoCorrelateImpl::fillKValue(
-        tmv::MatrixView<std::complex<double> > val,
-        double kx0, double dkx, double dkxy,
-        double ky0, double dky, double dkyx) const
-    {
-        dbg<<"SBCorrelate fillKValue\n";
-        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
-        dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
-        GetImpl(_adaptee)->fillKValue(val,kx0,dkx,dkxy,ky0,dky,dkyx);
-        val = ElemProd(val,val.conjugate());
     }
 
     double SBAutoCorrelate::SBAutoCorrelateImpl::getPositiveFlux() const
