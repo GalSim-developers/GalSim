@@ -57,14 +57,14 @@ def check_dep(f, *args, **kwargs):
     with warnings.catch_warnings(record=True) as w:
         res = f(*args, **kwargs)
     assert len(w) >= 1, "Calling %s did not raise a warning"%str(f)
-    print([ str(wk.message) for wk in w ])
+    #print([ str(wk.message) for wk in w ])
     assert issubclass(w[0].category, galsim.GalSimDeprecationWarning)
     return res
 
 def check_dep_tuple2(rhs):
     """Check that (x,y) = rhs raises a GalSimDeprecationWarning as a warning, but not an error.
     """
-    print('check dep tuple2: ',rhs)
+    #print('check dep tuple2: ',rhs)
     import warnings
     # Cause all warnings to always be triggered.
     # Important in case we want to trigger the same one twice in the test suite.
@@ -72,10 +72,10 @@ def check_dep_tuple2(rhs):
 
     with warnings.catch_warnings(record=True) as w:
         x,y = rhs
-    print('x,y = ',x,y)
-    print('w = ',w)
+    #print('x,y = ',x,y)
+    #print('w = ',w)
     assert len(w) >= 1, "Converting %s to a tuple did not raise a warning"%str(rhs)
-    print([ str(wk.message) for wk in w ])
+    #print([ str(wk.message) for wk in w ])
     assert issubclass(w[0].category, galsim.GalSimDeprecationWarning)
     return x,y
 
