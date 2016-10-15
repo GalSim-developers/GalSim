@@ -541,11 +541,21 @@ namespace galsim {
         double dk = kt.getDk();
         kt.clearCache();
 
-        tmv::Matrix<std::complex<double> > val(N/2+1,N+1);
+        ImageAlloc<std::complex<double> > im(N/2+1,N+1,0.);
+        fillKImage(im.view(),0.,dk,0,-N/2*dk,dk,N/2);
+        tmv::MatrixView<std::complex<double> > val(im.getData(),N/2+1,N+1,1,N/2+1,tmv::NonConj);
+
 #ifdef DEBUGLOGGING
-        val.setAllTo(999.);
+        tmv::Matrix<std::complex<double> > val2(N/2+1,N+1);
+        fillKValue(val2.view(),0.,dk,0,-N/2*dk,dk,N/2);
+        if (tmv::Norm(val2 - val) > 1.e-10 * tmv::Norm(val2)) {
+            dbg<<"fillKImage and fillKValue did something different."<<std::endl;
+            dbg<<"val = "<<val<<std::endl;
+            dbg<<"val2 = "<<val2<<std::endl;
+            dbg<<"diff = "<<(val-val2)<<std::endl;
+            throw SBError("fillKImage and fillKValue did something different");
+        }
 #endif
-        fillKValue(val.view(),0.,dk,0,-N/2*dk,dk,N/2);
 
         tmv::MatrixView<std::complex<double> > mkt(kt.getArray(),N/2+1,N,1,N/2+1,tmv::NonConj);
 #ifdef DEBUGLOGGING
