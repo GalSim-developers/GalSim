@@ -103,6 +103,8 @@ def test_Image_basic():
         np_array_type = np_types[i]
         print('array_type = ',array_type)
         print('np_array_type = ',np_array_type)
+
+        # Check basic constructor from ncol, nrow
         im1 = galsim.Image(ncol,nrow,dtype=array_type)
 
         # Check basic features of array built by ImageAlloc constructor
@@ -123,7 +125,20 @@ def test_Image_basic():
         assert im1.getBounds() == bounds
         assert im1.bounds == bounds
 
-        # Check basic constructor from ncol, nrow
+        # Adding on xmin, ymin allows you to set an origin other than (1,1)
+        im1a = galsim.Image(ncol, nrow, dtype=array_type, xmin=4, ymin=7)
+        im1b = galsim.Image(ncol, nrow, dtype=array_type, xmin=0, ymin=0)
+        assert im1a.getXMin() == 4
+        assert im1a.getXMax() == ncol+3
+        assert im1a.getYMin() == 7
+        assert im1a.getYMax() == nrow+6
+        assert im1a.bounds == galsim.BoundsI(4,ncol+3,7,nrow+6)
+        assert im1b.getXMin() == 0
+        assert im1b.getXMax() == ncol-1
+        assert im1b.getYMin() == 0
+        assert im1b.getYMax() == nrow-1
+        assert im1b.bounds == galsim.BoundsI(0,ncol-1,0,nrow-1)
+
         # Also test alternate name of image type: ImageD, ImageF, etc.
         image_type = eval("galsim.Image"+tchar[i]) # Use handy eval() mimics use of ImageSIFD
         im2 = image_type(bounds, init_value=23)
@@ -164,12 +179,16 @@ def test_Image_basic():
         for y in range(1,nrow+1):
             for x in range(1,ncol+1):
                 im1.setValue(x,y, 100 + 10*x + y)
+                im1a.setValue(x+3,y+6, 100 + 10*x + y)
+                im1b.setValue(x-1,y-1, 100 + 10*x + y)
                 im2_view.setValue(x,y, 100 + 10*x + y)
 
         for y in range(1,nrow+1):
             for x in range(1,ncol+1):
                 value = 100 + 10*x + y
                 assert im1(x,y) == value
+                assert im1a(x+3,y+6) == value
+                assert im1b(x-1,y-1) == value
                 assert im1.view()(x,y) == value
                 assert im1.view(make_const=True)(x,y) == value
                 assert im2(x,y) == value
@@ -228,7 +247,7 @@ def test_Image_basic():
             np.testing.assert_raises(RuntimeError,im1.view().setValue,ncol+1,nrow+1,1)
             np.testing.assert_raises(RuntimeError,im1.view().__call__,ncol+1,nrow+1)
 
-            # Also, setting values in some thing that should be const
+            # Also, setting values in something that should be const
             np.testing.assert_raises(ValueError,im1.view(make_const=True).setValue,1,1,1)
             np.testing.assert_raises(ValueError,im1.view(make_const=True).real.setValue,1,1,1)
             np.testing.assert_raises(ValueError,im1.view(make_const=True).imag.setValue,1,1,1)
@@ -242,10 +261,16 @@ def test_Image_basic():
         im3_view = galsim.Image(ref_array.astype(np_array_type))
         slice_array = large_array.astype(np_array_type)[::3,::2]
         im4_view = galsim.Image(slice_array)
+        im5_view = galsim.Image(ref_array.astype(np_array_type).tolist(), dtype=array_type)
+        im6_view = galsim.Image(ref_array.astype(np_array_type), xmin=4, ymin=7)
+        im7_view = galsim.Image(ref_array.astype(np_array_type), xmin=0, ymin=0)
         for y in range(1,nrow+1):
             for x in range(1,ncol+1):
                 assert im3_view(x,y) == 10*x+y
                 assert im4_view(x,y) == 10*x+y
+                assert im5_view(x,y) == 10*x+y
+                assert im6_view(x+3,y+6) == 10*x+y
+                assert im7_view(x-1,y-1) == 10*x+y
 
         # Check shift ops
         im1_view = im1.view() # View with old bounds

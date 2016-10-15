@@ -48,6 +48,9 @@ _galsim.ImageAlloc[alt_int32] = _galsim.ImageAllocI
 _galsim.ImageView[alt_int32] = _galsim.ImageViewI
 _galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
 
+_all_cpp_image_types = tuple(_galsim.ImageAlloc.values() + _galsim.ImageView.values() +
+                             _galsim.ConstImageView.values())
+
 # For more information regarding this rather unexpected behaviour for numpy.int32 types, see
 # the following (closed, marked "wontfix") ticket on the numpy issue tracker:
 # http://projects.scipy.org/numpy/ticket/1246
@@ -235,6 +238,8 @@ class Image(with_metaclass(MetaImage, object)):
         elif len(args) == 2:
             ncol = args[0]
             nrow = args[1]
+            xmin = kwargs.pop('xmin',1)
+            ymin = kwargs.pop('ymin',1)
         elif len(args) == 1:
             if isinstance(args[0], np.ndarray):
                 array = args[0]
@@ -243,8 +248,15 @@ class Image(with_metaclass(MetaImage, object)):
                 make_const = kwargs.pop('make_const',False)
             elif isinstance(args[0], galsim.BoundsI):
                 bounds = args[0]
-            else:
+            elif isinstance(args[0], (list, tuple)):
+                array = np.array(args[0])
+                xmin = kwargs.pop('xmin',1)
+                ymin = kwargs.pop('ymin',1)
+                make_const = kwargs.pop('make_const',False)
+            elif isinstance(args[0], (Image,) + _all_cpp_image_types):
                 image = args[0]
+            else:
+                raise TypeError("Unable to parse %s as an array, bounds, or image."%args[0])
         else:
             if 'array' in kwargs:
                 array = kwargs.pop('array')
@@ -329,6 +341,8 @@ class Image(with_metaclass(MetaImage, object)):
             except Exception:
                 raise TypeError("Cannot parse ncol, nrow as integers")
             self.image = _galsim.ImageAlloc[self.dtype](ncol, nrow)
+            if xmin != 1 or ymin != 1:
+                self.image.shift(galsim.PositionI(xmin-1,ymin-1))
             if init_value is not None:
                 self.image.fill(init_value)
         elif bounds is not None:
