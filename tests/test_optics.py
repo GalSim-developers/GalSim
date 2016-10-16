@@ -685,6 +685,49 @@ def test_OpticalPSF_lamdiam():
 
 
 @timer
+def test_OpticalPSF_pupil_plane_size():
+    """Reproduce Chris Davis's test failure in (#752), but using a smaller, faster array."""
+    im = galsim.Image(512, 512)
+    x = y = np.arange(512) - 256
+    y, x = np.meshgrid(y, x)
+    im.array[x**2+y**2 < 230**2] = 1.0
+    # The following still fails (uses deprecated optics framework):
+    # galsim.optics.OpticalPSF(aberrations=[0,0,0,0,0.5], diam=4.0, lam=700.0, pupil_plane_im=im)
+    # But using the new framework, should work.
+    galsim.OpticalPSF(aberrations=[0,0,0,0,0.5], diam=4.0, lam=700.0, pupil_plane_im=im)
+
+
+@timer
+def test_Zernike_orthonormality():
+    """ Zernike optical screens *should* be normalized such that
+    \int_{unit disc} Z(n1, m1) Z(n2, m2) dA = \pi in unit disc coordinates, or alternatively
+    = aperture area if radial coordinate is not normalized (i.e., diam != 2).
+    """
+    jmax = 20  # Going up to 20 takes about ~1 sec on my laptop.
+    diam = 4.0
+    pad_factor = 3.0  # Increasing pad_factor eliminates test failures caused by pixelization.
+    aper = galsim.Aperture(diam=diam, pad_factor=pad_factor)
+    area = np.pi*(diam/2)**2
+    for j1 in range(1, jmax+1):
+        screen1 = galsim.OpticalScreen(aberrations=[0]*(j1+1)+[1])
+        wf1 = screen1.wavefront(aper) / 500.0  # nm -> waves
+        for j2 in range(j1, jmax+1):
+            screen2 = galsim.OpticalScreen(aberrations=[0]*(j2+1)+[1])
+            wf2 = screen2.wavefront(aper) / 500.0
+            integral = np.dot(wf1, wf2) * aper.pupil_plane_scale**2
+            if j1 == j2:
+                # Only passes at ~1% level because of pixelization.
+                np.testing.assert_allclose(
+                        integral, area, rtol=1e-2,
+                        err_msg="Orthonormality failed for (j1,j2) = ({0},{1})".format(j1, j2))
+            else:
+                # Only passes at ~1% level because of pixelization.
+                np.testing.assert_allclose(
+                        integral, 0.0, atol=area*1e-2,
+                        err_msg="Orthonormality failed for (j1,j2) = ({0},{1})".format(j1, j2))
+
+
+@timer
 def test_ne():
     # Use some very forgiving settings to speed up this test.  We're not actually going to draw
     # any images (other than internally the PSF), so should be okay.
@@ -721,18 +764,6 @@ def test_ne():
     all_obj_diff(objs)
 
 
-@timer
-def test_OpticalPSF_pupil_plane_size():
-    """Reproduce Chris Davis's test failure in (#752), but using a smaller, faster array."""
-    im = galsim.Image(512, 512)
-    x = y = np.arange(512) - 256
-    y, x = np.meshgrid(y, x)
-    im.array[x**2+y**2 < 230**2] = 1.0
-    # The following still fails (uses deprecated optics framework):
-    # galsim.optics.OpticalPSF(aberrations=[0,0,0,0,0.5], diam=4.0, lam=700.0, pupil_plane_im=im)
-    # But using the new framework, should work.
-    galsim.OpticalPSF(aberrations=[0,0,0,0,0.5], diam=4.0, lam=700.0, pupil_plane_im=im)
-
 
 if __name__ == "__main__":
     test_OpticalPSF_flux()
@@ -744,4 +775,5 @@ if __name__ == "__main__":
     test_OpticalPSF_pupil_plane()
     test_OpticalPSF_lamdiam()
     test_OpticalPSF_pupil_plane_size()
+    test_Zernike_orthonormality()
     test_ne()
