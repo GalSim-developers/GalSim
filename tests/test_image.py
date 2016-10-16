@@ -18,7 +18,7 @@
 
 """Unit tests for the Image class.
 
-These tests use four externally generated (IDL + astrolib FITS writing tools) reference images for
+These tests use six externally generated (IDL + astrolib FITS writing tools) reference images for
 the Image unit tests.  These are in tests/data/.
 
 Each image is 5x7 pixels^2 and if each pixel is labelled (x, y) then each pixel value is 10*x + y.
@@ -49,6 +49,7 @@ import sys
 import numpy as np
 
 from galsim_test_helpers import *
+from distutils.version import LooseVersion
 
 try:
     import galsim
@@ -92,7 +93,7 @@ datadir = os.path.join(".", "Image_comparison_images")
 def test_Image_basic():
     """Test that all supported types perform basic Image operations correctly
     """
-    # Do all 6 types here, rather than just the 4 real types.  i.e. Test the aliases.
+    # Do all 8 types here, rather than just the 6 real types.  i.e. Test the aliases.
     for i in range(len(types)):
 
         # Check basic constructor from ncol, nrow
@@ -224,7 +225,7 @@ def test_Image_basic():
 
 @timer
 def test_Image_FITS_IO():
-    """Test that all four FITS reference images are correctly read in by both PyFITS and our Image
+    """Test that all six FITS reference images are correctly read in by both PyFITS and our Image
     wrappers.
     """
     for i in range(ntypes):
@@ -379,7 +380,7 @@ def test_Image_FITS_IO():
 
 @timer
 def test_Image_MultiFITS_IO():
-    """Test that all four FITS reference images are correctly read in by both PyFITS and our Image
+    """Test that all six FITS reference images are correctly read in by both PyFITS and our Image
     wrappers.
     """
     for i in range(ntypes):
@@ -599,7 +600,7 @@ def test_Image_MultiFITS_IO():
 
 @timer
 def test_Image_CubeFITS_IO():
-    """Test that all four FITS reference images are correctly read in by both PyFITS and our Image
+    """Test that all six FITS reference images are correctly read in by both PyFITS and our Image
     wrappers.
     """
     for i in range(ntypes):
@@ -649,7 +650,17 @@ def test_Image_CubeFITS_IO():
         # Check pyfits read for sanity
         with pyfits.open(test_cube_file) as fits:
             test_array = fits[0].data
-        assert test_array.dtype.type == types[i], "%s != %s" % (test_array.dtype.type, types[i])
+            
+        # If astropy version < 1.1.0, uint fits files will be read wrongly, so skip this test
+        # note that all other tests will pass since they will be read as float32s instead
+        wrong_type_error_msg = "%s != %s" % (test_array.dtype.type, types[i])
+        if (types[i] == "uint16" or types[i] == "uint32"): # Handle uint cases
+            import astropy  # Just b/c someone imported it, doesn't mean we can see it yet.
+            if LooseVersion(astropy.__version__) >= LooseVersion('1.1.0'):
+                assert test_array.dtype.type == types[i], wrong_type_error_msg
+        else:
+            assert test_array.dtype.type == types[i], wrong_type_error_msg
+                
         for k in range(nimages):
             np.testing.assert_array_equal((ref_array+k).astype(types[i]), test_array[k,:,:],
                     err_msg="PyFITS failing to read cube file.")
@@ -791,7 +802,7 @@ def test_Image_CubeFITS_IO():
 
 @timer
 def test_Image_array_view():
-    """Test that all four types of supported Images correctly provide a view on an input array.
+    """Test that all six types of supported Images correctly provide a view on an input array.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -809,7 +820,7 @@ def test_Image_array_view():
 
 @timer
 def test_Image_binary_add():
-    """Test that all four types of supported Images add correctly.
+    """Test that all six types of supported Images add correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -855,7 +866,7 @@ def test_Image_binary_add():
 
 @timer
 def test_Image_binary_subtract():
-    """Test that all four types of supported Images subtract correctly.
+    """Test that all six types of supported Images subtract correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -886,7 +897,7 @@ def test_Image_binary_subtract():
 
 @timer
 def test_Image_binary_multiply():
-    """Test that all four types of supported Images multiply correctly.
+    """Test that all six types of supported Images multiply correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -917,7 +928,7 @@ def test_Image_binary_multiply():
 
 @timer
 def test_Image_binary_divide():
-    """Test that all four types of supported Images divide correctly.
+    """Test that all six types of supported Images divide correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -949,7 +960,7 @@ def test_Image_binary_divide():
 
 @timer
 def test_Image_binary_scalar_add():
-    """Test that all four types of supported Images add scalars correctly.
+    """Test that all six types of supported Images add scalars correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -977,7 +988,7 @@ def test_Image_binary_scalar_add():
 
 @timer
 def test_Image_binary_scalar_subtract():
-    """Test that all four types of supported Images binary scalar subtract correctly.
+    """Test that all six types of supported Images binary scalar subtract correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -997,7 +1008,7 @@ def test_Image_binary_scalar_subtract():
 
 @timer
 def test_Image_binary_scalar_multiply():
-    """Test that all four types of supported Images binary scalar multiply correctly.
+    """Test that all six types of supported Images binary scalar multiply correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1025,7 +1036,7 @@ def test_Image_binary_scalar_multiply():
 
 @timer
 def test_Image_binary_scalar_divide():
-    """Test that all four types of supported Images binary scalar divide correctly.
+    """Test that all six types of supported Images binary scalar divide correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1045,7 +1056,7 @@ def test_Image_binary_scalar_divide():
 
 @timer
 def test_Image_binary_scalar_pow():
-    """Test that all four types of supported Images can be raised to a power (scalar) correctly.
+    """Test that all six types of supported Images can be raised to a power (scalar) correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1085,7 +1096,7 @@ def test_Image_binary_scalar_pow():
 
 @timer
 def test_Image_inplace_add():
-    """Test that all four types of supported Images inplace add correctly.
+    """Test that all six types of supported Images inplace add correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1115,7 +1126,7 @@ def test_Image_inplace_add():
 
 @timer
 def test_Image_inplace_subtract():
-    """Test that all four types of supported Images inplace subtract correctly.
+    """Test that all six types of supported Images inplace subtract correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1145,7 +1156,7 @@ def test_Image_inplace_subtract():
 
 @timer
 def test_Image_inplace_multiply():
-    """Test that all four types of supported Images inplace multiply correctly.
+    """Test that all six types of supported Images inplace multiply correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1175,7 +1186,7 @@ def test_Image_inplace_multiply():
 
 @timer
 def test_Image_inplace_divide():
-    """Test that all four types of supported Images inplace divide correctly.
+    """Test that all six types of supported Images inplace divide correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1205,7 +1216,7 @@ def test_Image_inplace_divide():
 
 @timer
 def test_Image_inplace_scalar_add():
-    """Test that all four types of supported Images inplace scalar add correctly.
+    """Test that all six types of supported Images inplace scalar add correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1225,7 +1236,7 @@ def test_Image_inplace_scalar_add():
 
 @timer
 def test_Image_inplace_scalar_subtract():
-    """Test that all four types of supported Images inplace scalar subtract correctly.
+    """Test that all six types of supported Images inplace scalar subtract correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1245,7 +1256,7 @@ def test_Image_inplace_scalar_subtract():
 
 @timer
 def test_Image_inplace_scalar_multiply():
-    """Test that all four types of supported Images inplace scalar multiply correctly.
+    """Test that all six types of supported Images inplace scalar multiply correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1267,7 +1278,7 @@ def test_Image_inplace_scalar_multiply():
 
 @timer
 def test_Image_inplace_scalar_divide():
-    """Test that all four types of supported Images inplace scalar divide correctly.
+    """Test that all six types of supported Images inplace scalar divide correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1289,7 +1300,7 @@ def test_Image_inplace_scalar_divide():
 
 @timer
 def test_Image_inplace_scalar_pow():
-    """Test that all four types of supported Images can be raised (in-place) to a scalar correctly.
+    """Test that all six types of supported Images can be raised (in-place) to a scalar correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1802,7 +1813,7 @@ if __name__ == "__main__":
     test_Image_basic()
     test_Image_FITS_IO()
     test_Image_MultiFITS_IO()
-    #test_Image_CubeFITS_IO()
+    test_Image_CubeFITS_IO()
     test_Image_array_view()
     test_Image_binary_add()
     test_Image_binary_subtract()
