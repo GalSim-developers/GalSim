@@ -1,6 +1,6 @@
 This README file describes the python code used to process AEGIS HST images in V and I bands to produce multi-band postage stamp images of galaxies. The selection procedure is explained in a separate document in devel/external/AEGIS/document/main.tex; a rendered version of the document may be viewed at https://www.overleaf.com/read/krbzscc. 
 The final products are similar to the COSMOS Real Galaxy training sample.
-The script can be implemented to analyze any HST field data in multiple filters. It takes HST images in multiple bands, identifies objects with SExtractor, classifies those objects as stars and galaxies. Stars are then used to measure the PSF. Galaxies that satisfy certain criteria (see Section 3.8 in document) are selected for the main catalog. Separate catalogs are made for different bands. A postage stamp image is drawn for every galaxy in the catalog in each band. Each galaxy image will also have a postage stamp of its PSF in each band. The output of the code can be opened using the RealGalaxyCatalog and COSMOSCatalog module of GalSim.
+The script can be implemented to analyze any HST field data in multiple filters. It takes HST images in multiple bands, identifies objects with SExtractor, classifies those objects as stars and galaxies. Stars are then used to measure the PSF. Galaxies that satisfy certain criteria (see Section 3.8 in document) are selected for the main catalog. Separate catalogs are made for different bands. A postage stamp image is drawn for every galaxy in the catalog in each band. Each galaxy image will also have a postage stamp of its PSF in each band. The output of the code can be opened using the RealGalaxyCatalog and COSMOSCatalog classes of GalSim.
 
 ##Requirements:
 ### Input Files:
@@ -36,13 +36,13 @@ The entire pipeline contains 6 scripts that are to be run in the order:
 
 Common functions that are called multiple times are saved in functions.py
 
- Additional scripts are also included which were used to run the above scripts through batch jobs , for faster computation. Note: the script is written to be run on SLAC batch farm with LSF batch system. You might have to tweak it depending on how you run.
+ Additional scripts are also included which were used to run the above scripts through batch jobs, for faster computation. Note: the script is written to be run on SLAC batch farm with LSF batch system. You might have to tweak it depending on how you run.
 
  1. additional.py : Additional code to get list of seg ids, coadd images in multiple bands and convert weight map to rms map.
  2. run_batch_first.py : Script to run get_objects.py over all segments.
  3. run_batch_second.py : Script to run get_psf.py over all segments.
  4. run_batch_third.py : Script to run run_clean_seg.py  over all segments.
- 5. run_clean_seg.py : Script tp run clean_pstamp.py over all postage stamps for a given segment
+ 5. run_clean_seg.py : Script to run clean_pstamp.py over all postage stamps for a given segment
  6. run_batch_third_again.py : Script to run clean_pstamp.py over all postage stamps whose jobs failed.
  7. run_batch_fourth.py : Script to run get_cat_seg.py  over all segments.
 
