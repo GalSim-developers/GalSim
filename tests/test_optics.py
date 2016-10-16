@@ -726,6 +726,9 @@ def test_Zernike_orthonormality():
                         integral, 0.0, atol=area*1e-2,
                         err_msg="Orthonormality failed for (j1,j2) = ({0},{1})".format(j1, j2))
 
+    do_pickle(screen1)
+    do_pickle(screen1, lambda x: tuple(x.wavefront(aper)))
+
     # Repeat for Annular Zernikes
     jmax = 14  # Going up to 14 annular Zernikes takes about ~1 sec on my laptop
     obscuration = 0.3
@@ -787,7 +790,6 @@ def test_ne():
                  galsim.OpticalPSF(lam_over_diam=1.0, pupil_plane_im=pupil_plane_im, gsparams=gsp1,
                                    pupil_angle=10*galsim.degrees, suppress_warning=True)]
     all_obj_diff(objs)
-
 
 
 if __name__ == "__main__":
