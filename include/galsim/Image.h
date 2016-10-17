@@ -501,7 +501,7 @@ namespace galsim {
          *
          *  This is used to alias the data of a k-space image before doing the FFT to real space.
          */
-        ImageView<T> wrap(const Bounds<int>& bounds);
+        ImageView<T> wrap(const Bounds<int>& bounds, bool hermx, bool hermy);
 
         /**
          *  @brief im[bounds] is another syntax for making a sub-image
@@ -733,8 +733,8 @@ namespace galsim {
          *
          *  This is used to alias the data of a k-space image before doing the FFT to real space.
          */
-        ImageView<T> wrap(const Bounds<int>& bounds)
-        { return view().wrap(bounds); }
+        ImageView<T> wrap(const Bounds<int>& bounds, bool hermx, bool hermy)
+        { return view().wrap(bounds, hermx, hermy); }
 
         //@{
         /**

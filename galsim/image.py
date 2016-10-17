@@ -616,7 +616,7 @@ class Image(with_metaclass(MetaImage, object)):
         else:
             raise TypeError("image[..] requires either 1 or 2 args")
 
-    def wrap(self, bounds):
+    def wrap(self, bounds, hermitian=False):
         """Wrap the values in a image onto a given subimage and return the subimage.
 
         This would typically be used on a k-space image where you initiall draw a larger image
@@ -624,17 +624,66 @@ class Image(with_metaclass(MetaImage, object)):
         aliasing of course, but this is often preferable to just using the smaller image
         without wrapping.
 
+        For complex images of FFTs, one often only stores half the image plane with the
+        implicit understanding that the funciton is Hermitian, so im(-x,-y) == im(x,y).conjugate().
+        In this case, the wrapping needs to work slightly differently, so you can specify
+        that your image is implicitly Hermitian with the `hermitian` argument.  Options are:
+
+            hermitian=False  (default) Normal non-Hermitian image.
+            hermitian='x'    Only x>=0 values are stored with x<0 values being implicitly Hermitian.
+                             In this case im.bounds.xmin and bounds.xmin must be 0.
+            hermitian='y'    Only y>=0 values are stored with y<0 values being implicitly Hermitian.
+                             In this case im.bounds.ymin and bounds.ymin must be 0.
+
+        Also, in the two Hermitian cases, the direction that is not implicitly Hermitian must be
+        symmetric in the image's bounds.  The wrap bounds must be almost symmetric, but missing
+        the most negative value.  For example,
+
+            >>> N = 100
+            >>> im_full = galsim.ImageC(bounds=galsim.BoundsI(-N/2,N/2,0,N/2), scale=dk)
+            >>> # ... fill with im[i,j] = FT(kx=i*dk, ky=j*dk)
+            >>> N2 = 64
+            >>> im_wrap = im_full.wrap(galsim.BoundsI(-N2/2+1,N2/2,0,N/2, hermitian='y')
+
+        This sets up im_wrap to be the properly Hermitian version of the data appropriate for
+        passing to an FFT.
+
         Note that this routine modifies the original image (and not just the subimage onto which
         it is wrapped), so if you want to keep the original pristine, you should call
         `wrapped_image = image.copy().wrap(bounds)`.
 
-        @param bounds   The bounds of the subimage onto which to wrap the full image
+        @param bounds       The bounds of the subimage onto which to wrap the full image.
+        @param hermitian    Whether the image is implicitly Hermitian and if so, whether it is the
+                            x or y values that are not stored.  [default: False]
 
         @returns the subimage, image[bounds], after doing the wrapping.
         """
         if not isinstance(bounds, galsim.BoundsI):
             raise TypeError("bounds must be a galsim.BoundsI instance")
-        subimage = self.image.wrap(bounds)
+        if not hermitian:
+            subimage = self.image.wrap(bounds, False, False)
+        elif hermitian == 'x':
+            if self.bounds.xmin != 0:
+                raise ValueError("hermitian == 'x' requires self.bounds.xmin == 0")
+            if bounds.xmin != 0:
+                raise ValueError("hermitian == 'x' requires bounds.xmin == 0")
+            if self.bounds.ymin != -self.bounds.ymax:
+                raise ValueError("hermitian == 'x' requires self.bounds.ymin == -self.bounds.ymax")
+            if bounds.ymin != -bounds.ymax+1:
+                raise ValueError("hermitian == 'x' requires bounds.ymin == -bounds.ymax+1")
+            subimage = self.image.wrap(bounds, True, False)
+        elif hermitian == 'y':
+            if self.bounds.ymin != 0:
+                raise ValueError("hermitian == 'y' requires self.bounds.ymin == 0")
+            if bounds.ymin != 0:
+                raise ValueError("hermitian == 'y' requires bounds.ymin == 0")
+            if self.bounds.xmin != -self.bounds.xmax:
+                raise ValueError("hermitian == 'y' requires self.bounds.xmin == -self.bounds.xmax")
+            if bounds.xmin != -bounds.xmax+1:
+                raise ValueError("hermitian == 'y' requires bounds.xmin == -bounds.xmax+1")
+            subimage = self.image.wrap(bounds, False, True)
+        else:
+            raise ValueError("Invalid value for hermitian: %s"%hermitian)
         return Image(image=subimage, wcs=self.wcs)
 
     def __iter__(self):

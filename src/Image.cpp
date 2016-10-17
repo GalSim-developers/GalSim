@@ -256,10 +256,206 @@ ImageView<T> ImageView<T>::subImage(const Bounds<int>& bounds)
     return ImageView<T>(newdata,this->_owner,this->_step,this->_stride,bounds);
 }
 
+// A helper function so we can write CONJ(x) for real or complex.
 template <typename T>
-ImageView<T> ImageView<T>::wrap(const Bounds<int>& b)
+struct ConjHelper
+{ static T conj(const T& x) { return x; } };
+template <typename T>
+struct ConjHelper<std::complex<T> >
+{ static std::complex<T> conj(const std::complex<T>& x) { return std::conj(x); } };
+template <typename T>
+T CONJ(const T& x) { return ConjHelper<T>::conj(x); }
+
+
+// Some helper functions to make the logic in the below wrap function easier to follow
+
+// Add row j to row jj
+// ptr and ptrwrap should be at the start of the respective rows.
+// At the end of this function, each will be one past the end of the row.
+template <typename T>
+void wrap_row(T*& ptr, T*& ptrwrap, int m, int step)
 {
+    // Add contents of row j to row jj
+    if (step == 1)
+        for(int i=0; i<m; ++i) *ptrwrap++ += *ptr++;
+    else
+        for(int i=0; i<m; ++i,ptr+=step,ptrwrap+=step) *ptrwrap += *ptr;
+}
+
+template <typename T>
+void wrap_cols(T*& ptr, int m, int mwrap, int i1, int i2, int step)
+{
+    int ii = i2 - (i2 % mwrap);
+    if (ii == i2) ii = i1;
+    T* ptrwrap = ptr + ii*step;
+    // First do i in [0,i1).
+    for(int i=0; i<i1;) {
+        xdbg<<"Start loop at i = "<<i<<std::endl;
+        // How many do we do before looping back
+        int k = i2-ii;
+        xdbg<<"k = "<<k<<std::endl;
+        if (step == 1)
+            for (; k; --k, ++i) *ptrwrap++ += *ptr++;
+        else
+            for (; k; --k, ++i, ptr+=step, ptrwrap+=step) *ptrwrap += *ptr;
+        ii = i1;
+        ptrwrap -= mwrap*step;
+    }
+    // Skip ahead to do i in [i2,m)
+    assert(ii == i1);
+    assert(ptr == ptrwrap);
+    ptr += mwrap * step;
+    for(int i=i2; i<m;) {
+        xdbg<<"Start loop at i = "<<i<<std::endl;
+        // How many do we do before looping back or ending.
+        int k = std::min(m-i, mwrap);
+        xdbg<<"k = "<<k<<std::endl;
+        if (step == 1)
+            for (; k; --k, ++i) *ptrwrap++ += *ptr++;
+        else
+            for (; k; --k, ++i, ptr+=step, ptrwrap+=step) *ptrwrap += *ptr;
+        ptrwrap -= mwrap*step;
+    }
+}
+
+// Add conjugate of row j to row jj
+// ptrwrap should be at the end of the conjugate row, not the beginning.
+// At the end of this function, ptr will be one past the end of the row, and ptrskip will be
+// one before the beginning.
+template <typename T>
+void wrap_row_conj(T*& ptr, T*& ptrwrap, int m, int step)
+{
+    if (step == 1)
+        for(int i=0; i<m; ++i) *ptrwrap-- += CONJ(*ptr++);
+    else
+        for(int i=0; i<m; ++i,ptr+=step,ptrwrap-=step) *ptrwrap += CONJ(*ptr);
+}
+
+// If j == jj, this needs to be slightly different.
+template <typename T>
+void wrap_row_selfconj(T*& ptr, T*& ptrwrap, int m, int step)
+{
+    if (step == 1)
+        for(int i=0; i<(m+1)/2; ++i,++ptr,--ptrwrap) {
+            *ptrwrap += CONJ(*ptr);
+            *ptr = CONJ(*ptrwrap);
+        }
+    else
+        for(int i=0; i<(m+1)/2; ++i,ptr+=step,ptrwrap-=step) {
+            *ptrwrap += CONJ(*ptr);
+            *ptr = CONJ(*ptrwrap);
+        }
+    ptr += (m-(m+1)/2) * step;
+    ptrwrap -= (m-(m+1)/2) * step;
+}
+
+// Wrap two half-rows where one has the conjugate information for the other.
+// ptr1 and ptr2 should start at the the pointer for i=mwrap within the two rows.
+// At the end of this function, they will each be one past the end of the rows.
+template <typename T>
+void wrap_hermx_cols_pair(T*& ptr1, T*& ptr2, int m, int mwrap, int step)
+{
+    // We start the wrapping with col N/2 (aka i2-1), which needs to wrap its conjugate
+    // (-N/2) onto itself.
+    // Then as i increases, we decrease ii and continue wrapping conjugates.
+    // When we get to something that wraps onto col 0 (the first one will correspond to
+    // i=-N, which is the conjugate of what is stored at i=N in the other row), we need to
+    // repeat with a regular non-conjugate wrapping for the positive col (e.g. i=N,j=j itself)
+    // which also wraps onto col 0.
+    // Then we run ii back up wrapping normally, until we get to N/2 again (aka i2-1).
+    // The negative col will wrap normally onto -N/2, which means we need to also do a
+    // conjugate wrapping onto N/2.
+
+    T* ptr1wrap = ptr1;
+    T* ptr2wrap = ptr2;
+    int i = mwrap-1;
+    while (1) {
+        xdbg<<"Start loop at i = "<<i<<std::endl;
+        // Do the first column with a temporary to avoid overwriting.
+        T temp = *ptr1;
+        *ptr1wrap += CONJ(*ptr2);
+        *ptr2wrap += CONJ(temp);
+        ptr1 += step;
+        ptr2 += step;
+        ptr1wrap -= step;
+        ptr2wrap -= step;
+        ++i;
+        // Progress as normal (starting at i=mwrap for the first loop).
+        int k = std::min(m-i, mwrap-2);
+        xdbg<<"k = "<<k<<std::endl;
+        if (step == 1)
+            for (; k; --k, ++i) {
+                *ptr1wrap-- += CONJ(*ptr2++);
+                *ptr2wrap-- += CONJ(*ptr1++);
+            }
+        else
+            for (; k; --k, ++i, ptr1+=step, ptr2+=step, ptr1wrap-=step, ptr2wrap-=step) {
+                *ptr1wrap += CONJ(*ptr2);
+                *ptr2wrap += CONJ(*ptr1);
+            }
+        xdbg<<"i = "<<i<<std::endl;
+        if (i == m) break;
+        // On the last one, don't increment ptrs, since we need to repeat with the non-conj add.
+        *ptr1wrap += CONJ(*ptr2);
+        *ptr2wrap += CONJ(*ptr1);
+        k = std::min(m-i, mwrap-1);
+        xdbg<<"k = "<<k<<std::endl;
+        if (step == 1)
+            for (; k; --k, ++i) {
+                *ptr1wrap++ += *ptr1++;
+                *ptr2wrap++ += *ptr2++;
+            }
+        else
+            for (; k; --k, ++i, ptr1+=step, ptr2+=step, ptr1wrap+=step, ptr2wrap+=step) {
+                *ptr1wrap += *ptr1;
+                *ptr2wrap += *ptr2;
+            }
+        xdbg<<"i = "<<i<<std::endl;
+        if (i == m) break;
+        *ptr1wrap += *ptr1;
+        *ptr2wrap += *ptr2;
+    }
+}
+
+// Wrap a single half-row that is its own conjugate (i.e. j==0)
+template <typename T>
+void wrap_hermx_cols(T*& ptr, int m, int mwrap, int step)
+{
+    T* ptrwrap = ptr;
+    int i = mwrap-1;
+    while (1) {
+        xdbg<<"Start loop at i = "<<i<<std::endl;
+        int k = std::min(m-i, mwrap-1);
+        xdbg<<"k = "<<k<<std::endl;
+        if (step == 1)
+            for (; k; --k, ++i) *ptrwrap-- += CONJ(*ptr++);
+        else
+            for (; k; --k, ++i, ptr+=step, ptrwrap-=step) *ptrwrap += CONJ(*ptr);
+        xdbg<<"i = "<<i<<std::endl;
+        if (i == m) break;
+        *ptrwrap += CONJ(*ptr);
+        k = std::min(m-i, mwrap-1);
+        xdbg<<"k = "<<k<<std::endl;
+        if (step == 1)
+            for (; k; --k, ++i) *ptrwrap++ += *ptr++;
+        else
+            for (; k; --k, ++i, ptr+=step, ptrwrap+=step) *ptrwrap += *ptr;
+        xdbg<<"i = "<<i<<std::endl;
+        if (i == m) break;
+        *ptrwrap += *ptr;
+    }
+}
+
+template <typename T>
+ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
+{
+    // Get this at the start to check for invalid bounds and raise the exception before
+    // possibly writing data past the edge of the image.
+    ImageView<T> ret = subImage(b);
+
     dbg<<"Start ImageView::wrap: b = "<<b<<std::endl;
+    dbg<<"self bounds = "<<this->_bounds<<std::endl;
+    set_verbose(2);
 
     const int i1 = b.getXMin()-this->_bounds.getXMin();
     const int i2 = b.getXMax()-this->_bounds.getXMin()+1;  // +1 for "1 past the end"
@@ -275,61 +471,143 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b)
     const int n = this->getNRow();
     T* ptr = this->getData();
 
-    // First wrap the rows into the range [j1,j2).
-    // Row 0 maps onto j2 - (j2 % nwrap)
-    int jj = j2 - (j2 % nwrap);
-    T* ptrwrap = ptr + jj * stride;
-    for (int j=0; j<n; ++j, ++jj, ptr+=skip, ptrwrap+=skip) {
-        // Loop jj and ptrwrap back if necessary.
-        if (jj == j2) {
-            jj = j1;
-            ptrwrap -= nwrap * stride;
+    if (hermx) {
+        // In the hermitian x case, we need to wrap the columns first, otherwise the bookkeeping
+        // becomes difficult.
+        //
+        // Each row has a corresponding row that stores the conjugate information for the
+        // negative x values that are not stored.  We do these pairs of rows together.
+        //
+        // The exception is row 0 (which here is j==(n-1)/2), which is its own conjugate, so
+        // it works slightly differently.
+        assert(i1 == 0);
+
+        int mid = (n-1)/2;  // The value of j that corresponds to the j==0 in the normal notation.
+
+        T* ptr1 = getData() + (i2-1)*step;
+        T* ptr2 = getData() + (n-1)*stride + (i2-1)*step;
+
+        // These skips will take us from the end of one row to the i2-1 element in the next row.
+        int skip1 = skip + (i2-1)*step;
+        int skip2 = skip1 - 2*stride; // This is negative.  We add this value to ptr2.
+
+        for (int j=0; j<mid; ++j, ptr1+=skip1, ptr2+=skip2) {
+            xdbg<<"Wrap rows "<<j<<","<<n-j-1<<" into columns ["<<i1<<','<<i2<<")\n";
+            xdbg<<"ptrs = "<<ptr1-this->getData()<<"  "<<ptr2-this->getData()<<std::endl;
+            wrap_hermx_cols_pair(ptr1, ptr2, m, mwrap, step);
         }
-        // When we get here, we can just skip to j2 and keep going.
-        if (j == j1) {
-            assert(jj == j1);
-            assert(ptr == ptrwrap);
-            j = j2;
-            ptr += nwrap * stride;
-            if (j2 == n) break;
-        }
-        xdbg<<"Wrap row "<<j<<" onto row = "<<jj<<std::endl;
-        xdbg<<"ptrs = "<<ptr-this->getData()<<"  "<<ptrwrap-this->getData()<<std::endl;
-        // Add contents of row j to row jj
-        if (step == 1)
-            for(int i=0; i<m; ++i) *ptrwrap++ += *ptr++;
-        else
-            for(int i=0; i<m; ++i,ptr+=step,ptrwrap+=step) *ptrwrap += *ptr;
+        // Finally, the row that is really j=0 (but here is j=(n-1)/2) also needs to be wrapped
+        // singly.
+        xdbg<<"Wrap row "<<mid<<" into columns ["<<i1<<','<<i2<<")\n";
+        xdbg<<"ptrs = "<<ptr1-this->getData()<<"  "<<ptr2-this->getData()<<std::endl;
+        wrap_hermx_cols(ptr1, m, mwrap, step);
     }
 
-    // Next wrap rows [j1,j2) into the columns [i1,i2).
-    ptr = getData() + j1*stride;
-    for (int j=j1; j<j2; ++j, ptr+=skip) {
-        int ii = i2 - (i2 % mwrap);
-        ptrwrap = ptr + ii*step;
-        xdbg<<"Wrap row "<<j<<" into columns ["<<i1<<','<<i2<<")\n";
+    // If hermx is false, then we wrap the rows first instead.
+    if (hermy) {
+        assert(j1 == 0);
+        // In this case, the number of rows in the target image corresponds to N/2+1.
+        // Rows 0 and N/2 need special handling, since the wrapping is really for the
+        // range (-N/2,N/2], even though the negative rows are not stored.
+        // We start with row N/2 (aka j2-1), which needs to wrap its conjugate (-N/2) onto itself.
+        // Then as j increases, we decrease jj and continue wrapping conjugates.
+        // When we get to something that wraps onto row 0 (the first one will correspond to
+        // j=-N, which is the conjugate of what is stored at j=N), we need to repeat with
+        // a regular non-conjugate wrapping for the positive row (e.g. j=N itself) which also
+        // wraps onto row 0.
+        // Then we run jj back up wrapping normally, until we get to N/2 again (aka j2-1).
+        // The negative row will wrap normally onto -N/2, which means we need to also do a
+        // conjugate wrapping onto N/2.
+
+        // Start with j == jj = j2-1.
+        int jj = j2-1;
+        bool conj = true;
+        ptr += jj * stride;
+        T* ptrwrap = ptr + (m-1) * step;
+
+        // Do the first row separately, since we need to do it slightly differently, as
+        // we are overwriting the input data as we go, so we would double add it if we did
+        // it the normal way.
+        xdbg<<"Wrap first row "<<jj<<" onto row = "<<jj<<" using conjugation.\n";
         xdbg<<"ptrs = "<<ptr-this->getData()<<"  "<<ptrwrap-this->getData()<<std::endl;
-        for (int i=0; i<m; ++i, ++ii, ptr+=step, ptrwrap+=step) {
-            // Loop ii and ptrwrap back if necessary.
-            if (ii == i2) {
-                ii = i1;
-                ptrwrap -= mwrap * step;
+        wrap_row_selfconj(ptr, ptrwrap, m, step);
+        --jj;
+
+        for (int j=j2; j<n; ++j, ptr+=skip) {
+            if (conj) {
+                xdbg<<"Wrap row "<<j<<" onto row = "<<jj<<" using conjugation.\n";
+                xdbg<<"ptrs = "<<ptr-this->getData()<<"  "<<ptrwrap-this->getData()<<std::endl;
+                wrap_row_conj(ptr, ptrwrap, m, step);
+                if (jj > 0) {
+                    // The normal case
+                    --jj;
+                    ptrwrap -= skip;
+                } else {
+                    // We also need to wrap this without conjugation, so move j and ptr back 1 row
+                    // to get it ready for the next pass through the loop.
+                    --j;
+                    ptr -= stride;
+                    conj = false;
+                    ptrwrap += step;
+                }
+            } else {
+                xdbg<<"Wrap row "<<j<<" onto row = "<<jj<<std::endl;
+                xdbg<<"ptrs = "<<ptr-this->getData()<<"  "<<ptrwrap-this->getData()<<std::endl;
+                wrap_row(ptr, ptrwrap, m, step);
+                if (jj < j2-1) {
+                    // The normal case
+                    ++jj;
+                    ptrwrap += skip;
+                } else {
+                    // We also need to wrap this with conjugation, so move j and ptr back 1 row
+                    // to get it ready for the next pass through the loop.
+                    --j;
+                    ptr -= stride;
+                    conj = true;
+                    ptrwrap -= step;
+                }
             }
-            // When we get here, we can just skip to i2 and keep going.
-            if (i == i1) {
-                assert(ii == i1);
+        }
+    } else {
+        // The regular case is mostly simpler (no conjugate stuff to worry about).
+        // However, we don't have the luxury of knowing that j1==0, so we need to start with
+        // the rows j<j1, then skip over [j1,j2) when we get there and continue with j>=j2.
+
+        // Row 0 maps onto j2 - (j2 % nwrap) (although we may need to subtract nwrap below).
+        int jj = j2 - (j2 % nwrap);
+        T* ptrwrap = ptr + jj * stride;
+        for (int j=0; j<n; ++j, ++jj, ptr+=skip, ptrwrap+=skip) {
+            // Loop jj and ptrwrap back if necessary.
+            if (jj == j2) {
+                jj = j1;
+                ptrwrap -= nwrap * stride;
+            }
+            // When we get here, we can just skip to j2 and keep going.
+            if (j == j1) {
+                assert(jj == j1);
                 assert(ptr == ptrwrap);
-                i = i2;
-                ptr += mwrap * step;
-                if (i2 == m) break;
+                j = j2;
+                ptr += nwrap * stride;
+                if (j2 == n) break;
             }
-            xxdbg<<i<<" "<<ii<<" "<<ptr-this->getData()<<" "<<ptrwrap-this->getData()<<std::endl;
-            // Add contents of pixel i to pixel ii
-            *ptrwrap += *ptr;
+            xdbg<<"Wrap row "<<j<<" onto row = "<<jj<<std::endl;
+            xdbg<<"ptrs = "<<ptr-this->getData()<<"  "<<ptrwrap-this->getData()<<std::endl;
+            wrap_row(ptr, ptrwrap, m, step);
         }
     }
 
-    return subImage(b);
+    // In the normal (not hermx) case, we now wrap rows [j1,j2) into the columns [i1,i2).
+    if (!hermx) {
+        ptr = getData() + j1*stride;
+        T* ptrwrap;
+        for (int j=j1; j<j2; ++j, ptr+=skip) {
+            xdbg<<"Wrap row "<<j<<" into columns ["<<i1<<','<<i2<<")\n";
+            xdbg<<"ptr = "<<ptr-this->getData()<<std::endl;
+            wrap_cols(ptr, m, mwrap, i1, i2, step);
+        }
+    }
+
+    return ret;
 }
 
 namespace {

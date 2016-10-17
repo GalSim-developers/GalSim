@@ -2296,7 +2296,7 @@ def test_wrap():
     for i in range(17):
         for j in range(23):
             val = np.exp(i/7.3) + (j/12.9)**3  # Something randomly complicated...
-            im.setValue(i,j,val)
+            im[i,j] = val
             # Find the location in the sub-image for this point.
             ii = (i-b.xmin) % (b.xmax-b.xmin+1) + b.xmin
             jj = (j-b.ymin) % (b.ymax-b.ymin+1) + b.ymin
@@ -2306,7 +2306,76 @@ def test_wrap():
                                    "image.wrap(%s) did not match expectation"%b)
     np.testing.assert_array_equal(im_wrap.array, im[b].array,
                                   "image.wrap(%s) did not return the right subimage")
-    np.testing.assert_equal(im_wrap.bounds, im[b].bounds,
+    np.testing.assert_equal(im_wrap.bounds, b,
+                            "image.wrap(%s) does not have the correct bounds")
+
+    # For complex images (in particular k-space images), we often want the image to be implicitly
+    # Hermitian, so we only need to keep around half of it.
+    M = 38
+    N = 25
+    K = 8
+    L = 5
+    im = galsim.ImageC(2*M+1, 2*N+1, xmin=-M, ymin=-N)  # Explicitly Hermitian
+    im2 = galsim.ImageC(2*M+1, N+1, xmin=-M, ymin=0)   # Implicitly Hermitian across y axis
+    im3 = galsim.ImageC(M+1, 2*N+1, xmin=0, ymin=-N)   # Implicitly Hermitian across x axis
+    print('im = ',im)
+    print('im2 = ',im2)
+    print('im3 = ',im3)
+    b = galsim.BoundsI(-K+1,K,-L+1,L)
+    b2 = galsim.BoundsI(-K+1,K,0,L)
+    b3 = galsim.BoundsI(0,K,-L+1,L)
+    im_test = galsim.ImageC(b, init_value=0)
+    for i in range(-M,M+1):
+        for j in range(-N,N+1):
+            # An arbitraryish Hermitian function.
+            #val = np.exp(i**2/57.3 + 1j*(2.8*i-1.3*j)) + ((2 + 3j*j)/12.9)**3
+            val = 2*(i-j)**2 + 3j*(i+j)
+
+            im[i,j] = val
+            if j >= 0:
+                im2[i,j] = val
+            if i >= 0:
+                im3[i,j] = val
+
+            ii = (i-b.xmin) % (b.xmax-b.xmin+1) + b.xmin
+            jj = (j-b.ymin) % (b.ymax-b.ymin+1) + b.ymin
+            im_test.addValue(ii,jj,val)
+    #print("im = ",im.array)
+
+    # Confirm that the image is Hermitian.
+    for i in range(-M,M+1):
+        for j in range(-N,N+1):
+            assert im(i,j) == im(-i,-j).conjugate()
+
+    im_wrap = im.wrap(b)
+    #print("im_wrap = ",im_wrap.array)
+    np.testing.assert_almost_equal(im_wrap.array, im_test.array, 12,
+                                   "image.wrap(%s) did not match expectation"%b)
+    np.testing.assert_array_equal(im_wrap.array, im[b].array,
+                                  "image.wrap(%s) did not return the right subimage")
+    np.testing.assert_equal(im_wrap.bounds, b,
+                            "image.wrap(%s) does not have the correct bounds")
+
+    im2_wrap = im2.wrap(b2, hermitian='y')
+    #print('im_test = ',im_test[b2].array)
+    #print('im2_wrap = ',im2_wrap.array)
+    #print('diff = ',im2_wrap.array-im_test[b2].array)
+    np.testing.assert_almost_equal(im2_wrap.array, im_test[b2].array, 12,
+                                   "image.wrap(%s) did not match expectation"%b)
+    np.testing.assert_array_equal(im2_wrap.array, im2[b2].array,
+                                  "image.wrap(%s) did not return the right subimage")
+    np.testing.assert_equal(im2_wrap.bounds, b2,
+                            "image.wrap(%s) does not have the correct bounds")
+
+    im3_wrap = im3.wrap(b3, hermitian='x')
+    #print('im_test = ',im_test[b3].array)
+    #print('im3_wrap = ',im3_wrap.array)
+    #print('diff = ',im3_wrap.array-im_test[b3].array)
+    np.testing.assert_almost_equal(im3_wrap.array, im_test[b3].array, 12,
+                                   "image.wrap(%s) did not match expectation"%b)
+    np.testing.assert_array_equal(im3_wrap.array, im3[b3].array,
+                                  "image.wrap(%s) did not return the right subimage")
+    np.testing.assert_equal(im3_wrap.bounds, b3,
                             "image.wrap(%s) does not have the correct bounds")
 
 if __name__ == "__main__":

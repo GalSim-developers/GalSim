@@ -237,7 +237,8 @@ struct PyImage {
                     &MakeAllocFromArray, bp::default_call_policies(),
                     (bp::arg("bounds"), bp::arg("array"))))
             .def("subImage", subImage_func_type(&ImageAlloc<T>::subImage), bp::args("bounds"))
-            .def("wrap", &ImageAlloc<T>::wrap, bp::args("bounds"))
+            .def("wrap", &ImageAlloc<T>::wrap,
+                 (bp::arg("bounds"), bp::arg("hermx")=false, bp::arg("hermy")=false))
             .def("view", view_func_type(&ImageAlloc<T>::view))
             .add_property("array", &GetArray)
             // In python, there is no way to have a function return a mutable reference
