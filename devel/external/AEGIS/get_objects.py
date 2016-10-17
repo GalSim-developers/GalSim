@@ -94,38 +94,28 @@ class Main_param:
 
 def run_segment(params):
     """Find objects in individual segments.
-        Detecting objects:
-        Run sextractor on file 1. O/p detected objects stroed in .cat file
-        Parametrs from sextractor results taht are saved in .cat file is in .param
-        Input for sextractor is in .config
-        Sextractor is run with bright_config_dict sex parameters on the first 
-        filter and detected objects saved in .*_bright.cat
-        Sextractor in then run in dual image mode with detection in first filter
-        and measurement in other filter images to give their corresponding 
-        *_brigt.cat detected images
+    
+    Runs SExtractor on a segment and stores the detected objects in .cat file
+    SExtractor input settings stored in .config file.
+    Parameters to be measured by SExtractor are written to sex.param file.
 
-        Sextractor is run with faint_config_dict sex parameters on the first 
-        filter and detected objects saved in .*_faint.cat
-        Sextractor in then run in dual image mode with detection in first filter
-        and measurement in other filter images to give their corresponding 
-        *_faint.cat detected images
-
-        Segmentation map is made for each of the _bright.cat files 
-        where regions within 20 pixels of bright detections are masked out 
-        for the faint detections.
-
-        Filter faint catalog:  Remove objects in *_faint.cat that are 
-        masked in the segmentation map for all filters. O/p is 
-        *_filteredfaint.cat
-
-        Merge the bright and filtered faint catologs to give catalog of 
-        all objects
-
-        """
+    Detecting objects, Hot/Cold method :
+    1) SExtractor in then run in dual image mode, detecting in co-added image and 
+    measuring in individual filter images to give their corresponding 
+    *_brigt.cat detected images.
+    2) Same step repeated with faint_config_dict SExtractor parameters and 
+    detected objects saved in .*_faint.cat.
+    3) A segmentation map is made for each of the _bright.cat files with regions 
+    belonging to bright objects expaned by 15 pixels.
+    4) Filter faint catalog:  Removes objects in *_faint.cat that are masked in 
+    the segmentation map for all filters. O/p is *_filteredfaint.cat
+    5) Merges the bright and filtered faint catologs to give catalog of all objects.
+    """
     cat = GalaxyCatalog(params)
     cat.generate_catalog()    
 
-class GalaxyCatalog:    
+class GalaxyCatalog:
+    """Parameters to be measured by SExtractor."""    
     output_params = ["NUMBER",
     "X_IMAGE",
     "Y_IMAGE",
@@ -150,7 +140,7 @@ class GalaxyCatalog:
     "KRON_RADIUS",
     "THETA_IMAGE",
     "ELLIPTICITY"]
-
+    # SExtractor input config values for bright object detection
     bright_config_dict = { 'DETECT_MINAREA' : 140 ,
     'DETECT_THRESH' : 2.2 ,
     'DEBLEND_NTHRESH' : 64 ,
@@ -161,7 +151,7 @@ class GalaxyCatalog:
     'BACKPHOTO_TYPE' : "LOCAL" ,
     'BACKPHOTO_THICK' : 200,
     'PIXEL_SCALE' : 0.03}
-
+    # SExtractor input config values for faint object detection
     faint_config_dict = { 'DETECT_MINAREA' : 18 ,
     'DETECT_THRESH' : 1.0 ,
     'DEBLEND_NTHRESH' : 64 ,
@@ -193,7 +183,7 @@ class GalaxyCatalog:
         
     def run_sextractor_dual(self, data_files, wht_files,
                             use_dict,out_dir, out_name, filt):
-        """ Runs sextractor in double image mode"""
+        """ Runs sextractor in dual image mode"""
         print "Running dual : ", out_name
         #Create config newfiles[i] and write out to a file
         config_ascii = asciidata.create(2,8+len(use_dict))
@@ -220,14 +210,13 @@ class GalaxyCatalog:
         config_ascii[0][row_counter+3] = 'GAIN'
         config_ascii[1][row_counter+3] = self.params.gain[filt]
         config_fname =  out_dir+ '/'+ out_name + ".config"
-        #config_ascii.writeto(config_fname)
         config_ascii.writeto(config_fname)               
         #Run sextractor and get the catalog
         subprocess.call(["sex", data_files[0],",",data_files[1] , "-c", config_fname])
 
     def add_bright_faint_column(self, cat_name, tag):
-        """Add coloumn 'IS_BRIGHT' in catalog with name cat_name.
-        value of column is to tag.
+        """Add coloumn 'IS_BRIGHT' in catalog with name cat_name.value of 
+        column is to tag.
         """
         catalog = Table.read(cat_name, format="ascii.sextractor")
         col= Column(np.ones(len(catalog))*tag,name='IS_BRIGHT',dtype='int', description = 'Detected in hot mode' )
@@ -245,11 +234,11 @@ class GalaxyCatalog:
 
     def filter_cat_with_segmentation_map(self, faint_catalog, seg_map,
                                          out_dir, out_name):
-        """Remove objects from the faint catalog that lie in the 
-        segemntation map. This is to remove faint objects very close to the
-        bright objects
+        """Removes objects from the faint catalog that lie within the bright 
+        segmentation map. This is to remove multiple detections of bright 
+        objects.
         """
-        print "Removing faint objects from segmentationn map for section", self.params.seg_id
+        print "Filtering faint objects for section ", self.params.seg_id
         segmentation_file = pyfits.open(seg_map)
         data = segmentation_file[0].data  
         val = [i for i in range(len(faint_catalog)) if (data[int(faint_catalog['Y_IMAGE'][i]),int(faint_catalog['X_IMAGE'][i])] == 0)]
@@ -260,7 +249,6 @@ class GalaxyCatalog:
     def merge(self, filtered_faint_catalog, 
               bright_catalog, out_name, out_dir):
         """ Merge objects detected in bright and filtered faint catalog """
-        #Copy the header to a new file
         print "Merging bright  and faint catalogs for section", self.params.seg_id
         name = out_dir + '/'+ out_name + "_merge.cat"
         faint_cat = Table.read(filtered_faint_catalog, format="ascii.basic" )
@@ -268,12 +256,11 @@ class GalaxyCatalog:
         comb_cat = vstack([bright_cat, faint_cat])
         comb_cat.write(name, format="ascii.basic")
 
-
     def classification(self, div_params, out_dir):
         """Detected objects are classified as stars or not depending on thier 
-        where they lie in the magnitude, peak surface brightness plot """     
+        magnitude and peak surface brightnes."""     
         x_max = 25
-        print "Performing star galaxy seperation for section", self.params.seg_id
+        print "Performing star-galaxy separation for section ", self.params.seg_id
         for filt in self.params.filters:
             x_div = div_params[filt][0]
             y_div = div_params[filt][1]
@@ -283,30 +270,34 @@ class GalaxyCatalog:
             merged_catalog = out_dir + '/' +out_name+ "_merge.cat"
             catalog = Table.read(merged_catalog, format="ascii.basic")
             snr = np.array(catalog['FLUX_AUTO'])/np.array(catalog['FLUXERR_AUTO'])
-            col= Column(snr,name='SNR',description = 'Signal to Noise Ratio')
+            col= Column(snr,name='SNR',
+                        description = 'Signal to Noise Ratio')
             catalog.add_column(col)
-            # Modified snr
+            # Modified SNR: Correcting of correlations in noise.
             A = catalog['FLUXERR_AUTO']**2 - catalog['FLUX_AUTO']/self.params.gain[filt]
             new_f_err = (A/self.params.sf + catalog['FLUX_AUTO']/self.params.gain[filt])**0.5 
-            col= Column(new_f_err,name='NEW_FLUXERR_AUTO',description = 'Modified FLUXERR_AUTO')
+            col = Column(new_f_err,name='NEW_FLUXERR_AUTO',
+                        description = 'Modified FLUXERR_AUTO')
             catalog.add_column(col)
             new_snr = np.array(catalog['FLUX_AUTO'])/new_f_err
-            col= Column(new_snr,name='NEW_SNR',description = 'Modified Signal to Noise Ratio')
+            col = Column(new_snr,name='NEW_SNR',
+                         description = 'Modified Signal to Noise Ratio')
             catalog.add_column(col)
-            col= Column(np.zeros(len(catalog)),name='IS_STAR',dtype='int')
+            col = Column(np.zeros(len(catalog)), name='IS_STAR', dtype='int')
             catalog.add_column(col)
             q = fn.is_below_boundary_table(catalog['MAG_AUTO'], catalog['MU_MAX'],
                                            x_div, y_div, slope, intercept, x_max)
             catalog['IS_STAR'][q] = 1
-            col= Column(np.zeros(len(catalog)),name='IS_FAKE',dtype='int')
+            col= Column(np.zeros(len(catalog)), name='IS_FAKE', dtype='int')
             catalog.add_column(col)
             q = fn.is_below_boundary_table(catalog['MAG_AUTO'], catalog['MU_MAX'],
                                            x_div+1, y_div-2, slope, intercept-2, x_max+1)
             catalog['IS_FAKE'][q] = 1
-            catalog.write(out_dir + '/' + out_name + "_class.cat",format="ascii.basic")
+            catalog.write(out_dir + '/' + out_name + "_class.cat", 
+                          format="ascii.basic")
 
     def remove_edge(self, catalog):
-        """Remove objects lying at the edge"""
+        """Remove objects lying on the image plane edge."""
         print "Removing edge objects"
         A = (390.,321.)
         B = (498.,6725.)
@@ -325,21 +316,21 @@ class GalaxyCatalog:
 
     def diffraction_mask_cleanup(self, catalog,
                                  diff_spike_params,  mag_cutoff = 19.0):
-        """Masks objects too close to saturated stars."""
-        m = diff_spike_params[0] 
-        b = diff_spike_params[1]
-        w = diff_spike_params[2]*0.5
-        theta = diff_spike_params[3]
+        """Masks objects within diffraction spikes of saturated stars."""
+        m = diff_spike_params[0] # slope
+        b = diff_spike_params[1] # intercept
+        w = diff_spike_params[2]*0.5 # width
+        theta = diff_spike_params[3] # angle
         x_vertex_sets = []
         y_vertex_sets = []        
         val=np.zeros(len(catalog))
         col = Column(val, name='IN_DIFF_MASK', 
-                 description="Close to saturated star", dtype=int)
+                     description="Close to saturated star", dtype=int)
         catalog.add_column(col)
         print "Identifying saturated stars"
         cond1 = catalog['MAG_AUTO']  < mag_cutoff
         cond2 = catalog['IS_STAR'] == 1
-        q, = np.where( cond1 & cond2)
+        q, = np.where(cond1 & cond2)
         ## exit if no saturated stars present
         if len(q)==0:
             print 'No saturated objects found'
@@ -354,7 +345,6 @@ class GalaxyCatalog:
         (x_vertices, y_vertices) = fn.rotate_table(x_vertices,y_vertices,x0,y0,theta)
         catalog['IN_DIFF_MASK'][q]=1
         print "Identify objects in diffraction spike"
-
         Xs = np.array([catalog['XMIN_IMAGE'],catalog['XMAX_IMAGE']], dtype=int)
         Ys = np.array([catalog['YMIN_IMAGE'],catalog['YMAX_IMAGE']], dtype=int)
         bottom_pixels = [[(x,Ys[0][i]) for x in range(Xs[0][i],Xs[1][i])]for i in range(len(catalog))]
@@ -369,8 +359,7 @@ class GalaxyCatalog:
         return catalog
 
     def manual_mask_cleanup(self, catalog, filt):
-        """masks regions that were observed to have artefacts upon visual inspection
-        """
+        """Masks regions that were observed to have artefacts upon visual inspection"""
         val=np.zeros(len(catalog))
         col = Column(val, name='IN_MANUAL_MASK', 
                      description="In a manual mask region", dtype=int)
@@ -397,7 +386,7 @@ class GalaxyCatalog:
             return catalog
 
     def combine_seg_map(self, filt,  out_dir):
-        """Combine bright and faint seg maps"""
+        """Combines bright and faint segmentation maps."""
         cat_name = out_dir + '/'+ filt +'_clean.cat'
         bright_name = out_dir + '/'+ filt +'_bright_seg_map.fits'
         faint_name = out_dir + '/'+ filt +'_faint_seg_map.fits'
@@ -409,7 +398,7 @@ class GalaxyCatalog:
         hdu1.close()
         cat = Table.read(cat_name, format='ascii.basic')        
         new_seg = br
-        # Expand bright regions by 10 pixels
+        # Expand bright regions by 5 pixels
         q, = np.where(cat['IS_BRIGHT']==1)
         for i in q:
             new_seg = fn.seg_expand(new_seg, buff=5, val=int(i)+1, set_to=int(i)+1)
@@ -631,7 +620,7 @@ if __name__ == '__main__':
     parser.add_argument('--det_wht_type', default='MAP_RMS',
                         help="SExtractor Weight file type for detetction image. \
                          Default='MAP_RMS'")
-    parser.add_argument('--buffer', default=10,
+    parser.add_argument('--buffer', default=15,
                         help="Number of pixels used as buffer around bright \
                         objects in Hot-cold detection method.[Default:15(pixels)]")
     parser.add_argument('--diff_spike_params', 
