@@ -5,14 +5,12 @@ using sextractor. Objects are detected with the Hot-Cold method employed in
 Rix et al.(2004). 
 
 Requirements:
-
-
 SExtractor Detection:
 SExtractor is run in double image mode, with objects detected in det_im_file &
 det_wht_file as weight map. These detected objects are then measures in each
 band(file_name, wht_name). SExtractor WEIGHT_TYPE is set with wht_type and
 det_wht_type for detection and measurement respectively. The config parameters 
-for Hot-Cold detetction are preset and not input  parametrs. The hot (faint)
+for Hot-Cold detetction are preset and not input parametrs. The hot(faint)
 objects are merged with the cold(bright) catalog that aren't within buffer 
 region  --buffer.
 
@@ -31,24 +29,23 @@ Note: Value of object in seg map will be 1 higher than NUMBER in catalog. catalo
 numbers start at 0, while 0 in segmap is no object present. 
 
 Stars for PSF estimation:
-select upto 25 stars with the highest SNR that are not masked. If theya are 
+Select upto 25 stars with the highest SNR that are not masked. If theya are 
 detected as stars in all bands, have an image in tt_starfield within 200 pixels,
 and do not have any other objects nearby, they are saved to a list for psf 
 estimation. Postage stamps of these stars are also saved for manual inspection.
 
-
 Output: 
-Cleaned catalog , combined segmentation map, list of stars for PSF measuremnt,
+Cleaned catalog, combined segmentation map, list of stars for PSF measurement and
 postage stamp images of those stars.
 """
 import asciidata
-from astropy.table import Table, Column, vstack
 import subprocess
 import pyfits
 import os
 import numpy as np
 import functions as fn
 import clean_pstamp as cp
+from astropy.table import Table, Column, vstack
 
 
 class Main_param:
@@ -524,7 +521,7 @@ class GalaxyCatalog:
             select_stars = self.check_stars(best_stars,filt, out_dir)
             matched_stars = self.match_to_tt(catalog, out_dir, filt, select_stars)
             print 'Number of stars selected', len(select_stars)
-            num =0
+            num = 0
             for i in range(len(matched_stars)):
                 x0 =  matched_stars[i][1]
                 y0 =  matched_stars[i][2]
@@ -567,7 +564,7 @@ class GalaxyCatalog:
             faint_catalog = self.add_bright_faint_column(faint_catalog_name,0)
             seg_map = out_dir+'/'+ out_name + "_bright_seg_map.fits"
             self.make_new_seg(seg_map, out_dir, filt)
-            new_seg_map = out_dir+'/'+ filt + "_bright_seg_map_new.fits"
+            new_seg_map = out_dir + '/' + filt + "_bright_seg_map_new.fits"
             self.filter_cat_with_segmentation_map(faint_catalog, new_seg_map,
                                                   out_dir, filt)
             filtered_faint_name = out_dir + '/' + filt + "_filteredfaint.cat"
@@ -584,8 +581,6 @@ class GalaxyCatalog:
 
 
 if __name__ == '__main__':
-    import subprocess
-    import numpy as np
     from argparse import ArgumentParser
     parser = ArgumentParser()
     parser.add_argument('--seg_id', default='1a',
