@@ -386,7 +386,8 @@ class GalaxyCatalog:
             return catalog
 
     def combine_seg_map(self, filt,  out_dir):
-        """Combines bright and faint segmentation maps."""
+        """Combines bright and faint segmentation maps. Regions belonging to
+        bright objects are expanded by 5 pixels"""
         cat_name = out_dir + '/'+ filt +'_clean.cat'
         bright_name = out_dir + '/'+ filt +'_bright_seg_map.fits'
         faint_name = out_dir + '/'+ filt +'_faint_seg_map.fits'
@@ -415,7 +416,6 @@ class GalaxyCatalog:
         os.remove(bright_name)
         os.remove(faint_name)
 
-
     def cleanup_catalog(self, out_dir):
         """Removes objects on boundaries, diffraction spikes, manual mask"""
         for filt in self.params.filters:
@@ -433,15 +433,19 @@ class GalaxyCatalog:
             catalog = fn.renumber_table(catalog)
             catalog = fn.mask_it_table(catalog)
             #add columns to catalog that will be useful later
-            col= Column(np.zeros(len(catalog)),name='MULTI_DET',dtype='int', description = 'detected in another segment' )
+            col= Column(np.zeros(len(catalog)), name='MULTI_DET',
+                       dtype='int', description = 'detected in another segment')
             catalog.add_column(col)
-            col= Column(['aa.0000000']*len(catalog),name='MULTI_DET_OBJ',dtype='S12', description = 'object id kept' )
+            col= Column(['aa.0000000']*len(catalog), name='MULTI_DET_OBJ',
+                        dtype='S12', description = 'object id kept')
             catalog.add_column(col)
-            col= Column([filt.upper()]*len(catalog) ,name='BAND', description = 'measurement filter' )
+            col= Column([filt.upper()]*len(catalog), name='BAND',
+                        description = 'measurement filter' )
             catalog.add_column(col)
-            catalog.write(out_dir + '/' +out_name+ "_clean.cat",format="ascii.basic")
+            catalog.write(out_dir+'/'+ out_name+ "_clean.cat",
+                          format="ascii.basic")
             #### Make combined seg map
-            self.combine_seg_map(filt,  out_dir)
+            self.combine_seg_map(filt,out_dir)
    
     def check_oth_obj(self, x0, y0,r,
                       filt, idx, out_dir):
