@@ -598,8 +598,9 @@ class OpticalScreen(object):
                             individual aberration.  Note that aberrations[1] is piston (and not
                             aberrations[0], which is unused.)  This list can be arbitrarily long to
                             handle Zernike polynomial aberrations of arbitrary order.
-    @param annular_zernike  Boolean indicating whether aberrations are for filled circular Zernike
-                            polynomials or annular Zernike polynomials.  [default: False]
+    @param annular_zernike  Boolean indicating that aberrations specify the amplitudes of annular
+                            Zernike polynomials instead of circular Zernike polynomials.
+                            [default: False]
     @param obscuration      Linear dimension of central obscuration as fraction of aperture linear
                             dimension. [0., 1.).  Note it is the user's responsibility to ensure
                             consistency of OpticalScreen obscuration and Aperture obscuration.

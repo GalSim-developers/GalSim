@@ -1167,10 +1167,11 @@ class OpticalPSF(GSObject):
     to the Zernike polynomials in the Noll convention defined in
     Noll, J. Opt. Soc. Am. 66, 207-211(1976).  For a brief summary of the polynomials, refer to
     http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials.  By default, the
-    aberration coefficients indicate the amplitudes of circular Zernike polynomials, which are
-    orthogonal over a circle, but not an annulus.  If you wish to specify the amplitudes of annular
-    Zernike polynomials instead, (see Mahajan, J. Opt. Soc. Am. 71, 1 (1981)), then set the
-    `annular_zernike` keyword argument to True.
+    aberration coefficients indicate the amplitudes of _circular_ Zernike polynomials, which are
+    orthogonal over a circle.  If you would like the aberration coefficients to instead be
+    interpretted as the amplitudes of _annular_ Zernike polynomials, which are orthogonal over an
+    annulus (see Mahajan, J. Opt. Soc. Am. 71, 1 (1981)), set the `annular_zernike` keyword argument
+    to True.
 
     There are two ways to specify the geometry of the pupil plane, i.e., the obscuration disk size
     and the areas that will be illuminated outside of it.  The first way is to use keywords that
@@ -1251,8 +1252,9 @@ class OpticalPSF(GSObject):
                             individual aberration.  Note that aberrations[1] is piston (and not
                             aberrations[0], which is unused.)  This list can be arbitrarily long to
                             handle Zernike polynomial aberrations of arbitrary order.
-    @param annular_zernike  Boolean indicating whether aberrations are for filled circular Zernike
-                            polynomials or annular Zernike polynomials.  [default: False]
+    @param annular_zernike  Boolean indicating that aberrations specify the amplitudes of annular
+                            Zernike polynomials instead of circular Zernike polynomials.
+                            [default: False]
     @param aper             Aperture object to use when creating PSF.  [default: None]
     @param circular_pupil   Adopt a circular pupil?  [default: True]
     @param obscuration      Linear dimension of central obscuration as fraction of pupil linear
