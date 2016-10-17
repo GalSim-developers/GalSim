@@ -485,17 +485,17 @@ def _binomial(a, b, n):
 # Mahajan (1981) JOSA Vol. 71, No. 1.
 
 # Mahajan's h-function normalization for annular Zernike coefficients.
-def _h(m, j, eps):
+def __h(m, j, eps):
     if m == 0:  # Equation (A5)
         return (1-eps**2)/(2*(2*j+1))
     else:  # Equation (A14)
         num = -(2*(2*j+2*m-1)) * _Q(m-1, j+1, eps)[0]
         den = (j+m)*(1-eps**2) * _Q(m-1, j, eps)[0]
         return num/den * _h(m-1, j, eps)
-
+_h = utilities.LRU_Cache(__h)
 
 # Mahajan's Q-function for annular Zernikes.
-def _Q(m, j, eps):
+def __Q(m, j, eps):
     if m == 0:  # Equation (A4)
         return _annular_zern_rho_coefs(2*j, 0, eps)[::2]
     else:  # Equation (A13)
@@ -504,12 +504,12 @@ def _Q(m, j, eps):
         summation = np.zeros((j+1,), dtype=float)
         for i in range(j+1):
             qq = _Q(m-1, i, eps)
-            qq *= qq[0]
+            qq = qq*qq[0]  # Don't use *= here since it modifies the cache!
             summation[:i+1] += qq/_h(m-1, i, eps)
         return summation * num / den
+_Q = utilities.LRU_Cache(__Q)
 
-
-def _annular_zern_rho_coefs(n, m, eps):
+def __annular_zern_rho_coefs(n, m, eps):
     """Compute coefficients of radial part of annular Zernike (n, m), with fractional linear
     obscuration eps.
     """
@@ -534,7 +534,7 @@ def _annular_zern_rho_coefs(n, m, eps):
         norm = np.sqrt((1-eps**2)/(2*(2*j+m+1) * _h(m,j,eps)))
         out[m::2] = norm * _Q(m, j, eps)
     return out
-
+_annular_zern_rho_coefs = utilities.LRU_Cache(__annular_zern_rho_coefs)
 
 def horner(x, coef):
     """Evaluate univariate polynomial using Horner's method.

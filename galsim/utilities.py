@@ -938,6 +938,7 @@ class LRU_Cache:
         # Cache miss: evaluate and insert new key/value at root, then increment root
         #             so that just-evaluated value is in last position.
         result = self.user_function(*key)
+        root = self.root  # re-establish root in case user_function modified it due to recursion
         root[2] = key
         root[3] = result
         oldroot = root
