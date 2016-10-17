@@ -756,6 +756,32 @@ def test_Zernike_orthonormality():
 
 
 @timer
+def test_annular_Zernike_limit():
+    """Check that annular Zernike matches circular Zernike in the limit of 0.0 obscuration.
+    """
+    jmax = 20
+    bd = galsim.BaseDeviate(1029384756)
+    u = galsim.UniformDeviate(bd)
+
+    diam = 4.0
+
+    for i in range(4):  # Do a few random tests.  Takes about 1 sec.
+        aberrations = [0]+[u() for i in range(jmax)]
+        psf1 = galsim.OpticalPSF(diam=diam, lam=500, obscuration=1e-5,
+                                 aberrations=aberrations, annular_zernike=True)
+        psf2 = galsim.OpticalPSF(diam=diam, lam=500, obscuration=1e-5,
+                                 aberrations=aberrations)
+        im1 = psf1.drawImage()
+        im2 = psf2.drawImage(image=im1.copy())
+        # We want the images to be close, since the obscuration is near 0, but not identical.
+        # That way we know that the `annular_zernike` keyword is doing something.
+        assert im1 != im2, "annular Zernike identical to circular Zernike"
+        np.testing.assert_allclose(
+                im1.array, im2.array, atol=1e-10,
+                err_msg="annular Zernike with 1e-5 obscuration not close to circular Zernike")
+
+
+@timer
 def test_ne():
     # Use some very forgiving settings to speed up this test.  We're not actually going to draw
     # any images (other than internally the PSF), so should be okay.
@@ -779,6 +805,9 @@ def test_ne():
             galsim.OpticalPSF(lam_over_diam=1.0, nstruts=2, strut_angle=10.*galsim.degrees,
                               gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, obscuration=0.5, gsparams=gsp1),
+            galsim.OpticalPSF(lam_over_diam=1.0, obscuration=0.5, coma1=1.0, gsparams=gsp1),
+            galsim.OpticalPSF(lam_over_diam=1.0, obscuration=0.5, coma1=1.0, annular_zernike=True,
+                              gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, oversampling=2.0, gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, pad_factor=2.0, gsparams=gsp1),
             galsim.OpticalPSF(lam_over_diam=1.0, flux=2.0, gsparams=gsp1),
@@ -803,4 +832,5 @@ if __name__ == "__main__":
     test_OpticalPSF_lamdiam()
     test_OpticalPSF_pupil_plane_size()
     test_Zernike_orthonormality()
+    test_annular_Zernike_limit()
     test_ne()

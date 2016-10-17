@@ -1166,7 +1166,11 @@ class OpticalPSF(GSObject):
     Input aberration coefficients are assumed to be supplied in units of wavelength, and correspond
     to the Zernike polynomials in the Noll convention defined in
     Noll, J. Opt. Soc. Am. 66, 207-211(1976).  For a brief summary of the polynomials, refer to
-    http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials.
+    http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials.  By default, the
+    aberration coefficients indicate the amplitudes of circular Zernike polynomials, which are
+    orthogonal over a circle, but not an annulus.  If you wish to specify the amplitudes of annular
+    Zernike polynomials instead, (see Mahajan, J. Opt. Soc. Am. 71, 1 (1981)), then set the
+    `annular_zernike` keyword argument to True.
 
     There are two ways to specify the geometry of the pupil plane, i.e., the obscuration disk size
     and the areas that will be illuminated outside of it.  The first way is to use keywords that
@@ -1247,6 +1251,8 @@ class OpticalPSF(GSObject):
                             individual aberration.  Note that aberrations[1] is piston (and not
                             aberrations[0], which is unused.)  This list can be arbitrarily long to
                             handle Zernike polynomial aberrations of arbitrary order.
+    @param annular_zernike  Boolean indicating whether aberrations are for filled circular Zernike
+                            polynomials or annular Zernike polynomials.  [default: False]
     @param aper             Aperture object to use when creating PSF.  [default: None]
     @param circular_pupil   Adopt a circular pupil?  [default: True]
     @param obscuration      Linear dimension of central obscuration as fraction of pupil linear
@@ -1340,7 +1346,8 @@ class OpticalPSF(GSObject):
 
     def __init__(self, lam_over_diam=None, lam=None, diam=None, tip=0., tilt=0., defocus=0.,
                  astig1=0., astig2=0., coma1=0., coma2=0., trefoil1=0., trefoil2=0., spher=0.,
-                 aberrations=None, aper=None, circular_pupil=True, obscuration=0., interpolant=None,
+                 aberrations=None, annular_zernike=False,
+                 aper=None, circular_pupil=True, obscuration=0., interpolant=None,
                  oversampling=1.5, pad_factor=1.5, flux=1., nstruts=0, strut_thick=0.05,
                  strut_angle=0.*galsim.degrees, pupil_plane_im=None,
                  pupil_plane_scale=None, pupil_plane_size=None,
@@ -1385,7 +1392,7 @@ class OpticalPSF(GSObject):
         optics_screen = galsim.OpticalScreen(
                 defocus=defocus, astig1=astig1, astig2=astig2, coma1=coma1, coma2=coma2,
                 trefoil1=trefoil1, trefoil2=trefoil2, spher=spher, aberrations=aberrations,
-                lam_0=lam)
+                obscuration=obscuration, annular_zernike=annular_zernike, lam_0=lam)
         self._screens = galsim.PhaseScreenList(optics_screen)
 
         # Make the aperture.

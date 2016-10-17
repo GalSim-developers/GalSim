@@ -596,7 +596,7 @@ class OpticalScreen(object):
                             individual aberration.  Note that aberrations[1] is piston (and not
                             aberrations[0], which is unused.)  This list can be arbitrarily long to
                             handle Zernike polynomial aberrations of arbitrary order.
-    @param annular_zernike  Bool indicating whether aberrations are for filled circular Zernike
+    @param annular_zernike  Boolean indicating whether aberrations are for filled circular Zernike
                             polynomials or annular Zernike polynomials.  [default: False]
     @param obscuration      Linear dimension of central obscuration as fraction of aperture linear
                             dimension. [0., 1.).  Note it is the user's responsibility to ensure
@@ -648,7 +648,9 @@ class OpticalScreen(object):
 
         for j, ab in enumerate(self.aberrations):
             if j == 0: continue
-            self.coef_array += _zern_coef_array(*_noll_to_zern(j), shape=shape, eps=self.obscuration, annular=self.annular_zernike) * ab
+            self.coef_array += ab * _zern_coef_array(*_noll_to_zern(j), shape=shape,
+                                                     eps=self.obscuration,
+                                                     annular=self.annular_zernike)
 
     def __str__(self):
         return "galsim.OpticalScreen(lam_0=%s)" % self.lam_0
@@ -661,8 +663,9 @@ class OpticalScreen(object):
         return s
 
     def __eq__(self, other):
-        return (isinstance(other, galsim.OpticalScreen) and
-                np.array_equal(self.aberrations*self.lam_0, other.aberrations*other.lam_0))
+        return (isinstance(other, galsim.OpticalScreen)
+                and np.array_equal(self.aberrations*self.lam_0, other.aberrations*other.lam_0)
+                and self.annular_zernike == other.annular_zernike)
 
     def __ne__(self, other): return not self == other
 
