@@ -15,12 +15,12 @@ The script can be implemented to analyze any HST field data in multiple filters.
 * zero_point_mag: Zero point magnitude for each filter.
 * diff_spike_params: These parameters are used to compute the size of the diffraction spikes. A polygonal mask is drawn around saturated stars to mask these spikes (see Fig1: in document).  Parameters are [slope(pixels/ADU), intercept(pixels),width(pixels),angle(degrees)]. Slope and intercept relate the FLUX_AUTO of the star to the length the spike (Obtained from a linear fit to FLUX_AUTO Vs length of the spike measured manually for 10 saturated stars). The width of the spikes is set with width. Angle gives the angle by which the polygon has to be rotated. The parameters may be different for different bands. 
 * star_galaxy_params: Parameters used to separate galaxies and stars in MU_MAX Vs MAG_AUTO plot(x_div, y_div, slope). x_div gives the maximum magnitude, below which the object is saturated. y_div is the value of surface brightness per pixel for a saturated star. The slope of the line separating stars and galaxies is given by slope (See Fig 2 in document). It is recommended to run the first script get_objects.py, with mock sat_galaxy_params values, on a small region and then compute the separation parameters from the objects measured. The parameters may be different for different bands.
-* gain: Detector gain in e/ADU 
+* gain: Detector gain in e/ADU. 
 
 ### Scripts: 
 The scripts are run entirely in python. Make sure the following modules are loaded:
 galsim, numpy, astropy, asciidata, subprocess, os, scipy.
-The detection and measurement is performed with [SExtractor](http://www.astromatic.net/software/sextractor)
+The detection and measurement is performed with [SExtractor](http://www.astromatic.net/software/sextractor)version 2.8.6.
 
 ## Running the script
 Note: For faster computation, most scripts are written to be run on each individual image segment, so that multiple segments can be analyzed simultaneously with multiple processors.
