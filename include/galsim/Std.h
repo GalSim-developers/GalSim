@@ -63,6 +63,7 @@ class Debugger // Use a Singleton model so it can be included multiple times.
 public:
     std::ostream& get_dbgout() { return *dbgout; }
     void set_dbgout(std::ostream* new_dbgout) { dbgout = new_dbgout; }
+    void set_verbose(int level) { verbose_level = level; }
     bool do_level(int level) { return verbose_level >= level; }
 
     static Debugger& instance()
@@ -83,11 +84,15 @@ private:
 #define dbg if(Debugger::instance().do_level(1)) Debugger::instance().get_dbgout()
 #define xdbg if(Debugger::instance().do_level(2)) Debugger::instance().get_dbgout()
 #define xxdbg if(Debugger::instance().do_level(3)) Debugger::instance().get_dbgout()
+#define set_dbgout(dbgout) Debugger::instance().set_dbgout(dbgout)
+#define set_verbose(level) Debugger::instance().set_verbose(level)
 #define xassert(x) assert(x)
 #else
 #define dbg if(false) (std::cerr)
 #define xdbg if(false) (std::cerr)
 #define xxdbg if(false) (std::cerr)
+#define set_dbgout(dbgout)
+#define set_verbose(level)
 #define xassert(x)
 #endif
 
