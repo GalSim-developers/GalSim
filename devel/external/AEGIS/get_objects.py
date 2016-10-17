@@ -31,7 +31,7 @@ numbers start at 0, while 0 in segmap is no object present.
 Stars for PSF estimation:
 Select upto 25 stars with the highest SNR that are not masked. If theya are 
 detected as stars in all bands, have an image in tt_starfield within 200 pixels,
-and do not have any other objects nearby, they are saved to a list for psf 
+and do not have any other objects nearby, they are saved to a list for PSF 
 estimation. Postage stamps of these stars are also saved for manual inspection.
 
 Output: 
