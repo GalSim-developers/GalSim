@@ -168,7 +168,7 @@ class GalaxyCatalog:
         self.params = params
 
     def get_sex_op_params(self, out_dir):
-        """Saves the names of parameters thet sextractor must save"""
+        """Saves the names of parameters thet SExtractor must save"""
         param_fname = 'sex_out.param'
         try:
             param_file=open(out_dir+ '/'+ param_fname, 'w')
@@ -219,7 +219,8 @@ class GalaxyCatalog:
         column is to tag.
         """
         catalog = Table.read(cat_name, format="ascii.sextractor")
-        col= Column(np.ones(len(catalog))*tag,name='IS_BRIGHT',dtype='int', description = 'Detected in hot mode' )
+        col= Column(np.ones(len(catalog))*tag,name='IS_BRIGHT',
+                    dtype='int', description='Detected in hot mode' )
         catalog.add_column(col)
         return catalog
 
@@ -240,8 +241,9 @@ class GalaxyCatalog:
         """
         print "Filtering faint objects for section ", self.params.seg_id
         segmentation_file = pyfits.open(seg_map)
-        data = segmentation_file[0].data  
-        val = [i for i in range(len(faint_catalog)) if (data[int(faint_catalog['Y_IMAGE'][i]),int(faint_catalog['X_IMAGE'][i])] == 0)]
+        data = segmentation_file[0].data 
+        fc =  faint_catalog
+        val = [i for i in range(len(fc)) if (data[int(fc['Y_IMAGE'][i]),int(fc['X_IMAGE'][i])] == 0)]
         new_catalog = faint_catalog[val]
         name = out_dir + '/' +out_name+ "_filteredfaint.cat"
         new_catalog.write(name, format="ascii.basic")
@@ -449,10 +451,10 @@ class GalaxyCatalog:
    
     def check_oth_obj(self, x0, y0,r,
                       filt, idx, out_dir):
-        """Check if other objects are close to stars picked for psf estimation"""
+        """Checks if other objects are close to stars picked for PSF estimation"""
         seg_name = out_dir + '/'+ filt +'_comb_seg_map.fits'
         seg_im = fn.get_subImage_pyfits(int(x0), int(y0), [int(r)]*8, seg_name,
-                                      None, None, save_img=False)
+                                        None, None, save_img=False)
         shape = seg_im.shape
         num = seg_im[shape[0]/2, shape[1]/2]
         im, bl, oth, oth_segs, check = cp.div_pixels(seg_im, -1)
@@ -463,14 +465,15 @@ class GalaxyCatalog:
 
     def match_to_tt(self, catalog, out_dir,
                     filt, best_stars, dist=200.):
-        """Find closest tiny tim PSF image in the tt_starfiled for each of
-         the stars picked to find focus stars""" 
+        """Finds closest tiny tim PSF image in the tt_starfiled for each star""" 
         tt_stars = self.params.tt_file_path + "/" + filt + "/{}_stars.txt".format(filt) 
         print 'tt stars', tt_stars
-        tt_table = np.loadtxt(tt_stars)        
+        tt_table = np.loadtxt(tt_stars)
+        # Center and size of stars in catalog.        
         x0 = catalog['X_IMAGE'][best_stars]
         y0 = catalog['Y_IMAGE'][best_stars]
         r = catalog['FLUX_RADIUS'][best_stars]
+        # Center of tiny tim stars.
         x = tt_table.T[0]
         y = tt_table.T[1]
         mult = np.ones([len(best_stars),1])
@@ -493,9 +496,8 @@ class GalaxyCatalog:
         return matched_stars.T
 
     def check_stars(self, best_stars, filt, out_dir):
-        """ Check if the best stars are detected as stars in all filters.
-        If not then remove them from the list of stars used to get the focus.
-        """
+        """Checks if the stars selected for PSF estimation are detected as stars 
+        in all filters. If not then it removes them from the list."""
         filter_list = list(self.params.filters)
         filter_list.remove(filt)
         for check_filter in filter_list:
@@ -512,7 +514,7 @@ class GalaxyCatalog:
 
 
     def stars_for_focus(self, out_dir):
-        """Make postage stamps of stars with the highest SNR"""
+        """Makes postage stamps of stars. Ordered in decresing highest SNR"""
         for filt in self.params.filters:
             cat_name = out_dir + '/' + filt + "_clean.cat"
             print "Making postage stamps of stars on filter ", cat_name
@@ -534,9 +536,8 @@ class GalaxyCatalog:
                                       dir_star, out_name, save_img=True)
                 num+=1
     
-  
     def generate_catalog(self):
-        # create o/p folder if doesn't exist
+        #create o/p folder if doesn't exist
         if os.path.isdir(self.params.out_path) is False:
             subprocess.call(["mkdir", self.params.out_path])
             print "CREATING output folder"
