@@ -753,7 +753,8 @@ def test_Zernike_orthonormality():
                 np.testing.assert_allclose(
                         integral, 0.0, atol=area*1e-2,
                         err_msg="Orthonormality failed for (j1,j2) = ({0},{1})".format(j1, j2))
-
+    do_pickle(screen1)
+    do_pickle(screen1, lambda x: tuple(x.wavefront(aper)))
 
 @timer
 def test_annular_Zernike_limit():
@@ -780,6 +781,8 @@ def test_annular_Zernike_limit():
                 im1.array, im2.array, atol=1e-10,
                 err_msg="annular Zernike with 1e-5 obscuration not close to circular Zernike")
 
+    do_pickle(psf1)
+    do_pickle(psf1, lambda x: x.drawImage())
 
 @timer
 def test_ne():

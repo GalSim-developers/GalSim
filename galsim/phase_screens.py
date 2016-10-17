@@ -662,6 +662,9 @@ class OpticalScreen(object):
         s = "galsim.OpticalScreen(lam_0=%r" % self.lam_0
         if any(self.aberrations):
             s += ", aberrations=%r"%self.aberrations
+        if self.annular_zernike:
+            s += ", annular_zernike=True"
+            s += ", obscuration=%r"%self.obscuration
         s += ")"
         return s
 

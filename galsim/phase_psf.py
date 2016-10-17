@@ -1406,6 +1406,12 @@ class OpticalPSF(GSObject):
                     pupil_plane_im=pupil_plane_im, pupil_angle=pupil_angle,
                     pupil_plane_scale=pupil_plane_scale, pupil_plane_size=pupil_plane_size,
                     gsparams=gsparams)
+            self.obscuration = obscuration
+        else:
+            if hasattr(aper, obscuration):
+                self.obscuration = aper.obscuration
+            else:
+                self.obscuration = 0.0
 
         # Save for pickling
         self._lam = lam
@@ -1441,6 +1447,9 @@ class OpticalPSF(GSObject):
         s += ", aper=%r"%self._psf.aper
         if any(screen.aberrations):
             s += ", aberrations=[" + ",".join(str(ab) for ab in screen.aberrations) + "]"
+        if screen.annular_zernike:
+            s += ", annular_zernike=True"
+            s += ", obscuration=%r"%self.obscuration
         if self._flux != 1.0:
             s += ", flux=%r" % self._flux
         s += ")"
