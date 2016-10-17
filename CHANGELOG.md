@@ -56,6 +56,8 @@ New Features
       I(R,z) = I_0 / (2h_s) * sech^2 (z/h_s) * exp(-R/R_s),
   inclined to the line of sight at a desired angle. If face-on (inclination =
   0 degrees), this will be identical to the Exponential profile.  (#782)
+- Added ability to specify optical aberrations in terms of annular Zernike
+  coefficients.  (#771)
 
 
 New config features
