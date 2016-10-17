@@ -47,7 +47,6 @@ import functions as fn
 import clean_pstamp as cp
 from astropy.table import Table, Column, vstack
 
-
 class Main_param:
     """Class containg parameters to pass to run analysis on each segment file.
     it adds path name in front of file name and replace seg_id names and filter names.
@@ -159,8 +158,7 @@ class GalaxyCatalog:
     'BACKPHOTO_TYPE' : "LOCAL" ,
     'BACKPHOTO_THICK' : 200,
     'PIXEL_SCALE' : 0.03}            
-    
-    
+      
     def __init__(self,params):
         self.params = params
 
@@ -509,7 +507,6 @@ class GalaxyCatalog:
             select_stars = np.delete(best_stars, remove_stars, axis=0)
         return select_stars
 
-
     def stars_for_focus(self, out_dir):
         """Makes postage stamps of stars. Ordered in decresing highest SNR"""
         for filt in self.params.filters:
@@ -578,7 +575,6 @@ class GalaxyCatalog:
         self.cleanup_catalog(out_dir) 
         # pick stars for PSF estimation   
         self.stars_for_focus(out_dir)
-
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
