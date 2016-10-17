@@ -20,7 +20,7 @@ The script can be implemented to analyze any HST field data in multiple filters.
 ### Scripts: 
 The scripts are run entirely in python. Make sure the following modules are loaded:
 galsim, numpy, astropy, asciidata, subprocess, os, scipy.
-The detection and measurement is performed with [SExtractor](http://www.astromatic.net/software/sextractor)version 2.8.6.
+The detection and measurement is performed with [SExtractor](http://www.astromatic.net/software/sextractor).
 
 ## Running the script
 Note: For faster computation, most scripts are written to be run on each individual image segment, so that multiple segments can be analyzed simultaneously with multiple processors.
@@ -36,7 +36,7 @@ The entire pipeline contains 6 scripts that are to be run in the order:
 
 Common functions that are called multiple times are saved in functions.py
 
- Additional scripts are also included which were used to run the above scripts through batch jobs, for faster computation. Note: the script is written to be run on SLAC batch farm with LSF batch system. You might have to tweak it depending on how you run.
+Additional scripts are also included which were used to run the above scripts through batch jobs, for faster computation. Note: the script is written to be run on SLAC batch farm with LSF batch system. You might have to tweak it depending on how you run.
 
  1. additional.py : Additional code to get list of seg ids, coadd images in multiple bands and convert weight map to rms map.
  2. run_batch_first.py : Script to run get_objects.py over all segments.
@@ -45,9 +45,6 @@ Common functions that are called multiple times are saved in functions.py
  5. run_clean_seg.py : Script to run clean_pstamp.py over all postage stamps for a given segment
  6. run_batch_third_again.py : Script to run clean_pstamp.py over all postage stamps whose jobs failed.
  7. run_batch_fourth.py : Script to run get_cat_seg.py  over all segments.
-
-
-
 
 ## Output:
 Fits files with galaxy images (in multiple bands), files with psf images (in 
