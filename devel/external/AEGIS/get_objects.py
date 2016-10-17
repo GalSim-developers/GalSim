@@ -435,14 +435,14 @@ class GalaxyCatalog:
             catalog = fn.renumber_table(catalog)
             catalog = fn.mask_it_table(catalog)
             #add columns to catalog that will be useful later
-            col= Column(np.zeros(len(catalog)), name='MULTI_DET',
-                       dtype='int', description = 'detected in another segment')
+            col = Column(np.zeros(len(catalog)), name='MULTI_DET',
+                         dtype='int', description = 'detected in another segment')
             catalog.add_column(col)
-            col= Column(['aa.0000000']*len(catalog), name='MULTI_DET_OBJ',
-                        dtype='S12', description = 'object id kept')
+            col = Column(['aa.0000000']*len(catalog), name='MULTI_DET_OBJ',
+                         dtype='S12', description = 'object id kept')
             catalog.add_column(col)
-            col= Column([filt.upper()]*len(catalog), name='BAND',
-                        description = 'measurement filter' )
+            col = Column([filt.upper()]*len(catalog), name='BAND',
+                         description = 'measurement filter' )
             catalog.add_column(col)
             catalog.write(out_dir+'/'+ out_name+ "_clean.cat",
                           format="ascii.basic")
@@ -505,7 +505,7 @@ class GalaxyCatalog:
             cat_name = out_dir + '/' + check_filter + "_clean.cat"
             catalog = Table.read(cat_name, format="ascii.basic")
             select_stars = best_stars
-            remove_stars=[]
+            remove_stars = []
             for i,idx in enumerate(select_stars):
                 if catalog['IS_STAR'][np.int(idx)] == 0:
                     remove_stars.append(i)
@@ -541,7 +541,7 @@ class GalaxyCatalog:
         if os.path.isdir(self.params.out_path) is False:
             subprocess.call(["mkdir", self.params.out_path])
             print "CREATING output folder"
-        out_dir = self.params.out_path+ '/' + self.params.seg_id
+        out_dir = self.params.out_path + '/' + self.params.seg_id
         print "Printing outdir",out_dir
         # create file taht lists o/p required from SExtractor
         self.get_sex_op_params(out_dir)
@@ -554,11 +554,11 @@ class GalaxyCatalog:
             print 'sextractor data files', data_files, wht_files
             self.run_sextractor_dual(data_files, wht_files,
                                      self.bright_config_dict, 
-                                     out_dir, filt+"_bright", filt)
+                                     out_dir, filt + "_bright", filt)
             # Create Faint catalog#
             self.run_sextractor_dual(data_files, wht_files,
                                      self.faint_config_dict, 
-                                     out_dir, filt+"_faint", filt)
+                                     out_dir, filt + "_faint", filt)
             out_name = filt
             bright_catalog_name = out_dir+'/'+filt + "_bright.cat"
             bright_catalog = self.add_bright_faint_column(bright_catalog_name,1)
@@ -570,7 +570,7 @@ class GalaxyCatalog:
             new_seg_map = out_dir+'/'+ filt + "_bright_seg_map_new.fits"
             self.filter_cat_with_segmentation_map(faint_catalog, new_seg_map,
                                                   out_dir, filt)
-            filtered_faint_name = out_dir + '/' + filt+ "_filteredfaint.cat"
+            filtered_faint_name = out_dir + '/' + filt + "_filteredfaint.cat"
             #Merge filtered faint catalog and bright catalog
             self.merge(filtered_faint_name, bright_catalog_name, 
                           out_name, out_dir)
