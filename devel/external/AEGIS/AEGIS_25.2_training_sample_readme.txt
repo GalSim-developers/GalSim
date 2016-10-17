@@ -64,7 +64,7 @@ MAG_AUTO: magnitude (MAG_AUTO computed by SExtractor).
 
 FLUX_RADIUS: half-light radius for the PSF-convolved object (same as flux_radius from the AEGIS catalog), in units of pixels.
 
-ZPHOT: Photometric redshift from the DEEP2 galaxy redshift catalog Data Realase 4 (Newman et al.
+ZPHOT: Photometric redshift from the DEEP2 galaxy redshift catalog Data Release 4 (Newman et al.
     2003).
 
 SERSICFIT: Not used.
