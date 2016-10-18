@@ -9,8 +9,8 @@ Note: If no photomteric or redshift catalog, set the input argument for the
 file names to be 'None'. The column names of these two catalogs in the code
 need to be changed to their names in the input.
 
-Since paramteric fits were not done for the galaxies, the parameter values 
-are manually set. If the fits step is performed read the file below and save that
+Since parametric fits were not done for the galaxies, the parameter values 
+are manually set. If the fits step is performed, read the file below and save that
 to the catalog, replacing the fake values set here.
 """
 
@@ -34,7 +34,12 @@ def get_cat_seg(args):
     cat = Table.read(cat_name, format= 'ascii.basic')
     obj_list= args.main_path + seg + '/objects_with_p_stamps.txt' 
     objs = np.loadtxt(obj_list, dtype="int")
-    temp = cat[objs]
+    #Select only good postage stamps
+    cond1 = cat['min_mask_dist_pixels'][obs] < 11
+    cond2 = cat['average_mask_adjacent_pixel_count'][obs]/ cat['peak_image_pixel_count'][obs] < 0.2
+    q, = np.where(cond1 & cond2)
+    good = objs[q]
+    temp = cat[good]
 
     print " Adding columns for additional catalog information"
     # Columns to add values from photometric and redshift catalog
@@ -117,7 +122,7 @@ def get_cat_seg(args):
     temp.add_column(col)
 
     # Add columns for selection file       
-    for idx,obj in enumerate(objs):
+    for idx,obj in enumerate(good):
         path = args.main_path + seg + '/postage_stamps/stamp_stats/'
         stats_file =  path + str(obj) + '_' + filt + '.txt'
         stats = np.loadtxt(stats_file) 
@@ -152,7 +157,9 @@ def get_cat_seg(args):
     temp = hstack([temp,temp2])
 
     print "Catalog with pstamps saved at ", new_cat_name
-    temp.write(new_cat_name, format='fits')  
+    temp.write(new_cat_name, format='fits') 
+    good_list= args.main_path + seg + '/gal_in_cat.txt' 
+    np.savetxt(good_list, good) 
 
 if __name__ == '__main__':
     import subprocess
