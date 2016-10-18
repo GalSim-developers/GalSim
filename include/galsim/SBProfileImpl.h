@@ -99,7 +99,7 @@ namespace galsim {
         virtual double getNegativeFlux() const { return getFlux()>0. ? 0. : -getFlux(); }
 
         // Utility for drawing a k grid into FFT data structures
-        void fillKGrid(KTable& kt) const;
+        void fillKGrid(KTable& kt, int N=0) const;
 
         // Public so it can be directly used from SBProfile.
         const GSParamsPtr gsparams;
