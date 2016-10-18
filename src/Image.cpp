@@ -366,6 +366,7 @@ void wrap_hermx_cols_pair(T*& ptr1, T*& ptr2, int m, int mwrap, int step)
     // The negative col will wrap normally onto -N/2, which means we need to also do a
     // conjugate wrapping onto N/2.
 
+    dbg<<"Start hermx_cols_pair\n";
     T* ptr1wrap = ptr1;
     T* ptr2wrap = ptr2;
     int i = mwrap-1;
@@ -421,6 +422,7 @@ void wrap_hermx_cols_pair(T*& ptr1, T*& ptr2, int m, int mwrap, int step)
 template <typename T>
 void wrap_hermx_cols(T*& ptr, int m, int mwrap, int step)
 {
+    dbg<<"Start hermx_cols\n";
     T* ptrwrap = ptr;
     int i = mwrap-1;
     while (1) {
@@ -455,7 +457,7 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
 
     dbg<<"Start ImageView::wrap: b = "<<b<<std::endl;
     dbg<<"self bounds = "<<this->_bounds<<std::endl;
-    set_verbose(2);
+    //set_verbose(2);
 
     const int i1 = b.getXMin()-this->_bounds.getXMin();
     const int i2 = b.getXMax()-this->_bounds.getXMin()+1;  // +1 for "1 past the end"
