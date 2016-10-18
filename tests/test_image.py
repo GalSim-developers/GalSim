@@ -2327,9 +2327,9 @@ def test_wrap():
     im_test = galsim.ImageC(b, init_value=0)
     for i in range(-M,M+1):
         for j in range(-N,N+1):
-            # An arbitraryish Hermitian function.
-            #val = np.exp(i**2/57.3 + 1j*(2.8*i-1.3*j)) + ((2 + 3j*j)/12.9)**3
-            val = 2*(i-j)**2 + 3j*(i+j)
+            # An arbitrary, complicated Hermitian function.
+            val = np.exp((i/(2.3*M))**2 + 1j*(2.8*i-1.3*j)) + ((2 + 3j*j)/(1.9*N))**3
+            #val = 2*(i-j)**2 + 3j*(i+j)
 
             im[i,j] = val
             if j >= 0:

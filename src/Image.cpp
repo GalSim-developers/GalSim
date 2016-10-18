@@ -521,7 +521,6 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
 
         // Start with j == jj = j2-1.
         int jj = j2-1;
-        bool conj = true;
         ptr += jj * stride;
         T* ptrwrap = ptr + (m-1) * step;
 
@@ -531,68 +530,63 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
         xdbg<<"Wrap first row "<<jj<<" onto row = "<<jj<<" using conjugation.\n";
         xdbg<<"ptrs = "<<ptr-this->getData()<<"  "<<ptrwrap-this->getData()<<std::endl;
         wrap_row_selfconj(ptr, ptrwrap, m, step);
-        --jj;
 
-        for (int j=j2; j<n; ++j, ptr+=skip) {
-            if (conj) {
+        ptr += skip;
+        ptrwrap -= skip;
+        --jj;
+        int  j= j2;
+        while (1) {
+            int k = std::min(n-j,jj);  // How many conjugate rows to do?
+            for (; k; --k, ++j, --jj, ptr+=skip, ptrwrap-=skip) {
                 xdbg<<"Wrap row "<<j<<" onto row = "<<jj<<" using conjugation.\n";
                 xdbg<<"ptrs = "<<ptr-this->getData()<<"  "<<ptrwrap-this->getData()<<std::endl;
                 wrap_row_conj(ptr, ptrwrap, m, step);
-                if (jj > 0) {
-                    // The normal case
-                    --jj;
-                    ptrwrap -= skip;
-                } else {
-                    // We also need to wrap this without conjugation, so move j and ptr back 1 row
-                    // to get it ready for the next pass through the loop.
-                    --j;
-                    ptr -= stride;
-                    conj = false;
-                    ptrwrap += step;
-                }
-            } else {
+            }
+            assert(j==n || jj == j1);
+            if (j == n) break;
+            assert(j < n);
+            // On the last one, don't increment ptrs, since we need to repeat with the non-conj add.
+            wrap_row_conj(ptr, ptrwrap, m, step);
+            ptr -= m*step;
+            ptrwrap += step;
+
+            k = std::min(n-j,nwrap-1);  // How many non-conjugate rows to do?
+            for (; k; --k, ++j, ++jj, ptr+=skip, ptrwrap+=skip) {
                 xdbg<<"Wrap row "<<j<<" onto row = "<<jj<<std::endl;
                 xdbg<<"ptrs = "<<ptr-this->getData()<<"  "<<ptrwrap-this->getData()<<std::endl;
                 wrap_row(ptr, ptrwrap, m, step);
-                if (jj < j2-1) {
-                    // The normal case
-                    ++jj;
-                    ptrwrap += skip;
-                } else {
-                    // We also need to wrap this with conjugation, so move j and ptr back 1 row
-                    // to get it ready for the next pass through the loop.
-                    --j;
-                    ptr -= stride;
-                    conj = true;
-                    ptrwrap -= step;
-                }
             }
+            assert(j==n || jj == j2-1);
+            if (j == n) break;
+            assert(j < n);
+            wrap_row(ptr, ptrwrap, m, step);
+            ptr -= m*step;
+            ptrwrap -= step;
         }
     } else {
         // The regular case is mostly simpler (no conjugate stuff to worry about).
         // However, we don't have the luxury of knowing that j1==0, so we need to start with
         // the rows j<j1, then skip over [j1,j2) when we get there and continue with j>=j2.
 
-        // Row 0 maps onto j2 - (j2 % nwrap) (although we may need to subtract nwrap below).
+        // Row 0 maps onto j2 - (j2 % nwrap) (although we may need to subtract nwrap).
         int jj = j2 - (j2 % nwrap);
+        if (jj == j2) jj = j1;
         T* ptrwrap = ptr + jj * stride;
-        for (int j=0; j<n; ++j, ++jj, ptr+=skip, ptrwrap+=skip) {
-            // Loop jj and ptrwrap back if necessary.
-            if (jj == j2) {
-                jj = j1;
-                ptrwrap -= nwrap * stride;
-            }
+        for (int j=0; j<n;) {
             // When we get here, we can just skip to j2 and keep going.
             if (j == j1) {
-                assert(jj == j1);
                 assert(ptr == ptrwrap);
                 j = j2;
                 ptr += nwrap * stride;
-                if (j2 == n) break;
             }
-            xdbg<<"Wrap row "<<j<<" onto row = "<<jj<<std::endl;
-            xdbg<<"ptrs = "<<ptr-this->getData()<<"  "<<ptrwrap-this->getData()<<std::endl;
-            wrap_row(ptr, ptrwrap, m, step);
+            int k = std::min(n-j,j2-jj);  // How many to do before looping back.
+            for (; k; --k, ++j, ++jj, ptr+=skip, ptrwrap+=skip) {
+                xdbg<<"Wrap row "<<j<<" onto row = "<<jj<<std::endl;
+                xdbg<<"ptrs = "<<ptr-this->getData()<<"  "<<ptrwrap-this->getData()<<std::endl;
+                wrap_row(ptr, ptrwrap, m, step);
+            }
+            jj = j1;
+            ptrwrap -= nwrap * stride;
         }
     }
 
