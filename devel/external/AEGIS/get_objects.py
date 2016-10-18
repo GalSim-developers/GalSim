@@ -277,17 +277,17 @@ class GalaxyCatalog:
             catalog = Table.read(merged_catalog, format="ascii.basic")
             snr = np.array(catalog['FLUX_AUTO'])/np.array(catalog['FLUXERR_AUTO'])
             col= Column(snr,name='SNR',
-                        description = 'Signal to Noise Ratio')
+                        description='Signal to Noise Ratio')
             catalog.add_column(col)
             # Modified SNR: Correcting of correlations in noise.
             A = catalog['FLUXERR_AUTO']**2 - catalog['FLUX_AUTO']/self.params.gain[filt]
             new_f_err = (A/self.params.sf + catalog['FLUX_AUTO']/self.params.gain[filt])**0.5 
             col = Column(new_f_err,name='NEW_FLUXERR_AUTO',
-                        description = 'Modified FLUXERR_AUTO')
+                        description='Modified FLUXERR_AUTO')
             catalog.add_column(col)
             new_snr = np.array(catalog['FLUX_AUTO'])/new_f_err
             col = Column(new_snr,name='NEW_SNR',
-                         description = 'Modified Signal to Noise Ratio')
+                         description='Modified Signal to Noise Ratio')
             catalog.add_column(col)
             col = Column(np.zeros(len(catalog)), name='IS_STAR', dtype='int')
             catalog.add_column(col)
@@ -349,7 +349,7 @@ class GalaxyCatalog:
         x_vertices = np.array([x0-w,x0-w,x0+w,x0+w,x0+r,x0+l,x0+l,x0+r,x0+w,x0+w,x0-w,x0-w,x0-r,x0-l,x0-l,x0-r])
         y_vertices = np.array([y0+r,y0+l,y0+l,y0+r,y0+w,y0+w,y0-w,y0-w,y0-r,y0-l,y0-l,y0-r,y0-w,y0-w,y0+w,y0+w])
         (x_vertices, y_vertices) = fn.rotate_table(x_vertices,y_vertices,x0,y0,theta)
-        catalog['IN_DIFF_MASK'][q]=1
+        catalog['IN_DIFF_MASK'][q]= 1
         print "Identify objects in diffraction spike"
         Xs = np.array([catalog['XMIN_IMAGE'], catalog['XMAX_IMAGE']], dtype=int)
         Ys = np.array([catalog['YMIN_IMAGE'], catalog['YMAX_IMAGE']], dtype=int)
@@ -440,10 +440,10 @@ class GalaxyCatalog:
             catalog = fn.mask_it_table(catalog)
             #add columns to catalog that will be useful later
             col = Column(np.zeros(len(catalog)), name='MULTI_DET',
-                         dtype='int', description = 'detected in another segment')
+                         dtype='int', description='detected in another segment')
             catalog.add_column(col)
             col = Column(['aa.0000000']*len(catalog), name='MULTI_DET_OBJ',
-                         dtype='S12', description = 'object id kept')
+                         dtype='S12', description='object id kept')
             catalog.add_column(col)
             col = Column([filt.upper()]*len(catalog), name='BAND',
                          description = 'measurement filter' )
@@ -590,15 +590,15 @@ if __name__ == '__main__':
     parser = ArgumentParser()
     parser.add_argument('--seg_id', default='1a',
                         help="Segment id of image to run [Default:1a]")
-    parser.add_argument('--filter_names', default= ['f606w','f814w'],
+    parser.add_argument('--filter_names', default=['f606w','f814w'],
                         help="names of filters [Default: ['f814w','f606w']]")
-    parser.add_argument('--file_path', default= '/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip/',
+    parser.add_argument('--file_path', default='/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip/',
                         help="Path of directory containing input images \
                         [Default:'/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip] ")
-    parser.add_argument('--wht_path', default= '/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip',
+    parser.add_argument('--wht_path', default='/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip',
                         help="Path of directory containing weight files \
                         [Default:'/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip] ")
-    parser.add_argument('--out_path', default= '/nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_full/',
+    parser.add_argument('--out_path', default='/nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_full/',
                         help="Path to where you want the output stored \
                         [Default: /nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_full/]")
     parser.add_argument('--file_name', default='EGS_10134_seg_id_acs_wfc_filter_30mas_unrot_drz.fits',
@@ -649,7 +649,7 @@ if __name__ == '__main__':
     parser.add_argument('--sf', default=0.316 ,
                         help="Scale factor to correct for correlated noise \
                         [Default:0.316 ")
-    parser.add_argument('--manual_mask_file', default= 'manual_masks.txt',
+    parser.add_argument('--manual_mask_file', default='manual_masks.txt',
                         help="File containing regions that are to be masked\
                         [Default:'manual_masks.txt']")
     parser.add_argument('--tt_file_path', 
