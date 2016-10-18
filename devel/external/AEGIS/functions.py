@@ -143,7 +143,7 @@ def rotate_table(x,y,x0,y0,theta):
     y_rotated = np.sin(theta)*x +np.cos(theta)*y - np.sin(theta)*x0 + (1-np.cos(theta))*y0
     return [x_rotated,y_rotated]
 
-def get_closest_tt(x0,y0,tt_table,dist=200.):    
+def get_closest_tt(x0, y0, tt_table, dist=200.):    
     x = tt_table.T[0]
     y = tt_table.T[1]
     d = ((x-x0)**2+(y-y0)**2)**0.5 
@@ -178,7 +178,6 @@ def inpoly(px,py,x,y):
                     crossings += 1
     return crossings % 2
 
-
 def set_col_any(arr, val, buff, set_to):
     """Set the column value to set_to that are within buff of any non zero value in arr"""
     s = arr.shape
@@ -196,13 +195,10 @@ def set_col_any(arr, val, buff, set_to):
         arr[:,i]=temp
     return arr
 
-def seg_expand(seg,  buff, val=None, set_to=-1):
+def seg_expand(seg, buff, val=None, set_to=-1):
     """Expand the seg map by buffering buff pixels around pixel val """
     arr = np.array(seg).copy()
     temp1 = set_col_any(arr, val, buff, set_to)
     temp2 = set_col_any(arr.T,val,  buff, set_to).T
     new_seg = np.minimum(temp1, temp2)
     return arr
-
-
-#################    
