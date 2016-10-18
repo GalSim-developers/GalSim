@@ -210,7 +210,7 @@ class GalaxyCatalog:
         config_fname =  out_dir+ '/'+ out_name + ".config"
         config_ascii.writeto(config_fname)               
         #Run sextractor and get the catalog
-        subprocess.call(["sex", data_files[0],",",data_files[1] , "-c", config_fname])
+        subprocess.call(["sex", data_files[0]+","+data_files[1] , "-c", config_fname])
 
     def add_bright_faint_column(self, cat_name, tag):
         """Add coloumn 'IS_BRIGHT' in catalog with name cat_name.value of 
