@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from astropy.table import Table, Column
 
 def make_line(point1, point2):
-    """Return slope and intercept of line joining point 1 and point2"""
+    """Return slope and intercept of line joining point 1 and point2."""
     x1 = point1[0]
     y1 = point1[1]
     x2 = point2[0]
@@ -16,18 +16,6 @@ def make_line(point1, point2):
     intercept = -1*slope*x1+y1
     return (slope, intercept)
 
-def is_below_boundary(x, y, x_div, y_div, slope, intercept, x_max):
-    """Return True if point lies within x_div y_div or if it lies 
-    under line with given slope and intercept"""
-    output = True
-    if x < x_div and y > y_div:
-        output = False
-    if x > x_div and y > slope*x + intercept:
-        output = False
-    if x > x_max:
-        output = False
-    return output
-
 def is_below_boundary_table(x, y, x_div, y_div, slope, intercept, x_max):
     """Return True if point lies within x_div y_div or if it lies 
     under line with given slope and intercept"""
@@ -35,22 +23,6 @@ def is_below_boundary_table(x, y, x_div, y_div, slope, intercept, x_max):
     cond2 = (x > x_div) & (y < slope*x + intercept) & (x < x_max)
     q, = np.where(cond1 ^ cond2)
     return q
-
-def lies_within(x_min, x_max, y_min, y_max,
-	           A,B,C,D):
-    """Return True if point lines within box with end points A,B,C,D"""
-    (left_m, left_b) = make_line(A,B)
-    (top_m, top_b) = make_line(B,C)
-    (right_m, right_b) = make_line(C,D)
-    (bottom_m, bottom_b) = make_line(D,A)
-    cond1 = y_max < left_m*x_min+left_b
-    cond2 = y_max < top_m*x_min+top_b
-    cond3 = y_max < right_m*x_max+right_b
-    cond4 = y_min > bottom_m*x_min+bottom_b
-    if (cond1 and cond2 and cond3 and cond4):
-    	return True
-    else:
-    	return False
 
 def correct_extinction(mag,filt):
     """Applies extinction correction to magnitude. Since the AEGIS field is 
@@ -84,16 +56,8 @@ def lies_within_table(x_min, x_max, y_min, y_max,
     cond4 = y_min > bottom_m*x_min+bottom_b
     return cond1 & cond2 & cond3 & cond4
 
-def renumber(catalog):
-    "Renumber detected objects while saving old number as well. Use asciidata"
-    for i in range(catalog.nrows):
-        catalog['OLD_NUMBER'][i] = catalog['NUMBER'][i]
-        catalog['NUMBER'][i] = i
-    catalog['OLD_NUMBER'].set_colcomment("Original detection number by sextractor")
-    return catalog
-
 def renumber_table(catalog):
-    "Renumber detected objects while saving old number as well. Use astropy table"
+    "Renumber detected objects while saving old number as well"
     old = np.zeros(len(catalog))
     for i in range(len(catalog)):
         old [i] = catalog['NUMBER'][i]
@@ -125,7 +89,6 @@ def select_good_stars(catalog, nstars=25):
             values = np.append(values, np.array([(catalog['SNR'][i],
                                                 catalog['NUMBER'][i])],dtype=dtype))
     best_stars = np.sort(values, order='snr')[-nstars:]['index']
-    #print 'Best Stars [SNR, ID]', np.sort(values, order='snr')[-nstars:]
     return best_stars
 
 def select_good_stars_table(catalog, nstars=25):
