@@ -18,7 +18,7 @@ Cleanup:
 Since the noise in the image is not uncorrelated (dut to multidrizzle), the snr
 computed from sextractor needs is modified by parameter scale factr --sf.
 The detected objects are then classified into stars and galaxies depending on
-their position in the MAG_AUTO Vs MU_MAX plot. The seperation line is set 
+their position in the MAG_CORR Vs MU_MAX plot. The seperation line is set 
 by star_galaxy_params. Objects that lie on image edge are masked. Region around
 saturated stars are masked: masked region set by diff_spike_params.Regions 
 that were manually observed to have artefacts (eg.ghosts) and are to be masked 
@@ -244,17 +244,23 @@ class GalaxyCatalog:
         new_catalog.write(name, format="ascii.basic")
 
     def merge(self, filtered_faint_catalog, 
-              bright_catalog, out_name, out_dir):
-        """ Merge objects detected in bright and filtered faint catalog """
+              bright_catalog, filt, out_dir):
+        """ Merge objects detected in bright and filtered faint catalog. 
+        Extinction correction to magnitude is also applied here. """
         print "Merging bright  and faint catalogs for section", self.params.seg_id
-        name = out_dir + '/'+ out_name + "_merge.cat"
+        name = out_dir + '/'+ filt + "_merge.cat"
         faint_cat = Table.read(filtered_faint_catalog, format="ascii.basic" )
         bright_cat = Table.read(bright_catalog, format="ascii.basic" )
         comb_cat = vstack([bright_cat, faint_cat])
+        # Correct magntiude for extinction
+        corr_mag = fn.correct_extinction(comb_cat['MAG_AUTO'], filt)
+        col = Column(corr_mag, name='MAG_CORR',
+                     description = 'Extinction corrected MAG_AUTO')
+        comb_cat.add_column(col)
         comb_cat.write(name, format="ascii.basic")
 
     def classification(self, div_params, out_dir):
-        """Detected objects are classified as stars or not depending on thier 
+        """Detected objects are classified as stars or not depending on their 
         magnitude and peak surface brightnes."""     
         x_max = 25
         print "Performing star-galaxy separation for section ", self.params.seg_id
@@ -282,12 +288,12 @@ class GalaxyCatalog:
             catalog.add_column(col)
             col = Column(np.zeros(len(catalog)), name='IS_STAR', dtype='int')
             catalog.add_column(col)
-            q = fn.is_below_boundary_table(catalog['MAG_AUTO'], catalog['MU_MAX'],
+            q = fn.is_below_boundary_table(catalog['MAG_CORR'], catalog['MU_MAX'],
                                            x_div, y_div, slope, intercept, x_max)
             catalog['IS_STAR'][q] = 1
             col= Column(np.zeros(len(catalog)), name='IS_FAKE', dtype='int')
             catalog.add_column(col)
-            q = fn.is_below_boundary_table(catalog['MAG_AUTO'], catalog['MU_MAX'],
+            q = fn.is_below_boundary_table(catalog['MAG_CORR'], catalog['MU_MAX'],
                                            x_div+1, y_div-2, slope, intercept-2, x_max+1)
             catalog['IS_FAKE'][q] = 1
             catalog.write(out_dir + '/' + out_name + "_class.cat", 
@@ -325,7 +331,7 @@ class GalaxyCatalog:
                      description="Close to saturated star", dtype=int)
         catalog.add_column(col)
         print "Identifying saturated stars"
-        cond1 = catalog['MAG_AUTO']  < mag_cutoff
+        cond1 = catalog['MAG_CORR']  < mag_cutoff
         cond2 = catalog['IS_STAR'] == 1
         q, = np.where(cond1 & cond2)
         ## exit if no saturated stars present
