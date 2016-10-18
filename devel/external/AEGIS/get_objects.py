@@ -550,11 +550,11 @@ class GalaxyCatalog:
         self.get_sex_op_params(out_dir)
         ### Detection done on given added image
         for filt in self.params.filters:
-            print "measuring filter", filt
+            print "Measuring on filter", filt
             data_files = [self.params.det_im_file, self.params.data_files[filt]]
             wht_files = [self.params.det_wht_file, self.params.wht_files[filt]]
             # Create Bright catalog#
-            print 'sextractor data files', data_files, wht_files
+            print 'Sextractor input data files', data_files, wht_files
             self.run_sextractor_dual(data_files, wht_files,
                                      self.bright_config_dict, 
                                      out_dir, filt + "_bright", filt)
@@ -591,7 +591,7 @@ if __name__ == '__main__':
     parser.add_argument('--seg_id', default='1a',
                         help="Segment id of image to run [Default:1a]")
     parser.add_argument('--filter_names', default=['f606w','f814w'],
-                        help="names of filters [Default: ['f814w','f606w']]")
+                        help="names of filters [Default: ['f606w','f814w']]")
     parser.add_argument('--file_path', default='/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip/',
                         help="Path of directory containing input images \
                         [Default:'/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip] ")
@@ -641,9 +641,9 @@ if __name__ == '__main__':
                         help="Star galaxy seperation line parametrs \
                         [Default:(x_div, y_div, slope)]")
     parser.add_argument('--zero_point_mag', 
-                        default= (26.486, 25.937),
+                        default= (26.508, 25.955),
                         help="Zero point magnitides for each band \
-                        [Default:(26.486, 25.937)]")
+                        [Default:(26.508, 25.955)]")
     parser.add_argument('--gain', default=[2260,2100],
                         help="Detector gain in e/ADU[Default:[2260,2100](s)]")
     parser.add_argument('--sf', default=0.316 ,

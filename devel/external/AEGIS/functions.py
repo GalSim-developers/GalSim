@@ -37,7 +37,7 @@ def correct_extinction(mag,filt):
     a_i = 0.016
     if filt == 'f606w':
         mag_corr = mag - a_v
-    else if filt == 'f814w':
+    elif filt == 'f814w':
         mag_corr = mag - a_i
     else:
         raise ValueError("correct_extinction cannot be used for filter %s"%filt)
