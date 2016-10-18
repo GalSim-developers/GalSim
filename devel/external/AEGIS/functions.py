@@ -52,6 +52,25 @@ def lies_within(x_min, x_max, y_min, y_max,
     else:
     	return False
 
+def correct_extinction(mag,filt):
+    """Applies extinction correction to magnitude. Since the AEGIS field is 
+    small and not in the galactic plane, the extinction is assumed to be 
+    uniform. This function will have to be modified for other surveys.
+    The extinction magnitudes are derived from 
+    http://ned.ipac.caltech.edu/forms/calculator.html computed from 
+    Schlafly et al.(2011), at RA=14h18m DEC=52d49m.
+    """
+    #eb_v = 0.0102  #from http://irsa.ipac.caltech.edu/applications/DUST/
+    a_v = 0.025
+    a_i = 0.016
+    if filt == 'f606w':
+        mag_corr = mag - a_v
+    else if filt == 'f814w':
+        mag_corr = mag - a_i
+    else:
+        raise ValueError("correct_extinction cannot be used for filter %s"%filt)
+    return mag_corr
+
 def lies_within_table(x_min, x_max, y_min, y_max,
                A,B,C,D):
     """Return True if point lines within box with end points A,B,C,D"""
