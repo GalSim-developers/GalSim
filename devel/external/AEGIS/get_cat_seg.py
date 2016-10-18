@@ -39,6 +39,8 @@ def get_cat_seg(args):
     cond2 = cat['average_mask_adjacent_pixel_count'][obs]/ cat['peak_image_pixel_count'][obs] < 0.2
     q, = np.where(cond1 & cond2)
     good = objs[q]
+    # If no selection cut has to be applied
+    #good = objs
     temp = cat[good]
 
     print " Adding columns for additional catalog information"
