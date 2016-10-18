@@ -16,16 +16,19 @@ region  --buffer.
 
 Cleanup:
 Since the noise in the image is not uncorrelated (dut to multidrizzle), the snr
-computed from sextractor needs is modified by parameter scale factr --sf.
-The detected objects are then classified into stars and galaxies depending on
-their position in the MAG_CORR Vs MU_MAX plot. The seperation line is set 
+computed from sextractor needs to be modified by parameter scale factr --sf.
+The magnitudes computed by SExtractor have to be corrected for dust extinction.
+The correction function correct_extinction() in functions.py would have to be 
+modified when running script on a survey other then AEGIS. The detected objects 
+are then classified into stars and galaxies depending on their position in the 
+magnitude Vs peak surface brightness plot. The separation line is set 
 by star_galaxy_params. Objects that lie on image edge are masked. Region around
-saturated stars are masked: masked region set by diff_spike_params.Regions 
+saturated stars are masked: masked region set by diff_spike_params. Regions 
 that were manually observed to have artefacts (eg.ghosts) and are to be masked 
 are input as manual_mask_file. final catalog is renumbered begining from 0.
 Bright and faint seg maps are combined to form a single segmentation map.
 The bright seg map objects are expanded by 10 pixels.
-Note: Value of object in seg map will be 1 higher than NUMBER in catalog. catalog
+Note: Value of object in seg map will be 1 higher than NUMBER in catalog. Catalog
 numbers start at 0, while 0 in segmap is no object present. 
 
 Stars for PSF estimation:
@@ -348,8 +351,8 @@ class GalaxyCatalog:
         (x_vertices, y_vertices) = fn.rotate_table(x_vertices,y_vertices,x0,y0,theta)
         catalog['IN_DIFF_MASK'][q]=1
         print "Identify objects in diffraction spike"
-        Xs = np.array([catalog['XMIN_IMAGE'],catalog['XMAX_IMAGE']], dtype=int)
-        Ys = np.array([catalog['YMIN_IMAGE'],catalog['YMAX_IMAGE']], dtype=int)
+        Xs = np.array([catalog['XMIN_IMAGE'], catalog['XMAX_IMAGE']], dtype=int)
+        Ys = np.array([catalog['YMIN_IMAGE'], catalog['YMAX_IMAGE']], dtype=int)
         bottom_pixels = [[(x,Ys[0][i]) for x in range(Xs[0][i],Xs[1][i])]for i in range(len(catalog))]
         top_pixels = [[(x,Ys[1][i]) for x in range(Xs[0][i],Xs[1][i])]for i in range(len(catalog))]
         left_pixels = [[(Xs[0][i],y) for y in range(Ys[0][i],Ys[1][i])]for i in range(len(catalog))]
