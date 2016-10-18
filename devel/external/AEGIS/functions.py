@@ -44,7 +44,7 @@ def correct_extinction(mag,filt):
     return mag_corr
 
 def lies_within_table(x_min, x_max, y_min, y_max,
-               A,B,C,D):
+                      A, B, C, D):
     """Return True if point lines within box with end points A,B,C,D"""
     (left_m, left_b) = make_line(A,B)
     (top_m, top_b) = make_line(B,C)
@@ -137,17 +137,6 @@ def get_subImage_pyfits(x0,y0, L, image,
             sub_img.write(out_dir+out_name+".fits")
     return sub_img
 
-
-##### Check #######
-def rotate(x,y,x0,y0,theta):
-    theta = np.radians(theta)
-    x_rotated = []
-    y_rotated = []
-    for i in range(len(x)):
-        x_rotated.append(np.cos(theta)*x[i]-np.sin(theta)*y[i]+(1-np.cos(theta))*x0+np.sin(theta)*y0)
-        y_rotated.append(np.sin(theta)*x[i]+np.cos(theta)*y[i]-np.sin(theta)*x0+(1-np.cos(theta))*y0)
-    return [x_rotated,y_rotated]
-
 def rotate_table(x,y,x0,y0,theta):
     theta = np.radians(theta)
     x_rotated = np.cos(theta)*x - np.sin(theta)*y + (1-np.cos(theta))*x0 + np.sin(theta)*y0
@@ -163,7 +152,6 @@ def get_closest_tt(x0,y0,tt_table,dist=200.):
         return [x[best],y[best]]
     else:
         return False
-
 
 def inpoly(px,py,x,y):
     crossings = 0
