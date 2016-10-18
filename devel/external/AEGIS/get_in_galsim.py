@@ -181,7 +181,7 @@ def get_main_catalog(args, index_table):
             temp = join(seg_cat, indx_seg, keys='NUMBER')
             col = Column(temp['HDU'], name='PSF_HDU')
             temp.add_column(col)
-            temp.rename_column('MAG_AUTO', 'MAG')
+            temp.rename_column('MAG_CORR', 'MAG')
             temp.rename_column('HDU', 'GAL_HDU')
             p_scales = np.ones(len(q))*0.03
             weights = np.ones(len(q))
@@ -245,7 +245,7 @@ def get_fits_catalog(args, index_table):
             q, = np.where(index_table['SEG_ID'] == seg_id)
             indx_seg = index_table[q]
             temp = join(seg_cat, indx_seg, keys='NUMBER')
-            temp.rename_column('MAG_AUTO', 'mag_auto')
+            temp.rename_column('MAG_CORR', 'mag_auto')
             temp.rename_column('FLUX_RADIUS', 'flux_radius')            
             col = Column(temp['stamp_flux'], name='flux')
             temp.add_column(col)

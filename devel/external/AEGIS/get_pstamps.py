@@ -72,7 +72,7 @@ def run(params, focus):
             cond3 = (catalogs[f]['SNR'][i] >= 0)
             cond4 = (catalogs[f]['MULTI_DET'][i] == 0)
             #Placing magnitude cut on only last filter
-            cond5 = (catalogs[-1]['MAG_AUTO'][i] <= 25.2)
+            cond5 = (catalogs[-1]['MAG_CORR'][i] <= 25.2)
             if  cond1 and cond2 and cond3 and cond4 and cond5:
                 t = (catalogs[f]['THETA_IMAGE'][int(i)])*np.pi/180.
                 e = catalogs[f]['ELLIPTICITY'][int(i)]
