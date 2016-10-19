@@ -299,9 +299,9 @@ class Aperture(object):
         """ Create an array of illuminated pixels parameterically.
         """
         ratio = pupil_plane_size/pupil_plane_scale
-        # Fudge a little to prevent goodFFTSize() from turning 512.0001 into 768.
+        # Fudge a little to prevent good_fft_size() from turning 512.0001 into 768.
         ratio *= (1.0 - 1.0/2**14)
-        self.npix = galsim._galsim.goodFFTSize(int(np.ceil(ratio)))
+        self.npix = galsim.Image.good_fft_size(int(np.ceil(ratio)))
         self.pupil_plane_size = pupil_plane_size
         # Shrink scale such that size = scale * npix exactly.
         self.pupil_plane_scale = pupil_plane_size / self.npix
@@ -389,7 +389,7 @@ class Aperture(object):
 
         # Check the pupil plane size here and bump it up if necessary.
         if self.pupil_plane_size < good_pupil_size:
-            new_npix = galsim._galsim.goodFFTSize(int(np.ceil(
+            new_npix = galsim.Image.good_fft_size(int(np.ceil(
                     good_pupil_size/self.pupil_plane_scale)))
             pad_width = (new_npix-self.npix)//2
             pp_arr = np.pad(pp_arr, [(pad_width, pad_width)]*2, mode='constant')

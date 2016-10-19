@@ -360,7 +360,7 @@ class InterpolatedImage(GSObject):
             # as large as we need in any direction.
             noise_pad_size = int(math.ceil(noise_pad_size / self.min_scale))
             # Round up to a good size for doing FFTs
-            noise_pad_size = galsim._galsim.goodFFTSize(noise_pad_size)
+            noise_pad_size = galsim.Image.good_fft_size(noise_pad_size)
             if noise_pad_size <= min(self.image.array.shape):
                 # Don't need any noise padding in this case.
                 noise_pad_size = 0

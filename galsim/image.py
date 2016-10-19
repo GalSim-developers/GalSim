@@ -686,6 +686,16 @@ class Image(with_metaclass(MetaImage, object)):
             raise ValueError("Invalid value for hermitian: %s"%hermitian)
         return Image(image=subimage, wcs=self.wcs)
 
+    @classmethod
+    def good_fft_size(cls, input_size):
+        """Round the given input size up to the next higher power of 2 or 3 times a power of 2.
+
+        This rounds up to the next higher value that is either 2^k or 3*2^k.  If you are
+        going to be performing FFTs on an image, these will tend to be faster at performing
+        the FFT.
+        """
+        return galsim._galsim.goodFFTSize(input_size)
+
     def __iter__(self):
         if self.iscomplex:
             # To enable the syntax re, im = obj.drawKImage(...), we let ImageC be iterable,

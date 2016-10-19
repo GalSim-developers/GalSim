@@ -24,6 +24,7 @@
 
 #include "NumpyHelper.h"
 #include "Image.h"
+#include "FFT.h"  // For goodFFTSize
 
 namespace bp = boost::python;
 
@@ -371,6 +372,9 @@ void pyExportImage() {
     scope.attr("ImageAlloc") = pyImageAllocDict;
     scope.attr("ConstImageView") = pyConstImageViewDict;
     scope.attr("ImageView") = pyImageViewDict;
+
+    bp::def("goodFFTSize", &goodFFTSize, (bp::arg("input_size")),
+            "Round up to the next larger 2^n or 3x2^n.");
 }
 
 } // namespace galsim
