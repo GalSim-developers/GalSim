@@ -23,6 +23,8 @@
 #include "SBProfileImpl.h"
 #include "SBKolmogorov.h"
 #include "LRUCache.h"
+#include "OneDimensionalDeviate.h"
+#include "Table.h"
 
 namespace galsim {
 

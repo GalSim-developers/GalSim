@@ -23,6 +23,7 @@
 #include "SBProfileImpl.h"
 #include "SBSpergel.h"
 #include "LRUCache.h"
+#include "OneDimensionalDeviate.h"
 
 namespace galsim {
 

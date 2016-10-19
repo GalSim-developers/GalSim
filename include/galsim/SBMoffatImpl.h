@@ -22,6 +22,8 @@
 
 #include "SBProfileImpl.h"
 #include "SBMoffat.h"
+#include "Table.h"
+#include "OneDimensionalDeviate.h"
 
 namespace galsim {
 

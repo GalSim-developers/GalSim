@@ -21,7 +21,6 @@
 #define GalSim_SBProfileImpl_H
 
 #include "SBProfile.h"
-#include "FFT.h"
 #include "integ/Int.h"
 #include "TMV.h"
 
@@ -97,9 +96,6 @@ namespace galsim {
         virtual double getPositiveFlux() const { return getFlux()>0. ? getFlux() : 0.; }
 
         virtual double getNegativeFlux() const { return getFlux()>0. ? 0. : -getFlux(); }
-
-        // Utility for drawing a k grid into FFT data structures
-        void fillKGrid(KTable& kt, int N=0) const;
 
         // Public so it can be directly used from SBProfile.
         const GSParamsPtr gsparams;

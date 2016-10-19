@@ -430,38 +430,6 @@ namespace galsim {
         image += im2;
     }
 
-    void SBProfile::SBProfileImpl::fillKGrid(KTable& kt, int Nk) const
-    {
-        dbg<<"Start fillKGrid\n";
-        double dk = kt.getDk();
-        int N = kt.getN();
-        dbg<<"N,dk = "<<N<<','<<dk<<std::endl;
-        kt.clearCache();
-
-        // If we don't specify a larger value, then use N for the k-space image.
-        if (Nk <= 0) Nk = N;
-        dbg<<"Nk = "<<Nk<<std::endl;
-
-        Bounds<int> bounds(0,Nk/2,-Nk/2,Nk/2);
-        ImageAlloc<std::complex<double> > im(bounds);
-        fillKImage(im.view(),0.,dk,0,-Nk/2*dk,dk,Nk/2);
-
-        // Wrap the full image to the size we want for the FT.
-        // Even if N == Nk, this is useful to make this portion properly Hermitian in the
-        // N/2 column and N/2 row.
-        Bounds<int> bwrap(0,N/2,-N/2+1,N/2);
-        ImageView<std::complex<double> > imwrap = im.wrap(bwrap, true, false);
-
-        // Copy the image into the KTable.
-        // The KTable wants the locations of the + and - ky values swapped relative to how
-        // we store it in an image.
-        tmv::MatrixView<std::complex<double> > val(imwrap.getData(),
-                                                   N/2+1,N+1,1,im.getStride(),tmv::NonConj);
-        tmv::MatrixView<std::complex<double> > mkt(kt.getArray(),N/2+1,N,1,N/2+1,tmv::NonConj);
-        mkt.colRange(0,N/2+1) = val.colRange(N/2-1,N);
-        mkt.colRange(N/2+1,N) = val.colRange(0,N/2-1);
-    }
-
     // The type of T (real or complex) determines whether the call-back is to
     // fillXImage or fillKImage.
     template <typename T>
