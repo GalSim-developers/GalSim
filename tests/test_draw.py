@@ -996,8 +996,6 @@ def test_fft():
     N = 1162
     nyq_scale = obj.nyquistScale()
     stepk = obj.stepK()
-    print('nyq_scale = ',nyq_scale)
-    print('stepk = ',stepk)
 
     # If we inverse_fft the above automatic image, it should match the automatic real image
     # for method = 'sb' and use_true_center=False.
@@ -1021,7 +1019,6 @@ def test_fft():
     # If we give both a good size to use and match up the scales, then they should produce the
     # same thing.
     N = galsim.Image.good_fft_size(N)
-    print('good FFT N = ',N)
     assert N == 1536 == 3 * 2**9
     kscale = 2.*np.pi / (N * nyq_scale)
     im2 = obj.drawKImage(nx=N+1, ny=N+1, scale=kscale)

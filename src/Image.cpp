@@ -621,81 +621,54 @@ ImageView<double> BaseImage<T>::inverse_fft(double dk) const
     // Get the largest No2 implied by the bounds.
     const int No2 = this->_bounds.getXMax();
     const int N = No2 << 1;
+    dbg<<"N = "<<N<<std::endl;
 
     if (this->_bounds.getYMin() != -No2+1 || this->_bounds.getYMax() != No2)
         throw ImageError("inverse_fft requires bounds to be (0, N/2, -N/2+1, N/2)");
 
-    // For now, use the KTable class to do this.
-    KTable kt(N, dk);
+    // Copy the data into an FFTW array.
+    FFTW_Array<std::complex<double> > k_array(N*(No2+1));
+    std::complex<double>* kptr = k_array.get();
 
-    // Copy the image into the KTable.
-    // The KTable wants the locations of the + and - ky values swapped relative to how
+    // FFTW wants the locations of the + and - ky values swapped relative to how
     // we store it in an image.
+    // Also, to put x=0 in center of array, we need to flop the sign of every other element
+    // and need to scale by (dk/2pi)^2.
+    double fac = dk * dk / (4*M_PI*M_PI);
+
     const int skip = this->getNSkip();
     const T* ptr = _data + (No2-1)*_stride;
-    std::complex<double>* ktptr = kt.getArray();
+    const bool extra_flip = (No2 % 2 == 1);
     if (_step == 1) {
-        for (int j=0; j<=No2; ++j, ptr+=skip)
-            for (int i=0; i<=No2; ++i) *ktptr++ = *ptr++;
+        for (int j=0; j<=No2; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
+            for (int i=0; i<=No2; ++i, fac=-fac)
+                *kptr++ = fac * *ptr++;
         ptr = _data;
-        for (int j=No2+1; j<N; ++j, ptr+=skip)
-            for (int i=0; i<=No2; ++i) *ktptr++ = *ptr++;
+        for (int j=-No2+1; j<0; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
+            for (int i=0; i<=No2; ++i, fac=-fac)
+                *kptr++ = fac * *ptr++;
     } else {
-        for (int j=0; j<=No2; ++j, ptr+=skip)
-            for (int i=0; i<=No2; ++i, ptr+=_step) *ktptr++ = *ptr;
+        for (int j=0; j<=No2; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
+            for (int i=0; i<=No2; ++i, ptr+=_step, fac=-fac)
+                *kptr++ = fac * *ptr;
         ptr = _data;
-        for (int j=No2+1; j<N; ++j, ptr+=skip)
-            for (int i=0; i<=No2; ++i, ptr+=_step) *ktptr++ = *ptr;
+        for (int j=No2+1; j<N; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
+            for (int i=0; i<=No2; ++i, ptr+=_step, fac=-fac)
+                *kptr++ = fac * *ptr;
     }
 
-    // Do the Fourier transform.
-    XTable xt(N, 2.*M_PI/(N*dk));
-    kt.transform(xt);
+    FFTW_Array<double> x_array(N*N);
+    fftw_plan plan = fftw_plan_dft_c2r_2d(
+        N, N, k_array.get_fftw(), x_array.get_fftw(), FFTW_ESTIMATE);
+    if (plan==NULL) throw FFTInvalid();
+    fftw_execute(plan);
+    fftw_destroy_plan(plan);
 
-    // Copy back to an Image<double>
-    ImageAlloc<double> xim(Bounds<int>(-No2, No2-1, -No2, No2-1));
-    for (int y = -No2; y < No2; y++)
-        for (int x = -No2; x < No2; x++)
-            xim(x,y) = xt.xval(x,y);
+    ImageView<double> xim1(x_array.get(), boost::shared_ptr<double>(), 1, N,
+                           Bounds<int>(-No2, No2-1, -No2, No2-1));
+    ImageAlloc<double> xim = xim1;
 
     return xim.view();
-
-#if 0
-    // Implementation from KTable
-
-    // We'll need a new k array because FFTW kills the k array in this
-    // operation.  Also, to put x=0 in center of array, we need to flop
-    // every other sign of k array, and need to scale.
-    xdbg<<"Before make t_array"<<std::endl;
-    FFTW_Array<std::complex<double> > t_array(_N*(_No2+1));
-    xdbg<<"After make t_array"<<std::endl;
-    double fac = _dk * _dk / (4*M_PI*M_PI);
-    long int ind=0;
-    xdbg<<"t_array.size = "<<t_array.size()<<std::endl;
-    for (int iy=0; iy<_N; ++iy) {
-        xdbg<<"ind = "<<ind<<std::endl;
-        for (int ix=0; ix<=_No2; ++ix) {
-            if ( (ix+iy)%2==0) t_array[ind]=fac * _array[ind];
-            else t_array[ind] = -fac* _array[ind];
-            ++ind;
-        }
-    }
-    xdbg<<"After fill t_array"<<std::endl;
-
-    fftw_plan plan = fftw_plan_dft_c2r_2d(
-        _N, _N, t_array.get_fftw(), xt._array.get_fftw(), FFTW_ESTIMATE);
-    xdbg<<"After make plan"<<std::endl;
-    if (plan==NULL) throw FFTInvalid();
-
-    // Run the transform:
-    fftw_execute(plan);
-    xdbg<<"After exec plan"<<std::endl;
-    fftw_destroy_plan(plan);
-    xdbg<<"After destroy plan"<<std::endl;
-
-    xt._dx = 2.*M_PI*_invNd*_invdk;
-    xdbg<<"Done transform"<<std::endl;
-#endif
 }
 
 namespace {
