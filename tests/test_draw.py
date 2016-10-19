@@ -302,7 +302,7 @@ def test_drawImage():
         #   - raise a ValueError
         im10 = galsim.ImageF()
         kwargs = {'nx':nx, 'ny':ny, 'scale':scale, 'image':im10}
-        np.testing.assert_raises(ValueError, obj2.drawImage, **kwargs)
+        np.testing.assert_raises(ValueError, obj.drawImage, **kwargs)
     except ImportError:
         print('The assert_raises tests require nose')
 
