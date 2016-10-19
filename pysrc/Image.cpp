@@ -218,6 +218,7 @@ struct PyImage {
             .add_property("array", &GetConstArray)
             .def("getBounds", getBounds)
             .add_property("bounds", getBounds)
+            .def("inverse_fft", &BaseImage<T>::inverse_fft, bp::args("dk"))
             ;
         ADD_CORNER(pyBaseImage, getXMin, xmin);
         ADD_CORNER(pyBaseImage, getYMin, ymin);

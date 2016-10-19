@@ -686,6 +686,57 @@ class Image(with_metaclass(MetaImage, object)):
             raise ValueError("Invalid value for hermitian: %s"%hermitian)
         return Image(image=subimage, wcs=self.wcs)
 
+    def calculate_inverse_fft(self):
+        """Performs an inverse FFT of an Image in k-space to produce a real-space Image.
+
+        The starting image is typically an ImageC, although if the Fourier function is real valued,
+        then you could get away with using an ImageD or ImageF.
+
+        The image is assumed to be Hermitian.  In fact, only the portion with x >= 0 needs to
+        be defined, with f(-x,-y) taken to be conj(f(x,y)).
+
+        Note: the k-space image will be padded with zeros and/or wrapped as needed to make an
+        image with bounds that look like BoundsI(0, N/2, -N/2+1, N/2).  If you are building a
+        larger k-space image and then wrapping, you should wrap directly into an image of
+        this shape.
+
+        The scale of the output image will be 2pi / (N dk), where dk is the scale of the input
+        image.
+
+        @returns an ImageD instance with the real-space image.
+        """
+        if self.wcs is None:
+            raise ValueError("calculate_inverse_fft requires that the scale be set.")
+        if not self.wcs.isPixelScale():
+            raise ValueError("calculate_inverse_fft requires that the image has a PixelScale wcs.")
+        if not self.bounds.isDefined():
+            raise ValueError("calculate_inverse_fft requires that the image have defined bounds.")
+        if not self.bounds.includes(galsim.PositionI(0,0)):
+            raise ValueError("calculate_inverse_fft requires that the image includes point (0,0)")
+
+        No2 = np.max((self.bounds.xmax, -self.bounds.ymin, self.bounds.ymax))
+
+        target_bounds = galsim.BoundsI(0, No2, -No2+1, No2)
+        if self.bounds == target_bounds:
+            # Then the image is already in the shape we need.
+            kimage = self
+        else:
+            # Then we can pad out with zeros and wrap to get this in the form we need.
+            full_bounds = galsim.BoundsI(0, No2, -No2, No2)
+            kimage = Image(full_bounds, dtype=self.dtype, init_value=0)
+            posx_bounds = galsim.BoundsI(0, self.bounds.xmax, self.bounds.ymin, self.bounds.ymax)
+            kimage[posx_bounds] = self[posx_bounds]
+            kimage = kimage.wrap(target_bounds, hermitian = 'x')
+
+        dk = self.scale
+        # dx = 2pi / (N dk)
+        dx = np.pi / (No2 * dk)
+
+        imview = kimage.image.inverse_fft(dk)
+        image = Image(imview, scale=dx)
+        image.setCenter(0,0)
+        return image
+
     @classmethod
     def good_fft_size(cls, input_size):
         """Round the given input size up to the next higher power of 2 or 3 times a power of 2.

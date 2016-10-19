@@ -1028,7 +1028,11 @@ namespace galsim {
     // This version takes XTable reference as argument 
     void KTable::transform(XTable& xt) const 
     {
+        dbg<<"Start transform K -> X\n";
+        dbg<<"N = "<<_N<<std::endl;
+        dbg<<"dk = "<<_dk<<std::endl;
         check_array();
+        dbg<<"flux = "<<_array[0]<<std::endl;
 
         // check proper dimensions for xt
         assert(_N==xt.getN());
@@ -1036,21 +1040,19 @@ namespace galsim {
         // We'll need a new k array because FFTW kills the k array in this
         // operation.  Also, to put x=0 in center of array, we need to flop
         // every other sign of k array, and need to scale.
-        xdbg<<"Before make t_array"<<std::endl;
         FFTW_Array<std::complex<double> > t_array(_N*(_No2+1));
-        xdbg<<"After make t_array"<<std::endl;
         double fac = _dk * _dk / (4*M_PI*M_PI);
+        xdbg<<"fac = "<<fac<<std::endl;
         long int ind=0;
         xdbg<<"t_array.size = "<<t_array.size()<<std::endl;
         for (int iy=0; iy<_N; ++iy) {
-            xdbg<<"ind = "<<ind<<std::endl;
             for (int ix=0; ix<=_No2; ++ix) {
                 if ( (ix+iy)%2==0) t_array[ind]=fac * _array[ind];
                 else t_array[ind] = -fac* _array[ind];
                 ++ind;
             }
         }
-        xdbg<<"After fill t_array"<<std::endl;
+        xdbg<<"After fill t_array, t_array[0] = "<<t_array[0]<<std::endl;
 
         fftw_plan plan = fftw_plan_dft_c2r_2d(
             _N, _N, t_array.get_fftw(), xt._array.get_fftw(), FFTW_ESTIMATE);
@@ -1064,7 +1066,8 @@ namespace galsim {
         xdbg<<"After destroy plan"<<std::endl;
 
         xt._dx = 2.*M_PI*_invNd*_invdk;
-        xdbg<<"Done transform"<<std::endl;
+        dbg<<"dx = "<<xt._dx<<std::endl;
+        dbg<<"Done transform"<<std::endl;
     }
 
     // Same thing, but return a new XTable

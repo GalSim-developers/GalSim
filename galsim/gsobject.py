@@ -1798,7 +1798,7 @@ class GSObject(object):
         else:
             dk = float(scale)
         if image is not None and image.bounds.isDefined():
-            dx = 2.*np.pi/( np.max(image.array.shape) * dk )
+            dx = np.pi/( np.max(image.array.shape) // 2 * dk )
         elif scale is None or scale <= 0:
             dx = self.nyquistScale()
         else:

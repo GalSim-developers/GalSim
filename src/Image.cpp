@@ -366,7 +366,7 @@ void wrap_hermx_cols_pair(T*& ptr1, T*& ptr2, int m, int mwrap, int step)
     // The negative col will wrap normally onto -N/2, which means we need to also do a
     // conjugate wrapping onto N/2.
 
-    dbg<<"Start hermx_cols_pair\n";
+    xdbg<<"Start hermx_cols_pair\n";
     T* ptr1wrap = ptr1;
     T* ptr2wrap = ptr2;
     int i = mwrap-1;
@@ -422,7 +422,7 @@ void wrap_hermx_cols_pair(T*& ptr1, T*& ptr2, int m, int mwrap, int step)
 template <typename T>
 void wrap_hermx_cols(T*& ptr, int m, int mwrap, int step)
 {
-    dbg<<"Start hermx_cols\n";
+    xdbg<<"Start hermx_cols\n";
     T* ptrwrap = ptr;
     int i = mwrap-1;
     while (1) {
@@ -604,6 +604,98 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
     }
 
     return ret;
+}
+
+template <typename T>
+ImageView<double> BaseImage<T>::inverse_fft(double dk) const
+{
+    dbg<<"Start BaseImage::inverse_fft\n";
+    dbg<<"self bounds = "<<this->_bounds<<std::endl;
+
+    if (!_data or !this->_bounds.isDefined())
+        throw ImageError("Attempting to perform inverse fft on undefined image.");
+
+    if (this->_bounds.getXMin() != 0)
+        throw ImageError("inverse_fft requires bounds to be (0, N/2, -N/2+1, N/2)");
+
+    // Get the largest No2 implied by the bounds.
+    const int No2 = this->_bounds.getXMax();
+    const int N = No2 << 1;
+
+    if (this->_bounds.getYMin() != -No2+1 || this->_bounds.getYMax() != No2)
+        throw ImageError("inverse_fft requires bounds to be (0, N/2, -N/2+1, N/2)");
+
+    // For now, use the KTable class to do this.
+    KTable kt(N, dk);
+
+    // Copy the image into the KTable.
+    // The KTable wants the locations of the + and - ky values swapped relative to how
+    // we store it in an image.
+    const int skip = this->getNSkip();
+    const T* ptr = _data + (No2-1)*_stride;
+    std::complex<double>* ktptr = kt.getArray();
+    if (_step == 1) {
+        for (int j=0; j<=No2; ++j, ptr+=skip)
+            for (int i=0; i<=No2; ++i) *ktptr++ = *ptr++;
+        ptr = _data;
+        for (int j=No2+1; j<N; ++j, ptr+=skip)
+            for (int i=0; i<=No2; ++i) *ktptr++ = *ptr++;
+    } else {
+        for (int j=0; j<=No2; ++j, ptr+=skip)
+            for (int i=0; i<=No2; ++i, ptr+=_step) *ktptr++ = *ptr;
+        ptr = _data;
+        for (int j=No2+1; j<N; ++j, ptr+=skip)
+            for (int i=0; i<=No2; ++i, ptr+=_step) *ktptr++ = *ptr;
+    }
+
+    // Do the Fourier transform.
+    XTable xt(N, 2.*M_PI/(N*dk));
+    kt.transform(xt);
+
+    // Copy back to an Image<double>
+    ImageAlloc<double> xim(Bounds<int>(-No2, No2-1, -No2, No2-1));
+    for (int y = -No2; y < No2; y++)
+        for (int x = -No2; x < No2; x++)
+            xim(x,y) = xt.xval(x,y);
+
+    return xim.view();
+
+#if 0
+    // Implementation from KTable
+
+    // We'll need a new k array because FFTW kills the k array in this
+    // operation.  Also, to put x=0 in center of array, we need to flop
+    // every other sign of k array, and need to scale.
+    xdbg<<"Before make t_array"<<std::endl;
+    FFTW_Array<std::complex<double> > t_array(_N*(_No2+1));
+    xdbg<<"After make t_array"<<std::endl;
+    double fac = _dk * _dk / (4*M_PI*M_PI);
+    long int ind=0;
+    xdbg<<"t_array.size = "<<t_array.size()<<std::endl;
+    for (int iy=0; iy<_N; ++iy) {
+        xdbg<<"ind = "<<ind<<std::endl;
+        for (int ix=0; ix<=_No2; ++ix) {
+            if ( (ix+iy)%2==0) t_array[ind]=fac * _array[ind];
+            else t_array[ind] = -fac* _array[ind];
+            ++ind;
+        }
+    }
+    xdbg<<"After fill t_array"<<std::endl;
+
+    fftw_plan plan = fftw_plan_dft_c2r_2d(
+        _N, _N, t_array.get_fftw(), xt._array.get_fftw(), FFTW_ESTIMATE);
+    xdbg<<"After make plan"<<std::endl;
+    if (plan==NULL) throw FFTInvalid();
+
+    // Run the transform:
+    fftw_execute(plan);
+    xdbg<<"After exec plan"<<std::endl;
+    fftw_destroy_plan(plan);
+    xdbg<<"After destroy plan"<<std::endl;
+
+    xt._dx = 2.*M_PI*_invNd*_invdk;
+    xdbg<<"Done transform"<<std::endl;
+#endif
 }
 
 namespace {

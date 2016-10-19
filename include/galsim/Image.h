@@ -280,7 +280,15 @@ namespace galsim {
          */
         void assignTo(ImageView<T> rhs) const { rhs.copyFrom(*this); }
 
+        /**
+         *  @brief Return the sum of the elements in the image.
+         */
         T sumElements() const;
+
+        /**
+         *  @brief Perform a 2D FFT from k-space to real space.
+         */
+        ImageView<double> inverse_fft(double dk) const;
 
     protected:
 

@@ -492,7 +492,6 @@ def test_drawKImage():
     N = 1162
     np.testing.assert_equal(im1.bounds, galsim.BoundsI(-N/2,N/2,-N/2,N/2),
                             "obj.drawKImage() produced image with wrong bounds")
-    nyq_scale = obj.nyquistScale()
     stepk = obj.stepK()
     np.testing.assert_almost_equal(im1.scale, stepk, 9,
                                    "obj.drawKImage() produced image with wrong scale")
@@ -549,7 +548,7 @@ def test_drawKImage():
     #   - create a new image using that scale for the scale
     #   - return the new image
     #   - set the size large enough to contain 99.5% of the flux
-    scale = 0.51   # Just something different from 1 or dx_nyq
+    scale = 0.51   # Just something different from 1 or stepk
     im7 = obj.drawKImage(scale=scale)
     np.testing.assert_almost_equal(im7.scale, scale, 9,
                                    "obj.drawKImage(dx) produced image with wrong scale")
@@ -986,6 +985,59 @@ def test_drawImage_area_exptime():
     assert not np.allclose(im1.array, im4.array/area/exptime), msg
 
 
+@timer
+def test_fft():
+    """Test the routines for calculating the fft of an image.
+    """
+
+    # Start by using drawKImage as above to get a k-space image
+    obj = galsim.Moffat(flux=test_flux, beta=1.5, scale_radius=0.5)
+    im1 = obj.drawKImage()
+    N = 1162
+    nyq_scale = obj.nyquistScale()
+    stepk = obj.stepK()
+    print('nyq_scale = ',nyq_scale)
+    print('stepk = ',stepk)
+
+    # If we inverse_fft the above automatic image, it should match the automatic real image
+    # for method = 'sb' and use_true_center=False.
+    im1_real = im1.calculate_inverse_fft()
+    # Convolve by a delta function to force FFT drawing.
+    obj2 = galsim.Convolve(obj, galsim.Gaussian(sigma=1.e-10))
+    im1_alt_real = obj2.drawImage(method='sb', use_true_center=False)
+    im1_alt_real.setCenter(0,0)  # This isn't done automatically.
+    np.testing.assert_equal(
+            im1_real.bounds, im1_alt_real.bounds,
+            "inverse_fft did not produce the same bounds as obj2.drawImage(method='sb')")
+    # The scale and array are only approximately equal, because drawImage rounds the size up to
+    # an even number and uses Nyquist scale for dx.
+    np.testing.assert_almost_equal(
+            im1_real.scale, im1_alt_real.scale, 3,
+            "inverse_fft produce a different scale than obj2.drawImage(method='sb')")
+    np.testing.assert_almost_equal(
+            im1_real.array, im1_alt_real.array, 3,
+            "inverse_fft produce a different array than obj2.drawImage(method='sb')")
+
+    # If we give both a good size to use and match up the scales, then they should produce the
+    # same thing.
+    N = galsim.Image.good_fft_size(N)
+    print('good FFT N = ',N)
+    assert N == 1536 == 3 * 2**9
+    kscale = 2.*np.pi / (N * nyq_scale)
+    im2 = obj.drawKImage(nx=N+1, ny=N+1, scale=kscale)
+    im2_real = im2.calculate_inverse_fft()
+    im2_alt_real = obj2.drawImage(nx=N, ny=N, method='sb', use_true_center=False, dtype=float)
+    im2_alt_real.setCenter(0,0)
+    np.testing.assert_equal(
+            im2_real.bounds, im2_alt_real.bounds,
+            "inverse_fft did not produce the same bounds as obj2.drawImage(nx,ny,method='sb')")
+    np.testing.assert_almost_equal(
+            im2_real.scale, im2_alt_real.scale, 9,
+            "inverse_fft produce a different scale than obj2.drawImage(nx,ny,method='sb')")
+    np.testing.assert_almost_equal(
+            im2_real.array, im2_alt_real.array, 9,
+            "inverse_fft produce a different array than obj2.drawImage(nx,ny,method='sb')")
+
 if __name__ == "__main__":
     test_drawImage()
     test_draw_methods()
@@ -994,3 +1046,4 @@ if __name__ == "__main__":
     test_drawKImage_Exponential_Moffat()
     test_offset()
     test_drawImage_area_exptime()
+    test_fft()
