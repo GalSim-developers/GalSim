@@ -1176,7 +1176,9 @@ def test_dep_drawKImage():
     #   - return the new images
     #   - set the scale to 2pi/(N*obj.nyquistScale())
     re1, im1 = check_dep_tuple2(obj.drawKImage())
-    N = 1162
+    re1.setOrigin(1,1)  # Go back to old convention on bounds
+    im1.setOrigin(1,1)
+    N = 1163
     assert re1.bounds == galsim.BoundsI(1,N,1,N),(
             "obj.drawKImage() produced image with wrong bounds")
     assert im1.bounds == galsim.BoundsI(1,N,1,N),(
@@ -1243,6 +1245,7 @@ def test_dep_drawKImage():
                                    "obj.drawKImage(re5,im5) produced non-zero imaginary image")
     np.testing.assert_almost_equal(CalculateScale(re5), 2, 1,
                                    "Measured wrong scale after obj.drawKImage(re5,im5)")
+    im5.setOrigin(1,1)
     assert im5.bounds == galsim.BoundsI(1,N,1,N),(
             "obj.drawKImage(re5,im5) produced image with wrong bounds")
 
@@ -1263,7 +1266,8 @@ def test_dep_drawKImage():
     np.testing.assert_almost_equal(CalculateScale(re7), 2, 1,
                                    "Measured wrong scale after obj.drawKImage(dx)")
     # This image is smaller because not using nyquist scale for stepk
-    assert im7.bounds == galsim.BoundsI(1,72,1,72),(
+    im7.setOrigin(1,1)
+    assert im7.bounds == galsim.BoundsI(1,73,1,73),(
             "obj.drawKImage(dx) produced image with wrong bounds")
 
     # Test if we provide an image with a defined scale.  It should:

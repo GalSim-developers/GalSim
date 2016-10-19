@@ -839,7 +839,7 @@ class GSObject(object):
 
 
     # Make sure the image is defined with the right size and wcs for drawImage()
-    def _setup_image(self, image, nx, ny, bounds, add_to_image, dtype, wmult):
+    def _setup_image(self, image, nx, ny, bounds, add_to_image, dtype, odd=False, wmult=None):
         # Check validity of nx,ny,bounds:
         if image is not None:
             if bounds is not None:
@@ -865,6 +865,7 @@ class GSObject(object):
                 image = galsim.Image(nx, ny, dtype=dtype)
             else:
                 N = self.SBProfile.getGoodImageSize(1.0 if wmult is None else 1.0/wmult)
+                if odd: N += 1
                 image = galsim.Image(N, N, dtype=dtype)
 
         # Resize the given image if necessary
@@ -873,6 +874,7 @@ class GSObject(object):
             if add_to_image:
                 raise ValueError("Cannot add_to_image if image bounds are not defined")
             N = self.SBProfile.getGoodImageSize(1.0 if wmult is None else 1.0/wmult)
+            if odd: N += 1
             bounds = galsim.BoundsI(1,N,1,N)
             image.resize(bounds)
             image.setZero()
@@ -1337,7 +1339,7 @@ class GSObject(object):
         prof = prof._fix_center(shape, offset, use_true_center, reverse=False)
 
         # Make sure image is setup correctly
-        image = prof._setup_image(image, nx, ny, bounds, add_to_image, dtype, wmult)
+        image = prof._setup_image(image, nx, ny, bounds, add_to_image, dtype, wmult=wmult)
         image.wcs = wcs
 
         if setup_only:
@@ -1809,15 +1811,16 @@ class GSObject(object):
         # So make that profile.
         real_prof = galsim.PixelScale(dx).toImage(self)
         if image is None: dtype = np.complex128
-        image = real_prof._setup_image(image, nx, ny, bounds, add_to_image, np.complex128, wmult)
+        image = real_prof._setup_image(image, nx, ny, bounds, add_to_image, np.complex128,
+                                       odd=True, wmult=wmult)
 
         # Set the wcs of the images to use the dk scale size
         image.scale = dk
 
         if re is not None or im is not None: # pragma: no cover
             # Make sure the input re and im images get all the right attributes to match
-            # This is a hack that won't get all use cases right, but probably most of them.
             # the output image.
+            # This is a hack that won't get all use cases right, but probably most of them.
             re._array = image._array.real
             im._array = image._array.imag
             b = image.bounds
@@ -1834,10 +1837,9 @@ class GSObject(object):
         prof = galsim.PixelScale(1./dk).toImage(self)
 
         # Making views of the images lets us change the centers without messing up the originals.
-        imview = image.view()
-        imview.setCenter(0,0)
+        image.setCenter(0,0)
 
-        prof.SBProfile.drawK(imview.image)
+        prof.SBProfile.drawK(image.image.view())
 
         if gain != 1.:
             image /= gain
