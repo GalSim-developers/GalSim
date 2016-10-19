@@ -19,8 +19,6 @@
 
 //#define DEBUGLOGGING
 
-//#define OUTPUT_FFT // Output the fft grids to files.  (Requires DEBUGLOGGING to be on as well.)
-
 #include "SBProfile.h"
 #include "SBTransform.h"
 #include "SBProfileImpl.h"
@@ -366,66 +364,50 @@ namespace galsim {
             " maxK " << dk*NFT/2 << std::endl;
         xdbg<<"dk - stepK() = "<<dk-(stepK()*(1.+1.e-8))<<std::endl;
         xassert(dk <= stepK()*(1. + 1.e-8)); // Add a little slop in case of rounding errors.
-        boost::shared_ptr<XTable> xt;
+        int Nk;
         if (NFT*dk/2 > maxK()) {
             dbg<<"NFT*dk/2 = "<<NFT*dk/2<<" > maxK() = "<<maxK()<<std::endl;
             dbg<<"Use NFT = "<<NFT<<std::endl;
-            if (NFT > _pimpl->gsparams->maximum_fft_size)
-                FormatAndThrow<SBError>() <<
-                    "fourierDraw() requires an FFT that is too large, " << NFT <<
-                    "\nIf you can handle the large FFT, you may update gsparams.maximum_fft_size.";
-            // No aliasing: build KTable and transform
-            KTable kt(NFT,dk);
-            assert(_pimpl.get());
-            _pimpl->fillKGrid(kt);
-            xt = kt.transform();
+            Nk = NFT;
         } else {
             dbg<<"NFT*dk/2 = "<<NFT*dk/2<<" <= maxK() = "<<maxK()<<std::endl;
-            // There will be aliasing.  Construct a KTable out to maxK() and
-            // then wrap it
-            int Nk = int(std::ceil(maxK()/dk)) * 2;
+            // There will be aliasing.  Make a larger image and then wrap it.
+            Nk = int(std::ceil(maxK()/dk)) * 2;
             dbg<<"Initial Nk = "<<Nk<<std::endl;
             // Round up to the next multiple of NFT.  Otherwise, the wrapping will start/stop
             // somewhere in the middle of the image, which can lead to subtle artifacts like
             // losing symmetry that should be present in the final image.
             Nk = ((Nk-1)/NFT + 1) * NFT;
             dbg<<"Use Nk = "<<Nk<<std::endl;
-            if (Nk > _pimpl->gsparams->maximum_fft_size)
-                FormatAndThrow<SBError>() <<
-                    "fourierDraw() requires an FFT that is too large, " << Nk <<
-                    "\nIf you can handle the large FFT, you may update gsparams.maximum_fft_size.";
-            KTable kt(NFT, dk);
-            assert(_pimpl.get());
-            _pimpl->fillKGrid(kt,Nk);
-            xt = kt.transform();
         }
-        int Nxt = xt->getN();
-        dbg<<"Nxt = "<<Nxt<<std::endl;
 
-#ifdef OUTPUT_FFT
-        std::ofstream fout("xt.dat");
-        tmv::MatrixView<double> mxt(xt->getArray(),Nxt,Nxt,1,Nxt,tmv::NonConj);
-        fout << tmv::EigenIO() << mxt << std::endl;
-        fout.close();
-#endif
+        if (Nk > _pimpl->gsparams->maximum_fft_size)
+            FormatAndThrow<SBError>() <<
+                "fourierDraw() requires an FFT that is too large, " << Nk <<
+                "\nIf you can handle the large FFT, you may update gsparams.maximum_fft_size.";
 
-        Bounds<int> xb(-Nxt/2, Nxt/2-1, -Nxt/2, Nxt/2-1);
-        if (I.getYMin() < xb.getYMin()
-            || I.getYMax() > xb.getYMax()
-            || I.getXMin() < xb.getXMin()
-            || I.getXMax() > xb.getXMax()) {
+        // Draw the image in k space.
+        Bounds<int> bounds(0,Nk/2,-Nk/2,Nk/2);
+        ImageAlloc<std::complex<double> > im(bounds);
+        _pimpl->fillKImage(im.view(),0.,dk,0,-Nk/2*dk,dk,Nk/2);
+
+        // Wrap the full image to the size we want for the FT.
+        // Even if N == Nk, this is useful to make this portion properly Hermitian in the
+        // N/2 column and N/2 row.
+        Bounds<int> bwrap(0,NFT/2,-NFT/2+1,NFT/2);
+        ImageView<std::complex<double> > imwrap = im.wrap(bwrap, true, false);
+
+        // Perform the fourier transform.
+        ImageView<double> real_im = imwrap.inverse_fft(dk);
+
+        // Add (a portion of) this to the original image.
+        if (!real_im.getBounds().includes(I.getBounds())) {
             dbg << "Bounds error!! target image bounds " << I.getBounds()
-                << " and FFT range " << xb << std::endl;
+                << " and FFT range " << real_im.getBounds() << std::endl;
             throw SBError("fourierDraw() FT bounds do not cover target image");
         }
-        double sum=0.;
-        for (int y = I.getYMin(); y <= I.getYMax(); y++) {
-            for (int x = I.getXMin(); x <= I.getXMax(); x++) {
-                double temp = xt->xval(x,y);
-                I(x,y) += T(temp);
-                sum += temp;
-            }
-        }
+        I += real_im[I.getBounds()];
+        double sum = real_im.sumElements();
 
         return sum;
     }
