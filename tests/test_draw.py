@@ -1016,7 +1016,7 @@ def test_fft():
     # Now use drawKImage (as above in test_drawKImage) to get a more realistic k-space image
     obj = galsim.Moffat(flux=test_flux, beta=1.5, scale_radius=0.5)
     im1 = obj.drawKImage()
-    N = 1162  # NB. It is useful to have this come out not a factor of 4, since some of the
+    N = 1162  # NB. It is useful to have this come out not a multiple of 4, since some of the
               #     calculation needs to be different when N/2 is odd.
     nyq_scale = obj.nyquistScale()
     stepk = obj.stepK()
