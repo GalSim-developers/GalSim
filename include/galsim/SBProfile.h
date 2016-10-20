@@ -357,25 +357,6 @@ namespace galsim {
         double draw(ImageView<T> image, double dx) const;
 
         /**
-         * @brief Draw an image of the SBProfile in real space forcing the use of Fourier transform
-         * from k space.
-         *
-         * The image will be drawn on the provided ImageView, although the k-image may be
-         * calculated internally on a larger grid to avoid folding.  The FFT image will also
-         * be scaled up to either a power of 2 or 3 x a power of 2, whichever fits.
-         *
-         * The image is not cleared out before drawing.  So this profile will be added to anything
-         * already on the input image.
-         *
-         * @param[in,out]    image (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in] wmult  If desired, a scaling to make intermediate images larger than normal.
-         *
-         * @returns summed flux.
-         */
-        template <typename T>
-        double fourierDraw(ImageView<T> image, double wmult) const;
-
-        /**
          * @brief Draw an image of the SBProfile in k space.
          *
          * For drawing in k space: routines are analagous to real space, except the image is

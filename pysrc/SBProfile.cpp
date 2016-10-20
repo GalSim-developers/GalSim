@@ -101,12 +101,7 @@ namespace galsim {
                 .def("draw",
                      (double (SBProfile::*)(ImageView<U>, double) const)&SBProfile::draw,
                      (bp::arg("image"), bp::arg("dx")),
-                     "Draw in-place and return the summed flux.")
-                .def("fourierDraw",
-                     (double (SBProfile::*)(ImageView<U>, double) const)&SBProfile::fourierDraw,
-                     (bp::arg("image"), bp::arg("wmult")=1.),
-                     "Draw in-place and return the summed flux.")
-                ;
+                     "Draw in-place and return the summed flux.");
         }
 
         static void wrap() {

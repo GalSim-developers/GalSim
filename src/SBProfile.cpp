@@ -327,90 +327,6 @@ namespace galsim {
         return total_flux;
     }
 
-    // Now the more complex case: real space via FT from k space.
-    // Will enforce image size is power of 2 or 3x2^n.
-    // Aliasing will be handled by folding the k values before transforming
-    // And enforce no image folding
-    template <typename T>
-    double SBProfile::fourierDraw(ImageView<T> I, double wmult) const
-    {
-        dbg<<"Start fourierDraw"<<std::endl;
-        Bounds<int> imgBounds; // Bounds for output image
-        dbg<<"  maxK() = "<<maxK()<<std::endl;
-        dbg<<"  stepK() = "<<stepK()<<std::endl;
-        dbg<<"  image bounds = "<<I.getBounds()<<std::endl;
-        dbg<<"  wmult = "<<wmult<<std::endl;
-
-        int Nnofold = getGoodImageSize(1./wmult);
-        dbg<<"Nnofold = "<<Nnofold<<std::endl;
-
-        // We must make something big enough to cover the target image size:
-        int xSize, ySize;
-        xSize = I.getXMax()-I.getXMin()+1;
-        ySize = I.getYMax()-I.getYMin()+1;
-        if (xSize  > Nnofold) Nnofold = xSize;
-        if (ySize  > Nnofold) Nnofold = ySize;
-        dbg<<" After scale up to image size, Nnofold = "<<Nnofold<<std::endl;
-
-        // Round up to a good size for making FFTs:
-        int NFT = goodFFTSize(Nnofold);
-        NFT = std::max(NFT,_pimpl->gsparams->minimum_fft_size);
-        dbg << " After adjustments: Nnofold " << Nnofold << " NFT " << NFT << std::endl;
-
-        double dk = 2.*M_PI/NFT;
-        dbg <<
-            " After adjustments: dk " << dk <<
-            " maxK " << dk*NFT/2 << std::endl;
-        xdbg<<"dk - stepK() = "<<dk-(stepK()*(1.+1.e-8))<<std::endl;
-        xassert(dk <= stepK()*(1. + 1.e-8)); // Add a little slop in case of rounding errors.
-        int Nk;
-        if (NFT*dk/2 > maxK()) {
-            dbg<<"NFT*dk/2 = "<<NFT*dk/2<<" > maxK() = "<<maxK()<<std::endl;
-            dbg<<"Use NFT = "<<NFT<<std::endl;
-            Nk = NFT;
-        } else {
-            dbg<<"NFT*dk/2 = "<<NFT*dk/2<<" <= maxK() = "<<maxK()<<std::endl;
-            // There will be aliasing.  Make a larger image and then wrap it.
-            Nk = int(std::ceil(maxK()/dk)) * 2;
-            dbg<<"Initial Nk = "<<Nk<<std::endl;
-            // Round up to the next multiple of NFT.  Otherwise, the wrapping will start/stop
-            // somewhere in the middle of the image, which can lead to subtle artifacts like
-            // losing symmetry that should be present in the final image.
-            Nk = ((Nk-1)/NFT + 1) * NFT;
-            dbg<<"Use Nk = "<<Nk<<std::endl;
-        }
-
-        if (Nk > _pimpl->gsparams->maximum_fft_size)
-            FormatAndThrow<SBError>() <<
-                "fourierDraw() requires an FFT that is too large, " << Nk <<
-                "\nIf you can handle the large FFT, you may update gsparams.maximum_fft_size.";
-
-        // Draw the image in k space.
-        Bounds<int> bounds(0,Nk/2,-Nk/2,Nk/2);
-        ImageAlloc<std::complex<double> > im(bounds);
-        _pimpl->fillKImage(im.view(),0.,dk,0,-Nk/2*dk,dk,Nk/2);
-
-        // Wrap the full image to the size we want for the FT.
-        // Even if N == Nk, this is useful to make this portion properly Hermitian in the
-        // N/2 column and N/2 row.
-        Bounds<int> bwrap(0,NFT/2,-NFT/2+1,NFT/2);
-        ImageView<std::complex<double> > imwrap = im.wrap(bwrap, true, false);
-
-        // Perform the fourier transform.
-        ImageView<double> real_im = imwrap.inverse_fft(dk);
-
-        // Add (a portion of) this to the original image.
-        if (!real_im.getBounds().includes(I.getBounds())) {
-            dbg << "Bounds error!! target image bounds " << I.getBounds()
-                << " and FFT range " << real_im.getBounds() << std::endl;
-            throw SBError("fourierDraw() FT bounds do not cover target image");
-        }
-        I += real_im[I.getBounds()];
-        double sum = real_im.sumElements();
-
-        return sum;
-    }
-
     template <typename T>
     void SBProfile::drawK(ImageView<std::complex<T> > image, double dk) const
     {
@@ -512,9 +428,6 @@ namespace galsim {
     // instantiate template functions for expected image types
     template double SBProfile::draw(ImageView<float> image, double dx) const;
     template double SBProfile::draw(ImageView<double> image, double dx) const;
-
-    template double SBProfile::fourierDraw(ImageView<float> I, double wmult) const;
-    template double SBProfile::fourierDraw(ImageView<double> I, double wmult) const;
 
     template void SBProfile::drawK(ImageView<std::complex<double> > image, double dk) const;
 
