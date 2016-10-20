@@ -627,9 +627,10 @@ ImageView<double> BaseImage<T>::inverse_fft(double dk) const
     if (this->_bounds.getYMin() != -No2+1 || this->_bounds.getYMax() != No2)
         throw ImageError("inverse_fft requires bounds to be (0, N/2, -N/2+1, N/2)");
 
-    // Copy the data into an FFTW array.
-    FFTW_Array<std::complex<double> > k_array(N*(No2+1));
-    std::complex<double>* kptr = k_array.get();
+    // ImageAlloc's memory allocation is aligned on 16 byte boundaries, which means we can
+    // use it for the fftw array.
+    ImageAlloc<std::complex<double> > kim(No2+1, N);
+    std::complex<double>* kptr = kim.getData();
 
     // FFTW wants the locations of the + and - ky values swapped relative to how
     // we store it in an image.
@@ -658,17 +659,18 @@ ImageView<double> BaseImage<T>::inverse_fft(double dk) const
                 *kptr++ = fac * *ptr;
     }
 
-    FFTW_Array<double> x_array(N*N);
-    fftw_plan plan = fftw_plan_dft_c2r_2d(
-        N, N, k_array.get_fftw(), x_array.get_fftw(), FFTW_ESTIMATE);
+    // This is the output array for fftw and also the image that we will return (as an ImageView).
+    ImageAlloc<double> xim(Bounds<int>(-No2, No2-1, -No2, No2-1));
+
+    // fftw has a different name for complex<double> so we need to cast.
+    fftw_complex* kdata = reinterpret_cast<fftw_complex*>(kim.getData());
+
+    fftw_plan plan = fftw_plan_dft_c2r_2d(N, N, kdata, xim.getData(), FFTW_ESTIMATE);
     if (plan==NULL) throw FFTInvalid();
     fftw_execute(plan);
     fftw_destroy_plan(plan);
 
-    ImageView<double> xim1(x_array.get(), boost::shared_ptr<double>(), 1, N,
-                           Bounds<int>(-No2, No2-1, -No2, No2-1));
-    ImageAlloc<double> xim = xim1;
-
+    // Now simply return a view of this image.
     return xim.view();
 }
 
