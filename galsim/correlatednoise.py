@@ -621,7 +621,7 @@ class _BaseCorrelatedNoise(object):
         return _BaseCorrelatedNoise(self.rng, conv, self.wcs)
 
     def drawImage(self, image=None, scale=None, wcs=None, dtype=None, add_to_image=False,
-                  dx=None, wmult=None):
+                  dx=None, wmult=1.0):
         """A method for drawing profiles storing correlation functions.
 
         This is a mild reimplementation of the drawImage() method for GSObjects.  The `method` is

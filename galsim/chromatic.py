@@ -2034,7 +2034,7 @@ class ChromaticConvolution(ChromaticObject):
                 sep_profs.append(prof0 / obj.SED(wave0))
                 insep_obj *= obj.SED
 
-        wmult = kwargs.get('wmult', None)
+        wmult = kwargs.get('wmult', 1.0)
 
         # Collapse inseparable profiles and chromatic normalizations into one effective profile
         # Note that at this point, insep_obj.SED should *not* be None.

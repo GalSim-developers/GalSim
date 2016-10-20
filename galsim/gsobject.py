@@ -839,7 +839,7 @@ class GSObject(object):
 
 
     # Make sure the image is defined with the right size and wcs for drawImage()
-    def _setup_image(self, image, nx, ny, bounds, add_to_image, dtype, odd=False, wmult=None):
+    def _setup_image(self, image, nx, ny, bounds, add_to_image, dtype, odd=False, wmult=1.):
         # Check validity of nx,ny,bounds:
         if image is not None:
             if bounds is not None:
@@ -864,7 +864,7 @@ class GSObject(object):
                     raise ValueError("Must set either both or neither of nx, ny")
                 image = galsim.Image(nx, ny, dtype=dtype)
             else:
-                N = self.SBProfile.getGoodImageSize(1.0 if wmult is None else 1.0/wmult)
+                N = self.SBProfile.getGoodImageSize(1.0/wmult)
                 if odd: N += 1
                 image = galsim.Image(N, N, dtype=dtype)
 
@@ -873,7 +873,7 @@ class GSObject(object):
             # Can't add to image if need to resize
             if add_to_image:
                 raise ValueError("Cannot add_to_image if image bounds are not defined")
-            N = self.SBProfile.getGoodImageSize(1.0 if wmult is None else 1.0/wmult)
+            N = self.SBProfile.getGoodImageSize(1.0/wmult)
             if odd: N += 1
             bounds = galsim.BoundsI(1,N,1,N)
             image.resize(bounds)
@@ -981,7 +981,7 @@ class GSObject(object):
     def drawImage(self, image=None, nx=None, ny=None, bounds=None, scale=None, wcs=None, dtype=None,
                   method='auto', area=1., exptime=1., gain=1., add_to_image=False,
                   use_true_center=True, offset=None, n_photons=0., rng=None, max_extra_noise=0.,
-                  poisson_flux=None, setup_only=False, dx=None, wmult=None):
+                  poisson_flux=None, setup_only=False, dx=None, wmult=1.):
         """Draws an Image of the object.
 
         The drawImage() method is used to draw an Image of the current object using one of several
@@ -1246,7 +1246,7 @@ class GSObject(object):
             from .deprecated import depr
             depr('dx', 1.1, 'scale')
             scale = dx
-        if wmult is not None: # pragma: no cover
+        if wmult != 1.: # pragma: no cover
             from .deprecated import depr
             depr('wmult', 1.5, 'GSParams(folding_threshold)',
                  'The old wmult parameter should not generally be required to get accurate FFT-'
@@ -1392,7 +1392,7 @@ class GSObject(object):
         """
         return self.SBProfile.plainDraw(image.image)
 
-    def drawFFT(self, image, wmult=None):
+    def drawFFT(self, image, wmult=1.):
         """
         Draw this profile into an Image by direct evaluation at the location of each pixel.
 
@@ -1419,7 +1419,7 @@ class GSObject(object):
 
         @returns The total flux drawin inside the image bounds.
         """
-        if wmult is not None: # pragma: no cover
+        if wmult != 1.: # pragma: no cover
             from .deprecated import depr
             depr('wmult', 1.5, 'GSParams(folding_threshold)',
                  'The old wmult parameter should not generally be required to get accurate FFT-'
@@ -1427,8 +1427,6 @@ class GSObject(object):
                  'now use a gsparams object with a folding_threshold lower than the default 0.005.')
             if type(wmult) != float:
                 wmult = float(wmult)
-        else:
-            wmult = 1.
 
         return self.SBProfile.fourierDraw(image.image, wmult)
 
@@ -1703,7 +1701,7 @@ class GSObject(object):
 
 
     def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None, gain=1.,
-                   add_to_image=False, dk=None, wmult=None, re=None, im=None, dtype=None):
+                   add_to_image=False, dk=None, wmult=1., re=None, im=None, dtype=None):
         """Draws the k-space (complex) Image of the object, with bounds optionally set by input
         Image instance.
 
@@ -1755,7 +1753,7 @@ class GSObject(object):
             from .deprecated import depr
             depr('dk', 1.1, 'scale')
             scale = dk
-        if wmult is not None: # pragma: no cover
+        if wmult != 1.: # pragma: no cover
             from .deprecated import depr
             depr('wmult', 1.5, 'GSParams(folding_threshold)',
                  'The old wmult parameter should not generally be required to get accurate FFT-'
