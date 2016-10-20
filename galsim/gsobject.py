@@ -1430,7 +1430,6 @@ class GSObject(object):
 
         # Start with what this profile thinks a good size would be given the image's pixel scale.
         N = self.SBProfile.getGoodImageSize(image.scale/wmult)
-        #print 'initial N = ',N
 
         # We must make something big enough to cover the target image size:
         image_N = np.max(image.bounds.numpyShape())
@@ -1441,10 +1440,8 @@ class GSObject(object):
 
         # Make sure we hit the minimum size specified in the gsparams.
         N = max(N, self.gsparams.minimum_fft_size)
-        #print 'N => ',N
 
         dk = 2.*np.pi / N;
-        #print 'dk = ',dk
 
         if N*dk/2 > self.maxK():
             Nk = N;
@@ -1455,7 +1452,6 @@ class GSObject(object):
             # somewhere in the middle of the image, which can lead to subtle artifacts like
             # losing symmetry that should be present in the final image.
             Nk = ((Nk-1)//N + 1) * N;
-        #print 'Nk = ',Nk
 
         if Nk > self.gsparams.maximum_fft_size:
             raise RuntimeError(
@@ -1542,14 +1538,11 @@ class GSObject(object):
         #
 
         flux = self.SBProfile.getFlux()
-        #print("flux = ",flux)
         posflux = self.SBProfile.getPositiveFlux()
         negflux = self.SBProfile.getNegativeFlux()
         eta = negflux / (posflux + negflux)
-        #print("N+ = ",posflux,", N- = ",negflux," -> eta = ",eta)
         eta_factor = 1.-2.*eta  # This is also the amount to scale each photon.
         mod_flux = flux/(eta_factor*eta_factor)
-        #print("mod_flux = ",mod_flux)
 
         # Use this for the factor by which to scale photon arrays.
         g = eta_factor
@@ -1573,16 +1566,11 @@ class GSObject(object):
             # delta Var = (1 - 4*eta + 4*eta^2) * flux
             #           = (1-2eta)^2 * flux
             mean = eta_factor*eta_factor * flux
-            #print("rng = ",rng.raw())
             pd = galsim.PoissonDeviate(rng, mean)
-            #print("pd = ",pd())
             pd_val = pd() - mean + flux
-            #print("Poisson flux = ",pd_val,", c.f. flux = ",flux)
             ratio = pd_val / flux
             g *= ratio;
             mod_flux *= ratio;
-            #print("g => ",g)
-            #print("mod_flux => ",mod_flux)
 
         if n_photons == 0.:
             n_photons = mod_flux;
@@ -1667,11 +1655,6 @@ class GSObject(object):
 
         @returns The total flux of photons that landed inside the image bounds.
         """
-        #print("Start drawPhot.")
-        #print("n_photons = ",n_photons)
-        #print("max_extra_noise = ",max_extra_noise)
-        #print("poisson = ",poisson_flux)
-
         # Make sure the type of n_photons is correct and has a valid value:
         if type(n_photons) != float:
             n_photons = float(n_photons)
@@ -1703,16 +1686,12 @@ class GSObject(object):
             raise TypeError("The rng provided is not a BaseDeviate")
 
         # Make sure the image is set up to have unit pixel scale and centered at 0,0.
-        #print('image = ',image)
-        #print('wcs = ',image.wcs)
-        #print('center = ',image.center())
         if image.wcs != galsim.PixelScale(1.0):
             raise ValueError("drawPhot requires an image with scale=1.0")
         if image.center() != galsim.PositionI(0,0):
             raise ValueError("drawPhot requires an image centered at 0,0")
 
         Ntot, g = self._calculate_nphotons(n_photons, poisson_flux, max_extra_noise, ud)
-        #print('Ntot, g = ',Ntot,g)
 
         if gain != 1.:
             g /= gain
@@ -1728,7 +1707,6 @@ class GSObject(object):
         while Nleft > 0:
             # Shoot at most maxN at a time
             thisN = min(maxN, Nleft)
-            #print('Shooting ',thisN)
 
             try:
                 phot_array = self.SBProfile.shoot(thisN, ud);
@@ -1745,8 +1723,6 @@ class GSObject(object):
 
             added_flux += phot_array.addTo(image.image)
             Nleft -= thisN;
-
-        #print("Added flux (falling within image bounds) = ",added_flux)
 
         return added_flux;
 
