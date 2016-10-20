@@ -279,9 +279,9 @@ if __name__ == '__main__':
     parser.add_argument('--file_filter_name', default =['V', 'I'] ,
                         help="Name of filter to use ")
     parser.add_argument('--main_path', 
-                        default= '/nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_full/',
+                        default= '/nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_catalog_full/',
                         help="Path where image files are stored \
-                        [Default:'/nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_full/'] ")
+                        [Default:'/nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_catalog_full/'] ")
     parser.add_argument('--main_string', default='filter_segid_num_',
                         help="String of file name with 'ident','segid','filter' \
                         instead[Default:'ident_segid_filter_']")

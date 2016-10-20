@@ -175,8 +175,9 @@ if __name__ == '__main__':
     parser.add_argument('--file_filter_name', default ='I' ,
                         help="Name of filter to use  [Default ='I']")
     parser.add_argument('--main_path',
-                        default = '/nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_full/')
-    parser.add_argument('--seg_file_name', default ='/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip/seg_ids.txt', help="file with all seg id names" )
+                        default = '/nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_catalog_full/')
+    parser.add_argument('--seg_file_name', default ='/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip/seg_ids.txt',
+                        help="file with all seg id names" )
     parser.add_argument('--phot_cat_file_name', default ='/nfs/slac/g/ki/ki19/deuce/AEGIS/aegis_additional/egsacs_phot_nodup.fits',
                         help="file with all seg id names" )
     parser.add_argument('--z_cat_file_name', default ='/nfs/slac/g/ki/ki19/deuce/AEGIS/aegis_additional/zcat.deep2.dr4.uniq.fits',

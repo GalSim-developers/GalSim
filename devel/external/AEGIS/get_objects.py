@@ -598,9 +598,9 @@ if __name__ == '__main__':
     parser.add_argument('--wht_path', default='/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip',
                         help="Path of directory containing weight files \
                         [Default:'/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip] ")
-    parser.add_argument('--out_path', default='/nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_full/',
+    parser.add_argument('--out_path', default='/nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_catalog_full/',
                         help="Path to where you want the output stored \
-                        [Default: /nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_full/]")
+                        [Default: /nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_catalog_full/]")
     parser.add_argument('--file_name', default='EGS_10134_seg_id_acs_wfc_filter_30mas_unrot_drz.fits',
                         help="File name of measurement image with 'seg_id' & \
                         'filter' in place of image segment id and filter \

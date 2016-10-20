@@ -214,9 +214,9 @@ if __name__ == '__main__':
                         help="File name of measurement image with 'seg_id' & \
                         'filter' in place of image segment id and filter  \
                         [Default:'EGS_10134_seg_id_acs_wfc_f606w_30mas_unrot_drz.fits']")
-    parser.add_argument('--out_path', default= '/nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_full/',
+    parser.add_argument('--out_path', default= '/nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_catalog_full/',
                         help="Path to where you want the output stored \
-                        [Default: /nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_full]")
+                        [Default: /nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_catalog_full]")
     parser.add_argument('--tt_file_path', 
                         default='/nfs/slac/g/ki/ki19/deuce/AEGIS/tt_starfield/',
                         help="Path of directory contating modelled TT fileds \

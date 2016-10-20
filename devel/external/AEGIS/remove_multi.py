@@ -62,9 +62,9 @@ if __name__ == '__main__':
     parser.add_argument('--filter_names', default= ['f606w','f814w'],
                         help="names of filters [Default: ['f606w','f814w']]")
     parser.add_argument('--main_path',
-                        default = '/nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_full/',
+                        default = '/nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_catalog_full/',
                         help="Path to where you want the images are stored \
-                        [Default: /nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_full]")
+                        [Default: /nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_catalog_full]")
     parser.add_argument('--seg_file_name', 
                         default ='/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip/seg_ids.txt',
                         help="File with list of all all segment id names" )

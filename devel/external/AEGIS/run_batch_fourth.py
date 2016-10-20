@@ -30,7 +30,7 @@ if __name__ == '__main__':
     parser.add_argument('--filter_file_names', default= ['V','I'],
                         help="Names of filters to write inf file [Default: ['V','I']]")
     parser.add_argument('--main_path',
-                        default = '/nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_full/')
+                        default = '/nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_catalog_full/')
     parser.add_argument('--seg_file_name', default ='/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip/seg_ids.txt',
                         help="file with all seg id names" )
     args = parser.parse_args()

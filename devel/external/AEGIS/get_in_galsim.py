@@ -282,7 +282,7 @@ if __name__ == '__main__':
     parser.add_argument('--filter_names', default= ['f606w','f814w'],
                         help="names of filters [Default: ['f606w','f814w']]")
     parser.add_argument('--main_path',
-                        default = '/nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_full/')
+                        default = '/nfs/slac/g/ki/ki19/deuce/AEGIS/AEGIS_catalog_full/')
     parser.add_argument('--out_dir', default = "AEGIS_training_sample/",
                         help="directory containing the final catalog")
     parser.add_argument('--cat_name', default = "AEGIS_galaxy_catalog_filter_25.2.fits",
