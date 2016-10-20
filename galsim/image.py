@@ -640,10 +640,10 @@ class Image(with_metaclass(MetaImage, object)):
         the most negative value.  For example,
 
             >>> N = 100
-            >>> im_full = galsim.ImageC(bounds=galsim.BoundsI(-N/2,N/2,0,N/2), scale=dk)
+            >>> im_full = galsim.ImageC(bounds=galsim.BoundsI(0,N/2,-N/2,N/2), scale=dk)
             >>> # ... fill with im[i,j] = FT(kx=i*dk, ky=j*dk)
             >>> N2 = 64
-            >>> im_wrap = im_full.wrap(galsim.BoundsI(-N2/2+1,N2/2,0,N/2, hermitian='y')
+            >>> im_wrap = im_full.wrap(galsim.BoundsI(0,N/2,-N2/2,N2/2-1, hermitian='x')
 
         This sets up im_wrap to be the properly Hermitian version of the data appropriate for
         passing to an FFT.
@@ -667,20 +667,12 @@ class Image(with_metaclass(MetaImage, object)):
                 raise ValueError("hermitian == 'x' requires self.bounds.xmin == 0")
             if bounds.xmin != 0:
                 raise ValueError("hermitian == 'x' requires bounds.xmin == 0")
-            if self.bounds.ymin != -self.bounds.ymax:
-                raise ValueError("hermitian == 'x' requires self.bounds.ymin == -self.bounds.ymax")
-            if bounds.ymin != -bounds.ymax+1:
-                raise ValueError("hermitian == 'x' requires bounds.ymin == -bounds.ymax+1")
             subimage = self.image.wrap(bounds, True, False)
         elif hermitian == 'y':
             if self.bounds.ymin != 0:
                 raise ValueError("hermitian == 'y' requires self.bounds.ymin == 0")
             if bounds.ymin != 0:
                 raise ValueError("hermitian == 'y' requires bounds.ymin == 0")
-            if self.bounds.xmin != -self.bounds.xmax:
-                raise ValueError("hermitian == 'y' requires self.bounds.xmin == -self.bounds.xmax")
-            if bounds.xmin != -bounds.xmax+1:
-                raise ValueError("hermitian == 'y' requires bounds.xmin == -bounds.xmax+1")
             subimage = self.image.wrap(bounds, False, True)
         else:
             raise ValueError("Invalid value for hermitian: %s"%hermitian)
@@ -696,7 +688,7 @@ class Image(with_metaclass(MetaImage, object)):
         be defined, with f(-x,-y) taken to be conj(f(x,y)).
 
         Note: the k-space image will be padded with zeros and/or wrapped as needed to make an
-        image with bounds that look like BoundsI(0, N/2, -N/2+1, N/2).  If you are building a
+        image with bounds that look like BoundsI(0, N/2, -N/2, N/2-1).  If you are building a
         larger k-space image and then wrapping, you should wrap directly into an image of
         this shape.
 
@@ -716,7 +708,7 @@ class Image(with_metaclass(MetaImage, object)):
 
         No2 = np.max((self.bounds.xmax, -self.bounds.ymin, self.bounds.ymax))
 
-        target_bounds = galsim.BoundsI(0, No2, -No2+1, No2)
+        target_bounds = galsim.BoundsI(0, No2, -No2, No2-1)
         if self.bounds == target_bounds:
             # Then the image is already in the shape we need.
             kimage = self

@@ -1470,7 +1470,7 @@ class GSObject(object):
         # Wrap the full image to the size we want for the FT.
         # Even if N == Nk, this is useful to make this portion properly Hermitian in the
         # N/2 column and N/2 row.
-        bwrap = galsim.BoundsI(0, N/2, -N/2+1, N/2)
+        bwrap = galsim.BoundsI(0, N/2, -N/2, N/2-1)
         kimage_wrap = kimage.image.wrap(bwrap, True, False)
 
         # Perform the fourier transform.j

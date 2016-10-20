@@ -618,15 +618,14 @@ ImageView<double> BaseImage<T>::inverse_fft(double dk) const
         throw ImageError("Attempting to perform inverse fft on undefined image.");
 
     if (this->_bounds.getXMin() != 0)
-        throw ImageError("inverse_fft requires bounds to be (0, N/2, -N/2+1, N/2)");
+        throw ImageError("inverse_fft requires bounds to be (0, N/2, -N/2, N/2-1)");
 
-    // Get the largest No2 implied by the bounds.
     const int No2 = this->_bounds.getXMax();
     const int N = No2 << 1;
     dbg<<"N = "<<N<<std::endl;
 
-    if (this->_bounds.getYMin() != -No2+1 || this->_bounds.getYMax() != No2)
-        throw ImageError("inverse_fft requires bounds to be (0, N/2, -N/2+1, N/2)");
+    if (this->_bounds.getYMin() != -No2 || this->_bounds.getYMax() != No2-1)
+        throw ImageError("inverse_fft requires bounds to be (0, N/2, -N/2, N/2-1)");
 
     // ImageAlloc's memory allocation is aligned on 16 byte boundaries, which means we can
     // use it for the fftw array.
@@ -647,22 +646,22 @@ ImageView<double> BaseImage<T>::inverse_fft(double dk) const
     double fac = dk * dk / (4*M_PI*M_PI);
 
     const int skip = this->getNSkip();
-    const T* ptr = _data + (No2-1)*_stride;
+    const T* ptr = _data + No2*_stride;
     const bool extra_flip = (No2 % 2 == 1);
     if (_step == 1) {
-        for (int j=0; j<=No2; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
+        for (int j=0; j<No2; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
             for (int i=0; i<=No2; ++i, fac=-fac)
                 *kptr++ = fac * *ptr++;
         ptr = _data;
-        for (int j=-No2+1; j<0; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
+        for (int j=-No2; j<0; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
             for (int i=0; i<=No2; ++i, fac=-fac)
                 *kptr++ = fac * *ptr++;
     } else {
-        for (int j=0; j<=No2; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
+        for (int j=0; j<No2; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
             for (int i=0; i<=No2; ++i, ptr+=_step, fac=-fac)
                 *kptr++ = fac * *ptr;
         ptr = _data;
-        for (int j=No2+1; j<N; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
+        for (int j=No2; j<N; ++j, ptr+=skip, fac=(extra_flip?-fac:fac))
             for (int i=0; i<=No2; ++i, ptr+=_step, fac=-fac)
                 *kptr++ = fac * *ptr;
     }
