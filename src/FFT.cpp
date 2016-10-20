@@ -109,6 +109,9 @@ namespace galsim {
         //     working fine.  But beware that there may be a subtle bug, probably in the
         //     handling of the N/2 column or row, when the wrap starts and ends somewhere in
         //     the middle of the output grid.
+        //     Update: Not anymore. Now that I switched it to only wrap once to include both
+        //     the wrapping and the Hermitian edges, it works just fine without being a multiple
+        //     of N.
         if (Nout < 0) FormatAndThrow<FFTError>() << "KTable::wrap invalid Nout= " << Nout;
         // Make it even:
         Nout = 2*((Nout+1)/2);

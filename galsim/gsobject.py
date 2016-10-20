@@ -1448,10 +1448,6 @@ class GSObject(object):
         else:
             # There will be aliasing.  Make a larger image and then wrap it.
             Nk = int(np.ceil(self.maxK()/dk)) * 2
-            # Round up to the next multiple of N.  Otherwise, the wrapping will start/stop
-            # somewhere in the middle of the image, which can lead to subtle artifacts like
-            # losing symmetry that should be present in the final image.
-            Nk = ((Nk-1)//N + 1) * N;
 
         if Nk > self.gsparams.maximum_fft_size:
             raise RuntimeError(
