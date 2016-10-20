@@ -35,12 +35,14 @@ def get_cat_seg(args):
     obj_list= args.main_path + seg + '/objects_with_p_stamps.txt' 
     objs = np.loadtxt(obj_list, dtype="int")
     #Select only good postage stamps
-    cond1 = cat['min_mask_dist_pixels'][obs] < 11
-    cond2 = cat['average_mask_adjacent_pixel_count'][obs]/ cat['peak_image_pixel_count'][obs] < 0.2
-    q, = np.where(cond1 & cond2)
-    good = objs[q]
-    # If no selection cut has to be applied
-    #good = objs
+    cond1 = cat['min_mask_dist_pixels'][obs] > 11
+    cond2 = cat['average_mask_adjacent_pixel_count'][obs]/ cat['peak_image_pixel_count'][obs] < 0.8
+    q, = np.where(cond1 | cond2)
+    if args.apply_cuts is True:
+        good = objs[q]
+    else:
+        # If no selection cut has to be applied
+        good = objs
     temp = cat[good]
 
     print " Adding columns for additional catalog information"
@@ -182,6 +184,8 @@ if __name__ == '__main__':
                         help="file with all seg id names" )
     parser.add_argument('--z_cat_file_name', default ='/nfs/slac/g/ki/ki19/deuce/AEGIS/aegis_additional/zcat.deep2.dr4.uniq.fits',
                         help="file with all seg id names")
+    parser.add_argument('--apply_cuts', default = True ,
+                        help="Remove galaxies with imperfect masking during pstamp cleaning step.[Default =True]")
     args = parser.parse_args()
     get_cat_seg(args)
 
