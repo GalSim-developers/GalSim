@@ -25,6 +25,7 @@ routines for handling multiple Images.
 from future.utils import iteritems, iterkeys, itervalues
 import os
 import galsim
+import numpy as np
 
 
 ##############################################################################################
@@ -537,6 +538,10 @@ def write(image, file_name=None, dir=None, hdu_list=None, clobber=True, compress
     """
     from galsim._pyfits import pyfits
 
+    if image.iscomplex:
+        raise ValueError("Cannot write complex Images to a fits file. "
+                         "Write image.real and image.imag separately.")
+
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
     if file_name and hdu_list is not None:
@@ -581,6 +586,10 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True
     @param compression  See documentation for this parameter on the galsim.fits.write() method.
     """
     from galsim._pyfits import pyfits
+
+    if any(image.iscomplex for image in image_list if isinstance(image, galsim.Image)):
+        raise ValueError("Cannot write complex Images to a fits file. "
+                         "Write image.real and image.imag separately.")
 
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
@@ -640,8 +649,23 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
     @param clobber      See documentation for this parameter on the galsim.fits.write() method.
     @param compression  See documentation for this parameter on the galsim.fits.write() method.
     """
-    import numpy
     from galsim._pyfits import pyfits
+
+    if isinstance(image_list, np.ndarray):
+        is_all_numpy = True
+        if image_list.dtype.kind == 'c':
+            raise ValueError("Cannot write complex numpy arrays to a fits file. "
+                             "Write array.real and array.imag separately.")
+    elif all(isinstance(item, np.ndarray) for item in image_list):
+        is_all_numpy = True
+        if any(a.dtype.kind == 'c' for a in image_list):
+            raise ValueError("Cannot write complex numpy arrays to a fits file. "
+                             "Write array.real and array.imag separately.")
+    else:
+        is_all_numpy = False
+        if any(im.iscomplex for im in image_list):
+            raise ValueError("Cannot write complex images to a fits file. "
+                             "Write image.real and image.imag separately.")
 
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
@@ -653,15 +677,14 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
     if hdu_list is None:
         hdu_list = pyfits.HDUList()
 
-    is_all_numpy = (isinstance(image_list, numpy.ndarray) or
-                    all(isinstance(item, numpy.ndarray) for item in image_list))
     if is_all_numpy:
-        cube = numpy.asarray(image_list)
+        cube = np.asarray(image_list)
         nimages = cube.shape[0]
         nx = cube.shape[1]
         ny = cube.shape[2]
         # Use default values for bounds
         bounds = galsim.BoundsI(1,nx,1,ny)
+        wcs = None
     else:
         nimages = len(image_list)
         if (nimages == 0):
@@ -675,7 +698,7 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
         bounds = im.bounds
         # Note: numpy shape is y,x
         array_shape = (nimages, ny, nx)
-        cube = numpy.zeros(array_shape, dtype=dtype)
+        cube = np.zeros(array_shape, dtype=dtype)
         for k in range(nimages):
             im = image_list[k]
             nx_k = im.xmax-im.xmin+1
@@ -809,8 +832,7 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
             import warnings
             warnings.warn("No C++ Image template instantiation for data type %s" % dt)
             warnings.warn("   Using numpy.float64 instead.")
-            import numpy
-            data = hdu.data.astype(numpy.float64)
+            data = hdu.data.astype(np.float64)
 
         image = galsim.Image(array=data)
         image.setOrigin(origin)
@@ -958,8 +980,7 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
             import warnings
             warnings.warn("No C++ Image template instantiation for data type %s" % dt)
             warnings.warn("   Using numpy.float64 instead.")
-            import numpy
-            data = hdu.data.astype(numpy.float64)
+            data = hdu.data.astype(np.float64)
 
         nimages = hdu.data.shape[0]
         image_list = []

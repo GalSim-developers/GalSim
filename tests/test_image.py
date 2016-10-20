@@ -365,10 +365,14 @@ def test_Image_FITS_IO():
         array_type = types[i]
 
         if tchar[i] == 'C':
-            continue
+            # Cannot write ImageC to fits.  Check for an exception and continue.
             ref_image = galsim.Image(ref_array.astype(array_type))
             test_file = os.path.join(datadir, "test"+tchar[i]+".fits")
-            ref_image.write(test_file)
+            try:
+                np.testing.assert_raises(ValueError, ref_image.write, test_file)
+            except ImportError:
+                pass
+            continue
 
         #
         # Test input from a single external FITS image
@@ -526,13 +530,18 @@ def test_Image_MultiFITS_IO():
         array_type = types[i]
 
         if tchar[i] == 'C':
-            continue
+            # Cannot write ImageC to fits.  Check for an exception and continue.
             ref_image = galsim.Image(ref_array.astype(array_type))
             image_list = []
             for k in range(nimages):
                 image_list.append(ref_image + k)
             test_multi_file = os.path.join(datadir, "test_multi"+tchar[i]+".fits")
-            galsim.fits.writeMulti(image_list,test_multi_file)
+            try:
+                np.testing.assert_raises(ValueError, galsim.fits.writeMulti,
+                                         image_list, test_multi_file)
+            except ImportError:
+                pass
+            continue
 
         #
         # Test input from an external multi-extension fits file
@@ -755,17 +764,29 @@ def test_Image_CubeFITS_IO():
         array_type = types[i]
 
         if tchar[i] == 'C':
-            continue
+            # Cannot write ImageC to fits.  Check for an exception and continue.
             ref_image = galsim.Image(ref_array.astype(array_type))
             image_list = []
             for k in range(nimages):
                 image_list.append(ref_image + k)
             test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+".fits")
-            galsim.fits.writeCube(image_list,test_cube_file)
+            try:
+                np.testing.assert_raises(ValueError, galsim.fits.writeCube,
+                                         image_list, test_cube_file)
+                array_list = [im.array for im in image_list]
+                np.testing.assert_raises(ValueError, galsim.fits.writeCube,
+                                         array_list, test_cube_file)
+                one_array = np.asarray(array_list)
+                np.testing.assert_raises(ValueError, galsim.fits.writeCube,
+                                         one_array, test_cube_file)
+            except ImportError:
+                pass
+            continue
 
         #
         # Test input from an external fits data cube
         #
+
         test_cube_file = os.path.join(datadir, "test_cube"+tchar[i]+".fits")
         # Check pyfits read for sanity
         with pyfits.open(test_cube_file) as fits:
@@ -827,6 +848,26 @@ def test_Image_CubeFITS_IO():
             np.testing.assert_array_equal((ref_array+k).astype(types[i]),
                     test_image_list[k].array,
                     err_msg="Image"+tchar[i]+" readCube failed reading from filename input.")
+
+        #
+        # Test writeCube with arrays, rather than images.
+        #
+
+        array_list = [ im.array for im in image_list ]
+        galsim.fits.writeCube(array_list, test_cube_file)
+        test_image_list = galsim.fits.readCube(test_cube_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]),
+                    test_image_list[k].array,
+                    err_msg="Image"+tchar[i]+" write/readCube failed with list of numpy arrays.")
+
+        one_array = np.asarray(array_list)
+        galsim.fits.writeCube(one_array, test_cube_file)
+        test_image_list = galsim.fits.readCube(test_cube_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]),
+                    test_image_list[k].array,
+                    err_msg="Image"+tchar[i]+" write/readCube failed with single 3D numpy array.")
 
         #
         # Test various compression schemes
