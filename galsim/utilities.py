@@ -1074,6 +1074,96 @@ def structure_function(image):
 
     return lambda r: 2*(tab(0.0, 0.0) - np.mean(tab(r*np.cos(thetas), r*np.sin(thetas))))
 
+def combine_wave_list(*args):
+    """Combine wave_list attributes of all objects in objlist while respecting blue_limit and
+    red_limit attributes.  Should work with SEDs, Bandpasses, and ChromaticObjects.
+
+    @param objlist  List of SED, Bandpass, or ChromaticObject objects.
+    @returns        wave_list, blue_limit, red_limit
+    """
+    if len(args) == 1:
+        if isinstance(args[0],
+                      (galsim.SED, galsim.Bandpass, galsim.ChromaticObject, galsim.GSObject)):
+            args = [args[0]]
+        elif isinstance(args[0], (list, tuple)):
+            args = args[0]
+        else:
+            raise TypeError("Single input argument must be a SED, Bandpass, GSObject, "
+                            " ChromaticObject or a (possibly mixed) list of them.")
+
+    blue_limit = 0.0
+    red_limit = np.inf
+    wave_list = np.array([], dtype=float)
+    for obj in args:
+        if hasattr(obj, 'blue_limit') and obj.blue_limit is not None:
+            blue_limit = np.max([blue_limit, obj.blue_limit])
+        if hasattr(obj, 'red_limit') and obj.red_limit is not None:
+            red_limit = np.min([red_limit, obj.red_limit])
+        wave_list = np.union1d(wave_list, obj.wave_list)
+    wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
+    return wave_list, blue_limit, red_limit
+
+def functionize(f):
+    """ Decorate a function `f` which accepts scalar positional or keyword arguments, to accept
+    arguments that can be either scalars or _functions_.  If the arguments include univariate
+    (N-variate) functions, then the output will be a univariate (N-variate) function.  While it's
+    okay to mix scalar and N-variate function arguments, it is an error to mix N-variate and
+    M-variate function arguments.
+
+    As an example:
+
+    >>> def f(x, y):      # Function of two scalars.
+    ...     return x + y
+    >>> decorated = functionize(f)   # Function of two scalars, functions, or a mix.
+    >>> result = f(2, 3)  # 5
+    >>> result = f(2, lambda u: u)  # Generates a TypeError
+    >>> result = decorated(2, 3)  # Scalar args returns a scalar
+    >>> result = decorated(2, lambda u: u)  # Univariate argument leads to a univariate output.
+    >>> print(result(5))  # 7
+    >>> result = decorated(2, lambda u,v: u*v)  # Bivariate argument leads to a bivariate output.
+    >>> print(result(5, 7))  # 2 + (5*7) = 37
+
+    We can use arguments that accept keyword arguments too:
+
+    >>> def f2(u, v=None):
+    ...    if v is None:
+    ...        v = 6.0
+    ...    return u / v
+    >>> result = decorated(2, f2)
+    >>> print(result(12))  # 2 + (12./6) = 4.0
+    >>> print(result(12, v=4))  # 2 + (12/4) = 5
+
+    Note that you can also use python's decorator syntax:
+
+    >>> @functionize
+    >>> def f(x, y):
+    ...     return x + y
+
+    @param f  The function to be decorated.
+    @returns  The decorated function.
+
+    """
+    import functools
+
+    @functools.wraps(f)
+    def ff(*args, **kwargs):
+        # First check if any of the arguments are callable...
+        if not any(hasattr(arg, '__call__') for arg in args+tuple(kwargs.values())):
+            return f(*args, **kwargs)  # ... if not, then keep output type a scalar ...
+        else:
+            def fff(*inner_args, **inner_kwargs): # ...else the output type is a function: `fff`.
+                new_args = [arg
+                            if not hasattr(arg, '__call__')
+                            else arg(*inner_args, **inner_kwargs)
+                            for arg in args]
+                new_kwargs = dict([(k, v)
+                                   if not hasattr(v, '__call__')
+                                   else (k, v(*inner_args, **inner_kwargs))
+                                   for k, v in iteritems(kwargs)])
+                return f(*new_args, **new_kwargs)
+            return fff
+    return ff
+
 def math_eval(str, other_modules=()):
     """Evaluate a string that may include numpy, np, or math commands.
 
@@ -1093,4 +1183,3 @@ def math_eval(str, other_modules=()):
     for m in other_modules:
         exec_('import ' + m, gdict)
     return eval(str, gdict)
-

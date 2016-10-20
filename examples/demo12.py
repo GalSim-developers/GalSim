@@ -47,7 +47,6 @@ New features introduced in this demo:
 - bandpass = galsim.Bandpass(filename, wave_type)
 - bandpass2 = bandpass.truncate(relative_throughput)
 - bandpass3 = bandpass2.thin(rel_err)
-- gal = galsim.Chromatic(GSObject, SED)
 - gal = GSObject * SED
 - obj = galsim.Add([list of ChromaticObjects])
 - ChromaticObject.drawImage(bandpass)
@@ -64,6 +63,8 @@ def main(argv):
     path, filename = os.path.split(__file__)
     datapath = os.path.abspath(os.path.join(path, "data/"))
     outpath = os.path.abspath(os.path.join(path, "output/"))
+    if not os.path.isdir(outpath):
+        os.mkdir(outpath)
 
     # In non-script code, use getLogger(__name__) at module scope instead.
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
@@ -116,21 +117,20 @@ def main(argv):
     #-----------------------------------------------------------------------------------------------
     # Part A: chromatic de Vaucouleurs galaxy
 
-    # Here we create a chromatic version of a de Vaucouleurs profile using the Chromatic class.
-    # This class lets one create chromatic versions of any galsim GSObject class.  The first
-    # argument is the GSObject instance to be chromaticized, and the second argument is the
-    # profile's SED.
-
+    # Here we create a chromatic version of a de Vaucouleurs profile by multipying a GSObject by an
+    # SED.  This is how one generally constructs _separable_ ChromaticObjects in GalSim, that is,
+    # those objects whose spatial dependence and wavelength dependence factor.
+    
     logger.info('')
     logger.info('Starting part A: chromatic De Vaucouleurs galaxy')
     redshift = 0.8
     mono_gal = galsim.DeVaucouleurs(half_light_radius=0.5)
     SED = SEDs['CWW_E_ext'].atRedshift(redshift)
-    gal = galsim.Chromatic(mono_gal, SED)
+    gal = mono_gal * SED
 
     # You can still shear, shift, and dilate the resulting chromatic object.
     gal = gal.shear(g1=0.5, g2=0.3).dilate(1.05).shift((0.0, 0.1))
-    logger.debug('Created Chromatic')
+    logger.debug('Created separable ChromaticObject')
 
     # convolve with PSF to make final profile
     PSF = galsim.Moffat(fwhm=0.6, beta=2.5)
@@ -161,7 +161,6 @@ def main(argv):
     # make a bulge ...
     mono_bulge = galsim.DeVaucouleurs(half_light_radius=0.5)
     bulge_SED = SEDs['CWW_E_ext'].atRedshift(redshift)
-    # The `*` operator can be used as a shortcut for creating a chromatic version of a GSObject:
     bulge = mono_bulge * bulge_SED
     bulge = bulge.shear(g1=0.12, g2=0.07)
     logger.debug('Created bulge component')
@@ -211,7 +210,7 @@ def main(argv):
     # throughputs, will, of course, be different.
     gal = mono_gal * SED
     gal = gal.shear(g1=0.5, g2=0.3)
-    logger.debug('Created `Chromatic` galaxy')
+    logger.debug('Created chromatic galaxy')
 
     # For a ground-based PSF, two chromatic effects are introduced by the atmosphere:
     # (i) differential chromatic refraction (DCR), and (ii) wavelength-dependent seeing.
@@ -250,7 +249,7 @@ def main(argv):
 
     # convolve with galaxy to create final profile
     final = galsim.Convolve([gal, PSF])
-    logger.debug('Created chromatic PSF finale profile')
+    logger.debug('Created chromatic PSF final profile')
 
     # Draw profile through LSST filters
     gaussian_noise = galsim.GaussianNoise(rng, sigma=0.03)

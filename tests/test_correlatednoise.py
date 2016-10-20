@@ -644,11 +644,6 @@ def test_copy():
     assert cn.rng is cn_copy.rng, "Copied correlated noise does not keep same RNG."
     cn_copy = cn.copy(rng=galsim.UniformDeviate(rseed + 1))
     assert cn.rng is not cn_copy.rng, "Copied correlated noise keeps same RNG despite reset."
-    # Then check the profile in the copy is *NOT* shared, so that changes in one aren't manifest
-    # in the other
-    cn_copy = cn.copy()
-    assert cn._profile is not cn_copy._profile, \
-        "Copied correlated noise erroneously retains reference to parent's correlation function."
     # Set up some random positions within the bounds of the correlation funtion and check that
     # the xValues are nonetheless the same
     for i in range(npos_test):

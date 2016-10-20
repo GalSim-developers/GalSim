@@ -89,6 +89,10 @@ The GalSim package also requires
   is kind of a gargantuan package.  But if you are willing to install that
   too, then you can use the galsim.AstropyWCS class.
 
+* Optional dependency: Astropy Units package.  This is now required for
+  GalSim chromatic functionality, but can be omitted if you're not using
+  this part of GalSim.
+
 * Optional dependency: Pandas.  This has a very fast function for reading ASCII
   tables.  If this is not available (e.g. when reading in Bandpass or SED
   files) then we fall back to the (much) slower numpy loadtxt function.

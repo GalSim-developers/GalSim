@@ -42,5 +42,12 @@ def Bandpass_rdiv(self, other):
     return galsim.Bandpass(tp, 'nm', blue_limit, red_limit,
                            _wave_list=wave_list)
 
+def Bandpass_copy(self):
+    depr('copy', 1.5, "", "Bandpasses are immutable, so there's no need for copy.")    
+    import copy
+    return copy.deepcopy(self)
+
+
 galsim.Bandpass.__rdiv__ = Bandpass_rdiv
 galsim.Bandpass.__rtruediv__ = Bandpass_rdiv
+galsim.Bandpass.copy = Bandpass_copy

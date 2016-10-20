@@ -42,7 +42,8 @@ class Bandpass(object):
     Outside of the wavelength interval between `blue_limit` and `red_limit`, the throughput is
     returned as zero, regardless of the `throughput` input parameter.
 
-    Bandpasses may be multiplied by other Bandpasses, functions, or scalars.
+    Bandpasses may be multiplied by other Bandpasses, functions, scalars, or SEDs.  The product of a
+    Bandpass with an SED is a new SED.
 
     The Bandpass effective wavelength is stored in the python property `effective_wavelength`. We
     use throughput-weighted average wavelength (which is independent of any SED) as our definition
@@ -75,6 +76,13 @@ class Bandpass(object):
     Note that the `wave_type` parameter does not propagate into other methods of `Bandpass`.
     For instance, Bandpass.__call__ assumes its input argument is in nanometers.
 
+    Finally, a Bandpass may have zeropoint attribute, which is a float used to convert flux
+    (in photons/s/cm^2) to magnitudes:
+        mag = -2.5*log10(flux) + zeropoint
+    You can either set the zeropoint at initialization, or via the `withZeropoint` method.  Note
+    that the zeropoint attribute does not propagate if you get a new Bandpass by multiplying or
+    dividing an old Bandpass.
+
     @param throughput   Function defining the throughput at each wavelength.  See above for
                         valid options for this parameter.
     @param wave_type    The units to use for the wavelength argument of the `throughput`
@@ -84,7 +92,7 @@ class Bandpass(object):
     @param red_limit    Hard cut off of bandpass on the red side. [default: None, but required
                         if throughput is not a LookupTable or file.  See above.]
     @param zeropoint    Set the zero-point for this Bandpass.  Here, this can only be a float
-                        value.  See the method `withZeroPoint` for other options for how to
+                        value.  See the method `withZeropoint` for other options for how to
                         set this using a particular spectrum (AB, Vega, etc.) [default: None]
     """
     def __init__(self, throughput, wave_type, blue_limit=None, red_limit=None,
@@ -217,18 +225,25 @@ class Bandpass(object):
         self.func = lambda w: self._tp(w * self.wave_factor)
 
     def __mul__(self, other):
-        blue_limit = self.blue_limit
-        red_limit = self.red_limit
-        wave_list = self.wave_list
+        # Watch out for 4 types of `other`:
+        # 1.  SED: delegate to SED.__mul__(bandpass)
+        # 2.  Bandpass: return a Bandpass, but carefully propagate blue/red limit and wave_list.
+        # 3.  Callable: return a Bandpass
+        # 4.  Scalar: return a Bandpass
+
+        # Delegate SED * Bandpass to SED.__mul__:
+        if isinstance(other, galsim.SED):
+            return other.__mul__(self)
+
+        # Bandpass * Bandpass -> Bandpass
+        if isinstance(other, Bandpass):
+            wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list([self, other])
+            tp = lambda w: self(w) * other(w)
+            return Bandpass(tp, 'nm', blue_limit=blue_limit, red_limit=red_limit, zeropoint=None,
+                            _wave_list=wave_list)
+
+        # Product of Bandpass with generic callable or scalar is a rescaled Bandpass.
         wave_type = 'nm'
-
-        if isinstance(other, (Bandpass, galsim.SED)):
-            if len(other.wave_list) > 0:
-                wave_list = np.union1d(wave_list, other.wave_list)
-            blue_limit = max([self.blue_limit, other.blue_limit])
-            red_limit = min([self.red_limit, other.red_limit])
-            wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
-
         if hasattr(other, '__call__'):
             tp = lambda w: self.func(w) * other(w)
         elif isinstance(self._tp, galsim.LookupTable):
@@ -244,25 +259,31 @@ class Bandpass(object):
         else:
             tp = lambda w: self.func(w) * other
 
-        return Bandpass(tp, wave_type, blue_limit, red_limit, _wave_list=wave_list)
+        return Bandpass(tp, wave_type, self.blue_limit, self.red_limit, _wave_list=self.wave_list)
 
     def __rmul__(self, other):
         return self*other
 
     # Doesn't check for divide by zero, so be careful.
     def __div__(self, other):
-        blue_limit = self.blue_limit
-        red_limit = self.red_limit
-        wave_list = self.wave_list
-        wave_type = 'nm'
+        # Watch out for 4 types of `other`:
+        # 1.  SED: prohibit.
+        # 2.  Bandpass: return a Bandpass, but carefully propagate blue/red limit and wave_list.
+        # 3.  Callable: return a Bandpass
+        # 4.  Scalar: return a Bandpass
 
+        if isinstance(other, galsim.SED):
+            raise TypeError("Cannot divide Bandpass by SED.")
+
+        # Bandpass / Bandpass -> Bandpass
         if isinstance(other, Bandpass):
-            if len(other.wave_list) > 0:
-                wave_list = np.union1d(wave_list, other.wave_list)
-            blue_limit = max([self.blue_limit, other.blue_limit])
-            red_limit = min([self.red_limit, other.red_limit])
-            wave_list = wave_list[(wave_list >= blue_limit) & (wave_list <= red_limit)]
+            wave_list, blue_limit, red_limit = galsim.utilities.combine_wave_list([self, other])
+            tp = lambda w: self(w) / other(w)
+            return Bandpass(tp, 'nm', blue_limit=blue_limit, red_limit=red_limit, zeropoint=None,
+                            _wave_list=wave_list)
 
+        # Quotient of Bandpass with generic callable or scalar is a rescaled Bandpass.
+        wave_type = 'nm'
         if hasattr(other, '__call__'):
             tp = lambda w: self.func(w) / other(w)
         elif isinstance(self._tp, galsim.LookupTable):
@@ -278,14 +299,10 @@ class Bandpass(object):
         else:
             tp = lambda w: self.func(w) / other
 
-        return Bandpass(tp, wave_type, blue_limit, red_limit, _wave_list=wave_list)
+        return Bandpass(tp, wave_type, self.blue_limit, self.red_limit, _wave_list=self.wave_list)
 
     def __truediv__(self, other):
         return self.__div__(other)
-
-    def copy(self):
-        import copy
-        return copy.deepcopy(self)
 
     def __call__(self, wave):
         """ Return dimensionless throughput of bandpass at given wavelength in nanometers.
@@ -342,33 +359,28 @@ class Bandpass(object):
 
         return self._effective_wavelength
 
-    def withZeropoint(self, zeropoint, effective_diameter=None, exptime=None):
+    def withZeropoint(self, zeropoint):
         """ Assign a zeropoint to this Bandpass.
 
-        The first argument `zeropoint` can take a variety of possible forms:
+        A bandpass zeropoint is a float used to convert flux (in photons/s/cm^2) to magnitudes:
+            mag = -2.5*log10(flux) + zeropoint
+        Note that the zeropoint attribute does not propagate if you get a new Bandpass by
+        multiplying or dividing an old Bandpass.
+
+        The `zeropoint` argument can take a variety of possible forms:
         1. a number, which will be the zeropoint
         2. a galsim.SED.  In this case, the zeropoint is set such that the magnitude of the supplied
            SED through the bandpass is 0.0
         3. the string 'AB'.  In this case, use an AB zeropoint.
         4. the string 'Vega'.  Use a Vega zeropoint.
         5. the string 'ST'.  Use a HST STmag zeropoint.
-        For 3, 4, and 5, the effective diameter of the telescope and exposure time of the
-        observation are also required.
 
         @param zeropoint            see above for valid input options
-        @param effective_diameter   Effective diameter of telescope aperture in cm. This number must
-                                    account for any central obscuration, i.e. for a diameter d and
-                                    linear obscuration fraction obs, the effective diameter is
-                                    d*sqrt(1-obs^2). [default: None, but required if zeropoint is
-                                    'AB', 'Vega', or 'ST'].
-        @param exptime              Exposure time in seconds. [default: None, but required if
-                                    zeropoint is 'AB', 'Vega', or 'ST'].
+
         @returns new Bandpass with zeropoint set.
         """
+        # Convert `zeropoint` from str to galsim.SED.
         if isinstance(zeropoint, str):
-            if effective_diameter is None or exptime is None:
-                raise ValueError("Cannot calculate Zeropoint from string {0} without "
-                                 +"telescope effective diameter or exposure time.")
             if zeropoint.upper()=='AB':
                 AB_source = 3631e-23 # 3631 Jy in units of erg/s/Hz/cm^2
                 sed = galsim.SED(lambda wave: AB_source, wave_type='nm', flux_type='fnu')
@@ -383,26 +395,23 @@ class Bandpass(object):
                 sed = galsim.SED(vegafile, wave_type='nm', flux_type='flambda')
             else:
                 raise ValueError("Do not recognize Zeropoint string {0}.".format(zeropoint))
-            flux = sed.calculateFlux(self)
-            flux *= np.pi*effective_diameter**2/4 * exptime
-            new_zeropoint = 2.5 * np.log10(flux)
-        # If `zeropoint` is an `SED`, then compute the SED flux through the bandpass, and
-        # use this to create a magnitude zeropoint.
-        elif isinstance(zeropoint, galsim.SED):
+            zeropoint = sed
+
+        # Convert `zeropoint` from galsim.SED to float
+        if isinstance(zeropoint, galsim.SED):
             flux = zeropoint.calculateFlux(self)
-            new_zeropoint = 2.5 * np.log10(flux)
-        # If zeropoint is a number, then use that
-        elif isinstance(zeropoint, (float, int)):
-            new_zeropoint = zeropoint
-        # But if zeropoint is none of these, raise an exception.
-        else:
-            raise ValueError(
-                "Don't know how to handle zeropoint of type: {0}".format(type(zeropoint)))
+            zeropoint = 2.5 * np.log10(flux)
 
-        return Bandpass(self._orig_tp, self.wave_type, self.blue_limit, self.red_limit,
-                        new_zeropoint, self.wave_list, self._tp)
+        # Should be a float now (or maybe an int).  If not, raise an exception.
+        if not isinstance(zeropoint, (float, int)):
+            raise TypeError(
+                   "Don't know how to handle zeropoint of type: {0}".format(type(zeropoint)))
 
-    def truncate(self, blue_limit=None, red_limit=None, relative_throughput=None, preserve_zp='auto'):
+        return Bandpass(self._orig_tp, self.wave_type, self.blue_limit, self.red_limit, zeropoint,
+                        self.wave_list, self._tp)
+
+    def truncate(self, blue_limit=None, red_limit=None, relative_throughput=None,
+                 preserve_zp='auto'):
         """Return a bandpass with its wavelength range truncated.
 
         This function truncate the range of the bandpass either explicitly (with `blue_limit` or
@@ -567,7 +576,7 @@ class Bandpass(object):
                 self.red_limit == other.red_limit and
                 self.wave_factor == other.wave_factor and
                 self.zeropoint == other.zeropoint and
-                np.array_equal(self.wave_list,other.wave_list))
+                np.array_equal(self.wave_list, other.wave_list))
     def __ne__(self, other): return not self.__eq__(other)
 
     def __hash__(self):

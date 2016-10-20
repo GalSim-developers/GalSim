@@ -987,6 +987,41 @@ def test_offset():
                 "obj.drawImage(im, offset=%f,%f) different from use_true_center=False")
 
 
+@timer
+def test_drawImage_area_exptime():
+    """Test that area and exptime kwargs to drawImage() appropriately scale image."""
+    exptime = 2
+    area = 1.4
+
+    obj = galsim.Exponential(flux=test_flux, scale_radius=2)
+
+    im1 = obj.drawImage(nx=24, ny=24, scale=0.3)
+    im2 = obj.drawImage(image=im1.copy(), exptime=exptime, area=area)
+    np.testing.assert_array_almost_equal(im1.array, im2.array/exptime/area, 8,
+            "obj.drawImage() did not respect area and exptime kwargs.")
+
+    # Now check with drawShoot().  Scaling the gain should just scale the image proportionally.
+    # Scaling the area or exptime should actually produce a non-proportional image, though, since a
+    # different number of photons will be shot.
+
+    rng = galsim.BaseDeviate(1234)
+    im1 = obj.drawImage(nx=24, ny=24, scale=0.3, method='phot', rng=rng.duplicate())
+    im2 = obj.drawImage(image=im1.copy(), method='phot', rng=rng.duplicate())
+    np.testing.assert_array_almost_equal(im1.array, im2.array, 8,
+            "obj.drawImage(method='phot', rng=rng.duplicate()) did not produce image "
+            "deterministically.")
+    im3 = obj.drawImage(image=im1.copy(), method='phot', rng=rng.duplicate(), gain=2)
+    np.testing.assert_array_almost_equal(im1.array, im3.array/2, 8,
+            "obj.drawImage(method='phot', rng=rng.duplicate()) did not produce image "
+            "deterministically.")
+
+    im4 = obj.drawImage(image=im1.copy(), method='phot', rng=rng.duplicate(),
+                        area=area, exptime=exptime)
+    msg = ("obj.drawImage(method='phot') unexpectedly produced proportional images with different "
+           "area and exptime keywords.")
+    assert not np.allclose(im1.array, im4.array/area/exptime), msg
+
+
 if __name__ == "__main__":
     test_drawImage()
     test_draw_methods()
@@ -994,3 +1029,4 @@ if __name__ == "__main__":
     test_drawKImage_Gaussian()
     test_drawKImage_Exponential_Moffat()
     test_offset()
+    test_drawImage_area_exptime()

@@ -73,7 +73,7 @@ def getBandpasses(AB_zeropoint=True, exptime=None, default_thin_trunc=True, **kw
                               use no thinning and truncation of bandpasses, or who want control over
                               the level of thinning and truncation, should have this be False.
                               [default: True]
-    @param **kwargs          Other kwargs are passed to either `bandpass.thin()` or 
+    @param **kwargs           Other kwargs are passed to either `bandpass.thin()` or
                               `bandpass.truncate()` as appropriate.
 
     @returns A dictionary containing bandpasses for all WFIRST imaging filters.
@@ -83,12 +83,6 @@ def getBandpasses(AB_zeropoint=True, exptime=None, default_thin_trunc=True, **kw
     # One line with the column headings, and the rest as a NumPy array.
     data = np.genfromtxt(datafile, names=True)
     wave = 1000.*data['Wave']
-
-    if AB_zeropoint:
-        # Note that withZeropoint wants an effective diameter in cm, not m.  Also, the effective
-        # diameter has to take into account the central obscuration, so d_eff = d sqrt(1 -
-        # obs^2).
-        d_eff = 100. * galsim.wfirst.diameter * np.sqrt(1.-galsim.wfirst.obscuration**2)
 
     # Read in and manipulate the sky background info.
     sky_file = os.path.join(galsim.meta_data.share_dir, "wfirst_sky_backgrounds.txt")
@@ -136,9 +130,7 @@ def getBandpasses(AB_zeropoint=True, exptime=None, default_thin_trunc=True, **kw
 
         # Set the zeropoint if requested by the user:
         if AB_zeropoint:
-            if exptime is None:
-                exptime = galsim.wfirst.exptime
-            bp = bp.withZeropoint('AB', effective_diameter=d_eff, exptime=exptime)
+            bp = bp.withZeropoint('AB')
 
         # Store the sky level information as an attribute.
         bp._ecliptic_lat = ecliptic_lat
@@ -149,4 +141,3 @@ def getBandpasses(AB_zeropoint=True, exptime=None, default_thin_trunc=True, **kw
         bandpass_dict[bp_name] = bp
 
     return bandpass_dict
-

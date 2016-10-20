@@ -215,12 +215,10 @@ def test_wfirst_bandpass():
     from galsim._pyfits import pyfits
 
     # Obtain the bandpasses with AB_zeropoint set
-    exp_time = 200. # non WFIRST exposure time
-    bp = galsim.wfirst.getBandpasses(AB_zeropoint=True, exptime=exp_time)
+    bp = galsim.wfirst.getBandpasses(AB_zeropoint=True)
 
     # Check if the zeropoints have been set correctly
-    AB_spec = lambda x: (3631e-23)*exp_time*(np.pi)*(100.**2)*\
-              (galsim.wfirst.diameter**2)*(1-galsim.wfirst.obscuration**2)/4.
+    AB_spec = lambda x: (3631e-23)
     AB_sed = galsim.SED(spec=AB_spec, wave_type='nm', flux_type='fnu')
     for filter_name, filter_ in bp.items():
         mag = AB_sed.calculateMagnitude(bandpass=filter_)
@@ -247,13 +245,10 @@ def test_wfirst_bandpass():
     sed = galsim.SED(sed_tab, wave_type='A', flux_type='flambda')
 
     # Now take the SDSS g bandpass:
-    gfile =  '/Users/rmandelb/Downloads/g.dat'
+    # gfile =  '/Users/rmandelb/Downloads/g.dat'
     bp_dat = np.loadtxt(os.path.join('wfirst_files','g.dat')).transpose()
     bp_tab = galsim.LookupTable(x=bp_dat[0,:], f=bp_dat[1,:], interpolant='linear')
-    bp_ref = galsim.Bandpass(bp_tab, wave_type='A')
-    # Set an AB zeropoint using WFIRST params:
-    eff_diam = 100.*galsim.wfirst.diameter*np.sqrt(1.-galsim.wfirst.obscuration**2)
-    bp_ref = bp_ref.withZeropoint('AB', effective_diameter=eff_diam, exptime=galsim.wfirst.exptime)
+    bp_ref = galsim.Bandpass(bp_tab, wave_type='A').withZeropoint('AB')
     # Now get a new SED that has magnitude -0.093 in this filter, since that's the normalization
     # that Jeff imposed for his tests.
     sed = sed.withMagnitude(-0.093, bp_ref)
@@ -267,14 +262,15 @@ def test_wfirst_bandpass():
     reference['F184'] = 0.58e10
     reference['W149'] = 4.34e10
 
-    # Only 10% accuracy required because did not use quite the same stellar template.  Fortunately,
+    # Only 15% accuracy required because did not use quite the same stellar template.  Fortunately,
     # bugs can easily lead to orders of magnitude errors, so this unit test is still pretty
     # non-trivial.
     for filter_name, filter_ in bp.items():
-        flux = sed.calculateFlux(filter_)
-        count_rate = flux / galsim.wfirst.exptime
+        flux = sed.calculateFlux(filter_)  # photons / cm^2 / s
+        count_rate = flux * galsim.wfirst.collecting_area  # photons / s
+        print(count_rate, reference[filter_name])
         np.testing.assert_allclose(
-            count_rate, reference[filter_name], rtol=0.1,
+            count_rate, reference[filter_name], rtol=0.15,
             err_msg="Count rate for stellar model not as expected for bandpass "
             "{0}".format(filter_name))
 
