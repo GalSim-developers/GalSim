@@ -55,7 +55,7 @@ from astropy.io import fits
 from astropy.table import Table,Column, vstack, hstack, join
 import os,glob
 
-def assign_num(args):
+def assign_num(args, all_seg_ids):
     """Assigns individual identification number to each object"""
     seed =122
     np.random.seed(seed)
@@ -67,7 +67,6 @@ def assign_num(args):
     #objects detected are same in all filters. So getting objects in first filter
     #is sufficient
     filt = args.filter_names[0]
-    all_seg_ids = np.loadtxt(args.seg_list_file, delimiter=" ",dtype='S2')
     for seg_id in all_seg_ids:
         file_name = args.main_path + seg_id + '/' + filt + '_with_pstamp.fits'
         catalog = Table.read(file_name, format='fits')
@@ -165,11 +164,10 @@ def fits_table():
     table.add_column(col)
     return table
 
-def get_main_catalog(args, index_table):
+def get_main_catalog(args, index_table, all_seg_ids):
     """Makes main catalog containing information on all selected galaxies.
     Columns are identical to COSMOS Real Galaxy catalog"""
     print "Creating main catalog" 
-    all_seg_ids = np.loadtxt(args.seg_list_file, delimiter=" ",dtype='S2')
     for f, filt in enumerate(args.filter_names):
     	final_table = main_table()
         complete_table=Table()
@@ -208,11 +206,10 @@ def get_main_catalog(args, index_table):
         cat_name = 'complete_' + args.cat_name.replace('filter', args.file_filter_name[f])
         complete_table[ord_indx].write(args.main_path + cat_name, format='fits',
                                                    overwrite=True)
-def get_selection_catalog(args, index_table):
+def get_selection_catalog(args, index_table, all_seg_ids):
     """Makes catalog containing information that can be used to select good galaxies.
     Columns are identical to COSMOS Real Galaxy catalog"""
-    print "Creating selection catalog" 
-    all_seg_ids = np.loadtxt(args.seg_list_file, delimiter=" ",dtype='S2')
+    print "Creating selection catalog"     
     for f, filt in enumerate(args.filter_names):
     	final_table = selection_table()
         for seg_id in all_seg_ids:
@@ -232,11 +229,10 @@ def get_selection_catalog(args, index_table):
                                                 overwrite=True)
         print "Savings fits file at ", path + file_name
 
-def get_fits_catalog(args, index_table):
+def get_fits_catalog(args, index_table, all_seg_ids):
     """Makes catalog containing information about parametric fits to the galaxies.
     Columns are identical to COSMOS Real Galaxy catalog"""   
     print "Creating fits catalog" 
-    all_seg_ids = np.loadtxt(args.seg_list_file, delimiter=" ",dtype='S2')
     for f, filt in enumerate(args.filter_names):
     	final_table = fits_table()
         for seg_id in all_seg_ids:
@@ -265,12 +261,17 @@ def get_in_galsim(args):
     else:
         for fl in glob.glob(args.main_path + args.out_dir+'*'):
             os.remove(fl)
-    index_table = assign_num(args)
+    all_seg_ids = np.loadtxt(args.seg_list_file, delimiter=" ",dtype='S2')
+    index_table = assign_num(args, all_seg_ids)
     for f, filt in enumerate(args.filter_names):
-        idx = get_images(args, index_table, filt, args.file_filter_name[f])
-    get_main_catalog(args, idx)
-    get_selection_catalog(args, idx)
-    get_fits_catalog(args, idx)
+        idx = get_images(args, index_table, filt,
+                         args.file_filter_name[f])
+    get_main_catalog(args, idx, 
+                     all_seg_ids)
+    get_selection_catalog(args, idx,
+                          all_seg_ids)
+    get_fits_catalog(args, idx,
+                     all_seg_ids)
 
 if __name__ == '__main__':
     import subprocess
