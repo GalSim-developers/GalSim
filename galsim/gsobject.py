@@ -1471,13 +1471,13 @@ class GSObject(object):
         # Even if N == Nk, this is useful to make this portion properly Hermitian in the
         # N/2 column and N/2 row.
         bwrap = galsim.BoundsI(0, N/2, -N/2+1, N/2)
-        kimage_wrap = kimage.wrap(bwrap, hermitian='x')
+        kimage_wrap = kimage.image.wrap(bwrap, True, False)
 
         # Perform the fourier transform.j
-        real_image = kimage_wrap.calculate_inverse_fft()
+        real_image = kimage_wrap.inverse_fft(dk)
 
         # Add (a portion of) this to the original image.
-        image += real_image[image.bounds]
+        image.image += real_image[image.bounds]
         added_photons = real_image[image.bounds].array.sum();
 
         return added_photons
