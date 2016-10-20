@@ -1428,8 +1428,59 @@ class GSObject(object):
             if type(wmult) != float:
                 wmult = float(wmult)
 
-        return self.SBProfile.fourierDraw(image.image, wmult)
+        # Start with what this profile thinks a good size would be for a pixel scale of 1.0
+        N = self.SBProfile.getGoodImageSize(1./wmult)
+        #print 'initial N = ',N
 
+        # We must make something big enough to cover the target image size:
+        image_N = np.max(image.bounds.numpyShape())
+        N = np.max((N, image_N))
+
+        # Round up to a good size for making FFTs:
+        N = image.good_fft_size(N)
+
+        # Make sure we hit the minimum size specified in the gsparams.
+        N = max(N, self.gsparams.minimum_fft_size)
+        #print 'N => ',N
+
+        dk = 2.*np.pi / N;
+        #print 'dk = ',dk
+
+        if N*dk/2 > self.maxK():
+            Nk = N;
+        else:
+            # There will be aliasing.  Make a larger image and then wrap it.
+            Nk = int(np.ceil(self.maxK()/dk)) * 2
+            # Round up to the next multiple of N.  Otherwise, the wrapping will start/stop
+            # somewhere in the middle of the image, which can lead to subtle artifacts like
+            # losing symmetry that should be present in the final image.
+            Nk = ((Nk-1)//N + 1) * N;
+        #print 'Nk = ',Nk
+
+        if Nk > self.gsparams.maximum_fft_size:
+            raise RuntimeError(
+                "drawFFT requires an FFT that is too large: %s."%Nk +
+                "If you can handle the large FFT, you may update gsparams.maximum_fft_size.")
+
+        # Draw the image in k space.
+        bounds = galsim.BoundsI(0,Nk/2,-Nk/2,Nk/2)
+        kimage = galsim.ImageC(bounds, scale=dk)
+        self.SBProfile.drawK(kimage.image.view(), dk)
+
+        # Wrap the full image to the size we want for the FT.
+        # Even if N == Nk, this is useful to make this portion properly Hermitian in the
+        # N/2 column and N/2 row.
+        bwrap = galsim.BoundsI(0, N/2, -N/2+1, N/2)
+        kimage_wrap = kimage.wrap(bwrap, hermitian='x')
+
+        # Perform the fourier transform.j
+        real_image = kimage_wrap.calculate_inverse_fft()
+
+        # Add (a portion of) this to the original image.
+        image += real_image[image.bounds]
+        added_photons = real_image[image.bounds].array.sum();
+
+        return added_photons
 
     def _calculate_nphotons(self, n_photons, poisson_flux, max_extra_noise, rng):
         """Calculate how many photons to shoot and what flux_ratio (called g) each one should
