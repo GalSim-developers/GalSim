@@ -1829,15 +1829,10 @@ class GSObject(object):
             re.setOrigin(image.origin())
             im.setOrigin(image.origin())
 
-        # Now, for drawing the k-space image, we need the profile to be in the image coordinates
-        # that correspond to having unit-sized pixels in k space. The conversion to image
-        # coordinates in this case is to apply the inverse dk pixel scale.
-        prof = galsim.PixelScale(1./dk).toImage(self)
-
         # Making views of the images lets us change the centers without messing up the originals.
         image.setCenter(0,0)
 
-        prof.SBProfile.drawK(image.image.view())
+        self.SBProfile.drawK(image.image.view(), dk)
 
         if gain != 1.:
             image /= gain

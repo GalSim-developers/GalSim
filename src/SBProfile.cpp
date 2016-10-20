@@ -413,7 +413,7 @@ namespace galsim {
     }
 
     template <typename T>
-    void SBProfile::drawK(ImageView<std::complex<T> > image) const
+    void SBProfile::drawK(ImageView<std::complex<T> > image, double dk) const
     {
         dbg<<"Start drawK: \n";
         typedef std::complex<T> CT;
@@ -426,7 +426,7 @@ namespace galsim {
 
         assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
         ImageAlloc<std::complex<double> > im2(image.getBounds(), 0.);
-        _pimpl->fillKImage(im2, xmin, 1., -xmin, ymin, 1., -ymin);
+        _pimpl->fillKImage(im2, xmin*dk, dk, -xmin, ymin*dk, dk, -ymin);
         image += im2;
     }
 
@@ -517,6 +517,6 @@ namespace galsim {
     template double SBProfile::fourierDraw(ImageView<float> I, double wmult) const;
     template double SBProfile::fourierDraw(ImageView<double> I, double wmult) const;
 
-    template void SBProfile::drawK(ImageView<std::complex<double> > image) const;
+    template void SBProfile::drawK(ImageView<std::complex<double> > image, double dk) const;
 
 }

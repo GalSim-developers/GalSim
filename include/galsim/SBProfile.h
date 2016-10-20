@@ -381,9 +381,10 @@ namespace galsim {
          * complex. The image is normalized such that I(0,0) is the total flux.
          *
          * @param[in,out]    image in k space (must be an ImageViewC)
+         * @param[in]        dk, the step size in k space
          */
         template <typename T>
-        void drawK(ImageView<std::complex<T> > image) const;
+        void drawK(ImageView<std::complex<T> > image, double dk) const;
 
         /// @brief Return a string that can act as the repr in python
         std::string repr() const;

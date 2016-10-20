@@ -187,8 +187,8 @@ namespace galsim {
             wrapTemplates<double>(pySBProfile);
             pySBProfile.def(
                 "drawK",
-                (void (SBProfile::*)(ImageView<std::complex<double> >) const)&SBProfile::drawK,
-                (bp::arg("image")), "Draw k-space image.");
+                (void (SBProfile::*)(ImageView<std::complex<double> >,double) const)&SBProfile::drawK,
+                (bp::arg("image"), bp::arg("dk")), "Draw k-space image.");
         }
 
     };
