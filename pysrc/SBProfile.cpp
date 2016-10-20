@@ -98,9 +98,9 @@ namespace galsim {
             // We also don't need to make 'W' a template parameter in this case,
             // but it's easier to do that than write out the full class_ type.
             wrapper
-                .def("plainDraw",
-                     (double (SBProfile::*)(ImageView<U>) const)&SBProfile::plainDraw,
-                     (bp::arg("image")),
+                .def("draw",
+                     (double (SBProfile::*)(ImageView<U>, double) const)&SBProfile::draw,
+                     (bp::arg("image"), bp::arg("dx")),
                      "Draw in-place and return the summed flux.")
                 .def("fourierDraw",
                      (double (SBProfile::*)(ImageView<U>, double) const)&SBProfile::fourierDraw,
@@ -187,7 +187,7 @@ namespace galsim {
             wrapTemplates<double>(pySBProfile);
             pySBProfile.def(
                 "drawK",
-                (void (SBProfile::*)(ImageView<std::complex<double> >,double) const)&SBProfile::drawK,
+                (void (SBProfile::*)(ImageView<std::complex<double> >, double) const)&SBProfile::drawK,
                 (bp::arg("image"), bp::arg("dk")), "Draw k-space image.");
         }
 

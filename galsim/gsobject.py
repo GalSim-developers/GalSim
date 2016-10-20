@@ -1369,7 +1369,7 @@ class GSObject(object):
 
         This is usually called from the `drawImage` function, rather than called directly by the
         user.  In particular, the input image must be already set up with defined bounds with
-        the center set to (0,0).  It also must have a pixel scale of 1.0.  The profile being
+        the center set to (0,0).  It also must have a pixel scale wcs.  The profile being
         drawn should have already been converted to image coordinates via
 
             >>> image_profile = original_wcs.toImage(original_profile)
@@ -1390,7 +1390,7 @@ class GSObject(object):
 
         @returns The total flux drawin inside the image bounds.
         """
-        return self.SBProfile.plainDraw(image.image)
+        return self.SBProfile.draw(image.image, image.scale)
 
     def drawFFT(self, image, wmult=1.):
         """
@@ -1428,8 +1428,8 @@ class GSObject(object):
             if type(wmult) != float:
                 wmult = float(wmult)
 
-        # Start with what this profile thinks a good size would be for a pixel scale of 1.0
-        N = self.SBProfile.getGoodImageSize(1./wmult)
+        # Start with what this profile thinks a good size would be given the image's pixel scale.
+        N = self.SBProfile.getGoodImageSize(image.scale/wmult)
         #print 'initial N = ',N
 
         # We must make something big enough to cover the target image size:

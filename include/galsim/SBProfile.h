@@ -349,11 +349,12 @@ namespace galsim {
          * already on the input image.
          *
          * @param[in,out]    image (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
+         * @param[in]        dx, the pixel scale
          *
          * @returns summed flux.
          */
         template <typename T>
-        double plainDraw(ImageView<T> image) const;
+        double draw(ImageView<T> image, double dx) const;
 
         /**
          * @brief Draw an image of the SBProfile in real space forcing the use of Fourier transform

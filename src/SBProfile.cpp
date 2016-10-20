@@ -309,7 +309,7 @@ namespace galsim {
     }
 
     template <typename T>
-    double SBProfile::plainDraw(ImageView<T> image) const
+    double SBProfile::draw(ImageView<T> image, double dx) const
     {
         dbg<<"Start plainDraw"<<std::endl;
         assert(_pimpl.get());
@@ -320,7 +320,7 @@ namespace galsim {
 
         assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
         ImageAlloc<double> im2(image.getBounds(), 0.);
-        _pimpl->fillXImage(im2, xmin, 1., -xmin, ymin, 1., -ymin);
+        _pimpl->fillXImage(im2, xmin*dx, dx, -xmin, ymin*dx, dx, -ymin);
 
         double total_flux = im2.sumElements();
         image += im2;
@@ -510,8 +510,8 @@ namespace galsim {
     }
 
     // instantiate template functions for expected image types
-    template double SBProfile::plainDraw(ImageView<float> I) const;
-    template double SBProfile::plainDraw(ImageView<double> I) const;
+    template double SBProfile::draw(ImageView<float> image, double dx) const;
+    template double SBProfile::draw(ImageView<double> image, double dx) const;
 
     template double SBProfile::fourierDraw(ImageView<float> I, double wmult) const;
     template double SBProfile::fourierDraw(ImageView<double> I, double wmult) const;
