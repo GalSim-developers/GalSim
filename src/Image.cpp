@@ -29,6 +29,30 @@
 
 namespace galsim {
 
+
+// A helper class to let us write things like REAL(x) or CONJ(x) for real or complex.
+template <typename T>
+struct ComplexHelper
+{
+    typedef T real_type;
+    typedef std::complex<T> complex_type;
+    static inline T conj(const T& x) { return x; }
+    static inline T real(const T& x) { return x; }
+};
+template <typename T>
+struct ComplexHelper<std::complex<T> >
+{
+    typedef T real_type;
+    typedef std::complex<T> complex_type;
+    static inline T real(const std::complex<T>& x) { return std::real(x); }
+    static inline std::complex<T> conj(const std::complex<T>& x) { return std::conj(x); }
+};
+template <typename T>
+inline typename ComplexHelper<T>::real_type REAL(const T& x) { return ComplexHelper<T>::real(x); }
+template <typename T>
+inline T CONJ(const T& x) { return ComplexHelper<T>::conj(x); }
+
+
 /////////////////////////////////////////////////////////////////////
 //// Constructor for out-of-bounds that has coordinate info
 ///////////////////////////////////////////////////////////////////////
@@ -257,16 +281,6 @@ ImageView<T> ImageView<T>::subImage(const Bounds<int>& bounds)
         + (bounds.getXMin() - this->_bounds.getXMin()) * this->_step;
     return ImageView<T>(newdata,this->_owner,this->_step,this->_stride,bounds);
 }
-
-// A helper function so we can write CONJ(x) for real or complex.
-template <typename T>
-struct ConjHelper
-{ static T conj(const T& x) { return x; } };
-template <typename T>
-struct ConjHelper<std::complex<T> >
-{ static std::complex<T> conj(const std::complex<T>& x) { return std::conj(x); } };
-template <typename T>
-T CONJ(const T& x) { return ConjHelper<T>::conj(x); }
 
 
 // Some helper functions to make the logic in the below wrap function easier to follow
@@ -606,6 +620,71 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
     }
 
     return ret;
+}
+
+
+template <typename T>
+ImageView<std::complex<double> > BaseImage<T>::fft(double dx) const
+{
+    dbg<<"Start BaseImage::fft\n";
+    dbg<<"self bounds = "<<this->_bounds<<std::endl;
+
+    if (!_data or !this->_bounds.isDefined())
+        throw ImageError("Attempting to perform fft on undefined image.");
+
+    const int No2 = this->_bounds.getXMax()+1;
+    const int N = No2 << 1;
+    dbg<<"N = "<<N<<std::endl;
+
+    if (this->_bounds.getYMin() != -No2 || this->_bounds.getYMax() != No2-1 ||
+        this->_bounds.getXMin() != -No2)
+        throw ImageError("fft requires bounds to be (-N/2, N/2-1, -N/2, N/2-1)");
+
+    // ImageAlloc's memory allocation is aligned on 16 byte boundaries, which means we can
+    // use it for the fftw array.
+    // We will use the same array for input and output.  It's simplest if we create the
+    // output image and just cast to double for the input.
+    // However, note that the complex array has two extra elements in the primary direction
+    // (x in our case) to allow for the extra column.
+    // cf. http://www.fftw.org/doc/Real_002ddata-DFT-Array-Format.html
+    ImageAlloc<std::complex<double> > kim(Bounds<int>(0, No2, -No2, No2-1));
+    double* xptr = reinterpret_cast<double*>(kim.getData());
+    const T* ptr = _data;
+    const int skip = this->getNSkip();
+
+    // The FT image that FFTW will return will have FT(0,0) placed at the origin.  We
+    // want it placed in the middle instead.  We can make that happen by inverting every other
+    // column in the input image.
+    double fac = 1.;
+    if (_step == 1) {
+        for (int j=-No2; j<No2; ++j, ptr+=skip, xptr+=2, fac=-fac)
+            for (int i=-No2; i<No2; ++i)
+                *xptr++ = fac * REAL(*ptr++);
+    } else {
+        for (int j=-No2; j<No2; ++j, ptr+=skip, xptr+=2, fac=-fac)
+            for (int i=-No2; i<No2; ++i, ptr+=_step)
+                *xptr++ = fac * REAL(*ptr++);
+    }
+
+    fftw_complex* kdata = reinterpret_cast<fftw_complex*>(kim.getData());
+    double* xdata = reinterpret_cast<double*>(kim.getData());
+
+    fftw_plan plan = fftw_plan_dft_r2c_2d(N, N, xdata, kdata, FFTW_ESTIMATE);
+    if (plan==NULL) throw std::runtime_error("fftw_plan cannot be created");
+    fftw_execute(plan);
+    fftw_destroy_plan(plan);
+
+    // The resulting image will still have a checkerboard pattern of +-1 on it, which
+    // we want to remove.  We also apply the factor dx^2.
+    fac = dx*dx;
+    std::complex<double>* kptr = kim.getData();
+    const bool extra_flip = (No2 % 2 == 1);
+    for (int j=-No2; j<No2; ++j, fac=(extra_flip?-fac:fac))
+        for (int i=0; i<=No2; ++i, fac=-fac)
+            *kptr++ *= fac;
+
+    // Now simply return a view of this image.
+    return kim.view();
 }
 
 template <typename T>

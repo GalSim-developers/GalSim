@@ -990,7 +990,30 @@ def test_fft():
     """Test the routines for calculating the fft of an image.
     """
 
-    # Start by using drawKImage as above to get a k-space image
+    # Start with a really simple test of the round trip fft and then inverse_fft.
+    # And run it for all input types to make sure they all work.
+    types = [np.int16, np.int32, np.float32, np.float64, np.complex128, int, float, complex]
+    for dt in types:
+        xim = galsim.Image([ [0,1,2,1],
+                             [1,2,3,2],
+                             [2,3,4,2],
+                             [1,2,3,3] ],
+                           xmin=-2, ymin=-2, dtype=dt, scale=0.1)
+        kim = xim.calculate_fft()
+        xim2 = kim.calculate_inverse_fft()
+        np.testing.assert_almost_equal(xim.array, xim2.array)
+
+        # Now the other way, starting with a (real) k-space image.
+        kim = galsim.Image([ [2,1,0],
+                             [3,2,1],
+                             [4,3,2],
+                             [3,2,1] ],
+                           xmin=0, ymin=-2, dtype=dt, scale=0.1)
+        xim = kim.calculate_inverse_fft()
+        kim2 = xim.calculate_fft()
+        np.testing.assert_almost_equal(kim.array, kim2.array)
+
+    # Now use drawKImage (as above in test_drawKImage) to get a more realistic k-space image
     obj = galsim.Moffat(flux=test_flux, beta=1.5, scale_radius=0.5)
     im1 = obj.drawKImage()
     N = 1162  # NB. It is useful to have this come out not a factor of 4, since some of the

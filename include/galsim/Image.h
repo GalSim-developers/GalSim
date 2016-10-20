@@ -286,6 +286,11 @@ namespace galsim {
         T sumElements() const;
 
         /**
+         *  @brief Perform a 2D FFT from real space to k-space.
+         */
+        ImageView<std::complex<double> > fft(double dk) const;
+
+        /**
          *  @brief Perform a 2D FFT from k-space to real space.
          */
         ImageView<double> inverse_fft(double dk) const;

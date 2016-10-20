@@ -678,6 +678,44 @@ class Image(with_metaclass(MetaImage, object)):
             raise ValueError("Invalid value for hermitian: %s"%hermitian)
         return Image(image=subimage, wcs=self.wcs)
 
+    def calculate_fft(self):
+        """Performs an FFT of an Image in real space to produce a k-space Image.
+
+        Note: the image will be padded with zeros as needed to make an image with bounds that
+        look like BoundsI(-N/2, N/2-1, -N/2, N/2-1).
+
+        The input image must have a PixelScale wcs.  The output image will be complex (an ImageC
+        instance) and its scale will be 2pi / (N dx), where dx is the scale of the input image.
+
+        @returns an ImageC instance with the k-space image.
+        """
+        if self.wcs is None:
+            raise ValueError("calculate_fft requires that the scale be set.")
+        if not self.wcs.isPixelScale():
+            raise ValueError("calculate_fft requires that the image has a PixelScale wcs.")
+        if not self.bounds.isDefined():
+            raise ValueError("calculate_fft requires that the image have defined bounds.")
+
+        No2 = np.max((-self.bounds.ymin, self.bounds.xmax+1, -self.bounds.ymin, self.bounds.ymax+1))
+
+        full_bounds = galsim.BoundsI(-No2, No2-1, -No2, No2-1)
+        if self.bounds == full_bounds:
+            # Then the image is already in the shape we need.
+            ximage = self
+        else:
+            # Then we pad out with zeros
+            ximage = Image(full_bounds, dtype=self.dtype, init_value=0)
+            ximage[self.bounds] = self[self.bounds]
+
+        dx = self.scale
+        # dk = 2pi / (N dk)
+        dk = np.pi / (No2 * dx)
+
+        imview = ximage.image.fft(dx)
+        image = Image(imview, scale=dk)
+        image.setOrigin(0,-No2)
+        return image
+
     def calculate_inverse_fft(self):
         """Performs an inverse FFT of an Image in k-space to produce a real-space Image.
 
@@ -692,8 +730,8 @@ class Image(with_metaclass(MetaImage, object)):
         larger k-space image and then wrapping, you should wrap directly into an image of
         this shape.
 
-        The scale of the output image will be 2pi / (N dk), where dk is the scale of the input
-        image.
+        The input image must have a PixelScale wcs.  The output image will be real (an ImageD
+        instance) and its scale will be 2pi / (N dk), where dk is the scale of the input image.
 
         @returns an ImageD instance with the real-space image.
         """
