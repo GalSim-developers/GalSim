@@ -22,7 +22,6 @@
 #include "SBProfile.h"
 #include "SBTransform.h"
 #include "SBProfileImpl.h"
-#include "FFT.h"
 
 // There are three levels of verbosity which can be helpful when debugging,
 // which are written as dbg, xdbg, xxdbg (all defined in Std.h).

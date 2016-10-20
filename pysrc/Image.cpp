@@ -24,7 +24,6 @@
 
 #include "NumpyHelper.h"
 #include "Image.h"
-#include "FFT.h"  // For goodFFTSize
 
 namespace bp = boost::python;
 
