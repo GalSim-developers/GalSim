@@ -210,6 +210,11 @@ namespace galsim {
         { return subImage(bounds); }
 
         /**
+         *  @brief Return the smallest bounds that includes all non-zero elements of the image.
+         */
+        Bounds<int> nonZeroBounds() const;
+
+        /**
          *  @brief Shift the bounding box of the image, changing the logical location of the pixels
          *
          *  xmin_new = xmin + dx
@@ -681,7 +686,7 @@ namespace galsim {
          */
         template <typename U>
         ImageAlloc<T>& operator=(const BaseImage<U>& rhs)
-        { if (this != &rhs) copyFrom(rhs); return *this; }
+        { copyFrom(rhs); return *this; }
 
         //@{
         /**

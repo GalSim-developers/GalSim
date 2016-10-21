@@ -87,6 +87,33 @@ namespace galsim {
     }
 
     /**
+     *  @brief Call a function of (value, i, j) on each pixel value
+     */
+    template <typename T, typename Op>
+    Op for_each_pixel_ij(const BaseImage<T>& image, Op f)
+    {
+        const T* ptr = image.getData();
+        if (ptr) {
+            const int skip = image.getNSkip();
+            const int step = image.getStep();
+            const int nrow = image.getNRow();
+            const int ncol = image.getNCol();
+            const int xmin = image.getXMin();
+            const int xmax = image.getXMax();
+            const int ymin = image.getYMin();
+            const int ymax = image.getYMax();
+            if (step == 1) {
+                for (int j=ymin; j<=ymax; j++, ptr+=skip)
+                    for (int i=xmin; i<=xmax; i++) f(*ptr++,i,j);
+            } else {
+                for (int j=ymin; j<=ymax; j++, ptr+=skip)
+                    for (int i=xmin; i<=xmax; i++, ptr+=step) f(*ptr,i,j);
+            }
+        }
+        return f;
+    }
+
+    /**
      *  @brief Replace image with a function of its pixel values.
      */
     template <typename T, typename Op>

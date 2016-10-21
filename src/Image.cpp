@@ -158,6 +158,22 @@ T BaseImage<T>::sumElements() const
 }
 
 template <typename T>
+struct NonZeroBounds
+{
+    NonZeroBounds(): bounds() {}
+    void operator()(T x, int i, int j) { if (x != T(0)) bounds += Position<int>(i,j); }
+    Bounds<int> bounds;
+};
+
+template <typename T>
+Bounds<int> BaseImage<T>::nonZeroBounds() const
+{
+    NonZeroBounds<T> nz;
+    nz = for_each_pixel_ij(*this, nz);
+    return nz.bounds;
+}
+
+template <typename T>
 ImageAlloc<T>::ImageAlloc(int ncol, int nrow, T init_value) :
     BaseImage<T>(Bounds<int>(1,ncol,1,nrow))
 {
