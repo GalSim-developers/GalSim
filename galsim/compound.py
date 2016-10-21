@@ -153,6 +153,19 @@ class Sum(galsim.GSObject):
 
     @property
     def obj_list(self): return self._obj_list
+    @property
+    def Ixx(self):
+        return 1./self.flux * sum([obj.flux * (obj.Ixx + (obj.centroid.x - self.centroid.x)**2)
+                                   for obj in self._obj_list])
+    @property
+    def Ixy(self):
+        return 1./self.flux * sum([obj.flux * (obj.Ixy + ((obj.centroid.x - self.centroid.x)
+                                                          *(obj.centroid.y - self.centroid.y)))
+                                   for obj in self._obj_list])
+    @property
+    def Iyy(self):
+        return 1./self.flux * sum([obj.flux * (obj.Iyy + (obj.centroid.y - self.centroid.y)**2)
+                                   for obj in self._obj_list])
 
     def __eq__(self, other):
         return (isinstance(other, galsim.Sum) and
@@ -387,6 +400,12 @@ class Convolution(galsim.GSObject):
     def obj_list(self): return self._obj_list
     @property
     def real_space(self): return self._real_space
+    @property
+    def Ixx(self): return sum(obj.Ixx for obj in self.obj_list)
+    @property
+    def Ixy(self): return sum(obj.Ixy for obj in self.obj_list)
+    @property
+    def Iyy(self): return sum(obj.Iyy for obj in self.obj_list)
 
     def __eq__(self, other):
         return (isinstance(other, galsim.Convolution) and
@@ -493,6 +512,13 @@ class Deconvolution(galsim.GSObject):
 
     @property
     def orig_obj(self): return self._orig_obj
+    # Dodgy?
+    @property
+    def Ixx(self): return -self._orig_obj.Ixx
+    @property
+    def Ixy(self): return -self._orig_obj.Ixy
+    @property
+    def Iyy(self): return -self._orig_obj.Iyy
 
     def __eq__(self, other):
         return (isinstance(other, galsim.Deconvolution) and
@@ -621,6 +647,13 @@ class AutoConvolution(galsim.GSObject):
     def orig_obj(self): return self._orig_obj
     @property
     def real_space(self): return self._real_space
+    @property
+    def Ixx(self): return 2*self._orig_obj.Ixx
+    @property
+    def Ixy(self): return 2*self._orig_obj.Ixy
+    @property
+    def Iyy(self): return 2*self._orig_obj.Iyy
+
 
     def __eq__(self, other):
         return (isinstance(other, galsim.AutoConvolution) and
@@ -761,6 +794,12 @@ class AutoCorrelation(galsim.GSObject):
     def orig_obj(self): return self._orig_obj
     @property
     def real_space(self): return self._real_space
+    @property
+    def Ixx(self): return 2*self._orig_obj.Ixx
+    @property
+    def Ixy(self): return 2*self._orig_obj.Ixy
+    @property
+    def Iyy(self): return 2*self._orig_obj.Iyy
 
     def __eq__(self, other):
         return (isinstance(other, galsim.AutoCorrelation) and
@@ -873,6 +912,12 @@ class FourierSqrtProfile(galsim.GSObject):
 
     @property
     def orig_obj(self): return self._orig_obj
+    @property
+    def Ixx(self): return 0.5 * self._orig_obj.Ixx
+    @property
+    def Ixy(self): return 0.5 * self._orig_obj.Ixy
+    @property
+    def Iyy(self): return 0.5 * self._orig_obj.Iyy
 
     def __eq__(self, other):
         return (isinstance(other, galsim.FourierSqrtProfile) and
