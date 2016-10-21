@@ -702,6 +702,12 @@ class Pixel(GSObject):
 
     @property
     def scale(self): return self.getScale()
+    @property
+    def Ixx(self): return self.getScale()/12.
+    @property
+    def Ixy(self): return 0.0
+    @property
+    def Iyy(self): return self.getScale()/12.
 
     def __eq__(self, other):
         return (isinstance(other, galsim.Pixel) and
@@ -771,6 +777,12 @@ class Box(GSObject):
     def width(self): return self.getWidth()
     @property
     def height(self): return self.getHeight()
+    @property
+    def Ixx(self): return self.getWidth()/12.
+    @property
+    def Ixy(self): return 0.0
+    @property
+    def Iyy(self): return self.getHeight()/12.
 
     def __eq__(self, other):
         return (isinstance(other, galsim.Box) and
@@ -838,6 +850,12 @@ class TopHat(GSObject):
 
     @property
     def radius(self): return self.getRadius()
+    @property
+    def Ixx(self): return 0.25*self.getRadius()**2
+    @property
+    def Ixy(self): return 0.0
+    @property
+    def Iyy(self): return 0.25*self.getRadius()**2
 
     def __eq__(self, other):
         return (isinstance(other, galsim.TopHat) and
