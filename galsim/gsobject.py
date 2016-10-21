@@ -234,6 +234,8 @@ class GSObject(object):
     def dimensionless(self): return True
     @property
     def wave_list(self): return np.array([], dtype=float)
+    @property
+    def I(self): return np.array([[self.Ixx, self.Ixy], [self.Ixy, self.Iyy]])
 
     # Also need this method to duck-type as a ChromaticObject
     def evaluateAtWavelength(self, wave):
@@ -1556,4 +1558,3 @@ _galsim.SBProfile.__setstate__ = SBProfile_setstate
 _galsim.SBProfile.__eq__ = lambda self, other: self.serialize() == other.serialize()
 _galsim.SBProfile.__ne__ = lambda self, other: not self.__eq__(other)
 _galsim.SBProfile.__hash__ = lambda self: hash(self.serialize())
-

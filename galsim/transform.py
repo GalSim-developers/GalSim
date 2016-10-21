@@ -139,6 +139,16 @@ class Transformation(galsim.GSObject):
     def offset(self): return self.getOffset()
     @property
     def flux_ratio(self): return self.getFluxRatio()
+    @property
+    def I(self):
+        return np.dot(self.jac, np.dot(self.original.I, self.jac.T))
+    @property
+    def Ixx(self): return self.I[0, 0]
+    @property
+    def Ixy(self): return self.I[0, 1]
+    @property
+    def Iyy(self): return self.I[1, 1]
+        
 
     # There's really no good way to check that two callables are equal, except if they literally
     # point to the same object.  So we'll just check for that for _jac, _offset, and _flux_ratio.
