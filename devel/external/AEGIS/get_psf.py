@@ -65,10 +65,10 @@ def get_moments(params, filter, out_dir):
     print filter, params.seg_id
     stars1 = np.loadtxt(out_dir + filter+'_matched_stars.txt').T
     moments = [[],[]]
-    hsm_params =galsim.hsm.HSMParams(max_mom2_iter = 1000000000)
+    hsm_params = galsim.hsm.HSMParams(max_mom2_iter = 1000000000)
     fin_stars=[]
-    for num,i in enumerate(stars1):
-        print "Getting moments of star ", int(stars1[i][0])
+    for i in range(len(stars1)):
+        print "Getting moments of star %i of %i  "%(i, len(stars1))
         x_s = stars1[i][1]
         y_s = stars1[i][2]
         r = stars1[i][3]
