@@ -40,8 +40,6 @@ between the scale radii used to specify the size of the GSObject and between the
 Image is acceptable.
 """
 
-import numpy as np
-
 import galsim
 from . import _galsim
 from .gsobject import GSObject
@@ -138,6 +136,12 @@ class Gaussian(GSObject):
     def half_light_radius(self): return self.getHalfLightRadius()
     @property
     def fwhm(self): return self.getFWHM()
+    @property
+    def Ixx(self): return self.getSigma()**2
+    @property
+    def Iyy(self): return self.getSigma()**2
+    @property
+    def Ixy(self): return 0.0
 
     def __eq__(self, other):
         return (isinstance(other, galsim.Gaussian) and
@@ -1431,4 +1435,3 @@ _galsim.SBSpergel.__getstate__ = lambda self: None
 _galsim.SBSpergel.__setstate__ = lambda self, state: 1
 _galsim.SBSpergel.__repr__ = lambda self: \
         'galsim._galsim.SBSpergel(%r, %r, %r, %r, %r)'%self.__getinitargs__()
-
