@@ -322,7 +322,7 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
         import pickle
     import copy
     # In case the repr uses these:
-    from numpy import array, int16, int32, float32, float64, ndarray
+    from numpy import array, uint16, uint32, int16, int32, float32, float64, ndarray
     try:
         import astropy.io.fits
         from distutils.version import LooseVersion
@@ -407,7 +407,6 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
     # attempt to perturb them a bit after inferring their type, and checking that the object
     # constructed with the perturbed argument list then compares inequally to the original object.
 
-    # import sys
     try:
         args = obj1.__getinitargs__()
     except:
@@ -426,7 +425,10 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
             elif isinstance(args[i], Complex):
                 newargs[i] = args[i] * (1.01 + 0.01j) + (0.99 - 0.01j)
             elif isinstance(args[i], ndarray):
-                newargs[i] = args[i] * 1.01 + 0.01
+                if args[i].dtype.kind in ['i','u']:
+                    newargs[i] = args[i] * 2 + 1
+                else:
+                    newargs[i] = args[i] * 1.01 + 0.01
             elif isinstance(args[i], galsim.GSParams):
                 newargs[i] = galsim.GSParams(folding_threshold=5.1e-3, maxk_threshold=1.1e-3)
             elif args[i] is None:
@@ -437,10 +439,12 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
             with galsim.utilities.printoptions(precision=18, threshold=1e6):
                 try:
                     obj6 = eval('galsim.' + classname + repr(tuple(newargs)))
-                except:
+                except Exception as e1:
                     try:
                         obj6 = eval('galsim._galsim.' + classname + repr(tuple(newargs)))
-                    except:
+                    except Exception as e2:
+                        print('e1 = ',e1)
+                        print('e2 = ',e2)
                         raise TypeError("{0} not `eval`able!".format(
                                 classname + repr(tuple(newargs))))
                 else:
