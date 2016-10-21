@@ -36,7 +36,8 @@ class Main_param:
         self.file_filter_name = args.file_filter_name
         string = args.main_string.replace('segid', self.seg_id) 
         string1 = string.replace('num', self.num)        
-        self.gal_files , self.noise_file, self.seg_files = {}, {}, {}
+        self.gal_files, self.noise_file = {}, {}
+        self.seg_files, self.cat_files = {}, {}
         n = len(self.filters)      
         for i in range(n):
             filter1 = self.filters[i]
@@ -45,6 +46,8 @@ class Main_param:
             self.seg_files[filter1] = self.path + string2 + args.seg_string
             string3 = args.noise_file.replace('filter',args.file_filter_name[i])
             self.noise_file[filter1] = args.main_path + '/' + string3
+            string4 = args.cat_file.replace('filter',args.file_filter_name[i])
+            self.cat_files[filter1] = args.main_path + '/' + self.seg_id + '/' + string4
 
 def div_pixels(seg_map, num):
     """Get pixels that belong to image, other objects, background from
@@ -103,11 +106,14 @@ def get_avg_around_pix(x0, y0,arr):
     avg=sum(neighb)/len(neighb)
     return avg
 
-def get_snr(image_data, b_var):
+def get_snr(image_data, b_var, hlr):
     """Returns SNr of shape measurement"""
     img = galsim.Image(image_data)
     try:
-        res = galsim.hsm.FindAdaptiveMom(img)
+        new_params = galsim.hsm.HSMParams(max_amoment=5.0e15, max_mom2_iter=2000000,
+                                          convergence_threshold=1.e-5)
+        res = galsim.hsm.FindAdaptiveMom(img, hsmparams=new_params,
+                                         guess_sig=hlr)
         aperture_noise = float(np.sqrt(b_var*2.*np.pi*(res.moments_sigma**2)))
         sn_ellip_gauss = res.moments_amp / aperture_noise
         print 'RES', res.moments_amp, res.moments_sigma
@@ -184,6 +190,8 @@ def clean_pstamp(args):
         if os.path.isdir(params.path + 'stamp_stats') is False:
             subprocess.call(["mkdir", params.path + 'stamp_stats'])
         # open image and seg map
+        catalog = Table.read(params.cat_files[filt], format="ascii.basic")
+        hlr = catalog['A_IMAGE'][params.num]
         hdu1 = pyfits.open(params.gal_files[filt])
         hdu2 = pyfits.open(params.seg_files[filt])
         im_dat = hdu1[0].data
@@ -232,7 +240,7 @@ def clean_pstamp(args):
             min_dist = 999.99      
             pix_near_dist = [shape[0]/2, shape[1]/2]
             avg_flux = 0.
-            snr = get_snr(im_dat, b_std**2)
+            snr = get_snr(im_dat, b_std**2, hlr)
             info = [b_mean, b_std, np.sum(im_dat), min_dist, avg_flux, peak_val, snr ]
             print info
             np.savetxt(params.path + 'stamp_stats'+'/'+ params.num + '_'+ filt + '.txt', info)
@@ -254,7 +262,7 @@ def clean_pstamp(args):
         min_dist = np.min(min_dists)
         pix_near_dist = pix_min_dists[np.argmin(min_dists)]
         avg_flux = get_avg_around_pix(pix_near_dist[0], pix_near_dist[1], im_dat)
-        snr = get_snr(new_im, b_std**2)
+        snr = get_snr(new_im, b_std**2, hlr)
         info = [b_mean, b_std, np.sum(im_dat), min_dist, avg_flux, peak_val, snr]
         np.savetxt(params.path + 'stamp_stats'+'/'+ params.num + '_'+ filt + '.txt', info)
         new_im_name = params.path + filt + '_'+ params.seg_id + '_'+ params.num +'_gal.fits'
@@ -270,12 +278,15 @@ if __name__ == '__main__':
     parser.add_argument('--seg_id', default='1a',
                         help="Segment id of image to run [Default:1a]")
     parser.add_argument('--num', default='0',type=str,
-                        help="Identifier of galaxy to run [Default:0")
+                        help="Identifier of galaxy to run [Default:0]")
     parser.add_argument('--filter_names', default= ['f606w','f814w'],
                         help="names of filters [Default: ['f814w','f606w']]")
     parser.add_argument('--noise_file', type=str, default = 'acs_filter_unrot_sci_noise.fits' ,
                         help="File containing noise in each band, with band name \
                         replaced by'filter'[Default:'acs_filter_unrot_sci_noise.fits']] ")
+    parser.add_argument('--cat_file', default='filter_clean.cat',
+                        help="Name of saved catalog file, with band name \
+                        replaced by'filter'[Default:'filter_clean.cat']")
     parser.add_argument('--file_filter_name', default =['V', 'I'] ,
                         help="Name of filter to use ")
     parser.add_argument('--main_path', 
