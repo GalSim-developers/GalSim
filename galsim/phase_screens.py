@@ -471,13 +471,14 @@ def _zern_coef_array(n, m, eps=0., shape=None, annular=False):
 
 def _binomial(a, b, n):
     """Return xy coefficients of (ax + by)^n."""
-    coefs = [1.0]
-    for i in range(n):
-        coefs.append(coefs[i] * (n-i)/(i+1))  # Build up nth row of Pascal's triangle.
-    coefs = np.array(coefs)
-    coefs[1:] *= np.cumprod(np.full((n,), b, dtype=float))  # powers of b
-    coefs[:-1] *= np.cumprod(np.full((n,), a, dtype=float))[::-1]  # powers of a
-    return coefs
+    b_over_a = float(b)/float(a)
+    def generate():
+        c = a**n
+        yield c
+        for i in range(n):
+            c *= b_over_a * (n-i)/(i+1)
+            yield c
+    return np.fromiter(generate(), float, n+1)
 
 # Following 3 functions from
 #
