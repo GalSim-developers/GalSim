@@ -664,8 +664,8 @@ class InterpolatedKImage(GSObject):
     _req_params = { 'real_kimage' : str,
                     'imag_kimage' : str }
     _opt_params = {
-        'k_interpolant' : str,
-        'stepk': float
+        'k_interpolant' : str, 'stepk': float,
+        'real_hdu': int, 'imag_hdu': int,
     }
     _single_params = []
     _takes_rng = False
@@ -688,6 +688,13 @@ class InterpolatedKImage(GSObject):
         if kimage is None:
             if real_kimage is None or imag_kimage is None:
                 raise ValueError("Must provide either kimage or real_kimage/imag_kimage")
+
+            # If the "image" is not actually an image, try to read the image as a file.
+            if not isinstance(real_kimage, galsim.Image):
+                real_kimage = galsim.fits.read(real_kimage, hdu=real_hdu)
+            if not isinstance(imag_kimage, galsim.Image):
+                imag_kimage = galsim.fits.read(imag_kimage, hdu=imag_hdu)
+
             # make sure real_kimage, imag_kimage are really `Image`s, are floats, and are
             # congruent.
             if not isinstance(real_kimage, galsim.Image):
@@ -698,11 +705,6 @@ class InterpolatedKImage(GSObject):
                 raise ValueError("Real and Imag kimages must have same bounds.")
             if real_kimage.wcs != imag_kimage.wcs:
                 raise ValueError("Real and Imag kimages must have same scale/wcs.")
-            # If the "image" is not actually an image, try to read the image as a file.
-            if not isinstance(real_kimage, galsim.Image):
-                real_kimage = galsim.fits.read(real_kimage, hdu=real_hdu)
-            if not isinstance(imag_kimage, galsim.Image):
-                imag_kimage = galsim.fits.read(imag_kimage, hdu=imag_hdu)
 
             kimage = real_kimage + 1j*imag_kimage
         else:

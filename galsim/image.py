@@ -230,12 +230,14 @@ class Image(with_metaclass(MetaImage, object)):
     # Hard to imagine a use case where this would be required though...
     valid_dtypes = cpp_valid_dtypes + list(alias_dtypes)
 
-    unsigned_dtypes = {
+    convert_dtypes = {
         # We don't have unsigned image code, so just use signed int types.
         np.uint32 : np.int32,
         np.uint16 : np.int16,
+        # Also we only have one complex type currently, so convert it up if necessary.
+        np.complex64 : np.complex128,
     }
-    valid_array_dtypes = cpp_valid_dtypes + list(unsigned_dtypes)
+    valid_array_dtypes = cpp_valid_dtypes + list(convert_dtypes)
 
     def __init__(self, *args, **kwargs):
         # Parse the args, kwargs
@@ -314,8 +316,8 @@ class Image(with_metaclass(MetaImage, object)):
             raise ValueError("dtype must be one of "+str(Image.valid_dtypes)+
                              ".  Instead got "+str(dtype))
         if array is not None:
-            if array.dtype.type in Image.unsigned_dtypes and dtype is None:
-                dtype = Image.unsigned_dtypes[array.dtype.type]
+            if array.dtype.type in Image.convert_dtypes and dtype is None:
+                dtype = Image.convert_dtypes[array.dtype.type]
             if array.dtype.type not in Image.cpp_valid_dtypes and dtype is None:
                 raise ValueError("array's dtype.type must be one of "+str(Image.cpp_valid_dtypes)+
                                  ".  Instead got "+str(array.dtype.type)+".  Or can set "+

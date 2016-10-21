@@ -33,6 +33,8 @@ except ImportError:
     sys.path.append(os.path.abspath(os.path.join(path, "..")))
     import galsim
 
+from galsim._pyfits import pyfits
+
 # for flux normalization tests
 test_flux = 0.7
 # for scale tests - avoid 1.0 because factors of scale^2 won't show up!
@@ -1072,9 +1074,24 @@ def test_multihdu_readin():
             test_g2, g2, decimal=3,
             err_msg='Did not get right shape image after reading from HDU')
 
+    # Repeat for InterpolatedKImage, drawing in k space for the check.
+    kfile = os.path.join(path, "fits_files", 'interpkim_hdu_test.fits')
+    for ind,g2 in enumerate(g2_vals):
+        obj2 = galsim.InterpolatedKImage(real_kimage=kfile, real_hdu=2*ind,
+                                         imag_kimage=kfile, imag_hdu=2*ind+1)
+        im = obj2.drawKImage(scale=scale)
+        test_g2 = im.real.FindAdaptiveMom().observed_shape.g2
+        np.testing.assert_almost_equal(
+            test_g2, -g2, decimal=3,
+            err_msg='Did not get right shape image after reading real_kimage from HDU')
+
     # Check for exception with invalid HDU.
     try:
         np.testing.assert_raises((OSError, IOError), galsim.InterpolatedImage, infile, hdu=37)
+        np.testing.assert_raises((OSError, IOError), galsim.InterpolatedKImage,
+                                 real_kimage=infile, imag_kimage=infile, real_hdu=37, imag_hdu=1)
+        np.testing.assert_raises((OSError, IOError), galsim.InterpolatedKImage,
+                                 real_kimage=infile, imag_kimage=infile, real_hdu=1, imag_hdu=37)
     except ImportError:
         print('The assert_raises tests require nose')
 
