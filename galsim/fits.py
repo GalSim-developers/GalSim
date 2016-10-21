@@ -982,10 +982,10 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
             warnings.warn("   Using numpy.float64 instead.")
             data = hdu.data.astype(np.float64)
 
-        nimages = hdu.data.shape[0]
+        nimages = data.shape[0]
         image_list = []
         for k in range(nimages):
-            image = galsim.Image(array=hdu.data[k,:,:])
+            image = galsim.Image(array=data[k,:,:])
             image.setOrigin(origin)
             image.wcs = wcs
             image_list.append(image)

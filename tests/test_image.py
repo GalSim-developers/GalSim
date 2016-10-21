@@ -629,6 +629,16 @@ def test_Image_MultiFITS_IO():
                     test_image_list[k].array,
                     err_msg="Image"+tchar[i]+" readMulti failed after using writeFile")
 
+        # Can also use writeMulti to write directly to an hdu list
+        hdu_list = pyfits.HDUList()
+        galsim.fits.writeMulti(image_list, hdu_list=hdu_list)
+        galsim.fits.writeFile(test_multi_file, hdu_list)
+        test_image_list = galsim.fits.readMulti(test_multi_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]),
+                    test_image_list[k].array,
+                    err_msg="Image"+tchar[i]+" readMulti failed after using writeFile")
+
         #
         # Test various compression schemes
         #
@@ -868,6 +878,26 @@ def test_Image_CubeFITS_IO():
             np.testing.assert_array_equal((ref_array+k).astype(types[i]),
                     test_image_list[k].array,
                     err_msg="Image"+tchar[i]+" write/readCube failed with single 3D numpy array.")
+
+        #
+        # Test writing to hdu_list directly and then writing to file.
+        #
+
+        # Start with empty hdu_list
+        hdu_list = pyfits.HDUList()
+
+        # Write the images to the hdu_list
+        galsim.fits.writeCube(image_list, hdu_list=hdu_list)
+
+        # Write it out with writeFile
+        galsim.fits.writeFile(test_cube_file, hdu_list)
+
+        # Check that reading it back in gives the same values
+        test_image_list = galsim.fits.readCube(test_cube_file)
+        for k in range(nimages):
+            np.testing.assert_array_equal((ref_array+k).astype(types[i]),
+                    test_image_list[k].array,
+                    err_msg="Image"+tchar[i]+" readCube failed after using writeFile")
 
         #
         # Test various compression schemes
@@ -2419,6 +2449,50 @@ def test_wrap():
     np.testing.assert_equal(im3_wrap.bounds, b3,
                             "image.wrap(%s) does not have the correct bounds")
 
+@timer
+def test_FITS_bad_type():
+    """Test that reading FITS files with an invalid data type succeeds by converting the
+    type to float64.
+    """
+    import warnings
+
+    # We check this by monkey patching the Image.valid_array_types list to not include int16
+    # and see if it reads properly and raises the appropriate warning.
+    orig_dtypes = galsim.Image.valid_array_dtypes
+    setattr(galsim.Image,'valid_array_dtypes',(np.int32, np.float32, np.float64))
+
+    testS_file = os.path.join(datadir, "testS.fits")
+    testMultiS_file = os.path.join(datadir, "test_multiS.fits")
+    testCubeS_file = os.path.join(datadir, "test_cubeS.fits")
+    try:
+        testS_image = np.testing.assert_warns(
+                UserWarning, galsim.fits.read, testS_file)
+        testMultiS_image_list = np.testing.assert_warns(
+                UserWarning, galsim.fits.readMulti, testMultiS_file)
+        testCubeS_image_list = np.testing.assert_warns(
+                UserWarning, galsim.fits.readCube, testCubeS_file)
+    except ImportError:
+        with warnings.catch_warnings(UserWarning):
+            testS_image = galsim.fits.read(testS_file)
+            testMultiS_image_list = galsim.fits.readMulti(testMultiS_file)
+            testCubeS_image_list = galsim.fits.readCube(testCubeS_file)
+
+    np.testing.assert_equal(np.float64, testS_image.array.dtype.type)
+    np.testing.assert_array_equal(ref_array.astype(float), testS_image.array,
+            err_msg="ImageS read failed reading when int16 not a valid image type")
+    for k in range(nimages):
+        np.testing.assert_equal(np.float64, testMultiS_image_list[k].array.dtype.type)
+        np.testing.assert_equal(np.float64, testCubeS_image_list[k].array.dtype.type)
+        np.testing.assert_array_equal((ref_array+k).astype(float),
+                testMultiS_image_list[k].array,
+                err_msg="ImageS readMulti failed reading when int16 not a valid image type")
+        np.testing.assert_array_equal((ref_array+k).astype(float),
+                testCubeS_image_list[k].array,
+                err_msg="ImageS readCube failed reading when int16 not a valid image type")
+
+    # Don't forget to set it back to the original.
+    setattr(galsim.Image,'valid_array_dtypes',orig_dtypes)
+
 if __name__ == "__main__":
     test_Image_basic()
     test_undefined_image()
@@ -2456,3 +2530,4 @@ if __name__ == "__main__":
     test_complex_image()
     test_complex_image_arith()
     test_wrap()
+    test_FITS_bad_type()
