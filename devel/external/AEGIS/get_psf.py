@@ -8,7 +8,8 @@ of stars in the segemnt to be used for psf measuremnt, image of region, tt_starf
 which contain psf drawn at difernt focus distance, at various points on the chip
 (size of tt_starfeild, must be same as input image),segmentation map of the
 region. If upon visual inspection, some stars were found to be unsuitable for
-psf measuremnt, then their seg id and number must be written in bad_stars.txt
+psf measuremnt, then their number must be removed from filter_matched_stars.txt
+file inside the segement directory.
 
 PSF estimation:
 The optimal focus and corresponding tt_starfeild in picked in get_pstamps. Here
@@ -37,14 +38,13 @@ from scipy import stats
 
 class Main_param:
     """Class containg parameters to pass to run analysis on each segment file."""
-    def __init__(self,args, bad_stars):
+    def __init__(self,args):
         self.file_name = args.file_name.replace('seg_id', args.seg_id)
         self.seg_id = args.seg_id
         self.filters = args.filter_names
         self.out_path = args.out_path
         self.tt_file_path = args.tt_file_path       
         self.focus = args.focus
-        self.bad_stars = bad_stars
         if args.file_path[-1] != '/':
             self.file_path = args.file_path+'/'
         else:
@@ -57,31 +57,8 @@ class Main_param:
         for focus in self.focus:
             self.tt_file_name[focus] = args.tt_file_name.replace('focus', 'f'+str(focus)) 
 
-def get_bad_stars(args):
-    """Returns list of stars that should be removed from list of stars 
-    for PSF estimation"""
-    bad_stars ={}
-    b_s = np.loadtxt(args.bad_stars_file, dtype='S16')
-    s = b_s.shape
-    for i in range(0,s[0],2):
-        bad_stars[b_s[i][0]]={}
-        bad_stars[b_s[i][0]][b_s[i][1]] = b_s[i][2:]
-        bad_stars[b_s[i][0]][b_s[i+1][1]] = b_s[i+1][2:]
-    return bad_stars
-
-def get_good_stars(params, filter, out_dir):
-    """Removes bad strs from from list of stars for PSF estimation"""
-    stars = (np.loadtxt(out_dir + filter+'_matched_stars.txt'))[0]
-    idx=[]
-    for b_s in params.bad_stars[filter]:
-        if b_s != 'None':
-            q,= np.where(stars == int(b_s))
-            idx.append(q[0])     
-    return np.delete(range(len(stars)),idx, axis=0)
-
-def get_moments(params, good_stars,
-                filter, out_dir):
-    """Computes moments of good_stars, and moments for of tt_starfeilds at
+def get_moments(params, filter, out_dir):
+    """Computes moments of stars, and moments for of tt_starfeilds at
     differnt Focus
     """
     print "Computing Moments"
@@ -90,7 +67,7 @@ def get_moments(params, good_stars,
     moments = [[],[]]
     hsm_params =galsim.hsm.HSMParams(max_mom2_iter = 1000000000)
     fin_stars=[]
-    for num,i in enumerate(good_stars):
+    for num,i in enumerate(stars1):
         print "Getting moments of star ", int(stars1[i][0])
         x_s = stars1[i][1]
         y_s = stars1[i][2]
@@ -161,10 +138,8 @@ def get_focus_num_stars(params):
     out_dir = params.out_path+ '/' + params.seg_id+ '/'
     for filter in params.filters:
         print "Running focus with different star number for filter:", filter
-        good_stars = get_good_stars(params, filter, out_dir)
-        print "Number of good stars:", len(good_stars)
         # compute moments for all stars 
-        moments, final_stars = get_moments(params, good_stars, filter, out_dir)
+        moments, final_stars = get_moments(params, filter, out_dir)
         focus =  np.zeros([len(final_stars)-3,2])
         # compute focus from 3 - all stars
         for i,num in enumerate(range(3,len(final_stars))):               
@@ -179,8 +154,7 @@ def get_focus_num_stars(params):
 
 def get_psf(args):
     """Gets list of stars, if any, to be omitted from PSF estimation"""
-    bad_stars = get_bad_stars(args)
-    params = Main_param(args, bad_stars[args.seg_id])
+    params = Main_param(args)
     # Computes focus for diffrent number of stars
     get_focus_num_stars(params)
     out_dir = params.out_path+ '/' + params.seg_id+ '/'
@@ -204,9 +178,6 @@ if __name__ == '__main__':
                         help="Segment id of image to run [Default:1g]")
     parser.add_argument('--filter_names', default= ['f606w','f814w'],
                         help="names of filters [Default: ['f606w','f814w']]")
-    parser.add_argument('--bad_stars_file', default= 'bad_stars.txt',
-                        help="File containing index of strs that should not be  \
-                        used in PSF estimation [Default:'bad_stars.txt'] ")
     parser.add_argument('--file_path', default= '/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip/',
                         help="Path of directory containing input images \
                         [Default:'/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip] ")
