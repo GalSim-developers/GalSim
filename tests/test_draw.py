@@ -984,6 +984,10 @@ def test_drawImage_area_exptime():
            "area and exptime keywords.")
     assert not np.allclose(im1.array, im4.array/area/exptime), msg
 
+    im5 = obj.drawImage(image=im1.copy(), method='phot', area=area, exptime=exptime)
+    msg = "obj.drawImage(method='phot') unexpectedly produced equal images with different rng"
+    assert not np.allclose(im5.array, im4.array), msg
+
 
 @timer
 def test_fft():
