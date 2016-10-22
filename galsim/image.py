@@ -465,6 +465,8 @@ class Image(with_metaclass(MetaImage, object)):
     def isconst(self): return self._array.flags.writeable == False
     @property
     def iscomplex(self): return self._array.dtype.kind == 'c'
+    @property
+    def isinteger(self): return self._array.dtype.kind in ['i','u']
 
     # Allow scale to work as a PixelScale wcs.
     @property
@@ -1310,13 +1312,17 @@ def Image_getitem(self, key):
     return self.subImage(key)
 
 # Define a utility function to be used by the arithmetic functions below
-def check_image_consistency(im1, im2):
+def check_image_consistency(im1, im2, integer=False):
+    if integer and not im1.isinteger:
+        raise ValueError("Image must have integer values, not %s"%im1.dtype)
     if ( isinstance(im2, Image) or
          type(im2) in _galsim.ImageAlloc.values() or
          type(im2) in _galsim.ImageView.values() or
          type(im2) in _galsim.ConstImageView.values()):
         if im1.array.shape != im2.array.shape:
             raise ValueError("Image shapes are inconsistent")
+        if integer and not im2.isinteger:
+            raise ValueError("Image must have integer values, not %s"%im2.dtype)
 
 def Image_add(self, other):
     check_image_consistency(self, other)
@@ -1324,7 +1330,7 @@ def Image_add(self, other):
         a = other.array
     except AttributeError:
         a = other
-    return Image(array=self.array+a, bounds=self.bounds, wcs=self.wcs)
+    return Image(array=self.array + a, bounds=self.bounds, wcs=self.wcs)
 
 def Image_iadd(self, other):
     check_image_consistency(self, other)
@@ -1346,7 +1352,7 @@ def Image_sub(self, other):
         a = other.array
     except AttributeError:
         a = other
-    return Image(array=self.array-a, bounds=self.bounds, wcs=self.wcs)
+    return Image(array=self.array - a, bounds=self.bounds, wcs=self.wcs)
 
 def Image_rsub(self, other):
     return Image(array=other-self.array, bounds=self.bounds, wcs=self.wcs)
@@ -1371,7 +1377,7 @@ def Image_mul(self, other):
         a = other.array
     except AttributeError:
         a = other
-    return Image(array=self.array*a, bounds=self.bounds, wcs=self.wcs)
+    return Image(array=self.array * a, bounds=self.bounds, wcs=self.wcs)
 
 def Image_imul(self, other):
     check_image_consistency(self, other)
@@ -1393,10 +1399,10 @@ def Image_div(self, other):
         a = other.array
     except AttributeError:
         a = other
-    return Image(array=self.array/a, bounds=self.bounds, wcs=self.wcs)
+    return Image(array=self.array / a, bounds=self.bounds, wcs=self.wcs)
 
 def Image_rdiv(self, other):
-    return Image(array=other/self.array, bounds=self.bounds, wcs=self.wcs)
+    return Image(array=other / self.array, bounds=self.bounds, wcs=self.wcs)
 
 def Image_idiv(self, other):
     check_image_consistency(self, other)
@@ -1412,6 +1418,58 @@ def Image_idiv(self, other):
         self.array[:,:] = (self.array / a).astype(self.array.dtype)
     return self
 
+def Image_floordiv(self, other):
+    check_image_consistency(self, other, integer=True)
+    try:
+        a = other.array
+    except AttributeError:
+        a = other
+    return Image(array=self.array // a, bounds=self.bounds, wcs=self.wcs)
+
+def Image_rfloordiv(self, other):
+    check_image_consistency(self, other, integer=True)
+    return Image(array=other // self.array, bounds=self.bounds, wcs=self.wcs)
+
+def Image_ifloordiv(self, other):
+    check_image_consistency(self, other, integer=True)
+    try:
+        a = other.array
+        dt = a.dtype
+    except AttributeError:
+        a = other
+        dt = type(a)
+    if dt == self.array.dtype:
+        self.array[:,:] //= a
+    else:
+        self.array[:,:] = (self.array // a).astype(self.array.dtype)
+    return self
+
+def Image_mod(self, other):
+    check_image_consistency(self, other, integer=True)
+    try:
+        a = other.array
+    except AttributeError:
+        a = other
+    return Image(array=self.array % a, bounds=self.bounds, wcs=self.wcs)
+
+def Image_rmod(self, other):
+    check_image_consistency(self, other, integer=True)
+    return Image(array=other % self.array, bounds=self.bounds, wcs=self.wcs)
+
+def Image_imod(self, other):
+    check_image_consistency(self, other, integer=True)
+    try:
+        a = other.array
+        dt = a.dtype
+    except AttributeError:
+        a = other
+        dt = type(a)
+    if dt == self.array.dtype:
+        self.array[:,:] %= a
+    else:
+        self.array[:,:] = (self.array % a).astype(self.array.dtype)
+    return self
+
 def Image_pow(self, other):
     result = self.copy()
     result **= other
@@ -1423,19 +1481,23 @@ def Image_ipow(self, other):
     self.array[:,:] **= other
     return self
 
-def Image_neg(self, other):
+def Image_neg(self):
     result = self.copy()
     result *= -1
     return result
 
 # Define &, ^ and | only for integer-type images
 def Image_and(self, other):
-    result = self.copy()
-    result &= other
-    return result
+    check_image_consistency(self, other)
+    try:
+        a = other.array
+    except AttributeError:
+        a = other
+    return Image(array=self.array & a, bounds=self.bounds, wcs=self.wcs)
+
 
 def Image_iand(self, other):
-    check_image_consistency(self, other)
+    check_image_consistency(self, other, integer=True)
     try:
         self.array[:,:] &= other.array
     except AttributeError:
@@ -1443,12 +1505,15 @@ def Image_iand(self, other):
     return self
 
 def Image_xor(self, other):
-    result = self.copy()
-    result ^= other
-    return result
+    check_image_consistency(self, other, integer=True)
+    try:
+        a = other.array
+    except AttributeError:
+        a = other
+    return Image(array=self.array ^ a, bounds=self.bounds, wcs=self.wcs)
 
 def Image_ixor(self, other):
-    check_image_consistency(self, other)
+    check_image_consistency(self, other, integer=True)
     try:
         self.array[:,:] ^= other.array
     except AttributeError:
@@ -1456,12 +1521,15 @@ def Image_ixor(self, other):
     return self
 
 def Image_or(self, other):
-    result = self.copy()
-    result |= other
-    return result
+    check_image_consistency(self, other, integer=True)
+    try:
+        a = other.array
+    except AttributeError:
+        a = other
+    return Image(array=self.array | a, bounds=self.bounds, wcs=self.wcs)
 
 def Image_ior(self, other):
-    check_image_consistency(self, other)
+    check_image_consistency(self, other, integer=True)
     try:
         self.array[:,:] |= other.array
     except AttributeError:
@@ -1509,12 +1577,21 @@ Image.__truediv__ = Image_div
 Image.__rtruediv__ = Image_rdiv
 Image.__idiv__ = Image_idiv
 Image.__itruediv__ = Image_idiv
+Image.__mod__ = Image_mod
+Image.__rmod__ = Image_rmod
+Image.__imod__ = Image_imod
+Image.__floordiv__ = Image_floordiv
+Image.__rfloordiv__ = Image_rfloordiv
+Image.__ifloordiv__ = Image_ifloordiv
 Image.__ipow__ = Image_ipow
 Image.__pow__ = Image_pow
 Image.__neg__ = Image_neg
 Image.__and__ = Image_and
 Image.__xor__ = Image_xor
 Image.__or__ = Image_or
+Image.__rand__ = Image_and
+Image.__rxor__ = Image_xor
+Image.__ror__ = Image_or
 Image.__iand__ = Image_iand
 Image.__ixor__ = Image_ixor
 Image.__ior__ = Image_ior
@@ -1591,10 +1668,19 @@ for Class in _galsim.ConstImageView.values():
 for int_type in [ np.int16, np.int32 ]:
     for Class in [ _galsim.ImageAlloc[int_type], _galsim.ImageView[int_type],
                    _galsim.ConstImageView[int_type] ]:
+        Class.__floordiv__ = Image_floordiv
+        Class.__rfloordiv__ = Image_rfloordiv
+        Class.__mod__ = Image_mod
+        Class.__rmod__ = Image_rmod
         Class.__and__ = Image_and
         Class.__xor__ = Image_xor
         Class.__or__ = Image_or
+        Class.__rand__ = Image_and
+        Class.__rxor__ = Image_xor
+        Class.__ror__ = Image_or
     for Class in [ _galsim.ImageAlloc[int_type], _galsim.ImageView[int_type] ]:
+        Class.__ifloordiv__ = Image_ifloordiv
+        Class.__imod__ = Image_imod
         Class.__iand__ = Image_iand
         Class.__ixor__ = Image_ixor
         Class.__ior__ = Image_ior

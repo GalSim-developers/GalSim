@@ -67,6 +67,7 @@ simple_types = [int, int, float, float, complex, int, float, complex]
 np_types = [np.int16, np.int32, np.float32, np.float64, np.complex128,
             np.int32, np.float64, np.complex128]
 tchar = ['S', 'I', 'F', 'D', 'C', 'I', 'D', 'C']
+int_ntypes = 2  # The first two are the integer types for which we need to test &, |, ^.
 
 ncol = 7
 nrow = 5
@@ -1067,6 +1068,7 @@ def test_Image_array_view():
         np.testing.assert_array_equal(ref_array.astype(types[i]), image.array,
                 err_msg="Array look into Image class does not match input for dtype = "+
                 str(types[i]))
+
         #Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.Image"+tchar[i])
         image = image_init_func(ref_array.astype(types[i]))
@@ -1087,6 +1089,7 @@ def test_Image_binary_add():
         np.testing.assert_array_equal((3 * ref_array).astype(types[i]), image3.array,
                 err_msg="Binary add in Image class does not match reference for dtype = "+
                 str(types[i]))
+
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.Image"+tchar[i])
         slice_array = large_array.astype(types[i])[::3,::2]
@@ -1133,6 +1136,7 @@ def test_Image_binary_subtract():
         np.testing.assert_array_equal(ref_array.astype(types[i]), image3.array,
                 err_msg="Binary subtract in Image class (dictionary call) does"
                 +" not match reference for dtype = "+str(types[i]))
+
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.Image"+tchar[i])
         slice_array = large_array.astype(types[i])[::3,::2]
@@ -1142,6 +1146,7 @@ def test_Image_binary_subtract():
         np.testing.assert_array_equal(ref_array.astype(types[i]), image3.array,
                 err_msg="Binary subtract in Image class does not match reference for dtype = "
                 +str(types[i]))
+
         for j in range(ntypes):
             image2_init_func = eval("galsim.Image"+tchar[j])
             image2 = image2_init_func((2 * ref_array).astype(types[j]))
@@ -1164,6 +1169,7 @@ def test_Image_binary_multiply():
         np.testing.assert_array_equal((2 * ref_array**2).astype(types[i]), image3.array,
                 err_msg="Binary multiply in Image class (dictionary call) does"
                 +" not match reference for dtype = "+str(types[i]))
+
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.Image"+tchar[i])
         slice_array = large_array.astype(types[i])[::3,::2]
@@ -1173,6 +1179,14 @@ def test_Image_binary_multiply():
         np.testing.assert_array_equal((2 * ref_array**2).astype(types[i]), image3.array,
                 err_msg="Binary multiply in Image class does not match reference for dtype = "
                 +str(types[i]))
+
+        # Check unary -
+        image1 = galsim.Image(ref_array.astype(types[i]))
+        image3 = -image1
+        np.testing.assert_array_equal(image3.array, (-1 * ref_array).astype(types[i]),
+                err_msg="Unary - in Image class (dictionary call) does"
+                +" not match reference for dtype = "+str(types[i]))
+
         for j in range(ntypes):
             image2_init_func = eval("galsim.Image"+tchar[j])
             image2 = image2_init_func((2 * ref_array).astype(types[j]))
@@ -1201,6 +1215,7 @@ def test_Image_binary_divide():
                 decimal=12,
                 err_msg="Binary divide in Image class (dictionary call) does"
                 +" not match reference for dtype = "+str(types[i]))
+
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.Image"+tchar[i])
         slice_array = (large_array+1).astype(types[i])[::3,::2]
@@ -1211,6 +1226,7 @@ def test_Image_binary_divide():
                 decimal=12,
                 err_msg="Binary divide in Image class does not match reference for dtype = "
                 +str(types[i]))
+
         for j in range(ntypes):
             image2_init_func = eval("galsim.Image"+tchar[j])
             image2 = image2_init_func((3 * (ref_array+1)**2).astype(types[j]))
@@ -1383,6 +1399,7 @@ def test_Image_inplace_add():
         np.testing.assert_array_equal((3 * ref_array).astype(types[i]), image1.array,
                 err_msg="Inplace add in Image class (dictionary call) does"
                 +" not match reference for dtype = "+str(types[i]))
+
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.Image"+tchar[i])
         slice_array = large_array.copy().astype(types[i])[::3,::2]
@@ -1392,6 +1409,7 @@ def test_Image_inplace_add():
         np.testing.assert_array_equal((3 * ref_array).astype(types[i]), image1.array,
                 err_msg="Inplace add in Image class does not match reference for dtype = "
                 +str(types[i]))
+
         for j in range(i): # Only add simpler types to this one.
             image2_init_func = eval("galsim.Image"+tchar[j])
             slice_array = large_array.copy().astype(types[i])[::3,::2]
@@ -1415,6 +1433,7 @@ def test_Image_inplace_subtract():
         np.testing.assert_array_equal(ref_array.astype(types[i]), image1.array,
                 err_msg="Inplace subtract in Image class (dictionary call) does"
                 +" not match reference for dtype = "+str(types[i]))
+
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.Image"+tchar[i])
         slice_array = (2*large_array).astype(types[i])[::3,::2]
@@ -1424,6 +1443,7 @@ def test_Image_inplace_subtract():
         np.testing.assert_array_equal(ref_array.astype(types[i]), image1.array,
                 err_msg="Inplace subtract in Image class does"
                 +" not match reference for dtype = "+str(types[i]))
+
         for j in range(i): # Only subtract simpler types from this one.
             image2_init_func = eval("galsim.Image"+tchar[j])
             slice_array = (2*large_array).astype(types[i])[::3,::2]
@@ -1447,6 +1467,7 @@ def test_Image_inplace_multiply():
         np.testing.assert_array_equal((2 * ref_array**2).astype(types[i]), image1.array,
                 err_msg="Inplace multiply in Image class (dictionary call) does"
                 +" not match reference for dtype = "+str(types[i]))
+
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.Image"+tchar[i])
         slice_array = large_array.copy().astype(types[i])[::3,::2]
@@ -1456,6 +1477,7 @@ def test_Image_inplace_multiply():
         np.testing.assert_array_equal((2 * ref_array**2).astype(types[i]), image1.array,
                 err_msg="Inplace multiply in Image class does not match reference for dtype = "
                 +str(types[i]))
+
         for j in range(i): # Only multiply simpler types to this one.
             image2_init_func = eval("galsim.Image"+tchar[j])
             slice_array = large_array.copy().astype(types[i])[::3,::2]
@@ -1479,6 +1501,7 @@ def test_Image_inplace_divide():
         np.testing.assert_array_equal((2 * (ref_array + 1)).astype(types[i]), image1.array,
                 err_msg="Inplace divide in Image class (dictionary call) does"
                 +" not match reference for dtype = "+str(types[i]))
+
         # Then try using the eval command to mimic use via ImageD, ImageF etc.
         image_init_func = eval("galsim.Image"+tchar[i])
         slice_array = (2*(large_array+1)**2).astype(types[i])[::3,::2]
@@ -1488,6 +1511,7 @@ def test_Image_inplace_divide():
         np.testing.assert_array_equal((2 * (ref_array + 1)).astype(types[i]), image1.array,
                 err_msg="Inplace divide in Image class does not match reference for dtype = "
                 +str(types[i]))
+
         for j in range(i): # Only divide simpler types into this one.
             image2_init_func = eval("galsim.Image"+tchar[j])
             slice_array = (2*(large_array+1)**2).astype(types[i])[::3,::2]
@@ -2402,6 +2426,270 @@ def test_complex_image_arith():
             err_msg="ImageC / ImageC is not correct")
 
 @timer
+def test_int_image_arith():
+    """Additional arithmetic tests that are relevant for integer Image types
+    """
+    for i in range(int_ntypes):
+        full = galsim.Image(ref_array.astype(types[i]))
+        hi = (full // 8) * 8
+        lo = (full % 8)
+        print('full = ',full.array)
+        print('hi = ',hi.array)
+        print('lo = ',lo.array)
+
+        #
+        # Tests of __and__ and __iand__ operators:
+        #
+
+        # lo & hi = 0
+        test = lo & hi
+        np.testing.assert_array_equal(test.array, 0,
+                err_msg="& failed for Images with dtype = %s."%types[i])
+
+        # full & lo = lo
+        test = full & lo
+        np.testing.assert_array_equal(test.array, lo.array,
+                err_msg="& failed for Images with dtype = %s."%types[i])
+
+        # fullo & 0 = 0
+        test = full & 0
+        np.testing.assert_array_equal(test.array, 0,
+                err_msg="& failed for Images with dtype = %s."%types[i])
+
+        # lo & 24 = 0
+        test = lo & 24
+        np.testing.assert_array_equal(test.array, 0,
+                err_msg="& failed for Images with dtype = %s."%types[i])
+
+        # 7 & hi = 0
+        test = 7 & hi
+        np.testing.assert_array_equal(test.array, 0,
+                err_msg="& failed for Images with dtype = %s."%types[i])
+
+        # full & hi = hi
+        test = full & hi
+        np.testing.assert_array_equal(test.array, hi.array,
+                err_msg="& failed for Images with dtype = %s."%types[i])
+
+        # hi &= full => hi
+        test &= full
+        np.testing.assert_array_equal(test.array, hi.array,
+                err_msg="&= failed for Images with dtype = %s."%types[i])
+
+        # hi &= 8 => (hi & 8)
+        test &= 8
+        np.testing.assert_array_equal(test.array, (hi.array & 8),
+                err_msg="&= failed for Images with dtype = %s."%types[i])
+
+        # (hi & 8) &= hi => (hi & 8)
+        test &= hi
+        np.testing.assert_array_equal(test.array, (hi.array & 8),
+                err_msg="&= failed for Images with dtype = %s."%types[i])
+
+
+        #
+        # Tests of __or__ and __ior__ operators:
+        #
+
+        # lo | hi = full
+        test = lo | hi
+        np.testing.assert_array_equal(test.array, full.array,
+                err_msg="| failed for Images with dtype = %s."%types[i])
+
+        # lo | lo = lo
+        test = lo | lo
+        np.testing.assert_array_equal(test.array, lo.array,
+                err_msg="| failed for Images with dtype = %s."%types[i])
+
+        # lo | 8 = lo + 8
+        test = lo | 8
+        np.testing.assert_array_equal(test.array, lo.array + 8,
+                err_msg="| failed for Images with dtype = %s."%types[i])
+
+        # 7 | hi = hi + 7
+        test = 7 | hi
+        np.testing.assert_array_equal(test.array, hi.array + 7,
+                err_msg="| failed for Images with dtype = %s."%types[i])
+
+        # hi | 0 = hi
+        test = hi | 0
+        np.testing.assert_array_equal(test.array, hi.array,
+                err_msg="| failed for Images with dtype = %s."%types[i])
+
+        # hi |= hi => hi
+        test |= hi
+        np.testing.assert_array_equal(test.array, hi.array,
+                err_msg="|= failed for Images with dtype = %s."%types[i])
+
+        # hi |= 3 => hi + 3
+        test |= 3
+        np.testing.assert_array_equal(test.array, hi.array + 3,
+                err_msg="|= failed for Images with dtype = %s."%types[i])
+
+
+        #
+        # Tests of __xor__ and __ixor__ operators:
+        #
+
+        # lo ^ hi = full
+        test = lo ^ hi
+        np.testing.assert_array_equal(test.array, full.array,
+                err_msg="^ failed for Images with dtype = %s."%types[i])
+
+        # lo ^ full = hi
+        test = lo ^ full
+        np.testing.assert_array_equal(test.array, hi.array,
+                err_msg="^ failed for Images with dtype = %s."%types[i])
+
+        # lo ^ 40 = lo + 40
+        test = lo ^ 40
+        np.testing.assert_array_equal(test.array, lo.array + 40,
+                err_msg="^ failed for Images with dtype = %s."%types[i])
+
+        # 5 ^ hi = hi + 5
+        test = 5 ^ hi
+        np.testing.assert_array_equal(test.array, hi.array + 5,
+                err_msg="^ failed for Images with dtype = %s."%types[i])
+
+        # full ^ hi = lo
+        test = full ^ hi
+        np.testing.assert_array_equal(test.array, lo.array,
+                err_msg="^ failed for Images with dtype = %s."%types[i])
+
+        # lo ^= hi => full
+        test ^= hi
+        np.testing.assert_array_equal(test.array, full.array,
+                err_msg="^= failed for Images with dtype = %s."%types[i])
+
+        # full ^= 111 (x2) => full
+        test ^= 111
+        test ^= 111
+        np.testing.assert_array_equal(test.array, full.array,
+                err_msg="^= failed for Images with dtype = %s."%types[i])
+
+        # full ^= lo => hi
+        test ^= lo
+        np.testing.assert_array_equal(test.array, hi.array,
+                err_msg="^= failed for Images with dtype = %s."%types[i])
+
+
+        #
+        # Tests of __mod__ and __floordiv__ operators:
+        #
+
+        # lo // hi = 0
+        test = lo // hi
+        np.testing.assert_array_equal(test.array, 0,
+                err_msg="// failed for Images with dtype = %s."%types[i])
+
+        # lo // 8 = 0
+        test = lo // 8
+        np.testing.assert_array_equal(test.array, 0,
+                err_msg="// failed for Images with dtype = %s."%types[i])
+
+        # lo % 8 = lo
+        test = lo % 8
+        np.testing.assert_array_equal(test.array, lo.array,
+                err_msg="%% failed for Images with dtype = %s."%types[i])
+
+        # hi % 2 = hi & 1
+        test = hi % 2
+        np.testing.assert_array_equal(test.array, (hi & 1).array,
+                err_msg="%% failed for Images with dtype = %s."%types[i])
+
+        # lo % hi = lo
+        test = lo % hi
+        np.testing.assert_array_equal(test.array, lo.array,
+                err_msg="%% failed for Images with dtype = %s."%types[i])
+
+        # lo %= hi => lo
+        test %= hi
+        np.testing.assert_array_equal(test.array, lo.array,
+                err_msg="%%= failed for Images with dtype = %s."%types[i])
+
+        # lo //= hi => 0
+        test //= hi
+        np.testing.assert_array_equal(test.array, 0,
+                err_msg="//= failed for Images with dtype = %s."%types[i])
+
+        # 7 // hi = 0
+        test = 7 // hi
+        np.testing.assert_array_equal(test.array, 0,
+                err_msg="// failed for Images with dtype = %s."%types[i])
+
+        # 7 % hi = 7
+        test = 7 % hi
+        np.testing.assert_array_equal(test.array, 7,
+                err_msg="%% failed for Images with dtype = %s."%types[i])
+
+        # 7 %= hi => 7
+        test %= hi
+        np.testing.assert_array_equal(test.array, 7,
+                err_msg="%%= failed for Images with dtype = %s."%types[i])
+
+        # 7 //= hi => 0
+        test //= hi
+        np.testing.assert_array_equal(test.array, 0,
+                err_msg="//= failed for Images with dtype = %s."%types[i])
+
+        # A subset of the above for cross-type checks.
+        for j in range(i):
+            full2 = galsim.Image(ref_array.astype(types[j]))
+            hi2 = (full2 // 8) * 8
+            lo2 = (full2 % 8)
+
+            # full & hi = hi
+            test = full & hi2
+            np.testing.assert_array_equal(test.array, hi.array,
+                    err_msg="& failed for Images with dtypes = %s, %s."%(types[i],types[j]))
+            # hi &= full => hi
+            test &= full2
+            np.testing.assert_array_equal(test.array, hi.array,
+                    err_msg="&= failed for Images with dtypes = %s, %s."%(types[i],types[j]))
+
+            # lo | lo = lo
+            test = lo | lo2
+            np.testing.assert_array_equal(test.array, lo.array,
+                    err_msg="| failed for Images with dtypes = %s, %s."%(types[i],types[j]))
+
+            # lo |= hi => full
+            test |= hi2
+            np.testing.assert_array_equal(test.array, full.array,
+                    err_msg="|= failed for Images with dtypes = %s, %s."%(types[i],types[j]))
+
+            # lo ^ hi = full
+            test = lo ^ hi2
+            np.testing.assert_array_equal(test.array, full.array,
+                    err_msg="^ failed for Images with dtypes = %s, %s."%(types[i],types[j]))
+
+            # full ^= lo => hi
+            test ^= lo2
+            np.testing.assert_array_equal(test.array, hi.array,
+                    err_msg="^= failed for Images with dtypes = %s, %s."%(types[i],types[j]))
+
+            # lo // hi = 0
+            test = lo // hi2
+            np.testing.assert_array_equal(test.array, 0,
+                    err_msg="// failed for Images with dtype = %s."%types[i])
+
+            # lo % hi = lo
+            test = lo % hi2
+            np.testing.assert_array_equal(test.array, lo.array,
+                    err_msg="%% failed for Images with dtype = %s."%types[i])
+
+            # lo %= hi => lo
+            test %= hi2
+            np.testing.assert_array_equal(test.array, lo.array,
+                    err_msg="%%= failed for Images with dtype = %s."%types[i])
+
+            # lo //= hi => 0
+            test //= hi2
+            np.testing.assert_array_equal(test.array, 0,
+                    err_msg="//= failed for Images with dtype = %s."%types[i])
+
+
+
+@timer
 def test_wrap():
     """Test the image.wrap() function.
     """
@@ -2605,5 +2893,6 @@ if __name__ == "__main__":
     test_copy()
     test_complex_image()
     test_complex_image_arith()
+    test_int_image_arith()
     test_wrap()
     test_FITS_bad_type()
