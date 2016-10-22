@@ -942,7 +942,7 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         # Find the suggested image size for each object given the choice of scale, and use the
         # maximum just to be safe.
-        possible_im_sizes = [ obj.SBProfile.getGoodImageSize(scale) for obj in objs ]
+        possible_im_sizes = [ obj.getGoodImageSize(scale) for obj in objs ]
         im_size = np.max(possible_im_sizes)
 
         # Find the stepK and maxK values for each object.  These will be used later on, so that we

@@ -864,7 +864,7 @@ class GSObject(object):
                     raise ValueError("Must set either both or neither of nx, ny")
                 image = galsim.Image(nx, ny, dtype=dtype)
             else:
-                N = self.SBProfile.getGoodImageSize(1.0/wmult)
+                N = self.getGoodImageSize(1.0/wmult)
                 if odd: N += 1
                 image = galsim.Image(N, N, dtype=dtype)
 
@@ -873,7 +873,7 @@ class GSObject(object):
             # Can't add to image if need to resize
             if add_to_image:
                 raise ValueError("Cannot add_to_image if image bounds are not defined")
-            N = self.SBProfile.getGoodImageSize(1.0/wmult)
+            N = self.getGoodImageSize(1.0/wmult)
             if odd: N += 1
             bounds = galsim.BoundsI(1,N,1,N)
             image.resize(bounds)
@@ -1384,6 +1384,22 @@ class GSObject(object):
         """
         return self.SBProfile.draw(image.image, image.scale)
 
+    def getGoodImageSize(self, pixel_scale):
+        """Return a good size to use for drawing this profile.
+
+        The size will be large enough to cover most of the flux of the object.  Specifically,
+        at least (1-gsparasm.folding_threshold) (i.e. 99.5% by default) of the flux should fall
+        in the image.
+
+        Also, the returned size is always an even number, which is usually desired in practice.
+        Of course, if you prefer an odd-sized image, you can add 1 to the result.
+
+        @param pixel_scale      The desired pixel scale of the image to be built.
+
+        @returns N, a good (linear) size of an image on which to draw this object.
+        """
+        return self.SBProfile.getGoodImageSize(pixel_scale)
+
     def drawFFT(self, image, wmult=1.):
         """
         Draw this profile into an Image by direct evaluation at the location of each pixel.
@@ -1421,7 +1437,7 @@ class GSObject(object):
                 wmult = float(wmult)
 
         # Start with what this profile thinks a good size would be given the image's pixel scale.
-        N = self.SBProfile.getGoodImageSize(image.scale/wmult)
+        N = self.getGoodImageSize(image.scale/wmult)
 
         # We must make something big enough to cover the target image size:
         image_N = np.max(image.bounds.numpyShape())
