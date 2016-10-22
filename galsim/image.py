@@ -432,10 +432,12 @@ class Image(with_metaclass(MetaImage, object)):
         return s
 
     def __str__(self):
+        # Get the type name without the <type '...'> part.
+        t = str(self.dtype).split("'")[1]
         if self.wcs is not None and self.wcs.isPixelScale():
-            return 'galsim.Image(bounds=%s, scale=%s)'%(self.bounds, self.scale)
+            return 'galsim.Image(bounds=%s, scale=%s, dtype=%s)'%(self.bounds, self.scale, t)
         else:
-            return 'galsim.Image(bounds=%s, wcs=%s)'%(self.bounds, self.wcs)
+            return 'galsim.Image(bounds=%s, wcs=%s, dtype=%s)'%(self.bounds, self.wcs, t)
 
     # Pickling almost works out of the box, but numpy arrays lose their non-writeable flag
     # when pickled, so make sure to set it to preserve const Images.
