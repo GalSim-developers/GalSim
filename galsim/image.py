@@ -357,11 +357,8 @@ class Image(with_metaclass(MetaImage, object)):
                 raise TypeError("Cannot specify both ncol/nrow and image")
             if ncol is None or nrow is None:
                 raise TypeError("Both nrow and ncol must be provided")
-            try:
-                ncol = int(ncol)
-                nrow = int(nrow)
-            except Exception:
-                raise TypeError("Cannot parse ncol, nrow as integers")
+            ncol = int(ncol)
+            nrow = int(nrow)
             self.image = _galsim.ImageAlloc[self.dtype](ncol, nrow)
             if xmin != 1 or ymin != 1:
                 self.image.shift(galsim.PositionI(xmin-1,ymin-1))
@@ -1309,9 +1306,6 @@ def ImageC(*args, **kwargs):
 # arithemetic functions, so they work more intuitively.
 #
 
-def Image_setitem(self, key, value):
-    self.subImage(key).copyFrom(value)
-
 def Image_getitem(self, key):
     return self.subImage(key)
 
@@ -1413,11 +1407,7 @@ def Image_idiv(self, other):
         a = other
         dt = type(a)
     if dt == self.array.dtype:
-        # Try numpy's idiv, but if that doesn't work, coerce it into the existing dtype.
-        try:
-            self.array[:,:] /= a
-        except TypeError:
-            self.array[:,:] = (self.array / a).astype(self.array.dtype)
+        self.array[:,:] /= a
     else:
         self.array[:,:] = (self.array / a).astype(self.array.dtype)
     return self
@@ -1531,7 +1521,6 @@ Image.__ior__ = Image_ior
 
 # inject these as methods of ImageAlloc classes
 for Class in _galsim.ImageAlloc.values():
-    Class.__setitem__ = Image_setitem
     Class.__getitem__ = Image_getitem
     Class.__add__ = Image_add
     Class.__radd__ = Image_add
@@ -1558,7 +1547,6 @@ for Class in _galsim.ImageAlloc.values():
     Class.__hash__ = None
 
 for Class in _galsim.ImageView.values():
-    Class.__setitem__ = Image_setitem
     Class.__getitem__ = Image_getitem
     Class.__add__ = Image_add
     Class.__radd__ = Image_add
