@@ -222,6 +222,8 @@ class Image(with_metaclass(MetaImage, object)):
         int : np.int32,          # So that user gets what they would expect
         float : np.float64,      # if using dtype=int or float or complex
         complex : np.complex128,
+        np.int64 : np.int32,          # Not equivalent, but will convert
+        np.complex64 : np.complex128  # Not equivalent, but will convert
     }
     # Note: Numpy uses int64 for int on 64 bit machines.  We don't implement int64 at all,
     # so we cannot quite match up to the numpy convention for dtype=int.  e.g. via
@@ -292,6 +294,13 @@ class Image(with_metaclass(MetaImage, object)):
                         array = None
                         xmin = None
                         ymin = None
+                elif np.prod(array.shape) == 0:
+                    # Another way to indicate that we don't have a defined image.
+                    if 'dtype' not in kwargs:
+                        kwargs['dtype'] = array.dtype.type
+                    array = None
+                    xmin = None
+                    ymin = None
             elif 'bounds' in kwargs:
                 bounds = kwargs.pop('bounds')
             elif 'image' in kwargs:

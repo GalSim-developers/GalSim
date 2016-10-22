@@ -335,32 +335,65 @@ def test_Image_basic():
 
 @timer
 def test_undefined_image():
-    """Test an image with undefined bounds
+    """Test various ways to construct an image with undefined bounds
     """
     for i in range(len(types)):
-        im = galsim.Image(dtype=types[i])
-        assert not im.bounds.isDefined()
-        assert im.array.shape == (1,1)
-        assert im == im
+        im1 = galsim.Image(dtype=types[i])
+        assert not im1.bounds.isDefined()
+        assert im1.array.shape == (1,1)
+        assert im1 == im1
 
         im2 = galsim.Image()
         assert not im2.bounds.isDefined()
         assert im2.array.shape == (1,1)
         assert im2 == im2
         if types[i] == np.float32:
-            assert im2 == im2
+            assert im2 == im1
+
+        im3 = galsim.Image(array=np.array([[]],dtype=types[i]))
+        assert not im3.bounds.isDefined()
+        assert im3.array.shape == (1,1)
+        assert im3 == im1
+
+        im4 = galsim.Image(array=np.array([[]]), dtype=types[i])
+        assert not im4.bounds.isDefined()
+        assert im4.array.shape == (1,1)
+        assert im4 == im1
+
+        im5 = galsim.Image(array=np.array([[1]]), dtype=types[i], bounds=galsim.BoundsI())
+        assert not im5.bounds.isDefined()
+        assert im5.array.shape == (1,1)
+        assert im5 == im1
+
+        im6 = galsim.Image(array=np.array([[1]], dtype=types[i]), bounds=galsim.BoundsI())
+        assert not im6.bounds.isDefined()
+        assert im6.array.shape == (1,1)
+        assert im6 == im1
+
+        im7 = 1.0 * im1
+        assert not im7.bounds.isDefined()
+        assert im7.array.shape == (1,1)
+        if types[i] == np.float64:
+            assert im7 == im1
+
+        im8 = im1 + 1j * im3
+        assert not im8.bounds.isDefined()
+        assert im8.array.shape == (1,1)
+        if types[i] == np.complex128:
+            assert im8 == im1
 
         try:
-            np.testing.assert_raises(RuntimeError,im.setValue,0,0,1)
-            np.testing.assert_raises(RuntimeError,im.__call__,0,0)
-            np.testing.assert_raises(RuntimeError,im.view().setValue,0,0,1)
-            np.testing.assert_raises(RuntimeError,im.view().__call__,0,0)
+            np.testing.assert_raises(RuntimeError,im1.setValue,0,0,1)
+            np.testing.assert_raises(RuntimeError,im1.__call__,0,0)
+            np.testing.assert_raises(RuntimeError,im1.view().setValue,0,0,1)
+            np.testing.assert_raises(RuntimeError,im1.view().__call__,0,0)
         except ImportError:
             pass
-        do_pickle(im.bounds)
-        do_pickle(im)
-        do_pickle(im.view())
-        do_pickle(im.view(make_const=True))
+
+        do_pickle(im1.bounds)
+        do_pickle(im1)
+        do_pickle(im1.view())
+        do_pickle(im1.view(make_const=True))
 
 @timer
 def test_Image_FITS_IO():
