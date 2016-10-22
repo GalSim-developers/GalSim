@@ -1257,19 +1257,11 @@ class GSObject(object):
         if image is not None and not isinstance(image, galsim.Image):
             raise ValueError("image is not an Image instance")
 
-        # Make sure the types of (gain, area, exptime) are correct and have valid values:
-        if type(gain) != float:
-            gain = float(gain)
+        # Make sure (gain, area, exptime) have valid values:
         if gain <= 0.:
             raise ValueError("Invalid gain <= 0.")
-
-        if type(area) != float:
-            area = float(area)
         if area <= 0.:
             raise ValueError("Invalid area <= 0.")
-
-        if type(exptime) != float:
-            exptime = float(exptime)
         if exptime <= 0.:
             raise ValueError("Invalid exptime <= 0.")
 
@@ -1578,7 +1570,7 @@ class GSObject(object):
         # Make n_photons an integer.
         iN = int(n_photons + 0.5);
 
-        if iN <= 0:
+        if iN <= 0:  # pragma: no cover
             import warnings
             warnings.warn("Automatic n_photons calculation did not end up with positive N. " +
                           "(n_photons = %s)  No photons will be shot. "%n_photons +
@@ -1587,8 +1579,6 @@ class GSObject(object):
                           "poisson_flux = %s  "%poisson_flux +
                           "max_extra_noise = %s  "%max_extra_noise +
                           "g = %s  "%g)
-
-
             return 0, 1.
 
         #g *= n_photons / iN;

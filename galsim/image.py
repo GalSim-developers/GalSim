@@ -1319,10 +1319,8 @@ def Image_add(self, other):
     check_image_consistency(self, other)
     try:
         a = other.array
-        dt = a.dtype
     except AttributeError:
         a = other
-        dt = type(a)
     return Image(array=self.array+a, bounds=self.bounds, wcs=self.wcs)
 
 def Image_iadd(self, other):
@@ -1343,21 +1341,12 @@ def Image_sub(self, other):
     check_image_consistency(self, other)
     try:
         a = other.array
-        dt = a.dtype
     except AttributeError:
         a = other
-        dt = type(a)
     return Image(array=self.array-a, bounds=self.bounds, wcs=self.wcs)
 
 def Image_rsub(self, other):
-    check_image_consistency(self, other)
-    try:
-        a = other.array
-        dt = a.dtype
-    except AttributeError:
-        a = other
-        dt = type(a)
-    return Image(array=a-self.array, bounds=self.bounds, wcs=self.wcs)
+    return Image(array=other-self.array, bounds=self.bounds, wcs=self.wcs)
 
 def Image_isub(self, other):
     check_image_consistency(self, other)
@@ -1377,10 +1366,8 @@ def Image_mul(self, other):
     check_image_consistency(self, other)
     try:
         a = other.array
-        dt = a.dtype
     except AttributeError:
         a = other
-        dt = type(a)
     return Image(array=self.array*a, bounds=self.bounds, wcs=self.wcs)
 
 def Image_imul(self, other):
@@ -1401,21 +1388,12 @@ def Image_div(self, other):
     check_image_consistency(self, other)
     try:
         a = other.array
-        dt = a.dtype
     except AttributeError:
         a = other
-        dt = type(a)
     return Image(array=self.array/a, bounds=self.bounds, wcs=self.wcs)
 
 def Image_rdiv(self, other):
-    check_image_consistency(self, other)
-    try:
-        a = other.array
-        dt = a.dtype
-    except AttributeError:
-        a = other
-        dt = type(a)
-    return Image(array=a/self.array, bounds=self.bounds, wcs=self.wcs)
+    return Image(array=other/self.array, bounds=self.bounds, wcs=self.wcs)
 
 def Image_idiv(self, other):
     check_image_consistency(self, other)
