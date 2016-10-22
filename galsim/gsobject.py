@@ -1477,8 +1477,8 @@ class GSObject(object):
         real_image = kimage_wrap.inverse_fft(dk)
 
         # Add (a portion of) this to the original image.
-        image.image += real_image[image.bounds]
-        added_photons = real_image[image.bounds].array.sum();
+        image.image += real_image.subImage(image.bounds)
+        added_photons = real_image.subImage(image.bounds).array.sum();
 
         return added_photons
 

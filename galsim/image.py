@@ -1308,9 +1308,6 @@ def ImageC(*args, **kwargs):
 # arithemetic functions, so they work more intuitively.
 #
 
-def Image_getitem(self, key):
-    return self.subImage(key)
-
 # Define a utility function to be used by the arithmetic functions below
 def check_image_consistency(im1, im2, integer=False):
     if integer and not im1.isinteger:
@@ -1598,7 +1595,6 @@ Image.__ior__ = Image_ior
 
 # inject these as methods of ImageAlloc classes
 for Class in _galsim.ImageAlloc.values():
-    Class.__getitem__ = Image_getitem
     Class.__add__ = Image_add
     Class.__radd__ = Image_add
     Class.__iadd__ = Image_iadd
@@ -1624,7 +1620,6 @@ for Class in _galsim.ImageAlloc.values():
     Class.__hash__ = None
 
 for Class in _galsim.ImageView.values():
-    Class.__getitem__ = Image_getitem
     Class.__add__ = Image_add
     Class.__radd__ = Image_add
     Class.__iadd__ = Image_iadd
@@ -1648,7 +1643,6 @@ for Class in _galsim.ImageView.values():
     Class.__hash__ = None
 
 for Class in _galsim.ConstImageView.values():
-    Class.__getitem__ = Image_getitem
     Class.__add__ = Image_add
     Class.__radd__ = Image_add
     Class.__sub__ = Image_sub
