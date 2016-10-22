@@ -1765,10 +1765,10 @@ def test_ConstImage_array_constness():
     attributes, and that if this is attempted a RuntimeError is raised.
     """
     for i in range(ntypes):
-        # First try using the dictionary-type Image init
         image = galsim.Image(ref_array.astype(types[i]), make_const=True)
         try:
             image.array[1, 2] = 666
+            assert False, "Setting values in a const image.array should have raised an error."
         # Apparently older numpy versions might raise a RuntimeError, a ValueError, or a TypeError
         # when trying to write to arrays that have writeable=False.
         # From the numpy 1.7.0 release notes:
@@ -1781,15 +1781,43 @@ def test_ConstImage_array_constness():
         except:
             assert False, "Unexpected error: "+str(sys.exc_info()[0])
 
-        # Then try using the eval command to mimic use via ImageD, etc.
-        image_init_func = eval("galsim.Image"+tchar[i])
-        image = image_init_func(ref_array.astype(types[i]), make_const=True)
+        # Native image operations that are invalid just raise ValueError
         try:
-            image.array[1, 2] = 666
-        except (RuntimeError, ValueError, TypeError):
+            image[1, 2] = 666
+            assert False, "Setting values in a const image should have raised an error."
+        except ValueError:
             pass
         except:
             assert False, "Unexpected error: "+str(sys.exc_info()[0])
+
+        try:
+            image.setValue(1,2,666)
+            assert False, "Calling setValue on a const image should have raised an error."
+        except ValueError:
+            pass
+        except:
+            assert False, "Unexpected error: "+str(sys.exc_info()[0])
+
+        try:
+            image[image.bounds] = image
+            assert False, "Setting subImage of a const image should have raised an error."
+        except ValueError:
+            pass
+        except:
+            assert False, "Unexpected error: "+str(sys.exc_info()[0])
+
+        # The rest are functions, so just use assert_raises.
+        try:
+            np.testing.assert_raises(ValueError, image.setValue, 1, 2, 666)
+            np.testing.assert_raises(ValueError, image.setSubImage, image.bounds, image)
+            np.testing.assert_raises(ValueError, image.addValue, 1, 2, 666)
+            np.testing.assert_raises(ValueError, image.copyFrom, image)
+            np.testing.assert_raises(ValueError, image.resize, image.bounds)
+            np.testing.assert_raises(ValueError, image.fill, 666)
+            np.testing.assert_raises(ValueError, image.setZero)
+            np.testing.assert_raises(ValueError, image.invertSelf)
+        except ImportError:
+            pass
 
         do_pickle(image)
 
@@ -2075,6 +2103,15 @@ def test_copy():
     im9.setValue(2,3,11.)
     assert im9(2,3) == 11.
     assert im_slice(2,3) != 11.
+
+    # copyFrom copies the data only.
+    im5.copyFrom(im8)
+    assert im5.wcs != im.wcs  # im5 had a different wcs.  Should still have it.
+    assert im5.bounds == im.bounds
+    np.testing.assert_array_equal(im5.array, im.array)
+    assert im5(3,8) == 11.
+    im8[3,8] = 15
+    assert im5(3,8) == 11.
 
 
 @timer
