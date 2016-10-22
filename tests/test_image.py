@@ -341,9 +341,15 @@ def test_undefined_image():
         im = galsim.Image(dtype=types[i])
         assert not im.bounds.isDefined()
         assert im.array.shape == (1,1)
-        print('im = ',repr(im))
-        print('b = ',repr(im.bounds))
         assert im == im
+
+        im2 = galsim.Image()
+        assert not im2.bounds.isDefined()
+        assert im2.array.shape == (1,1)
+        assert im2 == im2
+        if types[i] == np.float32:
+            assert im2 == im2
+
         try:
             np.testing.assert_raises(RuntimeError,im.setValue,0,0,1)
             np.testing.assert_raises(RuntimeError,im.__call__,0,0)
