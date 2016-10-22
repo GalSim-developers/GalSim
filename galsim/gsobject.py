@@ -1642,18 +1642,12 @@ class GSObject(object):
         @returns The total flux of photons that landed inside the image bounds.
         """
         # Make sure the type of n_photons is correct and has a valid value:
-        if type(n_photons) != float:
-            n_photons = float(n_photons)
         if n_photons < 0.:
             raise ValueError("Invalid n_photons < 0.")
 
         if poisson_flux is None:
             if n_photons == 0.: poisson_flux = True
             else: poisson_flux = False
-
-        # Make sure the type of max_extra_noise is correct and has a valid value:
-        if type(max_extra_noise) != float:
-            max_extra_noise = float(max_extra_noise)
 
         # Check that either n_photons is set to something or flux is set to something
         if (n_photons == 0. and self.getFlux() == 1.
