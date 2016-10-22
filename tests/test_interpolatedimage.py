@@ -979,6 +979,8 @@ def test_stepk_maxk():
 
 @timer
 def test_kroundtrip():
+    import warnings
+
     a = final
     kim_a = a.drawKImage()
     b = galsim.InterpolatedKImage(kim_a)
@@ -1032,8 +1034,19 @@ def test_kroundtrip():
     kim_a = a.drawKImage()
     b = galsim.InterpolatedKImage(kim_a)
     c = galsim.InterpolatedKImage(kim_a, stepk=2*b.stepK())
+    np.testing.assert_almost_equal(b.stepK(), kim_a.scale)
     np.testing.assert_almost_equal(2*b.stepK(), c.stepK())
     np.testing.assert_almost_equal(b.maxK(), c.maxK())
+
+    # Smaller stepk is overridden.
+    try:
+        d = np.testing.assert_warns(UserWarning,
+                                    galsim.InterpolatedKImage, kim_a, stepk=0.5*b.stepK())
+    except ImportError:
+        with warnings.catch_warnings(UserWarning):
+            d = galsim.InterpolatedKImage(kim_a, stepk=0.5*b.stepK())
+    np.testing.assert_almost_equal(b.stepK(), d.stepK())
+    np.testing.assert_almost_equal(b.maxK(), d.maxK())
 
     # Test centroid
     for dx, dy in zip(KXVALS, KYVALS):
