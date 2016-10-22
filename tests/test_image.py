@@ -102,8 +102,7 @@ def test_Image_basic():
         # Check basic constructor from ncol, nrow
         array_type = types[i]
         np_array_type = np_types[i]
-        print('array_type = ',array_type)
-        print('np_array_type = ',np_array_type)
+        print('array_type = ',array_type,np_array_type)
 
         # Check basic constructor from ncol, nrow
         im1 = galsim.Image(ncol,nrow,dtype=array_type)
@@ -2433,9 +2432,6 @@ def test_int_image_arith():
         full = galsim.Image(ref_array.astype(types[i]))
         hi = (full // 8) * 8
         lo = (full % 8)
-        print('full = ',full.array)
-        print('hi = ',hi.array)
-        print('lo = ',lo.array)
 
         #
         # Tests of __and__ and __iand__ operators:
@@ -2607,6 +2603,11 @@ def test_int_image_arith():
         np.testing.assert_array_equal(test.array, lo.array,
                 err_msg="%%= failed for Images with dtype = %s."%types[i])
 
+        # lo %= 8 => lo
+        test %= 8
+        np.testing.assert_array_equal(test.array, lo.array,
+                err_msg="%%= failed for Images with dtype = %s."%types[i])
+
         # lo //= hi => 0
         test //= hi
         np.testing.assert_array_equal(test.array, 0,
@@ -2622,12 +2623,12 @@ def test_int_image_arith():
         np.testing.assert_array_equal(test.array, 7,
                 err_msg="%% failed for Images with dtype = %s."%types[i])
 
-        # 7 %= hi => 7
-        test %= hi
-        np.testing.assert_array_equal(test.array, 7,
+        # 7 //= 2 => 3
+        test //= 2
+        np.testing.assert_array_equal(test.array, 3,
                 err_msg="%%= failed for Images with dtype = %s."%types[i])
 
-        # 7 //= hi => 0
+        # 3 //= hi => 0
         test //= hi
         np.testing.assert_array_equal(test.array, 0,
                 err_msg="//= failed for Images with dtype = %s."%types[i])
@@ -2753,9 +2754,9 @@ def test_wrap():
     im = galsim.ImageC(2*M+1, 2*N+1, xmin=-M, ymin=-N)  # Explicitly Hermitian
     im2 = galsim.ImageC(2*M+1, N+1, xmin=-M, ymin=0)   # Implicitly Hermitian across y axis
     im3 = galsim.ImageC(M+1, 2*N+1, xmin=0, ymin=-N)   # Implicitly Hermitian across x axis
-    print('im = ',im)
-    print('im2 = ',im2)
-    print('im3 = ',im3)
+    #print('im = ',im)
+    #print('im2 = ',im2)
+    #print('im3 = ',im3)
     b = galsim.BoundsI(-K+1,K,-L+1,L)
     b2 = galsim.BoundsI(-K+1,K,0,L)
     b3 = galsim.BoundsI(0,K,-L+1,L)
