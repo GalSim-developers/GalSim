@@ -1013,6 +1013,45 @@ def test_fft():
         kim2 = xim.calculate_fft()
         np.testing.assert_almost_equal(kim.array, kim2.array)
 
+        # Test starting with a larger image that gets wrapped.
+        kim3 = galsim.Image([ [0,0.5,1,0.5,0],
+                              [0.5,2,3,2,0.5],
+                              [1,3,4,3,1],
+                              [0.5,2,3,2,0.5],
+                              [0,0.5,1,0.5,0] ],
+                            xmin=0, ymin=-2, dtype=dt, scale=0.1)
+        xim = kim.calculate_inverse_fft()
+        kim2 = xim.calculate_fft()
+        np.testing.assert_almost_equal(kim.array, kim2.array)
+
+        # Test padding X Image with zeros
+        xim = galsim.Image([ [0,0,0,0],
+                             [1,2,3,0],
+                             [2,3,4,0],
+                             [0,0,0,0] ],
+                           xmin=-2, ymin=-2, dtype=dt, scale=0.1)
+        xim2 = galsim.Image([ [1,2,3],
+                              [2,3,4] ],
+                            xmin=-2, ymin=-1, dtype=dt, scale=0.1)
+        kim = xim.calculate_fft()
+        kim2 = xim2.calculate_fft()
+        np.testing.assert_almost_equal(kim.array, kim2.array)
+
+        # Test padding K Image with zeros
+        kim = galsim.Image([ [2,1,0],
+                             [3,2,0],
+                             [4,3,0],
+                             [3,2,0] ],
+                           xmin=0, ymin=-2, dtype=dt, scale=0.1)
+        kim2 = galsim.Image([ [3,2],
+                              [4,3],
+                              [3,2],
+                              [2,1] ],
+                           xmin=0, ymin=-1, dtype=dt, scale=0.1)
+        xim = kim.calculate_inverse_fft()
+        xim2 = kim2.calculate_inverse_fft()
+        np.testing.assert_almost_equal(xim.array, xim2.array)
+
     # Now use drawKImage (as above in test_drawKImage) to get a more realistic k-space image
     obj = galsim.Moffat(flux=test_flux, beta=1.5, scale_radius=0.5)
     im1 = obj.drawKImage()
