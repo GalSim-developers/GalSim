@@ -50,6 +50,10 @@ Deprecated Features
 - Deprecated `Image.at` method. Normally im(x,y) or im[x,y] would be the
   preferred syntax, but for the case where you want a named method, the
   new name is `getValue` in parallel with `setValue`. (#799)
+- Deprecated `gain` parameter of `drawKImage`.  It does not really make
+  sense.  If you had been using it, you should instead just divide the
+  returned image by gain, which will have the same effect and probably
+  be clearer in your own code about what you meant. (#799)
 
 
 New Features

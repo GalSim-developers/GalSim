@@ -1723,8 +1723,8 @@ class GSObject(object):
         return added_flux;
 
 
-    def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None, gain=1.,
-                   add_to_image=False, dk=None, wmult=1., re=None, im=None, dtype=None):
+    def drawKImage(self, image=None, nx=None, ny=None, bounds=None, scale=None,
+                   add_to_image=False, dk=None, wmult=1., re=None, im=None, dtype=None, gain=None):
         """Draws the k-space (complex) Image of the object, with bounds optionally set by input
         Image instance.
 
@@ -1755,8 +1755,6 @@ class GSObject(object):
                             If `scale` is None and `image` is None, then use the Nyquist scale.
                             If `scale <= 0` (regardless of `image`), then use the Nyquist scale.
                             [default: None]
-        @param gain         The number of photons per ADU ("analog to digital units", the units of
-                            the numbers output from a CCD).  [default: 1.]
         @param add_to_image Whether to add to the existing images rather than clear out
                             anything in the image before drawing.
                             Note: This requires that `image` be provided and that it has defined
@@ -1795,12 +1793,11 @@ class GSObject(object):
         if dtype is not None: # pragma: no cover
             from .deprecated import depr
             depr('dtype', 1.5, '', 'dtype of returned image will always be numpy.complex128')
-
-        # Make sure the type of gain is correct and has a valid value:
-        if type(gain) != float:
-            gain = float(gain)
-        if gain <= 0.:
-            raise ValueError("Invalid gain <= 0.")
+        if gain is not None: # pragma: no cover
+            from .deprecated import depr
+            depr('gain', 1.5, ''
+                 "The gain parameter doesn't really make sense for drawKImage.  If you had been "
+                 "using it, you should now just divide the final image by gain instead.")
 
         # Make sure provided image is an ImageC
         if image is not None and image.array.dtype != np.complex128:
@@ -1857,7 +1854,7 @@ class GSObject(object):
 
         self.SBProfile.drawK(image.image.view(), dk)
 
-        if gain != 1.:
+        if gain is not None:  # pragma: no cover
             image /= gain
 
         return image
