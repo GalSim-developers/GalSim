@@ -438,15 +438,14 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
                 continue
             with galsim.utilities.printoptions(precision=18, threshold=1e6):
                 try:
-                    obj6 = eval('galsim.' + classname + repr(tuple(newargs)))
-                except Exception as e1:
-                    try:
+                    if classname in galsim._galsim.__dict__:
                         obj6 = eval('galsim._galsim.' + classname + repr(tuple(newargs)))
-                    except Exception as e2:
-                        print('e1 = ',e1)
-                        print('e2 = ',e2)
-                        raise TypeError("{0} not `eval`able!".format(
-                                classname + repr(tuple(newargs))))
+                    else:
+                        obj6 = eval('galsim.' + classname + repr(tuple(newargs)))
+                except Exception as e:
+                    print('e = ',e)
+                    raise TypeError("{0} not `eval`able!".format(
+                            classname + repr(tuple(newargs))))
                 else:
                     assert obj1 != obj6
                     #print("SUCCESS\n")
