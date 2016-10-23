@@ -348,7 +348,7 @@ def test_fwhm():
 
     # Can set a centroid manually.  This should be equivalent to the default.
     print('e3.centroid = ',e3.centroid())
-    test_fwhm = e3.calculateFWHM(scale=0.1)
+    test_fwhm = e3.calculateFWHM(scale=0.1, centroid=e3.centroid())
     np.testing.assert_almost_equal(test_fwhm/e1_fwhm, 1.0, decimal=6,
                                    err_msg="shifted FWHM with explicit centroid is not accurate.")
 
