@@ -346,7 +346,13 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
                 continue
             with galsim.utilities.printoptions(precision=18, threshold=1e6):
                 try:
-                    obj6 = eval('galsim.' + classname + repr(tuple(newargs)))
+                    # ImageViewF, ImageAllocF, etc. are deprecated in the galsim namespace,
+                    # but the _galsim version is correct.  So turn warnings into errors
+                    # to make it move onto the next eval instead.
+                    import warnings
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("error")
+                        obj6 = eval('galsim.' + classname + repr(tuple(newargs)))
                 except Exception as e1:
                     try:
                         obj6 = eval('galsim._galsim.' + classname + repr(tuple(newargs)))
