@@ -311,15 +311,21 @@ def test_eq_ne():
 def test_pickle():
     """ Check that we can pickle it. """
 
-    do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians,scale_radius=3.0,scale_height=0.3))
-    do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians,scale_radius=3.0))
-    do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians,scale_radius=3.0,scale_h_over_r=0.2))
-    do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians,scale_radius=3.0,scale_height=0.3,
-                                         flux=10.0))
-    do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians,scale_radius=3.0,scale_height=0.3,
+    exp = galsim.InclinedExponential(inclination=0.1*galsim.radians, scale_radius=3.0,
+                                     scale_height=0.3)
+    do_pickle(exp)
+    do_pickle(exp.SBProfile)
+    do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians, scale_radius=3.0))
+    do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians, scale_radius=3.0,
+                                         scale_h_over_r=0.2))
+    do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians, scale_radius=3.0,
+                                         scale_height=0.3, flux=10.0))
+    do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians, scale_radius=3.0,
+                                         scale_height=0.3,
                                          gsparams=galsim.GSParams(folding_threshold=1.1e-3)))
-    do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians,scale_radius=3.0,scale_height=0.3,
-                                         flux=10.0,gsparams=galsim.GSParams(folding_threshold=1.1e-3)))
+    do_pickle(galsim.InclinedExponential(inclination=0.1*galsim.radians, scale_radius=3.0,
+                                         scale_height=0.3, flux=10.0,
+                                         gsparams=galsim.GSParams(folding_threshold=1.1e-3)))
 
 if __name__ == "__main__":
     test_regression()
