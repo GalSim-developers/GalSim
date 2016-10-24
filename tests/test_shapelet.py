@@ -287,10 +287,8 @@ def test_shapelet_adjustments():
         err_msg="Shapelet withFlux disagrees with GSObject withFlux")
 
     # Test that scaling the Shapelet flux does the same thing as the GSObject scaling
-    gsref_shapelet *= 0.23
-    gsref_shapelet.drawImage(ref_im, method='no_pixel')
-    shapelet *= 0.23
-    shapelet.drawImage(im, method='no_pixel')
+    (gsref_shapelet * 0.23).drawImage(ref_im, method='no_pixel')
+    (shapelet * 0.23).drawImage(im, method='no_pixel')
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
         err_msg="Shapelet *= 0.23 disagrees with GSObject *= 0.23")
