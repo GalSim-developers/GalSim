@@ -178,10 +178,10 @@ def test_Image_basic():
         # Check various ways to set and get values
         for y in range(1,nrow+1):
             for x in range(1,ncol+1):
-                im1.setValue(x,y, 100 + 10*x + y)
-                im1a.setValue(x+3,y+6, 100 + 10*x + y)
-                im1b.setValue(x-1,y-1, 100 + 10*x + y)
-                im2_view.setValue(x,y, 100 + 10*x + y)
+                im1.setValue(x, y, 100 + 10*x + y)
+                im1a.setValue(x+3, y+6, 100 + 10*x + y)
+                im1b.setValue(x=x-1, y=y-1, value=100 + 10*x + y)
+                im2_view.setValue(x=x, y=y, value=100 + 10*x + y)
 
         for y in range(1,nrow+1):
             for x in range(1,ncol+1):
@@ -208,9 +208,9 @@ def test_Image_basic():
                 im1[x,y] = value2
                 im2_view[galsim.PositionI(x,y)] = value2
                 assert im1.getValue(x,y) == value2
-                assert im1.view().getValue(x,y) == value2
+                assert im1.view().getValue(x=x, y=y) == value2
                 assert im1.view(make_const=True).getValue(x,y) == value2
-                assert im2.getValue(x,y) == value2
+                assert im2.getValue(x=x, y=y) == value2
                 assert im2_view.getValue(x,y) == value2
                 assert im2_cview.getValue(x,y) == value2
 
@@ -2281,7 +2281,7 @@ def test_complex_image():
 
             value2 = 10*x + y + 20j*x + 2j*y
             im1.setValue(x,y, value2)
-            im2_view.setValue(x,y, value2)
+            im2_view.setValue(x=x, y=y, value=value2)
             assert im1(x,y) == value2
             assert im1.view()(x,y) == value2
             assert im1.view(make_const=True)(x,y) == value2
