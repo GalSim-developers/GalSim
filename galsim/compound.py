@@ -310,7 +310,7 @@ class Convolution(galsim.GSObject):
 
         if real_space is None:
             # The automatic determination is to use real_space if 2 items, both with hard edges.
-            if len(args) == 2:
+            if len(args) <= 2:
                 real_space = hard_edge
             else:
                 real_space = False

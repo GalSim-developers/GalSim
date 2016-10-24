@@ -125,6 +125,26 @@ def test_convolve():
         warnings.simplefilter("ignore")
         do_shoot(conv,myImg,"Moffat * Pixel")
 
+    # Convolution of just one argument should be equivalent to that argument.
+    single = galsim.Convolve(psf)
+    gsobject_compare(single, psf)
+    check_basic(single, "`convolution' of single Moffat")
+    do_pickle(single)
+
+    single = galsim.Convolve([psf])
+    gsobject_compare(single, psf)
+    check_basic(single, "`convolution' of single Moffat")
+    do_pickle(single)
+
+    single = galsim.Convolution(psf)
+    gsobject_compare(single, psf)
+    check_basic(single, "`convolution' of single Moffat")
+    do_pickle(single)
+
+    single = galsim.Convolution([psf])
+    gsobject_compare(single, psf)
+    check_basic(single, "`convolution' of single Moffat")
+    do_pickle(single)
 
 @timer
 def test_convolve_flux_scaling():
@@ -502,6 +522,18 @@ def test_add():
     do_pickle(sum_gauss, lambda x: x.drawImage(method='sb'))
     do_pickle(sum_gauss)
     do_pickle(sum_gauss.SBProfile)
+
+    # Sum of just one argument should be equivalent to that argument.
+    single = galsim.Add(gauss1)
+    gsobject_compare(single, gauss1)
+    check_basic(single, "`sum' of 1 Gaussian")
+    do_pickle(single)
+
+    single = galsim.Add([gauss1])
+    gsobject_compare(single, gauss1)
+    check_basic(single, "`sum' of 1 Gaussian")
+    do_pickle(single)
+
 
 
 @timer
