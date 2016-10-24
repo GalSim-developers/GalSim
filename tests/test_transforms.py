@@ -696,6 +696,8 @@ def test_flip():
                               galsim.Gaussian(sigma=0.09) ]),
             galsim.Convolve([ galsim.TopHat(0.17, flux=1.7).shift(-0.275,0.125),
                               galsim.Gaussian(sigma=0.09) ]),
+            # Test a transform that is imperceptibly different from the identity.
+            galsim.Gaussian(sigma=2.3).transform(1.0+1.e-30, 2.e-30, 3.e-30, 1.0+4.e-30),
             # Test something really crazy with several layers worth of transformations
             galsim.Convolve([
                 galsim.Sum([
