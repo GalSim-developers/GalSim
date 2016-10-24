@@ -257,7 +257,7 @@ def test_shearconvolve():
         warnings.simplefilter("ignore")
         do_shoot(conv,myImg,"sheared Gaussian * Pixel")
     # Clear the warnings registry for later so we can test that appropriate warnings are raised.
-    galsim.Convolution.__init__.__globals__['__warningregistry__'].clear()
+    galsim.GSObject.drawImage.__globals__['__warningregistry__'].clear()
 
 
 @timer
