@@ -48,6 +48,9 @@ namespace galsim {
         /// @brief Destructor.
         ~SBDeconvolve();
 
+        /// @brief Get the SBProfile being convolved
+        SBProfile getObj() const;
+
     protected:
 
         class SBDeconvolveImpl;

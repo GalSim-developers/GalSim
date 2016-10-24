@@ -652,6 +652,60 @@ def test_add_flux_scaling():
 
 
 @timer
+def test_deconvolve():
+    """Test that deconvolution works as expected
+    """
+    dx = 0.4
+    myImg1 = galsim.ImageF(80,80, scale=dx)
+    myImg1.setCenter(0,0)
+    myImg2 = galsim.ImageF(80,80, scale=dx)
+    myImg2.setCenter(0,0)
+
+    psf = galsim.Moffat(beta=3.8, fwhm=1.3, flux=5)
+    inv_psf = galsim.Deconvolve(psf)
+    psf.drawImage(myImg1, method='no_pixel')
+    conv = galsim.Convolve(psf,psf,inv_psf)
+    conv.drawImage(myImg2, method='no_pixel')
+    printval(myImg1, myImg2)
+    np.testing.assert_array_almost_equal(
+            myImg1.array, myImg2.array, 4,
+            err_msg="Image of Deconvolve * obj^2 doesn't match obj alone")
+
+    cen = galsim.PositionD(0,0)
+    np.testing.assert_equal(inv_psf.centroid(), cen)
+    np.testing.assert_almost_equal(inv_psf.getFlux(), 1./psf.flux)
+    np.testing.assert_almost_equal(inv_psf.flux, 1./psf.flux)
+    # This doesn't really have any meaning, but this is what we've assigned to a deconvolve maxSB.
+    np.testing.assert_almost_equal(inv_psf.maxSB(), -psf.maxSB() / psf.flux**2)
+
+    check_basic(inv_psf, "Deconvolve(Moffat)", do_x=False)
+
+    # Also check Deconvolve with an asymmetric profile.
+    obj1 = galsim.Gaussian(sigma=3., flux=4).shift(-0.2, -0.4)
+    obj2 = galsim.Gaussian(sigma=6., flux=1.3).shift(0.3, 0.3)
+    obj = galsim.Add(obj1, obj2)
+    inv_obj = galsim.Deconvolve(obj)
+    conv = galsim.Convolve([inv_obj, obj, obj])
+    conv.drawImage(myImg1, method='no_pixel')
+    obj.drawImage(myImg2, method='no_pixel')
+    printval(myImg1, myImg2)
+    np.testing.assert_array_almost_equal(
+            myImg1.array, myImg2.array, 4,
+            err_msg="Image of Deconvolve of asymmetric sum of Gaussians doesn't match obj alone")
+
+    np.testing.assert_equal(inv_obj.centroid(), -obj.centroid())
+    np.testing.assert_almost_equal(inv_obj.getFlux(), 1./obj.flux)
+    np.testing.assert_almost_equal(inv_obj.flux, 1./obj.flux)
+    np.testing.assert_almost_equal(inv_obj.maxSB(), -obj.maxSB() / obj.flux**2)
+
+    check_basic(inv_psf, "Deconvolve(asym)", do_x=False)
+
+    # Check picklability
+    do_pickle(inv_obj)
+    do_pickle(inv_obj.SBProfile)
+
+
+@timer
 def test_autoconvolve():
     """Test that auto-convolution works the same as convolution with itself.
     """
@@ -856,6 +910,8 @@ def test_fourier_sqrt():
             myImg1.array, myImg2.array, 4,
             err_msg="Moffat sqrt convolved with self disagrees with original")
 
+    check_basic(sqrt1, "FourierSqrt", do_x=False)
+
     # Test non-trivial case where we compare (in Fourier space) sqrt(a*a + b*b + 2*a*b) against (a + b)
     a = galsim.Moffat(beta=3.8, fwhm=1.3, flux=5)
     a.shift(dx=0.5, dy=-0.3)  # need nonzero centroid to test centroid()
@@ -1027,6 +1083,7 @@ if __name__ == "__main__":
     test_add()
     test_sub_neg()
     test_add_flux_scaling()
+    test_deconvolve()
     test_autoconvolve()
     test_autocorrelate()
     test_ne()

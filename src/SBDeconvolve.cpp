@@ -32,6 +32,12 @@ namespace galsim {
 
     SBDeconvolve::~SBDeconvolve() {}
 
+    SBProfile SBDeconvolve::getObj() const
+    {
+        assert(dynamic_cast<const SBDeconvolveImpl*>(_pimpl.get()));
+        return static_cast<const SBDeconvolveImpl&>(*_pimpl).getObj();
+    }
+
     std::string SBDeconvolve::SBDeconvolveImpl::serialize() const
     {
         std::ostringstream oss(" ");

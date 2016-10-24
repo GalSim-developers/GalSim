@@ -31,6 +31,8 @@ namespace galsim {
         SBDeconvolveImpl(const SBProfile& adaptee, const GSParamsPtr& gsparams);
         ~SBDeconvolveImpl() {}
 
+        SBProfile getObj() const { return _adaptee; }
+
         // xValue() not implemented for SBDeconvolve.
         double xValue(const Position<double>& p) const;
 

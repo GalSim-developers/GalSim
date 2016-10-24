@@ -40,6 +40,7 @@ namespace galsim {
                          bp::arg("gsparams")=bp::object())
                 ))
                 .def(bp::init<const SBDeconvolve &>())
+                .def("getObj", &SBDeconvolve::getObj)
                 ;
         }
 
