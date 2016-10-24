@@ -1961,6 +1961,65 @@ def test_Image_constructor():
 
         do_pickle(test_im)
 
+        # Check that some invalid sets of construction args raise the appropriate errors
+        try:
+            # Invalid args
+            np.testing.assert_raises(TypeError, galsim.Image, 1, 2, 3)
+            np.testing.assert_raises(TypeError, galsim.Image, 128)
+            np.testing.assert_raises(TypeError, galsim.Image, 1.8)
+            np.testing.assert_raises(TypeError, galsim.Image, 1.3, 2.7)
+            # Invalid array kwarg
+            np.testing.assert_raises(TypeError, galsim.Image, array=5)
+            np.testing.assert_raises(TypeError, galsim.Image, array=test_im)
+            # Invalid image kwarg
+            np.testing.assert_raises(TypeError, galsim.Image, image=5)
+            np.testing.assert_raises(TypeError, galsim.Image, image=test_arr)
+            # Invalid bounds
+            np.testing.assert_raises(TypeError, galsim.Image, bounds=(1,4,1,3))
+            np.testing.assert_raises(TypeError, galsim.Image, bounds=galsim.BoundsD(1,4,1,3))
+            np.testing.assert_raises(TypeError, galsim.Image, array=test_arr, bounds=(1,4,1,3))
+            np.testing.assert_raises(ValueError, galsim.Image,
+                                     array=test_arr, bounds=galsim.BoundsI(1,3,1,4))
+            np.testing.assert_raises(ValueError, galsim.Image,
+                                     array=test_arr, bounds=galsim.BoundsI(1,4,1,1))
+            # Invalid ncol, nrow
+            np.testing.assert_raises(TypeError, galsim.Image, ncol=1.2, nrow=3)
+            np.testing.assert_raises(TypeError, galsim.Image, ncol=2, nrow=3.4)
+            np.testing.assert_raises(ValueError, galsim.Image, ncol='four', nrow='three')
+            # Invalid dtype
+            np.testing.assert_raises(ValueError, galsim.Image, array=test_arr, dtype=bool)
+            np.testing.assert_raises(ValueError, galsim.Image, array=test_arr.astype(bool))
+            # Invalid scale
+            np.testing.assert_raises(ValueError, galsim.Image, 4,3, scale='invalid')
+            # Invalid wcs
+            np.testing.assert_raises(TypeError, galsim.Image, 4,3, wcs='invalid')
+            # Disallowed combinations
+            np.testing.assert_raises(TypeError, galsim.Image,
+                                     ncol=4, nrow=3, bounds=galsim.BoundsI(1,4,1,3))
+            np.testing.assert_raises(TypeError, galsim.Image, ncol=4, nrow=3, array=test_arr)
+            np.testing.assert_raises(TypeError, galsim.Image, ncol=4, nrow=3, image=test_im)
+            np.testing.assert_raises(TypeError, galsim.Image, ncol=4)
+            np.testing.assert_raises(TypeError, galsim.Image, nrow=3)
+            np.testing.assert_raises(ValueError, galsim.Image,
+                                     test_arr, bounds=galsim.BoundsI(1,2,1,3))
+            np.testing.assert_raises(ValueError, galsim.Image,
+                                     array=test_arr, bounds=galsim.BoundsI(1,2,1,3))
+            np.testing.assert_raises(ValueError, galsim.Image,
+                                     [[1,2]], bounds=galsim.BoundsI(1,2,1,3))
+            np.testing.assert_raises(TypeError, galsim.Image, test_arr, init_value=3)
+            np.testing.assert_raises(TypeError, galsim.Image, array=test_arr, init_value=3)
+            np.testing.assert_raises(TypeError, galsim.Image, test_im, init_value=3)
+            np.testing.assert_raises(TypeError, galsim.Image, image=test_im, init_value=3)
+            np.testing.assert_raises(TypeError, galsim.Image, dtype=float, init_value=3)
+            np.testing.assert_raises(TypeError, galsim.Image,
+                                     test_im, scale=3, wcs=galsim.PixelScale(3))
+            # Extra kwargs
+            np.testing.assert_raises(TypeError, galsim.Image, image=test_im, name='invalid')
+
+
+        except ImportError:
+            pass
+
 
 @timer
 def test_Image_view():

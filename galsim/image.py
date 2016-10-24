@@ -103,15 +103,16 @@ class Image(with_metaclass(MetaImage, object)):
 
     There are several ways to construct an Image:
 
-        Image(ncol, nrow, dtype=numpy.float32, init_value=0, ...)
+        Image(ncol, nrow, dtype=numpy.float32, init_value=0, xmin=1, ymin=1, ...)
 
                 This constructs a new image, allocating memory for the pixel values according to
                 the number of columns and rows.  You can specify the data type as `dtype` if you
                 want.  The default is `numpy.float32` if you don't specify it.  You can also
                 optionally provide an initial value for the pixels, which defaults to 0.
-                Reminder, with our convention for x,y coordinates described above, ncol is the
-                number of pixels in the x direction, and nrow is the number of pixels in the y
-                direction.
+                The optional `xmin,ymin` allow you to specify the location of the lower-left
+                pixel, which defaults to (1,1).  Reminder, with our convention for x,y coordinates
+                described above, ncol is the number of pixels in the x direction, and nrow is the
+                number of pixels in the y direction.
 
         Image(bounds, dtype=numpy.float32, init_value=0, ...)
 
@@ -123,13 +124,13 @@ class Image(with_metaclass(MetaImage, object)):
 
         Image(array, xmin=1, ymin=1, make_const=False, ...)
 
-                This views an existing NumPy array as an Image, with updates to the array or Image
-                being affecting the other object unless `Image(array.copy(), ...)` is used.  The
-                dtype is taken from `array.dtype`, which must be one of the allowed types listed
-                above.  You can also optionally set the origin `(xmin, ymin)` if you want it to be
-                something other than (1,1).  You can also optionally force the Image to be read-only
-                with `make_const=True`, though if the original NumPy array is modified then the
-                contents of `Image.array` will change.
+                This views an existing NumPy array as an Image, where updates to either the image
+                or the original array will affect the other one.  (To avoid this, you could use
+                `Image(array.copy(), ...)`.) The dtype is taken from `array.dtype`, which must be
+                one of the allowed types listed above.  You can also optionally set the origin
+                `xmin, ymin` if you want it to be something other than (1,1).  You can also
+                optionally force the Image to be read-only with `make_const=True`, though if the
+                original NumPy array is modified then the contents of `Image.array` will change.
 
         Image(image, dtype=dtype)
 
@@ -258,15 +259,13 @@ class Image(with_metaclass(MetaImage, object)):
         elif len(args) == 1:
             if isinstance(args[0], np.ndarray):
                 array = args[0]
-                xmin = kwargs.pop('xmin',1)
-                ymin = kwargs.pop('ymin',1)
+                array, xmin, ymin = self._get_xmin_ymin(array, kwargs)
                 make_const = kwargs.pop('make_const',False)
             elif isinstance(args[0], galsim.BoundsI):
                 bounds = args[0]
             elif isinstance(args[0], (list, tuple)):
                 array = np.array(args[0])
-                xmin = kwargs.pop('xmin',1)
-                ymin = kwargs.pop('ymin',1)
+                array, xmin, ymin = self._get_xmin_ymin(array, kwargs)
                 make_const = kwargs.pop('make_const',False)
             elif isinstance(args[0], (Image,) + _all_cpp_image_types):
                 image = args[0]
@@ -275,32 +274,8 @@ class Image(with_metaclass(MetaImage, object)):
         else:
             if 'array' in kwargs:
                 array = kwargs.pop('array')
-                xmin = kwargs.pop('xmin',1)
-                ymin = kwargs.pop('ymin',1)
+                array, xmin, ymin = self._get_xmin_ymin(array, kwargs)
                 make_const = kwargs.pop('make_const',False)
-                if 'bounds' in kwargs:
-                    b = kwargs.pop('bounds')
-                    if b.xmax-b.xmin+1 != array.shape[1]:
-                        raise ValueError("Shape of array is inconsistent with provided bounds")
-                    if b.ymax-b.ymin+1 != array.shape[0]:
-                        raise ValueError("Shape of array is inconsistent with provided bounds")
-                    if b.isDefined():
-                        xmin = b.xmin
-                        ymin = b.ymin
-                    else:
-                        # Indication that array is formally undefined, even though provided.
-                        if 'dtype' not in kwargs:
-                            kwargs['dtype'] = array.dtype.type
-                        array = None
-                        xmin = None
-                        ymin = None
-                elif np.prod(array.shape) == 0:
-                    # Another way to indicate that we don't have a defined image.
-                    if 'dtype' not in kwargs:
-                        kwargs['dtype'] = array.dtype.type
-                    array = None
-                    xmin = None
-                    ymin = None
             elif 'bounds' in kwargs:
                 bounds = kwargs.pop('bounds')
             elif 'image' in kwargs:
@@ -325,6 +300,8 @@ class Image(with_metaclass(MetaImage, object)):
             raise ValueError("dtype must be one of "+str(Image.valid_dtypes)+
                              ".  Instead got "+str(dtype))
         if array is not None:
+            if not isinstance(array, np.ndarray):
+                raise TypeError("array must be a numpy.ndarray instance")
             if array.dtype.type in Image.convert_dtypes and dtype is None:
                 dtype = Image.convert_dtypes[array.dtype.type]
             if array.dtype.type not in Image.cpp_valid_dtypes and dtype is None:
@@ -342,21 +319,15 @@ class Image(with_metaclass(MetaImage, object)):
             self.dtype = array.dtype.type
         elif dtype is not None:
             self.dtype = dtype
-        elif image is not None:
-            self.dtype = image.array.dtype.type
         else:
             self.dtype = np.float32
 
         # Construct the image attribute
         if (ncol is not None or nrow is not None):
-            if bounds is not None:
-                raise TypeError("Cannot specify both ncol/nrow and bounds")
-            if array is not None:
-                raise TypeError("Cannot specify both ncol/nrow and array")
-            if image is not None:
-                raise TypeError("Cannot specify both ncol/nrow and image")
             if ncol is None or nrow is None:
                 raise TypeError("Both nrow and ncol must be provided")
+            if ncol != int(ncol) or nrow != int(nrow):
+                raise TypeError("nrow, ncol must be integers")
             ncol = int(ncol)
             nrow = int(nrow)
             self.image = _galsim.ImageAlloc[self.dtype](ncol, nrow)
@@ -365,20 +336,12 @@ class Image(with_metaclass(MetaImage, object)):
             if init_value is not None:
                 self.image.fill(init_value)
         elif bounds is not None:
-            if array is not None:
-                raise TypeError("Cannot specify both bounds and array")
-            if image is not None:
-                raise TypeError("Cannot specify both bounds and image")
             if not isinstance(bounds, galsim.BoundsI):
                 raise TypeError("bounds must be a galsim.BoundsI instance")
             self.image = _galsim.ImageAlloc[self.dtype](bounds)
             if init_value is not None:
                 self.image.fill(init_value)
         elif array is not None:
-            if image is not None:
-                raise TypeError("Cannot specify both array and image")
-            if not isinstance(array, np.ndarray):
-                raise TypeError("array must be a numpy.ndarray instance")
             # Easier than getting the memory management right in the C++ layer.
             # If we were provided a numpy array, keep a pointer to it here so it lives
             # as long as the self.image object.
@@ -413,6 +376,7 @@ class Image(with_metaclass(MetaImage, object)):
                 raise TypeError("image must be an Image or BaseImage type")
             if init_value is not None:
                 raise TypeError("Cannot specify init_value with image")
+            self.dtype = self.image.array.dtype.type
         else:
             self.image = _galsim.ImageAlloc[self.dtype]()
             if init_value is not None:
@@ -424,11 +388,46 @@ class Image(with_metaclass(MetaImage, object)):
         if scale is not None:
             if wcs is not None:
                 raise TypeError("Cannot provide both scale and wcs to Image constructor")
-            self.wcs = galsim.PixelScale(scale)
+            self.wcs = galsim.PixelScale(float(scale))
         else:
             if wcs is not None and not isinstance(wcs,galsim.BaseWCS):
                 raise TypeError("wcs parameters must be a galsim.BaseWCS instance")
             self.wcs = wcs
+
+    @staticmethod
+    def _get_xmin_ymin(array, kwargs):
+        """A helper function for parsing xmin, ymin, bounds options with a given array
+        """
+        if not isinstance(array, np.ndarray):
+            raise TypeError("array must be a numpy.ndarray instance")
+        xmin = kwargs.pop('xmin',1)
+        ymin = kwargs.pop('ymin',1)
+        if 'bounds' in kwargs:
+            b = kwargs.pop('bounds')
+            if not isinstance(b, galsim.BoundsI):
+                raise TypeError("bounds must be a galsim.BoundsI instance")
+            if b.xmax-b.xmin+1 != array.shape[1]:
+                raise ValueError("Shape of array is inconsistent with provided bounds")
+            if b.ymax-b.ymin+1 != array.shape[0]:
+                raise ValueError("Shape of array is inconsistent with provided bounds")
+            if b.isDefined():
+                xmin = b.xmin
+                ymin = b.ymin
+            else:
+                # Indication that array is formally undefined, even though provided.
+                if 'dtype' not in kwargs:
+                    kwargs['dtype'] = array.dtype.type
+                array = None
+                xmin = None
+                ymin = None
+        elif np.prod(array.shape) == 0:
+            # Another way to indicate that we don't have a defined image.
+            if 'dtype' not in kwargs:
+                kwargs['dtype'] = array.dtype.type
+            array = None
+            xmin = None
+            ymin = None
+        return array, xmin, ymin
 
     def __repr__(self):
         s = 'galsim.Image(bounds=%r, array=\n%r, wcs=%r'%(self.bounds, self.array, self.wcs)
