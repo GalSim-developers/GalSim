@@ -221,6 +221,5 @@ def SBTransform_init(self):
     return (obj, dudx, dudy, dvdx, dvdy, offset, flux_ratio, gsparams)
 _galsim.SBTransform.__getinitargs__ = SBTransform_init
 _galsim.SBTransform.__getstate__ = lambda self: None
-_galsim.SBTransform.__setstate__ = lambda self, state: 1
 _galsim.SBTransform.__repr__ = lambda self: \
         'galsim._galsim.SBTransform(%r, %r, %r, %r, %r, %r, %r, %r)'%self.__getinitargs__()

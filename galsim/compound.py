@@ -182,7 +182,6 @@ class Sum(galsim.GSObject):
 
 _galsim.SBAdd.__getinitargs__ = lambda self: (self.getObjs(), self.getGSParams())
 _galsim.SBAdd.__getstate__ = lambda self: None
-_galsim.SBAdd.__setstate__ = lambda self, state: 1
 _galsim.SBAdd.__repr__ = lambda self: \
         'galsim._galsim.SBAdd(%r, %r)'%self.__getinitargs__()
 
@@ -422,7 +421,6 @@ class Convolution(galsim.GSObject):
 _galsim.SBConvolve.__getinitargs__ = lambda self: (
         self.getObjs(), self.isRealSpace(), self.getGSParams())
 _galsim.SBConvolve.__getstate__ = lambda self: None
-_galsim.SBConvolve.__setstate__ = lambda self, state: 1
 _galsim.SBConvolve.__repr__ = lambda self: \
         'galsim._galsim.SBConvolve(%r, %r, %r)'%self.__getinitargs__()
 
@@ -521,7 +519,6 @@ class Deconvolution(galsim.GSObject):
 
 _galsim.SBDeconvolve.__getinitargs__ = lambda self: (self.getObj(), self.getGSParams())
 _galsim.SBDeconvolve.__getstate__ = lambda self: None
-_galsim.SBDeconvolve.__setstate__ = lambda self, state: 1
 _galsim.SBDeconvolve.__repr__ = lambda self: \
         'galsim._galsim.SBDeConvolve(%r, %r)'%self.__getinitargs__()
 
@@ -656,7 +653,6 @@ class AutoConvolution(galsim.GSObject):
 _galsim.SBAutoConvolve.__getinitargs__ = lambda self: (
         self.getObj(), self.isRealSpace(), self.getGSParams())
 _galsim.SBAutoConvolve.__getstate__ = lambda self: None
-_galsim.SBAutoConvolve.__setstate__ = lambda self, state: 1
 _galsim.SBAutoConvolve.__repr__ = lambda self: \
         'galsim._galsim.SBAutoConvolve(%r, %r, %r)'%self.__getinitargs__()
 
@@ -796,7 +792,6 @@ class AutoCorrelation(galsim.GSObject):
 _galsim.SBAutoCorrelate.__getinitargs__ = lambda self: (
         self.getObj(), self.isRealSpace(), self.getGSParams())
 _galsim.SBAutoCorrelate.__getstate__ = lambda self: None
-_galsim.SBAutoCorrelate.__setstate__ = lambda self, state: 1
 _galsim.SBAutoCorrelate.__repr__ = lambda self: \
         'galsim._galsim.SBAutoCorrelate(%r, %r, %r)'%self.__getinitargs__()
 
@@ -899,6 +894,5 @@ class FourierSqrtProfile(galsim.GSObject):
 
 _galsim.SBFourierSqrt.__getinitargs__ = lambda self: (self.getObj(), self.getGSParams())
 _galsim.SBFourierSqrt.__getstate__ = lambda self: None
-_galsim.SBFourierSqrt.__setstate__ = lambda self, state: 1
 _galsim.SBFourierSqrt.__repr__ = lambda self: \
         'galsim._galsim.SBFourierSqrt(%r, %r)'%self.__getinitargs__()

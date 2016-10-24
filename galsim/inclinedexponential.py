@@ -147,6 +147,5 @@ _galsim.SBInclinedExponential.__getinitargs__ = lambda self: (
         self.getInclination(), self.getScaleRadius(), self.getScaleHeight(), self.getFlux(),
         self.getGSParams())
 _galsim.SBInclinedExponential.__getstate__ = lambda self: None
-_galsim.SBInclinedExponential.__setstate__ = lambda self, state: 1
 _galsim.SBInclinedExponential.__repr__ = lambda self: \
         'galsim._galsim.SBInclinedExponential(%r, %r, %r, %r, %r)' % self.__getinitargs__()
