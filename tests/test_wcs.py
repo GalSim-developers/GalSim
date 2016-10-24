@@ -651,6 +651,21 @@ def do_nonlocal_wcs(wcs, ufunc, vfunc, name, test_pickle=True):
             except NotImplementedError:
                 pass
 
+            # Since these postage stamps are odd, should get the same answer if we draw
+            # using the true center or not.
+            world_profile.drawImage(im1, method='no_pixel', use_true_center=False)
+            image_profile.drawImage(im2, method='no_pixel', use_true_center=True)
+            np.testing.assert_array_almost_equal(
+                    im1.array, im2.array, digits,
+                    'world_profile at center() and image_profile differed when drawn for '+name)
+
+            # Can also pass in wcs as a parameter to drawImage.
+            world_profile.drawImage(im1, method='no_pixel', wcs=wcs)
+            image_profile.drawImage(im2, method='no_pixel')
+            np.testing.assert_array_almost_equal(
+                    im1.array, im2.array, digits,
+                    'world_profile with given wcs and image_profile differed when drawn for '+name)
+
 
 def do_celestial_wcs(wcs, name, test_pickle=True):
     # It's a bit harder to test WCS functions that return a CelestialCoord, since

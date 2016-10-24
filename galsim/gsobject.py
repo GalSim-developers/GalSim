@@ -533,7 +533,7 @@ class GSObject(object):
     @property
     def flux(self): return self.getFlux()
     @property
-    def gsparams(self): return self.SBProfile.getGSParams()
+    def gsparams(self): return self.getGSParams()
 
     def xValue(self, *args, **kwargs):
         """Returns the value of the object at a chosen 2D position in real space.
@@ -901,8 +901,8 @@ class GSObject(object):
             obj_cen = image.bounds.center()
             # Convert from PositionI to PositionD
             obj_cen = galsim.PositionD(obj_cen.x, obj_cen.y)
-        if offset:
-            obj_cen += offset
+        # _parse_offset has already turned offset=None into PositionD(0,0), so it is safe to add.
+        obj_cen += offset
         return wcs.local(image_pos=obj_cen)
 
     def _parse_offset(self, offset):
