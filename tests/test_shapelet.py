@@ -173,6 +173,8 @@ def test_shapelet_properties():
 
     # Check picklability
     do_pickle(shapelet)
+    do_pickle(shapelet.SBProfile)
+    do_pickle(shapelet.SBProfile.getBVec())
 
 
 @timer
@@ -191,7 +193,7 @@ def test_shapelet_fit():
 
         sigma = 1.2  # Match half-light-radius as a decent first approximation.
         shapelet = galsim.FitShapelet(sigma, 10, im1, normalization=norm)
-        print('fitted shapelet coefficients = ',shapelet.bvec)
+        #print('fitted shapelet coefficients = ',shapelet.bvec)
 
         # Check flux
         print('flux = ',shapelet.getFlux(),'  cf. ',flux)
@@ -211,10 +213,27 @@ def test_shapelet_fit():
         # Check that images are close to the same:
         print('norm(diff) = ',np.sum((im1.array-im2.array)**2))
         print('norm(im) = ',np.sum(im1.array**2))
-        assert np.sum((im1.array-im2.array)**2) < 1.e-3 * np.sum(im1.array**2)
+        print('max(diff) = ',np.max(np.abs(im1.array-im2.array)))
+        print('max(im) = ',np.max(np.abs(im1.array)))
+        peak_scale = np.max(np.abs(im1.array))*3  # Check agreement to within 3% of peak value.
+        np.testing.assert_almost_equal(im2.array/peak_scale, im1.array/peak_scale, decimal=2,
+                err_msg="Shapelet version not a good match to original")
 
         # Remeasure -- should now be very close to the same.
         shapelet2 = galsim.FitShapelet(sigma, 10, im2, normalization=norm)
+        np.testing.assert_equal(shapelet.sigma, shapelet2.sigma,
+                err_msg="Second fitted shapelet has the wrong sigma")
+        np.testing.assert_equal(shapelet.order, shapelet2.order,
+                err_msg="Second fitted shapelet has the wrong order")
+        np.testing.assert_almost_equal(shapelet.bvec, shapelet2.bvec, 6,
+                err_msg="Second fitted shapelet coefficients do not match original")
+
+        # Test drawing off center
+        im2 = im1.copy()
+        offset = galsim.PositionD(0.3,1.4)
+        shapelet.drawImage(im2, method=method, offset=offset)
+        shapelet2 = galsim.FitShapelet(sigma, 10, im2, normalization=norm,
+                                       center=im2.trueCenter() + offset)
         np.testing.assert_equal(shapelet.sigma, shapelet2.sigma,
                 err_msg="Second fitted shapelet has the wrong sigma")
         np.testing.assert_equal(shapelet.order, shapelet2.order,
@@ -248,6 +267,16 @@ def test_shapelet_adjustments():
     ref_im = galsim.ImageF(nx,ny)
     ref_shapelet.drawImage(ref_im, scale=scale)
 
+    # Test PQ and NM access
+    np.testing.assert_equal(ref_shapelet.getPQ(0,0), (bvec[0],0))
+    np.testing.assert_equal(ref_shapelet.getPQ(1,1), (bvec[5],0))
+    np.testing.assert_equal(ref_shapelet.getPQ(1,2), (bvec[8],-bvec[9]))
+    np.testing.assert_equal(ref_shapelet.getPQ(3,2), (bvec[19],bvec[20]))
+    np.testing.assert_equal(ref_shapelet.getNM(0,0), (bvec[0],0))
+    np.testing.assert_equal(ref_shapelet.getNM(2,0), (bvec[5],0))
+    np.testing.assert_equal(ref_shapelet.getNM(3,-1), (bvec[8],-bvec[9]))
+    np.testing.assert_equal(ref_shapelet.getNM(5,1), (bvec[19],bvec[20]))
+
     # Test that the Shapelet withFlux does the same thing as the GSObject withFlux
     gsref_shapelet = galsim.GSObject(ref_shapelet)  # Make it opaque to the Shapelet versions
     gsref_shapelet.withFlux(23.).drawImage(ref_im, method='no_pixel')
@@ -279,6 +308,13 @@ def test_shapelet_adjustments():
     np.testing.assert_array_almost_equal(
         im.array, ref_im.array, 6,
         err_msg="Shapelet dilate disagrees with GSObject dilate")
+
+    # Test that the Shapelet expand does the same thing as the GSObject expand
+    gsref_shapelet.expand(1.7).drawImage(ref_im, method='no_pixel')
+    shapelet.expand(1.7).drawImage(im, method='no_pixel')
+    np.testing.assert_array_almost_equal(
+        im.array, ref_im.array, 6,
+        err_msg="Shapelet expand disagrees with GSObject expand")
 
     # Test that the Shapelet magnify does the same thing as the GSObject magnify
     gsref_shapelet.magnify(0.8).drawImage(ref_im, method='no_pixel')
