@@ -1237,8 +1237,8 @@ class DeVaucouleurs(GSObject):
 
     def __init__(self, half_light_radius=None, scale_radius=None, flux=1., trunc=0.,
                  flux_untruncated=False, gsparams=None):
-        GSObject.__init__(self, _galsim.SBDeVaucouleurs(scale_radius, half_light_radius, flux,
-                                                        trunc, flux_untruncated, gsparams))
+        GSObject.__init__(self, _galsim.SBSersic(4, scale_radius, half_light_radius, flux,
+                                                 trunc, flux_untruncated, gsparams))
         self._gsparams = gsparams
 
     def getHalfLightRadius(self):
@@ -1286,12 +1286,6 @@ class DeVaucouleurs(GSObject):
             s += ', flux=%s'%self.flux
         s += ')'
         return s
-
-_galsim.SBDeVaucouleurs.__getinitargs__ = lambda self: (
-        self.getScaleRadius(), None, self.getFlux(), self.getTrunc(), False, self.getGSParams())
-_galsim.SBDeVaucouleurs.__getstate__ = lambda self: None
-_galsim.SBDeVaucouleurs.__repr__ = lambda self: \
-        'galsim._galsim.SBDeVaucouleurs(%r, %r, %r, %r, %r, %r)'%self.__getinitargs__()
 
 
 class Spergel(GSObject):
