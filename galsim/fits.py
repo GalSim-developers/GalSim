@@ -68,7 +68,7 @@ def _parse_compression(compression, file_name):
 class _ReadFile:
 
     # There are several methods available for each of gzip and bzip2.  Each is its own function.
-    def gunzip_call(self, file):
+    def gunzip_call(self, file): # pragma: no cover
         # cf. http://bugs.python.org/issue7471
         import subprocess
         from io import StringIO
@@ -121,7 +121,7 @@ class _ReadFile:
         hdu_list = pyfits.open(tmp)
         return hdu_list, tmp
 
-    def bunzip2_call(self, file):
+    def bunzip2_call(self, file): # pragma: no cover
         import subprocess
         from io import StringIO
         from galsim._pyfits import pyfits
@@ -479,8 +479,10 @@ def closeHDUList(hdu_list, fin):
     """If necessary, close the file handle that was opened to read in the `hdu_list`"""
     hdu_list.close()
     if fin: 
-        if isinstance(fin, str):
+        if isinstance(fin, str): # pragma: no cover
             # In this case, it is a file name that we need to delete.
+            # Note: This is relevant for the _tmp versions that are not run on Travis, so
+            # don't include this bit in the coverage report.
             import os
             os.remove(fin)
         else:
@@ -1243,10 +1245,7 @@ class FitsHeader(object):
 
     def __setitem__(self, key, value):
         # pyfits doesn't like getting bytes in python 3, so decode if appropriate
-        try:
-            key = str(key.decode())
-        except:
-            pass
+        key = str(key.decode())
         try:
             value = str(value.decode())
         except:
