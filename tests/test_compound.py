@@ -737,6 +737,23 @@ def test_autoconvolve():
             myImg1.array, myImg2.array, 4,
             err_msg="Using AutoConvolve with GSParams() disagrees with expected result")
 
+    check_basic(conv, "AutoConvolve(Moffat)")
+
+    cen = galsim.PositionD(0,0)
+    np.testing.assert_equal(conv2.centroid(), cen)
+    np.testing.assert_almost_equal(conv2.getFlux(), psf.flux**2)
+    np.testing.assert_almost_equal(conv2.flux, psf.flux**2)
+    np.testing.assert_array_less(conv2.xValue(cen), conv2.maxSB())
+
+    # Check picklability
+    do_pickle(conv2.SBProfile, lambda x: (repr(x.getObj()), x.isRealSpace(), x.getGSParams()))
+    do_pickle(conv2, lambda x: x.drawImage(method='no_pixel'))
+    do_pickle(conv2)
+    do_pickle(conv2.SBProfile)
+
+    # Test photon shooting.
+    do_shoot(conv2,myImg2,"AutoConvolve(Moffat)")
+
     # For a symmetric profile, AutoCorrelate is the same thing:
     conv2 = galsim.AutoCorrelate(psf)
     conv2.drawImage(myImg2, method='no_pixel')
@@ -763,11 +780,6 @@ def test_autoconvolve():
     np.testing.assert_almost_equal(conv2.flux, psf.flux**2)
     np.testing.assert_array_less(conv2.xValue(cen), conv2.maxSB())
 
-    check_basic(conv, "AutoConvolve(Moffat)")
-
-    # Test photon shooting.
-    do_shoot(conv2,myImg2,"AutoConvolve(Moffat)")
-
     # Also check AutoConvolve with an asymmetric profile.
     # (AutoCorrelate with this profile is done below...)
     obj1 = galsim.Gaussian(sigma=3., flux=4).shift(-0.2, -0.4)
@@ -790,12 +802,6 @@ def test_autoconvolve():
     np.testing.assert_array_less(autoconv.xValue(cen), autoconv.maxSB())
 
     check_basic(autoconv, "AutoConvolve(asym)")
-
-    # Check picklability
-    do_pickle(conv2.SBProfile, lambda x: (repr(x.getObj()), x.isRealSpace(), x.getGSParams()))
-    do_pickle(conv2, lambda x: x.drawImage(method='no_pixel'))
-    do_pickle(conv2)
-    do_pickle(conv2.SBProfile)
 
 
 @timer

@@ -26,7 +26,8 @@ for Class in (_galsim.PositionD, _galsim.PositionI):
     Class.__repr__ = lambda self: "galsim.%s(x=%r, y=%r)"%(self.__class__.__name__, self.x, self.y)
     Class.__str__ = lambda self: "galsim.%s(%s,%s)"%(self.__class__.__name__, self.x, self.y)
     Class.__getinitargs__ = lambda self: (self.x, self.y)
-    Class.__eq__ = lambda self, other: self.x == other.x and self.y == other.y
+    Class.__eq__ = lambda self, other: (
+            isinstance(other, self.__class__) and self.x == other.x and self.y == other.y)
     Class.__ne__ = lambda self, other: not self.__eq__(other)
     Class.__hash__ = lambda self: hash(repr(self))
 
