@@ -109,6 +109,8 @@ def test_convolve():
                 myImg.array, savedImg.array, 4,
                 err_msg="Using GSObject Convolve([psf,pixel]) with GSParams() disagrees with"
                 "expected result")
+    # Clear the warnings registry for later so we can test that appropriate warnings are raised.
+    galsim.Convolution.__init__.__globals__['__warningregistry__'].clear()
 
     cen = galsim.PositionD(0,0)
     np.testing.assert_equal(conv.centroid(), cen)
@@ -324,6 +326,46 @@ def test_realspace_convolve():
     do_pickle(conv, lambda x: x.drawImage(method='sb'))
     do_pickle(conv)
     do_pickle(conv.SBProfile)
+
+    # Check some warnings that should be raised
+
+    try:
+        # More than 2 with only hard edges gives a warning either way. (Different warnings though.)
+        np.testing.assert_warns(UserWarning, galsim.Convolve, [psf, psf, pixel])
+        np.testing.assert_warns(UserWarning, galsim.Convolve, [psf, psf, pixel], real_space=False)
+        np.testing.assert_warns(UserWarning, galsim.Convolve, [psf, psf, pixel], real_space=True)
+        # 2 with hard edges gives a warning if we ask it not to use real_space
+        np.testing.assert_warns(UserWarning, galsim.Convolve, [psf, pixel], real_space=False)
+        # >2 of any kind give a warning if we ask it to use real_space
+        g = galsim.Gaussian(sigma=2)
+        np.testing.assert_warns(UserWarning, galsim.Convolve, [g, g, g], real_space=True)
+        # non-analytic profiles cannot do real_space
+        d = galsim.Deconvolve(galsim.Gaussian(sigma=2))
+        np.testing.assert_warns(UserWarning, galsim.Convolve, [g, d], real_space=True)
+    except ImportError:
+        pass
+
+    # Repeat some of the above for AutoConvolve and AutoCorrelate
+    conv = galsim.AutoConvolve(psf,real_space=True)
+    check_basic(conv, "AutoConvolve Truncated Moffat", approx_maxsb=True)
+    do_kvalue(conv,img,"AutoConvolve Truncated Moffat")
+    do_pickle(conv)
+    do_pickle(conv.SBProfile)
+
+    conv = galsim.AutoCorrelate(psf,real_space=True)
+    check_basic(conv, "AutoCorrelate Truncated Moffat", approx_maxsb=True)
+    do_kvalue(conv,img,"AutoCorrelate Truncated Moffat")
+    do_pickle(conv)
+    do_pickle(conv.SBProfile)
+
+    try:
+        np.testing.assert_warns(UserWarning, galsim.AutoConvolve, psf, real_space=False)
+        np.testing.assert_warns(UserWarning, galsim.AutoConvolve, d, real_space=True)
+        np.testing.assert_warns(UserWarning, galsim.AutoCorrelate, psf, real_space=False)
+        np.testing.assert_warns(UserWarning, galsim.AutoCorrelate, d, real_space=True)
+    except ImportError:
+        pass
+
 
 
 @timer
