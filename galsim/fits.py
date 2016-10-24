@@ -1179,8 +1179,9 @@ class FitsHeader(object):
                     file_name = os.path.join(dir,file_name)
                 with open(file_name,"r") as fin:
                     lines = [ line.strip() for line in fin ]
-                if 'END' in lines:  # Don't include END (or later lines)
-                    lines = lines[:lines.index('END')]
+                # Don't include END (or later lines)
+                end = lines.index('END') if 'END' in lines else len(lines)
+                lines = lines[:end]
                 # Later pyfits versions changed this to a class method, so you can write
                 # pyfits.Card.fromstring(text).  But in older pyfits versions, it was
                 # a regular method.  This syntax should work in both cases.
