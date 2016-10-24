@@ -109,8 +109,6 @@ def test_convolve():
                 myImg.array, savedImg.array, 4,
                 err_msg="Using GSObject Convolve([psf,pixel]) with GSParams() disagrees with"
                 "expected result")
-    # Clear the warnings registry for later so we can test that appropriate warnings are raised.
-    galsim.Convolution.__init__.__globals__['__warningregistry__'].clear()
 
     cen = galsim.PositionD(0,0)
     np.testing.assert_equal(conv.centroid(), cen)
@@ -126,6 +124,8 @@ def test_convolve():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         do_shoot(conv,myImg,"Moffat * Pixel")
+    # Clear the warnings registry for later so we can test that appropriate warnings are raised.
+    galsim.Convolution.__init__.__globals__['__warningregistry__'].clear()
 
     # Convolution of just one argument should be equivalent to that argument.
     single = galsim.Convolve(psf)
@@ -256,6 +256,8 @@ def test_shearconvolve():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         do_shoot(conv,myImg,"sheared Gaussian * Pixel")
+    # Clear the warnings registry for later so we can test that appropriate warnings are raised.
+    galsim.Convolution.__init__.__globals__['__warningregistry__'].clear()
 
 
 @timer
@@ -940,6 +942,80 @@ def test_sum_transform():
         do_pickle(gal1)
         do_pickle(gal2)  # And this.
 
+def test_compound_noise():
+    """Test that noise propagation works properly for compount objects.
+    """
+    obj1 = galsim.Gaussian(sigma=1.7)
+    obj2 = galsim.Gaussian(sigma=2.3)
+    obj1.noise = galsim.UncorrelatedNoise(variance=0.3, scale=0.2)
+    obj2.noise = galsim.UncorrelatedNoise(variance=0.5, scale=0.2)
+    obj3 = galsim.Gaussian(sigma=2.9)
+
+    # Sum adds the variance of the components
+    sum2 = galsim.Sum([obj1,obj2])
+    np.testing.assert_almost_equal(sum2.noise.getVariance(), 0.8,
+            err_msg = "Sum of two objects did not add noise varinace")
+    sum2 = galsim.Sum([obj1,obj3])
+    np.testing.assert_almost_equal(sum2.noise.getVariance(), 0.3,
+            err_msg = "Sum of two objects did not add noise varinace")
+    sum2 = galsim.Sum([obj2,obj3])
+    np.testing.assert_almost_equal(sum2.noise.getVariance(), 0.5,
+            err_msg = "Sum of two objects did not add noise varinace")
+    sum3 = galsim.Sum([obj1,obj2,obj3])
+    np.testing.assert_almost_equal(sum3.noise.getVariance(), 0.8,
+            err_msg = "Sum of three objects did not add noise varinace")
+    sum3 = obj1 + obj2 + obj3
+    np.testing.assert_almost_equal(sum3.noise.getVariance(), 0.8,
+            err_msg = "Sum of three objects did not add noise varinace")
+
+    # Adding noise objects with different WCSs will raise a warning.
+    obj4 = galsim.Gaussian(sigma=3.3)
+    obj4.noise = galsim.UncorrelatedNoise(variance=0.3, scale=0.8)
+    try:
+        np.testing.assert_warns(UserWarning, galsim.Sum, [obj1, obj4])
+    except:
+        pass
+
+    # Convolve convolves the noise from a single component
+    conv2 = galsim.Convolution([obj1,obj3])
+    noise = galsim.Convolve([obj1.noise._profile, obj3, obj3])
+    # xValue is too slow here.  Use drawImage to get variance.  (Just as CorrelatedNoise does.)
+    variance = noise.drawImage(nx=1, ny=1, scale=1., method='sb')(1,1)
+    np.testing.assert_almost_equal(conv2.noise.getVariance(), variance,
+            err_msg = "Convolution of two objects did not correctly propagate noise varinace")
+    conv2 = galsim.Convolution([obj2,obj3])
+    noise = galsim.Convolve([obj2.noise._profile, obj3, obj3])
+    variance = noise.drawImage(nx=1, ny=1, scale=1., method='sb')(1,1)
+    np.testing.assert_almost_equal(conv2.noise.getVariance(), variance,
+            err_msg = "Convolution of two objects did not correctly propagate noise varinace")
+
+    # Convolution of multiple objects with noise attributes raises a warning and fails
+    # to propagate noise properly.  (It takes the input noise from the first one.)
+    try:
+        conv2 = np.testing.assert_warns(UserWarning, galsim.Convolution, [obj1, obj2])
+        conv3 = np.testing.assert_warns(UserWarning, galsim.Convolution, [obj1, obj2, obj3])
+        # Other types don't propagate noise and give a warning about it.
+        np.testing.assert_warns(UserWarning, galsim.Deconvolve, obj1)
+        np.testing.assert_warns(UserWarning, galsim.AutoConvolve, obj1)
+        np.testing.assert_warns(UserWarning, galsim.AutoCorrelate, obj1)
+        np.testing.assert_warns(UserWarning, galsim.FourierSqrtProfile, obj1)
+    except:
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            conv2 = galsim.Convolution([obj1,obj2])
+            conv3 = galsim.Convolution([obj1,obj2,obj3])
+
+    obj2.noise = None  # Remove obj2 noise for the rest.
+    noise = galsim.Convolve([obj1.noise._profile, obj2, obj2])
+    variance = noise.drawImage(nx=1, ny=1, scale=1., method='sb')(1,1)
+    np.testing.assert_almost_equal(conv2.noise.getVariance(), variance,
+            err_msg = "Convolution of two objects did not correctly propagate noise varinace")
+    noise = galsim.Convolve([obj1.noise._profile, obj2, obj2, obj3, obj3])
+    variance = noise.drawImage(nx=1, ny=1, scale=1., method='sb')(1,1)
+    np.testing.assert_almost_equal(conv3.noise.getVariance(), variance,
+            err_msg = "Convolution of three objects did not correctly propagate noise varinace")
+
 
 if __name__ == "__main__":
     test_convolve()
@@ -956,3 +1032,4 @@ if __name__ == "__main__":
     test_ne()
     test_fourier_sqrt()
     test_sum_transform()
+    test_compound_noise()

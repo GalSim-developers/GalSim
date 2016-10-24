@@ -857,7 +857,7 @@ class _BaseCorrelatedNoise(object):
                 # For later ones, rotate by 2pi/order, and draw it back into a new image.
                 tmp_obj = tmp_obj.rotate(2.*np.pi*galsim.radians/order)
                 tmp_im = galsim.Image(tmp_arr.shape[1], tmp_arr.shape[0], scale=1)
-                tmp_obj.drawImage(tmp_im, scale=1, method='no_pixel')
+                tmp_obj.drawImage(tmp_im, scale=1, method='sb')
                 final_arr[tmp_im.array > final_arr] = tmp_im.array[tmp_im.array > final_arr]
 
         # Now simply take the halfcomplex, compact stored part that we are interested in,

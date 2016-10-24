@@ -141,7 +141,7 @@ class Sum(galsim.GSObject):
         # noises (they add like variances) to the final sum.
         noise = None
         for obj in args:
-            if hasattr(obj,'noise'):
+            if hasattr(obj,'noise') and obj.noise is not None:
                 if noise is None:
                     noise = obj.noise
                 else:
@@ -355,12 +355,11 @@ class Convolution(galsim.GSObject):
         # More than one is not allowed.
         noise = None
         for obj in args:
-            if hasattr(obj,'noise'):
+            if hasattr(obj,'noise') and obj.noise is not None:
                 if noise is not None:
                     import warnings
                     warnings.warn("Unable to propagate noise in galsim.Convolution when multiple "+
                                   "objects have noise attribute")
-                    noise = None
                     break
                 noise = obj.noise
                 others = [ obj2 for obj2 in args if obj2 is not obj ]
@@ -485,7 +484,7 @@ class Deconvolution(galsim.GSObject):
 
         sbp = galsim._galsim.SBDeconvolve(obj.SBProfile, gsparams)
         galsim.GSObject.__init__(self, sbp)
-        if hasattr(obj,'noise'):
+        if hasattr(obj,'noise') and obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.Deconvolution")
 
@@ -610,7 +609,7 @@ class AutoConvolution(galsim.GSObject):
 
         sbp = galsim._galsim.SBAutoConvolve(obj.SBProfile, real_space, gsparams)
         galsim.GSObject.__init__(self, sbp)
-        if hasattr(obj,'noise'):
+        if hasattr(obj,'noise') and obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.AutoConvolution")
 
@@ -748,8 +747,7 @@ class AutoCorrelation(galsim.GSObject):
 
         sbp = galsim._galsim.SBAutoCorrelate(obj.SBProfile, real_space, gsparams)
         galsim.GSObject.__init__(self, sbp)
-
-        if hasattr(obj,'noise'):
+        if hasattr(obj,'noise') and obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.AutoCorrelation")
 
@@ -862,7 +860,7 @@ class FourierSqrtProfile(galsim.GSObject):
 
         sbp = galsim._galsim.SBFourierSqrt(obj.SBProfile, gsparams)
         galsim.GSObject.__init__(self, sbp)
-        if hasattr(obj,'noise'):
+        if hasattr(obj,'noise') and obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.FourierSqrtProfile")
 
