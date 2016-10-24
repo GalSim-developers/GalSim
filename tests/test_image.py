@@ -1759,13 +1759,13 @@ def test_Image_resize():
 
             # im1 starts with basic constructor with a given size
             array_type = types[i]
-            im1 = galsim.Image(5,5, dtype=array_type)
+            im1 = galsim.Image(5,5, dtype=array_type, scale=0.1)
 
             # im2 stars with null constructor
-            im2 = galsim.Image(dtype=array_type)
+            im2 = galsim.Image(dtype=array_type, scale=0.2)
 
             # im3 is a view into a larger image
-            im3_full = galsim.Image(10,10, dtype=array_type, init_value=23)
+            im3_full = galsim.Image(10,10, dtype=array_type, init_value=23, scale=0.3)
             im3 = im3_full.subImage(galsim.BoundsI(1,6,1,6))
 
             # Make sure at least one of the _arrays is instantiated.  This isn't required,
@@ -1782,7 +1782,7 @@ def test_Image_resize():
             b = galsim.BoundsI(xmin, xmax, ymin, ymax)
             im1.resize(b)
             im2.resize(b)
-            im3.resize(b)
+            im3.resize(b, wcs=galsim.PixelScale(0.33))
 
             np.testing.assert_equal(
                 b, im1.bounds, err_msg="im1 has wrong bounds after resize to b = %s"%b)
@@ -1796,6 +1796,12 @@ def test_Image_resize():
                 im2.array.shape, shape, err_msg="im2.array.shape wrong after resize")
             np.testing.assert_array_equal(
                 im3.array.shape, shape, err_msg="im3.array.shape wrong after resize")
+            np.testing.assert_equal(
+                im1.scale, 0.1, err_msg="im1 has wrong scale after resize to b = %s"%b)
+            np.testing.assert_equal(
+                im2.scale, 0.2, err_msg="im2 has wrong scale after resize to b = %s"%b)
+            np.testing.assert_equal(
+                im3.scale, 0.33, err_msg="im3 has wrong scale after resize to b = %s"%b)
 
             # Fill the images with random numbers
             for x in range(xmin,xmax+1):
