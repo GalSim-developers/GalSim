@@ -81,13 +81,11 @@ def _new_PositionI_init(self, *args, **kwargs):
         if any([a != int(a) for a in args]):
             raise ValueError("PositionI must be initialized with integer values")
         _orig_PositionI_init(self, *[int(a) for a in args])
-    elif len(args) == 0 and len(kwargs) == 2:
+    else:
         x = kwargs.pop('x')
         y = kwargs.pop('y')
         if any([a != int(a) for a in [x,y]]):
             raise ValueError("PositionI must be initialized with integer values")
-        _orig_PositionI_init(self, int(x), int(y))
-    else:
-        _orig_PositionI_init(self, *args, **kwargs)
+        _orig_PositionI_init(self, int(x), int(y), **kwargs)
 PositionI.__init__ = _new_PositionI_init
 
