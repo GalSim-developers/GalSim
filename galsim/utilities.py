@@ -244,9 +244,7 @@ def rand_arr(shape, deviate):
 def convert_interpolant(interpolant):
     """Convert a given interpolant to an Interpolant if it is given as a string.
     """
-    if interpolant is None:
-        return None  # caller is responsible for setting a default if desired.
-    elif isinstance(interpolant, galsim.Interpolant):
+    if isinstance(interpolant, galsim.Interpolant):
         return interpolant
     else:
         # Will raise an appropriate exception if this is invalid.
