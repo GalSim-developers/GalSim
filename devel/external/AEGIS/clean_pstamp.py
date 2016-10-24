@@ -110,10 +110,10 @@ def get_snr(image_data, b_var, hlr):
     """Returns SNr of shape measurement"""
     img = galsim.Image(image_data)
     try:
-        new_params = galsim.hsm.HSMParams(max_amoment=5.0e15, max_mom2_iter=2000000,
+        new_params = galsim.hsm.HSMParams(max_amoment=5.0e15, max_mom2_iter=20000,
                                           convergence_threshold=1.e-5)
         res = galsim.hsm.FindAdaptiveMom(img, hsmparams=new_params,
-                                         guess_sig=hlr)
+                                         guess_sig=hlr*2.5)
         aperture_noise = float(np.sqrt(b_var*2.*np.pi*(res.moments_sigma**2)))
         sn_ellip_gauss = res.moments_amp / aperture_noise
         print 'RES', res.moments_amp, res.moments_sigma
