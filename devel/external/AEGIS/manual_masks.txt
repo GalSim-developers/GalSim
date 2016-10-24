@@ -9,8 +9,8 @@ SEG FILTER AX BX CX DX AY BY CY DY FILE
 0g f814w 4679 4722 4839 4791 6716 5037 5037 6427 /nfs/slac/g/ki/ki19/deuce/AEGIS/unzip/f814w/EGS_10134_0g_acs_wfc_f814w_30mas_unrot_drz.fits
 0g f606w 4763 4166 4799 5245 5169 4643 3983 4670 /nfs/slac/g/ki/ki19/deuce/AEGIS/unzip/f606w/EGS_10134_0g_acs_wfc_f606w_30mas_unrot_drz.fits
 0g f814w 4763 4166 4799 5245 5169 4643 3983 4670 /nfs/slac/g/ki/ki19/deuce/AEGIS/unzip/f814w/EGS_10134_0g_acs_wfc_f814w_30mas_unrot_drz.fits
-0g f606w 1848 1839 7001 7010 4563 4509 4732 4786 /nfs/slac/g/ki/ki19/deuce/AEGIS/unzip/f606w/EGS_10134_0g_acs_wfc_f606w_30mas_unrot_drz.fits
-0g f814w 1848 1839 7001 7010 4563 4509 4732 4786 /nfs/slac/g/ki/ki19/deuce/AEGIS/unzip/f814w/EGS_10134_0g_acs_wfc_f814w_30mas_unrot_drz.fits
+0g f606w 1147 1120 7001 7010 4527 4493 4732 4786 /nfs/slac/g/ki/ki19/deuce/AEGIS/unzip/f606w/EGS_10134_0g_acs_wfc_f606w_30mas_unrot_drz.fits
+0g f814w 1147 1120 7001 7010 4527 4493 4732 4786 /nfs/slac/g/ki/ki19/deuce/AEGIS/unzip/f814w/EGS_10134_0g_acs_wfc_f814w_30mas_unrot_drz.fits
 0g f606w 4781 4895 4931 4815 4010 1226 1244 4035 /nfs/slac/g/ki/ki19/deuce/AEGIS/unzip/f606w/EGS_10134_0g_acs_wfc_f606w_30mas_unrot_drz.fits
 0g f814w 4781 4895 4931 4815 4010 1226 1244 4035 /nfs/slac/g/ki/ki19/deuce/AEGIS/unzip/f814w/EGS_10134_0g_acs_wfc_f814w_30mas_unrot_drz.fits
 0t f606w 5679 5679 6710 6710 1173 2166 2160 1173 /nfs/slac/g/ki/ki19/deuce/AEGIS/unzip/f606w/EGS_10134_0t_acs_wfc_f606w_30mas_unrot_drz.fits
