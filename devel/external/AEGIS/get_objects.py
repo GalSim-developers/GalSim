@@ -433,6 +433,8 @@ class GalaxyCatalog:
             catalog = self.remove_edge(catalog)
             # remove objects in diffraction spike
             diff_spike_params = self.params.spike_params[filt]
+            # magnitude cutoff of saturated stars is the horizontal line 
+            # in star-galaxy separation line
             mag_cutoff =  self.params.star_galaxy_params[filt][0]
             catalog = self.diffraction_mask_cleanup(catalog, diff_spike_params,
                                                     mag_cutoff= mag_cutoff)
@@ -639,7 +641,7 @@ if __name__ == '__main__':
                         [Default: [(0.0350087,64.0863,40.0,2.614),  \
                         (0.0367020,77.7674,40.0,2.180)]]")
     parser.add_argument('--star_galaxy_params', 
-                        default= [(19.5, 15.508, 0.945), (18.9, 14.955, 0.98)],
+                        default= [(19.5, 15.708, 0.945), (18.9, 14.955, 0.98)],
                         help="Star galaxy seperation line parametrs \
                         [Default:(x_div, y_div, slope)]")
     parser.add_argument('--zero_point_mag', 
