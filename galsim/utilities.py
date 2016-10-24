@@ -86,7 +86,7 @@ def g1g2_to_e1e2(g1, g2):
     elif gsq == 0.:
         return 0., 0.
     else:
-        raise ValueError("Input |g|^2 < 0, cannot convert.")
+        raise ValueError("Input |g|^2 > 0, cannot convert.")
 
 def rotate_xy(x, y, theta):
     """Rotates points in the xy-Cartesian plane counter-clockwise through an angle `theta` about the
