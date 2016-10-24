@@ -421,20 +421,23 @@ def do_pickle(obj1, func = lambda x : x, irreprable=False):
             elif isinstance(args[i], Integral):
                 newargs[i] = args[i] + 2
             elif isinstance(args[i], Real):
-                newargs[i] = args[i] * 1.01 + 0.01
+                newargs[i] = args[i] * 1.0134 + 0.018374
             elif isinstance(args[i], Complex):
-                newargs[i] = args[i] * (1.01 + 0.01j) + (0.99 - 0.01j)
+                newargs[i] = args[i] * (1.0134 + 0.0193j) + (0.9981 - 0.013439j)
             elif isinstance(args[i], ndarray):
                 if args[i].dtype.kind in ['i','u']:
                     newargs[i] = args[i] * 2 + 1
                 else:
-                    newargs[i] = args[i] * 1.01 + 0.01
+                    newargs[i] = args[i] * 1.0134 + 0.018374
             elif isinstance(args[i], galsim.GSParams):
                 newargs[i] = galsim.GSParams(folding_threshold=5.1e-3, maxk_threshold=1.1e-3)
             elif args[i] is None:
                 continue
             else:
                 #print("Unknown type: {0}\n".format(args[i]))
+                continue
+            # Special case: flux_untruncated doesn't change anything if trunc == 0.
+            if classname == 'SBSersic' and i == 5 and args[4] == 0.:
                 continue
             with galsim.utilities.printoptions(precision=18, threshold=1e6):
                 try:

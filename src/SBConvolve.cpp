@@ -75,7 +75,10 @@ namespace galsim {
         ConstIter sptr = _plist.begin();
         oss << sptr->serialize();
         for (++sptr; sptr!=_plist.end(); ++sptr) oss << ", " << sptr->serialize();
-        oss << "], galsim.GSParams("<<*gsparams<<"))";
+        oss << "], ";
+        if (_real_space) oss << "True, ";
+        else oss << "False, ";
+        oss << "galsim.GSParams("<<*gsparams<<"))";
         return oss.str();
     }
 

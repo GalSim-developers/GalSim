@@ -560,7 +560,7 @@ def test_sersic():
 
     # Check picklability
     do_pickle(sersic.SBProfile,
-              lambda x: (x.getScaleRadius(), x.getTrunc(), x.getFlux(), x.getGSParams()))
+              lambda x: (x.getN(), x.getScaleRadius(), x.getTrunc(), x.getFlux(), x.getGSParams()))
     do_pickle(sersic, lambda x: x.drawImage(method='no_pixel'))
     do_pickle(sersic)
     do_pickle(sersic.SBProfile)

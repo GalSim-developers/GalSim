@@ -1002,10 +1002,11 @@ namespace galsim {
         }
         oss<<"],dtype=float)), ";
 
-        oss << _ktab->getDk() << ", " << stepK() << ", ";
+        oss << _ktab->getDk() << ", " << stepK() << ", " << maxK() << ", ";
         boost::shared_ptr<Interpolant> kinterp = getKInterp();
-        oss << "galsim.Interpolant('"<<kinterp->makeStr()<<"', "<<kinterp->getTolerance()<<"), "
-            << "galsim.GSParams("<<*gsparams<<"))";
+        oss << "galsim.Interpolant('"<<kinterp->makeStr()<<"', "<<kinterp->getTolerance()<<"), ";
+        oss << _xcentroid << ", " << _ycentroid << ", " << _cenIsSet <<", ";
+        oss << "galsim.GSParams("<<*gsparams<<"))";
         return oss.str();
     }
 
