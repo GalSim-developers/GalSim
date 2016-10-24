@@ -1881,9 +1881,9 @@ def test_chromatic_invariant():
     check_chromatic_invariant(autocorr2)
 
     # ChromaticFourierSqrt
-    four1 = galsim.ChromaticFourierSqrtProfile(chrom_airy)
+    four1 = galsim.FourierSqrt(chrom_airy)
     check_chromatic_invariant(four1)
-    four2 = galsim.ChromaticFourierSqrtProfile(chrom_airy * (lambda w: (w/500.0)**0.1))
+    four2 = galsim.FourierSqrt(chrom_airy * (lambda w: (w/500.0)**0.1))
     check_chromatic_invariant(four2)
 
     # And a few transforms too...

@@ -814,7 +814,7 @@ def FourierSqrt(obj, gsparams=None):
     @returns a FourierSqrtProfile or ChromaticFourierSqrtProfile instance as appropriate.
     """
     if isinstance(obj, galsim.ChromaticObject):
-        return galsim.ChromaticFourierSqrt(obj, gsparams=gsparams)
+        return galsim.ChromaticFourierSqrtProfile(obj, gsparams=gsparams)
     elif isinstance(obj, galsim.GSObject):
         return FourierSqrtProfile(obj, gsparams=gsparams)
     else:

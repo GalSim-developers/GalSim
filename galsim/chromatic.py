@@ -2219,12 +2219,13 @@ class ChromaticAutoCorrelation(ChromaticObject):
 class ChromaticFourierSqrtProfile(ChromaticObject):
     """A class for computing the Fourier-space square root of a ChromaticObject.
 
-    The ChromaticFourierSqrt class represents a wavelength-dependent Fourier-space square root of a profile.
+    The ChromaticFourierSqrt class represents a wavelength-dependent Fourier-space square root of
+    a profile.
 
     You may also specify a gsparams argument.  See the docstring for GSParams using
     help(galsim.GSParams) for more information about this option.  Note: if `gsparams` is
-    unspecified (or None), then the ChromaticFourierSqrtProfile instance inherits the same GSParams as
-    the object being operated on.
+    unspecified (or None), then the ChromaticFourierSqrtProfile instance inherits the same GSParams
+    as the object being operated on.
 
     Initialization
     --------------

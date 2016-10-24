@@ -1054,7 +1054,7 @@ def test_compound_noise():
         np.testing.assert_warns(UserWarning, galsim.Deconvolve, obj1)
         np.testing.assert_warns(UserWarning, galsim.AutoConvolve, obj1)
         np.testing.assert_warns(UserWarning, galsim.AutoCorrelate, obj1)
-        np.testing.assert_warns(UserWarning, galsim.FourierSqrtProfile, obj1)
+        np.testing.assert_warns(UserWarning, galsim.FourierSqrt, obj1)
     except:
         import warnings
         with warnings.catch_warnings():
