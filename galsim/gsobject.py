@@ -1595,7 +1595,6 @@ class GSObject(object):
                           "g = %s  "%g)
             return 0, 1.
 
-        #g *= n_photons / iN;
         return iN, g
 
 
