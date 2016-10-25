@@ -148,6 +148,23 @@ def test_convolve():
     check_basic(single, "`convolution' of single Moffat")
     do_pickle(single)
 
+    # Should raise an exception for invalid arguments
+    try:
+        np.testing.assert_raises(TypeError, galsim.Convolve)
+        np.testing.assert_raises(TypeError, galsim.Convolve, myImg)
+        np.testing.assert_raises(TypeError, galsim.Convolve, [myImg])
+        np.testing.assert_raises(TypeError, galsim.Convolve, [psf, myImg])
+        np.testing.assert_raises(TypeError, galsim.Convolve, [psf, psf, myImg])
+        np.testing.assert_raises(TypeError, galsim.Convolve, [psf, psf], realspace=False)
+        np.testing.assert_raises(TypeError, galsim.Convolution)
+        np.testing.assert_raises(TypeError, galsim.Convolution, myImg)
+        np.testing.assert_raises(TypeError, galsim.Convolution, [myImg])
+        np.testing.assert_raises(TypeError, galsim.Convolution, [psf, myImg])
+        np.testing.assert_raises(TypeError, galsim.Convolution, [psf, psf, myImg])
+        np.testing.assert_raises(TypeError, galsim.Convolution, [psf, psf], realspace=False)
+    except ImportError:
+        pass
+
 @timer
 def test_convolve_flux_scaling():
     """Test flux scaling for Convolve.
@@ -578,6 +595,22 @@ def test_add():
     check_basic(single, "`sum' of 1 Gaussian")
     do_pickle(single)
 
+    # Should raise an exception for invalid arguments
+    try:
+        np.testing.assert_raises(TypeError, galsim.Add)
+        np.testing.assert_raises(TypeError, galsim.Add, myImg)
+        np.testing.assert_raises(TypeError, galsim.Add, [myImg])
+        np.testing.assert_raises(TypeError, galsim.Add, [gauss1, myImg])
+        np.testing.assert_raises(TypeError, galsim.Add, [gauss1, gauss1, myImg])
+        np.testing.assert_raises(TypeError, galsim.Add, [gauss1, gauss1], real_space=False)
+        np.testing.assert_raises(TypeError, galsim.Sum)
+        np.testing.assert_raises(TypeError, galsim.Sum, myImg)
+        np.testing.assert_raises(TypeError, galsim.Sum, [myImg])
+        np.testing.assert_raises(TypeError, galsim.Sum, [gauss1, myImg])
+        np.testing.assert_raises(TypeError, galsim.Sum, [gauss1, gauss1, myImg])
+        np.testing.assert_raises(TypeError, galsim.Sum, [gauss1, gauss1], real_space=False)
+    except ImportError:
+        pass
 
 
 @timer
@@ -704,6 +737,21 @@ def test_deconvolve():
     do_pickle(inv_obj)
     do_pickle(inv_obj.SBProfile)
 
+    # Should raise an exception for invalid arguments
+    try:
+        np.testing.assert_raises(TypeError, galsim.Deconvolve)
+        np.testing.assert_raises(TypeError, galsim.Deconvolve, myImg1)
+        np.testing.assert_raises(TypeError, galsim.Deconvolve, [psf])
+        np.testing.assert_raises(TypeError, galsim.Deconvolve, psf, psf)
+        np.testing.assert_raises(TypeError, galsim.Deconvolve, psf, real_space=False)
+        np.testing.assert_raises(TypeError, galsim.Deconvolution)
+        np.testing.assert_raises(TypeError, galsim.Deconvolution, myImg1)
+        np.testing.assert_raises(TypeError, galsim.Deconvolution, [psf])
+        np.testing.assert_raises(TypeError, galsim.Deconvolution, psf, psf)
+        np.testing.assert_raises(TypeError, galsim.Deconvolution, psf, real_space=False)
+    except ImportError:
+        pass
+
 
 @timer
 def test_autoconvolve():
@@ -803,6 +851,21 @@ def test_autoconvolve():
 
     check_basic(autoconv, "AutoConvolve(asym)")
 
+    # Should raise an exception for invalid arguments
+    try:
+        np.testing.assert_raises(TypeError, galsim.AutoConvolve)
+        np.testing.assert_raises(TypeError, galsim.AutoConvolve, myImg1)
+        np.testing.assert_raises(TypeError, galsim.AutoConvolve, [psf])
+        np.testing.assert_raises(TypeError, galsim.AutoConvolve, psf, psf)
+        np.testing.assert_raises(TypeError, galsim.AutoConvolve, psf, realspace=False)
+        np.testing.assert_raises(TypeError, galsim.AutoConvolution)
+        np.testing.assert_raises(TypeError, galsim.AutoConvolution, myImg1)
+        np.testing.assert_raises(TypeError, galsim.AutoConvolution, [psf])
+        np.testing.assert_raises(TypeError, galsim.AutoConvolution, psf, psf)
+        np.testing.assert_raises(TypeError, galsim.AutoConvolution, psf, realspace=False)
+    except ImportError:
+        pass
+
 
 @timer
 def test_autocorrelate():
@@ -843,6 +906,20 @@ def test_autocorrelate():
     do_pickle(corr)
     do_pickle(corr.SBProfile)
 
+    # Should raise an exception for invalid arguments
+    try:
+        np.testing.assert_raises(TypeError, galsim.AutoCorrelate)
+        np.testing.assert_raises(TypeError, galsim.AutoCorrelate, myImg1)
+        np.testing.assert_raises(TypeError, galsim.AutoCorrelate, [obj1])
+        np.testing.assert_raises(TypeError, galsim.AutoCorrelate, obj1, obj2)
+        np.testing.assert_raises(TypeError, galsim.AutoCorrelate, obj1, realspace=False)
+        np.testing.assert_raises(TypeError, galsim.AutoCorrelation)
+        np.testing.assert_raises(TypeError, galsim.AutoCorrelation, myImg1)
+        np.testing.assert_raises(TypeError, galsim.AutoCorrelation, [obj1])
+        np.testing.assert_raises(TypeError, galsim.AutoCorrelation, obj1, obj2)
+        np.testing.assert_raises(TypeError, galsim.AutoCorrelation, obj1, realspace=False)
+    except ImportError:
+        pass
 
 @timer
 def test_ne():
@@ -890,12 +967,10 @@ def test_ne():
     all_obj_diff(gals)
 
 
+@timer
 def test_fourier_sqrt():
     """Test that the FourierSqrt operator is the inverse of auto-convolution.
     """
-    import time
-    t1 = time.time()
-
     dx = 0.4
     myImg1 = galsim.ImageF(80,80, scale=dx)
     myImg1.setCenter(0,0)
@@ -952,9 +1027,22 @@ def test_fourier_sqrt():
     do_pickle(sqrt1)
     do_pickle(sqrt1.SBProfile)
 
-    t2 = time.time()
-    print('time for %s = %.2f'%(funcname(),t2-t1))
+    # Should raise an exception for invalid arguments
+    try:
+        np.testing.assert_raises(TypeError, galsim.FourierSqrt)
+        np.testing.assert_raises(TypeError, galsim.FourierSqrt, myImg1)
+        np.testing.assert_raises(TypeError, galsim.FourierSqrt, [psf])
+        np.testing.assert_raises(TypeError, galsim.FourierSqrt, psf, psf)
+        np.testing.assert_raises(TypeError, galsim.FourierSqrt, psf, real_space=False)
+        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile)
+        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile, myImg1)
+        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile, [psf])
+        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile, psf, psf)
+        np.testing.assert_raises(TypeError, galsim.FourierSqrtProfile, psf, real_space=False)
+    except ImportError:
+        pass
 
+@timer
 def test_sum_transform():
     """This test addresses a bug found by Ismael Serrano, #763, wherein some attributes
     got messed up for a Transform(Sum(Transform())) object.
@@ -1004,6 +1092,7 @@ def test_sum_transform():
         do_pickle(gal1)
         do_pickle(gal2)  # And this.
 
+@timer
 def test_compound_noise():
     """Test that noise propagation works properly for compount objects.
     """

@@ -55,7 +55,7 @@ def Add(*args, **kwargs):
     @returns a Sum or ChromaticSum instance as appropriate.
     """
     if len(args) == 0:
-        raise ValueError("At least one ChromaticObject or GSObject must be provided.")
+        raise TypeError("At least one ChromaticObject or GSObject must be provided.")
     elif len(args) == 1:
         # 1 argument.  Should be either a GSObject or a list of GSObjects
         if isinstance(args[0], (galsim.GSObject, galsim.ChromaticObject)):
@@ -123,7 +123,7 @@ class Sum(galsim.GSObject):
                 "Sum constructor got unexpected keyword argument(s): %s"%kwargs.keys())
 
         if len(args) == 0:
-            raise ValueError("At least one ChromaticObject or GSObject must be provided.")
+            raise TypeError("At least one ChromaticObject or GSObject must be provided.")
         elif len(args) == 1:
             # 1 argument.  Should be either a GSObject or a list of GSObjects
             if isinstance(args[0], galsim.GSObject):
@@ -141,6 +141,8 @@ class Sum(galsim.GSObject):
         # noises (they add like variances) to the final sum.
         noise = None
         for obj in args:
+            if not isinstance(obj, galsim.GSObject):
+                raise TypeError("Arguments to Sum must be GSObjects, not %s"%obj)
             if hasattr(obj,'noise') and obj.noise is not None:
                 if noise is None:
                     noise = obj.noise
@@ -204,7 +206,7 @@ def Convolve(*args, **kwargs):
     """
     # First check for number of arguments != 0
     if len(args) == 0:
-        raise ValueError("At least one ChromaticObject or GSObject must be provided.")
+        raise TypeError("At least one ChromaticObject or GSObject must be provided.")
     elif len(args) == 1:
         if isinstance(args[0], (galsim.GSObject, galsim.ChromaticObject)):
             args = [args[0]]
@@ -276,7 +278,7 @@ class Convolution(galsim.GSObject):
     def __init__(self, *args, **kwargs):
         # First check for number of arguments != 0
         if len(args) == 0:
-            raise ValueError("At least one ChromaticObject or GSObject must be provided.")
+            raise TypeError("At least one ChromaticObject or GSObject must be provided.")
         elif len(args) == 1:
             if isinstance(args[0], galsim.GSObject):
                 args = [args[0]]
@@ -305,6 +307,8 @@ class Convolution(galsim.GSObject):
         # Start by checking if all objects have a hard edge.
         hard_edge = True
         for obj in args:
+            if not isinstance(obj, galsim.GSObject):
+                raise TypeError("Arguments to Convolution must be GSObjects, not %s"%obj)
             if not obj.hasHardEdges():
                 hard_edge = False
 
