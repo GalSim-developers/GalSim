@@ -201,13 +201,15 @@ def test_shearest_basic():
 def test_shearest_precomputed():
     """Test that we can recover shears the same as before the code was put into GalSim."""
     # loop over real galaxies
-    for index in range(2,len(file_indices)):
+    for index in range(len(file_indices)):
         # define input filenames
         img_file = os.path.join(img_dir, gal_file_prefix + str(file_indices[index]) + img_suff)
         psf_file = os.path.join(img_dir, psf_file_prefix + str(file_indices[index]) + img_suff)
 
         # read in information for objects and expected results
         imgR = galsim.fits.read(img_file)
+        # perform a cast to int as the images on file are unsigned,
+        # which leads to problems when we subtract 1000 below
         img  = galsim.Image(imgR, dtype = int)
         img -= 1000
         psfR = galsim.fits.read(psf_file)
