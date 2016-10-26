@@ -26,6 +26,8 @@ AutoCorrelation = convolution of a profile by its reflection
 FourierSqrt = Fourier-space square root of a profile
 """
 
+import numpy
+
 import galsim
 from . import _galsim
 
@@ -902,3 +904,138 @@ _galsim.SBFourierSqrt.__getstate__ = lambda self: None
 _galsim.SBFourierSqrt.__setstate__ = lambda self, state: 1
 _galsim.SBFourierSqrt.__repr__ = lambda self: \
         'galsim._galsim.SBFourierSqrt(%r, %r)'%self.__getinitargs__()
+
+
+class RandomWalk(Sum):
+    """
+
+    A class for generating a set of point sources distributed using a random
+    walk.  Uses of this profile include representing an "irregular" galaxy, or
+    adding this profile to an Exponential to represent knots of star formation.
+
+    Random walk profiles have a "shape noise" of g~0.05, but can be sheared to
+    give an additional ellipticity, for example to follow that of an associated
+    disk.
+    
+    Initialization
+    --------------
+    @param  npoints  Number of point sources to generate.
+    @param  hlr      Half light radius of the distribution of points.  This
+                     is the mean half light radius produced by an 
+                     infinite number of points.  A single instance will be
+                     noisy.
+    @param  flux     Total flux in all point sources.  Default 1
+    @param  nstep    Number of steps in random walk.  Default 40
+    @param  rng      Optional random number generator. Should be a UniformDeviate.
+    @param  gsparams GSParams for the gaussians representing each point source.
+
+    Methods
+    -------
+
+    This class inherits from galsim.Sum. Additional methods, implemented as
+    read-only properties, are provided as "getters" for the basic parameters:
+
+        .npoints
+        .half_light_radius
+        .flux
+        .nstep
+
+    Notes
+    -----
+
+    - The algorithm is a modified version of that presented in
+      https://arxiv.org/abs/1312.5514v3 : There is no outer cutoff to how far a
+      point can wander.
+    - This class inherits from galsim.Sum
+    """
+    def __init__(self, npoints, hlr, flux=1.0, nstep=40, rng=None, gsparams=None):
+
+        self._hlr=hlr
+        self._flux=flux
+        self._npoints=npoints
+        self._nstep=nstep
+
+        self._gaussian_sigma = 1.0e-8
+
+        self._input_gsparams=gsparams
+
+        if rng is None:
+            rng = galsim.UniformDeviate()
+
+        self._rng=rng
+
+        # this is the scale factor by which to multiply each step
+        # in order to get the requested half light radius
+        factor = numpy.sqrt(nstep)/2.09
+        self._scale = hlr/factor
+
+        pts = self._get_points()
+        gaussians = self._get_gaussians(pts)
+
+        super(RandomWalk, self).__init__(gaussians)
+
+    @property
+    def half_light_radius(self):
+        return self._hlr
+
+    @property
+    def flux(self):
+        return self._flux
+
+    @property
+    def npoints(self):
+        return self._npoints
+
+    @property
+    def nstep(self):
+        return self._nstep
+
+
+    def _get_gaussians(self, points):
+
+        fluxper=self._flux/self._npoints
+        gaussians=[]
+
+        for i in xrange(points.shape[0]):
+            dx,dy = points[i]
+
+            g=galsim.Gaussian(
+                sigma=self._gaussian_sigma,
+                flux=fluxper,
+                gsparams=self._input_gsparams,
+            )
+            g = g.shift(dx=dx, dy=dy)
+
+            gaussians.append(g)
+
+        return gaussians
+
+    def _get_points(self):
+
+        scale=self._scale
+        npoints=self._npoints
+        nstep=self._nstep
+
+        pts=numpy.zeros( (npoints, 2) )
+
+        rng=self._rng
+
+        for i in xrange(npoints):
+            x=0.0
+            y=0.0
+
+            for istep in xrange(nstep):
+
+                r = scale*rng()
+                angle = 2*numpy.pi*rng()
+
+                dx = r*numpy.cos(angle)
+                dy = r*numpy.sin(angle)
+
+                x += dx
+                y += dy
+
+            pts[i,0] = x
+            pts[i,1] = y
+
+        return pts
