@@ -46,7 +46,7 @@ class Main_param:
             self.seg_files[filter1] = self.path + string2 + args.seg_string
             string3 = args.noise_file.replace('filter',args.file_filter_name[i])
             self.noise_file[filter1] = args.main_path + '/' + string3
-            string4 = args.cat_file.replace('filter',args.file_filter_name[i])
+            string4 = args.cat_file.replace('filter',args.filter_names[i])
             self.cat_files[filter1] = args.main_path + '/' + self.seg_id + '/' + string4
 
 def div_pixels(seg_map, num):
@@ -191,7 +191,7 @@ def clean_pstamp(args):
             subprocess.call(["mkdir", params.path + 'stamp_stats'])
         # open image and seg map
         catalog = Table.read(params.cat_files[filt], format="ascii.basic")
-        hlr = catalog['A_IMAGE'][params.num]
+        hlr = catalog['A_IMAGE'][int(params.num)]
         hdu1 = pyfits.open(params.gal_files[filt])
         hdu2 = pyfits.open(params.seg_files[filt])
         im_dat = hdu1[0].data
