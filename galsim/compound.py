@@ -939,6 +939,8 @@ class RandomWalk(Sum):
         .half_light_radius
         .flux
         .nstep
+        .gaussians
+            The list of galsim.Gaussian objects representing the points
 
     Notes
     -----
@@ -950,10 +952,10 @@ class RandomWalk(Sum):
     """
     def __init__(self, npoints, hlr, flux=1.0, nstep=40, rng=None, gsparams=None):
 
-        self._hlr=hlr
-        self._flux=flux
-        self._npoints=npoints
-        self._nstep=nstep
+        self._hlr     = float(hlr)
+        self._flux    = float(flux)
+        self._npoints = int(npoints)
+        self._nstep   = int(nstep)
 
         self._gaussian_sigma = 1.0e-8
 
@@ -964,15 +966,17 @@ class RandomWalk(Sum):
 
         self._rng=rng
 
+        self._verify()
+
         # this is the scale factor by which to multiply each step
         # in order to get the requested half light radius
         factor = numpy.sqrt(nstep)/2.09
         self._scale = hlr/factor
 
         pts = self._get_points()
-        gaussians = self._get_gaussians(pts)
+        self._gaussians = self._get_gaussians(pts)
 
-        super(RandomWalk, self).__init__(gaussians)
+        super(RandomWalk, self).__init__(self._gaussians)
 
     @property
     def half_light_radius(self):
@@ -989,6 +993,10 @@ class RandomWalk(Sum):
     @property
     def nstep(self):
         return self._nstep
+
+    @property
+    def gaussians(self):
+        return self._gaussians
 
 
     def _get_gaussians(self, points):
@@ -1039,3 +1047,19 @@ class RandomWalk(Sum):
             pts[i,1] = y
 
         return pts
+
+    def _verify(self):
+        if not isinstance(self._rng, galsim.UniformDeviate):
+            raise TypeError("rng must be of type galsim.UniformDeviate, "
+                            "got %s" % str(self._rng))
+
+        if self._npoints <= 0:
+            raise ValueError("npoints must be > 0, got %s" % str(self._npoints))
+        if self._nstep <= 0:
+            raise ValueError("nstep must be > 0, got %s" % str(self._nstep))
+
+        if self._hlr <= 0.0:
+            raise ValueError("half light radius must be > 0, got %s" % str(self._hlr))
+        if self._flux < 0.0:
+            raise ValueError("flux must be >= 0, got %s" % str(self._flux))
+
