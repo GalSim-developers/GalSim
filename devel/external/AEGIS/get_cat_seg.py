@@ -29,21 +29,13 @@ def get_cat_seg(args):
     f_str = args.file_filter_name
     cat_name = args.main_path + seg + '/' + filt + '_full.cat'
     new_cat_name = args.main_path + seg + '/' + filt + '_with_pstamp.fits'
+    all_cat_name = args.main_path + seg + '/' + filt + '_all.fits'
     if os.path.isfile(new_cat_name) is True:
                 subprocess.call(["rm", new_cat_name])    
     cat = Table.read(cat_name, format= 'ascii.basic')
     obj_list= args.main_path + seg + '/objects_with_p_stamps.txt' 
     objs = np.loadtxt(obj_list, dtype="int")
-    #Select only good postage stamps
-    cond1 = cat['min_mask_dist_pixels'][obs] > 11
-    cond2 = cat['average_mask_adjacent_pixel_count'][obs]/ cat['peak_image_pixel_count'][obs] < 0.8
-    q, = np.where(cond1 | cond2)
-    if args.apply_cuts is True:
-        good = objs[q]
-    else:
-        # If no selection cut has to be applied
-        good = objs
-    temp = cat[good]
+    temp = cat[objs]
 
     print " Adding columns for additional catalog information"
     # Columns to add values from photometric and redshift catalog
@@ -126,7 +118,7 @@ def get_cat_seg(args):
     temp.add_column(col)
 
     # Add columns for selection file       
-    for idx,obj in enumerate(good):
+    for idx,obj in enumerate(objs):
         path = args.main_path + seg + '/postage_stamps/stamp_stats/'
         stats_file =  path + str(obj) + '_' + filt + '.txt'
         stats = np.loadtxt(stats_file) 
@@ -160,8 +152,21 @@ def get_cat_seg(args):
     temp2 = Table(tab, names=names, dtype=dtype)
     temp = hstack([temp,temp2])
 
+
+    #Select only good postage stamps
+    cond1 = temp['min_mask_dist_pixels'] > 11
+    cond2 = temp['average_mask_adjacent_pixel_count']/ temp['peak_image_pixel_count'] < 0.8
+    q, = np.where(cond1 | cond2)
+    if args.apply_cuts is True:
+        good = q
+    else:
+        # If no selection cut has to be applied
+        good = range(len(temp))
+    good_gals = temp[good]
     print "Catalog with pstamps saved at ", new_cat_name
-    temp.write(new_cat_name, format='fits') 
+    good_gals.write(new_cat_name, format='fits') 
+    print "Catalog of all galaxies saved at ", all_cat_name
+    temp.write(all_cat_name, format='fits') 
     good_list= args.main_path + seg + '/gal_in_cat.txt' 
     np.savetxt(good_list, good) 
 
