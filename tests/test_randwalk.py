@@ -43,13 +43,17 @@ def test_randwalk_defaults():
     hlr = 8.0
     rw=galsim.RandomWalk(npoints, hlr)
 
-    assert rw.npoints==npoints,"expected npoints==%d" % (npoints, rw.npoints)
+    assert rw.npoints==npoints,"expected npoints==%d, got %d" % (npoints, rw.npoints)
     assert rw.input_half_light_radius==hlr,\
         "expected hlr==%g, got %g" % (hlr, rw.input_half_light_radius)
 
     g=rw.gaussians
     ngauss=len(g)
-    assert ngauss == npoints==npoints,"expected %d gaussians, got %d" % (npoints, ngauss)
+    assert ngauss == npoints,"expected %d gaussians, got %d" % (npoints, ngauss)
+
+    pts=rw.points
+    assert pts.shape == (npoints,2),"expected (%d,2) shape for points, got %s" % (npoints, pts.shape)
+
 
 @timer
 def test_randwalk_valid_inputs():
@@ -69,7 +73,7 @@ def test_randwalk_valid_inputs():
 
     rw=galsim.RandomWalk(npoints, hlr, nstep=nstep, flux=flux, rng=rng)
 
-    assert rw.npoints==npoints,"expected npoints==%d" % (npoints, rw.npoints)
+    assert rw.npoints==npoints,"expected npoints==%d, got %d" % (npoints, rw.npoints)
     assert rw.input_half_light_radius==hlr,\
         "expected hlr==%g, got %g" % (hlr, rw.input_half_light_radius)
     assert rw.flux==flux,\
@@ -82,6 +86,9 @@ def test_randwalk_valid_inputs():
     g=rw.gaussians
     ngauss=len(g)
     assert ngauss == npoints==npoints,"expected %d gaussians, got %d" % (npoints, ngauss)
+
+    pts=rw.points
+    assert pts.shape == (npoints,2),"expected (%d,2) shape for points, got %s" % (npoints, pts.shape)
 
 @timer
 def test_randwalk_invalid_inputs():
