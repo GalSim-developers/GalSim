@@ -17,7 +17,7 @@
 #
 
 from __future__ import print_function
-import numpy
+import numpy as np
 import os
 import sys
 import galsim
@@ -171,7 +171,63 @@ def test_randwalk_invalid_inputs():
     except ImportError:
         pass
 
+def calc_hlr(pts):
+
+    my,mx=pts.mean(axis=0)
+
+    r=np.sqrt( (pts[:,0]-my)**2 + (pts[:,1]-mx)**2)
+
+    hlr=np.median(r)
+
+    return hlr
+
+
+@timer
+def test_randwalk_hlr():
+    """
+    Create a random walk galaxy and test that the half light radius
+    is consistent with the requested value
+    """
+
+    hlr = 8.0
+
+    # test these npoints
+    npt_vals=[3, 10, 30, 60, 100]
+
+    # should be within 4 sigma
+    nstd=4
+
+    # test these nstep vals
+    nstepvals=[20,40,100]
+
+    # number of trials
+    ntrial_vals=[100]*len(npt_vals)
+
+    for ipts,npoints in enumerate(npt_vals):
+
+        ntrial=ntrial_vals[ipts]
+        for nstep in nstepvals:
+
+            hlr_calc=np.zeros(ntrial)
+            for i in range(ntrial):
+                rw=galsim.RandomWalk(npoints, hlr, nstep=nstep)
+                hlr_calc[i] = calc_hlr(rw.points)
+
+            mn=hlr_calc.mean()
+            std=hlr_calc.std()
+            err=std/np.sqrt(ntrial)
+
+            std_check=np.interp(npoints, rw._interp_npts, rw._interp_std*hlr)
+            mess="hlr for npoints: %d nstep: %d outside of expected range"
+            mess=mess % (npoints,nstep)
+            assert abs(mn-hlr) < nstd*std_check, mess
+
+            #print("npoints: %d nstep: %d hlr: %g +/- %g (2sig) std: %g" % (npoints, nstep, mn, err, std))
+            #print("%d %d %g %g %g" % (npoints, nstep, mn, err, std), file=fobj)
+
+
 if __name__ == "__main__":
     test_randwalk_defaults()
     test_randwalk_valid_inputs()
     test_randwalk_invalid_inputs()
+    test_randwalk_hlr()
