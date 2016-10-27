@@ -962,7 +962,6 @@ class RandomWalk(Sum):
     - The algorithm is a modified version of that presented in
       https://arxiv.org/abs/1312.5514v3 : There is no outer cutoff to how far a
       point can wander.
-    - This class inherits from galsim.Sum
     """
     def __init__(self, npoints, hlr, flux=1.0, nstep=40, rng=None, gsparams=None):
 
