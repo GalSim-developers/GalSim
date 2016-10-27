@@ -950,7 +950,7 @@ class RandomWalk(Sum):
     read-only properties, are provided as "getters" for the basic parameters:
 
         .npoints
-        .half_light_radius
+        .input_half_light_radius
         .flux
         .nstep
         .gaussians
@@ -993,7 +993,7 @@ class RandomWalk(Sum):
         super(RandomWalk, self).__init__(self._gaussians)
 
     @property
-    def half_light_radius(self):
+    def input_half_light_radius(self):
         return self._hlr
 
     @property
