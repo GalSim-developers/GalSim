@@ -938,8 +938,8 @@ class RandomWalk(Sum):
                                     and follow a random walk with fixed
                                     step size, designed to give the requested
                                     half light radius.  Default 40
-    @param  rng                     Optional random number generator. Should be
-                                    a UniformDeviate.
+    @param  rng                     Optional random number generator. Can be
+                                    any galsim.BaseDeviate
     @param                          gsparams GSParams for the gaussians
                                     representing each point source.
 
@@ -1063,8 +1063,8 @@ class RandomWalk(Sum):
         return pts
 
     def _verify(self):
-        if not isinstance(self._rng, galsim.UniformDeviate):
-            raise TypeError("rng must be of type galsim.UniformDeviate, "
+        if not isinstance(self._rng, galsim.BaseDeviate):
+            raise TypeError("rng must be an instance of galsim.BaseDeviate, "
                             "got %s" % str(self._rng))
 
         if self._npoints <= 0:
