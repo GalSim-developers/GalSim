@@ -222,10 +222,6 @@ def test_randwalk_hlr():
             mess=mess % (npoints,nstep)
             assert abs(mn-hlr) < nstd*std_check, mess
 
-            #print("npoints: %d nstep: %d hlr: %g +/- %g (2sig) std: %g" % (npoints, nstep, mn, err, std))
-            #print("%d %d %g %g %g" % (npoints, nstep, mn, err, std), file=fobj)
-
-
 if __name__ == "__main__":
     test_randwalk_defaults()
     test_randwalk_valid_inputs()
