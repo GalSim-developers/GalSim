@@ -278,15 +278,6 @@ struct PyShapeData {
         wrapTemplates<double, double>();
         wrapTemplates<double, float>();
         wrapTemplates<float, double>();
-        wrapTemplates<int, int>();
-        wrapTemplates<uint16_t, int>();
-        wrapTemplates<int, uint16_t>();
-        wrapTemplates<uint16_t, uint16_t>();
-        wrapTemplates<uint32_t, int>();
-        wrapTemplates<int, uint32_t>();
-        wrapTemplates<uint32_t, uint32_t>();
-        wrapTemplates<uint16_t, uint32_t>();
-        wrapTemplates<uint32_t, uint16_t>();
     }
 };
 
