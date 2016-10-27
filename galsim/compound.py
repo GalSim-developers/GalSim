@@ -921,15 +921,17 @@ class RandomWalk(Sum):
     
     Initialization
     --------------
-    @param  npoints  Number of point sources to generate.
-    @param  hlr      Half light radius of the distribution of points.  This
-                     is the mean half light radius produced by an 
-                     infinite number of points.  A single instance will be
-                     noisy.
-    @param  flux     Total flux in all point sources.  Default 1
-    @param  nstep    Number of steps in random walk.  Default 40
-    @param  rng      Optional random number generator. Should be a UniformDeviate.
-    @param  gsparams GSParams for the gaussians representing each point source.
+    @param  npoints                 Number of point sources to generate.
+    @param  half_light_radius       Half light radius of the distribution of
+                                    points.  This is the mean half light
+                                    radius produced by an infinite number of
+                                    points.  A single instance will be noisy.
+    @param  flux                    Total flux in all point sources.  Default 1
+    @param  nstep                   Number of steps in random walk.  Default 40
+    @param  rng                     Optional random number generator. Should be
+                                    a UniformDeviate.
+    @param                          gsparams GSParams for the gaussians
+                                    representing each point source.
 
     Methods
     -------
