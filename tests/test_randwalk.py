@@ -34,8 +34,8 @@ except ImportError:
 @timer
 def test_randwalk_defaults():
     """
-    Create two objects, each with three exposures. Save them to a MEDS file.
-    Load the MEDS file. Compare the created objects with the one read by MEDS.
+    Create a random walk galaxy and test that the getters work for
+    default inputs
     """
 
     # try constructing with mostly defaults
@@ -58,8 +58,8 @@ def test_randwalk_defaults():
 @timer
 def test_randwalk_valid_inputs():
     """
-    Create two objects, each with three exposures. Save them to a MEDS file.
-    Load the MEDS file. Compare the created objects with the one read by MEDS.
+    Create a random walk galaxy and test that the getters work for
+    valid non-default inputs
     """
 
     # try constructing with mostly defaults
@@ -93,8 +93,8 @@ def test_randwalk_valid_inputs():
 @timer
 def test_randwalk_invalid_inputs():
     """
-    Create two objects, each with three exposures. Save them to a MEDS file.
-    Load the MEDS file. Compare the created objects with the one read by MEDS.
+    Create a random walk galaxy and test that the the correct exceptions
+    are raised for invalid inputs
     """
 
     # try with rng wrong type
