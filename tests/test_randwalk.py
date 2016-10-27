@@ -103,68 +103,73 @@ def test_randwalk_invalid_inputs():
     hlr = 8.0
     rng=37
 
-    args=(npoints, hlr)
-    kwargs={'rng':rng}
-    np.testing.assert_raises(TypeError, galsim.RandomWalk, *args, **kwargs)
+    # this test requires nose, but nose is not a GalSim requirement.  So
+    # allow this test to pass if an ImportError is raised
+
+    try:
+        args=(npoints, hlr)
+        kwargs={'rng':rng}
+        np.testing.assert_raises(TypeError, galsim.RandomWalk, *args, **kwargs)
 
 
-    # try sending wrong type for npoints
-    npoints=[35]
-    hlr = 8.0
-    args=(npoints, hlr)
-    np.testing.assert_raises(TypeError, galsim.RandomWalk, *args)
+        # try sending wrong type for npoints
+        npoints=[35]
+        hlr = 8.0
+        args=(npoints, hlr)
+        np.testing.assert_raises(TypeError, galsim.RandomWalk, *args)
 
-    # try sending wrong type for nstep
-    npoints=100
-    hlr=8.0
-    nstep=[40]
-    args=(npoints, hlr)
-    kwargs={'nstep':nstep}
-    np.testing.assert_raises(TypeError, galsim.RandomWalk, *args, **kwargs)
+        # try sending wrong type for nstep
+        npoints=100
+        hlr=8.0
+        nstep=[40]
+        args=(npoints, hlr)
+        kwargs={'nstep':nstep}
+        np.testing.assert_raises(TypeError, galsim.RandomWalk, *args, **kwargs)
 
-    # try sending wrong type for hlr
-    npoints=100
-    hlr=[1.5]
-    args=(npoints, hlr)
-    np.testing.assert_raises(TypeError, galsim.RandomWalk, *args)
+        # try sending wrong type for hlr
+        npoints=100
+        hlr=[1.5]
+        args=(npoints, hlr)
+        np.testing.assert_raises(TypeError, galsim.RandomWalk, *args)
 
-    # try sending wrong type for flux
-    npoints=100
-    hlr=8.0
-    flux=[3.5]
-    args=(npoints, hlr)
-    kwargs={'flux':flux}
-    np.testing.assert_raises(TypeError, galsim.RandomWalk, *args, **kwargs)
+        # try sending wrong type for flux
+        npoints=100
+        hlr=8.0
+        flux=[3.5]
+        args=(npoints, hlr)
+        kwargs={'flux':flux}
+        np.testing.assert_raises(TypeError, galsim.RandomWalk, *args, **kwargs)
 
-    # send bad value for npoints
+        # send bad value for npoints
 
-    npoints=-35
-    hlr = 8.0
-    args=(npoints, hlr)
-    np.testing.assert_raises(ValueError, galsim.RandomWalk, *args)
+        npoints=-35
+        hlr = 8.0
+        args=(npoints, hlr)
+        np.testing.assert_raises(ValueError, galsim.RandomWalk, *args)
 
-    # try sending bad value for nstep
-    npoints=100
-    hlr=8.0
-    nstep=-35
-    args=(npoints, hlr)
-    kwargs={'nstep':nstep}
-    np.testing.assert_raises(ValueError, galsim.RandomWalk, *args, **kwargs)
+        # try sending bad value for nstep
+        npoints=100
+        hlr=8.0
+        nstep=-35
+        args=(npoints, hlr)
+        kwargs={'nstep':nstep}
+        np.testing.assert_raises(ValueError, galsim.RandomWalk, *args, **kwargs)
 
-    # try sending bad value for hlr
-    npoints=100
-    hlr=-1.5
-    args=(npoints, hlr)
-    np.testing.assert_raises(ValueError, galsim.RandomWalk, *args)
+        # try sending bad value for hlr
+        npoints=100
+        hlr=-1.5
+        args=(npoints, hlr)
+        np.testing.assert_raises(ValueError, galsim.RandomWalk, *args)
 
-    # try sending wrong type for flux
-    npoints=100
-    hlr=8.0
-    flux=-35.0
-    args=(npoints, hlr)
-    kwargs={'flux':flux}
-    np.testing.assert_raises(ValueError, galsim.RandomWalk, *args, **kwargs)
-
+        # try sending wrong type for flux
+        npoints=100
+        hlr=8.0
+        flux=-35.0
+        args=(npoints, hlr)
+        kwargs={'flux':flux}
+        np.testing.assert_raises(ValueError, galsim.RandomWalk, *args, **kwargs)
+    except ImportError:
+        pass
 
 if __name__ == "__main__":
     test_randwalk_defaults()
