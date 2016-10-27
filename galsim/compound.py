@@ -960,6 +960,8 @@ class RandomWalk(Sum):
         .nstep
         .gaussians
             The list of galsim.Gaussian objects representing the points
+        .points
+            The list of x,y offsets used to create the point sources
 
     Notes
     -----
