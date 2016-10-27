@@ -913,11 +913,17 @@ class RandomWalk(Sum):
     walk.  Uses of this profile include representing an "irregular" galaxy, or
     adding this profile to an Exponential to represent knots of star formation.
 
-    Random walk profiles have "shape noise" that depends on the number of
-    knots.  For example, with 100 points the shape noise is g~0.05, and this
-    will decrease as more points are added.  However, the profile can be
+    Random walk profiles have "shape noise" that depends on the number of point
+    sources used.  For example, with 100 points the shape noise is g~0.05, and
+    this will decrease as more points are added.  However, the profile can be
     sheared to give additional ellipticity, for example to follow that of an
     associated disk.
+
+    The number of steps in the walk is not generally important, except that it
+    must be large enough to result in a profile that does not strongly manifest
+    the inherient discreteness of the steps.  However, more steps will increase
+    the run time.  The default value of 40 seems to be a good compromise in
+    speed and fidelity.
     
     Initialization
     --------------
@@ -927,7 +933,11 @@ class RandomWalk(Sum):
                                     radius produced by an infinite number of
                                     points.  A single instance will be noisy.
     @param  flux                    Total flux in all point sources.  Default 1
-    @param  nstep                   Number of steps in random walk.  Default 40
+    @param  nstep                   Number of steps in the random walk for each
+                                    point.  Points are started at the center
+                                    and follow a random walk with fixed
+                                    step size, designed to give the requested
+                                    half light radius.  Default 40
     @param  rng                     Optional random number generator. Should be
                                     a UniformDeviate.
     @param                          gsparams GSParams for the gaussians
