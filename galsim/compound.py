@@ -926,9 +926,9 @@ class RandomWalk(Sum):
     the run time.  The default value of 40 seems to be a good compromise in
     speed and fidelity.
 
-    The requested half light radius should be thought of as a rough value.
-    With a finite number point sources the actual realized half light radius
-    will noisy.
+    The requested half light radius (hlr) should be thought of as a rough
+    value.  With a finite number point sources the actual realized hlr radius
+    will noisy.  In the mean the hlr is accurate to 1%% for npoints >= 3
 
     Initialization
     --------------
@@ -978,6 +978,11 @@ class RandomWalk(Sum):
     _single_params = []
     _takes_rng = True
 
+    _interp_ref_fac = 2.09
+    _interp_npts = np.array([6,7,8,9,10,15,20,30,50,75,100,150,200,500,1000])
+    _interp_hlr  = np.array([7.511,7.597,7.647,7.68,7.727,7.827,7.884,7.936,7.974,8.0,8.015,8.019,8.031,8.027,8.043])/8.0
+    _interp_std = np.array([2.043,2.029,1.828,1.817,1.67,1.443,1.235,1.017,0.8046,0.6628,0.5727,0.4703,0.4047,0.255,0.1851])/8.0
+
     def __init__(self, npoints, half_light_radius, flux=1.0, nstep=40, rng=None, gsparams=None):
 
         self._half_light_radius = float(half_light_radius)
@@ -997,11 +1002,9 @@ class RandomWalk(Sum):
 
         self._verify()
 
-        # this is the scale factor by which to multiply each step
-        # in order to get the requested half light radius
-        # the number 2.09 comes from monte carlo simulations
-        factor = np.sqrt(nstep)/2.09
-        self._scale = half_light_radius/factor
+
+        factor = self._get_hlr_factor()
+        self._scale = half_light_radius*factor
 
         self._points = self._get_points()
         self._gaussians = self._get_gaussians(self._points)
@@ -1096,4 +1099,26 @@ class RandomWalk(Sum):
                              ", got %s" % str(self._half_light_radius))
         if self._flux < 0.0:
             raise ValueError("flux must be >= 0, got %s" % str(self._flux))
+
+    def _get_hlr_factor(self):
+        """
+        this is the scale factor by which to multiply each step in order to
+        get the requested half light radius the number 2.09 came from a monte
+        carlo simulation of a specific npoints/nstep pair, the remaining
+        factor fixes the result to be good to 1%% for npoints > 3
+        """
+
+        if self._npoints < 6:
+            ifact = 7.35/8.0
+        else:
+            ifact = np.interp(
+                self._npoints,
+                self._interp_npts,
+                self._interp_hlr,
+            )
+
+        factor = self._interp_ref_fac/ifact/np.sqrt(self._nstep)
+        
+        return factor
+
 
