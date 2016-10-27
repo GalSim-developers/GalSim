@@ -913,9 +913,11 @@ class RandomWalk(Sum):
     walk.  Uses of this profile include representing an "irregular" galaxy, or
     adding this profile to an Exponential to represent knots of star formation.
 
-    Random walk profiles have a "shape noise" of g~0.05, but can be sheared to
-    give an additional ellipticity, for example to follow that of an associated
-    disk.
+    Random walk profiles have "shape noise" that depends on the number of
+    knots.  For example, with 100 points the shape noise is g~0.05, and this
+    will decrease as more points are added.  However, the profile can be
+    sheared to give additional ellipticity, for example to follow that of an
+    associated disk.
     
     Initialization
     --------------
