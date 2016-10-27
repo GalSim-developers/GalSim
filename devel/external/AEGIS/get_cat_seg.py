@@ -29,7 +29,6 @@ def get_cat_seg(args):
     f_str = args.file_filter_name
     cat_name = args.main_path + seg + '/' + filt + '_full.cat'
     new_cat_name = args.main_path + seg + '/' + filt + '_with_pstamp.fits'
-    all_cat_name = args.main_path + seg + '/' + filt + '_all.fits'
     if os.path.isfile(new_cat_name) is True:
                 subprocess.call(["rm", new_cat_name])    
     cat = Table.read(cat_name, format= 'ascii.basic')
@@ -151,24 +150,8 @@ def get_cat_seg(args):
     tab+= [viable_sersic, fit_status, sersicfit, bulgefit, hlr]
     temp2 = Table(tab, names=names, dtype=dtype)
     temp = hstack([temp,temp2])
-
-
-    #Select only good postage stamps
-    cond1 = temp['min_mask_dist_pixels'] > 11
-    cond2 = temp['average_mask_adjacent_pixel_count']/ temp['peak_image_pixel_count'] < 0.8
-    q, = np.where(cond1 | cond2)
-    if args.apply_cuts is True:
-        good = q
-    else:
-        # If no selection cut has to be applied
-        good = range(len(temp))
-    good_gals = temp[good]
-    print "Catalog with pstamps saved at ", new_cat_name
-    good_gals.write(new_cat_name, format='fits') 
-    print "Catalog of all galaxies saved at ", all_cat_name
-    temp.write(all_cat_name, format='fits') 
-    good_list= args.main_path + seg + '/gal_in_cat.txt' 
-    np.savetxt(good_list, good) 
+    print "Catalog of all galaxies saved at ", new_cat_name
+    temp.write(new_cat_name, format='fits') 
 
 if __name__ == '__main__':
     import subprocess
@@ -186,9 +169,9 @@ if __name__ == '__main__':
     parser.add_argument('--seg_file_name', default ='/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip/seg_ids.txt',
                         help="file with all seg id names" )
     parser.add_argument('--phot_cat_file_name', default ='/nfs/slac/g/ki/ki19/deuce/AEGIS/aegis_additional/egsacs_phot_nodup.fits',
-                        help="file with all seg id names" )
+                        help="other photometry catalogs" )
     parser.add_argument('--z_cat_file_name', default ='/nfs/slac/g/ki/ki19/deuce/AEGIS/aegis_additional/zcat.deep2.dr4.uniq.fits',
-                        help="file with all seg id names")
+                        help="file with redshift information")
     parser.add_argument('--apply_cuts', default = True ,
                         help="Remove galaxies with imperfect masking during pstamp cleaning step.[Default =True]")
     args = parser.parse_args()
