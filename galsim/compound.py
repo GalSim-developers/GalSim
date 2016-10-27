@@ -916,9 +916,9 @@ class RandomWalk(Sum):
 
     Random walk profiles have "shape noise" that depends on the number of point
     sources used.  For example, with 100 points the shape noise is g~0.05, and
-    this will decrease as more points are added.  However, the profile can be
-    sheared to give additional ellipticity, for example to follow that of an
-    associated disk.
+    this will decrease as more points are added.  The profile can be sheared to
+    give additional ellipticity, for example to follow that of an associated
+    disk.
 
     The number of steps in the walk is not generally important, except that it
     must be large enough to result in a profile that does not strongly manifest
@@ -928,7 +928,7 @@ class RandomWalk(Sum):
 
     The requested half light radius (hlr) should be thought of as a rough
     value.  With a finite number point sources the actual realized hlr radius
-    will noisy.  In the mean the hlr is accurate to 1%% for npoints >= 3
+    will be noisy.  In the mean, the hlr is accurate to 1%% for npoints >= 3
 
     Initialization
     --------------
@@ -961,7 +961,7 @@ class RandomWalk(Sum):
         .gaussians
             The list of galsim.Gaussian objects representing the points
         .points
-            The list of x,y offsets used to create the point sources
+            The array of x,y offsets used to create the point sources
 
     Notes
     -----
@@ -977,6 +977,9 @@ class RandomWalk(Sum):
     _opt_params = { "flux" : float, "nstep" : int }
     _single_params = []
     _takes_rng = True
+
+    # use to convert the requested hlr to a scale factor for each
+    # random walk step
 
     _interp_ref_fac = 2.09
     _interp_npts = np.array([6,7,8,9,10,15,20,30,50,75,100,150,200,500,1000])
@@ -1102,10 +1105,11 @@ class RandomWalk(Sum):
 
     def _get_hlr_factor(self):
         """
-        this is the scale factor by which to multiply each step in order to
-        get the requested half light radius the number 2.09 came from a monte
-        carlo simulation of a specific npoints/nstep pair, the remaining
-        factor fixes the result to be good to 1%% for npoints > 3
+        get the scale factor by which to multiply each step in order to produce
+        the requested half light radius. The number 2.09 came from a monte
+        carlo simulation of a specific npoints/nstep pair, but this breaks down
+        at very low npoints.  The remaining factor fixes the result to be good
+        to 1%% for npoints > 3
         """
 
         if self._npoints < 6:
