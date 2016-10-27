@@ -26,7 +26,7 @@ AutoCorrelation = convolution of a profile by its reflection
 FourierSqrt = Fourier-space square root of a profile
 """
 
-import numpy
+import numpy as np
 
 import galsim
 from . import _galsim
@@ -970,7 +970,7 @@ class RandomWalk(Sum):
 
         # this is the scale factor by which to multiply each step
         # in order to get the requested half light radius
-        factor = numpy.sqrt(nstep)/2.09
+        factor = np.sqrt(nstep)/2.09
         self._scale = hlr/factor
 
         pts = self._get_points()
@@ -1024,7 +1024,7 @@ class RandomWalk(Sum):
         npoints=self._npoints
         nstep=self._nstep
 
-        pts=numpy.zeros( (npoints, 2) )
+        pts=np.zeros( (npoints, 2) )
 
         rng=self._rng
 
@@ -1035,10 +1035,10 @@ class RandomWalk(Sum):
             for istep in xrange(nstep):
 
                 r = scale*rng()
-                angle = 2*numpy.pi*rng()
+                angle = 2*np.pi*rng()
 
-                dx = r*numpy.cos(angle)
-                dy = r*numpy.sin(angle)
+                dx = r*np.cos(angle)
+                dy = r*np.sin(angle)
 
                 x += dx
                 y += dy
