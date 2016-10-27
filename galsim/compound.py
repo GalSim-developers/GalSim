@@ -26,6 +26,7 @@ AutoCorrelation = convolution of a profile by its reflection
 FourierSqrt = Fourier-space square root of a profile
 """
 
+from past.builtins import xrange
 import numpy as np
 
 import galsim
@@ -924,7 +925,11 @@ class RandomWalk(Sum):
     the inherient discreteness of the steps.  However, more steps will increase
     the run time.  The default value of 40 seems to be a good compromise in
     speed and fidelity.
-    
+
+    The requested half light radius should be thought of as a rough value.
+    With a finite number point sources the actual realized half light radius
+    will noisy.
+
     Initialization
     --------------
     @param  npoints                 Number of point sources to generate.
@@ -963,9 +968,18 @@ class RandomWalk(Sum):
       https://arxiv.org/abs/1312.5514v3 : There is no outer cutoff to how far a
       point can wander.
     """
-    def __init__(self, npoints, hlr, flux=1.0, nstep=40, rng=None, gsparams=None):
 
-        self._hlr     = float(hlr)
+    # these allow use in a galsim configuration context
+
+    _req_params = { "npoints" : int, "half_light_radius" : float }
+    _opt_params = { "flux" : float, "nstep" : int }
+    _single_params = []
+    _takes_rng = True
+
+    def __init__(self, npoints, half_light_radius, flux=1.0, nstep=40, rng=None, gsparams=None):
+
+        self._half_light_radius = float(half_light_radius)
+
         self._flux    = float(flux)
         self._npoints = int(npoints)
         self._nstep   = int(nstep)
@@ -983,17 +997,18 @@ class RandomWalk(Sum):
 
         # this is the scale factor by which to multiply each step
         # in order to get the requested half light radius
+        # the number 2.09 comes from monte carlo simulations
         factor = np.sqrt(nstep)/2.09
-        self._scale = hlr/factor
+        self._scale = half_light_radius/factor
 
-        pts = self._get_points()
-        self._gaussians = self._get_gaussians(pts)
+        self._points = self._get_points()
+        self._gaussians = self._get_gaussians(self._points)
 
         super(RandomWalk, self).__init__(self._gaussians)
 
     @property
     def input_half_light_radius(self):
-        return self._hlr
+        return self._half_light_radius
 
     @property
     def flux(self):
@@ -1011,6 +1026,9 @@ class RandomWalk(Sum):
     def gaussians(self):
         return self._gaussians
 
+    @property
+    def points(self):
+        return self._points.copy()
 
     def _get_gaussians(self, points):
 
@@ -1071,8 +1089,9 @@ class RandomWalk(Sum):
         if self._nstep <= 0:
             raise ValueError("nstep must be > 0, got %s" % str(self._nstep))
 
-        if self._hlr <= 0.0:
-            raise ValueError("half light radius must be > 0, got %s" % str(self._hlr))
+        if self._half_light_radius <= 0.0:
+            raise ValueError("half light radius must be > 0"
+                             ", got %s" % str(self._half_light_radius))
         if self._flux < 0.0:
             raise ValueError("flux must be >= 0, got %s" % str(self._flux))
 
