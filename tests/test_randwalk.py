@@ -214,8 +214,6 @@ def test_randwalk_hlr():
                 hlr_calc[i] = calc_hlr(rw.points)
 
             mn=hlr_calc.mean()
-            std=hlr_calc.std()
-            err=std/np.sqrt(ntrial)
 
             std_check=np.interp(npoints, rw._interp_npts, rw._interp_std*hlr)
             mess="hlr for npoints: %d nstep: %d outside of expected range"
