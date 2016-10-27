@@ -55,6 +55,45 @@ from astropy.io import fits
 from astropy.table import Table,Column, vstack, hstack, join
 import os,glob
 
+def apply_selection(args, all_seg_ids):
+    """Applies selection cuts to galaxies in each segemnt.
+    Selection criteria are: 
+    1) Closest masked pixel is more than 11 pixels away
+                  OR 
+    2) Average flux in 9*9 pixels centered on the closest replaced pixel (before masking) is less than 
+       half of the peak flux of central galaxy
+                   AND  
+    3) SNR in elliptical gaussian filter is positve.
+    
+    Galaxies statifying these criteria in all filters are selected for the final catalog.
+    """
+    for seg in all_seg_ids:
+        cat={}
+        temp=[]
+        for f, filt in enumerate(args.filter_names):
+            cat_name = args.main_path + seg + '/' + filt + '_with_pstamp.fits'
+            cat[f] = Table.read(cat_name, format= 'fits')
+            #Select only good postage stamps
+            cond1 = cat[f]['min_mask_dist_pixels'] > 11
+            cond2 = cat[f]['average_mask_adjacent_pixel_count']/ cat[f]['peak_image_pixel_count'] < 0.5
+            cond3 = cat[f]['sn_ellip_gauss'] > 0
+            good, = np.where((cond1 | cond2) & cond3)
+            temp.append(good)
+        if args.apply_cuts is True:
+            select_gal = reduce(np.intersect1d,temp)
+        else:
+            # If no selection cut has to be applied
+            select_gal = range(len(cat[f]))
+        for f, filt in enumerate(args.filter_names):
+            new_cat_name = args.main_path + seg + '/' + filt + '_selected.fits'
+            new_cat = cat[f][select_gal]
+            if os.path.isfile(new_cat_name) is True:
+                subprocess.call(["rm", new_cat_name]) 
+            print "Catalog with pstamps saved at ", new_cat_name
+            new_cat.write(new_cat_name, format='fits') 
+        select_gal_list= args.main_path + seg + '/gal_in_cat.txt' 
+        np.savetxt(select_gal_list, select_gal)
+
 def assign_num(args, all_seg_ids):
     """Assigns individual identification number to each object"""
     seed =122
@@ -68,7 +107,7 @@ def assign_num(args, all_seg_ids):
     #is sufficient
     filt = args.filter_names[0]
     for seg_id in all_seg_ids:
-        file_name = args.main_path + seg_id + '/' + filt + '_with_pstamp.fits'
+        file_name = args.main_path + seg_id + '/' + filt + '_selected.fits'
         catalog = Table.read(file_name, format='fits')
         idents = range(ident,ident+len(catalog))
         seg_ids = [seg_id]*len(catalog)
@@ -172,7 +211,7 @@ def get_main_catalog(args, index_table, all_seg_ids):
     	final_table = main_table()
         complete_table=Table()
         for seg_id in all_seg_ids:
-            file_name = args.main_path + seg_id + '/' + filt + '_with_pstamp.fits'
+            file_name = args.main_path + seg_id + '/' + filt + '_selected.fits'
             seg_cat = Table.read(file_name, format='fits')
             q, = np.where(index_table['SEG_ID'] == seg_id)
             indx_seg = index_table[q]
@@ -213,7 +252,7 @@ def get_selection_catalog(args, index_table, all_seg_ids):
     for f, filt in enumerate(args.filter_names):
     	final_table = selection_table()
         for seg_id in all_seg_ids:
-            file_name = args.main_path + seg_id + '/' + filt + '_with_pstamp.fits'
+            file_name = args.main_path + seg_id + '/' + filt + '_selected.fits'
             seg_cat = Table.read(file_name, format='fits')
             q, = np.where(index_table['SEG_ID'] == seg_id)
             indx_seg = index_table[q]
@@ -236,7 +275,7 @@ def get_fits_catalog(args, index_table, all_seg_ids):
     for f, filt in enumerate(args.filter_names):
     	final_table = fits_table()
         for seg_id in all_seg_ids:
-            file_name = args.main_path + seg_id + '/' + filt + '_with_pstamp.fits'
+            file_name = args.main_path + seg_id + '/' + filt + '_selected.fits'
             seg_cat = Table.read(file_name, format='fits')
             q, = np.where(index_table['SEG_ID'] == seg_id)
             indx_seg = index_table[q]
@@ -262,6 +301,7 @@ def get_in_galsim(args):
         for fl in glob.glob(args.main_path + args.out_dir+'*'):
             os.remove(fl)
     all_seg_ids = np.loadtxt(args.seg_list_file, delimiter=" ",dtype='S2')
+    apply_selection(args, all_seg_ids)
     index_table = assign_num(args, all_seg_ids)
     for f, filt in enumerate(args.filter_names):
         idx = get_images(args, index_table, filt,
@@ -302,6 +342,8 @@ if __name__ == '__main__':
                         help="Name of Catalog with fit information")
     parser.add_argument('--seg_list_file', default ='/nfs/slac/g/ki/ki19/deuce/AEGIS/unzip/seg_ids.txt',
                         help="file with all seg id names" )
+    parser.add_argument('--apply_cuts', default = True,
+                        help="Remove galaxies with imperfect masking during pstamp cleaning step.[Default=True]")
     args = parser.parse_args()
     get_in_galsim(args)
 
