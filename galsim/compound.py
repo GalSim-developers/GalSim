@@ -920,15 +920,12 @@ class RandomWalk(Sum):
     give additional ellipticity, for example to follow that of an associated
     disk.
 
-    The number of steps in the walk is not generally important, except that it
-    must be large enough to result in a profile that does not strongly manifest
-    the inherient discreteness of the steps.  However, more steps will increase
-    the run time.  The default value of 40 seems to be a good compromise in
-    speed and fidelity.
+    We use the analytic approximation of an infinite number of steps, which is
+    a good approximation even if the desired number of steps were less than 10.
 
     The requested half light radius (hlr) should be thought of as a rough
     value.  With a finite number point sources the actual realized hlr radius
-    will be noisy.  In the mean, the hlr is accurate to 1%% for npoints >= 3
+    will be noisy.
 
     Initialization
     --------------
@@ -938,26 +935,25 @@ class RandomWalk(Sum):
                                     radius produced by an infinite number of
                                     points.  A single instance will be noisy.
     @param  flux                    Total flux in all point sources.  Default 1
-    @param  nstep                   Number of steps in the random walk for each
-                                    point.  Points are started at the center
-                                    and follow a random walk with fixed
-                                    step size, designed to give the requested
-                                    half light radius.  Default 40
     @param  rng                     Optional random number generator. Can be
                                     any galsim.BaseDeviate
-    @param                          gsparams GSParams for the gaussians
+    @param  gsparams                Optional GSParams for the gaussians
                                     representing each point source.
 
     Methods
     -------
 
-    This class inherits from galsim.Sum. Additional methods, implemented as
-    read-only properties, are provided as "getters" for the basic parameters:
+    This class inherits from galsim.Sum. An additional method is added
+    
+    calculateHLR:
+        Calculate the actual half light radius of the generated points
+    
+    Additional methods, implemented as read-only properties, are provided as
+    "getters" for the basic parameters:
 
         .npoints
         .input_half_light_radius
         .flux
-        .nstep
         .gaussians
             The list of galsim.Gaussian objects representing the points
         .points
@@ -974,155 +970,170 @@ class RandomWalk(Sum):
     # these allow use in a galsim configuration context
 
     _req_params = { "npoints" : int, "half_light_radius" : float }
-    _opt_params = { "flux" : float, "nstep" : int }
+    _opt_params = { "flux" : float }
     _single_params = []
     _takes_rng = True
 
-    # use to convert the requested hlr to a scale factor for each
-    # random walk step
-
-    _interp_ref_fac = 2.09
-    _interp_npts = np.array([6,7,8,9,10,15,20,30,50,75,100,150,200,500,1000])
-    _interp_hlr  = np.array([7.511,7.597,7.647,7.68,7.727,7.827,7.884,7.936,7.974,8.0,8.015,8.019,8.031,8.027,8.043])/8.0
-    _interp_std = np.array([2.043,2.029,1.828,1.817,1.67,1.443,1.235,1.017,0.8046,0.6628,0.5727,0.4703,0.4047,0.255,0.1851])/8.0
-
-    def __init__(self, npoints, half_light_radius, flux=1.0, nstep=40, rng=None, gsparams=None):
+    def __init__(self, npoints, half_light_radius, flux=1.0, rng=None, gsparams=None):
 
         self._half_light_radius = float(half_light_radius)
 
         self._flux    = float(flux)
         self._npoints = int(npoints)
-        self._nstep   = int(nstep)
 
+        # size of the galsim.Gaussian objects to use as delta functions
         self._gaussian_sigma = 1.0e-8
 
         self._input_gsparams=gsparams
 
+        # we will verify this in the _verify() method
         if rng is None:
-            rng = galsim.UniformDeviate()
+            rng = galsim.BaseDeviate()
 
         self._rng=rng
 
         self._verify()
 
-
-        factor = self._get_hlr_factor()
-        self._scale = half_light_radius*factor
+        self._set_gaussian_rng()
 
         self._points = self._get_points()
         self._gaussians = self._get_gaussians(self._points)
 
-        super(RandomWalk, self).__init__(self._gaussians)
+        gsobj = galsim._galsim.SBAdd(self._gaussians, gsparams)
+        galsim.GSObject.__init__(self, gsobj)
+        #super(RandomWalk, self).__init__(self._gaussians)
+
+    def calculateHLR(self):
+        """
+        calculate the half light radius of the generated points
+        """
+        pts = self._points
+        my,mx=pts.mean(axis=0)
+
+        r=np.sqrt( (pts[:,0]-my)**2 + (pts[:,1]-mx)**2)
+
+        hlr=np.median(r)
+
+        return hlr
+
 
     @property
     def input_half_light_radius(self):
+        """
+        getter for the input half light radius
+        """
         return self._half_light_radius
 
     @property
     def flux(self):
+        """
+        getter for the total flux
+        """
         return self._flux
 
     @property
     def npoints(self):
+        """
+        getter for the number of points
+        """
         return self._npoints
 
     @property
-    def nstep(self):
-        return self._nstep
-
-    @property
     def gaussians(self):
+        """
+        getter for the list of gaussians
+        """
         return self._gaussians
 
     @property
     def points(self):
+        """
+        getter for the array of points, shape [npoints, 2]
+        """
         return self._points.copy()
 
     def _get_gaussians(self, points):
+        """
+        Create galsim.Gaussian objects for each point.
 
+        Highly optimized
+        """
+
+	gaussians = []
+        sigma=self._gaussian_sigma
+        gsparams=self._input_gsparams
         fluxper=self._flux/self._npoints
-        gaussians=[]
-
-        for i in xrange(points.shape[0]):
-            dx,dy = points[i]
-
-            g=galsim.Gaussian(
-                sigma=self._gaussian_sigma,
+        
+        for p in points:
+            g = galsim._galsim.SBGaussian(
+                sigma=sigma,
                 flux=fluxper,
-                gsparams=self._input_gsparams,
+                gsparams=gsparams,
             )
-            g = g.shift(dx=dx, dy=dy)
+
+            pos = galsim.PositionD(p[0],p[1])
+
+            g = galsim._galsim.SBTransform(
+                g,
+                1.0,
+                0.0,
+                0.0,
+                1.0,
+                pos,
+                1.0,
+                gsparams,
+            )
 
             gaussians.append(g)
 
         return gaussians
 
+    def _set_gaussian_rng(self):
+        """
+        Set the random number generator used to create the points
+
+        We are approximating the random walk to have infinite number
+        of steps, which is just a gaussian
+        """
+
+        # gaussian step size in each dimension for a random walk with infinite
+        # number steps
+        self._sigma_step = self._half_light_radius/2.3548200450309493*2
+
+        self._gauss_rng = galsim.GaussianNoise(
+            self._rng,
+            sigma=self._sigma_step,
+        )
+
+
     def _get_points(self):
+        """
+        We must use a galsim random number generator, in order for
+        this profile to be used in the configuration file context.
 
-        scale=self._scale
-        npoints=self._npoints
-        nstep=self._nstep
+        The most efficient way is to write into an image
+        """
+        ny=self._npoints
+        nx=2
+        im=galsim.ImageD(nx, ny)
 
-        pts=np.zeros( (npoints, 2) )
+        im.addNoise(self._gauss_rng)
 
-        rng=self._rng
-
-        for i in xrange(npoints):
-            x=0.0
-            y=0.0
-
-            for istep in xrange(nstep):
-
-                r = scale*rng()
-                angle = 2*np.pi*rng()
-
-                dx = r*np.cos(angle)
-                dy = r*np.sin(angle)
-
-                x += dx
-                y += dy
-
-            pts[i,0] = x
-            pts[i,1] = y
-
-        return pts
+        return im.array
 
     def _verify(self):
+        """
+        type and range checking on the inputs
+        """
         if not isinstance(self._rng, galsim.BaseDeviate):
             raise TypeError("rng must be an instance of galsim.BaseDeviate, "
                             "got %s" % str(self._rng))
 
         if self._npoints <= 0:
             raise ValueError("npoints must be > 0, got %s" % str(self._npoints))
-        if self._nstep <= 0:
-            raise ValueError("nstep must be > 0, got %s" % str(self._nstep))
 
         if self._half_light_radius <= 0.0:
             raise ValueError("half light radius must be > 0"
                              ", got %s" % str(self._half_light_radius))
         if self._flux < 0.0:
             raise ValueError("flux must be >= 0, got %s" % str(self._flux))
-
-    def _get_hlr_factor(self):
-        """
-        get the scale factor by which to multiply each step in order to produce
-        the requested half light radius. The number 2.09 came from a monte
-        carlo simulation of a specific npoints/nstep pair, but this breaks down
-        at very low npoints.  The remaining factor fixes the result to be good
-        to 1%% for npoints > 3
-        """
-
-        if self._npoints < 6:
-            ifact = 7.35/8.0
-        else:
-            ifact = np.interp(
-                self._npoints,
-                self._interp_npts,
-                self._interp_hlr,
-            )
-
-        factor = self._interp_ref_fac/ifact/np.sqrt(self._nstep)
-        
-        return factor
-
-
