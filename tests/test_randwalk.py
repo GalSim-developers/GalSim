@@ -65,23 +65,18 @@ def test_randwalk_valid_inputs():
     # try constructing with mostly defaults
     npoints=100
     hlr = 8.0
-    nstep = 40
     flux = 3.5
 
     seed=35
     rng=galsim.UniformDeviate(seed)
 
-    rw=galsim.RandomWalk(npoints, hlr, nstep=nstep, flux=flux, rng=rng)
+    rw=galsim.RandomWalk(npoints, hlr, flux=flux, rng=rng)
 
     assert rw.npoints==npoints,"expected npoints==%d, got %d" % (npoints, rw.npoints)
     assert rw.input_half_light_radius==hlr,\
         "expected hlr==%g, got %g" % (hlr, rw.input_half_light_radius)
     assert rw.flux==flux,\
         "expected flux==%g, got %g" % (flux, rw.flux)
-
-    assert rw.nstep==nstep,"expected nstep==%d" % (nstep, rw.nstep)
-    assert rw.nstep==nstep,"expected nstep==%d" % (nstep, rw.nstep)
-
 
     g=rw.gaussians
     ngauss=len(g)
@@ -118,14 +113,6 @@ def test_randwalk_invalid_inputs():
         args=(npoints, hlr)
         np.testing.assert_raises(TypeError, galsim.RandomWalk, *args)
 
-        # try sending wrong type for nstep
-        npoints=100
-        hlr=8.0
-        nstep=[40]
-        args=(npoints, hlr)
-        kwargs={'nstep':nstep}
-        np.testing.assert_raises(TypeError, galsim.RandomWalk, *args, **kwargs)
-
         # try sending wrong type for hlr
         npoints=100
         hlr=[1.5]
@@ -147,14 +134,6 @@ def test_randwalk_invalid_inputs():
         args=(npoints, hlr)
         np.testing.assert_raises(ValueError, galsim.RandomWalk, *args)
 
-        # try sending bad value for nstep
-        npoints=100
-        hlr=8.0
-        nstep=-35
-        args=(npoints, hlr)
-        kwargs={'nstep':nstep}
-        np.testing.assert_raises(ValueError, galsim.RandomWalk, *args, **kwargs)
-
         # try sending bad value for hlr
         npoints=100
         hlr=-1.5
@@ -171,17 +150,6 @@ def test_randwalk_invalid_inputs():
     except ImportError:
         pass
 
-def calc_hlr(pts):
-
-    my,mx=pts.mean(axis=0)
-
-    r=np.sqrt( (pts[:,0]-my)**2 + (pts[:,1]-mx)**2)
-
-    hlr=np.median(r)
-
-    return hlr
-
-
 @timer
 def test_randwalk_hlr():
     """
@@ -189,16 +157,20 @@ def test_randwalk_hlr():
     is consistent with the requested value
     """
 
+    # for checking accuracy, we need expected standard deviation of
+    # the result
+    interp_npts = np.array([6,7,8,9,10,15,20,30,50,75,100,150,200,500,1000])
+    interp_hlr  = np.array([7.511,7.597,7.647,7.68,7.727,7.827,7.884,7.936,7.974,8.0,8.015,8.019,8.031,8.027,8.043])/8.0
+    interp_std = np.array([2.043,2.029,1.828,1.817,1.67,1.443,1.235,1.017,0.8046,0.6628,0.5727,0.4703,0.4047,0.255,0.1851])/8.0
+
+
     hlr = 8.0
 
     # test these npoints
-    npt_vals=[3, 10, 30, 60, 100]
+    npt_vals=[3, 10, 30, 60, 100, 1000]
 
     # should be within 4 sigma
     nstd=4
-
-    # test these nstep vals
-    nstepvals=[20,40,100]
 
     # number of trials
     ntrial_vals=[100]*len(npt_vals)
@@ -206,19 +178,17 @@ def test_randwalk_hlr():
     for ipts,npoints in enumerate(npt_vals):
 
         ntrial=ntrial_vals[ipts]
-        for nstep in nstepvals:
 
-            hlr_calc=np.zeros(ntrial)
-            for i in range(ntrial):
-                rw=galsim.RandomWalk(npoints, hlr, nstep=nstep)
-                hlr_calc[i] = calc_hlr(rw.points)
+        hlr_calc=np.zeros(ntrial)
+        for i in range(ntrial):
+            rw=galsim.RandomWalk(npoints, hlr)
+            hlr_calc[i] = rw.calculateHLR()
 
-            mn=hlr_calc.mean()
+        mn=hlr_calc.mean()
 
-            std_check=np.interp(npoints, rw._interp_npts, rw._interp_std*hlr)
-            mess="hlr for npoints: %d nstep: %d outside of expected range"
-            mess=mess % (npoints,nstep)
-            assert abs(mn-hlr) < nstd*std_check, mess
+        std_check=np.interp(npoints, interp_npts, interp_std*hlr)
+        mess="hlr for npoints: %d outside of expected range" % npoints
+        assert abs(mn-hlr) < nstd*std_check, mess
 
 if __name__ == "__main__":
     test_randwalk_defaults()
