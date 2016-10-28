@@ -12,23 +12,31 @@
 
 #include "polygon.h"
 #include "Image.h"
+#include "PhotonArray.h"
 
 namespace galsim
 {
 
-  class Silicon
- {
-   public:
-     Polygon** polylist;
-     Point* testpoint;
-     double DiffStep, collXmin, collXwidth, collYmin, collYwidth;
-     int Nx, Ny, Nv, NumVertices, NumElec;
-     Silicon() {};
-     Silicon(std::string); // Constructor
-     ~Silicon();  // Destructor
-     bool InsidePixel(int, int, double, double, double, ImageView<float>&);
-     double random_gaussian(void);
- };
+    class Silicon
+    {
+    public:
+        Polygon** polylist;
+        Point* testpoint;
+        double DiffStep, collXmin, collXwidth, collYmin, collYwidth;
+        int Nx, Ny, Nv, NumVertices, NumElec;
+        Silicon() {};
+        Silicon(std::string); // Constructor
+        ~Silicon();  // Destructor
+        double random_gaussian(void);
+
+        template <typename T>
+        bool InsidePixel(int ix, int iy, double x, double y, double zconv,
+                         ImageView<T> target) const;
+
+        template <typename T>
+        double accumulate(const PhotonArray& photons, UniformDeviate ud,
+                          ImageView<T> target) const;
+    };
 }
 
 #endif

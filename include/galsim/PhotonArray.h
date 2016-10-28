@@ -32,8 +32,6 @@
 #include "Random.h"
 #include "Image.h"
 
-#include "silicon.h"
-
 namespace galsim {
 
     /** @brief Class to hold a list of "photon" arrival positions
@@ -202,7 +200,7 @@ namespace galsim {
          * @returns The total flux of photons the landed inside the image bounds.
          */
         template <class T>
-        double addTo(ImageView<T>& target, UniformDeviate ud, Silicon* silicon=NULL) const;
+        double addTo(ImageView<T> target) const;
 
         /**
          * @brief Declare that the photons in this array are correlated.
