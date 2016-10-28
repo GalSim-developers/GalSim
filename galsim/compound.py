@@ -924,8 +924,8 @@ class RandomWalk(Sum):
     a good approximation even if the desired number of steps were less than 10.
 
     The requested half light radius (hlr) should be thought of as a rough
-    value.  With a finite number point sources the actual realized hlr radius
-    will be noisy.
+    value.  With a finite number point sources the actual realized hlr will be
+    noisy.
 
     Initialization
     --------------
@@ -934,22 +934,23 @@ class RandomWalk(Sum):
                                     points.  This is the mean half light
                                     radius produced by an infinite number of
                                     points.  A single instance will be noisy.
-    @param  flux                    Total flux in all point sources.  Default 1
+    @param  flux                    Optional total flux in all point sources.
+                                    Default 1
     @param  rng                     Optional random number generator. Can be
-                                    any galsim.BaseDeviate
+                                    any galsim.BaseDeviate.  If not sent or
+                                    None, the rng is created internally.
     @param  gsparams                Optional GSParams for the gaussians
                                     representing each point source.
 
     Methods
     -------
 
-    This class inherits from galsim.Sum. An additional method is added
+    This class inherits from galsim.Sum. Additional methods are
     
-    calculateHLR:
-        Calculate the actual half light radius of the generated points
-    
-    Additional methods, implemented as read-only properties, are provided as
-    "getters" for the basic parameters:
+        calculateHLR:
+            Calculate the actual half light radius of the generated points
+
+    There are also "getters",  implemented as read-only properties
 
         .npoints
         .input_half_light_radius
@@ -963,8 +964,12 @@ class RandomWalk(Sum):
     -----
 
     - The algorithm is a modified version of that presented in
-      https://arxiv.org/abs/1312.5514v3 : There is no outer cutoff to how far a
-      point can wander.
+
+          https://arxiv.org/abs/1312.5514v3.
+
+      Modifications are
+        1) there is no outer cutoff to how far a point can wander
+        2) We use the approximation of an infinite number of steps.
     """
 
     # these allow use in a galsim configuration context
@@ -1001,7 +1006,6 @@ class RandomWalk(Sum):
 
         gsobj = galsim._galsim.SBAdd(self._gaussians, gsparams)
         galsim.GSObject.__init__(self, gsobj)
-        #super(RandomWalk, self).__init__(self._gaussians)
 
     def calculateHLR(self):
         """
@@ -1137,3 +1141,16 @@ class RandomWalk(Sum):
                              ", got %s" % str(self._half_light_radius))
         if self._flux < 0.0:
             raise ValueError("flux must be >= 0, got %s" % str(self._flux))
+
+    def __str__(self):
+        rep='galsim.RandomWalk(%(npoints)d, %(hlr)g, flux=%(flux)g)'
+        rep = rep % dict(
+            npoints=self._npoints,
+            hlr=self._half_light_radius,
+            flux=self._flux,
+        )
+        return rep
+
+    def __repr__(self):
+        return self.__str__()
+
