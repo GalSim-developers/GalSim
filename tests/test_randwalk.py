@@ -162,19 +162,22 @@ def test_randwalk_repr():
     flux=1
     rw=galsim.RandomWalk(npoints, hlr, flux=flux)
 
+    # just make sure str() works, don't require eval to give
+    # a consistent object back
+    st=str(rw)
 
-    rep=repr(rw)
+    # require eval(repr(rw)) to give a consistent object back
 
-    for rep in [repr(rw),str(rw)]:
-        new_rw = eval(rep)
-        assert new_rw.npoints == rw.npoints,\
-            "expected npoints=%d got %d" % (rw.npoints,new_rw.npoints)
+    new_rw = eval(repr(rw))
 
-        mess="expected input_half_light_radius=%.16g got %.16g"
-        assert new_rw.input_half_light_radius == rw.input_half_light_radius,\
-            mess % (rw.input_half_light_radius,new_rw.input_half_light_radius)
-        assert new_rw.flux == rw.flux,\
-            "expected flux=%.16g got %.16g" % (rw.flux,new_rw.flux)
+    assert new_rw.npoints == rw.npoints,\
+        "expected npoints=%d got %d" % (rw.npoints,new_rw.npoints)
+
+    mess="expected input_half_light_radius=%.16g got %.16g"
+    assert new_rw.input_half_light_radius == rw.input_half_light_radius,\
+        mess % (rw.input_half_light_radius,new_rw.input_half_light_radius)
+    assert new_rw.flux == rw.flux,\
+        "expected flux=%.16g got %.16g" % (rw.flux,new_rw.flux)
 
 
 @timer
