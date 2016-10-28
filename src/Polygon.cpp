@@ -24,13 +24,13 @@
  * Polygon utilities
  */
 
-//****************** polygon.cpp **************************
+//****************** Polygon.cpp **************************
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <algorithm>            // for min_element
 #include <math.h>
-#include "polygon.h"
+#include "Polygon.h"
 
 Point::Point(double xin, double yin)  //Constructor
 {

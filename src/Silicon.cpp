@@ -24,7 +24,7 @@
  * Routines for integrating the CCD simulations into GalSim
  */
 
-//****************** silicon.cpp **************************
+//****************** Silicon.cpp **************************
 
 #include <math.h>
 #include <stdlib.h>
@@ -39,7 +39,7 @@
 // Uncomment this for debugging output
 //#define DEBUGLOGGING
 
-#include "silicon.h"
+#include "Silicon.h"
 #include "Image.h"
 #include "PhotonArray.h"
 

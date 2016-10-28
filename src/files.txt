@@ -29,5 +29,5 @@ Random.cpp
 CorrelatedNoise.cpp
 CDModel.cpp
 Version.cpp
-polygon.cpp
-silicon.cpp
+Polygon.cpp
+Silicon.cpp

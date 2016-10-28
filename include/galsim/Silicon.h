@@ -20,37 +20,42 @@
 /*
  * ------------------------------------------------------------------------------
  * Author: Craig Lage, UC Davis
- * Date: Jan 13, 2016
- * Polygon utilities
+ * Date: Mar 14, 2016
+ * Routines for integrating the CCD simulations into GalSim
  */
 
-//****************** polygon.h **************************
+//****************** Silicon.h **************************
 
-#ifndef POLYGON_H
-#define POLYGON_H
+#ifndef SILICON_H
+#define SILICON_H
 
-class Point
+#include "Polygon.h"
+#include "Image.h"
+#include "PhotonArray.h"
+
+namespace galsim
 {
-public:
-    double x,y;
-    void* owner;
-    Point() {};
-    Point(double, double);
-};
 
-class Polygon
-{
-public:
-    int npoints;
-    bool sorted;
-    double area;
-    Point** pointlist;
-    Polygon() {};
-    Polygon(int);// Constructor
-    ~Polygon();  //Destructor
-    void AddPoint(Point*);
-    void Sort();
-    double Area();
-    bool PointInside(Point*);
-};
+    class Silicon
+    {
+    public:
+        Polygon** polylist;
+        Point* testpoint;
+        double DiffStep, collXmin, collXwidth, collYmin, collYwidth;
+        int Nx, Ny, Nv, NumVertices, NumElec;
+        Silicon() {};
+        Silicon(std::string); // Constructor
+        ~Silicon();  // Destructor
+        double random_gaussian(void);
+
+        template <typename T>
+        bool InsidePixel(int ix, int iy, double x, double y, double zconv,
+                         ImageView<T> target) const;
+
+        template <typename T>
+        double accumulate(const PhotonArray& photons, UniformDeviate ud,
+                          ImageView<T> target) const;
+    };
+}
+
 #endif
