@@ -162,14 +162,15 @@ Silicon::Silicon (std::string inname)
         j = (index - n) / Nv;
         i = (index - n - j * Nv) / (Ny * Nv);
         iss>>x0>>y0>>th>>x1>>y1;
-        /*
-           if (index == 73) // Test print out of read in
-           {
-           printf("Successfully reading the Pixel vertex file\n");
-           printf("line = %s\n",line.c_str());
-           printf("n = %d, i = %d, j = %d, x0 = %f, y0 = %f, th = %f, x1 = %f, y1 = %f\n",n,i,j,x0,y0,th,x1,y1);
-           }
-           */
+#ifdef DEBUGLOGGING
+        if (index == 73) // Test print out of read in
+        {
+            dbg<<"Successfully reading the Pixel vertex file\n";
+            dbg<<"line = "<<line<<std::endl;
+            dbg<<"n = "<<n<<", i = "<<i<<", j = "<<j<<", x0 = "<<x0<<", y0 = "<<y0
+                <<", th = "<<th<<", x1 = "<<x1<<", y1 = "<<y1<<std::endl;
+        }
+#endif
 
         // The following captures the pixel displacement. These are translated into
         // coordinates compatible with (x,y). These are per electron.
@@ -177,13 +178,12 @@ Silicon::Silicon (std::string inname)
         polylist[i * Ny + j]->pointlist[n]->y = (((y1 - y0) / PixelSize + 0.5) - polylist[i * Ny + j]->pointlist[n]->y) / (double)NumElec;
     }
     //Test print out of distortion for central pixel
-    /*
-       i = 4; j = 4;
-       for (n=0; n<Nv; n++)
-       {
-       printf("n = %d, x = %f, y = %f\n",n,polylist[i * Ny + j]->pointlist[n]->x*(double)NumElec,polylist[i * Ny + j]->pointlist[n]->y*(double)NumElec);
-       fflush(stdout);
-       }*/
+#ifdef DEBUGLOGGING
+    i = 4; j = 4;
+    for (n=0; n<Nv; n++)
+        dbg<<"n = "<<n<<", x = "<<polylist[i * Ny + j]->pointlist[n]->x*(double)NumElec
+            <<", y = "<<polylist[i * Ny + j]->pointlist[n]->y*(double)NumElec<<std::endl;
+#endif
     // We generate a testpoint for testing whether a point is inside or outside the array
     testpoint = new Point(0.0,0.0);
     return;
@@ -261,12 +261,11 @@ bool Silicon::InsidePixel(int ix, int iy, double x, double y, double zconv,
         }
     }
 
-    /*
-       for (n=0; n<Nv; n++) // test printout of distorted pixe vertices.
-       {
-       printf("n = %d, x = %f, y = %f\n",n,polylist[TestPoly]->pointlist[n]->x,polylist[TestPoly]->pointlist[n]->y);
-       fflush(stdout);
-       }*/
+#ifdef DEBUGLOGGING
+    for (n=0; n<Nv; n++) // test printout of distorted pixe vertices.
+        dbg<<"n = "<<n<<", x = "<<polylist[TestPoly]->pointlist[n]->x
+            <<", y = "<<polylist[TestPoly]->pointlist[n]->y<<std::endl;
+#endif
 
     // Now test to see if the point is inside
     testpoint->x = x;
@@ -370,7 +369,8 @@ double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
             y_off = y - (double)yoff[n];
             if (this->InsidePixel(ix_off, iy_off, x_off, y_off, zconv, target))
             {
-                //printf("Found in pixel %d, ix = %d, iy = %d, x=%f, y = %f, target(ix,iy)=%f\n",n, ix, iy, x, y, target(ix,iy));
+                xdbg<<"Found in pixel "<<n<<", ix = "<<ix<<", iy = "<<iy
+                    <<", x="<<x<<", y = "<<y<<", target(ix,iy)="<<target(ix,iy)<<std::endl;
                 if (m == 0) zerocount += 1;
                 else if (m == 1) nearestcount += 1;
                 else othercount +=1;
@@ -402,7 +402,7 @@ double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
             ix = ix + xoff[n];
             iy = iy + yoff[n];
             FoundPixel = true;
-            //printf("Not found in any pixel\n");
+            dbg<<"Not found in any pixel\n";
         }
         // (ix, iy) now give the actual pixel which will receive the charge
 
