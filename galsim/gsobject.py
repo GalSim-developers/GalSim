@@ -979,7 +979,7 @@ class GSObject(object):
     def drawImage(self, image=None, nx=None, ny=None, bounds=None, scale=None, wcs=None, dtype=None,
                   method='auto', area=1., exptime=1., gain=1., add_to_image=False,
                   use_true_center=True, offset=None, n_photons=0., rng=None, max_extra_noise=0.,
-                  poisson_flux=None, setup_only=False, dx=None, wmult=1.):
+                  poisson_flux=None, sensor=None, setup_only=False, dx=None, wmult=1.):
         """Draws an Image of the object.
 
         The drawImage() method is used to draw an Image of the current object using one of several
@@ -1232,6 +1232,8 @@ class GSObject(object):
                             Poisson statistics for `n_photons` samples when photon shooting.
                             [default: True, unless `n_photons` is given, in which case the default
                             is False]
+        @param sensor       An optional Sensor instance, which will be used to accumulate the
+                            photons onto the image. [default: None]
         @param setup_only   Don't actually draw anything on the image.  Just make sure the image
                             is set up correctly.  This is used internally by GalSim, but there
                             may be cases where the user will want the same functionality.
@@ -1343,7 +1345,7 @@ class GSObject(object):
 
         if method == 'phot':
             added_photons = prof.drawPhot(imview, n_photons, rng, max_extra_noise, poisson_flux,
-                                          gain)
+                                          sensor, gain)
         elif prof.isAnalyticX():
             added_photons = prof.drawReal(imview)
         else:
@@ -1599,7 +1601,7 @@ class GSObject(object):
 
 
     def drawPhot(self, image, n_photons=0, rng=None, max_extra_noise=None, poisson_flux=False,
-                 gain=1.0):
+                 sensor=None, gain=1.0):
         """
         Draw this profile into an Image by shooting photons.
 
@@ -1649,6 +1651,8 @@ class GSObject(object):
                             Poisson statistics for `n_photons` samples when photon shooting.
                             [default: True, unless `n_photons` is given, in which case the default
                             is False]
+        @param sensor       An optional Sensor instance, which will be used to accumulate the
+                            photons onto the image. [default: None]
         @param gain         The number of photons per ADU ("analog to digital units", the units of
                             the numbers output from a CCD).  [default: 1.]
 
@@ -1684,6 +1688,11 @@ class GSObject(object):
         if image.center() != galsim.PositionI(0,0):
             raise ValueError("drawPhot requires an image centered at 0,0")
 
+        if sensor is None:
+            sensor = galsim.Sensor()
+        elif not isinstance(sensor, galsim.Sensor):
+            raise TypeError("The sensor provided is not a Sensor instance")
+
         Ntot, g = self._calculate_nphotons(n_photons, poisson_flux, max_extra_noise, ud)
 
         if gain != 1.:
@@ -1714,7 +1723,7 @@ class GSObject(object):
 
             phot_array.scaleFlux(g * thisN / Ntot);
 
-            added_flux += phot_array.addTo(image.image)
+            added_flux += sensor.accumulate(phot_array, image)
             Nleft -= thisN;
 
         return added_flux;
