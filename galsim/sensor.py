@@ -27,6 +27,7 @@ bottom of the detector.
 """
 
 import numpy as np
+import galsim
 
 class Sensor(object):
     """
