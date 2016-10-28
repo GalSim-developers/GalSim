@@ -1143,7 +1143,7 @@ class RandomWalk(Sum):
             raise ValueError("flux must be >= 0, got %s" % str(self._flux))
 
     def __str__(self):
-        rep='galsim.RandomWalk(%(npoints)d, %(hlr)g, flux=%(flux)g)'
+        rep='galsim.RandomWalk(%(npoints)d, %(hlr).16g, flux=%(flux).16g)'
         rep = rep % dict(
             npoints=self._npoints,
             hlr=self._half_light_radius,
