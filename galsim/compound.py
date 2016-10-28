@@ -935,12 +935,14 @@ class RandomWalk(Sum):
                                     radius produced by an infinite number of
                                     points.  A single instance will be noisy.
     @param  flux                    Optional total flux in all point sources.
-                                    Default 1
+                                    [default 1]
     @param  rng                     Optional random number generator. Can be
                                     any galsim.BaseDeviate.  If not sent or
                                     None, the rng is created internally.
+                                    [default None]
     @param  gsparams                Optional GSParams for the gaussians
                                     representing each point source.
+                                    [default None]
 
     Methods
     -------
