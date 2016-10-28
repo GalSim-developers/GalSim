@@ -36,8 +36,7 @@ namespace galsim {
          *
          * These parameters can be broadly split into two groups: i) parameters that affect the
          * rendering of objects by Discrete Fourier Transform (DFT) and by real space convolution; 
-         * and ii) parameters that affect rendering by Photon Shooting, invoked using the SBProfile
-         * .draw() and .drawShoot() member functions, respectively.
+         * and ii) parameters that affect rendering by photon shooting.
          *
          * The DFT and real space convolution relevant params are:
          *

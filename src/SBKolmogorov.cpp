@@ -22,12 +22,6 @@
 #include "SBKolmogorov.h"
 #include "SBKolmogorovImpl.h"
 
-#ifdef DEBUGLOGGING
-#include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 2;
-#endif
-
 // Uncomment this to do the calculation that solves for the conversion between lam_over_r0
 // and fwhm and hlr.
 // (Solved values are put into Kolmogorov class in galsim/base.py = 0.975865, 0.554811)
@@ -36,6 +30,10 @@
 #ifdef SOLVE_FWHM_HLR
 #include "Solve.h"
 #endif
+
+// This is used in two places below, so store it up here.
+// See KolmogorovInfo constructor for the explanantion of this number.
+#define XVAL_ZERO 0.55090124543985636638457099311149824 / (2.*M_PI)
 
 namespace galsim {
 
@@ -93,6 +91,12 @@ namespace galsim {
         dbg<<"xnorm = "<<_xnorm<<std::endl;
     }
 
+    double SBKolmogorov::SBKolmogorovImpl::maxSB() const
+    {
+        // _info->xValue(r) is just XVAL_ZERO, defined above.
+        return _xnorm * XVAL_ZERO;
+    }
+
     double SBKolmogorov::SBKolmogorovImpl::xValue(const Position<double>& p) const
     {
         double r = sqrt(p.x*p.x+p.y*p.y) * _k0;
@@ -108,83 +112,50 @@ namespace galsim {
         return _flux * _info->kValue(ksq);
     }
 
-    void SBKolmogorov::SBKolmogorovImpl::fillXValue(tmv::MatrixView<double> val,
+    void SBKolmogorov::SBKolmogorovImpl::fillXImage(ImageView<double> im,
                                                     double x0, double dx, int izero,
                                                     double y0, double dy, int jzero) const
     {
-        dbg<<"SBKolmogorov fillXValue\n";
+        dbg<<"SBKolmogorov fillXImage\n";
         dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
         dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
         if (izero != 0 || jzero != 0) {
             xdbg<<"Use Quadrant\n";
-            fillXValueQuadrant(val,x0,dx,izero,y0,dy,jzero);
+            fillXImageQuadrant(im,x0,dx,izero,y0,dy,jzero);
         } else {
             xdbg<<"Non-Quadrant\n";
-            assert(val.stepi() == 1);
-            const int m = val.colsize();
-            const int n = val.rowsize();
-            typedef tmv::VIt<double,1,tmv::NonConj> It;
+            const int m = im.getNCol();
+            const int n = im.getNRow();
+            double* ptr = im.getData();
+            const int skip = im.getNSkip();
+            assert(im.getStep() == 1);
 
             x0 *= _k0;
             dx *= _k0;
             y0 *= _k0;
             dy *= _k0;
 
-            for (int j=0;j<n;++j,y0+=dy) {
+            for (int j=0; j<n; ++j,y0+=dy,ptr+=skip) {
                 double x = x0;
                 double ysq = y0*y0;
-                It valit = val.col(j).begin();
-                for (int i=0;i<m;++i,x+=dx) {
-                    double r = sqrt(x*x + ysq);
-                    *valit++ = _xnorm * _info->xValue(r);
-                }
+                for (int i=0; i<m; ++i,x+=dx)
+                    *ptr++ = _xnorm * _info->xValue(sqrt(x*x + ysq));
             }
         }
     }
 
-    void SBKolmogorov::SBKolmogorovImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                                    double kx0, double dkx, int izero,
-                                                    double ky0, double dky, int jzero) const
-    {
-        dbg<<"SBKolmogorov fillKValue\n";
-        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
-        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
-        if (izero != 0 || jzero != 0) {
-            xdbg<<"Use Quadrant\n";
-            fillKValueQuadrant(val,kx0,dkx,izero,ky0,dky,jzero);
-        } else {
-            xdbg<<"Non-Quadrant\n";
-            assert(val.stepi() == 1);
-            const int m = val.colsize();
-            const int n = val.rowsize();
-            typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
-
-            kx0 *= _inv_k0;
-            dkx *= _inv_k0;
-            ky0 *= _inv_k0;
-            dky *= _inv_k0;
-
-            for (int j=0;j<n;++j,ky0+=dky) {
-                double kx = kx0;
-                double kysq = ky0*ky0;
-                It valit = val.col(j).begin();
-                for (int i=0;i<m;++i,kx+=dkx) *valit++ = _flux * _info->kValue(kx*kx + kysq);
-            }
-        }
-    }
-
-    void SBKolmogorov::SBKolmogorovImpl::fillXValue(tmv::MatrixView<double> val,
+    void SBKolmogorov::SBKolmogorovImpl::fillXImage(ImageView<double> im,
                                                     double x0, double dx, double dxy,
                                                     double y0, double dy, double dyx) const
     {
-        dbg<<"SBKolmogorov fillXValue\n";
+        dbg<<"SBKolmogorov fillXImage\n";
         dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
         dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
-        assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        double* ptr = im.getData();
+        const int skip = im.getNSkip();
+        assert(im.getStep() == 1);
 
         x0 *= _k0;
         dx *= _k0;
@@ -193,29 +164,58 @@ namespace galsim {
         dy *= _k0;
         dyx *= _k0;
 
-        It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+        for (int j=0; j<n; ++j,x0+=dxy,y0+=dy,ptr+=skip) {
             double x = x0;
             double y = y0;
-            for (int i=0;i<m;++i,x+=dx,y+=dyx) {
-                double r = sqrt(x*x + y*y);
-                *valit++ = _xnorm * _info->xValue(r);
+            for (int i=0; i<m; ++i,x+=dx,y+=dyx)
+                *ptr++ = _xnorm * _info->xValue(sqrt(x*x + y*y));
+        }
+    }
+
+    void SBKolmogorov::SBKolmogorovImpl::fillKImage(ImageView<std::complex<double> > im,
+                                                double kx0, double dkx, int izero,
+                                                double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBKolmogorov fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        if (izero != 0 || jzero != 0) {
+            xdbg<<"Use Quadrant\n";
+            fillKImageQuadrant(im,kx0,dkx,izero,ky0,dky,jzero);
+        } else {
+            xdbg<<"Non-Quadrant\n";
+            const int m = im.getNCol();
+            const int n = im.getNRow();
+            std::complex<double>* ptr = im.getData();
+            int skip = im.getNSkip();
+            assert(im.getStep() == 1);
+
+            kx0 *= _inv_k0;
+            dkx *= _inv_k0;
+            ky0 *= _inv_k0;
+            dky *= _inv_k0;
+
+            for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
+                double kx = kx0;
+                double kysq = ky0*ky0;
+                for (int i=0;i<m;++i,kx+=dkx)
+                    *ptr++ = _flux * _info->kValue(kx*kx+kysq);
             }
         }
     }
 
-    void SBKolmogorov::SBKolmogorovImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+    void SBKolmogorov::SBKolmogorovImpl::fillKImage(ImageView<std::complex<double> > im,
                                                     double kx0, double dkx, double dkxy,
                                                     double ky0, double dky, double dkyx) const
     {
-        dbg<<"SBKolmogorov fillKValue\n";
+        dbg<<"SBKolmogorov fillKImage\n";
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
-        assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
 
         kx0 *= _inv_k0;
         dkx *= _inv_k0;
@@ -224,11 +224,11 @@ namespace galsim {
         dky *= _inv_k0;
         dkyx *= _inv_k0;
 
-        It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
+        for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky,ptr+=skip) {
             double kx = kx0;
             double ky = ky0;
-            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx) *valit++ = _flux * _info->kValue(kx*kx+ky*ky);
+            for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx)
+                *ptr++ = _flux * _info->kValue(kx*kx+ky*ky);
         }
     }
 
@@ -345,7 +345,8 @@ namespace galsim {
         // According to Wolfram Alpha:
         // Integrate[k*exp(-k^5/3),{k,0,infinity}] = 3/5 Gamma(6/5)
         //    = 0.55090124543985636638457099311149824;
-        double val = 0.55090124543985636638457099311149824 / (2.*M_PI);
+        // The value we want is this / 2pi, which we define as XVAL_ZERO above.
+        double val = XVAL_ZERO;
         _radial.addEntry(0.,val);
         xdbg<<"f(0) = "<<val<<std::endl;
 

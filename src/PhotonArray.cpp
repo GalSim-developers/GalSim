@@ -27,12 +27,6 @@
 #include "PhotonArray.h"
 #include "silicon.h"
 
-#ifdef DEBUGLOGGING
-#include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 2;
-#endif
-
 namespace galsim {
 
     PhotonArray::PhotonArray(
@@ -319,11 +313,11 @@ namespace galsim {
             }
         }
 #endif
-	// These counts are mainly for debug purposes and can be removed later.
-	std::cout << "Found "<< zerocount << " photons in undistorted pixel, " << nearestcount <<
-      " in closest neighbor, " << othercount << " in other neighbor. " << misscount << " not in any pixel\n"
-        << std::endl;
-	    // delete silicon;
+        // These counts are mainly for debug purposes and can be removed later.
+        std::cout << "Found "<< zerocount << " photons in undistorted pixel, " << nearestcount;
+        std::cout << " in closest neighbor, " << othercount << " in other neighbor. " << misscount;
+        std::cout << " not in any pixel\n" << std::endl;
+        // delete silicon;
         return addedFlux;
     }
 
@@ -332,5 +326,4 @@ namespace galsim {
                                        Silicon* silicon = NULL) const;
     template double PhotonArray::addTo(ImageView<double>& image, UniformDeviate ud,
                                        Silicon* silicon = NULL) const;
-
 }

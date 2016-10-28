@@ -158,7 +158,8 @@ def permute(rng, *args):
     @param args   Any number of lists to be permuted.
     """
     ud = _galsim.UniformDeviate(rng)
-    if len(args) == 0: return
+    if len(args) == 0:
+        raise TypeError("permute called with no lists to permuts")
 
     # We use an algorithm called the Knuth shuffle, which is based on the Fisher-Yates shuffle.
     # See http://en.wikipedia.org/wiki/Fisher-Yates_shuffle for more information.
@@ -251,7 +252,7 @@ class DistDeviate(_galsim.BaseDeviate):
         # lseed is an obsolete synonym for seed
         # I think this was the only place that the name lseed was actually used in the docs.
         # so we keep it for now for backwards compatibility.
-        if lseed is not None:
+        if lseed is not None: # pragma: no cover
             from galsim.deprecated import depr
             depr('lseed', 1.1, 'seed')
             seed = lseed
@@ -289,17 +290,19 @@ class DistDeviate(_galsim.BaseDeviate):
                 x_max = function.x_max
             else:
                 try:
-                    function = eval('lambda x: ' + function)
+                    function = galsim.utilities.math_eval('lambda x : ' + function)
                     if x_min is not None: # is not None in case x_min=0.
                         function(x_min)
                     else:
                         # Somebody would be silly to pass a string for evaluation without x_min,
                         # but we'd like to throw reasonable errors in that case anyway
                         function(0.6) # A value unlikely to be a singular point of a function
-                except:
+                except Exception as e:
                     raise ValueError(
                         "String function must either be a valid filename or something that "+
-                        "can eval to a function of x. Input provided: {0}".format(input_function))
+                        "can eval to a function of x.\n"+
+                        "Input provided: {0}\n".format(input_function)+
+                        "Caught error: {0}".format(e))
         else:
             # Check that the function is actually a function
             if not (isinstance(function, galsim.LookupTable) or hasattr(function,'__call__')):

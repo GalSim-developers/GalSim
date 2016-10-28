@@ -244,6 +244,12 @@ parameters available for use (e.g.\ total \texttt{flux}) along with default valu
     with index \texttt{n=1}.  Requires one of the
     following \texttt{\emph{size}} parameters: \texttt{scale\_radius} or \texttt{half\_light\_radius}.
 \item[$\circ$]
+  \texttt{galsim.}\texttt{InclinedExponential}\texttt{(inclination, scale\_radius, scale\_height=0.1*scale\_radius, flux=1.)}
+    \newline
+    An Inclined Exponential galaxy disc profile. Requires the
+    following parameters: \texttt{inclination} and \texttt{scale\_radius}.
+    \texttt{scale\_height} can optionally provided; if not, it will default to 0.1*\texttt{scale\_radius}.
+\item[$\circ$]
   \texttt{galsim.}\href{http://galsim-developers.github.com/GalSim/classgalsim_1_1base_1_1_de_vaucouleurs.html}{\texttt{DeVaucouleurs}}\texttt{(half\_light\_radius, flux=1.)}
     \newline
     A De Vaucouleurs galaxy bulge profile, a S\'{e}rsic
@@ -265,7 +271,7 @@ parameters available for use (e.g.\ total \texttt{flux}) along with default valu
     class), or using the \texttt{galsim.\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1scene_1_1_c_o_s_m_o_s_catalog.html}{COSMOSCatalog}} class.
 
     An example catalog of 100 real galaxies is in the repository itself; a set of real
-    galaxy images, with original PSFs, can be downloaded following instructions on the 
+    galaxy images, with original PSFs, can be downloaded following instructions on the
     \emph{RealGalaxy Data Download Page} on the
     \href{https://github.com/GalSim-developers/GalSim/wiki/RealGalaxy\%20Data}{GalSim Wiki}, or
     using an executable \texttt{galsim\_download\_cosmos} that is distributed with GalSim. For information
@@ -342,7 +348,7 @@ cover different time intervals for the different calls (e.g., starting at 0 seco
 \end{verbatim}
 
 \subsection{Units}
-The choice of units for the size parameters is up to the user,
+The choice of units for the \textit{size} parameters is up to the user,
 but it must be kept consistent between all \GSObject s.  These
 units must also adopted when specifying the \Image\ pixel
 \texttt{scale}, whether this is set via the \texttt{GSObject}
@@ -366,6 +372,21 @@ system of units could be used.  Users wishing to separately specify the values o
 with their natural units of nanometers and meters may do so using \texttt{lam} and \texttt{diam}; in
 that case, the keyword \texttt{scale\_unit} can be used to define the system of units used for the
 scales in images.
+
+The units for the \textit{flux} of a \GSObject are nominally photons/s/cm$^2$, and the units for an
+image are ADUs (analog-to-digital units).  Note, however, that the default exposure time, telescope
+collecting area, and gain are 1 s, 1 cm$^2$, and 1 ADU/photon (we combine photon-to-electron and
+electron-to-ADU efficiencies), respectively, so users who wish to ignore the intricacies of managing
+exposure times, collecting areas, and gains can simply think of the flux of a \GSObject in either
+ADUs or photons.
+
+These details matter more when working with \texttt{ChromaticObject}s, where the flux normalization
+is handled with an \texttt{SED} object.  In fact, there are two types of \texttt{ChromaticObject}s
+to consider: 1) \texttt{ChromaticObject}s representing astronomical objects like stars and galaxies
+have units (once integrated over angle on the sky) of photons/s/cm$^2$/nm, 2)
+\texttt{ChromaticObject}s representing wavelength-dependent PSFs are, by contrast, dimensionless.
+(Technically, this distinction exists for achromatic astronomical objects and PSFs too, but we
+usually ignore it there.)
 
 
 \subsection{Important GSObject methods}\label{sect:gsobjectmethods}
@@ -580,7 +601,7 @@ a \texttt{ChromaticObject}).
   \texttt{bandpass.\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1bandpass_1_1_bandpass.html\#a230865a1e29ed8a95ea4b2c7d66a08a1}{truncate}(blue\_limit,
     red\_limit, relative\_throughput, \dots)}
     \newline
-    Return a new bandpass truncated to only include wavelengths between \texttt{blue\_limit} and 
+    Return a new bandpass truncated to only include wavelengths between \texttt{blue\_limit} and
     \texttt{red\_limit}, or truncated based on the supplied \texttt{relative\_throughput} level.
   \item[$\circ$]
   \texttt{bandpass.\href{http://galsim-developers.github.io/GalSim/classgalsim_1_1bandpass_1_1_bandpass.html\#a20a7b1813506e7441e03ef097f0d5bf1}{thin}(rel\_err,\dots)}
@@ -612,6 +633,12 @@ may be constructed in several ways, similarly to bandpasses:
     function that accepts wavelength in units given by \texttt{wave\_type} and returns flux density in units given by \texttt{flux\_type}.
 \end{itemize}
 
+SEDs can be created using the \texttt{astropy.units} module to specify \texttt{wave\_type} and \texttt{flux\_type}.  For example:
+
+\begin{verbatim}
+>>> from astropy import units as u
+>>> sed = galsim.SED(filename, wave_type=u.nm, flux_type=u.erg/(u.s*u.cm**2*u.nm))
+\end{verbatim}
 
 Important methods for \SED\ objects include:
 \begin{itemize}
@@ -645,8 +672,13 @@ Important methods for \SED\ objects include:
     to applying it just once.
 \end{itemize}
 
-Finally, note that \texttt{SED} instances can be added together, multiplied by scalars or functions
-(of wavelength in nanometers), and are callable, returning flux density in photons/nm.
+GalSim uses SED instances both to represent spectral density and dimensionless wavelength-dependent
+normalization.  (The former for stars and galaxies, the latter for chromatic PSFs.)  \texttt{SED}
+instances can be added together, multiplied by scalars or functions (of wavelength in nanometers),
+and are callable, returning either flux density in photons/s/cm$^2$/nm or dimensionless
+normalization as appropriate.  Some operations are restricted depending on \texttt{SED.flux\_type}.
+For instance, the product of two \texttt{SED}s with units photons/s/cm$^2$/nm is prohibited since
+the resulting object would not have the dimensions of an \texttt{SED}.
 
 \subsection{ChromaticObjects}
 
@@ -669,9 +701,9 @@ $\mathrm{I}(x, y, \lambda) = \mathrm{I}_0(x, y) \mathrm{f}(\lambda)$:
 \texttt{ChromaticObject}s may be combined and transformed similarly to
 \texttt{GSObjects}, using the functions and methods \texttt{Add}, \texttt{Convolve}, \texttt{withScaledFlux}, \texttt{dilate}, \texttt{magnify}, \texttt{shear}, \texttt{rotate}, and \texttt{shift}.
 
-The \href{http://galsim-developers.github.io/GalSim/classgalsim_1_1chromatic_1_1_chromatic_object.html#adb05a4f0dadc3c7cbc361ec97984e6f1}{\texttt{dilate}} and \href{http://galsim-developers.github.io/GalSim/classgalsim_1_1chromatic_1_1_chromatic_object.html#ab266ee1207d60ba7a9fb6b32a4ef6ab2}{\texttt{shift}} methods of
-\texttt{ChromaticObject}s can also accept as an argument a function of wavelength (in nanometers)
-that returns a wavelength-dependent dilation or shift.  These can be used to implement
+The transformation methods of \texttt{ChromaticObject}s, like \href{http://galsim-developers.github.io/GalSim/classgalsim_1_1chromatic_1_1_chromatic_object.html#adb05a4f0dadc3c7cbc361ec97984e6f1}{\texttt{dilate}} and \href{http://galsim-developers.github.io/GalSim/classgalsim_1_1chromatic_1_1_chromatic_object.html#ab266ee1207d60ba7a9fb6b32a4ef6ab2}{\texttt{shift}},
+can also accept as an argument a function of wavelength (in nanometers)
+that returns a wavelength-dependent dilation, shift, etc.  These can be used to implement
 chromatic PSFs.  For example, a diffraction limited PSF might look
 like:
 
@@ -680,7 +712,7 @@ like:
 
 The \href{http://galsim-developers.github.io/GalSim/classgalsim_1_1chromatic_1_1_chromatic_object.html#a4228098295ee04e4f491567a9ce3b28f}{\texttt{drawImage}} method of a \texttt{ChromaticObject} is similar to the \drawImage\ method of a \texttt{GSObject},
 except that it requires a \texttt{Bandpass} object as its first
-argument.
+argument.  Note that only \texttt{ChromaticObject}s with \texttt{SED}s having units of photons/s/cm$^2$/nm can be drawn.
 
 \texttt{>>> gband = galsim.Bandpass(lambda w:1.0, wave\_type='nm', blue\_limit=410, red\_limit=550)} \newline
 \texttt{>>> image = chromatic\_obj.drawImage(gband)}

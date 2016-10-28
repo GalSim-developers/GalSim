@@ -52,14 +52,13 @@ namespace galsim {
 
         void getYRangeX(double x, double& ymin, double& ymax, std::vector<double>& splits) const;
 
-        Position<double> centroid() const { return _cen+fwd(_adaptee.centroid()); }
+        Position<double> centroid() const { return _cen + fwd(_adaptee.centroid()); }
 
-        double getFlux() const { return _adaptee.getFlux()*_absdet; }
+        double getFlux() const { return _adaptee.getFlux() * _absdet; }
+        double maxSB() const { return _adaptee.maxSB() * _fluxScaling; }
 
-        double getPositiveFlux() const
-        { return _adaptee.getPositiveFlux()*_absdet; }
-        double getNegativeFlux() const
-        { return _adaptee.getNegativeFlux()*_absdet; }
+        double getPositiveFlux() const { return _adaptee.getPositiveFlux() * _absdet; }
+        double getNegativeFlux() const { return _adaptee.getNegativeFlux() * _absdet; }
 
         /**
          * @brief Shoot photons through this SBTransform.
@@ -80,16 +79,16 @@ namespace galsim {
         double getFluxScaling() const { return _fluxScaling; }
 
         // Overrides for better efficiency
-        void fillXValue(tmv::MatrixView<double> val,
+        void fillXImage(ImageView<double> im,
                         double x0, double dx, int izero,
                         double y0, double dy, int jzero) const;
-        void fillXValue(tmv::MatrixView<double> val,
+        void fillXImage(ImageView<double> im,
                         double x0, double dx, double dxy,
                         double y0, double dy, double dyx) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        void fillKImage(ImageView<std::complex<double> > im,
                         double kx0, double dkx, int izero,
                         double ky0, double dky, int jzero) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        void fillKImage(ImageView<std::complex<double> > im,
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 

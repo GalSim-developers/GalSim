@@ -23,12 +23,6 @@
 #include "integ/Int.h"
 #include "SBProfile.h"
 
-#ifdef DEBUGLOGGING
-#include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 2;
-#endif
-
 // Gary's original code used a lot of lookup tables, but most of these have analytic formulae
 // that seem to be generally faster than the lookup table.  Part of this is probably because
 // our lookup table isn't super fast, so I'm leaving the code in, but disabled.  If we manage

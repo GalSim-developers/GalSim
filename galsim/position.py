@@ -26,8 +26,8 @@ for Class in (_galsim.PositionD, _galsim.PositionI):
     Class.__repr__ = lambda self: "galsim.%s(x=%r, y=%r)"%(self.__class__.__name__, self.x, self.y)
     Class.__str__ = lambda self: "galsim.%s(%s,%s)"%(self.__class__.__name__, self.x, self.y)
     Class.__getinitargs__ = lambda self: (self.x, self.y)
-    # Quick and dirty.  Just check reprs are equal.
-    Class.__eq__ = lambda self, other: repr(self) == repr(other)
+    Class.__eq__ = lambda self, other: (
+            isinstance(other, self.__class__) and self.x == other.x and self.y == other.y)
     Class.__ne__ = lambda self, other: not self.__eq__(other)
     Class.__hash__ = lambda self: hash(repr(self))
 
@@ -81,13 +81,11 @@ def _new_PositionI_init(self, *args, **kwargs):
         if any([a != int(a) for a in args]):
             raise ValueError("PositionI must be initialized with integer values")
         _orig_PositionI_init(self, *[int(a) for a in args])
-    elif len(args) == 0 and len(kwargs) == 2:
+    else:
         x = kwargs.pop('x')
         y = kwargs.pop('y')
         if any([a != int(a) for a in [x,y]]):
             raise ValueError("PositionI must be initialized with integer values")
-        _orig_PositionI_init(self, int(x), int(y))
-    else:
-        _orig_PositionI_init(self, *args, **kwargs)
+        _orig_PositionI_init(self, int(x), int(y), **kwargs)
 PositionI.__init__ = _new_PositionI_init
 

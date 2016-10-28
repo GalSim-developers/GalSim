@@ -478,8 +478,8 @@ class NFWHalo(object):
         g = self.__gamma(r, ks)
         kappa = self.__kappa(r, ks)
 
-        g /= 1 - kappa
         mu = 1. / ( (1.-kappa)**2 - g**2 )
+        g /= 1 - kappa
         # Get the tangential shear (no x component)
         dx = pos_x - self.halo_pos.x
         dy = pos_y - self.halo_pos.y

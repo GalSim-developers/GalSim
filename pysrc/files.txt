@@ -1,6 +1,7 @@
 module.cpp
 Angle.cpp
 Bounds.cpp
+PhotonArray.cpp
 Image.cpp
 SBProfile.cpp
 SBAdd.cpp
@@ -18,6 +19,7 @@ SBShapelet.cpp
 SBInterpolatedImage.cpp
 SBKolmogorov.cpp
 SBSpergel.cpp
+SBInclinedExponential.cpp
 Random.cpp
 Noise.cpp
 HSM.cpp

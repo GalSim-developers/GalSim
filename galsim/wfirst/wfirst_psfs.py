@@ -365,11 +365,8 @@ def loadPSFImages(filename):
     metadata_hdu = hdu_list.pop()
     im_list = galsim.fits.readMulti(hdu_list=hdu_list)
     bp_list = list(metadata_hdu.data.bandpass)
-    try:
-        # In python3, convert from bytes to str
-        bp_list = [ str(bp.decode()) for bp in bp_list ]
-    except:
-        pass
+    # In python3, convert from bytes to str
+    bp_list = [ str(bp.decode()) for bp in bp_list ]
     SCA_list = list(metadata_hdu.data.SCA)
     galsim.fits.closeHDUList(hdu_list, fin)
 

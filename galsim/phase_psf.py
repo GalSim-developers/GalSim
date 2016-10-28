@@ -259,7 +259,7 @@ class Aperture(object):
         else:  # Use geometric parameters.
             if pupil_plane_scale is not None:
                 # Check input scale and warn if looks suspicious.
-                if pupil_plane_scale > good_pupil_scale:
+                if pupil_plane_scale > good_pupil_scale:  # pragma: no cover
                     import warnings
                     ratio = good_pupil_scale / pupil_plane_scale
                     warnings.warn("Input pupil_plane_scale may be too large for good sampling.\n"
@@ -270,7 +270,7 @@ class Aperture(object):
                 pupil_plane_scale = good_pupil_scale
             if pupil_plane_size is not None:
                 # Check input size and warn if looks suspicious
-                if pupil_plane_size < good_pupil_size:
+                if pupil_plane_size < good_pupil_size:  # pragma: no cover
                     import warnings
                     ratio = good_pupil_size / pupil_plane_size
                     warnings.warn("Input pupil_plane_size may be too small for good focal-plane"
@@ -299,9 +299,9 @@ class Aperture(object):
         """ Create an array of illuminated pixels parameterically.
         """
         ratio = pupil_plane_size/pupil_plane_scale
-        # Fudge a little to prevent goodFFTSize() from turning 512.0001 into 768.
+        # Fudge a little to prevent good_fft_size() from turning 512.0001 into 768.
         ratio *= (1.0 - 1.0/2**14)
-        self.npix = galsim._galsim.goodFFTSize(int(np.ceil(ratio)))
+        self.npix = galsim.Image.good_fft_size(int(np.ceil(ratio)))
         self.pupil_plane_size = pupil_plane_size
         # Shrink scale such that size = scale * npix exactly.
         self.pupil_plane_scale = pupil_plane_size / self.npix
@@ -389,7 +389,7 @@ class Aperture(object):
 
         # Check the pupil plane size here and bump it up if necessary.
         if self.pupil_plane_size < good_pupil_size:
-            new_npix = galsim._galsim.goodFFTSize(int(np.ceil(
+            new_npix = galsim.Image.good_fft_size(int(np.ceil(
                     good_pupil_size/self.pupil_plane_scale)))
             pad_width = (new_npix-self.npix)//2
             pp_arr = np.pad(pp_arr, [(pad_width, pad_width)]*2, mode='constant')
@@ -397,7 +397,7 @@ class Aperture(object):
             self.pupil_plane_size = self.pupil_plane_scale * self.npix
 
         # Check sampling interval and warn if it's not good enough.
-        if self.pupil_plane_scale > good_pupil_scale:
+        if self.pupil_plane_scale > good_pupil_scale:  # pragma: no cover
             import warnings
             ratio = self.pupil_plane_scale / good_pupil_scale
             warnings.warn("Input pupil plane image may not be sampled well enough!\n"
@@ -675,7 +675,7 @@ class PhaseScreenList(object):
             return cls(self._layers[index])
         elif isinstance(index, numbers.Integral):
             return self._layers[index]
-        else:
+        else:  # pragma: no cover
             msg = "{cls.__name__} indices must be integers"
             raise TypeError(msg.format(cls=cls))
 
@@ -1351,7 +1351,7 @@ class OpticalPSF(GSObject):
                  pupil_plane_scale=None, pupil_plane_size=None,
                  pupil_angle=0.*galsim.degrees, scale_unit=galsim.arcsec, gsparams=None,
                  suppress_warning=False, max_size=None):
-        if max_size is not None:
+        if max_size is not None: # pragma: no cover
             from .deprecated import depr
             depr('max_size', 1.4, '',
                  "The max_size keyword has been removed.  In its place, the pad_factor keyword can"

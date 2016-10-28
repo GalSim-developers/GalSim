@@ -110,16 +110,16 @@ class _BaseCorrelatedNoise(object):
     # Make "+" work in the intuitive sense (variances being additive, correlation functions add as
     # you would expect)
     def __add__(self, other):
-        if self.wcs != other.wcs:
+        if not galsim.wcs.compatible(self.wcs, other.wcs):
             import warnings
-            warnings.warn("Adding two CorrelatedNoise objects with different WCS functions.\n"+
+            warnings.warn("Adding two CorrelatedNoise objects with incompatible WCS functions.\n"+
                           "The result will have the WCS of the first object.")
         return _BaseCorrelatedNoise(self.rng, self._profile + other._profile, self.wcs)
 
     def __sub__(self, other):
-        if self.wcs != other.wcs:
+        if not galsim.wcs.compatible(self.wcs, other.wcs):
             import warnings
-            warnings.warn("Subtracting two CorrelatedNoise objects with different WCS functions.\n"+
+            warnings.warn("Subtracting two CorrelatedNoise objects with incompatible WCS functions.\n"+
                           "The result will have the WCS of the first object.")
         return _BaseCorrelatedNoise(self.rng, self._profile - other._profile, self.wcs)
 
@@ -140,7 +140,7 @@ class _BaseCorrelatedNoise(object):
         """
         if rng is None:
             rng = self.rng
-        return _BaseCorrelatedNoise(rng, self._profile.copy(), self.wcs)
+        return _BaseCorrelatedNoise(rng, self._profile, self.wcs)
 
     def __repr__(self):
         return "galsim.correlatednoise._BaseCorrelatedNoise(%r,%r,%r)"%(
@@ -620,8 +620,8 @@ class _BaseCorrelatedNoise(object):
         conv = galsim.Convolve([self._profile, galsim.AutoCorrelate(gsobject)], gsparams=gsparams)
         return _BaseCorrelatedNoise(self.rng, conv, self.wcs)
 
-    def drawImage(self, image=None, scale=None, wcs=None, dtype=None, wmult=1., add_to_image=False,
-                  dx=None):
+    def drawImage(self, image=None, scale=None, wcs=None, dtype=None, add_to_image=False,
+                  dx=None, wmult=1.0):
         """A method for drawing profiles storing correlation functions.
 
         This is a mild reimplementation of the drawImage() method for GSObjects.  The `method` is
@@ -644,10 +644,6 @@ class _BaseCorrelatedNoise(object):
         @param dtype        The data type to use for an automatically constructed image.  Only
                             valid if `image` is None. [default: None, which means to use
                             numpy.float32]
-        @param wmult        A multiplicative factor by which to enlarge (in each direction) the
-                            default automatically calculated FFT grid size used for any
-                            intermediate calculations in Fourier space.  See the description
-                            in GSObject.drawImage() for more details. [default: 1]
         @param add_to_image Whether to add flux to the existing image rather than clear out
                             anything in the image before drawing.
                             Note: This requires that `image` be provided and that it have defined
@@ -655,17 +651,18 @@ class _BaseCorrelatedNoise(object):
 
         @returns an Image of the correlation function.
         """
-        # Check for obsolete dx parameter
-        if dx is not None and scale is None:
+        # Check for obsolete parameters
+        if dx is not None and scale is None: # pragma: no cover
             from galsim.deprecated import depr
             depr('dx', 1.1, 'scale')
             scale = dx
+        # Let self._profile.drawImage raise the deprecation warning for wmult.
 
         wcs = self._profile._determine_wcs(scale, wcs, image, self.wcs)
 
         return self._profile.drawImage(
-            image=image, wcs=wcs, dtype=dtype, method='sb', gain=1., wmult=wmult,
-            add_to_image=add_to_image, use_true_center=False)
+            image=image, wcs=wcs, dtype=dtype, method='sb', gain=1.,
+            add_to_image=add_to_image, use_true_center=False, wmult=wmult)
 
     def _get_update_rootps(self, shape, wcs):
         """Internal utility function for querying the `rootps` cache, used by applyTo(),
@@ -860,7 +857,7 @@ class _BaseCorrelatedNoise(object):
                 # For later ones, rotate by 2pi/order, and draw it back into a new image.
                 tmp_obj = tmp_obj.rotate(2.*np.pi*galsim.radians/order)
                 tmp_im = galsim.Image(tmp_arr.shape[1], tmp_arr.shape[0], scale=1)
-                tmp_obj.drawImage(tmp_im, scale=1, method='no_pixel')
+                tmp_obj.drawImage(tmp_im, scale=1, method='sb')
                 final_arr[tmp_im.array > final_arr] = tmp_im.array[tmp_im.array > final_arr]
 
         # Now simply take the halfcomplex, compact stored part that we are interested in,
@@ -1066,7 +1063,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     A number of methods familiar from GSObject instances have also been implemented directly as
     `cn` methods, so that the following commands are all legal:
 
-        >>> image = cn.drawImage(im, scale, wmult=4)
+        >>> image = cn.drawImage(im, scale)
         >>> cn = cn.shear(s)
         >>> cn = cn.expand(m)
         >>> cn = cn.rotate(theta * galsim.degrees)
@@ -1118,7 +1115,7 @@ class CorrelatedNoise(_BaseCorrelatedNoise):
     def __init__(self, image, rng=None, scale=None, wcs=None, x_interpolant=None,
         correct_periodicity=True, subtract_mean=False, gsparams=None, dx=None):
         # Check for obsolete dx parameter
-        if dx is not None and scale==0.:
+        if dx is not None and scale==0.: # pragma: no cover
             from galsim.deprecated import depr
             depr('dx', 1.1, 'scale')
             scale = dx
@@ -1356,7 +1353,7 @@ def getCOSMOSNoise(file_name=None, rng=None, cosmos_scale=0.03, variance=0., x_i
     The FITS file `out.fits` should then contain an image of randomly-generated, COSMOS-like noise.
     """
     # Check for obsolete dx_cosmos parameter
-    if dx_cosmos is not None and cosmos_scale==0.03:
+    if dx_cosmos is not None and cosmos_scale==0.03: # pragma: no cover
         from galsim.deprecated import depr
         depr('dx_cosmos', 1.1, 'cosmos_scale')
         cosmos_scale = dx_cosmos

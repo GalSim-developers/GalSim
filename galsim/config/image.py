@@ -76,12 +76,12 @@ def BuildImages(nimages, config, image_num=0, obj_num=0, logger=None):
             logger.info(s0 + 'Image %d: size = %d x %d, time = %f sec', image_num, xs, ys, t)
 
     def except_func(logger, proc, k, e, tr):
-        if logger:
+        if logger: # pragma: no cover
             if proc is None: s0 = ''
             else: s0 = '%s: '%proc
             image_num = jobs[k]['image_num']
             logger.error(s0 + 'Exception caught when building image %d', image_num)
-            #logger.error('%s',tr)
+            logger.warning('%s',tr)
             logger.error('Aborting the rest of this file')
 
     # Convert to the tasks structure we need for MultiProcess

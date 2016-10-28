@@ -28,7 +28,7 @@
 
 BOOST_AUTO_TEST_SUITE(image_tests);
 
-typedef boost::mpl::list<short, int, float, double> test_types;
+typedef boost::mpl::list<short, int, float, double, std::complex<double> > test_types;
 
 BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageBasic , T , test_types )
 {
@@ -90,30 +90,30 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageBasic , T , test_types )
     }
     for (int y=1; y<=nrow; ++y) {
         for (int x=1; x<=ncol; ++x) {
-            BOOST_CHECK(im1.at(x,y) == 100+10*x+y);
-            BOOST_CHECK(im1.view().at(x,y) == 100+10*x+y);
-            BOOST_CHECK(im2.at(x,y) == 100+10*x+y);
-            BOOST_CHECK(im2_view.at(x,y) == 100+10*x+y);
-            BOOST_CHECK(im2_cview.at(x,y) == 100+10*x+y);
-            im1.setValue(x,y, 10*x + y);
-            im2.setValue(x,y, 10*x + y);
-            BOOST_CHECK(im1(x,y) == 10*x+y);
-            BOOST_CHECK(im1.view()(x,y) == 10*x+y);
-            BOOST_CHECK(im2(x,y) == 10*x+y);
-            BOOST_CHECK(im2_view(x,y) == 10*x+y);
-            BOOST_CHECK(im2_cview(x,y) == 10*x+y);
+            BOOST_CHECK(im1.at(x,y) == T(100+10*x+y));
+            BOOST_CHECK(im1.view().at(x,y) == T(100+10*x+y));
+            BOOST_CHECK(im2.at(x,y) == T(100+10*x+y));
+            BOOST_CHECK(im2_view.at(x,y) == T(100+10*x+y));
+            BOOST_CHECK(im2_cview.at(x,y) == T(100+10*x+y));
+            im1.setValue(x,y, T(10*x + y));
+            im2.setValue(x,y, T(10*x + y));
+            BOOST_CHECK(im1(x,y) == T(10*x+y));
+            BOOST_CHECK(im1.view()(x,y) == T(10*x+y));
+            BOOST_CHECK(im2(x,y) == T(10*x+y));
+            BOOST_CHECK(im2_view(x,y) == T(10*x+y));
+            BOOST_CHECK(im2_cview(x,y) == T(10*x+y));
         }
     }
 
     // Check view of given data
     // Note: Our array is on the stack, so we don't have any ownership to pass around.
     //       Hence, use a default shared_ptr constructor.
-    galsim::ImageView<T> im3_view(ref_array, boost::shared_ptr<T>(), ncol, bounds);
-    galsim::ConstImageView<T> im3_cview(ref_array, boost::shared_ptr<T>(), ncol, bounds);
+    galsim::ImageView<T> im3_view(ref_array, boost::shared_ptr<T>(), 1, ncol, bounds);
+    galsim::ConstImageView<T> im3_cview(ref_array, boost::shared_ptr<T>(), 1, ncol, bounds);
     for (int y=1; y<=nrow; ++y) {
         for (int x=1; x<=ncol; ++x) {
-            BOOST_CHECK(im3_view(x,y) == 10*x+y);
-            BOOST_CHECK(im3_cview(x,y) == 10*x+y);
+            BOOST_CHECK(im3_view(x,y) == T(10*x+y));
+            BOOST_CHECK(im3_cview(x,y) == T(10*x+y));
         }
     }
 
@@ -136,12 +136,12 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageBasic , T , test_types )
     BOOST_CHECK(im3_view.getBounds() == bounds);
     for (int y=1; y<=nrow; ++y) {
         for (int x=1; x<=ncol; ++x) {
-            BOOST_CHECK(im1(x+dx,y+dy) == 10*x+y);
-            BOOST_CHECK(im2(x,y) == 10*x+y);
-            BOOST_CHECK(im2_view(x+dx,y+dy) == 10*x+y);
-            BOOST_CHECK(im2_cview(x,y) == 10*x+y);
-            BOOST_CHECK(im3_view(x,y) == 10*x+y);
-            BOOST_CHECK(im3_cview(x+dx,y+dy) == 10*x+y);
+            BOOST_CHECK(im1(x+dx,y+dy) == T(10*x+y));
+            BOOST_CHECK(im2(x,y) == T(10*x+y));
+            BOOST_CHECK(im2_view(x+dx,y+dy) == T(10*x+y));
+            BOOST_CHECK(im2_cview(x,y) == T(10*x+y));
+            BOOST_CHECK(im3_view(x,y) == T(10*x+y));
+            BOOST_CHECK(im3_cview(x+dx,y+dy) == T(10*x+y));
         }
     }
 }
@@ -158,13 +158,13 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
         15, 25, 35, 45, 55, 65, 75 };
     galsim::Bounds<int> bounds(1,ncol,1,nrow);
 
-    galsim::ConstImageView<T> ref_im(ref_array, boost::shared_ptr<T>(), ncol, bounds);
+    galsim::ConstImageView<T> ref_im(ref_array, boost::shared_ptr<T>(), 1, ncol, bounds);
 
     galsim::ImageAlloc<T> im1 = ref_im;
     galsim::ImageAlloc<T> im2 = T(2) * ref_im;
     for (int y=1; y<=nrow; ++y) {
         for (int x=1; x<=ncol; ++x) {
-            BOOST_CHECK(im2(x,y) == 2 * ref_im(x,y));
+            BOOST_CHECK(im2(x,y) == T(2) * ref_im(x,y));
         }
     }
 
@@ -174,26 +174,26 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == 3 * ref_im(x,y));
+                BOOST_CHECK(im3(x,y) == T(3) * ref_im(x,y));
             }
         }
         im3.fill(0);
         im3.view() = im1 + im2;
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == 3 * ref_im(x,y));
+                BOOST_CHECK(im3(x,y) == T(3) * ref_im(x,y));
             }
         }
         im3 += im2;
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == 5 * ref_im(x,y));
+                BOOST_CHECK(im3(x,y) == T(5) * ref_im(x,y));
             }
         }
         im3.view() += im2;
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == 7 * ref_im(x,y));
+                BOOST_CHECK(im3(x,y) == T(7) * ref_im(x,y));
             }
         }
     }
@@ -217,13 +217,13 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
         im3 -= im2;
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == -3 * ref_im(x,y));
+                BOOST_CHECK(im3(x,y) == T(-3) * ref_im(x,y));
             }
         }
         im3.view() -= im2;
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == -5 * ref_im(x,y));
+                BOOST_CHECK(im3(x,y) == T(-5) * ref_im(x,y));
             }
         }
     }
@@ -234,22 +234,22 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == 2 * ref_im(x,y) * ref_im(x,y));
+                BOOST_CHECK(im3(x,y) == T(2) * ref_im(x,y) * ref_im(x,y));
             }
         }
         im3.fill(0);
         im3.view() = im1 * im2;
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == 2 * ref_im(x,y) * ref_im(x,y));
+                BOOST_CHECK(im3(x,y) == T(2) * ref_im(x,y) * ref_im(x,y));
                 im3(x,y) /= ref_im(x,y);
             }
         }
         im3 *= im2;
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == 4 * ref_im(x,y) * ref_im(x,y));
-                im3(x,y) /= 2 * ref_im(x,y);
+                BOOST_CHECK(im3(x,y) == T(4) * ref_im(x,y) * ref_im(x,y));
+                im3(x,y) /= T(2) * ref_im(x,y);
             }
         }
         im3.view() *= im2;
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
             for (int x=1; x<=ncol; ++x) {
                 // Note: 8 * ref_im(x,y) * ref_im(x,y) exceeds the maximum value for short
                 // but 4 * ref_im(x,y) * ref_im(x,y) is ok for ref_im(7,5) = 75
-                BOOST_CHECK(im3(x,y) == 4 * ref_im(x,y) * ref_im(x,y));
+                BOOST_CHECK(im3(x,y) == T(4) * ref_im(x,y) * ref_im(x,y));
             }
         }
     }
@@ -266,21 +266,21 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
     { 
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                im1(x,y) = 4 * ref_im(x,y) * ref_im(x,y);
+                im1(x,y) = T(4) * ref_im(x,y) * ref_im(x,y);
             }
         }
         galsim::ImageAlloc<T> im3 = im1 / im2;
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == 2 * ref_im(x,y));
+                BOOST_CHECK(im3(x,y) == T(2) * ref_im(x,y));
             }
         }
         im3.fill(0);
         im3.view() = im1 / im2;
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == 2 * ref_im(x,y));
+                BOOST_CHECK(im3(x,y) == T(2) * ref_im(x,y));
                 im3(x,y) *= ref_im(x,y);
             }
         }
@@ -288,13 +288,13 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
                 BOOST_CHECK(im3(x,y) == ref_im(x,y));
-                im3(x,y) *= 4 * ref_im(x,y);
+                im3(x,y) *= T(4) * ref_im(x,y);
             }
         }
         im3.view() /= im2;
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == 2 * ref_im(x,y));
+                BOOST_CHECK(im3(x,y) == T(2) * ref_im(x,y));
             }
         }
         im1 = ref_im;
@@ -306,26 +306,26 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == ref_im(x,y) + 3);
+                BOOST_CHECK(im3(x,y) == ref_im(x,y) + T(3));
             }
         }
         im3.fill(0);
         im3.view() = im1 + T(3);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == ref_im(x,y) + 3);
+                BOOST_CHECK(im3(x,y) == ref_im(x,y) + T(3));
             }
         }
         im3 += T(3);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == ref_im(x,y) + 6);
+                BOOST_CHECK(im3(x,y) == ref_im(x,y) + T(6));
             }
         }
         im3.view() += T(3);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == ref_im(x,y) + 9);
+                BOOST_CHECK(im3(x,y) == ref_im(x,y) + T(9));
             }
         }
     }
@@ -336,26 +336,26 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == ref_im(x,y) - 3);
+                BOOST_CHECK(im3(x,y) == ref_im(x,y) - T(3));
             }
         }
         im3.fill(0);
         im3.view() = im1 - T(3);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == ref_im(x,y) - 3);
+                BOOST_CHECK(im3(x,y) == ref_im(x,y) - T(3));
             }
         }
         im3 -= T(3);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == ref_im(x,y) - 6);
+                BOOST_CHECK(im3(x,y) == ref_im(x,y) - T(6));
             }
         }
         im3.view() -= T(3);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == ref_im(x,y) - 9);
+                BOOST_CHECK(im3(x,y) == ref_im(x,y) - T(9));
             }
         }
     }
@@ -366,26 +366,26 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == ref_im(x,y) * 3);
+                BOOST_CHECK(im3(x,y) == ref_im(x,y) * T(3));
             }
         }
         im3.fill(0);
         im3.view() = im1 * T(3);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == ref_im(x,y) * 3);
+                BOOST_CHECK(im3(x,y) == ref_im(x,y) * T(3));
             }
         }
         im3 *= T(3);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == ref_im(x,y) * 9);
+                BOOST_CHECK(im3(x,y) == ref_im(x,y) * T(9));
             }
         }
         im3.view() *= T(3);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(im3(x,y) == ref_im(x,y) * 27);
+                BOOST_CHECK(im3(x,y) == ref_im(x,y) * T(27));
             }
         }
     }
@@ -394,33 +394,33 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
     { 
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                im1(x,y) = ref_im(x,y) * 27;
+                im1(x,y) = ref_im(x,y) * T(27);
             }
         }
         galsim::ImageAlloc<T> im3 = im1 / T(3);
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(std::fabs(im3(x,y) - ref_im(x,y) * 9) < 0.0001);
+                BOOST_CHECK(std::abs(im3(x,y) - ref_im(x,y) * T(9)) < 0.0001);
             }
         }
         im3.fill(0);
         im3.view() = im1 / T(3);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(std::fabs(im3(x,y) - ref_im(x,y) * 9) < 0.0001);
+                BOOST_CHECK(std::abs(im3(x,y) - ref_im(x,y) * T(9)) < 0.0001);
             }
         }
         im3 /= T(3);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(std::fabs(im3(x,y) - ref_im(x,y) * 3) < 0.0001);
+                BOOST_CHECK(std::abs(im3(x,y) - ref_im(x,y) * T(3)) < 0.0001);
             }
         }
         im3.view() /= T(3);
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
-                BOOST_CHECK(std::fabs(im3(x,y) - ref_im(x,y)) < 0.0001);
+                BOOST_CHECK(std::abs(im3(x,y) - ref_im(x,y)) < 0.0001);
             }
         }
         im1 = ref_im;

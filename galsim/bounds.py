@@ -23,12 +23,30 @@ from . import _galsim
 from ._galsim import BoundsI, BoundsD
 from .utilities import set_func_doc
 
+def Bounds_repr(self):
+    if self.isDefined():
+        return "galsim.%s(xmin=%r, xmax=%r, ymin=%r, ymax=%r)"%(
+            self.__class__.__name__, self.xmin, self.xmax, self.ymin, self.ymax)
+    else:
+        return "galsim.%s()"%(self.__class__.__name__)
+
+def Bounds_str(self):
+    if self.isDefined():
+        return "galsim.%s(%s,%s,%s,%s)"%(
+            self.__class__.__name__, self.xmin, self.xmax, self.ymin, self.ymax)
+    else:
+        return "galsim.%s()"%(self.__class__.__name__)
+
+def Bounds_initargs(self):
+    if self.isDefined():
+        return (self.xmin, self.xmax, self.ymin, self.ymax)
+    else:
+        return ()
+
 for Class in (_galsim.BoundsD, _galsim.BoundsI):
-    Class.__repr__ = lambda self: "galsim.%s(xmin=%r, xmax=%r, ymin=%r, ymax=%r)"%(
-            self.__class__.__name__, self.xmin, self.xmax, self.ymin, self.ymax)
-    Class.__str__ = lambda self: "galsim.%s(%s,%s,%s,%s)"%(
-            self.__class__.__name__, self.xmin, self.xmax, self.ymin, self.ymax)
-    Class.__getinitargs__ = lambda self: (self.xmin, self.xmax, self.ymin, self.ymax)
+    Class.__repr__ = Bounds_repr
+    Class.__str__ = Bounds_str
+    Class.__getinitargs__ = Bounds_initargs
     # Quick and dirty.  Just check reprs are equal.
     Class.__eq__ = lambda self, other: repr(self) == repr(other)
     Class.__ne__ = lambda self, other: not self.__eq__(other)

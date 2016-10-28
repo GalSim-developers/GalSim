@@ -25,6 +25,7 @@ routines for handling multiple Images.
 from future.utils import iteritems, iterkeys, itervalues
 import os
 import galsim
+import numpy as np
 
 
 ##############################################################################################
@@ -67,7 +68,7 @@ def _parse_compression(compression, file_name):
 class _ReadFile:
 
     # There are several methods available for each of gzip and bzip2.  Each is its own function.
-    def gunzip_call(self, file):
+    def gunzip_call(self, file): # pragma: no cover
         # cf. http://bugs.python.org/issue7471
         import subprocess
         from io import StringIO
@@ -94,7 +95,9 @@ class _ReadFile:
         # done with hdu_list.
         return hdu_list, fin
 
-    def pyfits_open(self, file):
+    # Note: the above gzip_in_mem function succeeds on travis, so the rest don't get run.
+    # Omit them from the coverage test.
+    def pyfits_open(self, file):  # pragma: no cover
         from galsim._pyfits import pyfits
         # This usually works, although pyfits internally may (depending on the version)
         # use a temporary file, which is why we prefer the above in-memory code if it works.
@@ -102,7 +105,7 @@ class _ReadFile:
         hdu_list = pyfits.open(file, 'readonly')
         return hdu_list, None
 
-    def gzip_tmp(self, file):
+    def gzip_tmp(self, file):  # pragma: no cover
         import gzip
         from galsim._pyfits import pyfits
         # Finally, just in case, if everything else failed, here is an implementation that 
@@ -118,7 +121,7 @@ class _ReadFile:
         hdu_list = pyfits.open(tmp)
         return hdu_list, tmp
 
-    def bunzip2_call(self, file):
+    def bunzip2_call(self, file): # pragma: no cover
         import subprocess
         from io import StringIO
         from galsim._pyfits import pyfits
@@ -140,7 +143,7 @@ class _ReadFile:
         hdu = hdu_list[0]
         return hdu_list, fin
 
-    def bz2_tmp(self, file):
+    def bz2_tmp(self, file):  # pragma: no cover
         import bz2
         from galsim._pyfits import pyfits
         fin = bz2.BZ2File(file, 'rb')
@@ -222,7 +225,7 @@ _read_file = _ReadFile()
 class _WriteFile:
 
     # There are several methods available for each of gzip and bzip2.  Each is its own function.
-    def gzip_call2(self, hdu_list, file):
+    def gzip_call2(self, hdu_list, file):  # pragma: no cover
         root, ext = os.path.splitext(file)
         import subprocess
         if os.path.isfile(root):
@@ -248,7 +251,7 @@ class _WriteFile:
             p.communicate()
             assert p.returncode == 0
  
-    def gzip_in_mem(self, hdu_list, file):
+    def gzip_in_mem(self, hdu_list, file):  # pragma: no cover
         import gzip
         import io
         # The compression routines work better if we first write to an internal buffer
@@ -261,7 +264,7 @@ class _WriteFile:
         with gzip.open(file, 'wb') as fout:
             fout.write(data)
 
-    def gzip_tmp(self, hdu_list, file):
+    def gzip_tmp(self, hdu_list, file):  # pragma: no cover
         import gzip
         # However, pyfits versions before 2.3 do not support writing to a buffer, so the
         # above code will fail.  We need to use a temporary in that case.
@@ -276,7 +279,7 @@ class _WriteFile:
         with gzip.open(file, 'wb') as fout:
             fout.write(data)
 
-    def bzip2_call2(self, hdu_list, file):
+    def bzip2_call2(self, hdu_list, file):  # pragma: no cover
         root, ext = os.path.splitext(file)
         import subprocess
         if os.path.isfile(root) or ext != '.bz2':
@@ -302,7 +305,7 @@ class _WriteFile:
             p.communicate()
             assert p.returncode == 0
  
-    def bz2_in_mem(self, hdu_list, file):
+    def bz2_in_mem(self, hdu_list, file):  # pragma: no cover
         import bz2
         import io
         buf = io.BytesIO()
@@ -311,7 +314,7 @@ class _WriteFile:
         with bz2.BZ2File(file, 'wb') as fout:
             fout.write(data)
 
-    def bz2_tmp(self, hdu_list, file):
+    def bz2_tmp(self, hdu_list, file):  # pragma: no cover
         import bz2
         tmp = file + '.tmp'
         while os.path.isfile(tmp):
@@ -360,7 +363,7 @@ class _WriteFile:
             while self.gz_index < len(self.gz_methods):
                 try:
                     return self.gz(hdu_list, file)
-                except:
+                except Exception:
                     self.gz_index += 1
                     self.gz = self.gz_methods[self.gz_index]
             raise RuntimeError("None of the options for gunzipping were successful.")
@@ -368,7 +371,7 @@ class _WriteFile:
             while self.bz2_index < len(self.bz2_methods):
                 try:
                     return self.bz2(hdu_list, file)
-                except:
+                except Exception:
                     self.bz2_index += 1
                     self.bz2 = self.bz2_methods[self.bz2_index]
             raise RuntimeError("None of the options for bunzipping were successful.")
@@ -433,7 +436,7 @@ def _check_hdu(hdu, pyfits_compress):
 
     # Check that the specified compression is right for the given hdu type.
     if pyfits_compress:
-        if not isinstance(hdu, pyfits.CompImageHDU):
+        if not isinstance(hdu, pyfits.CompImageHDU):  # pragma: no cover
             if isinstance(hdu, pyfits.BinTableHDU):
                 raise IOError('Expecting a CompImageHDU, but got a BinTableHDU\n' +
                     'Probably your pyfits installation does not have the pyfitsComp module '+
@@ -476,8 +479,10 @@ def closeHDUList(hdu_list, fin):
     """If necessary, close the file handle that was opened to read in the `hdu_list`"""
     hdu_list.close()
     if fin: 
-        if isinstance(fin, str):
+        if isinstance(fin, str): # pragma: no cover
             # In this case, it is a file name that we need to delete.
+            # Note: This is relevant for the _tmp versions that are not run on Travis, so
+            # don't include this bit in the coverage report.
             import os
             os.remove(fin)
         else:
@@ -535,6 +540,10 @@ def write(image, file_name=None, dir=None, hdu_list=None, clobber=True, compress
     """
     from galsim._pyfits import pyfits
 
+    if image.iscomplex:
+        raise ValueError("Cannot write complex Images to a fits file. "
+                         "Write image.real and image.imag separately.")
+
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
     if file_name and hdu_list is not None:
@@ -579,6 +588,10 @@ def writeMulti(image_list, file_name=None, dir=None, hdu_list=None, clobber=True
     @param compression  See documentation for this parameter on the galsim.fits.write() method.
     """
     from galsim._pyfits import pyfits
+
+    if any(image.iscomplex for image in image_list if isinstance(image, galsim.Image)):
+        raise ValueError("Cannot write complex Images to a fits file. "
+                         "Write image.real and image.imag separately.")
 
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
@@ -638,8 +651,23 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
     @param clobber      See documentation for this parameter on the galsim.fits.write() method.
     @param compression  See documentation for this parameter on the galsim.fits.write() method.
     """
-    import numpy
     from galsim._pyfits import pyfits
+
+    if isinstance(image_list, np.ndarray):
+        is_all_numpy = True
+        if image_list.dtype.kind == 'c':
+            raise ValueError("Cannot write complex numpy arrays to a fits file. "
+                             "Write array.real and array.imag separately.")
+    elif all(isinstance(item, np.ndarray) for item in image_list):
+        is_all_numpy = True
+        if any(a.dtype.kind == 'c' for a in image_list):
+            raise ValueError("Cannot write complex numpy arrays to a fits file. "
+                             "Write array.real and array.imag separately.")
+    else:
+        is_all_numpy = False
+        if any(im.iscomplex for im in image_list):
+            raise ValueError("Cannot write complex images to a fits file. "
+                             "Write image.real and image.imag separately.")
 
     file_compress, pyfits_compress = _parse_compression(compression,file_name)
 
@@ -651,15 +679,14 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
     if hdu_list is None:
         hdu_list = pyfits.HDUList()
 
-    is_all_numpy = (isinstance(image_list, numpy.ndarray) or
-                    all(isinstance(item, numpy.ndarray) for item in image_list))
     if is_all_numpy:
-        cube = numpy.asarray(image_list)
+        cube = np.asarray(image_list)
         nimages = cube.shape[0]
         nx = cube.shape[1]
         ny = cube.shape[2]
         # Use default values for bounds
         bounds = galsim.BoundsI(1,nx,1,ny)
+        wcs = None
     else:
         nimages = len(image_list)
         if (nimages == 0):
@@ -673,7 +700,7 @@ def writeCube(image_list, file_name=None, dir=None, hdu_list=None, clobber=True,
         bounds = im.bounds
         # Note: numpy shape is y,x
         array_shape = (nimages, ny, nx)
-        cube = numpy.zeros(array_shape, dtype=dtype)
+        cube = np.zeros(array_shape, dtype=dtype)
         for k in range(nimages):
             im = image_list[k]
             nx_k = im.xmax-im.xmin+1
@@ -807,8 +834,7 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
             import warnings
             warnings.warn("No C++ Image template instantiation for data type %s" % dt)
             warnings.warn("   Using numpy.float64 instead.")
-            import numpy
-            data = hdu.data.astype(numpy.float64)
+            data = hdu.data.astype(np.float64)
 
         image = galsim.Image(array=data)
         image.setOrigin(origin)
@@ -956,13 +982,12 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
             import warnings
             warnings.warn("No C++ Image template instantiation for data type %s" % dt)
             warnings.warn("   Using numpy.float64 instead.")
-            import numpy
-            data = hdu.data.astype(numpy.float64)
+            data = hdu.data.astype(np.float64)
 
-        nimages = hdu.data.shape[0]
+        nimages = data.shape[0]
         image_list = []
         for k in range(nimages):
-            image = galsim.Image(array=hdu.data[k,:,:])
+            image = galsim.Image(array=data[k,:,:])
             image.setOrigin(origin)
             image.wcs = wcs
             image_list.append(image)
@@ -1154,8 +1179,9 @@ class FitsHeader(object):
                     file_name = os.path.join(dir,file_name)
                 with open(file_name,"r") as fin:
                     lines = [ line.strip() for line in fin ]
-                if 'END' in lines:  # Don't include END (or later lines)
-                    lines = lines[:lines.index('END')]
+                # Don't include END (or later lines)
+                end = lines.index('END') if 'END' in lines else len(lines)
+                lines = lines[:end]
                 # Later pyfits versions changed this to a class method, so you can write
                 # pyfits.Card.fromstring(text).  But in older pyfits versions, it was
                 # a regular method.  This syntax should work in both cases.
@@ -1220,10 +1246,7 @@ class FitsHeader(object):
 
     def __setitem__(self, key, value):
         # pyfits doesn't like getting bytes in python 3, so decode if appropriate
-        try:
-            key = str(key.decode())
-        except:
-            pass
+        key = str(key.decode())
         try:
             value = str(value.decode())
         except:

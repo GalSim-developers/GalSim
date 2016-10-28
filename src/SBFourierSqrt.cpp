@@ -22,12 +22,6 @@
 #include "SBFourierSqrt.h"
 #include "SBFourierSqrtImpl.h"
 
-#ifdef DEBUGLOGGING
-#include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 2;
-#endif
-
 namespace galsim {
 
     SBFourierSqrt::SBFourierSqrt(const SBProfile& adaptee,
@@ -71,49 +65,51 @@ namespace galsim {
         return (k.x*k.x + k.y*k.y <= _maxksq) ? std::sqrt(_adaptee.kValue(k)) : 0.;
     }
 
-    void SBFourierSqrt::SBFourierSqrtImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+    void SBFourierSqrt::SBFourierSqrtImpl::fillKImage(ImageView<std::complex<double> > im,
                                                       double kx0, double dkx, int izero,
                                                       double ky0, double dky, int jzero) const
     {
-        dbg<<"SBFourierSqrt fillKValue\n";
+        dbg<<"SBFourierSqrt fillKImage\n";
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
         dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
-        GetImpl(_adaptee)->fillKValue(val,kx0,dkx,izero,ky0,dky,jzero);
+        GetImpl(_adaptee)->fillKImage(im,kx0,dkx,izero,ky0,dky,jzero);
 
-        assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
-        It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,ky0+=dky) {
+        // Now sqrt the values
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+
+        for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
             double kx = kx0;
             double kysq = ky0*ky0;
-            for (int i=0;i<m;++i,kx+=dkx,++valit)
-                *valit = (kx*kx+kysq <= _maxksq) ? std::sqrt(*valit) : 0.;
+            for (int i=0; i<m; ++i,kx+=dkx,++ptr)
+                *ptr = (kx*kx+kysq <= _maxksq) ? std::sqrt(*ptr) : 0.;
         }
     }
 
-    void SBFourierSqrt::SBFourierSqrtImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+    void SBFourierSqrt::SBFourierSqrtImpl::fillKImage(ImageView<std::complex<double> > im,
                                                       double kx0, double dkx, double dkxy,
                                                       double ky0, double dky, double dkyx) const
     {
-        dbg<<"SBFourierSqrt fillKValue\n";
+        dbg<<"SBFourierSqrt fillKImage\n";
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
-        GetImpl(_adaptee)->fillKValue(val,kx0,dkx,dkxy,ky0,dky,dkyx);
+        GetImpl(_adaptee)->fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx);
 
-        assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
-        It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
+        // Now sqrt the values
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+
+        for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
             double kx = kx0;
             double ky = ky0;
-            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx,++valit)
-                *valit = (kx*kx+ky*ky <= _maxksq) ? std::sqrt(*valit) : 0.;
+            for (int i=0; i<m; ++i,kx+=dkx,++ptr)
+                *ptr = (kx*kx+ky*ky <= _maxksq) ? std::sqrt(*ptr) : 0.;
         }
     }
 
@@ -125,6 +121,15 @@ namespace galsim {
     double SBFourierSqrt::SBFourierSqrtImpl::getFlux() const
     {
         return std::sqrt(_adaptee.getFlux());
+    }
+
+    double SBFourierSqrt::SBFourierSqrtImpl::maxSB() const
+    {
+        // In this case, we want the autoconvolution of this object to get back to the
+        // maxSB value of the adaptee.
+        // flux * maxSB / 2 = maxSB_adaptee
+        // maxSB = 2 * maxSB_adaptee / flux
+        return 2. * _adaptee.maxSB() / std::abs(getFlux());
     }
 
     boost::shared_ptr<PhotonArray> SBFourierSqrt::SBFourierSqrtImpl::shoot(

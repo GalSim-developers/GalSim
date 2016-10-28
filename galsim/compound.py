@@ -55,7 +55,7 @@ def Add(*args, **kwargs):
     @returns a Sum or ChromaticSum instance as appropriate.
     """
     if len(args) == 0:
-        raise ValueError("At least one ChromaticObject or GSObject must be provided.")
+        raise TypeError("At least one ChromaticObject or GSObject must be provided.")
     elif len(args) == 1:
         # 1 argument.  Should be either a GSObject or a list of GSObjects
         if isinstance(args[0], (galsim.GSObject, galsim.ChromaticObject)):
@@ -123,7 +123,7 @@ class Sum(galsim.GSObject):
                 "Sum constructor got unexpected keyword argument(s): %s"%kwargs.keys())
 
         if len(args) == 0:
-            raise ValueError("At least one ChromaticObject or GSObject must be provided.")
+            raise TypeError("At least one ChromaticObject or GSObject must be provided.")
         elif len(args) == 1:
             # 1 argument.  Should be either a GSObject or a list of GSObjects
             if isinstance(args[0], galsim.GSObject):
@@ -141,7 +141,9 @@ class Sum(galsim.GSObject):
         # noises (they add like variances) to the final sum.
         noise = None
         for obj in args:
-            if hasattr(obj,'noise'):
+            if not isinstance(obj, galsim.GSObject):
+                raise TypeError("Arguments to Sum must be GSObjects, not %s"%obj)
+            if hasattr(obj,'noise') and obj.noise is not None:
                 if noise is None:
                     noise = obj.noise
                 else:
@@ -182,7 +184,6 @@ class Sum(galsim.GSObject):
 
 _galsim.SBAdd.__getinitargs__ = lambda self: (self.getObjs(), self.getGSParams())
 _galsim.SBAdd.__getstate__ = lambda self: None
-_galsim.SBAdd.__setstate__ = lambda self, state: 1
 _galsim.SBAdd.__repr__ = lambda self: \
         'galsim._galsim.SBAdd(%r, %r)'%self.__getinitargs__()
 
@@ -205,7 +206,7 @@ def Convolve(*args, **kwargs):
     """
     # First check for number of arguments != 0
     if len(args) == 0:
-        raise ValueError("At least one ChromaticObject or GSObject must be provided.")
+        raise TypeError("At least one ChromaticObject or GSObject must be provided.")
     elif len(args) == 1:
         if isinstance(args[0], (galsim.GSObject, galsim.ChromaticObject)):
             args = [args[0]]
@@ -277,7 +278,7 @@ class Convolution(galsim.GSObject):
     def __init__(self, *args, **kwargs):
         # First check for number of arguments != 0
         if len(args) == 0:
-            raise ValueError("At least one ChromaticObject or GSObject must be provided.")
+            raise TypeError("At least one ChromaticObject or GSObject must be provided.")
         elif len(args) == 1:
             if isinstance(args[0], galsim.GSObject):
                 args = [args[0]]
@@ -306,12 +307,14 @@ class Convolution(galsim.GSObject):
         # Start by checking if all objects have a hard edge.
         hard_edge = True
         for obj in args:
+            if not isinstance(obj, galsim.GSObject):
+                raise TypeError("Arguments to Convolution must be GSObjects, not %s"%obj)
             if not obj.hasHardEdges():
                 hard_edge = False
 
         if real_space is None:
             # The automatic determination is to use real_space if 2 items, both with hard edges.
-            if len(args) == 2:
+            if len(args) <= 2:
                 real_space = hard_edge
             else:
                 real_space = False
@@ -356,12 +359,11 @@ class Convolution(galsim.GSObject):
         # More than one is not allowed.
         noise = None
         for obj in args:
-            if hasattr(obj,'noise'):
+            if hasattr(obj,'noise') and obj.noise is not None:
                 if noise is not None:
                     import warnings
                     warnings.warn("Unable to propagate noise in galsim.Convolution when multiple "+
                                   "objects have noise attribute")
-                    noise = None
                     break
                 noise = obj.noise
                 others = [ obj2 for obj2 in args if obj2 is not obj ]
@@ -422,7 +424,6 @@ class Convolution(galsim.GSObject):
 _galsim.SBConvolve.__getinitargs__ = lambda self: (
         self.getObjs(), self.isRealSpace(), self.getGSParams())
 _galsim.SBConvolve.__getstate__ = lambda self: None
-_galsim.SBConvolve.__setstate__ = lambda self, state: 1
 _galsim.SBConvolve.__repr__ = lambda self: \
         'galsim._galsim.SBConvolve(%r, %r, %r)'%self.__getinitargs__()
 
@@ -487,7 +488,7 @@ class Deconvolution(galsim.GSObject):
 
         sbp = galsim._galsim.SBDeconvolve(obj.SBProfile, gsparams)
         galsim.GSObject.__init__(self, sbp)
-        if hasattr(obj,'noise'):
+        if hasattr(obj,'noise') and obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.Deconvolution")
 
@@ -521,7 +522,6 @@ class Deconvolution(galsim.GSObject):
 
 _galsim.SBDeconvolve.__getinitargs__ = lambda self: (self.getObj(), self.getGSParams())
 _galsim.SBDeconvolve.__getstate__ = lambda self: None
-_galsim.SBDeconvolve.__setstate__ = lambda self, state: 1
 _galsim.SBDeconvolve.__repr__ = lambda self: \
         'galsim._galsim.SBDeConvolve(%r, %r)'%self.__getinitargs__()
 
@@ -613,7 +613,7 @@ class AutoConvolution(galsim.GSObject):
 
         sbp = galsim._galsim.SBAutoConvolve(obj.SBProfile, real_space, gsparams)
         galsim.GSObject.__init__(self, sbp)
-        if hasattr(obj,'noise'):
+        if hasattr(obj,'noise') and obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.AutoConvolution")
 
@@ -656,7 +656,6 @@ class AutoConvolution(galsim.GSObject):
 _galsim.SBAutoConvolve.__getinitargs__ = lambda self: (
         self.getObj(), self.isRealSpace(), self.getGSParams())
 _galsim.SBAutoConvolve.__getstate__ = lambda self: None
-_galsim.SBAutoConvolve.__setstate__ = lambda self, state: 1
 _galsim.SBAutoConvolve.__repr__ = lambda self: \
         'galsim._galsim.SBAutoConvolve(%r, %r, %r)'%self.__getinitargs__()
 
@@ -752,8 +751,7 @@ class AutoCorrelation(galsim.GSObject):
 
         sbp = galsim._galsim.SBAutoCorrelate(obj.SBProfile, real_space, gsparams)
         galsim.GSObject.__init__(self, sbp)
-
-        if hasattr(obj,'noise'):
+        if hasattr(obj,'noise') and obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.AutoCorrelation")
 
@@ -796,7 +794,6 @@ class AutoCorrelation(galsim.GSObject):
 _galsim.SBAutoCorrelate.__getinitargs__ = lambda self: (
         self.getObj(), self.isRealSpace(), self.getGSParams())
 _galsim.SBAutoCorrelate.__getstate__ = lambda self: None
-_galsim.SBAutoCorrelate.__setstate__ = lambda self, state: 1
 _galsim.SBAutoCorrelate.__repr__ = lambda self: \
         'galsim._galsim.SBAutoCorrelate(%r, %r, %r)'%self.__getinitargs__()
 
@@ -821,7 +818,7 @@ def FourierSqrt(obj, gsparams=None):
     @returns a FourierSqrtProfile or ChromaticFourierSqrtProfile instance as appropriate.
     """
     if isinstance(obj, galsim.ChromaticObject):
-        return galsim.ChromaticFourierSqrt(obj, gsparams=gsparams)
+        return galsim.ChromaticFourierSqrtProfile(obj, gsparams=gsparams)
     elif isinstance(obj, galsim.GSObject):
         return FourierSqrtProfile(obj, gsparams=gsparams)
     else:
@@ -867,7 +864,7 @@ class FourierSqrtProfile(galsim.GSObject):
 
         sbp = galsim._galsim.SBFourierSqrt(obj.SBProfile, gsparams)
         galsim.GSObject.__init__(self, sbp)
-        if hasattr(obj,'noise'):
+        if hasattr(obj,'noise') and obj.noise is not None:
             import warnings
             warnings.warn("Unable to propagate noise in galsim.FourierSqrtProfile")
 
@@ -899,6 +896,5 @@ class FourierSqrtProfile(galsim.GSObject):
 
 _galsim.SBFourierSqrt.__getinitargs__ = lambda self: (self.getObj(), self.getGSParams())
 _galsim.SBFourierSqrt.__getstate__ = lambda self: None
-_galsim.SBFourierSqrt.__setstate__ = lambda self, state: 1
 _galsim.SBFourierSqrt.__repr__ = lambda self: \
         'galsim._galsim.SBFourierSqrt(%r, %r)'%self.__getinitargs__()

@@ -23,12 +23,6 @@
 #include "SBConvolveImpl.h"
 #include "SBTransform.h"
 
-#ifdef DEBUGLOGGING
-#include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 2;
-#endif
-
 namespace galsim {
 
     SBConvolve::SBConvolve(const std::list<SBProfile>& slist, bool real_space,
@@ -51,6 +45,28 @@ namespace galsim {
         return static_cast<const SBConvolveImpl&>(*_pimpl).isRealSpace();
     }
 
+    double SBConvolve::SBConvolveImpl::maxSB() const
+    {
+        // This one is probably the least accurate of all the estimates of maxSB.
+        // The calculation is based on the exact value for Gaussians.
+        //     maxSB = flux / 2pi sigma^2
+        // When convolving multiple Gaussians together, the sigma^2 values add:
+        //     sigma_final^2 = Sum_i sigma_i^2
+        // from which we can calculate
+        //     maxSB = flux_final / 2pi sigma_final^2
+        // or
+        //     maxSB = flux_final / Sum_i (flux_i / maxSB_i)
+        //
+        // For non-Gaussians, this procedure will tend to produce an over-estimate of the
+        // true maximum SB.  Non-Gaussian profiles tend to have peakier parts which get smoothed
+        // more than the Gaussian does.  So this is likely to be too high, which is acceptable.
+        ConstIter sptr = _plist.begin();
+        double twopisigmasq = sptr->getFlux() / sptr->maxSB();
+        for (++sptr; sptr!=_plist.end(); ++sptr) 
+            twopisigmasq += std::abs(sptr->getFlux()) / sptr->maxSB();
+        return _fluxProduct / twopisigmasq;
+    }
+
     std::string SBConvolve::SBConvolveImpl::serialize() const
     {
         std::ostringstream oss(" ");
@@ -59,7 +75,10 @@ namespace galsim {
         ConstIter sptr = _plist.begin();
         oss << sptr->serialize();
         for (++sptr; sptr!=_plist.end(); ++sptr) oss << ", " << sptr->serialize();
-        oss << "], galsim.GSParams("<<*gsparams<<"))";
+        oss << "], ";
+        if (_real_space) oss << "True, ";
+        else oss << "False, ";
+        oss << "galsim.GSParams("<<*gsparams<<"))";
         return oss.str();
     }
 
@@ -180,40 +199,40 @@ namespace galsim {
         return kv;
     }
 
-    void SBConvolve::SBConvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+    void SBConvolve::SBConvolveImpl::fillKImage(ImageView<std::complex<double> > im,
                                                 double kx0, double dkx, int izero,
                                                 double ky0, double dky, int jzero) const
     {
-        dbg<<"SBConvolve fillKValue\n";
+        dbg<<"SBConvolve fillKImage\n";
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
         dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
         ConstIter pptr = _plist.begin();
         assert(pptr != _plist.end());
-        GetImpl(*pptr)->fillKValue(val,kx0,dkx,izero,ky0,dky,jzero);
+        GetImpl(*pptr)->fillKImage(im,kx0,dkx,izero,ky0,dky,jzero);
         if (++pptr != _plist.end()) {
-            tmv::Matrix<std::complex<double> > val2(val.colsize(),val.rowsize());
+            ImageAlloc<std::complex<double> > im2(im.getBounds());
             for (; pptr != _plist.end(); ++pptr) {
-                GetImpl(*pptr)->fillKValue(val2.view(),kx0,dkx,izero,ky0,dky,jzero);
-                val = ElemProd(val,val2);
+                GetImpl(*pptr)->fillKImage(im2.view(),kx0,dkx,izero,ky0,dky,jzero);
+                im *= im2;
             }
         }
     }
 
-    void SBConvolve::SBConvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+    void SBConvolve::SBConvolveImpl::fillKImage(ImageView<std::complex<double> > im,
                                                 double kx0, double dkx, double dkxy,
                                                 double ky0, double dky, double dkyx) const
     {
-        dbg<<"SBConvolve fillKValue\n";
+        dbg<<"SBConvolve fillKImage\n";
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         ConstIter pptr = _plist.begin();
         assert(pptr != _plist.end());
-        GetImpl(*pptr)->fillKValue(val,kx0,dkx,dkxy,ky0,dky,dkyx);
+        GetImpl(*pptr)->fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx);
         if (++pptr != _plist.end()) {
-            tmv::Matrix<std::complex<double> > val2(val.colsize(),val.rowsize());
+            ImageAlloc<std::complex<double> > im2(im.getBounds());
             for (; pptr != _plist.end(); ++pptr) {
-                GetImpl(*pptr)->fillKValue(val2.view(),kx0,dkx,dkxy,ky0,dky,dkyx);
-                val = ElemProd(val,val2);
+                GetImpl(*pptr)->fillKImage(im2.view(),kx0,dkx,dkxy,ky0,dky,dkyx);
+                im *= im2;
             }
         }
     }
@@ -292,6 +311,12 @@ namespace galsim {
         return static_cast<const SBAutoConvolveImpl&>(*_pimpl).isRealSpace();
     }
 
+    double SBAutoConvolve::SBAutoConvolveImpl::maxSB() const
+    {
+        // f^2 / (f/sb + f/sb) = f*sb/2
+        return _adaptee.getFlux() * _adaptee.maxSB() / 2.;
+    }
+
     std::string SBAutoConvolve::SBAutoConvolveImpl::serialize() const
     {
         std::ostringstream oss(" ");
@@ -311,26 +336,30 @@ namespace galsim {
     double SBAutoConvolve::SBAutoConvolveImpl::xValue(const Position<double>& pos) const
     { return RealSpaceConvolve(_adaptee,_adaptee,pos,getFlux(),this->gsparams); }
 
-    void SBAutoConvolve::SBAutoConvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+    template <typename T>
+    struct Square
+    { T operator()(T x) { return x*x; } };
+
+    void SBAutoConvolve::SBAutoConvolveImpl::fillKImage(ImageView<std::complex<double> > im,
                                                         double kx0, double dkx, int izero,
                                                         double ky0, double dky, int jzero) const
     {
-        dbg<<"SBAutoConvolve fillKValue\n";
+        dbg<<"SBAutoConvolve fillKImage\n";
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
         dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
-        GetImpl(_adaptee)->fillKValue(val,kx0,dkx,izero,ky0,dky,jzero);
-        val = ElemProd(val,val);
+        GetImpl(_adaptee)->fillKImage(im,kx0,dkx,izero,ky0,dky,jzero);
+        transform_pixel(im, Square<std::complex<double> >());
     }
 
-    void SBAutoConvolve::SBAutoConvolveImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+    void SBAutoConvolve::SBAutoConvolveImpl::fillKImage(ImageView<std::complex<double> > im,
                                                         double kx0, double dkx, double dkxy,
                                                         double ky0, double dky, double dkyx) const
     {
-        dbg<<"SBAutoConvolve fillKValue\n";
+        dbg<<"SBAutoConvolve fillKImage\n";
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
-        GetImpl(_adaptee)->fillKValue(val,kx0,dkx,dkxy,ky0,dky,dkyx);
-        val = ElemProd(val,val);
+        GetImpl(_adaptee)->fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx);
+        transform_pixel(im, Square<std::complex<double> >());
     }
 
     double SBAutoConvolve::SBAutoConvolveImpl::getPositiveFlux() const
@@ -381,6 +410,11 @@ namespace galsim {
         return static_cast<const SBAutoCorrelateImpl&>(*_pimpl).isRealSpace();
     }
 
+    double SBAutoCorrelate::SBAutoCorrelateImpl::maxSB() const
+    {
+        return _adaptee.getFlux() * _adaptee.maxSB() / 2.;
+    }
+
     std::string SBAutoCorrelate::SBAutoCorrelateImpl::serialize() const
     {
         std::ostringstream oss(" ");
@@ -404,28 +438,30 @@ namespace galsim {
         return RealSpaceConvolve(_adaptee,temp,pos,getFlux(),this->gsparams);
     }
 
-    void SBAutoCorrelate::SBAutoCorrelateImpl::fillKValue(
-        tmv::MatrixView<std::complex<double> > val,
-        double kx0, double dkx, int izero,
-        double ky0, double dky, int jzero) const
+    template <typename T>
+    struct AbsSquare
+    { T operator()(T x) { return std::norm(x); } };
+
+    void SBAutoCorrelate::SBAutoCorrelateImpl::fillKImage(ImageView<std::complex<double> > im,
+                                                          double kx0, double dkx, int izero,
+                                                          double ky0, double dky, int jzero) const
     {
-        dbg<<"SBAutoCorrelate fillKValue\n";
+        dbg<<"SBAutoCorrelate fillKImage\n";
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
         dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
-        GetImpl(_adaptee)->fillKValue(val,kx0,dkx,izero,ky0,dky,jzero);
-        val = ElemProd(val,val.conjugate());
+        GetImpl(_adaptee)->fillKImage(im,kx0,dkx,izero,ky0,dky,jzero);
+        transform_pixel(im, AbsSquare<std::complex<double> >());
     }
 
-    void SBAutoCorrelate::SBAutoCorrelateImpl::fillKValue(
-        tmv::MatrixView<std::complex<double> > val,
-        double kx0, double dkx, double dkxy,
-        double ky0, double dky, double dkyx) const
+    void SBAutoCorrelate::SBAutoCorrelateImpl::fillKImage(ImageView<std::complex<double> > im,
+                                                          double kx0, double dkx, double dkxy,
+                                                          double ky0, double dky, double dkyx) const
     {
-        dbg<<"SBCorrelate fillKValue\n";
+        dbg<<"SBAutoCorrelate fillKImage\n";
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
-        GetImpl(_adaptee)->fillKValue(val,kx0,dkx,dkxy,ky0,dky,dkyx);
-        val = ElemProd(val,val.conjugate());
+        GetImpl(_adaptee)->fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx);
+        transform_pixel(im, AbsSquare<std::complex<double> >());
     }
 
     double SBAutoCorrelate::SBAutoCorrelateImpl::getPositiveFlux() const

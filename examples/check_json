@@ -64,27 +64,27 @@ echo 'Checking diffs: (No output means success)'
 
 # demo1:
 # Don't check demo1, since it doesn't use a deterministic seed.
-# If you add an initial seed in both places, then you can uncomment 
+# If you add an initial seed in both places, then you can uncomment
 # the next line and it should work.
-#./check_diff output/demo1.fits output_json/demo1.fits 
+#./check_diff.py output/demo1.fits output_json/demo1.fits
 
 # demo2:
-./check_diff output/demo2.fits output_json/demo2.fits 
+./check_diff.py output/demo2.fits output_json/demo2.fits
 
 # demo3:
-./check_diff output/demo3.fits output_json/demo3.fits 
-./check_diff output/demo3_epsf.fits output_json/demo3_epsf.fits 
+./check_diff.py output/demo3.fits output_json/demo3.fits
+./check_diff.py output/demo3_epsf.fits output_json/demo3_epsf.fits
 
 # demo4:
-./check_diff output/multi.fits output_json/multi.fits 
+./check_diff.py output/multi.fits output_json/multi.fits
 
 # demo5:
-./check_diff output/g08_psf.fits output_json/g08_psf.fits
-./check_diff output/g08_gal.fits output_json/g08_gal.fits
+./check_diff.py output/g08_psf.fits output_json/g08_psf.fits
+./check_diff.py output/g08_gal.fits output_json/g08_gal.fits
 
 # demo6:
-./check_diff output/psf_real.fits output_json/psf_real.fits
-./check_diff output/cube_real.fits output_json/cube_real.fits 
+./check_diff.py output/psf_real.fits output_json/psf_real.fits
+./check_diff.py output/cube_real.fits output_json/cube_real.fits
 
 # demo7:
 # Note; the raw .gz files include the filename in them.
@@ -92,27 +92,27 @@ echo 'Checking diffs: (No output means success)'
 # So unzip them first before running diff.
 gunzip output/cube_phot.fits.gz
 gunzip output_json/cube_phot.fits.gz
-./check_diff output/cube_phot.fits output_json/cube_phot.fits
+./check_diff.py output/cube_phot.fits output_json/cube_phot.fits
 
 # demo8:
-./check_diff output/bpd_single.fits output_json/bpd_single.fits 
-./check_diff output/bpd_multi.fits output_json/bpd_multi.fits 
+./check_diff.py output/bpd_single.fits output_json/bpd_single.fits
+./check_diff.py output/bpd_multi.fits output_json/bpd_multi.fits
 
 # demo9:
-for dir_num in {1..4} 
+for dir_num in {1..4}
 do
     for file_num in {0..4}
     do
         file_name=nfw$dir_num/cluster000$file_num.fits
         truth_name=nfw$dir_num/truth000$file_num.dat
-        ./check_diff output/$file_name output_json/$file_name
-        ./check_diff output/$truth_name output_json/$truth_name
+        ./check_diff.py output/$file_name output_json/$file_name
+        ./check_diff.py output/$truth_name output_json/$truth_name
     done
 done
 
 # demo10:
-./check_diff output/power_spectrum.fits output_json/power_spectrum.fits 
+./check_diff.py output/power_spectrum.fits output_json/power_spectrum.fits
 
 # demo11:
-./check_diff output/tabulated_power_spectrum.fits.fz output_json/tabulated_power_spectrum.fits.fz 
+./check_diff.py output/tabulated_power_spectrum.fits.fz output_json/tabulated_power_spectrum.fits.fz
 

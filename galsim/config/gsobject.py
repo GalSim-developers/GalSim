@@ -181,7 +181,7 @@ def BuildGSObject(config, key, base=None, gsparams={}, logger=None):
         if issubclass(galsim.__dict__[type_name], galsim.GSObject):
             gsobject, safe = _BuildSimple(param, base, ignore, gsparams, logger)
         else:
-            TypeError("Input config type = %s is not a GSObject."%type_name)
+            raise TypeError("Input config type = %s is not a GSObject."%type_name)
     # Otherwise, it's not a valid type.
     else:
         raise NotImplementedError("Unrecognised config type = %s"%type_name)
@@ -243,11 +243,12 @@ def _BuildSimple(config, base, ignore, gsparams, logger):
     if logger:
         logger.debug('obj %d: BuildSimple for type = %s',base['obj_num'],type_name)
 
+    req = init_func._req_params if hasattr(init_func,'_req_params') else {}
+    opt = init_func._opt_params if hasattr(init_func,'_opt_params') else {}
+    single = init_func._single_params if hasattr(init_func,'_single_params') else []
     kwargs, safe = galsim.config.GetAllParams(config, base,
-                                              req = init_func._req_params,
-                                              opt = init_func._opt_params,
-                                              single = init_func._single_params,
-                                              ignore = ignore)
+                                              req=req, opt=opt, single=single,
+                                              ignore=ignore)
     if gsparams: kwargs['gsparams'] = galsim.GSParams(**gsparams)
 
     if init_func._takes_rng:
@@ -498,7 +499,7 @@ def _GetMinimumBlock(config, base):
     """
     if isinstance(config, dict) and 'type' in config:
         type_name = config['type']
-        if type_name in block_gsobject_types:
+        if type_name in block_gsobject_types: # pragma: no cover
             num = galsim.config.ParseValue(config, 'num', base, int)[0]
             return num
         else:
@@ -539,7 +540,7 @@ def RegisterObjectType(type_name, build_func, input_type=None, _is_block=False):
     # now-deprecated type=Ring.  Once that feature is fully removed, we can remove the _is_block
     # parameter here.
     valid_gsobject_types[type_name] = build_func
-    if _is_block:
+    if _is_block: # pragma: no cover
         block_gsobject_types.append(type_name)
     if input_type is not None:
         from .input import RegisterInputConnectedType

@@ -48,22 +48,23 @@ namespace galsim {
         double getFlux() const;
         double getSigma() const;
         const LVector& getBVec() const;
+        double maxSB() const;
 
         /// @brief Photon-shooting is not implemented for SBShapelet, will throw an exception.
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate ud) const
         { throw SBError("SBShapelet::shoot() is not implemented"); }
 
         // Overrides for better efficiency
-        void fillXValue(tmv::MatrixView<double> val,
+        void fillXImage(ImageView<double> im,
                         double x0, double dx, int izero,
                         double y0, double dy, int jzero) const;
-        void fillXValue(tmv::MatrixView<double> val,
+        void fillXImage(ImageView<double> im,
                         double x0, double dx, double dxy,
                         double y0, double dy, double dyx) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        void fillKImage(ImageView<std::complex<double> > im,
                         double kx0, double dkx, int izero,
                         double ky0, double dky, int jzero) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        void fillKImage(ImageView<std::complex<double> > im,
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 

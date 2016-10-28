@@ -200,10 +200,11 @@ import galsim
 import numpy as np
 
 gain = 1.0
-pixel_scale = 0.11
-diameter = 2.36
+pixel_scale = 0.11  # arcsec / pixel
+diameter = 2.36  # meters
 obscuration = 0.3
-exptime = 168.1
+collecting_area = np.pi * diameter**2 / 4.0 * (1.0 - obscuration**2) * 1e4  # cm^2
+exptime = 168.1  # s
 dark_current = 0.015
 nonlinearity_beta = -3.57e-7
 reciprocity_alpha = 0.0065

@@ -616,7 +616,7 @@ def readFromFitsHeader(header):
     elif 'CTYPE1' in header:
         try:
             wcs = galsim.FitsWCS(header=header, suppress_warning=True)
-        except:
+        except:  # pragma: no cover
             # This shouldn't ever happen, but just in case...
             wcs = galsim.PixelScale(1.)
     else:
@@ -1874,18 +1874,18 @@ def _writeFuncToHeader(func, letter, header):
         # In particular, marshal can serialize arbitrary code. (!)
         try:
             import cPickle as pickle
-        except:
+        except ImportError:
             import pickle
         import types, marshal, base64
         if type(func) == types.FunctionType:
             try:
-                # Python3
+                # Python3 and usually Python2
                 code = marshal.dumps(func.__code__)
                 name = func.__name__
                 defaults = func.__defaults__
                 closure = func.__closure__
-            except:
-                # Python2
+            except:  # pragma: no cover
+                # Older Python2 syntax, just in case.
                 code = marshal.dumps(func.func_code)
                 name = func.func_name
                 defaults = func.func_defaults
@@ -1953,7 +1953,7 @@ def _readFuncFromHeader(letter, header):
     # This undoes the process of _writeFuncToHeader.  See the comments in that code for details.
     try:
         import cPickle as pickle
-    except:
+    except ImportError:
         import pickle
     import types, marshal, base64, types
     if 'GS_'+letter+'_STR' in header:
@@ -2065,26 +2065,23 @@ class UVFunction(EuclideanWCS):
             self._world_origin = world_origin
 
     def _initialize_funcs(self):
-        import math  # In case needed by function evals
-        import numpy
-
         if isinstance(self._orig_ufunc, str):
-            self._ufunc = eval('lambda x,y : ' + self._orig_ufunc)
+            self._ufunc = galsim.utilities.math_eval('lambda x,y : ' + self._orig_ufunc)
         else:
             self._ufunc = self._orig_ufunc
 
         if isinstance(self._orig_vfunc, str):
-            self._vfunc = eval('lambda x,y : ' + self._orig_vfunc)
+            self._vfunc = galsim.utilities.math_eval('lambda x,y : ' + self._orig_vfunc)
         else:
             self._vfunc = self._orig_vfunc
 
         if isinstance(self._orig_xfunc, str):
-            self._xfunc = eval('lambda u,v : ' + self._orig_xfunc)
+            self._xfunc = galsim.utilities.math_eval('lambda u,v : ' + self._orig_xfunc)
         else:
             self._xfunc = self._orig_xfunc
 
         if isinstance(self._orig_yfunc, str):
-            self._yfunc = eval('lambda u,v : ' + self._orig_yfunc)
+            self._yfunc = galsim.utilities.math_eval('lambda u,v : ' + self._orig_yfunc)
         else:
             self._yfunc = self._orig_yfunc
 
@@ -2252,21 +2249,18 @@ class RaDecFunction(CelestialWCS):
             self._origin = origin
 
     def _initialize_funcs(self):
-        import math  # In case needed by function evals
-        import numpy
-
         if self._orig_dec_func is None:
             if isinstance(self._orig_ra_func, str):
-                self._radec_func = eval('lambda x,y : ' + self._orig_ra_func)
+                self._radec_func = galsim.utilities.math_eval('lambda x,y : ' + self._orig_ra_func)
             else:
                 self._radec_func = self._orig_ra_func
         else:
             if isinstance(self._orig_ra_func, str):
-                ra_func = eval('lambda x,y : ' + self._orig_ra_func)
+                ra_func = galsim.utilities.math_eval('lambda x,y : ' + self._orig_ra_func)
             else:
                 ra_func = self._orig_ra_func
             if isinstance(self._orig_dec_func, str):
-                dec_func = eval('lambda x,y : ' + self._orig_dec_func)
+                dec_func = galsim.utilities.math_eval('lambda x,y : ' + self._orig_dec_func)
             else:
                 dec_func = self._orig_dec_func
             self._radec_func = lambda x,y : (ra_func(x,y), dec_func(x,y))
@@ -2327,3 +2321,14 @@ class RaDecFunction(CelestialWCS):
     def __setstate__(self, d):
         self.__dict__ = d
         self._initialize_funcs()
+
+def compatible(wcs1, wcs2):
+    """
+    A utility to check the compatibility of two WCS.  In particular, if two WCS are consistent with
+    each other modulo a shifted origin, we consider them to be compatible, even though they are not
+    equal.
+    """
+    if wcs1.isUniform() and wcs2.isUniform():
+        return wcs1.jacobian() == wcs2.jacobian()
+    else:
+        return wcs1 == wcs2.withOrigin(wcs1.origin, wcs1.world_origin)
