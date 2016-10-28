@@ -151,6 +151,33 @@ def test_randwalk_invalid_inputs():
         pass
 
 @timer
+def test_randwalk_repr():
+    """
+    test the repr and str work, and that a new object can be created
+    using eval
+    """
+
+    npoints=100
+    hlr = 8.0
+    flux=1
+    rw=galsim.RandomWalk(npoints, hlr, flux=flux)
+
+
+    rep=repr(rw)
+
+    for rep in [repr(rw),str(rw)]:
+        new_rw = eval(rep)
+        assert new_rw.npoints == rw.npoints,\
+            "expected npoints=%d got %d" % (rw.npoints,new_rw.npoints)
+
+        mess="expected input_half_light_radius=%.16g got %.16g"
+        assert new_rw.input_half_light_radius == rw.input_half_light_radius,\
+            mess % (rw.input_half_light_radius,new_rw.input_half_light_radius)
+        assert new_rw.flux == rw.flux,\
+            "expected flux=%.16g got %.16g" % (rw.flux,new_rw.flux)
+
+
+@timer
 def test_randwalk_hlr():
     """
     Create a random walk galaxy and test that the half light radius
@@ -195,3 +222,4 @@ if __name__ == "__main__":
     test_randwalk_valid_inputs()
     test_randwalk_invalid_inputs()
     test_randwalk_hlr()
+    test_randwalk_repr()
