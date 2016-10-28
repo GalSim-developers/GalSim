@@ -87,7 +87,7 @@ Silicon::Silicon (std::string inname)
     }
     else
     {
-        printf("Error setting collecting region");
+        throw std::runtime_error("Error setting collecting region");
     }
 
     // The following is the lateral diffusion step size in microns, assuming the entire silicon thickness (100 microns)
