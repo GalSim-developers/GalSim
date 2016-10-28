@@ -186,7 +186,6 @@ Silicon::Silicon (std::string inname)
 #endif
     // We generate a testpoint for testing whether a point is inside or outside the array
     testpoint = new Point(0.0,0.0);
-    return;
 }
 
 Silicon::~Silicon () {
@@ -209,7 +208,8 @@ bool Silicon::InsidePixel(int ix, int iy, double x, double y, double zconv,
 
     int TestPoly, EmptyPoly, i, j, ii, jj, chargei, chargej, n;
     double charge;
-    int NxCenter, NyCenter, QDist = 3; // QDist is how many pixels away to include neighboring charge.
+    int NxCenter, NyCenter;
+    int QDist = 3; // QDist is how many pixels away to include neighboring charge.
     double dx, dy;
     // The term zfactor decreases the pixel shifts as we get closer to the bottom
     // It is an empirical fit to the Poisson solver simulations, and only matters
@@ -235,20 +235,23 @@ bool Silicon::InsidePixel(int ix, int iy, double x, double y, double zconv,
     miny = target.getYMin();
     maxx = target.getXMax();
     maxy = target.getYMax();
-    //printf("minx = %d, miny = %d, maxx = %d, maxy = %d\n",minx,miny,maxx,maxy);
-    //printf("ix = %d, iy = %d, target(ix,iy) = %f, x = %f, y = %f\n",ix, iy, target(ix,iy), x, y);
+    xdbg<<"minx = "<<minx<<", miny = "<<miny<<", maxx = "<<maxx<<", maxy = "<<maxy<<std::endl;
+    xdbg<<"ix = "<<ix<<", iy = "<<iy<<", target(ix,iy) = "<<target(ix,iy)
+        <<", x = "<<x<<", y = "<<y<<std::endl;
+
     for (i=NxCenter-QDist; i<NxCenter+QDist+1; i++)
     {
         for (j=NyCenter-QDist; j<NyCenter+QDist+1; j++)
         {
             chargei = ix + i - NxCenter;
             chargej = iy + j - NyCenter;
-            if ((chargei < minx) || (chargei > maxx) || (chargej < miny) || (chargej > maxy)) continue;
+            if ((chargei < minx) || (chargei > maxx) || (chargej < miny) || (chargej > maxy))
+                continue;
+
             charge = target(chargei,chargej);
             if (charge < 10.0)
-            {
                 continue;
-            }
+
             for (n=0; n<Nv; n++)
             {
                 ii = 2 * NxCenter - i;
@@ -301,17 +304,15 @@ template <typename T>
 double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
                            ImageView<T> target) const
 {
-    // Modified by Craig Lage - UC Davis to incorporate the brighter-fatter effect
-    // 16-Mar-16
-    // 'silicon' must be passed to the function, optionally
-    // Silicon* silicon = new Silicon("../poisson/BF_256_9x9_0_Vertices"); // Create and read in pixel distortions
+    // Silicon* silicon = new Silicon("../poisson/BF_256_9x9_0_Vertices");
+    // Create and read in pixel distortions
     bool FoundPixel;
-    int xoff[9] = {0,1,1,0,-1,-1,-1,0,1};// Displacements to neighboring pixels
-    int yoff[9] = {0,0,1,1,1,0,-1,-1,-1};// Displacements to neighboring pixels
+    int xoff[9] = {0,1,1,0,-1,-1,-1,0,1}; // Displacements to neighboring pixels
+    int yoff[9] = {0,0,1,1,1,0,-1,-1,-1}; // Displacements to neighboring pixels
     int n=0, step, ix_off, iy_off;
     double x, y, x_off, y_off;
     double zconv = 95.0; // Z coordinate of photoconversion in microns
-    // Will add more detail later
+                         // Will add more detail later
     double ccdtemp =  173; // CCD temp in K <- THIS SHOULD COME FROM silicon
     double DiffStep; // Mean diffusion step size in microns
     GaussianDeviate gd(ud,0,1); // Random variable from Standard Normal dist.
@@ -330,7 +331,7 @@ double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
                                  " undefined Bounds");
 
     // Factor to turn flux into surface brightness in an Image pixel
-    dbg<<"In PhotonArray::addTo\n";
+    dbg<<"In Silicon::accumulate\n";
     dbg<<"bounds = "<<b<<std::endl;
 
     double addedFlux = 0.;
@@ -349,8 +350,8 @@ double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
         x = x - (double) ix + 0.5;
         y = y - (double) iy + 0.5;
         // (ix,iy) are the undistorted pixel coordinates.
-        // (x,y) are the coordinates within the pixel, centered at the lower left - CRAIG, BETTER TO
-        // CALL IT (dx,dy)
+        // (x,y) are the coordinates within the pixel, centered at the lower left
+        // CRAIG, BETTER TO CALL IT (dx,dy)
 
         // The following code finds which pixel we are in given
         // pixel distortion due to the brighter-fatter effect
@@ -384,10 +385,11 @@ double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
         }
         if (!FoundPixel)
         {
-            // We should never arrive here, since this means we didn't find it in the undistorted pixel
-            // or any of the neighboring pixels.  However, sometimes (about 0.01% of the time) we do
-            // arrive here due to roundoff error of the pixel boundary.  When this happens, I put
-            // the electron in the undistorted pixel or the nearest neighbor with equal probability.
+            // We should never arrive here, since this means we didn't find it in the undistorted
+            // pixel or any of the neighboring pixels.  However, sometimes (about 0.01% of the
+            // time) we do arrive here due to roundoff error of the pixel boundary.  When this
+            // happens, I put the electron in the undistorted pixel or the nearest neighbor with
+            // equal probability.
             misscount += 1;
             if (ud() > 0.5)
             {
