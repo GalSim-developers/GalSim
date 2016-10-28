@@ -29,3 +29,4 @@ Interpolant.cpp
 CorrelatedNoise.cpp
 Bessel.cpp
 CDModel.cpp
+Silicon.cpp
