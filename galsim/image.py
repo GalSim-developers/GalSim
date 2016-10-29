@@ -20,6 +20,7 @@ The Image class and some modifications to the docs for the C++ layer ImageAlloc 
 classes.
 """
 
+from __future__ import division
 from future.utils import with_metaclass
 from . import _galsim
 import numpy as np
@@ -1410,7 +1411,14 @@ def Image_idiv(self, other):
         a = other
         dt = type(a)
     if dt == self.array.dtype:
-        self.array[:,:] /= a
+        try:
+            self.array[:,:] /= a
+        except TypeError:
+            # if dtype is an integer type, and a is an array, then numpy doesn't allow true
+            # division /= to assign back to an integer array.  image_int /= 2 works as expected,
+            # so to be consistent we also allow image_int /= image_int2 to round to integer values
+            # by doing the following.
+            self.array[:,:] = (self.array / a).astype(self.array.dtype)
     else:
         self.array[:,:] = (self.array / a).astype(self.array.dtype)
     return self
