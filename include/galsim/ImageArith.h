@@ -96,8 +96,6 @@ namespace galsim {
         if (ptr) {
             const int skip = image.getNSkip();
             const int step = image.getStep();
-            const int nrow = image.getNRow();
-            const int ncol = image.getNCol();
             const int xmin = image.getXMin();
             const int xmax = image.getXMax();
             const int ymin = image.getYMin();

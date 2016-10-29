@@ -627,7 +627,6 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
     // In the normal (not hermx) case, we now wrap rows [j1,j2) into the columns [i1,i2).
     if (!hermx) {
         ptr = getData() + j1*stride;
-        T* ptrwrap;
         for (int j=j1; j<j2; ++j, ptr+=skip) {
             xdbg<<"Wrap row "<<j<<" into columns ["<<i1<<','<<i2<<")\n";
             xdbg<<"ptr = "<<ptr-this->getData()<<std::endl;
