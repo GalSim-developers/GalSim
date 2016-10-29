@@ -265,7 +265,7 @@ class GalaxyCatalog:
     def classification(self, div_params, out_dir):
         """Detected objects are classified as stars or not depending on their 
         magnitude and peak surface brightnes."""     
-        x_max = 25
+        x_max = 25.2
         print "Performing star-galaxy separation for section ", self.params.seg_id
         for filt in self.params.filters:
             x_div = div_params[filt][0]
@@ -343,7 +343,7 @@ class GalaxyCatalog:
             return catalog
         x0 = catalog['X_IMAGE'][q]
         y0 = catalog['Y_IMAGE'][q]
-        r = np.mean([catalog['A_IMAGE'][q],catalog['B_IMAGE'][q]])
+        r = np.mean([catalog['A_IMAGE'][q],catalog['B_IMAGE'][q]])*5
         flux = catalog['FLUX_AUTO'][q]
         l = m*flux + b
         x_vertices = np.array([x0-w,x0-w,x0+w,x0+w,x0+r,x0+l,x0+l,x0+r,x0+w,x0+w,x0-w,x0-w,x0-r,x0-l,x0-l,x0-r])
@@ -633,15 +633,15 @@ if __name__ == '__main__':
                         help="Number of pixels used as buffer around bright \
                         objects in Hot-cold detection method.[Default:15(pixels)]")
     parser.add_argument('--diff_spike_params', 
-                        default= [(0.0350087,64.0863,40.0,2.614),
-                                  (0.0367020,77.7674,40.0,2.180)],
+                        default= [(0.0441087,81.0863,15.0,2.614),
+                                  (0.0448020,92.7674,15.0,2.180)],
                         help="Params of diffraction spikes in each filter. \
                         They must be in the same order as filter_names. \
                         [slope(pixels/ADU),intercept(pixels),width(pixels),angle(degrees)] \
                         [Default: [(0.0350087,64.0863,40.0,2.614),  \
                         (0.0367020,77.7674,40.0,2.180)]]")
     parser.add_argument('--star_galaxy_params', 
-                        default= [(19.61, 15.708, 0.945), (18.9, 14.955, 0.98)],
+                        default= [(19.95, 16.17, 0.945), (18.95, 15.11, 0.98)],
                         help="Star galaxy seperation line parametrs \
                         [Default:(x_div, y_div, slope)]")
     parser.add_argument('--zero_point_mag', 
