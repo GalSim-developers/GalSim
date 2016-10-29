@@ -641,7 +641,7 @@ if __name__ == '__main__':
                         [Default: [(0.0350087,64.0863,40.0,2.614),  \
                         (0.0367020,77.7674,40.0,2.180)]]")
     parser.add_argument('--star_galaxy_params', 
-                        default= [(19.5, 15.708, 0.945), (18.9, 14.955, 0.98)],
+                        default= [(19.61, 15.708, 0.945), (18.9, 14.955, 0.98)],
                         help="Star galaxy seperation line parametrs \
                         [Default:(x_div, y_div, slope)]")
     parser.add_argument('--zero_point_mag', 
