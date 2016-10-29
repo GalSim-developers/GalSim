@@ -35,44 +35,95 @@ def test_silicon():
     """Test the basic construction and use of the SiloconSensor class.
     """
 
-    obj = galsim.Exponential(flux=353, scale_radius=1.3)
+    # Note: Use something fairly small in terms of npixels so the B/F effect kicks in without
+    # requiring a ridiculous number of photons
+    obj = galsim.Gaussian(flux=3539, sigma=0.3)
 
     # We'll draw the same object using SiliconSensor, Sensor, and the default (sensor=None)
-    im1 = galsim.ImageD(64, 64, scale=0.2)  # Will use sensor=silicon
-    im2 = galsim.ImageD(64, 64, scale=0.2)  # Will use sensor=simple
-    im3 = galsim.ImageD(64, 64, scale=0.2)  # Will use sensor=None
+    im1 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon
+    im2 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=simple
+    im3 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=None
 
     rng1 = galsim.BaseDeviate(5678)
     rng2 = galsim.BaseDeviate(5678)
     rng3 = galsim.BaseDeviate(5678)
 
-    # TODO: This file needs a better location.  If it's generic, we can put it in shared
-    # which will install into an accessibly location when GalSim is installed.  If it's
-    # too specific to be broadly useful, then we should switch to setting specific parameters
-    # via constructor arguments, rather than use a file at all.  (Should probably enable this
-    # anyway...)
+    # TODO: This file needs a better location (and probably name).
+    # If it's generic, we can put it in shared, which will install into an accessibly location
+    # when GalSim is installed.  If it's too specific to be broadly useful, then we should switch
+    # to setting specific parameters via constructor arguments, rather than use a file at all.
+    # (Should probably enable this feature anyway...)
     silicon = galsim.SiliconSensor('../devel/poisson/BF_256_9x9_0_Vertices', rng=rng1)
     simple = galsim.Sensor()
 
     # Start with photon shooting, since that's more straightforward.
-    nphot = 10000
-    obj.drawImage(im1, method='phot', n_photons=nphot, sensor=silicon, rng=rng1)
-    obj.drawImage(im2, method='phot', n_photons=nphot, sensor=simple, rng=rng2)
-    obj.drawImage(im3, method='phot', n_photons=nphot, rng=rng3)
-
-    print('im1: sum = ',im1.array.sum(),' flux = ',obj.flux)
-    print('im2: sum = ',im2.array.sum(),' flux = ',obj.flux)
-    print('im3: sum = ',im3.array.sum(),' flux = ',obj.flux)
+    obj.drawImage(im1, method='phot', poisson_flux=False, sensor=silicon, rng=rng1)
+    obj.drawImage(im2, method='phot', poisson_flux=False, sensor=simple, rng=rng2)
+    obj.drawImage(im3, method='phot', poisson_flux=False, rng=rng3)
 
     # First, im2 and im3 should be exactly equal.
     np.testing.assert_array_equal(im2.array, im3.array)
 
     # im1 should be similar, but not equal
-    np.testing.assert_almost_equal(im1.array/obj.flux, im2.array/obj.flux, decimal=3)
+    np.testing.assert_almost_equal(im1.array/obj.flux, im2.array/obj.flux, decimal=2)
 
-    # TODO: Obviously, the above test is sort of the opposite of what we care about.
-    # We need some tests that this is doing the right thing.  Not just nearly equivalent
-    # to the default Sensor.
+    # Now use a different seed for 3 to see how much of the variation is just from randomness.
+    rng3.seed(234241)
+    obj.drawImage(im3, method='phot', poisson_flux=False, rng=rng3)
+
+    r1 = im1.calculateMomentRadius(flux=obj.flux)
+    r2 = im2.calculateMomentRadius(flux=obj.flux)
+    r3 = im3.calculateMomentRadius(flux=obj.flux)
+    print('Flux = %s:  sum      peak       radius'%obj.flux)
+    print('im1:         %s     %s       %s'%(im1.array.sum(),im1.array.max(), r1))
+    print('im2:         %s     %s       %s'%(im2.array.sum(),im2.array.max(), r2))
+    print('im3:         %s     %s       %s'%(im3.array.sum(),im3.array.max(), r3))
+
+    # Fluxes should all equal obj.flux
+    np.testing.assert_almost_equal(im1.array.sum(), obj.flux)
+    np.testing.assert_almost_equal(im2.array.sum(), obj.flux)
+    np.testing.assert_almost_equal(im3.array.sum(), obj.flux)
+    np.testing.assert_almost_equal(im1.added_flux, obj.flux)
+    np.testing.assert_almost_equal(im2.added_flux, obj.flux)
+    np.testing.assert_almost_equal(im3.added_flux, obj.flux)
+
+    # Sizes are all about equal since flux is not large enough for B/F to be significant
+    np.testing.assert_allclose(r1, r2, rtol=1./np.sqrt(obj.flux))
+    np.testing.assert_allclose(r2, r3, rtol=1./np.sqrt(obj.flux))
+
+    # Repeat with 10X more photons where the brighter-fatter effect should kick in more.
+    obj = obj.withFlux(35390)
+    obj.drawImage(im1, method='phot', poisson_flux=False, sensor=silicon, rng=rng1)
+    obj.drawImage(im2, method='phot', poisson_flux=False, sensor=simple, rng=rng2)
+    obj.drawImage(im3, method='phot', poisson_flux=False, rng=rng3)
+
+    r1 = im1.calculateMomentRadius(flux=obj.flux)
+    r2 = im2.calculateMomentRadius(flux=obj.flux)
+    r3 = im3.calculateMomentRadius(flux=obj.flux)
+    print('Flux = %s:  sum      peak       radius'%obj.flux)
+    print('im1:         %s     %s       %s'%(im1.array.sum(),im1.array.max(), r1))
+    print('im2:         %s     %s       %s'%(im2.array.sum(),im2.array.max(), r2))
+    print('im3:         %s     %s       %s'%(im3.array.sum(),im3.array.max(), r3))
+
+    # Fluxes should still be fine.
+    np.testing.assert_almost_equal(im1.array.sum(), obj.flux)
+    np.testing.assert_almost_equal(im2.array.sum(), obj.flux)
+    np.testing.assert_almost_equal(im3.array.sum(), obj.flux)
+    np.testing.assert_almost_equal(im1.added_flux, obj.flux)
+    np.testing.assert_almost_equal(im2.added_flux, obj.flux)
+    np.testing.assert_almost_equal(im3.added_flux, obj.flux)
+
+    # Sizes for 2,3 should be about equal, but 1 should be larger.
+    print('check |r2-r3| = %f <? %f'%(np.abs(r2-r3), r3/np.sqrt(obj.flux)))
+    np.testing.assert_allclose(r2, r3, rtol=1./np.sqrt(obj.flux))
+    print('check |r1-r3| = %f >? %f'%(np.abs(r1-r3), r3/np.sqrt(obj.flux)))
+    assert r1-r3 > r3/np.sqrt(obj.flux)
+
+    # TODO: Obviously, the above tests are not sufficient.
+    # We need some more sophisticated tests that this is doing the right thing, not just
+    # showing some evidence for B/F.
+
+
 
 
 if __name__ == "__main__":
