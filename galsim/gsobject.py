@@ -1889,4 +1889,3 @@ _galsim.SBProfile.__setstate__ = SBProfile_setstate
 _galsim.SBProfile.__eq__ = lambda self, other: self.serialize() == other.serialize()
 _galsim.SBProfile.__ne__ = lambda self, other: not self.__eq__(other)
 _galsim.SBProfile.__hash__ = lambda self: hash(self.serialize())
-

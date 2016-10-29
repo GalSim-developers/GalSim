@@ -48,8 +48,9 @@ _galsim.ImageAlloc[alt_int32] = _galsim.ImageAllocI
 _galsim.ImageView[alt_int32] = _galsim.ImageViewI
 _galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
 
-_all_cpp_image_types = tuple(_galsim.ImageAlloc.values() + _galsim.ImageView.values() +
-                             _galsim.ConstImageView.values())
+_all_cpp_image_types = tuple(list(_galsim.ImageAlloc.values()) +
+                             list(_galsim.ImageView.values()) +
+                             list(_galsim.ConstImageView.values()))
 
 # For more information regarding this rather unexpected behaviour for numpy.int32 types, see
 # the following (closed, marked "wontfix") ticket on the numpy issue tracker:
@@ -786,7 +787,7 @@ class Image(with_metaclass(MetaImage, object)):
         going to be performing FFTs on an image, these will tend to be faster at performing
         the FFT.
         """
-        return galsim._galsim.goodFFTSize(input_size)
+        return galsim._galsim.goodFFTSize(int(input_size))
 
     def __iter__(self):
         if self.iscomplex:
