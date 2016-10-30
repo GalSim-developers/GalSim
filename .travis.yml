@@ -78,14 +78,20 @@ script:
     - which -a python2.7
     - which -a python3.4
     - python --version
-    - source $HOME/virtualenv/python2.7.12/bin/activate
+    # This lets scons work even on Python 3 builds
+    # cf. https://github.com/travis-ci/travis-ci/issues/5961
+    - source $HOME/virtualenv/python2.7/bin/activate
     - which -a python
     - which -a python2.7
     - which -a python3.4
-    - set -e # Fail fast if either scons command errors
-    - scons PREFIX=$HOME
+    # Fail fast if either scons command errors
+    - set -e
+    # But now we need to manually set the python, since it's not the default in this virtualenv.
+    - scons PREFIX=$HOME PYTHON=python${TRAVIS_PYTHON_VERSION}
     - scons install
-    - set +e # Don't exit if the first nosetests fails so we can check the second one too.
+    # Don't exit if the first nosetests fails so we can check the second one too.
+    - set +e
+    # Go back to the regular python environment for the tests
     - source $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/activate
     - cd tests
     # Use this rather than scons tests, so we can get the coverage options.
