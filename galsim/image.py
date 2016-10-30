@@ -1414,10 +1414,8 @@ def Image_idiv(self, other):
         try:
             self.array[:,:] /= a
         except TypeError:
-            # if dtype is an integer type, and a is an array, then numpy doesn't allow true
-            # division /= to assign back to an integer array.  image_int /= 2 works as expected,
-            # so to be consistent we also allow image_int /= image_int2 to round to integer values
-            # by doing the following.
+            # if dtype is an integer type, then numpy doesn't allow true division /= to assign
+            # back to an integer array.  To allow this for images, we do the following:
             self.array[:,:] = (self.array / a).astype(self.array.dtype)
     else:
         self.array[:,:] = (self.array / a).astype(self.array.dtype)
