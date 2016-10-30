@@ -63,8 +63,15 @@ install:
 
 script:
     - set -e # Fail fast if either scons command errors
+    - which python
+    - which scons
+    - sudo which python
+    - sudo which scons
+    - source virtualenv/python2.7/bin/activate
+    - which python
     - scons PREFIX=$HOME
     - scons install
+    - source virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/activate
     - set +e # Don't exit if the first nosetests fails so we can check the second one too.
     - cd tests
     # Use this rather than scons tests, so we can get the coverage options.
