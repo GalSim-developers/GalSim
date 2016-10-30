@@ -49,6 +49,9 @@ before_install:
     # Get the des data needed for the check_des test.
     - if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz && tar xfz des_data.tar.gz -C $HOME --wildcards *_01*; fi
     - ln -s $HOME/des_data examples/des/
+    - pwd
+    - which -a python
+    - python --version
 
 cache:
     pip: true
@@ -60,24 +63,30 @@ install:
     # Note: matplotlib is only required because starlink has an `import matplotlib` in their
     # code, despite that not being a dependency.
     - pip -vv install numpy astropy==1.1.1 future pyyaml starlink-pyast scipy nose codecov coveralls matplotlib==1.5.2
+    - pwd
+    - which -a python
+    - python --version
 
 script:
-    - set -e # Fail fast if either scons command errors
+    - pwd
     - which -a python
+    - python --version
     - which scons
     - sudo which python
     - sudo which scons
     - which -a python
     - which -a python2.7
     - which -a python3.4
-    - source $HOME/virtualenv/python2.7/bin/activate
+    - python --version
+    - source $HOME/virtualenv/python2.7.12/bin/activate
     - which -a python
     - which -a python2.7
     - which -a python3.4
+    - set -e # Fail fast if either scons command errors
     - scons PREFIX=$HOME
     - scons install
-    - source $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/activate
     - set +e # Don't exit if the first nosetests fails so we can check the second one too.
+    - source $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/activate
     - cd tests
     # Use this rather than scons tests, so we can get the coverage options.
     - "nosetests test*.py --with-coverage --cover-package=galsim --with-doctest --cover-erase"
