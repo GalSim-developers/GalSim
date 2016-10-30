@@ -15,7 +15,7 @@ compiler:
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
     - sudo apt-get -qq update
-    - sudo apt-get install -y libboost-all-dev libfftw3-dev scons
+    - sudo apt-get install -y libboost-all-dev libfftw3-dev scons libblas-dev liblapack-dev gfortran
 
     # List current contents of directories that should be being cached.
     - ls -l $HOME
