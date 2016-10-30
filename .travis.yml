@@ -59,19 +59,24 @@ cache:
 install:
     # Note: matplotlib is only required because starlink has an `import matplotlib` in their
     # code, despite that not being a dependency.
-    - pip install numpy astropy==1.1.1 future pyyaml starlink-pyast scipy nose codecov coveralls matplotlib==1.5.2
+    - pip -vv install numpy astropy==1.1.1 future pyyaml starlink-pyast scipy nose codecov coveralls matplotlib==1.5.2
 
 script:
     - set -e # Fail fast if either scons command errors
-    - which python
+    - which -a python
     - which scons
     - sudo which python
     - sudo which scons
-    - source virtualenv/python2.7/bin/activate
-    - which python
+    - which -a python
+    - which -a python2.7
+    - which -a python3.4
+    - source $HOME/virtualenv/python2.7/bin/activate
+    - which -a python
+    - which -a python2.7
+    - which -a python3.4
     - scons PREFIX=$HOME
     - scons install
-    - source virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/activate
+    - source $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/activate
     - set +e # Don't exit if the first nosetests fails so we can check the second one too.
     - cd tests
     # Use this rather than scons tests, so we can get the coverage options.
