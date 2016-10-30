@@ -19,8 +19,8 @@ before_install:
 
     # List current contents of directories that should be being cached.
     - ls -l $HOME
-    - if ! test -d $HOME/tmv-0.73; then ls -l $HOME/tmv-0.73; fi
-    - if ! test -d $HOME/des_data; then ls -l $HOME/des_data; fi
+    - if test -d $HOME/tmv-0.73; then ls -l $HOME/tmv-0.73; fi
+    - if test -d $HOME/des_data; then ls -l $HOME/des_data; fi
 
     # To get coverage of the WcsToolsWCS class:
     #- sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe"
