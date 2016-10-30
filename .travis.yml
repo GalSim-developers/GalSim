@@ -4,10 +4,14 @@ branches:
 
 language: python
 python:
+    - 2.6
     - 2.7
+    - 3.4
+    - 3.5
 
 compiler:
     - g++
+
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
     - sudo apt-get -qq update
@@ -15,8 +19,8 @@ before_install:
 
     # List current contents of directories that should be being cached.
     - ls -l $HOME
-    - ls -l $HOME/tmv-0.73
-    - ls -l $HOME/des_data
+    - if ! test -d $HOME/tmv-0.73; then ls -l $HOME/tmv-0.73; fi
+    - if ! test -d $HOME/des_data; then ls -l $HOME/des_data; fi
 
     # To get coverage of the WcsToolsWCS class:
     #- sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe"
@@ -81,8 +85,9 @@ after_success:
 
     # If we start doing multiple python versions here, then only send the report for one of them.
     # Otherwise the reported results get weird.
-    - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then codecov; fi
     - if [[ $TRAVIS_PYTHON_VERSION == 2.7 ]]; then coveralls; fi
+    # Codecov is better at combining the results from different python versions.
+    - codecov
 
 before_cache: 
     - rm -rf $HOME/.cache/pip/log
