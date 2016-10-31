@@ -937,8 +937,8 @@ class RandomWalk(Sum):
     @param  flux                    Optional total flux in all point sources.
                                     [default: 1]
     @param  rng                     Optional random number generator. Can be
-                                    any galsim.BaseDeviate.  If not sent or
-                                    None, the rng is created internally.
+                                    any galsim.BaseDeviate.  If None, the rng
+                                    is created internally.
                                     [default: None]
     @param  gsparams                Optional GSParams for the gaussians
                                     representing each point source.
@@ -1065,7 +1065,7 @@ class RandomWalk(Sum):
         Highly optimized
         """
 
-	gaussians = []
+        gaussians = []
         sigma=self._gaussian_sigma
         gsparams=self._input_gsparams
         fluxper=self._flux/self._npoints
