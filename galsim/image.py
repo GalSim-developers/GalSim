@@ -312,7 +312,7 @@ class Image(with_metaclass(MetaImage, object)):
             try:
                 ncol = int(ncol)
                 nrow = int(nrow)
-            except:
+            except Exception:
                 raise TypeError("Cannot parse ncol, nrow as integers")
             self.image = _galsim.ImageAlloc[self.dtype](ncol, nrow)
             if init_value is not None:
