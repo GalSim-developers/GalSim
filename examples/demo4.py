@@ -98,10 +98,10 @@ def main(argv):
     # 40% is in the bulge, 60% in a disk.  70% of that disk light is placed
     # into point sources distributed as a random walk
 
-    bulge_frac = 0.4
-    disk_frac = 1 - bulge_frac
-    knot_frac = 0.7*disk_frac
-    smooth_disk_frac = (1.0-knot_frac)*disk_frac
+    bulge_frac       = 0.4
+    disk_frac        = 0.6
+    knot_frac        = 0.42
+    smooth_disk_frac = 0.18
     n_knots = 100
 
     xsize = 64                      # pixels
