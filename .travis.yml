@@ -27,7 +27,6 @@ before_install:
     - export PYHOME=$HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}
     - export PATH=$HOME/bin:$PATH
     - export LD_LIBRARY_PATH=$HOME/lib:$LD_LIBRARY_PATH
-    - export PYTHONPATH=$HOME/lib/python$TRAVIS_PYTHON_VERSION/site-packages/:$PYHOME/lib/python${TRAVIS_PYTHON_VERSION}/site-packages/:$PYTHONPATH
 
     # Fix a directory name in 3.x installations so boost can find it.
     - if test -d $PYHOME/include/python${TRAVIS_PYTHON_VERSION}m; then ln -s $PYHOME/include/python${TRAVIS_PYTHON_VERSION}m $PYHOME/include/python${TRAVIS_PYTHON_VERSION}; fi
@@ -53,11 +52,6 @@ before_install:
 
     # Only get Boost if not cached
     - pushd $HOME
-    - ls -l $PYHOME/include/
-    - ls -l $PYHOME/include/python${TRAVIS_PYTHON_VERSION}*/
-    - ls -l /usr
-    - ls -l /usr/local/include
-    - ls -l /usr/include
     - if ! test -d boost_1_61_0 || ! test -f boost_1_61_0/bootstrap.sh; then wget https://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.tar.bz2 --no-check-certificate && tar --bzip2 -xf boost_1_61_0.tar.bz2 && cd boost_1_61_0 && ./bootstrap.sh --with-python=python$TRAVIS_PYTHON_VERSION && ./b2 link=shared && cd ..; else echo Using cached Boost; fi
     - cd boost_1_61_0 && sudo ./b2 -d0 link=shared install
     - popd
@@ -65,9 +59,6 @@ before_install:
     # Get the des data needed for the check_des test.
     - if ! test -d $HOME/des_data || ! test -f $HOME/des_data/DECam_00154912_01.fits.fz; then wget http://www.sas.upenn.edu/~mjarvis/des_data.tar.gz && tar xfz des_data.tar.gz -C $HOME --wildcards *_01*; fi
     - ln -s $HOME/des_data examples/des/
-    - pwd
-    - which -a python
-    - python --version
 
 cache:
     pip: true
@@ -77,37 +68,16 @@ cache:
     - $HOME/des_data
 
 install:
-    - pwd
-    - which -a python
-    - which -a pip
     # Note: matplotlib is only required because starlink has an `import matplotlib` in their
     # code, despite that not being a dependency.
     # Allow 30 minutes for this one, since sometimes scipy in particular can take a long time
     # if it's not in the cache yet.
     - travis_wait 30 pip install numpy astropy==1.1.1 future pyyaml starlink-pyast nose codecov coveralls matplotlib==1.5.2 scipy==0.17.0
-    #- set +e
-    #- scons PREFIX=$HOME
-    #- if test -f gs.error; then cat gs.error; fi
 
 script:
-    - pwd
-    - which -a python
-    - python --version
     # This lets scons work even on Python 3 builds
     # cf. https://github.com/travis-ci/travis-ci/issues/5961
     - source $HOME/virtualenv/python2.7/bin/activate
-    - which -a python
-    - ls -l $PYHOME
-    - ls -l $PYHOME/bin
-    - ls -l $PYHOME/lib
-    - ls -l $PYHOME/lib/python${TRAVIS_PYTHON_VERSION}
-    - ls -l $PYHOME/lib/python${TRAVIS_PYTHON_VERSION}/site-packages
-    - ls -l /usr/lib
-    - ls -l /usr/local/lib
-    - echo $PYTHONPATH
-    - echo $LD_LIBRARY_PATH
-    #- export PYTHONPATH=$HOME/lib/python$TRAVIS_PYTHON_VERSION/site-packages/:$PYTHONPATH
-    #- echo $PYTHONPATH
     # But now we need to manually set the python, since it's not the default in this virtualenv.
     - scons PREFIX=$HOME PYTHON=$PYHOME/bin/python PYPREFIX=$PYHOME/lib/python${TRAVIS_PYTHON_VERSION}/site-packages BOOST_DIR=$PYHOME && scons install
     - if test -f gs.error; then cat gs.error; fi
@@ -124,7 +94,6 @@ after_success:
     # we do this command.  (Some of the .coverage.* files are in the ../examples directory.)
     - coverage combine . ../examples ../examples/great3 ../examples/des
     - coverage xml
-    - ls -la
 
     # If we start doing multiple python versions here, then only send the report for one of them.
     # Otherwise the reported results get weird.
@@ -135,15 +104,3 @@ after_success:
 before_cache:
     - rm -rf $HOME/.cache/pip/log
     - rm -rf $HOME/.cache/pip/http
-
-after_failure:
-    # Print out some things to help diagnose problems in the build.
-    - ls -l $HOME
-    - if test -d $HOME/tmv-0.73; then ls -l $HOME/tmv-0.73; fi
-    - if test -d $HOME/boost_1_61_0; then ls -l $HOME/boost_1_61_0; fi
-    - if test -d $HOME/des_data; then ls -l $HOME/des_data; fi
-    - cd $TRAVIS_BUILD_DIR
-    - pwd
-    - ls -l
-    - if test -f gs.error; then cat gs.error; fi
-    - if test -f tests/tests.log; then cat tests.log; fi
