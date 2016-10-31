@@ -70,7 +70,7 @@ install:
     - travis_wait 30 pip install numpy astropy==1.1.1 future pyyaml starlink-pyast nose codecov coveralls matplotlib==1.5.2 scipy==0.17.0
     #- set +e
     #- scons PREFIX=$HOME
-    #- if test -d gs.error; then cat gs.error; fi
+    #- if test -f gs.error; then cat gs.error; fi
 
 script:
     - pwd
@@ -80,11 +80,16 @@ script:
     # cf. https://github.com/travis-ci/travis-ci/issues/5961
     - source $HOME/virtualenv/python2.7/bin/activate
     - which -a python
-    - ls -l /home/travis/virtualenv/python2.7.12/bin
-    - ls -l /home/travis/virtualenv/python2.7.12/lib/python${TRAVIS_PYTHON_VERSION}
+    - ls -l $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin
+    - ls -l $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/lib
+    - ls -l $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/lib/python${TRAVIS_PYTHON_VERSION}
+    - ls -l $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/lib/python${TRAVIS_PYTHON_VERSION}/site-packages
+    - echo $PYTHONPATH
+    - export PYTHONPATH=$HOME/lib/python$TRAVIS_PYTHON_VERSION/site-packages/:$PYTHONPATH
+    - echo $PYTHONPATH
     # But now we need to manually set the python, since it's not the default in this virtualenv.
-    - scons PREFIX=$HOME PYTHON=/home/travis/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/python PYPREFIX=/home/travis/virtualenv/python${TRAVIS_PYTHON_VERSION}/lib/python${TRAVIS_PYTHON_VERSION} && scons install
-    - if test -d gs.error; then cat gs.error; fi
+    - scons PREFIX=$HOME PYTHON=$HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/python PYPREFIX=$HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/lib/python${TRAVIS_PYTHON_VERSION}/site-packages && scons install
+    - if test -f gs.error; then cat gs.error; fi
     # Go back to the regular python environment for the tests
     - source $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/activate
     - cd tests
@@ -118,5 +123,5 @@ after_failure:
     - cd $TRAVIS_BUILD_DIR
     - pwd
     - ls -l
-    - if test -d gs.error; then cat gs.error; fi
-    - if test -d tests/tests.log; then cat tests.log; fi
+    - if test -f gs.error; then cat gs.error; fi
+    - if test -f tests/tests.log; then cat tests.log; fi
