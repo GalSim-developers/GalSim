@@ -157,11 +157,12 @@ def main(argv):
         disk_hlr = cat.getFloat(k,5)
         disk_e1 = cat.getFloat(k,6)
         disk_e2 = cat.getFloat(k,7)
-        disk = galsim.Exponential(flux=smooth_disk_frac, half_light_radius=disk_hlr)
-        disk = disk.shear(e1=disk_e1, e2=disk_e2)
+        smooth_disk = galsim.Exponential(flux=smooth_disk_frac, half_light_radius=disk_hlr)
 
         knots = galsim.RandomWalk(n_knots, disk_hlr, flux=knot_frac)
-        knots = knots.shear(e1=disk_e1, e2=disk_e2)
+
+        disk = galsim.Add([smooth_disk, knots])
+        disk = disk.shear(e1=disk_e1, e2=disk_e2)
 
         # the rest of the light goes into the bulge
         bulge_hlr = cat.getFloat(k,8)
@@ -170,7 +171,7 @@ def main(argv):
 
         # The flux of an Add object is the sum of the component fluxes.
         # Note that in demo3.py, a similar addition was performed by the binary operator "+".
-        gal = galsim.Add([disk, knots, bulge])
+        gal = galsim.Add([disk, bulge])
 
         # This flux may be overridden by withFlux.  The relative fluxes of the components
         # remains the same, but the total flux is set to gal_flux.
