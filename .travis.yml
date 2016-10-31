@@ -45,7 +45,7 @@ before_install:
     # Only get Boost if not cached
     - pushd $HOME
     - ls -l $HOME/virtualenv/python$TRAVIS_PYTHON_VERSION/include/
-    - ls -l $HOME/virtualenv/python$TRAVIS_PYTHON_VERSION/include/python$TRAVIS_PYTHON_VERSION
+    - ls -l $HOME/virtualenv/python$TRAVIS_PYTHON_VERSION/include/python${TRAVIS_PYTHON_VERSION}*/
     - ls -l /usr
     - ls -l /usr/local/include
     - ls -l /usr/include
