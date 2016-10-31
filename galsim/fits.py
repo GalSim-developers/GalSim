@@ -828,7 +828,7 @@ def read(file_name=None, dir=None, hdu_list=None, hdu=None, compression='auto'):
 
         wcs, origin = galsim.wcs.readFromFitsHeader(hdu.header)
         dt = hdu.data.dtype.type
-        if dt in galsim.Image.valid_array_dtypes:
+        if dt in galsim.Image.valid_dtypes:
             data = hdu.data
         else:
             import warnings
@@ -976,7 +976,7 @@ def readCube(file_name=None, dir=None, hdu_list=None, hdu=None, compression='aut
     try:
         wcs, origin = galsim.wcs.readFromFitsHeader(hdu.header)
         dt = hdu.data.dtype.type
-        if dt in galsim.Image.valid_array_dtypes:
+        if dt in galsim.Image.valid_dtypes:
             data = hdu.data
         else:
             import warnings

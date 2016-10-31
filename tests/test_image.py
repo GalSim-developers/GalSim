@@ -2915,10 +2915,10 @@ def test_FITS_bad_type():
     """
     import warnings
 
-    # We check this by monkey patching the Image.valid_array_types list to not include int16
+    # We check this by monkey patching the Image.valid_types list to not include int16
     # and see if it reads properly and raises the appropriate warning.
-    orig_dtypes = galsim.Image.valid_array_dtypes
-    setattr(galsim.Image,'valid_array_dtypes',(np.int32, np.float32, np.float64))
+    orig_dtypes = galsim.Image.valid_dtypes
+    setattr(galsim.Image,'valid_dtypes',(np.int32, np.float32, np.float64))
 
     testS_file = os.path.join(datadir, "testS.fits")
     testMultiS_file = os.path.join(datadir, "test_multiS.fits")
@@ -2950,7 +2950,7 @@ def test_FITS_bad_type():
                 err_msg="ImageS readCube failed reading when int16 not a valid image type")
 
     # Don't forget to set it back to the original.
-    setattr(galsim.Image,'valid_array_dtypes',orig_dtypes)
+    setattr(galsim.Image,'valid_dtypes',orig_dtypes)
 
 if __name__ == "__main__":
     test_Image_basic()
