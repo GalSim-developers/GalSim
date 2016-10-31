@@ -37,10 +37,11 @@ class COSMOSLoader(InputLoader):
                         logger.warning('Using user-specified COSMOSCatalog: %s',out_str)
             logger.info("file %d: COSMOS catalog has %d total objects; %d passed initial cuts.",
                         base['file_num'], cosmos_cat.getNTot(), cosmos_cat.getNObjects())
-            if base['gal']['gal_type']=='parametric':
-                logger.warning("Using parametric galaxies.")
-            else:
-                logger.warning("Using real galaxies.")
+            if 'gal' in base and 'gal_type' in base['gal']:
+                if base['gal']['gal_type']=='parametric':
+                    logger.warning("Using parametric galaxies.")
+                else:
+                    logger.warning("Using real galaxies.")
 
 RegisterInputType('cosmos_catalog', COSMOSLoader(galsim.COSMOSCatalog))
 
