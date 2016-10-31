@@ -84,11 +84,14 @@ script:
     - ls -l $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/lib
     - ls -l $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/lib/python${TRAVIS_PYTHON_VERSION}
     - ls -l $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/lib/python${TRAVIS_PYTHON_VERSION}/site-packages
+    - ls -l /usr/lib
+    - ls -l /usr/local/lib
     - echo $PYTHONPATH
-    - export PYTHONPATH=$HOME/lib/python$TRAVIS_PYTHON_VERSION/site-packages/:$PYTHONPATH
-    - echo $PYTHONPATH
+    - echo $LD_LIBRARY_PATH
+    #- export PYTHONPATH=$HOME/lib/python$TRAVIS_PYTHON_VERSION/site-packages/:$PYTHONPATH
+    #- echo $PYTHONPATH
     # But now we need to manually set the python, since it's not the default in this virtualenv.
-    - scons PREFIX=$HOME PYTHON=$HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/python PYPREFIX=$HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/lib/python${TRAVIS_PYTHON_VERSION}/site-packages && scons install
+    - scons PREFIX=$HOME PYTHON=$HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/python PYPREFIX=$HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/lib/python${TRAVIS_PYTHON_VERSION}/site-packages EXTRA_LIBS=boost_python && scons install
     - if test -f gs.error; then cat gs.error; fi
     # Go back to the regular python environment for the tests
     - source $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/activate
