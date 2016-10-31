@@ -19,6 +19,7 @@
 #
 
 
+from __future__ import print_function
 import sys
 import subprocess
 
@@ -28,7 +29,7 @@ def same(file_name1, file_name2):
     p = subprocess.Popen([cmd],stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
     diff_output = p.stdout.read()
     if len(diff_output) > 0:
-        print diff_output.strip()
+        print(diff_output.strip())
     return (len(diff_output) == 0)
 
 def report(file_name1, file_name2):
@@ -56,21 +57,21 @@ def report(file_name1, file_name2):
             pass
         elif hasattr(d0,'names'):
             if d0.names != d1.names:
-                print '    The column names are different in HDU %d:'%hdu
-                print '   ',d0.dtype
-                print '   ',d1.dtype
+                print('    The column names are different in HDU %d:'%hdu)
+                print('   ',d0.dtype)
+                print('   ',d1.dtype)
             elif d0.dtype != d1.dtype:
-                print '    The dtypes are different in HDU %d:'%hdu
-                print '   ',d0.dtype
-                print '   ',d1.dtype
+                print('    The dtypes are different in HDU %d:'%hdu)
+                print('   ',d0.dtype)
+                print('   ',d1.dtype)
             else:
                 for key in d0.names:
                     if (d0[key] != d1[key]).any():
-                        print '    HDU %d shows differences in key %s'%(hdu, key)
+                        print('    HDU %d shows differences in key %s'%(hdu, key))
         elif (d0 != d1).any():
-            print '    HDU %d shows differences in %d pixels'%(hdu, (d0!=d1).sum())
-            print '    The maximum absolute difference is %e.'%(abs(d0-d1).max())
-            print '    The maximum relative difference is %e.'%(abs((d0-d1)/(d0+1.e-10)).max())
+            print('    HDU %d shows differences in %d pixels'%(hdu, (d0!=d1).sum()))
+            print('    The maximum absolute difference is %e.'%(abs(d0-d1).max()))
+            print('    The maximum relative difference is %e.'%(abs((d0-d1)/(d0+1.e-10)).max()))
 
 
 if __name__ == "__main__":
