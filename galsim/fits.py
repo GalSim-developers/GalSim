@@ -1318,11 +1318,10 @@ class FitsHeader(object):
         from galsim._pyfits import pyfits_version
         self._tag = None
         # dict2 may be a dict or another FitsHeader (or anything that acts like a dict).
-        if pyfits_version < '3.1':
-            for k, v in dict2.iteritems():
-                self[k] = v
-        else:
-            self.header.update(dict2)
+        # Note: Don't use self.header.update, since that sometimes has problems (in astropy)
+        # with COMMENT lines.  The __setitem__ syntax seems to work properly though.
+        for k, v in iteritems(dict2):
+            self[k] = v
 
     def values(self):
         from galsim._pyfits import pyfits_version
