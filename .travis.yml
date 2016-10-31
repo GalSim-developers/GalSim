@@ -28,7 +28,7 @@ before_install:
     - export PATH=$HOME/bin:$PATH
     - export LD_LIBRARY_PATH=$HOME/lib:$LD_LIBRARY_PATH
     - export PYTHONPATH=$HOME/lib/python$TRAVIS_PYTHON_VERSION/site-packages/:$PYHOME/lib/python${TRAVIS_PYTHON_VERSION}/site-packages/:$PYTHONPATH
-    
+
     # Fix a directory name in 3.x installations so boost can find it.
     - if test -d $PYHOME/include/python${TRAVIS_PYTHON_VERSION}m; then ln -s $PYHOME/include/python${TRAVIS_PYTHON_VERSION}m $PYHOME/include/python${TRAVIS_PYTHON_VERSION}; fi
 
@@ -109,7 +109,7 @@ script:
     #- export PYTHONPATH=$HOME/lib/python$TRAVIS_PYTHON_VERSION/site-packages/:$PYTHONPATH
     #- echo $PYTHONPATH
     # But now we need to manually set the python, since it's not the default in this virtualenv.
-    - scons PREFIX=$HOME PYTHON=$PYHOME/bin/python PYPREFIX=$PYHOME/lib/python${TRAVIS_PYTHON_VERSION}/site-packages EXTRA_LIBS=boost_python BOOST_DIR=$PYHOME && scons install
+    - scons PREFIX=$HOME PYTHON=$PYHOME/bin/python PYPREFIX=$PYHOME/lib/python${TRAVIS_PYTHON_VERSION}/site-packages BOOST_DIR=$PYHOME && scons install
     - if test -f gs.error; then cat gs.error; fi
     # Go back to the regular python environment for the tests
     - source $PYHOME/bin/activate
