@@ -63,13 +63,19 @@ def in_examples(f):
             os.chdir(original_dir)
     return f2
 
+def check_same(f1, f2):
+    import check_diff
+    same = check_diff.same(f1,f2)
+    if not same:
+        check_diff.report(f1,f2)
+    return same
+
 @timer
 @in_examples
 def test_demo1():
     """Check that demo1 runs properly.
     """
     import demo1
-    import check_diff
     print('Running demo1.py')
     demo1.main([])
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
@@ -86,7 +92,6 @@ def test_demo2():
     """Check that demo2 makes the same image using demo2.py and demo2.yaml.
     """
     import demo2
-    import check_diff
     print('Running demo2.py')
     demo2.main([])
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
@@ -94,7 +99,7 @@ def test_demo2():
     config = galsim.config.ReadConfig('demo2.yaml', logger=logger)[0]
     print('Running demo2.yaml')
     galsim.config.Process(config, logger=logger)
-    assert check_diff.same('output/demo2.fits', 'output_yaml/demo2.fits')
+    assert check_same('output/demo2.fits', 'output_yaml/demo2.fits')
 
 @timer
 @in_examples
@@ -102,7 +107,6 @@ def test_demo3():
     """Check that demo3 makes the same image using demo3.py and demo3.yaml.
     """
     import demo3
-    import check_diff
     print('Running demo3.py')
     demo3.main([])
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
@@ -110,8 +114,8 @@ def test_demo3():
     config = galsim.config.ReadConfig('demo3.yaml', logger=logger)[0]
     print('Running demo3.yaml')
     galsim.config.Process(config, logger=logger)
-    assert check_diff.same('output/demo3.fits', 'output_yaml/demo3.fits')
-    assert check_diff.same('output/demo3_epsf.fits', 'output_yaml/demo3_epsf.fits')
+    assert check_same('output/demo3.fits', 'output_yaml/demo3.fits')
+    assert check_same('output/demo3_epsf.fits', 'output_yaml/demo3_epsf.fits')
 
 @timer
 @in_examples
@@ -119,7 +123,6 @@ def test_demo4():
     """Check that demo4 makes the same image using demo4.py and demo4.yaml.
     """
     import demo4
-    import check_diff
     print('Running demo4.py')
     demo4.main([])
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
@@ -127,7 +130,7 @@ def test_demo4():
     config = galsim.config.ReadConfig('demo4.yaml', logger=logger)[0]
     print('Running demo4.yaml')
     galsim.config.Process(config, logger=logger)
-    assert check_diff.same('output/multi.fits', 'output_yaml/multi.fits')
+    assert check_same('output/multi.fits', 'output_yaml/multi.fits')
 
 @timer
 @in_examples
@@ -135,7 +138,6 @@ def test_demo5():
     """Check that demo5 makes the same image using demo5.py and demo5.yaml.
     """
     import demo5
-    import check_diff
     print('Running demo5.py')
     demo5.main([])
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
@@ -143,8 +145,8 @@ def test_demo5():
     config = galsim.config.ReadConfig('demo5.yaml', logger=logger)[0]
     print('Running demo5.yaml')
     galsim.config.Process(config, logger=logger)
-    assert check_diff.same('output/g08_psf.fits', 'output_yaml/g08_psf.fits')
-    assert check_diff.same('output/g08_gal.fits', 'output_yaml/g08_gal.fits')
+    assert check_same('output/g08_psf.fits', 'output_yaml/g08_psf.fits')
+    assert check_same('output/g08_gal.fits', 'output_yaml/g08_gal.fits')
 
 @timer
 @in_examples
@@ -152,7 +154,6 @@ def test_demo6():
     """Check that demo6 makes the same image using demo6.py and demo6.yaml.
     """
     import demo6
-    import check_diff
     print('Running demo6.py')
     demo6.main([])
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
@@ -162,8 +163,8 @@ def test_demo6():
     galsim.config.Process(configs[0], logger=logger)
     print('Running demo6.yaml pass #2')
     galsim.config.Process(configs[1], logger=logger)
-    assert check_diff.same('output/psf_real.fits', 'output_yaml/psf_real.fits')
-    assert check_diff.same('output/cube_real.fits', 'output_yaml/cube_real.fits')
+    assert check_same('output/psf_real.fits', 'output_yaml/psf_real.fits')
+    assert check_same('output/cube_real.fits', 'output_yaml/cube_real.fits')
 
 @timer
 @in_examples
@@ -171,7 +172,6 @@ def test_demo7():
     """Check that demo7 makes the same image using demo7.py and demo7.yaml.
     """
     import demo7
-    import check_diff
     import gzip
     import shutil
     print('Running demo7.py')
@@ -187,7 +187,7 @@ def test_demo7():
     with gzip.open('output_yaml/cube_phot.fits.gz', 'rb') as f_in:
         with open('output_yaml/cube_phot.fits', 'wb') as f_out:
             shutil.copyfileobj(f_in, f_out)
-    assert check_diff.same('output/cube_phot.fits', 'output_yaml/cube_phot.fits')
+    assert check_same('output/cube_phot.fits', 'output_yaml/cube_phot.fits')
 
 @timer
 @in_examples
@@ -195,7 +195,6 @@ def test_demo8():
     """Check that demo8 makes the same image using demo8.py and demo8.yaml.
     """
     import demo8
-    import check_diff
     print('Running demo8.py')
     demo8.main([])
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
@@ -205,8 +204,8 @@ def test_demo8():
     galsim.config.Process(configs[0], logger=logger)
     print('Running demo8.yaml pass #2')
     galsim.config.Process(configs[1], logger=logger)
-    assert check_diff.same('output/bpd_single.fits', 'output_yaml/bpd_single.fits')
-    assert check_diff.same('output/bpd_multi.fits', 'output_yaml/bpd_multi.fits')
+    assert check_same('output/bpd_single.fits', 'output_yaml/bpd_single.fits')
+    assert check_same('output/bpd_multi.fits', 'output_yaml/bpd_multi.fits')
 
 @timer
 @in_examples
@@ -217,7 +216,6 @@ def test_demo9():
     # JSON parsing functionality, but also because the changes to the base config
     # are pretty minor, so we can effect them with the new_params option.
     import demo9
-    import check_diff
     print('Running demo9.py')
     demo9.main([])
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
@@ -234,8 +232,8 @@ def test_demo9():
         for file_num in range(5):
             file_name = 'nfw%d/cluster%04d.fits'%(dir_num, file_num)
             truth_name = 'nfw%d/truth%04d.dat'%(dir_num, file_num)
-            assert check_diff.same('output/'+file_name , 'output_json/'+file_name)
-            assert check_diff.same('output/'+truth_name , 'output_json/'+truth_name)
+            assert check_same('output/'+file_name , 'output_json/'+file_name)
+            assert check_same('output/'+truth_name , 'output_json/'+truth_name)
 
 @timer
 @in_examples
@@ -243,7 +241,6 @@ def test_demo10():
     """Check that demo10 makes the same image using demo10.py and demo10.yaml.
     """
     import demo10
-    import check_diff
     print('Running demo10.py')
     demo10.main([])
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
@@ -251,7 +248,7 @@ def test_demo10():
     config = galsim.config.ReadConfig('demo10.yaml', logger=logger)[0]
     print('Running demo10.yaml')
     galsim.config.Process(config, logger=logger)
-    assert check_diff.same('output/power_spectrum.fits', 'output_yaml/power_spectrum.fits')
+    assert check_same('output/power_spectrum.fits', 'output_yaml/power_spectrum.fits')
 
 @timer
 @in_examples
@@ -259,7 +256,6 @@ def test_demo11():
     """Check that demo11 makes the same image using demo11.py and demo11.yaml.
     """
     import demo11
-    import check_diff
     print('Running demo11.py')
     demo11.main([])
     logging.basicConfig(format="%(message)s", level=logging.INFO, stream=sys.stdout)
@@ -267,8 +263,8 @@ def test_demo11():
     config = galsim.config.ReadConfig('demo11.yaml', logger=logger)[0]
     print('Running demo11.yaml')
     galsim.config.Process(config, logger=logger)
-    assert check_diff.same('output/tabulated_power_spectrum.fits.fz',
-                           'output_yaml/tabulated_power_spectrum.fits.fz')
+    assert check_same('output/tabulated_power_spectrum.fits.fz',
+                      'output_yaml/tabulated_power_spectrum.fits.fz')
 
 @timer
 @in_examples
@@ -276,7 +272,6 @@ def test_demo12():
     """Check that demo12 runs properly.
     """
     import demo12
-    import check_diff
     print('Running demo12.py')
     demo12.main([])
     # There is no demo12.yaml yet, so all this does is check for syntax errors in demo12.py.
@@ -287,7 +282,6 @@ def test_demo13():
     """Check that demo13 runs properly.
     """
     import demo13
-    import check_diff
     print('Running demo13.py')
     demo13.main(['nuse=3','ntot=100','filters=YJH'])
     # There is no demo13.yaml yet, so all this does is check for syntax errors in demo13.py.
@@ -300,7 +294,6 @@ def test_des():
     Also run a few of the config files in the des directory to make sure they at least
     run to completion without errors.
     """
-    import check_diff
     original_dir = os.getcwd()
     try:
         os.chdir('des')
@@ -317,10 +310,10 @@ def test_des():
         for config in configs:
             config['output']['nfiles'] = 1
             galsim.config.Process(config, logger=logger)
-        assert check_diff.same('output/DECam_00154912_01_psfex_image.fits',
-                               'output_yaml/DECam_00154912_01_psfex_image.fits')
-        assert check_diff.same('output/DECam_00154912_01_fitpsf_image.fits',
-                               'output_yaml/DECam_00154912_01_fitpsf_image.fits')
+        assert check_same('output/DECam_00154912_01_psfex_image.fits',
+                          'output_yaml/DECam_00154912_01_psfex_image.fits')
+        assert check_same('output/DECam_00154912_01_fitpsf_image.fits',
+                          'output_yaml/DECam_00154912_01_fitpsf_image.fits')
 
         config = galsim.config.ReadConfig('meds.yaml', logger=logger)[0]
         config['output']['nfiles'] = 1
@@ -346,7 +339,6 @@ def test_des():
 def test_great3():
     """Check that the great3 config files run properly.
     """
-    import check_diff
     original_dir = os.getcwd()
     try:
         os.chdir('great3')
