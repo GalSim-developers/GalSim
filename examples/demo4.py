@@ -104,8 +104,8 @@ def main(argv):
     smooth_disk_frac = (1.0-knot_frac)*disk_frac
     n_knots = 100
 
-    xsize = 48                      # pixels
-    ysize = 48                      # pixels
+    xsize = 64                      # pixels
+    ysize = 64                      # pixels
 
     logger.info('Starting demo script 4 using:')
     logger.info('    - parameters taken from catalog %r',cat_file_name)
