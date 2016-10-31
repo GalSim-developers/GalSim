@@ -60,37 +60,23 @@ cache:
     - $HOME/des_data
 
 install:
-    # Note: matplotlib is only required because starlink has an `import matplotlib` in their
-    # code, despite that not being a dependency.
-    - pip -vv install numpy astropy==1.1.1 future pyyaml starlink-pyast scipy nose codecov coveralls matplotlib==1.5.2
     - pwd
     - which -a python
-    - python --version
+    - which -a pip
+    # Note: matplotlib is only required because starlink has an `import matplotlib` in their
+    # code, despite that not being a dependency.
+    - pip -v install numpy astropy==1.1.1 future pyyaml starlink-pyast scipy nose codecov coveralls matplotlib==1.5.2
 
 script:
     - pwd
     - which -a python
     - python --version
-    - which scons
-    - sudo which python
-    - sudo which scons
-    - which -a python
-    - which -a python2.7
-    - which -a python3.4
-    - python --version
     # This lets scons work even on Python 3 builds
     # cf. https://github.com/travis-ci/travis-ci/issues/5961
     - source $HOME/virtualenv/python2.7/bin/activate
     - which -a python
-    - which -a python2.7
-    - which -a python3.4
-    # Fail fast if either scons command errors
-    - set -e
     # But now we need to manually set the python, since it's not the default in this virtualenv.
-    - scons PREFIX=$HOME PYTHON=python${TRAVIS_PYTHON_VERSION}
-    - scons install
-    # Don't exit if the first nosetests fails so we can check the second one too.
-    - set +e
+    - scons PREFIX=$HOME PYTHON=python${TRAVIS_PYTHON_VERSION} && scons install
     # Go back to the regular python environment for the tests
     - source $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/activate
     - cd tests
