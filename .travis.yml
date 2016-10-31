@@ -59,7 +59,7 @@ before_install:
     - ls -l /usr/local/include
     - ls -l /usr/include
     - if ! test -d boost_1_61_0 || ! test -f boost_1_61_0/bootstrap.sh; then wget https://sourceforge.net/projects/boost/files/boost/1.61.0/boost_1_61_0.tar.bz2 --no-check-certificate && tar --bzip2 -xf boost_1_61_0.tar.bz2 && cd boost_1_61_0 && ./bootstrap.sh --with-python=python$TRAVIS_PYTHON_VERSION && ./b2 link=shared && cd ..; else echo Using cached Boost; fi
-    - cd boost_1_61_0 && sudo ./b2 link=shared install
+    - cd boost_1_61_0 && sudo ./b2 -d0 link=shared install
     - popd
 
     # Get the des data needed for the check_des test.
