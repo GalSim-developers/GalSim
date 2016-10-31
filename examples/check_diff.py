@@ -39,14 +39,14 @@ def report(file_name1, file_name2):
             import astropy.io.fits as pyfits
         except:
             import pyfits
-    except ImportError, e:
+    except ImportError as e:
         # Then /usr/bin/env python doesn't have pyfits installed.  Oh well.
         return
 
     try:
         f1 = pyfits.open(file_name1)
         f2 = pyfits.open(file_name2)
-    except IOError, e:
+    except IOError as e:
         # Then at least one of the files doesn't exist, which diff will have already reported.
         return
 
