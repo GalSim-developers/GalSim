@@ -181,12 +181,12 @@ def test_demo7():
     config = galsim.config.ReadConfig('demo7.yaml', logger=logger)[0]
     print('Running demo7.yaml')
     galsim.config.Process(config, logger=logger)
-    with gzip.open('output/cube_phot.fits.gz', 'rb') as f_in, \
-         open('output/cube_phot.fits', 'wb') as f_out:
-        shutil.copyfileobj(f_in, f_out)
-    with gzip.open('output_yaml/cube_phot.fits.gz', 'rb') as f_in, \
-         open('output_yaml/cube_phot.fits', 'wb') as f_out:
-        shutil.copyfileobj(f_in, f_out)
+    with gzip.open('output/cube_phot.fits.gz', 'rb') as f_in:
+        with open('output/cube_phot.fits', 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+    with gzip.open('output_yaml/cube_phot.fits.gz', 'rb') as f_in:
+        with open('output_yaml/cube_phot.fits', 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
     assert check_diff.same('output/cube_phot.fits', 'output_yaml/cube_phot.fits')
 
 @timer
