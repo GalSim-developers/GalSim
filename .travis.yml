@@ -30,7 +30,7 @@ before_install:
     - export PYTHONPATH=$HOME/lib/python$TRAVIS_PYTHON_VERSION/site-packages/:$PYHOME/lib/python${TRAVIS_PYTHON_VERSION}/site-packages/:$PYTHONPATH
     
     # Fix a directory name in 3.x installations so boost can find it.
-    - if [[ $TRAVIS_PYTHON_VERSION >= 3.0 ]]; then ln -s $PYHOME/lib/python${TRAVIS_PYTHON_VERSION}m $PYHOME/lib/python${TRAVIS_PYTHON_VERSION}
+    - if [[ $TRAVIS_PYTHON_VERSION >= 3.0 ]]; then ln -s $PYHOME/lib/python${TRAVIS_PYTHON_VERSION}m $PYHOME/lib/python${TRAVIS_PYTHON_VERSION}; fi
 
     # To get coverage of the WcsToolsWCS class:
     #- sudo add-apt-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe"
