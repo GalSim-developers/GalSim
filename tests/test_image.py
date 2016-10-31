@@ -18,7 +18,7 @@
 
 """Unit tests for the Image class.
 
-These tests use four externally generated (IDL + astrolib FITS writing tools) reference images for
+These tests use six externally generated (IDL + astrolib FITS writing tools) reference images for
 the Image unit tests.  These are in tests/data/.
 
 Each image is 5x7 pixels^2 and if each pixel is labelled (x, y) then each pixel value is 10*x + y.
@@ -35,7 +35,7 @@ x ->
 With array directions as indicated. This hopefully will make it easy enough to perform sub-image
 checks, etc.
 
-Images are in S, I, F, D, and C flavours.
+Images are in US, UI, S, I, F, D, and C flavors.
 
 There are also four FITS cubes, and four FITS multi-extension files for testing.  Each is 12
 images deep, with the first image being the reference above and each subsequent being the same
@@ -49,6 +49,7 @@ import sys
 import numpy as np
 
 from galsim_test_helpers import *
+from distutils.version import LooseVersion
 
 try:
     import galsim
@@ -60,14 +61,15 @@ except ImportError:
 from galsim._pyfits import pyfits
 
 # Setup info for tests, not likely to change
-ntypes = 5  # Note: Most tests below only run through the first 5 types.
-            # test_Image_basic tests all 7 types including the aliases.
-types = [np.int16, np.int32, np.float32, np.float64, np.complex128, int, float, complex]
-simple_types = [int, int, float, float, complex, int, float, complex]
-np_types = [np.int16, np.int32, np.float32, np.float64, np.complex128,
+ntypes = 7  # Note: Most tests below only run through the first 7 types.
+            # test_Image_basic tests all 10 types including the aliases.
+types = [np.int16, np.int32, np.uint16, np.uint32, np.float32, np.float64, np.complex128,
+         int, float, complex]
+simple_types = [int, int, int, int, float, float, complex, int, float, complex]
+np_types = [np.int16, np.int32, np.uint16, np.uint32, np.float32, np.float64, np.complex128,
             np.int32, np.float64, np.complex128]
-tchar = ['S', 'I', 'F', 'D', 'C', 'I', 'D', 'C']
-int_ntypes = 2  # The first two are the integer types for which we need to test &, |, ^.
+tchar = ['S', 'I', 'US', 'UI', 'F', 'D', 'C', 'I', 'D', 'C']
+int_ntypes = 4  # The first four are the integer types for which we need to test &, |, ^.
 
 ncol = 7
 nrow = 5
@@ -96,7 +98,7 @@ datadir = os.path.join(".", "Image_comparison_images")
 def test_Image_basic():
     """Test that all supported types perform basic Image operations correctly
     """
-    # Do all 8 types here, rather than just the 5 numpy types.  i.e. Test the aliases.
+    # Do all 10 types here, rather than just the 7 numpy types.  i.e. Test the aliases.
     for i in range(len(types)):
 
         # Check basic constructor from ncol, nrow
@@ -336,6 +338,14 @@ def test_Image_basic():
         do_pickle(im2_cview.image, lambda x: (x.array.tolist(), x.bounds))
         do_pickle(im3_view.image, lambda x: (x.array.tolist(), x.bounds))
 
+        # Check the c++ classes directly too.
+        do_pickle(im1.image, lambda x: (x.array.tolist(), x.bounds))
+        do_pickle(im1_view.image, lambda x: (x.array.tolist(), x.bounds))
+        do_pickle(im2.image, lambda x: (x.array.tolist(), x.bounds))
+        do_pickle(im2_view.image, lambda x: (x.array.tolist(), x.bounds))
+        do_pickle(im2_cview.image, lambda x: (x.array.tolist(), x.bounds))
+        do_pickle(im3_view.image, lambda x: (x.array.tolist(), x.bounds))
+
     # Also check picklability of Bounds, Position here.
     do_pickle(galsim.PositionI(2,3))
     do_pickle(galsim.PositionD(2.2,3.3))
@@ -406,7 +416,7 @@ def test_undefined_image():
 
 @timer
 def test_Image_FITS_IO():
-    """Test that all four FITS reference images are correctly read in by both PyFITS and our Image
+    """Test that all six FITS reference images are correctly read in by both PyFITS and our Image
     wrappers.
     """
     for i in range(ntypes):
@@ -525,7 +535,7 @@ def test_Image_FITS_IO():
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array,
                 err_msg="Image"+tchar[i]+" write failed for auto full-file bzip2")
 
-        # Test rice
+        # Test ric
         test_file = os.path.join(datadir, "test"+tchar[i]+".fits.fz")
         test_image = galsim.fits.read(test_file, compression='rice')
         np.testing.assert_array_equal(ref_array.astype(types[i]), test_image.array,
@@ -571,7 +581,7 @@ def test_Image_FITS_IO():
 
 @timer
 def test_Image_MultiFITS_IO():
-    """Test that all four FITS reference images are correctly read in by both PyFITS and our Image
+    """Test that all six FITS reference images are correctly read in by both PyFITS and our Image
     wrappers.
     """
     for i in range(ntypes):
@@ -815,7 +825,7 @@ def test_Image_MultiFITS_IO():
 
 @timer
 def test_Image_CubeFITS_IO():
-    """Test that all four FITS reference images are correctly read in by both PyFITS and our Image
+    """Test that all six FITS reference images are correctly read in by both PyFITS and our Image
     wrappers.
     """
     for i in range(ntypes):
@@ -886,7 +896,17 @@ def test_Image_CubeFITS_IO():
         # Check pyfits read for sanity
         with pyfits.open(test_cube_file) as fits:
             test_array = fits[0].data
-        assert test_array.dtype.type == types[i], "%s != %s" % (test_array.dtype.type, types[i])
+            
+        # If astropy version < 1.1.0, uint fits files will be read wrongly, so skip this test
+        # note that all other tests will pass since they will be read as float32s instead
+        wrong_type_error_msg = "%s != %s" % (test_array.dtype.type, types[i])
+        if (types[i] == "uint16" or types[i] == "uint32"): # Handle uint cases
+            import astropy  # Just b/c someone imported it, doesn't mean we can see it yet.
+            if LooseVersion(astropy.__version__) >= LooseVersion('1.1.0'):
+                assert test_array.dtype.type == types[i], wrong_type_error_msg
+        else:
+            assert test_array.dtype.type == types[i], wrong_type_error_msg
+                
         for k in range(nimages):
             np.testing.assert_array_equal((ref_array+k).astype(types[i]), test_array[k,:,:],
                     err_msg="PyFITS failing to read cube file.")
@@ -1068,7 +1088,7 @@ def test_Image_CubeFITS_IO():
 
 @timer
 def test_Image_array_view():
-    """Test that all four types of supported Images correctly provide a view on an input array.
+    """Test that all six types of supported Images correctly provide a view on an input array.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1087,7 +1107,7 @@ def test_Image_array_view():
 
 @timer
 def test_Image_binary_add():
-    """Test that all four types of supported Images add correctly.
+    """Test that all six types of supported Images add correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1134,7 +1154,7 @@ def test_Image_binary_add():
 
 @timer
 def test_Image_binary_subtract():
-    """Test that all four types of supported Images subtract correctly.
+    """Test that all six types of supported Images subtract correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1167,7 +1187,7 @@ def test_Image_binary_subtract():
 
 @timer
 def test_Image_binary_multiply():
-    """Test that all four types of supported Images multiply correctly.
+    """Test that all six types of supported Images multiply correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1207,7 +1227,7 @@ def test_Image_binary_multiply():
 
 @timer
 def test_Image_binary_divide():
-    """Test that all four types of supported Images divide correctly.
+    """Test that all six types of supported Images divide correctly.
     """
     # Note: tests here are not precisely equal, since division can have rounding errors for
     # some elements.  In particular when dividing by complex, where there is a bit more to the
@@ -1248,7 +1268,7 @@ def test_Image_binary_divide():
 
 @timer
 def test_Image_binary_scalar_add():
-    """Test that all four types of supported Images add scalars correctly.
+    """Test that all six types of supported Images add scalars correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1277,7 +1297,7 @@ def test_Image_binary_scalar_add():
 
 @timer
 def test_Image_binary_scalar_subtract():
-    """Test that all four types of supported Images binary scalar subtract correctly.
+    """Test that all six types of supported Images binary scalar subtract correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1306,7 +1326,7 @@ def test_Image_binary_scalar_subtract():
 
 @timer
 def test_Image_binary_scalar_multiply():
-    """Test that all four types of supported Images binary scalar multiply correctly.
+    """Test that all six types of supported Images binary scalar multiply correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1335,7 +1355,7 @@ def test_Image_binary_scalar_multiply():
 
 @timer
 def test_Image_binary_scalar_divide():
-    """Test that all four types of supported Images binary scalar divide correctly.
+    """Test that all six types of supported Images binary scalar divide correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1356,7 +1376,7 @@ def test_Image_binary_scalar_divide():
 
 @timer
 def test_Image_binary_scalar_pow():
-    """Test that all four types of supported Images can be raised to a power (scalar) correctly.
+    """Test that all six types of supported Images can be raised to a power (scalar) correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1397,7 +1417,7 @@ def test_Image_binary_scalar_pow():
 
 @timer
 def test_Image_inplace_add():
-    """Test that all four types of supported Images inplace add correctly.
+    """Test that all six types of supported Images inplace add correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1431,7 +1451,7 @@ def test_Image_inplace_add():
 
 @timer
 def test_Image_inplace_subtract():
-    """Test that all four types of supported Images inplace subtract correctly.
+    """Test that all six types of supported Images inplace subtract correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1465,7 +1485,7 @@ def test_Image_inplace_subtract():
 
 @timer
 def test_Image_inplace_multiply():
-    """Test that all four types of supported Images inplace multiply correctly.
+    """Test that all six types of supported Images inplace multiply correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1499,7 +1519,7 @@ def test_Image_inplace_multiply():
 
 @timer
 def test_Image_inplace_divide():
-    """Test that all four types of supported Images inplace divide correctly.
+    """Test that all six types of supported Images inplace divide correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1533,7 +1553,7 @@ def test_Image_inplace_divide():
 
 @timer
 def test_Image_inplace_scalar_add():
-    """Test that all four types of supported Images inplace scalar add correctly.
+    """Test that all six types of supported Images inplace scalar add correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1554,7 +1574,7 @@ def test_Image_inplace_scalar_add():
 
 @timer
 def test_Image_inplace_scalar_subtract():
-    """Test that all four types of supported Images inplace scalar subtract correctly.
+    """Test that all six types of supported Images inplace scalar subtract correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1575,7 +1595,7 @@ def test_Image_inplace_scalar_subtract():
 
 @timer
 def test_Image_inplace_scalar_multiply():
-    """Test that all four types of supported Images inplace scalar multiply correctly.
+    """Test that all six types of supported Images inplace scalar multiply correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1598,7 +1618,7 @@ def test_Image_inplace_scalar_multiply():
 
 @timer
 def test_Image_inplace_scalar_divide():
-    """Test that all four types of supported Images inplace scalar divide correctly.
+    """Test that all six types of supported Images inplace scalar divide correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init
@@ -1620,7 +1640,7 @@ def test_Image_inplace_scalar_divide():
 
 @timer
 def test_Image_inplace_scalar_pow():
-    """Test that all four types of supported Images can be raised (in-place) to a scalar correctly.
+    """Test that all six types of supported Images can be raised (in-place) to a scalar correctly.
     """
     for i in range(ntypes):
         # First try using the dictionary-type Image init

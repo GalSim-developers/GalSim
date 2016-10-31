@@ -59,6 +59,7 @@ Deprecated Features
 New Features
 ------------
 
+- Added support for reading in of unsigned int Images (#715)
 - Added ability to use `numpy`, `np`, or `math` in all places where we evaluate
   user input, including DistDeviate (aka RandomDistribution in config files),
   PowerSpectrum, UVFunction, RaDecFunction, Bandpass, and SED.  Some of these
@@ -87,8 +88,6 @@ New Features
   doing so are `im.calcuate_fft()` and `im.calculate_inverse_fft()`.  There
   is also `im.wrap()` which can be used to wrap an image prior to doing the
   FFT to properly alias the data if necessary. (#799)
-
-
 
 
 New config features

@@ -1242,16 +1242,11 @@ class OpticalPSF(GSObject):
     @param spher            Spherical aberration in units of incident light wavelength.
                             [default: 0]
     @param aberrations      Optional keyword, to pass in a list, tuple, or NumPy array of
-                            aberrations in units of incident light wavelength (ordered according to
+                            aberrations in units of reference wavelength (ordered according to
                             the Noll convention), rather than passing in individual values for each
-                            individual aberration.  Currently GalSim supports aberrations from
-                            defocus through third-order spherical (`spher`), which are aberrations
-                            4-11 in the Noll convention, and hence `aberrations` should be an
-                            object of length 12, with the 5th number (index 4) being the defocus,
-                            and so on through index 11 corresponding to `spher`.  Orders 1-3
-                            (piston, tip, and tilt), while not true optical aberrations, are
-                            permitted to be non-zero and will be treated appropriately, while the
-                            first number will be ignored. [default: None]
+                            individual aberration.  Note that aberrations[1] is piston (and not
+                            aberrations[0], which is unused.)  This list can be arbitrarily long to
+                            handle Zernike polynomial aberrations of arbitrary order.
     @param aper             Aperture object to use when creating PSF.  [default: None]
     @param circular_pupil   Adopt a circular pupil?  [default: True]
     @param obscuration      Linear dimension of central obscuration as fraction of pupil linear

@@ -81,6 +81,10 @@ namespace galsim {
         { applyToView(data); }
         void doApplyTo(ImageView<int16_t>& data)
         { applyToView(data); }
+        void doApplyTo(ImageView<uint32_t>& data)
+        { applyToView(data); }
+        void doApplyTo(ImageView<uint16_t>& data)
+        { applyToView(data); }
     };
 
     struct PyBaseNoise {
@@ -111,6 +115,8 @@ namespace galsim {
             wrapTemplates<float>(pyBaseNoise);
             wrapTemplates<int32_t>(pyBaseNoise);
             wrapTemplates<int16_t>(pyBaseNoise);
+            wrapTemplates<uint32_t>(pyBaseNoise);
+            wrapTemplates<uint16_t>(pyBaseNoise);
         }
 
     };
