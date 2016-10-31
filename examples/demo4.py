@@ -166,7 +166,7 @@ def main(argv):
 
         # the rest of the light goes into the bulge
         bulge_hlr = cat.getFloat(k,8)
-        bulge = galsim.DeVaucouleurs(flux=0.4, half_light_radius=bulge_hlr)
+        bulge = galsim.DeVaucouleurs(flux=bulge_frac, half_light_radius=bulge_hlr)
         bulge = bulge.shear(e1=cat.getFloat(k,9), e2=cat.getFloat(k,10))
 
         # The flux of an Add object is the sum of the component fluxes.
