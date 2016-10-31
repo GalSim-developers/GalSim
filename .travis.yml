@@ -15,7 +15,7 @@ compiler:
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
     - sudo apt-get -qq update
-    - sudo apt-get install -y libboost-all-dev libfftw3-dev scons libblas-dev liblapack-dev gfortran
+    - sudo apt-get install -y python$TRAVIS_PYTHON_VERSION-dev libboost-all-dev libfftw3-dev scons libblas-dev liblapack-dev gfortran
 
     # List current contents of directories that should be being cached.
     - ls -l $HOME
@@ -80,10 +80,12 @@ script:
     # cf. https://github.com/travis-ci/travis-ci/issues/5961
     - source $HOME/virtualenv/python2.7/bin/activate
     - which -a python
-    - ls -l $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin
-    - ls -l $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/lib
-    - ls -l $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/lib/python${TRAVIS_PYTHON_VERSION}
-    - ls -l $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/lib/python${TRAVIS_PYTHON_VERSION}/site-packages
+    - export PYHOME=$HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}
+    - ls -l $PYHOME
+    - ls -l $PYHOME/bin
+    - ls -l $PYHOME/lib
+    - ls -l $PYHOME/lib/python${TRAVIS_PYTHON_VERSION}
+    - ls -l $PYHOME/lib/python${TRAVIS_PYTHON_VERSION}/site-packages
     - ls -l /usr/lib
     - ls -l /usr/local/lib
     - echo $PYTHONPATH
@@ -91,10 +93,10 @@ script:
     #- export PYTHONPATH=$HOME/lib/python$TRAVIS_PYTHON_VERSION/site-packages/:$PYTHONPATH
     #- echo $PYTHONPATH
     # But now we need to manually set the python, since it's not the default in this virtualenv.
-    - scons PREFIX=$HOME PYTHON=$HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/python PYPREFIX=$HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/lib/python${TRAVIS_PYTHON_VERSION}/site-packages EXTRA_LIBS=boost_python && scons install
+    - scons PREFIX=$HOME PYTHON=$PYHOME/bin/python PYPREFIX=$PYHOME/lib/python${TRAVIS_PYTHON_VERSION}/site-packages EXTRA_LIBS=boost_python BOOST_DIR=$PYHOME && scons install
     - if test -f gs.error; then cat gs.error; fi
     # Go back to the regular python environment for the tests
-    - source $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/activate
+    - source $PYHOME/bin/activate
     - cd tests
     # Use this rather than scons tests, so we can get the coverage options.
     - "nosetests test*.py --with-coverage --cover-package=galsim --with-doctest --cover-erase"
