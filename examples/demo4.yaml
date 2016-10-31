@@ -114,6 +114,9 @@ gal :
         # get sheared by the same ellipticity, but the knots will
         # themselves have additional shape noise
 
+        # see demo11.yaml for a way to specify these flux variable relative to
+        # one another needing hard coding them
+
         - 
             type : Exponential
             half_light_radius : { type : Catalog , col : 5 }
