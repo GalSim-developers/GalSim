@@ -207,6 +207,8 @@ def test_Image_basic():
                     assert im2_conj(x,y) == value
 
                 value2 = 53 + 12*x - 19*y
+                if tchar[i] in ['US', 'UI']:
+                    value2 = abs(value2)
                 im1[x,y] = value2
                 im2_view[galsim.PositionI(x,y)] = value2
                 assert im1.getValue(x,y) == value2
