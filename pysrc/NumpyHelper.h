@@ -52,6 +52,8 @@ namespace bp = boost::python;
 namespace galsim {
 
 template <typename T> struct NumPyTraits;
+template <> struct NumPyTraits<uint16_t> { static int getCode() { return NPY_UINT16; } };
+template <> struct NumPyTraits<uint32_t> { static int getCode() { return NPY_UINT32; } };
 template <> struct NumPyTraits<int16_t> { static int getCode() { return NPY_INT16; } };
 template <> struct NumPyTraits<int32_t> { static int getCode() { return NPY_INT32; } };
 //template <> struct NumPyTraits<int64_t> { static int getCode() { return NPY_INT64; } };
@@ -71,6 +73,8 @@ inline int GetNumpyArrayTypeCode(PyObject* array)
     if (sizeof(int) == sizeof(int16_t) && code == NPY_INT) return NPY_INT16;
     if (sizeof(int) == sizeof(int32_t) && code == NPY_INT) return NPY_INT32;
     if (sizeof(int) == sizeof(int64_t) && code == NPY_INT) return NPY_INT64;
+    if (sizeof(int) == sizeof(uint16_t) && code == NPY_INT) return NPY_UINT16;
+    if (sizeof(int) == sizeof(uint32_t) && code == NPY_INT) return NPY_UINT32;
     return code;
 }
 
@@ -233,17 +237,23 @@ static void CheckNumpyArray(const bp::object& array, int ndim, bool isConst,
         oss<<"  NPY_INT16   = "<<NPY_INT16<<"\n";
         oss<<"  NPY_INT32   = "<<NPY_INT32<<"\n";
         oss<<"  NPY_INT64   = "<<NPY_INT64<<"\n";
+        oss<<"  NPY_UINT16   = "<<NPY_UINT16<<"\n";
+        oss<<"  NPY_UINT32   = "<<NPY_UINT32<<"\n";
         oss<<"  NPY_FLOAT   = "<<NPY_FLOAT<<"\n";
         oss<<"  NPY_DOUBLE  = "<<NPY_DOUBLE<<"\n";
         oss<<"  sizeof(int16_t) = "<<sizeof(int16_t)<<"\n";
         oss<<"  sizeof(int32_t) = "<<sizeof(int32_t)<<"\n";
         oss<<"  sizeof(int64_t) = "<<sizeof(int64_t)<<"\n";
+        oss<<"  sizeof(uint16_t) = "<<sizeof(uint16_t)<<"\n";
+        oss<<"  sizeof(uint32_t) = "<<sizeof(uint32_t)<<"\n";
         oss<<"  sizeof(short) = "<<sizeof(short)<<"\n";
         oss<<"  sizeof(int) = "<<sizeof(int)<<"\n";
         oss<<"  sizeof(long) = "<<sizeof(long)<<"\n";
         oss<<"  sizeof(npy_int16) = "<<sizeof(npy_int16)<<"\n";
         oss<<"  sizeof(npy_int32) = "<<sizeof(npy_int32)<<"\n";
         oss<<"  sizeof(npy_int64) = "<<sizeof(npy_int64)<<"\n";
+        oss<<"  sizeof(npy_uint16) = "<<sizeof(npy_uint16)<<"\n";
+        oss<<"  sizeof(npy_uint32) = "<<sizeof(npy_uint32)<<"\n";
         PyErr_SetString(PyExc_ValueError, oss.str().c_str());
         bp::throw_error_already_set();
     }

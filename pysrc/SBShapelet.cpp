@@ -133,6 +133,8 @@ namespace galsim {
             wrapImageTemplates<double>();
             wrapImageTemplates<int16_t>();
             wrapImageTemplates<int32_t>();
+            wrapImageTemplates<uint16_t>();
+            wrapImageTemplates<uint32_t>();
         }
     };
 

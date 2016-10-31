@@ -56,6 +56,7 @@ New Features
       I(R,z) = I_0 / (2h_s) * sech^2 (z/h_s) * exp(-R/R_s),
   inclined to the line of sight at a desired angle. If face-on (inclination =
   0 degrees), this will be identical to the Exponential profile.  (#782)
+- Added support for reading in of unsigned int Images (#715)
 
 
 New config features
