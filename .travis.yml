@@ -67,10 +67,10 @@ install:
     # code, despite that not being a dependency.
     # Allow 30 minutes for this one, since sometimes scipy in particular can take a long time
     # if it's not in the cache yet.
-    - travis_wait 30 pip install numpy astropy==1.1.1 future pyyaml starlink-pyast nose codecov coveralls matplotlib==1.5.2 scipy==0.17.0
-    - set +e
-    - scons PREFIX=$HOME
-    - if test -d gs.error; then cat gs.error; fi
+    - travis_wait 30 pip install numpy astropy==1.1.1 future pyyaml starlink-pyast nose codecov coveralls matplotlib==1.5.2 scipy==0.17.0 --user
+    #- set +e
+    #- scons PREFIX=$HOME
+    #- if test -d gs.error; then cat gs.error; fi
 
 script:
     - pwd
@@ -78,13 +78,13 @@ script:
     - python --version
     # This lets scons work even on Python 3 builds
     # cf. https://github.com/travis-ci/travis-ci/issues/5961
-    #- source $HOME/virtualenv/python2.7/bin/activate
-    #- which -a python
+    - source $HOME/virtualenv/python2.7/bin/activate
+    - which -a python
     # But now we need to manually set the python, since it's not the default in this virtualenv.
-    #- scons PREFIX=$HOME PYTHON=python${TRAVIS_PYTHON_VERSION} && scons install
-    #- if test -d gs.error; then cat gs.error; fi
+    - scons PREFIX=$HOME PYTHON=python${TRAVIS_PYTHON_VERSION} && scons install
+    - if test -d gs.error; then cat gs.error; fi
     # Go back to the regular python environment for the tests
-    #- source $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/activate
+    - source $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/activate
     - cd tests
     # Use this rather than scons tests, so we can get the coverage options.
     - "nosetests test*.py --with-coverage --cover-package=galsim --with-doctest --cover-erase"
