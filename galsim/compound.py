@@ -967,7 +967,7 @@ class RandomWalk(Sum):
 
     - The algorithm is a modified version of that presented in
 
-          https://arxiv.org/abs/1312.5514v3.
+          https://arxiv.org/abs/1312.5514v3
 
       Modifications are
         1) there is no outer cutoff to how far a point can wander
