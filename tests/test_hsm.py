@@ -213,7 +213,7 @@ def test_shearest_precomputed():
         img  = galsim.Image(imgR, dtype = int)
         img -= 1000
         psfR = galsim.fits.read(psf_file)
-        psf = galsim.Image(psfR, dtype = int)
+        psf = galsim.Image(psfR, dtype = np.int16)
         psf -= 1000
 
         # get PSF moments for later tests
