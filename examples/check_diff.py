@@ -24,7 +24,6 @@ import sys
 import subprocess
 
 def same(file_name1, file_name2):
-
     cmd = "diff -q %s %s"%(file_name1, file_name2)
     p = subprocess.Popen([cmd],stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
     diff_output = p.stdout.read()
@@ -32,23 +31,35 @@ def same(file_name1, file_name2):
         print(diff_output.strip())
     return (len(diff_output) == 0)
 
-def report(file_name1, file_name2):
 
+def report_txt(file_name1, file_name2):
+    # NB. No -q here:
+    cmd = "diff %s %s"%(file_name1, file_name2)
+    p = subprocess.Popen([cmd],stdout=subprocess.PIPE, stderr=subprocess.STDOUT, shell=True)
+    diff_output = p.stdout.read()
+    print(diff_output.strip())
+
+
+def report(file_name1, file_name2):
     try:
         try:
             import astropy.io.fits as pyfits
         except:
             import pyfits
     except ImportError as e:
+        print('Unable to import pyfits')
         # Then /usr/bin/env python doesn't have pyfits installed.  Oh well.
-        return
+        # Let diff do the best it can.
+        return report_txt(file_name1, file_name2)
 
+    # Now give more information for fits files
     try:
         f1 = pyfits.open(file_name1)
         f2 = pyfits.open(file_name2)
     except IOError as e:
-        # Then at least one of the files doesn't exist, which diff will have already reported.
-        return
+        # Then either at least one of the files doesn't exist, which diff can report for us,
+        # or the files are txt files, which diff can also do.
+        return report_txt(file_name1, file_name2)
 
     for hdu in range(len(f1)):
         d0 = f1[hdu].data
