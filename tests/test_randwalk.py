@@ -194,7 +194,7 @@ def test_randwalk_config():
     }
     config={
         'gal':gal_config,
-        'rng':galsim.BaseDeviate(),
+        'rng':galsim.BaseDeviate(31415),
     }
 
     rwc = galsim.config.BuildGSObject(config, 'gal')[0]
