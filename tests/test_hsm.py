@@ -207,9 +207,13 @@ def test_shearest_precomputed():
         psf_file = os.path.join(img_dir, psf_file_prefix + str(file_indices[index]) + img_suff)
 
         # read in information for objects and expected results
-        img = galsim.fits.read(img_file)
+        imgR = galsim.fits.read(img_file)
+        # perform a cast to int as the images on file are unsigned,
+        # which leads to problems when we subtract 1000 below
+        img  = galsim.Image(imgR, dtype = int)
         img -= 1000
-        psf = galsim.fits.read(psf_file)
+        psfR = galsim.fits.read(psf_file)
+        psf = galsim.Image(psfR, dtype = np.int16)
         psf -= 1000
 
         # get PSF moments for later tests

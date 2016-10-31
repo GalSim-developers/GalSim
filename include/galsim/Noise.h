@@ -113,6 +113,8 @@ namespace galsim {
         virtual void doApplyTo(ImageView<float>& data) = 0;
         virtual void doApplyTo(ImageView<int32_t>& data) = 0;
         virtual void doApplyTo(ImageView<int16_t>& data) = 0;
+        virtual void doApplyTo(ImageView<uint32_t>& data) = 0;
+        virtual void doApplyTo(ImageView<uint16_t>& data) = 0;
     };
 
 
@@ -203,6 +205,8 @@ namespace galsim {
         void doApplyTo(ImageView<float>& data) { applyToView(data); }
         void doApplyTo(ImageView<int32_t>& data) { applyToView(data); }
         void doApplyTo(ImageView<int16_t>& data) { applyToView(data); }
+        void doApplyTo(ImageView<uint32_t>& data) { applyToView(data); }
+        void doApplyTo(ImageView<uint16_t>& data) { applyToView(data); }
 
     private: 
         double _sigma;
@@ -318,6 +322,8 @@ namespace galsim {
         void doApplyTo(ImageView<float>& data) { applyToView(data); }
         void doApplyTo(ImageView<int32_t>& data) { applyToView(data); }
         void doApplyTo(ImageView<int16_t>& data) { applyToView(data); }
+        void doApplyTo(ImageView<uint32_t>& data) { applyToView(data); }
+        void doApplyTo(ImageView<uint16_t>& data) { applyToView(data); }
 
     private: 
         double _sky_level;
@@ -532,6 +538,8 @@ namespace galsim {
         void doApplyTo(ImageView<float>& data) { applyToView(data); }
         void doApplyTo(ImageView<int32_t>& data) { applyToView(data); }
         void doApplyTo(ImageView<int16_t>& data) { applyToView(data); }
+        void doApplyTo(ImageView<uint32_t>& data) { applyToView(data); }
+        void doApplyTo(ImageView<uint16_t>& data) { applyToView(data); }
 
     private: 
         double _sky_level;
@@ -614,6 +622,8 @@ namespace galsim {
         void doApplyTo(ImageView<float>& data) { applyToView(data); }
         void doApplyTo(ImageView<int32_t>& data) { applyToView(data); }
         void doApplyTo(ImageView<int16_t>& data) { applyToView(data); }
+        void doApplyTo(ImageView<uint32_t>& data) { applyToView(data); }
+        void doApplyTo(ImageView<uint16_t>& data) { applyToView(data); }
     };
 
     /** 
@@ -714,6 +724,8 @@ namespace galsim {
         void doApplyTo(ImageView<float>& data) { applyToView(data); }
         void doApplyTo(ImageView<int32_t>& data) { applyToView(data); }
         void doApplyTo(ImageView<int16_t>& data) { applyToView(data); }
+        void doApplyTo(ImageView<uint32_t>& data) { applyToView(data); }
+        void doApplyTo(ImageView<uint16_t>& data) { applyToView(data); }
 
     private: 
         ConstImageView<float> _var_image;
