@@ -14,8 +14,11 @@ compiler:
 
 before_install:
     - export PATH=$(echo $PATH | tr ':' "\n" | sed '/\/opt\/python/d' | tr "\n" ":" | sed "s|::|:|g")
+    - sudo add-apt-repository ppa:fkrull/deadsnakes
     - sudo apt-get -qq update
-    - sudo apt-get install -y python$TRAVIS_PYTHON_VERSION-dev libboost-all-dev libfftw3-dev scons libblas-dev liblapack-dev gfortran
+    - sudo apt-get install -y python$TRAVIS_PYTHON_VERSION
+    - sudo apt-get install -y python$TRAVIS_PYTHON_VERSION-dev
+    - sudo apt-get install -y libboost-all-dev libfftw3-dev scons libblas-dev liblapack-dev gfortran
 
     # List current contents of directories that should be being cached.
     - ls -l $HOME
@@ -116,7 +119,7 @@ after_success:
     # Codecov is better at combining the results from different python versions.
     - codecov
 
-before_cache: 
+before_cache:
     - rm -rf $HOME/.cache/pip/log
     - rm -rf $HOME/.cache/pip/http
 
