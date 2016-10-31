@@ -179,6 +179,47 @@ def test_randwalk_repr():
     assert new_rw.flux == rw.flux,\
         "expected flux=%.16g got %.16g" % (rw.flux,new_rw.flux)
 
+@timer
+def test_randwalk_config():
+    """
+    test we get the same object using a configuration and the
+    explicit constructor
+    """
+
+    gal_config = {
+        'type':'RandomWalk',
+        'npoints':100,
+        'half_light_radius':2.0,
+        'flux':np.pi,
+    }
+    config={
+        'gal':gal_config,
+        'rng':galsim.BaseDeviate(),
+    }
+
+    rwc = galsim.config.BuildGSObject(config, 'gal')[0]
+
+    rw = galsim.RandomWalk(
+        gal_config['npoints'],
+        gal_config['half_light_radius'],
+        flux=gal_config['flux'],
+    )
+ 
+    assert rw.npoints==rwc.npoints,\
+        "expected npoints==%d, got %d" % (rw.npoints, rwc.npoints)
+
+    assert rw.input_half_light_radius==rwc.input_half_light_radius,\
+        "expected hlr==%g, got %g" % (rw.input_half_light_radius, rw.input_half_light_radius)
+
+    ng=len(rw.gaussians)
+    ngc=len(rwc.gaussians)
+    assert ng==ngc,"expected %d gaussians, got %d" % (ng,ngc)
+
+    pts=rw.points
+    ptsc=rwc.points
+    assert (pts.shape == ptsc.shape),\
+            "expected %s shape for points, got %s" % (pts.shape,ptsc.shape)
+
 
 @timer
 def test_randwalk_hlr():
@@ -226,3 +267,4 @@ if __name__ == "__main__":
     test_randwalk_invalid_inputs()
     test_randwalk_hlr()
     test_randwalk_repr()
+    test_randwalk_config()
