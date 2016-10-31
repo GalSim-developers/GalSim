@@ -66,6 +66,9 @@ install:
     # Note: matplotlib is only required because starlink has an `import matplotlib` in their
     # code, despite that not being a dependency.
     - pip -v install numpy astropy==1.1.1 future pyyaml starlink-pyast scipy nose codecov coveralls matplotlib==1.5.2
+    - set +e
+    - scons PREFIX=$HOME
+    - if test -d gs.error; then cat gs.error; fi
 
 script:
     - pwd
@@ -77,6 +80,7 @@ script:
     - which -a python
     # But now we need to manually set the python, since it's not the default in this virtualenv.
     - scons PREFIX=$HOME PYTHON=python${TRAVIS_PYTHON_VERSION} && scons install
+    - if test -d gs.error; then cat gs.error; fi
     # Go back to the regular python environment for the tests
     - source $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/activate
     - cd tests
