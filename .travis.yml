@@ -65,13 +65,12 @@ install:
     - which -a pip
     # Note: matplotlib is only required because starlink has an `import matplotlib` in their
     # code, despite that not being a dependency.
-    #- pip -v install numpy astropy==1.1.1 future pyyaml starlink-pyast scipy nose codecov coveralls matplotlib==1.5.2
     # Allow 30 minutes for this one, since sometimes scipy in particular can take a long time
     # if it's not in the cache yet.
     - travis_wait 30 pip install numpy astropy==1.1.1 future pyyaml starlink-pyast nose codecov coveralls matplotlib==1.5.2 scipy==0.17.0
-    #- set +e
-    #- scons PREFIX=$HOME
-    #- if test -d gs.error; then cat gs.error; fi
+    - set +e
+    - scons PREFIX=$HOME
+    - if test -d gs.error; then cat gs.error; fi
 
 script:
     - pwd
@@ -86,11 +85,11 @@ script:
     #- if test -d gs.error; then cat gs.error; fi
     # Go back to the regular python environment for the tests
     #- source $HOME/virtualenv/python${TRAVIS_PYTHON_VERSION}/bin/activate
-    #- cd tests
+    - cd tests
     # Use this rather than scons tests, so we can get the coverage options.
-    #- "nosetests test*.py --with-coverage --cover-package=galsim --with-doctest --cover-erase"
+    - "nosetests test*.py --with-coverage --cover-package=galsim --with-doctest --cover-erase"
     # Without cover-erase, this will append to the .coverage file
-    #- "nosetests run_examples.py --with-coverage --cover-package=galsim --with-doctest"
+    - "nosetests run_examples.py --with-coverage --cover-package=galsim --with-doctest"
 
 after_success:
     # The multiprocessing stages don't get properly incorporated into the .coverage file unless
