@@ -1,5 +1,4 @@
-"""Program Number: 6
-
+"""
 Write complete catalog into files that can be opened with galsim.Realgalaxy()
 and galsim.COSMOSCatalog(). For historic reasons, the input files for the 
 galsim modules are:
@@ -51,9 +50,10 @@ Fits files with galaxy images (in multiple bands), files with psf images (in
 multiple bands), main catalog file, selection file and fits file.
 
 """
+import numpy as np
 from astropy.io import fits
 from astropy.table import Table,Column, vstack, hstack, join
-import os,glob
+import os,glob, subprocess
 
 def assign_num(args, all_seg_ids):
     """Assigns individual identification number to each object"""
@@ -236,7 +236,7 @@ def get_fits_catalog(args, index_table, all_seg_ids):
     for f, filt in enumerate(args.filter_names):
     	final_table = fits_table()
         for seg_id in all_seg_ids:
-            file_name = input_cat
+            file_name = args.main_path + seg_id + '/' + filt + '_selected.fits'
             seg_cat = Table.read(file_name, format='fits')
             q, = np.where(index_table['SEG_ID'] == seg_id)
             indx_seg = index_table[q]
@@ -262,7 +262,6 @@ def make_all(args):
         for fl in glob.glob(args.main_path + args.out_dir+'*'):
             os.remove(fl)
     all_seg_ids = np.loadtxt(args.seg_list_file, delimiter=" ",dtype='S2')
-    apply_selection(args, all_seg_ids)
     index_table = assign_num(args, all_seg_ids)
     for f, filt in enumerate(args.filter_names):
         idx = get_images(args, index_table, filt,

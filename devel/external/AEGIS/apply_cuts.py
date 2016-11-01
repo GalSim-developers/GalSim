@@ -1,3 +1,13 @@
+"""Program Number: 6
+Applies selection cuts on galaxies in all filters and calls script to
+create catalog in a format that can be read by galsim.Realgalaxy().
+
+Note: WEIGHT is still set to 1 for all galaxies. 
+"""
+
+
+
+
 import subprocess
 import os
 import numpy as np
@@ -7,18 +17,26 @@ from astropy.table import Table
 
 def apply_selection(args, all_seg_ids):
     """Applies selection cuts to galaxies in each segemnt.
-    Selection criteria are: 
-    1) Closest masked pixel is more than 11 pixels away
-                  OR 
-    2) Average flux in 9*9 pixels centered on the closest replaced pixel (before masking) is less than 
-       half of the peak flux of central galaxy
+    galaxy is selected for final catalog if: 
+    1) Closest masked pixel is more than 5 pixels away
+                  OR
+    2) Closest masked pixel is greater than 5 but less than 11 pixels away
+                  AND 
+       Average flux in 9*9 pixels centered on the closest replaced pixel (before masking) is less than 
+       0.2 of the peak flux of central galaxy
                    AND  
-    3) SNR in elliptical gaussian filter is positve.
-    
-    Galaxies statifying these criteria in all filters are selected for the final catalog.
+    3) HSM was able to measure adaptive moments for the galaxy 
+                   OR
+        ELLIPTICITY of galaxy as measured by SEXTRACTOR is greater than 0.75  
+
+    Galaxies statifying these criteria in all filters are selected for the 
+    final catalog and saved to *_selected.fits file.
+
+    Some postage stamps that passed the above cuts, but were found to have defects
+    upon visual inspection are removed manually. The SEG ID and NUMBER of these
+    galaxies is read from args.manual_bad_stamps and removed from the catalog.
     """
-    all_seg_ids2 =['0i']
-    for seg in all_seg_ids2:
+    for seg in all_seg_ids:
         print "Running segment ",seg
         cat={}
         temp=[]
@@ -50,8 +68,13 @@ def apply_selection(args, all_seg_ids):
         if os.path.isfile(args.manual_bad_stamps) is True:
             bad_file = np.genfromtxt(args.manual_bad_stamps,dtype='str').T
             bad_gal = bad_file[1][bad_file[0]==seg]
-            remove_gals = [np.where(cat[f]['NUMBER'] == int(i))[0] for i in bad_gal]
-            remove_gals_manual = [int(i) for i in remove_gals]
+            remove_gals_manual=[]
+            for i in bad_gal:
+                q, = np.where(cat[f]['NUMBER'] == int(i))
+                if len(q) ==0:
+                    print "Already removed"
+                else:
+                    remove_gals_manual.append(q[0])
         else:
             print "No file provided for manual galaxy removal"
             remove_gals =[] 
@@ -67,15 +90,15 @@ def main(args):
     if args.apply_cuts is True:
         apply_selection(args, all_seg_ids)
     else:
+        # No selection cuts applied. Writes entire input catalog to selected galaxies file
         for seg in all_seg_ids:
             for f, filt in enumerate(args.filter_names):
                 cat_name = args.main_path + seg + '/' + filt + '_with_pstamp.fits'
                 cat[f] = Table.read(cat_name, format= 'fits')
                 new_cat_name = args.main_path + seg + '/' + filt + '_selected.fits'
                 cat[f].write(new_cat_name, format='fits', overwrite=True) 
-    #get_in_galsim.make_all(args)
-
-
+    #Saves catalog in a format that can be read by galsim
+    get_in_galsim.make_all(args)
 
 if __name__ == '__main__':
     from argparse import ArgumentParser

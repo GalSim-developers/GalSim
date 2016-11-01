@@ -32,7 +32,7 @@ The entire pipeline contains 6 scripts that are to be run in the order:
 3. get_psf: Computes the focus offset for a given image, and uses that to estimate the PSF. Postage stamps of galaxies and PSF  are also drawn (called in get_pstamps.py).
 4. clean_pstamp.py: Identifies multiple objects in the postage stamp of a galaxy and replaces the other object with noise.  
 5. get_cat_seg.py: For each segment, creates a catalog with entries only for the objects with postage stamps that will appear in the main catalog. Information from other catalogs are also added in this step.
-6. get_in_galsim.py: Write final catalog into files that can be opened with galsim.Realgalaxy() and galsim.COSMOSCatalog().
+6. apply_selection.py: applies selection cuts and writes final catalog into files that can be opened with galsim.Realgalaxy() and galsim.COSMOSCatalog().
 
 Common functions that are called multiple times are saved in functions.py
 
