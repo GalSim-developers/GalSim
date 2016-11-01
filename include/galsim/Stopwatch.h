@@ -24,7 +24,7 @@
 
 namespace galsim {
 
-class Stopwatch 
+class Stopwatch
 {
 private:
     double seconds;
@@ -35,7 +35,7 @@ public:
 
     void start() { gettimeofday(&tpStart, NULL); running=true; }
 
-    void stop() 
+    void stop()
     {
         if (!running) return;
         struct timeval tp;

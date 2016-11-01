@@ -32,7 +32,7 @@ template <typename T>
 struct PyPosition {
 
     static void wrap(std::string const & suffix) {
-        
+
         bp::class_< Position<T> > pyPosition(("Position" + suffix).c_str(), bp::no_init);
         pyPosition.def(bp::init< const Position<T>& >(bp::args("other")))
             .def(bp::init<T,T>((bp::arg("x")=T(0), bp::arg("y")=T(0))))

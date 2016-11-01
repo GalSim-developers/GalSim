@@ -36,9 +36,9 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageBasic , T , test_types )
     const int ncol=7;  // x ranges from 1 .. ncol
     const int nrow=5;  // y ranges from 1 .. nrow
     T ref_array[nrow*ncol] = {
-        // x  -> 
+        // x  ->
         11, 21, 31, 41, 51, 61, 71,  // y
-        12, 22, 32, 42, 52, 62, 72,  //  
+        12, 22, 32, 42, 52, 62, 72,  //
         13, 23, 33, 43, 53, 63, 73,  // |
         14, 24, 34, 44, 54, 64, 74,  // v
         15, 25, 35, 45, 55, 65, 75 };
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageBasic , T , test_types )
     BOOST_CHECK(im2_view.getStride() == ncol);
     BOOST_CHECK(im2_cview.getStride() == ncol);
 
-    // Check various ways to set and get values 
+    // Check various ways to set and get values
     for (int y=1; y<=nrow; ++y) {
         for (int x=1; x<=ncol; ++x) {
             im1(x,y) = 100 + 10*x + y;
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
     }
 
     // Test image addition
-    { 
+    {
         galsim::ImageAlloc<T> im3 = im1 + im2;
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
     }
 
     // Test image subtraction
-    { 
+    {
         galsim::ImageAlloc<T> im3 = im1 - im2;
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
     }
 
     // Test binary multiplication
-    { 
+    {
         galsim::ImageAlloc<T> im3 = im1 * im2;
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
     }
 
     // Test binary division
-    { 
+    {
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
                 im1(x,y) = T(4) * ref_im(x,y) * ref_im(x,y);
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
     }
 
     // Test image scalar addition
-    { 
+    {
         galsim::ImageAlloc<T> im3 = im1 + T(3);
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
     }
 
     // Test image subtraction
-    { 
+    {
         galsim::ImageAlloc<T> im3 = im1 - T(3);
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
@@ -361,7 +361,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
     }
 
     // Test binary multiplication
-    { 
+    {
         galsim::ImageAlloc<T> im3 = im1 * T(3);
         BOOST_CHECK(im3.getBounds() == bounds);
         for (int y=1; y<=nrow; ++y) {
@@ -391,7 +391,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
     }
 
     // Test binary division
-    { 
+    {
         for (int y=1; y<=nrow; ++y) {
             for (int x=1; x<=ncol; ++x) {
                 im1(x,y) = ref_im(x,y) * T(27);

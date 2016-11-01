@@ -99,8 +99,8 @@ class Image(with_metaclass(MetaImage, object)):
     difference.
 
     There are 6 data types that the Image can use for the data values.  These are `numpy.uint16`,
-    `numpy.uint16`, `numpy.int16`, `numpy.int32`, `numpy.float32`, and `numpy.float64`.  
-    If you are constructing a new Image from scratch, the default is `numpy.float32`, but you 
+    `numpy.uint16`, `numpy.int16`, `numpy.int32`, `numpy.float32`, and `numpy.float64`.
+    If you are constructing a new Image from scratch, the default is `numpy.float32`, but you
     can specify one of the other data types.
 
     Initialization
@@ -1277,7 +1277,7 @@ def ImageUI(*args, **kwargs):
     """
     kwargs['dtype'] = np.uint32
     return Image(*args, **kwargs)
-    
+
 def ImageS(*args, **kwargs):
     """Alias for galsim.Image(..., dtype=numpy.int16)
     """

@@ -154,7 +154,7 @@ of the allowed operations on Angles listed above (e.g., addition/subtraction of 
 multiplication of an Angle by a float, but not multiplication of Angles together).
 
 There are convenience function for getting the sin, cos, and tan of an angle, along with
-one for getting sin and cos together, which should be more efficient than doing sin and 
+one for getting sin and cos together, which should be more efficient than doing sin and
 cos separately:
 
     >>> sint = theta.sin()  # equivalent to sint = math.sin(theta.rad())
@@ -204,7 +204,7 @@ def hms(self, sep=":"):
 
     The returned representation will have 0 <= hh < 24.
 
-    An optional `sep` parameter can change the : to something else (e.g. a space or 
+    An optional `sep` parameter can change the : to something else (e.g. a space or
     nothing at all).
 
     Note: the reverse process is effected by HMS_Angle:
@@ -232,7 +232,7 @@ def hms(self, sep=":"):
 
 def dms(self, sep=":"):
     """Return a DMS representation of the angle as a string: (+/-)ddmmss.decimal
-    An optional `sep` parameter can change the : to something else (e.g. a space or 
+    An optional `sep` parameter can change the : to something else (e.g. a space or
     nothing at all).
 
     Note: the reverse process is effected by DMS_Angle:

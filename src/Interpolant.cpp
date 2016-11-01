@@ -34,26 +34,26 @@
 // Gary's Quintic interpolant was designed to exactly interpolate up to 4th order of a Taylor
 // series expansion.  This implies F'(j) = F''(j) = F'''(j) = F''''(j) = 0.  However, it
 // doesn't have a continuous second derivative.  I (MJ) derived an alternate version that does
-// have a continuous second derivative, but doesn't have F''''(j) = 0.  Gary thinks the 
-// F''''(j) = 0 constraint is more important than the continuous second derivatives, since: 
+// have a continuous second derivative, but doesn't have F''''(j) = 0.  Gary thinks the
+// F''''(j) = 0 constraint is more important than the continuous second derivatives, since:
 //
-// "The most important characteristic for the k interpolation is to have F(k) as close to zero as 
-// possible in the vicinity of the aliasing frequency.  It's these components of F in the vicinity 
-// of 2 pi that cause the ghost images after interpolation. In this application I'm less worried 
-// about the continuous derivatives because the ringing at frequencies beyond the vicinity of 
-// k=2 pi does not affect the interpolated image if we know that we have zero-padded it before 
+// "The most important characteristic for the k interpolation is to have F(k) as close to zero as
+// possible in the vicinity of the aliasing frequency.  It's these components of F in the vicinity
+// of 2 pi that cause the ghost images after interpolation. In this application I'm less worried
+// about the continuous derivatives because the ringing at frequencies beyond the vicinity of
+// k=2 pi does not affect the interpolated image if we know that we have zero-padded it before
 // transforming."
 //
 // However, I have the alternate version coded up, so I figured I'd leave it in as an option.
-// The two functions are actually extremely similar though, so I doubt it really matters that 
+// The two functions are actually extremely similar though, so I doubt it really matters that
 // much which one we use in practice.
 //
 //#define ALT_QUINTIC
 
 
-// For grins, I also figured out the Septimic formulae while I was at it: 
+// For grins, I also figured out the Septimic formulae while I was at it:
 //
-// The version that correctly interpolates up to 6th order in the Taylor series (but has 
+// The version that correctly interpolates up to 6th order in the Taylor series (but has
 // discontinuous 2nd and 3rd derivatives) is:
 //
 // |x| < 1: 1 + |x|^4 (-3899/144 + 9233/144 |x| - 7669/144 |x|^2 + 2191/144 |x|^3)
@@ -61,7 +61,7 @@
 //                           - 2191/240 |x|^5)
 // |x| < 3: (|x|-2) (|x|-3) (-1567/6 + 4401/8 |x| - 1373/3 |x|^2 + 27049/144 |x|^3 - 913/24 |x|^4
 //                           + 2191/720 |x|^5)
-// |x| < 4: (|x|-3) (|x|-4)^2 (-3211/60 + 781/12 |x| - 7067/240 |x|^2 + 2113/360 |x|^3 
+// |x| < 4: (|x|-3) (|x|-4)^2 (-3211/60 + 781/12 |x| - 7067/240 |x|^2 + 2113/360 |x|^3
 //                             - 313/720 |x|^4)
 //
 // F(u) = (1/45) s^7 (6780 c piu^2 + 98595 s - 98550 c - 39570 s piu^2 + 112 c piu^4)
@@ -72,7 +72,7 @@
 // |x| < 1: 1 + |x|^4 (-203/8 + 2849/48 |x| - 293/6 |x|^2 + 665/48 |x|^3)
 // |x| < 2: (|x|-1) (|x|-2) (913/20 - 10441/60 |x| + 5173/20 |x|^2 - 11051/60 |x|^3 + 5037/80 |x|^4
 //                           - 133/16 |x|^5)
-// |x| < 3: (|x|-2) (|x|-3) (-2987/12 + 31219/60 |x| - 5149/12 |x|^2 + 5233/30 |x|^3 
+// |x| < 3: (|x|-2) (|x|-3) (-2987/12 + 31219/60 |x| - 5149/12 |x|^2 + 5233/30 |x|^3
 //                           - 1679/48 |x|^4 + 133/48 |x|^5)
 // |x| < 4: (|x|-3) (|x|-4)^4 (-383/120 + 539/240 |x| - 19/48 |x|^2)
 //
@@ -83,33 +83,33 @@
 namespace galsim {
 
     //
-    // Some auxilliary functions we will want: 
+    // Some auxilliary functions we will want:
     //
 
     // sinc(x) is defined here as sin(Pi x) / (Pi x)
-    double sinc(double x) 
+    double sinc(double x)
     {
-        if (std::abs(x) < 1.e-4) return 1.- (M_PI*M_PI/6.)*x*x; 
+        if (std::abs(x) < 1.e-4) return 1.- (M_PI*M_PI/6.)*x*x;
         else return std::sin(M_PI*x)/(M_PI*x);
     }
 
     // Utility for calculating the integral of sin(t)/t from 0 to x.  Note the official definition
     // does not have pi multiplying t.
-    static double Si(double x) 
+    static double Si(double x)
     {
 #if 0
         // These are the version Gary had taken from Abramowitz & Stegun's formulae.
         // Unfortunately, they don't seem to be quite accurate enough for our needs.
-        // They are accurate to better than 1.e-6, but since our calculation of the 
+        // They are accurate to better than 1.e-6, but since our calculation of the
         // fourier transform of Lanczon(n,x) involves subtracting multiples of these
-        // from each other, there is a lot of cancelling, and the resulting relative 
+        // from each other, there is a lot of cancelling, and the resulting relative
         // accuracy for uval is much worse than 1.e-6.
         double x2=x*x;
         if(x2>=3.8) {
             // Use rational approximation from Abramowitz & Stegun
             // cf. Eqns. 5.2.38, 5.2.39, 5.2.8 - where it says it's good to <1e-6.
             // ain't this pretty?
-            return (M_PI/2.)*((x>0.)?1.:-1.) 
+            return (M_PI/2.)*((x>0.)?1.:-1.)
                 - (38.102495+x2*(335.677320+x2*(265.187033+x2*(38.027264+x2))))
                 / (x* (157.105423+x2*(570.236280+x2*(322.624911+x2*(40.021433+x2)))) )*std::cos(x)
                 - (21.821899+x2*(352.018498+x2*(302.757865+x2*(42.242855+x2))))
@@ -137,18 +137,18 @@ namespace galsim {
             //
             // Si(x) = pi/2 - f(x) cos(x) - g(x) sin(x)
             //
-            // where f(x) = int(sin(t)/(x+t),t=0..inf) 
+            // where f(x) = int(sin(t)/(x+t),t=0..inf)
             //       g(x) = int(cos(t)/(x+t),t=0..inf)
             //
             // (By asymptotic, I mean that f and g approach 1/x and 1/x^2 respectively as x -> inf.
             //  The formula as given is exact.)
             //
-            // I used Maple to calculate a Chebyshev-Pade approximation of 1/sqrt(y) f(1/sqrt(y)) 
-            // from 0..1/4^2, which leads to the following formula for f(x).  It is accurate to 
+            // I used Maple to calculate a Chebyshev-Pade approximation of 1/sqrt(y) f(1/sqrt(y))
+            // from 0..1/4^2, which leads to the following formula for f(x).  It is accurate to
             // better than 1.e-16 for x > 4.
             double y=1./x2;
-            double f = 
-                (1. + 
+            double f =
+                (1. +
                  y*(7.44437068161936700618e2 +
                     y*(1.96396372895146869801e5 +
                        y*(2.37750310125431834034e7 +
@@ -170,30 +170,30 @@ namespace galsim {
                                            y*(1.43468549171581016479e13 +
                                               y*(1.11535493509914254097e13)))))))))));
 
-            // Similarly, a Chebyshev-Pade approximation of 1/y g(1/sqrt(y)) from 0..1/4^2 
-            // leads to the following formula for g(x), which is also accurate to better than 
+            // Similarly, a Chebyshev-Pade approximation of 1/y g(1/sqrt(y)) from 0..1/4^2
+            // leads to the following formula for g(x), which is also accurate to better than
             // 1.e-16 for x > 4.
-            double g = 
-                y*(1. + 
-                   y*(8.1359520115168615e2 + 
+            double g =
+                y*(1. +
+                   y*(8.1359520115168615e2 +
                       y*(2.35239181626478200e5 +
                          y*(3.12557570795778731e7 +
-                            y*(2.06297595146763354e9 + 
-                               y*(6.83052205423625007e10 + 
+                            y*(2.06297595146763354e9 +
+                               y*(6.83052205423625007e10 +
                                   y*(1.09049528450362786e12 +
-                                     y*(7.57664583257834349e12 + 
-                                        y*(1.81004487464664575e13 + 
+                                     y*(7.57664583257834349e12 +
+                                        y*(1.81004487464664575e13 +
                                            y*(6.43291613143049485e12 +
                                               y*(-1.36517137670871689e12)))))))))))
                 / (1. +
-                   y*(8.19595201151451564e2 + 
-                      y*(2.40036752835578777e5 + 
+                   y*(8.19595201151451564e2 +
+                      y*(2.40036752835578777e5 +
                          y*(3.26026661647090822e7 +
-                            y*(2.23355543278099360e9 + 
-                               y*(7.87465017341829930e10 + 
+                            y*(2.23355543278099360e9 +
+                               y*(7.87465017341829930e10 +
                                   y*(1.39866710696414565e12 +
-                                     y*(1.17164723371736605e13 + 
-                                        y*(4.01839087307656620e13 + 
+                                     y*(1.17164723371736605e13 +
+                                        y*(4.01839087307656620e13 +
                                            y*(3.99653257887490811e13))))))))));
 
             double sinx,cosx;
@@ -203,20 +203,20 @@ namespace galsim {
             // Here I used Maple to calculate the Pade approximation for Si(x), which is accurate
             // to better than 1.e-16 for x < 4:
             return
-                x*(1. + 
-                   x2*(-4.54393409816329991e-2 + 
-                       x2*(1.15457225751016682e-3 + 
-                           x2*(-1.41018536821330254e-5 + 
+                x*(1. +
+                   x2*(-4.54393409816329991e-2 +
+                       x2*(1.15457225751016682e-3 +
+                           x2*(-1.41018536821330254e-5 +
                                x2*(9.43280809438713025e-8 +
                                    x2*(-3.53201978997168357e-10 +
                                        x2*(7.08240282274875911e-13 +
                                            x2*(-6.05338212010422477e-16))))))))
-                / (1. + 
+                / (1. +
                    x2*(1.01162145739225565e-2 +
-                       x2*(4.99175116169755106e-5 + 
+                       x2*(4.99175116169755106e-5 +
                            x2*(1.55654986308745614e-7 +
-                               x2*(3.28067571055789734e-10 + 
-                                   x2*(4.5049097575386581e-13 + 
+                               x2*(3.28067571055789734e-10 +
+                                   x2*(4.5049097575386581e-13 +
                                        x2*(3.21107051193712168e-16)))))));
 
         }
@@ -231,19 +231,19 @@ namespace galsim {
     //
     // Generic InterpolantXY class methods
     //
-    
+
     double InterpolantFunction::operator()(double x) const  { return _interp.xval(x); }
 
-    double InterpolantXY::getPositiveFlux() const 
+    double InterpolantXY::getPositiveFlux() const
     {
         return _i1d->getPositiveFlux()*_i1d->getPositiveFlux()
             + _i1d->getNegativeFlux()*_i1d->getNegativeFlux();
     }
 
-    double InterpolantXY::getNegativeFlux() const 
+    double InterpolantXY::getNegativeFlux() const
     { return 2.*_i1d->getPositiveFlux()*_i1d->getNegativeFlux(); }
 
-    boost::shared_ptr<PhotonArray> InterpolantXY::shoot(int N, UniformDeviate ud) const 
+    boost::shared_ptr<PhotonArray> InterpolantXY::shoot(int N, UniformDeviate ud) const
     {
         dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";
@@ -254,7 +254,7 @@ namespace galsim {
         return result;
     }
 
-    double Interpolant::xvalWrapped(double x, int N) const 
+    double Interpolant::xvalWrapped(double x, int N) const
     {
         // sum over all arguments x+jN that are within range.
         // Start by finding x+jN closest to zero
@@ -282,8 +282,8 @@ namespace galsim {
     //
     // Delta
     //
-    
-    boost::shared_ptr<PhotonArray> Delta::shoot(int N, UniformDeviate ud) const 
+
+    boost::shared_ptr<PhotonArray> Delta::shoot(int N, UniformDeviate ud) const
     {
         dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";
@@ -303,8 +303,8 @@ namespace galsim {
     //
     // Nearest
     //
-    
-    double Nearest::xval(double x) const 
+
+    double Nearest::xval(double x) const
     {
         if (std::abs(x)>0.5) return 0.;
         else if (std::abs(x)<0.5) return 1.;
@@ -313,7 +313,7 @@ namespace galsim {
 
     double Nearest::uval(double u) const { return sinc(u); }
 
-    boost::shared_ptr<PhotonArray> Nearest::shoot(int N, UniformDeviate ud) const 
+    boost::shared_ptr<PhotonArray> Nearest::shoot(int N, UniformDeviate ud) const
     {
         dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";
@@ -334,7 +334,7 @@ namespace galsim {
     // SincInterpolant
     //
 
-    double SincInterpolant::uval(double u) const 
+    double SincInterpolant::uval(double u) const
     {
         if (std::abs(u)>0.5) return 0.;
         else if (std::abs(u)<0.5) return 1.;
@@ -343,7 +343,7 @@ namespace galsim {
 
     double SincInterpolant::xval(double x) const { return sinc(x); }
 
-    double SincInterpolant::xvalWrapped(double x, int N) const 
+    double SincInterpolant::xvalWrapped(double x, int N) const
     {
         // Magic formula:
         x *= M_PI;
@@ -356,7 +356,7 @@ namespace galsim {
         }
     }
 
-    boost::shared_ptr<PhotonArray> SincInterpolant::shoot(int N, UniformDeviate ud) const 
+    boost::shared_ptr<PhotonArray> SincInterpolant::shoot(int N, UniformDeviate ud) const
     {
         throw std::runtime_error("Photon shooting is not practical with sinc Interpolant");
         return boost::shared_ptr<PhotonArray>();
@@ -370,19 +370,19 @@ namespace galsim {
     // Linear
     //
 
-    double Linear::xval(double x) const 
+    double Linear::xval(double x) const
     {
         x = std::abs(x);
         if (x > 1.) return 0.;
         else return 1.-x;
     }
-    double Linear::uval(double u) const 
-    { 
+    double Linear::uval(double u) const
+    {
         double s = sinc(u);
         return s*s;
     }
 
-    boost::shared_ptr<PhotonArray> Linear::shoot(int N, UniformDeviate ud) const 
+    boost::shared_ptr<PhotonArray> Linear::shoot(int N, UniformDeviate ud) const
     {
         dbg<<"InterpolantXY shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";
@@ -404,15 +404,15 @@ namespace galsim {
     // Cubic
     //
 
-    double Cubic::xval(double x) const 
-    { 
+    double Cubic::xval(double x) const
+    {
         x = std::abs(x);
         if (x < 1.) return 1. + x*x*(1.5*x-2.5);
         else if (x < 2.) return -0.5*(x-1.)*(x-2.)*(x-2.);
         else return 0.;
     }
 
-    double Cubic::uval(double u) const 
+    double Cubic::uval(double u) const
     {
         u = std::abs(u);
 #ifdef USE_TABLES
@@ -435,14 +435,14 @@ namespace galsim {
         const Cubic& _c;
     };
 
-    double Cubic::uCalc(double u) const 
+    double Cubic::uCalc(double u) const
     {
         CubicIntegrand ci(u, *this);
         return 2.*( integ::int1d(ci, 0., 1., 0.1*_tolerance, 0.1*_tolerance)
                     + integ::int1d(ci, 1., 2., 0.1*_tolerance, 0.1*_tolerance));
     }
 
-    Cubic::Cubic(double tol, const GSParamsPtr& gsparams) : 
+    Cubic::Cubic(double tol, const GSParamsPtr& gsparams) :
         Interpolant(gsparams), _tolerance(tol)
     {
         dbg<<"Start Cubic:  tol = "<<tol<<std::endl;
@@ -451,7 +451,7 @@ namespace galsim {
         _range = 2.-0.1*_tolerance;
 
 #ifdef USE_TABLES
-        // Strangely, not all compilers correctly setup an empty map when it is a 
+        // Strangely, not all compilers correctly setup an empty map when it is a
         // static variable, so you can get seg faults using it.
         // Doing an explicit clear fixes the problem.
         if (_cache_umax.size() == 0) { _cache_umax.clear(); _cache_tab.clear(); }
@@ -462,7 +462,7 @@ namespace galsim {
             _uMax = _cache_umax[tol];
         } else {
             // Then need to do the calculation and then cache it.
-            const double uStep = 
+            const double uStep =
                 gsparams->table_spacing * std::pow(gsparams->kvalue_accuracy/10.,0.25);
             _uMax = 0.;
             _tab.reset(new Table<double,double>(Table<double,double>::spline));
@@ -503,8 +503,8 @@ namespace galsim {
     //
     // Quintic
     //
- 
-    double Quintic::xval(double x) const 
+
+    double Quintic::xval(double x) const
     {
         x = std::abs(x);
 #ifdef ALT_QUINTIC
@@ -534,7 +534,7 @@ namespace galsim {
             return (x-1.)*(x-2.)*(-23./4. + x*(169./12. + x*(-39./4. + x*(25./12.))));
         else if (x <= 3.)
             return (x-2.)*(x-3.)*(x-3.)*(x-3.)*(3./4. + x*(-5./12.));
-        else 
+        else
             return 0.;
 #else
         // This is Gary's original version with F''''(j) = 0, but f''(x) is not continuous at
@@ -545,12 +545,12 @@ namespace galsim {
             return (x-1.)*(x-2.)*(-23./4. + x*(29./2. + x*(-83./8. + x*(55./24.))));
         else if (x <= 3.)
             return (x-2.)*(x-3.)*(x-3.)*(-9./4. + x*(25./12. + x*(-11./24.)));
-        else 
+        else
             return 0.;
 #endif
     }
 
-    double Quintic::uval(double u) const 
+    double Quintic::uval(double u) const
     {
         u = std::abs(u);
 #ifdef USE_TABLES
@@ -579,7 +579,7 @@ namespace galsim {
         const Quintic& _q;
     };
 
-    double Quintic::uCalc(double u) const 
+    double Quintic::uCalc(double u) const
     {
         QuinticIntegrand qi(u, *this);
         return 2.*( integ::int1d(qi, 0., 1., 0.1*_tolerance, 0.1*_tolerance)
@@ -596,7 +596,7 @@ namespace galsim {
         _range = 3.-0.1*_tolerance;
 
 #ifdef USE_TABLES
-        // Strangely, not all compilers correctly setup an empty map when it is a 
+        // Strangely, not all compilers correctly setup an empty map when it is a
         // static variable, so you can get seg faults using it.
         // Doing an explicit clear fixes the problem.
         if (_cache_umax.size() == 0) { _cache_umax.clear(); _cache_tab.clear(); }
@@ -607,7 +607,7 @@ namespace galsim {
             _uMax = _cache_umax[tol];
         } else {
             // Then need to do the calculation and then cache it.
-            const double uStep = 
+            const double uStep =
                 gsparams->table_spacing * std::pow(gsparams->kvalue_accuracy/10.,0.25);
             _uMax = 0.;
             _tab.reset(new Table<double,double>(Table<double,double>::spline));
@@ -638,7 +638,7 @@ namespace galsim {
         }
 #else
         // uMax is the value where |ft| <= tolerance
-        // ft = sin(pi u)^5/(pi u)^5 * (sin(pi u)/(pi u)*(55.-19 pi^2 u^2) 
+        // ft = sin(pi u)^5/(pi u)^5 * (sin(pi u)/(pi u)*(55.-19 pi^2 u^2)
         //                              + 2*cos(pi u)*(pi^2 u^2-27)))
         // |ft| < 2 max[sin(x)^5 cos(x))] / (pi u)^3
         //      = 2 (25sqrt(5)/216) / (pi u)^3
@@ -672,7 +672,7 @@ namespace galsim {
     //
     // Lanczos
     //
-    
+
     double Lanczos::xCalc(double x) const
     {
         assert(x >= 0);
@@ -684,9 +684,9 @@ namespace galsim {
             // For low values of n, we can save some time by calculating sin(pi x)
             // from the value of sin(pi x / n) using trig identities.
             //
-            // At some point it might be worth implementing the same trick as we did with 
-            // SBMoffat's kValue and pow functions, making these different cases all different 
-            // functions and having the constructor just set the function once.  Then calls to 
+            // At some point it might be worth implementing the same trick as we did with
+            // SBMoffat's kValue and pow functions, making these different cases all different
+            // functions and having the constructor just set the function once.  Then calls to
             // xval wouldn't have any jumps from the case or (if you wanted) even the
             // _conserve_dc check.
             switch (_n) {
@@ -748,7 +748,7 @@ namespace galsim {
               }
               default : {
                   // Above n=7, there isn't much advantage anymore to specialization.
-                  // The second sin call isn't much slower than the multiplications 
+                  // The second sin call isn't much slower than the multiplications
                   // required to get sin(pi x) from sin(pi x/n)
                   s = sin(M_PI*x);
                   double sn = sin(M_PI*x/_nd);
@@ -774,16 +774,16 @@ namespace galsim {
         // An image with uniform f(x) = 1 when interpolated with Lanczos will have an error of:
         // E(x) = 2 * Sum_j K(j) (cos(2 pi j x) - 1)
         //      = -2 K(1) (1-cos(2pix)) - 2 K(2) (1-cos(4pix)) - 2 K(3) (1-cos(6pix)) ...
-        // 
+        //
         // To preserve a uniform flux, we want to divide by (1 + the above value) to correct
-        // for the error. 
+        // for the error.
         //
         // Unfortunately, it turns out that while K(1) << 1, the series from there on starts
         // to converge more slowly, so the gains from each subsequent term become less.
         // For n=3, the values of K(1)..K(4) are: 1.416e-3, 4.390e-5, 7.716e-6, 2.343e-6.
         // Thus, it would be hard to use this method to get to significantly better accuracy
         // than about 1.e-6.
-        // 
+        //
         // To give feel for how this correction goes, a 2-d unit flux field interpolated
         // with Lanczos, n=3, has the following maximum errors:
         //
@@ -822,14 +822,14 @@ namespace galsim {
                     - 2.*_K[2]*(1.-std::cos(4.*M_PI*x))
                     - 2.*_K[3]*(1.-std::cos(6.*M_PI*x))
                     - 2.*_K[4]*(1.-std::cos(8.*M_PI*x))
-                    - 2.*_K[5]*(1.-std::cos(10.*M_PI*x))) 
+                    - 2.*_K[5]*(1.-std::cos(10.*M_PI*x)))
                 <<" = "<<factor<<std::endl;
 #endif
         }
         return res;
     }
 
-    double Lanczos::uCalcRaw(double u) const 
+    double Lanczos::uCalcRaw(double u) const
     {
         // F(u) = ( (vp+1) Si((vp+1)pi) - (vp-1) Si((vp-1)pi) +
         //          (vm-1) Si((vm-1)pi) - (vm+1) Si((vm+1)pi) ) / 2pi
@@ -842,15 +842,15 @@ namespace galsim {
         return retval/(2.*M_PI);
     }
 
-    double Lanczos::uCalc(double u) const 
+    double Lanczos::uCalc(double u) const
     {
         double retval = uCalcRaw(u);
-        // The correction (described in xCalc) to preserve a uniform flux profile can be 
+        // The correction (described in xCalc) to preserve a uniform flux profile can be
         // approximate by its series approximation, where I throw out terms that are 3rd
         // order or higher in the coefficients (K1^3 ~ 3.e-9, so negligible), and the only
         // 2nd order terms I keep have K1 as one of the terms (K2^2 ~ 2.e-9).
         //
-        // (1+E(x))^-1 ~= 1 + 2K(1) (1-cos(2pix)) + 4K(1)^2 (1-cos(2pix))^2 
+        // (1+E(x))^-1 ~= 1 + 2K(1) (1-cos(2pix)) + 4K(1)^2 (1-cos(2pix))^2
         //                  + 2K(2) (1-cos(4pix)) + 4K(1)K(2) (1-cos(2pix)) (1-cos(4pix))
         //                  + 2K(3) (1-cos(6pix)) + 4K(1)K(3) (1-cos(2pix)) (1-cos(6pix))
         //                  + 2K(4) (1-cos(8pix)) + 2K(5) (1-cos(10pix))
@@ -858,15 +858,15 @@ namespace galsim {
         // The effect in the Fourier transform will then be a convolution by the fourier transform
         // of (1+E(x))^-1:
         //
-        // F[(1+E(x))^-1] = 2pi ( 
+        // F[(1+E(x))^-1] = 2pi (
         //     D(k)
         //     + K(1) (-D(k-2pi) + 2 D(k) - D(k+2pi))
         //     + K(1)^2 (D(k-4pi) - 4 D(k-2pi) + 6 D(k) - 4 D(k+2pi) + D(k+4pi))
         //     + K(2) (-D(k-4pi) + 2 D(k) - D(k+4pi))
-        //     + K(1) K(2) (D(k-6pi) - 2 D(k-4pi) - D(k-2pi) + 4 D(k) - D(k+2pi) 
+        //     + K(1) K(2) (D(k-6pi) - 2 D(k-4pi) - D(k-2pi) + 4 D(k) - D(k+2pi)
         //                  - 2 D(k+4pi) + D(k+6pi))
         //     + K(3) (-D(k-6pi) + 2 D(k) - D(k+6pi))
-        //     + K(1) K(3) (D(k-8pi) - 2 D(k-6pi) + D(k-4pi) - 2 D(k-2pi) + 4 D(k) 
+        //     + K(1) K(3) (D(k-8pi) - 2 D(k-6pi) + D(k-4pi) - 2 D(k-2pi) + 4 D(k)
         //                  - 2 D(k+2pi) + D(k+4pi) - 2 D(k+6pi) + D(k+8pi))
         //     + K(4) (-D(k-8pi) + 2 D(k) - D(k+8pi))
         //     + K(5) (-D(k-10pi) + 2 D(k) - D(k+10pi))
@@ -874,7 +874,7 @@ namespace galsim {
         //
         // where D(k) is the Dirac delta function.
         //
-        // When convolved with the original F(u) (since we are multiplying in real space, it 
+        // When convolved with the original F(u) (since we are multiplying in real space, it
         // becomes a convolution in k-space), we get:
         //
         // (1 + 2K1 + 6K1^2 + 2K2 + 2K1 K2 + 2K3 + 2K1 K3 + 2K4 + 2K5) F(u)
@@ -897,7 +897,7 @@ namespace galsim {
         return retval;
     }
 
-    Lanczos::Lanczos(int n, bool conserve_dc, double tol, const GSParamsPtr& gsparams) :  
+    Lanczos::Lanczos(int n, bool conserve_dc, double tol, const GSParamsPtr& gsparams) :
         Interpolant(gsparams), _n(n), _nd(n), _conserve_dc(conserve_dc), _tolerance(tol)
     {
         dbg<<"Start constructor for Lanczos n = "<<n<<std::endl;
@@ -941,7 +941,7 @@ namespace galsim {
                 dbg<<val<<" + ";
             }
             dbg<<" = "<<sum<<std::endl;
-            dbg<<"Nominal S("<<x<<") = "<< 
+            dbg<<"Nominal S("<<x<<") = "<<
                 (1.
                  - 2.*_K[1]*(1.-std::cos(2.*M_PI*x))
                  - 2.*_K[2]*(1.-std::cos(4.*M_PI*x))
@@ -950,7 +950,7 @@ namespace galsim {
                  - 2.*_K[5]*(1.-std::cos(10.*M_PI*x))) << std::endl;
         }
 
-        // Strangely, not all compilers correctly setup an empty map when it is a 
+        // Strangely, not all compilers correctly setup an empty map when it is a
         // static variable, so you can get seg faults using it.
         // Doing an explicit clear fixes the problem.
         if (_cache_umax.size() == 0) {
@@ -958,7 +958,7 @@ namespace galsim {
 #ifdef USE_TABLES
             _cache_xtab.clear();
 #endif
-            _cache_utab.clear();  
+            _cache_utab.clear();
         }
 
         KeyType key(n,std::pair<bool,double>(_conserve_dc,tol));
@@ -975,7 +975,7 @@ namespace galsim {
             // Build xtab = table of x values
             _xtab.reset(new Table<double,double>(Table<double,double>::spline));
             // Spline is accurate to O(dx^3), so errors should be ~dx^4.
-            const double xStep1 = 
+            const double xStep1 =
                 gsparams->table_spacing * std::pow(gsparams->xvalue_accuracy/10.,0.25);
             // Make sure steps hit the integer values exactly.
             const double xStep = 1. / std::ceil(1./xStep1);
@@ -984,7 +984,7 @@ namespace galsim {
 
             // Build utab = table of u values
             _utab.reset(new Table<double,double>(Table<double,double>::spline));
-            const double uStep = 
+            const double uStep =
                 gsparams->table_spacing * std::pow(gsparams->kvalue_accuracy/10.,0.25) / _nd;
             _uMax = 0.;
             for (double u=0.; u - _uMax < 1./_nd || u<1.1; u+=uStep) {

@@ -19,7 +19,7 @@
 
 #ifndef GalSim_SBTransform_H
 #define GalSim_SBTransform_H
-/** 
+/**
  * @file SBTransform.h @brief SBProfile adapter that transforms another SBProfile.
  * Includes shear, dilation, rotation, translation, and flux scaling.
  *
@@ -34,14 +34,14 @@ namespace galsim {
      *
      * Origin of original shape will now appear at `_cen`.
      * Flux is NOT conserved in transformation - surface brightness is preserved.
-     * We keep track of all distortions in a 2x2 matrix `M = [(A B), (C D)]` = [row1, row2] 
+     * We keep track of all distortions in a 2x2 matrix `M = [(A B), (C D)]` = [row1, row2]
      * plus a 2-element Positon object `cen` for the shift, and a flux scaling,
      * in addition to the scaling implicit in the matrix M = abs(det(M)).
      */
     class SBTransform : public SBProfile
     {
     public:
-        /** 
+        /**
          * @brief General constructor.
          *
          * @param[in] obj         SBProfile being transformed
@@ -55,7 +55,7 @@ namespace galsim {
          *                        image operations and rendering, if different from the default.
          */
         SBTransform(const SBProfile& sbin, double mA, double mB, double mC, double mD,
-                    const Position<double>& cen=Position<double>(0.,0.), 
+                    const Position<double>& cen=Position<double>(0.,0.),
                     double fluxScaling=1.,
                     const GSParamsPtr& gsparams=GSParamsPtr());
 
@@ -84,5 +84,5 @@ namespace galsim {
 
 }
 
-#endif 
+#endif
 

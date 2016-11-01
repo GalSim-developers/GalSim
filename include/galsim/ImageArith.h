@@ -370,7 +370,7 @@ namespace galsim {
 
     template <typename T>
     inline ImageView<CT> operator/=(ImageView<CT> im, T x)
-    { transform_pixel(im, bind2nd(std::divides<T>(),x)); return im; }
+    { transform_pixel(im, bind2nd(std::divides<CT>(),x)); return im; }
 
     template <typename T>
     inline ImageAlloc<CT>& operator/=(ImageAlloc<CT>& im, const T& x)

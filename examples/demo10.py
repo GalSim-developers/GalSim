@@ -26,8 +26,8 @@ the lines of a Great10 (Kitching, et al, 2012) image.  The galaxies are placed o
 (10 x 10 in this case, rather than 100 x 100 in the interest of time.)  Each postage stamp
 is 48 x 48 pixels.  Instead of putting the PSF images on a separate image, we package them
 as the second HDU in the file.  For the galaxies, we use a random selection from 5 specific
-RealGalaxy objects, selected to be 5 particularly irregular ones. (These are taken from 
-the same catalog of 100 objects that demo6 used.)  The galaxies are oriented in a ring 
+RealGalaxy objects, selected to be 5 particularly irregular ones. (These are taken from
+the same catalog of 100 objects that demo6 used.)  The galaxies are oriented in a ring
 test (Nakajima & Bernstein 2007) of 20 each.  And we again output a truth catalog with the
 correct applied shear for each object (among other information).
 
@@ -80,9 +80,9 @@ def main(argv):
     pixel_scale = 0.44              # arcsec / pixel
     sky_level = 1.e6                # ADU / arcsec^2
 
-    # The random seed is used for both the power spectrum realization and the random properties 
+    # The random seed is used for both the power spectrum realization and the random properties
     # of the galaxies.
-    random_seed = 3339201           
+    random_seed = 3339201
 
     # Make output directory if not already present.
     if not os.path.isdir('output'):
@@ -101,19 +101,19 @@ def main(argv):
     psf_signal_to_noise = 1000      # Even higher.
 
     logger.info('Starting demo script 10')
- 
+
     # Read in galaxy catalog
     cat_file_name = 'real_galaxy_catalog_23.5_example.fits'
     dir = 'data'
     real_galaxy_catalog = galsim.RealGalaxyCatalog(cat_file_name, dir=dir)
     logger.info('Read in %d real galaxies from catalog', real_galaxy_catalog.nobjects)
 
-    # List of IDs to use.  We select 5 particularly irregular galaxies for this demo. 
+    # List of IDs to use.  We select 5 particularly irregular galaxies for this demo.
     # Then we'll choose randomly from this list.
     id_list = [ 106416, 106731, 108402, 116045, 116448 ]
 
     # Make the 5 galaxies we're going to use here rather than remake them each time.
-    # This means the Fourier transforms of the real galaxy images don't need to be recalculated 
+    # This means the Fourier transforms of the real galaxy images don't need to be recalculated
     # each time, so it's a bit more efficient.
     gal_list = [ galsim.RealGalaxy(real_galaxy_catalog, id=id) for id in id_list ]
     # Grab the index numbers before we transform them and lose the index attribute.
@@ -152,14 +152,14 @@ def main(argv):
     gal_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles)
     psf_image = galsim.ImageF(stamp_size * n_tiles , stamp_size * n_tiles)
 
-    # Update the image WCS to use the image center as the origin of the WCS. 
+    # Update the image WCS to use the image center as the origin of the WCS.
     # The class that acts like a PixelScale except for this offset is called OffsetWCS.
     im_center = gal_image.bounds.trueCenter()
     wcs = galsim.OffsetWCS(scale=pixel_scale, origin=im_center)
     gal_image.wcs = wcs
     psf_image.wcs = wcs
 
-    # We will place the tiles in a random order.  To do this, we make two lists for the 
+    # We will place the tiles in a random order.  To do this, we make two lists for the
     # ix and iy values.  Then we apply a random permutation to the lists (in tandem).
     ix_list = []
     iy_list = []
@@ -173,13 +173,13 @@ def main(argv):
     galsim.random.permute(rng, ix_list, iy_list)
 
     # Initialize the OutputCatalog for the truth values
-    names = [ 'gal_num', 'x_image', 'y_image', 
+    names = [ 'gal_num', 'x_image', 'y_image',
               'psf_e1', 'psf_e2', 'psf_fwhm',
               'cosmos_id', 'cosmos_index', 'theta',
               'g1', 'g2', 'shift_x', 'shift_y' ]
     types = [ int, float, float,
               float, float, float,
-              str, int, float, 
+              str, int, float,
               float, float, float, float ]
     truth_catalog = galsim.OutputCatalog(names, types)
 
@@ -191,7 +191,7 @@ def main(argv):
         # Determine the bounds for this stamp and its center position.
         ix = ix_list[k]
         iy = iy_list[k]
-        b = galsim.BoundsI(ix*stamp_size+1 , (ix+1)*stamp_size, 
+        b = galsim.BoundsI(ix*stamp_size+1 , (ix+1)*stamp_size,
                            iy*stamp_size+1 , (iy+1)*stamp_size)
         sub_gal_image = gal_image[b]
         sub_psf_image = psf_image[b]
@@ -261,7 +261,7 @@ def main(argv):
         psf_offset = galsim.PositionD(psf_dx, psf_dy)
 
         # Draw the PSF image:
-        # We use real space integration over the pixels to avoid some of the 
+        # We use real space integration over the pixels to avoid some of the
         # artifacts that can show up with Fourier convolution.
         # The level of the artifacts is quite low, but when drawing with
         # so little noise, they are apparent with ds9's zscale viewing.
@@ -299,7 +299,7 @@ def main(argv):
     # Any items in the "images" list that is already an hdu is just used directly.
     # The actual images are converted to FITS hdus that contain the image data.
     galsim.fits.writeMulti(images, file_name)
-    logger.info('Wrote image to %r',file_name) 
+    logger.info('Wrote image to %r',file_name)
 
 if __name__ == "__main__":
     main(sys.argv)

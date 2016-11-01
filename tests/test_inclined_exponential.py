@@ -66,7 +66,6 @@ def test_regression():
         # Now make a test image
         test_profile = galsim.InclinedExponential(inc_angle*galsim.radians, scale_radius,
                                                   scale_height)
-
         check_basic(test_profile, "InclinedExponential")
 
         # Rotate it by the position angle

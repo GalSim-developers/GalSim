@@ -129,7 +129,7 @@ namespace galsim {
             << gsp.table_spacing << ", "
             << gsp.realspace_relerr << "," << gsp.realspace_abserr << ",  "
             << gsp.integration_relerr << "," << gsp.integration_abserr << ",  "
-            << gsp.shoot_accuracy << "," 
+            << gsp.shoot_accuracy << ","
             << gsp.allowed_flux_variation << "," << gsp.range_division_for_extrema << ","
             << gsp.small_fraction_of_flux;
         return os;

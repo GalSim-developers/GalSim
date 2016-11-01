@@ -120,7 +120,7 @@ def main(argv):
     # Here we create a chromatic version of a de Vaucouleurs profile by multipying a GSObject by an
     # SED.  This is how one generally constructs _separable_ ChromaticObjects in GalSim, that is,
     # those objects whose spatial dependence and wavelength dependence factor.
-    
+
     logger.info('')
     logger.info('Starting part A: chromatic De Vaucouleurs galaxy')
     redshift = 0.8

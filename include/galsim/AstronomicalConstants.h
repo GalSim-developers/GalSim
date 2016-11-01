@@ -55,7 +55,7 @@ const double  SECOND          = MINUTE/60.;
 const double  SpeedOfLightAU  = 63241.06515;      //in AU/YR
 
 //Obliquity of ecliptic at J2000
-const double  EclipticInclination =23.43928*DEGREE;  
+const double  EclipticInclination =23.43928*DEGREE;
 const double  EclipticNode        =0.;
 //Inclination and ascending node of invariable plane in the J2000
 //equatorial system: ??? check this

@@ -53,7 +53,7 @@
 // Convenient debugging.
 // Use as a normal C++ stream:
 // dbg << "Here x = "<<x<<" and y = "<<y<<std::endl;
-// If DEBUGLOGGING is not enabled, the compiler optimizes it away, so it 
+// If DEBUGLOGGING is not enabled, the compiler optimizes it away, so it
 // doesn't take any CPU cycles.
 //
 
@@ -100,7 +100,7 @@ private:
 // include double or int information as well.
 // e.g. FormatAndThrow<std::runtime_error>() << "x = "<<x<<" is invalid.";
 template <class E=std::runtime_error>
-class FormatAndThrow 
+class FormatAndThrow
 {
 public:
     // OK, this is a bit weird, but mostly innocuous.  Mac's default gcc compiler for OSX >= 10.6
@@ -113,14 +113,14 @@ public:
     //     http://gcc.gnu.org/bugzilla/show_bug.cgi?id=53838
     //     https://trac.macports.org/ticket/35070
     //     https://code.google.com/p/googletest/issues/detail?id=189
-    // Anyway, my workaround is to initialize the string with a space and a backspace, which 
-    // should print as nothing, so it should have no apparent result, and it avoids the 
+    // Anyway, my workaround is to initialize the string with a space and a backspace, which
+    // should print as nothing, so it should have no apparent result, and it avoids the
     // attempted deallocation of the global empty string.
-    
+
     FormatAndThrow() : oss(" ") {}
 
     template <class T>
-    FormatAndThrow& operator<<(const T& t) 
+    FormatAndThrow& operator<<(const T& t)
     { oss << t; return *this; }
 
     ~FormatAndThrow() { throw E(oss.str()); }
@@ -129,7 +129,7 @@ private:
 };
 
 /*
- *  A simple timer class to see how long a piece of code takes. 
+ *  A simple timer class to see how long a piece of code takes.
  *  Usage:
  *
  *  {
@@ -151,7 +151,7 @@ private:
 class Timer
 {
 public:
-    Timer(std::string name, bool start_running=false) : _name(name), _accum(0), _running(false) 
+    Timer(std::string name, bool start_running=false) : _name(name), _accum(0), _running(false)
     {
         if (start_running) start();
     }

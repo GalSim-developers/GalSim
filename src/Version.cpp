@@ -27,7 +27,7 @@ namespace galsim {
 
     int revision() { return GALSIM_REVISION; }
 
-    std::string version() { 
+    std::string version() {
         std::ostringstream oss;
         oss << GALSIM_MAJOR << '.' << GALSIM_MINOR << '.' << GALSIM_REVISION;
         return oss.str();

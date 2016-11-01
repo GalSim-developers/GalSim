@@ -68,7 +68,7 @@ def Shapelet_setNM(self,N,m,re,im=0.):
     galsim.GSObject.__init__(self, galsim._galsim.SBShapelet(self.sigma, bvec))
 
 def Shapelet_fitImage(self, image, center=None, normalization='flux'):
-    """A deprecated method that is roughly equivalent to 
+    """A deprecated method that is roughly equivalent to
     self = galsim.FitShapelet(self.sigma, self.order, image)
     """
     depr('fitImage', 1.1, 'galsim.FitShapelet')

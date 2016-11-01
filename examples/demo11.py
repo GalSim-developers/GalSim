@@ -93,7 +93,7 @@ def main(argv):
     noise_variance = 5.e4             # ADU^2  (Just use simple Gaussian noise here.)
     nobj = 288                        # number of galaxies in entire field
                                       # (This corresponds to 8 galaxies / arcmin^2)
-    grid_spacing = 90.0               # The spacing between the samples for the power spectrum 
+    grid_spacing = 90.0               # The spacing between the samples for the power spectrum
                                       # realization (arcsec)
     tel_diam = 4                      # Let's figure out the flux for a 4 m class telescope
     exp_time = 300                    # exposing for 300 seconds.
@@ -114,7 +114,7 @@ def main(argv):
     file_name = os.path.join('output','tabulated_power_spectrum.fits.fz')
 
     logger.info('Starting demo script 11')
- 
+
     # Read in galaxy catalog
     # The COSMOSCatalog uses the same input file as we have been usign for RealGalaxyCatalogs
     # along with a second file called real_galaxy_catalog_23.5_examples_fits.fits, which stores
@@ -138,7 +138,7 @@ def main(argv):
     # GalSim works in the flat-sky approximation, so we use this notation interchangeably with
     # P(k).  GalSim does not calculate shear power spectra for users, who must be able to provide
     # their own (or use the examples in the repository).
-    # 
+    #
     # Here we use a tabulated power spectrum from iCosmo (http://icosmo.org), with the following
     # cosmological parameters and survey design:
     # H_0 = 70 km/s/Mpc
@@ -175,15 +175,15 @@ def main(argv):
     # Setup the image:
     full_image = galsim.ImageF(image_size, image_size)
 
-    # The default convention for indexing an image is to follow the FITS standard where the 
-    # lower-left pixel is called (1,1).  However, this can be counter-intuitive to people more 
-    # used to C or python indexing, where indices start at 0.  It is possible to change the 
+    # The default convention for indexing an image is to follow the FITS standard where the
+    # lower-left pixel is called (1,1).  However, this can be counter-intuitive to people more
+    # used to C or python indexing, where indices start at 0.  It is possible to change the
     # coordinates of the lower-left pixel with the methods `setOrigin`.  For this demo, we
     # switch to 0-based indexing, so the lower-left pixel will be called (0,0).
     full_image.setOrigin(0,0)
 
-    # As for demo10, we use random_seed for the random numbers required for the 
-    # whole image.  In this case, both the power spectrum realization and the noise on the 
+    # As for demo10, we use random_seed for the random numbers required for the
+    # whole image.  In this case, both the power spectrum realization and the noise on the
     # full image we apply later.
     rng = galsim.BaseDeviate(random_seed)
 
@@ -216,7 +216,7 @@ def main(argv):
 
     # We can also put it on the celestial sphere to give it a bit more realism.
     # The TAN projection takes a (u,v) coordinate system on a tangent plane and projects
-    # that plane onto the sky using a given point as the tangent point.  The tangent 
+    # that plane onto the sky using a given point as the tangent point.  The tangent
     # point should be given as a CelestialCoord.
     sky_center = galsim.CelestialCoord(ra=19.3*galsim.hours, dec=-33.1*galsim.degrees)
 
@@ -240,7 +240,7 @@ def main(argv):
         # We leave this in the (u,v) plane, since the PowerSpectrum class is really defined
         # on the tangent plane, not in (ra,dec).
         world_pos = affine.toWorld(image_pos)
-        
+
         # Get the reduced shears and magnification at this point
         g1, g2, mu = ps.getLensing(pos = world_pos)
 
@@ -252,7 +252,7 @@ def main(argv):
 
         # First determine whether we will make a real galaxy (`gal_type = 'real'`) or a parametric
         # galaxy (`gal_type = 'parametric'`).  The real galaxies take longer to render, so for this
-        # script, we just use them 30% of the time and use parametric galaxies the other 70%. 
+        # script, we just use them 30% of the time and use parametric galaxies the other 70%.
 
         # We could just use `ud()<0.3` for this, but instead we introduce another Deviate type
         # available in GalSim that we haven't used yet: BinomialDeviate.
@@ -270,11 +270,11 @@ def main(argv):
             # present throughout the whole image, otherwise the whitening will do the wrong thing
             # to the parts of the image that don't include the original image.  The RealGalaxy
             # stores the correct noise profile to use as the gal.noise attribute.  This noise
-            # profile is automatically updated as we shear, dilate, convolve, etc.  But we need to 
-            # tell it how large to pad with this noise by hand.  This is a bit complicated for the 
-            # code to figure out on its own, so we have to supply the size for noise padding 
+            # profile is automatically updated as we shear, dilate, convolve, etc.  But we need to
+            # tell it how large to pad with this noise by hand.  This is a bit complicated for the
+            # code to figure out on its own, so we have to supply the size for noise padding
             # with the noise_pad_size parameter.
-        
+
             # The large galaxies will render fine without any noise padding, but the postage stamp
             # for the smaller galaxies will be sized appropriately for the PSF, which may make the
             # stamp larger than the original galaxy image.  The psf image is 40 x 40, although
@@ -298,7 +298,7 @@ def main(argv):
         # GSObject method.
         gal = gal.lens(g1, g2, mu)
 
-        # Convolve with the PSF.  
+        # Convolve with the PSF.
         final = galsim.Convolve(psf, gal)
 
         # Account for the fractional part of the position
@@ -383,7 +383,7 @@ def main(argv):
     # Now write the image to disk.  It is automatically compressed with Rice compression,
     # since the filename we provide ends in .fz.
     full_image.write(file_name)
-    logger.info('Wrote image to %r',file_name) 
+    logger.info('Wrote image to %r',file_name)
 
     # Compute some sky positions of some of the pixels to compare with the values of RA, Dec
     # that ds9 reports.  ds9 always uses (1,1) for the lower left pixel, so the pixel coordinates
