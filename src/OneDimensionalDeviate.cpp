@@ -310,7 +310,9 @@ namespace galsim {
         }
         dbg<<"Total of "<<_pt.size()<<" intervals\n";
         // Build the ProbabilityTree
-        _pt.buildTree();
+        double thresh = std::numeric_limits<double>::epsilon() * totalAbsoluteFlux;
+        dbg<<"thresh = "<<thresh<<std::endl;
+        _pt.buildTree(thresh);
     }
 
     boost::shared_ptr<PhotonArray> OneDimensionalDeviate::shoot(int N, UniformDeviate ud) const
