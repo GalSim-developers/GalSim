@@ -162,7 +162,7 @@ namespace galsim {
     }
 
     template <class T>
-    double PhotonArray::addTo(ImageView<T>& target) const
+    double PhotonArray::addTo(ImageView<T> target) const
     {
         Bounds<int> b = target.getBounds();
 
@@ -225,7 +225,7 @@ namespace galsim {
     }
 
     // instantiate template functions for expected image types
-    template double PhotonArray::addTo(ImageView<float>& image) const;
-    template double PhotonArray::addTo(ImageView<double>& image) const;
+    template double PhotonArray::addTo(ImageView<float> image) const;
+    template double PhotonArray::addTo(ImageView<double> image) const;
 
 }

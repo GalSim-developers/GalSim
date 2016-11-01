@@ -200,7 +200,7 @@ namespace galsim {
          * @returns The total flux of photons the landed inside the image bounds.
          */
         template <class T>
-        double addTo(ImageView<T>& target) const;
+        double addTo(ImageView<T> target) const;
 
         /**
          * @brief Declare that the photons in this array are correlated.

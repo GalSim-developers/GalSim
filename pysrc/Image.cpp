@@ -74,7 +74,7 @@ struct PyImage {
 
     template <typename U, typename W>
     static void wrapImageViewTemplates(W& wrapper) {
-        typedef void (ImageView<T>::* copyFrom_func_type)(const BaseImage<U>&) const;
+        typedef void (ImageView<T>::* copyFrom_func_type)(const BaseImage<U>&);
         wrapper
             .def("copyFrom", copyFrom_func_type(&ImageView<T>::copyFrom));
     }
@@ -227,8 +227,8 @@ struct PyImage {
 
     static bp::object wrapImageView(const std::string& suffix) {
 
-        typedef T& (ImageView<T>::*at_func_type)(int, int) const;
-        typedef T& (ImageView<T>::*at_pos_func_type)(const Position<int>&) const;
+        typedef T& (ImageView<T>::*at_func_type)(int, int);
+        typedef T& (ImageView<T>::*at_pos_func_type)(const Position<int>&);
 
         bp::object at = bp::make_function(
             at_func_type(&ImageView<T>::at),

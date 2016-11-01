@@ -65,7 +65,7 @@ namespace galsim {
      *  @brief Call a unary function on each pixel value
      */
     template <typename T, typename Op>
-    Op for_each_pixel(const ImageView<T>& image, Op f)
+    Op for_each_pixel(ImageView<T> image, Op f)
     {
         // Note: all of these functions have this guard to make sure we don't
         // try to access the memory if the image is in an undefined state.
@@ -84,7 +84,7 @@ namespace galsim {
      *  @brief Call a unary function on each pixel in a subset of the image.
      */
     template <typename T, typename Op>
-    Op for_each_pixel(const ImageView<T>& image, const Bounds<int>& bounds, Op f)
+    Op for_each_pixel(ImageView<T> image, const Bounds<int>& bounds, Op f)
     {
         if (image.getData()) {
             if (!image.getBounds().includes(bounds))
@@ -103,7 +103,7 @@ namespace galsim {
      *  @brief Replace image with a function of its pixel values.
      */
     template <typename T, typename Op>
-    Op transform_pixel(const ImageView<T>& image, Op f)
+    Op transform_pixel(ImageView<T> image, Op f)
     {
         if (image.getData()) {
             typedef typename ImageView<T>::iterator Iter;
@@ -126,7 +126,7 @@ namespace galsim {
      *  @brief Replace a subset of the image with a function of its pixel values.
      */
     template <typename T, typename Op>
-    Op transform_pixel(const ImageView<T>& image, const Bounds<int>& bounds, Op f)
+    Op transform_pixel(ImageView<T> image, const Bounds<int>& bounds, Op f)
     {
         if (image.getData()) {
             typedef typename ImageView<T>::iterator Iter;
@@ -148,7 +148,7 @@ namespace galsim {
      *  @brief Add a function of pixel coords to an image.
      */
     template <typename T, typename Op>
-    Op add_function_pixel(const ImageView<T>& image, Op f)
+    Op add_function_pixel(ImageView<T> image, Op f)
     {
         if (image.getData()) {
             typedef typename ImageView<T>::iterator Iter;
@@ -166,7 +166,7 @@ namespace galsim {
      *  @brief Add a function of pixel coords to a subset of an image.
      */
     template <typename T, typename Op>
-    Op add_function_pixel(const ImageView<T>& image, const Bounds<int>& bounds, Op f)
+    Op add_function_pixel(ImageView<T> image, const Bounds<int>& bounds, Op f)
     {
         if (image.getData()) {
             typedef typename ImageView<T>::iterator Iter;
@@ -190,7 +190,7 @@ namespace galsim {
      *  @brief Replace image with a function of pixel coords.
      */
     template <typename T, typename Op>
-    Op fill_pixel(const ImageView<T>& image, Op f)
+    Op fill_pixel(ImageView<T> image, Op f)
     {
         if (image.getData()) {
             typedef typename ImageView<T>::iterator Iter;
@@ -208,7 +208,7 @@ namespace galsim {
      *  @brief Replace subset of an image with a function of pixel coords.
      */
     template <typename T, typename Op>
-    Op fill_pixel(const ImageView<T>& image, const Bounds<int>& bounds, Op f)
+    Op fill_pixel(ImageView<T> image, const Bounds<int>& bounds, Op f)
     {
         if (image.getData()) {
             typedef typename ImageView<T>::iterator Iter;
@@ -229,7 +229,7 @@ namespace galsim {
 
     // Assign function of 2 images to 1st
     template <typename T1, typename T2, typename Op>
-    Op transform_pixel(const ImageView<T1>& image1, const BaseImage<T2>& image2, Op f)
+    Op transform_pixel(ImageView<T1> image1, const BaseImage<T2>& image2, Op f)
     {
         if (image1.getData()) {
             typedef typename ImageView<T1>::iterator Iter1;
@@ -251,11 +251,8 @@ namespace galsim {
 
     // Assign function of Img2 & Img3 to Img1
     template <typename T1, typename T2, typename T3, typename Op>
-    Op transform_pixel(
-        const ImageView<T1>& image1,
-        const BaseImage<T2>& image2,
-        const BaseImage<T3>& image3,
-        Op f)
+    Op transform_pixel(ImageView<T1> image1, const BaseImage<T2>& image2,
+                       const BaseImage<T3>& image3, Op f)
     {
         if (image1.getData()) {
             typedef typename ImageView<T1>::iterator Iter1;
@@ -285,11 +282,8 @@ namespace galsim {
     // They just both have to include the given bounds.
     // Only that portion of each image is used for the calculation.
     template <typename T1, typename T2, typename Op>
-    Op transform_pixel(
-        const ImageView<T1>& image1,
-        const BaseImage<T2>& image2,
-        const Bounds<int>& bounds,
-        Op f)
+    Op transform_pixel(ImageView<T1> image1, const BaseImage<T2>& image2,
+                       const Bounds<int>& bounds, Op f)
     {
         if (image1.getData()) {
             typedef typename ImageView<T1>::iterator Iter1;
@@ -354,7 +348,7 @@ namespace galsim {
         typedef typename ResultType<T1,T2>::type result_type;
         SumIX(const BaseImage<T1>& im, const T2 x) :
             AssignableToImage<result_type>(im.getBounds()), _im(im), _x(x) {}
-        void assignTo(const ImageView<result_type>& rhs) const { rhs = _im; rhs += _x; }
+        void assignTo(ImageView<result_type> rhs) const { rhs = _im; rhs += _x; }
     private:
         const BaseImage<T1>& _im;
         const T2 _x;
@@ -375,7 +369,7 @@ namespace galsim {
     { return SumIX<T,T>(im,x); }
 
     template <typename T>
-    inline const ImageView<T>& operator+=(const ImageView<T>& im, T x)
+    inline ImageView<T> operator+=(ImageView<T> im, T x)
     { transform_pixel(im, bind2nd(std::plus<T>(),x)); return im; }
 
     template <typename T>
@@ -392,7 +386,7 @@ namespace galsim {
     { return SumIX<T,T>(im,-x); }
 
     template <typename T>
-    inline const ImageView<T>& operator-=(const ImageView<T>& im, T x)
+    inline ImageView<T> operator-=(ImageView<T> im, T x)
     { im += T(-x); return im; }
 
     template <typename T>
@@ -411,7 +405,7 @@ namespace galsim {
         typedef typename ResultType<T1,T2>::type result_type;
         ProdIX(const BaseImage<T1>& im, const T2 x) :
             AssignableToImage<result_type>(im.getBounds()), _im(im), _x(x) {}
-        void assignTo(const ImageView<result_type>& rhs) const { rhs = _im; rhs *= _x; }
+        void assignTo(ImageView<result_type> rhs) const { rhs = _im; rhs *= _x; }
     private:
         const BaseImage<T1>& _im;
         const T2 _x;
@@ -426,7 +420,7 @@ namespace galsim {
     { return ProdIX<T,T>(im,x); }
 
     template <typename T>
-    inline const ImageView<T>& operator*=(const ImageView<T>& im, T x)
+    inline ImageView<T> operator*=(ImageView<T> im, T x)
     { transform_pixel(im, bind2nd(std::multiplies<T>(),x)); return im; }
 
     template <typename T>
@@ -444,7 +438,7 @@ namespace galsim {
         typedef typename ResultType<T1,T2>::type result_type;
         QuotIX(const BaseImage<T1>& im, const T2 x) :
             AssignableToImage<result_type>(im.getBounds()), _im(im), _x(x) {}
-        void assignTo(const ImageView<result_type>& rhs) const { rhs = _im; rhs /= _x; }
+        void assignTo(ImageView<result_type> rhs) const { rhs = _im; rhs /= _x; }
     private:
         const BaseImage<T1>& _im;
         const T2 _x;
@@ -459,7 +453,7 @@ namespace galsim {
     { return QuotIX<T,T>(im,x); }
 
     template <typename T>
-    inline const ImageView<T>& operator/=(const ImageView<T>& im, T x)
+    inline ImageView<T> operator/=(ImageView<T> im, T x)
     { transform_pixel(im, bind2nd(std::divides<T>(),x)); return im; }
 
     template <typename T>
@@ -481,7 +475,7 @@ namespace galsim {
             if (!im1.getBounds().isSameShapeAs(im2.getBounds()))
                 throw ImageError("Attempt im1 + im2, but bounds not the same shape");
         }
-        void assignTo(const ImageView<result_type>& rhs) const { rhs = _im1; rhs += _im2; }
+        void assignTo(ImageView<result_type> rhs) const { rhs = _im1; rhs += _im2; }
     private:
         const BaseImage<T1>& _im1;
         const BaseImage<T2>& _im2;
@@ -492,7 +486,7 @@ namespace galsim {
     { return SumII<T1,T2>(im1,im2); }
 
     template <typename T1, typename T2>
-    inline const ImageView<T1>& operator+=(const ImageView<T1>& im1, const BaseImage<T2>& im2)
+    inline ImageView<T1> operator+=(ImageView<T1> im1, const BaseImage<T2>& im2)
     {
         if (!im1.getBounds().isSameShapeAs(im2.getBounds()))
             throw ImageError("Attempt im1 += im2, but bounds not the same shape");
@@ -520,7 +514,7 @@ namespace galsim {
             if (!im1.getBounds().isSameShapeAs(im2.getBounds()))
                 throw ImageError("Attempt im1 - im2, but bounds not the same shape");
         }
-        void assignTo(const ImageView<result_type>& rhs) const { rhs = _im1; rhs -= _im2; }
+        void assignTo(ImageView<result_type> rhs) const { rhs = _im1; rhs -= _im2; }
     private:
         const BaseImage<T1>& _im1;
         const BaseImage<T2>& _im2;
@@ -531,7 +525,7 @@ namespace galsim {
     { return DiffII<T1,T2>(im1,im2); }
 
     template <typename T1, typename T2>
-    inline const ImageView<T1>& operator-=(const ImageView<T1>& im1, const BaseImage<T2>& im2)
+    inline ImageView<T1> operator-=(ImageView<T1> im1, const BaseImage<T2>& im2)
     {
         if (!im1.getBounds().isSameShapeAs(im2.getBounds()))
             throw ImageError("Attempt im1 -= im2, but bounds not the same shape");
@@ -559,7 +553,7 @@ namespace galsim {
             if (!im1.getBounds().isSameShapeAs(im2.getBounds()))
                 throw ImageError("Attempt im1 * im2, but bounds not the same shape");
         }
-        void assignTo(const ImageView<result_type>& rhs) const { rhs = _im1; rhs *= _im2; }
+        void assignTo(ImageView<result_type> rhs) const { rhs = _im1; rhs *= _im2; }
     private:
         const BaseImage<T1>& _im1;
         const BaseImage<T2>& _im2;
@@ -570,7 +564,7 @@ namespace galsim {
     { return ProdII<T1,T2>(im1,im2); }
 
     template <typename T1, typename T2>
-    inline const ImageView<T1>& operator*=(const ImageView<T1>& im1, const BaseImage<T2>& im2)
+    inline ImageView<T1> operator*=(ImageView<T1> im1, const BaseImage<T2>& im2)
     {
         if (!im1.getBounds().isSameShapeAs(im2.getBounds()))
             throw ImageError("Attempt im1 *= im2, but bounds not the same shape");
@@ -598,7 +592,7 @@ namespace galsim {
             if (!im1.getBounds().isSameShapeAs(im2.getBounds()))
                 throw ImageError("Attempt im1 / im2, but bounds not the same shape");
         }
-        void assignTo(const ImageView<result_type>& rhs) const { rhs = _im1; rhs /= _im2; }
+        void assignTo(ImageView<result_type> rhs) const { rhs = _im1; rhs /= _im2; }
     private:
         const BaseImage<T1>& _im1;
         const BaseImage<T2>& _im2;
@@ -609,7 +603,7 @@ namespace galsim {
     { return QuotII<T1,T2>(im1,im2); }
 
     template <typename T1, typename T2>
-    inline const ImageView<T1>& operator/=(const ImageView<T1>& im1, const BaseImage<T2>& im2)
+    inline ImageView<T1> operator/=(ImageView<T1> im1, const BaseImage<T2>& im2)
     {
         if (!im1.getBounds().isSameShapeAs(im2.getBounds()))
             throw ImageError("Attempt im1 /= im2, but bounds not the same shape");

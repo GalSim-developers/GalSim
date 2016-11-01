@@ -67,7 +67,7 @@ namespace galsim {
         /**
          *  @brief Assign values to an ImageView
          */
-        virtual void assignTo(const ImageView<T>& rhs) const = 0;
+        virtual void assignTo(ImageView<T> rhs) const = 0;
 
         /**
          *  @brief Return the bounding box of the image.
@@ -258,7 +258,7 @@ namespace galsim {
         /**
          *  @brief BaseImage's assignTo just uses the normal copyFrom method.
          */
-        void assignTo(const ImageView<T>& rhs) const { rhs.copyFrom(*this); }
+        void assignTo(ImageView<T> rhs) const { rhs.copyFrom(*this); }
 
     protected:
 
@@ -319,7 +319,6 @@ namespace galsim {
          *  @brief op= is invalid.  So private and undefined.
          */
         void operator=(const BaseImage<T>&);
-
 
     };
 
@@ -384,12 +383,6 @@ namespace galsim {
      *
      *  You could do the same thing within the C++ layer too.  You would just have
      *  to provide a shared_ptr explicitly to set up the ownership.
-     *
-     *  Note that the const-ness here is slightly odd.  const for ImageView refers
-     *  to whether the data it points to is const.  Also, the bounds.
-     *  So most things that modify data are labeled const.  If you want something
-     *  that is not allowed to modify data, you want to make a ConstImageView.
-     *  (Or you can just cast this as a BaseImage<T>, which will also work.)
      */
     template <typename T>
     class ImageView : public BaseImage<T>
@@ -424,29 +417,29 @@ namespace galsim {
          *  The bounds must be commensurate (i.e. the same shape).
          *  If not, an exception will be thrown.
          */
-        const ImageView<T>& operator=(const AssignableToImage<T>& rhs) const
+        ImageView<T>& operator=(const AssignableToImage<T>& rhs)
         { if (this != &rhs) rhs.assignTo(*this); return *this; }
 
         /**
          *  @brief Repeat for ImageView to prevent compiler from making the default op=
          */
-        const ImageView<T>& operator=(const ImageView<T>& rhs)
+        ImageView<T>& operator=(const ImageView<T>& rhs)
         { if (this != &rhs) copyFrom(rhs); return *this; }
 
         /**
          *  @brief Allow copy from a different type
          */
         template <typename U>
-        const ImageView<T>& operator=(const BaseImage<U>& rhs)
+        ImageView<T>& operator=(const BaseImage<U>& rhs)
         { if (this != &rhs) copyFrom(rhs); return *this; }
 
         //@{
         /**
          *  @brief Assignment with a scalar.
          */
-        void fill(T x) const;
-        const ImageView<T>& operator=(T x) const { fill(x); return *this; }
-        void setZero() const { fill(T(0)); }
+        void fill(T x);
+        ImageView<T>& operator=(T x) { fill(x); return *this; }
+        void setZero() { fill(T(0)); }
         //@}
 
         /**
@@ -454,7 +447,7 @@ namespace galsim {
          *
          * Note that if an element is zero, then this function quietly returns its inverse as zero.
          */
-        void invertSelf() const;
+        void invertSelf();
 
         /**
          *  @brief Return a pointer to the first pixel in the image.
@@ -462,22 +455,22 @@ namespace galsim {
          *  This overrides the version in BaseImage, since this one returns a non-const
          *  pointer.  (T*, not const T*)
          */
-        T* getData() const { return this->_data; }
+        T* getData() { return this->_data; }
 
         /**
          *  @brief View just returns itself.
          */
-        ImageView<T> view() const { return ImageView<T>(*this); }
+        ImageView<T> view() { return ImageView<T>(*this); }
 
         /**
          *  @brief New image that is a subimage of this (shares pixels)
          */
-        ImageView<T> subImage(const Bounds<int>& bounds) const;
+        ImageView<T> subImage(const Bounds<int>& bounds);
 
         /**
          *  @brief im[bounds] is another syntax for making a sub-image
          */
-        ImageView<T> operator[](const Bounds<int>& bounds) const
+        ImageView<T> operator[](const Bounds<int>& bounds)
         { return subImage(bounds); }
 
 
@@ -485,17 +478,17 @@ namespace galsim {
         /**
          *  @brief Unchecked access
          */
-        T& operator()(int xpos, int ypos) const
+        T& operator()(int xpos, int ypos)
         { return this->_data[this->addressPixel(xpos, ypos)]; }
-        T& operator()(const Position<int>& pos) const { return operator()(pos.x,pos.y); }
+        T& operator()(const Position<int>& pos) { return operator()(pos.x,pos.y); }
         //@}
 
         //@{
         /**
          *  @brief Element access - checked
          */
-        T& at(int xpos, int ypos) const;
-        T& at(const Position<int>& pos) const { return at(pos.x,pos.y); }
+        T& at(int xpos, int ypos);
+        T& at(const Position<int>& pos) { return at(pos.x,pos.y); }
         //@}
 
         /**
@@ -519,18 +512,18 @@ namespace galsim {
         /**
          *  @brief Return an iterator to the beginning of a row.
          */
-        iterator rowBegin(int r) const { return this->_data + this->addressPixel(r); }
+        iterator rowBegin(int r) { return this->_data + this->addressPixel(r); }
 
         /**
          *  @brief Return an iterator to one-past-the-end of a row.
          */
-        iterator rowEnd(int r) const
+        iterator rowEnd(int r)
         { return this->_data + this->addressPixel(this->getXMax() + 1, r); }
 
         /**
          *  @brief Return an iterator to an arbitrary pixel.
          */
-        iterator getIter(int x, int y) const
+        iterator getIter(int x, int y)
         { return this->_data + this->addressPixel(x, y); }
 
         /**
@@ -539,7 +532,7 @@ namespace galsim {
          *  The bounds must be commensurate (i.e. the same shape).
          *  If not, an exception will be thrown.
          */
-        void copyFrom(const BaseImage<T>& rhs) const;
+        void copyFrom(const BaseImage<T>& rhs);
 
         /**
          *  @brief Deep copy may be from a different type of image.
@@ -547,7 +540,7 @@ namespace galsim {
          *  Do this inline, so we don't have to worry about instantiating all pairs of types.
          */
         template <class U>
-        void copyFrom(const BaseImage<U>& rhs) const
+        void copyFrom(const BaseImage<U>& rhs)
         {
             if (!this->_bounds.isSameShapeAs(rhs.getBounds()))
                 throw ImageError("Attempt im1 = im2, but bounds not the same shape");
@@ -639,7 +632,7 @@ namespace galsim {
          */
         template <typename U>
         ImageAlloc<T>& operator=(const BaseImage<U>& rhs)
-        { if (this != &rhs) copyFrom(rhs); return *this; }
+        { copyFrom(rhs); return *this; }
 
         //@{
         /**

@@ -177,7 +177,7 @@ const T& BaseImage<T>::at(const int xpos, const int ypos) const
 }
 
 template <typename T>
-T& ImageView<T>::at(const int xpos, const int ypos) const
+T& ImageView<T>::at(const int xpos, const int ypos)
 {
     if (!this->_data) throw ImageError("Attempt to access values of an undefined image");
     if (!this->_bounds.includes(xpos, ypos)) throw ImageBoundsError(xpos, ypos, this->_bounds);
@@ -216,7 +216,7 @@ ConstImageView<T> BaseImage<T>::subImage(const Bounds<int>& bounds) const
 }
 
 template <typename T>
-ImageView<T> ImageView<T>::subImage(const Bounds<int>& bounds) const
+ImageView<T> ImageView<T>::subImage(const Bounds<int>& bounds)
 {
     if (!this->_data) throw ImageError("Attempt to make subImage of an undefined image");
     if (!this->_bounds.includes(bounds)) {
@@ -259,19 +259,19 @@ public:
 } // anonymous
 
 template <typename T>
-void ImageView<T>::fill(T x) const
+void ImageView<T>::fill(T x)
 {
     transform_pixel(*this, ConstReturn<T>(x));
 }
 
 template <typename T>
-void ImageView<T>::invertSelf() const
+void ImageView<T>::invertSelf()
 {
     transform_pixel(*this, ReturnInverse<T>());
 }
 
 template <typename T>
-void ImageView<T>::copyFrom(const BaseImage<T>& rhs) const
+void ImageView<T>::copyFrom(const BaseImage<T>& rhs)
 {
     if (!this->_bounds.isSameShapeAs(rhs.getBounds()))
         throw ImageError("Attempt im1 = im2, but bounds not the same shape");
