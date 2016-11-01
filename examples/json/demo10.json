@@ -22,7 +22,7 @@
 
     "fwhm" : {
         "type" : "Eval",
-        "str" : "0.9 + 0.5 * (world_pos.x**2 + world_pos.y**2) / 100**2"  
+        "str" : "0.9 + 0.5 * (world_pos.x**2 + world_pos.y**2) / 100**2"
     },
 
     "ellip":{

@@ -47,7 +47,7 @@ struct PyImage {
         T* data = 0;
         boost::shared_ptr<T> owner;
         Bounds<int> bounds2;
-        BuildConstructorArgs(array, bounds.getXMin(), bounds.getYMin(), false, data, owner, 
+        BuildConstructorArgs(array, bounds.getXMin(), bounds.getYMin(), false, data, owner,
                              stride, bounds2);
         ImageView<T>* imview = new ImageView<T>(data, owner, stride, bounds2);
         return new ImageAlloc<T>(*imview);
@@ -65,7 +65,7 @@ struct PyImage {
             .def(
                 "__init__",
                 bp::make_constructor(
-                    constructFrom_func_type(&MakeFromImage), 
+                    constructFrom_func_type(&MakeFromImage),
                     bp::default_call_policies(), bp::args("other")
                 )
             )
@@ -79,13 +79,13 @@ struct PyImage {
             .def("copyFrom", copyFrom_func_type(&ImageView<T>::copyFrom));
     }
 
-    static bp::object GetArrayImpl(bp::object self, bool isConst) 
+    static bp::object GetArrayImpl(bp::object self, bool isConst)
     {
         // --- Try to get cached array ---
         // NB: self.attr("_array") != bp::object() no longer works, since it calls the numpy
         //     overload of _array != None, which compares term by term rather than checking
         //     if _array is not None.  Instead check if the attribute exists and is not None.
-        if (PyObject_HasAttrString(self.ptr(), "_array") 
+        if (PyObject_HasAttrString(self.ptr(), "_array")
             && bp::object(self.attr("_array")).ptr() != Py_None) {
             return self.attr("_array");
         }
@@ -93,7 +93,7 @@ struct PyImage {
         const BaseImage<T>& image = bp::extract<const BaseImage<T>&>(self);
 
         bp::object numpy_array = MakeNumpyArray(
-            image.getData(), 
+            image.getData(),
             image.getYMax() - image.getYMin() + 1,
             image.getXMax() - image.getXMin() + 1,
             image.getStride(), isConst, image.getOwner());
@@ -104,7 +104,7 @@ struct PyImage {
 
     static void CallResize(bp::object self, const Bounds<int>& new_bounds)
     {
-        // We need to make sure the _array attribute is deleted 
+        // We need to make sure the _array attribute is deleted
         if (PyObject_HasAttrString(self.ptr(), "_array"))
             self.attr("_array") = bp::object();
 
@@ -118,7 +118,7 @@ struct PyImage {
 
     static void BuildConstructorArgs(
         const bp::object& array, int xmin, int ymin, bool isConst,
-        T*& data, boost::shared_ptr<T>& owner, int& stride, Bounds<int>& bounds) 
+        T*& data, boost::shared_ptr<T>& owner, int& stride, Bounds<int>& bounds)
     {
         CheckNumpyArray(array,2,isConst,data,owner,stride);
         bounds = Bounds<int>(
@@ -128,7 +128,7 @@ struct PyImage {
     }
 
     static ImageView<T>* MakeFromArray(
-        const bp::object& array, int xmin, int ymin) 
+        const bp::object& array, int xmin, int ymin)
     {
         Bounds<int> bounds;
         int stride = 0;
@@ -169,9 +169,9 @@ struct PyImage {
             bp::args("pos")
         );
         bp::object getBounds = bp::make_function(
-            &BaseImage<T>::getBounds, 
+            &BaseImage<T>::getBounds,
             bp::return_value_policy<bp::copy_const_reference>()
-        ); 
+        );
 
         bp::class_< BaseImage<T>, boost::noncopyable >
             pyBaseImage(("BaseImage" + suffix).c_str(), "", bp::no_init);
@@ -311,7 +311,7 @@ void pyExportImage() {
     pyImageAllocDict[GetNumPyType<float>()] = PyImage<float>::wrapImageAlloc("F");
     pyImageAllocDict[GetNumPyType<double>()] = PyImage<double>::wrapImageAlloc("D");
 
-    bp::dict pyConstImageViewDict; 
+    bp::dict pyConstImageViewDict;
 
     pyConstImageViewDict[GetNumPyType<uint16_t>()] = PyImage<uint16_t>::wrapConstImageView("US");
     pyConstImageViewDict[GetNumPyType<uint32_t>()] = PyImage<uint32_t>::wrapConstImageView("UI");

@@ -19,7 +19,7 @@
 
 #ifndef GalSim_SBDeconvolve_H
 #define GalSim_SBDeconvolve_H
-/** 
+/**
  * @file SBDeconvolve.h @brief SBProfile adapter which inverts its subject in k space to effect a
  * deconvolution.
  */
@@ -36,7 +36,7 @@ namespace galsim {
      * @param[in] gsparams  GSParams object storing constants that control the accuracy of
      *                      image operations and rendering, if different from the default.
      */
-    class SBDeconvolve : public SBProfile 
+    class SBDeconvolve : public SBProfile
     {
     public:
         /// @brief Constructor.

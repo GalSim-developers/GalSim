@@ -33,7 +33,7 @@ class DES_Shapelet(object):
     version stored as *_fitpsf.dat.
 
     The shapelet PSFs are built as part of the WL portion of the DES pipeline.  They measure
-    a shapelet decomposition of each star and interpolate the shapelet coefficients over the 
+    a shapelet decomposition of each star and interpolate the shapelet coefficients over the
     image positions.
 
     Unlike PSFEx, these PSF models are built directly in world coordinates.  The shapelets know
@@ -41,7 +41,7 @@ class DES_Shapelet(object):
     Thus, the getPSF function always returns a profile in world coordinates.
 
     Typical usage:
-        
+
         >>> des_shapelet = galsim.des.DES_Shapelet(fitpsf_file_name)
         >>> image_pos = galsim.PositionD(image_x, image_y)    # position in pixels on the image
         >>>                                                   # NOT in arcsec on the sky!
@@ -63,9 +63,9 @@ class DES_Shapelet(object):
 
 
     @param file_name        The name of the file to be read in.
-    @param dir              Optionally a directory name can be provided if the file names do not 
+    @param dir              Optionally a directory name can be provided if the file names do not
                             already include it. [default: None]
-    @param file_type        Either 'ASCII' or 'FITS' or None.  If None, infer from the file name 
+    @param file_type        Either 'ASCII' or 'FITS' or None.  If None, infer from the file name
                             ending. [default: None]
     """
     _req_params = { 'file_name' : str }
@@ -254,7 +254,7 @@ def BuildDES_Shapelet(config, base, ignore, gsparams, logger):
 
     if des_shapelet.getBounds().includes(image_pos):
         #psf = des_shapelet.getPSF(image_pos, gsparams)
-        # Because of serialization issues, the above call doesn't work.  So we need to 
+        # Because of serialization issues, the above call doesn't work.  So we need to
         # repeat the internals of getPSF here.
         b = des_shapelet.getB(image_pos)
         sigma = des_shapelet.getSigma()
@@ -268,8 +268,8 @@ def BuildDES_Shapelet(config, base, ignore, gsparams, logger):
     if 'flux' in params:
         psf = psf.withFlux(params['flux'])
 
-    # The second item here is "safe", a boolean that declares whether the returned value is 
-    # safe to save and use again for later objects.  In this case, we wouldn't want to do 
+    # The second item here is "safe", a boolean that declares whether the returned value is
+    # safe to save and use again for later objects.  In this case, we wouldn't want to do
     # that, since they will be at different positions, so the interpolated PSF will be different.
     return psf, False
 

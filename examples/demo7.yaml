@@ -21,13 +21,13 @@
 # The seventh YAML configuration file in our tutorial about using Galsim config files
 # (This file is designed to be viewed in a window 100 characters wide.)
 #
-# This script introduces drawing profiles with photon shooting rather than doing the 
+# This script introduces drawing profiles with photon shooting rather than doing the
 # convolution with an FFT.  It makes images using 5 different kinds of PSF and 5 different
-# kinds of galaxy.  Some of the parameters (flux, size and shape) are random variables, so 
+# kinds of galaxy.  Some of the parameters (flux, size and shape) are random variables, so
 # each of the 25 pairings is drawn 4 times with different realizations of the random numbers.
 # The profiles are drawn twice: once with the FFT method, and once with photon shooting.
-# The two images are drawn side by side into the same larger image so it is easy to 
-# visually compare the results. The 100 total profiles are written to a FITS data cube, 
+# The two images are drawn side by side into the same larger image so it is easy to
+# visually compare the results. The 100 total profiles are written to a FITS data cube,
 # which makes it easy to scroll through the images comparing the two drawing methods.
 #
 # New features introduced in this demo:
@@ -45,7 +45,7 @@
 
 
 # Define the PSF profiles
-psf : 
+psf :
     type : List
     items :
         -
@@ -67,19 +67,19 @@ psf :
 
                 # The OpticalPSF and set of Zernike values chosen below correspond to a reasonably
                 # well aligned, smallish ~0.3m / 12 inch diameter telescope with a central
-                # obscuration of ~0.12m or 5 inches diameter, being used in optical wavebands.  
+                # obscuration of ~0.12m or 5 inches diameter, being used in optical wavebands.
                 # In the Noll convention, the value of the Zernike coefficient also gives the RMS
                 # optical path difference across a circular pupil.  An RMS difference of ~0.5 or
                 # larger indicates that parts of the wavefront are in fully destructive
                 # interference, and so we might expect aberrations to become strong when Zernike
                 # aberrations summed in quadrature approach 0.5 wave.
-                # The aberrations chosen in this case correspond to operating close to a 0.25 wave 
+                # The aberrations chosen in this case correspond to operating close to a 0.25 wave
                 # RMS optical path difference:
-                - 
-                    type : OpticalPSF 
+                -
+                    type : OpticalPSF
                     lam_over_diam : 0.39
                     obscuration : 0.4
-                    aberrations: 
+                    aberrations:
                         # This should be a list of coefficients in the Noll index convention
                         # starting with index 4.
                         # c.f. http://en.wikipedia.org/wiki/Zernike_polynomials#Zernike_polynomials
@@ -97,7 +97,7 @@ psf :
                 - { type : Kolmogorov , fwhm : 0.65 }
                 - { type : Airy , lam_over_diam : 0.195 }
 
-    index : 
+    index :
         type : Sequence
         first : 0
         last : 4
@@ -107,14 +107,14 @@ psf :
 # Define the galaxy profiles
 gal :
     type : List
-    items : 
+    items :
         # The sizes here start as 1, but we dilate the profile below:
         - { type : Gaussian , half_light_radius : 1 }
         - { type : Exponential , half_light_radius : 1 }
         - { type : DeVaucouleurs , half_light_radius : 1 }
         - { type : Sersic , n : 2.5 , half_light_radius : 1 }
-        -  
-            type : Sum 
+        -
+            type : Sum
             items :
                 # Sersics can be truncated if desired.
                 # The units for this are expected to be arcsec (or specifically -- whatever units
@@ -126,17 +126,17 @@ gal :
         # The index item for a List automatically has first and last set appropriately
         # (0 and 4 in this case).  So we can omit them, and just specify repeat.
         # This will repeat each 8 times, but also go through the full list 5 times
-        repeat : 8 
+        repeat : 8
 
     flux : { type : Random , min : 1.e4 , max : 1.e5 }
     dilate : { type : Random , min : 0.3 , max : 1.3 }
-    ellip : 
+    ellip :
         type : EBeta
         e : { type : Random , min : 0.0 , max : 0.8 }
         beta : { type : Random }
 
 
-# Define some other information about the images 
+# Define some other information about the images
 image :
     # Each image in the data cube has two tiles.
     type : Tiled
@@ -155,7 +155,7 @@ image :
     pixel_scale : 0.28  # arcsec / pixel
 
     # Define what kind of noise to use
-    noise : 
+    noise :
         sky_level : 1.e4  # ADU / arcsec^2
 
     # This is pretty contrived.  It is really only relevant for this particular demo.
@@ -195,15 +195,15 @@ stamp :
     # This script is set up as a comparison between using FFTs for doing the convolutions and
     # shooting photons.  The two methods have trade-offs in speed and accuracy which vary
     # with the kind of profile being drawn and the S/N of the object, among other factors.
-    # In addition, for each method, there are a number of parameters GalSim uses that control 
-    # aspects of the calculation that further affect the speed and accuracy.  
+    # In addition, for each method, there are a number of parameters GalSim uses that control
+    # aspects of the calculation that further affect the speed and accuracy.
     #
     # These parametsrs can be adjusted from the defaults with a gsparams item, either in
-    # image (in which case the values apply to all objects) or in the gal or psf layer 
-    # in which case the values apply to just that object.  For this script, we just apply a 
+    # image (in which case the values apply to all objects) or in the gal or psf layer
+    # in which case the values apply to just that object.  For this script, we just apply a
     # global change to some of the values, just to demonstrate how it works.
-    # 
-    # See the config documentation for the complete list of parameters and more detailed 
+    #
+    # See the config documentation for the complete list of parameters and more detailed
     # documentation, including the default values for each parameter.
     gsparams :
         folding_threshold : 1.0e-2 # maximum fractional flux that may be folded around edge of FFT
@@ -218,7 +218,7 @@ stamp :
 output :
     type : DataCube
     dir : output_yaml
-    # Adding a .gz to the end of the file_name automatically uses gzip to compress the 
+    # Adding a .gz to the end of the file_name automatically uses gzip to compress the
     # output file.
     # Other options are .bz2 to use bzip2 and .fz to use rice compression.
     file_name : cube_phot.fits.gz

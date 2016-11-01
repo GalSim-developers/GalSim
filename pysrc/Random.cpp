@@ -26,7 +26,7 @@
 namespace bp = boost::python;
 
 
-// Note that class docstrings for all of these are now added in galsim/random.py     
+// Note that class docstrings for all of these are now added in galsim/random.py
 
 namespace galsim {
 
@@ -43,13 +43,13 @@ namespace galsim {
         ~BaseDeviateCallBack() {}
 
     protected:
-        // This is the special magic needed so the virtual function calls back to the 
+        // This is the special magic needed so the virtual function calls back to the
         // function defined in the python layer.
         double _val()
         {
-            if (bp::override py_func = this->get_override("_val")) 
+            if (bp::override py_func = this->get_override("_val"))
                 return py_func();
-            else 
+            else
                 return BaseDeviate::_val();
         }
     };
@@ -67,7 +67,7 @@ namespace galsim {
                      (bp::arg("seed")=0))
                 .def("reset", (void (BaseDeviate::*) (long) )&BaseDeviate::reset,
                      (bp::arg("seed")=0))
-                .def("reset", (void (BaseDeviate::*) (const BaseDeviate&) )&BaseDeviate::reset, 
+                .def("reset", (void (BaseDeviate::*) (const BaseDeviate&) )&BaseDeviate::reset,
                      (bp::arg("seed")))
                 .def("clearCache", &BaseDeviate::clearCache)
                 .def("serialize", &BaseDeviate::serialize)
@@ -90,7 +90,7 @@ namespace galsim {
             //
             // then the `gn.getRNG()` call doesn't need anything special because the actual
             // BaseDeviate being wrapped in the shared_ptr is really a BaseDeviateCallBack.
-            // So boost python knows how to handle it.  
+            // So boost python knows how to handle it.
             //
             // But if the BaseDeviate was constructed in the C++ layer, which happens when you
             // default construct the BaseNoise object:
@@ -99,7 +99,7 @@ namespace galsim {
             //
             // then the `gn.getRNG()` call returns a real BaseDeviate object in the shared_ptr.
             // So python doesn't really know what that is without this next line.  The
-            // register_ptr_to_python call tells boost that a shared_ptr<BaseDeviate> in the 
+            // register_ptr_to_python call tells boost that a shared_ptr<BaseDeviate> in the
             // C++ layer should be treated like a BaseDeviate in the python layer.
             bp::register_ptr_to_python< boost::shared_ptr<BaseDeviate> >();
         }

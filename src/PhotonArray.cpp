@@ -45,13 +45,13 @@ namespace galsim {
         _flux = vflux;
     }
 
-    double PhotonArray::getTotalFlux() const 
+    double PhotonArray::getTotalFlux() const
     {
         double total = 0.;
         return std::accumulate(_flux.begin(), _flux.end(), total);
     }
 
-    void PhotonArray::setTotalFlux(double flux) 
+    void PhotonArray::setTotalFlux(double flux)
     {
         double oldFlux = getTotalFlux();
         if (oldFlux==0.) return; // Do nothing if the flux is zero to start with
@@ -75,7 +75,7 @@ namespace galsim {
         }
     }
 
-    void PhotonArray::append(const PhotonArray& rhs) 
+    void PhotonArray::append(const PhotonArray& rhs)
     {
         if (rhs.size()==0) return;      // Nothing needed for empty RHS.
         int oldSize = size();
@@ -91,7 +91,7 @@ namespace galsim {
         std::copy(rhs._flux.begin(), rhs._flux.end(), destination);
     }
 
-    void PhotonArray::convolve(const PhotonArray& rhs, UniformDeviate ud) 
+    void PhotonArray::convolve(const PhotonArray& rhs, UniformDeviate ud)
     {
         // If both arrays have correlated photons, then we need to shuffle the photons
         // as we convolve them.
@@ -99,7 +99,7 @@ namespace galsim {
 
         // If neither or only one is correlated, we are ok to just use them in order.
         int N = size();
-        if (rhs.size() != N) 
+        if (rhs.size() != N)
             throw std::runtime_error("PhotonArray::convolve with unequal size arrays");
         // Add x coordinates:
         std::vector<double>::iterator lIter = _x.begin();
@@ -119,10 +119,10 @@ namespace galsim {
         if (rhs._is_correlated) _is_correlated = true;
     }
 
-    void PhotonArray::convolveShuffle(const PhotonArray& rhs, UniformDeviate ud) 
+    void PhotonArray::convolveShuffle(const PhotonArray& rhs, UniformDeviate ud)
     {
         int N = size();
-        if (rhs.size() != N) 
+        if (rhs.size() != N)
             throw std::runtime_error("PhotonArray::convolve with unequal size arrays");
         double xSave=0.;
         double ySave=0.;
@@ -151,7 +151,7 @@ namespace galsim {
         }
     }
 
-    void PhotonArray::takeYFrom(const PhotonArray& rhs) 
+    void PhotonArray::takeYFrom(const PhotonArray& rhs)
     {
         int N = size();
         assert(rhs.size()==N);
@@ -162,11 +162,11 @@ namespace galsim {
     }
 
     template <class T>
-    double PhotonArray::addTo(ImageView<T>& target) const 
+    double PhotonArray::addTo(ImageView<T>& target) const
     {
         Bounds<int> b = target.getBounds();
 
-        if (!b.isDefined()) 
+        if (!b.isDefined())
             throw std::runtime_error("Attempting to PhotonArray::addTo an Image with"
                                      " undefined Bounds");
 

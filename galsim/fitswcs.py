@@ -17,7 +17,7 @@
 #
 """@file fitswcs.py
 The function FitsWCS() acts like a BaseWCS class, but it really calls one of several other
-classes depending on what python modules are available and what kind of FITS file you are 
+classes depending on what python modules are available and what kind of FITS file you are
 trying to read.
 """
 
@@ -77,8 +77,8 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
                           the usual parameter to provide.  [default: None]
     @param dir            Optional directory to prepend to `file_name`. [default: None]
     @param hdu            Optionally, the number of the HDU to use if reading from a file.
-                          The default is to use either the primary or first extension as 
-                          appropriate for the given compression.  (e.g. for rice, the first 
+                          The default is to use either the primary or first extension as
+                          appropriate for the given compression.  (e.g. for rice, the first
                           extension is the one you normally want.) [default: None]
     @param header         The header of an open pyfits (or astropy.io) hdu.  Or, it can be
                           a FitsHeader object.  [default: None]
@@ -135,7 +135,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
 
         # Load the wcs from the header.
         if header is not None:
-            if self._tag is None: 
+            if self._tag is None:
                 self.header = header
             if wcs is not None:
                 raise TypeError("Cannot provide both pyfits header and wcs")
@@ -147,7 +147,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
         if file_name is not None:
             galsim.fits.closeHDUList(hdu_list, fin)
 
-        # If astropy.wcs cannot parse the header, it won't notice from just doing the 
+        # If astropy.wcs cannot parse the header, it won't notice from just doing the
         # WCS(header) command.  It will silently move on, thinking things are fine until
         # later when if will fail (with `RuntimeError: NULL error object in wcslib`).
         # We'd rather get that to happen now rather than later.
@@ -250,7 +250,7 @@ class AstropyWCS(galsim.wcs.CelestialWCS):
         # Here we have to work around another astropy.wcs bug.  The way they use scipy's
         # Broyden's method doesn't work.  So I implement a fix here.
         if astropy.__version__ >= '1.0.1':
-            # This works now on recent vesions of astropy.  At least >= 1.0.1, but possibly 
+            # This works now on recent vesions of astropy.  At least >= 1.0.1, but possibly
             # 1.0 also included the fix.
             # cf. https://github.com/astropy/astropy/issues/1977
 
@@ -407,8 +407,8 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
                           the usual parameter to provide.  [default: None]
     @param dir            Optional directory to prepend to `file_name`. [default: None]
     @param hdu            Optionally, the number of the HDU to use if reading from a file.
-                          The default is to use either the primary or first extension as 
-                          appropriate for the given compression.  (e.g. for rice, the first 
+                          The default is to use either the primary or first extension as
+                          appropriate for the given compression.  (e.g. for rice, the first
                           extension is the one you normally want.) [default: None]
     @param header         The header of an open pyfits (or astropy.io) hdu.  Or, it can be
                           a FitsHeader object.  [default: None]
@@ -449,7 +449,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
 
         # Load the wcs from the header.
         if header is not None:
-            if self._tag is None: 
+            if self._tag is None:
                 self.header = header
             if wcsinfo is not None:
                 raise TypeError("Cannot provide both pyfits header and wcsinfo")
@@ -529,8 +529,8 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
             header['CTYPE2'] = header['CTYPE2'].replace('TAN','TPV')
 
     def _radec(self, x, y):
-        # Need this to look like 
-        #    [ [ x1, x2, x3... ], [ y1, y2, y3... ] ] 
+        # Need this to look like
+        #    [ [ x1, x2, x3... ], [ y1, y2, y3... ] ]
         # if input is either scalar x,y or two arrays.
         xy = np.array([np.atleast_1d(x), np.atleast_1d(y)])
 
@@ -567,7 +567,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
         return ret
 
     def _writeHeader(self, header, bounds):
-        # See https://github.com/Starlink/starlink/issues/24 for helpful information from 
+        # See https://github.com/Starlink/starlink/issues/24 for helpful information from
         # David Berry, who assisted me in getting this working.
 
         from galsim._pyfits import pyfits
@@ -583,17 +583,17 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
                 if key in header:
                     fc[key] = header[key]
             success = fc.write(self._wcsinfo)
-            # PyAst doesn't write out TPV or ZPX correctly.  It writes them as TAN and ZPN 
+            # PyAst doesn't write out TPV or ZPX correctly.  It writes them as TAN and ZPN
             # respectively.  However, if the maximum error is less than 0.1 pixel, it claims
             # success nonetheless.  This doesn't seem accurate enough for many purposes,
             # so we need to countermand that.
-            # The easiest way I found to check for them is that the string TPN is in the string 
+            # The easiest way I found to check for them is that the string TPN is in the string
             # version of wcsinfo.  So check for that and set success = False in that case.
             if 'TPN' in str(self._wcsinfo): success = False
             # Likewise for SIP.  MPF seems to be an appropriate string to look for.
             if 'MPF' in str(self._wcsinfo): success = False
             if not success:
-                # This should always work, since it uses starlinks own proprietary encoding, but 
+                # This should always work, since it uses starlinks own proprietary encoding, but
                 # it won't necessarily be readable by ds9.
                 fc = starlink.Ast.FitsChan(None, starlink.Atl.PyFITSAdapter(hdu))
                 fc.write(self._wcsinfo)
@@ -612,7 +612,7 @@ class PyAstWCS(galsim.wcs.CelestialWCS):
         x0 = header.get("GS_X0",0.)
         y0 = header.get("GS_Y0",0.)
         return PyAstWCS(header=header, origin=galsim.PositionD(x0,y0))
- 
+
     def copy(self):
         # The copy module version of copying the dict works fine here.
         import copy
@@ -714,19 +714,19 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS): # pragma: no cover
     def origin(self): return self._origin
 
     def _radec(self, x, y):
-        # Need this to look like 
-        #    [ x1, y1, x2, y2, ... ] 
+        # Need this to look like
+        #    [ x1, y1, x2, y2, ... ]
         # if input is either scalar x,y or two arrays.
         xy = np.array([x, y]).transpose().ravel()
-        
+
         # The OS cannot handle arbitrarily long command lines, so we may need to split up
         # the list into smaller chunks.
         import os
         if 'SC_ARG_MAX' in os.sysconf_names:
-            arg_max = os.sysconf('SC_ARG_MAX') 
+            arg_max = os.sysconf('SC_ARG_MAX')
         else:
             # A conservative guess. My machines have 131072, 262144, and 2621440
-            arg_max = 32768  
+            arg_max = 32768
 
         # Sometimes SC_ARG_MAX is listed as -1.  Apparently that means "the configuration name
         # is known, but the value is not defined." So, just go with the above conservative value.
@@ -739,7 +739,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS): # pragma: no cover
         if arg_max < 4096:
             arg_max = 4096
 
-        # This corresponds to the total number of characters in the line.  
+        # This corresponds to the total number of characters in the line.
         # But we really need to know how many arguments we are allowed to use in each call.
         # Lets be conservative again and assume each argument is at most 20 characters.
         # (We ignore the few characters at the start for the command name and such.)
@@ -834,7 +834,7 @@ class WcsToolsWCS(galsim.wcs.CelestialWCS): # pragma: no cover
             assert len(x) == 1
             assert len(y) == 1
             return x[0], y[0]
- 
+
     def _newOrigin(self, origin):
         ret = self.copy()
         ret._origin = origin
@@ -892,7 +892,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
 
     It doesn't do nearly as many WCS types as the other options, and it does not try to be
     as rigorous about supporting all possible valid variations in the FITS parameters.
-    However, it does several popular WCS types properly, and it doesn't require any additional 
+    However, it does several popular WCS types properly, and it doesn't require any additional
     python modules to be installed, which can be helpful.
 
     Currrently, it is able to parse the following WCS types: TAN, STG, ZEA, ARC, TPV, TNX
@@ -904,7 +904,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         >>> wcs = galsim.GSFitsWCS(file_name=file_name)  # Open a file on disk
         >>> wcs = galsim.GSFitsWCS(header=header)        # Use an existing pyfits header
 
-    Also, since the most common usage will probably be the first, you can also give a file name 
+    Also, since the most common usage will probably be the first, you can also give a file name
     without it being named:
 
         >>> wcs = galsim.GSFitsWCS(file_name)
@@ -917,8 +917,8 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
                           the usual parameter to provide.  [default: None]
     @param dir            Optional directory to prepend to `file_name`. [default: None]
     @param hdu            Optionally, the number of the HDU to use if reading from a file.
-                          The default is to use either the primary or first extension as 
-                          appropriate for the given compression.  (e.g. for rice, the first 
+                          The default is to use either the primary or first extension as
+                          appropriate for the given compression.  (e.g. for rice, the first
                           extension is the one you normally want.) [default: None]
     @param header         The header of an open pyfits (or astropy.io) hdu.  Or, it can be
                           a FitsHeader object.  [default: None]
@@ -936,7 +936,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
 
     def __init__(self, file_name=None, dir=None, hdu=None, header=None, compression='auto',
                  origin=None, _data=None):
-        # Note: _data is not intended for end-user use.  It enables the equivalent of a 
+        # Note: _data is not intended for end-user use.  It enables the equivalent of a
         #       private constructor of GSFitsWCS by the function TanWCS.  The details of its
         #       use are intentionally not documented above.
 
@@ -1085,8 +1085,8 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             self._read_sip(header)
 
         # I think the CUNIT specification applies to the CD matrix as well, but I couldn't actually
-        # find good documentation for this.  Plus all the examples I saw used degrees anyway, so 
-        # it's hard to tell.  Hopefully this will never matter, but if CUNIT is not deg, this 
+        # find good documentation for this.  Plus all the examples I saw used degrees anyway, so
+        # it's hard to tell.  Hopefully this will never matter, but if CUNIT is not deg, this
         # next bit might be wrong.
         # I did see documentation that the PV matrices always use degrees, so at least we shouldn't
         # have to worry about that.
@@ -1133,10 +1133,10 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         a_order = int(header['A_ORDER'])
         b_order = int(header['B_ORDER'])
         order = max(a_order,b_order)  # Use the same order for both
-        a = [ float(header.get('A_'+str(i)+'_'+str(j),0.)) 
+        a = [ float(header.get('A_'+str(i)+'_'+str(j),0.))
                 for i in range(order+1) for j in range(order+1) ]
         a = np.array(a).reshape((order+1,order+1))
-        b = [ float(header.get('B_'+str(i)+'_'+str(j),0.)) 
+        b = [ float(header.get('B_'+str(i)+'_'+str(j),0.))
                 for i in range(order+1) for j in range(order+1) ]
         b = np.array(b).reshape((order+1,order+1))
         self.ab = np.array([a, b])
@@ -1146,20 +1146,20 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             ap_order = int(header['AP_ORDER'])
             bp_order = int(header['BP_ORDER'])
             order = max(ap_order,bp_order)  # Use the same order for both
-            ap = [ float(header.get('AP_'+str(i)+'_'+str(j),0.)) 
+            ap = [ float(header.get('AP_'+str(i)+'_'+str(j),0.))
                     for i in range(order+1) for j in range(order+1) ]
             ap = np.array(ap).reshape((order+1,order+1))
-            bp = [ float(header.get('BP_'+str(i)+'_'+str(j),0.)) 
+            bp = [ float(header.get('BP_'+str(i)+'_'+str(j),0.))
                     for i in range(order+1) for j in range(order+1) ]
             bp = np.array(bp).reshape((order+1,order+1))
             self.abp = np.array([ap, bp])
 
     def _read_tnx(self, header):
 
-        # TNX has a few different options.  Rather than keep things in the native format, 
+        # TNX has a few different options.  Rather than keep things in the native format,
         # we actually convert to the equivalent of TPV to make the actual operations faster.
         # See http://iraf.noao.edu/projects/ccdmosaic/tnx.html for details.
-        
+
         # First, parse the input values, which are stored in WAT keywords:
         k = 1
         wat1 = ""
@@ -1180,18 +1180,18 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         wat2 = wat2.split()
 
         if ( len(wat1) < 12 or
-             wat1[0] != 'wtype=tnx' or 
+             wat1[0] != 'wtype=tnx' or
              wat1[1] != 'axtype=ra' or
              wat1[2] != 'lngcor' or
-             wat1[3] != '=' or 
+             wat1[3] != '=' or
              not wat1[4].startswith('"') or
              not wat1[-1].endswith('"') ):
             raise RuntimeError("TNX WAT1 was not as expected")
         if ( len(wat2) < 12 or
-             wat2[0] != 'wtype=tnx' or 
+             wat2[0] != 'wtype=tnx' or
              wat2[1] != 'axtype=dec' or
              wat2[2] != 'latcor' or
-             wat2[3] != '=' or 
+             wat2[3] != '=' or
              not wat2[4].startswith('"') or
              not wat2[-1].endswith('"') ):
             raise RuntimeError("TNX WAT2 was not as expected")
@@ -1217,7 +1217,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         # I'm not sure if there is any requirement on there being a space before the final " and
         # not before the initial ".  But both the example in the description of the standard and
         # the one we have in our test directory are this way.  Here, if the " is by itself, I
-        # remove the item, and if it is part of a longer string, I just strip it off.  Seems the 
+        # remove the item, and if it is part of a longer string, I just strip it off.  Seems the
         # most sensible thing to do.
         if data[0] == '"':
             data = data[1:]
@@ -1258,7 +1258,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             # Instead of 1, x, x^2, x^3, Chebyshev uses: 1, x', 2x'^2 - 1, 4x'^3 - 3x
             # where x' = (2x - xmin - xmax) / (xmax-xmin).
             # Similarly, with y' = (2y - ymin - ymin) / (ymax-ymin)
-            # We'd like to convert the pv matrix from being in terms of x' and y' to being 
+            # We'd like to convert the pv matrix from being in terms of x' and y' to being
             # in terms of just x, y.  To see how this works, look at what pv[1,1] means:
             #
             # First, let's say we can write x as (a + bx), and we can write y' as (c + dy).
@@ -1269,9 +1269,9 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             #      =       a * pv[1,1] * c  +      a * pv[1,1] * d * y
             #        + x * b * pv[1,1] * c  +  x * b * pv[1,1] * d * y
             #
-            # So the single term initially will contribute to 4 different terms in the final 
+            # So the single term initially will contribute to 4 different terms in the final
             # matrix.  And the contributions will just be pv[1,1] times the outer product
-            # [a b]T [d e].  So if we can determine the matrix that converts from 
+            # [a b]T [d e].  So if we can determine the matrix that converts from
             # [1, x, x^2, x^3] to the Chebyshev vector, the the matrix we want is simply
             # xmT pv ym.
             a = -(xmax+xmin)/(xmax-xmin)
@@ -1295,7 +1295,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
                     ym[m] = 2. * c * ym[m-1] - ym[m-2]
                     ym[m,1:] += 2. * d * ym[m-1,:-1]
             else:
-                # code == 2 means Legendre.  The same argument applies, but we have a 
+                # code == 2 means Legendre.  The same argument applies, but we have a
                 # different recursion rule.
                 # WARNING: This branch has not been tested!  I don't have any TNX files
                 # with Legendre functions to test it on.  I think it's right, but beware!
@@ -1345,13 +1345,13 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             ones = np.ones(u.shape)
             upow = np.array([ ones, u, usq, usq*u ])
             vpow = np.array([ ones, v, vsq, vsq*v ])
-            # If we only have one input position, then p2 is 
+            # If we only have one input position, then p2 is
             #     p2[0] = upowT . pv[0] . vpow
             #     p2[1] = upowT . pv[1] . vpow
             # using matrix products, which are effected with the numpy.dot function.
             # When there are multiple inputs, then upow and vpow are each 4xN matrices.
-            # The values we want are the diagonal of the matrix you would get from the 
-            # above formulae.  So we use the fact that 
+            # The values we want are the diagonal of the matrix you would get from the
+            # above formulae.  So we use the fact that
             #     diag(AT . B) = sum_rows(A * B)
             temp = np.dot(self.pv, vpow)
             p2 = np.sum(upow * temp, axis=1)
@@ -1375,7 +1375,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
             assert len(ra) == 1
             assert len(dec) == 1
             return ra[0], dec[0]
- 
+
     def _xy(self, ra, dec):
         import numpy.linalg
 
@@ -1421,7 +1421,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
                 prev_err = err
 
                 # If we are below tolerance, break out of the loop
-                if err < TOL: 
+                if err < TOL:
                     # Update p2 to the new value.
                     p2 = np.array( [ u, v ] )
                     break
@@ -1475,7 +1475,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
                 prev_err = err
 
                 # If we are below tolerance, break out of the loop
-                if err < TOL: 
+                if err < TOL:
                     # Update p2 to the new value.
                     p1 = np.array( [ x, y ] )
                     break
@@ -1512,7 +1512,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         #                = ( dsdu  dsdv )  ( dudx  dudy )
         #                  ( dtdu  dtdv )  ( dvdx  dvdy )
         #
-        # So if we can find the jacobian for each step of the process, we just multiply the 
+        # So if we can find the jacobian for each step of the process, we just multiply the
         # jacobians.
         #
         # We also need to keep track of the position along the way, so we have to repeat many
@@ -1546,7 +1546,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         # The jacobian here is just the cd matrix.
         p2 = np.dot(self.cd, p1)
         jac = np.dot(self.cd, jac)
-        
+
         if self.pv is not None:
             # Now we apply the distortion terms
             u = p2[0]
@@ -1559,7 +1559,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
 
             p2 = np.dot(np.dot(self.pv, vpow), upow)
 
-            # The columns of the jacobian for this step are the same function with dupow 
+            # The columns of the jacobian for this step are the same function with dupow
             # or dvpow.
             dupow = np.array([ 0., 1., 2.*u, 3.*usq ])
             dvpow = np.array([ 0., 1., 2.*v, 3.*vsq ])
@@ -1569,7 +1569,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
 
         unit_convert = [ -1 * galsim.degrees / galsim.arcsec, 1 * galsim.degrees / galsim.arcsec ]
         p2 *= unit_convert
-        # Subtle point: Don't use jac *= ..., because jac might currently be self.cd, and 
+        # Subtle point: Don't use jac *= ..., because jac might currently be self.cd, and
         #               that would change self.cd!
         jac = jac * np.transpose( [ unit_convert ] )
 
@@ -1673,7 +1673,7 @@ class GSFitsWCS(galsim.wcs.CelestialWCS):
         else:
             abp_repr = 'array(%r)'%self.abp.tolist()
         return "galsim.GSFitsWCS(_data = [%r, array(%r), array(%r), %r, %s, %s, %s])"%(
-                self.wcs_type, self.crpix.tolist(), self.cd.tolist(), self.center, 
+                self.wcs_type, self.crpix.tolist(), self.cd.tolist(), self.center,
                 pv_repr, ab_repr, abp_repr)
 
     def __str__(self):
@@ -1690,13 +1690,13 @@ def TanWCS(affine, world_origin, units=galsim.arcsec):
 
     The TAN projection is essentially an affine transformation from image coordinates to
     Euclidean (u,v) coordinates on a tangent plane, and then a "deprojection" of this plane
-    onto the sphere given a particular RA, Dec for the location of the tangent point.  
+    onto the sphere given a particular RA, Dec for the location of the tangent point.
     The tangent point will correspond to the location of (u,v) = (0,0) in the intermediate
     coordinate system.
 
     @param affine        An AffineTransform defining the transformation from image coordinates
                          to the coordinates on the tangent plane.
-    @param world_origin  A CelestialCoord defining the location on the sphere where the 
+    @param world_origin  A CelestialCoord defining the location on the sphere where the
                          tangent plane is centered.
     @param units         The angular units of the (u,v) intermediate coordinate system.
                          [default: galsim.arcsec]
@@ -1716,7 +1716,7 @@ def TanWCS(affine, world_origin, units=galsim.arcsec):
     crpix = np.array( [ origin.x, origin.y ] )
 
     if affine.world_origin is not None:
-        # Then we need to absorb this back into crpix, since GSFits is expecting crpix to 
+        # Then we need to absorb this back into crpix, since GSFits is expecting crpix to
         # be the location of the tangent point in image coordinates.  i.e. where (u,v) = (0,0)
         # (u,v) = CD * (x-x0,y-y0) + (u0,v0)
         # (0,0) = CD * (x0',y0') - CD * (x0,y0) + (u0,v0)
@@ -1737,16 +1737,16 @@ def TanWCS(affine, world_origin, units=galsim.arcsec):
 # The list is defined here at global scope so that external modules can add extra
 # WCS types to the list if desired.
 
-fits_wcs_types = [ 
+fits_wcs_types = [
 
     GSFitsWCS,      # This doesn't work for very many WCS types, but it works for the very common
-                    # TAN projection, and also TPV, which is used by SCamp.  If it does work, it 
+                    # TAN projection, and also TPV, which is used by SCamp.  If it does work, it
                     # is a good choice, since it is easily the fastest of any of these.
 
     PyAstWCS,       # This requires `import starlink.Ast` to succeed.  This handles the largest
                     # number of WCS types of any of these.  In fact, it worked for every one
-                    # we tried in our unit tests (which was not exhaustive).  This is a bit 
-                    # slower than Astropy, but I think mostly due to their initial reading of 
+                    # we tried in our unit tests (which was not exhaustive).  This is a bit
+                    # slower than Astropy, but I think mostly due to their initial reading of
                     # the fits header -- that seems to take a lot of time for some reason.
                     # Once it is loaded, the actual usage seems to be quite fast.
 
@@ -1763,10 +1763,10 @@ fits_wcs_types = [
 
 def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
             text_file=False, suppress_warning=False):
-    """This factory function will try to read the WCS from a FITS file and return a WCS that will 
-    work.  It tries a number of different WCS classes until it finds one that succeeds in reading 
+    """This factory function will try to read the WCS from a FITS file and return a WCS that will
+    work.  It tries a number of different WCS classes until it finds one that succeeds in reading
     the file.
-    
+
     If none of them work, then the last class it tries, AffineTransform, is guaranteed to succeed,
     but it will only model the linear portion of the WCS (the CD matrix, CRPIX, and CRVAL), using
     reasonable defaults if even these are missing.  If you think that you have the right software
@@ -1774,28 +1774,28 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
     update your installation of PyFITS/astropy and the relevant WCS software (if you don't already
     have the latest version).
 
-    Note: The list of classes this function will try may be edited, e.g. by an external module 
+    Note: The list of classes this function will try may be edited, e.g. by an external module
     that wants to add an additional WCS type.  The list is `galsim.fitswcs.fits_wcs_types`.
 
     @param file_name      The FITS file from which to read the WCS information.  This is probably
                           the usual parameter to provide.  [default: None]
     @param dir            Optional directory to prepend to `file_name`. [default: None]
     @param hdu            Optionally, the number of the HDU to use if reading from a file.
-                          The default is to use either the primary or first extension as 
-                          appropriate for the given compression.  (e.g. for rice, the first 
+                          The default is to use either the primary or first extension as
+                          appropriate for the given compression.  (e.g. for rice, the first
                           extension is the one you normally want.) [default: None]
     @param header         The header of an open pyfits (or astropy.io) hdu.  Or, it can be
                           a FitsHeader object.  [default: None]
     @param compression    Which decompression scheme to use (if any). See galsim.fits.read()
                           for the available options.  [default: 'auto']
-    @param text_file      Normally a file is taken to be a fits file, but you can also give it a 
-                          text file with the header information (like the .head file output from 
+    @param text_file      Normally a file is taken to be a fits file, but you can also give it a
+                          text file with the header information (like the .head file output from
                           SCamp).  In this case you should set `text_file = True` to tell GalSim
                           to parse the file this way.  [default: False]
     @param suppress_warning Should a warning be emitted if none of the real FITS WCS classes
                           are able to successfully read the file, and we have to reset to
-                          an AffineTransform instead?  [default: False]  
-                          (Note: this is set to True when this function is implicitly called from 
+                          an AffineTransform instead?  [default: False]
+                          (Note: this is set to True when this function is implicitly called from
                           one of the galsim.fits.read* functions.)
     """
     if file_name is not None:
@@ -1825,7 +1825,7 @@ def FitsWCS(file_name=None, dir=None, hdu=None, header=None, compression='auto',
             return wcs
         except Exception as err:
             pass
-    # Finally, this one is really the last resort, since it only reads in the linear part of the 
+    # Finally, this one is really the last resort, since it only reads in the linear part of the
     # WCS.  It defaults to the equivalent of a pixel scale of 1.0 if even these are not present.
     if not suppress_warning:
         warnings.warn("All the fits WCS types failed to read "+file_name+".  " +

@@ -39,14 +39,14 @@ int verbose_level = 2;
 
 namespace galsim {
 
-    class ConvolveFunc : 
+    class ConvolveFunc :
         public std::binary_function<double,double,double>
     {
     public:
         ConvolveFunc(const SBProfile& p1, const SBProfile& p2, const Position<double>& pos) :
             _p1(p1), _p2(p2), _pos(pos) {}
 
-        double operator()(double x, double y) const 
+        double operator()(double x, double y) const
         {
             xdbg<<"Convolve function for pos = "<<_pos<<" at x,y = "<<x<<','<<y<<std::endl;
             double v1 = _p1.xValue(Position<double>(x,y));
@@ -110,21 +110,21 @@ namespace galsim {
     };
 
     // This class finds the overlap between the ymin/ymax values of two profiles.
-    // For overlaps of one profile's min with the other's max, this informs how to 
+    // For overlaps of one profile's min with the other's max, this informs how to
     // adjust the xmin/xmax values to avoid the region where the integral is trivially 0.
-    // This is important, because the abrupt shift from a bunch of 0's to not is 
+    // This is important, because the abrupt shift from a bunch of 0's to not is
     // hard for the integrator.  So it helps to figure this out in advance.
-    // The other use of this it to see where the two ymin's or the two ymax's cross 
-    // each other.  This also leads to an abrupt bend in the function being integrated, so 
+    // The other use of this it to see where the two ymin's or the two ymax's cross
+    // each other.  This also leads to an abrupt bend in the function being integrated, so
     // it's easier if we put a split point there at the start.
-    // The four cases are distinguished by a "mode" variable.  
+    // The four cases are distinguished by a "mode" variable.
     // mode = 1 and 2 are for finding where the ranges are disjoint.
     // mode = 3 and 4 are for finding the bends.
     struct OverlapFinder
     {
         OverlapFinder(const SBProfile& p1, const SBProfile& p2, const Position<double>& pos,
                       int mode) :
-            _p1(p1), _p2(p2), _pos(pos), _mode(mode) 
+            _p1(p1), _p2(p2), _pos(pos), _mode(mode)
         { assert(_mode >= 1 && _mode <= 4); }
         double operator()(double x) const
         {
@@ -136,7 +136,7 @@ namespace galsim {
             ymin2 = _pos.y - ymin2;
             ymax2 = _pos.y - ymax2;
             std::swap(ymin2,ymax2);
-            return 
+            return
                 _mode == 1 ? ymax2 - ymin1 :
                 _mode == 2 ? ymax1 - ymin2 :
                 _mode == 3 ? ymax2 - ymax1 :
@@ -153,7 +153,7 @@ namespace galsim {
 
     // We pull out this segment, since we do it twice.  Once with which = true, and once
     // with which = false.
-    static void UpdateXRange(const OverlapFinder& func, double& xmin, double& xmax, 
+    static void UpdateXRange(const OverlapFinder& func, double& xmin, double& xmax,
                              const std::vector<double>& splits)
     {
         xdbg<<"Start UpdateXRange given xmin,xmax = "<<xmin<<','<<xmax<<std::endl;
@@ -207,7 +207,7 @@ namespace galsim {
         }
     }
 
-    static void AddSplitsAtBends(const OverlapFinder& func, double xmin, double xmax, 
+    static void AddSplitsAtBends(const OverlapFinder& func, double xmin, double xmax,
                                  std::vector<double>& splits)
     {
         xdbg<<"Start AddSplitsAtBends given xmin,xmax = "<<xmin<<','<<xmax<<std::endl;
@@ -268,7 +268,7 @@ namespace galsim {
         // so I didn't bother, since I don't think we'll be doing that too often.
         // So p2 is always taken to be a rectangle rather than possibly a circle.
         assert(p1.isAxisymmetric() || !p2.isAxisymmetric());
-        
+
         xdbg<<"Start RealSpaceConvolve for pos = "<<pos<<std::endl;
         double xmin1, xmax1, xmin2, xmax2;
         std::vector<double> xsplits1, xsplits2;
@@ -327,9 +327,9 @@ namespace galsim {
             UpdateXRange(func2,xmin,xmax,xsplits);
 
             // Third check for early exit
-            if (xmin >= xmax) { 
+            if (xmin >= xmax) {
                 xdbg<<"p1 and p2 are disjoint, so trivially 0\n";
-                return 0.; 
+                return 0.;
             }
 
             // Also check for where the two tops or the two bottoms might cross.
@@ -368,7 +368,7 @@ namespace galsim {
         double t1 = tp.tv_sec + tp.tv_usec/1.e6;
 #endif
 
-        double result = integ::int2d(conv, xreg, yreg, 
+        double result = integ::int2d(conv, xreg, yreg,
                                      gsparams->realspace_relerr,
                                      gsparams->realspace_abserr * flux);
 

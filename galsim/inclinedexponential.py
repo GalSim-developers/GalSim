@@ -76,7 +76,7 @@ class InclinedExponential(GSObject):
 
     def __init__(self, inclination, scale_radius, scale_height=None, scale_h_over_r=0.1,
                  flux=1., gsparams=None):
-        
+
         if scale_height is None:
             scale_height = scale_h_over_r * scale_radius
 
@@ -103,7 +103,7 @@ class InclinedExponential(GSObject):
         """Return the scale height for this profile.
         """
         return self.SBProfile.getScaleHeight()
-    
+
     def getScaleHOverR(self):
         """Return the scale height over scale radius for this profile.
         """

@@ -66,7 +66,7 @@
         ]
     },
 
-    "redshift" : 0.6 
+    "redshift" : 0.6
 },
 
 
@@ -77,7 +77,7 @@
             "items" : [ 7.0e14, 4.0e14, 2.0e14, 1.0e14 ],
             "index" : { "type" : "Sequence", "repeat" : 5 }
         },
-        "conc" : 4, 
+        "conc" : 4,
         "redshift" : 0.3,
         "omega_m" : 0.3,
         "omega_lam" : 0.7

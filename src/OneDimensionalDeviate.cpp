@@ -23,8 +23,8 @@
 #include "integ/Int.h"
 #include "SBProfile.h"
 
-// Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by 
-// drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit 
+// Define this variable to find azimuth (and sometimes radius within a unit disc) of 2d photons by
+// drawing a uniform deviate for theta, instead of drawing 2 deviates for a point on the unit
 // circle and rejecting corner photons.
 // The relative speed of the two methods was tested as part of issue #163, and the results
 // are collated in devutils/external/time_photon_shooting.
@@ -55,9 +55,9 @@ namespace galsim {
     bool findExtremum( const FluxDensity& function,
                        double xmin,
                        double xmax,
-                       double& extremum, 
+                       double& extremum,
                        int divisionSteps,
-                       double xFractionalTolerance = 1e-4) 
+                       double xFractionalTolerance = 1e-4)
     {
         if (xmax < xmin) std::swap(xmax,xmin);
         const double xTolerance = xFractionalTolerance*(xmax-xmin);
@@ -71,9 +71,9 @@ namespace galsim {
         double x3 = xmin + 2*xStep;
         double f3 = function(x3);
         double df2 = f3 - f2;
-        
+
         while (df1 * df2 >= 0.) {
-            if (x3 >= xmax) 
+            if (x3 >= xmax)
                 return false;  // no extremum bracketed.
             x1 = x2;
             f1 = f2;
@@ -84,7 +84,7 @@ namespace galsim {
             f3 = function(x3);
             df2 = f3 - f2;
         }
-            
+
         // First guess is that minimum is in half of bracket with lowest gradient
         bool fatLeft = std::abs(df1) < std::abs(df2);
 
@@ -139,7 +139,7 @@ namespace galsim {
         return true;
     }
 
-    double Interval::interpolateFlux(double fraction) const 
+    double Interval::interpolateFlux(double fraction) const
     {
         // Find the x (or radius) value that encloses fraction
         // of the flux in this Interval if the function were constant
@@ -157,7 +157,7 @@ namespace galsim {
     // Select a photon from within the interval.  unitRandom
     // as an initial random value, more from ud if needed for rejections.
     void Interval::drawWithin(double unitRandom, double& x, double& flux,
-                              UniformDeviate ud) const 
+                              UniformDeviate ud) const
     {
         xdbg<<"drawWithin interval\n";
         xdbg<<"_flux = "<<_flux<<std::endl;
@@ -181,19 +181,19 @@ namespace galsim {
         xdbg<<"flux = "<<flux<<std::endl;
     }
 
-    void Interval::checkFlux() const 
+    void Interval::checkFlux() const
     {
         if (_fluxIsReady) return;
         if (_isRadial) {
             // Integrate r*F
             RTimesF<FluxDensity> integrand(*_fluxDensityPtr);
-            _flux = integ::int1d(integrand, 
+            _flux = integ::int1d(integrand,
                                  _xLower, _xUpper,
                                  _gsparams->integration_relerr,
                                  _gsparams->integration_abserr);
         } else {
             // Integrate the input function
-            _flux = integ::int1d(*_fluxDensityPtr, 
+            _flux = integ::int1d(*_fluxDensityPtr,
                                  _xLower, _xUpper,
                                  _gsparams->integration_relerr,
                                  _gsparams->integration_abserr);
@@ -205,11 +205,11 @@ namespace galsim {
     // (a) The max/min FluxDensity ratio in the interval is small enough, i.e. close to constant, or
     // (b) The total flux in the interval is below smallFlux.
     // In the former case, photons will be selected by drawing from a uniform distribution and then
-    // adjusting weights by flux.  In latter case, rejection sampling will be used to select 
+    // adjusting weights by flux.  In latter case, rejection sampling will be used to select
     // within interval.
-    std::list<Interval> Interval::split(double smallFlux) 
+    std::list<Interval> Interval::split(double smallFlux)
     {
-        // Get the flux in this interval 
+        // Get the flux in this interval
         checkFlux();
         if (_isRadial) {
             _invMeanAbsDensity = std::abs( (M_PI*(_xUpper*_xUpper - _xLower*_xLower)) / _flux );
@@ -247,7 +247,7 @@ namespace galsim {
         return result;
     }
 
-    OneDimensionalDeviate::OneDimensionalDeviate(const FluxDensity& fluxDensity, 
+    OneDimensionalDeviate::OneDimensionalDeviate(const FluxDensity& fluxDensity,
                                                  std::vector<double>& range,
                                                  bool isRadial,
                                                  const GSParamsPtr& gsparams) :
@@ -282,7 +282,7 @@ namespace galsim {
         for (Index iRange = 0; iRange < range.size()-1; iRange++) {
             // See if there is an extremum to split this range:
             double extremum;
-            if (findExtremum(_fluxDensity, 
+            if (findExtremum(_fluxDensity,
                              range[iRange],
                              range[iRange+1],
                              extremum,
@@ -319,7 +319,7 @@ namespace galsim {
         _pt.buildTree();
     }
 
-    boost::shared_ptr<PhotonArray> OneDimensionalDeviate::shoot(int N, UniformDeviate ud) const 
+    boost::shared_ptr<PhotonArray> OneDimensionalDeviate::shoot(int N, UniformDeviate ud) const
     {
         dbg<<"OneDimentionalDeviate shoot: N = "<<N<<std::endl;
         dbg<<"Target flux = 1.\n";
@@ -342,7 +342,7 @@ namespace galsim {
                 // Now draw a radius from within selected interval
                 double radius, flux;
                 chosen->drawWithin(unitRandom, radius, flux, ud);
-                // Draw second ud to get azimuth 
+                // Draw second ud to get azimuth
                 double theta = 2.*M_PI*ud();
                 double sintheta, costheta;
                 (theta * radians).sincos(sintheta,costheta);
@@ -365,7 +365,7 @@ namespace galsim {
                 // Rescale x & y:
                 double rScale = radius / std::sqrt(rsq);
                 result->setPhoton(i, xu*rScale, yu*rScale, flux*fluxPerPhoton);
-#endif            
+#endif
             } else {
                 // Simple 1d interpolation
                 double unitRandom = ud();
@@ -378,16 +378,16 @@ namespace galsim {
         }
         dbg<<"OneDimentionalDeviate Realized flux = "<<result->getTotalFlux()<<std::endl;
 
-        // This next bit is probably a bad idea, especially for profiles that have some 
-        // negative flux.  It is possible for the random photons to end up totalling a 
-        // negative value.  This should be allowed.  And certainly rescaling to get the 
+        // This next bit is probably a bad idea, especially for profiles that have some
+        // negative flux.  It is possible for the random photons to end up totalling a
+        // negative value.  This should be allowed.  And certainly rescaling to get the
         // correct flux would be wrong (it would involve a sign flip).  Similarly, Gary
-        // pointed out that it is conceivable for someone to want to draw a profile with 
+        // pointed out that it is conceivable for someone to want to draw a profile with
         // zero total flux.  We don't want to rescale all the photons to 0.
 #if 0
-        // The flux realized from photon shooting a OneDimensionalDeviate won't necessarily 
-        // match exactly the target flux because of the possibility of variable flux for the 
-        // photons, and also positive and negative photons partially canceling out in a 
+        // The flux realized from photon shooting a OneDimensionalDeviate won't necessarily
+        // match exactly the target flux because of the possibility of variable flux for the
+        // photons, and also positive and negative photons partially canceling out in a
         // stochastic way.
         // So rescale the image to get the correct flux.
         double targetFlux = getPositiveFlux() - getNegativeFlux();

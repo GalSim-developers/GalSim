@@ -659,7 +659,7 @@ def test_Image_CubeFITS_IO():
         # Check pyfits read for sanity
         with pyfits.open(test_cube_file) as fits:
             test_array = fits[0].data
-            
+
         # If astropy version < 1.1.0, uint fits files will be read wrongly, so skip this test
         # note that all other tests will pass since they will be read as float32s instead
         wrong_type_error_msg = "%s != %s" % (test_array.dtype.type, types[i])
@@ -669,7 +669,7 @@ def test_Image_CubeFITS_IO():
                 assert test_array.dtype.type == types[i], wrong_type_error_msg
         else:
             assert test_array.dtype.type == types[i], wrong_type_error_msg
-                
+
         for k in range(nimages):
             np.testing.assert_array_equal((ref_array+k).astype(types[i]), test_array[k,:,:],
                     err_msg="PyFITS failing to read cube file.")

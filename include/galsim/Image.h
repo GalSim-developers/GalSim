@@ -107,19 +107,19 @@ namespace galsim {
      *
      *  You should never need to declare an object of this class directly, using
      *  instead the various derived classes.  However, if you are using an image
-     *  as a parameter to a function in a non-modifying context, then it is 
+     *  as a parameter to a function in a non-modifying context, then it is
      *  convenient to declare the parameter "const BaseImage<T>&" so that any
      *  of the various image types can be used without requiring any casts.
      */
     template <typename T>
-    class BaseImage : public AssignableToImage<T> 
+    class BaseImage : public AssignableToImage<T>
     {
     public:
 
         /**
          *  @brief Destructor is virtual and public.
          *
-         *  Note: There are no public constructors, since this is an abstract 
+         *  Note: There are no public constructors, since this is an abstract
          *  base class.  But the destructor should be public (and virtual).
          *
          *  Nothing special needs to be done here, since shared_ptr takes care
@@ -215,7 +215,7 @@ namespace galsim {
         int getYMin() const { return this->_bounds.getYMin(); }
         int getYMax() const { return this->_bounds.getYMax(); }
         //@}
-        
+
         //@{
         /**
          *  @brief Unchecked element access
@@ -237,7 +237,7 @@ namespace galsim {
          */
         typedef const T* const_iterator;
 
-        /** 
+        /**
          *  @brief Return an iterator to the beginning of a row.
          */
         const_iterator rowBegin(int y) const { return _data + addressPixel(y); }
@@ -269,16 +269,16 @@ namespace galsim {
 
         inline int addressPixel(int y) const
         { return (y - this->getYMin()) * _stride; }
-        
+
         inline int addressPixel(int x, int y) const
         { return (x - this->getXMin()) + addressPixel(y); }
 
         /**
          *  @brief Constructor is protected since a BaseImage is a virtual base class.
          */
-        BaseImage(T* data, ptrdiff_t nElements, boost::shared_ptr<T> owner, 
+        BaseImage(T* data, ptrdiff_t nElements, boost::shared_ptr<T> owner,
                   int stride, const Bounds<int>& b) :
-            AssignableToImage<T>(b), 
+            AssignableToImage<T>(b),
             _owner(owner), _data(data), _nElements(nElements),
             _stride(stride) {}
 
@@ -294,10 +294,10 @@ namespace galsim {
             _stride(rhs._stride) {}
 
         /**
-         *  @brief Also have a constructor that just takes a bounds.  
+         *  @brief Also have a constructor that just takes a bounds.
          *
          *  This constructor allocates new memory for the data array for these bounds.
-         *  This is only used by the ImageAlloc<T> derived class, but it turns out to be 
+         *  This is only used by the ImageAlloc<T> derived class, but it turns out to be
          *  convenient to have the functionality here instead of in ImageAlloc.
          *
          *  If the bounds are not defined, then the _data pointer is 0.
@@ -309,7 +309,7 @@ namespace galsim {
         /**
          *  @brief Allocate new memory for the image
          *
-         *  This is used to implement both the above constructor and ImageAlloc<T>'s 
+         *  This is used to implement both the above constructor and ImageAlloc<T>'s
          *  resize function.
          */
         void allocateMem();
@@ -329,7 +329,7 @@ namespace galsim {
      *  Read-only only refers to the data values.  The bounds may be changed.
      */
     template <typename T>
-    class ConstImageView : public BaseImage<T> 
+    class ConstImageView : public BaseImage<T>
     {
     public:
 
@@ -355,7 +355,7 @@ namespace galsim {
          *  @brief View just returns itself.
          */
         ConstImageView<T> view() const { return ConstImageView<T>(*this); }
- 
+
     private:
         /**
          *  @brief op= is invalid so private and undefined.
@@ -392,7 +392,7 @@ namespace galsim {
      *  (Or you can just cast this as a BaseImage<T>, which will also work.)
      */
     template <typename T>
-    class ImageView : public BaseImage<T> 
+    class ImageView : public BaseImage<T>
     {
     public:
 
@@ -424,20 +424,20 @@ namespace galsim {
          *  The bounds must be commensurate (i.e. the same shape).
          *  If not, an exception will be thrown.
          */
-        const ImageView<T>& operator=(const AssignableToImage<T>& rhs) const 
+        const ImageView<T>& operator=(const AssignableToImage<T>& rhs) const
         { if (this != &rhs) rhs.assignTo(*this); return *this; }
 
         /**
          *  @brief Repeat for ImageView to prevent compiler from making the default op=
          */
-        const ImageView<T>& operator=(const ImageView<T>& rhs) 
+        const ImageView<T>& operator=(const ImageView<T>& rhs)
         { if (this != &rhs) copyFrom(rhs); return *this; }
 
         /**
          *  @brief Allow copy from a different type
          */
         template <typename U>
-        const ImageView<T>& operator=(const BaseImage<U>& rhs) 
+        const ImageView<T>& operator=(const BaseImage<U>& rhs)
         { if (this != &rhs) copyFrom(rhs); return *this; }
 
         //@{
@@ -468,7 +468,7 @@ namespace galsim {
          *  @brief View just returns itself.
          */
         ImageView<T> view() const { return ImageView<T>(*this); }
- 
+
         /**
          *  @brief New image that is a subimage of this (shares pixels)
          */
@@ -485,7 +485,7 @@ namespace galsim {
         /**
          *  @brief Unchecked access
          */
-        T& operator()(int xpos, int ypos) const 
+        T& operator()(int xpos, int ypos) const
         { return this->_data[this->addressPixel(xpos, ypos)]; }
         T& operator()(const Position<int>& pos) const { return operator()(pos.x,pos.y); }
         //@}
@@ -501,9 +501,9 @@ namespace galsim {
         /**
          *  @brief Another way to set a value.  Equivalent to im(x,y) = value.
          *
-         *  The python layer can't implement the im(x,y) = value syntax, so 
-         *  we need something else to set a single pixel.  
-         *  This function is unnecessary at the C++ level, but in the interest of 
+         *  The python layer can't implement the im(x,y) = value syntax, so
+         *  we need something else to set a single pixel.
+         *  This function is unnecessary at the C++ level, but in the interest of
          *  trying to keep the two layers as close as possible, we might as well include it.
          *
          *  Note: This uses the checked element access.
@@ -524,13 +524,13 @@ namespace galsim {
         /**
          *  @brief Return an iterator to one-past-the-end of a row.
          */
-        iterator rowEnd(int r) const 
+        iterator rowEnd(int r) const
         { return this->_data + this->addressPixel(this->getXMax() + 1, r); }
 
         /**
          *  @brief Return an iterator to an arbitrary pixel.
          */
-        iterator getIter(int x, int y) const 
+        iterator getIter(int x, int y) const
         { return this->_data + this->addressPixel(x, y); }
 
         /**
@@ -553,7 +553,7 @@ namespace galsim {
                 throw ImageError("Attempt im1 = im2, but bounds not the same shape");
             for (int y=this->getYMin(), y2=rhs.getYMin(); y <= this->getYMax(); ++y, ++y2) {
                 iterator it1 = rowBegin(y);
-                const iterator ee = rowEnd(y);      
+                const iterator ee = rowEnd(y);
                 typename BaseImage<U>::const_iterator it2 = rhs.rowBegin(y2);
                 while (it1 != ee) *(it1++) = T(*(it2++));
             }
@@ -566,20 +566,20 @@ namespace galsim {
      *  The ImageAlloc class is a 2-d array with pixel values stored contiguously in memory along
      *  rows (but not necessarily between rows).  An image's pixel values may be shared between
      *  multiple image objects (with reference counting), and a subimage may share data with
-     *  its parent and multiple siblings.  ImageAllocs may also share pixel values with NumPy 
+     *  its parent and multiple siblings.  ImageAllocs may also share pixel values with NumPy
      *  arrays when the allocation happens in the C++ layer.
      *
      *  An ImageAlloc also contains a bounding box; its origin need not be (0,0) or (1,1).
      *
-     *  The const semantics for this are pretty normal.  You cannot change either the 
+     *  The const semantics for this are pretty normal.  You cannot change either the
      *  pixel values or the ancillary information (like bounds) for a const ImageAlloc,
      *  while you can change things about a non-const ImageAlloc.
      *
-     *  ImageAlloc templates for uint16_t, uint32_t, int16_t, int32_t, float, and double are 
+     *  ImageAlloc templates for uint16_t, uint32_t, int16_t, int32_t, float, and double are
      *  explicitly instantiated in Image.cpp.
      */
     template <typename T>
-    class ImageAlloc : public BaseImage<T> 
+    class ImageAlloc : public BaseImage<T>
     {
     public:
 
@@ -609,7 +609,7 @@ namespace galsim {
         /**
          *  @brief Can construct from any AssignableToImage
          */
-        ImageAlloc(const AssignableToImage<T>& rhs) : BaseImage<T>(rhs.getBounds()) 
+        ImageAlloc(const AssignableToImage<T>& rhs) : BaseImage<T>(rhs.getBounds())
         { rhs.assignTo(view()); }
 
         /**
@@ -681,9 +681,9 @@ namespace galsim {
         /**
          *  @brief Make a view of this image
          */
-        ImageView<T> view() 
+        ImageView<T> view()
         {
-            return ImageView<T>(this->_data, this->_owner, this->_stride, this->_bounds); 
+            return ImageView<T>(this->_data, this->_owner, this->_stride, this->_bounds);
         }
         ConstImageView<T> view() const { return ConstImageView<T>(*this); }
         //@}
@@ -714,7 +714,7 @@ namespace galsim {
          */
         T& operator()(int xpos, int ypos)
         { return this->_data[this->addressPixel(xpos, ypos)]; }
-        const T& operator()(int xpos, int ypos) const 
+        const T& operator()(int xpos, int ypos) const
         { return this->_data[this->addressPixel(xpos, ypos)]; }
         T& operator()(const Position<int>& pos) { return operator()(pos.x,pos.y); }
         const T& operator()(const Position<int>& pos) const { return operator()(pos.x,pos.y); }
@@ -733,9 +733,9 @@ namespace galsim {
         /**
          *  @brief Another way to set a value.  Equivalent to im(x,y) = value.
          *
-         *  The python layer can't implement the im(x,y) = value syntax, so 
-         *  we need something else to set a single pixel.  
-         *  This function is unnecessary at the C++ level, but in the interest of 
+         *  The python layer can't implement the im(x,y) = value syntax, so
+         *  we need something else to set a single pixel.
+         *  This function is unnecessary at the C++ level, but in the interest of
          *  trying to keep the two layers as close as possible, we might as well include it.
          *
          *  Note: This uses the checked element access.
@@ -757,7 +757,7 @@ namespace galsim {
          */
         iterator rowBegin(int r)
         { return this->_data + this->addressPixel(r); }
-        const_iterator rowBegin(int r) const 
+        const_iterator rowBegin(int r) const
         { return this->_data + this->addressPixel(r); }
         //@}
 
@@ -767,7 +767,7 @@ namespace galsim {
          */
         iterator rowEnd(int r)
         { return this->_data + this->addressPixel(this->getXMax() + 1, r); }
-        const_iterator rowEnd(int r) const 
+        const_iterator rowEnd(int r) const
         { return this->_data + this->addressPixel(this->getXMax() + 1, r); }
         //@}
 
@@ -777,7 +777,7 @@ namespace galsim {
          */
         iterator getIter(int x, int y)
         { return this->_data + this->addressPixel(x, y); }
-        const_iterator getIter(int x, int y) const 
+        const_iterator getIter(int x, int y) const
         { return this->_data + this->addressPixel(x, y); }
         //@}
 
