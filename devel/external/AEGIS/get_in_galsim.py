@@ -236,7 +236,7 @@ def get_fits_catalog(args, index_table, all_seg_ids):
     for f, filt in enumerate(args.filter_names):
     	final_table = fits_table()
         for seg_id in all_seg_ids:
-            file_name = args.main_path + seg_id + '/' + filt + '_selected.fits'
+            file_name = input_cat
             seg_cat = Table.read(file_name, format='fits')
             q, = np.where(index_table['SEG_ID'] == seg_id)
             indx_seg = index_table[q]
@@ -253,7 +253,7 @@ def get_fits_catalog(args, index_table, all_seg_ids):
         print "Savings fits file at ", path + file_name
         final_table[ord_indx].write(path + file_name, format='fits',
                                                 overwrite=True)
-def make_all(args, input_cat):
+def make_all(args):
     """Saves Postage stamps and final catalogs in a format that can be read by
      galsim modules"""
     if os.path.isdir(args.main_path + args.out_dir) is False:

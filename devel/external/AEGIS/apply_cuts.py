@@ -1,6 +1,8 @@
 import subprocess
+import os
 import numpy as np
 import get_in_galsim
+from astropy.table import Table
 
 
 def apply_selection(args, all_seg_ids):
@@ -15,7 +17,9 @@ def apply_selection(args, all_seg_ids):
     
     Galaxies statifying these criteria in all filters are selected for the final catalog.
     """
-    for seg in all_seg_ids:
+    all_seg_ids2 =['0i']
+    for seg in all_seg_ids2:
+        print "Running segment ",seg
         cat={}
         temp=[]
         for f, filt in enumerate(args.filter_names):
@@ -27,6 +31,8 @@ def apply_selection(args, all_seg_ids):
             bad, = np.where(cond1 & cond2)
             temp.append(bad)
         remove_gals = reduce(np.union1d,temp)
+        print "{0} galaxies failed HSM".format(len(remove_gals))
+        temp=[]
         for f, filt in enumerate(args.filter_names):
             cat[f].remove_rows(remove_gals)
             #Remove postage stamps with closest pixel masked during cleanin step is less than 5 pixels or
@@ -37,34 +43,39 @@ def apply_selection(args, all_seg_ids):
             bad, = np.where(cond1 | (cond2 & cond3))
             temp.append(bad)
         remove_gals = reduce(np.union1d,temp)
+        print "{0} galaxies failed Cleaning cuts".format(len(remove_gals))
         for f, filt in enumerate(args.filter_names):
             cat[f].remove_rows(remove_gals)
         #If there exists a file to manually remove galaxies
-        if os.path.isdir(args.manual_bad_stamps) is True:
+        if os.path.isfile(args.manual_bad_stamps) is True:
             bad_file = np.genfromtxt(args.manual_bad_stamps,dtype='str').T
             bad_gal = bad_file[1][bad_file[0]==seg]
-            remove_gals = [np.where(cat[f]['NUMBER'] == i)[0] for i in bad_gal]
+            remove_gals = [np.where(cat[f]['NUMBER'] == int(i))[0] for i in bad_gal]
+            remove_gals_manual = [int(i) for i in remove_gals]
         else:
+            print "No file provided for manual galaxy removal"
             remove_gals =[] 
+        print "{0} galaxies removed manually".format(len(remove_gals_manual))
         for f, filt in enumerate(args.filter_names):
             cat[f].remove_rows(remove_gals_manual)
             new_cat_name = args.main_path + seg + '/' + filt + '_selected.fits'
-            new_cat = cat[f][select_gal]
-            if os.path.isfile(new_cat_name) is True:
-                subprocess.call(["rm", new_cat_name]) 
-            print "Catalog with pstamps saved at ", new_cat_name
-            new_cat.write(new_cat_name, format='fits') 
+            print "Catalog with pstamps that pass selection cuts saved at ", new_cat_name
+            cat[f].write(new_cat_name, format='fits', overwrite=True) 
 
 def main(args):
     all_seg_ids = np.loadtxt(args.seg_list_file, delimiter=" ",dtype='S2')
     if args.apply_cuts is True:
         apply_selection(args, all_seg_ids)
-        input_cat = args.main_path + seg_id + '/' + filt + '_selected.fits' 
-        get_in_galsim(args, inut_cat)
     else:
-        # If no selection cut has to be applied
-        input_cat = args.main_path + seg_id + '/' + filt + '_with_pstamp.fits' 
-        get_in_galsim(args, inut_cat)
+        for seg in all_seg_ids:
+            for f, filt in enumerate(args.filter_names):
+                cat_name = args.main_path + seg + '/' + filt + '_with_pstamp.fits'
+                cat[f] = Table.read(cat_name, format= 'fits')
+                new_cat_name = args.main_path + seg + '/' + filt + '_selected.fits'
+                cat[f].write(new_cat_name, format='fits', overwrite=True) 
+    #get_in_galsim.make_all(args)
+
+
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
