@@ -163,7 +163,7 @@ def main(argv):
 
         smooth_disk = galsim.Exponential(flux=smooth_disk_frac, half_light_radius=disk_hlr)
 
-        knots = galsim.RandomWalk(n_knots, disk_hlr, flux=knot_frac)
+        knots = galsim.RandomWalk(n_knots, disk_hlr, flux=knot_frac, rng=rng)
 
         disk = galsim.Add([smooth_disk, knots])
         disk = disk.shear(e1=disk_e1, e2=disk_e2)
