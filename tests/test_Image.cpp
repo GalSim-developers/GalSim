@@ -108,8 +108,8 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageBasic , T , test_types )
     // Check view of given data
     // Note: Our array is on the stack, so we don't have any ownership to pass around.
     //       Hence, use a default shared_ptr constructor.
-    galsim::ImageView<T> im3_view(ref_array, boost::shared_ptr<T>(), ncol, bounds);
-    galsim::ConstImageView<T> im3_cview(ref_array, boost::shared_ptr<T>(), ncol, bounds);
+    galsim::ImageView<T> im3_view(ref_array, boost::shared_ptr<T>(), 1, ncol, bounds);
+    galsim::ConstImageView<T> im3_cview(ref_array, boost::shared_ptr<T>(), 1, ncol, bounds);
     for (int y=1; y<=nrow; ++y) {
         for (int x=1; x<=ncol; ++x) {
             BOOST_CHECK(im3_view(x,y) == 10*x+y);
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE( TestImageArith , T , test_types )
         15, 25, 35, 45, 55, 65, 75 };
     galsim::Bounds<int> bounds(1,ncol,1,nrow);
 
-    galsim::ConstImageView<T> ref_im(ref_array, boost::shared_ptr<T>(), ncol, bounds);
+    galsim::ConstImageView<T> ref_im(ref_array, boost::shared_ptr<T>(), 1, ncol, bounds);
 
     galsim::ImageAlloc<T> im1 = ref_im;
     galsim::ImageAlloc<T> im2 = T(2) * ref_im;

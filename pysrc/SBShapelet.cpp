@@ -48,8 +48,9 @@ namespace galsim {
         {
             double* data = 0;
             boost::shared_ptr<double> owner;
+            int step = 0;
             int stride = 0;
-            CheckNumpyArray(array,1,true,data,owner,stride);
+            CheckNumpyArray(array,1,true,data,owner,step,stride);
             int size = GetNumpyArrayDim(array.ptr(), 0);
             if (size != PQIndex::size(order)) {
                 PyErr_SetString(PyExc_ValueError, "Array for LVector is the wrong size");

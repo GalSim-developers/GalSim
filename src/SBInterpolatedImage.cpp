@@ -472,7 +472,7 @@ namespace galsim {
         dbg << "xmin: " << xmin << std::endl;
         dbg << "xmax: " << xmax << std::endl;
         return ConstImageView<double>(_xtab->getArray(), boost::shared_ptr<double>(),
-                                      N, Bounds<int>(xmin,xmax,ymin,ymax));
+                                      1, N, Bounds<int>(xmin,xmax,ymin,ymax));
     }
 
     // The accessor for the original, unpadded image should be faster/smaller to serialize and
@@ -991,7 +991,7 @@ namespace galsim {
         //      actually matter for the intended application, which is just to store and
         //      later retrieve the 2N * N/2+1 memory-contiguous numbers representing the
         //      KTable.
-        return ConstImageView<double>(data, boost::shared_ptr<double>(), 2*N,
+        return ConstImageView<double>(data, boost::shared_ptr<double>(), 1, 2*N,
                                       Bounds<int>(0,2*N-1,0,N/2));
     }
 

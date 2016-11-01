@@ -43,13 +43,14 @@ struct PyImage {
     // This one is mostly just used to enable a repr that actually gets back to the original.
     static ImageAlloc<T>* MakeAllocFromArray(const Bounds<int>& bounds, const bp::object& array)
     {
+        int step = 0;
         int stride = 0;
         T* data = 0;
         boost::shared_ptr<T> owner;
         Bounds<int> bounds2;
         BuildConstructorArgs(array, bounds.getXMin(), bounds.getYMin(), false, data, owner,
-                             stride, bounds2);
-        ImageView<T>* imview = new ImageView<T>(data, owner, stride, bounds2);
+                             step, stride, bounds2);
+        ImageView<T>* imview = new ImageView<T>(data, owner, step, stride, bounds2);
         return new ImageAlloc<T>(*imview);
     }
 
@@ -96,7 +97,7 @@ struct PyImage {
             image.getData(),
             image.getYMax() - image.getYMin() + 1,
             image.getXMax() - image.getXMin() + 1,
-            image.getStride(), isConst, image.getOwner());
+            image.getStep(), image.getStride(), isConst, image.getOwner());
 
         self.attr("_array") = numpy_array;
         return numpy_array;
@@ -118,9 +119,9 @@ struct PyImage {
 
     static void BuildConstructorArgs(
         const bp::object& array, int xmin, int ymin, bool isConst,
-        T*& data, boost::shared_ptr<T>& owner, int& stride, Bounds<int>& bounds)
+        T*& data, boost::shared_ptr<T>& owner, int& step, int& stride, Bounds<int>& bounds)
     {
-        CheckNumpyArray(array,2,isConst,data,owner,stride);
+        CheckNumpyArray(array,2,isConst,data,owner,step,stride);
         bounds = Bounds<int>(
             xmin, xmin + GetNumpyArrayDim(array.ptr(), 1) - 1,
             ymin, ymin + GetNumpyArrayDim(array.ptr(), 0) - 1
@@ -131,22 +132,24 @@ struct PyImage {
         const bp::object& array, int xmin, int ymin)
     {
         Bounds<int> bounds;
+        int step = 0;
         int stride = 0;
         T* data = 0;
         boost::shared_ptr<T> owner;
-        BuildConstructorArgs(array, xmin, ymin, false, data, owner, stride, bounds);
-        return new ImageView<T>(data, owner, stride, bounds);
+        BuildConstructorArgs(array, xmin, ymin, false, data, owner, step, stride, bounds);
+        return new ImageView<T>(data, owner, step, stride, bounds);
     }
 
     static ConstImageView<T>* MakeConstFromArray(
         const bp::object& array, int xmin, int ymin)
     {
         Bounds<int> bounds;
+        int step = 0;
         int stride = 0;
         T* data = 0;
         boost::shared_ptr<T> owner;
-        BuildConstructorArgs(array, xmin, ymin, true, data, owner, stride, bounds);
-        return new ConstImageView<T>(data, owner, stride, bounds);
+        BuildConstructorArgs(array, xmin, ymin, true, data, owner, step, stride, bounds);
+        return new ConstImageView<T>(data, owner, step, stride, bounds);
     }
 
     static bp::object wrapImageAlloc(const std::string& suffix) {

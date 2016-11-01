@@ -82,10 +82,11 @@ public:
 
 template <typename T>
 BaseImage<T>::BaseImage(const Bounds<int>& b) :
-    AssignableToImage<T>(b), _owner(), _data(0), _nElements(0), _stride(0)
+    AssignableToImage<T>(b), _owner(), _data(0), _nElements(0), _step(0), _stride(0),
+    _ncol(0), _nrow(0)
 {
     if (this->_bounds.isDefined()) allocateMem();
-    // Else _data is left as 0, stride = 0.
+    // Else _data is left as 0, step,stride = 0.
 }
 
 template <typename T>
@@ -94,7 +95,9 @@ void BaseImage<T>::allocateMem()
     // Note: this version always does the memory (re-)allocation.
     // So the various functions that call this should do their (different) checks
     // for whether this is necessary.
-    _stride = this->_bounds.getXMax() - this->_bounds.getXMin() + 1;
+    _step = 1;
+    _stride = _ncol = this->_bounds.getXMax() - this->_bounds.getXMin() + 1;
+    _nrow = this->_bounds.getYMax() - this->_bounds.getYMin() + 1;
 
     _nElements = _stride * (this->_bounds.getYMax() - this->_bounds.getYMin() + 1);
     if (_stride <= 0 || _nElements <= 0) {
@@ -148,14 +151,18 @@ void ImageAlloc<T>::resize(const Bounds<int>& new_bounds)
         this->_owner.reset();
         this->_data = 0;
         this->_nElements = 0;
+        this->_step = 0;
         this->_stride = 0;
+        this->_ncol = 0;
+        this->_nrow = 0;
     } else if (this->_bounds.isDefined() &&
                new_bounds.area() <= this->_nElements &&
                this->_owner.unique()) {
         // Then safe to keep existing memory allocation.
         // Just redefine the bounds and stride.
         this->_bounds = new_bounds;
-        this->_stride = new_bounds.getXMax() - new_bounds.getXMin() + 1;
+        this->_stride = this->_ncol = new_bounds.getXMax() - new_bounds.getXMin() + 1;
+        this->_nrow = new_bounds.getYMax() - new_bounds.getYMin() + 1;
     } else {
         // Then we want to do the reallocation.
         this->_bounds = new_bounds;
@@ -211,8 +218,8 @@ ConstImageView<T> BaseImage<T>::subImage(const Bounds<int>& bounds) const
     }
     T* newdata = _data
         + (bounds.getYMin() - this->_bounds.getYMin()) * _stride
-        + (bounds.getXMin() - this->_bounds.getXMin());
-    return ConstImageView<T>(newdata,_owner,_stride,bounds);
+        + (bounds.getXMin() - this->_bounds.getXMin()) * _step;
+    return ConstImageView<T>(newdata,_owner,_step,_stride,bounds);
 }
 
 template <typename T>
@@ -226,8 +233,8 @@ ImageView<T> ImageView<T>::subImage(const Bounds<int>& bounds)
     }
     T* newdata = this->_data
         + (bounds.getYMin() - this->_bounds.getYMin()) * this->_stride
-        + (bounds.getXMin() - this->_bounds.getXMin());
-    return ImageView<T>(newdata,this->_owner,this->_stride,bounds);
+        + (bounds.getXMin() - this->_bounds.getXMin()) * this->_step;
+    return ImageView<T>(newdata,this->_owner,this->_step,this->_stride,bounds);
 }
 
 namespace {

@@ -154,13 +154,33 @@ namespace galsim {
         int getStride() const { return _stride; }
 
         /**
+         *  @brief Return the number of elements between cols in memory.
+         */
+        int getStep() const { return _step; }
+
+        /**
+         *  @brief Return the number of columns in the image
+         */
+        int getNCol() const { return _ncol; }
+
+        /**
+         *  @brief Return the number of rows in the image
+         */
+        int getNRow() const { return _nrow; }
+
+        /**
+         *  @brief Return the number of columns to skip at the end of each row when iterating.
+         */
+        int getNSkip() const { return _stride - _ncol*_step; }
+
+        /**
          *  @brief Return whether the data is contiguous in memory.
          *
          *  Shorthand for:
-         *  (getStride() == getBounds().getXMax() - getBounds().getXMin() + 1)
+         *  (getStride() == getNCol()) or equivalently (getNSkip() == 0)
          */
         bool isContiguous() const
-        { return (getStride() == this->_bounds.getXMax() - this->_bounds.getXMin() + 1); }
+        { return (_step == 1 && _stride == _ncol); }
 
         /**
          *  @brief Deep copy the image.
@@ -265,22 +285,27 @@ namespace galsim {
         boost::shared_ptr<T> _owner;  // manages ownership; _owner.get() != _data if subimage
         T* _data;                     // pointer to be used for this image
         ptrdiff_t _nElements;         // number of elements allocated in memory
+        int _step;                    // number of elements between cols (normally 1)
         int _stride;                  // number of elements between rows (!= width for subimages)
+        int _ncol;                    // number of columns
+        int _nrow;                    // number of rows
 
         inline int addressPixel(int y) const
         { return (y - this->getYMin()) * _stride; }
 
         inline int addressPixel(int x, int y) const
-        { return (x - this->getXMin()) + addressPixel(y); }
+        { return (x - this->getXMin()) * _step + addressPixel(y); }
 
         /**
          *  @brief Constructor is protected since a BaseImage is a virtual base class.
          */
         BaseImage(T* data, ptrdiff_t nElements, boost::shared_ptr<T> owner,
-                  int stride, const Bounds<int>& b) :
+                  int step, int stride, const Bounds<int>& b) :
             AssignableToImage<T>(b),
             _owner(owner), _data(data), _nElements(nElements),
-            _stride(stride) {}
+            _step(step), _stride(stride),
+            _ncol(b.getXMax()-b.getXMin()+1), _nrow(b.getYMax()-b.getYMin()+1)
+        {}
 
         /**
          *  @brief Copy constructor also protected
@@ -291,7 +316,8 @@ namespace galsim {
         BaseImage(const BaseImage<T>& rhs) :
             AssignableToImage<T>(rhs),
             _owner(rhs._owner), _data(rhs._data), _nElements(rhs._nElements),
-            _stride(rhs._stride) {}
+            _step(rhs._step), _stride(rhs._stride), _ncol(rhs._ncol), _nrow(rhs._nrow)
+        {}
 
         /**
          *  @brief Also have a constructor that just takes a bounds.
@@ -335,9 +361,9 @@ namespace galsim {
         /**
          *  @brief Direct constructor given all the necessary information
          */
-        ConstImageView(T* data, const boost::shared_ptr<T>& owner, int stride,
+        ConstImageView(T* data, const boost::shared_ptr<T>& owner, int step, int stride,
                        const Bounds<int>& b) :
-            BaseImage<T>(data,0,owner,stride,b) {}
+            BaseImage<T>(data,0,owner,step,stride,b) {}
 
         /**
          *  @brief Copy Constructor from a BaseImage makes a new view of the same data
@@ -392,8 +418,9 @@ namespace galsim {
         /**
          *  @brief Direct constructor given all the necessary information
          */
-        ImageView(T* data, const boost::shared_ptr<T>& owner, int stride, const Bounds<int>& b) :
-            BaseImage<T>(data, 0, owner, stride, b) {}
+        ImageView(T* data, const boost::shared_ptr<T>& owner, int step, int stride,
+                  const Bounds<int>& b) :
+            BaseImage<T>(data, 0, owner, step, stride, b) {}
 
         /**
          *  @brief Shallow copy constructor.
@@ -676,7 +703,8 @@ namespace galsim {
          */
         ImageView<T> view()
         {
-            return ImageView<T>(this->_data, this->_owner, this->_stride, this->_bounds);
+            return ImageView<T>(this->_data, this->_owner, this->_step, this->_stride,
+                                this->_bounds);
         }
         ConstImageView<T> view() const { return ConstImageView<T>(*this); }
         //@}
