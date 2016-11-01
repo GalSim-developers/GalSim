@@ -115,6 +115,10 @@ gal :
         # by the same ellipticity, but the knots will themselves have
         # additional shape noise
         #
+        # To simulate a nice irregular (all the flux is in knots) we find ~100
+        # is a minimum number needed, but we will just use 10 here to make the
+        # demo run fast.
+        #
         # see demo11.yaml for examples of how to specify variable relative to
         # one another rather than hard coding them
 
@@ -128,7 +132,7 @@ gal :
             flux : 0.18
         - 
             type : RandomWalk
-            npoints: 100
+            npoints: 10
             half_light_radius : { type : Catalog , col : 5 }
             ellip : 
                 type : E1E2 

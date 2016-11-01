@@ -102,7 +102,12 @@ def main(argv):
     disk_frac        = 0.6
     knot_frac        = 0.42
     smooth_disk_frac = 0.18
-    n_knots = 100
+
+    # number of knots of star formation.  To simulate a nice irregular (all the
+    # flux is in knots) we find ~100 is a minimum number needed, but we will
+    # just use 10 here to make the demo run fast.
+
+    n_knots = 10
 
     xsize = 64                      # pixels
     ysize = 64                      # pixels
