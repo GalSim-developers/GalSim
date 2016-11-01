@@ -812,6 +812,12 @@ namespace galsim {
         void copyFrom(const BaseImage<U>& rhs) { view().copyFrom(rhs); }
     };
 
+    /**
+     * @brief A helper function that will return the smallest 2^n or 3x2^n value that is
+     * even and >= the input integer.
+     */
+    int goodFFTSize(int input);
+
 } // namespace galsim
 
 #endif

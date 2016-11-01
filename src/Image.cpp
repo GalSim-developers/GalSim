@@ -288,6 +288,22 @@ void ImageView<T>::copyFrom(const BaseImage<T>& rhs)
     transform_pixel(*this, rhs, ReturnSecond<T>());
 }
 
+// A helper function that will return the smallest 2^n or 3x2^n value that is
+// even and >= the input integer.
+int goodFFTSize(int input)
+{
+    if (input<=2) return 2;
+    // Reduce slightly to eliminate potential rounding errors:
+    double insize = (1.-1.e-5)*input;
+    double log2n = std::log(2.)*std::ceil(std::log(insize)/std::log(2.));
+    double log2n3 = std::log(3.)
+        + std::log(2.)*std::ceil((std::log(insize)-std::log(3.))/std::log(2.));
+    log2n3 = std::max(log2n3, std::log(6.)); // must be even number
+    int Nk = int(std::ceil(std::exp(std::min(log2n, log2n3))-1.e-5));
+    return Nk;
+}
+
+
 // instantiate for expected types
 
 template class BaseImage<double>;

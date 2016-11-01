@@ -209,9 +209,6 @@ namespace galsim {
     {
         PySBProfile::wrap();
         PyGSParams::wrap();
-
-        bp::def("goodFFTSize", &goodFFTSize, (bp::arg("input_size")),
-                "Round up to the next larger 2^n or 3x2^n.");
     }
 
 } // namespace galsim
