@@ -41,12 +41,6 @@
 // the solution that might be faster than the table lookup.
 //#define USE_NEWTON_RAPHSON
 
-#ifdef DEBUGLOGGING
-#include <fstream>
-//std::ostream* dbgout = &std::cout;
-//int verbose_level = 2;
-#endif
-
 namespace galsim {
 
     SBExponential::SBExponential(double r0, double flux,

@@ -23,12 +23,6 @@
 #include "SBInterpolatedImage.h"
 #include "SBInterpolatedImageImpl.h"
 
-#ifdef DEBUGLOGGING
-#include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-std::ostream* dbgout = &std::cout;
-int verbose_level = 1;
-#endif
 
 namespace galsim {
 

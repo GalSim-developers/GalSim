@@ -17,6 +17,8 @@
  *    and/or other materials provided with the distribution.
  */
 
+//#define DEBUGLOGGING
+
 #include <sstream>
 
 #include "Image.h"

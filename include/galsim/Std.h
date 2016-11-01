@@ -56,24 +56,43 @@
 // If DEBUGLOGGING is not enabled, the compiler optimizes it away, so it
 // doesn't take any CPU cycles.
 //
-// You need to define dbgout and verbose_level in the .cpp file with main().
-// And if you are using OpenMP, you can get debugging output from each thread into
-// a separate file by calling SetupThreadDebug(name).
-// Then each thread other than the main thread will actually write to a file
-// name_threadnum and not clobber each other.  (The main thread will write to name.)
 
-//#define DEBUGLOGGING
 #ifdef DEBUGLOGGING
-extern std::ostream* dbgout;
-extern int verbose_level;
-#define dbg if(dbgout && verbose_level >= 1) (*dbgout)
-#define xdbg if(dbgout && verbose_level >= 2) (*dbgout)
-#define xxdbg if(dbgout && verbose_level >= 3) (*dbgout)
+class Debugger // Use a Singleton model so it can be included multiple times.
+{
+public:
+    std::ostream& get_dbgout() { return *dbgout; }
+    void set_dbgout(std::ostream* new_dbgout) { dbgout = new_dbgout; }
+    void set_verbose(int level) { verbose_level = level; }
+    bool do_level(int level) { return verbose_level >= level; }
+
+    static Debugger& instance()
+    {
+        static Debugger _instance;
+        return _instance;
+    }
+
+private:
+    std::ostream* dbgout;
+    int verbose_level;
+
+    Debugger() : dbgout(&std::cout), verbose_level(1) {}
+    Debugger(const Debugger&);
+    void operator=(const Debugger&);
+};
+
+#define dbg if(Debugger::instance().do_level(1)) Debugger::instance().get_dbgout()
+#define xdbg if(Debugger::instance().do_level(2)) Debugger::instance().get_dbgout()
+#define xxdbg if(Debugger::instance().do_level(3)) Debugger::instance().get_dbgout()
+#define set_dbgout(dbgout) Debugger::instance().set_dbgout(dbgout)
+#define set_verbose(level) Debugger::instance().set_verbose(level)
 #define xassert(x) assert(x)
 #else
 #define dbg if(false) (std::cerr)
 #define xdbg if(false) (std::cerr)
 #define xxdbg if(false) (std::cerr)
+#define set_dbgout(dbgout)
+#define set_verbose(level)
 #define xassert(x)
 #endif
 

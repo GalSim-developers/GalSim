@@ -26,11 +26,6 @@
 #include "SBProfileImpl.h"
 #include "FFT.h"
 
-#ifdef DEBUGLOGGING
-#include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-std::ostream* dbgout = &std::cerr;
-int verbose_level = 2;
 // There are three levels of verbosity which can be helpful when debugging,
 // which are written as dbg, xdbg, xxdbg (all defined in Std.h).
 // It's Mike's way to have debug statements in the code that are really easy to turn
@@ -45,7 +40,6 @@ int verbose_level = 2;
 // If DEBUGLOGGING is not defined, the all three becomes just `if (false) std::cerr`,
 // so the compiler parses the statement fine, but trivially optimizes the code away,
 // so there is no efficiency hit from leaving them in the code.
-#endif
 
 namespace galsim {
 

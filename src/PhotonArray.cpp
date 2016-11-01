@@ -26,12 +26,6 @@
 #include <numeric>
 #include "PhotonArray.h"
 
-#ifdef DEBUGLOGGING
-#include <fstream>
-//std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 2;
-#endif
-
 namespace galsim {
 
     PhotonArray::PhotonArray(

@@ -29,13 +29,6 @@
 #define USE_COS_SIN
 #endif
 
-#ifdef DEBUGLOGGING
-#include <fstream>
-//std::ostream* dbgout = &std::cerr;
-//std::ostream* dbgout = new std::ofstream("debug.out");
-//int verbose_level = 2;
-#endif
-
 namespace galsim {
 
 
