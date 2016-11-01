@@ -106,16 +106,17 @@ gal :
     type : Sum
 
     items :
-        # 0.6 of flux is in the total disk.  Further divide this
-        # into a smooth disk and knots of star formation, modeled
-        # as point sources distributed via a random walk
-        #
-        # note the knots get the same hlr as the smooth disk, and
-        # get sheared by the same ellipticity, but the knots will
-        # themselves have additional shape noise
 
-        # see demo11.yaml for a way to specify these flux variable relative to
-        # one another needing hard coding them
+        # 0.6 of the flux is in the total disk.  Further divide this into a
+        # smooth disk and knots of star formation, modeled as point sources
+        # distributed via a random walk
+        #
+        # note the knots get the same hlr as the smooth disk, and get sheared
+        # by the same ellipticity, but the knots will themselves have
+        # additional shape noise
+        #
+        # see demo11.yaml for examples of how to specify variable relative to
+        # one another rather than hard coding them
 
         - 
             type : Exponential
