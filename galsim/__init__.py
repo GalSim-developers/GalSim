@@ -125,6 +125,7 @@ from .interpolatedimage import InterpolatedImage, InterpolatedKImage
 from .compound import Add, Sum, Convolve, Convolution, Deconvolve, Deconvolution
 from .compound import AutoConvolve, AutoConvolution, AutoCorrelate, AutoCorrelation
 from .compound import FourierSqrt, FourierSqrtProfile
+from .compound import RandomWalk
 from .transform import Transform, Transformation
 
 # Chromatic

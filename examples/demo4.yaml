@@ -21,20 +21,23 @@
 # The fourth YAML configuration file in our tutorial about using Galsim config files
 # (This file is designed to be viewed in a window 100 characters wide.)
 #
-# This script is our first one to create multiple images.  Typically, you would want each
-# object to have at least some of its attributes vary when you are drawing multiple images 
-# (although not necessarily -- you might just want different noise realization of the same 
-# profile).  The easiest way to do this is to read in the properties from a catalog, which is 
-# what we do in this script.  The PSF is a truncated Moffat profile, and the galaxy is bulge
-# plus disk.  Both components get many of their parameters from an input catalog.  We also
-# shift the profile by a fraction of a pixel in each direction so the effect of pixelization 
-# varies among the images.  Each galaxy has the same applied shear.  The noise is simple 
-# Poisson noise.  We write the images out into a multi-extension fits file.
+# This script is our first one to create multiple images.  Typically, you would
+# want each object to have at least some of its attributes vary when you are
+# drawing multiple images (although not necessarily -- you might just want
+# different noise realization of the same profile).  The easiest way to do this
+# is to read in the properties from a catalog, which is what we do in this
+# script.  The PSF is a truncated Moffat profile, and the galaxy is bulge plus
+# disk, with added knots of star formation.  Both components get many of their
+# parameters from an input catalog.  We also shift the profile by a fraction of
+# a pixel in each direction so the effect of pixelization varies among the
+# images.  Each galaxy has the same applied shear.  The noise is simple Poisson
+# noise.  We write the images out into a multi-extension fits file.
 #
 # New features introduced in this demo:
 #
 # - obj type : Moffat (..., trunc)
 # - obj type : DeVaucouleurs (flux, half_light_radius)
+# - obj type : RandomWalk(npoints, half_light_radius, flux=)
 # - value type : Catalog (col)
 # - obj : shift
 # - shift type : XY (x, y)
@@ -103,6 +106,22 @@ gal :
     type : Sum
 
     items :
+
+        # 0.6 of the flux is in the total disk.  Further divide this into a
+        # smooth disk and knots of star formation, modeled as point sources
+        # distributed via a random walk
+        #
+        # note the knots get the same hlr as the smooth disk, and get sheared
+        # by the same ellipticity, but the knots will themselves have
+        # additional shape noise
+        #
+        # To simulate a nice irregular (all the flux is in knots) we find ~100
+        # is a minimum number needed, but we will just use 10 here to make the
+        # demo run fast.
+        #
+        # see demo11.yaml for examples of how to specify variable relative to
+        # one another rather than hard coding them
+
         - 
             type : Exponential
             half_light_radius : { type : Catalog , col : 5 }
@@ -110,7 +129,17 @@ gal :
                 type : E1E2 
                 e1 : { type : Catalog , col : 6 }  
                 e2 : { type : Catalog , col : 7 }
-            flux : 0.6
+            flux : 0.18
+        - 
+            type : RandomWalk
+            npoints: 10
+            half_light_radius : { type : Catalog , col : 5 }
+            ellip : 
+                type : E1E2 
+                e1 : { type : Catalog , col : 6 }  
+                e2 : { type : Catalog , col : 7 }
+            flux : 0.42
+
         -
             type : DeVaucouleurs
             half_light_radius : { type : Catalog , col : 8 }

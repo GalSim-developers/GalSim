@@ -44,6 +44,10 @@ Deprecated Features
 New Features
 ------------
 
+- Added new profile `galsim.RandomWalk`, a class for generating a set of 
+  point sources distributed using a random walk.  Uses of this profile include
+  representing an "irregular" galaxy, or adding this profile to an Exponential
+  to represent knots of star formation. (PR #819)
 - Added ability to use `numpy`, `np`, or `math` in all places where we evaluate
   user input, including DistDeviate (aka RandomDistribution in config files),
   PowerSpectrum, UVFunction, RaDecFunction, Bandpass, and SED.  Some of these
