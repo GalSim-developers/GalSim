@@ -72,16 +72,6 @@ ImageBoundsError::ImageBoundsError(const int x, const int y, const Bounds<int> b
 //// Constructor (and related helpers) for the various Image classes
 ///////////////////////////////////////////////////////////////////////
 
-namespace {
-
-template <typename T>
-class ArrayDeleter {
-public:
-    void operator()(T * p) const { delete [] p; }
-};
-
-} // anonymous
-
 template <typename T>
 BaseImage<T>::BaseImage(const Bounds<int>& b) :
     AssignableToImage<T>(b), _owner(), _data(0), _nElements(0), _step(0), _stride(0),
@@ -90,6 +80,13 @@ BaseImage<T>::BaseImage(const Bounds<int>& b) :
     if (this->_bounds.isDefined()) allocateMem();
     // Else _data is left as 0, step,stride = 0.
 }
+
+// A custom deleter that finds the original address of the memory allocation directly
+// before the stored pointer and frees that using delete []
+template <typename T>
+struct AlignedDeleter {
+    void operator()(T* p) const { delete [] ((char**)p)[-1]; }
+};
 
 template <typename T>
 void BaseImage<T>::allocateMem()
@@ -107,11 +104,15 @@ void BaseImage<T>::allocateMem()
             "Attempt to create an Image with defined but invalid Bounds ("<<this->_bounds<<")";
     }
 
-    // The ArrayDeleter is because we use "new T[]" rather than an normal new.
-    // Without ArrayDeleter, shared_ptr would just use a regular delete, rather
-    // than the required "delete []".
-    _owner.reset(new T[_nElements], ArrayDeleter<T>());
-    _data = _owner.get();
+    // This bit is based on the answers here:
+    // http://stackoverflow.com/questions/227897/how-to-allocate-aligned-memory-only-using-the-standard-library/227900
+    // The point of this is to get the _data pointer aligned to a 16 byte (128 bit) boundary.
+    // Arrays that are so aligned can use SSE operations and so can be much faster than
+    // non-aligned memroy.  FFTW in particular is faster if it gets aligned data.
+    char* mem = new char[_nElements * sizeof(T) + sizeof(char*) + 15];
+    _data = reinterpret_cast<T*>( (uintptr_t)(mem + sizeof(char*) + 15) & ~(size_t) 0x0F );
+    ((char**)_data)[-1] = mem;
+    _owner.reset(_data, AlignedDeleter<T>());
 }
 
 template <typename T>
