@@ -37,7 +37,7 @@ namespace galsim {
      * Functions derived from this interface can be integrated by `Int.h` and
      * can be sampled by `OneDimensionalDeviate`.
      */
-    class FluxDensity: public std::unary_function<double,double> 
+    class FluxDensity: public std::unary_function<double,double>
     {
     public:
         /// @brief virtual destructor for base class
@@ -55,7 +55,7 @@ namespace galsim {
      *
      * An `Interval` is a contiguous domain over which a `FluxDensity` function is well-behaved,
      * having no sign changes or extrema, which will make it easier to sample the FluxDensity
-     * function over its domain using either rejection sampling or by weighting uniformly 
+     * function over its domain using either rejection sampling or by weighting uniformly
      * distributed photons.
      *
      * This class could be made a subclass of `OneDimensionalDeviate` as it should only be used by
@@ -82,13 +82,13 @@ namespace galsim {
      *
      * See the `OneDimensionalDeviate` docstrings for more information.
      */
-    class Interval 
+    class Interval
     {
     public:
         /**
          * @brief Constructor
          *
-         * Note that no copy of the function is saved.  The function whose reference is passed must 
+         * Note that no copy of the function is saved.  The function whose reference is passed must
          * remain in existence through useful lifetime of the `Interval`
          * @param[in] fluxDensity  The function giving flux (= unnormalized probability) density.
          * @param[in] xLower       Lower bound in x (or radius) of this interval.
@@ -114,7 +114,7 @@ namespace galsim {
          * @brief Draw one photon position and flux from within this interval
          * @param[in] unitRandom An initial uniform deviate to select photon
          * @param[out] x (or radial) coordinate of the selected photon.
-         * @param[out] flux flux of the selected photon, nominally +-1, but can differ if not 
+         * @param[out] flux flux of the selected photon, nominally +-1, but can differ if not
          *             using rejection.
          * @param[out] ud UniformDeviate used for rejection sampling, if needed.
          */
@@ -135,7 +135,7 @@ namespace galsim {
          * @param[out] xLower Interval lower bound
          * @param[out] xUpper Interval upper bound
          */
-        void getRange(double& xLower, double& xUpper) const 
+        void getRange(double& xLower, double& xUpper) const
         {
             xLower = _xLower;
             xUpper = _xUpper;
@@ -144,8 +144,8 @@ namespace galsim {
         /**
          * @brief Return a list of intervals that divide this one into acceptably small ones.
          *
-         * This routine works by recursive bisection.  Intervals that are returned have all had 
-         * their fluxes integrated.  Intervals are split until the FluxDensity does not vary too 
+         * This routine works by recursive bisection.  Intervals that are returned have all had
+         * their fluxes integrated.  Intervals are split until the FluxDensity does not vary too
          * much within an interval, or when their flux is below `smallFlux`.
          * @param[in] smallFlux Flux below which a sub-interval is not further split.
          * @returns List contiguous Intervals whose union is this one.
@@ -164,16 +164,16 @@ namespace galsim {
         void checkFlux() const; // Calculate flux if it has not already been done.
         mutable double _flux; // Integrated flux in this interval (can be negative)
 
-        // Finds the x or radius coord that would enclose fraction of this interval's flux 
+        // Finds the x or radius coord that would enclose fraction of this interval's flux
         // if flux were constant.
-        double interpolateFlux(double fraction) const; 
+        double interpolateFlux(double fraction) const;
 
-        // Set this variable true if returning equal fluxes with rejection method, vs returning 
+        // Set this variable true if returning equal fluxes with rejection method, vs returning
         // non-unity flux weight.
         bool _useRejectionMethod;
 
         // 1. / (Maximum absolute flux density in the interval (assumed to be at an endpoint))
-        double _invMaxAbsDensity; 
+        double _invMaxAbsDensity;
 
         double _invMeanAbsDensity; // 1. / (Mean absolute flux density in the interval)
 
@@ -208,19 +208,19 @@ namespace galsim {
      * - There is at most one extremum within the interval
      * - Any extremum can be localized by sampling the interval at `RANGE_DIVISION_FOR_EXTREMA`
          equidistant points.
-     * - The function is smooth enough to be integrated over the interval with standard basic 
+     * - The function is smooth enough to be integrated over the interval with standard basic
      *   methods.
      */
-    class OneDimensionalDeviate 
+    class OneDimensionalDeviate
     {
     public:
         /**
          * @brief constructor
-         * @param[in] fluxDensity  The FluxDensity being sampled.  No copy is made, original must 
+         * @param[in] fluxDensity  The FluxDensity being sampled.  No copy is made, original must
          *                         stay in existence.
-         * @param[in] range        Ordered argument vector specifying the domain for sampling as 
+         * @param[in] range        Ordered argument vector specifying the domain for sampling as
          *                         described in class docstring.
-         * @param[in] isRadial     Set true for an axisymmetric function on the plane; false 
+         * @param[in] isRadial     Set true for an axisymmetric function on the plane; false
          *                         for linear domain.
          * @param[in] gsparams     GSParams object storing constants that control the accuracy of
          *                         operations, if different from the default.

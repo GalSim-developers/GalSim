@@ -515,18 +515,17 @@ namespace galsim {
         ImageView<T> subImage(const Bounds<int>& bounds);
 
         /**
-         *  @brief Wrap the full image onto a subset of the image and return that subset.
-         *
-         *  This is used to alias the data of a k-space image before doing the FFT to real space.
-         */
-        ImageView<T> wrap(const Bounds<int>& bounds, bool hermx, bool hermy);
-
-        /**
          *  @brief im[bounds] is another syntax for making a sub-image
          */
         ImageView<T> operator[](const Bounds<int>& bounds)
         { return subImage(bounds); }
 
+        /**
+         *  @brief Wrap the full image onto a subset of the image and return that subset.
+         *
+         *  This is used to alias the data of a k-space image before doing the FFT to real space.
+         */
+        ImageView<T> wrap(const Bounds<int>& bounds, bool hermx, bool hermy);
 
         //@{
         /**
@@ -622,8 +621,8 @@ namespace galsim {
      *  pixel values or the ancillary information (like bounds) for a const ImageAlloc,
      *  while you can change things about a non-const ImageAlloc.
      *
-     *  ImageAlloc templates for int16_t, int32_t, float, and double are explicitly instantiated
-     *  in Image.cpp.
+     *  ImageAlloc templates for uint16_t, uint32_t, int16_t, int32_t, float, and double are
+     *  explicitly instantiated in Image.cpp.
      */
     template <typename T>
     class ImageAlloc : public BaseImage<T>

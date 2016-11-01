@@ -16,6 +16,7 @@
 #    and/or other materials provided with the distribution.
 #
 import galsim
+import logging
 
 # This file adds input type cosmos_catalog and gsobject typs COSMOSGalaxy.
 
@@ -25,7 +26,14 @@ import galsim
 from .input import RegisterInputType, InputLoader
 class COSMOSLoader(InputLoader):
     def setupImage(self, cosmos_cat, config, base, logger):
-        if logger:
+        if logger: # pragma: no cover
+            # Only report as a warning the first time.  After that, use info.
+            first = not base.get('_COSMOSLoader_reported_as_warning',False)
+            base['_COSMOSLoader_reported_as_warning'] = True
+            if first:
+                log_level = logging.WARNING
+            else:
+                log_level = logging.INFO
             if 'input' in base:
                 if 'cosmos_catalog' in base['input']:
                     out_str = ''
@@ -34,13 +42,14 @@ class COSMOSLoader(InputLoader):
                     if 'dir' in base['input']['cosmos_catalog'][0]:
                         out_str += '\n  dir = %s'%base['input']['cosmos_catalog'][0]['dir']
                     if out_str != '':
-                        logger.warning('Using user-specified COSMOSCatalog: %s',out_str)
+                        logger.log(log_level, 'Using user-specified COSMOSCatalog: %s',out_str)
             logger.info("file %d: COSMOS catalog has %d total objects; %d passed initial cuts.",
                         base['file_num'], cosmos_cat.getNTot(), cosmos_cat.getNObjects())
-            if base['gal']['gal_type']=='parametric':
-                logger.warning("Using parametric galaxies.")
-            else:
-                logger.warning("Using real galaxies.")
+            if 'gal' in base and 'gal_type' in base['gal']:
+                if base['gal']['gal_type']=='parametric':
+                    logger.log(log_level,"Using parametric galaxies.")
+                else:
+                    logger.log(log_level,"Using real galaxies.")
 
 RegisterInputType('cosmos_catalog', COSMOSLoader(galsim.COSMOSCatalog))
 

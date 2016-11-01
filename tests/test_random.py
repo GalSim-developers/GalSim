@@ -1353,7 +1353,6 @@ def test_distLookupTable():
             d1._inverseprobabilitytable.getVals(), d2._inverseprobabilitytable.getVals(), precision,
             err_msg='DistDeviate with near-flat probabilities incorrectly created '
                     'a monotonic version of the CDF')
-            
 
     # Test filling an image
     d.seed(testseed)

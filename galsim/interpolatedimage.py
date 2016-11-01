@@ -678,7 +678,7 @@ class InterpolatedKImage(GSObject):
                  'either InterpolatedKImage(re + 1j * im, ...) or '
                  'InterpolatedKImage(real_kimage=re, imag_kimage=im)')
             # This won't work if they call InterpolatedKImage(re,im, k_interpolant=kinterp)
-            # But I don't see an easy way around that, so I guess that use case is not 
+            # But I don't see an easy way around that, so I guess that use case is not
             # backwards compatible.  Sorry..
             real_kimage = kimage
             imag_kimage = k_interpolant

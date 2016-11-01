@@ -97,7 +97,7 @@ def test_nfwhalo():
 
     # set up the same halo
     halo = galsim.NFWHalo(mass=1e15, conc=4, redshift=1)
-    pos_x = np.arange(1,600)
+    pos_x = np.arange(1.,600)
     pos_y = np.zeros_like(pos_x)
     z_s = 2
     # Along the way test different allowed ways to pass in position information.

@@ -31,7 +31,7 @@ namespace galsim {
 
     /// @brief Class for storing 2d position vectors in an (x, y) format.
     template <class T>
-    class Position 
+    class Position
     {
     public:
         /// @brief Publicly visible x & y attributes of the position.
@@ -44,7 +44,7 @@ namespace galsim {
         Position(const T xin, const T yin) : x(xin), y(yin) {}
 
         ///@brief Assignment.
-        Position& operator=(const Position<T>& rhs) 
+        Position& operator=(const Position<T>& rhs)
         {
             if (&rhs == this) return *this;
             else { x=rhs.x; y=rhs.y; return *this; }
@@ -75,16 +75,16 @@ namespace galsim {
         Position<T> operator-() const { return Position<T>(-x,-y); }
 
         /// @brief Overloaded vector + addition operator with a Position on the rhs.
-        Position<T> operator+(const Position<T>& rhs) const 
+        Position<T> operator+(const Position<T>& rhs) const
         { return Position<T>(x+rhs.x,y+rhs.y); }
 
         /// @brief Overloaded vector - subtraction operator with a Position on the rhs.
-        Position<T> operator-(const Position<T>& rhs) const 
+        Position<T> operator-(const Position<T>& rhs) const
         { return Position<T>(x-rhs.x,y-rhs.y); }
 
         /// @brief Overloaded == relational equality operator.
         bool operator==(const Position<T>& rhs) const { return (x==rhs.x && y==rhs.y); }
-        
+
         /// @brief Overloaded != relational non-equality operator.
         bool operator!=(const Position<T>& rhs) const { return (x!=rhs.x || y!=rhs.y); }
 
@@ -98,20 +98,20 @@ namespace galsim {
 
     /// @brief Overloaded << operator which uses write() method of Position class.
     template <class T>
-    inline std::ostream& operator<<(std::ostream& os, const Position<T> p) 
+    inline std::ostream& operator<<(std::ostream& os, const Position<T> p)
     { p.write(os); return os; }
 
     /// @brief Overloaded >> operator which uses read() method of Position class.
     template <class T>
-    inline std::istream& operator>>(std::istream& is, Position<T>& p) 
+    inline std::istream& operator>>(std::istream& is, Position<T>& p)
     { p.read(is); return is; }
 
     template <class T>
-    /** 
-     * @brief Class for storing image bounds, essentially the vertices of a rectangle.  
+    /**
+     * @brief Class for storing image bounds, essentially the vertices of a rectangle.
      *
-     * This is used to keep track of the bounds of catalogs and fields.  You can set values, 
-     * but generally you just keep including positions of each galaxy or the bounds of each 
+     * This is used to keep track of the bounds of catalogs and fields.  You can set values,
+     * but generally you just keep including positions of each galaxy or the bounds of each
      * catalog respectively using the += operators.
      *
      * The bounds are stored as four numbers in each instance, (xmin, ymin, xmax, ymax), with an
@@ -119,7 +119,7 @@ namespace galsim {
      *
      * Rectangle is undefined if min>max in either direction.
      */
-    class Bounds 
+    class Bounds
     {
     public:
         /// @brief Constructor using four scalar positions (xmin, xmax, ymin, ymax).
@@ -149,7 +149,7 @@ namespace galsim {
         /// @brief Set the xmin of the Bounds rectangle.
         void setXMin(const T x) { xmin = x; defined= xmin<=xmax && ymin<=ymax; }
 
-        /// @brief Set the xmax of the Bounds rectangle. 
+        /// @brief Set the xmax of the Bounds rectangle.
         void setXMax(const T x) { xmax = x; defined= xmin<=xmax && ymin<=ymax; }
 
         /// @brief Set the ymin of the Bounds rectangle.
@@ -176,14 +176,14 @@ namespace galsim {
         /// @brief Return the origin of the image (xmin, ymin)
         Position<T> origin() const { return Position<T>(xmin, ymin); }
 
-        /// @brief Return the nominal center of the image. 
+        /// @brief Return the nominal center of the image.
         ///
         /// This is the position of the pixel that is considered to be (0,0)
         Position<T> center() const;
 
         /// @brief Return the true center of the image.
         ///
-        /// For even-sized, integer bounds, this will not be an integer, since the center in 
+        /// For even-sized, integer bounds, this will not be an integer, since the center in
         /// that case falls between two pixels.
         Position<double> trueCenter() const;
 
@@ -212,13 +212,13 @@ namespace galsim {
 
         //@{
         /// @brief expand bounds by a factor m around the current center.
-        void expand(const double m); 
+        void expand(const double m);
         Bounds<T> makeExpanded(const double m) const
         { Bounds<T> ret = copy(); ret.expand(m); return ret; }
         //@}
 
         /// @brief find the intersection of two bounds
-        const Bounds<T> operator&(const Bounds<T>& rhs) const; 
+        const Bounds<T> operator&(const Bounds<T>& rhs) const;
 
         //@{
         /// @brief shift the bounding box by some amount.
@@ -240,19 +240,19 @@ namespace galsim {
 
         /// @brief return whether the bounded region includes all of the given bounds
         bool includes(const Bounds<T>& rhs) const
-        { 
-            return (defined && rhs.defined && 
+        {
+            return (defined && rhs.defined &&
                     rhs.xmin>=xmin && rhs.xmax<=xmax &&
                     rhs.ymin>=ymin && rhs.ymax<=ymax);
         }
 
         /// @brief check equality of two bounds
-        bool operator==(const Bounds<T>& rhs) const 
+        bool operator==(const Bounds<T>& rhs) const
         {
             return defined && rhs.defined && (xmin==rhs.xmin) &&
                 (ymin==rhs.ymin) && (xmax==rhs.xmax) && (ymax==rhs.ymax);
         }
-        bool operator!=(const Bounds<T>& rhs) const 
+        bool operator!=(const Bounds<T>& rhs) const
         {
             return !defined || !rhs.defined || (xmin!=rhs.xmin) ||
                 (ymin!=rhs.ymin) || (xmax!=rhs.xmax) || (ymax!=rhs.ymax);
@@ -261,7 +261,7 @@ namespace galsim {
         ///  @brief Check if two bounds have same shape, but maybe different origin.
         bool isSameShapeAs(const Bounds<T>& rhs) const
         {
-            return defined && rhs.defined && 
+            return defined && rhs.defined &&
                 (xmax - xmin == rhs.xmax - rhs.xmin) &&
                 (ymax - ymin == rhs.ymax - rhs.ymin);
         }
@@ -274,13 +274,13 @@ namespace galsim {
          *  However, for integer type, we need to add 1 to each size to correctly count the
          *  number of pixels being described by the bounding box.
          */
-        T area() const 
+        T area() const
         {
             return defined ?
                 ( std::numeric_limits<T>::is_integer ?
                   (xmax-xmin+1)*(ymax-ymin+1) :
                   (xmax-xmin)*(ymax-ymin) ) :
-                T(0); 
+                T(0);
         }
 
         /// @brief divide the current bounds into (nx x ny) sub-regions
@@ -288,7 +288,7 @@ namespace galsim {
 
         /// @brief write out to a file
         void write(std::ostream& fout) const
-        { 
+        {
             if (defined) fout << xmin << ' ' << xmax << ' ' << ymin << ' ' << ymax << ' ';
             else fout << "Undefined ";
         }
@@ -347,7 +347,7 @@ namespace galsim {
 
     // First the generic version:
     template <class T, class U, bool is_int>
-    struct CalculateCenter 
+    struct CalculateCenter
     {
         static Position<U> call(const Bounds<T>& b)
         { return Position<U>((b.getXMin() + b.getXMax())/U(2),(b.getYMin() + b.getYMax())/U(2)); }
@@ -364,7 +364,7 @@ namespace galsim {
             //      (-10,-1,-10,-1) -> (-5,-5)
             // Just up and to the right of the true center in both cases.
             return Position<U>(b.getXMin() + (b.getXMax()-b.getXMin()+1)/U(2),
-                               b.getYMin() + (b.getYMax()-b.getYMin()+1)/U(2)); 
+                               b.getYMin() + (b.getYMax()-b.getYMin()+1)/U(2));
         }
     };
 
@@ -414,11 +414,11 @@ namespace galsim {
     }
 
     template <class T>
-    void Bounds<T>::expand(const double m) 
+    void Bounds<T>::expand(const double m)
     {
         T dx = xmax-xmin;
         T dy = ymax-ymin;
-        dx = T(dx*0.5*(m-1.)); 
+        dx = T(dx*0.5*(m-1.));
         dy = T(dy*0.5*(m-1.));
         xmax += dx;  xmin -= dx;
         ymax += dy;  ymin -= dy;

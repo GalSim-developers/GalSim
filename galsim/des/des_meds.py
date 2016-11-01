@@ -412,7 +412,7 @@ def WriteMEDS(obj_list, file_name, clobber=True):
     hdu_list.writeto(file_name,clobber=clobber)
 
 
-# Make the class that will 
+# Make the class that will
 class MEDSBuilder(galsim.config.OutputBuilder):
 
     def buildImages(self, config, base, file_num, image_num, obj_num, ignore, logger):

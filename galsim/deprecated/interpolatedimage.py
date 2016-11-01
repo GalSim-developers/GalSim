@@ -29,7 +29,7 @@ def InterpolantXY(arg):
 
 galsim.InterpolantXY = InterpolantXY
 
-# Also make Interpolant2d an alias for Interpolant in case anyone does 
+# Also make Interpolant2d an alias for Interpolant in case anyone does
 # isinstance(interp, galsim.Interpolant2d)
 
 galsim.Interpolant2d = galsim.Interpolant

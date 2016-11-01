@@ -1832,12 +1832,6 @@ namespace hsm {
         float sky_var, const char* shear_est, const std::string& recompute_flux,
         double guess_sig_gal, double guess_sig_PSF, double precision,
         galsim::Position<double> guess_centroid, boost::shared_ptr<HSMParams> hsmparams);
-    template CppShapeData EstimateShearView(
-        const BaseImage<int>& gal_image, const BaseImage<int>& PSF_image,
-        const BaseImage<int>& gal_mask_image,
-        float sky_var, const char* shear_est, const std::string& recompute_flux,
-        double guess_sig_gal, double guess_sig_PSF, double precision,
-        galsim::Position<double> guess_centroid, boost::shared_ptr<HSMParams> hsmparams);
 
     template CppShapeData FindAdaptiveMomView(
         const BaseImage<float>& object_image, const BaseImage<int> &object_mask_image,
@@ -1851,6 +1845,6 @@ namespace hsm {
         const BaseImage<int>& object_image, const BaseImage<int> &object_mask_image,
         double guess_sig, double precision, galsim::Position<double> guess_centroid,
         boost::shared_ptr<HSMParams> hsmparams);
-
+        
 }
 }

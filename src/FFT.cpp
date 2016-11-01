@@ -45,7 +45,7 @@ namespace galsim {
         _array.fill(value);
     }
 
-    std::complex<double> KTable::kval(int ix, int iy) const 
+    std::complex<double> KTable::kval(int ix, int iy) const
     {
         check_array();
         std::complex<double> retval=_array[index(ix,iy)];
@@ -53,7 +53,7 @@ namespace galsim {
         else return retval;
     }
 
-    void KTable::kSet(int ix, int iy, std::complex<double> value) 
+    void KTable::kSet(int ix, int iy, std::complex<double> value)
     {
         check_array();
         clearCache(); // invalidate any stored interpolations
@@ -65,13 +65,13 @@ namespace galsim {
             if (ix==0 || ix==_No2) _array[index(ix,-iy)]=conj(value);
         }
     }
-    void KTable::clear() 
+    void KTable::clear()
     {
         clearCache(); // invalidate any stored interpolations
         _array.fill(0.);
     }
 
-    void KTable::accumulate(const KTable& rhs, double scalar) 
+    void KTable::accumulate(const KTable& rhs, double scalar)
     {
         clearCache(); // invalidate any stored interpolations
         check_array();
@@ -81,7 +81,7 @@ namespace galsim {
             _array[i] += scalar * rhs._array[i];
     }
 
-    void KTable::operator*=(const KTable& rhs) 
+    void KTable::operator*=(const KTable& rhs)
     {
         clearCache(); // invalidate any stored interpolations
         check_array();
@@ -99,7 +99,7 @@ namespace galsim {
             _array[i] *= scale;
     }
 
-    boost::shared_ptr<KTable> KTable::wrap(int Nout) const 
+    boost::shared_ptr<KTable> KTable::wrap(int Nout) const
     {
         dbg<<"Start KTable wrap: N = "<<_N<<", Nout = "<<Nout<<std::endl;
         // MJ: I found that when using this routing with N not being a multiple of Nout, that
@@ -151,7 +151,7 @@ namespace galsim {
         return out;
     }
 
-    boost::shared_ptr<XTable> XTable::wrap(int Nout) const 
+    boost::shared_ptr<XTable> XTable::wrap(int Nout) const
     {
         if (Nout < 0) FormatAndThrow<FFTError>() << "XTable::wrap invalid Nout= " << Nout;
         // Make it even:
@@ -283,11 +283,11 @@ namespace galsim {
             return 0.;
         }
     }
-    
+
     // Interpolate table to some specific k.  We WILL wrap the KTable to cover
     // entire interpolation kernel:
     std::complex<double> KTable::interpolate(
-        double kx, double ky, const Interpolant2d& interp) const 
+        double kx, double ky, const Interpolant2d& interp) const
     {
         dbg<<"Start KTable interpolate at "<<kx<<','<<ky<<std::endl;
         dbg<<"N = "<<_N<<std::endl;
@@ -295,7 +295,7 @@ namespace galsim {
         kx *= _invdk;
         ky *= _invdk;
         int ixMin, ixMax, iyMin, iyMax;
-        if ( interp.isExactAtNodes() 
+        if ( interp.isExactAtNodes()
              && std::abs(kx - std::floor(kx+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
             // x coord lies right on integer value, no interpolation in x direction
             ixMin = wrapKValue(kx+0.01);
@@ -314,7 +314,7 @@ namespace galsim {
         xassert(ixMax > -_No2);
         xassert(ixMax <= _No2);
 
-        if ( interp.isExactAtNodes() 
+        if ( interp.isExactAtNodes()
              && std::abs(ky - std::floor(ky+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
             // y coord lies right on integer value, no interpolation in y direction
             iyMin = wrapKValue(ky+0.01);
@@ -340,7 +340,7 @@ namespace galsim {
         if (ixy) {
             // Interpolant is seperable
             // We have the opportunity to speed up the calculation by
-            // re-using the sums over rows.  So we will keep a 
+            // re-using the sums over rows.  So we will keep a
             // cache of them.
             if (kx != _cacheX || ixy != _cacheInterp) {
                 clearCache();
@@ -404,9 +404,9 @@ namespace galsim {
                 nextSaved = _cache.begin();
             }
 
-            // Accumulate sum of 
+            // Accumulate sum of
             //    interp.xvalWrapped(ix-kx, iy-ky, N)*kval(ix,iy);
-            // Which separates into 
+            // Which separates into
             //    ixy->xvalWrapped(ix-kx) * ixy->xvalWrapped(iy-ky) * kval(ix,iy)
             // The first factor is saved in xwt
             // The second factor is constant for a given iy, so do that at the end of the loop.
@@ -530,7 +530,7 @@ namespace galsim {
         for (int iy=1; iy<_No2; ++iy) {
             ky = iy*_dk;
             *(zptr++) = tmp1[iy] = func(0,ky);        // [kx/dk] = ix = 0
-            for (int ix=1; ix<_No2; ++ix) {    
+            for (int ix=1; ix<_No2; ++ix) {
                 kx = ix*_dk;
                 *(zptr++) = func(kx,ky);               // [kx/dk] = ix = 1 to (N/2-1)
             }
@@ -540,7 +540,7 @@ namespace galsim {
         // [ky/dk] = iy = -N/2
         for (int ix=0; ix<_No2+1; ++ix) {
             kx = ix*_dk;
-            *(zptr++) = func(kx,-_halfNd*_dk);         // [kx/dk] = ix = 0 to N/2   
+            *(zptr++) = func(kx,-_halfNd*_dk);         // [kx/dk] = ix = 0 to N/2
         }
         // [ky/dk] = iy = (-N/2+1) to (-1)
         for (int iy=-_No2+1; iy<0; ++iy) {
@@ -552,7 +552,7 @@ namespace galsim {
             }
             *(zptr++) = conj(tmp2[-iy]);      // [kx/dk] = ix = N/2
         }
-    } 
+    }
 
     // Integrate a function over k - can be function of k or of PSF(k)
     std::complex<double> KTable::integrate(KTable::function2 func) const
@@ -600,7 +600,7 @@ namespace galsim {
     }
 
     // Integrate KTable over d^2k (sum of all pixels * dk * dk)
-    std::complex<double> KTable::integratePixels() const 
+    std::complex<double> KTable::integratePixels() const
     {
         check_array();
         std::complex<double> sum=0.;
@@ -628,7 +628,7 @@ namespace galsim {
     }
 
     // Make a new table that is function of old.
-    boost::shared_ptr<KTable> KTable::function(KTable::function2 func) const 
+    boost::shared_ptr<KTable> KTable::function(KTable::function2 func) const
     {
         check_array();
         boost::shared_ptr<KTable> lhs(new KTable(_N,_dk));
@@ -659,13 +659,13 @@ namespace galsim {
 
     // Transform to a single x point:
     // assumes (x,y) in physical units
-    double KTable::xval(double x, double y) const 
-    { 
+    double KTable::xval(double x, double y) const
+    {
         check_array();
         x*=_dk; y*=_dk;
         // Don't evaluate if x not in fundamental period +-PI/dk:
 #ifdef FFT_DEBUG
-        if (std::abs(x) > M_PI || std::abs(y) > M_PI) 
+        if (std::abs(x) > M_PI || std::abs(y) > M_PI)
             throw FFTOutofRange(" (x,y) too big in xval()");
 #endif
         std::complex<double> dxphase=std::polar(1.,x);
@@ -713,7 +713,7 @@ namespace galsim {
     }
 
     // Translate the PSF to be for source at (x0,y0);
-    void KTable::translate(double x0, double y0) 
+    void KTable::translate(double x0, double y0)
     {
         clearCache(); // invalidate any stored interpolations
         check_array();
@@ -764,26 +764,26 @@ namespace galsim {
         _array.fill(value);
     }
 
-    double XTable::xval(int ix, int iy) const 
+    double XTable::xval(int ix, int iy) const
     {
         check_array();
         return _array[index(ix,iy)];
     }
 
-    void XTable::xSet(int ix, int iy, double value) 
+    void XTable::xSet(int ix, int iy, double value)
     {
         check_array();
         clearCache(); // invalidate any stored interpolations
         _array[index(ix,iy)]=value;
     }
 
-    void XTable::clear() 
+    void XTable::clear()
     {
         clearCache(); // invalidate any stored interpolations
         _array.fill(0.);
     }
 
-    void XTable::accumulate(const XTable& rhs, double scalar) 
+    void XTable::accumulate(const XTable& rhs, double scalar)
     {
         check_array();
         clearCache(); // invalidate any stored interpolations
@@ -793,7 +793,7 @@ namespace galsim {
             _array[i] += scalar * rhs._array[i];
     }
 
-    void XTable::operator*=(double scale) 
+    void XTable::operator*=(double scale)
     {
         check_array();
         clearCache(); // invalidate any stored interpolations
@@ -804,25 +804,25 @@ namespace galsim {
 
     // Interpolate table (linearly) to some specific k:
     // x any y in physical units (to be divided by dx for indices)
-    double XTable::interpolate(double x, double y, const Interpolant2d& interp) const 
+    double XTable::interpolate(double x, double y, const Interpolant2d& interp) const
     {
         xdbg << "interpolating " << x << " " << y << " " << std::endl;
         x *= _invdx;
         y *= _invdx;
         int ixMin, ixMax, iyMin, iyMax;
-        if ( interp.isExactAtNodes() 
+        if ( interp.isExactAtNodes()
              && std::abs(x - std::floor(x+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
             // x coord lies right on integer value, no interpolation in x direction
             ixMin = ixMax = int(std::floor(x+0.01));
         } else {
-            ixMin = int(std::ceil(x-interp.xrange())); 
+            ixMin = int(std::ceil(x-interp.xrange()));
             ixMax = int(std::floor(x+interp.xrange()));
         }
         ixMin = std::max(ixMin, -_No2);
         ixMax = std::min(ixMax, _No2-1);
         if (ixMin > ixMax) return 0.;
 
-        if ( interp.isExactAtNodes() 
+        if ( interp.isExactAtNodes()
              && std::abs(y - std::floor(y+0.01)) < 10.*std::numeric_limits<double>::epsilon()) {
             // y coord lies right on integer value, no interpolation in y direction
             iyMin = iyMax = int(std::floor(y+0.01));
@@ -839,7 +839,7 @@ namespace galsim {
         if (ixy) {
             // Interpolant is seperable
             // We have the opportunity to speed up the calculation by
-            // re-using the sums over rows.  So we will keep a 
+            // re-using the sums over rows.  So we will keep a
             // cache of them.
             if (x != _cacheX || ixy != _cacheInterp) {
                 clearCache();
@@ -850,7 +850,7 @@ namespace galsim {
                 // See if we already have this row in cache:
                 int index = iyMin - _cacheStartY;
                 if (index < 0) index += _N;
-                if (index < int(_cache.size())) 
+                if (index < int(_cache.size()))
                     // We have it!
                     return _cache[index];
                 else
@@ -864,7 +864,7 @@ namespace galsim {
             // This is also cached if possible.  It gets cleared when kx != cacheX above.
             if (_xwt.empty()) {
                 _xwt.resize(nx);
-                for (int i=0; i<nx; ++i) 
+                for (int i=0; i<nx; ++i)
                     _xwt[i] = ixy->xval1d(i+ixMin-x);
             } else {
                 assert(int(_xwt.size()) == nx);
@@ -928,7 +928,7 @@ namespace galsim {
 
     // Integrate a function over x - can be function of x or of PSF(x)
     // Setting the Boolean flag gives sum over samples, not integral.
-    double XTable::integrate(XTable::function2 func, bool  sumonly) const 
+    double XTable::integrate(XTable::function2 func, bool  sumonly) const
     {
         check_array();
         double sum=0.;
@@ -949,12 +949,12 @@ namespace galsim {
         return sum;
     }
 
-    double XTable::integratePixels() const 
+    double XTable::integratePixels() const
     {
         check_array();
         double sum=0.;
         const double* zptr=_array.get();
-        for (int iy=-_No2; iy<_No2; ++iy) 
+        for (int iy=-_No2; iy<_No2; ++iy)
             for (int ix=-_N/2; ix<_No2; ++ix) {
                 sum += *(zptr++);
             }
@@ -963,14 +963,14 @@ namespace galsim {
     }
 
     // Transform to a single k point:
-    std::complex<double> XTable::kval(double kx, double ky) const 
+    std::complex<double> XTable::kval(double kx, double ky) const
     {
         check_array();
-        // Don't evaluate if k not in fundamental period 
+        // Don't evaluate if k not in fundamental period
         kx *= _dx;
         ky *= _dx;
 #ifdef FFT_DEBUG
-        if (std::abs(kx) > M_PI || std::abs(ky) > M_PI) 
+        if (std::abs(kx) > M_PI || std::abs(ky) > M_PI)
             throw FFTOutofRange("XTable::kval() args out of range");
 #endif
         std::complex<double> dxphase=std::polar(1.,-kx);
@@ -994,7 +994,7 @@ namespace galsim {
     }
 
     // Have FFTW develop "wisdom" on doing this kind of transform
-    void KTable::fftwMeasure() const 
+    void KTable::fftwMeasure() const
     {
         // Copy data into new array to avoid NaN's, etc., but not bothering
         // with scaling, etc.
@@ -1004,7 +1004,7 @@ namespace galsim {
 
         // Note: The fftw_execute function is the only thread-safe FFTW routine.
         // So if we decide to go with some kind of multi-threading (rather than multi-process
-        // parallelism) all of the plan creation and destruction calls in this file 
+        // parallelism) all of the plan creation and destruction calls in this file
         // will need to be placed in critical blocks or the equivalent (mutex locks, etc.).
         fftw_plan plan = fftw_plan_dft_c2r_2d(
             _N, _N, t_array.get_fftw(), xt._array.get_fftw(), FFTW_MEASURE);
@@ -1013,8 +1013,8 @@ namespace galsim {
     }
 
     // Fourier transform from (complex) k to x:
-    // This version takes XTable reference as argument 
-    void KTable::transform(XTable& xt) const 
+    // This version takes XTable reference as argument
+    void KTable::transform(XTable& xt) const
     {
         dbg<<"Start transform K -> X\n";
         dbg<<"N = "<<_N<<std::endl;
@@ -1059,14 +1059,14 @@ namespace galsim {
     }
 
     // Same thing, but return a new XTable
-    boost::shared_ptr<XTable> KTable::transform() const 
+    boost::shared_ptr<XTable> KTable::transform() const
     {
         boost::shared_ptr<XTable> xt(new XTable( _N, 2.*M_PI*_invNd*_invdk ));
         transform(*xt);
         return xt;
     }
 
-    void XTable::fftwMeasure() const 
+    void XTable::fftwMeasure() const
     {
         // Make a new copy of data array since measurement will overwrite:
         // Copy data into new array to avoid NaN's, etc., but not bothering
@@ -1083,7 +1083,7 @@ namespace galsim {
     }
 
     // Fourier transform from x back to (complex) k:
-    void XTable::transform(KTable& kt) const 
+    void XTable::transform(KTable& kt) const
     {
         check_array();
 
@@ -1097,7 +1097,7 @@ namespace galsim {
         fftw_destroy_plan(plan);
 
         // Now scale the k spectrum and flip signs for x=0 in middle.
-        double fac = _dx * _dx; 
+        double fac = _dx * _dx;
         size_t ind=0;
         for (int iy=0; iy<_N; ++iy) {
             for (int ix=0; ix<=_N/2; ++ix) {
@@ -1110,7 +1110,7 @@ namespace galsim {
     }
 
     // Same thing, but return a new KTable
-    boost::shared_ptr<KTable> XTable::transform() const 
+    boost::shared_ptr<KTable> XTable::transform() const
     {
         boost::shared_ptr<KTable> kt(new KTable( _N, 2.*M_PI*_invNd*_invdx ));
         transform(*kt);

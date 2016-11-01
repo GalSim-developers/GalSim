@@ -96,8 +96,6 @@ namespace galsim {
         if (ptr) {
             const int skip = image.getNSkip();
             const int step = image.getStep();
-            const int nrow = image.getNRow();
-            const int ncol = image.getNCol();
             const int xmin = image.getXMin();
             const int xmax = image.getXMax();
             const int ymin = image.getYMin();
@@ -180,14 +178,24 @@ namespace galsim {
     struct ResultType<int32_t,double> { typedef double type; };
     template <>
     struct ResultType<int16_t,double> { typedef double type; };
+    template <>
+    struct ResultType<uint32_t,double> { typedef double type; };
+    template <>
+    struct ResultType<uint16_t,double> { typedef double type; };
 
     template <>
     struct ResultType<int32_t,float> { typedef float type; };
     template <>
     struct ResultType<int16_t,float> { typedef float type; };
+    template <>
+    struct ResultType<uint32_t,float> { typedef float type; };
+    template <>
+    struct ResultType<uint16_t,float> { typedef float type; };
 
     template <>
     struct ResultType<int16_t,int32_t> { typedef int32_t type; };
+    template <>
+    struct ResultType<uint16_t,uint32_t> { typedef uint32_t type; };
 
     // For convenience below...
 #define CT std::complex<T>
@@ -362,7 +370,7 @@ namespace galsim {
 
     template <typename T>
     inline ImageView<CT> operator/=(ImageView<CT> im, T x)
-    { transform_pixel(im, bind2nd(std::divides<T>(),x)); return im; }
+    { transform_pixel(im, bind2nd(std::divides<CT>(),x)); return im; }
 
     template <typename T>
     inline ImageAlloc<CT>& operator/=(ImageAlloc<CT>& im, const T& x)

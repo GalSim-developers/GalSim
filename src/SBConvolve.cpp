@@ -62,7 +62,7 @@ namespace galsim {
         // more than the Gaussian does.  So this is likely to be too high, which is acceptable.
         ConstIter sptr = _plist.begin();
         double twopisigmasq = sptr->getFlux() / sptr->maxSB();
-        for (++sptr; sptr!=_plist.end(); ++sptr) 
+        for (++sptr; sptr!=_plist.end(); ++sptr)
             twopisigmasq += std::abs(sptr->getFlux()) / sptr->maxSB();
         return _fluxProduct / twopisigmasq;
     }

@@ -221,7 +221,7 @@ namespace galsim {
     double SBInclinedExponential::SBInclinedExponentialImpl::maxSB() const
     {
         // When the disk is face on, the max SB is flux / 2 pi r0^2
-        // When the dist is edge on, the max SB is flux / 2 pi r0^2 * (r0/h0)
+        // When the disk is edge on, the max SB is flux / 2 pi r0^2 * (r0/h0)
         double maxsb = _flux * _inv_r0 * _inv_r0 / (2. * M_PI);
         // The relationship for inclinations in between these is not linear.
         // Empirically, it is vaguely linearish in sqrt(cosi), so we use that for

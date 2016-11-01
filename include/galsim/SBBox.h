@@ -19,7 +19,7 @@
 
 #ifndef GalSim_SBBox_H
 #define GalSim_SBBox_H
-/** 
+/**
  * @file SBBox.h @brief SBProfile of a 2-d tophat profile.
  */
 
@@ -27,18 +27,18 @@
 
 namespace galsim {
 
-    /** 
+    /**
      * @brief Surface Brightness Profile for the Boxcar function.
      *
      * The boxcar function is a rectangular box.  Convolution with a Boxcar function of dimensions
      * `width` x `height` and sampling at pixel centres is equivalent to pixelation (i.e. Surface
      * Brightness integration) across rectangular pixels of the same dimensions.  This class is
      * therefore useful for pixelating SBProfiles.
-     */ 
-    class SBBox : public SBProfile 
+     */
+    class SBBox : public SBProfile
     {
     public:
-        /** 
+        /**
          * @brief Constructor.
          *
          * @param[in] width    width of Boxcar function along x.
@@ -70,16 +70,16 @@ namespace galsim {
         void operator=(const SBBox& rhs);
     };
 
-    /** 
+    /**
      * @brief Surface Brightness Profile for the TopHat function.
      *
      * The tophat function is much like the boxcar, but a circular plateau, rather than
      * a rectangle.  It is defined by a radius and a flux.
-     */ 
-    class SBTopHat : public SBProfile 
+     */
+    class SBTopHat : public SBProfile
     {
     public:
-        /** 
+        /**
          * @brief Constructor.
          *
          * @param[in] radius    radius of TopHat function

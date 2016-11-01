@@ -627,7 +627,6 @@ ImageView<T> ImageView<T>::wrap(const Bounds<int>& b, bool hermx, bool hermy)
     // In the normal (not hermx) case, we now wrap rows [j1,j2) into the columns [i1,i2).
     if (!hermx) {
         ptr = getData() + j1*stride;
-        T* ptrwrap;
         for (int j=j1; j<j2; ++j, ptr+=skip) {
             xdbg<<"Wrap row "<<j<<" into columns ["<<i1<<','<<i2<<")\n";
             xdbg<<"ptr = "<<ptr-this->getData()<<std::endl;
@@ -843,22 +842,29 @@ template class BaseImage<double>;
 template class BaseImage<float>;
 template class BaseImage<int32_t>;
 template class BaseImage<int16_t>;
+template class BaseImage<uint32_t>;
+template class BaseImage<uint16_t>;
 template class BaseImage<std::complex<double> >;
 template class ImageAlloc<double>;
 template class ImageAlloc<float>;
 template class ImageAlloc<int32_t>;
 template class ImageAlloc<int16_t>;
+template class ImageAlloc<uint32_t>;
+template class ImageAlloc<uint16_t>;
 template class ImageAlloc<std::complex<double> >;
 template class ImageView<double>;
 template class ImageView<float>;
 template class ImageView<int32_t>;
 template class ImageView<int16_t>;
+template class ImageView<uint32_t>;
+template class ImageView<uint16_t>;
 template class ImageView<std::complex<double> >;
 template class ConstImageView<double>;
 template class ConstImageView<float>;
 template class ConstImageView<int32_t>;
 template class ConstImageView<int16_t>;
+template class ConstImageView<uint32_t>;
+template class ConstImageView<uint16_t>;
 template class ConstImageView<std::complex<double> >;
-
 } // namespace galsim
 

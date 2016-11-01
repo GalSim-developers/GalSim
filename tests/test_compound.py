@@ -114,7 +114,7 @@ def test_convolve():
     np.testing.assert_equal(conv.centroid(), cen)
     np.testing.assert_almost_equal(conv.getFlux(), psf.flux * pixel.flux)
     np.testing.assert_almost_equal(conv.flux, psf.flux * pixel.flux)
-    # Not almost_equal.  Convolutions don't give a very good estimate. 
+    # Not almost_equal.  Convolutions don't give a very good estimate.
     # They are almost always too high, which is actually ok for how we use maxSB for phot shooting.
     np.testing.assert_array_less(conv.xValue(cen), conv.maxSB())
 

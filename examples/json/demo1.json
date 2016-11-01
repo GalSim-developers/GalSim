@@ -40,7 +40,7 @@
     "sigma" : 2,
     "flux" : 1e5
 },
- 
+
 "psf" : {
     "type" : "Gaussian",
     "sigma" : 1
@@ -55,5 +55,5 @@
     "dir" : "output_json",
     "file_name" : "demo1.fits"
 }
-    
+
 }

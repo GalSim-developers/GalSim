@@ -20,6 +20,7 @@ The Image class and some modifications to the docs for the C++ layer ImageAlloc 
 classes.
 """
 
+from __future__ import division
 from future.utils import with_metaclass
 from . import _galsim
 import numpy as np
@@ -48,8 +49,9 @@ _galsim.ImageAlloc[alt_int32] = _galsim.ImageAllocI
 _galsim.ImageView[alt_int32] = _galsim.ImageViewI
 _galsim.ConstImageView[alt_int32] = _galsim.ConstImageViewI
 
-_all_cpp_image_types = tuple(_galsim.ImageAlloc.values() + _galsim.ImageView.values() +
-                             _galsim.ConstImageView.values())
+_all_cpp_image_types = tuple(list(_galsim.ImageAlloc.values()) +
+                             list(_galsim.ImageView.values()) +
+                             list(_galsim.ConstImageView.values()))
 
 # For more information regarding this rather unexpected behaviour for numpy.int32 types, see
 # the following (closed, marked "wontfix") ticket on the numpy issue tracker:
@@ -64,6 +66,8 @@ class MetaImage(type):
         from galsim.deprecated import depr
         depr('Image[type]', 1.1, 'Image(..., dtype=type)')
         Image_dict = {
+            np.uint16 : ImageUS,
+            np.uint32 : ImageUI,
             np.int16 : ImageS,
             np.int32 : ImageI,
             np.float32 : ImageF,
@@ -94,9 +98,10 @@ class Image(with_metaclass(MetaImage, object)):
     numpy array directly via the `array` attribute, you will need to be careful about this
     difference.
 
-    There are 4 data types that the Image can use for the data values.  These are `numpy.int16`,
-    `numpy.int32`, `numpy.float32`, and `numpy.float64`.  If you are constructing a new Image from
-    scratch, the default is `numpy.float32`, but you can specify one of the other data types.
+    There are 6 data types that the Image can use for the data values.  These are `numpy.uint16`,
+    `numpy.uint16`, `numpy.int16`, `numpy.int32`, `numpy.float32`, and `numpy.float64`.
+    If you are constructing a new Image from scratch, the default is `numpy.float32`, but you
+    can specify one of the other data types.
 
     Initialization
     --------------
@@ -233,15 +238,6 @@ class Image(with_metaclass(MetaImage, object)):
     # Hard to imagine a use case where this would be required though...
     valid_dtypes = cpp_valid_dtypes + list(alias_dtypes)
 
-    convert_dtypes = {
-        # We don't have unsigned image code, so just use signed int types.
-        np.uint32 : np.int32,
-        np.uint16 : np.int16,
-        # Also we only have one complex type currently, so convert it up if necessary.
-        np.complex64 : np.complex128,
-    }
-    valid_array_dtypes = cpp_valid_dtypes + list(convert_dtypes)
-
     def __init__(self, *args, **kwargs):
         # Parse the args, kwargs
         ncol = None
@@ -302,8 +298,8 @@ class Image(with_metaclass(MetaImage, object)):
         if array is not None:
             if not isinstance(array, np.ndarray):
                 raise TypeError("array must be a numpy.ndarray instance")
-            if array.dtype.type in Image.convert_dtypes and dtype is None:
-                dtype = Image.convert_dtypes[array.dtype.type]
+            if array.dtype.type in Image.alias_dtypes and dtype is None:
+                dtype = Image.alias_dtypes[array.dtype.type]
             if array.dtype.type not in Image.cpp_valid_dtypes and dtype is None:
                 raise ValueError("array's dtype.type must be one of "+str(Image.cpp_valid_dtypes)+
                                  ".  Instead got "+str(array.dtype.type)+".  Or can set "+
@@ -786,7 +782,7 @@ class Image(with_metaclass(MetaImage, object)):
         going to be performing FFTs on an image, these will tend to be faster at performing
         the FFT.
         """
-        return galsim._galsim.goodFFTSize(input_size)
+        return galsim._galsim.goodFFTSize(int(input_size))
 
     def __iter__(self):
         if self.iscomplex:
@@ -1270,6 +1266,18 @@ class Image(with_metaclass(MetaImage, object)):
 
 
 # These are essentially aliases for the regular Image with the correct dtype
+def ImageUS(*args, **kwargs):
+    """Alias for galsim.Image(..., dtype=numpy.uint16)
+    """
+    kwargs['dtype'] = np.uint16
+    return Image(*args, **kwargs)
+
+def ImageUI(*args, **kwargs):
+    """Alias for galsim.Image(..., dtype=numpy.uint32)
+    """
+    kwargs['dtype'] = np.uint32
+    return Image(*args, **kwargs)
+
 def ImageS(*args, **kwargs):
     """Alias for galsim.Image(..., dtype=numpy.int16)
     """
@@ -1409,7 +1417,12 @@ def Image_idiv(self, other):
         a = other
         dt = type(a)
     if dt == self.array.dtype:
-        self.array[:,:] /= a
+        try:
+            self.array[:,:] /= a
+        except TypeError:
+            # if dtype is an integer type, then numpy doesn't allow true division /= to assign
+            # back to an integer array.  To allow this for images, we do the following:
+            self.array[:,:] = (self.array / a).astype(self.array.dtype)
     else:
         self.array[:,:] = (self.array / a).astype(self.array.dtype)
     return self
@@ -1658,7 +1671,7 @@ for Class in _galsim.ConstImageView.values():
     Class.__getinitargs__ = ImageView_getinitargs
     Class.__hash__ = None
 
-for int_type in [ np.int16, np.int32 ]:
+for int_type in [ np.int16, np.int32 , np.uint16, np.uint32]:
     for Class in [ _galsim.ImageAlloc[int_type], _galsim.ImageView[int_type],
                    _galsim.ConstImageView[int_type] ]:
         Class.__floordiv__ = Image_floordiv
@@ -1680,6 +1693,10 @@ for int_type in [ np.int16, np.int32 ]:
 
 del Class    # cleanup public namespace
 
+galsim._galsim.ImageAllocUS.__repr__ = lambda self: 'galsim._galsim.ImageAllocUS(%r,%r)'%(
+        self.bounds, self.array)
+galsim._galsim.ImageAllocUI.__repr__ = lambda self: 'galsim._galsim.ImageAllocUI(%r,%r)'%(
+        self.bounds, self.array)
 galsim._galsim.ImageAllocS.__repr__ = lambda self: 'galsim._galsim.ImageAllocS(%r,%r)'%(
         self.bounds, self.array)
 galsim._galsim.ImageAllocI.__repr__ = lambda self: 'galsim._galsim.ImageAllocI(%r,%r)'%(
@@ -1689,6 +1706,10 @@ galsim._galsim.ImageAllocF.__repr__ = lambda self: 'galsim._galsim.ImageAllocF(%
 galsim._galsim.ImageAllocD.__repr__ = lambda self: 'galsim._galsim.ImageAllocD(%r,%r)'%(
         self.bounds, self.array)
 
+galsim._galsim.ImageViewUS.__repr__ = lambda self: 'galsim._galsim.ImageViewUS(%r,%r,%r)'%(
+        self.array, self.xmin, self.ymin)
+galsim._galsim.ImageViewUI.__repr__ = lambda self: 'galsim._galsim.ImageViewUI(%r,%r,%r)'%(
+        self.array, self.xmin, self.ymin)
 galsim._galsim.ImageViewS.__repr__ = lambda self: 'galsim._galsim.ImageViewS(%r,%r,%r)'%(
         self.array, self.xmin, self.ymin)
 galsim._galsim.ImageViewI.__repr__ = lambda self: 'galsim._galsim.ImageViewI(%r,%r,%r)'%(
@@ -1698,6 +1719,10 @@ galsim._galsim.ImageViewF.__repr__ = lambda self: 'galsim._galsim.ImageViewF(%r,
 galsim._galsim.ImageViewD.__repr__ = lambda self: 'galsim._galsim.ImageViewD(%r,%r,%r)'%(
         self.array, self.xmin, self.ymin)
 
+galsim._galsim.ConstImageViewUS.__repr__ = lambda self: 'galsim._galsim.ConstImageViewUS(%r,%r,%r)'%(
+        self.array, self.xmin, self.ymin)
+galsim._galsim.ConstImageViewUI.__repr__ = lambda self: 'galsim._galsim.ConstImageViewUI(%r,%r,%r)'%(
+        self.array, self.xmin, self.ymin)
 galsim._galsim.ConstImageViewS.__repr__ = lambda self: 'galsim._galsim.ConstImageViewS(%r,%r,%r)'%(
         self.array, self.xmin, self.ymin)
 galsim._galsim.ConstImageViewI.__repr__ = lambda self: 'galsim._galsim.ConstImageViewI(%r,%r,%r)'%(

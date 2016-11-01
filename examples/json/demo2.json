@@ -18,7 +18,7 @@
     "flux" : 1e5,
     "shear" :  { "type" : "G1G2", "g1" : 0.1, "g2" : 0.2 }
 },
- 
+
 "psf" : {
     "type" : "Moffat",
     "beta" : 5.0,

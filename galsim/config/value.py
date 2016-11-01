@@ -22,7 +22,7 @@ import galsim
 
 # This file handles the parsing of values given in the config dict.  It includes the basic
 # parsing functionality along with generators for most of the simple value types.
-# Additional value types are defined in value_random.py, value_eval.py, input.py, 
+# Additional value types are defined in value_random.py, value_eval.py, input.py,
 # input_powerspectrum.py, input_nfw.py, and input_fitsheader.
 
 # This module-level dict will store all the registered value types.
@@ -34,7 +34,7 @@ valid_value_types = {}
 
 
 # Standard keys to ignore while parsing values:
-standard_ignore = [ 
+standard_ignore = [
     'type',
     'current_val', 'current_safe', 'current_value_type', 'current_index', 'current_index_key',
     'index_key', 'repeat',
@@ -57,7 +57,7 @@ def ParseValue(config, key, base, value_type):
     if isinstance(param, str) and param[0] == '@':
         param = { 'type' : 'Current', 'key' : param[1:] }
 
-    # Save these, so we can edit them based on parameters at this level in the tree to take 
+    # Save these, so we can edit them based on parameters at this level in the tree to take
     # effect on all lower branches, and then we can reset it back to this at the end.
     orig_index_key = base.get('index_key',None)
     orig_rng = base.get('rng',None)
@@ -86,7 +86,7 @@ def ParseValue(config, key, base, value_type):
         val,safe = param, True
     elif not isinstance(param, dict):
         if value_type is galsim.Angle:
-            # Angle is a special case.  Angles are specified with a final string to 
+            # Angle is a special case.  Angles are specified with a final string to
             # declare what unit to use.
             val = _GetAngleValue(param)
         elif value_type is bool:
@@ -199,11 +199,11 @@ def GetCurrentValue(key, config, value_type=None, base=None, return_safe=False):
 
     # We may need to make one adjustment.  If the first item in the key is 'input', then
     # the key is probably wrong relative to the current config dict.  We make each input
-    # item a list, so the user can have more than one input dict for example.  But if 
-    # they aren't using that, we don't want them to have to know about it if they try to 
+    # item a list, so the user can have more than one input dict for example.  But if
+    # they aren't using that, we don't want them to have to know about it if they try to
     # take something from there for a Current item.
-    # So we change, e.g., 
-    #     input.fits_header.file_name 
+    # So we change, e.g.,
+    #     input.fits_header.file_name
     # --> input.fits_header.0.file_name
     if chain[0] == 'input' and len(chain) > 2:
         try:
@@ -224,7 +224,7 @@ def GetCurrentValue(key, config, value_type=None, base=None, return_safe=False):
         try: k = int(k)
         except ValueError: pass
 
-        if chain: 
+        if chain:
             # If there are more keys, just set d to the next in the chain.
             try:
                 d = d[k]
@@ -283,12 +283,12 @@ def GetCurrentValue(key, config, value_type=None, base=None, return_safe=False):
 
 def SetDefaultIndex(config, num):
     """
-    When the number of items in a list is known, we allow the user to omit some of 
-    the parameters of a Sequence or Random and set them automatically based on the 
+    When the number of items in a list is known, we allow the user to omit some of
+    the parameters of a Sequence or Random and set them automatically based on the
     size of the list, catalog, etc.
     """
     # We use a default item (set to True) to indicate that the value of nitems, last, or max
-    # has been set here, rather than by the user.  This way if the number of items in the 
+    # has been set here, rather than by the user.  This way if the number of items in the
     # catalog changes from one file to the next, it will be update correctly to the new
     # number of catalog entries.
 
@@ -298,16 +298,16 @@ def SetDefaultIndex(config, num):
             'nitems' : num,
             'default' : True,
         }
-    elif ( isinstance(config['index'],dict) 
+    elif ( isinstance(config['index'],dict)
            and 'type' in config['index'] ):
         index = config['index']
         type_name = index['type']
-        if ( type_name == 'Sequence' 
-             and 'nitems' in index 
+        if ( type_name == 'Sequence'
+             and 'nitems' in index
              and 'default' in index ):
             index['nitems'] = num
             index['default'] = True
-        elif ( type_name == 'Sequence' 
+        elif ( type_name == 'Sequence'
                and 'nitems' not in index
                and ('step' not in index or (isinstance(index['step'],int) and index['step'] > 0) )
                and ('last' not in index or 'default' in index) ):
@@ -317,7 +317,7 @@ def SetDefaultIndex(config, num):
                and 'nitems' not in index
                and ('step' in index and (isinstance(index['step'],int) and index['step'] < 0) ) ):
             # Normally, the value of default doesn't matter.  Its presence is sufficient
-            # to indicate True.  However, here we have three options.  
+            # to indicate True.  However, here we have three options.
             # 1) first and last are both set by default
             # 2) first (only) is set by default
             # 3) last (only) is set by default
@@ -327,11 +327,11 @@ def SetDefaultIndex(config, num):
                 index['first'] = num-1
                 index['last'] = 0
                 index['default'] = 1
-            elif ( 'first' not in index 
+            elif ( 'first' not in index
                    or ('default' in index and index['default'] == 2) ):
                 index['first'] = num-1
                 index['default'] = 2
-            elif ( 'last' not in index 
+            elif ( 'last' not in index
                    or ('default' in index and index['default'] == 3) ):
                 index['last'] = 0
                 index['default'] = 3
@@ -345,7 +345,7 @@ def SetDefaultIndex(config, num):
 
 def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
     """@brief Check that the parameters for a particular item are all valid
-    
+
     @returns a dict, get, with get[key] = value_type for all keys to get.
     """
     get = {}
@@ -366,7 +366,7 @@ def CheckAllParams(config, req={}, opt={}, single=[], ignore=[]):
             get[key] = value_type
 
     # Check items for which exacly 1 should be defined:
-    for s in single: 
+    for s in single:
         if not s: # If no items in list, don't require one of them to be present.
             break
         valid_keys += list(s)
@@ -702,7 +702,7 @@ def _GenerateFromFormattedStr(config, base, value_type):
     # Figure out what types we are expecting for the list elements:
     tokens = format.split('%')
     val_types = []
-    skip = False 
+    skip = False
     for token in tokens[1:]:  # skip first one.
         # It we have set skip, then skip this one.
         if skip:
@@ -760,7 +760,7 @@ def _GenerateFromList(config, base, value_type):
     safe = safe and safe1
     #print(base['obj_num'],'List index = %d, val = %s'%(index,val))
     return val, safe
- 
+
 def _GenerateFromSum(config, base, value_type):
     """@brief Return next item from a provided list
     """
@@ -777,7 +777,7 @@ def _GenerateFromSum(config, base, value_type):
         val, safe1 = ParseValue(items, k, base, value_type)
         sum += val
         safe = safe and safe1
-        
+
     return sum, safe
 
 
@@ -805,7 +805,7 @@ def RegisterValueType(type_name, gen_func, valid_types, input_type=None):
        be one of the values that you specify as valid in valid_types.
     4. The return value of gen_func should be a tuple consisting of the value and a boolean,
        safe, which indicates whether the generated value is safe to use again rather than
-       regenerate for subsequent objects.  This will be used upstream to determine if 
+       regenerate for subsequent objects.  This will be used upstream to determine if
        objects constructed using this value are safe to keep or if they have to be rebuilt.
 
     The allowed types to include in valid_types are: float, int, bool, str, galsim.Angle,
@@ -834,11 +834,11 @@ def RegisterValueType(type_name, gen_func, valid_types, input_type=None):
             RegisterInputConnectedType(input_type, type_name)
 
 
-RegisterValueType('List', _GenerateFromList, 
+RegisterValueType('List', _GenerateFromList,
               [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD ])
-RegisterValueType('Current', _GenerateFromCurrent, 
+RegisterValueType('Current', _GenerateFromCurrent,
                  [ float, int, bool, str, galsim.Angle, galsim.Shear, galsim.PositionD, None ])
-RegisterValueType('Sum', _GenerateFromSum, 
+RegisterValueType('Sum', _GenerateFromSum,
              [ float, int, galsim.Angle, galsim.Shear, galsim.PositionD ])
 RegisterValueType('Sequence', _GenerateFromSequence, [ float, int, bool ])
 RegisterValueType('NumberedFile', _GenerateFromNumberedFile, [ str ])
