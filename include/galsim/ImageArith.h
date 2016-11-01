@@ -65,7 +65,7 @@ namespace galsim {
      *  @brief Call a unary function on each pixel value
      */
     template <typename T, typename Op>
-    Op for_each_pixel(ImageView<T> image, Op f)
+    Op for_each_pixel(const BaseImage<T>& image, Op f)
     {
         // Note: all of these functions have this guard to make sure we don't
         // try to access the memory if the image is in an undefined state.
@@ -76,25 +76,6 @@ namespace galsim {
                 for (int i = image.getYMin(); i <= image.getYMax(); i++)
                     f = std::for_each(image.rowBegin(i), image.rowEnd(i), f);
             }
-        }
-        return f;
-    }
-
-    /**
-     *  @brief Call a unary function on each pixel in a subset of the image.
-     */
-    template <typename T, typename Op>
-    Op for_each_pixel(ImageView<T> image, const Bounds<int>& bounds, Op f)
-    {
-        if (image.getData()) {
-            if (!image.getBounds().includes(bounds))
-                throw ImageError("for_each_pixel range exceeds image range");
-
-            if (image.getBounds() == bounds) return for_each_pixel(image,f);
-
-            for (int i = bounds.getYMin(); i <= bounds.getYMax(); i++)
-                f = std::for_each(image.getIter(bounds.getXMin(),i),
-                                  image.getIter(bounds.getXMax()+1,i), f);
         }
         return f;
     }
@@ -122,111 +103,6 @@ namespace galsim {
         return f;
     }
 
-    /**
-     *  @brief Replace a subset of the image with a function of its pixel values.
-     */
-    template <typename T, typename Op>
-    Op transform_pixel(ImageView<T> image, const Bounds<int>& bounds, Op f)
-    {
-        if (image.getData()) {
-            typedef typename ImageView<T>::iterator Iter;
-            if (!image.getBounds().includes(bounds))
-                throw ImageError("transform_pixel range exceeds image range");
-
-            if (image.getBounds() == bounds) return transform_pixel(image,f);
-
-            for (int y = bounds.getYMin(); y <= bounds.getYMax(); ++y) {
-                const Iter ee = image.getIter(bounds.getXMax()+1,y);
-                for (Iter it = image.getIter(bounds.getXMin(),y); it != ee; ++it)
-                    *it = T(f(*it));
-            }
-        }
-        return f;
-    }
-
-    /**
-     *  @brief Add a function of pixel coords to an image.
-     */
-    template <typename T, typename Op>
-    Op add_function_pixel(ImageView<T> image, Op f)
-    {
-        if (image.getData()) {
-            typedef typename ImageView<T>::iterator Iter;
-            for (int y = image.getYMin(); y <= image.getYMax(); ++y) {
-                int x = image.getXMin();
-                const Iter ee = image.rowEnd(y);
-                for (Iter it = image.rowBegin(y); it != ee; ++it, ++x)
-                    *it += T(f(x,y));
-            }
-        }
-        return f;
-    }
-
-    /**
-     *  @brief Add a function of pixel coords to a subset of an image.
-     */
-    template <typename T, typename Op>
-    Op add_function_pixel(ImageView<T> image, const Bounds<int>& bounds, Op f)
-    {
-        if (image.getData()) {
-            typedef typename ImageView<T>::iterator Iter;
-            if (!bounds.isDefined()) return f;
-            if (!image.getBounds().includes(bounds))
-                throw ImageError("add_function_pixel range exceeds image range");
-
-            if (image.getBounds() == bounds) return add_function_pixel(image,f);
-
-            for (int y = bounds.getYMin(); y <= bounds.getYMax(); ++y) {
-                int x = bounds.getXMin();
-                const Iter ee = image.getIter(bounds.getXMax()+1,y);
-                for (Iter it = image.getIter(bounds.getXMin(),y); it != ee; ++it, ++x)
-                    *it += T(f(x,y));
-            }
-        }
-        return f;
-    }
-
-    /**
-     *  @brief Replace image with a function of pixel coords.
-     */
-    template <typename T, typename Op>
-    Op fill_pixel(ImageView<T> image, Op f)
-    {
-        if (image.getData()) {
-            typedef typename ImageView<T>::iterator Iter;
-            for (int y = image.getYMin(); y <= image.getYMax(); ++y) {
-                int x = image.getXMin();
-                const Iter ee = image.rowEnd(y);
-                for (Iter it = image.rowBegin(y); it != ee; ++it, ++x)
-                    *it = T(f(x,y));
-            }
-        }
-        return f;
-    }
-
-    /**
-     *  @brief Replace subset of an image with a function of pixel coords.
-     */
-    template <typename T, typename Op>
-    Op fill_pixel(ImageView<T> image, const Bounds<int>& bounds, Op f)
-    {
-        if (image.getData()) {
-            typedef typename ImageView<T>::iterator Iter;
-            if (!image.getBounds().includes(bounds))
-                throw ImageError("add_function_pixel range exceeds image range");
-
-            if (image.getBounds() == bounds) return fill_pixel(image,f);
-
-            for (int y = bounds.getYMin(); y <= bounds.getYMax(); ++y) {
-                int x = bounds.getXMin();
-                const Iter ee = image.getIter(bounds.getXMax()+1,y);
-                for (Iter it = image.getIter(bounds.getXMin(),y); it != ee; ++it, ++x)
-                    *it = T(f(x,y));
-            }
-        }
-        return f;
-    }
-
     // Assign function of 2 images to 1st
     template <typename T1, typename T2, typename Op>
     Op transform_pixel(ImageView<T1> image1, const BaseImage<T2>& image2, Op f)
@@ -243,61 +119,6 @@ namespace galsim {
                 Iter2 it2 = image2.rowBegin(y2);
                 const Iter1 ee = image1.rowEnd(y);
                 for (Iter1 it1 = image1.rowBegin(y); it1 != ee; ++it1, ++it2)
-                    *it1 = f(*it1,*it2);
-            }
-        }
-        return f;
-    }
-
-    // Assign function of Img2 & Img3 to Img1
-    template <typename T1, typename T2, typename T3, typename Op>
-    Op transform_pixel(ImageView<T1> image1, const BaseImage<T2>& image2,
-                       const BaseImage<T3>& image3, Op f)
-    {
-        if (image1.getData()) {
-            typedef typename ImageView<T1>::iterator Iter1;
-            typedef typename BaseImage<T2>::const_iterator Iter2;
-            typedef typename BaseImage<T3>::const_iterator Iter3;
-
-            if (!image1.getBounds().isSameShapeAs(image2.getBounds()))
-                throw ImageError("transform_pixel image1, image2 bounds are not same shape");
-            if (!image1.getBounds().isSameShapeAs(image3.getBounds()))
-                throw ImageError("transform_pixel image1, image3 bounds are not same shape");
-
-            int y2 = image2.getYMin();
-            int y3 = image3.getYMin();
-            for (int y = image1.getYMin(); y <= image1.getYMax(); ++y, ++y2, ++y3) {
-                Iter2 it2 = image2.rowBegin(y2);
-                Iter3 it3 = image3.rowBegin(y3);
-                const Iter1 ee = image1.rowEnd(y);
-                for (Iter1 it1 = image1.rowBegin(y); it1 != ee; ++it1, ++it2, ++it3)
-                    *it1 = f(*it2,*it3);
-            }
-        }
-        return f;
-    }
-
-    // Assign function of 2 images to 1st over bounds
-    // Note that for this one, the two images do not have to be the same shape.
-    // They just both have to include the given bounds.
-    // Only that portion of each image is used for the calculation.
-    template <typename T1, typename T2, typename Op>
-    Op transform_pixel(ImageView<T1> image1, const BaseImage<T2>& image2,
-                       const Bounds<int>& bounds, Op f)
-    {
-        if (image1.getData()) {
-            typedef typename ImageView<T1>::iterator Iter1;
-            typedef typename BaseImage<T2>::iterator Iter2;
-            if (!image1.getBounds().includes(bounds) || !image2.getBounds().includes(bounds))
-                throw ImageError("transform_pixel range exceeds image range");
-
-            if (image1.getBounds() == bounds && image2.getBounds() == bounds)
-                return transform_pixel(image1,image2,f);
-
-            for (int y = bounds.getYMin(); y <= bounds.getYMax(); ++y) {
-                const Iter1 ee = image1.getIter(bounds.getXMax()+1,y);
-                Iter2 it2 = image2.getIter(bounds.getXMin(),y);
-                for (Iter1 it1 = image1.getIter(bounds.getXMin(),y); it1 != ee; ++it1, ++it2)
                     *it1 = f(*it1,*it2);
             }
         }
@@ -446,10 +267,6 @@ namespace galsim {
 
     template <typename T>
     inline QuotIX<T,T> operator/(const BaseImage<T>& im, T x)
-    { return QuotIX<T,T>(im,x); }
-
-    template <typename T>
-    inline QuotIX<T,T> operator/(T x, const BaseImage<T>& im)
     { return QuotIX<T,T>(im,x); }
 
     template <typename T>
