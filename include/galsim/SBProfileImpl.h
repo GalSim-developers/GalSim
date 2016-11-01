@@ -105,9 +105,6 @@ namespace galsim {
         // Utility for drawing a k grid into FFT data structures
         void fillKGrid(KTable& kt) const;
 
-        // Utility for drawing an x grid into FFT data structures
-        void fillXGrid(XTable& xt) const;
-
         // Public so it can be directly used from SBProfile.
         const GSParamsPtr gsparams;
 

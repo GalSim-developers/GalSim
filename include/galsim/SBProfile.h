@@ -481,50 +481,6 @@ namespace galsim {
         template <typename T>
         void drawK(ImageView<T> re, ImageView<T> im, double gain, double wmult) const;
 
-        /**
-         * @brief Draw an image of the SBProfile in k space forcing the use of k space methods
-         * where we have a formula for k values.
-         *
-         * For drawing in k space: routines are analagous to real space, except 2 images are
-         * needed since the SBProfile is complex.  If the input images are Image's and have
-         * null dimension, square images will be drawn which are big enough to
-         * avoid "folding."
-         * Note that if you give an input image, its origin may be redefined by the time it comes
-         * back.
-         *
-         * @param[in,out]    re image of real argument of SBProfile in k space
-         *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in,out]    im image of imaginary argument of SBProfile in k space
-         *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in] gain   Number of photons per ADU.
-         */
-        template <typename T>
-        void plainDrawK(ImageView<T> re, ImageView<T> im, double gain) const;
-
-        /**
-         * @brief Draw an image of the SBProfile in k space forcing the use of Fourier transform
-         * from real space.
-         *
-         * For drawing in k space: routines are analagous to real space, except 2 images are
-         * needed since the SBProfile is complex.
-         * If the input images are Image's and have null dimension, square
-         * images will be drawn which are big enough to avoid "folding."  Drawing is done using FFT,
-         * and the images will be scaled up to a power of 2, or 3x2^n, whicher fits.
-         * If input image has finite dimensions then these will be used, although in an FFT the
-         * image may be calculated internally on a larger grid to avoid folding in real space.
-         * Note that if you give an input image, its origin may be redefined by the time it comes
-         * back.
-         *
-         * @param[in,out]    re image of real argument of SBProfile in k space
-         *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in,out]    im image of imaginary argument of SBProfile in k space
-         *                   (any of ImageViewF, ImageViewD, ImageViewS, ImageViewI)
-         * @param[in] gain   Number of photons per ADU.
-         * @param[in] wmult  If desired, a scaling to make intermediate images larger than normal.
-         */
-        template <typename T>
-        void fourierDrawK(ImageView<T> re, ImageView<T> im, double gain, double wmult) const;
-
         /// @brief Return a string that can act as the repr in python
         std::string repr() const;
         /// @brief Return a string that can act as the pickle serialization string in python
