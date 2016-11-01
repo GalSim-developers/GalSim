@@ -117,78 +117,82 @@ namespace galsim {
         return kv;
     }
 
-    void SBAdd::SBAddImpl::fillXValue(tmv::MatrixView<double> val,
+    void SBAdd::SBAddImpl::fillXImage(ImageView<double> im,
                                       double x0, double dx, int izero,
                                       double y0, double dy, int jzero) const
     {
-        dbg<<"SBAdd fillXValue\n";
+        dbg<<"SBAdd fillXImage\n";
         dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
         dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
         ConstIter pptr = _plist.begin();
         assert(pptr != _plist.end());
-        GetImpl(*pptr)->fillXValue(val,x0,dx,izero,y0,dy,jzero);
+        GetImpl(*pptr)->fillXImage(im,x0,dx,izero,y0,dy,jzero);
         if (++pptr != _plist.end()) {
-            tmv::Matrix<double> val2(val.colsize(),val.rowsize());
+            ImageAlloc<double> im2(im.getBounds());
             for (; pptr != _plist.end(); ++pptr) {
-                GetImpl(*pptr)->fillXValue(val2.view(),x0,dx,izero,y0,dy,jzero);
-                val += val2;
+                im2.setZero();
+                GetImpl(*pptr)->fillXImage(im2.view(),x0,dx,izero,y0,dy,jzero);
+                im += im2;
             }
         }
     }
 
-    void SBAdd::SBAddImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                      double kx0, double dkx, int izero,
-                                      double ky0, double dky, int jzero) const
-    {
-        dbg<<"SBAdd fillKValue\n";
-        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
-        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
-        ConstIter pptr = _plist.begin();
-        assert(pptr != _plist.end());
-        GetImpl(*pptr)->fillKValue(val,kx0,dkx,izero,ky0,dky,jzero);
-        if (++pptr != _plist.end()) {
-            tmv::Matrix<std::complex<double> > val2(val.colsize(),val.rowsize());
-            for (; pptr != _plist.end(); ++pptr) {
-                GetImpl(*pptr)->fillKValue(val2.view(),kx0,dkx,izero,ky0,dky,jzero);
-                val += val2;
-            }
-        }
-    }
-
-    void SBAdd::SBAddImpl::fillXValue(tmv::MatrixView<double> val,
+    void SBAdd::SBAddImpl::fillXImage(ImageView<double> im,
                                       double x0, double dx, double dxy,
                                       double y0, double dy, double dyx) const
     {
-        dbg<<"SBAdd fillXValue\n";
+        dbg<<"SBAdd fillXImage\n";
         dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
         dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
         ConstIter pptr = _plist.begin();
         assert(pptr != _plist.end());
-        GetImpl(*pptr)->fillXValue(val,x0,dx,dxy,y0,dy,dyx);
+        GetImpl(*pptr)->fillXImage(im,x0,dx,dxy,y0,dy,dyx);
         if (++pptr != _plist.end()) {
-            tmv::Matrix<double> val2(val.colsize(),val.rowsize());
+            ImageAlloc<double> im2(im.getBounds());
             for (; pptr != _plist.end(); ++pptr) {
-                GetImpl(*pptr)->fillXValue(val2.view(),x0,dx,dxy,y0,dy,dyx);
-                val += val2;
+                im2.setZero();
+                GetImpl(*pptr)->fillXImage(im2.view(),x0,dx,dxy,y0,dy,dyx);
+                im += im2;
             }
         }
     }
 
-    void SBAdd::SBAddImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+    void SBAdd::SBAddImpl::fillKImage(ImageView<std::complex<double> > im,
+                                      double kx0, double dkx, int izero,
+                                      double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBAdd fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        ConstIter pptr = _plist.begin();
+        assert(pptr != _plist.end());
+        GetImpl(*pptr)->fillKImage(im,kx0,dkx,izero,ky0,dky,jzero);
+        if (++pptr != _plist.end()) {
+            ImageAlloc<std::complex<double> > im2(im.getBounds());
+            for (; pptr != _plist.end(); ++pptr) {
+                im2.setZero();
+                GetImpl(*pptr)->fillKImage(im2.view(),kx0,dkx,izero,ky0,dky,jzero);
+                im += im2;
+            }
+        }
+    }
+
+    void SBAdd::SBAddImpl::fillKImage(ImageView<std::complex<double> > im,
                                       double kx0, double dkx, double dkxy,
                                       double ky0, double dky, double dkyx) const
     {
-        dbg<<"SBAdd fillKValue\n";
+        dbg<<"SBAdd fillKImage\n";
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
         ConstIter pptr = _plist.begin();
         assert(pptr != _plist.end());
-        GetImpl(*pptr)->fillKValue(val,kx0,dkx,dkxy,ky0,dky,dkyx);
+        GetImpl(*pptr)->fillKImage(im,kx0,dkx,dkxy,ky0,dky,dkyx);
         if (++pptr != _plist.end()) {
-            tmv::Matrix<std::complex<double> > val2(val.colsize(),val.rowsize());
+            ImageAlloc<std::complex<double> > im2(im.getBounds());
             for (; pptr != _plist.end(); ++pptr) {
-                GetImpl(*pptr)->fillKValue(val2.view(),kx0,dkx,dkxy,ky0,dky,dkyx);
-                val += val2;
+                im2.setZero();
+                GetImpl(*pptr)->fillKImage(im2.view(),kx0,dkx,dkxy,ky0,dky,dkyx);
+                im += im2;
             }
         }
     }

@@ -246,144 +246,106 @@ namespace galsim {
         return _pimpl->fillXImage(I, gain);
     }
 
-    // The derived classes pretty much all override these functions, since there are
-    // almost always (at least minor) efficiency gains from doing so.  But we have
-    // them here in case someone doesn't want to bother for a new class.
-    void SBProfile::SBProfileImpl::fillXValue(tmv::MatrixView<double> val,
+    // Most derived classes override these functions, since there are usually (at least minor)
+    // efficiency gains from doing so.  But in some cases, these straightforward impleentations
+    // are perfectly fine.
+    void SBProfile::SBProfileImpl::fillXImage(ImageView<double> im,
                                               double x0, double dx, int izero,
                                               double y0, double dy, int jzero) const
     {
-        dbg<<"SBProfile fillXValue\n";
+        dbg<<"SBProfile fillXImage\n";
         dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
         dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
-        assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
-
-        It valit = val.linearView().begin();
-        double y = y0;
-        for (int j=0;j<n;++j,y+=dy) {
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        double* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+        for (int j=0; j<n; ++j,y0+=dy,ptr+=skip) {
             double x = x0;
-            for (int i=0;i<m;++i,x+=dx) {
-                *valit++ = xValue(Position<double>(x,y));
-            }
+            for (int i=0; i<m; ++i,x+=dx)
+                *ptr++ = xValue(Position<double>(x,y0));
         }
     }
 
-    void SBProfile::SBProfileImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
-                                              double kx0, double dkx, int izero,
-                                              double ky0, double dky, int jzero) const
-    {
-        dbg<<"SBProfile fillKValue\n";
-        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
-        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
-        assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
-
-        It valit = val.linearView().begin();
-        double ky = ky0;
-        for (int j=0;j<n;++j,ky+=dky) {
-            double kx = kx0;
-            for (int i=0;i<m;++i,kx+=dkx) *valit++ = kValue(Position<double>(kx,ky));
-        }
-    }
-
-    void SBProfile::SBProfileImpl::fillXValue(tmv::MatrixView<double> val,
+    void SBProfile::SBProfileImpl::fillXImage(ImageView<double> im,
                                               double x0, double dx, double dxy,
                                               double y0, double dy, double dyx) const
     {
-        dbg<<"SBProfile fillXValue\n";
+        dbg<<"SBProfile fillXImage\n";
         dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
         dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
-        assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
-
-        It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        double* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+        for (int j=0; j<n; ++j,x0+=dxy,y0+=dy,ptr+=skip) {
             double x = x0;
             double y = y0;
-            for (int i=0;i<m;++i,x+=dx,y+=dyx) *valit++ = xValue(Position<double>(x,y));
+            for (int i=0; i<m; ++i,x+=dx,y+=dyx)
+                *ptr++ = xValue(Position<double>(x,y));
         }
     }
 
-    void SBProfile::SBProfileImpl::fillKValue(tmv::MatrixView<std::complex<double> > val,
+    void SBProfile::SBProfileImpl::fillKImage(ImageView<std::complex<double> > im,
+                                              double kx0, double dkx, int izero,
+                                              double ky0, double dky, int jzero) const
+    {
+        dbg<<"SBProfile fillKImage\n";
+        dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
+        dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+        for (int j=0; j<n; ++j,ky0+=dky,ptr+=skip) {
+            double kx = kx0;
+            for (int i=0; i<m; ++i,kx+=dkx)
+                *ptr++ = kValue(Position<double>(kx,ky0));
+        }
+    }
+
+    void SBProfile::SBProfileImpl::fillKImage(ImageView<std::complex<double> > im,
                                               double kx0, double dkx, double dkxy,
                                               double ky0, double dky, double dkyx) const
     {
-        dbg<<"SBProfile fillKValue\n";
+        dbg<<"SBProfile fillKImage\n";
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
-        assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
-
-        It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky) {
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+        for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky,ptr+=skip) {
             double kx = kx0;
             double ky = ky0;
-            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx) *valit++ = kValue(Position<double>(kx,ky));
+            for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx)
+                *ptr++ = kValue(Position<double>(kx,ky));
         }
     }
 
-    // Note: Once we have TMV 0.90, this won't be necessary, since arithmetic between different
-    // types will be allowed.
     template <typename T>
-    void addMatrix(tmv::MatrixView<T> m1, const tmv::ConstMatrixView<double>& m2)
-    {
-        tmv::Matrix<T> m2T = m2;
-        m1 += m2T;
-    }
-
-    void addMatrix(tmv::MatrixView<double> m1, const tmv::ConstMatrixView<double>& m2)
-    { m1 += m2; }
-
-    template <typename T>
-    double SBProfile::SBProfileImpl::fillXImage(ImageView<T>& I, double gain) const
+    double SBProfile::SBProfileImpl::fillXImage(ImageView<T>& image, double gain) const
     {
         xdbg<<"Start fillXImage"<<std::endl;
         xdbg<<"gain = "<<gain<<std::endl;
 
-        const int m = I.getXMax()-I.getXMin()+1;
-        const int n = I.getYMax()-I.getYMin()+1;
-        xdbg<<"m,n = "<<m<<','<<n<<std::endl;
-        tmv::Vector<double> x(m);
-        const int xmin = I.getXMin();
-        for (int i=0;i<m;++i) x.ref(i) = (xmin+i);
-        xdbg<<"xmin = "<<xmin<<std::endl;
-        xdbg<<"x = "<<x<<std::endl;
+        const int xmin = image.getXMin();
+        const int ymin = image.getYMin();
+        const int m = image.getNCol();
+        const int n = image.getNRow();
 
-        tmv::Vector<double> y(n);
-        const int ymin = I.getYMin();
-        xdbg<<"ymin = "<<ymin<<std::endl;
-        for (int i=0;i<n;++i) y.ref(i) = (ymin+i);
-        xdbg<<"y = "<<y<<std::endl;
-
-        tmv::Matrix<double> val(m,n);
-#ifdef DEBUGLOGGING
-        val.setAllTo(999.);
-#endif
         assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
-        xdbg<<"Call fillXValue with "<<xmin<<','<<1.<<','<<-xmin<<
-            ','<<ymin<<','<<1.<<','<<-ymin<<std::endl;
-        fillXValue(val.view(),xmin,1.,-xmin,ymin,1.,-ymin);
+        ImageAlloc<double> im2(image.getBounds(), 0.);
+        fillXImage(im2.view(), xmin, 1., -xmin, ymin, 1., -ymin);
 
-        if (gain != 1.) val /= gain;
-
-        tmv::MatrixView<T> mI(I.getData(),m,n,1,I.getStride(),tmv::NonConj);
-        //mI += val;
-        addMatrix(mI,val);
-        double totalflux = val.sumElements();
-        return totalflux * gain;
+        double total_flux = im2.sumElements();
+        if (gain != 1.) im2 /= gain;
+        image += im2;
+        return total_flux;
     }
 
     // Now the more complex case: real space via FT from k space.
@@ -495,21 +457,24 @@ namespace galsim {
         dbg<<"m,n = "<<m<<','<<n<<std::endl;
         dbg<<"xmin,ymin = "<<xmin<<','<<ymin<<std::endl;
 
-        tmv::Matrix<std::complex<double> > val(m,n);
-#ifdef DEBUGLOGGING
-        val.setAllTo(999.);
-#endif
-        // Calculate all the kValues at once, since this is often faster than many calls to kValue.
         assert(xmin <= 0 && ymin <= 0 && -xmin < m && -ymin < n);
-        _pimpl->fillKValue(val.view(),xmin,1.,-xmin,ymin,1.,-ymin);
-        dbg<<"F(k=0) = "<<val(-xmin,-ymin)<<std::endl;
 
-        if (gain != 1.) val /= gain;
+        // Calculate all the kValues at once, since this is often faster than many calls to kValue.
+        ImageAlloc<std::complex<double> > im2(m, n, 0.);
+        _pimpl->fillKImage(im2.view(), xmin, 1., -xmin, ymin, 1., -ymin);
+        dbg<<"F(k=0) = "<<im2(-xmin,-ymin)<<std::endl;
 
-        tmv::MatrixView<T> mRe(Re.getData(),m,n,1,Re.getStride(),tmv::NonConj);
-        tmv::MatrixView<T> mIm(Im.getData(),m,n,1,Im.getStride(),tmv::NonConj);
-        addMatrix(mRe,val.realPart());
-        addMatrix(mIm,val.imagPart());
+        if (gain != 1.) im2 /= gain;
+
+        ImageView<double> real2(reinterpret_cast<double*>(im2.getData()),
+                                boost::shared_ptr<double>(),
+                                im2.getStep()*2, im2.getStride()*2, im2.getBounds());
+        ImageView<double> imag2(reinterpret_cast<double*>(im2.getData())+1,
+                                boost::shared_ptr<double>(),
+                                im2.getStep()*2, im2.getStride()*2, im2.getBounds());
+
+        Re += real2;
+        Im += imag2;
     }
 
     void SBProfile::SBProfileImpl::fillKGrid(KTable& kt) const
@@ -519,12 +484,10 @@ namespace galsim {
         double dk = kt.getDk();
         kt.clearCache();
 
-        tmv::Matrix<std::complex<double> > val(N/2+1,N+1);
-#ifdef DEBUGLOGGING
-        val.setAllTo(999.);
-#endif
-        fillKValue(val.view(),0.,dk,0,-N/2*dk,dk,N/2);
+        ImageAlloc<std::complex<double> > im(N/2+1, N+1, 0.);
+        fillKImage(im.view(), 0., dk, 0, -N/2*dk, dk, N/2);
 
+        tmv::MatrixView<std::complex<double> > val(im.getData(),N/2+1,N+1,1,N/2+1,tmv::NonConj);
         tmv::MatrixView<std::complex<double> > mkt(kt.getArray(),N/2+1,N,1,N/2+1,tmv::NonConj);
 #ifdef DEBUGLOGGING
         mkt.setAllTo(1.e100);
@@ -561,109 +524,83 @@ namespace galsim {
     }
 
     // The type of T (real or complex) determines whether the call-back is to
-    // fillXValue or fillKValue.
+    // fillXImage or fillKImage.
     template <typename T>
     struct QuadrantHelper
     {
         template <class Prof>
-        static void fill(const Prof& prof, tmv::MatrixView<T> q,
+        static void fill(const Prof& prof, ImageView<T> q,
                          double x0, double dx, double y0, double dy)
-        { prof.fillXValue(q,x0,dx,0,y0,dy,0); }
+        { prof.fillXImage(q,x0,dx,0,y0,dy,0); }
     };
 
     template <typename T>
     struct QuadrantHelper<std::complex<T> >
     {
-        typedef std::complex<T> CT;
         template <class Prof>
-        static void fill(const Prof& prof, tmv::MatrixView<CT> q,
+        static void fill(const Prof& prof, ImageView<std::complex<T> > q,
                          double kx0, double dkx, double ky0, double dky)
-        { prof.fillKValue(q,kx0,dkx,0,ky0,dky,0); }
+        { prof.fillKImage(q,kx0,dkx,0,ky0,dky,0); }
     };
 
     // The code is basically the same for X or K.
     template <class Prof, typename T>
-    static void FillQuadrant(const Prof& prof, tmv::MatrixView<T> val,
-                             double x0, double dx, int nx1, double y0, double dy, int ny1)
+    static void FillQuadrant(const Prof& prof, ImageView<T> im,
+                             double x0, double dx, int m1, double y0, double dy, int n1)
     {
         dbg<<"Start FillQuadrant\n";
-        dbg<<x0<<" "<<dx<<" "<<nx1<<"   "<<y0<<" "<<dy<<" "<<ny1<<std::endl;
-        // Figure out which quadrant is the largest.  Need to use that one.
-        const int nx = val.colsize();
-        const int nx2 = nx - nx1-1;
-        const int ny = val.rowsize();
-        const int ny2 = ny - ny1-1;
-        xdbg<<"nx = "<<nx1<<" + "<<nx2<<" + 1 = "<<nx<<std::endl;
-        xdbg<<"ny = "<<ny1<<" + "<<ny2<<" + 1 = "<<ny<<std::endl;
-        // Keep track of which quadrant is done in the first section.
-        bool ur_done = false;
-        bool ul_done = false;
-        bool lr_done = false;
-        bool ll_done = false;
-        boost::shared_ptr<tmv::MatrixView<T> > q; // The matrix to copy to each quadrant
-        if (nx2 >= nx1) {
-            if (ny2 >= ny1) {
-                // Upper right is the big quadrant
-                xdbg<<"Use Upper right (nx2,ny2)"<<std::endl;
-                q.reset(new tmv::MatrixView<T>(val.subMatrix(nx1,nx,ny1,ny)));
-                QuadrantHelper<T>::fill(prof,*q,nx1==0?x0:0.,dx,ny1==0?y0:0.,dy);
-                ur_done = true;
-                // Also do the rest of the ix=0 row and iy=0 col
-                val.row(nx1,0,ny1).reverse() = q->row(0,1,ny1+1);
-                val.col(ny1,0,nx1).reverse() = q->col(0,1,nx1+1);
-            } else {
-                // Lower right is the big quadrant
-                xdbg<<"Use Lower right (nx2,ny1)"<<std::endl;
-                q.reset(new tmv::MatrixView<T>(val.subMatrix(nx1,nx,ny1,-1,1,-1)));
-                QuadrantHelper<T>::fill(prof,val.subMatrix(nx1,nx,0,ny1+1),nx1==0?x0:0.,dx,y0,dy);
-                lr_done = true;
-                val.row(nx1,ny1+1,ny) = q->row(0,1,ny2+1);
-                val.col(ny1,0,nx1).reverse() = q->row(0,1,nx1+1);
-            }
-        } else {
-            if (ny2 >= ny1) {
-                // Upper left is the big quadrant
-                xdbg<<"Use Upper left (nx1,ny2)"<<std::endl;
-                q.reset(new tmv::MatrixView<T>(val.subMatrix(nx1,-1,ny1,ny,-1,1)));
-                QuadrantHelper<T>::fill(prof,val.subMatrix(0,nx1+1,ny1,ny),x0,dx,ny1==0?y0:0.,dy);
-                ul_done = true;
-                val.row(nx1,0,ny1).reverse() = q->row(0,1,ny1+1);
-                val.col(ny1,nx1+1,nx) = q->col(0,1,nx2+1);
-            } else {
-                // Lower left is the big quadrant
-                xdbg<<"Use Lower left (nx1,ny1)"<<std::endl;
-                q.reset(new tmv::MatrixView<T>(val.subMatrix(nx1,-1,ny1,-1,-1,-1)));
-                QuadrantHelper<T>::fill(prof,val.subMatrix(0,nx1+1,0,ny1+1),x0,dx,y0,dy);
-                ll_done = true;
-                val.row(nx1,ny1+1,ny) = q->row(0,1,ny2+1);
-                val.col(ny1,nx1+1,nx) = q->col(0,1,nx2+1);
-            }
+        dbg<<x0<<" "<<dx<<" "<<m1<<"   "<<y0<<" "<<dy<<" "<<n1<<std::endl;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        const int stride = im.getStride();
+        T* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
+
+        // m1 is the number of columns left of x==0
+        // m2 is the number of columns right of x==0
+        // n1 is the number of columns below of y==0
+        // n2 is the number of columns above of y==0
+        // m = m1 + m2 + 1
+        // n = n1 + n2 + 1
+        const int m2 = m - m1 - 1;
+        const int n2 = n - n1 - 1;
+
+        // Make a smaller single-quadrant image and fill that the normal way.
+        ImageAlloc<T> q(std::max(m1,m2)+1, std::max(n1,n2)+1,0.);
+        QuadrantHelper<T>::fill(prof, q.view(), m1==0?x0:0., dx, n1==0?y0:0., dy);
+
+        // Use those values to fill the original image.
+        T* qptr = q.getData() + n1*q.getStride() + m1;
+        int qskip = -q.getStride() + (m1-m2-1);
+        assert(q.getStep() == 1);
+        for (int j=0; j<n1; ++j,ptr+=skip,qptr+=qskip) {
+            for (int i=0; i<m1; ++i) *ptr++ = *qptr--;
+            for (int i=0; i<=m2; ++i) *ptr++ = *qptr++;
         }
-        if (!ur_done && nx2 > 0 && ny2 > 0)
-            val.subMatrix(nx1+1,nx,ny1+1,ny) = q->subMatrix(1,nx2+1,1,ny2+1);
-        if (!lr_done && nx2 > 0 && ny1 > 0)
-            val.subMatrix(nx1+1,nx,ny1-1,-1,1,-1) = q->subMatrix(1,nx2+1,1,ny1+1);
-        if (!ul_done && nx1 > 0 && ny2 > 0)
-            val.subMatrix(nx1-1,-1,ny1+1,ny,-1,1) = q->subMatrix(1,nx1+1,1,ny2+1);
-        if (!ll_done && nx1 > 0 && ny1 > 0)
-            val.subMatrix(nx1-1,-1,ny1-1,-1,-1,-1) = q->subMatrix(1,nx1+1,1,ny1+1);
+        assert(qptr == q.getData() + m1);
+        qskip = q.getStride() + (m1-m2-1);
+        for (int j=0; j<=n2; ++j,ptr+=skip,qptr+=qskip) {
+            for (int i=0; i<m1; ++i) *ptr++ = *qptr--;
+            for (int i=0; i<=m2; ++i) *ptr++ = *qptr++;
+        }
         xdbg<<"Done copying quadrants"<<std::endl;
     }
-    void SBProfile::SBProfileImpl::fillXValueQuadrant(tmv::MatrixView<double> val,
+    void SBProfile::SBProfileImpl::fillXImageQuadrant(ImageView<double> im,
                                                       double x0, double dx, int nx1,
                                                       double y0, double dy, int ny1) const
     {
         // Guard against infinite loop.
         assert(nx1 != 0 || ny1 != 0);
-        FillQuadrant(*this,val,x0,dx,nx1,y0,dy,ny1);
+        FillQuadrant(*this,im,x0,dx,nx1,y0,dy,ny1);
     }
-    void SBProfile::SBProfileImpl::fillKValueQuadrant(tmv::MatrixView<std::complex<double> > val,
+    void SBProfile::SBProfileImpl::fillKImageQuadrant(ImageView<std::complex<double> > im,
                                                       double kx0, double dkx, int nkx1,
                                                       double ky0, double dky, int nky1) const
     {
         // Guard against infinite loop.
         assert(nkx1 != 0 || nky1 != 0);
-        FillQuadrant(*this,val,kx0,dkx,nkx1,ky0,dky,nky1);
+        FillQuadrant(*this,im,kx0,dkx,nkx1,ky0,dky,nky1);
     }
 
     template <class T>

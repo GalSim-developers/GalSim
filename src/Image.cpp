@@ -116,6 +116,22 @@ void BaseImage<T>::allocateMem()
 }
 
 template <typename T>
+struct Sum
+{
+    Sum(): sum(0) {}
+    void operator()(T x) { sum += x; }
+    T sum;
+};
+
+template <typename T>
+T BaseImage<T>::sumElements() const
+{
+    Sum<T> sum;
+    sum = for_each_pixel(*this, sum);
+    return sum.sum;
+}
+
+template <typename T>
 ImageAlloc<T>::ImageAlloc(int ncol, int nrow, T init_value) :
     BaseImage<T>(Bounds<int>(1,ncol,1,nrow))
 {

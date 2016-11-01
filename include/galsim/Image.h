@@ -210,6 +210,11 @@ namespace galsim {
         { return subImage(bounds); }
 
         /**
+         *  @brief Return the sum of the pixel values
+         */
+        T sumElements() const;
+
+        /**
          *  @brief Shift the bounding box of the image, changing the logical location of the pixels
          *
          *  xmin_new = xmin + dx

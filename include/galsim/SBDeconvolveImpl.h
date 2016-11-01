@@ -55,10 +55,10 @@ namespace galsim {
         boost::shared_ptr<PhotonArray> shoot(int N, UniformDeviate u) const;
 
         // Overrides for better efficiency
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        void fillKImage(ImageView<std::complex<double> > im,
                         double kx0, double dkx, int izero,
                         double ky0, double dky, int jzero) const;
-        void fillKValue(tmv::MatrixView<std::complex<double> > val,
+        void fillKImage(ImageView<std::complex<double> > im,
                         double kx0, double dkx, double dkxy,
                         double ky0, double dky, double dkyx) const;
 

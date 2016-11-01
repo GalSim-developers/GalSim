@@ -220,187 +220,154 @@ namespace galsim {
         dbg<<"ktab size = "<<_ktab->getN()<<", scale = "<<_ktab->getDk()<<std::endl;
     }
 
-    void SBInterpolatedImage::SBInterpolatedImageImpl::fillXValue(
-        tmv::MatrixView<double> val,
+    void SBInterpolatedImage::SBInterpolatedImageImpl::fillXImage(
+        ImageView<double> im,
         double x0, double dx, int izero,
         double y0, double dy, int jzero) const
     {
-        dbg<<"SBInterpolatedImage fillXValue\n";
+        dbg<<"SBInterpolatedImage fillXImage\n";
         dbg<<"x = "<<x0<<" + i * "<<dx<<", izero = "<<izero<<std::endl;
         dbg<<"y = "<<y0<<" + j * "<<dy<<", jzero = "<<jzero<<std::endl;
-        assert(val.stepi() == 1);
-        const int m = val.colsize();
-        const int n = val.rowsize();
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        double* ptr = im.getData();
+        assert(im.getStep() == 1);
 
         if (dynamic_cast<const InterpolantXY*> (_xInterp.get())) {
             // If the interpolant is separable, the XTable interpolation routine
             // will go faster if we make y iteration the inner loop.
-            typedef tmv::VIt<double,tmv::Unknown,tmv::NonConj> RMIt;
-            for (int i=0;i<m;++i,x0+=dx) {
+            const int stride = im.getStride();
+            const int skip = 1 - n*stride;
+            for (int i=0; i<m; ++i,x0+=dx,ptr+=skip) {
                 double y = y0;
-                RMIt valit = val.row(i).begin();
-                for (int j=0;j<n;++j,y+=dy) *valit++ = _xtab->interpolate(x0, y, *_xInterp);
+                for (int j=0; j<n; ++j,y+=dy,ptr+=stride)
+                    *ptr = _xtab->interpolate(x0, y, *_xInterp);
             }
         } else {
             // Otherwise, just do the values in storage order
-            typedef tmv::VIt<double,1,tmv::NonConj> CMIt;
-            for (int j=0;j<n;++j,y0+=dy) {
+            const int skip = im.getNSkip();
+            for (int j=0; j<n; ++j,y0+=dy,ptr+=skip) {
                 double x = x0;
-                CMIt valit = val.col(j).begin();
-                for (int i=0;i<m;++i,x+=dx) *valit++ = _xtab->interpolate(x, y0, *_xInterp);
+                for (int i=0; i<m; ++i,x+=dx)
+                    *ptr++ = _xtab->interpolate(x, y0, *_xInterp);
             }
         }
     }
 
-    void SBInterpolatedImage::SBInterpolatedImageImpl::fillXValue(
-        tmv::MatrixView<double> val,
-        double x0, double dx, double dxy,
-        double y0, double dy, double dyx) const
-    {
-        dbg<<"SBInterpolatedImage fillXValue\n";
-        dbg<<"x = "<<x0<<" + i * "<<dx<<" + j * "<<dxy<<std::endl;
-        dbg<<"y = "<<y0<<" + i * "<<dyx<<" + j * "<<dy<<std::endl;
-        assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
-
-        It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,x0+=dxy,y0+=dy) {
-            double x = x0;
-            double y = y0;
-            for (int i=0;i<m;++i,x+=dx,y+=dyx) {
-                *valit++ = _xtab->interpolate(x, y, *_xInterp);
-            }
-        }
-    }
-
-    void SBInterpolatedImage::SBInterpolatedImageImpl::fillKValue(
-        tmv::MatrixView<std::complex<double> > val,
+    void SBInterpolatedImage::SBInterpolatedImageImpl::fillKImage(
+        ImageView<std::complex<double> > im,
         double kx0, double dkx, int izero,
         double ky0, double dky, int jzero) const
     {
-        dbg<<"SBInterpolatedImage fillKValue\n";
+        dbg<<"SBInterpolatedImage fillKImage\n";
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<", izero = "<<izero<<std::endl;
         dbg<<"ky = "<<ky0<<" + j * "<<dky<<", jzero = "<<jzero<<std::endl;
-        assert(val.stepi() == 1);
-        const int m = val.colsize();
-        const int n = val.rowsize();
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        assert(im.getStep() == 1);
         checkK();
 
-        // Assign zeros for range that has |u| > maxu
+        // Only non-zero where |u| <= maxu
         double absdkx = std::abs(dkx);
         double absdky = std::abs(dky);
         int i1 = std::max( int(-_maxk1/absdkx-kx0/dkx) , 0 );
         int i2 = std::min( int(_maxk1/absdkx-kx0/dkx)+1 , m );
         int j1 = std::max( int(-_maxk1/absdky-ky0/dky) , 0 );
         int j2 = std::min( int(_maxk1/absdky-ky0/dky)+1 , n );
-        xdbg<<"_maxk1 = "<<_maxk1<<std::endl;
-        xdbg<<"i1,i2 = "<<i1<<','<<i2<<std::endl;
-        xdbg<<"j1,j2 = "<<j1<<','<<j2<<std::endl;
-
-        val.colRange(0,j1).setZero();
-        val.subMatrix(0,i1,j1,j2).setZero();
-        val.subMatrix(i2,m,j1,j2).setZero();
-        val.colRange(j2,n).setZero();
 
         kx0 += i1*dkx;
         ky0 += j1*dky;
+        ptr += i1 + j1*im.getStride();
+        xdbg<<"i1,i2,j1,j2 = "<<i1<<','<<i2<<','<<j1<<','<<j2<<"  kx0,ky0 = "<<kx0<<','<<ky0<<std::endl;
 
         // For the rest of the range, calculate ux, uy values
-        tmv::Vector<double> ux(i2-i1);
-        typedef tmv::VIt<double,1,tmv::NonConj> It;
+        std::vector<double> ux(i2-i1);
+        typedef std::vector<double>::iterator It;
         It uxit = ux.begin();
         double kx = kx0;
-        for (int i=i1;i<i2;++i,kx+=dkx) *uxit++ = kx * _uscale;
+        for (int i=i1; i<i2; ++i,kx+=dkx) *uxit++ = kx * _uscale;
 
-        tmv::Vector<double> uy(j2-j1);
+        std::vector<double> uy(j2-j1);
         It uyit = uy.begin();
         double ky = ky0;
-        for (int j=j1;j<j2;++j,ky+=dky) *uyit++ = ky * _uscale;
+        for (int j=j1; j<j2; ++j,ky+=dky) *uyit++ = ky * _uscale;
 
         const InterpolantXY* kInterpXY = dynamic_cast<const InterpolantXY*>(_kInterp.get());
         if (kInterpXY) {
             // Again, the KTable interpolation routine will go faster if we make y iteration
             // the inner loop.
-            typedef tmv::VIt<std::complex<double>,tmv::Unknown,tmv::NonConj> RMIt;
-
+            const int stride = im.getStride();
+            const int skip = 1 - (j2-j1)*stride;
             const InterpolantXY* xInterpXY = dynamic_cast<const InterpolantXY*>(_xInterp.get());
             if (xInterpXY) {
                 // Then the uval's are separable.  Go ahead and pre-calculate them.
-                It uxit = ux.begin();
-                for (int i=i1;i<i2;++i,++uxit) *uxit = xInterpXY->uval1d(*uxit);
-                It uyit = uy.begin();
-                for (int j=j1;j<j2;++j,++uyit) *uyit = xInterpXY->uval1d(*uyit);
+                uxit = ux.begin();
+                for (int i=i1; i<i2; ++i,++uxit) *uxit = xInterpXY->uval1d(*uxit);
+                uyit = uy.begin();
+                for (int j=j1; j<j2; ++j,++uyit) *uyit = xInterpXY->uval1d(*uyit);
 
                 uxit = ux.begin();
-                for (int i=i1;i<i2;++i,kx0+=dkx,++uxit) {
+                for (int i=i1; i<i2; ++i,kx0+=dkx,++uxit,ptr+=skip) {
                     double ky = ky0;
                     uyit = uy.begin();
-                    RMIt valit = val.row(i,j1,j2).begin();
-                    for (int j=j1;j<j2;++j,ky+=dky) {
-                        *valit++ = *uxit * *uyit++ * _ktab->interpolate(kx0, ky, *kInterpXY);
-                    }
+                    for (int j=j1; j<j2; ++j,ky+=dky,ptr+=stride)
+                        *ptr = *uxit * *uyit++ * _ktab->interpolate(kx0, ky, *kInterpXY);
                 }
             } else {
-                It uxit = ux.begin();
-                for (int i=i1;i<i2;++i,kx0+=dkx,++uxit) {
+                uxit = ux.begin();
+                for (int i=i1; i<i2; ++i,kx0+=dkx,++uxit,ptr+=skip) {
                     double ky = ky0;
-                    It uyit = uy.begin();
-                    RMIt valit = val.row(i,j1,j2).begin();
-                    for (int j=j1;j<j2;++j,ky+=dky) {
+                    uyit = uy.begin();
+                    for (int j=j1; j<j2; ++j,ky+=dky,ptr+=stride) {
                         double xKernelTransform = _xInterp->uval(*uxit, *uyit++);
-                        *valit++ = xKernelTransform * _ktab->interpolate(kx0, ky, *kInterpXY);
+                        *ptr = xKernelTransform * _ktab->interpolate(kx0, ky, *kInterpXY);
                     }
                 }
             }
         } else {
-            typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> CMIt;
+            const int skip = im.getStride() - (i2-i1);
             const InterpolantXY* xInterpXY = dynamic_cast<const InterpolantXY*>(_xInterp.get());
             if (xInterpXY) {
-                It uxit = ux.begin();
-                for (int i=i1;i<i2;++i,++uxit) *uxit = xInterpXY->uval1d(*uxit);
-                It uyit = uy.begin();
-                for (int j=j1;j<j2;++j,++uyit) *uyit = xInterpXY->uval1d(*uyit);
+                uxit = ux.begin();
+                for (int i=i1; i<i2; ++i,++uxit) *uxit = xInterpXY->uval1d(*uxit);
+                uyit = uy.begin();
+                for (int j=j1; j<j2; ++j,++uyit) *uyit = xInterpXY->uval1d(*uyit);
 
                 uyit = uy.begin();
-                for (int j=j1;j<j2;++j,ky0+=dky,++uyit) {
+                for (int j=j1; j<j2; ++j,ky0+=dky,++uyit,ptr+=skip) {
                     double kx = kx0;
                     uxit = ux.begin();
-                    CMIt valit = val.col(j,i1,i2).begin();
-                    for (int i=i1;i<i2;++i,kx+=dkx) {
-                        *valit++ = *uxit++ * *uyit * _ktab->interpolate(kx, ky0, *_kInterp);
-                    }
+                    for (int i=i1; i<i2; ++i,kx+=dkx)
+                        *ptr++ = *uxit++ * *uyit * _ktab->interpolate(kx, ky0, *_kInterp);
                 }
             } else {
-                It uyit = uy.begin();
-                for (int j=j1;j<j2;++j,ky0+=dky,++uyit) {
+                uyit = uy.begin();
+                for (int j=j1; j<j2; ++j,ky0+=dky,++uyit,ptr+=skip) {
                     double kx = kx0;
-                    It uxit = ux.begin();
-                    CMIt valit = val.col(j,i1,i2).begin();
-                    for (int i=i1;i<i2;++i,kx+=dkx) {
+                    uxit = ux.begin();
+                    for (int i=i1; i<i2; ++i,kx+=dkx) {
                         double xKernelTransform = _xInterp->uval(*uxit++, *uyit);
-                        *valit++ = xKernelTransform * _ktab->interpolate(kx, ky0, *_kInterp);
+                        *ptr++ = xKernelTransform * _ktab->interpolate(kx, ky0, *_kInterp);
                     }
                 }
             }
         }
     }
 
-    void SBInterpolatedImage::SBInterpolatedImageImpl::fillKValue(
-        tmv::MatrixView<std::complex<double> > val,
+    void SBInterpolatedImage::SBInterpolatedImageImpl::fillKImage(
+        ImageView<std::complex<double> > im,
         double kx0, double dkx, double dkxy,
         double ky0, double dky, double dkyx) const
     {
-        dbg<<"SBInterpolatedImage fillKValue\n";
+        dbg<<"SBInterpolatedImage fillKImage\n";
         dbg<<"kx = "<<kx0<<" + i * "<<dkx<<" + j * "<<dkxy<<std::endl;
         dbg<<"ky = "<<ky0<<" + i * "<<dkyx<<" + j * "<<dky<<std::endl;
-        assert(val.stepi() == 1);
-        assert(val.canLinearize());
-        const int m = val.colsize();
-        const int n = val.rowsize();
-        typedef tmv::VIt<std::complex<double>,1,tmv::NonConj> It;
+        const int m = im.getNCol();
+        const int n = im.getNRow();
+        std::complex<double>* ptr = im.getData();
+        int skip = im.getNSkip();
+        assert(im.getStep() == 1);
         checkK();
 
         double ux0 = kx0 * _uscale;
@@ -410,18 +377,17 @@ namespace galsim {
         double duxy = dkxy * _uscale;
         double duyx = dkyx * _uscale;
 
-        It valit = val.linearView().begin();
-        for (int j=0;j<n;++j,kx0+=dkxy,ky0+=dky,ux0+=duxy,uy0+=duy) {
+        for (int j=0; j<n; ++j,kx0+=dkxy,ky0+=dky,ux0+=duxy,uy0+=duy,ptr+=skip) {
             double kx = kx0;
             double ky = ky0;
             double ux = ux0;
             double uy = uy0;
-            for (int i=0;i<m;++i,kx+=dkx,ky+=dkyx,ux+=dux,uy+=duyx) {
+            for (int i=0; i<m; ++i,kx+=dkx,ky+=dkyx,ux+=dux,uy+=duyx) {
                 if (std::abs(kx) > _maxk1 || std::abs(ky) > _maxk1) {
-                    *valit++ = 0.;
+                    ++ptr;
                 } else {
                     double xKernelTransform = _xInterp->uval(ux, uy);
-                    *valit++ = xKernelTransform * _ktab->interpolate(kx, ky, *_kInterp);
+                    *ptr++ = xKernelTransform * _ktab->interpolate(kx, ky, *_kInterp);
                 }
             }
         }
