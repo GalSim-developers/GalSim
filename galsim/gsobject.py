@@ -1324,7 +1324,8 @@ class GSObject(object):
                 real_space = False
             else:
                 real_space = True
-            prof = galsim.Convolve(prof, galsim.Pixel(scale=1.0), real_space=real_space)
+            prof = galsim.Convolve(prof, galsim.Pixel(scale=1.0, gsparams=self.gsparams),
+                                   real_space=real_space, gsparams=self.gsparams)
 
         # Apply the offset, and possibly fix the centering for even-sized images
         shape = prof._get_shape(image, nx, ny, bounds)
