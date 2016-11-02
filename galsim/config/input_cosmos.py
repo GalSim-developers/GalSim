@@ -36,11 +36,14 @@ class COSMOSLoader(InputLoader):
                 log_level = logging.INFO
             if 'input' in base:
                 if 'cosmos_catalog' in base['input']:
+                    cc = base['input']['cosmos_catalog']
                     out_str = ''
-                    if 'sample' in base['input']['cosmos_catalog'][0]:
-                        out_str += '\n  sample = %s'%base['input']['cosmos_catalog'][0]['sample']
-                    if 'dir' in base['input']['cosmos_catalog'][0]:
-                        out_str += '\n  dir = %s'%base['input']['cosmos_catalog'][0]['dir']
+                    if 'sample' in cc[0]:
+                        out_str += '\n  sample = %s'%cc[0]['sample']
+                    if 'dir' in cc[0]:
+                        out_str += '\n  dir = %s'%cc[0]['dir']
+                    if 'file_name' in cc[0]:
+                        out_str += '\n  file_name = %s'%cc[0]['file_name']
                     if out_str != '':
                         logger.log(log_level, 'Using user-specified COSMOSCatalog: %s',out_str)
             logger.info("file %d: COSMOS catalog has %d total objects; %d passed initial cuts.",
