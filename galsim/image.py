@@ -1416,13 +1416,10 @@ def Image_idiv(self, other):
     except AttributeError:
         a = other
         dt = type(a)
-    if dt == self.array.dtype:
-        try:
-            self.array[:,:] /= a
-        except TypeError:
-            # if dtype is an integer type, then numpy doesn't allow true division /= to assign
-            # back to an integer array.  To allow this for images, we do the following:
-            self.array[:,:] = (self.array / a).astype(self.array.dtype)
+    if dt == self.array.dtype and not self.isinteger:
+        # if dtype is an integer type, then numpy doesn't allow true division /= to assign
+        # back to an integer array.  To for integers (or mixed types), don't do use /=.
+        self.array[:,:] /= a
     else:
         self.array[:,:] = (self.array / a).astype(self.array.dtype)
     return self
