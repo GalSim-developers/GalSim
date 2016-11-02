@@ -1418,7 +1418,7 @@ def Image_idiv(self, other):
         dt = type(a)
     if dt == self.array.dtype and not self.isinteger:
         # if dtype is an integer type, then numpy doesn't allow true division /= to assign
-        # back to an integer array.  To for integers (or mixed types), don't do use /=.
+        # back to an integer array.  So for integers (or mixed types), don't use /=.
         self.array[:,:] /= a
     else:
         self.array[:,:] = (self.array / a).astype(self.array.dtype)
