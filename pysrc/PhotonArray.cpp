@@ -36,6 +36,8 @@ namespace {
         template <typename U, typename W>
         static void wrapTemplates(W & wrapper) {
             wrapper
+                .def(bp::init<const BaseImage<U>&, double, UniformDeviate>(
+                        bp::args("image", "maxFlux", "ud")))
                 .def("addTo",
                      (double (PhotonArray::*)(ImageView<U>) const)&PhotonArray::addTo,
                      (bp::arg("image")),

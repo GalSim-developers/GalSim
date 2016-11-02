@@ -62,6 +62,24 @@ namespace galsim {
         PhotonArray(std::vector<double>& vx, std::vector<double>& vy, std::vector<double>& vflux);
 
         /**
+         * @brief Turn an image into an array of photons
+         *
+         * The flux in each non-zero pixel will be turned into 1 or more photons according
+         * to the maxFlux parameter which sets an upper limit for the absolute value of the
+         * flux of any photon.  Pixels with abs values > maxFlux will spawn multiple photons.
+         *
+         * The positions of the photons will be random within the area of each pixel.
+         * TODO: This corresponds to the Nearest interpolant.  Consider implementing other
+         * interpolation options here.
+         *
+         * @param image     The image to use for the photon fluxes and positions.
+         * @param maxFlux   The maximum flux that any photon should have.
+         * @param ud        A UniformDeviate in case we need to shuffle.
+         */
+        template <class T>
+        PhotonArray(const BaseImage<T>& image, double maxFlux, UniformDeviate ud);
+
+        /**
          * @brief Accessor for array size
          *
          * @returns Array size

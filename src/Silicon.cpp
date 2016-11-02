@@ -93,7 +93,10 @@ Silicon::Silicon (std::string inname)
     // The following is the lateral diffusion step size in microns, assuming the entire silicon thickness (100 microns)
     // and -100 C temperature.  We adjust it for deviations from this in photonmanipulate.cpp
 
-    DiffStep = 100.0 * sqrt(2.0 * 0.015 / Vdiff);
+    // MJ: Turn off diffusion for now, so it's easier to see the effect of B/F.
+    //     We'll want this to be settable from the python layer.
+    //DiffStep = 100.0 * sqrt(2.0 * 0.015 / Vdiff);
+    DiffStep = 0.0;
 
     /* Next, we build the polygons. We have an array of Nx*Ny + 2 polygons,
        with 0 to Nx*Ny-1 holding the pixel distortions, Nx*Ny being the polygon
@@ -181,7 +184,7 @@ Silicon::Silicon (std::string inname)
 #ifdef DEBUGLOGGING
     i = 4; j = 4;
     for (n=0; n<Nv; n++)
-        dbg<<"n = "<<n<<", x = "<<polylist[i * Ny + j]->pointlist[n]->x*(double)NumElec
+        xdbg<<"n = "<<n<<", x = "<<polylist[i * Ny + j]->pointlist[n]->x*(double)NumElec
             <<", y = "<<polylist[i * Ny + j]->pointlist[n]->y*(double)NumElec<<std::endl;
 #endif
     // We generate a testpoint for testing whether a point is inside or outside the array
@@ -266,7 +269,7 @@ bool Silicon::InsidePixel(int ix, int iy, double x, double y, double zconv,
 
 #ifdef DEBUGLOGGING
     for (n=0; n<Nv; n++) // test printout of distorted pixe vertices.
-        dbg<<"n = "<<n<<", x = "<<polylist[TestPoly]->pointlist[n]->x
+        xdbg<<"n = "<<n<<", x = "<<polylist[TestPoly]->pointlist[n]->x
             <<", y = "<<polylist[TestPoly]->pointlist[n]->y<<std::endl;
 #endif
 
@@ -306,17 +309,15 @@ double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
 {
     // Silicon* silicon = new Silicon("../poisson/BF_256_9x9_0_Vertices");
     // Create and read in pixel distortions
-    bool FoundPixel;
     int xoff[9] = {0,1,1,0,-1,-1,-1,0,1}; // Displacements to neighboring pixels
     int yoff[9] = {0,0,1,1,1,0,-1,-1,-1}; // Displacements to neighboring pixels
-    int n=0, step, ix_off, iy_off;
-    double x, y, x_off, y_off;
+    int n=0;
     double zconv = 95.0; // Z coordinate of photoconversion in microns
                          // Will add more detail later
     double ccdtemp =  173; // CCD temp in K <- THIS SHOULD COME FROM silicon
-    double DiffStep; // Mean diffusion step size in microns
     GaussianDeviate gd(ud,0,1); // Random variable from Standard Normal dist.
 
+    double DiffStep; // Mean diffusion step size in microns
     if (zconv <= 10.0)
     { DiffStep = 0.0; }
     else
@@ -333,41 +334,47 @@ double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
     // Factor to turn flux into surface brightness in an Image pixel
     dbg<<"In Silicon::accumulate\n";
     dbg<<"bounds = "<<b<<std::endl;
+    dbg<<"total nphotons = "<<photons.size()<<std::endl;
 
     double addedFlux = 0.;
+    double Irr = 0.;
+    double Irr0 = 0.;
     for (int i=0; i<int(photons.size()); i++)
     {
-        int ix, iy;
         // First we add in a displacement due to diffusion
-        x = photons.getX(i) + DiffStep * gd() / 10.0;
-        y = photons.getY(i) + DiffStep * gd() / 10.0;
+        double x0 = photons.getX(i) + DiffStep * gd() / 10.0;
+        double y0 = photons.getY(i) + DiffStep * gd() / 10.0;
+        double flux = photons.getFlux(i);
 
         // Now we find the undistorted pixel
-        ix = int(floor(x + 0.5));
-        iy = int(floor(y + 0.5));
+        int ix = int(floor(x0 + 0.5));
+        int iy = int(floor(y0 + 0.5));
+        int ix0 = ix;
+        int iy0 = iy;
 
-        int n=0, step, ix_off, iy_off;
-        x = x - (double) ix + 0.5;
-        y = y - (double) iy + 0.5;
+        double x = x0 - (double) ix + 0.5;
+        double y = y0 - (double) iy + 0.5;
         // (ix,iy) are the undistorted pixel coordinates.
         // (x,y) are the coordinates within the pixel, centered at the lower left
-        // CRAIG, BETTER TO CALL IT (dx,dy)
 
         // The following code finds which pixel we are in given
         // pixel distortion due to the brighter-fatter effect
-        FoundPixel = false;
+        bool FoundPixel = false;
         // The following are set up to start the search in the undistorted pixel, then
         // search in the nearest neighbor first if it's not in the undistorted pixel.
+        int step;
         if      ((x > y) && (x > 1.0 - y)) step = 1;
-        else if ((x > y) && (x < 1.0 - y)) step = 7;
+        else if ((x < y) && (x < 1.0 - y)) step = 7;
         else if ((x < y) && (x > 1.0 - y)) step = 3;
         else step = 5;
+        int n=0;
+        int m_found;
         for (int m=0; m<9; m++)
         {
-            ix_off = ix + xoff[n];
-            iy_off = iy + yoff[n];
-            x_off = x - (double)xoff[n];
-            y_off = y - (double)yoff[n];
+            int ix_off = ix + xoff[n];
+            int iy_off = iy + yoff[n];
+            double x_off = x - (double)xoff[n];
+            double y_off = y - (double)yoff[n];
             if (this->InsidePixel(ix_off, iy_off, x_off, y_off, zconv, target))
             {
                 xdbg<<"Found in pixel "<<n<<", ix = "<<ix<<", iy = "<<iy
@@ -377,6 +384,7 @@ double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
                 else othercount +=1;
                 ix = ix_off;
                 iy = iy_off;
+                m_found = m;
                 FoundPixel = true;
                 break;
             }
@@ -385,6 +393,8 @@ double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
         }
         if (!FoundPixel)
         {
+            dbg<<"Not found in any pixel\n";
+            dbg<<"ix,iy = "<<ix<<','<<iy<<"  x,y = "<<x<<','<<y<<std::endl;
             // We should never arrive here, since this means we didn't find it in the undistorted
             // pixel or any of the neighboring pixels.  However, sometimes (about 0.01% of the
             // time) we do arrive here due to roundoff error of the pixel boundary.  When this
@@ -404,15 +414,32 @@ double Silicon::accumulate(const PhotonArray& photons, UniformDeviate ud,
             ix = ix + xoff[n];
             iy = iy + yoff[n];
             FoundPixel = true;
-            dbg<<"Not found in any pixel\n";
         }
+#if 0
         // (ix, iy) now give the actual pixel which will receive the charge
+        if (ix != ix0 || iy != iy0) {
+            dbg<<"("<<ix0<<","<<iy0<<") -> ("<<ix<<","<<iy<<")\n";
+            double r0 = sqrt((ix0+0.5)*(ix0+0.5)+(iy0+0.5)*(iy0+0.5));
+            double r = sqrt((ix+0.5)*(ix+0.5)+(iy+0.5)*(iy+0.5));
+            dbg<<"r = "<<r0<<" -> "<<r;
+            if (r < r0) { dbg<<"  *****"; }
+            dbg<<"\nstep = "<<step<<", n = "<<n<<", m_found = "<<m_found<<std::endl;
+            dbg<<"flux = "<<photons.getFlux(i)<<std::endl;
+        }
+#endif
 
         if (b.includes(ix,iy)) {
-            target(ix,iy) += photons.getFlux(i);
-            addedFlux += photons.getFlux(i);
+            double rsq = (ix+0.5)*(ix+0.5)+(iy+0.5)*(iy+0.5);
+            Irr += flux * rsq;
+            rsq = (ix0+0.5)*(ix0+0.5)+(iy0+0.5)*(iy0+0.5);
+            Irr0 += flux * rsq;
+            target(ix,iy) += flux;
+            addedFlux += flux;
         }
     }
+    Irr /= addedFlux;
+    Irr0 /= addedFlux;
+    dbg<<"Irr = "<<Irr<<"  cf. Irr0 = "<<Irr0<<std::endl;
     dbg << "Found "<< zerocount << " photons in undistorted pixel, " << nearestcount;
     dbg << " in closest neighbor, " << othercount << " in other neighbor. " << misscount;
     dbg << " not in any pixel\n" << std::endl;

@@ -80,25 +80,24 @@ def test_silicon():
     print('im3:         %.1f     %.2f       %f'%(im3.array.sum(),im3.array.max(), r3))
 
     # Fluxes should all equal obj.flux
-    np.testing.assert_almost_equal(im1.array.sum(), obj.flux)
-    np.testing.assert_almost_equal(im2.array.sum(), obj.flux)
-    np.testing.assert_almost_equal(im3.array.sum(), obj.flux)
-    np.testing.assert_almost_equal(im1.added_flux, obj.flux)
-    np.testing.assert_almost_equal(im2.added_flux, obj.flux)
-    np.testing.assert_almost_equal(im3.added_flux, obj.flux)
+    np.testing.assert_almost_equal(im1.array.sum(), obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im2.array.sum(), obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im3.array.sum(), obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im1.added_flux, obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im2.added_flux, obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im3.added_flux, obj.flux, decimal=6)
 
     # Sizes are all about equal since flux is not large enough for B/F to be significant
     # Variance of Irr for Gaussian with Poisson noise is
     # Var(Irr) = Sum(I r^4) = 4Irr [using Gaussian kurtosis = 8sigma^2, Irr = 2sigma^2]
     # r = sqrt(Irr/flux), so sigma(r) = 1/2 r sqrt(Var(Irr))/Irr = 1/sqrt(flux)
     # Use 2sigma for below checks.
-    rtol = 2. / np.sqrt(obj.flux) * im1.scale
-    np.testing.assert_allclose(r1, r2, atol=rtol)
-    np.testing.assert_allclose(r2, r3, atol=rtol)
+    sigma_r = 1. / np.sqrt(obj.flux) * im1.scale
+    np.testing.assert_allclose(r1, r2, atol=2.*sigma_r)
+    np.testing.assert_allclose(r2, r3, atol=2.*sigma_r)
 
-    # Repeat with 20X more photons where the brighter-fatter effect should kick in more.
-    obj *= 20
-    rtol = 2. / np.sqrt(obj.flux) * im1.scale
+    # Repeat with 200X more photons where the brighter-fatter effect should kick in more.
+    obj *= 200
     obj.drawImage(im1, method='phot', poisson_flux=False, sensor=silicon, rng=rng1)
     obj.drawImage(im2, method='phot', poisson_flux=False, sensor=simple, rng=rng2)
     obj.drawImage(im3, method='phot', poisson_flux=False, rng=rng3)
@@ -112,24 +111,25 @@ def test_silicon():
     print('im3:         %.1f     %.2f       %f'%(im3.array.sum(),im3.array.max(), r3))
 
     # Fluxes should still be fine.
-    np.testing.assert_almost_equal(im1.array.sum(), obj.flux)
-    np.testing.assert_almost_equal(im2.array.sum(), obj.flux)
-    np.testing.assert_almost_equal(im3.array.sum(), obj.flux)
-    np.testing.assert_almost_equal(im1.added_flux, obj.flux)
-    np.testing.assert_almost_equal(im2.added_flux, obj.flux)
-    np.testing.assert_almost_equal(im3.added_flux, obj.flux)
+    np.testing.assert_almost_equal(im1.array.sum(), obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im2.array.sum(), obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im3.array.sum(), obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im1.added_flux, obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im2.added_flux, obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im3.added_flux, obj.flux, decimal=6)
 
     # Sizes for 2,3 should be about equal, but 1 should be larger.
-    print('check |r2-r3| = %f <? %f'%(np.abs(r2-r3), rtol))
-    np.testing.assert_allclose(r2, r3, atol=rtol)
-    print('check |r1-r3| = %f >? %f'%(np.abs(r1-r3), rtol))
-    assert r1-r3 > rtol
+    sigma_r = 1. / np.sqrt(obj.flux) * im1.scale
+    print('check |r2-r3| = %f <? %f'%(np.abs(r2-r3), 2.*sigma_r))
+    np.testing.assert_allclose(r2, r3, atol=2.*sigma_r)
+    print('check |r1-r3| = %f >? %f'%(np.abs(r1-r3), 2.*sigma_r))
+    assert r1-r3 > 2.*sigma_r
 
     # Check that it is really responding to flux, not number of photons.
     # Using fewer shot photons will mean each one encapsulates several electrons at once.
-    obj.drawImage(im1, method='phot', n_photons=3000, poisson_flux=False, sensor=silicon, rng=rng1)
-    obj.drawImage(im2, method='phot', n_photons=3000, poisson_flux=False, sensor=simple, rng=rng2)
-    obj.drawImage(im3, method='phot', n_photons=3000, poisson_flux=False, rng=rng3)
+    obj.drawImage(im1, method='phot', n_photons=10000, poisson_flux=False, sensor=silicon, rng=rng1)
+    obj.drawImage(im2, method='phot', n_photons=10000, poisson_flux=False, sensor=simple, rng=rng2)
+    obj.drawImage(im3, method='phot', n_photons=10000, poisson_flux=False, rng=rng3)
 
     r1 = im1.calculateMomentRadius(flux=obj.flux)
     r2 = im2.calculateMomentRadius(flux=obj.flux)
@@ -139,24 +139,106 @@ def test_silicon():
     print('im2:         %.1f     %.2f       %f'%(im2.array.sum(),im2.array.max(), r2))
     print('im3:         %.1f     %.2f       %f'%(im3.array.sum(),im3.array.max(), r3))
 
-    np.testing.assert_almost_equal(im1.array.sum(), obj.flux)
-    np.testing.assert_almost_equal(im2.array.sum(), obj.flux)
-    np.testing.assert_almost_equal(im3.array.sum(), obj.flux)
-    np.testing.assert_almost_equal(im1.added_flux, obj.flux)
-    np.testing.assert_almost_equal(im2.added_flux, obj.flux)
-    np.testing.assert_almost_equal(im3.added_flux, obj.flux)
+    np.testing.assert_almost_equal(im1.array.sum(), obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im2.array.sum(), obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im3.array.sum(), obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im1.added_flux, obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im2.added_flux, obj.flux, decimal=6)
+    np.testing.assert_almost_equal(im3.added_flux, obj.flux, decimal=6)
 
-    print('check |r2-r3| = %f <? %f'%(np.abs(r2-r3), rtol))
-    np.testing.assert_allclose(r2, r3, atol=rtol)  # It's actually noisier now, but this passes.
-    print('check |r1-r3| = %f >? %f'%(np.abs(r1-r3), rtol))
-    assert r1-r3 > rtol
+    print('check |r2-r3| = %f <? %f'%(np.abs(r2-r3), 2.*sigma_r))
+    np.testing.assert_allclose(r2, r3, atol=2.*sigma_r)  # It's actually noisier now, but this passes.
+    print('check |r1-r3| = %f >? %f'%(np.abs(r1-r3), 2.*sigma_r))
+    assert r1-r3 > 2.*sigma_r
 
     # TODO: The above tests are not really sufficient.
     # We need some more sophisticated tests that this is doing the right thing, not just
     # showing some evidence for B/F.
 
 
+@timer
+def test_silicon_fft():
+    """Test that drawing witth method='fft' also works for SiliconSensor.
+    """
+    # Lower this somewhat so we get more accurate fluxes from the FFT.
+    # (Still only accurate to 3 d.p. though.)
+    gsparams = galsim.GSParams(maxk_threshold=1.e-5)
+    obj = galsim.Gaussian(flux=3539, sigma=0.3, gsparams=gsparams)
 
+    # We'll draw the same object using SiliconSensor, Sensor, and the default (sensor=None)
+    im1 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=silicon
+    im2 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=simple
+    im3 = galsim.ImageD(64, 64, scale=0.3)  # Will use sensor=None
+
+    rng = galsim.BaseDeviate(5678)
+    silicon = galsim.SiliconSensor('../devel/poisson/BF_256_9x9_0_Vertices', rng=rng)
+    simple = galsim.Sensor()
+
+    obj.drawImage(im1, method='fft', sensor=silicon, rng=rng)
+    obj.drawImage(im2, method='fft', sensor=simple, rng=rng)
+    obj.drawImage(im3, method='fft')
+
+    printval(im1,im2)
+    im1.write('junk1.fits')
+    im2.write('junk2.fits')
+
+    r1 = im1.calculateMomentRadius(flux=obj.flux)
+    r2 = im2.calculateMomentRadius(flux=obj.flux)
+    r3 = im3.calculateMomentRadius(flux=obj.flux)
+    print('Flux = %.0f:  sum        peak         radius'%obj.flux)
+    print('im1:         %.1f     %.2f       %f'%(im1.array.sum(),im1.array.max(), r1))
+    print('im2:         %.1f     %.2f       %f'%(im2.array.sum(),im2.array.max(), r2))
+    print('im3:         %.1f     %.2f       %f'%(im3.array.sum(),im3.array.max(), r3))
+
+    # First, im2 and im3 should be essentially exactly equal.
+    np.testing.assert_almost_equal(im2.array, im3.array, decimal=10)
+
+    # im1 should be similar, but not equal
+    np.testing.assert_almost_equal(im1.array/obj.flux, im2.array/obj.flux, decimal=2)
+
+    # Fluxes should all equal obj.flux
+    print('im1.array = ',im1.array)
+    np.testing.assert_almost_equal(im1.array.sum(), obj.flux, decimal=3)
+    np.testing.assert_almost_equal(im2.array.sum(), obj.flux, decimal=3)
+    np.testing.assert_almost_equal(im3.array.sum(), obj.flux, decimal=3)
+    np.testing.assert_almost_equal(im1.added_flux, obj.flux, decimal=3)
+    np.testing.assert_almost_equal(im2.added_flux, obj.flux, decimal=3)
+    np.testing.assert_almost_equal(im3.added_flux, obj.flux, decimal=3)
+
+    # Sizes are all about equal since flux is not large enough for B/F to be significant
+    sigma_r = 1./np.sqrt(obj.flux) * im1.scale
+    np.testing.assert_allclose(r1, r2, atol=2.*sigma_r)
+    np.testing.assert_allclose(r2, r3, atol=2.*sigma_r)
+
+    # Repeat with 20X more photons where the brighter-fatter effect should kick in more.
+    obj *= 200
+    obj.drawImage(im1, method='fft', sensor=silicon, rng=rng)
+    obj.drawImage(im2, method='fft', sensor=simple, rng=rng)
+    obj.drawImage(im3, method='fft')
+
+    r1 = im1.calculateMomentRadius(flux=obj.flux)
+    r2 = im2.calculateMomentRadius(flux=obj.flux)
+    r3 = im3.calculateMomentRadius(flux=obj.flux)
+    print('Flux = %.0f:  sum        peak          radius'%obj.flux)
+    print('im1:         %.1f     %.2f       %f'%(im1.array.sum(),im1.array.max(), r1))
+    print('im2:         %.1f     %.2f       %f'%(im2.array.sum(),im2.array.max(), r2))
+    print('im3:         %.1f     %.2f       %f'%(im3.array.sum(),im3.array.max(), r3))
+
+    # Fluxes should still be fine.
+    np.testing.assert_almost_equal(im1.array.sum(), obj.flux, decimal=1)
+    np.testing.assert_almost_equal(im2.array.sum(), obj.flux, decimal=1)
+    np.testing.assert_almost_equal(im3.array.sum(), obj.flux, decimal=1)
+    np.testing.assert_almost_equal(im1.added_flux, obj.flux, decimal=1)
+    np.testing.assert_almost_equal(im2.added_flux, obj.flux, decimal=1)
+    np.testing.assert_almost_equal(im3.added_flux, obj.flux, decimal=1)
+
+    # Sizes for 2,3 should be about equal, but 1 should be larger.
+    sigma_r = 1./np.sqrt(obj.flux) * im1.scale
+    print('check |r2-r3| = %f <? %f'%(np.abs(r2-r3), 2.*sigma_r))
+    np.testing.assert_allclose(r2, r3, atol=2.*sigma_r)
+    print('check |r1-r3| = %f >? %f'%(np.abs(r1-r3), 2.*sigma_r))
+    assert r1-r3 > 2.*sigma_r
 
 if __name__ == "__main__":
     test_silicon()
+    test_silicon_fft()

@@ -39,6 +39,53 @@ namespace galsim {
         _flux = vflux;
     }
 
+    template <typename T>
+    struct AddImagePhotons
+    {
+        AddImagePhotons(std::vector<double>& vx, std::vector<double>& vy, std::vector<double>& vf,
+                        double maxFlux, UniformDeviate ud) :
+            _vx(vx), _vy(vy), _vf(vf), _maxFlux(maxFlux), _ud(ud) {}
+
+        void operator()(T flux, int i, int j)
+        {
+            int N = (flux <= _maxFlux) ? 1 : int(std::ceil(flux / _maxFlux));
+            double fluxPer = double(flux) / N;
+            for (int k=0; k<N; ++k) {
+                double x = i + _ud() - 0.5;
+                double y = j + _ud() - 0.5;
+                _vx.push_back(x);
+                _vy.push_back(y);
+                _vf.push_back(fluxPer);
+            }
+        }
+
+        std::vector<double>& _vx;
+        std::vector<double>& _vy;
+        std::vector<double>& _vf;
+        const double& _maxFlux;
+        UniformDeviate _ud;
+    };
+
+    template <class T>
+    PhotonArray::PhotonArray(const BaseImage<T>& image, double maxFlux, UniformDeviate ud) :
+        _is_correlated(true)
+    {
+        double totalFlux = image.sumElements();
+        int N = image.getNRow() * image.getNCol() + totalFlux / maxFlux;
+        dbg<<"image size = "<<image.getNRow() * image.getNCol()<<std::endl;
+        dbg<<"count from photons = "<<totalFlux / maxFlux<<std::endl;
+        dbg<<"N = "<<N<<std::endl;
+        // This goes a bit over what we actually need, but not by much.  Worth it to save
+        // on the vector reallocations.
+        _x.reserve(N);
+        _y.reserve(N);
+        _flux.reserve(N);
+        dbg<<"bounds = "<<image.getBounds()<<std::endl;
+        AddImagePhotons<T> adder(_x, _y, _flux, maxFlux, ud);
+        for_each_pixel_ij(image, adder);
+        dbg<<"Done: size = "<<_x.size()<<std::endl;
+    }
+
     double PhotonArray::getTotalFlux() const
     {
         double total = 0.;
@@ -158,7 +205,9 @@ namespace galsim {
     template <class T>
     double PhotonArray::addTo(ImageView<T> target) const
     {
+        dbg<<"Start addTo\n";
         Bounds<int> b = target.getBounds();
+        dbg<<"bounds = "<<b<<std::endl;
         if (!b.isDefined())
             throw std::runtime_error("Attempting to PhotonArray::addTo an Image with"
                                      " undefined Bounds");
@@ -178,4 +227,8 @@ namespace galsim {
     // instantiate template functions for expected image types
     template double PhotonArray::addTo(ImageView<float> image) const;
     template double PhotonArray::addTo(ImageView<double> image) const;
+    template PhotonArray::PhotonArray(const BaseImage<float>& image, double maxFlux,
+                                      UniformDeviate ud);
+    template PhotonArray::PhotonArray(const BaseImage<double>& image, double maxFlux,
+                                      UniformDeviate ud);
 }

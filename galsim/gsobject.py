@@ -1282,7 +1282,7 @@ class GSObject(object):
                     "an _additional_ Pixel, you can suppress this warning by using method=fft.")
 
         # Some parameters are only relevant for method == 'phot'
-        if method != 'phot':
+        if method != 'phot' and sensor is None:
             if n_photons != 0.:
                 raise ValueError("n_photons is only relevant for method='phot'")
             if rng is not None:
@@ -1311,7 +1311,7 @@ class GSObject(object):
             flux_scale /= local_wcs.pixelArea()
         # Only do the gain here if not photon shooting, since need the number of photons to
         # reflect that actual photons, not ADU.
-        if gain != 1 and method != 'phot':
+        if gain != 1 and method != 'phot' and sensor is None:
             flux_scale /= gain
 
         prof *= flux_scale
@@ -1347,10 +1347,30 @@ class GSObject(object):
         if method == 'phot':
             added_photons = prof.drawPhot(imview, n_photons, rng, max_extra_noise, poisson_flux,
                                           sensor, gain)
-        elif prof.isAnalyticX():
-            added_photons = prof.drawReal(imview)
         else:
-            added_photons = prof.drawFFT(imview, wmult)
+            # If not using phot, but doing sensor, then make a copy.
+            if sensor is not None:
+                draw_image = imview.copy()
+                draw_image.setZero()
+            else:
+                draw_image = imview
+            print 'draw_image = ',draw_image
+            if prof.isAnalyticX():
+                added_photons = prof.drawReal(draw_image)
+            else:
+                added_photons = prof.drawFFT(draw_image, wmult)
+            print 'added_photons = ',added_photons
+            if sensor is not None:
+                # Setup the rng if not provided one.
+                if rng is None:
+                    ud = galsim.UniformDeviate()
+                elif isinstance(rng, galsim.BaseDeviate):
+                    ud = galsim.UniformDeviate(rng)
+                else:
+                    raise TypeError("The rng provided is not a BaseDeviate")
+                phot_array = galsim._galsim.PhotonArray(draw_image.image, 1., ud)
+                added_photons = sensor.accumulate(phot_array, imview)
+                print 'added_photons = ',added_photons
 
         image.added_flux = added_photons / flux_scale
 
