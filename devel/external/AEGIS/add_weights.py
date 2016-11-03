@@ -47,7 +47,7 @@ def main(args):
                                          parent_cat['FLUX_RADIUS'],
                                          bins=bins)
     hlr = [(bins[i]+bins[i-1])/2. for i in range(1, len(bins))]
-    z = np.polyfit(hlr, eff, 4)
+    z = np.polyfit(hlr, eff, 3)
     p = np.poly1d(z)
     norm = p(args.max_hlr)
     eff_new = p(select_cat['flux_radius'])
