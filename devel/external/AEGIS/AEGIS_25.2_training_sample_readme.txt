@@ -1,17 +1,22 @@
 This README file describes the AEGIS F814W<25.2 training sample, which is a
 randomly ordered sample of galaxies in the AEGIS field in F606W(V) and F814W(I) bands with AB magnitude in I band <25.2.
+The galaxies were detected in the summed V+I image 
+and the entries in the V and I catalog files correspond to the same galaxies.
 
 NOTE: The columns in the catalog are those expected by galsim.RealGalaxyCatalog.
-The catalog can also be used with galsim.COSMOSCatalog without parametric fits.
+The catalog can also be used with galsim.COSMOSCatalog() without parametric fits. 
+Drawing parametric galaxy in galsim.COSMOSCatalog() requires another file 
+with information on parametric fits performed on galaxy images.
 
 (1) The catalogs themselves are in AEGIS_galaxy_catalog_[VI]_25.2.fits (where
-[VI] indicates either V or I).  These files can be used to initialize a
+[VI] indicates either V or I). These files can be used to initialize a
 galsim.RealGalaxyCatalog or galsim.COSMOSCatalog instance, and contain a FITS
 tables that could also be  read in directly using, e.g., python or IDL.  The
 fields that are included for each galaxy are:
 
 IDENT: AEGIS object identifier. This value is internally derived. Therefore
 do not rely on this IDENT for cross-matching between other AEGIS catalogs.
+IDENT in V and I catalogs correspond to the same galaxies. 
 
 RA, DEC: Right ascension and declination (J2000, degrees).  While this is not
 needed for image simulation, it is necessary for proper cross-matching with

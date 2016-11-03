@@ -1,6 +1,6 @@
 This README file describes the python code used to process AEGIS HST images in V and I bands to produce multi-band postage stamp images of galaxies. The selection procedure is explained in a separate document in devel/external/AEGIS/document/main.tex; a rendered version of the document may be viewed at https://www.overleaf.com/read/krbzscc. 
 The final products are similar to the COSMOS Real Galaxy training sample.
-The script can be implemented to analyze any HST field data in multiple filters. It takes HST images in multiple bands, identifies objects with SExtractor, classifies those objects as stars and galaxies. Stars are then used to measure the PSF. Galaxies that satisfy certain criteria (see Section 3.8 in document) are selected for the main catalog. Separate catalogs are made for different bands. A postage stamp image is drawn for every galaxy in the catalog in each band. Each galaxy image will also have a postage stamp of its PSF in each band. The output of the code can be opened using the RealGalaxyCatalog and COSMOSCatalog classes of GalSim.
+The script can be implemented to analyze any HST field data in multiple filters. It takes HST images in multiple bands, identifies objects with SExtractor, classifies those objects as stars and galaxies. Stars are then used to measure the PSF. Galaxies that satisfy certain criteria (see Section 3.8 in document) are selected for the main catalog. Separate catalogs are made for different bands. Each catalog can be individually used to initialize a galsim.RealGalaxyCatalog or galsim.COSMOSCatalog instance.  A postage stamp image is drawn for every galaxy in the catalog in each band. Each galaxy image will also have a postage stamp of its PSF in each band. The entries in different filter catalog files correspond to the same galaxies.
 
 ##Requirements:
 ### Input Files:
@@ -13,8 +13,8 @@ The script can be implemented to analyze any HST field data in multiple filters.
 
 ### Input Parameters for script:
 * zero_point_mag: Zero point magnitude for each filter.
-* diff_spike_params: These parameters are used to compute the size of the diffraction spikes. A polygonal mask is drawn around saturated stars to mask these spikes (see Fig1: in document).  Parameters are [slope(pixels/ADU), intercept(pixels),width(pixels),angle(degrees)]. Slope and intercept relate the FLUX_AUTO of the star to the length the spike (Obtained from a linear fit to FLUX_AUTO Vs length of the spike measured manually for 10 saturated stars). The width of the spikes is set with width. Angle gives the angle by which the polygon has to be rotated. The parameters may be different for different bands. 
-* star_galaxy_params: Parameters used to separate galaxies and stars in MU_MAX Vs MAG_AUTO plot(x_div, y_div, slope). x_div gives the maximum magnitude, below which the object is saturated. y_div is the value of surface brightness per pixel for a saturated star. The slope of the line separating stars and galaxies is given by slope (See Fig 2 in document). It is recommended to run the first script get_objects.py, with mock sat_galaxy_params values, on a small region and then compute the separation parameters from the objects measured. The parameters may be different for different bands.
+* diff_spike_params: These parameters are used to compute the size of the diffraction spikes. A polygonal mask is drawn around saturated stars to mask these spikes (see Fig1: in document). Parameters are [slope(pixels/ADU), intercept(pixels),width(pixels),angle(degrees)]. Slope and intercept relate the FLUX_AUTO of the star to the length the spike. The width of the spike is set with width. Angle gives the angle by which the polygon has to be rotated. The parameters may be different for different bands. 
+* star_galaxy_params: Parameters used to separate galaxies and stars in MU_MAX Vs MAG_AUTO plot(x_div, y_div, slope). x_div gives the maximum magnitude, below which the object is saturated. y_div is the value of surface brightness per pixel for a saturated star. The slope of the line separating stars and galaxies is given by slope (See Fig 2 in document). It is recommended to run the first script get_objects.py, with mock star_galaxy_params values, on a small region and then compute the separation parameters from the objects measured. The parameters may be different for different bands.
 * gain: Detector gain in e/ADU. 
 
 ### Scripts: 
@@ -31,8 +31,8 @@ The entire pipeline contains 6 scripts that are to be run in the order:
 2. remove_multi.py : Script to remove multiple detections of the same object in overlapping segments. *Note: This script is to be run once to check multiple detections over all segments.*
 3. get_psf: Computes the focus offset for a given image, and uses that to estimate the PSF. Postage stamps of galaxies and PSF  are also drawn (called in get_pstamps.py).
 4. clean_pstamp.py: Identifies multiple objects in the postage stamp of a galaxy and replaces the other object with noise.  
-5. get_cat_seg.py: For each segment, creates a catalog with entries only for the objects with postage stamps that will appear in the main catalog. Information from other catalogs are also added in this step.
-6. apply_selection.py: applies selection cuts and writes final catalog into files that can be opened with galsim.Realgalaxy() and galsim.COSMOSCatalog().
+5. get_cat_seg.py: For each segment, creates a catalog with entries only for the objects with postage stamps that will appear in the main catalog. Information from other catalogs can also added in this step.
+6. apply_selection.py: applies selection cuts and writes final catalog into files that can be opened with galsim.RealGalaxy (called in get_in_galsim.py)
 
 Common functions that are called multiple times are saved in functions.py
 
