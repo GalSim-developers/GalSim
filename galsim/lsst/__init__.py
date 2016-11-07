@@ -16,4 +16,5 @@
 #    and/or other materials provided with the distribution.
 #
 
-from .lsst_wcs import LsstWCS, LsstCamera
+#from .lsst_wcs import LsstWCS, LsstCamera
+from .lsst_psf import getPSF
