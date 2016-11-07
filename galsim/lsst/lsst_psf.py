@@ -29,7 +29,7 @@ def getPSF(approximate_spider=False, gsparams=None, **kwargs):
     """
     diam = 8.36 # m (clear area)
     obscuration = 5.1/diam # linear obscuration
-    pupil_plane_im = os.path.join(galsim.meta_data.share_dir, "lsst_spider_2048.fits")
+    pupil_plane_im = os.path.join(galsim.meta_data.share_dir, "lsst_spider_2048.fits.gz")
     pupil_plane_scale = diam / 2048. # for a 2048 x 2048 image
     nstruts = 4 # when doing approximate calculation
 
