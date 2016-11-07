@@ -20,7 +20,7 @@ import numpy as np
 import galsim
 import os
 
-def getPSF(approximate_spider=False, gsparams=None, **kwargs):
+def getPSF(approximate_spider=False, no_spider=False, gsparams=None, **kwargs):
     """
     Get a PSF for LSST.  Currently does only the basics, keeps a lot of information locally that
     should eventually go in __init__.py.  Does not attempt to use camera geometry to propagate
@@ -35,7 +35,10 @@ def getPSF(approximate_spider=False, gsparams=None, **kwargs):
 
     if approximate_spider:
         psf = galsim.OpticalPSF(lam=500., diam=diam, obscuration=obscuration, nstruts=nstruts,
-                                gsparams=gsparams, **kwargs)
+                                gsparams=gsparams, strut_angle=45.*galsim.degrees, **kwargs)
+    elif no_spider:
+        psf = galsim.OpticalPSF(lam=500., diam=diam, obscuration=obscuration, gsparams=gsparams,
+                                **kwargs)
     else:
         psf = galsim.OpticalPSF(lam=500., diam=diam, obscuration=obscuration,
                                 pupil_plane_im=pupil_plane_im, pupil_plane_scale=pupil_plane_scale,
