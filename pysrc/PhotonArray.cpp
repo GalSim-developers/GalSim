@@ -43,6 +43,42 @@ namespace {
                 ;
         }
 
+        static bp::object GetXArray(PhotonArray& phot)
+        {
+            return MakeNumpyArray(&phot.getXVector()[0], phot.size(), 1, false,
+                                  boost::shared_ptr<double>());
+        }
+
+        static bp::object GetYArray(PhotonArray& phot)
+        {
+            return MakeNumpyArray(&phot.getYVector()[0], phot.size(), 1, false,
+                                  boost::shared_ptr<double>());
+        }
+
+        static bp::object GetFluxArray(PhotonArray& phot)
+        {
+            return MakeNumpyArray(&phot.getFluxVector()[0], phot.size(), 1, false,
+                                  boost::shared_ptr<double>());
+        }
+
+        static bp::object GetDXDZArray(PhotonArray& phot)
+        {
+            return MakeNumpyArray(&phot.getDXDZVector()[0], phot.size(), 1, false,
+                                  boost::shared_ptr<double>());
+        }
+
+        static bp::object GetDYDZArray(PhotonArray& phot)
+        {
+            return MakeNumpyArray(&phot.getDYDZVector()[0], phot.size(), 1, false,
+                                  boost::shared_ptr<double>());
+        }
+
+        static bp::object GetLambdaArray(PhotonArray& phot)
+        {
+            return MakeNumpyArray(&phot.getLambdaVector()[0], phot.size(), 1, false,
+                                  boost::shared_ptr<double>());
+        }
+
         static void wrap()
         {
             bp::class_<PhotonArray> pyPhotonArray("PhotonArray", bp::no_init);
@@ -61,6 +97,24 @@ namespace {
                      "Get y for photon number i")
                 .def("getFlux", &PhotonArray::getFlux, (bp::arg("i")),
                      "Get flux for photon number i")
+                .def("getDXDZ", &PhotonArray::getDXDZ, (bp::arg("i")),
+                     "Get dxdz for photon number i")
+                .def("getDYDZ", &PhotonArray::getDYDZ, (bp::arg("i")),
+                     "Get dydz for photon number i")
+                .def("getLambda", &PhotonArray::getLambda, (bp::arg("i")),
+                     "Get wavelength for photon number i")
+                .def("getXArray", GetXArray,
+                     "Get numpy array of x positions")
+                .def("getYArray", GetYArray,
+                     "Get numpy array of y positions")
+                .def("getFluxArray", GetFluxArray,
+                     "Get numpy array of fluxes")
+                .def("getDXDZArray", GetDXDZArray,
+                     "Get numpy array of dxdz values")
+                .def("getDYDZArray", GetDYDZArray,
+                     "Get numpy array of dydz values")
+                .def("getLambdaArray", GetLambdaArray,
+                     "Get numpy array of wavelengths")
                 .def("getTotalFlux", &PhotonArray::getTotalFlux,
                      "Return the total flux of all photons")
                 .def("setTotalFlux", &PhotonArray::setTotalFlux, (bp::arg("flux")),
@@ -75,7 +129,6 @@ namespace {
             wrapTemplates<double>(pyPhotonArray);
             wrapTemplates<float>(pyPhotonArray);
         }
-
     }; // struct PyPhotonArray
 
 } // anonymous
