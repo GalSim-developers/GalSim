@@ -1142,6 +1142,25 @@ class PhaseScreenPSF(GSObject):
                                        gsparams=self._gsparams)
         GSObject.__init__(self, self.ii)
 
+    def shoot(self, N, ud):
+        # Get a uniform distribution of photon arrival times from 0 to self.exptime.
+        arrival_times = np.squeeze(utilities.rand_arr((N,1), ud)) * self.exptime
+        # Randomly pick aperture locations (discretely for now)
+        u = self.aper.u[self.aper.illuminated]
+        v = self.aper.v[self.aper.illuminated]
+        pick = (np.squeeze(utilities.rand_arr((N,1), ud)) * N).astype(int)
+        u = u[pick]
+        pick = (np.squeeze(utilities.rand_arr((N,1), ud)) * N).astype(int)
+        v = v[pick]
+        x, y = self.screen_list.wavefront_grad_where(u, v, arrival_times, self.theta)
+        x *= 1.e-9 * 206265
+        y *= 1.e-9 * 206265
+
+        photon_array = galsim._galsim.PhotonArray(N)
+        for i, (x_, y_) in enumerate(zip(x, y)):
+            photon_array.setPhoton(i, x_, y_, 1.0)
+        return photon_array
+
 
 class OpticalPSF(GSObject):
     """A class describing aberrated PSFs due to telescope optics.  Its underlying implementation
